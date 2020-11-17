@@ -6,41 +6,32 @@ namespace metrics
 
 Poco::JSON::Object Scorer::get_metrics( const Poco::JSON::Object& _obj )
 {
+    const auto retrieve_metric =
+        [_obj]( const std::string& name, Poco::JSON::Object* result ) {
+            if ( _obj.has( name ) )
+                {
+                    const auto arr = jsonutils::JSON::get_array( _obj, name );
+
+                    if ( arr->size() > 0 )
+                        {
+                            result->set( name, arr );
+                        }
+                }
+        };
+
     Poco::JSON::Object result;
 
-    if ( _obj.has( "accuracy_" ) )
-        {
-            result.set(
-                "accuracy_", jsonutils::JSON::get_array( _obj, "accuracy_" ) );
-        }
+    retrieve_metric( "accuracy_", &result );
 
-    if ( _obj.has( "auc_" ) )
-        {
-            result.set( "auc_", jsonutils::JSON::get_array( _obj, "auc_" ) );
-        }
+    retrieve_metric( "auc_", &result );
 
-    if ( _obj.has( "cross_entropy_" ) )
-        {
-            result.set(
-                "cross_entropy_",
-                jsonutils::JSON::get_array( _obj, "cross_entropy_" ) );
-        }
+    retrieve_metric( "cross_entropy_", &result );
 
-    if ( _obj.has( "mae_" ) )
-        {
-            result.set( "mae_", jsonutils::JSON::get_array( _obj, "mae_" ) );
-        }
+    retrieve_metric( "mae_", &result );
 
-    if ( _obj.has( "rmse_" ) )
-        {
-            result.set( "rmse_", jsonutils::JSON::get_array( _obj, "rmse_" ) );
-        }
+    retrieve_metric( "rmse_", &result );
 
-    if ( _obj.has( "rsquared_" ) )
-        {
-            result.set(
-                "rsquared_", jsonutils::JSON::get_array( _obj, "rsquared_" ) );
-        }
+    retrieve_metric( "rsquared_", &result );
 
     return result;
 }

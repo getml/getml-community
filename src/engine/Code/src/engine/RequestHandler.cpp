@@ -348,6 +348,10 @@ void RequestHandler::run()
                 {
                     pipeline_manager().fit( name, cmd, &socket() );
                 }
+            else if ( type == "Pipeline.get_scores" )
+                {
+                    pipeline_manager().get_scores( name, &socket() );
+                }
             else if ( type == "Pipeline.lift_curve" )
                 {
                     pipeline_manager().lift_curve( name, cmd, &socket() );

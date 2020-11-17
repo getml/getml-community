@@ -90,6 +90,10 @@ class PipelineManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
+    /// Returns the scores from the last time .score(...) was called.
+    void get_scores(
+        const std::string& _name, Poco::Net::StreamSocket* _socket );
+
     /// Sends a command to the monitor to launch a hyperparameter optimization.
     void launch_hyperopt(
         const std::string& _name, Poco::Net::StreamSocket* _socket );

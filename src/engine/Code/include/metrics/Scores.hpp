@@ -65,6 +65,9 @@ class Scores
         return feature_names_;
     }
 
+    /// Trivial (const) accessor.
+    const std::string& set_used() const { return set_used_; }
+
     // ------------------------------------------------------
 
    private:

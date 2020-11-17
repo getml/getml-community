@@ -514,6 +514,29 @@ Poco::JSON::Array::Ptr PipelineManager::get_array(
 
 // ------------------------------------------------------------------------
 
+void PipelineManager::get_scores(
+    const std::string& _name, Poco::Net::StreamSocket* _socket )
+{
+    const auto pipeline = get_pipeline( _name );
+
+    const auto scores = pipeline.scores();
+
+    const auto obj = scores.to_json_obj();
+
+    auto response = metrics::Scorer::get_metrics( obj );
+
+    if ( scores.set_used() != "" )
+        {
+            response.set( "set_used_", scores.set_used() );
+        }
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( JSON::stringify( response ), _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void PipelineManager::lift_curve(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
