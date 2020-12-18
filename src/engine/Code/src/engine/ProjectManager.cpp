@@ -9,11 +9,6 @@ namespace handlers
 void ProjectManager::add_data_frame(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
-    if ( project_directory_ == "" )
-        {
-            throw std::invalid_argument( "You have not set a project!" );
-        }
-
     data_frame_manager_->add_data_frame( _name, _socket );
 
     multithreading::ReadLock read_lock( read_write_lock_ );
@@ -28,11 +23,6 @@ void ProjectManager::add_data_frame_from_csv(
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket* _socket )
 {
-    if ( project_directory_ == "" )
-        {
-            throw std::invalid_argument( "You have not set a project!" );
-        }
-
     const auto append = JSON::get_value<bool>( _cmd, "append_" );
 
     data_frame_manager().from_csv( _name, _cmd, append, _socket );
@@ -49,11 +39,6 @@ void ProjectManager::add_data_frame_from_s3(
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket* _socket )
 {
-    if ( project_directory_ == "" )
-        {
-            throw std::invalid_argument( "You have not set a project!" );
-        }
-
     const auto append = JSON::get_value<bool>( _cmd, "append_" );
 
     data_frame_manager().from_s3( _name, _cmd, append, _socket );
@@ -70,11 +55,6 @@ void ProjectManager::add_data_frame_from_db(
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket* _socket )
 {
-    if ( project_directory_ == "" )
-        {
-            throw std::invalid_argument( "You have not set a project!" );
-        }
-
     const auto append = JSON::get_value<bool>( _cmd, "append_" );
 
     data_frame_manager_->from_db( _name, _cmd, append, _socket );
@@ -91,11 +71,6 @@ void ProjectManager::add_data_frame_from_json(
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket* _socket )
 {
-    if ( project_directory_ == "" )
-        {
-            throw std::invalid_argument( "You have not set a project!" );
-        }
-
     const auto append = JSON::get_value<bool>( _cmd, "append_" );
 
     data_frame_manager_->from_json( _name, _cmd, append, _socket );
@@ -112,11 +87,6 @@ void ProjectManager::add_data_frame_from_query(
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket* _socket )
 {
-    if ( project_directory_ == "" )
-        {
-            throw std::invalid_argument( "You have not set a project!" );
-        }
-
     const auto append = JSON::get_value<bool>( _cmd, "append_" );
 
     data_frame_manager_->from_query( _name, _cmd, append, _socket );
@@ -224,7 +194,7 @@ void ProjectManager::delete_data_frame(
 {
     multithreading::WriteLock write_lock( read_write_lock_ );
 
-    FileHandler::remove( _name, project_directory_, _cmd, &data_frames() );
+    FileHandler::remove( _name, project_directory(), _cmd, &data_frames() );
 
     remove( "dataframe", _name );
 
@@ -240,7 +210,7 @@ void ProjectManager::delete_pipeline(
 {
     multithreading::WriteLock write_lock( read_write_lock_ );
 
-    FileHandler::remove( _name, project_directory_, _cmd, &pipelines() );
+    FileHandler::remove( _name, project_directory(), _cmd, &pipelines() );
 
     remove( "pipeline", _name );
 
@@ -265,29 +235,22 @@ void ProjectManager::delete_project(
                 "empty string!" );
         }
 
-    if ( project_directory_ == options_.all_projects_directory() + _name + "/" )
-        {
-            project_directory_ = "";
-            clear();
-        }
-
     Poco::File( options_.all_projects_directory() + _name + "/" )
         .remove( true );
 
     engine::communication::Sender::send_string( "Success!", _socket );
+
+    if ( project_directory() ==
+         options_.all_projects_directory() + _name + "/" )
+        {
+            exit( 0 );
+        }
 }
 
 // ------------------------------------------------------------------------
 
 void ProjectManager::list_data_frames( Poco::Net::StreamSocket* _socket ) const
 {
-    // ----------------------------------------------------------------
-
-    if ( project_directory_ == "" )
-        {
-            throw std::invalid_argument( "You have not set a project!" );
-        }
-
     // ----------------------------------------------------------------
 
     Poco::JSON::Object obj;
@@ -309,7 +272,8 @@ void ProjectManager::list_data_frames( Poco::Net::StreamSocket* _socket ) const
 
     Poco::DirectoryIterator end;
 
-    for ( Poco::DirectoryIterator it( project_directory_ + "data/" ); it != end;
+    for ( Poco::DirectoryIterator it( project_directory() + "data/" );
+          it != end;
           ++it )
         {
             if ( it->isDirectory() )
@@ -422,103 +386,9 @@ void ProjectManager::list_projects( Poco::Net::StreamSocket* _socket ) const
 
 // ------------------------------------------------------------------------
 
-void ProjectManager::load_all_hyperopts()
-{
-    // --------------------------------------------------------------------
-
-    if ( project_directory_ == "" )
-        {
-            throw std::invalid_argument( "You have not set a project!" );
-        }
-
-    Poco::DirectoryIterator end;
-
-    // --------------------------------------------------------------------
-
-    for ( Poco::DirectoryIterator it( project_directory_ + "hyperopts/" );
-          it != end;
-          ++it )
-        {
-            if ( !it->isDirectory() )
-                {
-                    continue;
-                }
-
-            try
-                {
-                    const auto hyperopt =
-                        hyperparam::Hyperopt( it->path() + "/" );
-
-                    set_hyperopt( it.name(), hyperopt );
-                }
-            catch ( std::exception& e )
-                {
-                    logger().log(
-                        "Error loading " + it.name() + ": " + e.what() );
-                }
-        }
-
-    // --------------------------------------------------------------------
-}
-
-// ------------------------------------------------------------------------
-
-void ProjectManager::load_all_pipelines()
-{
-    // --------------------------------------------------------------------
-
-    if ( project_directory_ == "" )
-        {
-            throw std::invalid_argument( "You have not set a project!" );
-        }
-
-    Poco::DirectoryIterator end;
-
-    // --------------------------------------------------------------------
-
-    for ( Poco::DirectoryIterator it( project_directory_ + "pipelines/" );
-          it != end;
-          ++it )
-        {
-            if ( !it->isDirectory() )
-                {
-                    continue;
-                }
-
-            try
-                {
-                    const auto pipeline = pipelines::Pipeline(
-                        it->path() + "/", fe_tracker_, pred_tracker_ );
-
-                    set_pipeline( it.name(), pipeline );
-
-                    post(
-                        "pipeline",
-                        pipeline.to_monitor(
-                            categories().vector(), it.name() ) );
-                }
-            catch ( std::exception& e )
-                {
-                    logger().log(
-                        "Error loading " + it.name() + ": " + e.what() );
-                }
-        }
-
-    // --------------------------------------------------------------------
-}
-
-// ------------------------------------------------------------------------
-
 void ProjectManager::load_data_frame(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
-    // --------------------------------------------------------------------
-
-    if ( project_directory_ == "" )
-        {
-            throw std::invalid_argument( "You have not set a project!" );
-        }
-
     // --------------------------------------------------------------------
 
     multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
@@ -529,7 +399,7 @@ void ProjectManager::load_data_frame(
         data_frames(),
         categories_,
         join_keys_encoding_,
-        project_directory_,
+        project_directory(),
         _name );
 
     license_checker().check_mem_size( data_frames(), df.nbytes() );
@@ -558,15 +428,26 @@ void ProjectManager::load_data_frame(
 
 // ------------------------------------------------------------------------
 
+void ProjectManager::load_hyperopt(
+    const std::string& _name, Poco::Net::StreamSocket* _socket )
+{
+    const auto path = project_directory() + "hyperopts/" + _name + "/";
+
+    const auto hyperopt = hyperparam::Hyperopt( path );
+
+    set_hyperopt( _name, hyperopt );
+
+    post( "hyperopt", hyperopt.to_monitor() );
+
+    engine::communication::Sender::send_string( "Success!", _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void ProjectManager::load_pipeline(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
-    if ( project_directory_ == "" )
-        {
-            throw std::invalid_argument( "You have not set a project!" );
-        }
-
-    const auto path = project_directory_ + "pipelines/" + _name + "/";
+    const auto path = project_directory() + "pipelines/" + _name + "/";
 
     auto pipeline = pipelines::Pipeline( path, fe_tracker_, pred_tracker_ );
 
@@ -582,13 +463,22 @@ void ProjectManager::load_pipeline(
 void ProjectManager::post(
     const std::string& _what, const Poco::JSON::Object& _obj ) const
 {
-    const auto response = monitor().send_tcp( "post" + _what, _obj );
+    const auto response = monitor().send_tcp(
+        "post" + _what, _obj, communication::Monitor::TIMEOUT_ON );
 
     if ( response != "Success!" )
         {
             throw std::runtime_error( response );
         }
 }
+
+// ------------------------------------------------------------------------
+
+void ProjectManager::project_name( Poco::Net::StreamSocket* _socket ) const
+{
+    communication::Sender::send_string( project_, _socket );
+}
+
 // ------------------------------------------------------------------------
 
 void ProjectManager::refresh( Poco::Net::StreamSocket* _socket ) const
@@ -616,7 +506,8 @@ void ProjectManager::remove(
 
     obj.set( "name", _name );
 
-    const auto response = monitor().send_tcp( "remove" + _what, obj );
+    const auto response = monitor().send_tcp(
+        "remove" + _what, obj, communication::Monitor::TIMEOUT_ON );
 
     if ( response != "Success!" )
         {
@@ -629,19 +520,14 @@ void ProjectManager::remove(
 void ProjectManager::save_data_frame(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
-    if ( project_directory_ == "" )
-        {
-            throw std::invalid_argument( "You have not set a project!" );
-        }
-
     multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
     auto& df = utils::Getter::get( _name, &data_frames() );
 
-    df.save( project_directory_ + "data/", _name );
+    df.save( project_directory() + "data/", _name );
 
     FileHandler::save_encodings(
-        project_directory_, categories(), join_keys_encoding() );
+        project_directory(), categories(), join_keys_encoding() );
 
     communication::Sender::send_string( "Success!", _socket );
 }
@@ -651,16 +537,11 @@ void ProjectManager::save_data_frame(
 void ProjectManager::save_hyperopt(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
-    if ( project_directory_ == "" )
-        {
-            throw std::invalid_argument( "You have not set a project!" );
-        }
-
     multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
     const auto hyperopt = utils::Getter::get( _name, hyperopts() );
 
-    hyperopt.save( project_directory_ + "hyperopts/", _name );
+    hyperopt.save( project_directory() + "hyperopts/", _name );
 
     communication::Sender::send_string( "Success!", _socket );
 }
@@ -670,65 +551,40 @@ void ProjectManager::save_hyperopt(
 void ProjectManager::save_pipeline(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
-    if ( project_directory_ == "" )
-        {
-            throw std::invalid_argument( "You have not set a project!" );
-        }
-
     multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
     const auto pipeline = get_pipeline( _name );
 
-    const auto path = project_directory_ + "pipelines/";
+    const auto path = project_directory() + "pipelines/";
 
     pipeline.save( path, _name );
 
     FileHandler::save_encodings(
-        project_directory_, categories(), containers::Encoding() );
+        project_directory(), categories(), containers::Encoding() );
 
     engine::communication::Sender::send_string( "Success!", _socket );
 }
 
 // ------------------------------------------------------------------------
 
-void ProjectManager::set_project(
-    const std::string& _name, Poco::Net::StreamSocket* _socket )
+void ProjectManager::set_project( const std::string& _project )
 {
-    // Some methods, particularly the hyperparameter optimization,
-    // require us to keep the project fixed while they run.
-    multithreading::WriteLock project_guard( project_lock_ );
-
-    auto absolute_path =
-        handlers::FileHandler::create_project_directory( _name, options_ );
-
-    if ( project_directory_ == absolute_path )
+    if ( _project == "" )
         {
-            engine::communication::Sender::send_string( "Success!", _socket );
-            return;
+            throw std::invalid_argument(
+                "Project name can not be an empty string!" );
         }
 
+    handlers::FileHandler::create_project_directory( project_directory() );
+
     multithreading::WriteLock write_lock( read_write_lock_ );
-
-    project_directory_ = absolute_path;
-
-    auto obj = Poco::JSON::Object();
-
-    obj.set( "name", _name );
-
-    post( "project", obj );
 
     clear();
 
     FileHandler::load_encodings(
-        project_directory_, &categories(), &join_keys_encoding() );
+        project_directory(), &categories(), &join_keys_encoding() );
 
     write_lock.unlock();
-
-    load_all_pipelines();
-
-    load_all_hyperopts();
-
-    engine::communication::Sender::send_string( "Success!", _socket );
 }
 
 // ------------------------------------------------------------------------

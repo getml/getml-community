@@ -37,6 +37,9 @@ void Options::parse_flags( int _argc, char* argv[] )
             bool success =
                 parse_size_t( arg, "engine-port", &( engine_.port_ ) );
 
+            success = success ||
+                      parse_string( arg, "project", &( engine_.project_ ) );
+
             success =
                 success ||
                 parse_size_t( arg, "http-port", &( monitor_.http_port_ ) );

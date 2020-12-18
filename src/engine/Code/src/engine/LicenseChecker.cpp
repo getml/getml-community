@@ -165,7 +165,8 @@ void LicenseChecker::receive_token( const std::string& _caller_id )
 std::pair<std::string, bool> LicenseChecker::send(
     const Poco::JSON::Object& _request )
 {
-    const auto response = monitor_->send_tcp( "gettoken", _request );
+    const auto response = monitor_->send_tcp(
+        "gettoken", _request, communication::Monitor::TIMEOUT_ON );
 
     if ( response.size() == 0 || response[0] != '{' )
         {

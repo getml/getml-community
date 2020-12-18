@@ -6,6 +6,31 @@ namespace handlers
 {
 // ----------------------------------------------------------------------------
 
+DatabaseManager::DatabaseManager(
+    const std::shared_ptr<const communication::Logger>& _logger,
+    const std::shared_ptr<const communication::Monitor>& _monitor,
+    const config::Options& _options )
+    : logger_( _logger ),
+      monitor_( _monitor ),
+      options_( _options ),
+      read_write_lock_( std::make_shared<multithreading::ReadWriteLock>() )
+{
+    connector_map_["default"] =
+        std::make_shared<database::Sqlite3>( database::Sqlite3(
+            options_.project_directory() + "database.db",
+            {"%Y-%m-%dT%H:%M:%s%z",
+             "%Y/%m/%d %H:%M:%S",
+             "%Y-%m-%d %H:%M:%S"} ) );
+
+    post_tables();
+}
+
+// ----------------------------------------------------------------------------
+
+DatabaseManager::~DatabaseManager() = default;
+
+// ----------------------------------------------------------------------------
+
 void DatabaseManager::copy_table(
     const Poco::JSON::Object& _cmd, Poco::Net::StreamSocket* _socket )
 {
@@ -321,7 +346,8 @@ void DatabaseManager::post_tables()
             obj.set( name, jsonutils::JSON::vector_to_array_ptr( tables ) );
         }
 
-    monitor_->send_tcp( "postdatabasetables", obj );
+    monitor_->send_tcp(
+        "postdatabasetables", obj, communication::Monitor::TIMEOUT_ON );
 }
 
 // ----------------------------------------------------------------------------

@@ -42,7 +42,8 @@ void HyperoptManager::launch(
 
     // -------------------------------------------------------
 
-    const auto monitor_socket = monitor().connect();
+    const auto monitor_socket =
+        monitor().connect( communication::Monitor::TIMEOUT_OFF );
 
     const auto cmd_str = monitor().make_cmd( "launchhyperopt", cmd );
 
@@ -70,9 +71,13 @@ void HyperoptManager::launch(
 
     // -------------------------------------------------------
 
+    const auto hyp = hyperparam::Hyperopt( obj );
+
+    post_hyperopt( hyp.to_monitor() );
+
     multithreading::WriteLock write_lock( read_write_lock_ );
 
-    hyperopts().insert_or_assign( _name, hyperparam::Hyperopt( obj ) );
+    hyperopts().insert_or_assign( _name, hyp );
 
     communication::Sender::send_string( "Success!", _socket );
 
@@ -121,6 +126,19 @@ void HyperoptManager::refresh(
 
 // ------------------------------------------------------------------------
 
+void HyperoptManager::post_hyperopt( const Poco::JSON::Object& _obj )
+{
+    const auto response = monitor().send_tcp(
+        "posthyperopt", _obj, communication::Monitor::TIMEOUT_ON );
+
+    if ( response != "Success!" )
+        {
+            throw std::runtime_error( response );
+        }
+}
+
+// ------------------------------------------------------------------------
+
 void HyperoptManager::tune(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
@@ -135,7 +153,8 @@ void HyperoptManager::tune(
 
     // -------------------------------------------------------
 
-    const auto monitor_socket = monitor().connect();
+    const auto monitor_socket =
+        monitor().connect( communication::Monitor::TIMEOUT_OFF );
 
     const auto cmd_str = monitor().make_cmd( "tune", _cmd );
 

@@ -6,7 +6,8 @@ namespace communication
 {
 // ------------------------------------------------------------------------
 
-std::shared_ptr<Poco::Net::StreamSocket> Monitor::connect() const
+std::shared_ptr<Poco::Net::StreamSocket> Monitor::connect(
+    const bool _timeout ) const
 {
     const auto host_and_port =
         "127.0.0.1:" + std::to_string( options_.monitor().tcp_port() );
@@ -14,6 +15,13 @@ std::shared_ptr<Poco::Net::StreamSocket> Monitor::connect() const
     const auto addr = Poco::Net::SocketAddress( host_and_port );
 
     const auto socket = std::make_shared<Poco::Net::StreamSocket>( addr );
+
+    // A 30 second timeout can escape deadlocks.
+    if ( _timeout )
+        {
+            socket->setReceiveTimeout( Poco::Timespan( 30, 0 ) );
+            socket->setSendTimeout( Poco::Timespan( 30, 0 ) );
+        }
 
     return socket;
 }
@@ -36,9 +44,11 @@ std::string Monitor::make_cmd(
 {
     auto cmd = Poco::JSON::Object();
 
-    cmd.set( "type_", _type );
-
     cmd.set( "body_", _body );
+
+    cmd.set( "project_", options_.engine().project_ );
+
+    cmd.set( "type_", _type );
 
     return JSON::stringify( cmd );
 }
@@ -46,11 +56,13 @@ std::string Monitor::make_cmd(
 // ------------------------------------------------------------------------
 
 std::string Monitor::send_tcp(
-    const std::string& _type, const Poco::JSON::Object& _body ) const
+    const std::string& _type,
+    const Poco::JSON::Object& _body,
+    const bool _timeout ) const
 {
     try
         {
-            const auto socket = connect();
+            const auto socket = connect( _timeout );
 
             const auto cmd_str = make_cmd( _type, _body );
 

@@ -12,6 +12,12 @@ class Monitor
     // ------------------------------------------------------------------------
 
    public:
+    static constexpr bool TIMEOUT_ON = true;
+    static constexpr bool TIMEOUT_OFF = false;
+
+    // ------------------------------------------------------------------------
+
+   public:
     Monitor( const engine::config::Options& _options ) : options_( _options )
     {
         std::thread t( shutdown_when_monitor_dies, *this );
@@ -23,7 +29,8 @@ class Monitor
     // ------------------------------------------------------------------------
 
     /// Connects to the TCP port of the monitor.
-    std::shared_ptr<Poco::Net::StreamSocket> connect() const;
+    std::shared_ptr<Poco::Net::StreamSocket> connect(
+        const bool _timeout ) const;
 
     /// For logging errors
     void log( const std::string& _msg ) const;
@@ -36,7 +43,8 @@ class Monitor
     /// Sends a command to the TCP port of the monitor.
     std::string send_tcp(
         const std::string& _type,
-        const Poco::JSON::Object& _body = Poco::JSON::Object() ) const;
+        const Poco::JSON::Object& _body = Poco::JSON::Object(),
+        const bool _timeout = TIMEOUT_ON ) const;
 
     // -----------------------------------------------------------------------
 

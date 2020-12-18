@@ -48,6 +48,9 @@ class HyperoptManager
         const std::shared_ptr<Poco::Net::StreamSocket>& _monitor_socket,
         Poco::Net::StreamSocket* _socket ) const;
 
+    /// Sends the hyperopt object to the monitor.
+    void post_hyperopt( const Poco::JSON::Object& _obj );
+
    private:
     /// Trivial (private) accessor
     std::map<std::string, hyperparam::Hyperopt>& hyperopts()

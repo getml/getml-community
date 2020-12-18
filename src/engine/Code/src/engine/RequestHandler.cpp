@@ -272,6 +272,10 @@ void RequestHandler::run()
                 {
                     hyperopt_manager().launch( name, cmd, &socket() );
                 }
+            else if ( type == "Hyperopt.load" )
+                {
+                    project_manager().load_hyperopt( name, &socket() );
+                }
             else if ( type == "Hyperopt.refresh" )
                 {
                     hyperopt_manager().refresh( name, &socket() );
@@ -365,9 +369,17 @@ void RequestHandler::run()
                     pipeline_manager().precision_recall_curve(
                         name, cmd, &socket() );
                 }
+            else if ( type == "project_name" )
+                {
+                    project_manager().project_name( &socket() );
+                }
             else if ( type == "Pipeline.refresh" )
                 {
                     pipeline_manager().refresh( name, &socket() );
+                }
+            else if ( type == "Pipeline.refresh_all" )
+                {
+                    pipeline_manager().refresh_all( &socket() );
                 }
             else if ( type == "Pipeline.roc_curve" )
                 {
@@ -388,10 +400,6 @@ void RequestHandler::run()
             else if ( type == "Pipeline.transform" )
                 {
                     pipeline_manager().transform( name, cmd, &socket() );
-                }
-            else if ( type == "set_project" )
-                {
-                    project_manager().set_project( name, &socket() );
                 }
             else if ( type == "set_s3_access_key_id" )
                 {

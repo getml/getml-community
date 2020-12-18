@@ -48,15 +48,15 @@ struct MonitorOptions
         if ( proxy_url_ == "" )
             {
                 return "http://localhost:" + std::to_string( http_port() ) +
-                       "/";
+                       "/#/";
             }
 
         if ( proxy_url_.back() == '/' )
             {
-                return proxy_url_;
+                return proxy_url_ + "#/";
             }
 
-        return proxy_url_ + "/";
+        return proxy_url_ + "/#/";
     }
     // ------------------------------------------------------
 

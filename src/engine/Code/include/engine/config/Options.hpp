@@ -76,6 +76,12 @@ class Options
     /// Trivial accessor
     const MonitorOptions& monitor() const { return monitor_; }
 
+    /// Generates the project directory.
+    std::string project_directory() const
+    {
+        return all_projects_directory() + engine().project_ + "/";
+    }
+
     // ------------------------------------------------------
 
    private:

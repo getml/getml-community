@@ -34,6 +34,7 @@ class ProjectManager
         const config::Options& _options,
         const std::shared_ptr<PipelineMapType>& _pipelines,
         const std::shared_ptr<dependency::PredTracker>& _pred_tracker,
+        const std::string& _project,
         const std::shared_ptr<multithreading::ReadWriteLock>& _project_lock,
         const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock )
         : categories_( _categories ),
@@ -49,9 +50,11 @@ class ProjectManager
           options_( _options ),
           pipelines_( _pipelines ),
           pred_tracker_( _pred_tracker ),
+          project_( _project ),
           project_lock_( _project_lock ),
           read_write_lock_( _read_write_lock )
     {
+        set_project( _project );
     }
 
     ~ProjectManager() = default;
@@ -145,9 +148,16 @@ class ProjectManager
     void load_data_frame(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
+    /// Loads a hyperopt
+    void load_hyperopt(
+        const std::string& _name, Poco::Net::StreamSocket* _socket );
+
     /// Loads a pipeline
     void load_pipeline(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
+
+    /// Get the name of the current project.
+    void project_name( Poco::Net::StreamSocket* _socket ) const;
 
     /// Updates the encodings in the client
     void refresh( Poco::Net::StreamSocket* _socket ) const;
@@ -165,14 +175,16 @@ class ProjectManager
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
     /// Sets the current project
-    void set_project(
-        const std::string& _name, Poco::Net::StreamSocket* _socket );
+    void set_project( const std::string& _name );
 
     // ------------------------------------------------------------------------
 
    public:
     /// Trivial accessor
-    const std::string& project_directory() const { return project_directory_; }
+    std::string project_directory() const
+    {
+        return options_.project_directory();
+    }
 
     // ------------------------------------------------------------------------
 
@@ -180,12 +192,6 @@ class ProjectManager
     /// Deletes all pipelines and data frames (from memory only) and clears all
     /// encodings.
     void clear();
-
-    /// Loads all hyperparameter optimization objects.
-    void load_all_hyperopts();
-
-    /// Loads all pipelines.
-    void load_all_pipelines();
 
     /// Loads a JSON object from a file.
     Poco::JSON::Object load_json_obj( const std::string& _fname ) const;
@@ -371,7 +377,7 @@ class ProjectManager
     /// For communication with the monitor
     const std::shared_ptr<const communication::Monitor> monitor_;
 
-    /// Settings for the engine
+    /// Settings for the engine and the monitor
     const config::Options options_;
 
     /// The pipelines currently held in memory
@@ -380,11 +386,11 @@ class ProjectManager
     /// Keeps track of all predictors.
     const std::shared_ptr<dependency::PredTracker> pred_tracker_;
 
+    /// The name of the current project
+    const std::string project_;
+
     /// It is sometimes necessary to prevent us from changing the project.
     const std::shared_ptr<multithreading::ReadWriteLock> project_lock_;
-
-    /// The current project directory
-    std::string project_directory_;
 
     /// For synchronization
     const std::shared_ptr<multithreading::ReadWriteLock>& read_write_lock_;

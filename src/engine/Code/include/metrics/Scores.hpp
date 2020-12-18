@@ -32,6 +32,9 @@ class Scores
     /// Transforms the Scores into a JSON object.
     Poco::JSON::Object to_json_obj() const;
 
+    /// Stores the current state of the metrics in the history
+    void to_history();
+
     // ------------------------------------------------------
 
    public:
@@ -63,6 +66,12 @@ class Scores
     const std::vector<std::string>& feature_names() const
     {
         return feature_names_;
+    }
+
+    /// Trivial accessor
+    const std::vector<Poco::JSON::Object::Ptr>& history() const
+    {
+        return history_;
     }
 
     /// Trivial (const) accessor.
@@ -191,6 +200,24 @@ class Scores
             }
     }
 
+    /// If the 1-dimensional array exists, this updated the corresponding
+    /// vector.
+    void update_1d_vector(
+        const Poco::JSON::Object& _json_obj,
+        const std::string& _name,
+        std::vector<Poco::JSON::Object::Ptr>* _vec ) const
+    {
+        if ( _json_obj.has( _name ) )
+            {
+                const auto arr = jsonutils::JSON::get_array( _json_obj, _name );
+
+                for ( size_t i = 0; i < arr->size(); ++i )
+                    {
+                        _vec->push_back( arr->getObject( i ) );
+                    }
+            }
+    }
+
     /// If the 2-dimensional array exists, this updated the corresponding
     /// vector.
     template <class T>
@@ -316,6 +343,9 @@ class Scores
 
     /// False positive rate.
     std::vector<std::vector<Float>> fpr_;
+
+    /// The history of the scores.
+    std::vector<Poco::JSON::Object::Ptr> history_;
 
     /// Min, max and step_size for feature_densities and average targets.
     std::vector<std::vector<Float>> labels_;

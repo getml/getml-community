@@ -16,22 +16,10 @@ class DatabaseManager
    public:
     DatabaseManager(
         const std::shared_ptr<const communication::Logger>& _logger,
-        const std::shared_ptr<const communication::Monitor>& _monitor )
-        : logger_( _logger ),
-          monitor_( _monitor ),
-          read_write_lock_( std::make_shared<multithreading::ReadWriteLock>() )
-    {
-        connector_map_["default"] =
-            std::make_shared<database::Sqlite3>( database::Sqlite3(
-                "../database.db",
-                { "%Y-%m-%dT%H:%M:%s%z",
-                  "%Y/%m/%d %H:%M:%S",
-                  "%Y-%m-%d %H:%M:%S" } ) );
+        const std::shared_ptr<const communication::Monitor>& _monitor,
+        const config::Options& _options );
 
-        post_tables();
-    }
-
-    ~DatabaseManager() = default;
+    ~DatabaseManager();
 
     // ------------------------------------------------------------------------
 
@@ -189,6 +177,9 @@ class DatabaseManager
 
     /// For communication with the monitor
     const std::shared_ptr<const communication::Monitor> monitor_;
+
+    /// Settings for the engine and the monitor
+    const config::Options options_;
 
     /// Protects the shared_ptr of the connector - the connector might have to
     /// implement its own locking strategy!

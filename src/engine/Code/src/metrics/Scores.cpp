@@ -58,6 +58,8 @@ void Scores::from_json_obj( const Poco::JSON::Object& _json_obj )
 
     update_1d_vector( _json_obj, "feature_names_", &feature_names_ );
 
+    // -------------------------
+
     update_1d_vector( _json_obj, "accuracy_", &accuracy_ );
 
     update_1d_vector( _json_obj, "auc_", &auc_ );
@@ -69,6 +71,10 @@ void Scores::from_json_obj( const Poco::JSON::Object& _json_obj )
     update_1d_vector( _json_obj, "rmse_", &rmse_ );
 
     update_1d_vector( _json_obj, "rsquared_", &rsquared_ );
+
+    // -------------------------
+
+    update_1d_vector( _json_obj, "history_", &history_ );
 
     // -------------------------
 
@@ -172,6 +178,10 @@ Poco::JSON::Object Scores::to_json_obj() const
 
     // -------------------------
 
+    obj.set( "history_", jsonutils::JSON::vector_to_array_ptr( history_ ) );
+
+    // -------------------------
+
     obj.set( "accuracy_curves_", to_2d_array( accuracy_curves() ) );
 
     obj.set( "column_importances_", to_2d_array( column_importances() ) );
@@ -203,6 +213,24 @@ Poco::JSON::Object Scores::to_json_obj() const
     return obj;
 
     // -------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+void Scores::to_history()
+{
+    const auto now = Poco::DateTimeFormatter::format(
+        Poco::DateTime(), Poco::DateTimeFormat::SORTABLE_FORMAT );
+
+    auto entry = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
+
+    *entry = Scorer::get_metrics( to_json_obj() );
+
+    entry->set( "date_time_", now );
+
+    entry->set( "set_used_", set_used_ );
+
+    history_.push_back( entry );
 }
 
 // ----------------------------------------------------------------------------

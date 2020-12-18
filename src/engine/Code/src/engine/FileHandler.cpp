@@ -6,28 +6,16 @@ namespace handlers
 {
 // ------------------------------------------------------------------------
 
-std::string FileHandler::create_project_directory(
-    const std::string& _project_name, const config::Options& _options )
+void FileHandler::create_project_directory(
+    const std::string& _project_directory )
 {
-    if ( _project_name == "" )
-        {
-            throw std::invalid_argument(
-                "Project name can not be an "
-                "empty string!" );
-        }
+    Poco::File( _project_directory ).createDirectories();
 
-    auto project_directory =
-        _options.all_projects_directory() + _project_name + "/";
+    Poco::File( _project_directory + "data/" ).createDirectories();
 
-    Poco::File( project_directory ).createDirectories();
+    Poco::File( _project_directory + "hyperopts/" ).createDirectories();
 
-    Poco::File( project_directory + "data/" ).createDirectories();
-
-    Poco::File( project_directory + "hyperopts/" ).createDirectories();
-
-    Poco::File( project_directory + "pipelines/" ).createDirectories();
-
-    return project_directory;
+    Poco::File( _project_directory + "pipelines/" ).createDirectories();
 }
 
 // ------------------------------------------------------------------------

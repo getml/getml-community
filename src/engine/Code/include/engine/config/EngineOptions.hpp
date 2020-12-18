@@ -32,6 +32,9 @@ struct EngineOptions
     /// The port of the engine
     size_t port_;
 
+    /// The name of the project adressed by this engine
+    std::string project_;
+
     // ------------------------------------------------------
 };
 

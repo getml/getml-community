@@ -40,5 +40,14 @@ void Hyperopt::save( const std::string& _path, const std::string& _name ) const
 }
 
 // ------------------------------------------------------------------------
+
+Poco::JSON::Object Hyperopt::to_monitor() const
+{
+    Poco::JSON::Object monitor;
+    monitor.set( "cmd_", obj() );
+    return monitor;
+}
+
+// ------------------------------------------------------------------------
 }  // namespace hyperparam
 }  // namespace engine

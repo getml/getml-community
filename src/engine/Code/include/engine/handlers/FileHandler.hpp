@@ -11,8 +11,8 @@ struct FileHandler
 {
     /// Creates a project directory, including the subfolders
     /// "data" and "models", if they do not already exist
-    static std::string create_project_directory(
-        const std::string& _project_name, const config::Options& _options );
+    static void create_project_directory(
+        const std::string& _project_directory );
 
     /// Determines the appropriate file ending for ColumnType
     template <class ColumnType>

@@ -2440,6 +2440,8 @@ Poco::JSON::Object Pipeline::score(
 
     scores().from_json_obj( obj );
 
+    scores().to_history();
+
     // ------------------------------------------------
 
     return metrics::Scorer::get_metrics( obj );

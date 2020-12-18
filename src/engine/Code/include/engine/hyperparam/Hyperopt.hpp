@@ -23,6 +23,10 @@ class Hyperopt
     /// Saves the hyperopt object.
     void save( const std::string& _path, const std::string& _name ) const;
 
+    /// Displays the hyperparameter optimization in a form the monitor can
+    /// understand.
+    Poco::JSON::Object to_monitor() const;
+
    public:
     /// Returns the underlying parameters as a JSON object.
     Poco::JSON::Object obj() const { return obj_; }

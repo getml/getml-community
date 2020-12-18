@@ -19,7 +19,7 @@ void Logger::log( const std::string& _msg ) const
 
     const auto cmd_str = monitor_->make_cmd( "log" );
 
-    const auto socket = monitor_->connect();
+    const auto socket = monitor_->connect( communication::Monitor::TIMEOUT_ON );
 
     Sender::send_string( cmd_str, socket.get() );
 

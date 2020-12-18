@@ -114,6 +114,9 @@ class PipelineManager
     /// Refreshes a pipeline in the target language
     void refresh( const std::string& _name, Poco::Net::StreamSocket* _socket );
 
+    /// Refreshes all pipeline in the target language
+    void refresh_all( Poco::Net::StreamSocket* _socket );
+
     /// Writes a JSON representation of the ROC curve into the socket.
     void roc_curve(
         const std::string& _name,
@@ -182,6 +185,9 @@ class PipelineManager
         const Poco::JSON::Object& _scores,
         const std::string& _name,
         const unsigned int _target_num ) const;
+
+    /// Retrieves the scores from the pipeline, adding set_used if available.
+    Poco::JSON::Object get_scores( const pipelines::Pipeline& _pipeline ) const;
 
     /// Posts a pipeline to the monitor.
     void post_pipeline( const Poco::JSON::Object& _obj );

@@ -10,7 +10,8 @@ int main( int argc, char* argv[] )
 
     try
         {
-            Poco::File( options.all_projects_directory() ).createDirectories();
+            engine::handlers::FileHandler::create_project_directory(
+                options.project_directory() );
         }
     catch ( std::exception& e )
         {
@@ -33,7 +34,7 @@ int main( int argc, char* argv[] )
     // -------------------------------------------
     // Instruct the user to log in and wait for the token.
 
-    std::cout << "getML - Automated Machine Learning and Automated Feature"
+    /*std::cout << "getML - Automated Machine Learning and Automated Feature"
               << " Learning for Relational Data and Time Series." << std::endl;
 
     std::cout << "version: " << GETML_VERSION << std::endl << std::endl;
@@ -47,26 +48,15 @@ int main( int argc, char* argv[] )
                  "been launched "
               << "on port " << options.monitor().https_port() << "."
               << std::endl
-              << std::endl;
+              << std::endl;*/
 
-    std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
+    // std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
 
     const auto license_checker =
         std::make_shared<engine::licensing::LicenseChecker>(
             logger, monitor, options );
 
     license_checker->receive_token( "main" );
-
-    // -------------------------------------------
-    // Check whether the port is currently occupied
-
-    const auto response = monitor->send_tcp( "checkengineport" );
-
-    if ( response != "Success!" )
-        {
-            monitor->log( response );
-            exit( 0 );
-        }
 
     // -------------------------------------------
 
@@ -104,7 +94,8 @@ int main( int argc, char* argv[] )
         std::make_shared<multithreading::ReadWriteLock>();
 
     const auto database_manager =
-        std::make_shared<engine::handlers::DatabaseManager>( logger, monitor );
+        std::make_shared<engine::handlers::DatabaseManager>(
+            logger, monitor, options );
 
     const auto data_frame_manager =
         std::make_shared<engine::handlers::DataFrameManager>(
@@ -151,6 +142,7 @@ int main( int argc, char* argv[] )
             options,
             pipelines,
             pred_tracker,
+            options.engine().project_,
             project_lock,
             read_write_lock );
 
@@ -192,10 +184,6 @@ int main( int argc, char* argv[] )
     // -------------------------------------------
 
     engine::handlers::FileHandler::delete_temp_dir();
-
-    // -------------------------------------------
-
-    std::cout << "getML engine successfully shut down." << std::endl;
 
     // -------------------------------------------
 

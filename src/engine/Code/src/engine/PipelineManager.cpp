@@ -76,7 +76,7 @@ void PipelineManager::add_join_keys_to_df(
                 }
 
             col.set_name(
-                helpers::Macros::modify_colnames( { col.name() } ).at( 0 ) );
+                helpers::Macros::modify_colnames( {col.name()} ).at( 0 ) );
 
             _df->add_int_column( col, containers::DataFrame::ROLE_JOIN_KEY );
         }
@@ -144,7 +144,7 @@ void PipelineManager::add_time_stamps_to_df(
                 }
 
             col.set_name(
-                helpers::Macros::modify_colnames( { col.name() } ).at( 0 ) );
+                helpers::Macros::modify_colnames( {col.name()} ).at( 0 ) );
 
             _df->add_float_column(
                 col, containers::DataFrame::ROLE_TIME_STAMP );
@@ -514,12 +514,10 @@ Poco::JSON::Array::Ptr PipelineManager::get_array(
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::get_scores(
-    const std::string& _name, Poco::Net::StreamSocket* _socket )
+Poco::JSON::Object PipelineManager::get_scores(
+    const pipelines::Pipeline& _pipeline ) const
 {
-    const auto pipeline = get_pipeline( _name );
-
-    const auto scores = pipeline.scores();
+    const auto scores = _pipeline.scores();
 
     const auto obj = scores.to_json_obj();
 
@@ -530,9 +528,23 @@ void PipelineManager::get_scores(
             response.set( "set_used_", scores.set_used() );
         }
 
+    response.set( "history_", JSON::vector_to_array_ptr( scores.history() ) );
+
+    return response;
+}
+
+// ------------------------------------------------------------------------
+
+void PipelineManager::get_scores(
+    const std::string& _name, Poco::Net::StreamSocket* _socket )
+{
+    const auto pipeline = get_pipeline( _name );
+
+    const auto scores = get_scores( pipeline );
+
     communication::Sender::send_string( "Success!", _socket );
 
-    communication::Sender::send_string( JSON::stringify( response ), _socket );
+    communication::Sender::send_string( JSON::stringify( scores ), _socket );
 }
 
 // ------------------------------------------------------------------------
@@ -575,7 +587,8 @@ void PipelineManager::lift_curve(
 
 void PipelineManager::post_pipeline( const Poco::JSON::Object& _obj )
 {
-    const auto response = monitor().send_tcp( "postpipeline", _obj );
+    const auto response = monitor().send_tcp(
+        "postpipeline", _obj, communication::Monitor::TIMEOUT_ON );
 
     if ( response != "Success!" )
         {
@@ -713,6 +726,38 @@ void PipelineManager::refresh(
 
 // ------------------------------------------------------------------------
 
+void PipelineManager::refresh_all( Poco::Net::StreamSocket* _socket )
+{
+    Poco::JSON::Object obj;
+
+    Poco::JSON::Array pipelines_arr;
+
+    Poco::JSON::Array scores_arr;
+
+    Poco::JSON::Array targets_arr;
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    for ( const auto& [_, pipe] : pipelines() )
+        {
+            pipelines_arr.add( pipe.obj() );
+            scores_arr.add( get_scores( pipe ) );
+            targets_arr.add( JSON::vector_to_array( pipe.targets() ) );
+        }
+
+    obj.set( "pipelines", pipelines_arr );
+
+    obj.set( "scores", scores_arr );
+
+    obj.set( "targets", targets_arr );
+
+    engine::communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( JSON::stringify( obj ), _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void PipelineManager::roc_curve(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
@@ -804,7 +849,10 @@ void PipelineManager::store_df(
 
     data_frames()[_df->name()] = *_df;
 
-    monitor_->send_tcp( "postdataframe", _df->to_monitor() );
+    monitor_->send_tcp(
+        "postdataframe",
+        _df->to_monitor(),
+        communication::Monitor::TIMEOUT_ON );
 }
 
 // ------------------------------------------------------------------------
