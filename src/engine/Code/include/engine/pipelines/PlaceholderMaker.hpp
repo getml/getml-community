@@ -59,6 +59,11 @@ class PlaceholderMaker
         const std::vector<Float>& _horizon,
         const std::vector<Float>& _memory );
 
+    static std::vector<std::string> make_colnames(
+        const std::string& _tname,
+        const std::string& _alias,
+        const std::vector<std::string>& _old_colnames );
+
    private:
     static bool is_to_many( const std::string& _relationship )
     {

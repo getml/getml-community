@@ -133,9 +133,15 @@ helpers::Placeholder PlaceholderMaker::handle_joined_tables(
             const auto joined_table =
                 make_placeholder( *joined_table_obj, alias, _num_alias );
 
+            const auto joined_name =
+                JSON::get_value<std::string>( *joined_table_obj, "name_" );
+
             append( joined_table.allow_lagged_targets_, &allow_lagged_targets );
 
-            append( joined_table.join_keys_used_, &join_keys_used );
+            const auto modified_jk = make_colnames(
+                joined_name, alias, joined_table.join_keys_used_ );
+
+            append( modified_jk, &join_keys_used );
 
             append( joined_table.other_join_keys_used_, &other_join_keys_used );
 
@@ -144,7 +150,10 @@ helpers::Placeholder PlaceholderMaker::handle_joined_tables(
             append(
                 joined_table.other_time_stamps_used_, &other_time_stamps_used );
 
-            append( joined_table.time_stamps_used_, &time_stamps_used );
+            const auto modified_ts = make_colnames(
+                joined_name, alias, joined_table.time_stamps_used_ );
+
+            append( modified_ts, &time_stamps_used );
 
             append(
                 joined_table.upper_time_stamps_used_, &upper_time_stamps_used );
@@ -212,6 +221,27 @@ std::vector<std::string> PlaceholderMaker::handle_memory(
         }
 
     return upper_time_stamps_used;
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<std::string> PlaceholderMaker::make_colnames(
+    const std::string& _tname,
+    const std::string& _alias,
+    const std::vector<std::string>& _old_colnames )
+{
+    std::vector<std::string> names;
+
+    for ( const auto& colname : _old_colnames )
+        {
+            const auto name = colname == "" ? std::string( "" )
+                                            : helpers::Macros::make_colname(
+                                                  _tname, _alias, colname );
+
+            names.push_back( name );
+        }
+
+    return names;
 }
 
 // ----------------------------------------------------------------------------

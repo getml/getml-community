@@ -872,7 +872,16 @@ std::string DataModelChecker::modify_join_key_name(
 
     for ( size_t i = 0; i < names.size(); ++i )
         {
-            modified += "'" + names.at( i ) + "'";
+            const bool has_column =
+                ( names.at( i ).find( helpers::Macros::column() ) !=
+                  std::string::npos );
+
+            const auto name =
+                has_column ? helpers::Macros::get_param(
+                                 names.at( i ), helpers::Macros::column() )
+                           : names.at( i );
+
+            modified += "'" + name + "'";
 
             if ( i != names.size() - 1 )
                 {
