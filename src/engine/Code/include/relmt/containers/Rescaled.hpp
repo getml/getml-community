@@ -39,6 +39,10 @@ class Rescaled
     const Float* row( size_t _i ) const
     {
         assert_true( _i < rows_map().size() );
+        if ( ncols_ == 0 )
+            {
+                return nullptr;
+            }
         assert_true( rows_map()[_i] * ncols_ < data_->size() );
         return data_->data() + rows_map()[_i] * ncols_;
     }
