@@ -2555,7 +2555,8 @@ Poco::JSON::Object Pipeline::to_monitor(
 
 std::string Pipeline::to_sql(
     const std::shared_ptr<const std::vector<strings::String>>& _categories,
-    const bool _targets ) const
+    const bool _targets,
+    const bool _subfeatures ) const
 {
     assert_true(
         feature_learners_.size() == predictor_impl().autofeatures().size() );
@@ -2570,8 +2571,8 @@ std::string Pipeline::to_sql(
 
             assert_true( fe );
 
-            const auto vec =
-                fe->to_sql( _categories, std::to_string( i + 1 ) + "_", true );
+            const auto vec = fe->to_sql(
+                _categories, std::to_string( i + 1 ) + "_", _subfeatures );
 
             assert_true( vec.size() >= fe->num_features() );
 

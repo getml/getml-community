@@ -998,11 +998,14 @@ void PipelineManager::to_sql(
 {
     const auto targets = JSON::get_value<bool>( _cmd, "targets_" );
 
+    const auto subfeatures = JSON::get_value<bool>( _cmd, "subfeatures_" );
+
     multithreading::ReadLock read_lock( read_write_lock_ );
 
     const auto pipeline = get_pipeline( _name );
 
-    const auto sql = pipeline.to_sql( categories().vector(), targets );
+    const auto sql =
+        pipeline.to_sql( categories().vector(), targets, subfeatures );
 
     communication::Sender::send_string( "Found!", _socket );
 
