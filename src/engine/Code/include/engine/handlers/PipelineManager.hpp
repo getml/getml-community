@@ -90,10 +90,6 @@ class PipelineManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
-    /// Returns the scores from the last time .score(...) was called.
-    void get_scores(
-        const std::string& _name, Poco::Net::StreamSocket* _socket );
-
     /// Sends a command to the monitor to launch a hyperparameter optimization.
     void launch_hyperopt(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
@@ -122,9 +118,6 @@ class PipelineManager
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
-
-    /// Writes a pipeline's targets into the socket.
-    void targets( const std::string& _name, Poco::Net::StreamSocket* _socket );
 
     /// Transform a pipeline to a JSON string
     void to_json( const std::string& _name, Poco::Net::StreamSocket* _socket );
@@ -202,6 +195,10 @@ class PipelineManager
         const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
             _data_frames,
         Poco::Net::StreamSocket* _socket );
+
+    /// Returns the data needed for refreshing a single pipeline.
+    Poco::JSON::Object refresh_pipeline(
+        const pipelines::Pipeline& _pipeline ) const;
 
     /// Under some circumstances, we might want to send data to the client, such
     /// as targets from the population or the results of a transform call.

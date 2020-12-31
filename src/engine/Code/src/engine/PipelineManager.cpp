@@ -76,7 +76,7 @@ void PipelineManager::add_join_keys_to_df(
                 }
 
             col.set_name(
-                helpers::Macros::modify_colnames( {col.name()} ).at( 0 ) );
+                helpers::Macros::modify_colnames( { col.name() } ).at( 0 ) );
 
             _df->add_int_column( col, containers::DataFrame::ROLE_JOIN_KEY );
         }
@@ -144,7 +144,7 @@ void PipelineManager::add_time_stamps_to_df(
                 }
 
             col.set_name(
-                helpers::Macros::modify_colnames( {col.name()} ).at( 0 ) );
+                helpers::Macros::modify_colnames( { col.name() } ).at( 0 ) );
 
             _df->add_float_column(
                 col, containers::DataFrame::ROLE_TIME_STAMP );
@@ -535,20 +535,6 @@ Poco::JSON::Object PipelineManager::get_scores(
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::get_scores(
-    const std::string& _name, Poco::Net::StreamSocket* _socket )
-{
-    const auto pipeline = get_pipeline( _name );
-
-    const auto scores = get_scores( pipeline );
-
-    communication::Sender::send_string( "Success!", _socket );
-
-    communication::Sender::send_string( JSON::stringify( scores ), _socket );
-}
-
-// ------------------------------------------------------------------------
-
 void PipelineManager::lift_curve(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
@@ -719,7 +705,7 @@ void PipelineManager::refresh(
 {
     const auto pipeline = get_pipeline( _name );
 
-    const auto obj = pipeline.obj();
+    const auto obj = refresh_pipeline( pipeline );
 
     communication::Sender::send_string( JSON::stringify( obj ), _socket );
 }
@@ -740,20 +726,30 @@ void PipelineManager::refresh_all( Poco::Net::StreamSocket* _socket )
 
     for ( const auto& [_, pipe] : pipelines() )
         {
-            pipelines_arr.add( pipe.obj() );
-            scores_arr.add( get_scores( pipe ) );
-            targets_arr.add( JSON::vector_to_array( pipe.targets() ) );
+            pipelines_arr.add( refresh_pipeline( pipe ) );
         }
 
     obj.set( "pipelines", pipelines_arr );
 
-    obj.set( "scores", scores_arr );
-
-    obj.set( "targets", targets_arr );
-
     engine::communication::Sender::send_string( "Success!", _socket );
 
     communication::Sender::send_string( JSON::stringify( obj ), _socket );
+}
+
+// ------------------------------------------------------------------------
+
+Poco::JSON::Object PipelineManager::refresh_pipeline(
+    const pipelines::Pipeline& _pipeline ) const
+{
+    Poco::JSON::Object obj;
+
+    obj.set( "obj", _pipeline.obj() );
+
+    obj.set( "scores", get_scores( _pipeline ) );
+
+    obj.set( "targets", JSON::vector_to_array( _pipeline.targets() ) );
+
+    return obj;
 }
 
 // ------------------------------------------------------------------------
@@ -853,30 +849,6 @@ void PipelineManager::store_df(
         "postdataframe",
         _df->to_monitor(),
         communication::Monitor::TIMEOUT_ON );
-}
-
-// ------------------------------------------------------------------------
-
-void PipelineManager::targets(
-    const std::string& _name, Poco::Net::StreamSocket* _socket )
-{
-    // -------------------------------------------------------
-
-    const auto pipeline = get_pipeline( _name );
-
-    // -------------------------------------------------------
-
-    Poco::JSON::Object response;
-
-    response.set( "targets_", JSON::vector_to_array( pipeline.targets() ) );
-
-    // -------------------------------------------------------
-
-    communication::Sender::send_string( "Success!", _socket );
-
-    communication::Sender::send_string( JSON::stringify( response ), _socket );
-
-    // -------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------

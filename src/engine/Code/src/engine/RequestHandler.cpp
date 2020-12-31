@@ -352,10 +352,6 @@ void RequestHandler::run()
                 {
                     pipeline_manager().fit( name, cmd, &socket() );
                 }
-            else if ( type == "Pipeline.get_scores" )
-                {
-                    pipeline_manager().get_scores( name, &socket() );
-                }
             else if ( type == "Pipeline.lift_curve" )
                 {
                     pipeline_manager().lift_curve( name, cmd, &socket() );
@@ -392,10 +388,6 @@ void RequestHandler::run()
             else if ( type == "Pipeline.to_sql" )
                 {
                     pipeline_manager().to_sql( name, cmd, &socket() );
-                }
-            else if ( type == "Pipeline.targets" )
-                {
-                    pipeline_manager().targets( name, &socket() );
                 }
             else if ( type == "Pipeline.transform" )
                 {
