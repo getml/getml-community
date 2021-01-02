@@ -969,6 +969,27 @@ void Pipeline::fit(
     scores().from_json_obj( feature_names_as_obj() );
 
     // -------------------------------------------------------------------------
+
+    const bool score = predictors_.size() > 0 &&
+                       predictors_.at( 0 ).size() > 0 && _cmd.has( "score_" ) &&
+                       JSON::get_value<bool>( _cmd, "score_" );
+
+    if ( score )
+        {
+            score_after_fitting(
+                _cmd,
+                _data_frames,
+                _data_frame_tracker,
+                _logger,
+                population_df,
+                peripheral_dfs,
+                fs_fingerprints(),
+                predictor_impl(),
+                autofeatures,
+                _socket );
+        }
+
+    // -------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -1086,7 +1107,7 @@ void Pipeline::fit_predictors(
         {
             const auto target_col = _population_df.target( t ).data_ptr();
 
-            for ( auto& p : ( *_predictors )[t] )
+            for ( auto& p : _predictors->at( t ) )
                 {
                     assert_true( p );
 
@@ -1766,7 +1787,12 @@ Pipeline::make_features(
 
     containers::Features autofeatures;
 
-    if ( _autofeatures && _autofeatures->size() != 0 )
+    if ( _autofeatures &&
+         _autofeatures->size() == _predictor_impl.num_autofeatures() )
+        {
+            autofeatures = *_autofeatures;
+        }
+    else if ( _autofeatures && _autofeatures->size() != 0 )
         {
             autofeatures =
                 select_autofeatures( *_autofeatures, _predictor_impl );
@@ -2378,28 +2404,20 @@ void Pipeline::save_preprocessors( const Poco::TemporaryFile& _tfile ) const
 // ----------------------------------------------------------------------------
 
 Poco::JSON::Object Pipeline::score(
-    const Poco::JSON::Object& _cmd,
-    const std::map<std::string, containers::DataFrame>& _data_frames,
+    const containers::DataFrame& _population_df,
+    const std::string& _population_name,
     const containers::Features& _yhat )
 {
     // ------------------------------------------------
-    // Get population table.
-
-    const auto population_name =
-        JSON::get_value<std::string>( _cmd, "population_name_" );
-
-    const auto population_df =
-        utils::Getter::get( population_name, _data_frames );
 
     containers::Features y;
 
-    for ( size_t i = 0; i < population_df.num_targets(); ++i )
+    for ( size_t i = 0; i < _population_df.num_targets(); ++i )
         {
-            y.push_back( population_df.target( i ).data_ptr() );
+            y.push_back( _population_df.target( i ).data_ptr() );
         }
 
     // ------------------------------------------------
-    // Make sure input is plausible
 
     if ( _yhat.size() != y.size() )
         {
@@ -2430,13 +2448,12 @@ Poco::JSON::Object Pipeline::score(
         }
 
     // ------------------------------------------------
-    // Calculate the score
 
     debug_log( "Calculating score..." );
 
     auto obj = metrics::Scorer::score( is_classification(), _yhat, y );
 
-    obj.set( "set_used_", population_name );
+    obj.set( "set_used_", _population_name );
 
     scores().from_json_obj( obj );
 
@@ -2447,6 +2464,44 @@ Poco::JSON::Object Pipeline::score(
     return metrics::Scorer::get_metrics( obj );
 
     // ------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+void Pipeline::score_after_fitting(
+    const Poco::JSON::Object& _cmd,
+    const std::map<std::string, containers::DataFrame>& _data_frames,
+    const dependency::DataFrameTracker& _data_frame_tracker,
+    const std::shared_ptr<const communication::Logger>& _logger,
+    const containers::DataFrame& _population_df,
+    const std::vector<containers::DataFrame>& _peripheral_dfs,
+    const std::vector<Poco::JSON::Object::Ptr>& _dependencies,
+    const predictors::PredictorImpl& _predictor_impl,
+    const containers::Features& _autofeatures,
+    Poco::Net::StreamSocket* _socket )
+{
+    auto [numerical_features, categorical_features, _] = make_features(
+        _cmd,
+        _data_frames,
+        _data_frame_tracker,
+        _logger,
+        _population_df,
+        _peripheral_dfs,
+        _dependencies,
+        _predictor_impl,
+        _autofeatures,
+        _socket );
+
+    categorical_features =
+        _predictor_impl.transform_encodings( categorical_features );
+
+    const auto yhat =
+        generate_predictions( categorical_features, numerical_features );
+
+    const auto population_name =
+        JSON::get_value<std::string>( _cmd, "population_name_" );
+
+    score( _population_df, population_name, yhat );
 }
 
 // ----------------------------------------------------------------------------

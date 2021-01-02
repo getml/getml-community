@@ -67,8 +67,8 @@ class Pipeline
 
     /// Score the pipeline.
     Poco::JSON::Object score(
-        const Poco::JSON::Object& _cmd,
-        const std::map<std::string, containers::DataFrame>& _data_frames,
+        const containers::DataFrame& _population_df,
+        const std::string& _population_name,
         const containers::Features& _yhat );
 
     /// Generate features and predictions.
@@ -468,6 +468,19 @@ class Pipeline
 
     /// Saves the preprocessors.
     void save_preprocessors( const Poco::TemporaryFile& _tfile ) const;
+
+    /// Conducts in-sample scoring after the pipeline has been fitted.
+    void score_after_fitting(
+        const Poco::JSON::Object& _cmd,
+        const std::map<std::string, containers::DataFrame>& _data_frames,
+        const dependency::DataFrameTracker& _data_frame_tracker,
+        const std::shared_ptr<const communication::Logger>& _logger,
+        const containers::DataFrame& _population_df,
+        const std::vector<containers::DataFrame>& _peripheral_dfs,
+        const std::vector<Poco::JSON::Object::Ptr>& _dependencies,
+        const predictors::PredictorImpl& _predictor_impl,
+        const containers::Features& _autofeatures,
+        Poco::Net::StreamSocket* _socket );
 
     /// Selects the autofeatures that are needed for the prediction.
     containers::Features select_autofeatures(

@@ -76,7 +76,7 @@ void PipelineManager::add_join_keys_to_df(
                 }
 
             col.set_name(
-                helpers::Macros::modify_colnames( { col.name() } ).at( 0 ) );
+                helpers::Macros::modify_colnames( {col.name()} ).at( 0 ) );
 
             _df->add_int_column( col, containers::DataFrame::ROLE_JOIN_KEY );
         }
@@ -144,7 +144,7 @@ void PipelineManager::add_time_stamps_to_df(
                 }
 
             col.set_name(
-                helpers::Macros::modify_colnames( { col.name() } ).at( 0 ) );
+                helpers::Macros::modify_colnames( {col.name()} ).at( 0 ) );
 
             _df->add_float_column(
                 col, containers::DataFrame::ROLE_TIME_STAMP );
@@ -799,7 +799,16 @@ void PipelineManager::score(
 {
     // -------------------------------------------------------
 
-    auto scores = _pipeline->score( _cmd, _data_frames, _yhat );
+    const auto population_name =
+        JSON::get_value<std::string>( _cmd, "population_name_" );
+
+    const auto population_df =
+        utils::Getter::get( population_name, _data_frames );
+
+    // -------------------------------------------------------
+
+    const auto scores =
+        _pipeline->score( population_df, population_name, _yhat );
 
     communication::Sender::send_string( "Success!", _socket );
 
