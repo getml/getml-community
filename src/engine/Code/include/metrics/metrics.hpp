@@ -10,6 +10,10 @@
 #include <numeric>
 #include <unordered_map>
 
+#include <Poco/DateTime.h>
+#include <Poco/DateTimeFormatter.h>
+#include <Poco/Timezone.h>
+
 #include "jsonutils/jsonutils.hpp"
 #include "multithreading/multithreading.hpp"
 #include "strings/strings.hpp"

@@ -220,7 +220,7 @@ Poco::JSON::Object Scores::to_json_obj() const
 void Scores::to_history()
 {
     const auto now = Poco::DateTimeFormatter::format(
-        Poco::DateTime(), Poco::DateTimeFormat::SORTABLE_FORMAT );
+        Poco::LocalDateTime(), Poco::DateTimeFormat::SORTABLE_FORMAT );
 
     auto entry = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
 
