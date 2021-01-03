@@ -36,6 +36,18 @@ class Parser
                 if ( trimmed.find_first_not_of( "0123456789.e-+" ) !=
                      std::string::npos )
                     {
+                        if ( trimmed == "true" || trimmed == "TRUE" ||
+                             trimmed == "True" )
+                            {
+                                return std::pair<Float, bool>( 1.0, true );
+                            }
+
+                        if ( trimmed == "false" || trimmed == "FALSE" ||
+                             trimmed == "False" )
+                            {
+                                return std::pair<Float, bool>( 0.0, true );
+                            }
+
                         return std::pair<Float, bool>( 0.0, false );
                     }
 
@@ -60,6 +72,18 @@ class Parser
 
                 if ( std::to_string( val ) != trimmed )
                     {
+                        if ( trimmed == "true" || trimmed == "TRUE" ||
+                             trimmed == "True" )
+                            {
+                                return std::pair<Int, bool>( 1, true );
+                            }
+
+                        if ( trimmed == "false" || trimmed == "FALSE" ||
+                             trimmed == "False" )
+                            {
+                                return std::pair<Int, bool>( 0, true );
+                            }
+
                         return std::pair<Int, bool>( 0, false );
                     }
 
