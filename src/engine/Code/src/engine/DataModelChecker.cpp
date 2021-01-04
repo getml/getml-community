@@ -138,13 +138,6 @@ void DataModelChecker::check_categorical_column(
 
     // --------------------------------------------------------------------------
 
-    if ( num_distinct == 2.0 && !is_comparison_only )
-        {
-            warn_binary( _col.name(), _df_name, _warner );
-        }
-
-    // --------------------------------------------------------------------------
-
     if ( num_distinct > 1000.0 && !is_comparison_only )
         {
             warn_too_many_unique(
@@ -1033,31 +1026,6 @@ void DataModelChecker::warn_all_equal(
         " or using it for "
         "comparison only (you can do the latter by setting a unit "
         "that contains 'comparison only')." );
-}
-
-// ------------------------------------------------------------------------
-
-void DataModelChecker::warn_binary(
-    const std::string& _colname,
-    const std::string& _df_name,
-    communication::Warner* _warner )
-{
-    const auto colname = modify_colname( _colname );
-
-    const auto df_name = modify_df_name( _df_name );
-
-    _warner->add(
-        binary_column() + "Column '" + colname + "' in " + df_name +
-        " has only two unique values. "
-        "You should consider redefining it as a numerical column. "
-        "This makes it possible to apply aggregations such as AVG or SUM, "
-        "which cannot be applied to categorical columns. "
-        "You can redefine it as a numerical column like this:\n"
-        "df.add(df[\"" +
-        colname + "\"] == 'some_value', \"" + colname +
-        "_is_some_value\", getml.data.roles.numerical)\n"
-        "df.set_role(\"" +
-        colname + "\", getml.data.roles.unused_string)" );
 }
 
 // ------------------------------------------------------------------------

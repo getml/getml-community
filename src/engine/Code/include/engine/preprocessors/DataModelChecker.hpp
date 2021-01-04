@@ -152,12 +152,6 @@ class DataModelChecker
         const std::string& _df_name,
         communication::Warner* _warner );
 
-    /// Adds a warning for categorical columns with only two unique values.
-    static void warn_binary(
-        const std::string& _colname,
-        const std::string& _df_name,
-        communication::Warner* _warner );
-
     /// Adds a warning that a data frame is empty.
     static void warn_is_empty(
         const std::string& _df_name, communication::Warner* _warner );
@@ -246,9 +240,6 @@ class DataModelChecker
     // -------------------------------------------------------------------------
 
    private:
-    /// Standard header for binary column.
-    static std::string binary_column() { return info() + "[BINARY COLUMN]: "; }
-
     /// Standard header for a column that should be unused.
     static std::string column_should_be_unused()
     {
