@@ -970,9 +970,7 @@ void Pipeline::fit(
 
     // -------------------------------------------------------------------------
 
-    const bool score = predictors_.size() > 0 &&
-                       predictors_.at( 0 ).size() > 0 && _cmd.has( "score_" ) &&
-                       JSON::get_value<bool>( _cmd, "score_" );
+    const bool score = predictors_.size() > 0 && predictors_.at( 0 ).size() > 0;
 
     if ( score )
         {
