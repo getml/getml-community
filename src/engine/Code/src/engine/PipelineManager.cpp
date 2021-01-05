@@ -718,10 +718,6 @@ void PipelineManager::refresh_all( Poco::Net::StreamSocket* _socket )
 
     Poco::JSON::Array pipelines_arr;
 
-    Poco::JSON::Array scores_arr;
-
-    Poco::JSON::Array targets_arr;
-
     multithreading::ReadLock read_lock( read_write_lock_ );
 
     for ( const auto& [_, pipe] : pipelines() )
