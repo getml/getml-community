@@ -154,6 +154,7 @@ std::string SQLMaker::condition_smaller(
             case enums::DataUsed::x_popul_discrete:
             case enums::DataUsed::x_perip_numerical:
             case enums::DataUsed::x_popul_numerical:
+            case enums::DataUsed::x_subfeature:
                 {
                     const auto name = get_name(
                         _feature_prefix,
