@@ -604,18 +604,10 @@ void XGBoostPredictor::set_hyperparameters(
     XGBoosterSetParam( *_handle, "nthread", std::to_string( nthread ).c_str() );
 
     // XGBoost has deprecated reg::linear, but we will continue to support it.
-    // Strangely enough, its exactly the other way around for windows.
-#if ( defined( _WIN32 ) || defined( _WIN64 ) )
-    if ( hyperparams_.objective_ == "reg:squarederror" )
-        {
-            XGBoosterSetParam( *_handle, "objective", "reg:linear" );
-        }
-#else
     if ( hyperparams_.objective_ == "reg:linear" )
         {
             XGBoosterSetParam( *_handle, "objective", "reg:squarederror" );
         }
-#endif
     else
         {
             XGBoosterSetParam(
