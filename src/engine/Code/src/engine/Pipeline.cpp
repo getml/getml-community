@@ -1275,6 +1275,8 @@ Pipeline::init_feature_learners(
                 featurelearners::FeatureLearnerParser::parse(
                     *ptr, placeholder, peripheral, _dependencies );
 
+            assert_true( new_feature_learner );
+
             // --------------------------------------------------------------
 
             if ( new_feature_learner->supports_multiple_targets() )

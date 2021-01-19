@@ -7,16 +7,7 @@ namespace utils
 {
 // ----------------------------------------------------------------------------
 
-struct NullChecker
-{
-    /// Checks whether a string is on the list of strings interpreted as NULL.
-    static bool is_null( const strings::String& _val )
-    {
-        return (
-            _val == "" || _val == "nan" || _val == "NaN" || _val == "NA" ||
-            _val == "NULL" || _val == "none" || _val == "None" );
-    }
-};
+typedef typename helpers::NullChecker NullChecker;
 
 // ----------------------------------------------------------------------------
 }  // namespace utils

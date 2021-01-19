@@ -943,6 +943,12 @@ std::string FeatureLearner<FeatureLearnerType>::type() const
 {
     // ----------------------------------------------------------------------
 
+    constexpr bool is_dfs = std::
+        is_same<FeatureLearnerType, dfs::algorithm::DeepFeatureSynthesis>();
+
+    constexpr bool is_dfs_time_series =
+        std::is_same<FeatureLearnerType, ts::DFSTimeSeries>();
+
     constexpr bool is_multirel = std::
         is_same<FeatureLearnerType, multirel::ensemble::DecisionTreeEnsemble>();
 
@@ -962,6 +968,24 @@ std::string FeatureLearner<FeatureLearnerType>::type() const
         std::is_same<FeatureLearnerType, ts::RelMTTimeSeries>();
 
     // ----------------------------------------------------------------------
+
+    constexpr bool unknown_feature_learner =
+        !is_dfs && !is_dfs_time_series && !is_multirel && !is_multirel_ts &&
+        !is_relboost && !is_relboost_ts && !is_relmt && !is_relmt_ts;
+
+    static_assert( !unknown_feature_learner, "Unknown feature learner!" );
+
+    // ----------------------------------------------------------------------
+
+    if constexpr ( is_dfs )
+        {
+            return AbstractFeatureLearner::DFS_MODEL;
+        }
+
+    if constexpr ( is_dfs_time_series )
+        {
+            return AbstractFeatureLearner::DFS_TIME_SERIES;
+        }
 
     if constexpr ( is_multirel )
         {

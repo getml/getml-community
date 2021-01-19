@@ -1,0 +1,9 @@
+set(
+    DFS_OBJ 
+    ${DFS_SOURCE_DIRECTORY}/AbstractFeature.cpp
+    ${DFS_SOURCE_DIRECTORY}/Aggregator.cpp
+    ${DFS_SOURCE_DIRECTORY}/DeepFeatureSynthesis.cpp
+    ${DFS_SOURCE_DIRECTORY}/Hyperparameters.cpp
+    ${DFS_SOURCE_DIRECTORY}/SQLMaker.cpp
+)
+

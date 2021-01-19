@@ -269,7 +269,6 @@ void DecisionTreeEnsemble::clean_up()
 std::map<helpers::ColumnDescription, Float>
 DecisionTreeEnsemble::column_importances(
     const std::vector<Float> &_importance_factors ) const
-
 {
     auto importance_maker = utils::ImportanceMaker();
 
