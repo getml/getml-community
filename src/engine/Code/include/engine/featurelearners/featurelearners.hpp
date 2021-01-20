@@ -30,6 +30,8 @@
 
 #include "engine/communication/communication.hpp"
 
+#include "dfs/algorithm/algorithm.hpp"
+
 #include "multirel/ensemble/ensemble.hpp"
 
 #include "relboost/ensemble/ensemble.hpp"

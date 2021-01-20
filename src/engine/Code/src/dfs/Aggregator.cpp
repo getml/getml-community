@@ -1,0 +1,263 @@
+#include "dfs/algorithm/algorithm.hpp"
+
+namespace dfs
+{
+namespace algorithm
+{
+// ----------------------------------------------------------------------------
+
+Float Aggregator::apply_aggregation(
+    const containers::DataFrame &_population,
+    const containers::DataFrame &_peripheral,
+    const containers::Features &_subfeatures,
+    const std::vector<containers::Match> &_matches,
+    const containers::AbstractFeature &_abstract_feature )
+{
+    switch ( _abstract_feature.data_used_ )
+        {
+            case enums::DataUsed::categorical:
+                return apply_categorical(
+                    _peripheral, _matches, _abstract_feature );
+
+            case enums::DataUsed::discrete:
+                return apply_discrete(
+                    _peripheral, _matches, _abstract_feature );
+
+            case enums::DataUsed::not_applicable:
+                return apply_not_applicable( _matches, _abstract_feature );
+
+            case enums::DataUsed::numerical:
+                return apply_numerical(
+                    _peripheral, _matches, _abstract_feature );
+
+            case enums::DataUsed::same_units_categorical:
+                return apply_same_units_categorical(
+                    _population, _peripheral, _matches, _abstract_feature );
+
+            case enums::DataUsed::same_units_discrete:
+            case enums::DataUsed::same_units_discrete_ts:
+                return apply_same_units_discrete(
+                    _population, _peripheral, _matches, _abstract_feature );
+
+            case enums::DataUsed::same_units_numerical:
+            case enums::DataUsed::same_units_numerical_ts:
+                return apply_same_units_numerical(
+                    _population, _peripheral, _matches, _abstract_feature );
+
+            case enums::DataUsed::subfeatures:
+                return apply_subfeatures(
+                    _subfeatures, _matches, _abstract_feature );
+
+            default:
+                assert_true( false && "Unknown data_used" );
+                return 0.0;
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+Float Aggregator::apply_categorical(
+    const containers::DataFrame &_peripheral,
+    const std::vector<containers::Match> &_matches,
+    const containers::AbstractFeature &_abstract_feature )
+{
+    assert_true(
+        _abstract_feature.input_col_ < _peripheral.num_categoricals() );
+
+    const auto &col =
+        _peripheral.categorical_col( _abstract_feature.input_col_ );
+
+    const auto extract_value =
+        [&col]( const containers::Match &match ) -> Float {
+        return col[match.ix_input];
+    };
+
+    const auto is_non_null = []( Int val ) { return val >= 0; };
+
+    auto range = _matches | std::views::transform( extract_value ) |
+                 std::views::filter( is_non_null );
+
+    return aggregate_categorical_range(
+        range.begin(), range.end(), _abstract_feature.aggregation_ );
+}
+
+// ----------------------------------------------------------------------------
+
+Float Aggregator::apply_discrete(
+    const containers::DataFrame &_peripheral,
+    const std::vector<containers::Match> &_matches,
+    const containers::AbstractFeature &_abstract_feature )
+{
+    assert_true( _abstract_feature.input_col_ < _peripheral.num_discretes() );
+
+    const auto &col = _peripheral.discrete_col( _abstract_feature.input_col_ );
+
+    const auto extract_value =
+        [&col]( const containers::Match &match ) -> Float {
+        return col[match.ix_input];
+    };
+
+    auto range = _matches | std::views::transform( extract_value ) |
+                 std::views::filter( is_not_nan_or_inf );
+
+    return aggregate_numerical_range(
+        range.begin(), range.end(), _abstract_feature.aggregation_ );
+}
+
+// ----------------------------------------------------------------------------
+
+Float Aggregator::apply_not_applicable(
+    const std::vector<containers::Match> &_matches,
+    const containers::AbstractFeature &_abstract_feature )
+{
+    assert_true( _abstract_feature.aggregation_ == enums::Aggregation::count );
+
+    return static_cast<Float>(
+        std::distance( _matches.begin(), _matches.end() ) );
+}
+
+// ----------------------------------------------------------------------------
+
+Float Aggregator::apply_numerical(
+    const containers::DataFrame &_peripheral,
+    const std::vector<containers::Match> &_matches,
+    const containers::AbstractFeature &_abstract_feature )
+{
+    assert_true( _abstract_feature.input_col_ < _peripheral.num_numericals() );
+
+    const auto &col = _peripheral.numerical_col( _abstract_feature.input_col_ );
+
+    const auto extract_value =
+        [&col]( const containers::Match &match ) -> Float {
+        return col[match.ix_input];
+    };
+
+    auto range = _matches | std::views::transform( extract_value ) |
+                 std::views::filter( is_not_nan_or_inf );
+
+    return aggregate_numerical_range(
+        range.begin(), range.end(), _abstract_feature.aggregation_ );
+}
+
+// ----------------------------------------------------------------------------
+
+Float Aggregator::apply_same_units_categorical(
+    const containers::DataFrame &_population,
+    const containers::DataFrame &_peripheral,
+    const std::vector<containers::Match> &_matches,
+    const containers::AbstractFeature &_abstract_feature )
+{
+    assert_true(
+        _abstract_feature.input_col_ < _peripheral.num_categoricals() );
+
+    assert_true(
+        _abstract_feature.output_col_ < _population.num_categoricals() );
+
+    const auto &col1 =
+        _population.categorical_col( _abstract_feature.output_col_ );
+
+    const auto &col2 =
+        _peripheral.categorical_col( _abstract_feature.input_col_ );
+
+    const auto extract_value =
+        [&col1, &col2]( const containers::Match &match ) -> Float {
+        if ( col1[match.ix_output] == col2[match.ix_input] )
+            {
+                return 1.0;
+            }
+        return 0.0;
+    };
+
+    auto range = _matches | std::views::transform( extract_value );
+
+    return aggregate_numerical_range(
+        range.begin(), range.end(), _abstract_feature.aggregation_ );
+}
+
+// ----------------------------------------------------------------------------
+
+Float Aggregator::apply_same_units_discrete(
+    const containers::DataFrame &_population,
+    const containers::DataFrame &_peripheral,
+    const std::vector<containers::Match> &_matches,
+    const containers::AbstractFeature &_abstract_feature )
+{
+    assert_true( _abstract_feature.input_col_ < _peripheral.num_discretes() );
+
+    assert_true( _abstract_feature.output_col_ < _population.num_discretes() );
+
+    const auto &col1 =
+        _population.discrete_col( _abstract_feature.output_col_ );
+
+    const auto &col2 = _peripheral.discrete_col( _abstract_feature.input_col_ );
+
+    const auto extract_value =
+        [&col1, &col2]( const containers::Match &match ) -> Float {
+        return col1[match.ix_output] - col2[match.ix_input];
+    };
+
+    auto range = _matches | std::views::transform( extract_value ) |
+                 std::views::filter( is_not_nan_or_inf );
+
+    return aggregate_numerical_range(
+        range.begin(), range.end(), _abstract_feature.aggregation_ );
+}
+
+// ----------------------------------------------------------------------------
+
+Float Aggregator::apply_same_units_numerical(
+    const containers::DataFrame &_population,
+    const containers::DataFrame &_peripheral,
+    const std::vector<containers::Match> &_matches,
+    const containers::AbstractFeature &_abstract_feature )
+{
+    assert_true( _abstract_feature.input_col_ < _peripheral.num_numericals() );
+
+    assert_true( _abstract_feature.output_col_ < _population.num_numericals() );
+
+    const auto &col1 =
+        _population.numerical_col( _abstract_feature.output_col_ );
+
+    const auto &col2 =
+        _peripheral.numerical_col( _abstract_feature.input_col_ );
+
+    const auto extract_value =
+        [&col1, &col2]( const containers::Match &match ) -> Float {
+        return col1[match.ix_output] - col2[match.ix_input];
+    };
+
+    auto range = _matches | std::views::transform( extract_value ) |
+                 std::views::filter( is_not_nan_or_inf );
+
+    return aggregate_numerical_range(
+        range.begin(), range.end(), _abstract_feature.aggregation_ );
+}
+
+// ----------------------------------------------------------------------------
+
+Float Aggregator::apply_subfeatures(
+    const containers::Features &_subfeatures,
+    const std::vector<containers::Match> &_matches,
+    const containers::AbstractFeature &_abstract_feature )
+{
+    assert_true( _abstract_feature.input_col_ < _subfeatures.size() );
+
+    assert_true( _subfeatures.at( _abstract_feature.input_col_ ) );
+
+    const auto &col = *_subfeatures.at( _abstract_feature.input_col_ );
+
+    const auto extract_value =
+        [&col]( const containers::Match &match ) -> Float {
+        return col[match.ix_input];
+    };
+
+    auto range = _matches | std::views::transform( extract_value ) |
+                 std::views::filter( is_not_nan_or_inf );
+
+    return aggregate_numerical_range(
+        range.begin(), range.end(), _abstract_feature.aggregation_ );
+}
+
+// ----------------------------------------------------------------------------
+}  // namespace algorithm
+}  // namespace dfs

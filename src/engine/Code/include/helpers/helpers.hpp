@@ -9,9 +9,11 @@
 #include <algorithm>
 #include <array>
 #include <memory>
+#include <numeric>
 #include <optional>
 #include <type_traits>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include <Poco/JSON/Object.h>
@@ -20,11 +22,17 @@
 
 #include "jsonutils/jsonutils.hpp"
 
+#include "strings/strings.hpp"
+
 // ----------------------------------------------------------------------------
 
 // These are just typedefs
 #include "helpers/Float.hpp"
 #include "helpers/Int.hpp"
+
+#include "helpers/NullChecker.hpp"
+
+#include "helpers/ColumnOperators.hpp"
 
 #include "helpers/StringReplacer.hpp"
 #include "helpers/StringSplitter.hpp"
@@ -44,6 +52,8 @@
 #include "helpers/DataFrame.hpp"
 
 #include "helpers/DataFrameView.hpp"
+
+#include "helpers/Matchmaker.hpp"
 
 #include "helpers/TableHolder.hpp"
 

@@ -14,47 +14,62 @@ std::shared_ptr<AbstractFeatureLearner> FeatureLearnerParser::parse(
 {
     const auto type = JSON::get_value<std::string>( _cmd, "type_" );
 
+    if ( type == AbstractFeatureLearner::DFS_MODEL )
+        {
+            return std::make_shared<
+                FeatureLearner<dfs::algorithm::DeepFeatureSynthesis>>(
+                _cmd, _placeholder, _peripheral, _dependencies );
+        }
+
+    if ( type == AbstractFeatureLearner::DFS_TIME_SERIES )
+        {
+            return std::make_shared<FeatureLearner<ts::DFSTimeSeries>>(
+                _cmd, _placeholder, _peripheral, _dependencies );
+        }
+
     if ( type == AbstractFeatureLearner::MULTIREL_MODEL )
         {
             return std::make_shared<
                 FeatureLearner<multirel::ensemble::DecisionTreeEnsemble>>(
                 _cmd, _placeholder, _peripheral, _dependencies );
         }
-    else if ( type == AbstractFeatureLearner::MULTIREL_TIME_SERIES )
+
+    if ( type == AbstractFeatureLearner::MULTIREL_TIME_SERIES )
         {
             return std::make_shared<FeatureLearner<ts::MultirelTimeSeries>>(
                 _cmd, _placeholder, _peripheral, _dependencies );
         }
-    else if ( type == AbstractFeatureLearner::RELBOOST_MODEL )
+
+    if ( type == AbstractFeatureLearner::RELBOOST_MODEL )
         {
             return std::make_shared<
                 FeatureLearner<relboost::ensemble::DecisionTreeEnsemble>>(
                 _cmd, _placeholder, _peripheral, _dependencies );
         }
-    else if ( type == AbstractFeatureLearner::RELMT_MODEL )
+
+    if ( type == AbstractFeatureLearner::RELMT_MODEL )
         {
             return std::make_shared<
                 FeatureLearner<relmt::ensemble::DecisionTreeEnsemble>>(
                 _cmd, _placeholder, _peripheral, _dependencies );
         }
-    else if ( type == AbstractFeatureLearner::RELBOOST_TIME_SERIES )
+
+    if ( type == AbstractFeatureLearner::RELBOOST_TIME_SERIES )
         {
             return std::make_shared<FeatureLearner<ts::RelboostTimeSeries>>(
                 _cmd, _placeholder, _peripheral, _dependencies );
         }
-    else if ( type == AbstractFeatureLearner::RELMT_TIME_SERIES )
+
+    if ( type == AbstractFeatureLearner::RELMT_TIME_SERIES )
         {
             return std::make_shared<FeatureLearner<ts::RelMTTimeSeries>>(
                 _cmd, _placeholder, _peripheral, _dependencies );
         }
-    else
-        {
-            throw std::invalid_argument(
-                "Feature learning algorithm of type '" + type +
-                "' not known!" );
 
-            return std::shared_ptr<AbstractFeatureLearner>();
-        }
+    throw std::invalid_argument(
+        "Feature learning algorithm of type '" + type + "' not known!" );
+
+    return std::shared_ptr<AbstractFeatureLearner>();
 }
 
 // ----------------------------------------------------------------------

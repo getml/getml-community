@@ -12,29 +12,21 @@ std::vector<containers::Match> Matchmaker::make_matches(
     const std::shared_ptr<const std::vector<Float>>& _sample_weights,
     const bool _use_timestamps )
 {
-    std::vector<containers::Match> matches;
+    const auto make_match = []( const size_t ix_input,
+                                const size_t ix_output ) {
+        return containers::Match{ ix_input, ix_output };
+    };
 
-    for ( size_t ix_output = 0; ix_output < _population.nrows(); ++ix_output )
-        {
-            if ( _sample_weights )
-                {
-                    assert_true(
-                        _sample_weights->size() == _population.nrows() );
-                    if ( ( *_sample_weights )[ix_output] <= 0.0 )
-                        {
-                            continue;
-                        }
-                }
-
-            Matchmaker::make_matches(
-                _population,
-                _peripheral,
-                _use_timestamps,
-                ix_output,
-                &matches );
-        }
-
-    return matches;
+    return helpers::Matchmaker<
+        containers::DataFrameView,
+        containers::Match,
+        decltype( make_match )>::
+        make_matches(
+            _population,
+            _peripheral,
+            _sample_weights,
+            _use_timestamps,
+            make_match );
 }
 
 // ----------------------------------------------------------------------------
@@ -46,7 +38,7 @@ std::vector<containers::Match> Matchmaker::make_matches(
 
     for ( size_t ix_output = 0; ix_output < _population.nrows(); ++ix_output )
         {
-            matches.emplace_back( containers::Match{0, ix_output} );
+            matches.emplace_back( containers::Match{ 0, ix_output } );
         }
 
     return matches;
@@ -61,31 +53,22 @@ void Matchmaker::make_matches(
     const size_t _ix_output,
     std::vector<containers::Match>* _matches )
 {
-    const auto join_key = _population.join_key( _ix_output );
+    const auto make_match = []( const size_t ix_input,
+                                const size_t ix_output ) {
+        return containers::Match{ ix_input, ix_output };
+    };
 
-    const auto time_stamp_out = _population.time_stamp( _ix_output );
-
-    if ( _peripheral.has( join_key ) )
-        {
-            auto it = _peripheral.find( join_key );
-
-            for ( size_t ix_input : it->second )
-                {
-                    const auto lower = _peripheral.time_stamp( ix_input );
-
-                    const auto upper = _peripheral.upper_time_stamp( ix_input );
-
-                    const bool match_in_range =
-                        lower <= time_stamp_out &&
-                        ( std::isnan( upper ) || upper > time_stamp_out );
-
-                    if ( !_use_timestamps || match_in_range )
-                        {
-                            _matches->push_back(
-                                containers::Match{ix_input, _ix_output} );
-                        }
-                }
-        }
+    helpers::Matchmaker<
+        containers::DataFrameView,
+        containers::Match,
+        decltype( make_match )>::
+        make_matches(
+            _population,
+            _peripheral,
+            _use_timestamps,
+            _ix_output,
+            make_match,
+            _matches );
 }
 
 // ----------------------------------------------------------------------------

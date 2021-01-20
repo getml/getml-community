@@ -910,7 +910,7 @@ ULong DataFrame::calc_nbytes( const std::vector<Column<T>> &_columns ) const
         _columns.begin(),
         _columns.end(),
         static_cast<ULong>( 0 ),
-        []( ULong &init, const Column<T> &col ) {
+        []( const ULong init, const Column<T> &col ) {
             return init + col.nbytes();
         } );
 }

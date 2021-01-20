@@ -78,6 +78,24 @@ struct JSON
         return arr;
     }
 
+    /// Gets a vector containing a complex type.
+    template <typename T>
+    static std::vector<T> get_type_vector(
+        const Poco::JSON::Object& _obj, const std::string& _key )
+    {
+        auto arr = get_object_array( _obj, _key );
+
+        auto vec = std::vector<T>();
+
+        for ( size_t i = 0; i < arr->size(); ++i )
+            {
+                const auto ptr = arr->getObject( i );
+                vec.push_back( T( *ptr ) );
+            }
+
+        return vec;
+    }
+
     /// Gets a value from a JSON object or throws.
     template <typename T>
     static T get_value(
@@ -157,6 +175,21 @@ struct JSON
                     }
 
                 arr.add( elem );
+            }
+
+        return arr;
+    }
+
+    /// Transforms a vector to a Poco array containing objects
+    template <typename T>
+    static Poco::JSON::Array::Ptr vector_to_object_array_ptr(
+        const std::vector<T>& _vector )
+    {
+        auto arr = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+
+        for ( const auto& val : _vector )
+            {
+                arr->add( val.to_json_obj() );
             }
 
         return arr;
