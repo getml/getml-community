@@ -51,16 +51,17 @@ void Threadutils::fit_as_feature_learner(
 
     utils::Logger::log( "RelMT: Training features...", _logger, _comm );
 
-    for ( int i = 0; i < num_features; ++i )
+    while ( _ensemble->num_features() < num_features )
         {
-            _ensemble->fit_new_feature(
+            _ensemble->fit_new_features(
                 loss_function, table_holder, subfeatures );
 
-            const auto progress = ( ( i + 1 ) * 100 ) / num_features;
+            const auto progress =
+                ( _ensemble->num_features() * 100 ) / num_features;
 
             utils::Logger::log(
-                "Trained FEATURE_" + std::to_string( i + 1 ) +
-                    ". Progress: " + std::to_string( progress ) + "\%.",
+                "Trained new features. Progress: " +
+                    std::to_string( progress ) + "\%.",
                 _logger,
                 _comm );
         }

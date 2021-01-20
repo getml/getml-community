@@ -503,7 +503,109 @@ void DecisionTreeEnsemble::fit(
 
 // ----------------------------------------------------------------------------
 
-void DecisionTreeEnsemble::fit_new_feature(
+std::vector<std::tuple<decisiontrees::DecisionTree, Float, std::vector<Float>>>
+DecisionTreeEnsemble::fit_candidate_features(
+    const std::shared_ptr<lossfunctions::LossFunction> &_loss_function,
+    const std::shared_ptr<const TableHolder> &_table_holder,
+    const std::vector<containers::Subfeatures> &_subfeatures,
+    const std::shared_ptr<const std::vector<Float>> &_sample_weights ) const
+{
+    std::vector<
+        std::tuple<decisiontrees::DecisionTree, Float, std::vector<Float>>>
+        candidates;
+
+    for ( size_t ix_table_used = 0;
+          ix_table_used < _table_holder->main_tables_.size();
+          ++ix_table_used )
+        {
+            // ------------------------------------------------------------------------
+
+            const auto &output_table =
+                _table_holder->main_tables_[ix_table_used];
+
+            const auto input_table = std::make_optional<containers::DataFrame>(
+                _table_holder->peripheral_tables_[ix_table_used] );
+
+            const auto &subfeatures = _subfeatures[ix_table_used];
+
+            // ------------------------------------------------------------------------
+
+            assert_true( _sample_weights );
+
+            assert_true( output_table.nrows() == _sample_weights->size() );
+
+            // ------------------------------------------------------------------------
+            // Matches can potentially use a lot of memory - better to create
+            // them anew when needed.
+
+            auto matches = utils::Matchmaker::make_matches(
+                output_table,
+                *input_table,
+                _sample_weights,
+                hyperparameters().use_timestamps_ );
+
+            debug_log(
+                "Number of matches: " + std::to_string( matches.size() ) );
+
+            // ------------------------------------------------------------------------
+
+            std::vector<std::shared_ptr<lossfunctions::LossFunction>>
+                aggregations;
+
+            aggregations.push_back( std::make_shared<aggregations::Avg>(
+                _loss_function,
+                matches,
+                *input_table,
+                output_table,
+                hyperparameters().allow_null_weights_,
+                &comm() ) );
+
+            aggregations.push_back( std::make_shared<aggregations::Sum>(
+                _loss_function, *input_table, output_table, &comm() ) );
+
+            // ------------------------------------------------------------------------
+
+            for ( auto &agg : aggregations )
+                {
+                    _loss_function->commit();
+
+                    auto new_candidate = decisiontrees::DecisionTree(
+                        impl().hyperparameters_, agg, ix_table_used, &comm() );
+
+                    new_candidate.fit(
+                        output_table,
+                        input_table,
+                        subfeatures,
+                        matches.begin(),
+                        matches.end() );
+
+                    auto new_predictions = new_candidate.transform(
+                        output_table, input_table, subfeatures );
+
+                    _loss_function->reduce_predictions(
+                        new_candidate.intercept(), &new_predictions );
+
+                    new_candidate.calc_update_rate( new_predictions );
+
+                    const auto new_loss_reduction =
+                        _loss_function->evaluate_tree(
+                            new_candidate.update_rate(), new_predictions );
+
+                    candidates.emplace_back( std::make_tuple(
+                        std::move( new_candidate ),
+                        new_loss_reduction,
+                        std::move( new_predictions ) ) );
+                }
+
+            // ------------------------------------------------------------------------
+        }
+
+    return candidates;
+}
+
+// ----------------------------------------------------------------------------
+
+void DecisionTreeEnsemble::fit_new_features(
     const std::shared_ptr<lossfunctions::LossFunction> &_loss_function,
     const std::shared_ptr<const TableHolder> &_table_holder,
     const std::vector<containers::Subfeatures> &_subfeatures )
@@ -523,7 +625,6 @@ void DecisionTreeEnsemble::fit_new_feature(
     assert_true( _table_holder->main_tables_.size() > 0 );
 
     // ------------------------------------------------------------------------
-    // Recreate sample weights.
 
     const auto sample_weights = _loss_function->make_sample_weights();
 
@@ -531,193 +632,12 @@ void DecisionTreeEnsemble::fit_new_feature(
 
     // ------------------------------------------------------------------------
 
-    std::vector<decisiontrees::DecisionTree> candidates;
-
-    std::vector<Float> loss;
-
-    std::vector<std::vector<Float>> predictions;
-
-    for ( size_t ix_table_used = 0;
-          ix_table_used < _table_holder->main_tables_.size();
-          ++ix_table_used )
-        {
-            // ------------------------------------------------------------------------
-
-            const auto &output_table =
-                _table_holder->main_tables_[ix_table_used];
-
-            const auto input_table = std::make_optional<containers::DataFrame>(
-                _table_holder->peripheral_tables_[ix_table_used] );
-
-            const auto &subfeatures = _subfeatures[ix_table_used];
-
-            // ------------------------------------------------------------------------
-
-            assert_true( output_table.nrows() == sample_weights->size() );
-
-            // ------------------------------------------------------------------------
-            // Matches can potentially use a lot of memory - better to create
-            // them anew when needed.
-
-            auto matches = utils::Matchmaker::make_matches(
-                output_table,
-                *input_table,
-                sample_weights,
-                hyperparameters().use_timestamps_ );
-
-            debug_log(
-                "Number of matches: " + std::to_string( matches.size() ) );
-
-            // ------------------------------------------------------------------------
-            // Build aggregations.
-
-            std::vector<std::shared_ptr<lossfunctions::LossFunction>>
-                aggregations;
-
-            aggregations.push_back( std::make_shared<aggregations::Avg>(
-                _loss_function,
-                matches,
-                *input_table,
-                output_table,
-                hyperparameters().allow_null_weights_,
-                &comm() ) );
-
-            aggregations.push_back( std::make_shared<aggregations::Sum>(
-                _loss_function, *input_table, output_table, &comm() ) );
-
-            // ------------------------------------------------------------------------
-            // Iterate through aggregations.
-
-            for ( auto &agg : aggregations )
-                {
-                    // Reset loss_function_committed_.
-                    _loss_function->commit();
-
-                    candidates.push_back( decisiontrees::DecisionTree(
-                        impl().hyperparameters_,
-                        agg,
-                        ix_table_used,
-                        &comm() ) );
-
-                    candidates.back().fit(
-                        output_table,
-                        input_table,
-                        subfeatures,
-                        matches.begin(),
-                        matches.end() );
-
-                    auto new_predictions = candidates.back().transform(
-                        output_table, input_table, subfeatures );
-
-                    _loss_function->reduce_predictions(
-                        candidates.back().intercept(), &new_predictions );
-
-                    candidates.back().calc_update_rate( new_predictions );
-
-                    const auto loss_reduction = _loss_function->evaluate_tree(
-                        candidates.back().update_rate(), new_predictions );
-
-                    loss.push_back( loss_reduction );
-
-                    predictions.emplace_back( std::move( new_predictions ) );
-                }
-
-            // ------------------------------------------------------------------------
-        }
-
-    // ------------------------------------------------------------------------
-    // Find best candidate
-
-    assert_true( loss.size() == candidates.size() );
-    assert_true( predictions.size() == candidates.size() );
-
-    const auto it = std::min_element( loss.begin(), loss.end() );
-
-    const auto dist = std::distance( loss.begin(), it );
-
-    const auto &best_predictions = predictions[dist];
-
-    // ------------------------------------------------------------------------
-    // Update yhat_old_.
-
-    _loss_function->update_yhat_old(
-        candidates[dist].update_rate() * hyperparameters().shrinkage_,
-        best_predictions );
-
-    _loss_function->calc_gradients();
-
-    _loss_function->commit();
-
-    // ------------------------------------------------------------------------
-    // Add best candidate to trees
-
-    trees().emplace_back( std::move( candidates[dist] ) );
-
-    // ------------------------------------------------------------------------
-    // Get rid of data no longer needed.
-
-    trees().back().clear();
-
-    // ------------------------------------------------------------------------
-}
-
-// ----------------------------------------------------------------------------
-
-void DecisionTreeEnsemble::fit_new_tree(
-    const std::shared_ptr<lossfunctions::LossFunction> &_loss_function,
-    const containers::DataFrameView &_population,
-    const std::vector<containers::Match>::iterator _begin,
-    const std::vector<containers::Match>::iterator _end )
-{
-    // ------------------------------------------------------------------------
-
-    assert_true( _loss_function );
+    auto candidates = fit_candidate_features(
+        _loss_function, _table_holder, _subfeatures, sample_weights );
 
     // ------------------------------------------------------------------------
 
-    const auto sample_weights = _loss_function->make_sample_weights();
-
-    // ------------------------------------------------------------------------
-
-    const auto sample_weights_greater_zero =
-        [sample_weights]( const containers::Match &m ) {
-            assert_true( m.ix_output < sample_weights->size() );
-            return ( *sample_weights )[m.ix_output] > 0.0;
-        };
-
-    const auto sample_weights_greater_zero_end =
-        std::partition( _begin, _end, sample_weights_greater_zero );
-
-    // ------------------------------------------------------------------------
-
-    auto new_tree = decisiontrees::DecisionTree(
-        impl().hyperparameters_, _loss_function, 0, &comm() );
-
-    new_tree.fit(
-        _population,
-        std::optional<containers::DataFrame>(),
-        containers::Subfeatures(),
-        _begin,
-        sample_weights_greater_zero_end );
-
-    const auto new_predictions = new_tree.transform(
-        _population,
-        std::optional<containers::DataFrame>(),
-        containers::Subfeatures() );
-
-    new_tree.calc_update_rate( new_predictions );
-
-    // ------------------------------------------------------------------------
-
-    _loss_function->update_yhat_old(
-        new_tree.update_rate() * hyperparameters().shrinkage_,
-        new_predictions );
-
-    _loss_function->calc_gradients();
-
-    // ------------------------------------------------------------------------
-
-    trees().emplace_back( std::move( new_tree ) );
+    keep_best_candidates( _loss_function, &candidates );
 
     // ------------------------------------------------------------------------
 }
@@ -806,56 +726,43 @@ DecisionTreeEnsemble::init_as_feature_learner(
 
 // ----------------------------------------------------------------------------
 
-std::shared_ptr<lossfunctions::LossFunction>
-DecisionTreeEnsemble::init_as_predictor(
-    const containers::DataFrameView &_population )
+void DecisionTreeEnsemble::keep_best_candidates(
+    const std::shared_ptr<lossfunctions::LossFunction> &_loss_function,
+    std::vector<
+        std::tuple<decisiontrees::DecisionTree, Float, std::vector<Float>>>
+        *_candidates )
 {
-    // ------------------------------------------------------------------------
-    // Prepare targets.
+    using TupleT =
+        std::tuple<decisiontrees::DecisionTree, Float, std::vector<Float>>;
 
-    if ( hyperparameters().target_num_ < 0 )
+    const auto loss_is_smaller = []( const TupleT &t1, const TupleT &t2 ) {
+        return std::get<1>( t1 ) < std::get<1>( t2 );
+    };
+
+    std::ranges::sort( *_candidates, loss_is_smaller );
+
+    const auto num_remaining =
+        static_cast<size_t>( hyperparameters().num_features_ ) - num_features();
+
+    const auto num_keep = std::min( _candidates->size(), num_remaining );
+
+    for ( size_t i = 0; i < num_keep; ++i )
         {
-            throw std::runtime_error( "target_num cannot be negative!" );
+            auto &candidate = std::get<0>( _candidates->at( i ) );
+
+            const auto &pred = std::get<2>( _candidates->at( i ) );
+
+            _loss_function->update_yhat_old(
+                candidate.update_rate() * hyperparameters().shrinkage_, pred );
+
+            _loss_function->calc_gradients();
+
+            _loss_function->commit();
+
+            trees().emplace_back( std::move( candidate ) );
+
+            trees().back().clear();
         }
-
-    const auto target_num =
-        static_cast<size_t>( hyperparameters().target_num_ );
-
-    if ( _population.num_targets() <= target_num )
-        {
-            throw std::runtime_error(
-                "target_num out of bounds! The target_num was " +
-                std::to_string( target_num ) +
-                ", but the population table only contains " +
-                std::to_string( _population.num_targets() ) + " targets!" );
-        }
-
-    targets().resize( _population.nrows() );
-
-    for ( size_t i = 0; i < _population.nrows(); ++i )
-        {
-            targets()[i] = _population.target( i, target_num );
-        }
-
-    // ------------------------------------------------------------------------
-
-    calc_initial_prediction();
-
-    // ------------------------------------------------------------------------
-    // Initialize the loss function.
-
-    loss_function().init_yhat_old( initial_prediction() );
-
-    loss_function().calc_gradients();
-
-    loss_function().calc_sampling_rate(
-        true, hyperparameters().sampling_factor_, &comm() );
-
-    // ------------------------------------------------------------------------
-
-    return loss_function_;
-
-    // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
