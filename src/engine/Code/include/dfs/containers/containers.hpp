@@ -44,6 +44,8 @@
 
 #include "dfs/containers/DataFrameView.hpp"
 
+#include "dfs/containers/Condition.hpp"
+
 #include "dfs/containers/AbstractFeature.hpp"
 
 #include "dfs/containers/SQLMaker.hpp"

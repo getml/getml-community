@@ -11,6 +11,7 @@ Float Aggregator::apply_aggregation(
     const containers::DataFrame &_peripheral,
     const containers::Features &_subfeatures,
     const std::vector<containers::Match> &_matches,
+    const std::function<bool( const containers::Match & )> &_condition_function,
     const containers::AbstractFeature &_abstract_feature )
 {
     switch ( _abstract_feature.data_used_ )
@@ -21,32 +22,53 @@ Float Aggregator::apply_aggregation(
 
             case enums::DataUsed::discrete:
                 return apply_discrete(
-                    _peripheral, _matches, _abstract_feature );
+                    _peripheral,
+                    _matches,
+                    _condition_function,
+                    _abstract_feature );
 
             case enums::DataUsed::not_applicable:
                 return apply_not_applicable( _matches, _abstract_feature );
 
             case enums::DataUsed::numerical:
                 return apply_numerical(
-                    _peripheral, _matches, _abstract_feature );
+                    _peripheral,
+                    _matches,
+                    _condition_function,
+                    _abstract_feature );
 
             case enums::DataUsed::same_units_categorical:
                 return apply_same_units_categorical(
-                    _population, _peripheral, _matches, _abstract_feature );
+                    _population,
+                    _peripheral,
+                    _matches,
+                    _condition_function,
+                    _abstract_feature );
 
             case enums::DataUsed::same_units_discrete:
             case enums::DataUsed::same_units_discrete_ts:
                 return apply_same_units_discrete(
-                    _population, _peripheral, _matches, _abstract_feature );
+                    _population,
+                    _peripheral,
+                    _matches,
+                    _condition_function,
+                    _abstract_feature );
 
             case enums::DataUsed::same_units_numerical:
             case enums::DataUsed::same_units_numerical_ts:
                 return apply_same_units_numerical(
-                    _population, _peripheral, _matches, _abstract_feature );
+                    _population,
+                    _peripheral,
+                    _matches,
+                    _condition_function,
+                    _abstract_feature );
 
             case enums::DataUsed::subfeatures:
                 return apply_subfeatures(
-                    _subfeatures, _matches, _abstract_feature );
+                    _subfeatures,
+                    _matches,
+                    _condition_function,
+                    _abstract_feature );
 
             default:
                 assert_true( false && "Unknown data_used" );
@@ -86,6 +108,7 @@ Float Aggregator::apply_categorical(
 Float Aggregator::apply_discrete(
     const containers::DataFrame &_peripheral,
     const std::vector<containers::Match> &_matches,
+    const std::function<bool( const containers::Match & )> &_condition_function,
     const containers::AbstractFeature &_abstract_feature )
 {
     assert_true( _abstract_feature.input_col_ < _peripheral.num_discretes() );
@@ -97,11 +120,8 @@ Float Aggregator::apply_discrete(
         return col[match.ix_input];
     };
 
-    auto range = _matches | std::views::transform( extract_value ) |
-                 std::views::filter( is_not_nan_or_inf );
-
-    return aggregate_numerical_range(
-        range.begin(), range.end(), _abstract_feature.aggregation_ );
+    return aggregate_matches_numerical(
+        _matches, extract_value, _condition_function, _abstract_feature );
 }
 
 // ----------------------------------------------------------------------------
@@ -121,6 +141,7 @@ Float Aggregator::apply_not_applicable(
 Float Aggregator::apply_numerical(
     const containers::DataFrame &_peripheral,
     const std::vector<containers::Match> &_matches,
+    const std::function<bool( const containers::Match & )> &_condition_function,
     const containers::AbstractFeature &_abstract_feature )
 {
     assert_true( _abstract_feature.input_col_ < _peripheral.num_numericals() );
@@ -132,11 +153,8 @@ Float Aggregator::apply_numerical(
         return col[match.ix_input];
     };
 
-    auto range = _matches | std::views::transform( extract_value ) |
-                 std::views::filter( is_not_nan_or_inf );
-
-    return aggregate_numerical_range(
-        range.begin(), range.end(), _abstract_feature.aggregation_ );
+    return aggregate_matches_numerical(
+        _matches, extract_value, _condition_function, _abstract_feature );
 }
 
 // ----------------------------------------------------------------------------
@@ -145,6 +163,7 @@ Float Aggregator::apply_same_units_categorical(
     const containers::DataFrame &_population,
     const containers::DataFrame &_peripheral,
     const std::vector<containers::Match> &_matches,
+    const std::function<bool( const containers::Match & )> &_condition_function,
     const containers::AbstractFeature &_abstract_feature )
 {
     assert_true(
@@ -168,10 +187,8 @@ Float Aggregator::apply_same_units_categorical(
         return 0.0;
     };
 
-    auto range = _matches | std::views::transform( extract_value );
-
-    return aggregate_numerical_range(
-        range.begin(), range.end(), _abstract_feature.aggregation_ );
+    return aggregate_matches_numerical(
+        _matches, extract_value, _condition_function, _abstract_feature );
 }
 
 // ----------------------------------------------------------------------------
@@ -180,6 +197,7 @@ Float Aggregator::apply_same_units_discrete(
     const containers::DataFrame &_population,
     const containers::DataFrame &_peripheral,
     const std::vector<containers::Match> &_matches,
+    const std::function<bool( const containers::Match & )> &_condition_function,
     const containers::AbstractFeature &_abstract_feature )
 {
     assert_true( _abstract_feature.input_col_ < _peripheral.num_discretes() );
@@ -196,11 +214,8 @@ Float Aggregator::apply_same_units_discrete(
         return col1[match.ix_output] - col2[match.ix_input];
     };
 
-    auto range = _matches | std::views::transform( extract_value ) |
-                 std::views::filter( is_not_nan_or_inf );
-
-    return aggregate_numerical_range(
-        range.begin(), range.end(), _abstract_feature.aggregation_ );
+    return aggregate_matches_numerical(
+        _matches, extract_value, _condition_function, _abstract_feature );
 }
 
 // ----------------------------------------------------------------------------
@@ -209,6 +224,7 @@ Float Aggregator::apply_same_units_numerical(
     const containers::DataFrame &_population,
     const containers::DataFrame &_peripheral,
     const std::vector<containers::Match> &_matches,
+    const std::function<bool( const containers::Match & )> &_condition_function,
     const containers::AbstractFeature &_abstract_feature )
 {
     assert_true( _abstract_feature.input_col_ < _peripheral.num_numericals() );
@@ -226,11 +242,8 @@ Float Aggregator::apply_same_units_numerical(
         return col1[match.ix_output] - col2[match.ix_input];
     };
 
-    auto range = _matches | std::views::transform( extract_value ) |
-                 std::views::filter( is_not_nan_or_inf );
-
-    return aggregate_numerical_range(
-        range.begin(), range.end(), _abstract_feature.aggregation_ );
+    return aggregate_matches_numerical(
+        _matches, extract_value, _condition_function, _abstract_feature );
 }
 
 // ----------------------------------------------------------------------------
@@ -238,6 +251,7 @@ Float Aggregator::apply_same_units_numerical(
 Float Aggregator::apply_subfeatures(
     const containers::Features &_subfeatures,
     const std::vector<containers::Match> &_matches,
+    const std::function<bool( const containers::Match & )> &_condition_function,
     const containers::AbstractFeature &_abstract_feature )
 {
     assert_true( _abstract_feature.input_col_ < _subfeatures.size() );
@@ -251,11 +265,8 @@ Float Aggregator::apply_subfeatures(
         return col[match.ix_input];
     };
 
-    auto range = _matches | std::views::transform( extract_value ) |
-                 std::views::filter( is_not_nan_or_inf );
-
-    return aggregate_numerical_range(
-        range.begin(), range.end(), _abstract_feature.aggregation_ );
+    return aggregate_matches_numerical(
+        _matches, extract_value, _condition_function, _abstract_feature );
 }
 
 // ----------------------------------------------------------------------------

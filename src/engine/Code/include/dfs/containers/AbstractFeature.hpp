@@ -11,6 +11,7 @@ struct AbstractFeature
 {
     AbstractFeature(
         const enums::Aggregation _aggregation,
+        const std::vector<Condition> &_conditions,
         const enums::DataUsed _data_used,
         const size_t _input_col,
         const size_t _output_col,
@@ -18,6 +19,7 @@ struct AbstractFeature
 
     AbstractFeature(
         const enums::Aggregation _aggregation,
+        const std::vector<Condition> &_conditions,
         const enums::DataUsed _data_used,
         const size_t _input_col,
         const size_t _peripheral );
@@ -39,6 +41,9 @@ struct AbstractFeature
 
     /// The aggregation to apply
     const enums::Aggregation aggregation_;
+
+    /// The conditions applied to the aggregation.
+    const std::vector<Condition> conditions_;
 
     /// The kind of data used
     const enums::DataUsed data_used_;

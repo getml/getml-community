@@ -19,6 +19,8 @@ class Aggregator
         const containers::DataFrame &_peripheral,
         const containers::Features &_subfeatures,
         const std::vector<containers::Match> &_matches,
+        const std::function<bool( const containers::Match & )>
+            &_condition_function,
         const containers::AbstractFeature &_abstract_feature );
 
    private:
@@ -28,10 +30,17 @@ class Aggregator
         const std::vector<containers::Match> &_matches,
         const containers::AbstractFeature &_abstract_feature );
 
+    /// Determines whether a condition is true w.r.t. a match.
+    static bool apply_condition(
+        const containers::Condition &_condition,
+        const containers::Match &_match );
+
     /// Applies the aggregation to a discrete column.
     static Float apply_discrete(
         const containers::DataFrame &_peripheral,
         const std::vector<containers::Match> &_matches,
+        const std::function<bool( const containers::Match & )>
+            &_condition_function,
         const containers::AbstractFeature &_abstract_feature );
 
     /// Applies a COUNT aggregation
@@ -43,6 +52,8 @@ class Aggregator
     static Float apply_numerical(
         const containers::DataFrame &_peripheral,
         const std::vector<containers::Match> &_matches,
+        const std::function<bool( const containers::Match & )>
+            &_condition_function,
         const containers::AbstractFeature &_abstract_feature );
 
     /// Applies the aggregation to categorical columns with the same unit.
@@ -50,6 +61,8 @@ class Aggregator
         const containers::DataFrame &_population,
         const containers::DataFrame &_peripheral,
         const std::vector<containers::Match> &_matches,
+        const std::function<bool( const containers::Match & )>
+            &_condition_function,
         const containers::AbstractFeature &_abstract_feature );
 
     /// Applies the aggregation to discrete columns with the same unit.
@@ -57,6 +70,8 @@ class Aggregator
         const containers::DataFrame &_population,
         const containers::DataFrame &_peripheral,
         const std::vector<containers::Match> &_matches,
+        const std::function<bool( const containers::Match & )>
+            &_condition_function,
         const containers::AbstractFeature &_abstract_feature );
 
     /// Applies the aggregation to numerical columns with the same unit.
@@ -64,12 +79,16 @@ class Aggregator
         const containers::DataFrame &_population,
         const containers::DataFrame &_peripheral,
         const std::vector<containers::Match> &_matches,
+        const std::function<bool( const containers::Match & )>
+            &_condition_function,
         const containers::AbstractFeature &_abstract_feature );
 
     /// Applies the aggregation to a subfeature.
     static Float apply_subfeatures(
         const containers::Features &_subfeatures,
         const std::vector<containers::Match> &_matches,
+        const std::function<bool( const containers::Match & )>
+            &_condition_function,
         const containers::AbstractFeature &_abstract_feature );
 
    private:
@@ -103,6 +122,41 @@ class Aggregator
             }
     }
 
+    /// Aggregates the matches using the extract_value lambda function.
+    template <class ExtractValueType>
+    static Float aggregate_matches_numerical(
+        const std::vector<containers::Match> &_matches,
+        const ExtractValueType &_extract_value,
+        const std::function<bool( const containers::Match & )>
+            &_condition_function,
+        const containers::AbstractFeature &_abstract_feature )
+    {
+        // ---------------------------------------------------
+
+        if ( _abstract_feature.conditions_.size() == 0 )
+            {
+                auto range = _matches |
+                             std::views::transform( _extract_value ) |
+                             std::views::filter( is_not_nan_or_inf );
+
+                return aggregate_numerical_range(
+                    range.begin(),
+                    range.end(),
+                    _abstract_feature.aggregation_ );
+            }
+
+        // ---------------------------------------------------
+
+        auto range = _matches | std::views::filter( _condition_function ) |
+                     std::views::transform( _extract_value ) |
+                     std::views::filter( is_not_nan_or_inf );
+
+        return aggregate_numerical_range(
+            range.begin(), range.end(), _abstract_feature.aggregation_ );
+
+        // ---------------------------------------------------
+    }
+
     /// Aggregates the range from _begin to _end, applying the _aggregation.
     template <class IteratorType>
     static Float aggregate_numerical_range(
@@ -110,7 +164,7 @@ class Aggregator
         const IteratorType _end,
         const enums::Aggregation _aggregation )
     {
-        if ( std::distance( _begin, _end ) <= 0.0 )
+        if ( std::distance( _begin, _end ) <= 0 )
             {
                 return 0.0;
             }

@@ -8,11 +8,13 @@ namespace containers
 
 AbstractFeature::AbstractFeature(
     const enums::Aggregation _aggregation,
+    const std::vector<Condition> &_conditions,
     const enums::DataUsed _data_used,
     const size_t _input_col,
     const size_t _output_col,
     const size_t _peripheral )
     : aggregation_( _aggregation ),
+      conditions_( _conditions ),
       data_used_( _data_used ),
       input_col_( _input_col ),
       output_col_( _output_col ),
@@ -24,10 +26,12 @@ AbstractFeature::AbstractFeature(
 
 AbstractFeature::AbstractFeature(
     const enums::Aggregation _aggregation,
+    const std::vector<Condition> &_conditions,
     const enums::DataUsed _data_used,
     const size_t _input_col,
     const size_t _peripheral )
-    : AbstractFeature( _aggregation, _data_used, _input_col, 0, _peripheral )
+    : AbstractFeature(
+          _aggregation, _conditions, _data_used, _input_col, 0, _peripheral )
 {
 }
 
@@ -37,6 +41,7 @@ AbstractFeature::AbstractFeature( const Poco::JSON::Object &_obj )
     : AbstractFeature(
           enums::Parser<enums::Aggregation>::parse(
               jsonutils::JSON::get_value<std::string>( _obj, "aggregation_" ) ),
+          jsonutils::JSON::get_type_vector<Condition>( _obj, "conditions_" ),
           enums::Parser<enums::DataUsed>::parse(
               jsonutils::JSON::get_value<std::string>( _obj, "data_used_" ) ),
           jsonutils::JSON::get_value<size_t>( _obj, "input_col_" ),
@@ -130,7 +135,7 @@ std::string AbstractFeature::to_sql(
 
     if ( use_time_stamps )
         {
-            sql << "WHERE ( ";
+            sql << "WHERE ";
 
             const auto upper_ts = _input.num_time_stamps() > 1
                                       ? _input.upper_time_stamps_name()
@@ -143,13 +148,33 @@ std::string AbstractFeature::to_sql(
                 "t1",
                 "t2",
                 "t1" );
-
-            sql << ") ";
         }
 
     // -------------------------------------------------------------------
 
-    sql << "GROUP BY t1.rowid;" << std::endl << std::endl << std::endl;
+    for ( size_t i = 0; i < conditions_.size(); ++i )
+        {
+            sql << std::endl;
+
+            if ( i == 0 && !use_time_stamps )
+                {
+                    sql << "WHERE ";
+                }
+            else
+                {
+                    sql << "AND ";
+                }
+
+            sql << conditions_.at( i ).to_sql(
+                _feature_prefix, _input, _output );
+        }
+
+    // -------------------------------------------------------------------
+
+    sql << std::endl
+        << "GROUP BY t1.rowid;" << std::endl
+        << std::endl
+        << std::endl;
 
     // -------------------------------------------------------------------
 

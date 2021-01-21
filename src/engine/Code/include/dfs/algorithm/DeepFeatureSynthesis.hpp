@@ -91,6 +91,8 @@ class DeepFeatureSynthesis
         const TableHolder& _table_holder,
         const std::vector<containers::Features>& _subfeatures,
         const std::vector<size_t>& _index,
+        const std::vector<std::function<bool( const containers::Match& )>>&
+            _condition_functions,
         const size_t _rownum,
         containers::Features* _features ) const;
 
@@ -129,6 +131,7 @@ class DeepFeatureSynthesis
     void fit_on_categoricals(
         const containers::DataFrame& _peripheral,
         const size_t _peripheral_ix,
+        const std::vector<containers::Condition>& _conditions,
         std::shared_ptr<std::vector<containers::AbstractFeature>>
             _abstract_features ) const;
 
@@ -136,6 +139,7 @@ class DeepFeatureSynthesis
     void fit_on_discretes(
         const containers::DataFrame& _peripheral,
         const size_t _peripheral_ix,
+        const std::vector<containers::Condition>& _conditions,
         std::shared_ptr<std::vector<containers::AbstractFeature>>
             _abstract_features ) const;
 
@@ -143,36 +147,7 @@ class DeepFeatureSynthesis
     void fit_on_numericals(
         const containers::DataFrame& _peripheral,
         const size_t _peripheral_ix,
-        std::shared_ptr<std::vector<containers::AbstractFeature>>
-            _abstract_features ) const;
-
-    /// Fits abstract features on categorical columns with the same unit.
-    void fit_on_same_units_categorical(
-        const containers::DataFrame& _population,
-        const containers::DataFrame& _peripheral,
-        const size_t _peripheral_ix,
-        std::shared_ptr<std::vector<containers::AbstractFeature>>
-            _abstract_features ) const;
-
-    /// Fits abstract features on discrete columns with the same unit.
-    void fit_on_same_units_discrete(
-        const containers::DataFrame& _population,
-        const containers::DataFrame& _peripheral,
-        const size_t _peripheral_ix,
-        std::shared_ptr<std::vector<containers::AbstractFeature>>
-            _abstract_features ) const;
-
-    /// Fits abstract features on numerical columns with the same unit.
-    void fit_on_same_units_numerical(
-        const containers::DataFrame& _population,
-        const containers::DataFrame& _peripheral,
-        const size_t _peripheral_ix,
-        std::shared_ptr<std::vector<containers::AbstractFeature>>
-            _abstract_features ) const;
-
-    /// Fits abstract features on the subfeatures.
-    void fit_on_subfeatures(
-        const size_t _peripheral_ix,
+        const std::vector<containers::Condition>& _conditions,
         std::shared_ptr<std::vector<containers::AbstractFeature>>
             _abstract_features ) const;
 
@@ -181,6 +156,41 @@ class DeepFeatureSynthesis
         const containers::DataFrame& _population,
         const containers::DataFrame& _peripheral,
         const size_t _peripheral_ix,
+        const std::vector<std::vector<containers::Condition>>& _conditions,
+        std::shared_ptr<std::vector<containers::AbstractFeature>>
+            _abstract_features ) const;
+
+    /// Fits abstract features on categorical columns with the same unit.
+    void fit_on_same_units_categorical(
+        const containers::DataFrame& _population,
+        const containers::DataFrame& _peripheral,
+        const size_t _peripheral_ix,
+        const std::vector<containers::Condition>& _conditions,
+        std::shared_ptr<std::vector<containers::AbstractFeature>>
+            _abstract_features ) const;
+
+    /// Fits abstract features on discrete columns with the same unit.
+    void fit_on_same_units_discrete(
+        const containers::DataFrame& _population,
+        const containers::DataFrame& _peripheral,
+        const size_t _peripheral_ix,
+        const std::vector<containers::Condition>& _conditions,
+        std::shared_ptr<std::vector<containers::AbstractFeature>>
+            _abstract_features ) const;
+
+    /// Fits abstract features on numerical columns with the same unit.
+    void fit_on_same_units_numerical(
+        const containers::DataFrame& _population,
+        const containers::DataFrame& _peripheral,
+        const size_t _peripheral_ix,
+        const std::vector<containers::Condition>& _conditions,
+        std::shared_ptr<std::vector<containers::AbstractFeature>>
+            _abstract_features ) const;
+
+    /// Fits abstract features on the subfeatures.
+    void fit_on_subfeatures(
+        const size_t _peripheral_ix,
+        const std::vector<containers::Condition>& _conditions,
         std::shared_ptr<std::vector<containers::AbstractFeature>>
             _abstract_features ) const;
 
@@ -222,6 +232,18 @@ class DeepFeatureSynthesis
     /// Infers whether the aggregation _agg can be applied to a numerical or
     /// discrete column.
     bool is_numerical( const std::string& _agg ) const;
+
+    /// Generates WHERE-conditions to apply to the aggregations.
+    std::vector<std::vector<containers::Condition>> make_conditions(
+        const TableHolder& _table_holder ) const;
+
+    /// Generates conditions based on the categorical columns with the same
+    /// unit.
+    void make_same_units_categorical_conditions(
+        const containers::DataFrame& _population,
+        const containers::DataFrame& _peripheral,
+        const size_t _peripheral_ix,
+        std::vector<std::vector<containers::Condition>>* _conditions ) const;
 
     /// Generates the matches for a particular row in the population table.
     std::vector<std::vector<containers::Match>> make_matches(
@@ -350,6 +372,21 @@ class DeepFeatureSynthesis
             _name.find( "$GETML_ROWID" ) == std::string::npos;
         return not_contains_rowid &&
                ( _unit.find( "time stamp" ) != std::string::npos );
+    }
+
+    /// Generates a filter function for the conditions.
+    std::function<bool( const std::vector<containers::Condition>& )>
+    make_condition_filter( const size_t _peripheral_ix ) const
+    {
+        const auto peripheral_matches =
+            [_peripheral_ix]( const containers::Condition& c ) -> bool {
+            return c.peripheral_ == _peripheral_ix;
+        };
+
+        return [peripheral_matches](
+                   const std::vector<containers::Condition>& c ) -> bool {
+            return std::all_of( c.begin(), c.end(), peripheral_matches );
+        };
     }
 
     /// Trivial accessor
