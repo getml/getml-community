@@ -39,13 +39,15 @@ ConditionParser::make_apply_conditions(
         parse_conditions( _table_holder, _subfeatures, _abstract_feature );
 
     return [conditions]( const containers::Match &match ) -> bool {
-        const auto include_match =
-            [&match](
-                const std::function<bool( const containers::Match &match )>
-                    &cond ) -> bool { return cond( match ); };
+        for ( const auto &cond : conditions )
+            {
+                if ( !cond( match ) )
+                    {
+                        return false;
+                    }
+            }
 
-        return std::all_of(
-            conditions.begin(), conditions.end(), include_match );
+        return true;
     };
 }
 
