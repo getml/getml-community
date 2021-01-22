@@ -6,6 +6,7 @@ set(
     ${DFS_SOURCE_DIRECTORY}/ConditionParser.cpp
     ${DFS_SOURCE_DIRECTORY}/DeepFeatureSynthesis.cpp
     ${DFS_SOURCE_DIRECTORY}/Hyperparameters.cpp
+    ${DFS_SOURCE_DIRECTORY}/RSquared.cpp
     ${DFS_SOURCE_DIRECTORY}/SQLMaker.cpp
 )
 

@@ -299,6 +299,63 @@ std::vector<containers::Features> DeepFeatureSynthesis::build_subfeatures(
 
 // ----------------------------------------------------------------------------
 
+std::vector<Float> DeepFeatureSynthesis::calc_r_squared(
+    const containers::DataFrame &_population,
+    const std::vector<containers::DataFrame> &_peripheral,
+    const std::shared_ptr<const logging::AbstractLogger> _logger ) const
+{
+    auto r_squared = std::vector<Float>();
+
+    constexpr size_t batch_size = 100;
+
+    for ( size_t begin = 0; begin < abstract_features().size();
+          begin += batch_size )
+        {
+            const auto end =
+                std::min( abstract_features().size(), begin + batch_size );
+
+            auto index = std::vector<size_t>( end - begin );
+
+            std::iota( index.begin(), index.end(), begin );
+
+            const auto features =
+                transform( _population, _peripheral, index, nullptr );
+
+            const auto r =
+                RSquared::calculate( _population.targets_, features );
+
+            r_squared.insert( r_squared.end(), r.begin(), r.end() );
+
+            if ( _logger )
+                {
+                    const auto progress = std::to_string(
+                        ( end * 100 ) / abstract_features().size() );
+
+                    _logger->log(
+                        "Built " + std::to_string( end ) +
+                        " features. Progress: " + progress + "\%." );
+                }
+        }
+
+    return r_squared;
+}
+
+// ----------------------------------------------------------------------------
+
+Float DeepFeatureSynthesis::calc_threshold(
+    const std::vector<Float> &_r_squared ) const
+{
+    auto r_squared = _r_squared;
+
+    std::ranges::sort( r_squared, std::ranges::greater() );
+
+    assert_true( r_squared.size() > hyperparameters().num_features_ );
+
+    return r_squared.at( hyperparameters().num_features_ );
+}
+
+// ----------------------------------------------------------------------------
+
 std::map<helpers::ColumnDescription, Float>
 DeepFeatureSynthesis::column_importances(
     const std::vector<Float> &_importance_factors ) const
@@ -416,7 +473,8 @@ containers::DataFrame DeepFeatureSynthesis::find_peripheral(
 void DeepFeatureSynthesis::fit(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral,
-    const std::shared_ptr<const logging::AbstractLogger> _logger )
+    const std::shared_ptr<const logging::AbstractLogger> _logger,
+    const bool _as_subfeatures )
 {
     extract_schemas( _population, _peripheral );
 
@@ -424,7 +482,12 @@ void DeepFeatureSynthesis::fit(
 
     if ( _logger )
         {
-            _logger->log( "DeepFeatureSynthesis: Training features..." );
+            const auto msg =
+                _as_subfeatures
+                    ? "DeepFeatureSynthesis: Training subfeatures..."
+                    : "DeepFeatureSynthesis: Training features...";
+
+            _logger->log( msg );
         }
 
     const auto abstract_features =
@@ -461,7 +524,12 @@ void DeepFeatureSynthesis::fit(
 
     abstract_features_ = abstract_features;
 
-    if ( _logger )
+    if ( !_as_subfeatures )
+        {
+            abstract_features_ =
+                select_features( _population, _peripheral, _logger );
+        }
+    else
         {
             _logger->log( "Trained features. Progress: 100\%." );
         }
@@ -871,7 +939,7 @@ DeepFeatureSynthesis::fit_subfeatures(
             const auto population =
                 find_peripheral( _peripheral, joined_table.name_ );
 
-            subfeatures->back()->fit( population, _peripheral, _logger );
+            subfeatures->back()->fit( population, _peripheral, _logger, true );
         }
 
     return subfeatures;
@@ -1307,6 +1375,50 @@ std::shared_ptr<std::vector<size_t>> DeepFeatureSynthesis::make_rownums(
 
 // ----------------------------------------------------------------------------
 
+std::shared_ptr<const std::vector<containers::AbstractFeature>>
+DeepFeatureSynthesis::select_features(
+    const containers::DataFrame &_population,
+    const std::vector<containers::DataFrame> &_peripheral,
+    const std::shared_ptr<const logging::AbstractLogger> _logger ) const
+{
+    if ( abstract_features().size() <= hyperparameters().num_features_ )
+        {
+            if ( _logger )
+                {
+                    _logger->log( "Trained features. Progress: 100\%." );
+                }
+
+            return abstract_features_;
+        }
+
+    const auto r_squared = calc_r_squared( _population, _peripheral, _logger );
+
+    const auto threshold = calc_threshold( r_squared );
+
+    const auto r_greater_threshold = [&r_squared,
+                                      threshold]( const size_t ix ) {
+        return r_squared.at( ix ) > threshold;
+    };
+
+    const auto get_feature = [this]( const size_t ix ) {
+        return abstract_features().at( ix );
+    };
+
+    assert_true( r_squared.size() == abstract_features().size() );
+
+    auto iota = std::vector<size_t>( r_squared.size() );
+
+    std::iota( iota.begin(), iota.end(), 0 );
+
+    auto range = iota | std::views::filter( r_greater_threshold ) |
+                 std::views::transform( get_feature );
+
+    return std::make_shared<std::vector<containers::AbstractFeature>>(
+        range.begin(), range.end() );
+}
+
+// ----------------------------------------------------------------------------
+
 void DeepFeatureSynthesis::spawn_threads(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral,
@@ -1434,7 +1546,10 @@ containers::Features DeepFeatureSynthesis::transform(
 
     auto features = init_features( _population.nrows(), index.size() );
 
-    _logger->log( "DeepFeatureSynthesis: Building features..." );
+    if ( _logger )
+        {
+            _logger->log( "DeepFeatureSynthesis: Building features..." );
+        }
 
     spawn_threads(
         _population, _peripheral, subfeatures, index, _logger, &features );

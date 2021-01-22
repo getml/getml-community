@@ -55,7 +55,8 @@ class DeepFeatureSynthesis
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
         const std::shared_ptr<const logging::AbstractLogger> _logger =
-            std::shared_ptr<const logging::AbstractLogger>() );
+            std::shared_ptr<const logging::AbstractLogger>(),
+        const bool _as_subfeatures = false );
 
     /// Saves the DeepFeatureSynthesis into a JSON file.
     void save( const std::string& _fname ) const;
@@ -111,6 +112,15 @@ class DeepFeatureSynthesis
     std::vector<containers::Features> build_subfeatures(
         const std::vector<containers::DataFrame>& _peripheral,
         const std::shared_ptr<const logging::AbstractLogger> _logger ) const;
+
+    /// Calculates the R-squared for each feature vis-a-vis the targets.
+    std::vector<Float> calc_r_squared(
+        const containers::DataFrame& _population,
+        const std::vector<containers::DataFrame>& _peripheral,
+        const std::shared_ptr<const logging::AbstractLogger> _logger ) const;
+
+    /// Calculates the threshold on the basis of which we throw out features.
+    Float calc_threshold( const std::vector<Float>& _r_squared ) const;
 
     /// Extracts the schemas from the training set.
     void extract_schemas(
@@ -252,6 +262,13 @@ class DeepFeatureSynthesis
     /// Generates the rownums for the thread signified by _thread_num
     std::shared_ptr<std::vector<size_t>> make_rownums(
         const size_t _thread_num, const size_t _nrows ) const;
+
+    /// Weeds out features for which the correlation coefficient is too small.
+    std::shared_ptr<const std::vector<containers::AbstractFeature>>
+    select_features(
+        const containers::DataFrame& _population,
+        const std::vector<containers::DataFrame>& _peripheral,
+        const std::shared_ptr<const logging::AbstractLogger> _logger ) const;
 
     /// Spawns the threads for building the features.
     void spawn_threads(

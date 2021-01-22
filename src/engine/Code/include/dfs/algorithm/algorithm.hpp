@@ -43,6 +43,7 @@
 
 #include "dfs/algorithm/Aggregator.hpp"
 #include "dfs/algorithm/ConditionParser.hpp"
+#include "dfs/algorithm/RSquared.hpp"
 
 #include "dfs/algorithm/DeepFeatureSynthesis.hpp"
 
