@@ -65,6 +65,10 @@ Poco::JSON::Object::Ptr AbstractFeature::to_json_obj() const
         enums::Parser<enums::Aggregation>::to_str( aggregation_ ) );
 
     obj->set(
+        "conditions_",
+        jsonutils::JSON::vector_to_object_array_ptr( conditions_ ) );
+
+    obj->set(
         "data_used_", enums::Parser<enums::DataUsed>::to_str( data_used_ ) );
 
     obj->set( "input_col_", input_col_ );
@@ -154,7 +158,10 @@ std::string AbstractFeature::to_sql(
 
     for ( size_t i = 0; i < conditions_.size(); ++i )
         {
-            sql << std::endl;
+            if ( i != 0 )
+                {
+                    sql << std::endl;
+                }
 
             if ( i == 0 && !use_time_stamps )
                 {

@@ -36,6 +36,24 @@ Condition::~Condition() = default;
 
 // ----------------------------------------------------------------------------
 
+Poco::JSON::Object::Ptr Condition::to_json_obj() const
+{
+    auto obj = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
+
+    obj->set(
+        "data_used_", enums::Parser<enums::DataUsed>::to_str( data_used_ ) );
+
+    obj->set( "input_col_", input_col_ );
+
+    obj->set( "output_col_", output_col_ );
+
+    obj->set( "peripheral_", peripheral_ );
+
+    return obj;
+}
+
+// ----------------------------------------------------------------------------
+
 std::string Condition::to_sql(
     const std::string &_feature_prefix,
     const Placeholder &_input,
