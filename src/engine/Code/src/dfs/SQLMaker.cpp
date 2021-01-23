@@ -172,6 +172,7 @@ std::pair<std::string, std::string> SQLMaker::get_same_units(
 // ----------------------------------------------------------------------------
 
 std::string SQLMaker::select_statement(
+    const std::vector<strings::String>& _categories,
     const std::string& _feature_prefix,
     const AbstractFeature& _abstract_feature,
     const Placeholder& _input,
@@ -198,7 +199,7 @@ std::string SQLMaker::select_statement(
         }
 
     select += value_to_be_aggregated(
-        _feature_prefix, _abstract_feature, _input, _output );
+        _categories, _feature_prefix, _abstract_feature, _input, _output );
 
     select += " )";
 
@@ -208,6 +209,7 @@ std::string SQLMaker::select_statement(
 // ----------------------------------------------------------------------------
 
 std::string SQLMaker::value_to_be_aggregated(
+    const std::vector<strings::String>& _categories,
     const std::string& _feature_prefix,
     const AbstractFeature& _abstract_feature,
     const Placeholder& _input,
@@ -216,6 +218,42 @@ std::string SQLMaker::value_to_be_aggregated(
     switch ( _abstract_feature.data_used_ )
         {
             case enums::DataUsed::categorical:
+                if ( _abstract_feature.categorical_value_ ==
+                     AbstractFeature::NO_CATEGORICAL_VALUE )
+                    {
+                        return get_name(
+                            _feature_prefix,
+                            _abstract_feature.data_used_,
+                            _abstract_feature.peripheral_,
+                            _abstract_feature.input_col_,
+                            _abstract_feature.output_col_,
+                            _input,
+                            _output );
+                    }
+                else
+                    {
+                        const auto name = get_name(
+                            _feature_prefix,
+                            _abstract_feature.data_used_,
+                            _abstract_feature.peripheral_,
+                            _abstract_feature.input_col_,
+                            _abstract_feature.output_col_,
+                            _input,
+                            _output );
+
+                        assert_true(
+                            _abstract_feature.categorical_value_ <
+                            _categories.size() );
+
+                        const auto category =
+                            _categories
+                                .at( _abstract_feature.categorical_value_ )
+                                .str();
+
+                        return "CASE WHEN " + name + " = '" + category +
+                               "' THEN 1 ELSE 0 END";
+                    }
+
             case enums::DataUsed::discrete:
             case enums::DataUsed::numerical:
             case enums::DataUsed::subfeatures:

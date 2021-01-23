@@ -9,6 +9,8 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _json_obj )
           jsonutils::JSON::get_array( _json_obj, "aggregation_" ) ) ),
       loss_function_( jsonutils::JSON::get_value<std::string>(
           _json_obj, "loss_function_" ) ),
+      n_most_frequent_(
+          jsonutils::JSON::get_value<size_t>( _json_obj, "n_most_frequent_" ) ),
       num_features_(
           jsonutils::JSON::get_value<Int>( _json_obj, "num_features_" ) ),
       num_threads_(
@@ -33,6 +35,8 @@ Poco::JSON::Object::Ptr Hyperparameters::to_json_obj() const
         "aggregation_", jsonutils::JSON::vector_to_array_ptr( aggregations_ ) );
 
     obj->set( "loss_function_", loss_function_ );
+
+    obj->set( "n_most_frequent_", n_most_frequent_ );
 
     obj->set( "num_features_", num_features_ );
 

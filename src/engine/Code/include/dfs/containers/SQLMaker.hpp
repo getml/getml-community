@@ -22,6 +22,7 @@ class SQLMaker
     /// Creates a select statement (SELECT AGGREGATION(VALUE TO TO BE
     /// AGGREGATED)).
     static std::string select_statement(
+        const std::vector<strings::String>& _categories,
         const std::string& _feature_prefix,
         const AbstractFeature& _abstract_feature,
         const Placeholder& _input,
@@ -50,6 +51,7 @@ class SQLMaker
     /// Creates the value to be aggregated (for instance a column name or the
     /// difference between two columns)
     static std::string value_to_be_aggregated(
+        const std::vector<strings::String>& _categories,
         const std::string& _feature_prefix,
         const AbstractFeature& _abstract_feature,
         const Placeholder& _input,

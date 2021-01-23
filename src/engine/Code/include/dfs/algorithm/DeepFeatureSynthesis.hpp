@@ -132,6 +132,10 @@ class DeepFeatureSynthesis
     /// held by the individual trees.
     void extract_schemas( const TableHolder& _table_holder );
 
+    /// Returns the most frequent categories of a categorical column
+    std::vector<Int> find_most_frequent_categories(
+        const containers::Column<Int>& _col ) const;
+
     /// Finds the DataFrame associated with _name.
     containers::DataFrame find_peripheral(
         const std::vector<containers::DataFrame>& _peripheral,
@@ -139,6 +143,15 @@ class DeepFeatureSynthesis
 
     /// Fits abstract features on the categorical columns.
     void fit_on_categoricals(
+        const containers::DataFrame& _peripheral,
+        const size_t _peripheral_ix,
+        const std::vector<containers::Condition>& _conditions,
+        std::shared_ptr<std::vector<containers::AbstractFeature>>
+            _abstract_features ) const;
+
+    /// Fits abstract features on the categorical columns by identifying the
+    /// most frequent categories.
+    void fit_on_categoricals_by_categories(
         const containers::DataFrame& _peripheral,
         const size_t _peripheral_ix,
         const std::vector<containers::Condition>& _conditions,

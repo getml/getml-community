@@ -93,11 +93,31 @@ Float Aggregator::apply_categorical(
     const auto &col =
         _peripheral.categorical_col( _abstract_feature.input_col_ );
 
-    const auto extract_value = [&col]( const containers::Match &match ) -> Int {
-        return col[match.ix_input];
+    if ( _abstract_feature.categorical_value_ ==
+         containers::AbstractFeature::NO_CATEGORICAL_VALUE )
+        {
+            const auto extract_value =
+                [&col]( const containers::Match &match ) -> Int {
+                return col[match.ix_input];
+            };
+
+            return aggregate_matches_categorical(
+                _matches,
+                extract_value,
+                _condition_function,
+                _abstract_feature );
+        }
+
+    const auto extract_value =
+        [&col, &_abstract_feature]( const containers::Match &match ) -> Float {
+        if ( col[match.ix_input] == _abstract_feature.categorical_value_ )
+            {
+                return 1.0;
+            }
+        return 0.0;
     };
 
-    return aggregate_matches_categorical(
+    return aggregate_matches_numerical(
         _matches, extract_value, _condition_function, _abstract_feature );
 }
 
@@ -178,7 +198,8 @@ Float Aggregator::apply_same_units_categorical(
 
     const auto extract_value =
         [&col1, &col2]( const containers::Match &match ) -> Float {
-        if ( col1[match.ix_output] == col2[match.ix_input] )
+        if ( col1[match.ix_output] == col2[match.ix_input] &&
+             col1[match.ix_output] >= 0 )
             {
                 return 1.0;
             }

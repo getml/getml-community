@@ -14,6 +14,7 @@ AbstractFeature::AbstractFeature(
     const size_t _output_col,
     const size_t _peripheral )
     : aggregation_( _aggregation ),
+      categorical_value_( NO_CATEGORICAL_VALUE ),
       conditions_( _conditions ),
       data_used_( _data_used ),
       input_col_( _input_col ),
@@ -37,16 +38,37 @@ AbstractFeature::AbstractFeature(
 
 // ----------------------------------------------------------------------------
 
+AbstractFeature::AbstractFeature(
+    const enums::Aggregation _aggregation,
+    const std::vector<Condition> &_conditions,
+    const size_t _input_col,
+    const size_t _peripheral,
+    const Int _categorical_value )
+    : aggregation_( _aggregation ),
+      categorical_value_( _categorical_value ),
+      conditions_( _conditions ),
+      data_used_( enums::DataUsed::categorical ),
+      input_col_( _input_col ),
+      output_col_( 0 ),
+      peripheral_( _peripheral )
+{
+    assert_true( _categorical_value >= 0 );
+}
+
+// ----------------------------------------------------------------------------
+
 AbstractFeature::AbstractFeature( const Poco::JSON::Object &_obj )
-    : AbstractFeature(
-          enums::Parser<enums::Aggregation>::parse(
-              jsonutils::JSON::get_value<std::string>( _obj, "aggregation_" ) ),
-          jsonutils::JSON::get_type_vector<Condition>( _obj, "conditions_" ),
-          enums::Parser<enums::DataUsed>::parse(
-              jsonutils::JSON::get_value<std::string>( _obj, "data_used_" ) ),
-          jsonutils::JSON::get_value<size_t>( _obj, "input_col_" ),
-          jsonutils::JSON::get_value<size_t>( _obj, "output_col_" ),
-          jsonutils::JSON::get_value<size_t>( _obj, "peripheral_" ) )
+    : aggregation_( enums::Parser<enums::Aggregation>::parse(
+          jsonutils::JSON::get_value<std::string>( _obj, "aggregation_" ) ) ),
+      categorical_value_(
+          jsonutils::JSON::get_value<Int>( _obj, "categorical_value_" ) ),
+      conditions_(
+          jsonutils::JSON::get_type_vector<Condition>( _obj, "conditions_" ) ),
+      data_used_( enums::Parser<enums::DataUsed>::parse(
+          jsonutils::JSON::get_value<std::string>( _obj, "data_used_" ) ) ),
+      input_col_( jsonutils::JSON::get_value<size_t>( _obj, "input_col_" ) ),
+      output_col_( jsonutils::JSON::get_value<size_t>( _obj, "output_col_" ) ),
+      peripheral_( jsonutils::JSON::get_value<size_t>( _obj, "peripheral_" ) )
 {
 }
 
@@ -63,6 +85,8 @@ Poco::JSON::Object::Ptr AbstractFeature::to_json_obj() const
     obj->set(
         "aggregation_",
         enums::Parser<enums::Aggregation>::to_str( aggregation_ ) );
+
+    obj->set( "categorical_value_", categorical_value_ );
 
     obj->set(
         "conditions_",
@@ -109,7 +133,7 @@ std::string AbstractFeature::to_sql(
     sql << "SELECT ";
 
     sql << SQLMaker::select_statement(
-        _feature_prefix, *this, _input, _output );
+        _categories, _feature_prefix, *this, _input, _output );
 
     sql << " AS \"feature_" << _feature_prefix << _feature_num << "\","
         << std::endl;

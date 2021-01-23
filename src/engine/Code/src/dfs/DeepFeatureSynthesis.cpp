@@ -443,6 +443,50 @@ void DeepFeatureSynthesis::extract_schemas( const TableHolder &_table_holder )
 
 // ----------------------------------------------------------------------------
 
+std::vector<Int> DeepFeatureSynthesis::find_most_frequent_categories(
+    const containers::Column<Int> &_col ) const
+{
+    std::map<Int, size_t> frequencies;
+
+    for ( size_t i = 0; i < _col.nrows_; ++i )
+        {
+            const auto val = _col[i];
+
+            const auto it = frequencies.find( val );
+
+            if ( it == frequencies.end() )
+                {
+                    frequencies[val] = 1;
+                }
+            else
+                {
+                    it->second++;
+                }
+        }
+
+    using Pair = std::pair<Int, size_t>;
+
+    const auto sort_by_second = []( const Pair p1, const Pair p2 ) {
+        return p1.second > p2.second;
+    };
+
+    auto pairs = std::vector<Pair>( frequencies.begin(), frequencies.end() );
+
+    std::ranges::sort( pairs, sort_by_second );
+
+    const auto get_first = []( const Pair p ) -> Int { return p.first; };
+
+    const auto is_not_null = []( const Int val ) -> bool { return val >= 0; };
+
+    const auto range = pairs | std::views::transform( get_first ) |
+                       std::views::filter( is_not_null ) |
+                       std::views::take( hyperparameters().n_most_frequent_ );
+
+    return helpers::STL::make_vector<Int>( range );
+}
+
+// ----------------------------------------------------------------------------
+
 containers::DataFrame DeepFeatureSynthesis::find_peripheral(
     const std::vector<containers::DataFrame> &_peripheral,
     const std::string &_name ) const
@@ -450,7 +494,8 @@ containers::DataFrame DeepFeatureSynthesis::find_peripheral(
     if ( _peripheral.size() != peripheral().size() )
         {
             throw std::invalid_argument(
-                "The number of peripheral tables does not match the number of "
+                "The number of peripheral tables does not match the number "
+                "of "
                 "peripheral placeholders." );
         }
 
@@ -529,7 +574,7 @@ void DeepFeatureSynthesis::fit(
             abstract_features_ =
                 select_features( _population, _peripheral, _logger );
         }
-    else
+    else if ( _logger )
         {
             _logger->log( "Trained features. Progress: 100\%." );
         }
@@ -568,6 +613,51 @@ void DeepFeatureSynthesis::fit_on_categoricals(
                         enums::DataUsed::categorical,
                         input_col,
                         _peripheral_ix ) );
+                }
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+void DeepFeatureSynthesis::fit_on_categoricals_by_categories(
+    const containers::DataFrame &_peripheral,
+    const size_t _peripheral_ix,
+    const std::vector<containers::Condition> &_conditions,
+    std::shared_ptr<std::vector<containers::AbstractFeature>>
+        _abstract_features ) const
+{
+    assert_true( _abstract_features );
+
+    for ( size_t input_col = 0; input_col < _peripheral.num_categoricals();
+          ++input_col )
+        {
+            if ( _peripheral.categorical_unit( input_col )
+                     .find( "comparison only" ) != std::string::npos )
+                {
+                    continue;
+                }
+
+            const auto most_frequent = find_most_frequent_categories(
+                _peripheral.categorical_col( input_col ) );
+
+            for ( const auto categorical_value : most_frequent )
+                {
+                    for ( const auto agg : hyperparameters().aggregations_ )
+                        {
+                            if ( !is_numerical( agg ) )
+                                {
+                                    continue;
+                                }
+
+                            _abstract_features->push_back(
+                                containers::AbstractFeature(
+                                    enums::Parser<enums::Aggregation>::parse(
+                                        agg ),
+                                    _conditions,
+                                    input_col,
+                                    _peripheral_ix,
+                                    categorical_value ) );
+                        }
                 }
         }
 }
@@ -867,6 +957,9 @@ void DeepFeatureSynthesis::fit_on_peripheral(
     for ( const auto &cond : filtered_conditions )
         {
             fit_on_categoricals(
+                _peripheral, _peripheral_ix, cond, _abstract_features );
+
+            fit_on_categoricals_by_categories(
                 _peripheral, _peripheral_ix, cond, _abstract_features );
 
             fit_on_discretes(
