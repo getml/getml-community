@@ -18,7 +18,10 @@ Float Aggregator::apply_aggregation(
         {
             case enums::DataUsed::categorical:
                 return apply_categorical(
-                    _peripheral, _matches, _abstract_feature );
+                    _peripheral,
+                    _matches,
+                    _condition_function,
+                    _abstract_feature );
 
             case enums::DataUsed::discrete:
                 return apply_discrete(
@@ -81,6 +84,7 @@ Float Aggregator::apply_aggregation(
 Float Aggregator::apply_categorical(
     const containers::DataFrame &_peripheral,
     const std::vector<containers::Match> &_matches,
+    const std::function<bool( const containers::Match & )> &_condition_function,
     const containers::AbstractFeature &_abstract_feature )
 {
     assert_true(
@@ -89,18 +93,12 @@ Float Aggregator::apply_categorical(
     const auto &col =
         _peripheral.categorical_col( _abstract_feature.input_col_ );
 
-    const auto extract_value =
-        [&col]( const containers::Match &match ) -> Float {
+    const auto extract_value = [&col]( const containers::Match &match ) -> Int {
         return col[match.ix_input];
     };
 
-    const auto is_non_null = []( Int val ) { return val >= 0; };
-
-    auto range = _matches | std::views::transform( extract_value ) |
-                 std::views::filter( is_non_null );
-
-    return aggregate_categorical_range(
-        range.begin(), range.end(), _abstract_feature.aggregation_ );
+    return aggregate_matches_categorical(
+        _matches, extract_value, _condition_function, _abstract_feature );
 }
 
 // ----------------------------------------------------------------------------

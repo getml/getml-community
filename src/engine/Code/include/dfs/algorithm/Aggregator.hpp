@@ -28,6 +28,8 @@ class Aggregator
     static Float apply_categorical(
         const containers::DataFrame &_peripheral,
         const std::vector<containers::Match> &_matches,
+        const std::function<bool( const containers::Match & )>
+            &_condition_function,
         const containers::AbstractFeature &_abstract_feature );
 
     /// Determines whether a condition is true w.r.t. a match.
@@ -120,6 +122,45 @@ class Aggregator
                         false && "Unknown aggregation for categorical column" );
                     return 0.0;
             }
+    }
+
+    /// Aggregates the matches using the extract_value lambda function.
+    template <class ExtractValueType>
+    static Float aggregate_matches_categorical(
+        const std::vector<containers::Match> &_matches,
+        const ExtractValueType &_extract_value,
+        const std::function<bool( const containers::Match & )>
+            &_condition_function,
+        const containers::AbstractFeature &_abstract_feature )
+    {
+        // ---------------------------------------------------
+
+        const auto is_non_null = []( Int val ) { return val >= 0; };
+
+        // ---------------------------------------------------
+
+        if ( _abstract_feature.conditions_.size() == 0 )
+            {
+                auto range = _matches |
+                             std::views::transform( _extract_value ) |
+                             std::views::filter( is_non_null );
+
+                return aggregate_categorical_range(
+                    range.begin(),
+                    range.end(),
+                    _abstract_feature.aggregation_ );
+            }
+
+        // ---------------------------------------------------
+
+        auto range = _matches | std::views::filter( _condition_function ) |
+                     std::views::transform( _extract_value ) |
+                     std::views::filter( is_non_null );
+
+        return aggregate_categorical_range(
+            range.begin(), range.end(), _abstract_feature.aggregation_ );
+
+        // ---------------------------------------------------
     }
 
     /// Aggregates the matches using the extract_value lambda function.
