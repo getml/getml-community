@@ -269,6 +269,7 @@ void DeepFeatureSynthesis::build_rows(
 
 std::vector<containers::Features> DeepFeatureSynthesis::build_subfeatures(
     const std::vector<containers::DataFrame> &_peripheral,
+    const std::vector<size_t> &_index,
     const std::shared_ptr<const logging::AbstractLogger> _logger ) const
 {
     assert_true( placeholder().joined_tables_.size() == subfeatures().size() );
@@ -288,10 +289,15 @@ std::vector<containers::Features> DeepFeatureSynthesis::build_subfeatures(
             const auto population =
                 find_peripheral( _peripheral, joined_table.name_ );
 
-            const auto f = subfeatures().at( i )->transform(
-                population, _peripheral, std::nullopt, _logger );
+            const auto subfeature_index = make_subfeature_index( i, _index );
 
-            features.push_back( f );
+            const auto f = subfeatures().at( i )->transform(
+                population, _peripheral, subfeature_index, _logger );
+
+            const auto f_expanded = expand_subfeatures(
+                f, subfeature_index, subfeatures().at( i )->num_features() );
+
+            features.push_back( f_expanded );
         }
 
     return features;
@@ -391,6 +397,29 @@ DeepFeatureSynthesis::column_importances(
         }
 
     return importances.importances();
+}
+
+// ----------------------------------------------------------------------------
+
+containers::Features DeepFeatureSynthesis::expand_subfeatures(
+    const containers::Features &_subfeatures,
+    const std::vector<size_t> &_subfeature_index,
+    const size_t _num_subfeatures ) const
+{
+    assert_true( _subfeatures.size() == _subfeature_index.size() );
+
+    auto expanded_subfeatures = containers::Features( _num_subfeatures );
+
+    for ( size_t i = 0; i < _subfeatures.size(); ++i )
+        {
+            const auto ix = _subfeature_index.at( i );
+
+            assert_true( ix < expanded_subfeatures.size() );
+
+            expanded_subfeatures.at( ix ) = _subfeatures.at( i );
+        }
+
+    return expanded_subfeatures;
 }
 
 // ----------------------------------------------------------------------------
@@ -1444,6 +1473,35 @@ void DeepFeatureSynthesis::make_same_units_categorical_conditions(
 
 // ----------------------------------------------------------------------------
 
+std::vector<size_t> DeepFeatureSynthesis::make_subfeature_index(
+    const size_t _peripheral_ix, const std::vector<size_t> &_index ) const
+{
+    const auto get_feature = [this]( const size_t ix ) {
+        assert_true( ix < abstract_features().size() );
+        return abstract_features().at( ix );
+    };
+
+    const auto is_relevant_feature =
+        [_peripheral_ix]( const containers::AbstractFeature &f ) {
+            return f.data_used_ == enums::DataUsed::subfeatures &&
+                   f.peripheral_ == _peripheral_ix;
+        };
+
+    const auto get_input_col = []( const containers::AbstractFeature &f ) {
+        return f.input_col_;
+    };
+
+    const auto range = _index | std::views::transform( get_feature ) |
+                       std::views::filter( is_relevant_feature ) |
+                       std::views::transform( get_input_col );
+
+    const auto s = helpers::STL::make_set<size_t>( range );
+
+    return std::vector<size_t>( s.begin(), s.end() );
+}
+
+// ----------------------------------------------------------------------------
+
 std::shared_ptr<std::vector<size_t>> DeepFeatureSynthesis::make_rownums(
     const size_t _thread_num, const size_t _nrows ) const
 {
@@ -1635,7 +1693,7 @@ containers::Features DeepFeatureSynthesis::transform(
 
     const auto index = infer_index( _index );
 
-    const auto subfeatures = build_subfeatures( _peripheral, _logger );
+    const auto subfeatures = build_subfeatures( _peripheral, index, _logger );
 
     auto features = init_features( _population.nrows(), index.size() );
 

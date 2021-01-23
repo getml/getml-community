@@ -111,6 +111,7 @@ class DeepFeatureSynthesis
     /// Builds the subfeatures.
     std::vector<containers::Features> build_subfeatures(
         const std::vector<containers::DataFrame>& _peripheral,
+        const std::vector<size_t>& _index,
         const std::shared_ptr<const logging::AbstractLogger> _logger ) const;
 
     /// Calculates the R-squared for each feature vis-a-vis the targets.
@@ -121,6 +122,14 @@ class DeepFeatureSynthesis
 
     /// Calculates the threshold on the basis of which we throw out features.
     Float calc_threshold( const std::vector<Float>& _r_squared ) const;
+
+    /// We only calculate the subfeatures that we actually need - but we still
+    /// need to make sure that they are located at the right position. This is
+    /// what expand_subfeatures(...) does.
+    containers::Features expand_subfeatures(
+        const containers::Features& _subfeatures,
+        const std::vector<size_t>& _subfeature_index,
+        const size_t _num_subfeatures ) const;
 
     /// Extracts the schemas from the training set.
     void extract_schemas(
@@ -267,6 +276,11 @@ class DeepFeatureSynthesis
         const containers::DataFrame& _peripheral,
         const size_t _peripheral_ix,
         std::vector<std::vector<containers::Condition>>* _conditions ) const;
+
+    /// Generates an index of all subfeatures required for this particular set
+    /// of indices.
+    std::vector<size_t> make_subfeature_index(
+        const size_t _peripheral_ix, const std::vector<size_t>& _index ) const;
 
     /// Generates the matches for a particular row in the population table.
     std::vector<std::vector<containers::Match>> make_matches(
