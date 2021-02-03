@@ -84,7 +84,8 @@ class DecisionTreeEnsemble
     void fit_new_features(
         const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
         const std::shared_ptr<const TableHolder>& _table_holder,
-        const std::vector<containers::Subfeatures>& _subfeatures );
+        const std::vector<containers::Subfeatures>& _subfeatures,
+        const size_t _num_features );
 
     /// Fits the subensembles.
     void fit_subensembles(
@@ -244,6 +245,7 @@ class DecisionTreeEnsemble
     /// After fitting a set of candidates, keep the best ones.
     void keep_best_candidates(
         const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
+        const size_t _num_features,
         std::vector<
             std::tuple<decisiontrees::DecisionTree, Float, std::vector<Float>>>*
             _candidates );

@@ -54,7 +54,7 @@ void Threadutils::fit_as_feature_learner(
     while ( _ensemble->num_features() < num_features )
         {
             _ensemble->fit_new_features(
-                loss_function, table_holder, subfeatures );
+                loss_function, table_holder, subfeatures, num_features );
 
             const auto progress =
                 ( _ensemble->num_features() * 100 ) / num_features;

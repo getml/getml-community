@@ -90,7 +90,10 @@ void SubtreeHelper::fit_subensemble(
         {
             ( *_subensemble )
                 ->fit_new_features(
-                    intermediate_agg, subtable_holder, subfeatures );
+                    intermediate_agg,
+                    subtable_holder,
+                    subfeatures,
+                    num_features );
 
             const auto progress =
                 ( ( *_subensemble )->num_features() * 100 ) / num_features;

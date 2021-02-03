@@ -608,7 +608,8 @@ DecisionTreeEnsemble::fit_candidate_features(
 void DecisionTreeEnsemble::fit_new_features(
     const std::shared_ptr<lossfunctions::LossFunction> &_loss_function,
     const std::shared_ptr<const TableHolder> &_table_holder,
-    const std::vector<containers::Subfeatures> &_subfeatures )
+    const std::vector<containers::Subfeatures> &_subfeatures,
+    const size_t _num_features )
 {
     // ------------------------------------------------------------------------
 
@@ -637,7 +638,7 @@ void DecisionTreeEnsemble::fit_new_features(
 
     // ------------------------------------------------------------------------
 
-    keep_best_candidates( _loss_function, &candidates );
+    keep_best_candidates( _loss_function, _num_features, &candidates );
 
     // ------------------------------------------------------------------------
 }
@@ -728,6 +729,7 @@ DecisionTreeEnsemble::init_as_feature_learner(
 
 void DecisionTreeEnsemble::keep_best_candidates(
     const std::shared_ptr<lossfunctions::LossFunction> &_loss_function,
+    const size_t _num_features,
     std::vector<
         std::tuple<decisiontrees::DecisionTree, Float, std::vector<Float>>>
         *_candidates )
@@ -741,8 +743,7 @@ void DecisionTreeEnsemble::keep_best_candidates(
 
     std::ranges::sort( *_candidates, loss_is_smaller );
 
-    const auto num_remaining =
-        static_cast<size_t>( hyperparameters().num_features_ ) - num_features();
+    const auto num_remaining = _num_features - num_features();
 
     const auto num_keep = std::min( _candidates->size(), num_remaining );
 
