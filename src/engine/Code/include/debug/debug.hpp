@@ -4,6 +4,11 @@
 // ----------------------------------------------------------------------------
 // Dependencies
 
+#ifdef __GNUG__
+#include <cxxabi.h>
+#include <execinfo.h>
+#endif
+
 #include <cassert>
 
 #include <chrono>
@@ -12,6 +17,8 @@
 #include <string>
 
 // ----------------------------------------------------------------------------
+
+#include "debug/StackTrace.hpp"
 
 #include "debug/Assert.hpp"
 #include "debug/Debugger.hpp"

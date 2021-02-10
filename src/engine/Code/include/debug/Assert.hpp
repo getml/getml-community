@@ -13,10 +13,15 @@ struct Assert
     static void throw_exception(
         const char *_msg, const char *_file, const int _line )
     {
-        throw std::runtime_error(
+        const auto stack_trace = StackTrace::make();
+
+        const auto msg =
             std::string( "Assertion failed: " ) + _msg + " at " + _file +
-            ", line " + std::to_string( _line ) + ". Please help us improve " +
-            "our software by reporting this incident." );
+            ", line " + std::to_string( _line ) + ".\n\n" + stack_trace +
+            "Please help us improve our software by reporting this "
+            "incident.";
+
+        throw_exception( msg );
     }
 
     /// Throws an exception based on the user-defined message.
