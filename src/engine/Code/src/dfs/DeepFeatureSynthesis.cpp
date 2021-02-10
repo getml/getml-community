@@ -554,16 +554,6 @@ void DeepFeatureSynthesis::fit(
 
     subfeatures_ = fit_subfeatures( _peripheral, _logger );
 
-    if ( _logger )
-        {
-            const auto msg =
-                _as_subfeatures
-                    ? "DeepFeatureSynthesis: Training subfeatures..."
-                    : "DeepFeatureSynthesis: Training features...";
-
-            _logger->log( msg );
-        }
-
     const auto abstract_features =
         std::make_shared<std::vector<containers::AbstractFeature>>();
 
@@ -598,14 +588,21 @@ void DeepFeatureSynthesis::fit(
 
     abstract_features_ = abstract_features;
 
+    if ( _logger && !_as_subfeatures )
+        {
+            const auto num_candidates =
+                std::to_string( abstract_features->size() );
+
+            const auto msg = "DeepFeatureSynthesis: Trying " + num_candidates +
+                             " features...";
+
+            _logger->log( msg );
+        }
+
     if ( !_as_subfeatures )
         {
             abstract_features_ =
                 select_features( _population, _peripheral, _logger );
-        }
-    else if ( _logger )
-        {
-            _logger->log( "Trained features. Progress: 100\%." );
         }
 }
 
@@ -623,15 +620,30 @@ void DeepFeatureSynthesis::fit_on_categoricals(
     for ( size_t input_col = 0; input_col < _peripheral.num_categoricals();
           ++input_col )
         {
+            if ( _peripheral.categorical_unit( input_col )
+                     .find( "comparison only" ) != std::string::npos )
+                {
+                    continue;
+                }
+
+            const auto condition_is_categorical =
+                []( const containers::Condition &_cond ) {
+                    return _cond.data_used_ == enums::DataUsed::categorical;
+                };
+
+            const auto any_condition_is_categorical = std::any_of(
+                _conditions.begin(),
+                _conditions.end(),
+                condition_is_categorical );
+
+            if ( any_condition_is_categorical )
+                {
+                    continue;
+                }
+
             for ( const auto agg : hyperparameters().aggregations_ )
                 {
                     if ( !is_categorical( agg ) )
-                        {
-                            continue;
-                        }
-
-                    if ( _peripheral.categorical_unit( input_col )
-                             .find( "comparison only" ) != std::string::npos )
                         {
                             continue;
                         }
@@ -662,6 +674,21 @@ void DeepFeatureSynthesis::fit_on_categoricals_by_categories(
         {
             if ( _peripheral.categorical_unit( input_col )
                      .find( "comparison only" ) != std::string::npos )
+                {
+                    continue;
+                }
+
+            const auto condition_is_categorical =
+                []( const containers::Condition &_cond ) {
+                    return _cond.data_used_ == enums::DataUsed::categorical;
+                };
+
+            const auto any_condition_is_categorical = std::any_of(
+                _conditions.begin(),
+                _conditions.end(),
+                condition_is_categorical );
+
+            if ( any_condition_is_categorical )
                 {
                     continue;
                 }
@@ -784,19 +811,34 @@ void DeepFeatureSynthesis::fit_on_same_units_categorical(
                   input_col < _peripheral.num_categoricals();
                   ++input_col )
                 {
+                    const bool same_unit =
+                        _population.categorical_unit( output_col ) != "" &&
+                        _population.categorical_unit( output_col ) ==
+                            _peripheral.categorical_unit( input_col );
+
+                    if ( !same_unit )
+                        {
+                            continue;
+                        }
+
+                    const auto condition_is_categorical =
+                        []( const containers::Condition &_cond ) {
+                            return _cond.data_used_ ==
+                                   enums::DataUsed::categorical;
+                        };
+
+                    const auto any_condition_is_categorical = std::any_of(
+                        _conditions.begin(),
+                        _conditions.end(),
+                        condition_is_categorical );
+
+                    if ( any_condition_is_categorical )
+                        {
+                            continue;
+                        }
+
                     for ( const auto agg : hyperparameters().aggregations_ )
                         {
-                            const bool same_unit =
-                                _population.categorical_unit( output_col ) !=
-                                    "" &&
-                                _population.categorical_unit( output_col ) ==
-                                    _peripheral.categorical_unit( input_col );
-
-                            if ( !same_unit )
-                                {
-                                    continue;
-                                }
-
                             if ( !is_numerical( agg ) )
                                 {
                                     continue;
@@ -1430,11 +1472,48 @@ DeepFeatureSynthesis::make_conditions( const TableHolder &_table_holder ) const
 
             const auto &peripheral = _table_holder.peripheral_tables_.at( i );
 
+            make_categorical_conditions( peripheral, i, &conditions );
+
             make_same_units_categorical_conditions(
                 population, peripheral, i, &conditions );
         }
 
     return conditions;
+}
+
+// ----------------------------------------------------------------------------
+
+void DeepFeatureSynthesis::make_categorical_conditions(
+    const containers::DataFrame &_peripheral,
+    const size_t _peripheral_ix,
+    std::vector<std::vector<containers::Condition>> *_conditions ) const
+{
+    if ( hyperparameters().n_most_frequent_ == 0 )
+        {
+            return;
+        }
+
+    for ( size_t input_col = 0; input_col < _peripheral.num_categoricals();
+          ++input_col )
+        {
+            if ( _peripheral.categorical_unit( input_col )
+                     .find( "comparison only" ) != std::string::npos )
+                {
+                    continue;
+                }
+
+            const auto most_frequent = find_most_frequent_categories(
+                _peripheral.categorical_col( input_col ) );
+
+            for ( const auto category_used : most_frequent )
+                {
+                    _conditions->push_back( { containers::Condition(
+                        category_used,
+                        enums::DataUsed::categorical,
+                        input_col,
+                        _peripheral_ix ) } );
+                }
+        }
 }
 
 // ----------------------------------------------------------------------------

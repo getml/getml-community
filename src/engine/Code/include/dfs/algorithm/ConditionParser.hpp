@@ -31,6 +31,11 @@ class ConditionParser
         const std::vector<containers::Features> &_subfeatures,
         const containers::AbstractFeature &_abstract_feature );
 
+    /// Generates a filtering function based on a categorical column.
+    static std::function<bool( const containers::Match & )> make_categorical(
+        const containers::DataFrame &_peripheral,
+        const containers::Condition &_condition );
+
     /// Generates a filtering function based on same_units_categorical.
     static std::function<bool( const containers::Match & )>
     make_same_units_categorical(

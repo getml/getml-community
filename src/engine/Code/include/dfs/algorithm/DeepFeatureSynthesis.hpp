@@ -269,6 +269,12 @@ class DeepFeatureSynthesis
     std::vector<std::vector<containers::Condition>> make_conditions(
         const TableHolder& _table_holder ) const;
 
+    /// Generates conditions based on categorical columns.
+    void make_categorical_conditions(
+        const containers::DataFrame& _peripheral,
+        const size_t _peripheral_ix,
+        std::vector<std::vector<containers::Condition>>* _conditions ) const;
+
     /// Generates conditions based on the categorical columns with the same
     /// unit.
     void make_same_units_categorical_conditions(

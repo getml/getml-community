@@ -182,11 +182,6 @@ std::string AbstractFeature::to_sql(
 
     for ( size_t i = 0; i < conditions_.size(); ++i )
         {
-            if ( i != 0 )
-                {
-                    sql << std::endl;
-                }
-
             if ( i == 0 && !use_time_stamps )
                 {
                     sql << "WHERE ";
@@ -197,15 +192,13 @@ std::string AbstractFeature::to_sql(
                 }
 
             sql << conditions_.at( i ).to_sql(
-                _feature_prefix, _input, _output );
+                       _categories, _feature_prefix, _input, _output )
+                << std::endl;
         }
 
     // -------------------------------------------------------------------
 
-    sql << std::endl
-        << "GROUP BY t1.rowid;" << std::endl
-        << std::endl
-        << std::endl;
+    sql << "GROUP BY t1.rowid;" << std::endl << std::endl << std::endl;
 
     // -------------------------------------------------------------------
 

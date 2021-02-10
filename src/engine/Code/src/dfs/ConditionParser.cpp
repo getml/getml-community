@@ -54,6 +54,24 @@ ConditionParser::make_apply_conditions(
 // ----------------------------------------------------------------------------
 
 std::function<bool( const containers::Match & )>
+ConditionParser::make_categorical(
+    const containers::DataFrame &_peripheral,
+    const containers::Condition &_condition )
+{
+    assert_true( _condition.input_col_ < _peripheral.num_categoricals() );
+
+    const auto col = _peripheral.categorical_col( _condition.input_col_ );
+
+    const auto category_used = _condition.category_used_;
+
+    return [col, category_used]( const containers::Match &match ) -> bool {
+        return ( col[match.ix_input] == category_used );
+    };
+}
+
+// ----------------------------------------------------------------------------
+
+std::function<bool( const containers::Match & )>
 ConditionParser::make_same_units_categorical(
     const containers::DataFrame &_population,
     const containers::DataFrame &_peripheral,
@@ -124,6 +142,9 @@ ConditionParser::parse_single_condition(
 {
     switch ( _condition.data_used_ )
         {
+            case enums::DataUsed::categorical:
+                return make_categorical( _peripheral, _condition );
+
             case enums::DataUsed::same_units_categorical:
                 return make_same_units_categorical(
                     _population, _peripheral, _condition );

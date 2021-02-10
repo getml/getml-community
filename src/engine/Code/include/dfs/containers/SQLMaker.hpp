@@ -14,6 +14,7 @@ class SQLMaker
    public:
     /// Creates a condition.
     static std::string condition(
+        const std::vector<strings::String>& _categories,
         const std::string& _feature_prefix,
         const Condition& _condition,
         const Placeholder& _input,

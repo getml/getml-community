@@ -15,6 +15,12 @@ struct Condition
         const size_t _output_col,
         const size_t _peripheral );
 
+    Condition(
+        const Int _category_used,
+        const enums::DataUsed _data_used,
+        const size_t _input_col,
+        const size_t _peripheral );
+
     Condition( const Poco::JSON::Object &_obj );
 
     ~Condition();
@@ -24,9 +30,13 @@ struct Condition
 
     /// Expresses the abstract feature as SQL code.
     std::string to_sql(
+        const std::vector<strings::String> &_categories,
         const std::string &_feature_prefix,
         const Placeholder &_input,
         const Placeholder &_output ) const;
+
+    /// The category used (when data_used_ == categorical).
+    const Int category_used_;
 
     /// The kind of data used
     const enums::DataUsed data_used_;

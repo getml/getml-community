@@ -7,6 +7,7 @@ namespace containers
 // ----------------------------------------------------------------------------
 
 std::string SQLMaker::condition(
+    const std::vector<strings::String>& _categories,
     const std::string& _feature_prefix,
     const Condition& _condition,
     const Placeholder& _input,
@@ -14,6 +15,26 @@ std::string SQLMaker::condition(
 {
     switch ( _condition.data_used_ )
         {
+            case enums::DataUsed::categorical:
+                {
+                    const auto name = get_name(
+                        _feature_prefix,
+                        _condition.data_used_,
+                        _condition.peripheral_,
+                        _condition.input_col_,
+                        _condition.output_col_,
+                        _input,
+                        _output );
+
+                    assert_true(
+                        _condition.category_used_ < _categories.size() );
+
+                    const auto category =
+                        _categories.at( _condition.category_used_ ).str();
+
+                    return name + " = '" + category + "'";
+                }
+
             case enums::DataUsed::same_units_categorical:
                 {
                     const auto [name1, name2] = get_same_units(
