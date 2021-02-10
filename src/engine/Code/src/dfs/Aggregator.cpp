@@ -31,7 +31,11 @@ Float Aggregator::apply_aggregation(
                     _abstract_feature );
 
             case enums::DataUsed::not_applicable:
-                return apply_not_applicable( _matches, _abstract_feature );
+                return apply_not_applicable(
+                    _peripheral,
+                    _matches,
+                    _condition_function,
+                    _abstract_feature );
 
             case enums::DataUsed::numerical:
                 return apply_numerical(
@@ -145,13 +149,39 @@ Float Aggregator::apply_discrete(
 // ----------------------------------------------------------------------------
 
 Float Aggregator::apply_not_applicable(
+    const containers::DataFrame &_peripheral,
     const std::vector<containers::Match> &_matches,
+    const std::function<bool( const containers::Match & )> &_condition_function,
     const containers::AbstractFeature &_abstract_feature )
 {
-    assert_true( _abstract_feature.aggregation_ == enums::Aggregation::count );
+    assert_true(
+        _abstract_feature.aggregation_ == enums::Aggregation::count ||
+        _abstract_feature.aggregation_ ==
+            enums::Aggregation::avg_time_between );
 
-    return static_cast<Float>(
-        std::distance( _matches.begin(), _matches.end() ) );
+    if ( _abstract_feature.aggregation_ == enums::Aggregation::count )
+        {
+            const auto extract_value =
+                []( const containers::Match &match ) -> Float { return 0.0; };
+
+            return aggregate_matches_numerical(
+                _matches,
+                extract_value,
+                _condition_function,
+                _abstract_feature );
+        }
+
+    assert_true( _peripheral.num_time_stamps() > 0 );
+
+    const auto &col = _peripheral.time_stamp_col();
+
+    const auto extract_value =
+        [&col]( const containers::Match &match ) -> Float {
+        return col[match.ix_input];
+    };
+
+    return aggregate_matches_numerical(
+        _matches, extract_value, _condition_function, _abstract_feature );
 }
 
 // ----------------------------------------------------------------------------

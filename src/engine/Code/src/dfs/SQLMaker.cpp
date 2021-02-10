@@ -192,6 +192,19 @@ std::pair<std::string, std::string> SQLMaker::get_same_units(
 
 // ----------------------------------------------------------------------------
 
+std::string SQLMaker::select_avg_time_between( const Placeholder& _input )
+{
+    assert_true( _input.num_time_stamps() > 0 );
+
+    const auto ts_name =
+        helpers::SQLGenerator::edit_colname( _input.time_stamps_name(), "t2" );
+
+    return "CASE WHEN COUNT( * ) > 1 THEN MAX( " + ts_name + " ) - MIN ( " +
+           ts_name + " ) / ( COUNT( * ) - 1 )  ELSE 0 END";
+}
+
+// ----------------------------------------------------------------------------
+
 std::string SQLMaker::select_statement(
     const std::vector<strings::String>& _categories,
     const std::string& _feature_prefix,
@@ -199,16 +212,30 @@ std::string SQLMaker::select_statement(
     const Placeholder& _input,
     const Placeholder& _output )
 {
+    constexpr auto AVG_TIME_BETWEEN =
+        enums::Parser<enums::Aggregation>::AVG_TIME_BETWEEN;
+
+    constexpr auto COUNT_DISTINCT =
+        enums::Parser<enums::Aggregation>::COUNT_DISTINCT;
+
+    constexpr auto COUNT_MINUS_COUNT_DISTINCT =
+        enums::Parser<enums::Aggregation>::COUNT_MINUS_COUNT_DISTINCT;
+
     const auto agg_type = enums::Parser<enums::Aggregation>::to_str(
         _abstract_feature.aggregation_ );
 
+    if ( agg_type == AVG_TIME_BETWEEN )
+        {
+            return select_avg_time_between( _input );
+        }
+
     std::string select;
 
-    if ( agg_type == "COUNT DISTINCT" )
+    if ( agg_type == COUNT_DISTINCT )
         {
             select += "COUNT( DISTINCT ";
         }
-    else if ( agg_type == "COUNT MINUS COUNT DISTINCT" )
+    else if ( agg_type == COUNT_MINUS_COUNT_DISTINCT )
         {
             select += "COUNT( * ) - COUNT( DISTINCT ";
         }

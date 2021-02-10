@@ -821,22 +821,6 @@ void DeepFeatureSynthesis::fit_on_same_units_categorical(
                             continue;
                         }
 
-                    const auto condition_is_categorical =
-                        []( const containers::Condition &_cond ) {
-                            return _cond.data_used_ ==
-                                   enums::DataUsed::categorical;
-                        };
-
-                    const auto any_condition_is_categorical = std::any_of(
-                        _conditions.begin(),
-                        _conditions.end(),
-                        condition_is_categorical );
-
-                    if ( any_condition_is_categorical )
-                        {
-                            continue;
-                        }
-
                     for ( const auto agg : hyperparameters().aggregations_ )
                         {
                             if ( !is_numerical( agg ) )
@@ -1062,15 +1046,25 @@ void DeepFeatureSynthesis::fit_on_peripheral(
 
             fit_on_subfeatures( _peripheral_ix, cond, _abstract_features );
 
-            if ( has_count() )
+            if ( _peripheral.num_time_stamps() > 0 )
                 {
                     _abstract_features->push_back( containers::AbstractFeature(
-                        enums::Aggregation::count,
+                        enums::Aggregation::avg_time_between,
                         cond,
                         enums::DataUsed::not_applicable,
                         0,
                         _peripheral_ix ) );
                 }
+        }
+
+    if ( has_count() )
+        {
+            _abstract_features->push_back( containers::AbstractFeature(
+                enums::Aggregation::count,
+                {},
+                enums::DataUsed::not_applicable,
+                0,
+                _peripheral_ix ) );
         }
 }
 

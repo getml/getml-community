@@ -20,6 +20,7 @@ template <>
 struct Parser<Aggregation>
 {
     static constexpr const char* AVG = "AVG";
+    static constexpr const char* AVG_TIME_BETWEEN = "AVG TIME BETWEEN";
     static constexpr const char* COUNT = "COUNT";
     static constexpr const char* COUNT_DISTINCT = "COUNT DISTINCT";
     static constexpr const char* COUNT_MINUS_COUNT_DISTINCT =
@@ -37,6 +38,11 @@ struct Parser<Aggregation>
         if ( _str == AVG )
             {
                 return Aggregation::avg;
+            }
+
+        if ( _str == AVG_TIME_BETWEEN )
+            {
+                return Aggregation::avg_time_between;
             }
 
         if ( _str == COUNT )
@@ -96,6 +102,9 @@ struct Parser<Aggregation>
             {
                 case Aggregation::avg:
                     return AVG;
+
+                case Aggregation::avg_time_between:
+                    return AVG_TIME_BETWEEN;
 
                 case Aggregation::count:
                     return COUNT;

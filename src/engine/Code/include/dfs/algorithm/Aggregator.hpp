@@ -47,7 +47,10 @@ class Aggregator
 
     /// Applies a COUNT aggregation
     static Float apply_not_applicable(
+        const containers::DataFrame &_peripheral,
         const std::vector<containers::Match> &_matches,
+        const std::function<bool( const containers::Match & )>
+            &_condition_function,
         const containers::AbstractFeature &_abstract_feature );
 
     /// Applies the aggregation to a numerical column.
@@ -215,6 +218,9 @@ class Aggregator
                 case enums::Aggregation::avg:
                     return helpers::ColumnOperators::avg( _begin, _end );
 
+                case enums::Aggregation::avg_time_between:
+                    return calc_avg_time_between( _begin, _end );
+
                 case enums::Aggregation::count:
                     return helpers::ColumnOperators::count( _begin, _end );
 
@@ -241,6 +247,27 @@ class Aggregator
                         false && "Unknown aggregation for numerical column" );
                     return 0.0;
             }
+    }
+
+    /// Calculates the average time between the time stamps.
+    template <class IteratorType>
+    static Float calc_avg_time_between(
+        const IteratorType _begin, const IteratorType _end )
+    {
+        const auto count = helpers::ColumnOperators::count( _begin, _end );
+
+        if ( count <= 1.0 )
+            {
+                return 0.0;
+            }
+
+        const auto max_value =
+            aggregate_numerical_range( _begin, _end, enums::Aggregation::max );
+
+        const auto min_value =
+            aggregate_numerical_range( _begin, _end, enums::Aggregation::min );
+
+        return ( max_value - min_value ) / ( count - 1.0 );
     }
 
     /// Determines whether a value is nan or inf

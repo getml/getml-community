@@ -49,6 +49,9 @@ class SQLMaker
         const Placeholder& _input,
         const Placeholder& _output );
 
+    /// Returns the select statement for AVG_TIME_BETWEEN.
+    static std::string select_avg_time_between( const Placeholder& _input );
+
     /// Creates the value to be aggregated (for instance a column name or the
     /// difference between two columns)
     static std::string value_to_be_aggregated(
