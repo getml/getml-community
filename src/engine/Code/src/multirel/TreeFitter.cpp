@@ -165,7 +165,8 @@ void TreeFitter::fit_tree(
             if ( _tree->aggregation_needs_sorting() )
                 {
                     debug_log( "Sorting samples..." );
-                    _tree->sort_samples( null_value_separator, matches.end() );
+                    _tree->sort_matches(
+                        _peripheral, null_value_separator, matches.end() );
                 }
 
             debug_log( "Separating NULL values..." );

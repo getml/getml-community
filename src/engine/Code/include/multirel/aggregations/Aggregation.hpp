@@ -259,8 +259,15 @@ class Aggregation : public AbstractAggregation
     /// Sorts the matches by value to be aggregated (within the element in
     /// population table)
     void sort_matches(
+        const containers::DataFrame &_peripheral,
         containers::Matches::iterator _matches_begin,
-        containers::Matches::iterator _matches_end );
+        containers::Matches::iterator _matches_end ) final;
+
+    /// Sorts the matches by the time stamp (needed for FIRST and LAST).
+    void sort_matches_by_ts(
+        const containers::DataFrame &_peripheral,
+        containers::Matches::iterator _matches_begin,
+        containers::Matches::iterator _matches_end ) const;
 
     /// Updates the optimization criterion, makes it store its
     /// current stage and clears updates_current()
@@ -621,16 +628,18 @@ class Aggregation : public AbstractAggregation
     }
 
     // --------------------------------------
-    // MAX aggregation
+    // MAX or LAST aggregation - only difference is
+    // how the samples are sorted
 
-    /// MAX aggregation:
+    /// MAX or LAST aggregation:
     /// Activate sample - activating a sample means that
     /// it is now included in the aggregation, but has not
     /// been included in the aggregation before.
     template <
         typename Agg = AggType,
         typename std::enable_if<
-            std::is_same<Agg, AggregationType::Max>::value,
+            std::is_same<Agg, AggregationType::Max>::value ||
+                std::is_same<Agg, AggregationType::Last>::value,
             int>::type = 0>
     inline void activate_match( containers::Match *_match )
     {
@@ -658,14 +667,15 @@ class Aggregation : public AbstractAggregation
             }
     }
 
-    /// MAX aggregation:
+    /// MAX or LAST aggregation:
     /// Deactivate sample - deactivating a sample means that
     /// it has been activated before, but it is now no longer
     /// included in the aggregation.
     template <
         typename Agg = AggType,
         typename std::enable_if<
-            std::is_same<Agg, AggregationType::Max>::value,
+            std::is_same<Agg, AggregationType::Max>::value ||
+                std::is_same<Agg, AggregationType::Last>::value,
             int>::type = 0>
     void deactivate_match( containers::Match *_match )
     {
@@ -900,16 +910,18 @@ class Aggregation : public AbstractAggregation
     }
 
     // --------------------------------------
-    // MIN aggregation
+    // MAX or LAST aggregation - only difference is
+    // how the samples are sorted
 
-    /// MIN aggregation:
+    /// MIN or FIRST aggregation:
     /// Activate sample - activating a sample means that
     /// it is now included in the aggregation, but has not
     /// been included in the aggregation before.
     template <
         typename Agg = AggType,
         typename std::enable_if<
-            std::is_same<Agg, AggregationType::Min>::value,
+            std::is_same<Agg, AggregationType::Min>::value ||
+                std::is_same<Agg, AggregationType::First>::value,
             int>::type = 0>
     inline void activate_match( containers::Match *_match )
     {
@@ -937,14 +949,15 @@ class Aggregation : public AbstractAggregation
             }
     }
 
-    /// MIN aggregation:
+    /// MIN or FIRST aggregation:
     /// Deactivate sample - deactivating a sample means that
     /// it has been activated before, but it is now no longer
     /// included in the aggregation.
     template <
         typename Agg = AggType,
         typename std::enable_if<
-            std::is_same<Agg, AggregationType::Min>::value,
+            std::is_same<Agg, AggregationType::Min>::value ||
+                std::is_same<Agg, AggregationType::First>::value,
             int>::type = 0>
     void deactivate_match( containers::Match *_match )
     {
@@ -1639,11 +1652,18 @@ class Aggregation : public AbstractAggregation
     /// Pointer to the optimization criterion used
     optimizationcriteria::OptimizationCriterion *optimization_criterion_;
 
+    /// Whether this is the FIRST or LAST aggregation.
+    constexpr static bool is_first_or_last_ =
+        std::is_same<AggType, AggregationType::First>() ||
+        std::is_same<AggType, AggregationType::Last>();
+
     /// Whether the aggregation requires recording which matches have been
     /// altered.
     constexpr static bool needs_altered_matches_ =
         std::is_same<AggType, AggregationType::CountDistinct>() ||
         std::is_same<AggType, AggregationType::CountMinusCountDistinct>() ||
+        std::is_same<AggType, AggregationType::First>() ||
+        std::is_same<AggType, AggregationType::Last>() ||
         std::is_same<AggType, AggregationType::Max>() ||
         std::is_same<AggType, AggregationType::Median>() ||
         std::is_same<AggType, AggregationType::Min>();
@@ -1651,6 +1671,8 @@ class Aggregation : public AbstractAggregation
     /// Whether the aggregation relies on count()
     constexpr static bool needs_count_ =
         std::is_same<AggType, AggregationType::Avg>() ||
+        std::is_same<AggType, AggregationType::First>() ||
+        std::is_same<AggType, AggregationType::Last>() ||
         std::is_same<AggType, AggregationType::Max>() ||
         std::is_same<AggType, AggregationType::Median>() ||
         std::is_same<AggType, AggregationType::Min>() ||
@@ -1660,6 +1682,8 @@ class Aggregation : public AbstractAggregation
 
     /// Whether the aggregation relies on sum()
     constexpr static bool needs_match_ptr_ =
+        std::is_same<AggType, AggregationType::First>() ||
+        std::is_same<AggType, AggregationType::Last>() ||
         std::is_same<AggType, AggregationType::Max>() ||
         std::is_same<AggType, AggregationType::Median>() ||
         std::is_same<AggType, AggregationType::Min>();
@@ -1668,6 +1692,8 @@ class Aggregation : public AbstractAggregation
     constexpr static bool needs_sorting_ =
         std::is_same<AggType, AggregationType::CountDistinct>() ||
         std::is_same<AggType, AggregationType::CountMinusCountDistinct>() ||
+        std::is_same<AggType, AggregationType::First>() ||
+        std::is_same<AggType, AggregationType::Last>() ||
         std::is_same<AggType, AggregationType::Max>() ||
         std::is_same<AggType, AggregationType::Median>() ||
         std::is_same<AggType, AggregationType::Min>();
@@ -3620,6 +3646,7 @@ template <
     enums::Mode mode_,
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::sort_matches(
+    const containers::DataFrame &_peripheral,
     containers::Matches::iterator _matches_begin,
     containers::Matches::iterator _matches_end )
 {
@@ -3634,22 +3661,87 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::sort_matches(
             return;
         }
 
-    auto compare_op = [this](
-                          const containers::Match &match1,
-                          const containers::Match &match2 ) {
+    // -----------------------------------
+
+    if constexpr ( is_first_or_last_ )
+        {
+            sort_matches_by_ts( _peripheral, _matches_begin, _matches_end );
+            return;
+        }
+
+    // -----------------------------------
+
+    const auto compare_op = [this](
+                                const containers::Match &match1,
+                                const containers::Match &match2 ) -> bool {
         if ( match1.ix_x_popul < match2.ix_x_popul )
             {
                 return true;
             }
-        else if ( match1.ix_x_popul > match2.ix_x_popul )
+
+        if ( match1.ix_x_popul > match2.ix_x_popul )
             {
                 return false;
             }
-        else
+
+        return value_to_be_aggregated( &match1 ) <
+               value_to_be_aggregated( &match2 );
+    };
+
+    // -----------------------------------
+
+    std::sort( _matches_begin, _matches_end, compare_op );
+
+    // -----------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+template <
+    typename AggType,
+    enums::DataUsed data_used_,
+    enums::Mode mode_,
+    bool is_population_>
+void Aggregation<AggType, data_used_, mode_, is_population_>::
+    sort_matches_by_ts(
+        const containers::DataFrame &_peripheral,
+        containers::Matches::iterator _matches_begin,
+        containers::Matches::iterator _matches_end ) const
+{
+    // -----------------------------------
+
+    assert_true( needs_sorting_ );
+
+    assert_true( is_first_or_last_ );
+
+    // -----------------------------------
+
+    assert_true( _peripheral.num_time_stamps() > 0 );
+
+    const auto &ts_col = _peripheral.time_stamp_col();
+
+    const auto retrieve_ts =
+        [&ts_col]( const containers::Match &match ) -> Float {
+        assert_true( match.ix_x_perip < ts_col.nrows_ );
+        return ts_col[match.ix_x_perip];
+    };
+
+    // -----------------------------------
+
+    const auto compare_op = [retrieve_ts](
+                                const containers::Match &match1,
+                                const containers::Match &match2 ) -> bool {
+        if ( match1.ix_x_popul < match2.ix_x_popul )
             {
-                return value_to_be_aggregated( &match1 ) <
-                       value_to_be_aggregated( &match2 );
+                return true;
             }
+
+        if ( match1.ix_x_popul > match2.ix_x_popul )
+            {
+                return false;
+            }
+
+        return retrieve_ts( match1 ) < retrieve_ts( match2 );
     };
 
     // -----------------------------------

@@ -225,7 +225,7 @@ AggregationParser::parse_aggregation(
                 _same_units_discrete );
         }
 
-    else if ( _aggregation == "COUNT" )
+    if ( _aggregation == "COUNT" )
         {
             return make_aggregation<
                 aggregations::AggregationType::Count,
@@ -236,7 +236,7 @@ AggregationParser::parse_aggregation(
                 _same_units_discrete );
         }
 
-    else if ( _aggregation == "COUNT DISTINCT" )
+    if ( _aggregation == "COUNT DISTINCT" )
         {
             return make_aggregation<
                 aggregations::AggregationType::CountDistinct,
@@ -247,7 +247,7 @@ AggregationParser::parse_aggregation(
                 _same_units_discrete );
         }
 
-    else if ( _aggregation == "COUNT MINUS COUNT DISTINCT" )
+    if ( _aggregation == "COUNT MINUS COUNT DISTINCT" )
         {
             return make_aggregation<
                 aggregations::AggregationType::CountMinusCountDistinct,
@@ -258,7 +258,27 @@ AggregationParser::parse_aggregation(
                 _same_units_discrete );
         }
 
-    else if ( _aggregation == "MAX" )
+    if ( _aggregation == "FIRST" )
+        {
+            return make_aggregation<
+                aggregations::AggregationType::First,
+                _mode>(
+                _data_used,
+                _ix_column_used,
+                _same_units_numerical,
+                _same_units_discrete );
+        }
+
+    if ( _aggregation == "LAST" )
+        {
+            return make_aggregation<aggregations::AggregationType::Last, _mode>(
+                _data_used,
+                _ix_column_used,
+                _same_units_numerical,
+                _same_units_discrete );
+        }
+
+    if ( _aggregation == "MAX" )
         {
             return make_aggregation<aggregations::AggregationType::Max, _mode>(
                 _data_used,
@@ -267,7 +287,7 @@ AggregationParser::parse_aggregation(
                 _same_units_discrete );
         }
 
-    else if ( _aggregation == "MEDIAN" )
+    if ( _aggregation == "MEDIAN" )
         {
             return make_aggregation<
                 aggregations::AggregationType::Median,
@@ -278,7 +298,7 @@ AggregationParser::parse_aggregation(
                 _same_units_discrete );
         }
 
-    else if ( _aggregation == "MIN" )
+    if ( _aggregation == "MIN" )
         {
             return make_aggregation<aggregations::AggregationType::Min, _mode>(
                 _data_used,
@@ -287,7 +307,7 @@ AggregationParser::parse_aggregation(
                 _same_units_discrete );
         }
 
-    else if ( _aggregation == "SKEWNESS" )
+    if ( _aggregation == "SKEWNESS" )
         {
             return make_aggregation<
                 aggregations::AggregationType::Skewness,
@@ -298,7 +318,7 @@ AggregationParser::parse_aggregation(
                 _same_units_discrete );
         }
 
-    else if ( _aggregation == "STDDEV" )
+    if ( _aggregation == "STDDEV" )
         {
             return make_aggregation<
                 aggregations::AggregationType::Stddev,
@@ -309,7 +329,7 @@ AggregationParser::parse_aggregation(
                 _same_units_discrete );
         }
 
-    else if ( _aggregation == "SUM" )
+    if ( _aggregation == "SUM" )
         {
             return make_aggregation<aggregations::AggregationType::Sum, _mode>(
                 _data_used,
@@ -318,7 +338,7 @@ AggregationParser::parse_aggregation(
                 _same_units_discrete );
         }
 
-    else if ( _aggregation == "VAR" )
+    if ( _aggregation == "VAR" )
         {
             return make_aggregation<aggregations::AggregationType::Var, _mode>(
                 _data_used,

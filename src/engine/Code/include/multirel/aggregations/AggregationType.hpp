@@ -1,5 +1,5 @@
 #ifndef MULTIREL_AGGREGATIONS_AGGREGATIONTYPE_HPP_
-#define MULTIREL_AGGREGATIONTYPE_HPP_
+#define MULTIREL_AGGREGATIONS_AGGREGATIONTYPE_HPP_
 
 namespace multirel
 {
@@ -27,6 +27,16 @@ struct CountDistinct
 struct CountMinusCountDistinct
 {
     static const std::string type() { return "COUNT MINUS COUNT DISTINCT"; }
+};
+
+struct First
+{
+    static const std::string type() { return "FIRST"; }
+};
+
+struct Last
+{
+    static const std::string type() { return "LAST"; }
 };
 
 struct Max
@@ -63,12 +73,9 @@ struct Var
 {
     static const std::string type() { return "VAR"; }
 };
-}  // namespace AggregationType
 
 // ----------------------------------------------------------------------------
 
-namespace AggregationType
-{
 template <typename AggType>
 struct ApplicableToCategoricalData
 {
@@ -76,12 +83,9 @@ struct ApplicableToCategoricalData
         std::is_same<AggType, AggregationType::CountDistinct>::value ||
         std::is_same<AggType, AggregationType::CountMinusCountDistinct>::value;
 };
-}  // namespace AggregationType
 
 // ----------------------------------------------------------------------------
 
-namespace AggregationType
-{
 template <enums::DataUsed data_used_>
 struct IsCategorical
 {
@@ -90,12 +94,9 @@ struct IsCategorical
           data_used_ == enums::DataUsed::x_perip_categorical ||
           data_used_ == enums::DataUsed::x_popul_categorical );
 };
-}  // namespace AggregationType
 
 // ----------------------------------------------------------------------------
 
-namespace AggregationType
-{
 template <enums::DataUsed data_used_>
 struct IsComparison
 {
@@ -106,9 +107,9 @@ struct IsComparison
           data_used_ == enums::DataUsed::same_unit_discrete ||
           data_used_ == enums::DataUsed::same_unit_discrete_ts );
 };
-}  // namespace AggregationType
-
 // ----------------------------------------------------------------------------
+
+}  // namespace AggregationType
 }  // namespace aggregations
 }  // namespace multirel
 

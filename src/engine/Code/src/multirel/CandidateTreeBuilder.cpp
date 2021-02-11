@@ -97,10 +97,23 @@ void CandidateTreeBuilder::add_other_aggs(
     multithreading::Communicator *_comm,
     std::list<decisiontrees::DecisionTree> *_candidate_trees )
 {
+    assert_true( _ix_perip_used >= 0 );
+
+    assert_true(
+        static_cast<size_t>( _ix_perip_used ) <
+        _table_holder.peripheral_tables_.size() );
+
     for ( auto &agg : _hyperparameters.aggregations_ )
         {
             if ( agg == "COUNT" || agg == "COUNT DISTINCT" ||
                  agg == "COUNT MINUS COUNT DISTINCT" )
+                {
+                    continue;
+                }
+
+            if ( skip_first_last(
+                     agg,
+                     _table_holder.peripheral_tables_.at( _ix_perip_used ) ) )
                 {
                     continue;
                 }
@@ -310,8 +323,7 @@ CandidateTreeBuilder::build_candidate_trees(
                 &candidate_trees );
 
             // ------------------------------------------------------------------
-            // Now we apply all of the aggregations that are not COUNT or COUNT
-            // DISTINCT
+            // Now we apply all of the aggregations.
 
             add_other_aggs(
                 _table_holder,
@@ -477,6 +489,19 @@ void CandidateTreeBuilder::round_robin(
     candidate_trees.emplace_back( std::move( *it ) );
 
     *_candidate_trees = std::move( candidate_trees );
+}
+
+// ----------------------------------------------------------------------------
+
+bool CandidateTreeBuilder::skip_first_last(
+    const std::string &_agg, const containers::DataFrame &_peripheral )
+{
+    if ( _agg != "FIRST" && _agg != "LAST" )
+        {
+            return false;
+        }
+
+    return ( _peripheral.num_time_stamps() == 0 );
 }
 
 // ----------------------------------------------------------------------------

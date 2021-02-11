@@ -297,6 +297,7 @@ class AbstractAggregation
     /// Sorts the samples by value to be aggregated (within the element in
     /// population table)
     virtual void sort_matches(
+        const containers::DataFrame &_peripheral,
         containers::Matches::iterator _matches_begin,
         containers::Matches::iterator _matches_end ) = 0;
 

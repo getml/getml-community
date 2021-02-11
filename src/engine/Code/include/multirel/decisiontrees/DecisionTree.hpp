@@ -240,11 +240,13 @@ class DecisionTree
 
     /// Some aggregations, such as MIN and MAX require the samples
     /// (not the pointers to the samples) to be sorted.
-    inline void sort_samples(
+    inline void sort_matches(
+        const containers::DataFrame &_peripheral,
         containers::Matches::iterator _samples_begin,
         containers::Matches::iterator _samples_end )
     {
-        aggregation()->sort_matches( _samples_begin, _samples_end );
+        aggregation()->sort_matches(
+            _peripheral, _samples_begin, _samples_end );
     }
 
     /// Stores the current stage (storing means that it is a candidate for
