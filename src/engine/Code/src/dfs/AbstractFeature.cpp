@@ -198,6 +198,17 @@ std::string AbstractFeature::to_sql(
 
     // -------------------------------------------------------------------
 
+    if ( aggregation_ == enums::Aggregation::first ||
+         aggregation_ == enums::Aggregation::last )
+        {
+            assert_true( _input.num_time_stamps() > 0 );
+            const auto ts_name = helpers::SQLGenerator::edit_colname(
+                _input.time_stamps_name(), "t2" );
+            sql << "ORDER BY " << ts_name << std::endl;
+        }
+
+    // -------------------------------------------------------------------
+
     sql << "GROUP BY t1.rowid;" << std::endl << std::endl << std::endl;
 
     // -------------------------------------------------------------------

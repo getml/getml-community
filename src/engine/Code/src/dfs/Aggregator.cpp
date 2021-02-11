@@ -72,6 +72,7 @@ Float Aggregator::apply_aggregation(
 
             case enums::DataUsed::subfeatures:
                 return apply_subfeatures(
+                    _peripheral,
                     _subfeatures,
                     _matches,
                     _condition_function,
@@ -121,6 +122,17 @@ Float Aggregator::apply_categorical(
         return 0.0;
     };
 
+    if ( _abstract_feature.aggregation_ == enums::Aggregation::first ||
+         _abstract_feature.aggregation_ == enums::Aggregation::last )
+        {
+            return apply_first_last(
+                _peripheral,
+                _matches,
+                extract_value,
+                _condition_function,
+                _abstract_feature );
+        }
+
     return aggregate_matches_numerical(
         _matches, extract_value, _condition_function, _abstract_feature );
 }
@@ -141,6 +153,17 @@ Float Aggregator::apply_discrete(
         [&col]( const containers::Match &match ) -> Float {
         return col[match.ix_input];
     };
+
+    if ( _abstract_feature.aggregation_ == enums::Aggregation::first ||
+         _abstract_feature.aggregation_ == enums::Aggregation::last )
+        {
+            return apply_first_last(
+                _peripheral,
+                _matches,
+                extract_value,
+                _condition_function,
+                _abstract_feature );
+        }
 
     return aggregate_matches_numerical(
         _matches, extract_value, _condition_function, _abstract_feature );
@@ -201,6 +224,17 @@ Float Aggregator::apply_numerical(
         return col[match.ix_input];
     };
 
+    if ( _abstract_feature.aggregation_ == enums::Aggregation::first ||
+         _abstract_feature.aggregation_ == enums::Aggregation::last )
+        {
+            return apply_first_last(
+                _peripheral,
+                _matches,
+                extract_value,
+                _condition_function,
+                _abstract_feature );
+        }
+
     return aggregate_matches_numerical(
         _matches, extract_value, _condition_function, _abstract_feature );
 }
@@ -236,6 +270,17 @@ Float Aggregator::apply_same_units_categorical(
         return 0.0;
     };
 
+    if ( _abstract_feature.aggregation_ == enums::Aggregation::first ||
+         _abstract_feature.aggregation_ == enums::Aggregation::last )
+        {
+            return apply_first_last(
+                _peripheral,
+                _matches,
+                extract_value,
+                _condition_function,
+                _abstract_feature );
+        }
+
     return aggregate_matches_numerical(
         _matches, extract_value, _condition_function, _abstract_feature );
 }
@@ -262,6 +307,17 @@ Float Aggregator::apply_same_units_discrete(
         [&col1, &col2]( const containers::Match &match ) -> Float {
         return col1[match.ix_output] - col2[match.ix_input];
     };
+
+    if ( _abstract_feature.aggregation_ == enums::Aggregation::first ||
+         _abstract_feature.aggregation_ == enums::Aggregation::last )
+        {
+            return apply_first_last(
+                _peripheral,
+                _matches,
+                extract_value,
+                _condition_function,
+                _abstract_feature );
+        }
 
     return aggregate_matches_numerical(
         _matches, extract_value, _condition_function, _abstract_feature );
@@ -291,6 +347,17 @@ Float Aggregator::apply_same_units_numerical(
         return col1[match.ix_output] - col2[match.ix_input];
     };
 
+    if ( _abstract_feature.aggregation_ == enums::Aggregation::first ||
+         _abstract_feature.aggregation_ == enums::Aggregation::last )
+        {
+            return apply_first_last(
+                _peripheral,
+                _matches,
+                extract_value,
+                _condition_function,
+                _abstract_feature );
+        }
+
     return aggregate_matches_numerical(
         _matches, extract_value, _condition_function, _abstract_feature );
 }
@@ -298,6 +365,7 @@ Float Aggregator::apply_same_units_numerical(
 // ----------------------------------------------------------------------------
 
 Float Aggregator::apply_subfeatures(
+    const containers::DataFrame &_peripheral,
     const containers::Features &_subfeatures,
     const std::vector<containers::Match> &_matches,
     const std::function<bool( const containers::Match & )> &_condition_function,
@@ -313,6 +381,17 @@ Float Aggregator::apply_subfeatures(
         [&col]( const containers::Match &match ) -> Float {
         return col[match.ix_input];
     };
+
+    if ( _abstract_feature.aggregation_ == enums::Aggregation::first ||
+         _abstract_feature.aggregation_ == enums::Aggregation::last )
+        {
+            return apply_first_last(
+                _peripheral,
+                _matches,
+                extract_value,
+                _condition_function,
+                _abstract_feature );
+        }
 
     return aggregate_matches_numerical(
         _matches, extract_value, _condition_function, _abstract_feature );

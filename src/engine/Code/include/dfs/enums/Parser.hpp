@@ -25,6 +25,8 @@ struct Parser<Aggregation>
     static constexpr const char* COUNT_DISTINCT = "COUNT DISTINCT";
     static constexpr const char* COUNT_MINUS_COUNT_DISTINCT =
         "COUNT MINUS COUNT DISTINCT";
+    static constexpr const char* FIRST = "FIRST";
+    static constexpr const char* LAST = "LAST";
     static constexpr const char* MAX = "MAX";
     static constexpr const char* MEDIAN = "MEDIAN";
     static constexpr const char* MIN = "MIN";
@@ -58,6 +60,16 @@ struct Parser<Aggregation>
         if ( _str == COUNT_MINUS_COUNT_DISTINCT )
             {
                 return Aggregation::count_minus_count_distinct;
+            }
+
+        if ( _str == FIRST )
+            {
+                return Aggregation::first;
+            }
+
+        if ( _str == LAST )
+            {
+                return Aggregation::last;
             }
 
         if ( _str == MAX )
@@ -114,6 +126,12 @@ struct Parser<Aggregation>
 
                 case Aggregation::count_minus_count_distinct:
                     return COUNT_MINUS_COUNT_DISTINCT;
+
+                case Aggregation::first:
+                    return FIRST;
+
+                case Aggregation::last:
+                    return LAST;
 
                 case Aggregation::max:
                     return MAX;

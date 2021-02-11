@@ -16,7 +16,7 @@ class ColumnOperators
     {
         if ( std::distance( _begin, _end ) <= 0 )
             {
-                throw std::runtime_error( "Column cannot be of length 0." );
+                return 0.0;
             }
 
         const auto assert_equal = []( const Float init, const Float val ) {
@@ -139,6 +139,52 @@ class ColumnOperators
             }
 
         return static_cast<Float>( set.size() );
+    }
+
+    /// Implements the FIRST aggregation. Assumes that the iterator points to a
+    /// set of pairs, the first signifying the element over which we want to
+    /// sort and the second signifying the value.
+    template <class IteratorType>
+    static Float first( IteratorType _begin, IteratorType _end )
+    {
+        if ( std::distance( _begin, _end ) <= 0 )
+            {
+                return NAN;
+            }
+
+        using Pair = std::pair<Float, Float>;
+
+        const auto ts_is_smaller = []( const Pair& p1,
+                                       const Pair& p2 ) -> Float {
+            return p1.first < p2.first;
+        };
+
+        const auto p = *std::ranges::min_element( _begin, _end, ts_is_smaller );
+
+        return p.second;
+    }
+
+    /// Implements the LAST aggregation. Assumes that the iterator points to a
+    /// set of pairs, the first signifying the element over which we want to
+    /// sort and the second signifying the value.
+    template <class IteratorType>
+    static Float last( IteratorType _begin, IteratorType _end )
+    {
+        if ( std::distance( _begin, _end ) <= 0 )
+            {
+                return NAN;
+            }
+
+        using Pair = std::pair<Float, Float>;
+
+        const auto ts_is_smaller = []( const Pair& p1,
+                                       const Pair& p2 ) -> Float {
+            return p1.first < p2.first;
+        };
+
+        const auto p = *std::ranges::max_element( _begin, _end, ts_is_smaller );
+
+        return p.second;
     }
 
     /// Finds the maximum of all non-null entries.

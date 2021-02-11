@@ -90,6 +90,7 @@ class Aggregator
 
     /// Applies the aggregation to a subfeature.
     static Float apply_subfeatures(
+        const containers::DataFrame &_peripheral,
         const containers::Features &_subfeatures,
         const std::vector<containers::Match> &_matches,
         const std::function<bool( const containers::Match & )>
@@ -123,6 +124,33 @@ class Aggregator
                 default:
                     assert_true(
                         false && "Unknown aggregation for categorical column" );
+                    return 0.0;
+            }
+    }
+
+    /// Aggregates the range from _begin to _end, applying the _aggregation.
+    template <class IteratorType>
+    static Float aggregate_first_last(
+        const IteratorType _begin,
+        const IteratorType _end,
+        const enums::Aggregation _aggregation )
+    {
+        if ( std::distance( _begin, _end ) <= 0 )
+            {
+                return 0.0;
+            }
+
+        switch ( _aggregation )
+            {
+                case enums::Aggregation::first:
+                    return helpers::ColumnOperators::first( _begin, _end );
+
+                case enums::Aggregation::last:
+                    return helpers::ColumnOperators::last( _begin, _end );
+
+                default:
+                    assert_true(
+                        false && "Unknown aggregation for first/last column" );
                     return 0.0;
             }
     }
@@ -161,6 +189,47 @@ class Aggregator
                      std::views::filter( is_non_null );
 
         return aggregate_categorical_range(
+            range.begin(), range.end(), _abstract_feature.aggregation_ );
+
+        // ---------------------------------------------------
+    }
+
+    /// Aggregates the matches using the extract_value lambda function.
+    template <class ExtractValueType>
+    static Float aggregate_matches_first_last(
+        const std::vector<containers::Match> &_matches,
+        const ExtractValueType &_extract_value,
+        const std::function<bool( const containers::Match & )>
+            &_condition_function,
+        const containers::AbstractFeature &_abstract_feature )
+    {
+        // ---------------------------------------------------
+
+        assert_true(
+            _abstract_feature.aggregation_ == enums::Aggregation::first ||
+            _abstract_feature.aggregation_ == enums::Aggregation::last );
+
+        // ---------------------------------------------------
+
+        if ( _abstract_feature.conditions_.size() == 0 )
+            {
+                auto range = _matches |
+                             std::views::transform( _extract_value ) |
+                             std::views::filter( second_is_not_nan_or_inf );
+
+                return aggregate_first_last(
+                    range.begin(),
+                    range.end(),
+                    _abstract_feature.aggregation_ );
+            }
+
+        // ---------------------------------------------------
+
+        auto range = _matches | std::views::filter( _condition_function ) |
+                     std::views::transform( _extract_value ) |
+                     std::views::filter( second_is_not_nan_or_inf );
+
+        return aggregate_first_last(
             range.begin(), range.end(), _abstract_feature.aggregation_ );
 
         // ---------------------------------------------------
@@ -249,6 +318,37 @@ class Aggregator
             }
     }
 
+    /// Creates a key-value-pair for applying the FIRST and LAST aggregation.
+    template <class ExtractValueType>
+    static Float apply_first_last(
+        const containers::DataFrame &_peripheral,
+        const std::vector<containers::Match> &_matches,
+        const ExtractValueType &_extract_value,
+        const std::function<bool( const containers::Match & )>
+            &_condition_function,
+        const containers::AbstractFeature &_abstract_feature )
+    {
+        assert_true(
+            _abstract_feature.aggregation_ == enums::Aggregation::first ||
+            _abstract_feature.aggregation_ == enums::Aggregation::last );
+
+        assert_true( _peripheral.num_time_stamps() > 0 );
+
+        using Pair = std::pair<Float, Float>;
+
+        const auto &ts_col = _peripheral.time_stamp_col();
+
+        const auto extract_pair =
+            [_extract_value, &ts_col]( const containers::Match &m ) -> Pair {
+            const auto key = ts_col[m.ix_input];
+            const auto value = _extract_value( m );
+            return std::make_pair( key, value );
+        };
+
+        return aggregate_matches_first_last(
+            _matches, extract_pair, _condition_function, _abstract_feature );
+    }
+
     /// Calculates the average time between the time stamps.
     template <class IteratorType>
     static Float calc_avg_time_between(
@@ -274,6 +374,12 @@ class Aggregator
     static bool is_not_nan_or_inf( const Float _val )
     {
         return !std::isnan( _val ) && !std::isinf( _val );
+    }
+
+    /// Determines whether a value is nan or inf
+    static bool second_is_not_nan_or_inf( const std::pair<Float, Float> &_p )
+    {
+        return !std::isnan( _p.second ) && !std::isinf( _p.second );
     }
 };
 

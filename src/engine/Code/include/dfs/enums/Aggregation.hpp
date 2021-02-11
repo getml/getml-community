@@ -16,6 +16,8 @@ enum class Aggregation
     count,
     count_distinct,
     count_minus_count_distinct,
+    first,
+    last,
     max,
     median,
     min,

@@ -705,6 +705,11 @@ void DeepFeatureSynthesis::fit_on_categoricals_by_categories(
                                     continue;
                                 }
 
+                            if ( skip_first_last( agg, _peripheral ) )
+                                {
+                                    continue;
+                                }
+
                             _abstract_features->push_back(
                                 containers::AbstractFeature(
                                     enums::Parser<enums::Aggregation>::parse(
@@ -745,6 +750,11 @@ void DeepFeatureSynthesis::fit_on_discretes(
                             continue;
                         }
 
+                    if ( skip_first_last( agg, _peripheral ) )
+                        {
+                            continue;
+                        }
+
                     _abstract_features->push_back( containers::AbstractFeature(
                         enums::Parser<enums::Aggregation>::parse( agg ),
                         _conditions,
@@ -778,6 +788,11 @@ void DeepFeatureSynthesis::fit_on_numericals(
 
                     if ( _peripheral.numerical_unit( input_col )
                              .find( "comparison only" ) != std::string::npos )
+                        {
+                            continue;
+                        }
+
+                    if ( skip_first_last( agg, _peripheral ) )
                         {
                             continue;
                         }
@@ -828,6 +843,11 @@ void DeepFeatureSynthesis::fit_on_same_units_categorical(
                                     continue;
                                 }
 
+                            if ( skip_first_last( agg, _peripheral ) )
+                                {
+                                    continue;
+                                }
+
                             _abstract_features->push_back(
                                 containers::AbstractFeature(
                                     enums::Parser<enums::Aggregation>::parse(
@@ -873,6 +893,11 @@ void DeepFeatureSynthesis::fit_on_same_units_discrete(
                                 }
 
                             if ( !is_numerical( agg ) )
+                                {
+                                    continue;
+                                }
+
+                            if ( skip_first_last( agg, _peripheral ) )
                                 {
                                     continue;
                                 }
@@ -935,6 +960,11 @@ void DeepFeatureSynthesis::fit_on_same_units_numerical(
                                     continue;
                                 }
 
+                            if ( skip_first_last( agg, _peripheral ) )
+                                {
+                                    continue;
+                                }
+
                             const auto data_used =
                                 is_ts(
                                     _population.numerical_name( output_col ),
@@ -959,6 +989,7 @@ void DeepFeatureSynthesis::fit_on_same_units_numerical(
 // ----------------------------------------------------------------------------
 
 void DeepFeatureSynthesis::fit_on_subfeatures(
+    const containers::DataFrame &_peripheral,
     const size_t _peripheral_ix,
     const std::vector<containers::Condition> &_conditions,
     std::shared_ptr<std::vector<containers::AbstractFeature>>
@@ -980,6 +1011,11 @@ void DeepFeatureSynthesis::fit_on_subfeatures(
             for ( const auto agg : hyperparameters().aggregations_ )
                 {
                     if ( !is_numerical( agg ) )
+                        {
+                            continue;
+                        }
+
+                    if ( skip_first_last( agg, _peripheral ) )
                         {
                             continue;
                         }
@@ -1044,7 +1080,8 @@ void DeepFeatureSynthesis::fit_on_peripheral(
                 cond,
                 _abstract_features );
 
-            fit_on_subfeatures( _peripheral_ix, cond, _abstract_features );
+            fit_on_subfeatures(
+                _peripheral, _peripheral_ix, cond, _abstract_features );
 
             if ( _peripheral.num_time_stamps() > 0 )
                 {
@@ -1335,6 +1372,8 @@ bool DeepFeatureSynthesis::is_numerical( const std::string &_agg ) const
     switch ( agg )
         {
             case enums::Aggregation::avg:
+            case enums::Aggregation::first:
+            case enums::Aggregation::last:
             case enums::Aggregation::max:
             case enums::Aggregation::median:
             case enums::Aggregation::min:
@@ -1639,6 +1678,21 @@ DeepFeatureSynthesis::select_features(
 
     return std::make_shared<std::vector<containers::AbstractFeature>>(
         range.begin(), range.end() );
+}
+
+// ----------------------------------------------------------------------------
+
+bool DeepFeatureSynthesis::skip_first_last(
+    const std::string &_agg, const containers::DataFrame &_peripheral ) const
+{
+    const auto agg = enums::Parser<enums::Aggregation>::parse( _agg );
+
+    if ( agg != enums::Aggregation::first && agg != enums::Aggregation::last )
+        {
+            return false;
+        }
+
+    return ( _peripheral.num_time_stamps() == 0 );
 }
 
 // ----------------------------------------------------------------------------

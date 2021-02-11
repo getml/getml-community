@@ -221,6 +221,7 @@ class DeepFeatureSynthesis
 
     /// Fits abstract features on the subfeatures.
     void fit_on_subfeatures(
+        const containers::DataFrame& _peripheral,
         const size_t _peripheral_ix,
         const std::vector<containers::Condition>& _conditions,
         std::shared_ptr<std::vector<containers::AbstractFeature>>
@@ -302,6 +303,12 @@ class DeepFeatureSynthesis
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
         const std::shared_ptr<const logging::AbstractLogger> _logger ) const;
+
+    /// Returns true if _agg is FIRST or LAST, but there are no time stamps in
+    /// _peripheral.
+    bool skip_first_last(
+        const std::string& _agg,
+        const containers::DataFrame& _peripheral ) const;
 
     /// Spawns the threads for building the features.
     void spawn_threads(
