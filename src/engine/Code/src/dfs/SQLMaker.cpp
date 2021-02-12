@@ -199,8 +199,8 @@ std::string SQLMaker::select_avg_time_between( const Placeholder& _input )
     const auto ts_name =
         helpers::SQLGenerator::edit_colname( _input.time_stamps_name(), "t2" );
 
-    return "CASE WHEN COUNT( * ) > 1 THEN MAX( " + ts_name + " ) - MIN ( " +
-           ts_name + " ) / ( COUNT( * ) - 1 )  ELSE 0 END";
+    return "CASE WHEN COUNT( * ) > 1 THEN ( MAX( " + ts_name + " ) - MIN ( " +
+           ts_name + " ) ) / ( COUNT( * ) - 1 )  ELSE 0 END";
 }
 
 // ----------------------------------------------------------------------------
