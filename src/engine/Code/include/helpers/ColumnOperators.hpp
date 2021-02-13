@@ -37,9 +37,14 @@ class ColumnOperators
     template <class IteratorType>
     static Float avg( IteratorType _begin, IteratorType _end )
     {
-        const auto numerator = sum( _begin, _end );
-
         const auto divisor = count( _begin, _end );
+
+        if ( divisor == 0.0 )
+            {
+                return NAN;
+            }
+
+        const auto numerator = sum( _begin, _end );
 
         return numerator / divisor;
     }
@@ -87,7 +92,7 @@ class ColumnOperators
 
         for ( const auto& val : _vec )
             {
-                if ( val < 0 )
+                if ( NullChecker::is_null( val ) )
                     {
                         continue;
                     }
@@ -101,19 +106,7 @@ class ColumnOperators
     /// Counts the non-null distinct number of entries.
     static Float count_distinct( const std::vector<std::string>& _vec )
     {
-        auto set = std::unordered_set<std::string>();
-
-        for ( const auto& str : _vec )
-            {
-                if ( NullChecker::is_null( str ) )
-                    {
-                        continue;
-                    }
-
-                set.insert( str );
-            }
-
-        return static_cast<Float>( set.size() );
+        return count_distinct( _vec.begin(), _vec.end() );
     }
 
     /// Counts the non-null distinct number of entries.
@@ -122,15 +115,19 @@ class ColumnOperators
         return count_distinct( _vec.begin(), _vec.end() );
     }
 
-    /// Finds the maximum of all non-null entries.
+    /// Counts the distinct number of entries.
     template <class IteratorType>
     static Float count_distinct( IteratorType _begin, IteratorType _end )
     {
-        auto set = std::unordered_set<Int>();
+        using ConstValueType = std::remove_reference<decltype( *_begin )>::type;
+
+        using ValueType = std::remove_const<ConstValueType>::type;
+
+        auto set = std::unordered_set<ValueType>();
 
         for ( auto it = _begin; it != _end; ++it )
             {
-                if ( *it < 0 )
+                if ( NullChecker::is_null( *it ) )
                     {
                         continue;
                     }
@@ -203,7 +200,7 @@ class ColumnOperators
     {
         if ( std::distance( _begin, _end ) <= 0 )
             {
-                throw std::runtime_error( "Column cannot be of length 0." );
+                return NAN;
             }
 
         auto values = std::vector<Float>( _begin, _end );
@@ -245,7 +242,7 @@ class ColumnOperators
     static Float sum( IteratorType _begin, IteratorType _end )
     {
         const auto sum = []( const Float init, const Float val ) {
-            if ( std::isnan( val ) )
+            if ( NullChecker::is_null( val ) )
                 {
                     return init;
                 }
@@ -267,7 +264,7 @@ class ColumnOperators
         const auto n = count( _begin, _end );
 
         const auto var = [mean, n]( const Float init, const Float val ) {
-            if ( std::isnan( val ) )
+            if ( NullChecker::is_null( val ) )
                 {
                     return init;
                 }
@@ -293,11 +290,6 @@ class ColumnOperators
         const Aggregation& _agg,
         const Float _init )
     {
-        if ( std::distance( _begin, _end ) <= 0 )
-            {
-                throw std::runtime_error( "Column cannot be of length 0." );
-            }
-
         return std::accumulate( _begin, _end, _init, _agg );
     }
 

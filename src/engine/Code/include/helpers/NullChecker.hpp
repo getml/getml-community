@@ -7,6 +7,13 @@ namespace helpers
 
 struct NullChecker
 {
+    /// When ever we us integers, they signify encodings. -1 means that they are
+    /// NULL.
+    static bool is_null( const Int _val ) { return _val < 0; }
+
+    /// Checks whether a float is NaN.
+    static bool is_null( const Float _val ) { return std::isnan( _val ); }
+
     /// Checks whether a string is on the list of strings interpreted as NULL.
     static bool is_null( const strings::String& _val )
     {

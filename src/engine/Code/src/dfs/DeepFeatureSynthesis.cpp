@@ -1372,6 +1372,8 @@ bool DeepFeatureSynthesis::is_numerical( const std::string &_agg ) const
     switch ( agg )
         {
             case enums::Aggregation::avg:
+            case enums::Aggregation::count_distinct:
+            case enums::Aggregation::count_minus_count_distinct:
             case enums::Aggregation::first:
             case enums::Aggregation::last:
             case enums::Aggregation::max:

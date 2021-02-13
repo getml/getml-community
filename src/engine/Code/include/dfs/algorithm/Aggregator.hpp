@@ -293,6 +293,15 @@ class Aggregator
                 case enums::Aggregation::count:
                     return helpers::ColumnOperators::count( _begin, _end );
 
+                case enums::Aggregation::count_distinct:
+                    return helpers::ColumnOperators::count_distinct(
+                        _begin, _end );
+
+                case enums::Aggregation::count_minus_count_distinct:
+                    return helpers::ColumnOperators::count( _begin, _end ) -
+                           helpers::ColumnOperators::count_distinct(
+                               _begin, _end );
+
                 case enums::Aggregation::max:
                     return helpers::ColumnOperators::maximum( _begin, _end );
 
