@@ -1368,25 +1368,7 @@ bool DeepFeatureSynthesis::is_categorical( const std::string &_agg ) const
 bool DeepFeatureSynthesis::is_numerical( const std::string &_agg ) const
 {
     const auto agg = enums::Parser<enums::Aggregation>::parse( _agg );
-
-    switch ( agg )
-        {
-            case enums::Aggregation::avg:
-            case enums::Aggregation::count_distinct:
-            case enums::Aggregation::count_minus_count_distinct:
-            case enums::Aggregation::first:
-            case enums::Aggregation::last:
-            case enums::Aggregation::max:
-            case enums::Aggregation::median:
-            case enums::Aggregation::min:
-            case enums::Aggregation::stddev:
-            case enums::Aggregation::sum:
-            case enums::Aggregation::var:
-                return true;
-
-            default:
-                return false;
-        }
+    return ( agg != enums::Aggregation::count );
 }
 
 // ----------------------------------------------------------------------------
