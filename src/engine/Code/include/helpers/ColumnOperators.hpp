@@ -230,6 +230,37 @@ class ColumnOperators
         return num_agg( _begin, _end, min_op, NAN );
     }
 
+    /// Takes the skewness of all non-null entries.
+    template <class IteratorType>
+    static Float skew( IteratorType _begin, IteratorType _end )
+    {
+        const auto n = count( _begin, _end );
+
+        if ( n == 0.0 )
+            {
+                return NAN;
+            }
+
+        const auto mean = avg( _begin, _end );
+
+        const auto std = stddev( _begin, _end );
+
+        const auto skewness = [mean, std, n](
+                                  const Float init, const Float val ) {
+            if ( NullChecker::is_null( val ) )
+                {
+                    return init;
+                }
+            else
+                {
+                    const auto diff = ( val - mean ) / std;
+                    return init + diff * diff * diff / n;
+                }
+        };
+
+        return num_agg( _begin, _end, skewness, 0.0 );
+    }
+
     /// Takes the standard deviation of all non-null entries.
     template <class IteratorType>
     static Float stddev( IteratorType _begin, IteratorType _end )
@@ -259,11 +290,16 @@ class ColumnOperators
     template <class IteratorType>
     static Float var( IteratorType _begin, IteratorType _end )
     {
-        const auto mean = avg( _begin, _end );
-
         const auto n = count( _begin, _end );
 
-        const auto var = [mean, n]( const Float init, const Float val ) {
+        if ( n == 0.0 )
+            {
+                return NAN;
+            }
+
+        const auto mean = avg( _begin, _end );
+
+        const auto variance = [mean, n]( const Float init, const Float val ) {
             if ( NullChecker::is_null( val ) )
                 {
                     return init;
@@ -275,7 +311,7 @@ class ColumnOperators
                 }
         };
 
-        return num_agg( _begin, _end, var, 0.0 );
+        return num_agg( _begin, _end, variance, 0.0 );
     }
 
     // ------------------------------------------------------------------------

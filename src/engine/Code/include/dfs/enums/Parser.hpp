@@ -30,6 +30,7 @@ struct Parser<Aggregation>
     static constexpr const char* MAX = "MAX";
     static constexpr const char* MEDIAN = "MEDIAN";
     static constexpr const char* MIN = "MIN";
+    static constexpr const char* SKEW = "SKEW";
     static constexpr const char* SUM = "SUM";
     static constexpr const char* STDDEV = "STDDEV";
     static constexpr const char* VAR = "VAR";
@@ -87,6 +88,11 @@ struct Parser<Aggregation>
                 return Aggregation::min;
             }
 
+        if ( _str == SKEW )
+            {
+                return Aggregation::skew;
+            }
+
         if ( _str == STDDEV )
             {
                 return Aggregation::stddev;
@@ -141,6 +147,9 @@ struct Parser<Aggregation>
 
                 case Aggregation::min:
                     return MIN;
+
+                case Aggregation::skew:
+                    return SKEW;
 
                 case Aggregation::stddev:
                     return STDDEV;

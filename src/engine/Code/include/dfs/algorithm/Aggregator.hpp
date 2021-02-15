@@ -311,6 +311,9 @@ class Aggregator
                 case enums::Aggregation::min:
                     return helpers::ColumnOperators::minimum( _begin, _end );
 
+                case enums::Aggregation::skew:
+                    return helpers::ColumnOperators::skew( _begin, _end );
+
                 case enums::Aggregation::stddev:
                     return helpers::ColumnOperators::stddev( _begin, _end );
 
