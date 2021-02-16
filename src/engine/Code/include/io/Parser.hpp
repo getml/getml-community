@@ -51,7 +51,16 @@ class Parser
                         return std::pair<Float, bool>( 0.0, false );
                     }
 
-                return std::pair<Float, bool>( std::stod( trimmed ), true );
+                size_t size = 0;
+
+                const auto val = std::stod( trimmed, &size );
+
+                if ( size != trimmed.size() )
+                    {
+                        return std::pair<Float, bool>( 0.0, false );
+                    }
+
+                return std::pair<Float, bool>( val, true );
             }
         catch ( std::exception& e )
             {
