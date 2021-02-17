@@ -114,6 +114,11 @@ class CandidateTreeBuilder
         const size_t _ix_perip_used,
         const enums::DataUsed _data_used );
 
+    /// Returns true if _agg is FIRST or LAST, but there are no time stamps in
+    /// _peripheral.
+    static bool skip_first_last(
+        const std::string &_agg, const containers::DataFrame &_peripheral );
+
     /// Transforms a same_unit enum to a same_unit_..._ts, if applicable.
     /// Otherwise, it just returns the original value.
     static enums::DataUsed to_ts(

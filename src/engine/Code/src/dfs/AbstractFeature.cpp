@@ -8,11 +8,14 @@ namespace containers
 
 AbstractFeature::AbstractFeature(
     const enums::Aggregation _aggregation,
+    const std::vector<Condition> &_conditions,
     const enums::DataUsed _data_used,
     const size_t _input_col,
     const size_t _output_col,
     const size_t _peripheral )
     : aggregation_( _aggregation ),
+      categorical_value_( NO_CATEGORICAL_VALUE ),
+      conditions_( _conditions ),
       data_used_( _data_used ),
       input_col_( _input_col ),
       output_col_( _output_col ),
@@ -24,24 +27,48 @@ AbstractFeature::AbstractFeature(
 
 AbstractFeature::AbstractFeature(
     const enums::Aggregation _aggregation,
+    const std::vector<Condition> &_conditions,
     const enums::DataUsed _data_used,
     const size_t _input_col,
     const size_t _peripheral )
-    : AbstractFeature( _aggregation, _data_used, _input_col, 0, _peripheral )
+    : AbstractFeature(
+          _aggregation, _conditions, _data_used, _input_col, 0, _peripheral )
 {
 }
 
 // ----------------------------------------------------------------------------
 
+AbstractFeature::AbstractFeature(
+    const enums::Aggregation _aggregation,
+    const std::vector<Condition> &_conditions,
+    const size_t _input_col,
+    const size_t _peripheral,
+    const Int _categorical_value )
+    : aggregation_( _aggregation ),
+      categorical_value_( _categorical_value ),
+      conditions_( _conditions ),
+      data_used_( enums::DataUsed::categorical ),
+      input_col_( _input_col ),
+      output_col_( 0 ),
+      peripheral_( _peripheral )
+{
+    assert_true( _categorical_value >= 0 );
+}
+
+// ----------------------------------------------------------------------------
+
 AbstractFeature::AbstractFeature( const Poco::JSON::Object &_obj )
-    : AbstractFeature(
-          enums::Parser<enums::Aggregation>::parse(
-              jsonutils::JSON::get_value<std::string>( _obj, "aggregation_" ) ),
-          enums::Parser<enums::DataUsed>::parse(
-              jsonutils::JSON::get_value<std::string>( _obj, "data_used_" ) ),
-          jsonutils::JSON::get_value<size_t>( _obj, "input_col_" ),
-          jsonutils::JSON::get_value<size_t>( _obj, "output_col_" ),
-          jsonutils::JSON::get_value<size_t>( _obj, "peripheral_" ) )
+    : aggregation_( enums::Parser<enums::Aggregation>::parse(
+          jsonutils::JSON::get_value<std::string>( _obj, "aggregation_" ) ) ),
+      categorical_value_(
+          jsonutils::JSON::get_value<Int>( _obj, "categorical_value_" ) ),
+      conditions_(
+          jsonutils::JSON::get_type_vector<Condition>( _obj, "conditions_" ) ),
+      data_used_( enums::Parser<enums::DataUsed>::parse(
+          jsonutils::JSON::get_value<std::string>( _obj, "data_used_" ) ) ),
+      input_col_( jsonutils::JSON::get_value<size_t>( _obj, "input_col_" ) ),
+      output_col_( jsonutils::JSON::get_value<size_t>( _obj, "output_col_" ) ),
+      peripheral_( jsonutils::JSON::get_value<size_t>( _obj, "peripheral_" ) )
 {
 }
 
@@ -58,6 +85,12 @@ Poco::JSON::Object::Ptr AbstractFeature::to_json_obj() const
     obj->set(
         "aggregation_",
         enums::Parser<enums::Aggregation>::to_str( aggregation_ ) );
+
+    obj->set( "categorical_value_", categorical_value_ );
+
+    obj->set(
+        "conditions_",
+        jsonutils::JSON::vector_to_object_array_ptr( conditions_ ) );
 
     obj->set(
         "data_used_", enums::Parser<enums::DataUsed>::to_str( data_used_ ) );
@@ -100,7 +133,7 @@ std::string AbstractFeature::to_sql(
     sql << "SELECT ";
 
     sql << SQLMaker::select_statement(
-        _feature_prefix, *this, _input, _output );
+        _categories, _feature_prefix, *this, _input, _output );
 
     sql << " AS \"feature_" << _feature_prefix << _feature_num << "\","
         << std::endl;
@@ -130,7 +163,7 @@ std::string AbstractFeature::to_sql(
 
     if ( use_time_stamps )
         {
-            sql << "WHERE ( ";
+            sql << "WHERE ";
 
             const auto upper_ts = _input.num_time_stamps() > 1
                                       ? _input.upper_time_stamps_name()
@@ -143,8 +176,35 @@ std::string AbstractFeature::to_sql(
                 "t1",
                 "t2",
                 "t1" );
+        }
 
-            sql << ") ";
+    // -------------------------------------------------------------------
+
+    for ( size_t i = 0; i < conditions_.size(); ++i )
+        {
+            if ( i == 0 && !use_time_stamps )
+                {
+                    sql << "WHERE ";
+                }
+            else
+                {
+                    sql << "AND ";
+                }
+
+            sql << conditions_.at( i ).to_sql(
+                       _categories, _feature_prefix, _input, _output )
+                << std::endl;
+        }
+
+    // -------------------------------------------------------------------
+
+    if ( aggregation_ == enums::Aggregation::first ||
+         aggregation_ == enums::Aggregation::last )
+        {
+            assert_true( _input.num_time_stamps() > 0 );
+            const auto ts_name = helpers::SQLGenerator::edit_colname(
+                _input.time_stamps_name(), "t2" );
+            sql << "ORDER BY " << ts_name << std::endl;
         }
 
     // -------------------------------------------------------------------

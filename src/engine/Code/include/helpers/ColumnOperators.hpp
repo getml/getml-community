@@ -16,7 +16,7 @@ class ColumnOperators
     {
         if ( std::distance( _begin, _end ) <= 0 )
             {
-                throw std::runtime_error( "Column cannot be of length 0." );
+                return 0.0;
             }
 
         const auto assert_equal = []( const Float init, const Float val ) {
@@ -37,9 +37,14 @@ class ColumnOperators
     template <class IteratorType>
     static Float avg( IteratorType _begin, IteratorType _end )
     {
-        const auto numerator = sum( _begin, _end );
-
         const auto divisor = count( _begin, _end );
+
+        if ( divisor == 0.0 )
+            {
+                return NAN;
+            }
+
+        const auto numerator = sum( _begin, _end );
 
         return numerator / divisor;
     }
@@ -87,7 +92,7 @@ class ColumnOperators
 
         for ( const auto& val : _vec )
             {
-                if ( val < 0 )
+                if ( NullChecker::is_null( val ) )
                     {
                         continue;
                     }
@@ -101,19 +106,7 @@ class ColumnOperators
     /// Counts the non-null distinct number of entries.
     static Float count_distinct( const std::vector<std::string>& _vec )
     {
-        auto set = std::unordered_set<std::string>();
-
-        for ( const auto& str : _vec )
-            {
-                if ( NullChecker::is_null( str ) )
-                    {
-                        continue;
-                    }
-
-                set.insert( str );
-            }
-
-        return static_cast<Float>( set.size() );
+        return count_distinct( _vec.begin(), _vec.end() );
     }
 
     /// Counts the non-null distinct number of entries.
@@ -122,15 +115,19 @@ class ColumnOperators
         return count_distinct( _vec.begin(), _vec.end() );
     }
 
-    /// Finds the maximum of all non-null entries.
+    /// Counts the distinct number of entries.
     template <class IteratorType>
     static Float count_distinct( IteratorType _begin, IteratorType _end )
     {
-        auto set = std::unordered_set<Int>();
+        using ConstValueType = std::remove_reference<decltype( *_begin )>::type;
+
+        using ValueType = std::remove_const<ConstValueType>::type;
+
+        auto set = std::unordered_set<ValueType>();
 
         for ( auto it = _begin; it != _end; ++it )
             {
-                if ( *it < 0 )
+                if ( NullChecker::is_null( *it ) )
                     {
                         continue;
                     }
@@ -139,6 +136,52 @@ class ColumnOperators
             }
 
         return static_cast<Float>( set.size() );
+    }
+
+    /// Implements the FIRST aggregation. Assumes that the iterator points to a
+    /// set of pairs, the first signifying the element over which we want to
+    /// sort and the second signifying the value.
+    template <class IteratorType>
+    static Float first( IteratorType _begin, IteratorType _end )
+    {
+        if ( std::distance( _begin, _end ) <= 0 )
+            {
+                return NAN;
+            }
+
+        using Pair = std::pair<Float, Float>;
+
+        const auto ts_is_smaller = []( const Pair& p1,
+                                       const Pair& p2 ) -> Float {
+            return p1.first < p2.first;
+        };
+
+        const auto p = *std::ranges::min_element( _begin, _end, ts_is_smaller );
+
+        return p.second;
+    }
+
+    /// Implements the LAST aggregation. Assumes that the iterator points to a
+    /// set of pairs, the first signifying the element over which we want to
+    /// sort and the second signifying the value.
+    template <class IteratorType>
+    static Float last( IteratorType _begin, IteratorType _end )
+    {
+        if ( std::distance( _begin, _end ) <= 0 )
+            {
+                return NAN;
+            }
+
+        using Pair = std::pair<Float, Float>;
+
+        const auto ts_is_smaller = []( const Pair& p1,
+                                       const Pair& p2 ) -> Float {
+            return p1.first < p2.first;
+        };
+
+        const auto p = *std::ranges::max_element( _begin, _end, ts_is_smaller );
+
+        return p.second;
     }
 
     /// Finds the maximum of all non-null entries.
@@ -157,7 +200,7 @@ class ColumnOperators
     {
         if ( std::distance( _begin, _end ) <= 0 )
             {
-                throw std::runtime_error( "Column cannot be of length 0." );
+                return NAN;
             }
 
         auto values = std::vector<Float>( _begin, _end );
@@ -187,6 +230,37 @@ class ColumnOperators
         return num_agg( _begin, _end, min_op, NAN );
     }
 
+    /// Takes the skewness of all non-null entries.
+    template <class IteratorType>
+    static Float skew( IteratorType _begin, IteratorType _end )
+    {
+        const auto n = count( _begin, _end );
+
+        if ( n == 0.0 )
+            {
+                return NAN;
+            }
+
+        const auto mean = avg( _begin, _end );
+
+        const auto std = stddev( _begin, _end );
+
+        const auto skewness = [mean, std, n](
+                                  const Float init, const Float val ) {
+            if ( NullChecker::is_null( val ) )
+                {
+                    return init;
+                }
+            else
+                {
+                    const auto diff = ( val - mean ) / std;
+                    return init + diff * diff * diff / n;
+                }
+        };
+
+        return num_agg( _begin, _end, skewness, 0.0 );
+    }
+
     /// Takes the standard deviation of all non-null entries.
     template <class IteratorType>
     static Float stddev( IteratorType _begin, IteratorType _end )
@@ -199,7 +273,7 @@ class ColumnOperators
     static Float sum( IteratorType _begin, IteratorType _end )
     {
         const auto sum = []( const Float init, const Float val ) {
-            if ( std::isnan( val ) )
+            if ( NullChecker::is_null( val ) )
                 {
                     return init;
                 }
@@ -216,12 +290,17 @@ class ColumnOperators
     template <class IteratorType>
     static Float var( IteratorType _begin, IteratorType _end )
     {
-        const auto mean = avg( _begin, _end );
-
         const auto n = count( _begin, _end );
 
-        const auto var = [mean, n]( const Float init, const Float val ) {
-            if ( std::isnan( val ) )
+        if ( n == 0.0 )
+            {
+                return NAN;
+            }
+
+        const auto mean = avg( _begin, _end );
+
+        const auto variance = [mean, n]( const Float init, const Float val ) {
+            if ( NullChecker::is_null( val ) )
                 {
                     return init;
                 }
@@ -232,7 +311,7 @@ class ColumnOperators
                 }
         };
 
-        return num_agg( _begin, _end, var, 0.0 );
+        return num_agg( _begin, _end, variance, 0.0 );
     }
 
     // ------------------------------------------------------------------------
@@ -247,11 +326,6 @@ class ColumnOperators
         const Aggregation& _agg,
         const Float _init )
     {
-        if ( std::distance( _begin, _end ) <= 0 )
-            {
-                throw std::runtime_error( "Column cannot be of length 0." );
-            }
-
         return std::accumulate( _begin, _end, _init, _agg );
     }
 

@@ -44,6 +44,13 @@ struct Hyperparameters
     /// this for consistency).
     const std::string loss_function_;
 
+    /// The number of categories from which we would like to extract numerical
+    /// features.
+    const size_t n_most_frequent_;
+
+    /// The maximum number of features generated.
+    const size_t num_features_;
+
     /// The number of threads we want to use
     const Int num_threads_;
 

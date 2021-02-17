@@ -20,13 +20,17 @@ template <>
 struct Parser<Aggregation>
 {
     static constexpr const char* AVG = "AVG";
+    static constexpr const char* AVG_TIME_BETWEEN = "AVG TIME BETWEEN";
     static constexpr const char* COUNT = "COUNT";
     static constexpr const char* COUNT_DISTINCT = "COUNT DISTINCT";
     static constexpr const char* COUNT_MINUS_COUNT_DISTINCT =
         "COUNT MINUS COUNT DISTINCT";
+    static constexpr const char* FIRST = "FIRST";
+    static constexpr const char* LAST = "LAST";
     static constexpr const char* MAX = "MAX";
     static constexpr const char* MEDIAN = "MEDIAN";
     static constexpr const char* MIN = "MIN";
+    static constexpr const char* SKEW = "SKEW";
     static constexpr const char* SUM = "SUM";
     static constexpr const char* STDDEV = "STDDEV";
     static constexpr const char* VAR = "VAR";
@@ -37,6 +41,11 @@ struct Parser<Aggregation>
         if ( _str == AVG )
             {
                 return Aggregation::avg;
+            }
+
+        if ( _str == AVG_TIME_BETWEEN )
+            {
+                return Aggregation::avg_time_between;
             }
 
         if ( _str == COUNT )
@@ -54,6 +63,16 @@ struct Parser<Aggregation>
                 return Aggregation::count_minus_count_distinct;
             }
 
+        if ( _str == FIRST )
+            {
+                return Aggregation::first;
+            }
+
+        if ( _str == LAST )
+            {
+                return Aggregation::last;
+            }
+
         if ( _str == MAX )
             {
                 return Aggregation::max;
@@ -67,6 +86,11 @@ struct Parser<Aggregation>
         if ( _str == MIN )
             {
                 return Aggregation::min;
+            }
+
+        if ( _str == SKEW )
+            {
+                return Aggregation::skew;
             }
 
         if ( _str == STDDEV )
@@ -97,6 +121,9 @@ struct Parser<Aggregation>
                 case Aggregation::avg:
                     return AVG;
 
+                case Aggregation::avg_time_between:
+                    return AVG_TIME_BETWEEN;
+
                 case Aggregation::count:
                     return COUNT;
 
@@ -106,6 +133,12 @@ struct Parser<Aggregation>
                 case Aggregation::count_minus_count_distinct:
                     return COUNT_MINUS_COUNT_DISTINCT;
 
+                case Aggregation::first:
+                    return FIRST;
+
+                case Aggregation::last:
+                    return LAST;
+
                 case Aggregation::max:
                     return MAX;
 
@@ -114,6 +147,9 @@ struct Parser<Aggregation>
 
                 case Aggregation::min:
                     return MIN;
+
+                case Aggregation::skew:
+                    return SKEW;
 
                 case Aggregation::stddev:
                     return STDDEV;

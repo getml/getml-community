@@ -6,6 +6,7 @@
 
 #include <execution>
 #include <fstream>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <ranges>
@@ -38,8 +39,11 @@
 // ----------------------------------------------------------------------------
 // Module files
 
-#include "dfs/algorithm/Aggregator.hpp"
 #include "dfs/algorithm/TableHolder.hpp"
+
+#include "dfs/algorithm/Aggregator.hpp"
+#include "dfs/algorithm/ConditionParser.hpp"
+#include "dfs/algorithm/RSquared.hpp"
 
 #include "dfs/algorithm/DeepFeatureSynthesis.hpp"
 

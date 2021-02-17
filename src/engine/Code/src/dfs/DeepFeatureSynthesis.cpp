@@ -149,9 +149,13 @@ void DeepFeatureSynthesis::build_row(
     const TableHolder &_table_holder,
     const std::vector<containers::Features> &_subfeatures,
     const std::vector<size_t> &_index,
+    const std::vector<std::function<bool( const containers::Match & )>>
+        &_condition_functions,
     const size_t _rownum,
     containers::Features *_features ) const
 {
+    assert_true( _condition_functions.size() == _index.size() );
+
     assert_true( _features->size() == _index.size() );
 
     const auto all_matches = make_matches( _table_holder, _rownum );
@@ -194,8 +198,15 @@ void DeepFeatureSynthesis::build_row(
 
             assert_true( _rownum < _features->at( i )->size() );
 
+            const auto &condition_function = _condition_functions.at( i );
+
             const auto value = Aggregator::apply_aggregation(
-                population, peripheral, subf, matches, abstract_feature );
+                population,
+                peripheral,
+                subf,
+                matches,
+                condition_function,
+                abstract_feature );
 
             _features->at( i )->at( _rownum ) =
                 ( std::isnan( value ) || std::isinf( value ) ) ? 0.0 : value;
@@ -224,12 +235,16 @@ void DeepFeatureSynthesis::build_rows(
 
     constexpr size_t log_iter = 5000;
 
+    const auto condition_functions = ConditionParser::make_condition_functions(
+        table_holder, _subfeatures, _index, abstract_features() );
+
     for ( size_t i = 0; i < rownums->size(); ++i )
         {
             build_row(
                 table_holder,
                 _subfeatures,
                 _index,
+                condition_functions,
                 rownums->at( i ),
                 _features );
 
@@ -254,6 +269,7 @@ void DeepFeatureSynthesis::build_rows(
 
 std::vector<containers::Features> DeepFeatureSynthesis::build_subfeatures(
     const std::vector<containers::DataFrame> &_peripheral,
+    const std::vector<size_t> &_index,
     const std::shared_ptr<const logging::AbstractLogger> _logger ) const
 {
     assert_true( placeholder().joined_tables_.size() == subfeatures().size() );
@@ -273,13 +289,75 @@ std::vector<containers::Features> DeepFeatureSynthesis::build_subfeatures(
             const auto population =
                 find_peripheral( _peripheral, joined_table.name_ );
 
-            const auto f = subfeatures().at( i )->transform(
-                population, _peripheral, std::nullopt, _logger );
+            const auto subfeature_index = make_subfeature_index( i, _index );
 
-            features.push_back( f );
+            const auto f = subfeatures().at( i )->transform(
+                population, _peripheral, subfeature_index, _logger );
+
+            const auto f_expanded = expand_subfeatures(
+                f, subfeature_index, subfeatures().at( i )->num_features() );
+
+            features.push_back( f_expanded );
         }
 
     return features;
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<Float> DeepFeatureSynthesis::calc_r_squared(
+    const containers::DataFrame &_population,
+    const std::vector<containers::DataFrame> &_peripheral,
+    const std::shared_ptr<const logging::AbstractLogger> _logger ) const
+{
+    auto r_squared = std::vector<Float>();
+
+    constexpr size_t batch_size = 100;
+
+    for ( size_t begin = 0; begin < abstract_features().size();
+          begin += batch_size )
+        {
+            const auto end =
+                std::min( abstract_features().size(), begin + batch_size );
+
+            auto index = std::vector<size_t>( end - begin );
+
+            std::iota( index.begin(), index.end(), begin );
+
+            const auto features =
+                transform( _population, _peripheral, index, nullptr );
+
+            const auto r =
+                RSquared::calculate( _population.targets_, features );
+
+            r_squared.insert( r_squared.end(), r.begin(), r.end() );
+
+            if ( _logger )
+                {
+                    const auto progress = std::to_string(
+                        ( end * 100 ) / abstract_features().size() );
+
+                    _logger->log(
+                        "Built " + std::to_string( end ) +
+                        " features. Progress: " + progress + "\%." );
+                }
+        }
+
+    return r_squared;
+}
+
+// ----------------------------------------------------------------------------
+
+Float DeepFeatureSynthesis::calc_threshold(
+    const std::vector<Float> &_r_squared ) const
+{
+    auto r_squared = _r_squared;
+
+    std::ranges::sort( r_squared, std::ranges::greater() );
+
+    assert_true( r_squared.size() > hyperparameters().num_features_ );
+
+    return r_squared.at( hyperparameters().num_features_ );
 }
 
 // ----------------------------------------------------------------------------
@@ -319,6 +397,29 @@ DeepFeatureSynthesis::column_importances(
         }
 
     return importances.importances();
+}
+
+// ----------------------------------------------------------------------------
+
+containers::Features DeepFeatureSynthesis::expand_subfeatures(
+    const containers::Features &_subfeatures,
+    const std::vector<size_t> &_subfeature_index,
+    const size_t _num_subfeatures ) const
+{
+    assert_true( _subfeatures.size() == _subfeature_index.size() );
+
+    auto expanded_subfeatures = containers::Features( _num_subfeatures );
+
+    for ( size_t i = 0; i < _subfeatures.size(); ++i )
+        {
+            const auto ix = _subfeature_index.at( i );
+
+            assert_true( ix < expanded_subfeatures.size() );
+
+            expanded_subfeatures.at( ix ) = _subfeatures.at( i );
+        }
+
+    return expanded_subfeatures;
 }
 
 // ----------------------------------------------------------------------------
@@ -371,6 +472,50 @@ void DeepFeatureSynthesis::extract_schemas( const TableHolder &_table_holder )
 
 // ----------------------------------------------------------------------------
 
+std::vector<Int> DeepFeatureSynthesis::find_most_frequent_categories(
+    const containers::Column<Int> &_col ) const
+{
+    std::map<Int, size_t> frequencies;
+
+    for ( size_t i = 0; i < _col.nrows_; ++i )
+        {
+            const auto val = _col[i];
+
+            const auto it = frequencies.find( val );
+
+            if ( it == frequencies.end() )
+                {
+                    frequencies[val] = 1;
+                }
+            else
+                {
+                    it->second++;
+                }
+        }
+
+    using Pair = std::pair<Int, size_t>;
+
+    const auto sort_by_second = []( const Pair p1, const Pair p2 ) {
+        return p1.second > p2.second;
+    };
+
+    auto pairs = std::vector<Pair>( frequencies.begin(), frequencies.end() );
+
+    std::ranges::sort( pairs, sort_by_second );
+
+    const auto get_first = []( const Pair p ) -> Int { return p.first; };
+
+    const auto is_not_null = []( const Int val ) -> bool { return val >= 0; };
+
+    const auto range = pairs | std::views::transform( get_first ) |
+                       std::views::filter( is_not_null ) |
+                       std::views::take( hyperparameters().n_most_frequent_ );
+
+    return helpers::STL::make_vector<Int>( range );
+}
+
+// ----------------------------------------------------------------------------
+
 containers::DataFrame DeepFeatureSynthesis::find_peripheral(
     const std::vector<containers::DataFrame> &_peripheral,
     const std::string &_name ) const
@@ -378,7 +523,8 @@ containers::DataFrame DeepFeatureSynthesis::find_peripheral(
     if ( _peripheral.size() != peripheral().size() )
         {
             throw std::invalid_argument(
-                "The number of peripheral tables does not match the number of "
+                "The number of peripheral tables does not match the number "
+                "of "
                 "peripheral placeholders." );
         }
 
@@ -401,16 +547,12 @@ containers::DataFrame DeepFeatureSynthesis::find_peripheral(
 void DeepFeatureSynthesis::fit(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral,
-    const std::shared_ptr<const logging::AbstractLogger> _logger )
+    const std::shared_ptr<const logging::AbstractLogger> _logger,
+    const bool _as_subfeatures )
 {
     extract_schemas( _population, _peripheral );
 
     subfeatures_ = fit_subfeatures( _peripheral, _logger );
-
-    if ( _logger )
-        {
-            _logger->log( "DeepFeatureSynthesis: Training features..." );
-        }
 
     const auto abstract_features =
         std::make_shared<std::vector<containers::AbstractFeature>>();
@@ -432,20 +574,35 @@ void DeepFeatureSynthesis::fit(
 
     extract_schemas( table_holder );
 
+    const auto conditions = make_conditions( table_holder );
+
     for ( size_t i = 0; i < table_holder.main_tables_.size(); ++i )
         {
             fit_on_peripheral(
                 table_holder.main_tables_.at( i ).df(),
                 table_holder.peripheral_tables_.at( i ),
                 i,
+                conditions,
                 abstract_features );
         }
 
     abstract_features_ = abstract_features;
 
-    if ( _logger )
+    if ( _logger && !_as_subfeatures )
         {
-            _logger->log( "Trained features. Progress: 100\%." );
+            const auto num_candidates =
+                std::to_string( abstract_features->size() );
+
+            const auto msg = "DeepFeatureSynthesis: Trying " + num_candidates +
+                             " features...";
+
+            _logger->log( msg );
+        }
+
+    if ( !_as_subfeatures )
+        {
+            abstract_features_ =
+                select_features( _population, _peripheral, _logger );
         }
 }
 
@@ -454,6 +611,7 @@ void DeepFeatureSynthesis::fit(
 void DeepFeatureSynthesis::fit_on_categoricals(
     const containers::DataFrame &_peripheral,
     const size_t _peripheral_ix,
+    const std::vector<containers::Condition> &_conditions,
     std::shared_ptr<std::vector<containers::AbstractFeature>>
         _abstract_features ) const
 {
@@ -462,6 +620,27 @@ void DeepFeatureSynthesis::fit_on_categoricals(
     for ( size_t input_col = 0; input_col < _peripheral.num_categoricals();
           ++input_col )
         {
+            if ( _peripheral.categorical_unit( input_col )
+                     .find( "comparison only" ) != std::string::npos )
+                {
+                    continue;
+                }
+
+            const auto condition_is_categorical =
+                []( const containers::Condition &_cond ) {
+                    return _cond.data_used_ == enums::DataUsed::categorical;
+                };
+
+            const auto any_condition_is_categorical = std::any_of(
+                _conditions.begin(),
+                _conditions.end(),
+                condition_is_categorical );
+
+            if ( any_condition_is_categorical )
+                {
+                    continue;
+                }
+
             for ( const auto agg : hyperparameters().aggregations_ )
                 {
                     if ( !is_categorical( agg ) )
@@ -469,14 +648,9 @@ void DeepFeatureSynthesis::fit_on_categoricals(
                             continue;
                         }
 
-                    if ( _peripheral.categorical_unit( input_col )
-                             .find( "comparison only" ) != std::string::npos )
-                        {
-                            continue;
-                        }
-
                     _abstract_features->push_back( containers::AbstractFeature(
                         enums::Parser<enums::Aggregation>::parse( agg ),
+                        _conditions,
                         enums::DataUsed::categorical,
                         input_col,
                         _peripheral_ix ) );
@@ -486,9 +660,75 @@ void DeepFeatureSynthesis::fit_on_categoricals(
 
 // ----------------------------------------------------------------------------
 
+void DeepFeatureSynthesis::fit_on_categoricals_by_categories(
+    const containers::DataFrame &_peripheral,
+    const size_t _peripheral_ix,
+    const std::vector<containers::Condition> &_conditions,
+    std::shared_ptr<std::vector<containers::AbstractFeature>>
+        _abstract_features ) const
+{
+    assert_true( _abstract_features );
+
+    for ( size_t input_col = 0; input_col < _peripheral.num_categoricals();
+          ++input_col )
+        {
+            if ( _peripheral.categorical_unit( input_col )
+                     .find( "comparison only" ) != std::string::npos )
+                {
+                    continue;
+                }
+
+            const auto condition_is_categorical =
+                []( const containers::Condition &_cond ) {
+                    return _cond.data_used_ == enums::DataUsed::categorical;
+                };
+
+            const auto any_condition_is_categorical = std::any_of(
+                _conditions.begin(),
+                _conditions.end(),
+                condition_is_categorical );
+
+            if ( any_condition_is_categorical )
+                {
+                    continue;
+                }
+
+            const auto most_frequent = find_most_frequent_categories(
+                _peripheral.categorical_col( input_col ) );
+
+            for ( const auto categorical_value : most_frequent )
+                {
+                    for ( const auto agg : hyperparameters().aggregations_ )
+                        {
+                            if ( !is_numerical( agg ) )
+                                {
+                                    continue;
+                                }
+
+                            if ( skip_first_last( agg, _peripheral ) )
+                                {
+                                    continue;
+                                }
+
+                            _abstract_features->push_back(
+                                containers::AbstractFeature(
+                                    enums::Parser<enums::Aggregation>::parse(
+                                        agg ),
+                                    _conditions,
+                                    input_col,
+                                    _peripheral_ix,
+                                    categorical_value ) );
+                        }
+                }
+        }
+}
+
+// ----------------------------------------------------------------------------
+
 void DeepFeatureSynthesis::fit_on_discretes(
     const containers::DataFrame &_peripheral,
     const size_t _peripheral_ix,
+    const std::vector<containers::Condition> &_conditions,
     std::shared_ptr<std::vector<containers::AbstractFeature>>
         _abstract_features ) const
 {
@@ -510,8 +750,14 @@ void DeepFeatureSynthesis::fit_on_discretes(
                             continue;
                         }
 
+                    if ( skip_first_last( agg, _peripheral ) )
+                        {
+                            continue;
+                        }
+
                     _abstract_features->push_back( containers::AbstractFeature(
                         enums::Parser<enums::Aggregation>::parse( agg ),
+                        _conditions,
                         enums::DataUsed::discrete,
                         input_col,
                         _peripheral_ix ) );
@@ -524,6 +770,7 @@ void DeepFeatureSynthesis::fit_on_discretes(
 void DeepFeatureSynthesis::fit_on_numericals(
     const containers::DataFrame &_peripheral,
     const size_t _peripheral_ix,
+    const std::vector<containers::Condition> &_conditions,
     std::shared_ptr<std::vector<containers::AbstractFeature>>
         _abstract_features ) const
 {
@@ -545,8 +792,14 @@ void DeepFeatureSynthesis::fit_on_numericals(
                             continue;
                         }
 
+                    if ( skip_first_last( agg, _peripheral ) )
+                        {
+                            continue;
+                        }
+
                     _abstract_features->push_back( containers::AbstractFeature(
                         enums::Parser<enums::Aggregation>::parse( agg ),
+                        _conditions,
                         enums::DataUsed::numerical,
                         input_col,
                         _peripheral_ix ) );
@@ -560,6 +813,7 @@ void DeepFeatureSynthesis::fit_on_same_units_categorical(
     const containers::DataFrame &_population,
     const containers::DataFrame &_peripheral,
     const size_t _peripheral_ix,
+    const std::vector<containers::Condition> &_conditions,
     std::shared_ptr<std::vector<containers::AbstractFeature>>
         _abstract_features ) const
 {
@@ -572,20 +826,24 @@ void DeepFeatureSynthesis::fit_on_same_units_categorical(
                   input_col < _peripheral.num_categoricals();
                   ++input_col )
                 {
+                    const bool same_unit =
+                        _population.categorical_unit( output_col ) != "" &&
+                        _population.categorical_unit( output_col ) ==
+                            _peripheral.categorical_unit( input_col );
+
+                    if ( !same_unit )
+                        {
+                            continue;
+                        }
+
                     for ( const auto agg : hyperparameters().aggregations_ )
                         {
-                            const bool same_unit =
-                                _population.categorical_unit( output_col ) !=
-                                    "" &&
-                                _population.categorical_unit( output_col ) ==
-                                    _peripheral.categorical_unit( input_col );
-
-                            if ( !same_unit )
+                            if ( !is_numerical( agg ) )
                                 {
                                     continue;
                                 }
 
-                            if ( !is_numerical( agg ) )
+                            if ( skip_first_last( agg, _peripheral ) )
                                 {
                                     continue;
                                 }
@@ -594,6 +852,7 @@ void DeepFeatureSynthesis::fit_on_same_units_categorical(
                                 containers::AbstractFeature(
                                     enums::Parser<enums::Aggregation>::parse(
                                         agg ),
+                                    _conditions,
                                     enums::DataUsed::same_units_categorical,
                                     input_col,
                                     output_col,
@@ -609,6 +868,7 @@ void DeepFeatureSynthesis::fit_on_same_units_discrete(
     const containers::DataFrame &_population,
     const containers::DataFrame &_peripheral,
     const size_t _peripheral_ix,
+    const std::vector<containers::Condition> &_conditions,
     std::shared_ptr<std::vector<containers::AbstractFeature>>
         _abstract_features ) const
 {
@@ -637,6 +897,11 @@ void DeepFeatureSynthesis::fit_on_same_units_discrete(
                                     continue;
                                 }
 
+                            if ( skip_first_last( agg, _peripheral ) )
+                                {
+                                    continue;
+                                }
+
                             const auto data_used =
                                 is_ts(
                                     _population.discrete_name( output_col ),
@@ -648,6 +913,7 @@ void DeepFeatureSynthesis::fit_on_same_units_discrete(
                                 containers::AbstractFeature(
                                     enums::Parser<enums::Aggregation>::parse(
                                         agg ),
+                                    _conditions,
                                     data_used,
                                     input_col,
                                     output_col,
@@ -663,6 +929,7 @@ void DeepFeatureSynthesis::fit_on_same_units_numerical(
     const containers::DataFrame &_population,
     const containers::DataFrame &_peripheral,
     const size_t _peripheral_ix,
+    const std::vector<containers::Condition> &_conditions,
     std::shared_ptr<std::vector<containers::AbstractFeature>>
         _abstract_features ) const
 {
@@ -693,6 +960,11 @@ void DeepFeatureSynthesis::fit_on_same_units_numerical(
                                     continue;
                                 }
 
+                            if ( skip_first_last( agg, _peripheral ) )
+                                {
+                                    continue;
+                                }
+
                             const auto data_used =
                                 is_ts(
                                     _population.numerical_name( output_col ),
@@ -704,6 +976,7 @@ void DeepFeatureSynthesis::fit_on_same_units_numerical(
                                 containers::AbstractFeature(
                                     enums::Parser<enums::Aggregation>::parse(
                                         agg ),
+                                    _conditions,
                                     data_used,
                                     input_col,
                                     output_col,
@@ -716,7 +989,9 @@ void DeepFeatureSynthesis::fit_on_same_units_numerical(
 // ----------------------------------------------------------------------------
 
 void DeepFeatureSynthesis::fit_on_subfeatures(
+    const containers::DataFrame &_peripheral,
     const size_t _peripheral_ix,
+    const std::vector<containers::Condition> &_conditions,
     std::shared_ptr<std::vector<containers::AbstractFeature>>
         _abstract_features ) const
 {
@@ -740,8 +1015,14 @@ void DeepFeatureSynthesis::fit_on_subfeatures(
                             continue;
                         }
 
+                    if ( skip_first_last( agg, _peripheral ) )
+                        {
+                            continue;
+                        }
+
                     _abstract_features->push_back( containers::AbstractFeature(
                         enums::Parser<enums::Aggregation>::parse( agg ),
+                        _conditions,
                         enums::DataUsed::subfeatures,
                         input_col,
                         _peripheral_ix ) );
@@ -755,30 +1036,69 @@ void DeepFeatureSynthesis::fit_on_peripheral(
     const containers::DataFrame &_population,
     const containers::DataFrame &_peripheral,
     const size_t _peripheral_ix,
+    const std::vector<std::vector<containers::Condition>> &_conditions,
     std::shared_ptr<std::vector<containers::AbstractFeature>>
         _abstract_features ) const
 {
-    fit_on_categoricals( _peripheral, _peripheral_ix, _abstract_features );
+    const auto condition_filter = make_condition_filter( _peripheral_ix );
 
-    fit_on_discretes( _peripheral, _peripheral_ix, _abstract_features );
+    auto filtered_conditions =
+        _conditions | std::views::filter( condition_filter );
 
-    fit_on_numericals( _peripheral, _peripheral_ix, _abstract_features );
+    for ( const auto &cond : filtered_conditions )
+        {
+            fit_on_categoricals(
+                _peripheral, _peripheral_ix, cond, _abstract_features );
 
-    fit_on_same_units_categorical(
-        _population, _peripheral, _peripheral_ix, _abstract_features );
+            fit_on_categoricals_by_categories(
+                _peripheral, _peripheral_ix, cond, _abstract_features );
 
-    fit_on_same_units_discrete(
-        _population, _peripheral, _peripheral_ix, _abstract_features );
+            fit_on_discretes(
+                _peripheral, _peripheral_ix, cond, _abstract_features );
 
-    fit_on_same_units_numerical(
-        _population, _peripheral, _peripheral_ix, _abstract_features );
+            fit_on_numericals(
+                _peripheral, _peripheral_ix, cond, _abstract_features );
 
-    fit_on_subfeatures( _peripheral_ix, _abstract_features );
+            fit_on_same_units_categorical(
+                _population,
+                _peripheral,
+                _peripheral_ix,
+                cond,
+                _abstract_features );
+
+            fit_on_same_units_discrete(
+                _population,
+                _peripheral,
+                _peripheral_ix,
+                cond,
+                _abstract_features );
+
+            fit_on_same_units_numerical(
+                _population,
+                _peripheral,
+                _peripheral_ix,
+                cond,
+                _abstract_features );
+
+            fit_on_subfeatures(
+                _peripheral, _peripheral_ix, cond, _abstract_features );
+
+            if ( _peripheral.num_time_stamps() > 0 )
+                {
+                    _abstract_features->push_back( containers::AbstractFeature(
+                        enums::Aggregation::avg_time_between,
+                        cond,
+                        enums::DataUsed::not_applicable,
+                        0,
+                        _peripheral_ix ) );
+                }
+        }
 
     if ( has_count() )
         {
             _abstract_features->push_back( containers::AbstractFeature(
                 enums::Aggregation::count,
+                {},
                 enums::DataUsed::not_applicable,
                 0,
                 _peripheral_ix ) );
@@ -814,7 +1134,7 @@ DeepFeatureSynthesis::fit_subfeatures(
             const auto population =
                 find_peripheral( _peripheral, joined_table.name_ );
 
-            subfeatures->back()->fit( population, _peripheral, _logger );
+            subfeatures->back()->fit( population, _peripheral, _logger, true );
         }
 
     return subfeatures;
@@ -1048,21 +1368,7 @@ bool DeepFeatureSynthesis::is_categorical( const std::string &_agg ) const
 bool DeepFeatureSynthesis::is_numerical( const std::string &_agg ) const
 {
     const auto agg = enums::Parser<enums::Aggregation>::parse( _agg );
-
-    switch ( agg )
-        {
-            case enums::Aggregation::avg:
-            case enums::Aggregation::max:
-            case enums::Aggregation::median:
-            case enums::Aggregation::min:
-            case enums::Aggregation::stddev:
-            case enums::Aggregation::sum:
-            case enums::Aggregation::var:
-                return true;
-
-            default:
-                return false;
-        }
+    return ( agg != enums::Aggregation::count );
 }
 
 // ----------------------------------------------------------------------------
@@ -1166,6 +1472,132 @@ void DeepFeatureSynthesis::log_progress(
 
 // ----------------------------------------------------------------------------
 
+std::vector<std::vector<containers::Condition>>
+DeepFeatureSynthesis::make_conditions( const TableHolder &_table_holder ) const
+{
+    auto conditions = std::vector<std::vector<containers::Condition>>();
+
+    conditions.push_back( {} );
+
+    assert_true(
+        _table_holder.main_tables_.size() ==
+        _table_holder.peripheral_tables_.size() );
+
+    for ( size_t i = 0; i < _table_holder.main_tables_.size(); ++i )
+        {
+            const auto &population = _table_holder.main_tables_.at( i ).df();
+
+            const auto &peripheral = _table_holder.peripheral_tables_.at( i );
+
+            make_categorical_conditions( peripheral, i, &conditions );
+
+            make_same_units_categorical_conditions(
+                population, peripheral, i, &conditions );
+        }
+
+    return conditions;
+}
+
+// ----------------------------------------------------------------------------
+
+void DeepFeatureSynthesis::make_categorical_conditions(
+    const containers::DataFrame &_peripheral,
+    const size_t _peripheral_ix,
+    std::vector<std::vector<containers::Condition>> *_conditions ) const
+{
+    if ( hyperparameters().n_most_frequent_ == 0 )
+        {
+            return;
+        }
+
+    for ( size_t input_col = 0; input_col < _peripheral.num_categoricals();
+          ++input_col )
+        {
+            if ( _peripheral.categorical_unit( input_col )
+                     .find( "comparison only" ) != std::string::npos )
+                {
+                    continue;
+                }
+
+            const auto most_frequent = find_most_frequent_categories(
+                _peripheral.categorical_col( input_col ) );
+
+            for ( const auto category_used : most_frequent )
+                {
+                    _conditions->push_back( { containers::Condition(
+                        category_used,
+                        enums::DataUsed::categorical,
+                        input_col,
+                        _peripheral_ix ) } );
+                }
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+void DeepFeatureSynthesis::make_same_units_categorical_conditions(
+    const containers::DataFrame &_population,
+    const containers::DataFrame &_peripheral,
+    const size_t _peripheral_ix,
+    std::vector<std::vector<containers::Condition>> *_conditions ) const
+{
+    for ( size_t output_col = 0; output_col < _population.num_categoricals();
+          ++output_col )
+        {
+            for ( size_t input_col = 0;
+                  input_col < _peripheral.num_categoricals();
+                  ++input_col )
+                {
+                    const bool same_unit =
+                        _population.categorical_unit( output_col ) != "" &&
+                        _population.categorical_unit( output_col ) ==
+                            _peripheral.categorical_unit( input_col );
+
+                    if ( !same_unit )
+                        {
+                            continue;
+                        }
+
+                    _conditions->push_back( { containers::Condition(
+                        enums::DataUsed::same_units_categorical,
+                        input_col,
+                        output_col,
+                        _peripheral_ix ) } );
+                }
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<size_t> DeepFeatureSynthesis::make_subfeature_index(
+    const size_t _peripheral_ix, const std::vector<size_t> &_index ) const
+{
+    const auto get_feature = [this]( const size_t ix ) {
+        assert_true( ix < abstract_features().size() );
+        return abstract_features().at( ix );
+    };
+
+    const auto is_relevant_feature =
+        [_peripheral_ix]( const containers::AbstractFeature &f ) {
+            return f.data_used_ == enums::DataUsed::subfeatures &&
+                   f.peripheral_ == _peripheral_ix;
+        };
+
+    const auto get_input_col = []( const containers::AbstractFeature &f ) {
+        return f.input_col_;
+    };
+
+    const auto range = _index | std::views::transform( get_feature ) |
+                       std::views::filter( is_relevant_feature ) |
+                       std::views::transform( get_input_col );
+
+    const auto s = helpers::STL::make_set<size_t>( range );
+
+    return std::vector<size_t>( s.begin(), s.end() );
+}
+
+// ----------------------------------------------------------------------------
+
 std::shared_ptr<std::vector<size_t>> DeepFeatureSynthesis::make_rownums(
     const size_t _thread_num, const size_t _nrows ) const
 {
@@ -1186,6 +1618,65 @@ std::shared_ptr<std::vector<size_t>> DeepFeatureSynthesis::make_rownums(
     std::iota( rownums->begin(), rownums->end(), begin );
 
     return rownums;
+}
+
+// ----------------------------------------------------------------------------
+
+std::shared_ptr<const std::vector<containers::AbstractFeature>>
+DeepFeatureSynthesis::select_features(
+    const containers::DataFrame &_population,
+    const std::vector<containers::DataFrame> &_peripheral,
+    const std::shared_ptr<const logging::AbstractLogger> _logger ) const
+{
+    if ( abstract_features().size() <= hyperparameters().num_features_ )
+        {
+            if ( _logger )
+                {
+                    _logger->log( "Trained features. Progress: 100\%." );
+                }
+
+            return abstract_features_;
+        }
+
+    const auto r_squared = calc_r_squared( _population, _peripheral, _logger );
+
+    const auto threshold = calc_threshold( r_squared );
+
+    const auto r_greater_threshold = [&r_squared,
+                                      threshold]( const size_t ix ) {
+        return r_squared.at( ix ) > threshold;
+    };
+
+    const auto get_feature = [this]( const size_t ix ) {
+        return abstract_features().at( ix );
+    };
+
+    assert_true( r_squared.size() == abstract_features().size() );
+
+    auto iota = std::vector<size_t>( r_squared.size() );
+
+    std::iota( iota.begin(), iota.end(), 0 );
+
+    auto range = iota | std::views::filter( r_greater_threshold ) |
+                 std::views::transform( get_feature );
+
+    return std::make_shared<std::vector<containers::AbstractFeature>>(
+        range.begin(), range.end() );
+}
+
+// ----------------------------------------------------------------------------
+
+bool DeepFeatureSynthesis::skip_first_last(
+    const std::string &_agg, const containers::DataFrame &_peripheral ) const
+{
+    const auto agg = enums::Parser<enums::Aggregation>::parse( _agg );
+
+    if ( agg != enums::Aggregation::first && agg != enums::Aggregation::last )
+        {
+            return false;
+        }
+
+    return ( _peripheral.num_time_stamps() == 0 );
 }
 
 // ----------------------------------------------------------------------------
@@ -1313,11 +1804,14 @@ containers::Features DeepFeatureSynthesis::transform(
 
     const auto index = infer_index( _index );
 
-    const auto subfeatures = build_subfeatures( _peripheral, _logger );
+    const auto subfeatures = build_subfeatures( _peripheral, index, _logger );
 
     auto features = init_features( _population.nrows(), index.size() );
 
-    _logger->log( "DeepFeatureSynthesis: Building features..." );
+    if ( _logger )
+        {
+            _logger->log( "DeepFeatureSynthesis: Building features..." );
+        }
 
     spawn_threads(
         _population, _peripheral, subfeatures, index, _logger, &features );

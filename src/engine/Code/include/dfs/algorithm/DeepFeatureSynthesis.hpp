@@ -55,7 +55,8 @@ class DeepFeatureSynthesis
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
         const std::shared_ptr<const logging::AbstractLogger> _logger =
-            std::shared_ptr<const logging::AbstractLogger>() );
+            std::shared_ptr<const logging::AbstractLogger>(),
+        const bool _as_subfeatures = false );
 
     /// Saves the DeepFeatureSynthesis into a JSON file.
     void save( const std::string& _fname ) const;
@@ -91,6 +92,8 @@ class DeepFeatureSynthesis
         const TableHolder& _table_holder,
         const std::vector<containers::Features>& _subfeatures,
         const std::vector<size_t>& _index,
+        const std::vector<std::function<bool( const containers::Match& )>>&
+            _condition_functions,
         const size_t _rownum,
         containers::Features* _features ) const;
 
@@ -108,7 +111,25 @@ class DeepFeatureSynthesis
     /// Builds the subfeatures.
     std::vector<containers::Features> build_subfeatures(
         const std::vector<containers::DataFrame>& _peripheral,
+        const std::vector<size_t>& _index,
         const std::shared_ptr<const logging::AbstractLogger> _logger ) const;
+
+    /// Calculates the R-squared for each feature vis-a-vis the targets.
+    std::vector<Float> calc_r_squared(
+        const containers::DataFrame& _population,
+        const std::vector<containers::DataFrame>& _peripheral,
+        const std::shared_ptr<const logging::AbstractLogger> _logger ) const;
+
+    /// Calculates the threshold on the basis of which we throw out features.
+    Float calc_threshold( const std::vector<Float>& _r_squared ) const;
+
+    /// We only calculate the subfeatures that we actually need - but we still
+    /// need to make sure that they are located at the right position. This is
+    /// what expand_subfeatures(...) does.
+    containers::Features expand_subfeatures(
+        const containers::Features& _subfeatures,
+        const std::vector<size_t>& _subfeature_index,
+        const size_t _num_subfeatures ) const;
 
     /// Extracts the schemas from the training set.
     void extract_schemas(
@@ -120,6 +141,10 @@ class DeepFeatureSynthesis
     /// held by the individual trees.
     void extract_schemas( const TableHolder& _table_holder );
 
+    /// Returns the most frequent categories of a categorical column
+    std::vector<Int> find_most_frequent_categories(
+        const containers::Column<Int>& _col ) const;
+
     /// Finds the DataFrame associated with _name.
     containers::DataFrame find_peripheral(
         const std::vector<containers::DataFrame>& _peripheral,
@@ -129,6 +154,16 @@ class DeepFeatureSynthesis
     void fit_on_categoricals(
         const containers::DataFrame& _peripheral,
         const size_t _peripheral_ix,
+        const std::vector<containers::Condition>& _conditions,
+        std::shared_ptr<std::vector<containers::AbstractFeature>>
+            _abstract_features ) const;
+
+    /// Fits abstract features on the categorical columns by identifying the
+    /// most frequent categories.
+    void fit_on_categoricals_by_categories(
+        const containers::DataFrame& _peripheral,
+        const size_t _peripheral_ix,
+        const std::vector<containers::Condition>& _conditions,
         std::shared_ptr<std::vector<containers::AbstractFeature>>
             _abstract_features ) const;
 
@@ -136,6 +171,7 @@ class DeepFeatureSynthesis
     void fit_on_discretes(
         const containers::DataFrame& _peripheral,
         const size_t _peripheral_ix,
+        const std::vector<containers::Condition>& _conditions,
         std::shared_ptr<std::vector<containers::AbstractFeature>>
             _abstract_features ) const;
 
@@ -143,36 +179,7 @@ class DeepFeatureSynthesis
     void fit_on_numericals(
         const containers::DataFrame& _peripheral,
         const size_t _peripheral_ix,
-        std::shared_ptr<std::vector<containers::AbstractFeature>>
-            _abstract_features ) const;
-
-    /// Fits abstract features on categorical columns with the same unit.
-    void fit_on_same_units_categorical(
-        const containers::DataFrame& _population,
-        const containers::DataFrame& _peripheral,
-        const size_t _peripheral_ix,
-        std::shared_ptr<std::vector<containers::AbstractFeature>>
-            _abstract_features ) const;
-
-    /// Fits abstract features on discrete columns with the same unit.
-    void fit_on_same_units_discrete(
-        const containers::DataFrame& _population,
-        const containers::DataFrame& _peripheral,
-        const size_t _peripheral_ix,
-        std::shared_ptr<std::vector<containers::AbstractFeature>>
-            _abstract_features ) const;
-
-    /// Fits abstract features on numerical columns with the same unit.
-    void fit_on_same_units_numerical(
-        const containers::DataFrame& _population,
-        const containers::DataFrame& _peripheral,
-        const size_t _peripheral_ix,
-        std::shared_ptr<std::vector<containers::AbstractFeature>>
-            _abstract_features ) const;
-
-    /// Fits abstract features on the subfeatures.
-    void fit_on_subfeatures(
-        const size_t _peripheral_ix,
+        const std::vector<containers::Condition>& _conditions,
         std::shared_ptr<std::vector<containers::AbstractFeature>>
             _abstract_features ) const;
 
@@ -181,6 +188,42 @@ class DeepFeatureSynthesis
         const containers::DataFrame& _population,
         const containers::DataFrame& _peripheral,
         const size_t _peripheral_ix,
+        const std::vector<std::vector<containers::Condition>>& _conditions,
+        std::shared_ptr<std::vector<containers::AbstractFeature>>
+            _abstract_features ) const;
+
+    /// Fits abstract features on categorical columns with the same unit.
+    void fit_on_same_units_categorical(
+        const containers::DataFrame& _population,
+        const containers::DataFrame& _peripheral,
+        const size_t _peripheral_ix,
+        const std::vector<containers::Condition>& _conditions,
+        std::shared_ptr<std::vector<containers::AbstractFeature>>
+            _abstract_features ) const;
+
+    /// Fits abstract features on discrete columns with the same unit.
+    void fit_on_same_units_discrete(
+        const containers::DataFrame& _population,
+        const containers::DataFrame& _peripheral,
+        const size_t _peripheral_ix,
+        const std::vector<containers::Condition>& _conditions,
+        std::shared_ptr<std::vector<containers::AbstractFeature>>
+            _abstract_features ) const;
+
+    /// Fits abstract features on numerical columns with the same unit.
+    void fit_on_same_units_numerical(
+        const containers::DataFrame& _population,
+        const containers::DataFrame& _peripheral,
+        const size_t _peripheral_ix,
+        const std::vector<containers::Condition>& _conditions,
+        std::shared_ptr<std::vector<containers::AbstractFeature>>
+            _abstract_features ) const;
+
+    /// Fits abstract features on the subfeatures.
+    void fit_on_subfeatures(
+        const containers::DataFrame& _peripheral,
+        const size_t _peripheral_ix,
+        const std::vector<containers::Condition>& _conditions,
         std::shared_ptr<std::vector<containers::AbstractFeature>>
             _abstract_features ) const;
 
@@ -223,6 +266,29 @@ class DeepFeatureSynthesis
     /// discrete column.
     bool is_numerical( const std::string& _agg ) const;
 
+    /// Generates WHERE-conditions to apply to the aggregations.
+    std::vector<std::vector<containers::Condition>> make_conditions(
+        const TableHolder& _table_holder ) const;
+
+    /// Generates conditions based on categorical columns.
+    void make_categorical_conditions(
+        const containers::DataFrame& _peripheral,
+        const size_t _peripheral_ix,
+        std::vector<std::vector<containers::Condition>>* _conditions ) const;
+
+    /// Generates conditions based on the categorical columns with the same
+    /// unit.
+    void make_same_units_categorical_conditions(
+        const containers::DataFrame& _population,
+        const containers::DataFrame& _peripheral,
+        const size_t _peripheral_ix,
+        std::vector<std::vector<containers::Condition>>* _conditions ) const;
+
+    /// Generates an index of all subfeatures required for this particular set
+    /// of indices.
+    std::vector<size_t> make_subfeature_index(
+        const size_t _peripheral_ix, const std::vector<size_t>& _index ) const;
+
     /// Generates the matches for a particular row in the population table.
     std::vector<std::vector<containers::Match>> make_matches(
         const TableHolder& _table_holder, const size_t _rownum ) const;
@@ -230,6 +296,19 @@ class DeepFeatureSynthesis
     /// Generates the rownums for the thread signified by _thread_num
     std::shared_ptr<std::vector<size_t>> make_rownums(
         const size_t _thread_num, const size_t _nrows ) const;
+
+    /// Weeds out features for which the correlation coefficient is too small.
+    std::shared_ptr<const std::vector<containers::AbstractFeature>>
+    select_features(
+        const containers::DataFrame& _population,
+        const std::vector<containers::DataFrame>& _peripheral,
+        const std::shared_ptr<const logging::AbstractLogger> _logger ) const;
+
+    /// Returns true if _agg is FIRST or LAST, but there are no time stamps in
+    /// _peripheral.
+    bool skip_first_last(
+        const std::string& _agg,
+        const containers::DataFrame& _peripheral ) const;
 
     /// Spawns the threads for building the features.
     void spawn_threads(
@@ -350,6 +429,21 @@ class DeepFeatureSynthesis
             _name.find( "$GETML_ROWID" ) == std::string::npos;
         return not_contains_rowid &&
                ( _unit.find( "time stamp" ) != std::string::npos );
+    }
+
+    /// Generates a filter function for the conditions.
+    std::function<bool( const std::vector<containers::Condition>& )>
+    make_condition_filter( const size_t _peripheral_ix ) const
+    {
+        const auto peripheral_matches =
+            [_peripheral_ix]( const containers::Condition& c ) -> bool {
+            return c.peripheral_ == _peripheral_ix;
+        };
+
+        return [peripheral_matches](
+                   const std::vector<containers::Condition>& c ) -> bool {
+            return std::all_of( c.begin(), c.end(), peripheral_matches );
+        };
     }
 
     /// Trivial accessor

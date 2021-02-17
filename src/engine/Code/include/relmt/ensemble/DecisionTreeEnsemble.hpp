@@ -69,12 +69,23 @@ class DecisionTreeEnsemble
         const std::shared_ptr<const logging::AbstractLogger> _logger =
             std::shared_ptr<const logging::AbstractLogger>() );
 
-    /// Fits one more feature - implies that this is used as a feature
-    /// learner.
-    void fit_new_feature(
+    /// Fits a new set of candidate features.
+    std::vector<
+        std::tuple<decisiontrees::DecisionTree, Float, std::vector<Float>>>
+    fit_candidate_features(
         const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
         const std::shared_ptr<const TableHolder>& _table_holder,
-        const std::vector<containers::Subfeatures>& _subfeatures );
+        const std::vector<containers::Subfeatures>& _subfeatures,
+        const std::shared_ptr<const std::vector<Float>>& _sample_weights )
+        const;
+
+    /// Fits more features - uses a round-robin approach over all
+    /// possible joins and aggregations.
+    void fit_new_features(
+        const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
+        const std::shared_ptr<const TableHolder>& _table_holder,
+        const std::vector<containers::Subfeatures>& _subfeatures,
+        const size_t _num_features );
 
     /// Fits the subensembles.
     void fit_subensembles(
@@ -231,6 +242,14 @@ class DecisionTreeEnsemble
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral );
 
+    /// After fitting a set of candidates, keep the best ones.
+    void keep_best_candidates(
+        const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
+        const size_t _num_features,
+        std::vector<
+            std::tuple<decisiontrees::DecisionTree, Float, std::vector<Float>>>*
+            _candidates );
+
     /// Fits a new candidate feature.
     void fit_candidate(
         const size_t _ix_table_used,
@@ -244,9 +263,9 @@ class DecisionTreeEnsemble
         const containers::Rescaled& _output_rescaled,
         const containers::Rescaled& _input_rescaled,
         std::vector<containers::Match>* _matches,
-        std::vector<decisiontrees::DecisionTree>* _candidates,
-        std::vector<Float>* _loss,
-        std::vector<std::vector<Float>>* _predictions ) const;
+        std::vector<
+            std::tuple<decisiontrees::DecisionTree, Float, std::vector<Float>>>*
+            _candidates ) const;
 
     /// Fits the scalers and applies them to the data.
     std::tuple<

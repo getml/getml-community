@@ -86,17 +86,21 @@ void SubtreeHelper::fit_subensemble(
 
     utils::Logger::log( "Relboost: Training subfeatures...", _logger, _comm );
 
-    for ( size_t i = 0; i < num_features; ++i )
+    while ( ( *_subensemble )->num_features() < num_features )
         {
             ( *_subensemble )
-                ->fit_new_feature(
-                    intermediate_agg, subtable_holder, subfeatures );
+                ->fit_new_features(
+                    intermediate_agg,
+                    subtable_holder,
+                    subfeatures,
+                    num_features );
 
-            const auto progress = ( ( i + 1 ) * 100 ) / num_features;
+            const auto progress =
+                ( ( *_subensemble )->num_features() * 100 ) / num_features;
 
             utils::Logger::log(
-                "Trained FEATURE_" + std::to_string( i + 1 ) +
-                    ". Progress: " + std::to_string( progress ) + "\%.",
+                "Trained new features. Progress: " +
+                    std::to_string( progress ) + "\%.",
                 _logger,
                 _comm );
         }

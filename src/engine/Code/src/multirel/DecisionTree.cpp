@@ -388,6 +388,16 @@ std::string DecisionTree::to_sql(
 
     // -------------------------------------------------------------------
 
+    if ( aggregation_type() == "FIRST" || aggregation_type() == "LAST" )
+        {
+            assert_true( input().num_time_stamps() > 0 );
+            const auto ts_name = helpers::SQLGenerator::edit_colname(
+                input().time_stamps_name(), "t2" );
+            sql << "ORDER BY " << ts_name << std::endl;
+        }
+
+    // -------------------------------------------------------------------
+
     sql << "GROUP BY t1.rowid;" << std::endl << std::endl << std::endl;
 
     // -------------------------------------------------------------------
@@ -463,7 +473,9 @@ std::vector<Float> DecisionTree::transform(
                     if ( _aggregation->needs_sorting() )
                         {
                             _aggregation->sort_matches(
-                                null_values_separator, matches.end() );
+                                _peripheral,
+                                null_values_separator,
+                                matches.end() );
                         }
 
                     // Because keep on generating matches and match_container,

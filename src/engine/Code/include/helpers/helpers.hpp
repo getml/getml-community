@@ -31,6 +31,7 @@
 #include "helpers/Int.hpp"
 
 #include "helpers/NullChecker.hpp"
+#include "helpers/STL.hpp"
 
 #include "helpers/ColumnOperators.hpp"
 
