@@ -119,9 +119,9 @@ class ColumnOperators
     template <class IteratorType>
     static Float count_distinct( IteratorType _begin, IteratorType _end )
     {
-        using ConstValueType = std::remove_reference<decltype( *_begin )>::type;
+        using ConstValueType = typename std::remove_reference<decltype( *_begin )>::type;
 
-        using ValueType = std::remove_const<ConstValueType>::type;
+        using ValueType = typename std::remove_const<ConstValueType>::type;
 
         auto set = std::unordered_set<ValueType>();
 
