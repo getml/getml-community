@@ -16,8 +16,8 @@ class AbstractFeatureLearner
    public:
     static constexpr Int USE_ALL_TARGETS = -1;
 
-    static constexpr const char* DFS_MODEL = "DFSModel";
-    static constexpr const char* DFS_TIME_SERIES = "DFSTimeSeries";
+    static constexpr const char* FASTPROP_MODEL = "FastPropModel";
+    static constexpr const char* FASTPROP_TIME_SERIES = "FastPropTimeSeries";
     static constexpr const char* MULTIREL_MODEL = "MultirelModel";
     static constexpr const char* MULTIREL_TIME_SERIES = "MultirelTimeSeries";
     static constexpr const char* RELBOOST_MODEL = "RelboostModel";

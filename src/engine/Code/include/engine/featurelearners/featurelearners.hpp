@@ -30,7 +30,7 @@
 
 #include "engine/communication/communication.hpp"
 
-#include "dfs/algorithm/algorithm.hpp"
+#include "fastprop/algorithm/algorithm.hpp"
 
 #include "multirel/ensemble/ensemble.hpp"
 

@@ -14,16 +14,16 @@ std::shared_ptr<AbstractFeatureLearner> FeatureLearnerParser::parse(
 {
     const auto type = JSON::get_value<std::string>( _cmd, "type_" );
 
-    if ( type == AbstractFeatureLearner::DFS_MODEL )
+    if ( type == AbstractFeatureLearner::FASTPROP_MODEL )
         {
             return std::make_shared<
-                FeatureLearner<dfs::algorithm::DeepFeatureSynthesis>>(
+                FeatureLearner<fastprop::algorithm::FastProp>>(
                 _cmd, _placeholder, _peripheral, _dependencies );
         }
 
-    if ( type == AbstractFeatureLearner::DFS_TIME_SERIES )
+    if ( type == AbstractFeatureLearner::FASTPROP_TIME_SERIES )
         {
-            return std::make_shared<FeatureLearner<ts::DFSTimeSeries>>(
+            return std::make_shared<FeatureLearner<ts::FastPropTimeSeries>>(
                 _cmd, _placeholder, _peripheral, _dependencies );
         }
 

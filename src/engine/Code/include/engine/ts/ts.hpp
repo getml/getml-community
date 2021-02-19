@@ -12,7 +12,7 @@
 #include "jsonutils/jsonutils.hpp"
 #include "logging/logging.hpp"
 
-#include "dfs/algorithm/algorithm.hpp"
+#include "fastprop/algorithm/algorithm.hpp"
 
 #include "multirel/ensemble/ensemble.hpp"
 
@@ -34,7 +34,7 @@
 
 #include "engine/ts/TimeSeriesModel.hpp"
 
-#include "engine/ts/DFSTimeSeries.hpp"
+#include "engine/ts/FastPropTimeSeries.hpp"
 #include "engine/ts/MultirelTimeSeries.hpp"
 #include "engine/ts/RelMTTimeSeries.hpp"
 #include "engine/ts/RelboostTimeSeries.hpp"
