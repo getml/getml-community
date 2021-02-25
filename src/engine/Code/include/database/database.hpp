@@ -21,14 +21,9 @@
 #include <openssl/ossl_typ.h>
 #endif
 
+#include <libpq-fe.h>
 #include <sql.h>
 #include <sqlext.h>
-
-#if ( defined( _WIN32 ) || defined( _WIN64 ) )
-// postgres is not supported in windows
-#else
-#include <libpq-fe.h>
-#endif
 
 #include <Poco/JSON/Object.h>
 #include <Poco/TemporaryFile.h>
@@ -78,13 +73,9 @@ extern "C"
 
 #include "database/ODBC.hpp"
 
-#if ( defined( _WIN32 ) || defined( _WIN64 ) )
-// postgres is not supported in windows
-#else
 #include "database/PostgresIterator.hpp"
 
 #include "database/Postgres.hpp"
-#endif
 
 #include "database/DatabaseParser.hpp"
 #include "database/DatabaseReader.hpp"

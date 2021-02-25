@@ -30,15 +30,7 @@ std::shared_ptr<Connector> DatabaseParser::parse(
         }
     else if ( db == "postgres" || db == "greenplum" )
         {
-#if ( defined( _WIN32 ) || defined( _WIN64 ) )
-            throw std::invalid_argument(
-                "PostgreSQL and Greenplum are not supported on Windows! Please "
-                "use the ODBC connector instead!" );
-
-            return std::shared_ptr<Connector>();
-#else
             return std::make_shared<Postgres>( _obj, _password, time_formats );
-#endif
         }
     else
         {

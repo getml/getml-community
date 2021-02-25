@@ -43,10 +43,6 @@ int main( int argc, char* argv[] )
     test6( test_path );
     test7( test_path );
 
-    // Tests for postgres
-#if ( defined( _WIN32 ) || defined( _WIN64 ) )
-    // postgres is not supported on windows
-#else
     test8( test_path );
     test9( test_path );
     test10( test_path );
@@ -54,7 +50,6 @@ int main( int argc, char* argv[] )
     test12( test_path );
     test13( test_path );
     test14();
-#endif
 
     // Tests for MySQL
     test15( test_path );
@@ -65,11 +60,6 @@ int main( int argc, char* argv[] )
     test20( test_path );
     test21();
 
-#if ( defined( _WIN32 ) || defined( _WIN64 ) )
-        // postgres is not supported on windows
-#else
-    // Test for copying tables from one database to another
     test22( test_path );
-#endif
 
 }

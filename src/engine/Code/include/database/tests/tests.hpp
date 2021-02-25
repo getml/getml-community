@@ -17,10 +17,6 @@
 #include "database/tests/test6.hpp"
 #include "database/tests/test7.hpp"
 
-// Tests for postgres
-#if ( defined( _WIN32 ) || defined( _WIN64 ) )
-// postgres is not supported on windows
-#else
 #include "database/tests/test8.hpp"
 #include "database/tests/test9.hpp"
 
@@ -29,7 +25,6 @@
 #include "database/tests/test12.hpp"
 #include "database/tests/test13.hpp"
 #include "database/tests/test14.hpp"
-#endif
 
 // Tests for MySQL
 #include "database/tests/test15.hpp"
@@ -40,11 +35,6 @@
 #include "database/tests/test20.hpp"
 #include "database/tests/test21.hpp"
 
-#if ( defined( _WIN32 ) || defined( _WIN64 ) )
-// postgres is not supported on windows
-#else
-// Copying from one database to another
 #include "database/tests/test22.hpp"
-#endif
 
 #endif  // DATABASE_TESTS_TESTS_HPP_
