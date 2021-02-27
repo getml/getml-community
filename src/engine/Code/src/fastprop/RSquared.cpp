@@ -8,17 +8,18 @@ namespace algorithm
 
 std::vector<Float> RSquared::calculate(
     const std::vector<containers::Column<Float>>& _targets,
-    const containers::Features& _features )
+    const containers::Features& _features,
+    const std::vector<size_t>& _rownums )
 {
-    const auto mean_targets = calc_mean_targets( _targets );
+    const auto mean_targets = calc_mean_targets( _targets, _rownums );
 
-    const auto var_targets = calc_var_targets( _targets );
+    const auto var_targets = calc_var_targets( _targets, _rownums );
 
     const auto calc_r =
-        [&mean_targets, &var_targets, &_targets](
+        [&mean_targets, &var_targets, &_targets, &_rownums](
             const std::shared_ptr<const std::vector<Float>> feature ) -> Float {
         return RSquared::calc_for_feature(
-            mean_targets, var_targets, _targets, feature );
+            mean_targets, var_targets, _targets, feature, _rownums );
     };
 
     auto range = _features | std::views::transform( calc_r );
@@ -32,15 +33,18 @@ Float RSquared::calc_for_feature(
     const std::vector<Float>& _mean_targets,
     const std::vector<Float>& _var_targets,
     const std::vector<containers::Column<Float>>& _targets,
-    const std::shared_ptr<const std::vector<Float>>& _feature )
+    const std::shared_ptr<const std::vector<Float>>& _feature,
+    const std::vector<size_t>& _rownums )
 {
-    const auto calc = [_mean_targets, _var_targets, _targets, _feature](
-                          const size_t ix ) -> Float {
+    const auto calc =
+        [_mean_targets, _var_targets, _targets, _feature, &_rownums](
+            const size_t ix ) -> Float {
         return RSquared::calc_for_target(
             _mean_targets.at( ix ),
             _var_targets.at( ix ),
             _targets.at( ix ),
-            _feature );
+            _feature,
+            _rownums );
     };
 
     assert_true( _mean_targets.size() == _targets.size() );
@@ -62,19 +66,34 @@ Float RSquared::calc_for_target(
     const Float _mean_target,
     const Float _var_target,
     const containers::Column<Float>& _targets,
-    const std::shared_ptr<const std::vector<Float>> _feature )
+    const std::shared_ptr<const std::vector<Float>> _feature,
+    const std::vector<size_t>& _rownums )
 {
-    assert_true( _feature );
-
-    assert_true( _feature->size() == _targets.nrows_ );
-
     if ( _var_target == 0.0 )
         {
             return 0.0;
         }
 
+    assert_true( _feature );
+
+    assert_true( _feature->size() == _targets.nrows_ );
+
+    const auto get_feature = [_feature]( size_t i ) -> Float {
+        assert_true( i < _feature->size() );
+        return _feature->at( i );
+    };
+
+    const auto get_target = [_targets]( size_t i ) -> Float {
+        assert_true( i < _targets.nrows_ );
+        return _targets[i];
+    };
+
+    const auto feature = _rownums | std::views::transform( get_feature );
+
+    const auto targets = _rownums | std::views::transform( get_target );
+
     const auto var_feature =
-        helpers::ColumnOperators::var( _feature->begin(), _feature->end() );
+        helpers::ColumnOperators::var( feature.begin(), feature.end() );
 
     if ( var_feature == 0.0 )
         {
@@ -82,19 +101,19 @@ Float RSquared::calc_for_target(
         }
 
     const auto mean_feature =
-        helpers::ColumnOperators::avg( _feature->begin(), _feature->end() );
+        helpers::ColumnOperators::avg( feature.begin(), feature.end() );
 
     const auto multiply = [_mean_target, mean_feature](
                               const Float t, const Float f ) -> Float {
         return ( t - _mean_target ) * ( f - mean_feature );
     };
 
-    const auto nrows_float = static_cast<Float>( _targets.nrows_ );
+    const auto nrows_float = static_cast<Float>( _rownums.size() );
 
     const auto cross_corr = std::inner_product(
-                                _targets.begin(),
-                                _targets.end(),
-                                _feature->begin(),
+                                targets.begin(),
+                                targets.end(),
+                                feature.begin(),
                                 0.0,
                                 std::plus<Float>(),
                                 multiply ) /
@@ -106,11 +125,19 @@ Float RSquared::calc_for_target(
 // ----------------------------------------------------------------------------
 
 std::vector<Float> RSquared::calc_mean_targets(
-    const std::vector<containers::Column<Float>>& _targets )
+    const std::vector<containers::Column<Float>>& _targets,
+    const std::vector<size_t>& _rownums )
 {
     const auto calc_mean =
-        []( const containers::Column<Float>& _target ) -> Float {
-        return helpers::ColumnOperators::avg( _target.begin(), _target.end() );
+        [&_rownums]( const containers::Column<Float>& _target ) -> Float {
+        const auto get_target = [&_target]( size_t i ) -> Float {
+            assert_true( i < _target.nrows_ );
+            return _target[i];
+        };
+
+        const auto target = _rownums | std::views::transform( get_target );
+
+        return helpers::ColumnOperators::avg( target.begin(), target.end() );
     };
 
     auto range = _targets | std::views::transform( calc_mean );
@@ -121,11 +148,19 @@ std::vector<Float> RSquared::calc_mean_targets(
 // ----------------------------------------------------------------------------
 
 std::vector<Float> RSquared::calc_var_targets(
-    const std::vector<containers::Column<Float>>& _targets )
+    const std::vector<containers::Column<Float>>& _targets,
+    const std::vector<size_t>& _rownums )
 {
     const auto calc_var =
-        []( const containers::Column<Float>& _target ) -> Float {
-        return helpers::ColumnOperators::var( _target.begin(), _target.end() );
+        [&_rownums]( const containers::Column<Float>& _target ) -> Float {
+        const auto get_target = [&_target]( size_t i ) -> Float {
+            assert_true( i < _target.nrows_ );
+            return _target[i];
+        };
+
+        const auto target = _rownums | std::views::transform( get_target );
+
+        return helpers::ColumnOperators::var( target.begin(), target.end() );
     };
 
     auto range = _targets | std::views::transform( calc_var );

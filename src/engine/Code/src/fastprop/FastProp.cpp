@@ -182,14 +182,14 @@ void FastProp::build_row(
                 abstract_feature.peripheral_ <
                 _table_holder.peripheral_tables_.size() );
 
-            const auto population =
+            const auto &population =
                 _table_holder.main_tables_.at( abstract_feature.peripheral_ )
                     .df();
 
-            const auto peripheral = _table_holder.peripheral_tables_.at(
+            const auto &peripheral = _table_holder.peripheral_tables_.at(
                 abstract_feature.peripheral_ );
 
-            const auto subf = _subfeatures.at( abstract_feature.peripheral_ );
+            const auto &subf = _subfeatures.at( abstract_feature.peripheral_ );
 
             const auto &matches =
                 all_matches.at( abstract_feature.peripheral_ );
@@ -221,11 +221,13 @@ void FastProp::build_rows(
     const std::vector<containers::Features> &_subfeatures,
     const std::vector<size_t> &_index,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
+    const std::shared_ptr<std::vector<size_t>> &_rownums,
     const size_t _thread_num,
     std::atomic<size_t> *_num_completed,
     containers::Features *_features ) const
 {
-    const auto rownums = make_rownums( _thread_num, _population.nrows() );
+    const auto rownums =
+        make_rownums( _thread_num, _population.nrows(), _rownums );
 
     const auto population_view =
         containers::DataFrameView( _population, rownums );
@@ -291,8 +293,9 @@ std::vector<containers::Features> FastProp::build_subfeatures(
 
             const auto subfeature_index = make_subfeature_index( i, _index );
 
+            // TODO: Insert actual rownums
             const auto f = subfeatures().at( i )->transform(
-                population, _peripheral, subfeature_index, _logger );
+                population, _peripheral, subfeature_index, _logger, nullptr );
 
             const auto f_expanded = expand_subfeatures(
                 f, subfeature_index, subfeatures().at( i )->num_features() );
@@ -308,8 +311,11 @@ std::vector<containers::Features> FastProp::build_subfeatures(
 std::vector<Float> FastProp::calc_r_squared(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral,
-    const std::shared_ptr<const logging::AbstractLogger> _logger ) const
+    const std::shared_ptr<const logging::AbstractLogger> _logger,
+    const std::shared_ptr<std::vector<size_t>> &_rownums ) const
 {
+    assert_true( _rownums );
+
     auto r_squared = std::vector<Float>();
 
     constexpr size_t batch_size = 100;
@@ -325,10 +331,10 @@ std::vector<Float> FastProp::calc_r_squared(
             std::iota( index.begin(), index.end(), begin );
 
             const auto features =
-                transform( _population, _peripheral, index, nullptr );
+                transform( _population, _peripheral, index, nullptr, _rownums );
 
-            const auto r =
-                RSquared::calculate( _population.targets_, features );
+            const auto r = RSquared::calculate(
+                _population.targets_, features, *_rownums );
 
             r_squared.insert( r_squared.end(), r.begin(), r.end() );
 
@@ -555,10 +561,7 @@ void FastProp::fit(
     const auto abstract_features =
         std::make_shared<std::vector<containers::AbstractFeature>>();
 
-    const auto rownums =
-        std::make_shared<std::vector<size_t>>( _population.nrows() );
-
-    std::iota( rownums->begin(), rownums->end(), 0 );
+    const auto rownums = sample_from_population( _population.nrows() );
 
     const auto population_view =
         containers::DataFrameView( _population, rownums );
@@ -600,7 +603,7 @@ void FastProp::fit(
     if ( !_as_subfeatures )
         {
             abstract_features_ =
-                select_features( _population, _peripheral, _logger );
+                select_features( _population, _peripheral, _logger, rownums );
         }
 }
 
@@ -1595,19 +1598,29 @@ std::vector<size_t> FastProp::make_subfeature_index(
 // ----------------------------------------------------------------------------
 
 std::shared_ptr<std::vector<size_t>> FastProp::make_rownums(
-    const size_t _thread_num, const size_t _nrows ) const
+    const size_t _thread_num,
+    const size_t _nrows,
+    const std::shared_ptr<std::vector<size_t>> &_rownums ) const
 {
     const size_t num_threads = get_num_threads();
 
     assert_true( _thread_num < num_threads );
 
-    const size_t rows_per_thread = _nrows / num_threads;
+    const auto nrows = _rownums ? _rownums->size() : _nrows;
+
+    const size_t rows_per_thread = nrows / num_threads;
 
     const size_t begin = _thread_num * rows_per_thread;
 
     const size_t end = ( _thread_num < num_threads - 1 )
                            ? ( _thread_num + 1 ) * rows_per_thread
-                           : _nrows;
+                           : nrows;
+
+    if ( _rownums )
+        {
+            return std::make_shared<std::vector<size_t>>(
+                _rownums->begin() + begin, _rownums->begin() + end );
+        }
 
     const auto rownums = std::make_shared<std::vector<size_t>>( end - begin );
 
@@ -1618,11 +1631,33 @@ std::shared_ptr<std::vector<size_t>> FastProp::make_rownums(
 
 // ----------------------------------------------------------------------------
 
+std::shared_ptr<std::vector<size_t>> FastProp::sample_from_population(
+    const size_t _nrows ) const
+{
+    std::mt19937 rng;
+
+    std::uniform_real_distribution<Float> dist( 0.0, 1.0 );
+
+    const auto include = [this, &rng, &dist]( const size_t rownum ) -> bool {
+        return dist( rng ) < hyperparameters().sampling_factor_;
+    };
+
+    auto iota = std::views::iota( static_cast<size_t>( 0 ), _nrows );
+
+    auto range = iota | std::views::filter( include );
+
+    return std::make_shared<std::vector<size_t>>(
+        helpers::STL::make_vector<size_t>( range ) );
+}
+
+// ----------------------------------------------------------------------------
+
 std::shared_ptr<const std::vector<containers::AbstractFeature>>
 FastProp::select_features(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral,
-    const std::shared_ptr<const logging::AbstractLogger> _logger ) const
+    const std::shared_ptr<const logging::AbstractLogger> _logger,
+    const std::shared_ptr<std::vector<size_t>> &_rownums ) const
 {
     if ( abstract_features().size() <= hyperparameters().num_features_ )
         {
@@ -1634,7 +1669,8 @@ FastProp::select_features(
             return abstract_features_;
         }
 
-    const auto r_squared = calc_r_squared( _population, _peripheral, _logger );
+    const auto r_squared =
+        calc_r_squared( _population, _peripheral, _logger, _rownums );
 
     const auto threshold = calc_threshold( r_squared );
 
@@ -1683,6 +1719,7 @@ void FastProp::spawn_threads(
     const std::vector<containers::Features> &_subfeatures,
     const std::vector<size_t> &_index,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
+    const std::shared_ptr<std::vector<size_t>> &_rownums,
     containers::Features *_features ) const
 {
     // ------------------------------------------------------------------------
@@ -1697,6 +1734,7 @@ void FastProp::spawn_threads(
                                _subfeatures,
                                _index,
                                _logger,
+                               _rownums,
                                &num_completed,
                                _features]( const size_t thread_num ) {
         try
@@ -1707,6 +1745,7 @@ void FastProp::spawn_threads(
                     _subfeatures,
                     _index,
                     _logger,
+                    _rownums,
                     thread_num,
                     &num_completed,
                     _features );
@@ -1790,7 +1829,8 @@ containers::Features FastProp::transform(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral,
     const std::optional<std::vector<size_t>> &_index,
-    const std::shared_ptr<const logging::AbstractLogger> _logger ) const
+    const std::shared_ptr<const logging::AbstractLogger> _logger,
+    const std::shared_ptr<std::vector<size_t>> &_rownums ) const
 {
     if ( _population.nrows() == 0 )
         {
@@ -1810,7 +1850,13 @@ containers::Features FastProp::transform(
         }
 
     spawn_threads(
-        _population, _peripheral, subfeatures, index, _logger, &features );
+        _population,
+        _peripheral,
+        subfeatures,
+        index,
+        _logger,
+        _rownums,
+        &features );
 
     return features;
 }

@@ -15,6 +15,11 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _json_obj )
           jsonutils::JSON::get_value<Int>( _json_obj, "num_features_" ) ),
       num_threads_(
           jsonutils::JSON::get_value<Int>( _json_obj, "num_threads_" ) ),
+      sampling_factor_(
+          _json_obj.has( "sampling_factor_" )
+              ? jsonutils::JSON::get_value<Float>(
+                    _json_obj, "sampling_factor_" )
+              : 1.0 ),
       silent_( jsonutils::JSON::get_value<bool>( _json_obj, "silent_" ) )
 {
     assert_true(
@@ -41,6 +46,8 @@ Poco::JSON::Object::Ptr Hyperparameters::to_json_obj() const
     obj->set( "num_features_", num_features_ );
 
     obj->set( "num_threads_", num_threads_ );
+
+    obj->set( "sampling_factor_", sampling_factor_ );
 
     obj->set( "silent_", silent_ );
 

@@ -68,7 +68,8 @@ class FastProp
         const std::vector<containers::DataFrame>& _peripheral,
         const std::optional<std::vector<size_t>>& _index = std::nullopt,
         const std::shared_ptr<const logging::AbstractLogger> _logger =
-            std::shared_ptr<const logging::AbstractLogger>() ) const;
+            std::shared_ptr<const logging::AbstractLogger>(),
+        const std::shared_ptr<std::vector<size_t>>& _rownums = nullptr ) const;
 
     /// Expresses FastProp as Poco::JSON::Object.
     Poco::JSON::Object to_json_obj( const bool _schema_only = false ) const;
@@ -104,6 +105,7 @@ class FastProp
         const std::vector<containers::Features>& _subfeatures,
         const std::vector<size_t>& _index,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
+        const std::shared_ptr<std::vector<size_t>>& _rownums,
         const size_t _thread_num,
         std::atomic<size_t>* _num_completed,
         containers::Features* _features ) const;
@@ -118,7 +120,8 @@ class FastProp
     std::vector<Float> calc_r_squared(
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
-        const std::shared_ptr<const logging::AbstractLogger> _logger ) const;
+        const std::shared_ptr<const logging::AbstractLogger> _logger,
+        const std::shared_ptr<std::vector<size_t>>& _rownums ) const;
 
     /// Calculates the threshold on the basis of which we throw out features.
     Float calc_threshold( const std::vector<Float>& _r_squared ) const;
@@ -294,14 +297,21 @@ class FastProp
 
     /// Generates the rownums for the thread signified by _thread_num
     std::shared_ptr<std::vector<size_t>> make_rownums(
-        const size_t _thread_num, const size_t _nrows ) const;
+        const size_t _thread_num,
+        const size_t _nrows,
+        const std::shared_ptr<std::vector<size_t>>& _rownums ) const;
+
+    /// Creates a random subsample for fitting.
+    std::shared_ptr<std::vector<size_t>> sample_from_population(
+        const size_t _nrows ) const;
 
     /// Weeds out features for which the correlation coefficient is too small.
     std::shared_ptr<const std::vector<containers::AbstractFeature>>
     select_features(
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
-        const std::shared_ptr<const logging::AbstractLogger> _logger ) const;
+        const std::shared_ptr<const logging::AbstractLogger> _logger,
+        const std::shared_ptr<std::vector<size_t>>& _rownums ) const;
 
     /// Returns true if _agg is FIRST or LAST, but there are no time stamps in
     /// _peripheral.
@@ -316,6 +326,7 @@ class FastProp
         const std::vector<containers::Features>& _subfeatures,
         const std::vector<size_t>& _index,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
+        const std::shared_ptr<std::vector<size_t>>& _rownums,
         containers::Features* _features ) const;
 
     /// Expresses the subfeatures as SQL code.

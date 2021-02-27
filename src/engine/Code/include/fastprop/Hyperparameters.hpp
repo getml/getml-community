@@ -3,6 +3,7 @@
 
 #include "jsonutils/jsonutils.hpp"
 
+#include "fastprop/Float.hpp"
 #include "fastprop/Int.hpp"
 
 namespace fastprop
@@ -53,6 +54,9 @@ struct Hyperparameters
 
     /// The number of threads we want to use
     const Int num_threads_;
+
+    /// The sampling factor to use. Set to 1 for no sampling.
+    const Float sampling_factor_;
 
     /// Whether we want logging.
     const bool silent_;
