@@ -11,6 +11,7 @@ Hyperparameters::Hyperparameters()
       include_categorical_( true ),
       loss_function_( "SquareLoss" ),
       max_depth_( 1 ),
+      min_df_( 30 ),
       min_num_samples_( 200 ),
       num_features_( 10 ),
       num_subfeatures_( 10 ),
@@ -21,8 +22,10 @@ Hyperparameters::Hyperparameters()
       share_selected_features_( 0.0 ),
       shrinkage_( 0.3 ),
       silent_( true ),
+      split_text_fields_( true ),
       target_num_( 0 ),
-      use_timestamps_( true )
+      use_timestamps_( true ),
+      vocab_size_( 500 )
 {
 }
 
@@ -35,10 +38,6 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _obj )
               : true ),  // TODO: Check inserted for backwards compatability.
                          // Remove later.
       delta_t_( JSON::get_value<Float>( _obj, "delta_t_" ) ),
-      /*feature_selector_(
-          _obj.has( "feature_selector_" )
-              ? _obj.getObject( "feature_selector_" )
-              : nullptr ),*/  // TODO: Remove
       gamma_( JSON::get_value<Float>( _obj, "gamma_" ) ),
       include_categorical_(
           _obj.has( "include_categorical_" )
@@ -46,12 +45,16 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _obj )
               : true ),  // TODO: Remove
       loss_function_( JSON::get_value<std::string>( _obj, "loss_function_" ) ),
       max_depth_( JSON::get_value<Int>( _obj, "max_depth_" ) ),
+      min_df_(
+          _obj.has( "min_df_" )
+              ? JSON::get_value<size_t>( _obj, "min_df_" )
+              : static_cast<size_t>(
+                    30 ) ),  // TODO: Check inserted for backwards
+                             // compatability. Remove later.
       min_num_samples_( JSON::get_value<Int>( _obj, "min_num_samples_" ) ),
       num_features_( JSON::get_value<Int>( _obj, "num_features_" ) ),
       num_subfeatures_( JSON::get_value<Int>( _obj, "num_subfeatures_" ) ),
       num_threads_( JSON::get_value<Int>( _obj, "num_threads_" ) ),
-      /*predictor_(
-          _obj.has( "predictor_" ) ? _obj.getObject( "predictor_" ) : nullptr ),*/ //TODO: Remove 
       reg_lambda_( JSON::get_value<Float>( _obj, "reg_lambda_" ) ),
       sampling_factor_( JSON::get_value<Float>( _obj, "sampling_factor_" ) ),
       seed_( JSON::get_value<unsigned int>( _obj, "seed_" ) ),
@@ -61,8 +64,18 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _obj )
               : 1.0 ),  // TODO: Remove
       shrinkage_( JSON::get_value<Float>( _obj, "shrinkage_" ) ),
       silent_( JSON::get_value<bool>( _obj, "silent_" ) ),
-      target_num_( /*JSON::get_value<Int>( _obj, "target_num_" )*/ 0 ), // TODO
-      use_timestamps_( JSON::get_value<bool>( _obj, "use_timestamps_" ) )
+      split_text_fields_(
+          _obj.has( "split_text_fields_" )
+              ? JSON::get_value<bool>( _obj, "split_text_fields_" )
+              : true ),  // TODO: Remove
+      target_num_( /*JSON::get_value<Int>( _obj, "target_num_" )*/ 0 ),  // TODO
+      use_timestamps_( JSON::get_value<bool>( _obj, "use_timestamps_" ) ),
+      vocab_size_(
+          _obj.has( "vocab_size_" )
+              ? JSON::get_value<size_t>( _obj, "vocab_size_" )
+              : static_cast<size_t>(
+                    500 ) )  // TODO: Check inserted for backwards
+                             // compatability. Remove later.
 {
 }
 
@@ -104,11 +117,6 @@ Poco::JSON::Object::Ptr Hyperparameters::to_json_obj() const
 
     obj->set( "delta_t_", delta_t_ );
 
-    if ( feature_selector_ )
-        {
-            obj->set( "feature_selector_", feature_selector_ );
-        }
-
     obj->set( "gamma_", gamma_ );
 
     obj->set( "include_categorical_", include_categorical_ );
@@ -117,6 +125,8 @@ Poco::JSON::Object::Ptr Hyperparameters::to_json_obj() const
 
     obj->set( "max_depth_", max_depth_ );
 
+    obj->set( "min_df_", min_df_ );
+
     obj->set( "min_num_samples_", min_num_samples_ );
 
     obj->set( "num_features_", num_features_ );
@@ -124,11 +134,6 @@ Poco::JSON::Object::Ptr Hyperparameters::to_json_obj() const
     obj->set( "num_subfeatures_", num_subfeatures_ );
 
     obj->set( "num_threads_", num_threads_ );
-
-    if ( predictor_ )
-        {
-            obj->set( "predictor_", predictor_ );
-        }
 
     obj->set( "reg_lambda_", reg_lambda_ );
 
@@ -142,7 +147,11 @@ Poco::JSON::Object::Ptr Hyperparameters::to_json_obj() const
 
     obj->set( "silent_", silent_ );
 
+    obj->set( "split_text_fields_", split_text_fields_ );
+
     obj->set( "use_timestamps_", use_timestamps_ );
+
+    obj->set( "vocab_size_", vocab_size_ );
 
     // ---------------------------------------------------------
 

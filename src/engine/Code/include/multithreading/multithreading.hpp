@@ -34,6 +34,8 @@
 #include "multithreading/maximum.hpp"
 #include "multithreading/minimum.hpp"
 
+#include "multithreading/Reducer.hpp"
+
 // ----------------------------------------------------
 
 #endif  // MULTITHREADING_HPP_

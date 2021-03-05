@@ -43,11 +43,12 @@ AbstractFeature::AbstractFeature(
     const std::vector<Condition> &_conditions,
     const size_t _input_col,
     const size_t _peripheral,
+    const enums::DataUsed _data_used,
     const Int _categorical_value )
     : aggregation_( _aggregation ),
       categorical_value_( _categorical_value ),
       conditions_( _conditions ),
-      data_used_( enums::DataUsed::categorical ),
+      data_used_( _data_used ),
       input_col_( _input_col ),
       output_col_( 0 ),
       peripheral_( _peripheral )
@@ -108,6 +109,7 @@ Poco::JSON::Object::Ptr AbstractFeature::to_json_obj() const
 
 std::string AbstractFeature::to_sql(
     const std::vector<strings::String> &_categories,
+    const Vocabulary &_vocabulary,
     const std::string &_feature_prefix,
     const std::string &_feature_num,
     const Placeholder &_input,
@@ -133,7 +135,7 @@ std::string AbstractFeature::to_sql(
     sql << "SELECT ";
 
     sql << SQLMaker::select_statement(
-        _categories, _feature_prefix, *this, _input, _output );
+        _categories, _vocabulary, _feature_prefix, *this, _input, _output );
 
     sql << " AS \"feature_" << _feature_prefix << _feature_num << "\","
         << std::endl;

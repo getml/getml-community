@@ -110,6 +110,14 @@ FastProp::FastProp( const Poco::JSON::Object &_obj )
 
     // ------------------------------------------------------------------------
 
+    if ( _obj.has( "vocabulary_" ) )
+        {
+            vocabulary_ = std::make_shared<helpers::VocabularyContainer>(
+                *jsonutils::JSON::get_object( _obj, "vocabulary_" ) );
+        }
+
+    // ------------------------------------------------------------------------
+
     if ( _obj.has( "subfeatures_" ) )
         {
             auto subfeatures_arr =
@@ -208,7 +216,7 @@ void FastProp::build_row(
                 condition_function,
                 abstract_feature );
 
-            _features->at( i )->at( _rownum ) =
+            ( *( *_features )[i] )[_rownum] =
                 ( std::isnan( value ) || std::isinf( value ) ) ? 0.0 : value;
         }
 }
@@ -219,6 +227,7 @@ void FastProp::build_rows(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral,
     const std::vector<containers::Features> &_subfeatures,
+    const helpers::WordIndexContainer &_word_indices,
     const std::vector<size_t> &_index,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     const std::shared_ptr<std::vector<size_t>> &_rownums,
@@ -233,7 +242,12 @@ void FastProp::build_rows(
         containers::DataFrameView( _population, rownums );
 
     const auto table_holder = TableHolder(
-        placeholder(), population_view, _peripheral, peripheral() );
+        placeholder(),
+        population_view,
+        _peripheral,
+        peripheral(),
+        std::nullopt,
+        _word_indices );
 
     constexpr size_t log_iter = 5000;
 
@@ -295,7 +309,12 @@ std::vector<containers::Features> FastProp::build_subfeatures(
 
             // TODO: Insert actual rownums
             const auto f = subfeatures().at( i )->transform(
-                population, _peripheral, subfeature_index, _logger, nullptr );
+                population,
+                _peripheral,
+                subfeature_index,
+                _logger,
+                nullptr,
+                true );
 
             const auto f_expanded = expand_subfeatures(
                 f, subfeature_index, subfeatures().at( i )->num_features() );
@@ -401,6 +420,25 @@ std::map<helpers::ColumnDescription, Float> FastProp::column_importances(
         }
 
     return importances.importances();
+}
+
+// ----------------------------------------------------------------------------
+
+typename FastProp::Vocabulary FastProp::expand_vocabulary(
+    const Vocabulary &_vocabulary ) const
+{
+    const auto find_vocabulary =
+        [this, &_vocabulary](
+            const containers::Placeholder &_joined_table ) -> VocabForDf {
+        const auto ix = find_peripheral_ix( _joined_table.name_ );
+        assert_true( ix < _vocabulary.size() );
+        return _vocabulary.at( ix );
+    };
+
+    auto range =
+        placeholder().joined_tables_ | std::views::transform( find_vocabulary );
+
+    return stl::make::vector<VocabForDf>( range );
 }
 
 // ----------------------------------------------------------------------------
@@ -515,7 +553,7 @@ std::vector<Int> FastProp::find_most_frequent_categories(
                        std::views::filter( is_not_null ) |
                        std::views::take( hyperparameters().n_most_frequent_ );
 
-    return helpers::STL::make_vector<Int>( range );
+    return stl::make::vector<Int>( range );
 }
 
 // ----------------------------------------------------------------------------
@@ -532,18 +570,29 @@ containers::DataFrame FastProp::find_peripheral(
                 "peripheral placeholders." );
         }
 
+    const auto ix = find_peripheral_ix( _name );
+
+    assert_true( ix < _peripheral.size() );
+
+    return _peripheral.at( ix );
+}
+
+// ----------------------------------------------------------------------------
+
+size_t FastProp::find_peripheral_ix( const std::string &_name ) const
+{
     for ( size_t i = 0; i < peripheral().size(); ++i )
         {
             if ( peripheral().at( i ) == _name )
                 {
-                    return _peripheral.at( i );
+                    return i;
                 }
         }
 
     throw std::invalid_argument(
         "Placeholder named '" + _name + "' not found." );
 
-    return _peripheral.at( 0 );
+    return 0;
 }
 
 // ----------------------------------------------------------------------------
@@ -557,6 +606,14 @@ void FastProp::fit(
     extract_schemas( _population, _peripheral );
 
     subfeatures_ = fit_subfeatures( _peripheral, _logger );
+
+    vocabulary_ = std::make_shared<const helpers::VocabularyContainer>(
+        hyperparameters().min_df_,
+        hyperparameters().vocab_size_,
+        _population,
+        _peripheral );
+
+    assert_true( vocabulary().peripheral().size() == _peripheral.size() );
 
     const auto abstract_features =
         std::make_shared<std::vector<containers::AbstractFeature>>();
@@ -573,17 +630,26 @@ void FastProp::fit(
         table_holder.main_tables_.size() ==
         table_holder.peripheral_tables_.size() );
 
+    assert_true(
+        table_holder.main_tables_.size() ==
+        placeholder().joined_tables_.size() );
+
     extract_schemas( table_holder );
 
     const auto conditions = make_conditions( table_holder );
 
     for ( size_t i = 0; i < table_holder.main_tables_.size(); ++i )
         {
+            const auto &name = placeholder().joined_tables_.at( i ).name_;
+
+            const auto ix = find_peripheral_ix( name );
+
             fit_on_peripheral(
                 table_holder.main_tables_.at( i ).df(),
                 table_holder.peripheral_tables_.at( i ),
                 i,
                 conditions,
+                vocabulary().peripheral().at( ix ),
                 abstract_features );
         }
 
@@ -718,6 +784,7 @@ void FastProp::fit_on_categoricals_by_categories(
                                     _conditions,
                                     input_col,
                                     _peripheral_ix,
+                                    enums::DataUsed::categorical,
                                     categorical_value ) );
                         }
                 }
@@ -1038,6 +1105,7 @@ void FastProp::fit_on_peripheral(
     const containers::DataFrame &_peripheral,
     const size_t _peripheral_ix,
     const std::vector<std::vector<containers::Condition>> &_conditions,
+    const VocabForDf &_vocabulary,
     std::shared_ptr<std::vector<containers::AbstractFeature>>
         _abstract_features ) const
 {
@@ -1084,6 +1152,13 @@ void FastProp::fit_on_peripheral(
             fit_on_subfeatures(
                 _peripheral, _peripheral_ix, cond, _abstract_features );
 
+            fit_on_text(
+                _peripheral,
+                _peripheral_ix,
+                cond,
+                _vocabulary,
+                _abstract_features );
+
             if ( _peripheral.num_time_stamps() > 0 )
                 {
                     _abstract_features->push_back( containers::AbstractFeature(
@@ -1103,6 +1178,51 @@ void FastProp::fit_on_peripheral(
                 enums::DataUsed::not_applicable,
                 0,
                 _peripheral_ix ) );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+void FastProp::fit_on_text(
+    const containers::DataFrame &_peripheral,
+    const size_t _peripheral_ix,
+    const std::vector<containers::Condition> &_conditions,
+    const VocabForDf &_vocabulary,
+    std::shared_ptr<std::vector<containers::AbstractFeature>>
+        _abstract_features ) const
+{
+    assert_true( _abstract_features );
+
+    assert_true( _peripheral.num_text() == _vocabulary.size() );
+
+    for ( size_t input_col = 0; input_col < _peripheral.num_text();
+          ++input_col )
+        {
+            assert_true( _vocabulary.at( input_col ) );
+
+            for ( Int word_ix = 0;
+                  word_ix <
+                  static_cast<Int>( _vocabulary.at( input_col )->size() );
+                  ++word_ix )
+                {
+                    for ( const auto agg : hyperparameters().aggregations_ )
+                        {
+                            if ( !is_numerical( agg ) )
+                                {
+                                    continue;
+                                }
+
+                            _abstract_features->push_back(
+                                containers::AbstractFeature(
+                                    enums::Parser<enums::Aggregation>::parse(
+                                        agg ),
+                                    _conditions,
+                                    input_col,
+                                    _peripheral_ix,
+                                    enums::DataUsed::text,
+                                    word_ix ) );
+                        }
+                }
         }
 }
 
@@ -1316,6 +1436,16 @@ FastProp::infer_importance(
 
                     return std::vector<
                         std::pair<helpers::ColumnDescription, Float>>();
+                }
+
+            case enums::DataUsed::text:
+                {
+                    const auto col_desc = helpers::ColumnDescription(
+                        helpers::ColumnDescription::PERIPHERAL,
+                        peripheral.name(),
+                        peripheral.text_name( abstract_feature.input_col_ ) );
+
+                    return { std::make_pair( col_desc, _importance_factor ) };
                 }
 
             default:
@@ -1590,7 +1720,7 @@ std::vector<size_t> FastProp::make_subfeature_index(
                        std::views::filter( is_relevant_feature ) |
                        std::views::transform( get_input_col );
 
-    const auto s = helpers::STL::make_set<size_t>( range );
+    const auto s = stl::make::set<size_t>( range );
 
     return std::vector<size_t>( s.begin(), s.end() );
 }
@@ -1647,7 +1777,7 @@ std::shared_ptr<std::vector<size_t>> FastProp::sample_from_population(
     auto range = iota | std::views::filter( include );
 
     return std::make_shared<std::vector<size_t>>(
-        helpers::STL::make_vector<size_t>( range ) );
+        stl::make::vector<size_t>( range ) );
 }
 
 // ----------------------------------------------------------------------------
@@ -1717,6 +1847,7 @@ void FastProp::spawn_threads(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral,
     const std::vector<containers::Features> &_subfeatures,
+    const helpers::WordIndexContainer &_word_indices,
     const std::vector<size_t> &_index,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     const std::shared_ptr<std::vector<size_t>> &_rownums,
@@ -1732,6 +1863,7 @@ void FastProp::spawn_threads(
                                _population,
                                _peripheral,
                                _subfeatures,
+                               _word_indices,
                                _index,
                                _logger,
                                _rownums,
@@ -1743,6 +1875,7 @@ void FastProp::spawn_threads(
                     _population,
                     _peripheral,
                     _subfeatures,
+                    _word_indices,
                     _index,
                     _logger,
                     _rownums,
@@ -1830,7 +1963,8 @@ containers::Features FastProp::transform(
     const std::vector<containers::DataFrame> &_peripheral,
     const std::optional<std::vector<size_t>> &_index,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
-    const std::shared_ptr<std::vector<size_t>> &_rownums ) const
+    const std::shared_ptr<std::vector<size_t>> &_rownums,
+    const bool _as_subfeatures ) const
 {
     if ( _population.nrows() == 0 )
         {
@@ -1842,17 +1976,25 @@ containers::Features FastProp::transform(
 
     const auto subfeatures = build_subfeatures( _peripheral, index, _logger );
 
-    auto features = init_features( _population.nrows(), index.size() );
-
     if ( _logger )
         {
-            _logger->log( "FastProp: Building features..." );
+            const auto msg = _as_subfeatures
+                                 ? "FastProp: Building subfeatures..."
+                                 : "FastProp: Building features...";
+
+            _logger->log( msg );
         }
+
+    auto features = init_features( _population.nrows(), index.size() );
+
+    const auto word_indices =
+        helpers::WordIndexContainer( _population, _peripheral, vocabulary() );
 
     spawn_threads(
         _population,
         _peripheral,
         subfeatures,
+        word_indices,
         index,
         _logger,
         _rownums,
@@ -1957,6 +2099,13 @@ Poco::JSON::Object FastProp::to_json_obj( const bool _schema_only ) const
 
     // ----------------------------------------
 
+    if ( vocabulary_ )
+        {
+            obj.set( "vocabulary_", vocabulary().to_json_obj() );
+        }
+
+    // ----------------------------------------
+
     if ( subfeatures_ )
         {
             Poco::JSON::Array::Ptr subfeatures_arr( new Poco::JSON::Array() );
@@ -2019,6 +2168,7 @@ std::vector<std::string> FastProp::to_sql(
 
             sql.push_back( abstract_feature.to_sql(
                 *_categories,
+                expand_vocabulary( vocabulary().peripheral() ),
                 _feature_prefix,
                 std::to_string( _offset + i + 1 ),
                 input_schema,

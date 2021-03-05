@@ -70,6 +70,9 @@ struct DecisionTreeEnsembleImpl
     /// The decision trees that are part of this ensemble -
     /// each represents one feature
     std::vector<decisiontrees::DecisionTree> trees_;
+
+    // The vocabulary used to analyze the text fields.
+    std::shared_ptr<const helpers::VocabularyContainer> vocabulary_;
 };
 
 // ----------------------------------------------------------------------------

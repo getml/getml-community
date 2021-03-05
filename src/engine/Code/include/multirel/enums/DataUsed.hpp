@@ -20,9 +20,11 @@ enum class DataUsed
     x_perip_categorical,
     x_perip_numerical,
     x_perip_discrete,
+    x_perip_text,
     x_popul_categorical,
     x_popul_numerical,
     x_popul_discrete,
+    x_popul_text,
     x_subfeature,
     time_stamps_diff,
     time_stamps_window

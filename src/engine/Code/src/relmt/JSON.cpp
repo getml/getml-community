@@ -78,6 +78,14 @@ enums::DataUsed JSON::destringify( const std::string& _data_used )
         {
             return enums::DataUsed::subfeatures;
         }
+    else if ( _data_used == "text_input" )
+        {
+            return enums::DataUsed::text_input;
+        }
+    else if ( _data_used == "text_output" )
+        {
+            return enums::DataUsed::text_output;
+        }
     else if ( _data_used == "time_stamps_window" )
         {
             return enums::DataUsed::time_stamps_window;
@@ -191,6 +199,12 @@ std::string JSON::stringify( const enums::DataUsed& _data_used )
 
             case enums::DataUsed::subfeatures:
                 return "subfeatures";
+
+            case enums::DataUsed::text_input:
+                return "text_input";
+
+            case enums::DataUsed::text_output:
+                return "text_output";
 
             case enums::DataUsed::time_stamps_window:
                 return "time_stamps_window";

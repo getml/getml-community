@@ -52,25 +52,9 @@ struct Hyperparameters
     /// Whether we want to allow null weights.
     const bool allow_null_weights_;
 
-    /// L1 regularization term on weights
-    // const Float alpha;
-
-    /// Specify which booster to use: gbtree, gblinear or dart.
-    // const std::string booster;
-
-    /// Subsample ratio of columns for each split, in each level.
-    // const Float colsample_bylevel;
-
-    /// Subsample ratio of columns when constructing each tree.
-    // const Float colsample_bytree;
-
     /// The lag variable used for calculating the moving time windows. When set
     /// to 0.0 or negative value, moving time windows will be omitted.
     const Float delta_t_;
-
-    /// Stores the hyperparameters of the feature selector - needed for .refresh
-    /// to work properly.
-    const Poco::JSON::Object::Ptr feature_selector_;
 
     /// Minimum loss reduction required to make a further partition on a leaf
     /// node of the tree.
@@ -83,11 +67,12 @@ struct Hyperparameters
     /// The loss function used for the learning function.
     const std::string loss_function_;
 
-    /// Maximum delta step we allow each tree’s weight estimation to be.
-    // const Float max_delta_step;
-
     /// Maximum tree depth for base learners
     const Int max_depth_;
+
+    /// The minimum document frequency required for a string to become part of
+    /// the vocabulary.
+    const size_t min_df_;
 
     /// Minimum number of samples.
     const Int min_num_samples_;
@@ -98,15 +83,8 @@ struct Hyperparameters
     /// Number of subfeatures
     const Int num_subfeatures_;
 
-    /// ...
-    // const Int num_parallel_tree;
-
     /// Number of parallel threads used to run xgboost
     const Int num_threads_;
-
-    /// Stores the hyperparameters of the predictor - needed for .refresh
-    /// to work properly.
-    const Poco::JSON::Object::Ptr predictor_;
 
     /// L2 regularization term on weights
     const Float reg_lambda_;
@@ -127,11 +105,17 @@ struct Hyperparameters
     /// Whether to print messages while running boosting
     const bool silent_;
 
+    /// Whether we want to split the text fields.
+    const bool split_text_fields_;
+
     /// The target on which to train.
     const Int target_num_;
 
-    /// Whether to use timestamps,
+    /// Whether to use timestamps.
     const bool use_timestamps_;
+
+    /// The maximum size of the vocabulary.
+    const size_t vocab_size_;
 };
 
 // ----------------------------------------------------------------------------

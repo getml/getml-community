@@ -1,19 +1,60 @@
-#include "multirel/utils/utils.hpp"
+#ifndef BINNING_CATEGORICALBINNER_HPP_
+#define BINNING_CATEGORICALBINNER_HPP_
 
-namespace multirel
-{
-namespace utils
+// ----------------------------------------------------------------------------
+
+namespace binning
 {
 // ----------------------------------------------------------------------------
 
+template <class MatchType, class GetValueType>
+class CategoricalBinner
+{
+   public:
+    static std::
+        pair<std::vector<size_t>, std::shared_ptr<const std::vector<Int>>>
+        bin( const Int _min,
+             const Int _max,
+             const GetValueType& _get_value,
+             const std::vector<MatchType>::const_iterator _begin,
+             const std::vector<MatchType>::const_iterator _nan_begin,
+             const std::vector<MatchType>::const_iterator _end,
+             std::vector<MatchType>* _bins,
+             multithreading::Communicator* _comm );
+
+   private:
+    /// Generates the critical values - a list of all category that have a count
+    /// of at least one.
+    static std::shared_ptr<const std::vector<Int>> make_critical_values(
+        const Int _min,
+        const Int _max,
+        const GetValueType& _get_value,
+        const std::vector<MatchType>::const_iterator _begin,
+        const std::vector<MatchType>::const_iterator _nan_begin,
+        multithreading::Communicator* _comm );
+
+    /// Generates the indptr, which indicates the beginning and end of
+    /// each bin.
+    static std::vector<size_t> make_indptr(
+        const Int _min,
+        const Int _max,
+        const GetValueType& _get_value,
+        const std::vector<MatchType>::const_iterator _begin,
+        const std::vector<MatchType>::const_iterator _nan_begin );
+};
+
+// ----------------------------------------------------------------------------
+
+template <class MatchType, class GetValueType>
 std::pair<std::vector<size_t>, std::shared_ptr<const std::vector<Int>>>
-CategoricalBinner::bin(
+CategoricalBinner<MatchType, GetValueType>::bin(
     const Int _min,
     const Int _max,
-    const std::vector<containers::Match*>::const_iterator _begin,
-    const std::vector<containers::Match*>::const_iterator _nan_begin,
-    const std::vector<containers::Match*>::const_iterator _end,
-    std::vector<containers::Match*>* _bins,
+    const GetValueType& _get_value,
+    const typename std::vector<MatchType>::const_iterator _begin,
+    const typename std::vector<MatchType>::const_iterator _nan_begin,
+    const typename std::vector<MatchType>::const_iterator _end,
+    std::vector<MatchType>* _bins,
     multithreading::Communicator* _comm )
 {
     // ---------------------------------------------------------------------------
@@ -28,7 +69,7 @@ CategoricalBinner::bin(
     // There is a possibility that all critical values are NAN in all processes.
     // This accounts for this edge case.
 
-    if ( _min > _max )
+    if ( _min >= _max )
         {
             return std::make_pair(
                 std::vector<size_t>( 0 ),
@@ -39,7 +80,8 @@ CategoricalBinner::bin(
 
     const auto num_bins = _max - _min + 1;
 
-    const auto indptr = make_indptr( _min, _max, _begin, _end );
+    const auto indptr =
+        make_indptr( _min, _max, _get_value, _begin, _nan_begin );
 
     // ---------------------------------------------------------------------------
 
@@ -47,9 +89,9 @@ CategoricalBinner::bin(
 
     std::vector<size_t> counts( num_bins );
 
-    for ( auto it = _begin; it != _end; ++it )
+    for ( auto it = _begin; it != _nan_begin; ++it )
         {
-            const auto val = ( *it )->categorical_value;
+            const auto val = _get_value( *it );
 
             const auto ix = val - _min;
 
@@ -65,8 +107,14 @@ CategoricalBinner::bin(
 
     // ---------------------------------------------------------------------------
 
-    const auto critical_values =
-        make_critical_values( _min, _max, _begin, _nan_begin, _comm );
+    assert_true( indptr.size() > 0 );
+
+    std::copy( _nan_begin, _end, _bins->begin() + indptr.back() );
+
+    // ---------------------------------------------------------------------------
+
+    const auto critical_values = make_critical_values(
+        _min, _max, _get_value, _begin, _nan_begin, _comm );
 
     // ---------------------------------------------------------------------------
 
@@ -77,11 +125,14 @@ CategoricalBinner::bin(
 
 // ----------------------------------------------------------------------------
 
-std::shared_ptr<const std::vector<Int>> CategoricalBinner::make_critical_values(
+template <class MatchType, class GetValueType>
+std::shared_ptr<const std::vector<Int>>
+CategoricalBinner<MatchType, GetValueType>::make_critical_values(
     const Int _min,
     const Int _max,
-    const std::vector<containers::Match*>::const_iterator _begin,
-    const std::vector<containers::Match*>::const_iterator _nan_begin,
+    const GetValueType& _get_value,
+    const typename std::vector<MatchType>::const_iterator _begin,
+    const typename std::vector<MatchType>::const_iterator _nan_begin,
     multithreading::Communicator* _comm )
 {
     // ------------------------------------------------------------------------
@@ -93,7 +144,7 @@ std::shared_ptr<const std::vector<Int>> CategoricalBinner::make_critical_values(
 
     for ( auto it = _begin; it != _nan_begin; ++it )
         {
-            const auto val = ( *it )->categorical_value;
+            const auto val = _get_value( *it );
 
             assert_true( val >= _min );
             assert_true( val <= _max );
@@ -102,13 +153,11 @@ std::shared_ptr<const std::vector<Int>> CategoricalBinner::make_critical_values(
         }
 
     // ------------------------------------------------------------------------
-    // Reduce included.
 
-    utils::Reducer::reduce(
+    multithreading::Reducer::reduce(
         multithreading::maximum<std::int8_t>(), &included, _comm );
 
     // ------------------------------------------------------------------------
-    // Build vector.
 
     auto categories = std::make_shared<std::vector<Int>>( 0 );
 
@@ -129,13 +178,15 @@ std::shared_ptr<const std::vector<Int>> CategoricalBinner::make_critical_values(
 
 // ----------------------------------------------------------------------------
 
-std::vector<size_t> CategoricalBinner::make_indptr(
+template <class MatchType, class GetValueType>
+std::vector<size_t> CategoricalBinner<MatchType, GetValueType>::make_indptr(
     const Int _min,
     const Int _max,
-    const std::vector<containers::Match*>::const_iterator _begin,
-    const std::vector<containers::Match*>::const_iterator _nan_begin )
+    const GetValueType& _get_value,
+    const typename std::vector<MatchType>::const_iterator _begin,
+    const typename std::vector<MatchType>::const_iterator _nan_begin )
 {
-    assert_true( _max >= _min );
+    assert_true( _max > _min );
 
     const auto num_bins = _max - _min + 1;
 
@@ -143,7 +194,7 @@ std::vector<size_t> CategoricalBinner::make_indptr(
 
     for ( auto it = _begin; it != _nan_begin; ++it )
         {
-            const auto val = ( *it )->categorical_value;
+            const auto val = _get_value( *it );
 
             const auto ix = val - _min;
 
@@ -165,5 +216,6 @@ std::vector<size_t> CategoricalBinner::make_indptr(
 }
 
 // ----------------------------------------------------------------------------
-}  // namespace utils
-}  // namespace multirel
+}  // namespace binning
+
+#endif  // BINNING_CATEGORICALBINNER_HPP_

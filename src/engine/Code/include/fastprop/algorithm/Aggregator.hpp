@@ -12,6 +12,10 @@ namespace algorithm
 class Aggregator
 {
    public:
+    typedef std::vector<std::shared_ptr<const textmining::WordIndex>>
+        WordIndices;
+
+   public:
     /// Applies the aggregation defined in _abstract feature to each of the
     /// matches.
     static Float apply_aggregation(
@@ -97,6 +101,14 @@ class Aggregator
             &_condition_function,
         const containers::AbstractFeature &_abstract_feature );
 
+    /// Applies the aggregation to text fields.
+    static Float apply_text(
+        const containers::DataFrame &_peripheral,
+        const std::vector<containers::Match> &_matches,
+        const std::function<bool( const containers::Match & )>
+            &_condition_function,
+        const containers::AbstractFeature &_abstract_feature );
+
    private:
     /// Aggregates the range from _begin to _end, applying the _aggregation.
     template <class IteratorType>
@@ -105,11 +117,6 @@ class Aggregator
         const IteratorType _end,
         const enums::Aggregation _aggregation )
     {
-        if ( std::distance( _begin, _end ) <= 0.0 )
-            {
-                return 0.0;
-            }
-
         switch ( _aggregation )
             {
                 case enums::Aggregation::count_distinct:
@@ -277,11 +284,6 @@ class Aggregator
         const IteratorType _end,
         const enums::Aggregation _aggregation )
     {
-        if ( std::distance( _begin, _end ) <= 0 )
-            {
-                return 0.0;
-            }
-
         switch ( _aggregation )
             {
                 case enums::Aggregation::avg:

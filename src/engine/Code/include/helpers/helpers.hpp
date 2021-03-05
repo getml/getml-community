@@ -22,7 +22,11 @@
 
 #include "jsonutils/jsonutils.hpp"
 
+#include "stl/stl.hpp"
+
 #include "strings/strings.hpp"
+
+#include "textmining/textmining.hpp"
 
 // ----------------------------------------------------------------------------
 
@@ -31,7 +35,6 @@
 #include "helpers/Int.hpp"
 
 #include "helpers/NullChecker.hpp"
-#include "helpers/STL.hpp"
 
 #include "helpers/ColumnOperators.hpp"
 
@@ -43,6 +46,7 @@
 #include "helpers/Column.hpp"
 #include "helpers/IntSet.hpp"
 #include "helpers/Placeholder.hpp"
+#include "helpers/Schema.hpp"
 
 #include "helpers/ColumnDescription.hpp"
 
@@ -55,6 +59,14 @@
 #include "helpers/DataFrameView.hpp"
 
 #include "helpers/Matchmaker.hpp"
+
+#include "helpers/VocabularyContainer.hpp"
+
+#include "helpers/WordIndexContainer.hpp"
+
+#include "helpers/RowIndexContainer.hpp"
+
+#include "helpers/TextFieldSplitter.hpp"
 
 #include "helpers/TableHolder.hpp"
 

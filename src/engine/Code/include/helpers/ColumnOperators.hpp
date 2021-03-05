@@ -16,7 +16,7 @@ class ColumnOperators
     {
         if ( std::distance( _begin, _end ) <= 0 )
             {
-                return 0.0;
+                return NAN;
             }
 
         const auto assert_equal = []( const Float init, const Float val ) {
@@ -119,7 +119,8 @@ class ColumnOperators
     template <class IteratorType>
     static Float count_distinct( IteratorType _begin, IteratorType _end )
     {
-        using ConstValueType = typename std::remove_reference<decltype( *_begin )>::type;
+        using ConstValueType =
+            typename std::remove_reference<decltype( *_begin )>::type;
 
         using ValueType = typename std::remove_const<ConstValueType>::type;
 

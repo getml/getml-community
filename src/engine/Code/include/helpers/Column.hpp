@@ -15,17 +15,27 @@ struct Column
     // ---------------------------------------------------------------------
 
     Column(
-        const T* const _data,
+        const std::shared_ptr<const std::vector<T>> _ptr,
         const std::string& _name,
         const size_t _nrows,
         const std::string& _unit )
-        : data_( _data ), name_( _name ), nrows_( _nrows ), unit_( _unit )
+        : data_( _ptr ? _ptr->data() : nullptr ),
+          name_( _name ),
+          nrows_( _nrows ),
+          ptr_( _ptr ),
+          unit_( _unit )
     {
+        assert_true( ptr_ );
     }
 
-    Column(
-        const T* const _data, const std::string& _name, const size_t _nrows )
-        : data_( _data ), name_( _name ), nrows_( _nrows ), unit_( "" )
+    // TODO: This is a temporary fix - in the future, the Column should always
+    // take ownership.
+    Column( const T* _data, const std::string& _name, const size_t _nrows )
+        : data_( _data ),
+          name_( _name ),
+          nrows_( _nrows ),
+          ptr_( nullptr ),  // TODO: This is bad.
+          unit_( "" )
     {
     }
 
@@ -57,6 +67,9 @@ struct Column
 
     /// Number of rows
     const size_t nrows_;
+
+    /// The pointer to take ownership of the underlying data.
+    const std::shared_ptr<const std::vector<T>> ptr_;
 
     /// Unit of the column
     const std::string unit_;

@@ -41,6 +41,12 @@ class String
     ~String() = default;
 
    public:
+    /// Checks whether the string contains another string.
+    bool contains( const strings::String& _other ) const
+    {
+        return ( strstr( c_str(), _other.c_str() ) != NULL );
+    }
+
     /// Returns a pointer to the underlying C-String.
     const char* c_str() const
     {
@@ -102,6 +108,32 @@ class String
     {
         assert_true( chars_ );
         return std::string( chars_.get() );
+    }
+
+    /// Returns a lower case version of this string.
+    String to_lower() const
+    {
+        const auto tolower = []( const char c ) { return std::tolower( c ); };
+        auto lower = String( *this );
+        std::transform(
+            lower.c_str(),
+            lower.c_str() + lower.size(),
+            lower.chars_.get(),
+            tolower );
+        return lower;
+    }
+
+    /// Returns a upper case version of this string.
+    String to_upper() const
+    {
+        const auto toupper = []( const char c ) { return std::toupper( c ); };
+        auto upper = String( *this );
+        std::transform(
+            upper.c_str(),
+            upper.c_str() + upper.size(),
+            upper.chars_.get(),
+            toupper );
+        return upper;
     }
 
     // -------------------------------------------------------

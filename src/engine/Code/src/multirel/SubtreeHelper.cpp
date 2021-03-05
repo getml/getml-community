@@ -8,6 +8,7 @@ namespace ensemble
 
 void SubtreeHelper::fit_subensembles(
     const std::shared_ptr<const decisiontrees::TableHolder>& _table_holder,
+    const helpers::WordIndexContainer& _word_indices,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     const DecisionTreeEnsemble& _ensemble,
     optimizationcriteria::OptimizationCriterion* _opt,
@@ -39,7 +40,7 @@ void SubtreeHelper::fit_subensembles(
         _table_holder->peripheral_tables_.size() );
 
     assert_true(
-        _table_holder->subtables_.size() == placeholder.joined_tables_.size() );
+        _table_holder->subtables_.size() >= placeholder.joined_tables_.size() );
 
     // ----------------------------------------------------------------
     // Set up the subfeatures.
@@ -67,12 +68,6 @@ void SubtreeHelper::fit_subensembles(
 
                     subensembles_sum[i].reset( new DecisionTreeEnsemble(
                         hyperparameters, peripheral, joined_table ) );
-                }
-            else
-                {
-                    assert_true(
-                        placeholder.joined_tables_[i].joined_tables_.size() ==
-                        0 );
                 }
         }
 
@@ -109,6 +104,7 @@ void SubtreeHelper::fit_subensembles(
                 {
                     fit_subensemble<aggregations::AggregationType::Avg>(
                         _table_holder,
+                        _word_indices,
                         _logger,
                         rows_map,
                         _ensemble.hyperparameters(),
@@ -128,6 +124,7 @@ void SubtreeHelper::fit_subensembles(
                 {
                     fit_subensemble<aggregations::AggregationType::Sum>(
                         _table_holder,
+                        _word_indices,
                         _logger,
                         rows_map,
                         _ensemble.hyperparameters(),

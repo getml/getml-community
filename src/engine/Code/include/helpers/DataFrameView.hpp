@@ -14,6 +14,10 @@ class DataFrameView
 
     typedef Column<Int> IntColumnType;
 
+    typedef typename DataFrame::RowIndices RowIndices;
+
+    typedef typename DataFrame::WordIndices WordIndices;
+
     // ---------------------------------------------------------------------
 
    public:
@@ -60,11 +64,19 @@ class DataFrameView
         const std::string& _name,
         const std::string& _join_key,
         const std::string& _time_stamp,
-        const std::string& _upper_time_stamp ) const
+        const std::string& _upper_time_stamp,
+        const RowIndices& _row_indices,
+        const WordIndices& _word_indices ) const
     {
         return DataFrameView(
             df_.create_subview(
-                _name, _join_key, _time_stamp, _upper_time_stamp, false ),
+                _name,
+                _join_key,
+                _time_stamp,
+                _upper_time_stamp,
+                false,
+                _row_indices,
+                _word_indices ),
             rows_ );
     }
 
@@ -138,6 +150,9 @@ class DataFrameView
 
     /// Trivial getter
     size_t num_targets() const { return df_.num_targets(); }
+
+    /// Trivial getter
+    size_t num_text() const { return df_.num_text(); }
 
     /// Trivial getter
     size_t num_time_stamps() const { return df_.num_time_stamps(); }

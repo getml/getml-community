@@ -14,6 +14,7 @@ class DataFrame
     static constexpr const char *ROLE_JOIN_KEY = "join_key";
     static constexpr const char *ROLE_NUMERICAL = "numerical";
     static constexpr const char *ROLE_TARGET = "target";
+    static constexpr const char *ROLE_TEXT = "text";
     static constexpr const char *ROLE_TIME_STAMP = "time_stamp";
     static constexpr const char *ROLE_UNUSED = "unused";
     static constexpr const char *ROLE_UNUSED_FLOAT = "unused_float";
@@ -50,7 +51,8 @@ class DataFrame
     void add_int_column( const Column<Int> &_col, const std::string _role );
 
     /// Setter for a string_column
-    void add_string_column( const Column<strings::String> &_col );
+    void add_string_column(
+        const Column<strings::String> &_col, const std::string &_role );
 
     /// Appends another data frame to this data frame.
     void append( const DataFrame &_other );
@@ -83,49 +85,25 @@ class DataFrame
         const size_t _num_lines_read,
         const size_t _skip,
         const std::vector<std::string> &_time_formats,
-        const std::vector<std::string> &_categorical_names,
-        const std::vector<std::string> &_join_key_names,
-        const std::vector<std::string> &_numerical_names,
-        const std::vector<std::string> &_target_names,
-        const std::vector<std::string> &_time_stamp_names,
-        const std::vector<std::string> &_unused_float_names,
-        const std::vector<std::string> &_unused_string_names );
+        const Schema &_schema );
 
     /// Builds a dataframe from a table in the data base.
     void from_db(
         const std::shared_ptr<database::Connector> _connector,
         const std::string &_tname,
-        const std::vector<std::string> &_categorical_names,
-        const std::vector<std::string> &_join_key_names,
-        const std::vector<std::string> &_numerical_names,
-        const std::vector<std::string> &_target_names,
-        const std::vector<std::string> &_time_stamp_names,
-        const std::vector<std::string> &_unused_float_names,
-        const std::vector<std::string> &_unused_string_names );
+        const Schema &_schema );
 
     /// Builds a dataframe from a JSON Object.
     void from_json(
         const Poco::JSON::Object &_obj,
         const std::vector<std::string> _time_formats,
-        const std::vector<std::string> &_categoricals,
-        const std::vector<std::string> &_join_keys,
-        const std::vector<std::string> &_numericals,
-        const std::vector<std::string> &_targets,
-        const std::vector<std::string> &_time_stamps,
-        const std::vector<std::string> &_unused_float_names,
-        const std::vector<std::string> &_unused_string_names );
+        const Schema &_schema );
 
     /// Builds a dataframe from a query.
     void from_query(
         const std::shared_ptr<database::Connector> _connector,
         const std::string &_query,
-        const std::vector<std::string> &_categoricals,
-        const std::vector<std::string> &_join_keys,
-        const std::vector<std::string> &_numericals,
-        const std::vector<std::string> &_targets,
-        const std::vector<std::string> &_time_stamp_names,
-        const std::vector<std::string> &_unused_float_names,
-        const std::vector<std::string> &_unused_string_names );
+        const Schema &_schema );
 
     /// Builds a dataframe from one or several CSV files located in an S3
     /// bucket.
@@ -138,13 +116,7 @@ class DataFrame
         const size_t _num_lines_read,
         const size_t _skip,
         const std::vector<std::string> &_time_formats,
-        const std::vector<std::string> &_categorical_names,
-        const std::vector<std::string> &_join_key_names,
-        const std::vector<std::string> &_numerical_names,
-        const std::vector<std::string> &_target_names,
-        const std::vector<std::string> &_time_stamp_names,
-        const std::vector<std::string> &_unused_floats,
-        const std::vector<std::string> &_unused_strings );
+        const Schema &_schema );
 
     /// Returns the content of the data frame in a format that is compatible
     /// with the DataTables.js server-side processing API.
@@ -269,7 +241,7 @@ class DataFrame
         return has_categorical( _name ) || has_join_key( _name ) ||
                has_numerical( _name ) || has_target( _name ) ||
                has_time_stamp( _name ) || has_unused_float( _name ) ||
-               has_unused_string( _name );
+               has_unused_string( _name ) || has_text( _name );
     }
 
     /// Whether the DataFrame has a categorical column named _name.
@@ -320,6 +292,20 @@ class DataFrame
         for ( size_t i = 0; i < num_targets(); ++i )
             {
                 if ( target( i ).name() == _name )
+                    {
+                        return true;
+                    }
+            }
+
+        return false;
+    }
+
+    /// Whether the DataFrame has a text column named _name.
+    bool has_text( const std::string &_name ) const
+    {
+        for ( size_t i = 0; i < num_text(); ++i )
+            {
+                if ( text( i ).name() == _name )
                     {
                         return true;
                     }
@@ -482,29 +468,32 @@ class DataFrame
     {
         return unused_floats_.size() + unused_strings_.size() +
                join_keys_.size() + time_stamps_.size() + categoricals_.size() +
-               numericals_.size() + targets_.size();
+               numericals_.size() + targets_.size() + text_.size();
     }
 
     /// Returns number of categorical columns.
-    size_t const num_categoricals() const { return categoricals_.size(); }
+    size_t num_categoricals() const { return categoricals_.size(); }
 
     /// Returns number of join keys.
-    size_t const num_join_keys() const { return join_keys_.size(); }
+    size_t num_join_keys() const { return join_keys_.size(); }
 
     /// Returns number of numerical columns.
-    size_t const num_numericals() const { return numericals_.size(); }
+    size_t num_numericals() const { return numericals_.size(); }
 
     /// Returns number of target columns.
-    size_t const num_targets() const { return targets_.size(); }
+    size_t num_targets() const { return targets_.size(); }
+
+    /// Returns number of text columns.
+    size_t num_text() const { return text_.size(); }
 
     /// Returns number of the time stamps.
-    size_t const num_time_stamps() const { return time_stamps_.size(); }
+    size_t num_time_stamps() const { return time_stamps_.size(); }
 
     /// Returns number of unused float columns.
-    size_t const num_unused_floats() const { return unused_floats_.size(); }
+    size_t num_unused_floats() const { return unused_floats_.size(); }
 
     /// Returns number of unused string columns.
-    size_t const num_unused_strings() const { return unused_strings_.size(); }
+    size_t num_unused_strings() const { return unused_strings_.size(); }
 
     /// Trivial accessor
     template <
@@ -586,6 +575,36 @@ class DataFrame
         throw std::invalid_argument(
             "Data frame '" + name_ + "' contains no target column named '" +
             _name + "'!" );
+    }
+
+    /// Trivial accessor
+    template <
+        typename T,
+        typename std::enable_if<!std::is_same<T, std::string>::value, int>::
+            type = 0>
+    const Column<strings::String> &text( const T _i ) const
+    {
+        assert_true( text_.size() > 0 );
+        assert_true( _i >= 0 );
+        assert_true( _i < static_cast<T>( text_.size() ) );
+
+        return text_.at( _i );
+    }
+
+    /// Trivial accessor
+    const Column<strings::String> &text( const std::string &_name ) const
+    {
+        for ( const auto &col : text_ )
+            {
+                if ( col.name() == _name )
+                    {
+                        return col;
+                    }
+            }
+
+        throw std::invalid_argument(
+            "Data frame '" + name_ +
+            "' contains no categorical column named '" + _name + "'!" );
     }
 
     /// Trivial accessor
@@ -708,7 +727,8 @@ class DataFrame
     void add_string_vectors(
         const std::vector<std::string> &_names,
         const std::vector<std::shared_ptr<std::vector<strings::String>>>
-            &_vectors );
+            &_vectors,
+        const std::string &_role );
 
     /// Calculate the number of bytes.
     template <class T>
@@ -719,14 +739,7 @@ class DataFrame
     void check_null( const Column<Float> &_col ) const;
 
     /// Concatenate a set of colnames.
-    std::vector<std::string> concat_colnames(
-        const std::vector<std::string> &_categorical_names,
-        const std::vector<std::string> &_join_key_names,
-        const std::vector<std::string> &_numerical_names,
-        const std::vector<std::string> &_target_names,
-        const std::vector<std::string> &_time_stamp_names,
-        const std::vector<std::string> &_unused_float_names,
-        const std::vector<std::string> &_unused_string_names ) const;
+    std::vector<std::string> concat_colnames( const Schema &_schema ) const;
 
     /// Parses int columns.
     void from_json(
@@ -753,13 +766,7 @@ class DataFrame
         const std::string &_fname,
         const size_t _skip,
         const std::vector<std::string> &_time_formats,
-        const std::vector<std::string> &_categorical_names,
-        const std::vector<std::string> &_join_key_names,
-        const std::vector<std::string> &_numerical_names,
-        const std::vector<std::string> &_target_names,
-        const std::vector<std::string> &_time_stamp_names,
-        const std::vector<std::string> &_unused_float_names,
-        const std::vector<std::string> &_unused_string_names );
+        const Schema &_schema );
 
     /// Returns the colnames of a vector of columns
     template <class T>
@@ -856,16 +863,20 @@ class DataFrame
     /// Numerical data
     std::vector<Column<Float>> numericals_;
 
-    /// "Undefined" floats - unused means that
+    /// "Unused" floats - unused means that
     /// no explicit role has been set yet.
     std::vector<Column<Float>> unused_floats_;
 
-    /// "Undefined" strings - unused means that
+    /// "Unused" strings - unused means that
     /// no explicit role has been set yet.
     std::vector<Column<strings::String>> unused_strings_;
 
     /// Targets - only exists for population tables
     std::vector<Column<Float>> targets_;
+
+    /// Text - to be interpreted as text fields.
+    /// Basic text mining is to be applied.
+    std::vector<Column<strings::String>> text_;
 
     /// Time stamps
     std::vector<Column<Float>> time_stamps_;

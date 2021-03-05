@@ -35,7 +35,6 @@ class FeatureLearner : public AbstractFeatureLearner
         assert_true( peripheral_ );
     }
 
-    /// Destructor.
     ~FeatureLearner() = default;
 
     // --------------------------------------------------------
@@ -312,10 +311,10 @@ FeatureLearner<FeatureLearnerType>::extract_table(
 
     for ( size_t i = 0; i < _df.num_categoricals(); ++i )
         {
-            const auto& mat = _df.categorical( i );
+            const auto& col = _df.categorical( i );
 
             categoricals.push_back( typename DataFrameType::IntColumnType(
-                mat.data(), mat.name(), mat.nrows(), mat.unit() ) );
+                col.data_ptr(), col.name(), col.nrows(), col.unit() ) );
         }
 
     // ------------------------------------------------------------------------
@@ -324,10 +323,10 @@ FeatureLearner<FeatureLearnerType>::extract_table(
 
     for ( size_t i = 0; i < _df.num_join_keys(); ++i )
         {
-            const auto& mat = _df.join_key( i );
+            const auto& col = _df.join_key( i );
 
             join_keys.push_back( typename DataFrameType::IntColumnType(
-                mat.data(), mat.name(), mat.nrows(), mat.unit() ) );
+                col.data_ptr(), col.name(), col.nrows(), col.unit() ) );
         }
 
     // ------------------------------------------------------------------------
@@ -345,22 +344,28 @@ FeatureLearner<FeatureLearnerType>::extract_table(
 
     for ( size_t i = 0; i < _df.num_numericals(); ++i )
         {
-            const auto& mat = _df.numerical( i );
+            const auto& col = _df.numerical( i );
 
             const bool is_discrete =
-                std::all_of( mat.begin(), mat.end(), is_int );
+                std::all_of( col.begin(), col.end(), is_int );
 
             if ( is_discrete )
                 {
                     discretes.push_back(
                         typename DataFrameType::FloatColumnType(
-                            mat.data(), mat.name(), mat.nrows(), mat.unit() ) );
+                            col.data_ptr(),
+                            col.name(),
+                            col.nrows(),
+                            col.unit() ) );
                 }
             else
                 {
                     numericals.push_back(
                         typename DataFrameType::FloatColumnType(
-                            mat.data(), mat.name(), mat.nrows(), mat.unit() ) );
+                            col.data_ptr(),
+                            col.name(),
+                            col.nrows(),
+                            col.unit() ) );
                 }
         }
 
@@ -373,14 +378,14 @@ FeatureLearner<FeatureLearnerType>::extract_table(
             case AbstractFeatureLearner::USE_ALL_TARGETS:
                 for ( size_t i = 0; i < _df.num_targets(); ++i )
                     {
-                        const auto& mat = _df.target( i );
+                        const auto& col = _df.target( i );
 
                         targets.push_back(
                             typename DataFrameType::FloatColumnType(
-                                mat.data(),
-                                mat.name(),
-                                mat.nrows(),
-                                mat.unit() ) );
+                                col.data_ptr(),
+                                col.name(),
+                                col.nrows(),
+                                col.unit() ) );
                     }
                 break;
 
@@ -389,10 +394,22 @@ FeatureLearner<FeatureLearnerType>::extract_table(
                 assert_true(
                     _target_num < static_cast<Int>( _df.num_targets() ) );
 
-                const auto& mat = _df.target( _target_num );
+                const auto& col = _df.target( _target_num );
 
                 targets.push_back( typename DataFrameType::FloatColumnType(
-                    mat.data(), mat.name(), mat.nrows(), mat.unit() ) );
+                    col.data_ptr(), col.name(), col.nrows(), col.unit() ) );
+        }
+
+    // ------------------------------------------------------------------------
+
+    std::vector<typename DataFrameType::StringColumnType> text;
+
+    for ( size_t i = 0; i < _df.num_text(); ++i )
+        {
+            const auto& col = _df.text( i );
+
+            text.push_back( typename DataFrameType::StringColumnType(
+                col.data_ptr(), col.name(), col.nrows(), col.unit() ) );
         }
 
     // ------------------------------------------------------------------------
@@ -401,10 +418,10 @@ FeatureLearner<FeatureLearnerType>::extract_table(
 
     for ( size_t i = 0; i < _df.num_time_stamps(); ++i )
         {
-            const auto& mat = _df.time_stamp( i );
+            const auto& col = _df.time_stamp( i );
 
             time_stamps.push_back( typename DataFrameType::FloatColumnType(
-                mat.data(), mat.name(), mat.nrows(), mat.unit() ) );
+                col.data_ptr(), col.name(), col.nrows(), col.unit() ) );
         }
 
     // ------------------------------------------------------------------------
@@ -417,6 +434,7 @@ FeatureLearner<FeatureLearnerType>::extract_table(
         _df.name(),
         numericals,
         targets,
+        text,
         time_stamps );
 
     // ------------------------------------------------------------------------
@@ -440,10 +458,10 @@ FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
         {
             const auto& name = _schema.categorical_name( i );
 
-            const auto& mat = _df.categorical( name );
+            const auto& col = _df.categorical( name );
 
             categoricals.push_back( typename DataFrameType::IntColumnType(
-                mat.data(), name, mat.nrows(), mat.unit() ) );
+                col.data_ptr(), name, col.nrows(), col.unit() ) );
         }
 
     // ------------------------------------------------------------------------
@@ -457,10 +475,10 @@ FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
             // Note that discrete columns actually do not exist
             // in the DataFrame - they are taken from numerical
             // instead.
-            const auto& mat = _df.numerical( name );
+            const auto& col = _df.numerical( name );
 
             discretes.push_back( typename DataFrameType::FloatColumnType(
-                mat.data(), name, mat.nrows(), mat.unit() ) );
+                col.data_ptr(), name, col.nrows(), col.unit() ) );
         }
 
     // ------------------------------------------------------------------------
@@ -474,10 +492,10 @@ FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
         {
             const auto& name = _schema.join_keys_name( i );
 
-            const auto& mat = _df.join_key( name );
+            const auto& col = _df.join_key( name );
 
             join_keys.push_back( typename DataFrameType::IntColumnType(
-                mat.data(), name, mat.nrows(), mat.unit() ) );
+                col.data_ptr(), name, col.nrows(), col.unit() ) );
 
             indices.push_back( _df.index( name ).map() );
         }
@@ -490,10 +508,10 @@ FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
         {
             const auto& name = _schema.numerical_name( i );
 
-            const auto& mat = _df.numerical( name );
+            const auto& col = _df.numerical( name );
 
             numericals.push_back( typename DataFrameType::FloatColumnType(
-                mat.data(), name, mat.nrows(), mat.unit() ) );
+                col.data_ptr(), name, col.nrows(), col.unit() ) );
         }
 
     // ------------------------------------------------------------------------
@@ -506,10 +524,10 @@ FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
 
             if ( _df.has_target( name ) )
                 {
-                    const auto& mat = _df.target( name );
+                    const auto& col = _df.target( name );
 
                     targets.push_back( typename DataFrameType::FloatColumnType(
-                        mat.data(), name, mat.nrows(), mat.unit() ) );
+                        col.data_ptr(), name, col.nrows(), col.unit() ) );
                 }
             else if ( _needs_targets )
                 {
@@ -524,16 +542,30 @@ FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
 
     // ------------------------------------------------------------------------
 
+    std::vector<typename DataFrameType::StringColumnType> text;
+
+    for ( size_t i = 0; i < _schema.num_text(); ++i )
+        {
+            const auto& name = _schema.text_name( i );
+
+            const auto& col = _df.text( name );
+
+            text.push_back( typename DataFrameType::StringColumnType(
+                col.data_ptr(), name, col.nrows(), col.unit() ) );
+        }
+
+    // ------------------------------------------------------------------------
+
     std::vector<typename DataFrameType::FloatColumnType> time_stamps;
 
     for ( size_t i = 0; i < _schema.num_time_stamps(); ++i )
         {
             const auto& name = _schema.time_stamps_name( i );
 
-            const auto& mat = _df.time_stamp( name );
+            const auto& col = _df.time_stamp( name );
 
             time_stamps.push_back( typename DataFrameType::FloatColumnType(
-                mat.data(), name, mat.nrows(), mat.unit() ) );
+                col.data_ptr(), name, col.nrows(), col.unit() ) );
         }
 
     // ------------------------------------------------------------------------
@@ -546,6 +578,7 @@ FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
         _df.name(),
         numericals,
         targets,
+        text,
         time_stamps );
 
     // ------------------------------------------------------------------------

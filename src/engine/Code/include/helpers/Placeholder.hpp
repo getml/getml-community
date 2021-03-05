@@ -34,6 +34,8 @@ struct Placeholder
               _json_obj, "other_time_stamps_used_" ) ),
           targets_( Placeholder::parse_columns<std::string>(
               _json_obj, "targets_" ) ),
+          text_(
+              Placeholder::parse_columns<std::string>( _json_obj, "text_" ) ),
           time_stamps_( Placeholder::parse_columns<std::string>(
               _json_obj, "time_stamps_" ) ),
           time_stamps_used_( Placeholder::parse_columns<std::string>(
@@ -77,6 +79,7 @@ struct Placeholder
         const std::string& _name,
         const std::vector<std::string>& _numericals,
         const std::vector<std::string>& _targets,
+        const std::vector<std::string>& _text,
         const std::vector<std::string>& _time_stamps )
         : categoricals_( _categoricals ),
           discretes_( _discretes ),
@@ -84,6 +87,7 @@ struct Placeholder
           name_( _name ),
           numericals_( _numericals ),
           targets_( _targets ),
+          text_( _text ),
           time_stamps_( _time_stamps )
     {
     }
@@ -161,6 +165,9 @@ struct Placeholder
     size_t num_targets() const { return targets_.size(); }
 
     /// Trivial getter
+    size_t num_text() const { return text_.size(); }
+
+    /// Trivial getter
     size_t num_time_stamps() const { return time_stamps_.size(); }
 
     /// Getter for a numerical name.
@@ -195,6 +202,13 @@ struct Placeholder
     {
         assert_true( _j < targets_.size() );
         return targets_[_j];
+    }
+
+    /// Getter for a text name.
+    const std::string& text_name( size_t _j ) const
+    {
+        assert_true( _j < text_.size() );
+        return text_[_j];
     }
 
     /// Getter for a time stamp name.
@@ -271,6 +285,10 @@ struct Placeholder
     /// The name of the target columns
     /// (this is only required for the Python API).
     const std::vector<std::string> targets_;
+
+    /// The name of the text columns
+    /// (this is only required for the Python API).
+    const std::vector<std::string> text_;
 
     /// The name of the time stamp columns
     /// (this is only required for the Python API).

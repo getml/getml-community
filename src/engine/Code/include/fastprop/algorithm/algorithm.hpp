@@ -28,7 +28,11 @@
 
 #include "debug/debug.hpp"
 
+#include "stl/stl.hpp"
+
 #include "jsonutils/jsonutils.hpp"
+
+#include "textmining/textmining.hpp"
 
 #include "fastprop/Float.hpp"
 #include "fastprop/Int.hpp"

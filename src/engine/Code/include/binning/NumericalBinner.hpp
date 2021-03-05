@@ -1,19 +1,66 @@
-#include "multirel/utils/utils.hpp"
+#ifndef BINNING_NUMERICALBINNER_HPP_
+#define BINNING_NUMERICALBINNER_HPP_
 
-namespace multirel
-{
-namespace utils
+// ----------------------------------------------------------------------------
+
+namespace binning
 {
 // ----------------------------------------------------------------------------
 
-std::pair<std::vector<size_t>, Float> NumericalBinner::bin(
+template <class MatchType, class GetValueType>
+class NumericalBinner
+{
+   public:
+    /// Bins the matches into _num_bins equal-width bins.
+    /// The bins will be written into _bins_begin and the
+    /// method returns and indptr to them as well as the
+    /// calculated step size.
+    static std::pair<std::vector<size_t>, Float> bin(
+        const Float _min,
+        const Float _max,
+        const GetValueType& _get_value,
+        const size_t _num_bins,
+        const std::vector<MatchType>::const_iterator _begin,
+        const std::vector<MatchType>::const_iterator _nan_begin,
+        const std::vector<MatchType>::const_iterator _end,
+        std::vector<MatchType>* _bins );
+
+    /// Bins under the assumption that the step size is known.
+    static std::vector<size_t> bin_given_step_size(
+        const Float _min,
+        const Float _max,
+        const GetValueType& _get_value,
+        const Float _step_size,
+        const std::vector<MatchType>::const_iterator _begin,
+        const std::vector<MatchType>::const_iterator _nan_begin,
+        const std::vector<MatchType>::const_iterator _end,
+        std::vector<MatchType>* _bins );
+
+   private:
+    /// Generates the indptr, which indicates the beginning and end of
+    /// each bin.
+    static std::vector<size_t> make_indptr(
+        const Float _min,
+        const Float _max,
+        const GetValueType& _get_value,
+        const Float _step_size,
+        const std::vector<MatchType>::const_iterator _begin,
+        const std::vector<MatchType>::const_iterator _nan_begin );
+};
+
+// ----------------------------------------------------------------------------
+
+template <class MatchType, class GetValueType>
+std::pair<std::vector<size_t>, Float>
+NumericalBinner<MatchType, GetValueType>::bin(
     const Float _min,
     const Float _max,
+    const GetValueType& _get_value,
     const size_t _num_bins,
-    const std::vector<containers::Match*>::const_iterator _begin,
-    const std::vector<containers::Match*>::const_iterator _nan_begin,
-    const std::vector<containers::Match*>::const_iterator _end,
-    std::vector<containers::Match*>* _bins )
+    const typename std::vector<MatchType>::const_iterator _begin,
+    const typename std::vector<MatchType>::const_iterator _nan_begin,
+    const typename std::vector<MatchType>::const_iterator _end,
+    std::vector<MatchType>* _bins )
 {
     // ---------------------------------------------------------------------------
 
@@ -38,7 +85,7 @@ std::pair<std::vector<size_t>, Float> NumericalBinner::bin(
     // ---------------------------------------------------------------------------
 
     const auto indptr = bin_given_step_size(
-        _min, _max, step_size, _begin, _nan_begin, _end, _bins );
+        _min, _max, _get_value, step_size, _begin, _nan_begin, _end, _bins );
 
     // ---------------------------------------------------------------------------
 
@@ -49,14 +96,17 @@ std::pair<std::vector<size_t>, Float> NumericalBinner::bin(
 
 // ----------------------------------------------------------------------------
 
-std::vector<size_t> NumericalBinner::bin_given_step_size(
+template <class MatchType, class GetValueType>
+std::vector<size_t>
+NumericalBinner<MatchType, GetValueType>::bin_given_step_size(
     const Float _min,
     const Float _max,
+    const GetValueType& _get_value,
     const Float _step_size,
-    const std::vector<containers::Match*>::const_iterator _begin,
-    const std::vector<containers::Match*>::const_iterator _nan_begin,
-    const std::vector<containers::Match*>::const_iterator _end,
-    std::vector<containers::Match*>* _bins )
+    const typename std::vector<MatchType>::const_iterator _begin,
+    const typename std::vector<MatchType>::const_iterator _nan_begin,
+    const typename std::vector<MatchType>::const_iterator _end,
+    std::vector<MatchType>* _bins )
 {
     // ---------------------------------------------------------------------------
 
@@ -83,7 +133,7 @@ std::vector<size_t> NumericalBinner::bin_given_step_size(
     // ---------------------------------------------------------------------------
 
     const auto indptr =
-        make_indptr( _min, _max, _step_size, _begin, _nan_begin );
+        make_indptr( _min, _max, _get_value, _step_size, _begin, _nan_begin );
 
     // ---------------------------------------------------------------------------
 
@@ -93,7 +143,7 @@ std::vector<size_t> NumericalBinner::bin_given_step_size(
 
     for ( auto it = _begin; it != _nan_begin; ++it )
         {
-            const auto val = ( *it )->numerical_value;
+            const auto val = _get_value( *it );
 
             assert_true( !std::isnan( val ) && !std::isinf( val ) );
 
@@ -112,17 +162,6 @@ std::vector<size_t> NumericalBinner::bin_given_step_size(
             ++counts[ix];
         }
 
-        // ---------------------------------------------------------------------------
-
-#ifndef NDEBUG
-
-    for ( size_t i = 0; i < counts.size(); ++i )
-        {
-            assert_true( indptr[i] + counts[i] == indptr[i + 1] );
-        }
-
-#endif  // NDEBUG
-
     // ---------------------------------------------------------------------------
 
     assert_true( indptr.size() > 0 );
@@ -138,12 +177,14 @@ std::vector<size_t> NumericalBinner::bin_given_step_size(
 
 // ----------------------------------------------------------------------------
 
-std::vector<size_t> NumericalBinner::make_indptr(
+template <class MatchType, class GetValueType>
+std::vector<size_t> NumericalBinner<MatchType, GetValueType>::make_indptr(
     const Float _min,
     const Float _max,
+    const GetValueType& _get_value,
     const Float _step_size,
-    const std::vector<containers::Match*>::const_iterator _begin,
-    const std::vector<containers::Match*>::const_iterator _nan_begin )
+    const typename std::vector<MatchType>::const_iterator _begin,
+    const typename std::vector<MatchType>::const_iterator _nan_begin )
 {
     assert_true( _max >= _min );
 
@@ -156,7 +197,7 @@ std::vector<size_t> NumericalBinner::make_indptr(
 
     for ( auto it = _begin; it != _nan_begin; ++it )
         {
-            const auto val = ( *it )->numerical_value;
+            const auto val = _get_value( *it );
 
             assert_true( !std::isnan( val ) && !std::isinf( val ) );
 
@@ -183,5 +224,6 @@ std::vector<size_t> NumericalBinner::make_indptr(
 }
 
 // ----------------------------------------------------------------------------
-}  // namespace utils
-}  // namespace multirel
+}  // namespace binning
+
+#endif  // BINNING_NUMERICALBINNER_HPP_

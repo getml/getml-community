@@ -199,6 +199,14 @@ containers::DataFrame ManyToOneJoiner::join_one(
                 col, containers::DataFrame::ROLE_NUMERICAL );
         }
 
+    for ( size_t i = 0; i < peripheral.num_text(); ++i )
+        {
+            auto col = peripheral.text( i ).sort_by_key( index );
+            col.set_name(
+                helpers::Macros::make_colname( name, alias, col.name() ) );
+            joined.add_string_column( col, containers::DataFrame::ROLE_TEXT );
+        }
+
     for ( size_t i = 0; i < peripheral.num_time_stamps(); ++i )
         {
             auto col = peripheral.time_stamp( i ).sort_by_key( index );
@@ -217,7 +225,8 @@ containers::DataFrame ManyToOneJoiner::join_one(
             auto col = peripheral.unused_string( i ).sort_by_key( index );
             col.set_name(
                 helpers::Macros::make_colname( name, alias, col.name() ) );
-            joined.add_string_column( col );
+            joined.add_string_column(
+                col, containers::DataFrame::ROLE_UNUSED_STRING );
         }
 
     return joined;

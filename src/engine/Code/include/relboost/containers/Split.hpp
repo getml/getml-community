@@ -38,7 +38,9 @@ struct Split
     {
         assert_true(
             _data_used == enums::DataUsed::categorical_input ||
-            _data_used == enums::DataUsed::categorical_output );
+            _data_used == enums::DataUsed::categorical_output ||
+            _data_used == enums::DataUsed::text_input ||
+            _data_used == enums::DataUsed::text_output );
     }
 
     /// Constructor for splits on numerical values.

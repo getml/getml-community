@@ -210,6 +210,10 @@ std::vector<std::string> CatOpParser::parse(
                         it->second.int_column( name, role ),
                         join_keys_encoding_ );
                 }
+            else if ( role == containers::DataFrame::ROLE_TEXT )
+                {
+                    return to_vec( it->second.text( name ) );
+                }
             else if (
                 role == containers::DataFrame::ROLE_UNUSED ||
                 role == containers::DataFrame::ROLE_UNUSED_STRING )

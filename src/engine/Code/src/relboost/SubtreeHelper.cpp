@@ -69,7 +69,9 @@ void SubtreeHelper::fit_subensemble(
             assert_true( false && "agg_type not known!" );
         }
 
-    ( *_subensemble )->init_as_subensemble( _comm );
+    ( *_subensemble )
+        ->init_as_subensemble(
+            subtable_holder->word_indices().vocabulary(), _comm );
 
     ( *_subensemble )
         ->fit_subensembles( subtable_holder, _logger, intermediate_agg );
@@ -145,11 +147,11 @@ void SubtreeHelper::fit_subensembles(
         _table_holder->subtables_.size() ==
         _table_holder->peripheral_tables_.size() );
 
+    // Do not have to be the same because of the text fields.
     assert_true(
-        _table_holder->subtables_.size() == placeholder.joined_tables_.size() );
+        _table_holder->subtables_.size() >= placeholder.joined_tables_.size() );
 
     // ----------------------------------------------------------------
-    // Set up the subensembles.
 
     const auto num_tables = _table_holder->subtables_.size();
 
@@ -163,9 +165,11 @@ void SubtreeHelper::fit_subensembles(
         {
             if ( _table_holder->subtables_.at( i ) )
                 {
+                    assert_true( i < placeholder.joined_tables_.size() );
+
                     const auto joined_table =
                         std::make_shared<const containers::Placeholder>(
-                            placeholder.joined_tables_[i] );
+                            placeholder.joined_tables_.at( i ) );
 
                     assert_true( joined_table->joined_tables_.size() > 0 );
 
@@ -177,16 +181,9 @@ void SubtreeHelper::fit_subensembles(
                         std::make_optional<DecisionTreeEnsemble>(
                             hyperparameters, peripheral, joined_table );
                 }
-            else
-                {
-                    assert_true(
-                        placeholder.joined_tables_.at( i )
-                            .joined_tables_.size() == 0 );
-                }
         }
 
     // ----------------------------------------------------------------
-    // If there are no subfeatures, we can stop here.
 
     const bool no_subfeatures = std::none_of(
         subensembles_avg.cbegin(),
@@ -204,17 +201,15 @@ void SubtreeHelper::fit_subensembles(
         }
 
     // ----------------------------------------------------------------
-    // Create the rows map (it stays the same over all aggregations).
 
     const auto rows_map = utils::Mapper::create_rows_map(
-        _table_holder->main_tables_[0].rows_ptr() );
+        _table_holder->main_tables_.at( 0 ).rows_ptr() );
 
     // ----------------------------------------------------------------
-    // Fit the subensembles_avg.
 
     for ( size_t i = 0; i < num_tables; ++i )
         {
-            if ( subensembles_avg[i] )
+            if ( subensembles_avg.at( i ) )
                 {
                     fit_subensemble(
                         "AVG",
@@ -225,16 +220,15 @@ void SubtreeHelper::fit_subensembles(
                         i,
                         _loss_function,
                         _comm,
-                        &subensembles_avg[i] );
+                        &subensembles_avg.at( i ) );
                 }
         }
 
     // ----------------------------------------------------------------
-    // Fit the subensembles_sum.
 
     for ( size_t i = 0; i < num_tables; ++i )
         {
-            if ( subensembles_sum[i] )
+            if ( subensembles_sum.at( i ) )
                 {
                     fit_subensemble(
                         "SUM",
@@ -245,12 +239,11 @@ void SubtreeHelper::fit_subensembles(
                         i,
                         _loss_function,
                         _comm,
-                        &subensembles_sum[i] );
+                        &subensembles_sum.at( i ) );
                 }
         }
 
     // ----------------------------------------------------------------
-    // Store the subensembles.
 
     *_subensembles_avg = std::move( subensembles_avg );
 

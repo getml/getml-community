@@ -78,6 +78,13 @@ Float Aggregator::apply_aggregation(
                     _condition_function,
                     _abstract_feature );
 
+            case enums::DataUsed::text:
+                return apply_text(
+                    _peripheral,
+                    _matches,
+                    _condition_function,
+                    _abstract_feature );
+
             default:
                 assert_true( false && "Unknown data_used" );
                 return 0.0;
@@ -392,6 +399,47 @@ Float Aggregator::apply_subfeatures(
                 _condition_function,
                 _abstract_feature );
         }
+
+    return aggregate_matches_numerical(
+        _matches, extract_value, _condition_function, _abstract_feature );
+}
+
+// ----------------------------------------------------------------------------
+
+Float Aggregator::apply_text(
+    const containers::DataFrame &_peripheral,
+    const std::vector<containers::Match> &_matches,
+    const std::function<bool( const containers::Match & )> &_condition_function,
+    const containers::AbstractFeature &_abstract_feature )
+{
+    assert_true( _peripheral.text_.size() == _peripheral.word_indices_.size() );
+
+    assert_true(
+        _abstract_feature.input_col_ < _peripheral.word_indices_.size() );
+
+    const auto index =
+        _peripheral.word_indices_.at( _abstract_feature.input_col_ );
+
+    assert_true( index );
+
+    const auto extract_value = [&index, &_abstract_feature](
+                                   const containers::Match &match ) -> Float {
+        const auto range = index->range( match.ix_input );
+
+        for ( const auto &word_ix : range )
+            {
+                if ( word_ix == _abstract_feature.categorical_value_ )
+                    {
+                        return 1.0;
+                    }
+
+                if ( word_ix > _abstract_feature.categorical_value_ )
+                    {
+                        return 0.0;
+                    }
+            }
+        return 0.0;
+    };
 
     return aggregate_matches_numerical(
         _matches, extract_value, _condition_function, _abstract_feature );

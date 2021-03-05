@@ -29,6 +29,8 @@ void Threadutils::fit_ensemble(
     const std::shared_ptr<const descriptors::Hyperparameters>& _hyperparameters,
     const containers::DataFrame& _population,
     const std::vector<containers::DataFrame>& _peripheral,
+    const helpers::RowIndexContainer& _row_indices,
+    const helpers::WordIndexContainer& _word_indices,
     const containers::Placeholder& _placeholder,
     const std::vector<std::string>& _peripheral_names,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
@@ -53,7 +55,9 @@ void Threadutils::fit_ensemble(
                     _placeholder,
                     population_subview,
                     _peripheral,
-                    _peripheral_names );
+                    _peripheral_names,
+                    _row_indices,
+                    _word_indices );
 
             // ----------------------------------------------------------------
             // Create and initialize the optimization criterion.
@@ -75,10 +79,10 @@ void Threadutils::fit_ensemble(
             opt->calc_residuals();
 
             // ----------------------------------------------------------------
-            // Start fitting
 
             _ensemble->fit(
                 table_holder,
+                _word_indices,
                 _logger,
                 _hyperparameters->num_features_,
                 opt.get(),
@@ -120,6 +124,7 @@ void Threadutils::transform_ensemble(
     const std::shared_ptr<const descriptors::Hyperparameters>& _hyperparameters,
     const containers::DataFrame& _population,
     const std::vector<containers::DataFrame>& _peripheral,
+    const helpers::WordIndexContainer& _word_indices,
     const std::vector<size_t>& _index,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     const ensemble::DecisionTreeEnsemble& _ensemble,
@@ -129,24 +134,20 @@ void Threadutils::transform_ensemble(
     try
         {
             // ----------------------------------------------------------------
-            // Build the subview on the population table
 
             const auto population_subview = utils::DataFrameScatterer::
                 DataFrameScatterer::scatter_data_frame(
                     _population, _thread_nums, _this_thread_num );
 
-            // ----------------------------------------------------------------
-            // Create abstractions over the peripheral_tables and the population
-            // table - for convenience
-
             const auto table_holder = decisiontrees::TableHolder(
                 _ensemble.placeholder(),
                 population_subview,
                 _peripheral,
-                _ensemble.peripheral() );
+                _ensemble.peripheral(),
+                std::nullopt,
+                _word_indices );
 
             // ----------------------------------------------------------------
-            // If there are any subfeatures, create them.
 
             const auto subpredictions = SubtreeHelper::make_predictions(
                 table_holder,
@@ -159,8 +160,6 @@ void Threadutils::transform_ensemble(
                 SubtreeHelper::make_subfeatures( table_holder, subpredictions );
 
             // ----------------------------------------------------------------
-            // aggregations::AggregationImpl stores most of the data for the
-            // aggregations. We do not want to reallocate the data all the time.
 
             auto impl = containers::Optional<aggregations::AggregationImpl>(
                 new aggregations::AggregationImpl(

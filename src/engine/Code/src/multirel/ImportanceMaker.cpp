@@ -100,6 +100,34 @@ void ImportanceMaker::add(
                     return;
                 }
 
+            case enums::DataUsed::x_perip_text:
+                {
+                    assert_true( _column < _input.num_text() );
+
+                    const auto desc = helpers::ColumnDescription(
+                        peripheral(),
+                        _input.name(),
+                        _input.text_name( _column ) );
+
+                    add_to_importances( desc, _value );
+
+                    return;
+                }
+
+            case enums::DataUsed::x_popul_text:
+                {
+                    assert_true( _column < _output.num_text() );
+
+                    const auto desc = helpers::ColumnDescription(
+                        population(),
+                        _output.name(),
+                        _output.text_name( _column ) );
+
+                    add_to_importances( desc, _value );
+
+                    return;
+                }
+
             case enums::DataUsed::same_unit_categorical:
                 {
                     assert_true( _same_units.same_units_categorical_ );

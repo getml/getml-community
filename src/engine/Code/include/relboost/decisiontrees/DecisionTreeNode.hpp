@@ -143,7 +143,7 @@ class DecisionTreeNode
         const std::vector<containers::Match>::iterator _end );
 
     /// Helper function for all functions that try categorical columns.
-    void try_categorical(
+    void try_categorical_or_text(
         const enums::Revert _revert,
         const Int _min,
         const std::shared_ptr<const std::vector<Int>> _critical_values,
@@ -253,6 +253,80 @@ class DecisionTreeNode
     void try_subfeatures(
         const Float _old_intercept,
         const containers::Subfeatures& _subfeatures,
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end,
+        std::vector<containers::Match>* _bins,
+        std::vector<containers::CandidateSplit>* _candidates );
+
+    /// Trying individuals words is tricky, because every match can be
+    /// associated with different words. That is why we can only use
+    /// try_categories_or_text for when we try multiple words for our
+    /// conditions.
+    void try_text(
+        const std::shared_ptr<const std::vector<Int>>& _words,
+        const size_t _num_column,
+        const Float _old_intercept,
+        const enums::DataUsed _data_used,
+        const textmining::RowIndex& _row_index,
+        const std::vector<size_t>& _indptr,
+        std::vector<containers::Match>* _bins,
+        std::vector<containers::CandidateSplit>* _candidates );
+
+    /// Try the text fields of the input data frame.
+    void try_text_input(
+        const Float _old_intercept,
+        const containers::DataFrame& _input,
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end,
+        std::vector<containers::Match>* _bins,
+        std::vector<containers::CandidateSplit>* _candidates );
+
+    /// Try conditions with a single word.
+    void try_text_input_single_word(
+        const size_t _num_column,
+        const Float _old_intercept,
+        const containers::DataFrame& _input,
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end,
+        std::vector<containers::Match>* _bins,
+        std::vector<containers::CandidateSplit>* _candidates );
+
+    /// Try conditions with multiple words.
+    void try_text_input_multiple_words(
+        const size_t _num_column,
+        const size_t _begin_ix,
+        const Float _old_intercept,
+        const containers::DataFrame& _input,
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end,
+        std::vector<containers::Match>* _bins,
+        std::vector<containers::CandidateSplit>* _candidates );
+
+    /// Try the text fields of the output data frame.
+    void try_text_output(
+        const Float _old_intercept,
+        const containers::DataFrameView& _output,
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end,
+        std::vector<containers::Match>* _bins,
+        std::vector<containers::CandidateSplit>* _candidates );
+
+    /// Try conditions with a single word.
+    void try_text_output_single_word(
+        const size_t _num_column,
+        const Float _old_intercept,
+        const containers::DataFrameView& _output,
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end,
+        std::vector<containers::Match>* _bins,
+        std::vector<containers::CandidateSplit>* _candidates );
+
+    /// Try conditions with multiple words.
+    void try_text_output_multiple_words(
+        const size_t _num_column,
+        const size_t _begin_ix,
+        const Float _old_intercept,
+        const containers::DataFrameView& _output,
         const std::vector<containers::Match>::iterator _begin,
         const std::vector<containers::Match>::iterator _end,
         std::vector<containers::Match>* _bins,

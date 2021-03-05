@@ -20,7 +20,8 @@ enum class DataUsed
     same_units_discrete_ts,
     same_units_numerical,
     same_units_numerical_ts,
-    subfeatures
+    subfeatures,
+    text
 };
 
 // ----------------------------------------------------------------------------

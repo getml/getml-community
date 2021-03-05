@@ -185,6 +185,7 @@ struct Parser<DataUsed>
     static constexpr const char* SAME_UNITS_NUMERICAL_TS =
         "same_units_numerical_ts";
     static constexpr const char* SUBFEATURES = "subfeatures";
+    static constexpr const char* TEXT = "text";
 
     /// Parse parses a _str.
     static DataUsed parse( const std::string& _str )
@@ -239,6 +240,11 @@ struct Parser<DataUsed>
                 return DataUsed::subfeatures;
             }
 
+        if ( _str == TEXT )
+            {
+                return DataUsed::text;
+            }
+
         throw_unless( false, "FastProp: Unknown data used: '" + _str + "'" );
 
         return DataUsed::same_units_numerical;
@@ -278,6 +284,9 @@ struct Parser<DataUsed>
 
                 case DataUsed::subfeatures:
                     return SUBFEATURES;
+
+                case DataUsed::text:
+                    return TEXT;
 
                 default:
                     throw_unless( false, "FastProp: Unknown data used." );

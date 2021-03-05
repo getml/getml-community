@@ -11,6 +11,10 @@ namespace algorithm
 
 class FastProp
 {
+   public:
+    typedef typename helpers::VocabularyContainer::VocabForDf VocabForDf;
+    typedef typename std::vector<VocabForDf> Vocabulary;
+
     // ------------------------------------------------------------------------
 
    public:
@@ -22,6 +26,7 @@ class FastProp
 
     typedef DataFrameType::FloatColumnType FloatColumnType;
     typedef DataFrameType::IntColumnType IntColumnType;
+    typedef DataFrameType::StringColumnType StringColumnType;
 
     constexpr static bool is_time_series_ = false;
     constexpr static bool premium_only_ = false;
@@ -69,7 +74,8 @@ class FastProp
         const std::optional<std::vector<size_t>>& _index = std::nullopt,
         const std::shared_ptr<const logging::AbstractLogger> _logger =
             std::shared_ptr<const logging::AbstractLogger>(),
-        const std::shared_ptr<std::vector<size_t>>& _rownums = nullptr ) const;
+        const std::shared_ptr<std::vector<size_t>>& _rownums = nullptr,
+        const bool _as_subfeatures = false ) const;
 
     /// Expresses FastProp as Poco::JSON::Object.
     Poco::JSON::Object to_json_obj( const bool _schema_only = false ) const;
@@ -103,6 +109,7 @@ class FastProp
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
         const std::vector<containers::Features>& _subfeatures,
+        const helpers::WordIndexContainer& _word_indices,
         const std::vector<size_t>& _index,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
         const std::shared_ptr<std::vector<size_t>>& _rownums,
@@ -125,6 +132,11 @@ class FastProp
 
     /// Calculates the threshold on the basis of which we throw out features.
     Float calc_threshold( const std::vector<Float>& _r_squared ) const;
+
+    /// We need to have a set of Vocabulary for every peripheral table that is
+    /// actually joined, which means they may be duplicated. This is why they
+    /// are kept as a shared_ptr, so we don't actually create a deep copy.
+    Vocabulary expand_vocabulary( const Vocabulary& _vocabulary ) const;
 
     /// We only calculate the subfeatures that we actually need - but we still
     /// need to make sure that they are located at the right position. This is
@@ -152,6 +164,9 @@ class FastProp
     containers::DataFrame find_peripheral(
         const std::vector<containers::DataFrame>& _peripheral,
         const std::string& _name ) const;
+
+    /// Returns the index related to the peripheral table.
+    size_t find_peripheral_ix( const std::string& _name ) const;
 
     /// Fits abstract features on the categorical columns.
     void fit_on_categoricals(
@@ -192,6 +207,7 @@ class FastProp
         const containers::DataFrame& _peripheral,
         const size_t _peripheral_ix,
         const std::vector<std::vector<containers::Condition>>& _conditions,
+        const VocabForDf& _vocabulary,
         std::shared_ptr<std::vector<containers::AbstractFeature>>
             _abstract_features ) const;
 
@@ -234,6 +250,15 @@ class FastProp
     std::shared_ptr<const std::vector<std::optional<FastProp>>> fit_subfeatures(
         const std::vector<containers::DataFrame>& _peripheral,
         const std::shared_ptr<const logging::AbstractLogger> _logger ) const;
+
+    /// Fits on the text fields of a peripheral data frame.
+    void fit_on_text(
+        const containers::DataFrame& _peripheral,
+        const size_t _peripheral_ix,
+        const std::vector<containers::Condition>& _conditions,
+        const VocabForDf& _vocabulary,
+        std::shared_ptr<std::vector<containers::AbstractFeature>>
+            _abstract_features ) const;
 
     /// Infers the appropriate number of threads.
     size_t get_num_threads() const;
@@ -324,6 +349,7 @@ class FastProp
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
         const std::vector<containers::Features>& _subfeatures,
+        const helpers::WordIndexContainer& _word_indices,
         const std::vector<size_t>& _index,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
         const std::shared_ptr<std::vector<size_t>>& _rownums,
@@ -408,6 +434,13 @@ class FastProp
             "Model has no population schema - did you may be forget to fit "
             "it?" );
         return *population_schema_;
+    }
+
+    /// Trivial (const) accessor
+    const helpers::VocabularyContainer& vocabulary() const
+    {
+        assert_true( vocabulary_ );
+        return *vocabulary_;
     }
 
     // ------------------------------------------------------------------------
@@ -523,6 +556,9 @@ class FastProp
 
     /// Contains the algorithms for the subfeatures.
     std::shared_ptr<const std::vector<std::optional<FastProp>>> subfeatures_;
+
+    // The vocabulary used to analyze the text fields.
+    std::shared_ptr<const helpers::VocabularyContainer> vocabulary_;
 
     // ------------------------------------------------------------------------
 };

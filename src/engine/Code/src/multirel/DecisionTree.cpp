@@ -490,13 +490,6 @@ std::vector<Float> DecisionTree::transform(
             // ------------------------------------------------------
             // Do the actual transformation
 
-            debug_log( "transform: Activate..." );
-
-            _aggregation->activate_all(
-                false,
-                match_ptrs.begin() + null_values_dist,
-                match_ptrs.end() );
-
             debug_log( "transform: Do actual transformation..." );
 
             root()->transform(

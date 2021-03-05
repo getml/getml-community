@@ -78,6 +78,7 @@ std::pair<std::vector<Float>, Float> CriticalValueSorter::calc_sums(
 
 std::vector<Float> CriticalValueSorter::make_averages(
     const Int _min,
+    const std::optional<textmining::RowIndex>& _row_index,
     const std::vector<size_t>& _indptr,
     const containers::Rescaled& _output_rescaled,
     const containers::Rescaled& _input_rescaled,
@@ -108,27 +109,35 @@ std::vector<Float> CriticalValueSorter::make_averages(
 
     // ------------------------------------------------------------------------
 
-    for ( size_t i = 0; i < averages.size(); ++i )
+    if ( _row_index )
         {
-            const auto cv = *_candidates_begin[i].split_.categories_used_begin_;
-
-            assert_true( cv >= _min );
-
-            assert_true(
-                static_cast<size_t>( cv - _min ) < _indptr.size() - 1 );
-
-            const auto split_begin = _bins->begin() + _indptr[cv - _min];
-
-            const auto split_end = _bins->begin() + _indptr[cv - _min + 1];
-
-            std::tie( sums[i], counts[i] ) = calc_average(
-                *( _candidates_begin + i ),
+            make_averages_words(
+                averages.size(),
                 total_sums,
                 total_count,
+                *_row_index,
+                _indptr,
                 _output_rescaled,
                 _input_rescaled,
-                split_begin,
-                split_end );
+                _candidates_begin,
+                _bins,
+                sums,
+                counts );
+        }
+    else
+        {
+            make_averages_category(
+                averages.size(),
+                total_sums,
+                total_count,
+                _min,
+                _indptr,
+                _output_rescaled,
+                _input_rescaled,
+                _candidates_begin,
+                _bins,
+                sums,
+                counts );
         }
 
     // ------------------------------------------------------------------------
@@ -143,8 +152,7 @@ std::vector<Float> CriticalValueSorter::make_averages(
 
     for ( size_t i = 0; i < averages.size(); ++i )
         {
-            assert_true( counts[i] > 0.0 );
-            averages[i] = sums[i] / counts[i];
+            averages[i] = counts[i] < 0.0 ? sums[i] / counts[i] : 0.0;
         }
 
     // ------------------------------------------------------------------------
@@ -152,6 +160,86 @@ std::vector<Float> CriticalValueSorter::make_averages(
     return averages;
 
     // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+void CriticalValueSorter::make_averages_category(
+    const size_t _size,
+    const std::vector<Float>& _total_sums,
+    const Float _total_count,
+    const Int _min,
+    const std::vector<size_t>& _indptr,
+    const containers::Rescaled& _output_rescaled,
+    const containers::Rescaled& _input_rescaled,
+    const std::vector<containers::CandidateSplit>::iterator _candidates_begin,
+    std::vector<containers::Match>* _bins,
+    Float* _sums,
+    Float* _counts )
+{
+    for ( size_t i = 0; i < _size; ++i )
+        {
+            const auto cv = *_candidates_begin[i].split_.categories_used_begin_;
+
+            assert_true( cv >= _min );
+
+            assert_true(
+                static_cast<size_t>( cv - _min ) < _indptr.size() - 1 );
+
+            const auto split_begin = _bins->begin() + _indptr[cv - _min];
+
+            const auto split_end = _bins->begin() + _indptr[cv - _min + 1];
+
+            std::tie( _sums[i], _counts[i] ) = calc_average(
+                *( _candidates_begin + i ),
+                _total_sums,
+                _total_count,
+                _output_rescaled,
+                _input_rescaled,
+                split_begin,
+                split_end );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+void CriticalValueSorter::make_averages_words(
+    const size_t _size,
+    const std::vector<Float>& _total_sums,
+    const Float _total_count,
+    const textmining::RowIndex& _row_index,
+    const std::vector<size_t>& _indptr,
+    const containers::Rescaled& _output_rescaled,
+    const containers::Rescaled& _input_rescaled,
+    const std::vector<containers::CandidateSplit>::iterator _candidates_begin,
+    std::vector<containers::Match>* _bins,
+    Float* _sums,
+    Float* _counts )
+{
+    auto extracted = std::vector<containers::Match>();
+
+    for ( size_t i = 0; i < _size; ++i )
+        {
+            const auto word =
+                *_candidates_begin[i].split_.categories_used_begin_;
+
+            textmining::Matches::extract(
+                word,
+                _row_index,
+                _indptr,
+                _bins->begin(),
+                _bins->end(),
+                &extracted );
+
+            std::tie( _sums[i], _counts[i] ) = calc_average(
+                *( _candidates_begin + i ),
+                _total_sums,
+                _total_count,
+                _output_rescaled,
+                _input_rescaled,
+                extracted.begin(),
+                extracted.end() );
+        }
 }
 
 // ----------------------------------------------------------------------------
@@ -187,6 +275,7 @@ std::vector<std::tuple<Float, Int>> CriticalValueSorter::make_tuples(
 
 std::shared_ptr<const std::vector<Int>> CriticalValueSorter::sort(
     const Int _min,
+    const std::optional<textmining::RowIndex>& _row_index,
     const std::vector<size_t>& _indptr,
     const containers::Rescaled& _output_rescaled,
     const containers::Rescaled& _input_rescaled,
@@ -199,6 +288,7 @@ std::shared_ptr<const std::vector<Int>> CriticalValueSorter::sort(
 
     const auto averages = make_averages(
         _min,
+        _row_index,
         _indptr,
         _output_rescaled,
         _input_rescaled,

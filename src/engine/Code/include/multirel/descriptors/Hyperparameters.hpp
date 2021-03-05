@@ -38,12 +38,12 @@ struct Hyperparameters
     /// included in our prediction.
     const bool include_categorical_;
 
-    /// Stores the hyperparameters of the feature selector - needed for .refresh
-    /// to work properly.
-    const Poco::JSON::Object::Ptr feature_selector_;
-
     /// The loss function to be used
     const std::string loss_function_;
+
+    /// The minimum document frequency required for a string to become part of
+    /// the vocabulary.
+    const size_t min_df_;
 
     /// The number of features to be extracted
     const size_t num_features_;
@@ -54,10 +54,6 @@ struct Hyperparameters
 
     /// The number of threads to be used, 0 for automatic determination
     const size_t num_threads_;
-
-    /// Stores the hyperparameters of the predictor - needed for .refresh
-    /// to work properly.
-    const Poco::JSON::Object::Ptr predictor_;
 
     /// Whether you just want to select the features one by one
     const bool round_robin_;
@@ -81,6 +77,9 @@ struct Hyperparameters
     /// Whether we want to print out the "Trained FEATURE_..." message
     const bool silent_;
 
+    /// Whether we want to split the text fields.
+    const bool split_text_fields_;
+
     /// Hyperparameters necessary for training the tree
     const std::shared_ptr<const TreeHyperparameters> tree_hyperparameters_;
 
@@ -88,6 +87,9 @@ struct Hyperparameters
     /// for all but idiosyncratic cases - it is the golden rule of
     /// predictive analytics)!
     const bool use_timestamps_;
+
+    /// The maximum size of the vocabulary.
+    const size_t vocab_size_;
 };
 
 // ----------------------------------------------------------------------------

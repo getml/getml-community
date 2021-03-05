@@ -45,6 +45,10 @@ struct Hyperparameters
     /// have this for consistency).
     const std::string loss_function_;
 
+    /// The minimum document frequency required for a string to become part of
+    /// the vocabulary.
+    const size_t min_df_;
+
     /// The number of categories from which we would like to extract numerical
     /// features.
     const size_t n_most_frequent_;
@@ -60,6 +64,9 @@ struct Hyperparameters
 
     /// Whether we want logging.
     const bool silent_;
+
+    /// The maximum size of the vocabulary.
+    const size_t vocab_size_;
 };
 
 // ----------------------------------------------------------------------------

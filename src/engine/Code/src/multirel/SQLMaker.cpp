@@ -112,6 +112,10 @@ std::string SQLMaker::condition_greater(
                         true );
                 }
 
+            case enums::DataUsed::x_popul_text:
+            case enums::DataUsed::x_perip_text:
+                return "TODO";
+
             case enums::DataUsed::time_stamps_window:
                 {
                     return make_time_stamp_window(
@@ -233,6 +237,10 @@ std::string SQLMaker::condition_smaller(
                         _split.critical_value,
                         false );
                 }
+
+            case enums::DataUsed::x_popul_text:
+            case enums::DataUsed::x_perip_text:
+                return "TODO";
 
             case enums::DataUsed::time_stamps_window:
                 {

@@ -69,6 +69,9 @@ struct DecisionTreeEnsembleImpl
     /// Schema of the population table.
     std::shared_ptr<const containers::Placeholder> population_schema_;
 
+    // The vocabulary used to analyze the text fields.
+    std::shared_ptr<const helpers::VocabularyContainer> vocabulary_;
+
     /// Trees underlying the model.
     std::vector<decisiontrees::DecisionTree> trees_;
 

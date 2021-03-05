@@ -11,6 +11,11 @@ struct AbstractFeature
 {
     static constexpr Int NO_CATEGORICAL_VALUE = -1;
 
+    typedef std::vector<std::shared_ptr<const std::vector<strings::String>>>
+        VocabForDf;
+
+    typedef std::vector<VocabForDf> Vocabulary;
+
     AbstractFeature(
         const enums::Aggregation _aggregation,
         const std::vector<Condition> &_conditions,
@@ -31,6 +36,7 @@ struct AbstractFeature
         const std::vector<Condition> &_conditions,
         const size_t _input_col,
         const size_t _peripheral,
+        const enums::DataUsed _data_used,
         const Int _categorical_value );
 
     AbstractFeature( const Poco::JSON::Object &_obj );
@@ -43,6 +49,7 @@ struct AbstractFeature
     /// Expresses the abstract feature as SQL code.
     std::string to_sql(
         const std::vector<strings::String> &_categories,
+        const Vocabulary &_vocabulary,
         const std::string &_feature_prefix,
         const std::string &_feature_num,
         const Placeholder &_input,

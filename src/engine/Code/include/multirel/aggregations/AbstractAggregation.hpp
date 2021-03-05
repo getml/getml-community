@@ -22,76 +22,50 @@ class AbstractAggregation
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _match_container_end ) = 0;
 
-    /// Activates all samples that contain _category
-    /// Used for prediction
-    virtual void activate_matches_containing_categories(
-        const std::vector<Int>::const_iterator _categories_begin,
-        const std::vector<Int>::const_iterator _categories_end,
-        containers::MatchPtrs::iterator _match_container_begin,
-        containers::MatchPtrs::iterator _match_container_end ) = 0;
-
     /// Iterates through the categories and selectively
     /// activates samples
-    /// Used for training
     virtual void activate_matches_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
         const Revert _revert,
         const containers::CategoryIndex &_index ) = 0;
 
-    /// Implements a lag functionality through moving time windows - used by
-    /// transform.
-    virtual void activate_matches_in_window(
-        const Float _critical_value,
-        const Float _lag,
-        containers::MatchPtrs::iterator _match_container_begin,
-        containers::MatchPtrs::iterator _match_container_end ) = 0;
-
-    /// Implements a lag functionality through moving time windows - used by
-    /// fit.
-    virtual void activate_matches_in_window(
-        const std::vector<size_t> &_indptr,
-        containers::MatchPtrs::iterator _match_container_begin,
-        containers::MatchPtrs::iterator _match_container_end ) = 0;
-
-    /// Implements a lag functionality through moving time windows - used by
-    /// transform.
-    virtual void activate_matches_outside_window(
-        const Float _critical_value,
-        const Float _lag,
-        containers::MatchPtrs::iterator _match_container_begin,
-        containers::MatchPtrs::iterator _match_container_end ) = 0;
-
-    /// Implements a lag functionality through moving time windows - used by
-    /// fit.
-    virtual void activate_matches_outside_window(
-        const std::vector<size_t> &_indptr,
-        containers::MatchPtrs::iterator _match_container_begin,
-        containers::MatchPtrs::iterator _match_container_end ) = 0;
-
-    /// Activates all samples that do not contain _category
-    /// Used for prediction
-    virtual void activate_matches_not_containing_categories(
+    /// Iterates through the individual words and selectively
+    /// activates samples.
+    virtual void activate_matches_containing_words(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
+        const Revert _revert,
+        const containers::WordIndex &_index ) = 0;
+
+    /// Implements a lag functionality through moving time windows.
+    virtual void activate_matches_in_window(
+        const std::vector<size_t> &_indptr,
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end ) = 0;
+
+    /// Implements a lag functionality through moving time windows.
+    virtual void activate_matches_outside_window(
+        const std::vector<size_t> &_indptr,
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _match_container_end ) = 0;
 
     /// Iterates through the categories and selectively
     /// activates samples
-    /// Used for training
     virtual void activate_matches_not_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
         const Revert _revert,
         const containers::CategoryIndex &_index ) = 0;
 
-    /// Iterates through the samples and activates those
-    /// samples that are greater than the critical value
-    virtual void activate_matches_from_above(
-        const Float _critical_value,
-        containers::MatchPtrs::const_iterator _match_container_begin,
-        containers::MatchPtrs::const_iterator _match_container_end ) = 0;
+    /// Iterates through the words and selectively
+    /// activates matches.
+    /// Used for individual words only.
+    virtual void activate_matches_not_containing_words(
+        const std::vector<Int>::const_iterator _words_begin,
+        const std::vector<Int>::const_iterator _words_end,
+        const Revert _revert,
+        const containers::WordIndex &_index ) = 0;
 
     /// Iterates through the samples and activates them
     /// starting with the greatest
@@ -100,19 +74,24 @@ class AbstractAggregation
         const containers::MatchPtrs::const_iterator &_matches_begin,
         const containers::MatchPtrs::const_iterator &_matches_end ) = 0;
 
-    /// Iterates through the samples and activates those
-    /// samples that smaller than or equal to the critical value
-    virtual void activate_matches_from_below(
-        const Float _critical_value,
-        containers::MatchPtrs::const_iterator _match_container_begin,
-        containers::MatchPtrs::const_iterator _match_container_end ) = 0;
-
     /// Iterates through the samples and activates them
     /// starting with the smallest
     virtual void activate_matches_from_below(
         const std::vector<size_t> &_indptr,
         const containers::MatchPtrs::const_iterator &_matches_begin,
         const containers::MatchPtrs::const_iterator &_matches_end ) = 0;
+
+    /// Activates all matches between _separator and _match_container_end.
+    virtual void activate_partition_from_above(
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _separator,
+        containers::MatchPtrs::iterator _match_container_end ) = 0;
+
+    /// Activates all matches between _match_container_begin and _separator.
+    virtual void activate_partition_from_below(
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _separator,
+        containers::MatchPtrs::iterator _match_container_end ) = 0;
 
     /// Gets rid of data that is no longer needed.
     virtual void clear() = 0;
@@ -126,29 +105,22 @@ class AbstractAggregation
     /// updates_stored
     virtual void commit() = 0;
 
-    /// Deactivates all samples that contains _category
-    /// Used for prediction
-    virtual void deactivate_matches_containing_categories(
-        const std::vector<Int>::const_iterator _categories_begin,
-        const std::vector<Int>::const_iterator _categories_end,
-        containers::MatchPtrs::iterator _match_container_begin,
-        containers::MatchPtrs::iterator _match_container_end ) = 0;
-
     /// Iteratres through the categories and selectively
     /// deactivates samples
-    /// Used for training
     virtual void deactivate_matches_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
         const Revert _revert,
         const containers::CategoryIndex &_index ) = 0;
 
-    /// Iterates through the samples and deactivates those
-    /// samples that are greater than the critical value
-    virtual void deactivate_matches_from_above(
-        const Float _critical_value,
-        containers::MatchPtrs::const_iterator _match_container_begin,
-        containers::MatchPtrs::const_iterator _match_container_end ) = 0;
+    /// Iterates through the words and selectively
+    /// activates matches.
+    /// Used for individual words only.
+    virtual void deactivate_matches_containing_words(
+        const std::vector<Int>::const_iterator _words_begin,
+        const std::vector<Int>::const_iterator _words_end,
+        const Revert _revert,
+        const containers::WordIndex &_index ) = 0;
 
     /// Iterates through the samples and deactivates them
     /// starting with the greatest
@@ -157,13 +129,6 @@ class AbstractAggregation
         const containers::MatchPtrs::const_iterator &_matches_begin,
         const containers::MatchPtrs::const_iterator &_matches_end ) = 0;
 
-    /// Iterates through the samples and deactivates those
-    /// samples that smaller than or equal to the critical value
-    virtual void deactivate_matches_from_below(
-        const Float _critical_value,
-        containers::MatchPtrs::const_iterator _match_container_begin,
-        containers::MatchPtrs::const_iterator _match_container_end ) = 0;
-
     /// Iterates through the samples and deactivates them
     /// starting with the smallest
     virtual void deactivate_matches_from_below(
@@ -171,52 +136,34 @@ class AbstractAggregation
         const containers::MatchPtrs::const_iterator &_matches_begin,
         const containers::MatchPtrs::const_iterator &_matches_end ) = 0;
 
-    /// Implements a lag functionality through moving time windows - used by
-    /// transform.
-    virtual void deactivate_matches_in_window(
-        const Float _critical_value,
-        const Float _lag,
-        containers::MatchPtrs::iterator _match_container_begin,
-        containers::MatchPtrs::iterator _match_container_end ) = 0;
-
-    /// Implements a lag functionality through moving time windows - used by
-    /// fit.
+    /// Implements a lag functionality through moving time windows.
     virtual void deactivate_matches_in_window(
         const std::vector<size_t> &_indptr,
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _match_container_end ) = 0;
 
-    /// Implements a lag functionality through moving time windows - used by
-    /// transform.
-    virtual void deactivate_matches_outside_window(
-        const Float _critical_value,
-        const Float _lag,
-        containers::MatchPtrs::iterator _match_container_begin,
-        containers::MatchPtrs::iterator _match_container_end ) = 0;
-
-    /// Implements a lag functionality through moving time windows - used by
-    /// fit.
+    /// Implements a lag functionality through moving time windows.
     virtual void deactivate_matches_outside_window(
         const std::vector<size_t> &_indptr,
-        containers::MatchPtrs::iterator _match_container_begin,
-        containers::MatchPtrs::iterator _match_container_end ) = 0;
-
-    /// Dectivates all samples that do not contain _category
-    /// Used for prediction
-    virtual void deactivate_matches_not_containing_categories(
-        const std::vector<Int>::const_iterator _categories_begin,
-        const std::vector<Int>::const_iterator _categories_end,
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _match_container_end ) = 0;
 
     /// Iterates through the categories and selectively
     /// deactivates samples
-    /// Used for training
     virtual void deactivate_matches_not_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
         const Revert _revert,
         const containers::CategoryIndex &_index ) = 0;
+
+    /// Iterates through the words and selectively
+    /// deactivates matches.
+    /// Used for individual words only.
+    virtual void deactivate_matches_not_containing_words(
+        const std::vector<Int>::const_iterator _words_begin,
+        const std::vector<Int>::const_iterator _words_end,
+        const Revert _revert,
+        const containers::WordIndex &_index ) = 0;
 
     /// Deactivates all samples where the numerical_value contains null values.
     /// Such samples must always be deactivated.
@@ -232,6 +179,18 @@ class AbstractAggregation
     virtual std::shared_ptr<optimizationcriteria::OptimizationCriterion>
     make_intermediate(
         std::shared_ptr<IntermediateAggregationImpl> _impl ) const = 0;
+
+    /// Activates all matches between _separator and _match_container_end.
+    virtual void deactivate_partition_from_above(
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _separator,
+        containers::MatchPtrs::iterator _match_container_end ) = 0;
+
+    /// Activates all matches between _match_container_begin and _separator.
+    virtual void deactivate_partition_from_below(
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _separator,
+        containers::MatchPtrs::iterator _match_container_end ) = 0;
 
     /// Returns the mode (enums::Mode::fit or enums::Mode::transform).
     virtual enums::Mode mode() const = 0;

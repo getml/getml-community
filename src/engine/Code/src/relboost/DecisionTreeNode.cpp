@@ -469,6 +469,16 @@ std::vector<containers::Match>::iterator DecisionTreeNode::partition(
                 return utils::Partitioner<enums::DataUsed::subfeatures>::
                     partition( _split, _subfeatures, _begin, _end );
 
+            case enums::DataUsed::text_input:
+                assert_true( _input );
+                return utils::Partitioner<enums::DataUsed::text_input>::
+                    partition( _split, *_input, _begin, _end );
+
+            case enums::DataUsed::text_output:
+                assert_true( _input );
+                return utils::Partitioner<enums::DataUsed::text_output>::
+                    partition( _split, _output, _begin, _end );
+
             case enums::DataUsed::time_stamps_window:
                 assert_true( _input );
                 return utils::Partitioner<enums::DataUsed::time_stamps_window>::
@@ -733,6 +743,19 @@ Float DecisionTreeNode::transform(
                     is_greater( split_, _subfeatures, _match );
                 break;
 
+            case enums::DataUsed::text_input:
+                assert_true( _input );
+                is_greater =
+                    utils::Partitioner<enums::DataUsed::text_input>::is_greater(
+                        split_, *_input, _match );
+                break;
+
+            case enums::DataUsed::text_output:
+                assert_true( _input );
+                is_greater = utils::Partitioner<enums::DataUsed::text_output>::
+                    is_greater( split_, _output, _match );
+                break;
+
             case enums::DataUsed::time_stamps_window:
                 assert_true( _input );
                 is_greater =
@@ -776,59 +799,37 @@ std::vector<containers::CandidateSplit> DecisionTreeNode::try_all(
     const std::vector<containers::Match>::iterator _begin,
     const std::vector<containers::Match>::iterator _end )
 {
+    assert_true( _input );
+
     std::vector<containers::CandidateSplit> candidates;
 
     std::vector<containers::Match> bins( _begin, _end );
 
-    if ( _input )
-        {
-            try_categorical_input(
-                _old_intercept, *_input, _begin, _end, &bins, &candidates );
+    try_categorical_input(
+        _old_intercept, *_input, _begin, _end, &bins, &candidates );
 
-            try_discrete_input(
-                _old_intercept, *_input, _begin, _end, &bins, &candidates );
+    try_discrete_input(
+        _old_intercept, *_input, _begin, _end, &bins, &candidates );
 
-            try_numerical_input(
-                _old_intercept, *_input, _begin, _end, &bins, &candidates );
+    try_numerical_input(
+        _old_intercept, *_input, _begin, _end, &bins, &candidates );
 
-            try_subfeatures(
-                _old_intercept,
-                _subfeatures,
-                _begin,
-                _end,
-                &bins,
-                &candidates );
+    try_subfeatures(
+        _old_intercept, _subfeatures, _begin, _end, &bins, &candidates );
 
-            try_same_units_categorical(
-                _old_intercept, *_input, _output, _begin, _end, &candidates );
+    try_same_units_categorical(
+        _old_intercept, *_input, _output, _begin, _end, &candidates );
 
-            try_same_units_discrete(
-                _old_intercept,
-                *_input,
-                _output,
-                _begin,
-                _end,
-                &bins,
-                &candidates );
+    try_same_units_discrete(
+        _old_intercept, *_input, _output, _begin, _end, &bins, &candidates );
 
-            try_same_units_numerical(
-                _old_intercept,
-                *_input,
-                _output,
-                _begin,
-                _end,
-                &bins,
-                &candidates );
+    try_same_units_numerical(
+        _old_intercept, *_input, _output, _begin, _end, &bins, &candidates );
 
-            try_time_stamps_window(
-                _old_intercept,
-                *_input,
-                _output,
-                _begin,
-                _end,
-                &bins,
-                &candidates );
-        }
+    try_text_input( _old_intercept, *_input, _begin, _end, &bins, &candidates );
+
+    try_time_stamps_window(
+        _old_intercept, *_input, _output, _begin, _end, &bins, &candidates );
 
     try_categorical_output(
         _old_intercept, _output, _begin, _end, &bins, &candidates );
@@ -839,12 +840,15 @@ std::vector<containers::CandidateSplit> DecisionTreeNode::try_all(
     try_numerical_output(
         _old_intercept, _output, _begin, _end, &bins, &candidates );
 
+    try_text_output(
+        _old_intercept, _output, _begin, _end, &bins, &candidates );
+
     return candidates;
 }
 
 // ----------------------------------------------------------------------------
 
-void DecisionTreeNode::try_categorical(
+void DecisionTreeNode::try_categorical_or_text(
     const enums::Revert _revert,
     const Int _min,
     const std::shared_ptr<const std::vector<Int>> _critical_values,
@@ -855,7 +859,7 @@ void DecisionTreeNode::try_categorical(
     std::vector<containers::Match>* _bins,
     std::vector<containers::CandidateSplit>* _candidates )
 {
-    debug_log( "try_categorical." );
+    debug_log( "try_categorical_or_text." );
 
     assert_true( _min >= 0 );
 
@@ -975,7 +979,7 @@ void DecisionTreeNode::try_categorical_input(
             // ----------------------------------------------------------------
             // Try individual categorical values.
 
-            try_categorical(
+            try_categorical_or_text(
                 enums::Revert::True,
                 min,
                 critical_values,
@@ -997,7 +1001,7 @@ void DecisionTreeNode::try_categorical_input(
             // ----------------------------------------------------------------
             // Try combined categorical values.
 
-            try_categorical(
+            try_categorical_or_text(
                 enums::Revert::False,
                 min,
                 sorted_critical_values,
@@ -1083,7 +1087,7 @@ void DecisionTreeNode::try_categorical_output(
             // ----------------------------------------------------------------
             // Try individual categorical values.
 
-            try_categorical(
+            try_categorical_or_text(
                 enums::Revert::True,
                 min,
                 critical_values,
@@ -1105,7 +1109,7 @@ void DecisionTreeNode::try_categorical_output(
             // ----------------------------------------------------------------
             // Try combined categorical values.
 
-            try_categorical(
+            try_categorical_or_text(
                 enums::Revert::False,
                 min,
                 sorted_critical_values,
@@ -1750,6 +1754,513 @@ void DecisionTreeNode::try_subfeatures(
                 _bins,
                 _candidates );
         }
+}
+
+// ----------------------------------------------------------------------------
+
+void DecisionTreeNode::try_text(
+    const std::shared_ptr<const std::vector<Int>>& _words,
+    const size_t _num_column,
+    const Float _old_intercept,
+    const enums::DataUsed _data_used,
+    const textmining::RowIndex& _row_index,
+    const std::vector<size_t>& _indptr,
+    std::vector<containers::Match>* _bins,
+    std::vector<containers::CandidateSplit>* _candidates )
+{
+    debug_log( "try_text (individual weights)." );
+
+    assert_true( _words );
+
+    auto fake_candidates = std::vector<containers::CandidateSplit>();
+
+    /// This is not a real candidate. We just need to call calc_all once.
+    add_candidates(
+        enums::Revert::True,
+        enums::Update::calc_all,
+        _old_intercept,
+        containers::Split(
+            _words, _words->begin(), _words->begin(), _num_column, _data_used ),
+        _bins->begin(),
+        _bins->begin(),
+        _bins->begin(),
+        _bins->end(),
+        &fake_candidates );
+
+    auto extracted = std::vector<containers::Match>();
+
+    for ( size_t i = 0; i < _words->size(); ++i )
+        {
+            const auto word = _words->at( i );
+
+            textmining::Matches::extract(
+                word,
+                _row_index,
+                _indptr,
+                _bins->begin(),
+                _bins->end(),
+                &extracted );
+
+            add_candidates(
+                enums::Revert::True,
+                enums::Update::calc_diff,
+                _old_intercept,
+                containers::Split(
+                    _words,
+                    _words->begin() + i,
+                    _words->begin() + i + 1,
+                    _num_column,
+                    _data_used ),
+                extracted.begin(),
+                extracted.begin(),
+                extracted.end(),
+                extracted.end(),
+                _candidates );
+        }
+
+    loss_function().revert_to_commit();
+}
+
+// ----------------------------------------------------------------------------
+
+void DecisionTreeNode::try_text_input(
+    const Float _old_intercept,
+    const containers::DataFrame& _input,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _end,
+    std::vector<containers::Match>* _bins,
+    std::vector<containers::CandidateSplit>* _candidates )
+{
+    debug_log( "try_text_input." );
+
+    assert_true( _input.num_text() == _input.word_indices_.size() );
+
+    assert_true( _input.num_text() == _input.row_indices_.size() );
+
+    for ( size_t j = 0; j < _input.num_text(); ++j )
+        {
+            // ----------------------------------------------------------------
+
+            const auto begin_ix = _candidates->size();
+
+            // ----------------------------------------------------------------
+
+            try_text_input_single_word(
+                j, _old_intercept, _input, _begin, _end, _bins, _candidates );
+
+            // ----------------------------------------------------------------
+
+            try_text_input_multiple_words(
+                j,
+                begin_ix,
+                _old_intercept,
+                _input,
+                _begin,
+                _end,
+                _bins,
+                _candidates );
+
+            // ----------------------------------------------------------------
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+void DecisionTreeNode::try_text_input_single_word(
+    const size_t _num_column,
+    const Float _old_intercept,
+    const containers::DataFrame& _input,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _end,
+    std::vector<containers::Match>* _bins,
+    std::vector<containers::CandidateSplit>* _candidates )
+{
+    // ----------------------------------------------------------------
+
+    const auto& word_index = _input.word_indices_.at( _num_column );
+
+    assert_true( word_index );
+
+    const auto get_range = [word_index]( const containers::Match& m ) {
+        return word_index->range( m.ix_input );
+    };
+
+    const auto words = utils::WordMaker<decltype( get_range )>::make_words(
+        word_index->vocabulary(), get_range, _begin, _end, &comm() );
+
+    assert_true( words );
+
+    if ( words->size() == 0 )
+        {
+            return;
+        }
+
+    // ----------------------------------------------------------------
+
+    const auto get_rownum = []( const containers::Match& m ) {
+        return m.ix_input;
+    };
+
+    const auto rownum_indptr = utils::RownumBinner<decltype( get_rownum )>::bin(
+        _input.nrows(), get_rownum, _begin, _end, _bins );
+
+    const auto& row_index = _input.row_indices_.at( _num_column );
+
+    assert_true( row_index );
+
+    // ----------------------------------------------------------------
+
+    try_text(
+        words,
+        _num_column,
+        _old_intercept,
+        enums::DataUsed::text_input,
+        *row_index,
+        rownum_indptr,
+        _bins,
+        _candidates );
+
+    // ----------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+void DecisionTreeNode::try_text_input_multiple_words(
+    const size_t _num_column,
+    const size_t _begin_ix,
+    const Float _old_intercept,
+    const containers::DataFrame& _input,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _end,
+    std::vector<containers::Match>* _bins,
+    std::vector<containers::CandidateSplit>* _candidates )
+{
+    // ----------------------------------------------------------------
+    // Sort words by their associated weights in DESCENDING
+    // order.
+
+    const auto sorted_words = utils::CriticalValueSorter::sort(
+        _candidates->begin() + _begin_ix, _candidates->end() );
+
+    assert_true( sorted_words );
+
+    // ----------------------------------------------------------------
+
+    const auto& word_index = _input.word_indices_.at( _num_column );
+
+    assert_true( word_index );
+
+    // ----------------------------------------------------------------
+
+    const auto extract_word =
+        [&word_index, sorted_words]( const containers::Match& m ) -> Int {
+        const auto range = word_index->range( m.ix_input );
+
+        if ( range.begin() == range.end() )
+            {
+                return -1;
+            }
+
+        for ( const auto word_ix : *sorted_words )
+            {
+                for ( const auto r : range )
+                    {
+                        if ( r == word_ix )
+                            {
+                                return word_ix;
+                            }
+
+                        if ( r > word_ix )
+                            {
+                                break;
+                            }
+                    }
+            }
+
+        return -1;
+    };
+
+    // ----------------------------------------------------------------
+    // Extracting the words is expensive, so we precalculate it.
+
+    constexpr Int WORD_NOT_SET = -2;
+
+    auto words = std::vector<Int>( _input.nrows(), WORD_NOT_SET );
+
+    for ( auto it = _begin; it != _end; ++it )
+        {
+            assert_true( it->ix_input < words.size() );
+
+            if ( words[it->ix_input] != WORD_NOT_SET )
+                {
+                    continue;
+                }
+
+            words[it->ix_input] = extract_word( *it );
+        }
+
+    // ----------------------------------------------------------------
+
+    const auto get_word = [&words]( const containers::Match& m ) {
+        assert_true( m.ix_input < words.size() );
+        return words[m.ix_input];
+    };
+
+    // ----------------------------------------------------------------
+
+    const auto is_not_nan = [get_word]( const containers::Match& m ) -> bool {
+        return ( get_word( m ) >= 0 );
+    };
+
+    /// Moves text fields without words from the vocabulary to the end.
+    const auto nan_begin = std::partition( _begin, _end, is_not_nan );
+
+    // ----------------------------------------------------------------
+
+    const auto word_indptr = utils::WordBinner<decltype( get_word )>::bin(
+        word_index->vocabulary(), get_word, _begin, nan_begin, _end, _bins );
+
+    //  ----------------------------------------------------------------
+
+    try_categorical_or_text(
+        enums::Revert::False,
+        0,  // _min
+        sorted_words,
+        _num_column,
+        _old_intercept,
+        enums::DataUsed::text_input,
+        word_indptr,
+        _bins,
+        _candidates );
+
+    //  ----------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+void DecisionTreeNode::try_text_output(
+    const Float _old_intercept,
+    const containers::DataFrameView& _output,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _end,
+    std::vector<containers::Match>* _bins,
+    std::vector<containers::CandidateSplit>* _candidates )
+{
+    debug_log( "try_text_output." );
+
+    assert_true( _output.num_text() == _output.df().word_indices_.size() );
+
+    assert_true( _output.num_text() == _output.df().row_indices_.size() );
+
+    for ( size_t j = 0; j < _output.num_text(); ++j )
+        {
+            // ----------------------------------------------------------------
+
+            const auto begin_ix = _candidates->size();
+
+            // ----------------------------------------------------------------
+
+            try_text_output_single_word(
+                j, _old_intercept, _output, _begin, _end, _bins, _candidates );
+
+            // ----------------------------------------------------------------
+
+            try_text_output_multiple_words(
+                j,
+                begin_ix,
+                _old_intercept,
+                _output,
+                _begin,
+                _end,
+                _bins,
+                _candidates );
+
+            // ----------------------------------------------------------------
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+void DecisionTreeNode::try_text_output_single_word(
+    const size_t _num_column,
+    const Float _old_intercept,
+    const containers::DataFrameView& _output,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _end,
+    std::vector<containers::Match>* _bins,
+    std::vector<containers::CandidateSplit>* _candidates )
+{
+    // ----------------------------------------------------------------
+
+    const auto& df = _output.df();
+
+    const auto& rows = _output.rows();
+
+    const auto& word_index = df.word_indices_.at( _num_column );
+
+    assert_true( word_index );
+
+    // ----------------------------------------------------------------
+
+    const auto get_range = [&word_index, &rows]( const containers::Match& m ) {
+        assert_true( m.ix_output < rows.size() );
+        return word_index->range( rows[m.ix_output] );
+    };
+
+    const auto words = utils::WordMaker<decltype( get_range )>::make_words(
+        word_index->vocabulary(), get_range, _begin, _end, &comm() );
+
+    assert_true( words );
+
+    if ( words->size() == 0 )
+        {
+            return;
+        }
+
+    // ----------------------------------------------------------------
+
+    const auto get_rownum = [&rows]( const containers::Match& m ) {
+        assert_true( m.ix_output < rows.size() );
+        return rows[m.ix_output];
+    };
+
+    const auto rownum_indptr = utils::RownumBinner<decltype( get_rownum )>::bin(
+        df.nrows(), get_rownum, _begin, _end, _bins );
+
+    const auto& row_index = df.row_indices_.at( _num_column );
+
+    assert_true( row_index );
+
+    // ----------------------------------------------------------------
+
+    try_text(
+        words,
+        _num_column,
+        _old_intercept,
+        enums::DataUsed::text_output,
+        *row_index,
+        rownum_indptr,
+        _bins,
+        _candidates );
+
+    // ----------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+void DecisionTreeNode::try_text_output_multiple_words(
+    const size_t _num_column,
+    const size_t _begin_ix,
+    const Float _old_intercept,
+    const containers::DataFrameView& _output,
+    const std::vector<containers::Match>::iterator _begin,
+    const std::vector<containers::Match>::iterator _end,
+    std::vector<containers::Match>* _bins,
+    std::vector<containers::CandidateSplit>* _candidates )
+{
+    // ----------------------------------------------------------------
+    // Sort words by their associated weights in DESCENDING
+    // order.
+
+    const auto sorted_words = utils::CriticalValueSorter::sort(
+        _candidates->begin() + _begin_ix, _candidates->end() );
+
+    assert_true( sorted_words );
+
+    // ----------------------------------------------------------------
+
+    const auto& df = _output.df();
+
+    const auto& rows = _output.rows();
+
+    const auto& word_index = df.word_indices_.at( _num_column );
+
+    assert_true( word_index );
+
+    // ----------------------------------------------------------------
+
+    const auto extract_word = [&word_index, sorted_words, &rows](
+                                  const containers::Match& m ) -> Int {
+        const auto range = word_index->range( rows[m.ix_output] );
+
+        if ( range.begin() == range.end() )
+            {
+                return -1;
+            }
+
+        for ( const auto word_ix : *sorted_words )
+            {
+                for ( const auto r : range )
+                    {
+                        if ( r == word_ix )
+                            {
+                                return word_ix;
+                            }
+
+                        if ( r > word_ix )
+                            {
+                                break;
+                            }
+                    }
+            }
+
+        return -1;
+    };
+
+    // ----------------------------------------------------------------
+    // Extracting the words is expensive, so we precalculate it.
+
+    constexpr Int WORD_NOT_SET = -2;
+
+    auto words = std::vector<Int>( rows.size(), WORD_NOT_SET );
+
+    for ( auto it = _begin; it != _end; ++it )
+        {
+            assert_true( it->ix_output < rows.size() );
+
+            if ( words[it->ix_output] != WORD_NOT_SET )
+                {
+                    continue;
+                }
+
+            words[it->ix_output] = extract_word( *it );
+        }
+
+    // ----------------------------------------------------------------
+
+    const auto get_word = [&words]( const containers::Match& m ) -> Int {
+        assert_true( m.ix_output < words.size() );
+        return words[m.ix_output];
+    };
+
+    // ----------------------------------------------------------------
+
+    const auto is_not_nan = [get_word]( const containers::Match& m ) -> bool {
+        return ( get_word( m ) >= 0 );
+    };
+
+    /// Moves text fields without words from the vocabulary to the end.
+    const auto nan_begin = std::partition( _begin, _end, is_not_nan );
+
+    // ----------------------------------------------------------------
+
+    const auto word_indptr = utils::WordBinner<decltype( get_word )>::bin(
+        word_index->vocabulary(), get_word, _begin, nan_begin, _end, _bins );
+
+    //  ----------------------------------------------------------------
+
+    try_categorical_or_text(
+        enums::Revert::False,
+        0,  // _min
+        sorted_words,
+        _num_column,
+        _old_intercept,
+        enums::DataUsed::text_output,
+        word_indptr,
+        _bins,
+        _candidates );
+
+    //  ----------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------

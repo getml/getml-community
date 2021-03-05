@@ -429,9 +429,11 @@ void DataFrameManager::add_string_column(
     // ------------------------------------------------------------------------
 
     if ( role == containers::DataFrame::ROLE_UNUSED ||
-         role == containers::DataFrame::ROLE_UNUSED_STRING )
+         role == containers::DataFrame::ROLE_UNUSED_STRING ||
+         role == containers::DataFrame::ROLE_TEXT )
         {
-            add_string_column_to_df( name, unit, vec, df, &weak_write_lock );
+            add_string_column_to_df(
+                name, role, unit, vec, df, &weak_write_lock );
         }
     else
         {
@@ -462,6 +464,7 @@ void DataFrameManager::add_string_column(
 
 void DataFrameManager::add_string_column_to_df(
     const std::string& _name,
+    const std::string& _role,
     const std::string& _unit,
     const std::vector<std::string>& _vec,
     containers::DataFrame* _df,
@@ -490,7 +493,7 @@ void DataFrameManager::add_string_column_to_df(
 
     // ------------------------------------------------------------------------
 
-    _df->add_string_column( col );
+    _df->add_string_column( col, _role );
 
     // ------------------------------------------------------------------------
 }
@@ -646,6 +649,17 @@ void DataFrameManager::calc_categorical_column_plots(
                     vec[i] = join_keys_encoding()[col[i]];
                 }
         }
+    else if ( role == containers::DataFrame::ROLE_TEXT )
+        {
+            const auto col = df.text( _name );
+
+            vec.resize( col.nrows() );
+
+            for ( size_t i = 0; i < col.nrows(); ++i )
+                {
+                    vec[i] = col[i];
+                }
+        }
     else if (
         role == containers::DataFrame::ROLE_UNUSED ||
         role == containers::DataFrame::ROLE_UNUSED_STRING )
@@ -750,7 +764,7 @@ void DataFrameManager::calc_column_plots(
 
     // --------------------------------------------------------------------
 
-    const containers::Features features = {col.data_ptr()};
+    const containers::Features features = { col.data_ptr() };
 
     const auto obj = metrics::Summarizer::calculate_feature_plots(
         features, col.nrows(), 1, num_bins, targets );
@@ -957,26 +971,7 @@ void DataFrameManager::from_csv(
     const auto time_formats = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "time_formats_" ) );
 
-    const auto categoricals = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "categoricals_" ) );
-
-    const auto join_keys = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "join_keys_" ) );
-
-    const auto numericals = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "numericals_" ) );
-
-    const auto targets = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "targets_" ) );
-
-    const auto time_stamps = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "time_stamps_" ) );
-
-    const auto unused_floats = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "unused_floats_" ) );
-
-    const auto unused_strings = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "unused_strings_" ) );
+    const auto schema = containers::Schema( _cmd );
 
     // --------------------------------------------------------------------
     // We need the weak write lock for the categories and join keys encoding.
@@ -1004,13 +999,7 @@ void DataFrameManager::from_csv(
         num_lines_read,
         skip,
         time_formats,
-        categoricals,
-        join_keys,
-        numericals,
-        targets,
-        time_stamps,
-        unused_floats,
-        unused_strings );
+        schema );
 
     license_checker().check_mem_size( data_frames(), df.nbytes() );
 
@@ -1063,26 +1052,7 @@ void DataFrameManager::from_db(
 
     const auto table_name = JSON::get_value<std::string>( _cmd, "table_name_" );
 
-    const auto categoricals = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "categoricals_" ) );
-
-    const auto join_keys = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "join_keys_" ) );
-
-    const auto numericals = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "numericals_" ) );
-
-    const auto targets = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "targets_" ) );
-
-    const auto time_stamps = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "time_stamps_" ) );
-
-    const auto unused_floats = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "unused_floats_" ) );
-
-    const auto unused_strings = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "unused_strings_" ) );
+    const auto schema = containers::Schema( _cmd );
 
     // --------------------------------------------------------------------
     // We need the weak write lock for the categories and join keys encoding.
@@ -1104,16 +1074,7 @@ void DataFrameManager::from_db(
     // --------------------------------------------------------------------
     // Get the data from the data base.
 
-    df.from_db(
-        connector( conn_id ),
-        table_name,
-        categoricals,
-        join_keys,
-        numericals,
-        targets,
-        time_stamps,
-        unused_floats,
-        unused_strings );
+    df.from_db( connector( conn_id ), table_name, schema );
 
     license_checker().check_mem_size( data_frames(), df.nbytes() );
 
@@ -1172,35 +1133,10 @@ void DataFrameManager::from_json(
     // Parse the command. Note that the JSON column from the HTTP endpoint
     // does not necessarily include unused columns - so we make the optional.
 
-    const auto categoricals = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "categoricals_" ) );
-
-    const auto join_keys = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "join_keys_" ) );
-
-    const auto numericals = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "numericals_" ) );
-
-    const auto targets = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "targets_" ) );
-
-    const auto time_stamps = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "time_stamps_" ) );
-
     const auto time_formats = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "time_formats_" ) );
 
-    const auto unused_floats =
-        _cmd.has( "unused_floats_" )
-            ? JSON::array_to_vector<std::string>(
-                  JSON::get_array( _cmd, "unused_floats_" ) )
-            : std::vector<std::string>();
-
-    const auto unused_strings =
-        _cmd.has( "unused_strings_" )
-            ? JSON::array_to_vector<std::string>(
-                  JSON::get_array( _cmd, "unused_strings_" ) )
-            : std::vector<std::string>();
+    const auto schema = containers::Schema( _cmd );
 
     // --------------------------------------------------------------------
     // We need the weak write lock for the categories and join keys encoding.
@@ -1222,16 +1158,7 @@ void DataFrameManager::from_json(
     // --------------------------------------------------------------------
     // Parse the data from the JSON string.
 
-    df.from_json(
-        obj,
-        time_formats,
-        categoricals,
-        join_keys,
-        numericals,
-        targets,
-        time_stamps,
-        unused_floats,
-        unused_strings );
+    df.from_json( obj, time_formats, schema );
 
     license_checker().check_mem_size( data_frames(), df.nbytes() );
 
@@ -1284,32 +1211,7 @@ void DataFrameManager::from_query(
 
     const auto query = JSON::get_value<std::string>( _cmd, "query_" );
 
-    const auto categoricals = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "categoricals_" ) );
-
-    const auto join_keys = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "join_keys_" ) );
-
-    const auto numericals = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "numericals_" ) );
-
-    const auto targets = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "targets_" ) );
-
-    const auto time_stamps = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "time_stamps_" ) );
-
-    const auto unused_floats =
-        _cmd.has( "unused_floats_" )
-            ? JSON::array_to_vector<std::string>(
-                  JSON::get_array( _cmd, "unused_floats_" ) )
-            : std::vector<std::string>();
-
-    const auto unused_strings =
-        _cmd.has( "unused_strings_" )
-            ? JSON::array_to_vector<std::string>(
-                  JSON::get_array( _cmd, "unused_strings_" ) )
-            : std::vector<std::string>();
+    const auto schema = containers::Schema( _cmd );
 
     // --------------------------------------------------------------------
     // We need the weak write lock for the categories and join keys encoding.
@@ -1331,16 +1233,7 @@ void DataFrameManager::from_query(
     // --------------------------------------------------------------------
     // Get the data from the data base.
 
-    df.from_query(
-        connector( conn_id ),
-        query,
-        categoricals,
-        join_keys,
-        numericals,
-        targets,
-        time_stamps,
-        unused_floats,
-        unused_strings );
+    df.from_query( connector( conn_id ), query, schema );
 
     license_checker().check_mem_size( data_frames(), df.nbytes() );
 
@@ -1420,26 +1313,7 @@ void DataFrameManager::from_s3(
     const auto time_formats = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "time_formats_" ) );
 
-    const auto categoricals = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "categoricals_" ) );
-
-    const auto join_keys = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "join_keys_" ) );
-
-    const auto numericals = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "numericals_" ) );
-
-    const auto targets = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "targets_" ) );
-
-    const auto time_stamps = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "time_stamps_" ) );
-
-    const auto unused_floats = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "unused_floats_" ) );
-
-    const auto unused_strings = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "unused_strings_" ) );
+    const auto schema = containers::Schema( _cmd );
 
     // --------------------------------------------------------------------
     // We need the weak write lock for the categories and join keys encoding.
@@ -1468,13 +1342,7 @@ void DataFrameManager::from_s3(
         num_lines_read,
         skip,
         time_formats,
-        categoricals,
-        join_keys,
-        numericals,
-        targets,
-        time_stamps,
-        unused_floats,
-        unused_strings );
+        schema );
 
     license_checker().check_mem_size( data_frames(), df.nbytes() );
 
@@ -1898,6 +1766,10 @@ void DataFrameManager::get_unit_categorical(
         {
             unit = df.unused_string( _name ).unit();
         }
+    else if ( role == containers::DataFrame::ROLE_TEXT )
+        {
+            unit = df.text( _name ).unit();
+        }
     else
         {
             unit = df.int_column( _name, role ).unit();
@@ -1908,7 +1780,7 @@ void DataFrameManager::get_unit_categorical(
     communication::Sender::send_string( "Success!", _socket );
 
     communication::Sender::send_string( unit, _socket );
-}
+}  // namespace handlers
 
 // ------------------------------------------------------------------------
 
@@ -1930,7 +1802,7 @@ void DataFrameManager::group_by(
     check_nrows( _cmd, df_name, df.nrows() );
 
     const auto grouped_df =
-        GroupByParser( categories_, join_keys_encoding_, {df} )
+        GroupByParser( categories_, join_keys_encoding_, { df } )
             .group_by( _name, key_name, aggregations );
 
     weak_write_lock.upgrade();
@@ -2099,9 +1971,11 @@ void DataFrameManager::recv_and_add_string_column(
     const auto str_col = communication::Receiver::recv_string_column( _socket );
 
     if ( role == containers::DataFrame::ROLE_UNUSED ||
-         role == containers::DataFrame::ROLE_UNUSED_STRING )
+         role == containers::DataFrame::ROLE_UNUSED_STRING ||
+         role == containers::DataFrame::ROLE_TEXT )
         {
-            add_string_column_to_df( name, "", str_col, _df, _weak_write_lock );
+            add_string_column_to_df(
+                name, role, "", str_col, _df, _weak_write_lock );
         }
     else
         {
@@ -2126,9 +2000,10 @@ void DataFrameManager::recv_and_add_string_column(
     const auto str_col = communication::Receiver::recv_string_column( _socket );
 
     if ( role == containers::DataFrame::ROLE_UNUSED ||
-         role == containers::DataFrame::ROLE_UNUSED_STRING )
+         role == containers::DataFrame::ROLE_UNUSED_STRING ||
+         role == containers::DataFrame::ROLE_TEXT )
         {
-            add_string_column_to_df( name, "", str_col, _df, nullptr );
+            add_string_column_to_df( name, role, "", str_col, _df, nullptr );
         }
     else
         {
@@ -2242,7 +2117,13 @@ void DataFrameManager::set_unit_categorical(
         {
             auto column = df.unused_string( _name );
             column.set_unit( unit );
-            df.add_string_column( column );
+            df.add_string_column( column, role );
+        }
+    else if ( role == containers::DataFrame::ROLE_TEXT )
+        {
+            auto column = df.text( _name );
+            column.set_unit( unit );
+            df.add_string_column( column, role );
         }
     else
         {

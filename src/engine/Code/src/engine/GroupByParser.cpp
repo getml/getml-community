@@ -78,6 +78,15 @@ containers::DataFrame GroupByParser::group_by(
                 unique, containers::DataFrame::ROLE_TARGET );
             group_by_unique( _aggregations, unique, index, &result );
         }
+    else if ( df().has_text( _join_key_name ) )
+        {
+            const auto col = df().text( _join_key_name );
+            const auto [index, unique] =
+                make_index<strings::String, strings::StringHasher>( col );
+            result.add_string_column(
+                unique, containers::DataFrame::ROLE_TEXT );
+            group_by_unique( _aggregations, unique, index, &result );
+        }
     else if ( df().has_unused_float( _join_key_name ) )
         {
             const auto col = df().unused_float( _join_key_name );
@@ -91,7 +100,8 @@ containers::DataFrame GroupByParser::group_by(
             const auto col = df().unused_string( _join_key_name );
             const auto [index, unique] =
                 make_index<strings::String, strings::StringHasher>( col );
-            result.add_string_column( unique );
+            result.add_string_column(
+                unique, containers::DataFrame::ROLE_UNUSED_STRING );
             group_by_unique( _aggregations, unique, index, &result );
         }
     else

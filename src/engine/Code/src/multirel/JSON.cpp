@@ -53,6 +53,12 @@ size_t JSON::data_used_to_int( const enums::DataUsed& _data_used )
             case enums::DataUsed::same_unit_numerical_ts:
                 return 14;
 
+            case enums::DataUsed::x_popul_text:
+                return 15;
+
+            case enums::DataUsed::x_perip_text:
+                return 16;
+
             default:
                 assert_true( !"Unknown enums::DataUsed!" );
                 return 0;
@@ -152,6 +158,12 @@ enums::DataUsed JSON::int_to_data_used( const size_t& _val )
 
             case 14:
                 return enums::DataUsed::same_unit_numerical_ts;
+
+            case 15:
+                return enums::DataUsed::x_popul_text;
+
+            case 16:
+                return enums::DataUsed::x_perip_text;
 
             default:
                 assert_true( !"Unknown enums::DataUsed!" );

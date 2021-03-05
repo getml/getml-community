@@ -1,0 +1,43 @@
+#ifndef HELPERS_TEXTFIELDSPLITTER_HPP_
+#define HELPERS_TEXTFIELDSPLITTER_HPP_
+
+// ----------------------------------------------------------------------------
+
+namespace helpers
+{
+// ----------------------------------------------------------------------------
+
+class TextFieldSplitter
+{
+   public:
+    /// Splits up all text fields into individual words and puts them in a
+    /// separate data frame.
+    static std::pair<DataFrame, std::vector<DataFrame>> split_text_fields(
+        const DataFrame& _population_df,
+        const std::vector<DataFrame>& _peripheral_dfs );
+
+   private:
+    /// Adds a rowid to the data frame.
+    static DataFrame add_rowid( const DataFrame& _df );
+
+    /// Generates a new peripheral data frame.
+    static DataFrame make_new_df(
+        const std::string& _df_name, const Column<strings::String>& _col );
+
+    /// Returns the same data frame, but with the text fields removed.
+    static DataFrame remove_text_fields( const DataFrame& _df );
+
+    /// Splits the text field in an individual column.
+    static std::pair<Column<Int>, Column<strings::String>>
+    split_text_fields_on_col( const Column<strings::String>& _col );
+
+    /// Splits up all text fields in a particular data frame into individual
+    /// words and puts them in a separate data frame.
+    static void split_text_fields_on_df(
+        const DataFrame& _df, std::vector<DataFrame>* _peripheral_dfs );
+};
+
+// ----------------------------------------------------------------------------
+}  // namespace helpers
+
+#endif  // HELPERS_TEXTFIELDSPLITTER_HPP_

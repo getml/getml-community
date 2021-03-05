@@ -243,6 +243,32 @@ std::string ConditionMaker::condition_greater(
                            std::to_string( _split.critical_value_ ) + " )";
                 }
 
+            case enums::DataUsed::text_input:
+                {
+                    assert_true( _split.column_ < _input.num_text() );
+
+                    const auto colname = helpers::SQLGenerator::edit_colname(
+                        _input.text_name( _split.column_ ), "t2" );
+
+                    // TODO
+                    const std::string condition = "( " + colname + " IN TODO )";
+
+                    return condition;
+                }
+
+            case enums::DataUsed::text_output:
+                {
+                    assert_true( _split.column_ < _output.num_text() );
+
+                    const auto colname = helpers::SQLGenerator::edit_colname(
+                        _output.text_name( _split.column_ ), "t1" );
+
+                    // TODO
+                    const std::string condition = "( " + colname + " IN TODO )";
+
+                    return condition;
+                }
+
             case enums::DataUsed::time_stamps_window:
                 {
                     return make_time_stamp_window(
@@ -500,6 +526,34 @@ std::string ConditionMaker::condition_smaller(
                     return "( COALESCE( f_" + number + ".\"feature_" + number +
                            "\", 0.0 ) <= " +
                            std::to_string( _split.critical_value_ ) + " )";
+                }
+
+            case enums::DataUsed::text_input:
+                {
+                    assert_true( _split.column_ < _input.num_text() );
+
+                    const auto colname = helpers::SQLGenerator::edit_colname(
+                        _input.text_name( _split.column_ ), "t2" );
+
+                    // TODO
+                    const std::string condition =
+                        "( " + colname + " NOT IN TODO )";
+
+                    return condition;
+                }
+
+            case enums::DataUsed::text_output:
+                {
+                    assert_true( _split.column_ < _output.num_text() );
+
+                    const auto colname = helpers::SQLGenerator::edit_colname(
+                        _output.text_name( _split.column_ ), "t1" );
+
+                    // TODO
+                    const std::string condition =
+                        "( " + colname + " NOT IN TODO )";
+
+                    return condition;
                 }
 
             case enums::DataUsed::time_stamps_window:

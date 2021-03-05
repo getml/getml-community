@@ -168,6 +168,38 @@ void ImportanceMaker::add(
 
                 return;
 
+            case enums::DataUsed::subfeatures:
+                add_to_importance_factors( _column, _value );
+                return;
+
+            case enums::DataUsed::text_input:
+                {
+                    assert_true( _column < _input.num_text() );
+
+                    const auto desc = helpers::ColumnDescription(
+                        peripheral(),
+                        _input.name(),
+                        _input.text_name( _column ) );
+
+                    add_to_importances( desc, _value );
+
+                    return;
+                }
+
+            case enums::DataUsed::text_output:
+                {
+                    assert_true( _column < _output.num_text() );
+
+                    const auto desc = helpers::ColumnDescription(
+                        peripheral(),
+                        _output.name(),
+                        _output.text_name( _column ) );
+
+                    add_to_importances( desc, _value );
+
+                    return;
+                }
+
             case enums::DataUsed::time_stamps_window:
                 {
                     const auto desc1 = helpers::ColumnDescription(
@@ -186,10 +218,6 @@ void ImportanceMaker::add(
 
                     return;
                 }
-
-            case enums::DataUsed::subfeatures:
-                add_to_importance_factors( _column, _value );
-                return;
 
             default:
                 assert_true( false && "Unknown data_used_" );

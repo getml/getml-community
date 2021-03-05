@@ -14,6 +14,8 @@
 #include <type_traits>
 #include <vector>
 
+#include "binning/binning.hpp"
+
 #include "logging/logging.hpp"
 
 #include "multithreading/multithreading.hpp"
@@ -39,7 +41,10 @@
 #include "relmt/utils/NumericalBinner.hpp"
 #include "relmt/utils/Partitioner.hpp"
 #include "relmt/utils/Reducer.hpp"
+#include "relmt/utils/RownumBinner.hpp"
 #include "relmt/utils/StandardScaler.hpp"
+#include "relmt/utils/WordBinner.hpp"
+#include "relmt/utils/WordMaker.hpp"
 
 #include "relmt/utils/CategoricalBinner.hpp"
 #include "relmt/utils/ConditionMaker.hpp"

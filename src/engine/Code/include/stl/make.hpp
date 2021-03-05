@@ -1,15 +1,15 @@
-#ifndef HELPERS_STL_HPP_
-#define HELPERS_STL_HPP_
+#ifndef STL_MAKE_HPP_
+#define STL_MAKE_HPP_
 
-namespace helpers
+namespace stl
 {
 // -------------------------------------------------------------------------
 
-struct STL
+struct make
 {
     /// Generates a vector from a range
     template <class T, class RangeType>
-    static std::vector<T> make_vector( RangeType range )
+    static std::vector<T> vector( RangeType range )
     {
         auto vec = std::vector<T>();
 
@@ -23,7 +23,7 @@ struct STL
 
     /// Generates a set from a range
     template <class T, class RangeType>
-    static std::set<T> make_set( RangeType range )
+    static std::set<T> set( RangeType range )
     {
         auto s = std::set<T>();
 
@@ -37,6 +37,6 @@ struct STL
 };
 
 // -------------------------------------------------------------------------
-}  // namespace helpers
+}  // namespace stl
 
-#endif  // HELPERS_STL_HPP_
+#endif  // STL_MAKE_HPP_

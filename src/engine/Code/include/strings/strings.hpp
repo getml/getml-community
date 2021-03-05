@@ -6,6 +6,8 @@
 
 #include <cstring>
 
+#include <algorithm>
+#include <iostream>
 #include <memory>
 #include <ostream>
 #include <string>

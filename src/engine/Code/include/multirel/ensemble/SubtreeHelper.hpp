@@ -15,6 +15,7 @@ class SubtreeHelper
     /// Fits the subensembles passed by the ensemble itself
     static void fit_subensembles(
         const std::shared_ptr<const decisiontrees::TableHolder>& _table_holder,
+        const helpers::WordIndexContainer& _word_indices,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
         const DecisionTreeEnsemble& _ensemble,
         optimizationcriteria::OptimizationCriterion* _opt,
@@ -46,6 +47,7 @@ class SubtreeHelper
     template <typename AggType>
     static void fit_subensemble(
         const std::shared_ptr<const decisiontrees::TableHolder>& _table_holder,
+        const helpers::WordIndexContainer& _word_indices,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
         const std::shared_ptr<const std::map<Int, Int>>& _output_map,
         const descriptors::Hyperparameters& _hyperparameters,
@@ -71,6 +73,7 @@ namespace ensemble
 template <typename AggType>
 void SubtreeHelper::fit_subensemble(
     const std::shared_ptr<const decisiontrees::TableHolder>& _table_holder,
+    const helpers::WordIndexContainer& _word_indices,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     const std::shared_ptr<const std::map<Int, Int>>& _output_map,
     const descriptors::Hyperparameters& _hyperparameters,
@@ -110,6 +113,7 @@ void SubtreeHelper::fit_subensemble(
 
     _subensemble->fit(
         subtable_holder,
+        _word_indices,
         _logger,
         _hyperparameters.num_subfeatures_,
         intermediate_agg.get(),

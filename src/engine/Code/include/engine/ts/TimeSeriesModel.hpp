@@ -461,6 +461,7 @@ TimeSeriesModel<FEType>::create_placeholder(
         _placeholder.name_ + helpers::Macros::peripheral(),
         _placeholder.numericals_,
         _placeholder.targets_,
+        _placeholder.text_,
         _placeholder.time_stamps_ );
 
     // ----------------------------------------------------------

@@ -28,6 +28,8 @@ void Threadutils::fit_as_feature_learner(
     const std::vector<size_t>& _thread_nums,
     const containers::DataFrame& _population,
     const std::vector<containers::DataFrame>& _peripheral,
+    const helpers::RowIndexContainer& _row_indices,
+    const helpers::WordIndexContainer& _word_indices,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     multithreading::Communicator* _comm,
     ensemble::DecisionTreeEnsemble* _ensemble )
@@ -36,8 +38,8 @@ void Threadutils::fit_as_feature_learner(
         relboost::utils::DataFrameScatterer::scatter_data_frame(
             _population, _thread_nums, _this_thread_num );
 
-    const auto [loss_function, table_holder] =
-        _ensemble->init_as_feature_learner( population_subview, _peripheral );
+    const auto [loss_function, table_holder] = _ensemble->init(
+        population_subview, _peripheral, _row_indices, _word_indices );
 
     _ensemble->fit_subensembles( table_holder, _logger, loss_function );
 
@@ -74,6 +76,8 @@ void Threadutils::fit_ensemble(
     const std::vector<size_t> _thread_nums,
     const containers::DataFrame& _population,
     const std::vector<containers::DataFrame>& _peripheral,
+    const helpers::RowIndexContainer& _row_indices,
+    const helpers::WordIndexContainer& _word_indices,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     multithreading::Communicator* _comm,
     ensemble::DecisionTreeEnsemble* _ensemble )
@@ -85,6 +89,8 @@ void Threadutils::fit_ensemble(
                 _thread_nums,
                 _population,
                 _peripheral,
+                _row_indices,
+                _word_indices,
                 _logger,
                 _comm,
                 _ensemble );
@@ -121,6 +127,7 @@ void Threadutils::transform_as_feature_learner(
     const std::vector<size_t> _thread_nums,
     const containers::DataFrame& _population,
     const std::vector<containers::DataFrame>& _peripheral,
+    const helpers::WordIndexContainer& _word_indices,
     const std::vector<size_t>& _index,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     const ensemble::DecisionTreeEnsemble& _ensemble,
@@ -135,7 +142,9 @@ void Threadutils::transform_as_feature_learner(
         _ensemble.placeholder(),
         population_subview,
         _peripheral,
-        _ensemble.peripheral() );
+        _ensemble.peripheral(),
+        std::nullopt,
+        _word_indices );
 
     auto predictions =
         _ensemble.make_subpredictions( table_holder, _logger, _comm );
@@ -176,6 +185,7 @@ void Threadutils::transform_ensemble(
     const std::vector<size_t> _thread_nums,
     const containers::DataFrame& _population,
     const std::vector<containers::DataFrame>& _peripheral,
+    const helpers::WordIndexContainer& _word_indices,
     const std::vector<size_t>& _index,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     const ensemble::DecisionTreeEnsemble& _ensemble,
@@ -189,6 +199,7 @@ void Threadutils::transform_ensemble(
                 _thread_nums,
                 _population,
                 _peripheral,
+                _word_indices,
                 _index,
                 _logger,
                 _ensemble,

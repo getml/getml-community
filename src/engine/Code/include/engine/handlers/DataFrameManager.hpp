@@ -295,10 +295,9 @@ class DataFrameManager
         containers::DataFrame* _df ) const;
 
     /// Adds a string column to the data frame.
-    /// This could only be an unused string,
-    /// because all others are encoded.
     void add_string_column_to_df(
         const std::string& _name,
+        const std::string& _role,
         const std::string& _unit,
         const std::vector<std::string>& _vec,
         containers::DataFrame* _df,

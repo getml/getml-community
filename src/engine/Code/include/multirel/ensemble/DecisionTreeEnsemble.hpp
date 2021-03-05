@@ -67,6 +67,7 @@ class DecisionTreeEnsemble
     /// Fits the decision tree ensemble - called by the spawned threads.
     void fit(
         const std::shared_ptr<const decisiontrees::TableHolder> &_table_holder,
+        const helpers::WordIndexContainer &_word_indices,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
         const size_t _num_features,
         optimizationcriteria::OptimizationCriterion *_opt,
@@ -219,6 +220,11 @@ class DecisionTreeEnsemble
         const std::vector<descriptors::SameUnits> &_same_units,
         const decisiontrees::TableHolder &_table_holder );
 
+    /// Calculates the thread numbers scattering the population table over
+    /// several threads.
+    std::pair<Int, std::vector<size_t>> calc_thread_nums(
+        const containers::DataFrame &_population ) const;
+
     /// Makes sure that the input provided by the user is plausible
     /// and throws an exception if it isn't. Only the fit(...) member
     /// function needs to call this, not transform(...).
@@ -230,9 +236,40 @@ class DecisionTreeEnsemble
         const containers::DataFrame &_population,
         const std::vector<containers::DataFrame> &_peripheral );
 
+    /// Spawns the threads for fitting.
+    void fit_spawn_threads(
+        const containers::DataFrame &_population,
+        const std::vector<containers::DataFrame> &_peripheral,
+        const helpers::RowIndexContainer &_row_indices,
+        const helpers::WordIndexContainer &_word_indices,
+        const std::shared_ptr<const logging::AbstractLogger> _logger );
+
     /// Extracts a DecisionTreeEnsemble from a JSON object.
     DecisionTreeEnsemble from_json_obj(
         const Poco::JSON::Object &_json_obj ) const;
+
+    /// Prepares the text fields for training and transformation.
+    std::tuple<
+        containers::DataFrame,
+        std::vector<containers::DataFrame>,
+        helpers::RowIndexContainer,
+        helpers::WordIndexContainer>
+    handle_text_fields(
+        const containers::DataFrame &_population,
+        const std::vector<containers::DataFrame> &_peripheral ) const;
+
+    /// Calculates an index containing all features, if none exists.
+    std::vector<size_t> infer_index(
+        const std::optional<std::vector<size_t>> &_index ) const;
+
+    /// Spawns the threads for transforming the features.
+    void transform_spawn_threads(
+        const containers::DataFrame &_population,
+        const std::vector<containers::DataFrame> &_peripheral,
+        const std::vector<size_t> &_index,
+        const helpers::WordIndexContainer &_word_indices,
+        const std::shared_ptr<const logging::AbstractLogger> _logger,
+        containers::Features *_features ) const;
 
     // -----------------------------------------------------------------
 
@@ -292,6 +329,13 @@ class DecisionTreeEnsemble
     inline std::vector<decisiontrees::DecisionTree> &trees()
     {
         return impl().trees_;
+    }
+
+    /// Trivial (const) accessor
+    inline const helpers::VocabularyContainer &vocabulary() const
+    {
+        assert_true( impl().vocabulary_ );
+        return *impl().vocabulary_;
     }
 
     // -----------------------------------------------------------------

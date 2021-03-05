@@ -29,6 +29,8 @@ enum class DataUsed
     same_units_numerical_is_nan,
     same_units_numerical_ts,
     subfeatures,
+    text_input,
+    text_output,
     time_stamps_window
 };
 

@@ -13,6 +13,8 @@
 #include <type_traits>
 #include <vector>
 
+#include "binning/binning.hpp"
+
 #include "logging/logging.hpp"
 
 #include "multithreading/multithreading.hpp"
@@ -27,22 +29,24 @@
 
 // ------------------------------------------------------------------------
 
+#include "relboost/utils/CategoricalBinner.hpp"
 #include "relboost/utils/ConditionMaker.hpp"
 #include "relboost/utils/CriticalValueSorter.hpp"
 #include "relboost/utils/CriticalValues.hpp"
 #include "relboost/utils/DataFrameScatterer.hpp"
+#include "relboost/utils/DiscreteBinner.hpp"
 #include "relboost/utils/Finder.hpp"
 #include "relboost/utils/ImportanceMaker.hpp"
 #include "relboost/utils/Logger.hpp"
 #include "relboost/utils/Mapper.hpp"
 #include "relboost/utils/Matchmaker.hpp"
+#include "relboost/utils/MinMaxFinder.hpp"
 #include "relboost/utils/NumericalBinner.hpp"
 #include "relboost/utils/Partitioner.hpp"
 #include "relboost/utils/Reducer.hpp"
-
-#include "relboost/utils/CategoricalBinner.hpp"
-#include "relboost/utils/DiscreteBinner.hpp"
-#include "relboost/utils/MinMaxFinder.hpp"
+#include "relboost/utils/RownumBinner.hpp"
+#include "relboost/utils/WordBinner.hpp"
+#include "relboost/utils/WordMaker.hpp"
 
 #include "relboost/utils/Sampler.hpp"
 

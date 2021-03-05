@@ -38,6 +38,7 @@
 #include "multirel/containers/CategoryIndex.hpp"
 #include "multirel/containers/IntSet.hpp"
 #include "multirel/containers/Optional.hpp"
+#include "multirel/containers/WordIndex.hpp"
 
 #include "multirel/containers/Column.hpp"
 #include "multirel/containers/Placeholder.hpp"

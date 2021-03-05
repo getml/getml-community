@@ -202,6 +202,8 @@ class Macros
 
     static std::string table() { return "$GETML_JOIN_PARAM_TABLE"; }
 
+    static std::string text_field() { return "$GETML_TEXT_FIELD"; }
+
     static std::string time_stamp() { return "$GETML_JOIN_PARAM_TIME_STAMP"; }
 
     static std::string upper_time_stamp()

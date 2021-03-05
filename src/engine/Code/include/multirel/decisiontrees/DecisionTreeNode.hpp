@@ -424,6 +424,14 @@ class DecisionTreeNode
         return tree_->optimization_criterion_;
     }
 
+    /// Trivial accessor
+    inline const optimizationcriteria::OptimizationCriterion *
+    optimization_criterion() const
+    {
+        assert_true( tree_->optimization_criterion_ );
+        return tree_->optimization_criterion_;
+    }
+
     /// Trivial getter
     inline const descriptors::SameUnitsContainer &same_units_categorical() const
     {
@@ -459,27 +467,18 @@ class DecisionTreeNode
             }
     }
 
+    /// Whether the data used is based on a text_field.
+    inline bool text_used() const
+    {
+        assert_true( split_ );
+        return (
+            split_->data_used == enums::DataUsed::x_popul_text ||
+            split_->data_used == enums::DataUsed::x_perip_text );
+    }
+
     // --------------------------------------
 
    private:
-    /// Apply changes based on the category used - used for prediction
-    void apply_by_categories_used(
-        containers::MatchPtrs::iterator _match_container_begin,
-        containers::MatchPtrs::iterator _match_container_end,
-        aggregations::AbstractAggregation *_aggregation ) const;
-
-    /// Apply changes based on the critical value
-    void apply_by_critical_value(
-        containers::MatchPtrs::iterator _match_container_begin,
-        containers::MatchPtrs::iterator _match_container_end,
-        aggregations::AbstractAggregation *_aggregation ) const;
-
-    /// Apply changes based on the lag operator
-    void apply_by_lag(
-        containers::MatchPtrs::iterator _match_container_begin,
-        containers::MatchPtrs::iterator _match_container_end,
-        aggregations::AbstractAggregation *_aggregation ) const;
-
     /// Calculates the beginning and end of the categorical
     /// values considered
     std::shared_ptr<const std::vector<Int>> calculate_categories(
@@ -514,12 +513,8 @@ class DecisionTreeNode
 
     /// Commits the split and spawns child nodes
     void commit(
-        const containers::DataFrameView &_population,
-        const containers::DataFrame &_peripheral,
-        const std::vector<containers::ColumnView<Float, std::map<Int, Int>>>
-            &_subfeatures,
-        const descriptors::Split &_split,
         containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _separator,
         containers::MatchPtrs::iterator _match_container_end );
 
     /// Determines whether a same unit numerical refers to time stamps.
@@ -536,6 +531,22 @@ class DecisionTreeNode
             containers::MatchPtrs::iterator _match_container_begin,
             containers::MatchPtrs::iterator _match_container_end );
 
+    /// Generates the indptr that matches each word to the corresponding
+    /// matches.
+    std::vector<size_t> make_word_indptr(
+        const textmining::WordIndex &_word_index,
+        const std::shared_ptr<const std::vector<Int>> &_sorted_words,
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end,
+        containers::MatchPtrs *_bins ) const;
+
+    /// Partitions the matches.
+    containers::MatchPtrs::iterator partition(
+        const containers::DataFrameView &_population,
+        const containers::DataFrame &_peripheral,
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end ) const;
+
     /// Partitions the iterators according by the categories.
     containers::MatchPtrs::iterator partition_by_categories_used(
         containers::MatchPtrs::iterator _match_container_begin,
@@ -543,6 +554,18 @@ class DecisionTreeNode
 
     /// Partitions the iterators according by the categories.
     containers::MatchPtrs::iterator partition_by_critical_value(
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end ) const;
+
+    /// Partitions the iterators according to the lag.
+    containers::MatchPtrs::iterator partition_by_lag(
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end ) const;
+
+    /// Partitions the iterator by text fields.
+    containers::MatchPtrs::iterator partition_by_text(
+        const containers::DataFrameView &_population,
+        const containers::DataFrame &_peripheral,
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _match_container_end ) const;
 
@@ -567,12 +590,20 @@ class DecisionTreeNode
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _match_container_end ) const;
 
+    /// Returns categories or words sorted by the corresponding optimization
+    /// criterion.
+    std::shared_ptr<const std::vector<Int>> sort_categories(
+        const std::shared_ptr<const std::vector<Int>> &_categories,
+        const size_t _begin,
+        const size_t _end ) const;
+
     /// Spawns two new child nodes in the fit(...) function
     void spawn_child_nodes(
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const containers::Subfeatures &_subfeatures,
         containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _separator,
         containers::MatchPtrs::iterator _match_container_end );
 
     /// Tries to impose the peripheral categorical columns as a condition
@@ -596,6 +627,28 @@ class DecisionTreeNode
         const size_t _column_used,
         const enums::DataUsed _data_used,
         const size_t _sample_size,
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end,
+        std::vector<descriptors::Split> *_candidate_splits );
+
+    /// Tries imposing combined categorical values as conditions.
+    void try_categorical_values_combined(
+        const size_t _column_used,
+        const enums::DataUsed _data_used,
+        const size_t _sample_size,
+        const containers::CategoryIndex &_index,
+        const std::shared_ptr<const std::vector<Int>> &_categories,
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end,
+        std::vector<descriptors::Split> *_candidate_splits );
+
+    /// Tries imposing individual categorical values as conditions.
+    void try_categorical_values_individual(
+        const size_t _column_used,
+        const enums::DataUsed _data_used,
+        const size_t _sample_size,
+        const containers::CategoryIndex &_index,
+        const std::shared_ptr<const std::vector<Int>> &_categories,
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _match_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
@@ -707,6 +760,58 @@ class DecisionTreeNode
         containers::MatchPtrs::iterator _match_container_end,
         std::vector<descriptors::Split> *_candidate_splits );
 
+    /// Tries to impose conditions based on the text fields in the peripheral
+    /// table.
+    void try_text_peripheral(
+        const containers::DataFrame &_peripheral,
+        const size_t _sample_size,
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end,
+        std::vector<descriptors::Split> *_candidate_splits );
+
+    /// Tries to impose conditions based on the text fields in the population
+    /// table.
+    void try_text_population(
+        const containers::DataFrameView &_population,
+        const size_t _sample_size,
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end,
+        std::vector<descriptors::Split> *_candidate_splits );
+
+    /// Tries to impose conditions based on the text fields.
+    void try_text_values(
+        const textmining::RowIndex &_row_index,
+        const textmining::WordIndex &_word_index,
+        const size_t _column_used,
+        const enums::DataUsed _data_used,
+        const size_t _sample_size,
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end,
+        std::vector<containers::Match *> *_bins,
+        std::vector<descriptors::Split> *_candidate_splits );
+
+    /// Tries to impose conditions based on combined words.
+    void try_text_values_combined(
+        const size_t _column_used,
+        const enums::DataUsed _data_used,
+        const size_t _sample_size,
+        const textmining::WordIndex &_word_index,
+        const std::shared_ptr<const std::vector<Int>> &_words,
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end,
+        std::vector<descriptors::Split> *_candidate_splits );
+
+    /// Tries to impose conditions based on individual words.
+    void try_text_values_individual(
+        const size_t _column_used,
+        const enums::DataUsed _data_used,
+        const size_t _sample_size,
+        const containers::WordIndex &_word_index,
+        const std::shared_ptr<const std::vector<Int>> &_words,
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _match_container_end,
+        std::vector<descriptors::Split> *_candidate_splits );
+
     /// Tries to impose the difference between the time stamps as a
     /// window condition, if delta_t is greater than 0.
     void try_time_stamps_window(
@@ -725,12 +830,11 @@ class DecisionTreeNode
 
     /// Updates the aggregations and the optimization criterion.
     void update(
-        const containers::DataFrameView &_population,
-        const containers::DataFrame &_peripheral,
-        const containers::Subfeatures &_subfeatures,
-        const descriptors::Split &_column,
+        const auto _allow_deactivation,
         containers::MatchPtrs::iterator _match_container_begin,
-        containers::MatchPtrs::iterator _match_container_end );
+        containers::MatchPtrs::iterator _separator,
+        containers::MatchPtrs::iterator _match_container_end,
+        aggregations::AbstractAggregation *_aggregation ) const;
 
     // --------------------------------------
 

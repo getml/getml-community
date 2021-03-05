@@ -74,6 +74,19 @@ void DataFrameJoiner::add_all(
                 containers::DataFrame::ROLE_TARGET );
         }
 
+    for ( size_t i = 0; i < _df.num_text(); ++i )
+        {
+            if ( _joined_df->has( _df.text( i ).name() ) )
+                {
+                    throw std::invalid_argument(
+                        "Duplicate column: '" + _df.text( i ).name() + "'." );
+                }
+
+            _joined_df->add_string_column(
+                _df.text( i ).sort_by_key( _rindices ),
+                containers::DataFrame::ROLE_TEXT );
+        }
+
     for ( size_t i = 0; i < _df.num_time_stamps(); ++i )
         {
             if ( _joined_df->has( _df.time_stamp( i ).name() ) )
@@ -112,7 +125,8 @@ void DataFrameJoiner::add_all(
                 }
 
             _joined_df->add_string_column(
-                _df.unused_string( i ).sort_by_key( _rindices ) );
+                _df.unused_string( i ).sort_by_key( _rindices ),
+                containers::DataFrame::ROLE_UNUSED_STRING );
         }
 }
 
@@ -137,6 +151,7 @@ void DataFrameJoiner::add_col(
             col.set_name( _as );
             _joined_df->add_int_column( col, _role );
         }
+
     else if ( _role == containers::DataFrame::ROLE_JOIN_KEY )
         {
             if ( _joined_df->has( _as ) )
@@ -148,6 +163,7 @@ void DataFrameJoiner::add_col(
             col.set_name( _as );
             _joined_df->add_int_column( col, _role );
         }
+
     else if ( _role == containers::DataFrame::ROLE_NUMERICAL )
         {
             if ( _joined_df->has( _as ) )
@@ -159,6 +175,7 @@ void DataFrameJoiner::add_col(
             col.set_name( _as );
             _joined_df->add_float_column( col, _role );
         }
+
     else if ( _role == containers::DataFrame::ROLE_TARGET )
         {
             if ( _joined_df->has( _as ) )
@@ -170,6 +187,19 @@ void DataFrameJoiner::add_col(
             col.set_name( _as );
             _joined_df->add_float_column( col, _role );
         }
+
+    else if ( _role == containers::DataFrame::ROLE_TEXT )
+        {
+            if ( _joined_df->has( _as ) )
+                {
+                    throw std::invalid_argument(
+                        "Duplicate column: '" + _as + "'." );
+                }
+            auto col = _df.text( _name ).sort_by_key( _rindices );
+            col.set_name( _as );
+            _joined_df->add_string_column( col, _role );
+        }
+
     else if ( _role == containers::DataFrame::ROLE_TIME_STAMP )
         {
             if ( _joined_df->has( _as ) )
@@ -181,6 +211,7 @@ void DataFrameJoiner::add_col(
             col.set_name( _as );
             _joined_df->add_float_column( col, _role );
         }
+
     else if (
         _role == containers::DataFrame::ROLE_UNUSED ||
         _role == containers::DataFrame::ROLE_UNUSED_FLOAT ||
@@ -204,9 +235,10 @@ void DataFrameJoiner::add_col(
                     auto col =
                         _df.unused_string( _name ).sort_by_key( _rindices );
                     col.set_name( _as );
-                    _joined_df->add_string_column( col );
+                    _joined_df->add_string_column( col, _role );
                 }
         }
+
     else
         {
             throw std::invalid_argument(

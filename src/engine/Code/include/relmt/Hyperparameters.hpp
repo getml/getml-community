@@ -63,6 +63,10 @@ struct Hyperparameters
     /// Maximum tree depth for base learners
     const Int max_depth_;
 
+    /// The minimum document frequency required for a string to become part of
+    /// the vocabulary.
+    const size_t min_df_;
+
     /// Minimum number of samples.
     const Int min_num_samples_;
 
@@ -90,8 +94,14 @@ struct Hyperparameters
     /// Whether to print messages while running boosting
     const bool silent_;
 
+    /// Whether we want to split the text fields.
+    const bool split_text_fields_;
+
     /// Whether to use timestamps,
     const bool use_timestamps_;
+
+    /// The maximum size of the vocabulary.
+    const size_t vocab_size_;
 };
 
 // ----------------------------------------------------------------------------

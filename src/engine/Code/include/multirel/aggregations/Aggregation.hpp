@@ -27,29 +27,22 @@ class Aggregation : public AbstractAggregation
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _match_container_end ) final;
 
-    /// Activates all matches that contain any category between
-    /// _categories_begin and _categories_end. Used for prediction.
-    void activate_matches_containing_categories(
-        const std::vector<Int>::const_iterator _categories_begin,
-        const std::vector<Int>::const_iterator _categories_end,
-        containers::MatchPtrs::iterator _match_container_begin,
-        containers::MatchPtrs::iterator _match_container_end ) final;
-
     /// Iterates through the categories and selectively
     /// activates matches.
-    /// Used for training.
     void activate_matches_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
         const Revert _revert,
         const containers::CategoryIndex &_index ) final;
 
-    /// Iterates through the matches and activates those.
-    /// matches that are greater than the critical value.
-    void activate_matches_from_above(
-        const Float _critical_value,
-        containers::MatchPtrs::const_iterator _match_container_begin,
-        containers::MatchPtrs::const_iterator _match_container_end ) final;
+    /// Iterates through the words and selectively
+    /// activates matches.
+    /// Used for individual words only.
+    void activate_matches_containing_words(
+        const std::vector<Int>::const_iterator _categories_begin,
+        const std::vector<Int>::const_iterator _categories_end,
+        const Revert _revert,
+        const containers::WordIndex &_index ) final;
 
     /// Iterates through the matches and activates them
     /// starting with the greatest.
@@ -58,13 +51,6 @@ class Aggregation : public AbstractAggregation
         const containers::MatchPtrs::const_iterator &_matches_begin,
         const containers::MatchPtrs::const_iterator &_matches_end ) final;
 
-    /// Iterates through the matches and activates those
-    /// matches that smaller than or equal to the critical value.
-    void activate_matches_from_below(
-        const Float _critical_value,
-        containers::MatchPtrs::const_iterator _match_container_begin,
-        containers::MatchPtrs::const_iterator _match_container_end ) final;
-
     /// Iterates through the matches and activates them
     /// starting with the smallest.
     void activate_matches_from_below(
@@ -72,52 +58,46 @@ class Aggregation : public AbstractAggregation
         const containers::MatchPtrs::const_iterator &_matches_begin,
         const containers::MatchPtrs::const_iterator &_matches_end ) final;
 
-    /// Implements a lag functionality through moving time windows - used by
-    /// transform.
-    void activate_matches_in_window(
-        const Float _critical_value,
-        const Float _delta_t,
-        containers::MatchPtrs::iterator _match_container_begin,
-        containers::MatchPtrs::iterator _match_container_end ) final;
-
-    /// Implements a lag functionality through moving time windows - used by
-    /// fit.
+    /// Implements a lag functionality through moving time windows.
     void activate_matches_in_window(
         const std::vector<size_t> &_indptr,
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _match_container_end ) final;
 
-    /// Implements a lag functionality through moving time windows - used by
-    /// transform.
-    void activate_matches_outside_window(
-        const Float _critical_value,
-        const Float _delta_t,
-        containers::MatchPtrs::iterator _match_container_begin,
-        containers::MatchPtrs::iterator _match_container_end ) final;
-
-    /// Implements a lag functionality through moving time windows - used by
-    /// fit.
+    /// Implements a lag functionality through moving time windows.
     void activate_matches_outside_window(
         const std::vector<size_t> &_indptr,
-        containers::MatchPtrs::iterator _match_container_begin,
-        containers::MatchPtrs::iterator _match_container_end ) final;
-
-    /// Activates all matches that do not contain any category between
-    /// _categories_begin and _categories_end. Used for prediction.
-    void activate_matches_not_containing_categories(
-        const std::vector<Int>::const_iterator _categories_begin,
-        const std::vector<Int>::const_iterator _categories_end,
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _match_container_end ) final;
 
     /// Iterates through the categories and selectively
     /// activates matches.
-    /// Used for training.
     void activate_matches_not_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
         const Revert _revert,
         const containers::CategoryIndex &_index ) final;
+
+    /// Iterates through the words and selectively
+    /// activates matches.
+    /// Used for individual words only.
+    void activate_matches_not_containing_words(
+        const std::vector<Int>::const_iterator _words_begin,
+        const std::vector<Int>::const_iterator _words_end,
+        const Revert _revert,
+        const containers::WordIndex &_index ) final;
+
+    /// Activates all matches between _separator and _match_container_end.
+    void activate_partition_from_above(
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _separator,
+        containers::MatchPtrs::iterator _match_container_end ) final;
+
+    /// Activates all matches between _match_container_begin and _separator.
+    void activate_partition_from_below(
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _separator,
+        containers::MatchPtrs::iterator _match_container_end ) final;
 
     /// Gets rid of data that is no longer needed.
     void clear() final;
@@ -126,29 +106,22 @@ class Aggregation : public AbstractAggregation
     /// updates_stored.
     void commit() final;
 
-    /// Deactivates all matches that contain any category between
-    /// _categories_begin and _categories_end. Used for prediction.
-    void deactivate_matches_containing_categories(
-        const std::vector<Int>::const_iterator _categories_begin,
-        const std::vector<Int>::const_iterator _categories_end,
-        containers::MatchPtrs::iterator _match_container_begin,
-        containers::MatchPtrs::iterator _match_container_end ) final;
-
-    /// Iteratres through the categories and selectively
+    /// Iterates through the categories and selectively
     /// deactivates matches.
-    /// Used for training.
     void deactivate_matches_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
         const Revert _revert,
         const containers::CategoryIndex &_index ) final;
 
-    /// Iterates through the matches and deactivates those
-    /// matches that are greater than the critical value.
-    void deactivate_matches_from_above(
-        const Float _critical_value,
-        containers::MatchPtrs::const_iterator _match_container_begin,
-        containers::MatchPtrs::const_iterator _match_container_end ) final;
+    /// Iterates through the words and selectively
+    /// activates matches.
+    /// Used for individual words only.
+    void deactivate_matches_containing_words(
+        const std::vector<Int>::const_iterator _words_begin,
+        const std::vector<Int>::const_iterator _words_end,
+        const Revert _revert,
+        const containers::WordIndex &_index ) final;
 
     /// Iterates through the matches and deactivates them
     /// starting with the greatest.
@@ -157,13 +130,6 @@ class Aggregation : public AbstractAggregation
         const containers::MatchPtrs::const_iterator &_matches_begin,
         const containers::MatchPtrs::const_iterator &_matches_end ) final;
 
-    /// Iterates through the matches and deactivates those
-    /// matches that smaller than or equal to the critical value.
-    void deactivate_matches_from_below(
-        const Float _critical_value,
-        containers::MatchPtrs::const_iterator _match_container_begin,
-        containers::MatchPtrs::const_iterator _match_container_end ) final;
-
     /// Iterates through the matches and deactivates them
     /// starting with the smallest.
     void deactivate_matches_from_below(
@@ -171,41 +137,15 @@ class Aggregation : public AbstractAggregation
         const containers::MatchPtrs::const_iterator &_matches_begin,
         const containers::MatchPtrs::const_iterator &_matches_end ) final;
 
-    /// Implements a lag functionality through moving time windows - used by
-    /// transform.
-    void deactivate_matches_in_window(
-        const Float _critical_value,
-        const Float _delta_t,
-        containers::MatchPtrs::iterator _match_container_begin,
-        containers::MatchPtrs::iterator _match_container_end ) final;
-
-    /// Implements a lag functionality through moving time windows - used by
-    /// fit.
+    /// Implements a lag functionality through moving time windows.
     void deactivate_matches_in_window(
         const std::vector<size_t> &_indptr,
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _match_container_end ) final;
 
-    /// Implements a lag functionality through moving time windows - used by
-    /// transform.
-    void deactivate_matches_outside_window(
-        const Float _critical_value,
-        const Float _delta_t,
-        containers::MatchPtrs::iterator _match_container_begin,
-        containers::MatchPtrs::iterator _match_container_end ) final;
-
-    /// Implements a lag functionality through moving time windows - used by
-    /// fit.
+    /// Implements a lag functionality through moving time windows.
     void deactivate_matches_outside_window(
         const std::vector<size_t> &_indptr,
-        containers::MatchPtrs::iterator _match_container_begin,
-        containers::MatchPtrs::iterator _match_container_end ) final;
-
-    /// Deactivates all matches that do not contain any category between
-    /// _categories_begin and _categories_end. Used for prediction.
-    void deactivate_matches_not_containing_categories(
-        const std::vector<Int>::const_iterator _categories_begin,
-        const std::vector<Int>::const_iterator _categories_end,
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _match_container_end ) final;
 
@@ -218,11 +158,32 @@ class Aggregation : public AbstractAggregation
         const Revert _revert,
         const containers::CategoryIndex &_index ) final;
 
+    /// Iterates through the words and selectively
+    /// deactivates matches.
+    /// Used for individual words only.
+    void deactivate_matches_not_containing_words(
+        const std::vector<Int>::const_iterator _words_begin,
+        const std::vector<Int>::const_iterator _words_end,
+        const Revert _revert,
+        const containers::WordIndex &_index ) final;
+
     /// Deactivates all matches where the numerical_value contains null values.
     /// Such matches must always be deactivated.
     void deactivate_matches_with_null_values(
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _null_values_separator ) final;
+
+    /// Deactivates all matches between _separator and _match_container_end.
+    void deactivate_partition_from_above(
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _separator,
+        containers::MatchPtrs::iterator _match_container_end ) final;
+
+    /// Deactivates all matches between _match_container_begin and _separator.
+    void deactivate_partition_from_below(
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _separator,
+        containers::MatchPtrs::iterator _match_container_end ) final;
 
     /// Initializes optimization criterion after all matches have been
     /// activated.
@@ -1788,72 +1749,6 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
     activate_matches_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
-        containers::MatchPtrs::iterator _match_container_begin,
-        containers::MatchPtrs::iterator _match_container_end )
-{
-    Float num_samples_smaller = 0.0;
-
-    Float num_samples_greater = 0.0;
-
-    for ( auto it = _match_container_begin; it != _match_container_end; ++it )
-        {
-            bool activate = false;
-
-            for ( auto cat = _categories_begin; cat < _categories_end; ++cat )
-                {
-                    assert_true(
-                        cat == _categories_begin || *cat > *( cat - 1 ) );
-
-                    if ( ( *it )->categorical_value == *cat )
-                        {
-                            activate = true;
-                            break;
-                        }
-                    else if ( ( *it )->categorical_value < *cat )
-                        {
-                            break;
-                        }
-                }
-
-            if ( activate )
-                {
-                    activate_match( *it );
-
-                    if constexpr ( mode_ == enums::Mode::fit )
-                        {
-                            updates_stored().insert( ( *it )->ix_x_popul );
-                            updates_current().insert( ( *it )->ix_x_popul );
-
-                            ++num_samples_smaller;
-                        }
-                }
-            else
-                {
-                    if constexpr ( mode_ == enums::Mode::fit )
-                        {
-                            ++num_samples_greater;
-                        }
-                }
-        }
-
-    if constexpr ( mode_ == enums::Mode::fit )
-        {
-            update_optimization_criterion_and_clear_updates_current(
-                num_samples_smaller, num_samples_greater );
-        }
-}
-
-// ----------------------------------------------------------------------------
-
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::
-    activate_matches_containing_categories(
-        const std::vector<Int>::const_iterator _categories_begin,
-        const std::vector<Int>::const_iterator _categories_end,
         const Revert _revert,
         const containers::CategoryIndex &_index )
 {
@@ -1871,7 +1766,6 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
             for ( auto it = _index.begin( *cat ); it < _index.end( *cat );
                   ++it )
                 {
-                    assert_true( ( *it )->categorical_value == *cat );
                     activate_match( *it );
 
                     updates_stored().insert( ( *it )->ix_x_popul );
@@ -1919,42 +1813,64 @@ template <
     enums::Mode mode_,
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::
-    activate_matches_from_above(
-        const Float _critical_value,
-        containers::MatchPtrs::const_iterator _match_container_begin,
-        containers::MatchPtrs::const_iterator _match_container_end )
+    activate_matches_containing_words(
+        const std::vector<Int>::const_iterator _words_begin,
+        const std::vector<Int>::const_iterator _words_end,
+        const Revert _revert,
+        const containers::WordIndex &_index )
 {
+    // ------------------------------------------------------------------
+
+    assert_true( _revert != Revert::after_all_categories );
+
+    // ------------------------------------------------------------------
+
+    containers::MatchPtrs matches;
+
+    // ------------------------------------------------------------------
+
     Float num_samples_smaller = 0.0;
 
-    Float num_samples_greater = 0.0;
+    const auto sample_size =
+        static_cast<Float>( std::distance( _index.begin(), _index.end() ) );
 
-    for ( auto it = _match_container_begin; it != _match_container_end; ++it )
+    // ------------------------------------------------------------------
+
+    for ( auto word = _words_begin; word < _words_end; ++word )
         {
-            if ( ( *it )->numerical_value > _critical_value )
+            _index.range( *word, &matches );
+
+            for ( const auto m : matches )
                 {
-                    activate_match( *it );
+                    activate_match( m );
 
-                    if constexpr ( mode_ == enums::Mode::fit )
-                        {
-                            updates_stored().insert( ( *it )->ix_x_popul );
-                            updates_current().insert( ( *it )->ix_x_popul );
+                    updates_stored().insert( m->ix_x_popul );
+                    updates_current().insert( m->ix_x_popul );
 
-                            ++num_samples_greater;
-                        }
+                    ++num_samples_smaller;
                 }
-            else
+
+            if ( _revert != Revert::not_at_all )
                 {
-                    if constexpr ( mode_ == enums::Mode::fit )
-                        {
-                            ++num_samples_smaller;
-                        }
+                    update_optimization_criterion_and_clear_updates_current(
+                        num_samples_smaller,
+                        sample_size - num_samples_smaller );
+                }
+
+            if ( _revert == Revert::after_each_category )
+                {
+                    revert_to_commit();
+                    optimization_criterion()->revert_to_commit();
+                    num_samples_smaller = 0.0;
                 }
         }
 
-    if constexpr ( mode_ == enums::Mode::fit )
+    // ------------------------------------------------------------------
+
+    if ( _revert == Revert::not_at_all )
         {
             update_optimization_criterion_and_clear_updates_current(
-                num_samples_smaller, num_samples_greater );
+                num_samples_smaller, sample_size - num_samples_smaller );
         }
 }
 
@@ -2001,53 +1917,6 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
             const auto num_samples_smaller =
                 static_cast<Float>( _indptr.back() - _indptr[i] ) + num_nans;
 
-            update_optimization_criterion_and_clear_updates_current(
-                num_samples_smaller, num_samples_greater );
-        }
-}
-
-// ----------------------------------------------------------------------------
-
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::
-    activate_matches_from_below(
-        const Float _critical_value,
-        containers::MatchPtrs::const_iterator _match_container_begin,
-        containers::MatchPtrs::const_iterator _match_container_end )
-{
-    Float num_samples_smaller = 0.0;
-
-    Float num_samples_greater = 0.0;
-
-    for ( auto it = _match_container_begin; it != _match_container_end; ++it )
-        {
-            if ( ( *it )->numerical_value <= _critical_value )
-                {
-                    activate_match( *it );
-
-                    if constexpr ( mode_ == enums::Mode::fit )
-                        {
-                            updates_stored().insert( ( *it )->ix_x_popul );
-                            updates_current().insert( ( *it )->ix_x_popul );
-
-                            ++num_samples_smaller;
-                        }
-                }
-            else
-                {
-                    if constexpr ( mode_ == enums::Mode::fit )
-                        {
-                            ++num_samples_greater;
-                        }
-                }
-        }
-
-    if constexpr ( mode_ == enums::Mode::fit )
-        {
             update_optimization_criterion_and_clear_updates_current(
                 num_samples_smaller, num_samples_greater );
         }
@@ -2113,55 +1982,6 @@ template <
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::
     activate_matches_in_window(
-        const Float _critical_value,
-        const Float _delta_t,
-        containers::MatchPtrs::iterator _match_container_begin,
-        containers::MatchPtrs::iterator _match_container_end )
-{
-    Float num_samples_smaller = 0.0;
-
-    Float num_samples_greater = 0.0;
-
-    for ( auto it = _match_container_begin; it != _match_container_end; ++it )
-        {
-            if ( ( *it )->numerical_value > _critical_value - _delta_t &&
-                 ( *it )->numerical_value <= _critical_value )
-                {
-                    activate_match( *it );
-
-                    if constexpr ( mode_ == enums::Mode::fit )
-                        {
-                            updates_stored().insert( ( *it )->ix_x_popul );
-                            updates_current().insert( ( *it )->ix_x_popul );
-
-                            ++num_samples_smaller;
-                        }
-                }
-            else
-                {
-                    if constexpr ( mode_ == enums::Mode::fit )
-                        {
-                            ++num_samples_greater;
-                        }
-                }
-        }
-
-    if constexpr ( mode_ == enums::Mode::fit )
-        {
-            update_optimization_criterion_and_clear_updates_current(
-                num_samples_smaller, num_samples_greater );
-        }
-}
-
-// ----------------------------------------------------------------------------
-
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::
-    activate_matches_in_window(
         const std::vector<size_t> &_indptr,
         containers::MatchPtrs::iterator _matches_begin,
         containers::MatchPtrs::iterator _matches_end )
@@ -2212,55 +2032,6 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
         }
 
     // ------------------------------------------------------------------
-}
-
-// ----------------------------------------------------------------------------
-
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::
-    activate_matches_outside_window(
-        const Float _critical_value,
-        const Float _delta_t,
-        containers::MatchPtrs::iterator _match_container_begin,
-        containers::MatchPtrs::iterator _match_container_end )
-{
-    Float num_samples_smaller = 0.0;
-
-    Float num_samples_greater = 0.0;
-
-    for ( auto it = _match_container_begin; it != _match_container_end; ++it )
-        {
-            if ( ( *it )->numerical_value <= _critical_value - _delta_t ||
-                 ( *it )->numerical_value > _critical_value )
-                {
-                    activate_match( *it );
-
-                    if constexpr ( mode_ == enums::Mode::fit )
-                        {
-                            updates_stored().insert( ( *it )->ix_x_popul );
-                            updates_current().insert( ( *it )->ix_x_popul );
-
-                            ++num_samples_greater;
-                        }
-                }
-            else
-                {
-                    if constexpr ( mode_ == enums::Mode::fit )
-                        {
-                            ++num_samples_smaller;
-                        }
-                }
-        }
-
-    if constexpr ( mode_ == enums::Mode::fit )
-        {
-            update_optimization_criterion_and_clear_updates_current(
-                num_samples_smaller, num_samples_greater );
-        }
 }
 
 // ----------------------------------------------------------------------------
@@ -2356,72 +2127,6 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
     activate_matches_not_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
-        containers::MatchPtrs::iterator _match_container_begin,
-        containers::MatchPtrs::iterator _match_container_end )
-{
-    Float num_samples_smaller = 0.0;
-
-    Float num_samples_greater = 0.0;
-
-    for ( auto it = _match_container_begin; it != _match_container_end; ++it )
-        {
-            auto activate = true;
-
-            for ( auto cat = _categories_begin; cat < _categories_end; ++cat )
-                {
-                    assert_true(
-                        cat == _categories_begin || *cat > *( cat - 1 ) );
-
-                    if ( ( *it )->categorical_value == *cat )
-                        {
-                            activate = false;
-                            break;
-                        }
-                    else if ( ( *it )->categorical_value < *cat )
-                        {
-                            break;
-                        }
-                }
-
-            if ( activate )
-                {
-                    activate_match( *it );
-
-                    if constexpr ( mode_ == enums::Mode::fit )
-                        {
-                            updates_stored().insert( ( *it )->ix_x_popul );
-                            updates_current().insert( ( *it )->ix_x_popul );
-
-                            ++num_samples_greater;
-                        }
-                }
-            else
-                {
-                    if constexpr ( mode_ == enums::Mode::fit )
-                        {
-                            ++num_samples_smaller;
-                        }
-                }
-        }
-
-    if constexpr ( mode_ == enums::Mode::fit )
-        {
-            update_optimization_criterion_and_clear_updates_current(
-                num_samples_smaller, num_samples_greater );
-        }
-}
-
-// ----------------------------------------------------------------------------
-
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::
-    activate_matches_not_containing_categories(
-        const std::vector<Int>::const_iterator _categories_begin,
-        const std::vector<Int>::const_iterator _categories_end,
         const Revert _revert,
         const containers::CategoryIndex &_index )
 {
@@ -2450,8 +2155,6 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
             for ( auto it = _index.begin( *cat ); it < _index.end( *cat );
                   ++it )
                 {
-                    assert_true( ( *it )->categorical_value == *cat );
-
                     deactivate_match( *it );
 
                     updates_current().insert( ( *it )->ix_x_popul );
@@ -2472,8 +2175,6 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
                           it < _index.end( *cat );
                           ++it )
                         {
-                            assert_true( ( *it )->categorical_value == *cat );
-
                             activate_match( *it );
 
                             updates_current().insert( ( *it )->ix_x_popul );
@@ -2498,6 +2199,180 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
         }
 
     // ------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+template <
+    typename AggType,
+    enums::DataUsed data_used_,
+    enums::Mode mode_,
+    bool is_population_>
+void Aggregation<AggType, data_used_, mode_, is_population_>::
+    activate_matches_not_containing_words(
+        const std::vector<Int>::const_iterator _words_begin,
+        const std::vector<Int>::const_iterator _words_end,
+        const Revert _revert,
+        const containers::WordIndex &_index )
+{
+    // ------------------------------------------------------------------
+
+    assert_true( _revert != Revert::after_all_categories );
+
+    // ------------------------------------------------------------------
+    // Activate all matches
+
+    for ( const auto m : _index )
+        {
+            activate_match( m );
+
+            updates_stored().insert( m->ix_x_popul );
+            updates_current().insert( m->ix_x_popul );
+        }
+
+    // ------------------------------------------------------------------
+
+    containers::MatchPtrs matches;
+
+    // ------------------------------------------------------------------
+    // Selectively deactivate those matches that are not of the
+    // particular category
+
+    Float num_samples_smaller = 0.0;
+
+    auto sample_size =
+        static_cast<Float>( std::distance( _index.begin(), _index.end() ) );
+
+    for ( auto word = _words_begin; word < _words_end; ++word )
+        {
+            _index.range( *word, &matches );
+
+            for ( const auto m : matches )
+                {
+                    deactivate_match( m );
+
+                    updates_current().insert( m->ix_x_popul );
+
+                    ++num_samples_smaller;
+                }
+
+            if ( _revert != Revert::not_at_all )
+                {
+                    update_optimization_criterion_and_clear_updates_current(
+                        num_samples_smaller,
+                        sample_size - num_samples_smaller );
+                }
+
+            if ( _revert == Revert::after_each_category )
+                {
+                    for ( const auto m : matches )
+                        {
+                            activate_match( m );
+
+                            updates_current().insert( m->ix_x_popul );
+                        }
+
+                    num_samples_smaller = 0.0;
+                }
+        }
+
+    // ------------------------------------------------------------------
+    // Revert to the original commit
+
+    if ( _revert != Revert::not_at_all )
+        {
+            revert_to_commit();
+            optimization_criterion()->revert_to_commit();
+        }
+    else
+        {
+            update_optimization_criterion_and_clear_updates_current(
+                num_samples_smaller, sample_size - num_samples_smaller );
+        }
+
+    // ------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+template <
+    typename AggType,
+    enums::DataUsed data_used_,
+    enums::Mode mode_,
+    bool is_population_>
+void Aggregation<AggType, data_used_, mode_, is_population_>::
+    activate_partition_from_above(
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _separator,
+        containers::MatchPtrs::iterator _match_container_end )
+{
+    assert_true( _separator >= _match_container_begin );
+
+    assert_true( _match_container_end >= _separator );
+
+    for ( auto it = _separator; it != _match_container_end; ++it )
+        {
+            activate_match( *it );
+
+            if constexpr ( mode_ == enums::Mode::fit )
+                {
+                    updates_stored().insert( ( *it )->ix_x_popul );
+                    updates_current().insert( ( *it )->ix_x_popul );
+                }
+        }
+
+    if constexpr ( mode_ == enums::Mode::fit )
+        {
+            const auto num_samples_smaller = static_cast<Float>(
+                std::distance( _match_container_begin, _separator ) );
+
+            const auto num_samples_greater = static_cast<Float>(
+                std::distance( _separator, _match_container_end ) );
+
+            update_optimization_criterion_and_clear_updates_current(
+                num_samples_smaller, num_samples_greater );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+template <
+    typename AggType,
+    enums::DataUsed data_used_,
+    enums::Mode mode_,
+    bool is_population_>
+void Aggregation<AggType, data_used_, mode_, is_population_>::
+    activate_partition_from_below(
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _separator,
+        containers::MatchPtrs::iterator _match_container_end )
+{
+    assert_true( _separator >= _match_container_begin );
+
+    assert_true( _match_container_end >= _separator );
+
+    for ( auto it = _match_container_begin; it != _separator; ++it )
+        {
+            activate_match( *it );
+
+            if constexpr ( mode_ == enums::Mode::fit )
+                {
+                    updates_stored().insert( ( *it )->ix_x_popul );
+                    updates_current().insert( ( *it )->ix_x_popul );
+                }
+        }
+
+    if constexpr ( mode_ == enums::Mode::fit )
+        {
+            const auto num_samples_smaller = static_cast<Float>(
+                std::distance( _match_container_begin, _separator ) );
+
+            const auto num_samples_greater = static_cast<Float>(
+                std::distance( _separator, _match_container_end ) );
+
+            update_optimization_criterion_and_clear_updates_current(
+                num_samples_smaller, num_samples_greater );
+        }
 }
 
 // ----------------------------------------------------------------------------
@@ -2615,73 +2490,6 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
     deactivate_matches_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
-        containers::MatchPtrs::iterator _match_container_begin,
-        containers::MatchPtrs::iterator _match_container_end )
-{
-    Float num_samples_smaller = 0.0;
-
-    Float num_samples_greater = 0.0;
-
-    for ( auto it = _match_container_begin; it != _match_container_end; ++it )
-        {
-            bool deactivate = false;
-
-            for ( auto cat = _categories_begin; cat < _categories_end; ++cat )
-                {
-                    assert_true(
-                        cat == _categories_begin || *cat > *( cat - 1 ) );
-
-                    if ( ( *it )->categorical_value == *cat )
-                        {
-                            deactivate = true;
-                            break;
-                        }
-
-                    else if ( ( *it )->categorical_value < *cat )
-                        {
-                            break;
-                        }
-                }
-
-            if ( deactivate )
-                {
-                    deactivate_match( *it );
-
-                    if constexpr ( mode_ == enums::Mode::fit )
-                        {
-                            updates_stored().insert( ( *it )->ix_x_popul );
-                            updates_current().insert( ( *it )->ix_x_popul );
-
-                            ++num_samples_smaller;
-                        }
-                }
-            else
-                {
-                    if constexpr ( mode_ == enums::Mode::fit )
-                        {
-                            ++num_samples_greater;
-                        }
-                }
-        }
-
-    if constexpr ( mode_ == enums::Mode::fit )
-        {
-            update_optimization_criterion_and_clear_updates_current(
-                num_samples_smaller, num_samples_greater );
-        }
-}
-
-// ----------------------------------------------------------------------------
-
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::
-    deactivate_matches_containing_categories(
-        const std::vector<Int>::const_iterator _categories_begin,
-        const std::vector<Int>::const_iterator _categories_end,
         const Revert _revert,
         const containers::CategoryIndex &_index )
 {
@@ -2699,7 +2507,6 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
             for ( auto it = _index.begin( *cat ); it < _index.end( *cat );
                   ++it )
                 {
-                    assert_true( ( *it )->categorical_value == *cat );
                     deactivate_match( *it );
 
                     updates_stored().insert( ( *it )->ix_x_popul );
@@ -2747,46 +2554,67 @@ template <
     enums::Mode mode_,
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::
-    deactivate_matches_from_above(
-        const Float _critical_value,
-        containers::MatchPtrs::const_iterator _match_container_begin,
-        containers::MatchPtrs::const_iterator _match_container_end )
+    deactivate_matches_containing_words(
+        const std::vector<Int>::const_iterator _words_begin,
+        const std::vector<Int>::const_iterator _words_end,
+        const Revert _revert,
+        const containers::WordIndex &_index )
 {
+    // ------------------------------------------------------------------
+
+    assert_true( _revert != Revert::after_all_categories );
+
+    // ------------------------------------------------------------------
+
+    containers::MatchPtrs matches;
+
+    // ------------------------------------------------------------------
+
     Float num_samples_smaller = 0.0;
 
-    Float num_samples_greater = 0.0;
+    auto sample_size =
+        static_cast<Float>( std::distance( _index.begin(), _index.end() ) );
 
-    for ( auto it = _match_container_begin; it != _match_container_end; ++it )
+    // ------------------------------------------------------------------
+
+    for ( auto word = _words_begin; word < _words_end; ++word )
         {
-            const Float val = ( *it )->numerical_value;
+            _index.range( *word, &matches );
 
-            if ( val > _critical_value || std::isnan( val ) ||
-                 std::isinf( val ) )
+            for ( const auto m : matches )
                 {
-                    deactivate_match( *it );
+                    deactivate_match( m );
 
-                    if constexpr ( mode_ == enums::Mode::fit )
-                        {
-                            updates_stored().insert( ( *it )->ix_x_popul );
-                            updates_current().insert( ( *it )->ix_x_popul );
+                    updates_stored().insert( m->ix_x_popul );
+                    updates_current().insert( m->ix_x_popul );
 
-                            ++num_samples_greater;
-                        }
+                    ++num_samples_smaller;
                 }
-            else
+
+            if ( _revert != Revert::not_at_all )
                 {
-                    if constexpr ( mode_ == enums::Mode::fit )
-                        {
-                            ++num_samples_smaller;
-                        }
+                    update_optimization_criterion_and_clear_updates_current(
+                        num_samples_smaller,
+                        sample_size - num_samples_smaller );
+                }
+
+            if ( _revert == Revert::after_each_category )
+                {
+                    revert_to_commit();
+                    optimization_criterion()->revert_to_commit();
+                    num_samples_smaller = 0.0;
                 }
         }
 
-    if constexpr ( mode_ == enums::Mode::fit )
+    // ------------------------------------------------------------------
+
+    if ( _revert == Revert::not_at_all )
         {
             update_optimization_criterion_and_clear_updates_current(
-                num_samples_smaller, num_samples_greater );
+                num_samples_smaller, sample_size - num_samples_smaller );
         }
+
+    // ------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -2833,56 +2661,6 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
             const auto num_samples_smaller =
                 static_cast<Float>( _indptr.back() - _indptr[i] );
 
-            update_optimization_criterion_and_clear_updates_current(
-                num_samples_smaller, num_samples_greater );
-        }
-}
-
-// ----------------------------------------------------------------------------
-
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::
-    deactivate_matches_from_below(
-        const Float _critical_value,
-        containers::MatchPtrs::const_iterator _match_container_begin,
-        containers::MatchPtrs::const_iterator _match_container_end )
-{
-    Float num_samples_smaller = 0.0;
-
-    Float num_samples_greater = 0.0;
-
-    for ( auto it = _match_container_begin; it != _match_container_end; ++it )
-        {
-            const Float val = ( *it )->numerical_value;
-
-            if ( val <= _critical_value || std::isnan( val ) ||
-                 std::isinf( val ) )
-                {
-                    deactivate_match( *it );
-
-                    if constexpr ( mode_ == enums::Mode::fit )
-                        {
-                            updates_stored().insert( ( *it )->ix_x_popul );
-                            updates_current().insert( ( *it )->ix_x_popul );
-
-                            ++num_samples_smaller;
-                        }
-                }
-            else
-                {
-                    if constexpr ( mode_ == enums::Mode::fit )
-                        {
-                            ++num_samples_greater;
-                        }
-                }
-        }
-
-    if constexpr ( mode_ == enums::Mode::fit )
-        {
             update_optimization_criterion_and_clear_updates_current(
                 num_samples_smaller, num_samples_greater );
         }
@@ -2947,55 +2725,6 @@ template <
     bool is_population_>
 void Aggregation<AggType, data_used_, mode_, is_population_>::
     deactivate_matches_in_window(
-        const Float _critical_value,
-        const Float _delta_t,
-        containers::MatchPtrs::iterator _match_container_begin,
-        containers::MatchPtrs::iterator _match_container_end )
-{
-    Float num_samples_smaller = 0.0;
-
-    Float num_samples_greater = 0.0;
-
-    for ( auto it = _match_container_begin; it != _match_container_end; ++it )
-        {
-            if ( ( *it )->numerical_value > _critical_value - _delta_t &&
-                 ( *it )->numerical_value <= _critical_value )
-                {
-                    deactivate_match( *it );
-
-                    if constexpr ( mode_ == enums::Mode::fit )
-                        {
-                            updates_stored().insert( ( *it )->ix_x_popul );
-                            updates_current().insert( ( *it )->ix_x_popul );
-
-                            ++num_samples_smaller;
-                        }
-                }
-            else
-                {
-                    if constexpr ( mode_ == enums::Mode::fit )
-                        {
-                            ++num_samples_greater;
-                        }
-                }
-        }
-
-    if constexpr ( mode_ == enums::Mode::fit )
-        {
-            update_optimization_criterion_and_clear_updates_current(
-                num_samples_smaller, num_samples_greater );
-        }
-}
-
-// ----------------------------------------------------------------------------
-
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::
-    deactivate_matches_in_window(
         const std::vector<size_t> &_indptr,
         containers::MatchPtrs::iterator _matches_begin,
         containers::MatchPtrs::iterator _matches_end )
@@ -3046,55 +2775,6 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
         }
 
     // ------------------------------------------------------------------
-}
-
-// ----------------------------------------------------------------------------
-
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::
-    deactivate_matches_outside_window(
-        const Float _critical_value,
-        const Float _delta_t,
-        containers::MatchPtrs::iterator _match_container_begin,
-        containers::MatchPtrs::iterator _match_container_end )
-{
-    Float num_samples_smaller = 0.0;
-
-    Float num_samples_greater = 0.0;
-
-    for ( auto it = _match_container_begin; it != _match_container_end; ++it )
-        {
-            if ( ( *it )->numerical_value <= _critical_value - _delta_t ||
-                 ( *it )->numerical_value > _critical_value )
-                {
-                    deactivate_match( *it );
-
-                    if constexpr ( mode_ == enums::Mode::fit )
-                        {
-                            updates_stored().insert( ( *it )->ix_x_popul );
-                            updates_current().insert( ( *it )->ix_x_popul );
-
-                            ++num_samples_greater;
-                        }
-                }
-            else
-                {
-                    if constexpr ( mode_ == enums::Mode::fit )
-                        {
-                            ++num_samples_smaller;
-                        }
-                }
-        }
-
-    if constexpr ( mode_ == enums::Mode::fit )
-        {
-            update_optimization_criterion_and_clear_updates_current(
-                num_samples_smaller, num_samples_greater );
-        }
 }
 
 // ----------------------------------------------------------------------------
@@ -3190,72 +2870,6 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
     deactivate_matches_not_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
-        containers::MatchPtrs::iterator _match_container_begin,
-        containers::MatchPtrs::iterator _match_container_end )
-{
-    Float num_samples_smaller = 0.0;
-
-    Float num_samples_greater = 0.0;
-
-    for ( auto it = _match_container_begin; it != _match_container_end; ++it )
-        {
-            auto deactivate = true;
-
-            for ( auto cat = _categories_begin; cat < _categories_end; ++cat )
-                {
-                    assert_true(
-                        cat == _categories_begin || *cat > *( cat - 1 ) );
-
-                    if ( ( *it )->categorical_value == *cat )
-                        {
-                            deactivate = false;
-                            break;
-                        }
-                    else if ( ( *it )->categorical_value < *cat )
-                        {
-                            break;
-                        }
-                }
-
-            if ( deactivate )
-                {
-                    deactivate_match( *it );
-
-                    if constexpr ( mode_ == enums::Mode::fit )
-                        {
-                            updates_stored().insert( ( *it )->ix_x_popul );
-                            updates_current().insert( ( *it )->ix_x_popul );
-
-                            ++num_samples_greater;
-                        }
-                }
-            else
-                {
-                    if constexpr ( mode_ == enums::Mode::fit )
-                        {
-                            ++num_samples_smaller;
-                        }
-                }
-        }
-
-    if constexpr ( mode_ == enums::Mode::fit )
-        {
-            update_optimization_criterion_and_clear_updates_current(
-                num_samples_smaller, num_samples_greater );
-        }
-}
-
-// ----------------------------------------------------------------------------
-
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::
-    deactivate_matches_not_containing_categories(
-        const std::vector<Int>::const_iterator _categories_begin,
-        const std::vector<Int>::const_iterator _categories_end,
         const Revert _revert,
         const containers::CategoryIndex &_index )
 {
@@ -3284,8 +2898,6 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
             for ( auto it = _index.begin( *cat ); it < _index.end( *cat );
                   ++it )
                 {
-                    assert_true( ( *it )->categorical_value == *cat );
-
                     activate_match( *it );
 
                     updates_current().insert( ( *it )->ix_x_popul );
@@ -3306,11 +2918,101 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
                           it < _index.end( *cat );
                           ++it )
                         {
-                            assert_true( ( *it )->categorical_value == *cat );
-
                             deactivate_match( *it );
 
                             updates_current().insert( ( *it )->ix_x_popul );
+                        }
+
+                    num_samples_smaller = 0.0;
+                }
+        }
+
+    // ------------------------------------------------------------------
+    // Revert to the original commit
+
+    if ( _revert != Revert::not_at_all )
+        {
+            revert_to_commit();
+            optimization_criterion()->revert_to_commit();
+        }
+    else
+        {
+            update_optimization_criterion_and_clear_updates_current(
+                num_samples_smaller, sample_size - num_samples_smaller );
+        }
+
+    // ------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+template <
+    typename AggType,
+    enums::DataUsed data_used_,
+    enums::Mode mode_,
+    bool is_population_>
+void Aggregation<AggType, data_used_, mode_, is_population_>::
+    deactivate_matches_not_containing_words(
+        const std::vector<Int>::const_iterator _words_begin,
+        const std::vector<Int>::const_iterator _words_end,
+        const Revert _revert,
+        const containers::WordIndex &_index )
+{
+    // ------------------------------------------------------------------
+
+    assert_true( _revert != Revert::after_all_categories );
+
+    // ------------------------------------------------------------------
+    // Deactivate all matches
+
+    for ( const auto m : _index )
+        {
+            deactivate_match( m );
+
+            updates_stored().insert( m->ix_x_popul );
+            updates_current().insert( m->ix_x_popul );
+        }
+
+    // ------------------------------------------------------------------
+
+    containers::MatchPtrs matches;
+
+    // ------------------------------------------------------------------
+    // Selectively activate those matches that are not of the
+    // particular category
+
+    const auto sample_size =
+        static_cast<Float>( std::distance( _index.begin(), _index.end() ) );
+
+    Float num_samples_smaller = 0.0;
+
+    for ( auto word = _words_begin; word < _words_end; ++word )
+        {
+            _index.range( *word, &matches );
+
+            for ( const auto m : matches )
+                {
+                    activate_match( m );
+
+                    updates_current().insert( m->ix_x_popul );
+
+                    ++num_samples_smaller;
+                }
+
+            if ( _revert != Revert::not_at_all )
+                {
+                    update_optimization_criterion_and_clear_updates_current(
+                        num_samples_smaller,
+                        sample_size - num_samples_smaller );
+                }
+
+            if ( _revert == Revert::after_each_category )
+                {
+                    for ( const auto m : matches )
+                        {
+                            deactivate_match( m );
+
+                            updates_current().insert( m->ix_x_popul );
                         }
 
                     num_samples_smaller = 0.0;
@@ -3354,6 +3056,88 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
             updates_stored().insert( ( *it )->ix_x_popul );
             updates_current().insert( ( *it )->ix_x_popul );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+template <
+    typename AggType,
+    enums::DataUsed data_used_,
+    enums::Mode mode_,
+    bool is_population_>
+void Aggregation<AggType, data_used_, mode_, is_population_>::
+    deactivate_partition_from_above(
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _separator,
+        containers::MatchPtrs::iterator _match_container_end )
+{
+    assert_true( _separator >= _match_container_begin );
+
+    assert_true( _match_container_end >= _separator );
+
+    for ( auto it = _separator; it != _match_container_end; ++it )
+        {
+            deactivate_match( *it );
+
+            if constexpr ( mode_ == enums::Mode::fit )
+                {
+                    updates_stored().insert( ( *it )->ix_x_popul );
+                    updates_current().insert( ( *it )->ix_x_popul );
+                }
+        }
+
+    if constexpr ( mode_ == enums::Mode::fit )
+        {
+            const auto num_samples_smaller = static_cast<Float>(
+                std::distance( _match_container_begin, _separator ) );
+
+            const auto num_samples_greater = static_cast<Float>(
+                std::distance( _separator, _match_container_end ) );
+
+            update_optimization_criterion_and_clear_updates_current(
+                num_samples_smaller, num_samples_greater );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+template <
+    typename AggType,
+    enums::DataUsed data_used_,
+    enums::Mode mode_,
+    bool is_population_>
+void Aggregation<AggType, data_used_, mode_, is_population_>::
+    deactivate_partition_from_below(
+        containers::MatchPtrs::iterator _match_container_begin,
+        containers::MatchPtrs::iterator _separator,
+        containers::MatchPtrs::iterator _match_container_end )
+{
+    assert_true( _separator >= _match_container_begin );
+
+    assert_true( _match_container_end >= _separator );
+
+    for ( auto it = _match_container_begin; it != _separator; ++it )
+        {
+            deactivate_match( *it );
+
+            if constexpr ( mode_ == enums::Mode::fit )
+                {
+                    updates_stored().insert( ( *it )->ix_x_popul );
+                    updates_current().insert( ( *it )->ix_x_popul );
+                }
+        }
+
+    if constexpr ( mode_ == enums::Mode::fit )
+        {
+            const auto num_samples_smaller = static_cast<Float>(
+                std::distance( _match_container_begin, _separator ) );
+
+            const auto num_samples_greater = static_cast<Float>(
+                std::distance( _separator, _match_container_end ) );
+
+            update_optimization_criterion_and_clear_updates_current(
+                num_samples_smaller, num_samples_greater );
         }
 }
 

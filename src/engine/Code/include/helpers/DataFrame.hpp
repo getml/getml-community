@@ -14,6 +14,13 @@ struct DataFrame
 
     typedef Column<Int> IntColumnType;
 
+    typedef std::vector<std::shared_ptr<const textmining::RowIndex>> RowIndices;
+
+    typedef Column<strings::String> StringColumnType;
+
+    typedef std::vector<std::shared_ptr<const textmining::WordIndex>>
+        WordIndices;
+
     // ---------------------------------------------------------------------
 
    public:
@@ -25,7 +32,10 @@ struct DataFrame
         const std::string& _name,
         const std::vector<Column<Float>>& _numericals,
         const std::vector<Column<Float>>& _targets,
-        const std::vector<Column<Float>>& _time_stamps );
+        const std::vector<Column<strings::String>>& _text,
+        const std::vector<Column<Float>>& _time_stamps,
+        const RowIndices& _row_indices = RowIndices(),
+        const WordIndices& _word_indices = WordIndices() );
 
     DataFrame(
         const std::vector<Column<Int>>& _categoricals,
@@ -34,6 +44,7 @@ struct DataFrame
         const std::string& _name,
         const std::vector<Column<Float>>& _numericals,
         const std::vector<Column<Float>>& _targets,
+        const std::vector<Column<strings::String>>& _text,
         const std::vector<Column<Float>>& _time_stamps );
 
     ~DataFrame() = default;
@@ -50,7 +61,9 @@ struct DataFrame
         const std::string& _join_key,
         const std::string& _time_stamp,
         const std::string& _upper_time_stamp,
-        const bool _allow_lagged_targets ) const;
+        const bool _allow_lagged_targets,
+        const RowIndices& _row_indices,
+        const WordIndices& _word_indices ) const;
 
     // ---------------------------------------------------------------------
 
@@ -161,6 +174,7 @@ struct DataFrame
         if ( num_join_keys() > 0 ) return join_keys_[0].nrows_;
         if ( num_numericals() > 0 ) return numericals_[0].nrows_;
         if ( num_targets() > 0 ) return targets_[0].nrows_;
+        if ( num_text() > 0 ) return text_[0].nrows_;
         if ( num_time_stamps() > 0 ) return time_stamps_[0].nrows_;
         return 0;
     }
@@ -179,6 +193,9 @@ struct DataFrame
 
     /// Trivial getter
     size_t num_targets() const { return targets_.size(); }
+
+    /// Trivial getter
+    size_t num_text() const { return text_.size(); }
 
     /// Trivial getter
     size_t num_time_stamps() const { return time_stamps_.size(); }
@@ -278,6 +295,7 @@ struct DataFrame
             name_,
             get_colnames( numericals_ ),
             get_colnames( targets_ ),
+            get_colnames( text_ ),
             get_colnames( time_stamps_ ) );
     }
 
@@ -337,11 +355,20 @@ struct DataFrame
     /// Pointer to numerical columns.
     const std::vector<Column<Float>> numericals_;
 
+    /// Index returning rows for each word.
+    const RowIndices row_indices_;
+
     /// Pointer to target column.
     const std::vector<Column<Float>> targets_;
 
+    /// Pointer to text column.
+    const std::vector<Column<strings::String>> text_;
+
     /// Time stamps of this data frame.
     const std::vector<Column<Float>> time_stamps_;
+
+    /// Index returning words for each row.
+    const WordIndices word_indices_;
 };
 
 // -------------------------------------------------------------------------

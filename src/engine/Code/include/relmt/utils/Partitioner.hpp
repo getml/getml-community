@@ -702,6 +702,133 @@ struct Partitioner<enums::DataUsed::subfeatures>
 // ----------------------------------------------------------------------------
 
 template <>
+struct Partitioner<enums::DataUsed::text_input>
+{
+    // --------------------------------------------------------------------
+
+    static std::vector<containers::Match>::iterator partition(
+        const containers::Split& _split,
+        const containers::DataFrame& _input,
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end )
+    {
+        const auto partition_function = [&_split,
+                                         &_input]( containers::Match m ) {
+            return is_greater( _split, _input, m );
+        };
+
+        return std::partition( _begin, _end, partition_function );
+    }
+
+    // --------------------------------------------------------------------
+
+    static bool is_greater(
+        const containers::Split& _split,
+        const containers::DataFrame& _input,
+        const containers::Match& _match )
+    {
+        const auto i = _match.ix_input;
+        const auto j = _split.column_;
+
+        assert_true( i < _input.nrows() );
+        assert_true( j < _input.word_indices_.size() );
+        assert_true( _input.word_indices_[j] );
+
+        const auto range = _input.word_indices_[j]->range( i );
+
+        const auto in_range = [range]( const Int word_ix ) -> bool {
+            for ( const auto& val : range )
+                {
+                    if ( val == word_ix )
+                        {
+                            return true;
+                        }
+                    if ( val > word_ix )
+                        {
+                            return false;
+                        }
+                }
+            return false;
+        };
+
+        const auto it = std::find_if(
+            _split.categories_used_begin_,
+            _split.categories_used_end_,
+            in_range );
+
+        return it != _split.categories_used_end_;
+    }
+
+    // --------------------------------------------------------------------
+};
+
+// ----------------------------------------------------------------------------
+
+template <>
+struct Partitioner<enums::DataUsed::text_output>
+{
+    // --------------------------------------------------------------------
+
+    static std::vector<containers::Match>::iterator partition(
+        const containers::Split& _split,
+        const containers::DataFrameView& _output,
+        const std::vector<containers::Match>::iterator _begin,
+        const std::vector<containers::Match>::iterator _end )
+    {
+        const auto partition_function = [&_split,
+                                         &_output]( containers::Match m ) {
+            return is_greater( _split, _output, m );
+        };
+
+        return std::partition( _begin, _end, partition_function );
+    }
+
+    // --------------------------------------------------------------------
+
+    static bool is_greater(
+        const containers::Split& _split,
+        const containers::DataFrameView& _output,
+        const containers::Match& _match )
+    {
+        const auto i = _match.ix_output;
+        const auto j = _split.column_;
+
+        assert_true( i < _output.nrows() );
+        assert_true( j < _output.df().word_indices_.size() );
+        assert_true( _output.df().word_indices_[j] );
+
+        const auto range =
+            _output.df().word_indices_[j]->range( _output.rows()[i] );
+
+        const auto in_range = [range]( const Int word_ix ) -> bool {
+            for ( const auto& val : range )
+                {
+                    if ( val == word_ix )
+                        {
+                            return true;
+                        }
+                    if ( val > word_ix )
+                        {
+                            return false;
+                        }
+                }
+            return false;
+        };
+
+        const auto it = std::find_if(
+            _split.categories_used_begin_,
+            _split.categories_used_end_,
+            in_range );
+
+        return it != _split.categories_used_end_;
+    }
+
+    // --------------------------------------------------------------------
+};
+
+// ----------------------------------------------------------------------------
+
+template <>
 struct Partitioner<enums::DataUsed::time_stamps_window>
 {
     // --------------------------------------------------------------------

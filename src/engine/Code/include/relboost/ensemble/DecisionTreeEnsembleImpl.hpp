@@ -72,6 +72,9 @@ struct DecisionTreeEnsembleImpl
     /// Trees underlying the model.
     std::vector<decisiontrees::DecisionTree> trees_;
 
+    // The vocabulary used to analyze the text fields.
+    std::shared_ptr<const helpers::VocabularyContainer> vocabulary_;
+
     /// Prediction of all previous tress in the ensemble
     std::vector<Float> yhat_old_;
 };

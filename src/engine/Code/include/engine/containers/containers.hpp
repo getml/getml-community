@@ -59,6 +59,7 @@
 
 #include "engine/containers/CategoricalFeatures.hpp"
 #include "engine/containers/Features.hpp"
+#include "engine/containers/Schema.hpp"
 
 #include "engine/containers/Column.hpp"
 #include "engine/containers/Encoding.hpp"

@@ -7,26 +7,32 @@ namespace helpers
 
 struct TableHolder
 {
+    typedef typename RowIndexContainer::RowIndices RowIndices;
+
+    typedef typename WordIndexContainer::WordIndices WordIndices;
+
     TableHolder(
         const Placeholder& _placeholder,
         const DataFrameView& _population,
         const std::vector<DataFrame>& _peripheral,
-        const std::vector<std::string>& _peripheral_names )
-        : main_tables_(
-              TableHolder::parse_main_tables( _placeholder, _population ) ),
-          peripheral_tables_( TableHolder::parse_peripheral_tables(
-              _placeholder, _peripheral, _peripheral_names ) ),
-          subtables_( TableHolder::parse_subtables(
-              _placeholder, _population, _peripheral, _peripheral_names ) )
+        const std::vector<std::string>& _peripheral_names,
+        const std::optional<RowIndexContainer>& _row_index_container =
+            std::nullopt,
+        const std::optional<WordIndexContainer>& _word_index_container =
+            std::nullopt );
 
-    {
-        assert_true( main_tables_.size() == peripheral_tables_.size() );
-        assert_true( main_tables_.size() == subtables_.size() );
-    }
-
-    ~TableHolder() = default;
+    ~TableHolder();
 
     // ------------------------------
+
+    /// Counts the number of peripheral tables that have been created from text
+    /// fields.
+    static size_t count_text( const std::vector<DataFrame>& _peripheral );
+
+    /// Identifies the index for the associated peripheral table.
+    static size_t find_peripheral_ix(
+        const std::vector<std::string>& _peripheral_names,
+        const std::string& _name );
 
     /// Creates the row indices for the subtables.
     static std::shared_ptr<const std::vector<size_t>> make_subrows(
@@ -35,20 +41,32 @@ struct TableHolder
 
     /// Creates the main tables during construction.
     static std::vector<DataFrameView> parse_main_tables(
-        const Placeholder& _placeholder, const DataFrameView& _population );
+        const Placeholder& _placeholder,
+        const DataFrameView& _population,
+        const std::vector<DataFrame>& _peripheral,
+        const std::optional<RowIndexContainer>& _row_index_container,
+        const std::optional<WordIndexContainer>& _word_index_container );
 
     /// Creates the peripheral tables during construction.
     static std::vector<DataFrame> parse_peripheral_tables(
         const Placeholder& _placeholder,
+        const DataFrameView& _population,
         const std::vector<DataFrame>& _peripheral,
-        const std::vector<std::string>& _peripheral_names );
+        const std::vector<std::string>& _peripheral_names,
+        const std::optional<RowIndexContainer>& _row_index_container,
+        const std::optional<WordIndexContainer>& _word_index_container );
 
     /// Creates the subtables during construction.
     static std::vector<std::optional<TableHolder>> parse_subtables(
         const Placeholder& _placeholder,
         const DataFrameView& _population,
         const std::vector<DataFrame>& _peripheral,
-        const std::vector<std::string>& _peripheral_names );
+        const std::vector<std::string>& _peripheral_names,
+        const std::optional<RowIndexContainer>& _row_index_container,
+        const std::optional<WordIndexContainer>& _word_index_container );
+
+    /// Extracts the wors indices from the tables.
+    WordIndexContainer word_indices() const;
 
     // ------------------------------
 

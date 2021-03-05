@@ -39,187 +39,6 @@ void DecisionTreeNode::add_subfeatures(
 
 // ----------------------------------------------------------------------------
 
-void DecisionTreeNode::apply_by_categories_used(
-    containers::MatchPtrs::iterator _match_container_begin,
-    containers::MatchPtrs::iterator _match_container_end,
-    aggregations::AbstractAggregation *_aggregation ) const
-{
-    if ( std::distance( _match_container_begin, _match_container_end ) == 0 )
-        {
-            return;
-        }
-
-    if ( apply_from_above() )
-        {
-            if ( is_activated_ )
-                {
-                    _aggregation->deactivate_matches_not_containing_categories(
-                        categories_used_begin(),
-                        categories_used_end(),
-                        _match_container_begin,
-                        _match_container_end );
-                }
-            else
-                {
-                    _aggregation->activate_matches_not_containing_categories(
-                        categories_used_begin(),
-                        categories_used_end(),
-                        _match_container_begin,
-                        _match_container_end );
-                }
-        }
-    else
-        {
-            if ( is_activated_ )
-                {
-                    _aggregation->deactivate_matches_containing_categories(
-                        categories_used_begin(),
-                        categories_used_end(),
-                        _match_container_begin,
-                        _match_container_end );
-                }
-            else
-                {
-                    _aggregation->activate_matches_containing_categories(
-                        categories_used_begin(),
-                        categories_used_end(),
-                        _match_container_begin,
-                        _match_container_end );
-                }
-        }
-}
-
-// ----------------------------------------------------------------------------
-
-void DecisionTreeNode::apply_by_critical_value(
-    containers::MatchPtrs::iterator _match_container_begin,
-    containers::MatchPtrs::iterator _match_container_end,
-    aggregations::AbstractAggregation *_aggregation ) const
-{
-    if ( std::distance( _match_container_begin, _match_container_end ) == 0 )
-        {
-            debug_log( "Distance is zero..." );
-            return;
-        }
-
-    if ( lag_used() )
-        {
-            apply_by_lag(
-                _match_container_begin, _match_container_end, _aggregation );
-
-            return;
-        }
-
-    debug_log( "Apply by critical value..." );
-
-    if ( apply_from_above() )
-        {
-            if ( is_activated_ )
-                {
-                    debug_log( "deactivate_matches_from_above..." );
-
-                    _aggregation->deactivate_matches_from_above(
-                        critical_value(),
-                        _match_container_begin,
-                        _match_container_end );
-                }
-            else
-                {
-                    debug_log( "activate_matches_from_above..." );
-
-                    _aggregation->activate_matches_from_above(
-                        critical_value(),
-                        _match_container_begin,
-                        _match_container_end );
-                }
-        }
-    else
-        {
-            if ( is_activated_ )
-                {
-                    debug_log( "deactivate_matches_from_below..." );
-
-                    _aggregation->deactivate_matches_from_below(
-                        critical_value(),
-                        _match_container_begin,
-                        _match_container_end );
-                }
-            else
-                {
-                    debug_log( "activate_matches_from_below..." );
-
-                    _aggregation->activate_matches_from_below(
-                        critical_value(),
-                        _match_container_begin,
-                        _match_container_end );
-                }
-        }
-}
-
-// ----------------------------------------------------------------------------
-
-void DecisionTreeNode::apply_by_lag(
-    containers::MatchPtrs::iterator _match_container_begin,
-    containers::MatchPtrs::iterator _match_container_end,
-    aggregations::AbstractAggregation *_aggregation ) const
-{
-    if ( std::distance( _match_container_begin, _match_container_end ) == 0 )
-        {
-            return;
-        }
-
-    debug_log( "Apply by lag..." );
-
-    if ( apply_from_above() )
-        {
-            if ( is_activated_ )
-                {
-                    debug_log( "deactivate_matches_outside_window..." );
-
-                    _aggregation->deactivate_matches_outside_window(
-                        critical_value(),
-                        tree_->delta_t(),
-                        _match_container_begin,
-                        _match_container_end );
-                }
-            else
-                {
-                    debug_log( "activate_matches_outside_window..." );
-
-                    _aggregation->activate_matches_outside_window(
-                        critical_value(),
-                        tree_->delta_t(),
-                        _match_container_begin,
-                        _match_container_end );
-                }
-        }
-    else
-        {
-            if ( is_activated_ )
-                {
-                    debug_log( "deactivate_matches_in_window..." );
-
-                    _aggregation->deactivate_matches_in_window(
-                        critical_value(),
-                        tree_->delta_t(),
-                        _match_container_begin,
-                        _match_container_end );
-                }
-            else
-                {
-                    debug_log( "activate_matches_in_window..." );
-
-                    _aggregation->activate_matches_in_window(
-                        critical_value(),
-                        tree_->delta_t(),
-                        _match_container_begin,
-                        _match_container_end );
-                }
-        }
-}
-
-// ----------------------------------------------------------------------------
-
 std::shared_ptr<const std::vector<Int>> DecisionTreeNode::calculate_categories(
     const size_t _sample_size,
     containers::MatchPtrs::iterator _match_container_begin,
@@ -599,11 +418,8 @@ void DecisionTreeNode::column_importances(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::commit(
-    const containers::DataFrameView &_population,
-    const containers::DataFrame &_peripheral,
-    const containers::Subfeatures &_subfeatures,
-    const descriptors::Split &_split,
     containers::MatchPtrs::iterator _match_container_begin,
+    containers::MatchPtrs::iterator _separator,
     containers::MatchPtrs::iterator _match_container_end )
 {
     debug_log( "fit: Improvement possible..." );
@@ -611,12 +427,11 @@ void DecisionTreeNode::commit(
     const auto old_value = optimization_criterion()->value();
 
     update(
-        _population,
-        _peripheral,
-        _subfeatures,
-        _split,
+        true,
         _match_container_begin,
-        _match_container_end );
+        _separator,
+        _match_container_end,
+        aggregation() );
 
     debug_log( "fit: Commit..." );
 
@@ -718,29 +533,34 @@ void DecisionTreeNode::fit(
 
             assert_true( ix_max < candidate_splits.size() );
 
-            commit(
+            split_.reset( new descriptors::Split(
+                candidate_splits[ix_max].deep_copy() ) );
+
+            set_samples(
                 _population,
                 _peripheral,
                 _subfeatures,
-                candidate_splits[ix_max].deep_copy(),
                 _match_container_begin,
                 _match_container_end );
 
+            const auto separator = partition(
+                _population,
+                _peripheral,
+                _match_container_begin,
+                _match_container_end );
+
+            commit( _match_container_begin, separator, _match_container_end );
+
             if ( depth_ < tree_->max_length() )
                 {
-                    debug_log( "fit: Max length not reached..." );
-
                     spawn_child_nodes(
                         _population,
                         _peripheral,
                         _subfeatures,
                         _match_container_begin,
+                        separator,
                         _match_container_end );
                 }
-        }
-    else
-        {
-            debug_log( "fit: No improvement possible..." );
         }
 }
 
@@ -862,33 +682,73 @@ DecisionTreeNode::make_index_and_categories(
     containers::MatchPtrs::iterator _match_container_begin,
     containers::MatchPtrs::iterator _match_container_end )
 {
-    const auto [min, max] = utils::MinMaxFinder<Int>::find_min_max(
-        _match_container_begin, _match_container_end, comm() );
+    const auto get_value = []( const containers::Match *const m ) {
+        return m->categorical_value;
+    };
 
-    const auto is_null = []( const containers::Match *m ) {
+    const auto is_not_null = []( const containers::Match *m ) {
         return m->categorical_value >= 0;
     };
 
-    const auto nan_begin =
-        std::partition( _match_container_begin, _match_container_end, is_null );
+    const auto nan_begin = std::partition(
+        _match_container_begin, _match_container_end, is_not_null );
+
+    const auto [min, max] =
+        utils::MinMaxFinder<decltype( get_value ), Int>::find_min_max(
+            get_value, _match_container_begin, nan_begin, comm() );
 
     auto bins =
         containers::MatchPtrs( _match_container_begin, _match_container_end );
 
     // Note that this bins in ASCENDING order.
-    auto [indptr, categories] = utils::CategoricalBinner::bin(
-        min,
-        max,
-        _match_container_begin,
-        nan_begin,
-        _match_container_end,
-        &bins,
-        comm() );
+    auto [indptr, categories] =
+        utils::CategoricalBinner<decltype( get_value )>::bin(
+            min,
+            max,
+            get_value,
+            _match_container_begin,
+            nan_begin,
+            _match_container_end,
+            &bins,
+            comm() );
 
     auto index = containers::CategoryIndex(
         std::move( bins ), std::move( indptr ), min );
 
     return std::make_pair( index, categories );
+}
+
+// ----------------------------------------------------------------------------
+
+containers::MatchPtrs::iterator DecisionTreeNode::partition(
+    const containers::DataFrameView &_population,
+    const containers::DataFrame &_peripheral,
+    containers::MatchPtrs::iterator _match_container_begin,
+    containers::MatchPtrs::iterator _match_container_end ) const
+{
+    if ( categorical_data_used() )
+        {
+            return partition_by_categories_used(
+                _match_container_begin, _match_container_end );
+        }
+
+    if ( lag_used() )
+        {
+            return partition_by_categories_used(
+                _match_container_begin, _match_container_end );
+        }
+
+    if ( text_used() )
+        {
+            return partition_by_text(
+                _population,
+                _peripheral,
+                _match_container_begin,
+                _match_container_end );
+        }
+
+    return partition_by_critical_value(
+        _match_container_begin, _match_container_end );
 }
 
 // ----------------------------------------------------------------------------
@@ -918,59 +778,104 @@ containers::MatchPtrs::iterator DecisionTreeNode::partition_by_critical_value(
 {
     // ---------------------------------------------------------
 
-    debug_log( "transform: Separating null values..." );
-
     const bool null_values_to_beginning =
         ( apply_from_above() != is_activated_ );
 
-    auto null_values_separator = separate_null_values(
+    const auto null_values_separator = separate_null_values(
         _match_container_begin,
         _match_container_end,
         null_values_to_beginning );
 
+    const auto smaller_equal = [this]( const containers::Match *_sample ) {
+        return _sample->numerical_value <= critical_value();
+    };
+
     // ---------------------------------------------------------
 
-    debug_log( "transform: Separating by critical values..." );
-
-    if ( lag_used() )
+    if ( null_values_to_beginning )
         {
-            assert_true(
-                null_values_separator == _match_container_begin ||
-                null_values_separator == _match_container_end );
-
             return std::partition(
-                _match_container_begin,
-                _match_container_end,
-                [this]( const containers::Match *_sample ) {
-                    return (
-                        _sample->numerical_value <= critical_value() &&
-                        _sample->numerical_value >
-                            critical_value() - tree_->delta_t() );
-                } );
+                null_values_separator, _match_container_end, smaller_equal );
         }
     else
         {
-            if ( null_values_to_beginning )
-                {
-                    return std::partition(
-                        null_values_separator,
-                        _match_container_end,
-                        [this]( const containers::Match *_sample ) {
-                            return _sample->numerical_value <= critical_value();
-                        } );
-                }
-            else
-                {
-                    return std::partition(
-                        _match_container_begin,
-                        null_values_separator,
-                        [this]( const containers::Match *_sample ) {
-                            return _sample->numerical_value <= critical_value();
-                        } );
-                }
+            return std::partition(
+                _match_container_begin, null_values_separator, smaller_equal );
         }
 
     // ---------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+containers::MatchPtrs::iterator DecisionTreeNode::partition_by_lag(
+    containers::MatchPtrs::iterator _match_container_begin,
+    containers::MatchPtrs::iterator _match_container_end ) const
+{
+    return std::partition(
+        _match_container_begin,
+        _match_container_end,
+        [this]( const containers::Match *_sample ) {
+            return (
+                _sample->numerical_value <= critical_value() &&
+                _sample->numerical_value >
+                    critical_value() - tree_->delta_t() );
+        } );
+}
+
+// ----------------------------------------------------------------------------
+
+containers::MatchPtrs::iterator DecisionTreeNode::partition_by_text(
+    const containers::DataFrameView &_population,
+    const containers::DataFrame &_peripheral,
+    containers::MatchPtrs::iterator _match_container_begin,
+    containers::MatchPtrs::iterator _match_container_end ) const
+{
+    assert_true( split_ );
+
+    const auto &split = *split_;
+
+    const auto &df = ( split.data_used == enums::DataUsed::x_popul_text )
+                         ? _population.df()
+                         : _peripheral;
+
+    const auto col = split.column_used;
+
+    assert_true( col < df.word_indices_.size() );
+    assert_true( df.word_indices_.at( col ) );
+
+    const auto &word_index = *df.word_indices_.at( col );
+
+    const auto word_is_contained = [&split,
+                                    &word_index]( const containers::Match *m ) {
+        assert_true( m->categorical_value >= 0 );
+
+        const auto range =
+            word_index.range( static_cast<size_t>( m->categorical_value ) );
+
+        const auto in_range = [&range]( const Int word_ix ) -> bool {
+            for ( const auto &val : range )
+                {
+                    if ( val == word_ix )
+                        {
+                            return true;
+                        }
+                    if ( val > word_ix )
+                        {
+                            return false;
+                        }
+                }
+            return false;
+        };
+
+        const auto it = std::find_if(
+            split.categories_used_begin, split.categories_used_end, in_range );
+
+        return it != split.categories_used_end;
+    };
+
+    return std::partition(
+        _match_container_begin, _match_container_end, word_is_contained );
 }
 
 // ----------------------------------------------------------------------------
@@ -1100,6 +1005,17 @@ void DecisionTreeNode::set_samples(
 
                 break;
 
+            case enums::DataUsed::x_perip_text:
+                for ( auto it = _match_container_begin;
+                      it != _match_container_end;
+                      ++it )
+                    {
+                        ( *it )->categorical_value =
+                            static_cast<Int>( ( *it )->ix_x_perip );
+                    }
+
+                break;
+
             case enums::DataUsed::x_popul_categorical:
 
                 for ( auto it = _match_container_begin;
@@ -1132,6 +1048,21 @@ void DecisionTreeNode::set_samples(
                     {
                         ( *it )->numerical_value = get_x_popul_discrete(
                             _population, *it, column_used() );
+                    }
+
+                break;
+
+            case enums::DataUsed::x_popul_text:
+                for ( auto it = _match_container_begin;
+                      it != _match_container_end;
+                      ++it )
+                    {
+                        const auto ix = ( *it )->ix_x_popul;
+
+                        assert_true( ix < _population.rows().size() );
+
+                        ( *it )->categorical_value =
+                            static_cast<Int>( _population.rows()[ix] );
                     }
 
                 break;
@@ -1169,35 +1100,46 @@ void DecisionTreeNode::set_samples(
 
 // ----------------------------------------------------------------------------
 
+std::shared_ptr<const std::vector<Int>> DecisionTreeNode::sort_categories(
+    const std::shared_ptr<const std::vector<Int>> &_categories,
+    const size_t _begin,
+    const size_t _end ) const
+{
+    assert_true( _end >= _begin );
+
+    const auto sorted = std::make_shared<std::vector<Int>>( _end - _begin );
+
+    const auto indices = optimization_criterion()->argsort( _begin, _end );
+
+    assert_true( indices.size() == _categories->size() );
+
+    for ( size_t i = 0; i < indices.size(); ++i )
+        {
+            assert_true( indices[i] >= 0 );
+            assert_true( indices[i] < _end - _begin );
+
+            ( *sorted )[i] = ( *_categories )[indices[i]];
+        }
+
+    return sorted;
+}
+
+// ----------------------------------------------------------------------------
+
 void DecisionTreeNode::spawn_child_nodes(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
     const containers::Subfeatures &_subfeatures,
     containers::MatchPtrs::iterator _match_container_begin,
+    containers::MatchPtrs::iterator _separator,
     containers::MatchPtrs::iterator _match_container_end )
 {
     // -------------------------------------------------------------------------
-
-    auto it = _match_container_begin;
 
     const bool child_node_greater_is_activated =
         ( apply_from_above() != is_activated_ );
 
     // -------------------------------------------------------------------------
-
-    if ( categorical_data_used() )
-        {
-            it = partition_by_categories_used(
-                _match_container_begin, _match_container_end );
-        }
-    else
-        {
-            it = partition_by_critical_value(
-                _match_container_begin, _match_container_end );
-        }
-
-    // -------------------------------------------------------------------------
-    // Set up and fit child_node_smaller_
 
     child_node_smaller_.reset( new DecisionTreeNode(
         !( child_node_greater_is_activated ),  // _is_activated
@@ -1206,10 +1148,13 @@ void DecisionTreeNode::spawn_child_nodes(
         ) );
 
     child_node_smaller_->fit(
-        _population, _peripheral, _subfeatures, _match_container_begin, it );
+        _population,
+        _peripheral,
+        _subfeatures,
+        _match_container_begin,
+        _separator );
 
     // -------------------------------------------------------------------------
-    // Set up and fit child_node_greater_
 
     child_node_greater_.reset( new DecisionTreeNode(
         child_node_greater_is_activated,  // _is_activated
@@ -1218,7 +1163,11 @@ void DecisionTreeNode::spawn_child_nodes(
         ) );
 
     child_node_greater_->fit(
-        _population, _peripheral, _subfeatures, it, _match_container_end );
+        _population,
+        _peripheral,
+        _subfeatures,
+        _separator,
+        _match_container_end );
 
     // -------------------------------------------------------------------------
 }
@@ -1356,11 +1305,15 @@ void DecisionTreeNode::transform(
 {
     // -----------------------------------------------------------
 
-    // Some nodes do not impose a condition at all. It that case they
-    // cannot have any children either and there is nothing left to do.
     if ( !split_ )
         {
             debug_log( "transform: Does not impose condition..." );
+
+            if ( is_activated_ )
+                {
+                    _aggregation->activate_all(
+                        false, _match_container_begin, _match_container_end );
+                }
 
             return;
         }
@@ -1380,61 +1333,43 @@ void DecisionTreeNode::transform(
 
     debug_log( "transform: Applying condition..." );
 
-    if ( categorical_data_used() )
-        {
-            apply_by_categories_used(
-                _match_container_begin, _match_container_end, _aggregation );
-        }
-    else
-        {
-            apply_by_critical_value(
-                _match_container_begin, _match_container_end, _aggregation );
-        }
+    const auto separator = partition(
+        _population,
+        _peripheral,
+        _match_container_begin,
+        _match_container_end );
 
     // -----------------------------------------------------------
-    // If the node has child nodes, use them to transform as well
-
-    auto it = _match_container_begin;
 
     if ( child_node_greater_ )
         {
-            debug_log( "transform: Has child..." );
-
-            // ---------------------------------------------------------
-
-            debug_log( "transform: Partitioning by value.." );
-
-            if ( categorical_data_used() )
-                {
-                    it = partition_by_categories_used(
-                        _match_container_begin, _match_container_end );
-                }
-            else
-                {
-                    it = partition_by_critical_value(
-                        _match_container_begin, _match_container_end );
-                }
-
-            // ---------------------------------------------------------
-
             child_node_smaller_->transform(
                 _population,
                 _peripheral,
                 _subfeatures,
                 _match_container_begin,
-                it,
+                separator,
                 _aggregation );
 
             child_node_greater_->transform(
                 _population,
                 _peripheral,
                 _subfeatures,
-                it,
+                separator,
                 _match_container_end,
                 _aggregation );
-
-            // ---------------------------------------------------------
         }
+    else
+        {
+            update(
+                false,
+                _match_container_begin,
+                separator,
+                _match_container_end,
+                _aggregation );
+        }
+
+    // -----------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -1717,102 +1652,17 @@ void DecisionTreeNode::try_categorical_values(
 
     assert_true( categories );
 
-    const auto num_categories = categories->size();
-
     // -----------------------------------------------------------------------
-    // Add new splits to the candidate splits
-    // The samples where the category equals category_used_
-    // are copied into samples_smaller. This makes sense, because
-    // for the numerical values, samples_smaller contains all values
-    // <= critical_value().
-    // Because we first try the samples containing a category, that means
-    // the change must be applied from below, so apply_from_above is
-    // first false and then true.
 
-    for ( auto cat = categories->cbegin(); cat < categories->cend(); ++cat )
-        {
-            _candidate_splits->push_back( descriptors::Split(
-                false,         // _apply_from_above
-                categories,    // _categories_used
-                cat,           // _categories_used_begin
-                cat + 1,       // _categories_used_end
-                _column_used,  // _column_used
-                _data_used     // _data_used
-                ) );
-        }
-
-    for ( auto cat = categories->cbegin(); cat < categories->cend(); ++cat )
-        {
-            _candidate_splits->push_back( descriptors::Split(
-                true,          // _apply_from_above
-                categories,    // _categories_used
-                cat,           // _categories_used_begin
-                cat + 1,       // _categories_used_end
-                _column_used,  // _column_used
-                _data_used     // _data_used
-                ) );
-        }
-
-    // -----------------------------------------------------------------------
-    // Try individual categories.
-    //
-    // It is possible that std::distance( _match_container_begin,
-    // _match_container_end ) is zero, when we are using the distributed
-    // version. In that case we want this process until this point, because
-    // calculate_critical_values_numerical contains a barrier and we want to
-    // avoid a deadlock.
-
-    if ( std::distance( _match_container_begin, _match_container_end ) == 0 )
-        {
-            for ( size_t i = 0; i < categories->size() * 2; ++i )
-                {
-                    optimization_criterion()->store_current_stage( 0.0, 0.0 );
-                }
-        }
-    else
-        {
-            // -----------------------------------------------------------------------
-            // Try applying all aggregation to all samples that
-            // contain a certain category.
-
-            if ( is_activated_ )
-                {
-                    aggregation()->deactivate_matches_containing_categories(
-                        categories->cbegin(),
-                        categories->cend(),
-                        aggregations::Revert::after_each_category,
-                        index );
-                }
-            else
-                {
-                    aggregation()->activate_matches_containing_categories(
-                        categories->cbegin(),
-                        categories->cend(),
-                        aggregations::Revert::after_each_category,
-                        index );
-                }
-
-            // -----------------------------------------------------------------------
-            // Try applying all aggregation to all samples that DO NOT
-            // contain a certain category
-
-            if ( is_activated_ )
-                {
-                    aggregation()->deactivate_matches_not_containing_categories(
-                        categories->cbegin(),
-                        categories->cend(),
-                        aggregations::Revert::after_each_category,
-                        index );
-                }
-            else
-                {
-                    aggregation()->activate_matches_not_containing_categories(
-                        categories->cbegin(),
-                        categories->cend(),
-                        aggregations::Revert::after_each_category,
-                        index );
-                }
-        }
+    try_categorical_values_individual(
+        _column_used,
+        _data_used,
+        _sample_size,
+        index,
+        categories,
+        _match_container_begin,
+        _match_container_end,
+        _candidate_splits );
 
     // -----------------------------------------------------------------------
     // If there are only two categories, trying combined categories does not
@@ -1824,48 +1674,45 @@ void DecisionTreeNode::try_categorical_values(
         }
 
     // -----------------------------------------------------------------------
-    // Produce sorted_by_containing.
+
+    try_categorical_values_combined(
+        _column_used,
+        _data_used,
+        _sample_size,
+        index,
+        categories,
+        _match_container_begin,
+        _match_container_end,
+        _candidate_splits );
+
+    // -----------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+void DecisionTreeNode::try_categorical_values_combined(
+    const size_t _column_used,
+    const enums::DataUsed _data_used,
+    const size_t _sample_size,
+    const containers::CategoryIndex &_index,
+    const std::shared_ptr<const std::vector<Int>> &_categories,
+    containers::MatchPtrs::iterator _match_container_begin,
+    containers::MatchPtrs::iterator _match_container_end,
+    std::vector<descriptors::Split> *_candidate_splits )
+{
+    // -----------------------------------------------------------------------
+
+    const auto num_categories = _categories->size();
 
     const auto storage_ix = optimization_criterion()->storage_ix();
 
-    auto sorted_by_containing =
-        std::make_shared<std::vector<Int>>( num_categories );
+    const auto sorted_by_containing = sort_categories(
+        _categories,
+        storage_ix - num_categories * 2,
+        storage_ix - num_categories );
 
-    {
-        const auto indices = optimization_criterion()->argsort(
-            storage_ix - num_categories * 2, storage_ix - num_categories );
-
-        assert_true( indices.size() == categories->size() );
-
-        for ( size_t i = 0; i < indices.size(); ++i )
-            {
-                assert_true( indices[i] >= 0 );
-                assert_true( indices[i] < num_categories );
-
-                ( *sorted_by_containing )[i] = ( *categories )[indices[i]];
-            }
-    }
-
-    // -----------------------------------------------------------------------
-    // Produce sorted_by_not_containing.
-
-    auto sorted_by_not_containing =
-        std::make_shared<std::vector<Int>>( num_categories );
-
-    {
-        const auto indices = optimization_criterion()->argsort(
-            storage_ix - num_categories, storage_ix );
-
-        assert_true( indices.size() == categories->size() );
-
-        for ( size_t i = 0; i < indices.size(); ++i )
-            {
-                assert_true( indices[i] >= 0 );
-                assert_true( indices[i] < num_categories );
-
-                ( *sorted_by_not_containing )[i] = ( *categories )[indices[i]];
-            }
-    }
+    const auto sorted_by_not_containing =
+        sort_categories( _categories, storage_ix - num_categories, storage_ix );
 
     // -----------------------------------------------------------------------
     // Add new splits to the candidate splits.
@@ -1899,58 +1746,165 @@ void DecisionTreeNode::try_categorical_values(
         }
 
     // -----------------------------------------------------------------------
-    // Try combined categories.
 
     if ( std::distance( _match_container_begin, _match_container_end ) == 0 )
         {
-            for ( size_t i = 0; i < categories->size() * 2; ++i )
+            for ( size_t i = 0; i < _categories->size() * 2; ++i )
                 {
                     optimization_criterion()->store_current_stage( 0.0, 0.0 );
                 }
+
+            return;
+        }
+
+    //-----------------------------------------------------------------
+    // Try applying all aggregation to all samples that
+    // contain a certain category.
+
+    if ( is_activated_ )
+        {
+            aggregation()->deactivate_matches_containing_categories(
+                sorted_by_containing->cbegin(),
+                sorted_by_containing->cend(),
+                aggregations::Revert::after_all_categories,
+                _index );
         }
     else
         {
-            //-----------------------------------------------------------------
-            // Try applying all aggregation to all samples that
-            // contain a certain category.
+            aggregation()->activate_matches_containing_categories(
+                sorted_by_containing->cbegin(),
+                sorted_by_containing->cend(),
+                aggregations::Revert::after_all_categories,
+                _index );
+        }
 
-            if ( is_activated_ )
+    // -------------------------------------------------------------------
+    // Try applying all aggregation to all samples that DO NOT
+    // contain a certain category
+
+    if ( is_activated_ )
+        {
+            aggregation()->deactivate_matches_not_containing_categories(
+                sorted_by_not_containing->cbegin(),
+                sorted_by_not_containing->cend(),
+                aggregations::Revert::after_all_categories,
+                _index );
+        }
+    else
+        {
+            aggregation()->activate_matches_not_containing_categories(
+                sorted_by_not_containing->cbegin(),
+                sorted_by_not_containing->cend(),
+                aggregations::Revert::after_all_categories,
+                _index );
+        }
+
+    // -----------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+void DecisionTreeNode::try_categorical_values_individual(
+    const size_t _column_used,
+    const enums::DataUsed _data_used,
+    const size_t _sample_size,
+    const containers::CategoryIndex &_index,
+    const std::shared_ptr<const std::vector<Int>> &_categories,
+    containers::MatchPtrs::iterator _match_container_begin,
+    containers::MatchPtrs::iterator _match_container_end,
+    std::vector<descriptors::Split> *_candidate_splits )
+{
+    // -----------------------------------------------------------------------
+    // Add new splits to the candidate splits
+    // The samples where the category equals category_used_
+    // are copied into samples_smaller. This makes sense, because
+    // for the numerical values, samples_smaller contains all values
+    // <= critical_value().
+    // Because we first try the samples containing a category, that means
+    // the change must be applied from below, so apply_from_above is
+    // first false and then true.
+
+    for ( auto cat = _categories->cbegin(); cat < _categories->cend(); ++cat )
+        {
+            _candidate_splits->push_back( descriptors::Split(
+                false,         // _apply_from_above
+                _categories,   // _categories_used
+                cat,           // _categories_used_begin
+                cat + 1,       // _categories_used_end
+                _column_used,  // _column_used
+                _data_used     // _data_used
+                ) );
+        }
+
+    for ( auto cat = _categories->cbegin(); cat < _categories->cend(); ++cat )
+        {
+            _candidate_splits->push_back( descriptors::Split(
+                true,          // _apply_from_above
+                _categories,   // _categories_used
+                cat,           // _categories_used_begin
+                cat + 1,       // _categories_used_end
+                _column_used,  // _column_used
+                _data_used     // _data_used
+                ) );
+        }
+
+    // -----------------------------------------------------------------------
+    // It is possible that std::distance( _match_container_begin,
+    // _match_container_end ) is zero, when we are using the distributed
+    // version. In that case we want this process until this point, because
+    // calculate_critical_values_numerical contains a barrier and we want to
+    // avoid a deadlock.
+
+    if ( std::distance( _match_container_begin, _match_container_end ) == 0 )
+        {
+            for ( size_t i = 0; i < _categories->size() * 2; ++i )
                 {
-                    aggregation()->deactivate_matches_containing_categories(
-                        sorted_by_containing->cbegin(),
-                        sorted_by_containing->cend(),
-                        aggregations::Revert::after_all_categories,
-                        index );
-                }
-            else
-                {
-                    aggregation()->activate_matches_containing_categories(
-                        sorted_by_containing->cbegin(),
-                        sorted_by_containing->cend(),
-                        aggregations::Revert::after_all_categories,
-                        index );
+                    optimization_criterion()->store_current_stage( 0.0, 0.0 );
                 }
 
-            // -------------------------------------------------------------------
-            // Try applying all aggregation to all samples that DO NOT
-            // contain a certain category
+            return;
+        }
 
-            if ( is_activated_ )
-                {
-                    aggregation()->deactivate_matches_not_containing_categories(
-                        sorted_by_not_containing->cbegin(),
-                        sorted_by_not_containing->cend(),
-                        aggregations::Revert::after_all_categories,
-                        index );
-                }
-            else
-                {
-                    aggregation()->activate_matches_not_containing_categories(
-                        sorted_by_not_containing->cbegin(),
-                        sorted_by_not_containing->cend(),
-                        aggregations::Revert::after_all_categories,
-                        index );
-                }
+    // -----------------------------------------------------------------------
+    // Try applying all aggregation to all samples that
+    // contain a certain category.
+
+    if ( is_activated_ )
+        {
+            aggregation()->deactivate_matches_containing_categories(
+                _categories->cbegin(),
+                _categories->cend(),
+                aggregations::Revert::after_each_category,
+                _index );
+        }
+    else
+        {
+            aggregation()->activate_matches_containing_categories(
+                _categories->cbegin(),
+                _categories->cend(),
+                aggregations::Revert::after_each_category,
+                _index );
+        }
+
+    // -----------------------------------------------------------------------
+    // Try applying all aggregation to all samples that DO NOT
+    // contain a certain category
+
+    if ( is_activated_ )
+        {
+            aggregation()->deactivate_matches_not_containing_categories(
+                _categories->cbegin(),
+                _categories->cend(),
+                aggregations::Revert::after_each_category,
+                _index );
+        }
+    else
+        {
+            aggregation()->activate_matches_not_containing_categories(
+                _categories->cbegin(),
+                _categories->cend(),
+                aggregations::Revert::after_each_category,
+                _index );
         }
 
     // -----------------------------------------------------------------------
@@ -2012,6 +1966,13 @@ void DecisionTreeNode::try_conditions(
         _match_container_end,
         _candidate_splits );
 
+    try_text_peripheral(
+        _peripheral,
+        _sample_size,
+        _match_container_begin,
+        _match_container_end,
+        _candidate_splits );
+
     try_categorical_population(
         _population,
         _sample_size,
@@ -2027,6 +1988,13 @@ void DecisionTreeNode::try_conditions(
         _candidate_splits );
 
     try_numerical_population(
+        _population,
+        _sample_size,
+        _match_container_begin,
+        _match_container_end,
+        _candidate_splits );
+
+    try_text_population(
         _population,
         _sample_size,
         _match_container_begin,
@@ -2071,21 +2039,28 @@ void DecisionTreeNode::try_discrete_values(
     auto bins =
         containers::MatchPtrs( _match_container_begin, _match_container_end );
 
-    const auto [min, max] = utils::MinMaxFinder<Float>::find_min_max(
-        _match_container_begin, nan_begin, comm() );
+    const auto get_value = []( const containers::Match *const m ) {
+        return m->numerical_value;
+    };
+
+    const auto [min, max] =
+        utils::MinMaxFinder<decltype( get_value ), Float>::find_min_max(
+            get_value, _match_container_begin, nan_begin, comm() );
 
     const auto num_bins_numerical =
         calc_num_bins( _match_container_begin, nan_begin );
 
     // Note that this bins in DESCENDING order.
-    const auto [indptr, step_size] = utils::DiscreteBinner::bin(
-        min,
-        max,
-        num_bins_numerical,
-        _match_container_begin,
-        nan_begin,
-        _match_container_end,
-        &bins );
+    const auto [indptr, step_size] =
+        utils::DiscreteBinner<decltype( get_value )>::bin(
+            min,
+            max,
+            get_value,
+            num_bins_numerical,
+            _match_container_begin,
+            nan_begin,
+            _match_container_end,
+            &bins );
 
     // -----------------------------------------------------------------------
 
@@ -2284,20 +2259,27 @@ void DecisionTreeNode::try_numerical_values(
     auto bins =
         containers::MatchPtrs( _match_container_begin, _match_container_end );
 
-    const auto [min, max] = utils::MinMaxFinder<Float>::find_min_max(
-        _match_container_begin, nan_begin, comm() );
+    const auto get_value = []( const containers::Match *const m ) {
+        return m->numerical_value;
+    };
+
+    const auto [min, max] =
+        utils::MinMaxFinder<decltype( get_value ), Float>::find_min_max(
+            get_value, _match_container_begin, nan_begin, comm() );
 
     const auto num_bins = calc_num_bins( _match_container_begin, nan_begin );
 
     // Note that this bins in DESCENDING order.
-    const auto [indptr, step_size] = utils::NumericalBinner::bin(
-        min,
-        max,
-        num_bins,
-        _match_container_begin,
-        nan_begin,
-        _match_container_end,
-        &bins );
+    const auto [indptr, step_size] =
+        utils::NumericalBinner<decltype( get_value )>::bin(
+            min,
+            max,
+            get_value,
+            num_bins,
+            _match_container_begin,
+            nan_begin,
+            _match_container_end,
+            &bins );
 
     // -----------------------------------------------------------------------
 
@@ -2480,6 +2462,581 @@ void DecisionTreeNode::try_subfeatures(
 
 // ----------------------------------------------------------------------------
 
+void DecisionTreeNode::try_text_population(
+    const containers::DataFrameView &_population,
+    const size_t _sample_size,
+    containers::MatchPtrs::iterator _match_container_begin,
+    containers::MatchPtrs::iterator _match_container_end,
+    std::vector<descriptors::Split> *_candidate_splits )
+{
+    debug_log( "try_text_population..." );
+
+    assert_true(
+        _population.df().row_indices_.size() == _population.num_text() );
+
+    assert_true(
+        _population.df().word_indices_.size() == _population.num_text() );
+
+    auto bins = std::vector<containers::Match *>();
+
+    if ( _population.num_text() == 0 )
+        {
+            return;
+        }
+
+    for ( auto it = _match_container_begin; it != _match_container_end; ++it )
+        {
+            const auto ix = ( *it )->ix_x_popul;
+
+            assert_true( ix < _population.rows().size() );
+
+            ( *it )->categorical_value =
+                static_cast<Int>( _population.rows()[ix] );
+        }
+
+    for ( size_t col = 0; col < _population.num_text(); ++col )
+        {
+            if ( skip_condition() )
+                {
+                    continue;
+                }
+
+            const auto &row_index = _population.df().row_indices_.at( col );
+
+            const auto &word_index = _population.df().word_indices_.at( col );
+
+            assert_true( row_index );
+
+            assert_true( word_index );
+
+            try_text_values(
+                *row_index,
+                *word_index,
+                col,
+                enums::DataUsed::x_popul_text,
+                _sample_size,
+                _match_container_begin,
+                _match_container_end,
+                &bins,
+                _candidate_splits );
+        }
+
+    debug_log( "try_text_population...done" );
+}
+
+// ----------------------------------------------------------------------------
+
+void DecisionTreeNode::try_text_peripheral(
+    const containers::DataFrame &_peripheral,
+    const size_t _sample_size,
+    containers::MatchPtrs::iterator _match_container_begin,
+    containers::MatchPtrs::iterator _match_container_end,
+    std::vector<descriptors::Split> *_candidate_splits )
+{
+    debug_log( "try_text_peripheral..." );
+
+    assert_true( _peripheral.row_indices_.size() == _peripheral.num_text() );
+
+    assert_true( _peripheral.word_indices_.size() == _peripheral.num_text() );
+
+    // TODO: Stop reallocating bins all the time.
+    auto bins =
+        containers::MatchPtrs( _match_container_begin, _match_container_end );
+
+    if ( _peripheral.num_text() == 0 )
+        {
+            return;
+        }
+
+    for ( auto it = _match_container_begin; it != _match_container_end; ++it )
+        {
+            ( *it )->categorical_value =
+                static_cast<Int>( ( *it )->ix_x_perip );
+        }
+
+    for ( size_t col = 0; col < _peripheral.num_text(); ++col )
+        {
+            if ( skip_condition() )
+                {
+                    continue;
+                }
+
+            const auto &row_index = _peripheral.row_indices_.at( col );
+
+            const auto &word_index = _peripheral.word_indices_.at( col );
+
+            assert_true( row_index );
+
+            assert_true( word_index );
+
+            try_text_values(
+                *row_index,
+                *word_index,
+                col,
+                enums::DataUsed::x_perip_text,
+                _sample_size,
+                _match_container_begin,
+                _match_container_end,
+                &bins,
+                _candidate_splits );
+        }
+
+    debug_log( "try_text_population...done" );
+}
+
+// ----------------------------------------------------------------------------
+
+void DecisionTreeNode::try_text_values(
+    const textmining::RowIndex &_row_index,
+    const textmining::WordIndex &_word_index,
+    const size_t _column_used,
+    const enums::DataUsed _data_used,
+    const size_t _sample_size,
+    containers::MatchPtrs::iterator _match_container_begin,
+    containers::MatchPtrs::iterator _match_container_end,
+    std::vector<containers::Match *> *_bins,
+    std::vector<descriptors::Split> *_candidate_splits )
+{
+    // ----------------------------------------------------------------
+
+    const auto get_range = [&_word_index]( const containers::Match *const m ) {
+        assert_true( m->categorical_value >= 0 );
+        return _word_index.range( static_cast<size_t>( m->categorical_value ) );
+    };
+
+    const auto words = utils::WordMaker<decltype( get_range )>::make_words(
+        _word_index.vocabulary(),
+        get_range,
+        _match_container_begin,
+        _match_container_end,
+        comm() );
+
+    assert_true( words );
+
+    if ( words->size() == 0 )
+        {
+            return;
+        }
+
+    // ----------------------------------------------------------------
+
+    const auto get_rownum = []( const containers::Match *const m ) {
+        assert_true( m->categorical_value >= 0 );
+        return static_cast<size_t>( m->categorical_value );
+    };
+
+    const auto rownum_indptr = utils::RownumBinner<decltype( get_rownum )>::bin(
+        _word_index.nrows(),
+        get_rownum,
+        _match_container_begin,
+        _match_container_end,
+        _bins );
+
+    const auto individual_word_index = containers::WordIndex(
+        _bins->begin(), _bins->end(), _row_index, rownum_indptr );
+
+    // ----------------------------------------------------------------
+
+    try_text_values_individual(
+        _column_used,
+        _data_used,
+        _sample_size,
+        individual_word_index,
+        words,
+        _match_container_begin,
+        _match_container_end,
+        _candidate_splits );
+
+    // -----------------------------------------------------------------------
+    // If there are only two words, trying combined words does not
+    // make any sense.
+
+    if ( words->size() < 3 || !tree_->allow_sets() )
+        {
+            return;
+        }
+
+    // -----------------------------------------------------------------------
+
+    try_text_values_combined(
+        _column_used,
+        _data_used,
+        _sample_size,
+        _word_index,
+        words,
+        _match_container_begin,
+        _match_container_end,
+        _candidate_splits );
+
+    // ----------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+void DecisionTreeNode::try_text_values_combined(
+    const size_t _column_used,
+    const enums::DataUsed _data_used,
+    const size_t _sample_size,
+    const textmining::WordIndex &_word_index,
+    const std::shared_ptr<const std::vector<Int>> &_words,
+    containers::MatchPtrs::iterator _match_container_begin,
+    containers::MatchPtrs::iterator _match_container_end,
+    std::vector<descriptors::Split> *_candidate_splits )
+{
+    // -----------------------------------------------------------------------
+
+    assert_true( _words );
+
+    const auto num_words = _words->size();
+
+    const auto storage_ix = optimization_criterion()->storage_ix();
+
+    const auto sorted_by_containing = sort_categories(
+        _words, storage_ix - num_words * 2, storage_ix - num_words );
+
+    const auto sorted_by_not_containing =
+        sort_categories( _words, storage_ix - num_words, storage_ix );
+
+    // -----------------------------------------------------------------------
+
+    // TODO: Stop reallocating bins all the time
+    auto bins_by_containing =
+        containers::MatchPtrs( _match_container_begin, _match_container_end );
+
+    auto word_indptr_by_containing = make_word_indptr(
+        _word_index,
+        sorted_by_containing,
+        _match_container_begin,
+        _match_container_end,
+        &bins_by_containing );
+
+    const auto index_by_containing = containers::CategoryIndex(
+        std::move( bins_by_containing ),
+        std::move( word_indptr_by_containing ),
+        0 );
+
+    // -----------------------------------------------------------------------
+
+    // TODO: Stop reallocating bins all the time
+    auto bins_by_not_containing =
+        containers::MatchPtrs( _match_container_begin, _match_container_end );
+
+    auto word_indptr_by_not_containing = make_word_indptr(
+        _word_index,
+        sorted_by_not_containing,
+        _match_container_begin,
+        _match_container_end,
+        &bins_by_not_containing );
+
+    const auto index_by_not_containing = containers::CategoryIndex(
+        std::move( bins_by_not_containing ),
+        std::move( word_indptr_by_not_containing ),
+        0 );
+
+    // -----------------------------------------------------------------------
+    // Add new splits to the candidate splits.
+
+    for ( auto cat = sorted_by_containing->cbegin();
+          cat < sorted_by_containing->cend();
+          ++cat )
+        {
+            _candidate_splits->push_back( descriptors::Split(
+                false,                           // _apply_from_above
+                sorted_by_containing,            // _categories_used
+                sorted_by_containing->cbegin(),  // _categories_used_begin
+                cat + 1,                         // _categories_used_end
+                _column_used,                    // _column_used
+                _data_used                       // _data_used
+                ) );
+        }
+
+    for ( auto cat = sorted_by_not_containing->cbegin();
+          cat < sorted_by_not_containing->cend();
+          ++cat )
+        {
+            _candidate_splits->push_back( descriptors::Split(
+                true,                                // _apply_from_above
+                sorted_by_not_containing,            // _categories_used
+                sorted_by_not_containing->cbegin(),  // _categories_used_begin
+                cat + 1,                             // _categories_used_end
+                _column_used,                        // _column_used
+                _data_used                           // _data_used
+                ) );
+        }
+
+    // -----------------------------------------------------------------------
+
+    if ( std::distance( _match_container_begin, _match_container_end ) == 0 )
+        {
+            for ( size_t i = 0; i < _words->size() * 2; ++i )
+                {
+                    optimization_criterion()->store_current_stage( 0.0, 0.0 );
+                }
+
+            return;
+        }
+
+    //-----------------------------------------------------------------
+    // Try applying all aggregation to all samples that
+    // contain a certain category.
+
+    if ( is_activated_ )
+        {
+            aggregation()->deactivate_matches_containing_categories(
+                sorted_by_containing->cbegin(),
+                sorted_by_containing->cend(),
+                aggregations::Revert::after_all_categories,
+                index_by_containing );
+        }
+    else
+        {
+            aggregation()->activate_matches_containing_categories(
+                sorted_by_containing->cbegin(),
+                sorted_by_containing->cend(),
+                aggregations::Revert::after_all_categories,
+                index_by_containing );
+        }
+
+    // -------------------------------------------------------------------
+    // Try applying all aggregation to all samples that DO NOT
+    // contain a certain category
+
+    if ( is_activated_ )
+        {
+            aggregation()->deactivate_matches_not_containing_categories(
+                sorted_by_not_containing->cbegin(),
+                sorted_by_not_containing->cend(),
+                aggregations::Revert::after_all_categories,
+                index_by_not_containing );
+        }
+    else
+        {
+            aggregation()->activate_matches_not_containing_categories(
+                sorted_by_not_containing->cbegin(),
+                sorted_by_not_containing->cend(),
+                aggregations::Revert::after_all_categories,
+                index_by_not_containing );
+        }
+
+    // -----------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<size_t> DecisionTreeNode::make_word_indptr(
+    const textmining::WordIndex &_word_index,
+    const std::shared_ptr<const std::vector<Int>> &_sorted_words,
+    containers::MatchPtrs::iterator _match_container_begin,
+    containers::MatchPtrs::iterator _match_container_end,
+    containers::MatchPtrs *_bins ) const
+{
+    // ----------------------------------------------------------------
+
+    assert_true( _sorted_words );
+
+    // ----------------------------------------------------------------
+
+    const auto extract_word =
+        [&_word_index, _sorted_words]( const containers::Match *m ) -> Int {
+        const auto rownum = m->categorical_value;
+
+        assert_true( rownum >= 0 );
+
+        const auto range = _word_index.range( static_cast<size_t>( rownum ) );
+
+        if ( range.begin() == range.end() )
+            {
+                return -1;
+            }
+
+        for ( const auto word_ix : *_sorted_words )
+            {
+                for ( const auto r : range )
+                    {
+                        if ( r == word_ix )
+                            {
+                                return word_ix;
+                            }
+
+                        if ( r > word_ix )
+                            {
+                                break;
+                            }
+                    }
+            }
+
+        return -1;
+    };
+
+    // ----------------------------------------------------------------
+    // Extracting the words is expensive, so we precalculate it.
+
+    constexpr Int WORD_NOT_SET = -2;
+
+    auto words = std::vector<Int>( _word_index.nrows(), WORD_NOT_SET );
+
+    for ( auto it = _match_container_begin; it != _match_container_end; ++it )
+        {
+            assert_true( ( *it )->categorical_value >= 0 );
+
+            const auto ix = static_cast<size_t>( ( *it )->categorical_value );
+
+            assert_true( ix < words.size() );
+
+            if ( words[ix] != WORD_NOT_SET )
+                {
+                    continue;
+                }
+
+            words[ix] = extract_word( *it );
+        }
+
+    // ----------------------------------------------------------------
+
+    const auto get_word = [&words]( const containers::Match *m ) {
+        assert_true( m->categorical_value >= 0 );
+        const auto ix = static_cast<size_t>( m->categorical_value );
+        assert_true( ix < words.size() );
+        return words[ix];
+    };
+
+    // ----------------------------------------------------------------
+
+    const auto is_not_nan = [get_word]( const containers::Match *m ) -> bool {
+        return ( get_word( m ) >= 0 );
+    };
+
+    /// Moves text fields without words from the vocabulary to the end.
+    const auto nan_begin = std::partition(
+        _match_container_begin, _match_container_end, is_not_nan );
+
+    // ----------------------------------------------------------------
+
+    return utils::WordBinner<decltype( get_word )>::bin(
+        _word_index.vocabulary(),
+        get_word,
+        _match_container_begin,
+        nan_begin,
+        _match_container_end,
+        _bins );
+
+    // ----------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+void DecisionTreeNode::try_text_values_individual(
+    const size_t _column_used,
+    const enums::DataUsed _data_used,
+    const size_t _sample_size,
+    const containers::WordIndex &_word_index,
+    const std::shared_ptr<const std::vector<Int>> &_words,
+    containers::MatchPtrs::iterator _match_container_begin,
+    containers::MatchPtrs::iterator _match_container_end,
+    std::vector<descriptors::Split> *_candidate_splits )
+{
+    // -----------------------------------------------------------------------
+
+    assert_true( _words );
+
+    // -----------------------------------------------------------------------
+    // Add new splits to the candidate splits
+    // The samples where the category equals category_used_
+    // are copied into samples_smaller. This makes sense, because
+    // for the numerical values, samples_smaller contains all values
+    // <= critical_value().
+    // Because we first try the samples containing a category, that means
+    // the change must be applied from below, so apply_from_above is
+    // first false and then true.
+
+    for ( auto word = _words->cbegin(); word < _words->cend(); ++word )
+        {
+            _candidate_splits->push_back( descriptors::Split(
+                false,         // _apply_from_above
+                _words,        // _categories_used
+                word,          // _categories_used_begin
+                word + 1,      // _categories_used_end
+                _column_used,  // _column_used
+                _data_used     // _data_used
+                ) );
+        }
+
+    for ( auto word = _words->cbegin(); word < _words->cend(); ++word )
+        {
+            _candidate_splits->push_back( descriptors::Split(
+                true,          // _apply_from_above
+                _words,        // _categories_used
+                word,          // _categories_used_begin
+                word + 1,      // _categories_used_end
+                _column_used,  // _column_used
+                _data_used     // _data_used
+                ) );
+        }
+
+    // -----------------------------------------------------------------------
+    // It is possible that std::distance( _match_container_begin,
+    // _match_container_end ) is zero, when we are using the distributed
+    // version. In that case we want this process until this point, because
+    // calculate_critical_values_numerical contains a barrier and we want to
+    // avoid a deadlock.
+
+    if ( std::distance( _match_container_begin, _match_container_end ) == 0 )
+        {
+            for ( size_t i = 0; i < _words->size() * 2; ++i )
+                {
+                    optimization_criterion()->store_current_stage( 0.0, 0.0 );
+                }
+
+            return;
+        }
+
+    // -----------------------------------------------------------------------
+    // Try applying all aggregation to all samples that
+    // contain a certain category.
+
+    if ( is_activated_ )
+        {
+            aggregation()->deactivate_matches_containing_words(
+                _words->cbegin(),
+                _words->cend(),
+                aggregations::Revert::after_each_category,
+                _word_index );
+        }
+    else
+        {
+            aggregation()->activate_matches_containing_words(
+                _words->cbegin(),
+                _words->cend(),
+                aggregations::Revert::after_each_category,
+                _word_index );
+        }
+
+    // -----------------------------------------------------------------------
+    // Try applying all aggregation to all samples that DO NOT
+    // contain a certain category
+
+    if ( is_activated_ )
+        {
+            aggregation()->deactivate_matches_not_containing_words(
+                _words->cbegin(),
+                _words->cend(),
+                aggregations::Revert::after_each_category,
+                _word_index );
+        }
+    else
+        {
+            aggregation()->activate_matches_not_containing_words(
+                _words->cbegin(),
+                _words->cend(),
+                aggregations::Revert::after_each_category,
+                _word_index );
+        }
+
+    // -----------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
 void DecisionTreeNode::try_time_stamps_window(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
@@ -2530,8 +3087,13 @@ void DecisionTreeNode::try_window(
 
     // -----------------------------------------------------------------------
 
-    const auto [min, max] = utils::MinMaxFinder<Float>::find_min_max(
-        _match_container_begin, _match_container_end, comm() );
+    const auto get_value = []( const containers::Match *const m ) {
+        return m->numerical_value;
+    };
+
+    const auto [min, max] =
+        utils::MinMaxFinder<decltype( get_value ), Float>::find_min_max(
+            get_value, _match_container_begin, _match_container_end, comm() );
 
     const auto num_bins = static_cast<size_t>( ( max - min ) / step_size ) + 1;
 
@@ -2547,14 +3109,16 @@ void DecisionTreeNode::try_window(
         containers::MatchPtrs( _match_container_begin, _match_container_end );
 
     // Note that this bins in DESCENDING order.
-    const auto indptr = utils::NumericalBinner::bin_given_step_size(
-        min,
-        max,
-        step_size,
-        _match_container_begin,
-        _match_container_end,
-        _match_container_end,
-        &bins );
+    const auto indptr =
+        utils::NumericalBinner<decltype( get_value )>::bin_given_step_size(
+            min,
+            max,
+            get_value,
+            step_size,
+            _match_container_begin,
+            _match_container_end,
+            _match_container_end,
+            &bins );
 
     if ( indptr.size() == 0 )
         {
@@ -2648,51 +3212,56 @@ void DecisionTreeNode::try_window(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeNode::update(
-    const containers::DataFrameView &_population,
-    const containers::DataFrame &_peripheral,
-    const containers::Subfeatures &_subfeatures,
-    const descriptors::Split &_split,
+    const auto _allow_deactivation,
     containers::MatchPtrs::iterator _match_container_begin,
-    containers::MatchPtrs::iterator _match_container_end )
+    containers::MatchPtrs::iterator _separator,
+    containers::MatchPtrs::iterator _match_container_end,
+    aggregations::AbstractAggregation *_aggregation ) const
 {
-    // --------------------------------------------------------------
-    // Transfer parameters from split descriptor
-
-    split_.reset( new descriptors::Split( _split ) );
-
-    // --------------------------------------------------------------
-
-    debug_log( "Identify parameters..." );
-
-    // --------------------------------------------------------------
-    // Restore the optimal split
-
-    set_samples(
-        _population,
-        _peripheral,
-        _subfeatures,
-        _match_container_begin,
-        _match_container_end );
-
-    // --------------------------------------------------------------
-    // Change stage of aggregation to optimal split
-
-    debug_log(
-        "Data used: " +
-        std::to_string( JSON::data_used_to_int( split_->data_used ) ) );
-
-    if ( categorical_data_used() )
+    if ( apply_from_above() )
         {
-            apply_by_categories_used(
-                _match_container_begin, _match_container_end, aggregation() );
+            if ( !is_activated_ )
+                {
+                    _aggregation->activate_partition_from_above(
+                        _match_container_begin,
+                        _separator,
+                        _match_container_end );
+                }
+            else
+                {
+                    if ( !_allow_deactivation )
+                        {
+                            return;
+                        }
+
+                    _aggregation->deactivate_partition_from_above(
+                        _match_container_begin,
+                        _separator,
+                        _match_container_end );
+                }
         }
     else
         {
-            apply_by_critical_value(
-                _match_container_begin, _match_container_end, aggregation() );
-        }
+            if ( !is_activated_ )
+                {
+                    _aggregation->activate_partition_from_below(
+                        _match_container_begin,
+                        _separator,
+                        _match_container_end );
+                }
+            else
+                {
+                    if ( !_allow_deactivation )
+                        {
+                            return;
+                        }
 
-    // --------------------------------------------------------------
+                    _aggregation->deactivate_partition_from_below(
+                        _match_container_begin,
+                        _separator,
+                        _match_container_end );
+                }
+        }
 }
 
 // ----------------------------------------------------------------------------

@@ -122,7 +122,14 @@ DecisionTreeEnsemble::DecisionTreeEnsemble( const Poco::JSON::Object &_obj )
         }
 
     // ----------------------------------------
-    // Extract subensembles_avg_
+
+    if ( _obj.has( "vocabulary_" ) )
+        {
+            impl().vocabulary_ = std::make_shared<helpers::VocabularyContainer>(
+                *jsonutils::JSON::get_object( _obj, "vocabulary_" ) );
+        }
+
+    // ----------------------------------------
 
     auto features_avg = JSON::get_array( _obj, "subfeatures1_" );
 
@@ -142,7 +149,6 @@ DecisionTreeEnsemble::DecisionTreeEnsemble( const Poco::JSON::Object &_obj )
         }
 
     // ----------------------------------------
-    // Extract subensembles_sum_
 
     auto features_sum = JSON::get_array( _obj, "subfeatures2_" );
 
@@ -221,6 +227,36 @@ void DecisionTreeEnsemble::calc_initial_prediction()
     initial_prediction() = sum / count;
 
     loss_function().apply_inverse( &initial_prediction() );
+}
+
+// ----------------------------------------------------------------------------
+
+std::pair<Int, std::vector<size_t>> DecisionTreeEnsemble::calc_thread_nums(
+    const containers::DataFrame &_population ) const
+{
+    // ------------------------------------------------------
+
+    auto num_threads =
+        Threadutils::get_num_threads( hyperparameters().num_threads_ );
+
+    // ------------------------------------------------------
+
+    const auto [thread_nums, n_unique] =
+        utils::DataFrameScatterer::build_thread_nums(
+            true, _population.nrows(), _population.join_keys(), num_threads );
+
+    // ------------------------------------------------------
+
+    if ( num_threads > n_unique )
+        {
+            num_threads = n_unique;
+        }
+
+    // ------------------------------------------------------
+
+    return std::make_pair( num_threads, thread_nums );
+
+    // ------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -390,13 +426,9 @@ void DecisionTreeEnsemble::fit(
     const std::vector<containers::DataFrame> &_peripheral,
     const std::shared_ptr<const logging::AbstractLogger> _logger )
 {
-    // ------------------------------------------------------
-    // Some plausibility checks.
-
     if ( num_features() != 0 )
         {
-            throw std::runtime_error(
-                "Relboost model has already been fitted!" );
+            throw std::runtime_error( "RelMT model has already been fitted!" );
         }
 
     if ( _population.nrows() == 0 )
@@ -407,107 +439,15 @@ void DecisionTreeEnsemble::fit(
 
     check_plausibility_of_targets( _population );
 
-    // ------------------------------------------------------
-    // We need to store the schemas for future reference.
-
     extract_schemas( _population, _peripheral );
 
-    // ------------------------------------------------------
+    const auto [population, peripheral, row_indices, word_indices] =
+        handle_text_fields( _population, _peripheral );
 
-    auto num_threads =
-        Threadutils::get_num_threads( hyperparameters().num_threads_ );
-
-    // ------------------------------------------------------
-    // Build thread_nums
-
-    const bool has_peripheral = ( _peripheral.size() > 0 );
-
-    const auto [thread_nums, n_unique] =
-        utils::DataFrameScatterer::build_thread_nums(
-            has_peripheral,
-            _population.nrows(),
-            _population.join_keys(),
-            num_threads );
-
-    // ------------------------------------------------------
-    // Take care of an edge case.
-
-    if ( num_threads > n_unique )
-        {
-            num_threads = n_unique;
-        }
-
-    // ------------------------------------------------------
-
-    multithreading::Communicator comm( num_threads );
-
-    set_comm( &comm );
-
-    // ------------------------------------------------------
-    // Create deep copies of this ensemble.
-
-    std::vector<ensemble::DecisionTreeEnsemble> ensembles;
-
-    for ( size_t i = 0; i < num_threads - 1; ++i )
-        {
-            ensembles.push_back( *this );
-        }
-
-    // ------------------------------------------------------
-    // Spawn threads.
-
-    std::vector<std::thread> threads;
-
-    for ( size_t i = 0; i < num_threads - 1; ++i )
-        {
-            threads.push_back( std::thread(
-                Threadutils::fit_ensemble,
-                i + 1,
-                thread_nums,
-                _population,
-                _peripheral,
-                std::shared_ptr<const logging::AbstractLogger>(),
-                &comm,
-                &ensembles[i] ) );
-        }
-
-    // ------------------------------------------------------
-    // Train ensemble in main thread.
-
-    try
-        {
-            Threadutils::fit_ensemble(
-                0,
-                thread_nums,
-                _population,
-                _peripheral,
-                _logger,
-                &comm,
-                this );
-        }
-    catch ( std::exception &e )
-        {
-            for ( auto &thr : threads )
-                {
-                    thr.join();
-                }
-
-            throw std::invalid_argument( e.what() );
-        }
-
-    // ------------------------------------------------------
-    // Join all other threads
-
-    for ( auto &thr : threads )
-        {
-            thr.join();
-        }
-
-    // ------------------------------------------------------
+    fit_spawn_threads(
+        population, peripheral, row_indices, word_indices, _logger );
 
     clean_up();
-
-    // ------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -695,6 +635,88 @@ void DecisionTreeEnsemble::fit_new_features(
 
 // ----------------------------------------------------------------------------
 
+void DecisionTreeEnsemble::fit_spawn_threads(
+    const containers::DataFrame &_population,
+    const std::vector<containers::DataFrame> &_peripheral,
+    const helpers::RowIndexContainer &_row_indices,
+    const helpers::WordIndexContainer &_word_indices,
+    const std::shared_ptr<const logging::AbstractLogger> _logger )
+{
+    // ------------------------------------------------------
+
+    const auto [num_threads, thread_nums] = calc_thread_nums( _population );
+
+    // ------------------------------------------------------
+
+    multithreading::Communicator comm( num_threads );
+
+    set_comm( &comm );
+
+    // ------------------------------------------------------
+
+    std::vector<ensemble::DecisionTreeEnsemble> ensembles;
+
+    for ( size_t i = 0; i < num_threads - 1; ++i )
+        {
+            ensembles.push_back( *this );
+        }
+
+    // ------------------------------------------------------
+
+    std::vector<std::thread> threads;
+
+    for ( size_t i = 0; i < num_threads - 1; ++i )
+        {
+            threads.push_back( std::thread(
+                Threadutils::fit_ensemble,
+                i + 1,
+                thread_nums,
+                _population,
+                _peripheral,
+                _row_indices,
+                _word_indices,
+                std::shared_ptr<const logging::AbstractLogger>(),
+                &comm,
+                &ensembles[i] ) );
+        }
+
+    // ------------------------------------------------------
+
+    try
+        {
+            Threadutils::fit_ensemble(
+                0,
+                thread_nums,
+                _population,
+                _peripheral,
+                _row_indices,
+                _word_indices,
+                _logger,
+                &comm,
+                this );
+        }
+    catch ( std::exception &e )
+        {
+            for ( auto &thr : threads )
+                {
+                    thr.join();
+                }
+
+            throw std::invalid_argument( e.what() );
+        }
+
+    // ------------------------------------------------------
+
+    for ( auto &thr : threads )
+        {
+            thr.join();
+        }
+
+    // ------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
 void DecisionTreeEnsemble::fit_subensembles(
     const std::shared_ptr<const TableHolder> &_table_holder,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
@@ -744,15 +766,62 @@ DecisionTreeEnsemble::fit_transform_scalers(
 
 // ----------------------------------------------------------------------------
 
+std::tuple<
+    containers::DataFrame,
+    std::vector<containers::DataFrame>,
+    helpers::RowIndexContainer,
+    helpers::WordIndexContainer>
+DecisionTreeEnsemble::handle_text_fields(
+    const containers::DataFrame &_population,
+    const std::vector<containers::DataFrame> &_peripheral ) const
+{
+    const auto [population, peripheral] =
+        hyperparameters().split_text_fields_
+            ? helpers::TextFieldSplitter::split_text_fields(
+                  _population, _peripheral )
+            : std::make_pair( _population, _peripheral );
+
+    const auto vocabulary = helpers::VocabularyContainer(
+        hyperparameters().min_df_,
+        hyperparameters().vocab_size_,
+        population,
+        peripheral );
+
+    const auto word_indices =
+        helpers::WordIndexContainer( population, peripheral, vocabulary );
+
+    const auto row_indices = helpers::RowIndexContainer( word_indices );
+
+    return std::make_tuple( population, peripheral, row_indices, word_indices );
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<size_t> DecisionTreeEnsemble::infer_index(
+    const std::optional<std::vector<size_t>> &_index ) const
+{
+    if ( _index )
+        {
+            return *_index;
+        }
+
+    auto iota = std::views::iota( static_cast<size_t>( 0 ), num_features() );
+
+    return stl::make::vector<size_t>( iota );
+}
+
+// ----------------------------------------------------------------------------
+
 std::pair<
     std::shared_ptr<lossfunctions::LossFunction>,
     std::shared_ptr<const TableHolder>>
-DecisionTreeEnsemble::init_as_feature_learner(
+DecisionTreeEnsemble::init(
     const containers::DataFrameView &_population,
-    const std::vector<containers::DataFrame> &_peripheral )
+    const std::vector<containers::DataFrame> &_peripheral,
+    const helpers::RowIndexContainer &_row_indices,
+    const helpers::WordIndexContainer &_word_indices )
 {
     // ------------------------------------------------------------------------
-    // Prepare targets.
 
     assert_true( _population.num_targets() == 1 );
 
@@ -768,7 +837,6 @@ DecisionTreeEnsemble::init_as_feature_learner(
     calc_initial_prediction();
 
     // ------------------------------------------------------------------------
-    // Initialize the loss function.
 
     loss_function().init_yhat_old( initial_prediction() );
 
@@ -778,49 +846,23 @@ DecisionTreeEnsemble::init_as_feature_learner(
         false, hyperparameters().sampling_factor_, &comm() );
 
     // ------------------------------------------------------------------------
-    // Build table holder.
 
     const auto table_holder = std::make_shared<const TableHolder>(
-        placeholder(), _population, _peripheral, peripheral() );
+        placeholder(),
+        _population,
+        _peripheral,
+        peripheral(),
+        _row_indices,
+        _word_indices );
+
+    // ------------------------------------------------------------------------
+
+    impl().vocabulary_ = std::make_shared<const helpers::VocabularyContainer>(
+        _word_indices.vocabulary() );
 
     // ------------------------------------------------------------------------
 
     return std::make_pair( loss_function_, table_holder );
-}
-
-// ----------------------------------------------------------------------------
-
-std::shared_ptr<lossfunctions::LossFunction>
-DecisionTreeEnsemble::init_as_predictor(
-    const containers::DataFrameView &_population )
-{
-    // ------------------------------------------------------------------------
-    // Prepare targets.
-
-    assert_true( _population.num_targets() == 1 );
-
-    for ( size_t i = 0; i < _population.nrows(); ++i )
-        {
-            targets()[i] = _population.target( i, 0 );
-        }
-
-    // ------------------------------------------------------------------------
-
-    calc_initial_prediction();
-
-    // ------------------------------------------------------------------------
-    // Initialize the loss function.
-
-    loss_function().init_yhat_old( initial_prediction() );
-
-    loss_function().calc_gradients();
-
-    loss_function().calc_sampling_rate(
-        true, hyperparameters().sampling_factor_, &comm() );
-
-    // ------------------------------------------------------------------------
-
-    return loss_function_;
 
     // ------------------------------------------------------------------------
 }
@@ -1038,7 +1080,6 @@ containers::Features DecisionTreeEnsemble::transform(
     const std::shared_ptr<const logging::AbstractLogger> _logger ) const
 {
     // ------------------------------------------------------
-    // Check plausibility.
 
     if ( _population.nrows() == 0 )
         {
@@ -1047,118 +1088,37 @@ containers::Features DecisionTreeEnsemble::transform(
         }
 
     // ------------------------------------------------------
-    // If no index is passed, take all features.
 
-    std::vector<size_t> index;
-
-    if ( _index )
-        {
-            index = *_index;
-        }
-    else
-        {
-            index = std::vector<size_t>( num_features() );
-
-            for ( size_t i = 0; i < index.size(); ++i )
-                {
-                    index[i] = i;
-                }
-        }
+    const auto index = infer_index( _index );
 
     // ------------------------------------------------------
-    // thread_nums signify the thread number that a particular row belongs to.
-    // The idea is to separate the join keys as clearly as possible.
 
-    auto num_threads =
-        Threadutils::get_num_threads( hyperparameters().num_threads_ );
+    const auto [population, peripheral] =
+        hyperparameters().split_text_fields_
+            ? helpers::TextFieldSplitter::split_text_fields(
+                  _population, _peripheral )
+            : std::make_pair( _population, _peripheral );
 
-    const bool has_peripheral = ( _peripheral.size() > 0 );
-
-    const auto [thread_nums, n_unique] =
-        utils::DataFrameScatterer::build_thread_nums(
-            has_peripheral,
-            _population.nrows(),
-            _population.join_keys(),
-            num_threads );
-
-    // ------------------------------------------------------
-    // Take care of an edge case.
-
-    if ( num_threads > n_unique )
-        {
-            num_threads = n_unique;
-        }
+    const auto word_indices =
+        helpers::WordIndexContainer( population, peripheral, vocabulary() );
 
     // -------------------------------------------------------
 
-    multithreading::Communicator comm( num_threads );
+    const auto init_feature = [&_population]( const size_t ix ) {
+        return std::make_shared<std::vector<Float>>( _population.nrows() );
+    };
+
+    auto range = index | std::views::transform( init_feature );
+
+    auto features =
+        stl::make::vector<std::shared_ptr<std::vector<Float>>>( range );
 
     // -------------------------------------------------------
-    // Launch threads and generate predictions on the subviews.
 
-    auto features = containers::Features( 1 );
+    transform_spawn_threads(
+        population, peripheral, index, word_indices, _logger, &features );
 
-    if ( has_peripheral )
-        {
-            features = containers::Features( index.size() );
-        }
-
-    for ( auto &f : features )
-        {
-            f = std::make_shared<std::vector<Float>>( _population.nrows() );
-        }
-
-    std::vector<std::thread> threads;
-
-    for ( size_t i = 0; i < num_threads - 1; ++i )
-        {
-            threads.push_back( std::thread(
-                Threadutils::transform_ensemble,
-                i + 1,
-                thread_nums,
-                _population,
-                _peripheral,
-                index,
-                std::shared_ptr<const logging::AbstractLogger>(),
-                *this,
-                &comm,
-                &features ) );
-        }
-
-    // ------------------------------------------------------
-    // Transform in main thread.
-
-    try
-        {
-            Threadutils::transform_ensemble(
-                0,
-                thread_nums,
-                _population,
-                _peripheral,
-                index,
-                _logger,
-                *this,
-                &comm,
-                &features );
-        }
-    catch ( std::exception &e )
-        {
-            for ( auto &thr : threads )
-                {
-                    thr.join();
-                }
-
-            throw std::invalid_argument( e.what() );
-        }
-
-    // ------------------------------------------------------
-
-    for ( auto &thr : threads )
-        {
-            thr.join();
-        }
-
-    // ------------------------------------------------------
+    // -------------------------------------------------------
 
     return features;
 
@@ -1188,6 +1148,80 @@ std::vector<Float> DecisionTreeEnsemble::transform(
         _table_holder.main_tables_[peripheral_used],
         _table_holder.peripheral_tables_[peripheral_used],
         _subfeatures[peripheral_used] );
+}
+
+// ----------------------------------------------------------------------------
+
+void DecisionTreeEnsemble::transform_spawn_threads(
+    const containers::DataFrame &_population,
+    const std::vector<containers::DataFrame> &_peripheral,
+    const std::vector<size_t> &_index,
+    const helpers::WordIndexContainer &_word_indices,
+    const std::shared_ptr<const logging::AbstractLogger> _logger,
+    containers::Features *_features ) const
+{
+    // -------------------------------------------------------
+
+    const auto [num_threads, thread_nums] = calc_thread_nums( _population );
+
+    // -------------------------------------------------------
+
+    multithreading::Communicator comm( num_threads );
+
+    // -------------------------------------------------------
+
+    std::vector<std::thread> threads;
+
+    for ( size_t i = 0; i < num_threads - 1; ++i )
+        {
+            threads.push_back( std::thread(
+                Threadutils::transform_ensemble,
+                i + 1,
+                thread_nums,
+                _population,
+                _peripheral,
+                _word_indices,
+                _index,
+                std::shared_ptr<const logging::AbstractLogger>(),
+                *this,
+                &comm,
+                _features ) );
+        }
+
+    // ------------------------------------------------------
+
+    try
+        {
+            Threadutils::transform_ensemble(
+                0,
+                thread_nums,
+                _population,
+                _peripheral,
+                _word_indices,
+                _index,
+                _logger,
+                *this,
+                &comm,
+                _features );
+        }
+    catch ( std::exception &e )
+        {
+            for ( auto &thr : threads )
+                {
+                    thr.join();
+                }
+
+            throw std::invalid_argument( e.what() );
+        }
+
+    // ------------------------------------------------------
+
+    for ( auto &thr : threads )
+        {
+            thr.join();
+        }
+
+    // ------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -1266,7 +1300,10 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj(
     obj.set( "trees_", trees_arr );
 
     // ----------------------------------------
-    // Extract subensembles_avg_
+
+    obj.set( "vocabulary_", vocabulary().to_json_obj() );
+
+    // ----------------------------------------
 
     Poco::JSON::Array::Ptr features_avg( new Poco::JSON::Array() );
 
@@ -1287,7 +1324,6 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj(
     obj.set( "subfeatures1_", features_avg );
 
     // ----------------------------------------
-    // Extract subensembles_sum_
 
     Poco::JSON::Array::Ptr features_sum( new Poco::JSON::Array() );
 

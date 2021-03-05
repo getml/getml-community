@@ -69,7 +69,9 @@ void SubtreeHelper::fit_subensemble(
             assert_true( false && "agg_type not known!" );
         }
 
-    ( *_subensemble )->init_as_subensemble( _comm );
+    ( *_subensemble )
+        ->init_as_subensemble(
+            subtable_holder->word_indices().vocabulary(), _comm );
 
     ( *_subensemble )
         ->fit_subensembles( subtable_holder, _logger, intermediate_agg );
@@ -145,8 +147,9 @@ void SubtreeHelper::fit_subensembles(
         _table_holder->subtables_.size() ==
         _table_holder->peripheral_tables_.size() );
 
+    // Do not have to be the same because of the text fields.
     assert_true(
-        _table_holder->subtables_.size() == placeholder.joined_tables_.size() );
+        _table_holder->subtables_.size() >= placeholder.joined_tables_.size() );
 
     // ----------------------------------------------------------------
     // Set up the subensembles.
@@ -163,6 +166,8 @@ void SubtreeHelper::fit_subensembles(
         {
             if ( _table_holder->subtables_.at( i ) )
                 {
+                    assert_true( i < placeholder.joined_tables_.size() );
+
                     const auto joined_table =
                         std::make_shared<const containers::Placeholder>(
                             placeholder.joined_tables_.at( i ) );
@@ -176,12 +181,6 @@ void SubtreeHelper::fit_subensembles(
                     subensembles_sum.at( i ) =
                         std::make_optional<DecisionTreeEnsemble>(
                             hyperparameters, peripheral, joined_table );
-                }
-            else
-                {
-                    assert_true(
-                        placeholder.joined_tables_.at( i )
-                            .joined_tables_.size() == 0 );
                 }
         }
 
