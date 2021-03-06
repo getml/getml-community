@@ -119,9 +119,11 @@ class FastProp
 
     /// Builds the subfeatures.
     std::vector<containers::Features> build_subfeatures(
+        const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
         const std::vector<size_t>& _index,
-        const std::shared_ptr<const logging::AbstractLogger> _logger ) const;
+        const std::shared_ptr<const logging::AbstractLogger> _logger,
+        const std::shared_ptr<std::vector<size_t>>& _rownums ) const;
 
     /// Calculates the R-squared for each feature vis-a-vis the targets.
     std::vector<Float> calc_r_squared(
@@ -315,6 +317,13 @@ class FastProp
     /// of indices.
     std::vector<size_t> make_subfeature_index(
         const size_t _peripheral_ix, const std::vector<size_t>& _index ) const;
+
+    /// Generates the rownums required for the subfeatures.
+    std::shared_ptr<std::vector<size_t>> make_subfeature_rownums(
+        const std::shared_ptr<std::vector<size_t>>& _rownums,
+        const containers::DataFrame& _population,
+        const containers::DataFrame& _peripheral,
+        const size_t _ix ) const;
 
     /// Generates the matches for a particular row in the population table.
     std::vector<std::vector<containers::Match>> make_matches(

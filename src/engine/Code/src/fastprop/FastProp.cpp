@@ -284,9 +284,11 @@ void FastProp::build_rows(
 // ----------------------------------------------------------------------------
 
 std::vector<containers::Features> FastProp::build_subfeatures(
+    const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral,
     const std::vector<size_t> &_index,
-    const std::shared_ptr<const logging::AbstractLogger> _logger ) const
+    const std::shared_ptr<const logging::AbstractLogger> _logger,
+    const std::shared_ptr<std::vector<size_t>> &_rownums ) const
 {
     assert_true( placeholder().joined_tables_.size() == subfeatures().size() );
 
@@ -302,18 +304,20 @@ std::vector<containers::Features> FastProp::build_subfeatures(
 
             const auto joined_table = placeholder().joined_tables_.at( i );
 
-            const auto population =
+            const auto new_population =
                 find_peripheral( _peripheral, joined_table.name_ );
 
             const auto subfeature_index = make_subfeature_index( i, _index );
 
-            // TODO: Insert actual rownums
+            const auto subfeature_rownums = make_subfeature_rownums(
+                _rownums, _population, new_population, i );
+
             const auto f = subfeatures().at( i )->transform(
-                population,
+                new_population,
                 _peripheral,
                 subfeature_index,
                 _logger,
-                nullptr,
+                subfeature_rownums,
                 true );
 
             const auto f_expanded = expand_subfeatures(
@@ -345,9 +349,8 @@ std::vector<Float> FastProp::calc_r_squared(
             const auto end =
                 std::min( abstract_features().size(), begin + batch_size );
 
-            auto index = std::vector<size_t>( end - begin );
-
-            std::iota( index.begin(), index.end(), begin );
+            const auto index =
+                stl::make::vector<size_t>( std::views::iota( begin, end ) );
 
             const auto features =
                 transform( _population, _peripheral, index, nullptr, _rownums );
@@ -1212,6 +1215,11 @@ void FastProp::fit_on_text(
                                     continue;
                                 }
 
+                            if ( skip_first_last( agg, _peripheral ) )
+                                {
+                                    continue;
+                                }
+
                             _abstract_features->push_back(
                                 containers::AbstractFeature(
                                     enums::Parser<enums::Aggregation>::parse(
@@ -1727,6 +1735,72 @@ std::vector<size_t> FastProp::make_subfeature_index(
 
 // ----------------------------------------------------------------------------
 
+std::shared_ptr<std::vector<size_t>> FastProp::make_subfeature_rownums(
+    const std::shared_ptr<std::vector<size_t>> &_rownums,
+    const containers::DataFrame &_population,
+    const containers::DataFrame &_peripheral,
+    const size_t _ix ) const
+{
+    if ( !_rownums )
+        {
+            return nullptr;
+        }
+
+    assert_true( _ix < placeholder().join_keys_used_.size() );
+
+    const auto population = _population.create_subview(
+        "POPULATION",
+        placeholder().join_keys_used_.at( _ix ),
+        placeholder().time_stamps_used_.at( _ix ),
+        "",
+        false,
+        {},
+        {} );
+
+    const auto peripheral = _peripheral.create_subview(
+        "PERIPHERAL",
+        placeholder().other_join_keys_used_.at( _ix ),
+        placeholder().other_time_stamps_used_.at( _ix ),
+        placeholder().upper_time_stamps_used_.at( _ix ),
+        placeholder().allow_lagged_targets_.at( _ix ),
+        {},
+        {} );
+
+    const auto get_ix_input = []( size_t _ix_input,
+                                  size_t _ix_output ) -> size_t {
+        return _ix_input;
+    };
+
+    std::set<size_t> unique_indices;
+
+    std::vector<size_t> peripheral_indices;
+
+    for ( const auto ix_output : *_rownums )
+        {
+            peripheral_indices.clear();
+
+            helpers::Matchmaker<
+                containers::DataFrame,
+                size_t,
+                decltype( get_ix_input )>::
+                make_matches(
+                    _population,
+                    _peripheral,
+                    true,
+                    ix_output,
+                    get_ix_input,
+                    &peripheral_indices );
+
+            unique_indices.insert(
+                peripheral_indices.begin(), peripheral_indices.end() );
+        }
+
+    return std::make_shared<std::vector<size_t>>(
+        unique_indices.begin(), unique_indices.end() );
+}
+
+// ----------------------------------------------------------------------------
+
 std::shared_ptr<std::vector<size_t>> FastProp::make_rownums(
     const size_t _thread_num,
     const size_t _nrows,
@@ -1815,15 +1889,14 @@ FastProp::select_features(
 
     assert_true( r_squared.size() == abstract_features().size() );
 
-    auto iota = std::vector<size_t>( r_squared.size() );
+    const auto iota =
+        std::views::iota( static_cast<size_t>( 0 ), r_squared.size() );
 
-    std::iota( iota.begin(), iota.end(), 0 );
-
-    auto range = iota | std::views::filter( r_greater_threshold ) |
-                 std::views::transform( get_feature );
+    const auto range = iota | std::views::filter( r_greater_threshold ) |
+                       std::views::transform( get_feature );
 
     return std::make_shared<std::vector<containers::AbstractFeature>>(
-        range.begin(), range.end() );
+        stl::make::vector<containers::AbstractFeature>( range ) );
 }
 
 // ----------------------------------------------------------------------------
@@ -1974,7 +2047,8 @@ containers::Features FastProp::transform(
 
     const auto index = infer_index( _index );
 
-    const auto subfeatures = build_subfeatures( _peripheral, index, _logger );
+    const auto subfeatures =
+        build_subfeatures( _population, _peripheral, index, _logger, _rownums );
 
     if ( _logger )
         {

@@ -441,6 +441,17 @@ Float Aggregator::apply_text(
         return 0.0;
     };
 
+    if ( _abstract_feature.aggregation_ == enums::Aggregation::first ||
+         _abstract_feature.aggregation_ == enums::Aggregation::last )
+        {
+            return apply_first_last(
+                _peripheral,
+                _matches,
+                extract_value,
+                _condition_function,
+                _abstract_feature );
+        }
+
     return aggregate_matches_numerical(
         _matches, extract_value, _condition_function, _abstract_feature );
 }
