@@ -1342,7 +1342,7 @@ FastProp::infer_importance(
                         peripheral.categorical_name(
                             abstract_feature.input_col_ ) );
 
-                    return { std::make_pair( col_desc, _importance_factor ) };
+                    return {std::make_pair( col_desc, _importance_factor )};
                 }
 
             case enums::DataUsed::discrete:
@@ -1353,7 +1353,7 @@ FastProp::infer_importance(
                         peripheral.discrete_name(
                             abstract_feature.input_col_ ) );
 
-                    return { std::make_pair( col_desc, _importance_factor ) };
+                    return {std::make_pair( col_desc, _importance_factor )};
                 }
 
             case enums::DataUsed::not_applicable:
@@ -1368,7 +1368,7 @@ FastProp::infer_importance(
                         peripheral.numerical_name(
                             abstract_feature.input_col_ ) );
 
-                    return { std::make_pair( col_desc, _importance_factor ) };
+                    return {std::make_pair( col_desc, _importance_factor )};
                 }
 
             case enums::DataUsed::same_units_categorical:
@@ -1387,7 +1387,7 @@ FastProp::infer_importance(
 
                     return {
                         std::make_pair( col_desc1, _importance_factor * 0.5 ),
-                        std::make_pair( col_desc2, _importance_factor * 0.5 ) };
+                        std::make_pair( col_desc2, _importance_factor * 0.5 )};
                 }
 
             case enums::DataUsed::same_units_discrete:
@@ -1407,7 +1407,7 @@ FastProp::infer_importance(
 
                     return {
                         std::make_pair( col_desc1, _importance_factor * 0.5 ),
-                        std::make_pair( col_desc2, _importance_factor * 0.5 ) };
+                        std::make_pair( col_desc2, _importance_factor * 0.5 )};
                 }
 
             case enums::DataUsed::same_units_numerical:
@@ -1427,7 +1427,7 @@ FastProp::infer_importance(
 
                     return {
                         std::make_pair( col_desc1, _importance_factor * 0.5 ),
-                        std::make_pair( col_desc2, _importance_factor * 0.5 ) };
+                        std::make_pair( col_desc2, _importance_factor * 0.5 )};
                 }
 
             case enums::DataUsed::subfeatures:
@@ -1453,7 +1453,7 @@ FastProp::infer_importance(
                         peripheral.name(),
                         peripheral.text_name( abstract_feature.input_col_ ) );
 
-                    return { std::make_pair( col_desc, _importance_factor ) };
+                    return {std::make_pair( col_desc, _importance_factor )};
                 }
 
             default:
@@ -1461,7 +1461,7 @@ FastProp::infer_importance(
 
                 const auto col_desc = helpers::ColumnDescription( "", "", "" );
 
-                return { std::make_pair( col_desc, 0.0 ) };
+                return {std::make_pair( col_desc, 0.0 )};
         }
 }
 
@@ -1505,7 +1505,8 @@ bool FastProp::is_categorical( const std::string &_agg ) const
 bool FastProp::is_numerical( const std::string &_agg ) const
 {
     const auto agg = enums::Parser<enums::Aggregation>::parse( _agg );
-    return ( agg != enums::Aggregation::count );
+    return (
+        agg != enums::Aggregation::count && agg != enums::Aggregation::mode );
 }
 
 // ----------------------------------------------------------------------------
@@ -1517,7 +1518,7 @@ std::vector<std::vector<containers::Match>> FastProp::make_matches(
 
     const auto make_match = []( const size_t ix_input,
                                 const size_t ix_output ) {
-        return containers::Match{ ix_input, ix_output };
+        return containers::Match{ix_input, ix_output};
     };
 
     // ------------------------------------------------------------
@@ -1661,11 +1662,11 @@ void FastProp::make_categorical_conditions(
 
             for ( const auto category_used : most_frequent )
                 {
-                    _conditions->push_back( { containers::Condition(
+                    _conditions->push_back( {containers::Condition(
                         category_used,
                         enums::DataUsed::categorical,
                         input_col,
-                        _peripheral_ix ) } );
+                        _peripheral_ix )} );
                 }
         }
 }
@@ -1695,11 +1696,11 @@ void FastProp::make_same_units_categorical_conditions(
                             continue;
                         }
 
-                    _conditions->push_back( { containers::Condition(
+                    _conditions->push_back( {containers::Condition(
                         enums::DataUsed::same_units_categorical,
                         input_col,
                         output_col,
-                        _peripheral_ix ) } );
+                        _peripheral_ix )} );
                 }
         }
 }

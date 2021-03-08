@@ -21,6 +21,31 @@ struct NullChecker
             _val == "" || _val == "nan" || _val == "NaN" || _val == "NA" ||
             _val == "NULL" || _val == "none" || _val == "None" );
     }
+
+    /// Returns the NULL value for a particular type.
+    template <class T>
+    static T make_null()
+    {
+        if constexpr ( std::is_same<T, Int>() )
+            {
+                return -1;
+            }
+
+        if constexpr ( std::is_same<T, Float>() )
+            {
+                return NAN;
+            }
+
+        if constexpr ( std::is_same<T, strings::String>() )
+            {
+                return strings::String( "NULL" );
+            }
+
+        static_assert(
+            std::is_same<T, Int>() || std::is_same<T, Float>() ||
+                std::is_same<T, strings::String>(),
+            "Unsupported type" );
+    }
 };
 
 // ----------------------------------------------------------------------------

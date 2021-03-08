@@ -231,6 +231,28 @@ class ColumnOperators
         return num_agg( _begin, _end, min_op, NAN );
     }
 
+    /// Returns the most frequent value.
+    template <class T, class IteratorType>
+    static T mode( IteratorType _begin, IteratorType _end )
+    {
+        const auto freq = count_frequencies<T>( _begin, _end );
+
+        if ( freq.size() == 0 )
+            {
+                return NullChecker::make_null<T>();
+            }
+
+        using Pair = std::pair<T, size_t>;
+
+        const auto less_frequent = []( const Pair& p1,
+                                       const Pair& p2 ) -> bool {
+            return p1.second < p2.second;
+        };
+
+        return std::max_element( freq.begin(), freq.end(), less_frequent )
+            ->second;
+    }
+
     /// Takes the skewness of all non-null entries.
     template <class IteratorType>
     static Float skew( IteratorType _begin, IteratorType _end )
@@ -318,6 +340,35 @@ class ColumnOperators
     // ------------------------------------------------------------------------
 
    private:
+    /// Maps each unique element onto its frequencies.
+    template <class T, class IteratorType>
+    static std::map<T, size_t> count_frequencies(
+        IteratorType _begin, IteratorType _end )
+    {
+        std::map<T, size_t> freq_map;
+
+        for ( auto key = _begin; key != _end; ++key )
+            {
+                if ( NullChecker::is_null( *key ) )
+                    {
+                        continue;
+                    }
+
+                const auto it = freq_map.find( *key );
+
+                if ( it == freq_map.end() )
+                    {
+                        freq_map[*key] = 1;
+                    }
+                else
+                    {
+                        it->second++;
+                    }
+            }
+
+        return freq_map;
+    }
+
     /// Undertakes a numerical aggregation based on the template class
     /// Aggregation.
     template <class Aggregation, class IteratorType>

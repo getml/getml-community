@@ -128,6 +128,9 @@ class Aggregator
                            helpers::ColumnOperators::count_distinct(
                                _begin, _end );
 
+                case enums::Aggregation::mode:
+                    return helpers::ColumnOperators::mode<Int>( _begin, _end );
+
                 default:
                     assert_true(
                         false && "Unknown aggregation for categorical column" );

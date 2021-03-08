@@ -21,6 +21,7 @@ enum class Aggregation
     max,
     median,
     min,
+    mode,
     skew,
     stddev,
     sum,
