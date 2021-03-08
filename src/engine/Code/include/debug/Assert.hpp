@@ -13,15 +13,30 @@ struct Assert
     static void throw_exception(
         const char *_msg, const char *_file, const int _line )
     {
+        Assert::throw_exception( _msg, _file, _line, "" );
+    }
+
+    /// Throws an exception providing the file and the line as well as a
+    /// custom message.
+    static void throw_exception(
+        const char *_msg,
+        const char *_file,
+        const int _line,
+        const std::string &_custom_msg )
+    {
         const auto stack_trace = StackTrace::make();
 
-        const auto msg =
+        const auto custom_msg =
+            _custom_msg == "" ? _custom_msg : _custom_msg + ".\n\n";
+
+        const auto output =
             std::string( "Assertion failed: " ) + _msg + " at " + _file +
-            ", line " + std::to_string( _line ) + ".\n\n" + stack_trace +
+            ", line " + std::to_string( _line ) + ".\n\n" + custom_msg +
+            stack_trace +
             "Please help us improve our software by reporting this "
             "incident.";
 
-        throw_exception( msg );
+        throw_exception( output );
     }
 
     /// Throws an exception based on the user-defined message.
