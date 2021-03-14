@@ -283,7 +283,7 @@ void FastProp::build_rows(
                         {
                             log_progress(
                                 _logger,
-                                _population.nrows(),
+                                rownums->size(),
                                 _num_completed->load() );
                         }
                 }
@@ -2078,7 +2078,7 @@ void FastProp::spawn_threads(
 
     // ------------------------------------------------------------------------
 
-    log_progress( _logger, _population.nrows(), num_completed.load() );
+    log_progress( _logger, 100, 100 );
 
     // ------------------------------------------------------------------------
 }
