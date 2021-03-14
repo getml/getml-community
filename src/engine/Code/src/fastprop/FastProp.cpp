@@ -91,6 +91,15 @@ FastProp::FastProp( const Poco::JSON::Object &_obj )
 
     // ------------------------------------------------------------------------
 
+    if ( _obj.has( "mappings_" ) )
+        {
+            const auto ptr = jsonutils::JSON::get_object( _obj, "mappings_" );
+            assert_true( ptr );
+            mappings_ = std::make_shared<helpers::MappingContainer>( *ptr );
+        }
+
+    // ------------------------------------------------------------------------
+
     allow_http() = _obj.has( "allow_http_" )
                        ? jsonutils::JSON::get_value<bool>( _obj, "allow_http_" )
                        : false;
@@ -228,6 +237,7 @@ void FastProp::build_rows(
     const std::vector<containers::DataFrame> &_peripheral,
     const std::vector<containers::Features> &_subfeatures,
     const helpers::WordIndexContainer &_word_indices,
+    const std::optional<const helpers::MappedContainer> &_mapped,
     const std::vector<size_t> &_index,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     const std::shared_ptr<std::vector<size_t>> &_rownums,
@@ -247,7 +257,8 @@ void FastProp::build_rows(
         _peripheral,
         peripheral(),
         std::nullopt,
-        _word_indices );
+        _word_indices,
+        _mapped );
 
     constexpr size_t log_iter = 5000;
 
@@ -288,9 +299,14 @@ std::vector<containers::Features> FastProp::build_subfeatures(
     const std::vector<containers::DataFrame> &_peripheral,
     const std::vector<size_t> &_index,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
-    const std::shared_ptr<std::vector<size_t>> &_rownums ) const
+    const std::shared_ptr<std::vector<size_t>> &_rownums,
+    const std::optional<const helpers::MappedContainer> &_mapped ) const
 {
     assert_true( placeholder().joined_tables_.size() == subfeatures().size() );
+
+    assert_true(
+        !_mapped ||
+        placeholder().joined_tables_.size() == _mapped->subcontainers_.size() );
 
     std::vector<containers::Features> features;
 
@@ -312,12 +328,22 @@ std::vector<containers::Features> FastProp::build_subfeatures(
             const auto subfeature_rownums = make_subfeature_rownums(
                 _rownums, _population, new_population, i );
 
+            assert_true( !_mapped || _mapped->subcontainers_.at( i ) );
+
+            const auto mapped =
+                _mapped ? std::make_optional<const helpers::MappedContainer>(
+                              *_mapped->subcontainers_.at( i ) )
+                        : static_cast<
+                              std::optional<const helpers::MappedContainer>>(
+                              std::nullopt );
+
             const auto f = subfeatures().at( i )->transform(
                 new_population,
                 _peripheral,
                 subfeature_index,
                 _logger,
                 subfeature_rownums,
+                mapped,
                 true );
 
             const auto f_expanded = expand_subfeatures(
@@ -352,8 +378,14 @@ std::vector<Float> FastProp::calc_r_squared(
             const auto index =
                 stl::make::vector<size_t>( std::views::iota( begin, end ) );
 
-            const auto features =
-                transform( _population, _peripheral, index, nullptr, _rownums );
+            const auto features = transform(
+                _population,
+                _peripheral,
+                index,
+                nullptr,
+                _rownums,
+                std::nullopt,
+                false );
 
             const auto r = RSquared::calculate(
                 _population.targets_, features, *_rownums );
@@ -604,11 +636,30 @@ void FastProp::fit(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
+    const std::optional<helpers::MappedContainer> _mapped,
     const bool _as_subfeatures )
 {
     extract_schemas( _population, _peripheral );
 
-    subfeatures_ = fit_subfeatures( _peripheral, _logger );
+    if ( !_mapped )
+        {
+            mappings_ = helpers::MappingContainerMaker::fit(
+                hyperparameters().min_df_,
+                placeholder(),
+                _population,
+                _peripheral,
+                peripheral() );
+        }
+
+    const auto mapped = _mapped ? *_mapped
+                                : helpers::MappingContainerMaker::transform(
+                                      mappings_,
+                                      placeholder(),
+                                      _population,
+                                      _peripheral,
+                                      peripheral() );
+
+    subfeatures_ = fit_subfeatures( _peripheral, _logger, mapped );
 
     vocabulary_ = std::make_shared<const helpers::VocabularyContainer>(
         hyperparameters().min_df_,
@@ -627,7 +678,13 @@ void FastProp::fit(
         containers::DataFrameView( _population, rownums );
 
     const auto table_holder = TableHolder(
-        placeholder(), population_view, _peripheral, peripheral() );
+        placeholder(),
+        population_view,
+        _peripheral,
+        peripheral(),
+        std::nullopt,
+        std::nullopt,
+        mapped );
 
     assert_true(
         table_holder.main_tables_.size() ==
@@ -1239,8 +1296,13 @@ void FastProp::fit_on_text(
 std::shared_ptr<const std::vector<std::optional<FastProp>>>
 FastProp::fit_subfeatures(
     const std::vector<containers::DataFrame> &_peripheral,
-    const std::shared_ptr<const logging::AbstractLogger> _logger ) const
+    const std::shared_ptr<const logging::AbstractLogger> _logger,
+    const std::optional<const helpers::MappedContainer> &_mapped ) const
 {
+    assert_true(
+        !_mapped ||
+        placeholder().joined_tables_.size() == _mapped->subcontainers_.size() );
+
     const auto subfeatures =
         std::make_shared<std::vector<std::optional<FastProp>>>();
 
@@ -1263,7 +1325,17 @@ FastProp::fit_subfeatures(
             const auto population =
                 find_peripheral( _peripheral, joined_table.name_ );
 
-            subfeatures->back()->fit( population, _peripheral, _logger, true );
+            assert_true( !_mapped || _mapped->subcontainers_.at( i ) );
+
+            const auto mapped =
+                _mapped ? std::make_optional<const helpers::MappedContainer>(
+                              *_mapped->subcontainers_.at( i ) )
+                        : static_cast<
+                              std::optional<const helpers::MappedContainer>>(
+                              std::nullopt );
+
+            subfeatures->back()->fit(
+                population, _peripheral, _logger, mapped, true );
         }
 
     return subfeatures;
@@ -1342,7 +1414,7 @@ FastProp::infer_importance(
                         peripheral.categorical_name(
                             abstract_feature.input_col_ ) );
 
-                    return {std::make_pair( col_desc, _importance_factor )};
+                    return { std::make_pair( col_desc, _importance_factor ) };
                 }
 
             case enums::DataUsed::discrete:
@@ -1353,7 +1425,7 @@ FastProp::infer_importance(
                         peripheral.discrete_name(
                             abstract_feature.input_col_ ) );
 
-                    return {std::make_pair( col_desc, _importance_factor )};
+                    return { std::make_pair( col_desc, _importance_factor ) };
                 }
 
             case enums::DataUsed::not_applicable:
@@ -1368,7 +1440,7 @@ FastProp::infer_importance(
                         peripheral.numerical_name(
                             abstract_feature.input_col_ ) );
 
-                    return {std::make_pair( col_desc, _importance_factor )};
+                    return { std::make_pair( col_desc, _importance_factor ) };
                 }
 
             case enums::DataUsed::same_units_categorical:
@@ -1387,7 +1459,7 @@ FastProp::infer_importance(
 
                     return {
                         std::make_pair( col_desc1, _importance_factor * 0.5 ),
-                        std::make_pair( col_desc2, _importance_factor * 0.5 )};
+                        std::make_pair( col_desc2, _importance_factor * 0.5 ) };
                 }
 
             case enums::DataUsed::same_units_discrete:
@@ -1407,7 +1479,7 @@ FastProp::infer_importance(
 
                     return {
                         std::make_pair( col_desc1, _importance_factor * 0.5 ),
-                        std::make_pair( col_desc2, _importance_factor * 0.5 )};
+                        std::make_pair( col_desc2, _importance_factor * 0.5 ) };
                 }
 
             case enums::DataUsed::same_units_numerical:
@@ -1427,7 +1499,7 @@ FastProp::infer_importance(
 
                     return {
                         std::make_pair( col_desc1, _importance_factor * 0.5 ),
-                        std::make_pair( col_desc2, _importance_factor * 0.5 )};
+                        std::make_pair( col_desc2, _importance_factor * 0.5 ) };
                 }
 
             case enums::DataUsed::subfeatures:
@@ -1453,7 +1525,7 @@ FastProp::infer_importance(
                         peripheral.name(),
                         peripheral.text_name( abstract_feature.input_col_ ) );
 
-                    return {std::make_pair( col_desc, _importance_factor )};
+                    return { std::make_pair( col_desc, _importance_factor ) };
                 }
 
             default:
@@ -1461,7 +1533,7 @@ FastProp::infer_importance(
 
                 const auto col_desc = helpers::ColumnDescription( "", "", "" );
 
-                return {std::make_pair( col_desc, 0.0 )};
+                return { std::make_pair( col_desc, 0.0 ) };
         }
 }
 
@@ -1505,8 +1577,7 @@ bool FastProp::is_categorical( const std::string &_agg ) const
 bool FastProp::is_numerical( const std::string &_agg ) const
 {
     const auto agg = enums::Parser<enums::Aggregation>::parse( _agg );
-    return (
-        agg != enums::Aggregation::count && agg != enums::Aggregation::mode );
+    return ( agg != enums::Aggregation::count );
 }
 
 // ----------------------------------------------------------------------------
@@ -1518,7 +1589,7 @@ std::vector<std::vector<containers::Match>> FastProp::make_matches(
 
     const auto make_match = []( const size_t ix_input,
                                 const size_t ix_output ) {
-        return containers::Match{ix_input, ix_output};
+        return containers::Match{ ix_input, ix_output };
     };
 
     // ------------------------------------------------------------
@@ -1662,11 +1733,11 @@ void FastProp::make_categorical_conditions(
 
             for ( const auto category_used : most_frequent )
                 {
-                    _conditions->push_back( {containers::Condition(
+                    _conditions->push_back( { containers::Condition(
                         category_used,
                         enums::DataUsed::categorical,
                         input_col,
-                        _peripheral_ix )} );
+                        _peripheral_ix ) } );
                 }
         }
 }
@@ -1696,11 +1767,11 @@ void FastProp::make_same_units_categorical_conditions(
                             continue;
                         }
 
-                    _conditions->push_back( {containers::Condition(
+                    _conditions->push_back( { containers::Condition(
                         enums::DataUsed::same_units_categorical,
                         input_col,
                         output_col,
-                        _peripheral_ix )} );
+                        _peripheral_ix ) } );
                 }
         }
 }
@@ -1756,6 +1827,7 @@ std::shared_ptr<std::vector<size_t>> FastProp::make_subfeature_rownums(
         "",
         false,
         {},
+        {},
         {} );
 
     const auto peripheral = _peripheral.create_subview(
@@ -1764,6 +1836,7 @@ std::shared_ptr<std::vector<size_t>> FastProp::make_subfeature_rownums(
         placeholder().other_time_stamps_used_.at( _ix ),
         placeholder().upper_time_stamps_used_.at( _ix ),
         placeholder().allow_lagged_targets_.at( _ix ),
+        {},
         {},
         {} );
 
@@ -1785,8 +1858,8 @@ std::shared_ptr<std::vector<size_t>> FastProp::make_subfeature_rownums(
                 size_t,
                 decltype( get_ix_input )>::
                 make_matches(
-                    _population,
-                    _peripheral,
+                    population,
+                    peripheral,
                     true,
                     ix_output,
                     get_ix_input,
@@ -1922,6 +1995,7 @@ void FastProp::spawn_threads(
     const std::vector<containers::DataFrame> &_peripheral,
     const std::vector<containers::Features> &_subfeatures,
     const helpers::WordIndexContainer &_word_indices,
+    const std::optional<const helpers::MappedContainer> &_mapped,
     const std::vector<size_t> &_index,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     const std::shared_ptr<std::vector<size_t>> &_rownums,
@@ -1938,6 +2012,7 @@ void FastProp::spawn_threads(
                                _peripheral,
                                _subfeatures,
                                _word_indices,
+                               _mapped,
                                _index,
                                _logger,
                                _rownums,
@@ -1950,6 +2025,7 @@ void FastProp::spawn_threads(
                     _peripheral,
                     _subfeatures,
                     _word_indices,
+                    _mapped,
                     _index,
                     _logger,
                     _rownums,
@@ -2038,6 +2114,7 @@ containers::Features FastProp::transform(
     const std::optional<std::vector<size_t>> &_index,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     const std::shared_ptr<std::vector<size_t>> &_rownums,
+    const std::optional<const helpers::MappedContainer> _mapped,
     const bool _as_subfeatures ) const
 {
     if ( _population.nrows() == 0 )
@@ -2048,8 +2125,16 @@ containers::Features FastProp::transform(
 
     const auto index = infer_index( _index );
 
-    const auto subfeatures =
-        build_subfeatures( _population, _peripheral, index, _logger, _rownums );
+    const auto mapped = _mapped ? _mapped
+                                : helpers::MappingContainerMaker::transform(
+                                      mappings_,
+                                      placeholder(),
+                                      _population,
+                                      _peripheral,
+                                      peripheral() );
+
+    const auto subfeatures = build_subfeatures(
+        _population, _peripheral, index, _logger, _rownums, mapped );
 
     if ( _logger )
         {
@@ -2070,6 +2155,7 @@ containers::Features FastProp::transform(
         _peripheral,
         subfeatures,
         word_indices,
+        mapped,
         index,
         _logger,
         _rownums,
@@ -2152,6 +2238,13 @@ Poco::JSON::Object FastProp::to_json_obj( const bool _schema_only ) const
                 peripheral_table_schemas() );
 
             obj.set( "peripheral_table_schemas_", arr );
+        }
+
+    // ----------------------------------------
+
+    if ( mappings_ )
+        {
+            obj.set( "mappings_", mappings_->to_json_obj() );
         }
 
     // ----------------------------------------

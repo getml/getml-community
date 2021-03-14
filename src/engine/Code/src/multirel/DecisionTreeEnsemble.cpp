@@ -262,8 +262,10 @@ void DecisionTreeEnsemble::fit(
     const auto [population, peripheral, row_indices, word_indices] =
         handle_text_fields( _population, _peripheral );
 
+    const auto mapped = handle_mappings( population, peripheral );
+
     fit_spawn_threads(
-        population, peripheral, row_indices, word_indices, _logger );
+        population, peripheral, row_indices, word_indices, mapped, _logger );
 }
 
 // ----------------------------------------------------------------------------
@@ -568,6 +570,7 @@ void DecisionTreeEnsemble::fit_spawn_threads(
     const std::vector<containers::DataFrame> &_peripheral,
     const helpers::RowIndexContainer &_row_indices,
     const helpers::WordIndexContainer &_word_indices,
+    const std::optional<const helpers::MappedContainer> &_mapped,
     const std::shared_ptr<const logging::AbstractLogger> _logger )
 {
     // ------------------------------------------------------
@@ -602,6 +605,7 @@ void DecisionTreeEnsemble::fit_spawn_threads(
                 _peripheral,
                 _row_indices,
                 _word_indices,
+                _mapped,
                 placeholder(),
                 peripheral(),
                 std::shared_ptr<const logging::AbstractLogger>(),
@@ -621,6 +625,7 @@ void DecisionTreeEnsemble::fit_spawn_threads(
                 _peripheral,
                 _row_indices,
                 _word_indices,
+                _mapped,
                 placeholder(),
                 peripheral(),
                 _logger,
@@ -697,6 +702,15 @@ DecisionTreeEnsemble DecisionTreeEnsemble::from_json_obj(
 
     model.targets() = JSON::array_to_vector<std::string>(
         JSON::get_array( _json_obj, "targets_" ) );
+
+    // ------------------------------------------------------------------------
+
+    if ( _json_obj.has( "mappings_" ) )
+        {
+            model.impl().mappings_ =
+                std::make_shared<helpers::MappingContainer>(
+                    *JSON::get_object( _json_obj, "mappings_" ) );
+        }
 
     // ----------------------------------------
 
@@ -789,6 +803,28 @@ DecisionTreeEnsemble DecisionTreeEnsemble::from_json_obj(
     return model;
 
     // -------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::optional<const helpers::MappedContainer>
+DecisionTreeEnsemble::handle_mappings(
+    const containers::DataFrame &_population,
+    const std::vector<containers::DataFrame> &_peripheral )
+{
+    impl().mappings_ = helpers::MappingContainerMaker::fit(
+        hyperparameters().min_df_,
+        placeholder(),
+        _population,
+        _peripheral,
+        peripheral() );
+
+    return helpers::MappingContainerMaker::transform(
+        impl().mappings_,
+        placeholder(),
+        _population,
+        _peripheral,
+        peripheral() );
 }
 
 // ----------------------------------------------------------------------------
@@ -944,6 +980,13 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj(
 
     // ----------------------------------------
 
+    if ( impl().mappings_ )
+        {
+            obj.set( "mappings_", impl().mappings_->to_json_obj() );
+        }
+
+    // ----------------------------------------
+
     obj.set( "vocabulary_", vocabulary().to_json_obj() );
 
     // ----------------------------------------
@@ -1068,14 +1111,23 @@ containers::Features DecisionTreeEnsemble::transform(
 
     // ------------------------------------------------------
 
-    const auto [population, peripheral] =
+    const auto [population_table, peripheral_tables] =
         hyperparameters().split_text_fields_
             ? helpers::TextFieldSplitter::split_text_fields(
                   _population, _peripheral )
             : std::make_pair( _population, _peripheral );
 
-    const auto word_indices =
-        helpers::WordIndexContainer( population, peripheral, vocabulary() );
+    const auto word_indices = helpers::WordIndexContainer(
+        population_table, peripheral_tables, vocabulary() );
+
+    // ------------------------------------------------------
+
+    const auto mapped = helpers::MappingContainerMaker::transform(
+        impl().mappings_,
+        placeholder(),
+        population_table,
+        peripheral_tables,
+        peripheral() );
 
     // ------------------------------------------------------
 
@@ -1093,7 +1145,13 @@ containers::Features DecisionTreeEnsemble::transform(
     // -------------------------------------------------------
 
     transform_spawn_threads(
-        population, peripheral, index, word_indices, _logger, &features );
+        population_table,
+        peripheral_tables,
+        index,
+        word_indices,
+        mapped,
+        _logger,
+        &features );
 
     // ------------------------------------------------------
 
@@ -1200,6 +1258,7 @@ void DecisionTreeEnsemble::transform_spawn_threads(
     const std::vector<containers::DataFrame> &_peripheral,
     const std::vector<size_t> &_index,
     const helpers::WordIndexContainer &_word_indices,
+    const std::optional<const helpers::MappedContainer> &_mapped,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     containers::Features *_features ) const
 {
@@ -1225,6 +1284,7 @@ void DecisionTreeEnsemble::transform_spawn_threads(
                 _population,
                 _peripheral,
                 _word_indices,
+                _mapped,
                 _index,
                 std::shared_ptr<const logging::AbstractLogger>(),
                 *this,
@@ -1243,6 +1303,7 @@ void DecisionTreeEnsemble::transform_spawn_threads(
                 _population,
                 _peripheral,
                 _word_indices,
+                _mapped,
                 _index,
                 _logger,
                 *this,

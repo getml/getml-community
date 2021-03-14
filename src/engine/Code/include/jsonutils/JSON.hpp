@@ -147,6 +147,21 @@ struct JSON
         return *ptr;
     }
 
+    /// Transforms a map into an object.
+    template <typename KeyType, typename ValueType>
+    static Poco::JSON::Object::Ptr map_to_object(
+        const std::map<KeyType, ValueType>& _map )
+    {
+        Poco::JSON::Object::Ptr obj( new Poco::JSON::Object() );
+
+        for ( const auto& [key, value] : _map )
+            {
+                obj->set( std::to_string( key ), value );
+            }
+
+        return obj;
+    }
+
     /// Expresses JSON object as JSON string
     static std::string stringify( const Poco::JSON::Object& _obj )
     {

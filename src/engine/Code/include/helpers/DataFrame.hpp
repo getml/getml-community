@@ -14,6 +14,8 @@ struct DataFrame
 
     typedef Column<Int> IntColumnType;
 
+    typedef typename MappedContainer::MappedColumns MappedColumns;
+
     typedef std::vector<std::shared_ptr<const textmining::RowIndex>> RowIndices;
 
     typedef Column<strings::String> StringColumnType;
@@ -63,7 +65,8 @@ struct DataFrame
         const std::string& _upper_time_stamp,
         const bool _allow_lagged_targets,
         const RowIndices& _row_indices,
-        const WordIndices& _word_indices ) const;
+        const WordIndices& _word_indices,
+        const MappedColumns& _mapped ) const;
 
     // ---------------------------------------------------------------------
 
@@ -369,7 +372,7 @@ struct DataFrame
 
     /// Index returning words for each row.
     const WordIndices word_indices_;
-};
+};  // namespace helpers
 
 // -------------------------------------------------------------------------
 }  // namespace helpers

@@ -20,6 +20,7 @@ class Threadutils
         const std::vector<containers::DataFrame>& _peripheral,
         const helpers::RowIndexContainer& _row_indices,
         const helpers::WordIndexContainer& _word_indices,
+        const std::optional<const helpers::MappedContainer>& _mapped,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
         multithreading::Communicator* _comm,
         ensemble::DecisionTreeEnsemble* _ensemble );
@@ -34,6 +35,7 @@ class Threadutils
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
         const helpers::WordIndexContainer& _word_indices,
+        const std::optional<const helpers::MappedContainer>& _mapped,
         const std::vector<size_t>& _index,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
         const ensemble::DecisionTreeEnsemble& _ensemble,
@@ -57,6 +59,7 @@ class Threadutils
         const std::vector<containers::DataFrame>& _peripheral,
         const helpers::RowIndexContainer& _row_indices,
         const helpers::WordIndexContainer& _word_indices,
+        const std::optional<const helpers::MappedContainer>& _mapped,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
         multithreading::Communicator* _comm,
         ensemble::DecisionTreeEnsemble* _ensemble );
@@ -68,6 +71,7 @@ class Threadutils
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
         const helpers::WordIndexContainer& _word_indices,
+        const std::optional<const helpers::MappedContainer>& _mapped,
         const std::vector<size_t>& _index,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
         const ensemble::DecisionTreeEnsemble& _ensemble,

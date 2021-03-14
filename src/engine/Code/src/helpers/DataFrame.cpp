@@ -111,7 +111,7 @@ std::shared_ptr<Index> DataFrame::create_index( const Column<Int>& _join_key )
                     if ( it == new_index->end() )
                         {
                             new_index->insert_or_assign(
-                                _join_key[ix], std::vector<size_t>( { ix } ) );
+                                _join_key[ix], std::vector<size_t>( {ix} ) );
                         }
                     else
                         {
@@ -147,7 +147,8 @@ DataFrame DataFrame::create_subview(
     const std::string& _upper_time_stamp,
     const bool _allow_lagged_targets,
     const RowIndices& _row_indices,
-    const WordIndices& _word_indices ) const
+    const WordIndices& _word_indices,
+    const MappedColumns& _mapped ) const
 {
     // ---------------------------------------------------------------------------
 
@@ -181,6 +182,11 @@ DataFrame DataFrame::create_subview(
             numericals_and_time_stamps.push_back( col );
         }
 
+    for ( const auto& col : _mapped )
+        {
+            numericals_and_time_stamps.push_back( col );
+        }
+
     if ( _allow_lagged_targets )
         {
             for ( const auto& col : targets_ )
@@ -209,8 +215,8 @@ DataFrame DataFrame::create_subview(
             return DataFrame(
                 categoricals_,
                 discretes_,
-                { indices_.at( ix_join_key ) },
-                { join_keys_.at( ix_join_key ) },
+                {indices_.at( ix_join_key )},
+                {join_keys_.at( ix_join_key )},
                 _name,
                 numericals_and_time_stamps,
                 targets_,
@@ -246,13 +252,13 @@ DataFrame DataFrame::create_subview(
             return DataFrame(
                 categoricals_,
                 discretes_,
-                { indices_.at( ix_join_key ) },
-                { join_keys_.at( ix_join_key ) },
+                {indices_.at( ix_join_key )},
+                {join_keys_.at( ix_join_key )},
                 _name,
                 numericals_and_time_stamps,
                 targets_,
                 text_,
-                { time_stamps_.at( ix_time_stamp ) },
+                {time_stamps_.at( ix_time_stamp )},
                 _row_indices,
                 _word_indices );
         }
@@ -281,14 +287,14 @@ DataFrame DataFrame::create_subview(
     return DataFrame(
         categoricals_,
         discretes_,
-        { indices_.at( ix_join_key ) },
-        { join_keys_.at( ix_join_key ) },
+        {indices_.at( ix_join_key )},
+        {join_keys_.at( ix_join_key )},
         _name,
         numericals_and_time_stamps,
         targets_,
         text_,
-        { time_stamps_.at( ix_time_stamp ),
-          time_stamps_.at( ix_upper_time_stamp ) },
+        {time_stamps_.at( ix_time_stamp ),
+         time_stamps_.at( ix_upper_time_stamp )},
         _row_indices,
         _word_indices );
 

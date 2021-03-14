@@ -31,6 +31,7 @@ void Threadutils::fit_ensemble(
     const std::vector<containers::DataFrame>& _peripheral,
     const helpers::RowIndexContainer& _row_indices,
     const helpers::WordIndexContainer& _word_indices,
+    const std::optional<const helpers::MappedContainer>& _mapped,
     const containers::Placeholder& _placeholder,
     const std::vector<std::string>& _peripheral_names,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
@@ -40,15 +41,12 @@ void Threadutils::fit_ensemble(
     try
         {
             // ----------------------------------------------------------------
-            // Build the subview on the population table
 
             const auto population_subview = utils::DataFrameScatterer::
                 DataFrameScatterer::scatter_data_frame(
                     _population, _thread_nums, _this_thread_num );
 
             // ----------------------------------------------------------------
-            // Create abstractions over the peripheral_tables and the population
-            // table - for convenience.
 
             const auto table_holder =
                 std::make_shared<const decisiontrees::TableHolder>(
@@ -57,10 +55,10 @@ void Threadutils::fit_ensemble(
                     _peripheral,
                     _peripheral_names,
                     _row_indices,
-                    _word_indices );
+                    _word_indices,
+                    _mapped );
 
             // ----------------------------------------------------------------
-            // Create and initialize the optimization criterion.
 
             assert_true( table_holder->main_tables_.size() > 0 );
 
@@ -125,6 +123,7 @@ void Threadutils::transform_ensemble(
     const containers::DataFrame& _population,
     const std::vector<containers::DataFrame>& _peripheral,
     const helpers::WordIndexContainer& _word_indices,
+    const std::optional<const helpers::MappedContainer>& _mapped,
     const std::vector<size_t>& _index,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     const ensemble::DecisionTreeEnsemble& _ensemble,
@@ -145,7 +144,8 @@ void Threadutils::transform_ensemble(
                 _peripheral,
                 _ensemble.peripheral(),
                 std::nullopt,
-                _word_indices );
+                _word_indices,
+                _mapped );
 
             // ----------------------------------------------------------------
 

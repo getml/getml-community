@@ -242,11 +242,17 @@ class DecisionTreeEnsemble
         const std::vector<containers::DataFrame> &_peripheral,
         const helpers::RowIndexContainer &_row_indices,
         const helpers::WordIndexContainer &_word_indices,
+        const std::optional<const helpers::MappedContainer> &_mapped,
         const std::shared_ptr<const logging::AbstractLogger> _logger );
 
     /// Extracts a DecisionTreeEnsemble from a JSON object.
     DecisionTreeEnsemble from_json_obj(
         const Poco::JSON::Object &_json_obj ) const;
+
+    /// Fits the mappings and returns the mapped containers.
+    std::optional<const helpers::MappedContainer> handle_mappings(
+        const containers::DataFrame &_population,
+        const std::vector<containers::DataFrame> &_peripheral );
 
     /// Prepares the text fields for training and transformation.
     std::tuple<
@@ -268,6 +274,7 @@ class DecisionTreeEnsemble
         const std::vector<containers::DataFrame> &_peripheral,
         const std::vector<size_t> &_index,
         const helpers::WordIndexContainer &_word_indices,
+        const std::optional<const helpers::MappedContainer> &_mapped,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
         containers::Features *_features ) const;
 
@@ -299,6 +306,13 @@ class DecisionTreeEnsemble
     {
         assert_true( trees().size() > 0 );
         return &( trees().back() );
+    }
+
+    /// Trivial accessor
+    inline const helpers::MappingContainer &mappings() const
+    {
+        assert_true( impl().mappings_ );
+        return *impl().mappings_;
     }
 
     /// Trivial accessor

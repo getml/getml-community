@@ -45,6 +45,9 @@ struct DecisionTreeEnsembleImpl
     /// The hyperparameters used in this ensemble
     std::shared_ptr<const descriptors::Hyperparameters> hyperparameters_;
 
+    /// Used to map columns onto the average target value.
+    std::shared_ptr<const helpers::MappingContainer> mappings_;
+
     /// Names of the peripheral tables.
     std::vector<std::string> peripheral_;
 

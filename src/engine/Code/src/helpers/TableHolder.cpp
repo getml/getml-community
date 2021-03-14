@@ -10,7 +10,8 @@ TableHolder::TableHolder(
     const std::vector<DataFrame>& _peripheral,
     const std::vector<std::string>& _peripheral_names,
     const std::optional<RowIndexContainer>& _row_index_container,
-    const std::optional<WordIndexContainer>& _word_index_container )
+    const std::optional<WordIndexContainer>& _word_index_container,
+    const std::optional<const MappedContainer>& _mapped )
     : main_tables_( TableHolder::parse_main_tables(
           _placeholder,
           _population,
@@ -23,14 +24,16 @@ TableHolder::TableHolder(
           _peripheral,
           _peripheral_names,
           _row_index_container,
-          _word_index_container ) ),
+          _word_index_container,
+          _mapped ) ),
       subtables_( TableHolder::parse_subtables(
           _placeholder,
           _population,
           _peripheral,
           _peripheral_names,
           _row_index_container,
-          _word_index_container ) )
+          _word_index_container,
+          _mapped ) )
 {
     assert_true( main_tables_.size() == peripheral_tables_.size() );
     assert_true( main_tables_.size() == subtables_.size() );
@@ -180,7 +183,8 @@ std::vector<DataFrame> TableHolder::parse_peripheral_tables(
     const std::vector<DataFrame>& _peripheral,
     const std::vector<std::string>& _peripheral_names,
     const std::optional<RowIndexContainer>& _row_index_container,
-    const std::optional<WordIndexContainer>& _word_index_container )
+    const std::optional<WordIndexContainer>& _word_index_container,
+    const std::optional<const MappedContainer>& _mapped )
 {
     // ---------------------------------------------------------------------
 
@@ -229,6 +233,9 @@ std::vector<DataFrame> TableHolder::parse_peripheral_tables(
                     ? _word_index_container->peripheral().at( j )
                     : WordIndices();
 
+            const auto mapped_columns =
+                _mapped ? _mapped->categorical_.at( i ) : MappedColumns();
+
             result.push_back( _peripheral.at( j ).create_subview(
                 _placeholder.joined_tables_.at( i ).name_,
                 _placeholder.other_join_keys_used_.at( i ),
@@ -236,7 +243,8 @@ std::vector<DataFrame> TableHolder::parse_peripheral_tables(
                 _placeholder.upper_time_stamps_used_.at( i ),
                 _placeholder.allow_lagged_targets_.at( i ),
                 row_indices,
-                word_indices ) );
+                word_indices,
+                mapped_columns ) );
         }
 
     // ---------------------------------------------------------------------
@@ -298,7 +306,8 @@ std::vector<std::optional<TableHolder>> TableHolder::parse_subtables(
     const std::vector<DataFrame>& _peripheral,
     const std::vector<std::string>& _peripheral_names,
     const std::optional<RowIndexContainer>& _row_index_container,
-    const std::optional<WordIndexContainer>& _word_index_container )
+    const std::optional<WordIndexContainer>& _word_index_container,
+    const std::optional<const MappedContainer>& _mapped )
 {
     // ---------------------------------------------------------------------
 
@@ -328,8 +337,8 @@ std::vector<std::optional<TableHolder>> TableHolder::parse_subtables(
             _placeholder.join_keys_used_.at( i ),
             _placeholder.time_stamps_used_.at( i ),
             "",
-            RowIndices(),
-            WordIndices() );
+            {},
+            {} );
 
         const auto peripheral_subview = _peripheral.at( j ).create_subview(
             _placeholder.joined_tables_.at( i ).name_,
@@ -337,8 +346,9 @@ std::vector<std::optional<TableHolder>> TableHolder::parse_subtables(
             _placeholder.other_time_stamps_used_.at( i ),
             _placeholder.upper_time_stamps_used_.at( i ),
             _placeholder.allow_lagged_targets_.at( i ),
-            RowIndices(),
-            WordIndices() );
+            {},
+            {},
+            {} );
 
         return DataFrameView(
             _peripheral.at( j ),
@@ -379,6 +389,19 @@ std::vector<std::optional<TableHolder>> TableHolder::parse_subtables(
 
     // ---------------------------------------------------------------------
 
+    const auto make_mapped =
+        [&_mapped]( const size_t i ) -> std::optional<MappedContainer> {
+        if ( _mapped )
+            {
+                assert_true( i < _mapped->subcontainers_.size() );
+                assert_true( _mapped->subcontainers_.at( i ) );
+                return *_mapped->subcontainers_.at( i );
+            }
+
+        return std::nullopt;
+    };
+    // ---------------------------------------------------------------------
+
     std::vector<std::optional<TableHolder>> result;
 
     // ---------------------------------------------------------------------
@@ -402,13 +425,16 @@ std::vector<std::optional<TableHolder>> TableHolder::parse_subtables(
 
             const auto word_index_container = make_word_index_container( j );
 
+            const auto mapped = make_mapped( i );
+
             result.push_back( std::make_optional<TableHolder>(
                 joined,
                 output,
                 _peripheral,
                 _peripheral_names,
                 row_index_container,
-                word_index_container ) );
+                word_index_container,
+                mapped ) );
         }
 
     // ---------------------------------------------------------------------

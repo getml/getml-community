@@ -61,6 +61,7 @@ class FastProp
         const std::vector<containers::DataFrame>& _peripheral,
         const std::shared_ptr<const logging::AbstractLogger> _logger =
             std::shared_ptr<const logging::AbstractLogger>(),
+        const std::optional<helpers::MappedContainer> _mapped = std::nullopt,
         const bool _as_subfeatures = false );
 
     /// Saves the FastProp into a JSON file.
@@ -75,6 +76,8 @@ class FastProp
         const std::shared_ptr<const logging::AbstractLogger> _logger =
             std::shared_ptr<const logging::AbstractLogger>(),
         const std::shared_ptr<std::vector<size_t>>& _rownums = nullptr,
+        const std::optional<const helpers::MappedContainer> _mapped =
+            std::nullopt,
         const bool _as_subfeatures = false ) const;
 
     /// Expresses FastProp as Poco::JSON::Object.
@@ -110,6 +113,7 @@ class FastProp
         const std::vector<containers::DataFrame>& _peripheral,
         const std::vector<containers::Features>& _subfeatures,
         const helpers::WordIndexContainer& _word_indices,
+        const std::optional<const helpers::MappedContainer>& _mapped,
         const std::vector<size_t>& _index,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
         const std::shared_ptr<std::vector<size_t>>& _rownums,
@@ -123,7 +127,8 @@ class FastProp
         const std::vector<containers::DataFrame>& _peripheral,
         const std::vector<size_t>& _index,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
-        const std::shared_ptr<std::vector<size_t>>& _rownums ) const;
+        const std::shared_ptr<std::vector<size_t>>& _rownums,
+        const std::optional<const helpers::MappedContainer>& _mapped ) const;
 
     /// Calculates the R-squared for each feature vis-a-vis the targets.
     std::vector<Float> calc_r_squared(
@@ -251,7 +256,8 @@ class FastProp
     /// Fits the subfeatures of the FastProp.
     std::shared_ptr<const std::vector<std::optional<FastProp>>> fit_subfeatures(
         const std::vector<containers::DataFrame>& _peripheral,
-        const std::shared_ptr<const logging::AbstractLogger> _logger ) const;
+        const std::shared_ptr<const logging::AbstractLogger> _logger,
+        const std::optional<const helpers::MappedContainer>& _mapped ) const;
 
     /// Fits on the text fields of a peripheral data frame.
     void fit_on_text(
@@ -359,6 +365,7 @@ class FastProp
         const std::vector<containers::DataFrame>& _peripheral,
         const std::vector<containers::Features>& _subfeatures,
         const helpers::WordIndexContainer& _word_indices,
+        const std::optional<const helpers::MappedContainer>& _mapped,
         const std::vector<size_t>& _index,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
         const std::shared_ptr<std::vector<size_t>>& _rownums,
@@ -506,6 +513,13 @@ class FastProp
     }
 
     /// Trivial accessor
+    const helpers::MappingContainer& mappings() const
+    {
+        assert_true( mappings_ );
+        return *mappings_;
+    }
+
+    /// Trivial accessor
     const std::vector<containers::Placeholder>& peripheral_table_schemas() const
     {
         assert_true( peripheral_table_schemas_ );
@@ -543,6 +557,9 @@ class FastProp
     /// held by the individual trees.
     std::shared_ptr<const std::vector<containers::Placeholder>>
         main_table_schemas_;
+
+    /// Used to map columns onto the average target value.
+    std::shared_ptr<const helpers::MappingContainer> mappings_;
 
     /// Names of the peripheral tables, as they are referred in placeholder
     std::shared_ptr<const std::vector<std::string>> peripheral_;

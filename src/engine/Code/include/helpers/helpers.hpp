@@ -48,6 +48,9 @@
 #include "helpers/Placeholder.hpp"
 #include "helpers/Schema.hpp"
 
+#include "helpers/MappedContainer.hpp"
+#include "helpers/MappingContainer.hpp"
+
 #include "helpers/ColumnDescription.hpp"
 
 #include "helpers/ImportanceMaker.hpp"
@@ -69,6 +72,8 @@
 #include "helpers/TextFieldSplitter.hpp"
 
 #include "helpers/TableHolder.hpp"
+
+#include "helpers/MappingContainerMaker.hpp"
 
 #include "helpers/Macros.hpp"
 

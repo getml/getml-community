@@ -76,7 +76,8 @@ class DataFrameView
                 _upper_time_stamp,
                 false,
                 _row_indices,
-                _word_indices ),
+                _word_indices,
+                {} ),
             rows_ );
     }
 

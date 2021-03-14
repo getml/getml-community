@@ -56,6 +56,9 @@ struct DecisionTreeEnsembleImpl
     /// to the average of the targets in the training set).
     Float initial_prediction_;
 
+    /// Used to map columns onto the average target value.
+    std::shared_ptr<const helpers::MappingContainer> mappings_;
+
     /// Names of the peripheral tables, as they are referred in placeholder
     std::shared_ptr<const std::vector<std::string>> peripheral_;
 

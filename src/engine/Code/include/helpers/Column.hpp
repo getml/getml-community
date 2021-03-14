@@ -52,7 +52,10 @@ struct Column
     /// Access operator
     const T& operator[]( size_t _i ) const
     {
-        assert_true( _i < nrows_ );
+        assert_msg(
+            _i < nrows_,
+            "_i: " + std::to_string( _i ) +
+                ", nrows_: " + std::to_string( nrows_ ) );
 
         return *( data_ + _i );
     }

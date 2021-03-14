@@ -7,6 +7,8 @@ namespace helpers
 
 struct TableHolder
 {
+    typedef typename MappedContainer::MappedColumns MappedColumns;
+
     typedef typename RowIndexContainer::RowIndices RowIndices;
 
     typedef typename WordIndexContainer::WordIndices WordIndices;
@@ -19,7 +21,8 @@ struct TableHolder
         const std::optional<RowIndexContainer>& _row_index_container =
             std::nullopt,
         const std::optional<WordIndexContainer>& _word_index_container =
-            std::nullopt );
+            std::nullopt,
+        const std::optional<const MappedContainer>& _mapped = std::nullopt );
 
     ~TableHolder();
 
@@ -54,7 +57,8 @@ struct TableHolder
         const std::vector<DataFrame>& _peripheral,
         const std::vector<std::string>& _peripheral_names,
         const std::optional<RowIndexContainer>& _row_index_container,
-        const std::optional<WordIndexContainer>& _word_index_container );
+        const std::optional<WordIndexContainer>& _word_index_container,
+        const std::optional<const MappedContainer>& _mapped );
 
     /// Creates the subtables during construction.
     static std::vector<std::optional<TableHolder>> parse_subtables(
@@ -63,7 +67,8 @@ struct TableHolder
         const std::vector<DataFrame>& _peripheral,
         const std::vector<std::string>& _peripheral_names,
         const std::optional<RowIndexContainer>& _row_index_container,
-        const std::optional<WordIndexContainer>& _word_index_container );
+        const std::optional<WordIndexContainer>& _word_index_container,
+        const std::optional<const MappedContainer>& _mapped );
 
     /// Extracts the wors indices from the tables.
     WordIndexContainer word_indices() const;
