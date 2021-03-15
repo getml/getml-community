@@ -18,7 +18,8 @@ class MappingContainerMaker
         const Placeholder& _placeholder,
         const DataFrame& _population,
         const std::vector<DataFrame>& _peripheral,
-        const std::vector<std::string>& _peripheral_names );
+        const std::vector<std::string>& _peripheral_names,
+        const WordIndexContainer& _word_indices );
 
     /// Transform categorical columns by mapping them onto
     /// the corresponding weights.
@@ -27,7 +28,8 @@ class MappingContainerMaker
         const Placeholder& _placeholder,
         const DataFrame& _population,
         const std::vector<DataFrame>& _peripheral,
-        const std::vector<std::string>& _peripheral_names );
+        const std::vector<std::string>& _peripheral_names,
+        const WordIndexContainer& _word_indices );
 
    private:
     /// Finds the correspondings rownums to the input indices.
@@ -38,6 +40,12 @@ class MappingContainerMaker
 
     /// Generates the mapping for a categorical column.
     static MappingForDf fit_on_categoricals(
+        const size_t _min_df,
+        const std::vector<DataFrame>& _main_tables,
+        const std::vector<DataFrame>& _peripheral_tables );
+
+    /// Generates the mapping for a text column.
+    static MappingForDf fit_on_text(
         const size_t _min_df,
         const std::vector<DataFrame>& _main_tables,
         const std::vector<DataFrame>& _peripheral_tables );
@@ -61,13 +69,23 @@ class MappingContainerMaker
         const std::vector<DataFrame>& _peripheral_tables );
 
     /// Returns a map of all the rownums associated with a categorical value.
-    static std::map<Int, std::vector<size_t>> make_rownum_map(
+    static std::map<Int, std::vector<size_t>> make_rownum_map_categorical(
         const Column<Int>& _col );
+
+    /// Returns a map of all the rownums associated with a word.
+    static std::map<Int, std::vector<size_t>> make_rownum_map_text(
+        const textmining::WordIndex& _word_index );
 
     /// Maps the categories on their corresponding weights.
     static MappedColumns transform_categorical(
         const MappingForDf& _mapping,
         const std::vector<Column<Int>>& _categorical );
+
+    /// Maps the text fields on their corresponding weights.
+    static MappedColumns transform_text(
+        const MappingForDf& _mapping,
+        const std::vector<Column<strings::String>>& _text,
+        const typename DataFrame::WordIndices& _word_indices );
 
     /// Transforms a table holder to get the extra columns.
     static std::shared_ptr<const MappedContainer> transform_table_holder(

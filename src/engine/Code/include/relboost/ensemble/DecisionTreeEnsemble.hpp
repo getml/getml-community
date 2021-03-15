@@ -267,7 +267,8 @@ class DecisionTreeEnsemble
     /// Fits the mappings and returns the mapped containers.
     std::optional<const helpers::MappedContainer> handle_mappings(
         const containers::DataFrame& _population,
-        const std::vector<containers::DataFrame>& _peripheral );
+        const std::vector<containers::DataFrame>& _peripheral,
+        const helpers::WordIndexContainer& _word_indices );
 
     /// Builds indices for the text fields.
     std::tuple<

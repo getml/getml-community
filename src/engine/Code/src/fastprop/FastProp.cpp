@@ -305,8 +305,7 @@ std::vector<containers::Features> FastProp::build_subfeatures(
     assert_true( placeholder().joined_tables_.size() == subfeatures().size() );
 
     assert_true(
-        !_mapped ||
-        placeholder().joined_tables_.size() == _mapped->subcontainers_.size() );
+        !_mapped || placeholder().joined_tables_.size() <= _mapped->size() );
 
     std::vector<containers::Features> features;
 
@@ -328,11 +327,11 @@ std::vector<containers::Features> FastProp::build_subfeatures(
             const auto subfeature_rownums = make_subfeature_rownums(
                 _rownums, _population, new_population, i );
 
-            assert_true( !_mapped || _mapped->subcontainers_.at( i ) );
+            assert_true( !_mapped || _mapped->subcontainers( i ) );
 
             const auto mapped =
                 _mapped ? std::make_optional<const helpers::MappedContainer>(
-                              *_mapped->subcontainers_.at( i ) )
+                              *_mapped->subcontainers( i ) )
                         : static_cast<
                               std::optional<const helpers::MappedContainer>>(
                               std::nullopt );
@@ -641,6 +640,15 @@ void FastProp::fit(
 {
     extract_schemas( _population, _peripheral );
 
+    vocabulary_ = std::make_shared<const helpers::VocabularyContainer>(
+        hyperparameters().min_df_,
+        hyperparameters().vocab_size_,
+        _population,
+        _peripheral );
+
+    const auto word_indices =
+        helpers::WordIndexContainer( _population, _peripheral, vocabulary() );
+
     if ( !_mapped )
         {
             mappings_ = helpers::MappingContainerMaker::fit(
@@ -648,7 +656,8 @@ void FastProp::fit(
                 placeholder(),
                 _population,
                 _peripheral,
-                peripheral() );
+                peripheral(),
+                word_indices );
         }
 
     const auto mapped = _mapped ? *_mapped
@@ -657,15 +666,10 @@ void FastProp::fit(
                                       placeholder(),
                                       _population,
                                       _peripheral,
-                                      peripheral() );
+                                      peripheral(),
+                                      word_indices );
 
     subfeatures_ = fit_subfeatures( _peripheral, _logger, mapped );
-
-    vocabulary_ = std::make_shared<const helpers::VocabularyContainer>(
-        hyperparameters().min_df_,
-        hyperparameters().vocab_size_,
-        _population,
-        _peripheral );
 
     assert_true( vocabulary().peripheral().size() == _peripheral.size() );
 
@@ -1300,8 +1304,7 @@ FastProp::fit_subfeatures(
     const std::optional<const helpers::MappedContainer> &_mapped ) const
 {
     assert_true(
-        !_mapped ||
-        placeholder().joined_tables_.size() == _mapped->subcontainers_.size() );
+        !_mapped || placeholder().joined_tables_.size() <= _mapped->size() );
 
     const auto subfeatures =
         std::make_shared<std::vector<std::optional<FastProp>>>();
@@ -1325,11 +1328,11 @@ FastProp::fit_subfeatures(
             const auto population =
                 find_peripheral( _peripheral, joined_table.name_ );
 
-            assert_true( !_mapped || _mapped->subcontainers_.at( i ) );
+            assert_true( !_mapped || _mapped->subcontainers( i ) );
 
             const auto mapped =
                 _mapped ? std::make_optional<const helpers::MappedContainer>(
-                              *_mapped->subcontainers_.at( i ) )
+                              *_mapped->subcontainers( i ) )
                         : static_cast<
                               std::optional<const helpers::MappedContainer>>(
                               std::nullopt );
@@ -2125,13 +2128,17 @@ containers::Features FastProp::transform(
 
     const auto index = infer_index( _index );
 
+    const auto word_indices =
+        helpers::WordIndexContainer( _population, _peripheral, vocabulary() );
+
     const auto mapped = _mapped ? _mapped
                                 : helpers::MappingContainerMaker::transform(
                                       mappings_,
                                       placeholder(),
                                       _population,
                                       _peripheral,
-                                      peripheral() );
+                                      peripheral(),
+                                      word_indices );
 
     const auto subfeatures = build_subfeatures(
         _population, _peripheral, index, _logger, _rownums, mapped );
@@ -2146,9 +2153,6 @@ containers::Features FastProp::transform(
         }
 
     auto features = init_features( _population.nrows(), index.size() );
-
-    const auto word_indices =
-        helpers::WordIndexContainer( _population, _peripheral, vocabulary() );
 
     spawn_threads(
         _population,

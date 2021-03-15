@@ -6,27 +6,41 @@ namespace helpers
 
 MappingContainer::MappingContainer(
     const std::vector<MappingForDf>& _categorical,
-    const std::vector<std::shared_ptr<const MappingContainer>>& _subcontainers )
-    : categorical_( _categorical ), subcontainers_( _subcontainers )
+    const std::vector<std::shared_ptr<const MappingContainer>>& _subcontainers,
+    const std::vector<MappingForDf>& _text )
+    : categorical_( _categorical ),
+      subcontainers_( _subcontainers ),
+      text_( _text )
 {
     assert_msg(
         categorical_.size() == subcontainers_.size(),
         "categorical_.size(): " + std::to_string( categorical_.size() ) +
             ", subcontainers_.size(): " +
             std::to_string( subcontainers_.size() ) );
+
+    assert_msg(
+        categorical_.size() == text_.size(),
+        "categorical_.size(): " + std::to_string( categorical_.size() ) +
+            ", text_.size(): " + std::to_string( text_.size() ) );
 }
 
 // ----------------------------------------------------------------------------
 
 MappingContainer::MappingContainer( const Poco::JSON::Object& _obj )
     : categorical_( extract_mapping_vector( _obj, "categorical_" ) ),
-      subcontainers_( extract_subcontainers( _obj ) )
+      subcontainers_( extract_subcontainers( _obj ) ),
+      text_( extract_mapping_vector( _obj, "text_" ) )
 {
     assert_msg(
         categorical_.size() == subcontainers_.size(),
         "categorical_.size(): " + std::to_string( categorical_.size() ) +
             ", subcontainers_.size(): " +
             std::to_string( subcontainers_.size() ) );
+
+    assert_msg(
+        categorical_.size() == text_.size(),
+        "categorical_.size(): " + std::to_string( categorical_.size() ) +
+            ", text_.size(): " + std::to_string( text_.size() ) );
 }
 
 // ----------------------------------------------------------------------------
@@ -204,6 +218,8 @@ Poco::JSON::Object::Ptr MappingContainer::to_json_obj() const
     obj->set( "categorical_", transform_mapping_vec( categorical_ ) );
 
     obj->set( "subcontainers_", transform_subcontainers( subcontainers_ ) );
+
+    obj->set( "text_", transform_mapping_vec( text_ ) );
 
     return obj;
 

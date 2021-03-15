@@ -452,7 +452,7 @@ void DecisionTreeEnsemble::fit(
     const auto [population, peripheral, row_indices, word_indices] =
         handle_text_fields( _population, _peripheral );
 
-    const auto mapped = handle_mappings( population, peripheral );
+    const auto mapped = handle_mappings( population, peripheral, word_indices );
 
     fit_spawn_threads(
         population, peripheral, row_indices, word_indices, mapped, _logger );
@@ -782,21 +782,24 @@ DecisionTreeEnsemble::fit_transform_scalers(
 std::optional<const helpers::MappedContainer>
 DecisionTreeEnsemble::handle_mappings(
     const containers::DataFrame &_population,
-    const std::vector<containers::DataFrame> &_peripheral )
+    const std::vector<containers::DataFrame> &_peripheral,
+    const helpers::WordIndexContainer &_word_indices )
 {
     impl().mappings_ = helpers::MappingContainerMaker::fit(
         hyperparameters().min_df_,
         placeholder(),
         _population,
         _peripheral,
-        peripheral() );
+        peripheral(),
+        _word_indices );
 
     return helpers::MappingContainerMaker::transform(
         impl().mappings_,
         placeholder(),
         _population,
         _peripheral,
-        peripheral() );
+        peripheral(),
+        _word_indices );
 }
 
 // ----------------------------------------------------------------------------
@@ -1146,7 +1149,8 @@ containers::Features DecisionTreeEnsemble::transform(
         placeholder(),
         population_table,
         peripheral_tables,
-        peripheral() );
+        peripheral(),
+        word_indices );
 
     // -------------------------------------------------------
 

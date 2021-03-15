@@ -9,14 +9,20 @@ std::shared_ptr<const MappingContainer> MappingContainerMaker::fit(
     const Placeholder& _placeholder,
     const DataFrame& _population,
     const std::vector<DataFrame>& _peripheral,
-    const std::vector<std::string>& _peripheral_names )
+    const std::vector<std::string>& _peripheral_names,
+    const WordIndexContainer& _word_indices )
 {
     const auto dummy_rownums = std::make_shared<std::vector<size_t>>( 0 );
 
     const auto population_view = DataFrameView( _population, dummy_rownums );
 
     const auto table_holder = TableHolder(
-        _placeholder, population_view, _peripheral, _peripheral_names );
+        _placeholder,
+        population_view,
+        _peripheral,
+        _peripheral_names,
+        std::nullopt,
+        _word_indices );
 
     return fit_on_table_holder(
         _min_df,
@@ -39,12 +45,49 @@ MappingContainerMaker::fit_on_categoricals(
 
     const auto col_to_mapping = [_min_df, &_main_tables, &_peripheral_tables](
                                     const Column<Int>& _col ) {
-        const auto rownum_map = MappingContainerMaker::make_rownum_map( _col );
+        const auto rownum_map =
+            MappingContainerMaker::make_rownum_map_categorical( _col );
         return MappingContainerMaker::make_mapping(
             _min_df, rownum_map, _main_tables, _peripheral_tables );
     };
 
     const auto range = _peripheral_tables.back().categoricals_ |
+                       std::views::transform( col_to_mapping );
+
+    return stl::make::vector<MappingForDf::value_type>( range );
+}
+
+// ----------------------------------------------------------------------------
+
+typename MappingContainerMaker::MappingForDf MappingContainerMaker::fit_on_text(
+    const size_t _min_df,
+    const std::vector<DataFrame>& _main_tables,
+    const std::vector<DataFrame>& _peripheral_tables )
+{
+    assert_true( _main_tables.size() == _peripheral_tables.size() );
+
+    assert_true( _main_tables.size() > 0 );
+
+    assert_msg(
+        _peripheral_tables.back().text_.size() ==
+            _peripheral_tables.back().word_indices_.size(),
+        "_peripheral_tables.back().text_.size(): " +
+            std::to_string( _peripheral_tables.back().text_.size() ) +
+            ", _peripheral_tables.back().word_indices_.size(): " +
+            std::to_string( _peripheral_tables.back().word_indices_.size() ) );
+
+    using WordIndex = typename DataFrame::WordIndices::value_type;
+
+    const auto col_to_mapping = [_min_df, &_main_tables, &_peripheral_tables](
+                                    const WordIndex& _word_index ) {
+        assert_true( _word_index );
+        const auto rownum_map =
+            MappingContainerMaker::make_rownum_map_text( *_word_index );
+        return MappingContainerMaker::make_mapping(
+            _min_df, rownum_map, _main_tables, _peripheral_tables );
+    };
+
+    const auto range = _peripheral_tables.back().word_indices_ |
                        std::views::transform( col_to_mapping );
 
     return stl::make::vector<MappingForDf::value_type>( range );
@@ -83,6 +126,8 @@ MappingContainerMaker::fit_on_table_holder(
 
     std::vector<std::shared_ptr<const MappingContainer>> subcontainers;
 
+    std::vector<MappingForDf> text;
+
     for ( size_t i = 0; i < _table_holder.main_tables_.size(); ++i )
         {
             const auto main_tables =
@@ -91,7 +136,7 @@ MappingContainerMaker::fit_on_table_holder(
             const auto peripheral_tables = append(
                 _peripheral_tables, _table_holder.peripheral_tables_.at( i ) );
 
-            const auto mapping =
+            const auto categorical_mapping =
                 fit_on_categoricals( _min_df, main_tables, peripheral_tables );
 
             const auto subcontainer =
@@ -103,14 +148,20 @@ MappingContainerMaker::fit_on_table_holder(
                           peripheral_tables )
                     : std::shared_ptr<MappingContainer>();
 
-            categorical.push_back( mapping );
+            const auto text_mapping =
+                fit_on_text( _min_df, main_tables, peripheral_tables );
+
+            categorical.push_back( categorical_mapping );
 
             subcontainers.push_back( subcontainer );
+
+            text.push_back( text_mapping );
         }
 
     // -----------------------------------------------------------
 
-    return std::make_shared<MappingContainer>( categorical, subcontainers );
+    return std::make_shared<MappingContainer>(
+        categorical, subcontainers, text );
 
     // -----------------------------------------------------------
 }
@@ -273,8 +324,8 @@ MappingContainerMaker::make_mapping(
 
 // ----------------------------------------------------------------------------
 
-std::map<Int, std::vector<size_t>> MappingContainerMaker::make_rownum_map(
-    const Column<Int>& _col )
+std::map<Int, std::vector<size_t>>
+MappingContainerMaker::make_rownum_map_categorical( const Column<Int>& _col )
 {
     std::map<Int, std::vector<size_t>> rownum_map;
 
@@ -299,12 +350,45 @@ std::map<Int, std::vector<size_t>> MappingContainerMaker::make_rownum_map(
 
 // ----------------------------------------------------------------------------
 
+std::map<Int, std::vector<size_t>> MappingContainerMaker::make_rownum_map_text(
+    const textmining::WordIndex& _word_index )
+{
+    std::map<Int, std::vector<size_t>> rownum_map;
+
+    for ( size_t i = 0; i < _word_index.nrows(); ++i )
+        {
+            const auto range = _word_index.range( i );
+
+            const auto unique_words =
+                std::set<Int>( range.begin(), range.end() );
+
+            for ( const auto key : unique_words )
+                {
+                    const auto it = rownum_map.find( key );
+
+                    if ( it == rownum_map.end() )
+                        {
+                            rownum_map[key] = { i };
+                        }
+                    else
+                        {
+                            it->second.push_back( i );
+                        }
+                }
+        }
+
+    return rownum_map;
+}
+
+// ----------------------------------------------------------------------------
+
 std::optional<const MappedContainer> MappingContainerMaker::transform(
     const std::shared_ptr<const MappingContainer>& _mapping,
     const Placeholder& _placeholder,
     const DataFrame& _population,
     const std::vector<DataFrame>& _peripheral,
-    const std::vector<std::string>& _peripheral_names )
+    const std::vector<std::string>& _peripheral_names,
+    const WordIndexContainer& _word_indices )
 {
     if ( !_mapping )
         {
@@ -316,7 +400,12 @@ std::optional<const MappedContainer> MappingContainerMaker::transform(
     const auto population_view = DataFrameView( _population, dummy_rownums );
 
     const auto table_holder = TableHolder(
-        _placeholder, population_view, _peripheral, _peripheral_names );
+        _placeholder,
+        population_view,
+        _peripheral,
+        _peripheral_names,
+        std::nullopt,
+        _word_indices );
 
     const auto ptr = transform_table_holder( _mapping, table_holder );
 
@@ -388,6 +477,101 @@ MappingContainerMaker::transform_categorical(
 
 // ----------------------------------------------------------------------------
 
+typename MappingContainerMaker::MappedColumns
+MappingContainerMaker::transform_text(
+    const MappingForDf& _mapping,
+    const std::vector<Column<strings::String>>& _text,
+    const typename DataFrame::WordIndices& _word_indices )
+{
+    const auto num_targets = infer_num_targets( _mapping );
+
+    if ( num_targets == 0 )
+        {
+            return MappedColumns();
+        }
+
+    const auto transform_col = [num_targets, &_mapping, &_text, &_word_indices](
+                                   const size_t i ) -> Column<Float> {
+        const auto colnum = i / num_targets;
+
+        const auto target_num = i % num_targets;
+
+        assert_true( colnum < _mapping.size() );
+
+        assert_true( _mapping.at( colnum ) );
+
+        assert_true( _word_indices.at( colnum ) );
+
+        const auto& mapping = *_mapping.at( colnum );
+
+        const auto& word_index = *_word_indices.at( colnum );
+
+        auto vec =
+            std::make_shared<std::vector<Float>>( word_index.nrows(), NAN );
+
+        for ( size_t i = 0; i < word_index.nrows(); ++i )
+            {
+                const auto range = word_index.range( i );
+
+                for ( const auto word : range )
+                    {
+                        const auto it = mapping.find( word );
+
+                        Float num_words = 0.0;
+
+                        if ( it != mapping.end() )
+                            {
+                                assert_true( it->second.size() == num_targets );
+
+                                ++num_words;
+
+                                if ( std::isnan( vec->at( i ) ) )
+                                    {
+                                        vec->at( i ) =
+                                            it->second.at( target_num );
+                                    }
+                                else
+                                    {
+                                        vec->at( i ) +=
+                                            it->second.at( target_num );
+                                    }
+                            }
+
+                        if ( num_words > 0.0 )
+                            {
+                                vec->at( i ) /= num_words;
+                            }
+                    }
+            }
+
+        return Column<Float>(
+            vec,
+            _text.at( i ).name_ + "__mapping, target " +
+                std::to_string( target_num + 1 ),
+            vec->size(),
+            "" );
+    };
+
+    assert_msg(
+        _text.size() == _word_indices.size(),
+        "_text.size(): " + std::to_string( _text.size() ) +
+            ", _word_index.size(): " + std::to_string( _word_indices.size() ) );
+
+    assert_msg(
+        _mapping.size() == _word_indices.size(),
+        "_mapping.size(): " + std::to_string( _mapping.size() ) +
+            ", _word_index.size(): " + std::to_string( _word_indices.size() ) );
+
+    const auto range =
+        std::views::iota(
+            static_cast<size_t>( 0 ), _mapping.size() * num_targets ) |
+        std::views::transform( transform_col );
+
+    return stl::make::vector<Column<Float>>( range );
+}
+
+// ----------------------------------------------------------------------------
+
 std::shared_ptr<const MappedContainer>
 MappingContainerMaker::transform_table_holder(
     const std::shared_ptr<const MappingContainer>& _mapping,
@@ -402,10 +586,14 @@ MappingContainerMaker::transform_table_holder(
     assert_true(
         _mapping->categorical_.size() == _mapping->subcontainers_.size() );
 
+    assert_true( _mapping->categorical_.size() == _mapping->text_.size() );
+
     assert_true(
         _mapping->categorical_.size() == _table_holder.subtables_.size() );
 
     std::vector<MappedColumns> categorical;
+
+    std::vector<MappedColumns> text;
 
     std::vector<std::shared_ptr<const MappedContainer>> subcontainers;
 
@@ -427,9 +615,15 @@ MappingContainerMaker::transform_table_holder(
                 {
                     subcontainers.push_back( nullptr );
                 }
+
+            text.push_back( transform_text(
+                _mapping->text_.at( i ),
+                _table_holder.peripheral_tables_.at( i ).text_,
+                _table_holder.peripheral_tables_.at( i ).word_indices_ ) );
         }
 
-    return std::make_shared<MappedContainer>( categorical, subcontainers );
+    return std::make_shared<MappedContainer>(
+        categorical, subcontainers, text );
 }
 
 // ----------------------------------------------------------------------------

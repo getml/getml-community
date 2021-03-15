@@ -14,7 +14,8 @@ struct MappingContainer
     MappingContainer(
         const std::vector<MappingForDf>& _categorical,
         const std::vector<std::shared_ptr<const MappingContainer>>&
-            _subcontainers );
+            _subcontainers,
+        const std::vector<MappingForDf>& _text );
 
     MappingContainer( const Poco::JSON::Object& _obj );
 
@@ -31,11 +32,14 @@ struct MappingContainer
     /// Transforms the VocabularyContainer into a JSON object.
     Poco::JSON::Object::Ptr to_json_obj() const;
 
-    /// The vocabulary for the categorical tables.
+    /// The vocabulary for the categorical columns.
     const std::vector<MappingForDf> categorical_;
 
     /// Containers for any and all existing subtables.
     const std::vector<std::shared_ptr<const MappingContainer>> subcontainers_;
+
+    /// The vocabulary for the text columns.
+    const std::vector<MappingForDf> text_;
 };
 
 // -------------------------------------------------------------------------

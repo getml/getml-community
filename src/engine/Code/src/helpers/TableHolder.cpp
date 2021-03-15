@@ -234,7 +234,7 @@ std::vector<DataFrame> TableHolder::parse_peripheral_tables(
                     : WordIndices();
 
             const auto mapped_columns =
-                _mapped ? _mapped->categorical_.at( i ) : MappedColumns();
+                _mapped ? _mapped->mapped( i ) : MappedColumns();
 
             result.push_back( _peripheral.at( j ).create_subview(
                 _placeholder.joined_tables_.at( i ).name_,
@@ -393,9 +393,9 @@ std::vector<std::optional<TableHolder>> TableHolder::parse_subtables(
         [&_mapped]( const size_t i ) -> std::optional<MappedContainer> {
         if ( _mapped )
             {
-                assert_true( i < _mapped->subcontainers_.size() );
-                assert_true( _mapped->subcontainers_.at( i ) );
-                return *_mapped->subcontainers_.at( i );
+                assert_true( i < _mapped->size() );
+                assert_true( _mapped->subcontainers( i ) );
+                return *_mapped->subcontainers( i );
             }
 
         return std::nullopt;

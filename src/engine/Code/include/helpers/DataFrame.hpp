@@ -372,7 +372,7 @@ struct DataFrame
 
     /// Index returning words for each row.
     const WordIndices word_indices_;
-};  // namespace helpers
+};
 
 // -------------------------------------------------------------------------
 }  // namespace helpers
