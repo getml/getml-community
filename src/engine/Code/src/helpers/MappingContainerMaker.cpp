@@ -523,9 +523,7 @@ MappingContainerMaker::transform_text(
                             {
                                 assert_true( it->second.size() == num_targets );
 
-                                ++num_words;
-
-                                if ( std::isnan( vec->at( i ) ) )
+                                if ( num_words == 0.0 )
                                     {
                                         vec->at( i ) =
                                             it->second.at( target_num );
@@ -535,6 +533,8 @@ MappingContainerMaker::transform_text(
                                         vec->at( i ) +=
                                             it->second.at( target_num );
                                     }
+
+                                ++num_words;
                             }
 
                         if ( num_words > 0.0 )
