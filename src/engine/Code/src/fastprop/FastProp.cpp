@@ -265,6 +265,8 @@ void FastProp::build_rows(
     const auto condition_functions = ConditionParser::make_condition_functions(
         table_holder, _subfeatures, _index, abstract_features() );
 
+    const auto nrows = _rownums ? _rownums->size() : _population.nrows();
+
     for ( size_t i = 0; i < rownums->size(); ++i )
         {
             build_row(
@@ -282,14 +284,12 @@ void FastProp::build_rows(
                     if ( _thread_num == 0 )
                         {
                             log_progress(
-                                _logger,
-                                rownums->size(),
-                                _num_completed->load() );
+                                _logger, nrows, _num_completed->load() );
                         }
                 }
         }
 
-    _num_completed->fetch_add( rownums->size() % log_iter );
+    _num_completed->fetch_add( nrows % log_iter );
 }
 
 // ----------------------------------------------------------------------------
@@ -1216,12 +1216,13 @@ void FastProp::fit_on_peripheral(
             fit_on_subfeatures(
                 _peripheral, _peripheral_ix, cond, _abstract_features );
 
-            fit_on_text(
+            // TODO: Think of a better solution
+            /*fit_on_text(
                 _peripheral,
                 _peripheral_ix,
                 cond,
                 _vocabulary,
-                _abstract_features );
+                _abstract_features );*/
 
             if ( _peripheral.num_time_stamps() > 0 )
                 {
