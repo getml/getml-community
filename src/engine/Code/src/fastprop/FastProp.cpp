@@ -1402,11 +1402,13 @@ FastProp::handle_text_fields(
     const std::vector<containers::DataFrame> &_peripheral,
     const bool _as_subfeatures )
 {
-    // TODO: Add parameter
+    const bool split_text_fields =
+        infer_split_text_fields( _peripheral, _as_subfeatures );
+
     const auto [population, peripheral] =
-        !_as_subfeatures ? helpers::TextFieldSplitter::split_text_fields(
-                               _population, _peripheral )
-                         : std::make_pair( _population, _peripheral );
+        split_text_fields ? helpers::TextFieldSplitter::split_text_fields(
+                                _population, _peripheral )
+                          : std::make_pair( _population, _peripheral );
 
     vocabulary_ = std::make_shared<const helpers::VocabularyContainer>(
         hyperparameters().min_df_,
@@ -1597,6 +1599,26 @@ FastProp::infer_importance(
 
                 return { std::make_pair( col_desc, 0.0 ) };
         }
+}
+
+// ----------------------------------------------------------------------------
+
+bool FastProp::infer_split_text_fields(
+    const std::vector<containers::DataFrame> &_peripheral,
+    const bool _as_subfeatures ) const
+{
+    // TODO: Add parameter
+
+    const auto is_text_field = []( const containers::DataFrame &_df ) -> bool {
+        return _df.name_.find( helpers::Macros::text_field() ) !=
+               std::string::npos;
+    };
+
+    const bool split_text_fields =
+        !_as_subfeatures &&
+        std::none_of( _peripheral.begin(), _peripheral.end(), is_text_field );
+
+    return split_text_fields;
 }
 
 // ----------------------------------------------------------------------------
@@ -2187,15 +2209,8 @@ containers::Features FastProp::transform(
 
     const auto index = infer_index( _index );
 
-    const auto is_text_field = []( const containers::DataFrame &_df ) -> bool {
-        return _df.name_.find( helpers::Macros::text_field() ) !=
-               std::string::npos;
-    };
-
-    // TODO: Add parameter
     const bool split_text_fields =
-        !_as_subfeatures &&
-        std::none_of( _peripheral.begin(), _peripheral.end(), is_text_field );
+        infer_split_text_fields( _peripheral, _as_subfeatures );
 
     const auto [population_table, peripheral_tables] =
         split_text_fields ? helpers::TextFieldSplitter::split_text_fields(

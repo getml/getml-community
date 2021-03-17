@@ -303,6 +303,11 @@ class FastProp
     std::vector<size_t> infer_index(
         const std::optional<std::vector<size_t>>& _index ) const;
 
+    /// Infers whether we want to split the text fields.
+    bool infer_split_text_fields(
+        const std::vector<containers::DataFrame>& _peripheral,
+        const bool _as_subfeatures ) const;
+
     /// Initializes the importance factors for the subfeatures.
     std::vector<std::vector<Float>> init_subimportance_factors() const;
 
