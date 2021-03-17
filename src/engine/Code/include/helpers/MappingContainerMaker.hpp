@@ -81,16 +81,33 @@ class MappingContainerMaker
         const MappingForDf& _mapping,
         const std::vector<Column<Int>>& _categorical );
 
+    /// Applies the mapping to a categorical column.
+    static Column<Float> transform_categorical_column(
+        const MappingForDf& _mapping,
+        const std::vector<Column<Int>>& _categorical,
+        const size_t _num_targets,
+        const size_t _colnum,
+        const size_t _target_num );
+
+    /// Transforms a table holder to get the extra columns.
+    static std::shared_ptr<const MappedContainer> transform_table_holder(
+        const std::shared_ptr<const MappingContainer>& _mapping,
+        const TableHolder& _table_holder );
+
     /// Maps the text fields on their corresponding weights.
     static MappedColumns transform_text(
         const MappingForDf& _mapping,
         const std::vector<Column<strings::String>>& _text,
         const typename DataFrame::WordIndices& _word_indices );
 
-    /// Transforms a table holder to get the extra columns.
-    static std::shared_ptr<const MappedContainer> transform_table_holder(
-        const std::shared_ptr<const MappingContainer>& _mapping,
-        const TableHolder& _table_holder );
+    /// Applies the mapping to a text column.
+    static Column<Float> transform_text_column(
+        const MappingForDf& _mapping,
+        const std::vector<Column<strings::String>>& _text,
+        const typename DataFrame::WordIndices& _word_indices,
+        const size_t _num_targets,
+        const size_t _colnum,
+        const size_t _target_num );
 };
 
 // -------------------------------------------------------------------------

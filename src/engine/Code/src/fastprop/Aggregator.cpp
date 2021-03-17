@@ -9,7 +9,7 @@ namespace algorithm
 Float Aggregator::apply_aggregation(
     const containers::DataFrame &_population,
     const containers::DataFrame &_peripheral,
-    const containers::Features &_subfeatures,
+    const std::optional<containers::Features> &_subfeatures,
     const std::vector<containers::Match> &_matches,
     const std::function<bool( const containers::Match & )> &_condition_function,
     const containers::AbstractFeature &_abstract_feature )
@@ -71,9 +71,10 @@ Float Aggregator::apply_aggregation(
                     _abstract_feature );
 
             case enums::DataUsed::subfeatures:
+                assert_true( _subfeatures );
                 return apply_subfeatures(
                     _peripheral,
-                    _subfeatures,
+                    *_subfeatures,
                     _matches,
                     _condition_function,
                     _abstract_feature );

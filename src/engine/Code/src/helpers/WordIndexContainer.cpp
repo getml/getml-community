@@ -9,8 +9,11 @@ WordIndexContainer::WordIndexContainer(
     const std::vector<DataFrame>& _peripheral,
     const VocabularyContainer& _vocabulary_container )
 {
-    assert_true(
-        _vocabulary_container.peripheral().size() == _peripheral.size() );
+    assert_msg(
+        _vocabulary_container.peripheral().size() == _peripheral.size(),
+        "_vocabulary_container.peripheral().size(): " +
+            std::to_string( _vocabulary_container.peripheral().size() ) +
+            ", _peripheral.size(): " + std::to_string( _peripheral.size() ) );
 
     for ( size_t i = 0; i < _peripheral.size(); ++i )
         {

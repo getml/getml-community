@@ -18,7 +18,6 @@ class ConditionParser
     static std::vector<std::function<bool( const containers::Match & )>>
     make_condition_functions(
         const TableHolder &_table_holder,
-        const std::vector<containers::Features> &_subfeatures,
         const std::vector<size_t> &_index,
         const std::vector<containers::AbstractFeature> &_abstract_features );
 
@@ -28,7 +27,6 @@ class ConditionParser
     static std::function<bool( const containers::Match & )>
     make_apply_conditions(
         const TableHolder &_table_holder,
-        const std::vector<containers::Features> &_subfeatures,
         const containers::AbstractFeature &_abstract_feature );
 
     /// Generates a filtering function based on a categorical column.
@@ -47,7 +45,6 @@ class ConditionParser
     static std::vector<std::function<bool( const containers::Match & )>>
     parse_conditions(
         const TableHolder &_table_holder,
-        const std::vector<containers::Features> &_subfeatures,
         const containers::AbstractFeature &_abstract_feature );
 
     /// Parses one condition in the abstract features.
@@ -55,7 +52,6 @@ class ConditionParser
     parse_single_condition(
         const containers::DataFrame &_population,
         const containers::DataFrame &_peripheral,
-        const containers::Features &_subfeatures,
         const containers::Condition &_condition );
 };
 

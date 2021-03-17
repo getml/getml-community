@@ -212,6 +212,9 @@ std::vector<DataFrame> TableHolder::parse_peripheral_tables(
         !_word_index_container ||
         _peripheral.size() == _word_index_container->peripheral().size() );
 
+    assert_true(
+        !_mapped || _mapped->size() >= _placeholder.joined_tables_.size() );
+
     // ---------------------------------------------------------------------
 
     std::vector<DataFrame> result;
@@ -257,12 +260,21 @@ std::vector<DataFrame> TableHolder::parse_peripheral_tables(
                std::string::npos;
     };
 
-    auto relevant_text_fields_ix =
+    auto range =
         std::views::iota( static_cast<size_t>( 0 ), _peripheral.size() ) |
         std::views::filter( is_relevant_text_field );
 
-    for ( const size_t j : relevant_text_fields_ix )
+    const auto relevant_text_fields_ix = stl::make::vector<size_t>( range );
+
+    assert_true(
+        !_mapped ||
+        relevant_text_fields_ix.size() + _placeholder.joined_tables_.size() ==
+            _mapped->size() );
+
+    for ( size_t i = 0; i < relevant_text_fields_ix.size(); ++i )
         {
+            const auto j = relevant_text_fields_ix.at( i );
+
             const auto& df = _peripheral.at( j );
 
             const auto row_indices =
@@ -275,13 +287,25 @@ std::vector<DataFrame> TableHolder::parse_peripheral_tables(
                     ? _word_index_container->peripheral().at( j )
                     : WordIndices();
 
+            const auto mapped_columns =
+                _mapped
+                    ? _mapped->mapped( _placeholder.joined_tables_.size() + i )
+                    : MappedColumns();
+
+            auto numericals = df.numericals_;
+
+            for ( const auto& col : mapped_columns )
+                {
+                    numericals.push_back( col );
+                }
+
             const auto text_field = DataFrame(
                 df.categoricals_,
                 df.discretes_,
                 df.indices_,
                 df.join_keys_,
                 df.name_,
-                df.numericals_,
+                numericals,
                 df.targets_,
                 df.text_,
                 df.time_stamps_,

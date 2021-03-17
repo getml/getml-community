@@ -222,9 +222,9 @@ std::vector<size_t> MappingContainerMaker::find_output_ix(
 
 size_t MappingContainerMaker::infer_num_targets( const MappingForDf& _mapping )
 {
-    const auto non_empty = []( const MappingForDf::value_type& m ) {
+    const auto non_empty = []( const MappingForDf::value_type& m ) -> bool {
         assert_true( m );
-        return m->size() > 0;
+        return ( m->size() > 0 );
     };
 
     const auto it = std::find_if( _mapping.begin(), _mapping.end(), non_empty );
@@ -285,7 +285,11 @@ MappingContainerMaker::make_mapping(
     const auto calc_avg_targets =
         [&_main_tables]( const std::pair<Int, std::vector<size_t>>& _input )
         -> std::pair<Int, std::vector<Float>> {
+        // -----------------------------------------------------------
+
         const auto& rownums = _input.second;
+
+        // -----------------------------------------------------------
 
         const auto calc_avg =
             [&rownums]( const Column<Float>& _target_col ) -> Float {
@@ -303,8 +307,12 @@ MappingContainerMaker::make_mapping(
 
         // -----------------------------------------------------------
 
+        assert_true( _main_tables.size() > 0 );
+
+        assert_true( _main_tables.at( 0 ).targets_.size() > 0 );
+
         const auto range =
-            _main_tables.back().targets_ | std::views::transform( calc_avg );
+            _main_tables.at( 0 ).targets_ | std::views::transform( calc_avg );
 
         return std::make_pair(
             _input.first, stl::make::vector<Float>( range ) );
@@ -411,6 +419,12 @@ std::optional<const MappedContainer> MappingContainerMaker::transform(
 
     assert_true( ptr );
 
+    assert_msg(
+        table_holder.subtables_.size() == ptr->size(),
+        "table_holder.subtables_.size(): " +
+            std::to_string( table_holder.subtables_.size() ) +
+            ", ptr->size(): " + std::to_string( ptr->size() ) );
+
     return *ptr;
 }
 
@@ -427,52 +441,71 @@ MappingContainerMaker::transform_categorical(
             return MappedColumns();
         }
 
+    assert_msg(
+        _categorical.size() == _mapping.size(),
+        "_categorical.size(): " + std::to_string( _categorical.size() ) +
+            ", _mapping.size(): " + std::to_string( _mapping.size() ) );
+
     const auto transform_col = [num_targets, &_mapping, &_categorical](
                                    const size_t i ) -> Column<Float> {
         const auto colnum = i / num_targets;
-
         const auto target_num = i % num_targets;
-
-        assert_true( colnum < _mapping.size() );
-
-        assert_true( _mapping.at( colnum ) );
-
-        const auto& mapping = *_mapping.at( colnum );
-
-        const auto& cat_col = _categorical.at( colnum );
-
-        auto vec = std::make_shared<std::vector<Float>>( cat_col.nrows_, NAN );
-
-        for ( size_t i = 0; i < cat_col.nrows_; ++i )
-            {
-                const auto it = mapping.find( cat_col[i] );
-
-                if ( it != mapping.end() )
-                    {
-                        assert_true( it->second.size() == num_targets );
-                        vec->at( i ) = it->second.at( target_num );
-                    }
-            }
-
-        return Column<Float>(
-            vec,
-            cat_col.name_ + "__mapping, target " +
-                std::to_string( target_num + 1 ),
-            vec->size(),
-            "" );
+        return MappingContainerMaker::transform_categorical_column(
+            _mapping, _categorical, num_targets, colnum, target_num );
     };
-
-    assert_msg(
-        _mapping.size() == _categorical.size(),
-        "_mapping.size(): " + std::to_string( _mapping.size() ) +
-            ", _categorical.size(): " + std::to_string( _categorical.size() ) );
 
     const auto range =
         std::views::iota(
             static_cast<size_t>( 0 ), _mapping.size() * num_targets ) |
         std::views::transform( transform_col );
 
-    return stl::make::vector<Column<Float>>( range );
+    const auto mapped = stl::make::vector<Column<Float>>( range );
+
+    assert_msg(
+        _mapping.size() * num_targets == mapped.size(),
+        "_mapping.size(): " + std::to_string( _mapping.size() ) +
+            ", mapped.size(): " + std::to_string( mapped.size() ) +
+            ", num_targets: " + std::to_string( num_targets ) );
+
+    return mapped;
+}
+
+// ----------------------------------------------------------------------------
+
+Column<Float> MappingContainerMaker::transform_categorical_column(
+    const MappingForDf& _mapping,
+    const std::vector<Column<Int>>& _categorical,
+    const size_t _num_targets,
+    const size_t _colnum,
+    const size_t _target_num )
+{
+    assert_true( _colnum < _mapping.size() );
+
+    assert_true( _mapping.at( _colnum ) );
+
+    const auto& mapping = *_mapping.at( _colnum );
+
+    const auto& cat_col = _categorical.at( _colnum );
+
+    auto vec = std::make_shared<std::vector<Float>>( cat_col.nrows_, NAN );
+
+    for ( size_t i = 0; i < cat_col.nrows_; ++i )
+        {
+            const auto it = mapping.find( cat_col[i] );
+
+            if ( it != mapping.end() )
+                {
+                    assert_true( it->second.size() == _num_targets );
+                    vec->at( i ) = it->second.at( _target_num );
+                }
+        }
+
+    return Column<Float>(
+        vec,
+        cat_col.name_ + "__mapping, target " +
+            std::to_string( _target_num + 1 ),
+        vec->size(),
+        "" );
 }
 
 // ----------------------------------------------------------------------------
@@ -490,84 +523,102 @@ MappingContainerMaker::transform_text(
             return MappedColumns();
         }
 
-    const auto transform_col = [num_targets, &_mapping, &_text, &_word_indices](
-                                   const size_t i ) -> Column<Float> {
-        const auto colnum = i / num_targets;
-
-        const auto target_num = i % num_targets;
-
-        assert_true( colnum < _mapping.size() );
-
-        assert_true( _mapping.at( colnum ) );
-
-        assert_true( _word_indices.at( colnum ) );
-
-        const auto& mapping = *_mapping.at( colnum );
-
-        const auto& word_index = *_word_indices.at( colnum );
-
-        auto vec =
-            std::make_shared<std::vector<Float>>( word_index.nrows(), NAN );
-
-        for ( size_t i = 0; i < word_index.nrows(); ++i )
-            {
-                const auto range = word_index.range( i );
-
-                for ( const auto word : range )
-                    {
-                        const auto it = mapping.find( word );
-
-                        Float num_words = 0.0;
-
-                        if ( it != mapping.end() )
-                            {
-                                assert_true( it->second.size() == num_targets );
-
-                                if ( num_words == 0.0 )
-                                    {
-                                        vec->at( i ) =
-                                            it->second.at( target_num );
-                                    }
-                                else
-                                    {
-                                        vec->at( i ) +=
-                                            it->second.at( target_num );
-                                    }
-
-                                ++num_words;
-                            }
-
-                        if ( num_words > 0.0 )
-                            {
-                                vec->at( i ) /= num_words;
-                            }
-                    }
-            }
-
-        return Column<Float>(
-            vec,
-            _text.at( i ).name_ + "__mapping, target " +
-                std::to_string( target_num + 1 ),
-            vec->size(),
-            "" );
-    };
-
     assert_msg(
         _text.size() == _word_indices.size(),
         "_text.size(): " + std::to_string( _text.size() ) +
             ", _word_index.size(): " + std::to_string( _word_indices.size() ) );
 
     assert_msg(
-        _mapping.size() == _word_indices.size(),
-        "_mapping.size(): " + std::to_string( _mapping.size() ) +
-            ", _word_index.size(): " + std::to_string( _word_indices.size() ) );
+        _text.size() == _mapping.size(),
+        "_text.size(): " + std::to_string( _text.size() ) +
+            ", _mapping.size(): " + std::to_string( _mapping.size() ) );
+
+    const auto transform_col = [num_targets, &_mapping, &_text, &_word_indices](
+                                   const size_t i ) -> Column<Float> {
+        const auto colnum = i / num_targets;
+        const auto target_num = i % num_targets;
+        return MappingContainerMaker::transform_text_column(
+            _mapping, _text, _word_indices, num_targets, colnum, target_num );
+    };
 
     const auto range =
         std::views::iota(
             static_cast<size_t>( 0 ), _mapping.size() * num_targets ) |
         std::views::transform( transform_col );
 
-    return stl::make::vector<Column<Float>>( range );
+    const auto mapped = stl::make::vector<Column<Float>>( range );
+
+    assert_msg(
+        _mapping.size() * num_targets == mapped.size(),
+        "_mapping.size(): " + std::to_string( _mapping.size() ) +
+            ", mapped.size(): " + std::to_string( mapped.size() ) +
+            ", num_targets: " + std::to_string( num_targets ) );
+
+    return mapped;
+}
+
+// ----------------------------------------------------------------------------
+
+Column<Float> MappingContainerMaker::transform_text_column(
+    const MappingForDf& _mapping,
+    const std::vector<Column<strings::String>>& _text,
+    const typename DataFrame::WordIndices& _word_indices,
+    const size_t _num_targets,
+    const size_t _colnum,
+    const size_t _target_num )
+{
+    assert_true( _colnum < _mapping.size() );
+
+    assert_true( _mapping.at( _colnum ) );
+
+    assert_true( _word_indices.at( _colnum ) );
+
+    const auto& mapping = *_mapping.at( _colnum );
+
+    const auto& word_index = *_word_indices.at( _colnum );
+
+    auto vec = std::make_shared<std::vector<Float>>( word_index.nrows(), NAN );
+
+    for ( size_t i = 0; i < word_index.nrows(); ++i )
+        {
+            const auto range = word_index.range( i );
+
+            for ( const auto word : range )
+                {
+                    const auto it = mapping.find( word );
+
+                    Float num_words = 0.0;
+
+                    if ( it != mapping.end() )
+                        {
+                            assert_true( it->second.size() == _num_targets );
+
+                            if ( num_words == 0.0 )
+                                {
+                                    vec->at( i ) = it->second.at( _target_num );
+                                }
+                            else
+                                {
+                                    vec->at( i ) +=
+                                        it->second.at( _target_num );
+                                }
+
+                            ++num_words;
+                        }
+
+                    if ( num_words > 0.0 )
+                        {
+                            vec->at( i ) /= num_words;
+                        }
+                }
+        }
+
+    return Column<Float>(
+        vec,
+        _text.at( _colnum ).name_ + "__mapping, target " +
+            std::to_string( _target_num + 1 ),
+        vec->size(),
+        "" );
 }
 
 // ----------------------------------------------------------------------------
@@ -622,8 +673,16 @@ MappingContainerMaker::transform_table_holder(
                 _table_holder.peripheral_tables_.at( i ).word_indices_ ) );
         }
 
-    return std::make_shared<MappedContainer>(
-        categorical, subcontainers, text );
+    const auto ptr =
+        std::make_shared<MappedContainer>( categorical, subcontainers, text );
+
+    assert_msg(
+        _table_holder.subtables_.size() == ptr->size(),
+        "_table_holder.subtables_.size(): " +
+            std::to_string( _table_holder.subtables_.size() ) +
+            ", ptr->size(): " + std::to_string( ptr->size() ) );
+
+    return ptr;
 }
 
 // ----------------------------------------------------------------------------

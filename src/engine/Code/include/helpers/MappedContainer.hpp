@@ -50,6 +50,9 @@ class MappedContainer
                 m.push_back( col );
             }
 
+        assert_true(
+            m.size() == categorical_.at( _i ).size() + text_.at( _i ).size() );
+
         return m;
     }
 

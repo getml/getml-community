@@ -255,6 +255,7 @@ class FastProp
 
     /// Fits the subfeatures of the FastProp.
     std::shared_ptr<const std::vector<std::optional<FastProp>>> fit_subfeatures(
+        const TableHolder& _table_holder,
         const std::vector<containers::DataFrame>& _peripheral,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
         const std::optional<const helpers::MappedContainer>& _mapped ) const;
@@ -271,11 +272,22 @@ class FastProp
     /// Infers the appropriate number of threads.
     size_t get_num_threads() const;
 
-    /// Logs the progress of building the features.
-    void log_progress(
-        const std::shared_ptr<const logging::AbstractLogger> _logger,
-        const size_t _nrows,
-        const size_t _num_completed ) const;
+    /// Handles the mappings during training.
+    std::optional<helpers::MappedContainer> handle_mappings(
+        const containers::DataFrame& _population,
+        const std::vector<containers::DataFrame>& _peripheral,
+        const std::optional<helpers::MappedContainer> _mapped,
+        const helpers::WordIndexContainer& _word_indices );
+
+    /// Handles the text fields during training.
+    std::tuple<
+        containers::DataFrame,
+        std::vector<containers::DataFrame>,
+        helpers::WordIndexContainer>
+    handle_text_fields(
+        const containers::DataFrame& _population,
+        const std::vector<containers::DataFrame>& _peripheral,
+        const bool _as_subfeatures );
 
     /// Generates importances from the features.
     std::vector<std::pair<helpers::ColumnDescription, Float>> infer_importance(
@@ -300,6 +312,12 @@ class FastProp
     /// Infers whether the aggregation _agg can be applied to a numerical or
     /// discrete column.
     bool is_numerical( const std::string& _agg ) const;
+
+    /// Logs the progress of building the features.
+    void log_progress(
+        const std::shared_ptr<const logging::AbstractLogger> _logger,
+        const size_t _nrows,
+        const size_t _num_completed ) const;
 
     /// Generates WHERE-conditions to apply to the aggregations.
     std::vector<std::vector<containers::Condition>> make_conditions(

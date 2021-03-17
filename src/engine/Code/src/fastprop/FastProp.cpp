@@ -185,7 +185,7 @@ void FastProp::build_row(
         _table_holder.peripheral_tables_.size() );
 
     assert_true(
-        _subfeatures.size() == _table_holder.peripheral_tables_.size() );
+        _subfeatures.size() <= _table_holder.peripheral_tables_.size() );
 
     for ( size_t i = 0; i < _index.size(); ++i )
         {
@@ -206,7 +206,10 @@ void FastProp::build_row(
             const auto &peripheral = _table_holder.peripheral_tables_.at(
                 abstract_feature.peripheral_ );
 
-            const auto &subf = _subfeatures.at( abstract_feature.peripheral_ );
+            const auto subf =
+                abstract_feature.peripheral_ < _subfeatures.size()
+                    ? _subfeatures.at( abstract_feature.peripheral_ )
+                    : std::optional<containers::Features>();
 
             const auto &matches =
                 all_matches.at( abstract_feature.peripheral_ );
@@ -263,7 +266,7 @@ void FastProp::build_rows(
     constexpr size_t log_iter = 5000;
 
     const auto condition_functions = ConditionParser::make_condition_functions(
-        table_holder, _subfeatures, _index, abstract_features() );
+        table_holder, _index, abstract_features() );
 
     const auto nrows = _rownums ? _rownums->size() : _population.nrows();
 
@@ -302,7 +305,7 @@ std::vector<containers::Features> FastProp::build_subfeatures(
     const std::shared_ptr<std::vector<size_t>> &_rownums,
     const std::optional<const helpers::MappedContainer> &_mapped ) const
 {
-    assert_true( placeholder().joined_tables_.size() == subfeatures().size() );
+    assert_true( placeholder().joined_tables_.size() <= subfeatures().size() );
 
     assert_true(
         !_mapped || placeholder().joined_tables_.size() <= _mapped->size() );
@@ -316,6 +319,8 @@ std::vector<containers::Features> FastProp::build_subfeatures(
                     features.push_back( containers::Features() );
                     continue;
                 }
+
+            assert_true( i < placeholder().joined_tables_.size() );
 
             const auto joined_table = placeholder().joined_tables_.at( i );
 
@@ -596,7 +601,7 @@ containers::DataFrame FastProp::find_peripheral(
     const std::vector<containers::DataFrame> &_peripheral,
     const std::string &_name ) const
 {
-    if ( _peripheral.size() != peripheral().size() )
+    if ( _peripheral.size() < peripheral().size() )
         {
             throw std::invalid_argument(
                 "The number of peripheral tables does not match the number "
@@ -638,75 +643,57 @@ void FastProp::fit(
     const std::optional<helpers::MappedContainer> _mapped,
     const bool _as_subfeatures )
 {
+    assert_true( !_as_subfeatures || _mapped );
+
     extract_schemas( _population, _peripheral );
 
-    vocabulary_ = std::make_shared<const helpers::VocabularyContainer>(
-        hyperparameters().min_df_,
-        hyperparameters().vocab_size_,
-        _population,
-        _peripheral );
+    const auto [population_table, peripheral_tables, word_indices] =
+        handle_text_fields( _population, _peripheral, _as_subfeatures );
 
-    const auto word_indices =
-        helpers::WordIndexContainer( _population, _peripheral, vocabulary() );
+    const auto mapped = handle_mappings(
+        population_table, peripheral_tables, _mapped, word_indices );
 
-    if ( !_mapped )
-        {
-            mappings_ = helpers::MappingContainerMaker::fit(
-                hyperparameters().min_df_,
-                placeholder(),
-                _population,
-                _peripheral,
-                peripheral(),
-                word_indices );
-        }
-
-    const auto mapped = _mapped ? *_mapped
-                                : helpers::MappingContainerMaker::transform(
-                                      mappings_,
-                                      placeholder(),
-                                      _population,
-                                      _peripheral,
-                                      peripheral(),
-                                      word_indices );
-
-    subfeatures_ = fit_subfeatures( _peripheral, _logger, mapped );
-
-    assert_true( vocabulary().peripheral().size() == _peripheral.size() );
-
-    const auto abstract_features =
-        std::make_shared<std::vector<containers::AbstractFeature>>();
-
-    const auto rownums = sample_from_population( _population.nrows() );
+    const auto rownums = sample_from_population( population_table.nrows() );
 
     const auto population_view =
-        containers::DataFrameView( _population, rownums );
+        containers::DataFrameView( population_table, rownums );
 
     const auto table_holder = TableHolder(
         placeholder(),
         population_view,
-        _peripheral,
+        peripheral_tables,
         peripheral(),
         std::nullopt,
-        std::nullopt,
+        word_indices,
         mapped );
+
+    extract_schemas( table_holder );
+
+    subfeatures_ =
+        fit_subfeatures( table_holder, peripheral_tables, _logger, mapped );
+
+    const auto conditions = make_conditions( table_holder );
 
     assert_true(
         table_holder.main_tables_.size() ==
         table_holder.peripheral_tables_.size() );
 
     assert_true(
-        table_holder.main_tables_.size() ==
+        table_holder.main_tables_.size() >=
         placeholder().joined_tables_.size() );
 
-    extract_schemas( table_holder );
+    assert_true( vocabulary().peripheral().size() == peripheral_tables.size() );
 
-    const auto conditions = make_conditions( table_holder );
+    const auto abstract_features =
+        std::make_shared<std::vector<containers::AbstractFeature>>();
 
     for ( size_t i = 0; i < table_holder.main_tables_.size(); ++i )
         {
-            const auto &name = placeholder().joined_tables_.at( i ).name_;
-
-            const auto ix = find_peripheral_ix( name );
+            const auto ix =
+                i < placeholder().joined_tables_.size()
+                    ? find_peripheral_ix(
+                          placeholder().joined_tables_.at( i ).name_ )
+                    : static_cast<size_t>( 0 );  // TODO: Find better fix.
 
             fit_on_peripheral(
                 table_holder.main_tables_.at( i ).df(),
@@ -732,8 +719,8 @@ void FastProp::fit(
 
     if ( !_as_subfeatures )
         {
-            abstract_features_ =
-                select_features( _population, _peripheral, _logger, rownums );
+            abstract_features_ = select_features(
+                population_table, peripheral_tables, _logger, rownums );
         }
 }
 
@@ -1127,14 +1114,17 @@ void FastProp::fit_on_subfeatures(
     std::shared_ptr<std::vector<containers::AbstractFeature>>
         _abstract_features ) const
 {
-    assert_true( _abstract_features );
-
-    assert_true( _peripheral_ix < subfeatures().size() );
+    if ( _peripheral_ix >= subfeatures().size() )
+        {
+            return;
+        }
 
     if ( !subfeatures().at( _peripheral_ix ) )
         {
             return;
         }
+
+    assert_true( _abstract_features );
 
     for ( size_t input_col = 0;
           input_col < subfeatures().at( _peripheral_ix )->num_features();
@@ -1300,12 +1290,23 @@ void FastProp::fit_on_text(
 
 std::shared_ptr<const std::vector<std::optional<FastProp>>>
 FastProp::fit_subfeatures(
+    const TableHolder &_table_holder,
     const std::vector<containers::DataFrame> &_peripheral,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     const std::optional<const helpers::MappedContainer> &_mapped ) const
 {
     assert_true(
+        placeholder().joined_tables_.size() <=
+        _table_holder.subtables_.size() );
+
+    assert_true(
         !_mapped || placeholder().joined_tables_.size() <= _mapped->size() );
+
+    assert_msg(
+        !_mapped || _table_holder.subtables_.size() == _mapped->size(),
+        "_table_holder.subtables_.size(): " +
+            std::to_string( _table_holder.subtables_.size() ) +
+            ", _mapped->size(): " + std::to_string( _mapped->size() ) );
 
     const auto subfeatures =
         std::make_shared<std::vector<std::optional<FastProp>>>();
@@ -1314,7 +1315,7 @@ FastProp::fit_subfeatures(
         {
             const auto &joined_table = placeholder().joined_tables_.at( i );
 
-            if ( joined_table.joined_tables_.size() == 0 )
+            if ( !_table_holder.subtables_.at( i ) )
                 {
                     subfeatures->push_back( std::nullopt );
                     continue;
@@ -1334,9 +1335,7 @@ FastProp::fit_subfeatures(
             const auto mapped =
                 _mapped ? std::make_optional<const helpers::MappedContainer>(
                               *_mapped->subcontainers( i ) )
-                        : static_cast<
-                              std::optional<const helpers::MappedContainer>>(
-                              std::nullopt );
+                        : std::optional<const helpers::MappedContainer>();
 
             subfeatures->back()->fit(
                 population, _peripheral, _logger, mapped, true );
@@ -1360,6 +1359,65 @@ size_t FastProp::get_num_threads() const
         }
 
     return static_cast<size_t>( num_threads );
+}
+
+// ----------------------------------------------------------------------------
+
+std::optional<helpers::MappedContainer> FastProp::handle_mappings(
+    const containers::DataFrame &_population,
+    const std::vector<containers::DataFrame> &_peripheral,
+    const std::optional<helpers::MappedContainer> _mapped,
+    const helpers::WordIndexContainer &_word_indices )
+{
+    if ( _mapped )
+        {
+            return *_mapped;
+        }
+
+    mappings_ = helpers::MappingContainerMaker::fit(
+        hyperparameters().min_df_,
+        placeholder(),
+        _population,
+        _peripheral,
+        peripheral(),
+        _word_indices );
+
+    return helpers::MappingContainerMaker::transform(
+        mappings_,
+        placeholder(),
+        _population,
+        _peripheral,
+        peripheral(),
+        _word_indices );
+}
+
+// ----------------------------------------------------------------------------
+
+std::tuple<
+    containers::DataFrame,
+    std::vector<containers::DataFrame>,
+    helpers::WordIndexContainer>
+FastProp::handle_text_fields(
+    const containers::DataFrame &_population,
+    const std::vector<containers::DataFrame> &_peripheral,
+    const bool _as_subfeatures )
+{
+    // TODO: Add parameter
+    const auto [population, peripheral] =
+        !_as_subfeatures ? helpers::TextFieldSplitter::split_text_fields(
+                               _population, _peripheral )
+                         : std::make_pair( _population, _peripheral );
+
+    vocabulary_ = std::make_shared<const helpers::VocabularyContainer>(
+        hyperparameters().min_df_,
+        hyperparameters().vocab_size_,
+        population,
+        peripheral );
+
+    const auto word_indices =
+        helpers::WordIndexContainer( population, peripheral, vocabulary() );
+
+    return std::make_tuple( population, peripheral, word_indices );
 }
 
 // ----------------------------------------------------------------------------
@@ -1397,7 +1455,7 @@ FastProp::infer_importance(
     const auto abstract_feature = abstract_features().at( _feature_num );
 
     assert_true(
-        _subimportance_factors->size() == peripheral_table_schemas().size() );
+        _subimportance_factors->size() <= peripheral_table_schemas().size() );
 
     assert_true(
         abstract_feature.peripheral_ < peripheral_table_schemas().size() );
@@ -2129,20 +2187,35 @@ containers::Features FastProp::transform(
 
     const auto index = infer_index( _index );
 
-    const auto word_indices =
-        helpers::WordIndexContainer( _population, _peripheral, vocabulary() );
+    const auto is_text_field = []( const containers::DataFrame &_df ) -> bool {
+        return _df.name_.find( helpers::Macros::text_field() ) !=
+               std::string::npos;
+    };
+
+    // TODO: Add parameter
+    const bool split_text_fields =
+        !_as_subfeatures &&
+        std::none_of( _peripheral.begin(), _peripheral.end(), is_text_field );
+
+    const auto [population_table, peripheral_tables] =
+        split_text_fields ? helpers::TextFieldSplitter::split_text_fields(
+                                _population, _peripheral )
+                          : std::make_pair( _population, _peripheral );
+
+    const auto word_indices = helpers::WordIndexContainer(
+        population_table, peripheral_tables, vocabulary() );
 
     const auto mapped = _mapped ? _mapped
                                 : helpers::MappingContainerMaker::transform(
                                       mappings_,
                                       placeholder(),
-                                      _population,
-                                      _peripheral,
+                                      population_table,
+                                      peripheral_tables,
                                       peripheral(),
                                       word_indices );
 
     const auto subfeatures = build_subfeatures(
-        _population, _peripheral, index, _logger, _rownums, mapped );
+        population_table, peripheral_tables, index, _logger, _rownums, mapped );
 
     if ( _logger )
         {
@@ -2153,11 +2226,11 @@ containers::Features FastProp::transform(
             _logger->log( msg );
         }
 
-    auto features = init_features( _population.nrows(), index.size() );
+    auto features = init_features( population_table.nrows(), index.size() );
 
     spawn_threads(
-        _population,
-        _peripheral,
+        population_table,
+        peripheral_tables,
         subfeatures,
         word_indices,
         mapped,

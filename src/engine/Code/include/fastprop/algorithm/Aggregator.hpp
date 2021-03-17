@@ -21,7 +21,7 @@ class Aggregator
     static Float apply_aggregation(
         const containers::DataFrame &_population,
         const containers::DataFrame &_peripheral,
-        const containers::Features &_subfeatures,
+        const std::optional<containers::Features> &_subfeatures,
         const std::vector<containers::Match> &_matches,
         const std::function<bool( const containers::Match & )>
             &_condition_function,
