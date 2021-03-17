@@ -43,7 +43,7 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _json_obj )
       split_text_fields_(
           _json_obj.has( "split_text_fields_" )
               ? JSON::get_value<bool>( _json_obj, "split_text_fields_" )
-              : true ),  // TODO: Remove
+              : false ),  // TODO: Remove
       tree_hyperparameters_(
           std::make_shared<const TreeHyperparameters>( _json_obj ) ),
       use_timestamps_( JSON::get_value<bool>( _json_obj, "use_timestamps_" ) ),

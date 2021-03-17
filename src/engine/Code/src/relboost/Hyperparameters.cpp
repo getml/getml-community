@@ -22,7 +22,7 @@ Hyperparameters::Hyperparameters()
       share_selected_features_( 0.0 ),
       shrinkage_( 0.3 ),
       silent_( true ),
-      split_text_fields_( true ),
+      split_text_fields_( false ),
       target_num_( 0 ),
       use_timestamps_( true ),
       vocab_size_( 500 )
@@ -67,7 +67,7 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _obj )
       split_text_fields_(
           _obj.has( "split_text_fields_" )
               ? JSON::get_value<bool>( _obj, "split_text_fields_" )
-              : true ),  // TODO: Remove
+              : false ),  // TODO: Remove
       target_num_( /*JSON::get_value<Int>( _obj, "target_num_" )*/ 0 ),  // TODO
       use_timestamps_( JSON::get_value<bool>( _obj, "use_timestamps_" ) ),
       vocab_size_(
