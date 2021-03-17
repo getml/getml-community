@@ -112,7 +112,7 @@ class FastProp
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
         const std::vector<containers::Features>& _subfeatures,
-        const helpers::WordIndexContainer& _word_indices,
+        const std::optional<helpers::WordIndexContainer>& _word_indices,
         const std::optional<const helpers::MappedContainer>& _mapped,
         const std::vector<size_t>& _index,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
@@ -214,7 +214,6 @@ class FastProp
         const containers::DataFrame& _peripheral,
         const size_t _peripheral_ix,
         const std::vector<std::vector<containers::Condition>>& _conditions,
-        const VocabForDf& _vocabulary,
         std::shared_ptr<std::vector<containers::AbstractFeature>>
             _abstract_features ) const;
 
@@ -259,15 +258,6 @@ class FastProp
         const std::vector<containers::DataFrame>& _peripheral,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
         const std::optional<const helpers::MappedContainer>& _mapped ) const;
-
-    /// Fits on the text fields of a peripheral data frame.
-    void fit_on_text(
-        const containers::DataFrame& _peripheral,
-        const size_t _peripheral_ix,
-        const std::vector<containers::Condition>& _conditions,
-        const VocabForDf& _vocabulary,
-        std::shared_ptr<std::vector<containers::AbstractFeature>>
-            _abstract_features ) const;
 
     /// Infers the appropriate number of threads.
     size_t get_num_threads() const;
@@ -387,7 +377,7 @@ class FastProp
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
         const std::vector<containers::Features>& _subfeatures,
-        const helpers::WordIndexContainer& _word_indices,
+        const std::optional<helpers::WordIndexContainer>& _word_indices,
         const std::optional<const helpers::MappedContainer>& _mapped,
         const std::vector<size_t>& _index,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
@@ -473,13 +463,6 @@ class FastProp
             "Model has no population schema - did you may be forget to fit "
             "it?" );
         return *population_schema_;
-    }
-
-    /// Trivial (const) accessor
-    const helpers::VocabularyContainer& vocabulary() const
-    {
-        assert_true( vocabulary_ );
-        return *vocabulary_;
     }
 
     // ------------------------------------------------------------------------

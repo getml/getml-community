@@ -212,7 +212,6 @@ std::string SQLMaker::select_avg_time_between( const Placeholder& _input )
 
 std::string SQLMaker::select_statement(
     const std::vector<strings::String>& _categories,
-    const Vocabulary& _vocabulary,
     const std::string& _feature_prefix,
     const AbstractFeature& _abstract_feature,
     const Placeholder& _input,
@@ -253,12 +252,7 @@ std::string SQLMaker::select_statement(
         }
 
     select += value_to_be_aggregated(
-        _categories,
-        _vocabulary,
-        _feature_prefix,
-        _abstract_feature,
-        _input,
-        _output );
+        _categories, _feature_prefix, _abstract_feature, _input, _output );
 
     select += " )";
 
@@ -269,7 +263,6 @@ std::string SQLMaker::select_statement(
 
 std::string SQLMaker::value_to_be_aggregated(
     const std::vector<strings::String>& _categories,
-    const Vocabulary& _vocabulary,
     const std::string& _feature_prefix,
     const AbstractFeature& _abstract_feature,
     const Placeholder& _input,
@@ -355,46 +348,6 @@ std::string SQLMaker::value_to_be_aggregated(
                         _output );
 
                     return name1 + " - " + name2;
-                }
-
-            case enums::DataUsed::text:
-                {
-                    const auto name = get_name(
-                        _feature_prefix,
-                        _abstract_feature.data_used_,
-                        _abstract_feature.peripheral_,
-                        _abstract_feature.input_col_,
-                        _abstract_feature.output_col_,
-                        _input,
-                        _output );
-
-                    assert_true(
-                        _abstract_feature.peripheral_ < _vocabulary.size() );
-
-                    assert_true(
-                        _abstract_feature.input_col_ <
-                        _vocabulary.at( _abstract_feature.peripheral_ )
-                            .size() );
-
-                    assert_true( _vocabulary.at( _abstract_feature.peripheral_ )
-                                     .at( _abstract_feature.input_col_ ) );
-
-                    assert_true(
-                        _abstract_feature.categorical_value_ <
-                        static_cast<Int>(
-                            _vocabulary.at( _abstract_feature.peripheral_ )
-                                .at( _abstract_feature.input_col_ )
-                                ->size() ) );
-
-                    assert_true( _abstract_feature.categorical_value_ >= 0 );
-
-                    const auto word =
-                        _vocabulary.at( _abstract_feature.peripheral_ )
-                            .at( _abstract_feature.input_col_ )
-                            ->at( _abstract_feature.categorical_value_ );
-
-                    return "CASE WHEN " + name + " LIKE '%" + word.str() +
-                           "%' THEN 1 ELSE 0 END";
                 }
 
             default:

@@ -49,7 +49,6 @@ struct AbstractFeature
     /// Expresses the abstract feature as SQL code.
     std::string to_sql(
         const std::vector<strings::String> &_categories,
-        const Vocabulary &_vocabulary,
         const std::string &_feature_prefix,
         const std::string &_feature_num,
         const Placeholder &_input,

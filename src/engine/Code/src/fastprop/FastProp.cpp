@@ -239,7 +239,7 @@ void FastProp::build_rows(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral,
     const std::vector<containers::Features> &_subfeatures,
-    const helpers::WordIndexContainer &_word_indices,
+    const std::optional<helpers::WordIndexContainer> &_word_indices,
     const std::optional<const helpers::MappedContainer> &_mapped,
     const std::vector<size_t> &_index,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
@@ -682,25 +682,16 @@ void FastProp::fit(
         table_holder.main_tables_.size() >=
         placeholder().joined_tables_.size() );
 
-    assert_true( vocabulary().peripheral().size() == peripheral_tables.size() );
-
     const auto abstract_features =
         std::make_shared<std::vector<containers::AbstractFeature>>();
 
     for ( size_t i = 0; i < table_holder.main_tables_.size(); ++i )
         {
-            const auto ix =
-                i < placeholder().joined_tables_.size()
-                    ? find_peripheral_ix(
-                          placeholder().joined_tables_.at( i ).name_ )
-                    : static_cast<size_t>( 0 );  // TODO: Find better fix.
-
             fit_on_peripheral(
                 table_holder.main_tables_.at( i ).df(),
                 table_holder.peripheral_tables_.at( i ),
                 i,
                 conditions,
-                vocabulary().peripheral().at( ix ),
                 abstract_features );
         }
 
@@ -1159,7 +1150,6 @@ void FastProp::fit_on_peripheral(
     const containers::DataFrame &_peripheral,
     const size_t _peripheral_ix,
     const std::vector<std::vector<containers::Condition>> &_conditions,
-    const VocabForDf &_vocabulary,
     std::shared_ptr<std::vector<containers::AbstractFeature>>
         _abstract_features ) const
 {
@@ -1206,14 +1196,6 @@ void FastProp::fit_on_peripheral(
             fit_on_subfeatures(
                 _peripheral, _peripheral_ix, cond, _abstract_features );
 
-            // TODO: Think of a better solution
-            /*fit_on_text(
-                _peripheral,
-                _peripheral_ix,
-                cond,
-                _vocabulary,
-                _abstract_features );*/
-
             if ( _peripheral.num_time_stamps() > 0 )
                 {
                     _abstract_features->push_back( containers::AbstractFeature(
@@ -1233,56 +1215,6 @@ void FastProp::fit_on_peripheral(
                 enums::DataUsed::not_applicable,
                 0,
                 _peripheral_ix ) );
-        }
-}
-
-// ----------------------------------------------------------------------------
-
-void FastProp::fit_on_text(
-    const containers::DataFrame &_peripheral,
-    const size_t _peripheral_ix,
-    const std::vector<containers::Condition> &_conditions,
-    const VocabForDf &_vocabulary,
-    std::shared_ptr<std::vector<containers::AbstractFeature>>
-        _abstract_features ) const
-{
-    assert_true( _abstract_features );
-
-    assert_true( _peripheral.num_text() == _vocabulary.size() );
-
-    for ( size_t input_col = 0; input_col < _peripheral.num_text();
-          ++input_col )
-        {
-            assert_true( _vocabulary.at( input_col ) );
-
-            for ( Int word_ix = 0;
-                  word_ix <
-                  static_cast<Int>( _vocabulary.at( input_col )->size() );
-                  ++word_ix )
-                {
-                    for ( const auto agg : hyperparameters().aggregations_ )
-                        {
-                            if ( !is_numerical( agg ) )
-                                {
-                                    continue;
-                                }
-
-                            if ( skip_first_last( agg, _peripheral ) )
-                                {
-                                    continue;
-                                }
-
-                            _abstract_features->push_back(
-                                containers::AbstractFeature(
-                                    enums::Parser<enums::Aggregation>::parse(
-                                        agg ),
-                                    _conditions,
-                                    input_col,
-                                    _peripheral_ix,
-                                    enums::DataUsed::text,
-                                    word_ix ) );
-                        }
-                }
         }
 }
 
@@ -1417,7 +1349,7 @@ FastProp::handle_text_fields(
         peripheral );
 
     const auto word_indices =
-        helpers::WordIndexContainer( population, peripheral, vocabulary() );
+        helpers::WordIndexContainer( population, peripheral, *vocabulary_ );
 
     return std::make_tuple( population, peripheral, word_indices );
 }
@@ -2078,7 +2010,7 @@ void FastProp::spawn_threads(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral,
     const std::vector<containers::Features> &_subfeatures,
-    const helpers::WordIndexContainer &_word_indices,
+    const std::optional<helpers::WordIndexContainer> &_word_indices,
     const std::optional<const helpers::MappedContainer> &_mapped,
     const std::vector<size_t> &_index,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
@@ -2217,8 +2149,10 @@ containers::Features FastProp::transform(
                                 _population, _peripheral )
                           : std::make_pair( _population, _peripheral );
 
-    const auto word_indices = helpers::WordIndexContainer(
-        population_table, peripheral_tables, vocabulary() );
+    const auto word_indices =
+        vocabulary_ ? std::make_optional<helpers::WordIndexContainer>(
+                          population_table, peripheral_tables, *vocabulary_ )
+                    : std::optional<helpers::WordIndexContainer>();
 
     const auto mapped = _mapped ? _mapped
                                 : helpers::MappingContainerMaker::transform(
@@ -2362,7 +2296,7 @@ Poco::JSON::Object FastProp::to_json_obj( const bool _schema_only ) const
 
     if ( vocabulary_ )
         {
-            obj.set( "vocabulary_", vocabulary().to_json_obj() );
+            obj.set( "vocabulary_", vocabulary_->to_json_obj() );
         }
 
     // ----------------------------------------
@@ -2429,7 +2363,6 @@ std::vector<std::string> FastProp::to_sql(
 
             sql.push_back( abstract_feature.to_sql(
                 *_categories,
-                expand_vocabulary( vocabulary().peripheral() ),
                 _feature_prefix,
                 std::to_string( _offset + i + 1 ),
                 input_schema,

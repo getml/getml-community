@@ -29,7 +29,7 @@ class MappingContainerMaker
         const DataFrame& _population,
         const std::vector<DataFrame>& _peripheral,
         const std::vector<std::string>& _peripheral_names,
-        const WordIndexContainer& _word_indices );
+        const std::optional<WordIndexContainer>& _word_indices );
 
    private:
     /// Finds the correspondings rownums to the input indices.

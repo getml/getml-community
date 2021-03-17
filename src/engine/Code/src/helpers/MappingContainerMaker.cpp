@@ -396,7 +396,7 @@ std::optional<const MappedContainer> MappingContainerMaker::transform(
     const DataFrame& _population,
     const std::vector<DataFrame>& _peripheral,
     const std::vector<std::string>& _peripheral_names,
-    const WordIndexContainer& _word_indices )
+    const std::optional<WordIndexContainer>& _word_indices )
 {
     if ( !_mapping )
         {

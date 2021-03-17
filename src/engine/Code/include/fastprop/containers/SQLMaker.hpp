@@ -29,7 +29,6 @@ class SQLMaker
     /// AGGREGATED)).
     static std::string select_statement(
         const std::vector<strings::String>& _categories,
-        const Vocabulary& _vocabulary,
         const std::string& _feature_prefix,
         const AbstractFeature& _abstract_feature,
         const Placeholder& _input,
@@ -62,7 +61,6 @@ class SQLMaker
     /// difference between two columns)
     static std::string value_to_be_aggregated(
         const std::vector<strings::String>& _categories,
-        const Vocabulary& _vocabulary,
         const std::string& _feature_prefix,
         const AbstractFeature& _abstract_feature,
         const Placeholder& _input,

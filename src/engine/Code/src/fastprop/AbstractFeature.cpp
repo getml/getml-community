@@ -109,7 +109,6 @@ Poco::JSON::Object::Ptr AbstractFeature::to_json_obj() const
 
 std::string AbstractFeature::to_sql(
     const std::vector<strings::String> &_categories,
-    const Vocabulary &_vocabulary,
     const std::string &_feature_prefix,
     const std::string &_feature_num,
     const Placeholder &_input,
@@ -135,7 +134,7 @@ std::string AbstractFeature::to_sql(
     sql << "SELECT ";
 
     sql << SQLMaker::select_statement(
-        _categories, _vocabulary, _feature_prefix, *this, _input, _output );
+        _categories, _feature_prefix, *this, _input, _output );
 
     sql << " AS \"feature_" << _feature_prefix << _feature_num << "\","
         << std::endl;
