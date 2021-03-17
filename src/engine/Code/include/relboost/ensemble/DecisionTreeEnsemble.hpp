@@ -309,7 +309,7 @@ class DecisionTreeEnsemble
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
         const std::vector<size_t>& _index,
-        const helpers::WordIndexContainer& _word_indices,
+        const std::optional<helpers::WordIndexContainer>& _word_indices,
         const std::optional<const helpers::MappedContainer>& _mapped,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
         containers::Features* _features ) const;
@@ -413,10 +413,10 @@ class DecisionTreeEnsemble
     }
 
     /// Trivial (const) accessor
-    const helpers::VocabularyContainer& vocabulary() const
+    const std::shared_ptr<const helpers::VocabularyContainer>& vocabulary()
+        const
     {
-        assert_true( impl().vocabulary_ );
-        return *impl().vocabulary_;
+        return impl().vocabulary_;
     }
 
     // -----------------------------------------------------------------

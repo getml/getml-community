@@ -1067,8 +1067,10 @@ containers::Features DecisionTreeEnsemble::transform(
                   _population, _peripheral )
             : std::make_pair( _population, _peripheral );
 
-    const auto word_indices = helpers::WordIndexContainer(
-        population_table, peripheral_tables, vocabulary() );
+    const auto word_indices =
+        vocabulary() ? std::make_optional<helpers::WordIndexContainer>(
+                           population_table, peripheral_tables, *vocabulary() )
+                     : std::optional<helpers::WordIndexContainer>();
 
     // ------------------------------------------------------
 
@@ -1140,7 +1142,7 @@ void DecisionTreeEnsemble::transform_spawn_threads(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral,
     const std::vector<size_t> &_index,
-    const helpers::WordIndexContainer &_word_indices,
+    const std::optional<helpers::WordIndexContainer> &_word_indices,
     const std::optional<const helpers::MappedContainer> &_mapped,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     containers::Features *_features ) const
@@ -1288,7 +1290,10 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj(
 
     // ----------------------------------------
 
-    obj.set( "vocabulary_", vocabulary().to_json_obj() );
+    if ( vocabulary() )
+        {
+            obj.set( "vocabulary_", vocabulary()->to_json_obj() );
+        }
 
     // ----------------------------------------
 
