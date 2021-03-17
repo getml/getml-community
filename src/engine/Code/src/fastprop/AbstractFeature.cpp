@@ -144,9 +144,11 @@ std::string AbstractFeature::to_sql(
 
     // -------------------------------------------------------------------
 
-    // TODO
     sql << helpers::SQLGenerator::make_joins(
-        _output.name(), _input.name(), "TODO", "TODO" );
+        _output.name(),
+        _input.name(),
+        _output.join_keys_name(),
+        _input.join_keys_name() );
 
     // -------------------------------------------------------------------
 
