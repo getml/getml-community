@@ -65,6 +65,10 @@ struct Hyperparameters
     /// Whether we want logging.
     const bool silent_;
 
+    /// Whether we want to split text fields into a separate table containing
+    /// individual words.
+    const bool split_text_fields_;
+
     /// The maximum size of the vocabulary.
     const size_t vocab_size_;
 };

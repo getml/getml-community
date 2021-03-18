@@ -1539,15 +1539,13 @@ bool FastProp::infer_split_text_fields(
     const std::vector<containers::DataFrame> &_peripheral,
     const bool _as_subfeatures ) const
 {
-    // TODO: Add parameter
-
     const auto is_text_field = []( const containers::DataFrame &_df ) -> bool {
         return _df.name_.find( helpers::Macros::text_field() ) !=
                std::string::npos;
     };
 
     const bool split_text_fields =
-        !_as_subfeatures &&
+        hyperparameters().split_text_fields_ && !_as_subfeatures &&
         std::none_of( _peripheral.begin(), _peripheral.end(), is_text_field );
 
     return split_text_fields;

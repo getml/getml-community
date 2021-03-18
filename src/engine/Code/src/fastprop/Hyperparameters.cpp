@@ -22,6 +22,11 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _json_obj )
                     _json_obj, "sampling_factor_" )
               : 1.0 ),
       silent_( jsonutils::JSON::get_value<bool>( _json_obj, "silent_" ) ),
+      split_text_fields_(
+          _json_obj.has( "split_text_fields_" )
+              ? jsonutils::JSON::get_value<bool>(
+                    _json_obj, "split_text_fields_" )
+              : false ),  // TODO: Remove
       vocab_size_(
           jsonutils::JSON::get_value<size_t>( _json_obj, "vocab_size_" ) )
 {
