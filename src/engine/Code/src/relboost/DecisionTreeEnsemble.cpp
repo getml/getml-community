@@ -782,8 +782,13 @@ DecisionTreeEnsemble::handle_mappings(
     const std::vector<containers::DataFrame> &_peripheral,
     const helpers::WordIndexContainer &_word_indices )
 {
+    if ( hyperparameters().min_freq_ == 0 )
+        {
+            return std::nullopt;
+        }
+
     impl().mappings_ = helpers::MappingContainerMaker::fit(
-        hyperparameters().min_df_,
+        hyperparameters().min_freq_,
         placeholder(),
         _population,
         _peripheral,

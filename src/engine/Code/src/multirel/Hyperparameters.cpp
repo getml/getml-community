@@ -21,6 +21,12 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _json_obj )
               : static_cast<size_t>(
                     30 ) ),  // TODO: Check inserted for backwards
                              // compatability. Remove later.
+      min_freq_(
+          _json_obj.has( "min_freq_" )
+              ? JSON::get_value<size_t>( _json_obj, "min_freq_" )
+              : static_cast<size_t>(
+                    0 ) ),  // TODO: Check inserted for backwards
+                            // compatability. Remove later.
       num_features_( JSON::get_value<size_t>( _json_obj, "num_features_" ) ),
       num_subfeatures_(
           JSON::get_value<size_t>( _json_obj, "num_subfeatures_" ) ),
@@ -109,6 +115,8 @@ Poco::JSON::Object::Ptr Hyperparameters::to_json_obj() const
     obj->set( "max_length_", tree_hyperparameters_->max_length_ );
 
     obj->set( "min_df_", min_df_ );
+
+    obj->set( "min_freq_", min_freq_ );
 
     obj->set( "min_num_samples_", tree_hyperparameters_->min_num_samples_ );
 

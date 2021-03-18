@@ -5,7 +5,7 @@ namespace helpers
 // ----------------------------------------------------------------------------
 
 std::shared_ptr<const MappingContainer> MappingContainerMaker::fit(
-    const size_t _min_df,
+    const size_t _min_freq,
     const Placeholder& _placeholder,
     const DataFrame& _population,
     const std::vector<DataFrame>& _peripheral,
@@ -25,7 +25,7 @@ std::shared_ptr<const MappingContainer> MappingContainerMaker::fit(
         _word_indices );
 
     return fit_on_table_holder(
-        _min_df,
+        _min_freq,
         table_holder,
         std::vector<DataFrame>(),
         std::vector<DataFrame>() );
@@ -35,7 +35,7 @@ std::shared_ptr<const MappingContainer> MappingContainerMaker::fit(
 
 typename MappingContainerMaker::MappingForDf
 MappingContainerMaker::fit_on_categoricals(
-    const size_t _min_df,
+    const size_t _min_freq,
     const std::vector<DataFrame>& _main_tables,
     const std::vector<DataFrame>& _peripheral_tables )
 {
@@ -43,12 +43,12 @@ MappingContainerMaker::fit_on_categoricals(
 
     assert_true( _main_tables.size() > 0 );
 
-    const auto col_to_mapping = [_min_df, &_main_tables, &_peripheral_tables](
+    const auto col_to_mapping = [_min_freq, &_main_tables, &_peripheral_tables](
                                     const Column<Int>& _col ) {
         const auto rownum_map =
             MappingContainerMaker::make_rownum_map_categorical( _col );
         return MappingContainerMaker::make_mapping(
-            _min_df, rownum_map, _main_tables, _peripheral_tables );
+            _min_freq, rownum_map, _main_tables, _peripheral_tables );
     };
 
     const auto range = _peripheral_tables.back().categoricals_ |
@@ -61,7 +61,7 @@ MappingContainerMaker::fit_on_categoricals(
 
 typename MappingContainerMaker::MappingForDf
 MappingContainerMaker::fit_on_discretes(
-    const size_t _min_df,
+    const size_t _min_freq,
     const std::vector<DataFrame>& _main_tables,
     const std::vector<DataFrame>& _peripheral_tables )
 {
@@ -69,12 +69,12 @@ MappingContainerMaker::fit_on_discretes(
 
     assert_true( _main_tables.size() > 0 );
 
-    const auto col_to_mapping = [_min_df, &_main_tables, &_peripheral_tables](
+    const auto col_to_mapping = [_min_freq, &_main_tables, &_peripheral_tables](
                                     const Column<Float>& _col ) {
         const auto rownum_map =
             MappingContainerMaker::make_rownum_map_discrete( _col );
         return MappingContainerMaker::make_mapping(
-            _min_df, rownum_map, _main_tables, _peripheral_tables );
+            _min_freq, rownum_map, _main_tables, _peripheral_tables );
     };
 
     const auto range = _peripheral_tables.back().discretes_ |
@@ -86,7 +86,7 @@ MappingContainerMaker::fit_on_discretes(
 // ----------------------------------------------------------------------------
 
 typename MappingContainerMaker::MappingForDf MappingContainerMaker::fit_on_text(
-    const size_t _min_df,
+    const size_t _min_freq,
     const std::vector<DataFrame>& _main_tables,
     const std::vector<DataFrame>& _peripheral_tables )
 {
@@ -104,13 +104,13 @@ typename MappingContainerMaker::MappingForDf MappingContainerMaker::fit_on_text(
 
     using WordIndex = typename DataFrame::WordIndices::value_type;
 
-    const auto col_to_mapping = [_min_df, &_main_tables, &_peripheral_tables](
+    const auto col_to_mapping = [_min_freq, &_main_tables, &_peripheral_tables](
                                     const WordIndex& _word_index ) {
         assert_true( _word_index );
         const auto rownum_map =
             MappingContainerMaker::make_rownum_map_text( *_word_index );
         return MappingContainerMaker::make_mapping(
-            _min_df, rownum_map, _main_tables, _peripheral_tables );
+            _min_freq, rownum_map, _main_tables, _peripheral_tables );
     };
 
     const auto range = _peripheral_tables.back().word_indices_ |
@@ -123,7 +123,7 @@ typename MappingContainerMaker::MappingForDf MappingContainerMaker::fit_on_text(
 
 std::shared_ptr<const MappingContainer>
 MappingContainerMaker::fit_on_table_holder(
-    const size_t _min_df,
+    const size_t _min_freq,
     const TableHolder& _table_holder,
     const std::vector<DataFrame>& _main_tables,
     const std::vector<DataFrame>& _peripheral_tables )
@@ -164,23 +164,23 @@ MappingContainerMaker::fit_on_table_holder(
             const auto peripheral_tables = append(
                 _peripheral_tables, _table_holder.peripheral_tables_.at( i ) );
 
-            const auto categorical_mapping =
-                fit_on_categoricals( _min_df, main_tables, peripheral_tables );
+            const auto categorical_mapping = fit_on_categoricals(
+                _min_freq, main_tables, peripheral_tables );
 
             const auto discrete_mapping =
-                fit_on_discretes( _min_df, main_tables, peripheral_tables );
+                fit_on_discretes( _min_freq, main_tables, peripheral_tables );
 
             const auto subcontainer =
                 _table_holder.subtables_.at( i )
                     ? fit_on_table_holder(
-                          _min_df,
+                          _min_freq,
                           *_table_holder.subtables_.at( i ),
                           main_tables,
                           peripheral_tables )
                     : std::shared_ptr<MappingContainer>();
 
             const auto text_mapping =
-                fit_on_text( _min_df, main_tables, peripheral_tables );
+                fit_on_text( _min_freq, main_tables, peripheral_tables );
 
             categorical.push_back( categorical_mapping );
 
@@ -274,7 +274,7 @@ size_t MappingContainerMaker::infer_num_targets( const MappingForDf& _mapping )
 
 std::shared_ptr<const std::map<Int, std::vector<Float>>>
 MappingContainerMaker::make_mapping(
-    const size_t _min_df,
+    const size_t _min_freq,
     const std::map<Int, std::vector<size_t>>& _rownum_map,
     const std::vector<DataFrame>& _main_tables,
     const std::vector<DataFrame>& _peripheral_tables )
@@ -308,9 +308,10 @@ MappingContainerMaker::make_mapping(
 
     // -----------------------------------------------------------
 
-    const auto greater_than_min_df =
-        [_min_df]( const std::pair<Int, std::vector<size_t>>& _input ) -> bool {
-        return _input.second.size() >= _min_df;
+    const auto greater_than_min_freq =
+        [_min_freq](
+            const std::pair<Int, std::vector<size_t>>& _input ) -> bool {
+        return _input.second.size() >= _min_freq;
     };
 
     // -----------------------------------------------------------
@@ -354,7 +355,7 @@ MappingContainerMaker::make_mapping(
     // -----------------------------------------------------------
 
     auto range = _rownum_map | std::views::transform( match_rownums ) |
-                 std::views::filter( greater_than_min_df ) |
+                 std::views::filter( greater_than_min_freq ) |
                  std::views::transform( calc_avg_targets );
 
     return std::make_shared<const std::map<Int, std::vector<Float>>>(

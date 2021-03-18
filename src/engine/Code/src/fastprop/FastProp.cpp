@@ -1306,8 +1306,13 @@ std::optional<helpers::MappedContainer> FastProp::handle_mappings(
             return *_mapped;
         }
 
+    if ( hyperparameters().min_freq_ == 0 )
+        {
+            return std::nullopt;
+        }
+
     mappings_ = helpers::MappingContainerMaker::fit(
-        hyperparameters().min_df_,
+        hyperparameters().min_freq_,
         placeholder(),
         _population,
         _peripheral,

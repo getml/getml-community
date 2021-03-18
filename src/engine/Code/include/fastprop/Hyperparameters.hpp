@@ -49,6 +49,10 @@ struct Hyperparameters
     /// the vocabulary.
     const size_t min_df_;
 
+    /// The minimum number of associated rows in the population table required
+    /// to create a mapping for a specific value.
+    const size_t min_freq_;
+
     /// The number of categories from which we would like to extract numerical
     /// features.
     const size_t n_most_frequent_;

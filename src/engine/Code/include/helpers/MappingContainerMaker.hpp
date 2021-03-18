@@ -14,7 +14,7 @@ class MappingContainerMaker
    public:
     /// Fits the mapping container.
     static std::shared_ptr<const MappingContainer> fit(
-        const size_t _min_df,
+        const size_t _min_freq,
         const Placeholder& _placeholder,
         const DataFrame& _population,
         const std::vector<DataFrame>& _peripheral,
@@ -40,25 +40,25 @@ class MappingContainerMaker
 
     /// Generates the mapping for a categorical column.
     static MappingForDf fit_on_categoricals(
-        const size_t _min_df,
+        const size_t _min_freq,
         const std::vector<DataFrame>& _main_tables,
         const std::vector<DataFrame>& _peripheral_tables );
 
     /// Generates the mapping for a discrete column.
     static MappingForDf fit_on_discretes(
-        const size_t _min_df,
+        const size_t _min_freq,
         const std::vector<DataFrame>& _main_tables,
         const std::vector<DataFrame>& _peripheral_tables );
 
     /// Generates the mapping for a text column.
     static MappingForDf fit_on_text(
-        const size_t _min_df,
+        const size_t _min_freq,
         const std::vector<DataFrame>& _main_tables,
         const std::vector<DataFrame>& _peripheral_tables );
 
     /// Fits a new mapping on the table holder.
     static std::shared_ptr<const MappingContainer> fit_on_table_holder(
-        const size_t _min_df,
+        const size_t _min_freq,
         const TableHolder& _table_holder,
         const std::vector<DataFrame>& _main_tables,
         const std::vector<DataFrame>& _peripheral_tables );
@@ -69,7 +69,7 @@ class MappingContainerMaker
     /// Generates a new mapping based on the rownum_map for a particular column.
     static std::shared_ptr<const std::map<Int, std::vector<Float>>>
     make_mapping(
-        const size_t _min_df,
+        const size_t _min_freq,
         const std::map<Int, std::vector<size_t>>& _rownum_map,
         const std::vector<DataFrame>& _main_tables,
         const std::vector<DataFrame>& _peripheral_tables );

@@ -12,6 +12,7 @@ Hyperparameters::Hyperparameters()
       loss_function_( "SquareLoss" ),
       max_depth_( 1 ),
       min_df_( 30 ),
+      min_freq_( 0 ),
       min_num_samples_( 200 ),
       num_features_( 10 ),
       num_subfeatures_( 10 ),
@@ -51,6 +52,12 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _obj )
               : static_cast<size_t>(
                     30 ) ),  // TODO: Check inserted for backwards
                              // compatability. Remove later.
+      min_freq_(
+          _obj.has( "min_freq_" )
+              ? JSON::get_value<size_t>( _obj, "min_freq_" )
+              : static_cast<size_t>(
+                    0 ) ),  // TODO: Check inserted for backwards
+                            // compatability. Remove later.
       min_num_samples_( JSON::get_value<Int>( _obj, "min_num_samples_" ) ),
       num_features_( JSON::get_value<Int>( _obj, "num_features_" ) ),
       num_subfeatures_( JSON::get_value<Int>( _obj, "num_subfeatures_" ) ),
@@ -126,6 +133,8 @@ Poco::JSON::Object::Ptr Hyperparameters::to_json_obj() const
     obj->set( "max_depth_", max_depth_ );
 
     obj->set( "min_df_", min_df_ );
+
+    obj->set( "min_freq_", min_freq_ );
 
     obj->set( "min_num_samples_", min_num_samples_ );
 
