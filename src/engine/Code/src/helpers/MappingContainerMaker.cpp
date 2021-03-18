@@ -59,6 +59,32 @@ MappingContainerMaker::fit_on_categoricals(
 
 // ----------------------------------------------------------------------------
 
+typename MappingContainerMaker::MappingForDf
+MappingContainerMaker::fit_on_discretes(
+    const size_t _min_df,
+    const std::vector<DataFrame>& _main_tables,
+    const std::vector<DataFrame>& _peripheral_tables )
+{
+    assert_true( _main_tables.size() == _peripheral_tables.size() );
+
+    assert_true( _main_tables.size() > 0 );
+
+    const auto col_to_mapping = [_min_df, &_main_tables, &_peripheral_tables](
+                                    const Column<Float>& _col ) {
+        const auto rownum_map =
+            MappingContainerMaker::make_rownum_map_discrete( _col );
+        return MappingContainerMaker::make_mapping(
+            _min_df, rownum_map, _main_tables, _peripheral_tables );
+    };
+
+    const auto range = _peripheral_tables.back().discretes_ |
+                       std::views::transform( col_to_mapping );
+
+    return stl::make::vector<MappingForDf::value_type>( range );
+}
+
+// ----------------------------------------------------------------------------
+
 typename MappingContainerMaker::MappingForDf MappingContainerMaker::fit_on_text(
     const size_t _min_df,
     const std::vector<DataFrame>& _main_tables,
@@ -124,6 +150,8 @@ MappingContainerMaker::fit_on_table_holder(
 
     std::vector<MappingForDf> categorical;
 
+    std::vector<MappingForDf> discrete;
+
     std::vector<std::shared_ptr<const MappingContainer>> subcontainers;
 
     std::vector<MappingForDf> text;
@@ -139,6 +167,9 @@ MappingContainerMaker::fit_on_table_holder(
             const auto categorical_mapping =
                 fit_on_categoricals( _min_df, main_tables, peripheral_tables );
 
+            const auto discrete_mapping =
+                fit_on_discretes( _min_df, main_tables, peripheral_tables );
+
             const auto subcontainer =
                 _table_holder.subtables_.at( i )
                     ? fit_on_table_holder(
@@ -153,6 +184,8 @@ MappingContainerMaker::fit_on_table_holder(
 
             categorical.push_back( categorical_mapping );
 
+            discrete.push_back( discrete_mapping );
+
             subcontainers.push_back( subcontainer );
 
             text.push_back( text_mapping );
@@ -161,7 +194,7 @@ MappingContainerMaker::fit_on_table_holder(
     // -----------------------------------------------------------
 
     return std::make_shared<MappingContainer>(
-        categorical, subcontainers, text );
+        categorical, discrete, subcontainers, text );
 
     // -----------------------------------------------------------
 }
@@ -358,6 +391,32 @@ MappingContainerMaker::make_rownum_map_categorical( const Column<Int>& _col )
 
 // ----------------------------------------------------------------------------
 
+std::map<Int, std::vector<size_t>>
+MappingContainerMaker::make_rownum_map_discrete( const Column<Float>& _col )
+{
+    std::map<Int, std::vector<size_t>> rownum_map;
+
+    for ( size_t i = 0; i < _col.nrows_; ++i )
+        {
+            const auto key = static_cast<Int>( _col[i] );
+
+            const auto it = rownum_map.find( key );
+
+            if ( it == rownum_map.end() )
+                {
+                    rownum_map[key] = { i };
+                }
+            else
+                {
+                    it->second.push_back( i );
+                }
+        }
+
+    return rownum_map;
+}
+
+// ----------------------------------------------------------------------------
+
 std::map<Int, std::vector<size_t>> MappingContainerMaker::make_rownum_map_text(
     const textmining::WordIndex& _word_index )
 {
@@ -511,6 +570,86 @@ Column<Float> MappingContainerMaker::transform_categorical_column(
 // ----------------------------------------------------------------------------
 
 typename MappingContainerMaker::MappedColumns
+MappingContainerMaker::transform_discrete(
+    const MappingForDf& _mapping, const std::vector<Column<Float>>& _discrete )
+{
+    const auto num_targets = infer_num_targets( _mapping );
+
+    if ( num_targets == 0 )
+        {
+            return MappedColumns();
+        }
+
+    assert_msg(
+        _discrete.size() == _mapping.size(),
+        "_discrete.size(): " + std::to_string( _discrete.size() ) +
+            ", _mapping.size(): " + std::to_string( _mapping.size() ) );
+
+    const auto transform_col = [num_targets, &_mapping, &_discrete](
+                                   const size_t i ) -> Column<Float> {
+        const auto colnum = i / num_targets;
+        const auto target_num = i % num_targets;
+        return MappingContainerMaker::transform_discrete_column(
+            _mapping, _discrete, num_targets, colnum, target_num );
+    };
+
+    const auto range =
+        std::views::iota(
+            static_cast<size_t>( 0 ), _mapping.size() * num_targets ) |
+        std::views::transform( transform_col );
+
+    const auto mapped = stl::make::vector<Column<Float>>( range );
+
+    assert_msg(
+        _mapping.size() * num_targets == mapped.size(),
+        "_mapping.size(): " + std::to_string( _mapping.size() ) +
+            ", mapped.size(): " + std::to_string( mapped.size() ) +
+            ", num_targets: " + std::to_string( num_targets ) );
+
+    return mapped;
+}
+
+// ----------------------------------------------------------------------------
+
+Column<Float> MappingContainerMaker::transform_discrete_column(
+    const MappingForDf& _mapping,
+    const std::vector<Column<Float>>& _discrete,
+    const size_t _num_targets,
+    const size_t _colnum,
+    const size_t _target_num )
+{
+    assert_true( _colnum < _mapping.size() );
+
+    assert_true( _mapping.at( _colnum ) );
+
+    const auto& mapping = *_mapping.at( _colnum );
+
+    const auto& dis_col = _discrete.at( _colnum );
+
+    auto vec = std::make_shared<std::vector<Float>>( dis_col.nrows_, NAN );
+
+    for ( size_t i = 0; i < dis_col.nrows_; ++i )
+        {
+            const auto it = mapping.find( static_cast<Int>( dis_col[i] ) );
+
+            if ( it != mapping.end() )
+                {
+                    assert_true( it->second.size() == _num_targets );
+                    vec->at( i ) = it->second.at( _target_num );
+                }
+        }
+
+    return Column<Float>(
+        vec,
+        dis_col.name_ + "__mapping, target " +
+            std::to_string( _target_num + 1 ),
+        vec->size(),
+        "" );
+}
+
+// ----------------------------------------------------------------------------
+
+typename MappingContainerMaker::MappedColumns
 MappingContainerMaker::transform_text(
     const MappingForDf& _mapping,
     const std::vector<Column<strings::String>>& _text,
@@ -644,6 +783,8 @@ MappingContainerMaker::transform_table_holder(
 
     std::vector<MappedColumns> categorical;
 
+    std::vector<MappedColumns> discrete;
+
     std::vector<MappedColumns> text;
 
     std::vector<std::shared_ptr<const MappedContainer>> subcontainers;
@@ -653,6 +794,10 @@ MappingContainerMaker::transform_table_holder(
             categorical.push_back( transform_categorical(
                 _mapping->categorical_.at( i ),
                 _table_holder.peripheral_tables_.at( i ).categoricals_ ) );
+
+            discrete.push_back( transform_discrete(
+                _mapping->discrete_.at( i ),
+                _table_holder.peripheral_tables_.at( i ).discretes_ ) );
 
             if ( _table_holder.subtables_.at( i ) )
                 {
@@ -673,8 +818,8 @@ MappingContainerMaker::transform_table_holder(
                 _table_holder.peripheral_tables_.at( i ).word_indices_ ) );
         }
 
-    const auto ptr =
-        std::make_shared<MappedContainer>( categorical, subcontainers, text );
+    const auto ptr = std::make_shared<MappedContainer>(
+        categorical, discrete, subcontainers, text );
 
     assert_msg(
         _table_holder.subtables_.size() == ptr->size(),

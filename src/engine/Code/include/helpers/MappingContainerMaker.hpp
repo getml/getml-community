@@ -44,6 +44,12 @@ class MappingContainerMaker
         const std::vector<DataFrame>& _main_tables,
         const std::vector<DataFrame>& _peripheral_tables );
 
+    /// Generates the mapping for a discrete column.
+    static MappingForDf fit_on_discretes(
+        const size_t _min_df,
+        const std::vector<DataFrame>& _main_tables,
+        const std::vector<DataFrame>& _peripheral_tables );
+
     /// Generates the mapping for a text column.
     static MappingForDf fit_on_text(
         const size_t _min_df,
@@ -72,6 +78,10 @@ class MappingContainerMaker
     static std::map<Int, std::vector<size_t>> make_rownum_map_categorical(
         const Column<Int>& _col );
 
+    /// Returns a map of all the rownums associated with a discrete value.
+    static std::map<Int, std::vector<size_t>> make_rownum_map_discrete(
+        const Column<Float>& _col );
+
     /// Returns a map of all the rownums associated with a word.
     static std::map<Int, std::vector<size_t>> make_rownum_map_text(
         const textmining::WordIndex& _word_index );
@@ -85,6 +95,19 @@ class MappingContainerMaker
     static Column<Float> transform_categorical_column(
         const MappingForDf& _mapping,
         const std::vector<Column<Int>>& _categorical,
+        const size_t _num_targets,
+        const size_t _colnum,
+        const size_t _target_num );
+
+    /// Maps the discrete values on their corresponding weights.
+    static MappedColumns transform_discrete(
+        const MappingForDf& _mapping,
+        const std::vector<Column<Float>>& _discrete );
+
+    /// Applies the mapping to a discrete column.
+    static Column<Float> transform_discrete_column(
+        const MappingForDf& _mapping,
+        const std::vector<Column<Float>>& _discrete,
         const size_t _num_targets,
         const size_t _colnum,
         const size_t _target_num );

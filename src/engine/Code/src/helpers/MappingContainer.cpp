@@ -6,9 +6,11 @@ namespace helpers
 
 MappingContainer::MappingContainer(
     const std::vector<MappingForDf>& _categorical,
+    const std::vector<MappingForDf>& _discrete,
     const std::vector<std::shared_ptr<const MappingContainer>>& _subcontainers,
     const std::vector<MappingForDf>& _text )
     : categorical_( _categorical ),
+      discrete_( _discrete ),
       subcontainers_( _subcontainers ),
       text_( _text )
 {
@@ -17,6 +19,11 @@ MappingContainer::MappingContainer(
         "categorical_.size(): " + std::to_string( categorical_.size() ) +
             ", subcontainers_.size(): " +
             std::to_string( subcontainers_.size() ) );
+
+    assert_msg(
+        categorical_.size() == discrete_.size(),
+        "categorical_.size(): " + std::to_string( categorical_.size() ) +
+            ", discrete_.size(): " + std::to_string( discrete_.size() ) );
 
     assert_msg(
         categorical_.size() == text_.size(),
@@ -28,6 +35,7 @@ MappingContainer::MappingContainer(
 
 MappingContainer::MappingContainer( const Poco::JSON::Object& _obj )
     : categorical_( extract_mapping_vector( _obj, "categorical_" ) ),
+      discrete_( extract_mapping_vector( _obj, "discrete_" ) ),
       subcontainers_( extract_subcontainers( _obj ) ),
       text_( extract_mapping_vector( _obj, "text_" ) )
 {
@@ -216,6 +224,8 @@ Poco::JSON::Object::Ptr MappingContainer::to_json_obj() const
     auto obj = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
 
     obj->set( "categorical_", transform_mapping_vec( categorical_ ) );
+
+    obj->set( "discrete_", transform_mapping_vec( discrete_ ) );
 
     obj->set( "subcontainers_", transform_subcontainers( subcontainers_ ) );
 

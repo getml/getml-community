@@ -12,10 +12,12 @@ class MappedContainer
 
     MappedContainer(
         const std::vector<MappedColumns>& _categorical,
+        const std::vector<MappedColumns>& _discrete,
         const std::vector<std::shared_ptr<const MappedContainer>>&
             _subcontainers,
         const std::vector<MappedColumns>& _text )
         : categorical_( _categorical ),
+          discrete_( _discrete ),
           subcontainers_( _subcontainers ),
           text_( _text )
     {
@@ -24,6 +26,11 @@ class MappedContainer
             "_categorical.size(): " + std::to_string( _categorical.size() ) +
                 ", _subcontainers.size(): " +
                 std::to_string( _subcontainers.size() ) );
+
+        assert_msg(
+            _categorical.size() == _discrete.size(),
+            "_categorical.size(): " + std::to_string( _categorical.size() ) +
+                ", _discrete.size(): " + std::to_string( _discrete.size() ) );
 
         assert_msg(
             _categorical.size() == _text.size(),
@@ -70,6 +77,9 @@ class MappedContainer
    private:
     /// The transformed categorical columns for the data frame.
     const std::vector<MappedColumns> categorical_;
+
+    /// The transformed discrete columns for the data frame.
+    const std::vector<MappedColumns> discrete_;
 
     /// Containers for any and all existing subtables.
     const std::vector<std::shared_ptr<const MappedContainer>> subcontainers_;
