@@ -32,9 +32,11 @@ class TreeFitter
     void fit(
         const decisiontrees::TableHolder &_table_holder,
         const std::vector<containers::Subfeatures> &_subfeatures,
+        const std::shared_ptr<aggregations::AggregationImpl> &_aggregation_impl,
+        const std::shared_ptr<optimizationcriteria::OptimizationCriterion>
+            &_opt,
         std::vector<containers::Matches> *_samples,
         std::vector<containers::MatchPtrs> *_match_containers,
-        optimizationcriteria::OptimizationCriterion *_optimization_criterion,
         std::list<decisiontrees::DecisionTree> *_candidate_trees,
         std::vector<decisiontrees::DecisionTree> *_trees );
 
@@ -46,10 +48,11 @@ class TreeFitter
         const size_t _num_trees,
         const decisiontrees::TableHolder &_table_holder,
         const std::vector<containers::Subfeatures> &_subfeatures,
+        const std::shared_ptr<optimizationcriteria::OptimizationCriterion>
+            &_opt,
         const std::vector<Float> &_values,
         std::vector<containers::Matches> *_samples,
         std::vector<containers::MatchPtrs> *_match_containers,
-        optimizationcriteria::OptimizationCriterion *_optimization_criterion,
         std::list<decisiontrees::DecisionTree> *_candidate_trees,
         std::vector<decisiontrees::DecisionTree> *_trees );
 
@@ -58,18 +61,22 @@ class TreeFitter
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const containers::Subfeatures &_subfeatures,
+        const std::shared_ptr<aggregations::AggregationImpl> &_aggregation_impl,
+        const std::shared_ptr<optimizationcriteria::OptimizationCriterion>
+            &_opt,
         std::vector<containers::Matches> *_samples,
         std::vector<containers::MatchPtrs> *_match_containers,
-        optimizationcriteria::OptimizationCriterion *_optimization_criterion,
         decisiontrees::DecisionTree *_tree );
 
     /// Fits all candidate trees at max_depth = _max_length_probe.
     void probe(
         const decisiontrees::TableHolder &_table_holder,
         const std::vector<containers::Subfeatures> &_subfeatures,
+        const std::shared_ptr<aggregations::AggregationImpl> &_aggregation_impl,
+        const std::shared_ptr<optimizationcriteria::OptimizationCriterion>
+            &_opt,
         std::vector<containers::Matches> *_samples,
         std::vector<containers::MatchPtrs> *_match_containers,
-        optimizationcriteria::OptimizationCriterion *_optimization_criterion,
         std::list<decisiontrees::DecisionTree> *_candidate_trees,
         std::vector<Float> *_values );
 

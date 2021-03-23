@@ -81,21 +81,6 @@ struct AggregationImpl
     /// commit() or clear.
     containers::IntSet updates_stored_;
 
-    /// Value to be aggregated - note the the length is usually different
-    /// from yhat
-    containers::ColumnView<Float, std::map<Int, Int>> value_to_be_aggregated_;
-
-    /// Value to be aggregated to be used for aggregations that can be
-    /// categorical
-    containers::ColumnView<Int, std::map<Int, Int>>
-        value_to_be_aggregated_categorical_;
-
-    /// Value to be compared - this applies when the value to be aggregated
-    /// is a timestamp difference or same unit numerical
-    /// Note the the length is usually different from value_to_be_aggregated_,
-    /// but always equal to the length of yhat_.
-    containers::ColumnView<Float, std::vector<size_t>> value_to_be_compared_;
-
     /// Vector containing predictions
     std::vector<Float> yhat_;
 

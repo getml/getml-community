@@ -56,7 +56,7 @@ struct Min
 
 struct Skewness
 {
-    static const std::string type() { return "SKEWNESS"; }
+    static const std::string type() { return "SKEW"; }
 };
 
 struct Stddev
@@ -107,6 +107,7 @@ struct IsComparison
           data_used_ == enums::DataUsed::same_unit_discrete ||
           data_used_ == enums::DataUsed::same_unit_discrete_ts );
 };
+
 // ----------------------------------------------------------------------------
 
 }  // namespace AggregationType

@@ -274,7 +274,7 @@ std::vector<Float> DecisionTree::transform(
                 }
             else
                 {
-                    matches = { containers::Match{ 0, ix_output } };
+                    matches = {containers::Match{0, ix_output}};
                 }
 
             // ------------------------------------------------------------------------

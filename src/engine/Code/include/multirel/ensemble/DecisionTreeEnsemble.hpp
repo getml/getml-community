@@ -70,7 +70,8 @@ class DecisionTreeEnsemble
         const helpers::WordIndexContainer &_word_indices,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
         const size_t _num_features,
-        optimizationcriteria::OptimizationCriterion *_opt,
+        const std::shared_ptr<optimizationcriteria::OptimizationCriterion>
+            &_opt,
         multithreading::Communicator *_comm );
 
     /// Saves the Model in JSON format, if applicable
@@ -282,13 +283,6 @@ class DecisionTreeEnsemble
     // -----------------------------------------------------------------
 
    private:
-    /// Trivial accessor
-    inline containers::Optional<aggregations::AggregationImpl>
-        &aggregation_impl()
-    {
-        return impl().aggregation_impl_;
-    }
-
     /// Whether the ensemble has a population schema
     inline bool has_population_schema() const
     {

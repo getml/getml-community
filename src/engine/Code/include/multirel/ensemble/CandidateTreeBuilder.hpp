@@ -22,7 +22,6 @@ class CandidateTreeBuilder
         const std::vector<descriptors::SameUnits> &_same_units,
         const size_t _ix_feature,
         const descriptors::Hyperparameters &_hyperparameters,
-        containers::Optional<aggregations::AggregationImpl> *_aggregation_impl,
         std::mt19937 *_random_number_generator,
         multithreading::Communicator *_comm );
 
@@ -36,7 +35,6 @@ class CandidateTreeBuilder
         const descriptors::Hyperparameters &_hyperparameters,
         const Int _ix_perip_used,
         std::mt19937 *_random_number_generator,
-        containers::Optional<aggregations::AggregationImpl> *_aggregation_impl,
         multithreading::Communicator *_comm,
         std::list<decisiontrees::DecisionTree> *_candidate_trees );
 
@@ -48,7 +46,6 @@ class CandidateTreeBuilder
         const descriptors::Hyperparameters &_hyperparameters,
         const Int _ix_perip_used,
         std::mt19937 *_random_number_generator,
-        containers::Optional<aggregations::AggregationImpl> *_aggregation_impl,
         multithreading::Communicator *_comm,
         std::list<decisiontrees::DecisionTree> *_candidate_trees );
 
@@ -59,7 +56,6 @@ class CandidateTreeBuilder
         const descriptors::Hyperparameters &_hyperparameters,
         const Int _ix_perip_used,
         std::mt19937 *_random_number_generator,
-        containers::Optional<aggregations::AggregationImpl> *_aggregation_impl,
         multithreading::Communicator *_comm,
         std::list<decisiontrees::DecisionTree> *_candidate_trees );
 
@@ -70,7 +66,6 @@ class CandidateTreeBuilder
         const descriptors::Hyperparameters &_hyperparameters,
         const Int _ix_perip_used,
         std::mt19937 *_random_number_generator,
-        containers::Optional<aggregations::AggregationImpl> *_aggregation_impl,
         multithreading::Communicator *_comm,
         std::list<decisiontrees::DecisionTree> *_candidate_trees );
 
@@ -81,7 +76,6 @@ class CandidateTreeBuilder
         const std::vector<descriptors::SameUnits> &_same_units,
         const descriptors::Hyperparameters _hyperparameters,
         std::mt19937 *_random_number_generator,
-        containers::Optional<aggregations::AggregationImpl> *_aggregation_impl,
         multithreading::Communicator *_comm );
 
     /// Determines whether a particular column may be used to comparison only.

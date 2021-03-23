@@ -1,13 +1,13 @@
 set(
     MULTIREL_OBJ 
     ${MULTIREL_SOURCE_DIRECTORY}/AggregationIndex.cpp 
-    ${MULTIREL_SOURCE_DIRECTORY}/AggregationParser.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/CandidateTreeBuilder.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/CrossEntropyLoss.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/DataFrameScatterer.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/DecisionTree.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/DecisionTreeEnsemble.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/DecisionTreeNode.cpp 
+    ${MULTIREL_SOURCE_DIRECTORY}/FitAggregationParser.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/Hyperparameters.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/ImportanceMaker.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/JSON.cpp 
@@ -24,7 +24,7 @@ set(
     ${MULTIREL_SOURCE_DIRECTORY}/SquareLoss.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/SubtreeHelper.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/Threadutils.cpp 
+    ${MULTIREL_SOURCE_DIRECTORY}/TransformAggregationParser.cpp 
     ${MULTIREL_SOURCE_DIRECTORY}/TreeFitter.cpp 
-    ${MULTIREL_SOURCE_DIRECTORY}/ValueToBeAggregatedCreator.cpp 
 )
 

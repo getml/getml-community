@@ -11,18 +11,15 @@ class ColumnView
     // -------------------------------
 
    public:
-    ColumnView() {}
-
     ColumnView( const Column<T>& _col )
-        : col_( std::make_shared<Column<T>>( _col ) ),
-          rows_( std::shared_ptr<const ContainerType>() )
+        : col_( _col ), rows_( std::shared_ptr<const ContainerType>() )
     {
     }
 
     ColumnView(
         const Column<T>& _col,
         const std::shared_ptr<const ContainerType>& _rows )
-        : col_( std::make_shared<Column<T>>( _col ) ), rows_( _rows )
+        : col_( _col ), rows_( _rows )
     {
     }
 
@@ -30,18 +27,8 @@ class ColumnView
 
     // -------------------------------
 
-    /// Deletes all data in the view
-    void clear() { *this = ColumnView(); }
-
     /// Returns the underlying column.
-    const Column<T> col() const
-    {
-        assert_true( col_ );
-        return *col_;
-    }
-
-    /// Whether or not the column view is empty.
-    operator bool() const { return ( col_ && true ); }
+    inline const Column<T>& col() const { return col_; }
 
     /// Accessor to data (when rows are std::vector<Int>)
     template <
@@ -53,7 +40,7 @@ class ColumnView
     {
         assert_true( rows_ );
         assert_true( _i < rows_->size() );
-        return ( *col_ )[( *rows_ )[_i]];
+        return col_[( *rows_ )[_i]];
     }
 
     /// Accessor to data (when rows are std::map<Int, Int>)
@@ -68,14 +55,14 @@ class ColumnView
         assert_true( rows_ );
         auto it = rows_->find( _i );
         assert_true( it != rows_->end() );
-        return ( *col_ )[it->second];
+        return col_[it->second];
     }
 
     // -------------------------------
 
    private:
     /// Shallow copy of the column in which we are interested.
-    std::shared_ptr<Column<T>> col_;
+    Column<T> col_;
 
     /// Indices indicating all of the rows that are part of this view
     std::shared_ptr<const ContainerType> rows_;

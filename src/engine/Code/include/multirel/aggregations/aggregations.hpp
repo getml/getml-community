@@ -26,12 +26,20 @@
 #include "multirel/aggregations/IntermediateAggregation.hpp"
 
 #include "multirel/aggregations/AggregationImpl.hpp"
+#include "multirel/aggregations/ValueContainer.hpp"
 
-#include "multirel/aggregations/AbstractAggregation.hpp"
+#include "multirel/aggregations/ValueContainerCreator.hpp"
 
-#include "multirel/aggregations/Aggregation.hpp"
+#include "multirel/aggregations/AbstractFitAggregation.hpp"
+#include "multirel/aggregations/AbstractTransformAggregation.hpp"
+
+#include "multirel/aggregations/FitAggregation.hpp"
+#include "multirel/aggregations/TransformAggregation.hpp"
 
 #include "multirel/aggregations/AggregationParser.hpp"
+
+#include "multirel/aggregations/FitAggregationParser.hpp"
+#include "multirel/aggregations/TransformAggregationParser.hpp"
 
 // ----------------------------------------------------------------------------
 

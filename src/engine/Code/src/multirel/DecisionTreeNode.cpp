@@ -734,7 +734,7 @@ containers::MatchPtrs::iterator DecisionTreeNode::partition(
 
     if ( lag_used() )
         {
-            return partition_by_categories_used(
+            return partition_by_lag(
                 _match_container_begin, _match_container_end );
         }
 
@@ -1295,79 +1295,62 @@ void DecisionTreeNode::to_sql(
 
 // ----------------------------------------------------------------------------
 
-void DecisionTreeNode::transform(
+bool DecisionTreeNode::transform(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
     const containers::Subfeatures &_subfeatures,
-    containers::MatchPtrs::iterator _match_container_begin,
-    containers::MatchPtrs::iterator _match_container_end,
-    aggregations::AbstractAggregation *_aggregation ) const
+    containers::Match *_match ) const
 {
     // -----------------------------------------------------------
 
     if ( !split_ )
         {
-            debug_log( "transform: Does not impose condition..." );
-
-            if ( is_activated_ )
-                {
-                    _aggregation->activate_all(
-                        false, _match_container_begin, _match_container_end );
-                }
-
-            return;
+            return is_activated_;
         }
 
     // -----------------------------------------------------------
 
-    debug_log( "transform: Setting samples..." );
+    auto match_container = containers::MatchPtrs( {_match} );
 
     set_samples(
         _population,
         _peripheral,
         _subfeatures,
-        _match_container_begin,
-        _match_container_end );
+        match_container.begin(),
+        match_container.end() );
 
     // -----------------------------------------------------------
-
-    debug_log( "transform: Applying condition..." );
 
     const auto separator = partition(
         _population,
         _peripheral,
-        _match_container_begin,
-        _match_container_end );
+        match_container.begin(),
+        match_container.end() );
+
+    const bool is_greater = ( separator == match_container.begin() );
 
     // -----------------------------------------------------------
 
-    if ( child_node_greater_ )
+    if ( !child_node_greater_ )
         {
-            child_node_smaller_->transform(
-                _population,
-                _peripheral,
-                _subfeatures,
-                _match_container_begin,
-                separator,
-                _aggregation );
+            const bool greater_is_activated =
+                ( apply_from_above() != is_activated_ );
 
-            child_node_greater_->transform(
-                _population,
-                _peripheral,
-                _subfeatures,
-                separator,
-                _match_container_end,
-                _aggregation );
+            return ( is_greater == greater_is_activated );
         }
-    else
+
+    // -----------------------------------------------------------
+
+    if ( is_greater )
         {
-            update(
-                false,
-                _match_container_begin,
-                separator,
-                _match_container_end,
-                _aggregation );
+            return child_node_greater_->transform(
+                _population, _peripheral, _subfeatures, _match );
         }
+
+    // -----------------------------------------------------------
+
+    return child_node_smaller_->transform(
+        _population, _peripheral, _subfeatures, _match );
 
     // -----------------------------------------------------------
 }
@@ -3216,7 +3199,7 @@ void DecisionTreeNode::update(
     containers::MatchPtrs::iterator _match_container_begin,
     containers::MatchPtrs::iterator _separator,
     containers::MatchPtrs::iterator _match_container_end,
-    aggregations::AbstractAggregation *_aggregation ) const
+    aggregations::AbstractFitAggregation *_aggregation ) const
 {
     if ( apply_from_above() )
         {

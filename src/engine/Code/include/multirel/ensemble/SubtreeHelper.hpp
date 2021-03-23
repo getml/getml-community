@@ -98,25 +98,27 @@ void SubtreeHelper::fit_subensemble(
 
     const auto aggregation_index = aggregations::AggregationIndex(
         input_table,
-        _table_holder->main_tables_[_ix_perip_used],
+        _table_holder->main_tables_.at( _ix_perip_used ),
         input_map,
         _output_map,
         _hyperparameters.use_timestamps_ );
 
     const auto opt_impl =
         std::make_shared<aggregations::IntermediateAggregationImpl>(
-            _table_holder->main_tables_[0].nrows(), aggregation_index, _opt );
+            _table_holder->main_tables_.at( 0 ).nrows(),
+            aggregation_index,
+            _opt );
 
     const auto intermediate_agg =
-        std::unique_ptr<optimizationcriteria::OptimizationCriterion>(
-            new aggregations::IntermediateAggregation<AggType>( opt_impl ) );
+        std::make_shared<aggregations::IntermediateAggregation<AggType>>(
+            opt_impl );
 
     _subensemble->fit(
         subtable_holder,
         _word_indices,
         _logger,
         _hyperparameters.num_subfeatures_,
-        intermediate_agg.get(),
+        intermediate_agg,
         _comm );
 
     _opt->reset_yhat_old();

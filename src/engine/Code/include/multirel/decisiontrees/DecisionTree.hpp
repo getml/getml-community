@@ -24,7 +24,6 @@ class DecisionTree
         const size_t _ix_column_used,
         const descriptors::SameUnits &_same_units,
         std::mt19937 *_random_number_generator,
-        containers::Optional<aggregations::AggregationImpl> *_aggregation_impl,
         multithreading::Communicator *_comm );
 
     DecisionTree( const DecisionTree &_other );
@@ -40,6 +39,8 @@ class DecisionTree
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const containers::Subfeatures &_subfeatures,
+        const std::shared_ptr<aggregations::AbstractFitAggregation>
+            &_aggregation,
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _match_container_end,
         optimizationcriteria::OptimizationCriterion *_optimization_criterion );
@@ -52,6 +53,12 @@ class DecisionTree
 
     /// Copy assignment constructor
     DecisionTree &operator=( DecisionTree &&_other ) noexcept;
+
+    /// Generates the appropriate intermediate aggregation.
+    std::shared_ptr<optimizationcriteria::OptimizationCriterion>
+    make_intermediate(
+        std::shared_ptr<aggregations::IntermediateAggregationImpl> _impl )
+        const;
 
     /// Extracts the tree as a JSON object
     Poco::JSON::Object to_json_obj() const;
@@ -69,8 +76,7 @@ class DecisionTree
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
         const containers::Subfeatures &_subfeatures,
-        const bool _use_timestamps,
-        aggregations::AbstractAggregation *_aggregation ) const;
+        const bool _use_timestamps ) const;
 
     // --------------------------------------
 
@@ -81,17 +87,17 @@ class DecisionTree
     // --------------------------------------
 
    public:
-    /// Some aggregations, such as MIN and MAX require the samples
-    /// (not the pointers to the samples) to be sorted.
-    inline bool const aggregation_needs_sorting()
+    /// Accessor for the aggregation.
+    inline std::shared_ptr<aggregations::AbstractFitAggregation> aggregation()
     {
-        return aggregation()->needs_sorting();
+        assert_true( impl_.aggregation_ );
+        return impl_.aggregation_;
     }
 
     /// Type of the aggregation used by this tree.
     inline const std::string aggregation_type() const
     {
-        return aggregation()->type();
+        return impl()->aggregation_type_;
     }
 
     /// Calculates the column importances for this tree.
@@ -117,68 +123,34 @@ class DecisionTree
         return impl()->column_to_be_aggregated_;
     }
 
-    /// An aggregation contains a value to be aggregated. This is set by
-    /// this function.
-    void create_value_to_be_aggregated(
-        const containers::DataFrameView &_population,
-        const containers::DataFrame &_peripheral,
-        const containers::Subfeatures &_subfeatures,
-        aggregations::AbstractAggregation *_aggregation ) const
-    {
-        ValueToBeAggregatedCreator::create(
-            *impl(),
-            column_to_be_aggregated(),
-            _population,
-            _peripheral,
-            _subfeatures,
-            _aggregation );
-    }
-
-    /// Calls create_value_to_be_aggregated on the tree's own aggregation.
-    void create_value_to_be_aggregated(
-        const containers::DataFrameView &_population,
-        const containers::DataFrame &_peripheral,
-        const containers::Subfeatures &_subfeatures )
-    {
-        create_value_to_be_aggregated(
-            _population, _peripheral, _subfeatures, aggregation() );
-    }
-
     /// Whether the decision tree has subtrees.
     inline const bool has_subtrees() const { return subtrees_.size() > 0; }
-
-    /// Returns the type of an intermediate aggregation representing the
-    /// aggregation of this DecisionTree.
-    inline std::string intermediate_type() const
-    {
-        assert_true( impl()->aggregation_ );
-        return impl()->aggregation_->intermediate_type();
-    }
 
     /// Trivial getter
     inline size_t ix_perip_used() const { return impl()->ix_perip_used(); }
 
-    /// Creates the aggregation used by this tree or a clone thereof.
-    inline std::shared_ptr<aggregations::AbstractAggregation> const
-    make_aggregation( const enums::Mode _mode ) const
+    /// Generates the fit aggregation.
+    inline std::shared_ptr<aggregations::AbstractFitAggregation>
+    make_aggregation(
+        const containers::DataFrameView &_population,
+        const containers::DataFrame &_peripheral,
+        const containers::Subfeatures &_subfeatures,
+        const std::shared_ptr<aggregations::AggregationImpl> &_aggregation_impl,
+        const std::shared_ptr<optimizationcriteria::OptimizationCriterion>
+            &_optimization_criterion,
+        containers::Matches *_matches ) const
     {
-        return aggregations::AggregationParser::parse_aggregation(
-            impl()->aggregation_type_,
-            _mode,
-            column_to_be_aggregated().data_used,
-            column_to_be_aggregated().ix_column_used,
+        return aggregations::FitAggregationParser::parse_aggregation(
+            aggregation_type(),
+            same_units_discrete(),
             same_units_numerical(),
-            same_units_discrete() );
-    }
-
-    /// Returns an intermediate aggregation representing the aggregation
-    /// of this DecisionTree.
-    inline std::shared_ptr<optimizationcriteria::OptimizationCriterion>
-    make_intermediate(
-        std::shared_ptr<aggregations::IntermediateAggregationImpl> _impl ) const
-    {
-        assert_true( impl()->aggregation_ );
-        return impl()->aggregation_->make_intermediate( _impl );
+            column_to_be_aggregated(),
+            _population,
+            _peripheral,
+            _subfeatures,
+            _aggregation_impl,
+            _optimization_criterion,
+            _matches );
     }
 
     /// Reverses to the status since the last time we have
@@ -187,28 +159,6 @@ class DecisionTree
     {
         aggregation()->revert_to_commit();
         optimization_criterion()->revert_to_commit();
-    }
-
-    /// Separates all null values in the samples
-    inline containers::Matches::iterator separate_null_values(
-        containers::Matches *_matches )
-    {
-        return aggregation()->separate_null_values( _matches );
-    }
-
-    /// Separates all null values in the sample containers (recall
-    /// that a sample containers contains pointers to samples)
-    inline containers::MatchPtrs::iterator separate_null_values(
-        containers::MatchPtrs *_match_ptrs )
-    {
-        return aggregation()->separate_null_values( _match_ptrs );
-    }
-
-    /// Passes the impl of the aggregation to the aggregation
-    inline void set_aggregation_impl(
-        containers::Optional<aggregations::AggregationImpl> *_aggregation_impl )
-    {
-        impl_.aggregation_->set_aggregation_impl( _aggregation_impl );
     }
 
     /// Parallel version only: Set the pointer to the communicator
@@ -229,26 +179,6 @@ class DecisionTree
         subtrees_ = _subtrees;
     }
 
-    /// Passes beginning and end of samples to the aggregation (
-    /// this is required by those aggregations that also need the
-    /// samples to be sorted)
-    inline void set_samples_begin_end(
-        containers::Match *_matches_begin, containers::Match *_matches_end )
-    {
-        aggregation()->set_samples_begin_end( _matches_begin, _matches_end );
-    }
-
-    /// Some aggregations, such as MIN and MAX require the samples
-    /// (not the pointers to the samples) to be sorted.
-    inline void sort_matches(
-        const containers::DataFrame &_peripheral,
-        containers::Matches::iterator _samples_begin,
-        containers::Matches::iterator _samples_end )
-    {
-        aggregation()->sort_matches(
-            _peripheral, _samples_begin, _samples_end );
-    }
-
     /// Stores the current stage (storing means that it is a candidate for
     /// a commit)
     inline void store_current_stage(
@@ -261,26 +191,6 @@ class DecisionTree
     // --------------------------------------
 
    private:
-    /// Trivial accessor
-    inline aggregations::AbstractAggregation *aggregation()
-    {
-        assert_true( impl_.aggregation_ && "aggregation()" );
-        return impl_.aggregation_.get();
-    }
-
-    /// Trivial accessor
-    inline const aggregations::AbstractAggregation *aggregation() const
-    {
-        assert_true( impl_.aggregation_ && "aggregation()" );
-        return impl_.aggregation_.get();
-    }
-
-    /// Trivial accessor
-    inline std::shared_ptr<aggregations::AbstractAggregation> &aggregation_ptr()
-    {
-        return impl_.aggregation_;
-    }
-
     /// Trivial accessor
     inline bool allow_sets() const { return impl_.allow_sets(); }
 

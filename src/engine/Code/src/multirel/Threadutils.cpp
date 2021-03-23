@@ -65,12 +65,11 @@ void Threadutils::fit_ensemble(
             assert_true( _hyperparameters );
 
             const auto opt =
-                std::unique_ptr<optimizationcriteria::OptimizationCriterion>(
-                    new optimizationcriteria::RSquaredCriterion(
-                        _hyperparameters,
-                        _hyperparameters->loss_function_,
-                        table_holder->main_tables_[0],
-                        _comm ) );
+                std::make_shared<optimizationcriteria::RSquaredCriterion>(
+                    _hyperparameters,
+                    _hyperparameters->loss_function_,
+                    table_holder->main_tables_.at( 0 ),
+                    _comm );
 
             opt->calc_sampling_rate();
 
@@ -83,7 +82,7 @@ void Threadutils::fit_ensemble(
                 _word_indices,
                 _logger,
                 _hyperparameters->num_features_,
-                opt.get(),
+                opt,
                 _comm );
 
             // ----------------------------------------------------------------

@@ -25,15 +25,13 @@ struct DecisionTreeEnsembleImpl
           hyperparameters_( _hyperparameters ),
           peripheral_( _peripheral ),
           peripheral_schema_( _peripheral_schema ),
-          placeholder_( new containers::Placeholder( _placeholder ) ),
+          placeholder_(
+              std::make_shared<const containers::Placeholder>( _placeholder ) ),
           population_schema_( _population_schema ){};
 
     ~DecisionTreeEnsembleImpl() = default;
 
     // --------------------------------------
-
-    /// Pimpl for aggregation
-    containers::Optional<aggregations::AggregationImpl> aggregation_impl_;
 
     /// Whether we want to allow this model to be used as an http endpoint.
     bool allow_http_;

@@ -58,14 +58,11 @@ class DecisionTreeNode
         std::string _sql ) const;
 
     /// Transforms the inserted samples
-    void transform(
+    bool transform(
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
-        const std::vector<containers::ColumnView<Float, std::map<Int, Int>>>
-            &_subfeatures,
-        containers::MatchPtrs::iterator _match_container_begin,
-        containers::MatchPtrs::iterator _match_container_end,
-        aggregations::AbstractAggregation *_aggregation ) const;
+        const containers::Subfeatures &_subfeatures,
+        containers::Match *_match ) const;
 
     // --------------------------------------
 
@@ -86,7 +83,7 @@ class DecisionTreeNode
 
    private:
     /// Trivial accessor
-    inline aggregations::AbstractAggregation *aggregation()
+    inline aggregations::AbstractFitAggregation *aggregation()
     {
         assert_true( tree_->aggregation_ );
         return tree_->aggregation_.get();
@@ -834,7 +831,7 @@ class DecisionTreeNode
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _separator,
         containers::MatchPtrs::iterator _match_container_end,
-        aggregations::AbstractAggregation *_aggregation ) const;
+        aggregations::AbstractFitAggregation *_aggregation ) const;
 
     // --------------------------------------
 

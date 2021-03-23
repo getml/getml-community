@@ -55,7 +55,6 @@ std::list<decisiontrees::DecisionTree> DecisionTreeEnsemble::build_candidates(
         _same_units,
         _ix_feature,
         hyperparameters(),
-        &aggregation_impl(),
         random_number_generator().get(),
         comm() );
 }
@@ -275,7 +274,7 @@ void DecisionTreeEnsemble::fit(
     const helpers::WordIndexContainer &_word_indices,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     const size_t _num_features,
-    optimizationcriteria::OptimizationCriterion *_opt,
+    const std::shared_ptr<optimizationcriteria::OptimizationCriterion> &_opt,
     multithreading::Communicator *_comm )
 {
     // ----------------------------------------------------------------
@@ -321,7 +320,7 @@ void DecisionTreeEnsemble::fit(
 
     if ( _table_holder->main_tables_[0].num_targets() > 0 )
         {
-            targets() = { _table_holder->main_tables_[0].target_name( 0 ) };
+            targets() = {_table_holder->main_tables_[0].target_name( 0 )};
         }
 
     // ----------------------------------------------------------------
@@ -338,7 +337,7 @@ void DecisionTreeEnsemble::fit(
         _word_indices,
         _logger,
         *this,
-        _opt,
+        _opt.get(),
         _comm,
         &subensembles_avg_,
         &subensembles_sum_ );
@@ -353,13 +352,12 @@ void DecisionTreeEnsemble::fit(
         SubtreeHelper::make_subfeatures( *_table_holder, subpredictions );
 
     // ----------------------------------------------------------------
-    // aggregations::AggregationImpl stores most of the data for the
-    // aggregations. We do not want to reallocate the data all the time.
 
     assert_true( _table_holder->main_tables_.size() > 0 );
 
-    aggregation_impl().reset( new aggregations::AggregationImpl(
-        _table_holder->main_tables_[0].nrows() ) );
+    const auto aggregation_impl =
+        std::make_shared<aggregations::AggregationImpl>(
+            _table_holder->main_tables_.at( 0 ).nrows() );
 
     // ----------------------------------------------------------------
     // Columns that share the same units are candidates for direct
@@ -368,6 +366,7 @@ void DecisionTreeEnsemble::fit(
     debug_log( "fit: Identifying same units..." );
 
     assert_true( _table_holder->main_tables_.size() > 0 );
+
     assert_true(
         _table_holder->main_tables_.size() ==
         _table_holder->peripheral_tables_.size() );
@@ -415,14 +414,14 @@ void DecisionTreeEnsemble::fit(
         {
             for ( size_t i = 0; i < num_peripheral; ++i )
                 {
-                    matches[i] = utils::Matchmaker::make_matches(
-                        _table_holder->main_tables_[i],
-                        _table_holder->peripheral_tables_[i],
+                    matches.at( i ) = utils::Matchmaker::make_matches(
+                        _table_holder->main_tables_.at( i ),
+                        _table_holder->peripheral_tables_.at( i ),
                         sample_weights,
                         hyperparameters().use_timestamps_ );
 
-                    match_ptrs[i] =
-                        utils::Matchmaker::make_pointers( &matches[i] );
+                    match_ptrs.at( i ) =
+                        utils::Matchmaker::make_pointers( &matches.at( i ) );
                 }
         }
 
@@ -457,18 +456,19 @@ void DecisionTreeEnsemble::fit(
 
                     assert_true(
                         sample_weights->size() ==
-                        _table_holder->main_tables_[0].nrows() );
+                        _table_holder->main_tables_.at( 0 ).nrows() );
 
                     for ( size_t i = 0; i < num_peripheral; ++i )
                         {
-                            matches[i] = utils::Matchmaker::make_matches(
-                                _table_holder->main_tables_[i],
-                                _table_holder->peripheral_tables_[i],
+                            matches.at( i ) = utils::Matchmaker::make_matches(
+                                _table_holder->main_tables_.at( i ),
+                                _table_holder->peripheral_tables_.at( i ),
                                 sample_weights,
                                 hyperparameters().use_timestamps_ );
 
-                            match_ptrs[i] =
-                                utils::Matchmaker::make_pointers( &matches[i] );
+                            match_ptrs.at( i ) =
+                                utils::Matchmaker::make_pointers(
+                                    &matches.at( i ) );
                         }
                 }
 
@@ -501,9 +501,10 @@ void DecisionTreeEnsemble::fit(
             tree_fitter.fit(
                 *_table_holder,
                 subfeatures,
+                aggregation_impl,
+                _opt,
                 &matches,
                 &match_ptrs,
-                _opt,
                 &candidate_trees,
                 &trees() );
 
@@ -517,17 +518,11 @@ void DecisionTreeEnsemble::fit(
                 {
                     const auto ix = last_tree()->ix_perip_used();
 
-                    const auto agg =
-                        last_tree()->make_aggregation( enums::Mode::transform );
-
-                    agg->set_aggregation_impl( &aggregation_impl() );
-
-                    std::vector<Float> new_feature = last_tree()->transform(
-                        _table_holder->main_tables_[ix],
-                        _table_holder->peripheral_tables_[ix],
-                        subfeatures[ix],
-                        hyperparameters().use_timestamps_,
-                        agg.get() );
+                    const auto new_feature = last_tree()->transform(
+                        _table_holder->main_tables_.at( ix ),
+                        _table_holder->peripheral_tables_.at( ix ),
+                        subfeatures.at( ix ),
+                        hyperparameters().use_timestamps_ );
 
                     _opt->update_yhat_old( *sample_weights, new_feature );
 
@@ -549,16 +544,6 @@ void DecisionTreeEnsemble::fit(
 
             // -------------------------------------------------------------
         }
-
-    // ----------------------------------------------------------------
-    // Clean up
-
-    aggregation_impl().reset();
-
-    // ----------------------------------------------------------------
-    // Return message
-
-    debug_log( "fit: Done..." );
 
     // ----------------------------------------------------------------
 }
@@ -1187,7 +1172,6 @@ containers::Predictions DecisionTreeEnsemble::transform(
     assert_true( _table_holder.main_tables_.size() > 0 );
 
     // ----------------------------------------------------------------
-    // If there are any subfeatures, create them.
 
     const auto subpredictions = SubtreeHelper::make_predictions(
         _table_holder, subensembles_avg_, subensembles_sum_, _logger, _comm );
@@ -1196,7 +1180,6 @@ containers::Predictions DecisionTreeEnsemble::transform(
         SubtreeHelper::make_subfeatures( _table_holder, subpredictions );
 
     // ----------------------------------------------------------------
-    // Generate the actual predictions.
 
     utils::Logger::log( "Multirel: Building subfeatures...", _logger, _comm );
 
@@ -1244,23 +1227,17 @@ std::vector<Float> DecisionTreeEnsemble::transform(
 
     assert_true( _table_holder.main_tables_.size() == _subfeatures.size() );
 
-    const auto ix = trees()[_num_feature].ix_perip_used();
+    const auto ix = trees().at( _num_feature ).ix_perip_used();
 
     assert_true( ix < _table_holder.main_tables_.size() );
 
-    auto aggregation =
-        trees()[_num_feature].make_aggregation( enums::Mode::transform );
-
-    aggregation->set_aggregation_impl( _impl );
-
-    auto new_feature = trees()[_num_feature].transform(
-        _table_holder.main_tables_[ix],
-        _table_holder.peripheral_tables_[ix],
-        _subfeatures[ix],
-        hyperparameters().use_timestamps_,
-        aggregation.get() );
-
-    aggregation->reset();
+    auto new_feature = trees()
+                           .at( _num_feature )
+                           .transform(
+                               _table_holder.main_tables_.at( ix ),
+                               _table_holder.peripheral_tables_.at( ix ),
+                               _subfeatures.at( ix ),
+                               hyperparameters().use_timestamps_ );
 
     return new_feature;
 }

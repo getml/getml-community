@@ -12,7 +12,6 @@ void CandidateTreeBuilder::add_counts(
     const descriptors::Hyperparameters &_hyperparameters,
     const Int _ix_perip_used,
     std::mt19937 *_random_number_generator,
-    containers::Optional<aggregations::AggregationImpl> *_aggregation_impl,
     multithreading::Communicator *_comm,
     std::list<decisiontrees::DecisionTree> *_candidate_trees )
 {
@@ -31,7 +30,6 @@ void CandidateTreeBuilder::add_counts(
                 0,  // _ix_column_used - not important
                 _same_units[_ix_perip_used],
                 _random_number_generator,
-                _aggregation_impl,
                 _comm ) );
         }
 }
@@ -44,7 +42,6 @@ void CandidateTreeBuilder::add_count_distincts(
     const descriptors::Hyperparameters &_hyperparameters,
     const Int _ix_perip_used,
     std::mt19937 *_random_number_generator,
-    containers::Optional<aggregations::AggregationImpl> *_aggregation_impl,
     multithreading::Communicator *_comm,
     std::list<decisiontrees::DecisionTree> *_candidate_trees )
 {
@@ -56,9 +53,8 @@ void CandidateTreeBuilder::add_count_distincts(
                     continue;
                 }
 
-            for ( auto data_used :
-                  { enums::DataUsed::x_perip_categorical,
-                    enums::DataUsed::x_perip_discrete } )
+            for ( auto data_used : {enums::DataUsed::x_perip_categorical,
+                                    enums::DataUsed::x_perip_discrete} )
                 {
                     size_t ncols = get_ncols(
                         _table_holder.peripheral_tables_,
@@ -78,7 +74,6 @@ void CandidateTreeBuilder::add_count_distincts(
                                     ix_column_used,
                                     _same_units[_ix_perip_used],
                                     _random_number_generator,
-                                    _aggregation_impl,
                                     _comm ) );
                         }
                 }
@@ -93,7 +88,6 @@ void CandidateTreeBuilder::add_other_aggs(
     const descriptors::Hyperparameters &_hyperparameters,
     const Int _ix_perip_used,
     std::mt19937 *_random_number_generator,
-    containers::Optional<aggregations::AggregationImpl> *_aggregation_impl,
     multithreading::Communicator *_comm,
     std::list<decisiontrees::DecisionTree> *_candidate_trees )
 {
@@ -118,11 +112,10 @@ void CandidateTreeBuilder::add_other_aggs(
                     continue;
                 }
 
-            for ( auto data_used :
-                  { enums::DataUsed::x_perip_numerical,
-                    enums::DataUsed::x_perip_discrete,
-                    enums::DataUsed::same_unit_numerical,
-                    enums::DataUsed::same_unit_discrete } )
+            for ( auto data_used : {enums::DataUsed::x_perip_numerical,
+                                    enums::DataUsed::x_perip_discrete,
+                                    enums::DataUsed::same_unit_numerical,
+                                    enums::DataUsed::same_unit_discrete} )
                 {
                     size_t ncols = get_ncols(
                         _table_holder.peripheral_tables_,
@@ -166,7 +159,6 @@ void CandidateTreeBuilder::add_other_aggs(
                                     ix_column_used,
                                     _same_units[_ix_perip_used],
                                     _random_number_generator,
-                                    _aggregation_impl,
                                     _comm ) );
 
                             // -----------------------------------------------------
@@ -183,7 +175,6 @@ void CandidateTreeBuilder::add_subfeature_aggs(
     const descriptors::Hyperparameters &_hyperparameters,
     const Int _ix_perip_used,
     std::mt19937 *_random_number_generator,
-    containers::Optional<aggregations::AggregationImpl> *_aggregation_impl,
     multithreading::Communicator *_comm,
     std::list<decisiontrees::DecisionTree> *_candidate_trees )
 {
@@ -209,7 +200,6 @@ void CandidateTreeBuilder::add_subfeature_aggs(
                         ix_column_used,
                         _same_units[_ix_perip_used],
                         _random_number_generator,
-                        _aggregation_impl,
                         _comm ) );
                 }
         }
@@ -222,14 +212,9 @@ std::list<decisiontrees::DecisionTree> CandidateTreeBuilder::build_candidates(
     const std::vector<descriptors::SameUnits> &_same_units,
     const size_t _ix_feature,
     const descriptors::Hyperparameters &_hyperparameters,
-    containers::Optional<aggregations::AggregationImpl> *_aggregation_impl,
     std::mt19937 *_random_number_generator,
     multithreading::Communicator *_comm )
 {
-    // ----------------------------------------------------------------
-
-    debug_log( "build_candidates..." );
-
     // ----------------------------------------------------------------
 
     auto candidate_trees = build_candidate_trees(
@@ -237,7 +222,6 @@ std::list<decisiontrees::DecisionTree> CandidateTreeBuilder::build_candidates(
         _same_units,
         _hyperparameters,
         _random_number_generator,
-        _aggregation_impl,
         _comm );
 
     // ----------------------------------------------------------------
@@ -246,25 +230,16 @@ std::list<decisiontrees::DecisionTree> CandidateTreeBuilder::build_candidates(
     // not make sense.
     if ( _hyperparameters.round_robin_ && _ix_feature != -1 )
         {
-            debug_log( "fit: Applying round robin..." );
-
             CandidateTreeBuilder::round_robin( _ix_feature, &candidate_trees );
         }
     else if ( _hyperparameters.share_aggregations_ >= 0.0 )
         {
-            debug_log( "fit: Removing candidates..." );
-
-            // This will remove all but share_aggregations of trees
             randomly_remove_candidate_trees(
                 _hyperparameters.share_aggregations_,
                 _random_number_generator,
                 _comm,
                 &candidate_trees );
         }
-
-    // ----------------------------------------------------------------
-
-    debug_log( "build_candidates...done." );
 
     // ----------------------------------------------------------------
 
@@ -281,7 +256,6 @@ CandidateTreeBuilder::build_candidate_trees(
     const std::vector<descriptors::SameUnits> &_same_units,
     const descriptors::Hyperparameters _hyperparameters,
     std::mt19937 *_random_number_generator,
-    containers::Optional<aggregations::AggregationImpl> *_aggregation_impl,
     multithreading::Communicator *_comm )
 {
     const auto num_perips = _table_holder.peripheral_tables_.size();
@@ -302,7 +276,6 @@ CandidateTreeBuilder::build_candidate_trees(
                 _hyperparameters,
                 static_cast<Int>( ix_perip_used ),
                 _random_number_generator,
-                _aggregation_impl,
                 _comm,
                 &candidate_trees );
 
@@ -318,7 +291,6 @@ CandidateTreeBuilder::build_candidate_trees(
                 _hyperparameters,
                 static_cast<Int>( ix_perip_used ),
                 _random_number_generator,
-                _aggregation_impl,
                 _comm,
                 &candidate_trees );
 
@@ -331,7 +303,6 @@ CandidateTreeBuilder::build_candidate_trees(
                 _hyperparameters,
                 static_cast<Int>( ix_perip_used ),
                 _random_number_generator,
-                _aggregation_impl,
                 _comm,
                 &candidate_trees );
 
@@ -346,7 +317,6 @@ CandidateTreeBuilder::build_candidate_trees(
                         _hyperparameters,
                         static_cast<Int>( ix_perip_used ),
                         _random_number_generator,
-                        _aggregation_impl,
                         _comm,
                         &candidate_trees );
                 }
@@ -451,6 +421,25 @@ void CandidateTreeBuilder::randomly_remove_candidate_trees(
         static_cast<size_t>( 1 ) );
 
     utils::RandomNumberGenerator rng( _random_number_generator, _comm );
+
+    // ------------------------------------------------
+
+    assert_true( _candidate_trees->size() > 0 );
+
+    if ( num_candidates == 1 )
+        {
+            const auto max = static_cast<Int>( _candidate_trees->size() ) - 1;
+
+            const auto ix_keep = rng.random_int( 0, max );
+
+            auto it = _candidate_trees->begin();
+
+            std::advance( it, ix_keep );
+
+            *_candidate_trees = std::list<decisiontrees::DecisionTree>( {*it} );
+
+            return;
+        }
 
     // ------------------------------------------------
 

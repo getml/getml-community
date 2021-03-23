@@ -1,5 +1,5 @@
-#ifndef MULTIREL_AGGREGATIONS_AGGREGATION_HPP_
-#define MULTIREL_AGGREGATIONS_AGGREGATION_HPP_
+#ifndef MULTIREL_AGGREGATIONS_FITAGGREGATION_HPP_
+#define MULTIREL_AGGREGATIONS_FITAGGREGATION_HPP_
 
 namespace multirel
 {
@@ -7,17 +7,57 @@ namespace aggregations
 {
 // ----------------------------------------------------------------------------
 
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-class Aggregation : public AbstractAggregation
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+class FitAggregation : public AbstractFitAggregation
 {
    public:
-    Aggregation() : AbstractAggregation(), aggregation_impl_( nullptr ){};
+    FitAggregation(
+        const descriptors::SameUnitsContainer &_same_units_discrete,
+        const descriptors::SameUnitsContainer &_same_units_numerical,
+        const descriptors::ColumnToBeAggregated &_column_to_be_aggregated,
+        const containers::DataFrameView &_population,
+        const containers::DataFrame &_peripheral,
+        const containers::Subfeatures &_subfeatures,
+        const std::shared_ptr<AggregationImpl> &_aggregation_impl,
+        const std::shared_ptr<optimizationcriteria::OptimizationCriterion>
+            &_optimization_criterion,
+        containers::Matches *_matches )
+        : AbstractFitAggregation(),
+          aggregation_impl_( _aggregation_impl ),
+          optimization_criterion_( _optimization_criterion ),
+          value_container_(
+              ValueContainerCreator<data_used_, is_population_>::create(
+                  _same_units_discrete,
+                  _same_units_numerical,
+                  _column_to_be_aggregated,
+                  _population,
+                  _peripheral,
+                  _subfeatures ) )
+    {
+        assert_true( aggregation_impl_ );
 
-    ~Aggregation() = default;
+        assert_true( optimization_criterion_ );
+
+        const auto null_value_separator =
+            separate_null_values_for_matches( _matches );
+
+        if constexpr ( needs_sorting_ )
+            {
+                sort_matches(
+                    _peripheral, null_value_separator, _matches->end() );
+            }
+
+        const auto dist =
+            std::distance( _matches->begin(), null_value_separator );
+
+        assert_true( dist >= 0 );
+
+        samples_begin_ = _matches->data() + dist;
+
+        samples_end_ = _matches->data() + _matches->size();
+    };
+
+    ~FitAggregation() = default;
 
     // --------------------------------------
 
@@ -191,15 +231,6 @@ class Aggregation : public AbstractAggregation
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _match_container_end );
 
-    /// Returns a string describing the type of the intermediate aggregation
-    /// needed
-    std::string intermediate_type() const final;
-
-    /// Returns an intermediate aggregation representing this aggregation
-    std::shared_ptr<optimizationcriteria::OptimizationCriterion>
-    make_intermediate(
-        std::shared_ptr<IntermediateAggregationImpl> _impl ) const final;
-
     /// Resets yhat_, yhat_committed_ and yhat_stored_ and all variables
     /// related to the aggregations with 0.0.
     void reset() final;
@@ -208,27 +239,10 @@ class Aggregation : public AbstractAggregation
     /// had been called.
     void revert_to_commit() final;
 
-    /// Separates the matches for which the value to be aggregated is NULL
-    containers::Matches::iterator separate_null_values(
-        containers::Matches *_matches );
-
     /// Separates the pointers to matches for which the value to be aggregated
     /// is NULL
     containers::MatchPtrs::iterator separate_null_values(
-        containers::MatchPtrs *_match_ptrs );
-
-    /// Sorts the matches by value to be aggregated (within the element in
-    /// population table)
-    void sort_matches(
-        const containers::DataFrame &_peripheral,
-        containers::Matches::iterator _matches_begin,
-        containers::Matches::iterator _matches_end ) final;
-
-    /// Sorts the matches by the time stamp (needed for FIRST and LAST).
-    void sort_matches_by_ts(
-        const containers::DataFrame &_peripheral,
-        containers::Matches::iterator _matches_begin,
-        containers::Matches::iterator _matches_end ) const;
+        containers::MatchPtrs *_match_ptrs ) const final;
 
     /// Updates the optimization criterion, makes it store its
     /// current stage and clears updates_current()
@@ -1244,87 +1258,31 @@ class Aggregation : public AbstractAggregation
     /// Clear all extras
     void clear_extras() final { altered_matches().clear(); }
 
-    /// Returns the mode (enums::Mode::fit or enums::Mode::transform).
-    enums::Mode mode() const final { return mode_; }
-
-    /// Whether this is an aggregation that requires the matches to be sorted
-    bool needs_sorting() const final { return needs_sorting_; }
-
-    /// Trivial setter
-    void set_aggregation_impl(
-        containers::Optional<AggregationImpl> *_aggregation_impl )
-    {
-        aggregation_impl_ = _aggregation_impl->get();
-    }
-
-    /// Trivial setter
-    void set_optimization_criterion( optimizationcriteria::OptimizationCriterion
-                                         *_optimization_criterion ) final
-    {
-        optimization_criterion_ = _optimization_criterion;
-    }
-
-    /// Trivial setter
-    void set_samples_begin_end(
-        containers::Match *_samples_begin,
-        containers::Match *_samples_end ) final
-    {
-        samples_begin_ = _samples_begin;
-        samples_end_ = _samples_end;
-    }
-
-    /// Trivial setter
-    void set_value_to_be_aggregated(
-        const containers::Column<Float> _value_to_be_aggregated ) final
-    {
-        value_to_be_aggregated() =
-            containers::ColumnView<Float, std::map<Int, Int>>(
-                _value_to_be_aggregated );
-    }
-
-    /// Trivial setter
-    void set_value_to_be_aggregated(
-        const containers::Column<Int> _value_to_be_aggregated ) final
-    {
-        value_to_be_aggregated_categorical() =
-            containers::ColumnView<Int, std::map<Int, Int>>(
-                _value_to_be_aggregated );
-    }
-
-    /// Trivial setter
-    void set_value_to_be_aggregated(
-        const containers::ColumnView<Float, std::map<Int, Int>>
-            _value_to_be_aggregated ) final
-    {
-        value_to_be_aggregated() = _value_to_be_aggregated;
-    }
-
-    /// Trivial setter
-    void set_value_to_be_compared(
-        const containers::Column<Float> _value_to_be_compared ) final
-    {
-        value_to_be_compared() =
-            containers::ColumnView<Float, std::vector<size_t>>(
-                _value_to_be_compared );
-    }
-
-    /// Trivial setter
-    void set_value_to_be_compared(
-        const containers::ColumnView<Float, std::vector<size_t>>
-            _value_to_be_compared ) final
-    {
-        value_to_be_compared() = _value_to_be_compared;
-    }
-
     /// Returns a string describing the type of the aggregation
     std::string type() const final { return AggType::type(); }
 
     /// Returns a reference to the predictions stored by the aggregation
-    std::vector<Float> &yhat() final
-    {
-        assert_true( aggregation_impl_ != nullptr );
-        return aggregation_impl_->yhat_;
-    }
+    std::vector<Float> &yhat() final { return aggregation_impl_->yhat_; }
+
+    // --------------------------------------
+
+   private:
+    /// Separates the matches for which the value to be aggregated is NULL
+    containers::Matches::iterator separate_null_values_for_matches(
+        containers::Matches *_matches ) const;
+
+    /// Sorts the matches by value to be aggregated (within the element in
+    /// population table)
+    void sort_matches(
+        const containers::DataFrame &_peripheral,
+        containers::Matches::iterator _matches_begin,
+        containers::Matches::iterator _matches_end ) const;
+
+    /// Sorts the matches by the time stamp (needed for FIRST and LAST).
+    void sort_matches_by_ts(
+        const containers::DataFrame &_peripheral,
+        containers::Matches::iterator _matches_begin,
+        containers::Matches::iterator _matches_end ) const;
 
     // --------------------------------------
 
@@ -1336,16 +1294,11 @@ class Aggregation : public AbstractAggregation
     }
 
     /// Trivial accessor
-    inline std::vector<Float> &count()
-    {
-        assert_true( aggregation_impl_ != nullptr );
-        return aggregation_impl_->count_;
-    }
+    inline std::vector<Float> &count() { return aggregation_impl_->count_; }
 
     /// Trivial accessor
     inline std::vector<Float> &count_committed()
     {
-        assert_true( aggregation_impl_ != nullptr );
         return aggregation_impl_->count_committed_;
     }
 
@@ -1384,235 +1337,110 @@ class Aggregation : public AbstractAggregation
     }
 
     /// Trivial accessor
-    inline optimizationcriteria::OptimizationCriterion *optimization_criterion()
-    {
-        assert_true( optimization_criterion_ );
-        return optimization_criterion_;
-    }
-
-    /// Trivial accessor
     inline std::vector<containers::Match *> &match_ptr()
     {
-        assert_true( aggregation_impl_ != nullptr );
         return aggregation_impl_->match_ptr_;
     }
 
     /// Trivial accessor
     inline std::vector<containers::Match *> &match_ptr_committed()
     {
-        assert_true( aggregation_impl_ != nullptr );
         return aggregation_impl_->match_ptr_committed_;
     }
 
-    /// Trivial accessor
-    inline std::vector<Float> &sum()
+    /// Trivial accessor.
+    inline optimizationcriteria::OptimizationCriterion *optimization_criterion()
     {
-        assert_true( aggregation_impl_ != nullptr );
-        return aggregation_impl_->sum_;
+        return optimization_criterion_.get();
     }
+
+    /// Trivial accessor
+    inline std::vector<Float> &sum() { return aggregation_impl_->sum_; }
 
     /// Trivial accessor
     inline std::vector<Float> &sum_committed()
     {
-        assert_true( aggregation_impl_ != nullptr );
         return aggregation_impl_->sum_committed_;
     }
 
     /// Trivial accessor
     inline std::vector<Float> &sum_cubed()
     {
-        assert_true( aggregation_impl_ != nullptr );
         return aggregation_impl_->sum_cubed_;
     }
 
     /// Trivial accessor
     inline std::vector<Float> &sum_cubed_committed()
     {
-        assert_true( aggregation_impl_ != nullptr );
         return aggregation_impl_->sum_cubed_committed_;
     }
 
     /// Trivial accessor
     inline std::vector<Float> &sum_squared()
     {
-        assert_true( aggregation_impl_ != nullptr );
         return aggregation_impl_->sum_squared_;
     }
 
     /// Trivial accessor
     inline std::vector<Float> &sum_squared_committed()
     {
-        assert_true( aggregation_impl_ != nullptr );
         return aggregation_impl_->sum_squared_committed_;
     }
 
     /// Trivial accessor
     inline containers::IntSet &updates_current()
     {
-        assert_true( aggregation_impl_ != nullptr );
         return aggregation_impl_->updates_current_;
     }
 
     /// Trivial accessor
     inline containers::IntSet &updates_stored()
     {
-        assert_true( aggregation_impl_ != nullptr );
         return aggregation_impl_->updates_stored_;
     }
 
-    /// Trivial accessor
-    inline containers::ColumnView<Float, std::map<Int, Int>>
-        &value_to_be_aggregated()
+    /// Returns the value to be aggregated for this particular match.
+    inline Float value_to_be_aggregated( const containers::Match *_match ) const
     {
-        assert_true( aggregation_impl_ != nullptr );
-        return aggregation_impl_->value_to_be_aggregated_;
-    }
+        using ReturnType =
+            ValueContainer<data_used_, is_population_>::ReturnType;
 
-    /// Trivial accessor
-    inline containers::ColumnView<Int, std::map<Int, Int>>
-        &value_to_be_aggregated_categorical()
-    {
-        assert_true( aggregation_impl_ != nullptr );
-        return aggregation_impl_->value_to_be_aggregated_categorical_;
-    }
+        if constexpr ( std::is_same<ReturnType, Float>() )
+            {
+                return value_container_.value_to_be_aggregated( _match );
+            }
 
-    /// Accessor for the value to be aggregated to be used for all
-    /// aggregations that ...
-    /// 1. ...are NOT applied to categorical data
-    /// 2. ...ARE a comparison
-    /// 3. ...the value to be compared IS in the population table
-    template <
-        enums::DataUsed data_used = data_used_,
-        bool is_population = is_population_,
-        typename std::enable_if<
-            !AggregationType::IsCategorical<data_used>::value &&
-                AggregationType::IsComparison<data_used>::value &&
-                is_population,
-            int>::type = 0>
-    inline const Float value_to_be_aggregated( const containers::Match *_match )
-    {
-        return value_to_be_compared()[_match->ix_x_popul] -
-               value_to_be_aggregated().col()[_match->ix_x_perip];
-    }
-
-    /// Accessor for the value to be aggregated to be used for all
-    /// aggregations that ...
-    /// 1. ...are NOT applied to categorical data
-    /// 2. ...ARE a comparison
-    /// 3. ...the value to be compared is NOT in the population table
-    template <
-        enums::DataUsed data_used = data_used_,
-        bool is_population = is_population_,
-        typename std::enable_if<
-            !AggregationType::IsCategorical<data_used>::value &&
-                AggregationType::IsComparison<data_used>::value &&
-                !is_population,
-            int>::type = 0>
-    inline const Float value_to_be_aggregated( const containers::Match *_match )
-    {
-        return value_to_be_compared().col()[_match->ix_x_perip] -
-               value_to_be_aggregated().col()[_match->ix_x_perip];
-    }
-
-    /// Accessor for the value to be aggregated to be used for all
-    /// aggregations that ...
-    /// 1. ...are NOT applied to categorical data
-    /// 2. ...are NOT a comparison
-    /// 3. ...are NOT applied to to subfeatures
-    template <
-        enums::DataUsed data_used = data_used_,
-        typename std::enable_if<
-            !AggregationType::IsCategorical<data_used>::value &&
-                !AggregationType::IsComparison<data_used>::value &&
-                data_used != enums::DataUsed::x_subfeature,
-            int>::type = 0>
-    inline const Float value_to_be_aggregated( const containers::Match *_match )
-    {
-        return value_to_be_aggregated().col()[_match->ix_x_perip];
-    }
-
-    /// Accessor for the value to be aggregated to be used for all
-    /// aggregations that ...
-    /// 1. ...are NOT applied to categorical data
-    /// 2. ...are NOT a comparison
-    /// 3. ...ARE applied to subfeatures
-    template <
-        enums::DataUsed data_used = data_used_,
-        typename std::enable_if<
-            !AggregationType::IsCategorical<data_used>::value &&
-                !AggregationType::IsComparison<data_used>::value &&
-                data_used == enums::DataUsed::x_subfeature,
-            int>::type = 0>
-    inline const Float value_to_be_aggregated( const containers::Match *_match )
-    {
-        return value_to_be_aggregated()[static_cast<Int>( _match->ix_x_perip )];
-    }
-
-    /// Accessor for the value to be aggregated to be used for all
-    /// aggregations that ...
-    /// 1. ...ARE applied to categorical data
-    template <
-        enums::DataUsed data_used = data_used_,
-        typename std::enable_if<
-            AggregationType::IsCategorical<data_used>::value,
-            int>::type = 0>
-    inline const Float value_to_be_aggregated( const containers::Match *_match )
-    {
-        return static_cast<Float>(
-            value_to_be_aggregated_categorical().col()[_match->ix_x_perip] );
-    }
-
-    /// Accessor for the value to be compared - this is needed for the
-    /// time_stamps and the same_units.
-    inline containers::ColumnView<Float, std::vector<size_t>>
-        &value_to_be_compared()
-    {
-        assert_true( aggregation_impl_ != nullptr );
-        return aggregation_impl_->value_to_be_compared_;
+        if constexpr ( !std::is_same<ReturnType, Float>() )
+            {
+                static_assert(
+                    std::is_same<AggType, AggregationType::Count>(),
+                    "Only Count does not return!" );
+                return 0.0;
+            }
     }
 
     /// Accessor for the value to be compared - this is needed for the
     /// time_stamps and the same_units.
     inline std::vector<Float> &yhat_committed()
     {
-        assert_true( aggregation_impl_ != nullptr );
         return aggregation_impl_->yhat_committed_;
     }
 
     /// Trivial accessor
     inline std::vector<Float> &yhat_inline()
     {
-        assert_true( aggregation_impl_ != nullptr );
         return aggregation_impl_->yhat_;
     }
 
     /// Trivial accessor
     inline std::vector<Float> &yhat_stored()
     {
-        assert_true( aggregation_impl_ != nullptr );
         return aggregation_impl_->yhat_stored_;
     }
 
     // --------------------------------------
 
    private:
-    /// Pimpl for aggregation
-    AggregationImpl *aggregation_impl_;
-
-    /// Contains pointers to matches that have been changed
-    /// since the last commit
-    std::vector<containers::Match *> altered_matches_;
-
-    /// Whether the appropriate intermediate aggregation is AVG.
-    constexpr static bool avg_intermediate_ =
-        std::is_same<AggType, AggregationType::Avg>() ||
-        std::is_same<AggType, AggregationType::Max>() ||
-        std::is_same<AggType, AggregationType::Median>() ||
-        std::is_same<AggType, AggregationType::Min>();
-
-    /// Pointer to the optimization criterion used
-    optimizationcriteria::OptimizationCriterion *optimization_criterion_;
-
     /// Whether this is the FIRST or LAST aggregation.
     constexpr static bool is_first_or_last_ =
         std::is_same<AggType, AggregationType::First>() ||
@@ -1649,7 +1477,7 @@ class Aggregation : public AbstractAggregation
         std::is_same<AggType, AggregationType::Median>() ||
         std::is_same<AggType, AggregationType::Min>();
 
-    /// Whether the aggregation needs sorting
+    /// Whether the aggregation requires sorting.
     constexpr static bool needs_sorting_ =
         std::is_same<AggType, AggregationType::CountDistinct>() ||
         std::is_same<AggType, AggregationType::CountMinusCountDistinct>() ||
@@ -1676,11 +1504,19 @@ class Aggregation : public AbstractAggregation
         std::is_same<AggType, AggregationType::Stddev>() ||
         std::is_same<AggType, AggregationType::Var>();
 
-    /// Whether there is no appropriate intermediate aggregation.
-    constexpr static bool no_intermediate_ =
-        std::is_same<AggType, AggregationType::Count>() ||
-        std::is_same<AggType, AggregationType::CountDistinct>() ||
-        std::is_same<AggType, AggregationType::CountMinusCountDistinct>();
+    // --------------------------------------
+
+   private:
+    /// Pimpl for aggregation
+    const std::shared_ptr<AggregationImpl> aggregation_impl_;
+
+    /// Contains pointers to matches that have been changed
+    /// since the last commit
+    std::vector<containers::Match *> altered_matches_;
+
+    /// Pointer to the optimization criterion used
+    const std::shared_ptr<optimizationcriteria::OptimizationCriterion>
+        optimization_criterion_;
 
     /// Pointer to the first element in matches - some aggregations
     /// like min and max need to know this
@@ -1694,17 +1530,16 @@ class Aggregation : public AbstractAggregation
     /// been activated or deactivated. revert_to_commit() needs this
     /// piece of information.
     bool updates_have_been_activated_;
+
+    /// Contains the value to be aggregated.
+    ValueContainer<data_used_, is_population_> value_container_;
 };
 
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::activate_all(
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void FitAggregation<AggType, data_used_, is_population_>::activate_all(
     const bool _init_opt,
     containers::MatchPtrs::iterator _match_container_begin,
     containers::MatchPtrs::iterator _match_container_end )
@@ -1740,12 +1575,8 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::activate_all(
 
 // ----------------------------------------------------------------------------
 
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void FitAggregation<AggType, data_used_, is_population_>::
     activate_matches_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
@@ -1807,12 +1638,8 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void FitAggregation<AggType, data_used_, is_population_>::
     activate_matches_containing_words(
         const std::vector<Int>::const_iterator _words_begin,
         const std::vector<Int>::const_iterator _words_end,
@@ -1876,12 +1703,8 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void FitAggregation<AggType, data_used_, is_population_>::
     activate_matches_from_above(
         const std::vector<size_t> &_indptr,
         const containers::MatchPtrs::const_iterator &_matches_begin,
@@ -1924,12 +1747,8 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void FitAggregation<AggType, data_used_, is_population_>::
     activate_matches_from_below(
         const std::vector<size_t> &_indptr,
         const containers::MatchPtrs::const_iterator &_matches_begin,
@@ -1975,12 +1794,8 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void FitAggregation<AggType, data_used_, is_population_>::
     activate_matches_in_window(
         const std::vector<size_t> &_indptr,
         containers::MatchPtrs::iterator _matches_begin,
@@ -2036,12 +1851,8 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void FitAggregation<AggType, data_used_, is_population_>::
     activate_matches_outside_window(
         const std::vector<size_t> &_indptr,
         containers::MatchPtrs::iterator _matches_begin,
@@ -2118,12 +1929,8 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void FitAggregation<AggType, data_used_, is_population_>::
     activate_matches_not_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
@@ -2203,12 +2010,8 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void FitAggregation<AggType, data_used_, is_population_>::
     activate_matches_not_containing_words(
         const std::vector<Int>::const_iterator _words_begin,
         const std::vector<Int>::const_iterator _words_end,
@@ -2295,12 +2098,8 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void FitAggregation<AggType, data_used_, is_population_>::
     activate_partition_from_above(
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _separator,
@@ -2314,34 +2113,24 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
         {
             activate_match( *it );
 
-            if constexpr ( mode_ == enums::Mode::fit )
-                {
-                    updates_stored().insert( ( *it )->ix_x_popul );
-                    updates_current().insert( ( *it )->ix_x_popul );
-                }
+            updates_stored().insert( ( *it )->ix_x_popul );
+            updates_current().insert( ( *it )->ix_x_popul );
         }
 
-    if constexpr ( mode_ == enums::Mode::fit )
-        {
-            const auto num_samples_smaller = static_cast<Float>(
-                std::distance( _match_container_begin, _separator ) );
+    const auto num_samples_smaller = static_cast<Float>(
+        std::distance( _match_container_begin, _separator ) );
 
-            const auto num_samples_greater = static_cast<Float>(
-                std::distance( _separator, _match_container_end ) );
+    const auto num_samples_greater =
+        static_cast<Float>( std::distance( _separator, _match_container_end ) );
 
-            update_optimization_criterion_and_clear_updates_current(
-                num_samples_smaller, num_samples_greater );
-        }
+    update_optimization_criterion_and_clear_updates_current(
+        num_samples_smaller, num_samples_greater );
 }
 
 // ----------------------------------------------------------------------------
 
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void FitAggregation<AggType, data_used_, is_population_>::
     activate_partition_from_below(
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _separator,
@@ -2355,42 +2144,26 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
         {
             activate_match( *it );
 
-            if constexpr ( mode_ == enums::Mode::fit )
-                {
-                    updates_stored().insert( ( *it )->ix_x_popul );
-                    updates_current().insert( ( *it )->ix_x_popul );
-                }
+            updates_stored().insert( ( *it )->ix_x_popul );
+            updates_current().insert( ( *it )->ix_x_popul );
         }
 
-    if constexpr ( mode_ == enums::Mode::fit )
-        {
-            const auto num_samples_smaller = static_cast<Float>(
-                std::distance( _match_container_begin, _separator ) );
+    const auto num_samples_smaller = static_cast<Float>(
+        std::distance( _match_container_begin, _separator ) );
 
-            const auto num_samples_greater = static_cast<Float>(
-                std::distance( _separator, _match_container_end ) );
+    const auto num_samples_greater =
+        static_cast<Float>( std::distance( _separator, _match_container_end ) );
 
-            update_optimization_criterion_and_clear_updates_current(
-                num_samples_smaller, num_samples_greater );
-        }
+    update_optimization_criterion_and_clear_updates_current(
+        num_samples_smaller, num_samples_greater );
 }
 
 // ----------------------------------------------------------------------------
 
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::clear()
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void FitAggregation<AggType, data_used_, is_population_>::clear()
 {
     altered_matches().clear();
-
-    value_to_be_aggregated().clear();
-
-    value_to_be_aggregated_categorical().clear();
-
-    value_to_be_compared().clear();
 
     updates_current().clear();
 
@@ -2399,12 +2172,8 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::clear()
 
 // ----------------------------------------------------------------------------
 
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::commit()
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void FitAggregation<AggType, data_used_, is_population_>::commit()
 {
     // --------------------------------------------------
 
@@ -2481,12 +2250,8 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::commit()
 
 // ----------------------------------------------------------------------------
 
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void FitAggregation<AggType, data_used_, is_population_>::
     deactivate_matches_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
@@ -2548,12 +2313,8 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void FitAggregation<AggType, data_used_, is_population_>::
     deactivate_matches_containing_words(
         const std::vector<Int>::const_iterator _words_begin,
         const std::vector<Int>::const_iterator _words_end,
@@ -2619,12 +2380,8 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void FitAggregation<AggType, data_used_, is_population_>::
     deactivate_matches_from_above(
         const std::vector<size_t> &_indptr,
         const containers::MatchPtrs::const_iterator &_matches_begin,
@@ -2668,12 +2425,8 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void FitAggregation<AggType, data_used_, is_population_>::
     deactivate_matches_from_below(
         const std::vector<size_t> &_indptr,
         const containers::MatchPtrs::const_iterator &_matches_begin,
@@ -2718,12 +2471,8 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void FitAggregation<AggType, data_used_, is_population_>::
     deactivate_matches_in_window(
         const std::vector<size_t> &_indptr,
         containers::MatchPtrs::iterator _matches_begin,
@@ -2779,12 +2528,8 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void FitAggregation<AggType, data_used_, is_population_>::
     deactivate_matches_outside_window(
         const std::vector<size_t> &_indptr,
         containers::MatchPtrs::iterator _matches_begin,
@@ -2861,12 +2606,8 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void FitAggregation<AggType, data_used_, is_population_>::
     deactivate_matches_not_containing_categories(
         const std::vector<Int>::const_iterator _categories_begin,
         const std::vector<Int>::const_iterator _categories_end,
@@ -2946,12 +2687,8 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void FitAggregation<AggType, data_used_, is_population_>::
     deactivate_matches_not_containing_words(
         const std::vector<Int>::const_iterator _words_begin,
         const std::vector<Int>::const_iterator _words_end,
@@ -3038,12 +2775,8 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void FitAggregation<AggType, data_used_, is_population_>::
     deactivate_matches_with_null_values(
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _null_values_separator )
@@ -3061,12 +2794,8 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void FitAggregation<AggType, data_used_, is_population_>::
     deactivate_partition_from_above(
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _separator,
@@ -3080,34 +2809,24 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
         {
             deactivate_match( *it );
 
-            if constexpr ( mode_ == enums::Mode::fit )
-                {
-                    updates_stored().insert( ( *it )->ix_x_popul );
-                    updates_current().insert( ( *it )->ix_x_popul );
-                }
+            updates_stored().insert( ( *it )->ix_x_popul );
+            updates_current().insert( ( *it )->ix_x_popul );
         }
 
-    if constexpr ( mode_ == enums::Mode::fit )
-        {
-            const auto num_samples_smaller = static_cast<Float>(
-                std::distance( _match_container_begin, _separator ) );
+    const auto num_samples_smaller = static_cast<Float>(
+        std::distance( _match_container_begin, _separator ) );
 
-            const auto num_samples_greater = static_cast<Float>(
-                std::distance( _separator, _match_container_end ) );
+    const auto num_samples_greater =
+        static_cast<Float>( std::distance( _separator, _match_container_end ) );
 
-            update_optimization_criterion_and_clear_updates_current(
-                num_samples_smaller, num_samples_greater );
-        }
+    update_optimization_criterion_and_clear_updates_current(
+        num_samples_smaller, num_samples_greater );
 }
 
 // ----------------------------------------------------------------------------
 
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void FitAggregation<AggType, data_used_, is_population_>::
     deactivate_partition_from_below(
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _separator,
@@ -3121,34 +2840,24 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
         {
             deactivate_match( *it );
 
-            if constexpr ( mode_ == enums::Mode::fit )
-                {
-                    updates_stored().insert( ( *it )->ix_x_popul );
-                    updates_current().insert( ( *it )->ix_x_popul );
-                }
+            updates_stored().insert( ( *it )->ix_x_popul );
+            updates_current().insert( ( *it )->ix_x_popul );
         }
 
-    if constexpr ( mode_ == enums::Mode::fit )
-        {
-            const auto num_samples_smaller = static_cast<Float>(
-                std::distance( _match_container_begin, _separator ) );
+    const auto num_samples_smaller = static_cast<Float>(
+        std::distance( _match_container_begin, _separator ) );
 
-            const auto num_samples_greater = static_cast<Float>(
-                std::distance( _separator, _match_container_end ) );
+    const auto num_samples_greater =
+        static_cast<Float>( std::distance( _separator, _match_container_end ) );
 
-            update_optimization_criterion_and_clear_updates_current(
-                num_samples_smaller, num_samples_greater );
-        }
+    update_optimization_criterion_and_clear_updates_current(
+        num_samples_smaller, num_samples_greater );
 }
 
 // ----------------------------------------------------------------------------
 
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void FitAggregation<AggType, data_used_, is_population_>::
     init_optimization_criterion(
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _match_container_end )
@@ -3169,123 +2878,8 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-std::string
-Aggregation<AggType, data_used_, mode_, is_population_>::intermediate_type()
-    const
-{
-    // --------------------------------------------------
-    // AVG, MAX, MEDIAN, MIN
-
-    if ( avg_intermediate_ )
-        {
-            return "AVG";
-        }
-
-    // --------------------------------------------------
-    // COUNT, COUNT_DISTINCT, COUNT_MINUS_COUNT_DISTINCT
-
-    else if ( no_intermediate_ )
-        {
-            return "none";
-        }
-
-    // --------------------------------------------------
-    // all others
-
-    else
-        {
-            return AggType::type();
-        }
-}
-
-// ----------------------------------------------------------------------------
-
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-std::shared_ptr<optimizationcriteria::OptimizationCriterion>
-Aggregation<AggType, data_used_, mode_, is_population_>::make_intermediate(
-    std::shared_ptr<IntermediateAggregationImpl> _impl ) const
-{
-    // --------------------------------------------------
-
-    debug_log( "make_intermediate..." );
-
-    assert_true( !no_intermediate_ );
-
-    // --------------------------------------------------
-    // AVG, MAX, MEDIAN, MIN
-
-    if ( avg_intermediate_ )
-        {
-            return std::make_shared<
-                IntermediateAggregation<AggregationType::Avg>>( _impl );
-        }
-
-    // --------------------------------------------------
-    // STDDEV
-
-    else if ( std::is_same<AggType, AggregationType::Stddev>() )
-        {
-            return std::make_shared<
-                IntermediateAggregation<AggregationType::Stddev>>( _impl );
-        }
-
-    // --------------------------------------------------
-    // SKEWNESS
-
-    else if ( std::is_same<AggType, AggregationType::Skewness>() )
-        {
-            return std::make_shared<
-                IntermediateAggregation<AggregationType::Skewness>>( _impl );
-        }
-
-    // --------------------------------------------------
-    // SUM
-
-    else if ( std::is_same<AggType, AggregationType::Sum>() )
-        {
-            return std::make_shared<
-                IntermediateAggregation<AggregationType::Sum>>( _impl );
-        }
-
-    // --------------------------------------------------
-    // VAR
-
-    else if ( std::is_same<AggType, AggregationType::Var>() )
-        {
-            return std::make_shared<
-                IntermediateAggregation<AggregationType::Var>>( _impl );
-        }
-
-    // --------------------------------------------------
-
-    else
-        {
-            assert_true(
-                false &&
-                "Unknown aggregation type in make_intermediate(...)!" );
-
-            return std::shared_ptr<
-                optimizationcriteria::OptimizationCriterion>();
-        }
-}
-
-// ----------------------------------------------------------------------------
-
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::revert_to_commit()
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void FitAggregation<AggType, data_used_, is_population_>::revert_to_commit()
 {
     // --------------------------------------------------
 
@@ -3367,42 +2961,25 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::revert_to_commit()
 
 // ----------------------------------------------------------------------------
 
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 containers::Matches::iterator
-Aggregation<AggType, data_used_, mode_, is_population_>::separate_null_values(
-    containers::Matches *_matches )
+FitAggregation<AggType, data_used_, is_population_>::
+    separate_null_values_for_matches( containers::Matches *_matches ) const
 {
     auto is_null = [this]( containers::Match &sample ) {
-        Float val = value_to_be_aggregated( &sample );
+        const auto val = value_to_be_aggregated( &sample );
         return ( std::isnan( val ) || std::isinf( val ) );
     };
 
-    if ( std::is_partitioned( _matches->begin(), _matches->end(), is_null ) )
-        {
-            return std::partition_point(
-                _matches->begin(), _matches->end(), is_null );
-        }
-    else
-        {
-            return std::stable_partition(
-                _matches->begin(), _matches->end(), is_null );
-        }
+    return std::stable_partition( _matches->begin(), _matches->end(), is_null );
 }
 
 // ----------------------------------------------------------------------------
 
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 containers::MatchPtrs::iterator
-Aggregation<AggType, data_used_, mode_, is_population_>::separate_null_values(
-    containers::MatchPtrs *_match_ptrs )
+FitAggregation<AggType, data_used_, is_population_>::separate_null_values(
+    containers::MatchPtrs *_match_ptrs ) const
 {
     auto is_null = [this]( containers::Match *sample ) {
         Float val = value_to_be_aggregated( sample );
@@ -3424,20 +3001,12 @@ Aggregation<AggType, data_used_, mode_, is_population_>::separate_null_values(
 
 // ----------------------------------------------------------------------------
 
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::sort_matches(
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void FitAggregation<AggType, data_used_, is_population_>::sort_matches(
     const containers::DataFrame &_peripheral,
     containers::Matches::iterator _matches_begin,
-    containers::Matches::iterator _matches_end )
+    containers::Matches::iterator _matches_end ) const
 {
-    // -----------------------------------
-
-    assert_true( needs_sorting_ );
-
     // -----------------------------------
 
     if ( std::distance( _matches_begin, _matches_end ) == 0 )
@@ -3481,20 +3050,13 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::sort_matches(
 
 // ----------------------------------------------------------------------------
 
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::
-    sort_matches_by_ts(
-        const containers::DataFrame &_peripheral,
-        containers::Matches::iterator _matches_begin,
-        containers::Matches::iterator _matches_end ) const
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void FitAggregation<AggType, data_used_, is_population_>::sort_matches_by_ts(
+    const containers::DataFrame &_peripheral,
+    containers::Matches::iterator _matches_begin,
+    containers::Matches::iterator _matches_end ) const
 {
     // -----------------------------------
-
-    assert_true( needs_sorting_ );
 
     assert_true( is_first_or_last_ );
 
@@ -3537,12 +3099,8 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::
 
 // ----------------------------------------------------------------------------
 
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::reset()
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void FitAggregation<AggType, data_used_, is_population_>::reset()
 {
     // --------------------------------------------------
 
@@ -3613,12 +3171,8 @@ void Aggregation<AggType, data_used_, mode_, is_population_>::reset()
 
 // ----------------------------------------------------------------------------
 
-template <
-    typename AggType,
-    enums::DataUsed data_used_,
-    enums::Mode mode_,
-    bool is_population_>
-void Aggregation<AggType, data_used_, mode_, is_population_>::
+template <typename AggType, enums::DataUsed data_used_, bool is_population_>
+void FitAggregation<AggType, data_used_, is_population_>::
     update_optimization_criterion_and_clear_updates_current(
         const Float _num_samples_smaller, const Float _num_samples_greater )
 {

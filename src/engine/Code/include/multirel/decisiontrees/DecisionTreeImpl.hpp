@@ -38,11 +38,8 @@ struct DecisionTreeImpl
     }
 
     /// Clears up the memory
-    inline void clear()
-    {
-        aggregation_->clear();
-        aggregation_->clear_extras();
-    }
+    inline void clear() { aggregation_ = nullptr; }
+
     /// Trivial getter
     inline Float delta_t() const
     {
@@ -143,9 +140,9 @@ struct DecisionTreeImpl
 
     /// The aggregation is what connects the peripheral table
     /// to the population table and thus the targets.
-    std::shared_ptr<aggregations::AbstractAggregation> aggregation_;
+    std::shared_ptr<aggregations::AbstractFitAggregation> aggregation_;
 
-    /// Type of the aggregation used (needed for copy constructor)
+    /// Type of the aggregation used
     std::string aggregation_type_;
 
     /// Pointer to the structure that contains information

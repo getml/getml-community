@@ -10,16 +10,13 @@ void TreeFitter::find_best_trees(
     const size_t _num_trees,
     const decisiontrees::TableHolder &_table_holder,
     const std::vector<containers::Subfeatures> &_subfeatures,
+    const std::shared_ptr<optimizationcriteria::OptimizationCriterion> &_opt,
     const std::vector<Float> &_values,
     std::vector<containers::Matches> *_samples,
     std::vector<containers::MatchPtrs> *_match_containers,
-    optimizationcriteria::OptimizationCriterion *_optimization_criterion,
     std::list<decisiontrees::DecisionTree> *_candidate_trees,
     std::vector<decisiontrees::DecisionTree> *_trees )
 {
-    // -------------------------------------------------------------------
-    // Identify and store best tree
-
     assert_true( _candidate_trees->size() == _values.size() );
 
     debug_log( "Identifying best feature..." );
@@ -55,8 +52,6 @@ void TreeFitter::find_best_trees(
         }
 
     *_candidate_trees = std::list<decisiontrees::DecisionTree>();
-
-    // -------------------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
@@ -64,48 +59,35 @@ void TreeFitter::find_best_trees(
 void TreeFitter::fit(
     const decisiontrees::TableHolder &_table_holder,
     const std::vector<containers::Subfeatures> &_subfeatures,
+    const std::shared_ptr<aggregations::AggregationImpl> &_aggregation_impl,
+    const std::shared_ptr<optimizationcriteria::OptimizationCriterion> &_opt,
     std::vector<containers::Matches> *_samples,
     std::vector<containers::MatchPtrs> *_match_containers,
-    optimizationcriteria::OptimizationCriterion *_optimization_criterion,
     std::list<decisiontrees::DecisionTree> *_candidate_trees,
     std::vector<decisiontrees::DecisionTree> *_trees )
 {
-    // ----------------------------------------------------------------
-    // In this section we just "probe" - we don't allow the tree to
-    // grow to its full depth,  instead we just get an idea of what
-    // might work best.
-
     std::vector<Float> values;
-
-    debug_log( "Fitter: Probing.." );
 
     probe(
         _table_holder,
         _subfeatures,
+        _aggregation_impl,
+        _opt,
         _samples,
         _match_containers,
-        _optimization_criterion,
         _candidate_trees,
         &values );
-
-    // -------------------------------------------------------------
-    // Now that we have done the "probe", we identify which tree was
-    // best and store the maximizing tree.
-
-    debug_log( "Fitter: Storing best feature.." );
 
     find_best_trees(
         1,
         _table_holder,
         _subfeatures,
+        _opt,
         values,
         _samples,
         _match_containers,
-        _optimization_criterion,
         _candidate_trees,
         _trees );
-
-    // -------------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
@@ -114,9 +96,10 @@ void TreeFitter::fit_tree(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
     const containers::Subfeatures &_subfeatures,
+    const std::shared_ptr<aggregations::AggregationImpl> &_aggregation_impl,
+    const std::shared_ptr<optimizationcriteria::OptimizationCriterion> &_opt,
     std::vector<containers::Matches> *_samples,
     std::vector<containers::MatchPtrs> *_match_containers,
-    optimizationcriteria::OptimizationCriterion *_optimization_criterion,
     decisiontrees::DecisionTree *_tree )
 {
     assert_true( _match_containers->size() == _samples->size() );
@@ -126,82 +109,40 @@ void TreeFitter::fit_tree(
     assert_true(
         ix_perip_used < static_cast<Int>( _match_containers->size() ) );
 
-    auto &matches = ( *_samples )[ix_perip_used];
+    auto &matches = _samples->at( ix_perip_used );
 
-    auto &match_ptrs = ( *_match_containers )[ix_perip_used];
-
-    debug_log( "matches.size(): " + std::to_string( matches.size() ) );
-
-    debug_log( "match_ptrs.size(): " + std::to_string( match_ptrs.size() ) );
+    auto &match_ptrs = _match_containers->at( ix_perip_used );
 
     assert_true( matches.size() == match_ptrs.size() );
 
-    auto null_values_dist = std::distance( matches.begin(), matches.begin() );
+    const auto aggregation = _tree->make_aggregation(
+        _population,
+        _peripheral,
+        _subfeatures,
+        _aggregation_impl,
+        _opt,
+        &matches );
 
-    if ( _tree->aggregation_type() != "COUNT" )
+    assert_true( aggregation );
+
+    auto begin = match_ptrs.begin();
+
+    if ( _tree->aggregation_type() !=
+         aggregations::AggregationType::Count::type() )
         {
-            debug_log( "fit_tree: Creating value to be aggregated..." );
-
-            _tree->create_value_to_be_aggregated(
-                _population, _peripheral, _subfeatures );
-
-            debug_log( "fit_tree: Separating NULL values..." );
-
-            const auto null_value_separator =
-                _tree->separate_null_values( &matches );
-
-            debug_log( "fit_tree: Separated NULL values." );
-
-            null_values_dist =
-                std::distance( matches.begin(), null_value_separator );
-
-            debug_log(
-                "null_values_dist: " + std::to_string( null_values_dist ) );
-
-            _tree->set_samples_begin_end(
-                matches.data() + null_values_dist,
-                matches.data() + matches.size() );
-
-            if ( _tree->aggregation_needs_sorting() )
-                {
-                    debug_log( "Sorting samples..." );
-                    _tree->sort_matches(
-                        _peripheral, null_value_separator, matches.end() );
-                }
-
-            debug_log( "Separating NULL values..." );
-
-            _tree->separate_null_values( &match_ptrs );
-
-            debug_log( "Separated NULL values..." );
-
-            assert_true(
-                null_values_dist ==
-                std::distance(
-                    match_ptrs.begin(),
-                    _tree->separate_null_values( &match_ptrs ) ) );
+            begin = aggregation->separate_null_values( &match_ptrs );
         }
-    else
-        {
-            _tree->set_samples_begin_end(
-                ( *_samples )[ix_perip_used].data(),
-                ( *_samples )[ix_perip_used].data() +
-                    ( *_samples )[ix_perip_used].size() );
-        }
-
-    // ---------------------------------------------------------
-
-    debug_log( "fit: Fitting new candidate.." );
 
     _tree->fit(
         _population,
         _peripheral,
         _subfeatures,
-        match_ptrs.begin() + null_values_dist,
+        aggregation,
+        begin,
         match_ptrs.end(),
-        _optimization_criterion );
+        _opt.get() );
 
-    // ---------------------------------------------------------
+    aggregation->clear();
 }
 
 // ------------------------------------------------------------------------
@@ -209,9 +150,10 @@ void TreeFitter::fit_tree(
 void TreeFitter::probe(
     const decisiontrees::TableHolder &_table_holder,
     const std::vector<containers::Subfeatures> &_subfeatures,
+    const std::shared_ptr<aggregations::AggregationImpl> &_aggregation_impl,
+    const std::shared_ptr<optimizationcriteria::OptimizationCriterion> &_opt,
     std::vector<containers::Matches> *_samples,
     std::vector<containers::MatchPtrs> *_match_containers,
-    optimizationcriteria::OptimizationCriterion *_optimization_criterion,
     std::list<decisiontrees::DecisionTree> *_candidate_trees,
     std::vector<Float> *_values )
 {
@@ -220,24 +162,29 @@ void TreeFitter::probe(
             const auto ix = tree.ix_perip_used();
 
             assert_true( ix < _table_holder.main_tables_.size() );
+
             assert_true(
                 _subfeatures.size() == _table_holder.main_tables_.size() );
+
             assert_true(
                 _subfeatures.size() ==
                 _table_holder.peripheral_tables_.size() );
 
             fit_tree(
-                _table_holder.main_tables_[ix],
-                _table_holder.peripheral_tables_[ix],
-                _subfeatures[ix],
+                _table_holder.main_tables_.at( ix ),
+                _table_holder.peripheral_tables_.at( ix ),
+                _subfeatures.at( ix ),
+                _aggregation_impl,
+                _opt,
                 _samples,
                 _match_containers,
-                _optimization_criterion,
                 &tree );
 
-            _values->push_back( _optimization_criterion->value() );
+            assert_true( _opt );
 
-            _optimization_criterion->reset();
+            _values->push_back( _opt->value() );
+
+            _opt->reset();
         }
 }
 

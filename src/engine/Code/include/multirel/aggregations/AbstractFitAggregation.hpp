@@ -1,5 +1,5 @@
-#ifndef MULTIREL_AGGREGATIONS_ABSTRACTAGGREGATION_HPP_
-#define MULTIREL_AGGREGATIONS_ABSTRACTAGGREGATION_HPP_
+#ifndef MULTIREL_AGGREGATIONS_ABSTRACTFITAGGREGATION_HPP_
+#define MULTIREL_AGGREGATIONS_ABSTRACTFITAGGREGATION_HPP_
 
 namespace multirel
 {
@@ -7,12 +7,12 @@ namespace aggregations
 {
 // ----------------------------------------------------------------------------
 
-class AbstractAggregation
+class AbstractFitAggregation
 {
    public:
-    AbstractAggregation(){};
+    AbstractFitAggregation(){};
 
-    virtual ~AbstractAggregation() = default;
+    virtual ~AbstractFitAggregation() = default;
 
     // --------------------------------------
 
@@ -171,15 +171,6 @@ class AbstractAggregation
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _null_values_separator ) = 0;
 
-    /// Returns a string describing the type of the intermediate aggregation
-    /// needed
-    virtual std::string intermediate_type() const = 0;
-
-    /// Returns an intermediate aggregation representing this aggregation
-    virtual std::shared_ptr<optimizationcriteria::OptimizationCriterion>
-    make_intermediate(
-        std::shared_ptr<IntermediateAggregationImpl> _impl ) const = 0;
-
     /// Activates all matches between _separator and _match_container_end.
     virtual void deactivate_partition_from_above(
         containers::MatchPtrs::iterator _match_container_begin,
@@ -192,13 +183,6 @@ class AbstractAggregation
         containers::MatchPtrs::iterator _separator,
         containers::MatchPtrs::iterator _match_container_end ) = 0;
 
-    /// Returns the mode (enums::Mode::fit or enums::Mode::transform).
-    virtual enums::Mode mode() const = 0;
-
-    /// Whether the aggregation requires the samples to be sorted
-    /// by value_to_be_aggregated
-    virtual bool needs_sorting() const = 0;
-
     /// Initializes yhat_, yhat_committed_ and yhat_stored_ and all variables
     /// related to the aggregations with 0.0.
     virtual void reset() = 0;
@@ -207,58 +191,10 @@ class AbstractAggregation
     /// had been called
     virtual void revert_to_commit() = 0;
 
-    /// Separates the samples for which the value to be aggregated is NULL
-    virtual containers::Matches::iterator separate_null_values(
-        containers::Matches *_matches ) = 0;
-
     /// Separates the pointers to samples for which the value to be aggregated
     /// is NULL
     virtual containers::MatchPtrs::iterator separate_null_values(
-        containers::MatchPtrs *_match_ptrs ) = 0;
-
-    /// Trivial setter
-    virtual void set_aggregation_impl(
-        containers::Optional<AggregationImpl> *_aggregation_impl ) = 0;
-
-    /// Trivial setter
-    virtual void set_optimization_criterion(
-        optimizationcriteria::OptimizationCriterion
-            *_optimization_criterion ) = 0;
-
-    /// Sets the beginning and the end of the actual samples -
-    /// some aggregations like MIN or MAX needs this information.
-    virtual void set_samples_begin_end(
-        containers::Match *_samples_begin,
-        containers::Match *_samples_end ) = 0;
-
-    /// Trivial setter
-    virtual void set_value_to_be_aggregated(
-        const containers::Column<Float> _value_to_be_aggregated ) = 0;
-
-    /// Trivial setter
-    virtual void set_value_to_be_aggregated(
-        const containers::ColumnView<Float, std::map<Int, Int>>
-            _value_to_be_aggregated ) = 0;
-
-    /// Trivial setter
-    virtual void set_value_to_be_aggregated(
-        const containers::Column<Int> _value_to_be_aggregated ) = 0;
-
-    /// Trivial setter
-    virtual void set_value_to_be_compared(
-        const containers::Column<Float> _value_to_be_compared ) = 0;
-
-    /// Trivial setter
-    virtual void set_value_to_be_compared(
-        const containers::ColumnView<Float, std::vector<size_t>>
-            _value_to_be_compared ) = 0;
-
-    /// Sorts the samples by value to be aggregated (within the element in
-    /// population table)
-    virtual void sort_matches(
-        const containers::DataFrame &_peripheral,
-        containers::Matches::iterator _matches_begin,
-        containers::Matches::iterator _matches_end ) = 0;
+        containers::MatchPtrs *_match_ptrs ) const = 0;
 
     /// Returns a string describing the type of the aggregation
     virtual std::string type() const = 0;
@@ -277,4 +213,4 @@ class AbstractAggregation
 }  // namespace aggregations
 }  // namespace multirel
 
-#endif  // MULTIREL_AGGREGATIONS_ABSTRACTAGGREGATION_HPP_
+#endif  // MULTIREL_AGGREGATIONS_ABSTRACTFITAGGREGATION_HPP_

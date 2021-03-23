@@ -30,7 +30,6 @@ DecisionTree::DecisionTree(
     const size_t _ix_column_used,
     const descriptors::SameUnits &_same_units,
     std::mt19937 *_random_number_generator,
-    containers::Optional<aggregations::AggregationImpl> *_aggregation_impl,
     multithreading::Communicator *_comm )
     : impl_( _tree_hyperparameters )
 {
@@ -46,15 +45,11 @@ DecisionTree::DecisionTree(
 
     impl_.aggregation_type_ = _agg;
 
-    aggregation_ptr() = make_aggregation( enums::Mode::fit );
-
     impl_.tree_hyperparameters_ = _tree_hyperparameters;
 
     impl_.comm_ = _comm;
 
     impl()->random_number_generator_ = _random_number_generator;
-
-    set_aggregation_impl( _aggregation_impl );
 }
 
 // ----------------------------------------------------------------------------
@@ -68,7 +63,7 @@ DecisionTree::DecisionTree( const DecisionTree &_other )
 
     assert_true( _other.impl_.aggregation_type_ != "" );
 
-    aggregation_ptr() = _other.make_aggregation( enums::Mode::fit );
+    // aggregation_ptr() = _other.make_aggregation( enums::Mode::fit );
 
     if ( root() )
         {
@@ -97,6 +92,7 @@ void DecisionTree::fit(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
     const containers::Subfeatures &_subfeatures,
+    const std::shared_ptr<aggregations::AbstractFitAggregation> &_aggregation,
     containers::MatchPtrs::iterator _match_container_begin,
     containers::MatchPtrs::iterator _match_container_end,
     optimizationcriteria::OptimizationCriterion *_optimization_criterion )
@@ -111,7 +107,11 @@ void DecisionTree::fit(
 
     // ------------------------------------------------------------
 
-    debug_log( "fit: Preparing new candidate..." );
+    assert_true( _aggregation );
+
+    impl()->aggregation_ = _aggregation;
+
+    impl()->optimization_criterion_ = _optimization_criterion;
 
     root().reset( new DecisionTreeNode(
         true,   // _is_activated
@@ -119,15 +119,9 @@ void DecisionTree::fit(
         impl()  // _tree
         ) );
 
-    aggregation()->reset();
-
-    impl()->optimization_criterion_ = _optimization_criterion;
-
-    aggregation()->set_optimization_criterion( optimization_criterion() );
+    _aggregation->reset();
 
     // ------------------------------------------------------------
-
-    debug_log( "fit: Trying conditions..." );
 
     root()->fit_as_root(
         _population,
@@ -169,7 +163,7 @@ void DecisionTree::from_json_obj( const Poco::JSON::Object &_json_obj )
 
     impl_.aggregation_type_ = agg;
 
-    aggregation_ptr() = make_aggregation( enums::Mode::fit );
+    // aggregation_ptr() = make_aggregation( enums::Mode::fit );
 
     // -----------------------------------
 
@@ -182,6 +176,76 @@ void DecisionTree::from_json_obj( const Poco::JSON::Object &_json_obj )
     root()->from_json_obj( *JSON::get_object( _json_obj, "conditions_" ) );
 
     // -----------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+inline std::shared_ptr<optimizationcriteria::OptimizationCriterion>
+DecisionTree::make_intermediate(
+    std::shared_ptr<aggregations::IntermediateAggregationImpl> _impl ) const
+{
+    // --------------------------------------------------
+
+    const bool avg_intermediate =
+        aggregation_type() == aggregations::AggregationType::Avg::type() ||
+        aggregation_type() == aggregations::AggregationType::Max::type() ||
+        aggregation_type() == aggregations::AggregationType::Median::type() ||
+        aggregation_type() == aggregations::AggregationType::Min::type();
+
+    const bool no_intermediate =
+        aggregation_type() == aggregations::AggregationType::Count::type() ||
+        aggregation_type() ==
+            aggregations::AggregationType::CountDistinct::type() ||
+        aggregation_type() ==
+            aggregations::AggregationType::CountMinusCountDistinct::type();
+
+    assert_true( !no_intermediate );
+
+    // --------------------------------------------------
+
+    if ( avg_intermediate )
+        {
+            return std::make_shared<aggregations::IntermediateAggregation<
+                aggregations::AggregationType::Avg>>( _impl );
+        }
+
+    // --------------------------------------------------
+
+    if ( aggregation_type() == aggregations::AggregationType::Stddev::type() )
+        {
+            return std::make_shared<aggregations::IntermediateAggregation<
+                aggregations::AggregationType::Stddev>>( _impl );
+        }
+
+    // --------------------------------------------------
+
+    if ( aggregation_type() == aggregations::AggregationType::Skewness::type() )
+        {
+            return std::make_shared<aggregations::IntermediateAggregation<
+                aggregations::AggregationType::Skewness>>( _impl );
+        }
+
+    // --------------------------------------------------
+
+    if ( aggregation_type() == aggregations::AggregationType::Sum::type() )
+        {
+            return std::make_shared<aggregations::IntermediateAggregation<
+                aggregations::AggregationType::Sum>>( _impl );
+        }
+
+    // --------------------------------------------------
+
+    if ( aggregation_type() == aggregations::AggregationType::Var::type() )
+        {
+            return std::make_shared<aggregations::IntermediateAggregation<
+                aggregations::AggregationType::Var>>( _impl );
+        }
+
+    // --------------------------------------------------
+
+    assert_msg( false, "Unknown aggregation type: " + aggregation_type() );
+
+    return std::shared_ptr<optimizationcriteria::OptimizationCriterion>();
 }
 
 // ----------------------------------------------------------------------------
@@ -260,7 +324,7 @@ Poco::JSON::Object DecisionTree::to_json_obj() const
 
     // -----------------------------------
 
-    obj.set( "aggregation_", aggregation()->type() );
+    obj.set( "aggregation_", aggregation_type() );
 
     obj.set( "column_", column_to_be_aggregated().to_json_obj() );
 
@@ -411,27 +475,32 @@ std::vector<Float> DecisionTree::transform(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
     const containers::Subfeatures &_subfeatures,
-    const bool _use_timestamps,
-    aggregations::AbstractAggregation *_aggregation ) const
+    const bool _use_timestamps ) const
 {
     // ------------------------------------------------------
-    // Prepare the aggregation
 
-    _aggregation->reset();
+    const auto aggregation =
+        aggregations::TransformAggregationParser::parse_aggregation(
+            impl()->aggregation_type_,
+            same_units_discrete(),
+            same_units_numerical(),
+            column_to_be_aggregated(),
+            _population,
+            _peripheral,
+            _subfeatures );
 
-    _aggregation->set_optimization_criterion( nullptr );
+    assert_true( aggregation );
 
     // ------------------------------------------------------
-    // This is put in a loop to avoid the sample containers
-    // taking up too much memory.
+
+    std::vector<Float> yhat( _population.nrows() );
+
+    // ------------------------------------------------------
 
     for ( size_t ix_x_popul = 0; ix_x_popul < _population.nrows();
           ++ix_x_popul )
         {
             // ------------------------------------------------------
-            // Create matches and match pointers.
-
-            debug_log( "transform: Create sample containers..." );
 
             containers::Matches matches;
 
@@ -446,76 +515,54 @@ std::vector<Float> DecisionTree::transform(
 
             // ------------------------------------------------------
 
-            create_value_to_be_aggregated(
-                _population, _peripheral, _subfeatures, _aggregation );
+            size_t skip = 0;
 
-            // ------------------------------------------------------
-            // Separate null values, tell the aggregation where the samples
-            // begin and end and sort the samples, if necessary
-
-            debug_log( "transform: Set begin, end..." );
-
-            auto null_values_dist =
-                std::distance( matches.begin(), matches.begin() );
-
-            if ( aggregation_type() != "COUNT" )
+            if ( aggregation_type() !=
+                 aggregations::AggregationType::Count::type() )
                 {
-                    auto null_values_separator =
-                        _aggregation->separate_null_values( &matches );
+                    const auto null_values_separator =
+                        aggregation->separate_null_values( &match_ptrs );
 
-                    null_values_dist =
-                        std::distance( matches.begin(), null_values_separator );
+                    assert_true( null_values_separator >= match_ptrs.begin() );
 
-                    _aggregation->set_samples_begin_end(
-                        matches.data() + null_values_dist,
-                        matches.data() + matches.size() );
-
-                    if ( _aggregation->needs_sorting() )
-                        {
-                            _aggregation->sort_matches(
-                                _peripheral,
-                                null_values_separator,
-                                matches.end() );
-                        }
-
-                    // Because keep on generating matches and match_container,
-                    // we do not have to explicitly sort the sample containers!
-                }
-            else
-                {
-                    _aggregation->set_samples_begin_end(
-                        matches.data(), matches.data() + matches.size() );
+                    skip = static_cast<size_t>( std::distance(
+                        match_ptrs.begin(), null_values_separator ) );
                 }
 
             // ------------------------------------------------------
-            // Do the actual transformation
 
-            debug_log( "transform: Do actual transformation..." );
+            const auto is_deactivated =
+                [this, _population, _peripheral, _subfeatures](
+                    containers::Match *_m ) -> bool {
+                return !root()->transform(
+                    _population, _peripheral, _subfeatures, _m );
+            };
 
-            root()->transform(
-                _population,
-                _peripheral,
-                _subfeatures,
-                match_ptrs.begin() + null_values_dist,
-                match_ptrs.end(),
-                _aggregation );
+            const auto deactivated_separator = std::partition(
+                match_ptrs.begin() + skip, match_ptrs.end(), is_deactivated );
+
+            assert_true( deactivated_separator >= match_ptrs.begin() );
+
+            skip = static_cast<size_t>(
+                std::distance( match_ptrs.begin(), deactivated_separator ) );
 
             // ------------------------------------------------------
-            // Some aggregations, such as min and max contain additional
-            // containers. If we do not clear them, they will use up too
-            // much memory. For other aggregations, this does nothing at
-            // all.
 
-            debug_log( "transform: Clear extras..." );
+            const auto time_stamp =
+                _peripheral.num_time_stamps() > 0
+                    ? _peripheral.time_stamp_col()
+                    : std::optional<containers::Column<Float>>();
 
-            _aggregation->clear_extras();
+            yhat[ix_x_popul] =
+                aggregation->aggregate( match_ptrs, skip, time_stamp );
+
+            if ( std::isnan( yhat[ix_x_popul] ) )
+                {
+                    yhat[ix_x_popul] = 0.0;
+                }
 
             // ------------------------------------------------------
         }
-
-    // ------------------------------------------------------
-
-    auto yhat = _aggregation->yhat();
 
     // ------------------------------------------------------
 
