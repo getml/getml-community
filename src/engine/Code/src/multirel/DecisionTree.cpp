@@ -482,12 +482,12 @@ std::vector<Float> DecisionTree::transform(
     const auto aggregation =
         aggregations::TransformAggregationParser::parse_aggregation(
             impl()->aggregation_type_,
-            same_units_discrete(),
-            same_units_numerical(),
-            column_to_be_aggregated(),
-            _population,
-            _peripheral,
-            _subfeatures );
+            {.column_to_be_aggregated = column_to_be_aggregated(),
+             .population = _population,
+             .peripheral = _peripheral,
+             .same_units_discrete = same_units_discrete(),
+             .same_units_numerical = same_units_numerical(),
+             .subfeatures = _subfeatures} );
 
     assert_true( aggregation );
 

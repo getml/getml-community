@@ -142,15 +142,15 @@ class DecisionTree
     {
         return aggregations::FitAggregationParser::parse_aggregation(
             aggregation_type(),
-            same_units_discrete(),
-            same_units_numerical(),
-            column_to_be_aggregated(),
-            _population,
-            _peripheral,
-            _subfeatures,
-            _aggregation_impl,
-            _optimization_criterion,
-            _matches );
+            {.aggregation_impl = _aggregation_impl,
+             .column_to_be_aggregated = column_to_be_aggregated(),
+             .matches = _matches,
+             .optimization_criterion = _optimization_criterion,
+             .population = _population,
+             .peripheral = _peripheral,
+             .same_units_discrete = same_units_discrete(),
+             .same_units_numerical = same_units_numerical(),
+             .subfeatures = _subfeatures} );
     }
 
     /// Reverses to the status since the last time we have

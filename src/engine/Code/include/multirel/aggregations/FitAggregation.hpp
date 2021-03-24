@@ -11,50 +11,42 @@ template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 class FitAggregation : public AbstractFitAggregation
 {
    public:
-    FitAggregation(
-        const descriptors::SameUnitsContainer &_same_units_discrete,
-        const descriptors::SameUnitsContainer &_same_units_numerical,
-        const descriptors::ColumnToBeAggregated &_column_to_be_aggregated,
-        const containers::DataFrameView &_population,
-        const containers::DataFrame &_peripheral,
-        const containers::Subfeatures &_subfeatures,
-        const std::shared_ptr<AggregationImpl> &_aggregation_impl,
-        const std::shared_ptr<optimizationcriteria::OptimizationCriterion>
-            &_optimization_criterion,
-        containers::Matches *_matches )
+    FitAggregation( const FitAggregationParams &_params )
         : AbstractFitAggregation(),
-          aggregation_impl_( _aggregation_impl ),
-          optimization_criterion_( _optimization_criterion ),
+          aggregation_impl_( _params.aggregation_impl ),
+          optimization_criterion_( _params.optimization_criterion ),
           value_container_(
               ValueContainerCreator<data_used_, is_population_>::create(
-                  _same_units_discrete,
-                  _same_units_numerical,
-                  _column_to_be_aggregated,
-                  _population,
-                  _peripheral,
-                  _subfeatures ) )
+                  _params.same_units_discrete,
+                  _params.same_units_numerical,
+                  _params.column_to_be_aggregated,
+                  _params.population,
+                  _params.peripheral,
+                  _params.subfeatures ) )
     {
         assert_true( aggregation_impl_ );
 
         assert_true( optimization_criterion_ );
 
         const auto null_value_separator =
-            separate_null_values_for_matches( _matches );
+            separate_null_values_for_matches( _params.matches );
 
         if constexpr ( needs_sorting_ )
             {
                 sort_matches(
-                    _peripheral, null_value_separator, _matches->end() );
+                    _params.peripheral,
+                    null_value_separator,
+                    _params.matches->end() );
             }
 
         const auto dist =
-            std::distance( _matches->begin(), null_value_separator );
+            std::distance( _params.matches->begin(), null_value_separator );
 
         assert_true( dist >= 0 );
 
-        samples_begin_ = _matches->data() + dist;
+        samples_begin_ = _params.matches->data() + dist;
 
-        samples_end_ = _matches->data() + _matches->size();
+        samples_end_ = _params.matches->data() + _params.matches->size();
     };
 
     ~FitAggregation() = default;

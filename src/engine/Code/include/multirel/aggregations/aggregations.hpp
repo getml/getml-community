@@ -32,6 +32,8 @@
 
 #include "multirel/aggregations/AbstractFitAggregation.hpp"
 #include "multirel/aggregations/AbstractTransformAggregation.hpp"
+#include "multirel/aggregations/FitAggregationParams.hpp"
+#include "multirel/aggregations/TransformAggregationParams.hpp"
 
 #include "multirel/aggregations/FitAggregation.hpp"
 #include "multirel/aggregations/TransformAggregation.hpp"
