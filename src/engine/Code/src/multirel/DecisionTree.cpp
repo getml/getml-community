@@ -119,8 +119,6 @@ void DecisionTree::fit(
         impl()  // _tree
         ) );
 
-    _aggregation->reset();
-
     // ------------------------------------------------------------
 
     root()->fit_as_root(

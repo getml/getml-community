@@ -47,6 +47,8 @@ class FitAggregation : public AbstractFitAggregation
         samples_begin_ = _params.matches->data() + dist;
 
         samples_end_ = _params.matches->data() + _params.matches->size();
+
+        reset();
     };
 
     ~FitAggregation() = default;
@@ -222,10 +224,6 @@ class FitAggregation : public AbstractFitAggregation
     void init_optimization_criterion(
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _match_container_end );
-
-    /// Resets yhat_, yhat_committed_ and yhat_stored_ and all variables
-    /// related to the aggregations with 0.0.
-    void reset() final;
 
     /// Reinstates the status of yhat the last time commit()
     /// had been called.
@@ -1259,6 +1257,10 @@ class FitAggregation : public AbstractFitAggregation
     // --------------------------------------
 
    private:
+    /// Resets yhat_, yhat_committed_ and yhat_stored_ and all variables
+    /// related to the aggregations with 0.0.
+    void reset();
+
     /// Separates the matches for which the value to be aggregated is NULL
     containers::Matches::iterator separate_null_values_for_matches(
         containers::Matches *_matches ) const;

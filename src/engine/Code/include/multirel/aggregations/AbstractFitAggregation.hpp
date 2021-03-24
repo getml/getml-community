@@ -183,10 +183,6 @@ class AbstractFitAggregation
         containers::MatchPtrs::iterator _separator,
         containers::MatchPtrs::iterator _match_container_end ) = 0;
 
-    /// Initializes yhat_, yhat_committed_ and yhat_stored_ and all variables
-    /// related to the aggregations with 0.0.
-    virtual void reset() = 0;
-
     /// Reinstates the status of yhat the last time commit()
     /// had been called
     virtual void revert_to_commit() = 0;
