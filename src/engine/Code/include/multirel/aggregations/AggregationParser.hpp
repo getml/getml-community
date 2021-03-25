@@ -14,7 +14,7 @@ class AggregationParser
     /// Returns the appropriate aggregation from the aggregation string and
     /// other information.
     static std::shared_ptr<BaseAggregationType> parse_aggregation(
-        const std::string& _aggregation, const ParamsType& _params );
+        const ParamsType& _params );
 
    private:
     /// Creates the aggregation.
@@ -54,7 +54,7 @@ class AggregationParser
     static std::shared_ptr<BaseAggregationType> make_aggregation(
         const ParamsType& _params )
     {
-        switch ( _params.column_to_be_aggregated.data_used )
+        switch ( _params.column_to_be_aggregated_.data_used )
             {
                 case enums::DataUsed::x_perip_numerical:
 
@@ -81,14 +81,14 @@ class AggregationParser
                 case enums::DataUsed::same_unit_numerical_ts:
                     {
                         const auto ix_column_used =
-                            _params.column_to_be_aggregated.ix_column_used;
+                            _params.column_to_be_aggregated_.ix_column_used;
 
                         assert_true(
                             ix_column_used <
-                            _params.same_units_numerical.size() );
+                            _params.same_units_numerical_.size() );
 
                         const auto data_used2 =
-                            std::get<1>( _params.same_units_numerical.at(
+                            std::get<1>( _params.same_units_numerical_.at(
                                              ix_column_used ) )
                                 .data_used;
 
@@ -118,14 +118,14 @@ class AggregationParser
                 case enums::DataUsed::same_unit_discrete_ts:
                     {
                         const auto ix_column_used =
-                            _params.column_to_be_aggregated.ix_column_used;
+                            _params.column_to_be_aggregated_.ix_column_used;
 
                         assert_true(
                             ix_column_used <
-                            _params.same_units_discrete.size() );
+                            _params.same_units_discrete_.size() );
 
                         const enums::DataUsed data_used2 =
-                            std::get<1>( _params.same_units_discrete.at(
+                            std::get<1>( _params.same_units_discrete_.at(
                                              ix_column_used ) )
                                 .data_used;
 
@@ -187,17 +187,17 @@ class AggregationParser
 template <typename BaseAggregationType, typename ParamsType>
 std::shared_ptr<BaseAggregationType>
 AggregationParser<BaseAggregationType, ParamsType>::parse_aggregation(
-    const std::string& _aggregation, const ParamsType& _params )
+    const ParamsType& _params )
 {
-    if ( _aggregation == AggregationType::Avg::type() )
+    if ( _params.aggregation_type_ == AggregationType::Avg::type() )
         {
             return make_aggregation<AggregationType::Avg>( _params );
         }
 
-    if ( _aggregation == AggregationType::Count::type() )
+    if ( _params.aggregation_type_ == AggregationType::Count::type() )
         {
             assert_true(
-                _params.column_to_be_aggregated.data_used ==
+                _params.column_to_be_aggregated_.data_used ==
                 enums::DataUsed::not_applicable );
 
             return make_shared_ptr<
@@ -206,64 +206,65 @@ AggregationParser<BaseAggregationType, ParamsType>::parse_aggregation(
                 true>( _params );
         }
 
-    if ( _aggregation == AggregationType::CountDistinct::type() )
+    if ( _params.aggregation_type_ == AggregationType::CountDistinct::type() )
         {
             return make_aggregation<AggregationType::CountDistinct>( _params );
         }
 
-    if ( _aggregation == AggregationType::CountMinusCountDistinct::type() )
+    if ( _params.aggregation_type_ ==
+         AggregationType::CountMinusCountDistinct::type() )
         {
             return make_aggregation<AggregationType::CountMinusCountDistinct>(
                 _params );
         }
 
-    if ( _aggregation == AggregationType::First::type() )
+    if ( _params.aggregation_type_ == AggregationType::First::type() )
         {
             return make_aggregation<AggregationType::First>( _params );
         }
 
-    if ( _aggregation == AggregationType::Last::type() )
+    if ( _params.aggregation_type_ == AggregationType::Last::type() )
         {
             return make_aggregation<AggregationType::Last>( _params );
         }
 
-    if ( _aggregation == AggregationType::Max::type() )
+    if ( _params.aggregation_type_ == AggregationType::Max::type() )
         {
             return make_aggregation<AggregationType::Max>( _params );
         }
 
-    if ( _aggregation == AggregationType::Median::type() )
+    if ( _params.aggregation_type_ == AggregationType::Median::type() )
         {
             return make_aggregation<AggregationType::Median>( _params );
         }
 
-    if ( _aggregation == AggregationType::Min::type() )
+    if ( _params.aggregation_type_ == AggregationType::Min::type() )
         {
             return make_aggregation<AggregationType::Min>( _params );
         }
 
-    if ( _aggregation == AggregationType::Skewness::type() )
+    if ( _params.aggregation_type_ == AggregationType::Skewness::type() )
         {
             return make_aggregation<AggregationType::Skewness>( _params );
         }
 
-    if ( _aggregation == AggregationType::Stddev::type() )
+    if ( _params.aggregation_type_ == AggregationType::Stddev::type() )
         {
             return make_aggregation<AggregationType::Stddev>( _params );
         }
 
-    if ( _aggregation == AggregationType::Sum::type() )
+    if ( _params.aggregation_type_ == AggregationType::Sum::type() )
         {
             return make_aggregation<AggregationType::Sum>( _params );
         }
 
-    if ( _aggregation == AggregationType::Var::type() )
+    if ( _params.aggregation_type_ == AggregationType::Var::type() )
         {
             return make_aggregation<AggregationType::Var>( _params );
         }
 
     const auto warning_message =
-        "Aggregation of type '" + _aggregation + "' not known!";
+        "Aggregation of type '" + _params.aggregation_type_ + "' not known!";
 
     throw std::invalid_argument( warning_message );
 }

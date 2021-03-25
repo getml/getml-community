@@ -14,7 +14,6 @@ struct TransformAggregationParser
     /// This is a separate method to make sure that the aggregations are
     /// actually compiled in the aggregation module.
     static std::shared_ptr<AbstractTransformAggregation> parse_aggregation(
-        const std::string& _aggregation,
         const TransformAggregationParams& _params );
 };
 

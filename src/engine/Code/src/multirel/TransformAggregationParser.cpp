@@ -8,11 +8,11 @@ namespace aggregations
 
 std::shared_ptr<AbstractTransformAggregation>
 TransformAggregationParser::parse_aggregation(
-    const std::string& _aggregation, const TransformAggregationParams& _params )
+    const TransformAggregationParams& _params )
 {
     return AggregationParser<
         AbstractTransformAggregation,
-        TransformAggregationParams>::parse_aggregation( _aggregation, _params );
+        TransformAggregationParams>::parse_aggregation( _params );
 }
 
 // ----------------------------------------------------------------------------

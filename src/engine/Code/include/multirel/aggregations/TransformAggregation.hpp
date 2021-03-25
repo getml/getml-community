@@ -17,12 +17,12 @@ class TransformAggregation : public AbstractTransformAggregation
         : AbstractTransformAggregation(),
           value_container_(
               ValueContainerCreator<data_used_, is_population_>::create(
-                  _params.same_units_discrete,
-                  _params.same_units_numerical,
-                  _params.column_to_be_aggregated,
-                  _params.population,
-                  _params.peripheral,
-                  _params.subfeatures ) ){};
+                  _params.same_units_discrete_,
+                  _params.same_units_numerical_,
+                  _params.column_to_be_aggregated_,
+                  _params.population_,
+                  _params.peripheral_,
+                  _params.subfeatures_ ) ){};
 
     ~TransformAggregation() = default;
 

@@ -141,16 +141,16 @@ class DecisionTree
         containers::Matches *_matches ) const
     {
         return aggregations::FitAggregationParser::parse_aggregation(
-            aggregation_type(),
-            {.aggregation_impl = _aggregation_impl,
-             .column_to_be_aggregated = column_to_be_aggregated(),
-             .matches = _matches,
-             .optimization_criterion = _optimization_criterion,
-             .population = _population,
-             .peripheral = _peripheral,
-             .same_units_discrete = same_units_discrete(),
-             .same_units_numerical = same_units_numerical(),
-             .subfeatures = _subfeatures} );
+            {.aggregation_impl_ = _aggregation_impl,
+             .aggregation_type_ = aggregation_type(),
+             .column_to_be_aggregated_ = column_to_be_aggregated(),
+             .matches_ = *_matches,
+             .optimization_criterion_ = _optimization_criterion,
+             .population_ = _population,
+             .peripheral_ = _peripheral,
+             .same_units_discrete_ = same_units_discrete(),
+             .same_units_numerical_ = same_units_numerical(),
+             .subfeatures_ = _subfeatures} );
     }
 
     /// Reverses to the status since the last time we have

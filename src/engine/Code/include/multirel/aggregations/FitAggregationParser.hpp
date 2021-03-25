@@ -14,7 +14,7 @@ struct FitAggregationParser
     /// This is a separate method to make sure that the aggregations are
     /// actually compiled in the aggregation module.
     static std::shared_ptr<AbstractFitAggregation> parse_aggregation(
-        const std::string& _aggregation, const FitAggregationParams& _params );
+        const FitAggregationParams& _params );
 };
 
 // ----------------------------------------------------------------------------

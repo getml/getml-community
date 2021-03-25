@@ -7,11 +7,10 @@ namespace aggregations
 // ----------------------------------------------------------------------------
 
 std::shared_ptr<aggregations::AbstractFitAggregation>
-FitAggregationParser::parse_aggregation(
-    const std::string& _aggregation, const FitAggregationParams& _params )
+FitAggregationParser::parse_aggregation( const FitAggregationParams& _params )
 {
     return AggregationParser<AbstractFitAggregation, FitAggregationParams>::
-        parse_aggregation( _aggregation, _params );
+        parse_aggregation( _params );
 }
 
 // ----------------------------------------------------------------------------

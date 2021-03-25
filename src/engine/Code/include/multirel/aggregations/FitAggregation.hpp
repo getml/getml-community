@@ -13,40 +13,40 @@ class FitAggregation : public AbstractFitAggregation
    public:
     FitAggregation( const FitAggregationParams &_params )
         : AbstractFitAggregation(),
-          aggregation_impl_( _params.aggregation_impl ),
-          optimization_criterion_( _params.optimization_criterion ),
+          aggregation_impl_( _params.aggregation_impl_ ),
+          optimization_criterion_( _params.optimization_criterion_ ),
           value_container_(
               ValueContainerCreator<data_used_, is_population_>::create(
-                  _params.same_units_discrete,
-                  _params.same_units_numerical,
-                  _params.column_to_be_aggregated,
-                  _params.population,
-                  _params.peripheral,
-                  _params.subfeatures ) )
+                  _params.same_units_discrete_,
+                  _params.same_units_numerical_,
+                  _params.column_to_be_aggregated_,
+                  _params.population_,
+                  _params.peripheral_,
+                  _params.subfeatures_ ) )
     {
         assert_true( aggregation_impl_ );
 
         assert_true( optimization_criterion_ );
 
         const auto null_value_separator =
-            separate_null_values_for_matches( _params.matches );
+            separate_null_values_for_matches( &_params.matches_ );
 
         if constexpr ( needs_sorting_ )
             {
                 sort_matches(
-                    _params.peripheral,
+                    _params.peripheral_,
                     null_value_separator,
-                    _params.matches->end() );
+                    _params.matches_.end() );
             }
 
         const auto dist =
-            std::distance( _params.matches->begin(), null_value_separator );
+            std::distance( _params.matches_.begin(), null_value_separator );
 
         assert_true( dist >= 0 );
 
-        samples_begin_ = _params.matches->data() + dist;
+        samples_begin_ = _params.matches_.data() + dist;
 
-        samples_end_ = _params.matches->data() + _params.matches->size();
+        samples_end_ = _params.matches_.data() + _params.matches_.size();
 
         reset();
     };
