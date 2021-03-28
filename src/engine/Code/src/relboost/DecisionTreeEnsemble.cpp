@@ -115,6 +115,15 @@ DecisionTreeEnsemble::DecisionTreeEnsemble( const Poco::JSON::Object &_obj )
 
     // ----------------------------------------
 
+    if ( _obj.has( "fast_prop_container_" ) )
+        {
+            impl().fast_prop_container_ =
+                std::make_shared<fastprop::subfeatures::FastPropContainer>(
+                    *JSON::get_object( _obj, "fast_prop_container_" ) );
+        }
+
+    // ----------------------------------------
+
     if ( _obj.has( "mappings_" ) )
         {
             impl().mappings_ = std::make_shared<helpers::MappingContainer>(
@@ -446,8 +455,17 @@ void DecisionTreeEnsemble::fit(
 
     const auto mapped = handle_mappings( population, peripheral, word_indices );
 
-    fit_spawn_threads(
+    const auto feature_container = fit_propositionalization(
         population, peripheral, row_indices, word_indices, mapped, _logger );
+
+    fit_spawn_threads(
+        population,
+        peripheral,
+        row_indices,
+        word_indices,
+        mapped,
+        feature_container,
+        _logger );
 
     clean_up();
 }
@@ -461,6 +479,8 @@ DecisionTreeEnsemble::fit_candidate_features(
     const std::vector<containers::Subfeatures> &_subfeatures,
     const std::shared_ptr<const std::vector<Float>> &_sample_weights ) const
 {
+    assert_true( _table_holder );
+
     std::vector<
         std::tuple<decisiontrees::DecisionTree, Float, std::vector<Float>>>
         candidates;
@@ -471,13 +491,20 @@ DecisionTreeEnsemble::fit_candidate_features(
         {
             // ------------------------------------------------------------------------
 
+            if ( _table_holder->propositionalization_.at( ix_table_used ) )
+                {
+                    continue;
+                }
+
+            // ------------------------------------------------------------------------
+
             const auto &output_table =
-                _table_holder->main_tables_[ix_table_used];
+                _table_holder->main_tables_.at( ix_table_used );
 
             const auto input_table = std::make_optional<containers::DataFrame>(
-                _table_holder->peripheral_tables_[ix_table_used] );
+                _table_holder->peripheral_tables_.at( ix_table_used ) );
 
-            const auto &subfeatures = _subfeatures[ix_table_used];
+            const auto &subfeatures = _subfeatures.at( ix_table_used );
 
             // ------------------------------------------------------------------------
 
@@ -596,12 +623,50 @@ void DecisionTreeEnsemble::fit_new_features(
 
 // ----------------------------------------------------------------------------
 
+std::optional<const helpers::FeatureContainer>
+DecisionTreeEnsemble::fit_propositionalization(
+    const containers::DataFrame &_population,
+    const std::vector<containers::DataFrame> &_peripheral,
+    const helpers::RowIndexContainer &_row_indices,
+    const helpers::WordIndexContainer &_word_indices,
+    const std::optional<const helpers::MappedContainer> &_mapped,
+    const std::shared_ptr<const logging::AbstractLogger> _logger )
+{
+    if ( !hyperparameters().propositionalization_ )
+        {
+            return std::nullopt;
+        }
+
+    assert_true( _mapped );
+
+    using MakerParams = fastprop::subfeatures::MakerParams;
+
+    const auto [fast_prop_container, feature_container] =
+        fastprop::subfeatures::Maker::fit( MakerParams{
+            .hyperparameters_ = hyperparameters().propositionalization_,
+            .logger_ = _logger,
+            .mapped_ = *_mapped,
+            .peripheral_ = _peripheral,
+            .peripheral_names_ = impl().peripheral_,
+            .placeholder_ = placeholder(),
+            .population_ = _population,
+            .row_index_container_ = _row_indices,
+            .word_index_container_ = _word_indices } );
+
+    impl().fast_prop_container_ = fast_prop_container;
+
+    return feature_container;
+}
+
+// ----------------------------------------------------------------------------
+
 void DecisionTreeEnsemble::fit_spawn_threads(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral,
     const helpers::RowIndexContainer &_row_indices,
     const helpers::WordIndexContainer &_word_indices,
     const std::optional<const helpers::MappedContainer> &_mapped,
+    const std::optional<const helpers::FeatureContainer> &_feature_container,
     const std::shared_ptr<const logging::AbstractLogger> _logger )
 {
     // ------------------------------------------------------
@@ -631,33 +696,35 @@ void DecisionTreeEnsemble::fit_spawn_threads(
         {
             threads.push_back( std::thread(
                 Threadutils::fit_ensemble,
-                i + 1,
-                thread_nums,
-                _population,
-                _peripheral,
-                _row_indices,
-                _word_indices,
-                _mapped,
-                std::shared_ptr<const logging::AbstractLogger>(),
-                &comm,
-                &ensembles[i] ) );
+                ThreadutilsFitParams{
+                    .comm_ = comm,
+                    .ensemble_ = ensembles.at( i ),
+                    .feature_container_ = _feature_container,
+                    .mapped_ = _mapped,
+                    .peripheral_ = _peripheral,
+                    .population_ = _population,
+                    .row_indices_ = _row_indices,
+                    .this_thread_num_ = i + 1,
+                    .thread_nums_ = thread_nums,
+                    .word_indices_ = _word_indices } ) );
         }
 
     // ------------------------------------------------------
 
     try
         {
-            Threadutils::fit_ensemble(
-                0,
-                thread_nums,
-                _population,
-                _peripheral,
-                _row_indices,
-                _word_indices,
-                _mapped,
-                _logger,
-                &comm,
-                this );
+            Threadutils::fit_ensemble( ThreadutilsFitParams{
+                .comm_ = comm,
+                .ensemble_ = *this,
+                .feature_container_ = _feature_container,
+                .logger_ = _logger,
+                .mapped_ = _mapped,
+                .peripheral_ = _peripheral,
+                .population_ = _population,
+                .row_indices_ = _row_indices,
+                .this_thread_num_ = 0,
+                .thread_nums_ = thread_nums,
+                .word_indices_ = _word_indices } );
         }
     catch ( std::exception &e )
         {
@@ -710,32 +777,18 @@ DecisionTreeEnsemble::init(
     const std::vector<containers::DataFrame> &_peripheral,
     const helpers::RowIndexContainer &_row_indices,
     const helpers::WordIndexContainer &_word_indices,
-    const std::optional<const helpers::MappedContainer> &_mapped )
+    const std::optional<const helpers::MappedContainer> &_mapped,
+    const std::optional<const helpers::FeatureContainer> &_feature_container )
 {
     // ------------------------------------------------------------------------
 
-    if ( hyperparameters().target_num_ < 0 )
-        {
-            throw std::runtime_error( "target_num cannot be negative!" );
-        }
-
-    const auto target_num =
-        static_cast<size_t>( hyperparameters().target_num_ );
-
-    if ( _population.num_targets() <= target_num )
-        {
-            throw std::runtime_error(
-                "target_num out of bounds! The target_num was " +
-                std::to_string( target_num ) +
-                ", but the population table only contains " +
-                std::to_string( _population.num_targets() ) + " targets!" );
-        }
-
     targets().resize( _population.nrows() );
+
+    assert_true( _population.num_targets() == 1 );
 
     for ( size_t i = 0; i < _population.nrows(); ++i )
         {
-            targets()[i] = _population.target( i, target_num );
+            targets()[i] = _population.target( i, 0 );
         }
 
     // ------------------------------------------------------------------------
@@ -760,7 +813,8 @@ DecisionTreeEnsemble::init(
         peripheral(),
         _row_indices,
         _word_indices,
-        _mapped );
+        _mapped,
+        _feature_container );
 
     // ------------------------------------------------------------------------
 
@@ -1089,6 +1143,11 @@ containers::Features DecisionTreeEnsemble::transform(
 
     // -------------------------------------------------------
 
+    const auto feature_container = transform_propositionalization(
+        population_table, peripheral_tables, word_indices, mapped, _logger );
+
+    // -------------------------------------------------------
+
     const auto init_feature = [&_population]( const size_t ix ) {
         return std::make_shared<std::vector<Float>>( _population.nrows() );
     };
@@ -1106,6 +1165,7 @@ containers::Features DecisionTreeEnsemble::transform(
         index,
         word_indices,
         mapped,
+        feature_container,
         _logger,
         &features );
 
@@ -1136,9 +1196,47 @@ std::vector<Float> DecisionTreeEnsemble::transform(
     assert_true( peripheral_used < _subfeatures.size() );
 
     return decision_tree.transform(
-        _table_holder.main_tables_[peripheral_used],
-        _table_holder.peripheral_tables_[peripheral_used],
-        _subfeatures[peripheral_used] );
+        _table_holder.main_tables_.at( peripheral_used ),
+        _table_holder.peripheral_tables_.at( peripheral_used ),
+        _subfeatures.at( peripheral_used ) );
+}
+
+// ----------------------------------------------------------------------------
+
+std::optional<const helpers::FeatureContainer>
+DecisionTreeEnsemble::transform_propositionalization(
+    const containers::DataFrame &_population,
+    const std::vector<containers::DataFrame> &_peripheral,
+    const std::optional<const helpers::WordIndexContainer> &_word_indices,
+    const std::optional<const helpers::MappedContainer> &_mapped,
+    const std::shared_ptr<const logging::AbstractLogger> _logger ) const
+{
+    if ( !hyperparameters().propositionalization_ )
+        {
+            return std::nullopt;
+        }
+
+    assert_true( _mapped );
+
+    assert_true( _word_indices );
+
+    assert_true( impl().fast_prop_container_ );
+
+    using MakerParams = fastprop::subfeatures::MakerParams;
+
+    const auto feature_container =
+        fastprop::subfeatures::Maker::transform( MakerParams{
+            .fast_prop_container_ = impl().fast_prop_container_,
+            .hyperparameters_ = hyperparameters().propositionalization_,
+            .logger_ = _logger,
+            .mapped_ = _mapped.value(),
+            .peripheral_ = _peripheral,
+            .peripheral_names_ = impl().peripheral_,
+            .placeholder_ = placeholder(),
+            .population_ = _population,
+            .word_index_container_ = _word_indices.value() } );
+
+    return feature_container;
 }
 
 // ----------------------------------------------------------------------------
@@ -1149,6 +1247,7 @@ void DecisionTreeEnsemble::transform_spawn_threads(
     const std::vector<size_t> &_index,
     const std::optional<helpers::WordIndexContainer> &_word_indices,
     const std::optional<const helpers::MappedContainer> &_mapped,
+    const std::optional<const helpers::FeatureContainer> &_feature_container,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     containers::Features *_features ) const
 {
@@ -1168,35 +1267,37 @@ void DecisionTreeEnsemble::transform_spawn_threads(
         {
             threads.push_back( std::thread(
                 Threadutils::transform_ensemble,
-                i + 1,
-                thread_nums,
-                _population,
-                _peripheral,
-                _word_indices,
-                _mapped,
-                _index,
-                std::shared_ptr<const logging::AbstractLogger>(),
-                *this,
-                &comm,
-                _features ) );
+                ThreadutilsTransformParams{
+                    .comm_ = comm,
+                    .ensemble_ = *this,
+                    .feature_container_ = _feature_container,
+                    .features_ = *_features,
+                    .index_ = _index,
+                    .mapped_ = _mapped,
+                    .peripheral_ = _peripheral,
+                    .population_ = _population,
+                    .this_thread_num_ = i + 1,
+                    .thread_nums_ = thread_nums,
+                    .word_indices_ = _word_indices } ) );
         }
 
     // ------------------------------------------------------
 
     try
         {
-            Threadutils::transform_ensemble(
-                0,
-                thread_nums,
-                _population,
-                _peripheral,
-                _word_indices,
-                _mapped,
-                _index,
-                _logger,
-                *this,
-                &comm,
-                _features );
+            Threadutils::transform_ensemble( ThreadutilsTransformParams{
+                .comm_ = comm,
+                .ensemble_ = *this,
+                .feature_container_ = _feature_container,
+                .features_ = *_features,
+                .index_ = _index,
+                .logger_ = _logger,
+                .mapped_ = _mapped,
+                .peripheral_ = _peripheral,
+                .population_ = _population,
+                .this_thread_num_ = 0,
+                .thread_nums_ = thread_nums,
+                .word_indices_ = _word_indices } );
         }
     catch ( std::exception &e )
         {
@@ -1305,6 +1406,15 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj(
     if ( impl().mappings_ )
         {
             obj.set( "mappings_", impl().mappings_->to_json_obj() );
+        }
+
+    // ----------------------------------------
+
+    if ( impl().fast_prop_container_ )
+        {
+            obj.set(
+                "fast_prop_container_",
+                impl().fast_prop_container_->to_json_obj() );
         }
 
     // ----------------------------------------

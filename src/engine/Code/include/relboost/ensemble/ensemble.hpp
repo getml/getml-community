@@ -22,6 +22,8 @@
 
 #include "strings/strings.hpp"
 
+#include "fastprop/subfeatures/subfeatures.hpp"
+
 #include "relboost/Float.hpp"
 #include "relboost/Int.hpp"
 
@@ -44,6 +46,9 @@
 #include "relboost/ensemble/DecisionTreeEnsemble.hpp"
 
 #include "relboost/ensemble/SubtreeHelper.hpp"
+
+#include "relboost/ensemble/ThreadutilsFitParams.hpp"
+#include "relboost/ensemble/ThreadutilsTransformParams.hpp"
 
 #include "relboost/ensemble/Threadutils.hpp"
 

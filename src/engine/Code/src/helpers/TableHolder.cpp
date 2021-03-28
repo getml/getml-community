@@ -11,13 +11,15 @@ TableHolder::TableHolder(
     const std::vector<std::string>& _peripheral_names,
     const std::optional<RowIndexContainer>& _row_index_container,
     const std::optional<WordIndexContainer>& _word_index_container,
-    const std::optional<const MappedContainer>& _mapped )
+    const std::optional<const MappedContainer>& _mapped,
+    const std::optional<const FeatureContainer>& _feature_container )
     : main_tables_( TableHolder::parse_main_tables(
           _placeholder,
           _population,
           _peripheral,
           _row_index_container,
-          _word_index_container ) ),
+          _word_index_container,
+          _feature_container ) ),
       peripheral_tables_( TableHolder::parse_peripheral_tables(
           _placeholder,
           _population,
@@ -25,7 +27,10 @@ TableHolder::TableHolder(
           _peripheral_names,
           _row_index_container,
           _word_index_container,
-          _mapped ) ),
+          _mapped,
+          _feature_container ) ),
+      propositionalization_( TableHolder::parse_propositionalization(
+          _placeholder, main_tables_.size() ) ),
       subtables_( TableHolder::parse_subtables(
           _placeholder,
           _population,
@@ -36,6 +41,7 @@ TableHolder::TableHolder(
           _mapped ) )
 {
     assert_true( main_tables_.size() == peripheral_tables_.size() );
+    assert_true( main_tables_.size() == propositionalization_.size() );
     assert_true( main_tables_.size() == subtables_.size() );
 }
 
@@ -108,7 +114,8 @@ std::vector<DataFrameView> TableHolder::parse_main_tables(
     const DataFrameView& _population,
     const std::vector<DataFrame>& _peripheral,
     const std::optional<RowIndexContainer>& _row_index_container,
-    const std::optional<WordIndexContainer>& _word_index_container )
+    const std::optional<WordIndexContainer>& _word_index_container,
+    const std::optional<const FeatureContainer>& _feature_container )
 {
     assert_true(
         _placeholder.joined_tables_.size() ==
@@ -128,6 +135,9 @@ std::vector<DataFrameView> TableHolder::parse_main_tables(
                                   ? _word_index_container->population()
                                   : WordIndices();
 
+    const auto features = _feature_container ? _feature_container->features()
+                                             : AdditionalColumns();
+
     // ---------------------------------------------------------------------
 
     std::vector<DataFrameView> result;
@@ -142,7 +152,8 @@ std::vector<DataFrameView> TableHolder::parse_main_tables(
                 _placeholder.time_stamps_used_.at( i ),
                 "",
                 row_indices,
-                word_indices ) );
+                word_indices,
+                features ) );
         }
 
     // ---------------------------------------------------------------------
@@ -167,7 +178,8 @@ std::vector<DataFrameView> TableHolder::parse_main_tables(
                 "",
                 "",
                 row_indices,
-                word_indices ) );
+                word_indices,
+                features ) );
         }
 
     // ---------------------------------------------------------------------
@@ -184,7 +196,8 @@ std::vector<DataFrame> TableHolder::parse_peripheral_tables(
     const std::vector<std::string>& _peripheral_names,
     const std::optional<RowIndexContainer>& _row_index_container,
     const std::optional<WordIndexContainer>& _word_index_container,
-    const std::optional<const MappedContainer>& _mapped )
+    const std::optional<const MappedContainer>& _mapped,
+    const std::optional<const FeatureContainer>& _feature_container )
 {
     // ---------------------------------------------------------------------
 
@@ -217,6 +230,33 @@ std::vector<DataFrame> TableHolder::parse_peripheral_tables(
 
     // ---------------------------------------------------------------------
 
+    const auto make_additional_columns =
+        [&_mapped, &_feature_container]( const size_t _i ) {
+            std::vector<Column<Float>> additional;
+
+            if ( _mapped )
+                {
+                    for ( const auto& col : _mapped->mapped( _i ) )
+                        {
+                            additional.push_back( col );
+                        }
+                }
+
+            if ( _feature_container && _feature_container->subcontainers( _i ) )
+                {
+                    for ( const auto& col :
+                          _feature_container->subcontainers( _i )->features() )
+
+                        {
+                            additional.push_back( col );
+                        }
+                }
+
+            return additional;
+        };
+
+    // ---------------------------------------------------------------------
+
     std::vector<DataFrame> result;
 
     // ---------------------------------------------------------------------
@@ -236,8 +276,7 @@ std::vector<DataFrame> TableHolder::parse_peripheral_tables(
                     ? _word_index_container->peripheral().at( j )
                     : WordIndices();
 
-            const auto mapped_columns =
-                _mapped ? _mapped->mapped( i ) : MappedColumns();
+            const auto additional = make_additional_columns( i );
 
             result.push_back( _peripheral.at( j ).create_subview(
                 _placeholder.joined_tables_.at( i ).name_,
@@ -247,7 +286,7 @@ std::vector<DataFrame> TableHolder::parse_peripheral_tables(
                 _placeholder.allow_lagged_targets_.at( i ),
                 row_indices,
                 word_indices,
-                mapped_columns ) );
+                additional ) );
         }
 
     // ---------------------------------------------------------------------
@@ -290,7 +329,7 @@ std::vector<DataFrame> TableHolder::parse_peripheral_tables(
             const auto mapped_columns =
                 _mapped
                     ? _mapped->mapped( _placeholder.joined_tables_.size() + i )
-                    : MappedColumns();
+                    : AdditionalColumns();
 
             auto numericals = df.numericals_;
 
@@ -320,6 +359,23 @@ std::vector<DataFrame> TableHolder::parse_peripheral_tables(
     return result;
 
     // ---------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<bool> TableHolder::parse_propositionalization(
+    const Placeholder& _placeholder, const size_t _expected_size )
+{
+    auto propositionalization = _placeholder.propositionalization();
+
+    assert_true( propositionalization.size() <= _expected_size );
+
+    for ( size_t i = propositionalization.size(); i < _expected_size; ++i )
+        {
+            propositionalization.push_back( false );
+        }
+
+    return propositionalization;
 }
 
 // ----------------------------------------------------------------------------
@@ -361,6 +417,7 @@ std::vector<std::optional<TableHolder>> TableHolder::parse_subtables(
             _placeholder.join_keys_used_.at( i ),
             _placeholder.time_stamps_used_.at( i ),
             "",
+            {},
             {},
             {} );
 

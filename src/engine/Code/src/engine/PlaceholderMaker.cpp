@@ -84,6 +84,8 @@ helpers::Placeholder PlaceholderMaker::handle_joined_tables(
 
     auto other_time_stamps_used = std::vector<std::string>();
 
+    auto propositionalization = std::vector<bool>();
+
     auto time_stamps_used = std::vector<std::string>();
 
     auto upper_time_stamps_used = std::vector<std::string>();
@@ -119,6 +121,10 @@ helpers::Placeholder PlaceholderMaker::handle_joined_tables(
                     other_time_stamps_used.push_back(
                         _other_time_stamps_used.at( i ) );
 
+                    propositionalization.push_back(
+                        _relationship.at( i ) ==
+                        RELATIONSHIP_PROPOSITIONALIZATION );
+
                     time_stamps_used.push_back(
                         _placeholder.time_stamps_used_.at( i ) );
 
@@ -149,6 +155,8 @@ helpers::Placeholder PlaceholderMaker::handle_joined_tables(
 
             append(
                 joined_table.other_time_stamps_used_, &other_time_stamps_used );
+
+            append( joined_table.propositionalization_, &propositionalization );
 
             const auto modified_ts = make_colnames(
                 joined_name, alias, joined_table.time_stamps_used_ );
@@ -183,6 +191,7 @@ helpers::Placeholder PlaceholderMaker::handle_joined_tables(
         name,
         other_join_keys_used,
         other_time_stamps_used,
+        propositionalization,
         time_stamps_used,
         upper_time_stamps_used );
 }

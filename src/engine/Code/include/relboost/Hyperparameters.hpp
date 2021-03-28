@@ -8,6 +8,8 @@
 
 #include <Poco/JSON/Object.h>
 
+#include "fastprop/Hyperparameters.hpp"
+
 #include "relboost/Float.hpp"
 #include "relboost/Int.hpp"
 
@@ -90,6 +92,11 @@ struct Hyperparameters
     /// Number of parallel threads used to run xgboost
     const Int num_threads_;
 
+    /// Contains the hyperparameters used for the propositionalization
+    /// subfeatures.
+    const std::shared_ptr<const fastprop::Hyperparameters>
+        propositionalization_;
+
     /// L2 regularization term on weights
     const Float reg_lambda_;
 
@@ -111,9 +118,6 @@ struct Hyperparameters
 
     /// Whether we want to split the text fields.
     const bool split_text_fields_;
-
-    /// The target on which to train.
-    const Int target_num_;
 
     /// Whether to use timestamps.
     const bool use_timestamps_;

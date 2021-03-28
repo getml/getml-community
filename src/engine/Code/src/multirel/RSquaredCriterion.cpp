@@ -8,14 +8,16 @@ namespace optimizationcriteria
 
 RSquaredCriterion::RSquaredCriterion(
     const std::shared_ptr<const descriptors::Hyperparameters>& _hyperparameters,
-    const std::string& _loss_function_type,
     const containers::DataFrameView& _main_table,
     multithreading::Communicator* _comm )
     : OptimizationCriterion(),
       comm_( _comm ),
       hyperparameters_( _hyperparameters ),
-      impl_( OptimizationCriterionImpl(
-          _hyperparameters, _loss_function_type, _main_table, _comm ) ){};
+      impl_( OptimizationCriterionImpl( _hyperparameters, _main_table, _comm ) )
+{
+    calc_sampling_rate();
+    calc_residuals();
+};
 
 // ----------------------------------------------------------------------------
 

@@ -59,6 +59,11 @@ struct Hyperparameters
     /// The number of threads to be used, 0 for automatic determination
     const size_t num_threads_;
 
+    /// Contains the hyperparameters used for the propositionalization
+    /// subfeatures.
+    const std::shared_ptr<const fastprop::Hyperparameters>
+        propositionalization_;
+
     /// Whether you just want to select the features one by one
     const bool round_robin_;
 

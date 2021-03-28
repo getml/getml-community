@@ -12,6 +12,8 @@
 
 #include "strings/strings.hpp"
 
+#include "fastprop/subfeatures/subfeatures.hpp"
+
 #include "multirel/utils/utils.hpp"
 
 #include "multirel/decisiontrees/decisiontrees.hpp"
@@ -30,6 +32,9 @@
 #include "multirel/ensemble/DecisionTreeEnsemble.hpp"
 
 #include "multirel/ensemble/SubtreeHelper.hpp"
+
+#include "multirel/ensemble/ThreadutilsFitParams.hpp"
+#include "multirel/ensemble/ThreadutilsTransformParams.hpp"
 
 #include "multirel/ensemble/Threadutils.hpp"
 

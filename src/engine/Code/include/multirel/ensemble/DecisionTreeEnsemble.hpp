@@ -144,13 +144,23 @@ class DecisionTreeEnsemble
     /// Whether the ensemble is a subensemble
     const bool is_subensemble() const { return !impl().population_schema_; }
 
+    /// Generates the optimizer
+    std::shared_ptr<optimizationcriteria::RSquaredCriterion> make_r_squared(
+        const containers::DataFrameView &_population,
+        multithreading::Communicator *_comm ) const
+    {
+        return std::make_shared<optimizationcriteria::RSquaredCriterion>(
+            impl().hyperparameters_, _population, _comm );
+    }
+
     /// Trivial accessor
     const size_t num_features() const { return trees().size(); }
 
     /// Trivial accessor
     inline const std::vector<std::string> &peripheral() const
     {
-        return impl().peripheral_;
+        assert_true( impl().peripheral_ );
+        return *impl().peripheral_;
     }
 
     /// Trivial (const) accessor
@@ -237,6 +247,16 @@ class DecisionTreeEnsemble
         const containers::DataFrame &_population,
         const std::vector<containers::DataFrame> &_peripheral );
 
+    /// Fits the propositionalization subfeatures and returns the feature
+    /// container.
+    std::optional<const helpers::FeatureContainer> fit_propositionalization(
+        const containers::DataFrame &_population,
+        const std::vector<containers::DataFrame> &_peripheral,
+        const helpers::RowIndexContainer &_row_indices,
+        const helpers::WordIndexContainer &_word_indices,
+        const std::optional<const helpers::MappedContainer> &_mapped,
+        const std::shared_ptr<const logging::AbstractLogger> _logger );
+
     /// Spawns the threads for fitting.
     void fit_spawn_threads(
         const containers::DataFrame &_population,
@@ -244,6 +264,8 @@ class DecisionTreeEnsemble
         const helpers::RowIndexContainer &_row_indices,
         const helpers::WordIndexContainer &_word_indices,
         const std::optional<const helpers::MappedContainer> &_mapped,
+        const std::optional<const helpers::FeatureContainer>
+            &_feature_container,
         const std::shared_ptr<const logging::AbstractLogger> _logger );
 
     /// Extracts a DecisionTreeEnsemble from a JSON object.
@@ -270,6 +292,15 @@ class DecisionTreeEnsemble
     std::vector<size_t> infer_index(
         const std::optional<std::vector<size_t>> &_index ) const;
 
+    /// Generates the feature container for the propositionalization.
+    std::optional<const helpers::FeatureContainer>
+    transform_propositionalization(
+        const containers::DataFrame &_population,
+        const std::vector<containers::DataFrame> &_peripheral,
+        const std::optional<const helpers::WordIndexContainer> &_word_indices,
+        const std::optional<const helpers::MappedContainer> &_mapped,
+        const std::shared_ptr<const logging::AbstractLogger> _logger ) const;
+
     /// Spawns the threads for transforming the features.
     void transform_spawn_threads(
         const containers::DataFrame &_population,
@@ -277,6 +308,8 @@ class DecisionTreeEnsemble
         const std::vector<size_t> &_index,
         const std::optional<helpers::WordIndexContainer> &_word_indices,
         const std::optional<const helpers::MappedContainer> &_mapped,
+        const std::optional<const helpers::FeatureContainer>
+            &_feature_container,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
         containers::Features *_features ) const;
 

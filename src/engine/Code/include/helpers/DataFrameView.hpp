@@ -14,6 +14,8 @@ class DataFrameView
 
     typedef Column<Int> IntColumnType;
 
+    typedef typename DataFrame::AdditionalColumns AdditionalColumns;
+
     typedef typename DataFrame::RowIndices RowIndices;
 
     typedef typename DataFrame::WordIndices WordIndices;
@@ -66,7 +68,8 @@ class DataFrameView
         const std::string& _time_stamp,
         const std::string& _upper_time_stamp,
         const RowIndices& _row_indices,
-        const WordIndices& _word_indices ) const
+        const WordIndices& _word_indices,
+        const AdditionalColumns& _additional ) const
     {
         return DataFrameView(
             df_.create_subview(
@@ -77,7 +80,7 @@ class DataFrameView
                 false,
                 _row_indices,
                 _word_indices,
-                {} ),
+                _additional ),
             rows_ );
     }
 

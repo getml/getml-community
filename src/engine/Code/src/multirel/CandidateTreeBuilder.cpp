@@ -53,8 +53,9 @@ void CandidateTreeBuilder::add_count_distincts(
                     continue;
                 }
 
-            for ( auto data_used : {enums::DataUsed::x_perip_categorical,
-                                    enums::DataUsed::x_perip_discrete} )
+            for ( auto data_used :
+                  { enums::DataUsed::x_perip_categorical,
+                    enums::DataUsed::x_perip_discrete } )
                 {
                     size_t ncols = get_ncols(
                         _table_holder.peripheral_tables_,
@@ -112,10 +113,11 @@ void CandidateTreeBuilder::add_other_aggs(
                     continue;
                 }
 
-            for ( auto data_used : {enums::DataUsed::x_perip_numerical,
-                                    enums::DataUsed::x_perip_discrete,
-                                    enums::DataUsed::same_unit_numerical,
-                                    enums::DataUsed::same_unit_discrete} )
+            for ( auto data_used :
+                  { enums::DataUsed::x_perip_numerical,
+                    enums::DataUsed::x_perip_discrete,
+                    enums::DataUsed::same_unit_numerical,
+                    enums::DataUsed::same_unit_discrete } )
                 {
                     size_t ncols = get_ncols(
                         _table_holder.peripheral_tables_,
@@ -260,11 +262,20 @@ CandidateTreeBuilder::build_candidate_trees(
 {
     const auto num_perips = _table_holder.peripheral_tables_.size();
 
+    assert_true( _table_holder.propositionalization_.size() == num_perips );
+
     std::list<decisiontrees::DecisionTree> candidate_trees;
 
     for ( size_t ix_perip_used = 0; ix_perip_used < num_perips;
           ++ix_perip_used )
         {
+            // -----------------------------------------------------
+
+            if ( _table_holder.propositionalization_.at( ix_perip_used ) )
+                {
+                    continue;
+                }
+
             // -----------------------------------------------------
             // COUNT is special, because the values it aggregates
             // do not matter. The only thing that matters is
@@ -436,7 +447,8 @@ void CandidateTreeBuilder::randomly_remove_candidate_trees(
 
             std::advance( it, ix_keep );
 
-            *_candidate_trees = std::list<decisiontrees::DecisionTree>( {*it} );
+            *_candidate_trees =
+                std::list<decisiontrees::DecisionTree>( { *it } );
 
             return;
         }

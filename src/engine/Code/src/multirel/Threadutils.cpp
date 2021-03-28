@@ -23,20 +23,7 @@ void Threadutils::copy(
 
 // ----------------------------------------------------------------------------
 
-void Threadutils::fit_ensemble(
-    const size_t _this_thread_num,
-    const std::vector<size_t> _thread_nums,
-    const std::shared_ptr<const descriptors::Hyperparameters>& _hyperparameters,
-    const containers::DataFrame& _population,
-    const std::vector<containers::DataFrame>& _peripheral,
-    const helpers::RowIndexContainer& _row_indices,
-    const helpers::WordIndexContainer& _word_indices,
-    const std::optional<const helpers::MappedContainer>& _mapped,
-    const containers::Placeholder& _placeholder,
-    const std::vector<std::string>& _peripheral_names,
-    const std::shared_ptr<const logging::AbstractLogger> _logger,
-    multithreading::Communicator* _comm,
-    ensemble::DecisionTreeEnsemble* _ensemble )
+void Threadutils::fit_ensemble( const ThreadutilsFitParams& _params )
 {
     try
         {
@@ -44,52 +31,45 @@ void Threadutils::fit_ensemble(
 
             const auto population_subview = utils::DataFrameScatterer::
                 DataFrameScatterer::scatter_data_frame(
-                    _population, _thread_nums, _this_thread_num );
+                    _params.population_,
+                    _params.thread_nums_,
+                    _params.this_thread_num_ );
 
             // ----------------------------------------------------------------
 
             const auto table_holder =
                 std::make_shared<const decisiontrees::TableHolder>(
-                    _placeholder,
+                    _params.ensemble_.placeholder(),
                     population_subview,
-                    _peripheral,
-                    _peripheral_names,
-                    _row_indices,
-                    _word_indices,
-                    _mapped );
+                    _params.peripheral_,
+                    _params.ensemble_.peripheral(),
+                    _params.row_indices_,
+                    _params.word_indices_,
+                    _params.mapped_,
+                    _params.feature_container_ );
 
             // ----------------------------------------------------------------
 
             assert_true( table_holder->main_tables_.size() > 0 );
 
-            assert_true( _hyperparameters );
-
-            const auto opt =
-                std::make_shared<optimizationcriteria::RSquaredCriterion>(
-                    _hyperparameters,
-                    _hyperparameters->loss_function_,
-                    table_holder->main_tables_.at( 0 ),
-                    _comm );
-
-            opt->calc_sampling_rate();
-
-            opt->calc_residuals();
+            const auto opt = _params.ensemble_.make_r_squared(
+                table_holder->main_tables_.at( 0 ), &_params.comm_ );
 
             // ----------------------------------------------------------------
 
-            _ensemble->fit(
+            _params.ensemble_.fit(
                 table_holder,
-                _word_indices,
-                _logger,
-                _hyperparameters->num_features_,
+                _params.word_indices_,
+                _params.logger_,
+                _params.ensemble_.hyperparameters().num_features_,
                 opt,
-                _comm );
+                &_params.comm_ );
 
             // ----------------------------------------------------------------
         }
     catch ( std::exception& e )
         {
-            if ( _logger )
+            if ( _params.logger_ )
                 {
                     throw std::runtime_error( e.what() );
                 }
@@ -116,18 +96,7 @@ size_t Threadutils::get_num_threads( const size_t _num_threads )
 // ----------------------------------------------------------------------------
 
 void Threadutils::transform_ensemble(
-    const size_t _this_thread_num,
-    const std::vector<size_t> _thread_nums,
-    const std::shared_ptr<const descriptors::Hyperparameters>& _hyperparameters,
-    const containers::DataFrame& _population,
-    const std::vector<containers::DataFrame>& _peripheral,
-    const std::optional<helpers::WordIndexContainer>& _word_indices,
-    const std::optional<const helpers::MappedContainer>& _mapped,
-    const std::vector<size_t>& _index,
-    const std::shared_ptr<const logging::AbstractLogger> _logger,
-    const ensemble::DecisionTreeEnsemble& _ensemble,
-    multithreading::Communicator* _comm,
-    containers::Features* _features )
+    const ThreadutilsTransformParams& _params )
 {
     try
         {
@@ -135,25 +104,28 @@ void Threadutils::transform_ensemble(
 
             const auto population_subview = utils::DataFrameScatterer::
                 DataFrameScatterer::scatter_data_frame(
-                    _population, _thread_nums, _this_thread_num );
+                    _params.population_,
+                    _params.thread_nums_,
+                    _params.this_thread_num_ );
 
             const auto table_holder = decisiontrees::TableHolder(
-                _ensemble.placeholder(),
+                _params.ensemble_.placeholder(),
                 population_subview,
-                _peripheral,
-                _ensemble.peripheral(),
+                _params.peripheral_,
+                _params.ensemble_.peripheral(),
                 std::nullopt,
-                _word_indices,
-                _mapped );
+                _params.word_indices_,
+                _params.mapped_,
+                _params.feature_container_ );
 
             // ----------------------------------------------------------------
 
             const auto subpredictions = SubtreeHelper::make_predictions(
                 table_holder,
-                _ensemble.subensembles_avg(),
-                _ensemble.subensembles_sum(),
-                _logger,
-                _comm );
+                _params.ensemble_.subensembles_avg(),
+                _params.ensemble_.subensembles_sum(),
+                _params.logger_,
+                &_params.comm_ );
 
             const auto subfeatures =
                 SubtreeHelper::make_subfeatures( table_holder, subpredictions );
@@ -167,41 +139,44 @@ void Threadutils::transform_ensemble(
             // ----------------------------------------------------------------
 
             utils::Logger::log(
-                "Multirel: Building features...", _logger, _comm );
+                "Multirel: Building features...",
+                _params.logger_,
+                &_params.comm_ );
 
             // ----------------------------------------------------------------
             // Build the actual features.
 
-            assert_true( _index.size() == _features->size() );
+            assert_true( _params.index_.size() == _params.features_.size() );
 
-            for ( size_t i = 0; i < _index.size(); ++i )
+            for ( size_t i = 0; i < _params.index_.size(); ++i )
                 {
-                    const auto ix = _index.at( i );
+                    const auto ix = _params.index_.at( i );
 
-                    assert_true( ix < _ensemble.num_features() );
+                    assert_true( ix < _params.ensemble_.num_features() );
 
-                    const auto new_feature = _ensemble.transform(
+                    const auto new_feature = _params.ensemble_.transform(
                         table_holder, subfeatures, ix, &impl );
 
                     copy(
                         population_subview.rows(),
                         new_feature,
-                        _features->at( i ).get() );
+                        _params.features_.at( i ).get() );
 
-                    const auto progress = ( ( i + 1 ) * 100 ) / _index.size();
+                    const auto progress =
+                        ( ( i + 1 ) * 100 ) / _params.index_.size();
 
                     utils::Logger::log(
                         "Built FEATURE_" + std::to_string( ix + 1 ) +
                             ". Progress: " + std::to_string( progress ) + "\%.",
-                        _logger,
-                        _comm );
+                        _params.logger_,
+                        &_params.comm_ );
                 }
 
             // ----------------------------------------------------------------
         }
     catch ( std::exception& e )
         {
-            if ( _logger )
+            if ( _params.logger_ )
                 {
                     throw std::runtime_error( e.what() );
                 }

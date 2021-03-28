@@ -12,6 +12,8 @@ class PlaceholderMaker
    private:
     static constexpr const char* RELATIONSHIP_MANY_TO_MANY = "many-to-many";
     static constexpr const char* RELATIONSHIP_MANY_TO_ONE = "many-to-one";
+    static constexpr const char* RELATIONSHIP_PROPOSITIONALIZATION =
+        helpers::Placeholder::RELATIONSHIP_PROPOSITIONALIZATION;
     static constexpr const char* RELATIONSHIP_ONE_TO_MANY = "one-to-many";
     static constexpr const char* RELATIONSHIP_ONE_TO_ONE = "one-to-one";
 
@@ -69,6 +71,7 @@ class PlaceholderMaker
     {
         return (
             _relationship == RELATIONSHIP_MANY_TO_MANY ||
+            _relationship == RELATIONSHIP_PROPOSITIONALIZATION ||
             _relationship == RELATIONSHIP_ONE_TO_MANY );
     }
 

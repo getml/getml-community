@@ -152,6 +152,10 @@ Poco::JSON::Object::Ptr Placeholder::to_json_obj() const
         "other_time_stamps_used_",
         jsonutils::JSON::vector_to_array_ptr( other_time_stamps_used_ ) );
 
+    obj->set(
+        "propositionalization_",
+        jsonutils::JSON::vector_to_array_ptr( propositionalization_ ) );
+
     obj->set( "name_", name_ );
 
     obj->set(

@@ -11,6 +11,11 @@ struct Placeholder
 {
     // --------------------------------------------------------
 
+    constexpr static const char* RELATIONSHIP_PROPOSITIONALIZATION =
+        "propositionalization";
+
+    // --------------------------------------------------------
+
     Placeholder( const Poco::JSON::Object& _json_obj )
         : allow_lagged_targets_( Placeholder::parse_columns<bool>(
               _json_obj, "allow_lagged_targets_" ) ),
@@ -32,6 +37,8 @@ struct Placeholder
               _json_obj, "other_join_keys_used_" ) ),
           other_time_stamps_used_( Placeholder::parse_columns<std::string>(
               _json_obj, "other_time_stamps_used_" ) ),
+          propositionalization_( Placeholder::parse_columns<bool>(
+              _json_obj, "propositionalization_" ) ),
           targets_( Placeholder::parse_columns<std::string>(
               _json_obj, "targets_" ) ),
           text_(
@@ -58,6 +65,7 @@ struct Placeholder
         const std::string& _name,
         const std::vector<std::string>& _other_join_keys_used,
         const std::vector<std::string>& _other_time_stamps_used,
+        const std::vector<bool>& _propositionalization,
         const std::vector<std::string>& _time_stamps_used,
         const std::vector<std::string>& _upper_time_stamps_used )
         : allow_lagged_targets_( _allow_lagged_targets ),
@@ -66,6 +74,7 @@ struct Placeholder
           name_( _name ),
           other_join_keys_used_( _other_join_keys_used ),
           other_time_stamps_used_( _other_time_stamps_used ),
+          propositionalization_( _propositionalization ),
           time_stamps_used_( _time_stamps_used ),
           upper_time_stamps_used_( _upper_time_stamps_used )
     {
@@ -194,6 +203,12 @@ struct Placeholder
             }
     }
 
+    /// Getter for the propositionalization vector
+    const std::vector<bool>& propositionalization() const
+    {
+        return propositionalization_;
+    }
+
     /// Getter for a targets.
     const std::vector<std::string>& targets() const { return targets_; }
 
@@ -281,6 +296,9 @@ struct Placeholder
     /// Names of the time stamps used (RIGHT) - should have
     /// same length as joined_tables_
     const std::vector<std::string> other_time_stamps_used_;
+
+    /// Whether we want to use propositionalization for the relationship.
+    const std::vector<bool> propositionalization_;
 
     /// The name of the target columns
     /// (this is only required for the Python API).

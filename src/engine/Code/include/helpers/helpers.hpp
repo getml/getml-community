@@ -48,6 +48,7 @@
 #include "helpers/Placeholder.hpp"
 #include "helpers/Schema.hpp"
 
+#include "helpers/FeatureContainer.hpp"
 #include "helpers/MappedContainer.hpp"
 #include "helpers/MappingContainer.hpp"
 

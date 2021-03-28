@@ -14,7 +14,7 @@ struct DataFrame
 
     typedef Column<Int> IntColumnType;
 
-    typedef typename MappedContainer::MappedColumns MappedColumns;
+    typedef std::vector<Column<Float>> AdditionalColumns;
 
     typedef std::vector<std::shared_ptr<const textmining::RowIndex>> RowIndices;
 
@@ -66,7 +66,7 @@ struct DataFrame
         const bool _allow_lagged_targets,
         const RowIndices& _row_indices,
         const WordIndices& _word_indices,
-        const MappedColumns& _mapped ) const;
+        const AdditionalColumns& _additional ) const;
 
     // ---------------------------------------------------------------------
 

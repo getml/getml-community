@@ -15,8 +15,8 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
     const std::shared_ptr<const containers::Placeholder> &_population_schema )
     : impl_(
           _hyperparameters,
-          *_peripheral,
-          *_placeholder,
+          _peripheral,
+          _placeholder,
           _peripheral_schema,
           _population_schema )
 {
@@ -30,9 +30,10 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
     : impl_(
           std::make_shared<const descriptors::Hyperparameters>(
               *JSON::get_object( _json_obj, "hyperparameters_" ) ),
-          JSON::array_to_vector<std::string>(
-              JSON::get_array( _json_obj, "peripheral_" ) ),
-          containers::Placeholder(
+          std::make_shared<const std::vector<std::string>>(
+              JSON::array_to_vector<std::string>(
+                  JSON::get_array( _json_obj, "peripheral_" ) ) ),
+          std::make_shared<const containers::Placeholder>(
               *JSON::get_object( _json_obj, "placeholder_" ) ),
           nullptr,
           nullptr )
@@ -263,8 +264,17 @@ void DecisionTreeEnsemble::fit(
 
     const auto mapped = handle_mappings( population, peripheral, word_indices );
 
-    fit_spawn_threads(
+    const auto feature_container = fit_propositionalization(
         population, peripheral, row_indices, word_indices, mapped, _logger );
+
+    fit_spawn_threads(
+        population,
+        peripheral,
+        row_indices,
+        word_indices,
+        mapped,
+        feature_container,
+        _logger );
 }
 
 // ----------------------------------------------------------------------------
@@ -320,7 +330,7 @@ void DecisionTreeEnsemble::fit(
 
     if ( _table_holder->main_tables_[0].num_targets() > 0 )
         {
-            targets() = {_table_holder->main_tables_[0].target_name( 0 )};
+            targets() = { _table_holder->main_tables_[0].target_name( 0 ) };
         }
 
     // ----------------------------------------------------------------
@@ -550,12 +560,50 @@ void DecisionTreeEnsemble::fit(
 
 // ----------------------------------------------------------------------------
 
+std::optional<const helpers::FeatureContainer>
+DecisionTreeEnsemble::fit_propositionalization(
+    const containers::DataFrame &_population,
+    const std::vector<containers::DataFrame> &_peripheral,
+    const helpers::RowIndexContainer &_row_indices,
+    const helpers::WordIndexContainer &_word_indices,
+    const std::optional<const helpers::MappedContainer> &_mapped,
+    const std::shared_ptr<const logging::AbstractLogger> _logger )
+{
+    if ( !hyperparameters().propositionalization_ )
+        {
+            return std::nullopt;
+        }
+
+    assert_true( _mapped );
+
+    using MakerParams = fastprop::subfeatures::MakerParams;
+
+    const auto [fast_prop_container, feature_container] =
+        fastprop::subfeatures::Maker::fit( MakerParams{
+            .hyperparameters_ = hyperparameters().propositionalization_,
+            .logger_ = _logger,
+            .mapped_ = *_mapped,
+            .peripheral_ = _peripheral,
+            .peripheral_names_ = impl().peripheral_,
+            .placeholder_ = placeholder(),
+            .population_ = _population,
+            .row_index_container_ = _row_indices,
+            .word_index_container_ = _word_indices } );
+
+    impl().fast_prop_container_ = fast_prop_container;
+
+    return feature_container;
+}
+
+// ----------------------------------------------------------------------------
+
 void DecisionTreeEnsemble::fit_spawn_threads(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral,
     const helpers::RowIndexContainer &_row_indices,
     const helpers::WordIndexContainer &_word_indices,
     const std::optional<const helpers::MappedContainer> &_mapped,
+    const std::optional<const helpers::FeatureContainer> &_feature_container,
     const std::shared_ptr<const logging::AbstractLogger> _logger )
 {
     // ------------------------------------------------------
@@ -583,39 +631,35 @@ void DecisionTreeEnsemble::fit_spawn_threads(
         {
             threads.push_back( std::thread(
                 Threadutils::fit_ensemble,
-                i + 1,
-                thread_nums,
-                impl().hyperparameters_,
-                _population,
-                _peripheral,
-                _row_indices,
-                _word_indices,
-                _mapped,
-                placeholder(),
-                peripheral(),
-                std::shared_ptr<const logging::AbstractLogger>(),
-                &comm,
-                &ensembles[i] ) );
+                ThreadutilsFitParams{
+                    .comm_ = comm,
+                    .ensemble_ = ensembles.at( i ),
+                    .feature_container_ = _feature_container,
+                    .mapped_ = _mapped,
+                    .peripheral_ = _peripheral,
+                    .population_ = _population,
+                    .row_indices_ = _row_indices,
+                    .this_thread_num_ = i + 1,
+                    .thread_nums_ = thread_nums,
+                    .word_indices_ = _word_indices } ) );
         }
 
     // ------------------------------------------------------
 
     try
         {
-            Threadutils::fit_ensemble(
-                0,
-                thread_nums,
-                impl().hyperparameters_,
-                _population,
-                _peripheral,
-                _row_indices,
-                _word_indices,
-                _mapped,
-                placeholder(),
-                peripheral(),
-                _logger,
-                &comm,
-                this );
+            Threadutils::fit_ensemble( ThreadutilsFitParams{
+                .comm_ = comm,
+                .ensemble_ = *this,
+                .feature_container_ = _feature_container,
+                .logger_ = _logger,
+                .mapped_ = _mapped,
+                .peripheral_ = _peripheral,
+                .population_ = _population,
+                .row_indices_ = _row_indices,
+                .this_thread_num_ = 0,
+                .thread_nums_ = thread_nums,
+                .word_indices_ = _word_indices } );
         }
     catch ( std::exception &e )
         {
@@ -655,8 +699,8 @@ DecisionTreeEnsemble DecisionTreeEnsemble::from_json_obj(
     // ----------------------------------------
     // Extract placeholders.
 
-    model.impl().peripheral_ =
-        std::vector<std::string>( JSON::array_to_vector<std::string>(
+    model.impl().peripheral_ = std::make_shared<const std::vector<std::string>>(
+        JSON::array_to_vector<std::string>(
             JSON::get_array( _json_obj, "peripheral_" ) ) );
 
     model.impl().placeholder_.reset( new containers::Placeholder(
@@ -664,7 +708,6 @@ DecisionTreeEnsemble DecisionTreeEnsemble::from_json_obj(
 
     // ----------------------------------------
 
-    // TODO: For backwards compatability.
     model.allow_http() = _json_obj.has( "allow_http_" )
                              ? JSON::get_value<bool>( _json_obj, "allow_http_" )
                              : false;
@@ -688,7 +731,16 @@ DecisionTreeEnsemble DecisionTreeEnsemble::from_json_obj(
     model.targets() = JSON::array_to_vector<std::string>(
         JSON::get_array( _json_obj, "targets_" ) );
 
-    // ------------------------------------------------------------------------
+    // ----------------------------------------
+
+    if ( _json_obj.has( "fast_prop_container_" ) )
+        {
+            model.impl().fast_prop_container_ =
+                std::make_shared<fastprop::subfeatures::FastPropContainer>(
+                    *JSON::get_object( _json_obj, "fast_prop_container_" ) );
+        }
+
+    // ----------------------------------------
 
     if ( _json_obj.has( "mappings_" ) )
         {
@@ -986,6 +1038,15 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj(
         }
 
     // ----------------------------------------
+
+    if ( impl().fast_prop_container_ )
+        {
+            obj.set(
+                "fast_prop_container_",
+                impl().fast_prop_container_->to_json_obj() );
+        }
+
+    // ----------------------------------------
     // Extract subensembles_avg_
 
     Poco::JSON::Array features_avg;
@@ -1128,6 +1189,11 @@ containers::Features DecisionTreeEnsemble::transform(
         peripheral(),
         word_indices );
 
+    // -------------------------------------------------------
+
+    const auto feature_container = transform_propositionalization(
+        population_table, peripheral_tables, word_indices, mapped, _logger );
+
     // ------------------------------------------------------
 
     const auto index = infer_index( _index );
@@ -1149,6 +1215,7 @@ containers::Features DecisionTreeEnsemble::transform(
         index,
         word_indices,
         mapped,
+        feature_container,
         _logger,
         &features );
 
@@ -1244,12 +1311,51 @@ std::vector<Float> DecisionTreeEnsemble::transform(
 
 // ----------------------------------------------------------------------------
 
+std::optional<const helpers::FeatureContainer>
+DecisionTreeEnsemble::transform_propositionalization(
+    const containers::DataFrame &_population,
+    const std::vector<containers::DataFrame> &_peripheral,
+    const std::optional<const helpers::WordIndexContainer> &_word_indices,
+    const std::optional<const helpers::MappedContainer> &_mapped,
+    const std::shared_ptr<const logging::AbstractLogger> _logger ) const
+{
+    if ( !hyperparameters().propositionalization_ )
+        {
+            return std::nullopt;
+        }
+
+    assert_true( _mapped );
+
+    assert_true( _word_indices );
+
+    assert_true( impl().fast_prop_container_ );
+
+    using MakerParams = fastprop::subfeatures::MakerParams;
+
+    const auto feature_container =
+        fastprop::subfeatures::Maker::transform( MakerParams{
+            .fast_prop_container_ = impl().fast_prop_container_,
+            .hyperparameters_ = hyperparameters().propositionalization_,
+            .logger_ = _logger,
+            .mapped_ = _mapped.value(),
+            .peripheral_ = _peripheral,
+            .peripheral_names_ = impl().peripheral_,
+            .placeholder_ = placeholder(),
+            .population_ = _population,
+            .word_index_container_ = _word_indices.value() } );
+
+    return feature_container;
+}
+
+// ----------------------------------------------------------------------------
+
 void DecisionTreeEnsemble::transform_spawn_threads(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral,
     const std::vector<size_t> &_index,
     const std::optional<helpers::WordIndexContainer> &_word_indices,
     const std::optional<const helpers::MappedContainer> &_mapped,
+    const std::optional<const helpers::FeatureContainer> &_feature_container,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     containers::Features *_features ) const
 {
@@ -1269,37 +1375,37 @@ void DecisionTreeEnsemble::transform_spawn_threads(
         {
             threads.push_back( std::thread(
                 Threadutils::transform_ensemble,
-                i + 1,
-                thread_nums,
-                impl().hyperparameters_,
-                _population,
-                _peripheral,
-                _word_indices,
-                _mapped,
-                _index,
-                std::shared_ptr<const logging::AbstractLogger>(),
-                *this,
-                &comm,
-                _features ) );
+                ThreadutilsTransformParams{
+                    .comm_ = comm,
+                    .ensemble_ = *this,
+                    .feature_container_ = _feature_container,
+                    .features_ = *_features,
+                    .index_ = _index,
+                    .mapped_ = _mapped,
+                    .peripheral_ = _peripheral,
+                    .population_ = _population,
+                    .this_thread_num_ = i + 1,
+                    .thread_nums_ = thread_nums,
+                    .word_indices_ = _word_indices } ) );
         }
 
     // ------------------------------------------------------
 
     try
         {
-            Threadutils::transform_ensemble(
-                0,
-                thread_nums,
-                impl().hyperparameters_,
-                _population,
-                _peripheral,
-                _word_indices,
-                _mapped,
-                _index,
-                _logger,
-                *this,
-                &comm,
-                _features );
+            Threadutils::transform_ensemble( ThreadutilsTransformParams{
+                .comm_ = comm,
+                .ensemble_ = *this,
+                .feature_container_ = _feature_container,
+                .features_ = *_features,
+                .index_ = _index,
+                .logger_ = _logger,
+                .mapped_ = _mapped,
+                .peripheral_ = _peripheral,
+                .population_ = _population,
+                .this_thread_num_ = 0,
+                .thread_nums_ = thread_nums,
+                .word_indices_ = _word_indices } );
         }
     catch ( std::exception &e )
         {

@@ -33,12 +33,32 @@ class MappedContainer
                 ", _discrete.size(): " + std::to_string( _discrete.size() ) );
 
         assert_msg(
+            _categorical.size() == _subcontainers.size(),
+            "_categorical.size(): " + std::to_string( _categorical.size() ) +
+                ", _subcontainers.size(): " +
+                std::to_string( _subcontainers.size() ) );
+
+        assert_msg(
             _categorical.size() == _text.size(),
             "_categorical.size(): " + std::to_string( _categorical.size() ) +
                 ", _text.size(): " + std::to_string( _text.size() ) );
     }
 
     ~MappedContainer() = default;
+
+    /// Trivial (const) accessor.
+    const MappedColumns& categorical( size_t _i ) const
+    {
+        assert_true( _i < categorical_.size() );
+        return categorical_.at( _i );
+    }
+
+    /// Trivial (const) accessor.
+    const MappedColumns& discrete( size_t _i ) const
+    {
+        assert_true( _i < discrete_.size() );
+        return discrete_.at( _i );
+    }
 
     // Returns all mapped columns.
     MappedColumns mapped( size_t _i ) const
@@ -52,13 +72,15 @@ class MappedContainer
                 m.push_back( col );
             }
 
-        for ( const auto& col : text_.at( _i ) )
+        for ( const auto& col : discrete_.at( _i ) )
             {
                 m.push_back( col );
             }
 
-        assert_true(
-            m.size() == categorical_.at( _i ).size() + text_.at( _i ).size() );
+        for ( const auto& col : text_.at( _i ) )
+            {
+                m.push_back( col );
+            }
 
         return m;
     }
@@ -72,6 +94,13 @@ class MappedContainer
     {
         assert_true( _i < subcontainers_.size() );
         return subcontainers_.at( _i );
+    }
+
+    /// Trivial (const) accessor.
+    const MappedColumns& text( size_t _i ) const
+    {
+        assert_true( _i < text_.size() );
+        return text_.at( _i );
     }
 
    private:

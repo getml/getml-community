@@ -23,84 +23,63 @@ void Threadutils::copy(
 
 // ----------------------------------------------------------------------------
 
-void Threadutils::fit_as_feature_learner(
-    const size_t _this_thread_num,
-    const std::vector<size_t>& _thread_nums,
-    const containers::DataFrame& _population,
-    const std::vector<containers::DataFrame>& _peripheral,
-    const helpers::RowIndexContainer& _row_indices,
-    const helpers::WordIndexContainer& _word_indices,
-    const std::optional<const helpers::MappedContainer>& _mapped,
-    const std::shared_ptr<const logging::AbstractLogger> _logger,
-    multithreading::Communicator* _comm,
-    ensemble::DecisionTreeEnsemble* _ensemble )
+void Threadutils::fit_as_feature_learner( const ThreadutilsFitParams& _params )
 {
     const auto population_subview =
         relboost::utils::DataFrameScatterer::scatter_data_frame(
-            _population, _thread_nums, _this_thread_num );
+            _params.population_,
+            _params.thread_nums_,
+            _params.this_thread_num_ );
 
-    const auto [loss_function, table_holder] = _ensemble->init(
-        population_subview, _peripheral, _row_indices, _word_indices, _mapped );
+    const auto [loss_function, table_holder] = _params.ensemble_.init(
+        population_subview,
+        _params.peripheral_,
+        _params.row_indices_,
+        _params.word_indices_,
+        _params.mapped_,
+        _params.feature_container_ );
 
-    _ensemble->fit_subensembles( table_holder, _logger, loss_function );
+    _params.ensemble_.fit_subensembles(
+        table_holder, _params.logger_, loss_function );
 
-    auto predictions =
-        _ensemble->make_subpredictions( *table_holder, _logger, _comm );
+    auto predictions = _params.ensemble_.make_subpredictions(
+        *table_holder, _params.logger_, &_params.comm_ );
 
     auto subfeatures =
         SubtreeHelper::make_subfeatures( *table_holder, predictions );
 
-    const auto num_features = _ensemble->hyperparameters().num_features_;
+    const auto num_features = _params.ensemble_.hyperparameters().num_features_;
 
-    utils::Logger::log( "Relboost: Training features...", _logger, _comm );
+    utils::Logger::log(
+        "Relboost: Training features...", _params.logger_, &_params.comm_ );
 
-    while ( _ensemble->num_features() < num_features )
+    while ( _params.ensemble_.num_features() < num_features )
         {
-            _ensemble->fit_new_features(
+            _params.ensemble_.fit_new_features(
                 loss_function, table_holder, subfeatures, num_features );
 
             const auto progress =
-                ( _ensemble->num_features() * 100 ) / num_features;
+                ( _params.ensemble_.num_features() * 100 ) / num_features;
 
             utils::Logger::log(
                 "Trained new features. Progress: " +
                     std::to_string( progress ) + "\%.",
-                _logger,
-                _comm );
+                _params.logger_,
+                &_params.comm_ );
         }
 }
 
 // ----------------------------------------------------------------------------
 
-void Threadutils::fit_ensemble(
-    const size_t _this_thread_num,
-    const std::vector<size_t> _thread_nums,
-    const containers::DataFrame& _population,
-    const std::vector<containers::DataFrame>& _peripheral,
-    const helpers::RowIndexContainer& _row_indices,
-    const helpers::WordIndexContainer& _word_indices,
-    const std::optional<const helpers::MappedContainer>& _mapped,
-    const std::shared_ptr<const logging::AbstractLogger> _logger,
-    multithreading::Communicator* _comm,
-    ensemble::DecisionTreeEnsemble* _ensemble )
+void Threadutils::fit_ensemble( const ThreadutilsFitParams _params )
 {
     try
         {
-            fit_as_feature_learner(
-                _this_thread_num,
-                _thread_nums,
-                _population,
-                _peripheral,
-                _row_indices,
-                _word_indices,
-                _mapped,
-                _logger,
-                _comm,
-                _ensemble );
+            fit_as_feature_learner( _params );
         }
     catch ( std::exception& e )
         {
-            if ( _logger )
+            if ( _params.logger_ )
                 {
                     throw std::runtime_error( e.what() );
                 }
@@ -126,96 +105,68 @@ Int Threadutils::get_num_threads( const Int _num_threads )
 // ----------------------------------------------------------------------------
 
 void Threadutils::transform_as_feature_learner(
-    const size_t _this_thread_num,
-    const std::vector<size_t> _thread_nums,
-    const containers::DataFrame& _population,
-    const std::vector<containers::DataFrame>& _peripheral,
-    const std::optional<helpers::WordIndexContainer>& _word_indices,
-    const std::optional<const helpers::MappedContainer>& _mapped,
-    const std::vector<size_t>& _index,
-    const std::shared_ptr<const logging::AbstractLogger> _logger,
-    const ensemble::DecisionTreeEnsemble& _ensemble,
-    multithreading::Communicator* _comm,
-    containers::Features* _features )
+    const ThreadutilsTransformParams& _params )
 {
     auto population_subview =
         utils::DataFrameScatterer::DataFrameScatterer::scatter_data_frame(
-            _population, _thread_nums, _this_thread_num );
+            _params.population_,
+            _params.thread_nums_,
+            _params.this_thread_num_ );
 
     const auto table_holder = TableHolder(
-        _ensemble.placeholder(),
+        _params.ensemble_.placeholder(),
         population_subview,
-        _peripheral,
-        _ensemble.peripheral(),
+        _params.peripheral_,
+        _params.ensemble_.peripheral(),
         std::nullopt,
-        _word_indices,
-        _mapped );
+        _params.word_indices_,
+        _params.mapped_,
+        _params.feature_container_ );
 
-    auto predictions =
-        _ensemble.make_subpredictions( table_holder, _logger, _comm );
+    auto predictions = _params.ensemble_.make_subpredictions(
+        table_holder, _params.logger_, &_params.comm_ );
 
     auto subfeatures =
         SubtreeHelper::make_subfeatures( table_holder, predictions );
 
-    assert_true( _features->size() == _index.size() );
+    assert_true( _params.features_.size() == _params.index_.size() );
 
-    utils::Logger::log( "Relboost: Building features...", _logger, _comm );
+    utils::Logger::log(
+        "Relboost: Building features...", _params.logger_, &_params.comm_ );
 
-    for ( size_t i = 0; i < _index.size(); ++i )
+    for ( size_t i = 0; i < _params.index_.size(); ++i )
         {
-            const auto ix = _index.at( i );
+            const auto ix = _params.index_.at( i );
 
             const auto new_feature =
-                _ensemble.transform( table_holder, subfeatures, ix );
+                _params.ensemble_.transform( table_holder, subfeatures, ix );
 
             copy(
                 population_subview.rows(),
                 new_feature,
-                _features->at( i ).get() );
+                _params.features_.at( i ).get() );
 
-            const auto progress = ( ( i + 1 ) * 100 ) / _index.size();
+            const auto progress = ( ( i + 1 ) * 100 ) / _params.index_.size();
 
             utils::Logger::log(
                 "Built FEATURE_" + std::to_string( ix + 1 ) +
                     ". Progress: " + std::to_string( progress ) + "\%.",
-                _logger,
-                _comm );
+                _params.logger_,
+                &_params.comm_ );
         }
 }
 
 // ----------------------------------------------------------------------------
 
-void Threadutils::transform_ensemble(
-    const size_t _this_thread_num,
-    const std::vector<size_t> _thread_nums,
-    const containers::DataFrame& _population,
-    const std::vector<containers::DataFrame>& _peripheral,
-    const std::optional<helpers::WordIndexContainer>& _word_indices,
-    const std::optional<const helpers::MappedContainer>& _mapped,
-    const std::vector<size_t>& _index,
-    const std::shared_ptr<const logging::AbstractLogger> _logger,
-    const ensemble::DecisionTreeEnsemble& _ensemble,
-    multithreading::Communicator* _comm,
-    containers::Features* _features )
+void Threadutils::transform_ensemble( const ThreadutilsTransformParams _params )
 {
     try
         {
-            transform_as_feature_learner(
-                _this_thread_num,
-                _thread_nums,
-                _population,
-                _peripheral,
-                _word_indices,
-                _mapped,
-                _index,
-                _logger,
-                _ensemble,
-                _comm,
-                _features );
+            transform_as_feature_learner( _params );
         }
     catch ( std::exception& e )
         {
-            if ( _logger )
+            if ( _params.logger_ )
                 {
                     throw std::runtime_error( e.what() );
                 }

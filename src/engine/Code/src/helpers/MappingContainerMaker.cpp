@@ -379,7 +379,7 @@ MappingContainerMaker::make_rownum_map_categorical( const Column<Int>& _col )
 
             if ( it == rownum_map.end() )
                 {
-                    rownum_map[key] = { i };
+                    rownum_map[key] = {i};
                 }
             else
                 {
@@ -405,7 +405,7 @@ MappingContainerMaker::make_rownum_map_discrete( const Column<Float>& _col )
 
             if ( it == rownum_map.end() )
                 {
-                    rownum_map[key] = { i };
+                    rownum_map[key] = {i};
                 }
             else
                 {
@@ -436,7 +436,7 @@ std::map<Int, std::vector<size_t>> MappingContainerMaker::make_rownum_map_text(
 
                     if ( it == rownum_map.end() )
                         {
-                            rownum_map[key] = { i };
+                            rownum_map[key] = {i};
                         }
                     else
                         {

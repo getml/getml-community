@@ -13,40 +13,13 @@ class Threadutils
 
    public:
     /// Fits a feature learner  or throws an exception.
-    static void fit_ensemble(
-        const size_t _this_thread_num,
-        const std::vector<size_t> _thread_nums,
-        const std::shared_ptr<const descriptors::Hyperparameters>&
-            _hyperparameters,
-        const containers::DataFrame& _population,
-        const std::vector<containers::DataFrame>& _peripheral,
-        const helpers::RowIndexContainer& _row_indices,
-        const helpers::WordIndexContainer& _word_indices,
-        const std::optional<const helpers::MappedContainer>& _mapped,
-        const containers::Placeholder& _placeholder,
-        const std::vector<std::string>& _peripheral_names,
-        const std::shared_ptr<const logging::AbstractLogger> _logger,
-        multithreading::Communicator* _comm,
-        ensemble::DecisionTreeEnsemble* _ensemble );
+    static void fit_ensemble( const ThreadutilsFitParams& _params );
 
     /// Number of threads.
     static size_t get_num_threads( const size_t _num_threads );
 
     /// Generates features.
-    static void transform_ensemble(
-        const size_t _this_thread_num,
-        const std::vector<size_t> _thread_nums,
-        const std::shared_ptr<const descriptors::Hyperparameters>&
-            _hyperparameters,
-        const containers::DataFrame& _population,
-        const std::vector<containers::DataFrame>& _peripheral,
-        const std::optional<helpers::WordIndexContainer>& _word_indices,
-        const std::optional<const helpers::MappedContainer>& _mapped,
-        const std::vector<size_t>& _index,
-        const std::shared_ptr<const logging::AbstractLogger> _logger,
-        const DecisionTreeEnsemble& _ensemble,
-        multithreading::Communicator* _comm,
-        containers::Features* _features );
+    static void transform_ensemble( const ThreadutilsTransformParams& _params );
 
     // ------------------------------------------------------------------------
 

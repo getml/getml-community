@@ -476,6 +476,8 @@ TimeSeriesModel<FEType>::create_placeholder(
 
     auto other_time_stamps_used = _placeholder.other_time_stamps_used_;
 
+    auto propositionalization = _placeholder.propositionalization_;
+
     auto time_stamps_used = _placeholder.time_stamps_used_;
 
     auto upper_time_stamps_used = _placeholder.upper_time_stamps_used_;
@@ -495,6 +497,8 @@ TimeSeriesModel<FEType>::create_placeholder(
 
             other_time_stamps_used.push_back( lower_ts_name );
 
+            propositionalization.push_back( false );
+
             time_stamps_used.push_back( ts_name );
 
             upper_time_stamps_used.push_back( upper_ts_name );
@@ -509,6 +513,7 @@ TimeSeriesModel<FEType>::create_placeholder(
         _placeholder.name(),
         other_join_keys_used,
         other_time_stamps_used,
+        propositionalization,
         time_stamps_used,
         upper_time_stamps_used );
 

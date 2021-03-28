@@ -8,7 +8,6 @@ namespace optimizationcriteria
 
 OptimizationCriterionImpl::OptimizationCriterionImpl(
     const std::shared_ptr<const descriptors::Hyperparameters>& _hyperparameters,
-    const std::string& _loss_function_type,
     const containers::DataFrameView& _main_table,
     multithreading::Communicator* _comm )
     : comm_( _comm ),
@@ -21,8 +20,9 @@ OptimizationCriterionImpl::OptimizationCriterionImpl(
           main_table_.num_targets(),
           std::vector<Float>( main_table_.nrows() ) ) )
 {
+    assert_true( hyperparameters_ );
     loss_function_ = lossfunctions::LossFunctionParser::parse_loss_function(
-        _loss_function_type, comm_ );
+        hyperparameters_->loss_function_, comm_ );
 };
 
 // ----------------------------------------------------------------------------
@@ -69,7 +69,7 @@ OptimizationCriterionImpl::reduce_sufficient_statistics_stored() const
                 local.data(),                                // in_values
                 local.size(),                                // n
                 sufficient_statistics_global.back().data(),  // out_values
-                std::plus<Float>()                   // op
+                std::plus<Float>()                           // op
             );
 
             comm_->barrier();
@@ -109,8 +109,8 @@ void OptimizationCriterionImpl::store_current_stage(
     // why sufficient_statistics_stored_ has two extra columns over ..._current
     // and ..._committed.
 
-    sufficient_statistics_stored_.push_back( std::vector<Float>(
-        _sufficient_statistics_current.size() + 2 ) );
+    sufficient_statistics_stored_.push_back(
+        std::vector<Float>( _sufficient_statistics_current.size() + 2 ) );
 
     std::copy(
         _sufficient_statistics_current.begin(),

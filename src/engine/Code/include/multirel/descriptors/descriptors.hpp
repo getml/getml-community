@@ -9,6 +9,8 @@
 #include <Poco/JSON/Array.h>
 #include <Poco/JSON/Object.h>
 
+#include "fastprop/Hyperparameters.hpp"
+
 #include "multirel/Float.hpp"
 #include "multirel/Int.hpp"
 

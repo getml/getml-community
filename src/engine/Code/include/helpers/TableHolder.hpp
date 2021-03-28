@@ -7,7 +7,7 @@ namespace helpers
 
 struct TableHolder
 {
-    typedef typename MappedContainer::MappedColumns MappedColumns;
+    typedef typename DataFrame::AdditionalColumns AdditionalColumns;
 
     typedef typename RowIndexContainer::RowIndices RowIndices;
 
@@ -22,7 +22,9 @@ struct TableHolder
             std::nullopt,
         const std::optional<WordIndexContainer>& _word_index_container =
             std::nullopt,
-        const std::optional<const MappedContainer>& _mapped = std::nullopt );
+        const std::optional<const MappedContainer>& _mapped = std::nullopt,
+        const std::optional<const FeatureContainer>& _feature_container =
+            std::nullopt );
 
     ~TableHolder();
 
@@ -48,7 +50,8 @@ struct TableHolder
         const DataFrameView& _population,
         const std::vector<DataFrame>& _peripheral,
         const std::optional<RowIndexContainer>& _row_index_container,
-        const std::optional<WordIndexContainer>& _word_index_container );
+        const std::optional<WordIndexContainer>& _word_index_container,
+        const std::optional<const FeatureContainer>& _feature_container );
 
     /// Creates the peripheral tables during construction.
     static std::vector<DataFrame> parse_peripheral_tables(
@@ -58,7 +61,12 @@ struct TableHolder
         const std::vector<std::string>& _peripheral_names,
         const std::optional<RowIndexContainer>& _row_index_container,
         const std::optional<WordIndexContainer>& _word_index_container,
-        const std::optional<const MappedContainer>& _mapped );
+        const std::optional<const MappedContainer>& _mapped,
+        const std::optional<const FeatureContainer>& _feature_container );
+
+    /// Parses the propositionalization flag in the Placeholder
+    static std::vector<bool> parse_propositionalization(
+        const Placeholder& _placeholder, const size_t _expected_size );
 
     /// Creates the subtables during construction.
     static std::vector<std::optional<TableHolder>> parse_subtables(
@@ -81,6 +89,9 @@ struct TableHolder
 
     /// The TableHolder can have peripheral tables.
     const std::vector<DataFrame> peripheral_tables_;
+
+    /// Whether we want to use propsitionalization on a particular relationship.
+    const std::vector<bool> propositionalization_;
 
     /// The TableHolder may or may not have subtables.
     const std::vector<std::optional<TableHolder>> subtables_;

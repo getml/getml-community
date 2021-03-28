@@ -38,37 +38,58 @@ DataFrame::DataFrame(
 
     for ( auto& col : _categoricals )
         {
-            assert_true( col.nrows_ == nrows() );
+            assert_msg(
+                col.nrows_ == nrows(),
+                "categoricals: col.nrows_: " + std::to_string( col.nrows_ ) +
+                    ", nrows(): " + std::to_string( nrows() ) );
         }
 
     for ( auto& col : _discretes )
         {
-            assert_true( col.nrows_ == nrows() );
+            assert_msg(
+                col.nrows_ == nrows(),
+                "discretes: col.nrows_: " + std::to_string( col.nrows_ ) +
+                    ", nrows(): " + std::to_string( nrows() ) );
         }
 
     for ( auto& col : _join_keys )
         {
-            assert_true( col.nrows_ == nrows() );
+            assert_msg(
+                col.nrows_ == nrows(),
+                "join_keys: col.nrows_: " + std::to_string( col.nrows_ ) +
+                    ", nrows(): " + std::to_string( nrows() ) );
         }
 
     for ( auto& col : _numericals )
         {
-            assert_true( col.nrows_ == nrows() );
+            assert_msg(
+                col.nrows_ == nrows(),
+                "numericals: col.nrows_: " + std::to_string( col.nrows_ ) +
+                    ", nrows(): " + std::to_string( nrows() ) );
         }
 
     for ( auto& col : _targets )
         {
-            assert_true( col.nrows_ == nrows() );
+            assert_msg(
+                col.nrows_ == nrows(),
+                "targets: col.nrows_: " + std::to_string( col.nrows_ ) +
+                    ", nrows(): " + std::to_string( nrows() ) );
         }
 
     for ( auto& col : _text )
         {
-            assert_true( col.nrows_ == nrows() );
+            assert_msg(
+                col.nrows_ == nrows(),
+                "text: col.nrows_: " + std::to_string( col.nrows_ ) +
+                    ", nrows(): " + std::to_string( nrows() ) );
         }
 
     for ( auto& col : _time_stamps )
         {
-            assert_true( col.nrows_ == nrows() );
+            assert_msg(
+                col.nrows_ == nrows(),
+                "time_stamps: col.nrows_: " + std::to_string( col.nrows_ ) +
+                    ", nrows(): " + std::to_string( nrows() ) );
         }
 }
 
@@ -111,7 +132,7 @@ std::shared_ptr<Index> DataFrame::create_index( const Column<Int>& _join_key )
                     if ( it == new_index->end() )
                         {
                             new_index->insert_or_assign(
-                                _join_key[ix], std::vector<size_t>( {ix} ) );
+                                _join_key[ix], std::vector<size_t>( { ix } ) );
                         }
                     else
                         {
@@ -148,7 +169,7 @@ DataFrame DataFrame::create_subview(
     const bool _allow_lagged_targets,
     const RowIndices& _row_indices,
     const WordIndices& _word_indices,
-    const MappedColumns& _mapped ) const
+    const AdditionalColumns& _additional ) const
 {
     // ---------------------------------------------------------------------------
 
@@ -182,7 +203,7 @@ DataFrame DataFrame::create_subview(
             numericals_and_time_stamps.push_back( col );
         }
 
-    for ( const auto& col : _mapped )
+    for ( const auto& col : _additional )
         {
             numericals_and_time_stamps.push_back( col );
         }
@@ -215,8 +236,8 @@ DataFrame DataFrame::create_subview(
             return DataFrame(
                 categoricals_,
                 discretes_,
-                {indices_.at( ix_join_key )},
-                {join_keys_.at( ix_join_key )},
+                { indices_.at( ix_join_key ) },
+                { join_keys_.at( ix_join_key ) },
                 _name,
                 numericals_and_time_stamps,
                 targets_,
@@ -252,13 +273,13 @@ DataFrame DataFrame::create_subview(
             return DataFrame(
                 categoricals_,
                 discretes_,
-                {indices_.at( ix_join_key )},
-                {join_keys_.at( ix_join_key )},
+                { indices_.at( ix_join_key ) },
+                { join_keys_.at( ix_join_key ) },
                 _name,
                 numericals_and_time_stamps,
                 targets_,
                 text_,
-                {time_stamps_.at( ix_time_stamp )},
+                { time_stamps_.at( ix_time_stamp ) },
                 _row_indices,
                 _word_indices );
         }
@@ -287,14 +308,14 @@ DataFrame DataFrame::create_subview(
     return DataFrame(
         categoricals_,
         discretes_,
-        {indices_.at( ix_join_key )},
-        {join_keys_.at( ix_join_key )},
+        { indices_.at( ix_join_key ) },
+        { join_keys_.at( ix_join_key ) },
         _name,
         numericals_and_time_stamps,
         targets_,
         text_,
-        {time_stamps_.at( ix_time_stamp ),
-         time_stamps_.at( ix_upper_time_stamp )},
+        { time_stamps_.at( ix_time_stamp ),
+          time_stamps_.at( ix_upper_time_stamp ) },
         _row_indices,
         _word_indices );
 

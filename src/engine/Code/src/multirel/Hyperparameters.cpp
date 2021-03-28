@@ -31,6 +31,11 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _json_obj )
       num_subfeatures_(
           JSON::get_value<size_t>( _json_obj, "num_subfeatures_" ) ),
       num_threads_( JSON::get_value<size_t>( _json_obj, "num_threads_" ) ),
+      propositionalization_(
+          _json_obj.has( "propositionalization_" )
+              ? std::make_shared<const fastprop::Hyperparameters>(
+                    *JSON::get_object( _json_obj, "propositionalization_" ) )
+              : std::shared_ptr<const fastprop::Hyperparameters>() ),
       round_robin_( JSON::get_value<bool>( _json_obj, "round_robin_" ) ),
       sampling_factor_(
           JSON::get_value<Float>( _json_obj, "sampling_factor_" ) ),
@@ -120,6 +125,14 @@ Poco::JSON::Object::Ptr Hyperparameters::to_json_obj() const
 
     obj->set( "min_num_samples_", tree_hyperparameters_->min_num_samples_ );
 
+    obj->set( "num_threads_", num_threads_ );
+
+    if ( propositionalization_ )
+        {
+            obj->set(
+                "propositionalization_", propositionalization_->to_json_obj() );
+        }
+
     obj->set( "shrinkage_", shrinkage_ );
 
     obj->set( "sampling_factor_", sampling_factor_ );
@@ -141,8 +154,6 @@ Poco::JSON::Object::Ptr Hyperparameters::to_json_obj() const
     obj->set( "seed_", seed_ );
 
     obj->set( "split_text_fields_", split_text_fields_ );
-
-    obj->set( "num_threads_", num_threads_ );
 
     obj->set( "vocab_size_", vocab_size_ );
 

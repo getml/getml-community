@@ -49,6 +49,10 @@ struct DecisionTreeEnsembleImpl
     /// raw pointer to the communicator.
     multithreading::Communicator* comm_;
 
+    /// Holds the propositionalization subfeatures.
+    std::shared_ptr<const fastprop::subfeatures::FastPropContainer>
+        fast_prop_container_;
+
     /// Hyperparameters used to train the relboost model.
     std::shared_ptr<const Hyperparameters> hyperparameters_;
 

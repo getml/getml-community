@@ -14,8 +14,8 @@ struct DecisionTreeEnsembleImpl
     DecisionTreeEnsembleImpl(
         const std::shared_ptr<const descriptors::Hyperparameters>
             &_hyperparameters,
-        const std::vector<std::string> &_peripheral,
-        const containers::Placeholder &_placeholder,
+        const std::shared_ptr<const std::vector<std::string>> &_peripheral,
+        const std::shared_ptr<const containers::Placeholder> &_placeholder,
         const std::shared_ptr<const std::vector<containers::Placeholder>>
             &_peripheral_schema,
         const std::shared_ptr<const containers::Placeholder>
@@ -25,8 +25,7 @@ struct DecisionTreeEnsembleImpl
           hyperparameters_( _hyperparameters ),
           peripheral_( _peripheral ),
           peripheral_schema_( _peripheral_schema ),
-          placeholder_(
-              std::make_shared<const containers::Placeholder>( _placeholder ) ),
+          placeholder_( _placeholder ),
           population_schema_( _population_schema ){};
 
     ~DecisionTreeEnsembleImpl() = default;
@@ -43,11 +42,15 @@ struct DecisionTreeEnsembleImpl
     /// The hyperparameters used in this ensemble
     std::shared_ptr<const descriptors::Hyperparameters> hyperparameters_;
 
+    /// Holds the propositionalization subfeatures.
+    std::shared_ptr<const fastprop::subfeatures::FastPropContainer>
+        fast_prop_container_;
+
     /// Used to map columns onto the average target value.
     std::shared_ptr<const helpers::MappingContainer> mappings_;
 
     /// Names of the peripheral tables.
-    std::vector<std::string> peripheral_;
+    std::shared_ptr<const std::vector<std::string>> peripheral_;
 
     /// containers::Placeholder for the peripheral tables (only used
     /// for the schema)

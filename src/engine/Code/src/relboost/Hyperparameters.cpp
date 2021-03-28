@@ -17,6 +17,8 @@ Hyperparameters::Hyperparameters()
       num_features_( 10 ),
       num_subfeatures_( 10 ),
       num_threads_( 0 ),
+      propositionalization_(
+          std::shared_ptr<const fastprop::Hyperparameters>() ),
       reg_lambda_( 0.0 ),
       sampling_factor_( 1.0 ),
       seed_( 5843 ),
@@ -24,7 +26,6 @@ Hyperparameters::Hyperparameters()
       shrinkage_( 0.3 ),
       silent_( true ),
       split_text_fields_( false ),
-      target_num_( 0 ),
       use_timestamps_( true ),
       vocab_size_( 500 )
 {
@@ -62,6 +63,11 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _obj )
       num_features_( JSON::get_value<Int>( _obj, "num_features_" ) ),
       num_subfeatures_( JSON::get_value<Int>( _obj, "num_subfeatures_" ) ),
       num_threads_( JSON::get_value<Int>( _obj, "num_threads_" ) ),
+      propositionalization_(
+          _obj.has( "propositionalization_" )
+              ? std::make_shared<const fastprop::Hyperparameters>(
+                    *JSON::get_object( _obj, "propositionalization_" ) )
+              : std::shared_ptr<const fastprop::Hyperparameters>() ),
       reg_lambda_( JSON::get_value<Float>( _obj, "reg_lambda_" ) ),
       sampling_factor_( JSON::get_value<Float>( _obj, "sampling_factor_" ) ),
       seed_( JSON::get_value<unsigned int>( _obj, "seed_" ) ),
@@ -75,7 +81,6 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _obj )
           _obj.has( "split_text_fields_" )
               ? JSON::get_value<bool>( _obj, "split_text_fields_" )
               : false ),  // TODO: Remove
-      target_num_( /*JSON::get_value<Int>( _obj, "target_num_" )*/ 0 ),  // TODO
       use_timestamps_( JSON::get_value<bool>( _obj, "use_timestamps_" ) ),
       vocab_size_(
           _obj.has( "vocab_size_" )
@@ -143,6 +148,12 @@ Poco::JSON::Object::Ptr Hyperparameters::to_json_obj() const
     obj->set( "num_subfeatures_", num_subfeatures_ );
 
     obj->set( "num_threads_", num_threads_ );
+
+    if ( propositionalization_ )
+        {
+            obj->set(
+                "propositionalization_", propositionalization_->to_json_obj() );
+        }
 
     obj->set( "reg_lambda_", reg_lambda_ );
 
