@@ -13,7 +13,6 @@ class RSquaredCriterion : public OptimizationCriterion
     RSquaredCriterion(
         const std::shared_ptr<const descriptors::Hyperparameters>&
             _hyperparameters,
-        const std::string& _loss_function_type,
         const containers::DataFrameView& _main_table,
         multithreading::Communicator* _comm );
 
