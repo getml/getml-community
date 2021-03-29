@@ -40,6 +40,22 @@ DataFrame TextFieldSplitter::add_rowid( const DataFrame& _df )
 
 // ----------------------------------------------------------------------------
 
+size_t TextFieldSplitter::count_text_fields(
+    const DataFrame& _population_df,
+    const std::vector<DataFrame>& _peripheral_dfs )
+{
+    auto num_text_fields = _population_df.num_text();
+
+    for ( const auto& df : _peripheral_dfs )
+        {
+            num_text_fields += df.num_text();
+        }
+
+    return num_text_fields;
+}
+
+// ----------------------------------------------------------------------------
+
 DataFrame TextFieldSplitter::make_new_df(
     const std::string& _df_name, const Column<strings::String>& _col )
 {
@@ -75,13 +91,30 @@ DataFrame TextFieldSplitter::remove_text_fields( const DataFrame& _df )
         {}                  // _word_indices
     );
 }
+
 // ----------------------------------------------------------------------------
 
 std::pair<DataFrame, std::vector<DataFrame>>
 TextFieldSplitter::split_text_fields(
     const DataFrame& _population_df,
-    const std::vector<DataFrame>& _peripheral_dfs )
+    const std::vector<DataFrame>& _peripheral_dfs,
+    const std::shared_ptr<const logging::AbstractLogger>& _logger )
 {
+    const auto num_text_fields =
+        count_text_fields( _population_df, _peripheral_dfs );
+
+    if ( num_text_fields == 0 )
+        {
+            return std::make_pair( _population_df, _peripheral_dfs );
+        }
+
+    if ( _logger )
+        {
+            _logger->log( "Splitting text fields..." );
+        }
+
+    auto progress_logger = logging::ProgressLogger( _logger, num_text_fields );
+
     const auto modify_if_applicable = []( const DataFrame& _df ) -> DataFrame {
         return _df.num_text() == 0 ? _df
                                    : remove_text_fields( add_rowid( _df ) );
@@ -94,11 +127,12 @@ TextFieldSplitter::split_text_fields(
 
     auto peripheral_dfs = stl::make::vector<DataFrame>( range );
 
-    split_text_fields_on_df( _population_df, &peripheral_dfs );
+    split_text_fields_on_df(
+        _population_df, &peripheral_dfs, &progress_logger );
 
     for ( const auto& df : _peripheral_dfs )
         {
-            split_text_fields_on_df( df, &peripheral_dfs );
+            split_text_fields_on_df( df, &peripheral_dfs, &progress_logger );
         }
 
     return std::make_pair( population_df, peripheral_dfs );
@@ -138,11 +172,14 @@ TextFieldSplitter::split_text_fields_on_col(
 // ----------------------------------------------------------------------------
 
 void TextFieldSplitter::split_text_fields_on_df(
-    const DataFrame& _df, std::vector<DataFrame>* _peripheral_dfs )
+    const DataFrame& _df,
+    std::vector<DataFrame>* _peripheral_dfs,
+    logging::ProgressLogger* _progress_logger )
 {
     const auto add_df =
         [&_df]( const Column<strings::String>& _col ) -> DataFrame {
-        return make_new_df( _df.name(), _col );
+        const auto df = make_new_df( _df.name(), _col );
+        return df;
     };
 
     auto range = _df.text_ | std::views::transform( add_df );
@@ -150,6 +187,7 @@ void TextFieldSplitter::split_text_fields_on_df(
     for ( auto df : range )
         {
             _peripheral_dfs->push_back( df );
+            _progress_logger->increment();
         }
 }
 

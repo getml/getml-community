@@ -5,13 +5,18 @@
 // Dependencies
 
 #include <chrono>
+#include <memory>
 #include <thread>
 #include <vector>
+
+#include "debug/debug.hpp"
 
 // ----------------------------------------------------
 // Module files
 
 #include "logging/AbstractLogger.hpp"
+
+#include "logging/ProgressLogger.hpp"
 
 // ----------------------------------------------------
 

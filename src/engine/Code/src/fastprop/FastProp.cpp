@@ -648,7 +648,8 @@ void FastProp::fit(
     extract_schemas( _population, _peripheral );
 
     const auto [population_table, peripheral_tables, word_indices] =
-        handle_text_fields( _population, _peripheral, _as_subfeatures );
+        handle_text_fields(
+            _population, _peripheral, _logger, _as_subfeatures );
 
     const auto mapped = handle_mappings(
         population_table, peripheral_tables, _mapped, word_indices );
@@ -1337,6 +1338,7 @@ std::tuple<
 FastProp::handle_text_fields(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral,
+    const std::shared_ptr<const logging::AbstractLogger> _logger,
     const bool _as_subfeatures )
 {
     const bool split_text_fields =
@@ -1344,7 +1346,7 @@ FastProp::handle_text_fields(
 
     const auto [population, peripheral] =
         split_text_fields ? helpers::TextFieldSplitter::split_text_fields(
-                                _population, _peripheral )
+                                _population, _peripheral, _logger )
                           : std::make_pair( _population, _peripheral );
 
     vocabulary_ = std::make_shared<const helpers::VocabularyContainer>(
@@ -2149,7 +2151,7 @@ containers::Features FastProp::transform(
 
     const auto [population_table, peripheral_tables] =
         split_text_fields ? helpers::TextFieldSplitter::split_text_fields(
-                                _population, _peripheral )
+                                _population, _peripheral, _logger )
                           : std::make_pair( _population, _peripheral );
 
     const auto word_indices =

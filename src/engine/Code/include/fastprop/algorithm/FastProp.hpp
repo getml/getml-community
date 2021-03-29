@@ -277,6 +277,7 @@ class FastProp
     handle_text_fields(
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
+        const std::shared_ptr<const logging::AbstractLogger> _logger,
         const bool _as_subfeatures );
 
     /// Generates importances from the features.

@@ -14,11 +14,17 @@ class TextFieldSplitter
     /// separate data frame.
     static std::pair<DataFrame, std::vector<DataFrame>> split_text_fields(
         const DataFrame& _population_df,
-        const std::vector<DataFrame>& _peripheral_dfs );
+        const std::vector<DataFrame>& _peripheral_dfs,
+        const std::shared_ptr<const logging::AbstractLogger>& _logger );
 
    private:
     /// Adds a rowid to the data frame.
     static DataFrame add_rowid( const DataFrame& _df );
+
+    /// Counts the total number of text fields.
+    static size_t count_text_fields(
+        const DataFrame& _population_df,
+        const std::vector<DataFrame>& _peripheral_dfs );
 
     /// Generates a new peripheral data frame.
     static DataFrame make_new_df(
@@ -34,7 +40,9 @@ class TextFieldSplitter
     /// Splits up all text fields in a particular data frame into individual
     /// words and puts them in a separate data frame.
     static void split_text_fields_on_df(
-        const DataFrame& _df, std::vector<DataFrame>* _peripheral_dfs );
+        const DataFrame& _df,
+        std::vector<DataFrame>* _peripheral_dfs,
+        logging::ProgressLogger* _progress_logger );
 };
 
 // ----------------------------------------------------------------------------

@@ -289,7 +289,8 @@ class DecisionTreeEnsemble
         helpers::WordIndexContainer>
     handle_text_fields(
         const containers::DataFrame& _population,
-        const std::vector<containers::DataFrame>& _peripheral ) const;
+        const std::vector<containers::DataFrame>& _peripheral,
+        const std::shared_ptr<const logging::AbstractLogger> _logger ) const;
 
     /// Calculates the index
     std::vector<size_t> infer_index(

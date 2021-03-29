@@ -22,6 +22,8 @@
 
 #include "jsonutils/jsonutils.hpp"
 
+#include "logging/logging.hpp"
+
 #include "stl/stl.hpp"
 
 #include "strings/strings.hpp"

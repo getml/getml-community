@@ -260,7 +260,7 @@ void DecisionTreeEnsemble::fit(
     extract_schemas( _population, _peripheral );
 
     const auto [population, peripheral, row_indices, word_indices] =
-        handle_text_fields( _population, _peripheral );
+        handle_text_fields( _population, _peripheral, _logger );
 
     const auto mapped = handle_mappings( population, peripheral, word_indices );
 
@@ -881,12 +881,13 @@ std::tuple<
     helpers::WordIndexContainer>
 DecisionTreeEnsemble::handle_text_fields(
     const containers::DataFrame &_population,
-    const std::vector<containers::DataFrame> &_peripheral ) const
+    const std::vector<containers::DataFrame> &_peripheral,
+    const std::shared_ptr<const logging::AbstractLogger> _logger ) const
 {
     const auto [population, peripheral] =
         hyperparameters().split_text_fields_
             ? helpers::TextFieldSplitter::split_text_fields(
-                  _population, _peripheral )
+                  _population, _peripheral, _logger )
             : std::make_pair( _population, _peripheral );
 
     const auto vocabulary = helpers::VocabularyContainer(
@@ -1171,7 +1172,7 @@ containers::Features DecisionTreeEnsemble::transform(
     const auto [population_table, peripheral_tables] =
         hyperparameters().split_text_fields_
             ? helpers::TextFieldSplitter::split_text_fields(
-                  _population, _peripheral )
+                  _population, _peripheral, _logger )
             : std::make_pair( _population, _peripheral );
 
     const auto word_indices =
