@@ -276,7 +276,8 @@ class DecisionTreeEnsemble
     std::optional<const helpers::MappedContainer> handle_mappings(
         const containers::DataFrame &_population,
         const std::vector<containers::DataFrame> &_peripheral,
-        const helpers::WordIndexContainer &_word_indices );
+        const helpers::WordIndexContainer &_word_indices,
+        const std::shared_ptr<const logging::AbstractLogger> _logger );
 
     /// Prepares the text fields for training and transformation.
     std::tuple<

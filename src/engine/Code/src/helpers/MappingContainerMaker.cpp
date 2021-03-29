@@ -4,13 +4,43 @@ namespace helpers
 {
 // ----------------------------------------------------------------------------
 
+size_t MappingContainerMaker::count_mappable_columns(
+    const TableHolder& _table_holder )
+{
+    const auto get_count = []( const DataFrame& _df ) -> size_t {
+        return _df.num_categoricals() + _df.num_discretes() + _df.num_text();
+    };
+
+    const auto get_subcount =
+        []( const std::optional<TableHolder>& _subtable ) -> size_t {
+        if ( !_subtable )
+            {
+                return 0;
+            }
+        return MappingContainerMaker::count_mappable_columns(
+            _subtable.value() );
+    };
+
+    auto range1 =
+        _table_holder.peripheral_tables_ | std::views::transform( get_count );
+
+    auto range2 =
+        _table_holder.subtables_ | std::views::transform( get_subcount );
+
+    return std::accumulate( range1.begin(), range1.end(), 0 ) +
+           std::accumulate( range2.begin(), range2.end(), 0 );
+}
+
+// ----------------------------------------------------------------------------
+
 std::shared_ptr<const MappingContainer> MappingContainerMaker::fit(
     const size_t _min_freq,
     const Placeholder& _placeholder,
     const DataFrame& _population,
     const std::vector<DataFrame>& _peripheral,
     const std::vector<std::string>& _peripheral_names,
-    const WordIndexContainer& _word_indices )
+    const WordIndexContainer& _word_indices,
+    const std::shared_ptr<const logging::AbstractLogger>& _logger )
 {
     const auto dummy_rownums = std::make_shared<std::vector<size_t>>( 0 );
 
@@ -24,11 +54,17 @@ std::shared_ptr<const MappingContainer> MappingContainerMaker::fit(
         std::nullopt,
         _word_indices );
 
+    const auto total = count_mappable_columns( table_holder );
+
+    auto progress_logger =
+        logging::ProgressLogger( "Fitting the mappings...", _logger, total );
+
     return fit_on_table_holder(
         _min_freq,
         table_holder,
         std::vector<DataFrame>(),
-        std::vector<DataFrame>() );
+        std::vector<DataFrame>(),
+        &progress_logger );
 }
 
 // ----------------------------------------------------------------------------
@@ -37,7 +73,8 @@ typename MappingContainerMaker::MappingForDf
 MappingContainerMaker::fit_on_categoricals(
     const size_t _min_freq,
     const std::vector<DataFrame>& _main_tables,
-    const std::vector<DataFrame>& _peripheral_tables )
+    const std::vector<DataFrame>& _peripheral_tables,
+    logging::ProgressLogger* _progress_logger )
 {
     assert_true( _main_tables.size() == _peripheral_tables.size() );
 
@@ -54,7 +91,11 @@ MappingContainerMaker::fit_on_categoricals(
     const auto range = _peripheral_tables.back().categoricals_ |
                        std::views::transform( col_to_mapping );
 
-    return stl::make::vector<MappingForDf::value_type>( range );
+    const auto vec = stl::make::vector<MappingForDf::value_type>( range );
+
+    _progress_logger->increment( vec.size() );
+
+    return vec;
 }
 
 // ----------------------------------------------------------------------------
@@ -63,7 +104,8 @@ typename MappingContainerMaker::MappingForDf
 MappingContainerMaker::fit_on_discretes(
     const size_t _min_freq,
     const std::vector<DataFrame>& _main_tables,
-    const std::vector<DataFrame>& _peripheral_tables )
+    const std::vector<DataFrame>& _peripheral_tables,
+    logging::ProgressLogger* _progress_logger )
 {
     assert_true( _main_tables.size() == _peripheral_tables.size() );
 
@@ -80,7 +122,11 @@ MappingContainerMaker::fit_on_discretes(
     const auto range = _peripheral_tables.back().discretes_ |
                        std::views::transform( col_to_mapping );
 
-    return stl::make::vector<MappingForDf::value_type>( range );
+    const auto vec = stl::make::vector<MappingForDf::value_type>( range );
+
+    _progress_logger->increment( vec.size() );
+
+    return vec;
 }
 
 // ----------------------------------------------------------------------------
@@ -88,7 +134,8 @@ MappingContainerMaker::fit_on_discretes(
 typename MappingContainerMaker::MappingForDf MappingContainerMaker::fit_on_text(
     const size_t _min_freq,
     const std::vector<DataFrame>& _main_tables,
-    const std::vector<DataFrame>& _peripheral_tables )
+    const std::vector<DataFrame>& _peripheral_tables,
+    logging::ProgressLogger* _progress_logger )
 {
     assert_true( _main_tables.size() == _peripheral_tables.size() );
 
@@ -116,7 +163,11 @@ typename MappingContainerMaker::MappingForDf MappingContainerMaker::fit_on_text(
     const auto range = _peripheral_tables.back().word_indices_ |
                        std::views::transform( col_to_mapping );
 
-    return stl::make::vector<MappingForDf::value_type>( range );
+    const auto vec = stl::make::vector<MappingForDf::value_type>( range );
+
+    _progress_logger->increment( vec.size() );
+
+    return vec;
 }
 
 // ----------------------------------------------------------------------------
@@ -126,7 +177,8 @@ MappingContainerMaker::fit_on_table_holder(
     const size_t _min_freq,
     const TableHolder& _table_holder,
     const std::vector<DataFrame>& _main_tables,
-    const std::vector<DataFrame>& _peripheral_tables )
+    const std::vector<DataFrame>& _peripheral_tables,
+    logging::ProgressLogger* _progress_logger )
 {
     // -----------------------------------------------------------
 
@@ -165,10 +217,10 @@ MappingContainerMaker::fit_on_table_holder(
                 _peripheral_tables, _table_holder.peripheral_tables_.at( i ) );
 
             const auto categorical_mapping = fit_on_categoricals(
-                _min_freq, main_tables, peripheral_tables );
+                _min_freq, main_tables, peripheral_tables, _progress_logger );
 
-            const auto discrete_mapping =
-                fit_on_discretes( _min_freq, main_tables, peripheral_tables );
+            const auto discrete_mapping = fit_on_discretes(
+                _min_freq, main_tables, peripheral_tables, _progress_logger );
 
             const auto subcontainer =
                 _table_holder.subtables_.at( i )
@@ -176,11 +228,12 @@ MappingContainerMaker::fit_on_table_holder(
                           _min_freq,
                           *_table_holder.subtables_.at( i ),
                           main_tables,
-                          peripheral_tables )
+                          peripheral_tables,
+                          _progress_logger )
                     : std::shared_ptr<MappingContainer>();
 
-            const auto text_mapping =
-                fit_on_text( _min_freq, main_tables, peripheral_tables );
+            const auto text_mapping = fit_on_text(
+                _min_freq, main_tables, peripheral_tables, _progress_logger );
 
             categorical.push_back( categorical_mapping );
 
@@ -379,7 +432,7 @@ MappingContainerMaker::make_rownum_map_categorical( const Column<Int>& _col )
 
             if ( it == rownum_map.end() )
                 {
-                    rownum_map[key] = {i};
+                    rownum_map[key] = { i };
                 }
             else
                 {
@@ -405,7 +458,7 @@ MappingContainerMaker::make_rownum_map_discrete( const Column<Float>& _col )
 
             if ( it == rownum_map.end() )
                 {
-                    rownum_map[key] = {i};
+                    rownum_map[key] = { i };
                 }
             else
                 {
@@ -436,7 +489,7 @@ std::map<Int, std::vector<size_t>> MappingContainerMaker::make_rownum_map_text(
 
                     if ( it == rownum_map.end() )
                         {
-                            rownum_map[key] = {i};
+                            rownum_map[key] = { i };
                         }
                     else
                         {
@@ -456,7 +509,8 @@ std::optional<const MappedContainer> MappingContainerMaker::transform(
     const DataFrame& _population,
     const std::vector<DataFrame>& _peripheral,
     const std::vector<std::string>& _peripheral_names,
-    const std::optional<WordIndexContainer>& _word_indices )
+    const std::optional<WordIndexContainer>& _word_indices,
+    const std::shared_ptr<const logging::AbstractLogger>& _logger )
 {
     if ( !_mapping )
         {
@@ -475,7 +529,13 @@ std::optional<const MappedContainer> MappingContainerMaker::transform(
         std::nullopt,
         _word_indices );
 
-    const auto ptr = transform_table_holder( _mapping, table_holder );
+    const auto total = count_mappable_columns( table_holder );
+
+    auto progress_logger = logging::ProgressLogger(
+        "Building the mapping columns...", _logger, total );
+
+    const auto ptr =
+        transform_table_holder( _mapping, table_holder, &progress_logger );
 
     assert_true( ptr );
 
@@ -492,7 +552,9 @@ std::optional<const MappedContainer> MappingContainerMaker::transform(
 
 typename MappingContainerMaker::MappedColumns
 MappingContainerMaker::transform_categorical(
-    const MappingForDf& _mapping, const std::vector<Column<Int>>& _categorical )
+    const MappingForDf& _mapping,
+    const std::vector<Column<Int>>& _categorical,
+    logging::ProgressLogger* _progress_logger )
 {
     const auto num_targets = infer_num_targets( _mapping );
 
@@ -526,6 +588,8 @@ MappingContainerMaker::transform_categorical(
         "_mapping.size(): " + std::to_string( _mapping.size() ) +
             ", mapped.size(): " + std::to_string( mapped.size() ) +
             ", num_targets: " + std::to_string( num_targets ) );
+
+    _progress_logger->increment( mapped.size() );
 
     return mapped;
 }
@@ -572,7 +636,9 @@ Column<Float> MappingContainerMaker::transform_categorical_column(
 
 typename MappingContainerMaker::MappedColumns
 MappingContainerMaker::transform_discrete(
-    const MappingForDf& _mapping, const std::vector<Column<Float>>& _discrete )
+    const MappingForDf& _mapping,
+    const std::vector<Column<Float>>& _discrete,
+    logging::ProgressLogger* _progress_logger )
 {
     const auto num_targets = infer_num_targets( _mapping );
 
@@ -606,6 +672,8 @@ MappingContainerMaker::transform_discrete(
         "_mapping.size(): " + std::to_string( _mapping.size() ) +
             ", mapped.size(): " + std::to_string( mapped.size() ) +
             ", num_targets: " + std::to_string( num_targets ) );
+
+    _progress_logger->increment( mapped.size() );
 
     return mapped;
 }
@@ -654,7 +722,8 @@ typename MappingContainerMaker::MappedColumns
 MappingContainerMaker::transform_text(
     const MappingForDf& _mapping,
     const std::vector<Column<strings::String>>& _text,
-    const typename DataFrame::WordIndices& _word_indices )
+    const typename DataFrame::WordIndices& _word_indices,
+    logging::ProgressLogger* _progress_logger )
 {
     const auto num_targets = infer_num_targets( _mapping );
 
@@ -693,6 +762,8 @@ MappingContainerMaker::transform_text(
         "_mapping.size(): " + std::to_string( _mapping.size() ) +
             ", mapped.size(): " + std::to_string( mapped.size() ) +
             ", num_targets: " + std::to_string( num_targets ) );
+
+    _progress_logger->increment( mapped.size() );
 
     return mapped;
 }
@@ -766,7 +837,8 @@ Column<Float> MappingContainerMaker::transform_text_column(
 std::shared_ptr<const MappedContainer>
 MappingContainerMaker::transform_table_holder(
     const std::shared_ptr<const MappingContainer>& _mapping,
-    const TableHolder& _table_holder )
+    const TableHolder& _table_holder,
+    logging::ProgressLogger* _progress_logger )
 {
     assert_true( _mapping );
 
@@ -794,11 +866,13 @@ MappingContainerMaker::transform_table_holder(
         {
             categorical.push_back( transform_categorical(
                 _mapping->categorical_.at( i ),
-                _table_holder.peripheral_tables_.at( i ).categoricals_ ) );
+                _table_holder.peripheral_tables_.at( i ).categoricals_,
+                _progress_logger ) );
 
             discrete.push_back( transform_discrete(
                 _mapping->discrete_.at( i ),
-                _table_holder.peripheral_tables_.at( i ).discretes_ ) );
+                _table_holder.peripheral_tables_.at( i ).discretes_,
+                _progress_logger ) );
 
             if ( _table_holder.subtables_.at( i ) )
                 {
@@ -806,7 +880,8 @@ MappingContainerMaker::transform_table_holder(
 
                     subcontainers.push_back( transform_table_holder(
                         _mapping->subcontainers_.at( i ),
-                        *_table_holder.subtables_.at( i ) ) );
+                        *_table_holder.subtables_.at( i ),
+                        _progress_logger ) );
                 }
             else
                 {
@@ -816,7 +891,8 @@ MappingContainerMaker::transform_table_holder(
             text.push_back( transform_text(
                 _mapping->text_.at( i ),
                 _table_holder.peripheral_tables_.at( i ).text_,
-                _table_holder.peripheral_tables_.at( i ).word_indices_ ) );
+                _table_holder.peripheral_tables_.at( i ).word_indices_,
+                _progress_logger ) );
         }
 
     const auto ptr = std::make_shared<MappedContainer>(

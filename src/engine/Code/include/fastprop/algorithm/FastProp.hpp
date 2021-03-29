@@ -267,7 +267,8 @@ class FastProp
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
         const std::optional<helpers::MappedContainer> _mapped,
-        const helpers::WordIndexContainer& _word_indices );
+        const helpers::WordIndexContainer& _word_indices,
+        const std::shared_ptr<const logging::AbstractLogger> _logger );
 
     /// Handles the text fields during training.
     std::tuple<

@@ -262,7 +262,8 @@ void DecisionTreeEnsemble::fit(
     const auto [population, peripheral, row_indices, word_indices] =
         handle_text_fields( _population, _peripheral, _logger );
 
-    const auto mapped = handle_mappings( population, peripheral, word_indices );
+    const auto mapped =
+        handle_mappings( population, peripheral, word_indices, _logger );
 
     const auto feature_container = fit_propositionalization(
         population, peripheral, row_indices, word_indices, mapped, _logger );
@@ -848,7 +849,8 @@ std::optional<const helpers::MappedContainer>
 DecisionTreeEnsemble::handle_mappings(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral,
-    const helpers::WordIndexContainer &_word_indices )
+    const helpers::WordIndexContainer &_word_indices,
+    const std::shared_ptr<const logging::AbstractLogger> _logger )
 {
     if ( hyperparameters().min_freq_ == 0 )
         {
@@ -861,7 +863,8 @@ DecisionTreeEnsemble::handle_mappings(
         _population,
         _peripheral,
         peripheral(),
-        _word_indices );
+        _word_indices,
+        _logger );
 
     return helpers::MappingContainerMaker::transform(
         impl().mappings_,
@@ -869,7 +872,8 @@ DecisionTreeEnsemble::handle_mappings(
         _population,
         _peripheral,
         peripheral(),
-        _word_indices );
+        _word_indices,
+        _logger );
 }
 
 // ----------------------------------------------------------------------------
@@ -1207,7 +1211,8 @@ containers::Features DecisionTreeEnsemble::transform(
         population_table,
         peripheral_tables,
         peripheral(),
-        word_indices );
+        word_indices,
+        _logger );
 
     // -------------------------------------------------------
 

@@ -19,7 +19,8 @@ class MappingContainerMaker
         const DataFrame& _population,
         const std::vector<DataFrame>& _peripheral,
         const std::vector<std::string>& _peripheral_names,
-        const WordIndexContainer& _word_indices );
+        const WordIndexContainer& _word_indices,
+        const std::shared_ptr<const logging::AbstractLogger>& _logger );
 
     /// Transform categorical columns by mapping them onto
     /// the corresponding weights.
@@ -29,9 +30,13 @@ class MappingContainerMaker
         const DataFrame& _population,
         const std::vector<DataFrame>& _peripheral,
         const std::vector<std::string>& _peripheral_names,
-        const std::optional<WordIndexContainer>& _word_indices );
+        const std::optional<WordIndexContainer>& _word_indices,
+        const std::shared_ptr<const logging::AbstractLogger>& _logger );
 
    private:
+    /// Counts the total number of mappable columns.
+    static size_t count_mappable_columns( const TableHolder& _table_holder );
+
     /// Finds the correspondings rownums to the input indices.
     static std::vector<size_t> find_output_ix(
         const std::vector<size_t>& _input_ix,
@@ -42,26 +47,30 @@ class MappingContainerMaker
     static MappingForDf fit_on_categoricals(
         const size_t _min_freq,
         const std::vector<DataFrame>& _main_tables,
-        const std::vector<DataFrame>& _peripheral_tables );
+        const std::vector<DataFrame>& _peripheral_tables,
+        logging::ProgressLogger* _progress_logger );
 
     /// Generates the mapping for a discrete column.
     static MappingForDf fit_on_discretes(
         const size_t _min_freq,
         const std::vector<DataFrame>& _main_tables,
-        const std::vector<DataFrame>& _peripheral_tables );
+        const std::vector<DataFrame>& _peripheral_tables,
+        logging::ProgressLogger* _progress_logger );
 
     /// Generates the mapping for a text column.
     static MappingForDf fit_on_text(
         const size_t _min_freq,
         const std::vector<DataFrame>& _main_tables,
-        const std::vector<DataFrame>& _peripheral_tables );
+        const std::vector<DataFrame>& _peripheral_tables,
+        logging::ProgressLogger* _progress_logger );
 
     /// Fits a new mapping on the table holder.
     static std::shared_ptr<const MappingContainer> fit_on_table_holder(
         const size_t _min_freq,
         const TableHolder& _table_holder,
         const std::vector<DataFrame>& _main_tables,
-        const std::vector<DataFrame>& _peripheral_tables );
+        const std::vector<DataFrame>& _peripheral_tables,
+        logging::ProgressLogger* _progress_logger );
 
     /// Infers the number of targets on which the mapping was fitted.
     static size_t infer_num_targets( const MappingForDf& _mapping );
@@ -89,7 +98,8 @@ class MappingContainerMaker
     /// Maps the categories on their corresponding weights.
     static MappedColumns transform_categorical(
         const MappingForDf& _mapping,
-        const std::vector<Column<Int>>& _categorical );
+        const std::vector<Column<Int>>& _categorical,
+        logging::ProgressLogger* _progress_logger );
 
     /// Applies the mapping to a categorical column.
     static Column<Float> transform_categorical_column(
@@ -102,7 +112,8 @@ class MappingContainerMaker
     /// Maps the discrete values on their corresponding weights.
     static MappedColumns transform_discrete(
         const MappingForDf& _mapping,
-        const std::vector<Column<Float>>& _discrete );
+        const std::vector<Column<Float>>& _discrete,
+        logging::ProgressLogger* _progress_logger );
 
     /// Applies the mapping to a discrete column.
     static Column<Float> transform_discrete_column(
@@ -115,13 +126,15 @@ class MappingContainerMaker
     /// Transforms a table holder to get the extra columns.
     static std::shared_ptr<const MappedContainer> transform_table_holder(
         const std::shared_ptr<const MappingContainer>& _mapping,
-        const TableHolder& _table_holder );
+        const TableHolder& _table_holder,
+        logging::ProgressLogger* _progress_logger );
 
     /// Maps the text fields on their corresponding weights.
     static MappedColumns transform_text(
         const MappingForDf& _mapping,
         const std::vector<Column<strings::String>>& _text,
-        const typename DataFrame::WordIndices& _word_indices );
+        const typename DataFrame::WordIndices& _word_indices,
+        logging::ProgressLogger* _progress_logger );
 
     /// Applies the mapping to a text column.
     static Column<Float> transform_text_column(

@@ -13,11 +13,15 @@ class ProgressLogger
 
    public:
     ProgressLogger(
+        const std::string& _msg,
         const std::shared_ptr<const AbstractLogger>& _logger,
         const size_t _total )
         : current_value_( 0 ), logger_( _logger ), total_( _total )
     {
-        assert_true( total_ > 0 );
+        if ( logger_ && total_ > 0 )
+            {
+                logger_->log( _msg );
+            }
     }
 
     ~ProgressLogger() = default;
@@ -25,13 +29,18 @@ class ProgressLogger
     // --------------------------------------------------------
 
     /// Increments the progress.
-    void increment()
+    void increment( const size_t _by = 1 )
     {
-        ++current_value_;
+        if ( _by == 0 )
+            {
+                return;
+            }
+
+        current_value_ += _by;
 
         assert_true( current_value_ <= total_ );
 
-        if ( logger_ )
+        if ( logger_ && total_ > 0 )
             {
                 const auto progress = ( current_value_ * 100 ) / total_;
                 logger_->log(

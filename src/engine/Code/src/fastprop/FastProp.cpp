@@ -652,7 +652,7 @@ void FastProp::fit(
             _population, _peripheral, _logger, _as_subfeatures );
 
     const auto mapped = handle_mappings(
-        population_table, peripheral_tables, _mapped, word_indices );
+        population_table, peripheral_tables, _mapped, word_indices, _logger );
 
     const auto rownums = sample_from_population( population_table.nrows() );
 
@@ -1300,7 +1300,8 @@ std::optional<helpers::MappedContainer> FastProp::handle_mappings(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral,
     const std::optional<helpers::MappedContainer> _mapped,
-    const helpers::WordIndexContainer &_word_indices )
+    const helpers::WordIndexContainer &_word_indices,
+    const std::shared_ptr<const logging::AbstractLogger> _logger )
 {
     if ( _mapped )
         {
@@ -1318,7 +1319,8 @@ std::optional<helpers::MappedContainer> FastProp::handle_mappings(
         _population,
         _peripheral,
         peripheral(),
-        _word_indices );
+        _word_indices,
+        _logger );
 
     return helpers::MappingContainerMaker::transform(
         mappings_,
@@ -1326,7 +1328,8 @@ std::optional<helpers::MappedContainer> FastProp::handle_mappings(
         _population,
         _peripheral,
         peripheral(),
-        _word_indices );
+        _word_indices,
+        _logger );
 }
 
 // ----------------------------------------------------------------------------
@@ -2181,7 +2184,8 @@ containers::Features FastProp::transform(
                                       population_table,
                                       peripheral_tables,
                                       peripheral(),
-                                      word_indices );
+                                      word_indices,
+                                      _logger );
 
     const auto subfeatures = build_subfeatures(
         population_table, peripheral_tables, index, _logger, _rownums, mapped );

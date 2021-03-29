@@ -103,17 +103,8 @@ TextFieldSplitter::split_text_fields(
     const auto num_text_fields =
         count_text_fields( _population_df, _peripheral_dfs );
 
-    if ( num_text_fields == 0 )
-        {
-            return std::make_pair( _population_df, _peripheral_dfs );
-        }
-
-    if ( _logger )
-        {
-            _logger->log( "Splitting text fields..." );
-        }
-
-    auto progress_logger = logging::ProgressLogger( _logger, num_text_fields );
+    auto progress_logger = logging::ProgressLogger(
+        "Splitting text fields...", _logger, num_text_fields );
 
     const auto modify_if_applicable = []( const DataFrame& _df ) -> DataFrame {
         return _df.num_text() == 0 ? _df
