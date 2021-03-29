@@ -870,11 +870,24 @@ DecisionTreeEnsemble::handle_text_fields(
     const std::vector<containers::DataFrame> &_peripheral,
     const std::shared_ptr<const logging::AbstractLogger> _logger ) const
 {
+    assert_true( _logger );
+
     const auto [population, peripheral] =
         hyperparameters().split_text_fields_
             ? helpers::TextFieldSplitter::split_text_fields(
                   _population, _peripheral, _logger )
             : std::make_pair( _population, _peripheral );
+
+    const auto has_text_fields =
+        []( const containers::DataFrame &_df ) -> bool {
+        return _df.num_text() > 0;
+    };
+
+    const bool any_text_fields =
+        has_text_fields( _population ) ||
+        std::any_of( _peripheral.begin(), _peripheral.end(), has_text_fields );
+
+    if ( any_text_fields ) _logger->log( "Indexing text fields..." );
 
     const auto vocabulary = helpers::VocabularyContainer(
         hyperparameters().min_df_,
@@ -882,10 +895,16 @@ DecisionTreeEnsemble::handle_text_fields(
         population,
         peripheral );
 
+    if ( any_text_fields ) _logger->log( "Progress: 33%." );
+
     const auto word_indices =
         helpers::WordIndexContainer( population, peripheral, vocabulary );
 
+    if ( any_text_fields ) _logger->log( "Progress: 66%." );
+
     const auto row_indices = helpers::RowIndexContainer( word_indices );
+
+    if ( any_text_fields ) _logger->log( "Progress: 100%." );
 
     return std::make_tuple( population, peripheral, row_indices, word_indices );
 }

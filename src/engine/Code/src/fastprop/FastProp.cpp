@@ -1349,14 +1349,29 @@ FastProp::handle_text_fields(
                                 _population, _peripheral, _logger )
                           : std::make_pair( _population, _peripheral );
 
+    const auto has_text_fields =
+        []( const containers::DataFrame &_df ) -> bool {
+        return _df.num_text() > 0;
+    };
+
+    const bool any_text_fields =
+        has_text_fields( _population ) ||
+        std::any_of( _peripheral.begin(), _peripheral.end(), has_text_fields );
+
+    if ( any_text_fields ) _logger->log( "Indexing text fields..." );
+
     vocabulary_ = std::make_shared<const helpers::VocabularyContainer>(
         hyperparameters().min_df_,
         hyperparameters().vocab_size_,
         population,
         peripheral );
 
+    if ( any_text_fields ) _logger->log( "Progress: 50%." );
+
     const auto word_indices =
         helpers::WordIndexContainer( population, peripheral, *vocabulary_ );
+
+    if ( any_text_fields ) _logger->log( "Progress: 100%." );
 
     return std::make_tuple( population, peripheral, word_indices );
 }

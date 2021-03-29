@@ -134,15 +134,15 @@ MakerParams Maker::make_params( const MakerParams& _params, const size_t _i )
     assert_true( _params.peripheral_names_ );
 
     assert_true(
-        _params.peripheral_names_->size() == _params.peripheral_.size() );
+        _params.peripheral_names_->size() <= _params.peripheral_.size() );
 
     assert_true(
         !_params.row_index_container_ ||
-        _params.peripheral_names_->size() ==
+        _params.peripheral_names_->size() <=
             _params.row_index_container_->peripheral().size() );
 
     assert_true(
-        _params.peripheral_names_->size() ==
+        _params.peripheral_names_->size() <=
         _params.word_index_container_.peripheral().size() );
 
     const auto ix = find_peripheral_ix( _params, _i );
