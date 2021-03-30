@@ -22,11 +22,14 @@ struct Parser<Aggregation>
     static constexpr const char* AVG = "AVG";
     static constexpr const char* AVG_TIME_BETWEEN = "AVG TIME BETWEEN";
     static constexpr const char* COUNT = "COUNT";
+    static constexpr const char* COUNT_ABOVE_MEAN = "COUNT ABOVE MEAN";
+    static constexpr const char* COUNT_BELOW_MEAN = "COUNT BELOW MEAN";
     static constexpr const char* COUNT_DISTINCT = "COUNT DISTINCT";
     static constexpr const char* COUNT_MINUS_COUNT_DISTINCT =
         "COUNT MINUS COUNT DISTINCT";
     static constexpr const char* FIRST = "FIRST";
     static constexpr const char* LAST = "LAST";
+    static constexpr const char* KURTOSIS = "KURTOSIS";
     static constexpr const char* MAX = "MAX";
     static constexpr const char* MEDIAN = "MEDIAN";
     static constexpr const char* MIN = "MIN";
@@ -35,6 +38,8 @@ struct Parser<Aggregation>
     static constexpr const char* SUM = "SUM";
     static constexpr const char* STDDEV = "STDDEV";
     static constexpr const char* VAR = "VAR";
+    static constexpr const char* VARIATION_COEFFICIENT =
+        "VARIATION COEFFICIENT";
 
     /// Parse parses a _str.
     static Aggregation parse( const std::string& _str )
@@ -54,6 +59,16 @@ struct Parser<Aggregation>
                 return Aggregation::count;
             }
 
+        if ( _str == COUNT_ABOVE_MEAN )
+            {
+                return Aggregation::count_above_mean;
+            }
+
+        if ( _str == COUNT_BELOW_MEAN )
+            {
+                return Aggregation::count_below_mean;
+            }
+
         if ( _str == COUNT_DISTINCT )
             {
                 return Aggregation::count_distinct;
@@ -67,6 +82,11 @@ struct Parser<Aggregation>
         if ( _str == FIRST )
             {
                 return Aggregation::first;
+            }
+
+        if ( _str == KURTOSIS )
+            {
+                return Aggregation::kurtosis;
             }
 
         if ( _str == LAST )
@@ -114,6 +134,11 @@ struct Parser<Aggregation>
                 return Aggregation::var;
             }
 
+        if ( _str == VARIATION_COEFFICIENT )
+            {
+                return Aggregation::variation_coefficient;
+            }
+
         throw_unless( false, "FastProp: Unknown aggregation: '" + _str + "'" );
 
         return Aggregation::avg;
@@ -133,6 +158,12 @@ struct Parser<Aggregation>
                 case Aggregation::count:
                     return COUNT;
 
+                case Aggregation::count_above_mean:
+                    return COUNT_ABOVE_MEAN;
+
+                case Aggregation::count_below_mean:
+                    return COUNT_BELOW_MEAN;
+
                 case Aggregation::count_distinct:
                     return COUNT_DISTINCT;
 
@@ -141,6 +172,9 @@ struct Parser<Aggregation>
 
                 case Aggregation::first:
                     return FIRST;
+
+                case Aggregation::kurtosis:
+                    return KURTOSIS;
 
                 case Aggregation::last:
                     return LAST;
@@ -168,6 +202,9 @@ struct Parser<Aggregation>
 
                 case Aggregation::var:
                     return VAR;
+
+                case Aggregation::variation_coefficient:
+                    return VARIATION_COEFFICIENT;
 
                 default:
                     throw_unless( false, "FastProp: Unknown aggregation." );

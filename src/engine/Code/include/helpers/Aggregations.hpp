@@ -14,7 +14,7 @@ class Aggregations
     template <class IteratorType>
     static Float assert_equal( IteratorType _begin, IteratorType _end )
     {
-        if ( std::distance( _begin, _end ) <= 0 )
+        if ( std::distance( _begin, _end ) <= 0 ) [[unlikely]]
             {
                 return NAN;
             }
@@ -39,7 +39,7 @@ class Aggregations
     {
         const auto divisor = count( _begin, _end );
 
-        if ( divisor == 0.0 )
+        if ( divisor == 0.0 ) [[unlikely]]
             {
                 return NAN;
             }
@@ -58,10 +58,41 @@ class Aggregations
                 {
                     return init;
                 }
-            else
+            return init + 1.0;
+        };
+
+        return num_agg( _begin, _end, count, 0.0 );
+    }
+
+    /// Counts all values that are strictly greater than the mean.
+    template <class IteratorType>
+    static Float count_above_mean( IteratorType _begin, IteratorType _end )
+    {
+        const auto mean = avg( _begin, _end );
+
+        const auto count = [mean]( const Float init, const Float val ) {
+            if ( val > mean )
                 {
                     return init + 1.0;
                 }
+            return init;
+        };
+
+        return num_agg( _begin, _end, count, 0.0 );
+    }
+
+    /// Counts all values that are strictly smaller than the mean.
+    template <class IteratorType>
+    static Float count_below_mean( IteratorType _begin, IteratorType _end )
+    {
+        const auto mean = avg( _begin, _end );
+
+        const auto count = [mean]( const Float init, const Float val ) {
+            if ( val < mean )
+                {
+                    return init + 1.0;
+                }
+            return init;
         };
 
         return num_agg( _begin, _end, count, 0.0 );
@@ -145,7 +176,7 @@ class Aggregations
     template <class IteratorType>
     static Float first( IteratorType _begin, IteratorType _end )
     {
-        if ( std::distance( _begin, _end ) <= 0 )
+        if ( std::distance( _begin, _end ) <= 0 ) [[unlikely]]
             {
                 return NAN;
             }
@@ -162,13 +193,40 @@ class Aggregations
         return p.second;
     }
 
+    /// Takes the kurtosis of all non-null entries.
+    template <class IteratorType>
+    static Float kurtosis( IteratorType _begin, IteratorType _end )
+    {
+        const auto n = count( _begin, _end );
+
+        if ( n == 0.0 ) [[unlikely]]
+            {
+                return NAN;
+            }
+
+        const auto mean = avg( _begin, _end );
+
+        const auto std = stddev( _begin, _end );
+
+        const auto kurt = [mean, std, n]( const Float init, const Float val ) {
+            if ( NullChecker::is_null( val ) )
+                {
+                    return init;
+                }
+            const auto diff = ( val - mean ) / std;
+            return init + diff * diff * diff * diff / n;
+        };
+
+        return num_agg( _begin, _end, kurt, 0.0 );
+    }
+
     /// Implements the LAST aggregation. Assumes that the iterator points to a
     /// set of pairs, the first signifying the element over which we want to
     /// sort and the second signifying the value.
     template <class IteratorType>
     static Float last( IteratorType _begin, IteratorType _end )
     {
-        if ( std::distance( _begin, _end ) <= 0 )
+        if ( std::distance( _begin, _end ) <= 0 ) [[unlikely]]
             {
                 return NAN;
             }
@@ -199,7 +257,7 @@ class Aggregations
     template <class IteratorType>
     static Float median( IteratorType _begin, IteratorType _end )
     {
-        if ( std::distance( _begin, _end ) <= 0 )
+        if ( std::distance( _begin, _end ) <= 0 ) [[unlikely]]
             {
                 return NAN;
             }
@@ -214,10 +272,7 @@ class Aggregations
                          values[values.size() / 2] ) /
                        2.0;
             }
-        else
-            {
-                return values[values.size() / 2];
-            }
+        return values[values.size() / 2];
     }
 
     /// Finds the minimum of all non-null entries.
@@ -237,7 +292,7 @@ class Aggregations
     {
         const auto freq = count_frequencies<T>( _begin, _end );
 
-        if ( freq.size() == 0 )
+        if ( freq.size() == 0 ) [[unlikely]]
             {
                 return NullChecker::make_null<T>();
             }
@@ -270,15 +325,12 @@ class Aggregations
 
         const auto skewness = [mean, std, n](
                                   const Float init, const Float val ) {
-            if ( NullChecker::is_null( val ) )
+            if ( NullChecker::is_null( val ) ) [[unlikely]]
                 {
                     return init;
                 }
-            else
-                {
-                    const auto diff = ( val - mean ) / std;
-                    return init + diff * diff * diff / n;
-                }
+            const auto diff = ( val - mean ) / std;
+            return init + diff * diff * diff / n;
         };
 
         return num_agg( _begin, _end, skewness, 0.0 );
@@ -296,14 +348,11 @@ class Aggregations
     static Float sum( IteratorType _begin, IteratorType _end )
     {
         const auto sum = []( const Float init, const Float val ) {
-            if ( NullChecker::is_null( val ) )
+            if ( NullChecker::is_null( val ) ) [[unlikely]]
                 {
                     return init;
                 }
-            else
-                {
-                    return init + val;
-                }
+            return init + val;
         };
 
         return num_agg( _begin, _end, sum, 0.0 );
@@ -323,18 +372,31 @@ class Aggregations
         const auto mean = avg( _begin, _end );
 
         const auto variance = [mean, n]( const Float init, const Float val ) {
-            if ( NullChecker::is_null( val ) )
+            if ( NullChecker::is_null( val ) ) [[unlikely]]
                 {
                     return init;
                 }
-            else
-                {
-                    const auto diff = val - mean;
-                    return init + diff * diff / n;
-                }
+            const auto diff = val - mean;
+            return init + diff * diff / n;
         };
 
         return num_agg( _begin, _end, variance, 0.0 );
+    }
+
+    /// Variance over mean.
+    template <class IteratorType>
+    static Float variation_coefficient( IteratorType _begin, IteratorType _end )
+    {
+        const auto mean = avg( _begin, _end );
+
+        if ( NullChecker::is_null( mean ) || mean == 0.0 ) [[unlikely]]
+            {
+                return NAN;
+            }
+
+        const auto variance = var( _begin, _end );
+
+        return variance / mean;
     }
 
     // ------------------------------------------------------------------------

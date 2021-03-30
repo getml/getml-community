@@ -295,6 +295,14 @@ class Aggregator
                 case enums::Aggregation::count:
                     return helpers::Aggregations::count( _begin, _end );
 
+                case enums::Aggregation::count_above_mean:
+                    return helpers::Aggregations::count_above_mean(
+                        _begin, _end );
+
+                case enums::Aggregation::count_below_mean:
+                    return helpers::Aggregations::count_below_mean(
+                        _begin, _end );
+
                 case enums::Aggregation::count_distinct:
                     return helpers::Aggregations::count_distinct(
                         _begin, _end );
@@ -303,6 +311,9 @@ class Aggregator
                     return helpers::Aggregations::count( _begin, _end ) -
                            helpers::Aggregations::count_distinct(
                                _begin, _end );
+
+                case enums::Aggregation::kurtosis:
+                    return helpers::Aggregations::kurtosis( _begin, _end );
 
                 case enums::Aggregation::max:
                     return helpers::Aggregations::maximum( _begin, _end );
@@ -327,6 +338,10 @@ class Aggregator
 
                 case enums::Aggregation::var:
                     return helpers::Aggregations::var( _begin, _end );
+
+                case enums::Aggregation::variation_coefficient:
+                    return helpers::Aggregations::variation_coefficient(
+                        _begin, _end );
 
                 default:
                     assert_true(

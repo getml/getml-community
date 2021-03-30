@@ -14,9 +14,12 @@ enum class Aggregation
     avg,
     avg_time_between,
     count,
+    count_above_mean,
+    count_below_mean,
     count_distinct,
     count_minus_count_distinct,
     first,
+    kurtosis,
     last,
     max,
     median,
@@ -25,7 +28,8 @@ enum class Aggregation
     skew,
     stddev,
     sum,
-    var
+    var,
+    variation_coefficient
 };
 
 // ----------------------------------------------------------------------------
