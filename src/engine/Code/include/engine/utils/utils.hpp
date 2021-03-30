@@ -32,7 +32,7 @@
 #include "engine/utils/NullChecker.hpp"
 #include "engine/utils/SQLMaker.hpp"
 
-#include "engine/utils/ColumnOperators.hpp"
+#include "engine/utils/Aggregations.hpp"
 #include "engine/utils/Endianness.hpp"
 #include "engine/utils/Getter.hpp"
 #include "engine/utils/Time.hpp"

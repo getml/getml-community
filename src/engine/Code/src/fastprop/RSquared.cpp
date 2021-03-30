@@ -57,7 +57,7 @@ Float RSquared::calc_for_feature(
 
     auto range = iota | std::views::transform( calc );
 
-    return helpers::ColumnOperators::avg( range.begin(), range.end() );
+    return helpers::Aggregations::avg( range.begin(), range.end() );
 }
 
 // ----------------------------------------------------------------------------
@@ -93,7 +93,7 @@ Float RSquared::calc_for_target(
     const auto targets = _rownums | std::views::transform( get_target );
 
     const auto var_feature =
-        helpers::ColumnOperators::var( feature.begin(), feature.end() );
+        helpers::Aggregations::var( feature.begin(), feature.end() );
 
     if ( var_feature == 0.0 )
         {
@@ -101,7 +101,7 @@ Float RSquared::calc_for_target(
         }
 
     const auto mean_feature =
-        helpers::ColumnOperators::avg( feature.begin(), feature.end() );
+        helpers::Aggregations::avg( feature.begin(), feature.end() );
 
     const auto multiply = [_mean_target, mean_feature](
                               const Float t, const Float f ) -> Float {
@@ -137,7 +137,7 @@ std::vector<Float> RSquared::calc_mean_targets(
 
         const auto target = _rownums | std::views::transform( get_target );
 
-        return helpers::ColumnOperators::avg( target.begin(), target.end() );
+        return helpers::Aggregations::avg( target.begin(), target.end() );
     };
 
     auto range = _targets | std::views::transform( calc_mean );
@@ -160,7 +160,7 @@ std::vector<Float> RSquared::calc_var_targets(
 
         const auto target = _rownums | std::views::transform( get_target );
 
-        return helpers::ColumnOperators::var( target.begin(), target.end() );
+        return helpers::Aggregations::var( target.begin(), target.end() );
     };
 
     auto range = _targets | std::views::transform( calc_var );

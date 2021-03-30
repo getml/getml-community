@@ -63,8 +63,8 @@ void Imputation::extract_and_add(
                 "unused_float." );
         }
 
-    const auto mean = utils::ColumnOperators::avg(
-        _original_col.begin(), _original_col.end() );
+    const auto mean =
+        utils::Aggregations::avg( _original_col.begin(), _original_col.end() );
 
     const auto any_imputation = impute( _original_col, mean, _df );
 

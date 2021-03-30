@@ -120,12 +120,12 @@ class Aggregator
         switch ( _aggregation )
             {
                 case enums::Aggregation::count_distinct:
-                    return helpers::ColumnOperators::count_distinct(
+                    return helpers::Aggregations::count_distinct(
                         _begin, _end );
 
                 case enums::Aggregation::count_minus_count_distinct:
-                    return helpers::ColumnOperators::count( _begin, _end ) -
-                           helpers::ColumnOperators::count_distinct(
+                    return helpers::Aggregations::count( _begin, _end ) -
+                           helpers::Aggregations::count_distinct(
                                _begin, _end );
 
                 default:
@@ -150,10 +150,10 @@ class Aggregator
         switch ( _aggregation )
             {
                 case enums::Aggregation::first:
-                    return helpers::ColumnOperators::first( _begin, _end );
+                    return helpers::Aggregations::first( _begin, _end );
 
                 case enums::Aggregation::last:
-                    return helpers::ColumnOperators::last( _begin, _end );
+                    return helpers::Aggregations::last( _begin, _end );
 
                 default:
                     assert_true(
@@ -287,47 +287,46 @@ class Aggregator
         switch ( _aggregation )
             {
                 case enums::Aggregation::avg:
-                    return helpers::ColumnOperators::avg( _begin, _end );
+                    return helpers::Aggregations::avg( _begin, _end );
 
                 case enums::Aggregation::avg_time_between:
                     return calc_avg_time_between( _begin, _end );
 
                 case enums::Aggregation::count:
-                    return helpers::ColumnOperators::count( _begin, _end );
+                    return helpers::Aggregations::count( _begin, _end );
 
                 case enums::Aggregation::count_distinct:
-                    return helpers::ColumnOperators::count_distinct(
+                    return helpers::Aggregations::count_distinct(
                         _begin, _end );
 
                 case enums::Aggregation::count_minus_count_distinct:
-                    return helpers::ColumnOperators::count( _begin, _end ) -
-                           helpers::ColumnOperators::count_distinct(
+                    return helpers::Aggregations::count( _begin, _end ) -
+                           helpers::Aggregations::count_distinct(
                                _begin, _end );
 
                 case enums::Aggregation::max:
-                    return helpers::ColumnOperators::maximum( _begin, _end );
+                    return helpers::Aggregations::maximum( _begin, _end );
 
                 case enums::Aggregation::median:
-                    return helpers::ColumnOperators::median( _begin, _end );
+                    return helpers::Aggregations::median( _begin, _end );
 
                 case enums::Aggregation::min:
-                    return helpers::ColumnOperators::minimum( _begin, _end );
+                    return helpers::Aggregations::minimum( _begin, _end );
 
                 case enums::Aggregation::mode:
-                    return helpers::ColumnOperators::mode<Float>(
-                        _begin, _end );
+                    return helpers::Aggregations::mode<Float>( _begin, _end );
 
                 case enums::Aggregation::skew:
-                    return helpers::ColumnOperators::skew( _begin, _end );
+                    return helpers::Aggregations::skew( _begin, _end );
 
                 case enums::Aggregation::stddev:
-                    return helpers::ColumnOperators::stddev( _begin, _end );
+                    return helpers::Aggregations::stddev( _begin, _end );
 
                 case enums::Aggregation::sum:
-                    return helpers::ColumnOperators::sum( _begin, _end );
+                    return helpers::Aggregations::sum( _begin, _end );
 
                 case enums::Aggregation::var:
-                    return helpers::ColumnOperators::var( _begin, _end );
+                    return helpers::Aggregations::var( _begin, _end );
 
                 default:
                     assert_true(
@@ -372,7 +371,7 @@ class Aggregator
     static Float calc_avg_time_between(
         const IteratorType _begin, const IteratorType _end )
     {
-        const auto count = helpers::ColumnOperators::count( _begin, _end );
+        const auto count = helpers::Aggregations::count( _begin, _end );
 
         if ( count <= 1.0 )
             {

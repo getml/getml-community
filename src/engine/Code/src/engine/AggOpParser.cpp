@@ -20,11 +20,11 @@ Float AggOpParser::categorical_aggregation(
 
     if ( _type == "count_categorical" )
         {
-            return utils::ColumnOperators::count_categorical( vec );
+            return utils::Aggregations::count_categorical( vec );
         }
     else if ( _type == "count_distinct" )
         {
-            return utils::ColumnOperators::count_distinct( vec );
+            return utils::Aggregations::count_distinct( vec );
         }
     else
         {
@@ -70,40 +70,39 @@ Float AggOpParser::numerical_aggregation(
 
     if ( _type == "assert_equal" )
         {
-            return utils::ColumnOperators::assert_equal(
-                col.begin(), col.end() );
+            return utils::Aggregations::assert_equal( col.begin(), col.end() );
         }
     else if ( _type == "avg" )
         {
-            return utils::ColumnOperators::avg( col.begin(), col.end() );
+            return utils::Aggregations::avg( col.begin(), col.end() );
         }
     else if ( _type == "count" )
         {
-            return utils::ColumnOperators::count( col.begin(), col.end() );
+            return utils::Aggregations::count( col.begin(), col.end() );
         }
     else if ( _type == "max" )
         {
-            return utils::ColumnOperators::maximum( col.begin(), col.end() );
+            return utils::Aggregations::maximum( col.begin(), col.end() );
         }
     else if ( _type == "median" )
         {
-            return utils::ColumnOperators::median( col.begin(), col.end() );
+            return utils::Aggregations::median( col.begin(), col.end() );
         }
     else if ( _type == "min" )
         {
-            return utils::ColumnOperators::minimum( col.begin(), col.end() );
+            return utils::Aggregations::minimum( col.begin(), col.end() );
         }
     else if ( _type == "stddev" )
         {
-            return utils::ColumnOperators::stddev( col.begin(), col.end() );
+            return utils::Aggregations::stddev( col.begin(), col.end() );
         }
     else if ( _type == "sum" )
         {
-            return utils::ColumnOperators::sum( col.begin(), col.end() );
+            return utils::Aggregations::sum( col.begin(), col.end() );
         }
     else if ( _type == "var" )
         {
-            return utils::ColumnOperators::var( col.begin(), col.end() );
+            return utils::Aggregations::var( col.begin(), col.end() );
         }
     else
         {

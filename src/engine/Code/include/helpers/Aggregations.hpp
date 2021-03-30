@@ -1,11 +1,11 @@
-#ifndef HELPERS_COLUMNOPERATORS_HPP_
-#define HELPERS_COLUMNOPERATORS_HPP_
+#ifndef HELPERS_AGGREGATIONS_HPP_
+#define HELPERS_AGGREGATIONS_HPP_
 
 namespace helpers
 {
 // ------------------------------------------------------------------------
 
-class ColumnOperators
+class Aggregations
 {
     // ------------------------------------------------------------------------
 
@@ -387,4 +387,4 @@ class ColumnOperators
 // ------------------------------------------------------------------------
 }  // namespace helpers
 
-#endif  // HELPERS_COLUMNOPERATORS_HPP_
+#endif  // HELPERS_AGGREGATIONS_HPP_

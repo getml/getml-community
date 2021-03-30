@@ -64,18 +64,17 @@ Float TransformAggregation<AggType, data_used_, is_population_>::aggregate(
 
     if constexpr ( std::is_same<AggType, AggregationType::Avg>() )
         {
-            return helpers::ColumnOperators::avg( range.begin(), range.end() );
+            return helpers::Aggregations::avg( range.begin(), range.end() );
         }
 
     if constexpr ( std::is_same<AggType, AggregationType::Count>() )
         {
-            return helpers::ColumnOperators::count(
-                range.begin(), range.end() );
+            return helpers::Aggregations::count( range.begin(), range.end() );
         }
 
     if constexpr ( std::is_same<AggType, AggregationType::CountDistinct>() )
         {
-            return helpers::ColumnOperators::count_distinct(
+            return helpers::Aggregations::count_distinct(
                 range.begin(), range.end() );
         }
 
@@ -83,60 +82,54 @@ Float TransformAggregation<AggType, data_used_, is_population_>::aggregate(
                        AggType,
                        AggregationType::CountMinusCountDistinct>() )
         {
-            return helpers::ColumnOperators::count(
-                       range.begin(), range.end() ) -
-                   helpers::ColumnOperators::count_distinct(
+            return helpers::Aggregations::count( range.begin(), range.end() ) -
+                   helpers::Aggregations::count_distinct(
                        range.begin(), range.end() );
         }
 
     if constexpr ( std::is_same<AggType, AggregationType::First>() )
         {
-            return helpers::ColumnOperators::first(
-                range.begin(), range.end() );
+            return helpers::Aggregations::first( range.begin(), range.end() );
         }
 
     if constexpr ( std::is_same<AggType, AggregationType::Last>() )
         {
-            return helpers::ColumnOperators::last( range.begin(), range.end() );
+            return helpers::Aggregations::last( range.begin(), range.end() );
         }
 
     if constexpr ( std::is_same<AggType, AggregationType::Max>() )
         {
-            return helpers::ColumnOperators::maximum(
-                range.begin(), range.end() );
+            return helpers::Aggregations::maximum( range.begin(), range.end() );
         }
 
     if constexpr ( std::is_same<AggType, AggregationType::Median>() )
         {
-            return helpers::ColumnOperators::median(
-                range.begin(), range.end() );
+            return helpers::Aggregations::median( range.begin(), range.end() );
         }
 
     if constexpr ( std::is_same<AggType, AggregationType::Min>() )
         {
-            return helpers::ColumnOperators::minimum(
-                range.begin(), range.end() );
+            return helpers::Aggregations::minimum( range.begin(), range.end() );
         }
 
     if constexpr ( std::is_same<AggType, AggregationType::Skewness>() )
         {
-            return helpers::ColumnOperators::skew( range.begin(), range.end() );
+            return helpers::Aggregations::skew( range.begin(), range.end() );
         }
 
     if constexpr ( std::is_same<AggType, AggregationType::Stddev>() )
         {
-            return helpers::ColumnOperators::stddev(
-                range.begin(), range.end() );
+            return helpers::Aggregations::stddev( range.begin(), range.end() );
         }
 
     if constexpr ( std::is_same<AggType, AggregationType::Sum>() )
         {
-            return helpers::ColumnOperators::sum( range.begin(), range.end() );
+            return helpers::Aggregations::sum( range.begin(), range.end() );
         }
 
     if constexpr ( std::is_same<AggType, AggregationType::Var>() )
         {
-            return helpers::ColumnOperators::var( range.begin(), range.end() );
+            return helpers::Aggregations::var( range.begin(), range.end() );
         }
 
     assert_msg( false, "Unknown aggregation: " + AggType::type() );

@@ -38,7 +38,7 @@
 
 #include "helpers/NullChecker.hpp"
 
-#include "helpers/ColumnOperators.hpp"
+#include "helpers/Aggregations.hpp"
 
 #include "helpers/StringReplacer.hpp"
 #include "helpers/StringSplitter.hpp"

@@ -200,7 +200,7 @@ containers::Column<Float> GroupByParser::categorical_aggregation(
         {
             const auto count_categorical =
                 []( const std::vector<std::string>& vec ) {
-                    return utils::ColumnOperators::count_categorical( vec );
+                    return utils::Aggregations::count_categorical( vec );
                 };
 
             return aggregate( _unique, _index, vec, _as, count_categorical );
@@ -209,7 +209,7 @@ containers::Column<Float> GroupByParser::categorical_aggregation(
         {
             const auto count_distinct =
                 []( const std::vector<std::string>& vec ) {
-                    return utils::ColumnOperators::count_distinct( vec );
+                    return utils::Aggregations::count_distinct( vec );
                 };
 
             return aggregate( _unique, _index, vec, _as, count_distinct );
@@ -322,7 +322,7 @@ containers::Column<Float> GroupByParser::numerical_aggregation(
     if ( _type == "assert_equal" )
         {
             const auto assert_equal = []( const std::vector<Float>& vec ) {
-                return utils::ColumnOperators::assert_equal(
+                return utils::Aggregations::assert_equal(
                     vec.begin(), vec.end() );
             };
 
@@ -331,7 +331,7 @@ containers::Column<Float> GroupByParser::numerical_aggregation(
     else if ( _type == "avg" )
         {
             const auto avg = []( const std::vector<Float>& vec ) {
-                return utils::ColumnOperators::avg( vec.begin(), vec.end() );
+                return utils::Aggregations::avg( vec.begin(), vec.end() );
             };
 
             return aggregate( _unique, _index, col, _as, avg );
@@ -339,7 +339,7 @@ containers::Column<Float> GroupByParser::numerical_aggregation(
     else if ( _type == "count" )
         {
             const auto count = []( const std::vector<Float>& vec ) {
-                return utils::ColumnOperators::count( vec.begin(), vec.end() );
+                return utils::Aggregations::count( vec.begin(), vec.end() );
             };
 
             return aggregate( _unique, _index, col, _as, count );
@@ -347,7 +347,7 @@ containers::Column<Float> GroupByParser::numerical_aggregation(
     else if ( _type == "max" )
         {
             const auto max = []( const std::vector<Float>& vec ) {
-                return utils::ColumnOperators::maximum( vec.begin(), vec.end() );
+                return utils::Aggregations::maximum( vec.begin(), vec.end() );
             };
 
             return aggregate( _unique, _index, col, _as, max );
@@ -355,7 +355,7 @@ containers::Column<Float> GroupByParser::numerical_aggregation(
     else if ( _type == "median" )
         {
             const auto median = []( const std::vector<Float>& vec ) {
-                return utils::ColumnOperators::median( vec.begin(), vec.end() );
+                return utils::Aggregations::median( vec.begin(), vec.end() );
             };
 
             return aggregate( _unique, _index, col, _as, median );
@@ -363,7 +363,7 @@ containers::Column<Float> GroupByParser::numerical_aggregation(
     else if ( _type == "min" )
         {
             const auto min = []( const std::vector<Float>& vec ) {
-                return utils::ColumnOperators::minimum( vec.begin(), vec.end() );
+                return utils::Aggregations::minimum( vec.begin(), vec.end() );
             };
 
             return aggregate( _unique, _index, col, _as, min );
@@ -371,7 +371,7 @@ containers::Column<Float> GroupByParser::numerical_aggregation(
     else if ( _type == "stddev" )
         {
             const auto stddev = []( const std::vector<Float>& vec ) {
-                return utils::ColumnOperators::stddev( vec.begin(), vec.end() );
+                return utils::Aggregations::stddev( vec.begin(), vec.end() );
             };
 
             return aggregate( _unique, _index, col, _as, stddev );
@@ -379,7 +379,7 @@ containers::Column<Float> GroupByParser::numerical_aggregation(
     else if ( _type == "sum" )
         {
             const auto sum = []( const std::vector<Float>& vec ) {
-                return utils::ColumnOperators::sum( vec.begin(), vec.end() );
+                return utils::Aggregations::sum( vec.begin(), vec.end() );
             };
 
             return aggregate( _unique, _index, col, _as, sum );
@@ -387,7 +387,7 @@ containers::Column<Float> GroupByParser::numerical_aggregation(
     else if ( _type == "var" )
         {
             const auto var = []( const std::vector<Float>& vec ) {
-                return utils::ColumnOperators::var( vec.begin(), vec.end() );
+                return utils::Aggregations::var( vec.begin(), vec.end() );
             };
 
             return aggregate( _unique, _index, col, _as, var );

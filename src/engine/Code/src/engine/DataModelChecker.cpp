@@ -106,7 +106,7 @@ void DataModelChecker::check_categorical_column(
     assert_true( _col.size() > 0 );
 
     const Float num_non_null =
-        utils::ColumnOperators::count_categorical( *_col.data_ptr() );
+        utils::Aggregations::count_categorical( *_col.data_ptr() );
 
     const auto share_null = 1.0 - num_non_null / length;
 
@@ -127,7 +127,7 @@ void DataModelChecker::check_categorical_column(
         ( _col.unit().find( "comparison only" ) != std::string::npos );
 
     const Float num_distinct =
-        utils::ColumnOperators::count_distinct( *_col.data_ptr() );
+        utils::Aggregations::count_distinct( *_col.data_ptr() );
 
     // --------------------------------------------------------------------------
 
@@ -275,7 +275,7 @@ void DataModelChecker::check_float_column(
     assert_true( _col.size() > 0 );
 
     const Float num_non_null =
-        utils::ColumnOperators::count( _col.begin(), _col.end() );
+        utils::Aggregations::count( _col.begin(), _col.end() );
 
     const auto share_null = 1.0 - num_non_null / length;
 

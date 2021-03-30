@@ -105,7 +105,7 @@ void NumOpParser::check(
     const Float length = static_cast<Float>( _col.size() );
 
     const Float num_non_null =
-        utils::ColumnOperators::count( _col.begin(), _col.end() );
+        utils::Aggregations::count( _col.begin(), _col.end() );
 
     const auto share_null = 1.0 - num_non_null / length;
 
