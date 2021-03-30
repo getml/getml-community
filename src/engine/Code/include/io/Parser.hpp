@@ -207,6 +207,12 @@ class Parser
 
         const auto time_stamp = Poco::Timestamp( microseconds_since_epoch );
 
+        if ( std::floor( _time_stamp_float ) == _time_stamp_float )
+            {
+                return Poco::DateTimeFormatter::format(
+                    time_stamp, Poco::DateTimeFormat::ISO8601_FORMAT );
+            }
+
         return Poco::DateTimeFormatter::format(
             time_stamp, Poco::DateTimeFormat::ISO8601_FRAC_FORMAT );
     }
