@@ -307,6 +307,10 @@ class Aggregator
                     return helpers::Aggregations::count_distinct(
                         _begin, _end );
 
+                case enums::Aggregation::count_distinct_over_count:
+                    return helpers::Aggregations::count_distinct_over_count(
+                        _begin, _end );
+
                 case enums::Aggregation::count_minus_count_distinct:
                     return helpers::Aggregations::count( _begin, _end ) -
                            helpers::Aggregations::count_distinct(
@@ -326,6 +330,12 @@ class Aggregator
 
                 case enums::Aggregation::mode:
                     return helpers::Aggregations::mode<Float>( _begin, _end );
+
+                case enums::Aggregation::num_max:
+                    return helpers::Aggregations::num_max( _begin, _end );
+
+                case enums::Aggregation::num_min:
+                    return helpers::Aggregations::num_min( _begin, _end );
 
                 case enums::Aggregation::skew:
                     return helpers::Aggregations::skew( _begin, _end );

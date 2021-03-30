@@ -70,7 +70,7 @@ class Aggregations
     {
         const auto mean = avg( _begin, _end );
 
-        const auto count = [mean]( const Float init, const Float val ) {
+        const auto count_op = [mean]( const Float init, const Float val ) {
             if ( val > mean )
                 {
                     return init + 1.0;
@@ -78,7 +78,7 @@ class Aggregations
             return init;
         };
 
-        return num_agg( _begin, _end, count, 0.0 );
+        return num_agg( _begin, _end, count_op, 0.0 );
     }
 
     /// Counts all values that are strictly smaller than the mean.
@@ -87,7 +87,7 @@ class Aggregations
     {
         const auto mean = avg( _begin, _end );
 
-        const auto count = [mean]( const Float init, const Float val ) {
+        const auto count_op = [mean]( const Float init, const Float val ) {
             if ( val < mean )
                 {
                     return init + 1.0;
@@ -95,7 +95,7 @@ class Aggregations
             return init;
         };
 
-        return num_agg( _begin, _end, count, 0.0 );
+        return num_agg( _begin, _end, count_op, 0.0 );
     }
 
     /// Counts the non-null number of entries.
@@ -168,6 +168,21 @@ class Aggregations
             }
 
         return static_cast<Float>( set.size() );
+    }
+
+    /// Number of distinct elements divided by number of total elements.
+    template <class IteratorType>
+    static Float count_distinct_over_count(
+        IteratorType _begin, IteratorType _end )
+    {
+        const auto n = count( _begin, _end );
+
+        if ( n == 0.0 ) [[unlikely]]
+            {
+                return NAN;
+            }
+
+        return count_distinct( _begin, _end ) / n;
     }
 
     /// Implements the FIRST aggregation. Assumes that the iterator points to a
@@ -306,6 +321,50 @@ class Aggregations
 
         return std::max_element( freq.begin(), freq.end(), less_frequent )
             ->second;
+    }
+
+    /// Calculates the number of times the maximum value is seen.
+    template <class IteratorType>
+    static Float num_max( IteratorType _begin, IteratorType _end )
+    {
+        const auto max = maximum( _begin, _end );
+
+        if ( std::isnan( max ) ) [[unlikely]]
+            {
+                return 0.0;
+            }
+
+        const auto count_op = [max]( const Float init, const Float val ) {
+            if ( val == max )
+                {
+                    return init + 1.0;
+                }
+            return init;
+        };
+
+        return num_agg( _begin, _end, count_op, 0.0 );
+    }
+
+    /// Calculates the number of times the minimum value is seen.
+    template <class IteratorType>
+    static Float num_min( IteratorType _begin, IteratorType _end )
+    {
+        const auto min = minimum( _begin, _end );
+
+        if ( std::isnan( min ) ) [[unlikely]]
+            {
+                return 0.0;
+            }
+
+        const auto count_op = [min]( const Float init, const Float val ) {
+            if ( val == min )
+                {
+                    return init + 1.0;
+                }
+            return init;
+        };
+
+        return num_agg( _begin, _end, count_op, 0.0 );
     }
 
     /// Takes the skewness of all non-null entries.

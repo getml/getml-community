@@ -25,6 +25,8 @@ struct Parser<Aggregation>
     static constexpr const char* COUNT_ABOVE_MEAN = "COUNT ABOVE MEAN";
     static constexpr const char* COUNT_BELOW_MEAN = "COUNT BELOW MEAN";
     static constexpr const char* COUNT_DISTINCT = "COUNT DISTINCT";
+    static constexpr const char* COUNT_DISTINCT_OVER_COUNT =
+        "COUNT DISTINCT OVER COUNT";
     static constexpr const char* COUNT_MINUS_COUNT_DISTINCT =
         "COUNT MINUS COUNT DISTINCT";
     static constexpr const char* FIRST = "FIRST";
@@ -34,6 +36,8 @@ struct Parser<Aggregation>
     static constexpr const char* MEDIAN = "MEDIAN";
     static constexpr const char* MIN = "MIN";
     static constexpr const char* MODE = "MODE";
+    static constexpr const char* NUM_MAX = "NUM MAX";
+    static constexpr const char* NUM_MIN = "NUM MIN";
     static constexpr const char* SKEW = "SKEW";
     static constexpr const char* SUM = "SUM";
     static constexpr const char* STDDEV = "STDDEV";
@@ -79,6 +83,11 @@ struct Parser<Aggregation>
                 return Aggregation::count_minus_count_distinct;
             }
 
+        if ( _str == COUNT_DISTINCT_OVER_COUNT )
+            {
+                return Aggregation::count_distinct_over_count;
+            }
+
         if ( _str == FIRST )
             {
                 return Aggregation::first;
@@ -112,6 +121,16 @@ struct Parser<Aggregation>
         if ( _str == MODE )
             {
                 return Aggregation::mode;
+            }
+
+        if ( _str == NUM_MAX )
+            {
+                return Aggregation::num_max;
+            }
+
+        if ( _str == NUM_MIN )
+            {
+                return Aggregation::num_min;
             }
 
         if ( _str == SKEW )
@@ -170,6 +189,9 @@ struct Parser<Aggregation>
                 case Aggregation::count_minus_count_distinct:
                     return COUNT_MINUS_COUNT_DISTINCT;
 
+                case Aggregation::count_distinct_over_count:
+                    return COUNT_DISTINCT_OVER_COUNT;
+
                 case Aggregation::first:
                     return FIRST;
 
@@ -190,6 +212,12 @@ struct Parser<Aggregation>
 
                 case Aggregation::mode:
                     return MODE;
+
+                case Aggregation::num_max:
+                    return NUM_MAX;
+
+                case Aggregation::num_min:
+                    return NUM_MIN;
 
                 case Aggregation::skew:
                     return SKEW;
