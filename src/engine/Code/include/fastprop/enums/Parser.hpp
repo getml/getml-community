@@ -38,6 +38,14 @@ struct Parser<Aggregation>
     static constexpr const char* MODE = "MODE";
     static constexpr const char* NUM_MAX = "NUM MAX";
     static constexpr const char* NUM_MIN = "NUM MIN";
+    static constexpr const char* Q1 = "Q1";
+    static constexpr const char* Q5 = "Q5";
+    static constexpr const char* Q10 = "Q10";
+    static constexpr const char* Q25 = "Q25";
+    static constexpr const char* Q75 = "Q75";
+    static constexpr const char* Q90 = "Q90";
+    static constexpr const char* Q95 = "Q95";
+    static constexpr const char* Q99 = "Q99";
     static constexpr const char* SKEW = "SKEW";
     static constexpr const char* SUM = "SUM";
     static constexpr const char* STDDEV = "STDDEV";
@@ -131,6 +139,46 @@ struct Parser<Aggregation>
         if ( _str == NUM_MIN )
             {
                 return Aggregation::num_min;
+            }
+
+        if ( _str == Q1 )
+            {
+                return Aggregation::q1;
+            }
+
+        if ( _str == Q5 )
+            {
+                return Aggregation::q5;
+            }
+
+        if ( _str == Q10 )
+            {
+                return Aggregation::q10;
+            }
+
+        if ( _str == Q25 )
+            {
+                return Aggregation::q25;
+            }
+
+        if ( _str == Q75 )
+            {
+                return Aggregation::q75;
+            }
+
+        if ( _str == Q90 )
+            {
+                return Aggregation::q90;
+            }
+
+        if ( _str == Q95 )
+            {
+                return Aggregation::q95;
+            }
+
+        if ( _str == Q99 )
+            {
+                return Aggregation::q99;
             }
 
         if ( _str == SKEW )

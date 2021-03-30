@@ -367,6 +367,32 @@ class Aggregations
         return num_agg( _begin, _end, count_op, 0.0 );
     }
 
+    /// Returns the quantile designated by _q.
+    template <class IteratorType>
+    static Float quantile(
+        const Float _q, IteratorType _begin, IteratorType _end )
+    {
+        assert_true( _q >= 0.0 );
+
+        assert_true( _q <= 1.0 );
+
+        auto values = std::vector<Float>( _begin, _end );
+
+        if ( values.size() == 0 ) [[unlikely]]
+            {
+                return NAN;
+            }
+
+        std::ranges::sort( values );
+
+        const auto ix =
+            static_cast<size_t>( static_cast<Float>( values.size() ) * _q );
+
+        assert_true( ix < values.size() );
+
+        return values[ix];
+    }
+
     /// Takes the skewness of all non-null entries.
     template <class IteratorType>
     static Float skew( IteratorType _begin, IteratorType _end )

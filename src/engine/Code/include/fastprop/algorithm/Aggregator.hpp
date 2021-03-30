@@ -337,6 +337,37 @@ class Aggregator
                 case enums::Aggregation::num_min:
                     return helpers::Aggregations::num_min( _begin, _end );
 
+                case enums::Aggregation::q1:
+                    return helpers::Aggregations::quantile(
+                        0.01, _begin, _end );
+
+                case enums::Aggregation::q5:
+                    return helpers::Aggregations::quantile(
+                        0.05, _begin, _end );
+
+                case enums::Aggregation::q10:
+                    return helpers::Aggregations::quantile( 0.1, _begin, _end );
+
+                case enums::Aggregation::q25:
+                    return helpers::Aggregations::quantile(
+                        0.25, _begin, _end );
+
+                case enums::Aggregation::q75:
+                    return helpers::Aggregations::quantile(
+                        0.75, _begin, _end );
+
+                case enums::Aggregation::q90:
+                    return helpers::Aggregations::quantile(
+                        0.90, _begin, _end );
+
+                case enums::Aggregation::q95:
+                    return helpers::Aggregations::quantile(
+                        0.95, _begin, _end );
+
+                case enums::Aggregation::q99:
+                    return helpers::Aggregations::quantile(
+                        0.99, _begin, _end );
+
                 case enums::Aggregation::skew:
                     return helpers::Aggregations::skew( _begin, _end );
 
