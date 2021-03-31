@@ -161,18 +161,18 @@ void TreeFitter::probe(
         {
             const auto ix = tree.ix_perip_used();
 
-            assert_true( ix < _table_holder.main_tables_.size() );
+            assert_true( ix < _table_holder.main_tables().size() );
 
             assert_true(
-                _subfeatures.size() == _table_holder.main_tables_.size() );
+                _subfeatures.size() == _table_holder.main_tables().size() );
 
             assert_true(
                 _subfeatures.size() ==
-                _table_holder.peripheral_tables_.size() );
+                _table_holder.peripheral_tables().size() );
 
             fit_tree(
-                _table_holder.main_tables_.at( ix ),
-                _table_holder.peripheral_tables_.at( ix ),
+                _table_holder.main_tables().at( ix ),
+                _table_holder.peripheral_tables().at( ix ),
                 _subfeatures.at( ix ),
                 _aggregation_impl,
                 _opt,

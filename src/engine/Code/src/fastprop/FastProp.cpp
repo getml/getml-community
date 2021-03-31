@@ -178,14 +178,14 @@ void FastProp::build_row(
     const auto all_matches = make_matches( _table_holder, _rownum );
 
     assert_true(
-        all_matches.size() == _table_holder.peripheral_tables_.size() );
+        all_matches.size() == _table_holder.peripheral_tables().size() );
 
     assert_true(
-        _table_holder.main_tables_.size() ==
-        _table_holder.peripheral_tables_.size() );
+        _table_holder.main_tables().size() ==
+        _table_holder.peripheral_tables().size() );
 
     assert_true(
-        _subfeatures.size() <= _table_holder.peripheral_tables_.size() );
+        _subfeatures.size() <= _table_holder.peripheral_tables().size() );
 
     for ( size_t i = 0; i < _index.size(); ++i )
         {
@@ -197,13 +197,13 @@ void FastProp::build_row(
 
             assert_true(
                 abstract_feature.peripheral_ <
-                _table_holder.peripheral_tables_.size() );
+                _table_holder.peripheral_tables().size() );
 
-            const auto &population =
-                _table_holder.main_tables_.at( abstract_feature.peripheral_ )
-                    .df();
+            const auto &population = _table_holder.main_tables()
+                                         .at( abstract_feature.peripheral_ )
+                                         .df();
 
-            const auto &peripheral = _table_holder.peripheral_tables_.at(
+            const auto &peripheral = _table_holder.peripheral_tables().at(
                 abstract_feature.peripheral_ );
 
             const auto subf =
@@ -528,8 +528,8 @@ void FastProp::extract_schemas(
 void FastProp::extract_schemas( const TableHolder &_table_holder )
 {
     assert_true(
-        _table_holder.main_tables_.size() ==
-        _table_holder.peripheral_tables_.size() );
+        _table_holder.main_tables().size() ==
+        _table_holder.peripheral_tables().size() );
 
     const auto main_table_schemas =
         std::make_shared<std::vector<containers::Placeholder>>();
@@ -537,13 +537,13 @@ void FastProp::extract_schemas( const TableHolder &_table_holder )
     const auto peripheral_table_schemas =
         std::make_shared<std::vector<containers::Placeholder>>();
 
-    for ( size_t i = 0; i < _table_holder.main_tables_.size(); ++i )
+    for ( size_t i = 0; i < _table_holder.main_tables().size(); ++i )
         {
             main_table_schemas->push_back(
-                _table_holder.main_tables_.at( i ).df().to_schema() );
+                _table_holder.main_tables().at( i ).df().to_schema() );
 
             peripheral_table_schemas->push_back(
-                _table_holder.peripheral_tables_.at( i ).to_schema() );
+                _table_holder.peripheral_tables().at( i ).to_schema() );
         }
 
     main_table_schemas_ = main_table_schemas;
@@ -676,21 +676,21 @@ void FastProp::fit(
     const auto conditions = make_conditions( table_holder );
 
     assert_true(
-        table_holder.main_tables_.size() ==
-        table_holder.peripheral_tables_.size() );
+        table_holder.main_tables().size() ==
+        table_holder.peripheral_tables().size() );
 
     assert_true(
-        table_holder.main_tables_.size() >=
+        table_holder.main_tables().size() >=
         placeholder().joined_tables_.size() );
 
     const auto abstract_features =
         std::make_shared<std::vector<containers::AbstractFeature>>();
 
-    for ( size_t i = 0; i < table_holder.main_tables_.size(); ++i )
+    for ( size_t i = 0; i < table_holder.main_tables().size(); ++i )
         {
             fit_on_peripheral(
-                table_holder.main_tables_.at( i ).df(),
-                table_holder.peripheral_tables_.at( i ),
+                table_holder.main_tables().at( i ).df(),
+                table_holder.peripheral_tables().at( i ),
                 i,
                 conditions,
                 abstract_features );
@@ -1254,15 +1254,15 @@ FastProp::fit_subfeatures(
 {
     assert_true(
         placeholder().joined_tables_.size() <=
-        _table_holder.subtables_.size() );
+        _table_holder.subtables().size() );
 
     assert_true(
         !_mapped || placeholder().joined_tables_.size() <= _mapped->size() );
 
     assert_msg(
-        !_mapped || _table_holder.subtables_.size() == _mapped->size(),
-        "_table_holder.subtables_.size(): " +
-            std::to_string( _table_holder.subtables_.size() ) +
+        !_mapped || _table_holder.subtables().size() == _mapped->size(),
+        "_table_holder.subtables().size(): " +
+            std::to_string( _table_holder.subtables().size() ) +
             ", _mapped->size(): " + std::to_string( _mapped->size() ) );
 
     const auto subfeatures =
@@ -1272,7 +1272,7 @@ FastProp::fit_subfeatures(
         {
             const auto &joined_table = placeholder().joined_tables_.at( i );
 
-            if ( !_table_holder.subtables_.at( i ) )
+            if ( !_table_holder.subtables().at( i ) )
                 {
                     subfeatures->push_back( std::nullopt );
                     continue;
@@ -1658,18 +1658,18 @@ std::vector<std::vector<containers::Match>> FastProp::make_matches(
     // ------------------------------------------------------------
 
     assert_true(
-        _table_holder.main_tables_.size() ==
-        _table_holder.peripheral_tables_.size() );
+        _table_holder.main_tables().size() ==
+        _table_holder.peripheral_tables().size() );
 
     // ------------------------------------------------------------
 
     auto all_matches = std::vector<std::vector<containers::Match>>();
 
-    for ( size_t i = 0; i < _table_holder.main_tables_.size(); ++i )
+    for ( size_t i = 0; i < _table_holder.main_tables().size(); ++i )
         {
-            const auto population = _table_holder.main_tables_.at( i ).df();
+            const auto population = _table_holder.main_tables().at( i ).df();
 
-            const auto peripheral = _table_holder.peripheral_tables_.at( i );
+            const auto peripheral = _table_holder.peripheral_tables().at( i );
 
             auto matches = std::vector<containers::Match>();
 
@@ -1752,14 +1752,14 @@ std::vector<std::vector<containers::Condition>> FastProp::make_conditions(
     conditions.push_back( {} );
 
     assert_true(
-        _table_holder.main_tables_.size() ==
-        _table_holder.peripheral_tables_.size() );
+        _table_holder.main_tables().size() ==
+        _table_holder.peripheral_tables().size() );
 
-    for ( size_t i = 0; i < _table_holder.main_tables_.size(); ++i )
+    for ( size_t i = 0; i < _table_holder.main_tables().size(); ++i )
         {
-            const auto &population = _table_holder.main_tables_.at( i ).df();
+            const auto &population = _table_holder.main_tables().at( i ).df();
 
-            const auto &peripheral = _table_holder.peripheral_tables_.at( i );
+            const auto &peripheral = _table_holder.peripheral_tables().at( i );
 
             make_categorical_conditions( peripheral, i, &conditions );
 

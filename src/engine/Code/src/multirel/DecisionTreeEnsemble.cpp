@@ -298,13 +298,13 @@ void DecisionTreeEnsemble::fit(
 
     // ----------------------------------------------------------------
 
-    if ( _table_holder->main_tables_.size() == 0 )
+    if ( _table_holder->main_tables().size() == 0 )
         {
             throw std::invalid_argument(
                 "You need to provide a population table!" );
         }
 
-    if ( _table_holder->main_tables_[0].nrows() == 0 )
+    if ( _table_holder->main_tables()[0].nrows() == 0 )
         {
             throw std::invalid_argument(
                 "Your population table needs to contain at least one "
@@ -317,21 +317,21 @@ void DecisionTreeEnsemble::fit(
 
     debug_log( "fit: Storing column numbers..." );
 
-    assert_true( _table_holder->main_tables_.size() > 0 );
+    assert_true( _table_holder->main_tables().size() > 0 );
 
     // ----------------------------------------------------------------
     // Make sure that the data passed by the user is plausible
 
     debug_log( "fit: Checking plausibility of input..." );
 
-    assert_true( _table_holder->main_tables_.size() > 0 );
+    assert_true( _table_holder->main_tables().size() > 0 );
 
     // ----------------------------------------------------------------
     // Store names of the targets
 
-    if ( _table_holder->main_tables_[0].num_targets() > 0 )
+    if ( _table_holder->main_tables()[0].num_targets() > 0 )
         {
-            targets() = { _table_holder->main_tables_[0].target_name( 0 ) };
+            targets() = { _table_holder->main_tables()[0].target_name( 0 ) };
         }
 
     // ----------------------------------------------------------------
@@ -364,11 +364,11 @@ void DecisionTreeEnsemble::fit(
 
     // ----------------------------------------------------------------
 
-    assert_true( _table_holder->main_tables_.size() > 0 );
+    assert_true( _table_holder->main_tables().size() > 0 );
 
     const auto aggregation_impl =
         std::make_shared<aggregations::AggregationImpl>(
-            _table_holder->main_tables_.at( 0 ).nrows() );
+            _table_holder->main_tables().at( 0 ).nrows() );
 
     // ----------------------------------------------------------------
     // Columns that share the same units are candidates for direct
@@ -376,15 +376,15 @@ void DecisionTreeEnsemble::fit(
 
     debug_log( "fit: Identifying same units..." );
 
-    assert_true( _table_holder->main_tables_.size() > 0 );
+    assert_true( _table_holder->main_tables().size() > 0 );
 
     assert_true(
-        _table_holder->main_tables_.size() ==
-        _table_holder->peripheral_tables_.size() );
+        _table_holder->main_tables().size() ==
+        _table_holder->peripheral_tables().size() );
 
     auto same_units = SameUnitIdentifier::identify_same_units(
-        _table_holder->peripheral_tables_,
-        _table_holder->main_tables_[0].df() );
+        _table_holder->peripheral_tables(),
+        _table_holder->main_tables()[0].df() );
 
     // ----------------------------------------------------------------
     // containers::Match weights are needed for the random-forest-like
@@ -397,9 +397,9 @@ void DecisionTreeEnsemble::fit(
             throw std::invalid_argument( "Seed must be positive!" );
         }
 
-    assert_true( _table_holder->main_tables_.size() > 0 );
+    assert_true( _table_holder->main_tables().size() > 0 );
 
-    const auto nrows = _table_holder->main_tables_[0].nrows();
+    const auto nrows = _table_holder->main_tables()[0].nrows();
 
     auto sample_weights = std::make_shared<std::vector<Float>>( nrows, 1.0 );
 
@@ -413,9 +413,9 @@ void DecisionTreeEnsemble::fit(
 
     debug_log( "fit: Creating matches..." );
 
-    const auto num_peripheral = _table_holder->peripheral_tables_.size();
+    const auto num_peripheral = _table_holder->peripheral_tables().size();
 
-    assert_true( _table_holder->main_tables_.size() == num_peripheral );
+    assert_true( _table_holder->main_tables().size() == num_peripheral );
 
     std::vector<containers::Matches> matches( num_peripheral );
 
@@ -426,8 +426,8 @@ void DecisionTreeEnsemble::fit(
             for ( size_t i = 0; i < num_peripheral; ++i )
                 {
                     matches.at( i ) = utils::Matchmaker::make_matches(
-                        _table_holder->main_tables_.at( i ),
-                        _table_holder->peripheral_tables_.at( i ),
+                        _table_holder->main_tables().at( i ),
+                        _table_holder->peripheral_tables().at( i ),
                         sample_weights,
                         hyperparameters().use_timestamps_ );
 
@@ -463,17 +463,17 @@ void DecisionTreeEnsemble::fit(
                 {
                     sample_weights = _opt->make_sample_weights();
 
-                    assert_true( _table_holder->main_tables_.size() > 0 );
+                    assert_true( _table_holder->main_tables().size() > 0 );
 
                     assert_true(
                         sample_weights->size() ==
-                        _table_holder->main_tables_.at( 0 ).nrows() );
+                        _table_holder->main_tables().at( 0 ).nrows() );
 
                     for ( size_t i = 0; i < num_peripheral; ++i )
                         {
                             matches.at( i ) = utils::Matchmaker::make_matches(
-                                _table_holder->main_tables_.at( i ),
-                                _table_holder->peripheral_tables_.at( i ),
+                                _table_holder->main_tables().at( i ),
+                                _table_holder->peripheral_tables().at( i ),
                                 sample_weights,
                                 hyperparameters().use_timestamps_ );
 
@@ -530,8 +530,8 @@ void DecisionTreeEnsemble::fit(
                     const auto ix = last_tree()->ix_perip_used();
 
                     const auto new_feature = last_tree()->transform(
-                        _table_holder->main_tables_.at( ix ),
-                        _table_holder->peripheral_tables_.at( ix ),
+                        _table_holder->main_tables().at( ix ),
+                        _table_holder->peripheral_tables().at( ix ),
                         subfeatures.at( ix ),
                         hyperparameters().use_timestamps_ );
 
@@ -1261,7 +1261,7 @@ containers::Predictions DecisionTreeEnsemble::transform(
 {
     // ----------------------------------------------------------------
 
-    assert_true( _table_holder.main_tables_.size() > 0 );
+    assert_true( _table_holder.main_tables().size() > 0 );
 
     // ----------------------------------------------------------------
 
@@ -1311,23 +1311,24 @@ std::vector<Float> DecisionTreeEnsemble::transform(
     assert_true( _num_feature < trees().size() );
 
     assert_true(
-        _table_holder.main_tables_.size() ==
-        _table_holder.peripheral_tables_.size() );
+        _table_holder.main_tables().size() ==
+        _table_holder.peripheral_tables().size() );
 
     assert_true(
-        _table_holder.main_tables_.size() == _table_holder.subtables_.size() );
+        _table_holder.main_tables().size() ==
+        _table_holder.subtables().size() );
 
-    assert_true( _table_holder.main_tables_.size() == _subfeatures.size() );
+    assert_true( _table_holder.main_tables().size() == _subfeatures.size() );
 
     const auto ix = trees().at( _num_feature ).ix_perip_used();
 
-    assert_true( ix < _table_holder.main_tables_.size() );
+    assert_true( ix < _table_holder.main_tables().size() );
 
     auto new_feature = trees()
                            .at( _num_feature )
                            .transform(
-                               _table_holder.main_tables_.at( ix ),
-                               _table_holder.peripheral_tables_.at( ix ),
+                               _table_holder.main_tables().at( ix ),
+                               _table_holder.peripheral_tables().at( ix ),
                                _subfeatures.at( ix ),
                                hyperparameters().use_timestamps_ );
 

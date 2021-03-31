@@ -95,17 +95,17 @@ ConditionParser::parse_conditions(
     const containers::AbstractFeature &_abstract_feature )
 {
     assert_true(
-        _table_holder.main_tables_.size() ==
-        _table_holder.peripheral_tables_.size() );
+        _table_holder.main_tables().size() ==
+        _table_holder.peripheral_tables().size() );
 
     assert_true(
-        _abstract_feature.peripheral_ < _table_holder.main_tables_.size() );
+        _abstract_feature.peripheral_ < _table_holder.main_tables().size() );
 
     const auto &population =
-        _table_holder.main_tables_.at( _abstract_feature.peripheral_ ).df();
+        _table_holder.main_tables().at( _abstract_feature.peripheral_ ).df();
 
     const auto &peripheral =
-        _table_holder.peripheral_tables_.at( _abstract_feature.peripheral_ );
+        _table_holder.peripheral_tables().at( _abstract_feature.peripheral_ );
 
     const auto parse = [_abstract_feature, &population, &peripheral](
                            const containers::Condition &cond )

@@ -58,7 +58,7 @@ void CandidateTreeBuilder::add_count_distincts(
                     enums::DataUsed::x_perip_discrete } )
                 {
                     size_t ncols = get_ncols(
-                        _table_holder.peripheral_tables_,
+                        _table_holder.peripheral_tables(),
                         _same_units,
                         _ix_perip_used,
                         data_used );
@@ -96,7 +96,7 @@ void CandidateTreeBuilder::add_other_aggs(
 
     assert_true(
         static_cast<size_t>( _ix_perip_used ) <
-        _table_holder.peripheral_tables_.size() );
+        _table_holder.peripheral_tables().size() );
 
     for ( auto &agg : _hyperparameters.aggregations_ )
         {
@@ -108,7 +108,7 @@ void CandidateTreeBuilder::add_other_aggs(
 
             if ( skip_first_last(
                      agg,
-                     _table_holder.peripheral_tables_.at( _ix_perip_used ) ) )
+                     _table_holder.peripheral_tables().at( _ix_perip_used ) ) )
                 {
                     continue;
                 }
@@ -120,7 +120,7 @@ void CandidateTreeBuilder::add_other_aggs(
                     enums::DataUsed::same_unit_discrete } )
                 {
                     size_t ncols = get_ncols(
-                        _table_holder.peripheral_tables_,
+                        _table_holder.peripheral_tables(),
                         _same_units,
                         _ix_perip_used,
                         data_used );
@@ -180,7 +180,7 @@ void CandidateTreeBuilder::add_subfeature_aggs(
     multithreading::Communicator *_comm,
     std::list<decisiontrees::DecisionTree> *_candidate_trees )
 {
-    assert_true( _table_holder.subtables_[_ix_perip_used] );
+    assert_true( _table_holder.subtables().at( _ix_perip_used ) );
 
     for ( auto &agg : _hyperparameters.aggregations_ )
         {
@@ -260,9 +260,9 @@ CandidateTreeBuilder::build_candidate_trees(
     std::mt19937 *_random_number_generator,
     multithreading::Communicator *_comm )
 {
-    const auto num_perips = _table_holder.peripheral_tables_.size();
+    const auto num_perips = _table_holder.peripheral_tables().size();
 
-    assert_true( _table_holder.propositionalization_.size() == num_perips );
+    assert_true( _table_holder.propositionalization().size() == num_perips );
 
     std::list<decisiontrees::DecisionTree> candidate_trees;
 
@@ -271,7 +271,7 @@ CandidateTreeBuilder::build_candidate_trees(
         {
             // -----------------------------------------------------
 
-            if ( _table_holder.propositionalization_.at( ix_perip_used ) )
+            if ( _table_holder.propositionalization().at( ix_perip_used ) )
                 {
                     continue;
                 }
@@ -320,7 +320,7 @@ CandidateTreeBuilder::build_candidate_trees(
             // ------------------------------------------------------------------
             // If applicable, add aggregations over the subfeatures
 
-            if ( _table_holder.subtables_[ix_perip_used] )
+            if ( _table_holder.subtables()[ix_perip_used] )
                 {
                     add_subfeature_aggs(
                         _table_holder,
@@ -391,7 +391,8 @@ bool CandidateTreeBuilder::is_comparison_only(
             case enums::DataUsed::x_perip_numerical:
                 {
                     const bool contains_comparison_only =
-                        _table_holder.peripheral_tables_[_ix_perip_used]
+                        _table_holder.peripheral_tables()
+                            .at( _ix_perip_used )
                             .numerical_unit( _ix_column_used )
                             .find(
                                 "comparison "
@@ -403,7 +404,8 @@ bool CandidateTreeBuilder::is_comparison_only(
             case enums::DataUsed::x_perip_discrete:
                 {
                     const bool contains_comparison_only =
-                        _table_holder.peripheral_tables_[_ix_perip_used]
+                        _table_holder.peripheral_tables()
+                            .at( _ix_perip_used )
                             .discrete_unit( _ix_column_used )
                             .find(
                                 "comparison "
@@ -517,17 +519,17 @@ enums::DataUsed CandidateTreeBuilder::to_ts(
     // ------------------------------------------------------------------
 
     assert_true(
-        _table_holder.main_tables_.size() ==
-        _table_holder.peripheral_tables_.size() );
+        _table_holder.main_tables().size() ==
+        _table_holder.peripheral_tables().size() );
 
-    assert_true( _table_holder.main_tables_.size() == _same_units.size() );
+    assert_true( _table_holder.main_tables().size() == _same_units.size() );
 
-    assert_true( _ix_perip_used < _table_holder.peripheral_tables_.size() );
+    assert_true( _ix_perip_used < _table_holder.peripheral_tables().size() );
 
-    const auto population = _table_holder.main_tables_.at( _ix_perip_used );
+    const auto population = _table_holder.main_tables().at( _ix_perip_used );
 
     const auto peripheral =
-        _table_holder.peripheral_tables_.at( _ix_perip_used );
+        _table_holder.peripheral_tables().at( _ix_perip_used );
 
     // ------------------------------------------------------------------
 

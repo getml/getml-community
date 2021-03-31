@@ -546,12 +546,12 @@ DecisionTreeEnsemble::fit_candidate_features(
         candidates;
 
     for ( size_t ix_table_used = 0;
-          ix_table_used < _table_holder->main_tables_.size();
+          ix_table_used < _table_holder->main_tables().size();
           ++ix_table_used )
         {
             // ------------------------------------------------------------------------
 
-            if ( _table_holder->propositionalization_.at( ix_table_used ) )
+            if ( _table_holder->propositionalization().at( ix_table_used ) )
                 {
                     continue;
                 }
@@ -559,10 +559,10 @@ DecisionTreeEnsemble::fit_candidate_features(
             // ------------------------------------------------------------------------
 
             const auto &output_table =
-                _table_holder->main_tables_.at( ix_table_used );
+                _table_holder->main_tables().at( ix_table_used );
 
             const auto input_table = std::make_optional<containers::DataFrame>(
-                _table_holder->peripheral_tables_.at( ix_table_used ) );
+                _table_holder->peripheral_tables().at( ix_table_used ) );
 
             const auto &subfeatures = _subfeatures.at( ix_table_used );
 
@@ -644,12 +644,12 @@ void DecisionTreeEnsemble::fit_new_features(
     assert_true( _table_holder );
 
     assert_true(
-        _table_holder->main_tables_.size() ==
-        _table_holder->peripheral_tables_.size() );
+        _table_holder->main_tables().size() ==
+        _table_holder->peripheral_tables().size() );
 
-    assert_true( _table_holder->main_tables_.size() == _subfeatures.size() );
+    assert_true( _table_holder->main_tables().size() == _subfeatures.size() );
 
-    assert_true( _table_holder->main_tables_.size() > 0 );
+    assert_true( _table_holder->main_tables().size() > 0 );
 
     // ------------------------------------------------------------------------
 
@@ -1299,15 +1299,15 @@ std::vector<Float> DecisionTreeEnsemble::transform(
 
     const auto peripheral_used = decision_tree.peripheral_used();
 
-    assert_true( peripheral_used < _table_holder.main_tables_.size() );
+    assert_true( peripheral_used < _table_holder.main_tables().size() );
 
-    assert_true( peripheral_used < _table_holder.peripheral_tables_.size() );
+    assert_true( peripheral_used < _table_holder.peripheral_tables().size() );
 
     assert_true( peripheral_used < _subfeatures.size() );
 
     return decision_tree.transform(
-        _table_holder.main_tables_.at( peripheral_used ),
-        _table_holder.peripheral_tables_.at( peripheral_used ),
+        _table_holder.main_tables().at( peripheral_used ),
+        _table_holder.peripheral_tables().at( peripheral_used ),
         _subfeatures.at( peripheral_used ) );
 }
 

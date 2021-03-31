@@ -50,10 +50,10 @@ void Threadutils::fit_ensemble( const ThreadutilsFitParams& _params )
 
             // ----------------------------------------------------------------
 
-            assert_true( table_holder->main_tables_.size() > 0 );
+            assert_true( table_holder->main_tables().size() > 0 );
 
             const auto opt = _params.ensemble_.make_r_squared(
-                table_holder->main_tables_.at( 0 ), &_params.comm_ );
+                table_holder->main_tables().at( 0 ), &_params.comm_ );
 
             // ----------------------------------------------------------------
 

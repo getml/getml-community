@@ -21,16 +21,16 @@ void SubtreeHelper::fit_subensemble(
 
     assert_true( _loss_function );
 
-    assert_true( _table_holder->subtables_[_ix_perip_used] );
+    assert_true( _table_holder->subtables()[_ix_perip_used] );
 
     const auto subtable_holder = std::make_shared<const TableHolder>(
-        *_table_holder->subtables_[_ix_perip_used] );
+        *_table_holder->subtables()[_ix_perip_used] );
 
-    assert_true( subtable_holder->main_tables_.size() > 0 );
+    assert_true( subtable_holder->main_tables().size() > 0 );
 
     const auto input_table = containers::DataFrameView(
-        _table_holder->peripheral_tables_[_ix_perip_used],
-        subtable_holder->main_tables_[0].rows_ptr() );
+        _table_holder->peripheral_tables()[_ix_perip_used],
+        subtable_holder->main_tables()[0].rows_ptr() );
 
     // The input map is needed for propagating sampling.
     const auto input_map =
@@ -39,7 +39,7 @@ void SubtreeHelper::fit_subensemble(
     const auto aggregation_index =
         std::make_shared<aggregations::AggregationIndex>(
             input_table,
-            _table_holder->main_tables_[_ix_perip_used],
+            _table_holder->main_tables()[_ix_perip_used],
             input_map,
             _output_map,
             _hyperparameters.use_timestamps_ );
@@ -51,8 +51,8 @@ void SubtreeHelper::fit_subensemble(
             intermediate_agg = std::make_shared<aggregations::Avg>(
                 aggregation_index,
                 _loss_function,
-                _table_holder->peripheral_tables_[_ix_perip_used],
-                _table_holder->main_tables_[_ix_perip_used],
+                _table_holder->peripheral_tables()[_ix_perip_used],
+                _table_holder->main_tables()[_ix_perip_used],
                 _comm );
         }
     else if ( _agg_type == "SUM" )
@@ -60,8 +60,8 @@ void SubtreeHelper::fit_subensemble(
             intermediate_agg = std::make_shared<aggregations::Sum>(
                 aggregation_index,
                 _loss_function,
-                _table_holder->peripheral_tables_[_ix_perip_used],
-                _table_holder->main_tables_[_ix_perip_used],
+                _table_holder->peripheral_tables()[_ix_perip_used],
+                _table_holder->main_tables()[_ix_perip_used],
                 _comm );
         }
     else
@@ -140,20 +140,21 @@ void SubtreeHelper::fit_subensembles(
     assert_true( _table_holder );
 
     assert_true(
-        _table_holder->subtables_.size() ==
-        _table_holder->main_tables_.size() );
+        _table_holder->subtables().size() ==
+        _table_holder->main_tables().size() );
 
     assert_true(
-        _table_holder->subtables_.size() ==
-        _table_holder->peripheral_tables_.size() );
+        _table_holder->subtables().size() ==
+        _table_holder->peripheral_tables().size() );
 
     // Do not have to be the same because of the text fields.
     assert_true(
-        _table_holder->subtables_.size() >= placeholder.joined_tables_.size() );
+        _table_holder->subtables().size() >=
+        placeholder.joined_tables_.size() );
 
     // ----------------------------------------------------------------
 
-    const auto num_tables = _table_holder->subtables_.size();
+    const auto num_tables = _table_holder->subtables().size();
 
     auto subensembles_avg =
         std::vector<std::optional<DecisionTreeEnsemble>>( num_tables );
@@ -163,7 +164,7 @@ void SubtreeHelper::fit_subensembles(
 
     for ( size_t i = 0; i < num_tables; ++i )
         {
-            if ( _table_holder->subtables_.at( i ) )
+            if ( _table_holder->subtables().at( i ) )
                 {
                     assert_true( i < placeholder.joined_tables_.size() );
 
@@ -203,7 +204,7 @@ void SubtreeHelper::fit_subensembles(
     // ----------------------------------------------------------------
 
     const auto rows_map = utils::Mapper::create_rows_map(
-        _table_holder->main_tables_.at( 0 ).rows_ptr() );
+        _table_holder->main_tables().at( 0 ).rows_ptr() );
 
     // ----------------------------------------------------------------
 
@@ -261,7 +262,7 @@ std::vector<containers::Predictions> SubtreeHelper::make_predictions(
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     multithreading::Communicator* _comm )
 {
-    const auto size = _table_holder.subtables_.size();
+    const auto size = _table_holder.subtables().size();
 
     assert_true( size == _subensembles_avg.size() );
     assert_true( size == _subensembles_sum.size() );
@@ -270,14 +271,14 @@ std::vector<containers::Predictions> SubtreeHelper::make_predictions(
 
     for ( size_t i = 0; i < size; ++i )
         {
-            if ( !_table_holder.subtables_.at( i ) )
+            if ( !_table_holder.subtables().at( i ) )
                 {
                     continue;
                 }
 
-            const auto& subtable_holder = *_table_holder.subtables_.at( i );
+            const auto& subtable_holder = *_table_holder.subtables().at( i );
 
-            assert_true( subtable_holder.main_tables_.size() > 0 );
+            assert_true( subtable_holder.main_tables().size() > 0 );
 
             assert_true( _subensembles_avg.at( i ) );
 
@@ -350,7 +351,7 @@ std::vector<containers::Subfeatures> SubtreeHelper::make_subfeatures(
     const TableHolder& _table_holder,
     const std::vector<containers::Predictions>& _predictions )
 {
-    const auto size = _table_holder.subtables_.size();
+    const auto size = _table_holder.subtables().size();
 
     assert_true( size == _predictions.size() );
 
@@ -358,32 +359,38 @@ std::vector<containers::Subfeatures> SubtreeHelper::make_subfeatures(
 
     for ( size_t i = 0; i < size; ++i )
         {
-            if ( !_table_holder.subtables_.at( i ) )
+            if ( !_table_holder.subtables().at( i ) )
                 {
                     continue;
                 }
 
-            assert_true( _table_holder.subtables_.at( i ) );
+            assert_true( _table_holder.subtables().at( i ) );
 
             assert_true(
-                _table_holder.subtables_.at( i )->main_tables_.size() > 0 );
+                _table_holder.subtables().at( i )->main_tables().size() > 0 );
 
-            assert_true( _table_holder.subtables_.at( i )
-                             ->main_tables_.at( 0 )
+            assert_true( _table_holder.subtables()
+                             .at( i )
+                             ->main_tables()
+                             .at( 0 )
                              .rows_ptr() );
 
-            const auto rows_map = utils::Mapper::create_rows_map(
-                _table_holder.subtables_.at( i )
-                    ->main_tables_.at( 0 )
-                    .rows_ptr() );
+            const auto rows_map =
+                utils::Mapper::create_rows_map( _table_holder.subtables()
+                                                    .at( i )
+                                                    ->main_tables()
+                                                    .at( 0 )
+                                                    .rows_ptr() );
 
             const auto& p = _predictions.at( i );
 
             for ( size_t j = 0; j < p.size(); ++j )
                 {
                     assert_true(
-                        _table_holder.subtables_.at( i )
-                            ->main_tables_.at( 0 )
+                        _table_holder.subtables()
+                            .at( i )
+                            ->main_tables()
+                            .at( 0 )
                             .rows_ptr()
                             ->size() == p.at( j ).size() );
 
