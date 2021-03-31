@@ -295,6 +295,30 @@ struct Parser<Aggregation>
                 case Aggregation::num_min:
                     return NUM_MIN;
 
+                case Aggregation::q1:
+                    return Q1;
+
+                case Aggregation::q5:
+                    return Q5;
+
+                case Aggregation::q10:
+                    return Q10;
+
+                case Aggregation::q25:
+                    return Q25;
+
+                case Aggregation::q75:
+                    return Q75;
+
+                case Aggregation::q90:
+                    return Q90;
+
+                case Aggregation::q95:
+                    return Q95;
+
+                case Aggregation::q99:
+                    return Q99;
+
                 case Aggregation::skew:
                     return SKEW;
 
