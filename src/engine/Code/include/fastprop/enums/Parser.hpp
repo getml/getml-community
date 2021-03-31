@@ -49,6 +49,14 @@ struct Parser<Aggregation>
     static constexpr const char* SKEW = "SKEW";
     static constexpr const char* SUM = "SUM";
     static constexpr const char* STDDEV = "STDDEV";
+    static constexpr const char* TIME_SINCE_FIRST_MAXIMUM =
+        "TIME SINCE FIRST MAXIMUM";
+    static constexpr const char* TIME_SINCE_FIRST_MINIMUM =
+        "TIME SINCE FIRST MINIMUM";
+    static constexpr const char* TIME_SINCE_LAST_MAXIMUM =
+        "TIME SINCE LAST MAXIMUM";
+    static constexpr const char* TIME_SINCE_LAST_MINIMUM =
+        "TIME SINCE LAST MINIMUM";
     static constexpr const char* VAR = "VAR";
     static constexpr const char* VARIATION_COEFFICIENT =
         "VARIATION COEFFICIENT";
@@ -196,6 +204,26 @@ struct Parser<Aggregation>
                 return Aggregation::sum;
             }
 
+        if ( _str == TIME_SINCE_FIRST_MAXIMUM )
+            {
+                return Aggregation::time_since_first_maximum;
+            }
+
+        if ( _str == TIME_SINCE_FIRST_MINIMUM )
+            {
+                return Aggregation::time_since_first_minimum;
+            }
+
+        if ( _str == TIME_SINCE_LAST_MAXIMUM )
+            {
+                return Aggregation::time_since_last_maximum;
+            }
+
+        if ( _str == TIME_SINCE_LAST_MINIMUM )
+            {
+                return Aggregation::time_since_last_minimum;
+            }
+
         if ( _str == VAR )
             {
                 return Aggregation::var;
@@ -275,6 +303,18 @@ struct Parser<Aggregation>
 
                 case Aggregation::sum:
                     return SUM;
+
+                case Aggregation::time_since_first_maximum:
+                    return TIME_SINCE_FIRST_MAXIMUM;
+
+                case Aggregation::time_since_first_minimum:
+                    return TIME_SINCE_FIRST_MINIMUM;
+
+                case Aggregation::time_since_last_maximum:
+                    return TIME_SINCE_LAST_MAXIMUM;
+
+                case Aggregation::time_since_last_minimum:
+                    return TIME_SINCE_LAST_MINIMUM;
 
                 case Aggregation::var:
                     return VAR;

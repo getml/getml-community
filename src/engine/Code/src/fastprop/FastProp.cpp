@@ -771,6 +771,7 @@ void FastProp::fit_on_categoricals(
 // ----------------------------------------------------------------------------
 
 void FastProp::fit_on_categoricals_by_categories(
+    const containers::DataFrame &_population,
     const containers::DataFrame &_peripheral,
     const size_t _peripheral_ix,
     const std::vector<containers::Condition> &_conditions,
@@ -815,7 +816,8 @@ void FastProp::fit_on_categoricals_by_categories(
                                     continue;
                                 }
 
-                            if ( skip_first_last( agg, _peripheral ) )
+                            if ( skip_first_last(
+                                     agg, _population, _peripheral ) )
                                 {
                                     continue;
                                 }
@@ -837,6 +839,7 @@ void FastProp::fit_on_categoricals_by_categories(
 // ----------------------------------------------------------------------------
 
 void FastProp::fit_on_discretes(
+    const containers::DataFrame &_population,
     const containers::DataFrame &_peripheral,
     const size_t _peripheral_ix,
     const std::vector<containers::Condition> &_conditions,
@@ -861,7 +864,7 @@ void FastProp::fit_on_discretes(
                             continue;
                         }
 
-                    if ( skip_first_last( agg, _peripheral ) )
+                    if ( skip_first_last( agg, _population, _peripheral ) )
                         {
                             continue;
                         }
@@ -879,6 +882,7 @@ void FastProp::fit_on_discretes(
 // ----------------------------------------------------------------------------
 
 void FastProp::fit_on_numericals(
+    const containers::DataFrame &_population,
     const containers::DataFrame &_peripheral,
     const size_t _peripheral_ix,
     const std::vector<containers::Condition> &_conditions,
@@ -903,7 +907,7 @@ void FastProp::fit_on_numericals(
                             continue;
                         }
 
-                    if ( skip_first_last( agg, _peripheral ) )
+                    if ( skip_first_last( agg, _population, _peripheral ) )
                         {
                             continue;
                         }
@@ -954,7 +958,8 @@ void FastProp::fit_on_same_units_categorical(
                                     continue;
                                 }
 
-                            if ( skip_first_last( agg, _peripheral ) )
+                            if ( skip_first_last(
+                                     agg, _population, _peripheral ) )
                                 {
                                     continue;
                                 }
@@ -1008,7 +1013,8 @@ void FastProp::fit_on_same_units_discrete(
                                     continue;
                                 }
 
-                            if ( skip_first_last( agg, _peripheral ) )
+                            if ( skip_first_last(
+                                     agg, _population, _peripheral ) )
                                 {
                                     continue;
                                 }
@@ -1071,7 +1077,8 @@ void FastProp::fit_on_same_units_numerical(
                                     continue;
                                 }
 
-                            if ( skip_first_last( agg, _peripheral ) )
+                            if ( skip_first_last(
+                                     agg, _population, _peripheral ) )
                                 {
                                     continue;
                                 }
@@ -1100,6 +1107,7 @@ void FastProp::fit_on_same_units_numerical(
 // ----------------------------------------------------------------------------
 
 void FastProp::fit_on_subfeatures(
+    const containers::DataFrame &_population,
     const containers::DataFrame &_peripheral,
     const size_t _peripheral_ix,
     const std::vector<containers::Condition> &_conditions,
@@ -1129,7 +1137,7 @@ void FastProp::fit_on_subfeatures(
                             continue;
                         }
 
-                    if ( skip_first_last( agg, _peripheral ) )
+                    if ( skip_first_last( agg, _population, _peripheral ) )
                         {
                             continue;
                         }
@@ -1165,13 +1173,25 @@ void FastProp::fit_on_peripheral(
                 _peripheral, _peripheral_ix, cond, _abstract_features );
 
             fit_on_categoricals_by_categories(
-                _peripheral, _peripheral_ix, cond, _abstract_features );
+                _population,
+                _peripheral,
+                _peripheral_ix,
+                cond,
+                _abstract_features );
 
             fit_on_discretes(
-                _peripheral, _peripheral_ix, cond, _abstract_features );
+                _population,
+                _peripheral,
+                _peripheral_ix,
+                cond,
+                _abstract_features );
 
             fit_on_numericals(
-                _peripheral, _peripheral_ix, cond, _abstract_features );
+                _population,
+                _peripheral,
+                _peripheral_ix,
+                cond,
+                _abstract_features );
 
             fit_on_same_units_categorical(
                 _population,
@@ -1195,7 +1215,11 @@ void FastProp::fit_on_peripheral(
                 _abstract_features );
 
             fit_on_subfeatures(
-                _peripheral, _peripheral_ix, cond, _abstract_features );
+                _population,
+                _peripheral,
+                _peripheral_ix,
+                cond,
+                _abstract_features );
 
             if ( _peripheral.num_time_stamps() > 0 )
                 {
@@ -2015,16 +2039,20 @@ FastProp::select_features(
 // ----------------------------------------------------------------------------
 
 bool FastProp::skip_first_last(
-    const std::string &_agg, const containers::DataFrame &_peripheral ) const
+    const std::string &_agg,
+    const containers::DataFrame &_population,
+    const containers::DataFrame &_peripheral ) const
 {
     const auto agg = enums::Parser<enums::Aggregation>::parse( _agg );
 
-    if ( agg != enums::Aggregation::first && agg != enums::Aggregation::last )
+    if ( !Aggregator::is_first_last( agg ) )
         {
             return false;
         }
 
-    return ( _peripheral.num_time_stamps() == 0 );
+    return (
+        _population.num_time_stamps() == 0 ||
+        _peripheral.num_time_stamps() == 0 );
 }
 
 // ----------------------------------------------------------------------------

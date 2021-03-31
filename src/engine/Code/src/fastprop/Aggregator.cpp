@@ -18,6 +18,7 @@ Float Aggregator::apply_aggregation(
         {
             case enums::DataUsed::categorical:
                 return apply_categorical(
+                    _population,
                     _peripheral,
                     _matches,
                     _condition_function,
@@ -25,6 +26,7 @@ Float Aggregator::apply_aggregation(
 
             case enums::DataUsed::discrete:
                 return apply_discrete(
+                    _population,
                     _peripheral,
                     _matches,
                     _condition_function,
@@ -39,6 +41,7 @@ Float Aggregator::apply_aggregation(
 
             case enums::DataUsed::numerical:
                 return apply_numerical(
+                    _population,
                     _peripheral,
                     _matches,
                     _condition_function,
@@ -73,6 +76,7 @@ Float Aggregator::apply_aggregation(
             case enums::DataUsed::subfeatures:
                 assert_true( _subfeatures );
                 return apply_subfeatures(
+                    _population,
                     _peripheral,
                     *_subfeatures,
                     _matches,
@@ -81,6 +85,7 @@ Float Aggregator::apply_aggregation(
 
             case enums::DataUsed::text:
                 return apply_text(
+                    _population,
                     _peripheral,
                     _matches,
                     _condition_function,
@@ -95,6 +100,7 @@ Float Aggregator::apply_aggregation(
 // ----------------------------------------------------------------------------
 
 Float Aggregator::apply_categorical(
+    const containers::DataFrame &_population,
     const containers::DataFrame &_peripheral,
     const std::vector<containers::Match> &_matches,
     const std::function<bool( const containers::Match & )> &_condition_function,
@@ -130,10 +136,10 @@ Float Aggregator::apply_categorical(
         return 0.0;
     };
 
-    if ( _abstract_feature.aggregation_ == enums::Aggregation::first ||
-         _abstract_feature.aggregation_ == enums::Aggregation::last )
+    if ( is_first_last( _abstract_feature.aggregation_ ) )
         {
             return apply_first_last(
+                _population,
                 _peripheral,
                 _matches,
                 extract_value,
@@ -148,6 +154,7 @@ Float Aggregator::apply_categorical(
 // ----------------------------------------------------------------------------
 
 Float Aggregator::apply_discrete(
+    const containers::DataFrame &_population,
     const containers::DataFrame &_peripheral,
     const std::vector<containers::Match> &_matches,
     const std::function<bool( const containers::Match & )> &_condition_function,
@@ -162,10 +169,10 @@ Float Aggregator::apply_discrete(
         return col[match.ix_input];
     };
 
-    if ( _abstract_feature.aggregation_ == enums::Aggregation::first ||
-         _abstract_feature.aggregation_ == enums::Aggregation::last )
+    if ( is_first_last( _abstract_feature.aggregation_ ) )
         {
             return apply_first_last(
+                _population,
                 _peripheral,
                 _matches,
                 extract_value,
@@ -218,6 +225,7 @@ Float Aggregator::apply_not_applicable(
 // ----------------------------------------------------------------------------
 
 Float Aggregator::apply_numerical(
+    const containers::DataFrame &_population,
     const containers::DataFrame &_peripheral,
     const std::vector<containers::Match> &_matches,
     const std::function<bool( const containers::Match & )> &_condition_function,
@@ -232,10 +240,10 @@ Float Aggregator::apply_numerical(
         return col[match.ix_input];
     };
 
-    if ( _abstract_feature.aggregation_ == enums::Aggregation::first ||
-         _abstract_feature.aggregation_ == enums::Aggregation::last )
+    if ( is_first_last( _abstract_feature.aggregation_ ) )
         {
             return apply_first_last(
+                _population,
                 _peripheral,
                 _matches,
                 extract_value,
@@ -278,10 +286,10 @@ Float Aggregator::apply_same_units_categorical(
         return 0.0;
     };
 
-    if ( _abstract_feature.aggregation_ == enums::Aggregation::first ||
-         _abstract_feature.aggregation_ == enums::Aggregation::last )
+    if ( is_first_last( _abstract_feature.aggregation_ ) )
         {
             return apply_first_last(
+                _population,
                 _peripheral,
                 _matches,
                 extract_value,
@@ -316,10 +324,10 @@ Float Aggregator::apply_same_units_discrete(
         return col1[match.ix_output] - col2[match.ix_input];
     };
 
-    if ( _abstract_feature.aggregation_ == enums::Aggregation::first ||
-         _abstract_feature.aggregation_ == enums::Aggregation::last )
+    if ( is_first_last( _abstract_feature.aggregation_ ) )
         {
             return apply_first_last(
+                _population,
                 _peripheral,
                 _matches,
                 extract_value,
@@ -355,10 +363,10 @@ Float Aggregator::apply_same_units_numerical(
         return col1[match.ix_output] - col2[match.ix_input];
     };
 
-    if ( _abstract_feature.aggregation_ == enums::Aggregation::first ||
-         _abstract_feature.aggregation_ == enums::Aggregation::last )
+    if ( is_first_last( _abstract_feature.aggregation_ ) )
         {
             return apply_first_last(
+                _population,
                 _peripheral,
                 _matches,
                 extract_value,
@@ -373,6 +381,7 @@ Float Aggregator::apply_same_units_numerical(
 // ----------------------------------------------------------------------------
 
 Float Aggregator::apply_subfeatures(
+    const containers::DataFrame &_population,
     const containers::DataFrame &_peripheral,
     const containers::Features &_subfeatures,
     const std::vector<containers::Match> &_matches,
@@ -390,10 +399,10 @@ Float Aggregator::apply_subfeatures(
         return col[match.ix_input];
     };
 
-    if ( _abstract_feature.aggregation_ == enums::Aggregation::first ||
-         _abstract_feature.aggregation_ == enums::Aggregation::last )
+    if ( is_first_last( _abstract_feature.aggregation_ ) )
         {
             return apply_first_last(
+                _population,
                 _peripheral,
                 _matches,
                 extract_value,
@@ -408,6 +417,7 @@ Float Aggregator::apply_subfeatures(
 // ----------------------------------------------------------------------------
 
 Float Aggregator::apply_text(
+    const containers::DataFrame &_population,
     const containers::DataFrame &_peripheral,
     const std::vector<containers::Match> &_matches,
     const std::function<bool( const containers::Match & )> &_condition_function,
@@ -442,10 +452,10 @@ Float Aggregator::apply_text(
         return 0.0;
     };
 
-    if ( _abstract_feature.aggregation_ == enums::Aggregation::first ||
-         _abstract_feature.aggregation_ == enums::Aggregation::last )
+    if ( is_first_last( _abstract_feature.aggregation_ ) )
         {
             return apply_first_last(
+                _population,
                 _peripheral,
                 _matches,
                 extract_value,

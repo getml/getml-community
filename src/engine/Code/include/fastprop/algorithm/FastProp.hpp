@@ -186,6 +186,7 @@ class FastProp
     /// Fits abstract features on the categorical columns by identifying the
     /// most frequent categories.
     void fit_on_categoricals_by_categories(
+        const containers::DataFrame& _population,
         const containers::DataFrame& _peripheral,
         const size_t _peripheral_ix,
         const std::vector<containers::Condition>& _conditions,
@@ -194,6 +195,7 @@ class FastProp
 
     /// Fits abstract features on the discrete columns.
     void fit_on_discretes(
+        const containers::DataFrame& _population,
         const containers::DataFrame& _peripheral,
         const size_t _peripheral_ix,
         const std::vector<containers::Condition>& _conditions,
@@ -202,6 +204,7 @@ class FastProp
 
     /// Fits abstract features on the numerical columns.
     void fit_on_numericals(
+        const containers::DataFrame& _population,
         const containers::DataFrame& _peripheral,
         const size_t _peripheral_ix,
         const std::vector<containers::Condition>& _conditions,
@@ -246,6 +249,7 @@ class FastProp
 
     /// Fits abstract features on the subfeatures.
     void fit_on_subfeatures(
+        const containers::DataFrame& _population,
         const containers::DataFrame& _peripheral,
         const size_t _peripheral_ix,
         const std::vector<containers::Condition>& _conditions,
@@ -372,6 +376,7 @@ class FastProp
     /// _peripheral.
     bool skip_first_last(
         const std::string& _agg,
+        const containers::DataFrame& _population,
         const containers::DataFrame& _peripheral ) const;
 
     /// Spawns the threads for building the features.
