@@ -1,4 +1,3 @@
-;
 #ifndef IO_PARSER_HPP_
 #define IO_PARSER_HPP_
 
