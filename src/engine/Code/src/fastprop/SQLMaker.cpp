@@ -246,7 +246,8 @@ std::string SQLMaker::select_statement(
         }
     else
         {
-            select += agg_type;
+            select +=
+                helpers::StringReplacer::replace_all( agg_type, " ", "_" );
 
             select += "( ";
         }
