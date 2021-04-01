@@ -167,12 +167,16 @@ std::string SQLGenerator::get_table_name( const std::string& _raw_name )
     const auto has_delimiter =
         ( _raw_name.find( Macros::delimiter() ) != std::string::npos );
 
-    const auto name =
+    auto name =
         has_delimiter
             ? StringSplitter::split( _raw_name, Macros::delimiter() ).at( 0 )
             : _raw_name;
 
-    return StringReplacer::replace_all( name, Macros::peripheral(), "" );
+    name = StringReplacer::replace_all( name, Macros::population(), "" );
+
+    name = StringReplacer::replace_all( name, Macros::peripheral(), "" );
+
+    return name;
 }
 
 // ----------------------------------------------------------------------------

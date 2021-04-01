@@ -23,7 +23,8 @@ class PlaceholderMaker
     static helpers::Placeholder make_placeholder(
         const Poco::JSON::Object& _obj,
         const std::string& _alias,
-        const std::shared_ptr<size_t> _num_alias = nullptr );
+        const std::shared_ptr<size_t> _num_alias = nullptr,
+        const bool _is_population = true );
 
     /// Returns a list of all peripheral tables used in the placeholder.
     static std::vector<std::string> make_peripheral(
@@ -54,7 +55,8 @@ class PlaceholderMaker
         const Poco::JSON::Array& _joined_tables_arr,
         const std::vector<std::string>& _relationship,
         const std::vector<std::string>& _other_time_stamps_used,
-        const std::vector<std::string>& _upper_time_stamps_used );
+        const std::vector<std::string>& _upper_time_stamps_used,
+        const bool _is_population );
 
     static std::vector<std::string> handle_memory(
         const helpers::Placeholder& _placeholder,

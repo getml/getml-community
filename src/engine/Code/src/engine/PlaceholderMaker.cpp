@@ -50,7 +50,8 @@ helpers::Placeholder PlaceholderMaker::handle_joined_tables(
     const Poco::JSON::Array& _joined_tables_arr,
     const std::vector<std::string>& _relationship,
     const std::vector<std::string>& _other_time_stamps_used,
-    const std::vector<std::string>& _upper_time_stamps_used )
+    const std::vector<std::string>& _upper_time_stamps_used,
+    const bool _is_population )
 {
     // ------------------------------------------------------------------------
 
@@ -78,7 +79,9 @@ helpers::Placeholder PlaceholderMaker::handle_joined_tables(
 
     auto joined_tables = std::vector<helpers::Placeholder>();
 
-    auto name = _placeholder.name();
+    auto name = _is_population
+                    ? _placeholder.name() + helpers::Macros::population()
+                    : _placeholder.name();
 
     auto other_join_keys_used = std::vector<std::string>();
 
@@ -105,7 +108,8 @@ helpers::Placeholder PlaceholderMaker::handle_joined_tables(
                     const auto joined_table = make_placeholder(
                         *joined_table_obj,
                         helpers::Macros::t1_or_t2(),
-                        _num_alias );
+                        _num_alias,
+                        false );
 
                     allow_lagged_targets.push_back(
                         _placeholder.allow_lagged_targets_.at( i ) );
@@ -137,7 +141,7 @@ helpers::Placeholder PlaceholderMaker::handle_joined_tables(
             const auto alias = make_alias( _num_alias );
 
             const auto joined_table =
-                make_placeholder( *joined_table_obj, alias, _num_alias );
+                make_placeholder( *joined_table_obj, alias, _num_alias, false );
 
             const auto joined_name =
                 JSON::get_value<std::string>( *joined_table_obj, "name_" );
@@ -270,7 +274,8 @@ std::vector<std::string> PlaceholderMaker::make_peripheral(
 helpers::Placeholder PlaceholderMaker::make_placeholder(
     const Poco::JSON::Object& _obj,
     const std::string& _alias,
-    const std::shared_ptr<size_t> _num_alias )
+    const std::shared_ptr<size_t> _num_alias,
+    const bool _is_population )
 {
     // ----------------------------------------------------------
 
@@ -321,7 +326,8 @@ helpers::Placeholder PlaceholderMaker::make_placeholder(
         *joined_tables_arr,
         relationship,
         other_time_stamps_used,
-        upper_time_stamps_used );
+        upper_time_stamps_used,
+        _is_population );
 
     // ------------------------------------------------------------------------
 }

@@ -167,6 +167,8 @@ class Macros
 
     static std::string peripheral() { return "$GETML_PERIPHERAL"; }
 
+    static std::string population() { return "$GETML_POPULATION"; }
+
     static std::string postfix() { return "$GETML_POSTFIX"; }
 
     static std::string prefix() { return "$GETML_PREFIX"; }
