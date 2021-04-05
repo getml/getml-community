@@ -154,7 +154,7 @@ std::string AbstractFeature::to_sql(
     if ( data_used_ == enums::DataUsed::subfeatures )
         {
             sql << helpers::SQLGenerator::make_subfeature_joins(
-                _feature_prefix, peripheral_, { input_col_ } );
+                _feature_prefix, peripheral_, {input_col_} );
         }
 
     // -------------------------------------------------------------------
@@ -195,17 +195,6 @@ std::string AbstractFeature::to_sql(
             sql << conditions_.at( i ).to_sql(
                        _categories, _feature_prefix, _input, _output )
                 << std::endl;
-        }
-
-    // -------------------------------------------------------------------
-
-    if ( aggregation_ == enums::Aggregation::first ||
-         aggregation_ == enums::Aggregation::last )
-        {
-            assert_true( _input.num_time_stamps() > 0 );
-            const auto ts_name = helpers::SQLGenerator::edit_colname(
-                _input.time_stamps_name(), "t2" );
-            sql << "ORDER BY " << ts_name << std::endl;
         }
 
     // -------------------------------------------------------------------

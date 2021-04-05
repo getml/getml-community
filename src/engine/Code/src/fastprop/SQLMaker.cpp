@@ -255,6 +255,12 @@ std::string SQLMaker::select_statement(
     select += value_to_be_aggregated(
         _categories, _feature_prefix, _abstract_feature, _input, _output );
 
+    if ( is_first_last( _abstract_feature.aggregation_ ) )
+        {
+            select +=
+                ", julianday( t2.\"" + _input.time_stamps_name( 0 ) + "\" )";
+        }
+
     select += " )";
 
     return select;

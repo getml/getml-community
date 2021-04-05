@@ -32,13 +32,7 @@ class Aggregator
     /// first-last-logic.
     static bool is_first_last( const enums::Aggregation _agg )
     {
-        return (
-            _agg == enums::Aggregation::first ||
-            _agg == enums::Aggregation::last ||
-            _agg == enums::Aggregation::time_since_first_maximum ||
-            _agg == enums::Aggregation::time_since_first_minimum ||
-            _agg == enums::Aggregation::time_since_last_maximum ||
-            _agg == enums::Aggregation::time_since_last_minimum );
+        return containers::SQLMaker::is_first_last( _agg );
     }
 
    private:
