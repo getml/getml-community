@@ -68,6 +68,12 @@ class SQLMaker
         const Placeholder& _input,
         const Placeholder& _output );
 
+    /// Generates an additional argument passed to the aggregation function.
+    static std::string make_additional_argument(
+        const enums::Aggregation& _aggregation,
+        const Placeholder& _input,
+        const Placeholder& _output );
+
     /// Returns the select statement for AVG_TIME_BETWEEN.
     static std::string select_avg_time_between( const Placeholder& _input );
 

@@ -210,6 +210,26 @@ std::string SQLMaker::select_avg_time_between( const Placeholder& _input )
 
 // ----------------------------------------------------------------------------
 
+std::string SQLMaker::make_additional_argument(
+    const enums::Aggregation& _aggregation,
+    const Placeholder& _input,
+    const Placeholder& _output )
+{
+    if ( _aggregation == enums::Aggregation::first ||
+         _aggregation == enums::Aggregation::last )
+        {
+            return "julianday( t2.\"" + _input.time_stamps_name() + "\" )";
+        }
+
+    return helpers::SQLGenerator::make_epoch_time(
+               _output.time_stamps_name(), "t1" ) +
+           " - " +
+           helpers::SQLGenerator::make_epoch_time(
+               _input.time_stamps_name(), "t2" );
+}
+
+// ----------------------------------------------------------------------------
+
 std::string SQLMaker::select_statement(
     const std::vector<strings::String>& _categories,
     const std::string& _feature_prefix,
@@ -258,7 +278,8 @@ std::string SQLMaker::select_statement(
     if ( is_first_last( _abstract_feature.aggregation_ ) )
         {
             select +=
-                ", julianday( t2.\"" + _input.time_stamps_name( 0 ) + "\" )";
+                ", " + make_additional_argument(
+                           _abstract_feature.aggregation_, _input, _output );
         }
 
     select += " )";
