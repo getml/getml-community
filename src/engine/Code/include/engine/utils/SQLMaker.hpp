@@ -30,10 +30,6 @@ class SQLMaker
         const std::vector<std::string>& _targets,
         const predictors::PredictorImpl& _predictor_impl );
 
-    /// Generates the SQL code needed to join the feature tables.
-    static std::string make_left_joins(
-        const std::vector<std::string>& _autofeatures );
-
     /// Generates the SQL code needed to impute the features and drop the
     /// feature tables.
     static std::string make_postprocessing(
@@ -45,6 +41,11 @@ class SQLMaker
         const std::vector<std::string>& _autofeatures,
         const std::vector<std::string>& _targets,
         const predictors::PredictorImpl& _predictor_impl );
+
+    /// Generates the SQL code needed to insert the autofeatures into the
+    /// FEATURES table.
+    static std::string make_updates(
+        const std::vector<std::string>& _autofeatures );
 };
 
 // ----------------------------------------------------------------------------
