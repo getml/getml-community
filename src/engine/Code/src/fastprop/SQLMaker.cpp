@@ -218,7 +218,8 @@ std::string SQLMaker::make_additional_argument(
     if ( _aggregation == enums::Aggregation::first ||
          _aggregation == enums::Aggregation::last )
         {
-            return "julianday( t2.\"" + _input.time_stamps_name() + "\" )";
+            return helpers::SQLGenerator::make_epoch_time(
+                _input.time_stamps_name(), "t2" );
         }
 
     return helpers::SQLGenerator::make_epoch_time(
