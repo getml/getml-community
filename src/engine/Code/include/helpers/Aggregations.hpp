@@ -54,7 +54,7 @@ class Aggregations
     static Float count( IteratorType _begin, IteratorType _end )
     {
         const auto count = []( const Float init, const Float val ) {
-            if ( std::isnan( val ) )
+            if ( NullChecker::is_null( val ) )
                 {
                     return init;
                 }
@@ -223,6 +223,11 @@ class Aggregations
 
         const auto std = stddev( _begin, _end );
 
+        if ( std == 0.0 ) [[unlikely]]
+            {
+                return 0.0;
+            }
+
         const auto kurt = [mean, std, n]( const Float init, const Float val ) {
             if ( NullChecker::is_null( val ) )
                 {
@@ -385,12 +390,18 @@ class Aggregations
 
         std::ranges::sort( values );
 
-        const auto ix =
-            static_cast<size_t>( static_cast<Float>( values.size() ) * _q );
+        const auto ix_float = static_cast<Float>( values.size() - 1 ) * _q;
 
-        assert_true( ix < values.size() );
+        const auto ix = static_cast<size_t>( ix_float );
 
-        return values[ix];
+        if ( ix == values.size() - 1 ) [[unlikely]]
+            {
+                return values[ix];
+            }
+
+        const auto share = ix_float - static_cast<Float>( ix );
+
+        return values[ix + 1] * share + values[ix] * ( 1.0 - share );
     }
 
     /// Takes the skewness of all non-null entries.
