@@ -219,14 +219,15 @@ class Aggregations
                 return NAN;
             }
 
-        const auto mean = avg( _begin, _end );
-
-        const auto std = stddev( _begin, _end );
-
-        if ( std == 0.0 ) [[unlikely]]
+        // Needed to catch numerical instability issues.
+        if ( count_distinct( _begin, _end ) == 1.0 ) [[unlikely]]
             {
                 return 0.0;
             }
+
+        const auto mean = avg( _begin, _end );
+
+        const auto std = stddev( _begin, _end );
 
         const auto kurt = [mean, std, n]( const Float init, const Float val ) {
             if ( NullChecker::is_null( val ) )
@@ -410,9 +411,15 @@ class Aggregations
     {
         const auto n = count( _begin, _end );
 
-        if ( n == 0.0 )
+        if ( n == 0.0 ) [[unlikely]]
             {
                 return NAN;
+            }
+
+        // Needed to catch numerical instability issues.
+        if ( count_distinct( _begin, _end ) == 1.0 ) [[unlikely]]
+            {
+                return 0.0;
             }
 
         const auto mean = avg( _begin, _end );
