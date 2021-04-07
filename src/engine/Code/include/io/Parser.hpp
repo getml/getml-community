@@ -10,18 +10,6 @@ class Parser
    public:
     // -------------------------------
 
-    static std::string format_fixed_and_trim_zeros(
-        const Float val, const unsigned long precision )
-    {
-        std::ostringstream stream;
-
-        stream << std::fixed << std::setprecision( precision ) << val;
-        const auto str = stream.str();
-        const auto pos = str.find_last_not_of( "0" ) + 1;
-
-        return str.substr( 0, pos );
-    }
-
     // -------------------------------
 
     /// Removes the quotechars.
@@ -136,27 +124,25 @@ class Parser
     static std::string to_string( const Float _val )
     {
         constexpr unsigned long precision = 4;
-        constexpr Float delta = 1 / std::pow( 10, precision );
 
-        const auto is_full = []( const Float val ) {
-            return std::floor( val ) == val;
-        };
+        constexpr Float delta =
+            1.0 / std::pow( 10.0, static_cast<Float>( precision ) );
 
-        const auto is_approx_full = [ precision, delta ]( const Float val ) {
+        const auto is_approx_full = [precision, delta]( const Float val ) {
             return std::fmod( val, 1.0 ) <= delta;
         };
 
         std::ostringstream stream;
 
-        if ( is_full( _val ) || is_approx_full( _val ) )
+        if ( is_approx_full( _val ) )
             {
                 stream << static_cast<long>( _val );
             }
-        else if ( _val > 1.0 ) 
+        else if ( _val > 1.0 )
             {
-                stream << format_fixed_and_trim_zeros( _val, precision );
+                stream << format_fixed_without_zeros( _val, precision );
             }
-        else 
+        else
             {
                 stream << std::setprecision( precision ) << _val;
             }
@@ -231,7 +217,7 @@ class Parser
 
         const auto time_stamp = Poco::Timestamp( microseconds_since_epoch );
 
-        if (std::fmod(_time_stamp_float, 86400.0) == 0.0)
+        if ( std::fmod( _time_stamp_float, 86400.0 ) == 0.0 )
             {
                 return Poco::DateTimeFormatter::format(
                     time_stamp, "%Y-%m-%d" );
@@ -248,6 +234,21 @@ class Parser
     }
 
     // -------------------------------
+
+   private:
+    /// Uses fixed format, but trims trailing zeros.
+    static std::string format_fixed_without_zeros(
+        const Float _val, const unsigned long _precision )
+    {
+        std::ostringstream stream;
+
+        stream << std::fixed << std::setprecision( _precision ) << _val;
+
+        const auto str = stream.str();
+        const auto pos = str.find_last_not_of( "0" ) + 1;
+
+        return str.substr( 0, pos );
+    }
 };
 
 // ----------------------------------------------------------------------------
