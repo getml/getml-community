@@ -26,29 +26,9 @@ std::string SQLMaker::make_feature_table(
 
     sql += helpers::SQLGenerator::handle_many_to_one_joins( _main_table, "t1" );
 
-    sql += make_left_joins( _autofeatures );
-
     sql += "ORDER BY t1.rowid;\n\n";
 
-    return sql;
-}
-
-// ----------------------------------------------------------------------------
-
-std::string SQLMaker::make_left_joins(
-    const std::vector<std::string>& _autofeatures )
-{
-    std::string sql;
-
-    for ( const auto table : _autofeatures )
-        {
-            sql += "LEFT JOIN \"" +
-                   helpers::StringReplacer::replace_all(
-                       table, "feature", "FEATURE" ) +
-                   "\" f_" + table.substr( 8 ) + "\n";
-
-            sql += "ON t1.rowid = f_" + table.substr( 8 ) + ".\"rownum\"\n";
-        }
+    sql += make_updates( _autofeatures );
 
     return sql;
 }
@@ -111,20 +91,19 @@ std::string SQLMaker::make_select(
 
     for ( size_t i = 0; i < _autofeatures.size(); ++i )
         {
+            const std::string begin = ( i == 0 ? "" : "       " );
+
             const bool no_comma =
                 ( i == _autofeatures.size() - 1 && manual.size() == 0 );
 
             const auto end = ( no_comma ? "\n" : ",\n" );
 
-            sql += "       CAST( COALESCE( f_" +
-                   _autofeatures.at( i ).substr( 8 ) + ".\"" +
-                   _autofeatures.at( i ) + "\", 0.0 ) AS REAL ) AS \"" +
-                   _autofeatures.at( i ) + "\"" + end;
+            sql += begin + "0.0 AS \"" + _autofeatures.at( i ) + "\"" + end;
         }
 
     for ( size_t i = 0; i < manual.size(); ++i )
         {
-            const std::string begin = ( i == 0 ? "" : "       " );
+            const std::string begin = "       ";
 
             const auto edited_colname =
                 helpers::SQLGenerator::edit_colname( manual.at( i ), "t1" );
@@ -170,6 +149,28 @@ std::string SQLMaker::make_sql(
         _main_table, _autofeatures, _sql, _targets, _predictor_impl );
 
     sql += make_postprocessing( _sql );
+
+    return sql;
+}
+
+// ----------------------------------------------------------------------------
+
+std::string SQLMaker::make_updates(
+    const std::vector<std::string>& _autofeatures )
+{
+    std::string sql;
+
+    for ( const auto colname : _autofeatures )
+        {
+            const auto table = helpers::StringReplacer::replace_all(
+                colname, "feature", "FEATURE" );
+
+            sql += "UPDATE \"FEATURES\"\n";
+            sql += "SET \"" + colname + "\" = COALESCE( t2.\"" + colname +
+                   "\", 0.0 )\n";
+            sql += "FROM \"" + table + "\" AS t2\n";
+            sql += "WHERE FEATURES.rowid = t2.\"rownum\";\n\n";
+        }
 
     return sql;
 }

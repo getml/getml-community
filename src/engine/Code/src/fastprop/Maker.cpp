@@ -54,7 +54,7 @@ std::shared_ptr<const FastPropContainer> Maker::fit_fast_prop_container(
     const auto& placeholder = _params.placeholder_;
 
     assert_true(
-        _table_holder.subtables_.size() >=
+        _table_holder.subtables().size() >=
         placeholder.propositionalization_.size() );
 
     for ( size_t i = 0; i < placeholder.propositionalization_.size(); ++i )
@@ -65,9 +65,9 @@ std::shared_ptr<const FastPropContainer> Maker::fit_fast_prop_container(
                     continue;
                 }
 
-            const auto s = _table_holder.subtables_.at( i )
+            const auto s = _table_holder.subtables().at( i )
                                ? fit_fast_prop_container(
-                                     *_table_holder.subtables_.at( i ),
+                                     *_table_holder.subtables().at( i ),
                                      make_params( _params, i ) )
                                : std::shared_ptr<const FastPropContainer>();
 

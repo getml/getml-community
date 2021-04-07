@@ -84,13 +84,13 @@ void SubtreeHelper::fit_subensemble(
 {
     const auto subtable_holder =
         std::make_shared<const decisiontrees::TableHolder>(
-            *_table_holder->subtables_[_ix_perip_used] );
+            *_table_holder->subtables()[_ix_perip_used] );
 
-    assert_true( subtable_holder->main_tables_.size() > 0 );
+    assert_true( subtable_holder->main_tables().size() > 0 );
 
     const auto input_table = containers::DataFrameView(
-        _table_holder->peripheral_tables_[_ix_perip_used],
-        subtable_holder->main_tables_[0].rows_ptr() );
+        _table_holder->peripheral_tables()[_ix_perip_used],
+        subtable_holder->main_tables()[0].rows_ptr() );
 
     // The input map is needed for propagating sampling.
     const auto input_map =
@@ -98,14 +98,14 @@ void SubtreeHelper::fit_subensemble(
 
     const auto aggregation_index = aggregations::AggregationIndex(
         input_table,
-        _table_holder->main_tables_.at( _ix_perip_used ),
+        _table_holder->main_tables().at( _ix_perip_used ),
         input_map,
         _output_map,
         _hyperparameters.use_timestamps_ );
 
     const auto opt_impl =
         std::make_shared<aggregations::IntermediateAggregationImpl>(
-            _table_holder->main_tables_.at( 0 ).nrows(),
+            _table_holder->main_tables().at( 0 ).nrows(),
             aggregation_index,
             _opt );
 

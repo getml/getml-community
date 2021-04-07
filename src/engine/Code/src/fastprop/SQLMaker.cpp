@@ -210,6 +210,27 @@ std::string SQLMaker::select_avg_time_between( const Placeholder& _input )
 
 // ----------------------------------------------------------------------------
 
+std::string SQLMaker::make_additional_argument(
+    const enums::Aggregation& _aggregation,
+    const Placeholder& _input,
+    const Placeholder& _output )
+{
+    if ( _aggregation == enums::Aggregation::first ||
+         _aggregation == enums::Aggregation::last )
+        {
+            return helpers::SQLGenerator::make_epoch_time(
+                _input.time_stamps_name(), "t2" );
+        }
+
+    return helpers::SQLGenerator::make_epoch_time(
+               _output.time_stamps_name(), "t1" ) +
+           " - " +
+           helpers::SQLGenerator::make_epoch_time(
+               _input.time_stamps_name(), "t2" );
+}
+
+// ----------------------------------------------------------------------------
+
 std::string SQLMaker::select_statement(
     const std::vector<strings::String>& _categories,
     const std::string& _feature_prefix,
@@ -246,13 +267,21 @@ std::string SQLMaker::select_statement(
         }
     else
         {
-            select += agg_type;
+            select +=
+                helpers::StringReplacer::replace_all( agg_type, " ", "_" );
 
             select += "( ";
         }
 
     select += value_to_be_aggregated(
         _categories, _feature_prefix, _abstract_feature, _input, _output );
+
+    if ( is_first_last( _abstract_feature.aggregation_ ) )
+        {
+            select +=
+                ", " + make_additional_argument(
+                           _abstract_feature.aggregation_, _input, _output );
+        }
 
     select += " )";
 

@@ -443,6 +443,118 @@ class Aggregations
         return num_agg( _begin, _end, sum, 0.0 );
     }
 
+    /// Implements the time_since_first_maximum aggregation.
+    /// Assumes that the iterator points to a
+    /// set of pairs, the first signifying the time difference and
+    /// the second signifying the value.
+    template <class IteratorType>
+    static Float time_since_first_maximum(
+        IteratorType _begin, IteratorType _end )
+    {
+        if ( std::distance( _begin, _end ) <= 0 ) [[unlikely]]
+            {
+                return NAN;
+            }
+
+        using Pair = std::pair<Float, Float>;
+
+        const auto is_smaller = []( const Pair& p1, const Pair& p2 ) -> Float {
+            if ( p1.second == p2.second ) [[unlikely]]
+                {
+                    return p1.first < p2.first;
+                }
+            return p1.second < p2.second;
+        };
+
+        const auto p = *std::ranges::max_element( _begin, _end, is_smaller );
+
+        return p.first;
+    }
+
+    /// Implements the time_since_first_minimum aggregation.
+    /// Assumes that the iterator points to a
+    /// set of pairs, the first signifying the time difference and
+    /// the second signifying the value.
+    template <class IteratorType>
+    static Float time_since_first_minimum(
+        IteratorType _begin, IteratorType _end )
+    {
+        if ( std::distance( _begin, _end ) <= 0 ) [[unlikely]]
+            {
+                return NAN;
+            }
+
+        using Pair = std::pair<Float, Float>;
+
+        const auto is_smaller = []( const Pair& p1, const Pair& p2 ) -> Float {
+            if ( p1.second == p2.second ) [[unlikely]]
+                {
+                    return p1.first > p2.first;
+                }
+            return p1.second < p2.second;
+        };
+
+        const auto p = *std::ranges::min_element( _begin, _end, is_smaller );
+
+        return p.first;
+    }
+
+    /// Implements the time_since_last_maximum aggregation.
+    /// Assumes that the iterator points to a
+    /// set of pairs, the first signifying the time difference and
+    /// the second signifying the value.
+    template <class IteratorType>
+    static Float time_since_last_maximum(
+        IteratorType _begin, IteratorType _end )
+    {
+        if ( std::distance( _begin, _end ) <= 0 ) [[unlikely]]
+            {
+                return NAN;
+            }
+
+        using Pair = std::pair<Float, Float>;
+
+        const auto is_smaller = []( const Pair& p1, const Pair& p2 ) -> Float {
+            if ( p1.second == p2.second ) [[unlikely]]
+                {
+                    return p1.first > p2.first;
+                }
+            return p1.second < p2.second;
+        };
+
+        const auto p = *std::ranges::max_element( _begin, _end, is_smaller );
+
+        return p.first;
+    }
+
+    /// Implements the time_since_first_minimum aggregation.
+    /// Assumes that the iterator points to a
+    /// set of pairs, the first signifying the time difference and
+    /// the second signifying the value.
+    template <class IteratorType>
+    static Float time_since_last_minimum(
+        IteratorType _begin, IteratorType _end )
+    {
+        if ( std::distance( _begin, _end ) <= 0 ) [[unlikely]]
+            {
+                return NAN;
+            }
+
+        using Pair = std::pair<Float, Float>;
+
+        const auto is_smaller = []( const Pair& p1, const Pair& p2 ) -> Float {
+            if ( p1.second == p2.second ) [[unlikely]]
+                {
+                    return p1.first < p2.first;
+                }
+            return p1.second < p2.second;
+        };
+
+        const auto p = *std::ranges::min_element( _begin, _end, is_smaller );
+
+        return p.first;
+    }
+
     /// Takes the variance of all non-null entries.
     template <class IteratorType>
     static Float var( IteratorType _begin, IteratorType _end )

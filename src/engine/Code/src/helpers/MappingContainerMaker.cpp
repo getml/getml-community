@@ -22,10 +22,10 @@ size_t MappingContainerMaker::count_mappable_columns(
     };
 
     auto range1 =
-        _table_holder.peripheral_tables_ | std::views::transform( get_count );
+        _table_holder.peripheral_tables() | std::views::transform( get_count );
 
     auto range2 =
-        _table_holder.subtables_ | std::views::transform( get_subcount );
+        _table_holder.subtables() | std::views::transform( get_subcount );
 
     return std::accumulate( range1.begin(), range1.end(), 0 ) +
            std::accumulate( range2.begin(), range2.end(), 0 );
@@ -183,11 +183,12 @@ MappingContainerMaker::fit_on_table_holder(
     // -----------------------------------------------------------
 
     assert_true(
-        _table_holder.main_tables_.size() ==
-        _table_holder.peripheral_tables_.size() );
+        _table_holder.main_tables().size() ==
+        _table_holder.peripheral_tables().size() );
 
     assert_true(
-        _table_holder.main_tables_.size() == _table_holder.subtables_.size() );
+        _table_holder.main_tables().size() ==
+        _table_holder.subtables().size() );
 
     // -----------------------------------------------------------
 
@@ -208,13 +209,13 @@ MappingContainerMaker::fit_on_table_holder(
 
     std::vector<MappingForDf> text;
 
-    for ( size_t i = 0; i < _table_holder.main_tables_.size(); ++i )
+    for ( size_t i = 0; i < _table_holder.main_tables().size(); ++i )
         {
-            const auto main_tables =
-                append( _main_tables, _table_holder.main_tables_.at( i ).df() );
+            const auto main_tables = append(
+                _main_tables, _table_holder.main_tables().at( i ).df() );
 
             const auto peripheral_tables = append(
-                _peripheral_tables, _table_holder.peripheral_tables_.at( i ) );
+                _peripheral_tables, _table_holder.peripheral_tables().at( i ) );
 
             const auto categorical_mapping = fit_on_categoricals(
                 _min_freq, main_tables, peripheral_tables, _progress_logger );
@@ -223,10 +224,10 @@ MappingContainerMaker::fit_on_table_holder(
                 _min_freq, main_tables, peripheral_tables, _progress_logger );
 
             const auto subcontainer =
-                _table_holder.subtables_.at( i )
+                _table_holder.subtables().at( i )
                     ? fit_on_table_holder(
                           _min_freq,
-                          *_table_holder.subtables_.at( i ),
+                          *_table_holder.subtables().at( i ),
                           main_tables,
                           peripheral_tables,
                           _progress_logger )
@@ -540,9 +541,9 @@ std::optional<const MappedContainer> MappingContainerMaker::transform(
     assert_true( ptr );
 
     assert_msg(
-        table_holder.subtables_.size() == ptr->size(),
-        "table_holder.subtables_.size(): " +
-            std::to_string( table_holder.subtables_.size() ) +
+        table_holder.subtables().size() == ptr->size(),
+        "table_holder.subtables().size(): " +
+            std::to_string( table_holder.subtables().size() ) +
             ", ptr->size(): " + std::to_string( ptr->size() ) );
 
     return *ptr;
@@ -844,7 +845,7 @@ MappingContainerMaker::transform_table_holder(
 
     assert_true(
         _mapping->categorical_.size() ==
-        _table_holder.peripheral_tables_.size() );
+        _table_holder.peripheral_tables().size() );
 
     assert_true(
         _mapping->categorical_.size() == _mapping->subcontainers_.size() );
@@ -852,7 +853,7 @@ MappingContainerMaker::transform_table_holder(
     assert_true( _mapping->categorical_.size() == _mapping->text_.size() );
 
     assert_true(
-        _mapping->categorical_.size() == _table_holder.subtables_.size() );
+        _mapping->categorical_.size() == _table_holder.subtables().size() );
 
     std::vector<MappedColumns> categorical;
 
@@ -866,21 +867,21 @@ MappingContainerMaker::transform_table_holder(
         {
             categorical.push_back( transform_categorical(
                 _mapping->categorical_.at( i ),
-                _table_holder.peripheral_tables_.at( i ).categoricals_,
+                _table_holder.peripheral_tables().at( i ).categoricals_,
                 _progress_logger ) );
 
             discrete.push_back( transform_discrete(
                 _mapping->discrete_.at( i ),
-                _table_holder.peripheral_tables_.at( i ).discretes_,
+                _table_holder.peripheral_tables().at( i ).discretes_,
                 _progress_logger ) );
 
-            if ( _table_holder.subtables_.at( i ) )
+            if ( _table_holder.subtables().at( i ) )
                 {
                     assert_true( _mapping->subcontainers_.at( i ) );
 
                     subcontainers.push_back( transform_table_holder(
                         _mapping->subcontainers_.at( i ),
-                        *_table_holder.subtables_.at( i ),
+                        *_table_holder.subtables().at( i ),
                         _progress_logger ) );
                 }
             else
@@ -890,8 +891,8 @@ MappingContainerMaker::transform_table_holder(
 
             text.push_back( transform_text(
                 _mapping->text_.at( i ),
-                _table_holder.peripheral_tables_.at( i ).text_,
-                _table_holder.peripheral_tables_.at( i ).word_indices_,
+                _table_holder.peripheral_tables().at( i ).text_,
+                _table_holder.peripheral_tables().at( i ).word_indices_,
                 _progress_logger ) );
         }
 
@@ -899,9 +900,9 @@ MappingContainerMaker::transform_table_holder(
         categorical, discrete, subcontainers, text );
 
     assert_msg(
-        _table_holder.subtables_.size() == ptr->size(),
-        "_table_holder.subtables_.size(): " +
-            std::to_string( _table_holder.subtables_.size() ) +
+        _table_holder.subtables().size() == ptr->size(),
+        "_table_holder.subtables().size(): " +
+            std::to_string( _table_holder.subtables().size() ) +
             ", ptr->size(): " + std::to_string( ptr->size() ) );
 
     return ptr;

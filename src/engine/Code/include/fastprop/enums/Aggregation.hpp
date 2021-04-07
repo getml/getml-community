@@ -39,6 +39,10 @@ enum class Aggregation
     skew,
     stddev,
     sum,
+    time_since_first_maximum,
+    time_since_first_minimum,
+    time_since_last_maximum,
+    time_since_last_minimum,
     var,
     variation_coefficient
 };

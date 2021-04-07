@@ -34,6 +34,20 @@ class SQLMaker
         const Placeholder& _input,
         const Placeholder& _output );
 
+   public:
+    /// Whether the aggregation is an aggregation that relies on the
+    /// first-last-logic.
+    static bool is_first_last( const enums::Aggregation _agg )
+    {
+        return (
+            _agg == enums::Aggregation::first ||
+            _agg == enums::Aggregation::last ||
+            _agg == enums::Aggregation::time_since_first_maximum ||
+            _agg == enums::Aggregation::time_since_first_minimum ||
+            _agg == enums::Aggregation::time_since_last_maximum ||
+            _agg == enums::Aggregation::time_since_last_minimum );
+    }
+
    private:
     /// Returns the column name signified by _column_used and _data_used.
     static std::string get_name(
@@ -51,6 +65,12 @@ class SQLMaker
         const enums::DataUsed _data_used,
         const size_t _input_col,
         const size_t _output_col,
+        const Placeholder& _input,
+        const Placeholder& _output );
+
+    /// Generates an additional argument passed to the aggregation function.
+    static std::string make_additional_argument(
+        const enums::Aggregation& _aggregation,
         const Placeholder& _input,
         const Placeholder& _output );
 

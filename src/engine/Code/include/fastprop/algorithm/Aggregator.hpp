@@ -27,9 +27,18 @@ class Aggregator
             &_condition_function,
         const containers::AbstractFeature &_abstract_feature );
 
+   public:
+    /// Whether the aggregation is an aggregation that relies on the
+    /// first-last-logic.
+    static bool is_first_last( const enums::Aggregation _agg )
+    {
+        return containers::SQLMaker::is_first_last( _agg );
+    }
+
    private:
     /// Applies an aggregation to a categorical column.
     static Float apply_categorical(
+        const containers::DataFrame &_population,
         const containers::DataFrame &_peripheral,
         const std::vector<containers::Match> &_matches,
         const std::function<bool( const containers::Match & )>
@@ -43,6 +52,7 @@ class Aggregator
 
     /// Applies the aggregation to a discrete column.
     static Float apply_discrete(
+        const containers::DataFrame &_population,
         const containers::DataFrame &_peripheral,
         const std::vector<containers::Match> &_matches,
         const std::function<bool( const containers::Match & )>
@@ -59,6 +69,7 @@ class Aggregator
 
     /// Applies the aggregation to a numerical column.
     static Float apply_numerical(
+        const containers::DataFrame &_population,
         const containers::DataFrame &_peripheral,
         const std::vector<containers::Match> &_matches,
         const std::function<bool( const containers::Match & )>
@@ -94,6 +105,7 @@ class Aggregator
 
     /// Applies the aggregation to a subfeature.
     static Float apply_subfeatures(
+        const containers::DataFrame &_population,
         const containers::DataFrame &_peripheral,
         const containers::Features &_subfeatures,
         const std::vector<containers::Match> &_matches,
@@ -103,6 +115,7 @@ class Aggregator
 
     /// Applies the aggregation to text fields.
     static Float apply_text(
+        const containers::DataFrame &_population,
         const containers::DataFrame &_peripheral,
         const std::vector<containers::Match> &_matches,
         const std::function<bool( const containers::Match & )>
@@ -154,6 +167,22 @@ class Aggregator
 
                 case enums::Aggregation::last:
                     return helpers::Aggregations::last( _begin, _end );
+
+                case enums::Aggregation::time_since_first_maximum:
+                    return helpers::Aggregations::time_since_first_maximum(
+                        _begin, _end );
+
+                case enums::Aggregation::time_since_first_minimum:
+                    return helpers::Aggregations::time_since_first_minimum(
+                        _begin, _end );
+
+                case enums::Aggregation::time_since_last_maximum:
+                    return helpers::Aggregations::time_since_last_maximum(
+                        _begin, _end );
+
+                case enums::Aggregation::time_since_last_minimum:
+                    return helpers::Aggregations::time_since_last_minimum(
+                        _begin, _end );
 
                 default:
                     assert_true(
@@ -212,9 +241,7 @@ class Aggregator
     {
         // ---------------------------------------------------
 
-        assert_true(
-            _abstract_feature.aggregation_ == enums::Aggregation::first ||
-            _abstract_feature.aggregation_ == enums::Aggregation::last );
+        assert_true( is_first_last( _abstract_feature.aggregation_ ) );
 
         // ---------------------------------------------------
 
@@ -394,6 +421,7 @@ class Aggregator
     /// Creates a key-value-pair for applying the FIRST and LAST aggregation.
     template <class ExtractValueType>
     static Float apply_first_last(
+        const containers::DataFrame &_population,
         const containers::DataFrame &_peripheral,
         const std::vector<containers::Match> &_matches,
         const ExtractValueType &_extract_value,
@@ -401,19 +429,41 @@ class Aggregator
             &_condition_function,
         const containers::AbstractFeature &_abstract_feature )
     {
-        assert_true(
-            _abstract_feature.aggregation_ == enums::Aggregation::first ||
-            _abstract_feature.aggregation_ == enums::Aggregation::last );
+        assert_true( is_first_last( _abstract_feature.aggregation_ ) );
 
         assert_true( _peripheral.num_time_stamps() > 0 );
 
         using Pair = std::pair<Float, Float>;
 
-        const auto &ts_col = _peripheral.time_stamp_col();
+        if ( _abstract_feature.aggregation_ == enums::Aggregation::first ||
+             _abstract_feature.aggregation_ == enums::Aggregation::last )
+            {
+                const auto &ts_col = _peripheral.time_stamp_col();
 
-        const auto extract_pair =
-            [_extract_value, &ts_col]( const containers::Match &m ) -> Pair {
-            const auto key = ts_col[m.ix_input];
+                const auto extract_pair =
+                    [_extract_value,
+                     &ts_col]( const containers::Match &m ) -> Pair {
+                    const auto key = ts_col[m.ix_input];
+                    const auto value = _extract_value( m );
+                    return std::make_pair( key, value );
+                };
+
+                return aggregate_matches_first_last(
+                    _matches,
+                    extract_pair,
+                    _condition_function,
+                    _abstract_feature );
+            }
+
+        assert_true( _population.num_time_stamps() > 0 );
+
+        const auto &ts_col1 = _population.time_stamp_col();
+
+        const auto &ts_col2 = _peripheral.time_stamp_col();
+
+        const auto extract_pair = [_extract_value, &ts_col1, &ts_col2](
+                                      const containers::Match &m ) -> Pair {
+            const auto key = ts_col1[m.ix_output] - ts_col2[m.ix_input];
             const auto value = _extract_value( m );
             return std::make_pair( key, value );
         };
