@@ -325,7 +325,7 @@ class Aggregations
         };
 
         return std::max_element( freq.begin(), freq.end(), less_frequent )
-            ->second;
+            ->first;
     }
 
     /// Calculates the number of times the maximum value is seen.
