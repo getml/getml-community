@@ -68,6 +68,12 @@ class Aggregations
     template <class IteratorType>
     static Float count_above_mean( IteratorType _begin, IteratorType _end )
     {
+        // Needed to catch numerical instability issues.
+        if ( all_same( _begin, _end ) ) [[unlikely]]
+            {
+                return 0.0;
+            }
+
         const auto mean = avg( _begin, _end );
 
         const auto count_op = [mean]( const Float init, const Float val ) {
@@ -85,6 +91,12 @@ class Aggregations
     template <class IteratorType>
     static Float count_below_mean( IteratorType _begin, IteratorType _end )
     {
+        // Needed to catch numerical instability issues.
+        if ( all_same( _begin, _end ) ) [[unlikely]]
+            {
+                return 0.0;
+            }
+
         const auto mean = avg( _begin, _end );
 
         const auto count_op = [mean]( const Float init, const Float val ) {
@@ -220,7 +232,7 @@ class Aggregations
             }
 
         // Needed to catch numerical instability issues.
-        if ( count_distinct( _begin, _end ) == 1.0 ) [[unlikely]]
+        if ( all_same( _begin, _end ) ) [[unlikely]]
             {
                 return 0.0;
             }
@@ -417,7 +429,7 @@ class Aggregations
             }
 
         // Needed to catch numerical instability issues.
-        if ( count_distinct( _begin, _end ) == 1.0 ) [[unlikely]]
+        if ( all_same( _begin, _end ) ) [[unlikely]]
             {
                 return 0.0;
             }
@@ -644,6 +656,32 @@ class Aggregations
             }
 
         return freq_map;
+    }
+
+    /// Whether all values are the same.
+    template <class IteratorType>
+    static bool all_same( IteratorType _begin, IteratorType _end )
+    {
+        if ( std::distance( _begin, _end ) <= 1 )
+            {
+                return true;
+            }
+
+        auto it = _begin;
+
+        const auto val = *it;
+
+        ++it;
+
+        for ( ; it != _end; ++it )
+            {
+                if ( *it != val )
+                    {
+                        return false;
+                    }
+            }
+
+        return true;
     }
 
     /// Undertakes a numerical aggregation based on the template class
