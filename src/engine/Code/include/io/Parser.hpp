@@ -119,6 +119,17 @@ class Parser
 
     // -------------------------------
 
+    /// Custom floating-point-to-string conversion (produces more precise
+    /// numbers than std::to_string)
+    static std::string to_precise_string( const Float _val )
+    {
+        std::stringstream stream;
+        stream.precision( 16 );
+        stream << std::scientific;
+        stream << _val;
+        return stream.str();
+    }
+
     /// Custom floating-point-to-string conversion (produces more beautiful
     /// numbers than std::to_string)
     static std::string to_string( const Float _val )

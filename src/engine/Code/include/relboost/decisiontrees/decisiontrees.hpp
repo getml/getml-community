@@ -12,6 +12,8 @@
 
 #include "strings/strings.hpp"
 
+#include "io/io.hpp"
+
 #include "relboost/Float.hpp"
 #include "relboost/Int.hpp"
 
