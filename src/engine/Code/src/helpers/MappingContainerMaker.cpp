@@ -590,7 +590,7 @@ MappingContainerMaker::transform_categorical(
             ", mapped.size(): " + std::to_string( mapped.size() ) +
             ", num_targets: " + std::to_string( num_targets ) );
 
-    _progress_logger->increment( mapped.size() );
+    _progress_logger->increment( _mapping.size() );
 
     return mapped;
 }
@@ -674,7 +674,7 @@ MappingContainerMaker::transform_discrete(
             ", mapped.size(): " + std::to_string( mapped.size() ) +
             ", num_targets: " + std::to_string( num_targets ) );
 
-    _progress_logger->increment( mapped.size() );
+    _progress_logger->increment( _mapping.size() );
 
     return mapped;
 }
@@ -764,7 +764,7 @@ MappingContainerMaker::transform_text(
             ", mapped.size(): " + std::to_string( mapped.size() ) +
             ", num_targets: " + std::to_string( num_targets ) );
 
-    _progress_logger->increment( mapped.size() );
+    _progress_logger->increment( _mapping.size() );
 
     return mapped;
 }
