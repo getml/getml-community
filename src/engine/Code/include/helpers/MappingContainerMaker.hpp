@@ -99,12 +99,14 @@ class MappingContainerMaker
     static MappedColumns transform_categorical(
         const MappingForDf& _mapping,
         const std::vector<Column<Int>>& _categorical,
+        const std::string& _feature_postfix,
         logging::ProgressLogger* _progress_logger );
 
     /// Applies the mapping to a categorical column.
     static Column<Float> transform_categorical_column(
         const MappingForDf& _mapping,
         const std::vector<Column<Int>>& _categorical,
+        const std::string& _feature_postfix,
         const size_t _num_targets,
         const size_t _colnum,
         const size_t _target_num );
@@ -113,12 +115,14 @@ class MappingContainerMaker
     static MappedColumns transform_discrete(
         const MappingForDf& _mapping,
         const std::vector<Column<Float>>& _discrete,
+        const std::string& _feature_postfix,
         logging::ProgressLogger* _progress_logger );
 
     /// Applies the mapping to a discrete column.
     static Column<Float> transform_discrete_column(
         const MappingForDf& _mapping,
         const std::vector<Column<Float>>& _discrete,
+        const std::string& _feature_postfix,
         const size_t _num_targets,
         const size_t _colnum,
         const size_t _target_num );
@@ -127,6 +131,7 @@ class MappingContainerMaker
     static std::shared_ptr<const MappedContainer> transform_table_holder(
         const std::shared_ptr<const MappingContainer>& _mapping,
         const TableHolder& _table_holder,
+        const std::string& _feature_postfix,
         logging::ProgressLogger* _progress_logger );
 
     /// Maps the text fields on their corresponding weights.
@@ -134,6 +139,7 @@ class MappingContainerMaker
         const MappingForDf& _mapping,
         const std::vector<Column<strings::String>>& _text,
         const typename DataFrame::WordIndices& _word_indices,
+        const std::string& _feature_postfix,
         logging::ProgressLogger* _progress_logger );
 
     /// Applies the mapping to a text column.
@@ -141,6 +147,7 @@ class MappingContainerMaker
         const MappingForDf& _mapping,
         const std::vector<Column<strings::String>>& _text,
         const typename DataFrame::WordIndices& _word_indices,
+        const std::string& _feature_postfix,
         const size_t _num_targets,
         const size_t _colnum,
         const size_t _target_num );
