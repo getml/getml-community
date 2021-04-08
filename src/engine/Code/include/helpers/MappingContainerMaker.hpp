@@ -22,6 +22,9 @@ class MappingContainerMaker
         const WordIndexContainer& _word_indices,
         const std::shared_ptr<const logging::AbstractLogger>& _logger );
 
+    /// Infers the number of targets on which the mapping was fitted.
+    static size_t infer_num_targets( const MappingForDf& _mapping );
+
     /// Transform categorical columns by mapping them onto
     /// the corresponding weights.
     static std::optional<const MappedContainer> transform(
@@ -71,9 +74,6 @@ class MappingContainerMaker
         const std::vector<DataFrame>& _main_tables,
         const std::vector<DataFrame>& _peripheral_tables,
         logging::ProgressLogger* _progress_logger );
-
-    /// Infers the number of targets on which the mapping was fitted.
-    static size_t infer_num_targets( const MappingForDf& _mapping );
 
     /// Generates a new mapping based on the rownum_map for a particular column.
     static std::shared_ptr<const std::map<Int, std::vector<Float>>>

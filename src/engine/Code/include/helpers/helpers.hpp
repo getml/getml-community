@@ -20,6 +20,8 @@
 
 #include "debug/debug.hpp"
 
+#include "io/io.hpp"
+
 #include "jsonutils/jsonutils.hpp"
 
 #include "logging/logging.hpp"

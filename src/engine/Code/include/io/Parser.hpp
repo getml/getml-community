@@ -125,7 +125,6 @@ class Parser
     {
         std::stringstream stream;
         stream.precision( 16 );
-        stream << std::scientific;
         stream << _val;
         return stream.str();
     }

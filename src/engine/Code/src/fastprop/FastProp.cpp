@@ -2394,6 +2394,12 @@ std::vector<std::string> FastProp::to_sql(
 
     std::vector<std::string> sql;
 
+    if ( _subfeatures && mappings_ )
+        {
+            sql.push_back(
+                mappings_->to_sql( _categories, _feature_prefix, _offset ) );
+        }
+
     if ( _subfeatures )
         {
             subfeatures_to_sql( _categories, _feature_prefix, _offset, &sql );
