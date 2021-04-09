@@ -2618,7 +2618,7 @@ std::string Pipeline::to_sql(
 
     std::vector<std::string> features;
 
-    std::vector<std::string> sql;
+    auto sql = std::vector<std::string>();
 
     for ( size_t i = 0; i < feature_learners_.size(); ++i )
         {

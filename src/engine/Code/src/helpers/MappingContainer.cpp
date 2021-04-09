@@ -6,13 +6,19 @@ namespace helpers
 
 MappingContainer::MappingContainer(
     const std::vector<MappingForDf>& _categorical,
+    const std::vector<Colnames>& _categorical_names,
     const std::vector<MappingForDf>& _discrete,
+    const std::vector<Colnames>& _discrete_names,
     const std::vector<std::shared_ptr<const MappingContainer>>& _subcontainers,
-    const std::vector<MappingForDf>& _text )
+    const std::vector<MappingForDf>& _text,
+    const std::vector<Colnames>& _text_names )
     : categorical_( _categorical ),
+      categorical_names_( _categorical_names ),
       discrete_( _discrete ),
+      discrete_names_( _discrete_names ),
       subcontainers_( _subcontainers ),
-      text_( _text )
+      text_( _text ),
+      text_names_( _text_names )
 {
     assert_msg(
         categorical_.size() == subcontainers_.size(),
@@ -21,14 +27,31 @@ MappingContainer::MappingContainer(
             std::to_string( subcontainers_.size() ) );
 
     assert_msg(
+        categorical_.size() == categorical_names_.size(),
+        "categorical_.size(): " + std::to_string( categorical_.size() ) +
+            ", categorical_names_.size(): " +
+            std::to_string( categorical_names_.size() ) );
+
+    assert_msg(
         categorical_.size() == discrete_.size(),
         "categorical_.size(): " + std::to_string( categorical_.size() ) +
             ", discrete_.size(): " + std::to_string( discrete_.size() ) );
 
     assert_msg(
+        categorical_.size() == discrete_names_.size(),
+        "categorical_.size(): " + std::to_string( categorical_.size() ) +
+            ", discrete_names_.size(): " +
+            std::to_string( discrete_names_.size() ) );
+
+    assert_msg(
         categorical_.size() == text_.size(),
         "categorical_.size(): " + std::to_string( categorical_.size() ) +
             ", text_.size(): " + std::to_string( text_.size() ) );
+
+    assert_msg(
+        categorical_.size() == text_names_.size(),
+        "categorical_.size(): " + std::to_string( categorical_.size() ) +
+            ", text_names_.size(): " + std::to_string( text_names_.size() ) );
 }
 
 // ----------------------------------------------------------------------------
@@ -339,9 +362,17 @@ std::string MappingContainer::to_sql(
 
     // ------------------------------------------------------------------------
 
+    assert_true( categorical_.size() == categorical_names_.size() );
+
     for ( size_t i = 0; i < categorical_.size(); ++i )
         {
             const auto& c = categorical_.at( i );
+
+            const auto& names = categorical_names_.at( i );
+
+            assert_true( names );
+
+            assert_true( c.size() == names->size() );
 
             const auto num_targets =
                 MappingContainerMaker::infer_num_targets( c );
@@ -351,9 +382,11 @@ std::string MappingContainer::to_sql(
                     for ( size_t j = 0; j < c.size(); ++j )
                         {
                             const auto& ptr = c.at( j );
-                            const auto name = "CATEGORICAL_MAPPING_" +
-                                              _feature_prefix +
-                                              std::to_string( j + 1 ) + "_" +
+                            const auto name = SQLGenerator::to_upper(
+                                                  SQLGenerator::make_colname(
+                                                      names->at( j ) ) ) +
+                                              "__MAPPING_" + _feature_prefix +
+                                              "TARGET_" +
                                               std::to_string( t + 1 );
                             sql += categorical_to_sql( name, ptr, t );
                         }
@@ -362,9 +395,17 @@ std::string MappingContainer::to_sql(
 
     // ------------------------------------------------------------------------
 
+    assert_true( discrete_.size() == discrete_names_.size() );
+
     for ( size_t i = 0; i < discrete_.size(); ++i )
         {
             const auto& d = discrete_.at( i );
+
+            const auto& names = discrete_names_.at( i );
+
+            assert_true( names );
+
+            assert_true( d.size() == names->size() );
 
             const auto num_targets =
                 MappingContainerMaker::infer_num_targets( d );
@@ -374,9 +415,11 @@ std::string MappingContainer::to_sql(
                     for ( size_t j = 0; j < d.size(); ++j )
                         {
                             const auto& ptr = d.at( j );
-                            const auto name = "NUMERICAL_MAPPING_" +
-                                              _feature_prefix +
-                                              std::to_string( j + 1 ) + "_" +
+                            const auto name = SQLGenerator::to_upper(
+                                                  SQLGenerator::make_colname(
+                                                      names->at( j ) ) ) +
+                                              "__MAPPING_" + _feature_prefix +
+                                              "TARGET_" +
                                               std::to_string( t + 1 );
                             sql += discrete_to_sql( name, ptr, t );
                         }

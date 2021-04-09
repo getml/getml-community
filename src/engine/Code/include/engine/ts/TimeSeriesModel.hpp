@@ -88,6 +88,12 @@ class TimeSeriesModel
         return *hyperparameters_;
     }
 
+    /// Trivial (const) accessor
+    const helpers::MappingContainer &mappings() const
+    {
+        return model().mappings();
+    }
+
     /// Returns the number of features.
     size_t num_features() const { return model().num_features(); }
 

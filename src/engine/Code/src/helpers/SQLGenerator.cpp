@@ -162,6 +162,19 @@ std::string SQLGenerator::edit_colname(
 
 // ----------------------------------------------------------------------------
 
+std::string SQLGenerator::make_colname( const std::string& _colname )
+{
+    if ( _colname.find( Macros::table() ) == std::string::npos )
+        {
+            return to_lower( _colname );
+        }
+    const auto alias = Macros::get_param( _colname, Macros::alias() );
+    const auto column = Macros::get_param( _colname, Macros::column() );
+    return to_lower( alias + "__" + column );
+}
+
+// ----------------------------------------------------------------------------
+
 std::string SQLGenerator::get_table_name( const std::string& _raw_name )
 {
     const auto has_delimiter =
@@ -362,6 +375,135 @@ std::string SQLGenerator::make_relative_time(
 
 // ----------------------------------------------------------------------------
 
+std::string SQLGenerator::make_staging_table(
+    const bool& _include_targets,
+    const size_t _number,
+    const Placeholder& _schema )
+{
+    // ------------------------------------------------------------------------
+
+    const auto cast_column = []( const std::string& _colname,
+                                 const std::string& _coltype ) -> std::string {
+        return "CAST( " + SQLGenerator::edit_colname( _colname, "t1" ) +
+               " AS " + _coltype + " ) AS \"" +
+               SQLGenerator::make_colname( _colname ) + "\"";
+    };
+
+    // ------------------------------------------------------------------------
+
+    const auto cast_as_numeric =
+        [cast_column]( const std::vector<std::string>& _colnames )
+        -> std::vector<std::string> {
+        const auto cast =
+            std::bind( cast_column, std::placeholders::_1, "NUMERIC" );
+        return stl::make::vector<std::string>(
+            _colnames | std::views::transform( cast ) );
+    };
+
+    // ------------------------------------------------------------------------
+
+    const auto cast_as_text =
+        [cast_column]( const std::vector<std::string>& _colnames )
+        -> std::vector<std::string> {
+        const auto cast =
+            std::bind( cast_column, std::placeholders::_1, "TEXT" );
+        return stl::make::vector<std::string>(
+            _colnames | std::views::transform( cast ) );
+    };
+
+    // ------------------------------------------------------------------------
+
+    const auto categoricals = cast_as_text( _schema.categoricals_ );
+
+    const auto discretes = cast_as_numeric( _schema.discretes_ );
+
+    const auto join_keys = cast_as_text( _schema.join_keys_ );
+
+    const auto numericals = cast_as_numeric( _schema.numericals_ );
+
+    const auto targets = cast_as_numeric( _schema.targets_ );
+
+    const auto text = cast_as_text( _schema.text_ );
+
+    const auto time_stamps = cast_as_numeric( _schema.time_stamps_ );
+
+    // ------------------------------------------------------------------------
+
+    const auto all = _include_targets ? std::vector<std::vector<std::string>>(
+                                            { targets,
+                                              categoricals,
+                                              discretes,
+                                              join_keys,
+                                              numericals,
+                                              text,
+                                              time_stamps } )
+                                      : std::vector<std::vector<std::string>>(
+                                            { categoricals,
+                                              discretes,
+                                              join_keys,
+                                              numericals,
+                                              text,
+                                              time_stamps } );
+
+    const auto columns =
+        stl::make::vector<std::string>( all | std::ranges::views::join );
+
+    // ------------------------------------------------------------------------
+
+    const auto name = to_upper( get_table_name( _schema.name_ ) ) +
+                      "__STAGED_TABLE_" + std::to_string( _number );
+
+    std::stringstream sql;
+
+    sql << "DROP TABLE IF EXISTS \"" << name << "\";\n\n";
+
+    sql << "CREATE TABLE \"" << name << "\" AS\nSELECT ";
+
+    for ( size_t i = 0; i < columns.size(); ++i )
+        {
+            const auto begin = ( i == 0 ) ? "" : "       ";
+            const auto end = ( i == columns.size() - 1 ) ? "\n" : ",\n";
+            sql << begin << columns.at( i ) << end;
+        }
+
+    sql << "FROM \"" << get_table_name( _schema.name_ ) << "\" t1\n";
+
+    sql << handle_many_to_one_joins( _schema.name_, "t1" );
+
+    sql << ";";
+
+    sql << "\n\n\n";
+
+    // ------------------------------------------------------------------------
+
+    return sql.str();
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<std::string> SQLGenerator::make_staging_tables(
+    const bool& _include_targets,
+    const Placeholder& _population_schema,
+    const std::vector<Placeholder>& _peripheral_schema )
+{
+    size_t number = 1;
+
+    auto sql = std::vector<std::string>( { make_staging_table(
+        _include_targets, number, _population_schema ) } );
+
+    for ( size_t i = 0; i < _peripheral_schema.size(); ++i )
+        {
+            ++number;
+            auto s =
+                make_staging_table( false, number, _peripheral_schema.at( i ) );
+            sql.emplace_back( std::move( s ) );
+        }
+
+    return sql;
+}
+
+// ----------------------------------------------------------------------------
+
 std::string SQLGenerator::make_subfeature_identifier(
     const std::string& _feature_prefix,
     const size_t _peripheral_used,
@@ -460,6 +602,30 @@ std::string SQLGenerator::make_time_stamps(
 
     return StringReplacer::replace_all(
         sql.str(), Macros::t1_or_t2(), _t1_or_t2 );
+}
+
+// ------------------------------------------------------------------------
+
+std::string SQLGenerator::to_lower( const std::string& _str )
+{
+    auto lower = _str;
+    for ( auto& c : lower )
+        {
+            c = std::tolower( c );
+        }
+    return lower;
+};
+
+// ------------------------------------------------------------------------
+
+std::string SQLGenerator::to_upper( const std::string& _str )
+{
+    auto upper = _str;
+    for ( auto& c : upper )
+        {
+            c = std::toupper( c );
+        }
+    return upper;
 }
 
 // ----------------------------------------------------------------------------

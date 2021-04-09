@@ -154,6 +154,13 @@ class DecisionTreeEnsemble
     }
 
     /// Trivial accessor
+    inline const helpers::MappingContainer &mappings() const
+    {
+        assert_true( impl().mappings_ );
+        return *impl().mappings_;
+    }
+
+    /// Trivial accessor
     const size_t num_features() const { return trees().size(); }
 
     /// Trivial accessor
@@ -336,13 +343,6 @@ class DecisionTreeEnsemble
     {
         assert_true( trees().size() > 0 );
         return &( trees().back() );
-    }
-
-    /// Trivial accessor
-    inline const helpers::MappingContainer &mappings() const
-    {
-        assert_true( impl().mappings_ );
-        return *impl().mappings_;
     }
 
     /// Trivial accessor

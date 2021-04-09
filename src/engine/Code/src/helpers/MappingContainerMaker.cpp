@@ -203,11 +203,17 @@ MappingContainerMaker::fit_on_table_holder(
 
     std::vector<MappingForDf> categorical;
 
+    std::vector<Colnames> categorical_names;
+
     std::vector<MappingForDf> discrete;
+
+    std::vector<Colnames> discrete_names;
 
     std::vector<std::shared_ptr<const MappingContainer>> subcontainers;
 
     std::vector<MappingForDf> text;
+
+    std::vector<Colnames> text_names;
 
     for ( size_t i = 0; i < _table_holder.main_tables().size(); ++i )
         {
@@ -238,17 +244,32 @@ MappingContainerMaker::fit_on_table_holder(
 
             categorical.push_back( categorical_mapping );
 
+            categorical_names.push_back(
+                extract_colnames( peripheral_tables.back().categoricals_ ) );
+
             discrete.push_back( discrete_mapping );
+
+            discrete_names.push_back(
+                extract_colnames( peripheral_tables.back().discretes_ ) );
 
             subcontainers.push_back( subcontainer );
 
             text.push_back( text_mapping );
+
+            text_names.push_back(
+                extract_colnames( peripheral_tables.back().text_ ) );
         }
 
     // -----------------------------------------------------------
 
     return std::make_shared<MappingContainer>(
-        categorical, discrete, subcontainers, text );
+        categorical,
+        categorical_names,
+        discrete,
+        discrete_names,
+        subcontainers,
+        text,
+        text_names );
 
     // -----------------------------------------------------------
 }

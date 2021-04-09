@@ -428,6 +428,13 @@ class FastProp
                Hyperparameters::CROSS_ENTROPY_LOSS;
     }
 
+    /// Trivial accessor
+    const helpers::MappingContainer& mappings() const
+    {
+        assert_true( mappings_ );
+        return *mappings_;
+    }
+
     /// Trivial accessor.
     size_t num_features() const
     {
@@ -523,13 +530,6 @@ class FastProp
     {
         assert_true( main_table_schemas_ );
         return *main_table_schemas_;
-    }
-
-    /// Trivial accessor
-    const helpers::MappingContainer& mappings() const
-    {
-        assert_true( mappings_ );
-        return *mappings_;
     }
 
     /// Trivial accessor

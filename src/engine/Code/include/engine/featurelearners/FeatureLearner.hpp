@@ -156,8 +156,34 @@ class FeatureLearner : public AbstractFeatureLearner
         const std::string& _prefix,
         const bool _subfeatures ) const final
     {
-        return feature_learner().to_sql(
-            _categories, _prefix, 0, _subfeatures );
+        std::vector<std::string> sql;
+
+        if ( _subfeatures )
+            {
+                // TODO: Better fix based on has_mappings(...).
+                try
+                    {
+                        sql.push_back( feature_learner().mappings().to_sql(
+                            _categories, _prefix, 0 ) );
+                    }
+                catch ( std::exception& e )
+                    {
+                    }
+                const auto staging_tables =
+                    helpers::SQLGenerator::make_staging_tables(
+                        true,
+                        feature_learner().population_schema(),
+                        feature_learner().peripheral_schema() );
+                sql.insert(
+                    sql.end(), staging_tables.begin(), staging_tables.end() );
+            }
+
+        const auto features =
+            feature_learner().to_sql( _categories, _prefix, 0, _subfeatures );
+
+        sql.insert( sql.end(), features.begin(), features.end() );
+
+        return sql;
     }
 
     // --------------------------------------------------------

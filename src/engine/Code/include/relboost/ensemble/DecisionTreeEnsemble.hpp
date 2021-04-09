@@ -195,6 +195,13 @@ class DecisionTreeEnsemble
         return loss_function().type() != "SquareLoss";
     }
 
+    /// Trivial accessor
+    const helpers::MappingContainer& mappings() const
+    {
+        assert_true( impl().mappings_ );
+        return *impl().mappings_;
+    }
+
     /// Trivial accessor.
     size_t num_features() const { return trees().size(); }
 

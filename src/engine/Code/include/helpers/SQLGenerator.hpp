@@ -20,6 +20,9 @@ class SQLGenerator
     static std::string handle_many_to_one_joins(
         const std::string& _table_name, const std::string& _t1_or_t2 );
 
+    /// Makes a clean, but unique colname.
+    static std::string make_colname( const std::string& _colname );
+
     /// Generates the number of seconds (including fractional seconds) since
     /// epoch time.
     static std::string make_epoch_time(
@@ -37,6 +40,12 @@ class SQLGenerator
     /// compared to something else.
     static std::string make_relative_time(
         const std::string& _raw_name, const std::string& _alias );
+
+    /// Generates the staging tables.
+    static std::vector<std::string> make_staging_tables(
+        const bool& _include_targets,
+        const Placeholder& _population_schema,
+        const std::vector<Placeholder>& _peripheral_schema );
 
     /// Generates the unique identifier for a subfeature.
     static std::string make_subfeature_identifier(
@@ -63,7 +72,12 @@ class SQLGenerator
         const std::string& _input_alias,
         const std::string& _t1_or_t2 );
 
-   public:
+    /// Returns the lower case of a string
+    static std::string to_lower( const std::string& _str );
+
+    /// Returns the upper case of a string
+    static std::string to_upper( const std::string& _str );
+
    private:
     /// Generates the SQL code for when there are multiple join keys.
     static std::string handle_multiple_join_keys(
@@ -78,6 +92,12 @@ class SQLGenerator
         const std::string& _input_join_keys_name,
         const std::string& _output_alias,
         const std::string& _input_alias );
+
+    /// Generates a single staging table.
+    static std::string make_staging_table(
+        const bool& _include_targets,
+        const size_t _number,
+        const Placeholder& _schema );
 };
 
 // -------------------------------------------------------------------------

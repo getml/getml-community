@@ -8,6 +8,7 @@ namespace helpers
 class MappingContainerMaker
 {
    public:
+    typedef MappingContainer::Colnames Colnames;
     typedef MappedContainer::MappedColumns MappedColumns;
     typedef MappingContainer::MappingForDf MappingForDf;
 
@@ -151,6 +152,19 @@ class MappingContainerMaker
         const size_t _num_targets,
         const size_t _colnum,
         const size_t _target_num );
+
+   private:
+    /// Extracts the colnames of a list of columns.
+    template <class T>
+    static Colnames extract_colnames( const std::vector<Column<T>>& _columns )
+    {
+        const auto get_name = []( const Column<T>& _col ) {
+            return _col.name_;
+        };
+        const auto range = _columns | std::ranges::views::transform( get_name );
+        return std::make_shared<std::vector<std::string>>(
+            stl::make::vector<std::string>( range ) );
+    }
 };
 
 // -------------------------------------------------------------------------
