@@ -10,6 +10,7 @@ MappingContainer::MappingContainer(
     const std::vector<MappingForDf>& _discrete,
     const std::vector<Colnames>& _discrete_names,
     const std::vector<std::shared_ptr<const MappingContainer>>& _subcontainers,
+    const TableNames& _table_names,
     const std::vector<MappingForDf>& _text,
     const std::vector<Colnames>& _text_names )
     : categorical_( _categorical ),
@@ -17,8 +18,31 @@ MappingContainer::MappingContainer(
       discrete_( _discrete ),
       discrete_names_( _discrete_names ),
       subcontainers_( _subcontainers ),
+      table_names_( _table_names ),
       text_( _text ),
       text_names_( _text_names )
+{
+    check_lengths();
+}
+
+// ----------------------------------------------------------------------------
+
+MappingContainer::MappingContainer( const Poco::JSON::Object& _obj )
+    : categorical_( extract_mapping_vector( _obj, "categorical_" ) ),
+      discrete_( extract_mapping_vector( _obj, "discrete_" ) ),
+      subcontainers_( extract_subcontainers( _obj ) ),
+      text_( extract_mapping_vector( _obj, "text_" ) )
+{
+    check_lengths();
+}
+
+// ----------------------------------------------------------------------------
+
+MappingContainer::~MappingContainer() = default;
+
+// ----------------------------------------------------------------------------
+
+void MappingContainer::check_lengths() const
 {
     assert_msg(
         categorical_.size() == subcontainers_.size(),
@@ -52,31 +76,15 @@ MappingContainer::MappingContainer(
         categorical_.size() == text_names_.size(),
         "categorical_.size(): " + std::to_string( categorical_.size() ) +
             ", text_names_.size(): " + std::to_string( text_names_.size() ) );
-}
 
-// ----------------------------------------------------------------------------
-
-MappingContainer::MappingContainer( const Poco::JSON::Object& _obj )
-    : categorical_( extract_mapping_vector( _obj, "categorical_" ) ),
-      discrete_( extract_mapping_vector( _obj, "discrete_" ) ),
-      subcontainers_( extract_subcontainers( _obj ) ),
-      text_( extract_mapping_vector( _obj, "text_" ) )
-{
-    assert_msg(
-        categorical_.size() == subcontainers_.size(),
-        "categorical_.size(): " + std::to_string( categorical_.size() ) +
-            ", subcontainers_.size(): " +
-            std::to_string( subcontainers_.size() ) );
+    assert_true( table_names_ );
 
     assert_msg(
-        categorical_.size() == text_.size(),
+        categorical_.size() == table_names_->size(),
         "categorical_.size(): " + std::to_string( categorical_.size() ) +
-            ", text_.size(): " + std::to_string( text_.size() ) );
+            ", table_names_->size(): " +
+            std::to_string( table_names_->size() ) );
 }
-
-// ----------------------------------------------------------------------------
-
-MappingContainer::~MappingContainer() = default;
 
 // ----------------------------------------------------------------------------
 
@@ -261,7 +269,8 @@ Poco::JSON::Object::Ptr MappingContainer::to_json_obj() const
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::string> MappingContainer::to_sql(
+std::pair<std::vector<std::string>, typename MappingContainer::ColnameMap>
+MappingContainer::to_sql(
     const std::shared_ptr<const std::vector<strings::String>>& _categories,
     const std::string& _feature_prefix,
     const size_t _offset ) const
@@ -273,6 +282,39 @@ std::vector<std::string> MappingContainer::to_sql(
     using Pair = std::pair<Int, Float>;
 
     using Map = typename PtrType::element_type;
+
+    // ------------------------------------------------------------------------
+
+    ColnameMap colname_map;
+
+    // ------------------------------------------------------------------------
+
+    const auto add_to_map = [&colname_map](
+                                const std::string& _tname,
+                                const std::string& _colname ) {
+        auto it = colname_map.find( _tname );
+
+        if ( it == colname_map.end() )
+            {
+                colname_map[_tname] = { _colname };
+            }
+        else
+            {
+                it->second.push_back( _colname );
+            }
+    };
+
+    // ------------------------------------------------------------------------
+
+    const auto merge_map = [add_to_map]( const ColnameMap& _submap ) {
+        for ( const auto& [key, values] : _submap )
+            {
+                for ( const auto& value : values )
+                    {
+                        add_to_map( key, value );
+                    }
+            }
+    };
 
     // ------------------------------------------------------------------------
 
@@ -362,8 +404,6 @@ std::vector<std::string> MappingContainer::to_sql(
 
     // ------------------------------------------------------------------------
 
-    assert_true( categorical_.size() == categorical_names_.size() );
-
     for ( size_t i = 0; i < categorical_.size(); ++i )
         {
             const auto& c = categorical_.at( i );
@@ -382,13 +422,17 @@ std::vector<std::string> MappingContainer::to_sql(
                     for ( size_t j = 0; j < c.size(); ++j )
                         {
                             const auto& ptr = c.at( j );
+
                             const auto name = SQLGenerator::to_upper(
                                                   SQLGenerator::make_colname(
                                                       names->at( j ) ) ) +
                                               "__MAPPING_" + _feature_prefix +
                                               "TARGET_" +
                                               std::to_string( t + 1 );
+
                             sql.push_back( categorical_to_sql( name, ptr, t ) );
+
+                            add_to_map( table_names_->at( i ), name );
                         }
                 }
         }
@@ -415,13 +459,17 @@ std::vector<std::string> MappingContainer::to_sql(
                     for ( size_t j = 0; j < d.size(); ++j )
                         {
                             const auto& ptr = d.at( j );
+
                             const auto name = SQLGenerator::to_upper(
                                                   SQLGenerator::make_colname(
                                                       names->at( j ) ) ) +
                                               "__MAPPING_" + _feature_prefix +
                                               "TARGET_" +
                                               std::to_string( t + 1 );
+
                             sql.push_back( discrete_to_sql( name, ptr, t ) );
+
+                            add_to_map( table_names_->at( i ), name );
                         }
                 }
         }
@@ -436,16 +484,20 @@ std::vector<std::string> MappingContainer::to_sql(
                 {
                     const auto feature_prefix =
                         _feature_prefix + std::to_string( i + 1 ) + "_";
-                    const auto subfeatures =
+
+                    const auto [subfeatures, submap] =
                         s->to_sql( _categories, feature_prefix, _offset );
+
                     sql.insert(
                         sql.end(), subfeatures.begin(), subfeatures.end() );
+
+                    merge_map( submap );
                 }
         }
 
     // ------------------------------------------------------------------------
 
-    return sql;
+    return std::make_pair( sql, colname_map );
 
     // ------------------------------------------------------------------------
 }

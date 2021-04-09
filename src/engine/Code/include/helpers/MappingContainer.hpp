@@ -5,13 +5,18 @@ namespace helpers
 {
 // -------------------------------------------------------------------------
 
-struct MappingContainer
+class MappingContainer
 {
+   public:
     typedef std::shared_ptr<const std::vector<std::string>> Colnames;
 
     typedef std::vector<
         std::shared_ptr<const std::map<Int, std::vector<Float>>>>
         MappingForDf;
+
+    typedef std::map<std::string, std::vector<std::string>> ColnameMap;
+
+    typedef std::shared_ptr<const std::vector<std::string>> TableNames;
 
     MappingContainer(
         const std::vector<MappingForDf>& _categorical,
@@ -20,12 +25,27 @@ struct MappingContainer
         const std::vector<Colnames>& _discrete_names,
         const std::vector<std::shared_ptr<const MappingContainer>>&
             _subcontainers,
+        const TableNames& _table_names,
         const std::vector<MappingForDf>& _text,
         const std::vector<Colnames>& _text_names );
 
     MappingContainer( const Poco::JSON::Object& _obj );
 
     ~MappingContainer();
+
+   public:
+    /// Transforms the VocabularyContainer into a JSON object.
+    Poco::JSON::Object::Ptr to_json_obj() const;
+
+    /// Expresses the mapping as SQL
+    std::pair<std::vector<std::string>, ColnameMap> to_sql(
+        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const std::string& _feature_prefix,
+        const size_t _offset ) const;
+
+   private:
+    /// Checks the lengths of the mappings.
+    void check_lengths() const;
 
     /// Extracts a vector containing mappings from the object.
     static std::vector<MappingForDf> extract_mapping_vector(
@@ -35,15 +55,27 @@ struct MappingContainer
     static std::vector<std::shared_ptr<const MappingContainer>>
     extract_subcontainers( const Poco::JSON::Object& _obj );
 
-    /// Transforms the VocabularyContainer into a JSON object.
-    Poco::JSON::Object::Ptr to_json_obj() const;
+   public:
+    /// Trivial (const) accessor.
+    const std::vector<MappingForDf>& categorical() const
+    {
+        return categorical_;
+    }
 
-    /// Expresses the mapping as SQL
-    std::vector<std::string> to_sql(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories,
-        const std::string& _feature_prefix,
-        const size_t _offset ) const;
+    /// Trivial (const) accessor.
+    const std::vector<MappingForDf>& discrete() const { return discrete_; }
 
+    /// Trivial (const) accessor.
+    const std::vector<std::shared_ptr<const MappingContainer>>& subcontainers()
+        const
+    {
+        return subcontainers_;
+    }
+
+    /// Trivial (const) accessor.
+    const std::vector<MappingForDf>& text() const { return text_; }
+
+   private:
     /// The vocabulary for the categorical columns.
     const std::vector<MappingForDf> categorical_;
 
@@ -58,6 +90,9 @@ struct MappingContainer
 
     /// Containers for any and all existing subtables.
     const std::vector<std::shared_ptr<const MappingContainer>> subcontainers_;
+
+    /// The names of the table the mappings apply to.
+    const TableNames table_names_;
 
     /// The vocabulary for the text columns.
     const std::vector<MappingForDf> text_;

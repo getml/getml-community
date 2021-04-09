@@ -957,17 +957,23 @@ std::vector<std::string> FeatureLearner<FeatureLearnerType>::to_sql(
 
     if ( _subfeatures )
         {
+            using ColnameMap = typename helpers::MappingContainer::ColnameMap;
+
+            ColnameMap colname_map;
+
             if ( feature_learner().has_mappings() )
                 {
-                    sql = feature_learner().mappings().to_sql(
-                        _categories, _prefix, 0 );
+                    std::tie( sql, colname_map ) =
+                        feature_learner().mappings().to_sql(
+                            _categories, _prefix, 0 );
                 }
 
             const auto staging_tables =
                 helpers::SQLGenerator::make_staging_tables(
-                    true,
+                    true,  // TODO
                     feature_learner().population_schema(),
-                    feature_learner().peripheral_schema() );
+                    feature_learner().peripheral_schema(),
+                    colname_map );
 
             sql.insert(
                 sql.end(), staging_tables.begin(), staging_tables.end() );

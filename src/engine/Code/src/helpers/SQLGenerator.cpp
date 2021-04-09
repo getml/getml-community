@@ -378,7 +378,8 @@ std::string SQLGenerator::make_relative_time(
 std::string SQLGenerator::make_staging_table(
     const bool& _include_targets,
     const size_t _number,
-    const Placeholder& _schema )
+    const Placeholder& _schema,
+    const std::vector<std::string>& _mappings )
 {
     // ------------------------------------------------------------------------
 
@@ -413,6 +414,19 @@ std::string SQLGenerator::make_staging_table(
 
     // ------------------------------------------------------------------------
 
+    const auto init_as_zero = []( const std::string& _colname ) -> std::string {
+        return "0.0 AS \"" + to_lower( _colname ) + "\"";
+    };
+
+    // ------------------------------------------------------------------------
+
+    const auto make_mappings = [&_mappings, init_as_zero]() {
+        return stl::make::vector<std::string>(
+            _mappings | std::views::transform( init_as_zero ) );
+    };
+
+    // ------------------------------------------------------------------------
+
     const auto categoricals = cast_as_text( _schema.categoricals_ );
 
     const auto discretes = cast_as_numeric( _schema.discretes_ );
@@ -427,6 +441,8 @@ std::string SQLGenerator::make_staging_table(
 
     const auto time_stamps = cast_as_numeric( _schema.time_stamps_ );
 
+    const auto mappings = make_mappings();
+
     // ------------------------------------------------------------------------
 
     const auto all = _include_targets ? std::vector<std::vector<std::string>>(
@@ -436,14 +452,16 @@ std::string SQLGenerator::make_staging_table(
                                               join_keys,
                                               numericals,
                                               text,
-                                              time_stamps } )
+                                              time_stamps,
+                                              mappings } )
                                       : std::vector<std::vector<std::string>>(
                                             { categoricals,
                                               discretes,
                                               join_keys,
                                               numericals,
                                               text,
-                                              time_stamps } );
+                                              time_stamps,
+                                              mappings } );
 
     const auto columns =
         stl::make::vector<std::string>( all | std::ranges::views::join );
@@ -484,20 +502,47 @@ std::string SQLGenerator::make_staging_table(
 std::vector<std::string> SQLGenerator::make_staging_tables(
     const bool& _include_targets,
     const Placeholder& _population_schema,
-    const std::vector<Placeholder>& _peripheral_schema )
+    const std::vector<Placeholder>& _peripheral_schema,
+    const ColnameMap& _colname_map )
 {
+    // ------------------------------------------------------------------------
+
+    const auto get_mapping =
+        [&_colname_map](
+            const Placeholder& _schema ) -> std::vector<std::string> {
+        const auto it = _colname_map.find( _schema.name_ );
+        if ( it == _colname_map.end() )
+            {
+                return std::vector<std::string>();
+            }
+        return it->second;
+    };
+
+    // ------------------------------------------------------------------------
+
     size_t number = 1;
 
     auto sql = std::vector<std::string>( { make_staging_table(
-        _include_targets, number, _population_schema ) } );
+        _include_targets,
+        number,
+        _population_schema,
+        get_mapping( _population_schema ) ) } );
+
+    // ------------------------------------------------------------------------
 
     for ( size_t i = 0; i < _peripheral_schema.size(); ++i )
         {
             ++number;
-            auto s =
-                make_staging_table( false, number, _peripheral_schema.at( i ) );
+
+            const auto& schema = _peripheral_schema.at( i );
+
+            auto s = make_staging_table(
+                false, number, schema, get_mapping( schema ) );
+
             sql.emplace_back( std::move( s ) );
         }
+
+    // ------------------------------------------------------------------------
 
     return sql;
 }
@@ -614,7 +659,7 @@ std::string SQLGenerator::to_lower( const std::string& _str )
             c = std::tolower( c );
         }
     return lower;
-};
+}
 
 // ------------------------------------------------------------------------
 

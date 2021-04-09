@@ -7,6 +7,8 @@ namespace helpers
 
 class SQLGenerator
 {
+    typedef typename MappingContainer::ColnameMap ColnameMap;
+
    public:
     /// Removes the Macros from the colname and replaces it with proper SQLite3
     /// code.
@@ -45,7 +47,8 @@ class SQLGenerator
     static std::vector<std::string> make_staging_tables(
         const bool& _include_targets,
         const Placeholder& _population_schema,
-        const std::vector<Placeholder>& _peripheral_schema );
+        const std::vector<Placeholder>& _peripheral_schema,
+        const ColnameMap& _colname_map );
 
     /// Generates the unique identifier for a subfeature.
     static std::string make_subfeature_identifier(
@@ -97,7 +100,8 @@ class SQLGenerator
     static std::string make_staging_table(
         const bool& _include_targets,
         const size_t _number,
-        const Placeholder& _schema );
+        const Placeholder& _schema,
+        const std::vector<std::string>& _mappings );
 };
 
 // -------------------------------------------------------------------------

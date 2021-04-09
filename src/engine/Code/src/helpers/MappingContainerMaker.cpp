@@ -215,6 +215,8 @@ MappingContainerMaker::fit_on_table_holder(
 
     std::vector<Colnames> text_names;
 
+    auto table_names = std::make_shared<std::vector<std::string>>();
+
     for ( size_t i = 0; i < _table_holder.main_tables().size(); ++i )
         {
             const auto main_tables = append(
@@ -254,6 +256,8 @@ MappingContainerMaker::fit_on_table_holder(
 
             subcontainers.push_back( subcontainer );
 
+            table_names->push_back( peripheral_tables.back().name_ );
+
             text.push_back( text_mapping );
 
             text_names.push_back(
@@ -268,6 +272,7 @@ MappingContainerMaker::fit_on_table_holder(
         discrete,
         discrete_names,
         subcontainers,
+        table_names,
         text,
         text_names );
 
@@ -891,16 +896,16 @@ MappingContainerMaker::transform_table_holder(
     assert_true( _mapping );
 
     assert_true(
-        _mapping->categorical_.size() ==
+        _mapping->categorical().size() ==
         _table_holder.peripheral_tables().size() );
 
     assert_true(
-        _mapping->categorical_.size() == _mapping->subcontainers_.size() );
+        _mapping->categorical().size() == _mapping->subcontainers().size() );
 
-    assert_true( _mapping->categorical_.size() == _mapping->text_.size() );
+    assert_true( _mapping->categorical().size() == _mapping->text().size() );
 
     assert_true(
-        _mapping->categorical_.size() == _table_holder.subtables().size() );
+        _mapping->categorical().size() == _table_holder.subtables().size() );
 
     std::vector<MappedColumns> categorical;
 
@@ -910,29 +915,29 @@ MappingContainerMaker::transform_table_holder(
 
     std::vector<std::shared_ptr<const MappedContainer>> subcontainers;
 
-    for ( size_t i = 0; i < _mapping->categorical_.size(); ++i )
+    for ( size_t i = 0; i < _mapping->categorical().size(); ++i )
         {
             categorical.push_back( transform_categorical(
-                _mapping->categorical_.at( i ),
+                _mapping->categorical().at( i ),
                 _table_holder.peripheral_tables().at( i ).categoricals_,
                 _feature_postfix,
                 _progress_logger ) );
 
             discrete.push_back( transform_discrete(
-                _mapping->discrete_.at( i ),
+                _mapping->discrete().at( i ),
                 _table_holder.peripheral_tables().at( i ).discretes_,
                 _feature_postfix,
                 _progress_logger ) );
 
             if ( _table_holder.subtables().at( i ) )
                 {
-                    assert_true( _mapping->subcontainers_.at( i ) );
+                    assert_true( _mapping->subcontainers().at( i ) );
 
                     const auto feature_postfix =
                         _feature_postfix + std::to_string( i + 1 ) + "_";
 
                     subcontainers.push_back( transform_table_holder(
-                        _mapping->subcontainers_.at( i ),
+                        _mapping->subcontainers().at( i ),
                         *_table_holder.subtables().at( i ),
                         feature_postfix,
                         _progress_logger ) );
@@ -943,7 +948,7 @@ MappingContainerMaker::transform_table_holder(
                 }
 
             text.push_back( transform_text(
-                _mapping->text_.at( i ),
+                _mapping->text().at( i ),
                 _table_holder.peripheral_tables().at( i ).text_,
                 _table_holder.peripheral_tables().at( i ).word_indices_,
                 _feature_postfix,
