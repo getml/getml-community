@@ -261,7 +261,7 @@ Poco::JSON::Object::Ptr MappingContainer::to_json_obj() const
 
 // ----------------------------------------------------------------------------
 
-std::string MappingContainer::to_sql(
+std::vector<std::string> MappingContainer::to_sql(
     const std::shared_ptr<const std::vector<strings::String>>& _categories,
     const std::string& _feature_prefix,
     const size_t _offset ) const
@@ -358,7 +358,7 @@ std::string MappingContainer::to_sql(
 
     // ------------------------------------------------------------------------
 
-    std::string sql;
+    std::vector<std::string> sql;
 
     // ------------------------------------------------------------------------
 
@@ -388,7 +388,7 @@ std::string MappingContainer::to_sql(
                                               "__MAPPING_" + _feature_prefix +
                                               "TARGET_" +
                                               std::to_string( t + 1 );
-                            sql += categorical_to_sql( name, ptr, t );
+                            sql.push_back( categorical_to_sql( name, ptr, t ) );
                         }
                 }
         }
@@ -421,7 +421,7 @@ std::string MappingContainer::to_sql(
                                               "__MAPPING_" + _feature_prefix +
                                               "TARGET_" +
                                               std::to_string( t + 1 );
-                            sql += discrete_to_sql( name, ptr, t );
+                            sql.push_back( discrete_to_sql( name, ptr, t ) );
                         }
                 }
         }
@@ -436,7 +436,10 @@ std::string MappingContainer::to_sql(
                 {
                     const auto feature_prefix =
                         _feature_prefix + std::to_string( i + 1 ) + "_";
-                    sql += s->to_sql( _categories, feature_prefix, _offset );
+                    const auto subfeatures =
+                        s->to_sql( _categories, feature_prefix, _offset );
+                    sql.insert(
+                        sql.end(), subfeatures.begin(), subfeatures.end() );
                 }
         }
 

@@ -81,6 +81,9 @@ class TimeSeriesModel
     // -----------------------------------------------------------------
 
    public:
+    /// Whether there are mappings
+    const bool has_mappings() const { return model().has_mappings(); }
+
     /// Trivial (const) accessor
     const HypType &hyperparameters() const
     {

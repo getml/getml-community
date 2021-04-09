@@ -39,7 +39,7 @@ struct MappingContainer
     Poco::JSON::Object::Ptr to_json_obj() const;
 
     /// Expresses the mapping as SQL
-    std::string to_sql(
+    std::vector<std::string> to_sql(
         const std::shared_ptr<const std::vector<strings::String>>& _categories,
         const std::string& _feature_prefix,
         const size_t _offset ) const;

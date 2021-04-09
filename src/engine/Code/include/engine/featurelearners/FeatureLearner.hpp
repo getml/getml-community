@@ -67,6 +67,12 @@ class FeatureLearner : public AbstractFeatureLearner
         const containers::DataFrame& _population_df,
         const std::vector<containers::DataFrame>& _peripheral_dfs ) const final;
 
+    /// Return feature learner as SQL code.
+    std::vector<std::string> to_sql(
+        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const std::string& _prefix,
+        const bool _subfeatures ) const final;
+
     /// Returns a string describing the type of the feature learner.
     std::string type() const final;
 
@@ -148,42 +154,6 @@ class FeatureLearner : public AbstractFeatureLearner
     Poco::JSON::Object to_json_obj( const bool _schema_only ) const final
     {
         return feature_learner().to_json_obj( _schema_only );
-    }
-
-    /// Return feature learner as SQL code.
-    std::vector<std::string> to_sql(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories,
-        const std::string& _prefix,
-        const bool _subfeatures ) const final
-    {
-        std::vector<std::string> sql;
-
-        if ( _subfeatures )
-            {
-                // TODO: Better fix based on has_mappings(...).
-                try
-                    {
-                        sql.push_back( feature_learner().mappings().to_sql(
-                            _categories, _prefix, 0 ) );
-                    }
-                catch ( std::exception& e )
-                    {
-                    }
-                const auto staging_tables =
-                    helpers::SQLGenerator::make_staging_tables(
-                        true,
-                        feature_learner().population_schema(),
-                        feature_learner().peripheral_schema() );
-                sql.insert(
-                    sql.end(), staging_tables.begin(), staging_tables.end() );
-            }
-
-        const auto features =
-            feature_learner().to_sql( _categories, _prefix, 0, _subfeatures );
-
-        sql.insert( sql.end(), features.begin(), features.end() );
-
-        return sql;
     }
 
     // --------------------------------------------------------
@@ -973,6 +943,42 @@ std::string FeatureLearner<FeatureLearnerType>::remove_time_diff(
     return _from_colname.substr( 0, pos );
 
     // --------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+template <typename FeatureLearnerType>
+std::vector<std::string> FeatureLearner<FeatureLearnerType>::to_sql(
+    const std::shared_ptr<const std::vector<strings::String>>& _categories,
+    const std::string& _prefix,
+    const bool _subfeatures ) const
+{
+    std::vector<std::string> sql;
+
+    if ( _subfeatures )
+        {
+            if ( feature_learner().has_mappings() )
+                {
+                    sql = feature_learner().mappings().to_sql(
+                        _categories, _prefix, 0 );
+                }
+
+            const auto staging_tables =
+                helpers::SQLGenerator::make_staging_tables(
+                    true,
+                    feature_learner().population_schema(),
+                    feature_learner().peripheral_schema() );
+
+            sql.insert(
+                sql.end(), staging_tables.begin(), staging_tables.end() );
+        }
+
+    const auto features =
+        feature_learner().to_sql( _categories, _prefix, 0, _subfeatures );
+
+    sql.insert( sql.end(), features.begin(), features.end() );
+
+    return sql;
 }
 
 // ----------------------------------------------------------------------------

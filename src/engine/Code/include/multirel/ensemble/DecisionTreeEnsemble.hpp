@@ -124,6 +124,9 @@ class DecisionTreeEnsemble
     /// Trivial accessor
     bool allow_http() const { return impl().allow_http_; }
 
+    /// Whether there are mappings
+    const bool has_mappings() const { return ( true && impl().mappings_ ); }
+
     /// Trivial getter
     inline multithreading::Communicator *comm() { return impl().comm_; }
 

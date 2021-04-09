@@ -407,6 +407,9 @@ class FastProp
     /// Trivial accessor
     bool allow_http() const { return allow_http_; }
 
+    /// Whether there are mappings
+    const bool has_mappings() const { return ( true && mappings_ ); }
+
     /// Trivial (const) accessor
     const Hyperparameters& hyperparameters() const
     {
