@@ -7,6 +7,20 @@ namespace stl
 
 struct make
 {
+    /// Generates a string from a range
+    template <class RangeType>
+    static std::string string( RangeType range )
+    {
+        std::stringstream stream;
+
+        for ( const auto& val : range )
+            {
+                stream << val;
+            }
+
+        return stream.str();
+    }
+
     /// Generates a vector from a range
     template <class T, class RangeType>
     static std::vector<T> vector( RangeType range )

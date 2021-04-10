@@ -488,7 +488,35 @@ std::string SQLGenerator::make_staging_table(
 
     sql << handle_many_to_one_joins( _schema.name_, "t1" );
 
-    sql << ";";
+    sql << ";\n\n";
+
+    // ------------------------------------------------------------------------
+
+    const auto extract_colname = []( const std::string& _col ) -> std::string {
+        const auto pos = _col.find( "__MAPPING_" );
+        assert_true( pos != std::string::npos );
+        return to_lower( _col.substr( 0, pos ) );
+    };
+
+    // ------------------------------------------------------------------------
+
+    const auto join =
+        [&name, extract_colname]( const std::string& _colname ) -> std::string {
+        return "UPDATE \"" + name + "\"\nSET \"" + to_lower( _colname ) +
+               "\" = t2.\"value\"\nFROM \"" + to_upper( _colname ) +
+               "\" AS t2\nWHERE \"" + name + "\".\"" +
+               extract_colname( _colname ) + "\" = t2.\"key\";\n\n";
+    };
+
+    // ------------------------------------------------------------------------
+
+    const auto join_mappings = [&_mappings, join]() -> std::string {
+        return stl::make::string( _mappings | std::views::transform( join ) );
+    };
+
+    // ------------------------------------------------------------------------
+
+    sql << join_mappings();
 
     sql << "\n\n\n";
 
