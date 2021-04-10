@@ -286,6 +286,28 @@ std::string SQLGenerator::handle_many_to_one_joins(
 
 // ----------------------------------------------------------------------------
 
+std::string SQLGenerator::join_mappings(
+    const std::string& _name, const std::vector<std::string>& _mappings )
+{
+    const auto extract_colname = []( const std::string& _col ) -> std::string {
+        const auto pos = _col.find( "__MAPPING_" );
+        assert_true( pos != std::string::npos );
+        return to_lower( _col.substr( 0, pos ) );
+    };
+
+    const auto join = [&_name, extract_colname](
+                          const std::string& _colname ) -> std::string {
+        return "UPDATE \"" + _name + "\"\nSET \"" + to_lower( _colname ) +
+               "\" = t2.\"value\"\nFROM \"" + to_upper( _colname ) +
+               "\" AS t2\nWHERE \"" + _name + "\".\"" +
+               extract_colname( _colname ) + "\" = t2.\"key\";\n\n";
+    };
+
+    return stl::make::string( _mappings | std::views::transform( join ) );
+}
+
+// ----------------------------------------------------------------------------
+
 std::string SQLGenerator::make_epoch_time(
     const std::string& _raw_name, const std::string& _alias )
 {
@@ -375,9 +397,8 @@ std::string SQLGenerator::make_relative_time(
 
 // ----------------------------------------------------------------------------
 
-std::string SQLGenerator::make_staging_table(
+std::vector<std::string> SQLGenerator::make_staging_columns(
     const bool& _include_targets,
-    const size_t _number,
     const Placeholder& _schema,
     const std::vector<std::string>& _mappings )
 {
@@ -463,15 +484,34 @@ std::string SQLGenerator::make_staging_table(
                                               time_stamps,
                                               mappings } );
 
-    const auto columns =
-        stl::make::vector<std::string>( all | std::ranges::views::join );
+    // ------------------------------------------------------------------------
+
+    return stl::make::vector<std::string>( all | std::ranges::views::join );
 
     // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::string SQLGenerator::make_staging_table(
+    const bool& _include_targets,
+    const size_t _number,
+    const Placeholder& _schema,
+    const std::vector<std::string>& _mappings )
+{
+    // ------------------------------------------------------------------------
+
+    const auto columns =
+        make_staging_columns( _include_targets, _schema, _mappings );
 
     const auto name = to_upper( get_table_name( _schema.name_ ) ) +
                       "__STAGED_TABLE_" + std::to_string( _number );
 
+    // ------------------------------------------------------------------------
+
     std::stringstream sql;
+
+    // ------------------------------------------------------------------------
 
     sql << "DROP TABLE IF EXISTS \"" << name << "\";\n\n";
 
@@ -490,33 +530,7 @@ std::string SQLGenerator::make_staging_table(
 
     sql << ";\n\n";
 
-    // ------------------------------------------------------------------------
-
-    const auto extract_colname = []( const std::string& _col ) -> std::string {
-        const auto pos = _col.find( "__MAPPING_" );
-        assert_true( pos != std::string::npos );
-        return to_lower( _col.substr( 0, pos ) );
-    };
-
-    // ------------------------------------------------------------------------
-
-    const auto join =
-        [&name, extract_colname]( const std::string& _colname ) -> std::string {
-        return "UPDATE \"" + name + "\"\nSET \"" + to_lower( _colname ) +
-               "\" = t2.\"value\"\nFROM \"" + to_upper( _colname ) +
-               "\" AS t2\nWHERE \"" + name + "\".\"" +
-               extract_colname( _colname ) + "\" = t2.\"key\";\n\n";
-    };
-
-    // ------------------------------------------------------------------------
-
-    const auto join_mappings = [&_mappings, join]() -> std::string {
-        return stl::make::string( _mappings | std::views::transform( join ) );
-    };
-
-    // ------------------------------------------------------------------------
-
-    sql << join_mappings();
+    sql << join_mappings( name, _mappings );
 
     sql << "\n\n\n";
 
