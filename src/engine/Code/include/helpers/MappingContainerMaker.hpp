@@ -11,6 +11,8 @@ class MappingContainerMaker
     typedef MappingContainer::Colnames Colnames;
     typedef MappedContainer::MappedColumns MappedColumns;
     typedef MappingContainer::MappingForDf MappingForDf;
+    typedef std::pair<Int, std::vector<size_t>> RownumMap;
+    typedef std::pair<Int, std::vector<Float>> ValueMap;
 
    public:
     /// Fits the mapping container.
@@ -76,11 +78,20 @@ class MappingContainerMaker
         const std::vector<DataFrame>& _peripheral_tables,
         logging::ProgressLogger* _progress_logger );
 
+    /// Generates a lambda function to calculate the average targets.
+    static std::function<ValueMap( const RownumMap& )> make_calc_avg_targets(
+        const std::vector<DataFrame>& _main_tables );
+
     /// Generates a new mapping based on the rownum_map for a particular column.
     static std::shared_ptr<const std::map<Int, std::vector<Float>>>
     make_mapping(
         const size_t _min_freq,
         const std::map<Int, std::vector<size_t>>& _rownum_map,
+        const std::vector<DataFrame>& _main_tables,
+        const std::vector<DataFrame>& _peripheral_tables );
+
+    /// Generates a lambda function to match the rownums.
+    static std::function<RownumMap( const RownumMap& )> make_match_rownums(
         const std::vector<DataFrame>& _main_tables,
         const std::vector<DataFrame>& _peripheral_tables );
 

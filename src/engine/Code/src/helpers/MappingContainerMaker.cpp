@@ -352,53 +352,12 @@ size_t MappingContainerMaker::infer_num_targets( const MappingForDf& _mapping )
 
 // ----------------------------------------------------------------------------
 
-std::shared_ptr<const std::map<Int, std::vector<Float>>>
-MappingContainerMaker::make_mapping(
-    const size_t _min_freq,
-    const std::map<Int, std::vector<size_t>>& _rownum_map,
-    const std::vector<DataFrame>& _main_tables,
-    const std::vector<DataFrame>& _peripheral_tables )
+std::function<typename MappingContainerMaker::ValueMap(
+    const typename MappingContainerMaker::RownumMap& )>
+MappingContainerMaker::make_calc_avg_targets(
+    const std::vector<DataFrame>& _main_tables )
 {
-    // -----------------------------------------------------------
-
-    assert_true( _main_tables.size() == _peripheral_tables.size() );
-
-    assert_true( _main_tables.size() > 0 );
-
-    // -----------------------------------------------------------
-
-    const auto match_rownums =
-        [&_main_tables, &_peripheral_tables](
-            const std::pair<Int, std::vector<size_t>>& _input )
-        -> std::pair<Int, std::vector<size_t>> {
-        auto rownums = _input.second;
-
-        for ( size_t i = 0; i < _main_tables.size(); ++i )
-            {
-                const auto ix = _main_tables.size() - 1 - i;
-
-                rownums = MappingContainerMaker::find_output_ix(
-                    rownums,
-                    _main_tables.at( ix ),
-                    _peripheral_tables.at( ix ) );
-            }
-
-        return std::make_pair( _input.first, rownums );
-    };
-
-    // -----------------------------------------------------------
-
-    const auto greater_than_min_freq =
-        [_min_freq](
-            const std::pair<Int, std::vector<size_t>>& _input ) -> bool {
-        return _input.second.size() >= _min_freq;
-    };
-
-    // -----------------------------------------------------------
-
-    const auto calc_avg_targets =
-        [&_main_tables]( const std::pair<Int, std::vector<size_t>>& _input )
-        -> std::pair<Int, std::vector<Float>> {
+    return [&_main_tables]( const RownumMap& _input ) -> ValueMap {
         // -----------------------------------------------------------
 
         const auto& rownums = _input.second;
@@ -431,8 +390,31 @@ MappingContainerMaker::make_mapping(
         return std::make_pair(
             _input.first, stl::make::vector<Float>( range ) );
     };
+}
 
-    // -----------------------------------------------------------
+// ----------------------------------------------------------------------------
+
+std::shared_ptr<const std::map<Int, std::vector<Float>>>
+MappingContainerMaker::make_mapping(
+    const size_t _min_freq,
+    const std::map<Int, std::vector<size_t>>& _rownum_map,
+    const std::vector<DataFrame>& _main_tables,
+    const std::vector<DataFrame>& _peripheral_tables )
+{
+    assert_true( _main_tables.size() == _peripheral_tables.size() );
+
+    assert_true( _main_tables.size() > 0 );
+
+    const auto match_rownums =
+        make_match_rownums( _main_tables, _peripheral_tables );
+
+    const auto greater_than_min_freq =
+        [_min_freq](
+            const std::pair<Int, std::vector<size_t>>& _input ) -> bool {
+        return _input.second.size() >= _min_freq;
+    };
+
+    const auto calc_avg_targets = make_calc_avg_targets( _main_tables );
 
     auto range = _rownum_map | std::views::transform( match_rownums ) |
                  std::views::filter( greater_than_min_freq ) |
@@ -440,8 +422,32 @@ MappingContainerMaker::make_mapping(
 
     return std::make_shared<const std::map<Int, std::vector<Float>>>(
         range.begin(), range.end() );
+}
 
-    // -----------------------------------------------------------
+// ----------------------------------------------------------------------------
+
+std::function<typename MappingContainerMaker::RownumMap(
+    const typename MappingContainerMaker::RownumMap& )>
+MappingContainerMaker::make_match_rownums(
+    const std::vector<DataFrame>& _main_tables,
+    const std::vector<DataFrame>& _peripheral_tables )
+{
+    return [&_main_tables,
+            &_peripheral_tables]( const RownumMap& _input ) -> RownumMap {
+        auto rownums = _input.second;
+
+        for ( size_t i = 0; i < _main_tables.size(); ++i )
+            {
+                const auto ix = _main_tables.size() - 1 - i;
+
+                rownums = MappingContainerMaker::find_output_ix(
+                    rownums,
+                    _main_tables.at( ix ),
+                    _peripheral_tables.at( ix ) );
+            }
+
+        return std::make_pair( _input.first, rownums );
+    };
 }
 
 // ----------------------------------------------------------------------------
