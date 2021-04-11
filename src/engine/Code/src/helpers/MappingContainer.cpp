@@ -29,9 +29,13 @@ MappingContainer::MappingContainer(
 
 MappingContainer::MappingContainer( const Poco::JSON::Object& _obj )
     : categorical_( extract_mapping_vector( _obj, "categorical_" ) ),
+      categorical_names_( extract_colnames( _obj, "categorical_names_" ) ),
       discrete_( extract_mapping_vector( _obj, "discrete_" ) ),
+      discrete_names_( extract_colnames( _obj, "discrete_names_" ) ),
       subcontainers_( extract_subcontainers( _obj ) ),
-      text_( extract_mapping_vector( _obj, "text_" ) )
+      table_names_( extract_table_names( _obj ) ),
+      text_( extract_mapping_vector( _obj, "text_" ) ),
+      text_names_( extract_colnames( _obj, "text_names_" ) )
 {
     check_lengths();
 }
@@ -246,6 +250,31 @@ std::vector<std::string> MappingContainer::discrete_to_sql(
 
 // ----------------------------------------------------------------------------
 
+std::vector<typename MappingContainer::Colnames>
+MappingContainer::extract_colnames(
+    const Poco::JSON::Object& _obj, const std::string& _key )
+{
+    auto arr = _obj.getArray( _key );
+
+    throw_unless( arr, "Expected array called '" + _key + "'" );
+
+    auto colnames = std::vector<Colnames>();
+
+    for ( size_t i = 0; i < arr->size(); ++i )
+        {
+            const auto ptr = arr->getArray( i );
+
+            auto vec = std::make_shared<std::vector<std::string>>(
+                jsonutils::JSON::array_to_vector<std::string>( ptr ) );
+
+            colnames.emplace_back( std::move( vec ) );
+        }
+
+    return colnames;
+}
+
+// ----------------------------------------------------------------------------
+
 std::vector<typename MappingContainer::MappingForDf>
 MappingContainer::extract_mapping_vector(
     const Poco::JSON::Object& _obj, const std::string& _key )
@@ -337,6 +366,19 @@ MappingContainer::extract_subcontainers( const Poco::JSON::Object& _obj )
     return subcontainers;
 }
 
+// ----------------------------------------------------------------------------
+
+typename MappingContainer::TableNames MappingContainer::extract_table_names(
+    const Poco::JSON::Object& _obj )
+{
+    auto arr = _obj.getArray( "table_names_" );
+
+    throw_unless( arr, "Expected array called table_names_'" );
+
+    return std::make_shared<typename TableNames::element_type>(
+        jsonutils::JSON::array_to_vector<std::string>( arr ) );
+}
+
 // ------------------------------------------------------------------------
 
 std::vector<std::pair<Int, Float>> MappingContainer::make_pairs(
@@ -414,88 +456,28 @@ std::vector<std::string> MappingContainer::subcontainers_to_sql(
 
 Poco::JSON::Object::Ptr MappingContainer::to_json_obj() const
 {
-    // --------------------------------------------------------------
-
-    const auto map_to_object =
-        []( const std::map<Int, std::vector<Float>>& _map ) {
-            Poco::JSON::Object::Ptr obj( new Poco::JSON::Object() );
-
-            for ( const auto& [key, value] : _map )
-                {
-                    obj->set(
-                        std::to_string( key ),
-                        jsonutils::JSON::vector_to_array_ptr( value ) );
-                }
-
-            return obj;
-        };
-
-    // --------------------------------------------------------------
-
-    const auto transform_mapping =
-        [map_to_object]( const MappingForDf& _mapping ) {
-            auto arr = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
-
-            for ( const auto& ptr : _mapping )
-                {
-                    assert_true( ptr );
-                    arr->add( map_to_object( *ptr ) );
-                }
-
-            return arr;
-        };
-
-    // --------------------------------------------------------------
-
-    const auto transform_mapping_vec =
-        [transform_mapping]( const std::vector<MappingForDf>& _mapping_vec ) {
-            auto arr = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
-
-            for ( const auto& vec : _mapping_vec )
-                {
-                    arr->add( transform_mapping( vec ) );
-                }
-
-            return arr;
-        };
-
-    // --------------------------------------------------------------
-
-    const auto transform_subcontainers =
-        []( const std::vector<std::shared_ptr<const MappingContainer>>&
-                _subcontainers ) {
-            auto arr = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
-
-            for ( const auto& s : _subcontainers )
-                {
-                    if ( s )
-                        {
-                            arr->add( s->to_json_obj() );
-                        }
-                    else
-                        {
-                            arr->add( "" );
-                        }
-                }
-
-            return arr;
-        };
-
-    // --------------------------------------------------------------
+    assert_true( table_names_ );
 
     auto obj = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
 
     obj->set( "categorical_", transform_mapping_vec( categorical_ ) );
 
+    obj->set( "categorical_names_", transform_colnames( categorical_names_ ) );
+
     obj->set( "discrete_", transform_mapping_vec( discrete_ ) );
+
+    obj->set( "discrete_names_", transform_colnames( discrete_names_ ) );
 
     obj->set( "subcontainers_", transform_subcontainers( subcontainers_ ) );
 
+    obj->set(
+        "table_names_", jsonutils::JSON::vector_to_array_ptr( *table_names_ ) );
+
     obj->set( "text_", transform_mapping_vec( text_ ) );
 
-    return obj;
+    obj->set( "text_names_", transform_colnames( text_names_ ) );
 
-    // --------------------------------------------------------------
+    return obj;
 }
 
 // ----------------------------------------------------------------------------
@@ -561,6 +543,94 @@ MappingContainer::to_sql(
     return std::make_pair( sql, colname_map );
 
     // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+Poco::JSON::Array::Ptr MappingContainer::transform_colnames(
+    const std::vector<Colnames>& _colnames ) const
+{
+    auto arr = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+    for ( const auto& c : _colnames )
+        {
+            assert_true( c );
+            arr->add( jsonutils::JSON::vector_to_array_ptr( *c ) );
+        }
+
+    return arr;
+}
+
+// ----------------------------------------------------------------------------
+
+Poco::JSON::Array::Ptr MappingContainer::transform_mapping_vec(
+    const std::vector<MappingForDf>& _mapping_vec ) const
+{
+    // --------------------------------------------------------------
+
+    const auto map_to_object =
+        []( const std::map<Int, std::vector<Float>>& _map ) {
+            Poco::JSON::Object::Ptr obj( new Poco::JSON::Object() );
+
+            for ( const auto& [key, value] : _map )
+                {
+                    obj->set(
+                        std::to_string( key ),
+                        jsonutils::JSON::vector_to_array_ptr( value ) );
+                }
+
+            return obj;
+        };
+
+    // --------------------------------------------------------------
+
+    const auto transform_mapping =
+        [map_to_object]( const MappingForDf& _mapping ) {
+            auto arr = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+
+            for ( const auto& ptr : _mapping )
+                {
+                    assert_true( ptr );
+                    arr->add( map_to_object( *ptr ) );
+                }
+
+            return arr;
+        };
+
+    // --------------------------------------------------------------
+
+    auto arr = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+
+    for ( const auto& vec : _mapping_vec )
+        {
+            arr->add( transform_mapping( vec ) );
+        }
+
+    return arr;
+
+    // --------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+Poco::JSON::Array::Ptr MappingContainer::transform_subcontainers(
+    const std::vector<std::shared_ptr<const MappingContainer>>& _subcontainers )
+    const
+{
+    auto arr = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+
+    for ( const auto& s : _subcontainers )
+        {
+            if ( s )
+                {
+                    arr->add( s->to_json_obj() );
+                }
+            else
+                {
+                    arr->add( "" );
+                }
+        }
+
+    return arr;
 }
 
 // ----------------------------------------------------------------------------

@@ -76,6 +76,10 @@ class MappingContainer
         const std::function<void( const std::string&, const std::string& )>&
             _add_to_map ) const;
 
+    /// Extracts the column names from the JSON object.
+    static std::vector<Colnames> extract_colnames(
+        const Poco::JSON::Object& _obj, const std::string& _key );
+
     /// Extracts a vector containing mappings from the object.
     static std::vector<MappingForDf> extract_mapping_vector(
         const Poco::JSON::Object& _obj, const std::string& _key );
@@ -83,6 +87,9 @@ class MappingContainer
     /// Extracts the subcontainers from an object.
     static std::vector<std::shared_ptr<const MappingContainer>>
     extract_subcontainers( const Poco::JSON::Object& _obj );
+
+    /// Extracts the table names from an object.
+    static TableNames extract_table_names( const Poco::JSON::Object& _obj );
 
     /// Generates the key-value-pairs.
     std::vector<std::pair<Int, Float>> make_pairs(
@@ -97,6 +104,19 @@ class MappingContainer
         const std::shared_ptr<const std::vector<strings::String>>& _categories,
         const std::string& _feature_prefix,
         const std::function<void( const ColnameMap& )>& _merge_map ) const;
+
+    /// Transforms the column names to JSON.
+    Poco::JSON::Array::Ptr transform_colnames(
+        const std::vector<Colnames>& _colnames ) const;
+
+    /// Transforms a vector of mappings to JSON.
+    Poco::JSON::Array::Ptr transform_mapping_vec(
+        const std::vector<MappingForDf>& _mapping_vec ) const;
+
+    /// Transforms the subcontainers to JSON.
+    Poco::JSON::Array::Ptr transform_subcontainers(
+        const std::vector<std::shared_ptr<const MappingContainer>>&
+            _subcontainers ) const;
 
    public:
     /// Trivial (const) accessor.
