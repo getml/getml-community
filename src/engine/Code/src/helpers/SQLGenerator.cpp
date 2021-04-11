@@ -532,7 +532,7 @@ std::string SQLGenerator::make_staging_table(
 
     sql << join_mappings( name, _mappings );
 
-    sql << "\n\n\n";
+    sql << "\n";
 
     // ------------------------------------------------------------------------
 
