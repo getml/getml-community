@@ -42,6 +42,89 @@ MappingContainer::~MappingContainer() = default;
 
 // ----------------------------------------------------------------------------
 
+std::string MappingContainer::categorical_column_to_sql(
+    const std::shared_ptr<const std::vector<strings::String>>& _categories,
+    const std::string& _name,
+    const PtrType& _ptr,
+    const size_t _target_num ) const
+{
+    assert_true( _categories );
+
+    assert_true( _ptr );
+
+    const auto pairs = make_pairs( *_ptr, _target_num );
+
+    std::string sql = make_table_header( _name, false );
+
+    for ( size_t i = 0; i < pairs.size(); ++i )
+        {
+            const std::string begin = ( i == 0 ) ? "" : "      ";
+
+            const auto& p = pairs.at( i );
+
+            assert_true( p.first >= 0 );
+
+            assert_true( static_cast<size_t>( p.first ) < _categories->size() );
+
+            const std::string end =
+                ( i == pairs.size() - 1 ) ? ";\n\n\n" : ",\n";
+
+            sql += begin + "('" + _categories->at( p.first ).str() + "', " +
+                   io::Parser::to_precise_string( p.second ) + ")" + end;
+        }
+
+    return sql;
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<std::string> MappingContainer::categorical_to_sql(
+    const std::shared_ptr<const std::vector<strings::String>>& _categories,
+    const std::string& _feature_prefix,
+    const std::function<void( const std::string&, const std::string& )>&
+        _add_to_map ) const
+{
+    std::vector<std::string> sql;
+
+    for ( size_t i = 0; i < categorical_.size(); ++i )
+        {
+            const auto& c = categorical_.at( i );
+
+            const auto& names = categorical_names_.at( i );
+
+            const auto feature_prefix =
+                _feature_prefix + std::to_string( i + 1 ) + "_";
+
+            assert_true( names );
+
+            assert_true( c.size() == names->size() );
+
+            const auto num_targets =
+                MappingContainerMaker::infer_num_targets( c );
+
+            for ( size_t t = 0; t < num_targets; ++t )
+                {
+                    for ( size_t j = 0; j < c.size(); ++j )
+                        {
+                            const auto& ptr = c.at( j );
+
+                            const auto name = SQLGenerator::to_upper(
+                                MappingContainerMaker::make_colname(
+                                    names->at( j ), feature_prefix, t ) );
+
+                            sql.push_back( categorical_column_to_sql(
+                                _categories, name, ptr, t ) );
+
+                            _add_to_map( table_names_->at( i ), name );
+                        }
+                }
+        }
+
+    return sql;
+}
+
+// ----------------------------------------------------------------------------
+
 void MappingContainer::check_lengths() const
 {
     assert_msg(
@@ -84,6 +167,81 @@ void MappingContainer::check_lengths() const
         "categorical_.size(): " + std::to_string( categorical_.size() ) +
             ", table_names_->size(): " +
             std::to_string( table_names_->size() ) );
+}
+
+// ----------------------------------------------------------------------------
+
+std::string MappingContainer::discrete_column_to_sql(
+    const std::string& _name,
+    const PtrType& _ptr,
+    const size_t _target_num ) const
+{
+    assert_true( _ptr );
+
+    const auto pairs = make_pairs( *_ptr, _target_num );
+
+    std::string sql = make_table_header( _name, true );
+
+    for ( size_t i = 0; i < pairs.size(); ++i )
+        {
+            const std::string begin = ( i == 0 ) ? "" : "      ";
+
+            const auto& p = pairs.at( i );
+
+            const std::string end =
+                ( i == pairs.size() - 1 ) ? ";\n\n\n" : ",\n";
+
+            sql += begin + "(" + std::to_string( p.first ) + ", " +
+                   io::Parser::to_precise_string( p.second ) + ")" + end;
+        }
+
+    return sql;
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<std::string> MappingContainer::discrete_to_sql(
+    const std::string& _feature_prefix,
+    const std::function<void( const std::string&, const std::string& )>&
+        _add_to_map ) const
+{
+    std::vector<std::string> sql;
+
+    for ( size_t i = 0; i < discrete_.size(); ++i )
+        {
+            const auto& d = discrete_.at( i );
+
+            const auto& names = discrete_names_.at( i );
+
+            const auto feature_prefix =
+                _feature_prefix + std::to_string( i + 1 ) + "_";
+
+            assert_true( names );
+
+            assert_true( d.size() == names->size() );
+
+            const auto num_targets =
+                MappingContainerMaker::infer_num_targets( d );
+
+            for ( size_t t = 0; t < num_targets; ++t )
+                {
+                    for ( size_t j = 0; j < d.size(); ++j )
+                        {
+                            const auto& ptr = d.at( j );
+
+                            const auto name = SQLGenerator::to_upper(
+                                MappingContainerMaker::make_colname(
+                                    names->at( j ), feature_prefix, t ) );
+
+                            sql.push_back(
+                                discrete_column_to_sql( name, ptr, t ) );
+
+                            _add_to_map( table_names_->at( i ), name );
+                        }
+                }
+        }
+
+    return sql;
 }
 
 // ----------------------------------------------------------------------------
@@ -177,6 +335,79 @@ MappingContainer::extract_subcontainers( const Poco::JSON::Object& _obj )
         }
 
     return subcontainers;
+}
+
+// ------------------------------------------------------------------------
+
+std::vector<std::pair<Int, Float>> MappingContainer::make_pairs(
+    const Map& _m, const size_t _target_num ) const
+{
+    using Pair = std::pair<Int, Float>;
+
+    auto pairs = std::vector<Pair>();
+
+    for ( const auto& p : _m )
+        {
+            assert_true( _target_num < p.second.size() );
+            pairs.push_back(
+                std::make_pair( p.first, p.second.at( _target_num ) ) );
+        }
+
+    const auto by_value = []( const Pair& _p1, const Pair& _p2 ) -> bool {
+        return _p1.second > _p2.second;
+    };
+
+    std::sort( pairs.begin(), pairs.end(), by_value );
+
+    return pairs;
+}
+
+// ----------------------------------------------------------------------------
+
+std::string MappingContainer::make_table_header(
+    const std::string& _name, const bool _key_is_num ) const
+{
+    std::string sql = "DROP TABLE IF EXISTS \"" + _name + "\";\n\n";
+
+    const std::string key_type = _key_is_num ? "NUMERIC" : "TEXT";
+
+    sql += "CREATE TABLE \"" + _name + "\"(key " + key_type +
+           " NOT NULL PRIMARY KEY, value NUMERIC);\n\n";
+
+    sql += "INSERT INTO \"" + _name + "\"(key, value)\nVALUES";
+
+    return sql;
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<std::string> MappingContainer::subcontainers_to_sql(
+    const std::shared_ptr<const std::vector<strings::String>>& _categories,
+    const std::string& _feature_prefix,
+    const std::function<void( const ColnameMap& )>& _merge_map ) const
+{
+    std::vector<std::string> sql;
+
+    for ( size_t i = 0; i < subcontainers_.size(); ++i )
+        {
+            const auto& s = subcontainers_.at( i );
+
+            if ( s )
+                {
+                    const auto feature_prefix =
+                        _feature_prefix + std::to_string( i + 1 ) + "_";
+
+                    const auto [subfeatures, submap] =
+                        s->to_sql( _categories, feature_prefix );
+
+                    sql.insert(
+                        sql.end(), subfeatures.begin(), subfeatures.end() );
+
+                    _merge_map( submap );
+                }
+        }
+
+    return sql;
 }
 
 // ----------------------------------------------------------------------------
@@ -276,14 +507,6 @@ MappingContainer::to_sql(
 {
     // ------------------------------------------------------------------------
 
-    using PtrType = typename MappingForDf::value_type;
-
-    using Pair = std::pair<Int, Float>;
-
-    using Map = typename PtrType::element_type;
-
-    // ------------------------------------------------------------------------
-
     ColnameMap colname_map;
 
     // ------------------------------------------------------------------------
@@ -317,182 +540,21 @@ MappingContainer::to_sql(
 
     // ------------------------------------------------------------------------
 
-    const auto by_value = []( const Pair& _p1, const Pair& _p2 ) -> bool {
-        return _p1.second > _p2.second;
-    };
+    const auto categorical =
+        categorical_to_sql( _categories, _feature_prefix, add_to_map );
+
+    const auto discrete = discrete_to_sql( _feature_prefix, add_to_map );
+
+    const auto subcontainers =
+        subcontainers_to_sql( _categories, _feature_prefix, merge_map );
 
     // ------------------------------------------------------------------------
 
-    const auto make_pairs =
-        [by_value](
-            const Map& _m, const size_t _target_num ) -> std::vector<Pair> {
-        auto pairs = std::vector<Pair>();
-        for ( const auto& p : _m )
-            {
-                assert_true( _target_num < p.second.size() );
-                pairs.push_back(
-                    std::make_pair( p.first, p.second.at( _target_num ) ) );
-            }
-        std::sort( pairs.begin(), pairs.end(), by_value );
-        return pairs;
-    };
+    const auto all = std::vector<std::vector<std::string>>(
+        { categorical, discrete, subcontainers } );
 
-    // ------------------------------------------------------------------------
-
-    const auto make_table_header = []( const std::string& _name,
-                                       const bool _key_is_num ) -> std::string {
-        std::string sql = "DROP TABLE IF EXISTS \"" + _name + "\";\n\n";
-        const std::string key_type = _key_is_num ? "NUMERIC" : "TEXT";
-        sql += "CREATE TABLE \"" + _name + "\"(key " + key_type +
-               " NOT NULL PRIMARY KEY, value NUMERIC);\n\n";
-        sql += "INSERT INTO \"" + _name + "\"(key, value)\nVALUES";
-        return sql;
-    };
-
-    // ------------------------------------------------------------------------
-
-    assert_true( _categories );
-
-    const auto categorical_to_sql =
-        [_categories, make_pairs, make_table_header](
-            const std::string& _name,
-            const PtrType& _ptr,
-            const size_t _target_num ) -> std::string {
-        assert_true( _ptr );
-        const auto pairs = make_pairs( *_ptr, _target_num );
-        std::string sql = make_table_header( _name, false );
-        for ( size_t i = 0; i < pairs.size(); ++i )
-            {
-                const std::string begin = ( i == 0 ) ? "" : "      ";
-                const auto& p = pairs.at( i );
-                assert_true( p.first >= 0 );
-                assert_true(
-                    static_cast<size_t>( p.first ) < _categories->size() );
-                const std::string end =
-                    ( i == pairs.size() - 1 ) ? ";\n\n\n" : ",\n";
-                sql += begin + "('" + _categories->at( p.first ).str() + "', " +
-                       io::Parser::to_precise_string( p.second ) + ")" + end;
-            }
-        return sql;
-    };
-
-    // ------------------------------------------------------------------------
-
-    const auto discrete_to_sql = [make_pairs, make_table_header](
-                                     const std::string& _name,
-                                     const PtrType& _ptr,
-                                     const size_t _target_num ) -> std::string {
-        assert_true( _ptr );
-        const auto pairs = make_pairs( *_ptr, _target_num );
-        std::string sql = make_table_header( _name, true );
-        for ( size_t i = 0; i < pairs.size(); ++i )
-            {
-                const std::string begin = ( i == 0 ) ? "" : "      ";
-                const auto& p = pairs.at( i );
-                const std::string end =
-                    ( i == pairs.size() - 1 ) ? ";\n\n\n" : ",\n";
-                sql += begin + "(" + std::to_string( p.first ) + ", " +
-                       io::Parser::to_precise_string( p.second ) + ")" + end;
-            }
-        return sql;
-    };
-
-    // ------------------------------------------------------------------------
-
-    std::vector<std::string> sql;
-
-    // ------------------------------------------------------------------------
-
-    for ( size_t i = 0; i < categorical_.size(); ++i )
-        {
-            const auto& c = categorical_.at( i );
-
-            const auto& names = categorical_names_.at( i );
-
-            const auto feature_prefix =
-                _feature_prefix + std::to_string( i + 1 ) + "_";
-
-            assert_true( names );
-
-            assert_true( c.size() == names->size() );
-
-            const auto num_targets =
-                MappingContainerMaker::infer_num_targets( c );
-
-            for ( size_t t = 0; t < num_targets; ++t )
-                {
-                    for ( size_t j = 0; j < c.size(); ++j )
-                        {
-                            const auto& ptr = c.at( j );
-
-                            const auto name = SQLGenerator::to_upper(
-                                MappingContainerMaker::make_colname(
-                                    names->at( j ), feature_prefix, t ) );
-
-                            sql.push_back( categorical_to_sql( name, ptr, t ) );
-
-                            add_to_map( table_names_->at( i ), name );
-                        }
-                }
-        }
-
-    // ------------------------------------------------------------------------
-
-    assert_true( discrete_.size() == discrete_names_.size() );
-
-    for ( size_t i = 0; i < discrete_.size(); ++i )
-        {
-            const auto& d = discrete_.at( i );
-
-            const auto& names = discrete_names_.at( i );
-
-            const auto feature_prefix =
-                _feature_prefix + std::to_string( i + 1 ) + "_";
-
-            assert_true( names );
-
-            assert_true( d.size() == names->size() );
-
-            const auto num_targets =
-                MappingContainerMaker::infer_num_targets( d );
-
-            for ( size_t t = 0; t < num_targets; ++t )
-                {
-                    for ( size_t j = 0; j < d.size(); ++j )
-                        {
-                            const auto& ptr = d.at( j );
-
-                            const auto name = SQLGenerator::to_upper(
-                                MappingContainerMaker::make_colname(
-                                    names->at( j ), feature_prefix, t ) );
-
-                            sql.push_back( discrete_to_sql( name, ptr, t ) );
-
-                            add_to_map( table_names_->at( i ), name );
-                        }
-                }
-        }
-
-    // ------------------------------------------------------------------------
-
-    for ( size_t i = 0; i < subcontainers_.size(); ++i )
-        {
-            const auto& s = subcontainers_.at( i );
-
-            if ( s )
-                {
-                    const auto feature_prefix =
-                        _feature_prefix + std::to_string( i + 1 ) + "_";
-
-                    const auto [subfeatures, submap] =
-                        s->to_sql( _categories, feature_prefix );
-
-                    sql.insert(
-                        sql.end(), subfeatures.begin(), subfeatures.end() );
-
-                    merge_map( submap );
-                }
-        }
+    const auto sql =
+        stl::make::vector<std::string>( all | std::ranges::views::join );
 
     // ------------------------------------------------------------------------
 
