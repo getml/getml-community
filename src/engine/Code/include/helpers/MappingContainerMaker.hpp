@@ -11,8 +11,8 @@ class MappingContainerMaker
     typedef MappingContainer::Colnames Colnames;
     typedef MappedContainer::MappedColumns MappedColumns;
     typedef MappingContainer::MappingForDf MappingForDf;
-    typedef std::pair<Int, std::vector<size_t>> RownumMap;
-    typedef std::pair<Int, std::vector<Float>> ValueMap;
+    typedef std::pair<Int, std::vector<size_t>> RownumPair;
+    typedef std::pair<Int, std::vector<Float>> ValuePair;
 
    public:
     /// Fits the mapping container.
@@ -27,6 +27,12 @@ class MappingContainerMaker
 
     /// Infers the number of targets on which the mapping was fitted.
     static size_t infer_num_targets( const MappingForDf& _mapping );
+
+    /// Generates the column name for the mapping.
+    static std::string make_colname(
+        const std::string& _name,
+        const std::string& _feature_postfix,
+        const size_t _target );
 
     /// Transform categorical columns by mapping them onto
     /// the corresponding weights.
@@ -79,7 +85,7 @@ class MappingContainerMaker
         logging::ProgressLogger* _progress_logger );
 
     /// Generates a lambda function to calculate the average targets.
-    static std::function<ValueMap( const RownumMap& )> make_calc_avg_targets(
+    static std::function<ValuePair( const RownumPair& )> make_calc_avg_targets(
         const std::vector<DataFrame>& _main_tables );
 
     /// Generates a new mapping based on the rownum_map for a particular column.
@@ -91,7 +97,7 @@ class MappingContainerMaker
         const std::vector<DataFrame>& _peripheral_tables );
 
     /// Generates a lambda function to match the rownums.
-    static std::function<RownumMap( const RownumMap& )> make_match_rownums(
+    static std::function<RownumPair( const RownumPair& )> make_match_rownums(
         const std::vector<DataFrame>& _main_tables,
         const std::vector<DataFrame>& _peripheral_tables );
 

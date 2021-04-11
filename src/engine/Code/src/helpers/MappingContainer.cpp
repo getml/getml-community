@@ -272,8 +272,7 @@ Poco::JSON::Object::Ptr MappingContainer::to_json_obj() const
 std::pair<std::vector<std::string>, typename MappingContainer::ColnameMap>
 MappingContainer::to_sql(
     const std::shared_ptr<const std::vector<strings::String>>& _categories,
-    const std::string& _feature_prefix,
-    const size_t _offset ) const
+    const std::string& _feature_prefix ) const
 {
     // ------------------------------------------------------------------------
 
@@ -410,6 +409,9 @@ MappingContainer::to_sql(
 
             const auto& names = categorical_names_.at( i );
 
+            const auto feature_prefix =
+                _feature_prefix + std::to_string( i + 1 ) + "_";
+
             assert_true( names );
 
             assert_true( c.size() == names->size() );
@@ -424,11 +426,8 @@ MappingContainer::to_sql(
                             const auto& ptr = c.at( j );
 
                             const auto name = SQLGenerator::to_upper(
-                                                  SQLGenerator::make_colname(
-                                                      names->at( j ) ) ) +
-                                              "__MAPPING_" + _feature_prefix +
-                                              "TARGET_" +
-                                              std::to_string( t + 1 );
+                                MappingContainerMaker::make_colname(
+                                    names->at( j ), feature_prefix, t ) );
 
                             sql.push_back( categorical_to_sql( name, ptr, t ) );
 
@@ -447,6 +446,9 @@ MappingContainer::to_sql(
 
             const auto& names = discrete_names_.at( i );
 
+            const auto feature_prefix =
+                _feature_prefix + std::to_string( i + 1 ) + "_";
+
             assert_true( names );
 
             assert_true( d.size() == names->size() );
@@ -461,11 +463,8 @@ MappingContainer::to_sql(
                             const auto& ptr = d.at( j );
 
                             const auto name = SQLGenerator::to_upper(
-                                                  SQLGenerator::make_colname(
-                                                      names->at( j ) ) ) +
-                                              "__MAPPING_" + _feature_prefix +
-                                              "TARGET_" +
-                                              std::to_string( t + 1 );
+                                MappingContainerMaker::make_colname(
+                                    names->at( j ), feature_prefix, t ) );
 
                             sql.push_back( discrete_to_sql( name, ptr, t ) );
 
@@ -486,7 +485,7 @@ MappingContainer::to_sql(
                         _feature_prefix + std::to_string( i + 1 ) + "_";
 
                     const auto [subfeatures, submap] =
-                        s->to_sql( _categories, feature_prefix, _offset );
+                        s->to_sql( _categories, feature_prefix );
 
                     sql.insert(
                         sql.end(), subfeatures.begin(), subfeatures.end() );

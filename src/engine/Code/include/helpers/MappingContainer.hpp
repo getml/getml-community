@@ -40,8 +40,7 @@ class MappingContainer
     /// Expresses the mapping as SQL
     std::pair<std::vector<std::string>, ColnameMap> to_sql(
         const std::shared_ptr<const std::vector<strings::String>>& _categories,
-        const std::string& _feature_prefix,
-        const size_t _offset ) const;
+        const std::string& _feature_prefix ) const;
 
    private:
     /// Checks the lengths of the mappings.

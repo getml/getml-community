@@ -352,12 +352,12 @@ size_t MappingContainerMaker::infer_num_targets( const MappingForDf& _mapping )
 
 // ----------------------------------------------------------------------------
 
-std::function<typename MappingContainerMaker::ValueMap(
-    const typename MappingContainerMaker::RownumMap& )>
+std::function<typename MappingContainerMaker::ValuePair(
+    const typename MappingContainerMaker::RownumPair& )>
 MappingContainerMaker::make_calc_avg_targets(
     const std::vector<DataFrame>& _main_tables )
 {
-    return [&_main_tables]( const RownumMap& _input ) -> ValueMap {
+    return [&_main_tables]( const RownumPair& _input ) -> ValuePair {
         // -----------------------------------------------------------
 
         const auto& rownums = _input.second;
@@ -394,6 +394,17 @@ MappingContainerMaker::make_calc_avg_targets(
 
 // ----------------------------------------------------------------------------
 
+std::string MappingContainerMaker::make_colname(
+    const std::string& _name,
+    const std::string& _feature_postfix,
+    const size_t _target )
+{
+    return SQLGenerator::make_colname( _name ) + "__mapping_" +
+           _feature_postfix + "target_" + std::to_string( _target + 1 );
+}
+
+// ----------------------------------------------------------------------------
+
 std::shared_ptr<const std::map<Int, std::vector<Float>>>
 MappingContainerMaker::make_mapping(
     const size_t _min_freq,
@@ -409,8 +420,7 @@ MappingContainerMaker::make_mapping(
         make_match_rownums( _main_tables, _peripheral_tables );
 
     const auto greater_than_min_freq =
-        [_min_freq](
-            const std::pair<Int, std::vector<size_t>>& _input ) -> bool {
+        [_min_freq]( const RownumPair& _input ) -> bool {
         return _input.second.size() >= _min_freq;
     };
 
@@ -426,14 +436,14 @@ MappingContainerMaker::make_mapping(
 
 // ----------------------------------------------------------------------------
 
-std::function<typename MappingContainerMaker::RownumMap(
-    const typename MappingContainerMaker::RownumMap& )>
+std::function<typename MappingContainerMaker::RownumPair(
+    const typename MappingContainerMaker::RownumPair& )>
 MappingContainerMaker::make_match_rownums(
     const std::vector<DataFrame>& _main_tables,
     const std::vector<DataFrame>& _peripheral_tables )
 {
     return [&_main_tables,
-            &_peripheral_tables]( const RownumMap& _input ) -> RownumMap {
+            &_peripheral_tables]( const RownumPair& _input ) -> RownumPair {
         auto rownums = _input.second;
 
         for ( size_t i = 0; i < _main_tables.size(); ++i )
@@ -567,8 +577,8 @@ std::optional<const MappedContainer> MappingContainerMaker::transform(
     auto progress_logger = logging::ProgressLogger(
         "Building the mapping columns...", _logger, total );
 
-    const auto ptr = transform_table_holder(
-        _mapping, table_holder, "mapping_", &progress_logger );
+    const auto ptr =
+        transform_table_holder( _mapping, table_holder, "", &progress_logger );
 
     assert_true( ptr );
 
@@ -607,13 +617,10 @@ MappingContainerMaker::transform_categorical(
             const size_t i ) -> Column<Float> {
         const auto colnum = i / num_targets;
         const auto target_num = i % num_targets;
-        const auto feature_postfix = _feature_postfix +
-                                     std::to_string( colnum + 1 ) + "_" +
-                                     std::to_string( target_num + 1 );
         return MappingContainerMaker::transform_categorical_column(
             _mapping,
             _categorical,
-            feature_postfix,
+            _feature_postfix,
             num_targets,
             colnum,
             target_num );
@@ -668,8 +675,10 @@ Column<Float> MappingContainerMaker::transform_categorical_column(
                 }
         }
 
-    return Column<Float>(
-        vec, cat_col.name_ + "__" + _feature_postfix, vec->size(), "" );
+    const auto colname =
+        make_colname( cat_col.name_, _feature_postfix, _target_num );
+
+    return Column<Float>( vec, colname, vec->size(), "" );
 }
 
 // ----------------------------------------------------------------------------
@@ -698,13 +707,10 @@ MappingContainerMaker::transform_discrete(
             const size_t i ) -> Column<Float> {
         const auto colnum = i / num_targets;
         const auto target_num = i % num_targets;
-        const auto feature_postfix = _feature_postfix +
-                                     std::to_string( colnum + 1 ) + "_" +
-                                     std::to_string( target_num + 1 );
         return MappingContainerMaker::transform_discrete_column(
             _mapping,
             _discrete,
-            feature_postfix,
+            _feature_postfix,
             num_targets,
             colnum,
             target_num );
@@ -759,8 +765,10 @@ Column<Float> MappingContainerMaker::transform_discrete_column(
                 }
         }
 
-    return Column<Float>(
-        vec, dis_col.name_ + "__" + _feature_postfix, vec->size(), "" );
+    const auto colname =
+        make_colname( dis_col.name_, _feature_postfix, _target_num );
+
+    return Column<Float>( vec, colname, vec->size(), "" );
 }
 
 // ----------------------------------------------------------------------------
@@ -795,14 +803,11 @@ MappingContainerMaker::transform_text(
             const size_t i ) -> Column<Float> {
         const auto colnum = i / num_targets;
         const auto target_num = i % num_targets;
-        const auto feature_postfix = _feature_postfix +
-                                     std::to_string( colnum + 1 ) + "_" +
-                                     std::to_string( target_num + 1 );
         return MappingContainerMaker::transform_text_column(
             _mapping,
             _text,
             _word_indices,
-            feature_postfix,
+            _feature_postfix,
             num_targets,
             colnum,
             target_num );
@@ -883,11 +888,10 @@ Column<Float> MappingContainerMaker::transform_text_column(
                 }
         }
 
-    return Column<Float>(
-        vec,
-        _text.at( _colnum ).name_ + "__" + _feature_postfix,
-        vec->size(),
-        "" );
+    const auto colname = make_colname(
+        _text.at( _colnum ).name_, _feature_postfix, _target_num );
+
+    return Column<Float>( vec, colname, vec->size(), "" );
 }
 
 // ----------------------------------------------------------------------------
@@ -923,24 +927,24 @@ MappingContainerMaker::transform_table_holder(
 
     for ( size_t i = 0; i < _mapping->categorical().size(); ++i )
         {
+            const auto feature_postfix =
+                _feature_postfix + std::to_string( i + 1 ) + "_";
+
             categorical.push_back( transform_categorical(
                 _mapping->categorical().at( i ),
                 _table_holder.peripheral_tables().at( i ).categoricals_,
-                _feature_postfix,
+                feature_postfix,
                 _progress_logger ) );
 
             discrete.push_back( transform_discrete(
                 _mapping->discrete().at( i ),
                 _table_holder.peripheral_tables().at( i ).discretes_,
-                _feature_postfix,
+                feature_postfix,
                 _progress_logger ) );
 
             if ( _table_holder.subtables().at( i ) )
                 {
                     assert_true( _mapping->subcontainers().at( i ) );
-
-                    const auto feature_postfix =
-                        _feature_postfix + std::to_string( i + 1 ) + "_";
 
                     subcontainers.push_back( transform_table_holder(
                         _mapping->subcontainers().at( i ),
@@ -957,7 +961,7 @@ MappingContainerMaker::transform_table_holder(
                 _mapping->text().at( i ),
                 _table_holder.peripheral_tables().at( i ).text_,
                 _table_holder.peripheral_tables().at( i ).word_indices_,
-                _feature_postfix,
+                feature_postfix,
                 _progress_logger ) );
         }
 

@@ -964,8 +964,7 @@ std::vector<std::string> FeatureLearner<FeatureLearnerType>::to_sql(
             if ( feature_learner().has_mappings() )
                 {
                     std::tie( sql, colname_map ) =
-                        feature_learner().mappings().to_sql(
-                            _categories, _prefix, 0 );
+                        feature_learner().mappings().to_sql( _categories, "" );
                 }
 
             const auto staging_tables =
