@@ -344,7 +344,7 @@ MappingContainer::to_sql(
         std::string sql = "DROP TABLE IF EXISTS \"" + _name + "\";\n\n";
         const std::string key_type = _key_is_num ? "NUMERIC" : "TEXT";
         sql += "CREATE TABLE \"" + _name + "\"(key " + key_type +
-               ", value NUMERIC);\n\n";
+               " NOT NULL PRIMARY KEY, value NUMERIC);\n\n";
         sql += "INSERT INTO \"" + _name + "\"(key, value)\nVALUES";
         return sql;
     };
