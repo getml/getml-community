@@ -4,21 +4,9 @@ namespace helpers
 {
 // ----------------------------------------------------------------------------
 
-std::string SQLGenerator::edit_colname(
-    const std::string& _raw_name, const std::string& _alias )
+std::tuple<std::string, std::string, std::string>
+SQLGenerator::demangle_colname( const std::string& _raw_name )
 {
-    // --------------------------------------------------------------
-
-    if ( _raw_name.find( Macros::no_join_key() ) != std::string::npos )
-        {
-            return "1";
-        }
-
-    if ( _raw_name.find( Macros::self_join_key() ) != std::string::npos )
-        {
-            return "1";
-        }
-
     // --------------------------------------------------------------
 
     const auto has_col_param =
@@ -118,6 +106,34 @@ std::string SQLGenerator::edit_colname(
 
     // --------------------------------------------------------------
 
+    return std::make_tuple( prefix, new_name, postfix );
+
+    // --------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::string SQLGenerator::edit_colname(
+    const std::string& _raw_name, const std::string& _alias )
+{
+    // --------------------------------------------------------------
+
+    if ( _raw_name.find( Macros::no_join_key() ) != std::string::npos )
+        {
+            return "1";
+        }
+
+    if ( _raw_name.find( Macros::self_join_key() ) != std::string::npos )
+        {
+            return "1";
+        }
+
+    // --------------------------------------------------------------
+
+    const auto [prefix, new_name, postfix] = demangle_colname( _raw_name );
+
+    // --------------------------------------------------------------
+
     const bool need_alias = ( _alias != "" );
 
     const bool has_alias =
@@ -143,34 +159,32 @@ std::string SQLGenerator::edit_colname(
 
     // --------------------------------------------------------------
 
-    new_name =
-        prefix + alias + dot + quotation + new_name + quotation + postfix;
-
-    // --------------------------------------------------------------
-    // TODO: For backwards compatability only, remove at some point!
-
-    new_name = StringReplacer::replace_all(
-        new_name, Macros::remove_char() + "\"", "" );
-
-    new_name =
-        StringReplacer::replace_all( new_name, Macros::remove_char(), "" );
-
-    return new_name;
+    return prefix + alias + dot + quotation + new_name + quotation + postfix;
 
     // --------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
 
-std::string SQLGenerator::make_colname( const std::string& _colname )
+std::string SQLGenerator::make_colname( const std::string& _raw_name )
 {
-    if ( _colname.find( Macros::table() ) == std::string::npos )
-        {
-            return to_lower( _colname );
-        }
-    const auto alias = Macros::get_param( _colname, Macros::alias() );
-    const auto column = Macros::get_param( _colname, Macros::column() );
-    return to_lower( alias + "__" + column );
+    const auto [prefix, new_name, postfix] = demangle_colname( _raw_name );
+
+    const bool has_alias =
+        ( _raw_name.find( Macros::alias() ) != std::string::npos );
+
+    const bool not_t1_or_t2 =
+        has_alias && ( Macros::get_param( _raw_name, Macros::alias() ) !=
+                       Macros::t1_or_t2() );
+
+    const bool extract_alias = has_alias && not_t1_or_t2;
+
+    const auto alias =
+        extract_alias ? Macros::get_param( _raw_name, Macros::alias() ) : "";
+
+    const auto underscore = ( alias == "" ) ? "" : "__";
+
+    return alias + underscore + to_lower( prefix + new_name + postfix );
 }
 
 // ----------------------------------------------------------------------------
@@ -318,15 +332,17 @@ std::string SQLGenerator::join_mappings(
 std::string SQLGenerator::make_epoch_time(
     const std::string& _raw_name, const std::string& _alias )
 {
-    const auto colname = edit_colname( _raw_name, _alias );
+    const auto colname = make_colname( _raw_name );
 
-    if ( _raw_name.find( Macros::rowid() ) != std::string::npos )
+    return _alias + ".\"" + colname + "\"";
+
+    /*if ( _raw_name.find( Macros::rowid() ) != std::string::npos )
         {
             return colname;
         }
 
     return "( julianday( " + colname +
-           " ) - julianday( '1970-01-01' ) ) * 86400.0";
+           " ) - julianday( '1970-01-01' ) ) * 86400.0";*/
 }
 
 // ----------------------------------------------------------------------------
@@ -388,14 +404,16 @@ std::string SQLGenerator::make_joins(
 std::string SQLGenerator::make_relative_time(
     const std::string& _raw_name, const std::string& _alias )
 {
-    const auto colname = edit_colname( _raw_name, _alias );
+    const auto colname = make_colname( _raw_name );
 
-    if ( _raw_name.find( Macros::rowid() ) != std::string::npos )
+    return _alias + ".\"" + colname + "\"";
+
+    /*if ( _raw_name.find( Macros::rowid() ) != std::string::npos )
         {
             return colname;
         }
 
-    return "julianday( " + colname + " )";
+    return "julianday( " + colname + " )";*/
 }
 
 // ----------------------------------------------------------------------------
@@ -407,6 +425,22 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
 {
     // ------------------------------------------------------------------------
 
+    const auto include_column = []( const std::string& _name ) {
+        if ( _name == helpers::Macros::no_join_key() )
+            {
+                return false;
+            }
+
+        if ( _name == helpers::Macros::self_join_key() )
+            {
+                return false;
+            }
+
+        return true;
+    };
+
+    // ------------------------------------------------------------------------
+
     const auto cast_column = []( const std::string& _colname,
                                  const std::string& _coltype ) -> std::string {
         return "CAST( " + SQLGenerator::edit_colname( _colname, "t1" ) +
@@ -416,24 +450,54 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
 
     // ------------------------------------------------------------------------
 
-    const auto cast_as_numeric =
-        [cast_column]( const std::vector<std::string>& _colnames )
-        -> std::vector<std::string> {
-        const auto cast =
-            std::bind( cast_column, std::placeholders::_1, "NUMERIC" );
-        return stl::make::vector<std::string>(
-            _colnames | std::views::transform( cast ) );
+    const auto to_epoch_time =
+        []( const std::string& _colname ) -> std::string {
+        const auto epoch_time =
+            _colname.find( Macros::rowid() ) == std::string::npos
+                ? "( julianday( " +
+                      SQLGenerator::edit_colname( _colname, "t1" ) +
+                      " ) - julianday( '1970-01-01' ) ) * 86400.0"
+                : SQLGenerator::edit_colname( _colname, "t1" );
+
+        return epoch_time + " AS \"" + SQLGenerator::make_colname( _colname ) +
+               "\"";
     };
 
     // ------------------------------------------------------------------------
 
-    const auto cast_as_text =
-        [cast_column]( const std::vector<std::string>& _colnames )
+    const auto cast_as_numeric = [include_column, cast_column](
+                                     const std::vector<std::string>& _colnames )
+        -> std::vector<std::string> {
+        const auto cast =
+            std::bind( cast_column, std::placeholders::_1, "NUMERIC" );
+
+        return stl::make::vector<std::string>(
+            _colnames | std::views::filter( include_column ) |
+            std::views::transform( cast ) );
+    };
+
+    // ------------------------------------------------------------------------
+
+    const auto cast_as_time_stamp =
+        [include_column,
+         to_epoch_time]( const std::vector<std::string>& _colnames )
+        -> std::vector<std::string> {
+        return stl::make::vector<std::string>(
+            _colnames | std::views::filter( include_column ) |
+            std::views::transform( to_epoch_time ) );
+    };
+
+    // ------------------------------------------------------------------------
+
+    const auto cast_as_text = [include_column, cast_column](
+                                  const std::vector<std::string>& _colnames )
         -> std::vector<std::string> {
         const auto cast =
             std::bind( cast_column, std::placeholders::_1, "TEXT" );
+
         return stl::make::vector<std::string>(
-            _colnames | std::views::transform( cast ) );
+            _colnames | std::views::filter( include_column ) |
+            std::views::transform( cast ) );
     };
 
     // ------------------------------------------------------------------------
@@ -463,7 +527,7 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
 
     const auto text = cast_as_text( _schema.text_ );
 
-    const auto time_stamps = cast_as_numeric( _schema.time_stamps_ );
+    const auto time_stamps = cast_as_time_stamp( _schema.time_stamps_ );
 
     const auto mappings = make_mappings();
 
@@ -489,7 +553,9 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
 
     // ------------------------------------------------------------------------
 
-    return stl::make::vector<std::string>( all | std::ranges::views::join );
+    return stl::make::vector<std::string>(
+        all | std::ranges::views::join |
+        std::ranges::views::filter( include_column ) );
 
     // ------------------------------------------------------------------------
 }
@@ -551,8 +617,13 @@ std::string SQLGenerator::make_staging_table_name( const std::string& _name )
             return to_upper( get_table_name( _name ) );
         }
 
-    const auto number =
-        _name.substr( pos + Macros::staging_table_num().size() );
+    const auto begin = pos + Macros::staging_table_num().size();
+
+    const auto end = _name.find_first_not_of( "0123456789", begin );
+
+    assert_true( end > begin );
+
+    const auto number = _name.substr( begin, end - begin );
 
     return to_upper( get_table_name( _name ) ) + "__STAGING_TABLE_" + number;
 }

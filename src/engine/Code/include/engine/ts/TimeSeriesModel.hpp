@@ -129,6 +129,10 @@ class TimeSeriesModel
     // -----------------------------------------------------------------
 
    private:
+    /// Creates the name for the additional peripheral table.
+    std::string create_peripheral_name(
+        const std::string &_name, const size_t _num_peripherals ) const;
+
     /// This lags the time stamps, which is necessary to prevent easter eggs.
     std::vector<containers::Column<Float>> create_modified_time_stamps(
         const std::string &_ts_name,
@@ -350,7 +354,12 @@ std::vector<containers::DataFrame> TimeSeriesModel<FEType>::create_peripheral(
 
     auto new_df = _population;
 
-    new_df.set_name( new_df.name() + helpers::Macros::peripheral() );
+    // ------------------------------------------------------------
+
+    const auto name =
+        create_peripheral_name( new_df.name(), _peripheral.size() );
+
+    new_df.set_name( name );
 
     // ------------------------------------------------------------
 
@@ -377,6 +386,24 @@ std::vector<containers::DataFrame> TimeSeriesModel<FEType>::create_peripheral(
     return new_peripheral;
 
     // ------------------------------------------------------------
+}
+
+// -----------------------------------------------------------------------------
+
+template <class FEType>
+std::string TimeSeriesModel<FEType>::create_peripheral_name(
+    const std::string &_name, const size_t _num_peripherals ) const
+{
+    const auto pos = _name.find( helpers::Macros::staging_table_num() );
+
+    if ( pos == std::string::npos )
+        {
+            return _name + helpers::Macros::peripheral();
+        }
+
+    return _name.substr( 0, pos ) + helpers::Macros::staging_table_num() +
+           std::to_string( _num_peripherals + 2 ) +
+           helpers::Macros::peripheral();
 }
 
 // -----------------------------------------------------------------------------

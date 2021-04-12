@@ -85,6 +85,11 @@ class SQLGenerator
     static std::string to_upper( const std::string& _str );
 
    private:
+    /// Parses the prefix,  the new name and the postfix out of the
+    /// raw name.
+    static std::tuple<std::string, std::string, std::string> demangle_colname(
+        const std::string& _raw_name );
+
     /// Generates the SQL code for when there are multiple join keys.
     static std::string handle_multiple_join_keys(
         const std::string& _output_join_keys_name,
