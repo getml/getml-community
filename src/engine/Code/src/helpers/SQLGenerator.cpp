@@ -184,7 +184,7 @@ std::string SQLGenerator::make_colname( const std::string& _raw_name )
 
     const auto underscore = ( alias == "" ) ? "" : "__";
 
-    return alias + underscore + to_lower( prefix + new_name + postfix );
+    return alias + underscore + prefix + to_lower( new_name ) + postfix;
 }
 
 // ----------------------------------------------------------------------------
