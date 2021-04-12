@@ -162,7 +162,6 @@ std::vector<std::shared_ptr<Index>> DataFrame::create_indices(
 // ----------------------------------------------------------------------------
 
 DataFrame DataFrame::create_subview(
-    const std::string& _name,
     const std::string& _join_key,
     const std::string& _time_stamp,
     const std::string& _upper_time_stamp,
@@ -238,7 +237,7 @@ DataFrame DataFrame::create_subview(
                 discretes_,
                 { indices_.at( ix_join_key ) },
                 { join_keys_.at( ix_join_key ) },
-                _name,
+                name_,
                 numericals_and_time_stamps,
                 targets_,
                 text_,
@@ -275,7 +274,7 @@ DataFrame DataFrame::create_subview(
                 discretes_,
                 { indices_.at( ix_join_key ) },
                 { join_keys_.at( ix_join_key ) },
-                _name,
+                name_,
                 numericals_and_time_stamps,
                 targets_,
                 text_,
@@ -310,7 +309,7 @@ DataFrame DataFrame::create_subview(
         discretes_,
         { indices_.at( ix_join_key ) },
         { join_keys_.at( ix_join_key ) },
-        _name,
+        name_,
         numericals_and_time_stamps,
         targets_,
         text_,

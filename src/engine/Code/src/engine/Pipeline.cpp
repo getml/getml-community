@@ -2041,7 +2041,7 @@ Pipeline::modify_data_frames(
     const auto joined_peripheral_names =
         PlaceholderMaker::make_peripheral( placeholder );
 
-    ManyToOneJoiner::join_tables(
+    Staging::join_tables(
         true,
         *peripheral_names,
         placeholder.name_,

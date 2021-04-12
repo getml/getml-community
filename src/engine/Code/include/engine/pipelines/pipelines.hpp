@@ -41,7 +41,7 @@
 #include "engine/pipelines/PlaceholderMaker.hpp"
 
 #include "engine/pipelines/DataFrameModifier.hpp"
-#include "engine/pipelines/ManyToOneJoiner.hpp"
+#include "engine/pipelines/Staging.hpp"
 
 #include "engine/pipelines/PipelineImpl.hpp"
 

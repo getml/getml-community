@@ -1884,7 +1884,6 @@ std::shared_ptr<std::vector<size_t>> FastProp::make_subfeature_rownums(
     assert_true( _ix < placeholder().join_keys_used_.size() );
 
     const auto population = _population.create_subview(
-        "POPULATION",
         placeholder().join_keys_used_.at( _ix ),
         placeholder().time_stamps_used_.at( _ix ),
         "",
@@ -1894,7 +1893,6 @@ std::shared_ptr<std::vector<size_t>> FastProp::make_subfeature_rownums(
         {} );
 
     const auto peripheral = _peripheral.create_subview(
-        "PERIPHERAL",
         placeholder().other_join_keys_used_.at( _ix ),
         placeholder().other_time_stamps_used_.at( _ix ),
         placeholder().upper_time_stamps_used_.at( _ix ),

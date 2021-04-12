@@ -59,7 +59,6 @@ struct DataFrame
 
     /// Creates a subview.
     DataFrame create_subview(
-        const std::string& _name,
         const std::string& _join_key,
         const std::string& _time_stamp,
         const std::string& _upper_time_stamp,

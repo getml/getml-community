@@ -238,7 +238,6 @@ std::vector<DataFrameView> TableHolder::parse_main_tables(
     for ( size_t i = 0; i < _placeholder.joined_tables_.size(); ++i )
         {
             result.push_back( _population.create_subview(
-                _placeholder.name_,
                 _placeholder.join_keys_used_.at( i ),
                 _placeholder.time_stamps_used_.at( i ),
                 "",
@@ -264,7 +263,6 @@ std::vector<DataFrameView> TableHolder::parse_main_tables(
     for ( Int i = 0; i < num_fields; ++i )
         {
             result.push_back( _population.create_subview(
-                _placeholder.name_,
                 Macros::rowid(),
                 "",
                 "",
@@ -351,7 +349,6 @@ std::vector<DataFrame> TableHolder::parse_peripheral_tables(
             const auto additional = make_additional_columns( i );
 
             result.push_back( _peripheral.at( j ).create_subview(
-                _placeholder.joined_tables_.at( i ).name_,
                 _placeholder.other_join_keys_used_.at( i ),
                 _placeholder.other_time_stamps_used_.at( i ),
                 _placeholder.upper_time_stamps_used_.at( i ),
@@ -434,7 +431,6 @@ DataFrameView TableHolder::make_output(
     const size_t _j )
 {
     const auto population_subview = _population.create_subview(
-        _placeholder.name_,
         _placeholder.join_keys_used_.at( _i ),
         _placeholder.time_stamps_used_.at( _i ),
         "",
@@ -443,7 +439,6 @@ DataFrameView TableHolder::make_output(
         {} );
 
     const auto peripheral_subview = _peripheral.at( _j ).create_subview(
-        _placeholder.joined_tables_.at( _i ).name_,
         _placeholder.other_join_keys_used_.at( _i ),
         _placeholder.other_time_stamps_used_.at( _i ),
         _placeholder.upper_time_stamps_used_.at( _i ),

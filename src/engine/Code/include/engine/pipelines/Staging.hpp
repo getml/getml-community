@@ -1,5 +1,5 @@
-#ifndef ENGINE_PIPELINES_MANYTOONEJOINER_HPP_
-#define ENGINE_PIPELINES_MANYTOONEJOINER_HPP_
+#ifndef ENGINE_PIPELINES_STAGING_HPP_
+#define ENGINE_PIPELINES_STAGING_HPP_
 
 // ----------------------------------------------------------------------------
 
@@ -9,7 +9,7 @@ namespace pipelines
 {
 // ----------------------------------------------------------------------------
 
-class ManyToOneJoiner
+class Staging
 {
    public:
     /// Parses the joined names to execute the many-to-one joins required in the
@@ -49,6 +49,7 @@ class ManyToOneJoiner
 
     static containers::DataFrame join_all(
         const bool _use_timestamps,
+        const size_t _number,
         const bool _is_population,
         const std::string& _joined_name,
         const std::vector<std::string>& _origin_peripheral_names,
@@ -102,5 +103,5 @@ class ManyToOneJoiner
 }  // namespace pipelines
 }  // namespace engine
 
-#endif  // ENGINE_PIPELINES_MANYTOONEJOINER_HPP_
+#endif  // ENGINE_PIPELINES_STAGING_HPP_
 

@@ -198,6 +198,11 @@ class Macros
     // Deprecated - use no_join_key(...) instead.
     static std::string self_join_key() { return "$GETML_SELF_JOIN_KEY"; }
 
+    static std::string staging_table_num()
+    {
+        return "$GETML_STAGING_TABLE_NUM";
+    }
+
     static std::string substring() { return "$GETML_SUBSTRING"; }
 
     static std::string t1_or_t2() { return "$GETML_T1_OR_T2"; }

@@ -6,7 +6,7 @@ namespace pipelines
 {
 // ----------------------------------------------------------------------------
 
-containers::Column<Int> ManyToOneJoiner::extract_join_key(
+containers::Column<Int> Staging::extract_join_key(
     const containers::DataFrame& _df,
     const std::string& _tname,
     const std::string& _alias,
@@ -25,7 +25,7 @@ containers::Column<Int> ManyToOneJoiner::extract_join_key(
 // ----------------------------------------------------------------------------
 
 std::shared_ptr<const typename containers::DataFrameIndex::MapType>
-ManyToOneJoiner::extract_map(
+Staging::extract_map(
     const containers::DataFrame& _df,
     const std::string& _tname,
     const std::string& _alias,
@@ -43,7 +43,7 @@ ManyToOneJoiner::extract_map(
 
 // ----------------------------------------------------------------------------
 
-std::optional<containers::Column<Float>> ManyToOneJoiner::extract_time_stamp(
+std::optional<containers::Column<Float>> Staging::extract_time_stamp(
     const containers::DataFrame& _df,
     const std::string& _tname,
     const std::string& _alias,
@@ -66,7 +66,7 @@ std::optional<containers::Column<Float>> ManyToOneJoiner::extract_time_stamp(
 
 // ----------------------------------------------------------------------------
 
-containers::DataFrame ManyToOneJoiner::find_peripheral(
+containers::DataFrame Staging::find_peripheral(
     const std::string& _name,
     const std::vector<std::string>& _peripheral_names,
     const std::vector<containers::DataFrame>& _peripheral_dfs )
@@ -96,8 +96,9 @@ containers::DataFrame ManyToOneJoiner::find_peripheral(
 
 // ----------------------------------------------------------------------------
 
-containers::DataFrame ManyToOneJoiner::join_all(
+containers::DataFrame Staging::join_all(
     const bool _use_timestamps,
+    const size_t _number,
     const bool _is_population,
     const std::string& _joined_name,
     const std::vector<std::string>& _origin_peripheral_names,
@@ -127,14 +128,16 @@ containers::DataFrame ManyToOneJoiner::join_all(
                 _origin_peripheral_names );
         }
 
-    population.set_name( _joined_name );
+    population.set_name(
+        _joined_name + helpers::Macros::staging_table_num() +
+        std::to_string( _number ) );
 
     return population;
 }
 
 // ----------------------------------------------------------------------------
 
-containers::DataFrame ManyToOneJoiner::join_one(
+containers::DataFrame Staging::join_one(
     const bool _use_timestamps,
     const std::string& _splitted,
     const containers::DataFrame& _population,
@@ -234,7 +237,7 @@ containers::DataFrame ManyToOneJoiner::join_one(
 
 // ----------------------------------------------------------------------------
 
-void ManyToOneJoiner::join_tables(
+void Staging::join_tables(
     const bool _use_timestamps,
     const std::vector<std::string>& _origin_peripheral_names,
     const std::string& _joined_population_name,
@@ -244,6 +247,7 @@ void ManyToOneJoiner::join_tables(
 {
     const auto population_df = join_all(
         _use_timestamps,
+        1,
         true,
         _joined_population_name,
         _origin_peripheral_names,
@@ -257,6 +261,7 @@ void ManyToOneJoiner::join_tables(
         {
             peripheral_dfs.at( i ) = join_all(
                 _use_timestamps,
+                i + 2,
                 false,
                 _joined_peripheral_names.at( i ),
                 _origin_peripheral_names,
@@ -271,7 +276,7 @@ void ManyToOneJoiner::join_tables(
 
 // ----------------------------------------------------------------------------
 
-std::vector<size_t> ManyToOneJoiner::make_index(
+std::vector<size_t> Staging::make_index(
     const bool _use_timestamps,
     const std::string& _name,
     const std::string& _alias,
@@ -370,7 +375,7 @@ std::vector<size_t> ManyToOneJoiner::make_index(
 
 // ----------------------------------------------------------------------------
 
-std::pair<size_t, bool> ManyToOneJoiner::retrieve_index(
+std::pair<size_t, bool> Staging::retrieve_index(
     const size_t _nrows,
     const Int _jk,
     const Float _ts,

@@ -189,7 +189,14 @@ std::string SQLGenerator::get_table_name( const std::string& _raw_name )
 
     name = StringReplacer::replace_all( name, Macros::peripheral(), "" );
 
-    return name;
+    const auto pos = name.find( Macros::staging_table_num() );
+
+    if ( pos == std::string::npos )
+        {
+            return name;
+        }
+
+    return name.substr( 0, pos );
 }
 
 // ----------------------------------------------------------------------------
@@ -360,9 +367,9 @@ std::string SQLGenerator::make_joins(
     const std::string& _output_join_keys_name,
     const std::string& _input_join_keys_name )
 {
-    const auto output_name = get_table_name( _output_name );
+    const auto output_name = make_staging_table_name( _output_name );
 
-    const auto input_name = get_table_name( _input_name );
+    const auto input_name = make_staging_table_name( _input_name );
 
     std::stringstream sql;
 
@@ -372,10 +379,6 @@ std::string SQLGenerator::make_joins(
 
     sql << make_join_keys(
         _output_join_keys_name, _input_join_keys_name, "t1", "t2" );
-
-    sql << handle_many_to_one_joins( _output_name, "t1" );
-
-    sql << handle_many_to_one_joins( _input_name, "t2" );
 
     return sql.str();
 }
@@ -495,7 +498,6 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
 
 std::string SQLGenerator::make_staging_table(
     const bool& _include_targets,
-    const size_t _number,
     const Placeholder& _schema,
     const std::vector<std::string>& _mappings )
 {
@@ -504,8 +506,7 @@ std::string SQLGenerator::make_staging_table(
     const auto columns =
         make_staging_columns( _include_targets, _schema, _mappings );
 
-    const auto name = to_upper( get_table_name( _schema.name_ ) ) +
-                      "__STAGED_TABLE_" + std::to_string( _number );
+    const auto name = make_staging_table_name( _schema.name_ );
 
     // ------------------------------------------------------------------------
 
@@ -541,6 +542,23 @@ std::string SQLGenerator::make_staging_table(
 
 // ----------------------------------------------------------------------------
 
+std::string SQLGenerator::make_staging_table_name( const std::string& _name )
+{
+    const auto pos = _name.find( Macros::staging_table_num() );
+
+    if ( pos == std::string::npos )
+        {
+            return to_upper( get_table_name( _name ) );
+        }
+
+    const auto number =
+        _name.substr( pos + Macros::staging_table_num().size() );
+
+    return to_upper( get_table_name( _name ) ) + "__STAGING_TABLE_" + number;
+}
+
+// ----------------------------------------------------------------------------
+
 std::vector<std::string> SQLGenerator::make_staging_tables(
     const bool& _include_targets,
     const Placeholder& _population_schema,
@@ -553,20 +571,19 @@ std::vector<std::string> SQLGenerator::make_staging_tables(
         [&_colname_map](
             const Placeholder& _schema ) -> std::vector<std::string> {
         const auto it = _colname_map.find( _schema.name_ );
+
         if ( it == _colname_map.end() )
             {
                 return std::vector<std::string>();
             }
+
         return it->second;
     };
 
     // ------------------------------------------------------------------------
 
-    size_t number = 1;
-
     auto sql = std::vector<std::string>( { make_staging_table(
         _include_targets,
-        number,
         _population_schema,
         get_mapping( _population_schema ) ) } );
 
@@ -574,12 +591,9 @@ std::vector<std::string> SQLGenerator::make_staging_tables(
 
     for ( size_t i = 0; i < _peripheral_schema.size(); ++i )
         {
-            ++number;
-
             const auto& schema = _peripheral_schema.at( i );
 
-            auto s = make_staging_table(
-                false, number, schema, get_mapping( schema ) );
+            auto s = make_staging_table( false, schema, get_mapping( schema ) );
 
             sql.emplace_back( std::move( s ) );
         }

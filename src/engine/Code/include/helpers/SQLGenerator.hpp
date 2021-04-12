@@ -50,6 +50,9 @@ class SQLGenerator
         const std::vector<Placeholder>& _peripheral_schema,
         const ColnameMap& _colname_map );
 
+    /// Generates the name for a staging table.
+    static std::string make_staging_table_name( const std::string& _name );
+
     /// Generates the unique identifier for a subfeature.
     static std::string make_subfeature_identifier(
         const std::string& _feature_prefix,
@@ -110,7 +113,6 @@ class SQLGenerator
     /// Generates a single staging table.
     static std::string make_staging_table(
         const bool& _include_targets,
-        const size_t _number,
         const Placeholder& _schema,
         const std::vector<std::string>& _mappings );
 };
