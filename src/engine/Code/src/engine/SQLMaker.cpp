@@ -6,6 +6,30 @@ namespace utils
 {
 // ----------------------------------------------------------------------------
 
+std::vector<std::string> SQLMaker::drop_duplicates(
+    const std::vector<std::string>& _sql )
+{
+    std::set<std::string> unique;
+
+    std::vector<std::string> sql;
+
+    for ( const auto& s : _sql )
+        {
+            if ( unique.contains( s ) )
+                {
+                    continue;
+                }
+
+            sql.push_back( s );
+
+            unique.insert( s );
+        }
+
+    return sql;
+}
+
+// ----------------------------------------------------------------------------
+
 std::string SQLMaker::make_feature_table(
     const std::string& _main_table,
     const std::vector<std::string>& _autofeatures,
@@ -138,19 +162,16 @@ std::string SQLMaker::make_sql(
     const std::vector<std::string>& _targets,
     const predictors::PredictorImpl& _predictor_impl )
 {
-    std::string sql;
+    auto sql = _sql;
 
-    for ( const auto& feature : _sql )
-        {
-            sql += feature;
-        }
+    sql.push_back( make_feature_table(
+        _main_table, _autofeatures, _sql, _targets, _predictor_impl ) );
 
-    sql += make_feature_table(
-        _main_table, _autofeatures, _sql, _targets, _predictor_impl );
+    sql.push_back( make_postprocessing( _sql ) );
 
-    sql += make_postprocessing( _sql );
+    sql = drop_duplicates( sql );
 
-    return sql;
+    return stl::make::string( sql );
 }
 
 // ----------------------------------------------------------------------------

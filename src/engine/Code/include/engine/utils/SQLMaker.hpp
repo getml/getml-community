@@ -22,6 +22,10 @@ class SQLMaker
         const predictors::PredictorImpl& _predictor_impl );
 
    private:
+    /// Drops any duplicate scripts.
+    static std::vector<std::string> drop_duplicates(
+        const std::vector<std::string>& _sql );
+
     /// Generates the table that contains all the features.
     static std::string make_feature_table(
         const std::string& _main_table,
