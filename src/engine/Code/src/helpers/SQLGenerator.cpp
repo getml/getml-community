@@ -444,17 +444,17 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
                       " ) - julianday( '1970-01-01' ) ) * 86400.0"
                 : SQLGenerator::edit_colname( _colname, "t1" );
 
-        return epoch_time + " AS \"" + SQLGenerator::make_colname( _colname ) +
-               "\"";
+        return "CAST( " + epoch_time + " AS REAL ) AS \"" +
+               SQLGenerator::make_colname( _colname ) + "\"";
     };
 
     // ------------------------------------------------------------------------
 
-    const auto cast_as_numeric = [include_column, cast_column](
-                                     const std::vector<std::string>& _colnames )
+    const auto cast_as_real = [include_column, cast_column](
+                                  const std::vector<std::string>& _colnames )
         -> std::vector<std::string> {
         const auto cast =
-            std::bind( cast_column, std::placeholders::_1, "NUMERIC" );
+            std::bind( cast_column, std::placeholders::_1, "REAL" );
 
         return stl::make::vector<std::string>(
             _colnames | std::views::filter( include_column ) |
@@ -488,7 +488,7 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
     // ------------------------------------------------------------------------
 
     const auto init_as_null = []( const std::string& _colname ) -> std::string {
-        return "CAST( NULL AS NUMERIC ) AS \"" + to_lower( _colname ) + "\"";
+        return "CAST( NULL AS REAL ) AS \"" + to_lower( _colname ) + "\"";
     };
 
     // ------------------------------------------------------------------------
@@ -502,13 +502,13 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
 
     const auto categoricals = cast_as_text( _schema.categoricals_ );
 
-    const auto discretes = cast_as_numeric( _schema.discretes_ );
+    const auto discretes = cast_as_real( _schema.discretes_ );
 
     const auto join_keys = cast_as_text( _schema.join_keys_ );
 
-    const auto numericals = cast_as_numeric( _schema.numericals_ );
+    const auto numericals = cast_as_real( _schema.numericals_ );
 
-    const auto targets = cast_as_numeric( _schema.targets_ );
+    const auto targets = cast_as_real( _schema.targets_ );
 
     const auto text = cast_as_text( _schema.text_ );
 

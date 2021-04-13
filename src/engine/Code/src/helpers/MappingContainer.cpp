@@ -411,10 +411,10 @@ std::string MappingContainer::make_table_header(
 {
     std::string sql = "DROP TABLE IF EXISTS \"" + _name + "\";\n\n";
 
-    const std::string key_type = _key_is_num ? "NUMERIC" : "TEXT";
+    const std::string key_type = _key_is_num ? "INTEGER" : "TEXT";
 
     sql += "CREATE TABLE \"" + _name + "\"(key " + key_type +
-           " NOT NULL PRIMARY KEY, value NUMERIC);\n\n";
+           " NOT NULL PRIMARY KEY, value REAL);\n\n";
 
     sql += "INSERT INTO \"" + _name + "\"(key, value)\nVALUES";
 
