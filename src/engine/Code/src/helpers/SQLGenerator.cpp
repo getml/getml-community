@@ -502,15 +502,15 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
 
     // ------------------------------------------------------------------------
 
-    const auto init_as_zero = []( const std::string& _colname ) -> std::string {
-        return "0.0 AS \"" + to_lower( _colname ) + "\"";
+    const auto init_as_null = []( const std::string& _colname ) -> std::string {
+        return "CAST( NULL AS NUMERIC ) AS \"" + to_lower( _colname ) + "\"";
     };
 
     // ------------------------------------------------------------------------
 
-    const auto make_mappings = [&_mappings, init_as_zero]() {
+    const auto make_mappings = [&_mappings, init_as_null]() {
         return stl::make::vector<std::string>(
-            _mappings | std::views::transform( init_as_zero ) );
+            _mappings | std::views::transform( init_as_null ) );
     };
 
     // ------------------------------------------------------------------------
