@@ -261,6 +261,16 @@ std::string SQLMaker::select_statement(
             return select_avg_time_between( _input );
         }
 
+    auto value = value_to_be_aggregated(
+        _categories, _feature_prefix, _abstract_feature, _input, _output );
+
+    if ( is_first_last( _abstract_feature.aggregation_ ) )
+        {
+            value +=
+                ", " + make_additional_argument(
+                           _abstract_feature.aggregation_, _input, _output );
+        }
+
     std::string select;
 
     if ( agg_type == COUNT_DISTINCT )
@@ -269,7 +279,7 @@ std::string SQLMaker::select_statement(
         }
     else if ( agg_type == COUNT_MINUS_COUNT_DISTINCT )
         {
-            select += "COUNT( * ) - COUNT( DISTINCT ";
+            select += "COUNT( " + value + "  ) - COUNT( DISTINCT ";
         }
     else
         {
@@ -279,15 +289,7 @@ std::string SQLMaker::select_statement(
             select += "( ";
         }
 
-    select += value_to_be_aggregated(
-        _categories, _feature_prefix, _abstract_feature, _input, _output );
-
-    if ( is_first_last( _abstract_feature.aggregation_ ) )
-        {
-            select +=
-                ", " + make_additional_argument(
-                           _abstract_feature.aggregation_, _input, _output );
-        }
+    select += value;
 
     select += " )";
 
