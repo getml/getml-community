@@ -410,22 +410,6 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
 {
     // ------------------------------------------------------------------------
 
-    const auto include_column = []( const std::string& _name ) {
-        if ( _name == helpers::Macros::no_join_key() )
-            {
-                return false;
-            }
-
-        if ( _name == helpers::Macros::self_join_key() )
-            {
-                return false;
-            }
-
-        return true;
-    };
-
-    // ------------------------------------------------------------------------
-
     const auto cast_column = []( const std::string& _colname,
                                  const std::string& _coltype ) -> std::string {
         return "CAST( " + SQLGenerator::edit_colname( _colname, "t1" ) +
@@ -450,8 +434,8 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
 
     // ------------------------------------------------------------------------
 
-    const auto cast_as_real = [include_column, cast_column](
-                                  const std::vector<std::string>& _colnames )
+    const auto cast_as_real =
+        [cast_column]( const std::vector<std::string>& _colnames )
         -> std::vector<std::string> {
         const auto cast =
             std::bind( cast_column, std::placeholders::_1, "REAL" );
@@ -464,8 +448,7 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
     // ------------------------------------------------------------------------
 
     const auto cast_as_time_stamp =
-        [include_column,
-         to_epoch_time]( const std::vector<std::string>& _colnames )
+        [to_epoch_time]( const std::vector<std::string>& _colnames )
         -> std::vector<std::string> {
         return stl::make::vector<std::string>(
             _colnames | std::views::filter( include_column ) |
@@ -474,8 +457,8 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
 
     // ------------------------------------------------------------------------
 
-    const auto cast_as_text = [include_column, cast_column](
-                                  const std::vector<std::string>& _colnames )
+    const auto cast_as_text =
+        [cast_column]( const std::vector<std::string>& _colnames )
         -> std::vector<std::string> {
         const auto cast =
             std::bind( cast_column, std::placeholders::_1, "TEXT" );
@@ -538,9 +521,7 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
 
     // ------------------------------------------------------------------------
 
-    return stl::make::vector<std::string>(
-        all | std::ranges::views::join |
-        std::ranges::views::filter( include_column ) );
+    return stl::make::vector<std::string>( all | std::ranges::views::join );
 
     // ------------------------------------------------------------------------
 }
@@ -549,12 +530,17 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
 
 bool SQLGenerator::include_column( const std::string& _name )
 {
-    if ( _name == helpers::Macros::no_join_key() )
+    if ( _name == Macros::no_join_key() )
         {
             return false;
         }
 
-    if ( _name == helpers::Macros::self_join_key() )
+    if ( _name == Macros::self_join_key() )
+        {
+            return false;
+        }
+
+    if ( _name.find( Macros::multiple_join_key_begin() ) != std::string::npos )
         {
             return false;
         }
