@@ -837,30 +837,7 @@ bool DataModelChecker::is_all_equal( const containers::Column<Float>& _col )
 
 std::string DataModelChecker::modify_df_name( const std::string& _df_name )
 {
-    const auto names = helpers::Macros::extract_table_names( _df_name );
-
-    std::string modified;
-
-    for ( size_t i = 0; i < names.size(); ++i )
-        {
-            modified += "'" + names.at( i ) + "'";
-
-            if ( i != names.size() - 1 )
-                {
-                    modified += "-";
-                }
-        }
-
-    if ( names.size() == 1 )
-        {
-            return " data frame " + modified;
-        }
-    else
-        {
-            return "the composite data frame " + modified +
-                   " that has been created by many-to-one joins or one-to-one "
-                   "joins";
-        }
+    return helpers::SQLGenerator::make_staging_table_name( _df_name );
 }
 
 // ------------------------------------------------------------------------
