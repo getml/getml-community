@@ -335,14 +335,6 @@ std::string SQLGenerator::make_epoch_time(
     const auto colname = make_colname( _raw_name );
 
     return _alias + ".\"" + colname + "\"";
-
-    /*if ( _raw_name.find( Macros::rowid() ) != std::string::npos )
-        {
-            return colname;
-        }
-
-    return "( julianday( " + colname +
-           " ) - julianday( '1970-01-01' ) ) * 86400.0";*/
 }
 
 // ----------------------------------------------------------------------------
@@ -407,13 +399,6 @@ std::string SQLGenerator::make_relative_time(
     const auto colname = make_colname( _raw_name );
 
     return _alias + ".\"" + colname + "\"";
-
-    /*if ( _raw_name.find( Macros::rowid() ) != std::string::npos )
-        {
-            return colname;
-        }
-
-    return "julianday( " + colname + " )";*/
 }
 
 // ----------------------------------------------------------------------------
