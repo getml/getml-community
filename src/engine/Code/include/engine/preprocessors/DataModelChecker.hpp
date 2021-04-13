@@ -265,7 +265,7 @@ class DataModelChecker
     /// Standard header for when some join keys where not found.
     static std::string join_keys_not_found()
     {
-        return info() + "[JOIN KEYS NOT FOUND]: ";
+        return info() + "[FOREIGN KEYS NOT FOUND]: ";
     }
 
     /// Standard header for something that might take long.
@@ -277,7 +277,7 @@ class DataModelChecker
     /// Removes any macros from a colname.
     static std::string modify_colname( const std::string& _colname )
     {
-        const auto colnames = helpers::Macros::modify_colnames( {_colname} );
+        const auto colnames = helpers::Macros::modify_colnames( { _colname } );
         assert_true( colnames.size() == 1 );
         return colnames.at( 0 );
     }
