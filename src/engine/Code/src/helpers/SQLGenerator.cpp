@@ -547,6 +547,55 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
 
 // ----------------------------------------------------------------------------
 
+bool SQLGenerator::include_column( const std::string& _name )
+{
+    if ( _name == helpers::Macros::no_join_key() )
+        {
+            return false;
+        }
+
+    if ( _name == helpers::Macros::self_join_key() )
+        {
+            return false;
+        }
+
+    return true;
+}
+
+// ----------------------------------------------------------------------------
+
+std::string SQLGenerator::create_indices(
+    const std::string& _table_name, const Placeholder& _schema )
+{
+    // ------------------------------------------------------------------------
+
+    const auto create_index =
+        [&_table_name]( const std::string& _colname ) -> std::string {
+        const auto colname = SQLGenerator::make_colname( _colname );
+
+        const auto index_name = _table_name + "__" + colname;
+
+        const auto drop = "DROP INDEX IF EXISTS \"" + index_name + "\";\n";
+
+        return drop + "CREATE INDEX \"" + index_name + "\" ON \"" +
+               _table_name + "\" (\"" + colname + "\");\n\n";
+    };
+
+    // ------------------------------------------------------------------------
+
+    return stl::make::string(
+               _schema.join_keys_ |
+               std::ranges::views::filter( include_column ) |
+               std::ranges::views::transform( create_index ) ) +
+           stl::make::string(
+               _schema.time_stamps_ |
+               std::ranges::views::transform( create_index ) );
+
+    // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
 std::string SQLGenerator::make_staging_table(
     const bool& _include_targets,
     const Placeholder& _schema,
@@ -581,6 +630,8 @@ std::string SQLGenerator::make_staging_table(
     sql << handle_many_to_one_joins( _schema.name_, "t1" );
 
     sql << ";\n\n";
+
+    sql << create_indices( name, _schema );
 
     sql << join_mappings( name, _mappings );
 

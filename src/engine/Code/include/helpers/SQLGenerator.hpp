@@ -85,6 +85,10 @@ class SQLGenerator
     static std::string to_upper( const std::string& _str );
 
    private:
+    /// Creates the indices for a staging table.
+    static std::string create_indices(
+        const std::string& _table_name, const Placeholder& _schema );
+
     /// Parses the prefix,  the new name and the postfix out of the
     /// raw name.
     static std::tuple<std::string, std::string, std::string> demangle_colname(
@@ -96,6 +100,9 @@ class SQLGenerator
         const std::string& _input_join_keys_name,
         const std::string& _output_alias,
         const std::string& _input_alias );
+
+    /// Determines whether we want to include a column.
+    static bool include_column( const std::string& _name );
 
     /// Generates the SQL code necessary for joining the mapping tables onto the
     /// staged table.
