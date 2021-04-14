@@ -471,6 +471,11 @@ MappingContainerMaker::make_rownum_map_categorical( const Column<Int>& _col )
         {
             const auto key = _col[i];
 
+            if ( key < 0 )
+                {
+                    continue;
+                }
+
             const auto it = rownum_map.find( key );
 
             if ( it == rownum_map.end() )
