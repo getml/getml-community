@@ -138,8 +138,12 @@ class Parser
         constexpr Float delta =
             1.0 / std::pow( 10.0, static_cast<Float>( precision ) );
 
-        const auto is_approx_full = [precision, delta]( const Float val ) {
-            return std::fmod( val, 1.0 ) <= delta;
+        const auto is_approx_full = [delta]( const Float val ) {
+            if ( val != 0.0 && std::round( val ) == 0.0 )
+                {
+                    return false;
+                }
+            return std::abs( std::fmod( val, 1.0 ) ) <= delta;
         };
 
         std::ostringstream stream;
@@ -148,7 +152,7 @@ class Parser
             {
                 stream << static_cast<long>( _val );
             }
-        else if ( _val > 1.0 )
+        else if ( std::abs( _val ) > 1.0 )
             {
                 stream << format_fixed_without_zeros( _val, precision );
             }
