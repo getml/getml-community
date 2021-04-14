@@ -538,6 +538,9 @@ std::string SQLMaker::select_statement(
     const enums::DataUsed& _data_used,
     const std::string& _agg_type ) const
 {
+    const auto value = value_to_be_aggregated(
+        _feature_prefix, _input, _output, _column_used, _data_used );
+
     std::string select;
 
     if ( _agg_type == "COUNT DISTINCT" )
@@ -546,7 +549,7 @@ std::string SQLMaker::select_statement(
         }
     else if ( _agg_type == "COUNT MINUS COUNT DISTINCT" )
         {
-            select += "COUNT( * ) - COUNT( DISTINCT ";
+            select += "COUNT( " + value + " ) - COUNT( DISTINCT ";
         }
     else
         {
@@ -555,8 +558,13 @@ std::string SQLMaker::select_statement(
             select += "( ";
         }
 
-    select += value_to_be_aggregated(
-        _feature_prefix, _input, _output, _column_used, _data_used );
+    select += value;
+
+    if ( _agg_type == "FIRST" || _agg_type == "LAST" )
+        {
+            select += ", " + helpers::SQLGenerator::make_epoch_time(
+                                 _input.time_stamps_name(), "t2" );
+        }
 
     select += " )";
 

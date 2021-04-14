@@ -450,16 +450,6 @@ std::string DecisionTree::to_sql(
 
     // -------------------------------------------------------------------
 
-    if ( aggregation_type() == "FIRST" || aggregation_type() == "LAST" )
-        {
-            assert_true( input().num_time_stamps() > 0 );
-            const auto ts_name = helpers::SQLGenerator::edit_colname(
-                input().time_stamps_name(), "t2" );
-            sql << "ORDER BY " << ts_name << std::endl;
-        }
-
-    // -------------------------------------------------------------------
-
     sql << "GROUP BY t1.rowid;" << std::endl << std::endl << std::endl;
 
     // -------------------------------------------------------------------
@@ -479,13 +469,13 @@ std::vector<Float> DecisionTree::transform(
 
     const auto aggregation =
         aggregations::TransformAggregationParser::parse_aggregation(
-            {.aggregation_type_ = impl()->aggregation_type_,
-             .column_to_be_aggregated_ = column_to_be_aggregated(),
-             .population_ = _population,
-             .peripheral_ = _peripheral,
-             .same_units_discrete_ = same_units_discrete(),
-             .same_units_numerical_ = same_units_numerical(),
-             .subfeatures_ = _subfeatures} );
+            { .aggregation_type_ = impl()->aggregation_type_,
+              .column_to_be_aggregated_ = column_to_be_aggregated(),
+              .population_ = _population,
+              .peripheral_ = _peripheral,
+              .same_units_discrete_ = same_units_discrete(),
+              .same_units_numerical_ = same_units_numerical(),
+              .subfeatures_ = _subfeatures } );
 
     assert_true( aggregation );
 
