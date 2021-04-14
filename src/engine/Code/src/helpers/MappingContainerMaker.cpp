@@ -500,6 +500,11 @@ MappingContainerMaker::make_rownum_map_discrete( const Column<Float>& _col )
 
     for ( size_t i = 0; i < _col.nrows_; ++i )
         {
+            if ( std::isnan( _col[i] ) || std::isinf( _col[i] ) )
+                {
+                    continue;
+                }
+
             const auto key = static_cast<Int>( _col[i] );
 
             const auto it = rownum_map.find( key );
