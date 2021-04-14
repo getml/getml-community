@@ -70,8 +70,9 @@ class FeatureLearner : public AbstractFeatureLearner
     /// Return feature learner as SQL code.
     std::vector<std::string> to_sql(
         const std::shared_ptr<const std::vector<strings::String>>& _categories,
-        const std::string& _prefix,
-        const bool _subfeatures ) const final;
+        const bool _targets,
+        const bool _subfeatures,
+        const std::string& _prefix ) const final;
 
     /// Returns a string describing the type of the feature learner.
     std::string type() const final;
@@ -950,8 +951,9 @@ std::string FeatureLearner<FeatureLearnerType>::remove_time_diff(
 template <typename FeatureLearnerType>
 std::vector<std::string> FeatureLearner<FeatureLearnerType>::to_sql(
     const std::shared_ptr<const std::vector<strings::String>>& _categories,
-    const std::string& _prefix,
-    const bool _subfeatures ) const
+    const bool _targets,
+    const bool _subfeatures,
+    const std::string& _prefix ) const
 {
     std::vector<std::string> sql;
 
@@ -967,9 +969,13 @@ std::vector<std::string> FeatureLearner<FeatureLearnerType>::to_sql(
                         feature_learner().mappings().to_sql( _categories, "" );
                 }
 
+            const auto peripheral_needs_targets = infer_needs_targets(
+                placeholder(), feature_learner().peripheral_schema().size() );
+
             const auto staging_tables =
                 helpers::SQLGenerator::make_staging_tables(
-                    true,  // TODO
+                    _targets,
+                    peripheral_needs_targets,
                     feature_learner().population_schema(),
                     feature_learner().peripheral_schema(),
                     colname_map );
@@ -1091,7 +1097,6 @@ std::string FeatureLearner<FeatureLearnerType>::type() const
     // ----------------------------------------------------------------------
 }
 
-// ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 }  // namespace featurelearners
 }  // namespace engine

@@ -59,8 +59,8 @@ class ConditionMaker
         const std::vector<strings::String>& _categories,
         const containers::Split& _split ) const;
 
-    /// Generates the column name for the equation.
-    std::string make_colname(
+    /// Generates parts of the equation.
+    std::string make_equation_part(
         const std::string& _raw_name,
         const std::string& _alias,
         const Float _weight,
@@ -98,6 +98,14 @@ class ConditionMaker
     {
         assert_true( input_scaler_ );
         return *input_scaler_;
+    }
+
+    /// Generates the column name to insert into the conditions.
+    std::string make_colname(
+        const std::string& _colname, const std::string& _alias ) const
+    {
+        return _alias + ".\"" +
+               helpers::SQLGenerator::make_colname( _colname ) + "\"";
     }
 
     /// Returns the timediff string for time comparisons

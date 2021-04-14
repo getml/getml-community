@@ -19,7 +19,7 @@ std::string ConditionMaker::condition_greater(
                 {
                     assert_true( _split.column_ < _input.num_categoricals() );
 
-                    const auto colname = helpers::SQLGenerator::edit_colname(
+                    const auto colname = make_colname(
                         _input.categorical_name( _split.column_ ), "t2" );
 
                     const std::string condition =
@@ -33,7 +33,7 @@ std::string ConditionMaker::condition_greater(
                 {
                     assert_true( _split.column_ < _output.num_categoricals() );
 
-                    const auto colname = helpers::SQLGenerator::edit_colname(
+                    const auto colname = make_colname(
                         _output.categorical_name( _split.column_ ), "t1" );
 
                     const std::string condition =
@@ -47,7 +47,7 @@ std::string ConditionMaker::condition_greater(
                 {
                     assert_true( _split.column_ < _input.num_discretes() );
 
-                    const auto colname = helpers::SQLGenerator::edit_colname(
+                    const auto colname = make_colname(
                         _input.discrete_name( _split.column_ ), "t2" );
 
                     return "( " + colname + " > " +
@@ -58,7 +58,7 @@ std::string ConditionMaker::condition_greater(
                 {
                     assert_true( _split.column_ < _input.num_discretes() );
 
-                    const auto colname = helpers::SQLGenerator::edit_colname(
+                    const auto colname = make_colname(
                         _input.discrete_name( _split.column_ ), "t2" );
 
                     return "( " + colname + " IS NOT NULL )";
@@ -68,7 +68,7 @@ std::string ConditionMaker::condition_greater(
                 {
                     assert_true( _split.column_ < _output.num_discretes() );
 
-                    const auto colname = helpers::SQLGenerator::edit_colname(
+                    const auto colname = make_colname(
                         _output.discrete_name( _split.column_ ), "t1" );
 
                     return "( " + colname + " > " +
@@ -79,7 +79,7 @@ std::string ConditionMaker::condition_greater(
                 {
                     assert_true( _split.column_ < _output.num_discretes() );
 
-                    const auto colname = helpers::SQLGenerator::edit_colname(
+                    const auto colname = make_colname(
                         _output.discrete_name( _split.column_ ), "t1" );
 
                     return "( " + colname + " IS NOT NULL )";
@@ -89,7 +89,7 @@ std::string ConditionMaker::condition_greater(
                 {
                     assert_true( _split.column_ < _input.num_numericals() );
 
-                    const auto colname = helpers::SQLGenerator::edit_colname(
+                    const auto colname = make_colname(
                         _input.numerical_name( _split.column_ ), "t2" );
 
                     return "( " + colname + " > " +
@@ -100,7 +100,7 @@ std::string ConditionMaker::condition_greater(
                 {
                     assert_true( _split.column_ < _input.num_numericals() );
 
-                    const auto colname = helpers::SQLGenerator::edit_colname(
+                    const auto colname = make_colname(
                         _input.numerical_name( _split.column_ ), "t2" );
 
                     return "( " + colname + " IS NOT NULL )";
@@ -110,7 +110,7 @@ std::string ConditionMaker::condition_greater(
                 {
                     assert_true( _split.column_ < _output.num_numericals() );
 
-                    const auto colname = helpers::SQLGenerator::edit_colname(
+                    const auto colname = make_colname(
                         _output.numerical_name( _split.column_ ), "t1" );
 
                     return "( " + colname + " > " +
@@ -121,7 +121,7 @@ std::string ConditionMaker::condition_greater(
                 {
                     assert_true( _split.column_ < _output.num_numericals() );
 
-                    const auto colname = helpers::SQLGenerator::edit_colname(
+                    const auto colname = make_colname(
                         _output.numerical_name( _split.column_ ), "t1" );
 
                     return "( " + colname + " IS NOT NULL )";
@@ -133,10 +133,10 @@ std::string ConditionMaker::condition_greater(
                     assert_true(
                         _split.column_input_ < _input.num_categoricals() );
 
-                    const auto colname1 = helpers::SQLGenerator::edit_colname(
+                    const auto colname1 = make_colname(
                         _output.categorical_name( _split.column_ ), "t1" );
 
-                    const auto colname2 = helpers::SQLGenerator::edit_colname(
+                    const auto colname2 = make_colname(
                         _input.categorical_name( _split.column_input_ ), "t2" );
 
                     return "( " + colname1 + " = " + colname2 + " )";
@@ -148,10 +148,10 @@ std::string ConditionMaker::condition_greater(
                     assert_true(
                         _split.column_input_ < _input.num_discretes() );
 
-                    const auto colname1 = helpers::SQLGenerator::edit_colname(
+                    const auto colname1 = make_colname(
                         _output.discrete_name( _split.column_ ), "t1" );
 
-                    const auto colname2 = helpers::SQLGenerator::edit_colname(
+                    const auto colname2 = make_colname(
                         _input.discrete_name( _split.column_input_ ), "t2" );
 
                     return "( " + colname1 + " - " + colname2 + " > " +
@@ -164,10 +164,10 @@ std::string ConditionMaker::condition_greater(
                     assert_true(
                         _split.column_input_ < _input.num_discretes() );
 
-                    const auto colname1 = helpers::SQLGenerator::edit_colname(
+                    const auto colname1 = make_colname(
                         _output.discrete_name( _split.column_ ), "t1" );
 
-                    const auto colname2 = helpers::SQLGenerator::edit_colname(
+                    const auto colname2 = make_colname(
                         _input.discrete_name( _split.column_input_ ), "t2" );
 
                     return "( " + colname1 + " IS NOT NULL AND " + colname2 +
@@ -193,10 +193,10 @@ std::string ConditionMaker::condition_greater(
                     assert_true(
                         _split.column_input_ < _input.num_numericals() );
 
-                    const auto colname1 = helpers::SQLGenerator::edit_colname(
+                    const auto colname1 = make_colname(
                         _output.numerical_name( _split.column_ ), "t1" );
 
-                    const auto colname2 = helpers::SQLGenerator::edit_colname(
+                    const auto colname2 = make_colname(
                         _input.numerical_name( _split.column_input_ ), "t2" );
 
                     return "( " + colname1 + " - " + colname2 + " > " +
@@ -209,10 +209,10 @@ std::string ConditionMaker::condition_greater(
                     assert_true(
                         _split.column_input_ < _input.num_numericals() );
 
-                    const auto colname1 = helpers::SQLGenerator::edit_colname(
+                    const auto colname1 = make_colname(
                         _output.numerical_name( _split.column_ ), "t1" );
 
-                    const auto colname2 = helpers::SQLGenerator::edit_colname(
+                    const auto colname2 = make_colname(
                         _input.numerical_name( _split.column_input_ ), "t2" );
 
                     return "( " + colname1 + " IS NOT NULL AND " + colname2 +
@@ -247,7 +247,7 @@ std::string ConditionMaker::condition_greater(
                 {
                     assert_true( _split.column_ < _input.num_text() );
 
-                    const auto colname = helpers::SQLGenerator::edit_colname(
+                    const auto colname = make_colname(
                         _input.text_name( _split.column_ ), "t2" );
 
                     // TODO
@@ -260,7 +260,7 @@ std::string ConditionMaker::condition_greater(
                 {
                     assert_true( _split.column_ < _output.num_text() );
 
-                    const auto colname = helpers::SQLGenerator::edit_colname(
+                    const auto colname = make_colname(
                         _output.text_name( _split.column_ ), "t1" );
 
                     // TODO
@@ -296,7 +296,7 @@ std::string ConditionMaker::condition_smaller(
                 {
                     assert_true( _split.column_ < _input.num_categoricals() );
 
-                    const auto colname = helpers::SQLGenerator::edit_colname(
+                    const auto colname = make_colname(
                         _input.categorical_name( _split.column_ ), "t2" );
 
                     const std::string condition =
@@ -310,7 +310,7 @@ std::string ConditionMaker::condition_smaller(
                 {
                     assert_true( _split.column_ < _output.num_categoricals() );
 
-                    const auto colname = helpers::SQLGenerator::edit_colname(
+                    const auto colname = make_colname(
                         _output.categorical_name( _split.column_ ), "t1" );
 
                     const std::string condition =
@@ -324,7 +324,7 @@ std::string ConditionMaker::condition_smaller(
                 {
                     assert_true( _split.column_ < _input.num_discretes() );
 
-                    const auto colname = helpers::SQLGenerator::edit_colname(
+                    const auto colname = make_colname(
                         _input.discrete_name( _split.column_ ), "t2" );
 
                     return "( " + colname +
@@ -336,7 +336,7 @@ std::string ConditionMaker::condition_smaller(
                 {
                     assert_true( _split.column_ < _input.num_discretes() );
 
-                    const auto colname = helpers::SQLGenerator::edit_colname(
+                    const auto colname = make_colname(
                         _input.discrete_name( _split.column_ ), "t2" );
 
                     return "( " + colname + " IS NULL )";
@@ -346,7 +346,7 @@ std::string ConditionMaker::condition_smaller(
                 {
                     assert_true( _split.column_ < _output.num_discretes() );
 
-                    const auto colname = helpers::SQLGenerator::edit_colname(
+                    const auto colname = make_colname(
                         _output.discrete_name( _split.column_ ), "t1" );
 
                     return "( " + colname +
@@ -358,7 +358,7 @@ std::string ConditionMaker::condition_smaller(
                 {
                     assert_true( _split.column_ < _output.num_discretes() );
 
-                    const auto colname = helpers::SQLGenerator::edit_colname(
+                    const auto colname = make_colname(
                         _output.discrete_name( _split.column_ ), "t1" );
 
                     return "( " + colname + " IS NULL )";
@@ -368,7 +368,7 @@ std::string ConditionMaker::condition_smaller(
                 {
                     assert_true( _split.column_ < _input.num_numericals() );
 
-                    const auto colname = helpers::SQLGenerator::edit_colname(
+                    const auto colname = make_colname(
                         _input.numerical_name( _split.column_ ), "t2" );
 
                     return "( " + colname +
@@ -380,7 +380,7 @@ std::string ConditionMaker::condition_smaller(
                 {
                     assert_true( _split.column_ < _input.num_numericals() );
 
-                    const auto colname = helpers::SQLGenerator::edit_colname(
+                    const auto colname = make_colname(
                         _input.numerical_name( _split.column_ ), "t2" );
 
                     return "( " + colname + " IS NULL )";
@@ -390,7 +390,7 @@ std::string ConditionMaker::condition_smaller(
                 {
                     assert_true( _split.column_ < _output.num_numericals() );
 
-                    const auto colname = helpers::SQLGenerator::edit_colname(
+                    const auto colname = make_colname(
                         _output.numerical_name( _split.column_ ), "t1" );
 
                     return "( " + colname +
@@ -402,7 +402,7 @@ std::string ConditionMaker::condition_smaller(
                 {
                     assert_true( _split.column_ < _output.num_numericals() );
 
-                    const auto colname = helpers::SQLGenerator::edit_colname(
+                    const auto colname = make_colname(
                         _output.numerical_name( _split.column_ ), "t1" );
 
                     return "( " + colname + " IS NOT NULL )";
@@ -414,10 +414,10 @@ std::string ConditionMaker::condition_smaller(
                     assert_true(
                         _split.column_input_ < _input.num_categoricals() );
 
-                    const auto colname1 = helpers::SQLGenerator::edit_colname(
+                    const auto colname1 = make_colname(
                         _output.categorical_name( _split.column_ ), "t1" );
 
-                    const auto colname2 = helpers::SQLGenerator::edit_colname(
+                    const auto colname2 = make_colname(
                         _input.categorical_name( _split.column_input_ ), "t2" );
 
                     return "( " + colname1 + " != " + colname2 + " )";
@@ -429,10 +429,10 @@ std::string ConditionMaker::condition_smaller(
                     assert_true(
                         _split.column_input_ < _input.num_discretes() );
 
-                    const auto colname1 = helpers::SQLGenerator::edit_colname(
+                    const auto colname1 = make_colname(
                         _output.discrete_name( _split.column_ ), "t1" );
 
-                    const auto colname2 = helpers::SQLGenerator::edit_colname(
+                    const auto colname2 = make_colname(
                         _input.discrete_name( _split.column_input_ ), "t2" );
 
                     return "( " + colname1 + " - " + colname2 +
@@ -447,10 +447,10 @@ std::string ConditionMaker::condition_smaller(
                     assert_true(
                         _split.column_input_ < _input.num_discretes() );
 
-                    const auto colname1 = helpers::SQLGenerator::edit_colname(
+                    const auto colname1 = make_colname(
                         _output.discrete_name( _split.column_ ), "t1" );
 
-                    const auto colname2 = helpers::SQLGenerator::edit_colname(
+                    const auto colname2 = make_colname(
                         _input.discrete_name( _split.column_input_ ), "t2" );
 
                     return "( " + colname1 + " IS NULL OR " + colname2 +
@@ -476,10 +476,10 @@ std::string ConditionMaker::condition_smaller(
                     assert_true(
                         _split.column_input_ < _input.num_numericals() );
 
-                    const auto colname1 = helpers::SQLGenerator::edit_colname(
+                    const auto colname1 = make_colname(
                         _output.numerical_name( _split.column_ ), "t1" );
 
-                    const auto colname2 = helpers::SQLGenerator::edit_colname(
+                    const auto colname2 = make_colname(
                         _input.numerical_name( _split.column_input_ ), "t2" );
 
                     return "( " + colname1 + " - " + colname2 +
@@ -494,10 +494,10 @@ std::string ConditionMaker::condition_smaller(
                     assert_true(
                         _split.column_input_ < _input.num_numericals() );
 
-                    const auto colname1 = helpers::SQLGenerator::edit_colname(
+                    const auto colname1 = make_colname(
                         _output.numerical_name( _split.column_ ), "t1" );
 
-                    const auto colname2 = helpers::SQLGenerator::edit_colname(
+                    const auto colname2 = make_colname(
                         _input.numerical_name( _split.column_input_ ), "t2" );
 
                     return "( " + colname1 + " IS NULL OR " + colname2 +
@@ -532,7 +532,7 @@ std::string ConditionMaker::condition_smaller(
                 {
                     assert_true( _split.column_ < _input.num_text() );
 
-                    const auto colname = helpers::SQLGenerator::edit_colname(
+                    const auto colname = make_colname(
                         _input.text_name( _split.column_ ), "t2" );
 
                     // TODO
@@ -546,7 +546,7 @@ std::string ConditionMaker::condition_smaller(
                 {
                     assert_true( _split.column_ < _output.num_text() );
 
-                    const auto colname = helpers::SQLGenerator::edit_colname(
+                    const auto colname = make_colname(
                         _output.text_name( _split.column_ ), "t1" );
 
                     // TODO

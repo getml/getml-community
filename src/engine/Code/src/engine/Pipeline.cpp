@@ -2627,7 +2627,10 @@ std::string Pipeline::to_sql(
             assert_true( fe );
 
             const auto vec = fe->to_sql(
-                _categories, std::to_string( i + 1 ) + "_", _subfeatures );
+                _categories,
+                _targets,
+                _subfeatures,
+                std::to_string( i + 1 ) + "_" );
 
             assert_true( vec.size() >= fe->num_features() );
 
@@ -2687,8 +2690,8 @@ Poco::JSON::Array::Ptr Pipeline::to_sql_arr(
 
             const auto& index = predictor_impl().autofeatures().at( i );
 
-            const auto vec =
-                fe->to_sql( _categories, std::to_string( i + 1 ) + "_", false );
+            const auto vec = fe->to_sql(
+                _categories, false, false, std::to_string( i + 1 ) + "_" );
 
             for ( const auto ix : index )
                 {

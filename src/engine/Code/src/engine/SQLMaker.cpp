@@ -122,7 +122,8 @@ std::string SQLMaker::make_select(
 
             const auto end = ( no_comma ? "\n" : ",\n" );
 
-            sql += begin + "0.0 AS \"" + _autofeatures.at( i ) + "\"" + end;
+            sql += begin + "CAST( 0.0 AS REAL ) AS \"" + _autofeatures.at( i ) +
+                   "\"" + end;
         }
 
     for ( size_t i = 0; i < manual.size(); ++i )

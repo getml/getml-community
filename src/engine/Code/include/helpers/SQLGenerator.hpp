@@ -45,7 +45,8 @@ class SQLGenerator
 
     /// Generates the staging tables.
     static std::vector<std::string> make_staging_tables(
-        const bool& _include_targets,
+        const bool _population_needs_targets,
+        const std::vector<bool>& _peripheral_needs_targets,
         const Placeholder& _population_schema,
         const std::vector<Placeholder>& _peripheral_schema,
         const ColnameMap& _colname_map );

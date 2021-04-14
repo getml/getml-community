@@ -653,7 +653,8 @@ std::string SQLGenerator::make_staging_table_name( const std::string& _name )
 // ----------------------------------------------------------------------------
 
 std::vector<std::string> SQLGenerator::make_staging_tables(
-    const bool& _include_targets,
+    const bool _population_needs_targets,
+    const std::vector<bool>& _peripheral_needs_targets,
     const Placeholder& _population_schema,
     const std::vector<Placeholder>& _peripheral_schema,
     const ColnameMap& _colname_map )
@@ -676,17 +677,23 @@ std::vector<std::string> SQLGenerator::make_staging_tables(
     // ------------------------------------------------------------------------
 
     auto sql = std::vector<std::string>( { make_staging_table(
-        _include_targets,
+        _population_needs_targets,
         _population_schema,
         get_mapping( _population_schema ) ) } );
 
     // ------------------------------------------------------------------------
 
+    assert_true(
+        _peripheral_schema.size() == _peripheral_needs_targets.size() );
+
     for ( size_t i = 0; i < _peripheral_schema.size(); ++i )
         {
             const auto& schema = _peripheral_schema.at( i );
 
-            auto s = make_staging_table( false, schema, get_mapping( schema ) );
+            auto s = make_staging_table(
+                _peripheral_needs_targets.at( i ),
+                schema,
+                get_mapping( schema ) );
 
             sql.emplace_back( std::move( s ) );
         }

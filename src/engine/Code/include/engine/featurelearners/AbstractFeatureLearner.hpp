@@ -95,8 +95,9 @@ class AbstractFeatureLearner
     /// Return features as SQL code.
     virtual std::vector<std::string> to_sql(
         const std::shared_ptr<const std::vector<strings::String>>& _categories,
-        const std::string& _prefix,
-        const bool _subfeatures ) const = 0;
+        const bool _targets,
+        const bool _subfeatures,
+        const std::string& _prefix ) const = 0;
 
     /// Generate features.
     virtual containers::Features transform(
