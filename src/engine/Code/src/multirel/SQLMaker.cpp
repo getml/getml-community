@@ -263,36 +263,42 @@ std::string SQLMaker::get_name(
     const size_t _column_used,
     const enums::DataUsed& _data_used ) const
 {
+    const auto make_colname = []( const std::string& _colname,
+                                  const std::string& _alias ) -> std::string {
+        return _alias + ".\"" +
+               helpers::SQLGenerator::make_colname( _colname ) + "\"";
+    };
+
     switch ( _data_used )
         {
             case enums::DataUsed::x_perip_categorical:
                 assert_true( _column_used < _input.num_categoricals() );
-                return helpers::SQLGenerator::edit_colname(
+                return make_colname(
                     _input.categorical_name( _column_used ), "t2" );
 
             case enums::DataUsed::x_popul_categorical:
                 assert_true( _column_used < _output.num_categoricals() );
-                return helpers::SQLGenerator::edit_colname(
+                return make_colname(
                     _output.categorical_name( _column_used ), "t1" );
 
             case enums::DataUsed::x_perip_discrete:
                 assert_true( _column_used < _input.num_discretes() );
-                return helpers::SQLGenerator::edit_colname(
+                return make_colname(
                     _input.discrete_name( _column_used ), "t2" );
 
             case enums::DataUsed::x_popul_discrete:
                 assert_true( _column_used < _output.num_discretes() );
-                return helpers::SQLGenerator::edit_colname(
+                return make_colname(
                     _output.discrete_name( _column_used ), "t1" );
 
             case enums::DataUsed::x_perip_numerical:
                 assert_true( _column_used < _input.num_numericals() );
-                return helpers::SQLGenerator::edit_colname(
+                return make_colname(
                     _input.numerical_name( _column_used ), "t2" );
 
             case enums::DataUsed::x_popul_numerical:
                 assert_true( _column_used < _output.num_numericals() );
-                return helpers::SQLGenerator::edit_colname(
+                return make_colname(
                     _output.numerical_name( _column_used ), "t1" );
 
             case enums::DataUsed::x_subfeature:
@@ -630,7 +636,7 @@ std::string SQLMaker::value_to_be_aggregated(
                         same_units_.same_units_discrete_,
                         _column_used );
 
-                    return "( " + name2 + " - " + name1 + " ) * 86400.0";
+                    return name2 + " - " + name1;
                 }
 
             case enums::DataUsed::same_unit_numerical_ts:
@@ -641,7 +647,7 @@ std::string SQLMaker::value_to_be_aggregated(
                         same_units_.same_units_numerical_,
                         _column_used );
 
-                    return "( " + name2 + " - " + name1 + " ) * 86400.0";
+                    return name2 + " - " + name1;
                 }
 
             default:

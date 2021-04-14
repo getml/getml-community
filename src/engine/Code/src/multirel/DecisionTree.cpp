@@ -444,9 +444,14 @@ std::string DecisionTree::to_sql(
                 {
                     sql << "OR ( " << conditions.at( i ) << " )" << std::endl;
                 }
+
+            if ( i + 1 == conditions.size() )
+                {
+                    sql << ")";
+                }
         }
 
-    sql << ")" << std::endl;
+    sql << std::endl;
 
     // -------------------------------------------------------------------
 
