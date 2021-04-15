@@ -82,14 +82,16 @@ std::pair<Float, containers::Weights> IntermediateAggregationImpl::calc_pair(
 
 // ----------------------------------------------------------------------------
 
-std::vector<Float> IntermediateAggregationImpl::reduce_predictions(
+std::shared_ptr<std::vector<Float>>
+IntermediateAggregationImpl::reduce_predictions(
     const bool _divide_by_count, const std::vector<Float>& _input_predictions )
 {
     assert_true( eta1_.size() > 0 );
 
     auto counts = std::vector<Float>( agg_index().nrows() );
 
-    auto predictions = std::vector<Float>( agg_index().nrows() );
+    auto predictions =
+        std::make_shared<std::vector<Float>>( agg_index().nrows() );
 
     for ( size_t i = 0; i < _input_predictions.size(); ++i )
         {
@@ -99,20 +101,20 @@ std::vector<Float> IntermediateAggregationImpl::reduce_predictions(
                 {
                     assert_true( ix >= 0 );
                     assert_true(
-                        static_cast<size_t>( ix ) < predictions.size() );
+                        static_cast<size_t>( ix ) < predictions->size() );
 
-                    predictions[ix] += _input_predictions[i];
+                    ( *predictions )[ix] += _input_predictions[i];
                     ++counts[ix];
                 }
         }
 
     if ( _divide_by_count )
         {
-            for ( size_t i = 0; i < predictions.size(); ++i )
+            for ( size_t i = 0; i < predictions->size(); ++i )
                 {
                     if ( counts[i] > 0.0 )
                         {
-                            predictions[i] /= counts[i];
+                            ( *predictions )[i] /= counts[i];
                         }
                 }
         }

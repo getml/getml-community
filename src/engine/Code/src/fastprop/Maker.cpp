@@ -316,7 +316,6 @@ helpers::FeatureContainer Maker::transform( const MakerParams& _params )
                     features->push_back( helpers::Column<Float>(
                         feature_ptrs.at( i ),
                         "FAST_PROP_FEATURE_" + std::to_string( i + 1 ),
-                        feature_ptrs.at( i )->size(),
                         "" ) );
                 }
         }

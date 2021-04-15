@@ -109,7 +109,7 @@ class DecisionTreeEnsemble
         containers::Optional<aggregations::AggregationImpl> *_impl ) const;
 
     /// Transforms a specific feature.
-    std::vector<Float> transform(
+    std::shared_ptr<const std::vector<Float>> transform(
         const decisiontrees::TableHolder &_table_holder,
         const std::vector<containers::Subfeatures> &_subfeatures,
         const size_t _num_feature,

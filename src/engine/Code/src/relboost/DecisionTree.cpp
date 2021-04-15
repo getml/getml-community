@@ -241,9 +241,9 @@ std::string DecisionTree::to_sql(
 
 // ----------------------------------------------------------------------------
 
-std::vector<Float> DecisionTree::transform(
+std::shared_ptr<std::vector<Float>> DecisionTree::transform(
     const containers::DataFrameView& _output,
-    const std::optional<containers::DataFrame>& _input,
+    const containers::DataFrame& _input,
     const containers::Subfeatures& _subfeatures ) const
 {
     // ------------------------------------------------------------------------
@@ -252,33 +252,25 @@ std::vector<Float> DecisionTree::transform(
 
     // ------------------------------------------------------------------------
 
-    auto predictions = std::vector<Float>( _output.nrows() );
+    const auto predictions =
+        std::make_shared<std::vector<Float>>( _output.nrows() );
 
     // ------------------------------------------------------------------------
 
     for ( size_t ix_output = 0; ix_output < _output.nrows(); ++ix_output )
         {
             // ------------------------------------------------------------------------
-            // Build matches and pointers
 
             std::vector<containers::Match> matches;
 
-            if ( _input )
-                {
-                    utils::Matchmaker::make_matches(
-                        _output,
-                        *_input,
-                        hyperparameters_->use_timestamps_,
-                        ix_output,
-                        &matches );
-                }
-            else
-                {
-                    matches = {containers::Match{0, ix_output}};
-                }
+            utils::Matchmaker::make_matches(
+                _output,
+                _input,
+                hyperparameters_->use_timestamps_,
+                ix_output,
+                &matches );
 
             // ------------------------------------------------------------------------
-            // Calculate weights for each match.
 
             std::vector<Float> weights( matches.size() );
 
@@ -289,9 +281,8 @@ std::vector<Float> DecisionTree::transform(
                 }
 
             // ------------------------------------------------------------------------
-            // Aggregate weights to predictions.
 
-            predictions[ix_output] = loss_function_->transform( weights );
+            ( *predictions )[ix_output] = loss_function_->transform( weights );
 
             // ------------------------------------------------------------------------
         }

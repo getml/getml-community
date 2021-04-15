@@ -141,9 +141,11 @@ void Threadutils::transform_as_feature_learner(
             const auto new_feature =
                 _params.ensemble_.transform( table_holder, subfeatures, ix );
 
+            assert_true( new_feature );
+
             copy(
                 population_subview.rows(),
-                new_feature,
+                *new_feature,
                 _params.features_.at( i ).get() );
 
             const auto progress = ( ( i + 1 ) * 100 ) / _params.index_.size();

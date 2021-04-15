@@ -241,7 +241,7 @@ class CrossEntropyLoss : public LossFunction
             }
         else
             {
-                return {p};
+                return { p };
             }
     }
 
@@ -286,7 +286,7 @@ class CrossEntropyLoss : public LossFunction
     void commit() final
     {
         assert_true( yhat_old().size() == targets().size() );
-        auto weights = std::array<Float, 3>( {0.0, 0.0, 0.0} );
+        auto weights = std::array<Float, 3>( { 0.0, 0.0, 0.0 } );
         auto indices = std::vector<size_t>( 0 );
         commit( indices, weights );
     }
@@ -361,11 +361,12 @@ class CrossEntropyLoss : public LossFunction
     }
 
     /// Reduces the predictions - since this is a loss function, there is
-    /// nothing to reduce, but we do have to intercept.
+    /// nothing to reduce, but we do have to add the intercept.
     void reduce_predictions(
-        const Float _intercept, std::vector<Float>* _predictions ) final
+        const Float _intercept,
+        std::shared_ptr<std::vector<Float>>* _predictions ) final
     {
-        for ( auto& val : *_predictions ) val += _intercept;
+        for ( auto& p : **_predictions ) p += _intercept;
     }
 
     /// Resets critical resources to zero.

@@ -136,8 +136,7 @@ class DecisionTreeEnsemble
     /// Selects the features according to the index given.
     void select_features( const std::vector<size_t>& _index );
 
-    /// Returns the features underlying the model (the predictions of the
-    /// individual trees as opposed to the entire prediction)
+    /// Returns the features underlying the model
     containers::Features transform(
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
@@ -146,7 +145,7 @@ class DecisionTreeEnsemble
             std::shared_ptr<const logging::AbstractLogger>() ) const;
 
     /// Returns one feature.
-    std::vector<Float> transform(
+    std::shared_ptr<const std::vector<Float>> transform(
         const TableHolder& _table_holder,
         const std::vector<containers::Subfeatures>& _subfeatures,
         size_t _n_feature ) const;

@@ -157,9 +157,11 @@ void Threadutils::transform_ensemble(
                     const auto new_feature = _params.ensemble_.transform(
                         table_holder, subfeatures, ix, &impl );
 
+                    assert_true( new_feature );
+
                     copy(
                         population_subview.rows(),
-                        new_feature,
+                        *new_feature,
                         _params.features_.at( i ).get() );
 
                     const auto progress =

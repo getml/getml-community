@@ -218,31 +218,33 @@ std::vector<containers::Subfeatures> SubtreeHelper::make_subfeatures(
 
     for ( size_t i = 0; i < size; ++i )
         {
-            if ( !_table_holder.subtables()[i] )
+            if ( !_table_holder.subtables().at( i ) )
                 {
                     continue;
                 }
 
             assert_true(
-                _table_holder.subtables()[i]->main_tables().size() > 0 );
+                _table_holder.subtables().at( i )->main_tables().size() > 0 );
 
-            const auto rows_map = utils::Mapper::create_rows_map(
-                _table_holder.subtables()[i]->main_tables()[0].rows_ptr() );
+            const auto rows_map =
+                utils::Mapper::create_rows_map( _table_holder.subtables()
+                                                    .at( i )
+                                                    ->main_tables()
+                                                    .at( 0 )
+                                                    .rows_ptr() );
 
-            const auto& p = _predictions[i];
+            const auto& p = _predictions.at( i );
 
             for ( size_t j = 0; j < p.size(); ++j )
                 {
                     const auto column = containers::Column<Float>(
-                        p[j].data(),
-                        "FEATURE_" + std::to_string( j + 1 ),
-                        p[j].size() );
+                        p.at( j ), "FEATURE_" + std::to_string( j + 1 ), "" );
 
                     const auto view =
                         containers::ColumnView<Float, std::map<Int, Int>>(
                             column, rows_map );
 
-                    subfeatures[i].push_back( view );
+                    subfeatures.at( i ).push_back( view );
                 }
         }
 

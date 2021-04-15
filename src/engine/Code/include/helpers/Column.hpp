@@ -17,26 +17,14 @@ struct Column
     Column(
         const std::shared_ptr<const std::vector<T>> _ptr,
         const std::string& _name,
-        const size_t _nrows,
         const std::string& _unit )
         : data_( _ptr ? _ptr->data() : nullptr ),
           name_( _name ),
-          nrows_( _nrows ),
+          nrows_( _ptr ? _ptr->size() : static_cast<size_t>( 0 ) ),
           ptr_( _ptr ),
           unit_( _unit )
     {
         assert_true( ptr_ );
-    }
-
-    // TODO: This is a temporary fix - in the future, the Column should always
-    // take ownership.
-    Column( const T* _data, const std::string& _name, const size_t _nrows )
-        : data_( _data ),
-          name_( _name ),
-          nrows_( _nrows ),
-          ptr_( nullptr ),  // TODO: This is bad.
-          unit_( "" )
-    {
     }
 
     ~Column() = default;

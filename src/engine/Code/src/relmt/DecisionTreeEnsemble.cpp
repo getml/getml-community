@@ -520,16 +520,18 @@ void DecisionTreeEnsemble::fit_candidate(
     auto new_predictions =
         new_candidate.transform( _output_table, _input_table, _subfeatures );
 
+    assert_true( new_predictions );
+
     _loss_function->reduce_predictions(
         new_candidate.intercept(), &new_predictions );
 
-    new_candidate.calc_update_rate( new_predictions );
+    new_candidate.calc_update_rate( *new_predictions );
 
     const auto new_loss = _loss_function->evaluate_tree(
-        new_candidate.update_rate(), new_predictions );
+        new_candidate.update_rate(), *new_predictions );
 
     _candidates->emplace_back( std::make_tuple(
-        std::move( new_candidate ), new_loss, std::move( new_predictions ) ) );
+        std::move( new_candidate ), new_loss, std::move( *new_predictions ) ) );
 }
 
 // ----------------------------------------------------------------------------
@@ -1168,36 +1170,6 @@ std::vector<Float> DecisionTreeEnsemble::predict(
 
 // ----------------------------------------------------------------------------
 
-std::vector<Float> DecisionTreeEnsemble::predict(
-    const containers::DataFrameView &_population ) const
-{
-    auto predictions =
-        std::vector<Float>( _population.nrows(), initial_prediction() );
-
-    for ( const auto &tree : trees() )
-        {
-            const auto new_predictions = tree.transform(
-                _population,
-                std::optional<containers::DataFrame>(),
-                containers::Subfeatures() );
-
-            assert_true( new_predictions.size() == predictions.size() );
-
-            for ( size_t i = 0; i < predictions.size(); ++i )
-
-                {
-                    const auto p = new_predictions[i];
-
-                    predictions[i] +=
-                        p * hyperparameters().shrinkage_ * tree.update_rate();
-                }
-        }
-
-    return predictions;
-}
-
-// ----------------------------------------------------------------------------
-
 void DecisionTreeEnsemble::save( const std::string &_fname ) const
 {
     std::ofstream fs( _fname, std::ofstream::out );
@@ -1288,7 +1260,7 @@ containers::Features DecisionTreeEnsemble::transform(
 
 // ----------------------------------------------------------------------------
 
-std::vector<Float> DecisionTreeEnsemble::transform(
+std::shared_ptr<const std::vector<Float>> DecisionTreeEnsemble::transform(
     const TableHolder &_table_holder,
     const std::vector<containers::Subfeatures> &_subfeatures,
     size_t _n_feature ) const

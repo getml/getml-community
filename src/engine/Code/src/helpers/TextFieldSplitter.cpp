@@ -12,8 +12,7 @@ DataFrame TextFieldSplitter::add_rowid( const DataFrame& _df )
     const auto ptr =
         std::make_shared<std::vector<Int>>( stl::make::vector<Int>( range ) );
 
-    const auto rowid =
-        Column<Int>( ptr, helpers::Macros::rowid(), ptr->size(), "" );
+    const auto rowid = Column<Int>( ptr, helpers::Macros::rowid(), "" );
 
     auto join_keys = _df.join_keys_;
 
@@ -151,11 +150,9 @@ TextFieldSplitter::split_text_fields_on_col(
                 }
         }
 
-    const auto rownums =
-        Column<Int>( rownums_ptr, "rownums", rownums_ptr->size(), "" );
+    const auto rownums = Column<Int>( rownums_ptr, "rownums", "" );
 
-    const auto words =
-        Column<strings::String>( words_ptr, "words", words_ptr->size(), "" );
+    const auto words = Column<strings::String>( words_ptr, "words", "" );
 
     return std::make_pair( rownums, words );
 }

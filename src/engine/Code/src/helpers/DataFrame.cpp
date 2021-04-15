@@ -222,8 +222,7 @@ DataFrame DataFrame::create_subview(
                     continue;
                 }
 
-            const auto ts =
-                Column<Float>( col.ptr_, col.name_, col.nrows_, col.unit_ );
+            const auto ts = Column<Float>( col.ptr_, col.name_, col.unit_ );
 
             numericals_and_time_stamps.push_back( ts );
         }

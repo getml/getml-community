@@ -535,7 +535,9 @@ void DecisionTreeEnsemble::fit(
                         subfeatures.at( ix ),
                         hyperparameters().use_timestamps_ );
 
-                    _opt->update_yhat_old( *sample_weights, new_feature );
+                    assert_true( new_feature );
+
+                    _opt->update_yhat_old( *sample_weights, *new_feature );
 
                     _opt->calc_residuals();
                 }
@@ -1302,7 +1304,7 @@ containers::Predictions DecisionTreeEnsemble::transform(
 
 // ----------------------------------------------------------------------------
 
-std::vector<Float> DecisionTreeEnsemble::transform(
+std::shared_ptr<const std::vector<Float>> DecisionTreeEnsemble::transform(
     const decisiontrees::TableHolder &_table_holder,
     const std::vector<containers::Subfeatures> &_subfeatures,
     const size_t _num_feature,

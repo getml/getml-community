@@ -303,11 +303,12 @@ class SquareLoss : public LossFunction
     }
 
     /// Reduces the predictions - since this is a loss function, there is
-    /// nothing to reduce, but we do have to intercept.
+    /// nothing to reduce, but we do have to add the intercept.
     void reduce_predictions(
-        const Float _intercept, std::vector<Float>* _predictions ) final
+        const Float _intercept,
+        std::shared_ptr<std::vector<Float>>* _predictions ) final
     {
-        for ( auto& val : *_predictions ) val += _intercept;
+        for ( auto& p : **_predictions ) p += _intercept;
     }
 
     /// Resets critical resources to zero.

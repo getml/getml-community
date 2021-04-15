@@ -688,7 +688,7 @@ Column<Float> MappingContainerMaker::transform_categorical_column(
     const auto colname =
         make_colname( cat_col.name_, _feature_postfix, _target_num );
 
-    return Column<Float>( vec, colname, vec->size(), "" );
+    return Column<Float>( vec, colname, "" );
 }
 
 // ----------------------------------------------------------------------------
@@ -778,7 +778,7 @@ Column<Float> MappingContainerMaker::transform_discrete_column(
     const auto colname =
         make_colname( dis_col.name_, _feature_postfix, _target_num );
 
-    return Column<Float>( vec, colname, vec->size(), "" );
+    return Column<Float>( vec, colname, "" );
 }
 
 // ----------------------------------------------------------------------------
@@ -901,7 +901,7 @@ Column<Float> MappingContainerMaker::transform_text_column(
     const auto colname = make_colname(
         _text.at( _colnum ).name_, _feature_postfix, _target_num );
 
-    return Column<Float>( vec, colname, vec->size(), "" );
+    return Column<Float>( vec, colname, "" );
 }
 
 // ----------------------------------------------------------------------------

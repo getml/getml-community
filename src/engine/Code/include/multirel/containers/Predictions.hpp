@@ -7,7 +7,7 @@ namespace containers
 {
 // ----------------------------------------------------------------------------
 
-typedef std::vector<std::vector<Float>> Predictions;
+typedef std::vector<std::shared_ptr<const std::vector<Float>>> Predictions;
 
 // ----------------------------------------------------------------------------
 }  // namespace containers

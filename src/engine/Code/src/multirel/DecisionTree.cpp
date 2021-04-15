@@ -464,7 +464,7 @@ std::string DecisionTree::to_sql(
 
 // ----------------------------------------------------------------------------
 
-std::vector<Float> DecisionTree::transform(
+std::shared_ptr<const std::vector<Float>> DecisionTree::transform(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
     const containers::Subfeatures &_subfeatures,
@@ -486,7 +486,8 @@ std::vector<Float> DecisionTree::transform(
 
     // ------------------------------------------------------
 
-    std::vector<Float> yhat( _population.nrows() );
+    const auto yhat =
+        std::make_shared<std::vector<Float>>( _population.nrows() );
 
     // ------------------------------------------------------
 
@@ -546,12 +547,12 @@ std::vector<Float> DecisionTree::transform(
                     ? _peripheral.time_stamp_col()
                     : std::optional<containers::Column<Float>>();
 
-            yhat[ix_x_popul] =
+            ( *yhat )[ix_x_popul] =
                 aggregation->aggregate( match_ptrs, skip, time_stamp );
 
-            if ( std::isnan( yhat[ix_x_popul] ) )
+            if ( std::isnan( ( *yhat )[ix_x_popul] ) )
                 {
-                    yhat[ix_x_popul] = 0.0;
+                    ( *yhat )[ix_x_popul] = 0.0;
                 }
 
             // ------------------------------------------------------

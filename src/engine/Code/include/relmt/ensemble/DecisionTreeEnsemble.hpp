@@ -143,7 +143,7 @@ class DecisionTreeEnsemble
             std::shared_ptr<const logging::AbstractLogger>() ) const;
 
     /// Returns one feature.
-    std::vector<Float> transform(
+    std::shared_ptr<const std::vector<Float>> transform(
         const TableHolder& _table_holder,
         const std::vector<containers::Subfeatures>& _subfeatures,
         size_t _n_feature ) const;

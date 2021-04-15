@@ -143,7 +143,8 @@ class LossFunction
 
     /// Reduces the predictions.
     virtual void reduce_predictions(
-        const Float _intercept, std::vector<Float>* _predictions ) = 0;
+        const Float _intercept,
+        std::shared_ptr<std::vector<Float>>* _predictions ) = 0;
 
     /// Resets the critical resources to zero.
     virtual void reset() = 0;

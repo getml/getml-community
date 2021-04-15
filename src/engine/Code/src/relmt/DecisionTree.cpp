@@ -515,26 +515,24 @@ std::string DecisionTree::to_sql(
 
 // ----------------------------------------------------------------------------
 
-std::vector<Float> DecisionTree::transform(
+std::shared_ptr<std::vector<Float>> DecisionTree::transform(
     const containers::DataFrameView& _output,
-    const std::optional<containers::DataFrame>& _input,
+    const containers::DataFrame& _input,
     const containers::Subfeatures& _subfeatures ) const
 {
     // ------------------------------------------------------------------------
 
     assert_true( root_ );
 
-    assert_true( _input );
-
     // ------------------------------------------------------------------------
 
-    auto predictions = std::vector<Float>( _output.nrows() );
+    auto predictions = std::make_shared<std::vector<Float>>( _output.nrows() );
 
     const auto output_map = std::make_shared<containers::Rescaled::MapType>(
         _output.nrows(), _output.nrows() );
 
     const auto input_map = std::make_shared<containers::Rescaled::MapType>(
-        _input->nrows(), _input->nrows() );
+        _input.nrows(), _input.nrows() );
 
     // ------------------------------------------------------------------------
 
@@ -544,11 +542,9 @@ std::vector<Float> DecisionTree::transform(
 
             std::vector<containers::Match> matches;
 
-            assert_true( _input );
-
             utils::Matchmaker::make_matches(
                 _output,
-                *_input,
+                _input,
                 hyperparameters_->use_timestamps_,
                 ix_output,
                 &matches );
@@ -563,7 +559,7 @@ std::vector<Float> DecisionTree::transform(
                 matches.end() );
 
             const auto input_rescaled = input_scaler().transform(
-                *_input,
+                _input,
                 _subfeatures,
                 input_map,
                 matches.begin(),
@@ -586,7 +582,7 @@ std::vector<Float> DecisionTree::transform(
 
             // ------------------------------------------------------------------------
 
-            predictions[ix_output] = loss_function_->transform( weights );
+            ( *predictions )[ix_output] = loss_function_->transform( weights );
 
             // ------------------------------------------------------------------------
         }

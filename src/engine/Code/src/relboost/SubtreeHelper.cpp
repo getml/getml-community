@@ -328,9 +328,11 @@ void SubtreeHelper::make_predictions_for_one_subensemble(
             _predictions->emplace_back( _subensemble->transform(
                 _subtable_holder, subsubfeatures, i ) );
 
+            assert_true( _predictions->back() );
+
             assert_true( std::all_of(
-                _predictions->back().begin(),
-                _predictions->back().end(),
+                _predictions->back()->begin(),
+                _predictions->back()->end(),
                 []( Float val ) {
                     return !std::isnan( val ) && !std::isinf( val );
                 } ) );
@@ -386,25 +388,25 @@ std::vector<containers::Subfeatures> SubtreeHelper::make_subfeatures(
 
             for ( size_t j = 0; j < p.size(); ++j )
                 {
+                    assert_true( p.at( j ) );
+
                     assert_true(
                         _table_holder.subtables()
                             .at( i )
                             ->main_tables()
                             .at( 0 )
                             .rows_ptr()
-                            ->size() == p.at( j ).size() );
+                            ->size() == p.at( j )->size() );
 
                     assert_true( std::all_of(
-                        p.at( j ).begin(),
-                        p.at( j ).end(),
+                        p.at( j )->begin(),
+                        p.at( j )->end(),
                         []( const Float val ) {
                             return !std::isnan( val ) && !std::isinf( val );
                         } ) );
 
                     const auto column = containers::Column<Float>(
-                        p.at( j ).data(),
-                        "FEATURE_" + std::to_string( j + 1 ),
-                        p.at( j ).size() );
+                        p.at( j ), "FEATURE_" + std::to_string( j + 1 ), "" );
 
                     assert_true( std::all_of(
                         column.begin(), column.end(), []( const Float val ) {

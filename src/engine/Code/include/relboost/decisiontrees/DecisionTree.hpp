@@ -40,9 +40,9 @@ class DecisionTree
     Poco::JSON::Object::Ptr to_json_obj() const;
 
     /// Transforms the data to form a prediction.
-    std::vector<Float> transform(
+    std::shared_ptr<std::vector<Float>> transform(
         const containers::DataFrameView& _output,
-        const std::optional<containers::DataFrame>& _input,
+        const containers::DataFrame& _input,
         const containers::Subfeatures& _subfeatures ) const;
 
     /// Expresses the decision tree as SQL code.
