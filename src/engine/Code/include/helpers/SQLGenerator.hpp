@@ -108,7 +108,9 @@ class SQLGenerator
     /// Generates the SQL code necessary for joining the mapping tables onto the
     /// staged table.
     static std::string join_mappings(
-        const std::string& _name, const std::vector<std::string>& _mappings );
+        const std::string& _name,
+        const Placeholder& _schema,
+        const std::vector<std::string>& _mappings );
 
     /// Generates the queries for the join keys.
     static std::string make_join_keys(

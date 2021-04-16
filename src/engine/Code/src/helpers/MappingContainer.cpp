@@ -46,7 +46,7 @@ MappingContainer::~MappingContainer() = default;
 
 // ----------------------------------------------------------------------------
 
-std::string MappingContainer::categorical_column_to_sql(
+std::string MappingContainer::categorical_or_text_column_to_sql(
     const std::shared_ptr<const std::vector<strings::String>>& _categories,
     const std::string& _name,
     const PtrType& _ptr,
@@ -116,7 +116,7 @@ std::vector<std::string> MappingContainer::categorical_to_sql(
                                 MappingContainerMaker::make_colname(
                                     names->at( j ), feature_prefix, t ) );
 
-                            sql.push_back( categorical_column_to_sql(
+                            sql.push_back( categorical_or_text_column_to_sql(
                                 _categories, name, ptr, t ) );
 
                             _add_to_map( table_names_->at( i ), name );
@@ -425,9 +425,12 @@ std::string MappingContainer::make_table_header(
 
 std::vector<std::string> MappingContainer::subcontainers_to_sql(
     const std::shared_ptr<const std::vector<strings::String>>& _categories,
+    const VocabularyTree& _vocabulary_tree,
     const std::string& _feature_prefix,
     const std::function<void( const ColnameMap& )>& _merge_map ) const
 {
+    assert_true( _vocabulary_tree.subtrees().size() == subcontainers_.size() );
+
     std::vector<std::string> sql;
 
     for ( size_t i = 0; i < subcontainers_.size(); ++i )
@@ -439,13 +442,71 @@ std::vector<std::string> MappingContainer::subcontainers_to_sql(
                     const auto feature_prefix =
                         _feature_prefix + std::to_string( i + 1 ) + "_";
 
+                    assert_true( _vocabulary_tree.subtrees().at( i ) );
+
+                    const auto& vocab =
+                        _vocabulary_tree.subtrees().at( i ).value();
+
                     const auto [subfeatures, submap] =
-                        s->to_sql( _categories, feature_prefix );
+                        s->to_sql( _categories, vocab, feature_prefix );
 
                     sql.insert(
                         sql.end(), subfeatures.begin(), subfeatures.end() );
 
                     _merge_map( submap );
+                }
+        }
+
+    return sql;
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<std::string> MappingContainer::text_to_sql(
+    const std::vector<VocabForDf>& _vocab,
+    const std::string& _feature_prefix,
+    const std::function<void( const std::string&, const std::string& )>&
+        _add_to_map ) const
+{
+    assert_true( _vocab.size() == text_.size() );
+
+    std::vector<std::string> sql;
+
+    for ( size_t i = 0; i < text_.size(); ++i )
+        {
+            const auto& txt = text_.at( i );
+
+            const auto& names = text_names_.at( i );
+
+            const auto& voc = _vocab.at( i );
+
+            const auto feature_prefix =
+                _feature_prefix + std::to_string( i + 1 ) + "_";
+
+            assert_true( names );
+
+            assert_true( txt.size() == names->size() );
+
+            assert_true( txt.size() == voc.size() );
+
+            const auto num_targets =
+                MappingContainerMaker::infer_num_targets( txt );
+
+            for ( size_t t = 0; t < num_targets; ++t )
+                {
+                    for ( size_t j = 0; j < txt.size(); ++j )
+                        {
+                            const auto& ptr = txt.at( j );
+
+                            const auto name = SQLGenerator::to_upper(
+                                MappingContainerMaker::make_colname(
+                                    names->at( j ), feature_prefix, t ) );
+
+                            sql.push_back( categorical_or_text_column_to_sql(
+                                _vocab.at( i ).at( j ), name, ptr, t ) );
+
+                            _add_to_map( table_names_->at( i ), name );
+                        }
                 }
         }
 
@@ -485,6 +546,7 @@ Poco::JSON::Object::Ptr MappingContainer::to_json_obj() const
 std::pair<std::vector<std::string>, typename MappingContainer::ColnameMap>
 MappingContainer::to_sql(
     const std::shared_ptr<const std::vector<strings::String>>& _categories,
+    const VocabularyTree& _vocabulary_tree,
     const std::string& _feature_prefix ) const
 {
     // ------------------------------------------------------------------------
@@ -527,13 +589,16 @@ MappingContainer::to_sql(
 
     const auto discrete = discrete_to_sql( _feature_prefix, add_to_map );
 
-    const auto subcontainers =
-        subcontainers_to_sql( _categories, _feature_prefix, merge_map );
+    const auto text = text_to_sql(
+        _vocabulary_tree.peripheral(), _feature_prefix, add_to_map );
+
+    const auto subcontainers = subcontainers_to_sql(
+        _categories, _vocabulary_tree, _feature_prefix, merge_map );
 
     // ------------------------------------------------------------------------
 
     const auto all = std::vector<std::vector<std::string>>(
-        { categorical, discrete, subcontainers } );
+        { categorical, discrete, text, subcontainers } );
 
     const auto sql =
         stl::make::vector<std::string>( all | std::ranges::views::join );

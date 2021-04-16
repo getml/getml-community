@@ -232,6 +232,13 @@ class DecisionTreeEnsemble
         return impl().trees_;
     }
 
+    /// Trivial (const) accessor
+    inline const std::shared_ptr<const helpers::VocabularyContainer>
+        &vocabulary() const
+    {
+        return impl().vocabulary_;
+    }
+
     // -----------------------------------------------------------------
 
    private:
@@ -376,13 +383,6 @@ class DecisionTreeEnsemble
     inline std::vector<decisiontrees::DecisionTree> &trees()
     {
         return impl().trees_;
-    }
-
-    /// Trivial (const) accessor
-    inline const std::shared_ptr<const helpers::VocabularyContainer>
-        &vocabulary() const
-    {
-        return impl().vocabulary_;
     }
 
     // -----------------------------------------------------------------

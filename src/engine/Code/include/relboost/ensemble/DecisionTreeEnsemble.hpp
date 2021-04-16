@@ -244,6 +244,13 @@ class DecisionTreeEnsemble
         return *impl().population_schema_;
     }
 
+    /// Trivial (const) accessor
+    const std::shared_ptr<const helpers::VocabularyContainer>& vocabulary()
+        const
+    {
+        return impl().vocabulary_;
+    }
+
     // -----------------------------------------------------------------
 
    private:
@@ -443,13 +450,6 @@ class DecisionTreeEnsemble
                 return yhat +
                        pred * hyperparameters().shrinkage_ * _update_rate;
             } );
-    }
-
-    /// Trivial (const) accessor
-    const std::shared_ptr<const helpers::VocabularyContainer>& vocabulary()
-        const
-    {
-        return impl().vocabulary_;
     }
 
     // -----------------------------------------------------------------

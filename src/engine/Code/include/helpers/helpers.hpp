@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <array>
+#include <functional>
 #include <memory>
 #include <numeric>
 #include <optional>
@@ -51,6 +52,8 @@
 #include "helpers/IntSet.hpp"
 #include "helpers/Placeholder.hpp"
 #include "helpers/Schema.hpp"
+
+#include "helpers/VocabularyTree.hpp"
 
 #include "helpers/FeatureContainer.hpp"
 #include "helpers/MappedContainer.hpp"

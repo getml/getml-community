@@ -308,21 +308,69 @@ std::string SQLGenerator::handle_many_to_one_joins(
 // ----------------------------------------------------------------------------
 
 std::string SQLGenerator::join_mappings(
-    const std::string& _name, const std::vector<std::string>& _mappings )
+    const std::string& _name,
+    const Placeholder& _schema,
+    const std::vector<std::string>& _mappings )
 {
+    // ------------------------------------------------------------------------
+
     const auto extract_colname = []( const std::string& _col ) -> std::string {
         const auto pos = _col.find( "__MAPPING_" );
         assert_true( pos != std::string::npos );
         return to_lower( _col.substr( 0, pos ) );
     };
 
-    const auto join = [&_name, extract_colname](
-                          const std::string& _colname ) -> std::string {
+    // ------------------------------------------------------------------------
+
+    const auto join_text = [&_name, extract_colname](
+                               const std::string& _colname ) -> std::string {
+        const auto extracted = extract_colname( _colname );
+
+        return "UPDATE \"" + _name + "\"\nSET \"" + to_lower( _colname ) +
+               "\" = t3.\"avg_value\"\nFROM \"" + _name +
+               "\",\n     ( SELECT t1.\"" + extracted +
+               "\", AVG( t2.\"value\" ) AS \"avg_value\"\n       FROM "
+               "\"" +
+               _name + "\" t1\n       LEFT JOIN \"" + to_upper( _colname ) +
+               "\" t2\n       ON contains( t1.\"" + extracted +
+               "\", t2.\"key\" ) > 0\n       GROUP BY t1.\"" + extracted +
+               "\" ) AS t3\nWHERE \"" + _name + "\".\"" + extracted +
+               "\" = t3.\"" + extracted + "\";\n\n";
+    };
+
+    // ------------------------------------------------------------------------
+
+    const auto join_other = [&_name, extract_colname](
+                                const std::string& _colname ) -> std::string {
         return "UPDATE \"" + _name + "\"\nSET \"" + to_lower( _colname ) +
                "\" = t2.\"value\"\nFROM \"" + to_upper( _colname ) +
                "\" AS t2\nWHERE \"" + _name + "\".\"" +
                extract_colname( _colname ) + "\" = t2.\"key\";\n\n";
     };
+
+    // ------------------------------------------------------------------------
+
+    const auto is_text =
+        [&_schema, extract_colname]( const std::string& _colname ) -> bool {
+        const auto it = std::find(
+            _schema.text_.begin(),
+            _schema.text_.end(),
+            extract_colname( _colname ) );
+        return it != _schema.text_.end();
+    };
+
+    // ------------------------------------------------------------------------
+
+    const auto join = [join_text, join_other, is_text](
+                          const std::string& _colname ) -> std::string {
+        if ( is_text( _colname ) )
+            {
+                return join_text( _colname );
+            }
+        return join_other( _colname );
+    };
+
+    // ------------------------------------------------------------------------
 
     return stl::make::string( _mappings | std::views::transform( join ) );
 }
@@ -619,7 +667,7 @@ std::string SQLGenerator::make_staging_table(
 
     sql << create_indices( name, _schema );
 
-    sql << join_mappings( name, _mappings );
+    sql << join_mappings( name, _schema, _mappings );
 
     sql << "\n";
 

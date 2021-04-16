@@ -482,6 +482,13 @@ class FastProp
         return *population_schema_;
     }
 
+    /// Trivial (const) accessor
+    const std::shared_ptr<const helpers::VocabularyContainer>& vocabulary()
+        const
+    {
+        return vocabulary_;
+    }
+
     // ------------------------------------------------------------------------
 
    private:

@@ -956,8 +956,17 @@ std::vector<std::string> FeatureLearner<FeatureLearnerType>::to_sql(
 
             if ( feature_learner().has_mappings() )
                 {
+                    assert_true( feature_learner().vocabulary() );
+
+                    const auto vocabulary_tree = helpers::VocabularyTree(
+                        feature_learner().vocabulary()->population(),
+                        feature_learner().vocabulary()->peripheral(),
+                        placeholder(),
+                        peripheral() );
+
                     std::tie( sql, colname_map ) =
-                        feature_learner().mappings().to_sql( _categories, "" );
+                        feature_learner().mappings().to_sql(
+                            _categories, vocabulary_tree, "" );
                 }
 
             const auto peripheral_needs_targets = infer_needs_targets(

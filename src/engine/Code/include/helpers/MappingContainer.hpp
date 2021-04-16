@@ -22,6 +22,9 @@ class MappingContainer
 
     typedef std::shared_ptr<const std::vector<std::string>> TableNames;
 
+    typedef std::vector<std::shared_ptr<const std::vector<strings::String>>>
+        VocabForDf;
+
     MappingContainer(
         const std::vector<MappingForDf>& _categorical,
         const std::vector<Colnames>& _categorical_names,
@@ -44,11 +47,12 @@ class MappingContainer
     /// Expresses the mapping as SQL
     std::pair<std::vector<std::string>, ColnameMap> to_sql(
         const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const VocabularyTree& _vocabulary_tree,
         const std::string& _feature_prefix ) const;
 
    private:
     /// Transforms the mapping for a categorical column to SQL code.
-    std::string categorical_column_to_sql(
+    std::string categorical_or_text_column_to_sql(
         const std::shared_ptr<const std::vector<strings::String>>& _categories,
         const std::string& _name,
         const PtrType& _ptr,
@@ -102,8 +106,16 @@ class MappingContainer
     /// Transforms any and all subcontainers to SQL.
     std::vector<std::string> subcontainers_to_sql(
         const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const VocabularyTree& _vocabulary_tree,
         const std::string& _feature_prefix,
         const std::function<void( const ColnameMap& )>& _merge_map ) const;
+
+    /// Transforms the mapping all text columns to SQL code.
+    std::vector<std::string> text_to_sql(
+        const std::vector<VocabForDf>& _vocab,
+        const std::string& _feature_prefix,
+        const std::function<void( const std::string&, const std::string& )>&
+            _add_to_map ) const;
 
     /// Transforms the column names to JSON.
     Poco::JSON::Array::Ptr transform_colnames(

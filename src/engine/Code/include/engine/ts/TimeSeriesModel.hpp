@@ -126,6 +126,13 @@ class TimeSeriesModel
             _categories, _feature_prefix, _offset, _subfeatures );
     }
 
+    /// Trivial (const) accessor
+    const std::shared_ptr<const helpers::VocabularyContainer> &vocabulary()
+        const
+    {
+        return model().vocabulary();
+    }
+
     // -----------------------------------------------------------------
 
    private:
