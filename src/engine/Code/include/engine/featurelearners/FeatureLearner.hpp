@@ -263,6 +263,22 @@ class FeatureLearner : public AbstractFeatureLearner
         return false;
     }
 
+    /// Whether we want to split text fields
+    bool split_text_fields() const
+    {
+        if constexpr ( FeatureLearnerType::is_time_series_ )
+            {
+                return feature_learner()
+                    .hyperparameters()
+                    .model_hyperparams_->split_text_fields_;
+            }
+
+        if constexpr ( !FeatureLearnerType::is_time_series_ )
+            {
+                return feature_learner().hyperparameters().split_text_fields_;
+            }
+    }
+
     // --------------------------------------------------------
 
    private:
@@ -958,11 +974,20 @@ std::vector<std::string> FeatureLearner<FeatureLearnerType>::to_sql(
                 {
                     assert_true( feature_learner().vocabulary() );
 
+                    const auto vocab =
+                        split_text_fields()
+                            ? helpers::TextFieldSplitter::reverse(
+                                  *feature_learner().vocabulary(),
+                                  feature_learner().population_schema(),
+                                  feature_learner().peripheral_schema() )
+                            : *feature_learner().vocabulary();
+
                     const auto vocabulary_tree = helpers::VocabularyTree(
-                        feature_learner().vocabulary()->population(),
-                        feature_learner().vocabulary()->peripheral(),
+                        vocab.population(),
+                        vocab.peripheral(),
                         placeholder(),
-                        peripheral() );
+                        peripheral(),
+                        split_text_fields() );
 
                     std::tie( sql, colname_map ) =
                         feature_learner().mappings().to_sql(
@@ -982,6 +1007,16 @@ std::vector<std::string> FeatureLearner<FeatureLearnerType>::to_sql(
 
             sql.insert(
                 sql.end(), staging_tables.begin(), staging_tables.end() );
+
+            if ( split_text_fields() )
+                {
+                    const auto splitted =
+                        helpers::SQLGenerator::split_text_fields(
+                            feature_learner().population_schema(),
+                            feature_learner().peripheral_schema() );
+
+                    sql.insert( sql.end(), splitted.begin(), splitted.end() );
+                }
         }
 
     const auto features =

@@ -25,6 +25,8 @@ struct Hyperparameters
           ts_name_(
               jsonutils::JSON::get_value<std::string>( _json_obj, "ts_name_" ) )
     {
+        assert_true( model_hyperparams_ );
+
         if ( horizon_ < 0.0 )
             {
                 throw std::invalid_argument(

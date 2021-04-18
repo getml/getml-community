@@ -853,6 +853,57 @@ std::string SQLGenerator::make_time_stamps(
         sql.str(), Macros::t1_or_t2(), _t1_or_t2 );
 }
 
+// ----------------------------------------------------------------------------
+
+std::vector<std::string> SQLGenerator::split_text_fields_on_schema(
+    const Placeholder& _schema )
+{
+    const auto split =
+        [_schema]( const std::string& _text_field ) -> std::string {
+        const auto new_table =
+            to_upper( make_staging_table_name( _schema.name_ ) ) + "__" +
+            to_upper( _text_field );
+
+        return "DROP TABLE IF EXISTS \"" + new_table +
+               "\";\n\n"
+               "CREATE TABLE \"" +
+               new_table +
+               "\" AS\nWITH RECURSIVE\nsplit_text_field(i, field, word, "
+               "rownum, n) AS (\n"
+               "SELECT 1, field, get_word(field, 1), rownum, num_words(field)\n"
+               "FROM ( SELECT \"" +
+               _text_field + "\" AS field, rowid AS rownum FROM \"" +
+               make_staging_table_name( _schema.name_ ) +
+               "\" )\n"
+               "UNION ALL\n"
+               "SELECT i + 1, field, get_word(field, i + 1), rownum, n FROM "
+               "split_text_field\n"
+               "WHERE i < n\n"
+               "SELECT rownum, word FROM split_text_field;\n\n\n";
+    };
+
+    return stl::make::vector<std::string>(
+        _schema.text_ | std::ranges::views::transform( split ) );
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<std::string> SQLGenerator::split_text_fields(
+    const Placeholder& _population_schema,
+    const std::vector<Placeholder>& _peripheral_schema )
+{
+    std::vector<std::vector<std::string>> sql;
+
+    sql.push_back( split_text_fields_on_schema( _population_schema ) );
+
+    for ( const auto& p : _peripheral_schema )
+        {
+            sql.push_back( split_text_fields_on_schema( p ) );
+        }
+
+    return stl::make::vector<std::string>( sql | std::ranges::views::join );
+}
+
 // ------------------------------------------------------------------------
 
 std::string SQLGenerator::to_lower( const std::string& _str )
