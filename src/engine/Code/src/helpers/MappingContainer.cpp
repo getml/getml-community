@@ -437,15 +437,16 @@ std::vector<std::string> MappingContainer::subcontainers_to_sql(
         {
             const auto& s = subcontainers_.at( i );
 
+            const auto& v = _vocabulary_tree.subtrees().at( i );
+
             if ( s )
                 {
                     const auto feature_prefix =
                         _feature_prefix + std::to_string( i + 1 ) + "_";
 
-                    assert_true( _vocabulary_tree.subtrees().at( i ) );
+                    assert_true( v );
 
-                    const auto& vocab =
-                        _vocabulary_tree.subtrees().at( i ).value();
+                    const auto& vocab = v.value();
 
                     const auto [subfeatures, submap] =
                         s->to_sql( _categories, vocab, feature_prefix );

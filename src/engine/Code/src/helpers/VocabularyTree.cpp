@@ -122,7 +122,8 @@ std::vector<std::optional<VocabularyTree>> VocabularyTree::parse_subtrees(
 
         const auto new_population = extract_peripheral( _p );
 
-        if ( _split_text_fields && new_population.size() == 0 )
+        if ( _split_text_fields && new_population.size() == 0 &&
+             _p.joined_tables_.size() == 0 )
             {
                 return std::nullopt;
             }

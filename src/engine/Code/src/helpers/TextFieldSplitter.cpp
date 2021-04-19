@@ -148,7 +148,7 @@ VocabularyContainer TextFieldSplitter::reverse(
                                 infer_begin_end]( const Int _i ) -> VocabForDf {
         const auto [begin, end] = infer_begin_end( _i );
 
-        assert_true( begin < _vocab.peripheral().size() );
+        assert_true( begin < _vocab.peripheral().size() || begin == end );
 
         assert_true( end <= _vocab.peripheral().size() );
 
