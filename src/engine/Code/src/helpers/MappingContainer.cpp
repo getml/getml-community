@@ -469,7 +469,10 @@ std::vector<std::string> MappingContainer::text_to_sql(
     const std::function<void( const std::string&, const std::string& )>&
         _add_to_map ) const
 {
-    assert_true( _vocab.size() == text_.size() );
+    assert_msg(
+        _vocab.size() == text_.size(),
+        "_vocab.size(): " + std::to_string( _vocab.size() ) +
+            ", text_.size(): " + std::to_string( text_.size() ) );
 
     std::vector<std::string> sql;
 

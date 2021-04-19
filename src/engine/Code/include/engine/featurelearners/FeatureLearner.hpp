@@ -898,8 +898,8 @@ std::vector<std::string> FeatureLearner<FeatureLearnerType>::make_staging(
             const auto vocabulary_tree = helpers::VocabularyTree(
                 vocab.population(),
                 vocab.peripheral(),
-                placeholder(),
-                peripheral(),
+                feature_learner().placeholder(),
+                feature_learner().peripheral(),
                 split_text_fields() );
 
             std::tie( sql, colname_map ) = feature_learner().mappings().to_sql(

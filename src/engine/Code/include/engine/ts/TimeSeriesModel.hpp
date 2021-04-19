@@ -101,6 +101,12 @@ class TimeSeriesModel
     size_t num_features() const { return model().num_features(); }
 
     /// Trivial (const) accessor
+    const std::vector<std::string> &peripheral() const
+    {
+        return model().peripheral();
+    }
+
+    /// Trivial (const) accessor
     const std::vector<PlaceholderType> &peripheral_schema() const
     {
         return model().peripheral_schema();
