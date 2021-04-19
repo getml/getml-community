@@ -2327,7 +2327,7 @@ void DataFrameManager::to_s3(
 
     while ( !reader.eof() )
         {
-            auto tfile = Poco::TemporaryFile( engine::temp_dir );
+            auto tfile = Poco::TemporaryFile( options_.temp_dir() );
 
             auto writer =
                 io::CSVWriter( tfile.path(), batch_size, colnames, "\"", sep );

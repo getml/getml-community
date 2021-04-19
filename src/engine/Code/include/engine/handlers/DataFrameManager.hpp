@@ -19,6 +19,7 @@ class DataFrameManager
         const std::shared_ptr<licensing::LicenseChecker>& _license_checker,
         const std::shared_ptr<const communication::Logger>& _logger,
         const std::shared_ptr<const communication::Monitor>& _monitor,
+        const config::Options& _options,
         const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock )
         : categories_( _categories ),
           database_manager_( _database_manager ),
@@ -27,6 +28,7 @@ class DataFrameManager
           license_checker_( _license_checker ),
           logger_( _logger ),
           monitor_( _monitor ),
+          options_( _options ),
           read_write_lock_( _read_write_lock )
     {
     }
@@ -434,6 +436,9 @@ class DataFrameManager
 
     /// For communication with the monitor
     const std::shared_ptr<const communication::Monitor> monitor_;
+
+    /// Settings for the engine and the monitor
+    const config::Options options_;
 
     /// For coordinating the read and write process of the data
     const std::shared_ptr<multithreading::ReadWriteLock> read_write_lock_;

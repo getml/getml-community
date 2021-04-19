@@ -30,6 +30,7 @@ class PipelineManager
             _license_checker,
         const std::shared_ptr<const communication::Logger>& _logger,
         const std::shared_ptr<const communication::Monitor>& _monitor,
+        const config::Options& _options,
         const std::shared_ptr<PipelineMapType>& _pipelines,
         const std::shared_ptr<dependency::PredTracker>& _pred_tracker,
         const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock )
@@ -42,6 +43,7 @@ class PipelineManager
           license_checker_( _license_checker ),
           logger_( _logger ),
           monitor_( _monitor ),
+          options_( _options ),
           pipelines_( _pipelines ),
           pred_tracker_( _pred_tracker ),
           read_write_lock_( _read_write_lock )
@@ -375,6 +377,9 @@ class PipelineManager
 
     /// For communication with the monitor
     const std::shared_ptr<const communication::Monitor> monitor_;
+
+    /// Settings for the engine and the monitor
+    const config::Options options_;
 
     /// The pipelines currently held in memory
     const std::shared_ptr<PipelineMapType> pipelines_;

@@ -76,7 +76,7 @@ void PipelineManager::add_join_keys_to_df(
                 }
 
             col.set_name(
-                helpers::Macros::modify_colnames( {col.name()} ).at( 0 ) );
+                helpers::Macros::modify_colnames( { col.name() } ).at( 0 ) );
 
             _df->add_int_column( col, containers::DataFrame::ROLE_JOIN_KEY );
         }
@@ -144,7 +144,7 @@ void PipelineManager::add_time_stamps_to_df(
                 }
 
             col.set_name(
-                helpers::Macros::modify_colnames( {col.name()} ).at( 0 ) );
+                helpers::Macros::modify_colnames( { col.name() } ).at( 0 ) );
 
             _df->add_float_column(
                 col, containers::DataFrame::ROLE_TIME_STAMP );
@@ -645,6 +645,7 @@ Poco::JSON::Object PipelineManager::receive_data(
         license_checker_,
         logger_,
         monitor_,
+        options_,
         local_read_write_lock );
 
     // -------------------------------------------------------

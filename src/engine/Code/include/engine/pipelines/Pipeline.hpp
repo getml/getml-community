@@ -63,7 +63,10 @@ class Pipeline
     Pipeline& operator=( Pipeline&& _other ) noexcept;
 
     /// Save the pipeline to disk.
-    void save( const std::string& _path, const std::string& _name ) const;
+    void save(
+        const std::string& _temp_dir,
+        const std::string& _path,
+        const std::string& _name ) const;
 
     /// Score the pipeline.
     Poco::JSON::Object score(

@@ -21,7 +21,10 @@ class Hyperopt
 
    public:
     /// Saves the hyperopt object.
-    void save( const std::string& _path, const std::string& _name ) const;
+    void save(
+        const std::string& _temp_dir,
+        const std::string& _path,
+        const std::string& _name ) const;
 
     /// Displays the hyperparameter optimization in a form the monitor can
     /// understand.

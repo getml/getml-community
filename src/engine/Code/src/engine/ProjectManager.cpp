@@ -524,7 +524,7 @@ void ProjectManager::save_data_frame(
 
     auto& df = utils::Getter::get( _name, &data_frames() );
 
-    df.save( project_directory() + "data/", _name );
+    df.save( options_.temp_dir(), project_directory() + "data/", _name );
 
     FileHandler::save_encodings(
         project_directory(), categories(), join_keys_encoding() );
@@ -541,7 +541,8 @@ void ProjectManager::save_hyperopt(
 
     const auto hyperopt = utils::Getter::get( _name, hyperopts() );
 
-    hyperopt.save( project_directory() + "hyperopts/", _name );
+    hyperopt.save(
+        options_.temp_dir(), project_directory() + "hyperopts/", _name );
 
     communication::Sender::send_string( "Success!", _socket );
 }
@@ -557,7 +558,7 @@ void ProjectManager::save_pipeline(
 
     const auto path = project_directory() + "pipelines/";
 
-    pipeline.save( path, _name );
+    pipeline.save( options_.temp_dir(), path, _name );
 
     FileHandler::save_encodings(
         project_directory(), categories(), containers::Encoding() );

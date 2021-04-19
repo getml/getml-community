@@ -78,9 +78,9 @@ struct FileHandler
     // ------------------------------------------------------------------------
 
     /// Deletes the temporary directory
-    static void delete_temp_dir()
+    static void delete_temp_dir( const std::string& _path )
     {
-        auto file = Poco::File( engine::temp_dir );
+        auto file = Poco::File( _path );
         file.createDirectories();
         file.remove( true );
     }

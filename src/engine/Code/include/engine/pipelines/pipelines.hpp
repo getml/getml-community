@@ -31,8 +31,6 @@
 
 #include "engine/preprocessors/preprocessors.hpp"
 
-#include "engine/temp_dir.hpp"
-
 #include "predictors/predictors.hpp"
 
 // ----------------------------------------------------

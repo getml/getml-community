@@ -6,11 +6,14 @@ namespace hyperparam
 {
 // ------------------------------------------------------------------------
 
-void Hyperopt::save( const std::string& _path, const std::string& _name ) const
+void Hyperopt::save(
+    const std::string& _temp_dir,
+    const std::string& _path,
+    const std::string& _name ) const
 {
     // ------------------------------------------------------------------
 
-    auto tfile = Poco::TemporaryFile( engine::temp_dir );
+    auto tfile = Poco::TemporaryFile( _temp_dir );
 
     tfile.createDirectories();
 

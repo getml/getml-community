@@ -21,7 +21,7 @@ int main( int argc, char* argv[] )
                 "you have provided in your config.json." );
         }
 
-    engine::handlers::FileHandler::delete_temp_dir();
+    engine::handlers::FileHandler::delete_temp_dir( options.temp_dir() );
 
     // -------------------------------------------
 
@@ -106,6 +106,7 @@ int main( int argc, char* argv[] )
             license_checker,
             logger,
             monitor,
+            options,
             read_write_lock );
 
     const auto hyperopt_manager =
@@ -123,6 +124,7 @@ int main( int argc, char* argv[] )
             license_checker,
             logger,
             monitor,
+            options,
             pipelines,
             pred_tracker,
             read_write_lock );
@@ -183,7 +185,7 @@ int main( int argc, char* argv[] )
 
     // -------------------------------------------
 
-    engine::handlers::FileHandler::delete_temp_dir();
+    engine::handlers::FileHandler::delete_temp_dir( options.temp_dir() );
 
     // -------------------------------------------
 

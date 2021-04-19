@@ -158,7 +158,10 @@ class DataFrame
     bool remove_column( const std::string &_name );
 
     /// Saves the data on the engine
-    void save( const std::string &_path, const std::string &_name ) const;
+    void save(
+        const std::string &_temp_dir,
+        const std::string &_path,
+        const std::string &_name ) const;
 
     /// Extracts the data frame as a Poco::JSON::Object the monitor process can
     /// understand
