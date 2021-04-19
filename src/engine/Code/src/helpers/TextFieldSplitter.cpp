@@ -242,9 +242,9 @@ TextFieldSplitter::split_text_fields_on_col(
                 }
         }
 
-    const auto rownums = Column<Int>( rownums_ptr, "rownums", "" );
+    const auto rownums = Column<Int>( rownums_ptr, "rownum", "" );
 
-    const auto words = Column<strings::String>( words_ptr, "words", "" );
+    const auto words = Column<strings::String>( words_ptr, "word", "" );
 
     return std::make_pair( rownums, words );
 }

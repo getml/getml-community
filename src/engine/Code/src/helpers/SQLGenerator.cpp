@@ -695,6 +695,14 @@ std::string SQLGenerator::make_staging_table_name( const std::string& _name )
 
     const auto number = _name.substr( begin, end - begin );
 
+    const auto pos_text_field = _name.find( Macros::text_field() );
+
+    const auto text_field_col =
+        ( pos_text_field == std::string::npos )
+            ? std::string( "" )
+            : "__" +
+                  _name.substr( pos_text_field + Macros::text_field().size() );
+
     return to_upper( get_table_name( _name ) ) + "__STAGING_TABLE_" + number;
 }
 
