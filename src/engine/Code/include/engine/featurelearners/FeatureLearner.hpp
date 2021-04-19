@@ -196,6 +196,11 @@ class FeatureLearner : public AbstractFeatureLearner
     /// Initializes the feature learner.
     std::optional<FeatureLearnerType> make_feature_learner() const;
 
+    /// Generates the staging scripts.
+    std::vector<std::string> make_staging(
+        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const bool _targets ) const;
+
     /// Extracts the table and column name, if they are from a many-to-one join,
     /// needed for the column importances.
     std::pair<std::string, std::string> parse_table_colname(
@@ -866,6 +871,65 @@ FeatureLearner<FeatureLearnerType>::make_feature_learner() const
         population_schema );
 }
 
+// ----------------------------------------------------------------------------
+
+template <typename FeatureLearnerType>
+std::vector<std::string> FeatureLearner<FeatureLearnerType>::make_staging(
+    const std::shared_ptr<const std::vector<strings::String>>& _categories,
+    const bool _targets ) const
+{
+    std::vector<std::string> sql;
+
+    using ColnameMap = typename helpers::MappingContainer::ColnameMap;
+
+    ColnameMap colname_map;
+
+    if ( feature_learner().has_mappings() )
+        {
+            assert_true( feature_learner().vocabulary() );
+
+            const auto vocab = split_text_fields()
+                                   ? helpers::TextFieldSplitter::reverse(
+                                         *feature_learner().vocabulary(),
+                                         feature_learner().population_schema(),
+                                         feature_learner().peripheral_schema() )
+                                   : *feature_learner().vocabulary();
+
+            const auto vocabulary_tree = helpers::VocabularyTree(
+                vocab.population(),
+                vocab.peripheral(),
+                placeholder(),
+                peripheral(),
+                split_text_fields() );
+
+            std::tie( sql, colname_map ) = feature_learner().mappings().to_sql(
+                _categories, vocabulary_tree, "" );
+        }
+
+    const auto peripheral_needs_targets = infer_needs_targets(
+        placeholder(), feature_learner().peripheral_schema().size() );
+
+    const auto staging_tables = helpers::SQLGenerator::make_staging_tables(
+        _targets,
+        peripheral_needs_targets,
+        feature_learner().population_schema(),
+        feature_learner().peripheral_schema(),
+        colname_map );
+
+    sql.insert( sql.end(), staging_tables.begin(), staging_tables.end() );
+
+    if ( split_text_fields() )
+        {
+            const auto splitted = helpers::SQLGenerator::split_text_fields(
+                feature_learner().population_schema(),
+                feature_learner().peripheral_schema() );
+
+            sql.insert( sql.end(), splitted.begin(), splitted.end() );
+        }
+
+    return sql;
+}
+
 // -----------------------------------------------------------------------------
 
 template <typename FeatureLearnerType>
@@ -966,57 +1030,7 @@ std::vector<std::string> FeatureLearner<FeatureLearnerType>::to_sql(
 
     if ( _subfeatures )
         {
-            using ColnameMap = typename helpers::MappingContainer::ColnameMap;
-
-            ColnameMap colname_map;
-
-            if ( feature_learner().has_mappings() )
-                {
-                    assert_true( feature_learner().vocabulary() );
-
-                    const auto vocab =
-                        split_text_fields()
-                            ? helpers::TextFieldSplitter::reverse(
-                                  *feature_learner().vocabulary(),
-                                  feature_learner().population_schema(),
-                                  feature_learner().peripheral_schema() )
-                            : *feature_learner().vocabulary();
-
-                    const auto vocabulary_tree = helpers::VocabularyTree(
-                        vocab.population(),
-                        vocab.peripheral(),
-                        placeholder(),
-                        peripheral(),
-                        split_text_fields() );
-
-                    std::tie( sql, colname_map ) =
-                        feature_learner().mappings().to_sql(
-                            _categories, vocabulary_tree, "" );
-                }
-
-            const auto peripheral_needs_targets = infer_needs_targets(
-                placeholder(), feature_learner().peripheral_schema().size() );
-
-            const auto staging_tables =
-                helpers::SQLGenerator::make_staging_tables(
-                    _targets,
-                    peripheral_needs_targets,
-                    feature_learner().population_schema(),
-                    feature_learner().peripheral_schema(),
-                    colname_map );
-
-            sql.insert(
-                sql.end(), staging_tables.begin(), staging_tables.end() );
-
-            if ( split_text_fields() )
-                {
-                    const auto splitted =
-                        helpers::SQLGenerator::split_text_fields(
-                            feature_learner().population_schema(),
-                            feature_learner().peripheral_schema() );
-
-                    sql.insert( sql.end(), splitted.begin(), splitted.end() );
-                }
+            sql = make_staging( _categories, _targets );
         }
 
     const auto features =
