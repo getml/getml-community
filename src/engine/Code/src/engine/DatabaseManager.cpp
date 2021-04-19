@@ -18,9 +18,9 @@ DatabaseManager::DatabaseManager(
     connector_map_["default"] =
         std::make_shared<database::Sqlite3>( database::Sqlite3(
             options_.project_directory() + "database.db",
-            {"%Y-%m-%dT%H:%M:%s%z",
-             "%Y/%m/%d %H:%M:%S",
-             "%Y-%m-%d %H:%M:%S"} ) );
+            { "%Y-%m-%dT%H:%M:%s%z",
+              "%Y/%m/%d %H:%M:%S",
+              "%Y-%m-%d %H:%M:%S" } ) );
 
     post_tables();
 }
@@ -664,6 +664,14 @@ void DatabaseManager::sniff_s3(
     // --------------------------------------------------------------------
 
 #endif
+}
+
+// ----------------------------------------------------------------------------
+
+void DatabaseManager::refresh( Poco::Net::StreamSocket* _socket )
+{
+    post_tables();
+    communication::Sender::send_string( "Success!", _socket );
 }
 
 // ----------------------------------------------------------------------------

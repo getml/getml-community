@@ -88,6 +88,10 @@ void RequestHandler::run()
                 {
                     database_manager().read_s3( name, cmd, &socket() );
                 }
+            else if ( type == "Database.refresh" )
+                {
+                    database_manager().refresh( &socket() );
+                }
             else if ( type == "Database.sniff_csv" )
                 {
                     database_manager().sniff_csv( name, cmd, &socket() );

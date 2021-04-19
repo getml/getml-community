@@ -84,6 +84,9 @@ class DatabaseManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
+    /// Posts a list of all tables in all databases.
+    void refresh( Poco::Net::StreamSocket* _socket );
+
     /// Reads CSV files located in an S3 bucket into the database.
     void read_s3(
         const std::string& _name,
