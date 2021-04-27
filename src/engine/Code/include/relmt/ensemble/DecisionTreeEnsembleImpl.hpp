@@ -49,19 +49,12 @@ struct DecisionTreeEnsembleImpl
     /// raw pointer to the communicator.
     multithreading::Communicator* comm_;
 
-    /// Holds the propositionalization subfeatures.
-    std::shared_ptr<const fastprop::subfeatures::FastPropContainer>
-        fast_prop_container_;
-
     /// Hyperparameters used to train the relmt model.
     std::shared_ptr<const Hyperparameters> hyperparameters_;
 
     /// The prediction that we start with before there are any trees (identical
     /// to the average of the targets in the training set).
     Float initial_prediction_;
-
-    /// Used to map columns onto the average target value.
-    std::shared_ptr<const helpers::MappingContainer> mappings_;
 
     /// Names of the peripheral tables, as they are referred in placeholder
     std::shared_ptr<const std::vector<std::string>> peripheral_;
@@ -75,9 +68,6 @@ struct DecisionTreeEnsembleImpl
 
     /// Schema of the population table.
     std::shared_ptr<const containers::Placeholder> population_schema_;
-
-    // The vocabulary used to analyze the text fields.
-    std::shared_ptr<const helpers::VocabularyContainer> vocabulary_;
 
     /// Trees underlying the model.
     std::vector<decisiontrees::DecisionTree> trees_;

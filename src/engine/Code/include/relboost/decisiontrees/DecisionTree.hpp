@@ -65,6 +65,8 @@ class DecisionTree
     {
         assert_true( root_ );
         root_->column_importances( _importance_maker );
+        _importance_maker->fill_zeros( output(), output().name(), true );
+        _importance_maker->fill_zeros( input(), input().name(), false );
     }
 
     /// Clears data no longer needed.

@@ -22,8 +22,6 @@
 
 #include "strings/strings.hpp"
 
-#include "fastprop/subfeatures/subfeatures.hpp"
-
 #include "relmt/Float.hpp"
 #include "relmt/Int.hpp"
 
@@ -38,6 +36,9 @@
 #include "relmt/decisiontrees/decisiontrees.hpp"
 
 // ----------------------------------------------------------------------------
+
+#include "relmt/ensemble/FitParams.hpp"
+#include "relmt/ensemble/TransformParams.hpp"
 
 #include "relmt/ensemble/TableHolder.hpp"
 

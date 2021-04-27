@@ -5,6 +5,7 @@ namespace helpers
 // ----------------------------------------------------------------------------
 
 MappingContainer::MappingContainer(
+    const std::shared_ptr<const std::vector<std::string>>& _aggregation,
     const std::vector<MappingForDf>& _categorical,
     const std::vector<Colnames>& _categorical_names,
     const std::vector<MappingForDf>& _discrete,
@@ -13,7 +14,8 @@ MappingContainer::MappingContainer(
     const TableNames& _table_names,
     const std::vector<MappingForDf>& _text,
     const std::vector<Colnames>& _text_names )
-    : categorical_( _categorical ),
+    : aggregation_( _aggregation ),
+      categorical_( _categorical ),
       categorical_names_( _categorical_names ),
       discrete_( _discrete ),
       discrete_names_( _discrete_names ),
@@ -28,7 +30,10 @@ MappingContainer::MappingContainer(
 // ----------------------------------------------------------------------------
 
 MappingContainer::MappingContainer( const Poco::JSON::Object& _obj )
-    : categorical_( extract_mapping_vector( _obj, "categorical_" ) ),
+    : aggregation_( std::make_shared<const std::vector<std::string>>(
+          jsonutils::JSON::array_to_vector<std::string>(
+              jsonutils::JSON::get_array( _obj, "aggregation_" ) ) ) ),
+      categorical_( extract_mapping_vector( _obj, "categorical_" ) ),
       categorical_names_( extract_colnames( _obj, "categorical_names_" ) ),
       discrete_( extract_mapping_vector( _obj, "discrete_" ) ),
       discrete_names_( extract_colnames( _obj, "discrete_names_" ) ),
@@ -50,7 +55,7 @@ std::string MappingContainer::categorical_or_text_column_to_sql(
     const std::shared_ptr<const std::vector<strings::String>>& _categories,
     const std::string& _name,
     const PtrType& _ptr,
-    const size_t _target_num ) const
+    const size_t _target_num )
 {
     assert_true( _categories );
 
@@ -114,7 +119,10 @@ std::vector<std::string> MappingContainer::categorical_to_sql(
 
                             const auto name = SQLGenerator::to_upper(
                                 MappingContainerMaker::make_colname(
-                                    names->at( j ), feature_prefix, t ) );
+                                    names->at( j ),
+                                    feature_prefix,
+                                    aggregation(),
+                                    t ) );
 
                             sql.push_back( categorical_or_text_column_to_sql(
                                 _categories, name, ptr, t ) );
@@ -176,9 +184,7 @@ void MappingContainer::check_lengths() const
 // ----------------------------------------------------------------------------
 
 std::string MappingContainer::discrete_column_to_sql(
-    const std::string& _name,
-    const PtrType& _ptr,
-    const size_t _target_num ) const
+    const std::string& _name, const PtrType& _ptr, const size_t _target_num )
 {
     assert_true( _ptr );
 
@@ -235,7 +241,10 @@ std::vector<std::string> MappingContainer::discrete_to_sql(
 
                             const auto name = SQLGenerator::to_upper(
                                 MappingContainerMaker::make_colname(
-                                    names->at( j ), feature_prefix, t ) );
+                                    names->at( j ),
+                                    feature_prefix,
+                                    aggregation(),
+                                    t ) );
 
                             sql.push_back(
                                 discrete_column_to_sql( name, ptr, t ) );
@@ -382,7 +391,7 @@ typename MappingContainer::TableNames MappingContainer::extract_table_names(
 // ------------------------------------------------------------------------
 
 std::vector<std::pair<Int, Float>> MappingContainer::make_pairs(
-    const Map& _m, const size_t _target_num ) const
+    const Map& _m, const size_t _target_num )
 {
     using Pair = std::pair<Int, Float>;
 
@@ -407,7 +416,7 @@ std::vector<std::pair<Int, Float>> MappingContainer::make_pairs(
 // ----------------------------------------------------------------------------
 
 std::string MappingContainer::make_table_header(
-    const std::string& _name, const bool _key_is_num ) const
+    const std::string& _name, const bool _key_is_num )
 {
     std::string sql = "DROP TABLE IF EXISTS \"" + _name + "\";\n\n";
 
@@ -504,7 +513,10 @@ std::vector<std::string> MappingContainer::text_to_sql(
 
                             const auto name = SQLGenerator::to_upper(
                                 MappingContainerMaker::make_colname(
-                                    names->at( j ), feature_prefix, t ) );
+                                    names->at( j ),
+                                    feature_prefix,
+                                    aggregation(),
+                                    t ) );
 
                             sql.push_back( categorical_or_text_column_to_sql(
                                 _vocab.at( i ).at( j ), name, ptr, t ) );
@@ -521,9 +533,14 @@ std::vector<std::string> MappingContainer::text_to_sql(
 
 Poco::JSON::Object::Ptr MappingContainer::to_json_obj() const
 {
+    assert_true( aggregation_ );
+
     assert_true( table_names_ );
 
     auto obj = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
+
+    obj->set(
+        "aggregation_", jsonutils::JSON::vector_to_array_ptr( *aggregation_ ) );
 
     obj->set( "categorical_", transform_mapping_vec( categorical_ ) );
 
@@ -617,9 +634,10 @@ MappingContainer::to_sql(
 // ----------------------------------------------------------------------------
 
 Poco::JSON::Array::Ptr MappingContainer::transform_colnames(
-    const std::vector<Colnames>& _colnames ) const
+    const std::vector<Colnames>& _colnames )
 {
     auto arr = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+
     for ( const auto& c : _colnames )
         {
             assert_true( c );
@@ -632,7 +650,7 @@ Poco::JSON::Array::Ptr MappingContainer::transform_colnames(
 // ----------------------------------------------------------------------------
 
 Poco::JSON::Array::Ptr MappingContainer::transform_mapping_vec(
-    const std::vector<MappingForDf>& _mapping_vec ) const
+    const std::vector<MappingForDf>& _mapping_vec )
 {
     // --------------------------------------------------------------
 

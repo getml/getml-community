@@ -26,6 +26,7 @@ class MappingContainer
         VocabForDf;
 
     MappingContainer(
+        const std::shared_ptr<const std::vector<std::string>>& _aggregation,
         const std::vector<MappingForDf>& _categorical,
         const std::vector<Colnames>& _categorical_names,
         const std::vector<MappingForDf>& _discrete,
@@ -41,6 +42,31 @@ class MappingContainer
     ~MappingContainer();
 
    public:
+    /// Transforms the mapping for a categorical column to SQL code.
+    static std::string categorical_or_text_column_to_sql(
+        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const std::string& _name,
+        const PtrType& _ptr,
+        const size_t _target_num );
+
+    /// Transforms the mapping for a discrete column to SQL code.
+    static std::string discrete_column_to_sql(
+        const std::string& _name,
+        const PtrType& _ptr,
+        const size_t _target_num );
+
+    /// Extracts the column names from the JSON object.
+    static std::vector<Colnames> extract_colnames(
+        const Poco::JSON::Object& _obj, const std::string& _key );
+
+    /// Extracts a vector containing mappings from the object.
+    static std::vector<MappingForDf> extract_mapping_vector(
+        const Poco::JSON::Object& _obj, const std::string& _key );
+
+    /// Generates the table header.
+    static std::string make_table_header(
+        const std::string& _name, const bool _key_is_num );
+
     /// Transforms the VocabularyContainer into a JSON object.
     Poco::JSON::Object::Ptr to_json_obj() const;
 
@@ -50,14 +76,15 @@ class MappingContainer
         const VocabularyTree& _vocabulary_tree,
         const std::string& _feature_prefix ) const;
 
-   private:
-    /// Transforms the mapping for a categorical column to SQL code.
-    std::string categorical_or_text_column_to_sql(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories,
-        const std::string& _name,
-        const PtrType& _ptr,
-        const size_t _target_num ) const;
+    /// Transforms the column names to JSON.
+    static Poco::JSON::Array::Ptr transform_colnames(
+        const std::vector<Colnames>& _colnames );
 
+    /// Transforms a vector of mappings to JSON.
+    static Poco::JSON::Array::Ptr transform_mapping_vec(
+        const std::vector<MappingForDf>& _mapping_vec );
+
+   private:
     /// Transforms the mapping all categorical columns to SQL code.
     std::vector<std::string> categorical_to_sql(
         const std::shared_ptr<const std::vector<strings::String>>& _categories,
@@ -68,25 +95,11 @@ class MappingContainer
     /// Checks the lengths of the mappings.
     void check_lengths() const;
 
-    /// Transforms the mapping for a discrete column to SQL code.
-    std::string discrete_column_to_sql(
-        const std::string& _name,
-        const PtrType& _ptr,
-        const size_t _target_num ) const;
-
     /// Transforms the mapping all discrete columns to SQL code.
     std::vector<std::string> discrete_to_sql(
         const std::string& _feature_prefix,
         const std::function<void( const std::string&, const std::string& )>&
             _add_to_map ) const;
-
-    /// Extracts the column names from the JSON object.
-    static std::vector<Colnames> extract_colnames(
-        const Poco::JSON::Object& _obj, const std::string& _key );
-
-    /// Extracts a vector containing mappings from the object.
-    static std::vector<MappingForDf> extract_mapping_vector(
-        const Poco::JSON::Object& _obj, const std::string& _key );
 
     /// Extracts the subcontainers from an object.
     static std::vector<std::shared_ptr<const MappingContainer>>
@@ -96,12 +109,8 @@ class MappingContainer
     static TableNames extract_table_names( const Poco::JSON::Object& _obj );
 
     /// Generates the key-value-pairs.
-    std::vector<std::pair<Int, Float>> make_pairs(
-        const Map& _m, const size_t _target_num ) const;
-
-    /// Generates the table header.
-    std::string make_table_header(
-        const std::string& _name, const bool _key_is_num ) const;
+    static std::vector<std::pair<Int, Float>> make_pairs(
+        const Map& _m, const size_t _target_num );
 
     /// Transforms any and all subcontainers to SQL.
     std::vector<std::string> subcontainers_to_sql(
@@ -117,20 +126,19 @@ class MappingContainer
         const std::function<void( const std::string&, const std::string& )>&
             _add_to_map ) const;
 
-    /// Transforms the column names to JSON.
-    Poco::JSON::Array::Ptr transform_colnames(
-        const std::vector<Colnames>& _colnames ) const;
-
-    /// Transforms a vector of mappings to JSON.
-    Poco::JSON::Array::Ptr transform_mapping_vec(
-        const std::vector<MappingForDf>& _mapping_vec ) const;
-
     /// Transforms the subcontainers to JSON.
     Poco::JSON::Array::Ptr transform_subcontainers(
         const std::vector<std::shared_ptr<const MappingContainer>>&
             _subcontainers ) const;
 
    public:
+    /// Trivial (const) accessor.
+    const std::vector<std::string>& aggregation() const
+    {
+        assert_true( aggregation_ );
+        return *aggregation_;
+    }
+
     /// Trivial (const) accessor.
     const std::vector<MappingForDf>& categorical() const
     {
@@ -151,6 +159,9 @@ class MappingContainer
     const std::vector<MappingForDf>& text() const { return text_; }
 
    private:
+    /// The aggregations used, for generating the colnames.
+    const std::shared_ptr<const std::vector<std::string>> aggregation_;
+
     /// The vocabulary for the categorical columns.
     const std::vector<MappingForDf> categorical_;
 

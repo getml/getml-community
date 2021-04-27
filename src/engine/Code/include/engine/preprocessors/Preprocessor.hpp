@@ -12,6 +12,7 @@ class Preprocessor
    public:
     static constexpr const char* EMAILDOMAIN = "EmailDomain";
     static constexpr const char* IMPUTATION = "Imputation";
+    static constexpr const char* MAPPING = "Mapping";
     static constexpr const char* SEASONAL = "Seasonal";
     static constexpr const char* SUBSTRING = "Substring";
 
@@ -46,6 +47,11 @@ class Preprocessor
 
     /// Expresses the preprocessor as a JSON object.
     virtual Poco::JSON::Object::Ptr to_json_obj() const = 0;
+
+    /// Expresses the preprocessor as SQL, if applicable.
+    virtual std::vector<std::string> to_sql(
+        const std::shared_ptr<const std::vector<strings::String>>& _categories )
+        const = 0;
 
     /// Returns the type of the preprocessor.
     virtual std::string type() const = 0;

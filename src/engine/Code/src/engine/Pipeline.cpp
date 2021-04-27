@@ -680,6 +680,59 @@ Poco::JSON::Object Pipeline::feature_importances_as_obj() const
 
 // ----------------------------------------------------------------------------
 
+std::vector<std::string> Pipeline::feature_learners_to_sql(
+    const std::shared_ptr<const std::vector<strings::String>>& _categories,
+    const bool _targets,
+    const bool _subfeatures ) const
+{
+    const auto to_sql = [this, _categories, _targets, _subfeatures](
+                            const size_t _i ) -> std::vector<std::string> {
+        const auto& fl = feature_learners_.at( _i );
+
+        assert_true( fl );
+
+        const auto all = fl->to_sql(
+            _categories,
+            _targets,
+            _subfeatures,
+            std::to_string( _i + 1 ) + "_" );
+
+        assert_true( all.size() >= fl->num_features() );
+
+        const auto num_subfeatures = all.size() - fl->num_features();
+
+        const auto subfeatures = stl::make::vector<std::string>(
+            all | std::views::take( num_subfeatures ) );
+
+        const auto get_feature = [num_subfeatures,
+                                  all]( const size_t _ix ) -> std::string {
+            assert_true( _ix < all.size() );
+            return all.at( num_subfeatures + _ix );
+        };
+
+        assert_true( _i < predictor_impl().autofeatures().size() );
+
+        const auto& autofeatures = predictor_impl().autofeatures().at( _i );
+
+        const auto features = stl::make::vector<std::string>(
+            autofeatures | std::views::transform( get_feature ) );
+
+        const auto vec =
+            std::vector<std::vector<std::string>>( { subfeatures, features } );
+
+        return stl::make::vector<std::string>( vec | std::views::join );
+    };
+
+    const auto iota =
+        std::views::iota( static_cast<size_t>( 0 ), feature_learners_.size() );
+
+    const auto all = stl::make::vector<std::vector<std::string>>(
+        iota | std::views::transform( to_sql ) );
+
+    return stl::make::vector<std::string>( all | std::views::join );
+}
+// ----------------------------------------------------------------------------
+
 std::tuple<
     std::vector<std::string>,
     std::vector<std::string>,
@@ -1234,6 +1287,44 @@ std::vector<std::string> Pipeline::get_targets(
 
 // ----------------------------------------------------------------------
 
+std::tuple<
+    std::shared_ptr<const std::vector<std::string>>,
+    std::vector<helpers::MappingAggregation>,
+    size_t>
+Pipeline::infer_mapping_params() const
+{
+    const auto preprocessors = init_preprocessors( df_fingerprints() );
+
+    const auto is_mapping =
+        []( const std::shared_ptr<preprocessors::Preprocessor>& _p ) -> bool {
+        assert_true( _p );
+        return ( _p->type() == preprocessors::Preprocessor::MAPPING );
+    };
+
+    const auto it =
+        std::find_if( preprocessors.begin(), preprocessors.end(), is_mapping );
+
+    if ( it == preprocessors.end() )
+        {
+            return std::make_tuple(
+                std::make_shared<const std::vector<std::string>>(),
+                std::vector<helpers::MappingAggregation>(),
+                static_cast<size_t>( 0 ) );
+        }
+
+    const auto ptr = dynamic_cast<preprocessors::Mapping*>( it->get() );
+
+    assert_true( ptr );
+
+    const auto aggregation =
+        std::make_shared<const std::vector<std::string>>( ptr->aggregation() );
+
+    return std::make_tuple(
+        aggregation, ptr->aggregation_enums(), ptr->min_freq() );
+}
+
+// ----------------------------------------------------------------------
+
 std::pair<
     std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>,
     std::vector<Int>>
@@ -1253,6 +1344,9 @@ Pipeline::init_feature_learners(
 
     const auto [placeholder, peripheral] = make_placeholder();
 
+    const auto [aggregation, aggregation_enums, min_freq] =
+        infer_mapping_params();
+
     const auto obj_vector = JSON::array_to_obj_vector(
         JSON::get_array( obj(), "feature_learners_" ) );
 
@@ -1271,9 +1365,17 @@ Pipeline::init_feature_learners(
 
             // --------------------------------------------------------------
 
+            const auto params = featurelearners::FeatureLearnerParams{
+                .aggregation_ = aggregation,
+                .aggregation_enums_ = aggregation_enums,
+                .cmd_ = *ptr,
+                .dependencies_ = _dependencies,
+                .min_freq_ = min_freq,
+                .peripheral_ = peripheral,
+                .placeholder_ = placeholder };
+
             auto new_feature_learner =
-                featurelearners::FeatureLearnerParser::parse(
-                    *ptr, placeholder, peripheral, _dependencies );
+                featurelearners::FeatureLearnerParser::parse( params );
 
             assert_true( new_feature_learner );
 
@@ -1303,10 +1405,7 @@ Pipeline::init_feature_learners(
 
                             feature_learners.emplace_back(
                                 featurelearners::FeatureLearnerParser::parse(
-                                    *ptr,
-                                    placeholder,
-                                    peripheral,
-                                    dependencies ) );
+                                    params ) );
 
                             target_nums.push_back( static_cast<Int>( t ) );
                         }
@@ -1378,25 +1477,34 @@ std::vector<std::shared_ptr<preprocessors::Preprocessor>>
 Pipeline::init_preprocessors(
     const std::vector<Poco::JSON::Object::Ptr>& _dependencies ) const
 {
-    auto vec = std::vector<std::shared_ptr<preprocessors::Preprocessor>>();
-
     if ( !obj().has( "preprocessors_" ) )
         {
-            return vec;
+            return std::vector<std::shared_ptr<preprocessors::Preprocessor>>();
         }
 
     const auto arr =
         jsonutils::JSON::get_object_array( obj(), "preprocessors_" );
 
-    for ( size_t i = 0; i < arr->size(); ++i )
-        {
-            const auto ptr = arr->getObject( i );
+    const auto parse = [&arr, &_dependencies]( const size_t _i ) {
+        const auto ptr = arr->getObject( _i );
+        assert_true( ptr );
+        return preprocessors::PreprocessorParser::parse( *ptr, _dependencies );
+    };
 
-            assert_true( ptr );
+    const auto iota = std::views::iota( static_cast<size_t>( 0 ), arr->size() );
 
-            vec.push_back( preprocessors::PreprocessorParser::parse(
-                *ptr, _dependencies ) );
-        }
+    const auto range = iota | std::views::transform( parse );
+
+    auto vec = stl::make::vector<std::shared_ptr<preprocessors::Preprocessor>>(
+        range );
+
+    const auto mapping_to_end =
+        []( const std::shared_ptr<preprocessors::Preprocessor>& _ptr ) -> bool {
+        assert_true( _ptr );
+        return _ptr->type() != preprocessors::Preprocessor::MAPPING;
+    };
+
+    std::stable_partition( vec.begin(), vec.end(), mapping_to_end );
 
     return vec;
 }
@@ -1753,6 +1861,34 @@ void Pipeline::load_preprocessors(
         }
 
     _pipeline->preprocessors_ = preprocessors;
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<std::string> Pipeline::make_feature_names() const
+{
+    const auto to_names =
+        [this]( const size_t _i ) -> std::vector<std::string> {
+        const auto make_name = [_i]( const size_t _ix ) -> std::string {
+            return "feature_" + std::to_string( _i + 1 ) + "_" +
+                   std::to_string( _ix + 1 );
+        };
+
+        assert_true( _i < predictor_impl().autofeatures().size() );
+
+        const auto& autofeatures = predictor_impl().autofeatures().at( _i );
+
+        return stl::make::vector<std::string>(
+            autofeatures | std::views::transform( make_name ) );
+    };
+
+    const auto iota =
+        std::views::iota( static_cast<size_t>( 0 ), feature_learners_.size() );
+
+    const auto all = stl::make::vector<std::vector<std::string>>(
+        iota | std::views::transform( to_names ) );
+
+    return stl::make::vector<std::string>( all | std::views::join );
 }
 
 // ----------------------------------------------------------------------------
@@ -2611,6 +2747,26 @@ Poco::JSON::Object Pipeline::to_monitor(
 
 // ----------------------------------------------------------------------------
 
+std::vector<std::string> Pipeline::preprocessors_to_sql(
+    const std::shared_ptr<const std::vector<strings::String>>& _categories )
+    const
+{
+    const auto to_sql =
+        [_categories](
+            const std::shared_ptr<const preprocessors::Preprocessor>& _p )
+        -> std::vector<std::string> {
+        assert_true( _p );
+        return _p->to_sql( _categories );
+    };
+
+    const auto all = stl::make::vector<std::vector<std::string>>(
+        preprocessors_ | std::views::transform( to_sql ) );
+
+    return stl::make::vector<std::string>( all | std::views::join );
+}
+
+// ----------------------------------------------------------------------------
+
 std::string Pipeline::to_sql(
     const std::shared_ptr<const std::vector<strings::String>>& _categories,
     const bool _targets,
@@ -2619,57 +2775,29 @@ std::string Pipeline::to_sql(
     assert_true(
         feature_learners_.size() == predictor_impl().autofeatures().size() );
 
-    std::vector<std::string> features;
+    const auto preprocessing = _subfeatures
+                                   ? preprocessors_to_sql( _categories )
+                                   : std::vector<std::string>();
 
-    auto sql = std::vector<std::string>();
+    const auto features =
+        feature_learners_to_sql( _categories, _targets, _subfeatures );
 
-    for ( size_t i = 0; i < feature_learners_.size(); ++i )
-        {
-            const auto& fe = feature_learners_.at( i );
+    const auto all =
+        std::vector<std::vector<std::string>>( { preprocessing, features } );
 
-            assert_true( fe );
-
-            const auto vec = fe->to_sql(
-                _categories,
-                _targets,
-                _subfeatures,
-                std::to_string( i + 1 ) + "_" );
-
-            assert_true( vec.size() >= fe->num_features() );
-
-            const auto subfeatures_begin = vec.begin();
-
-            const auto features_begin = vec.end() - fe->num_features();
-
-            for ( auto it = subfeatures_begin; it != features_begin; ++it )
-                {
-                    sql.push_back( *it );
-                }
-
-            const auto& autofeatures = predictor_impl().autofeatures().at( i );
-
-            for ( const auto& ix : autofeatures )
-                {
-                    assert_true( ix < fe->num_features() );
-
-                    const auto feature = "feature_" + std::to_string( i + 1 ) +
-                                         "_" + std::to_string( ix + 1 );
-
-                    sql.push_back( features_begin[ix] );
-
-                    features.push_back( feature );
-                }
-        }
+    const auto sql = stl::make::vector<std::string>( all | std::views::join );
 
     const auto population = *JSON::get_object( obj(), "population_" );
 
     const auto placeholder =
         PlaceholderMaker::make_placeholder( population, "t1" );
 
+    const auto feature_names = make_feature_names();
+
     const auto target_names = _targets ? targets() : std::vector<std::string>();
 
     return utils::SQLMaker::make_sql(
-        placeholder.name_, features, sql, target_names, predictor_impl() );
+        placeholder.name_, feature_names, sql, target_names, predictor_impl() );
 }
 
 // ----------------------------------------------------------------------------
@@ -2835,7 +2963,11 @@ Poco::JSON::Array::Ptr Pipeline::transpose(
 
             for ( const auto& vec : _original )
                 {
-                    assert_true( vec.size() == n );
+                    assert_msg(
+                        vec.size() == n,
+                        "vec.size(): " + std::to_string( vec.size() ) +
+                            ", n: " + std::to_string( n ) );
+
                     temp->add( vec.at( i ) );
                 }
 

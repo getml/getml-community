@@ -13,6 +13,9 @@ class TimeSeriesModel
     // -----------------------------------------------------------------
 
    public:
+    typedef typename FEType::FitParamsType FitParamsType;
+    typedef typename FEType::TransformParamsType TransformParamsType;
+
     typedef typename FEType::DataFrameType DataFrameType;
     typedef typename FEType::DataFrameViewType DataFrameViewType;
     typedef typename FEType::FeaturesType FeaturesType;
@@ -58,11 +61,7 @@ class TimeSeriesModel
         const std::vector<containers::DataFrame> &_peripheral ) const;
 
     /// Fits the time series model.
-    void fit(
-        const DataFrameType &_population,
-        const std::vector<DataFrameType> &_peripheral,
-        const std::shared_ptr<const logging::AbstractLogger> _logger =
-            std::shared_ptr<const logging::AbstractLogger>() );
+    void fit( const FitParamsType &_params );
 
     /// Saves the Model in JSON format, if applicable
     void save( const std::string &_fname ) const;
@@ -71,12 +70,7 @@ class TimeSeriesModel
     Poco::JSON::Object to_json_obj( const bool _schema_only = false ) const;
 
     /// Transforms a set of raw data into extracted features.
-    FeaturesType transform(
-        const DataFrameType &_population,
-        const std::vector<DataFrameType> &_peripheral,
-        const std::vector<size_t> &_index,
-        const std::shared_ptr<const logging::AbstractLogger> _logger =
-            std::shared_ptr<const logging::AbstractLogger>() ) const;
+    FeaturesType transform( const TransformParamsType &_params ) const;
 
     // -----------------------------------------------------------------
 
@@ -572,12 +566,9 @@ TimeSeriesModel<FEType>::create_placeholder(
 // -----------------------------------------------------------------------------
 
 template <class FEType>
-void TimeSeriesModel<FEType>::fit(
-    const DataFrameType &_population,
-    const std::vector<DataFrameType> &_peripheral,
-    const std::shared_ptr<const logging::AbstractLogger> _logger )
+void TimeSeriesModel<FEType>::fit( const FitParamsType &_params )
 {
-    model().fit( _population, _peripheral, _logger );
+    model().fit( _params );
 }
 
 // -----------------------------------------------------------------------------
@@ -690,12 +681,9 @@ void TimeSeriesModel<FEType>::transfer_importance_value(
 
 template <class FEType>
 typename FEType::FeaturesType TimeSeriesModel<FEType>::transform(
-    const DataFrameType &_population,
-    const std::vector<DataFrameType> &_peripheral,
-    const std::vector<size_t> &_index,
-    const std::shared_ptr<const logging::AbstractLogger> _logger ) const
+    const TransformParamsType &_params ) const
 {
-    return model().transform( _population, _peripheral, _index, _logger );
+    return model().transform( _params );
 }
 
 // ----------------------------------------------------------------------------

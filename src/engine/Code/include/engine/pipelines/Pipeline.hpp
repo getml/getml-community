@@ -262,6 +262,12 @@ class Pipeline
         std::vector<containers::DataFrame>* _peripheral_dfs,
         Poco::Net::StreamSocket* _socket ) const;
 
+    /// Expresses the feature learners as SQL code.
+    std::vector<std::string> feature_learners_to_sql(
+        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const bool _targets,
+        const bool _subfeatures ) const;
+
     /// Calculates the feature importances vis-a-vis each target.
     std::vector<std::vector<Float>> feature_importances(
         const std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>&
@@ -307,6 +313,13 @@ class Pipeline
         const Poco::JSON::Object& _cmd,
         const std::map<std::string, containers::DataFrame>& _data_frames )
         const;
+
+    /// Returns the aggreagations and min_freq used for the mappings.
+    std::tuple<
+        std::shared_ptr<const std::vector<std::string>>,
+        std::vector<helpers::MappingAggregation>,
+        size_t>
+    infer_mapping_params() const;
 
     /// Prepares the feature learners from the JSON object.
     std::pair<
@@ -398,6 +411,9 @@ class Pipeline
         const std::optional<containers::Features> _autofeatures,
         Poco::Net::StreamSocket* _socket ) const;
 
+    /// Generates the names of the features.
+    std::vector<std::string> make_feature_names() const;
+
     /// Figures out which columns from the population table we would like to
     /// add.
     void make_feature_selector_impl(
@@ -442,6 +458,11 @@ class Pipeline
 
     /// Parses the peripheral names.
     std::shared_ptr<std::vector<std::string>> parse_peripheral() const;
+
+    /// Expresses the preprocessors as SQL code.
+    std::vector<std::string> preprocessors_to_sql(
+        const std::shared_ptr<const std::vector<strings::String>>& _categories )
+        const;
 
     /// Retrieves the features from a data frame.
     std::tuple<

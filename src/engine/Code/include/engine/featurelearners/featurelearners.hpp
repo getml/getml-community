@@ -38,12 +38,15 @@
 
 #include "relmt/ensemble/ensemble.hpp"
 
+#include "fastprop/subfeatures/subfeatures.hpp"
+
 #include "engine/ts/ts.hpp"
 
 // ----------------------------------------------------
 // Module files
 
 #include "engine/featurelearners/AbstractFeatureLearner.hpp"
+#include "engine/featurelearners/FeatureLearnerParams.hpp"
 
 #include "engine/featurelearners/FeatureLearner.hpp"
 

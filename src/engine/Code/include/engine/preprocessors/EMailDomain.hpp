@@ -54,6 +54,14 @@ class EMailDomain : public Preprocessor
         return std::make_shared<EMailDomain>( *this );
     }
 
+    /// The preprocessor does not generate any SQL scripts.
+    std::vector<std::string> to_sql(
+        const std::shared_ptr<const std::vector<strings::String>>& _categories )
+        const final
+    {
+        return {};
+    }
+
     /// Returns the type of the preprocessor.
     std::string type() const final { return Preprocessor::EMAILDOMAIN; }
 

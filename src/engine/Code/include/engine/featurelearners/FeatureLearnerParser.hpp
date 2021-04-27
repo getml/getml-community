@@ -13,10 +13,7 @@ struct FeatureLearnerParser
 {
     /// Returns the correct feature learner
     static std::shared_ptr<AbstractFeatureLearner> parse(
-        const Poco::JSON::Object& _cmd,
-        const std::shared_ptr<const helpers::Placeholder>& _placeholder,
-        const std::shared_ptr<const std::vector<std::string>>& _peripheral,
-        const std::vector<Poco::JSON::Object::Ptr>& _dependencies );
+        const FeatureLearnerParams& _params );
 };
 
 // ----------------------------------------------------------------------------

@@ -52,6 +52,8 @@ void ImportanceMaker::fill_zeros(
 
     fill_zeros_from_columns( marker, _tname, _pl.numericals_ );
 
+    fill_zeros_from_columns( marker, _tname, _pl.text_ );
+
     fill_zeros_from_columns( marker, _tname, _pl.time_stamps_ );
 }
 

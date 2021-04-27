@@ -3,6 +3,7 @@
 
 #include <set>
 #include <sstream>
+#include <tuple>
 #include <vector>
 
 #include "stl/Range.hpp"

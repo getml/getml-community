@@ -55,6 +55,8 @@
 
 #include "helpers/VocabularyTree.hpp"
 
+#include "helpers/MappingAggregation.hpp"
+
 #include "helpers/FeatureContainer.hpp"
 #include "helpers/MappedContainer.hpp"
 #include "helpers/MappingContainer.hpp"
@@ -86,6 +88,9 @@
 #include "helpers/Macros.hpp"
 
 #include "helpers/SQLGenerator.hpp"
+
+#include "helpers/FitParams.hpp"
+#include "helpers/TransformParams.hpp"
 
 // ----------------------------------------------------------------------------
 

@@ -65,6 +65,8 @@ class Macros
 
     static std::string remove_imputation( const std::string& _from_colname );
 
+    static std::string remove_mappings( const std::string& _from_colname );
+
     static std::string remove_seasonal( const std::string& _from_colname );
 
     static std::string remove_substring( const std::string& _from_colname );

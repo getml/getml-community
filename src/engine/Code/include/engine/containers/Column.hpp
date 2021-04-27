@@ -33,6 +33,14 @@ class Column
         nrows_ = data_ptr_->size();
     }
 
+    Column(
+        const std::shared_ptr<std::vector<T>> &_data_ptr,
+        const std::string &_name )
+        : Column( _data_ptr )
+    {
+        set_name( _name );
+    }
+
     Column() : Column( 0 ) {}
 
     ~Column() {}

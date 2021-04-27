@@ -158,6 +158,8 @@ helpers::ImportanceMaker Macros::modify_column_importances(
 
             to_colname = remove_imputation( to_colname );
 
+            to_colname = remove_mappings( to_colname );
+
             to_colname = remove_substring( to_colname );
 
             to_colname = remove_seasonal( to_colname );
@@ -375,6 +377,20 @@ std::string Macros::remove_imputation( const std::string& _from_colname )
     return to_colname.substr( begin, length );
 
     // --------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::string Macros::remove_mappings( const std::string& _from_colname )
+{
+    const auto pos = _from_colname.find( "__mapping_" );
+
+    if ( pos == std::string::npos )
+        {
+            return _from_colname;
+        }
+
+    return _from_colname.substr( 0, pos );
 }
 
 // ----------------------------------------------------------------------------

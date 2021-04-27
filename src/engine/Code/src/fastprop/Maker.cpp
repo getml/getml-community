@@ -87,12 +87,18 @@ std::shared_ptr<const FastPropContainer> Maker::fit_fast_prop_container(
     const auto fast_prop = std::make_shared<algorithm::FastProp>(
         _params.hyperparameters_, _params.peripheral_names_, new_placeholder );
 
-    fast_prop->fit(
-        _params.population_,
-        _params.peripheral_,
-        _params.logger_,
-        new_mapped,
-        true );
+    assert_true( _params.row_index_container_ );
+
+    const auto params = algorithm::FitParams{
+        .feature_container_ = std::nullopt,
+        .logger_ = _params.logger_,
+        .mapped_ = _params.mapped_,
+        .peripheral_ = _params.peripheral_,
+        .population_ = _params.population_,
+        .row_indices_ = _params.row_index_container_.value(),
+        .word_indices_ = _params.word_index_container_ };
+
+    fast_prop->fit( params, true );
 
     return std::make_shared<const FastPropContainer>(
         fast_prop, subcontainers );
@@ -301,15 +307,23 @@ helpers::FeatureContainer Maker::transform( const MakerParams& _params )
         {
             const auto new_mapped = make_mapped( _params );
 
+            const auto& fast_prop = _params.fast_prop_container_->fast_prop();
+
+            const auto index =
+                stl::make::vector<size_t>( std::ranges::views::iota(
+                    static_cast<size_t>( 0 ), fast_prop.num_features() ) );
+
+            const auto params = algorithm::TransformParams{
+                .feature_container_ = std::nullopt,
+                .index_ = index,
+                .logger_ = _params.logger_,
+                .mapped_ = _params.mapped_,
+                .peripheral_ = _params.peripheral_,
+                .population_ = _params.population_,
+                .word_indices_ = _params.word_index_container_ };
+
             const auto feature_ptrs =
-                _params.fast_prop_container_->fast_prop().transform(
-                    _params.population_,
-                    _params.peripheral_,
-                    std::nullopt,
-                    _params.logger_,
-                    nullptr,
-                    new_mapped,
-                    true );
+                fast_prop.transform( params, nullptr, true );
 
             for ( size_t i = 0; i < feature_ptrs.size(); ++i )
                 {

@@ -458,8 +458,20 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
 {
     // ------------------------------------------------------------------------
 
-    const auto cast_column = []( const std::string& _colname,
+    const auto init_as_null = []( const std::string& _colname ) -> std::string {
+        return "CAST( NULL AS REAL ) AS \"" + _colname + "\"";
+    };
+
+    // ------------------------------------------------------------------------
+
+    const auto cast_column = [init_as_null](
+                                 const std::string& _colname,
                                  const std::string& _coltype ) -> std::string {
+        if ( _colname.find( "__mapping_" ) != std::string::npos )
+            {
+                return init_as_null( SQLGenerator::make_colname( _colname ) );
+            }
+
         return "CAST( " + SQLGenerator::edit_colname( _colname, "t1" ) +
                " AS " + _coltype + " ) AS \"" +
                SQLGenerator::make_colname( _colname ) + "\"";
@@ -514,12 +526,6 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
         return stl::make::vector<std::string>(
             _colnames | std::views::filter( include_column ) |
             std::views::transform( cast ) );
-    };
-
-    // ------------------------------------------------------------------------
-
-    const auto init_as_null = []( const std::string& _colname ) -> std::string {
-        return "CAST( NULL AS REAL ) AS \"" + to_lower( _colname ) + "\"";
     };
 
     // ------------------------------------------------------------------------
@@ -798,35 +804,40 @@ std::string SQLGenerator::make_subfeature_joins(
 std::string SQLGenerator::make_time_stamp_diff(
     const Float _diff, const bool _is_rowid )
 {
+    const auto diffstr = [_diff]() {
+        constexpr Float seconds_per_day = 24.0 * 60.0 * 60.0;
+        constexpr Float seconds_per_hour = 60.0 * 60.0;
+        constexpr Float seconds_per_minute = 60.0;
+
+        const auto abs_diff = std::abs( _diff );
+
+        if ( abs_diff >= seconds_per_day )
+            {
+                return std::to_string( _diff / seconds_per_day ) + " days";
+            }
+
+        if ( abs_diff >= seconds_per_hour )
+            {
+                return std::to_string( _diff / seconds_per_hour ) + " hours";
+            }
+
+        if ( abs_diff >= seconds_per_minute )
+            {
+                return std::to_string( _diff / seconds_per_minute ) +
+                       " minutes";
+            }
+
+        return std::to_string( _diff ) + " seconds";
+    };
+
     if ( _is_rowid )
         {
             return Macros::diffstr() + " + " + std::to_string( _diff );
         }
 
-    constexpr Float seconds_per_day = 24.0 * 60.0 * 60.0;
-    constexpr Float seconds_per_hour = 60.0 * 60.0;
-    constexpr Float seconds_per_minute = 60.0;
-
-    const auto abs_diff = std::abs( _diff );
-
-    auto diffstr = std::to_string( _diff ) + " seconds";
-
-    if ( abs_diff >= seconds_per_day )
-        {
-            diffstr = std::to_string( _diff / seconds_per_day ) + " days";
-        }
-    else if ( abs_diff >= seconds_per_hour )
-        {
-            diffstr = std::to_string( _diff / seconds_per_hour ) + " hours";
-        }
-    else if ( abs_diff >= seconds_per_minute )
-        {
-            diffstr = std::to_string( _diff / seconds_per_minute ) + " minutes";
-        }
-
     const std::string sign = _diff >= 0.0 ? "+" : "";
 
-    return Macros::diffstr() + ", '" + sign + diffstr + "'";
+    return Macros::diffstr() + ", '" + sign + diffstr() + "'";
 }
 
 // ----------------------------------------------------------------------------

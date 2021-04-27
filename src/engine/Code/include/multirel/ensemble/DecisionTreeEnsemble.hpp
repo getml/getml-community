@@ -12,6 +12,9 @@ class DecisionTreeEnsemble
     // -----------------------------------------------------------------
 
    public:
+    typedef FitParams FitParamsType;
+    typedef TransformParams TransformParamsType;
+
     typedef multirel::containers::DataFrame DataFrameType;
     typedef multirel::containers::DataFrameView DataFrameViewType;
     typedef multirel::containers::Features FeaturesType;
@@ -58,11 +61,7 @@ class DecisionTreeEnsemble
     void feature_importances();
 
     /// Fits the decision tree ensemble - spawns the threads.
-    void fit(
-        const containers::DataFrame &_population,
-        const std::vector<containers::DataFrame> &_peripheral,
-        const std::shared_ptr<const logging::AbstractLogger> _logger =
-            std::shared_ptr<const logging::AbstractLogger>() );
+    void fit( const FitParams &_params );
 
     /// Fits the decision tree ensemble - called by the spawned threads.
     void fit(
@@ -73,9 +72,6 @@ class DecisionTreeEnsemble
         const std::shared_ptr<optimizationcriteria::OptimizationCriterion>
             &_opt,
         multithreading::Communicator *_comm );
-
-    /// Saves the Model in JSON format, if applicable
-    void save( const std::string &_fname ) const;
 
     /// Selects the features according to the index given.
     void select_features( const std::vector<size_t> &_index );
@@ -93,12 +89,7 @@ class DecisionTreeEnsemble
     /// Transforms a set of raw data into extracted features.
     /// Only the features signified by _index will be used, if such an index
     /// is passed.
-    containers::Features transform(
-        const containers::DataFrame &_population,
-        const std::vector<containers::DataFrame> &_peripheral,
-        const std::optional<std::vector<size_t>> &_index = std::nullopt,
-        const std::shared_ptr<const logging::AbstractLogger> _logger =
-            std::shared_ptr<const logging::AbstractLogger>() ) const;
+    containers::Features transform( const TransformParams &_params ) const;
 
     /// Transforms table holders into predictions, used for subtree
     /// predictions.
@@ -123,9 +114,6 @@ class DecisionTreeEnsemble
 
     /// Trivial accessor
     bool allow_http() const { return impl().allow_http_; }
-
-    /// Whether there are mappings
-    const bool has_mappings() const { return ( true && impl().mappings_ ); }
 
     /// Trivial getter
     inline multithreading::Communicator *comm() { return impl().comm_; }
@@ -154,13 +142,6 @@ class DecisionTreeEnsemble
     {
         return std::make_shared<optimizationcriteria::RSquaredCriterion>(
             impl().hyperparameters_, _population, _comm );
-    }
-
-    /// Trivial accessor
-    inline const helpers::MappingContainer &mappings() const
-    {
-        assert_true( impl().mappings_ );
-        return *impl().mappings_;
     }
 
     /// Trivial accessor
@@ -232,13 +213,6 @@ class DecisionTreeEnsemble
         return impl().trees_;
     }
 
-    /// Trivial (const) accessor
-    inline const std::shared_ptr<const helpers::VocabularyContainer>
-        &vocabulary() const
-    {
-        return impl().vocabulary_;
-    }
-
     // -----------------------------------------------------------------
 
    private:
@@ -264,16 +238,6 @@ class DecisionTreeEnsemble
         const containers::DataFrame &_population,
         const std::vector<containers::DataFrame> &_peripheral );
 
-    /// Fits the propositionalization subfeatures and returns the feature
-    /// container.
-    std::optional<const helpers::FeatureContainer> fit_propositionalization(
-        const containers::DataFrame &_population,
-        const std::vector<containers::DataFrame> &_peripheral,
-        const helpers::RowIndexContainer &_row_indices,
-        const helpers::WordIndexContainer &_word_indices,
-        const std::optional<const helpers::MappedContainer> &_mapped,
-        const std::shared_ptr<const logging::AbstractLogger> _logger );
-
     /// Spawns the threads for fitting.
     void fit_spawn_threads(
         const containers::DataFrame &_population,
@@ -288,37 +252,6 @@ class DecisionTreeEnsemble
     /// Extracts a DecisionTreeEnsemble from a JSON object.
     DecisionTreeEnsemble from_json_obj(
         const Poco::JSON::Object &_json_obj ) const;
-
-    /// Fits the mappings and returns the mapped containers.
-    std::optional<const helpers::MappedContainer> handle_mappings(
-        const containers::DataFrame &_population,
-        const std::vector<containers::DataFrame> &_peripheral,
-        const helpers::WordIndexContainer &_word_indices,
-        const std::shared_ptr<const logging::AbstractLogger> _logger );
-
-    /// Prepares the text fields for training and transformation.
-    std::tuple<
-        containers::DataFrame,
-        std::vector<containers::DataFrame>,
-        helpers::RowIndexContainer,
-        helpers::WordIndexContainer>
-    handle_text_fields(
-        const containers::DataFrame &_population,
-        const std::vector<containers::DataFrame> &_peripheral,
-        const std::shared_ptr<const logging::AbstractLogger> _logger ) const;
-
-    /// Calculates an index containing all features, if none exists.
-    std::vector<size_t> infer_index(
-        const std::optional<std::vector<size_t>> &_index ) const;
-
-    /// Generates the feature container for the propositionalization.
-    std::optional<const helpers::FeatureContainer>
-    transform_propositionalization(
-        const containers::DataFrame &_population,
-        const std::vector<containers::DataFrame> &_peripheral,
-        const std::optional<const helpers::WordIndexContainer> &_word_indices,
-        const std::optional<const helpers::MappedContainer> &_mapped,
-        const std::shared_ptr<const logging::AbstractLogger> _logger ) const;
 
     /// Spawns the threads for transforming the features.
     void transform_spawn_threads(

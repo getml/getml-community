@@ -69,9 +69,7 @@ void SubtreeHelper::fit_subensemble(
             assert_true( false && "agg_type not known!" );
         }
 
-    ( *_subensemble )
-        ->init_as_subensemble(
-            subtable_holder->word_indices().vocabulary(), _comm );
+    ( *_subensemble )->init_as_subensemble( _comm );
 
     ( *_subensemble )
         ->fit_subensembles( subtable_holder, _logger, intermediate_agg );

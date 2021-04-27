@@ -12,14 +12,15 @@
 
 #include "strings/strings.hpp"
 
-#include "fastprop/subfeatures/subfeatures.hpp"
-
 #include "multirel/utils/utils.hpp"
 
 #include "multirel/decisiontrees/decisiontrees.hpp"
 
 // ----------------------------------------------------
 // Module files
+
+#include "multirel/ensemble/FitParams.hpp"
+#include "multirel/ensemble/TransformParams.hpp"
 
 #include "multirel/ensemble/SameUnitIdentifier.hpp"
 

@@ -44,6 +44,9 @@
 // ----------------------------------------------------------------------------
 // Module files
 
+#include "fastprop/algorithm/FitParams.hpp"
+#include "fastprop/algorithm/TransformParams.hpp"
+
 #include "fastprop/algorithm/TableHolder.hpp"
 
 #include "fastprop/algorithm/Aggregator.hpp"

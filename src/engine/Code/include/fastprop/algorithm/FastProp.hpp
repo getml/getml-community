@@ -18,6 +18,9 @@ class FastProp
     // ------------------------------------------------------------------------
 
    public:
+    typedef FitParams FitParamsType;
+    typedef TransformParams TransformParamsType;
+
     typedef fastprop::containers::DataFrame DataFrameType;
     typedef fastprop::containers::DataFrameView DataFrameViewType;
     typedef fastprop::containers::Features FeaturesType;
@@ -56,28 +59,13 @@ class FastProp
         const std::vector<Float>& _importance_factors ) const;
 
     /// Fits the FastProp.
-    void fit(
-        const containers::DataFrame& _population,
-        const std::vector<containers::DataFrame>& _peripheral,
-        const std::shared_ptr<const logging::AbstractLogger> _logger =
-            std::shared_ptr<const logging::AbstractLogger>(),
-        const std::optional<helpers::MappedContainer> _mapped = std::nullopt,
-        const bool _as_subfeatures = false );
-
-    /// Saves the FastProp into a JSON file.
-    void save( const std::string& _fname ) const;
+    void fit( const FitParams& _params, const bool _as_subfeatures = false );
 
     /// Returns the features underlying the model (the predictions of the
     /// individual trees as opposed to the entire prediction)
     containers::Features transform(
-        const containers::DataFrame& _population,
-        const std::vector<containers::DataFrame>& _peripheral,
-        const std::optional<std::vector<size_t>>& _index = std::nullopt,
-        const std::shared_ptr<const logging::AbstractLogger> _logger =
-            std::shared_ptr<const logging::AbstractLogger>(),
+        const TransformParams& _params,
         const std::shared_ptr<std::vector<size_t>>& _rownums = nullptr,
-        const std::optional<const helpers::MappedContainer> _mapped =
-            std::nullopt,
         const bool _as_subfeatures = false ) const;
 
     /// Expresses FastProp as Poco::JSON::Object.
@@ -109,13 +97,8 @@ class FastProp
 
     /// Builds all rows for the thread associated with _thread_num
     void build_rows(
-        const containers::DataFrame& _population,
-        const std::vector<containers::DataFrame>& _peripheral,
+        const TransformParams& _params,
         const std::vector<containers::Features>& _subfeatures,
-        const std::optional<helpers::WordIndexContainer>& _word_indices,
-        const std::optional<const helpers::MappedContainer>& _mapped,
-        const std::vector<size_t>& _index,
-        const std::shared_ptr<const logging::AbstractLogger> _logger,
         const std::shared_ptr<std::vector<size_t>>& _rownums,
         const size_t _thread_num,
         std::atomic<size_t>* _num_completed,
@@ -123,18 +106,16 @@ class FastProp
 
     /// Builds the subfeatures.
     std::vector<containers::Features> build_subfeatures(
-        const containers::DataFrame& _population,
-        const std::vector<containers::DataFrame>& _peripheral,
-        const std::vector<size_t>& _index,
-        const std::shared_ptr<const logging::AbstractLogger> _logger,
-        const std::shared_ptr<std::vector<size_t>>& _rownums,
-        const std::optional<const helpers::MappedContainer>& _mapped ) const;
+        const TransformParams& _params,
+        const std::shared_ptr<std::vector<size_t>>& _rownums ) const;
 
     /// Calculates the R-squared for each feature vis-a-vis the targets.
     std::vector<Float> calc_r_squared(
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
+        const std::optional<const helpers::MappedContainer>& _mapped,
+        const helpers::WordIndexContainer& _word_indices,
         const std::shared_ptr<std::vector<size_t>>& _rownums ) const;
 
     /// Calculates the threshold on the basis of which we throw out features.
@@ -258,32 +239,10 @@ class FastProp
 
     /// Fits the subfeatures of the FastProp.
     std::shared_ptr<const std::vector<std::optional<FastProp>>> fit_subfeatures(
-        const TableHolder& _table_holder,
-        const std::vector<containers::DataFrame>& _peripheral,
-        const std::shared_ptr<const logging::AbstractLogger> _logger,
-        const std::optional<const helpers::MappedContainer>& _mapped ) const;
+        const FitParams& _params, const TableHolder& _table_holder ) const;
 
     /// Infers the appropriate number of threads.
     size_t get_num_threads() const;
-
-    /// Handles the mappings during training.
-    std::optional<helpers::MappedContainer> handle_mappings(
-        const containers::DataFrame& _population,
-        const std::vector<containers::DataFrame>& _peripheral,
-        const std::optional<helpers::MappedContainer> _mapped,
-        const helpers::WordIndexContainer& _word_indices,
-        const std::shared_ptr<const logging::AbstractLogger> _logger );
-
-    /// Handles the text fields during training.
-    std::tuple<
-        containers::DataFrame,
-        std::vector<containers::DataFrame>,
-        helpers::WordIndexContainer>
-    handle_text_fields(
-        const containers::DataFrame& _population,
-        const std::vector<containers::DataFrame>& _peripheral,
-        const std::shared_ptr<const logging::AbstractLogger> _logger,
-        const bool _as_subfeatures );
 
     /// Generates importances from the features.
     std::vector<std::pair<helpers::ColumnDescription, Float>> infer_importance(
@@ -294,15 +253,6 @@ class FastProp
     /// Initializes a set of empty features.
     containers::Features init_features(
         const size_t _nrows, const size_t _ncols ) const;
-
-    /// Infers the indices of the features needed.
-    std::vector<size_t> infer_index(
-        const std::optional<std::vector<size_t>>& _index ) const;
-
-    /// Infers whether we want to split the text fields.
-    bool infer_split_text_fields(
-        const std::vector<containers::DataFrame>& _peripheral,
-        const bool _as_subfeatures ) const;
 
     /// Initializes the importance factors for the subfeatures.
     std::vector<std::vector<Float>> init_subimportance_factors() const;
@@ -370,6 +320,8 @@ class FastProp
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
+        const std::optional<const helpers::MappedContainer>& _mapped,
+        const helpers::WordIndexContainer& _word_indices,
         const std::shared_ptr<std::vector<size_t>>& _rownums ) const;
 
     /// Returns true if _agg is FIRST or LAST, but there are no time stamps in
@@ -381,13 +333,8 @@ class FastProp
 
     /// Spawns the threads for building the features.
     void spawn_threads(
-        const containers::DataFrame& _population,
-        const std::vector<containers::DataFrame>& _peripheral,
+        const TransformParams& _params,
         const std::vector<containers::Features>& _subfeatures,
-        const std::optional<helpers::WordIndexContainer>& _word_indices,
-        const std::optional<const helpers::MappedContainer>& _mapped,
-        const std::vector<size_t>& _index,
-        const std::shared_ptr<const logging::AbstractLogger> _logger,
         const std::shared_ptr<std::vector<size_t>>& _rownums,
         containers::Features* _features ) const;
 

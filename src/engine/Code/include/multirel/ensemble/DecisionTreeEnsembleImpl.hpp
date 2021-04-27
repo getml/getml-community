@@ -42,13 +42,6 @@ struct DecisionTreeEnsembleImpl
     /// The hyperparameters used in this ensemble
     std::shared_ptr<const descriptors::Hyperparameters> hyperparameters_;
 
-    /// Holds the propositionalization subfeatures.
-    std::shared_ptr<const fastprop::subfeatures::FastPropContainer>
-        fast_prop_container_;
-
-    /// Used to map columns onto the average target value.
-    std::shared_ptr<const helpers::MappingContainer> mappings_;
-
     /// Names of the peripheral tables.
     std::shared_ptr<const std::vector<std::string>> peripheral_;
 
@@ -74,9 +67,6 @@ struct DecisionTreeEnsembleImpl
     /// The decision trees that are part of this ensemble -
     /// each represents one feature
     std::vector<decisiontrees::DecisionTree> trees_;
-
-    // The vocabulary used to analyze the text fields.
-    std::shared_ptr<const helpers::VocabularyContainer> vocabulary_;
 };
 
 // ----------------------------------------------------------------------------
