@@ -40,7 +40,7 @@ typename RowIndexContainer::RowIndices RowIndexContainer::make_row_indices(
 
     auto range = _word_indices | std::views::transform( make_row_index );
 
-    return stl::make::vector<std::shared_ptr<const textmining::RowIndex>>(
+    return stl::collect::vector<std::shared_ptr<const textmining::RowIndex>>(
         range );
 }
 

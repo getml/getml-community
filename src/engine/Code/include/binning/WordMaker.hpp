@@ -72,7 +72,7 @@ WordMaker<MatchType, GetRangeType>::make_words(
     // ------------------------------------------------------------------------
 
     return std::make_shared<const std::vector<Int>>(
-        stl::make::vector<Int>( range ) );
+        stl::collect::vector<Int>( range ) );
 
     // ------------------------------------------------------------------------
 }

@@ -90,7 +90,7 @@ typename Mapping::TextMapping Mapping::extract_text_mapping(
     const auto range = iota | std::views::transform( get_obj ) |
                        std::views::transform( obj_to_map );
 
-    return stl::make::vector<TextMapping::value_type>( range );
+    return stl::collect::vector<TextMapping::value_type>( range );
 }
 
 // ----------------------------------------------------
@@ -140,10 +140,11 @@ Mapping::fit_on_categoricals( const containers::DataFrame& _data_frame ) const
     const auto range2 = iota | std::views::transform( get_categorical ) |
                         std::views::transform( get_colname );
 
-    const auto mappings = stl::make::vector<MappingForDf::value_type>( range1 );
+    const auto mappings =
+        stl::collect::vector<MappingForDf::value_type>( range1 );
 
     const auto colnames = std::make_shared<const std::vector<std::string>>(
-        stl::make::vector<std::string>( range2 ) );
+        stl::collect::vector<std::string>( range2 ) );
 
     return std::make_pair( mappings, colnames );
 }
@@ -186,16 +187,17 @@ Mapping::fit_on_discretes( const containers::DataFrame& _data_frame ) const
                         std::views::filter( is_discrete );
 
     const auto discrete_cols =
-        stl::make::vector<containers::Column<Float>>( range1 );
+        stl::collect::vector<containers::Column<Float>>( range1 );
 
     const auto range2 = discrete_cols | std::views::transform( col_to_mapping );
 
     const auto range3 = discrete_cols | std::views::transform( get_colname );
 
-    const auto mappings = stl::make::vector<MappingForDf::value_type>( range2 );
+    const auto mappings =
+        stl::collect::vector<MappingForDf::value_type>( range2 );
 
     const auto colnames = std::make_shared<const std::vector<std::string>>(
-        stl::make::vector<std::string>( range3 ) );
+        stl::collect::vector<std::string>( range3 ) );
 
     return std::make_pair( mappings, colnames );
 }
@@ -232,10 +234,11 @@ Mapping::fit_on_text( const containers::DataFrame& _data_frame ) const
     const auto range2 = iota | std::views::transform( get_text ) |
                         std::views::transform( get_colname );
 
-    const auto mappings = stl::make::vector<TextMapping::value_type>( range1 );
+    const auto mappings =
+        stl::collect::vector<TextMapping::value_type>( range1 );
 
     const auto colnames = std::make_shared<const std::vector<std::string>>(
-        stl::make::vector<std::string>( range2 ) );
+        stl::collect::vector<std::string>( range2 ) );
 
     return std::make_pair( mappings, colnames );
 }
@@ -293,7 +296,7 @@ Mapping Mapping::from_json_obj( const Poco::JSON::Object& _obj ) const
     that.aggregation_ = JSON::array_to_vector<std::string>(
         JSON::get_array( _obj, "aggregation_" ) );
 
-    that.aggregation_enums_ = stl::make::vector<helpers::MappingAggregation>(
+    that.aggregation_enums_ = stl::collect::vector<helpers::MappingAggregation>(
         that.aggregation_ | std::views::transform( parse ) );
 
     that.min_freq_ = JSON::get_value<size_t>( _obj, "min_freq_" );
@@ -361,7 +364,7 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_int(
         const auto range = col | std::views::transform( get_val );
 
         const auto ptr = std::make_shared<std::vector<Float>>(
-            stl::make::vector<Float>( range ) );
+            stl::collect::vector<Float>( range ) );
 
         const auto name = helpers::MappingContainerMaker::make_colname(
             col.name(), "", aggregation_, _weight_num );
@@ -382,7 +385,7 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_int(
 
     const auto iota = std::views::iota( static_cast<size_t>( 0 ), num_weights );
 
-    return stl::make::vector<containers::Column<Float>>(
+    return stl::collect::vector<containers::Column<Float>>(
         iota | std::views::transform( make_mapping_column ) );
 
     // ----------------------------------------------------
@@ -453,7 +456,7 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_text(
         const auto range = col | std::views::transform( get_val );
 
         const auto ptr = std::make_shared<std::vector<Float>>(
-            stl::make::vector<Float>( range ) );
+            stl::collect::vector<Float>( range ) );
 
         assert_msg(
             ptr->size() == col.nrows(),
@@ -479,7 +482,7 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_text(
 
     const auto iota = std::views::iota( static_cast<size_t>( 0 ), num_weights );
 
-    return stl::make::vector<containers::Column<Float>>(
+    return stl::collect::vector<containers::Column<Float>>(
         iota | std::views::transform( make_mapping_column ) );
 
     // ----------------------------------------------------
@@ -671,7 +674,7 @@ std::vector<std::string> Mapping::to_sql(
     const auto all = std::vector<std::vector<std::string>>(
         { categorical, discrete, text } );
 
-    return stl::make::vector<std::string>( all | std::views::join );
+    return stl::collect::vector<std::string>( all | std::views::join );
 }
 
 // ----------------------------------------------------
@@ -751,9 +754,9 @@ std::vector<containers::Column<Float>> Mapping::transform_categorical(
                        std::views::transform( make_cols );
 
     const auto all =
-        stl::make::vector<std::vector<containers::Column<Float>>>( range );
+        stl::collect::vector<std::vector<containers::Column<Float>>>( range );
 
-    return stl::make::vector<containers::Column<Float>>(
+    return stl::collect::vector<containers::Column<Float>>(
         all | std::ranges::views::join );
 }
 
@@ -780,7 +783,7 @@ std::vector<containers::Column<Float>> Mapping::transform_discrete(
         const auto range = col | std::views::transform( cast_as_int );
 
         const auto ptr = std::make_shared<std::vector<Int>>(
-            stl::make::vector<Int>( range ) );
+            stl::collect::vector<Int>( range ) );
 
         return containers::Column<Int>( ptr, col.name() );
     };
@@ -811,9 +814,9 @@ std::vector<containers::Column<Float>> Mapping::transform_discrete(
                        std::views::transform( make_cols );
 
     const auto all =
-        stl::make::vector<std::vector<containers::Column<Float>>>( range );
+        stl::collect::vector<std::vector<containers::Column<Float>>>( range );
 
-    return stl::make::vector<containers::Column<Float>>(
+    return stl::collect::vector<containers::Column<Float>>(
         all | std::ranges::views::join );
 }
 
@@ -859,9 +862,9 @@ std::vector<containers::Column<Float>> Mapping::transform_text(
                        std::views::transform( make_cols );
 
     const auto all =
-        stl::make::vector<std::vector<containers::Column<Float>>>( range );
+        stl::collect::vector<std::vector<containers::Column<Float>>>( range );
 
-    return stl::make::vector<containers::Column<Float>>(
+    return stl::collect::vector<containers::Column<Float>>(
         all | std::ranges::views::join );
 }
 

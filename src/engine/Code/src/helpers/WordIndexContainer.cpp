@@ -52,7 +52,7 @@ VocabularyContainer WordIndexContainer::vocabulary() const
     const auto extract_vocab_for_df =
         [get_vocab]( const WordIndices& _word_indices ) {
             auto range = _word_indices | std::views::transform( get_vocab );
-            return stl::make::vector<
+            return stl::collect::vector<
                 std::shared_ptr<const std::vector<strings::String>>>( range );
         };
 
@@ -60,7 +60,7 @@ VocabularyContainer WordIndexContainer::vocabulary() const
 
     auto range = peripheral_ | std::views::transform( extract_vocab_for_df );
 
-    const auto peripheral = stl::make::vector<VocabForDf>( range );
+    const auto peripheral = stl::collect::vector<VocabForDf>( range );
 
     return VocabularyContainer( population, peripheral );
 }
@@ -84,7 +84,7 @@ typename WordIndexContainer::WordIndices WordIndexContainer::make_word_indices(
 
     auto range = iota | std::views::transform( make_index );
 
-    return stl::make::vector<std::shared_ptr<const textmining::WordIndex>>(
+    return stl::collect::vector<std::shared_ptr<const textmining::WordIndex>>(
         range );
 }
 

@@ -172,7 +172,7 @@ std::string SQLMaker::make_sql(
 
     sql = drop_duplicates( sql );
 
-    return stl::make::string( sql );
+    return stl::collect::string( sql );
 }
 
 // ----------------------------------------------------------------------------

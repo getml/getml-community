@@ -881,7 +881,7 @@ containers::Features DecisionTreeEnsemble::transform(
     auto range = _params.index_ | std::views::transform( init_feature );
 
     auto features =
-        stl::make::vector<std::shared_ptr<std::vector<Float>>>( range );
+        stl::collect::vector<std::shared_ptr<std::vector<Float>>>( range );
 
     // -------------------------------------------------------
 

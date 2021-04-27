@@ -7,6 +7,6 @@
 #include <vector>
 
 #include "stl/Range.hpp"
-#include "stl/make.hpp"
+#include "stl/collect.hpp"
 
 #endif  // STL_STL_HPP_

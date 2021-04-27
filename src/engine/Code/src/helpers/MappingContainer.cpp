@@ -622,7 +622,7 @@ MappingContainer::to_sql(
         { categorical, discrete, text, subcontainers } );
 
     const auto sql =
-        stl::make::vector<std::string>( all | std::ranges::views::join );
+        stl::collect::vector<std::string>( all | std::ranges::views::join );
 
     // ------------------------------------------------------------------------
 

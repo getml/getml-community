@@ -1,11 +1,11 @@
-#ifndef STL_MAKE_HPP_
-#define STL_MAKE_HPP_
+#ifndef STL_COLLECT_HPP_
+#define STL_COLLECT_HPP_
 
 namespace stl
 {
 // -------------------------------------------------------------------------
 
-struct make
+struct collect
 {
     /// Generates a string from a range
     template <class RangeType>
@@ -53,4 +53,4 @@ struct make
 // -------------------------------------------------------------------------
 }  // namespace stl
 
-#endif  // STL_MAKE_HPP_
+#endif  // STL_COLLECT_HPP_

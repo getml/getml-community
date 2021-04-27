@@ -33,7 +33,7 @@ std::pair<Int, std::vector<Float>> MappingContainerMaker::calc_agg_targets(
         const auto aggregated_range =
             _aggregation_enums | std::views::transform( aggregate );
 
-        return stl::make::vector<Float>( aggregated_range );
+        return stl::collect::vector<Float>( aggregated_range );
     };
 
     // -----------------------------------------------------------------------
@@ -41,9 +41,9 @@ std::pair<Int, std::vector<Float>> MappingContainerMaker::calc_agg_targets(
     const auto range =
         _data_frame.targets_ | std::views::transform( calc_aggs );
 
-    const auto all = stl::make::vector<std::vector<Float>>( range );
+    const auto all = stl::collect::vector<std::vector<Float>>( range );
 
-    const auto second = stl::make::vector<Float>( all | std::views::join );
+    const auto second = stl::collect::vector<Float>( all | std::views::join );
 
     // -----------------------------------------------------------------------
 
@@ -149,7 +149,7 @@ MappingContainerMaker::fit_on_categoricals(
     const auto range = _peripheral_tables.back().categoricals_ |
                        std::views::transform( col_to_mapping );
 
-    const auto vec = stl::make::vector<MappingForDf::value_type>( range );
+    const auto vec = stl::collect::vector<MappingForDf::value_type>( range );
 
     _progress_logger->increment( vec.size() );
 
@@ -186,7 +186,7 @@ MappingContainerMaker::fit_on_discretes(
     const auto range = _peripheral_tables.back().discretes_ |
                        std::views::transform( col_to_mapping );
 
-    const auto vec = stl::make::vector<MappingForDf::value_type>( range );
+    const auto vec = stl::collect::vector<MappingForDf::value_type>( range );
 
     _progress_logger->increment( vec.size() );
 
@@ -233,7 +233,7 @@ typename MappingContainerMaker::MappingForDf MappingContainerMaker::fit_on_text(
     const auto range = _peripheral_tables.back().word_indices_ |
                        std::views::transform( col_to_mapping );
 
-    const auto vec = stl::make::vector<MappingForDf::value_type>( range );
+    const auto vec = stl::collect::vector<MappingForDf::value_type>( range );
 
     _progress_logger->increment( vec.size() );
 
@@ -842,10 +842,10 @@ MappingContainerMaker::transform_categorical(
         std::views::iota( static_cast<size_t>( 0 ), _mapping.size() ) |
         std::views::transform( transform_col );
 
-    const auto all = stl::make::vector<std::vector<Column<Float>>>( range );
+    const auto all = stl::collect::vector<std::vector<Column<Float>>>( range );
 
     const auto mapped =
-        stl::make::vector<Column<Float>>( all | std::views::join );
+        stl::collect::vector<Column<Float>>( all | std::views::join );
 
     _progress_logger->increment( _mapping.size() );
 
@@ -886,7 +886,7 @@ Column<Float> MappingContainerMaker::transform_categorical_column(
     const auto range = cat_col | std::views::transform( map_to_value );
 
     const auto data = std::make_shared<std::vector<Float>>(
-        stl::make::vector<Float>( range ) );
+        stl::collect::vector<Float>( range ) );
 
     const auto colname = make_colname(
         cat_col.name_, _feature_postfix, _aggregation, _weight_num );
@@ -935,10 +935,10 @@ MappingContainerMaker::transform_discrete(
         std::views::iota( static_cast<size_t>( 0 ), _mapping.size() ) |
         std::views::transform( transform_col );
 
-    const auto all = stl::make::vector<std::vector<Column<Float>>>( range );
+    const auto all = stl::collect::vector<std::vector<Column<Float>>>( range );
 
     const auto mapped =
-        stl::make::vector<Column<Float>>( all | std::views::join );
+        stl::collect::vector<Column<Float>>( all | std::views::join );
 
     _progress_logger->increment( _mapping.size() );
 
@@ -981,7 +981,7 @@ Column<Float> MappingContainerMaker::transform_discrete_column(
     const auto range = dis_col | std::views::transform( map_to_value );
 
     const auto data = std::make_shared<std::vector<Float>>(
-        stl::make::vector<Float>( range ) );
+        stl::collect::vector<Float>( range ) );
 
     const auto colname = make_colname(
         dis_col.name_, _feature_postfix, _aggregation, _weight_num );
@@ -1037,10 +1037,10 @@ MappingContainerMaker::transform_text(
         std::views::iota( static_cast<size_t>( 0 ), _mapping.size() ) |
         std::views::transform( transform_col );
 
-    const auto all = stl::make::vector<std::vector<Column<Float>>>( range );
+    const auto all = stl::collect::vector<std::vector<Column<Float>>>( range );
 
     const auto mapped =
-        stl::make::vector<Column<Float>>( all | std::views::join );
+        stl::collect::vector<Column<Float>>( all | std::views::join );
 
     _progress_logger->increment( _mapping.size() );
 
@@ -1111,7 +1111,7 @@ Column<Float> MappingContainerMaker::transform_text_column(
                        std::views::transform( map_word_range );
 
     const auto data = std::make_shared<std::vector<Float>>(
-        stl::make::vector<Float>( range ) );
+        stl::collect::vector<Float>( range ) );
 
     assert_msg(
         data->size() == _text.at( _colnum ).nrows_,
@@ -1220,17 +1220,17 @@ MappingContainerMaker::transform_table_holder(
     const auto iota = std::views::iota(
         static_cast<size_t>( 0 ), _mapping->categorical().size() );
 
-    const auto categorical = stl::make::vector<std::vector<Column<Float>>>(
+    const auto categorical = stl::collect::vector<std::vector<Column<Float>>>(
         iota | std::views::transform( make_categorical ) );
 
-    const auto discrete = stl::make::vector<std::vector<Column<Float>>>(
+    const auto discrete = stl::collect::vector<std::vector<Column<Float>>>(
         iota | std::views::transform( make_discrete ) );
 
     const auto subcontainers =
-        stl::make::vector<std::shared_ptr<const MappedContainer>>(
+        stl::collect::vector<std::shared_ptr<const MappedContainer>>(
             iota | std::views::transform( make_subcontainer ) );
 
-    const auto text = stl::make::vector<std::vector<Column<Float>>>(
+    const auto text = stl::collect::vector<std::vector<Column<Float>>>(
         iota | std::views::transform( make_text ) );
 
     const auto ptr = std::make_shared<MappedContainer>(

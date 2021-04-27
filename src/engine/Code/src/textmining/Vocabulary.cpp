@@ -53,7 +53,7 @@ std::shared_ptr<const std::vector<strings::String>> Vocabulary::generate(
         std::views::transform( get_first ) | std::views::take( _max_size );
 
     auto vocab = std::make_shared<std::vector<strings::String>>(
-        stl::make::vector<strings::String>( range ) );
+        stl::collect::vector<strings::String>( range ) );
 
     std::sort( vocab->begin(), vocab->end() );
 
@@ -86,7 +86,7 @@ std::vector<std::string> Vocabulary::split_text_field(
         [is_non_empty](
             const std::vector<std::string>& vec ) -> std::vector<std::string> {
         const auto range = vec | std::views::filter( is_non_empty );
-        return stl::make::vector<std::string>( range );
+        return stl::collect::vector<std::string>( range );
     };
 
     const auto splitted = StringSplitter::split( _text_field.to_lower().str() );

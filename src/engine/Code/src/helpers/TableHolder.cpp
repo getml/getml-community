@@ -80,7 +80,7 @@ std::vector<DataFrame> TableHolder::add_text_fields_to_peripheral_tables(
         std::views::iota( static_cast<size_t>( 0 ), _peripheral.size() ) |
         std::views::filter( is_relevant_text_field );
 
-    const auto relevant_text_fields_ix = stl::make::vector<size_t>( range );
+    const auto relevant_text_fields_ix = stl::collect::vector<size_t>( range );
 
     assert_true(
         !_mapped ||
@@ -614,7 +614,7 @@ WordIndexContainer TableHolder::word_indices() const
     auto range =
         peripheral_tables_ | std::views::transform( extract_word_indices );
 
-    const auto peripheral = stl::make::vector<WordIndices>( range );
+    const auto peripheral = stl::collect::vector<WordIndices>( range );
 
     return WordIndexContainer( population, peripheral );
 }

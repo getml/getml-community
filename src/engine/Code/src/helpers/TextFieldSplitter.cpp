@@ -9,8 +9,8 @@ DataFrame TextFieldSplitter::add_rowid( const DataFrame& _df )
     auto range = std::views::iota(
         static_cast<Int>( 0 ), static_cast<Int>( _df.nrows() ) );
 
-    const auto ptr =
-        std::make_shared<std::vector<Int>>( stl::make::vector<Int>( range ) );
+    const auto ptr = std::make_shared<std::vector<Int>>(
+        stl::collect::vector<Int>( range ) );
 
     const auto rowid = Column<Int>( ptr, helpers::Macros::rowid(), "" );
 
@@ -207,7 +207,7 @@ TextFieldSplitter::split_text_fields(
     auto range =
         _peripheral_dfs | std::views::transform( modify_if_applicable );
 
-    auto peripheral_dfs = stl::make::vector<DataFrame>( range );
+    auto peripheral_dfs = stl::collect::vector<DataFrame>( range );
 
     split_text_fields_on_df(
         _population_df, &peripheral_dfs, &progress_logger );

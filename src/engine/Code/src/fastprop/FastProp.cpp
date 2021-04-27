@@ -388,7 +388,7 @@ std::vector<Float> FastProp::calc_r_squared(
                 std::min( abstract_features().size(), begin + batch_size );
 
             const auto index =
-                stl::make::vector<size_t>( std::views::iota( begin, end ) );
+                stl::collect::vector<size_t>( std::views::iota( begin, end ) );
 
             const auto params = TransformParams{
                 .feature_container_ = std::nullopt,
@@ -487,7 +487,7 @@ typename FastProp::Vocabulary FastProp::expand_vocabulary(
     auto range =
         placeholder().joined_tables_ | std::views::transform( find_vocabulary );
 
-    return stl::make::vector<VocabForDf>( range );
+    return stl::collect::vector<VocabForDf>( range );
 }
 
 // ----------------------------------------------------------------------------
@@ -602,7 +602,7 @@ std::vector<Int> FastProp::find_most_frequent_categories(
                        std::views::filter( is_not_null ) |
                        std::views::take( hyperparameters().n_most_frequent_ );
 
-    return stl::make::vector<Int>( range );
+    return stl::collect::vector<Int>( range );
 }
 
 // ----------------------------------------------------------------------------
@@ -1752,7 +1752,7 @@ std::vector<size_t> FastProp::make_subfeature_index(
                        std::views::filter( is_relevant_feature ) |
                        std::views::transform( get_input_col );
 
-    const auto s = stl::make::set<size_t>( range );
+    const auto s = stl::collect::set<size_t>( range );
 
     return std::vector<size_t>( s.begin(), s.end() );
 }
@@ -1875,7 +1875,7 @@ std::shared_ptr<std::vector<size_t>> FastProp::sample_from_population(
     auto range = iota | std::views::filter( include );
 
     return std::make_shared<std::vector<size_t>>(
-        stl::make::vector<size_t>( range ) );
+        stl::collect::vector<size_t>( range ) );
 }
 
 // ----------------------------------------------------------------------------
@@ -1922,7 +1922,7 @@ FastProp::select_features(
                        std::views::transform( get_feature );
 
     return std::make_shared<std::vector<containers::AbstractFeature>>(
-        stl::make::vector<containers::AbstractFeature>( range ) );
+        stl::collect::vector<containers::AbstractFeature>( range ) );
 }
 
 // ----------------------------------------------------------------------------

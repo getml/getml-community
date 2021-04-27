@@ -91,7 +91,7 @@ VocabularyTree::parse_peripheral(
     const auto range = _placeholder.joined_tables_ |
                        std::ranges::views::transform( extract_peripheral );
 
-    return stl::make::vector<VocabForDf>( range );
+    return stl::collect::vector<VocabForDf>( range );
 }
 
 // ----------------------------------------------------------------------------
@@ -139,7 +139,8 @@ std::vector<std::optional<VocabularyTree>> VocabularyTree::parse_subtrees(
     const auto range = _placeholder.joined_tables_ |
                        std::ranges::views::transform( make_subtree );
 
-    auto subtrees = stl::make::vector<std::optional<VocabularyTree>>( range );
+    auto subtrees =
+        stl::collect::vector<std::optional<VocabularyTree>>( range );
 
     if ( !_split_text_fields )
         {

@@ -24,7 +24,7 @@ VocabularyContainer::VocabularyContainer(
 
     auto range = _peripheral | std::views::transform( extract_from_df );
 
-    peripheral_ = stl::make::vector<VocabForDf>( range );
+    peripheral_ = stl::collect::vector<VocabForDf>( range );
 
     population_ = extract_from_df( _population );
 }
@@ -58,7 +58,7 @@ VocabularyContainer::VocabularyContainer( const Poco::JSON::Object& _obj )
         auto range = vec | std::views::transform( to_str );
 
         return std::make_shared<const std::vector<strings::String>>(
-            stl::make::vector<strings::String>( range ) );
+            stl::collect::vector<strings::String>( range ) );
     };
 
     // ------------------------------------------------------------------
@@ -115,7 +115,7 @@ Poco::JSON::Object::Ptr VocabularyContainer::to_json_obj() const
         [to_str]( const std::vector<strings::String>& _vocab )
         -> Poco::JSON::Array::Ptr {
         auto range = _vocab | std::views::transform( to_str );
-        const auto vec = stl::make::vector<std::string>( range );
+        const auto vec = stl::collect::vector<std::string>( range );
         return jsonutils::JSON::vector_to_array_ptr( vec );
     };
 

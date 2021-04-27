@@ -372,7 +372,7 @@ std::string SQLGenerator::join_mappings(
 
     // ------------------------------------------------------------------------
 
-    return stl::make::string( _mappings | std::views::transform( join ) );
+    return stl::collect::string( _mappings | std::views::transform( join ) );
 }
 
 // ----------------------------------------------------------------------------
@@ -500,7 +500,7 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
         const auto cast =
             std::bind( cast_column, std::placeholders::_1, "REAL" );
 
-        return stl::make::vector<std::string>(
+        return stl::collect::vector<std::string>(
             _colnames | std::views::filter( include_column ) |
             std::views::transform( cast ) );
     };
@@ -510,7 +510,7 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
     const auto cast_as_time_stamp =
         [to_epoch_time]( const std::vector<std::string>& _colnames )
         -> std::vector<std::string> {
-        return stl::make::vector<std::string>(
+        return stl::collect::vector<std::string>(
             _colnames | std::views::filter( include_column ) |
             std::views::transform( to_epoch_time ) );
     };
@@ -523,7 +523,7 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
         const auto cast =
             std::bind( cast_column, std::placeholders::_1, "TEXT" );
 
-        return stl::make::vector<std::string>(
+        return stl::collect::vector<std::string>(
             _colnames | std::views::filter( include_column ) |
             std::views::transform( cast ) );
     };
@@ -531,7 +531,7 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
     // ------------------------------------------------------------------------
 
     const auto make_mappings = [&_mappings, init_as_null]() {
-        return stl::make::vector<std::string>(
+        return stl::collect::vector<std::string>(
             _mappings | std::views::transform( init_as_null ) );
     };
 
@@ -575,7 +575,7 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
 
     // ------------------------------------------------------------------------
 
-    return stl::make::vector<std::string>( all | std::ranges::views::join );
+    return stl::collect::vector<std::string>( all | std::ranges::views::join );
 
     // ------------------------------------------------------------------------
 }
@@ -623,11 +623,11 @@ std::string SQLGenerator::create_indices(
 
     // ------------------------------------------------------------------------
 
-    return stl::make::string(
+    return stl::collect::string(
                _schema.join_keys_ |
                std::ranges::views::filter( include_column ) |
                std::ranges::views::transform( create_index ) ) +
-           stl::make::string(
+           stl::collect::string(
                _schema.time_stamps_ |
                std::ranges::views::transform( create_index ) );
 
@@ -901,7 +901,7 @@ std::vector<std::string> SQLGenerator::split_text_fields_on_schema(
                "SELECT rownum, word FROM split_text_field;\n\n\n";
     };
 
-    return stl::make::vector<std::string>(
+    return stl::collect::vector<std::string>(
         _schema.text_ | std::ranges::views::transform( split ) );
 }
 
@@ -920,7 +920,7 @@ std::vector<std::string> SQLGenerator::split_text_fields(
             sql.push_back( split_text_fields_on_schema( p ) );
         }
 
-    return stl::make::vector<std::string>( sql | std::ranges::views::join );
+    return stl::collect::vector<std::string>( sql | std::ranges::views::join );
 }
 
 // ------------------------------------------------------------------------

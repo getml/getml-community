@@ -351,7 +351,7 @@ class MappingContainerMaker
             const auto map =
                 std::bind( _map_to_weight, _colnum, std::placeholders::_1 );
 
-            return stl::make::vector<Column<Float>>(
+            return stl::collect::vector<Column<Float>>(
                 iota | std::views::transform( map ) );
         };
     }
@@ -366,7 +366,7 @@ class MappingContainerMaker
         };
         const auto range = _columns | std::ranges::views::transform( get_name );
         return std::make_shared<std::vector<std::string>>(
-            stl::make::vector<std::string>( range ) );
+            stl::collect::vector<std::string>( range ) );
     }
 };
 
