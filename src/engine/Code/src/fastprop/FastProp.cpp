@@ -648,8 +648,6 @@ size_t FastProp::find_peripheral_ix( const std::string &_name ) const
 
 void FastProp::fit( const FitParams &_params, const bool _as_subfeatures )
 {
-    assert_true( !_as_subfeatures || _params.mapped_ );
-
     extract_schemas( _params.population_, _params.peripheral_ );
 
     const auto rownums = sample_from_population( _params.population_.nrows() );

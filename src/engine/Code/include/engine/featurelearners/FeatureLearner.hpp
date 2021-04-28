@@ -266,7 +266,7 @@ class FeatureLearner : public AbstractFeatureLearner
     transform_propositionalization(
         const DataFrameType& _population,
         const std::vector<DataFrameType>& _peripheral,
-        const std::optional<const helpers::WordIndexContainer>& _word_indices,
+        const helpers::WordIndexContainer& _word_indices,
         const std::optional<const helpers::MappedContainer>& _mapped,
         const std::shared_ptr<const logging::AbstractLogger> _logger ) const;
 
@@ -941,8 +941,6 @@ FeatureLearner<FeatureLearnerType>::fit_propositionalization(
 {
     if constexpr ( has_propositionalization_ )
         {
-            assert_true( _mapped );
-
             const auto hyp =
                 propositionalization( _feature_learner.hyperparameters() );
 
@@ -960,7 +958,7 @@ FeatureLearner<FeatureLearnerType>::fit_propositionalization(
             const auto params = MakerParams{
                 .hyperparameters_ = hyp,
                 .logger_ = _logger,
-                .mapped_ = _mapped.value(),
+                .mapped_ = _mapped,
                 .peripheral_ = _peripheral,
                 .peripheral_names_ = peripheral_names,
                 .placeholder_ = _feature_learner.placeholder(),
@@ -1511,7 +1509,7 @@ std::optional<const helpers::FeatureContainer>
 FeatureLearner<FeatureLearnerType>::transform_propositionalization(
     const DataFrameType& _population,
     const std::vector<DataFrameType>& _peripheral,
-    const std::optional<const helpers::WordIndexContainer>& _word_indices,
+    const helpers::WordIndexContainer& _word_indices,
     const std::optional<const helpers::MappedContainer>& _mapped,
     const std::shared_ptr<const logging::AbstractLogger> _logger ) const
 {
@@ -1521,10 +1519,6 @@ FeatureLearner<FeatureLearnerType>::transform_propositionalization(
                 {
                     return std::nullopt;
                 }
-
-            assert_true( _mapped );
-
-            assert_true( _word_indices );
 
             assert_true( fast_prop_container_ );
 
@@ -1538,12 +1532,12 @@ FeatureLearner<FeatureLearnerType>::transform_propositionalization(
                 .fast_prop_container_ = fast_prop_container_,
                 .hyperparameters_ = propositionalization(),
                 .logger_ = _logger,
-                .mapped_ = _mapped.value(),
+                .mapped_ = _mapped,
                 .peripheral_ = _peripheral,
                 .peripheral_names_ = peripheral_names,
                 .placeholder_ = feature_learner().placeholder(),
                 .population_ = _population,
-                .word_index_container_ = _word_indices.value() };
+                .word_index_container_ = _word_indices };
 
             const auto feature_container =
                 fastprop::subfeatures::Maker::transform( params );

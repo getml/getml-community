@@ -48,31 +48,7 @@ Maker::fit( const MakerParams& _params )
 std::shared_ptr<const FastPropContainer> Maker::fit_fast_prop_container(
     const helpers::TableHolder& _table_holder, const MakerParams& _params )
 {
-    const auto subcontainers =
-        std::make_shared<typename FastPropContainer::Subcontainers>();
-
-    const auto& placeholder = _params.placeholder_;
-
-    assert_true(
-        _table_holder.subtables().size() >=
-        placeholder.propositionalization_.size() );
-
-    for ( size_t i = 0; i < placeholder.propositionalization_.size(); ++i )
-        {
-            if ( placeholder.propositionalization_.at( i ) )
-                {
-                    subcontainers->push_back( nullptr );
-                    continue;
-                }
-
-            const auto s = _table_holder.subtables().at( i )
-                               ? fit_fast_prop_container(
-                                     *_table_holder.subtables().at( i ),
-                                     make_params( _params, i ) )
-                               : std::shared_ptr<const FastPropContainer>();
-
-            subcontainers->push_back( s );
-        }
+    const auto subcontainers = make_subcontainers( _table_holder, _params );
 
     const auto new_placeholder = make_placeholder( _params );
 
@@ -92,7 +68,7 @@ std::shared_ptr<const FastPropContainer> Maker::fit_fast_prop_container(
     const auto params = algorithm::FitParams{
         .feature_container_ = std::nullopt,
         .logger_ = _params.logger_,
-        .mapped_ = _params.mapped_,
+        .mapped_ = new_mapped,
         .peripheral_ = _params.peripheral_,
         .population_ = _params.population_,
         .row_indices_ = _params.row_index_container_.value(),
@@ -133,7 +109,7 @@ MakerParams Maker::make_params( const MakerParams& _params, const size_t _i )
         !_params.fast_prop_container_ ||
         _params.fast_prop_container_->subcontainers( _i ) );
 
-    assert_true( _params.mapped_.subcontainers( _i ) );
+    assert_true( !_params.mapped_ || _params.mapped_->subcontainers( _i ) );
 
     assert_true( _i < _params.placeholder_.joined_tables_.size() );
 
@@ -171,7 +147,9 @@ MakerParams Maker::make_params( const MakerParams& _params, const size_t _i )
                 : std::shared_ptr<const FastPropContainer>(),
         .hyperparameters_ = _params.hyperparameters_,
         .logger_ = _params.logger_,
-        .mapped_ = *_params.mapped_.subcontainers( _i ),
+        .mapped_ = _params.mapped_
+                       ? *_params.mapped_->subcontainers( _i )
+                       : std::optional<const helpers::MappedContainer>(),
         .peripheral_ = _params.peripheral_,
         .peripheral_names_ = _params.peripheral_names_,
         .placeholder_ = _params.placeholder_.joined_tables_.at( _i ),
@@ -182,39 +160,61 @@ MakerParams Maker::make_params( const MakerParams& _params, const size_t _i )
 
 // ----------------------------------------------------------------------------
 
-helpers::MappedContainer Maker::make_mapped( const MakerParams& _params )
+std::optional<const helpers::MappedContainer> Maker::make_mapped(
+    const MakerParams& _params )
 {
+    if ( !_params.mapped_ )
+        {
+            return std::nullopt;
+        }
+
     using MappedColumns = helpers::MappedContainer::MappedColumns;
 
     const auto& placeholder = _params.placeholder_;
 
     const auto& mapped = _params.mapped_;
 
-    std::vector<MappedColumns> categorical;
+    const auto is_propositionalization =
+        [&placeholder]( const size_t _i ) -> bool {
+        return placeholder.propositionalization_.at( _i );
+    };
 
-    std::vector<MappedColumns> discrete;
+    const auto get_categorical = [&mapped]( const size_t _i ) {
+        return mapped.value().categorical( _i );
+    };
 
-    std::vector<std::shared_ptr<const helpers::MappedContainer>> subcontainers;
+    const auto get_discrete = [&mapped]( const size_t _i ) {
+        return mapped.value().discrete( _i );
+    };
 
-    std::vector<MappedColumns> text;
+    const auto get_subcontainer = [&mapped]( const size_t _i ) {
+        return mapped.value().subcontainers( _i );
+    };
 
-    for ( size_t i = 0; i < placeholder.propositionalization_.size(); ++i )
-        {
-            if ( !placeholder.propositionalization_.at( i ) )
-                {
-                    continue;
-                }
+    const auto get_text = [&mapped]( const size_t _i ) {
+        return mapped.value().text( _i );
+    };
 
-            categorical.push_back( mapped.categorical( i ) );
+    const auto iota = std::views::iota(
+        static_cast<size_t>( 0 ), placeholder.propositionalization_.size() );
 
-            discrete.push_back( mapped.discrete( i ) );
+    const auto filtered = stl::collect::vector<size_t>(
+        iota | std::views::filter( is_propositionalization ) );
 
-            subcontainers.push_back( mapped.subcontainers( i ) );
+    assert_true( filtered.size() > 0 );
 
-            text.push_back( mapped.text( i ) );
-        }
+    const auto categorical = stl::collect::vector<MappedColumns>(
+        filtered | std::views::transform( get_categorical ) );
 
-    assert_true( categorical.size() > 0 );
+    const auto discrete = stl::collect::vector<MappedColumns>(
+        filtered | std::views::transform( get_discrete ) );
+
+    const auto subcontainers =
+        stl::collect::vector<std::shared_ptr<const helpers::MappedContainer>>(
+            filtered | std::views::transform( get_subcontainer ) );
+
+    const auto text = stl::collect::vector<MappedColumns>(
+        filtered | std::views::transform( get_text ) );
 
     return helpers::MappedContainer(
         categorical, discrete, subcontainers, text );
@@ -290,6 +290,45 @@ std::shared_ptr<const helpers::Placeholder> Maker::make_placeholder(
 
 // ----------------------------------------------------------------------------
 
+std::shared_ptr<typename FastPropContainer::Subcontainers>
+Maker::make_subcontainers(
+    const helpers::TableHolder& _table_holder, const MakerParams& _params )
+{
+    const auto subcontainers =
+        std::make_shared<typename FastPropContainer::Subcontainers>();
+
+    const auto& placeholder = _params.placeholder_;
+
+    const auto make_subcontainer =
+        [&_table_holder, &placeholder, &_params]( size_t _i ) {
+            if ( placeholder.propositionalization_.at( _i ) )
+                {
+                    return std::shared_ptr<const FastPropContainer>();
+                }
+
+            return _table_holder.subtables().at( _i )
+                       ? fit_fast_prop_container(
+                             *_table_holder.subtables().at( _i ),
+                             make_params( _params, _i ) )
+                       : std::shared_ptr<const FastPropContainer>();
+        };
+
+    assert_true(
+        _table_holder.subtables().size() >=
+        placeholder.propositionalization_.size() );
+
+    const auto iota = std::views::iota(
+        static_cast<size_t>( 0 ), placeholder.propositionalization_.size() );
+
+    const auto range = iota | std::views::transform( make_subcontainer );
+
+    return std::make_shared<typename FastPropContainer::Subcontainers>(
+        stl::collect::vector<std::shared_ptr<const FastPropContainer>>(
+            range ) );
+}
+
+// ----------------------------------------------------------------------------
+
 helpers::FeatureContainer Maker::transform( const MakerParams& _params )
 {
     const auto& placeholder = _params.placeholder_;
@@ -317,7 +356,7 @@ helpers::FeatureContainer Maker::transform( const MakerParams& _params )
                 .feature_container_ = std::nullopt,
                 .index_ = index,
                 .logger_ = _params.logger_,
-                .mapped_ = _params.mapped_,
+                .mapped_ = new_mapped,
                 .peripheral_ = _params.peripheral_,
                 .population_ = _params.population_,
                 .word_indices_ = _params.word_index_container_ };

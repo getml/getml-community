@@ -33,7 +33,13 @@ class Maker
 
     /// Generates the subselection of the mapped container needed to fit or
     /// transform FastProp.
-    static helpers::MappedContainer make_mapped( const MakerParams& _params );
+    static std::optional<const helpers::MappedContainer> make_mapped(
+        const MakerParams& _params );
+
+    /// Generates the subcontainers.
+    static std::shared_ptr<typename FastPropContainer::Subcontainers>
+    make_subcontainers(
+        const helpers::TableHolder& _table_holder, const MakerParams& _params );
 
     /// Generates the params for fitting a subcontainer.
     static MakerParams make_params(

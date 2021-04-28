@@ -23,7 +23,7 @@ struct MakerParams
     const std::shared_ptr<const logging::AbstractLogger>& logger_;
 
     /// The mapped categorical, discrete and text columns.
-    const helpers::MappedContainer mapped_;
+    const std::optional<const helpers::MappedContainer> mapped_;
 
     /// The peripheral tables used for training.
     const std::vector<containers::DataFrame>& peripheral_;
