@@ -15,8 +15,9 @@ std::vector<std::string> Mapping::categorical_columns_to_sql(
     const auto mapping_to_sql = [this, &_categories](
                                     const size_t _i,
                                     const size_t _weight_num ) -> std::string {
-        const auto name = helpers::MappingContainerMaker::make_colname(
-            categorical_names_->at( _i ), "", aggregation_, _weight_num );
+        const auto name = helpers::SQLGenerator::make_colname(
+            helpers::MappingContainerMaker::make_colname(
+                categorical_names_->at( _i ), "", aggregation_, _weight_num ) );
 
         return helpers::MappingContainer::categorical_or_text_column_to_sql(
             _categories,
@@ -36,8 +37,9 @@ std::vector<std::string> Mapping::discrete_columns_to_sql() const
 
     const auto mapping_to_sql =
         [this]( const size_t _i, const size_t _weight_num ) -> std::string {
-        const auto name = helpers::MappingContainerMaker::make_colname(
-            discrete_names_->at( _i ), "", aggregation_, _weight_num );
+        const auto name = helpers::SQLGenerator::make_colname(
+            helpers::MappingContainerMaker::make_colname(
+                discrete_names_->at( _i ), "", aggregation_, _weight_num ) );
 
         return helpers::MappingContainer::discrete_column_to_sql(
             helpers::SQLGenerator::to_upper( name ),
@@ -607,8 +609,9 @@ std::vector<std::string> Mapping::text_columns_to_sql() const
     const auto mapping_to_sql = [this, text_column_to_sql](
                                     const size_t _i,
                                     const size_t _weight_num ) -> std::string {
-        const auto name = helpers::MappingContainerMaker::make_colname(
-            text_names_->at( _i ), "", aggregation_, _weight_num );
+        const auto name = helpers::SQLGenerator::make_colname(
+            helpers::MappingContainerMaker::make_colname(
+                text_names_->at( _i ), "", aggregation_, _weight_num ) );
 
         return text_column_to_sql(
             helpers::SQLGenerator::to_upper( name ),

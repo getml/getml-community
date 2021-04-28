@@ -453,7 +453,8 @@ std::string SQLGenerator::make_relative_time(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::string> SQLGenerator::make_staging_columns(
+std::pair<std::vector<std::string>, std::vector<std::string>>
+SQLGenerator::make_staging_columns(
     const bool& _include_targets,
     const Placeholder& _schema,
     const std::vector<std::string>& _mappings )
@@ -466,10 +467,16 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
 
     // ------------------------------------------------------------------------
 
-    const auto cast_column = [init_as_null](
+    const auto is_mapping = []( const std::string& _colname ) -> bool {
+        return _colname.find( "__mapping_" ) != std::string::npos;
+    };
+
+    // ------------------------------------------------------------------------
+
+    const auto cast_column = [init_as_null, is_mapping](
                                  const std::string& _colname,
                                  const std::string& _coltype ) -> std::string {
-        if ( _colname.find( "__mapping_" ) != std::string::npos )
+        if ( is_mapping( _colname ) )
             {
                 return init_as_null( make_colname( _colname ) );
             }
@@ -530,7 +537,7 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
 
     // ------------------------------------------------------------------------
 
-    const auto make_mappings = [&_mappings, init_as_null]() {
+    const auto make_mapping_casts = [&_mappings, init_as_null]() {
         return stl::collect::vector<std::string>(
             _mappings | std::views::transform( init_as_null ) );
     };
@@ -551,7 +558,7 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
 
     const auto time_stamps = cast_as_time_stamp( _schema.time_stamps_ );
 
-    const auto mappings = make_mappings();
+    const auto mapping_casts = make_mapping_casts();
 
     // ------------------------------------------------------------------------
 
@@ -563,7 +570,7 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
                                               numericals,
                                               text,
                                               time_stamps,
-                                              mappings } )
+                                              mapping_casts } )
                                       : std::vector<std::vector<std::string>>(
                                             { categoricals,
                                               discretes,
@@ -571,11 +578,21 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
                                               numericals,
                                               text,
                                               time_stamps,
-                                              mappings } );
+                                              mapping_casts } );
 
     // ------------------------------------------------------------------------
 
-    return stl::collect::vector<std::string>( all | std::ranges::views::join );
+    const auto columns =
+        stl::collect::vector<std::string>( all | std::ranges::views::join );
+
+    const auto mappings =
+        _mappings.size() > 0
+            ? _mappings
+            : stl::collect::vector<std::string>(
+                  _schema.numericals_ | std::views::filter( is_mapping ) |
+                  std::views::transform( make_colname ) );
+
+    return std::make_pair( columns, mappings );
 
     // ------------------------------------------------------------------------
 }
@@ -643,7 +660,7 @@ std::string SQLGenerator::make_staging_table(
 {
     // ------------------------------------------------------------------------
 
-    const auto columns =
+    const auto [columns, mappings] =
         make_staging_columns( _include_targets, _schema, _mappings );
 
     const auto name = make_staging_table_name( _schema.name_ );
@@ -673,7 +690,7 @@ std::string SQLGenerator::make_staging_table(
 
     sql << create_indices( name, _schema );
 
-    sql << join_mappings( name, _schema, _mappings );
+    sql << join_mappings( name, _schema, mappings );
 
     sql << "\n";
 

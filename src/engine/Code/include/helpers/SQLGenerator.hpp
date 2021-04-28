@@ -129,7 +129,8 @@ class SQLGenerator
         const std::string& _input_alias );
 
     /// Generates the columns for a single staging table.
-    static std::vector<std::string> make_staging_columns(
+    static std::pair<std::vector<std::string>, std::vector<std::string>>
+    make_staging_columns(
         const bool& _include_targets,
         const Placeholder& _schema,
         const std::vector<std::string>& _mappings );
