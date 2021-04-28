@@ -131,4 +131,21 @@ void ImportanceMaker::transfer(
 }
 
 // ----------------------------------------------------------------------------
+
+void ImportanceMaker::transfer_population()
+{
+    auto importance_maker = ImportanceMaker();
+
+    for ( const auto& [key, value] : importances() )
+        {
+            const auto desc = ColumnDescription(
+                ColumnDescription::PERIPHERAL, key.table_, key.name_ );
+
+            importance_maker.add_to_importances( desc, value );
+        }
+
+    importances_ = importance_maker.importances();
+}
+
+// ----------------------------------------------------------------------------
 }  // namespace helpers

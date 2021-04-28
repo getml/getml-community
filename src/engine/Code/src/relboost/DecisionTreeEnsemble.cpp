@@ -296,7 +296,8 @@ void DecisionTreeEnsemble::clean_up()
 
 std::map<helpers::ColumnDescription, Float>
 DecisionTreeEnsemble::column_importances(
-    const std::vector<Float> &_importance_factors ) const
+    const std::vector<Float> &_importance_factors,
+    const bool _is_subfeatures ) const
 {
     auto importance_maker = utils::ImportanceMaker();
 
@@ -308,6 +309,27 @@ DecisionTreeEnsemble::column_importances(
                 _importance_factors.at( i ), trees().at( i ) );
 
             importance_maker.merge( importances );
+        }
+
+    if ( impl().population_schema_ )
+        {
+            importance_maker.fill_zeros(
+                population_schema(), placeholder().name(), true );
+
+            assert_true( peripheral_schema().size() == peripheral().size() );
+
+            for ( size_t i = 0; i < peripheral().size(); ++i )
+                {
+                    importance_maker.fill_zeros(
+                        peripheral_schema().at( i ),
+                        peripheral().at( i ),
+                        false );
+                }
+        }
+
+    if ( _is_subfeatures )
+        {
+            importance_maker.transfer_population();
         }
 
     return importance_maker.importances();
@@ -349,12 +371,12 @@ DecisionTreeEnsemble::column_importance_for_tree(
     if ( sub_avg )
         {
             const auto importances_avg = sub_avg->column_importances(
-                importance_maker.importance_factors_avg() );
+                importance_maker.importance_factors_avg(), true );
 
             importance_maker.merge( importances_avg );
 
             const auto importances_sum = sub_sum->column_importances(
-                importance_maker.importance_factors_sum() );
+                importance_maker.importance_factors_sum(), true );
 
             importance_maker.merge( importances_sum );
         }

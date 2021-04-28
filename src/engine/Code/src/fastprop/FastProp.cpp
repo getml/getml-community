@@ -436,7 +436,8 @@ Float FastProp::calc_threshold( const std::vector<Float> &_r_squared ) const
 // ----------------------------------------------------------------------------
 
 std::map<helpers::ColumnDescription, Float> FastProp::column_importances(
-    const std::vector<Float> &_importance_factors ) const
+    const std::vector<Float> &_importance_factors,
+    const bool _is_subfeatures ) const
 {
     auto importances = helpers::ImportanceMaker();
 
@@ -459,13 +460,18 @@ std::map<helpers::ColumnDescription, Float> FastProp::column_importances(
                 {
                     const auto subimportances =
                         subfeatures().at( i )->column_importances(
-                            subimportance_factors.at( i ) );
+                            subimportance_factors.at( i ), true );
 
                     for ( const auto &p : subimportances )
                         {
                             importances.add_to_importances( p.first, p.second );
                         }
                 }
+        }
+
+    if ( _is_subfeatures )
+        {
+            importances.transfer_population();
         }
 
     return importances.importances();

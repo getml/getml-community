@@ -120,7 +120,8 @@ class FeatureLearner : public AbstractFeatureLearner
     std::map<helpers::ColumnDescription, Float> column_importances(
         const std::vector<Float>& _importance_factors ) const final
     {
-        return feature_learner().column_importances( _importance_factors );
+        return feature_learner().column_importances(
+            _importance_factors, false );
     }
 
     /// Whether the feature learner is used for classification.

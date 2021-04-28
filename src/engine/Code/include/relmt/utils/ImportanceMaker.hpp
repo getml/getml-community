@@ -71,6 +71,10 @@ class ImportanceMaker
         return helper_.importances();
     }
 
+    /// Transfers all values marked population to an equivalent value marked
+    /// peripheral.
+    void transfer_population() { helper_.transfer_population(); }
+
    private:
     /// Adds the _value to the column signified by _name in the map.
     void add_to_importances(

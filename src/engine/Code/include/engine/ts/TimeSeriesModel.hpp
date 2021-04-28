@@ -51,7 +51,8 @@ class TimeSeriesModel
    public:
     /// Calculates the column importances for this ensemble.
     std::map<helpers::ColumnDescription, Float> column_importances(
-        const std::vector<Float> &_importance_factors ) const;
+        const std::vector<Float> &_importance_factors,
+        const bool _is_subfeatures ) const;
 
     /// Creates a modified version of the population table and the peripheral
     /// tables.
@@ -280,9 +281,11 @@ TimeSeriesModel<FEType>::~TimeSeriesModel() = default;
 template <class FEType>
 std::map<helpers::ColumnDescription, Float>
 TimeSeriesModel<FEType>::column_importances(
-    const std::vector<Float> &_importance_factors ) const
+    const std::vector<Float> &_importance_factors,
+    const bool _is_subfeatures ) const
 {
-    const auto importances = model().column_importances( _importance_factors );
+    const auto importances =
+        model().column_importances( _importance_factors, _is_subfeatures );
 
     auto importance_maker = helpers::ImportanceMaker( importances );
 

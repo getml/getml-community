@@ -52,6 +52,10 @@ class ImportanceMaker
     void transfer(
         const ColumnDescription& _from, const ColumnDescription& _to );
 
+    /// Transfers all importance values marked population to an equivalent value
+    /// marked peripheral.
+    void transfer_population();
+
    public:
     /// Returns the names of the columns.
     std::vector<std::string> colnames() const
