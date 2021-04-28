@@ -9,12 +9,22 @@ SQLGenerator::demangle_colname( const std::string& _raw_name )
 {
     // --------------------------------------------------------------
 
-    const auto has_col_param =
-        ( _raw_name.find( Macros::column() ) != std::string::npos );
+    const auto m_pos = _raw_name.find( "__mapping_" );
 
-    auto new_name = has_col_param
-                        ? Macros::get_param( _raw_name, Macros::column() )
+    auto new_name = ( m_pos != std::string::npos )
+                        ? make_colname( _raw_name.substr( 0, m_pos ) ) +
+                              _raw_name.substr( m_pos )
                         : _raw_name;
+
+    // --------------------------------------------------------------
+
+    const auto has_col_param =
+        ( new_name.find( Macros::column() ) != std::string::npos );
+
+    new_name = has_col_param ? Macros::get_param( new_name, Macros::column() )
+                             : new_name;
+
+    // --------------------------------------------------------------
 
     new_name = Macros::prefix() + new_name + Macros::postfix();
 
@@ -177,7 +187,10 @@ std::string SQLGenerator::make_colname( const std::string& _raw_name )
         has_alias && ( Macros::get_param( _raw_name, Macros::alias() ) !=
                        Macros::t1_or_t2() );
 
-    const bool extract_alias = has_alias && not_t1_or_t2;
+    const bool is_not_mapping =
+        ( _raw_name.find( "__mapping_" ) == std::string::npos );
+
+    const bool extract_alias = has_alias && not_t1_or_t2 && is_not_mapping;
 
     const auto alias =
         extract_alias ? Macros::get_param( _raw_name, Macros::alias() ) : "";
@@ -314,48 +327,37 @@ std::string SQLGenerator::join_mappings(
 {
     // ------------------------------------------------------------------------
 
-    const auto extract_colname = []( const std::string& _col ) -> std::string {
-        const auto pos = _col.find( "__MAPPING_" );
-        assert_true( pos != std::string::npos );
-        return to_lower( _col.substr( 0, pos ) );
-    };
+    const auto join_text =
+        [&_name]( const std::string& _colname ) -> std::string {
+        const auto extracted = to_lower( _colname );
 
-    // ------------------------------------------------------------------------
-
-    const auto join_text = [&_name, extract_colname](
-                               const std::string& _colname ) -> std::string {
-        const auto extracted = extract_colname( _colname );
-
-        return "UPDATE \"" + _name + "\"\nSET \"" + to_lower( _colname ) +
-               "\" = t3.\"avg_value\"\nFROM \"" + _name +
+        return "UPDATE \"" + to_upper( _name ) + "\"\nSET \"" +
+               to_lower( _colname ) + "\" = t3.\"avg_value\"\nFROM \"" + _name +
                "\",\n     ( SELECT t1.\"" + extracted +
                "\", AVG( t2.\"value\" ) AS \"avg_value\"\n       FROM "
                "\"" +
                _name + "\" t1\n       LEFT JOIN \"" + to_upper( _colname ) +
                "\" t2\n       ON contains( t1.\"" + extracted +
                "\", t2.\"key\" ) > 0\n       GROUP BY t1.\"" + extracted +
-               "\" ) AS t3\nWHERE \"" + _name + "\".\"" + extracted +
-               "\" = t3.\"" + extracted + "\";\n\n";
+               "\" ) AS t3\nWHERE \"" + to_lower( _name ) + "\".\"" +
+               extracted + "\" = t3.\"" + extracted + "\";\n\n";
     };
 
     // ------------------------------------------------------------------------
 
-    const auto join_other = [&_name, extract_colname](
-                                const std::string& _colname ) -> std::string {
-        return "UPDATE \"" + _name + "\"\nSET \"" + to_lower( _colname ) +
-               "\" = t2.\"value\"\nFROM \"" + to_upper( _colname ) +
-               "\" AS t2\nWHERE \"" + _name + "\".\"" +
-               extract_colname( _colname ) + "\" = t2.\"key\";\n\n";
+    const auto join_other =
+        [&_name]( const std::string& _colname ) -> std::string {
+        return "UPDATE \"" + to_upper( _name ) + "\"\nSET \"" +
+               to_lower( _colname ) + "\" = t2.\"value\"\nFROM \"" +
+               to_upper( _colname ) + "\" AS t2\nWHERE \"" + to_upper( _name ) +
+               "\".\"" + to_lower( _colname ) + "\" = t2.\"key\";\n\n";
     };
 
     // ------------------------------------------------------------------------
 
-    const auto is_text =
-        [&_schema, extract_colname]( const std::string& _colname ) -> bool {
+    const auto is_text = [&_schema]( const std::string& _colname ) -> bool {
         const auto it = std::find(
-            _schema.text_.begin(),
-            _schema.text_.end(),
-            extract_colname( _colname ) );
+            _schema.text_.begin(), _schema.text_.end(), to_lower( _colname ) );
         return it != _schema.text_.end();
     };
 
@@ -459,7 +461,7 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
     // ------------------------------------------------------------------------
 
     const auto init_as_null = []( const std::string& _colname ) -> std::string {
-        return "CAST( NULL AS REAL ) AS \"" + _colname + "\"";
+        return "CAST( NULL AS REAL ) AS \"" + to_lower( _colname ) + "\"";
     };
 
     // ------------------------------------------------------------------------
@@ -469,12 +471,11 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
                                  const std::string& _coltype ) -> std::string {
         if ( _colname.find( "__mapping_" ) != std::string::npos )
             {
-                return init_as_null( SQLGenerator::make_colname( _colname ) );
+                return init_as_null( make_colname( _colname ) );
             }
 
-        return "CAST( " + SQLGenerator::edit_colname( _colname, "t1" ) +
-               " AS " + _coltype + " ) AS \"" +
-               SQLGenerator::make_colname( _colname ) + "\"";
+        return "CAST( " + edit_colname( _colname, "t1" ) + " AS " + _coltype +
+               " ) AS \"" + to_lower( make_colname( _colname ) ) + "\"";
     };
 
     // ------------------------------------------------------------------------
@@ -483,13 +484,12 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
         []( const std::string& _colname ) -> std::string {
         const auto epoch_time =
             _colname.find( Macros::rowid() ) == std::string::npos
-                ? "( julianday( " +
-                      SQLGenerator::edit_colname( _colname, "t1" ) +
+                ? "( julianday( " + edit_colname( _colname, "t1" ) +
                       " ) - julianday( '1970-01-01' ) ) * 86400.0"
-                : SQLGenerator::edit_colname( _colname, "t1" );
+                : edit_colname( _colname, "t1" );
 
         return "CAST( " + epoch_time + " AS REAL ) AS \"" +
-               SQLGenerator::make_colname( _colname ) + "\"";
+               to_lower( make_colname( _colname ) ) + "\"";
     };
 
     // ------------------------------------------------------------------------
@@ -654,9 +654,9 @@ std::string SQLGenerator::make_staging_table(
 
     // ------------------------------------------------------------------------
 
-    sql << "DROP TABLE IF EXISTS \"" << name << "\";\n\n";
+    sql << "DROP TABLE IF EXISTS \"" << to_upper( name ) << "\";\n\n";
 
-    sql << "CREATE TABLE \"" << name << "\" AS\nSELECT ";
+    sql << "CREATE TABLE \"" << to_upper( name ) << "\" AS\nSELECT ";
 
     for ( size_t i = 0; i < columns.size(); ++i )
         {
@@ -928,10 +928,25 @@ std::vector<std::string> SQLGenerator::split_text_fields(
 std::string SQLGenerator::to_lower( const std::string& _str )
 {
     auto lower = _str;
+
+    bool skip = false;
+
     for ( auto& c : lower )
         {
+            if ( skip )
+                {
+                    skip = false;
+                    continue;
+                }
+
+            if ( c == '%' )
+                {
+                    skip = true;
+                }
+
             c = std::tolower( c );
         }
+
     return lower;
 }
 
@@ -940,10 +955,25 @@ std::string SQLGenerator::to_lower( const std::string& _str )
 std::string SQLGenerator::to_upper( const std::string& _str )
 {
     auto upper = _str;
+
+    bool skip = false;
+
     for ( auto& c : upper )
         {
+            if ( skip )
+                {
+                    skip = false;
+                    continue;
+                }
+
+            if ( c == '%' )
+                {
+                    skip = true;
+                }
+
             c = std::toupper( c );
         }
+
     return upper;
 }
 

@@ -118,11 +118,12 @@ std::vector<std::string> MappingContainer::categorical_to_sql(
                             const auto& ptr = c.at( j );
 
                             const auto name = SQLGenerator::to_upper(
-                                MappingContainerMaker::make_colname(
-                                    names->at( j ),
-                                    feature_prefix,
-                                    aggregation(),
-                                    t ) );
+                                SQLGenerator::make_colname(
+                                    MappingContainerMaker::make_colname(
+                                        names->at( j ),
+                                        feature_prefix,
+                                        aggregation(),
+                                        t ) ) );
 
                             sql.push_back( categorical_or_text_column_to_sql(
                                 _categories, name, ptr, t ) );
@@ -240,11 +241,12 @@ std::vector<std::string> MappingContainer::discrete_to_sql(
                             const auto& ptr = d.at( j );
 
                             const auto name = SQLGenerator::to_upper(
-                                MappingContainerMaker::make_colname(
-                                    names->at( j ),
-                                    feature_prefix,
-                                    aggregation(),
-                                    t ) );
+                                SQLGenerator::make_colname(
+                                    MappingContainerMaker::make_colname(
+                                        names->at( j ),
+                                        feature_prefix,
+                                        aggregation(),
+                                        t ) ) );
 
                             sql.push_back(
                                 discrete_column_to_sql( name, ptr, t ) );
@@ -512,11 +514,12 @@ std::vector<std::string> MappingContainer::text_to_sql(
                             const auto& ptr = txt.at( j );
 
                             const auto name = SQLGenerator::to_upper(
-                                MappingContainerMaker::make_colname(
-                                    names->at( j ),
-                                    feature_prefix,
-                                    aggregation(),
-                                    t ) );
+                                SQLGenerator::make_colname(
+                                    MappingContainerMaker::make_colname(
+                                        names->at( j ),
+                                        feature_prefix,
+                                        aggregation(),
+                                        t ) ) );
 
                             sql.push_back( categorical_or_text_column_to_sql(
                                 _vocab.at( i ).at( j ), name, ptr, t ) );

@@ -154,11 +154,11 @@ helpers::ImportanceMaker Macros::modify_column_importances(
             auto [to_table, to_colname] =
                 parse_table_colname( from_desc.table_, from_desc.name_ );
 
+            to_colname = remove_mappings( to_colname );
+
             to_colname = remove_email( to_colname );
 
             to_colname = remove_imputation( to_colname );
-
-            to_colname = remove_mappings( to_colname );
 
             to_colname = remove_substring( to_colname );
 

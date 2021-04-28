@@ -448,9 +448,9 @@ std::string MappingContainerMaker::make_colname(
     const auto [agg, target_num] =
         infer_aggregation_target_num( _aggregation, _weight_num );
 
-    return helpers::SQLGenerator::make_colname( _name ) + "__mapping_" +
-           _feature_postfix + "target_" + std::to_string( target_num + 1 ) +
-           "_" + helpers::SQLGenerator::to_lower( agg );
+    return _name + "__mapping_" + _feature_postfix + "target_" +
+           std::to_string( target_num + 1 ) + "_" +
+           helpers::SQLGenerator::to_lower( agg );
 }
 
 // ----------------------------------------------------------------------------
