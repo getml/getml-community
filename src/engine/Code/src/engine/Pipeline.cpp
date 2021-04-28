@@ -300,6 +300,8 @@ Pipeline::column_importances() const
             i_maker = helpers::Macros::modify_column_importances( i_maker );
         }
 
+    fill_zeros( &importance_makers );
+
     for ( const auto& i_maker : importance_makers )
         {
             extract_coldesc( i_maker.importances(), &c_desc );
@@ -786,6 +788,35 @@ Poco::JSON::Object Pipeline::feature_names_as_obj() const
     obj.set( "feature_names_", all_names );
 
     return obj;
+}
+
+// ----------------------------------------------------------------------------
+
+void Pipeline::fill_zeros(
+    std::vector<helpers::ImportanceMaker>* _f_importances ) const
+{
+    if ( _f_importances->size() == 0 )
+        {
+            return;
+        }
+
+    const auto fill_all = []( const helpers::ImportanceMaker& _f1,
+                              helpers::ImportanceMaker* _f2 ) {
+        for ( const auto& [desc, _] : _f1.importances() )
+            {
+                _f2->add_to_importances( desc, 0.0 );
+            }
+    };
+
+    for ( size_t i = 1; i < _f_importances->size(); ++i )
+        {
+            fill_all( _f_importances->at( i ), &_f_importances->at( 0 ) );
+        }
+
+    for ( size_t i = 1; i < _f_importances->size(); ++i )
+        {
+            fill_all( _f_importances->at( 0 ), &_f_importances->at( i ) );
+        }
 }
 
 // ----------------------------------------------------------------------------

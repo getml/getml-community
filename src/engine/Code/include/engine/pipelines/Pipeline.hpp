@@ -279,6 +279,10 @@ class Pipeline
     /// Returns a JSON object containing all feature names.
     Poco::JSON::Object feature_names_as_obj() const;
 
+    /// Fills up the values of the importance makers.
+    void fill_zeros(
+        std::vector<helpers::ImportanceMaker>* _f_importances ) const;
+
     /// Generate the autofeatures.
     containers::Features generate_autofeatures(
         const Poco::JSON::Object& _cmd,
