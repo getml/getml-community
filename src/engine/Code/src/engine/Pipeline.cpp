@@ -1403,9 +1403,20 @@ Pipeline::init_feature_learners(
 
                             dependencies.push_back( obj );
 
+                            const auto new_params =
+                                featurelearners::FeatureLearnerParams{
+                                    .aggregation_ = params.aggregation_,
+                                    .aggregation_enums_ =
+                                        params.aggregation_enums_,
+                                    .cmd_ = params.cmd_,
+                                    .dependencies_ = dependencies,
+                                    .min_freq_ = params.min_freq_,
+                                    .peripheral_ = params.peripheral_,
+                                    .placeholder_ = params.placeholder_ };
+
                             feature_learners.emplace_back(
                                 featurelearners::FeatureLearnerParser::parse(
-                                    params ) );
+                                    new_params ) );
 
                             target_nums.push_back( static_cast<Int>( t ) );
                         }
