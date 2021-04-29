@@ -29,8 +29,18 @@ struct FeatureLearnerParams
     /// The names of the peripheral tables.
     const std::shared_ptr<const std::vector<std::string>>& peripheral_;
 
+    /// The schema of the peripheral tables.
+    const std::shared_ptr<const std::vector<helpers::Schema>>&
+        peripheral_schema_;
+
     /// The placeholder representing the data model.
     const std::shared_ptr<const helpers::Placeholder>& placeholder_;
+
+    /// The schema of the population.
+    const std::shared_ptr<const helpers::Schema>& population_schema_;
+
+    /// Indicates which target to use.
+    const Int& target_num_;
 };
 
 // ----------------------------------------------------------------------------

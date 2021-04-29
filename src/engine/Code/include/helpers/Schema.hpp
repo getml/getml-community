@@ -36,6 +36,9 @@ struct Schema
     /// The names of the categorical columns
     const std::vector<std::string> categoricals_;
 
+    /// The names of the discrete columns
+    const std::vector<std::string> discretes_;
+
     /// The names of the join keys
     const std::vector<std::string> join_keys_;
 

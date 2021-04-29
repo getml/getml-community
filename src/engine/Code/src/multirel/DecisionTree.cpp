@@ -63,8 +63,6 @@ DecisionTree::DecisionTree( const DecisionTree &_other )
 
     assert_true( _other.impl_.aggregation_type_ != "" );
 
-    // aggregation_ptr() = _other.make_aggregation( enums::Mode::fit );
-
     if ( root() )
         {
             root().get()->set_tree( impl() );
@@ -160,8 +158,6 @@ void DecisionTree::from_json_obj( const Poco::JSON::Object &_json_obj )
     assert_true( agg != "" );
 
     impl_.aggregation_type_ = agg;
-
-    // aggregation_ptr() = make_aggregation( enums::Mode::fit );
 
     // -----------------------------------
 

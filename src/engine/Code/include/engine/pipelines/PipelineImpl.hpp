@@ -68,11 +68,20 @@ struct PipelineImpl
     /// The JSON Object used to construct the pipeline.
     Poco::JSON::Object obj_;
 
+    /// The schema of the peripheral tables as they are inserted into the
+    /// feature learners.
+    std::shared_ptr<const std::vector<helpers::Schema>>
+        modified_peripheral_schema_;
+
+    /// The schema of the population as it is inserted into the feature
+    /// learners.
+    std::shared_ptr<const helpers::Schema> modified_population_schema_;
+
     /// The schema of the peripheral tables.
-    Poco::JSON::Array::Ptr peripheral_schema_;
+    std::shared_ptr<const std::vector<helpers::Schema>> peripheral_schema_;
 
     /// The schema of the population.
-    Poco::JSON::Object::Ptr population_schema_;
+    std::shared_ptr<const helpers::Schema> population_schema_;
 
     /// Pimpl for the predictors.
     std::shared_ptr<const predictors::PredictorImpl> predictor_impl_;

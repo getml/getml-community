@@ -95,14 +95,14 @@ DataFrame TextFieldSplitter::remove_text_fields( const DataFrame& _df )
 
 VocabularyContainer TextFieldSplitter::reverse(
     const VocabularyContainer& _vocab,
-    const Placeholder& _population_schema,
-    const std::vector<Placeholder>& _peripheral_schema )
+    const helpers::Schema& _population_schema,
+    const std::vector<helpers::Schema>& _peripheral_schema )
 {
     // -------------------------------------------------------------------------
 
     const auto add_num_text = []( const size_t _init,
-                                  const Placeholder& _p ) -> size_t {
-        return _init + _p.text_.size();
+                                  const helpers::Schema& _s ) -> size_t {
+        return _init + _s.text_.size();
     };
 
     // -------------------------------------------------------------------------
@@ -148,7 +148,11 @@ VocabularyContainer TextFieldSplitter::reverse(
                                 infer_begin_end]( const Int _i ) -> VocabForDf {
         const auto [begin, end] = infer_begin_end( _i );
 
-        assert_true( begin < _vocab.peripheral().size() || begin == end );
+        assert_msg(
+            begin < _vocab.peripheral().size() || begin == end,
+            "begin: " + std::to_string( begin ) + ", end: " +
+                std::to_string( end ) + ", _vocab.peripheral.size(): " +
+                std::to_string( _vocab.peripheral().size() ) );
 
         assert_true( end <= _vocab.peripheral().size() );
 

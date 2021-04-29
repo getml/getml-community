@@ -2128,15 +2128,45 @@ Poco::JSON::Object DataFrame::to_monitor() const
 // ----------------------------------------------------------------------------
 
 /// Expresses the schema of the DataFrame as a JSON object.
-Poco::JSON::Object::Ptr DataFrame::to_schema() const
+helpers::Schema DataFrame::to_schema( const bool _separate_discrete ) const
 {
+    const auto is_full = []( const Float _val ) -> bool {
+        return helpers::NullChecker::is_null( _val ) ||
+               ( std::floor( _val ) == _val );
+    };
+
+    const auto is_discrete = [_separate_discrete,
+                              is_full]( const Column<Float> &_col ) -> bool {
+        return _separate_discrete &&
+               std::all_of( _col.begin(), _col.end(), is_full );
+    };
+
+    const auto is_not_discrete =
+        [is_discrete]( const Column<Float> &_col ) -> bool {
+        return !is_discrete( _col );
+    };
+
+    const auto get_name = []( const Column<Float> &_col ) -> std::string {
+        return _col.name();
+    };
+
     auto obj = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
 
     obj->set( "categorical_", get_colnames( categoricals_ ) );
 
+    obj->set(
+        "discrete_",
+        stl::collect::array(
+            numericals_ | std::views::filter( is_discrete ) |
+            std::views::transform( get_name ) ) );
+
     obj->set( "join_key_", get_colnames( join_keys_ ) );
 
-    obj->set( "numerical_", get_colnames( numericals_ ) );
+    obj->set(
+        "numerical_",
+        stl::collect::array(
+            numericals_ | std::views::filter( is_not_discrete ) |
+            std::views::transform( get_name ) ) );
 
     obj->set( "target_", get_colnames( targets_ ) );
 
@@ -2148,7 +2178,7 @@ Poco::JSON::Object::Ptr DataFrame::to_schema() const
 
     obj->set( "unused_string_", get_colnames( unused_strings_ ) );
 
-    return obj;
+    return helpers::Schema( *obj );
 }
 
 // ----------------------------------------------------------------------------

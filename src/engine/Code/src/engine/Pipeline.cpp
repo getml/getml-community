@@ -251,8 +251,7 @@ void Pipeline::check(
 
     // -------------------------------------------------------------------------
 
-    const auto [feature_learners, target_nums] =
-        init_feature_learners( 1, df_fingerprints() );
+    const auto feature_learners = init_feature_learners( 1, df_fingerprints() );
 
     // -------------------------------------------------------------------------
 
@@ -553,7 +552,34 @@ Pipeline::extract_preprocessor_fingerprints() const
 
 // ----------------------------------------------------------------------
 
-std::pair<Poco::JSON::Object::Ptr, Poco::JSON::Array::Ptr>
+std::pair<
+    std::shared_ptr<const helpers::Schema>,
+    std::shared_ptr<const std::vector<helpers::Schema>>>
+Pipeline::extract_modified_schemata(
+    const containers::DataFrame& _population_df,
+    const std::vector<containers::DataFrame>& _peripheral_dfs ) const
+{
+    const auto extract_schema =
+        []( const containers::DataFrame& _df ) -> helpers::Schema {
+        return _df.to_schema( true );
+    };
+
+    const auto population_schema = std::make_shared<const helpers::Schema>(
+        extract_schema( _population_df ) );
+
+    const auto peripheral_schema =
+        std::make_shared<const std::vector<helpers::Schema>>(
+            stl::collect::vector<helpers::Schema>(
+                _peripheral_dfs | std::views::transform( extract_schema ) ) );
+
+    return std::make_pair( population_schema, peripheral_schema );
+}
+
+// ----------------------------------------------------------------------------
+
+std::pair<
+    std::shared_ptr<const helpers::Schema>,
+    std::shared_ptr<const std::vector<helpers::Schema>>>
 Pipeline::extract_schemata(
     const Poco::JSON::Object& _cmd,
     const std::map<std::string, containers::DataFrame>& _data_frames ) const
@@ -564,24 +590,24 @@ Pipeline::extract_schemata(
     const auto peripheral_names = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "peripheral_names_" ) );
 
-    const auto population_df =
-        utils::Getter::get( population_name, _data_frames );
+    const auto extract_schema =
+        [&_data_frames]( const std::string& _name ) -> helpers::Schema {
+        const auto df = utils::Getter::get( _name, _data_frames );
+        return df.to_schema( false );
+    };
 
-    const auto population_schema = population_df.to_schema();
+    const auto population_schema = std::make_shared<const helpers::Schema>(
+        extract_schema( population_name ) );
 
-    auto peripheral_schema = Poco::JSON::Array::Ptr( new Poco::JSON::Array );
-
-    for ( const auto& df_name : peripheral_names )
-        {
-            const auto df = utils::Getter::get( df_name, _data_frames );
-
-            peripheral_schema->add( df.to_schema() );
-        }
+    const auto peripheral_schema =
+        std::make_shared<const std::vector<helpers::Schema>>(
+            stl::collect::vector<helpers::Schema>(
+                peripheral_names | std::views::transform( extract_schema ) ) );
 
     return std::make_pair( population_schema, peripheral_schema );
 }
 
-// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------
 
 std::vector<std::vector<Float>> Pipeline::feature_importances(
     const std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>&
@@ -1084,10 +1110,12 @@ void Pipeline::fit_feature_learners(
     const std::shared_ptr<dependency::FETracker> _fe_tracker,
     Poco::Net::StreamSocket* _socket )
 {
-    auto [feature_learners, target_nums] =
-        init_feature_learners( num_targets(), preprocessor_fingerprints() );
+    std::tie(
+        impl_.modified_population_schema_, impl_.modified_peripheral_schema_ ) =
+        extract_modified_schemata( _population_df, _peripheral_dfs );
 
-    assert_true( feature_learners.size() == target_nums.size() );
+    auto feature_learners =
+        init_feature_learners( num_targets(), preprocessor_fingerprints() );
 
     for ( size_t i = 0; i < feature_learners.size(); ++i )
         {
@@ -1116,12 +1144,7 @@ void Pipeline::fit_feature_learners(
                     continue;
                 }
 
-            fe->fit(
-                _cmd,
-                socket_logger,
-                _population_df,
-                _peripheral_dfs,
-                target_nums.at( i ) );
+            fe->fit( _cmd, socket_logger, _population_df, _peripheral_dfs );
 
             _fe_tracker->add( fe );
         }
@@ -1356,9 +1379,7 @@ Pipeline::infer_mapping_params() const
 
 // ----------------------------------------------------------------------
 
-std::pair<
-    std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>,
-    std::vector<Int>>
+std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>
 Pipeline::init_feature_learners(
     const size_t _num_targets,
     const std::vector<Poco::JSON::Object::Ptr>& _dependencies ) const
@@ -1373,92 +1394,99 @@ Pipeline::init_feature_learners(
 
     // ----------------------------------------------------------------------
 
+    const auto make_fl_for_one_target =
+        []( const featurelearners::FeatureLearnerParams& _params,
+            const Int _target_num ) {
+            const auto new_params = featurelearners::FeatureLearnerParams{
+                .aggregation_ = _params.aggregation_,
+                .aggregation_enums_ = _params.aggregation_enums_,
+                .cmd_ = _params.cmd_,
+                .dependencies_ = _params.dependencies_,
+                .min_freq_ = _params.min_freq_,
+                .peripheral_ = _params.peripheral_,
+                .peripheral_schema_ = _params.peripheral_schema_,
+                .placeholder_ = _params.placeholder_,
+                .population_schema_ = _params.population_schema_,
+                .target_num_ = _target_num };
+
+            return featurelearners::FeatureLearnerParser::parse( new_params );
+        };
+
+    // ----------------------------------------------------------------------
+
+    const auto make_fl_for_all_targets =
+        [_num_targets, make_fl_for_one_target](
+            const featurelearners::FeatureLearnerParams& _params ) {
+            const auto make = std::bind(
+                make_fl_for_one_target, _params, std::placeholders::_1 );
+
+            const auto iota = std::views::iota(
+                static_cast<Int>( 0 ), static_cast<Int>( _num_targets ) );
+
+            const auto range = iota | std::views::transform( make );
+
+            return stl::collect::vector<
+                std::shared_ptr<featurelearners::AbstractFeatureLearner>>(
+                range );
+        };
+
+    // ----------------------------------------------------------------------
+
     const auto [placeholder, peripheral] = make_placeholder();
 
     const auto [aggregation, aggregation_enums, min_freq] =
         infer_mapping_params();
 
+    const auto to_fl = [this,
+                        &_dependencies,
+                        &placeholder,
+                        &peripheral,
+                        &aggregation,
+                        &aggregation_enums,
+                        min_freq,
+                        make_fl_for_all_targets]( Poco::JSON::Object::Ptr _cmd )
+        -> std::vector<
+            std::shared_ptr<featurelearners::AbstractFeatureLearner>> {
+        assert_true( _cmd );
+
+        const auto params = featurelearners::FeatureLearnerParams{
+            .aggregation_ = aggregation,
+            .aggregation_enums_ = aggregation_enums,
+            .cmd_ = *_cmd,
+            .dependencies_ = _dependencies,
+            .min_freq_ = min_freq,
+            .peripheral_ = peripheral,
+            .peripheral_schema_ = impl_.modified_peripheral_schema_,
+            .placeholder_ = placeholder,
+            .population_schema_ = impl_.modified_population_schema_,
+            .target_num_ =
+                featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS };
+
+        const auto new_feature_learner =
+            featurelearners::FeatureLearnerParser::parse( params );
+
+        if ( new_feature_learner->supports_multiple_targets() )
+            {
+                return { new_feature_learner };
+            }
+
+        return make_fl_for_all_targets( params );
+    };
+
+    // ----------------------------------------------------------------------
+
     const auto obj_vector = JSON::array_to_obj_vector(
         JSON::get_array( obj(), "feature_learners_" ) );
 
-    // ----------------------------------------------------------------------
-
-    std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>
-        feature_learners;
-
-    std::vector<Int> target_nums;
-
-    for ( auto ptr : obj_vector )
-        {
-            // --------------------------------------------------------------
-
-            assert_true( ptr );
-
-            // --------------------------------------------------------------
-
-            const auto params = featurelearners::FeatureLearnerParams{
-                .aggregation_ = aggregation,
-                .aggregation_enums_ = aggregation_enums,
-                .cmd_ = *ptr,
-                .dependencies_ = _dependencies,
-                .min_freq_ = min_freq,
-                .peripheral_ = peripheral,
-                .placeholder_ = placeholder };
-
-            auto new_feature_learner =
-                featurelearners::FeatureLearnerParser::parse( params );
-
-            assert_true( new_feature_learner );
-
-            // --------------------------------------------------------------
-
-            if ( new_feature_learner->supports_multiple_targets() )
-                {
-                    feature_learners.emplace_back(
-                        std::move( new_feature_learner ) );
-
-                    target_nums.push_back(
-                        featurelearners::AbstractFeatureLearner::
-                            USE_ALL_TARGETS );
-                }
-            else
-                {
-                    for ( size_t t = 0; t < _num_targets; ++t )
-                        {
-                            auto obj = Poco::JSON::Object::Ptr(
-                                new Poco::JSON::Object() );
-
-                            obj->set( "target_num_", t );
-
-                            auto dependencies = _dependencies;
-
-                            dependencies.push_back( obj );
-
-                            const auto new_params =
-                                featurelearners::FeatureLearnerParams{
-                                    .aggregation_ = params.aggregation_,
-                                    .aggregation_enums_ =
-                                        params.aggregation_enums_,
-                                    .cmd_ = params.cmd_,
-                                    .dependencies_ = dependencies,
-                                    .min_freq_ = params.min_freq_,
-                                    .peripheral_ = params.peripheral_,
-                                    .placeholder_ = params.placeholder_ };
-
-                            feature_learners.emplace_back(
-                                featurelearners::FeatureLearnerParser::parse(
-                                    new_params ) );
-
-                            target_nums.push_back( static_cast<Int>( t ) );
-                        }
-                }
-
-            // --------------------------------------------------------------
-        }
+    const auto all = stl::collect::vector<
+        std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>>(
+        obj_vector | std::views::transform( to_fl ) );
 
     // ----------------------------------------------------------------------
 
-    return std::make_pair( feature_learners, target_nums );
+    return stl::collect::vector<
+        std::shared_ptr<featurelearners::AbstractFeatureLearner>>(
+        all | std::views::join );
 
     // ----------------------------------------------------------------------
 }
@@ -1688,10 +1716,8 @@ void Pipeline::load_feature_learners(
 {
     assert_true( _fe_tracker );
 
-    _pipeline->feature_learners_ =
-        std::get<0>( _pipeline->init_feature_learners(
-            _pipeline->num_targets(),
-            _pipeline->preprocessor_fingerprints() ) );
+    _pipeline->feature_learners_ = _pipeline->init_feature_learners(
+        _pipeline->num_targets(), _pipeline->preprocessor_fingerprints() );
 
     for ( size_t i = 0; i < _pipeline->feature_learners_.size(); ++i )
         {
@@ -1824,7 +1850,22 @@ Poco::JSON::Object Pipeline::load_json_obj( const std::string& _fname ) const
 void Pipeline::load_pipeline_json(
     const std::string& _path, Pipeline* _pipeline ) const
 {
+    const auto to_schema =
+        []( const Poco::JSON::Object::Ptr& _obj ) -> helpers::Schema {
+        assert_true( _obj );
+        return helpers::Schema( *_obj );
+    };
+
     const auto pipeline_json = load_json_obj( _path + "pipeline.json" );
+
+    const auto get_peripheral_schema = [&pipeline_json,
+                                        to_schema]( const std::string& _name ) {
+        auto arr = JSON::get_array( pipeline_json, _name );
+        const auto vec = JSON::array_to_obj_vector( arr );
+        return std::make_shared<const std::vector<helpers::Schema>>(
+            stl::collect::vector<helpers::Schema>(
+                vec | std::views::transform( to_schema ) ) );
+    };
 
     _pipeline->allow_http() =
         JSON::get_value<bool>( pipeline_json, "allow_http_" );
@@ -1832,11 +1873,18 @@ void Pipeline::load_pipeline_json(
     _pipeline->creation_time() =
         JSON::get_value<std::string>( pipeline_json, "creation_time_" );
 
-    _pipeline->peripheral_schema() =
-        JSON::get_array( pipeline_json, "peripheral_schema_" );
+    _pipeline->modified_peripheral_schema() =
+        get_peripheral_schema( "modified_peripheral_schema_" );
 
-    _pipeline->population_schema() =
-        JSON::get_object( pipeline_json, "population_schema_" );
+    _pipeline->modified_population_schema() =
+        std::make_shared<const helpers::Schema>(
+            *JSON::get_object( pipeline_json, "modified_population_schema_" ) );
+
+    _pipeline->peripheral_schema() =
+        get_peripheral_schema( "peripheral_schema_" );
+
+    _pipeline->population_schema() = std::make_shared<const helpers::Schema>(
+        *JSON::get_object( pipeline_json, "population_schema_" ) );
 
     _pipeline->targets() = JSON::array_to_vector<std::string>(
         JSON::get_array( pipeline_json, "targets_" ) );
@@ -2505,6 +2553,10 @@ void Pipeline::save_feature_selectors( const Poco::TemporaryFile& _tfile ) const
 
 void Pipeline::save_pipeline_json( const Poco::TemporaryFile& _tfile ) const
 {
+    const auto to_obj = []( const helpers::Schema& s ) {
+        return s.to_json_obj();
+    };
+
     Poco::JSON::Object pipeline_json;
 
     pipeline_json.set( "allow_http_", allow_http() );
@@ -2521,14 +2573,27 @@ void Pipeline::save_pipeline_json( const Poco::TemporaryFile& _tfile ) const
         "fs_fingerprints_", JSON::vector_to_array( fs_fingerprints() ) );
 
     pipeline_json.set(
+        "modified_peripheral_schema_",
+        stl::collect::array(
+            *modified_peripheral_schema() | std::views::transform( to_obj ) ) );
+
+    pipeline_json.set(
+        "modified_population_schema_",
+        modified_population_schema()->to_json_obj() );
+
+    pipeline_json.set(
         "preprocessor_fingerprints_",
         JSON::vector_to_array( preprocessor_fingerprints() ) );
 
     pipeline_json.set( "targets_", JSON::vector_to_array( targets() ) );
 
-    pipeline_json.set( "peripheral_schema_", peripheral_schema() );
+    pipeline_json.set(
+        "peripheral_schema_",
+        stl::collect::array(
+            *peripheral_schema() | std::views::transform( to_obj ) ) );
 
-    pipeline_json.set( "population_schema_", population_schema() );
+    pipeline_json.set(
+        "population_schema_", population_schema()->to_json_obj() );
 
     save_json_obj( pipeline_json, _tfile.path() + "/pipeline.json" );
 }
@@ -2754,9 +2819,10 @@ Poco::JSON::Object Pipeline::to_monitor(
 
     json_obj.set( "num_features_", num_features() );
 
-    json_obj.set( "peripheral_schema_", peripheral_schema() );
+    // TODO
+    // json_obj.set( "peripheral_schema_", peripheral_schema() );
 
-    json_obj.set( "population_schema_", population_schema() );
+    json_obj.set( "population_schema_", population_schema()->to_json_obj() );
 
     json_obj.set( "population_", JSON::get_object( obj(), "population_" ) );
 

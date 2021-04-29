@@ -221,8 +221,19 @@ class Pipeline
     std::vector<Poco::JSON::Object::Ptr> extract_preprocessor_fingerprints()
         const;
 
+    /// Extracts the schemata as they are inserted into the feature learners.
+    std::pair<
+        std::shared_ptr<const helpers::Schema>,
+        std::shared_ptr<const std::vector<helpers::Schema>>>
+    extract_modified_schemata(
+        const containers::DataFrame& _population_df,
+        const std::vector<containers::DataFrame>& _peripheral_dfs ) const;
+
     /// Extracts the schemata from the data frame used for training.
-    std::pair<Poco::JSON::Object::Ptr, Poco::JSON::Array::Ptr> extract_schemata(
+    std::pair<
+        std::shared_ptr<const helpers::Schema>,
+        std::shared_ptr<const std::vector<helpers::Schema>>>
+    extract_schemata(
         const Poco::JSON::Object& _cmd,
         const std::map<std::string, containers::DataFrame>& _data_frames )
         const;
@@ -326,9 +337,7 @@ class Pipeline
     infer_mapping_params() const;
 
     /// Prepares the feature learners from the JSON object.
-    std::pair<
-        std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>,
-        std::vector<Int>>
+    std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>
     init_feature_learners(
         const size_t _num_targets,
         const std::vector<Poco::JSON::Object::Ptr>& _dependencies ) const;
@@ -607,6 +616,35 @@ class Pipeline
         return impl_.fs_fingerprints_;
     }
 
+    /// Trivial (private) accessor
+    std::shared_ptr<const std::vector<helpers::Schema>>&
+    modified_peripheral_schema()
+    {
+        return impl_.modified_peripheral_schema_;
+    }
+
+    /// Trivial (const) accessor
+    const std::shared_ptr<const std::vector<helpers::Schema>>&
+    modified_peripheral_schema() const
+    {
+        assert_true( impl_.modified_peripheral_schema_ );
+        return impl_.modified_peripheral_schema_;
+    }
+
+    /// Trivial (private) accessor
+    std::shared_ptr<const helpers::Schema>& modified_population_schema()
+    {
+        return impl_.modified_population_schema_;
+    }
+
+    /// Trivial (const) accessor
+    const std::shared_ptr<const helpers::Schema>& modified_population_schema()
+        const
+    {
+        assert_true( impl_.modified_population_schema_ );
+        return impl_.modified_population_schema_;
+    }
+
     /// Calculates the number of automated and manual features used.
     size_t num_features() const
     {
@@ -642,26 +680,27 @@ class Pipeline
     Poco::JSON::Object& obj() { return impl_.obj_; }
 
     /// Trivial (private) accessor
-    Poco::JSON::Array::Ptr& peripheral_schema()
+    std::shared_ptr<const std::vector<helpers::Schema>>& peripheral_schema()
     {
         return impl_.peripheral_schema_;
     }
 
     /// Trivial (const) accessor
-    const Poco::JSON::Array::Ptr& peripheral_schema() const
+    const std::shared_ptr<const std::vector<helpers::Schema>>&
+    peripheral_schema() const
     {
         assert_true( impl_.peripheral_schema_ );
         return impl_.peripheral_schema_;
     }
 
     /// Trivial (private) accessor
-    Poco::JSON::Object::Ptr& population_schema()
+    std::shared_ptr<const helpers::Schema>& population_schema()
     {
         return impl_.population_schema_;
     }
 
     /// Trivial (const) accessor
-    const Poco::JSON::Object::Ptr& population_schema() const
+    const std::shared_ptr<const helpers::Schema>& population_schema() const
     {
         assert_true( impl_.population_schema_ );
         return impl_.population_schema_;

@@ -15,6 +15,7 @@ class AbstractFeatureLearner
 
    public:
     static constexpr Int USE_ALL_TARGETS = -1;
+    static constexpr Int IGNORE_TARGETS = -2;
 
     static constexpr const char* FASTPROP_MODEL = "FastPropModel";
     static constexpr const char* FASTPROP_TIME_SERIES = "FastPropTimeSeries";
@@ -51,8 +52,7 @@ class AbstractFeatureLearner
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const communication::SocketLogger>& _logger,
         const containers::DataFrame& _population_df,
-        const std::vector<containers::DataFrame>& _peripheral_dfs,
-        const Int _target_num ) = 0;
+        const std::vector<containers::DataFrame>& _peripheral_dfs ) = 0;
 
     /// Whether this is a classification problem.
     virtual bool is_classification() const = 0;

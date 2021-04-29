@@ -7,6 +7,20 @@ namespace stl
 
 struct collect
 {
+    /// Generates Poco::JSON::Array::Ptr from a range
+    template <class RangeType>
+    static Poco::JSON::Array::Ptr array( RangeType range )
+    {
+        auto arr = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+
+        for ( const auto& val : range )
+            {
+                arr->add( val );
+            }
+
+        return arr;
+    }
+
     /// Generates a string from a range
     template <class RangeType>
     static std::string string( RangeType range )

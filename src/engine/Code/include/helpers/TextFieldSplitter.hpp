@@ -14,8 +14,8 @@ class TextFieldSplitter
     /// field splitting.
     static VocabularyContainer reverse(
         const VocabularyContainer& _vocab,
-        const Placeholder& _population_schema,
-        const std::vector<Placeholder>& _peripheral_schema );
+        const helpers::Schema& _population_schema,
+        const std::vector<helpers::Schema>& _peripheral_schema );
 
     /// Splits up all text fields into individual words and puts them in a
     /// separate data frame.

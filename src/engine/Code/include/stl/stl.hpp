@@ -6,6 +6,8 @@
 #include <tuple>
 #include <vector>
 
+#include <Poco/JSON/Array.h>
+
 #include "stl/Range.hpp"
 #include "stl/collect.hpp"
 

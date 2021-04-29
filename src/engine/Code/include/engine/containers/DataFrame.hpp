@@ -168,7 +168,7 @@ class DataFrame
     Poco::JSON::Object to_monitor() const;
 
     /// Expresses the schema of the DataFrame as a JSON object.
-    Poco::JSON::Object::Ptr to_schema() const;
+    helpers::Schema to_schema( const bool _separate_discrete ) const;
 
     /// Selects all rows for which the corresponding entry in _condition is
     /// true.
