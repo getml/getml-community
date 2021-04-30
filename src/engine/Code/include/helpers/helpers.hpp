@@ -79,8 +79,6 @@
 
 #include "helpers/RowIndexContainer.hpp"
 
-#include "helpers/TextFieldSplitter.hpp"
-
 #include "helpers/TableHolder.hpp"
 
 #include "helpers/MappingContainerMaker.hpp"

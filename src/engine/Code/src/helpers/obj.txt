@@ -12,7 +12,6 @@ set(
     ${HELPERS_SOURCE_DIRECTORY}/StringReplacer.cpp
     ${HELPERS_SOURCE_DIRECTORY}/StringSplitter.cpp
     ${HELPERS_SOURCE_DIRECTORY}/TableHolder.cpp
-    ${HELPERS_SOURCE_DIRECTORY}/TextFieldSplitter.cpp
     ${HELPERS_SOURCE_DIRECTORY}/VocabularyContainer.cpp
     ${HELPERS_SOURCE_DIRECTORY}/VocabularyTree.cpp
     ${HELPERS_SOURCE_DIRECTORY}/WordIndexContainer.cpp

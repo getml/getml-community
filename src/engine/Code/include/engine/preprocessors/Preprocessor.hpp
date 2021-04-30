@@ -15,6 +15,7 @@ class Preprocessor
     static constexpr const char* MAPPING = "Mapping";
     static constexpr const char* SEASONAL = "Seasonal";
     static constexpr const char* SUBSTRING = "Substring";
+    static constexpr const char* TEXT_FIELD_SPLITTER = "TextFieldSplitter";
 
    public:
     Preprocessor(){};

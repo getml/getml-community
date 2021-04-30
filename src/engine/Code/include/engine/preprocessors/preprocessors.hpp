@@ -35,6 +35,7 @@
 #include "engine/preprocessors/Mapping.hpp"
 #include "engine/preprocessors/Seasonal.hpp"
 #include "engine/preprocessors/Substring.hpp"
+#include "engine/preprocessors/TextFieldSplitter.hpp"
 
 #include "engine/preprocessors/PreprocessorParser.hpp"
 

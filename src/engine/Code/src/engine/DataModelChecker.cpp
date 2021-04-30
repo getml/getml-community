@@ -18,16 +18,27 @@ void DataModelChecker::check(
 {
     // --------------------------------------------------------------------------
 
+    const auto is_not_text_field =
+        []( const containers::DataFrame& _df ) -> bool {
+        return _df.name().find( helpers::Macros::text_field() ) ==
+               std::string::npos;
+    };
+
+    const auto peripheral = stl::collect::vector<containers::DataFrame>(
+        _peripheral | std::views::filter( is_not_text_field ) );
+
+    // --------------------------------------------------------------------------
+
     assert_true( _peripheral_names );
 
-    if ( _peripheral_names->size() != _peripheral.size() )
+    if ( _peripheral_names->size() != peripheral.size() )
         {
             throw std::invalid_argument(
                 "The number of peripheral tables in the placeholder must "
                 "be "
                 "equal to the number of peripheral tables passed (" +
                 std::to_string( _peripheral_names->size() ) + " vs. " +
-                std::to_string( _peripheral.size() ) +
+                std::to_string( peripheral.size() ) +
                 "). This is the point of having placeholders." );
         }
 
@@ -37,7 +48,7 @@ void DataModelChecker::check(
 
     // --------------------------------------------------------------------------
 
-    check_data_frames( _population, _peripheral, _feature_learners, &warner );
+    check_data_frames( _population, peripheral, _feature_learners, &warner );
 
     // --------------------------------------------------------------------------
 
@@ -61,14 +72,14 @@ void DataModelChecker::check(
                 *_placeholder,
                 _peripheral_names,
                 _population,
-                _peripheral,
+                peripheral,
                 prob_pick,
                 &warner );
 
             check_self_joins(
                 *_placeholder,
                 _population,
-                _peripheral,
+                peripheral,
                 _feature_learners,
                 &warner );
         }

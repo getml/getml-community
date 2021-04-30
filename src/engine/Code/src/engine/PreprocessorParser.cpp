@@ -37,6 +37,11 @@ std::shared_ptr<Preprocessor> PreprocessorParser::parse(
             return std::make_shared<Substring>( _obj, _dependencies );
         }
 
+    if ( type == Preprocessor::TEXT_FIELD_SPLITTER )
+        {
+            return std::make_shared<TextFieldSplitter>( _obj, _dependencies );
+        }
+
     throw std::invalid_argument(
         "Preprocessor of type '" + type + "' not known!" );
 

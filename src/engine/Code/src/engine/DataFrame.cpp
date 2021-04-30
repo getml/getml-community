@@ -2160,7 +2160,7 @@ helpers::Schema DataFrame::to_schema( const bool _separate_discrete ) const
             numericals_ | std::views::filter( is_discrete ) |
             std::views::transform( get_name ) ) );
 
-    obj->set( "join_key_", get_colnames( join_keys_ ) );
+    obj->set( "join_keys_", get_colnames( join_keys_ ) );
 
     obj->set(
         "numerical_",
@@ -2168,15 +2168,15 @@ helpers::Schema DataFrame::to_schema( const bool _separate_discrete ) const
             numericals_ | std::views::filter( is_not_discrete ) |
             std::views::transform( get_name ) ) );
 
-    obj->set( "target_", get_colnames( targets_ ) );
+    obj->set( "targets_", get_colnames( targets_ ) );
 
     obj->set( "text_", get_colnames( text_ ) );
 
-    obj->set( "time_stamp_", get_colnames( time_stamps_ ) );
+    obj->set( "time_stamps_", get_colnames( time_stamps_ ) );
 
-    obj->set( "unused_float_", get_colnames( unused_floats_ ) );
+    obj->set( "unused_floats_", get_colnames( unused_floats_ ) );
 
-    obj->set( "unused_string_", get_colnames( unused_strings_ ) );
+    obj->set( "unused_strings_", get_colnames( unused_strings_ ) );
 
     return helpers::Schema( *obj );
 }

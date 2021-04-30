@@ -381,27 +381,6 @@ class FeatureLearner : public AbstractFeatureLearner
         return propositionalization( feature_learner().hyperparameters() );
     }
 
-    /// Whether we want to split text fields
-    bool split_text_fields( const HypType& _hyp ) const
-    {
-        if constexpr ( FeatureLearnerType::is_time_series_ )
-            {
-                assert_true( _hyp.model_hyperparams_ );
-                return _hyp.model_hyperparams_->split_text_fields_;
-            }
-
-        if constexpr ( !FeatureLearnerType::is_time_series_ )
-            {
-                return _hyp.split_text_fields_;
-            }
-    }
-
-    /// Whether we want to split text fields
-    bool split_text_fields() const
-    {
-        return split_text_fields( feature_learner().hyperparameters() );
-    }
-
     /// The size of the vocabulary.
     size_t vocab_size( const HypType& _hyp ) const
     {
@@ -1020,12 +999,6 @@ FeatureLearner<FeatureLearnerType>::handle_text_fields(
     const auto hyperparameters =
         std::make_shared<typename FeatureLearnerType::HypType>( cmd_ );
 
-    const auto [population, peripheral] =
-        split_text_fields( *hyperparameters )
-            ? helpers::TextFieldSplitter::split_text_fields(
-                  _population, _peripheral, _logger )
-            : std::make_pair( _population, _peripheral );
-
     const auto has_text_fields = []( const helpers::DataFrame& _df ) -> bool {
         return _df.num_text() > 0;
     };
@@ -1040,13 +1013,13 @@ FeatureLearner<FeatureLearnerType>::handle_text_fields(
         std::make_shared<const helpers::VocabularyContainer>(
             min_df( *hyperparameters ),
             vocab_size( *hyperparameters ),
-            population,
-            peripheral );
+            _population,
+            _peripheral );
 
     if ( any_text_fields ) _logger->log( "Progress: 33%." );
 
     const auto word_indices =
-        helpers::WordIndexContainer( population, peripheral, *vocabulary );
+        helpers::WordIndexContainer( _population, _peripheral, *vocabulary );
 
     if ( any_text_fields ) _logger->log( "Progress: 66%." );
 
@@ -1055,7 +1028,7 @@ FeatureLearner<FeatureLearnerType>::handle_text_fields(
     if ( any_text_fields ) _logger->log( "Progress: 100%." );
 
     return std::make_tuple(
-        population, peripheral, vocabulary, row_indices, word_indices );
+        _population, _peripheral, vocabulary, row_indices, word_indices );
 }
 
 // ------------------------------------------------------------------------
@@ -1235,19 +1208,12 @@ std::vector<std::string> FeatureLearner<FeatureLearnerType>::make_staging(
         {
             assert_true( vocabulary_ );
 
-            const auto vocab = split_text_fields()
-                                   ? helpers::TextFieldSplitter::reverse(
-                                         *vocabulary_,
-                                         population_schema(),
-                                         peripheral_schema() )
-                                   : *vocabulary_;
-
             const auto vocabulary_tree = helpers::VocabularyTree(
-                vocab.population(),
-                vocab.peripheral(),
+                vocabulary_->population(),
+                vocabulary_->peripheral(),
                 feature_learner().placeholder(),
                 feature_learner().peripheral(),
-                split_text_fields() );
+                false );  // TODO
 
             std::tie( sql, colname_map ) =
                 mappings_->to_sql( _categories, vocabulary_tree, "" );
@@ -1264,15 +1230,6 @@ std::vector<std::string> FeatureLearner<FeatureLearnerType>::make_staging(
         colname_map );
 
     sql.insert( sql.end(), staging_tables.begin(), staging_tables.end() );
-
-    if ( split_text_fields() )
-        {
-            const auto splitted = helpers::SQLGenerator::split_text_fields(
-                feature_learner().population_schema(),
-                feature_learner().peripheral_schema() );
-
-            sql.insert( sql.end(), splitted.begin(), splitted.end() );
-        }
 
     return sql;
 }
@@ -1447,15 +1404,8 @@ containers::Features FeatureLearner<FeatureLearnerType>::transform(
     const auto [population_df, peripheral_dfs] =
         modify_data_frames( _population_df, _peripheral_dfs );
 
-    const auto [population_table, peripheral_tables] =
-        extract_tables_by_colnames(
-            population_df, peripheral_dfs, population_needs_targets() );
-
-    const auto [population, peripheral] =
-        split_text_fields()
-            ? helpers::TextFieldSplitter::split_text_fields(
-                  population_table, peripheral_tables, _logger )
-            : std::make_pair( population_table, peripheral_tables );
+    const auto [population, peripheral] = extract_tables_by_colnames(
+        population_df, peripheral_dfs, population_needs_targets() );
 
     assert_true( vocabulary_ );
 
