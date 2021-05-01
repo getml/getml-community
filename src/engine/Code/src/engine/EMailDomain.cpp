@@ -104,7 +104,9 @@ EMailDomain::fit_transform(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<containers::Encoding>& _categories,
     const containers::DataFrame& _population_df,
-    const std::vector<containers::DataFrame>& _peripheral_dfs )
+    const std::vector<containers::DataFrame>& _peripheral_dfs,
+    const helpers::Placeholder& _placeholder,
+    const std::vector<std::string>& _peripheral_names )
 {
     assert_true( _categories );
 

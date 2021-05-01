@@ -36,7 +36,9 @@ class Preprocessor
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<containers::Encoding>& _categories,
         const containers::DataFrame& _population_df,
-        const std::vector<containers::DataFrame>& _peripheral_dfs ) = 0;
+        const std::vector<containers::DataFrame>& _peripheral_dfs,
+        const helpers::Placeholder& _placeholder,
+        const std::vector<std::string>& _peripheral_names ) = 0;
 
     /// Generates the new column.
     virtual std::pair<containers::DataFrame, std::vector<containers::DataFrame>>

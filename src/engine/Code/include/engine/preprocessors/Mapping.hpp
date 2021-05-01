@@ -41,7 +41,9 @@ class Mapping : public Preprocessor
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<containers::Encoding>& _categories,
         const containers::DataFrame& _population_df,
-        const std::vector<containers::DataFrame>& _peripheral_dfs ) final;
+        const std::vector<containers::DataFrame>& _peripheral_dfs,
+        const helpers::Placeholder& _placeholder,
+        const std::vector<std::string>& _peripheral_names ) final;
 
     /// Expresses the Seasonal preprocessor as a JSON object.
     Poco::JSON::Object::Ptr to_json_obj() const final;
@@ -98,17 +100,45 @@ class Mapping : public Preprocessor
     typename Mapping::TextMapping extract_text_mapping(
         const Poco::JSON::Object& _obj, const std::string& _key ) const;
 
+    /// Identifies the correct indicies in the output table.
+    std::vector<size_t> find_output_ix(
+        const std::vector<size_t>& _input_ix,
+        const helpers::DataFrame& _output_table,
+        const helpers::DataFrame& _input_table ) const;
+
     /// Calculates the mappings for categorical columns.
     std::pair<MappingForDf, Colnames> fit_on_categoricals(
-        const containers::DataFrame& _data_frame ) const;
+        const helpers::DataFrame& _population,
+        const std::vector<helpers::DataFrame>& _main_tables,
+        const std::vector<helpers::DataFrame>& _peripheral_tables ) const;
 
     /// Calculates the mappings for discrete columns.
     std::pair<MappingForDf, Colnames> fit_on_discretes(
-        const containers::DataFrame& _data_frame ) const;
+        const helpers::DataFrame& _population,
+        const std::vector<helpers::DataFrame>& _main_tables,
+        const std::vector<helpers::DataFrame>& _peripheral_tables ) const;
+
+    /// Fits a new submapping on table holder.
+    Mapping fit_on_table_holder(
+        const helpers::DataFrame& _population,
+        const helpers::TableHolder& _table_holder,
+        const std::vector<helpers::DataFrame>& _main_tables,
+        const std::vector<helpers::DataFrame>& _peripheral_tables,
+        const size_t _ix ) const;
 
     /// Calculates the mappings for text columns.
     std::pair<typename Mapping::TextMapping, typename Mapping::Colnames>
-    fit_on_text( const containers::DataFrame& _data_frame ) const;
+    fit_on_text(
+        const helpers::DataFrame& _population,
+        const std::vector<helpers::DataFrame>& _main_tables,
+        const std::vector<helpers::DataFrame>& _peripheral_tables ) const;
+
+    /// Fits the submappings on the subtables of a table holder.
+    std::vector<Mapping> fit_submappings(
+        const helpers::DataFrame& _population,
+        const std::optional<helpers::TableHolder>& _table_holder,
+        const std::vector<helpers::DataFrame>& _main_tables,
+        const std::vector<helpers::DataFrame>& _peripheral_tables ) const;
 
     /// Parses a JSON object.
     Mapping from_json_obj( const Poco::JSON::Object& _obj ) const;
@@ -148,7 +178,7 @@ class Mapping : public Preprocessor
     /// Calculates the aggregated targets.
     template <class KeyType>
     std::pair<KeyType, std::vector<Float>> calc_agg_targets(
-        const containers::DataFrame& _data_frame,
+        const helpers::DataFrame& _population,
         const std::pair<KeyType, std::vector<size_t>>& _input ) const
     {
         // -----------------------------------------------------------------------
@@ -157,15 +187,8 @@ class Mapping : public Preprocessor
 
         // -----------------------------------------------------------------------
 
-        const auto get_target =
-            [&_data_frame]( const size_t _i ) -> containers::Column<Float> {
-            return _data_frame.target( _i );
-        };
-
-        // -----------------------------------------------------------------------
-
         const auto calc_aggs =
-            [this, &rownums]( const containers::Column<Float>& _target_col )
+            [this, &rownums]( const helpers::Column<Float>& _target_col )
             -> std::vector<Float> {
             const auto get_value = [&_target_col]( const size_t _i ) -> Float {
                 return _target_col[_i];
@@ -189,11 +212,8 @@ class Mapping : public Preprocessor
 
         // -----------------------------------------------------------------------
 
-        const auto iota = std::views::iota(
-            static_cast<size_t>( 0 ), _data_frame.num_targets() );
-
-        const auto range = iota | std::views::transform( get_target ) |
-                           std::views::transform( calc_aggs );
+        const auto range =
+            _population.targets_ | std::views::transform( calc_aggs );
 
         const auto values = stl::collect::vector<std::vector<Float>>( range );
 
@@ -261,7 +281,9 @@ class Mapping : public Preprocessor
     template <class KeyType>
     auto make_mapping(
         const std::map<KeyType, std::vector<size_t>>& _rownum_map,
-        const containers::DataFrame& _data_frame ) const
+        const helpers::DataFrame& _population,
+        const std::vector<helpers::DataFrame>& _main_tables,
+        const std::vector<helpers::DataFrame>& _peripheral_tables ) const
     {
         using RownumPair = std::pair<KeyType, std::vector<size_t>>;
 
@@ -270,9 +292,14 @@ class Mapping : public Preprocessor
             return _input.second.size() >= min_freq_;
         };
 
-        const auto calc_agg = [this, &_data_frame]( const RownumPair& _pair )
+        const auto match_rows = [this, &_main_tables, &_peripheral_tables](
+                                    const RownumPair& _input ) -> RownumPair {
+            return match_rownums( _main_tables, _peripheral_tables, _input );
+        };
+
+        const auto calc_agg = [this, &_population]( const RownumPair& _pair )
             -> std::pair<KeyType, std::vector<Float>> {
-            return calc_agg_targets( _data_frame, _pair );
+            return calc_agg_targets( _population, _pair );
         };
 
         const auto key_to_string =
@@ -287,6 +314,7 @@ class Mapping : public Preprocessor
             {
                 auto range = _rownum_map |
                              std::views::filter( greater_than_min_freq ) |
+                             std::views::transform( match_rows ) |
                              std::views::transform( calc_agg ) |
                              std::views::transform( key_to_string );
 
@@ -299,6 +327,7 @@ class Mapping : public Preprocessor
             {
                 auto range = _rownum_map |
                              std::views::filter( greater_than_min_freq ) |
+                             std::views::transform( match_rows ) |
                              std::views::transform( calc_agg );
 
                 return std::make_shared<
@@ -309,26 +338,49 @@ class Mapping : public Preprocessor
 
     /// Generates a rownum map for discrete columns.
     template <class T>
-    auto make_rownum_map( const containers::Column<T>& _col ) const
+    auto make_rownum_map( const helpers::Column<T>& _col ) const
     {
-        const auto col = helpers::Column<T>( _col.data_ptr(), _col.name(), "" );
-
         if constexpr ( std::is_same<T, Int>() )
             {
                 return helpers::MappingContainerMaker::
-                    make_rownum_map_categorical( col );
+                    make_rownum_map_categorical( _col );
             }
 
         if constexpr ( std::is_same<T, Float>() )
             {
                 return helpers::MappingContainerMaker::make_rownum_map_discrete(
-                    col );
+                    _col );
             }
 
         if constexpr ( std::is_same<T, strings::String>() )
             {
-                return make_rownum_map_text( col );
+                return make_rownum_map_text( _col );
             }
+    }
+
+    /// Identifies the correct rownums to use by parsing through the main and
+    /// peripheral tables.
+    template <class RownumPair>
+    RownumPair match_rownums(
+        const std::vector<helpers::DataFrame>& _main_tables,
+        const std::vector<helpers::DataFrame>& _peripheral_tables,
+        const RownumPair& _input ) const
+    {
+        assert_true( _main_tables.size() == _peripheral_tables.size() );
+
+        auto rownums = _input.second;
+
+        for ( size_t i = 0; i < _main_tables.size(); ++i )
+            {
+                const auto ix = _main_tables.size() - 1 - i;
+
+                rownums = find_output_ix(
+                    rownums,
+                    _main_tables.at( ix ),
+                    _peripheral_tables.at( ix ) );
+            }
+
+        return std::make_pair( _input.first, rownums );
     }
 
    private:
@@ -355,6 +407,15 @@ class Mapping : public Preprocessor
 
     /// The minimum number of targets required for a category to be included.
     size_t min_freq_;
+
+    /// The prefix to insert into the generated mapping.
+    std::string prefix_;
+
+    /// Any relational mappings that might exist.
+    std::vector<Mapping> submappings_;
+
+    /// The name of the table for which the mappings are created
+    std::string table_name_;
 
     /// The vocabulary for the text columns.
     TextMapping text_;

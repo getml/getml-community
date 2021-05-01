@@ -1259,12 +1259,23 @@ Pipeline::fit_transform_preprocessors(
 {
     auto preprocessors = init_preprocessors( df_fingerprints() );
 
+    const auto [placeholder, peripheral_names] = make_placeholder();
+
+    assert_true( placeholder );
+
+    assert_true( peripheral_names );
+
     for ( auto& p : preprocessors )
         {
             assert_true( p );
 
             std::tie( *_population_df, *_peripheral_dfs ) = p->fit_transform(
-                _cmd, _categories, *_population_df, *_peripheral_dfs );
+                _cmd,
+                _categories,
+                *_population_df,
+                *_peripheral_dfs,
+                *placeholder,
+                *peripheral_names );
         }
 
     return preprocessors;

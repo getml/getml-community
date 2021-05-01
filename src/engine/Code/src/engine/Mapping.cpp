@@ -97,6 +97,58 @@ typename Mapping::TextMapping Mapping::extract_text_mapping(
 
 // ----------------------------------------------------
 
+std::vector<size_t> Mapping::find_output_ix(
+    const std::vector<size_t>& _input_ix,
+    const helpers::DataFrame& _output_table,
+    const helpers::DataFrame& _input_table ) const
+{
+    const auto time_stamp_in_range =
+        []( const Float _time_stamp_input,
+            const Float _upper_time_stamp,
+            const Float _time_stamp_output ) -> bool {
+        return (
+            ( _time_stamp_input <= _time_stamp_output ) &&
+            ( std::isnan( _upper_time_stamp ) ||
+              _time_stamp_output < _upper_time_stamp ) );
+    };
+
+    std::set<size_t> unique;
+
+    for ( const auto ix : _input_ix )
+        {
+            if ( !_output_table.has( _input_table.join_key( ix ) ) )
+                {
+                    continue;
+                }
+
+            const auto it = _output_table.find( _input_table.join_key( ix ) );
+
+            const auto time_stamp_input = _input_table.time_stamp( ix );
+
+            const auto upper_time_stamp = _input_table.upper_time_stamp( ix );
+
+            for ( const auto ix_out : it->second )
+                {
+                    assert_true( ix_out >= 0 );
+                    assert_true( ix_out < _output_table.nrows() );
+
+                    const bool use_this = time_stamp_in_range(
+                        time_stamp_input,
+                        upper_time_stamp,
+                        _output_table.time_stamp( ix_out ) );
+
+                    if ( use_this )
+                        {
+                            unique.insert( static_cast<size_t>( ix_out ) );
+                        }
+                }
+        }
+
+    return std::vector<size_t>( unique.begin(), unique.end() );
+}
+
+// ----------------------------------------------------
+
 Poco::JSON::Object::Ptr Mapping::fingerprint() const
 {
     auto obj = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
@@ -115,32 +167,32 @@ Poco::JSON::Object::Ptr Mapping::fingerprint() const
 // ----------------------------------------------------------------------------
 
 std::pair<typename Mapping::MappingForDf, typename Mapping::Colnames>
-Mapping::fit_on_categoricals( const containers::DataFrame& _data_frame ) const
+Mapping::fit_on_categoricals(
+    const helpers::DataFrame& _population,
+    const std::vector<helpers::DataFrame>& _main_tables,
+    const std::vector<helpers::DataFrame>& _peripheral_tables ) const
 {
-    const auto get_categorical =
-        [&_data_frame]( const size_t _i ) -> containers::Column<Int> {
-        return _data_frame.categorical( _i );
-    };
-
     const auto col_to_mapping =
-        [this, &_data_frame]( const containers::Column<Int>& _col ) {
+        [this, &_population, &_main_tables, &_peripheral_tables](
+            const helpers::Column<Int>& _col ) {
             const auto rownum_map = make_rownum_map( _col );
-            return make_mapping( rownum_map, _data_frame );
+            return make_mapping(
+                rownum_map, _population, _main_tables, _peripheral_tables );
         };
 
     const auto get_colname =
-        []( const containers::Column<Int>& _col ) -> std::string {
-        return _col.name();
+        []( const helpers::Column<Int>& _col ) -> std::string {
+        return _col.name_;
     };
 
-    const auto iota = std::views::iota(
-        static_cast<size_t>( 0 ), _data_frame.num_categoricals() );
+    const auto& data_frame =
+        _peripheral_tables.size() > 0 ? _peripheral_tables.back() : _population;
 
-    const auto range1 = iota | std::views::transform( get_categorical ) |
-                        std::views::transform( col_to_mapping );
+    const auto range1 =
+        data_frame.categoricals_ | std::views::transform( col_to_mapping );
 
-    const auto range2 = iota | std::views::transform( get_categorical ) |
-                        std::views::transform( get_colname );
+    const auto range2 =
+        data_frame.categoricals_ | std::views::transform( get_colname );
 
     const auto mappings =
         stl::collect::vector<MappingForDf::value_type>( range1 );
@@ -154,87 +206,142 @@ Mapping::fit_on_categoricals( const containers::DataFrame& _data_frame ) const
 // ----------------------------------------------------------------------------
 
 std::pair<typename Mapping::MappingForDf, typename Mapping::Colnames>
-Mapping::fit_on_discretes( const containers::DataFrame& _data_frame ) const
+Mapping::fit_on_discretes(
+    const helpers::DataFrame& _population,
+    const std::vector<helpers::DataFrame>& _main_tables,
+    const std::vector<helpers::DataFrame>& _peripheral_tables ) const
 {
-    const auto get_numerical =
-        [&_data_frame]( const size_t _i ) -> containers::Column<Float> {
-        return _data_frame.numerical( _i );
-    };
-
-    const auto is_full_number = []( const Float _val ) -> bool {
-        return helpers::NullChecker::is_null( _val ) |
-               ( std::floor( _val ) == _val );
-    };
-
-    const auto is_discrete =
-        [is_full_number]( const containers::Column<Float>& _col ) -> bool {
-        return std::all_of( _col.begin(), _col.end(), is_full_number );
-    };
-
     const auto col_to_mapping =
-        [this, &_data_frame]( const containers::Column<Float>& _col ) {
+        [this, &_population, &_main_tables, &_peripheral_tables](
+            const helpers::Column<Float>& _col ) {
             const auto rownum_map = make_rownum_map( _col );
-            return make_mapping( rownum_map, _data_frame );
+            return make_mapping(
+                rownum_map, _population, _main_tables, _peripheral_tables );
         };
 
     const auto get_colname =
-        []( const containers::Column<Float>& _col ) -> std::string {
-        return _col.name();
+        []( const helpers::Column<Float>& _col ) -> std::string {
+        return _col.name_;
     };
 
-    const auto iota = std::views::iota(
-        static_cast<size_t>( 0 ), _data_frame.num_numericals() );
+    const auto& data_frame =
+        _peripheral_tables.size() > 0 ? _peripheral_tables.back() : _population;
 
-    const auto range1 = iota | std::views::transform( get_numerical ) |
-                        std::views::filter( is_discrete );
+    const auto range1 =
+        data_frame.discretes_ | std::views::transform( col_to_mapping );
 
-    const auto discrete_cols =
-        stl::collect::vector<containers::Column<Float>>( range1 );
-
-    const auto range2 = discrete_cols | std::views::transform( col_to_mapping );
-
-    const auto range3 = discrete_cols | std::views::transform( get_colname );
+    const auto range2 =
+        data_frame.discretes_ | std::views::transform( get_colname );
 
     const auto mappings =
-        stl::collect::vector<MappingForDf::value_type>( range2 );
+        stl::collect::vector<MappingForDf::value_type>( range1 );
 
     const auto colnames = std::make_shared<const std::vector<std::string>>(
-        stl::collect::vector<std::string>( range3 ) );
+        stl::collect::vector<std::string>( range2 ) );
 
     return std::make_pair( mappings, colnames );
+}
+
+// ----------------------------------------------------
+
+Mapping Mapping::fit_on_table_holder(
+    const helpers::DataFrame& _population,
+    const helpers::TableHolder& _table_holder,
+    const std::vector<helpers::DataFrame>& _main_tables,
+    const std::vector<helpers::DataFrame>& _peripheral_tables,
+    const size_t _ix ) const
+{
+    // ----------------------------------------------------
+
+    const auto append =
+        []( const std::vector<helpers::DataFrame>& _vec,
+            const helpers::DataFrame& _df ) -> std::vector<helpers::DataFrame> {
+        auto vec = _vec;
+        vec.push_back( _df );
+        return vec;
+    };
+
+    // ----------------------------------------------------
+
+    assert_true(
+        _table_holder.main_tables().size() ==
+        _table_holder.peripheral_tables().size() );
+
+    assert_true(
+        _table_holder.main_tables().size() ==
+        _table_holder.subtables().size() );
+
+    assert_true( _ix < _table_holder.main_tables().size() );
+
+    // ----------------------------------------------------
+
+    const auto main_tables =
+        append( _main_tables, _table_holder.main_tables().at( _ix ).df() );
+
+    const auto peripheral_tables = append(
+        _peripheral_tables, _table_holder.peripheral_tables().at( _ix ) );
+
+    // ----------------------------------------------------
+
+    auto mapping = *this;
+
+    if ( mapping.prefix_ != "" )
+        {
+            mapping.prefix_ += "_";
+        }
+
+    mapping.prefix_ += std::to_string( _ix + 1 );
+
+    mapping.table_name_ = _table_holder.peripheral_tables().at( _ix ).name();
+
+    mapping.submappings_ = mapping.fit_submappings(
+        _population,
+        _table_holder.subtables().at( _ix ),
+        main_tables,
+        peripheral_tables );
+
+    std::tie( mapping.categorical_, mapping.categorical_names_ ) =
+        fit_on_categoricals( _population, main_tables, peripheral_tables );
+
+    std::tie( mapping.discrete_, mapping.discrete_names_ ) =
+        fit_on_discretes( _population, main_tables, peripheral_tables );
+
+    std::tie( mapping.text_, mapping.text_names_ ) =
+        fit_on_text( _population, main_tables, peripheral_tables );
+
+    return mapping;
+
+    // ----------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
 
 std::pair<typename Mapping::TextMapping, typename Mapping::Colnames>
-Mapping::fit_on_text( const containers::DataFrame& _data_frame ) const
+Mapping::fit_on_text(
+    const helpers::DataFrame& _population,
+    const std::vector<helpers::DataFrame>& _main_tables,
+    const std::vector<helpers::DataFrame>& _peripheral_tables ) const
 {
-    const auto get_text =
-        [&_data_frame](
-            const size_t _i ) -> containers::Column<strings::String> {
-        return _data_frame.text( _i );
-    };
-
     const auto col_to_mapping =
-        [this,
-         &_data_frame]( const containers::Column<strings::String>& _col ) {
+        [this, &_population, &_main_tables, &_peripheral_tables](
+            const helpers::Column<strings::String>& _col ) {
             const auto rownum_map = make_rownum_map( _col );
-            return make_mapping( rownum_map, _data_frame );
+            return make_mapping(
+                rownum_map, _population, _main_tables, _peripheral_tables );
         };
 
     const auto get_colname =
-        []( const containers::Column<strings::String>& _col ) -> std::string {
-        return _col.name();
+        []( const helpers::Column<strings::String>& _col ) -> std::string {
+        return _col.name_;
     };
 
-    const auto iota =
-        std::views::iota( static_cast<size_t>( 0 ), _data_frame.num_text() );
+    const auto& data_frame =
+        _peripheral_tables.size() > 0 ? _peripheral_tables.back() : _population;
 
-    const auto range1 = iota | std::views::transform( get_text ) |
-                        std::views::transform( col_to_mapping );
+    const auto range1 =
+        data_frame.text_ | std::views::transform( col_to_mapping );
 
-    const auto range2 = iota | std::views::transform( get_text ) |
-                        std::views::transform( get_colname );
+    const auto range2 = data_frame.text_ | std::views::transform( get_colname );
 
     const auto mappings =
         stl::collect::vector<TextMapping::value_type>( range1 );
@@ -247,21 +354,87 @@ Mapping::fit_on_text( const containers::DataFrame& _data_frame ) const
 
 // ----------------------------------------------------
 
+std::vector<Mapping> Mapping::fit_submappings(
+    const helpers::DataFrame& _population,
+    const std::optional<helpers::TableHolder>& _table_holder,
+    const std::vector<helpers::DataFrame>& _main_tables,
+    const std::vector<helpers::DataFrame>& _peripheral_tables ) const
+{
+    // ----------------------------------------------------
+
+    if ( !_table_holder )
+        {
+            return {};
+        }
+
+    // ----------------------------------------------------
+
+    const auto fit = [this,
+                      &_population,
+                      &_table_holder,
+                      &_main_tables,
+                      &_peripheral_tables]( const size_t _ix ) -> Mapping {
+        return fit_on_table_holder(
+            _population,
+            _table_holder.value(),
+            _main_tables,
+            _peripheral_tables,
+            _ix );
+    };
+
+    // ----------------------------------------------------
+
+    const auto iota = std::views::iota(
+        static_cast<size_t>( 0 ), _table_holder->main_tables().size() );
+
+    return stl::collect::vector<Mapping>( iota | std::views::transform( fit ) );
+
+    // ----------------------------------------------------
+}
+
+// ----------------------------------------------------
+
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
 Mapping::fit_transform(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<containers::Encoding>& _categories,
     const containers::DataFrame& _population_df,
-    const std::vector<containers::DataFrame>& _peripheral_dfs )
+    const std::vector<containers::DataFrame>& _peripheral_dfs,
+    const helpers::Placeholder& _placeholder,
+    const std::vector<std::string>& _peripheral_names )
 {
     assert_true( _categories );
 
+    const auto to_immutable =
+        []( const containers::DataFrame& _df ) -> helpers::DataFrame {
+        return _df.to_immutable<helpers::DataFrame>();
+    };
+
+    const auto population = to_immutable( _population_df );
+
+    const auto rownums = std::make_shared<std::vector<size_t>>(
+        stl::collect::vector<size_t>( std::views::iota(
+            static_cast<size_t>( 0 ), population.nrows() ) ) );
+
+    const auto population_view = helpers::DataFrameView( population, rownums );
+
+    const auto peripheral = stl::collect::vector<helpers::DataFrame>(
+        _peripheral_dfs | std::views::transform( to_immutable ) );
+
+    const auto table_holder = helpers::TableHolder(
+        _placeholder, population_view, peripheral, _peripheral_names );
+
+    prefix_ = "_";
+
+    submappings_ = fit_submappings( population, table_holder, {}, {} );
+
     std::tie( categorical_, categorical_names_ ) =
-        fit_on_categoricals( _population_df );
+        fit_on_categoricals( population, {}, {} );
 
-    std::tie( discrete_, discrete_names_ ) = fit_on_discretes( _population_df );
+    std::tie( discrete_, discrete_names_ ) =
+        fit_on_discretes( population, {}, {} );
 
-    std::tie( text_, text_names_ ) = fit_on_text( _population_df );
+    std::tie( text_, text_names_ ) = fit_on_text( population, {}, {} );
 
     return transform( _cmd, _categories, _population_df, _peripheral_dfs );
 }
