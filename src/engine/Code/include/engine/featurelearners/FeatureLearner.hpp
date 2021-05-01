@@ -601,56 +601,6 @@ FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
 {
     // ------------------------------------------------------------------------
 
-    const auto get_categorical = [&_df]( const std::string& _name ) {
-        const auto& col = _df.categorical( _name );
-        return typename DataFrameType::IntColumnType(
-            col.data_ptr(), _name, col.unit() );
-    };
-
-    const auto categoricals =
-        stl::collect::vector<typename DataFrameType::IntColumnType>(
-            _schema.categoricals_ | std::views::transform( get_categorical ) );
-
-    // ------------------------------------------------------------------------
-
-    const auto get_join_key = [&_df]( const std::string& _name ) {
-        const auto& col = _df.join_key( _name );
-        return typename DataFrameType::IntColumnType(
-            col.data_ptr(), _name, col.unit() );
-    };
-
-    const auto join_keys =
-        stl::collect::vector<typename DataFrameType::IntColumnType>(
-            _schema.join_keys_ | std::views::transform( get_join_key ) );
-
-    // ------------------------------------------------------------------------
-
-    const auto get_index = [&_df]( const std::string& _name ) {
-        return _df.index( _name ).map();
-    };
-
-    const auto indices = stl::collect::vector<
-        std::shared_ptr<typename containers::DataFrameIndex::MapType>>(
-        _schema.join_keys_ | std::views::transform( get_index ) );
-
-    // ------------------------------------------------------------------------
-
-    const auto get_numerical = [&_df]( const std::string& _name ) {
-        const auto& col = _df.numerical( _name );
-        return typename DataFrameType::FloatColumnType(
-            col.data_ptr(), _name, col.unit() );
-    };
-
-    const auto discretes =
-        stl::collect::vector<typename DataFrameType::FloatColumnType>(
-            _schema.discretes_ | std::views::transform( get_numerical ) );
-
-    const auto numericals =
-        stl::collect::vector<typename DataFrameType::FloatColumnType>(
-            _schema.numericals_ | std::views::transform( get_numerical ) );
-
-    // ------------------------------------------------------------------------
-
     assert_true(
         _target_num < 0 ||
         static_cast<size_t>( _target_num ) < _schema.targets_.size() );
@@ -683,53 +633,26 @@ FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
         return false;
     };
 
-    const auto get_target = [&_df]( const std::string& _name ) {
-        const auto& col = _df.target( _name );
-        return typename DataFrameType::FloatColumnType(
-            col.data_ptr(), _name, col.unit() );
-    };
-
-    const auto targets =
-        stl::collect::vector<typename DataFrameType::FloatColumnType>(
-            _schema.targets_ | std::views::filter( include_target ) |
-            std::views::transform( get_target ) );
+    const auto targets = stl::collect::vector<std::string>(
+        _schema.targets_ | std::views::filter( include_target ) );
 
     // ------------------------------------------------------------------------
 
-    const auto get_text = [&_df]( const std::string& _name ) {
-        const auto& col = _df.text( _name );
-        return typename DataFrameType::StringColumnType(
-            col.data_ptr(), _name, col.unit() );
-    };
-
-    const auto text =
-        stl::collect::vector<typename DataFrameType::StringColumnType>(
-            _schema.text_ | std::views::transform( get_text ) );
-
-    // ------------------------------------------------------------------------
-
-    const auto get_time_stamp = [&_df]( const std::string& _name ) {
-        const auto& col = _df.time_stamp( _name );
-        return typename DataFrameType::FloatColumnType(
-            col.data_ptr(), _name, col.unit() );
-    };
-
-    const auto time_stamps =
-        stl::collect::vector<typename DataFrameType::FloatColumnType>(
-            _schema.time_stamps_ | std::views::transform( get_time_stamp ) );
+    const auto schema = containers::Schema{
+        .categoricals_ = _schema.categoricals_,
+        .discretes_ = _schema.discretes_,
+        .join_keys_ = _schema.join_keys_,
+        .numericals_ = _schema.numericals_,
+        .targets_ = targets,
+        .text_ = _schema.text_,
+        .time_stamps_ = _schema.time_stamps_,
+        .unused_floats_ = _schema.unused_floats_,
+        .unused_strings_ = _schema.unused_strings_ };
 
     // ------------------------------------------------------------------------
 
-    return DataFrameType(
-        categoricals,
-        discretes,
-        indices,
-        join_keys,
-        _df.name(),
-        numericals,
-        targets,
-        text,
-        time_stamps );
+    return _df.to_immutable<typename FeatureLearnerType::DataFrameType>(
+        schema );
 
     // ------------------------------------------------------------------------
 }

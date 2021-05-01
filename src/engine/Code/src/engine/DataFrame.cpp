@@ -2128,7 +2128,7 @@ Poco::JSON::Object DataFrame::to_monitor() const
 // ----------------------------------------------------------------------------
 
 /// Expresses the schema of the DataFrame as a JSON object.
-helpers::Schema DataFrame::to_schema( const bool _separate_discrete ) const
+Schema DataFrame::to_schema( const bool _separate_discrete ) const
 {
     const auto is_full = []( const Float _val ) -> bool {
         return helpers::NullChecker::is_null( _val ) ||
@@ -2146,39 +2146,49 @@ helpers::Schema DataFrame::to_schema( const bool _separate_discrete ) const
         return !is_discrete( _col );
     };
 
-    const auto get_name = []( const Column<Float> &_col ) -> std::string {
+    const auto get_name = []( const auto &_col ) -> std::string {
         return _col.name();
     };
 
-    auto obj = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
+    const auto categoricals = stl::collect::vector<std::string>(
+        categoricals_ | std::views::transform( get_name ) );
 
-    obj->set( "categorical_", get_colnames( categoricals_ ) );
+    const auto discretes = stl::collect::vector<std::string>(
+        numericals_ | std::views::filter( is_discrete ) |
+        std::views::transform( get_name ) );
 
-    obj->set(
-        "discrete_",
-        stl::collect::array(
-            numericals_ | std::views::filter( is_discrete ) |
-            std::views::transform( get_name ) ) );
+    const auto join_keys = stl::collect::vector<std::string>(
+        join_keys_ | std::views::transform( get_name ) );
 
-    obj->set( "join_keys_", get_colnames( join_keys_ ) );
+    const auto numericals = stl::collect::vector<std::string>(
+        numericals_ | std::views::filter( is_not_discrete ) |
+        std::views::transform( get_name ) );
 
-    obj->set(
-        "numerical_",
-        stl::collect::array(
-            numericals_ | std::views::filter( is_not_discrete ) |
-            std::views::transform( get_name ) ) );
+    const auto targets = stl::collect::vector<std::string>(
+        targets_ | std::views::transform( get_name ) );
 
-    obj->set( "targets_", get_colnames( targets_ ) );
+    const auto text = stl::collect::vector<std::string>(
+        text_ | std::views::transform( get_name ) );
 
-    obj->set( "text_", get_colnames( text_ ) );
+    const auto time_stamps = stl::collect::vector<std::string>(
+        time_stamps_ | std::views::transform( get_name ) );
 
-    obj->set( "time_stamps_", get_colnames( time_stamps_ ) );
+    const auto unused_floats = stl::collect::vector<std::string>(
+        unused_floats_ | std::views::transform( get_name ) );
 
-    obj->set( "unused_floats_", get_colnames( unused_floats_ ) );
+    const auto unused_strings = stl::collect::vector<std::string>(
+        unused_strings_ | std::views::transform( get_name ) );
 
-    obj->set( "unused_strings_", get_colnames( unused_strings_ ) );
-
-    return helpers::Schema( *obj );
+    return Schema{
+        .categoricals_ = categoricals,
+        .discretes_ = discretes,
+        .join_keys_ = join_keys,
+        .numericals_ = numericals,
+        .targets_ = targets,
+        .text_ = text,
+        .time_stamps_ = time_stamps,
+        .unused_floats_ = unused_floats,
+        .unused_strings_ = unused_strings };
 }
 
 // ----------------------------------------------------------------------------

@@ -1853,7 +1853,7 @@ void Pipeline::load_pipeline_json(
     const auto to_schema =
         []( const Poco::JSON::Object::Ptr& _obj ) -> helpers::Schema {
         assert_true( _obj );
-        return helpers::Schema( *_obj );
+        return helpers::Schema::from_json( *_obj );
     };
 
     const auto pipeline_json = load_json_obj( _path + "pipeline.json" );
@@ -1878,13 +1878,15 @@ void Pipeline::load_pipeline_json(
 
     _pipeline->modified_population_schema() =
         std::make_shared<const helpers::Schema>(
-            *JSON::get_object( pipeline_json, "modified_population_schema_" ) );
+            helpers::Schema::from_json( *JSON::get_object(
+                pipeline_json, "modified_population_schema_" ) ) );
 
     _pipeline->peripheral_schema() =
         get_peripheral_schema( "peripheral_schema_" );
 
-    _pipeline->population_schema() = std::make_shared<const helpers::Schema>(
-        *JSON::get_object( pipeline_json, "population_schema_" ) );
+    _pipeline->population_schema() =
+        std::make_shared<const helpers::Schema>( helpers::Schema::from_json(
+            *JSON::get_object( pipeline_json, "population_schema_" ) ) );
 
     _pipeline->targets() = JSON::array_to_vector<std::string>(
         JSON::get_array( pipeline_json, "targets_" ) );

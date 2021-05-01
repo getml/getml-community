@@ -9,9 +9,8 @@ namespace helpers
 
 struct Schema
 {
-    Schema( const Poco::JSON::Object& _json_obj );
-
-    ~Schema();
+    /// Constructs a new schema from a JSON object.
+    static Schema from_json( const Poco::JSON::Object& _json_obj );
 
     /// Expresses the Schema as a JSON object.
     Poco::JSON::Object::Ptr to_json_obj() const;

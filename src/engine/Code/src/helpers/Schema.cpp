@@ -4,34 +4,28 @@ namespace helpers
 {
 // ----------------------------------------------------------------------------
 
-Schema::Schema( const Poco::JSON::Object& _json_obj )
-    : categoricals_( jsonutils::JSON::array_to_vector<std::string>(
-          jsonutils::JSON::get_array( _json_obj, "categorical_" ) ) ),
-      discretes_(
-          _json_obj.has( "discrete_" )
-              ? jsonutils::JSON::array_to_vector<std::string>(
-                    jsonutils::JSON::get_array( _json_obj, "discrete_" ) )
-              : std::vector<std::string>() ),
-      join_keys_( jsonutils::JSON::array_to_vector<std::string>(
-          jsonutils::JSON::get_array( _json_obj, "join_keys_" ) ) ),
-      numericals_( jsonutils::JSON::array_to_vector<std::string>(
-          jsonutils::JSON::get_array( _json_obj, "numerical_" ) ) ),
-      targets_( jsonutils::JSON::array_to_vector<std::string>(
-          jsonutils::JSON::get_array( _json_obj, "targets_" ) ) ),
-      text_( jsonutils::JSON::array_to_vector<std::string>(
-          jsonutils::JSON::get_array( _json_obj, "text_" ) ) ),
-      time_stamps_( jsonutils::JSON::array_to_vector<std::string>(
-          jsonutils::JSON::get_array( _json_obj, "time_stamps_" ) ) ),
-      unused_floats_(
-          Schema::parse_columns<std::string>( _json_obj, "unused_floats_" ) ),
-      unused_strings_(
-          Schema::parse_columns<std::string>( _json_obj, "unused_strings_" ) )
+Schema Schema::from_json( const Poco::JSON::Object& _json_obj )
 {
+    return Schema{
+        .categoricals_ = jsonutils::JSON::array_to_vector<std::string>(
+            jsonutils::JSON::get_array( _json_obj, "categorical_" ) ),
+        .discretes_ =
+            Schema::parse_columns<std::string>( _json_obj, "discrete_" ),
+        .join_keys_ = jsonutils::JSON::array_to_vector<std::string>(
+            jsonutils::JSON::get_array( _json_obj, "join_keys_" ) ),
+        .numericals_ = jsonutils::JSON::array_to_vector<std::string>(
+            jsonutils::JSON::get_array( _json_obj, "numerical_" ) ),
+        .targets_ = jsonutils::JSON::array_to_vector<std::string>(
+            jsonutils::JSON::get_array( _json_obj, "targets_" ) ),
+        .text_ = jsonutils::JSON::array_to_vector<std::string>(
+            jsonutils::JSON::get_array( _json_obj, "text_" ) ),
+        .time_stamps_ = jsonutils::JSON::array_to_vector<std::string>(
+            jsonutils::JSON::get_array( _json_obj, "time_stamps_" ) ),
+        .unused_floats_ =
+            Schema::parse_columns<std::string>( _json_obj, "unused_floats_" ),
+        .unused_strings_ = Schema::parse_columns<std::string>(
+            _json_obj, "unused_strings_" ) };
 }
-
-// ----------------------------------------------------------------------------
-
-Schema::~Schema() = default;
 
 // ----------------------------------------------------------------------------
 

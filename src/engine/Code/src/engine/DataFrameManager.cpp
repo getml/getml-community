@@ -971,7 +971,7 @@ void DataFrameManager::from_csv(
     const auto time_formats = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "time_formats_" ) );
 
-    const auto schema = containers::Schema( _cmd );
+    const auto schema = containers::Schema::from_json( _cmd );
 
     // --------------------------------------------------------------------
     // We need the weak write lock for the categories and join keys encoding.
@@ -1052,7 +1052,7 @@ void DataFrameManager::from_db(
 
     const auto table_name = JSON::get_value<std::string>( _cmd, "table_name_" );
 
-    const auto schema = containers::Schema( _cmd );
+    const auto schema = containers::Schema::from_json( _cmd );
 
     // --------------------------------------------------------------------
     // We need the weak write lock for the categories and join keys encoding.
@@ -1136,7 +1136,7 @@ void DataFrameManager::from_json(
     const auto time_formats = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "time_formats_" ) );
 
-    const auto schema = containers::Schema( _cmd );
+    const auto schema = containers::Schema::from_json( _cmd );
 
     // --------------------------------------------------------------------
     // We need the weak write lock for the categories and join keys encoding.
@@ -1211,7 +1211,7 @@ void DataFrameManager::from_query(
 
     const auto query = JSON::get_value<std::string>( _cmd, "query_" );
 
-    const auto schema = containers::Schema( _cmd );
+    const auto schema = containers::Schema::from_json( _cmd );
 
     // --------------------------------------------------------------------
     // We need the weak write lock for the categories and join keys encoding.
@@ -1313,7 +1313,7 @@ void DataFrameManager::from_s3(
     const auto time_formats = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "time_formats_" ) );
 
-    const auto schema = containers::Schema( _cmd );
+    const auto schema = containers::Schema::from_json( _cmd );
 
     // --------------------------------------------------------------------
     // We need the weak write lock for the categories and join keys encoding.

@@ -163,12 +163,17 @@ class DataFrame
         const std::string &_path,
         const std::string &_name ) const;
 
+    /// Transforms an immutable data frame from this.
+    template <typename DataFrameType>
+    DataFrameType to_immutable(
+        const std::optional<Schema> &_schema = std::nullopt ) const;
+
     /// Extracts the data frame as a Poco::JSON::Object the monitor process can
     /// understand
     Poco::JSON::Object to_monitor() const;
 
     /// Expresses the schema of the DataFrame as a JSON object.
-    helpers::Schema to_schema( const bool _separate_discrete ) const;
+    Schema to_schema( const bool _separate_discrete ) const;
 
     /// Selects all rows for which the corresponding entry in _condition is
     /// true.
@@ -886,17 +891,7 @@ class DataFrame
 };
 
 // -------------------------------------------------------------------------
-}  // namespace containers
-}  // namespace engine
-
 // -------------------------------------------------------------------------
-// -------------------------------------------------------------------------
-
-namespace engine
-{
-namespace containers
-{
-// ----------------------------------------------------------------------------
 
 template <class ColType>
 void DataFrame::add_column(
@@ -1049,6 +1044,110 @@ void DataFrame::save_matrices(
         }
 }
 
+// ----------------------------------------------------------------------------
+
+template <typename DataFrameType>
+DataFrameType DataFrame::to_immutable(
+    const std::optional<Schema> &_schema ) const
+{
+    // ------------------------------------------------------------------------
+
+    using FloatColumnType = typename DataFrameType::FloatColumnType;
+    using IntColumnType = typename DataFrameType::IntColumnType;
+    using MapType = typename containers::DataFrameIndex::MapType;
+    using StringColumnType = typename DataFrameType::StringColumnType;
+
+    // ------------------------------------------------------------------------
+
+    const auto schema = _schema.value_or( to_schema( true ) );
+
+    // ------------------------------------------------------------------------
+
+    const auto get_categorical = [this]( const std::string &_name ) {
+        const auto &col = categorical( _name );
+        return IntColumnType( col.data_ptr(), _name, col.unit() );
+    };
+
+    const auto categoricals = stl::collect::vector<IntColumnType>(
+        schema.categoricals_ | std::views::transform( get_categorical ) );
+
+    // ------------------------------------------------------------------------
+
+    const auto get_join_key = [this]( const std::string &_name ) {
+        const auto &col = join_key( _name );
+        return IntColumnType( col.data_ptr(), _name, col.unit() );
+    };
+
+    const auto join_keys = stl::collect::vector<IntColumnType>(
+        schema.join_keys_ | std::views::transform( get_join_key ) );
+
+    // ------------------------------------------------------------------------
+
+    const auto get_index = [this]( const std::string &_name ) {
+        return index( _name ).map();
+    };
+
+    const auto indices = stl::collect::vector<std::shared_ptr<MapType>>(
+        schema.join_keys_ | std::views::transform( get_index ) );
+
+    // ------------------------------------------------------------------------
+
+    const auto get_numerical = [this]( const std::string &_name ) {
+        const auto &col = numerical( _name );
+        return FloatColumnType( col.data_ptr(), _name, col.unit() );
+    };
+
+    const auto discretes = stl::collect::vector<FloatColumnType>(
+        schema.discretes_ | std::views::transform( get_numerical ) );
+
+    const auto numericals = stl::collect::vector<FloatColumnType>(
+        schema.numericals_ | std::views::transform( get_numerical ) );
+
+    // ------------------------------------------------------------------------
+
+    const auto get_target = [this]( const std::string &_name ) {
+        const auto &col = target( _name );
+        return FloatColumnType( col.data_ptr(), _name, col.unit() );
+    };
+
+    const auto targets = stl::collect::vector<FloatColumnType>(
+        schema.targets_ | std::views::transform( get_target ) );
+
+    // ------------------------------------------------------------------------
+
+    const auto get_text = [this]( const std::string &_name ) {
+        const auto &col = text( _name );
+        return StringColumnType( col.data_ptr(), _name, col.unit() );
+    };
+
+    const auto text = stl::collect::vector<StringColumnType>(
+        schema.text_ | std::views::transform( get_text ) );
+
+    // ------------------------------------------------------------------------
+
+    const auto get_time_stamp = [this]( const std::string &_name ) {
+        const auto &col = time_stamp( _name );
+        return FloatColumnType( col.data_ptr(), _name, col.unit() );
+    };
+
+    const auto time_stamps = stl::collect::vector<FloatColumnType>(
+        schema.time_stamps_ | std::views::transform( get_time_stamp ) );
+
+    // ------------------------------------------------------------------------
+
+    return DataFrameType(
+        categoricals,
+        discretes,
+        indices,
+        join_keys,
+        name(),
+        numericals,
+        targets,
+        text,
+        time_stamps );
+
+    // ------------------------------------------------------------------------
+}
 // -------------------------------------------------------------------------
 }  // namespace containers
 }  // namespace engine
