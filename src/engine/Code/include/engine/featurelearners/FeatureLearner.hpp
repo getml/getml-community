@@ -762,19 +762,19 @@ void FeatureLearner<FeatureLearnerType>::fit(
 
     assert_true( new_feature_learner );
 
-    const auto [mappings, mapped] = handle_mappings(
+    /*const auto [mappings, mapped] = handle_mappings(
         population,
         peripheral,
         word_indices,
         _logger,
-        new_feature_learner.value() );
+        new_feature_learner.value() );*/
 
     const auto prop_pair = fit_propositionalization(
         population,
         peripheral,
         row_indices,
         word_indices,
-        mapped,
+        std::nullopt,  // TODO
         _logger,
         new_feature_learner.value() );
 
@@ -785,7 +785,7 @@ void FeatureLearner<FeatureLearnerType>::fit(
             prop_pair ? prop_pair->second
                       : std::optional<const helpers::FeatureContainer>(),
         .logger_ = _logger,
-        .mapped_ = mapped,
+        .mapped_ = std::nullopt,  // TODO
         .peripheral_ = peripheral,
         .population_ = population,
         .row_indices_ = row_indices,
@@ -802,7 +802,8 @@ void FeatureLearner<FeatureLearnerType>::fit(
             ? prop_pair->first
             : std::shared_ptr<const fastprop::subfeatures::FastPropContainer>();
 
-    mappings_ = mappings;
+    // TODO
+    // mappings_ = mappings;
 
     vocabulary_ = vocabulary;
 
@@ -1335,17 +1336,17 @@ containers::Features FeatureLearner<FeatureLearnerType>::transform(
     const auto word_indices =
         helpers::WordIndexContainer( population, peripheral, *vocabulary_ );
 
-    const auto mapped = helpers::MappingContainerMaker::transform(
+    /*const auto mapped = helpers::MappingContainerMaker::transform(
         mappings_,
         feature_learner().placeholder(),
         population,
         peripheral,
         feature_learner().peripheral(),
         word_indices,
-        _logger );
+        _logger );*/
 
     const auto feature_container = transform_propositionalization(
-        population, peripheral, word_indices, mapped, _logger );
+        population, peripheral, word_indices, std::nullopt, _logger );
 
     // -------------------------------------------------------
 
@@ -1355,7 +1356,7 @@ containers::Features FeatureLearner<FeatureLearnerType>::transform(
         .feature_container_ = feature_container,
         .index_ = _index,
         .logger_ = _logger,
-        .mapped_ = mapped,
+        .mapped_ = std::nullopt,  // TODO
         .peripheral_ = peripheral,
         .population_ = population,
         .word_indices_ = word_indices };

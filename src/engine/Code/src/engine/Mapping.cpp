@@ -149,6 +149,8 @@ std::vector<size_t> Mapping::find_output_ix(
 
 // ----------------------------------------------------
 
+// ----------------------------------------------------
+
 Poco::JSON::Object::Ptr Mapping::fingerprint() const
 {
     auto obj = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
@@ -285,12 +287,7 @@ Mapping Mapping::fit_on_table_holder(
 
     auto mapping = *this;
 
-    if ( mapping.prefix_ != "" )
-        {
-            mapping.prefix_ += "_";
-        }
-
-    mapping.prefix_ += std::to_string( _ix + 1 );
+    mapping.prefix_ += std::to_string( _ix + 1 ) + "_";
 
     mapping.table_name_ = _table_holder.peripheral_tables().at( _ix ).name();
 
@@ -542,7 +539,7 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_int(
             stl::collect::vector<Float>( range ) );
 
         const auto name = helpers::MappingContainerMaker::make_colname(
-            col.name(), "", aggregation_, _weight_num );
+            col.name(), prefix_, aggregation_, _weight_num );
 
         return containers::Column<Float>( ptr, name );
     };
@@ -862,31 +859,52 @@ Mapping::transform(
     const containers::DataFrame& _population_df,
     const std::vector<containers::DataFrame>& _peripheral_dfs ) const
 {
-    const auto add_columns =
-        []( const std::vector<containers::Column<Float>>& _cols,
-            containers::DataFrame* _df ) {
-            for ( const auto& col : _cols )
-                {
-                    _df->add_float_column(
-                        col, containers::DataFrame::ROLE_NUMERICAL );
-                }
-        };
-
-    const auto categorical_mappings = transform_categorical( _population_df );
-
-    const auto discrete_mappings = transform_discrete( _population_df );
-
-    const auto text_mappings = transform_text( _population_df );
-
     auto population_df = _population_df;
 
-    add_columns( categorical_mappings, &population_df );
+    auto peripheral_dfs = _peripheral_dfs;
 
-    add_columns( discrete_mappings, &population_df );
+    transform_peripherals( &peripheral_dfs );
 
-    add_columns( text_mappings, &population_df );
+    transform_data_frame( &population_df );
 
-    return std::make_pair( population_df, _peripheral_dfs );
+    return std::make_pair( population_df, peripheral_dfs );
+}
+
+// ----------------------------------------------------
+
+void Mapping::transform_peripherals(
+    std::vector<containers::DataFrame>* _peripheral_dfs ) const
+{
+    // ----------------------------------------------------
+
+    const auto find_peripheral =
+        [_peripheral_dfs]( const Mapping& _mapping ) -> containers::DataFrame* {
+        for ( auto& df : *_peripheral_dfs )
+            {
+                if ( df.name() == _mapping.table_name_ )
+                    {
+                        return &df;
+                    }
+            }
+
+        throw std::runtime_error(
+            "Mapping: Data frame '" + _mapping.table_name_ + "' not found!" );
+
+        return nullptr;
+    };
+
+    // ----------------------------------------------------
+
+    for ( const auto& mapping : submappings_ )
+        {
+            mapping.transform_peripherals( _peripheral_dfs );
+
+            const auto df = find_peripheral( mapping );
+
+            mapping.transform_data_frame( df );
+        }
+
+    // ----------------------------------------------------
 }
 
 // ----------------------------------------------------
@@ -934,6 +952,33 @@ std::vector<containers::Column<Float>> Mapping::transform_categorical(
 
     return stl::collect::vector<containers::Column<Float>>(
         all | std::ranges::views::join );
+}
+
+// ----------------------------------------------------
+
+void Mapping::transform_data_frame( containers::DataFrame* _data_frame ) const
+{
+    const auto add_columns =
+        []( const std::vector<containers::Column<Float>>& _cols,
+            containers::DataFrame* _df ) {
+            for ( const auto& col : _cols )
+                {
+                    _df->add_float_column(
+                        col, containers::DataFrame::ROLE_NUMERICAL );
+                }
+        };
+
+    const auto categorical_mappings = transform_categorical( *_data_frame );
+
+    const auto discrete_mappings = transform_discrete( *_data_frame );
+
+    const auto text_mappings = transform_text( *_data_frame );
+
+    add_columns( categorical_mappings, _data_frame );
+
+    add_columns( discrete_mappings, _data_frame );
+
+    add_columns( text_mappings, _data_frame );
 }
 
 // ----------------------------------------------------

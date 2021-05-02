@@ -162,9 +162,16 @@ class Mapping : public Preprocessor
     std::vector<containers::Column<Float>> transform_categorical(
         const containers::DataFrame& _df ) const;
 
+    /// Adds the columns produced by this mapping to the data frame.
+    void transform_data_frame( containers::DataFrame* _data_frame ) const;
+
     /// Transforms the discrete columns in the DataFrame.
     std::vector<containers::Column<Float>> transform_discrete(
         const containers::DataFrame& _df ) const;
+
+    /// Transforms the peripheral data frames.
+    void transform_peripherals(
+        std::vector<containers::DataFrame>* _peripheral_dfs ) const;
 
     /// Transforms the text columns in the DataFrame.
     std::vector<containers::Column<Float>> transform_text(
