@@ -81,6 +81,10 @@ class MappingContainerMaker
     /// Returns the correct enum for the string.
     static MappingAggregation parse_aggregation( const std::string& _str );
 
+    /// Returns a map of all the rownums associated with a word.
+    static std::map<Int, std::vector<size_t>> make_rownum_map_text(
+        const textmining::WordIndex& _word_index );
+
     /// Transform categorical columns by mapping them onto
     /// the corresponding weights.
     static std::optional<const MappedContainer> transform(
@@ -155,10 +159,6 @@ class MappingContainerMaker
     static std::function<RownumPair( const RownumPair& )> make_match_rownums(
         const std::vector<DataFrame>& _main_tables,
         const std::vector<DataFrame>& _peripheral_tables );
-
-    /// Returns a map of all the rownums associated with a word.
-    static std::map<Int, std::vector<size_t>> make_rownum_map_text(
-        const textmining::WordIndex& _word_index );
 
     /// Maps the categories on their corresponding weights.
     static MappedColumns transform_categorical(

@@ -46,7 +46,9 @@ class Preprocessor
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const containers::Encoding> _categories,
         const containers::DataFrame& _population_df,
-        const std::vector<containers::DataFrame>& _peripheral_dfs ) const = 0;
+        const std::vector<containers::DataFrame>& _peripheral_dfs,
+        const helpers::Placeholder& _placeholder,
+        const std::vector<std::string>& _peripheral_names ) const = 0;
 
     /// Expresses the preprocessor as a JSON object.
     virtual Poco::JSON::Object::Ptr to_json_obj() const = 0;

@@ -55,7 +55,9 @@ class Mapping : public Preprocessor
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const containers::Encoding> _categories,
         const containers::DataFrame& _population_df,
-        const std::vector<containers::DataFrame>& _peripheral_dfs ) const final;
+        const std::vector<containers::DataFrame>& _peripheral_dfs,
+        const helpers::Placeholder& _placeholder,
+        const std::vector<std::string>& _peripheral_names ) const final;
 
     /// Generates the mapping tables.
     std::vector<std::string> to_sql(
@@ -85,6 +87,18 @@ class Mapping : public Preprocessor
     size_t min_freq() const { return min_freq_; }
 
    private:
+    /// Builds some of the objects required for fitting or transforming the
+    /// mapping.
+    std::tuple<
+        helpers::DataFrame,
+        helpers::TableHolder,
+        std::shared_ptr<const helpers::VocabularyContainer>>
+    build_prerequisites(
+        const containers::DataFrame& _population_df,
+        const std::vector<containers::DataFrame>& _peripheral_dfs,
+        const helpers::Placeholder& _placeholder,
+        const std::vector<std::string>& _peripheral_names ) const;
+
     /// Transforms the mappings for the categorical columns to SQL.
     std::vector<std::string> categorical_columns_to_sql(
         const std::shared_ptr<const std::vector<strings::String>>& _categories )
@@ -127,8 +141,7 @@ class Mapping : public Preprocessor
         const size_t _ix ) const;
 
     /// Calculates the mappings for text columns.
-    std::pair<typename Mapping::TextMapping, typename Mapping::Colnames>
-    fit_on_text(
+    std::pair<MappingForDf, Colnames> fit_on_text(
         const helpers::DataFrame& _population,
         const std::vector<helpers::DataFrame>& _main_tables,
         const std::vector<helpers::DataFrame>& _peripheral_tables ) const;
@@ -143,6 +156,14 @@ class Mapping : public Preprocessor
     /// Parses a JSON object.
     Mapping from_json_obj( const Poco::JSON::Object& _obj ) const;
 
+    /// Creates indices on the text fields.
+    std::pair<
+        std::shared_ptr<const helpers::VocabularyContainer>,
+        helpers::WordIndexContainer>
+    handle_text_fields(
+        const helpers::DataFrame& _population,
+        const std::vector<helpers::DataFrame>& _peripheral ) const;
+
     /// Generates the mapping columns.
     std::vector<containers::Column<Float>> make_mapping_columns_int(
         const std::pair<containers::Column<Int>, MappingForDf::value_type>& _p )
@@ -150,9 +171,10 @@ class Mapping : public Preprocessor
 
     /// Generates the mapping columns for text fields.
     std::vector<containers::Column<Float>> make_mapping_columns_text(
-        const std::pair<
-            containers::Column<strings::String>,
-            TextMapping::value_type>& _p ) const;
+        const std::tuple<
+            std::string,
+            std::shared_ptr<const textmining::WordIndex>,
+            MappingForDf::value_type>& _t ) const;
 
     /// Generates the rownum map for the text columns.
     std::map<strings::String, std::vector<size_t>> make_rownum_map_text(
@@ -163,7 +185,9 @@ class Mapping : public Preprocessor
         const containers::DataFrame& _df ) const;
 
     /// Adds the columns produced by this mapping to the data frame.
-    void transform_data_frame( containers::DataFrame* _data_frame ) const;
+    void transform_data_frame(
+        const helpers::DataFrame& _immutable,
+        containers::DataFrame* _data_frame ) const;
 
     /// Transforms the discrete columns in the DataFrame.
     std::vector<containers::Column<Float>> transform_discrete(
@@ -171,10 +195,12 @@ class Mapping : public Preprocessor
 
     /// Transforms the peripheral data frames.
     void transform_peripherals(
+        const helpers::TableHolder& _table_holder,
         std::vector<containers::DataFrame>* _peripheral_dfs ) const;
 
     /// Transforms the text columns in the DataFrame.
     std::vector<containers::Column<Float>> transform_text(
+        const helpers::DataFrame& _immutable,
         const containers::DataFrame& _df ) const;
 
     /// Transforms the text mapping into a JSON Array.
@@ -425,10 +451,13 @@ class Mapping : public Preprocessor
     std::string table_name_;
 
     /// The vocabulary for the text columns.
-    TextMapping text_;
+    MappingForDf text_;
 
     /// The names of the text columns.
     Colnames text_names_;
+
+    /// The vocabulary used for the text fields.
+    std::shared_ptr<const helpers::VocabularyContainer> vocabulary_;
 };
 
 // ----------------------------------------------------

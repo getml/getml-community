@@ -96,12 +96,23 @@ Pipeline::apply_preprocessors(
 
     auto peripheral_dfs = _peripheral_dfs;
 
+    const auto [placeholder, peripheral_names] = make_placeholder();
+
+    assert_true( placeholder );
+
+    assert_true( peripheral_names );
+
     for ( const auto& p : preprocessors_ )
         {
             assert_true( p );
 
             std::tie( population_df, peripheral_dfs ) = p->transform(
-                _cmd, _categories, population_df, peripheral_dfs );
+                _cmd,
+                _categories,
+                population_df,
+                peripheral_dfs,
+                *placeholder,
+                *peripheral_names );
         }
 
     return std::make_pair( population_df, peripheral_dfs );

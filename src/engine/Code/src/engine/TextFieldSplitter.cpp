@@ -84,7 +84,13 @@ TextFieldSplitter::fit_transform(
             cols_.insert( cols_.end(), new_cols.begin(), new_cols.end() );
         }
 
-    return transform( _cmd, _categories, _population_df, _peripheral_dfs );
+    return transform(
+        _cmd,
+        _categories,
+        _population_df,
+        _peripheral_dfs,
+        _placeholder,
+        _peripheral_names );
 }
 
 // ----------------------------------------------------
@@ -194,7 +200,9 @@ TextFieldSplitter::transform(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const containers::Encoding> _categories,
     const containers::DataFrame& _population_df,
-    const std::vector<containers::DataFrame>& _peripheral_dfs ) const
+    const std::vector<containers::DataFrame>& _peripheral_dfs,
+    const helpers::Placeholder& _placeholder,
+    const std::vector<std::string>& _peripheral_names ) const
 {
     const auto modify_if_applicable =
         [this]( const containers::DataFrame& _df ) -> containers::DataFrame {

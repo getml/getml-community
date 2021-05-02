@@ -48,12 +48,18 @@ std::shared_ptr<const std::vector<strings::String>> Vocabulary::generate(
         return p.first;
     };
 
-    const auto range =
+    const auto range_with_max_size =
         df_count | std::views::filter( count_greater_than_min_df ) |
         std::views::transform( get_first ) | std::views::take( _max_size );
 
+    const auto range_without_max_size =
+        df_count | std::views::filter( count_greater_than_min_df ) |
+        std::views::transform( get_first );
+
     auto vocab = std::make_shared<std::vector<strings::String>>(
-        stl::collect::vector<strings::String>( range ) );
+        _max_size > 0
+            ? stl::collect::vector<strings::String>( range_with_max_size )
+            : stl::collect::vector<strings::String>( range_without_max_size ) );
 
     std::sort( vocab->begin(), vocab->end() );
 

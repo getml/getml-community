@@ -6,6 +6,48 @@ namespace preprocessors
 {
 // ----------------------------------------------------
 
+std::tuple<
+    helpers::DataFrame,
+    helpers::TableHolder,
+    std::shared_ptr<const helpers::VocabularyContainer>>
+Mapping::build_prerequisites(
+    const containers::DataFrame& _population_df,
+    const std::vector<containers::DataFrame>& _peripheral_dfs,
+    const helpers::Placeholder& _placeholder,
+    const std::vector<std::string>& _peripheral_names ) const
+{
+    const auto to_immutable =
+        []( const containers::DataFrame& _df ) -> helpers::DataFrame {
+        return _df.to_immutable<helpers::DataFrame>();
+    };
+
+    const auto population = to_immutable( _population_df );
+
+    const auto peripheral = stl::collect::vector<helpers::DataFrame>(
+        _peripheral_dfs | std::views::transform( to_immutable ) );
+
+    const auto [vocabulary, word_index_container] =
+        handle_text_fields( population, peripheral );
+
+    const auto rownums = std::make_shared<std::vector<size_t>>(
+        stl::collect::vector<size_t>( std::views::iota(
+            static_cast<size_t>( 0 ), population.nrows() ) ) );
+
+    const auto population_view = helpers::DataFrameView( population, rownums );
+
+    const auto table_holder = helpers::TableHolder(
+        _placeholder,
+        population_view,
+        peripheral,
+        _peripheral_names,
+        std::nullopt,
+        word_index_container );
+
+    return std::make_tuple( population, table_holder, vocabulary );
+}
+
+// ----------------------------------------------------
+
 std::vector<std::string> Mapping::categorical_columns_to_sql(
     const std::shared_ptr<const std::vector<strings::String>>& _categories )
     const
@@ -313,7 +355,7 @@ Mapping Mapping::fit_on_table_holder(
 
 // ----------------------------------------------------------------------------
 
-std::pair<typename Mapping::TextMapping, typename Mapping::Colnames>
+std::pair<typename Mapping::MappingForDf, typename Mapping::Colnames>
 Mapping::fit_on_text(
     const helpers::DataFrame& _population,
     const std::vector<helpers::DataFrame>& _main_tables,
@@ -321,8 +363,11 @@ Mapping::fit_on_text(
 {
     const auto col_to_mapping =
         [this, &_population, &_main_tables, &_peripheral_tables](
-            const helpers::Column<strings::String>& _col ) {
-            const auto rownum_map = make_rownum_map( _col );
+            const std::shared_ptr<const textmining::WordIndex>& _word_index ) {
+            assert_true( _word_index );
+            const auto rownum_map =
+                helpers::MappingContainerMaker::make_rownum_map_text(
+                    *_word_index );
             return make_mapping(
                 rownum_map, _population, _main_tables, _peripheral_tables );
         };
@@ -335,13 +380,15 @@ Mapping::fit_on_text(
     const auto& data_frame =
         _peripheral_tables.size() > 0 ? _peripheral_tables.back() : _population;
 
+    assert_true( data_frame.word_indices_.size() == data_frame.text_.size() );
+
     const auto range1 =
-        data_frame.text_ | std::views::transform( col_to_mapping );
+        data_frame.word_indices_ | std::views::transform( col_to_mapping );
 
     const auto range2 = data_frame.text_ | std::views::transform( get_colname );
 
     const auto mappings =
-        stl::collect::vector<TextMapping::value_type>( range1 );
+        stl::collect::vector<MappingForDf::value_type>( range1 );
 
     const auto colnames = std::make_shared<const std::vector<std::string>>(
         stl::collect::vector<std::string>( range2 ) );
@@ -402,24 +449,10 @@ Mapping::fit_transform(
 {
     assert_true( _categories );
 
-    const auto to_immutable =
-        []( const containers::DataFrame& _df ) -> helpers::DataFrame {
-        return _df.to_immutable<helpers::DataFrame>();
-    };
+    const auto [population, table_holder, vocabulary] = build_prerequisites(
+        _population_df, _peripheral_dfs, _placeholder, _peripheral_names );
 
-    const auto population = to_immutable( _population_df );
-
-    const auto rownums = std::make_shared<std::vector<size_t>>(
-        stl::collect::vector<size_t>( std::views::iota(
-            static_cast<size_t>( 0 ), population.nrows() ) ) );
-
-    const auto population_view = helpers::DataFrameView( population, rownums );
-
-    const auto peripheral = stl::collect::vector<helpers::DataFrame>(
-        _peripheral_dfs | std::views::transform( to_immutable ) );
-
-    const auto table_holder = helpers::TableHolder(
-        _placeholder, population_view, peripheral, _peripheral_names );
+    vocabulary_ = vocabulary;
 
     prefix_ = "_";
 
@@ -433,7 +466,13 @@ Mapping::fit_transform(
 
     std::tie( text_, text_names_ ) = fit_on_text( population, {}, {} );
 
-    return transform( _cmd, _categories, _population_df, _peripheral_dfs );
+    return transform(
+        _cmd,
+        _categories,
+        _population_df,
+        _peripheral_dfs,
+        _placeholder,
+        _peripheral_names );
 }
 
 // ----------------------------------------------------
@@ -490,12 +529,32 @@ Mapping Mapping::from_json_obj( const Poco::JSON::Object& _obj ) const
 
     if ( _obj.has( "text_" ) )
         {
-            that.text_ = extract_text_mapping( _obj, "text_" );
+            that.text_ = extract_mapping_vector( _obj, "text_" );
 
             that.text_names_ = extract_colnames( _obj, "text_names_" );
         }
 
     return that;
+}
+
+// ----------------------------------------------------
+
+std::pair<
+    std::shared_ptr<const helpers::VocabularyContainer>,
+    helpers::WordIndexContainer>
+Mapping::handle_text_fields(
+    const helpers::DataFrame& _population,
+    const std::vector<helpers::DataFrame>& _peripheral ) const
+{
+    const auto vocabulary =
+        vocabulary_ ? vocabulary_
+                    : std::make_shared<const helpers::VocabularyContainer>(
+                          1, 0, _population, _peripheral );
+
+    const auto word_indices =
+        helpers::WordIndexContainer( _population, _peripheral, *vocabulary );
+
+    return std::make_pair( vocabulary, word_indices );
 }
 
 // ----------------------------------------------------
@@ -506,13 +565,18 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_int(
 {
     // ----------------------------------------------------
 
-    const auto map_value =
-        []( const std::map<Int, std::vector<Float>>& _mapping,
-            const size_t _weight_num,
-            const Int& _val ) -> Float {
-        const auto it = _mapping.find( _val );
+    const auto& col = _p.first;
+    const auto& mapping = _p.second;
 
-        if ( it == _mapping.end() )
+    assert_true( mapping );
+
+    // ----------------------------------------------------
+
+    const auto map_value =
+        [&mapping]( const size_t _weight_num, const Int& _val ) -> Float {
+        const auto it = mapping->find( _val );
+
+        if ( it == mapping->end() )
             {
                 return 0.0;
             }
@@ -525,13 +589,10 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_int(
     // ----------------------------------------------------
 
     const auto make_mapping_column =
-        [this, map_value, &_p](
+        [this, map_value, &col](
             const size_t _weight_num ) -> containers::Column<Float> {
-        const auto& col = _p.first;
-        const auto& mapping = *_p.second;
-
         const auto get_val =
-            std::bind( map_value, mapping, _weight_num, std::placeholders::_1 );
+            std::bind( map_value, _weight_num, std::placeholders::_1 );
 
         const auto range = col | std::views::transform( get_val );
 
@@ -546,14 +607,12 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_int(
 
     // ----------------------------------------------------
 
-    assert_true( _p.second );
-
-    if ( _p.second->size() <= 1 )
+    if ( mapping->size() <= 1 )
         {
             return std::vector<containers::Column<Float>>();
         }
 
-    const auto num_weights = _p.second->begin()->second.size();
+    const auto num_weights = mapping->begin()->second.size();
 
     const auto iota = std::views::iota( static_cast<size_t>( 0 ), num_weights );
 
@@ -566,19 +625,30 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_int(
 // ----------------------------------------------------
 
 std::vector<containers::Column<Float>> Mapping::make_mapping_columns_text(
-    const std::pair<
-        containers::Column<strings::String>,
-        TextMapping::value_type>& _p ) const
+    const std::tuple<
+        std::string,
+        std::shared_ptr<const textmining::WordIndex>,
+        MappingForDf::value_type>& _t ) const
 {
     // ----------------------------------------------------
 
-    const auto map_word =
-        []( const std::map<std::string, std::vector<Float>>& _mapping,
-            const size_t _weight_num,
-            const std::string& _word ) -> Float {
-        const auto it = _mapping.find( _word );
+    const auto& colname = std::get<0>( _t );
 
-        if ( it == _mapping.end() )
+    const auto& word_index = std::get<1>( _t );
+
+    const auto& mapping = std::get<2>( _t );
+
+    assert_true( word_index );
+
+    assert_true( mapping );
+
+    // ----------------------------------------------------
+
+    const auto map_word =
+        [&mapping]( const size_t _weight_num, const Int _word ) -> Float {
+        const auto it = mapping->find( _word );
+
+        if ( it == mapping->end() )
             {
                 return NAN;
             }
@@ -590,16 +660,13 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_text(
 
     // ----------------------------------------------------
 
-    const auto map_text_field =
-        [map_word](
-            const std::map<std::string, std::vector<Float>>& _mapping,
-            const size_t _weight_num,
-            const strings::String& _text_field ) -> Float {
-        const auto words =
-            textmining::Vocabulary::process_text_field( _text_field );
-
+    const auto map_text_field = [map_word, &word_index](
+                                    const size_t _weight_num,
+                                    const size_t _i ) -> Float {
         const auto map =
-            std::bind( map_word, _mapping, _weight_num, std::placeholders::_1 );
+            std::bind( map_word, _weight_num, std::placeholders::_1 );
+
+        const auto words = word_index->range( _i );
 
         auto range = words | std::views::transform( map );
 
@@ -617,45 +684,40 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_text(
     // ----------------------------------------------------
 
     const auto make_mapping_column =
-        [this, map_text_field, &_p](
+        [this, map_text_field, &colname, &word_index](
             const size_t _weight_num ) -> containers::Column<Float> {
-        const auto& col = _p.first;
-        const auto& mapping = *_p.second;
+        const auto get_val =
+            std::bind( map_text_field, _weight_num, std::placeholders::_1 );
 
-        const auto get_val = std::bind(
-            map_text_field, mapping, _weight_num, std::placeholders::_1 );
+        const auto iota =
+            std::views::iota( static_cast<size_t>( 0 ), word_index->nrows() );
 
-        const auto range = col | std::views::transform( get_val );
+        const auto range = iota | std::views::transform( get_val );
 
         const auto ptr = std::make_shared<std::vector<Float>>(
             stl::collect::vector<Float>( range ) );
 
-        assert_msg(
-            ptr->size() == col.nrows(),
-            "ptr->size(): " + std::to_string( ptr->size() ) +
-                ", col.nrows(): " + std::to_string( col.nrows() ) );
-
         const auto name = helpers::MappingContainerMaker::make_colname(
-            col.name(), "", aggregation_, _weight_num );
+            colname, "", aggregation_, _weight_num );
 
         return containers::Column<Float>( ptr, name );
     };
 
     // ----------------------------------------------------
 
-    assert_true( _p.second );
-
-    if ( _p.second->size() <= 1 )
+    if ( mapping->size() <= 1 )
         {
             return std::vector<containers::Column<Float>>();
         }
 
-    const auto num_weights = _p.second->begin()->second.size();
+    const auto num_weights = mapping->begin()->second.size();
 
     const auto iota = std::views::iota( static_cast<size_t>( 0 ), num_weights );
 
-    return stl::collect::vector<containers::Column<Float>>(
+    const auto vec = stl::collect::vector<containers::Column<Float>>(
         iota | std::views::transform( make_mapping_column ) );
+
+    return vec;
 
     // ----------------------------------------------------
 }
@@ -776,6 +838,8 @@ std::vector<std::string> Mapping::text_columns_to_sql() const
 
     // ----------------------------------------------------
 
+    // TODO
+    /*
     const auto mapping_to_sql = [this, text_column_to_sql](
                                     const size_t _i,
                                     const size_t _weight_num ) -> std::string {
@@ -787,11 +851,12 @@ std::vector<std::string> Mapping::text_columns_to_sql() const
             helpers::SQLGenerator::to_upper( name ),
             text_.at( _i ),
             _weight_num );
-    };
+    };*/
 
     // ----------------------------------------------------
 
-    return columns_to_sql( mapping_to_sql, text_, text_names_ );
+    // TODO
+    return {};  // columns_to_sql( mapping_to_sql, text_, text_names_ );
 }
 
 // ----------------------------------------------------
@@ -823,7 +888,9 @@ Poco::JSON::Object::Ptr Mapping::to_json_obj() const
         "discrete_names_",
         helpers::MappingContainer::transform_colnames( { discrete_names_ } ) );
 
-    obj->set( "text_", transform_text_mapping( text_ ) );
+    obj->set(
+        "text_",
+        helpers::MappingContainer::transform_mapping_vec( { text_ } ) );
 
     obj->set(
         "text_names_",
@@ -857,15 +924,20 @@ Mapping::transform(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const containers::Encoding> _categories,
     const containers::DataFrame& _population_df,
-    const std::vector<containers::DataFrame>& _peripheral_dfs ) const
+    const std::vector<containers::DataFrame>& _peripheral_dfs,
+    const helpers::Placeholder& _placeholder,
+    const std::vector<std::string>& _peripheral_names ) const
 {
+    const auto [population, table_holder, _] = build_prerequisites(
+        _population_df, _peripheral_dfs, _placeholder, _peripheral_names );
+
     auto population_df = _population_df;
 
     auto peripheral_dfs = _peripheral_dfs;
 
-    transform_peripherals( &peripheral_dfs );
+    transform_peripherals( table_holder, &peripheral_dfs );
 
-    transform_data_frame( &population_df );
+    transform_data_frame( population, &population_df );
 
     return std::make_pair( population_df, peripheral_dfs );
 }
@@ -873,6 +945,7 @@ Mapping::transform(
 // ----------------------------------------------------
 
 void Mapping::transform_peripherals(
+    const helpers::TableHolder& _table_holder,
     std::vector<containers::DataFrame>* _peripheral_dfs ) const
 {
     // ----------------------------------------------------
@@ -895,13 +968,29 @@ void Mapping::transform_peripherals(
 
     // ----------------------------------------------------
 
-    for ( const auto& mapping : submappings_ )
+    assert_true(
+        submappings_.size() == _table_holder.peripheral_tables().size() );
+
+    assert_true( submappings_.size() == _table_holder.subtables().size() );
+
+    for ( size_t i = 0; i < submappings_.size(); ++i )
         {
-            mapping.transform_peripherals( _peripheral_dfs );
+            const auto& mapping = submappings_.at( i );
+
+            const auto subtable = _table_holder.subtables().at( i );
+
+            if ( mapping.submappings_.size() > 0 )
+                {
+                    assert_true( subtable );
+                    mapping.transform_peripherals(
+                        subtable.value(), _peripheral_dfs );
+                }
+
+            const auto& immutable = _table_holder.peripheral_tables().at( i );
 
             const auto df = find_peripheral( mapping );
 
-            mapping.transform_data_frame( df );
+            mapping.transform_data_frame( immutable, df );
         }
 
     // ----------------------------------------------------
@@ -956,7 +1045,9 @@ std::vector<containers::Column<Float>> Mapping::transform_categorical(
 
 // ----------------------------------------------------
 
-void Mapping::transform_data_frame( containers::DataFrame* _data_frame ) const
+void Mapping::transform_data_frame(
+    const helpers::DataFrame& _immutable,
+    containers::DataFrame* _data_frame ) const
 {
     const auto add_columns =
         []( const std::vector<containers::Column<Float>>& _cols,
@@ -972,7 +1063,7 @@ void Mapping::transform_data_frame( containers::DataFrame* _data_frame ) const
 
     const auto discrete_mappings = transform_discrete( *_data_frame );
 
-    const auto text_mappings = transform_text( *_data_frame );
+    const auto text_mappings = transform_text( _immutable, *_data_frame );
 
     add_columns( categorical_mappings, _data_frame );
 
@@ -1044,42 +1135,81 @@ std::vector<containers::Column<Float>> Mapping::transform_discrete(
 // ----------------------------------------------------
 
 std::vector<containers::Column<Float>> Mapping::transform_text(
+    const helpers::DataFrame& _immutable,
     const containers::DataFrame& _df ) const
 {
+    // --------------------------------------------------------------
+
     using Pair =
-        std::pair<containers::Column<strings::String>, TextMapping::value_type>;
+        std::pair<std::string, std::shared_ptr<const textmining::WordIndex>>;
 
-    const auto get_column =
-        [&_df, this]( const size_t _i ) -> containers::Column<strings::String> {
-        assert_true( text_names_ );
-        assert_true( _i < text_names_->size() );
-        const auto& name = text_names_->at( _i );
-        return _df.text( name );
-    };
+    using Tuple = std::tuple<
+        std::string,
+        std::shared_ptr<const textmining::WordIndex>,
+        MappingForDf::value_type>;
 
-    const auto get_mapping =
-        [this]( const size_t _i ) -> TextMapping::value_type {
-        assert_true( _i < text_.size() );
-        return text_.at( _i );
-    };
-
-    const auto make_pair = [get_column,
-                            get_mapping]( const size_t _i ) -> Pair {
-        return std::make_pair( get_column( _i ), get_mapping( _i ) );
-    };
+    assert_true( _immutable.word_indices_.size() == _immutable.text_.size() );
 
     assert_true( text_names_ );
 
     assert_true( text_.size() == text_names_->size() );
 
-    const auto make_cols = [this]( const Pair& _p ) {
-        return make_mapping_columns_text( _p );
+    // --------------------------------------------------------------
+
+    const auto find_word_index = [&_immutable]( const std::string& _name )
+        -> std::shared_ptr<const textmining::WordIndex> {
+        for ( size_t i = 0; i < _immutable.text_.size(); ++i )
+            {
+                if ( _immutable.text_.at( i ).name_ == _name )
+                    {
+                        return _immutable.word_indices_.at( i );
+                    }
+            }
+
+        throw std::invalid_argument(
+            "Mapping: Column '" + _name + "' not found!" );
+
+        return _immutable.word_indices_.at( 0 );
     };
+
+    // --------------------------------------------------------------
+
+    const auto get_word_index = [this,
+                                 find_word_index]( const size_t _i ) -> Pair {
+        assert_true( text_names_ );
+        assert_true( _i < text_names_->size() );
+        const auto& colname = text_names_->at( _i );
+        return std::make_pair( colname, find_word_index( colname ) );
+    };
+
+    // --------------------------------------------------------------
+
+    const auto get_mapping =
+        [this]( const size_t _i ) -> MappingForDf::value_type {
+        assert_true( _i < text_.size() );
+        return text_.at( _i );
+    };
+
+    // --------------------------------------------------------------
+
+    const auto make_tuple = [get_word_index,
+                             get_mapping]( const size_t _i ) -> Tuple {
+        const auto [colname, word_index] = get_word_index( _i );
+        return std::make_tuple( colname, word_index, get_mapping( _i ) );
+    };
+
+    // --------------------------------------------------------------
+
+    const auto make_cols = [this]( const Tuple& _t ) {
+        return make_mapping_columns_text( _t );
+    };
+
+    // --------------------------------------------------------------
 
     const auto iota =
         std::views::iota( static_cast<size_t>( 0 ), text_.size() );
 
-    const auto range = iota | std::views::transform( make_pair ) |
+    const auto range = iota | std::views::transform( make_tuple ) |
                        std::views::transform( make_cols );
 
     const auto all =

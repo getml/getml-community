@@ -51,7 +51,9 @@ class Seasonal : public Preprocessor
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const containers::Encoding> _categories,
         const containers::DataFrame& _population_df,
-        const std::vector<containers::DataFrame>& _peripheral_dfs ) const final;
+        const std::vector<containers::DataFrame>& _peripheral_dfs,
+        const helpers::Placeholder& _placeholder,
+        const std::vector<std::string>& _peripheral_names ) const final;
 
    public:
     /// Creates a deep copy.
