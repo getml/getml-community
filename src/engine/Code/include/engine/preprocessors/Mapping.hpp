@@ -371,6 +371,14 @@ class Mapping : public Preprocessor
     std::vector<std::pair<Int, Float>> make_pairs(
         const Map& _m, const size_t _weight_num ) const;
 
+    /// Generates the rownum map for the categorical columns.
+    std::map<Int, std::vector<size_t>> make_rownum_map_categorical(
+        const helpers::Column<Int>& _col ) const;
+
+    /// Generates the rownum map for the discrete columns.
+    std::map<Int, std::vector<size_t>> make_rownum_map_discrete(
+        const helpers::Column<Float>& _col ) const;
+
     /// Generates the rownum map for the text columns.
     std::map<Int, std::vector<size_t>> make_rownum_map_text(
         const textmining::WordIndex& _word_index ) const;
@@ -469,28 +477,6 @@ class Mapping : public Preprocessor
             iota | std::views::transform( all_weights_to_sql ) );
 
         return stl::collect::vector<std::string>( all | std::views::join );
-    }
-
-    /// Generates a rownum map for discrete columns.
-    template <class T>
-    auto make_rownum_map( const helpers::Column<T>& _col ) const
-    {
-        if constexpr ( std::is_same<T, Int>() )
-            {
-                return helpers::MappingContainerMaker::
-                    make_rownum_map_categorical( _col );
-            }
-
-        if constexpr ( std::is_same<T, Float>() )
-            {
-                return helpers::MappingContainerMaker::make_rownum_map_discrete(
-                    _col );
-            }
-
-        if constexpr ( std::is_same<T, strings::String>() )
-            {
-                return make_rownum_map_text( _col );
-            }
     }
 
    private:

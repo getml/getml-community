@@ -266,7 +266,6 @@ void DecisionTreeEnsemble::fit( const FitParams &_params )
         _params.peripheral_,
         _params.row_indices_,
         _params.word_indices_,
-        _params.mapped_,
         _params.feature_container_,
         _params.logger_ );
 }
@@ -555,7 +554,6 @@ void DecisionTreeEnsemble::fit_spawn_threads(
     const std::vector<containers::DataFrame> &_peripheral,
     const helpers::RowIndexContainer &_row_indices,
     const helpers::WordIndexContainer &_word_indices,
-    const std::optional<const helpers::MappedContainer> &_mapped,
     const std::optional<const helpers::FeatureContainer> &_feature_container,
     const std::shared_ptr<const logging::AbstractLogger> _logger )
 {
@@ -588,7 +586,6 @@ void DecisionTreeEnsemble::fit_spawn_threads(
                     .comm_ = comm,
                     .ensemble_ = ensembles.at( i ),
                     .feature_container_ = _feature_container,
-                    .mapped_ = _mapped,
                     .peripheral_ = _peripheral,
                     .population_ = _population,
                     .row_indices_ = _row_indices,
@@ -606,7 +603,6 @@ void DecisionTreeEnsemble::fit_spawn_threads(
                 .ensemble_ = *this,
                 .feature_container_ = _feature_container,
                 .logger_ = _logger,
-                .mapped_ = _mapped,
                 .peripheral_ = _peripheral,
                 .population_ = _population,
                 .row_indices_ = _row_indices,
@@ -998,7 +994,6 @@ containers::Features DecisionTreeEnsemble::transform(
         _params.peripheral_,
         _params.index_,
         _params.word_indices_,
-        _params.mapped_,
         _params.feature_container_,
         _params.logger_,
         &features );
@@ -1101,7 +1096,6 @@ void DecisionTreeEnsemble::transform_spawn_threads(
     const std::vector<containers::DataFrame> &_peripheral,
     const std::vector<size_t> &_index,
     const std::optional<helpers::WordIndexContainer> &_word_indices,
-    const std::optional<const helpers::MappedContainer> &_mapped,
     const std::optional<const helpers::FeatureContainer> &_feature_container,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     containers::Features *_features ) const
@@ -1128,7 +1122,6 @@ void DecisionTreeEnsemble::transform_spawn_threads(
                     .feature_container_ = _feature_container,
                     .features_ = *_features,
                     .index_ = _index,
-                    .mapped_ = _mapped,
                     .peripheral_ = _peripheral,
                     .population_ = _population,
                     .this_thread_num_ = i + 1,
@@ -1147,7 +1140,6 @@ void DecisionTreeEnsemble::transform_spawn_threads(
                 .features_ = *_features,
                 .index_ = _index,
                 .logger_ = _logger,
-                .mapped_ = _mapped,
                 .peripheral_ = _peripheral,
                 .population_ = _population,
                 .this_thread_num_ = 0,

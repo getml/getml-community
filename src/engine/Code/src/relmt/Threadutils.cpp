@@ -36,7 +36,6 @@ void Threadutils::fit_as_feature_learner( const ThreadutilsFitParams& _params )
         _params.peripheral_,
         _params.row_indices_,
         _params.word_indices_,
-        _params.mapped_,
         _params.feature_container_ );
 
     _params.ensemble_.fit_subensembles(
@@ -120,7 +119,6 @@ void Threadutils::transform_as_feature_learner(
         _params.ensemble_.peripheral(),
         std::nullopt,
         _params.word_indices_,
-        _params.mapped_,
         _params.feature_container_ );
 
     auto predictions = _params.ensemble_.make_subpredictions(

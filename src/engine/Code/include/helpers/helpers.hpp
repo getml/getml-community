@@ -55,11 +55,7 @@
 
 #include "helpers/VocabularyTree.hpp"
 
-#include "helpers/MappingAggregation.hpp"
-
 #include "helpers/FeatureContainer.hpp"
-#include "helpers/MappedContainer.hpp"
-#include "helpers/MappingContainer.hpp"
 
 #include "helpers/ColumnDescription.hpp"
 
@@ -80,8 +76,6 @@
 #include "helpers/RowIndexContainer.hpp"
 
 #include "helpers/TableHolder.hpp"
-
-#include "helpers/MappingContainerMaker.hpp"
 
 #include "helpers/Macros.hpp"
 

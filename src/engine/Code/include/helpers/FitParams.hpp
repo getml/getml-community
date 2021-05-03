@@ -13,9 +13,6 @@ struct FitParams
     /// Uses to log progress.
     const std::shared_ptr<const logging::AbstractLogger> &logger_;
 
-    /// Contains the mapping columns.
-    const std::optional<const MappedContainer> &mapped_;
-
     /// The peripheral tables used.
     const std::vector<DataFrame> &peripheral_;
 

@@ -45,7 +45,6 @@ void Threadutils::fit_ensemble( const ThreadutilsFitParams& _params )
                     _params.ensemble_.peripheral(),
                     _params.row_indices_,
                     _params.word_indices_,
-                    _params.mapped_,
                     _params.feature_container_ );
 
             // ----------------------------------------------------------------
@@ -115,7 +114,6 @@ void Threadutils::transform_ensemble(
                 _params.ensemble_.peripheral(),
                 std::nullopt,
                 _params.word_indices_,
-                _params.mapped_,
                 _params.feature_container_ );
 
             // ----------------------------------------------------------------

@@ -435,7 +435,7 @@ Mapping::fit_on_categoricals(
     const auto col_to_mapping =
         [this, &_population, &_main_tables, &_peripheral_tables](
             const helpers::Column<Int>& _col ) {
-            const auto rownum_map = make_rownum_map( _col );
+            const auto rownum_map = make_rownum_map_categorical( _col );
             return make_mapping(
                 rownum_map, _population, _main_tables, _peripheral_tables );
         };
@@ -474,7 +474,7 @@ Mapping::fit_on_discretes(
     const auto col_to_mapping =
         [this, &_population, &_main_tables, &_peripheral_tables](
             const helpers::Column<Float>& _col ) {
-            const auto rownum_map = make_rownum_map( _col );
+            const auto rownum_map = make_rownum_map_discrete( _col );
             return make_mapping(
                 rownum_map, _population, _main_tables, _peripheral_tables );
         };
@@ -1026,6 +1026,68 @@ std::vector<std::pair<Int, Float>> Mapping::make_pairs(
     std::sort( pairs.begin(), pairs.end(), by_value );
 
     return pairs;
+}
+
+// ----------------------------------------------------------------------------
+
+std::map<Int, std::vector<size_t>> Mapping::make_rownum_map_categorical(
+    const helpers::Column<Int>& _col ) const
+{
+    std::map<Int, std::vector<size_t>> rownum_map;
+
+    for ( size_t i = 0; i < _col.nrows_; ++i )
+        {
+            const auto key = _col[i];
+
+            if ( key < 0 )
+                {
+                    continue;
+                }
+
+            const auto it = rownum_map.find( key );
+
+            if ( it == rownum_map.end() )
+                {
+                    rownum_map[key] = { i };
+                }
+            else
+                {
+                    it->second.push_back( i );
+                }
+        }
+
+    return rownum_map;
+}
+
+// ----------------------------------------------------------------------------
+
+std::map<Int, std::vector<size_t>> Mapping::make_rownum_map_discrete(
+    const helpers::Column<Float>& _col ) const
+{
+    std::map<Int, std::vector<size_t>> rownum_map;
+
+    for ( size_t i = 0; i < _col.nrows_; ++i )
+        {
+            if ( std::isnan( _col[i] ) || std::isinf( _col[i] ) )
+                {
+                    continue;
+                }
+
+            const auto key = static_cast<Int>( _col[i] );
+
+            const auto it = rownum_map.find( key );
+
+            if ( it == rownum_map.end() )
+                {
+                    rownum_map[key] = { i };
+                }
+            else
+                {
+                    it->second.push_back( i );
+                }
+        }
+
+    return rownum_map;
 }
 
 // ----------------------------------------------------------------------------

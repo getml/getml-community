@@ -7,8 +7,6 @@ namespace helpers
 
 class SQLGenerator
 {
-    typedef typename MappingContainer::ColnameMap ColnameMap;
-
    public:
     /// Removes the Macros from the colname and replaces it with proper SQLite3
     /// code.

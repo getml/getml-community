@@ -3,8 +3,6 @@ set(
     ${HELPERS_SOURCE_DIRECTORY}/DataFrame.cpp
     ${HELPERS_SOURCE_DIRECTORY}/ImportanceMaker.cpp
     ${HELPERS_SOURCE_DIRECTORY}/Macros.cpp
-    ${HELPERS_SOURCE_DIRECTORY}/MappingContainer.cpp
-    ${HELPERS_SOURCE_DIRECTORY}/MappingContainerMaker.cpp
     ${HELPERS_SOURCE_DIRECTORY}/Placeholder.cpp
     ${HELPERS_SOURCE_DIRECTORY}/RowIndexContainer.cpp
     ${HELPERS_SOURCE_DIRECTORY}/Schema.cpp

@@ -23,7 +23,6 @@ class TableHolder
             std::nullopt,
         const std::optional<WordIndexContainer>& _word_index_container =
             std::nullopt,
-        const std::optional<const MappedContainer>& _mapped = std::nullopt,
         const std::optional<const FeatureContainer>& _feature_container =
             std::nullopt );
 
@@ -41,7 +40,6 @@ class TableHolder
         const std::vector<std::string>& _peripheral_names,
         const std::optional<RowIndexContainer>& _row_index_container,
         const std::optional<WordIndexContainer>& _word_index_container,
-        const std::optional<const MappedContainer>& _mapped,
         const std::optional<const FeatureContainer>& _feature_container );
 
     /// Counts the number of peripheral tables that have been created from text
@@ -55,7 +53,6 @@ class TableHolder
 
     /// Generates additional numerical columns to add to a data frame.
     static std::vector<Column<Float>> make_additional_columns(
-        const std::optional<const MappedContainer>& _mapped,
         const std::optional<const FeatureContainer>& _feature_container,
         const size_t _i );
 
@@ -89,7 +86,6 @@ class TableHolder
         const std::vector<std::string>& _peripheral_names,
         const std::optional<RowIndexContainer>& _row_index_container,
         const std::optional<WordIndexContainer>& _word_index_container,
-        const std::optional<const MappedContainer>& _mapped,
         const std::optional<const FeatureContainer>& _feature_container );
 
     /// Parses the propositionalization flag in the Placeholder
@@ -103,8 +99,7 @@ class TableHolder
         const std::vector<DataFrame>& _peripheral,
         const std::vector<std::string>& _peripheral_names,
         const std::optional<RowIndexContainer>& _row_index_container,
-        const std::optional<WordIndexContainer>& _word_index_container,
-        const std::optional<const MappedContainer>& _mapped );
+        const std::optional<WordIndexContainer>& _word_index_container );
 
     // ------------------------------
 

@@ -21,9 +21,6 @@ struct ThreadutilsFitParams
     /// For logging the progress.
     std::shared_ptr<const logging::AbstractLogger> logger_;
 
-    /// Maps categorical, discrete and text columns onto numerical values.
-    const std::optional<const helpers::MappedContainer>& mapped_;
-
     /// The peripheral tables.
     const std::vector<containers::DataFrame>& peripheral_;
 

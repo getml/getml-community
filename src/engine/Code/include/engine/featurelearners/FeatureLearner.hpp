@@ -204,7 +204,6 @@ class FeatureLearner : public AbstractFeatureLearner
         const std::vector<DataFrameType>& _peripheral,
         const helpers::RowIndexContainer& _row_indices,
         const helpers::WordIndexContainer& _word_indices,
-        const std::optional<const helpers::MappedContainer>& _mapped,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
         const FeatureLearnerType& _feature_learner ) const;
 
@@ -242,7 +241,6 @@ class FeatureLearner : public AbstractFeatureLearner
         const DataFrameType& _population,
         const std::vector<DataFrameType>& _peripheral,
         const helpers::WordIndexContainer& _word_indices,
-        const std::optional<const helpers::MappedContainer>& _mapped,
         const std::shared_ptr<const logging::AbstractLogger> _logger ) const;
 
     // --------------------------------------------------------
@@ -405,9 +403,6 @@ class FeatureLearner : public AbstractFeatureLearner
 
     /// The underlying feature learning algorithm.
     std::optional<FeatureLearnerType> feature_learner_;
-
-    /// The mappings used for categorical, discrete and text columns.
-    std::shared_ptr<const helpers::MappingContainer> mappings_;
 
     /// The names of the peripheral tables
     std::shared_ptr<const std::vector<std::string>> peripheral_;
@@ -753,7 +748,6 @@ void FeatureLearner<FeatureLearnerType>::fit(
         peripheral,
         row_indices,
         word_indices,
-        std::nullopt,  // TODO
         _logger,
         new_feature_learner.value() );
 
@@ -764,7 +758,6 @@ void FeatureLearner<FeatureLearnerType>::fit(
             prop_pair ? prop_pair->second
                       : std::optional<const helpers::FeatureContainer>(),
         .logger_ = _logger,
-        .mapped_ = std::nullopt,  // TODO
         .peripheral_ = peripheral,
         .population_ = population,
         .row_indices_ = row_indices,
@@ -780,9 +773,6 @@ void FeatureLearner<FeatureLearnerType>::fit(
         prop_pair
             ? prop_pair->first
             : std::shared_ptr<const fastprop::subfeatures::FastPropContainer>();
-
-    // TODO
-    // mappings_ = mappings;
 
     vocabulary_ = vocabulary;
 
@@ -800,7 +790,6 @@ FeatureLearner<FeatureLearnerType>::fit_propositionalization(
     const std::vector<DataFrameType>& _peripheral,
     const helpers::RowIndexContainer& _row_indices,
     const helpers::WordIndexContainer& _word_indices,
-    const std::optional<const helpers::MappedContainer>& _mapped,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     const FeatureLearnerType& _feature_learner ) const
 {
@@ -823,7 +812,6 @@ FeatureLearner<FeatureLearnerType>::fit_propositionalization(
             const auto params = MakerParams{
                 .hyperparameters_ = hyp,
                 .logger_ = _logger,
-                .mapped_ = _mapped,
                 .peripheral_ = _peripheral,
                 .peripheral_names_ = peripheral_names,
                 .placeholder_ = _feature_learner.placeholder(),
@@ -902,12 +890,6 @@ void FeatureLearner<FeatureLearnerType>::load( const std::string& _fname )
             fast_prop_container_ = std::make_shared<
                 const fastprop::subfeatures::FastPropContainer>(
                 *JSON::get_object( obj, "fast_prop_container_" ) );
-        }
-
-    if ( obj.has( "mappings_" ) )
-        {
-            mappings_ = std::make_shared<const helpers::MappingContainer>(
-                *JSON::get_object( obj, "mappings_" ) );
         }
 
     if ( obj.has( "vocabulary_" ) )
@@ -1118,11 +1100,6 @@ Poco::JSON::Object FeatureLearner<FeatureLearnerType>::to_json_obj(
                 "fast_prop_container_", fast_prop_container_->to_json_obj() );
         }
 
-    if ( mappings_ )
-        {
-            obj.set( "mappings_", mappings_->to_json_obj() );
-        }
-
     if ( vocabulary_ )
         {
             obj.set( "vocabulary_", vocabulary_->to_json_obj() );
@@ -1168,17 +1145,8 @@ containers::Features FeatureLearner<FeatureLearnerType>::transform(
     const auto word_indices =
         helpers::WordIndexContainer( population, peripheral, *vocabulary_ );
 
-    /*const auto mapped = helpers::MappingContainerMaker::transform(
-        mappings_,
-        feature_learner().placeholder(),
-        population,
-        peripheral,
-        feature_learner().peripheral(),
-        word_indices,
-        _logger );*/
-
     const auto feature_container = transform_propositionalization(
-        population, peripheral, word_indices, std::nullopt, _logger );
+        population, peripheral, word_indices, _logger );
 
     // -------------------------------------------------------
 
@@ -1188,7 +1156,6 @@ containers::Features FeatureLearner<FeatureLearnerType>::transform(
         .feature_container_ = feature_container,
         .index_ = _index,
         .logger_ = _logger,
-        .mapped_ = std::nullopt,  // TODO
         .peripheral_ = peripheral,
         .population_ = population,
         .word_indices_ = word_indices };
@@ -1204,7 +1171,6 @@ FeatureLearner<FeatureLearnerType>::transform_propositionalization(
     const DataFrameType& _population,
     const std::vector<DataFrameType>& _peripheral,
     const helpers::WordIndexContainer& _word_indices,
-    const std::optional<const helpers::MappedContainer>& _mapped,
     const std::shared_ptr<const logging::AbstractLogger> _logger ) const
 {
     if constexpr ( has_propositionalization_ )
@@ -1226,7 +1192,6 @@ FeatureLearner<FeatureLearnerType>::transform_propositionalization(
                 .fast_prop_container_ = fast_prop_container_,
                 .hyperparameters_ = propositionalization(),
                 .logger_ = _logger,
-                .mapped_ = _mapped,
                 .peripheral_ = _peripheral,
                 .peripheral_names_ = peripheral_names,
                 .placeholder_ = feature_learner().placeholder(),

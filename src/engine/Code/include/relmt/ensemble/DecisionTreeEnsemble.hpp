@@ -102,7 +102,6 @@ class DecisionTreeEnsemble
         const std::vector<containers::DataFrame>& _peripheral,
         const helpers::RowIndexContainer& _row_indices,
         const helpers::WordIndexContainer& _word_indices,
-        const std::optional<const helpers::MappedContainer>& _mapped,
         const std::optional<const helpers::FeatureContainer>&
             _feature_container );
 
@@ -235,7 +234,6 @@ class DecisionTreeEnsemble
         const std::vector<containers::DataFrame>& _peripheral,
         const helpers::RowIndexContainer& _row_indices,
         const helpers::WordIndexContainer& _word_indices,
-        const std::optional<const helpers::MappedContainer>& _mapped,
         const std::optional<const helpers::FeatureContainer>&
             _feature_container,
         const std::shared_ptr<const logging::AbstractLogger> _logger );
@@ -298,7 +296,6 @@ class DecisionTreeEnsemble
         const std::vector<containers::DataFrame>& _peripheral,
         const std::vector<size_t>& _index,
         const std::optional<helpers::WordIndexContainer>& _word_indices,
-        const std::optional<const helpers::MappedContainer>& _mapped,
         const std::optional<const helpers::FeatureContainer>&
             _feature_container,
         const std::shared_ptr<const logging::AbstractLogger> _logger,

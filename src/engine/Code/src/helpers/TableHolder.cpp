@@ -11,7 +11,6 @@ TableHolder::TableHolder(
     const std::vector<std::string>& _peripheral_names,
     const std::optional<RowIndexContainer>& _row_index_container,
     const std::optional<WordIndexContainer>& _word_index_container,
-    const std::optional<const MappedContainer>& _mapped,
     const std::optional<const FeatureContainer>& _feature_container )
     : main_tables_( TableHolder::parse_main_tables(
           _placeholder,
@@ -27,7 +26,6 @@ TableHolder::TableHolder(
           _peripheral_names,
           _row_index_container,
           _word_index_container,
-          _mapped,
           _feature_container ) ),
       propositionalization_( TableHolder::parse_propositionalization(
           _placeholder, main_tables_.size() ) ),
@@ -37,8 +35,7 @@ TableHolder::TableHolder(
           _peripheral,
           _peripheral_names,
           _row_index_container,
-          _word_index_container,
-          _mapped ) )
+          _word_index_container ) )
 {
     assert_true( main_tables_.size() == peripheral_tables_.size() );
     assert_true( main_tables_.size() == propositionalization_.size() );
@@ -59,7 +56,6 @@ std::vector<DataFrame> TableHolder::add_text_fields_to_peripheral_tables(
     const std::vector<std::string>& _peripheral_names,
     const std::optional<RowIndexContainer>& _row_index_container,
     const std::optional<WordIndexContainer>& _word_index_container,
-    const std::optional<const MappedContainer>& _mapped,
     const std::optional<const FeatureContainer>& _feature_container )
 {
     // ---------------------------------------------------------------------
@@ -82,11 +78,6 @@ std::vector<DataFrame> TableHolder::add_text_fields_to_peripheral_tables(
 
     const auto relevant_text_fields_ix = stl::collect::vector<size_t>( range );
 
-    assert_true(
-        !_mapped ||
-        relevant_text_fields_ix.size() + _placeholder.joined_tables_.size() ==
-            _mapped->size() );
-
     // ---------------------------------------------------------------------
 
     for ( size_t i = 0; i < relevant_text_fields_ix.size(); ++i )
@@ -105,25 +96,13 @@ std::vector<DataFrame> TableHolder::add_text_fields_to_peripheral_tables(
                     ? _word_index_container->peripheral().at( j )
                     : WordIndices();
 
-            const auto mapped_columns =
-                _mapped
-                    ? _mapped->mapped( _placeholder.joined_tables_.size() + i )
-                    : AdditionalColumns();
-
-            auto numericals = df.numericals_;
-
-            for ( const auto& col : mapped_columns )
-                {
-                    numericals.push_back( col );
-                }
-
             const auto text_field = DataFrame(
                 df.categoricals_,
                 df.discretes_,
                 df.indices_,
                 df.join_keys_,
                 df.name_,
-                numericals,
+                df.numericals_,
                 df.targets_,
                 df.text_,
                 df.time_stamps_,
@@ -285,7 +264,6 @@ std::vector<DataFrame> TableHolder::parse_peripheral_tables(
     const std::vector<std::string>& _peripheral_names,
     const std::optional<RowIndexContainer>& _row_index_container,
     const std::optional<WordIndexContainer>& _word_index_container,
-    const std::optional<const MappedContainer>& _mapped,
     const std::optional<const FeatureContainer>& _feature_container )
 {
     // ---------------------------------------------------------------------
@@ -314,16 +292,12 @@ std::vector<DataFrame> TableHolder::parse_peripheral_tables(
         !_word_index_container ||
         _peripheral.size() == _word_index_container->peripheral().size() );
 
-    assert_true(
-        !_mapped || _mapped->size() >= _placeholder.joined_tables_.size() );
-
     // ---------------------------------------------------------------------
 
-    const auto make_additional_columns =
-        [&_mapped, &_feature_container]( const size_t _i ) {
-            return TableHolder::make_additional_columns(
-                _mapped, _feature_container, _i );
-        };
+    const auto make_additional_columns = [&_feature_container](
+                                             const size_t _i ) {
+        return TableHolder::make_additional_columns( _feature_container, _i );
+    };
 
     // ---------------------------------------------------------------------
 
@@ -368,7 +342,6 @@ std::vector<DataFrame> TableHolder::parse_peripheral_tables(
         _peripheral_names,
         _row_index_container,
         _word_index_container,
-        _mapped,
         _feature_container );
 
     // ---------------------------------------------------------------------
@@ -394,19 +367,10 @@ std::vector<bool> TableHolder::parse_propositionalization(
 // ----------------------------------------------------------------------------
 
 std::vector<Column<Float>> TableHolder::make_additional_columns(
-    const std::optional<const MappedContainer>& _mapped,
     const std::optional<const FeatureContainer>& _feature_container,
     const size_t _i )
 {
     std::vector<Column<Float>> additional;
-
-    if ( _mapped )
-        {
-            for ( const auto& col : _mapped->mapped( _i ) )
-                {
-                    additional.push_back( col );
-                }
-        }
 
     if ( _feature_container && _feature_container->subcontainers( _i ) )
         {
@@ -460,8 +424,7 @@ std::vector<std::optional<TableHolder>> TableHolder::parse_subtables(
     const std::vector<DataFrame>& _peripheral,
     const std::vector<std::string>& _peripheral_names,
     const std::optional<RowIndexContainer>& _row_index_container,
-    const std::optional<WordIndexContainer>& _word_index_container,
-    const std::optional<const MappedContainer>& _mapped )
+    const std::optional<WordIndexContainer>& _word_index_container )
 {
     // ---------------------------------------------------------------------
 
@@ -524,19 +487,6 @@ std::vector<std::optional<TableHolder>> TableHolder::parse_subtables(
 
     // ---------------------------------------------------------------------
 
-    const auto make_mapped =
-        [&_mapped]( const size_t i ) -> std::optional<MappedContainer> {
-        if ( _mapped )
-            {
-                assert_true( i < _mapped->size() );
-                assert_true( _mapped->subcontainers( i ) );
-                return *_mapped->subcontainers( i );
-            }
-
-        return std::nullopt;
-    };
-    // ---------------------------------------------------------------------
-
     std::vector<std::optional<TableHolder>> result;
 
     // ---------------------------------------------------------------------
@@ -560,16 +510,13 @@ std::vector<std::optional<TableHolder>> TableHolder::parse_subtables(
 
             const auto word_index_container = make_word_index_container( j );
 
-            const auto mapped = make_mapped( i );
-
             result.push_back( std::make_optional<TableHolder>(
                 joined,
                 output,
                 _peripheral,
                 _peripheral_names,
                 row_index_container,
-                word_index_container,
-                mapped ) );
+                word_index_container ) );
         }
 
     // ---------------------------------------------------------------------

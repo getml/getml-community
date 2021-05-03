@@ -115,7 +115,6 @@ class FastProp
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
-        const std::optional<const helpers::MappedContainer>& _mapped,
         const helpers::WordIndexContainer& _word_indices,
         const std::shared_ptr<std::vector<size_t>>& _rownums ) const;
 
@@ -321,7 +320,6 @@ class FastProp
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
-        const std::optional<const helpers::MappedContainer>& _mapped,
         const helpers::WordIndexContainer& _word_indices,
         const std::shared_ptr<std::vector<size_t>>& _rownums ) const;
 
@@ -355,9 +353,6 @@ class FastProp
     /// Trivial accessor
     bool allow_http() const { return allow_http_; }
 
-    /// Whether there are mappings
-    const bool has_mappings() const { return ( true && mappings_ ); }
-
     /// Trivial (const) accessor
     const Hyperparameters& hyperparameters() const
     {
@@ -377,13 +372,6 @@ class FastProp
     {
         return hyperparameters().loss_function_ ==
                Hyperparameters::CROSS_ENTROPY_LOSS;
-    }
-
-    /// Trivial accessor
-    const helpers::MappingContainer& mappings() const
-    {
-        assert_true( mappings_ );
-        return *mappings_;
     }
 
     /// Trivial accessor.
@@ -528,9 +516,6 @@ class FastProp
     /// held by the individual trees.
     std::shared_ptr<const std::vector<containers::Placeholder>>
         main_table_schemas_;
-
-    /// Used to map columns onto the average target value.
-    std::shared_ptr<const helpers::MappingContainer> mappings_;
 
     /// Names of the peripheral tables, as they are referred in placeholder
     std::shared_ptr<const std::vector<std::string>> peripheral_;

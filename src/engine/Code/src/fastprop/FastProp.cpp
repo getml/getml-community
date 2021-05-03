@@ -91,15 +91,6 @@ FastProp::FastProp( const Poco::JSON::Object &_obj )
 
     // ------------------------------------------------------------------------
 
-    if ( _obj.has( "mappings_" ) )
-        {
-            const auto ptr = jsonutils::JSON::get_object( _obj, "mappings_" );
-            assert_true( ptr );
-            mappings_ = std::make_shared<helpers::MappingContainer>( *ptr );
-        }
-
-    // ------------------------------------------------------------------------
-
     allow_http() = _obj.has( "allow_http_" )
                        ? jsonutils::JSON::get_value<bool>( _obj, "allow_http_" )
                        : false;
@@ -255,8 +246,7 @@ void FastProp::build_rows(
         _params.peripheral_,
         peripheral(),
         std::nullopt,
-        _params.word_indices_,
-        _params.mapped_ );
+        _params.word_indices_ );
 
     constexpr size_t log_iter = 5000;
 
@@ -301,10 +291,6 @@ std::vector<containers::Features> FastProp::build_subfeatures(
 {
     assert_true( placeholder().joined_tables_.size() <= subfeatures().size() );
 
-    assert_true(
-        !_params.mapped_ ||
-        placeholder().joined_tables_.size() <= _params.mapped_->size() );
-
     std::vector<containers::Features> features;
 
     for ( size_t i = 0; i < subfeatures().size(); ++i )
@@ -328,14 +314,6 @@ std::vector<containers::Features> FastProp::build_subfeatures(
             const auto subfeature_rownums = make_subfeature_rownums(
                 _rownums, _params.population_, new_population, i );
 
-            assert_true(
-                !_params.mapped_ || _params.mapped_->subcontainers( i ) );
-
-            const auto new_mapped =
-                _params.mapped_
-                    ? *_params.mapped_->subcontainers( i )
-                    : std::optional<const helpers::MappedContainer>();
-
             const auto ix = find_peripheral_ix( joined_table.name_ );
 
             assert_true( ix < _params.word_indices_.peripheral().size() );
@@ -348,7 +326,6 @@ std::vector<containers::Features> FastProp::build_subfeatures(
                 .feature_container_ = std::nullopt,
                 .index_ = subfeature_index,
                 .logger_ = _params.logger_,
-                .mapped_ = new_mapped,
                 .peripheral_ = _params.peripheral_,
                 .population_ = new_population,
                 .word_indices_ = new_word_indices };
@@ -371,7 +348,6 @@ std::vector<Float> FastProp::calc_r_squared(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
-    const std::optional<const helpers::MappedContainer> &_mapped,
     const helpers::WordIndexContainer &_word_indices,
     const std::shared_ptr<std::vector<size_t>> &_rownums ) const
 {
@@ -394,7 +370,6 @@ std::vector<Float> FastProp::calc_r_squared(
                 .feature_container_ = std::nullopt,
                 .index_ = index,
                 .logger_ = nullptr,
-                .mapped_ = _mapped,
                 .peripheral_ = _peripheral,
                 .population_ = _population,
                 .word_indices_ = _word_indices };
@@ -667,8 +642,7 @@ void FastProp::fit( const FitParams &_params, const bool _as_subfeatures )
         _params.peripheral_,
         peripheral(),
         std::nullopt,
-        _params.word_indices_,
-        _params.mapped_ );
+        _params.word_indices_ );
 
     extract_schemas( table_holder );
 
@@ -716,7 +690,6 @@ void FastProp::fit( const FitParams &_params, const bool _as_subfeatures )
                 _params.population_,
                 _params.peripheral_,
                 _params.logger_,
-                _params.mapped_,
                 _params.word_indices_,
                 rownums );
         }
@@ -1259,17 +1232,6 @@ FastProp::fit_subfeatures(
         placeholder().joined_tables_.size() <=
         _table_holder.subtables().size() );
 
-    assert_true(
-        !_params.mapped_ ||
-        placeholder().joined_tables_.size() <= _params.mapped_->size() );
-
-    assert_msg(
-        !_params.mapped_ ||
-            _table_holder.subtables().size() == _params.mapped_->size(),
-        "_table_holder.subtables().size(): " +
-            std::to_string( _table_holder.subtables().size() ) +
-            ", _mapped->size(): " + std::to_string( _params.mapped_->size() ) );
-
     const auto subfeatures =
         std::make_shared<std::vector<std::optional<FastProp>>>();
 
@@ -1292,15 +1254,6 @@ FastProp::fit_subfeatures(
             const auto new_population =
                 find_peripheral( _params.peripheral_, joined_table.name_ );
 
-            assert_true(
-                !_params.mapped_ || _params.mapped_->subcontainers( i ) );
-
-            const auto new_mapped =
-                _params.mapped_
-                    ? std::make_optional<const helpers::MappedContainer>(
-                          *_params.mapped_->subcontainers( i ) )
-                    : std::optional<const helpers::MappedContainer>();
-
             const auto ix = find_peripheral_ix( joined_table.name_ );
 
             assert_true( ix < _params.row_indices_.peripheral().size() );
@@ -1318,7 +1271,6 @@ FastProp::fit_subfeatures(
             const auto params = FitParams{
                 .feature_container_ = std::nullopt,
                 .logger_ = _params.logger_,
-                .mapped_ = new_mapped,
                 .peripheral_ = _params.peripheral_,
                 .population_ = new_population,
                 .row_indices_ = new_row_indices,
@@ -1889,7 +1841,6 @@ FastProp::select_features(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
-    const std::optional<const helpers::MappedContainer> &_mapped,
     const helpers::WordIndexContainer &_word_indices,
     const std::shared_ptr<std::vector<size_t>> &_rownums ) const
 {
@@ -1904,7 +1855,7 @@ FastProp::select_features(
         }
 
     const auto r_squared = calc_r_squared(
-        _population, _peripheral, _logger, _mapped, _word_indices, _rownums );
+        _population, _peripheral, _logger, _word_indices, _rownums );
 
     const auto threshold = calc_threshold( r_squared );
 
@@ -2154,13 +2105,6 @@ Poco::JSON::Object FastProp::to_json_obj( const bool _schema_only ) const
                 peripheral_table_schemas() );
 
             obj.set( "peripheral_table_schemas_", arr );
-        }
-
-    // ----------------------------------------
-
-    if ( mappings_ )
-        {
-            obj.set( "mappings_", mappings_->to_json_obj() );
         }
 
     // ----------------------------------------

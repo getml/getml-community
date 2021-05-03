@@ -22,8 +22,7 @@ Maker::fit( const MakerParams& _params )
         _params.peripheral_,
         *_params.peripheral_names_,
         _params.row_index_container_,
-        _params.word_index_container_,
-        _params.mapped_ );
+        _params.word_index_container_ );
 
     const auto fast_prop_container =
         fit_fast_prop_container( table_holder, _params );
@@ -32,7 +31,6 @@ Maker::fit( const MakerParams& _params )
         .fast_prop_container_ = fast_prop_container,
         .hyperparameters_ = _params.hyperparameters_,
         .logger_ = _params.logger_,
-        .mapped_ = _params.mapped_,
         .peripheral_ = _params.peripheral_,
         .peripheral_names_ = _params.peripheral_names_,
         .placeholder_ = _params.placeholder_,
@@ -58,8 +56,6 @@ std::shared_ptr<const FastPropContainer> Maker::fit_fast_prop_container(
                 std::shared_ptr<const algorithm::FastProp>(), subcontainers );
         }
 
-    const auto new_mapped = make_mapped( _params );
-
     const auto fast_prop = std::make_shared<algorithm::FastProp>(
         _params.hyperparameters_, _params.peripheral_names_, new_placeholder );
 
@@ -68,7 +64,6 @@ std::shared_ptr<const FastPropContainer> Maker::fit_fast_prop_container(
     const auto params = algorithm::FitParams{
         .feature_container_ = std::nullopt,
         .logger_ = _params.logger_,
-        .mapped_ = new_mapped,
         .peripheral_ = _params.peripheral_,
         .population_ = _params.population_,
         .row_indices_ = _params.row_index_container_.value(),
@@ -109,8 +104,6 @@ MakerParams Maker::make_params( const MakerParams& _params, const size_t _i )
         !_params.fast_prop_container_ ||
         _params.fast_prop_container_->subcontainers( _i ) );
 
-    assert_true( !_params.mapped_ || _params.mapped_->subcontainers( _i ) );
-
     assert_true( _i < _params.placeholder_.joined_tables_.size() );
 
     assert_true( _params.peripheral_names_ );
@@ -147,77 +140,12 @@ MakerParams Maker::make_params( const MakerParams& _params, const size_t _i )
                 : std::shared_ptr<const FastPropContainer>(),
         .hyperparameters_ = _params.hyperparameters_,
         .logger_ = _params.logger_,
-        .mapped_ = _params.mapped_
-                       ? *_params.mapped_->subcontainers( _i )
-                       : std::optional<const helpers::MappedContainer>(),
         .peripheral_ = _params.peripheral_,
         .peripheral_names_ = _params.peripheral_names_,
         .placeholder_ = _params.placeholder_.joined_tables_.at( _i ),
         .population_ = _params.peripheral_.at( ix ),
         .row_index_container_ = row_index_container,
         .word_index_container_ = word_index_container };
-}
-
-// ----------------------------------------------------------------------------
-
-std::optional<const helpers::MappedContainer> Maker::make_mapped(
-    const MakerParams& _params )
-{
-    if ( !_params.mapped_ )
-        {
-            return std::nullopt;
-        }
-
-    using MappedColumns = helpers::MappedContainer::MappedColumns;
-
-    const auto& placeholder = _params.placeholder_;
-
-    const auto& mapped = _params.mapped_;
-
-    const auto is_propositionalization =
-        [&placeholder]( const size_t _i ) -> bool {
-        return placeholder.propositionalization_.at( _i );
-    };
-
-    const auto get_categorical = [&mapped]( const size_t _i ) {
-        return mapped.value().categorical( _i );
-    };
-
-    const auto get_discrete = [&mapped]( const size_t _i ) {
-        return mapped.value().discrete( _i );
-    };
-
-    const auto get_subcontainer = [&mapped]( const size_t _i ) {
-        return mapped.value().subcontainers( _i );
-    };
-
-    const auto get_text = [&mapped]( const size_t _i ) {
-        return mapped.value().text( _i );
-    };
-
-    const auto iota = std::views::iota(
-        static_cast<size_t>( 0 ), placeholder.propositionalization_.size() );
-
-    const auto filtered = stl::collect::vector<size_t>(
-        iota | std::views::filter( is_propositionalization ) );
-
-    assert_true( filtered.size() > 0 );
-
-    const auto categorical = stl::collect::vector<MappedColumns>(
-        filtered | std::views::transform( get_categorical ) );
-
-    const auto discrete = stl::collect::vector<MappedColumns>(
-        filtered | std::views::transform( get_discrete ) );
-
-    const auto subcontainers =
-        stl::collect::vector<std::shared_ptr<const helpers::MappedContainer>>(
-            filtered | std::views::transform( get_subcontainer ) );
-
-    const auto text = stl::collect::vector<MappedColumns>(
-        filtered | std::views::transform( get_text ) );
-
-    return helpers::MappedContainer(
-        categorical, discrete, subcontainers, text );
 }
 
 // ----------------------------------------------------------------------------
@@ -344,8 +272,6 @@ helpers::FeatureContainer Maker::transform( const MakerParams& _params )
 
     if ( _params.fast_prop_container_->has_fast_prop() )
         {
-            const auto new_mapped = make_mapped( _params );
-
             const auto& fast_prop = _params.fast_prop_container_->fast_prop();
 
             const auto index =
@@ -356,7 +282,6 @@ helpers::FeatureContainer Maker::transform( const MakerParams& _params )
                 .feature_container_ = std::nullopt,
                 .index_ = index,
                 .logger_ = _params.logger_,
-                .mapped_ = new_mapped,
                 .peripheral_ = _params.peripheral_,
                 .population_ = _params.population_,
                 .word_indices_ = _params.word_index_container_ };
