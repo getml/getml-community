@@ -43,8 +43,12 @@ class Mapping : public Preprocessor
         "VARIATION COEFFICIENT";
 
    public:
-    typedef typename helpers::MappingContainer::Colnames Colnames;
-    typedef typename helpers::MappingContainer::MappingForDf MappingForDf;
+    typedef std::shared_ptr<const std::vector<std::string>> Colnames;
+    typedef std::vector<
+        std::shared_ptr<const std::map<Int, std::vector<Float>>>>
+        MappingForDf;
+    typedef typename MappingForDf::value_type PtrType;
+    typedef typename PtrType::element_type Map;
     typedef std::pair<Int, std::vector<size_t>> RownumPair;
     typedef std::vector<
         std::shared_ptr<const std::map<std::string, std::vector<Float>>>>
@@ -253,11 +257,28 @@ class Mapping : public Preprocessor
         const std::shared_ptr<const std::vector<strings::String>>& _categories )
         const;
 
+    /// Transforms a mapping for a categorical or text column to SQL.
+    std::string categorical_or_text_column_to_sql(
+        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const std::string& _name,
+        const PtrType& _ptr,
+        const size_t _weight_num ) const;
+
+    /// Transforms the mappings for a discrete columns to SQL.
+    std::string discrete_column_to_sql(
+        const std::string& _name,
+        const PtrType& _ptr,
+        const size_t _weight_num ) const;
+
     /// Transforms the mappings for the discrete columns to SQL.
     std::vector<std::string> discrete_columns_to_sql() const;
 
     /// Transforms the mappings for the text columns to SQL.
     std::vector<std::string> text_columns_to_sql() const;
+
+    /// Extracts a mapping from JSON.
+    MappingForDf extract_mapping(
+        const Poco::JSON::Object& _obj, const std::string& _key ) const;
 
     /// Extracts the text mapping.
     typename Mapping::TextMapping extract_text_mapping(
@@ -336,9 +357,17 @@ class Mapping : public Preprocessor
             std::shared_ptr<const textmining::WordIndex>,
             MappingForDf::value_type>& _t ) const;
 
+    /// Generates the pairs needed generate the create table statement.
+    std::vector<std::pair<Int, Float>> make_pairs(
+        const Map& _m, const size_t _weight_num ) const;
+
     /// Generates the rownum map for the text columns.
-    std::map<strings::String, std::vector<size_t>> make_rownum_map_text(
-        const helpers::Column<strings::String>& _col ) const;
+    std::map<Int, std::vector<size_t>> make_rownum_map_text(
+        const textmining::WordIndex& _word_index ) const;
+
+    /// Generates the table header for the resulting SQL code.
+    std::string make_table_header(
+        const std::string& _name, const bool _key_is_num ) const;
 
     /// Identifies the correct rownums to use by parsing through the main and
     /// peripheral tables.
@@ -367,6 +396,10 @@ class Mapping : public Preprocessor
     void transform_peripherals(
         const helpers::TableHolder& _table_holder,
         std::vector<containers::DataFrame>* _peripheral_dfs ) const;
+
+    /// Transform the mapping into a Poco array.
+    Poco::JSON::Array::Ptr transform_mapping(
+        const MappingForDf& _mapping ) const;
 
     /// Transforms the text columns in the DataFrame.
     std::vector<containers::Column<Float>> transform_text(

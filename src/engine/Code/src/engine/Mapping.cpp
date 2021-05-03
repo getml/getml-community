@@ -109,7 +109,7 @@ std::vector<std::string> Mapping::categorical_columns_to_sql(
         const auto name = helpers::SQLGenerator::make_colname(
             make_colname( categorical_names_->at( _i ), _weight_num ) );
 
-        return helpers::MappingContainer::categorical_or_text_column_to_sql(
+        return categorical_or_text_column_to_sql(
             _categories,
             helpers::SQLGenerator::to_upper( name ),
             categorical_.at( _i ),
@@ -117,6 +117,71 @@ std::vector<std::string> Mapping::categorical_columns_to_sql(
     };
 
     return columns_to_sql( mapping_to_sql, categorical_, categorical_names_ );
+}
+
+// ----------------------------------------------------
+
+std::string Mapping::categorical_or_text_column_to_sql(
+    const std::shared_ptr<const std::vector<strings::String>>& _categories,
+    const std::string& _name,
+    const PtrType& _ptr,
+    const size_t _weight_num ) const
+{
+    assert_true( _categories );
+
+    assert_true( _ptr );
+
+    const auto pairs = make_pairs( *_ptr, _weight_num );
+
+    std::string sql = make_table_header( _name, false );
+
+    for ( size_t i = 0; i < pairs.size(); ++i )
+        {
+            const std::string begin = ( i == 0 ) ? "" : "      ";
+
+            const auto& p = pairs.at( i );
+
+            assert_true( p.first >= 0 );
+
+            assert_true( static_cast<size_t>( p.first ) < _categories->size() );
+
+            const std::string end =
+                ( i == pairs.size() - 1 ) ? ";\n\n\n" : ",\n";
+
+            sql += begin + "('" + _categories->at( p.first ).str() + "', " +
+                   io::Parser::to_precise_string( p.second ) + ")" + end;
+        }
+
+    return sql;
+}
+
+// ----------------------------------------------------
+
+std::string Mapping::discrete_column_to_sql(
+    const std::string& _name,
+    const PtrType& _ptr,
+    const size_t _weight_num ) const
+{
+    assert_true( _ptr );
+
+    const auto pairs = make_pairs( *_ptr, _weight_num );
+
+    std::string sql = make_table_header( _name, true );
+
+    for ( size_t i = 0; i < pairs.size(); ++i )
+        {
+            const std::string begin = ( i == 0 ) ? "" : "      ";
+
+            const auto& p = pairs.at( i );
+
+            const std::string end =
+                ( i == pairs.size() - 1 ) ? ";\n\n\n" : ",\n";
+
+            sql += begin + "(" + std::to_string( p.first ) + ", " +
+                   io::Parser::to_precise_string( p.second ) + ")" + end;
+        }
+
+    return sql;
 }
 
 // ----------------------------------------------------
@@ -130,13 +195,56 @@ std::vector<std::string> Mapping::discrete_columns_to_sql() const
         const auto name = helpers::SQLGenerator::make_colname(
             make_colname( discrete_names_->at( _i ), _weight_num ) );
 
-        return helpers::MappingContainer::discrete_column_to_sql(
+        return discrete_column_to_sql(
             helpers::SQLGenerator::to_upper( name ),
             discrete_.at( _i ),
             _weight_num );
     };
 
     return columns_to_sql( mapping_to_sql, discrete_, discrete_names_ );
+}
+
+// ----------------------------------------------------------------------------
+
+typename Mapping::MappingForDf Mapping::extract_mapping(
+    const Poco::JSON::Object& _obj, const std::string& _key ) const
+{
+    // --------------------------------------------------------------
+
+    const auto arr = *JSON::get_array( _obj, _key );
+
+    // --------------------------------------------------------------
+
+    const auto obj_to_map = [&arr]( const size_t _i ) {
+        auto ptr = arr.getObject( _i );
+
+        throw_unless( ptr, "Expected an object inside the mapping." );
+
+        auto m = std::make_shared<std::map<Int, std::vector<Float>>>();
+
+        for ( const auto& [key, _] : *ptr )
+            {
+                const auto arr = ptr->getArray( key );
+
+                throw_unless(
+                    arr,
+                    "Expected an array: key: " + key +
+                        ", _obj: " + jsonutils::JSON::stringify( *ptr ) );
+
+                ( *m )[static_cast<Int>( std::atoi( key.c_str() ) )] =
+                    jsonutils::JSON::array_to_vector<Float>( arr );
+            }
+
+        return m;
+    };
+
+    // --------------------------------------------------------------
+
+    const auto iota = std::views::iota( static_cast<size_t>( 0 ), arr.size() );
+
+    const auto range = iota | std::views::transform( obj_to_map );
+
+    return stl::collect::vector<MappingForDf::value_type>( range );
 }
 
 // ----------------------------------------------------
@@ -412,9 +520,7 @@ Mapping::fit_on_text(
         [this, &_population, &_main_tables, &_peripheral_tables](
             const std::shared_ptr<const textmining::WordIndex>& _word_index ) {
             assert_true( _word_index );
-            const auto rownum_map =
-                helpers::MappingContainerMaker::make_rownum_map_text(
-                    *_word_index );
+            const auto rownum_map = make_rownum_map_text( *_word_index );
             return make_mapping(
                 rownum_map, _population, _main_tables, _peripheral_tables );
         };
@@ -501,8 +607,6 @@ Mapping::fit_transform(
 
     vocabulary_ = vocabulary;
 
-    prefix_ = "_";
-
     submappings_ = fit_submappings( population, table_holder, {}, {} );
 
     std::tie( categorical_, categorical_names_ ) =
@@ -530,22 +634,17 @@ Mapping Mapping::from_json_obj( const Poco::JSON::Object& _obj ) const
         return parse_aggregation( _str );
     };
 
-    const auto extract_mapping_vector = []( const Poco::JSON::Object& _obj,
-                                            const std::string& _name ) {
-        const auto vec =
-            helpers::MappingContainer::extract_mapping_vector( _obj, _name );
-        throw_unless(
-            vec.size() == 1, "Unexpected mapping vector length in Mapping" );
-        return vec.at( 0 );
-    };
+    const auto extract_mpg =
+        [this]( const Poco::JSON::Object& _obj, const std::string& _name ) {
+            return extract_mapping( _obj, _name );
+        };
 
     const auto extract_colnames = []( const Poco::JSON::Object& _obj,
-                                      const std::string& _name ) {
-        const auto vec =
-            helpers::MappingContainer::extract_colnames( _obj, _name );
-        throw_unless(
-            vec.size() == 1, "Unexpected colname length length in Mapping" );
-        return vec.at( 0 );
+                                      const std::string& _key ) {
+        auto arr = _obj.getArray( _key );
+        throw_unless( arr, "Expected array called '" + _key + "'" );
+        return std::make_shared<const std::vector<std::string>>(
+            JSON::array_to_vector<std::string>( arr ) );
     };
 
     Mapping that;
@@ -560,7 +659,7 @@ Mapping Mapping::from_json_obj( const Poco::JSON::Object& _obj ) const
 
     if ( _obj.has( "categorical_" ) )
         {
-            that.categorical_ = extract_mapping_vector( _obj, "categorical_" );
+            that.categorical_ = extract_mpg( _obj, "categorical_" );
 
             that.categorical_names_ =
                 extract_colnames( _obj, "categorical_names_" );
@@ -568,14 +667,14 @@ Mapping Mapping::from_json_obj( const Poco::JSON::Object& _obj ) const
 
     if ( _obj.has( "discrete_" ) )
         {
-            that.discrete_ = extract_mapping_vector( _obj, "discrete_" );
+            that.discrete_ = extract_mpg( _obj, "discrete_" );
 
             that.discrete_names_ = extract_colnames( _obj, "discrete_names_" );
         }
 
     if ( _obj.has( "text_" ) )
         {
-            that.text_ = extract_mapping_vector( _obj, "text_" );
+            that.text_ = extract_mpg( _obj, "text_" );
 
             that.text_names_ = extract_colnames( _obj, "text_names_" );
         }
@@ -812,55 +911,78 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_text(
     // ----------------------------------------------------
 }
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------
 
-std::map<strings::String, std::vector<size_t>> Mapping::make_rownum_map_text(
-    const helpers::Column<strings::String>& _col ) const
+std::vector<std::pair<Int, Float>> Mapping::make_pairs(
+    const Map& _m, const size_t _weight_num ) const
 {
-    // ---------------------------------------------------------------
+    using Pair = std::pair<Int, Float>;
 
-    std::map<strings::String, std::vector<size_t>> rownum_map;
+    auto pairs = std::vector<Pair>();
 
-    // ---------------------------------------------------------------
-
-    const auto insert_word =
-        [&rownum_map]( const std::string& _word, const size_t _rownum ) {
-            const auto it = rownum_map.find( _word );
-
-            if ( it == rownum_map.end() )
-                {
-                    rownum_map[_word] = { _rownum };
-                }
-            else
-                {
-                    it->second.push_back( _rownum );
-                }
-        };
-
-    // ---------------------------------------------------------------
-
-    const auto insert_text_field = [insert_word](
-                                       const strings::String& _text_field,
-                                       const size_t _rownum ) {
-        const auto words =
-            textmining::Vocabulary::process_text_field( _text_field );
-
-        for ( const auto& word : words )
-            {
-                insert_word( word, _rownum );
-            }
-    };
-
-    // ---------------------------------------------------------------
-
-    for ( size_t rownum = 0; rownum < _col.nrows_; ++rownum )
+    for ( const auto& p : _m )
         {
-            insert_text_field( _col[rownum], rownum );
+            assert_true( _weight_num < p.second.size() );
+            pairs.push_back(
+                std::make_pair( p.first, p.second.at( _weight_num ) ) );
         }
 
-    // ---------------------------------------------------------------
+    const auto by_value = []( const Pair& _p1, const Pair& _p2 ) -> bool {
+        return _p1.second > _p2.second;
+    };
+
+    std::sort( pairs.begin(), pairs.end(), by_value );
+
+    return pairs;
+}
+
+// ----------------------------------------------------------------------------
+
+std::map<Int, std::vector<size_t>> Mapping::make_rownum_map_text(
+    const textmining::WordIndex& _word_index ) const
+{
+    std::map<Int, std::vector<size_t>> rownum_map;
+
+    for ( size_t i = 0; i < _word_index.nrows(); ++i )
+        {
+            const auto range = _word_index.range( i );
+
+            const auto unique_words =
+                std::set<Int>( range.begin(), range.end() );
+
+            for ( const auto key : unique_words )
+                {
+                    const auto it = rownum_map.find( key );
+
+                    if ( it == rownum_map.end() )
+                        {
+                            rownum_map[key] = { i };
+                        }
+                    else
+                        {
+                            it->second.push_back( i );
+                        }
+                }
+        }
 
     return rownum_map;
+}
+
+// ----------------------------------------------------
+
+std::string Mapping::make_table_header(
+    const std::string& _name, const bool _key_is_num ) const
+{
+    std::string sql = "DROP TABLE IF EXISTS \"" + _name + "\";\n\n";
+
+    const std::string key_type = _key_is_num ? "INTEGER" : "TEXT";
+
+    sql += "CREATE TABLE \"" + _name + "\"(key " + key_type +
+           " NOT NULL PRIMARY KEY, value REAL);\n\n";
+
+    sql += "INSERT INTO \"" + _name + "\"(key, value)\nVALUES";
+
+    return sql;
 }
 
 // ----------------------------------------------------
@@ -1065,7 +1187,7 @@ std::vector<std::string> Mapping::text_columns_to_sql() const
 
     // ----------------------------------------------------
 
-    const auto text_column_to_sql = [make_pairs](
+    const auto text_column_to_sql = [this, make_pairs](
                                         const std::string& _name,
                                         const PtrType& _ptr,
                                         const size_t _target_num ) {
@@ -1073,8 +1195,7 @@ std::vector<std::string> Mapping::text_columns_to_sql() const
 
         const auto pairs = make_pairs( *_ptr, _target_num );
 
-        std::string sql =
-            helpers::MappingContainer::make_table_header( _name, false );
+        std::string sql = make_table_header( _name, false );
 
         for ( size_t i = 0; i < pairs.size(); ++i )
             {
@@ -1119,6 +1240,11 @@ std::vector<std::string> Mapping::text_columns_to_sql() const
 
 Poco::JSON::Object::Ptr Mapping::to_json_obj() const
 {
+    const auto transform_colnames = []( const Colnames& _colnames ) {
+        assert_true( _colnames );
+        return JSON::vector_to_array_ptr( *_colnames );
+    };
+
     auto obj = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
 
     obj->set( "type_", type() );
@@ -1127,30 +1253,17 @@ Poco::JSON::Object::Ptr Mapping::to_json_obj() const
 
     obj->set( "min_freq_", min_freq_ );
 
-    obj->set(
-        "categorical_",
-        helpers::MappingContainer::transform_mapping_vec( { categorical_ } ) );
+    obj->set( "categorical_", transform_mapping( categorical_ ) );
 
-    obj->set(
-        "categorical_names_",
-        helpers::MappingContainer::transform_colnames(
-            { categorical_names_ } ) );
+    obj->set( "categorical_names_", transform_colnames( categorical_names_ ) );
 
-    obj->set(
-        "discrete_",
-        helpers::MappingContainer::transform_mapping_vec( { discrete_ } ) );
+    obj->set( "discrete_", transform_mapping( discrete_ ) );
 
-    obj->set(
-        "discrete_names_",
-        helpers::MappingContainer::transform_colnames( { discrete_names_ } ) );
+    obj->set( "discrete_names_", transform_colnames( discrete_names_ ) );
 
-    obj->set(
-        "text_",
-        helpers::MappingContainer::transform_mapping_vec( { text_ } ) );
+    obj->set( "text_", transform_mapping( text_ ) );
 
-    obj->set(
-        "text_names_",
-        helpers::MappingContainer::transform_colnames( { text_names_ } ) );
+    obj->set( "text_names_", transform_colnames( text_names_ ) );
 
     return obj;
 }
@@ -1386,6 +1499,39 @@ std::vector<containers::Column<Float>> Mapping::transform_discrete(
 
     return stl::collect::vector<containers::Column<Float>>(
         all | std::ranges::views::join );
+}
+
+// ----------------------------------------------------
+
+Poco::JSON::Array::Ptr Mapping::transform_mapping(
+    const MappingForDf& _mapping ) const
+{
+    // --------------------------------------------------------------
+
+    const auto map_to_object =
+        []( const std::shared_ptr<const std::map<Int, std::vector<Float>>>&
+                _map ) {
+            assert_true( _map );
+
+            Poco::JSON::Object::Ptr obj( new Poco::JSON::Object() );
+
+            for ( const auto& [key, value] : *_map )
+                {
+                    obj->set(
+                        std::to_string( key ),
+                        jsonutils::JSON::vector_to_array_ptr( value ) );
+                }
+
+            return obj;
+        };
+
+    // --------------------------------------------------------------
+
+    const auto range = _mapping | std::views::transform( map_to_object );
+
+    return stl::collect::array( range );
+
+    // --------------------------------------------------------------
 }
 
 // ----------------------------------------------------
