@@ -1363,44 +1363,6 @@ std::vector<std::string> Pipeline::get_targets(
 
 // ----------------------------------------------------------------------
 
-std::tuple<
-    std::shared_ptr<const std::vector<std::string>>,
-    std::vector<helpers::MappingAggregation>,
-    size_t>
-Pipeline::infer_mapping_params() const
-{
-    const auto preprocessors = init_preprocessors( df_fingerprints() );
-
-    const auto is_mapping =
-        []( const std::shared_ptr<preprocessors::Preprocessor>& _p ) -> bool {
-        assert_true( _p );
-        return ( _p->type() == preprocessors::Preprocessor::MAPPING );
-    };
-
-    const auto it =
-        std::find_if( preprocessors.begin(), preprocessors.end(), is_mapping );
-
-    if ( it == preprocessors.end() )
-        {
-            return std::make_tuple(
-                std::make_shared<const std::vector<std::string>>(),
-                std::vector<helpers::MappingAggregation>(),
-                static_cast<size_t>( 0 ) );
-        }
-
-    const auto ptr = dynamic_cast<preprocessors::Mapping*>( it->get() );
-
-    assert_true( ptr );
-
-    const auto aggregation =
-        std::make_shared<const std::vector<std::string>>( ptr->aggregation() );
-
-    return std::make_tuple(
-        aggregation, ptr->aggregation_enums(), ptr->min_freq() );
-}
-
-// ----------------------------------------------------------------------
-
 std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>
 Pipeline::init_feature_learners(
     const size_t _num_targets,
@@ -1420,11 +1382,8 @@ Pipeline::init_feature_learners(
         []( const featurelearners::FeatureLearnerParams& _params,
             const Int _target_num ) {
             const auto new_params = featurelearners::FeatureLearnerParams{
-                .aggregation_ = _params.aggregation_,
-                .aggregation_enums_ = _params.aggregation_enums_,
                 .cmd_ = _params.cmd_,
                 .dependencies_ = _params.dependencies_,
-                .min_freq_ = _params.min_freq_,
                 .peripheral_ = _params.peripheral_,
                 .peripheral_schema_ = _params.peripheral_schema_,
                 .placeholder_ = _params.placeholder_,
@@ -1456,27 +1415,18 @@ Pipeline::init_feature_learners(
 
     const auto [placeholder, peripheral] = make_placeholder();
 
-    const auto [aggregation, aggregation_enums, min_freq] =
-        infer_mapping_params();
-
     const auto to_fl = [this,
                         &_dependencies,
                         &placeholder,
                         &peripheral,
-                        &aggregation,
-                        &aggregation_enums,
-                        min_freq,
                         make_fl_for_all_targets]( Poco::JSON::Object::Ptr _cmd )
         -> std::vector<
             std::shared_ptr<featurelearners::AbstractFeatureLearner>> {
         assert_true( _cmd );
 
         const auto params = featurelearners::FeatureLearnerParams{
-            .aggregation_ = aggregation,
-            .aggregation_enums_ = aggregation_enums,
             .cmd_ = *_cmd,
             .dependencies_ = _dependencies,
-            .min_freq_ = min_freq,
             .peripheral_ = peripheral,
             .peripheral_schema_ = impl_.modified_peripheral_schema_,
             .placeholder_ = placeholder,

@@ -26,6 +26,7 @@
 // Module files
 
 #include "engine/preprocessors/DataModelChecker.hpp"
+#include "engine/preprocessors/MappingAggregation.hpp"
 
 #include "engine/preprocessors/Preprocessor.hpp"
 #include "engine/preprocessors/PreprocessorImpl.hpp"

@@ -48,6 +48,55 @@ Mapping::build_prerequisites(
 
 // ----------------------------------------------------
 
+std::pair<Int, std::vector<Float>> Mapping::calc_agg_targets(
+    const helpers::DataFrame& _population,
+    const std::pair<Int, std::vector<size_t>>& _input ) const
+{
+    // -----------------------------------------------------------------------
+
+    const auto& rownums = _input.second;
+
+    // -----------------------------------------------------------------------
+
+    const auto calc_aggs =
+        [this, &rownums](
+            const helpers::Column<Float>& _target_col ) -> std::vector<Float> {
+        const auto get_value = [&_target_col]( const size_t _i ) -> Float {
+            return _target_col[_i];
+        };
+
+        const auto value_range = rownums | std::views::transform( get_value );
+
+        const auto agg =
+            [this, value_range]( const MappingAggregation& _agg ) -> Float {
+            return aggregate( value_range.begin(), value_range.end(), _agg );
+        };
+
+        const auto aggregated_range =
+            aggregation_enums_ | std::views::transform( agg );
+
+        return stl::collect::vector<Float>( aggregated_range );
+    };
+
+    // -----------------------------------------------------------------------
+
+    const auto range =
+        _population.targets_ | std::views::transform( calc_aggs );
+
+    const auto values = stl::collect::vector<std::vector<Float>>( range );
+
+    const auto second =
+        stl::collect::vector<Float>( values | std::views::join );
+
+    // -----------------------------------------------------------------------
+
+    return std::make_pair( _input.first, second );
+
+    // -----------------------------------------------------------------------
+}
+
+// ----------------------------------------------------
+
 std::vector<std::string> Mapping::categorical_columns_to_sql(
     const std::shared_ptr<const std::vector<strings::String>>& _categories )
     const
@@ -58,8 +107,7 @@ std::vector<std::string> Mapping::categorical_columns_to_sql(
                                     const size_t _i,
                                     const size_t _weight_num ) -> std::string {
         const auto name = helpers::SQLGenerator::make_colname(
-            helpers::MappingContainerMaker::make_colname(
-                categorical_names_->at( _i ), "", aggregation_, _weight_num ) );
+            make_colname( categorical_names_->at( _i ), _weight_num ) );
 
         return helpers::MappingContainer::categorical_or_text_column_to_sql(
             _categories,
@@ -80,8 +128,7 @@ std::vector<std::string> Mapping::discrete_columns_to_sql() const
     const auto mapping_to_sql =
         [this]( const size_t _i, const size_t _weight_num ) -> std::string {
         const auto name = helpers::SQLGenerator::make_colname(
-            helpers::MappingContainerMaker::make_colname(
-                discrete_names_->at( _i ), "", aggregation_, _weight_num ) );
+            make_colname( discrete_names_->at( _i ), _weight_num ) );
 
         return helpers::MappingContainer::discrete_column_to_sql(
             helpers::SQLGenerator::to_upper( name ),
@@ -479,9 +526,8 @@ Mapping::fit_transform(
 
 Mapping Mapping::from_json_obj( const Poco::JSON::Object& _obj ) const
 {
-    const auto parse =
-        []( const std::string& _str ) -> helpers::MappingAggregation {
-        return helpers::MappingContainerMaker::parse_aggregation( _str );
+    const auto parse = [this]( const std::string& _str ) -> MappingAggregation {
+        return parse_aggregation( _str );
     };
 
     const auto extract_mapping_vector = []( const Poco::JSON::Object& _obj,
@@ -507,7 +553,7 @@ Mapping Mapping::from_json_obj( const Poco::JSON::Object& _obj ) const
     that.aggregation_ = JSON::array_to_vector<std::string>(
         JSON::get_array( _obj, "aggregation_" ) );
 
-    that.aggregation_enums_ = stl::collect::vector<helpers::MappingAggregation>(
+    that.aggregation_enums_ = stl::collect::vector<MappingAggregation>(
         that.aggregation_ | std::views::transform( parse ) );
 
     that.min_freq_ = JSON::get_value<size_t>( _obj, "min_freq_" );
@@ -559,6 +605,52 @@ Mapping::handle_text_fields(
 
 // ----------------------------------------------------
 
+std::string Mapping::make_colname(
+    const std::string& _name, const size_t _weight_num ) const
+{
+    const auto agg_num = _weight_num % aggregation_.size();
+
+    const auto target_num = _weight_num / aggregation_.size();
+
+    return _name + "__mapping_" + prefix_ + "target_" +
+           std::to_string( target_num + 1 ) + "_" +
+           helpers::SQLGenerator::to_lower( aggregation_.at( agg_num ) );
+}
+
+// ----------------------------------------------------
+
+std::shared_ptr<const std::map<Int, std::vector<Float>>> Mapping::make_mapping(
+    const std::map<Int, std::vector<size_t>>& _rownum_map,
+    const helpers::DataFrame& _population,
+    const std::vector<helpers::DataFrame>& _main_tables,
+    const std::vector<helpers::DataFrame>& _peripheral_tables ) const
+{
+    const auto greater_than_min_freq =
+        [this]( const RownumPair& _input ) -> bool {
+        return _input.second.size() >= min_freq_;
+    };
+
+    const auto match_rows = [this, &_main_tables, &_peripheral_tables](
+                                const RownumPair& _input ) -> RownumPair {
+        return match_rownums( _main_tables, _peripheral_tables, _input );
+    };
+
+    const auto calc_agg =
+        [this, &_population](
+            const RownumPair& _pair ) -> std::pair<Int, std::vector<Float>> {
+        return calc_agg_targets( _population, _pair );
+    };
+
+    auto range = _rownum_map | std::views::filter( greater_than_min_freq ) |
+                 std::views::transform( match_rows ) |
+                 std::views::transform( calc_agg );
+
+    return std::make_shared<const std::map<Int, std::vector<Float>>>(
+        range.begin(), range.end() );
+}
+
+// ----------------------------------------------------
+
 std::vector<containers::Column<Float>> Mapping::make_mapping_columns_int(
     const std::pair<containers::Column<Int>, MappingForDf::value_type>& _p )
     const
@@ -599,8 +691,7 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_int(
         const auto ptr = std::make_shared<std::vector<Float>>(
             stl::collect::vector<Float>( range ) );
 
-        const auto name = helpers::MappingContainerMaker::make_colname(
-            col.name(), prefix_, aggregation_, _weight_num );
+        const auto name = make_colname( col.name(), _weight_num );
 
         return containers::Column<Float>( ptr, name );
     };
@@ -697,8 +788,7 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_text(
         const auto ptr = std::make_shared<std::vector<Float>>(
             stl::collect::vector<Float>( range ) );
 
-        const auto name = helpers::MappingContainerMaker::make_colname(
-            colname, "", aggregation_, _weight_num );
+        const auto name = make_colname( colname, _weight_num );
 
         return containers::Column<Float>( ptr, name );
     };
@@ -775,6 +865,172 @@ std::map<strings::String, std::vector<size_t>> Mapping::make_rownum_map_text(
 
 // ----------------------------------------------------
 
+typename Mapping::RownumPair Mapping::match_rownums(
+    const std::vector<helpers::DataFrame>& _main_tables,
+    const std::vector<helpers::DataFrame>& _peripheral_tables,
+    const RownumPair& _input ) const
+{
+    assert_true( _main_tables.size() == _peripheral_tables.size() );
+
+    auto rownums = _input.second;
+
+    for ( size_t i = 0; i < _main_tables.size(); ++i )
+        {
+            const auto ix = _main_tables.size() - i - 1;
+
+            rownums = find_output_ix(
+                rownums, _main_tables.at( ix ), _peripheral_tables.at( ix ) );
+        }
+
+    return std::make_pair( _input.first, rownums );
+}
+
+// ----------------------------------------------------
+
+MappingAggregation Mapping::parse_aggregation( const std::string& _str ) const
+{
+    if ( _str == AVG )
+        {
+            return MappingAggregation::avg;
+        }
+
+    if ( _str == COUNT )
+        {
+            return MappingAggregation::count;
+        }
+
+    if ( _str == COUNT_ABOVE_MEAN )
+        {
+            return MappingAggregation::count_above_mean;
+        }
+
+    if ( _str == COUNT_BELOW_MEAN )
+        {
+            return MappingAggregation::count_below_mean;
+        }
+
+    if ( _str == COUNT_DISTINCT )
+        {
+            return MappingAggregation::count_distinct;
+        }
+
+    if ( _str == COUNT_MINUS_COUNT_DISTINCT )
+        {
+            return MappingAggregation::count_minus_count_distinct;
+        }
+
+    if ( _str == COUNT_DISTINCT_OVER_COUNT )
+        {
+            return MappingAggregation::count_distinct_over_count;
+        }
+
+    if ( _str == KURTOSIS )
+        {
+            return MappingAggregation::kurtosis;
+        }
+
+    if ( _str == MAX )
+        {
+            return MappingAggregation::max;
+        }
+
+    if ( _str == MEDIAN )
+        {
+            return MappingAggregation::median;
+        }
+
+    if ( _str == MIN )
+        {
+            return MappingAggregation::min;
+        }
+
+    if ( _str == MODE )
+        {
+            return MappingAggregation::mode;
+        }
+
+    if ( _str == NUM_MAX )
+        {
+            return MappingAggregation::num_max;
+        }
+
+    if ( _str == NUM_MIN )
+        {
+            return MappingAggregation::num_min;
+        }
+
+    if ( _str == Q1 )
+        {
+            return MappingAggregation::q1;
+        }
+
+    if ( _str == Q5 )
+        {
+            return MappingAggregation::q5;
+        }
+
+    if ( _str == Q10 )
+        {
+            return MappingAggregation::q10;
+        }
+
+    if ( _str == Q25 )
+        {
+            return MappingAggregation::q25;
+        }
+
+    if ( _str == Q75 )
+        {
+            return MappingAggregation::q75;
+        }
+
+    if ( _str == Q90 )
+        {
+            return MappingAggregation::q90;
+        }
+
+    if ( _str == Q95 )
+        {
+            return MappingAggregation::q95;
+        }
+
+    if ( _str == Q99 )
+        {
+            return MappingAggregation::q99;
+        }
+
+    if ( _str == SKEW )
+        {
+            return MappingAggregation::skew;
+        }
+
+    if ( _str == STDDEV )
+        {
+            return MappingAggregation::stddev;
+        }
+
+    if ( _str == SUM )
+        {
+            return MappingAggregation::sum;
+        }
+
+    if ( _str == VAR )
+        {
+            return MappingAggregation::var;
+        }
+
+    if ( _str == VARIATION_COEFFICIENT )
+        {
+            return MappingAggregation::variation_coefficient;
+        }
+
+    throw_unless( false, "Mapping: Unknown aggregation: '" + _str + "'" );
+
+    return MappingAggregation::avg;
+}
+
+// ----------------------------------------------------
+
 std::vector<std::string> Mapping::text_columns_to_sql() const
 {
     assert_true( text_names_ );
@@ -844,8 +1100,8 @@ std::vector<std::string> Mapping::text_columns_to_sql() const
                                     const size_t _i,
                                     const size_t _weight_num ) -> std::string {
         const auto name = helpers::SQLGenerator::make_colname(
-            helpers::MappingContainerMaker::make_colname(
-                text_names_->at( _i ), "", aggregation_, _weight_num ) );
+            make_colname(
+                text_names_->at( _i ), _weight_num ) );
 
         return text_column_to_sql(
             helpers::SQLGenerator::to_upper( name ),

@@ -329,13 +329,6 @@ class Pipeline
         const std::map<std::string, containers::DataFrame>& _data_frames )
         const;
 
-    /// Returns the aggreagations and min_freq used for the mappings.
-    std::tuple<
-        std::shared_ptr<const std::vector<std::string>>,
-        std::vector<helpers::MappingAggregation>,
-        size_t>
-    infer_mapping_params() const;
-
     /// Prepares the feature learners from the JSON object.
     std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>
     init_feature_learners(

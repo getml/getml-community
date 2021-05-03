@@ -42,11 +42,8 @@ class FeatureLearner : public AbstractFeatureLearner
 
    public:
     FeatureLearner( const FeatureLearnerParams& _params )
-        : aggregation_( _params.aggregation_ ),
-          aggregation_enums_( _params.aggregation_enums_ ),
-          cmd_( _params.cmd_ ),
+        : cmd_( _params.cmd_ ),
           dependencies_( _params.dependencies_ ),
-          min_freq_( _params.min_freq_ ),
           peripheral_( _params.peripheral_ ),
           peripheral_schema_( _params.peripheral_schema_ ),
           placeholder_( _params.placeholder_ ),
@@ -55,8 +52,6 @@ class FeatureLearner : public AbstractFeatureLearner
     {
         assert_true( placeholder_ );
         assert_true( peripheral_ );
-        assert_true( aggregation_ );
-        assert_true( aggregation_->size() == aggregation_enums_.size() );
     }
 
     ~FeatureLearner() = default;
@@ -205,17 +200,6 @@ class FeatureLearner : public AbstractFeatureLearner
         const helpers::RowIndexContainer& _row_indices,
         const helpers::WordIndexContainer& _word_indices,
         const std::optional<const helpers::MappedContainer>& _mapped,
-        const std::shared_ptr<const logging::AbstractLogger> _logger,
-        const FeatureLearnerType& _feature_learner ) const;
-
-    /// Fits the mappings, if necessary.
-    std::pair<
-        std::shared_ptr<const helpers::MappingContainer>,
-        std::optional<const helpers::MappedContainer>>
-    handle_mappings(
-        const helpers::DataFrame& _population,
-        const std::vector<helpers::DataFrame>& _peripheral,
-        const helpers::WordIndexContainer& _word_indices,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
         const FeatureLearnerType& _feature_learner ) const;
 
@@ -399,12 +383,6 @@ class FeatureLearner : public AbstractFeatureLearner
     // --------------------------------------------------------
 
    private:
-    /// The aggregations used for the mapping expressed in string form.
-    std::shared_ptr<const std::vector<std::string>> aggregation_;
-
-    /// The aggregations used for the mapping.
-    std::vector<helpers::MappingAggregation> aggregation_enums_;
-
     /// The command used to create the feature learner.
     Poco::JSON::Object cmd_;
 
@@ -420,9 +398,6 @@ class FeatureLearner : public AbstractFeatureLearner
 
     /// The mappings used for categorical, discrete and text columns.
     std::shared_ptr<const helpers::MappingContainer> mappings_;
-
-    /// The minimum frequency used for the mappings.
-    size_t min_freq_;
 
     /// The names of the peripheral tables
     std::shared_ptr<const std::vector<std::string>> peripheral_;
@@ -762,13 +737,6 @@ void FeatureLearner<FeatureLearnerType>::fit(
 
     assert_true( new_feature_learner );
 
-    /*const auto [mappings, mapped] = handle_mappings(
-        population,
-        peripheral,
-        word_indices,
-        _logger,
-        new_feature_learner.value() );*/
-
     const auto prop_pair = fit_propositionalization(
         population,
         peripheral,
@@ -856,52 +824,6 @@ FeatureLearner<FeatureLearnerType>::fit_propositionalization(
         }
 
     return std::nullopt;
-}
-
-// ----------------------------------------------------------------------------
-
-template <typename FeatureLearnerType>
-std::pair<
-    std::shared_ptr<const helpers::MappingContainer>,
-    std::optional<const helpers::MappedContainer>>
-FeatureLearner<FeatureLearnerType>::handle_mappings(
-    const helpers::DataFrame& _population,
-    const std::vector<helpers::DataFrame>& _peripheral,
-    const helpers::WordIndexContainer& _word_indices,
-    const std::shared_ptr<const logging::AbstractLogger> _logger,
-    const FeatureLearnerType& _feature_learner ) const
-{
-    const auto hyperparameters =
-        std::make_shared<typename FeatureLearnerType::HypType>( cmd_ );
-
-    if ( min_freq_ == 0 || aggregation_enums_.size() == 0 )
-        {
-            return std::make_pair(
-                std::shared_ptr<const helpers::MappingContainer>(),
-                std::optional<const helpers::MappedContainer>() );
-        }
-
-    const auto mappings = helpers::MappingContainerMaker::fit(
-        aggregation_,
-        aggregation_enums_,
-        min_freq_,
-        _feature_learner.placeholder(),
-        _population,
-        _peripheral,
-        _feature_learner.peripheral(),
-        _word_indices,
-        _logger );
-
-    const auto mapped = helpers::MappingContainerMaker::transform(
-        mappings,
-        _feature_learner.placeholder(),
-        _population,
-        _peripheral,
-        _feature_learner.peripheral(),
-        _word_indices,
-        _logger );
-
-    return std::make_pair( mappings, mapped );
 }
 
 // ------------------------------------------------------------------------

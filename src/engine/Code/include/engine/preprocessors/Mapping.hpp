@@ -10,8 +10,42 @@ namespace preprocessors
 class Mapping : public Preprocessor
 {
    public:
+    static constexpr const char* AVG = "AVG";
+    static constexpr const char* AVG_TIME_BETWEEN = "AVG TIME BETWEEN";
+    static constexpr const char* COUNT = "COUNT";
+    static constexpr const char* COUNT_ABOVE_MEAN = "COUNT ABOVE MEAN";
+    static constexpr const char* COUNT_BELOW_MEAN = "COUNT BELOW MEAN";
+    static constexpr const char* COUNT_DISTINCT = "COUNT DISTINCT";
+    static constexpr const char* COUNT_DISTINCT_OVER_COUNT =
+        "COUNT DISTINCT OVER COUNT";
+    static constexpr const char* COUNT_MINUS_COUNT_DISTINCT =
+        "COUNT MINUS COUNT DISTINCT";
+    static constexpr const char* KURTOSIS = "KURTOSIS";
+    static constexpr const char* MAX = "MAX";
+    static constexpr const char* MEDIAN = "MEDIAN";
+    static constexpr const char* MIN = "MIN";
+    static constexpr const char* MODE = "MODE";
+    static constexpr const char* NUM_MAX = "NUM MAX";
+    static constexpr const char* NUM_MIN = "NUM MIN";
+    static constexpr const char* Q1 = "Q1";
+    static constexpr const char* Q5 = "Q5";
+    static constexpr const char* Q10 = "Q10";
+    static constexpr const char* Q25 = "Q25";
+    static constexpr const char* Q75 = "Q75";
+    static constexpr const char* Q90 = "Q90";
+    static constexpr const char* Q95 = "Q95";
+    static constexpr const char* Q99 = "Q99";
+    static constexpr const char* SKEW = "SKEW";
+    static constexpr const char* SUM = "SUM";
+    static constexpr const char* STDDEV = "STDDEV";
+    static constexpr const char* VAR = "VAR";
+    static constexpr const char* VARIATION_COEFFICIENT =
+        "VARIATION COEFFICIENT";
+
+   public:
     typedef typename helpers::MappingContainer::Colnames Colnames;
     typedef typename helpers::MappingContainer::MappingForDf MappingForDf;
+    typedef std::pair<Int, std::vector<size_t>> RownumPair;
     typedef std::vector<
         std::shared_ptr<const std::map<std::string, std::vector<Float>>>>
         TextMapping;
@@ -69,7 +103,7 @@ class Mapping : public Preprocessor
     const std::vector<std::string>& aggregation() const { return aggregation_; }
 
     /// Trivial (const) accessor.
-    const std::vector<helpers::MappingAggregation>& aggregation_enums() const
+    const std::vector<MappingAggregation>& aggregation_enums() const
     {
         return aggregation_enums_;
     }
@@ -87,6 +121,116 @@ class Mapping : public Preprocessor
     size_t min_freq() const { return min_freq_; }
 
    private:
+    /// Aggregates the range.
+    template <class IteratorType>
+    Float aggregate(
+        const IteratorType _begin,
+        const IteratorType _end,
+        const MappingAggregation _aggregation ) const
+    {
+        switch ( _aggregation )
+            {
+                case MappingAggregation::avg:
+                    return helpers::Aggregations::avg( _begin, _end );
+
+                case MappingAggregation::count:
+                    return helpers::Aggregations::count( _begin, _end );
+
+                case MappingAggregation::count_above_mean:
+                    return helpers::Aggregations::count_above_mean(
+                        _begin, _end );
+
+                case MappingAggregation::count_below_mean:
+                    return helpers::Aggregations::count_below_mean(
+                        _begin, _end );
+
+                case MappingAggregation::count_distinct:
+                    return helpers::Aggregations::count_distinct(
+                        _begin, _end );
+
+                case MappingAggregation::count_distinct_over_count:
+                    return helpers::Aggregations::count_distinct_over_count(
+                        _begin, _end );
+
+                case MappingAggregation::count_minus_count_distinct:
+                    return helpers::Aggregations::count( _begin, _end ) -
+                           helpers::Aggregations::count_distinct(
+                               _begin, _end );
+
+                case MappingAggregation::kurtosis:
+                    return helpers::Aggregations::kurtosis( _begin, _end );
+
+                case MappingAggregation::max:
+                    return helpers::Aggregations::maximum( _begin, _end );
+
+                case MappingAggregation::median:
+                    return helpers::Aggregations::median( _begin, _end );
+
+                case MappingAggregation::min:
+                    return helpers::Aggregations::minimum( _begin, _end );
+
+                case MappingAggregation::mode:
+                    return helpers::Aggregations::mode<Float>( _begin, _end );
+
+                case MappingAggregation::num_max:
+                    return helpers::Aggregations::num_max( _begin, _end );
+
+                case MappingAggregation::num_min:
+                    return helpers::Aggregations::num_min( _begin, _end );
+
+                case MappingAggregation::q1:
+                    return helpers::Aggregations::quantile(
+                        0.01, _begin, _end );
+
+                case MappingAggregation::q5:
+                    return helpers::Aggregations::quantile(
+                        0.05, _begin, _end );
+
+                case MappingAggregation::q10:
+                    return helpers::Aggregations::quantile( 0.1, _begin, _end );
+
+                case MappingAggregation::q25:
+                    return helpers::Aggregations::quantile(
+                        0.25, _begin, _end );
+
+                case MappingAggregation::q75:
+                    return helpers::Aggregations::quantile(
+                        0.75, _begin, _end );
+
+                case MappingAggregation::q90:
+                    return helpers::Aggregations::quantile(
+                        0.90, _begin, _end );
+
+                case MappingAggregation::q95:
+                    return helpers::Aggregations::quantile(
+                        0.95, _begin, _end );
+
+                case MappingAggregation::q99:
+                    return helpers::Aggregations::quantile(
+                        0.99, _begin, _end );
+
+                case MappingAggregation::skew:
+                    return helpers::Aggregations::skew( _begin, _end );
+
+                case MappingAggregation::stddev:
+                    return helpers::Aggregations::stddev( _begin, _end );
+
+                case MappingAggregation::sum:
+                    return helpers::Aggregations::sum( _begin, _end );
+
+                case MappingAggregation::var:
+                    return helpers::Aggregations::var( _begin, _end );
+
+                case MappingAggregation::variation_coefficient:
+                    return helpers::Aggregations::variation_coefficient(
+                        _begin, _end );
+
+                default:
+                    assert_true( false && "Unknown aggregation" );
+                    return 0.0;
+            }
+    }
+
     /// Builds some of the objects required for fitting or transforming the
     /// mapping.
     std::tuple<
@@ -98,6 +242,11 @@ class Mapping : public Preprocessor
         const std::vector<containers::DataFrame>& _peripheral_dfs,
         const helpers::Placeholder& _placeholder,
         const std::vector<std::string>& _peripheral_names ) const;
+
+    /// Calculates the aggregated targets.
+    std::pair<Int, std::vector<Float>> calc_agg_targets(
+        const helpers::DataFrame& _population,
+        const std::pair<Int, std::vector<size_t>>& _input ) const;
 
     /// Transforms the mappings for the categorical columns to SQL.
     std::vector<std::string> categorical_columns_to_sql(
@@ -164,6 +313,17 @@ class Mapping : public Preprocessor
         const helpers::DataFrame& _population,
         const std::vector<helpers::DataFrame>& _peripheral ) const;
 
+    /// Generates the name of the mapping column.
+    std::string make_colname(
+        const std::string& _name, const size_t _weight_num ) const;
+
+    /// Generates the mapping for a rownum map.
+    std::shared_ptr<const std::map<Int, std::vector<Float>>> make_mapping(
+        const std::map<Int, std::vector<size_t>>& _rownum_map,
+        const helpers::DataFrame& _population,
+        const std::vector<helpers::DataFrame>& _main_tables,
+        const std::vector<helpers::DataFrame>& _peripheral_tables ) const;
+
     /// Generates the mapping columns.
     std::vector<containers::Column<Float>> make_mapping_columns_int(
         const std::pair<containers::Column<Int>, MappingForDf::value_type>& _p )
@@ -179,6 +339,16 @@ class Mapping : public Preprocessor
     /// Generates the rownum map for the text columns.
     std::map<strings::String, std::vector<size_t>> make_rownum_map_text(
         const helpers::Column<strings::String>& _col ) const;
+
+    /// Identifies the correct rownums to use by parsing through the main and
+    /// peripheral tables.
+    RownumPair match_rownums(
+        const std::vector<helpers::DataFrame>& _main_tables,
+        const std::vector<helpers::DataFrame>& _peripheral_tables,
+        const RownumPair& _input ) const;
+
+    /// Parses the aggregation string to a proper enum.
+    MappingAggregation parse_aggregation( const std::string& _str ) const;
 
     /// Transforms the categorical columns in the DataFrame.
     std::vector<containers::Column<Float>> transform_categorical(
@@ -208,58 +378,6 @@ class Mapping : public Preprocessor
         const TextMapping& _mapping ) const;
 
    private:
-    /// Calculates the aggregated targets.
-    template <class KeyType>
-    std::pair<KeyType, std::vector<Float>> calc_agg_targets(
-        const helpers::DataFrame& _population,
-        const std::pair<KeyType, std::vector<size_t>>& _input ) const
-    {
-        // -----------------------------------------------------------------------
-
-        const auto& rownums = _input.second;
-
-        // -----------------------------------------------------------------------
-
-        const auto calc_aggs =
-            [this, &rownums]( const helpers::Column<Float>& _target_col )
-            -> std::vector<Float> {
-            const auto get_value = [&_target_col]( const size_t _i ) -> Float {
-                return _target_col[_i];
-            };
-
-            const auto value_range =
-                rownums | std::views::transform( get_value );
-
-            const auto aggregate =
-                [value_range](
-                    const helpers::MappingAggregation& _agg ) -> Float {
-                return helpers::MappingContainerMaker::aggregate(
-                    value_range.begin(), value_range.end(), _agg );
-            };
-
-            const auto aggregated_range =
-                aggregation_enums_ | std::views::transform( aggregate );
-
-            return stl::collect::vector<Float>( aggregated_range );
-        };
-
-        // -----------------------------------------------------------------------
-
-        const auto range =
-            _population.targets_ | std::views::transform( calc_aggs );
-
-        const auto values = stl::collect::vector<std::vector<Float>>( range );
-
-        const auto second =
-            stl::collect::vector<Float>( values | std::views::join );
-
-        // -----------------------------------------------------------------------
-
-        return std::make_pair( _input.first, second );
-
-        // -----------------------------------------------------------------------
-    }
-
     /// Transforms a set of columns to SQL.
     template <class MappingToSqlType, class MappingType>
     std::vector<std::string> columns_to_sql(
@@ -310,65 +428,6 @@ class Mapping : public Preprocessor
         return stl::collect::vector<std::string>( all | std::views::join );
     }
 
-    /// Generates the mapping for a rownum map.
-    template <class KeyType>
-    auto make_mapping(
-        const std::map<KeyType, std::vector<size_t>>& _rownum_map,
-        const helpers::DataFrame& _population,
-        const std::vector<helpers::DataFrame>& _main_tables,
-        const std::vector<helpers::DataFrame>& _peripheral_tables ) const
-    {
-        using RownumPair = std::pair<KeyType, std::vector<size_t>>;
-
-        const auto greater_than_min_freq =
-            [this]( const RownumPair& _input ) -> bool {
-            return _input.second.size() >= min_freq_;
-        };
-
-        const auto match_rows = [this, &_main_tables, &_peripheral_tables](
-                                    const RownumPair& _input ) -> RownumPair {
-            return match_rownums( _main_tables, _peripheral_tables, _input );
-        };
-
-        const auto calc_agg = [this, &_population]( const RownumPair& _pair )
-            -> std::pair<KeyType, std::vector<Float>> {
-            return calc_agg_targets( _population, _pair );
-        };
-
-        const auto key_to_string =
-            []( const std::pair<strings::String, std::vector<Float>>& _pair )
-            -> std::pair<std::string, std::vector<Float>> {
-            return std::make_pair( _pair.first.str(), _pair.second );
-        };
-
-        constexpr bool is_text = std::is_same<KeyType, strings::String>();
-
-        if constexpr ( is_text )
-            {
-                auto range = _rownum_map |
-                             std::views::filter( greater_than_min_freq ) |
-                             std::views::transform( match_rows ) |
-                             std::views::transform( calc_agg ) |
-                             std::views::transform( key_to_string );
-
-                return std::make_shared<
-                    const std::map<std::string, std::vector<Float>>>(
-                    range.begin(), range.end() );
-            }
-
-        if constexpr ( !is_text )
-            {
-                auto range = _rownum_map |
-                             std::views::filter( greater_than_min_freq ) |
-                             std::views::transform( match_rows ) |
-                             std::views::transform( calc_agg );
-
-                return std::make_shared<
-                    const std::map<KeyType, std::vector<Float>>>(
-                    range.begin(), range.end() );
-            }
-    }
-
     /// Generates a rownum map for discrete columns.
     template <class T>
     auto make_rownum_map( const helpers::Column<T>& _col ) const
@@ -391,37 +450,12 @@ class Mapping : public Preprocessor
             }
     }
 
-    /// Identifies the correct rownums to use by parsing through the main and
-    /// peripheral tables.
-    template <class RownumPair>
-    RownumPair match_rownums(
-        const std::vector<helpers::DataFrame>& _main_tables,
-        const std::vector<helpers::DataFrame>& _peripheral_tables,
-        const RownumPair& _input ) const
-    {
-        assert_true( _main_tables.size() == _peripheral_tables.size() );
-
-        auto rownums = _input.second;
-
-        for ( size_t i = 0; i < _main_tables.size(); ++i )
-            {
-                const auto ix = _main_tables.size() - 1 - i;
-
-                rownums = find_output_ix(
-                    rownums,
-                    _main_tables.at( ix ),
-                    _peripheral_tables.at( ix ) );
-            }
-
-        return std::make_pair( _input.first, rownums );
-    }
-
    private:
     /// The aggregations to use, in string form.
     std::vector<std::string> aggregation_;
 
     /// The aggregations to use, as enums.
-    std::vector<helpers::MappingAggregation> aggregation_enums_;
+    std::vector<MappingAggregation> aggregation_enums_;
 
     /// The vocabulary for the categorical columns.
     MappingForDf categorical_;
