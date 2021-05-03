@@ -113,6 +113,11 @@ struct Placeholder
     /// Checks the length of the vectors.
     void check_vector_length();
 
+    /// Infers whether any of the tables noted in _peripheral_names require
+    /// lagged targets.
+    std::vector<bool> infer_needs_targets(
+        const std::vector<std::string>& _peripheral_names ) const;
+
     /// Returns the joined tables as a JSON array
     static Poco::JSON::Array::Ptr joined_tables_to_array(
         const std::vector<Placeholder>& _vector );

@@ -221,12 +221,6 @@ class FeatureLearner : public AbstractFeatureLearner
         const std::vector<DataFrameType>& _peripheral,
         const std::shared_ptr<const logging::AbstractLogger> _logger ) const;
 
-    /// Infers whether we need the targets of a peripheral table.
-    std::vector<bool> infer_needs_targets(
-        const helpers::Placeholder& _placeholder,
-        const size_t _num_peripheral,
-        std::vector<bool>* _needs_targets = nullptr ) const;
-
     /// Initializes the feature learner.
     std::optional<FeatureLearnerType> make_feature_learner() const;
 
@@ -276,6 +270,22 @@ class FeatureLearner : public AbstractFeatureLearner
             }
 
         return *feature_learner_;
+    }
+
+    /// Infers whether we need the targets of a peripheral table.
+    std::vector<bool> infer_needs_targets() const
+    {
+        auto needs_targets = placeholder().infer_needs_targets( peripheral() );
+
+        if ( peripheral_schema().size() > needs_targets.size() )
+            {
+                needs_targets.insert(
+                    needs_targets.end(),
+                    peripheral_schema().size() - needs_targets.size(),
+                    false );
+            }
+
+        return needs_targets;
     }
 
     /// The minimum document frequency used for the vocabulary.
@@ -663,10 +673,10 @@ FeatureLearner<FeatureLearnerType>::extract_tables_by_colnames(
 
     // ------------------------------------------------
 
-    const auto needs_targets =
-        infer_needs_targets( placeholder(), peripheral_schema().size() );
+    const auto peripheral_needs_targets = infer_needs_targets();
 
-    assert_true( needs_targets.size() == peripheral_schema().size() );
+    assert_true(
+        peripheral_needs_targets.size() == peripheral_schema().size() );
 
     // ------------------------------------------------
 
@@ -674,12 +684,13 @@ FeatureLearner<FeatureLearnerType>::extract_tables_by_colnames(
 
     for ( size_t i = 0; i < peripheral_schema().size(); ++i )
         {
+            const auto t =
+                ( peripheral_needs_targets.at( i )
+                      ? AbstractFeatureLearner::USE_ALL_TARGETS
+                      : AbstractFeatureLearner::IGNORE_TARGETS );
+
             const auto table = extract_table_by_colnames(
-                peripheral_schema().at( i ),
-                _peripheral_dfs.at( i ),
-                needs_targets.at( i )
-                    ? AbstractFeatureLearner::USE_ALL_TARGETS
-                    : AbstractFeatureLearner::IGNORE_TARGETS );
+                peripheral_schema().at( i ), _peripheral_dfs.at( i ), t );
 
             peripheral_tables.push_back( table );
         }
@@ -880,74 +891,6 @@ FeatureLearner<FeatureLearnerType>::handle_text_fields(
 // ------------------------------------------------------------------------
 
 template <typename FeatureLearnerType>
-std::vector<bool> FeatureLearner<FeatureLearnerType>::infer_needs_targets(
-    const helpers::Placeholder& _placeholder,
-    const size_t _num_peripheral,
-    std::vector<bool>* _needs_targets ) const
-{
-    // ------------------------------------------------------------------------
-
-    std::vector<bool> needs_targets;
-
-    // ------------------------------------------------------------------------
-
-    if ( _needs_targets != nullptr )
-        {
-            needs_targets = *_needs_targets;
-            assert_true( needs_targets.size() == _num_peripheral );
-        }
-    else
-        {
-            needs_targets = std::vector<bool>( _num_peripheral, false );
-        }
-
-    // ------------------------------------------------------------------------
-
-    const auto& allow_lagged_targets = _placeholder.allow_lagged_targets_;
-
-    const auto& joined_tables = _placeholder.joined_tables_;
-
-    assert_true( allow_lagged_targets.size() == joined_tables.size() );
-
-    // ------------------------------------------------------------------------
-
-    for ( size_t i = 0; i < joined_tables.size(); ++i )
-        {
-            const auto& joined_table = joined_tables.at( i );
-
-            if ( allow_lagged_targets.at( i ) )
-                {
-                    const auto name = joined_table.name_;
-
-                    const auto it = std::find(
-                        peripheral().begin(), peripheral().end(), name );
-
-                    if ( it == peripheral().end() )
-                        {
-                            throw std::invalid_argument(
-                                "Peripheral placeholder named '" + name +
-                                "' not found!" );
-                        }
-
-                    const auto dist = std::distance( peripheral().begin(), it );
-
-                    needs_targets.at( dist ) = true;
-                }
-
-            needs_targets = infer_needs_targets(
-                joined_table, _num_peripheral, &needs_targets );
-        }
-
-    // ------------------------------------------------------------------------
-
-    return needs_targets;
-
-    // ------------------------------------------------------------------------
-}
-
-// ------------------------------------------------------------------------
-
-template <typename FeatureLearnerType>
 void FeatureLearner<FeatureLearnerType>::load( const std::string& _fname )
 {
     const auto obj = load_json_obj( _fname );
@@ -1046,8 +989,7 @@ std::vector<std::string> FeatureLearner<FeatureLearnerType>::make_staging(
 {
     std::vector<std::string> sql;
 
-    const auto peripheral_needs_targets = infer_needs_targets(
-        placeholder(), feature_learner().peripheral_schema().size() );
+    const auto peripheral_needs_targets = infer_needs_targets();
 
     const auto staging_tables = helpers::SQLGenerator::make_staging_tables(
         _targets,

@@ -17,16 +17,51 @@ Mapping::build_prerequisites(
     const std::vector<std::string>& _peripheral_names,
     const bool _targets ) const
 {
+    // -----------------------------------------------------------------------
+
     assert_true( population_schema_ );
 
     assert_true( peripheral_schema_ );
 
-    // TODO: infer needs targets logic
-    const auto to_immutable = [this, &_peripheral_dfs, _targets](
+    // -----------------------------------------------------------------------
+
+    const auto infer_needs_targets =
+        [this,
+         _targets,
+         &_placeholder,
+         &_peripheral_names]() -> std::vector<bool> {
+        if ( _targets )
+            {
+                return std::vector<bool>( peripheral_schema_->size(), true );
+            }
+
+        auto needs_targets =
+            _placeholder.infer_needs_targets( _peripheral_names );
+
+        if ( peripheral_schema_->size() > needs_targets.size() )
+            {
+                needs_targets.insert(
+                    needs_targets.end(),
+                    peripheral_schema_->size() - needs_targets.size(),
+                    false );
+            }
+
+        return needs_targets;
+    };
+
+    // -----------------------------------------------------------------------
+
+    const auto needs_targets = infer_needs_targets();
+
+    // -----------------------------------------------------------------------
+
+    const auto to_immutable = [this, &_peripheral_dfs, &needs_targets](
                                   const size_t _i ) -> helpers::DataFrame {
         return _peripheral_dfs.at( _i ).to_immutable<helpers::DataFrame>(
-            peripheral_schema_->at( _i ), _targets );
+            peripheral_schema_->at( _i ), needs_targets.at( _i ) );
     };
+
+    // -----------------------------------------------------------------------
 
     if ( peripheral_schema_->size() != _peripheral_dfs.size() )
         {

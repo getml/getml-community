@@ -90,6 +90,65 @@ void Placeholder::check_vector_length()
 
 // ----------------------------------------------------------------------------
 
+std::vector<bool> Placeholder::infer_needs_targets(
+    const std::vector<std::string>& _peripheral_names ) const
+{
+    // ------------------------------------------------------------------------
+
+    std::vector<bool> needs_targets( _peripheral_names.size() );
+
+    // ------------------------------------------------------------------------
+
+    assert_true( allow_lagged_targets_.size() == joined_tables_.size() );
+
+    // ------------------------------------------------------------------------
+
+    for ( size_t i = 0; i < joined_tables_.size(); ++i )
+        {
+            const auto& joined_table = joined_tables_.at( i );
+
+            if ( allow_lagged_targets_.at( i ) )
+                {
+                    const auto name = joined_table.name_;
+
+                    const auto it = std::find(
+                        _peripheral_names.begin(),
+                        _peripheral_names.end(),
+                        name );
+
+                    if ( it == _peripheral_names.end() )
+                        {
+                            throw std::invalid_argument(
+                                "Peripheral placeholder named '" + name +
+                                "' not found!" );
+                        }
+
+                    const auto dist =
+                        std::distance( _peripheral_names.begin(), it );
+
+                    needs_targets.at( dist ) = true;
+                }
+
+            const auto joined_table_needs_targets =
+                joined_table.infer_needs_targets( _peripheral_names );
+
+            std::transform(
+                needs_targets.begin(),
+                needs_targets.end(),
+                joined_table_needs_targets.begin(),
+                needs_targets.begin(),
+                std::logical_or<bool>() );
+        }
+
+    // ------------------------------------------------------------------------
+
+    return needs_targets;
+
+    // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
 Poco::JSON::Array::Ptr Placeholder::joined_tables_to_array(
     const std::vector<Placeholder>& _vector )
 {
