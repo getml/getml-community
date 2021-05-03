@@ -14,17 +14,36 @@ Mapping::build_prerequisites(
     const containers::DataFrame& _population_df,
     const std::vector<containers::DataFrame>& _peripheral_dfs,
     const helpers::Placeholder& _placeholder,
-    const std::vector<std::string>& _peripheral_names ) const
+    const std::vector<std::string>& _peripheral_names,
+    const bool _targets ) const
 {
-    const auto to_immutable =
-        []( const containers::DataFrame& _df ) -> helpers::DataFrame {
-        return _df.to_immutable<helpers::DataFrame>();
+    assert_true( population_schema_ );
+
+    assert_true( peripheral_schema_ );
+
+    // TODO: infer needs targets logic
+    const auto to_immutable = [this, &_peripheral_dfs, _targets](
+                                  const size_t _i ) -> helpers::DataFrame {
+        return _peripheral_dfs.at( _i ).to_immutable<helpers::DataFrame>(
+            peripheral_schema_->at( _i ), _targets );
     };
 
-    const auto population = to_immutable( _population_df );
+    if ( peripheral_schema_->size() != _peripheral_dfs.size() )
+        {
+            throw std::invalid_argument(
+                "Expected " + std::to_string( peripheral_schema_->size() ) +
+                " peripheral tables, got " +
+                std::to_string( _peripheral_dfs.size() ) + "." );
+        }
+
+    const auto population =
+        _population_df.to_immutable<helpers::DataFrame>( *population_schema_ );
+
+    const auto iota =
+        std::views::iota( static_cast<size_t>( 0 ), _peripheral_dfs.size() );
 
     const auto peripheral = stl::collect::vector<helpers::DataFrame>(
-        _peripheral_dfs | std::views::transform( to_immutable ) );
+        iota | std::views::transform( to_immutable ) );
 
     const auto [vocabulary, word_index_container] =
         handle_text_fields( population, peripheral );
@@ -113,7 +132,8 @@ std::vector<std::string> Mapping::categorical_columns_to_sql(
             _categories,
             helpers::SQLGenerator::to_upper( name ),
             categorical_.at( _i ),
-            _weight_num );
+            _weight_num,
+            false );
     };
 
     return columns_to_sql( mapping_to_sql, categorical_, categorical_names_ );
@@ -125,7 +145,8 @@ std::string Mapping::categorical_or_text_column_to_sql(
     const std::shared_ptr<const std::vector<strings::String>>& _categories,
     const std::string& _name,
     const PtrType& _ptr,
-    const size_t _weight_num ) const
+    const size_t _weight_num,
+    const bool _is_text ) const
 {
     assert_true( _categories );
 
@@ -145,12 +166,15 @@ std::string Mapping::categorical_or_text_column_to_sql(
 
             assert_true( static_cast<size_t>( p.first ) < _categories->size() );
 
-            const std::string end =
-                ( i == pairs.size() - 1 ) ? ";\n\n\n" : ",\n";
+            const std::string end = ( i == pairs.size() - 1 ) ? ";\n\n" : ",\n";
 
             sql += begin + "('" + _categories->at( p.first ).str() + "', " +
                    io::Parser::to_precise_string( p.second ) + ")" + end;
         }
+
+    sql += helpers::SQLGenerator::join_mapping( table_name_, _name, _is_text );
+
+    sql += "\n\n";
 
     return sql;
 }
@@ -180,6 +204,8 @@ std::string Mapping::discrete_column_to_sql(
             sql += begin + "(" + std::to_string( p.first ) + ", " +
                    io::Parser::to_precise_string( p.second ) + ")" + end;
         }
+
+    sql += helpers::SQLGenerator::join_mapping( table_name_, _name, false );
 
     return sql;
 }
@@ -591,6 +617,30 @@ std::vector<Mapping> Mapping::fit_submappings(
 
 // ----------------------------------------------------
 
+std::pair<
+    std::shared_ptr<const containers::Schema>,
+    std::shared_ptr<const std::vector<containers::Schema>>>
+Mapping::extract_schemata(
+    const containers::DataFrame& _population_df,
+    const std::vector<containers::DataFrame>& _peripheral_dfs ) const
+{
+    const auto to_schema = []( const containers::DataFrame& _df ) {
+        return _df.to_schema( true );
+    };
+
+    const auto population_schema = std::make_shared<const containers::Schema>(
+        _population_df.to_schema( true ) );
+
+    const auto peripheral_schema =
+        std::make_shared<const std::vector<containers::Schema>>(
+            stl::collect::vector<containers::Schema>(
+                _peripheral_dfs | std::views::transform( to_schema ) ) );
+
+    return std::make_pair( population_schema, peripheral_schema );
+}
+
+// ----------------------------------------------------
+
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
 Mapping::fit_transform(
     const Poco::JSON::Object& _cmd,
@@ -602,8 +652,15 @@ Mapping::fit_transform(
 {
     assert_true( _categories );
 
+    std::tie( population_schema_, peripheral_schema_ ) =
+        extract_schemata( _population_df, _peripheral_dfs );
+
     const auto [population, table_holder, vocabulary] = build_prerequisites(
-        _population_df, _peripheral_dfs, _placeholder, _peripheral_names );
+        _population_df,
+        _peripheral_dfs,
+        _placeholder,
+        _peripheral_names,
+        true );
 
     vocabulary_ = vocabulary;
 
@@ -1157,83 +1214,52 @@ std::vector<std::string> Mapping::text_columns_to_sql() const
 {
     assert_true( text_names_ );
 
-    using Map = std::map<std::string, std::vector<Float>>;
+    assert_true( vocabulary_ );
 
-    using PtrType = std::shared_ptr<const Map>;
+    assert_true( peripheral_schema_ );
 
-    // ----------------------------------------------------
+    assert_true(
+        vocabulary_->peripheral().size() == peripheral_schema_->size() );
 
-    const auto make_pairs = []( const Map& _m, const size_t _target_num )
-        -> std::vector<std::pair<std::string, Float>> {
-        using Pair = std::pair<std::string, Float>;
-
-        auto pairs = std::vector<Pair>();
-
-        for ( const auto& p : _m )
+    const auto find_vocabulary = [this]() {
+        if ( prefix_ == "" )
             {
-                assert_true( _target_num < p.second.size() );
-                pairs.push_back(
-                    std::make_pair( p.first, p.second.at( _target_num ) ) );
+                return vocabulary_->population();
             }
 
-        const auto by_value = []( const Pair& _p1, const Pair& _p2 ) -> bool {
-            return _p1.second > _p2.second;
-        };
-
-        std::sort( pairs.begin(), pairs.end(), by_value );
-
-        return pairs;
-    };
-
-    // ----------------------------------------------------
-
-    const auto text_column_to_sql = [this, make_pairs](
-                                        const std::string& _name,
-                                        const PtrType& _ptr,
-                                        const size_t _target_num ) {
-        assert_true( _ptr );
-
-        const auto pairs = make_pairs( *_ptr, _target_num );
-
-        std::string sql = make_table_header( _name, false );
-
-        for ( size_t i = 0; i < pairs.size(); ++i )
+        for ( size_t i = 0; i < peripheral_schema_->size(); ++i )
             {
-                const std::string begin = ( i == 0 ) ? "" : "      ";
-
-                const auto& p = pairs.at( i );
-
-                const std::string end =
-                    ( i == pairs.size() - 1 ) ? ";\n\n\n" : ",\n";
-
-                sql += begin + "('" + p.first + "', " +
-                       io::Parser::to_precise_string( p.second ) + ")" + end;
+                if ( peripheral_schema_->at( i ).name_ == table_name_ )
+                    {
+                        return vocabulary_->peripheral().at( i );
+                    }
             }
 
-        return sql;
+        assert_true( false );
+
+        return std::vector<
+            std::shared_ptr<const std::vector<strings::String>>>();
     };
 
-    // ----------------------------------------------------
+    const auto& vocabulary = find_vocabulary();
 
-    // TODO
-    /*
-    const auto mapping_to_sql = [this, text_column_to_sql](
+    assert_true( text_names_->size() == vocabulary.size() );
+
+    const auto mapping_to_sql = [this, &vocabulary](
                                     const size_t _i,
                                     const size_t _weight_num ) -> std::string {
         const auto name = helpers::SQLGenerator::make_colname(
-            make_colname(
-                text_names_->at( _i ), _weight_num ) );
+            make_colname( text_names_->at( _i ), _weight_num ) );
 
-        return text_column_to_sql(
+        return categorical_or_text_column_to_sql(
+            vocabulary.at( _i ),
             helpers::SQLGenerator::to_upper( name ),
             text_.at( _i ),
-            _weight_num );
-    };*/
+            _weight_num,
+            true );
+    };
 
-    // ----------------------------------------------------
-
-    // TODO
-    return {};  // columns_to_sql( mapping_to_sql, text_, text_names_ );
+    return columns_to_sql( mapping_to_sql, text_, text_names_ );
 }
 
 // ----------------------------------------------------
@@ -1274,14 +1300,25 @@ std::vector<std::string> Mapping::to_sql(
     const std::shared_ptr<const std::vector<strings::String>>& _categories )
     const
 {
+    const auto submapping_to_sql =
+        [&_categories]( const Mapping& _mapping ) -> std::vector<std::string> {
+        return _mapping.to_sql( _categories );
+    };
+
     const auto categorical = categorical_columns_to_sql( _categories );
 
     const auto discrete = discrete_columns_to_sql();
 
     const auto text = text_columns_to_sql();
 
+    const auto all_submappings = stl::collect::vector<std::vector<std::string>>(
+        submappings_ | std::views::transform( submapping_to_sql ) );
+
+    const auto submappings =
+        stl::collect::vector<std::string>( all_submappings | std::views::join );
+
     const auto all = std::vector<std::vector<std::string>>(
-        { categorical, discrete, text } );
+        { submappings, categorical, discrete, text } );
 
     return stl::collect::vector<std::string>( all | std::views::join );
 }
@@ -1298,7 +1335,11 @@ Mapping::transform(
     const std::vector<std::string>& _peripheral_names ) const
 {
     const auto [population, table_holder, _] = build_prerequisites(
-        _population_df, _peripheral_dfs, _placeholder, _peripheral_names );
+        _population_df,
+        _peripheral_dfs,
+        _placeholder,
+        _peripheral_names,
+        false );
 
     auto population_df = _population_df;
 
@@ -1556,32 +1597,15 @@ std::vector<containers::Column<Float>> Mapping::transform_text(
 
     assert_true( text_.size() == text_names_->size() );
 
-    // --------------------------------------------------------------
-
-    const auto find_word_index = [&_immutable]( const std::string& _name )
-        -> std::shared_ptr<const textmining::WordIndex> {
-        for ( size_t i = 0; i < _immutable.text_.size(); ++i )
-            {
-                if ( _immutable.text_.at( i ).name_ == _name )
-                    {
-                        return _immutable.word_indices_.at( i );
-                    }
-            }
-
-        throw std::invalid_argument(
-            "Mapping: Column '" + _name + "' not found!" );
-
-        return _immutable.word_indices_.at( 0 );
-    };
+    assert_true( text_.size() == _immutable.text_.size() );
 
     // --------------------------------------------------------------
 
-    const auto get_word_index = [this,
-                                 find_word_index]( const size_t _i ) -> Pair {
+    const auto get_word_index = [this, &_immutable]( const size_t _i ) -> Pair {
         assert_true( text_names_ );
         assert_true( _i < text_names_->size() );
         const auto& colname = text_names_->at( _i );
-        return std::make_pair( colname, find_word_index( colname ) );
+        return std::make_pair( colname, _immutable.word_indices_.at( _i ) );
     };
 
     // --------------------------------------------------------------

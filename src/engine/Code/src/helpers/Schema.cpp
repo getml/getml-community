@@ -13,6 +13,10 @@ Schema Schema::from_json( const Poco::JSON::Object& _json_obj )
             Schema::parse_columns<std::string>( _json_obj, "discrete_" ),
         .join_keys_ = jsonutils::JSON::array_to_vector<std::string>(
             jsonutils::JSON::get_array( _json_obj, "join_keys_" ) ),
+        .name_ =
+            _json_obj.has( "name_" )
+                ? jsonutils::JSON::get_value<std::string>( _json_obj, "name_" )
+                : std::string( "" ),
         .numericals_ = jsonutils::JSON::array_to_vector<std::string>(
             jsonutils::JSON::get_array( _json_obj, "numerical_" ) ),
         .targets_ = jsonutils::JSON::array_to_vector<std::string>(
@@ -47,6 +51,8 @@ Poco::JSON::Object::Ptr Schema::to_json_obj() const
 
     obj->set(
         "join_keys_", jsonutils::JSON::vector_to_array_ptr( join_keys_ ) );
+
+    obj->set( "name_", name_ );
 
     obj->set(
         "numerical_", jsonutils::JSON::vector_to_array_ptr( numericals_ ) );

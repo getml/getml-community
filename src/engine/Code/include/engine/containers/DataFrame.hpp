@@ -166,7 +166,8 @@ class DataFrame
     /// Transforms an immutable data frame from this.
     template <typename DataFrameType>
     DataFrameType to_immutable(
-        const std::optional<Schema> &_schema = std::nullopt ) const;
+        const std::optional<Schema> &_schema = std::nullopt,
+        const bool _targets = true ) const;
 
     /// Extracts the data frame as a Poco::JSON::Object the monitor process can
     /// understand
@@ -1048,7 +1049,7 @@ void DataFrame::save_matrices(
 
 template <typename DataFrameType>
 DataFrameType DataFrame::to_immutable(
-    const std::optional<Schema> &_schema ) const
+    const std::optional<Schema> &_schema, const bool _targets ) const
 {
     // ------------------------------------------------------------------------
 
@@ -1110,8 +1111,10 @@ DataFrameType DataFrame::to_immutable(
         return FloatColumnType( col.data_ptr(), _name, col.unit() );
     };
 
-    const auto targets = stl::collect::vector<FloatColumnType>(
-        schema.targets_ | std::views::transform( get_target ) );
+    const auto targets =
+        _targets ? stl::collect::vector<FloatColumnType>(
+                       schema.targets_ | std::views::transform( get_target ) )
+                 : std::vector<FloatColumnType>();
 
     // ------------------------------------------------------------------------
 

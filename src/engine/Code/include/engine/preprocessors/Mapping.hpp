@@ -245,7 +245,8 @@ class Mapping : public Preprocessor
         const containers::DataFrame& _population_df,
         const std::vector<containers::DataFrame>& _peripheral_dfs,
         const helpers::Placeholder& _placeholder,
-        const std::vector<std::string>& _peripheral_names ) const;
+        const std::vector<std::string>& _peripheral_names,
+        const bool _targets ) const;
 
     /// Calculates the aggregated targets.
     std::pair<Int, std::vector<Float>> calc_agg_targets(
@@ -262,7 +263,8 @@ class Mapping : public Preprocessor
         const std::shared_ptr<const std::vector<strings::String>>& _categories,
         const std::string& _name,
         const PtrType& _ptr,
-        const size_t _weight_num ) const;
+        const size_t _weight_num,
+        const bool _is_text ) const;
 
     /// Transforms the mappings for a discrete columns to SQL.
     std::string discrete_column_to_sql(
@@ -279,6 +281,14 @@ class Mapping : public Preprocessor
     /// Extracts a mapping from JSON.
     MappingForDf extract_mapping(
         const Poco::JSON::Object& _obj, const std::string& _key ) const;
+
+    /// Extracts the schemata from the peripheral and population tables.
+    std::pair<
+        std::shared_ptr<const containers::Schema>,
+        std::shared_ptr<const std::vector<containers::Schema>>>
+    extract_schemata(
+        const containers::DataFrame& _population_df,
+        const std::vector<containers::DataFrame>& _peripheral_dfs ) const;
 
     /// Extracts the text mapping.
     typename Mapping::TextMapping extract_text_mapping(
@@ -510,6 +520,12 @@ class Mapping : public Preprocessor
 
     /// The prefix to insert into the generated mapping.
     std::string prefix_;
+
+    /// The schema of the peripheral data frames
+    std::shared_ptr<const std::vector<containers::Schema>> peripheral_schema_;
+
+    /// The schema of the population data frame
+    std::shared_ptr<const containers::Schema> population_schema_;
 
     /// Any relational mappings that might exist.
     std::vector<Mapping> submappings_;

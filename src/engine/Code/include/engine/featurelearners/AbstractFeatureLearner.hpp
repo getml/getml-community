@@ -67,6 +67,11 @@ class AbstractFeatureLearner
     /// feature learner (the difference matters for time series).
     virtual helpers::Placeholder make_placeholder() const = 0;
 
+    /// Generates the staging scripts.
+    virtual std::vector<std::string> make_staging(
+        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const bool _targets ) const = 0;
+
     /// Data frames might have to be modified, such as adding upper time stamps
     /// or self joins.
     virtual std::pair<containers::DataFrame, std::vector<containers::DataFrame>>

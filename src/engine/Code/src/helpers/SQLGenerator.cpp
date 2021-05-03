@@ -320,61 +320,50 @@ std::string SQLGenerator::handle_many_to_one_joins(
 
 // ----------------------------------------------------------------------------
 
-std::string SQLGenerator::join_mappings(
-    const std::string& _name,
-    const Placeholder& _schema,
-    const std::vector<std::string>& _mappings )
+std::string SQLGenerator::join_mapping(
+    const std::string& _name, const std::string& _colname, const bool _is_text )
 {
     // ------------------------------------------------------------------------
 
+    const auto table_name = make_staging_table_name( _name );
+
+    // ------------------------------------------------------------------------
+
     const auto join_text =
-        [&_name]( const std::string& _colname ) -> std::string {
+        [&table_name]( const std::string& _colname ) -> std::string {
         const auto extracted = to_lower( _colname );
 
-        return "UPDATE \"" + to_upper( _name ) + "\"\nSET \"" +
-               to_lower( _colname ) + "\" = t3.\"avg_value\"\nFROM \"" + _name +
-               "\",\n     ( SELECT t1.\"" + extracted +
+        return "UPDATE \"" + to_upper( table_name ) + "\"\nSET \"" +
+               to_lower( _colname ) + "\" = t3.\"avg_value\"\nFROM \"" +
+               table_name + "\",\n     ( SELECT t1.\"" + extracted +
                "\", AVG( t2.\"value\" ) AS \"avg_value\"\n       FROM "
                "\"" +
-               _name + "\" t1\n       LEFT JOIN \"" + to_upper( _colname ) +
-               "\" t2\n       ON contains( t1.\"" + extracted +
-               "\", t2.\"key\" ) > 0\n       GROUP BY t1.\"" + extracted +
-               "\" ) AS t3\nWHERE \"" + to_lower( _name ) + "\".\"" +
-               extracted + "\" = t3.\"" + extracted + "\";\n\n";
+               table_name + "\" t1\n       LEFT JOIN \"" +
+               to_upper( _colname ) + "\" t2\n       ON contains( t1.\"" +
+               extracted + "\", t2.\"key\" ) > 0\n       GROUP BY t1.\"" +
+               extracted + "\" ) AS t3\nWHERE \"" + to_lower( table_name ) +
+               "\".\"" + extracted + "\" = t3.\"" + extracted + "\";\n\n";
     };
 
     // ------------------------------------------------------------------------
 
     const auto join_other =
-        [&_name]( const std::string& _colname ) -> std::string {
-        return "UPDATE \"" + to_upper( _name ) + "\"\nSET \"" +
+        [&table_name]( const std::string& _colname ) -> std::string {
+        return "UPDATE \"" + to_upper( table_name ) + "\"\nSET \"" +
                to_lower( _colname ) + "\" = t2.\"value\"\nFROM \"" +
-               to_upper( _colname ) + "\" AS t2\nWHERE \"" + to_upper( _name ) +
-               "\".\"" + to_lower( _colname ) + "\" = t2.\"key\";\n\n";
+               to_upper( _colname ) + "\" AS t2\nWHERE \"" +
+               to_upper( table_name ) + "\".\"" + to_lower( _colname ) +
+               "\" = t2.\"key\";\n\n";
     };
 
     // ------------------------------------------------------------------------
 
-    const auto is_text = [&_schema]( const std::string& _colname ) -> bool {
-        const auto it = std::find(
-            _schema.text_.begin(), _schema.text_.end(), to_lower( _colname ) );
-        return it != _schema.text_.end();
-    };
+    if ( _is_text )
+        {
+            return join_text( _colname );
+        }
 
-    // ------------------------------------------------------------------------
-
-    const auto join = [join_text, join_other, is_text](
-                          const std::string& _colname ) -> std::string {
-        if ( is_text( _colname ) )
-            {
-                return join_text( _colname );
-            }
-        return join_other( _colname );
-    };
-
-    // ------------------------------------------------------------------------
-
-    return stl::collect::string( _mappings | std::views::transform( join ) );
+    return join_other( _colname );
 }
 
 // ----------------------------------------------------------------------------
@@ -453,11 +442,8 @@ std::string SQLGenerator::make_relative_time(
 
 // ----------------------------------------------------------------------------
 
-std::pair<std::vector<std::string>, std::vector<std::string>>
-SQLGenerator::make_staging_columns(
-    const bool& _include_targets,
-    const Placeholder& _schema,
-    const std::vector<std::string>& _mappings )
+std::vector<std::string> SQLGenerator::make_staging_columns(
+    const bool& _include_targets, const Placeholder& _schema )
 {
     // ------------------------------------------------------------------------
 
@@ -537,13 +523,6 @@ SQLGenerator::make_staging_columns(
 
     // ------------------------------------------------------------------------
 
-    const auto make_mapping_casts = [&_mappings, init_as_null]() {
-        return stl::collect::vector<std::string>(
-            _mappings | std::views::transform( init_as_null ) );
-    };
-
-    // ------------------------------------------------------------------------
-
     const auto categoricals = cast_as_text( _schema.categoricals_ );
 
     const auto discretes = cast_as_real( _schema.discretes_ );
@@ -558,8 +537,6 @@ SQLGenerator::make_staging_columns(
 
     const auto time_stamps = cast_as_time_stamp( _schema.time_stamps_ );
 
-    const auto mapping_casts = make_mapping_casts();
-
     // ------------------------------------------------------------------------
 
     const auto all = _include_targets ? std::vector<std::vector<std::string>>(
@@ -569,30 +546,18 @@ SQLGenerator::make_staging_columns(
                                               join_keys,
                                               numericals,
                                               text,
-                                              time_stamps,
-                                              mapping_casts } )
+                                              time_stamps } )
                                       : std::vector<std::vector<std::string>>(
                                             { categoricals,
                                               discretes,
                                               join_keys,
                                               numericals,
                                               text,
-                                              time_stamps,
-                                              mapping_casts } );
+                                              time_stamps } );
 
     // ------------------------------------------------------------------------
 
-    const auto columns =
-        stl::collect::vector<std::string>( all | std::ranges::views::join );
-
-    const auto mappings =
-        _mappings.size() > 0
-            ? _mappings
-            : stl::collect::vector<std::string>(
-                  _schema.numericals_ | std::views::filter( is_mapping ) |
-                  std::views::transform( make_colname ) );
-
-    return std::make_pair( columns, mappings );
+    return stl::collect::vector<std::string>( all | std::ranges::views::join );
 
     // ------------------------------------------------------------------------
 }
@@ -654,14 +619,11 @@ std::string SQLGenerator::create_indices(
 // ----------------------------------------------------------------------------
 
 std::string SQLGenerator::make_staging_table(
-    const bool& _include_targets,
-    const Placeholder& _schema,
-    const std::vector<std::string>& _mappings )
+    const bool& _include_targets, const Placeholder& _schema )
 {
     // ------------------------------------------------------------------------
 
-    const auto [columns, mappings] =
-        make_staging_columns( _include_targets, _schema, _mappings );
+    const auto columns = make_staging_columns( _include_targets, _schema );
 
     const auto name = make_staging_table_name( _schema.name_ );
 
@@ -689,8 +651,6 @@ std::string SQLGenerator::make_staging_table(
     sql << ";\n\n";
 
     sql << create_indices( name, _schema );
-
-    sql << join_mappings( name, _schema, mappings );
 
     sql << "\n";
 
@@ -735,30 +695,12 @@ std::vector<std::string> SQLGenerator::make_staging_tables(
     const bool _population_needs_targets,
     const std::vector<bool>& _peripheral_needs_targets,
     const Placeholder& _population_schema,
-    const std::vector<Placeholder>& _peripheral_schema,
-    const ColnameMap& _colname_map )
+    const std::vector<Placeholder>& _peripheral_schema )
 {
     // ------------------------------------------------------------------------
 
-    const auto get_mapping =
-        [&_colname_map](
-            const Placeholder& _schema ) -> std::vector<std::string> {
-        const auto it = _colname_map.find( _schema.name_ );
-
-        if ( it == _colname_map.end() )
-            {
-                return std::vector<std::string>();
-            }
-
-        return it->second;
-    };
-
-    // ------------------------------------------------------------------------
-
     auto sql = std::vector<std::string>( { make_staging_table(
-        _population_needs_targets,
-        _population_schema,
-        get_mapping( _population_schema ) ) } );
+        _population_needs_targets, _population_schema ) } );
 
     // ------------------------------------------------------------------------
 
@@ -769,10 +711,8 @@ std::vector<std::string> SQLGenerator::make_staging_tables(
         {
             const auto& schema = _peripheral_schema.at( i );
 
-            auto s = make_staging_table(
-                _peripheral_needs_targets.at( i ),
-                schema,
-                get_mapping( schema ) );
+            auto s =
+                make_staging_table( _peripheral_needs_targets.at( i ), schema );
 
             sql.emplace_back( std::move( s ) );
         }

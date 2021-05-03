@@ -2850,6 +2850,27 @@ std::vector<std::string> Pipeline::preprocessors_to_sql(
 
 // ----------------------------------------------------------------------------
 
+std::vector<std::string> Pipeline::staging_to_sql(
+    const std::shared_ptr<const std::vector<strings::String>>& _categories,
+    const bool _targets ) const
+{
+    const auto to_sql =
+        [_categories,
+         _targets]( const std::shared_ptr<
+                    const featurelearners::AbstractFeatureLearner>& _f )
+        -> std::vector<std::string> {
+        assert_true( _f );
+        return _f->make_staging( _categories, _targets );
+    };
+
+    const auto all = stl::collect::vector<std::vector<std::string>>(
+        feature_learners_ | std::views::transform( to_sql ) );
+
+    return stl::collect::vector<std::string>( all | std::views::join );
+}
+
+// ----------------------------------------------------------------------------
+
 std::string Pipeline::to_sql(
     const std::shared_ptr<const std::vector<strings::String>>& _categories,
     const bool _targets,
@@ -2858,6 +2879,9 @@ std::string Pipeline::to_sql(
     assert_true(
         feature_learners_.size() == predictor_impl().autofeatures().size() );
 
+    const auto staging = _subfeatures ? staging_to_sql( _categories, _targets )
+                                      : std::vector<std::string>();
+
     const auto preprocessing = _subfeatures
                                    ? preprocessors_to_sql( _categories )
                                    : std::vector<std::string>();
@@ -2865,8 +2889,8 @@ std::string Pipeline::to_sql(
     const auto features =
         feature_learners_to_sql( _categories, _targets, _subfeatures );
 
-    const auto all =
-        std::vector<std::vector<std::string>>( { preprocessing, features } );
+    const auto all = std::vector<std::vector<std::string>>(
+        { staging, preprocessing, features } );
 
     const auto sql =
         stl::collect::vector<std::string>( all | std::views::join );

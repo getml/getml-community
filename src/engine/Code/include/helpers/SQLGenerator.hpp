@@ -22,6 +22,13 @@ class SQLGenerator
     static std::string handle_many_to_one_joins(
         const std::string& _table_name, const std::string& _t1_or_t2 );
 
+    /// Generates the SQL code necessary for joining the mapping tables onto the
+    /// staged table.
+    static std::string join_mapping(
+        const std::string& _name,
+        const std::string& _colname,
+        const bool _is_text );
+
     /// Makes a clean, but unique colname.
     static std::string make_colname( const std::string& _colname );
 
@@ -48,8 +55,7 @@ class SQLGenerator
         const bool _population_needs_targets,
         const std::vector<bool>& _peripheral_needs_targets,
         const Placeholder& _population_schema,
-        const std::vector<Placeholder>& _peripheral_schema,
-        const ColnameMap& _colname_map );
+        const std::vector<Placeholder>& _peripheral_schema );
 
     /// Generates the name for a staging table.
     static std::string make_staging_table_name( const std::string& _name );
@@ -114,13 +120,6 @@ class SQLGenerator
     /// Determines whether we want to include a column.
     static bool include_column( const std::string& _name );
 
-    /// Generates the SQL code necessary for joining the mapping tables onto the
-    /// staged table.
-    static std::string join_mappings(
-        const std::string& _name,
-        const Placeholder& _schema,
-        const std::vector<std::string>& _mappings );
-
     /// Generates the queries for the join keys.
     static std::string make_join_keys(
         const std::string& _output_join_keys_name,
@@ -129,17 +128,12 @@ class SQLGenerator
         const std::string& _input_alias );
 
     /// Generates the columns for a single staging table.
-    static std::pair<std::vector<std::string>, std::vector<std::string>>
-    make_staging_columns(
-        const bool& _include_targets,
-        const Placeholder& _schema,
-        const std::vector<std::string>& _mappings );
+    static std::vector<std::string> make_staging_columns(
+        const bool& _include_targets, const Placeholder& _schema );
 
     /// Generates a single staging table.
     static std::string make_staging_table(
-        const bool& _include_targets,
-        const Placeholder& _schema,
-        const std::vector<std::string>& _mappings );
+        const bool& _include_targets, const Placeholder& _schema );
 };
 
 // -------------------------------------------------------------------------

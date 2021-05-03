@@ -41,6 +41,9 @@ struct Schema
     /// The names of the join keys
     const std::vector<std::string> join_keys_;
 
+    /// The table name
+    const std::string name_;
+
     /// The names of the numerical columns
     const std::vector<std::string> numericals_;
 

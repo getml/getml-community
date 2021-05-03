@@ -517,6 +517,11 @@ class Pipeline
         const containers::Features& _autofeatures,
         const predictors::PredictorImpl& _predictor_impl ) const;
 
+    /// Expresses the staging scripts as SQL.
+    std::vector<std::string> staging_to_sql(
+        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const bool _targets ) const;
+
     /// Returns a the SQL features.
     Poco::JSON::Array::Ptr to_sql_arr(
         const std::shared_ptr<const std::vector<strings::String>>& _categories )

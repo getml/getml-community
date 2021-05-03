@@ -2183,6 +2183,7 @@ Schema DataFrame::to_schema( const bool _separate_discrete ) const
         .categoricals_ = categoricals,
         .discretes_ = discretes,
         .join_keys_ = join_keys,
+        .name_ = name_,
         .numericals_ = numericals,
         .targets_ = targets,
         .text_ = text,

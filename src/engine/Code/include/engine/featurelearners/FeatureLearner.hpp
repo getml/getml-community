@@ -73,6 +73,11 @@ class FeatureLearner : public AbstractFeatureLearner
     /// Loads the feature learner from a file designated by _fname.
     void load( const std::string& _fname ) final;
 
+    /// Generates the staging scripts.
+    std::vector<std::string> make_staging(
+        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const bool _targets ) const final;
+
     /// Data frames might have to be modified, such as adding upper time stamps
     /// or self joins.
     std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
@@ -224,11 +229,6 @@ class FeatureLearner : public AbstractFeatureLearner
 
     /// Initializes the feature learner.
     std::optional<FeatureLearnerType> make_feature_learner() const;
-
-    /// Generates the staging scripts.
-    std::vector<std::string> make_staging(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories,
-        const bool _targets ) const;
 
     /// Extracts the table and column name, if they are from a many-to-one join,
     /// needed for the column importances.
@@ -1046,25 +1046,6 @@ std::vector<std::string> FeatureLearner<FeatureLearnerType>::make_staging(
 {
     std::vector<std::string> sql;
 
-    using ColnameMap = typename helpers::MappingContainer::ColnameMap;
-
-    ColnameMap colname_map;
-
-    if ( mappings_ )
-        {
-            assert_true( vocabulary_ );
-
-            const auto vocabulary_tree = helpers::VocabularyTree(
-                vocabulary_->population(),
-                vocabulary_->peripheral(),
-                feature_learner().placeholder(),
-                feature_learner().peripheral(),
-                false );  // TODO
-
-            std::tie( sql, colname_map ) =
-                mappings_->to_sql( _categories, vocabulary_tree, "" );
-        }
-
     const auto peripheral_needs_targets = infer_needs_targets(
         placeholder(), feature_learner().peripheral_schema().size() );
 
@@ -1072,8 +1053,7 @@ std::vector<std::string> FeatureLearner<FeatureLearnerType>::make_staging(
         _targets,
         peripheral_needs_targets,
         feature_learner().population_schema(),
-        feature_learner().peripheral_schema(),
-        colname_map );
+        feature_learner().peripheral_schema() );
 
     sql.insert( sql.end(), staging_tables.begin(), staging_tables.end() );
 
@@ -1220,19 +1200,7 @@ std::vector<std::string> FeatureLearner<FeatureLearnerType>::to_sql(
     const bool _subfeatures,
     const std::string& _prefix ) const
 {
-    std::vector<std::string> sql;
-
-    if ( _subfeatures )
-        {
-            sql = make_staging( _categories, _targets );
-        }
-
-    const auto features =
-        feature_learner().to_sql( _categories, _prefix, 0, _subfeatures );
-
-    sql.insert( sql.end(), features.begin(), features.end() );
-
-    return sql;
+    return feature_learner().to_sql( _categories, _prefix, 0, _subfeatures );
 }
 
 // ----------------------------------------------------------------------------
