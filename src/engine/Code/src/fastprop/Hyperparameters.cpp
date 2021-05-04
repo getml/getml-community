@@ -10,10 +10,6 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _json_obj )
       loss_function_( jsonutils::JSON::get_value<std::string>(
           _json_obj, "loss_function_" ) ),
       min_df_( jsonutils::JSON::get_value<size_t>( _json_obj, "min_df_" ) ),
-      min_freq_(
-          _json_obj.has( "min_freq_" )
-              ? jsonutils::JSON::get_value<size_t>( _json_obj, "min_freq_" )
-              : 0 ),
       n_most_frequent_(
           jsonutils::JSON::get_value<size_t>( _json_obj, "n_most_frequent_" ) ),
       num_features_(
@@ -26,11 +22,6 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _json_obj )
                     _json_obj, "sampling_factor_" )
               : 1.0 ),
       silent_( jsonutils::JSON::get_value<bool>( _json_obj, "silent_" ) ),
-      split_text_fields_(
-          _json_obj.has( "split_text_fields_" )
-              ? jsonutils::JSON::get_value<bool>(
-                    _json_obj, "split_text_fields_" )
-              : false ),  // TODO: Remove
       vocab_size_(
           jsonutils::JSON::get_value<size_t>( _json_obj, "vocab_size_" ) )
 {
@@ -54,8 +45,6 @@ Poco::JSON::Object::Ptr Hyperparameters::to_json_obj() const
     obj->set( "loss_function_", loss_function_ );
 
     obj->set( "min_df_", min_df_ );
-
-    obj->set( "min_freq_", min_freq_ );
 
     obj->set( "n_most_frequent_", n_most_frequent_ );
 

@@ -45,10 +45,6 @@ struct Hyperparameters
     /// the vocabulary.
     const size_t min_df_;
 
-    /// The minimum number of associated rows in the population table required
-    /// to create a mapping for a specific value.
-    const size_t min_freq_;
-
     /// The number of features to be extracted
     const size_t num_features_;
 
@@ -85,9 +81,6 @@ struct Hyperparameters
 
     /// Whether we want to print out the "Trained FEATURE_..." message
     const bool silent_;
-
-    /// Whether we want to split the text fields.
-    const bool split_text_fields_;
 
     /// Hyperparameters necessary for training the tree
     const std::shared_ptr<const TreeHyperparameters> tree_hyperparameters_;

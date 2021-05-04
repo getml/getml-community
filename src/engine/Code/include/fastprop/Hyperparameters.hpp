@@ -49,10 +49,6 @@ struct Hyperparameters
     /// the vocabulary.
     const size_t min_df_;
 
-    /// The minimum number of associated rows in the population table required
-    /// to create a mapping for a specific value.
-    const size_t min_freq_;
-
     /// The number of categories from which we would like to extract numerical
     /// features.
     const size_t n_most_frequent_;
@@ -68,10 +64,6 @@ struct Hyperparameters
 
     /// Whether we want logging.
     const bool silent_;
-
-    /// Whether we want to split text fields into a separate table containing
-    /// individual words.
-    const bool split_text_fields_;
 
     /// The maximum size of the vocabulary.
     const size_t vocab_size_;

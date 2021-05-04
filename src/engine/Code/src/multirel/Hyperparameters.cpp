@@ -21,12 +21,6 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _json_obj )
               : static_cast<size_t>(
                     30 ) ),  // TODO: Check inserted for backwards
                              // compatability. Remove later.
-      min_freq_(
-          _json_obj.has( "min_freq_" )
-              ? JSON::get_value<size_t>( _json_obj, "min_freq_" )
-              : static_cast<size_t>(
-                    0 ) ),  // TODO: Check inserted for backwards
-                            // compatability. Remove later.
       num_features_( JSON::get_value<size_t>( _json_obj, "num_features_" ) ),
       num_subfeatures_(
           JSON::get_value<size_t>( _json_obj, "num_subfeatures_" ) ),
@@ -51,10 +45,6 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _json_obj )
           _json_obj.has( "silent_" )  // for backwards compatability
               ? JSON::get_value<bool>( _json_obj, "silent_" )
               : false ),
-      split_text_fields_(
-          _json_obj.has( "split_text_fields_" )
-              ? JSON::get_value<bool>( _json_obj, "split_text_fields_" )
-              : false ),  // TODO: Remove
       tree_hyperparameters_(
           std::make_shared<const TreeHyperparameters>( _json_obj ) ),
       use_timestamps_( JSON::get_value<bool>( _json_obj, "use_timestamps_" ) ),
@@ -121,8 +111,6 @@ Poco::JSON::Object::Ptr Hyperparameters::to_json_obj() const
 
     obj->set( "min_df_", min_df_ );
 
-    obj->set( "min_freq_", min_freq_ );
-
     obj->set( "min_num_samples_", tree_hyperparameters_->min_num_samples_ );
 
     obj->set( "num_threads_", num_threads_ );
@@ -152,8 +140,6 @@ Poco::JSON::Object::Ptr Hyperparameters::to_json_obj() const
     obj->set( "regularization_", tree_hyperparameters_->regularization_ );
 
     obj->set( "seed_", seed_ );
-
-    obj->set( "split_text_fields_", split_text_fields_ );
 
     obj->set( "vocab_size_", vocab_size_ );
 
