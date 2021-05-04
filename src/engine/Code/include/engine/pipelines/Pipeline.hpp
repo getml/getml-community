@@ -19,7 +19,9 @@ class Pipeline
     Pipeline(
         const std::string& _path,
         const std::shared_ptr<dependency::FETracker> _fe_tracker,
-        const std::shared_ptr<dependency::PredTracker> _pred_tracker );
+        const std::shared_ptr<dependency::PredTracker> _pred_tracker,
+        const std::shared_ptr<dependency::PreprocessorTracker>
+            _preprocessor_tracker );
 
     Pipeline( const Pipeline& _other );
 
@@ -43,6 +45,8 @@ class Pipeline
         const std::shared_ptr<const communication::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
         const std::shared_ptr<containers::Encoding>& _categories,
+        const std::shared_ptr<dependency::PreprocessorTracker>&
+            _preprocessor_tracker,
         Poco::Net::StreamSocket* _socket ) const;
 
     /// Fit the pipeline.
@@ -54,6 +58,8 @@ class Pipeline
         const dependency::DataFrameTracker& _data_frame_tracker,
         const std::shared_ptr<dependency::FETracker> _fe_tracker,
         const std::shared_ptr<dependency::PredTracker> _pred_tracker,
+        const std::shared_ptr<dependency::PreprocessorTracker>
+            _preprocessor_tracker,
         Poco::Net::StreamSocket* _socket );
 
     /// Copy assignment operator.
@@ -269,6 +275,8 @@ class Pipeline
     fit_transform_preprocessors(
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<containers::Encoding>& _categories,
+        const std::shared_ptr<dependency::PreprocessorTracker>&
+            _preprocessor_tracker,
         containers::DataFrame* _population_df,
         std::vector<containers::DataFrame>* _peripheral_dfs,
         Poco::Net::StreamSocket* _socket ) const;
@@ -355,7 +363,9 @@ class Pipeline
     Pipeline load(
         const std::string& _path,
         const std::shared_ptr<dependency::FETracker> _fe_tracker,
-        const std::shared_ptr<dependency::PredTracker> _pred_tracker ) const;
+        const std::shared_ptr<dependency::PredTracker> _pred_tracker,
+        const std::shared_ptr<dependency::PreprocessorTracker>
+            _preprocessor_tracker ) const;
 
     /// Loads the feature learners.
     void load_feature_learners(
@@ -391,7 +401,10 @@ class Pipeline
 
     /// Loads the preprocessors.
     void load_preprocessors(
-        const std::string& _path, Pipeline* _pipeline ) const;
+        const std::string& _path,
+        const std::shared_ptr<dependency::PreprocessorTracker>
+            _preprocessor_tracker,
+        Pipeline* _pipeline ) const;
 
     /// Generates a build history from the dependencies as the fingerprints of
     /// the inserted data frames.

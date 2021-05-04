@@ -195,12 +195,18 @@ void PipelineManager::check(
 
     // -------------------------------------------------------
 
-    multithreading::ReadLock read_lock( read_write_lock_ );
+    multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
     const auto local_categories =
         std::make_shared<containers::Encoding>( categories_ );
 
-    pipeline.check( _cmd, logger_, data_frames(), local_categories, _socket );
+    pipeline.check(
+        _cmd,
+        logger_,
+        data_frames(),
+        local_categories,
+        preprocessor_tracker_,
+        _socket );
 
     // -------------------------------------------------------
 }
@@ -454,6 +460,7 @@ void PipelineManager::fit(
         data_frame_tracker(),
         fe_tracker_,
         pred_tracker_,
+        preprocessor_tracker_,
         _socket );
 
     // -------------------------------------------------------

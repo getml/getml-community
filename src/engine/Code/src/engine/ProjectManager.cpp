@@ -449,7 +449,8 @@ void ProjectManager::load_pipeline(
 {
     const auto path = project_directory() + "pipelines/" + _name + "/";
 
-    auto pipeline = pipelines::Pipeline( path, fe_tracker_, pred_tracker_ );
+    auto pipeline = pipelines::Pipeline(
+        path, fe_tracker_, pred_tracker_, preprocessor_tracker_ );
 
     set_pipeline( _name, pipeline );
 

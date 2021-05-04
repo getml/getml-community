@@ -34,6 +34,8 @@ class ProjectManager
         const config::Options& _options,
         const std::shared_ptr<PipelineMapType>& _pipelines,
         const std::shared_ptr<dependency::PredTracker>& _pred_tracker,
+        const std::shared_ptr<dependency::PreprocessorTracker>&
+            _preprocessor_tracker,
         const std::string& _project,
         const std::shared_ptr<multithreading::ReadWriteLock>& _project_lock,
         const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock )
@@ -385,6 +387,10 @@ class ProjectManager
 
     /// Keeps track of all predictors.
     const std::shared_ptr<dependency::PredTracker> pred_tracker_;
+
+    /// Keeps track of all preprocessors.
+    const std::shared_ptr<dependency::PreprocessorTracker>
+        preprocessor_tracker_;
 
     /// The name of the current project
     const std::string project_;

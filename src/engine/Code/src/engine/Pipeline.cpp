@@ -31,10 +31,12 @@ Pipeline::Pipeline( const Poco::JSON::Object& _obj )
 Pipeline::Pipeline(
     const std::string& _path,
     const std::shared_ptr<dependency::FETracker> _fe_tracker,
-    const std::shared_ptr<dependency::PredTracker> _pred_tracker )
+    const std::shared_ptr<dependency::PredTracker> _pred_tracker,
+    const std::shared_ptr<dependency::PreprocessorTracker>
+        _preprocessor_tracker )
     : impl_( PipelineImpl() )
 {
-    *this = load( _path, _fe_tracker, _pred_tracker );
+    *this = load( _path, _fe_tracker, _pred_tracker, _preprocessor_tracker );
 }
 
 // ----------------------------------------------------------------------------
@@ -246,6 +248,8 @@ void Pipeline::check(
     const std::shared_ptr<const communication::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
     const std::shared_ptr<containers::Encoding>& _categories,
+    const std::shared_ptr<dependency::PreprocessorTracker>&
+        _preprocessor_tracker,
     Poco::Net::StreamSocket* _socket ) const
 {
     // -------------------------------------------------------------------------
@@ -258,7 +262,12 @@ void Pipeline::check(
         modify_data_frames( population_df, peripheral_dfs );
 
     fit_transform_preprocessors(
-        _cmd, _categories, &population_df, &peripheral_dfs, _socket );
+        _cmd,
+        _categories,
+        _preprocessor_tracker,
+        &population_df,
+        &peripheral_dfs,
+        _socket );
 
     // -------------------------------------------------------------------------
 
@@ -979,6 +988,8 @@ void Pipeline::fit(
     const dependency::DataFrameTracker& _data_frame_tracker,
     const std::shared_ptr<dependency::FETracker> _fe_tracker,
     const std::shared_ptr<dependency::PredTracker> _pred_tracker,
+    const std::shared_ptr<dependency::PreprocessorTracker>
+        _preprocessor_tracker,
     Poco::Net::StreamSocket* _socket )
 {
     // -------------------------------------------------------------------------
@@ -1008,7 +1019,12 @@ void Pipeline::fit(
     // -------------------------------------------------------------------------
 
     preprocessors_ = fit_transform_preprocessors(
-        _cmd, _categories, &population_df, &peripheral_dfs, _socket );
+        _cmd,
+        _categories,
+        _preprocessor_tracker,
+        &population_df,
+        &peripheral_dfs,
+        _socket );
 
     preprocessor_fingerprints() = extract_preprocessor_fingerprints();
 
@@ -1264,6 +1280,8 @@ std::vector<std::shared_ptr<preprocessors::Preprocessor>>
 Pipeline::fit_transform_preprocessors(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<containers::Encoding>& _categories,
+    const std::shared_ptr<dependency::PreprocessorTracker>&
+        _preprocessor_tracker,
     containers::DataFrame* _population_df,
     std::vector<containers::DataFrame>* _peripheral_dfs,
     Poco::Net::StreamSocket* _socket ) const
@@ -1276,9 +1294,32 @@ Pipeline::fit_transform_preprocessors(
 
     assert_true( peripheral_names );
 
+    assert_true( _preprocessor_tracker );
+
     for ( auto& p : preprocessors )
         {
             assert_true( p );
+
+            const auto fingerprint = p->fingerprint();
+
+            const auto retrieved_preprocessor =
+                _preprocessor_tracker->retrieve( fingerprint );
+
+            if ( retrieved_preprocessor )
+                {
+                    p = retrieved_preprocessor;
+
+                    std::tie( *_population_df, *_peripheral_dfs ) =
+                        p->transform(
+                            _cmd,
+                            _categories,
+                            *_population_df,
+                            *_peripheral_dfs,
+                            *placeholder,
+                            *peripheral_names );
+
+                    continue;
+                }
 
             std::tie( *_population_df, *_peripheral_dfs ) = p->fit_transform(
                 _cmd,
@@ -1287,6 +1328,8 @@ Pipeline::fit_transform_preprocessors(
                 *_peripheral_dfs,
                 *placeholder,
                 *peripheral_names );
+
+            _preprocessor_tracker->add( p );
         }
 
     return preprocessors;
@@ -1635,13 +1678,17 @@ bool Pipeline::is_classification() const
 Pipeline Pipeline::load(
     const std::string& _path,
     const std::shared_ptr<dependency::FETracker> _fe_tracker,
-    const std::shared_ptr<dependency::PredTracker> _pred_tracker ) const
+    const std::shared_ptr<dependency::PredTracker> _pred_tracker,
+    const std::shared_ptr<dependency::PreprocessorTracker>
+        _preprocessor_tracker ) const
 {
     // ------------------------------------------------------------------
 
     assert_true( _fe_tracker );
 
     assert_true( _pred_tracker );
+
+    assert_true( _preprocessor_tracker );
 
     // ------------------------------------------------------------------
 
@@ -1664,7 +1711,7 @@ Pipeline Pipeline::load(
 
     load_impls( _path, &pipeline );
 
-    load_preprocessors( _path, &pipeline );
+    load_preprocessors( _path, _preprocessor_tracker, &pipeline );
 
     load_feature_learners( _path, _fe_tracker, &pipeline );
 
@@ -1901,8 +1948,13 @@ void Pipeline::load_predictors(
 // ------------------------------------------------------------------------
 
 void Pipeline::load_preprocessors(
-    const std::string& _path, Pipeline* _pipeline ) const
+    const std::string& _path,
+    const std::shared_ptr<dependency::PreprocessorTracker>
+        _preprocessor_tracker,
+    Pipeline* _pipeline ) const
 {
+    assert_true( _preprocessor_tracker );
+
     if ( !_pipeline->obj().has( "preprocessors_" ) )
         {
             return;
@@ -1923,6 +1975,8 @@ void Pipeline::load_preprocessors(
                 json_obj, _pipeline->df_fingerprints() );
 
             preprocessors.push_back( p );
+
+            _preprocessor_tracker->add( p );
         }
 
     _pipeline->preprocessors_ = preprocessors;

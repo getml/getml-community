@@ -81,6 +81,9 @@ int main( int argc, char* argv[] )
     const auto data_frame_tracker =
         std::make_shared<engine::dependency::DataFrameTracker>( data_frames );
 
+    const auto preprocessor_tracker =
+        std::make_shared<engine::dependency::PreprocessorTracker>();
+
     const auto fe_tracker = std::make_shared<engine::dependency::FETracker>();
 
     const auto pred_tracker =
@@ -127,6 +130,7 @@ int main( int argc, char* argv[] )
             options,
             pipelines,
             pred_tracker,
+            preprocessor_tracker,
             read_write_lock );
 
     const auto project_manager =
@@ -144,6 +148,7 @@ int main( int argc, char* argv[] )
             options,
             pipelines,
             pred_tracker,
+            preprocessor_tracker,
             options.engine().project_,
             project_lock,
             read_write_lock );

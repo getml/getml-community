@@ -33,6 +33,8 @@ class PipelineManager
         const config::Options& _options,
         const std::shared_ptr<PipelineMapType>& _pipelines,
         const std::shared_ptr<dependency::PredTracker>& _pred_tracker,
+        const std::shared_ptr<dependency::PreprocessorTracker>&
+            _preprocessor_tracker,
         const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock )
         : categories_( _categories ),
           database_manager_( _database_manager ),
@@ -46,6 +48,7 @@ class PipelineManager
           options_( _options ),
           pipelines_( _pipelines ),
           pred_tracker_( _pred_tracker ),
+          preprocessor_tracker_( _preprocessor_tracker ),
           read_write_lock_( _read_write_lock )
     {
     }
@@ -386,6 +389,10 @@ class PipelineManager
 
     /// Keeps track of all predictors.
     const std::shared_ptr<dependency::PredTracker> pred_tracker_;
+
+    /// Keeps track of all preprocessors.
+    const std::shared_ptr<dependency::PreprocessorTracker>
+        preprocessor_tracker_;
 
     /// For coordinating the read and write process of the data
     const std::shared_ptr<multithreading::ReadWriteLock> read_write_lock_;
