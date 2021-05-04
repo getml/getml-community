@@ -83,11 +83,6 @@ class SQLGenerator
         const std::string& _input_alias,
         const std::string& _t1_or_t2 );
 
-    /// Generates the SQL code for splitting the text fields on all schemata.
-    static std::vector<std::string> split_text_fields(
-        const Placeholder& _population_schema,
-        const std::vector<Placeholder>& _peripheral_schema );
-
     /// Returns the lower case of a string
     static std::string to_lower( const std::string& _str );
 
@@ -95,10 +90,6 @@ class SQLGenerator
     static std::string to_upper( const std::string& _str );
 
    private:
-    /// Generates the SQL code for splitting the text fields on a schema.
-    static std::vector<std::string> split_text_fields_on_schema(
-        const Placeholder& _schema );
-
     /// Creates the indices for a staging table.
     static std::string create_indices(
         const std::string& _table_name, const Placeholder& _schema );
