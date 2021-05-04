@@ -52,6 +52,7 @@ class ProjectManager
           options_( _options ),
           pipelines_( _pipelines ),
           pred_tracker_( _pred_tracker ),
+          preprocessor_tracker_( _preprocessor_tracker ),
           project_( _project ),
           project_lock_( _project_lock ),
           read_write_lock_( _read_write_lock )
