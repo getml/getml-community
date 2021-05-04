@@ -263,17 +263,30 @@ Macros::parse_table_name( const std::string& _splitted )
 std::pair<std::string, std::string> Macros::parse_table_colname(
     const std::string& _table, const std::string& _colname )
 {
+    const auto remove_staging_num =
+        []( const std::string& _table ) -> std::string {
+        const auto pos = _table.find( staging_table_num() );
+
+        if ( pos == std::string::npos )
+            {
+                return _table;
+            }
+
+        return _table.substr( 0, pos );
+    };
+
     if ( _colname.find( table() ) == std::string::npos )
         {
             if ( _table.find( Macros::joined_to_name() ) == std::string::npos )
                 {
-                    return std::make_pair( _table, _colname );
+                    return std::make_pair(
+                        remove_staging_num( _table ), _colname );
                 }
 
             const auto table =
                 get_param( _table, Macros::joined_to_name() + "=" );
 
-            return std::make_pair( table, _colname );
+            return std::make_pair( remove_staging_num( table ), _colname );
         }
 
     const auto table = get_param( _colname, Macros::table() + "=" );
@@ -294,7 +307,7 @@ std::pair<std::string, std::string> Macros::parse_table_colname(
 
     colname.replace( begin, len, column );
 
-    return std::make_pair( table, colname );
+    return std::make_pair( remove_staging_num( table ), colname );
 }
 
 // ----------------------------------------------------------------------------
