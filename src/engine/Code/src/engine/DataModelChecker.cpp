@@ -74,6 +74,7 @@ void DataModelChecker::check(
                 _population,
                 peripheral,
                 prob_pick,
+                _feature_learners,
                 &warner );
 
             check_self_joins(
@@ -319,8 +320,26 @@ void DataModelChecker::check_join(
     const containers::DataFrame& _population,
     const std::vector<containers::DataFrame>& _peripheral,
     const std::vector<Float>& _prob_pick,
+    const std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>&
+        _feature_learners,
     communication::Warner* _warner )
 {
+    // ------------------------------------------------------------------------
+
+    const auto is_prop =
+        []( const std::shared_ptr<featurelearners::AbstractFeatureLearner>&
+                _fl ) -> bool {
+        assert_true( _fl );
+        return (
+            _fl->type() ==
+                featurelearners::AbstractFeatureLearner::FASTPROP_MODEL ||
+            _fl->type() ==
+                featurelearners::AbstractFeatureLearner::FASTPROP_TIME_SERIES );
+    };
+
+    const bool all_propositionalization = std::all_of(
+        _feature_learners.begin(), _feature_learners.end(), is_prop );
+
     // ------------------------------------------------------------------------
 
     assert_true( _peripheral_names );
@@ -335,6 +354,8 @@ void DataModelChecker::check_join(
 
     const auto& other_join_keys_used = _placeholder.other_join_keys_used_;
 
+    const auto& propositionalization = _placeholder.propositionalization_;
+
     const auto& time_stamps_used = _placeholder.time_stamps_used_;
 
     const auto& other_time_stamps_used = _placeholder.other_time_stamps_used_;
@@ -348,6 +369,8 @@ void DataModelChecker::check_join(
     assert_true( join_keys_used.size() == size );
 
     assert_true( other_join_keys_used.size() == size );
+
+    assert_true( propositionalization.size() == size );
 
     assert_true( time_stamps_used.size() == size );
 
@@ -390,6 +413,7 @@ void DataModelChecker::check_join(
                         _prob_pick );
 
             raise_join_warnings(
+                all_propositionalization || propositionalization.at( i ),
                 is_many_to_one,
                 num_matches,
                 num_expected,
@@ -406,6 +430,7 @@ void DataModelChecker::check_join(
                 _peripheral.at( dist ),
                 _peripheral,
                 prob_pick,
+                _feature_learners,
                 _warner );
         }
 
@@ -564,6 +589,12 @@ void DataModelChecker::check_self_joins(
 
             // ----------------------------------------------------------------
 
+            const bool is_propositionalization =
+                ( fl->type() == featurelearners::AbstractFeatureLearner::
+                                    FASTPROP_TIME_SERIES );
+
+            // ----------------------------------------------------------------
+
             const auto [new_population, new_peripheral] =
                 fl->modify_data_frames( _population, _peripheral );
 
@@ -631,7 +662,11 @@ void DataModelChecker::check_self_joins(
                                 prob_pick );
 
                     raise_self_join_warnings(
-                        is_many_to_one, num_matches, new_population, _warner );
+                        is_propositionalization,
+                        is_many_to_one,
+                        num_matches,
+                        new_population,
+                        _warner );
                 }
 
             // ----------------------------------------------------------------
@@ -885,6 +920,7 @@ std::string DataModelChecker::modify_join_key_name(
 // ------------------------------------------------------------------------
 
 void DataModelChecker::raise_join_warnings(
+    const bool _is_propositionalization,
     const bool _is_many_to_one,
     const size_t _num_matches,
     const Float _num_expected,
@@ -923,7 +959,7 @@ void DataModelChecker::raise_join_warnings(
 
     // ------------------------------------------------------------------------
 
-    if ( _num_expected > 300.0 )
+    if ( !_is_propositionalization && _num_expected > 300.0 )
         {
             warn_too_many_matches(
                 _num_matches,
@@ -956,6 +992,7 @@ void DataModelChecker::raise_join_warnings(
 // ------------------------------------------------------------------------
 
 void DataModelChecker::raise_self_join_warnings(
+    const bool _is_propositionalization,
     const bool _is_many_to_one,
     const size_t _num_matches,
     const containers::DataFrame& _population_df,
@@ -980,7 +1017,7 @@ void DataModelChecker::raise_self_join_warnings(
     const auto avg_num_matches = static_cast<Float>( _num_matches ) /
                                  static_cast<Float>( _population_df.nrows() );
 
-    if ( avg_num_matches > 300.0 )
+    if ( !_is_propositionalization && avg_num_matches > 300.0 )
         {
             warn_self_join_too_many_matches(
                 _num_matches, _population_df, _warner );
@@ -1243,8 +1280,9 @@ void DataModelChecker::warn_too_many_matches(
         might_take_long() + "There are " + std::to_string( _num_matches ) +
         " matches between " + population_name + " and " + peripheral_name +
         " when joined over " + join_key_used + " and " + other_join_key_used +
-        ". This pipeline might take a very long time to fit. "
-        "You should consider imposing a narrower limit on the scope of "
+        ". This pipeline might take a very long time to fit. There are "
+        "multiple ways to fix this: \n"
+        "1) You could impose a narrower limit on the scope of "
         "this join by reducing the memory (the period of time until "
         "the feature learner 'forgets' historical data). "
         "You can reduce the memory "
@@ -1252,7 +1290,12 @@ void DataModelChecker::warn_too_many_matches(
         "of the Placeholder. "
         "Please note that a memory of 0.0 means that "
         "the time series will not forget any past "
-        "data." );
+        "data.\n"
+        "2) You could also set the relationship parameter to "
+        "propositionalization, which would force the pipeline to use the "
+        "FastProp algorithm for this particular join.\n"
+        "3) You could also use FastPropModel or FastPropTimeSeries for the "
+        "entire pipeline." );
 }
 
 // ------------------------------------------------------------------------

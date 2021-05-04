@@ -59,6 +59,9 @@ class DataModelChecker
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
         const std::vector<Float>& _prob_pick,
+        const std::vector<
+            std::shared_ptr<featurelearners::AbstractFeatureLearner>>&
+            _feature_learners,
         communication::Warner* _warner );
 
     /// Raises a warning if there is something wrong with the matches.
@@ -128,6 +131,7 @@ class DataModelChecker
 
     /// Adds warning messages related to the joins.
     static void raise_join_warnings(
+        const bool _propositionalization,
         const bool _is_many_to_one,
         const size_t _num_matches,
         const Float _num_expected,
@@ -140,6 +144,7 @@ class DataModelChecker
 
     /// Adds warning messages related to the joins.
     static void raise_self_join_warnings(
+        const bool _propositionalization,
         const bool _is_many_to_one,
         const size_t _num_matches,
         const containers::DataFrame& _population_df,
