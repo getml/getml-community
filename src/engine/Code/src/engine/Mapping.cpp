@@ -739,6 +739,23 @@ Mapping Mapping::from_json_obj( const Poco::JSON::Object& _obj ) const
             JSON::array_to_vector<std::string>( arr ) );
     };
 
+    const auto extract_peripheral_schema = [&_obj]() {
+        const auto arr = JSON::get_array( _obj, "peripheral_schema_" );
+
+        const auto to_schema = [&arr]( const size_t _i ) {
+            auto ptr = arr->getObject( _i );
+            throw_unless( ptr, "Mapping: Expected an object" );
+            return containers::Schema::from_json( *ptr );
+        };
+
+        const auto iota =
+            std::views::iota( static_cast<size_t>( 0 ), arr->size() );
+
+        return std::make_shared<std::vector<containers::Schema>>(
+            stl::collect::vector<containers::Schema>(
+                iota | std::views::transform( to_schema ) ) );
+    };
+
     Mapping that;
 
     that.aggregation_ = JSON::array_to_vector<std::string>(
@@ -747,29 +764,63 @@ Mapping Mapping::from_json_obj( const Poco::JSON::Object& _obj ) const
     that.aggregation_enums_ = stl::collect::vector<MappingAggregation>(
         that.aggregation_ | std::views::transform( parse ) );
 
+    that.dependencies_ = dependencies_;
+
     that.min_freq_ = JSON::get_value<size_t>( _obj, "min_freq_" );
 
-    if ( _obj.has( "categorical_" ) )
+    if ( !_obj.has( "categorical_" ) )
         {
-            that.categorical_ = extract_mpg( _obj, "categorical_" );
-
-            that.categorical_names_ =
-                extract_colnames( _obj, "categorical_names_" );
+            return that;
         }
 
-    if ( _obj.has( "discrete_" ) )
-        {
-            that.discrete_ = extract_mpg( _obj, "discrete_" );
+    that.categorical_ = extract_mpg( _obj, "categorical_" );
 
-            that.discrete_names_ = extract_colnames( _obj, "discrete_names_" );
+    that.categorical_names_ = extract_colnames( _obj, "categorical_names_" );
+
+    that.discrete_ = extract_mpg( _obj, "discrete_" );
+
+    that.discrete_names_ = extract_colnames( _obj, "discrete_names_" );
+
+    that.prefix_ = JSON::get_value<std::string>( _obj, "prefix_" );
+
+    that.table_name_ = JSON::get_value<std::string>( _obj, "table_name_" );
+
+    that.text_ = extract_mpg( _obj, "text_" );
+
+    that.text_names_ = extract_colnames( _obj, "text_names_" );
+
+    if ( that.prefix_ == "" )
+        {
+            that.peripheral_schema_ = extract_peripheral_schema();
+
+            that.population_schema_ =
+                std::make_shared<const containers::Schema>(
+                    containers::Schema::from_json(
+                        *JSON::get_object( _obj, "population_schema_" ) ) );
+
+            that.vocabulary_ =
+                std::make_shared<const helpers::VocabularyContainer>(
+                    *JSON::get_object( _obj, "vocabulary_" ) );
         }
 
-    if ( _obj.has( "text_" ) )
-        {
-            that.text_ = extract_mpg( _obj, "text_" );
+    const auto extract_submappings = [&that, &_obj]() {
+        const auto arr = JSON::get_array( _obj, "submappings_" );
 
-            that.text_names_ = extract_colnames( _obj, "text_names_" );
-        }
+        const auto to_mapping = [that, &arr]( const size_t _i ) {
+            auto ptr = arr->getObject( _i );
+            throw_unless( ptr, "Mapping: Expected an object" );
+            auto mapping = that;
+            return mapping.from_json_obj( *ptr );
+        };
+
+        const auto iota =
+            std::views::iota( static_cast<size_t>( 0 ), arr->size() );
+
+        return stl::collect::vector<Mapping>(
+            iota | std::views::transform( to_mapping ) );
+    };
+
+    that.submappings_ = extract_submappings();
 
     return that;
 }
@@ -1363,6 +1414,16 @@ std::vector<std::string> Mapping::text_columns_to_sql() const
 
 Poco::JSON::Object::Ptr Mapping::to_json_obj() const
 {
+    assert_true( peripheral_schema_ );
+
+    assert_true( population_schema_ );
+
+    assert_true( vocabulary_ );
+
+    const auto to_json_obj = []( const auto& _obj ) {
+        return _obj.to_json_obj();
+    };
+
     const auto transform_colnames = []( const Colnames& _colnames ) {
         assert_true( _colnames );
         return JSON::vector_to_array_ptr( *_colnames );
@@ -1374,8 +1435,6 @@ Poco::JSON::Object::Ptr Mapping::to_json_obj() const
 
     obj->set( "aggregation_", JSON::vector_to_array_ptr( aggregation_ ) );
 
-    obj->set( "min_freq_", min_freq_ );
-
     obj->set( "categorical_", transform_mapping( categorical_ ) );
 
     obj->set( "categorical_names_", transform_colnames( categorical_names_ ) );
@@ -1384,9 +1443,34 @@ Poco::JSON::Object::Ptr Mapping::to_json_obj() const
 
     obj->set( "discrete_names_", transform_colnames( discrete_names_ ) );
 
+    obj->set( "min_freq_", min_freq_ );
+
+    obj->set( "prefix_", prefix_ );
+
+    obj->set(
+        "submappings_",
+        stl::collect::array(
+            submappings_ | std::views::transform( to_json_obj ) ) );
+
+    obj->set( "table_name_", table_name_ );
+
     obj->set( "text_", transform_mapping( text_ ) );
 
     obj->set( "text_names_", transform_colnames( text_names_ ) );
+
+    /// For reasons for memory efficiency, we do not duplicate the vocabulary.
+    if ( prefix_ == "" )
+        {
+            obj->set(
+                "peripheral_schema_",
+                stl::collect::array(
+                    *peripheral_schema_ |
+                    std::views::transform( to_json_obj ) ) );
+
+            obj->set( "population_schema_", population_schema_->to_json_obj() );
+
+            obj->set( "vocabulary_", vocabulary_->to_json_obj() );
+        }
 
     return obj;
 }

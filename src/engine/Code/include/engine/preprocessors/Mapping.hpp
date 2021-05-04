@@ -504,14 +504,14 @@ class Mapping : public Preprocessor
     /// The minimum number of targets required for a category to be included.
     size_t min_freq_;
 
-    /// The prefix to insert into the generated mapping.
-    std::string prefix_;
-
     /// The schema of the peripheral data frames
     std::shared_ptr<const std::vector<containers::Schema>> peripheral_schema_;
 
     /// The schema of the population data frame
     std::shared_ptr<const containers::Schema> population_schema_;
+
+    /// The prefix to insert into the generated mapping.
+    std::string prefix_;
 
     /// Any relational mappings that might exist.
     std::vector<Mapping> submappings_;
