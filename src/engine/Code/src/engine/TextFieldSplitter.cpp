@@ -72,14 +72,12 @@ TextFieldSplitter::fit_transform(
     const helpers::Placeholder& _placeholder,
     const std::vector<std::string>& _peripheral_names )
 {
-    cols_ = fit_df( _population_df, helpers::ColumnDescription::POPULATION, 0 );
+    cols_ = fit_df( _population_df, helpers::ColumnDescription::POPULATION );
 
-    for ( size_t i = 0; i < _peripheral_dfs.size(); ++i )
+    for ( const auto& df : _peripheral_dfs )
         {
-            const auto& df = _peripheral_dfs.at( i );
-
             const auto new_cols =
-                fit_df( df, helpers::ColumnDescription::PERIPHERAL, i );
+                fit_df( df, helpers::ColumnDescription::PERIPHERAL );
 
             cols_.insert( cols_.end(), new_cols.begin(), new_cols.end() );
         }
@@ -97,15 +95,12 @@ TextFieldSplitter::fit_transform(
 
 std::vector<std::shared_ptr<helpers::ColumnDescription>>
 TextFieldSplitter::fit_df(
-    const containers::DataFrame& _df,
-    const std::string& _marker,
-    const size_t _table ) const
+    const containers::DataFrame& _df, const std::string& _marker ) const
 {
-    const auto to_column_description =
-        [&_df, &_marker, _table]( const size_t _i ) {
-            return std::make_shared<helpers::ColumnDescription>(
-                _marker, std::to_string( _table ), _df.text( _i ).name() );
-        };
+    const auto to_column_description = [&_df, &_marker]( const size_t _i ) {
+        return std::make_shared<helpers::ColumnDescription>(
+            _marker, _df.name(), _df.text( _i ).name() );
+    };
 
     const auto iota =
         std::views::iota( static_cast<size_t>( 0 ), _df.num_text() );
@@ -195,6 +190,48 @@ Poco::JSON::Object::Ptr TextFieldSplitter::to_json_obj() const
 
 // ----------------------------------------------------
 
+std::vector<std::string> TextFieldSplitter::to_sql(
+    const std::shared_ptr<const std::vector<strings::String>>& _categories )
+    const
+{
+    const auto split =
+        [this]( const std::shared_ptr<helpers::ColumnDescription>& _desc )
+        -> std::string {
+        assert_true( _desc );
+
+        const auto staging_table = helpers::SQLGenerator::to_upper(
+            helpers::SQLGenerator::make_staging_table_name( _desc->table_ ) );
+
+        const auto colname = helpers::SQLGenerator::to_lower(
+            helpers::SQLGenerator::make_colname( _desc->name_ ) );
+
+        const auto new_table =
+            staging_table + "__" + helpers::SQLGenerator::to_upper( colname );
+
+        return "DROP TABLE IF EXISTS \"" + new_table +
+               "\";\n\n"
+               "CREATE TABLE \"" +
+               new_table +
+               "\" AS\nWITH RECURSIVE\nsplit_text_field(i, field, word, "
+               "rownum, n) AS (\n"
+               "SELECT 1, field, get_word(field, 1), rownum, num_words(field)\n"
+               "FROM ( SELECT \"" +
+               colname + "\" AS field, rowid AS rownum FROM \"" +
+               staging_table +
+               "\" )\n"
+               "UNION ALL\n"
+               "SELECT i + 1, field, get_word(field, i + 1), rownum, n FROM "
+               "split_text_field\n"
+               "WHERE i < n\n"
+               "SELECT rownum, word FROM split_text_field;\n\n\n";
+    };
+
+    return stl::collect::vector<std::string>(
+        cols_ | std::ranges::views::transform( split ) );
+}
+
+// ----------------------------------------------------
+
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
 TextFieldSplitter::transform(
     const Poco::JSON::Object& _cmd,
@@ -219,19 +256,13 @@ TextFieldSplitter::transform(
 
     transform_df(
         helpers::ColumnDescription::POPULATION,
-        0,
         _population_df,
         &peripheral_dfs );
 
-    for ( size_t i = 0; i < _peripheral_dfs.size(); ++i )
+    for ( const auto& df : _peripheral_dfs )
         {
-            const auto& df = _peripheral_dfs.at( i );
-
             transform_df(
-                helpers::ColumnDescription::PERIPHERAL,
-                i,
-                df,
-                &peripheral_dfs );
+                helpers::ColumnDescription::PERIPHERAL, df, &peripheral_dfs );
         }
 
     return std::make_pair( population_df, peripheral_dfs );
@@ -241,19 +272,16 @@ TextFieldSplitter::transform(
 
 void TextFieldSplitter::transform_df(
     const std::string& _marker,
-    const size_t _table,
     const containers::DataFrame& _df,
     std::vector<containers::DataFrame>* _peripheral_dfs ) const
 {
     // ----------------------------------------------------
 
-    const auto table = std::to_string( _table );
-
     const auto matching_description =
-        [&_marker, table](
+        [&_marker, &_df](
             const std::shared_ptr<helpers::ColumnDescription>& _desc ) -> bool {
         assert_true( _desc );
-        return _desc->marker_ == _marker && _desc->table_ == table;
+        return _desc->marker_ == _marker && _desc->table_ == _df.name();
     };
 
     // ----------------------------------------------------

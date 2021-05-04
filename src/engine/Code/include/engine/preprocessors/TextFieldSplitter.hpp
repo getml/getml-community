@@ -40,6 +40,11 @@ class TextFieldSplitter : public Preprocessor
     /// Expresses the Seasonal preprocessor as a JSON object.
     Poco::JSON::Object::Ptr to_json_obj() const final;
 
+    /// Generates SQL code for the text field splitting.
+    std::vector<std::string> to_sql(
+        const std::shared_ptr<const std::vector<strings::String>>& _categories )
+        const final;
+
     /// Transforms the data frames by adding the desired time series
     /// transformations.
     std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
@@ -58,14 +63,6 @@ class TextFieldSplitter : public Preprocessor
         return std::make_shared<TextFieldSplitter>( *this );
     }
 
-    /// The preprocessor does not generate any SQL scripts.
-    std::vector<std::string> to_sql(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories )
-        const final
-    {
-        return {};
-    }
-
     /// Returns the type of the preprocessor.
     std::string type() const final { return Preprocessor::TEXT_FIELD_SPLITTER; }
 
@@ -75,9 +72,7 @@ class TextFieldSplitter : public Preprocessor
 
     /// Fits and transforms an individual data frame.
     std::vector<std::shared_ptr<helpers::ColumnDescription>> fit_df(
-        const containers::DataFrame& _df,
-        const std::string& _marker,
-        const size_t _table ) const;
+        const containers::DataFrame& _df, const std::string& _marker ) const;
 
     /// Parses a JSON object.
     TextFieldSplitter from_json_obj( const Poco::JSON::Object& _obj ) const;
@@ -99,7 +94,6 @@ class TextFieldSplitter : public Preprocessor
     /// Transforms a single data frame.
     void transform_df(
         const std::string& _marker,
-        const size_t _table,
         const containers::DataFrame& _df,
         std::vector<containers::DataFrame>* _peripheral_dfs ) const;
 
