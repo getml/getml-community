@@ -233,14 +233,15 @@ std::string Mapping::discrete_column_to_sql(
 
             const auto& p = pairs.at( i );
 
-            const std::string end =
-                ( i == pairs.size() - 1 ) ? ";\n\n\n" : ",\n";
+            const std::string end = ( i == pairs.size() - 1 ) ? ";\n\n" : ",\n";
 
             sql += begin + "(" + std::to_string( p.first ) + ", " +
                    io::Parser::to_precise_string( p.second ) + ")" + end;
         }
 
     sql += helpers::SQLGenerator::join_mapping( table_name_, _name, false );
+
+    sql += "\n\n";
 
     return sql;
 }
