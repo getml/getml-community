@@ -289,7 +289,7 @@ class FeatureLearner : public AbstractFeatureLearner
                 needs_targets.insert(
                     needs_targets.end(),
                     peripheral_schema().size() - needs_targets.size(),
-                    false );
+                    population_needs_targets() );
             }
 
         return needs_targets;
@@ -318,9 +318,17 @@ class FeatureLearner : public AbstractFeatureLearner
     }
 
     /// Trivial accessor.
-    const std::vector<helpers::Schema>& peripheral_schema() const
+    std::vector<helpers::Schema> peripheral_schema() const
     {
         assert_true( peripheral_schema_ );
+
+        if constexpr ( FeatureLearnerType::is_time_series_ )
+            {
+                assert_true( population_schema_ );
+                return feature_learner().create_peripheral_schema(
+                    *population_schema_, *peripheral_schema_ );
+            }
+
         return *peripheral_schema_;
     }
 
@@ -332,9 +340,16 @@ class FeatureLearner : public AbstractFeatureLearner
     }
 
     /// Trivial accessor.
-    const helpers::Schema& population_schema() const
+    helpers::Schema population_schema() const
     {
         assert_true( population_schema_ );
+
+        if constexpr ( FeatureLearnerType::is_time_series_ )
+            {
+                return feature_learner().create_population_schema(
+                    *population_schema_ );
+            }
+
         return *population_schema_;
     }
 
@@ -723,6 +738,10 @@ void FeatureLearner<FeatureLearnerType>::fit(
 {
     // ------------------------------------------------
 
+    feature_learner_ = make_feature_learner();
+
+    // ------------------------------------------------
+
     const auto [population_df, peripheral_dfs] =
         modify_data_frames( _population_df, _peripheral_dfs );
 
@@ -734,9 +753,7 @@ void FeatureLearner<FeatureLearnerType>::fit(
 
     // ------------------------------------------------
 
-    auto new_feature_learner = make_feature_learner();
-
-    assert_true( new_feature_learner );
+    assert_true( feature_learner_ );
 
     const auto prop_pair = fit_propositionalization(
         population,
@@ -744,7 +761,7 @@ void FeatureLearner<FeatureLearnerType>::fit(
         row_indices,
         word_indices,
         _logger,
-        new_feature_learner.value() );
+        feature_learner_.value() );
 
     // ------------------------------------------------
 
@@ -758,11 +775,9 @@ void FeatureLearner<FeatureLearnerType>::fit(
         .row_indices_ = row_indices,
         .word_indices_ = word_indices };
 
-    new_feature_learner->fit( params );
+    feature_learner_->fit( params );
 
     // ------------------------------------------------
-
-    feature_learner_ = std::move( new_feature_learner );
 
     fast_prop_container_ =
         prop_pair

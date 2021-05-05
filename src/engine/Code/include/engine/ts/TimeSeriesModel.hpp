@@ -65,6 +65,15 @@ class TimeSeriesModel
         const containers::DataFrame &_population,
         const std::vector<containers::DataFrame> &_peripheral ) const;
 
+    /// Creates the schema for the peripheral table.
+    std::vector<containers::Schema> create_peripheral_schema(
+        const containers::Schema &_population,
+        const std::vector<containers::Schema> &_peripheral ) const;
+
+    /// Creates a modified version of the population table.
+    containers::Schema create_population_schema(
+        const containers::Schema &_schema ) const;
+
     /// Fits the time series model.
     void fit( const FitParamsType &_params );
 
@@ -335,21 +344,19 @@ std::vector<std::string> TimeSeriesModel<FEType>::additional_staging_tables()
         sql << "CREATE TABLE \"" << helpers::SQLGenerator::to_upper( name )
             << "\" AS\nSELECT t1.*";
 
-        for ( size_t i = 0; i < diffs.size(); ++i )
+        for ( const auto &diff : diffs )
             {
-                const auto end = ( i == diffs.size() - 1 ) ? "\n" : ",\n";
-
                 const auto ts_used =
                     helpers::SQLGenerator::make_colname( ts_name );
 
                 const auto new_colname = helpers::SQLGenerator::make_colname(
-                    TimeStampMaker::make_ts_name( ts_name, diffs.at( i ) ) );
+                    TimeStampMaker::make_ts_name( ts_name, diff ) );
 
-                sql << "       t1.\"" << ts_used << "\" + " << diffs.at( i )
-                    << " AS \"" << new_colname << "\"" << end;
+                sql << ",\n       t1.\"" << ts_used << "\" + " << diff
+                    << " AS \"" << new_colname << "\"";
             }
 
-        sql << "FROM \"" << population_table_name << "\" t1;\n\n";
+        sql << "\nFROM \"" << population_table_name << "\" t1;\n\n\n";
 
         return sql.str();
     };
@@ -488,6 +495,60 @@ std::vector<containers::DataFrame> TimeSeriesModel<FEType>::create_peripheral(
 // -----------------------------------------------------------------------------
 
 template <class FEType>
+std::vector<containers::Schema>
+TimeSeriesModel<FEType>::create_peripheral_schema(
+    const containers::Schema &_population,
+    const std::vector<containers::Schema> &_peripheral ) const
+{
+    const auto ts_name = hyperparameters().ts_name_ == ""
+                             ? helpers::Macros::rowid()
+                             : hyperparameters().ts_name_;
+
+    auto join_keys = _population.join_keys_;
+
+    if ( hyperparameters().self_join_keys_.size() == 0 )
+        {
+            join_keys.push_back( helpers::Macros::no_join_key() );
+        }
+
+    auto time_stamps = _population.time_stamps_;
+
+    if ( hyperparameters().horizon_ != 0.0 )
+        {
+            time_stamps.push_back( TimeStampMaker::make_ts_name(
+                ts_name, hyperparameters().horizon_ ) );
+        }
+
+    if ( hyperparameters().memory_ > 0.0 )
+        {
+            time_stamps.push_back( TimeStampMaker::make_ts_name(
+                ts_name,
+                hyperparameters().horizon_ + hyperparameters().memory_ ) );
+        }
+
+    const auto new_schema = containers::Schema{
+        .categoricals_ = _population.categoricals_,
+        .discretes_ = _population.discretes_,
+        .join_keys_ = join_keys,
+        .name_ =
+            create_peripheral_name( _population.name_, _peripheral.size() ),
+        .numericals_ = _population.numericals_,
+        .targets_ = _population.targets_,
+        .text_ = _population.text_,
+        .time_stamps_ = time_stamps,
+        .unused_floats_ = _population.unused_floats_,
+        .unused_strings_ = _population.unused_strings_ };
+
+    auto peripheral = _peripheral;
+
+    peripheral.push_back( new_schema );
+
+    return peripheral;
+}
+
+// -----------------------------------------------------------------------------
+
+template <class FEType>
 std::string TimeSeriesModel<FEType>::create_peripheral_name(
     const std::string &_name, const size_t _num_peripherals ) const
 {
@@ -549,6 +610,39 @@ containers::DataFrame TimeSeriesModel<FEType>::create_population(
     return new_df;
 
     // -----------------------------------------------------------------
+}
+
+// -----------------------------------------------------------------------------
+
+template <class FEType>
+containers::Schema TimeSeriesModel<FEType>::create_population_schema(
+    const containers::Schema &_schema ) const
+{
+    auto join_keys = _schema.join_keys_;
+
+    if ( hyperparameters().self_join_keys_.size() == 0 )
+        {
+            join_keys.push_back( helpers::Macros::no_join_key() );
+        }
+
+    auto time_stamps = _schema.time_stamps_;
+
+    if ( hyperparameters().ts_name_ == "" )
+        {
+            time_stamps.push_back( helpers::Macros::rowid() );
+        }
+
+    return containers::Schema{
+        .categoricals_ = _schema.categoricals_,
+        .discretes_ = _schema.discretes_,
+        .join_keys_ = join_keys,
+        .name_ = _schema.name_,
+        .numericals_ = _schema.numericals_,
+        .targets_ = _schema.targets_,
+        .text_ = _schema.text_,
+        .time_stamps_ = time_stamps,
+        .unused_floats_ = _schema.unused_floats_,
+        .unused_strings_ = _schema.unused_strings_ };
 }
 
 // -----------------------------------------------------------------------------
