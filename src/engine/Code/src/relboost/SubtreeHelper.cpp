@@ -100,7 +100,7 @@ void SubtreeHelper::fit_subensemble(
 
             utils::Logger::log(
                 "Trained new features. Progress: " +
-                    std::to_string( progress ) + "\%.",
+                    std::to_string( progress ) + "%.",
                 _logger,
                 _comm );
         }
@@ -339,7 +339,7 @@ void SubtreeHelper::make_predictions_for_one_subensemble(
 
             utils::Logger::log(
                 "Built FEATURE_" + std::to_string( i + 1 ) +
-                    ". Progress: " + std::to_string( progress ) + "\%.",
+                    ". Progress: " + std::to_string( progress ) + "%.",
                 _logger,
                 _comm );
         }

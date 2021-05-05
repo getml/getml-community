@@ -95,7 +95,7 @@ void CatOpParser::check(
         {
             warner.add(
                 std::to_string( share_null * 100.0 ) +
-                "\% of all entries of column '" + _name +
+                "% of all entries of column '" + _name +
                 "' are NULL values." );
         }
 

@@ -309,7 +309,7 @@ void XGBoostPredictor::fit_handle(
             const auto progress = ( ( i + 1 ) * 100 ) / n_iter;
 
             const auto progress_str =
-                "Progress: " + std::to_string( progress ) + "\%.";
+                "Progress: " + std::to_string( progress ) + "%.";
 
             if ( _logger )
                 {

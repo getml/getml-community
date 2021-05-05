@@ -167,7 +167,7 @@ void Threadutils::transform_ensemble(
 
                     utils::Logger::log(
                         "Built FEATURE_" + std::to_string( ix + 1 ) +
-                            ". Progress: " + std::to_string( progress ) + "\%.",
+                            ". Progress: " + std::to_string( progress ) + "%.",
                         _params.logger_,
                         &_params.comm_ );
                 }

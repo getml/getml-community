@@ -20,9 +20,9 @@ class NumericalBinner
         const Float _max,
         const GetValueType& _get_value,
         const size_t _num_bins,
-        const std::vector<MatchType>::const_iterator _begin,
-        const std::vector<MatchType>::const_iterator _nan_begin,
-        const std::vector<MatchType>::const_iterator _end,
+        const typename std::vector<MatchType>::const_iterator _begin,
+        const typename std::vector<MatchType>::const_iterator _nan_begin,
+        const typename std::vector<MatchType>::const_iterator _end,
         std::vector<MatchType>* _bins );
 
     /// Bins under the assumption that the step size is known.
@@ -31,9 +31,9 @@ class NumericalBinner
         const Float _max,
         const GetValueType& _get_value,
         const Float _step_size,
-        const std::vector<MatchType>::const_iterator _begin,
-        const std::vector<MatchType>::const_iterator _nan_begin,
-        const std::vector<MatchType>::const_iterator _end,
+        const typename std::vector<MatchType>::const_iterator _begin,
+        const typename std::vector<MatchType>::const_iterator _nan_begin,
+        const typename std::vector<MatchType>::const_iterator _end,
         std::vector<MatchType>* _bins );
 
    private:
@@ -44,8 +44,8 @@ class NumericalBinner
         const Float _max,
         const GetValueType& _get_value,
         const Float _step_size,
-        const std::vector<MatchType>::const_iterator _begin,
-        const std::vector<MatchType>::const_iterator _nan_begin );
+        const typename std::vector<MatchType>::const_iterator _begin,
+        const typename std::vector<MatchType>::const_iterator _nan_begin );
 };
 
 // ----------------------------------------------------------------------------

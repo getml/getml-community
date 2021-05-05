@@ -9,8 +9,7 @@ namespace preprocessors
 containers::DataFrame TextFieldSplitter::add_rowid(
     const containers::DataFrame& _df ) const
 {
-    const auto range = std::views::iota(
-        static_cast<Int>( 0 ), static_cast<Int>( _df.nrows() ) );
+    const auto range = stl::iota<Int>( 0, _df.nrows() );
 
     const auto ptr = std::make_shared<std::vector<Int>>(
         stl::collect::vector<Int>( range ) );
@@ -33,10 +32,9 @@ containers::DataFrame TextFieldSplitter::remove_text_fields(
         return _df.text( _i ).name();
     };
 
-    const auto range =
-        std::views::iota( static_cast<size_t>( 0 ), _df.num_text() );
+    const auto iota = stl::iota<size_t>( 0, _df.num_text() );
 
-    const auto names = range | std::views::transform( get_name );
+    const auto names = iota | std::views::transform( get_name );
 
     auto df = _df;
 
@@ -102,8 +100,7 @@ TextFieldSplitter::fit_df(
             _marker, _df.name(), _df.text( _i ).name() );
     };
 
-    const auto iota =
-        std::views::iota( static_cast<size_t>( 0 ), _df.num_text() );
+    const auto iota = stl::iota<size_t>( 0, _df.num_text() );
 
     const auto range = iota | std::views::transform( to_column_description );
 

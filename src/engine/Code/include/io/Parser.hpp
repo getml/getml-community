@@ -10,8 +10,6 @@ class Parser
    public:
     // -------------------------------
 
-    // -------------------------------
-
     /// Removes the quotechars.
     static std::string remove_quotechars(
         const std::string& _str, const char _quotechar )
@@ -135,7 +133,7 @@ class Parser
     {
         constexpr unsigned long precision = 4;
 
-        constexpr Float delta =
+        const Float delta =
             1.0 / std::pow( 10.0, static_cast<Float>( precision ) );
 
         const auto is_approx_full = [delta]( const Float val ) {

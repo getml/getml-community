@@ -13,8 +13,8 @@ struct Matches
         const Int _word,
         const RowIndex& _row_index,
         const std::vector<size_t>& _indptr,
-        const std::vector<MatchType>::iterator _matches_begin,
-        const std::vector<MatchType>::iterator _matches_end,
+        const typename std::vector<MatchType>::iterator _matches_begin,
+        const typename std::vector<MatchType>::iterator _matches_end,
         std::vector<MatchType>* _extracted )
     {
         _extracted->clear();

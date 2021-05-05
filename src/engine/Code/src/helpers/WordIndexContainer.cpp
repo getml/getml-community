@@ -79,8 +79,7 @@ typename WordIndexContainer::WordIndices WordIndexContainer::make_word_indices(
             stl::Range( col.begin(), col.end() ), voc );
     };
 
-    const auto iota =
-        std::views::iota( static_cast<size_t>( 0 ), _df.text_.size() );
+    const auto iota = stl::iota<size_t>( 0, _df.text_.size() );
 
     auto range = iota | std::views::transform( make_index );
 

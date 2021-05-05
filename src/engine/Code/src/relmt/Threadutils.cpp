@@ -62,7 +62,7 @@ void Threadutils::fit_as_feature_learner( const ThreadutilsFitParams& _params )
 
             utils::Logger::log(
                 "Trained new features. Progress: " +
-                    std::to_string( progress ) + "\%.",
+                    std::to_string( progress ) + "%.",
                 _params.logger_,
                 &_params.comm_ );
         }
@@ -150,7 +150,7 @@ void Threadutils::transform_as_feature_learner(
 
             utils::Logger::log(
                 "Built FEATURE_" + std::to_string( ix + 1 ) +
-                    ". Progress: " + std::to_string( progress ) + "\%.",
+                    ". Progress: " + std::to_string( progress ) + "%.",
                 _params.logger_,
                 &_params.comm_ );
         }

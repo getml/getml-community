@@ -363,8 +363,7 @@ std::vector<Float> FastProp::calc_r_squared(
             const auto end =
                 std::min( abstract_features().size(), begin + batch_size );
 
-            const auto index =
-                stl::collect::vector<size_t>( std::views::iota( begin, end ) );
+            const auto index = stl::collect::vector<size_t>( stl::iota<size_t>( begin, end ) );
 
             const auto params = TransformParams{
                 .feature_container_ = std::nullopt,
@@ -388,7 +387,7 @@ std::vector<Float> FastProp::calc_r_squared(
 
                     _logger->log(
                         "Built " + std::to_string( end ) +
-                        " features. Progress: " + progress + "\%." );
+                        " features. Progress: " + progress + "%." );
                 }
         }
 
@@ -1584,7 +1583,7 @@ void FastProp::log_progress(
     const auto progress = std::to_string( ( _num_completed * 100 ) / _nrows );
 
     _logger->log(
-        "Built " + num_completed_str + " rows. Progress: " + progress + "\%." );
+        "Built " + num_completed_str + " rows. Progress: " + progress + "%." );
 }
 
 // ----------------------------------------------------------------------------
@@ -1826,7 +1825,7 @@ std::shared_ptr<std::vector<size_t>> FastProp::sample_from_population(
         return dist( rng ) < hyperparameters().sampling_factor_;
     };
 
-    auto iota = std::views::iota( static_cast<size_t>( 0 ), _nrows );
+    auto iota = stl::iota<size_t>( 0, _nrows );
 
     auto range = iota | std::views::filter( include );
 
@@ -1848,7 +1847,7 @@ FastProp::select_features(
         {
             if ( _logger )
                 {
-                    _logger->log( "Trained features. Progress: 100\%." );
+                    _logger->log( "Trained features. Progress: 100%." );
                 }
 
             return abstract_features_;
@@ -1870,8 +1869,7 @@ FastProp::select_features(
 
     assert_true( r_squared.size() == abstract_features().size() );
 
-    const auto iota =
-        std::views::iota( static_cast<size_t>( 0 ), r_squared.size() );
+    const auto iota = stl::iota<size_t>( 0, r_squared.size() );
 
     const auto range = iota | std::views::filter( r_greater_threshold ) |
                        std::views::transform( get_feature );

@@ -768,16 +768,15 @@ std::vector<std::string> Pipeline::feature_learners_to_sql(
         const auto vec =
             std::vector<std::vector<std::string>>( { subfeatures, features } );
 
-        return stl::collect::vector<std::string>( vec | std::views::join );
+        return stl::join( vec );
     };
 
-    const auto iota =
-        std::views::iota( static_cast<size_t>( 0 ), feature_learners_.size() );
+    const auto iota = stl::iota<size_t>( 0, feature_learners_.size() );
 
     const auto all = stl::collect::vector<std::vector<std::string>>(
         iota | std::views::transform( to_sql ) );
 
-    return stl::collect::vector<std::string>( all | std::views::join );
+    return stl::join( all );
 }
 // ----------------------------------------------------------------------------
 
@@ -1444,8 +1443,7 @@ Pipeline::init_feature_learners(
             const auto make = std::bind(
                 make_fl_for_one_target, _params, std::placeholders::_1 );
 
-            const auto iota = std::views::iota(
-                static_cast<Int>( 0 ), static_cast<Int>( _num_targets ) );
+            const auto iota = stl::iota<Int>( 0, _num_targets );
 
             const auto range = iota | std::views::transform( make );
 
@@ -1499,9 +1497,7 @@ Pipeline::init_feature_learners(
 
     // ----------------------------------------------------------------------
 
-    return stl::collect::vector<
-        std::shared_ptr<featurelearners::AbstractFeatureLearner>>(
-        all | std::views::join );
+    return stl::join( all );
 
     // ----------------------------------------------------------------------
 }
@@ -1576,7 +1572,7 @@ Pipeline::init_preprocessors(
         return preprocessors::PreprocessorParser::parse( *ptr, _dependencies );
     };
 
-    const auto iota = std::views::iota( static_cast<size_t>( 0 ), arr->size() );
+    const auto iota = stl::iota<size_t>( 0, arr->size() );
 
     const auto range = iota | std::views::transform( parse );
 
@@ -2001,13 +1997,12 @@ std::vector<std::string> Pipeline::make_feature_names() const
             autofeatures | std::views::transform( make_name ) );
     };
 
-    const auto iota =
-        std::views::iota( static_cast<size_t>( 0 ), feature_learners_.size() );
+    const auto iota = stl::iota<size_t>( 0, feature_learners_.size() );
 
     const auto all = stl::collect::vector<std::vector<std::string>>(
         iota | std::views::transform( to_names ) );
 
-    return stl::collect::vector<std::string>( all | std::views::join );
+    return stl::join( all );
 }
 
 // ----------------------------------------------------------------------------
@@ -2899,7 +2894,7 @@ std::vector<std::string> Pipeline::preprocessors_to_sql(
     const auto all = stl::collect::vector<std::vector<std::string>>(
         preprocessors_ | std::views::transform( to_sql ) );
 
-    return stl::collect::vector<std::string>( all | std::views::join );
+    return stl::join( all );
 }
 
 // ----------------------------------------------------------------------------
@@ -2967,8 +2962,7 @@ std::string Pipeline::to_sql(
     const auto all = std::vector<std::vector<std::string>>(
         { staging, preprocessing, features } );
 
-    const auto sql =
-        stl::collect::vector<std::string>( all | std::views::join );
+    const auto sql = stl::join( all );
 
     const auto population = *JSON::get_object( obj(), "population_" );
 

@@ -551,7 +551,7 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
 
     // ------------------------------------------------------------------------
 
-    return stl::collect::vector<std::string>( all | std::ranges::views::join );
+    return stl::join( all );
 
     // ------------------------------------------------------------------------
 }

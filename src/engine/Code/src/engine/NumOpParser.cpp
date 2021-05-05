@@ -113,7 +113,7 @@ void NumOpParser::check(
         {
             warner.add(
                 std::to_string( share_null * 100.0 ) +
-                "\% of all entries of column '" + _col.name() +
+                "% of all entries of column '" + _col.name() +
                 "' are NULL values." );
         }
 

@@ -15,8 +15,8 @@ struct WordMaker
     static std::shared_ptr<const std::vector<Int>> make_words(
         const std::vector<strings::String>& _vocabulary,
         const GetRangeType& _get_range,
-        const std::vector<MatchType>::const_iterator _begin,
-        const std::vector<MatchType>::const_iterator _end,
+        const typename std::vector<MatchType>::const_iterator _begin,
+        const typename std::vector<MatchType>::const_iterator _end,
         multithreading::Communicator* _comm );
 };
 
@@ -64,8 +64,7 @@ WordMaker<MatchType, GetRangeType>::make_words(
         return included[i] == 1;
     };
 
-    const auto iota = std::views::iota(
-        static_cast<Int>( 0 ), static_cast<Int>( included.size() ) );
+    const auto iota = stl::iota<Int>( 0, included.size() );
 
     auto range = iota | std::views::filter( is_included );
 

@@ -14,8 +14,8 @@ class RownumBinner
     static std::vector<size_t> bin(
         const size_t _nrows,
         const GetRownumType& _get_rownum,
-        const std::vector<MatchType>::const_iterator _begin,
-        const std::vector<MatchType>::const_iterator _end,
+        const typename std::vector<MatchType>::const_iterator _begin,
+        const typename std::vector<MatchType>::const_iterator _end,
         std::vector<MatchType>* _bins );
 
    private:
@@ -24,8 +24,8 @@ class RownumBinner
     static std::vector<size_t> make_indptr(
         const size_t _nrows,
         const GetRownumType& _get_rownum,
-        const std::vector<MatchType>::const_iterator _begin,
-        const std::vector<MatchType>::const_iterator _end );
+        const typename std::vector<MatchType>::const_iterator _begin,
+        const typename std::vector<MatchType>::const_iterator _end );
 };
 
 // ----------------------------------------------------------------------------

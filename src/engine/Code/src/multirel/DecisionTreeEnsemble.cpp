@@ -537,7 +537,7 @@ void DecisionTreeEnsemble::fit(
 
             utils::Logger::log(
                 "Trained FEATURE_" + std::to_string( ix_feature + 1 ) +
-                    ". Progress: " + std::to_string( progress ) + "\%.",
+                    ". Progress: " + std::to_string( progress ) + "%.",
                 _logger,
                 _comm );
 
@@ -1040,7 +1040,7 @@ containers::Predictions DecisionTreeEnsemble::transform(
 
             utils::Logger::log(
                 "Built FEATURE_" + std::to_string( i + 1 ) +
-                    ". Progress: " + std::to_string( progress ) + "\%.",
+                    ". Progress: " + std::to_string( progress ) + "%.",
                 _logger,
                 _comm );
 

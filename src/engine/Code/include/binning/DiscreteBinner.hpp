@@ -20,9 +20,9 @@ class DiscreteBinner
         const Float _max,
         const GetValueType& _get_value,
         const size_t _num_bins_numerical,
-        const std::vector<MatchType>::const_iterator _begin,
-        const std::vector<MatchType>::const_iterator _nan_begin,
-        const std::vector<MatchType>::const_iterator _end,
+        const typename std::vector<MatchType>::const_iterator _begin,
+        const typename std::vector<MatchType>::const_iterator _nan_begin,
+        const typename std::vector<MatchType>::const_iterator _end,
         std::vector<MatchType>* _bins );
 };
 

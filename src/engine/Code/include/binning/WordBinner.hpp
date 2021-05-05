@@ -14,9 +14,9 @@ class WordBinner
     static std::vector<size_t> bin(
         const std::vector<strings::String>& _vocabulary,
         const GetValueType& _get_value,
-        const std::vector<MatchType>::const_iterator _begin,
-        const std::vector<MatchType>::const_iterator _nan_begin,
-        const std::vector<MatchType>::const_iterator _end,
+        const typename std::vector<MatchType>::const_iterator _begin,
+        const typename std::vector<MatchType>::const_iterator _nan_begin,
+        const typename std::vector<MatchType>::const_iterator _end,
         std::vector<MatchType>* _bins );
 
    private:
@@ -25,8 +25,8 @@ class WordBinner
     static std::vector<size_t> make_indptr(
         const std::vector<strings::String>& _vocabulary,
         const GetValueType& _get_value,
-        const std::vector<MatchType>::const_iterator _begin,
-        const std::vector<MatchType>::const_iterator _nan_begin );
+        const typename std::vector<MatchType>::const_iterator _begin,
+        const typename std::vector<MatchType>::const_iterator _nan_begin );
 };
 
 // ----------------------------------------------------------------------------

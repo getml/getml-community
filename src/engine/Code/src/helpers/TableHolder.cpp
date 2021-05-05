@@ -72,9 +72,9 @@ std::vector<DataFrame> TableHolder::add_text_fields_to_peripheral_tables(
                std::string::npos;
     };
 
-    auto range =
-        std::views::iota( static_cast<size_t>( 0 ), _peripheral.size() ) |
-        std::views::filter( is_relevant_text_field );
+    const auto iota = stl::iota<size_t>( 0, _peripheral.size() );
+
+    auto range = iota | std::views::filter( is_relevant_text_field );
 
     const auto relevant_text_fields_ix = stl::collect::vector<size_t>( range );
 

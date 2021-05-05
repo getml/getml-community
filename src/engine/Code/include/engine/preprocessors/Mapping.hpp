@@ -461,8 +461,7 @@ class Mapping : public Preprocessor
             const auto to_sql =
                 std::bind( _mapping_to_sql, _i, std::placeholders::_1 );
 
-            const auto iota =
-                std::views::iota( static_cast<size_t>( 0 ), num_weights );
+            const auto iota = stl::iota<size_t>( 0, num_weights );
 
             return stl::collect::vector<std::string>(
                 iota | std::views::transform( to_sql ) );
@@ -470,13 +469,12 @@ class Mapping : public Preprocessor
 
         // -----------------------------------------------------------------------
 
-        const auto iota =
-            std::views::iota( static_cast<size_t>( 0 ), _mappings.size() );
+        const auto iota = stl::iota<size_t>( 0, _mappings.size() );
 
         const auto all = stl::collect::vector<std::vector<std::string>>(
             iota | std::views::transform( all_weights_to_sql ) );
 
-        return stl::collect::vector<std::string>( all | std::views::join );
+        return stl::join( all );
     }
 
    private:
@@ -534,4 +532,3 @@ class Mapping : public Preprocessor
 }  // namespace engine
 
 #endif  // ENGINE_PREPROCESSORS_MAPPING_HPP_
-

@@ -1142,7 +1142,7 @@ void DataModelChecker::warn_not_found(
         join_keys_not_found() + "When joining " + population_name + " and " +
         peripheral_name + " over " + join_key_used + " and " +
         other_join_key_used + ", there are no corresponding entries for " +
-        std::to_string( _not_found_ratio * 100.0 ) + "\% of entries in " +
+        std::to_string( _not_found_ratio * 100.0 ) + "% of entries in " +
         join_key_used + " in '" + population_name +
         "'. You might want to double-check your join keys." );
 }
@@ -1317,7 +1317,7 @@ void DataModelChecker::warn_too_many_nulls(
 
     _warner->add(
         column_should_be_unused() + std::to_string( _share_null * 100.0 ) +
-        "\% of all entries in column '" + colname + "' in " + df_name +
+        "% of all entries in column '" + colname + "' in " + df_name +
         " are NULL values. You should "
         "consider setting its role to " +
         role + "." );
@@ -1367,7 +1367,7 @@ void DataModelChecker::warn_unique_share_too_high(
         "'" +
         colname + "' in data frame " + df_name + " is " +
         std::to_string( _unique_share * 100.0 ) +
-        "\%. You should "
+        "%. You should "
         "consider setting its role to unused_string or using it "
         "for "
         "comparison only (you can do the latter by setting a unit "

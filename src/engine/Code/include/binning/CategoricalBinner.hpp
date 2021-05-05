@@ -16,9 +16,9 @@ class CategoricalBinner
         bin( const Int _min,
              const Int _max,
              const GetValueType& _get_value,
-             const std::vector<MatchType>::const_iterator _begin,
-             const std::vector<MatchType>::const_iterator _nan_begin,
-             const std::vector<MatchType>::const_iterator _end,
+             const typename std::vector<MatchType>::const_iterator _begin,
+             const typename std::vector<MatchType>::const_iterator _nan_begin,
+             const typename std::vector<MatchType>::const_iterator _end,
              std::vector<MatchType>* _bins,
              multithreading::Communicator* _comm );
 
@@ -29,8 +29,8 @@ class CategoricalBinner
         const Int _min,
         const Int _max,
         const GetValueType& _get_value,
-        const std::vector<MatchType>::const_iterator _begin,
-        const std::vector<MatchType>::const_iterator _nan_begin,
+        const typename std::vector<MatchType>::const_iterator _begin,
+        const typename std::vector<MatchType>::const_iterator _nan_begin,
         multithreading::Communicator* _comm );
 
     /// Generates the indptr, which indicates the beginning and end of
@@ -39,8 +39,8 @@ class CategoricalBinner
         const Int _min,
         const Int _max,
         const GetValueType& _get_value,
-        const std::vector<MatchType>::const_iterator _begin,
-        const std::vector<MatchType>::const_iterator _nan_begin );
+        const typename std::vector<MatchType>::const_iterator _begin,
+        const typename std::vector<MatchType>::const_iterator _nan_begin );
 };
 
 // ----------------------------------------------------------------------------

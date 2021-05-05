@@ -14,8 +14,8 @@ struct MinMaxFinder
     /// _get_value.
     static std::pair<VType, VType> find_min_max(
         const GetValueType& _get_value,
-        const std::vector<MatchType>::const_iterator _begin,
-        const std::vector<MatchType>::const_iterator _end,
+        const typename std::vector<MatchType>::const_iterator _begin,
+        const typename std::vector<MatchType>::const_iterator _end,
         multithreading::Communicator* _comm );
 };
 

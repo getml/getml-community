@@ -74,8 +74,7 @@ Mapping::build_prerequisites(
     const auto population =
         _population_df.to_immutable<helpers::DataFrame>( *population_schema_ );
 
-    const auto iota =
-        std::views::iota( static_cast<size_t>( 0 ), _peripheral_dfs.size() );
+    const auto iota = stl::iota<size_t>( 0, _peripheral_dfs.size() );
 
     const auto peripheral = stl::collect::vector<helpers::DataFrame>(
         iota | std::views::transform( to_immutable ) );
@@ -84,8 +83,7 @@ Mapping::build_prerequisites(
         handle_text_fields( population, peripheral );
 
     const auto rownums = std::make_shared<std::vector<size_t>>(
-        stl::collect::vector<size_t>( std::views::iota(
-            static_cast<size_t>( 0 ), population.nrows() ) ) );
+        stl::collect::vector<size_t>( stl::iota<size_t>( 0, population.nrows() ) ) );
 
     const auto population_view = helpers::DataFrameView( population, rownums );
 
@@ -139,8 +137,7 @@ std::pair<Int, std::vector<Float>> Mapping::calc_agg_targets(
 
     const auto values = stl::collect::vector<std::vector<Float>>( range );
 
-    const auto second =
-        stl::collect::vector<Float>( values | std::views::join );
+    const auto second = stl::join( values );
 
     // -----------------------------------------------------------------------
 
@@ -302,7 +299,7 @@ typename Mapping::MappingForDf Mapping::extract_mapping(
 
     // --------------------------------------------------------------
 
-    const auto iota = std::views::iota( static_cast<size_t>( 0 ), arr.size() );
+    const auto iota = stl::iota<size_t>( 0, arr.size() );
 
     const auto range = iota | std::views::transform( obj_to_map );
 
@@ -346,7 +343,7 @@ typename Mapping::TextMapping Mapping::extract_text_mapping(
 
     // --------------------------------------------------------------
 
-    const auto iota = std::views::iota( static_cast<size_t>( 0 ), arr.size() );
+    const auto iota = stl::iota<size_t>( 0, arr.size() );
 
     const auto range = iota | std::views::transform( get_obj ) |
                        std::views::transform( obj_to_map );
@@ -643,8 +640,7 @@ std::vector<Mapping> Mapping::fit_submappings(
 
     // ----------------------------------------------------
 
-    const auto iota = std::views::iota(
-        static_cast<size_t>( 0 ), _table_holder->main_tables().size() );
+    const auto iota = stl::iota<size_t>( 0, _table_holder->main_tables().size() );
 
     return stl::collect::vector<Mapping>( iota | std::views::transform( fit ) );
 
@@ -749,8 +745,7 @@ Mapping Mapping::from_json_obj( const Poco::JSON::Object& _obj ) const
             return containers::Schema::from_json( *ptr );
         };
 
-        const auto iota =
-            std::views::iota( static_cast<size_t>( 0 ), arr->size() );
+        const auto iota = stl::iota<size_t>( 0, arr->size() );
 
         return std::make_shared<std::vector<containers::Schema>>(
             stl::collect::vector<containers::Schema>(
@@ -814,8 +809,7 @@ Mapping Mapping::from_json_obj( const Poco::JSON::Object& _obj ) const
             return mapping.from_json_obj( *ptr );
         };
 
-        const auto iota =
-            std::views::iota( static_cast<size_t>( 0 ), arr->size() );
+        const auto iota = stl::iota<size_t>( 0, arr->size() );
 
         return stl::collect::vector<Mapping>(
             iota | std::views::transform( to_mapping ) );
@@ -948,7 +942,7 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_int(
 
     const auto num_weights = mapping->begin()->second.size();
 
-    const auto iota = std::views::iota( static_cast<size_t>( 0 ), num_weights );
+    const auto iota = stl::iota<size_t>( 0, num_weights );
 
     return stl::collect::vector<containers::Column<Float>>(
         iota | std::views::transform( make_mapping_column ) );
@@ -1023,8 +1017,7 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_text(
         const auto get_val =
             std::bind( map_text_field, _weight_num, std::placeholders::_1 );
 
-        const auto iota =
-            std::views::iota( static_cast<size_t>( 0 ), word_index->nrows() );
+        const auto iota = stl::iota<size_t>( 0, word_index->nrows() );
 
         const auto range = iota | std::views::transform( get_val );
 
@@ -1045,7 +1038,7 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_text(
 
     const auto num_weights = mapping->begin()->second.size();
 
-    const auto iota = std::views::iota( static_cast<size_t>( 0 ), num_weights );
+    const auto iota = stl::iota<size_t>( 0, num_weights );
 
     const auto vec = stl::collect::vector<containers::Column<Float>>(
         iota | std::views::transform( make_mapping_column ) );
@@ -1496,13 +1489,12 @@ std::vector<std::string> Mapping::to_sql(
     const auto all_submappings = stl::collect::vector<std::vector<std::string>>(
         submappings_ | std::views::transform( submapping_to_sql ) );
 
-    const auto submappings =
-        stl::collect::vector<std::string>( all_submappings | std::views::join );
+    const auto submappings = stl::join( all_submappings );
 
     const auto all = std::vector<std::vector<std::string>>(
         { submappings, categorical, discrete, text } );
 
-    return stl::collect::vector<std::string>( all | std::views::join );
+    return stl::join( all );
 }
 
 // ----------------------------------------------------
@@ -1622,8 +1614,7 @@ std::vector<containers::Column<Float>> Mapping::transform_categorical(
         return make_mapping_columns_int( _p );
     };
 
-    const auto iota =
-        std::views::iota( static_cast<size_t>( 0 ), categorical_.size() );
+    const auto iota = stl::iota<size_t>( 0, categorical_.size() );
 
     const auto range = iota | std::views::transform( make_pair ) |
                        std::views::transform( make_cols );
@@ -1631,8 +1622,7 @@ std::vector<containers::Column<Float>> Mapping::transform_categorical(
     const auto all =
         stl::collect::vector<std::vector<containers::Column<Float>>>( range );
 
-    return stl::collect::vector<containers::Column<Float>>(
-        all | std::ranges::views::join );
+    return stl::join( all );
 }
 
 // ----------------------------------------------------
@@ -1711,8 +1701,7 @@ std::vector<containers::Column<Float>> Mapping::transform_discrete(
         return make_mapping_columns_int( _p );
     };
 
-    const auto iota =
-        std::views::iota( static_cast<size_t>( 0 ), discrete_.size() );
+    const auto iota = stl::iota<size_t>( 0, discrete_.size() );
 
     const auto range = iota | std::views::transform( make_pair ) |
                        std::views::transform( make_cols );
@@ -1720,8 +1709,7 @@ std::vector<containers::Column<Float>> Mapping::transform_discrete(
     const auto all =
         stl::collect::vector<std::vector<containers::Column<Float>>>( range );
 
-    return stl::collect::vector<containers::Column<Float>>(
-        all | std::ranges::views::join );
+    return stl::join( all );
 }
 
 // ----------------------------------------------------
@@ -1814,8 +1802,7 @@ std::vector<containers::Column<Float>> Mapping::transform_text(
 
     // --------------------------------------------------------------
 
-    const auto iota =
-        std::views::iota( static_cast<size_t>( 0 ), text_.size() );
+    const auto iota = stl::iota<size_t>( 0, text_.size() );
 
     const auto range = iota | std::views::transform( make_tuple ) |
                        std::views::transform( make_cols );
@@ -1823,8 +1810,7 @@ std::vector<containers::Column<Float>> Mapping::transform_text(
     const auto all =
         stl::collect::vector<std::vector<containers::Column<Float>>>( range );
 
-    return stl::collect::vector<containers::Column<Float>>(
-        all | std::ranges::views::join );
+    return stl::join( all );
 }
 
 // ----------------------------------------------------
