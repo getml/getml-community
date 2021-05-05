@@ -2904,23 +2904,44 @@ std::vector<std::string> Pipeline::preprocessors_to_sql(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::string> Pipeline::staging_to_sql(
-    const std::shared_ptr<const std::vector<strings::String>>& _categories,
-    const bool _targets ) const
+std::vector<std::string> Pipeline::staging_to_sql( const bool _targets ) const
 {
-    const auto to_sql =
-        [_categories,
-         _targets]( const std::shared_ptr<
-                    const featurelearners::AbstractFeatureLearner>& _f )
-        -> std::vector<std::string> {
+    const auto needs_targets =
+        []( const std::shared_ptr<
+            const featurelearners::AbstractFeatureLearner>& _f ) -> bool {
         assert_true( _f );
-        return _f->make_staging( _categories, _targets );
+        return _f->population_needs_targets();
     };
 
-    const auto all = stl::collect::vector<std::vector<std::string>>(
-        feature_learners_ | std::views::transform( to_sql ) );
+    const auto population_needs_targets =
+        _targets |
+        std::any_of(
+            feature_learners_.begin(), feature_learners_.end(), needs_targets );
 
-    return stl::collect::vector<std::string>( all | std::views::join );
+    const auto [placeholder, peripheral_names] = make_placeholder();
+
+    assert_true( placeholder );
+
+    assert_true( peripheral_names );
+
+    const auto peripheral_needs_targets =
+        placeholder->infer_needs_targets( *peripheral_names );
+
+    const auto is_not_text_field =
+        []( const containers::Schema& _schema ) -> bool {
+        return _schema.name_.find( helpers::Macros::text_field() ) ==
+               std::string::npos;
+    };
+
+    const auto peripheral_schema = stl::collect::vector<containers::Schema>(
+        *modified_peripheral_schema() |
+        std::views::filter( is_not_text_field ) );
+
+    return helpers::SQLGenerator::make_staging_tables(
+        population_needs_targets,
+        peripheral_needs_targets,
+        *modified_population_schema(),
+        peripheral_schema );
 }
 
 // ----------------------------------------------------------------------------
@@ -2933,8 +2954,8 @@ std::string Pipeline::to_sql(
     assert_true(
         feature_learners_.size() == predictor_impl().autofeatures().size() );
 
-    const auto staging = _subfeatures ? staging_to_sql( _categories, _targets )
-                                      : std::vector<std::string>();
+    const auto staging =
+        _subfeatures ? staging_to_sql( _targets ) : std::vector<std::string>();
 
     const auto preprocessing = _subfeatures
                                    ? preprocessors_to_sql( _categories )

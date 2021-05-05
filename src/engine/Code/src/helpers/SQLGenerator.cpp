@@ -443,7 +443,7 @@ std::string SQLGenerator::make_relative_time(
 // ----------------------------------------------------------------------------
 
 std::vector<std::string> SQLGenerator::make_staging_columns(
-    const bool& _include_targets, const Placeholder& _schema )
+    const bool& _include_targets, const helpers::Schema& _schema )
 {
     // ------------------------------------------------------------------------
 
@@ -587,7 +587,7 @@ bool SQLGenerator::include_column( const std::string& _name )
 // ----------------------------------------------------------------------------
 
 std::string SQLGenerator::create_indices(
-    const std::string& _table_name, const Placeholder& _schema )
+    const std::string& _table_name, const helpers::Schema& _schema )
 {
     // ------------------------------------------------------------------------
 
@@ -619,7 +619,7 @@ std::string SQLGenerator::create_indices(
 // ----------------------------------------------------------------------------
 
 std::string SQLGenerator::make_staging_table(
-    const bool& _include_targets, const Placeholder& _schema )
+    const bool& _include_targets, const helpers::Schema& _schema )
 {
     // ------------------------------------------------------------------------
 
@@ -694,8 +694,8 @@ std::string SQLGenerator::make_staging_table_name( const std::string& _name )
 std::vector<std::string> SQLGenerator::make_staging_tables(
     const bool _population_needs_targets,
     const std::vector<bool>& _peripheral_needs_targets,
-    const Placeholder& _population_schema,
-    const std::vector<Placeholder>& _peripheral_schema )
+    const Schema& _population_schema,
+    const std::vector<Schema>& _peripheral_schema )
 {
     // ------------------------------------------------------------------------
 

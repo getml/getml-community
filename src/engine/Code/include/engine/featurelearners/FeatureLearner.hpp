@@ -73,11 +73,6 @@ class FeatureLearner : public AbstractFeatureLearner
     /// Loads the feature learner from a file designated by _fname.
     void load( const std::string& _fname ) final;
 
-    /// Generates the staging scripts.
-    std::vector<std::string> make_staging(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories,
-        const bool _targets ) const final;
-
     /// Data frames might have to be modified, such as adding upper time stamps
     /// or self joins.
     std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
@@ -151,6 +146,20 @@ class FeatureLearner : public AbstractFeatureLearner
     size_t num_features() const final
     {
         return feature_learner().num_features();
+    }
+
+    /// Determines whether the population table needs targets during
+    /// transform (only for time series that include autoregression).
+    bool population_needs_targets() const final
+    {
+        if constexpr ( FeatureLearnerType::is_time_series_ )
+            {
+                return feature_learner()
+                    .hyperparameters()
+                    .allow_lagged_targets_;
+            }
+
+        return false;
     }
 
     /// Whether the feature learner is for the premium version only.
@@ -327,20 +336,6 @@ class FeatureLearner : public AbstractFeatureLearner
     {
         assert_true( population_schema_ );
         return *population_schema_;
-    }
-
-    /// Determines whether the population table needs targets during
-    /// transform(...).
-    const bool population_needs_targets() const
-    {
-        if constexpr ( FeatureLearnerType::is_time_series_ )
-            {
-                return feature_learner()
-                    .hyperparameters()
-                    .allow_lagged_targets_;
-            }
-
-        return false;
     }
 
     /// Extracts the propositionalization from the hyperparameters, if they
@@ -960,28 +955,6 @@ FeatureLearner<FeatureLearnerType>::make_feature_learner() const
         placeholder_,
         peripheral_schema,
         population_schema );
-}
-
-// ----------------------------------------------------------------------------
-
-template <typename FeatureLearnerType>
-std::vector<std::string> FeatureLearner<FeatureLearnerType>::make_staging(
-    const std::shared_ptr<const std::vector<strings::String>>& _categories,
-    const bool _targets ) const
-{
-    std::vector<std::string> sql;
-
-    const auto peripheral_needs_targets = infer_needs_targets();
-
-    const auto staging_tables = helpers::SQLGenerator::make_staging_tables(
-        _targets,
-        peripheral_needs_targets,
-        feature_learner().population_schema(),
-        feature_learner().peripheral_schema() );
-
-    sql.insert( sql.end(), staging_tables.begin(), staging_tables.end() );
-
-    return sql;
 }
 
 // -----------------------------------------------------------------------------

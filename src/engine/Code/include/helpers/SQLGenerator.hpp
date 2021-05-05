@@ -52,8 +52,8 @@ class SQLGenerator
     static std::vector<std::string> make_staging_tables(
         const bool _population_needs_targets,
         const std::vector<bool>& _peripheral_needs_targets,
-        const Placeholder& _population_schema,
-        const std::vector<Placeholder>& _peripheral_schema );
+        const Schema& _population_schema,
+        const std::vector<Schema>& _peripheral_schema );
 
     /// Generates the name for a staging table.
     static std::string make_staging_table_name( const std::string& _name );
@@ -92,7 +92,7 @@ class SQLGenerator
    private:
     /// Creates the indices for a staging table.
     static std::string create_indices(
-        const std::string& _table_name, const Placeholder& _schema );
+        const std::string& _table_name, const helpers::Schema& _schema );
 
     /// Parses the prefix,  the new name and the postfix out of the
     /// raw name.
@@ -118,11 +118,11 @@ class SQLGenerator
 
     /// Generates the columns for a single staging table.
     static std::vector<std::string> make_staging_columns(
-        const bool& _include_targets, const Placeholder& _schema );
+        const bool& _include_targets, const Schema& _schema );
 
     /// Generates a single staging table.
     static std::string make_staging_table(
-        const bool& _include_targets, const Placeholder& _schema );
+        const bool& _include_targets, const Schema& _schema );
 };
 
 // -------------------------------------------------------------------------

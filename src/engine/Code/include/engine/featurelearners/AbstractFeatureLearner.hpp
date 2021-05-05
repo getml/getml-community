@@ -67,13 +67,8 @@ class AbstractFeatureLearner
     /// feature learner (the difference matters for time series).
     virtual helpers::Placeholder make_placeholder() const = 0;
 
-    /// Generates the staging scripts.
-    virtual std::vector<std::string> make_staging(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories,
-        const bool _targets ) const = 0;
-
     /// Data frames might have to be modified, such as adding upper time stamps
-    /// or self joins.
+    /// or self joins, for time series only.
     virtual std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
     modify_data_frames(
         const containers::DataFrame& _population_df,
@@ -81,6 +76,10 @@ class AbstractFeatureLearner
 
     /// Returns the number of features in the feature learner.
     virtual size_t num_features() const = 0;
+
+    /// Determines whether the population table needs targets during
+    /// transform (only for time series that include autoregression).
+    virtual bool population_needs_targets() const = 0;
 
     /// Whether the feature learner is for the premium version only.
     virtual bool premium_only() const = 0;
