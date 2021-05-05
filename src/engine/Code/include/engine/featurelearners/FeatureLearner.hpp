@@ -1092,7 +1092,19 @@ std::vector<std::string> FeatureLearner<FeatureLearnerType>::to_sql(
     const bool _subfeatures,
     const std::string& _prefix ) const
 {
-    return feature_learner().to_sql( _categories, _prefix, 0, _subfeatures );
+    std::vector<std::string> sql;
+
+    if constexpr ( FeatureLearnerType::is_time_series_ )
+        {
+            sql = feature_learner().additional_staging_tables();
+        }
+
+    const auto features =
+        feature_learner().to_sql( _categories, _prefix, 0, _subfeatures );
+
+    sql.insert( sql.end(), features.begin(), features.end() );
+
+    return sql;
 }
 
 // ----------------------------------------------------------------------------

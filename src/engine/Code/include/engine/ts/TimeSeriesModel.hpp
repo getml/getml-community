@@ -49,6 +49,10 @@ class TimeSeriesModel
     // -----------------------------------------------------------------
 
    public:
+    /// Generates the SQL code for the additional staging tables required for
+    /// the time series.
+    std::vector<std::string> additional_staging_tables() const;
+
     /// Calculates the column importances for this ensemble.
     std::map<helpers::ColumnDescription, Float> column_importances(
         const std::vector<Float> &_importance_factors,
@@ -269,6 +273,95 @@ TimeSeriesModel<FEType>::TimeSeriesModel( const Poco::JSON::Object &_obj )
 
 template <class FEType>
 TimeSeriesModel<FEType>::~TimeSeriesModel() = default;
+
+// ----------------------------------------------------------------------------
+
+template <class FEType>
+std::vector<std::string> TimeSeriesModel<FEType>::additional_staging_tables()
+    const
+{
+    // ------------------------------------------------------------------------
+
+    const auto is_additional_table =
+        []( const helpers::Placeholder &_placeholder ) -> bool {
+        return _placeholder.name_.find( helpers::Macros::peripheral() ) !=
+               std::string::npos;
+    };
+
+    // ------------------------------------------------------------------------
+
+    const auto make_diffs = [this]() -> std::vector<Float> {
+        std::vector<Float> diffs;
+
+        if ( hyperparameters().horizon_ != 0.0 )
+            {
+                diffs.push_back( hyperparameters().horizon_ );
+            }
+
+        if ( hyperparameters().memory_ > 0.0 )
+            {
+                diffs.push_back(
+                    hyperparameters().horizon_ + hyperparameters().memory_ );
+            }
+
+        return diffs;
+    };
+
+    // ------------------------------------------------------------------------
+
+    const auto population_table_name =
+        helpers::SQLGenerator::make_staging_table_name(
+            model().population_schema().name_ );
+
+    const auto diffs = make_diffs();
+
+    const auto ts_name = hyperparameters().ts_name_ == ""
+                             ? helpers::Macros::rowid()
+                             : hyperparameters().ts_name_;
+
+    // ------------------------------------------------------------------------
+
+    const auto to_sql =
+        [&population_table_name, &diffs, &ts_name](
+            const helpers::Placeholder &_placeholder ) -> std::string {
+        const auto name = helpers::SQLGenerator::make_staging_table_name(
+            _placeholder.name_ );
+
+        std::stringstream sql;
+
+        sql << "DROP TABLE IF EXISTS \""
+            << helpers::SQLGenerator::to_upper( name ) << "\";\n\n";
+
+        sql << "CREATE TABLE \"" << helpers::SQLGenerator::to_upper( name )
+            << "\" AS\nSELECT t1.*";
+
+        for ( size_t i = 0; i < diffs.size(); ++i )
+            {
+                const auto end = ( i == diffs.size() - 1 ) ? "\n" : ",\n";
+
+                const auto ts_used =
+                    helpers::SQLGenerator::make_colname( ts_name );
+
+                const auto new_colname = helpers::SQLGenerator::make_colname(
+                    TimeStampMaker::make_ts_name( ts_name, diffs.at( i ) ) );
+
+                sql << "       t1.\"" << ts_used << "\" + " << diffs.at( i )
+                    << " AS \"" << new_colname << "\"" << end;
+            }
+
+        sql << "FROM \"" << population_table_name << "\" t1;\n\n";
+
+        return sql.str();
+    };
+
+    // ------------------------------------------------------------------------
+
+    const auto range = model().peripheral_schema() |
+                       std::views::filter( is_additional_table ) |
+                       std::views::transform( to_sql );
+
+    return stl::collect::vector<std::string>( range );
+}
 
 // ----------------------------------------------------------------------------
 

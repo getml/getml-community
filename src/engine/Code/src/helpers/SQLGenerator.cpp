@@ -531,7 +531,8 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
 
     const auto numericals = cast_as_real( _schema.numericals_ );
 
-    const auto targets = cast_as_real( _schema.targets_ );
+    const auto targets = _include_targets ? cast_as_real( _schema.targets_ )
+                                          : std::vector<std::string>();
 
     const auto text = cast_as_text( _schema.text_ );
 
@@ -539,21 +540,14 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
 
     // ------------------------------------------------------------------------
 
-    const auto all = _include_targets ? std::vector<std::vector<std::string>>(
-                                            { targets,
-                                              categoricals,
-                                              discretes,
-                                              join_keys,
-                                              numericals,
-                                              text,
-                                              time_stamps } )
-                                      : std::vector<std::vector<std::string>>(
-                                            { categoricals,
-                                              discretes,
-                                              join_keys,
-                                              numericals,
-                                              text,
-                                              time_stamps } );
+    const auto all = std::vector<std::vector<std::string>>(
+        { targets,
+          categoricals,
+          discretes,
+          join_keys,
+          numericals,
+          text,
+          time_stamps } );
 
     // ------------------------------------------------------------------------
 
