@@ -154,6 +154,8 @@ helpers::ImportanceMaker Macros::modify_column_importances(
             auto [to_table, to_colname] =
                 parse_table_colname( from_desc.table_, from_desc.name_ );
 
+            to_table = remove_population( to_table );
+
             to_colname = remove_mappings( to_colname );
 
             to_colname = remove_email( to_colname );
@@ -397,6 +399,20 @@ std::string Macros::remove_imputation( const std::string& _from_colname )
 std::string Macros::remove_mappings( const std::string& _from_colname )
 {
     const auto pos = _from_colname.find( "__mapping_" );
+
+    if ( pos == std::string::npos )
+        {
+            return _from_colname;
+        }
+
+    return _from_colname.substr( 0, pos );
+}
+
+// ----------------------------------------------------------------------------
+
+std::string Macros::remove_population( const std::string& _from_colname )
+{
+    const auto pos = _from_colname.find( population() );
 
     if ( pos == std::string::npos )
         {

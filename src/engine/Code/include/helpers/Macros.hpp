@@ -67,6 +67,8 @@ class Macros
 
     static std::string remove_mappings( const std::string& _from_colname );
 
+    static std::string remove_population( const std::string& _from_colname );
+
     static std::string remove_seasonal( const std::string& _from_colname );
 
     static std::string remove_substring( const std::string& _from_colname );
