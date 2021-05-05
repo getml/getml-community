@@ -1111,7 +1111,9 @@ std::vector<std::string> FeatureLearner<FeatureLearnerType>::to_sql(
 
     if constexpr ( FeatureLearnerType::is_time_series_ )
         {
-            sql = feature_learner().additional_staging_tables();
+            assert_true( peripheral_schema_ );
+            sql.push_back( feature_learner().additional_staging_table(
+                population_schema().name_, peripheral_schema_->size() ) );
         }
 
     const auto features =
