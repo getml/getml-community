@@ -89,11 +89,17 @@ void Pipeline::add_population_cols(
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
 Pipeline::apply_preprocessors(
     const Poco::JSON::Object& _cmd,
+    const std::shared_ptr<const communication::Logger>& _logger,
     const containers::DataFrame& _population_df,
     const std::vector<containers::DataFrame>& _peripheral_dfs,
     const std::shared_ptr<const containers::Encoding>& _categories,
     Poco::Net::StreamSocket* _socket ) const
 {
+    if ( preprocessors_.size() == 0 )
+        {
+            return std::make_pair( _population_df, _peripheral_dfs );
+        }
+
     auto population_df = _population_df;
 
     auto peripheral_dfs = _peripheral_dfs;
@@ -104,8 +110,22 @@ Pipeline::apply_preprocessors(
 
     assert_true( peripheral_names );
 
-    for ( const auto& p : preprocessors_ )
+    assert_true( _logger );
+
+    const auto socket_logger =
+        communication::SocketLogger( _logger, true, _socket );
+
+    socket_logger.log( "Preprocessing..." );
+
+    for ( size_t i = 0; i < preprocessors_.size(); ++i )
         {
+            const auto progress = ( i * 100 ) / preprocessors_.size();
+
+            socket_logger.log(
+                "Progress: " + std::to_string( progress ) + "%." );
+
+            auto& p = preprocessors_.at( i );
+
             assert_true( p );
 
             std::tie( population_df, peripheral_dfs ) = p->transform(
@@ -116,6 +136,8 @@ Pipeline::apply_preprocessors(
                 *placeholder,
                 *peripheral_names );
         }
+
+    socket_logger.log( "Progress: 100%." );
 
     return std::make_pair( population_df, peripheral_dfs );
 }
@@ -263,6 +285,7 @@ void Pipeline::check(
 
     fit_transform_preprocessors(
         _cmd,
+        nullptr,
         _categories,
         _preprocessor_tracker,
         &population_df,
@@ -1019,6 +1042,7 @@ void Pipeline::fit(
 
     preprocessors_ = fit_transform_preprocessors(
         _cmd,
+        _logger,
         _categories,
         _preprocessor_tracker,
         &population_df,
@@ -1278,6 +1302,7 @@ void Pipeline::fit_predictors(
 std::vector<std::shared_ptr<preprocessors::Preprocessor>>
 Pipeline::fit_transform_preprocessors(
     const Poco::JSON::Object& _cmd,
+    const std::shared_ptr<const communication::Logger>& _logger,
     const std::shared_ptr<containers::Encoding>& _categories,
     const std::shared_ptr<dependency::PreprocessorTracker>&
         _preprocessor_tracker,
@@ -1287,6 +1312,11 @@ Pipeline::fit_transform_preprocessors(
 {
     auto preprocessors = init_preprocessors( df_fingerprints() );
 
+    if ( preprocessors.size() == 0 )
+        {
+            return preprocessors;
+        }
+
     const auto [placeholder, peripheral_names] = make_placeholder();
 
     assert_true( placeholder );
@@ -1295,8 +1325,27 @@ Pipeline::fit_transform_preprocessors(
 
     assert_true( _preprocessor_tracker );
 
-    for ( auto& p : preprocessors )
+    const auto socket_logger =
+        _logger ? std::make_optional<const communication::SocketLogger>(
+                      _logger, true, _socket )
+                : std::optional<const communication::SocketLogger>();
+
+    if ( socket_logger )
         {
+            socket_logger->log( "Preprocessing..." );
+        }
+
+    for ( size_t i = 0; i < preprocessors.size(); ++i )
+        {
+            if ( socket_logger )
+                {
+                    const auto progress = ( i * 100 ) / preprocessors.size();
+                    socket_logger->log(
+                        "Progress: " + std::to_string( progress ) + "%." );
+                }
+
+            auto& p = preprocessors.at( i );
+
             assert_true( p );
 
             const auto fingerprint = p->fingerprint();
@@ -1329,6 +1378,11 @@ Pipeline::fit_transform_preprocessors(
                 *peripheral_names );
 
             _preprocessor_tracker->add( p );
+        }
+
+    if ( socket_logger )
+        {
+            socket_logger->log( "Progress: 100%." );
         }
 
     return preprocessors;
@@ -3059,7 +3113,7 @@ Pipeline::transform(
     // -------------------------------------------------------------------------
 
     std::tie( population_df, peripheral_dfs ) = apply_preprocessors(
-        _cmd, population_df, peripheral_dfs, _categories, _socket );
+        _cmd, _logger, population_df, peripheral_dfs, _categories, _socket );
 
     // -------------------------------------------------------------------------
 

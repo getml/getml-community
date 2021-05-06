@@ -161,6 +161,7 @@ class Pipeline
     std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
     apply_preprocessors(
         const Poco::JSON::Object& _cmd,
+        const std::shared_ptr<const communication::Logger>& _logger,
         const containers::DataFrame& _population_df,
         const std::vector<containers::DataFrame>& _peripheral_dfs,
         const std::shared_ptr<const containers::Encoding>& _categories,
@@ -274,6 +275,7 @@ class Pipeline
     std::vector<std::shared_ptr<preprocessors::Preprocessor>>
     fit_transform_preprocessors(
         const Poco::JSON::Object& _cmd,
+        const std::shared_ptr<const communication::Logger>& _logger,
         const std::shared_ptr<containers::Encoding>& _categories,
         const std::shared_ptr<dependency::PreprocessorTracker>&
             _preprocessor_tracker,
