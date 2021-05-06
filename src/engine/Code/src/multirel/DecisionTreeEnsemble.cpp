@@ -920,14 +920,19 @@ std::vector<std::string> DecisionTreeEnsemble::to_sql(
         {
             assert_true( subensembles_avg_.size() == subensembles_sum_.size() );
 
+            assert_true(
+                subensembles_avg_.size() == _vocabulary.subtrees().size() );
+
             for ( size_t i = 0; i < subensembles_avg_.size(); ++i )
                 {
                     if ( subensembles_avg_.at( i ) )
                         {
+                            assert_true( _vocabulary.subtrees().at( i ) );
+
                             const auto sub_avg =
                                 subensembles_avg_.at( i )->to_sql(
                                     _categories,
-                                    _vocabulary,
+                                    _vocabulary.subtrees().at( i ).value(),
                                     _feature_prefix + std::to_string( i + 1 ) +
                                         "_",
                                     0,
@@ -941,7 +946,7 @@ std::vector<std::string> DecisionTreeEnsemble::to_sql(
                             const auto sub_sum =
                                 subensembles_sum_.at( i )->to_sql(
                                     _categories,
-                                    _vocabulary,
+                                    _vocabulary.subtrees().at( i ).value(),
                                     _feature_prefix + std::to_string( i + 1 ) +
                                         "_",
                                     subensembles_avg_.at( i )->num_features(),
