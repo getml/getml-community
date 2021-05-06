@@ -2878,6 +2878,10 @@ Poco::JSON::Object Pipeline::to_monitor(
     const std::shared_ptr<const std::vector<strings::String>>& _categories,
     const std::string& _name ) const
 {
+    const auto to_json_obj = []( const containers::Schema& _schema ) {
+        return _schema.to_json_obj();
+    };
+
     auto feature_learners = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
 
     Poco::JSON::Object json_obj;
@@ -2896,8 +2900,10 @@ Poco::JSON::Object Pipeline::to_monitor(
 
     json_obj.set( "num_features_", num_features() );
 
-    // TODO
-    // json_obj.set( "peripheral_schema_", peripheral_schema() );
+    json_obj.set(
+        "peripheral_schema_",
+        stl::collect::array(
+            *peripheral_schema() | std::views::transform( to_json_obj ) ) );
 
     json_obj.set( "population_schema_", population_schema()->to_json_obj() );
 
