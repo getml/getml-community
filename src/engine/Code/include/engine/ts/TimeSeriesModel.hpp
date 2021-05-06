@@ -482,14 +482,9 @@ TimeSeriesModel<FEType>::create_peripheral_schema(
                              ? helpers::Macros::rowid()
                              : hyperparameters().ts_name_;
 
-    auto join_keys = _population.join_keys_;
+    const auto population = create_population_schema( _population );
 
-    if ( hyperparameters().self_join_keys_.size() == 0 )
-        {
-            join_keys.push_back( helpers::Macros::no_join_key() );
-        }
-
-    auto time_stamps = _population.time_stamps_;
+    auto time_stamps = population.time_stamps_;
 
     if ( hyperparameters().horizon_ != 0.0 )
         {
@@ -505,17 +500,17 @@ TimeSeriesModel<FEType>::create_peripheral_schema(
         }
 
     const auto new_schema = containers::Schema{
-        .categoricals_ = _population.categoricals_,
-        .discretes_ = _population.discretes_,
-        .join_keys_ = join_keys,
+        .categoricals_ = population.categoricals_,
+        .discretes_ = population.discretes_,
+        .join_keys_ = population.join_keys_,
         .name_ =
             create_peripheral_name( _population.name_, _peripheral.size() ),
-        .numericals_ = _population.numericals_,
-        .targets_ = _population.targets_,
-        .text_ = _population.text_,
+        .numericals_ = population.numericals_,
+        .targets_ = population.targets_,
+        .text_ = population.text_,
         .time_stamps_ = time_stamps,
-        .unused_floats_ = _population.unused_floats_,
-        .unused_strings_ = _population.unused_strings_ };
+        .unused_floats_ = population.unused_floats_,
+        .unused_strings_ = population.unused_strings_ };
 
     auto peripheral = _peripheral;
 
