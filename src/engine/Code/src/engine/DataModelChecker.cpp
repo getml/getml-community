@@ -647,8 +647,8 @@ void DataModelChecker::check_self_joins(
                 {
                     const auto
                         [is_many_to_one,
-                         num_expected,
                          num_matches,
+                         num_expected,
                          num_jk_not_found,
                          _] =
                             check_matches(
@@ -972,6 +972,19 @@ void DataModelChecker::raise_join_warnings(
 
     // ------------------------------------------------------------------------
 
+    if ( _num_expected > 3000.0 )
+        {
+            warn_memory(
+                _num_matches,
+                _join_key_used,
+                _other_join_key_used,
+                _population_df,
+                _peripheral_df,
+                _warner );
+        }
+
+    // ------------------------------------------------------------------------
+
     const auto not_found_ratio = static_cast<Float>( _num_jk_not_found ) /
                                  static_cast<Float>( _population_df.nrows() );
 
@@ -1021,6 +1034,13 @@ void DataModelChecker::raise_self_join_warnings(
         {
             warn_self_join_too_many_matches(
                 _num_matches, _population_df, _warner );
+        }
+
+    // ------------------------------------------------------------------------
+
+    if ( avg_num_matches > 3000.0 )
+        {
+            warn_self_join_memory( _num_matches, _population_df, _warner );
         }
 
     // ------------------------------------------------------------------------
@@ -1095,6 +1115,40 @@ void DataModelChecker::warn_many_to_one(
 
 // ------------------------------------------------------------------------
 
+void DataModelChecker::warn_memory(
+    const size_t _num_matches,
+    const std::string& _join_key_used,
+    const std::string& _other_join_key_used,
+    const containers::DataFrame& _population_df,
+    const containers::DataFrame& _peripheral_df,
+    communication::Warner* _warner )
+{
+    const auto join_key_used = modify_join_key_name( _join_key_used );
+
+    const auto other_join_key_used =
+        modify_join_key_name( _other_join_key_used );
+
+    const auto population_name = modify_df_name( _population_df.name() );
+
+    const auto peripheral_name = modify_df_name( _peripheral_df.name() );
+
+    _warner->add(
+        uses_memory() + "There are " + std::to_string( _num_matches ) +
+        " matches between " + population_name + " and " + peripheral_name +
+        " when joined over " + join_key_used + " and " + other_join_key_used +
+        ". This pipeline might use a lot of memory. "
+        "You could impose a narrower limit on the scope of "
+        "this join by reducing the memory (the period of time until "
+        "the feature learner 'forgets' historical data). "
+        "You can reduce the memory "
+        "by setting the appropriate parameter in the .join(...)-method "
+        "of the Placeholder. "
+        "Please note that a memory of 0.0 means that "
+        "the time series will not forget any past "
+        "data." );
+}
+// ------------------------------------------------------------------------
+
 void DataModelChecker::warn_no_matches(
     const std::string& _join_key_used,
     const std::string& _other_join_key_used,
@@ -1149,6 +1203,29 @@ void DataModelChecker::warn_not_found(
 
 // ------------------------------------------------------------------------
 
+void DataModelChecker::warn_self_join_memory(
+    const size_t _num_matches,
+    const containers::DataFrame& _population_df,
+    communication::Warner* _warner )
+{
+    const auto population_name = modify_df_name( _population_df.name() );
+
+    _warner->add(
+        uses_memory() + "The self-join on " + population_name +
+        " created by the time series feature learner "
+        "has a total of " +
+        std::to_string( _num_matches ) +
+        " matches.  This might use a lot of memory. "
+        "You could impose a narrower limit on the scope of "
+        "this join by reducing the memory (the period of time until "
+        "the feature learner 'forgets' historical data). "
+        "Please note that a memory of 0.0 means that "
+        "the time series will not forget any past "
+        "data." );
+}
+
+// ------------------------------------------------------------------------
+
 void DataModelChecker::warn_self_join_no_matches(
     const containers::DataFrame& _population_df,
     communication::Warner* _warner )
@@ -1176,14 +1253,14 @@ void DataModelChecker::warn_self_join_too_many_matches(
         "has a total of " +
         std::to_string( _num_matches ) +
         " matches.  This can take a long time to fit. "
-        "You should consider imposing a narrower limit on the scope of "
+        "There are two possible ways to fix this: \n"
+        "1) You could impose a narrower limit on the scope of "
         "this join by reducing the memory (the period of time until "
-        "the time series feature learner 'forgets' historical data). "
-        "You can "
-        "do so by setting the appropriate hyperparameter in the "
-        "feature learner. Please note that a memory of 0.0 means that "
-        "the time series feature learner will not forget any past "
-        "data." );
+        "the feature learner 'forgets' historical data). "
+        "Please note that a memory of 0.0 means that "
+        "the time series will not forget any past "
+        "data.\n"
+        "2) You could also use FastPropTimeSeries instead." );
 }
 
 // ------------------------------------------------------------------------
@@ -1293,7 +1370,8 @@ void DataModelChecker::warn_too_many_matches(
         "data.\n"
         "2) You could also set the relationship parameter to "
         "propositionalization, which would force the pipeline to use the "
-        "FastProp algorithm for this particular join.\n"
+        "FastProp algorithm for this particular join. You can also do that in "
+        "the .join(...)-method of the Placeholder.\n"
         "3) You could also use FastPropModel or FastPropTimeSeries for the "
         "entire pipeline." );
 }
