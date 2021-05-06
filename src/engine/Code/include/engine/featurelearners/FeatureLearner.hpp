@@ -1122,8 +1122,12 @@ std::vector<std::string> FeatureLearner<FeatureLearnerType>::to_sql(
 
     if constexpr ( FeatureLearnerType::is_time_series_ )
         {
-            sql.push_back( feature_learner().additional_staging_table(
-                population_schema().name_, peripheral_schema_->size() ) );
+            if ( _subfeatures )
+                {
+                    sql.push_back( feature_learner().additional_staging_table(
+                        population_schema().name_,
+                        peripheral_schema_->size() ) );
+                }
         }
 
     throw_unless( vocabulary_, "Pipeline has not been fitted." );

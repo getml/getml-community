@@ -920,8 +920,12 @@ std::vector<std::string> DecisionTreeEnsemble::to_sql(
         {
             assert_true( subensembles_avg_.size() == subensembles_sum_.size() );
 
-            assert_true(
-                subensembles_avg_.size() == _vocabulary.subtrees().size() );
+            assert_msg(
+                subensembles_avg_.size() == _vocabulary.subtrees().size(),
+                "subensembles_avg_.size(): " +
+                    std::to_string( subensembles_avg_.size() ) +
+                    ", _vocabulary.subtrees().size(): " +
+                    std::to_string( _vocabulary.subtrees().size() ) );
 
             for ( size_t i = 0; i < subensembles_avg_.size(); ++i )
                 {
