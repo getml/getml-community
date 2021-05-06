@@ -234,7 +234,7 @@ class Sum : public lossfunctions::LossFunction
     /// Initializes yhat_old_ by setting it to the initial prediction.
     void init_yhat_old( const Float _initial_prediction ) final
     {
-        assert_true( false && "TODO" );
+        assert_true( false );
     }
 
     /// Generates the sample weights.

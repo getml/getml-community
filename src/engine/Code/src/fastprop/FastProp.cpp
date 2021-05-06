@@ -110,14 +110,6 @@ FastProp::FastProp( const Poco::JSON::Object &_obj )
 
     // ------------------------------------------------------------------------
 
-    if ( _obj.has( "vocabulary_" ) )
-        {
-            vocabulary_ = std::make_shared<helpers::VocabularyContainer>(
-                *jsonutils::JSON::get_object( _obj, "vocabulary_" ) );
-        }
-
-    // ------------------------------------------------------------------------
-
     if ( _obj.has( "subfeatures_" ) )
         {
             auto subfeatures_arr =
@@ -363,7 +355,8 @@ std::vector<Float> FastProp::calc_r_squared(
             const auto end =
                 std::min( abstract_features().size(), begin + batch_size );
 
-            const auto index = stl::collect::vector<size_t>( stl::iota<size_t>( begin, end ) );
+            const auto index =
+                stl::collect::vector<size_t>( stl::iota<size_t>( begin, end ) );
 
             const auto params = TransformParams{
                 .feature_container_ = std::nullopt,
@@ -449,25 +442,6 @@ std::map<helpers::ColumnDescription, Float> FastProp::column_importances(
         }
 
     return importances.importances();
-}
-
-// ----------------------------------------------------------------------------
-
-typename FastProp::Vocabulary FastProp::expand_vocabulary(
-    const Vocabulary &_vocabulary ) const
-{
-    const auto find_vocabulary =
-        [this, &_vocabulary](
-            const containers::Placeholder &_joined_table ) -> VocabForDf {
-        const auto ix = find_peripheral_ix( _joined_table.name_ );
-        assert_true( ix < _vocabulary.size() );
-        return _vocabulary.at( ix );
-    };
-
-    auto range =
-        placeholder().joined_tables_ | std::views::transform( find_vocabulary );
-
-    return stl::collect::vector<VocabForDf>( range );
 }
 
 // ----------------------------------------------------------------------------
@@ -1978,6 +1952,7 @@ void FastProp::spawn_threads(
 
 void FastProp::subfeatures_to_sql(
     const std::shared_ptr<const std::vector<strings::String>> &_categories,
+    const helpers::VocabularyTree &_vocabulary,
     const std::string &_feature_prefix,
     const size_t _offset,
     std::vector<std::string> *_sql ) const
@@ -1988,6 +1963,7 @@ void FastProp::subfeatures_to_sql(
                 {
                     const auto sub = subfeatures().at( i )->to_sql(
                         _categories,
+                        _vocabulary,
                         _feature_prefix + std::to_string( i + 1 ) + "_",
                         0,
                         true );
@@ -2125,13 +2101,6 @@ Poco::JSON::Object FastProp::to_json_obj( const bool _schema_only ) const
 
     // ----------------------------------------
 
-    if ( vocabulary_ )
-        {
-            obj.set( "vocabulary_", vocabulary_->to_json_obj() );
-        }
-
-    // ----------------------------------------
-
     if ( subfeatures_ )
         {
             Poco::JSON::Array::Ptr subfeatures_arr( new Poco::JSON::Array() );
@@ -2162,6 +2131,7 @@ Poco::JSON::Object FastProp::to_json_obj( const bool _schema_only ) const
 
 std::vector<std::string> FastProp::to_sql(
     const std::shared_ptr<const std::vector<strings::String>> &_categories,
+    const helpers::VocabularyTree &_vocabulary,
     const std::string &_feature_prefix,
     const size_t _offset,
     const bool _subfeatures ) const
@@ -2175,7 +2145,8 @@ std::vector<std::string> FastProp::to_sql(
 
     if ( _subfeatures )
         {
-            subfeatures_to_sql( _categories, _feature_prefix, _offset, &sql );
+            subfeatures_to_sql(
+                _categories, _vocabulary, _feature_prefix, _offset, &sql );
         }
 
     for ( size_t i = 0; i < abstract_features().size(); ++i )

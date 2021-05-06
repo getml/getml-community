@@ -310,10 +310,6 @@ class CrossEntropyLoss : public LossFunction
         const containers::Weights& _weights ) final
     {
         return loss_committed_ - calc_loss( _weights );
-        // TODO
-        //+
-        /*impl_.calc_regularization_reduction(
-            _old_intercept, _old_weight, _weights );*/
     }
 
     /// Returns the loss reduction associated with a split.

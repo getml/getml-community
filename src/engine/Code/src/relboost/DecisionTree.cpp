@@ -135,6 +135,7 @@ Poco::JSON::Object::Ptr DecisionTree::to_json_obj() const
 
 std::string DecisionTree::to_sql(
     const std::vector<strings::String>& _categories,
+    const helpers::VocabularyTree& _vocabulary,
     const std::string& _feature_prefix,
     const std::string& _feature_num,
     const bool _use_timestamps ) const
@@ -170,8 +171,16 @@ std::string DecisionTree::to_sql(
 
     assert_true( root_ );
 
+    assert_true( peripheral_used() < _vocabulary.peripheral().size() );
+
     root_->to_sql(
-        _categories, _feature_prefix, _feature_num, "", &conditions );
+        _categories,
+        _vocabulary.population(),
+        _vocabulary.peripheral().at( peripheral_used() ),
+        _feature_prefix,
+        _feature_num,
+        "",
+        &conditions );
 
     for ( size_t i = 0; i < conditions.size(); ++i )
         {

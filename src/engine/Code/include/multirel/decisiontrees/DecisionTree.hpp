@@ -67,6 +67,7 @@ class DecisionTree
     /// as a string
     std::string to_sql(
         const std::vector<strings::String> &_categories,
+        const helpers::VocabularyTree &_vocabulary,
         const std::string &_feature_prefix,
         const std::string &_feature_num,
         const bool _use_timestamps ) const;

@@ -9,6 +9,10 @@ namespace decisiontrees
 
 class DecisionTreeNode
 {
+   private:
+    typedef std::vector<std::shared_ptr<const std::vector<strings::String>>>
+        VocabForDf;
+
    public:
     DecisionTreeNode(
         bool _is_activated, Int _depth, const DecisionTreeImpl *_tree );
@@ -52,6 +56,8 @@ class DecisionTreeNode
     /// Returns the SQL condition associated with this node
     void to_sql(
         const std::vector<strings::String> &_categories,
+        const VocabForDf &_vocab_popul,
+        const VocabForDf &_vocab_perip,
         const std::string &_feature_prefix,
         const std::string &_feature_num,
         std::vector<std::string> &_conditions,

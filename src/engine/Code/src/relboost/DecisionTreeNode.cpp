@@ -548,6 +548,8 @@ Poco::JSON::Object::Ptr DecisionTreeNode::to_json_obj() const
 
 void DecisionTreeNode::to_sql(
     const std::vector<strings::String>& _categories,
+    const VocabForDf& _vocab_popul,
+    const VocabForDf& _vocab_perip,
     const std::string& _feature_prefix,
     const std::string& _feature_num,
     const std::string& _sql,
@@ -559,25 +561,39 @@ void DecisionTreeNode::to_sql(
 
             const auto prefix = ( _sql == "" ) ? "WHEN " : " AND ";
 
-            const auto sql_greater =
-                _sql + prefix +
-                condition_maker_.condition_greater(
-                    _categories, _feature_prefix, input(), output(), split_ );
+            const auto sql_greater = _sql + prefix +
+                                     condition_maker_.condition_greater(
+                                         _categories,
+                                         _vocab_popul,
+                                         _vocab_perip,
+                                         _feature_prefix,
+                                         input(),
+                                         output(),
+                                         split_ );
 
             child_greater_->to_sql(
                 _categories,
+                _vocab_popul,
+                _vocab_perip,
                 _feature_prefix,
                 _feature_num,
                 sql_greater,
                 _conditions );
 
-            const auto sql_smaller =
-                _sql + prefix +
-                condition_maker_.condition_smaller(
-                    _categories, _feature_prefix, input(), output(), split_ );
+            const auto sql_smaller = _sql + prefix +
+                                     condition_maker_.condition_smaller(
+                                         _categories,
+                                         _vocab_popul,
+                                         _vocab_perip,
+                                         _feature_prefix,
+                                         input(),
+                                         output(),
+                                         split_ );
 
             child_smaller_->to_sql(
                 _categories,
+                _vocab_popul,
+                _vocab_perip,
                 _feature_prefix,
                 _feature_num,
                 sql_smaller,

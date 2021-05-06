@@ -8,6 +8,8 @@ namespace utils
 
 std::string SQLMaker::condition_greater(
     const std::vector<strings::String>& _categories,
+    const VocabForDf& _vocab_popul,
+    const VocabForDf& _vocab_perip,
     const std::string& _feature_prefix,
     const containers::Placeholder& _input,
     const containers::Placeholder& _output,
@@ -65,6 +67,7 @@ std::string SQLMaker::condition_greater(
                 }
 
             case enums::DataUsed::same_unit_discrete:
+            case enums::DataUsed::same_unit_discrete_ts:
                 {
                     const auto [name1, name2] = get_names(
                         _feature_prefix,
@@ -78,6 +81,7 @@ std::string SQLMaker::condition_greater(
                 }
 
             case enums::DataUsed::same_unit_numerical:
+            case enums::DataUsed::same_unit_numerical_ts:
                 {
                     const auto [name1, name2] = get_names(
                         _feature_prefix,
@@ -90,31 +94,43 @@ std::string SQLMaker::condition_greater(
                            std::to_string( _split.critical_value ) + " )";
                 }
 
-            case enums::DataUsed::same_unit_discrete_ts:
-                {
-                    make_time_stamp_diff(
-                        _input,
-                        _output,
-                        same_units_.same_units_discrete_,
-                        _split.column_used,
-                        _split.critical_value,
-                        true );
-                }
-
-            case enums::DataUsed::same_unit_numerical_ts:
-                {
-                    return make_time_stamp_diff(
-                        _input,
-                        _output,
-                        same_units_.same_units_numerical_,
-                        _split.column_used,
-                        _split.critical_value,
-                        true );
-                }
-
             case enums::DataUsed::x_popul_text:
+                {
+                    const auto name = get_name(
+                        _feature_prefix,
+                        _input,
+                        _output,
+                        _split.column_used,
+                        _split.data_used );
+
+                    assert_true( _split.column_used < _vocab_popul.size() );
+                    assert_true( _vocab_popul.at( _split.column_used ) );
+
+                    return list_words(
+                        *_vocab_popul.at( _split.column_used ),
+                        _split,
+                        name,
+                        true );
+                }
+
             case enums::DataUsed::x_perip_text:
-                return "TODO";
+                {
+                    const auto name = get_name(
+                        _feature_prefix,
+                        _input,
+                        _output,
+                        _split.column_used,
+                        _split.data_used );
+
+                    assert_true( _split.column_used < _vocab_perip.size() );
+                    assert_true( _vocab_perip.at( _split.column_used ) );
+
+                    return list_words(
+                        *_vocab_perip.at( _split.column_used ),
+                        _split,
+                        name,
+                        true );
+                }
 
             case enums::DataUsed::time_stamps_window:
                 {
@@ -132,6 +148,8 @@ std::string SQLMaker::condition_greater(
 
 std::string SQLMaker::condition_smaller(
     const std::vector<strings::String>& _categories,
+    const VocabForDf& _vocab_popul,
+    const VocabForDf& _vocab_perip,
     const std::string& _feature_prefix,
     const containers::Placeholder& _input,
     const containers::Placeholder& _output,
@@ -189,6 +207,7 @@ std::string SQLMaker::condition_smaller(
                 }
 
             case enums::DataUsed::same_unit_discrete:
+            case enums::DataUsed::same_unit_discrete_ts:
                 {
                     const auto [name1, name2] = get_names(
                         _feature_prefix,
@@ -203,6 +222,7 @@ std::string SQLMaker::condition_smaller(
                 }
 
             case enums::DataUsed::same_unit_numerical:
+            case enums::DataUsed::same_unit_numerical_ts:
                 {
                     const auto [name1, name2] = get_names(
                         _feature_prefix,
@@ -216,31 +236,43 @@ std::string SQLMaker::condition_smaller(
                            " )";
                 }
 
-            case enums::DataUsed::same_unit_discrete_ts:
-                {
-                    return make_time_stamp_diff(
-                        _input,
-                        _output,
-                        same_units_.same_units_discrete_,
-                        _split.column_used,
-                        _split.critical_value,
-                        false );
-                }
-
-            case enums::DataUsed::same_unit_numerical_ts:
-                {
-                    return make_time_stamp_diff(
-                        _input,
-                        _output,
-                        same_units_.same_units_numerical_,
-                        _split.column_used,
-                        _split.critical_value,
-                        false );
-                }
-
             case enums::DataUsed::x_popul_text:
+                {
+                    const auto name = get_name(
+                        _feature_prefix,
+                        _input,
+                        _output,
+                        _split.column_used,
+                        _split.data_used );
+
+                    assert_true( _split.column_used < _vocab_popul.size() );
+                    assert_true( _vocab_popul.at( _split.column_used ) );
+
+                    return list_words(
+                        *_vocab_popul.at( _split.column_used ),
+                        _split,
+                        name,
+                        false );
+                }
+
             case enums::DataUsed::x_perip_text:
-                return "TODO";
+                {
+                    const auto name = get_name(
+                        _feature_prefix,
+                        _input,
+                        _output,
+                        _split.column_used,
+                        _split.data_used );
+
+                    assert_true( _split.column_used < _vocab_perip.size() );
+                    assert_true( _vocab_perip.at( _split.column_used ) );
+
+                    return list_words(
+                        *_vocab_perip.at( _split.column_used ),
+                        _split,
+                        name,
+                        false );
+                }
 
             case enums::DataUsed::time_stamps_window:
                 {
@@ -300,6 +332,14 @@ std::string SQLMaker::get_name(
                 assert_true( _column_used < _output.num_numericals() );
                 return make_colname(
                     _output.numerical_name( _column_used ), "t1" );
+
+            case enums::DataUsed::x_perip_text:
+                assert_true( _column_used < _input.num_text() );
+                return make_colname( _input.text_name( _column_used ), "t2" );
+
+            case enums::DataUsed::x_popul_text:
+                assert_true( _column_used < _output.num_text() );
+                return make_colname( _output.text_name( _column_used ), "t1" );
 
             case enums::DataUsed::x_subfeature:
                 {
@@ -446,6 +486,46 @@ std::string SQLMaker::list_categories(
     categories += " )";
 
     return categories;
+}
+
+// ----------------------------------------------------------------------------
+
+std::string SQLMaker::list_words(
+    const std::vector<strings::String>& _vocabulary,
+    const descriptors::Split& _split,
+    const std::string& _name,
+    const bool _is_greater ) const
+{
+    std::stringstream words;
+
+    words << "( ";
+
+    assert_true( _split.categories_used_begin <= _split.categories_used_end );
+
+    const std::string and_or_or = _is_greater ? " AND " : " OR ";
+
+    const std::string comparison = _is_greater ? " == 0 " : " > 0 ";
+
+    for ( auto it = _split.categories_used_begin;
+          it != _split.categories_used_end;
+          ++it )
+        {
+            assert_true( *it < _vocabulary.size() );
+
+            words << "( contains( " + _name + ", '" +
+                         _vocabulary.at( *it ).str() + "' )";
+
+            words << comparison << ")";
+
+            if ( std::next( it, 1 ) != _split.categories_used_end )
+                {
+                    words << and_or_or;
+                }
+        }
+
+    words << " )";
+
+    return words.str();
 }
 
 // ----------------------------------------------------------------------------
@@ -605,6 +685,7 @@ std::string SQLMaker::value_to_be_aggregated(
                 }
 
             case enums::DataUsed::same_unit_discrete:
+            case enums::DataUsed::same_unit_discrete_ts:
                 {
                     const auto [name1, name2] = get_names(
                         _feature_prefix,
@@ -617,31 +698,10 @@ std::string SQLMaker::value_to_be_aggregated(
                 }
 
             case enums::DataUsed::same_unit_numerical:
+            case enums::DataUsed::same_unit_numerical_ts:
                 {
                     const auto [name1, name2] = get_names(
                         _feature_prefix,
-                        _input,
-                        _output,
-                        same_units_.same_units_numerical_,
-                        _column_used );
-
-                    return name2 + " - " + name1;
-                }
-
-            case enums::DataUsed::same_unit_discrete_ts:
-                {
-                    const auto [name1, name2] = get_ts_names(
-                        _input,
-                        _output,
-                        same_units_.same_units_discrete_,
-                        _column_used );
-
-                    return name2 + " - " + name1;
-                }
-
-            case enums::DataUsed::same_unit_numerical_ts:
-                {
-                    const auto [name1, name2] = get_ts_names(
                         _input,
                         _output,
                         same_units_.same_units_numerical_,

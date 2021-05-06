@@ -8,6 +8,8 @@ namespace utils
 
 std::string ConditionMaker::condition_greater(
     const std::vector<strings::String>& _categories,
+    const VocabForDf& _vocab_popul,
+    const VocabForDf& _vocab_perip,
     const std::string& _feature_prefix,
     const containers::Placeholder& _input,
     const containers::Placeholder& _output,
@@ -143,6 +145,7 @@ std::string ConditionMaker::condition_greater(
                 }
 
             case enums::DataUsed::same_units_discrete:
+            case enums::DataUsed::same_units_discrete_ts:
                 {
                     assert_true( _split.column_ < _output.num_discretes() );
                     assert_true(
@@ -174,20 +177,8 @@ std::string ConditionMaker::condition_greater(
                            " IS NOT NULL )";
                 }
 
-            case enums::DataUsed::same_units_discrete_ts:
-                {
-                    assert_true( _split.column_ < _output.num_discretes() );
-                    assert_true(
-                        _split.column_input_ < _input.num_discretes() );
-
-                    return make_time_stamp_diff(
-                        _output.discrete_name( _split.column_ ),
-                        _input.discrete_name( _split.column_input_ ),
-                        _split.critical_value_,
-                        true );
-                }
-
             case enums::DataUsed::same_units_numerical:
+            case enums::DataUsed::same_units_numerical_ts:
                 {
                     assert_true( _split.column_ < _output.num_numericals() );
                     assert_true(
@@ -219,19 +210,6 @@ std::string ConditionMaker::condition_greater(
                            " IS NOT NULL )";
                 }
 
-            case enums::DataUsed::same_units_numerical_ts:
-                {
-                    assert_true( _split.column_ < _output.num_numericals() );
-                    assert_true(
-                        _split.column_input_ < _input.num_numericals() );
-
-                    return make_time_stamp_diff(
-                        _output.numerical_name( _split.column_ ),
-                        _input.numerical_name( _split.column_input_ ),
-                        _split.critical_value_,
-                        true );
-                }
-
             case enums::DataUsed::subfeatures:
                 {
                     const auto number =
@@ -245,28 +223,34 @@ std::string ConditionMaker::condition_greater(
 
             case enums::DataUsed::text_input:
                 {
+                    assert_true( _vocab_perip.size() == _input.num_text() );
                     assert_true( _split.column_ < _input.num_text() );
+                    assert_true( _vocab_perip.at( _split.column_ ) );
 
                     const auto colname = make_colname(
                         _input.text_name( _split.column_ ), "t2" );
 
-                    // TODO
-                    const std::string condition = "( " + colname + " IN TODO )";
-
-                    return condition;
+                    return list_words(
+                        *_vocab_perip.at( _split.column_ ),
+                        _split,
+                        colname,
+                        true );
                 }
 
             case enums::DataUsed::text_output:
                 {
+                    assert_true( _vocab_popul.size() == _output.num_text() );
                     assert_true( _split.column_ < _output.num_text() );
+                    assert_true( _vocab_popul.at( _split.column_ ) );
 
                     const auto colname = make_colname(
                         _output.text_name( _split.column_ ), "t1" );
 
-                    // TODO
-                    const std::string condition = "( " + colname + " IN TODO )";
-
-                    return condition;
+                    return list_words(
+                        *_vocab_popul.at( _split.column_ ),
+                        _split,
+                        colname,
+                        true );
                 }
 
             case enums::DataUsed::time_stamps_window:
@@ -285,6 +269,8 @@ std::string ConditionMaker::condition_greater(
 
 std::string ConditionMaker::condition_smaller(
     const std::vector<strings::String>& _categories,
+    const VocabForDf& _vocab_popul,
+    const VocabForDf& _vocab_perip,
     const std::string& _feature_prefix,
     const containers::Placeholder& _input,
     const containers::Placeholder& _output,
@@ -424,6 +410,7 @@ std::string ConditionMaker::condition_smaller(
                 }
 
             case enums::DataUsed::same_units_discrete:
+            case enums::DataUsed::same_units_discrete_ts:
                 {
                     assert_true( _split.column_ < _output.num_discretes() );
                     assert_true(
@@ -457,20 +444,8 @@ std::string ConditionMaker::condition_smaller(
                            " IS NULL )";
                 }
 
-            case enums::DataUsed::same_units_discrete_ts:
-                {
-                    assert_true( _split.column_ < _output.num_discretes() );
-                    assert_true(
-                        _split.column_input_ < _input.num_discretes() );
-
-                    return make_time_stamp_diff(
-                        _output.discrete_name( _split.column_ ),
-                        _input.discrete_name( _split.column_input_ ),
-                        _split.critical_value_,
-                        false );
-                }
-
             case enums::DataUsed::same_units_numerical:
+            case enums::DataUsed::same_units_numerical_ts:
                 {
                     assert_true( _split.column_ < _output.num_numericals() );
                     assert_true(
@@ -504,19 +479,6 @@ std::string ConditionMaker::condition_smaller(
                            " IS NULL )";
                 }
 
-            case enums::DataUsed::same_units_numerical_ts:
-                {
-                    assert_true( _split.column_ < _output.num_numericals() );
-                    assert_true(
-                        _split.column_input_ < _input.num_numericals() );
-
-                    return make_time_stamp_diff(
-                        _output.numerical_name( _split.column_ ),
-                        _input.numerical_name( _split.column_input_ ),
-                        _split.critical_value_,
-                        false );
-                }
-
             case enums::DataUsed::subfeatures:
                 {
                     const auto number =
@@ -530,30 +492,34 @@ std::string ConditionMaker::condition_smaller(
 
             case enums::DataUsed::text_input:
                 {
+                    assert_true( _vocab_perip.size() == _input.num_text() );
                     assert_true( _split.column_ < _input.num_text() );
+                    assert_true( _vocab_perip.at( _split.column_ ) );
 
                     const auto colname = make_colname(
                         _input.text_name( _split.column_ ), "t2" );
 
-                    // TODO
-                    const std::string condition =
-                        "( " + colname + " NOT IN TODO )";
-
-                    return condition;
+                    return list_words(
+                        *_vocab_perip.at( _split.column_ ),
+                        _split,
+                        colname,
+                        false );
                 }
 
             case enums::DataUsed::text_output:
                 {
+                    assert_true( _vocab_popul.size() == _output.num_text() );
                     assert_true( _split.column_ < _output.num_text() );
+                    assert_true( _vocab_popul.at( _split.column_ ) );
 
                     const auto colname = make_colname(
                         _output.text_name( _split.column_ ), "t1" );
 
-                    // TODO
-                    const std::string condition =
-                        "( " + colname + " NOT IN TODO )";
-
-                    return condition;
+                    return list_words(
+                        *_vocab_popul.at( _split.column_ ),
+                        _split,
+                        colname,
+                        false );
                 }
 
             case enums::DataUsed::time_stamps_window:
@@ -595,6 +561,46 @@ std::string ConditionMaker::list_categories(
     categories += " )";
 
     return categories;
+}
+
+// ----------------------------------------------------------------------------
+
+std::string ConditionMaker::list_words(
+    const std::vector<strings::String>& _vocabulary,
+    const containers::Split& _split,
+    const std::string& _name,
+    const bool _is_greater ) const
+{
+    std::stringstream words;
+
+    words << "( ";
+
+    assert_true( _split.categories_used_begin_ <= _split.categories_used_end_ );
+
+    const std::string and_or_or = _is_greater ? " OR " : " AND ";
+
+    const std::string comparison = _is_greater ? " > 0 " : " == 0 ";
+
+    for ( auto it = _split.categories_used_begin_;
+          it != _split.categories_used_end_;
+          ++it )
+        {
+            assert_true( *it < _vocabulary.size() );
+
+            words << "( contains( " + _name + ", '" +
+                         _vocabulary.at( *it ).str() + "' )";
+
+            words << comparison << ")";
+
+            if ( std::next( it, 1 ) != _split.categories_used_end_ )
+                {
+                    words << and_or_or;
+                }
+        }
+
+    words << " )";
+
+    return words.str();
 }
 
 // ----------------------------------------------------------------------------

@@ -128,19 +128,13 @@ class TimeSeriesModel
     /// Expresses DecisionTreeEnsemble as SQL code.
     std::vector<std::string> to_sql(
         const std::shared_ptr<const std::vector<strings::String>> &_categories,
+        const helpers::VocabularyTree &_vocabulary,
         const std::string &_feature_prefix = "",
         const size_t _offset = 0,
         const bool _subfeatures = true ) const
     {
         return model().to_sql(
-            _categories, _feature_prefix, _offset, _subfeatures );
-    }
-
-    /// Trivial (const) accessor
-    const std::shared_ptr<const helpers::VocabularyContainer> &vocabulary()
-        const
-    {
-        return model().vocabulary();
+            _categories, _vocabulary, _feature_prefix, _offset, _subfeatures );
     }
 
     // -----------------------------------------------------------------

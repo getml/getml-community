@@ -1227,6 +1227,7 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj(
 
 std::vector<std::string> DecisionTreeEnsemble::to_sql(
     const std::shared_ptr<const std::vector<strings::String>> &_categories,
+    const helpers::VocabularyTree &_vocabulary,
     const std::string &_feature_prefix,
     const size_t _offset,
     const bool _subfeatures ) const
@@ -1246,6 +1247,7 @@ std::vector<std::string> DecisionTreeEnsemble::to_sql(
                             const auto sub_avg =
                                 subensembles_avg_.at( i )->to_sql(
                                     _categories,
+                                    _vocabulary,
                                     _feature_prefix + std::to_string( i + 1 ) +
                                         "_",
                                     0,
@@ -1259,6 +1261,7 @@ std::vector<std::string> DecisionTreeEnsemble::to_sql(
                             const auto sub_sum =
                                 subensembles_sum_.at( i )->to_sql(
                                     _categories,
+                                    _vocabulary,
                                     _feature_prefix + std::to_string( i + 1 ) +
                                         "_",
                                     subensembles_avg_.at( i )->num_features(),
@@ -1274,6 +1277,7 @@ std::vector<std::string> DecisionTreeEnsemble::to_sql(
         {
             sql.push_back( trees().at( i ).to_sql(
                 *_categories,
+                _vocabulary,
                 _feature_prefix,
                 std::to_string( _offset + i + 1 ),
                 hyperparameters().use_timestamps_ ) );

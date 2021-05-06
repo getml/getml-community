@@ -75,6 +75,7 @@ class FastProp
     /// Expresses FastProp as SQL code.
     std::vector<std::string> to_sql(
         const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const helpers::VocabularyTree& _vocabulary,
         const std::string& _feature_prefix = "",
         const size_t _offset = 0,
         const bool _subfeatures = true ) const;
@@ -120,11 +121,6 @@ class FastProp
 
     /// Calculates the threshold on the basis of which we throw out features.
     Float calc_threshold( const std::vector<Float>& _r_squared ) const;
-
-    /// We need to have a set of Vocabulary for every peripheral table that is
-    /// actually joined, which means they may be duplicated. This is why they
-    /// are kept as a shared_ptr, so we don't actually create a deep copy.
-    Vocabulary expand_vocabulary( const Vocabulary& _vocabulary ) const;
 
     /// We only calculate the subfeatures that we actually need - but we still
     /// need to make sure that they are located at the right position. This is
@@ -340,6 +336,7 @@ class FastProp
     /// Expresses the subfeatures as SQL code.
     void subfeatures_to_sql(
         const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const helpers::VocabularyTree& _vocabulary,
         const std::string& _feature_prefix,
         const size_t _offset,
         std::vector<std::string>* _sql ) const;
@@ -416,13 +413,6 @@ class FastProp
             "Model has no population schema - did you may be forget to fit "
             "it?" );
         return *population_schema_;
-    }
-
-    /// Trivial (const) accessor
-    const std::shared_ptr<const helpers::VocabularyContainer>& vocabulary()
-        const
-    {
-        return vocabulary_;
     }
 
     // ------------------------------------------------------------------------
@@ -538,9 +528,6 @@ class FastProp
 
     /// Contains the algorithms for the subfeatures.
     std::shared_ptr<const std::vector<std::optional<FastProp>>> subfeatures_;
-
-    // The vocabulary used to analyze the text fields.
-    std::shared_ptr<const helpers::VocabularyContainer> vocabulary_;
 
     // ------------------------------------------------------------------------
 };

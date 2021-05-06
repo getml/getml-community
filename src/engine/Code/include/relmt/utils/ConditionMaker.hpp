@@ -11,6 +11,10 @@ namespace utils
 
 class ConditionMaker
 {
+   private:
+    typedef std::vector<std::shared_ptr<const std::vector<strings::String>>>
+        VocabForDf;
+
    public:
     ConditionMaker(
         const Float _lag,
@@ -32,6 +36,8 @@ class ConditionMaker
     /// value.
     std::string condition_greater(
         const std::vector<strings::String>& _categories,
+        const VocabForDf& _vocab_popul,
+        const VocabForDf& _vocab_perip,
         const std::string& _feature_prefix,
         const containers::Placeholder& _input,
         const containers::Placeholder& _output,
@@ -41,6 +47,8 @@ class ConditionMaker
     /// value.
     std::string condition_smaller(
         const std::vector<strings::String>& _categories,
+        const VocabForDf& _vocab_popul,
+        const VocabForDf& _vocab_perip,
         const std::string& _feature_prefix,
         const containers::Placeholder& _input,
         const containers::Placeholder& _output,
@@ -58,6 +66,13 @@ class ConditionMaker
     std::string list_categories(
         const std::vector<strings::String>& _categories,
         const containers::Split& _split ) const;
+
+    /// Returns a list of the words.
+    std::string list_words(
+        const std::vector<strings::String>& _vocabulary,
+        const containers::Split& _split,
+        const std::string& _name,
+        const bool _is_greater ) const;
 
     /// Generates parts of the equation.
     std::string make_equation_part(

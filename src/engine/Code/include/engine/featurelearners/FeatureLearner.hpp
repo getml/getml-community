@@ -1107,17 +1107,36 @@ std::vector<std::string> FeatureLearner<FeatureLearnerType>::to_sql(
     const bool _subfeatures,
     const std::string& _prefix ) const
 {
+    const auto is_text_field =
+        [this]( const containers::Schema& _schema ) -> bool {
+        return _schema.name_.find( helpers::Macros::text_field() ) !=
+               std::string::npos;
+    };
+
+    throw_unless( peripheral_schema_, "Pipeline has not been fitted." );
+
+    const auto split_text_fields = std::any_of(
+        peripheral_schema_->begin(), peripheral_schema_->end(), is_text_field );
+
     std::vector<std::string> sql;
 
     if constexpr ( FeatureLearnerType::is_time_series_ )
         {
-            assert_true( peripheral_schema_ );
             sql.push_back( feature_learner().additional_staging_table(
                 population_schema().name_, peripheral_schema_->size() ) );
         }
 
-    const auto features =
-        feature_learner().to_sql( _categories, _prefix, 0, _subfeatures );
+    throw_unless( vocabulary_, "Pipeline has not been fitted." );
+
+    const auto vocabulary_tree = helpers::VocabularyTree(
+        vocabulary_->population(),
+        vocabulary_->peripheral(),
+        feature_learner().placeholder(),
+        feature_learner().peripheral(),
+        split_text_fields );
+
+    const auto features = feature_learner().to_sql(
+        _categories, vocabulary_tree, _prefix, 0, _subfeatures );
 
     sql.insert( sql.end(), features.begin(), features.end() );
 

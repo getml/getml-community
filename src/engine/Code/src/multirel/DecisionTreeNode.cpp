@@ -1221,6 +1221,8 @@ Poco::JSON::Object DecisionTreeNode::to_json_obj() const
 
 void DecisionTreeNode::to_sql(
     const std::vector<strings::String> &_categories,
+    const VocabForDf &_vocab_popul,
+    const VocabForDf &_vocab_perip,
     const std::string &_feature_prefix,
     const std::string &_feature_num,
     std::vector<std::string> &_conditions,
@@ -1239,6 +1241,8 @@ void DecisionTreeNode::to_sql(
             const auto sql_greater = _sql + prefix +
                                      sql_maker.condition_greater(
                                          _categories,
+                                         _vocab_popul,
+                                         _vocab_perip,
                                          _feature_prefix,
                                          tree_->input(),
                                          tree_->output(),
@@ -1248,6 +1252,8 @@ void DecisionTreeNode::to_sql(
             const auto sql_smaller = _sql + prefix +
                                      sql_maker.condition_smaller(
                                          _categories,
+                                         _vocab_popul,
+                                         _vocab_perip,
                                          _feature_prefix,
                                          tree_->input(),
                                          tree_->output(),
@@ -1260,6 +1266,8 @@ void DecisionTreeNode::to_sql(
 
                     child_node_greater_->to_sql(
                         _categories,
+                        _vocab_popul,
+                        _vocab_perip,
                         _feature_prefix,
                         _feature_num,
                         _conditions,
@@ -1267,6 +1275,8 @@ void DecisionTreeNode::to_sql(
 
                     child_node_smaller_->to_sql(
                         _categories,
+                        _vocab_popul,
+                        _vocab_perip,
                         _feature_prefix,
                         _feature_num,
                         _conditions,
@@ -1310,7 +1320,7 @@ bool DecisionTreeNode::transform(
 
     // -----------------------------------------------------------
 
-    auto match_container = containers::MatchPtrs( {_match} );
+    auto match_container = containers::MatchPtrs( { _match } );
 
     set_samples(
         _population,
