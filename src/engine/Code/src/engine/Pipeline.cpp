@@ -789,7 +789,7 @@ std::vector<std::string> Pipeline::feature_learners_to_sql(
             autofeatures | std::views::transform( get_feature ) );
 
         const auto vec =
-            std::vector<std::vector<std::string>>( { subfeatures, features } );
+            std::vector<std::vector<std::string>>( {subfeatures, features} );
 
         return stl::join( vec );
     };
@@ -1484,7 +1484,7 @@ Pipeline::init_feature_learners(
                 .peripheral_schema_ = _params.peripheral_schema_,
                 .placeholder_ = _params.placeholder_,
                 .population_schema_ = _params.population_schema_,
-                .target_num_ = _target_num };
+                .target_num_ = _target_num};
 
             return featurelearners::FeatureLearnerParser::parse( new_params );
         };
@@ -1527,14 +1527,14 @@ Pipeline::init_feature_learners(
             .placeholder_ = placeholder,
             .population_schema_ = impl_.modified_population_schema_,
             .target_num_ =
-                featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS };
+                featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS};
 
         const auto new_feature_learner =
             featurelearners::FeatureLearnerParser::parse( params );
 
         if ( new_feature_learner->supports_multiple_targets() )
             {
-                return { new_feature_learner };
+                return {new_feature_learner};
             }
 
         return make_fl_for_all_targets( params );
@@ -1641,6 +1641,18 @@ Pipeline::init_preprocessors(
     };
 
     std::stable_partition( vec.begin(), vec.end(), mapping_to_end );
+
+    // We need to take into consideration that preprocessors can also depend on
+    // each other.
+    auto dependencies = _dependencies;
+
+    for ( auto& p : vec )
+        {
+            assert_true( p );
+            const auto copy = p->clone( dependencies );
+            dependencies.push_back( p->fingerprint() );
+            p = copy;
+        }
 
     return vec;
 }
@@ -3020,7 +3032,7 @@ std::string Pipeline::to_sql(
         feature_learners_to_sql( _categories, _targets, _subfeatures );
 
     const auto all = std::vector<std::vector<std::string>>(
-        { staging, preprocessing, features } );
+        {staging, preprocessing, features} );
 
     const auto sql = stl::join( all );
 

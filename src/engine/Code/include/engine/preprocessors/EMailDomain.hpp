@@ -53,9 +53,16 @@ class EMailDomain : public Preprocessor
 
    public:
     /// Creates a deep copy.
-    std::shared_ptr<Preprocessor> clone() const final
+    std::shared_ptr<Preprocessor> clone(
+        const std::optional<std::vector<Poco::JSON::Object::Ptr>>&
+            _dependencies = std::nullopt ) const final
     {
-        return std::make_shared<EMailDomain>( *this );
+        auto c = std::make_shared<EMailDomain>( *this );
+        if ( _dependencies )
+            {
+                c->dependencies_ = *_dependencies;
+            }
+        return c;
     }
 
     /// The preprocessor does not generate any SQL scripts.

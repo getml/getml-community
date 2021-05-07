@@ -24,7 +24,9 @@ class Preprocessor
 
    public:
     /// Returns a deep copy.
-    virtual std::shared_ptr<Preprocessor> clone() const = 0;
+    virtual std::shared_ptr<Preprocessor> clone(
+        const std::optional<std::vector<Poco::JSON::Object::Ptr>>&
+            _dependencies = std::nullopt ) const = 0;
 
     /// Returns the fingerprint of the feature learner (necessary to build
     /// the dependency graphs).
