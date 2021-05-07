@@ -73,6 +73,8 @@ class Macros
 
     static std::string remove_substring( const std::string& _from_colname );
 
+    static std::string remove_text_field( const std::string& _from_table );
+
     static std::string remove_time_diff( const std::string& _from_colname );
 
     static std::pair<std::string, std::string> parse_table_colname(

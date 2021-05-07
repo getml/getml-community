@@ -156,6 +156,8 @@ helpers::ImportanceMaker Macros::modify_column_importances(
 
             to_table = remove_population( to_table );
 
+            to_table = remove_text_field( to_table );
+
             to_colname = remove_mappings( to_colname );
 
             to_colname = remove_email( to_colname );
@@ -468,6 +470,20 @@ std::string Macros::remove_seasonal( const std::string& _from_colname )
     to_colname = StringReplacer::replace_all( to_colname, seasonal_end(), "" );
 
     return to_colname;
+}
+
+// ----------------------------------------------------------------------------
+
+std::string Macros::remove_text_field( const std::string& _from_table )
+{
+    const auto pos = _from_table.find( text_field() );
+
+    if ( pos == std::string::npos )
+        {
+            return _from_table;
+        }
+
+    return _from_table.substr( 0, pos );
 }
 
 // ----------------------------------------------------------------------------

@@ -167,7 +167,8 @@ TextFieldSplitter::split_text_fields_on_col(
 
     const auto rownums = containers::Column<Int>( rownums_ptr, "rownum" );
 
-    const auto words = containers::Column<strings::String>( words_ptr, "word" );
+    const auto words =
+        containers::Column<strings::String>( words_ptr, _col.name() );
 
     return std::make_pair( rownums, words );
 }
