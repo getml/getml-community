@@ -239,7 +239,7 @@ class Mapping : public Preprocessor
     /// mapping.
     std::tuple<
         helpers::DataFrame,
-        helpers::TableHolder,
+        std::optional<helpers::TableHolder>,
         std::shared_ptr<const helpers::VocabularyContainer>>
     build_prerequisites(
         const containers::DataFrame& _population_df,

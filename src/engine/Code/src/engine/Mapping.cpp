@@ -8,7 +8,7 @@ namespace preprocessors
 
 std::tuple<
     helpers::DataFrame,
-    helpers::TableHolder,
+    std::optional<helpers::TableHolder>,
     std::shared_ptr<const helpers::VocabularyContainer>>
 Mapping::build_prerequisites(
     const containers::DataFrame& _population_df,
@@ -66,7 +66,8 @@ Mapping::build_prerequisites(
     if ( peripheral_schema_->size() != _peripheral_dfs.size() )
         {
             throw std::invalid_argument(
-                "Expected " + std::to_string( peripheral_schema_->size() ) +
+                "Mapping: Expected " +
+                std::to_string( peripheral_schema_->size() ) +
                 " peripheral tables, got " +
                 std::to_string( _peripheral_dfs.size() ) + "." );
         }
@@ -82,18 +83,21 @@ Mapping::build_prerequisites(
     const auto [vocabulary, word_index_container] =
         handle_text_fields( population, peripheral );
 
-    const auto rownums = std::make_shared<std::vector<size_t>>(
-        stl::collect::vector<size_t>( stl::iota<size_t>( 0, population.nrows() ) ) );
+    const auto rownums =
+        std::make_shared<std::vector<size_t>>( stl::collect::vector<size_t>(
+            stl::iota<size_t>( 0, population.nrows() ) ) );
 
     const auto population_view = helpers::DataFrameView( population, rownums );
 
-    const auto table_holder = helpers::TableHolder(
-        _placeholder,
-        population_view,
-        peripheral,
-        _peripheral_names,
-        std::nullopt,
-        word_index_container );
+    const auto table_holder = peripheral.size() > 0
+                                  ? std::make_optional<helpers::TableHolder>(
+                                        _placeholder,
+                                        population_view,
+                                        peripheral,
+                                        _peripheral_names,
+                                        std::nullopt,
+                                        word_index_container )
+                                  : std::optional<helpers::TableHolder>();
 
     return std::make_tuple( population, table_holder, vocabulary );
 }
@@ -640,7 +644,8 @@ std::vector<Mapping> Mapping::fit_submappings(
 
     // ----------------------------------------------------
 
-    const auto iota = stl::iota<size_t>( 0, _table_holder->main_tables().size() );
+    const auto iota =
+        stl::iota<size_t>( 0, _table_holder->main_tables().size() );
 
     return stl::collect::vector<Mapping>( iota | std::views::transform( fit ) );
 
@@ -1519,7 +1524,10 @@ Mapping::transform(
 
     auto peripheral_dfs = _peripheral_dfs;
 
-    transform_peripherals( table_holder, &peripheral_dfs );
+    if ( table_holder )
+        {
+            transform_peripherals( *table_holder, &peripheral_dfs );
+        }
 
     transform_data_frame( population, &population_df );
 
