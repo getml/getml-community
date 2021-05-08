@@ -161,13 +161,6 @@ class DataModelChecker
     static void warn_is_empty(
         const std::string& _df_name, communication::Warner* _warner );
 
-    /// Adds a warning message for when there are too many matches on a
-    /// self-join.
-    static void warn_self_join_memory(
-        const size_t _num_matches,
-        const containers::DataFrame& _population_df,
-        communication::Warner* _warner );
-
     /// Adds a warning message for when there are no matches on a self-join.
     static void warn_self_join_no_matches(
         const containers::DataFrame& _population_df,
@@ -178,15 +171,6 @@ class DataModelChecker
     static void warn_self_join_too_many_matches(
         const size_t _num_matches,
         const containers::DataFrame& _population_df,
-        communication::Warner* _warner );
-
-    /// Generates a too-many-matches warning.
-    static void warn_memory(
-        const size_t _num_matches,
-        const std::string& _join_key_used,
-        const std::string& _other_join_key_used,
-        const containers::DataFrame& _population_df,
-        const containers::DataFrame& _peripheral_df,
         communication::Warner* _warner );
 
     /// Adds a warning message related to many-to-one or one-to-one
@@ -302,12 +286,6 @@ class DataModelChecker
         const auto colnames = helpers::Macros::modify_colnames( { _colname } );
         assert_true( colnames.size() == 1 );
         return colnames.at( 0 );
-    }
-
-    /// Standard header for something that uses a lot of memory
-    static std::string uses_memory()
-    {
-        return warning() + "[USES A LOT OF MEMORY]: ";
     }
 
     /// Standard header for a warning message.

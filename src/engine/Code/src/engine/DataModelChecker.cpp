@@ -972,19 +972,6 @@ void DataModelChecker::raise_join_warnings(
 
     // ------------------------------------------------------------------------
 
-    if ( _num_expected > 3000.0 )
-        {
-            warn_memory(
-                _num_matches,
-                _join_key_used,
-                _other_join_key_used,
-                _population_df,
-                _peripheral_df,
-                _warner );
-        }
-
-    // ------------------------------------------------------------------------
-
     const auto not_found_ratio = static_cast<Float>( _num_jk_not_found ) /
                                  static_cast<Float>( _population_df.nrows() );
 
@@ -1034,13 +1021,6 @@ void DataModelChecker::raise_self_join_warnings(
         {
             warn_self_join_too_many_matches(
                 _num_matches, _population_df, _warner );
-        }
-
-    // ------------------------------------------------------------------------
-
-    if ( avg_num_matches > 3000.0 )
-        {
-            warn_self_join_memory( _num_matches, _population_df, _warner );
         }
 
     // ------------------------------------------------------------------------
@@ -1115,40 +1095,6 @@ void DataModelChecker::warn_many_to_one(
 
 // ------------------------------------------------------------------------
 
-void DataModelChecker::warn_memory(
-    const size_t _num_matches,
-    const std::string& _join_key_used,
-    const std::string& _other_join_key_used,
-    const containers::DataFrame& _population_df,
-    const containers::DataFrame& _peripheral_df,
-    communication::Warner* _warner )
-{
-    const auto join_key_used = modify_join_key_name( _join_key_used );
-
-    const auto other_join_key_used =
-        modify_join_key_name( _other_join_key_used );
-
-    const auto population_name = modify_df_name( _population_df.name() );
-
-    const auto peripheral_name = modify_df_name( _peripheral_df.name() );
-
-    _warner->add(
-        uses_memory() + "There are " + std::to_string( _num_matches ) +
-        " matches between " + population_name + " and " + peripheral_name +
-        " when joined over " + join_key_used + " and " + other_join_key_used +
-        ". This pipeline might use a lot of memory. "
-        "You could impose a narrower limit on the scope of "
-        "this join by reducing the memory (the period of time until "
-        "the feature learner 'forgets' historical data). "
-        "You can reduce the memory "
-        "by setting the appropriate parameter in the .join(...)-method "
-        "of the Placeholder. "
-        "Please note that a memory of 0.0 means that "
-        "the time series will not forget any past "
-        "data." );
-}
-// ------------------------------------------------------------------------
-
 void DataModelChecker::warn_no_matches(
     const std::string& _join_key_used,
     const std::string& _other_join_key_used,
@@ -1199,29 +1145,6 @@ void DataModelChecker::warn_not_found(
         std::to_string( _not_found_ratio * 100.0 ) + "% of entries in " +
         join_key_used + " in '" + population_name +
         "'. You might want to double-check your join keys." );
-}
-
-// ------------------------------------------------------------------------
-
-void DataModelChecker::warn_self_join_memory(
-    const size_t _num_matches,
-    const containers::DataFrame& _population_df,
-    communication::Warner* _warner )
-{
-    const auto population_name = modify_df_name( _population_df.name() );
-
-    _warner->add(
-        uses_memory() + "The self-join on " + population_name +
-        " created by the time series feature learner "
-        "has a total of " +
-        std::to_string( _num_matches ) +
-        " matches.  This might use a lot of memory. "
-        "You could impose a narrower limit on the scope of "
-        "this join by reducing the memory (the period of time until "
-        "the feature learner 'forgets' historical data). "
-        "Please note that a memory of 0.0 means that "
-        "the time series will not forget any past "
-        "data." );
 }
 
 // ------------------------------------------------------------------------
