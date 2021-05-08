@@ -805,6 +805,19 @@ FeatureLearner<FeatureLearnerType>::fit_propositionalization(
 {
     if constexpr ( has_propositionalization_ )
         {
+            const bool all_propositionalization = std::all_of(
+                _feature_learner.placeholder().propositionalization().begin(),
+                _feature_learner.placeholder().propositionalization().end(),
+                std::identity() );
+
+            if ( all_propositionalization )
+                {
+                    throw std::invalid_argument(
+                        "All joins in the data model have been set to "
+                        "propositionalization. You should use FastPropModel or "
+                        "FastPropTimeSeries instead." );
+                }
+
             const auto hyp =
                 propositionalization( _feature_learner.hyperparameters() );
 

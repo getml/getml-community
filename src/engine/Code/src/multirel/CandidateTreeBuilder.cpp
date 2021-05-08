@@ -182,6 +182,18 @@ void CandidateTreeBuilder::add_subfeature_aggs(
 {
     assert_true( _table_holder.subtables().at( _ix_perip_used ) );
 
+    const auto &subholder = *_table_holder.subtables().at( _ix_perip_used );
+
+    const bool all_propositionalization = std::all_of(
+        subholder.propositionalization().begin(),
+        subholder.propositionalization().end(),
+        std::identity() );
+
+    if ( all_propositionalization )
+        {
+            return;
+        }
+
     for ( auto &agg : _hyperparameters.aggregations_ )
         {
             if ( agg == "COUNT" || agg == "COUNT DISTINCT" ||
@@ -320,7 +332,7 @@ CandidateTreeBuilder::build_candidate_trees(
             // ------------------------------------------------------------------
             // If applicable, add aggregations over the subfeatures
 
-            if ( _table_holder.subtables()[ix_perip_used] )
+            if ( _table_holder.subtables().at( ix_perip_used ) )
                 {
                     add_subfeature_aggs(
                         _table_holder,

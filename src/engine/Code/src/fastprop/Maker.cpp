@@ -245,7 +245,8 @@ Maker::make_subcontainers(
         _table_holder.subtables().size() >=
         placeholder.propositionalization_.size() );
 
-    const auto iota = stl::iota<size_t>( 0, placeholder.propositionalization_.size() );
+    const auto iota =
+        stl::iota<size_t>( 0, placeholder.propositionalization_.size() );
 
     const auto range = iota | std::views::transform( make_subcontainer );
 
@@ -273,8 +274,8 @@ helpers::FeatureContainer Maker::transform( const MakerParams& _params )
         {
             const auto& fast_prop = _params.fast_prop_container_->fast_prop();
 
-            const auto index =
-                stl::collect::vector<size_t>( stl::iota<size_t>( 0, fast_prop.num_features() ) );
+            const auto index = stl::collect::vector<size_t>(
+                stl::iota<size_t>( 0, fast_prop.num_features() ) );
 
             const auto params = algorithm::TransformParams{
                 .feature_container_ = std::nullopt,
@@ -291,7 +292,8 @@ helpers::FeatureContainer Maker::transform( const MakerParams& _params )
                 {
                     features->push_back( helpers::Column<Float>(
                         feature_ptrs.at( i ),
-                        "FAST_PROP_FEATURE_" + std::to_string( i + 1 ),
+                        helpers::Macros::fast_prop_feature() +
+                            std::to_string( i + 1 ),
                         "" ) );
                 }
         }

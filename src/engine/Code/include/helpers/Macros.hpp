@@ -103,6 +103,11 @@ class Macros
 
     static std::string end() { return "$GETML_JOIN_PARAM_END"; }
 
+    static std::string fast_prop_feature()
+    {
+        return "$GETML_FAST_PROP_FEATURE";
+    }
+
     static std::string length() { return "$GETML_LENGTH"; }
 
     static std::string generated_ts() { return "$GETML_GENERATED_TS"; }

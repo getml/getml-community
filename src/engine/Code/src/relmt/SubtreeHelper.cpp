@@ -282,6 +282,16 @@ std::vector<containers::Predictions> SubtreeHelper::make_predictions(
 
             const auto& subtable_holder = *_table_holder.subtables().at( i );
 
+            const auto all_propositionalization = std::all_of(
+                subtable_holder.propositionalization().begin(),
+                subtable_holder.propositionalization().end(),
+                std::identity() );
+
+            if ( all_propositionalization )
+                {
+                    continue;
+                }
+
             assert_true( subtable_holder.main_tables().size() > 0 );
 
             assert_true( _subensembles_avg.at( i ) );

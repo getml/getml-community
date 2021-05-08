@@ -44,6 +44,37 @@ void DataModelChecker::check(
 
     // --------------------------------------------------------------------------
 
+    const auto is_prop =
+        []( const std::shared_ptr<featurelearners::AbstractFeatureLearner>&
+                _fl ) -> bool {
+        assert_true( _fl );
+        return (
+            _fl->type() ==
+                featurelearners::AbstractFeatureLearner::FASTPROP_MODEL ||
+            _fl->type() ==
+                featurelearners::AbstractFeatureLearner::FASTPROP_TIME_SERIES );
+    };
+
+    const bool any_non_fast_prop = std::any_of(
+        _feature_learners.begin(), _feature_learners.end(), is_prop );
+
+    assert_true( _placeholder );
+
+    const bool all_propositionalization = std::all_of(
+        _placeholder->propositionalization().begin(),
+        _placeholder->propositionalization().end(),
+        std::identity() );
+
+    if ( all_propositionalization && any_non_fast_prop )
+        {
+            throw std::invalid_argument(
+                "All joins in the data model have been set to "
+                "propositionalization. You should use FastPropModel or "
+                "FastPropTimeSeries instead." );
+        }
+
+    // --------------------------------------------------------------------------
+
     communication::Warner warner;
 
     // --------------------------------------------------------------------------

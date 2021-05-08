@@ -56,7 +56,7 @@ void SubtreeHelper::fit_subensembles(
 
     for ( size_t i = 0; i < num_tables; ++i )
         {
-            if ( _table_holder->subtables()[i] )
+            if ( _table_holder->subtables().at( i ) )
                 {
                     const auto joined_table =
                         std::make_shared<const containers::Placeholder>(
@@ -64,10 +64,20 @@ void SubtreeHelper::fit_subensembles(
 
                     assert_true( joined_table->joined_tables_.size() > 0 );
 
-                    subensembles_avg[i].reset( new DecisionTreeEnsemble(
+                    const auto all_propositionalization = std::all_of(
+                        joined_table->propositionalization().begin(),
+                        joined_table->propositionalization().end(),
+                        std::identity() );
+
+                    if ( all_propositionalization )
+                        {
+                            continue;
+                        }
+
+                    subensembles_avg.at( i ).reset( new DecisionTreeEnsemble(
                         hyperparameters, peripheral, joined_table ) );
 
-                    subensembles_sum[i].reset( new DecisionTreeEnsemble(
+                    subensembles_sum.at( i ).reset( new DecisionTreeEnsemble(
                         hyperparameters, peripheral, joined_table ) );
                 }
         }
@@ -171,6 +181,18 @@ std::vector<containers::Predictions> SubtreeHelper::make_predictions(
                     continue;
                 }
 
+            const auto& subtable_holder = *_table_holder.subtables().at( i );
+
+            const auto all_propositionalization = std::all_of(
+                subtable_holder.propositionalization().begin(),
+                subtable_holder.propositionalization().end(),
+                std::identity() );
+
+            if ( all_propositionalization )
+                {
+                    continue;
+                }
+
             assert_true(
                 _table_holder.subtables().at( i )->main_tables().size() > 0 );
 
@@ -185,10 +207,10 @@ std::vector<containers::Predictions> SubtreeHelper::make_predictions(
             assert_true( _subensembles_sum.at( i ) );
 
             auto predictions_avg = _subensembles_avg.at( i )->transform(
-                *_table_holder.subtables().at( i ), _logger, _comm, &impl );
+                subtable_holder, _logger, _comm, &impl );
 
             auto predictions_sum = _subensembles_sum.at( i )->transform(
-                *_table_holder.subtables().at( i ), _logger, _comm, &impl );
+                subtable_holder, _logger, _comm, &impl );
 
             for ( auto& p : predictions_avg )
                 {
