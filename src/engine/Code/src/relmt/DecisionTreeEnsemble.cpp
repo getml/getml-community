@@ -319,22 +319,6 @@ DecisionTreeEnsemble::column_importances(
             importance_maker.merge( importances );
         }
 
-    if ( impl().population_schema_ )
-        {
-            importance_maker.fill_zeros(
-                population_schema(), placeholder().name(), true );
-
-            assert_true( peripheral_schema().size() == peripheral().size() );
-
-            for ( size_t i = 0; i < peripheral().size(); ++i )
-                {
-                    importance_maker.fill_zeros(
-                        peripheral_schema().at( i ),
-                        peripheral().at( i ),
-                        false );
-                }
-        }
-
     if ( _is_subfeatures )
         {
             importance_maker.transfer_population();
