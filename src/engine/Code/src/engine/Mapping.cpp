@@ -372,7 +372,7 @@ std::vector<size_t> Mapping::find_output_ix(
               _time_stamp_output < _upper_time_stamp ) );
     };
 
-    std::set<size_t> unique;
+    std::vector<size_t> result;
 
     for ( const auto ix : _input_ix )
         {
@@ -399,15 +399,13 @@ std::vector<size_t> Mapping::find_output_ix(
 
                     if ( use_this )
                         {
-                            unique.insert( static_cast<size_t>( ix_out ) );
+                            result.push_back( static_cast<size_t>( ix_out ) );
                         }
                 }
         }
 
-    return std::vector<size_t>( unique.begin(), unique.end() );
+    return result;
 }
-
-// ----------------------------------------------------
 
 // ----------------------------------------------------
 
@@ -867,14 +865,16 @@ std::shared_ptr<const std::map<Int, std::vector<Float>>> Mapping::make_mapping(
     const std::vector<helpers::DataFrame>& _main_tables,
     const std::vector<helpers::DataFrame>& _peripheral_tables ) const
 {
-    const auto greater_than_min_freq =
-        [this]( const RownumPair& _input ) -> bool {
-        return _input.second.size() >= min_freq_;
-    };
-
     const auto match_rows = [this, &_main_tables, &_peripheral_tables](
                                 const RownumPair& _input ) -> RownumPair {
         return match_rownums( _main_tables, _peripheral_tables, _input );
+    };
+
+    const auto greater_than_min_freq =
+        [this]( const RownumPair& _input ) -> bool {
+        const auto& vec = _input.second;
+        const auto unique = std::set<size_t>( vec.begin(), vec.end() );
+        return unique.size() >= min_freq_;
     };
 
     const auto calc_agg =
@@ -883,8 +883,8 @@ std::shared_ptr<const std::map<Int, std::vector<Float>>> Mapping::make_mapping(
         return calc_agg_targets( _population, _pair );
     };
 
-    auto range = _rownum_map | std::views::filter( greater_than_min_freq ) |
-                 std::views::transform( match_rows ) |
+    auto range = _rownum_map | std::views::transform( match_rows ) |
+                 std::views::filter( greater_than_min_freq ) |
                  std::views::transform( calc_agg );
 
     return std::make_shared<const std::map<Int, std::vector<Float>>>(
