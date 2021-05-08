@@ -40,13 +40,14 @@ class DataFrameTracker
    public:
     /// Generates the build history and retrieves the data frame.
     std::optional<containers::DataFrame> retrieve(
+        const Poco::JSON::Object& _obj,
         const Poco::JSON::Object& _cmd,
         const std::map<std::string, containers::DataFrame>& _data_frames,
         const std::vector<Poco::JSON::Object::Ptr>& _dependencies ) const
     {
         const auto df_fingerprints =
             containers::DataFrameExtractor::extract_df_fingerprints(
-                _cmd, _data_frames );
+                _obj, _cmd, _data_frames );
         const auto build_history =
             make_build_history( _dependencies, df_fingerprints );
         return retrieve( build_history );

@@ -8,14 +8,17 @@ namespace containers
 
 std::vector<Poco::JSON::Object::Ptr>
 DataFrameExtractor::extract_df_fingerprints(
+    const Poco::JSON::Object& _obj,
     const Poco::JSON::Object& _cmd,
     const std::map<std::string, containers::DataFrame>& _data_frames )
 {
+    const auto placeholder = JSON::get_object( _obj, "population_" );
+
     const auto [population, peripheral] =
         extract_data_frames( _cmd, _data_frames );
 
     std::vector<Poco::JSON::Object::Ptr> df_fingerprints = {
-        population.fingerprint()};
+        placeholder, population.fingerprint() };
 
     for ( const auto& df : peripheral )
         {

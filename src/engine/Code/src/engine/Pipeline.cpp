@@ -283,18 +283,23 @@ void Pipeline::check(
     std::tie( population_df, peripheral_dfs ) =
         modify_data_frames( population_df, peripheral_dfs );
 
+    const auto dependencies =
+        containers::DataFrameExtractor::extract_df_fingerprints(
+            obj(), _cmd, _data_frames );
+
     fit_transform_preprocessors(
         _cmd,
         nullptr,
         _categories,
         _preprocessor_tracker,
+        dependencies,
         &population_df,
         &peripheral_dfs,
         _socket );
 
     // -------------------------------------------------------------------------
 
-    const auto feature_learners = init_feature_learners( 1, df_fingerprints() );
+    const auto feature_learners = init_feature_learners( 1, {} );
 
     // -------------------------------------------------------------------------
 
@@ -789,7 +794,7 @@ std::vector<std::string> Pipeline::feature_learners_to_sql(
             autofeatures | std::views::transform( get_feature ) );
 
         const auto vec =
-            std::vector<std::vector<std::string>>( {subfeatures, features} );
+            std::vector<std::vector<std::string>>( { subfeatures, features } );
 
         return stl::join( vec );
     };
@@ -1027,7 +1032,7 @@ void Pipeline::fit(
         extract_schemata( _cmd, _data_frames );
 
     df_fingerprints() = containers::DataFrameExtractor::extract_df_fingerprints(
-        _cmd, _data_frames );
+        obj(), _cmd, _data_frames );
 
     // -------------------------------------------------------------------------
 
@@ -1045,6 +1050,7 @@ void Pipeline::fit(
         _logger,
         _categories,
         _preprocessor_tracker,
+        df_fingerprints(),
         &population_df,
         &peripheral_dfs,
         _socket );
@@ -1306,11 +1312,12 @@ Pipeline::fit_transform_preprocessors(
     const std::shared_ptr<containers::Encoding>& _categories,
     const std::shared_ptr<dependency::PreprocessorTracker>&
         _preprocessor_tracker,
+    const std::vector<Poco::JSON::Object::Ptr>& _dependencies,
     containers::DataFrame* _population_df,
     std::vector<containers::DataFrame>* _peripheral_dfs,
     Poco::Net::StreamSocket* _socket ) const
 {
-    auto preprocessors = init_preprocessors( df_fingerprints() );
+    auto preprocessors = init_preprocessors( _dependencies );
 
     if ( preprocessors.size() == 0 )
         {
@@ -1484,7 +1491,7 @@ Pipeline::init_feature_learners(
                 .peripheral_schema_ = _params.peripheral_schema_,
                 .placeholder_ = _params.placeholder_,
                 .population_schema_ = _params.population_schema_,
-                .target_num_ = _target_num};
+                .target_num_ = _target_num };
 
             return featurelearners::FeatureLearnerParser::parse( new_params );
         };
@@ -1527,14 +1534,14 @@ Pipeline::init_feature_learners(
             .placeholder_ = placeholder,
             .population_schema_ = impl_.modified_population_schema_,
             .target_num_ =
-                featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS};
+                featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS };
 
         const auto new_feature_learner =
             featurelearners::FeatureLearnerParser::parse( params );
 
         if ( new_feature_learner->supports_multiple_targets() )
             {
-                return {new_feature_learner};
+                return { new_feature_learner };
             }
 
         return make_fl_for_all_targets( params );
@@ -2091,8 +2098,8 @@ Pipeline::make_features(
 {
     // --------------------------------------------------------------------
 
-    const auto df =
-        _data_frame_tracker.retrieve( _cmd, _data_frames, _dependencies );
+    const auto df = _data_frame_tracker.retrieve(
+        obj(), _cmd, _data_frames, _dependencies );
 
     if ( df )
         {
@@ -3032,7 +3039,7 @@ std::string Pipeline::to_sql(
         feature_learners_to_sql( _categories, _targets, _subfeatures );
 
     const auto all = std::vector<std::vector<std::string>>(
-        {staging, preprocessing, features} );
+        { staging, preprocessing, features } );
 
     const auto sql = stl::join( all );
 

@@ -18,6 +18,7 @@ struct DataFrameExtractor
     /// Extracts the fingerprints of all data frames referenced in the command
     /// _cmd.
     static std::vector<Poco::JSON::Object::Ptr> extract_df_fingerprints(
+        const Poco::JSON::Object& _obj,
         const Poco::JSON::Object& _cmd,
         const std::map<std::string, containers::DataFrame>& _data_frames );
 };

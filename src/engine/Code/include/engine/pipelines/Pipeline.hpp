@@ -279,6 +279,7 @@ class Pipeline
         const std::shared_ptr<containers::Encoding>& _categories,
         const std::shared_ptr<dependency::PreprocessorTracker>&
             _preprocessor_tracker,
+        const std::vector<Poco::JSON::Object::Ptr>& _dependencies,
         containers::DataFrame* _population_df,
         std::vector<containers::DataFrame>* _peripheral_dfs,
         Poco::Net::StreamSocket* _socket ) const;

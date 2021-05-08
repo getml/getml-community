@@ -76,7 +76,7 @@ void PipelineManager::add_join_keys_to_df(
                 }
 
             col.set_name(
-                helpers::Macros::modify_colnames( {col.name()} ).at( 0 ) );
+                helpers::Macros::modify_colnames( { col.name() } ).at( 0 ) );
 
             _df->add_int_column( col, containers::DataFrame::ROLE_JOIN_KEY );
         }
@@ -144,7 +144,7 @@ void PipelineManager::add_time_stamps_to_df(
                 }
 
             col.set_name(
-                helpers::Macros::modify_colnames( {col.name()} ).at( 0 ) );
+                helpers::Macros::modify_colnames( { col.name() } ).at( 0 ) );
 
             _df->add_float_column(
                 col, containers::DataFrame::ROLE_TIME_STAMP );
@@ -163,7 +163,7 @@ void PipelineManager::add_to_tracker(
 
     const auto df_fingerprints =
         containers::DataFrameExtractor::extract_df_fingerprints(
-            _cmd, _data_frames );
+            _pipeline.obj(), _cmd, _data_frames );
 
     const auto build_history = data_frame_tracker().make_build_history(
         dependencies, df_fingerprints );
