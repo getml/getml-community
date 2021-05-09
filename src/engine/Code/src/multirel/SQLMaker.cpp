@@ -345,9 +345,10 @@ std::string SQLMaker::get_name(
                 {
                     const auto number =
                         helpers::SQLGenerator::make_subfeature_identifier(
-                            _feature_prefix, peripheral_used_, _column_used );
+                            _feature_prefix, peripheral_used_ );
 
                     return "COALESCE( f_" + number + ".\"feature_" + number +
+                           "_" + std::to_string( _column_used + 1 ) +
                            "\", 0.0 )";
                 }
 

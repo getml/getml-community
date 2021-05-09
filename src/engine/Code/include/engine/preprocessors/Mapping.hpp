@@ -478,10 +478,8 @@ class Mapping : public Preprocessor
 
         const auto iota = stl::iota<size_t>( 0, _mappings.size() );
 
-        const auto all = stl::collect::vector<std::vector<std::string>>(
+        return stl::join::vector<std::string>(
             iota | std::views::transform( all_weights_to_sql ) );
-
-        return stl::join( all );
     }
 
    private:

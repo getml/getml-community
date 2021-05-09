@@ -86,10 +86,10 @@ std::string SQLMaker::get_name(
                 {
                     const auto number =
                         helpers::SQLGenerator::make_subfeature_identifier(
-                            _feature_prefix, _peripheral, _input_col );
+                            _feature_prefix, _peripheral );
 
                     return "COALESCE( f_" + number + ".\"feature_" + number +
-                           "\", 0.0 )";
+                           "_" + std::to_string( _input_col + 1 ) + "\", 0.0 )";
                 }
 
             case enums::DataUsed::text:

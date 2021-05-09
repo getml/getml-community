@@ -291,6 +291,14 @@ class DecisionTreeEnsemble
         const size_t _nrows,
         const std::vector<const containers::Match*>& _matches_ptr );
 
+    /// Expresses the subfeatures as SQL code.
+    void subfeatures_to_sql(
+        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const helpers::VocabularyTree& _vocabulary,
+        const std::string& _feature_prefix,
+        const size_t _offset,
+        std::vector<std::string>* _sql ) const;
+
     /// Spawns the threads for the transform method.
     void transform_spawn_threads(
         const containers::DataFrame& _population,

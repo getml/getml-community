@@ -4,6 +4,38 @@ namespace helpers
 {
 // ----------------------------------------------------------------------------
 
+std::string SQLGenerator::create_indices(
+    const std::string& _table_name, const helpers::Schema& _schema )
+{
+    // ------------------------------------------------------------------------
+
+    const auto create_index =
+        [&_table_name]( const std::string& _colname ) -> std::string {
+        const auto colname = SQLGenerator::make_colname( _colname );
+
+        const auto index_name = _table_name + "__" + colname;
+
+        const auto drop = "DROP INDEX IF EXISTS \"" + index_name + "\";\n";
+
+        return drop + "CREATE INDEX \"" + index_name + "\" ON \"" +
+               _table_name + "\" (\"" + colname + "\");\n\n";
+    };
+
+    // ------------------------------------------------------------------------
+
+    return stl::collect::string(
+               _schema.join_keys_ |
+               std::ranges::views::filter( include_column ) |
+               std::ranges::views::transform( create_index ) ) +
+           stl::collect::string(
+               _schema.time_stamps_ |
+               std::ranges::views::transform( create_index ) );
+
+    // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
 std::tuple<std::string, std::string, std::string>
 SQLGenerator::demangle_colname( const std::string& _raw_name )
 {
@@ -540,7 +572,7 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
 
     // ------------------------------------------------------------------------
 
-    const auto all = std::vector<std::vector<std::string>>(
+    return stl::join::vector<std::string>(
         { targets,
           categoricals,
           discretes,
@@ -548,10 +580,6 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
           numericals,
           text,
           time_stamps } );
-
-    // ------------------------------------------------------------------------
-
-    return stl::join( all );
 
     // ------------------------------------------------------------------------
 }
@@ -580,34 +608,132 @@ bool SQLGenerator::include_column( const std::string& _name )
 
 // ----------------------------------------------------------------------------
 
-std::string SQLGenerator::create_indices(
-    const std::string& _table_name, const helpers::Schema& _schema )
+std::string SQLGenerator::make_feature_table(
+    const std::string& _main_table,
+    const std::vector<std::string>& _autofeatures,
+    const std::vector<std::string>& _targets,
+    const std::vector<std::string>& _categorical,
+    const std::vector<std::string>& _numerical,
+    const std::string& _prefix )
 {
-    // ------------------------------------------------------------------------
+    std::string sql = "DROP TABLE IF EXISTS \"FEATURES" + _prefix + "\";\n\n";
 
-    const auto create_index =
-        [&_table_name]( const std::string& _colname ) -> std::string {
-        const auto colname = SQLGenerator::make_colname( _colname );
+    sql += "CREATE TABLE \"FEATURES" + _prefix + "\" AS\n";
 
-        const auto index_name = _table_name + "__" + colname;
+    sql += make_select(
+        _main_table, _autofeatures, _targets, _categorical, _numerical );
 
-        const auto drop = "DROP INDEX IF EXISTS \"" + index_name + "\";\n";
+    const auto main_table =
+        helpers::SQLGenerator::get_table_name( _main_table );
 
-        return drop + "CREATE INDEX \"" + index_name + "\" ON \"" +
-               _table_name + "\" (\"" + colname + "\");\n\n";
-    };
+    sql += "FROM \"" + main_table + "\" t1\n";
 
-    // ------------------------------------------------------------------------
+    sql += handle_many_to_one_joins( _main_table, "t1" );
 
-    return stl::collect::string(
-               _schema.join_keys_ |
-               std::ranges::views::filter( include_column ) |
-               std::ranges::views::transform( create_index ) ) +
-           stl::collect::string(
-               _schema.time_stamps_ |
-               std::ranges::views::transform( create_index ) );
+    sql += "ORDER BY t1.rowid;\n\n";
 
-    // ------------------------------------------------------------------------
+    sql += make_updates( _autofeatures );
+
+    return sql;
+}
+
+// ----------------------------------------------------------------------------
+
+std::string SQLGenerator::make_postprocessing(
+    const std::vector<std::string>& _sql )
+{
+    std::string sql;
+
+    for ( const auto feature : _sql )
+        {
+            const auto pos = feature.find( "\";\n" );
+
+            throw_unless(
+                pos != std::string::npos,
+                "Could not find end of DROP TABLE IF EXISTS statement." );
+
+            sql += feature.substr( 0, pos ) + "\";\n";
+        }
+
+    return sql;
+}
+// ----------------------------------------------------------------------------
+
+std::string SQLGenerator::make_select(
+    const std::string& _main_table,
+    const std::vector<std::string>& _autofeatures,
+    const std::vector<std::string>& _targets,
+    const std::vector<std::string>& _categorical,
+    const std::vector<std::string>& _numerical )
+{
+    const auto manual = stl::join::vector<std::string>(
+        { _targets, _numerical, _categorical } );
+
+    const auto modified_colnames = helpers::Macros::modify_colnames( manual );
+
+    std::string sql =
+        manual.size() > 0 ? "SELECT " : "SELECT t1.rowid AS \"rownum\",\n";
+
+    for ( size_t i = 0; i < _autofeatures.size(); ++i )
+        {
+            const std::string begin =
+                ( i == 0 && manual.size() > 0 ? "" : "       " );
+
+            const bool no_comma =
+                ( i == _autofeatures.size() - 1 && manual.size() == 0 );
+
+            const auto end = ( no_comma ? "\n" : ",\n" );
+
+            sql += begin + "CAST( 0.0 AS REAL ) AS \"" + _autofeatures.at( i ) +
+                   "\"" + end;
+        }
+
+    for ( size_t i = 0; i < manual.size(); ++i )
+        {
+            const std::string begin = "       ";
+
+            const auto edited_colname =
+                helpers::SQLGenerator::edit_colname( manual.at( i ), "t1" );
+
+            const std::string data_type =
+                ( i < _targets.size() + _numerical.size() ? "REAL" : "TEXT" );
+
+            const auto target_or_feature =
+                i < _targets.size()
+                    ? "\"target_" + std::to_string( i + 1 )
+                    : "\"manual_feature_" +
+                          std::to_string( i - _targets.size() + 1 );
+
+            const bool no_comma = ( i == manual.size() - 1 );
+
+            const auto end = no_comma ? "\"\n" : "\",\n";
+
+            sql += begin + "CAST( " + edited_colname + " AS " + data_type +
+                   " ) AS " + target_or_feature + "__" +
+                   modified_colnames.at( i ) + end;
+        }
+
+    return sql;
+}
+
+// ----------------------------------------------------------------------------
+
+std::string SQLGenerator::make_sql(
+    const std::string& _main_table,
+    const std::vector<std::string>& _autofeatures,
+    const std::vector<std::string>& _sql,
+    const std::vector<std::string>& _targets,
+    const std::vector<std::string>& _categorical,
+    const std::vector<std::string>& _numerical )
+{
+    auto sql = _sql;
+
+    sql.push_back( make_feature_table(
+        _main_table, _autofeatures, _targets, _categorical, _numerical, "" ) );
+
+    sql.push_back( make_postprocessing( _sql ) );
+
+    return stl::collect::string( sql );
 }
 
 // ----------------------------------------------------------------------------
@@ -719,33 +845,24 @@ std::vector<std::string> SQLGenerator::make_staging_tables(
 // ----------------------------------------------------------------------------
 
 std::string SQLGenerator::make_subfeature_identifier(
-    const std::string& _feature_prefix,
-    const size_t _peripheral_used,
-    const size_t _column )
+    const std::string& _feature_prefix, const size_t _peripheral_used )
 {
-    return _feature_prefix + std::to_string( _peripheral_used + 1 ) + "_" +
-           std::to_string( _column + 1 );
+    return _feature_prefix + std::to_string( _peripheral_used + 1 );
 }
 
 // ----------------------------------------------------------------------------
 
 std::string SQLGenerator::make_subfeature_joins(
-    const std::string& _feature_prefix,
-    const size_t _peripheral_used,
-    const std::set<size_t>& _columns )
+    const std::string& _feature_prefix, const size_t _peripheral_used )
 {
     std::stringstream sql;
 
-    for ( const auto col : _columns )
-        {
-            const auto number = make_subfeature_identifier(
-                _feature_prefix, _peripheral_used, col );
+    const auto number =
+        make_subfeature_identifier( _feature_prefix, _peripheral_used );
 
-            sql << "LEFT JOIN \"FEATURE_" << number << "\" f_" << number
-                << std::endl;
+    sql << "LEFT JOIN \"FEATURES_" << number << "\" f_" << number << std::endl;
 
-            sql << "ON t2.rowid = f_" << number << ".\"rownum\"" << std::endl;
-        }
+    sql << "ON t2.rowid = f_" << number << ".\"rownum\"" << std::endl;
 
     return sql.str();
 }
@@ -823,6 +940,27 @@ std::string SQLGenerator::make_time_stamps(
         sql.str(), Macros::t1_or_t2(), _t1_or_t2 );
 }
 
+// ----------------------------------------------------------------------------
+
+std::string SQLGenerator::make_updates(
+    const std::vector<std::string>& _autofeatures )
+{
+    std::string sql;
+
+    for ( const auto colname : _autofeatures )
+        {
+            const auto table = helpers::StringReplacer::replace_all(
+                colname, "feature", "FEATURE" );
+
+            sql += "UPDATE \"FEATURES\"\n";
+            sql += "SET \"" + colname + "\" = COALESCE( t2.\"" + colname +
+                   "\", 0.0 )\n";
+            sql += "FROM \"" + table + "\" AS t2\n";
+            sql += "WHERE FEATURES.rowid = t2.\"rownum\";\n\n";
+        }
+
+    return sql;
+}
 // ------------------------------------------------------------------------
 
 std::string SQLGenerator::to_lower( const std::string& _str )

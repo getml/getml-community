@@ -154,7 +154,7 @@ std::string AbstractFeature::to_sql(
     if ( data_used_ == enums::DataUsed::subfeatures )
         {
             sql << helpers::SQLGenerator::make_subfeature_joins(
-                _feature_prefix, peripheral_, {input_col_} );
+                _feature_prefix, peripheral_ );
         }
 
     // -------------------------------------------------------------------

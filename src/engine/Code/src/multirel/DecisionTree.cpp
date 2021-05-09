@@ -344,7 +344,8 @@ std::string DecisionTree::to_sql(
     const helpers::VocabularyTree &_vocabulary,
     const std::string &_feature_prefix,
     const std::string &_feature_num,
-    const bool _use_timestamps ) const
+    const bool _use_timestamps,
+    const bool _has_subfeatures ) const
 {
     // -------------------------------------------------------------------
 
@@ -391,8 +392,11 @@ std::string DecisionTree::to_sql(
 
     // -------------------------------------------------------------------
 
-    sql << helpers::SQLGenerator::make_subfeature_joins(
-        _feature_prefix, ix_perip_used(), make_subfeatures_used() );
+    if ( _has_subfeatures )
+        {
+            sql << helpers::SQLGenerator::make_subfeature_joins(
+                _feature_prefix, ix_perip_used() );
+        }
 
     // -------------------------------------------------------------------
 

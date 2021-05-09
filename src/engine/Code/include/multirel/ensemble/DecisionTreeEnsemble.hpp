@@ -254,6 +254,14 @@ class DecisionTreeEnsemble
     DecisionTreeEnsemble from_json_obj(
         const Poco::JSON::Object &_json_obj ) const;
 
+    /// Expresses the subfeatures as SQL.
+    void subfeatures_to_sql(
+        const std::shared_ptr<const std::vector<strings::String>> &_categories,
+        const helpers::VocabularyTree &_vocabulary,
+        const std::string &_feature_prefix,
+        const size_t _offset,
+        std::vector<std::string> *_sql ) const;
+
     /// Spawns the threads for transforming the features.
     void transform_spawn_threads(
         const containers::DataFrame &_population,

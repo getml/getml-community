@@ -777,6 +777,88 @@ void DecisionTreeEnsemble::select_features( const std::vector<size_t> &_index )
 
 // ----------------------------------------------------------------------------
 
+void DecisionTreeEnsemble::subfeatures_to_sql(
+    const std::shared_ptr<const std::vector<strings::String>> &_categories,
+    const helpers::VocabularyTree &_vocabulary,
+    const std::string &_feature_prefix,
+    const size_t _offset,
+    std::vector<std::string> *_sql ) const
+{
+    assert_true( subensembles_avg_.size() == subensembles_sum_.size() );
+
+    assert_msg(
+        subensembles_avg_.size() == _vocabulary.subtrees().size(),
+        "subensembles_avg_.size(): " +
+            std::to_string( subensembles_avg_.size() ) +
+            ", _vocabulary.subtrees().size(): " +
+            std::to_string( _vocabulary.subtrees().size() ) );
+
+    for ( size_t i = 0; i < subensembles_avg_.size(); ++i )
+        {
+            if ( subensembles_avg_.at( i ) )
+                {
+                    assert_true( _vocabulary.subtrees().at( i ) );
+
+                    const auto sub_avg = subensembles_avg_.at( i )->to_sql(
+                        _categories,
+                        _vocabulary.subtrees().at( i ).value(),
+                        _feature_prefix + std::to_string( i + 1 ) + "_",
+                        0,
+                        true );
+
+                    _sql->insert( _sql->end(), sub_avg.begin(), sub_avg.end() );
+
+                    assert_true( subensembles_sum_.at( i ) );
+
+                    const auto sub_sum = subensembles_sum_.at( i )->to_sql(
+                        _categories,
+                        _vocabulary.subtrees().at( i ).value(),
+                        _feature_prefix + std::to_string( i + 1 ) + "_",
+                        subensembles_avg_.at( i )->num_features(),
+                        true );
+
+                    _sql->insert( _sql->end(), sub_sum.begin(), sub_sum.end() );
+
+                    const auto to_feature_name =
+                        [&_feature_prefix,
+                         i]( const size_t _feature_num ) -> std::string {
+                        return "feature_" + _feature_prefix +
+                               std::to_string( i + 1 ) + "_" +
+                               std::to_string( _feature_num + 1 );
+                    };
+
+                    const auto iota = stl::iota<size_t>(
+                        0,
+                        subensembles_avg_.at( i )->num_features() +
+                            subensembles_sum_.at( i )->num_features() );
+
+                    const auto autofeatures = stl::collect::vector<std::string>(
+                        iota | std::views::transform( to_feature_name ) );
+
+                    const auto main_table =
+                        helpers::SQLGenerator::make_staging_table_name(
+                            subensembles_avg_.at( i )->placeholder().name() );
+
+                    if ( autofeatures.size() > 0 )
+                        {
+                            const auto feature_table =
+                                helpers::SQLGenerator::make_feature_table(
+                                    main_table,
+                                    autofeatures,
+                                    {},
+                                    {},
+                                    {},
+                                    "_" + _feature_prefix +
+                                        std::to_string( i + 1 ) );
+
+                            _sql->push_back( feature_table + "\n" );
+                        }
+                }
+        }
+}
+
+// ----------------------------------------------------------------------------
+
 Poco::JSON::Object DecisionTreeEnsemble::to_json_obj(
     const bool _schema_only ) const
 {
@@ -902,58 +984,28 @@ std::vector<std::string> DecisionTreeEnsemble::to_sql(
 
     if ( _subfeatures )
         {
-            assert_true( subensembles_avg_.size() == subensembles_sum_.size() );
-
-            assert_msg(
-                subensembles_avg_.size() == _vocabulary.subtrees().size(),
-                "subensembles_avg_.size(): " +
-                    std::to_string( subensembles_avg_.size() ) +
-                    ", _vocabulary.subtrees().size(): " +
-                    std::to_string( _vocabulary.subtrees().size() ) );
-
-            for ( size_t i = 0; i < subensembles_avg_.size(); ++i )
-                {
-                    if ( subensembles_avg_.at( i ) )
-                        {
-                            assert_true( _vocabulary.subtrees().at( i ) );
-
-                            const auto sub_avg =
-                                subensembles_avg_.at( i )->to_sql(
-                                    _categories,
-                                    _vocabulary.subtrees().at( i ).value(),
-                                    _feature_prefix + std::to_string( i + 1 ) +
-                                        "_",
-                                    0,
-                                    true );
-
-                            sql.insert(
-                                sql.end(), sub_avg.begin(), sub_avg.end() );
-
-                            assert_true( subensembles_sum_.at( i ) );
-
-                            const auto sub_sum =
-                                subensembles_sum_.at( i )->to_sql(
-                                    _categories,
-                                    _vocabulary.subtrees().at( i ).value(),
-                                    _feature_prefix + std::to_string( i + 1 ) +
-                                        "_",
-                                    subensembles_avg_.at( i )->num_features(),
-                                    true );
-
-                            sql.insert(
-                                sql.end(), sub_sum.begin(), sub_sum.end() );
-                        }
-                }
+            subfeatures_to_sql(
+                _categories, _vocabulary, _feature_prefix, _offset, &sql );
         }
 
     for ( size_t i = 0; i < trees().size(); ++i )
         {
+            const auto &tree = trees().at( i );
+
+            const auto p = tree.ix_perip_used();
+
+            assert_true( p < placeholder().joined_tables_.size() );
+
+            const bool has_subfeatures =
+                placeholder().joined_tables_.at( p ).joined_tables_.size() > 0;
+
             sql.push_back( trees().at( i ).to_sql(
                 *_categories,
                 _vocabulary,
                 _feature_prefix,
                 std::to_string( _offset + i + 1 ),
-                hyperparameters().use_timestamps_ ) );
+                hyperparameters().use_timestamps_,
+                has_subfeatures ) );
         }
 
     return sql;

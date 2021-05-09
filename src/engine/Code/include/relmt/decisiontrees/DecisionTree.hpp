@@ -58,7 +58,8 @@ class DecisionTree
         const helpers::VocabularyTree& _vocabulary,
         const std::string& _feature_prefix,
         const std::string _feature_num,
-        const bool _use_timestamps ) const;
+        const bool _use_timestamps,
+        const bool _has_subfeatures ) const;
 
     // -----------------------------------------------------------------
 

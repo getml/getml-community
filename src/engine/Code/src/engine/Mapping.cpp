@@ -139,9 +139,7 @@ std::pair<Int, std::vector<Float>> Mapping::calc_agg_targets(
     const auto range =
         _population.targets_ | std::views::transform( calc_aggs );
 
-    const auto values = stl::collect::vector<std::vector<Float>>( range );
-
-    const auto second = stl::join( values );
+    const auto second = stl::join::vector<Float>( range );
 
     // -----------------------------------------------------------------------
 
@@ -1491,15 +1489,13 @@ std::vector<std::string> Mapping::to_sql(
 
     const auto text = text_columns_to_sql();
 
-    const auto all_submappings = stl::collect::vector<std::vector<std::string>>(
-        submappings_ | std::views::transform( submapping_to_sql ) );
+    const auto all_submappings =
+        submappings_ | std::views::transform( submapping_to_sql );
 
-    const auto submappings = stl::join( all_submappings );
+    const auto submappings = stl::join::vector<std::string>( all_submappings );
 
-    const auto all = std::vector<std::vector<std::string>>(
+    return stl::join::vector<std::string>(
         { submappings, categorical, discrete, text } );
-
-    return stl::join( all );
 }
 
 // ----------------------------------------------------
@@ -1627,10 +1623,7 @@ std::vector<containers::Column<Float>> Mapping::transform_categorical(
     const auto range = iota | std::views::transform( make_pair ) |
                        std::views::transform( make_cols );
 
-    const auto all =
-        stl::collect::vector<std::vector<containers::Column<Float>>>( range );
-
-    return stl::join( all );
+    return stl::join::vector<containers::Column<Float>>( range );
 }
 
 // ----------------------------------------------------
@@ -1714,10 +1707,7 @@ std::vector<containers::Column<Float>> Mapping::transform_discrete(
     const auto range = iota | std::views::transform( make_pair ) |
                        std::views::transform( make_cols );
 
-    const auto all =
-        stl::collect::vector<std::vector<containers::Column<Float>>>( range );
-
-    return stl::join( all );
+    return stl::join::vector<containers::Column<Float>>( range );
 }
 
 // ----------------------------------------------------
@@ -1815,10 +1805,7 @@ std::vector<containers::Column<Float>> Mapping::transform_text(
     const auto range = iota | std::views::transform( make_tuple ) |
                        std::views::transform( make_cols );
 
-    const auto all =
-        stl::collect::vector<std::vector<containers::Column<Float>>>( range );
-
-    return stl::join( all );
+    return stl::join::vector<containers::Column<Float>>( range );
 }
 
 // ----------------------------------------------------

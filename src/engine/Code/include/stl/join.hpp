@@ -6,16 +6,35 @@ namespace stl
 // -------------------------------------------------------------------------
 
 /// Necessary work-around, as join is not supported on Windows yet.
-template<class T>
-inline std::vector<T> join( const std::vector<std::vector<T>>& _input ) {
-  std::vector<T> result;
+struct join
+{
+    template <class T, class RangeType>
+    static std::vector<T> vector( RangeType _range )
+    {
+        std::vector<T> result;
 
-  for(const auto& in: _input ) {
-    result.insert( result.end(), in.begin(), in.end() );
-  }
+        for ( const auto& r : _range )
+            {
+                result.insert( result.end(), r.begin(), r.end() );
+            }
 
-  return result;
-}
+        return result;
+    }
+
+    template <class T>
+    static std::vector<T> vector(
+        const std::initializer_list<std::vector<T>>& _range )
+    {
+        std::vector<T> result;
+
+        for ( const auto& r : _range )
+            {
+                result.insert( result.end(), r.begin(), r.end() );
+            }
+
+        return result;
+    }
+};
 
 // -------------------------------------------------------------------------
 }  // namespace stl

@@ -35,6 +35,15 @@ class SQLGenerator
     static std::string make_epoch_time(
         const std::string& _raw_name, const std::string& _alias );
 
+    /// Generates the table that contains all the features.
+    static std::string make_feature_table(
+        const std::string& _main_table,
+        const std::vector<std::string>& _autofeatures,
+        const std::vector<std::string>& _targets,
+        const std::vector<std::string>& _categorical,
+        const std::vector<std::string>& _numerical,
+        const std::string& _prefix );
+
     /// Generates the joins to be included in every single .
     static std::string make_joins(
         const std::string& _output_name,
@@ -42,11 +51,35 @@ class SQLGenerator
         const std::string& _output_join_keys_name,
         const std::string& _input_join_keys_name );
 
+    /// Generates the SQL code needed to impute the features and drop the
+    /// feature tables.
+    static std::string make_postprocessing(
+        const std::vector<std::string>& _sql );
+
+    /// Generates the select statement for the feature table.
+    static std::string make_select(
+        const std::string& _main_table,
+        const std::vector<std::string>& _autofeatures,
+        const std::vector<std::string>& _targets,
+        const std::vector<std::string>& _categorical,
+        const std::vector<std::string>& _numerical );
+
     /// Generates an SQLite3-compatible datetime string. This is to be used when
     /// the absolute value is note important, because the string is only
     /// compared to something else.
     static std::string make_relative_time(
         const std::string& _raw_name, const std::string& _alias );
+
+    /// Transpiles the features in SQLite3 code. This
+    /// is supposed to replicate the .transform(...) method
+    /// of a pipeline.
+    static std::string make_sql(
+        const std::string& _main_table,
+        const std::vector<std::string>& _autofeatures,
+        const std::vector<std::string>& _sql,
+        const std::vector<std::string>& _targets,
+        const std::vector<std::string>& _categorical,
+        const std::vector<std::string>& _numerical );
 
     /// Generates the staging tables.
     static std::vector<std::string> make_staging_tables(
@@ -60,15 +93,11 @@ class SQLGenerator
 
     /// Generates the unique identifier for a subfeature.
     static std::string make_subfeature_identifier(
-        const std::string& _feature_prefix,
-        const size_t _peripheral_used,
-        const size_t _column );
+        const std::string& _feature_prefix, const size_t _peripheral_used );
 
     /// Generates the code for joining the subfeature tables.
     static std::string make_subfeature_joins(
-        const std::string& _feature_prefix,
-        const size_t _peripheral_used,
-        const std::set<size_t>& _columns );
+        const std::string& _feature_prefix, const size_t _peripheral_used );
 
     /// Generates the diffstring for time stamps.
     static std::string make_time_stamp_diff(
@@ -82,6 +111,11 @@ class SQLGenerator
         const std::string& _output_alias,
         const std::string& _input_alias,
         const std::string& _t1_or_t2 );
+
+    /// Generates the SQL code needed to insert the autofeatures into the
+    /// FEATURES table.
+    static std::string make_updates(
+        const std::vector<std::string>& _autofeatures );
 
     /// Returns the lower case of a string
     static std::string to_lower( const std::string& _str );

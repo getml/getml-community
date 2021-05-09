@@ -214,9 +214,10 @@ std::string ConditionMaker::condition_greater(
                 {
                     const auto number =
                         helpers::SQLGenerator::make_subfeature_identifier(
-                            _feature_prefix, peripheral_used_, _split.column_ );
+                            _feature_prefix, peripheral_used_ );
 
                     return "( COALESCE( f_" + number + ".\"feature_" + number +
+                           "_" + std::to_string( _split.column_ + 1 ) +
                            "\", 0.0 ) > " +
                            std::to_string( _split.critical_value_ ) + " )";
                 }
@@ -483,9 +484,10 @@ std::string ConditionMaker::condition_smaller(
                 {
                     const auto number =
                         helpers::SQLGenerator::make_subfeature_identifier(
-                            _feature_prefix, peripheral_used_, _split.column_ );
+                            _feature_prefix, peripheral_used_ );
 
                     return "( COALESCE( f_" + number + ".\"feature_" + number +
+                           "_" + std::to_string( _split.column_ + 1 ) +
                            "\", 0.0 ) <= " +
                            std::to_string( _split.critical_value_ ) + " )";
                 }
@@ -601,6 +603,26 @@ std::string ConditionMaker::list_words(
     words << " )";
 
     return words.str();
+}
+
+// ----------------------------------------------------------------------------
+
+std::string ConditionMaker::make_colname(
+    const std::string& _colname, const std::string& _alias ) const
+{
+    if ( _colname.find( helpers::Macros::fast_prop_feature() ) !=
+         std::string::npos )
+        {
+            return "f.\"" +
+                   helpers::StringReplacer::replace_all(
+                       _colname,
+                       helpers::Macros::fast_prop_feature(),
+                       "feature_" ) +
+                   "\"";
+        }
+
+    return _alias + ".\"" + helpers::SQLGenerator::make_colname( _colname ) +
+           "\"";
 }
 
 // ----------------------------------------------------------------------------

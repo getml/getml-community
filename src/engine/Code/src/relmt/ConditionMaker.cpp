@@ -214,9 +214,10 @@ std::string ConditionMaker::condition_greater(
                 {
                     const auto number =
                         helpers::SQLGenerator::make_subfeature_identifier(
-                            _feature_prefix, peripheral_used_, _split.column_ );
+                            _feature_prefix, peripheral_used_ );
 
                     return "( COALESCE( f_" + number + ".\"feature_" + number +
+                           "_" + std::to_string( _split.column_ + 1 ) +
                            "\", 0.0 ) > " +
                            std::to_string( _split.critical_value_ ) + " )";
                 }
@@ -483,9 +484,10 @@ std::string ConditionMaker::condition_smaller(
                 {
                     const auto number =
                         helpers::SQLGenerator::make_subfeature_identifier(
-                            _feature_prefix, peripheral_used_, _split.column_ );
+                            _feature_prefix, peripheral_used_ );
 
                     return "( COALESCE( f_" + number + ".\"feature_" + number +
+                           "_" + std::to_string( _split.column_ + 1 ) +
                            "\", 0.0 ) <= " +
                            std::to_string( _split.critical_value_ ) + " )";
                 }
@@ -756,10 +758,10 @@ std::string ConditionMaker::make_equation(
         {
             const auto number =
                 helpers::SQLGenerator::make_subfeature_identifier(
-                    _feature_prefix, peripheral_used_, j );
+                    _feature_prefix, peripheral_used_ );
 
             const auto eq = make_equation_part(
-                "feature_" + number,
+                "feature_" + number + "_" + std::to_string( j + 1 ),
                 "f_" + number,
                 rescaled_weights.at( i ),
                 means.at( i - 1 ),

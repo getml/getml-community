@@ -55,6 +55,10 @@ class ConditionMaker
         const std::string& _name,
         const bool _is_greater ) const;
 
+    /// Generates the column name to insert into the conditions.
+    std::string make_colname(
+        const std::string& _colname, const std::string& _alias ) const;
+
     /// Transforms the time stamps diff into SQLite-compliant code.
     std::string make_time_stamp_diff(
         const std::string& _ts1,
@@ -77,23 +81,6 @@ class ConditionMaker
         const bool _is_greater ) const;
 
    private:
-    /// Generates the column name to insert into the conditions.
-    std::string make_colname(
-        const std::string& _colname, const std::string& _alias ) const
-    {
-        return _alias + ".\"" +
-               helpers::SQLGenerator::make_colname( _colname ) + "\"";
-    }
-
-    /// Returns the timediff string for time comparisons
-    std::string make_diffstr(
-        const Float _timediff, const std::string _timeunit ) const
-    {
-        return ( _timediff >= 0.0 )
-                   ? "'+" + std::to_string( _timediff ) + " " + _timeunit + "'"
-                   : "'" + std::to_string( _timediff ) + " " + _timeunit + "'";
-    }
-
    private:
     /// The lag variable used for the moving time window.
     const Float lag_;
