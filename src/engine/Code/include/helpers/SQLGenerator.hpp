@@ -97,7 +97,10 @@ class SQLGenerator
 
     /// Generates the code for joining the subfeature tables.
     static std::string make_subfeature_joins(
-        const std::string& _feature_prefix, const size_t _peripheral_used );
+        const std::string& _feature_prefix,
+        const size_t _peripheral_used,
+        const std::string& _alias = "t2",
+        const std::string& _feature_postfix = "" );
 
     /// Generates the diffstring for time stamps.
     static std::string make_time_stamp_diff(
@@ -115,7 +118,8 @@ class SQLGenerator
     /// Generates the SQL code needed to insert the autofeatures into the
     /// FEATURES table.
     static std::string make_updates(
-        const std::vector<std::string>& _autofeatures );
+        const std::vector<std::string>& _autofeatures,
+        const std::string& _prefix );
 
     /// Returns the lower case of a string
     static std::string to_lower( const std::string& _str );

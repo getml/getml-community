@@ -920,7 +920,12 @@ containers::Features Pipeline::generate_autofeatures(
             assert_true( fe );
 
             auto new_features = fe->transform(
-                _cmd, index, socket_logger, _population_df, _peripheral_dfs );
+                _cmd,
+                index,
+                std::to_string( i + 1 ) + "_",
+                socket_logger,
+                _population_df,
+                _peripheral_dfs );
 
             autofeatures.insert(
                 autofeatures.end(), new_features.begin(), new_features.end() );
@@ -1196,7 +1201,12 @@ void Pipeline::fit_feature_learners(
                     continue;
                 }
 
-            fe->fit( _cmd, socket_logger, _population_df, _peripheral_dfs );
+            fe->fit(
+                _cmd,
+                std::to_string( i + 1 ) + "_",
+                socket_logger,
+                _population_df,
+                _peripheral_dfs );
 
             _fe_tracker->add( fe );
         }

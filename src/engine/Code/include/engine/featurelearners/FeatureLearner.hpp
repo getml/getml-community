@@ -66,6 +66,7 @@ class FeatureLearner : public AbstractFeatureLearner
     /// Fits the model.
     void fit(
         const Poco::JSON::Object& _cmd,
+        const std::string& _prefix,
         const std::shared_ptr<const communication::SocketLogger>& _logger,
         const containers::DataFrame& _population_df,
         const std::vector<containers::DataFrame>& _peripheral_dfs ) final;
@@ -97,6 +98,7 @@ class FeatureLearner : public AbstractFeatureLearner
     containers::Features transform(
         const Poco::JSON::Object& _cmd,
         const std::vector<size_t>& _index,
+        const std::string& _prefix,
         const std::shared_ptr<const communication::SocketLogger>& _logger,
         const containers::DataFrame& _population_df,
         const std::vector<containers::DataFrame>& _peripheral_dfs ) const final;
@@ -213,6 +215,7 @@ class FeatureLearner : public AbstractFeatureLearner
         const std::vector<DataFrameType>& _peripheral,
         const helpers::RowIndexContainer& _row_indices,
         const helpers::WordIndexContainer& _word_indices,
+        const std::string& _prefix,
         const std::shared_ptr<const logging::AbstractLogger> _logger,
         const FeatureLearnerType& _feature_learner ) const;
 
@@ -237,6 +240,14 @@ class FeatureLearner : public AbstractFeatureLearner
     std::pair<std::string, std::string> parse_table_colname(
         const std::string& _table, const std::string& _colname ) const;
 
+    /// Transforms the propositionalization features to SQL.
+    void propositionalization_to_sql(
+        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const helpers::VocabularyTree& _vocabulary,
+        const std::string& _prefix,
+        const bool _subfeatures,
+        std::vector<std::string>* _sql ) const;
+
     /// Removes the time difference marker from the colnames, needed for the
     /// column importances.
     std::string remove_time_diff( const std::string& _from_colname ) const;
@@ -250,6 +261,7 @@ class FeatureLearner : public AbstractFeatureLearner
         const DataFrameType& _population,
         const std::vector<DataFrameType>& _peripheral,
         const helpers::WordIndexContainer& _word_indices,
+        const std::string& _prefix,
         const std::shared_ptr<const logging::AbstractLogger> _logger ) const;
 
     // --------------------------------------------------------
@@ -732,6 +744,7 @@ Poco::JSON::Object::Ptr FeatureLearner<FeatureLearnerType>::fingerprint() const
 template <typename FeatureLearnerType>
 void FeatureLearner<FeatureLearnerType>::fit(
     const Poco::JSON::Object& _cmd,
+    const std::string& _prefix,
     const std::shared_ptr<const communication::SocketLogger>& _logger,
     const containers::DataFrame& _population_df,
     const std::vector<containers::DataFrame>& _peripheral_dfs )
@@ -760,6 +773,7 @@ void FeatureLearner<FeatureLearnerType>::fit(
         peripheral,
         row_indices,
         word_indices,
+        _prefix,
         _logger,
         feature_learner_.value() );
 
@@ -800,15 +814,21 @@ FeatureLearner<FeatureLearnerType>::fit_propositionalization(
     const std::vector<DataFrameType>& _peripheral,
     const helpers::RowIndexContainer& _row_indices,
     const helpers::WordIndexContainer& _word_indices,
+    const std::string& _prefix,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     const FeatureLearnerType& _feature_learner ) const
 {
     if constexpr ( has_propositionalization_ )
         {
-            const bool all_propositionalization = std::all_of(
-                _feature_learner.placeholder().propositionalization().begin(),
-                _feature_learner.placeholder().propositionalization().end(),
-                std::identity() );
+            const bool all_propositionalization =
+                ( _feature_learner.placeholder().propositionalization().size() >
+                  0 ) &&
+                std::all_of(
+                    _feature_learner.placeholder()
+                        .propositionalization()
+                        .begin(),
+                    _feature_learner.placeholder().propositionalization().end(),
+                    std::identity() );
 
             if ( all_propositionalization )
                 {
@@ -839,6 +859,7 @@ FeatureLearner<FeatureLearnerType>::fit_propositionalization(
                 .peripheral_names_ = peripheral_names,
                 .placeholder_ = _feature_learner.placeholder(),
                 .population_ = _population,
+                .prefix_ = _prefix,
                 .row_index_container_ = _row_indices,
                 .word_index_container_ = _word_indices };
 
@@ -1042,6 +1063,28 @@ FeatureLearner<FeatureLearnerType>::parse_table_colname(
     return std::make_pair( table, colname );
 }
 
+// ----------------------------------------------------------------------------
+
+template <typename FeatureLearnerType>
+void FeatureLearner<FeatureLearnerType>::propositionalization_to_sql(
+    const std::shared_ptr<const std::vector<strings::String>>& _categories,
+    const helpers::VocabularyTree& _vocabulary,
+    const std::string& _prefix,
+    const bool _subfeatures,
+    std::vector<std::string>* _sql ) const
+{
+    if constexpr ( has_propositionalization_ )
+        {
+            if ( !fast_prop_container_ )
+                {
+                    return;
+                }
+
+            fast_prop_container_->to_sql(
+                _categories, _vocabulary, _prefix, _subfeatures, _sql );
+        }
+}
+
 // -----------------------------------------------------------------------------
 
 template <typename FeatureLearnerType>
@@ -1152,6 +1195,9 @@ std::vector<std::string> FeatureLearner<FeatureLearnerType>::to_sql(
         feature_learner().peripheral(),
         split_text_fields );
 
+    propositionalization_to_sql(
+        _categories, vocabulary_tree, _prefix, _subfeatures, &sql );
+
     const auto features = feature_learner().to_sql(
         _categories, vocabulary_tree, _prefix, 0, _subfeatures );
 
@@ -1166,6 +1212,7 @@ template <typename FeatureLearnerType>
 containers::Features FeatureLearner<FeatureLearnerType>::transform(
     const Poco::JSON::Object& _cmd,
     const std::vector<size_t>& _index,
+    const std::string& _prefix,
     const std::shared_ptr<const communication::SocketLogger>& _logger,
     const containers::DataFrame& _population_df,
     const std::vector<containers::DataFrame>& _peripheral_dfs ) const
@@ -1184,7 +1231,7 @@ containers::Features FeatureLearner<FeatureLearnerType>::transform(
         helpers::WordIndexContainer( population, peripheral, *vocabulary_ );
 
     const auto feature_container = transform_propositionalization(
-        population, peripheral, word_indices, _logger );
+        population, peripheral, word_indices, _prefix, _logger );
 
     // -------------------------------------------------------
 
@@ -1209,6 +1256,7 @@ FeatureLearner<FeatureLearnerType>::transform_propositionalization(
     const DataFrameType& _population,
     const std::vector<DataFrameType>& _peripheral,
     const helpers::WordIndexContainer& _word_indices,
+    const std::string& _prefix,
     const std::shared_ptr<const logging::AbstractLogger> _logger ) const
 {
     if constexpr ( has_propositionalization_ )
@@ -1226,6 +1274,8 @@ FeatureLearner<FeatureLearnerType>::transform_propositionalization(
 
             using MakerParams = fastprop::subfeatures::MakerParams;
 
+            assert_true( _prefix != "" );
+
             const auto params = MakerParams{
                 .fast_prop_container_ = fast_prop_container_,
                 .hyperparameters_ = propositionalization(),
@@ -1234,6 +1284,7 @@ FeatureLearner<FeatureLearnerType>::transform_propositionalization(
                 .peripheral_names_ = peripheral_names,
                 .placeholder_ = feature_learner().placeholder(),
                 .population_ = _population,
+                .prefix_ = _prefix,
                 .word_index_container_ = _word_indices };
 
             const auto feature_container =

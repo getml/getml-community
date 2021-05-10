@@ -632,7 +632,7 @@ std::string SQLGenerator::make_feature_table(
 
     sql += "ORDER BY t1.rowid;\n\n";
 
-    sql += make_updates( _autofeatures );
+    sql += make_updates( _autofeatures, _prefix );
 
     return sql;
 }
@@ -853,16 +853,29 @@ std::string SQLGenerator::make_subfeature_identifier(
 // ----------------------------------------------------------------------------
 
 std::string SQLGenerator::make_subfeature_joins(
-    const std::string& _feature_prefix, const size_t _peripheral_used )
+    const std::string& _feature_prefix,
+    const size_t _peripheral_used,
+    const std::string& _alias,
+    const std::string& _feature_postfix )
 {
+    assert_msg( _alias == "t1" || _alias == "t2", "_alias: " + _alias );
+
+    assert_true( _feature_prefix.size() > 0 );
+
     std::stringstream sql;
 
     const auto number =
-        make_subfeature_identifier( _feature_prefix, _peripheral_used );
+        ( _alias == "t2" )
+            ? make_subfeature_identifier( _feature_prefix, _peripheral_used )
+            : _feature_prefix.substr( 0, _feature_prefix.size() - 1 );
 
-    sql << "LEFT JOIN \"FEATURES_" << number << "\" f_" << number << std::endl;
+    const auto letter = _feature_postfix == "" ? 'f' : 'p';
 
-    sql << "ON t2.rowid = f_" << number << ".\"rownum\"" << std::endl;
+    sql << "LEFT JOIN \"FEATURES_" << number << _feature_postfix << "\" "
+        << letter << "_" << number << std::endl;
+
+    sql << "ON " << _alias << ".rowid = " << letter << "_" << number
+        << ".\"rownum\"" << std::endl;
 
     return sql.str();
 }
@@ -943,7 +956,7 @@ std::string SQLGenerator::make_time_stamps(
 // ----------------------------------------------------------------------------
 
 std::string SQLGenerator::make_updates(
-    const std::vector<std::string>& _autofeatures )
+    const std::vector<std::string>& _autofeatures, const std::string& _prefix )
 {
     std::string sql;
 
@@ -952,11 +965,12 @@ std::string SQLGenerator::make_updates(
             const auto table = helpers::StringReplacer::replace_all(
                 colname, "feature", "FEATURE" );
 
-            sql += "UPDATE \"FEATURES\"\n";
+            sql += "UPDATE \"FEATURES" + _prefix + "\"\n";
             sql += "SET \"" + colname + "\" = COALESCE( t2.\"" + colname +
                    "\", 0.0 )\n";
             sql += "FROM \"" + table + "\" AS t2\n";
-            sql += "WHERE FEATURES.rowid = t2.\"rownum\";\n\n";
+            sql +=
+                "WHERE \"FEATURES" + _prefix + "\".rowid = t2.\"rownum\";\n\n";
         }
 
     return sql;

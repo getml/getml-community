@@ -35,6 +35,7 @@ Maker::fit( const MakerParams& _params )
         .peripheral_names_ = _params.peripheral_names_,
         .placeholder_ = _params.placeholder_,
         .population_ = _params.population_,
+        .prefix_ = _params.prefix_,
         .row_index_container_ = _params.row_index_container_,
         .word_index_container_ = _params.word_index_container_ } );
 
@@ -144,6 +145,7 @@ MakerParams Maker::make_params( const MakerParams& _params, const size_t _i )
         .peripheral_names_ = _params.peripheral_names_,
         .placeholder_ = _params.placeholder_.joined_tables_.at( _i ),
         .population_ = _params.peripheral_.at( ix ),
+        .prefix_ = _params.prefix_ + std::to_string( _i + 1 ) + "_",
         .row_index_container_ = row_index_container,
         .word_index_container_ = word_index_container };
 }
@@ -267,6 +269,8 @@ helpers::FeatureContainer Maker::transform( const MakerParams& _params )
         _params.fast_prop_container_->size() ==
         placeholder.joined_tables_.size() );
 
+    assert_true( _params.prefix_ != "" );
+
     const auto features =
         std::make_shared<std::vector<helpers::Column<Float>>>();
 
@@ -292,7 +296,7 @@ helpers::FeatureContainer Maker::transform( const MakerParams& _params )
                 {
                     features->push_back( helpers::Column<Float>(
                         feature_ptrs.at( i ),
-                        helpers::Macros::fast_prop_feature() +
+                        helpers::Macros::fast_prop_feature() + _params.prefix_ +
                             std::to_string( i + 1 ),
                         "" ) );
                 }

@@ -34,6 +34,9 @@ struct MakerParams
     /// The population table used for training.
     const containers::DataFrame population_;
 
+    /// The prefix used for the generated features.
+    const std::string prefix_;
+
     /// The row index container used to fit the text columns.
     const std::optional<helpers::RowIndexContainer> row_index_container_ =
         std::nullopt;

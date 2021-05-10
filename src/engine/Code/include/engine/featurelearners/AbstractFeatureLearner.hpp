@@ -50,6 +50,7 @@ class AbstractFeatureLearner
     /// Fits the model.
     virtual void fit(
         const Poco::JSON::Object& _cmd,
+        const std::string& _prefix,
         const std::shared_ptr<const communication::SocketLogger>& _logger,
         const containers::DataFrame& _population_df,
         const std::vector<containers::DataFrame>& _peripheral_dfs ) = 0;
@@ -107,6 +108,7 @@ class AbstractFeatureLearner
     virtual containers::Features transform(
         const Poco::JSON::Object& _cmd,
         const std::vector<size_t>& _index,
+        const std::string& _prefix,
         const std::shared_ptr<const communication::SocketLogger>& _logger,
         const containers::DataFrame& _population_df,
         const std::vector<containers::DataFrame>& _peripheral_dfs ) const = 0;

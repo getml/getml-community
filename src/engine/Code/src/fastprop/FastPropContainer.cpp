@@ -99,5 +99,67 @@ Poco::JSON::Object::Ptr FastPropContainer::to_json_obj() const
 
 // ----------------------------------------------------------------------------
 
+void FastPropContainer::to_sql(
+    const std::shared_ptr<const std::vector<strings::String>>& _categories,
+    const helpers::VocabularyTree& _vocabulary,
+    const std::string& _prefix,
+    const bool _subfeatures,
+    std::vector<std::string>* _sql ) const
+{
+    if ( has_fast_prop() )
+        {
+            const auto features = fast_prop().to_sql(
+                _categories, _vocabulary, _prefix, 0, _subfeatures );
+
+            _sql->insert( _sql->end(), features.begin(), features.end() );
+
+            if ( _subfeatures )
+                {
+                    const auto to_feature_name =
+                        [&_prefix]( const size_t _feature_num ) -> std::string {
+                        return "feature_" + _prefix +
+                               std::to_string( _feature_num + 1 );
+                    };
+
+                    const auto iota =
+                        stl::iota<size_t>( 0, fast_prop().num_features() );
+
+                    const auto autofeatures = stl::collect::vector<std::string>(
+                        iota | std::views::transform( to_feature_name ) );
+
+                    const auto main_table =
+                        helpers::SQLGenerator::make_staging_table_name(
+                            fast_prop().placeholder().name() );
+
+                    _sql->push_back(
+                        helpers::SQLGenerator::make_feature_table(
+                            main_table,
+                            autofeatures,
+                            {},
+                            {},
+                            {},
+                            "_" + _prefix + "PROPOSITIONALIZATION" ) +
+                        "\n" );
+                }
+        }
+
+    if ( _subfeatures )
+        {
+            for ( size_t i = 0; i < size(); ++i )
+                {
+                    if ( subcontainers( i ) )
+                        {
+                            subcontainers( i )->to_sql(
+                                _categories,
+                                _vocabulary,
+                                _prefix + std::to_string( i + 1 ) + "_",
+                                _subfeatures,
+                                _sql );
+                        }
+                }
+        }
+}
+
+// ----------------------------------------------------------------------------
 }  // namespace subfeatures
 }  // namespace fastprop

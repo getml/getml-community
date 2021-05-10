@@ -613,7 +613,16 @@ std::string ConditionMaker::make_colname(
     if ( _colname.find( helpers::Macros::fast_prop_feature() ) !=
          std::string::npos )
         {
-            return "f.\"" +
+            const auto stripped = helpers::StringReplacer::replace_all(
+                _colname, helpers::Macros::fast_prop_feature(), "" );
+
+            const auto pos = stripped.rfind( "_" );
+
+            assert_true( pos != std::string::npos );
+
+            const auto alias = "p_" + stripped.substr( 0, pos );
+
+            return alias + ".\"" +
                    helpers::StringReplacer::replace_all(
                        _colname,
                        helpers::Macros::fast_prop_feature(),
