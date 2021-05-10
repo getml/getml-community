@@ -37,6 +37,13 @@ class DataModelChecker
         communication::Warner* _warner );
 
    private:
+    /// Checks whether all data frames are propositionalization frames.
+    static void check_all_propositionalization(
+        const std::shared_ptr<const helpers::Placeholder> _placeholder,
+        const std::vector<
+            std::shared_ptr<featurelearners::AbstractFeatureLearner>>
+            _feature_learners );
+
     /// Checks the validity of the data frames.
     static void check_data_frames(
         const containers::DataFrame& _population,
@@ -81,6 +88,18 @@ class DataModelChecker
         const containers::DataFrame& _population,
         const containers::DataFrame& _peripheral,
         communication::Warner* _warner );
+
+    /// Makes sure that the peripheral tables are in the right size.
+    static void check_peripheral_size(
+        const std::shared_ptr<const std::vector<std::string>> _peripheral_names,
+        const std::vector<containers::DataFrame>& _peripheral );
+
+    /// Makes sure that the data model is actually relational.
+    static void check_relational(
+        const std::vector<containers::DataFrame>& _peripheral,
+        const std::vector<
+            std::shared_ptr<featurelearners::AbstractFeatureLearner>>
+            _feature_learners );
 
     /// Checks the self joins for the time series models.
     static void check_self_joins(

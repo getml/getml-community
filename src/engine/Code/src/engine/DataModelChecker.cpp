@@ -18,6 +18,10 @@ void DataModelChecker::check(
 {
     // --------------------------------------------------------------------------
 
+    check_relational( _peripheral, _feature_learners );
+
+    // --------------------------------------------------------------------------
+
     const auto is_not_text_field =
         []( const containers::DataFrame& _df ) -> bool {
         return _df.name().find( helpers::Macros::text_field() ) ==
@@ -29,49 +33,9 @@ void DataModelChecker::check(
 
     // --------------------------------------------------------------------------
 
-    assert_true( _peripheral_names );
+    check_peripheral_size( _peripheral_names, peripheral );
 
-    if ( _peripheral_names->size() != peripheral.size() )
-        {
-            throw std::invalid_argument(
-                "The number of peripheral tables in the placeholder must "
-                "be "
-                "equal to the number of peripheral tables passed (" +
-                std::to_string( _peripheral_names->size() ) + " vs. " +
-                std::to_string( peripheral.size() ) +
-                "). This is the point of having placeholders." );
-        }
-
-    // --------------------------------------------------------------------------
-
-    const auto is_prop =
-        []( const std::shared_ptr<featurelearners::AbstractFeatureLearner>&
-                _fl ) -> bool {
-        assert_true( _fl );
-        return (
-            _fl->type() ==
-                featurelearners::AbstractFeatureLearner::FASTPROP_MODEL ||
-            _fl->type() ==
-                featurelearners::AbstractFeatureLearner::FASTPROP_TIME_SERIES );
-    };
-
-    const bool any_non_fast_prop = std::any_of(
-        _feature_learners.begin(), _feature_learners.end(), is_prop );
-
-    assert_true( _placeholder );
-
-    const bool all_propositionalization = std::all_of(
-        _placeholder->propositionalization().begin(),
-        _placeholder->propositionalization().end(),
-        std::identity() );
-
-    if ( all_propositionalization && any_non_fast_prop )
-        {
-            throw std::invalid_argument(
-                "All joins in the data model have been set to "
-                "propositionalization. You should use FastPropModel or "
-                "FastPropTimeSeries instead." );
-        }
+    check_all_propositionalization( _placeholder, _feature_learners );
 
     // --------------------------------------------------------------------------
 
@@ -131,6 +95,45 @@ void DataModelChecker::check(
     warner.send( _socket );
 
     // --------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+void DataModelChecker::check_all_propositionalization(
+    const std::shared_ptr<const helpers::Placeholder> _placeholder,
+    const std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>
+        _feature_learners )
+{
+    const auto is_not_prop =
+        []( const std::shared_ptr<featurelearners::AbstractFeatureLearner>&
+                _fl ) -> bool {
+        assert_true( _fl );
+        return (
+            _fl->type() !=
+                featurelearners::AbstractFeatureLearner::FASTPROP_MODEL &&
+            _fl->type() !=
+                featurelearners::AbstractFeatureLearner::FASTPROP_TIME_SERIES );
+    };
+
+    const bool any_non_fast_prop = std::any_of(
+        _feature_learners.begin(), _feature_learners.end(), is_not_prop );
+
+    assert_true( _placeholder );
+
+    const bool all_propositionalization =
+        ( _placeholder->propositionalization().size() > 0 ) &&
+        std::all_of(
+            _placeholder->propositionalization().begin(),
+            _placeholder->propositionalization().end(),
+            std::identity() );
+
+    if ( all_propositionalization && any_non_fast_prop )
+        {
+            throw std::invalid_argument(
+                "All joins in the data model have been set to "
+                "propositionalization. You should use FastPropModel or "
+                "FastPropTimeSeries instead." );
+        }
 }
 
 // ----------------------------------------------------------------------------
@@ -575,6 +578,26 @@ DataModelChecker::check_matches(
 
 // ----------------------------------------------------------------------------
 
+void DataModelChecker::check_peripheral_size(
+    const std::shared_ptr<const std::vector<std::string>> _peripheral_names,
+    const std::vector<containers::DataFrame>& _peripheral )
+{
+    assert_true( _peripheral_names );
+
+    if ( _peripheral_names->size() != _peripheral.size() )
+        {
+            throw std::invalid_argument(
+                "The number of peripheral tables in the placeholder must "
+                "be "
+                "equal to the number of peripheral tables passed (" +
+                std::to_string( _peripheral_names->size() ) + " vs. " +
+                std::to_string( _peripheral.size() ) +
+                "). This is the point of having placeholders." );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
 void DataModelChecker::check_num_columns_relmt(
     const containers::DataFrame& _population,
     const containers::DataFrame& _peripheral,
@@ -588,6 +611,34 @@ void DataModelChecker::check_num_columns_relmt(
         {
             warn_too_many_columns_relmt(
                 num_columns, _population.name(), _peripheral.name(), _warner );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+void DataModelChecker::check_relational(
+    const std::vector<containers::DataFrame>& _peripheral,
+    const std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>
+        _feature_learners )
+{
+    const auto is_not_ts =
+        []( const std::shared_ptr<featurelearners::AbstractFeatureLearner>&
+                _fl ) -> bool {
+        assert_true( _fl );
+        return !( _fl->is_time_series() );
+    };
+
+    const bool wrong_data_model =
+        _peripheral.size() == 0 &&
+        std::any_of(
+            _feature_learners.begin(), _feature_learners.end(), is_not_ts );
+
+    if ( wrong_data_model )
+        {
+            throw std::invalid_argument(
+                "The data model you have passed is not relational (there are "
+                "no joins in it that aren't many-to-one or one-to-one), yet "
+                "you have passed relational feature learners." );
         }
 }
 
