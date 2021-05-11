@@ -59,7 +59,7 @@ class DecisionTree
         const std::string& _feature_prefix,
         const std::string _feature_num,
         const bool _use_timestamps,
-        const bool _has_subfeatures ) const;
+        const std::tuple<bool, bool, bool> _has_subfeatures ) const;
 
     // -----------------------------------------------------------------
 

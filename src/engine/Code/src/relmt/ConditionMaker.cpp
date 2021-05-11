@@ -607,6 +607,35 @@ std::string ConditionMaker::list_words(
 
 // ----------------------------------------------------------------------------
 
+std::string ConditionMaker::make_colname(
+    const std::string& _colname, const std::string& _alias ) const
+{
+    if ( _colname.find( helpers::Macros::fast_prop_feature() ) !=
+         std::string::npos )
+        {
+            const auto stripped = helpers::StringReplacer::replace_all(
+                _colname, helpers::Macros::fast_prop_feature(), "" );
+
+            const auto pos = stripped.rfind( "_" );
+
+            assert_true( pos != std::string::npos );
+
+            const auto alias = "p_" + stripped.substr( 0, pos );
+
+            return alias + ".\"" +
+                   helpers::StringReplacer::replace_all(
+                       _colname,
+                       helpers::Macros::fast_prop_feature(),
+                       "feature_" ) +
+                   "\"";
+        }
+
+    return _alias + ".\"" + helpers::SQLGenerator::make_colname( _colname ) +
+           "\"";
+}
+
+// ----------------------------------------------------------------------------
+
 std::string ConditionMaker::make_equation_part(
     const std::string& _raw_name,
     const std::string& _alias,
@@ -648,17 +677,6 @@ std::string ConditionMaker::make_equation_part(
 
         return "COALESCE( " + name + ", 0.0 )";
     };
-
-    // ------------------------------------------------------
-
-    if ( _is_ts && !is_rowid )
-        {
-            const auto centered =
-                center( helpers::SQLGenerator::make_relative_time(
-                    _raw_name, _alias ) );
-
-            return impute( centered ) + " * " + to_string( _weight );
-        }
 
     // ------------------------------------------------------
 
