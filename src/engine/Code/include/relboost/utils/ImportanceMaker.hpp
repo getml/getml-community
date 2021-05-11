@@ -71,6 +71,14 @@ class ImportanceMaker
         return helper_.importances();
     }
 
+    /// Retrieves the fast prop importances and deletes the corresponding
+    /// entries.
+    std::vector<Float> retrieve_fast_prop(
+        const std::vector<helpers::ColumnDescription>& _fast_prop_descs )
+    {
+        return helper_.retrieve_fast_prop( _fast_prop_descs );
+    }
+
     /// Transfers all values marked population to an equivalent value marked
     /// peripheral.
     void transfer_population() { helper_.transfer_population(); }

@@ -105,6 +105,81 @@ void DecisionTree::fit(
 
 // ----------------------------------------------------------------------------
 
+void DecisionTree::handle_fast_prop_importances(
+    const fastprop::subfeatures::FastPropContainer& _fast_prop_container,
+    const bool _is_subfeatures,
+    utils::ImportanceMaker* _importance_maker ) const
+{
+    const auto is_fast_prop = []( const std::string& _name ) -> bool {
+        return _name.find( helpers::Macros::fast_prop_feature() ) !=
+               std::string::npos;
+    };
+
+    const auto make_col_descs =
+        []( const std::string& _marker,
+            const std::string& _table,
+            const std::string& _name ) -> helpers::ColumnDescription {
+        return helpers::ColumnDescription( _marker, _table, _name );
+    };
+
+    const auto make_col_descs_output = std::bind(
+        make_col_descs,
+        helpers::ColumnDescription::POPULATION,
+        output().name(),
+        std::placeholders::_1 );
+
+    const auto make_col_descs_input = std::bind(
+        make_col_descs,
+        helpers::ColumnDescription::PERIPHERAL,
+        input().name(),
+        std::placeholders::_1 );
+
+    const auto fast_prop_input =
+        peripheral_used() < _fast_prop_container.size()
+            ? _fast_prop_container.subcontainers( peripheral_used() )
+            : std::shared_ptr<const fastprop::subfeatures::FastPropContainer>();
+
+    if ( _fast_prop_container.has_fast_prop() )
+        {
+            const auto range = output().numericals_ |
+                               std::views::filter( is_fast_prop ) |
+                               std::views::transform( make_col_descs_output );
+
+            const auto descs =
+                stl::collect::vector<helpers::ColumnDescription>( range );
+
+            const auto importance_factors =
+                _importance_maker->retrieve_fast_prop( descs );
+
+            const auto importances =
+                _fast_prop_container.fast_prop().column_importances(
+                    importance_factors, _is_subfeatures );
+
+            _importance_maker->merge( importances );
+        }
+
+    if ( fast_prop_input && fast_prop_input->has_fast_prop() )
+        {
+            const auto range = input().numericals_ |
+                               std::views::filter( is_fast_prop ) |
+                               std::views::transform( make_col_descs_input );
+
+            const auto descs =
+                stl::collect::vector<helpers::ColumnDescription>( range );
+
+            const auto importance_factors =
+                _importance_maker->retrieve_fast_prop( descs );
+
+            const auto importances =
+                fast_prop_input->fast_prop().column_importances(
+                    importance_factors, _is_subfeatures );
+
+            _importance_maker->merge( importances );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
 Poco::JSON::Object::Ptr DecisionTree::to_json_obj() const
 {
     Poco::JSON::Object::Ptr obj( new Poco::JSON::Object );

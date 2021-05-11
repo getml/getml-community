@@ -1,6 +1,7 @@
 #ifndef STL_STL_HPP_
 #define STL_STL_HPP_
 
+#include <map>
 #include <numeric>
 #include <set>
 #include <sstream>

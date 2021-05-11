@@ -21,6 +21,13 @@ struct collect
         return arr;
     }
 
+    /// Generates a map from a range
+    template <class KeyType, class ValueType, class RangeType>
+    static std::map<KeyType, ValueType> map( RangeType range )
+    {
+        return std::map<KeyType, ValueType>( range.begin(), range.end() );
+    }
+
     /// Generates a string from a range
     template <class RangeType>
     static std::string string( RangeType range )

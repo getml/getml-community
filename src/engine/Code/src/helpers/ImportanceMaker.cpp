@@ -74,6 +74,30 @@ void ImportanceMaker::fill_zeros_from_columns(
 
 // ----------------------------------------------------------------------------
 
+std::vector<Float> ImportanceMaker::retrieve_fast_prop(
+    const std::vector<ColumnDescription>& _fast_prop_descs )
+{
+    std::vector<Float> importance_factors( _fast_prop_descs.size() );
+
+    for ( size_t i = 0; i < _fast_prop_descs.size(); ++i )
+        {
+            const auto it = importances_.find( _fast_prop_descs.at( i ) );
+
+            if ( it == importances_.end() )
+                {
+                    continue;
+                }
+
+            importance_factors.at( i ) = it->second;
+
+            importances_.erase( it );
+        }
+
+    return importance_factors;
+}
+
+// ----------------------------------------------------------------------------
+
 void ImportanceMaker::merge(
     const std::map<ColumnDescription, Float>& _importances )
 {

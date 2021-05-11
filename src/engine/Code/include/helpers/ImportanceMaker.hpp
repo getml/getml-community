@@ -33,6 +33,11 @@ class ImportanceMaker
     /// factors.
     void add_to_importance_factors( const size_t _ix, const Float _value );
 
+    /// Retrieves the fast prop importances and deletes the corresponding
+    /// entries.
+    std::vector<Float> retrieve_fast_prop(
+        const std::vector<ColumnDescription>& _fast_prop_descs );
+
     /// Adds all of the colnames with importance 0.0.
     void fill_zeros(
         const Placeholder& _pl,
@@ -93,6 +98,9 @@ class ImportanceMaker
     std::string population() const { return ColumnDescription::POPULATION; }
 
    private:
+    /// Adds the _value to fast_prop importance factors.
+    void add_to_fast_prop( const ColumnDescription& _desc, const Float _value );
+
     /// Adds all of the elements from this column.
     void fill_zeros_from_columns(
         const std::string& _marker,

@@ -36,6 +36,13 @@ class DecisionTree
         const std::vector<containers::Match>::iterator _begin,
         const std::vector<containers::Match>::iterator _end );
 
+    /// Moves the column importances from the fast prop columns to the
+    /// appropriate actual columns.
+    void handle_fast_prop_importances(
+        const fastprop::subfeatures::FastPropContainer& _fast_prop_container,
+        const bool _is_subfeatures,
+        utils::ImportanceMaker* _importance_maker ) const;
+
     /// Expresses DecisionTree as Poco::JSON::Object.
     Poco::JSON::Object::Ptr to_json_obj() const;
 

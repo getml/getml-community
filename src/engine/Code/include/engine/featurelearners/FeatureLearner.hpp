@@ -59,6 +59,10 @@ class FeatureLearner : public AbstractFeatureLearner
     // --------------------------------------------------------
 
    public:
+    /// Calculates the column importances for this ensemble.
+    std::map<helpers::ColumnDescription, Float> column_importances(
+        const std::vector<Float>& _importance_factors ) const final;
+
     /// Returns the fingerprint of the feature learner (necessary to build
     /// the dependency graphs).
     Poco::JSON::Object::Ptr fingerprint() const final;
@@ -113,14 +117,6 @@ class FeatureLearner : public AbstractFeatureLearner
     std::shared_ptr<AbstractFeatureLearner> clone() const final
     {
         return std::make_shared<FeatureLearner<FeatureLearnerType>>( *this );
-    }
-
-    /// Calculates the column importances for this ensemble.
-    std::map<helpers::ColumnDescription, Float> column_importances(
-        const std::vector<Float>& _importance_factors ) const final
-    {
-        return feature_learner().column_importances(
-            _importance_factors, false );
     }
 
     /// Whether the feature learner is used for classification.
@@ -458,6 +454,36 @@ namespace engine
 {
 namespace featurelearners
 {
+// ----------------------------------------------------------------------------
+
+template <typename FeatureLearnerType>
+std::map<helpers::ColumnDescription, Float>
+FeatureLearner<FeatureLearnerType>::column_importances(
+    const std::vector<Float>& _importance_factors ) const
+{
+    const auto is_non_zero = []( const auto& p ) -> bool {
+        return p.second > 0.0;
+    };
+
+    const auto filter_non_zeros = [is_non_zero]( const auto& _importances ) {
+        return stl::collect::map<helpers::ColumnDescription, Float>(
+            _importances | std::views::filter( is_non_zero ) );
+    };
+
+    if constexpr ( !has_propositionalization_ )
+        {
+            return filter_non_zeros( feature_learner().column_importances(
+                _importance_factors, false ) );
+        }
+
+    if constexpr ( has_propositionalization_ )
+        {
+            assert_true( fast_prop_container_ );
+            return filter_non_zeros( feature_learner().column_importances(
+                _importance_factors, *fast_prop_container_, false ) );
+        }
+}
+
 // ----------------------------------------------------------------------------
 
 template <typename FeatureLearnerType>

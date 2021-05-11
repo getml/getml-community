@@ -55,11 +55,6 @@ class TimeSeriesModel
         const std::string &_population_table_name,
         const size_t _num_peripherals ) const;
 
-    /// Calculates the column importances for this ensemble.
-    std::map<helpers::ColumnDescription, Float> column_importances(
-        const std::vector<Float> &_importance_factors,
-        const bool _is_subfeatures ) const;
-
     /// Creates a modified version of the population table and the peripheral
     /// tables.
     std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
@@ -91,6 +86,53 @@ class TimeSeriesModel
     // -----------------------------------------------------------------
 
    public:
+    /// Calculates the column importances for this ensemble.
+    template <
+        typename FE = FEType,
+        typename std::enable_if<
+            !std::is_same<FE, fastprop::algorithm::FastProp>::value,
+            int>::type = 0>
+    std::map<helpers::ColumnDescription, Float> column_importances(
+        const std::vector<Float> &_importance_factors,
+        const fastprop::subfeatures::FastPropContainer &_fast_prop_container,
+        const bool _is_subfeatures ) const
+    {
+        const auto importances = model().column_importances(
+            _importance_factors, _fast_prop_container, _is_subfeatures );
+
+        auto importance_maker = helpers::ImportanceMaker( importances );
+
+        for ( const auto &[desc, _] : importances )
+            {
+                transfer_importance_value( desc, &importance_maker );
+            }
+
+        return importance_maker.importances();
+    }
+
+    /// Calculates the column importances for this ensemble.
+    template <
+        typename FE = FEType,
+        typename std::enable_if<
+            std::is_same<FE, fastprop::algorithm::FastProp>::value,
+            int>::type = 0>
+    std::map<helpers::ColumnDescription, Float> column_importances(
+        const std::vector<Float> &_importance_factors,
+        const bool _is_subfeatures ) const
+    {
+        const auto importances =
+            model().column_importances( _importance_factors, _is_subfeatures );
+
+        auto importance_maker = helpers::ImportanceMaker( importances );
+
+        for ( const auto &[desc, _] : importances )
+            {
+                transfer_importance_value( desc, &importance_maker );
+            }
+
+        return importance_maker.importances();
+    }
+
     /// Whether there are mappings
     const bool has_mappings() const { return model().has_mappings(); }
 
@@ -346,27 +388,6 @@ std::string TimeSeriesModel<FEType>::additional_staging_table(
     return sql.str();
 
     // ------------------------------------------------------------------------
-}
-
-// ----------------------------------------------------------------------------
-
-template <class FEType>
-std::map<helpers::ColumnDescription, Float>
-TimeSeriesModel<FEType>::column_importances(
-    const std::vector<Float> &_importance_factors,
-    const bool _is_subfeatures ) const
-{
-    const auto importances =
-        model().column_importances( _importance_factors, _is_subfeatures );
-
-    auto importance_maker = helpers::ImportanceMaker( importances );
-
-    for ( const auto &[desc, _] : importances )
-        {
-            transfer_importance_value( desc, &importance_maker );
-        }
-
-    return importance_maker.importances();
 }
 
 // ----------------------------------------------------------------------------

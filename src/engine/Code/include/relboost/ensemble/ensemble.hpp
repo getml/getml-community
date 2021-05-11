@@ -22,6 +22,8 @@
 
 #include "strings/strings.hpp"
 
+#include "fastprop/subfeatures/subfeatures.hpp"
+
 #include "relboost/Float.hpp"
 #include "relboost/Int.hpp"
 
