@@ -12,6 +12,8 @@
 
 #include "strings/strings.hpp"
 
+#include "fastprop/subfeatures/subfeatures.hpp"
+
 #include "relmt/Float.hpp"
 #include "relmt/Int.hpp"
 
