@@ -345,7 +345,7 @@ std::string DecisionTree::to_sql(
     const std::string &_feature_prefix,
     const std::string &_feature_num,
     const bool _use_timestamps,
-    const bool _has_subfeatures ) const
+    const std::tuple<bool, bool, bool> _has_subfeatures ) const
 {
     // -------------------------------------------------------------------
 
@@ -392,10 +392,31 @@ std::string DecisionTree::to_sql(
 
     // -------------------------------------------------------------------
 
-    if ( _has_subfeatures )
+    const auto [has_normal_subfeatures, output_has_prop, input_has_prop] =
+        _has_subfeatures;
+
+    if ( has_normal_subfeatures )
         {
             sql << helpers::SQLGenerator::make_subfeature_joins(
                 _feature_prefix, ix_perip_used() );
+        }
+
+    if ( output_has_prop )
+        {
+            sql << helpers::SQLGenerator::make_subfeature_joins(
+                _feature_prefix,
+                ix_perip_used(),
+                "t1",
+                "_PROPOSITIONALIZATION" );
+        }
+
+    if ( input_has_prop )
+        {
+            sql << helpers::SQLGenerator::make_subfeature_joins(
+                _feature_prefix,
+                ix_perip_used(),
+                "t2",
+                "_PROPOSITIONALIZATION" );
         }
 
     // -------------------------------------------------------------------

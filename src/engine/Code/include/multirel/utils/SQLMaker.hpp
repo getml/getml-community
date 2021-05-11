@@ -107,6 +107,10 @@ class SQLMaker
         const std::string& _name,
         const bool _is_greater ) const;
 
+    /// Generates the colname to display in the SQL code.
+    std::string make_colname(
+        const std::string& _colname, const std::string& _alias ) const;
+
     /// Transforms the time stamps diff into SQLite-compliant code.
     std::string make_time_stamp_diff(
         const containers::Placeholder& _input,

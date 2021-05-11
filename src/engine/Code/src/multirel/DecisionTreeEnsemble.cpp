@@ -996,8 +996,22 @@ std::vector<std::string> DecisionTreeEnsemble::to_sql(
 
             assert_true( p < placeholder().joined_tables_.size() );
 
-            const bool has_subfeatures =
-                placeholder().joined_tables_.at( p ).joined_tables_.size() > 0;
+            const auto &prop_out = placeholder().propositionalization_;
+
+            const auto &prop_in =
+                placeholder().joined_tables_.at( p ).propositionalization_;
+
+            const bool has_normal_subfeatures = std::any_of(
+                prop_in.begin(), prop_in.end(), std::logical_not() );
+
+            const bool output_has_prop = std::any_of(
+                prop_out.begin(), prop_out.end(), std::identity() );
+
+            const bool input_has_prop =
+                std::any_of( prop_in.begin(), prop_in.end(), std::identity() );
+
+            const auto has_subfeatures = std::make_tuple(
+                has_normal_subfeatures, output_has_prop, input_has_prop );
 
             sql.push_back( trees().at( i ).to_sql(
                 *_categories,

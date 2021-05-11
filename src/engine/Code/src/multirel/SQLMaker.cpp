@@ -288,6 +288,8 @@ std::string SQLMaker::condition_smaller(
 
 // ----------------------------------------------------------------------------
 
+// ----------------------------------------------------------------------------
+
 std::string SQLMaker::get_name(
     const std::string& _feature_prefix,
     const containers::Placeholder& _input,
@@ -295,12 +297,6 @@ std::string SQLMaker::get_name(
     const size_t _column_used,
     const enums::DataUsed& _data_used ) const
 {
-    const auto make_colname = []( const std::string& _colname,
-                                  const std::string& _alias ) -> std::string {
-        return _alias + ".\"" +
-               helpers::SQLGenerator::make_colname( _colname ) + "\"";
-    };
-
     switch ( _data_used )
         {
             case enums::DataUsed::x_perip_categorical:
@@ -527,6 +523,35 @@ std::string SQLMaker::list_words(
     words << " )";
 
     return words.str();
+}
+
+// ----------------------------------------------------------------------------
+
+std::string SQLMaker::make_colname(
+    const std::string& _colname, const std::string& _alias ) const
+{
+    if ( _colname.find( helpers::Macros::fast_prop_feature() ) !=
+         std::string::npos )
+        {
+            const auto stripped = helpers::StringReplacer::replace_all(
+                _colname, helpers::Macros::fast_prop_feature(), "" );
+
+            const auto pos = stripped.rfind( "_" );
+
+            assert_true( pos != std::string::npos );
+
+            const auto alias = "p_" + stripped.substr( 0, pos );
+
+            return alias + ".\"" +
+                   helpers::StringReplacer::replace_all(
+                       _colname,
+                       helpers::Macros::fast_prop_feature(),
+                       "feature_" ) +
+                   "\"";
+        }
+
+    return _alias + ".\"" + helpers::SQLGenerator::make_colname( _colname ) +
+           "\"";
 }
 
 // ----------------------------------------------------------------------------
