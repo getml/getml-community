@@ -48,6 +48,13 @@ class DecisionTree
     /// Rebuilds the tree from a Poco::JSON::Object
     void from_json_obj( const Poco::JSON::Object &_json_obj );
 
+    /// Moves the column importances from the fast prop columns to the
+    /// appropriate actual columns.
+    void handle_fast_prop_importances(
+        const fastprop::subfeatures::FastPropContainer &_fast_prop_container,
+        const bool _is_subfeatures,
+        utils::ImportanceMaker *_importance_maker ) const;
+
     /// Copy constructor
     DecisionTree &operator=( const DecisionTree &_other );
 

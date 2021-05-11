@@ -41,6 +41,8 @@
 
 #include "strings/strings.hpp"
 
+#include "fastprop/subfeatures/subfeatures.hpp"
+
 #include "multirel/Float.hpp"
 #include "multirel/Int.hpp"
 

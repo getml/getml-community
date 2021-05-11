@@ -142,6 +142,7 @@ DecisionTreeEnsemble::column_importances(
             const auto importances = column_importance_for_tree(
                 _importance_factors.at( i ),
                 _fast_prop_container,
+                _is_subfeatures,
                 trees().at( i ) );
 
             importance_maker.merge( importances );
@@ -161,6 +162,7 @@ std::map<helpers::ColumnDescription, Float>
 DecisionTreeEnsemble::column_importance_for_tree(
     const Float _importance_factor,
     const fastprop::subfeatures::FastPropContainer &_fast_prop_container,
+    const bool _is_subfeatures,
     const decisiontrees::DecisionTree &_tree ) const
 {
     if ( _importance_factor == 0.0 )
@@ -205,6 +207,9 @@ DecisionTreeEnsemble::column_importance_for_tree(
 
             importance_maker.merge( importances_sum );
         }
+
+    _tree.handle_fast_prop_importances(
+        _fast_prop_container, _is_subfeatures, &importance_maker );
 
     importance_maker.normalize();
 

@@ -58,6 +58,7 @@ class DecisionTreeEnsemble
     std::map<helpers::ColumnDescription, Float> column_importance_for_tree(
         const Float _importance_factors,
         const fastprop::subfeatures::FastPropContainer &_fast_prop_container,
+        const bool _is_subfeatures,
         const decisiontrees::DecisionTree &_tree ) const;
 
     /// Calculates feature importances
