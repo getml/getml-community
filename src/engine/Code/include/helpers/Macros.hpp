@@ -43,6 +43,11 @@ class Macros
     static std::vector<std::string> parse_join_key_name(
         const std::string& _jk_name );
 
+    /// Extracts the name of the original table and the original column from a
+    /// table that has been joined.
+    static std::pair<std::string, std::string> parse_table_colname(
+        const std::string& _table, const std::string& _colname );
+
     /// Extracts all relevant parameters from the output of split_joined_name.
     /// Effectively reverses make_table_name(...).
     static std::tuple<
@@ -76,9 +81,6 @@ class Macros
     static std::string remove_text_field( const std::string& _from_table );
 
     static std::string remove_time_diff( const std::string& _from_colname );
-
-    static std::pair<std::string, std::string> parse_table_colname(
-        const std::string& _table, const std::string& _colname );
 
    public:
     static std::string alias() { return "$GETML_JOIN_PARAM_ALIAS"; }

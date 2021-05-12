@@ -218,9 +218,7 @@ class DataFrame
                     }
             }
 
-        throw std::invalid_argument(
-            "Data frame '" + name_ +
-            "' contains no categorical column named '" + _name + "'!" );
+        throw_column_does_not_exist( _name, "categorical column" );
     }
 
     /// Trivial accessor
@@ -410,9 +408,7 @@ class DataFrame
                     }
             }
 
-        throw std::invalid_argument(
-            "Data frame '" + name_ + "' contains no join key named '" + _name +
-            "'!" );
+        throw_column_does_not_exist( _name, "join key" );
     }
 
     /// Trivial accessor
@@ -446,9 +442,7 @@ class DataFrame
                     }
             }
 
-        throw std::invalid_argument(
-            "Data frame '" + name_ + "' contains no join key named '" + _name +
-            "'!" );
+        throw_column_does_not_exist( _name, "join key" );
     }
 
     /// Trivial accessor
@@ -529,9 +523,7 @@ class DataFrame
                     }
             }
 
-        throw std::invalid_argument(
-            "Data frame '" + name_ + "' contains no numerical column named '" +
-            _name + "'!" );
+        throw_column_does_not_exist( _name, "numerical column" );
     }
 
     /// Trivial setter
@@ -581,9 +573,7 @@ class DataFrame
                     }
             }
 
-        throw std::invalid_argument(
-            "Data frame '" + name_ + "' contains no target column named '" +
-            _name + "'!" );
+        throw_column_does_not_exist( _name, "target column" );
     }
 
     /// Trivial accessor
@@ -611,9 +601,7 @@ class DataFrame
                     }
             }
 
-        throw std::invalid_argument(
-            "Data frame '" + name_ +
-            "' contains no categorical column named '" + _name + "'!" );
+        throw_column_does_not_exist( _name, "text column" );
     }
 
     /// Trivial accessor
@@ -641,9 +629,7 @@ class DataFrame
                     }
             }
 
-        throw std::invalid_argument(
-            "Data frame '" + name_ + "' contains no time stamp named '" +
-            _name + "'!" );
+        throw_column_does_not_exist( _name, "time stamp" );
     }
 
     /// Trivial accessor
@@ -677,9 +663,7 @@ class DataFrame
                     }
             }
 
-        throw std::invalid_argument(
-            "Data frame '" + name_ +
-            "' contains no unused float column named '" + _name + "'!" );
+        throw_column_does_not_exist( _name, "unused float column" );
     }
 
     /// Trivial accessor
@@ -708,9 +692,7 @@ class DataFrame
                     }
             }
 
-        throw std::invalid_argument(
-            "Data frame '" + name_ +
-            "' contains no unused string column named '" + _name + "'!" );
+        throw_column_does_not_exist( _name, "unused string column" );
     }
 
     // -------------------------------
@@ -832,6 +814,17 @@ class DataFrame
         const std::string &_text ) const;
 
    private:
+    /// Throws an error that a particular column does not exist.
+    void throw_column_does_not_exist(
+        const std::string &_colname, const std::string &_coltype ) const
+    {
+        const auto [table, colname] =
+            helpers::Macros::parse_table_colname( name_, _colname );
+        throw std::invalid_argument(
+            "Data frame '" + table + "' contains no " + _coltype + " named '" +
+            helpers::SQLGenerator::make_colname( colname ) + "'!" );
+    }
+
     /// Records the current time as the last time something was changed.
     void update_last_change()
     {
