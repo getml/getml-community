@@ -357,6 +357,9 @@ std::string SQLGenerator::join_mapping(
 {
     // ------------------------------------------------------------------------
 
+    const bool is_text_field =
+        ( _name.find( Macros::text_field() ) != std::string::npos );
+
     const auto table_name = to_upper( make_staging_table_name( _name ) );
 
     const auto mapping_col = to_lower( _colname );
@@ -405,7 +408,7 @@ std::string SQLGenerator::join_mapping(
 
     // ------------------------------------------------------------------------
 
-    if ( _is_text )
+    if ( _is_text && !is_text_field )
         {
             return alter_table + set_to_zero + join_text() + drop_table;
         }
