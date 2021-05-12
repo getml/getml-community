@@ -462,6 +462,11 @@ class Pipeline
         const Poco::JSON::Object& _cmd,
         const containers::DataFrame& _population_df );
 
+    /// Generates the schemata needed for the SQL generation of the staging
+    /// tables.
+    std::pair<containers::Schema, std::vector<containers::Schema>>
+    make_staging_schemata() const;
+
     /// Implements such things as memory, horizon, many-to-joins etc.
     std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
     modify_data_frames(

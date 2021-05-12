@@ -40,6 +40,10 @@ containers::DataFrame TextFieldSplitter::remove_text_fields(
 
     for ( const auto name : names )
         {
+            auto col = df.text( name );
+            col.set_name( name + helpers::Macros::text_field() );
+            df.add_string_column(
+                col, containers::DataFrame::ROLE_UNUSED_STRING );
             df.remove_column( name );
         }
 
@@ -213,15 +217,16 @@ std::vector<std::string> TextFieldSplitter::to_sql(
                "\" AS\nWITH RECURSIVE\nsplit_text_field(i, field, word, "
                "rownum, n) AS (\n"
                "SELECT 1, field, get_word(field, 1), rownum, num_words(field)\n"
-               "FROM ( SELECT \"" +
+               "FROM ( SELECT t1.\"" +
                colname + "\" AS field, rowid AS rownum FROM \"" +
                staging_table +
-               "\" )\n"
+               "\" t1 )\n"
                "UNION ALL\n"
                "SELECT i + 1, field, get_word(field, i + 1), rownum, n FROM "
                "split_text_field\n"
-               "WHERE i < n\n"
-               "SELECT rownum, word FROM split_text_field;\n\n\n";
+               "WHERE i < n\n)\n"
+               "SELECT rownum, word AS \"" +
+               colname + "\" FROM split_text_field;\n\n\n";
     };
 
     return stl::collect::vector<std::string>(

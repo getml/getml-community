@@ -2331,6 +2331,65 @@ void Pipeline::make_predictor_impl(
 
 // ----------------------------------------------------------------------------
 
+std::pair<containers::Schema, std::vector<containers::Schema>>
+Pipeline::make_staging_schemata() const
+{
+    const auto has_text_field_marker =
+        []( const std::string& _colname ) -> bool {
+        const auto pos = _colname.find( helpers::Macros::text_field() );
+        return pos != std::string::npos;
+    };
+
+    const auto remove_text_field_marker =
+        []( const std::string& _colname ) -> std::string {
+        const auto pos = _colname.find( helpers::Macros::text_field() );
+        assert_true( pos != std::string::npos );
+        return _colname.substr( 0, pos );
+    };
+
+    const auto add_text_fields =
+        [has_text_field_marker, remove_text_field_marker](
+            const containers::Schema& _schema ) -> containers::Schema {
+        const auto text_fields = stl::collect::vector<std::string>(
+            _schema.unused_strings_ |
+            std::views::filter( has_text_field_marker ) |
+            std::views::transform( remove_text_field_marker ) );
+
+        return containers::Schema{
+            .categoricals_ = _schema.categoricals_,
+            .discretes_ = _schema.discretes_,
+            .join_keys_ = _schema.join_keys_,
+            .name_ = _schema.name_,
+            .numericals_ = _schema.numericals_,
+            .targets_ = _schema.targets_,
+            .text_ = stl::join::vector<std::string>(
+                { _schema.text_, text_fields } ),
+            .time_stamps_ = _schema.time_stamps_,
+            .unused_floats_ = _schema.unused_floats_,
+            .unused_strings_ = _schema.unused_strings_ };
+    };
+
+    const auto is_not_text_field =
+        []( const containers::Schema& _schema ) -> bool {
+        return _schema.name_.find( helpers::Macros::text_field() ) ==
+               std::string::npos;
+    };
+
+    const auto staging_schema_population =
+        add_text_fields( *modified_population_schema() );
+
+    const auto staging_schema_peripheral =
+        stl::collect::vector<containers::Schema>(
+            *modified_peripheral_schema() |
+            std::views::filter( is_not_text_field ) |
+            std::views::transform( add_text_fields ) );
+
+    return std::make_pair(
+        staging_schema_population, staging_schema_peripheral );
+}
+
+// ----------------------------------------------------------------------------
+
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
 Pipeline::modify_data_frames(
     const containers::DataFrame& _population_df,
@@ -2999,21 +3058,14 @@ std::vector<std::string> Pipeline::staging_to_sql( const bool _targets ) const
     const auto peripheral_needs_targets =
         placeholder->infer_needs_targets( *peripheral_names );
 
-    const auto is_not_text_field =
-        []( const containers::Schema& _schema ) -> bool {
-        return _schema.name_.find( helpers::Macros::text_field() ) ==
-               std::string::npos;
-    };
-
-    const auto peripheral_schema = stl::collect::vector<containers::Schema>(
-        *modified_peripheral_schema() |
-        std::views::filter( is_not_text_field ) );
+    const auto [staging_schema_population, staging_schema_peripheral] =
+        make_staging_schemata();
 
     return helpers::SQLGenerator::make_staging_tables(
         population_needs_targets,
         peripheral_needs_targets,
-        *modified_population_schema(),
-        peripheral_schema );
+        staging_schema_population,
+        staging_schema_peripheral );
 }
 
 // ----------------------------------------------------------------------------

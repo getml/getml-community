@@ -37,6 +37,12 @@ std::vector<std::string> DataFrameReader::make_colnames(
             colnames.push_back( colname );
         }
 
+    for ( size_t i = 0; i < _df.num_text(); ++i )
+        {
+            const auto& colname = _df.text( i ).name();
+            colnames.push_back( colname );
+        }
+
     for ( size_t i = 0; i < _df.num_time_stamps(); ++i )
         {
             const auto& colname = _df.time_stamp( i ).name();
@@ -101,6 +107,11 @@ std::vector<io::Datatype> DataFrameReader::make_coltypes( const DataFrame& _df )
     for ( size_t i = 0; i < _df.num_targets(); ++i )
         {
             coltypes.push_back( io::Datatype::double_precision );
+        }
+
+    for ( size_t i = 0; i < _df.num_text(); ++i )
+        {
+            coltypes.push_back( io::Datatype::string );
         }
 
     for ( size_t i = 0; i < _df.num_time_stamps(); ++i )
@@ -176,6 +187,12 @@ std::vector<std::string> DataFrameReader::next_line()
         {
             const auto& val = df_.target( i )[rownum_];
             result[col++] = io::Parser::to_precise_string( val );
+        }
+
+    for ( size_t i = 0; i < df_.num_text(); ++i )
+        {
+            const auto& val = df_.text( i )[rownum_];
+            result[col++] = val.str();
         }
 
     for ( size_t i = 0; i < df_.num_time_stamps(); ++i )

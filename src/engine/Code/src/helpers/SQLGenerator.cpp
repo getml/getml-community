@@ -372,10 +372,8 @@ std::string SQLGenerator::join_mapping(
     const auto join_text =
         [&table_name, &mapping_col, &orig_col]() -> std::string {
         return "UPDATE \"" + table_name + "\"\nSET \"" + mapping_col +
-               "\" = t3.\"avg_value\"\nFROM \"" + table_name +
-               "\",\n     ( SELECT t1.\"" + orig_col +
-               "\", AVG( t2.\"value\" ) AS \"avg_value\"\n       FROM "
-               "\"" +
+               "\" = t3.\"avg_value\"\nFROM ( SELECT t1.\"" + orig_col +
+               "\", AVG( t2.\"value\" ) AS \"avg_value\"\n       FROM \"" +
                table_name + "\" t1\n       LEFT JOIN \"" +
                to_upper( mapping_col ) + "\" t2\n       ON contains( t1.\"" +
                orig_col + "\", t2.\"key\" ) > 0\n       GROUP BY t1.\"" +
