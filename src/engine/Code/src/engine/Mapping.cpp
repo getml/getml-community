@@ -188,7 +188,9 @@ std::string Mapping::categorical_or_text_column_to_sql(
 
     const auto pairs = make_pairs( *_ptr, _weight_num );
 
-    std::string sql = make_table_header( _name, false );
+    std::stringstream sql;
+
+    sql << make_table_header( _name, false );
 
     for ( size_t i = 0; i < pairs.size(); ++i )
         {
@@ -202,15 +204,13 @@ std::string Mapping::categorical_or_text_column_to_sql(
 
             const std::string end = ( i == pairs.size() - 1 ) ? ";\n\n" : ",\n";
 
-            sql += begin + "('" + _categories->at( p.first ).str() + "', " +
-                   io::Parser::to_precise_string( p.second ) + ")" + end;
+            sql << begin << "('" << _categories->at( p.first ).str() << "', "
+                << io::Parser::to_precise_string( p.second ) << ")" << end;
         }
 
-    sql += helpers::SQLGenerator::join_mapping( table_name_, _name, _is_text );
+    sql << helpers::SQLGenerator::join_mapping( table_name_, _name, _is_text );
 
-    sql += "\n\n";
-
-    return sql;
+    return sql.str();
 }
 
 // ----------------------------------------------------
@@ -224,7 +224,9 @@ std::string Mapping::discrete_column_to_sql(
 
     const auto pairs = make_pairs( *_ptr, _weight_num );
 
-    std::string sql = make_table_header( _name, true );
+    std::stringstream sql;
+
+    sql << make_table_header( _name, true );
 
     for ( size_t i = 0; i < pairs.size(); ++i )
         {
@@ -234,15 +236,13 @@ std::string Mapping::discrete_column_to_sql(
 
             const std::string end = ( i == pairs.size() - 1 ) ? ";\n\n" : ",\n";
 
-            sql += begin + "(" + std::to_string( p.first ) + ", " +
-                   io::Parser::to_precise_string( p.second ) + ")" + end;
+            sql << begin << "(" << std::to_string( p.first ) << ", "
+                << io::Parser::to_precise_string( p.second ) << ")" << end;
         }
 
-    sql += helpers::SQLGenerator::join_mapping( table_name_, _name, false );
+    sql << helpers::SQLGenerator::join_mapping( table_name_, _name, false );
 
-    sql += "\n\n";
-
-    return sql;
+    return sql.str();
 }
 
 // ----------------------------------------------------
@@ -698,6 +698,8 @@ Mapping::fit_transform(
     vocabulary_ = vocabulary;
 
     submappings_ = fit_submappings( population, table_holder, {}, {} );
+
+    table_name_ = _population_df.name();
 
     std::tie( categorical_, categorical_names_ ) =
         fit_on_categoricals( population, {}, {} );

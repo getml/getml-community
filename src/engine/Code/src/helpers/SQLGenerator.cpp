@@ -357,45 +357,59 @@ std::string SQLGenerator::join_mapping(
 {
     // ------------------------------------------------------------------------
 
-    const auto table_name = make_staging_table_name( _name );
+    const auto table_name = to_upper( make_staging_table_name( _name ) );
+
+    const auto mapping_col = to_lower( _colname );
+
+    const auto pos = mapping_col.find( "__mapping_" );
+
+    assert_true( pos != std::string::npos );
+
+    const auto orig_col = mapping_col.substr( 0, pos );
 
     // ------------------------------------------------------------------------
 
     const auto join_text =
-        [&table_name]( const std::string& _colname ) -> std::string {
-        const auto extracted = to_lower( _colname );
-
-        return "UPDATE \"" + to_upper( table_name ) + "\"\nSET \"" +
-               to_lower( _colname ) + "\" = t3.\"avg_value\"\nFROM \"" +
-               table_name + "\",\n     ( SELECT t1.\"" + extracted +
+        [&table_name, &mapping_col, &orig_col]() -> std::string {
+        return "UPDATE \"" + table_name + "\"\nSET \"" + mapping_col +
+               "\" = t3.\"avg_value\"\nFROM \"" + table_name +
+               "\",\n     ( SELECT t1.\"" + orig_col +
                "\", AVG( t2.\"value\" ) AS \"avg_value\"\n       FROM "
                "\"" +
                table_name + "\" t1\n       LEFT JOIN \"" +
-               to_upper( _colname ) + "\" t2\n       ON contains( t1.\"" +
-               extracted + "\", t2.\"key\" ) > 0\n       GROUP BY t1.\"" +
-               extracted + "\" ) AS t3\nWHERE \"" + to_lower( table_name ) +
-               "\".\"" + extracted + "\" = t3.\"" + extracted + "\";\n\n";
+               to_upper( mapping_col ) + "\" t2\n       ON contains( t1.\"" +
+               orig_col + "\", t2.\"key\" ) > 0\n       GROUP BY t1.\"" +
+               orig_col + "\" ) AS t3\nWHERE \"" + table_name + "\".\"" +
+               orig_col + "\" = t3.\"" + orig_col + "\";\n\n";
     };
 
     // ------------------------------------------------------------------------
 
     const auto join_other =
-        [&table_name]( const std::string& _colname ) -> std::string {
-        return "UPDATE \"" + to_upper( table_name ) + "\"\nSET \"" +
-               to_lower( _colname ) + "\" = t2.\"value\"\nFROM \"" +
-               to_upper( _colname ) + "\" AS t2\nWHERE \"" +
-               to_upper( table_name ) + "\".\"" + to_lower( _colname ) +
+        [&table_name, &mapping_col, &orig_col]() -> std::string {
+        return "UPDATE \"" + table_name + "\"\nSET \"" + mapping_col +
+               "\" = t2.\"value\"\nFROM \"" + to_upper( mapping_col ) +
+               "\" AS t2\nWHERE \"" + table_name + "\".\"" + orig_col +
                "\" = t2.\"key\";\n\n";
     };
 
     // ------------------------------------------------------------------------
 
+    const std::string alter_table = "ALTER TABLE \"" + table_name +
+                                    "\" ADD COLUMN \"" + to_lower( _colname ) +
+                                    "\";\n\n";
+
+    const std::string drop_table =
+        "DROP TABLE IF EXISTS \"" + to_upper( _colname ) + "\";\n\n\n";
+
+    // ------------------------------------------------------------------------
+
     if ( _is_text )
         {
-            return join_text( _colname );
+            return alter_table + join_text() + drop_table;
         }
 
-    return join_other( _colname );
+    return alter_table + join_other() + drop_table;
 }
 
 // ----------------------------------------------------------------------------
@@ -479,26 +493,8 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
 {
     // ------------------------------------------------------------------------
 
-    const auto init_as_null = []( const std::string& _colname ) -> std::string {
-        return "CAST( NULL AS REAL ) AS \"" + to_lower( _colname ) + "\"";
-    };
-
-    // ------------------------------------------------------------------------
-
-    const auto is_mapping = []( const std::string& _colname ) -> bool {
-        return _colname.find( "__mapping_" ) != std::string::npos;
-    };
-
-    // ------------------------------------------------------------------------
-
-    const auto cast_column = [init_as_null, is_mapping](
-                                 const std::string& _colname,
+    const auto cast_column = []( const std::string& _colname,
                                  const std::string& _coltype ) -> std::string {
-        if ( is_mapping( _colname ) )
-            {
-                return init_as_null( make_colname( _colname ) );
-            }
-
         return "CAST( " + edit_colname( _colname, "t1" ) + " AS " + _coltype +
                " ) AS \"" + to_lower( make_colname( _colname ) ) + "\"";
     };
@@ -599,6 +595,11 @@ bool SQLGenerator::include_column( const std::string& _name )
         }
 
     if ( _name.find( Macros::multiple_join_key_begin() ) != std::string::npos )
+        {
+            return false;
+        }
+
+    if ( _name.find( "__mapping_" ) != std::string::npos )
         {
             return false;
         }
@@ -806,7 +807,8 @@ std::string SQLGenerator::make_staging_table_name( const std::string& _name )
             : "__" +
                   _name.substr( pos_text_field + Macros::text_field().size() );
 
-    return to_upper( get_table_name( _name ) ) + "__STAGING_TABLE_" + number;
+    return to_upper( get_table_name( _name ) ) + "__STAGING_TABLE_" + number +
+           to_upper( text_field_col );
 }
 
 // ----------------------------------------------------------------------------
