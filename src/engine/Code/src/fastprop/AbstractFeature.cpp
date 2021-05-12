@@ -153,8 +153,14 @@ std::string AbstractFeature::to_sql(
 
     if ( data_used_ == enums::DataUsed::subfeatures )
         {
-            sql << helpers::SQLGenerator::make_subfeature_joins(
-                _feature_prefix, peripheral_ );
+            const auto number = _feature_prefix +
+                                std::to_string( peripheral_ + 1 ) + "_" +
+                                std::to_string( input_col_ + 1 );
+
+            sql << "LEFT JOIN \"FEATURE_" << number << "\" f_" << number
+                << std::endl;
+
+            sql << "ON t2.rowid = f_" << number << ".\"rownum\"" << std::endl;
         }
 
     // -------------------------------------------------------------------

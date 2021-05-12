@@ -399,6 +399,9 @@ std::string SQLGenerator::join_mapping(
                                     "\" ADD COLUMN \"" + to_lower( _colname ) +
                                     "\";\n\n";
 
+    const std::string set_to_zero =
+        "UPDATE \"" + table_name + "\" SET \"" + mapping_col + "\" = 0.0;\n\n";
+
     const std::string drop_table =
         "DROP TABLE IF EXISTS \"" + to_upper( _colname ) + "\";\n\n\n";
 
@@ -406,10 +409,10 @@ std::string SQLGenerator::join_mapping(
 
     if ( _is_text )
         {
-            return alter_table + join_text() + drop_table;
+            return alter_table + set_to_zero + join_text() + drop_table;
         }
 
-    return alter_table + join_other() + drop_table;
+    return alter_table + set_to_zero + join_other() + drop_table;
 }
 
 // ----------------------------------------------------------------------------
