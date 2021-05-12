@@ -9,7 +9,7 @@ namespace textmining
 /// in that it can separate on more than just one character.
 struct StringSplitter
 {
-    static constexpr const char* separators_ = " ;,.!?-|\t\"\t\v\f\r\n%";
+    static constexpr const char* separators_ = " ;,.!?-|\t\"\t\v\f\r\n%'()[]{}";
 
     /// Splits a string into its individual components.
     static std::vector<std::string> split( const std::string& _str );
