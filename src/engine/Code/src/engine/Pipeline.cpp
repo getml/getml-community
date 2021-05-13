@@ -3091,17 +3091,12 @@ std::string Pipeline::to_sql(
     const auto sql =
         stl::join::vector<std::string>( { staging, preprocessing, features } );
 
-    const auto population = *JSON::get_object( obj(), "population_" );
-
-    const auto placeholder =
-        PlaceholderMaker::make_placeholder( population, "t1" );
-
     const auto autofeatures = make_feature_names();
 
     const auto target_names = _targets ? targets() : std::vector<std::string>();
 
     return helpers::SQLGenerator::make_sql(
-        placeholder.name_,
+        modified_population_schema()->name_,
         autofeatures,
         sql,
         target_names,
