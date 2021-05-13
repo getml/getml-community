@@ -628,8 +628,7 @@ std::string SQLGenerator::make_feature_table(
     sql += make_select(
         _main_table, _autofeatures, _targets, _categorical, _numerical );
 
-    const auto main_table =
-        helpers::SQLGenerator::get_table_name( _main_table );
+    const auto main_table = make_staging_table_name( _main_table );
 
     sql += "FROM \"" + main_table + "\" t1\n";
 
