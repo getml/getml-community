@@ -237,10 +237,6 @@ std::string DecisionTree::to_sql(
 
     sql << "SELECT ";
 
-    sql << loss_function().type() << "( " << std::endl;
-
-    sql << tab << "CASE" << std::endl;
-
     // -------------------------------------------------------------------
 
     std::vector<std::string> conditions;
@@ -258,17 +254,31 @@ std::string DecisionTree::to_sql(
         "",
         &conditions );
 
-    for ( size_t i = 0; i < conditions.size(); ++i )
+    if ( conditions.size() > 1 )
         {
-            sql << tab << tab << conditions.at( i ) << std::endl;
-        }
+            sql << loss_function().type() << "( " << std::endl;
 
-    sql << tab << tab << "ELSE NULL" << std::endl;
+            sql << tab << "CASE" << std::endl;
+
+            for ( size_t i = 0; i < conditions.size(); ++i )
+                {
+                    sql << tab << tab << conditions.at( i ) << std::endl;
+                }
+
+            sql << tab << tab << "ELSE NULL" << std::endl;
+
+            sql << tab << "END" << std::endl;
+
+            sql << ") ";
+        }
+    else
+        {
+            sql << 0.0 << " ";
+        }
 
     // -------------------------------------------------------------------
 
-    sql << tab << "END" << std::endl
-        << ") AS \"feature_" << _feature_prefix << _feature_num << "\","
+    sql << "AS \"feature_" << _feature_prefix << _feature_num << "\","
         << std::endl;
 
     sql << tab << " t1.rowid AS \"rownum\"" << std::endl;
