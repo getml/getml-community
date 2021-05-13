@@ -216,9 +216,8 @@ std::string ConditionMaker::condition_greater(
                         helpers::SQLGenerator::make_subfeature_identifier(
                             _feature_prefix, peripheral_used_ );
 
-                    return "( COALESCE( f_" + number + ".\"feature_" + number +
-                           "_" + std::to_string( _split.column_ + 1 ) +
-                           "\", 0.0 ) > " +
+                    return "( f_" + number + ".\"feature_" + number + "_" +
+                           std::to_string( _split.column_ + 1 ) + "\" > " +
                            std::to_string( _split.critical_value_ ) + " )";
                 }
 
@@ -486,10 +485,10 @@ std::string ConditionMaker::condition_smaller(
                         helpers::SQLGenerator::make_subfeature_identifier(
                             _feature_prefix, peripheral_used_ );
 
-                    return "( COALESCE( f_" + number + ".\"feature_" + number +
-                           "_" + std::to_string( _split.column_ + 1 ) +
-                           "\", 0.0 ) <= " +
-                           std::to_string( _split.critical_value_ ) + " )";
+                    return "( f_" + number + ".\"feature_" + number + "_" +
+                           std::to_string( _split.column_ + 1 ) +
+                           "\" <= " + std::to_string( _split.critical_value_ ) +
+                           " )";
                 }
 
             case enums::DataUsed::text_input:
