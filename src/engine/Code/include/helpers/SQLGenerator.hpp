@@ -147,13 +147,6 @@ class SQLGenerator
     /// Determines whether we want to include a column.
     static bool include_column( const std::string& _name );
 
-    /// Generates the queries for the join keys.
-    static std::string make_join_keys(
-        const std::string& _output_join_keys_name,
-        const std::string& _input_join_keys_name,
-        const std::string& _output_alias,
-        const std::string& _input_alias );
-
     /// Generates the columns for a single staging table.
     static std::vector<std::string> make_staging_columns(
         const bool& _include_targets, const Schema& _schema );

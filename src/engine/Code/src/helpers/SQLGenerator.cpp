@@ -330,8 +330,12 @@ std::string SQLGenerator::handle_many_to_one_joins(
 
             sql << "LEFT JOIN \"" << name << "\" " << alias << std::endl;
 
-            sql << make_join_keys(
-                join_key, other_join_key, joined_to_alias, alias );
+            sql << "ON ";
+
+            sql << edit_colname( join_key, joined_to_alias );
+            sql << " = ";
+            sql << edit_colname( other_join_key, alias );
+            sql << std::endl;
 
             if ( time_stamp != "" && other_time_stamp != "" )
                 {
@@ -428,36 +432,6 @@ std::string SQLGenerator::make_epoch_time(
 
 // ----------------------------------------------------------------------------
 
-std::string SQLGenerator::make_join_keys(
-    const std::string& _output_join_keys_name,
-    const std::string& _input_join_keys_name,
-    const std::string& _output_alias,
-    const std::string& _input_alias )
-{
-    if ( _output_join_keys_name.find( Macros::multiple_join_key_sep() ) !=
-         std::string::npos )
-        {
-            return handle_multiple_join_keys(
-                _output_join_keys_name,
-                _input_join_keys_name,
-                _output_alias,
-                _input_alias );
-        }
-
-    std::stringstream sql;
-
-    sql << "ON ";
-
-    sql << edit_colname( _output_join_keys_name, _output_alias );
-    sql << " = ";
-    sql << edit_colname( _input_join_keys_name, _input_alias );
-    sql << std::endl;
-
-    return sql.str();
-}
-
-// ----------------------------------------------------------------------------
-
 std::string SQLGenerator::make_joins(
     const std::string& _output_name,
     const std::string& _input_name,
@@ -474,8 +448,26 @@ std::string SQLGenerator::make_joins(
 
     sql << "LEFT JOIN \"" << input_name << "\" t2" << std::endl;
 
-    sql << make_join_keys(
-        _output_join_keys_name, _input_join_keys_name, "t1", "t2" );
+    sql << "ON ";
+
+    if ( _output_join_keys_name == Macros::no_join_key() ||
+         _output_join_keys_name == Macros::self_join_key() )
+        {
+            assert_true( _output_join_keys_name == _input_join_keys_name );
+
+            sql << "1 = 1 " << std::endl;
+        }
+    else
+        {
+            assert_true(
+                _input_join_keys_name != Macros::no_join_key() &&
+                _input_join_keys_name != Macros::self_join_key() );
+
+            sql << "t1.\"" << make_colname( _output_join_keys_name ) << "\"";
+            sql << " = ";
+            sql << "t2.\"" << make_colname( _input_join_keys_name ) << "\"";
+            sql << std::endl;
+        }
 
     return sql.str();
 }
@@ -631,8 +623,6 @@ std::string SQLGenerator::make_feature_table(
     const auto main_table = make_staging_table_name( _main_table );
 
     sql += "FROM \"" + main_table + "\" t1\n";
-
-    sql += handle_many_to_one_joins( _main_table, "t1" );
 
     sql += "ORDER BY t1.rowid;\n\n";
 
