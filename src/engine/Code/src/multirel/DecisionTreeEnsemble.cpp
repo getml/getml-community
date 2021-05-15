@@ -367,7 +367,7 @@ void DecisionTreeEnsemble::fit(
 
     auto same_units = SameUnitIdentifier::identify_same_units(
         _table_holder->peripheral_tables(),
-        _table_holder->main_tables()[0].df() );
+        _table_holder->main_tables().at( 0 ).df() );
 
     // ----------------------------------------------------------------
     // containers::Match weights are needed for the random-forest-like

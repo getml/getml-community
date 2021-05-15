@@ -30,14 +30,15 @@ SameUnitIdentifier::get_same_units_categorical(
         {
             debug_log( "identify_same_units: Adding inputs (categorical)..." );
 
-            for ( size_t j = 0; j < _peripheral_tables[i].num_categoricals();
+            for ( size_t j = 0;
+                  j < _peripheral_tables.at( i ).num_categoricals();
                   ++j )
                 {
                     add_to_unit_map(
                         enums::DataUsed::x_perip_categorical,
                         static_cast<Int>( i ),
                         static_cast<Int>( j ),
-                        _peripheral_tables[i].categorical_col( j ),
+                        _peripheral_tables.at( i ).categorical_col( j ),
                         &unit_map );
                 }
         }

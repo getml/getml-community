@@ -67,9 +67,10 @@ CategoricalBinner<MatchType, GetValueType>::bin(
 
     // ---------------------------------------------------------------------------
     // There is a possibility that all critical values are NAN in all processes.
-    // This accounts for this edge case.
+    // This accounts for this edge case. They can be equal though, for instance
+    // for same units categorical in Multirel.
 
-    if ( _min >= _max )
+    if ( _min > _max )
         {
             return std::make_pair(
                 std::vector<size_t>( 0 ),
@@ -186,7 +187,7 @@ std::vector<size_t> CategoricalBinner<MatchType, GetValueType>::make_indptr(
     const typename std::vector<MatchType>::const_iterator _begin,
     const typename std::vector<MatchType>::const_iterator _nan_begin )
 {
-    assert_true( _max > _min );
+    assert_true( _max >= _min );
 
     const auto num_bins = _max - _min + 1;
 
