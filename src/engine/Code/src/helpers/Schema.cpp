@@ -59,7 +59,7 @@ Poco::JSON::Object::Ptr Schema::to_json_obj() const
 
     obj->set( "targets_", jsonutils::JSON::vector_to_array_ptr( targets_ ) );
 
-    obj->set( "text_", jsonutils::JSON::vector_to_array_ptr( targets_ ) );
+    obj->set( "text_", jsonutils::JSON::vector_to_array_ptr( text_ ) );
 
     obj->set(
         "time_stamps_", jsonutils::JSON::vector_to_array_ptr( time_stamps_ ) );
