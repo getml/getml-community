@@ -296,9 +296,11 @@ std::string SQLGenerator::handle_multiple_join_keys(
                 }
             else
                 {
-                    sql << make_colname( join_keys1.at( i ) );
+                    sql << _output_alias << ".\""
+                        << make_colname( join_keys1.at( i ) ) << "\"";
                     sql << " = ";
-                    sql << make_colname( join_keys2.at( i ) );
+                    sql << _input_alias << ".\""
+                        << make_colname( join_keys2.at( i ) ) << "\"";
                     sql << std::endl;
                 }
 
