@@ -463,7 +463,7 @@ std::string SQLGenerator::make_joins(
         {
             assert_true( _output_join_keys_name == _input_join_keys_name );
 
-            sql << "ON 1 =1 " << std::endl;
+            sql << "ON 1 = 1" << std::endl;
         }
     else
         {
