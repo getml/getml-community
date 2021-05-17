@@ -264,7 +264,8 @@ std::string SQLGenerator::handle_multiple_join_keys(
     const std::string& _output_join_keys_name,
     const std::string& _input_join_keys_name,
     const std::string& _output_alias,
-    const std::string& _input_alias )
+    const std::string& _input_alias,
+    const bool _for_staging )
 {
     const auto sep = Macros::multiple_join_key_sep();
 
@@ -276,8 +277,9 @@ std::string SQLGenerator::handle_multiple_join_keys(
     throw_unless(
         join_keys1.size() == join_keys2.size(),
         "Error while handling multiple join keys: Number of join keys does "
-        "not "
-        "match!" );
+        "not match: " +
+            std::to_string( join_keys1.size() ) + " vs. " +
+            std::to_string( join_keys2.size() ) );
 
     std::stringstream sql;
 
@@ -285,10 +287,20 @@ std::string SQLGenerator::handle_multiple_join_keys(
 
     for ( size_t i = 0; i < join_keys1.size(); ++i )
         {
-            sql << edit_colname( join_keys1.at( i ), _output_alias );
-            sql << " = ";
-            sql << edit_colname( join_keys2.at( i ), _input_alias );
-            sql << std::endl;
+            if ( _for_staging )
+                {
+                    sql << edit_colname( join_keys1.at( i ), _output_alias );
+                    sql << " = ";
+                    sql << edit_colname( join_keys2.at( i ), _input_alias );
+                    sql << std::endl;
+                }
+            else
+                {
+                    sql << make_colname( join_keys1.at( i ) );
+                    sql << " = ";
+                    sql << make_colname( join_keys2.at( i ) );
+                    sql << std::endl;
+                }
 
             if ( i != join_keys1.size() - 1 )
                 {
@@ -330,12 +342,8 @@ std::string SQLGenerator::handle_many_to_one_joins(
 
             sql << "LEFT JOIN \"" << name << "\" " << alias << std::endl;
 
-            sql << "ON ";
-
-            sql << edit_colname( join_key, joined_to_alias );
-            sql << " = ";
-            sql << edit_colname( other_join_key, alias );
-            sql << std::endl;
+            sql << handle_multiple_join_keys(
+                join_key, other_join_key, joined_to_alias, alias, FOR_STAGING );
 
             if ( time_stamp != "" && other_time_stamp != "" )
                 {
@@ -448,14 +456,12 @@ std::string SQLGenerator::make_joins(
 
     sql << "LEFT JOIN \"" << input_name << "\" t2" << std::endl;
 
-    sql << "ON ";
-
     if ( _output_join_keys_name == Macros::no_join_key() ||
          _output_join_keys_name == Macros::self_join_key() )
         {
             assert_true( _output_join_keys_name == _input_join_keys_name );
 
-            sql << "1 = 1 " << std::endl;
+            sql << "ON 1 =1 " << std::endl;
         }
     else
         {
@@ -463,10 +469,12 @@ std::string SQLGenerator::make_joins(
                 _input_join_keys_name != Macros::no_join_key() &&
                 _input_join_keys_name != Macros::self_join_key() );
 
-            sql << "t1.\"" << make_colname( _output_join_keys_name ) << "\"";
-            sql << " = ";
-            sql << "t2.\"" << make_colname( _input_join_keys_name ) << "\"";
-            sql << std::endl;
+            sql << handle_multiple_join_keys(
+                _output_join_keys_name,
+                _input_join_keys_name,
+                "t1",
+                "t2",
+                NOT_FOR_STAGING );
         }
 
     return sql.str();

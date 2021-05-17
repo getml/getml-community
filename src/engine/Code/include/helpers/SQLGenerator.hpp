@@ -8,6 +8,10 @@ namespace helpers
 class SQLGenerator
 {
    public:
+    static constexpr bool FOR_STAGING = true;
+    static constexpr bool NOT_FOR_STAGING = false;
+
+   public:
     /// Removes the Macros from the colname and replaces it with proper SQLite3
     /// code.
     static std::string edit_colname(
@@ -142,7 +146,8 @@ class SQLGenerator
         const std::string& _output_join_keys_name,
         const std::string& _input_join_keys_name,
         const std::string& _output_alias,
-        const std::string& _input_alias );
+        const std::string& _input_alias,
+        const bool _for_staging );
 
     /// Determines whether we want to include a column.
     static bool include_column( const std::string& _name );
