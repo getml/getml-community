@@ -31,7 +31,7 @@ struct FeatureLearnerParams
     const std::shared_ptr<const helpers::Schema>& population_schema_;
 
     /// Indicates which target to use.
-    const Int& target_num_;
+    const Int target_num_;
 };
 
 // ----------------------------------------------------------------------------

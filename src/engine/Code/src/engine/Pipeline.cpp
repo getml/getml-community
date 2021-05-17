@@ -1585,6 +1585,15 @@ Pipeline::init_predictors(
             std::vector<std::shared_ptr<predictors::Predictor>>
                 predictors_for_target;
 
+            auto target_num =
+                Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
+
+            target_num->set( "target_num_", t );
+
+            auto dependencies = _dependencies;
+
+            dependencies.push_back( target_num );
+
             for ( size_t i = 0; i < arr->size(); ++i )
                 {
                     const auto ptr = arr->getObject( i );
@@ -1599,7 +1608,7 @@ Pipeline::init_predictors(
                         }
 
                     auto new_predictor = predictors::PredictorParser::parse(
-                        *ptr, _predictor_impl, _dependencies );
+                        *ptr, _predictor_impl, dependencies );
 
                     predictors_for_target.emplace_back(
                         std::move( new_predictor ) );
