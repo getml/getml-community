@@ -99,7 +99,21 @@ Mapping::build_prerequisites(
                                         word_index_container )
                                   : std::optional<helpers::TableHolder>();
 
-    return std::make_tuple( population, table_holder, vocabulary );
+    const auto population_with_word_indices = helpers::DataFrame(
+        population.categoricals_,
+        population.discretes_,
+        population.indices_,
+        population.join_keys_,
+        population.name_,
+        population.numericals_,
+        population.targets_,
+        population.text_,
+        population.time_stamps_,
+        {},
+        word_index_container.population() );
+
+    return std::make_tuple(
+        population_with_word_indices, table_holder, vocabulary );
 }
 
 // ----------------------------------------------------
@@ -592,7 +606,12 @@ Mapping::fit_on_text(
     const auto& data_frame =
         _peripheral_tables.size() > 0 ? _peripheral_tables.back() : _population;
 
-    assert_true( data_frame.word_indices_.size() == data_frame.text_.size() );
+    assert_msg(
+        data_frame.word_indices_.size() == data_frame.text_.size(),
+        "data_frame.word_indices_.size(): " +
+            std::to_string( data_frame.word_indices_.size() ) +
+            ", data_frame.text_.size(): " +
+            std::to_string( data_frame.text_.size() ) );
 
     const auto range1 =
         data_frame.word_indices_ | std::views::transform( col_to_mapping );
