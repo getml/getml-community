@@ -376,6 +376,22 @@ void DataModelChecker::check_join(
 
     // ------------------------------------------------------------------------
 
+    const auto is_relmt =
+        []( const std::shared_ptr<featurelearners::AbstractFeatureLearner>&
+                _fl ) -> bool {
+        assert_true( _fl );
+        return (
+            _fl->type() ==
+                featurelearners::AbstractFeatureLearner::RELMT_MODEL ||
+            _fl->type() ==
+                featurelearners::AbstractFeatureLearner::RELMT_TIME_SERIES );
+    };
+
+    const bool any_relmt = std::any_of(
+        _feature_learners.begin(), _feature_learners.end(), is_relmt );
+
+    // ------------------------------------------------------------------------
+
     assert_true( _peripheral_names );
 
     assert_true( _peripheral_names->size() == _peripheral.size() );
@@ -448,6 +464,7 @@ void DataModelChecker::check_join(
 
             raise_join_warnings(
                 all_propositionalization || propositionalization.at( i ),
+                any_relmt && propositionalization.at( i ),
                 is_many_to_one,
                 num_matches,
                 num_expected,
@@ -1003,6 +1020,7 @@ std::string DataModelChecker::modify_join_key_name(
 
 void DataModelChecker::raise_join_warnings(
     const bool _is_propositionalization,
+    const bool _is_propositionalization_with_relmt,
     const bool _is_many_to_one,
     const size_t _num_matches,
     const Float _num_expected,
@@ -1045,6 +1063,18 @@ void DataModelChecker::raise_join_warnings(
         {
             warn_too_many_matches(
                 _num_matches,
+                _join_key_used,
+                _other_join_key_used,
+                _population_df,
+                _peripheral_df,
+                _warner );
+        }
+
+    // ------------------------------------------------------------------------
+
+    if ( _is_propositionalization_with_relmt )
+        {
+            warn_propositionalization_with_relmt(
                 _join_key_used,
                 _other_join_key_used,
                 _population_df,
@@ -1133,6 +1163,42 @@ void DataModelChecker::warn_all_equal(
         " or using it for "
         "comparison only (you can do the latter by setting a unit "
         "that contains 'comparison only')." );
+}
+
+// ------------------------------------------------------------------------
+
+void DataModelChecker::warn_propositionalization_with_relmt(
+    const std::string& _join_key_used,
+    const std::string& _other_join_key_used,
+    const containers::DataFrame& _population_df,
+    const containers::DataFrame& _peripheral_df,
+    communication::Warner* _warner )
+{
+    const auto join_key_used = modify_join_key_name( _join_key_used );
+
+    const auto other_join_key_used =
+        modify_join_key_name( _other_join_key_used );
+
+    const auto population_name = modify_df_name( _population_df.name() );
+
+    const auto peripheral_name = modify_df_name( _peripheral_df.name() );
+
+    const std::string warning =
+        might_take_long() +
+        "You have set the 'propositionalization' marker when joining " +
+        population_name + " and " + peripheral_name + " over " + join_key_used +
+        " and " + other_join_key_used +
+        ". At the same time, you are using relmt. The relmt "
+        "algorithm does not scale very well to "
+        "with many columns, as the propositionalization is likely to produce. "
+        "This pipeline might take a very "
+        "long time to fit. "
+        "You could replace RelMTModel or "
+        "RelMTTimeSeries with RelboostModel or "
+        "RelboostTimeSeries respectively. The relboost "
+        "algorithm has been designed to scale well to situations like this.";
+
+    _warner->add( warning );
 }
 
 // ------------------------------------------------------------------------

@@ -151,6 +151,7 @@ class DataModelChecker
     /// Adds warning messages related to the joins.
     static void raise_join_warnings(
         const bool _propositionalization,
+        const bool _is_propositionalization_with_relmt,
         const bool _is_many_to_one,
         const size_t _num_matches,
         const Float _num_expected,
@@ -212,6 +213,15 @@ class DataModelChecker
     /// Generates a not-found warning
     static void warn_not_found(
         const Float _not_found_ratio,
+        const std::string& _join_key_used,
+        const std::string& _other_join_key_used,
+        const containers::DataFrame& _population_df,
+        const containers::DataFrame& _peripheral_df,
+        communication::Warner* _warner );
+
+    /// Generates a warning when somebody tries to combine the
+    /// propositionalization tag with relmt.
+    static void warn_propositionalization_with_relmt(
         const std::string& _join_key_used,
         const std::string& _other_join_key_used,
         const containers::DataFrame& _population_df,
@@ -302,7 +312,7 @@ class DataModelChecker
     /// Removes any macros from a colname.
     static std::string modify_colname( const std::string& _colname )
     {
-        const auto colnames = helpers::Macros::modify_colnames( { _colname } );
+        const auto colnames = helpers::Macros::modify_colnames( {_colname} );
         assert_true( colnames.size() == 1 );
         return colnames.at( 0 );
     }
