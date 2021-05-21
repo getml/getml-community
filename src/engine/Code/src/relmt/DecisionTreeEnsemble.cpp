@@ -617,8 +617,6 @@ void DecisionTreeEnsemble::fit_new_features(
 
     assert_true( _table_holder->main_tables().size() > 0 );
 
-    // ------------------------------------------------------------------------
-
     const auto sample_weights = _loss_function->make_sample_weights();
 
     _loss_function->calc_sums();

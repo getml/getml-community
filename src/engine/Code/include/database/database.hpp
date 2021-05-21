@@ -15,7 +15,7 @@
 #include <mysql.h>
 
 #if ( defined( _WIN32 ) || defined( _WIN64 ) )
-#define _WINSOCKAPI_    // stops windows.h including winsock.h
+#define _WINSOCKAPI_  // stops windows.h including winsock.h
 #include <windows.h>
 #include <winsock2.h>
 

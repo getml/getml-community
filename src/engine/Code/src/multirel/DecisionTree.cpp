@@ -579,13 +579,13 @@ std::shared_ptr<const std::vector<Float>> DecisionTree::transform(
 
     const auto aggregation =
         aggregations::TransformAggregationParser::parse_aggregation(
-            { .aggregation_type_ = impl()->aggregation_type_,
-              .column_to_be_aggregated_ = column_to_be_aggregated(),
-              .population_ = _population,
-              .peripheral_ = _peripheral,
-              .same_units_discrete_ = same_units_discrete(),
-              .same_units_numerical_ = same_units_numerical(),
-              .subfeatures_ = _subfeatures } );
+            {.aggregation_type_ = impl()->aggregation_type_,
+             .column_to_be_aggregated_ = column_to_be_aggregated(),
+             .population_ = _population,
+             .peripheral_ = _peripheral,
+             .same_units_discrete_ = same_units_discrete(),
+             .same_units_numerical_ = same_units_numerical(),
+             .subfeatures_ = _subfeatures} );
 
     assert_true( aggregation );
 
