@@ -269,10 +269,9 @@ std::string SQLGenerator::handle_multiple_join_keys(
 {
     const auto sep = Macros::multiple_join_key_sep();
 
-    const auto join_keys1 =
-        StringSplitter::split( _output_join_keys_name, sep );
+    auto join_keys1 = StringSplitter::split( _output_join_keys_name, sep );
 
-    const auto join_keys2 = StringSplitter::split( _input_join_keys_name, sep );
+    auto join_keys2 = StringSplitter::split( _input_join_keys_name, sep );
 
     throw_unless(
         join_keys1.size() == join_keys2.size(),
@@ -280,6 +279,18 @@ std::string SQLGenerator::handle_multiple_join_keys(
         "not match: " +
             std::to_string( join_keys1.size() ) + " vs. " +
             std::to_string( join_keys2.size() ) );
+
+    if ( join_keys1.size() > 1 )
+        {
+            join_keys1.front() = StringReplacer::replace_all(
+                join_keys1.front(), Macros::multiple_join_key_begin(), "" );
+            join_keys1.back() = StringReplacer::replace_all(
+                join_keys1.back(), Macros::multiple_join_key_end(), "" );
+            join_keys2.front() = StringReplacer::replace_all(
+                join_keys2.front(), Macros::multiple_join_key_begin(), "" );
+            join_keys2.back() = StringReplacer::replace_all(
+                join_keys2.back(), Macros::multiple_join_key_end(), "" );
+        }
 
     std::stringstream sql;
 
