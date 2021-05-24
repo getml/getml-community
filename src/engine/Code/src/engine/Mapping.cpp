@@ -119,19 +119,12 @@ Mapping::build_prerequisites(
 // ----------------------------------------------------
 
 std::pair<Int, std::vector<Float>> Mapping::calc_agg_targets(
-    const helpers::DataFrame& _population, const RownumPair& _input ) const
+    const helpers::DataFrame& _population,
+    const std::pair<Int, std::vector<size_t>>& _input ) const
 {
     // -----------------------------------------------------------------------
 
-    const auto to_rownum_part =
-        []( const std::pair<size_t, size_t>& _p ) -> std::vector<size_t> {
-        return std::vector<size_t>( _p.second, _p.first );
-    };
-
-    // -----------------------------------------------------------------------
-
-    const auto rownums = stl::join::vector<size_t>(
-        _input.second | std::views::transform( to_rownum_part ) );
+    const auto& rownums = _input.second;
 
     // -----------------------------------------------------------------------
 
@@ -376,8 +369,8 @@ typename Mapping::TextMapping Mapping::extract_text_mapping(
 
 // ----------------------------------------------------
 
-std::map<size_t, size_t> Mapping::find_output_ix(
-    const std::map<size_t, size_t>& _input_ix,
+std::vector<size_t> Mapping::find_output_ix(
+    const std::vector<size_t>& _input_ix,
     const helpers::DataFrame& _output_table,
     const helpers::DataFrame& _input_table ) const
 {
@@ -391,12 +384,10 @@ std::map<size_t, size_t> Mapping::find_output_ix(
               _time_stamp_output < _upper_time_stamp ) );
     };
 
-    std::map<size_t, size_t> result;
+    std::vector<size_t> result;
 
-    for ( const auto pair : _input_ix )
+    for ( const auto ix : _input_ix )
         {
-            const auto ix = pair.first;
-
             if ( !_output_table.has( _input_table.join_key( ix ) ) )
                 {
                     continue;
@@ -420,16 +411,7 @@ std::map<size_t, size_t> Mapping::find_output_ix(
 
                     if ( use_this )
                         {
-                            const auto it2 = result.find( ix_out );
-
-                            if ( it2 == result.end() )
-                                {
-                                    result[ix_out] = pair.second;
-                                }
-                            else
-                                {
-                                    it2->second += pair.second;
-                                }
+                            result.push_back( static_cast<size_t>( ix_out ) );
                         }
                 }
         }
@@ -902,19 +884,6 @@ std::shared_ptr<const std::map<Int, std::vector<Float>>> Mapping::make_mapping(
     const std::vector<helpers::DataFrame>& _main_tables,
     const std::vector<helpers::DataFrame>& _peripheral_tables ) const
 {
-    const auto to_single_pair =
-        []( const size_t _ix ) -> std::pair<size_t, size_t> {
-        return std::make_pair( _ix, static_cast<size_t>( 1 ) );
-    };
-
-    const auto to_rownum_pair =
-        [to_single_pair](
-            const std::pair<Int, std::vector<size_t>>& _p ) -> RownumPair {
-        const auto range = _p.second | std::views::transform( to_single_pair );
-        return std::make_pair(
-            _p.first, stl::collect::map<size_t, size_t>( range ) );
-    };
-
     const auto match_rows = [this, &_main_tables, &_peripheral_tables](
                                 const RownumPair& _input ) -> RownumPair {
         return match_rownums( _main_tables, _peripheral_tables, _input );
@@ -922,7 +891,9 @@ std::shared_ptr<const std::map<Int, std::vector<Float>>> Mapping::make_mapping(
 
     const auto greater_than_min_freq =
         [this]( const RownumPair& _input ) -> bool {
-        return _input.second.size() >= min_freq_;
+        const auto& vec = _input.second;
+        const auto unique = std::set<size_t>( vec.begin(), vec.end() );
+        return unique.size() >= min_freq_;
     };
 
     const auto calc_agg =
@@ -931,8 +902,7 @@ std::shared_ptr<const std::map<Int, std::vector<Float>>> Mapping::make_mapping(
         return calc_agg_targets( _population, _pair );
     };
 
-    auto range = _rownum_map | std::views::transform( to_rownum_pair ) |
-                 std::views::transform( match_rows ) |
+    auto range = _rownum_map | std::views::transform( match_rows ) |
                  std::views::filter( greater_than_min_freq ) |
                  std::views::transform( calc_agg );
 
