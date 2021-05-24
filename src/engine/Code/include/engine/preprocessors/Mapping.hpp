@@ -49,7 +49,7 @@ class Mapping : public Preprocessor
         MappingForDf;
     typedef typename MappingForDf::value_type PtrType;
     typedef typename PtrType::element_type Map;
-    typedef std::pair<Int, std::vector<size_t>> RownumPair;
+    typedef std::pair<Int, std::map<size_t, size_t>> RownumPair;
     typedef std::vector<
         std::shared_ptr<const std::map<std::string, std::vector<Float>>>>
         TextMapping;
@@ -257,8 +257,7 @@ class Mapping : public Preprocessor
 
     /// Calculates the aggregated targets.
     std::pair<Int, std::vector<Float>> calc_agg_targets(
-        const helpers::DataFrame& _population,
-        const std::pair<Int, std::vector<size_t>>& _input ) const;
+        const helpers::DataFrame& _population, const RownumPair& _input ) const;
 
     /// Transforms the mappings for the categorical columns to SQL.
     std::vector<std::string> categorical_columns_to_sql(
@@ -302,8 +301,8 @@ class Mapping : public Preprocessor
         const Poco::JSON::Object& _obj, const std::string& _key ) const;
 
     /// Identifies the correct indicies in the output table.
-    std::vector<size_t> find_output_ix(
-        const std::vector<size_t>& _input_ix,
+    std::map<size_t, size_t> find_output_ix(
+        const std::map<size_t, size_t>& _input_ix,
         const helpers::DataFrame& _output_table,
         const helpers::DataFrame& _input_table ) const;
 
