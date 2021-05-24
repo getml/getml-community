@@ -1765,7 +1765,25 @@ std::shared_ptr<std::vector<size_t>> FastProp::make_rownums(
 
     const auto nrows = _rownums ? _rownums->size() : _nrows;
 
-    const size_t rows_per_thread = nrows / num_threads;
+    const auto calc_rows_per_thread = [nrows, num_threads]() -> size_t {
+        size_t rows_per_thread = 0;
+
+        while ( true )
+            {
+                const auto remaining = nrows - rows_per_thread * num_threads;
+
+                rows_per_thread += remaining / num_threads;
+
+                if ( remaining < num_threads )
+                    {
+                        break;
+                    }
+            }
+
+        return rows_per_thread;
+    };
+
+    const size_t rows_per_thread = calc_rows_per_thread();
 
     const size_t begin = _thread_num * rows_per_thread;
 
