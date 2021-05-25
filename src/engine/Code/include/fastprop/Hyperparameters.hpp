@@ -41,9 +41,15 @@ struct Hyperparameters
     /// Describes the aggregations that may be used
     const std::vector<std::string> aggregations_;
 
+    /// Size of the moving time windows.
+    const Float delta_t_;
+
     /// The loss function (FastProp is completely unsupervised, so we simply
     /// have this for consistency).
     const std::string loss_function_;
+
+    /// The maximum lag.
+    const size_t max_lag_;
 
     /// The minimum document frequency required for a string to become part of
     /// the vocabulary.

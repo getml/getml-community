@@ -276,6 +276,13 @@ class FastProp
         const size_t _peripheral_ix,
         std::vector<std::vector<containers::Condition>>* _conditions ) const;
 
+    /// Generates conditions based on lag variables.
+    void make_lag_conditions(
+        const containers::DataFrame& _population,
+        const containers::DataFrame& _peripheral,
+        const size_t _peripheral_ix,
+        std::vector<std::vector<containers::Condition>>* _conditions ) const;
+
     /// Generates conditions based on the categorical columns with the same
     /// unit.
     void make_same_units_categorical_conditions(

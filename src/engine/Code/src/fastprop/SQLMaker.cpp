@@ -35,6 +35,21 @@ std::string SQLMaker::condition(
                     return name + " = '" + category + "'";
                 }
 
+            case enums::DataUsed::lag:
+                {
+                    const auto col1 = helpers::SQLGenerator::make_epoch_time(
+                        _output.time_stamps_name(), "t1" );
+
+                    const auto col2 = helpers::SQLGenerator::make_epoch_time(
+                        _input.time_stamps_name(), "t2" );
+
+                    return "( " + col2 + " + " +
+                           std::to_string( _condition.bound_upper_ ) + " > " +
+                           col1 + " AND " + col2 + " + " +
+                           std::to_string( _condition.bound_lower_ ) +
+                           " <= " + col1 + " )";
+                }
+
             case enums::DataUsed::same_units_categorical:
                 {
                     const auto [name1, name2] = get_same_units(

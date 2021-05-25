@@ -1581,6 +1581,8 @@ std::vector<std::vector<containers::Condition>> FastProp::make_conditions(
 
             make_categorical_conditions( peripheral, i, &conditions );
 
+            make_lag_conditions( population, peripheral, i, &conditions );
+
             make_same_units_categorical_conditions(
                 population, peripheral, i, &conditions );
         }
@@ -1620,6 +1622,54 @@ void FastProp::make_categorical_conditions(
                         input_col,
                         _peripheral_ix ) } );
                 }
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+void FastProp::make_lag_conditions(
+    const containers::DataFrame &_population,
+    const containers::DataFrame &_peripheral,
+    const size_t _peripheral_ix,
+    std::vector<std::vector<containers::Condition>> *_conditions ) const
+{
+    if ( _population.num_time_stamps() == 0 ||
+         _peripheral.num_time_stamps() == 0 )
+        {
+            return;
+        }
+
+    if ( hyperparameters().delta_t_ <= 0.0 && hyperparameters().max_lag_ == 0 )
+        {
+            return;
+        }
+
+    if ( hyperparameters().delta_t_ <= 0.0 && hyperparameters().max_lag_ > 0 )
+        {
+            throw std::invalid_argument(
+                "FastProp: If you pass a max_lag, you must also pass a delta_t "
+                "that is "
+                "greater than 0." );
+        }
+
+    if ( hyperparameters().delta_t_ > 0.0 && hyperparameters().max_lag_ == 0 )
+        {
+            throw std::invalid_argument(
+                "FastProp: If you pass a delta_t, you must also pass a max_lag "
+                "that is "
+                "greater than 0." );
+        }
+
+    for ( size_t i = 0; i < hyperparameters().max_lag_; ++i )
+        {
+            const auto lower =
+                hyperparameters().delta_t_ * static_cast<Float>( i );
+
+            const auto upper =
+                hyperparameters().delta_t_ * static_cast<Float>( i + 1 );
+
+            _conditions->push_back( { containers::Condition(
+                lower, upper, enums::DataUsed::lag, _peripheral_ix ) } );
         }
 }
 

@@ -34,6 +34,12 @@ class ConditionParser
         const containers::DataFrame &_peripheral,
         const containers::Condition &_condition );
 
+    /// Generates a filtering function based on lags.
+    static std::function<bool( const containers::Match & )> make_lag(
+        const containers::DataFrame &_population,
+        const containers::DataFrame &_peripheral,
+        const containers::Condition &_condition );
+
     /// Generates a filtering function based on same_units_categorical.
     static std::function<bool( const containers::Match & )>
     make_same_units_categorical(

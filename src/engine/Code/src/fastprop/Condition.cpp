@@ -11,7 +11,9 @@ Condition::Condition(
     const size_t _input_col,
     const size_t _output_col,
     const size_t _peripheral )
-    : category_used_( -1 ),
+    : bound_lower_( 0.0 ),
+      bound_upper_( 0.0 ),
+      category_used_( -1 ),
       data_used_( _data_used ),
       input_col_( _input_col ),
       output_col_( _output_col ),
@@ -23,11 +25,30 @@ Condition::Condition(
 // ----------------------------------------------------------------------------
 
 Condition::Condition(
+    const Float _bound_lower,
+    const Float _bound_upper,
+    const enums::DataUsed _data_used,
+    const size_t _peripheral )
+    : bound_lower_( _bound_lower ),
+      bound_upper_( _bound_upper ),
+      category_used_( -1 ),
+      data_used_( _data_used ),
+      input_col_( 0 ),
+      output_col_( 0 ),
+      peripheral_( _peripheral )
+{
+    assert_true( _data_used == enums::DataUsed::lag );
+}
+// ----------------------------------------------------------------------------
+
+Condition::Condition(
     const Int _category_used,
     const enums::DataUsed _data_used,
     const size_t _input_col,
     const size_t _peripheral )
-    : category_used_( _category_used ),
+    : bound_lower_( 0.0 ),
+      bound_upper_( 0.0 ),
+      category_used_( _category_used ),
       data_used_( _data_used ),
       input_col_( _input_col ),
       output_col_( 0 ),
@@ -39,7 +60,15 @@ Condition::Condition(
 // ----------------------------------------------------------------------------
 
 Condition::Condition( const Poco::JSON::Object &_obj )
-    : category_used_(
+    : bound_lower_(
+          _obj.has( "bound_lower_" )
+              ? jsonutils::JSON::get_value<Float>( _obj, "bound_lower_" )
+              : static_cast<Float>( 0.0 ) ),
+      bound_upper_(
+          _obj.has( "bound_upper_" )
+              ? jsonutils::JSON::get_value<Float>( _obj, "bound_upper_" )
+              : static_cast<Float>( 0.0 ) ),
+      category_used_(
           jsonutils::JSON::get_value<Int>( _obj, "category_used_" ) ),
       data_used_( enums::Parser<enums::DataUsed>::parse(
           jsonutils::JSON::get_value<std::string>( _obj, "data_used_" ) ) ),
@@ -58,6 +87,12 @@ Condition::~Condition() = default;
 Poco::JSON::Object::Ptr Condition::to_json_obj() const
 {
     auto obj = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
+
+    obj->set( "bound_lower_", bound_lower_ );
+
+    obj->set( "bound_upper_", bound_upper_ );
+
+    obj->set( "category_used_", category_used_ );
 
     obj->set( "category_used_", category_used_ );
 

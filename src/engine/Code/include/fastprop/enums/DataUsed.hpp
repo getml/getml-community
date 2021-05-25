@@ -13,6 +13,7 @@ enum class DataUsed
 {
     categorical,
     discrete,
+    lag,  // used for conditions only, not aggregations
     not_applicable,
     numerical,
     same_units_categorical,

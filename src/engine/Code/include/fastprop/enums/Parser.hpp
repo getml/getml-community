@@ -360,6 +360,7 @@ struct Parser<DataUsed>
 {
     static constexpr const char* CATEGORICAL = "categorical";
     static constexpr const char* DISCRETE = "discrete";
+    static constexpr const char* LAG = "lag";
     static constexpr const char* NOT_APPLICABLE = "na";
     static constexpr const char* NUMERICAL = "numerical";
     static constexpr const char* SAME_UNITS_CATEGORICAL =
@@ -384,6 +385,11 @@ struct Parser<DataUsed>
         if ( _str == DISCRETE )
             {
                 return DataUsed::discrete;
+            }
+
+        if ( _str == LAG )
+            {
+                return DataUsed::lag;
             }
 
         if ( _str == NOT_APPLICABLE )
@@ -446,6 +452,9 @@ struct Parser<DataUsed>
 
                 case DataUsed::discrete:
                     return DISCRETE;
+
+                case DataUsed::lag:
+                    return LAG;
 
                 case DataUsed::not_applicable:
                     return NOT_APPLICABLE;

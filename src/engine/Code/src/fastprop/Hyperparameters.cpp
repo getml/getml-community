@@ -7,8 +7,16 @@ namespace fastprop
 Hyperparameters::Hyperparameters( const Poco::JSON::Object& _json_obj )
     : aggregations_( jsonutils::JSON::array_to_vector<std::string>(
           jsonutils::JSON::get_array( _json_obj, "aggregation_" ) ) ),
+      delta_t_(
+          _json_obj.has( "delta_t_" )
+              ? jsonutils::JSON::get_value<Float>( _json_obj, "delta_t_" )
+              : 0.0 ),
       loss_function_( jsonutils::JSON::get_value<std::string>(
           _json_obj, "loss_function_" ) ),
+      max_lag_(
+          _json_obj.has( "max_lag_" )
+              ? jsonutils::JSON::get_value<size_t>( _json_obj, "max_lag_" )
+              : static_cast<size_t>( 0 ) ),
       min_df_( jsonutils::JSON::get_value<size_t>( _json_obj, "min_df_" ) ),
       n_most_frequent_(
           jsonutils::JSON::get_value<size_t>( _json_obj, "n_most_frequent_" ) ),
@@ -42,7 +50,11 @@ Poco::JSON::Object::Ptr Hyperparameters::to_json_obj() const
     obj->set(
         "aggregation_", jsonutils::JSON::vector_to_array_ptr( aggregations_ ) );
 
+    obj->set( "delta_t_", delta_t_ );
+
     obj->set( "loss_function_", loss_function_ );
+
+    obj->set( "max_lag_", max_lag_ );
 
     obj->set( "min_df_", min_df_ );
 

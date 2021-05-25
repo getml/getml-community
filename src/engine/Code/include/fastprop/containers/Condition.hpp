@@ -21,6 +21,12 @@ struct Condition
         const size_t _input_col,
         const size_t _peripheral );
 
+    Condition(
+        const Float _bound_lower,
+        const Float _bound_upper,
+        const enums::DataUsed _data_used,
+        const size_t _peripheral );
+
     Condition( const Poco::JSON::Object &_obj );
 
     ~Condition();
@@ -34,6 +40,12 @@ struct Condition
         const std::string &_feature_prefix,
         const Placeholder &_input,
         const Placeholder &_output ) const;
+
+    /// The lower bound (when data_used_ == lag).
+    const Float bound_lower_;
+
+    /// The upper bound (when data_used_ == lag).
+    const Float bound_upper_;
 
     /// The category used (when data_used_ == categorical).
     const Int category_used_;

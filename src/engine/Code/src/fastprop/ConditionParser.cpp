@@ -68,6 +68,32 @@ ConditionParser::make_categorical(
 
 // ----------------------------------------------------------------------------
 
+std::function<bool( const containers::Match & )> ConditionParser::make_lag(
+    const containers::DataFrame &_population,
+    const containers::DataFrame &_peripheral,
+    const containers::Condition &_condition )
+{
+    assert_true( _population.num_time_stamps() > 0 );
+
+    assert_true( _peripheral.num_time_stamps() > 0 );
+
+    const auto col1 = _population.time_stamp_col();
+
+    const auto col2 = _peripheral.time_stamp_col();
+
+    const auto lower = _condition.bound_lower_;
+
+    const auto upper = _condition.bound_upper_;
+
+    return
+        [col1, col2, lower, upper]( const containers::Match &match ) -> bool {
+            return ( col2[match.ix_input] + upper > col1[match.ix_output] ) &&
+                   ( col2[match.ix_input] + lower <= col1[match.ix_output] );
+        };
+}
+
+// ----------------------------------------------------------------------------
+
 std::function<bool( const containers::Match & )>
 ConditionParser::make_same_units_categorical(
     const containers::DataFrame &_population,
@@ -133,6 +159,9 @@ ConditionParser::parse_single_condition(
         {
             case enums::DataUsed::categorical:
                 return make_categorical( _peripheral, _condition );
+
+            case enums::DataUsed::lag:
+                return make_lag( _population, _peripheral, _condition );
 
             case enums::DataUsed::same_units_categorical:
                 return make_same_units_categorical(
