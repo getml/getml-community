@@ -21,6 +21,7 @@ class Column
     {
         static_assert(
             std::is_arithmetic<T>::value ||
+                std::is_same<T, std::string>::value ||
                 std::is_same<T, strings::String>::value,
             "Only arithmetic types or strings::String allowed for "
             "Column<T>(...)!" );

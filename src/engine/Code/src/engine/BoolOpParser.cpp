@@ -6,7 +6,7 @@ namespace handlers
 {
 // ----------------------------------------------------------------------------
 
-std::vector<bool> BoolOpParser::binary_operation(
+containers::ColumnView<bool> BoolOpParser::binary_operation(
     const Poco::JSON::Object& _col ) const
 {
     const auto op = JSON::get_value<std::string>( _col, "operator_" );
@@ -92,25 +92,29 @@ std::vector<bool> BoolOpParser::binary_operation(
             throw std::invalid_argument(
                 "Operator '" + op + "' not recognized for boolean columns." );
 
-            return std::vector<bool>( 0 );
+            return bin_op( _col, std::logical_and<bool>() );
         }
 }
 
 // ----------------------------------------------------------------------------
 
-std::vector<bool> BoolOpParser::parse( const Poco::JSON::Object& _col ) const
+containers::ColumnView<bool> BoolOpParser::parse(
+    const Poco::JSON::Object& _col ) const
 {
     const auto type = JSON::get_value<std::string>( _col, "type_" );
 
     if ( type == "BooleanValue" )
         {
-            const auto val = JSON::get_value<bool>( _col, "value_" );
+            const auto value = JSON::get_value<bool>( _col, "value_" );
 
-            auto vec = std::vector<bool>( length_ );
+            const auto value_func =
+                [value]( const size_t _i ) -> std::optional<bool> {
+                return value;
+            };
 
-            std::fill( vec.begin(), vec.end(), val );
+            const auto nrows_func = []() -> NRowsType { return INFINITE; };
 
-            return vec;
+            return containers::ColumnView<bool>( value_func, nrows_func );
         }
     else if ( type == "VirtualBooleanColumn" )
         {
@@ -129,13 +133,13 @@ std::vector<bool> BoolOpParser::parse( const Poco::JSON::Object& _col ) const
                 "Column of type '" + type +
                 "' not recognized for boolean columns." );
 
-            return std::vector<bool>( 0 );
+            return unary_operation( _col );
         }
 }
 
 // ----------------------------------------------------------------------------
 
-std::vector<bool> BoolOpParser::unary_operation(
+containers::ColumnView<bool> BoolOpParser::unary_operation(
     const Poco::JSON::Object& _col ) const
 {
     const auto op = JSON::get_value<std::string>( _col, "operator_" );
@@ -165,7 +169,7 @@ std::vector<bool> BoolOpParser::unary_operation(
             throw std::invalid_argument(
                 "Operator '" + op + "' not recognized for boolen columns." );
 
-            return std::vector<bool>( 0 );
+            return un_op( _col, std::logical_not<bool>() );
         }
 }
 

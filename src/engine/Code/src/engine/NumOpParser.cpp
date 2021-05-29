@@ -200,7 +200,7 @@ containers::Column<Float> NumOpParser::boolean_as_num(
                               subselection_ )
                               .parse( obj );
 
-    auto result = containers::Column<Float>( operand1.size() );
+    auto result = std::make_shared<std::vector<Float>>();
 
     const auto as_num = []( const bool val ) {
         if ( val )
@@ -213,9 +213,24 @@ containers::Column<Float> NumOpParser::boolean_as_num(
             }
     };
 
-    std::transform( operand1.begin(), operand1.end(), result.begin(), as_num );
+    // TODO
+    assert_true(
+        std::holds_alternative<size_t>( operand1.nrows() ) ||
+        std::get<UnknownSize>( operand1.nrows() ) != INFINITE );
 
-    return result;
+    for ( size_t i = 0; true; ++i )
+        {
+            const auto val = operand1[i];
+
+            if ( !val )
+                {
+                    break;
+                }
+
+            result->push_back( as_num( *val ) );
+        }
+
+    return containers::Column<Float>( result );
 }
 
 // ----------------------------------------------------------------------------
@@ -505,13 +520,15 @@ containers::Column<Float> NumOpParser::update(
 
     assert_true( operand1.size() == operand2.size() );
 
-    assert_true( operand1.size() == condition.size() );
-
     auto result = containers::Column<Float>( operand1.size() );
 
     for ( size_t i = 0; i < operand1.size(); ++i )
         {
-            result[i] = ( condition[i] ? operand2[i] : operand1[i] );
+            const auto cond = condition[i];
+
+            assert_true( cond );
+
+            result[i] = ( *cond ? operand2[i] : operand1[i] );
         }
 
     return result;

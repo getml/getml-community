@@ -12,6 +12,22 @@ class CatOpParser
     // ------------------------------------------------------------------------
 
    public:
+    typedef containers::ColumnView<bool>::UnknownSize UnknownSize;
+    typedef containers::ColumnView<bool>::NRowsType NRowsType;
+    typedef containers::ColumnView<bool>::NRowsFunc NRowsFunc;
+    typedef containers::ColumnView<bool>::ValueFunc ValueFunc;
+
+    static constexpr UnknownSize NOT_KNOWABLE =
+        containers::ColumnView<bool>::NOT_KNOWABLE;
+    static constexpr UnknownSize INFINITE =
+        containers::ColumnView<bool>::INFINITE;
+
+    static constexpr bool NROWS_MUST_MATCH =
+        containers::ColumnView<bool>::NROWS_MUST_MATCH;
+
+    // ------------------------------------------------------------------------
+
+   public:
     CatOpParser(
         const std::shared_ptr<const containers::Encoding>& _categories,
         const std::shared_ptr<const containers::Encoding>& _join_keys_encoding,

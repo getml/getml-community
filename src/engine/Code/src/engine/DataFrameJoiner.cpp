@@ -441,11 +441,14 @@ void DataFrameJoiner::filter(
     const auto condition =
         BoolOpParser(
             _categories, _join_keys_encoding, data_frames, 0, nrows, false )
-            .parse( _where );
+            .parse( _where )
+            .to_vector( nrows, true );
+
+    assert_true( condition );
 
     // ------------------------------------------------------------------------
 
-    _temp_df->where( condition );
+    _temp_df->where( *condition );
 
     // ------------------------------------------------------------------------
 }

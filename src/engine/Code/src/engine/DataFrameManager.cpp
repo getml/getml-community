@@ -764,7 +764,7 @@ void DataFrameManager::calc_column_plots(
 
     // --------------------------------------------------------------------
 
-    const containers::Features features = { col.data_ptr() };
+    const containers::Features features = {col.data_ptr()};
 
     const auto obj = metrics::Summarizer::calculate_feature_plots(
         features, col.nrows(), 1, num_bins, targets );
@@ -1397,18 +1397,21 @@ void DataFrameManager::get_boolean_column(
 
     check_nrows( json_col, _name, df.nrows() );
 
-    const auto col = BoolOpParser(
-                         categories_,
-                         join_keys_encoding_,
-                         data_frames_,
-                         0,
-                         df.nrows(),
-                         false )
-                         .parse( json_col );
+    const auto data_ptr = BoolOpParser(
+                              categories_,
+                              join_keys_encoding_,
+                              data_frames_,
+                              0,
+                              df.nrows(),
+                              false )
+                              .parse( json_col )
+                              .to_vector( df.nrows(), true );
+
+    assert_true( data_ptr );
 
     communication::Sender::send_string( "Found!", _socket );
 
-    communication::Sender::send_boolean_column( col, _socket );
+    communication::Sender::send_boolean_column( *data_ptr, _socket );
 }
 
 // ------------------------------------------------------------------------
@@ -1437,17 +1440,21 @@ void DataFrameManager::get_boolean_column_content(
 
     check_nrows( json_col, _name, df.nrows() );
 
-    const auto col = BoolOpParser(
-                         categories_,
-                         join_keys_encoding_,
-                         data_frames_,
-                         start,
-                         length,
-                         true )
-                         .parse( json_col );
+    // TODO: Fix this.
+    const auto data_ptr = BoolOpParser(
+                              categories_,
+                              join_keys_encoding_,
+                              data_frames_,
+                              start,
+                              length,
+                              true )
+                              .parse( json_col )
+                              .to_vector( length, false );
 
-    const auto col_str =
-        make_column_string<bool>( draw, df.nrows(), col.begin(), col.end() );
+    assert_true( data_ptr );
+
+    const auto col_str = make_column_string<bool>(
+        draw, df.nrows(), data_ptr->begin(), data_ptr->end() );
 
     communication::Sender::send_string( col_str, _socket );
 }
@@ -1802,7 +1809,7 @@ void DataFrameManager::group_by(
     check_nrows( _cmd, df_name, df.nrows() );
 
     const auto grouped_df =
-        GroupByParser( categories_, join_keys_encoding_, { df } )
+        GroupByParser( categories_, join_keys_encoding_, {df} )
             .group_by( _name, key_name, aggregations );
 
     weak_write_lock.upgrade();
@@ -2386,11 +2393,14 @@ void DataFrameManager::where(
                                0,
                                df.nrows(),
                                false )
-                               .parse( condition_json );
+                               .parse( condition_json )
+                               .to_vector( df.nrows(), true );
+
+    assert_true( condition );
 
     // --------------------------------------------------------------------
 
-    df.where( condition );
+    df.where( *condition );
 
     df.set_name( new_df_name );
 

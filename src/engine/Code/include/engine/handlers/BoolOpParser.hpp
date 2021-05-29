@@ -10,6 +10,21 @@ namespace handlers
 class BoolOpParser
 {
     // ------------------------------------------------------------------------
+   public:
+    typedef containers::ColumnView<bool>::UnknownSize UnknownSize;
+    typedef containers::ColumnView<bool>::NRowsType NRowsType;
+    typedef containers::ColumnView<bool>::NRowsFunc NRowsFunc;
+    typedef containers::ColumnView<bool>::ValueFunc ValueFunc;
+
+    static constexpr UnknownSize NOT_KNOWABLE =
+        containers::ColumnView<bool>::NOT_KNOWABLE;
+    static constexpr UnknownSize INFINITE =
+        containers::ColumnView<bool>::INFINITE;
+
+    static constexpr bool NROWS_MUST_MATCH =
+        containers::ColumnView<bool>::NROWS_MUST_MATCH;
+
+    // ------------------------------------------------------------------------
 
    public:
     BoolOpParser(
@@ -38,169 +53,133 @@ class BoolOpParser
 
    public:
     /// Parses a numerical column.
-    std::vector<bool> parse( const Poco::JSON::Object& _col ) const;
+    containers::ColumnView<bool> parse( const Poco::JSON::Object& _col ) const;
 
     // ------------------------------------------------------------------------
 
    private:
     /// Parses the operator and undertakes a binary operation.
-    std::vector<bool> binary_operation( const Poco::JSON::Object& _col ) const;
+    containers::ColumnView<bool> binary_operation(
+        const Poco::JSON::Object& _col ) const;
 
     /// Parses the operator and undertakes a unary operation.
-    std::vector<bool> unary_operation( const Poco::JSON::Object& _col ) const;
+    containers::ColumnView<bool> unary_operation(
+        const Poco::JSON::Object& _col ) const;
 
     // ------------------------------------------------------------------------
 
     /// Undertakes a binary operation based on template class
     /// Operator.
     template <class Operator>
-    std::vector<bool> bin_op(
+    containers::ColumnView<bool> bin_op(
         const Poco::JSON::Object& _col, const Operator& _op ) const
     {
         const auto operand1 = parse( *JSON::get_object( _col, "operand1_" ) );
 
         const auto operand2 = parse( *JSON::get_object( _col, "operand2_" ) );
 
-        assert_true( operand1.size() == operand2.size() );
-
-        auto result = std::vector<bool>( operand1.size() );
-
-        std::transform(
-            operand1.begin(),
-            operand1.end(),
-            operand2.begin(),
-            result.begin(),
-            _op );
-
-        return result;
+        return containers::ColumnView<bool>::from_bin_op(
+            operand1, operand2, _op );
     }
 
     /// Undertakes a binary operation based on template class
     /// Operator for categorical columns.
     template <class Operator>
-    std::vector<bool> cat_bin_op(
+    containers::ColumnView<bool> cat_bin_op(
         const Poco::JSON::Object& _col, const Operator& _op ) const
     {
+        const auto vec1 = CatOpParser(
+                              categories_,
+                              join_keys_encoding_,
+                              data_frames_,
+                              begin_,
+                              length_,
+                              subselection_ )
+                              .parse( *JSON::get_object( _col, "operand1_" ) );
+
+        const auto vec2 = CatOpParser(
+                              categories_,
+                              join_keys_encoding_,
+                              data_frames_,
+                              begin_,
+                              length_,
+                              subselection_ )
+                              .parse( *JSON::get_object( _col, "operand2_" ) );
+
         const auto operand1 =
-            CatOpParser(
-                categories_,
-                join_keys_encoding_,
-                data_frames_,
-                begin_,
-                length_,
-                subselection_ )
-                .parse( *JSON::get_object( _col, "operand1_" ) );
+            containers::ColumnView<std::string>::from_vector( vec1 );
 
         const auto operand2 =
-            CatOpParser(
-                categories_,
-                join_keys_encoding_,
-                data_frames_,
-                begin_,
-                length_,
-                subselection_ )
-                .parse( *JSON::get_object( _col, "operand2_" ) );
+            containers::ColumnView<std::string>::from_vector( vec2 );
 
-        if ( operand1.size() != operand2.size() )
-            {
-                throw std::invalid_argument(
-                    "Columns must have the same length for binary operations "
-                    "to be possible!" );
-            }
-
-        auto result = std::vector<bool>( operand1.size() );
-
-        std::transform(
-            operand1.begin(),
-            operand1.end(),
-            operand2.begin(),
-            result.begin(),
-            _op );
-
-        return result;
+        return containers::ColumnView<bool>::from_bin_op(
+            operand1, operand2, _op );
     }
 
     /// Undertakes a binary operation based on template class
     /// Operator for numerical columns.
     template <class Operator>
-    std::vector<bool> num_bin_op(
+    containers::ColumnView<bool> num_bin_op(
         const Poco::JSON::Object& _col, const Operator& _op ) const
     {
+        const auto col1 = NumOpParser(
+                              categories_,
+                              join_keys_encoding_,
+                              data_frames_,
+                              begin_,
+                              length_,
+                              subselection_ )
+                              .parse( *JSON::get_object( _col, "operand1_" ) );
+
+        const auto col2 = NumOpParser(
+                              categories_,
+                              join_keys_encoding_,
+                              data_frames_,
+                              begin_,
+                              length_,
+                              subselection_ )
+                              .parse( *JSON::get_object( _col, "operand2_" ) );
+
         const auto operand1 =
-            NumOpParser(
-                categories_,
-                join_keys_encoding_,
-                data_frames_,
-                begin_,
-                length_,
-                subselection_ )
-                .parse( *JSON::get_object( _col, "operand1_" ) );
+            containers::ColumnView<Float>::from_column( col1 );
 
         const auto operand2 =
-            NumOpParser(
-                categories_,
-                join_keys_encoding_,
-                data_frames_,
-                begin_,
-                length_,
-                subselection_ )
-                .parse( *JSON::get_object( _col, "operand2_" ) );
+            containers::ColumnView<Float>::from_column( col2 );
 
-        if ( operand1.size() != operand2.size() )
-            {
-                throw std::invalid_argument(
-                    "Columns must have the same length for binary operations "
-                    "to be possible!" );
-            }
-
-        auto result = std::vector<bool>( operand1.size() );
-
-        std::transform(
-            operand1.begin(),
-            operand1.end(),
-            operand2.begin(),
-            result.begin(),
-            _op );
-
-        return result;
+        return containers::ColumnView<bool>::from_bin_op(
+            operand1, operand2, _op );
     }
 
     /// Undertakes a unary operation based on template class
     /// Operator for numerical columns.
     template <class Operator>
-    std::vector<bool> num_un_op(
+    containers::ColumnView<bool> num_un_op(
         const Poco::JSON::Object& _col, const Operator& _op ) const
     {
+        const auto col1 = NumOpParser(
+                              categories_,
+                              join_keys_encoding_,
+                              data_frames_,
+                              begin_,
+                              length_,
+                              subselection_ )
+                              .parse( *JSON::get_object( _col, "operand1_" ) );
+
         const auto operand1 =
-            NumOpParser(
-                categories_,
-                join_keys_encoding_,
-                data_frames_,
-                begin_,
-                length_,
-                subselection_ )
-                .parse( *JSON::get_object( _col, "operand1_" ) );
+            containers::ColumnView<Float>::from_column( col1 );
 
-        auto result = std::vector<bool>( operand1.size() );
-
-        std::transform( operand1.begin(), operand1.end(), result.begin(), _op );
-
-        return result;
+        return containers::ColumnView<bool>::from_un_op( operand1, _op );
     }
 
     /// Undertakes a unary operation based on template class
     /// Operator.
     template <class Operator>
-    std::vector<bool> un_op(
+    containers::ColumnView<bool> un_op(
         const Poco::JSON::Object& _col, const Operator& _op ) const
     {
         const auto operand1 = parse( *JSON::get_object( _col, "operand1_" ) );
 
-        auto result = std::vector<bool>( operand1.size() );
-
-        std::transform( operand1.begin(), operand1.end(), result.begin(), _op );
-
-        return result;
+        return containers::ColumnView<bool>::from_un_op( operand1, _op );
     }
 
     // ------------------------------------------------------------------------
