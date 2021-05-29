@@ -107,12 +107,7 @@ containers::ColumnView<bool> BoolOpParser::parse(
         {
             const auto value = JSON::get_value<bool>( _col, "value_" );
 
-            const auto value_func =
-                [value]( const size_t _i ) -> std::optional<bool> {
-                return value;
-            };
-
-            return containers::ColumnView<bool>( value_func, INFINITE );
+            return containers::ColumnView<bool>::from_value( value );
         }
     else if ( type == "VirtualBooleanColumn" )
         {

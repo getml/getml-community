@@ -6,7 +6,7 @@ namespace handlers
 {
 // ----------------------------------------------------------------------------
 
-std::vector<std::string> CatOpParser::binary_operation(
+containers::ColumnView<std::string> CatOpParser::binary_operation(
     const Poco::JSON::Object& _col ) const
 {
     const auto op = JSON::get_value<std::string>( _col, "operator_" );
@@ -25,13 +25,13 @@ std::vector<std::string> CatOpParser::binary_operation(
                 "Operator '" + op +
                 "' not recognized for categorical columns." );
 
-            return std::vector<std::string>( 0 );
+            return update( _col );
         }
 }
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::string> CatOpParser::boolean_as_string(
+containers::ColumnView<std::string> CatOpParser::boolean_as_string(
     const Poco::JSON::Object& _col ) const
 {
     const auto obj = *JSON::get_object( _col, "operand1_" );
@@ -45,8 +45,6 @@ std::vector<std::string> CatOpParser::boolean_as_string(
                               subselection_ )
                               .parse( obj );
 
-    auto result = std::vector<std::string>();
-
     const auto to_str = []( const bool val ) {
         if ( val )
             {
@@ -58,24 +56,7 @@ std::vector<std::string> CatOpParser::boolean_as_string(
             }
     };
 
-    // TODO
-    assert_true(
-        std::holds_alternative<size_t>( operand1.nrows() ) ||
-        std::get<UnknownSize>( operand1.nrows() ) != INFINITE );
-
-    for ( size_t i = 0; true; ++i )
-        {
-            const auto val = operand1[i];
-
-            if ( !val )
-                {
-                    break;
-                }
-
-            result.push_back( to_str( *val ) );
-        }
-
-    return result;
+    return containers::ColumnView<std::string>::from_un_op( operand1, to_str );
 }
 
 // ----------------------------------------------------------------------------
@@ -132,30 +113,30 @@ void CatOpParser::check(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::string> CatOpParser::numerical_as_string(
+containers::ColumnView<std::string> CatOpParser::numerical_as_string(
     const Poco::JSON::Object& _col ) const
 {
     const auto obj = *JSON::get_object( _col, "operand1_" );
 
-    const auto operand1 = NumOpParser(
-                              categories_,
-                              join_keys_encoding_,
-                              data_frames_,
-                              begin_,
-                              length_,
-                              subselection_ )
-                              .parse( obj );
+    const auto col = NumOpParser(
+                         categories_,
+                         join_keys_encoding_,
+                         data_frames_,
+                         begin_,
+                         length_,
+                         subselection_ )
+                         .parse( obj );
+
+    const auto operand1 = containers::ColumnView<Float>::from_column( col );
 
     const auto role = obj.has( "role_" )
                           ? JSON::get_value<std::string>( obj, "role_" )
                           : std::string( "" );
 
-    auto result = std::vector<std::string>( operand1.nrows() );
-
     if ( role == containers::DataFrame::ROLE_TIME_STAMP ||
          operand1.unit().find( "time stamp" ) != std::string::npos )
         {
-            const auto to_str = []( const Float val ) {
+            const auto as_str = []( const Float val ) {
                 if ( std::isnan( val ) || std::isinf( val ) )
                     {
                         return std::string( "NULL" );
@@ -171,25 +152,20 @@ std::vector<std::string> CatOpParser::numerical_as_string(
                     time_stamp, Poco::DateTimeFormat::ISO8601_FRAC_FORMAT );
             };
 
-            std::transform(
-                operand1.begin(), operand1.end(), result.begin(), to_str );
-        }
-    else
-        {
-            const auto as_str = []( const Float val ) {
-                return io::Parser::to_string( val );
-            };
-
-            std::transform(
-                operand1.begin(), operand1.end(), result.begin(), as_str );
+            return containers::ColumnView<std::string>::from_un_op(
+                operand1, as_str );
         }
 
-    return result;
+    const auto as_str = []( const Float val ) {
+        return io::Parser::to_string( val );
+    };
+
+    return containers::ColumnView<std::string>::from_un_op( operand1, as_str );
 }
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::string> CatOpParser::parse(
+containers::ColumnView<std::string> CatOpParser::parse(
     const Poco::JSON::Object& _col ) const
 {
     const auto type = JSON::get_value<std::string>( _col, "type_" );
@@ -214,67 +190,60 @@ std::vector<std::string> CatOpParser::parse(
 
             if ( role == containers::DataFrame::ROLE_CATEGORICAL )
                 {
-                    return to_vec(
+                    return to_view(
                         it->second.int_column( name, role ), categories_ );
                 }
-            else if ( role == containers::DataFrame::ROLE_JOIN_KEY )
+
+            if ( role == containers::DataFrame::ROLE_JOIN_KEY )
                 {
-                    return to_vec(
+                    return to_view(
                         it->second.int_column( name, role ),
                         join_keys_encoding_ );
                 }
-            else if ( role == containers::DataFrame::ROLE_TEXT )
+
+            if ( role == containers::DataFrame::ROLE_TEXT )
                 {
-                    return to_vec( it->second.text( name ) );
+                    return to_view( it->second.text( name ) );
                 }
-            else if (
-                role == containers::DataFrame::ROLE_UNUSED ||
-                role == containers::DataFrame::ROLE_UNUSED_STRING )
+
+            if ( role == containers::DataFrame::ROLE_UNUSED ||
+                 role == containers::DataFrame::ROLE_UNUSED_STRING )
                 {
-                    return to_vec( it->second.unused_string( name ) );
+                    return to_view( it->second.unused_string( name ) );
                 }
-            else
-                {
-                    throw std::invalid_argument(
-                        "Column '" + name +
-                        "' is a categorical column, but has unknown role '" +
-                        role + "'." );
-                }
+
+            throw std::invalid_argument(
+                "Column '" + name +
+                "' is a string column, but has unknown role '" + role + "'." );
         }
-    else if ( type == "CategoricalValue" )
+
+    if ( type == "CategoricalValue" )
         {
             const auto val = JSON::get_value<std::string>( _col, "value_" );
 
-            auto vec = std::vector<std::string>( length_ );
-
-            std::fill( vec.begin(), vec.end(), val );
-
-            return vec;
+            return containers::ColumnView<std::string>::from_value( val );
         }
-    else if ( type == "VirtualStringColumn" )
+
+    if ( type == "VirtualStringColumn" )
         {
             if ( _col.has( "operand2_" ) )
                 {
                     return binary_operation( _col );
                 }
-            else
-                {
-                    return unary_operation( _col );
-                }
-        }
-    else
-        {
-            throw std::invalid_argument(
-                "Column of type '" + type +
-                "' not recognized for categorical columns." );
 
-            return std::vector<std::string>( 0 );
+            return unary_operation( _col );
         }
+
+    throw std::invalid_argument(
+        "Column of type '" + type +
+        "' not recognized for categorical columns." );
+
+    return unary_operation( _col );
 }
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::string> CatOpParser::unary_operation(
+containers::ColumnView<std::string> CatOpParser::unary_operation(
     const Poco::JSON::Object& _col ) const
 {
     const auto op = JSON::get_value<std::string>( _col, "operator_" );
@@ -289,15 +258,18 @@ std::vector<std::string> CatOpParser::unary_operation(
         {
             return boolean_as_string( _col );
         }
-    else if ( !is_boolean && op == "as_str" )
+
+    if ( !is_boolean && op == "as_str" )
         {
             return numerical_as_string( _col );
         }
-    else if ( op == "categorical_value" )
+
+    if ( op == "categorical_value" )
         {
             return parse( *JSON::get_object( _col, "operand1_" ) );
         }
-    else if ( op == "substr" )
+
+    if ( op == "substr" )
         {
             const auto begin = JSON::get_value<size_t>( _col, "begin_" );
 
@@ -309,19 +281,56 @@ std::vector<std::string> CatOpParser::unary_operation(
 
             return un_op( _col, substr );
         }
-    else
-        {
-            throw std::invalid_argument(
-                "Operator '" + op +
-                "' not recognized for categorical columns." );
 
-            return std::vector<std::string>( 0 );
-        }
+    throw std::invalid_argument(
+        "Operator '" + op + "' not recognized for categorical columns." );
+
+    return boolean_as_string( _col );
 }
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::string> CatOpParser::update(
+containers::ColumnView<std::string> CatOpParser::to_view(
+    const containers::Column<Int>& _col,
+    const std::shared_ptr<const containers::Encoding>& _encoding ) const
+{
+    assert_true( _encoding );
+
+    const auto to_str = [_encoding,
+                         _col]( size_t _i ) -> std::optional<std::string> {
+        if ( _i >= _col.nrows() )
+            {
+                return std::nullopt;
+            }
+
+        return ( *_encoding )[_col[_i]].str();
+    };
+
+    return containers::ColumnView<std::string>(
+        to_str, _col.nrows(), _col.unit() );
+}
+
+// ----------------------------------------------------------------------------
+
+containers::ColumnView<std::string> CatOpParser::to_view(
+    const containers::Column<strings::String>& _col ) const
+{
+    const auto to_str = [_col]( size_t _i ) -> std::optional<std::string> {
+        if ( _i >= _col.nrows() )
+            {
+                return std::nullopt;
+            }
+
+        return _col[_i].str();
+    };
+
+    return containers::ColumnView<std::string>(
+        to_str, _col.nrows(), _col.unit() );
+}
+
+// ----------------------------------------------------------------------------
+
+containers::ColumnView<std::string> CatOpParser::update(
     const Poco::JSON::Object& _col ) const
 {
     const auto operand1 = parse( *JSON::get_object( _col, "operand1_" ) );
@@ -338,20 +347,12 @@ std::vector<std::string> CatOpParser::update(
             subselection_ )
             .parse( *JSON::get_object( _col, "condition_" ) );
 
-    assert_true( operand1.size() == operand2.size() );
+    const auto op = []( const std::string _val1,
+                        const std::string _val2,
+                        const bool _cond ) { return _cond ? _val2 : _val1; };
 
-    auto result = std::vector<std::string>( operand1.size() );
-
-    for ( size_t i = 0; i < operand1.size(); ++i )
-        {
-            const auto cond = condition[i];
-
-            assert_true( cond );
-
-            result[i] = ( *cond ? operand2[i] : operand1[i] );
-        }
-
-    return result;
+    return containers::ColumnView<std::string>::from_tern_op(
+        operand1, operand2, condition, op );
 }
 
 // ----------------------------------------------------------------------------

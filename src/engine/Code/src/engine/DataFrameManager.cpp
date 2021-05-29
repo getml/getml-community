@@ -408,7 +408,7 @@ void DataFrameManager::add_string_column(
     const auto parser = CatOpParser(
         categories_, join_keys_encoding_, data_frames_, 0, nrows, false );
 
-    const auto vec = parser.parse( json_col );
+    const auto vec = *parser.parse( json_col ).to_vector( nrows, true );
 
     // ------------------------------------------------------------------------
 
@@ -1474,14 +1474,15 @@ void DataFrameManager::get_categorical_column(
 
     check_nrows( json_col, _name, df.nrows() );
 
-    const auto col = CatOpParser(
-                         categories_,
-                         join_keys_encoding_,
-                         data_frames_,
-                         0,
-                         df.nrows(),
-                         false )
-                         .parse( json_col );
+    const auto col = *CatOpParser(
+                          categories_,
+                          join_keys_encoding_,
+                          data_frames_,
+                          0,
+                          df.nrows(),
+                          false )
+                          .parse( json_col )
+                          .to_vector( df.nrows(), true );
 
     communication::Sender::send_string( "Found!", _socket );
 
@@ -1507,6 +1508,11 @@ void DataFrameManager::get_categorical_column_content(
 
     const auto df = utils::Getter::get( _name, data_frames() );
 
+    if ( length < 0 )
+        {
+            throw std::invalid_argument( "length_ must be positive." );
+        }
+
     if ( start + length > df.nrows() )
         {
             throw std::invalid_argument( "start_ + length_ must be <= nrows." );
@@ -1514,14 +1520,15 @@ void DataFrameManager::get_categorical_column_content(
 
     check_nrows( json_col, _name, df.nrows() );
 
-    const auto col = CatOpParser(
-                         categories_,
-                         join_keys_encoding_,
-                         data_frames_,
-                         start,
-                         length,
-                         true )
-                         .parse( json_col );
+    const auto col = *CatOpParser(
+                          categories_,
+                          join_keys_encoding_,
+                          data_frames_,
+                          start,
+                          length,
+                          true )
+                          .parse( json_col )
+                          .to_vector( static_cast<size_t>( length ), false );
 
     const auto col_str = make_column_string<std::string>(
         draw, df.nrows(), col.begin(), col.end() );

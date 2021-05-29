@@ -18,8 +18,6 @@ containers::Column<Float> NumOpParser::as_num(
                               subselection_ )
                               .parse( *JSON::get_object( _col, "operand1_" ) );
 
-    auto result = containers::Column<Float>( operand1.size() );
-
     const auto to_double = []( const std::string& _str ) {
         const auto [val, success] = io::Parser::to_double( _str );
         if ( success )
@@ -32,10 +30,26 @@ containers::Column<Float> NumOpParser::as_num(
             }
     };
 
-    std::transform(
-        operand1.begin(), operand1.end(), result.begin(), to_double );
+    const auto data_ptr = std::make_shared<std::vector<Float>>();
 
-    return result;
+    // TODO: better fix
+    assert_true(
+        std::holds_alternative<size_t>( operand1.nrows() ) ||
+        std::get<UnknownSize>( operand1.nrows() ) != INFINITE );
+
+    for ( size_t i = 0; true; ++i )
+        {
+            const auto val = operand1[i];
+
+            if ( !val )
+                {
+                    break;
+                }
+
+            data_ptr->push_back( to_double( *val ) );
+        }
+
+    return containers::Column<Float>( data_ptr );
 }
 
 // ----------------------------------------------------------------------------
@@ -55,8 +69,6 @@ containers::Column<Float> NumOpParser::as_ts(
                               subselection_ )
                               .parse( *JSON::get_object( _col, "operand1_" ) );
 
-    auto result = containers::Column<Float>( operand1.size() );
-
     const auto to_time_stamp = [time_formats]( const std::string& _str ) {
         auto [val, success] = io::Parser::to_time_stamp( _str, time_formats );
 
@@ -75,10 +87,26 @@ containers::Column<Float> NumOpParser::as_ts(
         return static_cast<Float>( NAN );
     };
 
-    std::transform(
-        operand1.begin(), operand1.end(), result.begin(), to_time_stamp );
+    const auto data_ptr = std::make_shared<std::vector<Float>>();
 
-    return result;
+    // TODO: better fix
+    assert_true(
+        std::holds_alternative<size_t>( operand1.nrows() ) ||
+        std::get<UnknownSize>( operand1.nrows() ) != INFINITE );
+
+    for ( size_t i = 0; true; ++i )
+        {
+            const auto val = operand1[i];
+
+            if ( !val )
+                {
+                    break;
+                }
+
+            data_ptr->push_back( to_time_stamp( *val ) );
+        }
+
+    return containers::Column<Float>( data_ptr );
 }
 
 // ----------------------------------------------------------------------------

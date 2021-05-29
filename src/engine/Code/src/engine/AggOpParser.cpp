@@ -9,14 +9,15 @@ namespace handlers
 Float AggOpParser::categorical_aggregation(
     const std::string& _type, const Poco::JSON::Object& _json_col )
 {
-    const auto vec = CatOpParser(
-                         categories_,
-                         join_keys_encoding_,
-                         data_frames_,
-                         0,
-                         num_elem_,
-                         false )
-                         .parse( _json_col );
+    const auto vec = *CatOpParser(
+                          categories_,
+                          join_keys_encoding_,
+                          data_frames_,
+                          0,
+                          num_elem_,
+                          false )
+                          .parse( _json_col )
+                          .to_vector( num_elem_, false );
 
     if ( _type == "count_categorical" )
         {

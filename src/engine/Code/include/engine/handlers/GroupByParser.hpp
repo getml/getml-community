@@ -187,14 +187,15 @@ containers::Column<Float> GroupByParser::categorical_aggregation(
 
     ( *data_frames )[df().name()] = df();
 
-    const auto vec = CatOpParser(
-                         categories_,
-                         join_keys_encoding_,
-                         data_frames,
-                         0,
-                         df().nrows(),
-                         false )
-                         .parse( _json_col );
+    const auto vec = *CatOpParser(
+                          categories_,
+                          join_keys_encoding_,
+                          data_frames,
+                          0,
+                          df().nrows(),
+                          false )
+                          .parse( _json_col )
+                          .to_vector( df().nrows(), true );
 
     if ( _type == "count_categorical" )
         {

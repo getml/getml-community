@@ -87,29 +87,25 @@ class BoolOpParser
     containers::ColumnView<bool> cat_bin_op(
         const Poco::JSON::Object& _col, const Operator& _op ) const
     {
-        const auto vec1 = CatOpParser(
-                              categories_,
-                              join_keys_encoding_,
-                              data_frames_,
-                              begin_,
-                              length_,
-                              subselection_ )
-                              .parse( *JSON::get_object( _col, "operand1_" ) );
-
-        const auto vec2 = CatOpParser(
-                              categories_,
-                              join_keys_encoding_,
-                              data_frames_,
-                              begin_,
-                              length_,
-                              subselection_ )
-                              .parse( *JSON::get_object( _col, "operand2_" ) );
-
         const auto operand1 =
-            containers::ColumnView<std::string>::from_vector( vec1 );
+            CatOpParser(
+                categories_,
+                join_keys_encoding_,
+                data_frames_,
+                begin_,
+                length_,
+                subselection_ )
+                .parse( *JSON::get_object( _col, "operand1_" ) );
 
         const auto operand2 =
-            containers::ColumnView<std::string>::from_vector( vec2 );
+            CatOpParser(
+                categories_,
+                join_keys_encoding_,
+                data_frames_,
+                begin_,
+                length_,
+                subselection_ )
+                .parse( *JSON::get_object( _col, "operand2_" ) );
 
         return containers::ColumnView<bool>::from_bin_op(
             operand1, operand2, _op );

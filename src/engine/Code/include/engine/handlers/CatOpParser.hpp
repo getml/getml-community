@@ -60,127 +60,66 @@ class CatOpParser
         Poco::Net::StreamSocket* _socket ) const;
 
     /// Parses a numerical column.
-    std::vector<std::string> parse( const Poco::JSON::Object& _col ) const;
+    containers::ColumnView<std::string> parse(
+        const Poco::JSON::Object& _col ) const;
 
     // ------------------------------------------------------------------------
 
    private:
     /// Parses the operator and undertakes a binary operation.
-    std::vector<std::string> binary_operation(
+    containers::ColumnView<std::string> binary_operation(
         const Poco::JSON::Object& _col ) const;
 
     /// Transforms a boolean column to a string.
-    std::vector<std::string> boolean_as_string(
+    containers::ColumnView<std::string> boolean_as_string(
         const Poco::JSON::Object& _col ) const;
 
     /// Transforms a float column to a string.
-    std::vector<std::string> numerical_as_string(
+    containers::ColumnView<std::string> numerical_as_string(
         const Poco::JSON::Object& _col ) const;
 
+    /// Transforms an int column to a column view.
+    containers::ColumnView<std::string> to_view(
+        const containers::Column<Int>& _col,
+        const std::shared_ptr<const containers::Encoding>& _encoding ) const;
+
+    /// Transforms a string column to a column view.
+    containers::ColumnView<std::string> to_view(
+        const containers::Column<strings::String>& _col ) const;
+
     /// Parses the operator and undertakes a unary operation.
-    std::vector<std::string> unary_operation(
+    containers::ColumnView<std::string> unary_operation(
         const Poco::JSON::Object& _col ) const;
 
     /// Returns an updated version of the column.
-    std::vector<std::string> update( const Poco::JSON::Object& _col ) const;
+    containers::ColumnView<std::string> update(
+        const Poco::JSON::Object& _col ) const;
 
     // ------------------------------------------------------------------------
 
     /// Undertakes a binary operation based on template class
     /// Operator.
     template <class Operator>
-    std::vector<std::string> bin_op(
+    containers::ColumnView<std::string> bin_op(
         const Poco::JSON::Object& _col, const Operator& _op ) const
     {
         const auto operand1 = parse( *JSON::get_object( _col, "operand1_" ) );
 
         const auto operand2 = parse( *JSON::get_object( _col, "operand2_" ) );
 
-        if ( operand1.size() != operand2.size() )
-            {
-                throw std::invalid_argument(
-                    "Columns must have the same length for binary operations "
-                    "to be possible!" );
-            }
-
-        auto result = std::vector<std::string>( operand1.size() );
-
-        std::transform(
-            operand1.begin(),
-            operand1.end(),
-            operand2.begin(),
-            result.begin(),
-            _op );
-
-        return result;
+        return containers::ColumnView<std::string>::from_bin_op(
+            operand1, operand2, _op );
     }
 
     /// Undertakes a unary operation based on template class
     /// Operator.
     template <class Operator>
-    std::vector<std::string> un_op(
+    containers::ColumnView<std::string> un_op(
         const Poco::JSON::Object& _col, const Operator& _op ) const
     {
         const auto operand1 = parse( *JSON::get_object( _col, "operand1_" ) );
 
-        auto result = std::vector<std::string>( operand1.size() );
-
-        std::transform( operand1.begin(), operand1.end(), result.begin(), _op );
-
-        return result;
-    }
-
-    /// Transforms a column to vector of equal length.
-    std::vector<std::string> to_vec(
-        const containers::Column<Int>& _col,
-        const containers::Encoding& _encoding ) const
-    {
-        const bool wrong_length =
-            ( !subselection_ && _col.size() != length_ ) ||
-            _col.size() < begin_ + length_;
-
-        if ( wrong_length )
-            {
-                throw std::invalid_argument(
-                    "Columns must have the same length for binary operations "
-                    "to be possible!" );
-            }
-
-        auto result = std::vector<std::string>( length_ );
-
-        std::transform(
-            _col.begin() + begin_,
-            _col.begin() + begin_ + length_,
-            result.begin(),
-            [_encoding]( const Int val ) { return _encoding[val].str(); } );
-
-        return result;
-    }
-
-    /// Transforms an unused string column to a vector of equal length.
-    std::vector<std::string> to_vec(
-        const containers::Column<strings::String>& _col ) const
-    {
-        const bool wrong_length =
-            ( !subselection_ && _col.size() != length_ ) ||
-            _col.size() < length_;
-
-        if ( wrong_length )
-            {
-                throw std::invalid_argument(
-                    "Columns must have the same length for binary operations "
-                    "to be possible!" );
-            }
-
-        auto result = std::vector<std::string>( length_ );
-
-        std::transform(
-            _col.begin() + begin_,
-            _col.begin() + begin_ + length_,
-            result.begin(),
-            []( const strings::String& val ) { return val.str(); } );
-
-        return result;
+        return containers::ColumnView<std::string>::from_un_op( operand1, _op );
     }
 
     // ------------------------------------------------------------------------
