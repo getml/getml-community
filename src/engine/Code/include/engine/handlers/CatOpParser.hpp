@@ -14,7 +14,6 @@ class CatOpParser
    public:
     typedef containers::ColumnView<bool>::UnknownSize UnknownSize;
     typedef containers::ColumnView<bool>::NRowsType NRowsType;
-    typedef containers::ColumnView<bool>::NRowsFunc NRowsFunc;
     typedef containers::ColumnView<bool>::ValueFunc ValueFunc;
 
     static constexpr UnknownSize NOT_KNOWABLE =

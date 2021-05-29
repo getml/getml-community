@@ -112,9 +112,7 @@ containers::ColumnView<bool> BoolOpParser::parse(
                 return value;
             };
 
-            const auto nrows_func = []() -> NRowsType { return INFINITE; };
-
-            return containers::ColumnView<bool>( value_func, nrows_func );
+            return containers::ColumnView<bool>( value_func, INFINITE );
         }
     else if ( type == "VirtualBooleanColumn" )
         {

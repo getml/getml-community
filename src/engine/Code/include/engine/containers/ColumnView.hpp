@@ -14,7 +14,6 @@ class ColumnView
     typedef T value_type;
     typedef bool UnknownSize;
     typedef std::variant<size_t, UnknownSize> NRowsType;
-    typedef std::function<NRowsType()> NRowsFunc;
     typedef std::function<std::optional<T>( size_t )> ValueFunc;
 
     static constexpr UnknownSize NOT_KNOWABLE = true;
@@ -25,9 +24,9 @@ class ColumnView
    public:
     ColumnView(
         const ValueFunc& _value_func,
-        const NRowsFunc& _nrows_func,
+        const NRowsType& _nrows,
         const std::string& _unit = "" )
-        : nrows_func_( _nrows_func ), unit_( _unit ), value_func_( _value_func )
+        : nrows_( _nrows ), unit_( _unit ), value_func_( _value_func )
     {
         static_assert( !std::is_same<T, void>(), "Type cannot be void!" );
     }
@@ -121,7 +120,7 @@ class ColumnView
                    std::get<UnknownSize>( _operand2.nrows() );
         };
 
-        return ColumnView<T>( value_func, nrows_func );
+        return ColumnView<T>( value_func, nrows_func() );
     }
 
     static ColumnView<T> from_column( const Column<T>& _col )
@@ -135,9 +134,7 @@ class ColumnView
             return _col[_i];
         };
 
-        const auto nrows_func = [_col]() -> NRowsType { return _col.nrows(); };
-
-        return ColumnView<T>( value_func, nrows_func, _col.unit() );
+        return ColumnView<T>( value_func, _col.nrows(), _col.unit() );
     }
 
     template <class T1, class Operator>
@@ -154,11 +151,7 @@ class ColumnView
             return _op( *_operand[_i] );
         };
 
-        const auto nrows_func = [_operand]() -> NRowsType {
-            return _operand.nrows();
-        };
-
-        return ColumnView<T>( value_func, nrows_func );
+        return ColumnView<T>( value_func, _operand.nrows() );
     }
 
     // TODO: Remove this -  it is a temporary fix and dangerous for your memory!
@@ -173,9 +166,7 @@ class ColumnView
             return _vec[_i];
         };
 
-        const auto nrows_func = [_vec]() -> NRowsType { return _vec.size(); };
-
-        return ColumnView<T>( value_func, nrows_func );
+        return ColumnView<T>( value_func, _vec.size() );
     }
 
     // -------------------------------
@@ -201,7 +192,7 @@ class ColumnView
     }
 
     /// Trivial getter
-    NRowsType nrows() const { return nrows_func_(); }
+    NRowsType nrows() const { return nrows_; }
 
     /// Trivial getter
     const std::string& unit() const { return unit_; }
@@ -210,7 +201,7 @@ class ColumnView
 
    private:
     /// Functiona returning the Number of rows (if that is knowable).
-    const NRowsFunc nrows_func_;
+    const NRowsType nrows_;
 
     /// Unit of the column.
     const std::string unit_;
