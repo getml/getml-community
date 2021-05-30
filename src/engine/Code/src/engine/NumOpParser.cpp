@@ -6,7 +6,7 @@ namespace handlers
 {
 // ----------------------------------------------------------------------------
 
-containers::Column<Float> NumOpParser::as_num(
+containers::ColumnView<Float> NumOpParser::as_num(
     const Poco::JSON::Object& _col ) const
 {
     const auto operand1 = CatOpParser(
@@ -30,31 +30,12 @@ containers::Column<Float> NumOpParser::as_num(
             }
     };
 
-    const auto data_ptr = std::make_shared<std::vector<Float>>();
-
-    // TODO: better fix
-    assert_true(
-        std::holds_alternative<size_t>( operand1.nrows() ) ||
-        std::get<UnknownSize>( operand1.nrows() ) != INFINITE );
-
-    for ( size_t i = 0; true; ++i )
-        {
-            const auto val = operand1[i];
-
-            if ( !val )
-                {
-                    break;
-                }
-
-            data_ptr->push_back( to_double( *val ) );
-        }
-
-    return containers::Column<Float>( data_ptr );
+    return containers::ColumnView<Float>::from_un_op( operand1, to_double );
 }
 
 // ----------------------------------------------------------------------------
 
-containers::Column<Float> NumOpParser::as_ts(
+containers::ColumnView<Float> NumOpParser::as_ts(
     const Poco::JSON::Object& _col ) const
 {
     const auto time_formats = JSON::array_to_vector<std::string>(
@@ -87,26 +68,7 @@ containers::Column<Float> NumOpParser::as_ts(
         return static_cast<Float>( NAN );
     };
 
-    const auto data_ptr = std::make_shared<std::vector<Float>>();
-
-    // TODO: better fix
-    assert_true(
-        std::holds_alternative<size_t>( operand1.nrows() ) ||
-        std::get<UnknownSize>( operand1.nrows() ) != INFINITE );
-
-    for ( size_t i = 0; true; ++i )
-        {
-            const auto val = operand1[i];
-
-            if ( !val )
-                {
-                    break;
-                }
-
-            data_ptr->push_back( to_time_stamp( *val ) );
-        }
-
-    return containers::Column<Float>( data_ptr );
+    return containers::ColumnView<Float>::from_un_op( operand1, to_time_stamp );
 }
 
 // ----------------------------------------------------------------------------
@@ -164,7 +126,7 @@ void NumOpParser::check(
 
 // ----------------------------------------------------------------------------
 
-containers::Column<Float> NumOpParser::binary_operation(
+containers::ColumnView<Float> NumOpParser::binary_operation(
     const Poco::JSON::Object& _col ) const
 {
     const auto op = JSON::get_value<std::string>( _col, "operator_" );
@@ -173,48 +135,51 @@ containers::Column<Float> NumOpParser::binary_operation(
         {
             return bin_op( _col, std::divides<Float>() );
         }
-    else if ( op == "fmod" )
+
+    if ( op == "fmod" )
         {
             const auto fmod = []( const Float val1, const Float val2 ) {
                 return std::fmod( val1, val2 );
             };
             return bin_op( _col, fmod );
         }
-    else if ( op == "minus" )
+
+    if ( op == "minus" )
         {
             return bin_op( _col, std::minus<Float>() );
         }
-    else if ( op == "multiplies" )
+
+    if ( op == "multiplies" )
         {
             return bin_op( _col, std::multiplies<Float>() );
         }
-    else if ( op == "plus" )
+
+    if ( op == "plus" )
         {
             return bin_op( _col, std::plus<Float>() );
         }
-    else if ( op == "pow" )
+
+    if ( op == "pow" )
         {
             const auto pow = []( const Float val1, const Float val2 ) {
                 return std::pow( val1, val2 );
             };
             return bin_op( _col, pow );
         }
-    else if ( op == "update" )
+
+    if ( op == "update" )
         {
             return update( _col );
         }
-    else
-        {
-            throw std::invalid_argument(
-                "Operator '" + op + "' not recognized." );
 
-            return containers::Column<Float>( 0 );
-        }
+    throw std::invalid_argument( "Operator '" + op + "' not recognized." );
+
+    return update( _col );
 }
 
 // ----------------------------------------------------------------------------
 
-containers::Column<Float> NumOpParser::boolean_as_num(
+containers::ColumnView<Float> NumOpParser::boolean_as_num(
     const Poco::JSON::Object& _col ) const
 {
     const auto obj = *JSON::get_object( _col, "operand1_" );
@@ -228,8 +193,6 @@ containers::Column<Float> NumOpParser::boolean_as_num(
                               subselection_ )
                               .parse( obj );
 
-    auto result = std::make_shared<std::vector<Float>>();
-
     const auto as_num = []( const bool val ) {
         if ( val )
             {
@@ -241,29 +204,12 @@ containers::Column<Float> NumOpParser::boolean_as_num(
             }
     };
 
-    // TODO
-    assert_true(
-        std::holds_alternative<size_t>( operand1.nrows() ) ||
-        std::get<UnknownSize>( operand1.nrows() ) != INFINITE );
-
-    for ( size_t i = 0; true; ++i )
-        {
-            const auto val = operand1[i];
-
-            if ( !val )
-                {
-                    break;
-                }
-
-            result->push_back( as_num( *val ) );
-        }
-
-    return containers::Column<Float>( result );
+    return containers::ColumnView<Float>::from_un_op( operand1, as_num );
 }
 
 // ----------------------------------------------------------------------------
 
-containers::Column<Float> NumOpParser::get_column(
+containers::ColumnView<Float> NumOpParser::get_column(
     const Poco::JSON::Object& _col ) const
 {
     const auto name = JSON::get_value<std::string>( _col, "name_" );
@@ -281,41 +227,14 @@ containers::Column<Float> NumOpParser::get_column(
                 "', but no such DataFrame is known." );
         }
 
-    const bool wrong_length =
-        ( !subselection_ && it->second.nrows() != length_ ) ||
-        it->second.nrows() < begin_ + length_;
+    const auto float_col = it->second.float_column( name, role );
 
-    if ( wrong_length )
-        {
-            throw std::invalid_argument(
-                "Columns must have the same length for binary operations "
-                "to be possible!" );
-
-            return containers::Column<Float>( 0 );
-        }
-
-    if ( it->second.nrows() == length_ )
-        {
-            return it->second.float_column( name, role );
-        }
-    else
-        {
-            const auto long_col = it->second.float_column( name, role );
-
-            auto col = containers::Column<Float>( length_ );
-
-            std::copy(
-                long_col.begin() + begin_,
-                long_col.begin() + begin_ + length_,
-                col.begin() );
-
-            return col;
-        }
+    return containers::ColumnView<Float>::from_column( float_col );
 }
 
 // ----------------------------------------------------------------------------
 
-containers::Column<Float> NumOpParser::parse(
+containers::ColumnView<Float> NumOpParser::parse(
     const Poco::JSON::Object& _col ) const
 {
     const auto type = JSON::get_value<std::string>( _col, "type_" );
@@ -324,35 +243,30 @@ containers::Column<Float> NumOpParser::parse(
         {
             return get_column( _col );
         }
-    else if ( type == "Value" )
+
+    if ( type == "Value" )
         {
             const auto val = JSON::get_value<Float>( _col, "value_" );
-
-            auto col = containers::Column<Float>( length_ );
-
-            std::fill( col.begin(), col.end(), val );
-
-            return col;
+            return containers::ColumnView<Float>::from_value( val );
         }
-    else if ( type == "VirtualFloatColumn" && _col.has( "operand2_" ) )
+
+    if ( type == "VirtualFloatColumn" && _col.has( "operand2_" ) )
         {
             return binary_operation( _col );
         }
-    else if ( type == "VirtualFloatColumn" && !_col.has( "operand2_" ) )
+
+    if ( type == "VirtualFloatColumn" && !_col.has( "operand2_" ) )
         {
             return unary_operation( _col );
         }
-    else
-        {
-            throw std::invalid_argument(
-                "Column of type '" + type +
-                "' not recognized for numerical columns." );
-        }
+
+    throw std::invalid_argument(
+        "Column of type '" + type + "' not recognized for numerical columns." );
 }
 
 // ----------------------------------------------------------------------------
 
-containers::Column<Float> NumOpParser::unary_operation(
+containers::ColumnView<Float> NumOpParser::unary_operation(
     const Poco::JSON::Object& _col ) const
 {
     const auto op = JSON::get_value<std::string>( _col, "operator_" );
@@ -362,174 +276,202 @@ containers::Column<Float> NumOpParser::unary_operation(
             const auto abs = []( const Float val ) { return std::abs( val ); };
             return un_op( _col, abs );
         }
-    else if ( op == "acos" )
+
+    if ( op == "acos" )
         {
             const auto acos = []( const Float val ) {
                 return std::acos( val );
             };
             return un_op( _col, acos );
         }
-    else if ( op == "as_num" )
+
+    if ( op == "as_num" )
         {
             return as_num( _col );
         }
-    else if ( op == "as_ts" )
+
+    if ( op == "as_ts" )
         {
             return as_ts( _col );
         }
-    else if ( op == "asin" )
+
+    if ( op == "asin" )
         {
             const auto asin = []( const Float val ) {
                 return std::asin( val );
             };
             return un_op( _col, asin );
         }
-    else if ( op == "atan" )
+
+    if ( op == "atan" )
         {
             const auto atan = []( const Float val ) {
                 return std::atan( val );
             };
             return un_op( _col, atan );
         }
-    else if ( op == "boolean_as_num" )
+
+    if ( op == "boolean_as_num" )
         {
             return boolean_as_num( _col );
         }
-    else if ( op == "cbrt" )
+
+    if ( op == "cbrt" )
         {
             const auto cbrt = []( const Float val ) {
                 return std::cbrt( val );
             };
             return un_op( _col, cbrt );
         }
-    else if ( op == "ceil" )
+
+    if ( op == "ceil" )
         {
             const auto ceil = []( const Float val ) {
                 return std::ceil( val );
             };
             return un_op( _col, ceil );
         }
-    else if ( op == "cos" )
+
+    if ( op == "cos" )
         {
             const auto cos = []( const Float val ) { return std::cos( val ); };
             return un_op( _col, cos );
         }
-    else if ( op == "day" )
+
+    if ( op == "day" )
         {
             return un_op( _col, utils::Time::day );
         }
-    else if ( op == "erf" )
+
+    if ( op == "erf" )
         {
             const auto erf = []( const Float val ) { return std::erf( val ); };
             return un_op( _col, erf );
         }
-    else if ( op == "exp" )
+
+    if ( op == "exp" )
         {
             const auto exp = []( const Float val ) { return std::exp( val ); };
             return un_op( _col, exp );
         }
-    else if ( op == "floor" )
+
+    if ( op == "floor" )
         {
             const auto floor = []( const Float val ) {
                 return std::floor( val );
             };
             return un_op( _col, floor );
         }
-    else if ( op == "hour" )
+
+    if ( op == "hour" )
         {
             return un_op( _col, utils::Time::hour );
         }
-    else if ( op == "lgamma" )
+
+    if ( op == "lgamma" )
         {
             const auto lgamma = []( const Float val ) {
                 return std::lgamma( val );
             };
             return un_op( _col, lgamma );
         }
-    else if ( op == "log" )
+
+    if ( op == "log" )
         {
             const auto log = []( const Float val ) { return std::log( val ); };
             return un_op( _col, log );
         }
-    else if ( op == "minute" )
+
+    if ( op == "minute" )
         {
             return un_op( _col, utils::Time::minute );
         }
-    else if ( op == "month" )
+
+    if ( op == "month" )
         {
             return un_op( _col, utils::Time::month );
         }
-    else if ( op == "random" )
+
+    if ( op == "random" )
         {
             return random( _col );
         }
-    else if ( op == "round" )
+
+    if ( op == "round" )
         {
             const auto round = []( const Float val ) {
                 return std::round( val );
             };
             return un_op( _col, round );
         }
-    else if ( op == "rowid" )
+
+    if ( op == "rowid" )
         {
             return rowid();
         }
-    else if ( op == "second" )
+
+    if ( op == "second" )
         {
             return un_op( _col, utils::Time::second );
         }
-    else if ( op == "sin" )
+
+    if ( op == "sin" )
         {
             const auto sin = []( const Float val ) { return std::sin( val ); };
             return un_op( _col, sin );
         }
-    else if ( op == "sqrt" )
+
+    if ( op == "sqrt" )
         {
             const auto sqrt = []( const Float val ) {
                 return std::sqrt( val );
             };
             return un_op( _col, sqrt );
         }
-    else if ( op == "tan" )
+
+    if ( op == "tan" )
         {
             const auto tan = []( const Float val ) { return std::tan( val ); };
             return un_op( _col, tan );
         }
-    else if ( op == "tgamma" )
+
+    if ( op == "tgamma" )
         {
             const auto tgamma = []( const Float val ) {
                 return std::tgamma( val );
             };
             return un_op( _col, tgamma );
         }
-    else if ( op == "value" )
+
+    if ( op == "value" )
         {
             return parse( *JSON::get_object( _col, "operand1_" ) );
         }
-    else if ( op == "weekday" )
+
+    if ( op == "weekday" )
         {
             return un_op( _col, utils::Time::weekday );
         }
-    else if ( op == "year" )
+
+    if ( op == "year" )
         {
             return un_op( _col, utils::Time::year );
         }
-    else if ( op == "yearday" )
+
+    if ( op == "yearday" )
         {
             return un_op( _col, utils::Time::yearday );
         }
-    else
-        {
-            throw std::invalid_argument(
-                "Operator '" + op + "' not recognized for numerical columns." );
 
-            return containers::Column<Float>( 0 );
-        }
+    throw std::invalid_argument(
+        "Operator '" + op + "' not recognized for numerical columns." );
+
+    return un_op( _col, utils::Time::yearday );
 }
 
 // ----------------------------------------------------------------------------
 
-containers::Column<Float> NumOpParser::update(
+containers::ColumnView<Float> NumOpParser::update(
     const Poco::JSON::Object& _col ) const
 {
     const auto operand1 = parse( *JSON::get_object( _col, "operand1_" ) );
@@ -546,20 +488,12 @@ containers::Column<Float> NumOpParser::update(
             subselection_ )
             .parse( *JSON::get_object( _col, "condition_" ) );
 
-    assert_true( operand1.size() == operand2.size() );
+    const auto op = []( const Float _val1,
+                        const Float _val2,
+                        const bool _cond ) { return _cond ? _val2 : _val1; };
 
-    auto result = containers::Column<Float>( operand1.size() );
-
-    for ( size_t i = 0; i < operand1.size(); ++i )
-        {
-            const auto cond = condition[i];
-
-            assert_true( cond );
-
-            result[i] = ( *cond ? operand2[i] : operand1[i] );
-        }
-
-    return result;
+    return containers::ColumnView<Float>::from_tern_op(
+        operand1, operand2, condition, op );
 }
 
 // ----------------------------------------------------------------------------

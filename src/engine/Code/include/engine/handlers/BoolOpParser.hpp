@@ -117,29 +117,25 @@ class BoolOpParser
     containers::ColumnView<bool> num_bin_op(
         const Poco::JSON::Object& _col, const Operator& _op ) const
     {
-        const auto col1 = NumOpParser(
-                              categories_,
-                              join_keys_encoding_,
-                              data_frames_,
-                              begin_,
-                              length_,
-                              subselection_ )
-                              .parse( *JSON::get_object( _col, "operand1_" ) );
-
-        const auto col2 = NumOpParser(
-                              categories_,
-                              join_keys_encoding_,
-                              data_frames_,
-                              begin_,
-                              length_,
-                              subselection_ )
-                              .parse( *JSON::get_object( _col, "operand2_" ) );
-
         const auto operand1 =
-            containers::ColumnView<Float>::from_column( col1 );
+            NumOpParser(
+                categories_,
+                join_keys_encoding_,
+                data_frames_,
+                begin_,
+                length_,
+                subselection_ )
+                .parse( *JSON::get_object( _col, "operand1_" ) );
 
         const auto operand2 =
-            containers::ColumnView<Float>::from_column( col2 );
+            NumOpParser(
+                categories_,
+                join_keys_encoding_,
+                data_frames_,
+                begin_,
+                length_,
+                subselection_ )
+                .parse( *JSON::get_object( _col, "operand2_" ) );
 
         return containers::ColumnView<bool>::from_bin_op(
             operand1, operand2, _op );
@@ -151,17 +147,15 @@ class BoolOpParser
     containers::ColumnView<bool> num_un_op(
         const Poco::JSON::Object& _col, const Operator& _op ) const
     {
-        const auto col1 = NumOpParser(
-                              categories_,
-                              join_keys_encoding_,
-                              data_frames_,
-                              begin_,
-                              length_,
-                              subselection_ )
-                              .parse( *JSON::get_object( _col, "operand1_" ) );
-
         const auto operand1 =
-            containers::ColumnView<Float>::from_column( col1 );
+            NumOpParser(
+                categories_,
+                join_keys_encoding_,
+                data_frames_,
+                begin_,
+                length_,
+                subselection_ )
+                .parse( *JSON::get_object( _col, "operand1_" ) );
 
         return containers::ColumnView<bool>::from_un_op( operand1, _op );
     }

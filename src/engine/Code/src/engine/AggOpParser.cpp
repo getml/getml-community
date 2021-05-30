@@ -67,7 +67,8 @@ Float AggOpParser::numerical_aggregation(
                          0,
                          num_elem_,
                          false )
-                         .parse( _json_col );
+                         .parse( _json_col )
+                         .to_column( num_elem_, true );
 
     if ( _type == "assert_equal" )
         {

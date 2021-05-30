@@ -94,7 +94,7 @@ void DataFrameManager::add_float_column(
     auto parser = NumOpParser(
         categories_, join_keys_encoding_, data_frames_, 0, nrows, false );
 
-    auto col = parser.parse( json_col );
+    auto col = parser.parse( json_col ).to_column( nrows, true );
 
     col.set_name( name );
 
@@ -1558,7 +1558,8 @@ void DataFrameManager::get_column(
                          0,
                          df.nrows(),
                          false )
-                         .parse( json_col );
+                         .parse( json_col )
+                         .to_column( df.nrows(), true );
 
     communication::Sender::send_string( "Found!", _socket );
 
@@ -1697,7 +1698,8 @@ void DataFrameManager::get_float_column_content(
                          start,
                          length,
                          true )
-                         .parse( json_col );
+                         .parse( json_col )
+                         .to_column( length, false );
 
     const auto col_str =
         make_column_string<Float>( draw, df.nrows(), col.begin(), col.end() );

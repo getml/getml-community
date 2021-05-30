@@ -318,7 +318,8 @@ containers::Column<Float> GroupByParser::numerical_aggregation(
                          0,
                          df().nrows(),
                          false )
-                         .parse( _json_col );
+                         .parse( _json_col )
+                         .to_column( df().nrows(), true );
 
     if ( _type == "assert_equal" )
         {

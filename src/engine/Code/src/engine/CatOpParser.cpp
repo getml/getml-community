@@ -118,16 +118,14 @@ containers::ColumnView<std::string> CatOpParser::numerical_as_string(
 {
     const auto obj = *JSON::get_object( _col, "operand1_" );
 
-    const auto col = NumOpParser(
-                         categories_,
-                         join_keys_encoding_,
-                         data_frames_,
-                         begin_,
-                         length_,
-                         subselection_ )
-                         .parse( obj );
-
-    const auto operand1 = containers::ColumnView<Float>::from_column( col );
+    const auto operand1 = NumOpParser(
+                              categories_,
+                              join_keys_encoding_,
+                              data_frames_,
+                              begin_,
+                              length_,
+                              subselection_ )
+                              .parse( obj );
 
     const auto role = obj.has( "role_" )
                           ? JSON::get_value<std::string>( obj, "role_" )

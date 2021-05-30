@@ -60,69 +60,56 @@ class NumOpParser
         Poco::Net::StreamSocket* _socket ) const;
 
     /// Parses a numerical column.
-    containers::Column<Float> parse( const Poco::JSON::Object& _col ) const;
+    containers::ColumnView<Float> parse( const Poco::JSON::Object& _col ) const;
 
     // ------------------------------------------------------------------------
 
    private:
     /// Transforms a string column to a float.
-    containers::Column<Float> as_num( const Poco::JSON::Object& _col ) const;
+    containers::ColumnView<Float> as_num(
+        const Poco::JSON::Object& _col ) const;
 
     /// Transforms a string column to a time stamp.
-    containers::Column<Float> as_ts( const Poco::JSON::Object& _col ) const;
+    containers::ColumnView<Float> as_ts( const Poco::JSON::Object& _col ) const;
 
     /// Parses the operator and undertakes a binary operation.
-    containers::Column<Float> binary_operation(
+    containers::ColumnView<Float> binary_operation(
         const Poco::JSON::Object& _col ) const;
 
     /// Transforms a boolean column to a float column.
-    containers::Column<Float> boolean_as_num(
+    containers::ColumnView<Float> boolean_as_num(
         const Poco::JSON::Object& _col ) const;
 
     /// Returns an actual column.
-    containers::Column<Float> get_column(
+    containers::ColumnView<Float> get_column(
         const Poco::JSON::Object& _col ) const;
 
     /// Parses the operator and undertakes a unary operation.
-    containers::Column<Float> unary_operation(
+    containers::ColumnView<Float> unary_operation(
         const Poco::JSON::Object& _col ) const;
 
     /// Returns an updated version of the column.
-    containers::Column<Float> update( const Poco::JSON::Object& _col ) const;
+    containers::ColumnView<Float> update(
+        const Poco::JSON::Object& _col ) const;
 
     // ------------------------------------------------------------------------
 
     /// Undertakes a binary operation based on template class
     /// Operator.
     template <class Operator>
-    containers::Column<Float> bin_op(
+    containers::ColumnView<Float> bin_op(
         const Poco::JSON::Object& _col, const Operator& _op ) const
     {
         const auto operand1 = parse( *JSON::get_object( _col, "operand1_" ) );
 
         const auto operand2 = parse( *JSON::get_object( _col, "operand2_" ) );
 
-        if ( operand1.size() != operand2.size() )
-            {
-                throw std::invalid_argument(
-                    "Columns must have the same length for binary operations "
-                    "to be possible!" );
-            }
-
-        auto result = containers::Column<Float>( operand1.nrows() );
-
-        std::transform(
-            operand1.begin(),
-            operand1.end(),
-            operand2.begin(),
-            result.begin(),
-            _op );
-
-        return result;
+        return containers::ColumnView<Float>::from_bin_op(
+            operand1, operand2, _op );
     }
 
     /// Returns a columns containing random values.
-    containers::Column<Float> random( const Poco::JSON::Object& _col ) const
+    containers::ColumnView<Float> random( const Poco::JSON::Object& _col ) const
     {
         const auto seed = JSON::get_value<unsigned int>( _col, "seed_" );
 
@@ -130,42 +117,33 @@ class NumOpParser
 
         std::uniform_real_distribution<Float> dis( 0.0, 1.0 );
 
-        auto result = containers::Column<Float>( length_ );
+        const auto value_func =
+            [rng, dis]( size_t _i ) mutable -> std::optional<Float> {
+            return dis( rng );
+        };
 
-        for ( auto& val : result )
-            {
-                val = dis( rng );
-            }
-
-        return result;
+        return containers::ColumnView<Float>( value_func, INFINITE );
     }
 
     /// Returns a columns containing the rowids.
-    containers::Column<Float> rowid() const
+    containers::ColumnView<Float> rowid() const
     {
-        auto result = containers::Column<Float>( length_ );
+        const auto value_func = []( size_t _i ) -> std::optional<Float> {
+            return static_cast<Float>( _i );
+        };
 
-        for ( size_t i = 0; i < result.size(); ++i )
-            {
-                result[i] = begin_ + static_cast<Float>( i );
-            }
-
-        return result;
+        return containers::ColumnView<Float>( value_func, INFINITE );
     }
 
     /// Undertakes a unary operation based on template class
     /// Operator.
     template <class Operator>
-    containers::Column<Float> un_op(
+    containers::ColumnView<Float> un_op(
         const Poco::JSON::Object& _col, const Operator& _op ) const
     {
         const auto operand1 = parse( *JSON::get_object( _col, "operand1_" ) );
 
-        auto result = containers::Column<Float>( operand1.nrows() );
-
-        std::transform( operand1.begin(), operand1.end(), result.begin(), _op );
-
-        return result;
+        return containers::ColumnView<Float>::from_un_op( operand1, _op );
     }
 
     // ------------------------------------------------------------------------
