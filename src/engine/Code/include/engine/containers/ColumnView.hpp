@@ -279,7 +279,7 @@ class ColumnView
                         {
                             throw std::invalid_argument(
                                 "Number of rows between three columns do not "
-                                "match, which is necessary for binary "
+                                "match, which is necessary for ternary "
                                 "operations to be possible." );
                         }
 
@@ -297,7 +297,7 @@ class ColumnView
                         {
                             throw std::invalid_argument(
                                 "Number of rows between three columns do not "
-                                "match, which is necessary for binary "
+                                "match, which is necessary for ternary "
                                 "operations to be possible." );
                         }
 
@@ -324,21 +324,6 @@ class ColumnView
             [_value]( const size_t _i ) -> std::optional<T> { return _value; };
 
         return ColumnView<T>( value_func, INFINITE );
-    }
-
-    // TODO: Remove this -  it is a temporary fix and dangerous for your memory!
-    static ColumnView<T> from_vector( const std::vector<T>& _vec )
-    {
-        const auto value_func = [_vec]( const size_t _i ) -> std::optional<T> {
-            if ( _i >= _vec.size() )
-                {
-                    return std::nullopt;
-                };
-
-            return _vec[_i];
-        };
-
-        return ColumnView<T>( value_func, _vec.size() );
     }
 
     // -------------------------------
