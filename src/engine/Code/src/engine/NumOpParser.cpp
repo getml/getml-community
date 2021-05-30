@@ -9,14 +9,9 @@ namespace handlers
 containers::ColumnView<Float> NumOpParser::as_num(
     const Poco::JSON::Object& _col ) const
 {
-    const auto operand1 = CatOpParser(
-                              categories_,
-                              join_keys_encoding_,
-                              data_frames_,
-                              begin_,
-                              length_,
-                              subselection_ )
-                              .parse( *JSON::get_object( _col, "operand1_" ) );
+    const auto operand1 =
+        CatOpParser( categories_, join_keys_encoding_, data_frames_ )
+            .parse( *JSON::get_object( _col, "operand1_" ) );
 
     const auto to_double = []( const std::string& _str ) {
         const auto [val, success] = io::Parser::to_double( _str );
@@ -41,14 +36,9 @@ containers::ColumnView<Float> NumOpParser::as_ts(
     const auto time_formats = JSON::array_to_vector<std::string>(
         JSON::get_array( _col, "time_formats_" ) );
 
-    const auto operand1 = CatOpParser(
-                              categories_,
-                              join_keys_encoding_,
-                              data_frames_,
-                              begin_,
-                              length_,
-                              subselection_ )
-                              .parse( *JSON::get_object( _col, "operand1_" ) );
+    const auto operand1 =
+        CatOpParser( categories_, join_keys_encoding_, data_frames_ )
+            .parse( *JSON::get_object( _col, "operand1_" ) );
 
     const auto to_time_stamp = [time_formats]( const std::string& _str ) {
         auto [val, success] = io::Parser::to_time_stamp( _str, time_formats );
@@ -184,14 +174,9 @@ containers::ColumnView<Float> NumOpParser::boolean_as_num(
 {
     const auto obj = *JSON::get_object( _col, "operand1_" );
 
-    const auto operand1 = BoolOpParser(
-                              categories_,
-                              join_keys_encoding_,
-                              data_frames_,
-                              begin_,
-                              length_,
-                              subselection_ )
-                              .parse( obj );
+    const auto operand1 =
+        BoolOpParser( categories_, join_keys_encoding_, data_frames_ )
+            .parse( obj );
 
     const auto as_num = []( const bool val ) {
         if ( val )
@@ -479,13 +464,7 @@ containers::ColumnView<Float> NumOpParser::update(
     const auto operand2 = parse( *JSON::get_object( _col, "operand2_" ) );
 
     const auto condition =
-        BoolOpParser(
-            categories_,
-            join_keys_encoding_,
-            data_frames_,
-            begin_,
-            length_,
-            subselection_ )
+        BoolOpParser( categories_, join_keys_encoding_, data_frames_ )
             .parse( *JSON::get_object( _col, "condition_" ) );
 
     const auto op = []( const Float _val1,

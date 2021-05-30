@@ -187,15 +187,10 @@ containers::Column<Float> GroupByParser::categorical_aggregation(
 
     ( *data_frames )[df().name()] = df();
 
-    const auto vec = *CatOpParser(
-                          categories_,
-                          join_keys_encoding_,
-                          data_frames,
-                          0,
-                          df().nrows(),
-                          false )
-                          .parse( _json_col )
-                          .to_vector( df().nrows(), true );
+    const auto vec =
+        *CatOpParser( categories_, join_keys_encoding_, data_frames )
+             .parse( _json_col )
+             .to_vector( 0, df().nrows(), true );
 
     if ( _type == "count_categorical" )
         {
@@ -311,15 +306,10 @@ containers::Column<Float> GroupByParser::numerical_aggregation(
 
     ( *data_frames )[df().name()] = df();
 
-    const auto col = NumOpParser(
-                         categories_,
-                         join_keys_encoding_,
-                         data_frames,
-                         0,
-                         df().nrows(),
-                         false )
-                         .parse( _json_col )
-                         .to_column( df().nrows(), true );
+    const auto col =
+        NumOpParser( categories_, join_keys_encoding_, data_frames )
+            .parse( _json_col )
+            .to_column( 0, df().nrows(), true );
 
     if ( _type == "assert_equal" )
         {

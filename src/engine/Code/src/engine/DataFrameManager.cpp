@@ -91,10 +91,9 @@ void DataFrameManager::add_float_column(
                 "has been referred." );
         }
 
-    auto parser = NumOpParser(
-        categories_, join_keys_encoding_, data_frames_, 0, nrows, false );
+    auto parser = NumOpParser( categories_, join_keys_encoding_, data_frames_ );
 
-    auto col = parser.parse( json_col ).to_column( nrows, true );
+    auto col = parser.parse( json_col ).to_column( 0, nrows, true );
 
     col.set_name( name );
 
@@ -405,10 +404,10 @@ void DataFrameManager::add_string_column(
                 "has been referred." );
         }
 
-    const auto parser = CatOpParser(
-        categories_, join_keys_encoding_, data_frames_, 0, nrows, false );
+    const auto parser =
+        CatOpParser( categories_, join_keys_encoding_, data_frames_ );
 
-    const auto vec = *parser.parse( json_col ).to_vector( nrows, true );
+    const auto vec = *parser.parse( json_col ).to_vector( 0, nrows, true );
 
     // ------------------------------------------------------------------------
 
@@ -1397,15 +1396,10 @@ void DataFrameManager::get_boolean_column(
 
     check_nrows( json_col, _name, df.nrows() );
 
-    const auto data_ptr = BoolOpParser(
-                              categories_,
-                              join_keys_encoding_,
-                              data_frames_,
-                              0,
-                              df.nrows(),
-                              false )
-                              .parse( json_col )
-                              .to_vector( df.nrows(), true );
+    const auto data_ptr =
+        BoolOpParser( categories_, join_keys_encoding_, data_frames_ )
+            .parse( json_col )
+            .to_vector( 0, df.nrows(), true );
 
     assert_true( data_ptr );
 
@@ -1423,9 +1417,9 @@ void DataFrameManager::get_boolean_column_content(
 {
     const auto draw = JSON::get_value<Int>( _cmd, "draw_" );
 
-    const auto length = JSON::get_value<Int>( _cmd, "length_" );
+    const auto length = JSON::get_value<size_t>( _cmd, "length_" );
 
-    const auto start = JSON::get_value<Int>( _cmd, "start_" );
+    const auto start = JSON::get_value<size_t>( _cmd, "start_" );
 
     const auto json_col = *JSON::get_object( _cmd, "col_" );
 
@@ -1441,15 +1435,10 @@ void DataFrameManager::get_boolean_column_content(
     check_nrows( json_col, _name, df.nrows() );
 
     // TODO: Fix this.
-    const auto data_ptr = BoolOpParser(
-                              categories_,
-                              join_keys_encoding_,
-                              data_frames_,
-                              start,
-                              length,
-                              true )
-                              .parse( json_col )
-                              .to_vector( length, false );
+    const auto data_ptr =
+        BoolOpParser( categories_, join_keys_encoding_, data_frames_ )
+            .parse( json_col )
+            .to_vector( start, length, false );
 
     assert_true( data_ptr );
 
@@ -1474,15 +1463,10 @@ void DataFrameManager::get_categorical_column(
 
     check_nrows( json_col, _name, df.nrows() );
 
-    const auto col = *CatOpParser(
-                          categories_,
-                          join_keys_encoding_,
-                          data_frames_,
-                          0,
-                          df.nrows(),
-                          false )
-                          .parse( json_col )
-                          .to_vector( df.nrows(), true );
+    const auto col =
+        *CatOpParser( categories_, join_keys_encoding_, data_frames_ )
+             .parse( json_col )
+             .to_vector( 0, df.nrows(), true );
 
     communication::Sender::send_string( "Found!", _socket );
 
@@ -1498,9 +1482,9 @@ void DataFrameManager::get_categorical_column_content(
 {
     const auto draw = JSON::get_value<Int>( _cmd, "draw_" );
 
-    const auto length = JSON::get_value<Int>( _cmd, "length_" );
+    const auto length = JSON::get_value<size_t>( _cmd, "length_" );
 
-    const auto start = JSON::get_value<Int>( _cmd, "start_" );
+    const auto start = JSON::get_value<size_t>( _cmd, "start_" );
 
     const auto json_col = *JSON::get_object( _cmd, "col_" );
 
@@ -1520,15 +1504,10 @@ void DataFrameManager::get_categorical_column_content(
 
     check_nrows( json_col, _name, df.nrows() );
 
-    const auto col = *CatOpParser(
-                          categories_,
-                          join_keys_encoding_,
-                          data_frames_,
-                          start,
-                          length,
-                          true )
-                          .parse( json_col )
-                          .to_vector( static_cast<size_t>( length ), false );
+    const auto col =
+        *CatOpParser( categories_, join_keys_encoding_, data_frames_ )
+             .parse( json_col )
+             .to_vector( start, length, false );
 
     const auto col_str = make_column_string<std::string>(
         draw, df.nrows(), col.begin(), col.end() );
@@ -1551,15 +1530,10 @@ void DataFrameManager::get_column(
 
     check_nrows( json_col, _name, df.nrows() );
 
-    const auto col = NumOpParser(
-                         categories_,
-                         join_keys_encoding_,
-                         data_frames_,
-                         0,
-                         df.nrows(),
-                         false )
-                         .parse( json_col )
-                         .to_column( df.nrows(), true );
+    const auto col =
+        NumOpParser( categories_, join_keys_encoding_, data_frames_ )
+            .parse( json_col )
+            .to_column( 0, df.nrows(), true );
 
     communication::Sender::send_string( "Found!", _socket );
 
@@ -1674,9 +1648,9 @@ void DataFrameManager::get_float_column_content(
 {
     const auto draw = JSON::get_value<Int>( _cmd, "draw_" );
 
-    const auto length = JSON::get_value<Int>( _cmd, "length_" );
+    const auto length = JSON::get_value<size_t>( _cmd, "length_" );
 
-    const auto start = JSON::get_value<Int>( _cmd, "start_" );
+    const auto start = JSON::get_value<size_t>( _cmd, "start_" );
 
     const auto json_col = *JSON::get_object( _cmd, "col_" );
 
@@ -1691,15 +1665,10 @@ void DataFrameManager::get_float_column_content(
 
     check_nrows( json_col, _name, df.nrows() );
 
-    const auto col = NumOpParser(
-                         categories_,
-                         join_keys_encoding_,
-                         data_frames_,
-                         start,
-                         length,
-                         true )
-                         .parse( json_col )
-                         .to_column( length, false );
+    const auto col =
+        NumOpParser( categories_, join_keys_encoding_, data_frames_ )
+            .parse( json_col )
+            .to_column( start, length, false );
 
     const auto col_str =
         make_column_string<Float>( draw, df.nrows(), col.begin(), col.end() );
@@ -2395,15 +2364,10 @@ void DataFrameManager::where(
 
     check_nrows( condition_json, _name, df.nrows() );
 
-    const auto condition = BoolOpParser(
-                               categories_,
-                               join_keys_encoding_,
-                               data_frames_,
-                               0,
-                               df.nrows(),
-                               false )
-                               .parse( condition_json )
-                               .to_vector( df.nrows(), true );
+    const auto condition =
+        BoolOpParser( categories_, join_keys_encoding_, data_frames_ )
+            .parse( condition_json )
+            .to_vector( 0, df.nrows(), true );
 
     assert_true( condition );
 

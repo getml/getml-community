@@ -36,14 +36,9 @@ containers::ColumnView<std::string> CatOpParser::boolean_as_string(
 {
     const auto obj = *JSON::get_object( _col, "operand1_" );
 
-    const auto operand1 = BoolOpParser(
-                              categories_,
-                              join_keys_encoding_,
-                              data_frames_,
-                              begin_,
-                              length_,
-                              subselection_ )
-                              .parse( obj );
+    const auto operand1 =
+        BoolOpParser( categories_, join_keys_encoding_, data_frames_ )
+            .parse( obj );
 
     const auto to_str = []( const bool val ) {
         if ( val )
@@ -118,14 +113,9 @@ containers::ColumnView<std::string> CatOpParser::numerical_as_string(
 {
     const auto obj = *JSON::get_object( _col, "operand1_" );
 
-    const auto operand1 = NumOpParser(
-                              categories_,
-                              join_keys_encoding_,
-                              data_frames_,
-                              begin_,
-                              length_,
-                              subselection_ )
-                              .parse( obj );
+    const auto operand1 =
+        NumOpParser( categories_, join_keys_encoding_, data_frames_ )
+            .parse( obj );
 
     const auto role = obj.has( "role_" )
                           ? JSON::get_value<std::string>( obj, "role_" )
@@ -336,13 +326,7 @@ containers::ColumnView<std::string> CatOpParser::update(
     const auto operand2 = parse( *JSON::get_object( _col, "operand2_" ) );
 
     const auto condition =
-        BoolOpParser(
-            categories_,
-            join_keys_encoding_,
-            data_frames_,
-            begin_,
-            length_,
-            subselection_ )
+        BoolOpParser( categories_, join_keys_encoding_, data_frames_ )
             .parse( *JSON::get_object( _col, "condition_" ) );
 
     const auto op = []( const std::string _val1,

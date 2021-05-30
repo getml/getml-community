@@ -31,16 +31,10 @@ class CatOpParser
         const std::shared_ptr<const containers::Encoding>& _categories,
         const std::shared_ptr<const containers::Encoding>& _join_keys_encoding,
         const std::shared_ptr<
-            const std::map<std::string, containers::DataFrame>>& _data_frames,
-        const size_t _begin,
-        const size_t _length,
-        const bool _subselection )
-        : begin_( _begin ),
-          categories_( _categories ),
+            const std::map<std::string, containers::DataFrame>>& _data_frames )
+        : categories_( _categories ),
           data_frames_( _data_frames ),
-          join_keys_encoding_( _join_keys_encoding ),
-          length_( _length ),
-          subselection_( _subselection )
+          join_keys_encoding_( _join_keys_encoding )
     {
         assert_true( categories_ );
         assert_true( data_frames_ );
@@ -125,9 +119,6 @@ class CatOpParser
     // ------------------------------------------------------------------------
 
    private:
-    /// The index of the first element to be drawn
-    const size_t begin_;
-
     /// Encodes the categories used.
     const std::shared_ptr<const containers::Encoding> categories_;
 
@@ -137,13 +128,6 @@ class CatOpParser
 
     /// Encodes the join keys used.
     const std::shared_ptr<const containers::Encoding> join_keys_encoding_;
-
-    /// The number of elements required (must not be greater than the number of
-    /// rows in df)
-    const size_t length_;
-
-    /// Whether we want to get a subselection.
-    const bool subselection_;
 
     // ------------------------------------------------------------------------
 };

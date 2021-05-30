@@ -331,12 +331,14 @@ class ColumnView
    public:
     /// Transforms the ColumnView to a physical column.
     Column<T> to_column(
-        const std::optional<size_t> _expected_nrows,
+        const size_t _begin,
+        const std::optional<size_t> _expected_length,
         const bool _nrows_must_match ) const;
 
     /// Transforms the ColumnView to a physical vector.
     std::shared_ptr<std::vector<T>> to_vector(
-        const std::optional<size_t> _expected_nrows,
+        const size_t _begin,
+        const std::optional<size_t> _expected_length,
         const bool _nrows_must_match ) const;
 
     // -------------------------------
@@ -374,10 +376,12 @@ class ColumnView
 
 template <class T>
 Column<T> ColumnView<T>::to_column(
-    const std::optional<size_t> _expected_nrows,
+    const size_t _begin,
+    const std::optional<size_t> _expected_length,
     const bool _nrows_must_match ) const
 {
-    const auto data_ptr = to_vector( _expected_nrows, _nrows_must_match );
+    const auto data_ptr =
+        to_vector( _begin, _expected_length, _nrows_must_match );
 
     auto col = Column<T>( data_ptr );
 
@@ -390,31 +394,33 @@ Column<T> ColumnView<T>::to_column(
 
 template <class T>
 std::shared_ptr<std::vector<T>> ColumnView<T>::to_vector(
-    const std::optional<size_t> _expected_nrows,
+    const size_t _begin,
+    const std::optional<size_t> _expected_length,
     const bool _nrows_must_match ) const
 {
-    assert_true( _expected_nrows || !_nrows_must_match );
+    assert_true( _expected_length || !_nrows_must_match );
 
-    const auto expected_nrows =
-        _expected_nrows ? *_expected_nrows : std::numeric_limits<size_t>::max();
+    const auto expected_length = _expected_length
+                                     ? *_expected_length
+                                     : std::numeric_limits<size_t>::max();
 
     const bool nrows_do_not_match =
         _nrows_must_match && std::holds_alternative<size_t>( nrows() ) &&
-        std::get<size_t>( nrows() ) != _expected_nrows;
+        std::get<size_t>( nrows() ) != expected_length;
 
     if ( nrows_do_not_match )
         {
             throw std::invalid_argument(
-                "Expected " + std::to_string( expected_nrows ) +
+                "Expected " + std::to_string( expected_length ) +
                 " nrows, but got " +
                 std::to_string( std::get<size_t>( nrows() ) ) + "." );
         }
 
     const auto data_ptr = std::make_shared<std::vector<T>>();
 
-    for ( size_t i = 0; i < expected_nrows; ++i )
+    for ( size_t i = 0; i < expected_length; ++i )
         {
-            const auto val = value_func_( i );
+            const auto val = value_func_( _begin + i );
 
             if ( !val )
                 {
@@ -427,19 +433,19 @@ std::shared_ptr<std::vector<T>> ColumnView<T>::to_vector(
     const bool exceeds_expected_by_unknown_number =
         _nrows_must_match && std::holds_alternative<UnknownSize>( nrows() ) &&
         std::get<UnknownSize>( nrows() ) == NOT_KNOWABLE &&
-        value_func_( expected_nrows );
+        value_func_( _begin + expected_length );
 
     if ( exceeds_expected_by_unknown_number )
         {
             throw std::invalid_argument(
-                "Expected " + std::to_string( expected_nrows ) +
+                "Expected " + std::to_string( expected_length ) +
                 " nrows, but there were more." );
         }
 
-    if ( _nrows_must_match && data_ptr->size() != expected_nrows )
+    if ( _nrows_must_match && data_ptr->size() != expected_length )
         {
             throw std::invalid_argument(
-                "Expected " + std::to_string( expected_nrows ) +
+                "Expected " + std::to_string( expected_length ) +
                 " nrows, but got " + std::to_string( data_ptr->size() ) + "." );
         }
 
