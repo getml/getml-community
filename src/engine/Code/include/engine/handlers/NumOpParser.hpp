@@ -117,8 +117,24 @@ class NumOpParser
 
         std::uniform_real_distribution<Float> dis( 0.0, 1.0 );
 
+        size_t next = 0;
+
         const auto value_func =
-            [rng, dis]( size_t _i ) mutable -> std::optional<Float> {
+            [rng, dis, next, seed](
+                size_t _i ) mutable -> std::optional<Float> {
+            if ( _i > next )
+                {
+                    rng.discard( _i - next );
+                }
+
+            if ( _i < next )
+                {
+                    rng = std::mt19937( seed );
+                    rng.discard( _i );
+                }
+
+            next = _i + 1;
+
             return dis( rng );
         };
 
