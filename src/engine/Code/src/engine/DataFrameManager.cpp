@@ -82,26 +82,25 @@ void DataFrameManager::add_float_column(
 
     // ------------------------------------------------------------------------
 
-    const auto [nrows, any_df_found] = check_nrows( json_col );
+    const auto parser =
+        NumOpParser( categories_, join_keys_encoding_, data_frames_ );
 
-    if ( !any_df_found )
-        {
-            throw std::invalid_argument(
-                "Could not infer the number of rows, because no DataFrame "
-                "has been referred." );
-        }
-
-    auto parser = NumOpParser( categories_, join_keys_encoding_, data_frames_ );
-
-    auto col = parser.parse( json_col ).to_column( 0, nrows, true );
-
-    col.set_name( name );
-
-    col.set_unit( unit );
+    const auto column_view = parser.parse( json_col );
 
     // ------------------------------------------------------------------------
 
-    parser.check( col, logger_, _socket );
+    const auto make_col = [this, column_view, parser, name, unit, _socket](
+                              const std::optional<size_t> _nrows ) {
+        auto col = column_view.to_column( 0, _nrows, true );
+
+        col.set_name( name );
+
+        col.set_unit( unit );
+
+        parser.check( col, logger_, _socket );
+
+        return col;
+    };
 
     // ------------------------------------------------------------------------
 
@@ -109,6 +108,8 @@ void DataFrameManager::add_float_column(
 
     if ( exists )
         {
+            const auto col = make_col( df->nrows() );
+
             add_float_column_to_df( role, col, df, &weak_write_lock );
 
             monitor_->send_tcp(
@@ -118,6 +119,18 @@ void DataFrameManager::add_float_column(
         }
     else
         {
+            if ( column_view.is_infinite() )
+                {
+                    throw std::invalid_argument(
+                        "Column length could not be inferred! This is because "
+                        "you have "
+                        "tried to add an infinite length ColumnView to a data "
+                        "frame "
+                        "that does not contain any columns yet." );
+                }
+
+            const auto col = make_col( std::nullopt );
+
             auto new_df = containers::DataFrame(
                 df_name, categories_, join_keys_encoding_ );
 
@@ -395,23 +408,8 @@ void DataFrameManager::add_string_column(
 
     // ------------------------------------------------------------------------
 
-    const auto [nrows, any_df_found] = check_nrows( json_col );
-
-    if ( !any_df_found )
-        {
-            throw std::invalid_argument(
-                "Could not infer the number of rows, because no DataFrame "
-                "has been referred." );
-        }
-
     const auto parser =
         CatOpParser( categories_, join_keys_encoding_, data_frames_ );
-
-    const auto vec = *parser.parse( json_col ).to_vector( 0, nrows, true );
-
-    // ------------------------------------------------------------------------
-
-    parser.check( vec, name, logger_, _socket );
 
     // ------------------------------------------------------------------------
 
@@ -424,6 +422,36 @@ void DataFrameManager::add_string_column(
         {
             df = &new_df;
         }
+
+    // ------------------------------------------------------------------------
+
+    const auto column_view = parser.parse( json_col );
+
+    // ------------------------------------------------------------------------
+
+    const auto make_vec = [this, column_view, parser, name, unit, _socket](
+                              const std::optional<size_t> _nrows ) {
+        const auto vec = column_view.to_vector( 0, _nrows, true );
+
+        assert_true( vec );
+
+        parser.check( *vec, name, logger_, _socket );
+
+        return *vec;
+    };
+
+    // ------------------------------------------------------------------------
+
+    if ( !exists && column_view.is_infinite() )
+        {
+            throw std::invalid_argument(
+                "Column length could not be inferred! This is because you have "
+                "tried to add an infinite length ColumnView to a data frame "
+                "that does not contain any columns yet." );
+        }
+
+    const auto vec =
+        exists ? make_vec( df->nrows() ) : make_vec( std::nullopt );
 
     // ------------------------------------------------------------------------
 
@@ -1392,14 +1420,19 @@ void DataFrameManager::get_boolean_column(
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    const auto df = utils::Getter::get( _name, &data_frames() );
-
-    check_nrows( json_col, _name, df.nrows() );
-
-    const auto data_ptr =
+    const auto column_view =
         BoolOpParser( categories_, join_keys_encoding_, data_frames_ )
-            .parse( json_col )
-            .to_vector( 0, df.nrows(), true );
+            .parse( json_col );
+
+    if ( column_view.is_infinite() )
+        {
+            throw std::invalid_argument(
+                "The length of the column view is infinite! You can look at "
+                "the column view, "
+                "but you cannot retrieve it." );
+        }
+
+    const auto data_ptr = column_view.to_vector( 0, std::nullopt, false );
 
     assert_true( data_ptr );
 
@@ -1425,25 +1458,21 @@ void DataFrameManager::get_boolean_column_content(
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    const auto df = utils::Getter::get( _name, &data_frames() );
-
-    if ( start + length > df.nrows() )
-        {
-            throw std::invalid_argument( "start_ + length_ must be <= nrows." );
-        }
-
-    check_nrows( json_col, _name, df.nrows() );
-
-    // TODO: Fix this.
-    const auto data_ptr =
+    const auto column_view =
         BoolOpParser( categories_, join_keys_encoding_, data_frames_ )
-            .parse( json_col )
-            .to_vector( start, length, false );
+            .parse( json_col );
+
+    const auto data_ptr = column_view.to_vector( start, length, false );
 
     assert_true( data_ptr );
 
+    // TODO: Replacement for 0.
+    const auto nrows = std::holds_alternative<size_t>( column_view.nrows() )
+                           ? std::get<size_t>( column_view.nrows() )
+                           : 0;
+
     const auto col_str = make_column_string<bool>(
-        draw, df.nrows(), data_ptr->begin(), data_ptr->end() );
+        draw, nrows, data_ptr->begin(), data_ptr->end() );
 
     communication::Sender::send_string( col_str, _socket );
 }
@@ -1459,18 +1488,25 @@ void DataFrameManager::get_categorical_column(
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    const auto df = utils::Getter::get( _name, data_frames() );
+    const auto column_view =
+        CatOpParser( categories_, join_keys_encoding_, data_frames_ )
+            .parse( json_col );
 
-    check_nrows( json_col, _name, df.nrows() );
+    if ( column_view.is_infinite() )
+        {
+            throw std::invalid_argument(
+                "The length of the column view is infinite! You can look at "
+                "the column view, "
+                "but you cannot retrieve it." );
+        }
 
-    const auto col =
-        *CatOpParser( categories_, join_keys_encoding_, data_frames_ )
-             .parse( json_col )
-             .to_vector( 0, df.nrows(), true );
+    const auto data_ptr = column_view.to_vector( 0, std::nullopt, false );
+
+    assert_true( data_ptr );
 
     communication::Sender::send_string( "Found!", _socket );
 
-    communication::Sender::send_categorical_column( col, _socket );
+    communication::Sender::send_categorical_column( *data_ptr, _socket );
 }
 
 // ------------------------------------------------------------------------
@@ -1490,27 +1526,21 @@ void DataFrameManager::get_categorical_column_content(
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    const auto df = utils::Getter::get( _name, data_frames() );
+    const auto column_view =
+        CatOpParser( categories_, join_keys_encoding_, data_frames_ )
+            .parse( json_col );
 
-    if ( length < 0 )
-        {
-            throw std::invalid_argument( "length_ must be positive." );
-        }
+    const auto data_ptr = column_view.to_vector( start, length, false );
 
-    if ( start + length > df.nrows() )
-        {
-            throw std::invalid_argument( "start_ + length_ must be <= nrows." );
-        }
+    assert_true( data_ptr );
 
-    check_nrows( json_col, _name, df.nrows() );
-
-    const auto col =
-        *CatOpParser( categories_, join_keys_encoding_, data_frames_ )
-             .parse( json_col )
-             .to_vector( start, length, false );
+    // TODO: Replacement for 0.
+    const auto nrows = std::holds_alternative<size_t>( column_view.nrows() )
+                           ? std::get<size_t>( column_view.nrows() )
+                           : 0;
 
     const auto col_str = make_column_string<std::string>(
-        draw, df.nrows(), col.begin(), col.end() );
+        draw, nrows, data_ptr->begin(), data_ptr->end() );
 
     communication::Sender::send_string( col_str, _socket );
 }
@@ -1526,14 +1556,21 @@ void DataFrameManager::get_column(
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    auto df = utils::Getter::get( _name, data_frames() );
-
-    check_nrows( json_col, _name, df.nrows() );
-
-    const auto col =
+    const auto column_view =
         NumOpParser( categories_, join_keys_encoding_, data_frames_ )
-            .parse( json_col )
-            .to_column( 0, df.nrows(), true );
+            .parse( json_col );
+
+    if ( column_view.is_infinite() )
+        {
+            throw std::invalid_argument(
+                "The length of the column view is infinite! You can look at "
+                "the column view, "
+                "but you cannot retrieve it." );
+        }
+
+    const auto col = column_view.to_column( 0, std::nullopt, false );
+
+    read_lock.unlock();
 
     communication::Sender::send_string( "Found!", _socket );
 
@@ -1656,22 +1693,19 @@ void DataFrameManager::get_float_column_content(
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    auto df = utils::Getter::get( _name, data_frames() );
-
-    if ( start + length > df.nrows() )
-        {
-            throw std::invalid_argument( "start_ + length_ must be <= nrows." );
-        }
-
-    check_nrows( json_col, _name, df.nrows() );
-
-    const auto col =
+    const auto column_view =
         NumOpParser( categories_, join_keys_encoding_, data_frames_ )
-            .parse( json_col )
-            .to_column( start, length, false );
+            .parse( json_col );
+
+    const auto col = column_view.to_column( start, length, false );
+
+    // TODO: Replacement for length.
+    const auto nrows = std::holds_alternative<size_t>( column_view.nrows() )
+                           ? std::get<size_t>( column_view.nrows() )
+                           : length;
 
     const auto col_str =
-        make_column_string<Float>( draw, df.nrows(), col.begin(), col.end() );
+        make_column_string<Float>( draw, nrows, col.begin(), col.end() );
 
     communication::Sender::send_string( col_str, _socket );
 }
@@ -1765,7 +1799,7 @@ void DataFrameManager::get_unit_categorical(
     communication::Sender::send_string( "Success!", _socket );
 
     communication::Sender::send_string( unit, _socket );
-}  // namespace handlers
+}
 
 // ------------------------------------------------------------------------
 
@@ -2361,8 +2395,6 @@ void DataFrameManager::where(
     const auto condition_json = *JSON::get_object( _cmd, "condition_" );
 
     auto df = utils::Getter::get( _name, data_frames() );
-
-    check_nrows( condition_json, _name, df.nrows() );
 
     const auto condition =
         BoolOpParser( categories_, join_keys_encoding_, data_frames_ )

@@ -344,6 +344,12 @@ class ColumnView
     // -------------------------------
 
    public:
+    /// Whether the column view is infinite.
+    bool is_infinite() const
+    {
+        return std::holds_alternative<UnknownSize>( nrows() ) &&
+               std::get<UnknownSize>( nrows() ) == INFINITE;
+    }
     /// Accessor to data
     std::optional<T> operator[]( const size_t _i ) const
     {
