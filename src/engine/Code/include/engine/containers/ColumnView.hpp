@@ -406,9 +406,22 @@ std::shared_ptr<std::vector<T>> ColumnView<T>::to_vector(
 {
     assert_true( _expected_length || !_nrows_must_match );
 
-    const auto expected_length = _expected_length
-                                     ? *_expected_length
-                                     : std::numeric_limits<size_t>::max();
+    const auto calc_expected_length = [this, _begin, _expected_length]() {
+        if ( _expected_length )
+            {
+                return std::make_pair( *_expected_length, true );
+            }
+
+        if ( std::holds_alternative<size_t>( nrows() ) )
+            {
+                return std::make_pair(
+                    std::get<size_t>( nrows() ) - _begin, true );
+            }
+
+        return std::make_pair( std::numeric_limits<size_t>::max(), false );
+    };
+
+    const auto [expected_length, length_is_known] = calc_expected_length();
 
     const bool nrows_do_not_match =
         _nrows_must_match && std::holds_alternative<size_t>( nrows() ) &&
@@ -422,19 +435,60 @@ std::shared_ptr<std::vector<T>> ColumnView<T>::to_vector(
                 std::to_string( std::get<size_t>( nrows() ) ) + "." );
         }
 
-    const auto data_ptr = std::make_shared<std::vector<T>>();
-
-    for ( size_t i = 0; i < expected_length; ++i )
+    if ( !_expected_length && is_infinite() )
         {
-            const auto val = value_func_( _begin + i );
-
-            if ( !val )
-                {
-                    break;
-                }
-
-            data_ptr->push_back( *val );
+            throw std::invalid_argument(
+                "The length of the column view is infinite. You can look at "
+                "it, but it cannot be transformed into an actual column unless "
+                "the length can be inferred from somewhere else." );
         }
+
+    const auto make_parallel = [this, _begin, expected_length]() {
+        const auto data_ptr =
+            std::make_shared<std::vector<T>>( expected_length );
+
+        const auto range = stl::iota<size_t>( 0, expected_length );
+
+        const auto deep_copy = *this;
+
+        const auto extract_value =
+            [deep_copy, _begin, data_ptr]( const size_t _i ) {
+                const auto val = deep_copy.value_func_( _begin + _i );
+                if ( val )
+                    {
+                        ( *data_ptr )[_i] = *val;
+                    }
+                else
+                    {
+                        assert_true( false );
+                    }
+            };
+
+        multithreading::parallel_for_each(
+            range.begin(), range.end(), extract_value );
+
+        return data_ptr;
+    };
+
+    const auto make_sequential = [this, _begin, expected_length]() {
+        const auto data_ptr = std::make_shared<std::vector<T>>();
+
+        for ( size_t i = 0; i < expected_length; ++i )
+            {
+                const auto val = value_func_( _begin + i );
+
+                if ( !val )
+                    {
+                        break;
+                    }
+
+                data_ptr->push_back( *val );
+            }
+
+        return data_ptr;
+    };
+
+    const auto data_ptr = length_is_known ? make_parallel() : make_sequential();
 
     const bool exceeds_expected_by_unknown_number =
         _nrows_must_match && std::holds_alternative<UnknownSize>( nrows() ) &&
