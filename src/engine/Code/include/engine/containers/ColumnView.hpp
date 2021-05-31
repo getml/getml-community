@@ -40,128 +40,15 @@ class ColumnView
     static ColumnView<T> from_bin_op(
         const ColumnView<T1>& _operand1,
         const ColumnView<T2>& _operand2,
-        const Operator _op )
-    {
-        const auto value_func =
-            [_operand1, _operand2, _op]( const size_t _i ) -> std::optional<T> {
-            const auto op1 = _operand1[_i];
-            const auto op2 = _operand2[_i];
-
-            if ( !op1 )
-                {
-                    const bool nrows_do_not_match =
-                        std::holds_alternative<UnknownSize>(
-                            _operand2.nrows() ) &&
-                        std::get<UnknownSize>( _operand2.nrows() ) !=
-                            INFINITE &&
-                        op2;
-
-                    if ( nrows_do_not_match )
-                        {
-                            throw std::invalid_argument(
-                                "Number of rows between two columns do not "
-                                "match, which is necessary for binary "
-                                "operations to be possible." );
-                        }
-
-                    return std::nullopt;
-                }
-
-            if ( !op2 )
-                {
-                    const bool nrows_do_not_match =
-                        std::holds_alternative<UnknownSize>(
-                            _operand1.nrows() ) &&
-                        std::get<UnknownSize>( _operand1.nrows() ) !=
-                            INFINITE &&
-                        op1;
-
-                    if ( nrows_do_not_match )
-                        {
-                            throw std::invalid_argument(
-                                "Number of rows between two columns do not "
-                                "match, which is necessary for binary "
-                                "operations to be possible." );
-                        }
-
-                    return std::nullopt;
-                }
-
-            return _op( *op1, *op2 );
-        };
-
-        const auto nrows_func = [_operand1, _operand2]() -> NRowsType {
-            if ( std::holds_alternative<size_t>( _operand1.nrows() ) )
-                {
-                    const bool nrows_do_not_match =
-                        std::holds_alternative<size_t>( _operand2.nrows() ) &&
-                        std::get<size_t>( _operand1.nrows() ) !=
-                            std::get<size_t>( _operand2.nrows() );
-
-                    if ( nrows_do_not_match )
-                        {
-                            throw std::invalid_argument(
-                                "Number of rows between two columns do not "
-                                "match, which is necessary for binary "
-                                "operations to be possible: " +
-                                std::to_string(
-                                    std::get<size_t>( _operand1.nrows() ) ) +
-                                " vs. " +
-                                std::to_string(
-                                    std::get<size_t>( _operand2.nrows() ) ) +
-                                "." );
-                        }
-
-                    return _operand1.nrows();
-                }
-
-            if ( std::holds_alternative<size_t>( _operand2.nrows() ) )
-                {
-                    return _operand2.nrows();
-                }
-
-            return std::get<UnknownSize>( _operand1.nrows() ) ||
-                   std::get<UnknownSize>( _operand2.nrows() );
-        };
-
-        return ColumnView<T>( value_func, nrows_func() );
-    }
+        const Operator _op );
 
     /// Constructs a column view from a column.
-    static ColumnView<T> from_column( const Column<T>& _col )
-    {
-        const auto value_func = [_col]( const size_t _i ) -> std::optional<T> {
-            if ( _i >= _col.nrows() )
-                {
-                    return std::nullopt;
-                };
+    static ColumnView<T> from_column( const Column<T>& _col );
 
-            return _col[_i];
-        };
-
-        return ColumnView<T>( value_func, _col.nrows(), _col.unit() );
-    }
-
+    /// Constructs a column view from a unary operator.
     template <class T1, class Operator>
     static ColumnView<T> from_un_op(
-        const ColumnView<T1>& _operand, const Operator& _op )
-    {
-        const auto value_func = [_operand,
-                                 _op]( const size_t _i ) -> std::optional<T> {
-            const auto op1 = _operand[_i];
-
-            if ( !op1 )
-                {
-                    return std::nullopt;
-                }
-
-            return _op( *op1 );
-        };
-
-        return ColumnView<T>( value_func, _operand.nrows() );
-    }
-
-    // -------------------------------
+        const ColumnView<T1>& _operand, const Operator& _op );
 
     /// Constructs a column view from a ternary operation.
     template <class T1, class T2, class T3, class Operator>
@@ -169,162 +56,10 @@ class ColumnView
         const ColumnView<T1>& _operand1,
         const ColumnView<T2>& _operand2,
         const ColumnView<T3>& _operand3,
-        const Operator _op )
-    {
-        const auto value_func = [_operand1, _operand2, _operand3, _op](
-                                    const size_t _i ) -> std::optional<T> {
-            const auto op1 = _operand1[_i];
-            const auto op2 = _operand2[_i];
-            const auto op3 = _operand3[_i];
-
-            if ( !op1 )
-                {
-                    const bool nrows_do_not_match2 =
-                        std::holds_alternative<UnknownSize>(
-                            _operand2.nrows() ) &&
-                        std::get<UnknownSize>( _operand2.nrows() ) !=
-                            INFINITE &&
-                        op2;
-
-                    const bool nrows_do_not_match3 =
-                        std::holds_alternative<UnknownSize>(
-                            _operand3.nrows() ) &&
-                        std::get<UnknownSize>( _operand3.nrows() ) !=
-                            INFINITE &&
-                        op3;
-
-                    if ( nrows_do_not_match2 || nrows_do_not_match3 )
-                        {
-                            throw std::invalid_argument(
-                                "Number of rows between two columns do not "
-                                "match, which is necessary for ternary "
-                                "operations to be possible." );
-                        }
-
-                    return std::nullopt;
-                }
-
-            if ( !op2 )
-                {
-                    const bool nrows_do_not_match1 =
-                        std::holds_alternative<UnknownSize>(
-                            _operand1.nrows() ) &&
-                        std::get<UnknownSize>( _operand1.nrows() ) !=
-                            INFINITE &&
-                        op1;
-
-                    const bool nrows_do_not_match3 =
-                        std::holds_alternative<UnknownSize>(
-                            _operand3.nrows() ) &&
-                        std::get<UnknownSize>( _operand3.nrows() ) !=
-                            INFINITE &&
-                        op3;
-
-                    if ( nrows_do_not_match1 || nrows_do_not_match3 )
-                        {
-                            throw std::invalid_argument(
-                                "Number of rows between two columns do not "
-                                "match, which is necessary for ternary "
-                                "operations to be possible." );
-                        }
-
-                    return std::nullopt;
-                }
-
-            if ( !op3 )
-                {
-                    const bool nrows_do_not_match1 =
-                        std::holds_alternative<UnknownSize>(
-                            _operand1.nrows() ) &&
-                        std::get<UnknownSize>( _operand1.nrows() ) !=
-                            INFINITE &&
-                        op1;
-
-                    const bool nrows_do_not_match2 =
-                        std::holds_alternative<UnknownSize>(
-                            _operand2.nrows() ) &&
-                        std::get<UnknownSize>( _operand2.nrows() ) !=
-                            INFINITE &&
-                        op2;
-
-                    if ( nrows_do_not_match1 || nrows_do_not_match2 )
-                        {
-                            throw std::invalid_argument(
-                                "Number of rows between two columns do not "
-                                "match, which is necessary for ternary "
-                                "operations to be possible." );
-                        }
-
-                    return std::nullopt;
-                }
-
-            return _op( *op1, *op2, *op3 );
-        };
-
-        const auto nrows_func =
-            [_operand1, _operand2, _operand3]() -> NRowsType {
-            if ( std::holds_alternative<size_t>( _operand1.nrows() ) )
-                {
-                    const bool nrows_do_not_match2 =
-                        std::holds_alternative<size_t>( _operand2.nrows() ) &&
-                        std::get<size_t>( _operand1.nrows() ) !=
-                            std::get<size_t>( _operand2.nrows() );
-
-                    const bool nrows_do_not_match3 =
-                        std::holds_alternative<size_t>( _operand3.nrows() ) &&
-                        std::get<size_t>( _operand1.nrows() ) !=
-                            std::get<size_t>( _operand3.nrows() );
-
-                    if ( nrows_do_not_match2 || nrows_do_not_match3 )
-                        {
-                            throw std::invalid_argument(
-                                "Number of rows between three columns do not "
-                                "match, which is necessary for ternary "
-                                "operations to be possible." );
-                        }
-
-                    return _operand1.nrows();
-                }
-
-            if ( std::holds_alternative<size_t>( _operand2.nrows() ) )
-                {
-                    const bool nrows_do_not_match3 =
-                        std::holds_alternative<size_t>( _operand3.nrows() ) &&
-                        std::get<size_t>( _operand2.nrows() ) !=
-                            std::get<size_t>( _operand3.nrows() );
-
-                    if ( nrows_do_not_match3 )
-                        {
-                            throw std::invalid_argument(
-                                "Number of rows between three columns do not "
-                                "match, which is necessary for ternary "
-                                "operations to be possible." );
-                        }
-
-                    return _operand2.nrows();
-                }
-
-            if ( std::holds_alternative<size_t>( _operand3.nrows() ) )
-                {
-                    return _operand3.nrows();
-                }
-
-            return std::get<UnknownSize>( _operand1.nrows() ) ||
-                   std::get<UnknownSize>( _operand2.nrows() ) ||
-                   std::get<UnknownSize>( _operand3.nrows() );
-        };
-
-        return ColumnView<T>( value_func, nrows_func() );
-    }
+        const Operator _op );
 
     /// Constructs a column view from a value.
-    static ColumnView<T> from_value( const T _value )
-    {
-        const auto value_func =
-            [_value]( const size_t _i ) -> std::optional<T> { return _value; };
-
-        return ColumnView<T>( value_func, INFINITE );
-    }
+    static ColumnView<T> from_value( const T _value );
 
     // -------------------------------
 
@@ -362,6 +97,23 @@ class ColumnView
     /// Trivial getter
     const std::string& unit() const { return unit_; }
 
+   private:
+    /// Calculates the expected length of a vector.
+    std::pair<size_t, bool> calc_expected_length(
+        const size_t _begin,
+        const std::optional<size_t> _expected_length ) const;
+
+    /// Generates the vector in parallel.
+
+    std::shared_ptr<std::vector<T>> make_parallel(
+        const size_t _begin, const size_t _expected_length ) const;
+
+    /// Generates the vector sequentially.
+    std::shared_ptr<std::vector<T>> make_sequential(
+        const size_t _begin,
+        const size_t _expected_length,
+        const bool _nrows_must_match ) const;
+
     // -------------------------------
 
    private:
@@ -378,6 +130,265 @@ class ColumnView
 };
 
 // -------------------------------------------------------------------------
+// -------------------------------------------------------------------------
+
+template <class T>
+template <class T1, class T2, class Operator>
+ColumnView<T> ColumnView<T>::from_bin_op(
+    const ColumnView<T1>& _operand1,
+    const ColumnView<T2>& _operand2,
+    const Operator _op )
+{
+    // -----------------------------------------------------------
+
+    const auto check_nrows = []( const auto _operand, const auto _op ) {
+        const bool nrows_do_not_match =
+            ( std::holds_alternative<size_t>( _operand.nrows() ) ||
+              std::get<UnknownSize>( _operand.nrows() ) != INFINITE ) &&
+            _op;
+
+        if ( nrows_do_not_match )
+            {
+                throw std::invalid_argument(
+                    "Number of rows between two columns do not "
+                    "match, which is necessary for binary "
+                    "operations to be possible." );
+            }
+    };
+
+    // -----------------------------------------------------------
+
+    const auto value_func = [_operand1, _operand2, _op, check_nrows](
+                                const size_t _i ) -> std::optional<T> {
+        const auto op1 = _operand1[_i];
+        const auto op2 = _operand2[_i];
+
+        if ( !op1 )
+            {
+                check_nrows( _operand2, op2 );
+                return std::nullopt;
+            }
+
+        if ( !op2 )
+            {
+                check_nrows( _operand1, op1 );
+                return std::nullopt;
+            }
+
+        return _op( *op1, *op2 );
+    };
+
+    // -----------------------------------------------------------
+
+    const auto check_same_size = [_operand1, _operand2]() {
+        const bool nrows_do_not_match =
+            std::holds_alternative<size_t>( _operand2.nrows() ) &&
+            std::get<size_t>( _operand1.nrows() ) !=
+                std::get<size_t>( _operand2.nrows() );
+
+        if ( nrows_do_not_match )
+            {
+                throw std::invalid_argument(
+                    "Number of rows between two columns do not "
+                    "match, which is necessary for binary "
+                    "operations to be possible: " +
+                    std::to_string( std::get<size_t>( _operand1.nrows() ) ) +
+                    " vs. " +
+                    std::to_string( std::get<size_t>( _operand2.nrows() ) ) +
+                    "." );
+            }
+    };
+
+    // -----------------------------------------------------------
+
+    const auto nrows_func =
+        [_operand1, _operand2, check_same_size]() -> NRowsType {
+        if ( std::holds_alternative<size_t>( _operand1.nrows() ) )
+            {
+                check_same_size();
+                return _operand1.nrows();
+            }
+
+        if ( std::holds_alternative<size_t>( _operand2.nrows() ) )
+            {
+                // check_same_size() not necessary, because we wouldn't get
+                // here otherwise.
+                return _operand2.nrows();
+            }
+
+        return std::get<UnknownSize>( _operand1.nrows() ) ||
+               std::get<UnknownSize>( _operand2.nrows() );
+    };
+
+    // -----------------------------------------------------------
+
+    return ColumnView<T>( value_func, nrows_func() );
+
+    // -----------------------------------------------------------
+}
+
+// -------------------------------------------------------------------------
+
+template <class T>
+ColumnView<T> ColumnView<T>::from_column( const Column<T>& _col )
+{
+    const auto value_func = [_col]( const size_t _i ) -> std::optional<T> {
+        if ( _i >= _col.nrows() )
+            {
+                return std::nullopt;
+            };
+
+        return _col[_i];
+    };
+
+    return ColumnView<T>( value_func, _col.nrows(), _col.unit() );
+}
+
+// -------------------------------------------------------------------------
+
+template <class T>
+template <class T1, class Operator>
+ColumnView<T> ColumnView<T>::from_un_op(
+    const ColumnView<T1>& _operand, const Operator& _op )
+{
+    const auto value_func = [_operand,
+                             _op]( const size_t _i ) -> std::optional<T> {
+        const auto op1 = _operand[_i];
+
+        if ( !op1 )
+            {
+                return std::nullopt;
+            }
+
+        return _op( *op1 );
+    };
+
+    return ColumnView<T>( value_func, _operand.nrows() );
+}
+
+// -------------------------------------------------------------------------
+
+template <class T>
+template <class T1, class T2, class T3, class Operator>
+ColumnView<T> ColumnView<T>::from_tern_op(
+    const ColumnView<T1>& _operand1,
+    const ColumnView<T2>& _operand2,
+    const ColumnView<T3>& _operand3,
+    const Operator _op )
+{
+    // -----------------------------------------------------------
+
+    const auto check_nrows = []( const auto _operand, const auto _op ) {
+        const bool nrows_do_not_match =
+            ( std::holds_alternative<size_t>( _operand.nrows() ) ||
+              std::get<UnknownSize>( _operand.nrows() ) != INFINITE ) &&
+            _op;
+
+        if ( nrows_do_not_match )
+            {
+                throw std::invalid_argument(
+                    "Number of rows between two columns do not "
+                    "match, which is necessary for ternary "
+                    "operations to be possible." );
+            }
+    };
+
+    // -----------------------------------------------------------
+
+    const auto value_func = [_operand1, _operand2, _operand3, _op, check_nrows](
+                                const size_t _i ) -> std::optional<T> {
+        const auto op1 = _operand1[_i];
+        const auto op2 = _operand2[_i];
+        const auto op3 = _operand3[_i];
+
+        if ( !op1 )
+            {
+                check_nrows( _operand2, op2 );
+                check_nrows( _operand3, op3 );
+                return std::nullopt;
+            }
+
+        if ( !op2 )
+            {
+                check_nrows( _operand1, op1 );
+                check_nrows( _operand3, op3 );
+                return std::nullopt;
+            }
+
+        if ( !op3 )
+            {
+                check_nrows( _operand1, op1 );
+                check_nrows( _operand2, op2 );
+                return std::nullopt;
+            }
+
+        return _op( *op1, *op2, *op3 );
+    };
+
+    // -----------------------------------------------------------
+
+    const auto check_same_size = []( const auto& _operand1,
+                                     const auto& _operand2 ) {
+        const bool nrows_do_not_match =
+            std::holds_alternative<size_t>( _operand2.nrows() ) &&
+            std::get<size_t>( _operand1.nrows() ) !=
+                std::get<size_t>( _operand2.nrows() );
+
+        if ( nrows_do_not_match )
+            {
+                throw std::invalid_argument(
+                    "Number of rows between two columns do not "
+                    "match, which is necessary for ternary "
+                    "operations to be possible." );
+            }
+    };
+
+    // -----------------------------------------------------------
+
+    const auto nrows_func =
+        [_operand1, _operand2, _operand3, check_same_size]() -> NRowsType {
+        if ( std::holds_alternative<size_t>( _operand1.nrows() ) )
+            {
+                check_same_size( _operand1, _operand2 );
+                check_same_size( _operand1, _operand3 );
+                return _operand1.nrows();
+            }
+
+        if ( std::holds_alternative<size_t>( _operand2.nrows() ) )
+            {
+                check_same_size( _operand2, _operand3 );
+                return _operand2.nrows();
+            }
+
+        if ( std::holds_alternative<size_t>( _operand3.nrows() ) )
+            {
+                return _operand3.nrows();
+            }
+
+        return std::get<UnknownSize>( _operand1.nrows() ) ||
+               std::get<UnknownSize>( _operand2.nrows() ) ||
+               std::get<UnknownSize>( _operand3.nrows() );
+    };
+
+    // -----------------------------------------------------------
+
+    return ColumnView<T>( value_func, nrows_func() );
+
+    // -----------------------------------------------------------
+}
+
+// -------------------------------------------------------------------------
+
+template <class T>
+ColumnView<T> ColumnView<T>::from_value( const T _value )
+{
+    const auto value_func = [_value]( const size_t _i ) -> std::optional<T> {
+        return _value;
+    };
+
+    return ColumnView<T>( value_func, INFINITE );
+}
+
 // -------------------------------------------------------------------------
 
 template <class T>
@@ -399,6 +410,91 @@ Column<T> ColumnView<T>::to_column(
 // -------------------------------------------------------------------------
 
 template <class T>
+std::pair<size_t, bool> ColumnView<T>::calc_expected_length(
+    const size_t _begin, const std::optional<size_t> _expected_length ) const
+{
+    if ( _expected_length )
+        {
+            return std::make_pair( *_expected_length, true );
+        }
+
+    if ( std::holds_alternative<size_t>( nrows() ) )
+        {
+            return std::make_pair( std::get<size_t>( nrows() ) - _begin, true );
+        }
+
+    return std::make_pair( std::numeric_limits<size_t>::max(), false );
+}
+
+// -------------------------------------------------------------------------
+
+template <class T>
+std::shared_ptr<std::vector<T>> ColumnView<T>::make_parallel(
+    const size_t _begin, const size_t _expected_length ) const
+{
+    const auto data_ptr = std::make_shared<std::vector<T>>( _expected_length );
+
+    const auto range = stl::iota<size_t>( 0, _expected_length );
+
+    const auto deep_copy = *this;
+
+    const auto extract_value = [deep_copy, _begin, _expected_length, data_ptr](
+                                   const size_t _i ) {
+        const auto val = deep_copy.value_func_( _begin + _i );
+
+        if ( val )
+            {
+                ( *data_ptr )[_i] = *val;
+            }
+        else
+            {
+                throw std::runtime_error(
+                    "Expected " + std::to_string( _begin + _expected_length ) +
+                    " elements, but there were fewer." );
+            }
+    };
+
+    multithreading::parallel_for_each(
+        range.begin(), range.end(), extract_value );
+
+    return data_ptr;
+}
+
+// -------------------------------------------------------------------------
+
+template <class T>
+std::shared_ptr<std::vector<T>> ColumnView<T>::make_sequential(
+    const size_t _begin,
+    const size_t _expected_length,
+    const bool _nrows_must_match ) const
+{
+    const auto data_ptr = std::make_shared<std::vector<T>>();
+
+    for ( size_t i = 0; i < _expected_length; ++i )
+        {
+            const auto val = value_func_( _begin + i );
+
+            if ( !val )
+                {
+                    break;
+                }
+
+            data_ptr->push_back( *val );
+        }
+
+    if ( _nrows_must_match && data_ptr->size() != _expected_length )
+        {
+            throw std::invalid_argument(
+                "Expected " + std::to_string( _expected_length ) +
+                " nrows, but got " + std::to_string( data_ptr->size() ) + "." );
+        }
+
+    return data_ptr;
+}
+
+// -------------------------------------------------------------------------
+
+template <class T>
 std::shared_ptr<std::vector<T>> ColumnView<T>::to_vector(
     const size_t _begin,
     const std::optional<size_t> _expected_length,
@@ -406,22 +502,8 @@ std::shared_ptr<std::vector<T>> ColumnView<T>::to_vector(
 {
     assert_true( _expected_length || !_nrows_must_match );
 
-    const auto calc_expected_length = [this, _begin, _expected_length]() {
-        if ( _expected_length )
-            {
-                return std::make_pair( *_expected_length, true );
-            }
-
-        if ( std::holds_alternative<size_t>( nrows() ) )
-            {
-                return std::make_pair(
-                    std::get<size_t>( nrows() ) - _begin, true );
-            }
-
-        return std::make_pair( std::numeric_limits<size_t>::max(), false );
-    };
-
-    const auto [expected_length, length_is_known] = calc_expected_length();
+    const auto [expected_length, length_is_known] =
+        calc_expected_length( _begin, _expected_length );
 
     const bool nrows_do_not_match =
         _nrows_must_match && std::holds_alternative<size_t>( nrows() ) &&
@@ -435,60 +517,20 @@ std::shared_ptr<std::vector<T>> ColumnView<T>::to_vector(
                 std::to_string( std::get<size_t>( nrows() ) ) + "." );
         }
 
-    if ( !_expected_length && is_infinite() )
+    if ( !length_is_known && is_infinite() )
         {
             throw std::invalid_argument(
-                "The length of the column view is infinite. You can look at "
-                "it, but it cannot be transformed into an actual column unless "
+                "The length of the column view is infinite. You can look "
+                "at "
+                "it, but it cannot be transformed into an actual column "
+                "unless "
                 "the length can be inferred from somewhere else." );
         }
 
-    const auto make_parallel = [this, _begin, expected_length]() {
-        const auto data_ptr =
-            std::make_shared<std::vector<T>>( expected_length );
-
-        const auto range = stl::iota<size_t>( 0, expected_length );
-
-        const auto deep_copy = *this;
-
-        const auto extract_value =
-            [deep_copy, _begin, data_ptr]( const size_t _i ) {
-                const auto val = deep_copy.value_func_( _begin + _i );
-                if ( val )
-                    {
-                        ( *data_ptr )[_i] = *val;
-                    }
-                else
-                    {
-                        assert_true( false );
-                    }
-            };
-
-        multithreading::parallel_for_each(
-            range.begin(), range.end(), extract_value );
-
-        return data_ptr;
-    };
-
-    const auto make_sequential = [this, _begin, expected_length]() {
-        const auto data_ptr = std::make_shared<std::vector<T>>();
-
-        for ( size_t i = 0; i < expected_length; ++i )
-            {
-                const auto val = value_func_( _begin + i );
-
-                if ( !val )
-                    {
-                        break;
-                    }
-
-                data_ptr->push_back( *val );
-            }
-
-        return data_ptr;
-    };
-
-    const auto data_ptr = length_is_known ? make_parallel() : make_sequential();
+    const auto data_ptr =
+        length_is_known
+            ? make_parallel( _begin, expected_length )
+            : make_sequential( _begin, expected_length, _nrows_must_match );
 
     const bool exceeds_expected_by_unknown_number =
         _nrows_must_match && std::holds_alternative<UnknownSize>( nrows() ) &&
@@ -500,13 +542,6 @@ std::shared_ptr<std::vector<T>> ColumnView<T>::to_vector(
             throw std::invalid_argument(
                 "Expected " + std::to_string( expected_length ) +
                 " nrows, but there were more." );
-        }
-
-    if ( _nrows_must_match && data_ptr->size() != expected_length )
-        {
-            throw std::invalid_argument(
-                "Expected " + std::to_string( expected_length ) +
-                " nrows, but got " + std::to_string( data_ptr->size() ) + "." );
         }
 
     return data_ptr;
