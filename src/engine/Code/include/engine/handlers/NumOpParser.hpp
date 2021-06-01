@@ -78,6 +78,10 @@ class NumOpParser
     containers::ColumnView<Float> get_column(
         const Poco::JSON::Object& _col ) const;
 
+    /// Returns a subselection on the column.
+    containers::ColumnView<Float> subselection(
+        const Poco::JSON::Object& _col ) const;
+
     /// Parses the operator and undertakes a unary operation.
     containers::ColumnView<Float> unary_operation(
         const Poco::JSON::Object& _col ) const;

@@ -235,6 +235,13 @@ containers::ColumnView<Float> NumOpParser::parse(
             return containers::ColumnView<Float>::from_value( val );
         }
 
+    const auto op = JSON::get_value<std::string>( _col, "operator_" );
+
+    if ( type == "VirtualFloatColumn" && op == "subselection" )
+        {
+            return subselection( _col );
+        }
+
     if ( type == "VirtualFloatColumn" && _col.has( "operand2_" ) )
         {
             return binary_operation( _col );
@@ -247,6 +254,21 @@ containers::ColumnView<Float> NumOpParser::parse(
 
     throw std::invalid_argument(
         "Column of type '" + type + "' not recognized for numerical columns." );
+}
+
+// ----------------------------------------------------------------------------
+
+containers::ColumnView<Float> NumOpParser::subselection(
+    const Poco::JSON::Object& _col ) const
+{
+    const auto data = parse( *JSON::get_object( _col, "operand1_" ) );
+
+    const auto indices =
+        BoolOpParser( categories_, join_keys_encoding_, data_frames_ )
+            .parse( *JSON::get_object( _col, "operand2_" ) );
+
+    return containers::ColumnView<Float>::from_boolean_subselection(
+        data, indices );
 }
 
 // ----------------------------------------------------------------------------

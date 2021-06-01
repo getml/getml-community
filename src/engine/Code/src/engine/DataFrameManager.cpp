@@ -791,7 +791,7 @@ void DataFrameManager::calc_column_plots(
 
     // --------------------------------------------------------------------
 
-    const containers::Features features = {col.data_ptr()};
+    const containers::Features features = { col.data_ptr() };
 
     const auto obj = metrics::Summarizer::calculate_feature_plots(
         features, col.nrows(), 1, num_bins, targets );
@@ -1479,6 +1479,27 @@ void DataFrameManager::get_boolean_column_content(
 
 // ------------------------------------------------------------------------
 
+void DataFrameManager::get_boolean_column_nrows(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    const auto json_col = *JSON::get_object( _cmd, "col_" );
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    const auto column_view =
+        BoolOpParser( categories_, join_keys_encoding_, data_frames_ )
+            .parse( json_col );
+
+    read_lock.unlock();
+
+    communication::Sender::send_string( "Found!", _socket );
+
+    communication::Sender::send_string( column_view.nrows_to_str(), _socket );
+}
+// ------------------------------------------------------------------------
+
 void DataFrameManager::get_categorical_column(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
@@ -1547,6 +1568,27 @@ void DataFrameManager::get_categorical_column_content(
 
 // ------------------------------------------------------------------------
 
+void DataFrameManager::get_categorical_column_nrows(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    const auto json_col = *JSON::get_object( _cmd, "col_" );
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    const auto column_view =
+        CatOpParser( categories_, join_keys_encoding_, data_frames_ )
+            .parse( json_col );
+
+    read_lock.unlock();
+
+    communication::Sender::send_string( "Found!", _socket );
+
+    communication::Sender::send_string( column_view.nrows_to_str(), _socket );
+}
+// ------------------------------------------------------------------------
+
 void DataFrameManager::get_column(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
@@ -1599,6 +1641,28 @@ void DataFrameManager::get_data_frame_content(
     read_lock.unlock();
 
     communication::Sender::send_string( JSON::stringify( obj ), _socket );
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::get_column_nrows(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    const auto json_col = *JSON::get_object( _cmd, "col_" );
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    const auto column_view =
+        NumOpParser( categories_, join_keys_encoding_, data_frames_ )
+            .parse( json_col );
+
+    read_lock.unlock();
+
+    communication::Sender::send_string( "Found!", _socket );
+
+    communication::Sender::send_string( column_view.nrows_to_str(), _socket );
 }
 
 // ------------------------------------------------------------------------
@@ -1821,7 +1885,7 @@ void DataFrameManager::group_by(
     check_nrows( _cmd, df_name, df.nrows() );
 
     const auto grouped_df =
-        GroupByParser( categories_, join_keys_encoding_, {df} )
+        GroupByParser( categories_, join_keys_encoding_, { df } )
             .group_by( _name, key_name, aggregations );
 
     weak_write_lock.upgrade();

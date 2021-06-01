@@ -141,8 +141,20 @@ class DataFrameManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
+    /// Returns the number of rows in boolean column.
+    void get_boolean_column_nrows(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Sends a categorical columm to the client
     void get_categorical_column(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Sends a string describing the number of rows in a categorical column.
+    void get_categorical_column_nrows(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
@@ -155,6 +167,12 @@ class DataFrameManager
 
     /// Sends a column to the client
     void get_column(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Gets the number of rows in a float column.
+    void get_column_nrows(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );

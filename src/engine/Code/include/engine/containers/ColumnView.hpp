@@ -42,6 +42,10 @@ class ColumnView
         const ColumnView<T2>& _operand2,
         const Operator _op );
 
+    /// Constructs a new column from a boolean subselection.
+    static ColumnView<T> from_boolean_subselection(
+        const ColumnView<T>& _data, const ColumnView<bool>& _indices );
+
     /// Constructs a column view from a column.
     static ColumnView<T> from_column( const Column<T>& _col );
 
@@ -95,16 +99,32 @@ class ColumnView
     NRowsType nrows() const { return nrows_; }
 
     /// Trivial getter
+    std::string nrows_to_str() const
+    {
+        if ( std::holds_alternative<size_t>( nrows() ) )
+            {
+                return std::to_string( std::get<size_t>( nrows() ) );
+            }
+
+        if ( std::get<UnknownSize>( nrows() ) == INFINITE )
+            {
+                return "infinite";
+            }
+
+        return "unknown";
+    }
+
+    /// Trivial getter
     const std::string& unit() const { return unit_; }
 
    private:
     /// Calculates the expected length of a vector.
     std::pair<size_t, bool> calc_expected_length(
         const size_t _begin,
-        const std::optional<size_t> _expected_length ) const;
+        const std::optional<size_t> _expected_length,
+        const bool _nrows_must_match ) const;
 
     /// Generates the vector in parallel.
-
     std::shared_ptr<std::vector<T>> make_parallel(
         const size_t _begin, const size_t _expected_length ) const;
 
@@ -223,6 +243,143 @@ ColumnView<T> ColumnView<T>::from_bin_op(
     // -----------------------------------------------------------
 
     return ColumnView<T>( value_func, nrows_func() );
+
+    // -----------------------------------------------------------
+}
+
+// -------------------------------------------------------------------------
+
+template <class T>
+ColumnView<T> ColumnView<T>::from_boolean_subselection(
+    const ColumnView<T>& _data, const ColumnView<bool>& _indices )
+{
+    // -----------------------------------------------------------
+
+    const bool nrows_do_not_match =
+        std::holds_alternative<size_t>( _data.nrows() ) &&
+        std::holds_alternative<size_t>( _indices.nrows() ) &&
+        std::get<size_t>( _data.nrows() ) !=
+            std::get<size_t>( _indices.nrows() );
+
+    if ( nrows_do_not_match )
+        {
+            throw std::invalid_argument(
+                "Number of rows between two columns do not "
+                "match, which is necessary for subselection "
+                "operations on a boolean column to be possible: " +
+                std::to_string( std::get<size_t>( _data.nrows() ) ) + " vs. " +
+                std::to_string( std::get<size_t>( _indices.nrows() ) ) + "." );
+        }
+
+    // -----------------------------------------------------------
+
+    if ( _data.is_infinite() )
+        {
+            throw std::invalid_argument(
+                "The data or the indices must be finite for a boolean "
+                "subselection to work!" );
+        }
+
+    // -----------------------------------------------------------
+
+    const auto find_next = [_indices, _data](
+                               size_t _begin,
+                               size_t _skip ) -> std::optional<size_t> {
+        size_t ix = _begin;
+
+        size_t count = 0;
+
+        while ( true )
+            {
+                const auto val = _indices[ix];
+
+                if ( !val )
+                    {
+                        if ( _data[ix] )
+                            {
+                                throw std::runtime_error(
+                                    "Number of rows do not match on the "
+                                    "boolean subselection. The data is longer "
+                                    "than the indices." );
+                            }
+
+                        return std::nullopt;
+                    }
+
+                if ( !_data[ix] )
+                    {
+                        if ( !_indices.is_infinite() )
+                            {
+                                throw std::runtime_error(
+                                    "Number of rows do not match on the "
+                                    "boolean subselection. The indices are "
+                                    "longer than the data. This may only be "
+                                    "the case if the indices are infinite." );
+                            }
+
+                        return std::nullopt;
+                    }
+
+                if ( *val )
+                    {
+                        if ( ++count > _skip )
+                            {
+                                return ix;
+                            }
+                    }
+
+                ++ix;
+            }
+
+        assert_true( false );
+
+        return 0;
+    };
+
+    // -----------------------------------------------------------
+
+    size_t ix = 0;
+
+    size_t next = 0;
+
+    const auto value_func = [_data, _indices, ix, next, find_next](
+                                const size_t _i ) mutable -> std::optional<T> {
+        if ( _i == next ) [[likely]]
+            {
+                const auto new_ix = find_next( ix, 0 );
+                if ( !new_ix )
+                    {
+                        return std::nullopt;
+                    }
+                ix = *new_ix;
+            }
+        else if ( _i < next ) [[unlikely]]
+            {
+                const auto new_ix = find_next( 0, _i );
+                if ( !new_ix )
+                    {
+                        return std::nullopt;
+                    }
+                ix = *new_ix;
+            }
+        else if ( _i > next ) [[unlikely]]
+            {
+                const auto new_ix = find_next( ix, _i - next );
+                if ( !new_ix )
+                    {
+                        return std::nullopt;
+                    }
+                ix = *new_ix;
+            }
+
+        next = _i + 1;
+
+        return _data[ix++];
+    };
+
+    // -----------------------------------------------------------
+
+    return ColumnView<T>( value_func, NOT_KNOWABLE, _data.unit() );
 
     // -----------------------------------------------------------
 }
@@ -411,11 +568,13 @@ Column<T> ColumnView<T>::to_column(
 
 template <class T>
 std::pair<size_t, bool> ColumnView<T>::calc_expected_length(
-    const size_t _begin, const std::optional<size_t> _expected_length ) const
+    const size_t _begin,
+    const std::optional<size_t> _expected_length,
+    const bool _nrows_must_match ) const
 {
     if ( _expected_length )
         {
-            return std::make_pair( *_expected_length, true );
+            return std::make_pair( *_expected_length, _nrows_must_match );
         }
 
     if ( std::holds_alternative<size_t>( nrows() ) )
@@ -503,7 +662,7 @@ std::shared_ptr<std::vector<T>> ColumnView<T>::to_vector(
     assert_true( _expected_length || !_nrows_must_match );
 
     const auto [expected_length, length_is_known] =
-        calc_expected_length( _begin, _expected_length );
+        calc_expected_length( _begin, _expected_length, _nrows_must_match );
 
     const bool nrows_do_not_match =
         _nrows_must_match && std::holds_alternative<size_t>( nrows() ) &&
@@ -517,7 +676,7 @@ std::shared_ptr<std::vector<T>> ColumnView<T>::to_vector(
                 std::to_string( std::get<size_t>( nrows() ) ) + "." );
         }
 
-    if ( !length_is_known && is_infinite() )
+    if ( !_expected_length && is_infinite() )
         {
             throw std::invalid_argument(
                 "The length of the column view is infinite. You can look "
