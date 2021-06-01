@@ -109,7 +109,15 @@ containers::ColumnView<bool> BoolOpParser::parse(
 
             return containers::ColumnView<bool>::from_value( value );
         }
-    else if ( type == "VirtualBooleanColumn" )
+
+    const auto op = JSON::get_value<std::string>( _col, "operator_" );
+
+    if ( type == "VirtualBooleanColumn" && op == "subselection" )
+        {
+            return subselection( _col );
+        }
+
+    if ( type == "VirtualBooleanColumn" )
         {
             if ( _col.has( "operand2_" ) )
                 {
@@ -120,14 +128,24 @@ containers::ColumnView<bool> BoolOpParser::parse(
                     return unary_operation( _col );
                 }
         }
-    else
-        {
-            throw std::invalid_argument(
-                "Column of type '" + type +
-                "' not recognized for boolean columns." );
 
-            return unary_operation( _col );
-        }
+    throw std::invalid_argument(
+        "Column of type '" + type + "' not recognized for boolean columns." );
+
+    return unary_operation( _col );
+}
+
+// ----------------------------------------------------------------------------
+
+containers::ColumnView<bool> BoolOpParser::subselection(
+    const Poco::JSON::Object& _col ) const
+{
+    const auto data = parse( *JSON::get_object( _col, "operand1_" ) );
+
+    const auto indices = parse( *JSON::get_object( _col, "operand2_" ) );
+
+    return containers::ColumnView<bool>::from_boolean_subselection(
+        data, indices );
 }
 
 // ----------------------------------------------------------------------------

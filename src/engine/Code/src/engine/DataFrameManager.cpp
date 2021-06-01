@@ -1466,10 +1466,9 @@ void DataFrameManager::get_boolean_column_content(
 
     assert_true( data_ptr );
 
-    // TODO: Replacement for 0.
     const auto nrows = std::holds_alternative<size_t>( column_view.nrows() )
                            ? std::get<size_t>( column_view.nrows() )
-                           : 0;
+                           : length;
 
     const auto col_str = make_column_string<bool>(
         draw, nrows, data_ptr->begin(), data_ptr->end() );
@@ -1555,10 +1554,9 @@ void DataFrameManager::get_categorical_column_content(
 
     assert_true( data_ptr );
 
-    // TODO: Replacement for 0.
     const auto nrows = std::holds_alternative<size_t>( column_view.nrows() )
                            ? std::get<size_t>( column_view.nrows() )
-                           : 0;
+                           : length;
 
     const auto col_str = make_column_string<std::string>(
         draw, nrows, data_ptr->begin(), data_ptr->end() );
@@ -1763,7 +1761,6 @@ void DataFrameManager::get_float_column_content(
 
     const auto col = column_view.to_column( start, length, false );
 
-    // TODO: Replacement for length.
     const auto nrows = std::holds_alternative<size_t>( column_view.nrows() )
                            ? std::get<size_t>( column_view.nrows() )
                            : length;

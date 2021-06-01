@@ -59,6 +59,10 @@ class BoolOpParser
     containers::ColumnView<bool> unary_operation(
         const Poco::JSON::Object& _col ) const;
 
+    /// Returns a subselection on the column.
+    containers::ColumnView<bool> subselection(
+        const Poco::JSON::Object& _col ) const;
+
     // ------------------------------------------------------------------------
 
     /// Undertakes a binary operation based on template class

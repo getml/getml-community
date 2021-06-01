@@ -72,6 +72,10 @@ class CatOpParser
     containers::ColumnView<std::string> numerical_as_string(
         const Poco::JSON::Object& _col ) const;
 
+    /// Returns a subselection on the column.
+    containers::ColumnView<std::string> subselection(
+        const Poco::JSON::Object& _col ) const;
+
     /// Transforms an int column to a column view.
     containers::ColumnView<std::string> to_view(
         const containers::Column<Int>& _col,

@@ -212,6 +212,13 @@ containers::ColumnView<std::string> CatOpParser::parse(
             return containers::ColumnView<std::string>::from_value( val );
         }
 
+    const auto op = JSON::get_value<std::string>( _col, "operator_" );
+
+    if ( type == "VirtualStringColumn" && op == "subselection" )
+        {
+            return subselection( _col );
+        }
+
     if ( type == "VirtualStringColumn" )
         {
             if ( _col.has( "operand2_" ) )
@@ -227,6 +234,21 @@ containers::ColumnView<std::string> CatOpParser::parse(
         "' not recognized for categorical columns." );
 
     return unary_operation( _col );
+}
+
+// ----------------------------------------------------------------------------
+
+containers::ColumnView<std::string> CatOpParser::subselection(
+    const Poco::JSON::Object& _col ) const
+{
+    const auto data = parse( *JSON::get_object( _col, "operand1_" ) );
+
+    const auto indices =
+        BoolOpParser( categories_, join_keys_encoding_, data_frames_ )
+            .parse( *JSON::get_object( _col, "operand2_" ) );
+
+    return containers::ColumnView<std::string>::from_boolean_subselection(
+        data, indices );
 }
 
 // ----------------------------------------------------------------------------
