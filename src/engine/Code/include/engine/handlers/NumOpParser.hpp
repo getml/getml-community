@@ -59,6 +59,10 @@ class NumOpParser
     // ------------------------------------------------------------------------
 
    private:
+    /// Implements numpy's arange in a lazy fashion.
+    containers::ColumnView<Float> arange(
+        const Poco::JSON::Object& _col ) const;
+
     /// Transforms a string column to a float.
     containers::ColumnView<Float> as_num(
         const Poco::JSON::Object& _col ) const;

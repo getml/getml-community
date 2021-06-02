@@ -6,6 +6,55 @@ namespace handlers
 {
 // ----------------------------------------------------------------------------
 
+containers::ColumnView<Float> NumOpParser::arange(
+    const Poco::JSON::Object& _col ) const
+{
+    const auto start = JSON::get_value<Float>( _col, "start_" );
+
+    const auto stop = JSON::get_value<Float>( _col, "stop_" );
+
+    const auto step = JSON::get_value<Float>( _col, "step_" );
+
+    const auto value_func =
+        [start, stop, step]( const size_t _i ) -> std::optional<Float> {
+        if ( start == stop )
+            {
+                return std::nullopt;
+            }
+
+        const auto result = start + step * static_cast<Float>( _i );
+
+        const auto end_is_reached = ( stop > start && result >= stop ) ||
+                                    ( stop < start && result <= stop );
+
+        if ( end_is_reached )
+            {
+                return std::nullopt;
+            }
+
+        return result;
+    };
+
+    if ( step == 0.0 )
+        {
+            throw std::invalid_argument( "arange: step cannot be zero." );
+        }
+
+    if ( ( stop - start ) * step < 0.0 )
+        {
+            throw std::invalid_argument(
+                "arange: stop - start must have the same sign as step." );
+        }
+
+    const auto nrows = std::fmod( stop - start, step ) == 0.0
+                           ? static_cast<size_t>( ( stop - start ) / step )
+                           : static_cast<size_t>( ( stop - start ) / step ) + 1;
+
+    return containers::ColumnView<Float>( value_func, nrows );
+}
+
+// ----------------------------------------------------------------------------
+
 containers::ColumnView<Float> NumOpParser::as_num(
     const Poco::JSON::Object& _col ) const
 {
@@ -236,6 +285,11 @@ containers::ColumnView<Float> NumOpParser::parse(
         }
 
     const auto op = JSON::get_value<std::string>( _col, "operator_" );
+
+    if ( type == "VirtualFloatColumn" && op == "arange" )
+        {
+            return arange( _col );
+        }
 
     if ( type == "VirtualFloatColumn" && op == "with_unit" )
         {
