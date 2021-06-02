@@ -90,6 +90,10 @@ class NumOpParser
     containers::ColumnView<Float> update(
         const Poco::JSON::Object& _col ) const;
 
+    /// Returns a new column with a new unit.
+    containers::ColumnView<Float> with_unit(
+        const Poco::JSON::Object& _col ) const;
+
     // ------------------------------------------------------------------------
 
     /// Undertakes a binary operation based on template class

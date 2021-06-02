@@ -46,6 +46,10 @@ class ColumnView
     static ColumnView<T> from_boolean_subselection(
         const ColumnView<T>& _data, const ColumnView<bool>& _indices );
 
+    /// Constructs a new column from a numerical subselection.
+    static ColumnView<T> from_numerical_subselection(
+        const ColumnView<T>& _data, const ColumnView<Float>& _indices );
+
     /// Constructs a column view from a column.
     static ColumnView<T> from_column( const Column<T>& _col );
 
@@ -79,6 +83,9 @@ class ColumnView
         const size_t _begin,
         const std::optional<size_t> _expected_length,
         const bool _nrows_must_match ) const;
+
+    /// Returns a new column view with a new unit.
+    ColumnView<T> with_unit( const std::string& _unit ) const;
 
     // -------------------------------
 
@@ -380,6 +387,49 @@ ColumnView<T> ColumnView<T>::from_boolean_subselection(
     // -----------------------------------------------------------
 
     return ColumnView<T>( value_func, NOT_KNOWABLE, _data.unit() );
+
+    // -----------------------------------------------------------
+}
+
+// -------------------------------------------------------------------------
+
+template <class T>
+ColumnView<T> ColumnView<T>::from_numerical_subselection(
+    const ColumnView<T>& _data, const ColumnView<Float>& _indices )
+{
+    // -----------------------------------------------------------
+
+    const auto value_func = [_data,
+                             _indices]( const size_t _i ) -> std::optional<T> {
+        const auto ix_float = _indices[_i];
+
+        if ( !ix_float )
+            {
+                return std::nullopt;
+            }
+
+        if ( *ix_float < 0.0 )
+            {
+                throw std::runtime_error(
+                    "Index on a numerical subselection smaller than zero!" );
+            }
+
+        const auto ix = static_cast<size_t>( *ix_float );
+
+        const auto d = _data[ix];
+
+        if ( !d )
+            {
+                throw std::runtime_error(
+                    "Index on a numerical subselection out of bounds!" );
+            }
+
+        return *d;
+    };
+
+    // -----------------------------------------------------------
+
+    return ColumnView<T>( value_func, _indices.nrows(), _data.unit() );
 
     // -----------------------------------------------------------
 }
@@ -704,6 +754,20 @@ std::shared_ptr<std::vector<T>> ColumnView<T>::to_vector(
         }
 
     return data_ptr;
+}
+
+// -------------------------------------------------------------------------
+
+template <class T>
+ColumnView<T> ColumnView<T>::with_unit( const std::string& _unit ) const
+{
+    const auto deep_copy = *this;
+
+    const auto value_func = [deep_copy]( const size_t _i ) -> std::optional<T> {
+        return deep_copy[_i];
+    };
+
+    return ColumnView<T>( value_func, nrows(), _unit );
 }
 
 // -------------------------------------------------------------------------

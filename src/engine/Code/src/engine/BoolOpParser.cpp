@@ -142,7 +142,21 @@ containers::ColumnView<bool> BoolOpParser::subselection(
 {
     const auto data = parse( *JSON::get_object( _col, "operand1_" ) );
 
-    const auto indices = parse( *JSON::get_object( _col, "operand2_" ) );
+    const auto indices_json = *JSON::get_object( _col, "operand2_" );
+
+    const auto type = JSON::get_value<std::string>( indices_json, "type_" );
+
+    if ( type == "FloatColumn" || type == "VirtualFloatColumn" )
+        {
+            const auto indices =
+                NumOpParser( categories_, join_keys_encoding_, data_frames_ )
+                    .parse( indices_json );
+
+            return containers::ColumnView<bool>::from_numerical_subselection(
+                data, indices );
+        }
+
+    const auto indices = parse( indices_json );
 
     return containers::ColumnView<bool>::from_boolean_subselection(
         data, indices );

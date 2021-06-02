@@ -214,6 +214,11 @@ containers::ColumnView<std::string> CatOpParser::parse(
 
     const auto op = JSON::get_value<std::string>( _col, "operator_" );
 
+    if ( type == "VirtualStringColumn" && op == "with_unit" )
+        {
+            return with_unit( _col );
+        }
+
     if ( type == "VirtualStringColumn" && op == "subselection" )
         {
             return subselection( _col );
@@ -243,9 +248,23 @@ containers::ColumnView<std::string> CatOpParser::subselection(
 {
     const auto data = parse( *JSON::get_object( _col, "operand1_" ) );
 
+    const auto indices_json = *JSON::get_object( _col, "operand2_" );
+
+    const auto type = JSON::get_value<std::string>( indices_json, "type_" );
+
+    if ( type == "FloatColumn" || type == "VirtualFloatColumn" )
+        {
+            const auto indices =
+                NumOpParser( categories_, join_keys_encoding_, data_frames_ )
+                    .parse( indices_json );
+
+            return containers::ColumnView<
+                std::string>::from_numerical_subselection( data, indices );
+        }
+
     const auto indices =
         BoolOpParser( categories_, join_keys_encoding_, data_frames_ )
-            .parse( *JSON::get_object( _col, "operand2_" ) );
+            .parse( indices_json );
 
     return containers::ColumnView<std::string>::from_boolean_subselection(
         data, indices );
@@ -357,6 +376,18 @@ containers::ColumnView<std::string> CatOpParser::update(
 
     return containers::ColumnView<std::string>::from_tern_op(
         operand1, operand2, condition, op );
+}
+
+// ----------------------------------------------------------------------------
+
+containers::ColumnView<std::string> CatOpParser::with_unit(
+    const Poco::JSON::Object& _col ) const
+{
+    const auto col = parse( *JSON::get_object( _col, "operand1_" ) );
+
+    const auto unit = JSON::get_value<std::string>( _col, "unit_" );
+
+    return col.with_unit( unit );
 }
 
 // ----------------------------------------------------------------------------
