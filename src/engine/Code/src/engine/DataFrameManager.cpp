@@ -1807,21 +1807,19 @@ void DataFrameManager::get_unit(
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket* _socket )
 {
+    const auto json_col = *JSON::get_object( _cmd, "col_" );
+
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    const auto role = JSON::get_value<std::string>( _cmd, "role_" );
-
-    const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
-
-    const auto df = utils::Getter::get( df_name, data_frames() );
-
-    const auto unit = df.float_column( _name, role ).unit();
+    const auto column_view =
+        NumOpParser( categories_, join_keys_encoding_, data_frames_ )
+            .parse( json_col );
 
     read_lock.unlock();
 
     communication::Sender::send_string( "Success!", _socket );
 
-    communication::Sender::send_string( unit, _socket );
+    communication::Sender::send_string( column_view.unit(), _socket );
 }
 
 // ------------------------------------------------------------------------
@@ -1831,35 +1829,19 @@ void DataFrameManager::get_unit_categorical(
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket* _socket )
 {
+    const auto json_col = *JSON::get_object( _cmd, "col_" );
+
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    const auto role = JSON::get_value<std::string>( _cmd, "role_" );
-
-    const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
-
-    const auto df = utils::Getter::get( df_name, data_frames() );
-
-    std::string unit;
-
-    if ( role == containers::DataFrame::ROLE_UNUSED ||
-         role == containers::DataFrame::ROLE_UNUSED_STRING )
-        {
-            unit = df.unused_string( _name ).unit();
-        }
-    else if ( role == containers::DataFrame::ROLE_TEXT )
-        {
-            unit = df.text( _name ).unit();
-        }
-    else
-        {
-            unit = df.int_column( _name, role ).unit();
-        }
+    const auto column_view =
+        CatOpParser( categories_, join_keys_encoding_, data_frames_ )
+            .parse( json_col );
 
     read_lock.unlock();
 
     communication::Sender::send_string( "Success!", _socket );
 
-    communication::Sender::send_string( unit, _socket );
+    communication::Sender::send_string( column_view.unit(), _socket );
 }
 
 // ------------------------------------------------------------------------
