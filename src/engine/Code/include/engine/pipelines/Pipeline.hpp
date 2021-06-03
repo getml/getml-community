@@ -43,7 +43,8 @@ class Pipeline
     void check(
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const communication::Logger>& _logger,
-        const std::map<std::string, containers::DataFrame>& _data_frames,
+        const containers::DataFrame& _population_df,
+        const std::vector<containers::DataFrame>& _peripheral_dfs,
         const std::shared_ptr<containers::Encoding>& _categories,
         const std::shared_ptr<dependency::PreprocessorTracker>&
             _preprocessor_tracker,
@@ -54,6 +55,8 @@ class Pipeline
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const communication::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
+        const containers::DataFrame& _population_df,
+        const std::vector<containers::DataFrame>& _peripheral_dfs,
         const std::shared_ptr<containers::Encoding>& _categories,
         const dependency::DataFrameTracker& _data_frame_tracker,
         const std::shared_ptr<dependency::FETracker> _fe_tracker,
@@ -85,6 +88,8 @@ class Pipeline
         const Poco::JSON::Object& _cmd,
         const std::shared_ptr<const communication::Logger>& _logger,
         const std::map<std::string, containers::DataFrame>& _data_frames,
+        const containers::DataFrame& _population_df,
+        const std::vector<containers::DataFrame>& _peripheral_dfs,
         const dependency::DataFrameTracker& _data_frame_tracker,
         const std::shared_ptr<const containers::Encoding> _categories,
         Poco::Net::StreamSocket* _socket );
@@ -208,6 +213,11 @@ class Pipeline
         const std::map<helpers::ColumnDescription, Float>& _column_importances,
         std::vector<helpers::ColumnDescription>* _coldesc ) const;
 
+    /// Extracts the fingerprints of the data frames.
+    std::vector<Poco::JSON::Object::Ptr> extract_df_fingerprints(
+        const containers::DataFrame& _population_df,
+        const std::vector<containers::DataFrame>& _peripheral_dfs ) const;
+
     /// Extracts the fingerprints of the feature learners.
     std::vector<Poco::JSON::Object::Ptr> extract_fe_fingerprints() const;
 
@@ -241,9 +251,8 @@ class Pipeline
         std::shared_ptr<const helpers::Schema>,
         std::shared_ptr<const std::vector<helpers::Schema>>>
     extract_schemata(
-        const Poco::JSON::Object& _cmd,
-        const std::map<std::string, containers::DataFrame>& _data_frames )
-        const;
+        const containers::DataFrame& _population_df,
+        const std::vector<containers::DataFrame>& _peripheral_dfs ) const;
 
     /// Fits the feature learning algorithms.
     void fit_feature_learners(
@@ -336,9 +345,7 @@ class Pipeline
 
     /// Get the targets from the population table.
     std::vector<std::string> get_targets(
-        const Poco::JSON::Object& _cmd,
-        const std::map<std::string, containers::DataFrame>& _data_frames )
-        const;
+        const containers::DataFrame& _population_df ) const;
 
     /// Prepares the feature learners from the JSON object.
     std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>

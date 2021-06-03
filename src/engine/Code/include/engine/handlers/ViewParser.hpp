@@ -34,6 +34,10 @@ class ViewParser
     /// Parses a view and turns it into a DataFrame.
     containers::DataFrame parse( const Poco::JSON::Object& _obj );
 
+    /// Returns the population and peripheral data frames.
+    std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
+    parse_all( const Poco::JSON::Object& _cmd );
+
     // ------------------------------------------------------------------------
 
    private:

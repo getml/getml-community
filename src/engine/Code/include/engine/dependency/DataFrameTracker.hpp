@@ -45,12 +45,15 @@ class DataFrameTracker
         const std::map<std::string, containers::DataFrame>& _data_frames,
         const std::vector<Poco::JSON::Object::Ptr>& _dependencies ) const
     {
-        const auto df_fingerprints =
+        // TODO
+        return std::nullopt;
+
+        /*const auto df_fingerprints =
             containers::DataFrameExtractor::extract_df_fingerprints(
                 _obj, _cmd, _data_frames );
         const auto build_history =
             make_build_history( _dependencies, df_fingerprints );
-        return retrieve( build_history );
+        return retrieve( build_history );*/
     }
 
    private:

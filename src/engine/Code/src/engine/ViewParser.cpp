@@ -164,6 +164,30 @@ containers::DataFrame ViewParser::parse( const Poco::JSON::Object& _obj )
 
 // ----------------------------------------------------------------------------
 
+std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
+ViewParser::parse_all( const Poco::JSON::Object& _cmd )
+{
+    const auto to_df =
+        [this]( const Poco::JSON::Object::Ptr& _obj ) -> containers::DataFrame {
+        assert_true( _obj );
+        return parse( *_obj );
+    };
+
+    const auto population_obj = JSON::get_object( _cmd, "population_df_" );
+
+    const auto peripheral_objs =
+        JSON::array_to_obj_vector( JSON::get_array( _cmd, "peripheral_dfs_" ) );
+
+    const auto population = to_df( population_obj );
+
+    const auto peripheral = stl::collect::vector<containers::DataFrame>(
+        peripheral_objs | std::views::transform( to_df ) );
+
+    return std::make_pair( population, peripheral );
+}
+
+// ----------------------------------------------------------------------------
+
 void ViewParser::subselection(
     const Poco::JSON::Object& _obj, containers::DataFrame* _df ) const
 {
