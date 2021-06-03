@@ -129,6 +129,13 @@ class DataFrameManager
         const bool _append,
         Poco::Net::StreamSocket* _socket );
 
+    /// Creates a new data frame from a view.
+    void from_view(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        const bool _append,
+        Poco::Net::StreamSocket* _socket );
+
     /// Sends a boolean columm to the client
     void get_boolean_column(
         const std::string& _name,

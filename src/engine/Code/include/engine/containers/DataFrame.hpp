@@ -163,6 +163,9 @@ class DataFrame
         const std::string &_path,
         const std::string &_name ) const;
 
+    /// Sorts all columns by the designated key.
+    void sort_by_key( const std::vector<size_t> &_key );
+
     /// Transforms an immutable data frame from this.
     template <typename DataFrameType>
     DataFrameType to_immutable(

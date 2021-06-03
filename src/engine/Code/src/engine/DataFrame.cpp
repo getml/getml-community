@@ -2060,6 +2060,63 @@ void DataFrame::save_text(
 
 // ----------------------------------------------------------------------------
 
+void DataFrame::sort_by_key( const std::vector<size_t> &_key )
+{
+    auto df = DataFrame( name(), categories_, join_keys_encoding_ );
+
+    for ( size_t i = 0; i < num_categoricals(); ++i )
+        {
+            df.add_int_column(
+                categorical( i ).sort_by_key( _key ), ROLE_CATEGORICAL );
+        }
+
+    for ( size_t i = 0; i < num_join_keys(); ++i )
+        {
+            df.add_int_column(
+                join_key( i ).sort_by_key( _key ), ROLE_JOIN_KEY );
+        }
+
+    for ( size_t i = 0; i < num_numericals(); ++i )
+        {
+            df.add_float_column(
+                numerical( i ).sort_by_key( _key ), ROLE_NUMERICAL );
+        }
+
+    for ( size_t i = 0; i < num_targets(); ++i )
+        {
+            df.add_float_column( target( i ).sort_by_key( _key ), ROLE_TARGET );
+        }
+
+    for ( size_t i = 0; i < num_text(); ++i )
+        {
+            df.add_string_column( text( i ).sort_by_key( _key ), ROLE_TEXT );
+        }
+
+    for ( size_t i = 0; i < num_time_stamps(); ++i )
+        {
+            df.add_float_column(
+                time_stamp( i ).sort_by_key( _key ), ROLE_TIME_STAMP );
+        }
+
+    for ( size_t i = 0; i < num_unused_floats(); ++i )
+        {
+            df.add_float_column(
+                unused_float( i ).sort_by_key( _key ), ROLE_UNUSED_FLOAT );
+        }
+
+    for ( size_t i = 0; i < num_unused_strings(); ++i )
+        {
+            df.add_string_column(
+                unused_string( i ).sort_by_key( _key ), ROLE_UNUSED_STRING );
+        }
+
+    df.create_indices();
+
+    *this = std::move( df );
+}
+
+// ----------------------------------------------------------------------------
+
 Poco::JSON::Object DataFrame::to_monitor() const
 {
     // ---------------------------------------------------------------------

@@ -1411,6 +1411,74 @@ void DataFrameManager::from_s3(
 
 // ------------------------------------------------------------------------
 
+void DataFrameManager::from_view(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    const bool _append,
+    Poco::Net::StreamSocket* _socket )
+{
+    // --------------------------------------------------------------------
+
+    const auto view = *JSON::get_object( _cmd, "view_" );
+
+    // --------------------------------------------------------------------
+    // We need the weak write lock for the categories and join keys encoding.
+
+    multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
+
+    // --------------------------------------------------------------------
+
+    auto local_categories =
+        std::make_shared<containers::Encoding>( categories_ );
+
+    auto local_join_keys_encoding =
+        std::make_shared<containers::Encoding>( join_keys_encoding_ );
+
+    // --------------------------------------------------------------------
+
+    auto df =
+        ViewParser( local_categories, local_join_keys_encoding, data_frames_ )
+            .parse( view )
+            .clone( _name );
+
+    license_checker().check_mem_size( data_frames(), df.nbytes() );
+
+    // --------------------------------------------------------------------
+    // Now we upgrade the weak write lock to a strong write lock to commit
+    // the changes.
+
+    weak_write_lock.upgrade();
+
+    // --------------------------------------------------------------------
+
+    categories_->append( *local_categories );
+
+    join_keys_encoding_->append( *local_join_keys_encoding );
+
+    df.set_categories( categories_ );
+
+    df.set_join_keys_encoding( join_keys_encoding_ );
+
+    if ( !_append || data_frames().find( _name ) == data_frames().end() )
+        {
+            data_frames()[_name] = df;
+        }
+    else
+        {
+            data_frames()[_name].append( df );
+        }
+
+    data_frames()[_name].create_indices();
+
+    // --------------------------------------------------------------------
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    // --------------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
 void DataFrameManager::get_boolean_column(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,

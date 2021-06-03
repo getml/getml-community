@@ -161,6 +161,11 @@ void RequestHandler::run()
                     project_manager().add_data_frame_from_query(
                         name, cmd, &socket() );
                 }
+            else if ( type == "DataFrame.from_view" )
+                {
+                    project_manager().add_data_frame_from_view(
+                        name, cmd, &socket() );
+                }
             else if ( type == "DataFrame.load" )
                 {
                     project_manager().load_data_frame( name, &socket() );

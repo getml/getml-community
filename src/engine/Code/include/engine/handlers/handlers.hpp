@@ -80,6 +80,8 @@
 #include "engine/handlers/AggOpParser.hpp"
 #include "engine/handlers/GroupByParser.hpp"
 
+#include "engine/handlers/ViewParser.hpp"
+
 #include "engine/handlers/DataFrameJoiner.hpp"
 
 #include "engine/handlers/DatabaseManager.hpp"

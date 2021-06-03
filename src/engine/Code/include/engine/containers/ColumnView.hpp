@@ -411,7 +411,8 @@ ColumnView<T> ColumnView<T>::from_numerical_subselection(
         if ( *ix_float < 0.0 )
             {
                 throw std::runtime_error(
-                    "Index on a numerical subselection smaller than zero!" );
+                    "Index on a numerical subselection cannot be smaller than "
+                    "zero!" );
             }
 
         const auto ix = static_cast<size_t>( *ix_float );
