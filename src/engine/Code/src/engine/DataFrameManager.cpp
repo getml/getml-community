@@ -2020,7 +2020,7 @@ void DataFrameManager::join(
 void DataFrameManager::last_change(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
-    multithreading::WeakWriteLock read_lock( read_write_lock_ );
+    multithreading::ReadLock read_lock( read_write_lock_ );
 
     const auto df = utils::Getter::get( _name, data_frames() );
 
