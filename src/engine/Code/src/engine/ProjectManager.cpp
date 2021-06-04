@@ -98,6 +98,22 @@ void ProjectManager::add_data_frame_from_query(
 
 // ------------------------------------------------------------------------
 
+void ProjectManager::add_data_frame_from_view(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    const auto append = JSON::get_value<bool>( _cmd, "append_" );
+
+    data_frame_manager().from_view( _name, _cmd, append, _socket );
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    post( "dataframe", data_frames()[_name].to_monitor() );
+}
+
+// ------------------------------------------------------------------------
+
 void ProjectManager::add_hyperopt(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,

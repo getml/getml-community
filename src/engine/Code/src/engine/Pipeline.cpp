@@ -268,7 +268,8 @@ std::vector<Float> Pipeline::calculate_sum_importances() const
 void Pipeline::check(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const communication::Logger>& _logger,
-    const std::map<std::string, containers::DataFrame>& _data_frames,
+    const containers::DataFrame& _population_df,
+    const std::vector<containers::DataFrame>& _peripheral_dfs,
     const std::shared_ptr<containers::Encoding>& _categories,
     const std::shared_ptr<dependency::PreprocessorTracker>&
         _preprocessor_tracker,
@@ -277,15 +278,10 @@ void Pipeline::check(
     // -------------------------------------------------------------------------
 
     auto [population_df, peripheral_dfs] =
-        containers::DataFrameExtractor::extract_data_frames(
-            _cmd, _data_frames );
-
-    std::tie( population_df, peripheral_dfs ) =
-        modify_data_frames( population_df, peripheral_dfs );
+        modify_data_frames( _population_df, _peripheral_dfs );
 
     const auto dependencies =
-        containers::DataFrameExtractor::extract_df_fingerprints(
-            obj(), _cmd, _data_frames );
+        extract_df_fingerprints( _population_df, _peripheral_dfs );
 
     fit_transform_preprocessors(
         _cmd,
@@ -508,6 +504,25 @@ void Pipeline::extract_coldesc(
         }
 }
 
+// ----------------------------------------------------------------------------
+
+std::vector<Poco::JSON::Object::Ptr> Pipeline::extract_df_fingerprints(
+    const containers::DataFrame& _population_df,
+    const std::vector<containers::DataFrame>& _peripheral_dfs ) const
+{
+    const auto placeholder = JSON::get_object( obj(), "population_" );
+
+    std::vector<Poco::JSON::Object::Ptr> df_fingerprints = {
+        placeholder, _population_df.fingerprint() };
+
+    for ( const auto& df : _peripheral_dfs )
+        {
+            df_fingerprints.push_back( df.fingerprint() );
+        }
+
+    return df_fingerprints;
+}
+
 // ----------------------------------------------------------------------
 
 std::vector<Poco::JSON::Object::Ptr> Pipeline::extract_fe_fingerprints() const
@@ -629,28 +644,21 @@ std::pair<
     std::shared_ptr<const helpers::Schema>,
     std::shared_ptr<const std::vector<helpers::Schema>>>
 Pipeline::extract_schemata(
-    const Poco::JSON::Object& _cmd,
-    const std::map<std::string, containers::DataFrame>& _data_frames ) const
+    const containers::DataFrame& _population_df,
+    const std::vector<containers::DataFrame>& _peripheral_dfs ) const
 {
-    const auto population_name =
-        JSON::get_value<std::string>( _cmd, "population_name_" );
-
-    const auto peripheral_names = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "peripheral_names_" ) );
-
     const auto extract_schema =
-        [&_data_frames]( const std::string& _name ) -> helpers::Schema {
-        const auto df = utils::Getter::get( _name, _data_frames );
-        return df.to_schema( false );
+        []( const containers::DataFrame& _df ) -> helpers::Schema {
+        return _df.to_schema( false );
     };
 
     const auto population_schema = std::make_shared<const helpers::Schema>(
-        extract_schema( population_name ) );
+        extract_schema( _population_df ) );
 
     const auto peripheral_schema =
         std::make_shared<const std::vector<helpers::Schema>>(
             stl::collect::vector<helpers::Schema>(
-                peripheral_names | std::views::transform( extract_schema ) ) );
+                _peripheral_dfs | std::views::transform( extract_schema ) ) );
 
     return std::make_pair( population_schema, peripheral_schema );
 }
@@ -1012,6 +1020,8 @@ void Pipeline::fit(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const communication::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
+    const containers::DataFrame& _population_df,
+    const std::vector<containers::DataFrame>& _peripheral_dfs,
     const std::shared_ptr<containers::Encoding>& _categories,
     const dependency::DataFrameTracker& _data_frame_tracker,
     const std::shared_ptr<dependency::FETracker> _fe_tracker,
@@ -1027,22 +1037,18 @@ void Pipeline::fit(
 
     // -------------------------------------------------------------------------
 
-    targets() = get_targets( _cmd, _data_frames );
+    targets() = get_targets( _population_df );
 
     std::tie( population_schema(), peripheral_schema() ) =
-        extract_schemata( _cmd, _data_frames );
+        extract_schemata( _population_df, _peripheral_dfs );
 
-    df_fingerprints() = containers::DataFrameExtractor::extract_df_fingerprints(
-        obj(), _cmd, _data_frames );
+    df_fingerprints() =
+        extract_df_fingerprints( _population_df, _peripheral_dfs );
 
     // -------------------------------------------------------------------------
 
     auto [population_df, peripheral_dfs] =
-        containers::DataFrameExtractor::extract_data_frames(
-            _cmd, _data_frames );
-
-    std::tie( population_df, peripheral_dfs ) =
-        modify_data_frames( population_df, peripheral_dfs );
+        modify_data_frames( _population_df, _peripheral_dfs );
 
     // -------------------------------------------------------------------------
 
@@ -1451,20 +1457,14 @@ containers::Features Pipeline::get_numerical_features(
 // ----------------------------------------------------------------------
 
 std::vector<std::string> Pipeline::get_targets(
-    const Poco::JSON::Object& _cmd,
-    const std::map<std::string, containers::DataFrame>& _data_frames ) const
+    const containers::DataFrame& _population_df ) const
 {
-    const auto population_name =
-        JSON::get_value<std::string>( _cmd, "population_name_" );
+    auto target_names =
+        std::vector<std::string>( _population_df.num_targets() );
 
-    const auto population_df =
-        utils::Getter::get( population_name, _data_frames );
-
-    auto target_names = std::vector<std::string>( population_df.num_targets() );
-
-    for ( size_t i = 0; i < population_df.num_targets(); ++i )
+    for ( size_t i = 0; i < _population_df.num_targets(); ++i )
         {
-            target_names[i] = population_df.target( i ).name();
+            target_names[i] = _population_df.target( i ).name();
         }
 
     return target_names;
@@ -2909,10 +2909,11 @@ void Pipeline::score_after_fitting(
     const auto yhat =
         generate_predictions( categorical_features, numerical_features );
 
-    const auto population_name =
-        JSON::get_value<std::string>( _cmd, "population_name_" );
+    const auto population_json = *JSON::get_object( _cmd, "population_df_" );
 
-    score( _population_df, population_name, yhat );
+    const auto name = JSON::get_value<std::string>( population_json, "name_" );
+
+    score( _population_df, name, yhat );
 }
 
 // ----------------------------------------------------------------------------
@@ -3172,6 +3173,8 @@ Pipeline::transform(
     const Poco::JSON::Object& _cmd,
     const std::shared_ptr<const communication::Logger>& _logger,
     const std::map<std::string, containers::DataFrame>& _data_frames,
+    const containers::DataFrame& _population_df,
+    const std::vector<containers::DataFrame>& _peripheral_dfs,
     const dependency::DataFrameTracker& _data_frame_tracker,
     const std::shared_ptr<const containers::Encoding> _categories,
     Poco::Net::StreamSocket* _socket )
@@ -3186,11 +3189,7 @@ Pipeline::transform(
     // -------------------------------------------------------------------------
 
     auto [population_df, peripheral_dfs] =
-        containers::DataFrameExtractor::extract_data_frames(
-            _cmd, _data_frames );
-
-    std::tie( population_df, peripheral_dfs ) =
-        modify_data_frames( population_df, peripheral_dfs );
+        modify_data_frames( _population_df, _peripheral_dfs );
 
     // -------------------------------------------------------------------------
 

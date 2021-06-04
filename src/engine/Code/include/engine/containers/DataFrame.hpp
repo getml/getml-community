@@ -154,6 +154,9 @@ class DataFrame
     /// Returns the colnames expressed as their respective roles
     Poco::JSON::Object refresh() const;
 
+    /// Returns the role of the column signified by _name.
+    std::string role( const std::string &_name ) const;
+
     /// Removes a column.
     bool remove_column( const std::string &_name );
 
@@ -162,6 +165,9 @@ class DataFrame
         const std::string &_temp_dir,
         const std::string &_path,
         const std::string &_name ) const;
+
+    /// Sorts all columns by the designated key.
+    void sort_by_key( const std::vector<size_t> &_key );
 
     /// Transforms an immutable data frame from this.
     template <typename DataFrameType>

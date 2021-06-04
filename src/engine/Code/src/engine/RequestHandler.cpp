@@ -36,6 +36,11 @@ void RequestHandler::run()
                     data_frame_manager().get_boolean_column_content(
                         name, cmd, &socket() );
                 }
+            else if ( type == "BooleanColumn.get_nrows" )
+                {
+                    data_frame_manager().get_boolean_column_nrows(
+                        name, cmd, &socket() );
+                }
             else if ( type == "Database.copy_table" )
                 {
                     database_manager().copy_table( cmd, &socket() );
@@ -156,6 +161,15 @@ void RequestHandler::run()
                     project_manager().add_data_frame_from_query(
                         name, cmd, &socket() );
                 }
+            else if ( type == "DataFrame.from_view" )
+                {
+                    project_manager().add_data_frame_from_view(
+                        name, cmd, &socket() );
+                }
+            else if ( type == "DataFrame.last_change" )
+                {
+                    data_frame_manager().last_change( name, &socket() );
+                }
             else if ( type == "DataFrame.load" )
                 {
                     project_manager().load_data_frame( name, &socket() );
@@ -256,6 +270,11 @@ void RequestHandler::run()
             else if ( type == "FloatColumn.get_content" )
                 {
                     data_frame_manager().get_float_column_content(
+                        name, cmd, &socket() );
+                }
+            else if ( type == "FloatColumn.get_nrows" )
+                {
+                    data_frame_manager().get_column_nrows(
                         name, cmd, &socket() );
                 }
             else if ( type == "FloatColumn.get_unit" )
@@ -421,6 +440,11 @@ void RequestHandler::run()
             else if ( type == "StringColumn.get_content" )
                 {
                     data_frame_manager().get_categorical_column_content(
+                        name, cmd, &socket() );
+                }
+            else if ( type == "StringColumn.get_nrows" )
+                {
+                    data_frame_manager().get_categorical_column_nrows(
                         name, cmd, &socket() );
                 }
             else if ( type == "StringColumn.get_unit" )

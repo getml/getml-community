@@ -439,13 +439,15 @@ void DataFrameJoiner::filter(
     const auto nrows = std::max( temp_df1.nrows(), temp_df2.nrows() );
 
     const auto condition =
-        BoolOpParser(
-            _categories, _join_keys_encoding, data_frames, 0, nrows, false )
-            .parse( _where );
+        BoolOpParser( _categories, _join_keys_encoding, data_frames )
+            .parse( _where )
+            .to_vector( 0, nrows, true );
+
+    assert_true( condition );
 
     // ------------------------------------------------------------------------
 
-    _temp_df->where( condition );
+    _temp_df->where( *condition );
 
     // ------------------------------------------------------------------------
 }

@@ -8,6 +8,7 @@
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
+#include <execution>
 #include <mutex>
 #include <thread>
 #include <vector>
@@ -15,6 +16,8 @@
 #include "debug/debug.hpp"
 
 // ----------------------------------------------------
+
+#include "multithreading/parallel_for_each.hpp"
 
 #include "multithreading/Barrier.hpp"
 

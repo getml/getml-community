@@ -129,6 +129,13 @@ class DataFrameManager
         const bool _append,
         Poco::Net::StreamSocket* _socket );
 
+    /// Creates a new data frame from a view.
+    void from_view(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        const bool _append,
+        Poco::Net::StreamSocket* _socket );
+
     /// Sends a boolean columm to the client
     void get_boolean_column(
         const std::string& _name,
@@ -141,8 +148,20 @@ class DataFrameManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
+    /// Returns the number of rows in boolean column.
+    void get_boolean_column_nrows(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Sends a categorical columm to the client
     void get_categorical_column(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Sends a string describing the number of rows in a categorical column.
+    void get_categorical_column_nrows(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
@@ -155,6 +174,12 @@ class DataFrameManager
 
     /// Sends a column to the client
     void get_column(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Gets the number of rows in a float column.
+    void get_column_nrows(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
@@ -216,6 +241,10 @@ class DataFrameManager
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
+
+    /// Returns a string describing the last time a data frame has been changed.
+    void last_change(
+        const std::string& _name, Poco::Net::StreamSocket* _socket );
 
     /// Refreshes a data frame.
     void refresh( const std::string& _name, Poco::Net::StreamSocket* _socket );

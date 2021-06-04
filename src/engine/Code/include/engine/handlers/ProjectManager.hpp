@@ -100,6 +100,12 @@ class ProjectManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
+    /// Adds a new data frame generated from a view.
+    void add_data_frame_from_view(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Adds a new hyperparameter optimization.
     void add_hyperopt(
         const std::string& _name,

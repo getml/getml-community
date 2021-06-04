@@ -21,6 +21,7 @@
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include <Poco/DateTimeFormat.h>
@@ -63,13 +64,14 @@
 #include "engine/containers/Encoding.hpp"
 #include "engine/containers/Index.hpp"
 
+#include "engine/containers/ColumnView.hpp"
+
 #include "engine/containers/DataFrameIndex.hpp"
 
 #include "engine/containers/DataFramePrinter.hpp"
 
 #include "engine/containers/DataFrame.hpp"
 
-#include "engine/containers/DataFrameExtractor.hpp"
 #include "engine/containers/DataFrameReader.hpp"
 
 // ----------------------------------------------------

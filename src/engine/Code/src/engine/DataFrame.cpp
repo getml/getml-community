@@ -1982,6 +1982,74 @@ bool DataFrame::remove_column( const std::string &_name )
 
 // ----------------------------------------------------------------------------
 
+std::string DataFrame::role( const std::string &_name ) const
+{
+    // ----------------------------------------
+
+    const auto name_in = [_name]( const auto &_columns ) -> bool {
+        for ( size_t i = 0; i < _columns.size(); ++i )
+            {
+                if ( _columns[i].name() == _name )
+                    {
+                        return true;
+                    }
+            }
+        return false;
+    };
+
+    // ----------------------------------------
+
+    if ( name_in( categoricals_ ) )
+        {
+            return ROLE_CATEGORICAL;
+        }
+
+    if ( name_in( join_keys_ ) )
+        {
+            return ROLE_JOIN_KEY;
+        }
+
+    if ( name_in( numericals_ ) )
+        {
+            return ROLE_NUMERICAL;
+        }
+
+    if ( name_in( targets_ ) )
+        {
+            return ROLE_TARGET;
+        }
+
+    if ( name_in( text_ ) )
+        {
+            return ROLE_TEXT;
+        }
+
+    if ( name_in( time_stamps_ ) )
+        {
+            return ROLE_TIME_STAMP;
+        }
+
+    if ( name_in( unused_floats_ ) )
+        {
+            return ROLE_UNUSED_FLOAT;
+        }
+
+    if ( name_in( unused_strings_ ) )
+        {
+            return ROLE_UNUSED_STRING;
+        }
+
+    // ----------------------------------------
+
+    throw_column_does_not_exist( _name, "column" );
+
+    return "";
+
+    // ----------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
 void DataFrame::save(
     const std::string &_temp_dir,
     const std::string &_path,
@@ -2056,6 +2124,63 @@ void DataFrame::save_text(
     textfile.open( _tpath + _fname );
     textfile << _text;
     textfile.close();
+}
+
+// ----------------------------------------------------------------------------
+
+void DataFrame::sort_by_key( const std::vector<size_t> &_key )
+{
+    auto df = DataFrame( name(), categories_, join_keys_encoding_ );
+
+    for ( size_t i = 0; i < num_categoricals(); ++i )
+        {
+            df.add_int_column(
+                categorical( i ).sort_by_key( _key ), ROLE_CATEGORICAL );
+        }
+
+    for ( size_t i = 0; i < num_join_keys(); ++i )
+        {
+            df.add_int_column(
+                join_key( i ).sort_by_key( _key ), ROLE_JOIN_KEY );
+        }
+
+    for ( size_t i = 0; i < num_numericals(); ++i )
+        {
+            df.add_float_column(
+                numerical( i ).sort_by_key( _key ), ROLE_NUMERICAL );
+        }
+
+    for ( size_t i = 0; i < num_targets(); ++i )
+        {
+            df.add_float_column( target( i ).sort_by_key( _key ), ROLE_TARGET );
+        }
+
+    for ( size_t i = 0; i < num_text(); ++i )
+        {
+            df.add_string_column( text( i ).sort_by_key( _key ), ROLE_TEXT );
+        }
+
+    for ( size_t i = 0; i < num_time_stamps(); ++i )
+        {
+            df.add_float_column(
+                time_stamp( i ).sort_by_key( _key ), ROLE_TIME_STAMP );
+        }
+
+    for ( size_t i = 0; i < num_unused_floats(); ++i )
+        {
+            df.add_float_column(
+                unused_float( i ).sort_by_key( _key ), ROLE_UNUSED_FLOAT );
+        }
+
+    for ( size_t i = 0; i < num_unused_strings(); ++i )
+        {
+            df.add_string_column(
+                unused_string( i ).sort_by_key( _key ), ROLE_UNUSED_STRING );
+        }
+
+    df.create_indices();
+
+    *this = std::move( df );
 }
 
 // ----------------------------------------------------------------------------

@@ -159,7 +159,8 @@ void PipelineManager::add_to_tracker(
     const std::map<std::string, containers::DataFrame>& _data_frames,
     containers::DataFrame* _df )
 {
-    const auto dependencies = _pipeline.dependencies();
+    // TODO
+    /*const auto dependencies = _pipeline.dependencies();
 
     const auto df_fingerprints =
         containers::DataFrameExtractor::extract_df_fingerprints(
@@ -170,7 +171,7 @@ void PipelineManager::add_to_tracker(
 
     _df->set_build_history( build_history );
 
-    data_frame_tracker().add( *_df );
+    data_frame_tracker().add( *_df );*/
 }
 
 // ------------------------------------------------------------------------
@@ -197,13 +198,25 @@ void PipelineManager::check(
 
     multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
-    const auto local_categories =
+    auto local_categories =
         std::make_shared<containers::Encoding>( categories_ );
+
+    auto local_join_keys_encoding =
+        std::make_shared<containers::Encoding>( join_keys_encoding_ );
+
+    // -------------------------------------------------------
+
+    const auto [population_df, peripheral_dfs] =
+        ViewParser( local_categories, local_join_keys_encoding, data_frames_ )
+            .parse_all( _cmd );
+
+    // -------------------------------------------------------
 
     pipeline.check(
         _cmd,
         logger_,
-        data_frames(),
+        population_df,
+        peripheral_dfs,
         local_categories,
         preprocessor_tracker_,
         _socket );
@@ -460,10 +473,23 @@ void PipelineManager::fit(
     auto local_categories =
         std::make_shared<containers::Encoding>( categories_ );
 
+    auto local_join_keys_encoding =
+        std::make_shared<containers::Encoding>( join_keys_encoding_ );
+
+    // -------------------------------------------------------
+
+    const auto [population_df, peripheral_dfs] =
+        ViewParser( local_categories, local_join_keys_encoding, data_frames_ )
+            .parse_all( _cmd );
+
+    // -------------------------------------------------------
+
     pipeline.fit(
         _cmd,
         logger_,
         data_frames(),
+        population_df,
+        peripheral_dfs,
         local_categories,
         data_frame_tracker(),
         fe_tracker_,
@@ -802,25 +828,20 @@ void PipelineManager::roc_curve(
 // ------------------------------------------------------------------------
 
 void PipelineManager::score(
-    const std::string& _name,
     const Poco::JSON::Object& _cmd,
-    const std::map<std::string, containers::DataFrame>& _data_frames,
+    const std::string& _name,
+    const containers::DataFrame& _population_df,
     const containers::Features& _yhat,
     pipelines::Pipeline* _pipeline,
     Poco::Net::StreamSocket* _socket )
 {
     // -------------------------------------------------------
 
-    const auto population_name =
-        JSON::get_value<std::string>( _cmd, "population_name_" );
+    const auto population_json = *JSON::get_object( _cmd, "population_df_" );
 
-    const auto population_df =
-        utils::Getter::get( population_name, _data_frames );
+    const auto name = JSON::get_value<std::string>( population_json, "name_" );
 
-    // -------------------------------------------------------
-
-    const auto scores =
-        _pipeline->score( population_df, population_name, _yhat );
+    const auto scores = _pipeline->score( _population_df, name, _yhat );
 
     communication::Sender::send_string( "Success!", _socket );
 
@@ -1045,12 +1066,21 @@ void PipelineManager::transform(
 
     // -------------------------------------------------------
 
+    const auto [population_df, peripheral_dfs] =
+        ViewParser(
+            local_categories, local_join_keys_encoding, local_data_frames )
+            .parse_all( cmd );
+
+    // -------------------------------------------------------
+
     // IMPORTANT: Use categories_, not local_categories, otherwise
     // .vector() might not work.
     const auto [numerical_features, categorical_features] = pipeline.transform(
         cmd,
         logger_,
         *local_data_frames,
+        population_df,
+        peripheral_dfs,
         data_frame_tracker(),
         categories_,
         _socket );
@@ -1126,9 +1156,9 @@ void PipelineManager::transform(
             assert_true( local_data_frames );
 
             this->score(
-                _name,
                 cmd,
-                *local_data_frames,
+                _name,
+                population_df,
                 numerical_features,
                 &pipeline,
                 _socket );
