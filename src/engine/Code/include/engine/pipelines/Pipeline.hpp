@@ -686,10 +686,12 @@ class Pipeline
 
         const auto n_expected = predictors_.at( 0 ).size();
 
+#ifndef NDEBUG
         for ( const auto& pset : predictors_ )
             {
                 assert_true( pset.size() == n_expected );
             }
+#endif  // NDEBUG
 
         return n_expected;
     }

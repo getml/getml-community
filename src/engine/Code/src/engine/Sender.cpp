@@ -107,10 +107,12 @@ void Sender::send_features(
     const ULong nrows =
         ( ncols > 0 ) ? ( static_cast<ULong>( _features[0]->size() ) ) : ( 0 );
 
+#ifndef NDEBUG
     for ( auto& f : _features )
         {
             assert_true( f->size() == nrows );
         }
+#endif
 
     // ------------------------------------------------
     // Send dimensions of features.

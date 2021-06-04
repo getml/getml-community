@@ -226,7 +226,9 @@ void IntermediateAggregationImpl::update_etas_divide_by_count(
     assert_true( _eta1_input.size() == _eta2_input_old.size() );
     assert_true( _eta1_input.size() % ncols() == 0 );
 
+#ifndef NDEBUG
     const auto nrows_input = _eta1_input.size() / ncols();
+#endif
 
     for ( auto ix_input : _indices_current )
         {
@@ -284,7 +286,9 @@ void IntermediateAggregationImpl::update_etas_dont_divide(
     assert_true( _eta1_input.size() == _eta2_input_old.size() );
     assert_true( _eta1_input.size() % ncols() == 0 );
 
+#ifndef NDEBUG
     const auto nrows_input = _eta1_input.size() / ncols();
+#endif
 
     for ( auto ix_input : _indices_current )
         {

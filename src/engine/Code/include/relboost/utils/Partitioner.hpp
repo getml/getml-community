@@ -172,9 +172,7 @@ struct Partitioner<enums::DataUsed::discrete_input_is_nan>
         const containers::DataFrame& _input,
         const containers::Match& _match )
     {
-        const auto i = _match.ix_input;
-
-        assert_true( i < _input.nrows() );
+        assert_true( _match.ix_input < _input.nrows() );
         assert_true( _num_column < _input.num_discretes() );
 
         const auto val = _input.discrete( _match.ix_input, _num_column );
@@ -251,9 +249,7 @@ struct Partitioner<enums::DataUsed::discrete_output_is_nan>
         const containers::DataFrameView& _output,
         const containers::Match& _match )
     {
-        const auto i = _match.ix_output;
-
-        assert_true( i < _output.nrows() );
+        assert_true( _match.ix_output < _output.nrows() );
         assert_true( _num_column < _output.num_discretes() );
 
         const auto val = _output.discrete( _match.ix_output, _num_column );
@@ -330,9 +326,7 @@ struct Partitioner<enums::DataUsed::numerical_input_is_nan>
         const containers::DataFrame& _input,
         const containers::Match& _match )
     {
-        const auto i = _match.ix_input;
-
-        assert_true( i < _input.nrows() );
+        assert_true( _match.ix_input < _input.nrows() );
         assert_true( _num_column < _input.num_numericals() );
 
         const auto val = _input.numerical( _match.ix_input, _num_column );
@@ -409,9 +403,7 @@ struct Partitioner<enums::DataUsed::numerical_output_is_nan>
         const containers::DataFrameView& _output,
         const containers::Match& _match )
     {
-        const auto i = _match.ix_output;
-
-        assert_true( i < _output.nrows() );
+        assert_true( _match.ix_output < _output.nrows() );
         assert_true( _num_column < _output.num_numericals() );
 
         const auto val = _output.numerical( _match.ix_output, _num_column );
