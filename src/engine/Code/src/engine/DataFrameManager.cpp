@@ -2017,6 +2017,20 @@ void DataFrameManager::join(
 
 // ------------------------------------------------------------------------
 
+void DataFrameManager::last_change(
+    const std::string& _name, Poco::Net::StreamSocket* _socket )
+{
+    multithreading::WeakWriteLock read_lock( read_write_lock_ );
+
+    const auto df = utils::Getter::get( _name, data_frames() );
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( df.last_change(), _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void DataFrameManager::receive_data(
     const std::shared_ptr<containers::Encoding>& _local_categories,
     const std::shared_ptr<containers::Encoding>& _local_join_keys_encoding,

@@ -242,6 +242,10 @@ class DataFrameManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
+    /// Returns a string describing the last time a data frame has been changed.
+    void last_change(
+        const std::string& _name, Poco::Net::StreamSocket* _socket );
+
     /// Refreshes a data frame.
     void refresh( const std::string& _name, Poco::Net::StreamSocket* _socket );
 
