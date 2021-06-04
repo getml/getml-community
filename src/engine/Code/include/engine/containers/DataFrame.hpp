@@ -154,6 +154,9 @@ class DataFrame
     /// Returns the colnames expressed as their respective roles
     Poco::JSON::Object refresh() const;
 
+    /// Returns the role of the column signified by _name.
+    std::string role( const std::string &_name ) const;
+
     /// Removes a column.
     bool remove_column( const std::string &_name );
 

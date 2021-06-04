@@ -162,8 +162,6 @@ containers::ColumnView<std::string> CatOpParser::parse(
         {
             const auto name = JSON::get_value<std::string>( _col, "name_" );
 
-            const auto role = JSON::get_value<std::string>( _col, "role_" );
-
             const auto df_name =
                 JSON::get_value<std::string>( _col, "df_name_" );
 
@@ -175,6 +173,8 @@ containers::ColumnView<std::string> CatOpParser::parse(
                         "Column '" + name + "' is from DataFrame '" + df_name +
                         "', but such a DataFrame is not known." );
                 }
+
+            const auto role = it->second.role( name );
 
             if ( role == containers::DataFrame::ROLE_CATEGORICAL )
                 {
@@ -201,8 +201,10 @@ containers::ColumnView<std::string> CatOpParser::parse(
                 }
 
             throw std::invalid_argument(
-                "Column '" + name +
-                "' is a string column, but has unknown role '" + role + "'." );
+                "Column '" + name + "' from DataFrame '" + df_name +
+                "' is expected to be a StringColumn, but it appears to be a "
+                "FloatColumn. You have most likely changed the type when "
+                "assigning a new role." );
         }
 
     if ( type == "CategoricalValue" )

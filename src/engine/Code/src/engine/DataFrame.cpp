@@ -1982,6 +1982,74 @@ bool DataFrame::remove_column( const std::string &_name )
 
 // ----------------------------------------------------------------------------
 
+std::string DataFrame::role( const std::string &_name ) const
+{
+    // ----------------------------------------
+
+    const auto name_in = [_name]( const auto &_columns ) -> bool {
+        for ( size_t i = 0; i < _columns.size(); ++i )
+            {
+                if ( _columns[i].name() == _name )
+                    {
+                        return true;
+                    }
+            }
+        return false;
+    };
+
+    // ----------------------------------------
+
+    if ( name_in( categoricals_ ) )
+        {
+            return ROLE_CATEGORICAL;
+        }
+
+    if ( name_in( join_keys_ ) )
+        {
+            return ROLE_JOIN_KEY;
+        }
+
+    if ( name_in( numericals_ ) )
+        {
+            return ROLE_NUMERICAL;
+        }
+
+    if ( name_in( targets_ ) )
+        {
+            return ROLE_TARGET;
+        }
+
+    if ( name_in( text_ ) )
+        {
+            return ROLE_TEXT;
+        }
+
+    if ( name_in( time_stamps_ ) )
+        {
+            return ROLE_TIME_STAMP;
+        }
+
+    if ( name_in( unused_floats_ ) )
+        {
+            return ROLE_UNUSED_FLOAT;
+        }
+
+    if ( name_in( unused_strings_ ) )
+        {
+            return ROLE_UNUSED_STRING;
+        }
+
+    // ----------------------------------------
+
+    throw_column_does_not_exist( _name, "column" );
+
+    return "";
+
+    // ----------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
 void DataFrame::save(
     const std::string &_temp_dir,
     const std::string &_path,

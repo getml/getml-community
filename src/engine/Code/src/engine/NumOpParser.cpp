@@ -248,8 +248,6 @@ containers::ColumnView<Float> NumOpParser::get_column(
 {
     const auto name = JSON::get_value<std::string>( _col, "name_" );
 
-    const auto role = JSON::get_value<std::string>( _col, "role_" );
-
     const auto df_name = JSON::get_value<std::string>( _col, "df_name_" );
 
     const auto it = data_frames_->find( df_name );
@@ -258,7 +256,21 @@ containers::ColumnView<Float> NumOpParser::get_column(
         {
             throw std::invalid_argument(
                 "Column '" + name + "' is from DataFrame '" + df_name +
-                "', but no such DataFrame is known." );
+                "', but no such DataFrame exists." );
+        }
+
+    const auto role = it->second.role( name );
+
+    if ( role != containers::DataFrame::ROLE_NUMERICAL &&
+         role != containers::DataFrame::ROLE_TARGET &&
+         role != containers::DataFrame::ROLE_UNUSED_FLOAT &&
+         role != containers::DataFrame::ROLE_TIME_STAMP )
+        {
+            throw std::invalid_argument(
+                "Column '" + name + "' from DataFrame '" + df_name +
+                "' is expected to be a FloatColumn, but it appears to be a "
+                "StringColumn. You have most likely changed the type when "
+                "assigning a new role." );
         }
 
     const auto float_col = it->second.float_column( name, role );
