@@ -828,6 +828,7 @@ void PipelineManager::roc_curve(
 // ------------------------------------------------------------------------
 
 void PipelineManager::score(
+    const Poco::JSON::Object& _cmd,
     const std::string& _name,
     const containers::DataFrame& _population_df,
     const containers::Features& _yhat,
@@ -836,8 +837,11 @@ void PipelineManager::score(
 {
     // -------------------------------------------------------
 
-    const auto scores =
-        _pipeline->score( _population_df, _population_df.name(), _yhat );
+    const auto population_json = *JSON::get_object( _cmd, "population_df_" );
+
+    const auto name = JSON::get_value<std::string>( population_json, "name_" );
+
+    const auto scores = _pipeline->score( _population_df, name, _yhat );
 
     communication::Sender::send_string( "Success!", _socket );
 
@@ -1152,7 +1156,12 @@ void PipelineManager::transform(
             assert_true( local_data_frames );
 
             this->score(
-                _name, population_df, numerical_features, &pipeline, _socket );
+                cmd,
+                _name,
+                population_df,
+                numerical_features,
+                &pipeline,
+                _socket );
         }
 
     // -------------------------------------------------------

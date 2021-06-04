@@ -215,6 +215,7 @@ class PipelineManager
 
     /// Scores a pipeline
     void score(
+        const Poco::JSON::Object& _cmd,
         const std::string& _name,
         const containers::DataFrame& _population_df,
         const containers::Features& _yhat,

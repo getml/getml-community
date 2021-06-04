@@ -2909,7 +2909,11 @@ void Pipeline::score_after_fitting(
     const auto yhat =
         generate_predictions( categorical_features, numerical_features );
 
-    score( _population_df, _population_df.name(), yhat );
+    const auto population_json = *JSON::get_object( _cmd, "population_df_" );
+
+    const auto name = JSON::get_value<std::string>( population_json, "name_" );
+
+    score( _population_df, name, yhat );
 }
 
 // ----------------------------------------------------------------------------
