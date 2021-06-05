@@ -68,6 +68,10 @@ class DataFrame
     /// an "index" over the join keys
     void create_indices();
 
+    /// Returns the fingerprint of the data frame (necessary to build the
+    /// dependency graphs).
+    Poco::JSON::Object::Ptr fingerprint() const;
+
     /// Getter for a float_column.
     const Column<Float> &float_column(
         const std::string &_role, const size_t _num ) const;
@@ -236,16 +240,6 @@ class DataFrame
         assert_true( _i < categories().size() );
 
         return categories()[_i].str();
-    }
-
-    /// Returns the fingerprint of the data frame (necessary to build the
-    /// dependency graphs).
-    Poco::JSON::Object::Ptr fingerprint() const
-    {
-        auto obj = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
-        obj->set( "name_", name_ );
-        obj->set( "last_change_", last_change_ );
-        return obj;
     }
 
     /// Whether the DataFrame has any column named _name.

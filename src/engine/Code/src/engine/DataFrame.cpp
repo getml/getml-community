@@ -350,6 +350,23 @@ void DataFrame::append( const DataFrame &_other )
 
 // ----------------------------------------------------------------------------
 
+Poco::JSON::Object::Ptr DataFrame::fingerprint() const
+{
+    if ( build_history_ )
+        {
+            return build_history_;
+        }
+
+    auto obj = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
+
+    obj->set( "name_", name_ );
+    obj->set( "last_change_", last_change_ );
+
+    return obj;
+}
+
+// ----------------------------------------------------------------------------
+
 void DataFrame::check_null( const Column<Float> &_col ) const
 {
     const auto is_nan_or_inf = []( const Float val ) {

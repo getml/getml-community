@@ -52,6 +52,8 @@ void DataFrameTracker::clear()
 
 // ----------------------------------------------------------------------
 
+// TODO: Use fingerprint, because it retrieves the build history if there is
+// one.
 std::optional<containers::DataFrame> DataFrameTracker::get_df(
     const size_t _b_hash ) const
 {

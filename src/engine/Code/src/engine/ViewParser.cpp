@@ -26,7 +26,6 @@ void ViewParser::add_column(
 
     const auto type = JSON::get_value<std::string>( json_col, "type_" );
 
-    // TODO: No deep copy for FloatColumn.
     if ( type == "FloatColumn" || type == "VirtualFloatColumn" )
         {
             const auto column_view =
@@ -42,7 +41,6 @@ void ViewParser::add_column(
             _df->add_float_column( col, role );
         }
 
-    // TODO: No deep copy for StringColumn.
     if ( type == "StringColumn" || type == "VirtualStringColumn" )
         {
             const auto column_view =
@@ -158,6 +156,9 @@ containers::DataFrame ViewParser::parse( const Poco::JSON::Object& _obj )
     drop_columns( _obj, &df );
 
     subselection( _obj, &df );
+
+    df.set_build_history(
+        Poco::JSON::Object::Ptr( new Poco::JSON::Object( _obj ) ) );
 
     return df;
 }
