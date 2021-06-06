@@ -290,13 +290,13 @@ containers::ColumnView<Float> NumOpParser::parse(
             return get_column( _col );
         }
 
-    if ( type == "Value" )
+    const auto op = JSON::get_value<std::string>( _col, "operator_" );
+
+    if ( op == "const" )
         {
             const auto val = JSON::get_value<Float>( _col, "value_" );
             return containers::ColumnView<Float>::from_value( val );
         }
-
-    const auto op = JSON::get_value<std::string>( _col, "operator_" );
 
     if ( type == FLOAT_COLUMN_VIEW && op == "arange" )
         {

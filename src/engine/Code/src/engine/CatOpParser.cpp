@@ -207,14 +207,13 @@ containers::ColumnView<std::string> CatOpParser::parse(
                 "assigning a new role." );
         }
 
-    if ( type == "CategoricalValue" )
+    const auto op = JSON::get_value<std::string>( _col, "operator_" );
+
+    if ( op == "const" )
         {
             const auto val = JSON::get_value<std::string>( _col, "value_" );
-
             return containers::ColumnView<std::string>::from_value( val );
         }
-
-    const auto op = JSON::get_value<std::string>( _col, "operator_" );
 
     if ( type == STRING_COLUMN_VIEW && op == "with_unit" )
         {
@@ -282,8 +281,7 @@ containers::ColumnView<std::string> CatOpParser::unary_operation(
     const auto operand_type = JSON::get_value<std::string>(
         *JSON::get_object( _col, "operand1_" ), "type_" );
 
-    const auto is_boolean = ( operand_type == "BooleanValue" ) ||
-                            ( operand_type == BOOLEAN_COLUMN_VIEW );
+    const auto is_boolean = ( operand_type == BOOLEAN_COLUMN_VIEW );
 
     if ( is_boolean && op == "as_str" )
         {

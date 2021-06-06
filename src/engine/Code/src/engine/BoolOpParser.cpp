@@ -14,15 +14,12 @@ containers::ColumnView<bool> BoolOpParser::binary_operation(
     const auto operand_type = JSON::get_value<std::string>(
         *JSON::get_object( _col, "operand1_" ), "type_" );
 
-    const auto is_boolean = ( operand_type == "BooleanValue" ) ||
-                            ( operand_type == BOOLEAN_COLUMN_VIEW );
+    const auto is_boolean = ( operand_type == BOOLEAN_COLUMN_VIEW );
 
     const auto is_categorical = ( operand_type == STRING_COLUMN ) ||
-                                ( operand_type == "CategoricalValue" ) ||
                                 ( operand_type == STRING_COLUMN_VIEW );
 
     const auto is_numerical = ( operand_type == FLOAT_COLUMN ) ||
-                              ( operand_type == "Value" ) ||
                               ( operand_type == FLOAT_COLUMN_VIEW );
 
     if ( op == "and" )
@@ -103,14 +100,13 @@ containers::ColumnView<bool> BoolOpParser::parse(
 {
     const auto type = JSON::get_value<std::string>( _col, "type_" );
 
-    if ( type == "BooleanValue" )
+    const auto op = JSON::get_value<std::string>( _col, "operator_" );
+
+    if ( op == "const" )
         {
             const auto value = JSON::get_value<bool>( _col, "value_" );
-
             return containers::ColumnView<bool>::from_value( value );
         }
-
-    const auto op = JSON::get_value<std::string>( _col, "operator_" );
 
     if ( type == BOOLEAN_COLUMN_VIEW && op == "subselection" )
         {
