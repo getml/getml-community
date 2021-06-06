@@ -158,7 +158,7 @@ containers::ColumnView<std::string> CatOpParser::parse(
 {
     const auto type = JSON::get_value<std::string>( _col, "type_" );
 
-    if ( type == "StringColumn" )
+    if ( type == STRING_COLUMN )
         {
             const auto name = JSON::get_value<std::string>( _col, "name_" );
 
@@ -216,17 +216,17 @@ containers::ColumnView<std::string> CatOpParser::parse(
 
     const auto op = JSON::get_value<std::string>( _col, "operator_" );
 
-    if ( type == "VirtualStringColumn" && op == "with_unit" )
+    if ( type == STRING_COLUMN_VIEW && op == "with_unit" )
         {
             return with_unit( _col );
         }
 
-    if ( type == "VirtualStringColumn" && op == "subselection" )
+    if ( type == STRING_COLUMN_VIEW && op == "subselection" )
         {
             return subselection( _col );
         }
 
-    if ( type == "VirtualStringColumn" )
+    if ( type == STRING_COLUMN_VIEW )
         {
             if ( _col.has( "operand2_" ) )
                 {
@@ -254,7 +254,7 @@ containers::ColumnView<std::string> CatOpParser::subselection(
 
     const auto type = JSON::get_value<std::string>( indices_json, "type_" );
 
-    if ( type == "FloatColumn" || type == "VirtualFloatColumn" )
+    if ( type == FLOAT_COLUMN || type == FLOAT_COLUMN_VIEW )
         {
             const auto indices =
                 NumOpParser( categories_, join_keys_encoding_, data_frames_ )
@@ -283,7 +283,7 @@ containers::ColumnView<std::string> CatOpParser::unary_operation(
         *JSON::get_object( _col, "operand1_" ), "type_" );
 
     const auto is_boolean = ( operand_type == "BooleanValue" ) ||
-                            ( operand_type == "VirtualBooleanColumn" );
+                            ( operand_type == BOOLEAN_COLUMN_VIEW );
 
     if ( is_boolean && op == "as_str" )
         {

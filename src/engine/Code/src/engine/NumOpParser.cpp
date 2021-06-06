@@ -285,7 +285,7 @@ containers::ColumnView<Float> NumOpParser::parse(
 {
     const auto type = JSON::get_value<std::string>( _col, "type_" );
 
-    if ( type == "FloatColumn" )
+    if ( type == FLOAT_COLUMN )
         {
             return get_column( _col );
         }
@@ -298,27 +298,27 @@ containers::ColumnView<Float> NumOpParser::parse(
 
     const auto op = JSON::get_value<std::string>( _col, "operator_" );
 
-    if ( type == "VirtualFloatColumn" && op == "arange" )
+    if ( type == FLOAT_COLUMN_VIEW && op == "arange" )
         {
             return arange( _col );
         }
 
-    if ( type == "VirtualFloatColumn" && op == "with_unit" )
+    if ( type == FLOAT_COLUMN_VIEW && op == "with_unit" )
         {
             return with_unit( _col );
         }
 
-    if ( type == "VirtualFloatColumn" && op == "subselection" )
+    if ( type == FLOAT_COLUMN_VIEW && op == "subselection" )
         {
             return subselection( _col );
         }
 
-    if ( type == "VirtualFloatColumn" && _col.has( "operand2_" ) )
+    if ( type == FLOAT_COLUMN_VIEW && _col.has( "operand2_" ) )
         {
             return binary_operation( _col );
         }
 
-    if ( type == "VirtualFloatColumn" && !_col.has( "operand2_" ) )
+    if ( type == FLOAT_COLUMN_VIEW && !_col.has( "operand2_" ) )
         {
             return unary_operation( _col );
         }
@@ -338,7 +338,7 @@ containers::ColumnView<Float> NumOpParser::subselection(
 
     const auto type = JSON::get_value<std::string>( indices_json, "type_" );
 
-    if ( type == "FloatColumn" || type == "VirtualFloatColumn" )
+    if ( type == FLOAT_COLUMN || type == FLOAT_COLUMN_VIEW )
         {
             const auto indices = parse( indices_json );
 

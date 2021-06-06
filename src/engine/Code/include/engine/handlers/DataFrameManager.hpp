@@ -10,6 +10,12 @@ namespace handlers
 class DataFrameManager
 {
    public:
+    static constexpr const char* FLOAT_COLUMN =
+        containers::Column<bool>::FLOAT_COLUMN;
+    static constexpr const char* STRING_COLUMN =
+        containers::Column<bool>::STRING_COLUMN;
+
+   public:
     DataFrameManager(
         const std::shared_ptr<containers::Encoding>& _categories,
         const std::shared_ptr<DatabaseManager>& _database_manager,

@@ -255,7 +255,7 @@ void RequestHandler::run()
                 {
                     project_manager().delete_project( name, &socket() );
                 }
-            else if ( type == "FloatColumn" )
+            else if ( type == FLOAT_COLUMN )
                 {
                     data_frame_manager().add_float_column( cmd, &socket() );
                 }
@@ -428,7 +428,7 @@ void RequestHandler::run()
                 {
                     *shutdown_ = true;
                 }
-            else if ( type == "StringColumn" )
+            else if ( type == STRING_COLUMN )
                 {
                     data_frame_manager().add_string_column( cmd, &socket() );
                 }

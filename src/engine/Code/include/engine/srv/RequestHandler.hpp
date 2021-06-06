@@ -13,6 +13,14 @@ class RequestHandler : public Poco::Net::TCPServerConnection
     // -------------------------------------------------------------
 
    public:
+    static constexpr const char* FLOAT_COLUMN =
+        containers::Column<bool>::FLOAT_COLUMN;
+    static constexpr const char* STRING_COLUMN =
+        containers::Column<bool>::STRING_COLUMN;
+
+    // -------------------------------------------------------------
+
+   public:
     RequestHandler(
         const Poco::Net::StreamSocket& _socket,
         const std::shared_ptr<handlers::DatabaseManager>& _database_manager,

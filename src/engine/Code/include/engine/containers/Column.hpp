@@ -11,6 +11,14 @@ template <class T>
 class Column
 {
    public:
+    static constexpr const char *FLOAT_COLUMN = "FloatColumn";
+    static constexpr const char *STRING_COLUMN = "StringColumn";
+
+    static constexpr const char *FLOAT_COLUMN_VIEW = "FloatColumnView";
+    static constexpr const char *STRING_COLUMN_VIEW = "StringColumnView";
+    static constexpr const char *BOOLEAN_COLUMN_VIEW = "BooleanColumnView";
+
+   public:
     typedef T value_type;
 
     Column( const size_t _nrows )

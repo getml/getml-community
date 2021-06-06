@@ -12,6 +12,21 @@ class ViewParser
     // ------------------------------------------------------------------------
 
    public:
+    static constexpr const char* FLOAT_COLUMN =
+        containers::Column<bool>::FLOAT_COLUMN;
+    static constexpr const char* STRING_COLUMN =
+        containers::Column<bool>::STRING_COLUMN;
+
+    static constexpr const char* FLOAT_COLUMN_VIEW =
+        containers::Column<bool>::FLOAT_COLUMN_VIEW;
+    static constexpr const char* STRING_COLUMN_VIEW =
+        containers::Column<bool>::STRING_COLUMN_VIEW;
+    static constexpr const char* BOOLEAN_COLUMN_VIEW =
+        containers::Column<bool>::BOOLEAN_COLUMN_VIEW;
+
+    // ------------------------------------------------------------------------
+
+   public:
     ViewParser(
         const std::shared_ptr<containers::Encoding>& _categories,
         const std::shared_ptr<containers::Encoding>& _join_keys_encoding,

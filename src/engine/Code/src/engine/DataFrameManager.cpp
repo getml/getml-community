@@ -2046,13 +2046,13 @@ void DataFrameManager::receive_data(
 
             const auto name = JSON::get_value<std::string>( cmd, "name_" );
 
-            if ( type == "FloatColumn" )
+            if ( type == FLOAT_COLUMN )
                 {
                     recv_and_add_float_column( cmd, _df, nullptr, _socket );
 
                     communication::Sender::send_string( "Success!", _socket );
                 }
-            else if ( type == "StringColumn" )
+            else if ( type == STRING_COLUMN )
                 {
                     recv_and_add_string_column(
                         cmd,

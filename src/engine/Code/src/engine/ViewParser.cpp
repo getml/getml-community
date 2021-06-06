@@ -26,7 +26,7 @@ void ViewParser::add_column(
 
     const auto type = JSON::get_value<std::string>( json_col, "type_" );
 
-    if ( type == "FloatColumn" || type == "VirtualFloatColumn" )
+    if ( type == FLOAT_COLUMN || type == FLOAT_COLUMN_VIEW )
         {
             const auto column_view =
                 NumOpParser( categories_, join_keys_encoding_, data_frames_ )
@@ -41,7 +41,7 @@ void ViewParser::add_column(
             _df->add_float_column( col, role );
         }
 
-    if ( type == "StringColumn" || type == "VirtualStringColumn" )
+    if ( type == STRING_COLUMN || type == STRING_COLUMN_VIEW )
         {
             const auto column_view =
                 CatOpParser( categories_, join_keys_encoding_, data_frames_ )
@@ -201,7 +201,7 @@ void ViewParser::subselection(
 
     const auto type = JSON::get_value<std::string>( json_col, "type_" );
 
-    if ( type == "VirtualBooleanColumn" )
+    if ( type == BOOLEAN_COLUMN_VIEW )
         {
             const auto column_view =
                 BoolOpParser( categories_, join_keys_encoding_, data_frames_ )
