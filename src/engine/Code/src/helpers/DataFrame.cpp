@@ -36,6 +36,7 @@ DataFrame::DataFrame(
     assert_true(
         _word_indices.size() == 0 || _word_indices.size() == _text.size() );
 
+#ifndef NDEBUG
     for ( auto& col : _categoricals )
         {
             assert_msg(
@@ -91,6 +92,7 @@ DataFrame::DataFrame(
                 "time_stamps: col.nrows_: " + std::to_string( col.nrows_ ) +
                     ", nrows(): " + std::to_string( nrows() ) );
         }
+#endif  // NDEBUG
 }
 
 // ----------------------------------------------------------------------------

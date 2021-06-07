@@ -168,9 +168,11 @@ ValueContainerCreator<data_used_, is_population_>::create_same_unit_discrete(
                 static_cast<Int>( _same_units_discrete.size() ) >
                 _ix_column_used );
 
+#ifndef NDEBUG
             const auto data_used1 =
-                std::get<0>( _same_units_discrete.at( _ix_column_used ) )
+                std::get<0>( _same_units_numerical.at( _ix_column_used ) )
                     .data_used;
+#endif  // NDEBUG
 
             const auto data_used2 =
                 std::get<1>( _same_units_discrete.at( _ix_column_used ) )
@@ -229,9 +231,11 @@ ValueContainerCreator<data_used_, is_population_>::create_same_unit_numerical(
                 static_cast<Int>( _same_units_numerical.size() ) >
                 _ix_column_used );
 
+#ifndef NDEBUG
             const auto data_used1 =
                 std::get<0>( _same_units_numerical.at( _ix_column_used ) )
                     .data_used;
+#endif  // NDEBUG
 
             const auto data_used2 =
                 std::get<1>( _same_units_numerical.at( _ix_column_used ) )
