@@ -268,7 +268,9 @@ std::vector<DataFrame> TableHolder::parse_peripheral_tables(
 {
     // ---------------------------------------------------------------------
 
+#ifndef NDEBUG
     const size_t num_text = count_text( _peripheral );
+#endif  // NDEBUG
 
     // ---------------------------------------------------------------------
 
@@ -428,7 +430,9 @@ std::vector<std::optional<TableHolder>> TableHolder::parse_subtables(
 {
     // ---------------------------------------------------------------------
 
+#ifndef NDEBUG
     const size_t num_text = count_text( _peripheral );
+#endif  // NDEBUG
 
     // ---------------------------------------------------------------------
 

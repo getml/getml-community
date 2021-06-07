@@ -247,10 +247,6 @@ void RequestHandler::run()
                 {
                     data_frame_manager().to_s3( name, cmd, &socket() );
                 }
-            else if ( type == "DataFrame.where" )
-                {
-                    data_frame_manager().where( name, cmd, &socket() );
-                }
             else if ( type == "delete_project" )
                 {
                     project_manager().delete_project( name, &socket() );
@@ -280,6 +276,10 @@ void RequestHandler::run()
             else if ( type == "FloatColumn.get_unit" )
                 {
                     data_frame_manager().get_unit( name, cmd, &socket() );
+                }
+            else if ( type == "FloatColumn.set_subroles" )
+                {
+                    data_frame_manager().set_subroles( name, cmd, &socket() );
                 }
             else if ( type == "FloatColumn.set_unit" )
                 {
@@ -450,6 +450,11 @@ void RequestHandler::run()
             else if ( type == "StringColumn.get_unit" )
                 {
                     data_frame_manager().get_unit_categorical(
+                        name, cmd, &socket() );
+                }
+            else if ( type == "StringColumn.set_subroles" )
+                {
+                    data_frame_manager().set_subroles_categorical(
                         name, cmd, &socket() );
                 }
             else if ( type == "StringColumn.set_unit" )

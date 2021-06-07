@@ -298,6 +298,7 @@ helpers::FeatureContainer Maker::transform( const MakerParams& _params )
                         feature_ptrs.at( i ),
                         helpers::Macros::fast_prop_feature() + _params.prefix_ +
                             std::to_string( i + 1 ),
+                        {},
                         "" ) );
                 }
         }

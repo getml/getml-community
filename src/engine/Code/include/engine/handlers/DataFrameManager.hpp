@@ -261,13 +261,25 @@ class DataFrameManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
-    /// Changes the unit of _col.
+    /// Changes the subroles of the column.
+    void set_subroles(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Changes the subroles of the column.
+    void set_subroles_categorical(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Changes the unit of the column.
     void set_unit(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
-    /// Changes the unit of _col.
+    /// Changes the unit of the column.
     void set_unit_categorical(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
@@ -291,12 +303,6 @@ class DataFrameManager
 
     /// Writes the dataframe to CSV files located in an S3 bucket.
     void to_s3(
-        const std::string& _name,
-        const Poco::JSON::Object& _cmd,
-        Poco::Net::StreamSocket* _socket );
-
-    /// Creates a new data frame by selecting from an existing one.
-    void where(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );

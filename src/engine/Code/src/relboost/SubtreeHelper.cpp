@@ -424,7 +424,10 @@ std::vector<containers::Subfeatures> SubtreeHelper::make_subfeatures(
                         } ) );
 
                     const auto column = containers::Column<Float>(
-                        p.at( j ), "FEATURE_" + std::to_string( j + 1 ), "" );
+                        p.at( j ),
+                        "FEATURE_" + std::to_string( j + 1 ),
+                        {},
+                        "" );
 
                     assert_true( std::all_of(
                         column.begin(), column.end(), []( const Float val ) {

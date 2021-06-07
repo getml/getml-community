@@ -1057,9 +1057,17 @@ DataFrameType DataFrame::to_immutable(
 
     // ------------------------------------------------------------------------
 
-    const auto get_categorical = [this]( const std::string &_name ) {
+    const auto parse = []( const std::vector<std::string> &_vec )
+        -> std::vector<helpers::Subrole> {
+        return helpers::SubroleParser::parse( _vec );
+    };
+
+    // ------------------------------------------------------------------------
+
+    const auto get_categorical = [this, parse]( const std::string &_name ) {
         const auto &col = categorical( _name );
-        return IntColumnType( col.data_ptr(), _name, col.unit() );
+        return IntColumnType(
+            col.data_ptr(), _name, parse( col.subroles() ), col.unit() );
     };
 
     const auto categoricals = stl::collect::vector<IntColumnType>(
@@ -1067,9 +1075,10 @@ DataFrameType DataFrame::to_immutable(
 
     // ------------------------------------------------------------------------
 
-    const auto get_join_key = [this]( const std::string &_name ) {
+    const auto get_join_key = [this, parse]( const std::string &_name ) {
         const auto &col = join_key( _name );
-        return IntColumnType( col.data_ptr(), _name, col.unit() );
+        return IntColumnType(
+            col.data_ptr(), _name, parse( col.subroles() ), col.unit() );
     };
 
     const auto join_keys = stl::collect::vector<IntColumnType>(
@@ -1086,9 +1095,10 @@ DataFrameType DataFrame::to_immutable(
 
     // ------------------------------------------------------------------------
 
-    const auto get_numerical = [this]( const std::string &_name ) {
+    const auto get_numerical = [this, parse]( const std::string &_name ) {
         const auto &col = numerical( _name );
-        return FloatColumnType( col.data_ptr(), _name, col.unit() );
+        return FloatColumnType(
+            col.data_ptr(), _name, parse( col.subroles() ), col.unit() );
     };
 
     const auto discretes = stl::collect::vector<FloatColumnType>(
@@ -1099,9 +1109,10 @@ DataFrameType DataFrame::to_immutable(
 
     // ------------------------------------------------------------------------
 
-    const auto get_target = [this]( const std::string &_name ) {
+    const auto get_target = [this, parse]( const std::string &_name ) {
         const auto &col = target( _name );
-        return FloatColumnType( col.data_ptr(), _name, col.unit() );
+        return FloatColumnType(
+            col.data_ptr(), _name, parse( col.subroles() ), col.unit() );
     };
 
     const auto targets =
@@ -1111,9 +1122,10 @@ DataFrameType DataFrame::to_immutable(
 
     // ------------------------------------------------------------------------
 
-    const auto get_text = [this]( const std::string &_name ) {
+    const auto get_text = [this, parse]( const std::string &_name ) {
         const auto &col = text( _name );
-        return StringColumnType( col.data_ptr(), _name, col.unit() );
+        return StringColumnType(
+            col.data_ptr(), _name, parse( col.subroles() ), col.unit() );
     };
 
     const auto text = stl::collect::vector<StringColumnType>(
@@ -1121,9 +1133,10 @@ DataFrameType DataFrame::to_immutable(
 
     // ------------------------------------------------------------------------
 
-    const auto get_time_stamp = [this]( const std::string &_name ) {
+    const auto get_time_stamp = [this, parse]( const std::string &_name ) {
         const auto &col = time_stamp( _name );
-        return FloatColumnType( col.data_ptr(), _name, col.unit() );
+        return FloatColumnType(
+            col.data_ptr(), _name, parse( col.subroles() ), col.unit() );
     };
 
     const auto time_stamps = stl::collect::vector<FloatColumnType>(

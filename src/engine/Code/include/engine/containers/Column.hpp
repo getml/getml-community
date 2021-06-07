@@ -189,6 +189,12 @@ class Column
     void set_name( const std::string &_name ) { name_ = _name; }
 
     /// Trivial setter
+    void set_subroles( const std::vector<std::string> &_subroles )
+    {
+        subroles_ = _subroles;
+    }
+
+    /// Trivial setter
     void set_unit( const std::string &_unit ) { unit_ = _unit; }
 
     /// Trivial getter.
@@ -241,6 +247,9 @@ class Column
 
         return int_col;
     }
+
+    /// Trivial getter
+    const std::vector<std::string> &subroles() const { return subroles_; }
 
     /// Trivial getter
     const std::string &unit() const { return unit_; }
@@ -347,6 +356,9 @@ class Column
 
     /// Number of rows.
     size_t nrows_;
+
+    /// Subroles applied to this column.
+    std::vector<std::string> subroles_;
 
     /// Unit of the column.
     std::string unit_;

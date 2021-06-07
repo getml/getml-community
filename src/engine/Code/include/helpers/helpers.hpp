@@ -39,6 +39,10 @@
 #include "helpers/Float.hpp"
 #include "helpers/Int.hpp"
 
+#include "helpers/Subrole.hpp"
+
+#include "helpers/SubroleParser.hpp"
+
 #include "helpers/NullChecker.hpp"
 
 #include "helpers/Aggregations.hpp"

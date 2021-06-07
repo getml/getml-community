@@ -17,11 +17,13 @@ struct Column
     Column(
         const std::shared_ptr<const std::vector<T>> _ptr,
         const std::string& _name,
+        const std::vector<Subrole>& _subroles,
         const std::string& _unit )
         : data_( _ptr ? _ptr->data() : nullptr ),
           name_( _name ),
           nrows_( _ptr ? _ptr->size() : static_cast<size_t>( 0 ) ),
           ptr_( _ptr ),
+          subroles_( _subroles ),
           unit_( _unit )
     {
         assert_true( ptr_ );
@@ -61,6 +63,9 @@ struct Column
 
     /// The pointer to take ownership of the underlying data.
     const std::shared_ptr<const std::vector<T>> ptr_;
+
+    /// Subroles of the column
+    const std::vector<Subrole> subroles_;
 
     /// Unit of the column
     const std::string unit_;

@@ -2210,6 +2210,84 @@ void DataFrameManager::remove_column(
 
 // ------------------------------------------------------------------------
 
+void DataFrameManager::set_subroles(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    const auto role = JSON::get_value<std::string>( _cmd, "role_" );
+
+    const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
+
+    const auto subroles = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "subroles_" ) );
+
+    multithreading::WriteLock write_lock( read_write_lock_ );
+
+    auto& df = utils::Getter::get( df_name, &data_frames() );
+
+    auto column = df.float_column( _name, role );
+
+    column.set_subroles( subroles );
+
+    df.add_float_column( column, role );
+
+    monitor_->send_tcp(
+        "postdataframe", df.to_monitor(), communication::Monitor::TIMEOUT_ON );
+
+    write_lock.unlock();
+
+    communication::Sender::send_string( "Success!", _socket );
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::set_subroles_categorical(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    const auto role = JSON::get_value<std::string>( _cmd, "role_" );
+
+    const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
+
+    const auto subroles = JSON::array_to_vector<std::string>(
+        JSON::get_array( _cmd, "subroles_" ) );
+
+    multithreading::WriteLock write_lock( read_write_lock_ );
+
+    auto& df = utils::Getter::get( df_name, &data_frames() );
+
+    if ( role == containers::DataFrame::ROLE_UNUSED ||
+         role == containers::DataFrame::ROLE_UNUSED_STRING )
+        {
+            auto column = df.unused_string( _name );
+            column.set_subroles( subroles );
+            df.add_string_column( column, role );
+        }
+    else if ( role == containers::DataFrame::ROLE_TEXT )
+        {
+            auto column = df.text( _name );
+            column.set_subroles( subroles );
+            df.add_string_column( column, role );
+        }
+    else
+        {
+            auto column = df.int_column( _name, role );
+            column.set_subroles( subroles );
+            df.add_int_column( column, role );
+        }
+
+    monitor_->send_tcp(
+        "postdataframe", df.to_monitor(), communication::Monitor::TIMEOUT_ON );
+
+    write_lock.unlock();
+
+    communication::Sender::send_string( "Success!", _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void DataFrameManager::set_unit(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
@@ -2504,54 +2582,5 @@ void DataFrameManager::to_s3(
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::where(
-    const std::string& _name,
-    const Poco::JSON::Object& _cmd,
-    Poco::Net::StreamSocket* _socket )
-{
-    // --------------------------------------------------------------------
-
-    multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
-
-    // --------------------------------------------------------------------
-
-    const auto new_df_name = JSON::get_value<std::string>( _cmd, "new_df_" );
-
-    const auto condition_json = *JSON::get_object( _cmd, "condition_" );
-
-    auto df = utils::Getter::get( _name, data_frames() );
-
-    const auto condition =
-        BoolOpParser( categories_, join_keys_encoding_, data_frames_ )
-            .parse( condition_json )
-            .to_vector( 0, df.nrows(), true );
-
-    assert_true( condition );
-
-    // --------------------------------------------------------------------
-
-    df.where( *condition );
-
-    df.set_name( new_df_name );
-
-    license_checker().check_mem_size( data_frames(), df.nbytes() );
-
-    // --------------------------------------------------------------------
-
-    weak_write_lock.upgrade();
-
-    data_frames()[new_df_name] = df;
-
-    monitor_->send_tcp(
-        "postdataframe", df.to_monitor(), communication::Monitor::TIMEOUT_ON );
-
-    weak_write_lock.unlock();
-
-    communication::Sender::send_string( "Success!", _socket );
-
-    // --------------------------------------------------------------------
-}
-
-// ------------------------------------------------------------------------
 }  // namespace handlers
 }  // namespace engine

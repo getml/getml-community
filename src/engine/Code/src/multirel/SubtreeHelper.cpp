@@ -260,7 +260,10 @@ std::vector<containers::Subfeatures> SubtreeHelper::make_subfeatures(
             for ( size_t j = 0; j < p.size(); ++j )
                 {
                     const auto column = containers::Column<Float>(
-                        p.at( j ), "FEATURE_" + std::to_string( j + 1 ), "" );
+                        p.at( j ),
+                        "FEATURE_" + std::to_string( j + 1 ),
+                        {},
+                        "" );
 
                     const auto view =
                         containers::ColumnView<Float, std::map<Int, Int>>(
