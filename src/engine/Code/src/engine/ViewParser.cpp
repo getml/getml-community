@@ -22,6 +22,9 @@ void ViewParser::add_column(
 
     const auto role = JSON::get_value<std::string>( added, "role_" );
 
+    const auto subroles = JSON::array_to_vector<std::string>(
+        JSON::get_array( added, "subroles_" ) );
+
     const auto unit = JSON::get_value<std::string>( added, "unit_" );
 
     const auto type = JSON::get_value<std::string>( json_col, "type_" );
@@ -35,6 +38,8 @@ void ViewParser::add_column(
             auto col = column_view.to_column( 0, _df->nrows(), true );
 
             col.set_name( name );
+
+            col.set_subroles( subroles );
 
             col.set_unit( unit );
 
@@ -54,14 +59,16 @@ void ViewParser::add_column(
             if ( role == containers::DataFrame::ROLE_CATEGORICAL ||
                  role == containers::DataFrame::ROLE_JOIN_KEY )
                 {
-                    add_int_column_to_df( name, role, unit, *vec, _df );
+                    add_int_column_to_df(
+                        name, role, subroles, unit, *vec, _df );
                 }
 
             if ( role == containers::DataFrame::ROLE_UNUSED ||
                  role == containers::DataFrame::ROLE_TEXT ||
                  role == containers::DataFrame::ROLE_UNUSED_FLOAT )
                 {
-                    add_string_column_to_df( name, role, unit, *vec, _df );
+                    add_string_column_to_df(
+                        name, role, subroles, unit, *vec, _df );
                 }
         }
 }
@@ -71,6 +78,7 @@ void ViewParser::add_column(
 void ViewParser::add_int_column_to_df(
     const std::string& _name,
     const std::string& _role,
+    const std::vector<std::string>& _subroles,
     const std::string& _unit,
     const std::vector<std::string>& _vec,
     containers::DataFrame* _df )
@@ -88,6 +96,8 @@ void ViewParser::add_int_column_to_df(
 
     col.set_name( _name );
 
+    col.set_subroles( _subroles );
+
     col.set_unit( _unit );
 
     _df->add_int_column( col, _role );
@@ -103,6 +113,7 @@ void ViewParser::add_int_column_to_df(
 void ViewParser::add_string_column_to_df(
     const std::string& _name,
     const std::string& _role,
+    const std::vector<std::string>& _subroles,
     const std::string& _unit,
     const std::vector<std::string>& _vec,
     containers::DataFrame* _df )
@@ -115,6 +126,8 @@ void ViewParser::add_string_column_to_df(
         }
 
     col.set_name( _name );
+
+    col.set_subroles( _subroles );
 
     col.set_unit( _unit );
 

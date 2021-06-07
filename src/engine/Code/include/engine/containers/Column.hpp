@@ -191,6 +191,8 @@ class Column
     /// Trivial setter
     void set_subroles( const std::vector<std::string> &_subroles )
     {
+        // For checking only
+        helpers::SubroleParser::parse( _subroles );
         subroles_ = _subroles;
     }
 

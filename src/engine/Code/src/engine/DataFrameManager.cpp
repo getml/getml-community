@@ -1870,6 +1870,52 @@ void DataFrameManager::get_nrows(
 
 // ------------------------------------------------------------------------
 
+void DataFrameManager::get_subroles(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    const auto json_col = *JSON::get_object( _cmd, "col_" );
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    const auto column_view =
+        NumOpParser( categories_, join_keys_encoding_, data_frames_ )
+            .parse( json_col );
+
+    read_lock.unlock();
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_categorical_column(
+        column_view.subroles(), _socket );
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::get_subroles_categorical(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    const auto json_col = *JSON::get_object( _cmd, "col_" );
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    const auto column_view =
+        CatOpParser( categories_, join_keys_encoding_, data_frames_ )
+            .parse( json_col );
+
+    read_lock.unlock();
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_categorical_column(
+        column_view.subroles(), _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void DataFrameManager::get_unit(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,

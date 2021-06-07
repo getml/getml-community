@@ -64,6 +64,7 @@ class ViewParser
     void add_int_column_to_df(
         const std::string& _name,
         const std::string& _role,
+        const std::vector<std::string>& _subroles,
         const std::string& _unit,
         const std::vector<std::string>& _vec,
         containers::DataFrame* _df );
@@ -72,6 +73,7 @@ class ViewParser
     void add_string_column_to_df(
         const std::string& _name,
         const std::string& _role,
+        const std::vector<std::string>& _subroles,
         const std::string& _unit,
         const std::vector<std::string>& _vec,
         containers::DataFrame* _df );

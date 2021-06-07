@@ -105,6 +105,10 @@ class CatOpParser
     containers::ColumnView<std::string> update(
         const Poco::JSON::Object& _col ) const;
 
+    /// Returns a new column with new subroles.
+    containers::ColumnView<std::string> with_subroles(
+        const Poco::JSON::Object& _col ) const;
+
     /// Returns a new column with a new unit.
     containers::ColumnView<std::string> with_unit(
         const Poco::JSON::Object& _col ) const;

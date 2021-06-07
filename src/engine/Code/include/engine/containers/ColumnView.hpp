@@ -25,8 +25,12 @@ class ColumnView
     ColumnView(
         const ValueFunc& _value_func,
         const NRowsType& _nrows,
+        const std::vector<std::string>& _subroles = {},
         const std::string& _unit = "" )
-        : nrows_( _nrows ), unit_( _unit ), value_func_( _value_func )
+        : nrows_( _nrows ),
+          subroles_( _subroles ),
+          unit_( _unit ),
+          value_func_( _value_func )
     {
         static_assert( !std::is_same<T, void>(), "Type cannot be void!" );
     }
@@ -84,6 +88,10 @@ class ColumnView
         const std::optional<size_t> _expected_length,
         const bool _nrows_must_match ) const;
 
+    /// Returns a new column view with new subroles.
+    ColumnView<T> with_subroles(
+        const std::vector<std::string>& _subroles ) const;
+
     /// Returns a new column view with a new unit.
     ColumnView<T> with_unit( const std::string& _unit ) const;
 
@@ -122,6 +130,9 @@ class ColumnView
     }
 
     /// Trivial getter
+    const std::vector<std::string>& subroles() const { return subroles_; }
+
+    /// Trivial getter
     const std::string& unit() const { return unit_; }
 
    private:
@@ -146,6 +157,9 @@ class ColumnView
    private:
     /// Functiona returning the Number of rows (if that is knowable).
     const NRowsType nrows_;
+
+    /// The subroles of the column view.
+    const std::vector<std::string> subroles_;
 
     /// Unit of the column.
     const std::string unit_;
@@ -386,7 +400,8 @@ ColumnView<T> ColumnView<T>::from_boolean_subselection(
 
     // -----------------------------------------------------------
 
-    return ColumnView<T>( value_func, NOT_KNOWABLE, _data.unit() );
+    return ColumnView<T>(
+        value_func, NOT_KNOWABLE, _data.subroles(), _data.unit() );
 
     // -----------------------------------------------------------
 }
@@ -430,7 +445,8 @@ ColumnView<T> ColumnView<T>::from_numerical_subselection(
 
     // -----------------------------------------------------------
 
-    return ColumnView<T>( value_func, _indices.nrows(), _data.unit() );
+    return ColumnView<T>(
+        value_func, _indices.nrows(), _data.subroles(), _data.unit() );
 
     // -----------------------------------------------------------
 }
@@ -449,7 +465,8 @@ ColumnView<T> ColumnView<T>::from_column( const Column<T>& _col )
         return _col[_i];
     };
 
-    return ColumnView<T>( value_func, _col.nrows(), _col.unit() );
+    return ColumnView<T>(
+        value_func, _col.nrows(), _col.subroles(), _col.unit() );
 }
 
 // -------------------------------------------------------------------------
@@ -760,6 +777,24 @@ std::shared_ptr<std::vector<T>> ColumnView<T>::to_vector(
 // -------------------------------------------------------------------------
 
 template <class T>
+ColumnView<T> ColumnView<T>::with_subroles(
+    const std::vector<std::string>& _subroles ) const
+{
+    // For checking only
+    helpers::SubroleParser::parse( _subroles );
+
+    const auto deep_copy = *this;
+
+    const auto value_func = [deep_copy]( const size_t _i ) -> std::optional<T> {
+        return deep_copy[_i];
+    };
+
+    return ColumnView<T>( value_func, nrows(), _subroles, unit() );
+}
+
+// -------------------------------------------------------------------------
+
+template <class T>
 ColumnView<T> ColumnView<T>::with_unit( const std::string& _unit ) const
 {
     const auto deep_copy = *this;
@@ -768,7 +803,7 @@ ColumnView<T> ColumnView<T>::with_unit( const std::string& _unit ) const
         return deep_copy[_i];
     };
 
-    return ColumnView<T>( value_func, nrows(), _unit );
+    return ColumnView<T>( value_func, nrows(), subroles(), _unit );
 }
 
 // -------------------------------------------------------------------------

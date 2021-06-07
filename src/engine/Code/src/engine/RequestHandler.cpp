@@ -273,6 +273,10 @@ void RequestHandler::run()
                     data_frame_manager().get_column_nrows(
                         name, cmd, &socket() );
                 }
+            else if ( type == "FloatColumn.get_subroles" )
+                {
+                    data_frame_manager().get_subroles( name, cmd, &socket() );
+                }
             else if ( type == "FloatColumn.get_unit" )
                 {
                     data_frame_manager().get_unit( name, cmd, &socket() );
@@ -445,6 +449,11 @@ void RequestHandler::run()
             else if ( type == "StringColumn.get_nrows" )
                 {
                     data_frame_manager().get_categorical_column_nrows(
+                        name, cmd, &socket() );
+                }
+            else if ( type == "StringColumn.get_subroles" )
+                {
+                    data_frame_manager().get_subroles_categorical(
                         name, cmd, &socket() );
                 }
             else if ( type == "StringColumn.get_unit" )

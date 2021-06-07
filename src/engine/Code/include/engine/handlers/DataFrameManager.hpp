@@ -224,6 +224,18 @@ class DataFrameManager
     void get_nrows(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
+    /// Get the subroles for a float column.
+    void get_subroles(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Get the subroles for a string column.
+    void get_subroles_categorical(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Get the unit for a float column.
     void get_unit(
         const std::string& _name,

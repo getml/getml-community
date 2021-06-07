@@ -215,6 +215,11 @@ containers::ColumnView<std::string> CatOpParser::parse(
             return containers::ColumnView<std::string>::from_value( val );
         }
 
+    if ( type == STRING_COLUMN_VIEW && op == "with_subroles" )
+        {
+            return with_subroles( _col );
+        }
+
     if ( type == STRING_COLUMN_VIEW && op == "with_unit" )
         {
             return with_unit( _col );
@@ -336,7 +341,7 @@ containers::ColumnView<std::string> CatOpParser::to_view(
     };
 
     return containers::ColumnView<std::string>(
-        to_str, _col.nrows(), _col.unit() );
+        to_str, _col.nrows(), _col.subroles(), _col.unit() );
 }
 
 // ----------------------------------------------------------------------------
@@ -354,7 +359,7 @@ containers::ColumnView<std::string> CatOpParser::to_view(
     };
 
     return containers::ColumnView<std::string>(
-        to_str, _col.nrows(), _col.unit() );
+        to_str, _col.nrows(), _col.subroles(), _col.unit() );
 }
 
 // ----------------------------------------------------------------------------
@@ -376,6 +381,19 @@ containers::ColumnView<std::string> CatOpParser::update(
 
     return containers::ColumnView<std::string>::from_tern_op(
         operand1, operand2, condition, op );
+}
+
+// ----------------------------------------------------------------------------
+
+containers::ColumnView<std::string> CatOpParser::with_subroles(
+    const Poco::JSON::Object& _col ) const
+{
+    const auto col = parse( *JSON::get_object( _col, "operand1_" ) );
+
+    const auto subroles = JSON::array_to_vector<std::string>(
+        JSON::get_array( _col, "subroles_" ) );
+
+    return col.with_subroles( subroles );
 }
 
 // ----------------------------------------------------------------------------

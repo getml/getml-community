@@ -303,6 +303,11 @@ containers::ColumnView<Float> NumOpParser::parse(
             return arange( _col );
         }
 
+    if ( type == FLOAT_COLUMN_VIEW && op == "with_subroles" )
+        {
+            return with_subroles( _col );
+        }
+
     if ( type == FLOAT_COLUMN_VIEW && op == "with_unit" )
         {
             return with_unit( _col );
@@ -578,6 +583,19 @@ containers::ColumnView<Float> NumOpParser::update(
 
     return containers::ColumnView<Float>::from_tern_op(
         operand1, operand2, condition, op );
+}
+
+// ----------------------------------------------------------------------------
+
+containers::ColumnView<Float> NumOpParser::with_subroles(
+    const Poco::JSON::Object& _col ) const
+{
+    const auto col = parse( *JSON::get_object( _col, "operand1_" ) );
+
+    const auto subroles = JSON::array_to_vector<std::string>(
+        JSON::get_array( _col, "subroles_" ) );
+
+    return col.with_subroles( subroles );
 }
 
 // ----------------------------------------------------------------------------

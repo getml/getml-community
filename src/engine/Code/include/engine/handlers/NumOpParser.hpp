@@ -106,6 +106,10 @@ class NumOpParser
     containers::ColumnView<Float> update(
         const Poco::JSON::Object& _col ) const;
 
+    /// Returns a new column with new subroles.
+    containers::ColumnView<Float> with_subroles(
+        const Poco::JSON::Object& _col ) const;
+
     /// Returns a new column with a new unit.
     containers::ColumnView<Float> with_unit(
         const Poco::JSON::Object& _col ) const;
