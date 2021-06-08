@@ -33,6 +33,23 @@ Schema Schema::from_json( const Poco::JSON::Object& _json_obj )
 
 // ----------------------------------------------------------------------------
 
+std::shared_ptr<const std::vector<Schema>> Schema::from_json(
+    const Poco::JSON::Array& _json_arr )
+{
+    auto vec = std::make_shared<std::vector<helpers::Schema>>();
+
+    for ( size_t i = 0; i < _json_arr.size(); ++i )
+        {
+            const auto ptr = _json_arr.getObject( i );
+            assert_true( ptr );
+            vec->push_back( from_json( *ptr ) );
+        }
+
+    return vec;
+}
+
+// ----------------------------------------------------------------------------
+
 Poco::JSON::Object::Ptr Schema::to_json_obj() const
 {
     Poco::JSON::Object::Ptr obj( new Poco::JSON::Object() );

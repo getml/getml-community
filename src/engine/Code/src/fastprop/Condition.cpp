@@ -113,8 +113,8 @@ Poco::JSON::Object::Ptr Condition::to_json_obj() const
 std::string Condition::to_sql(
     const std::vector<strings::String> &_categories,
     const std::string &_feature_prefix,
-    const Placeholder &_input,
-    const Placeholder &_output ) const
+    const helpers::Schema &_input,
+    const helpers::Schema &_output ) const
 {
     return SQLMaker::condition(
         _categories, _feature_prefix, *this, _input, _output );

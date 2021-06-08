@@ -15,18 +15,14 @@ struct DecisionTreeEnsembleImpl
         const std::shared_ptr<const descriptors::Hyperparameters>
             &_hyperparameters,
         const std::shared_ptr<const std::vector<std::string>> &_peripheral,
-        const std::shared_ptr<const containers::Placeholder> &_placeholder,
-        const std::shared_ptr<const std::vector<containers::Placeholder>>
-            &_peripheral_schema,
-        const std::shared_ptr<const containers::Placeholder>
-            &_population_schema )
+        const std::shared_ptr<const containers::Placeholder> &_placeholder )
         : allow_http_( false ),
           comm_( nullptr ),
           hyperparameters_( _hyperparameters ),
           peripheral_( _peripheral ),
-          peripheral_schema_( _peripheral_schema ),
-          placeholder_( _placeholder ),
-          population_schema_( _population_schema ){};
+          placeholder_( _placeholder )
+    {
+    }
 
     ~DecisionTreeEnsembleImpl() = default;
 
@@ -47,15 +43,14 @@ struct DecisionTreeEnsembleImpl
 
     /// containers::Placeholder for the peripheral tables (only used
     /// for the schema)
-    std::shared_ptr<const std::vector<containers::Placeholder>>
-        peripheral_schema_;
+    std::shared_ptr<const std::vector<helpers::Schema>> peripheral_schema_;
 
     /// containers::Placeholder for the population table (contains the
     /// relational tree)
     std::shared_ptr<const containers::Placeholder> placeholder_;
 
     /// The schema of the population table.
-    std::shared_ptr<const containers::Placeholder> population_schema_;
+    std::shared_ptr<const helpers::Schema> population_schema_;
 
     /// Random number generator for creating sample weights and
     /// the like.

@@ -40,7 +40,7 @@ class ImportanceMaker
 
     /// Adds all of the colnames with importance 0.0.
     void fill_zeros(
-        const Placeholder& _pl,
+        const Schema& _pl,
         const std::string& _tname,
         const bool _is_population );
 

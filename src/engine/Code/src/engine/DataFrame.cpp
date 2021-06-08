@@ -2202,6 +2202,108 @@ void DataFrame::sort_by_key( const std::vector<size_t> &_key )
 
 // ----------------------------------------------------------------------------
 
+const Column<strings::String> &DataFrame::string_column(
+    const std::string &_role, const size_t _num ) const
+{
+    if ( _role == ROLE_TEXT )
+        {
+            return text( _num );
+        }
+    else if ( _role == ROLE_UNUSED_STRING )
+        {
+            return unused_string( _num );
+        }
+
+    throw std::invalid_argument( "Role '" + _role + "' not known!" );
+}
+
+// ----------------------------------------------------------------------------
+
+const Column<strings::String> &DataFrame::string_column(
+    const std::string &_name, const std::string &_role ) const
+{
+    if ( _role == ROLE_TEXT )
+        {
+            return text( _name );
+        }
+    else if ( _role == ROLE_UNUSED_STRING )
+        {
+            return unused_string( _name );
+        }
+
+    throw std::invalid_argument( "Role '" + _role + "' not known!" );
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<std::string> DataFrame::subroles( const std::string &_name ) const
+{
+    // ----------------------------------------
+
+    const auto name_in = [_name]( const auto &_columns ) -> bool {
+        for ( size_t i = 0; i < _columns.size(); ++i )
+            {
+                if ( _columns[i].name() == _name )
+                    {
+                        return true;
+                    }
+            }
+        return false;
+    };
+
+    // ----------------------------------------
+
+    if ( name_in( categoricals_ ) )
+        {
+            return int_column( _name, ROLE_CATEGORICAL ).subroles();
+        }
+
+    if ( name_in( join_keys_ ) )
+        {
+            return int_column( _name, ROLE_JOIN_KEY ).subroles();
+        }
+
+    if ( name_in( numericals_ ) )
+        {
+            return float_column( _name, ROLE_NUMERICAL ).subroles();
+        }
+
+    if ( name_in( targets_ ) )
+        {
+            return float_column( _name, ROLE_TARGET ).subroles();
+        }
+
+    if ( name_in( text_ ) )
+        {
+            return string_column( _name, ROLE_TEXT ).subroles();
+        }
+
+    if ( name_in( time_stamps_ ) )
+        {
+            return float_column( _name, ROLE_TIME_STAMP ).subroles();
+        }
+
+    if ( name_in( unused_floats_ ) )
+        {
+            return float_column( _name, ROLE_UNUSED_FLOAT ).subroles();
+        }
+
+    if ( name_in( unused_strings_ ) )
+        {
+            return string_column( _name, ROLE_UNUSED_STRING ).subroles();
+        }
+
+    // ----------------------------------------
+
+    throw_column_does_not_exist( _name, "column" );
+
+    return {};
+
+    // ----------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
 Poco::JSON::Object DataFrame::to_monitor() const
 {
     // ---------------------------------------------------------------------

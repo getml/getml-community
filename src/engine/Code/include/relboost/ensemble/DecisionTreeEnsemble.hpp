@@ -36,11 +36,7 @@ class DecisionTreeEnsemble
     DecisionTreeEnsemble(
         const std::shared_ptr<const Hyperparameters>& _hyperparameters,
         const std::shared_ptr<const std::vector<std::string>>& _peripheral,
-        const std::shared_ptr<const containers::Placeholder>& _placeholder,
-        const std::shared_ptr<const std::vector<containers::Placeholder>>&
-            _peripheral_schema = nullptr,
-        const std::shared_ptr<const containers::Placeholder>&
-            _population_schema = nullptr );
+        const std::shared_ptr<const containers::Placeholder>& _placeholder );
 
     DecisionTreeEnsemble( const Poco::JSON::Object& _obj );
 
@@ -189,7 +185,7 @@ class DecisionTreeEnsemble
     }
 
     /// Trivial (const) accessor
-    const std::vector<containers::Placeholder>& peripheral_schema() const
+    const std::vector<helpers::Schema>& peripheral_schema() const
     {
         throw_unless(
             impl().peripheral_schema_,
@@ -206,7 +202,7 @@ class DecisionTreeEnsemble
     }
 
     /// Trivial (const) accessor
-    const containers::Placeholder& population_schema() const
+    const helpers::Schema& population_schema() const
     {
         throw_unless(
             impl().population_schema_,

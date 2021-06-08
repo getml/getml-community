@@ -14,19 +14,13 @@ struct DecisionTreeEnsembleImpl
     DecisionTreeEnsembleImpl(
         const std::shared_ptr<const Hyperparameters>& _hyperparameters,
         const std::shared_ptr<const std::vector<std::string>>& _peripheral,
-        const std::shared_ptr<const containers::Placeholder>& _placeholder,
-        const std::shared_ptr<const std::vector<containers::Placeholder>>&
-            _peripheral_schema,
-        const std::shared_ptr<const containers::Placeholder>&
-            _population_schema )
+        const std::shared_ptr<const containers::Placeholder>& _placeholder )
         : allow_http_( false ),
           comm_( nullptr ),
           hyperparameters_( _hyperparameters ),
           initial_prediction_( 0.0 ),
           peripheral_( _peripheral ),
-          peripheral_schema_( _peripheral_schema ),
-          placeholder_( _placeholder ),
-          population_schema_( _population_schema )
+          placeholder_( _placeholder )
     {
         if ( placeholder_ )
             {
@@ -60,14 +54,13 @@ struct DecisionTreeEnsembleImpl
     std::shared_ptr<const std::vector<std::string>> peripheral_;
 
     /// Schema of the peripheral tables.
-    std::shared_ptr<const std::vector<containers::Placeholder>>
-        peripheral_schema_;
+    std::shared_ptr<const std::vector<helpers::Schema>> peripheral_schema_;
 
     /// Placeholder object used to define the data schema.
     std::shared_ptr<const containers::Placeholder> placeholder_;
 
     /// Schema of the population table.
-    std::shared_ptr<const containers::Placeholder> population_schema_;
+    std::shared_ptr<const helpers::Schema> population_schema_;
 
     /// Trees underlying the model.
     std::vector<decisiontrees::DecisionTree> trees_;

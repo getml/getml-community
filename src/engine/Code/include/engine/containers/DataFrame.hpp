@@ -173,6 +173,17 @@ class DataFrame
     /// Sorts all columns by the designated key.
     void sort_by_key( const std::vector<size_t> &_key );
 
+    /// Getter for a string_column
+    const Column<strings::String> &string_column(
+        const std::string &_role, const size_t _num ) const;
+
+    /// Getter for a string_column.
+    const Column<strings::String> &string_column(
+        const std::string &_name, const std::string &_role ) const;
+
+    /// Returns the subroles of the column signified by _name.
+    std::vector<std::string> subroles( const std::string &_name ) const;
+
     /// Transforms an immutable data frame from this.
     template <typename DataFrameType>
     DataFrameType to_immutable(

@@ -288,17 +288,19 @@ struct DataFrame
     }
 
     /// Returns the schema.
-    Placeholder to_schema() const
+    Schema to_schema() const
     {
-        return Placeholder(
-            get_colnames( categoricals_ ),
-            get_colnames( discretes_ ),
-            get_colnames( join_keys_ ),
-            name_,
-            get_colnames( numericals_ ),
-            get_colnames( targets_ ),
-            get_colnames( text_ ),
-            get_colnames( time_stamps_ ) );
+        return Schema{
+            .categoricals_ = get_colnames( categoricals_ ),
+            .discretes_ = get_colnames( discretes_ ),
+            .join_keys_ = get_colnames( join_keys_ ),
+            .name_ = name_,
+            .numericals_ = get_colnames( numericals_ ),
+            .targets_ = get_colnames( targets_ ),
+            .text_ = get_colnames( text_ ),
+            .time_stamps_ = get_colnames( time_stamps_ ),
+            .unused_floats_ = {},
+            .unused_strings_ = {} };
     }
 
     /// Trivial getter

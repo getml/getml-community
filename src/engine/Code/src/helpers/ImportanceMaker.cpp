@@ -40,9 +40,7 @@ void ImportanceMaker::add_to_importance_factors(
 // ----------------------------------------------------------------------------
 
 void ImportanceMaker::fill_zeros(
-    const Placeholder& _pl,
-    const std::string& _tname,
-    const bool _is_population )
+    const Schema& _pl, const std::string& _tname, const bool _is_population )
 {
     const auto marker = _is_population ? population() : peripheral();
 

@@ -34,8 +34,8 @@ class SQLMaker
         const VocabForDf& _vocab_popul,
         const VocabForDf& _vocab_perip,
         const std::string& _feature_prefix,
-        const containers::Placeholder& _input,
-        const containers::Placeholder& _output,
+        const helpers::Schema& _input,
+        const helpers::Schema& _output,
         const descriptors::Split& _split,
         const bool _add_null ) const;
 
@@ -45,8 +45,8 @@ class SQLMaker
         const VocabForDf& _vocab_popul,
         const VocabForDf& _vocab_perip,
         const std::string& _feature_prefix,
-        const containers::Placeholder& _input,
-        const containers::Placeholder& _output,
+        const helpers::Schema& _input,
+        const helpers::Schema& _output,
         const descriptors::Split& _split,
         const bool _add_null ) const;
 
@@ -54,8 +54,8 @@ class SQLMaker
     /// AGGREGATED)).
     std::string select_statement(
         const std::string& _feature_prefix,
-        const containers::Placeholder& _input,
-        const containers::Placeholder& _output,
+        const helpers::Schema& _input,
+        const helpers::Schema& _output,
         const size_t _column_used,
         const enums::DataUsed& _data_used,
         const std::string& _agg_type ) const;
@@ -64,16 +64,16 @@ class SQLMaker
     /// Returns the column name signified by _column_used and _data_used.
     std::string get_name(
         const std::string& _feature_prefix,
-        const containers::Placeholder& _input,
-        const containers::Placeholder& _output,
+        const helpers::Schema& _input,
+        const helpers::Schema& _output,
         const size_t _column_used,
         const enums::DataUsed& _data_used ) const;
 
     /// Extracts the proper name from a same units struct.
     std::pair<std::string, std::string> get_names(
         const std::string& _feature_prefix,
-        const containers::Placeholder& _input,
-        const containers::Placeholder& _output,
+        const helpers::Schema& _input,
+        const helpers::Schema& _output,
         const std::shared_ptr<const descriptors::SameUnitsContainer>
             _same_units,
         const size_t _column_used ) const;
@@ -81,16 +81,16 @@ class SQLMaker
     /// Returns the column name signified by _column_used and _data_used as a
     /// time stamp
     std::string get_ts_name(
-        const containers::Placeholder& _input,
-        const containers::Placeholder& _output,
+        const helpers::Schema& _input,
+        const helpers::Schema& _output,
         const size_t _column_used,
         const enums::DataUsed& _data_used,
         const std::string& _diffstr ) const;
 
     /// Extracts the proper name from a same units struct.
     std::pair<std::string, std::string> get_ts_names(
-        const containers::Placeholder& _input,
-        const containers::Placeholder& _output,
+        const helpers::Schema& _input,
+        const helpers::Schema& _output,
         const std::shared_ptr<const descriptors::SameUnitsContainer>
             _same_units,
         const size_t _column_used ) const;
@@ -113,8 +113,8 @@ class SQLMaker
 
     /// Transforms the time stamps diff into SQLite-compliant code.
     std::string make_time_stamp_diff(
-        const containers::Placeholder& _input,
-        const containers::Placeholder& _output,
+        const helpers::Schema& _input,
+        const helpers::Schema& _output,
         const std::shared_ptr<const descriptors::SameUnitsContainer>
             _same_units,
         const size_t _column_used,
@@ -130,8 +130,8 @@ class SQLMaker
 
     /// Makes a window
     std::string make_time_stamp_window(
-        const containers::Placeholder& _input,
-        const containers::Placeholder& _output,
+        const helpers::Schema& _input,
+        const helpers::Schema& _output,
         const Float _diff,
         const bool _is_greater ) const;
 
@@ -139,8 +139,8 @@ class SQLMaker
     /// difference between two columns)
     std::string value_to_be_aggregated(
         const std::string& _feature_prefix,
-        const containers::Placeholder& _input,
-        const containers::Placeholder& _output,
+        const helpers::Schema& _input,
+        const helpers::Schema& _output,
         const size_t _column_used,
         const enums::DataUsed& _data_used ) const;
 

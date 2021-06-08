@@ -41,11 +41,7 @@ class FastProp
     FastProp(
         const std::shared_ptr<const Hyperparameters>& _hyperparameters,
         const std::shared_ptr<const std::vector<std::string>>& _peripheral,
-        const std::shared_ptr<const containers::Placeholder>& _placeholder,
-        const std::shared_ptr<const std::vector<containers::Placeholder>>&
-            _peripheral_schema = nullptr,
-        const std::shared_ptr<const containers::Placeholder>&
-            _population_schema = nullptr );
+        const std::shared_ptr<const containers::Placeholder>& _placeholder );
 
     FastProp( const Poco::JSON::Object& _obj );
 
@@ -396,7 +392,7 @@ class FastProp
     }
 
     /// Trivial (const) accessor
-    const std::vector<containers::Placeholder>& peripheral_schema() const
+    const std::vector<helpers::Schema>& peripheral_schema() const
     {
         throw_unless(
             peripheral_schema_,
@@ -413,7 +409,7 @@ class FastProp
     }
 
     /// Trivial (const) accessor
-    const containers::Placeholder& population_schema() const
+    const helpers::Schema& population_schema() const
     {
         throw_unless(
             population_schema_,
@@ -469,14 +465,14 @@ class FastProp
     }
 
     /// Trivial accessor
-    const std::vector<containers::Placeholder>& main_table_schemas() const
+    const std::vector<helpers::Schema>& main_table_schemas() const
     {
         assert_true( main_table_schemas_ );
         return *main_table_schemas_;
     }
 
     /// Trivial accessor
-    const std::vector<containers::Placeholder>& peripheral_table_schemas() const
+    const std::vector<helpers::Schema>& peripheral_table_schemas() const
     {
         assert_true( peripheral_table_schemas_ );
         return *peripheral_table_schemas_;
@@ -511,27 +507,25 @@ class FastProp
     /// Schema of the main tables taken from the table holder  - needed
     /// to generate the SQL code. In the other algorithms, this information is
     /// held by the individual trees.
-    std::shared_ptr<const std::vector<containers::Placeholder>>
-        main_table_schemas_;
+    std::shared_ptr<const std::vector<helpers::Schema>> main_table_schemas_;
 
     /// Names of the peripheral tables, as they are referred in placeholder
     std::shared_ptr<const std::vector<std::string>> peripheral_;
 
     /// Schema of the peripheral tables.
-    std::shared_ptr<const std::vector<containers::Placeholder>>
-        peripheral_schema_;
+    std::shared_ptr<const std::vector<helpers::Schema>> peripheral_schema_;
 
     /// Schema of the peripheral tables taken from the table holder  - needed
     /// to generate the SQL code. In the other algorithms, this information is
     /// held by the individual trees.
-    std::shared_ptr<const std::vector<containers::Placeholder>>
+    std::shared_ptr<const std::vector<helpers::Schema>>
         peripheral_table_schemas_;
 
     /// Placeholder object used to define the data schema.
     std::shared_ptr<const containers::Placeholder> placeholder_;
 
     /// Schema of the population table.
-    std::shared_ptr<const containers::Placeholder> population_schema_;
+    std::shared_ptr<const helpers::Schema> population_schema_;
 
     /// Contains the algorithms for the subfeatures.
     std::shared_ptr<const std::vector<std::optional<FastProp>>> subfeatures_;

@@ -9,18 +9,12 @@ namespace algorithm
 FastProp::FastProp(
     const std::shared_ptr<const Hyperparameters> &_hyperparameters,
     const std::shared_ptr<const std::vector<std::string>> &_peripheral,
-    const std::shared_ptr<const containers::Placeholder> &_placeholder,
-    const std::shared_ptr<const std::vector<containers::Placeholder>>
-        &_peripheral_schema,
-    const std::shared_ptr<const containers::Placeholder> &_population_schema )
+    const std::shared_ptr<const containers::Placeholder> &_placeholder )
     : allow_http_( false ),
       comm_( nullptr ),
       hyperparameters_( _hyperparameters ),
       peripheral_( _peripheral ),
-      peripheral_schema_( _peripheral_schema ),
-      placeholder_( _placeholder ),
-      population_schema_( _population_schema )
-
+      placeholder_( _placeholder )
 {
     if ( placeholder_ )
         {
@@ -49,44 +43,36 @@ FastProp::FastProp( const Poco::JSON::Object &_obj )
 
     if ( _obj.has( "population_schema_" ) )
         {
-            population_schema_.reset( new containers::Placeholder(
-                *jsonutils::JSON::get_object( _obj, "population_schema_" ) ) );
+            population_schema_ = std::make_shared<const helpers::Schema>(
+                helpers::Schema::from_json( *jsonutils::JSON::get_object(
+                    _obj, "population_schema_" ) ) );
         }
 
     // ------------------------------------------------------------------------
 
     if ( _obj.has( "peripheral_schema_" ) )
         {
-            auto vec =
-                jsonutils::JSON::get_type_vector<containers::Placeholder>(
-                    _obj, "peripheral_schema_" );
-
             peripheral_schema_ =
-                std::make_shared<std::vector<containers::Placeholder>>( vec );
+                helpers::Schema::from_json( *jsonutils::JSON::get_object_array(
+                    _obj, "peripheral_schema_" ) );
         }
 
     // ------------------------------------------------------------------------
 
     if ( _obj.has( "main_table_schemas_" ) )
         {
-            auto vec =
-                jsonutils::JSON::get_type_vector<containers::Placeholder>(
-                    _obj, "main_table_schemas_" );
-
             main_table_schemas_ =
-                std::make_shared<std::vector<containers::Placeholder>>( vec );
+                helpers::Schema::from_json( *jsonutils::JSON::get_object_array(
+                    _obj, "main_table_schemas_" ) );
         }
 
     // ------------------------------------------------------------------------
 
     if ( _obj.has( "peripheral_table_schemas_" ) )
         {
-            auto vec =
-                jsonutils::JSON::get_type_vector<containers::Placeholder>(
-                    _obj, "peripheral_table_schemas_" );
-
             peripheral_table_schemas_ =
-                std::make_shared<std::vector<containers::Placeholder>>( vec );
+                helpers::Schema::from_json( *jsonutils::JSON::get_object_array(
+                    _obj, "peripheral_table_schemas_" ) );
         }
 
     // ------------------------------------------------------------------------
@@ -473,11 +459,10 @@ void FastProp::extract_schemas(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral )
 {
-    population_schema_ = std::make_shared<const containers::Placeholder>(
-        _population.to_schema() );
+    population_schema_ =
+        std::make_shared<const helpers::Schema>( _population.to_schema() );
 
-    auto peripheral_schema =
-        std::make_shared<std::vector<containers::Placeholder>>();
+    auto peripheral_schema = std::make_shared<std::vector<helpers::Schema>>();
 
     for ( auto &df : _peripheral )
         {
@@ -496,10 +481,10 @@ void FastProp::extract_schemas( const TableHolder &_table_holder )
         _table_holder.peripheral_tables().size() );
 
     const auto main_table_schemas =
-        std::make_shared<std::vector<containers::Placeholder>>();
+        std::make_shared<std::vector<helpers::Schema>>();
 
     const auto peripheral_table_schemas =
-        std::make_shared<std::vector<containers::Placeholder>>();
+        std::make_shared<std::vector<helpers::Schema>>();
 
     for ( size_t i = 0; i < _table_holder.main_tables().size(); ++i )
         {

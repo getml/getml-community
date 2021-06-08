@@ -202,12 +202,10 @@ void DecisionTree::fit(
 {
     // ------------------------------------------------------------------------
 
-    if ( _input )
-        {
-            input_.reset( new containers::Placeholder( _input->to_schema() ) );
-        }
+    input_ = std::make_shared<const helpers::Schema>( _input->to_schema() );
 
-    output_.reset( new containers::Placeholder( _output.df().to_schema() ) );
+    output_ =
+        std::make_shared<const helpers::Schema>( _output.df().to_schema() );
 
     // ------------------------------------------------------------------------
 
@@ -233,6 +231,8 @@ void DecisionTree::fit(
         0,
         hyperparameters_,
         loss_function_,
+        input_,
+        output_,
         initial_weights_,
         &comm() ) );
 
@@ -263,13 +263,13 @@ void DecisionTree::from_json_obj(
     loss_function_ = aggregations::AggregationParser::parse(
         JSON::get_value<std::string>( _obj, "loss_" ), _loss_function );
 
-    input_.reset(
-        new containers::Placeholder( *JSON::get_object( _obj, "input_" ) ) );
+    input_ = std::make_shared<const helpers::Schema>(
+        helpers::Schema::from_json( *JSON::get_object( _obj, "input_" ) ) );
 
     intercept_ = JSON::get_value<Float>( _obj, "intercept_" );
 
-    output_.reset(
-        new containers::Placeholder( *JSON::get_object( _obj, "output_" ) ) );
+    output_ = std::make_shared<const helpers::Schema>(
+        helpers::Schema::from_json( *JSON::get_object( _obj, "output_" ) ) );
 
     peripheral_used_ = JSON::get_value<size_t>( _obj, "peripheral_used_" );
 
@@ -299,6 +299,8 @@ void DecisionTree::from_json_obj(
         0,  // _depth
         hyperparameters_,
         loss_function_,
+        input_,
+        output_,
         *JSON::get_object( _obj, "root_" ) ) );
 }
 

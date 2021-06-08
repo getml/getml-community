@@ -9,16 +9,9 @@ namespace ensemble
 DecisionTreeEnsemble::DecisionTreeEnsemble(
     const std::shared_ptr<const Hyperparameters> &_hyperparameters,
     const std::shared_ptr<const std::vector<std::string>> &_peripheral,
-    const std::shared_ptr<const containers::Placeholder> &_placeholder,
-    const std::shared_ptr<const std::vector<containers::Placeholder>>
-        &_peripheral_schema,
-    const std::shared_ptr<const containers::Placeholder> &_population_schema )
+    const std::shared_ptr<const containers::Placeholder> &_placeholder )
     : impl_( DecisionTreeEnsembleImpl(
-          _hyperparameters,
-          _peripheral,
-          _placeholder,
-          _peripheral_schema,
-          _population_schema ) ),
+          _hyperparameters, _peripheral, _placeholder ) ),
       targets_( std::make_shared<std::vector<Float>>( 0 ) )
 {
     loss_function_ = lossfunctions::LossFunctionParser::parse(
@@ -44,9 +37,7 @@ DecisionTreeEnsemble::DecisionTreeEnsemble( const Poco::JSON::Object &_obj )
           _obj.has( "placeholder_" )
               ? std::make_shared<const containers::Placeholder>(
                     *JSON::get_object( _obj, "placeholder_" ) )
-              : nullptr,
-          nullptr,
-          nullptr ) ),
+              : nullptr ) ),
       targets_( std::make_shared<std::vector<Float>>( 0 ) )
 {
     // ------------------------------------------------------------------------
@@ -62,8 +53,9 @@ DecisionTreeEnsemble::DecisionTreeEnsemble( const Poco::JSON::Object &_obj )
 
     if ( _obj.has( "population_schema_" ) )
         {
-            impl().population_schema_.reset( new containers::Placeholder(
-                *JSON::get_object( _obj, "population_schema_" ) ) );
+            impl().population_schema_ = std::make_shared<const helpers::Schema>(
+                helpers::Schema::from_json(
+                    *JSON::get_object( _obj, "population_schema_" ) ) );
         }
 
     // ------------------------------------------------------------------------
@@ -71,28 +63,9 @@ DecisionTreeEnsemble::DecisionTreeEnsemble( const Poco::JSON::Object &_obj )
 
     if ( _obj.has( "peripheral_schema_" ) )
         {
-            std::vector<containers::Placeholder> peripheral;
-
-            const auto peripheral_arr =
-                *JSON::get_array( _obj, "peripheral_schema_" );
-
-            for ( size_t i = 0; i < peripheral_arr.size(); ++i )
-                {
-                    const auto ptr = peripheral_arr.getObject(
-                        static_cast<unsigned int>( i ) );
-
-                    if ( !ptr )
-                        {
-                            throw std::invalid_argument(
-                                "peripheral_schema_, element " +
-                                std::to_string( i ) + " is not an Object!" );
-                        }
-
-                    peripheral.push_back( containers::Placeholder( *ptr ) );
-                }
-
-            impl().peripheral_schema_.reset(
-                new std::vector<containers::Placeholder>( peripheral ) );
+            impl().peripheral_schema_ =
+                helpers::Schema::from_json( *jsonutils::JSON::get_object_array(
+                    _obj, "peripheral_schema_" ) );
         }
 
     // ------------------------------------------------------------------------
@@ -392,10 +365,9 @@ void DecisionTreeEnsemble::extract_schemas(
     const std::vector<containers::DataFrame> &_peripheral )
 {
     impl().population_schema_ =
-        std::make_shared<containers::Placeholder>( _population.to_schema() );
+        std::make_shared<helpers::Schema>( _population.to_schema() );
 
-    auto peripheral_schema =
-        std::make_shared<std::vector<containers::Placeholder>>();
+    auto peripheral_schema = std::make_shared<std::vector<helpers::Schema>>();
 
     for ( auto &df : _peripheral )
         {

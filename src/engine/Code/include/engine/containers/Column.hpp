@@ -694,6 +694,8 @@ Column<T> Column<T>::sort_by_key( const std::vector<size_t> &_key ) const
 
     sorted.set_name( name() );
 
+    sorted.set_subroles( subroles() );
+
     sorted.set_unit( unit() );
 
     for ( size_t i = 0; i < _key.size(); ++i )
@@ -749,28 +751,27 @@ Column<T> Column<T>::where( const std::vector<bool> &_condition ) const
                 "Size of keys must be identical to number of rows!" );
         }
 
-    auto op = []( size_t init, bool elem ) {
-        return ( ( elem ) ? ( init + 1 ) : ( init ) );
+    const auto include = [&_condition]( size_t _i ) -> bool {
+        return _condition[_i];
     };
 
-    size_t nrows_new =
-        std::accumulate( _condition.begin(), _condition.end(), 0, op );
+    const auto get_val = [this]( size_t _i ) -> T { return *( begin() + _i ); };
 
-    Column<T> trimmed( nrows_new );
+    const auto iota = stl::iota<size_t>( 0, nrows() );
 
-    trimmed.name_ = name_;
+    const auto range =
+        iota | std::views::filter( include ) | std::views::transform( get_val );
 
-    trimmed.unit_ = unit_;
+    const auto data_ptr =
+        std::make_shared<std::vector<T>>( stl::collect::vector<T>( range ) );
 
-    size_t k = 0;
+    Column<T> trimmed( data_ptr );
 
-    for ( size_t i = 0; i < nrows(); ++i )
-        {
-            if ( _condition[i] )
-                {
-                    trimmed[k++] = data()[i];
-                }
-        }
+    trimmed.set_name( name_ );
+
+    trimmed.set_subroles( subroles_ );
+
+    trimmed.set_unit( unit_ );
 
     return trimmed;
 }

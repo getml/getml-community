@@ -11,16 +11,22 @@ DecisionTreeNode::DecisionTreeNode(
     const Int _depth,
     const std::shared_ptr<const Hyperparameters>& _hyperparameters,
     const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
+    const std::shared_ptr<const helpers::Schema>& _input,
+    const std::shared_ptr<const helpers::Schema>& _output,
     const std::vector<Float> _weights,
     multithreading::Communicator* _comm )
     : comm_( _comm ),
       condition_maker_( _condition_maker ),
       depth_( _depth ),
       hyperparameters_( _hyperparameters ),
+      input_( _input ),
       loss_function_( _loss_function ),
       loss_reduction_( NAN ),
+      output_( _output ),
       weights_( _weights )
 {
+    assert_true( input_ );
+    assert_true( output_ );
 }
 
 // ----------------------------------------------------------------------------
@@ -30,24 +36,22 @@ DecisionTreeNode::DecisionTreeNode(
     const Int _depth,
     const std::shared_ptr<const Hyperparameters>& _hyperparameters,
     const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
+    const std::shared_ptr<const helpers::Schema>& _input,
+    const std::shared_ptr<const helpers::Schema>& _output,
     const Poco::JSON::Object& _obj )
     : comm_( nullptr ),
       condition_maker_( _condition_maker ),
       depth_( _depth ),
       hyperparameters_( _hyperparameters ),
+      input_( _input ),
       loss_function_( _loss_function ),
       loss_reduction_( NAN ),
+      output_( _output ),
       weights_(
           JSON::array_to_vector<Float>( JSON::get_array( _obj, "weights_" ) ) )
 {
-    if ( _obj.has( "input_" ) )
-        {
-            input_.reset( new containers::Placeholder(
-                *JSON::get_object( _obj, "input_" ) ) );
-        }
-
-    output_.reset(
-        new containers::Placeholder( *JSON::get_object( _obj, "output_" ) ) );
+    assert_true( input_ );
+    assert_true( output_ );
 
     if ( _obj.has( "child_greater_" ) )
         {
@@ -86,6 +90,8 @@ DecisionTreeNode::DecisionTreeNode(
                 depth_ + 1,
                 hyperparameters_,
                 loss_function_,
+                input_,
+                output_,
                 *JSON::get_object( _obj, "child_greater_" ) ) );
 
             child_smaller_.reset( new DecisionTreeNode(
@@ -93,6 +99,8 @@ DecisionTreeNode::DecisionTreeNode(
                 depth_ + 1,
                 hyperparameters_,
                 loss_function_,
+                input_,
+                output_,
                 *JSON::get_object( _obj, "child_smaller_" ) ) );
         }
 }
@@ -245,9 +253,9 @@ void DecisionTreeNode::fit(
 
     assert_true( _input );
 
-    input_.reset( new containers::Placeholder( _input->to_schema() ) );
+    input_.reset( new helpers::Schema( _input->to_schema() ) );
 
-    output_.reset( new containers::Placeholder( _output.df().to_schema() ) );
+    output_.reset( new helpers::Schema( _output.df().to_schema() ) );
 
     // ------------------------------------------------------------------------
 
@@ -329,6 +337,8 @@ void DecisionTreeNode::fit(
         depth_ + 1,
         hyperparameters_,
         loss_function_,
+        input_,
+        output_,
         std::get<1>( best_split.weights_ ),
         &comm() ) );
 
@@ -337,6 +347,8 @@ void DecisionTreeNode::fit(
         depth_ + 1,
         hyperparameters_,
         loss_function_,
+        input_,
+        output_,
         std::get<2>( best_split.weights_ ),
         &comm() ) );
 

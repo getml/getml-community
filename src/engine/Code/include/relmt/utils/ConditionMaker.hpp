@@ -39,8 +39,8 @@ class ConditionMaker
         const VocabForDf& _vocab_popul,
         const VocabForDf& _vocab_perip,
         const std::string& _feature_prefix,
-        const containers::Placeholder& _input,
-        const containers::Placeholder& _output,
+        const helpers::Schema& _input,
+        const helpers::Schema& _output,
         const containers::Split& _split ) const;
 
     /// Generates a condition for when the column is smaller than the critical
@@ -50,15 +50,15 @@ class ConditionMaker
         const VocabForDf& _vocab_popul,
         const VocabForDf& _vocab_perip,
         const std::string& _feature_prefix,
-        const containers::Placeholder& _input,
-        const containers::Placeholder& _output,
+        const helpers::Schema& _input,
+        const helpers::Schema& _output,
         const containers::Split& _split ) const;
 
     /// Generates the equation at the end of the condition.
     std::string make_equation(
         const std::string& _feature_prefix,
-        const containers::Placeholder& _input,
-        const containers::Placeholder& _output,
+        const helpers::Schema& _input,
+        const helpers::Schema& _output,
         const std::vector<Float>& _weights ) const;
 
    private:
@@ -102,8 +102,8 @@ class ConditionMaker
 
     /// Transforms the time stamps windows into SQLite-compliant code.
     std::string make_time_stamp_window(
-        const containers::Placeholder& _input,
-        const containers::Placeholder& _output,
+        const helpers::Schema& _input,
+        const helpers::Schema& _output,
         const Float _diff,
         const bool _is_greater ) const;
 

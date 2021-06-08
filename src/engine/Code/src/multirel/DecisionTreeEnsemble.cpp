@@ -9,16 +9,8 @@ namespace ensemble
 DecisionTreeEnsemble::DecisionTreeEnsemble(
     const std::shared_ptr<const descriptors::Hyperparameters> &_hyperparameters,
     const std::shared_ptr<const std::vector<std::string>> &_peripheral,
-    const std::shared_ptr<const containers::Placeholder> &_placeholder,
-    const std::shared_ptr<const std::vector<containers::Placeholder>>
-        &_peripheral_schema,
-    const std::shared_ptr<const containers::Placeholder> &_population_schema )
-    : impl_(
-          _hyperparameters,
-          _peripheral,
-          _placeholder,
-          _peripheral_schema,
-          _population_schema )
+    const std::shared_ptr<const containers::Placeholder> &_placeholder )
+    : impl_( _hyperparameters, _peripheral, _placeholder )
 {
     placeholder().check_data_model( peripheral(), true );
 }
@@ -34,9 +26,7 @@ DecisionTreeEnsemble::DecisionTreeEnsemble(
               JSON::array_to_vector<std::string>(
                   JSON::get_array( _json_obj, "peripheral_" ) ) ),
           std::make_shared<const containers::Placeholder>(
-              *JSON::get_object( _json_obj, "placeholder_" ) ),
-          nullptr,
-          nullptr )
+              *JSON::get_object( _json_obj, "placeholder_" ) ) )
 {
     *this = from_json_obj( _json_obj );
     placeholder().check_data_model( peripheral(), true );
@@ -224,11 +214,10 @@ void DecisionTreeEnsemble::extract_schemas(
     const containers::DataFrame &_population,
     const std::vector<containers::DataFrame> &_peripheral )
 {
-    impl().population_schema_ = std::make_shared<const containers::Placeholder>(
-        _population.to_schema() );
+    impl().population_schema_ =
+        std::make_shared<const helpers::Schema>( _population.to_schema() );
 
-    auto peripheral_schema =
-        std::make_shared<std::vector<containers::Placeholder>>();
+    auto peripheral_schema = std::make_shared<std::vector<helpers::Schema>>();
 
     for ( auto &df : _peripheral )
         {
@@ -721,37 +710,16 @@ DecisionTreeEnsemble DecisionTreeEnsemble::from_json_obj(
 
     // ------------------------------------------------------------------------
 
-    // Subensembles in a snowflake model do not have schemata.
     if ( _json_obj.has( "population_schema_" ) )
         {
             model.impl().population_schema_ =
-                std::make_shared<const containers::Placeholder>(
-                    *JSON::get_object( _json_obj, "population_schema_" ) );
-
-            std::vector<containers::Placeholder> peripheral_schema;
-
-            const auto peripheral_arr =
-                *JSON::get_array( _json_obj, "peripheral_schema_" );
-
-            for ( size_t i = 0; i < peripheral_arr.size(); ++i )
-                {
-                    const auto ptr = peripheral_arr.getObject(
-                        static_cast<unsigned int>( i ) );
-
-                    if ( !ptr )
-                        {
-                            throw std::invalid_argument(
-                                "peripheral_schema_, element " +
-                                std::to_string( i ) + " is not an Object!" );
-                        }
-
-                    peripheral_schema.push_back(
-                        containers::Placeholder( *ptr ) );
-                }
+                std::make_shared<const helpers::Schema>(
+                    helpers::Schema::from_json( *JSON::get_object(
+                        _json_obj, "population_schema_" ) ) );
 
             model.impl().peripheral_schema_ =
-                std::make_shared<const std::vector<containers::Placeholder>>(
-                    peripheral_schema );
+                helpers::Schema::from_json( *jsonutils::JSON::get_object_array(
+                    _json_obj, "peripheral_schema_" ) );
         }
 
     // ----------------------------------------

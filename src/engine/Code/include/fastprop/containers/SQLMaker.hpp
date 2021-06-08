@@ -22,8 +22,8 @@ class SQLMaker
         const std::vector<strings::String>& _categories,
         const std::string& _feature_prefix,
         const Condition& _condition,
-        const Placeholder& _input,
-        const Placeholder& _output );
+        const helpers::Schema& _input,
+        const helpers::Schema& _output );
 
     /// Creates a select statement (SELECT AGGREGATION(VALUE TO TO BE
     /// AGGREGATED)).
@@ -31,8 +31,8 @@ class SQLMaker
         const std::vector<strings::String>& _categories,
         const std::string& _feature_prefix,
         const AbstractFeature& _abstract_feature,
-        const Placeholder& _input,
-        const Placeholder& _output );
+        const helpers::Schema& _input,
+        const helpers::Schema& _output );
 
    public:
     /// Whether the aggregation is an aggregation that relies on the
@@ -56,8 +56,8 @@ class SQLMaker
         const size_t _peripheral,
         const size_t _input_col,
         const size_t _output_col,
-        const Placeholder& _input,
-        const Placeholder& _output );
+        const helpers::Schema& _input,
+        const helpers::Schema& _output );
 
     /// Returns the column names signified by _column_used and _data_used, for
     /// same_units_...
@@ -65,17 +65,17 @@ class SQLMaker
         const enums::DataUsed _data_used,
         const size_t _input_col,
         const size_t _output_col,
-        const Placeholder& _input,
-        const Placeholder& _output );
+        const helpers::Schema& _input,
+        const helpers::Schema& _output );
 
     /// Generates an additional argument passed to the aggregation function.
     static std::string make_additional_argument(
         const enums::Aggregation& _aggregation,
-        const Placeholder& _input,
-        const Placeholder& _output );
+        const helpers::Schema& _input,
+        const helpers::Schema& _output );
 
     /// Returns the select statement for AVG_TIME_BETWEEN.
-    static std::string select_avg_time_between( const Placeholder& _input );
+    static std::string select_avg_time_between( const helpers::Schema& _input );
 
     /// Creates the value to be aggregated (for instance a column name or the
     /// difference between two columns)
@@ -83,8 +83,8 @@ class SQLMaker
         const std::vector<strings::String>& _categories,
         const std::string& _feature_prefix,
         const AbstractFeature& _abstract_feature,
-        const Placeholder& _input,
-        const Placeholder& _output );
+        const helpers::Schema& _input,
+        const helpers::Schema& _output );
 };
 
 // ------------------------------------------------------------------------

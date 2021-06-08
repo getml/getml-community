@@ -111,8 +111,8 @@ std::string AbstractFeature::to_sql(
     const std::vector<strings::String> &_categories,
     const std::string &_feature_prefix,
     const std::string &_feature_num,
-    const Placeholder &_input,
-    const Placeholder &_output ) const
+    const helpers::Schema &_input,
+    const helpers::Schema &_output ) const
 {
     // -------------------------------------------------------------------
 
@@ -143,9 +143,13 @@ std::string AbstractFeature::to_sql(
 
     // -------------------------------------------------------------------
 
+    assert_true( _output.join_keys_.size() == 1 );
+
+    assert_true( _input.join_keys_.size() == 1 );
+
     sql << helpers::SQLGenerator::make_joins(
-        _output.name(),
-        _input.name(),
+        _output.name_,
+        _input.name_,
         _output.join_keys_name(),
         _input.join_keys_name() );
 

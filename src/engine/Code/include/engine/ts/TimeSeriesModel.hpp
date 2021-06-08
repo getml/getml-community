@@ -36,11 +36,7 @@ class TimeSeriesModel
     TimeSeriesModel(
         const std::shared_ptr<const HypType> &_hyperparameters,
         const std::shared_ptr<const std::vector<std::string>> &_peripheral,
-        const std::shared_ptr<const PlaceholderType> &_placeholder,
-        const std::shared_ptr<const std::vector<PlaceholderType>>
-            &_peripheral_schema = nullptr,
-        const std::shared_ptr<const PlaceholderType> &_population_schema =
-            nullptr );
+        const std::shared_ptr<const PlaceholderType> &_placeholder );
 
     TimeSeriesModel( const Poco::JSON::Object &_obj );
 
@@ -153,7 +149,7 @@ class TimeSeriesModel
     }
 
     /// Trivial (const) accessor
-    const std::vector<PlaceholderType> &peripheral_schema() const
+    const std::vector<helpers::Schema> &peripheral_schema() const
     {
         return model().peripheral_schema();
     }
@@ -162,7 +158,7 @@ class TimeSeriesModel
     const PlaceholderType &placeholder() const { return model().placeholder(); }
 
     /// Trivial (const) accessor
-    const PlaceholderType &population_schema() const
+    const helpers::Schema &population_schema() const
     {
         return model().population_schema();
     }
@@ -271,10 +267,7 @@ template <class FEType>
 TimeSeriesModel<FEType>::TimeSeriesModel(
     const std::shared_ptr<const HypType> &_hyperparameters,
     const std::shared_ptr<const std::vector<std::string>> &_peripheral,
-    const std::shared_ptr<const PlaceholderType> &_placeholder,
-    const std::shared_ptr<const std::vector<PlaceholderType>>
-        &_peripheral_schema,
-    const std::shared_ptr<const PlaceholderType> &_population_schema )
+    const std::shared_ptr<const PlaceholderType> &_placeholder )
     : hyperparameters_( _hyperparameters )
 {
     // --------------------------------------------------------------------
@@ -296,11 +289,7 @@ TimeSeriesModel<FEType>::TimeSeriesModel(
     // --------------------------------------------------------------------
 
     model_ = std::make_optional<FEType>(
-        hyperparameters().model_hyperparams_,
-        new_peripheral,
-        new_placeholder,
-        _peripheral_schema,
-        _population_schema );
+        hyperparameters().model_hyperparams_, new_peripheral, new_placeholder );
 
     // --------------------------------------------------------------------
 }

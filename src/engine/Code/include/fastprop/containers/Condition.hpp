@@ -38,8 +38,8 @@ struct Condition
     std::string to_sql(
         const std::vector<strings::String> &_categories,
         const std::string &_feature_prefix,
-        const Placeholder &_input,
-        const Placeholder &_output ) const;
+        const helpers::Schema &_input,
+        const helpers::Schema &_output ) const;
 
     /// The lower bound (when data_used_ == lag).
     const Float bound_lower_;

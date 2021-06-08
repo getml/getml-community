@@ -11,16 +11,22 @@ DecisionTreeNode::DecisionTreeNode(
     const Int _depth,
     const std::shared_ptr<const Hyperparameters>& _hyperparameters,
     const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
+    const std::shared_ptr<const helpers::Schema>& _input,
+    const std::shared_ptr<const helpers::Schema>& _output,
     const Float _weight,
     multithreading::Communicator* _comm )
     : comm_( _comm ),
       condition_maker_( _condition_maker ),
       depth_( _depth ),
       hyperparameters_( _hyperparameters ),
+      input_( _input ),
       loss_function_( _loss_function ),
       loss_reduction_( NAN ),
+      output_( _output ),
       weight_( _weight )
 {
+    assert_true( input_ );
+    assert_true( output_ );
 }
 
 // ----------------------------------------------------------------------------
@@ -30,25 +36,23 @@ DecisionTreeNode::DecisionTreeNode(
     const Int _depth,
     const std::shared_ptr<const Hyperparameters>& _hyperparameters,
     const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
+    const std::shared_ptr<const helpers::Schema>& _input,
+    const std::shared_ptr<const helpers::Schema>& _output,
     const Poco::JSON::Object& _obj )
     : comm_( nullptr ),
       condition_maker_( _condition_maker ),
       depth_( _depth ),
       hyperparameters_( _hyperparameters ),
+      input_( _input ),
       loss_function_( _loss_function ),
       loss_reduction_( NAN ),
+      output_( _output ),
       weight_(
           _obj.has( "weight_" ) ? JSON::get_value<Float>( _obj, "weight_" )
                                 : NAN )
 {
-    if ( _obj.has( "input_" ) )
-        {
-            input_.reset( new containers::Placeholder(
-                *JSON::get_object( _obj, "input_" ) ) );
-        }
-
-    output_.reset(
-        new containers::Placeholder( *JSON::get_object( _obj, "output_" ) ) );
+    assert_true( input_ );
+    assert_true( output_ );
 
     if ( _obj.has( "child_greater_" ) )
         {
@@ -87,6 +91,8 @@ DecisionTreeNode::DecisionTreeNode(
                 depth_ + 1,
                 hyperparameters_,
                 loss_function_,
+                input_,
+                output_,
                 *JSON::get_object( _obj, "child_greater_" ) ) );
 
             child_smaller_.reset( new DecisionTreeNode(
@@ -94,6 +100,8 @@ DecisionTreeNode::DecisionTreeNode(
                 depth_ + 1,
                 hyperparameters_,
                 loss_function_,
+                input_,
+                output_,
                 *JSON::get_object( _obj, "child_smaller_" ) ) );
         }
 }
@@ -234,16 +242,6 @@ void DecisionTreeNode::fit(
     Float* _intercept )
 {
     // ------------------------------------------------------------------------
-    // Store input and output (we need the column names).
-
-    if ( _input )
-        {
-            input_.reset( new containers::Placeholder( _input->to_schema() ) );
-        }
-
-    output_.reset( new containers::Placeholder( _output.df().to_schema() ) );
-
-    // ------------------------------------------------------------------------
     // If the maximum depth is reached or there are no samples to fit, don't
     // bother fitting the node.
 
@@ -339,6 +337,8 @@ void DecisionTreeNode::fit(
         depth_ + 1,
         hyperparameters_,
         loss_function_,
+        input_,
+        output_,
         std::get<1>( best_split.weights_ ),
         &comm() ) );
 
@@ -347,6 +347,8 @@ void DecisionTreeNode::fit(
         depth_ + 1,
         hyperparameters_,
         loss_function_,
+        input_,
+        output_,
         std::get<2>( best_split.weights_ ),
         &comm() ) );
 
@@ -502,10 +504,7 @@ Poco::JSON::Object::Ptr DecisionTreeNode::to_json_obj() const
 {
     Poco::JSON::Object::Ptr obj( new Poco::JSON::Object() );
 
-    if ( input_ )
-        {
-            obj->set( "input_", input().to_json_obj() );
-        }
+    obj->set( "input_", input().to_json_obj() );
 
     obj->set( "output_", output().to_json_obj() );
 

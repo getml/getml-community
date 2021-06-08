@@ -140,7 +140,7 @@ class DecisionTree
     }
 
     /// Trivial (private) accessor
-    const containers::Placeholder& input() const
+    const helpers::Schema& input() const
     {
         assert_true( input_ );
         return *input_;
@@ -168,7 +168,7 @@ class DecisionTree
     }
 
     /// Trivial (private) accessor
-    const containers::Placeholder& output() const
+    const helpers::Schema& output() const
     {
         assert_true( output_ );
         return *output_;
@@ -197,7 +197,7 @@ class DecisionTree
     std::vector<Float> initial_weights_;
 
     /// The input table used (we keep it, because we need the colnames)
-    containers::Optional<containers::Placeholder> input_;
+    std::shared_ptr<const helpers::Schema> input_;
 
     /// The scaler used for the input table.
     std::shared_ptr<const utils::StandardScaler> input_scaler_;
@@ -213,7 +213,7 @@ class DecisionTree
     std::shared_ptr<lossfunctions::LossFunction> loss_function_;
 
     /// The output table used (we keep it, because we need the colnames)
-    containers::Optional<containers::Placeholder> output_;
+    std::shared_ptr<const helpers::Schema> output_;
 
     /// The scaler used for the output table.
     std::shared_ptr<const utils::StandardScaler> output_scaler_;

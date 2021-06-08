@@ -55,7 +55,7 @@ struct DecisionTreeImpl
     }
 
     /// Trivial getter
-    inline const containers::Placeholder& input() const
+    inline const helpers::Schema& input() const
     {
         assert_true( input_ );
         return *input_;
@@ -82,7 +82,7 @@ struct DecisionTreeImpl
     }
 
     /// Trivial getter
-    inline const containers::Placeholder& output() const
+    inline const helpers::Schema& output() const
     {
         assert_true( output_ );
         return *output_;
@@ -153,14 +153,14 @@ struct DecisionTreeImpl
     multithreading::Communicator* comm_;
 
     /// The input table used (we keep it, because we need the colnames)
-    containers::Optional<containers::Placeholder> input_;
+    std::shared_ptr<const helpers::Schema> input_;
 
     /// The optimization criterion is what we want to maximize -
     /// using it we can determine the optimal splits
     optimizationcriteria::OptimizationCriterion* optimization_criterion_;
 
     /// The output table used (we keep it, because we need the colnames)
-    containers::Optional<containers::Placeholder> output_;
+    std::shared_ptr<const helpers::Schema> output_;
 
     /// Random number generator
     std::mt19937* random_number_generator_;

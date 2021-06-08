@@ -28,26 +28,16 @@ DecisionTree::DecisionTree(
     const Poco::JSON::Object& _obj )
     : comm_( nullptr ), hyperparameters_( _hyperparameters )
 {
-    if ( _obj.has( "input_" ) )
-        {
-            loss_function_ = aggregations::AggregationParser::parse(
-                JSON::get_value<std::string>( _obj, "loss_" ), _loss_function );
-        }
-    else
-        {
-            loss_function_ = _loss_function;
-        }
+    loss_function_ = aggregations::AggregationParser::parse(
+        JSON::get_value<std::string>( _obj, "loss_" ), _loss_function );
 
-    if ( _obj.has( "input_" ) )
-        {
-            input_.reset( new containers::Placeholder(
-                *JSON::get_object( _obj, "input_" ) ) );
-        }
+    input_ = std::make_shared<const helpers::Schema>(
+        helpers::Schema::from_json( *JSON::get_object( _obj, "input_" ) ) );
 
     intercept_ = JSON::get_value<Float>( _obj, "intercept_" );
 
-    output_.reset(
-        new containers::Placeholder( *JSON::get_object( _obj, "output_" ) ) );
+    output_ = std::make_shared<const helpers::Schema>(
+        helpers::Schema::from_json( *JSON::get_object( _obj, "output_" ) ) );
 
     peripheral_used_ = JSON::get_value<size_t>( _obj, "peripheral_used_" );
 
@@ -58,6 +48,8 @@ DecisionTree::DecisionTree(
         0,  // _depth
         hyperparameters_,
         loss_function_,
+        input_,
+        output_,
         *JSON::get_object( _obj, "root_" ) ) );
 }
 
@@ -73,12 +65,10 @@ void DecisionTree::fit(
     // ------------------------------------------------------------------------
     // Store input and output (we need the column names).
 
-    if ( _input )
-        {
-            input_.reset( new containers::Placeholder( _input->to_schema() ) );
-        }
+    input_ = std::make_shared<const helpers::Schema>( _input->to_schema() );
 
-    output_.reset( new containers::Placeholder( _output.df().to_schema() ) );
+    output_ =
+        std::make_shared<const helpers::Schema>( _output.df().to_schema() );
 
     // ------------------------------------------------------------------------
     // Set up and fit root node
@@ -90,6 +80,8 @@ void DecisionTree::fit(
         0,
         hyperparameters_,
         loss_function_,
+        input_,
+        output_,
         0.0,
         &comm() ) );
 
@@ -186,10 +178,7 @@ Poco::JSON::Object::Ptr DecisionTree::to_json_obj() const
 
     assert_true( root_ );
 
-    if ( input_ )
-        {
-            obj->set( "input_", input().to_json_obj() );
-        }
+    obj->set( "input_", input().to_json_obj() );
 
     obj->set( "intercept_", intercept_ );
 

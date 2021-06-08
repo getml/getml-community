@@ -10,8 +10,8 @@ std::string SQLMaker::condition(
     const std::vector<strings::String>& _categories,
     const std::string& _feature_prefix,
     const Condition& _condition,
-    const Placeholder& _input,
-    const Placeholder& _output )
+    const helpers::Schema& _input,
+    const helpers::Schema& _output )
 {
     switch ( _condition.data_used_ )
         {
@@ -76,8 +76,8 @@ std::string SQLMaker::get_name(
     const size_t _peripheral,
     const size_t _input_col,
     const size_t _output_col,
-    const Placeholder& _input,
-    const Placeholder& _output )
+    const helpers::Schema& _input,
+    const helpers::Schema& _output )
 {
     const auto make_colname = []( const std::string& _colname ) -> std::string {
         return "t2.\"" + helpers::SQLGenerator::make_colname( _colname ) + "\"";
@@ -124,8 +124,8 @@ std::pair<std::string, std::string> SQLMaker::get_same_units(
     const enums::DataUsed _data_used,
     const size_t _input_col,
     const size_t _output_col,
-    const Placeholder& _input,
-    const Placeholder& _output )
+    const helpers::Schema& _input,
+    const helpers::Schema& _output )
 {
     const auto make_colname = []( const std::string& _colname,
                                   const std::string& _alias ) -> std::string {
@@ -218,7 +218,7 @@ std::pair<std::string, std::string> SQLMaker::get_same_units(
 
 // ----------------------------------------------------------------------------
 
-std::string SQLMaker::select_avg_time_between( const Placeholder& _input )
+std::string SQLMaker::select_avg_time_between( const helpers::Schema& _input )
 {
     assert_true( _input.num_time_stamps() > 0 );
 
@@ -234,8 +234,8 @@ std::string SQLMaker::select_avg_time_between( const Placeholder& _input )
 
 std::string SQLMaker::make_additional_argument(
     const enums::Aggregation& _aggregation,
-    const Placeholder& _input,
-    const Placeholder& _output )
+    const helpers::Schema& _input,
+    const helpers::Schema& _output )
 {
     if ( _aggregation == enums::Aggregation::first ||
          _aggregation == enums::Aggregation::last )
@@ -257,8 +257,8 @@ std::string SQLMaker::select_statement(
     const std::vector<strings::String>& _categories,
     const std::string& _feature_prefix,
     const AbstractFeature& _abstract_feature,
-    const Placeholder& _input,
-    const Placeholder& _output )
+    const helpers::Schema& _input,
+    const helpers::Schema& _output )
 {
     constexpr auto AVG_TIME_BETWEEN =
         enums::Parser<enums::Aggregation>::AVG_TIME_BETWEEN;
@@ -318,8 +318,8 @@ std::string SQLMaker::value_to_be_aggregated(
     const std::vector<strings::String>& _categories,
     const std::string& _feature_prefix,
     const AbstractFeature& _abstract_feature,
-    const Placeholder& _input,
-    const Placeholder& _output )
+    const helpers::Schema& _input,
+    const helpers::Schema& _output )
 {
     switch ( _abstract_feature.data_used_ )
         {

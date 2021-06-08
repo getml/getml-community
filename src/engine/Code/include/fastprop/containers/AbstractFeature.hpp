@@ -51,8 +51,8 @@ struct AbstractFeature
         const std::vector<strings::String> &_categories,
         const std::string &_feature_prefix,
         const std::string &_feature_num,
-        const Placeholder &_input,
-        const Placeholder &_output ) const;
+        const helpers::Schema &_input,
+        const helpers::Schema &_output ) const;
 
     /// The aggregation to apply
     const enums::Aggregation aggregation_;

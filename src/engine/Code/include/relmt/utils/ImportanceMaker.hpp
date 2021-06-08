@@ -20,8 +20,8 @@ class ImportanceMaker
    public:
     /// Adds a _value to the column signifed by the other input values.
     void add(
-        const containers::Placeholder& _input,
-        const containers::Placeholder& _output,
+        const helpers::Schema& _input,
+        const helpers::Schema& _output,
         const enums::DataUsed _data_used,
         const size_t _column,
         const size_t _column_input,
@@ -30,7 +30,7 @@ class ImportanceMaker
    public:
     /// Adds all of the colnames with importance 0.0.
     void fill_zeros(
-        const containers::Placeholder& _pl,
+        const helpers::Schema& _pl,
         const std::string& _tname,
         const bool _is_population )
     {

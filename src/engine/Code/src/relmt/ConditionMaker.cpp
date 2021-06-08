@@ -11,8 +11,8 @@ std::string ConditionMaker::condition_greater(
     const VocabForDf& _vocab_popul,
     const VocabForDf& _vocab_perip,
     const std::string& _feature_prefix,
-    const containers::Placeholder& _input,
-    const containers::Placeholder& _output,
+    const helpers::Schema& _input,
+    const helpers::Schema& _output,
     const containers::Split& _split ) const
 {
     switch ( _split.data_used_ )
@@ -272,8 +272,8 @@ std::string ConditionMaker::condition_smaller(
     const VocabForDf& _vocab_popul,
     const VocabForDf& _vocab_perip,
     const std::string& _feature_prefix,
-    const containers::Placeholder& _input,
-    const containers::Placeholder& _output,
+    const helpers::Schema& _input,
+    const helpers::Schema& _output,
     const containers::Split& _split ) const
 {
     switch ( _split.data_used_ )
@@ -688,8 +688,8 @@ std::string ConditionMaker::make_equation_part(
 
 std::string ConditionMaker::make_equation(
     const std::string& _feature_prefix,
-    const containers::Placeholder& _input,
-    const containers::Placeholder& _output,
+    const helpers::Schema& _input,
+    const helpers::Schema& _output,
     const std::vector<Float>& _weights ) const
 {
     assert_true(
@@ -837,8 +837,8 @@ std::string ConditionMaker::make_time_stamp_diff(
 // ----------------------------------------------------------------------------
 
 std::string ConditionMaker::make_time_stamp_window(
-    const containers::Placeholder& _input,
-    const containers::Placeholder& _output,
+    const helpers::Schema& _input,
+    const helpers::Schema& _output,
     const Float _diff,
     const bool _is_greater ) const
 {

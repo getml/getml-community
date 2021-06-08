@@ -7,8 +7,8 @@ namespace utils
 // ----------------------------------------------------------------------------
 
 void ImportanceMaker::add(
-    const containers::Placeholder& _input,
-    const containers::Placeholder& _output,
+    const helpers::Schema& _input,
+    const helpers::Schema& _output,
     const enums::DataUsed _data_used,
     const size_t _column,
     const size_t _column_input,

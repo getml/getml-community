@@ -11,8 +11,8 @@ std::string SQLMaker::condition_greater(
     const VocabForDf& _vocab_popul,
     const VocabForDf& _vocab_perip,
     const std::string& _feature_prefix,
-    const containers::Placeholder& _input,
-    const containers::Placeholder& _output,
+    const helpers::Schema& _input,
+    const helpers::Schema& _output,
     const descriptors::Split& _split,
     const bool _add_null ) const
 {
@@ -151,8 +151,8 @@ std::string SQLMaker::condition_smaller(
     const VocabForDf& _vocab_popul,
     const VocabForDf& _vocab_perip,
     const std::string& _feature_prefix,
-    const containers::Placeholder& _input,
-    const containers::Placeholder& _output,
+    const helpers::Schema& _input,
+    const helpers::Schema& _output,
     const descriptors::Split& _split,
     const bool _add_null ) const
 {
@@ -292,8 +292,8 @@ std::string SQLMaker::condition_smaller(
 
 std::string SQLMaker::get_name(
     const std::string& _feature_prefix,
-    const containers::Placeholder& _input,
-    const containers::Placeholder& _output,
+    const helpers::Schema& _input,
+    const helpers::Schema& _output,
     const size_t _column_used,
     const enums::DataUsed& _data_used ) const
 {
@@ -357,8 +357,8 @@ std::string SQLMaker::get_name(
 // ----------------------------------------------------------------------------
 
 std::string SQLMaker::get_ts_name(
-    const containers::Placeholder& _input,
-    const containers::Placeholder& _output,
+    const helpers::Schema& _input,
+    const helpers::Schema& _output,
     const size_t _column_used,
     const enums::DataUsed& _data_used,
     const std::string& _diffstr ) const
@@ -396,8 +396,8 @@ std::string SQLMaker::get_ts_name(
 
 std::pair<std::string, std::string> SQLMaker::get_names(
     const std::string& _feature_prefix,
-    const containers::Placeholder& _input,
-    const containers::Placeholder& _output,
+    const helpers::Schema& _input,
+    const helpers::Schema& _output,
     const std::shared_ptr<const descriptors::SameUnitsContainer> _same_units,
     const size_t _column_used ) const
 {
@@ -427,8 +427,8 @@ std::pair<std::string, std::string> SQLMaker::get_names(
 // ----------------------------------------------------------------------------
 
 std::pair<std::string, std::string> SQLMaker::get_ts_names(
-    const containers::Placeholder& _input,
-    const containers::Placeholder& _output,
+    const helpers::Schema& _input,
+    const helpers::Schema& _output,
     const std::shared_ptr<const descriptors::SameUnitsContainer> _same_units,
     const size_t _column_used ) const
 {
@@ -556,8 +556,8 @@ std::string SQLMaker::make_colname(
 // ----------------------------------------------------------------------------
 
 std::string SQLMaker::make_time_stamp_diff(
-    const containers::Placeholder& _input,
-    const containers::Placeholder& _output,
+    const helpers::Schema& _input,
+    const helpers::Schema& _output,
     const std::shared_ptr<const descriptors::SameUnitsContainer> _same_units,
     const size_t _column_used,
     const Float _diff,
@@ -603,8 +603,8 @@ std::string SQLMaker::make_time_stamp_diff(
 // ----------------------------------------------------------------------------
 
 std::string SQLMaker::make_time_stamp_window(
-    const containers::Placeholder& _input,
-    const containers::Placeholder& _output,
+    const helpers::Schema& _input,
+    const helpers::Schema& _output,
     const Float _diff,
     const bool _is_greater ) const
 {
@@ -643,8 +643,8 @@ std::string SQLMaker::make_time_stamp_window(
 
 std::string SQLMaker::select_statement(
     const std::string& _feature_prefix,
-    const containers::Placeholder& _input,
-    const containers::Placeholder& _output,
+    const helpers::Schema& _input,
+    const helpers::Schema& _output,
     const size_t _column_used,
     const enums::DataUsed& _data_used,
     const std::string& _agg_type ) const
@@ -686,8 +686,8 @@ std::string SQLMaker::select_statement(
 
 std::string SQLMaker::value_to_be_aggregated(
     const std::string& _feature_prefix,
-    const containers::Placeholder& _input,
-    const containers::Placeholder& _output,
+    const helpers::Schema& _input,
+    const helpers::Schema& _output,
     const size_t _column_used,
     const enums::DataUsed& _data_used ) const
 {

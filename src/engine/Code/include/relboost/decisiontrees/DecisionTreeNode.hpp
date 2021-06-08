@@ -21,6 +21,8 @@ class DecisionTreeNode
         const Int _depth,
         const std::shared_ptr<const Hyperparameters>& _hyperparameters,
         const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
+        const std::shared_ptr<const helpers::Schema>& _input,
+        const std::shared_ptr<const helpers::Schema>& _output,
         const Float _weight,
         multithreading::Communicator* _comm );
 
@@ -29,6 +31,8 @@ class DecisionTreeNode
         const Int _depth,
         const std::shared_ptr<const Hyperparameters>& _hyperparameters,
         const std::shared_ptr<lossfunctions::LossFunction>& _loss_function,
+        const std::shared_ptr<const helpers::Schema>& _input,
+        const std::shared_ptr<const helpers::Schema>& _output,
         const Poco::JSON::Object& _obj );
 
     ~DecisionTreeNode() = default;
@@ -381,7 +385,7 @@ class DecisionTreeNode
     }
 
     /// Trivial (private) accessor
-    const containers::Placeholder& input() const
+    const helpers::Schema& input() const
     {
         assert_true( input_ );
         return *input_;
@@ -406,7 +410,7 @@ class DecisionTreeNode
     }
 
     /// Trivial (private) accessor
-    const containers::Placeholder& output() const
+    const helpers::Schema& output() const
     {
         assert_true( output_ );
         return *output_;
@@ -434,7 +438,7 @@ class DecisionTreeNode
     const std::shared_ptr<const Hyperparameters> hyperparameters_;
 
     /// The input table used (we keep it, because we need the colnames)
-    containers::Optional<containers::Placeholder> input_;
+    const std::shared_ptr<const helpers::Schema> input_;
 
     /// Reference to the loss function used.
     const std::shared_ptr<lossfunctions::LossFunction> loss_function_;
@@ -443,7 +447,7 @@ class DecisionTreeNode
     Float loss_reduction_;
 
     /// The output table used (we keep it, because we need the colnames)
-    containers::Optional<containers::Placeholder> output_;
+    const std::shared_ptr<const helpers::Schema> output_;
 
     /// Describes the split that this node uses.
     containers::Split split_;
