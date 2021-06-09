@@ -24,6 +24,11 @@ class ViewParser
     static constexpr const char* BOOLEAN_COLUMN_VIEW =
         containers::Column<bool>::BOOLEAN_COLUMN_VIEW;
 
+    typedef std::variant<
+        containers::ColumnView<std::string>,
+        containers::ColumnView<Float>>
+        ColumnViewVariant;
+
     // ------------------------------------------------------------------------
 
    public:
@@ -46,6 +51,9 @@ class ViewParser
     // ------------------------------------------------------------------------
 
    public:
+    /// Returns the content of a view.
+    Poco::JSON::Object get_content( const Poco::JSON::Object& _obj ) const;
+
     /// Parses a view and turns it into a DataFrame.
     containers::DataFrame parse( const Poco::JSON::Object& _obj );
 
@@ -81,6 +89,24 @@ class ViewParser
     /// Drop a set of columns.
     void drop_columns(
         const Poco::JSON::Object& _obj, containers::DataFrame* _df ) const;
+
+    /// Generates a column view from a JSON::Object::Ptr - used by
+    /// get_content(...).
+    ColumnViewVariant make_column_view( Poco::JSON::Object::Ptr _ptr ) const;
+
+    /// Generates the data for get_content(...).
+    Poco::JSON::Array::Ptr make_data(
+        const std::vector<std::vector<std::string>>& _string_vectors ) const;
+
+    /// Generates nrows for get_content(...).
+    std::optional<size_t> make_nrows(
+        const std::vector<ColumnViewVariant>& _column_views ) const;
+
+    /// Extracts a string vector from a column view - used by get_content(...).
+    std::vector<std::string> make_string_vector(
+        const size_t _start,
+        const size_t _length,
+        const ColumnViewVariant& _column_view ) const;
 
     /// Applies the subselection.
     void subselection(

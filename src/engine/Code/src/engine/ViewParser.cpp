@@ -150,6 +150,207 @@ void ViewParser::drop_columns(
 
 // ----------------------------------------------------------------------------
 
+typename ViewParser::ColumnViewVariant ViewParser::make_column_view(
+    Poco::JSON::Object::Ptr _ptr ) const
+{
+    assert_true( _ptr );
+
+    const auto type = JSON::get_value<std::string>( *_ptr, "type_" );
+
+    if ( type == STRING_COLUMN || type == STRING_COLUMN_VIEW )
+        {
+            return CatOpParser( categories_, join_keys_encoding_, data_frames_ )
+                .parse( *_ptr );
+        }
+
+    return NumOpParser( categories_, join_keys_encoding_, data_frames_ )
+        .parse( *_ptr );
+}
+
+// ----------------------------------------------------------------------------
+
+Poco::JSON::Array::Ptr ViewParser::make_data(
+    const std::vector<std::vector<std::string>>& _string_vectors ) const
+{
+    auto data = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+
+    if ( _string_vectors.size() == 0 )
+        {
+            return data;
+        }
+
+    for ( size_t i = 0; i < _string_vectors.at( 0 ).size(); ++i )
+        {
+            auto row = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+
+            for ( size_t j = 0; j < _string_vectors.size(); ++j )
+                {
+                    if ( i == 0 && _string_vectors.at( j ).size() !=
+                                       _string_vectors.at( 0 ).size() )
+                        {
+                            throw std::runtime_error(
+                                "ViewParser: Resulting columns do not all have "
+                                "the same length!" );
+                        }
+
+                    row->add( _string_vectors.at( j ).at( i ) );
+                }
+
+            data->add( row );
+        }
+
+    return data;
+}
+
+// ----------------------------------------------------------------------------
+
+std::optional<size_t> ViewParser::make_nrows(
+    const std::vector<ColumnViewVariant>& _column_views ) const
+{
+    const auto has_nrows = []( const ColumnViewVariant& _column_view ) -> bool {
+        if ( std::holds_alternative<containers::ColumnView<Float>>(
+                 _column_view ) )
+            {
+                const auto float_col =
+                    std::get<containers::ColumnView<Float>>( _column_view );
+                return std::holds_alternative<size_t>( float_col.nrows() );
+            }
+        const auto str_col =
+            std::get<containers::ColumnView<std::string>>( _column_view );
+        return std::holds_alternative<size_t>( str_col.nrows() );
+    };
+
+    const auto get_nrows =
+        []( const ColumnViewVariant& _column_view ) -> size_t {
+        if ( std::holds_alternative<containers::ColumnView<Float>>(
+                 _column_view ) )
+            {
+                const auto float_col =
+                    std::get<containers::ColumnView<Float>>( _column_view );
+                return std::get<size_t>( float_col.nrows() );
+            }
+
+        const auto str_col =
+            std::get<containers::ColumnView<std::string>>( _column_view );
+        return std::get<size_t>( str_col.nrows() );
+    };
+
+    const auto it =
+        std::find_if( _column_views.begin(), _column_views.end(), has_nrows );
+
+    return it == _column_views.end() ? std::optional<size_t>()
+                                     : std::make_optional( get_nrows( *it ) );
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<std::string> ViewParser::make_string_vector(
+    const size_t _start,
+    const size_t _length,
+    const ColumnViewVariant& _column_view ) const
+{
+    const bool is_string_column =
+        std::holds_alternative<containers::ColumnView<std::string>>(
+            _column_view );
+
+    if ( is_string_column )
+        {
+            const auto str_col =
+                std::get<containers::ColumnView<std::string>>( _column_view );
+
+            return *str_col.to_vector( _start, _length, false );
+        }
+
+    const auto float_col =
+        std::get<containers::ColumnView<Float>>( _column_view );
+
+    const auto float_vec = *float_col.to_vector( _start, _length, false );
+
+    if ( float_col.unit().find( "time stamp" ) != std::string::npos )
+        {
+            return stl::collect::vector<std::string>(
+                float_vec | std::views::transform( io::Parser::ts_to_string ) );
+        }
+
+    const auto to_string = []( const Float _val ) {
+        return io::Parser::to_string( _val );
+    };
+
+    return stl::collect::vector<std::string>(
+        float_vec | std::views::transform( to_string ) );
+}
+
+// ----------------------------------------------------------------------------
+
+Poco::JSON::Object ViewParser::get_content(
+    const Poco::JSON::Object& _cmd ) const
+{
+    // ------------------------------------------------------------------------
+
+    const auto to_column_view =
+        [this]( Poco::JSON::Object::Ptr _ptr ) -> ColumnViewVariant {
+        return make_column_view( _ptr );
+    };
+
+    // ------------------------------------------------------------------------
+
+    const auto draw = JSON::get_value<size_t>( _cmd, "draw_" );
+
+    const auto start = JSON::get_value<size_t>( _cmd, "start_" );
+
+    const auto length = JSON::get_value<size_t>( _cmd, "length_" );
+
+    // ------------------------------------------------------------------------
+
+    const auto to_string_vector =
+        [this, start, length]( const ColumnViewVariant& _column_view )
+        -> std::vector<std::string> {
+        return make_string_vector( start, length, _column_view );
+    };
+
+    // ------------------------------------------------------------------------
+
+    const auto cols = jsonutils::JSON::get_object_array( _cmd, "cols_" );
+
+    const auto get_object = [cols]( const size_t _i ) {
+        return cols->getObject( _i );
+    };
+
+    const auto iota = stl::iota<size_t>( 0, cols->size() );
+
+    const auto column_views = stl::collect::vector<ColumnViewVariant>(
+        iota | std::views::transform( get_object ) |
+        std::views::transform( to_column_view ) );
+
+    const auto string_vectors = stl::collect::vector<std::vector<std::string>>(
+        column_views | std::views::transform( to_string_vector ) );
+
+    // ------------------------------------------------------------------------
+
+    const auto data = make_data( string_vectors );
+
+    const auto nrows = make_nrows( column_views );
+
+    // ------------------------------------------------------------------------
+
+    Poco::JSON::Object obj;
+
+    obj.set( "draw", draw );
+
+    obj.set( "data", data );
+
+    if ( nrows )
+        {
+            obj.set( "recordsTotal", *nrows );
+
+            obj.set( "recordsFiltered", *nrows );
+        }
+
+    return obj;
+}
+
+// ----------------------------------------------------------------------------
+
 containers::DataFrame ViewParser::parse( const Poco::JSON::Object& _obj )
 {
     const auto type = JSON::get_value<std::string>( _obj, "type_" );

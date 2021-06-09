@@ -1960,6 +1960,24 @@ void DataFrameManager::get_unit_categorical(
 
 // ------------------------------------------------------------------------
 
+void DataFrameManager::get_view_content(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    const auto result =
+        ViewParser( categories_, join_keys_encoding_, data_frames_ )
+            .get_content( _cmd );
+
+    read_lock.unlock();
+
+    communication::Sender::send_string( JSON::stringify( result ), _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void DataFrameManager::group_by(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,

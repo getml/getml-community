@@ -471,6 +471,11 @@ void RequestHandler::run()
                     data_frame_manager().set_unit_categorical(
                         name, cmd, &socket() );
                 }
+            else if ( type == "View.get_content" )
+                {
+                    data_frame_manager().get_view_content(
+                        name, cmd, &socket() );
+                }
             else
                 {
                     throw std::invalid_argument(

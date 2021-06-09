@@ -248,6 +248,12 @@ class DataFrameManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
+    /// Sends a JSON representing the view to the client.
+    void get_view_content(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Undertakes a GROUP BY operation
     void group_by(
         const std::string& _name,
