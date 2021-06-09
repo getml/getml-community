@@ -142,17 +142,33 @@ containers::DataFrame EMailDomain::fit_transform_df(
     const size_t _table,
     containers::Encoding* _categories )
 {
+    const auto whitelist = std::vector<helpers::Subrole>(
+        { helpers::Subrole::email, helpers::Subrole::email_only } );
+
+    const auto blacklist = std::vector<helpers::Subrole>(
+        { helpers::Subrole::exclude_preprocessors,
+          helpers::Subrole::substring_only } );
+
     auto df = _df;
 
-    for ( size_t i = 0; i < _df.num_unused_strings(); ++i )
+    for ( size_t i = 0; i < _df.num_text(); ++i )
         {
             // -----------------------------------
 
-            const auto& email_col = _df.unused_string( i );
+            const auto& email_col = _df.text( i );
 
             // -----------------------------------
 
-            if ( email_col.unit() != "email" )
+            if ( !helpers::SubroleParser::contains_any(
+                     email_col.subroles(), whitelist ) )
+                {
+                    continue;
+                }
+
+            // -----------------------------------
+
+            if ( helpers::SubroleParser::contains_any(
+                     email_col.subroles(), blacklist ) )
                 {
                     continue;
                 }

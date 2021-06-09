@@ -18,14 +18,38 @@ class FeatureLearner : public AbstractFeatureLearner
         std::is_same<FeatureLearnerType, fastprop::algorithm::FastProp>();
 
     /// Whether this is a FastPropTimeSeries
-    static constexpr bool is_fastprop_time_series_ =
+    static constexpr bool is_fastprop_ts_ =
         std::is_same<FeatureLearnerType, ts::FastPropTimeSeries>();
+
+    /// Whether this is multirel.
+    static constexpr bool is_multirel_ = std::
+        is_same<FeatureLearnerType, multirel::ensemble::DecisionTreeEnsemble>();
+
+    /// Whether is is a multirel time series.
+    static constexpr bool is_multirel_ts_ =
+        std::is_same<FeatureLearnerType, ts::MultirelTimeSeries>();
+
+    /// Whether this is relboost.
+    static constexpr bool is_relboost_ = std::
+        is_same<FeatureLearnerType, relboost::ensemble::DecisionTreeEnsemble>();
+
+    /// Whether this is relmt.
+    static constexpr bool is_relmt_ = std::
+        is_same<FeatureLearnerType, relmt::ensemble::DecisionTreeEnsemble>();
+
+    /// Whether this is a relboost time series.
+    static constexpr bool is_relboost_ts_ =
+        std::is_same<FeatureLearnerType, ts::RelboostTimeSeries>();
+
+    /// Whether this is a relmt time series.
+    static constexpr bool is_relmt_ts_ =
+        std::is_same<FeatureLearnerType, ts::RelMTTimeSeries>();
 
     /// Because FastProp and FastPropTimeSeries are propositionalization
     /// approaches themselves, they do not have a propositionalization
     /// subfeature.
     static constexpr bool has_propositionalization_ =
-        ( !is_fastprop_ && !is_fastprop_time_series_ );
+        ( !is_fastprop_ && !is_fastprop_ts_ );
 
     // --------------------------------------------------------
 
@@ -964,51 +988,40 @@ template <typename FeatureLearnerType>
 bool FeatureLearner<FeatureLearnerType>::parse_subroles(
     const std::vector<std::string>& _subroles ) const
 {
-    const auto subroles = helpers::SubroleParser::parse( _subroles );
+    auto blacklist = std::vector<helpers::Subrole>(
+        { helpers::Subrole::exclude_feature_learners,
+          helpers::Subrole::email_only,
+          helpers::Subrole::substring_only } );
 
-    const auto contains = [&subroles]( const helpers::Subrole& _s ) -> bool {
-        return std::find( subroles.begin(), subroles.end(), _s ) !=
-               subroles.end();
-    };
-
-    if ( contains( helpers::Subrole::exclude_feature_learners ) )
+    if constexpr ( is_fastprop_ || is_fastprop_ts_ )
         {
-            return false;
+            blacklist.push_back( helpers::Subrole::exclude_fastprop );
+            return !helpers::SubroleParser::contains_any(
+                _subroles, blacklist );
         }
 
-    if ( contains( helpers::Subrole::email_only ) )
+    if constexpr ( is_multirel_ || is_multirel_ts_ )
         {
-            return false;
+            blacklist.push_back( helpers::Subrole::exclude_multirel );
+            return !helpers::SubroleParser::contains_any(
+                _subroles, blacklist );
         }
 
-    if ( contains( helpers::Subrole::substring_only ) )
+    if constexpr ( is_relboost_ || is_relboost_ts_ )
         {
-            return false;
+            blacklist.push_back( helpers::Subrole::exclude_relboost );
+            return !helpers::SubroleParser::contains_any(
+                _subroles, blacklist );
         }
 
-    if ( type() == AbstractFeatureLearner::FASTPROP_MODEL &&
-         contains( helpers::Subrole::exclude_fastprop ) )
+    if constexpr ( is_relmt_ || is_relmt_ts_ )
         {
-            return false;
+            blacklist.push_back( helpers::Subrole::exclude_relmt );
+            return !helpers::SubroleParser::contains_any(
+                _subroles, blacklist );
         }
 
-    if ( type() == AbstractFeatureLearner::MULTIREL_MODEL &&
-         contains( helpers::Subrole::exclude_multirel ) )
-        {
-            return false;
-        }
-
-    if ( type() == AbstractFeatureLearner::RELBOOST_MODEL &&
-         contains( helpers::Subrole::exclude_relboost ) )
-        {
-            return false;
-        }
-
-    if ( type() == AbstractFeatureLearner::RELMT_MODEL &&
-         contains( helpers::Subrole::exclude_relmt ) )
-        {
-            return false;
-        }
+    assert_true( false );
 
     return true;
 }
@@ -1298,77 +1311,51 @@ std::string FeatureLearner<FeatureLearnerType>::type() const
 {
     // ----------------------------------------------------------------------
 
-    constexpr bool is_fastprop =
-        std::is_same<FeatureLearnerType, fastprop::algorithm::FastProp>();
-
-    constexpr bool is_fastprop_time_series =
-        std::is_same<FeatureLearnerType, ts::FastPropTimeSeries>();
-
-    constexpr bool is_multirel = std::
-        is_same<FeatureLearnerType, multirel::ensemble::DecisionTreeEnsemble>();
-
-    constexpr bool is_multirel_ts =
-        std::is_same<FeatureLearnerType, ts::MultirelTimeSeries>();
-
-    constexpr bool is_relboost = std::
-        is_same<FeatureLearnerType, relboost::ensemble::DecisionTreeEnsemble>();
-
-    constexpr bool is_relmt = std::
-        is_same<FeatureLearnerType, relmt::ensemble::DecisionTreeEnsemble>();
-
-    constexpr bool is_relboost_ts =
-        std::is_same<FeatureLearnerType, ts::RelboostTimeSeries>();
-
-    constexpr bool is_relmt_ts =
-        std::is_same<FeatureLearnerType, ts::RelMTTimeSeries>();
-
-    // ----------------------------------------------------------------------
-
     constexpr bool unknown_feature_learner =
-        !is_fastprop && !is_fastprop_time_series && !is_multirel &&
-        !is_multirel_ts && !is_relboost && !is_relboost_ts && !is_relmt &&
-        !is_relmt_ts;
+        !is_fastprop_ && !is_fastprop_ts_ && !is_multirel_ &&
+        !is_multirel_ts_ && !is_relboost_ && !is_relboost_ts_ && !is_relmt_ &&
+        !is_relmt_ts_;
 
     static_assert( !unknown_feature_learner, "Unknown feature learner!" );
 
     // ----------------------------------------------------------------------
 
-    if constexpr ( is_fastprop )
+    if constexpr ( is_fastprop_ )
         {
             return AbstractFeatureLearner::FASTPROP_MODEL;
         }
 
-    if constexpr ( is_fastprop_time_series )
+    if constexpr ( is_fastprop_ts_ )
         {
             return AbstractFeatureLearner::FASTPROP_TIME_SERIES;
         }
 
-    if constexpr ( is_multirel )
+    if constexpr ( is_multirel_ )
         {
             return AbstractFeatureLearner::MULTIREL_MODEL;
         }
 
-    if constexpr ( is_multirel_ts )
+    if constexpr ( is_multirel_ts_ )
         {
             return AbstractFeatureLearner::MULTIREL_TIME_SERIES;
         }
 
-    if constexpr ( is_relboost )
+    if constexpr ( is_relboost_ )
         {
             return AbstractFeatureLearner::RELBOOST_MODEL;
         }
 
-    if constexpr ( is_relmt )
+    if constexpr ( is_relmt_ )
         {
             return AbstractFeatureLearner::RELMT_MODEL;
         }
 
-    if constexpr ( is_relboost_ts )
+    if constexpr ( is_relboost_ts_ )
         {
             return AbstractFeatureLearner::RELBOOST_TIME_SERIES;
         }
 
-    if constexpr ( is_relmt_ts )
+    if constexpr ( is_relmt_ts_ )
         {
             return AbstractFeatureLearner::RELMT_TIME_SERIES;
         }

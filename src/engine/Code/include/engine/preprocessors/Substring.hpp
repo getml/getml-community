@@ -123,7 +123,26 @@ class Substring : public Preprocessor
         containers::Encoding* _categories,
         containers::DataFrame* _df )
     {
-        if ( _original_col.unit() != unit_ )
+        const auto whitelist = std::vector<helpers::Subrole>(
+            { helpers::Subrole::substring, helpers::Subrole::substring_only } );
+
+        const auto blacklist = std::vector<helpers::Subrole>(
+            { helpers::Subrole::exclude_preprocessors,
+              helpers::Subrole::email_only } );
+
+        if ( !helpers::SubroleParser::contains_any(
+                 _original_col.subroles(), whitelist ) )
+            {
+                return;
+            }
+
+        if ( helpers::SubroleParser::contains_any(
+                 _original_col.subroles(), blacklist ) )
+            {
+                return;
+            }
+
+        if ( unit_ != "" && _original_col.unit() != unit_ )
             {
                 return;
             }

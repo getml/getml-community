@@ -4,6 +4,29 @@ namespace helpers
 {
 // ----------------------------------------------------------------------------
 
+bool SubroleParser::contains_any(
+    const std::vector<std::string>& _column,
+    const std::vector<Subrole>& _targets )
+{
+    const auto column = parse( _column );
+
+    return contains_any( column, _targets );
+}
+
+// ----------------------------------------------------------------------------
+
+bool SubroleParser::contains_any(
+    const std::vector<Subrole>& _column, const std::vector<Subrole>& _targets )
+{
+    const auto in_column = [&_column]( const Subrole _s ) -> bool {
+        return std::find( _column.begin(), _column.end(), _s ) != _column.end();
+    };
+
+    return std::any_of( _targets.begin(), _targets.end(), in_column );
+}
+
+// ----------------------------------------------------------------------------
+
 Subrole SubroleParser::parse( const std::string& _str )
 {
     if ( _str == COMPARISON_ONLY )

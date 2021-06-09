@@ -145,7 +145,7 @@ containers::DataFrame Substring::fit_transform_df(
             extract_and_add( _marker, _table, original_col, _categories, &df );
         }
 
-    for ( size_t i = 0; i < _df.num_unused_strings(); ++i )
+    for ( size_t i = 0; i < _df.num_text(); ++i )
         {
             const auto& original_col = _df.unused_string( i );
 
@@ -274,10 +274,10 @@ containers::DataFrame Substring::transform_df(
                     df.add_int_column(
                         col, containers::DataFrame::ROLE_CATEGORICAL );
                 }
-            else if ( _df.has_unused_string( name ) )
+            else if ( _df.has_text( name ) )
                 {
-                    const auto col = extract_substring(
-                        _categories, _df.unused_string( name ) );
+                    const auto col =
+                        extract_substring( _categories, _df.text( name ) );
 
                     df.add_int_column(
                         col, containers::DataFrame::ROLE_CATEGORICAL );

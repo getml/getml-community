@@ -482,6 +482,20 @@ class Mapping : public Preprocessor
             iota | std::views::transform( all_weights_to_sql ) );
     }
 
+    /// Determines whether you want to include this column.
+    template <class T>
+    bool parse_subroles( const helpers::Column<T>& _col ) const
+    {
+        const auto blacklist = std::vector<helpers::Subrole>(
+            { helpers::Subrole::exclude_preprocessors,
+              helpers::Subrole::email_only,
+              helpers::Subrole::substring_only,
+              helpers::Subrole::exclude_mapping } );
+
+        return !helpers::SubroleParser::contains_any(
+            _col.subroles_, blacklist );
+    }
+
    private:
     /// The aggregations to use, in string form.
     std::vector<std::string> aggregation_;

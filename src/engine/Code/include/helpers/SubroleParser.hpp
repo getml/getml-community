@@ -27,6 +27,16 @@ struct SubroleParser
     static constexpr const char* SUBSTRING = "substring";
     static constexpr const char* SUBSTRING_ONLY = "substring only";
 
+    /// Whether the column returns contains any of the _targets.
+    static bool contains_any(
+        const std::vector<std::string>& _column,
+        const std::vector<Subrole>& _targets );
+
+    /// Whether the column returns contains any of the _targets.
+    static bool contains_any(
+        const std::vector<Subrole>& _column,
+        const std::vector<Subrole>& _targets );
+
     /// Parses a single subrole
     static Subrole parse( const std::string& _str );
 

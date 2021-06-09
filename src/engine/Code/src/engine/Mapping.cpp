@@ -444,6 +444,10 @@ Mapping::fit_on_categoricals(
     const std::vector<helpers::DataFrame>& _main_tables,
     const std::vector<helpers::DataFrame>& _peripheral_tables ) const
 {
+    const auto include = [this]( const helpers::Column<Int>& _col ) -> bool {
+        return parse_subroles( _col );
+    };
+
     const auto col_to_mapping =
         [this, &_population, &_main_tables, &_peripheral_tables](
             const helpers::Column<Int>& _col ) {
@@ -460,11 +464,13 @@ Mapping::fit_on_categoricals(
     const auto& data_frame =
         _peripheral_tables.size() > 0 ? _peripheral_tables.back() : _population;
 
-    const auto range1 =
-        data_frame.categoricals_ | std::views::transform( col_to_mapping );
+    const auto range1 = data_frame.categoricals_ |
+                        std::views::filter( include ) |
+                        std::views::transform( col_to_mapping );
 
-    const auto range2 =
-        data_frame.categoricals_ | std::views::transform( get_colname );
+    const auto range2 = data_frame.categoricals_ |
+                        std::views::filter( include ) |
+                        std::views::transform( get_colname );
 
     const auto mappings =
         stl::collect::vector<MappingForDf::value_type>( range1 );
@@ -483,6 +489,10 @@ Mapping::fit_on_discretes(
     const std::vector<helpers::DataFrame>& _main_tables,
     const std::vector<helpers::DataFrame>& _peripheral_tables ) const
 {
+    const auto include = [this]( const helpers::Column<Float>& _col ) -> bool {
+        return parse_subroles( _col );
+    };
+
     const auto col_to_mapping =
         [this, &_population, &_main_tables, &_peripheral_tables](
             const helpers::Column<Float>& _col ) {
@@ -499,11 +509,11 @@ Mapping::fit_on_discretes(
     const auto& data_frame =
         _peripheral_tables.size() > 0 ? _peripheral_tables.back() : _population;
 
-    const auto range1 =
-        data_frame.discretes_ | std::views::transform( col_to_mapping );
+    const auto range1 = data_frame.discretes_ | std::views::filter( include ) |
+                        std::views::transform( col_to_mapping );
 
-    const auto range2 =
-        data_frame.discretes_ | std::views::transform( get_colname );
+    const auto range2 = data_frame.discretes_ | std::views::filter( include ) |
+                        std::views::transform( get_colname );
 
     const auto mappings =
         stl::collect::vector<MappingForDf::value_type>( range1 );
@@ -589,7 +599,7 @@ Mapping::fit_on_text(
     const std::vector<helpers::DataFrame>& _main_tables,
     const std::vector<helpers::DataFrame>& _peripheral_tables ) const
 {
-    const auto col_to_mapping =
+    const auto word_index_to_mapping =
         [this, &_population, &_main_tables, &_peripheral_tables](
             const std::shared_ptr<const textmining::WordIndex>& _word_index ) {
             assert_true( _word_index );
@@ -603,8 +613,24 @@ Mapping::fit_on_text(
         return _col.name_;
     };
 
+    const auto include =
+        [this]( const helpers::Column<strings::String>& _col ) -> bool {
+        return parse_subroles( _col );
+    };
+
     const auto& data_frame =
         _peripheral_tables.size() > 0 ? _peripheral_tables.back() : _population;
+
+    const auto include_index = [&data_frame,
+                                include]( const size_t _i ) -> bool {
+        return include( data_frame.text_.at( _i ) );
+    };
+
+    const auto get_word_index =
+        [&data_frame](
+            const size_t _i ) -> std::shared_ptr<const textmining::WordIndex> {
+        return data_frame.word_indices_.at( _i );
+    };
 
     assert_msg(
         data_frame.word_indices_.size() == data_frame.text_.size(),
@@ -613,10 +639,14 @@ Mapping::fit_on_text(
             ", data_frame.text_.size(): " +
             std::to_string( data_frame.text_.size() ) );
 
-    const auto range1 =
-        data_frame.word_indices_ | std::views::transform( col_to_mapping );
+    const auto iota = stl::iota<size_t>( 0, data_frame.text_.size() );
 
-    const auto range2 = data_frame.text_ | std::views::transform( get_colname );
+    const auto range1 = iota | std::views::filter( include_index ) |
+                        std::views::transform( get_word_index ) |
+                        std::views::transform( word_index_to_mapping );
+
+    const auto range2 = data_frame.text_ | std::views::filter( include ) |
+                        std::views::transform( get_colname );
 
     const auto mappings =
         stl::collect::vector<MappingForDf::value_type>( range1 );

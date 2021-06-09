@@ -134,11 +134,23 @@ containers::DataFrame Imputation::fit_transform_df(
     const std::string& _marker,
     const size_t _table )
 {
+    const auto blacklist = std::vector<helpers::Subrole>(
+        { helpers::Subrole::exclude_preprocessors,
+          helpers::Subrole::email_only,
+          helpers::Subrole::substring_only,
+          helpers::Subrole::exclude_imputation } );
+
     auto df = _df;
 
     for ( size_t i = 0; i < _df.num_numericals(); ++i )
         {
             const auto& original_col = _df.numerical( i );
+
+            if ( helpers::SubroleParser::contains_any(
+                     original_col.subroles(), blacklist ) )
+                {
+                    continue;
+                }
 
             extract_and_add( _marker, _table, original_col, &df );
         }

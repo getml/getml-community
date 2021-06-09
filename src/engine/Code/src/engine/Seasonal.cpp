@@ -253,6 +253,12 @@ containers::DataFrame Seasonal::fit_transform_df(
     const size_t _table,
     containers::Encoding* _categories )
 {
+    const auto blacklist = std::vector<helpers::Subrole>(
+        { helpers::Subrole::exclude_preprocessors,
+          helpers::Subrole::email_only,
+          helpers::Subrole::substring_only,
+          helpers::Subrole::exclude_seasonal } );
+
     auto df = _df;
 
     for ( size_t i = 0; i < _df.num_time_stamps(); ++i )
@@ -265,6 +271,14 @@ containers::DataFrame Seasonal::fit_transform_df(
 
             if ( ts.name().find( helpers::Macros::generated_ts() ) !=
                  std::string::npos )
+                {
+                    continue;
+                }
+
+            // -----------------------------------
+
+            if ( helpers::SubroleParser::contains_any(
+                     ts.subroles(), blacklist ) )
                 {
                     continue;
                 }
