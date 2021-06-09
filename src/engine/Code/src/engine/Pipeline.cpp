@@ -2170,6 +2170,13 @@ void Pipeline::make_feature_selector_impl(
 
     // --------------------------------------------------------------------
 
+    const auto blacklist = std::vector<helpers::Subrole>(
+        { helpers::Subrole::exclude_predictors,
+          helpers::Subrole::email_only,
+          helpers::Subrole::substring_only } );
+
+    // --------------------------------------------------------------------
+
     auto categorical_colnames = std::vector<std::string>();
 
     if ( impl_.include_categorical_ )
@@ -2178,6 +2185,13 @@ void Pipeline::make_feature_selector_impl(
                 {
                     if ( _population_df.categorical( i ).unit().find(
                              "comparison only" ) != std::string::npos )
+                        {
+                            continue;
+                        }
+
+                    if ( helpers::SubroleParser::contains_any(
+                             _population_df.categorical( i ).subroles(),
+                             blacklist ) )
                         {
                             continue;
                         }
@@ -2195,6 +2209,12 @@ void Pipeline::make_feature_selector_impl(
         {
             if ( _population_df.numerical( i ).unit().find(
                      "comparison only" ) != std::string::npos )
+                {
+                    continue;
+                }
+
+            if ( helpers::SubroleParser::contains_any(
+                     _population_df.numerical( i ).subroles(), blacklist ) )
                 {
                     continue;
                 }
