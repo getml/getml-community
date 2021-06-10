@@ -193,14 +193,6 @@ void RequestHandler::run()
                     data_frame_manager().get_data_frame_string(
                         name, &socket() );
                 }
-            else if ( type == "DataFrame.group_by" )
-                {
-                    data_frame_manager().group_by( name, cmd, &socket() );
-                }
-            else if ( type == "DataFrame.join" )
-                {
-                    data_frame_manager().join( name, cmd, &socket() );
-                }
             else if ( type == "DataFrame.nbytes" )
                 {
                     data_frame_manager().get_nbytes( name, &socket() );

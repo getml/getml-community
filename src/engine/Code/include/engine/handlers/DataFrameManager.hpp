@@ -260,18 +260,6 @@ class DataFrameManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
-    /// Undertakes a GROUP BY operation
-    void group_by(
-        const std::string& _name,
-        const Poco::JSON::Object& _cmd,
-        Poco::Net::StreamSocket* _socket );
-
-    /// Creates a new data frame by joining two other tables.
-    void join(
-        const std::string& _name,
-        const Poco::JSON::Object& _cmd,
-        Poco::Net::StreamSocket* _socket );
-
     /// Returns a string describing the last time a data frame has been changed.
     void last_change(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
