@@ -285,13 +285,15 @@ void Pipeline::check(
 
     fit_transform_preprocessors(
         _cmd,
-        nullptr,
+        _logger,
         _categories,
         _preprocessor_tracker,
         dependencies,
         &population_df,
         &peripheral_dfs,
         _socket );
+
+    communication::Sender::send_string( "Success!", _socket );
 
     // -------------------------------------------------------------------------
 
