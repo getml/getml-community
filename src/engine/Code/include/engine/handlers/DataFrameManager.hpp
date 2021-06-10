@@ -254,6 +254,12 @@ class DataFrameManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
+    /// Sends a JSON representing the number of rows in the view, if known.
+    void get_view_nrows(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Undertakes a GROUP BY operation
     void group_by(
         const std::string& _name,

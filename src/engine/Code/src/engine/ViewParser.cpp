@@ -283,7 +283,10 @@ std::vector<std::string> ViewParser::make_string_vector(
 // ----------------------------------------------------------------------------
 
 Poco::JSON::Object ViewParser::get_content(
-    const Poco::JSON::Object& _cmd ) const
+    const size_t _draw,
+    const size_t _start,
+    const size_t _length,
+    const Poco::JSON::Array::Ptr& _cols ) const
 {
     // ------------------------------------------------------------------------
 
@@ -294,29 +297,19 @@ Poco::JSON::Object ViewParser::get_content(
 
     // ------------------------------------------------------------------------
 
-    const auto draw = JSON::get_value<size_t>( _cmd, "draw_" );
-
-    const auto start = JSON::get_value<size_t>( _cmd, "start_" );
-
-    const auto length = JSON::get_value<size_t>( _cmd, "length_" );
-
-    // ------------------------------------------------------------------------
-
     const auto to_string_vector =
-        [this, start, length]( const ColumnViewVariant& _column_view )
+        [this, _start, _length]( const ColumnViewVariant& _column_view )
         -> std::vector<std::string> {
-        return make_string_vector( start, length, _column_view );
+        return make_string_vector( _start, _length, _column_view );
     };
 
     // ------------------------------------------------------------------------
 
-    const auto cols = jsonutils::JSON::get_object_array( _cmd, "cols_" );
-
-    const auto get_object = [cols]( const size_t _i ) {
-        return cols->getObject( _i );
+    const auto get_object = [_cols]( const size_t _i ) {
+        return _cols->getObject( _i );
     };
 
-    const auto iota = stl::iota<size_t>( 0, cols->size() );
+    const auto iota = stl::iota<size_t>( 0, _cols->size() );
 
     const auto column_views = stl::collect::vector<ColumnViewVariant>(
         iota | std::views::transform( get_object ) |
@@ -335,7 +328,7 @@ Poco::JSON::Object ViewParser::get_content(
 
     Poco::JSON::Object obj;
 
-    obj.set( "draw", draw );
+    obj.set( "draw", _draw );
 
     obj.set( "data", data );
 

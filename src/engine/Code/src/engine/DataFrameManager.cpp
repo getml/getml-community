@@ -1965,11 +1965,39 @@ void DataFrameManager::get_view_content(
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket* _socket )
 {
+    const auto draw = JSON::get_value<size_t>( _cmd, "draw_" );
+
+    const auto start = JSON::get_value<size_t>( _cmd, "start_" );
+
+    const auto length = JSON::get_value<size_t>( _cmd, "length_" );
+
+    const auto cols = jsonutils::JSON::get_object_array( _cmd, "cols_" );
+
     multithreading::ReadLock read_lock( read_write_lock_ );
 
     const auto result =
         ViewParser( categories_, join_keys_encoding_, data_frames_ )
-            .get_content( _cmd );
+            .get_content( draw, start, length, cols );
+
+    read_lock.unlock();
+
+    communication::Sender::send_string( JSON::stringify( result ), _socket );
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::get_view_nrows(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    const auto cols = jsonutils::JSON::get_object_array( _cmd, "cols_" );
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    const auto result =
+        ViewParser( categories_, join_keys_encoding_, data_frames_ )
+            .get_content( 1, 0, 0, cols );
 
     read_lock.unlock();
 

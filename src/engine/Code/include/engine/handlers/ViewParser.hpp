@@ -52,7 +52,11 @@ class ViewParser
 
    public:
     /// Returns the content of a view.
-    Poco::JSON::Object get_content( const Poco::JSON::Object& _obj ) const;
+    Poco::JSON::Object get_content(
+        const size_t _draw,
+        const size_t _start,
+        const size_t _length,
+        const Poco::JSON::Array::Ptr& _cols ) const;
 
     /// Parses a view and turns it into a DataFrame.
     containers::DataFrame parse( const Poco::JSON::Object& _obj );

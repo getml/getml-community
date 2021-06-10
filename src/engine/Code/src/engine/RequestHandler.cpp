@@ -476,6 +476,10 @@ void RequestHandler::run()
                     data_frame_manager().get_view_content(
                         name, cmd, &socket() );
                 }
+            else if ( type == "View.get_nrows" )
+                {
+                    data_frame_manager().get_view_nrows( name, cmd, &socket() );
+                }
             else
                 {
                     throw std::invalid_argument(
