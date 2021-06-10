@@ -816,6 +816,8 @@ Mapping Mapping::from_json_obj( const Poco::JSON::Object& _obj ) const
 
     that.min_freq_ = JSON::get_value<size_t>( _obj, "min_freq_" );
 
+    that.multithreading_ = JSON::get_value<bool>( _obj, "multithreading_" );
+
     if ( !_obj.has( "categorical_" ) )
         {
             return that;
@@ -936,6 +938,12 @@ std::shared_ptr<const std::map<Int, std::vector<Float>>> Mapping::make_mapping(
                  std::views::filter( greater_than_min_freq ) |
                  std::views::transform( calc_agg );
 
+    if ( multithreading_ )
+        {
+            return std::make_shared<const std::map<Int, std::vector<Float>>>(
+                stl::collect_parallel::map<Int, std::vector<Float>>( range ) );
+        }
+
     return std::make_shared<const std::map<Int, std::vector<Float>>>(
         range.begin(), range.end() );
 }
@@ -979,8 +987,12 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_int(
 
         const auto range = col | std::views::transform( get_val );
 
-        const auto ptr = std::make_shared<std::vector<Float>>(
-            stl::collect::vector<Float>( range ) );
+        const auto ptr =
+            multithreading_
+                ? std::make_shared<std::vector<Float>>(
+                      stl::collect_parallel::vector<Float>( range ) )
+                : std::make_shared<std::vector<Float>>(
+                      stl::collect::vector<Float>( range ) );
 
         const auto name = make_colname( col.name(), _weight_num );
 
@@ -1075,8 +1087,12 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_text(
 
         const auto range = iota | std::views::transform( get_val );
 
-        const auto ptr = std::make_shared<std::vector<Float>>(
-            stl::collect::vector<Float>( range ) );
+        const auto ptr =
+            multithreading_
+                ? std::make_shared<std::vector<Float>>(
+                      stl::collect_parallel::vector<Float>( range ) )
+                : std::make_shared<std::vector<Float>>(
+                      stl::collect::vector<Float>( range ) );
 
         const auto name = make_colname( colname, _weight_num );
 

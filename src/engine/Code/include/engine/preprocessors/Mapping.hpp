@@ -55,12 +55,12 @@ class Mapping : public Preprocessor
         TextMapping;
 
    public:
-    Mapping() : min_freq_( 0 ) {}
+    Mapping() : min_freq_( 0 ), multithreading_( true ) {}
 
     Mapping(
         const Poco::JSON::Object& _obj,
         const std::vector<Poco::JSON::Object::Ptr>& _dependencies )
-        : min_freq_( 0 )
+        : min_freq_( 0 ), multithreading_( true )
     {
         *this = from_json_obj( _obj );
         dependencies_ = _dependencies;
@@ -520,6 +520,9 @@ class Mapping : public Preprocessor
 
     /// The minimum number of targets required for a category to be included.
     size_t min_freq_;
+
+    /// Whether we want to use multithreading.
+    bool multithreading_;
 
     /// The schema of the peripheral data frames
     std::shared_ptr<const std::vector<containers::Schema>> peripheral_schema_;

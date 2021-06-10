@@ -10,9 +10,13 @@
 
 #include <Poco/JSON/Array.h>
 
+#include "multithreading/multithreading.hpp"
+
+#include "stl/iota.hpp"
+
 #include "stl/Range.hpp"
 #include "stl/collect.hpp"
-#include "stl/iota.hpp"
+#include "stl/collect_parallel.hpp"
 #include "stl/join.hpp"
 
 #endif  // STL_STL_HPP_
