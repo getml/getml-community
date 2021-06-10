@@ -29,6 +29,14 @@ struct Parser<Aggregation>
         "COUNT DISTINCT OVER COUNT";
     static constexpr const char* COUNT_MINUS_COUNT_DISTINCT =
         "COUNT MINUS COUNT DISTINCT";
+    static constexpr const char* EWMA1S = "EWMA_1S";
+    static constexpr const char* EWMA1M = "EWMA_1M";
+    static constexpr const char* EWMA1H = "EWMA_1H";
+    static constexpr const char* EWMA1D = "EWMA_1D";
+    static constexpr const char* EWMA7D = "EWMA_7D";
+    static constexpr const char* EWMA30D = "EWMA_30D";
+    static constexpr const char* EWMA90D = "EWMA_90D";
+    static constexpr const char* EWMA365D = "EWMA_365D";
     static constexpr const char* FIRST = "FIRST";
     static constexpr const char* LAST = "LAST";
     static constexpr const char* KURTOSIS = "KURTOSIS";
@@ -102,6 +110,46 @@ struct Parser<Aggregation>
         if ( _str == COUNT_DISTINCT_OVER_COUNT )
             {
                 return Aggregation::count_distinct_over_count;
+            }
+
+        if ( _str == EWMA1S )
+            {
+                return Aggregation::ewma1s;
+            }
+
+        if ( _str == EWMA1M )
+            {
+                return Aggregation::ewma1m;
+            }
+
+        if ( _str == EWMA1H )
+            {
+                return Aggregation::ewma1h;
+            }
+
+        if ( _str == EWMA1D )
+            {
+                return Aggregation::ewma1d;
+            }
+
+        if ( _str == EWMA7D )
+            {
+                return Aggregation::ewma7d;
+            }
+
+        if ( _str == EWMA30D )
+            {
+                return Aggregation::ewma30d;
+            }
+
+        if ( _str == EWMA90D )
+            {
+                return Aggregation::ewma90d;
+            }
+
+        if ( _str == EWMA365D )
+            {
+                return Aggregation::ewma365d;
             }
 
         if ( _str == FIRST )
@@ -267,6 +315,30 @@ struct Parser<Aggregation>
 
                 case Aggregation::count_distinct_over_count:
                     return COUNT_DISTINCT_OVER_COUNT;
+
+                case Aggregation::ewma1s:
+                    return EWMA1S;
+
+                case Aggregation::ewma1m:
+                    return EWMA1M;
+
+                case Aggregation::ewma1h:
+                    return EWMA1H;
+
+                case Aggregation::ewma1d:
+                    return EWMA1D;
+
+                case Aggregation::ewma7d:
+                    return EWMA7D;
+
+                case Aggregation::ewma30d:
+                    return EWMA30D;
+
+                case Aggregation::ewma90d:
+                    return EWMA90D;
+
+                case Aggregation::ewma365d:
+                    return EWMA365D;
 
                 case Aggregation::first:
                     return FIRST;

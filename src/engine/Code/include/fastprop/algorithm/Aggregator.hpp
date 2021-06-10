@@ -160,6 +160,15 @@ class Aggregator
                 return 0.0;
             }
 
+        constexpr Float t1s = 1.0;
+        constexpr Float t1m = 60.0 * t1s;
+        constexpr Float t1h = 60.0 * t1m;
+        constexpr Float t1d = 24.0 * t1h;
+        constexpr Float t7d = 7.0 * t1d;
+        constexpr Float t30d = 30.0 * t1d;
+        constexpr Float t90d = 90.0 * t1d;
+        constexpr Float t365d = 365.0 * t1d;
+
         switch ( _aggregation )
             {
                 case enums::Aggregation::first:
@@ -167,6 +176,30 @@ class Aggregator
 
                 case enums::Aggregation::last:
                     return helpers::Aggregations::last( _begin, _end );
+
+                case enums::Aggregation::ewma1s:
+                    return helpers::Aggregations::ewma( t1s, _begin, _end );
+
+                case enums::Aggregation::ewma1m:
+                    return helpers::Aggregations::ewma( t1m, _begin, _end );
+
+                case enums::Aggregation::ewma1h:
+                    return helpers::Aggregations::ewma( t1h, _begin, _end );
+
+                case enums::Aggregation::ewma1d:
+                    return helpers::Aggregations::ewma( t1d, _begin, _end );
+
+                case enums::Aggregation::ewma7d:
+                    return helpers::Aggregations::ewma( t7d, _begin, _end );
+
+                case enums::Aggregation::ewma30d:
+                    return helpers::Aggregations::ewma( t30d, _begin, _end );
+
+                case enums::Aggregation::ewma90d:
+                    return helpers::Aggregations::ewma( t90d, _begin, _end );
+
+                case enums::Aggregation::ewma365d:
+                    return helpers::Aggregations::ewma( t365d, _begin, _end );
 
                 case enums::Aggregation::time_since_first_maximum:
                     return helpers::Aggregations::time_since_first_maximum(

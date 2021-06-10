@@ -42,6 +42,14 @@ class SQLMaker
         return (
             _agg == enums::Aggregation::first ||
             _agg == enums::Aggregation::last ||
+            _agg == enums::Aggregation::ewma1s ||
+            _agg == enums::Aggregation::ewma1m ||
+            _agg == enums::Aggregation::ewma1h ||
+            _agg == enums::Aggregation::ewma1d ||
+            _agg == enums::Aggregation::ewma7d ||
+            _agg == enums::Aggregation::ewma30d ||
+            _agg == enums::Aggregation::ewma90d ||
+            _agg == enums::Aggregation::ewma365d ||
             _agg == enums::Aggregation::time_since_first_maximum ||
             _agg == enums::Aggregation::time_since_first_minimum ||
             _agg == enums::Aggregation::time_since_last_maximum ||

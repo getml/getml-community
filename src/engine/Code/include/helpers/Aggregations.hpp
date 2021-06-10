@@ -197,6 +197,46 @@ class Aggregations
         return count_distinct( _begin, _end ) / n;
     }
 
+    /// EWMA is short for exponentially weighted moving average.
+    template <class IteratorType>
+    static Float ewma(
+        const Float _half_life, IteratorType _begin, IteratorType _end )
+    {
+        constexpr Float log05 = std::log( 0.5 );
+
+        const auto get_first = [_half_life, log05](
+                                   const Float _init,
+                                   const auto& _pair ) -> Float {
+            if ( NullChecker::is_null( _pair.second ) ) [[unlikely]]
+                {
+                    return _init;
+                }
+            return _init + std::exp( log05 * _pair.first / _half_life );
+        };
+
+        const auto sum_first = std::accumulate( _begin, _end, 0.0, get_first );
+
+        if ( sum_first == 0.0 )
+            {
+                return NAN;
+            }
+
+        const auto get_both = [_half_life, log05](
+                                  const Float _init,
+                                  const auto& _pair ) -> Float {
+            if ( NullChecker::is_null( _pair.second ) ) [[unlikely]]
+                {
+                    return _init;
+                }
+            return _init +
+                   std::exp( log05 * _pair.first / _half_life ) * _pair.second;
+        };
+
+        const auto sum_both = std::accumulate( _begin, _end, 0.0, get_both );
+
+        return sum_both / sum_first;
+    }
+
     /// Implements the FIRST aggregation. Assumes that the iterator points to a
     /// set of pairs, the first signifying the element over which we want to
     /// sort and the second signifying the value.
