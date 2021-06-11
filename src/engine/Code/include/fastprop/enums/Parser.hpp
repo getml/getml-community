@@ -65,6 +65,7 @@ struct Parser<Aggregation>
         "TIME SINCE LAST MAXIMUM";
     static constexpr const char* TIME_SINCE_LAST_MINIMUM =
         "TIME SINCE LAST MINIMUM";
+    static constexpr const char* TREND = "TREND";
     static constexpr const char* VAR = "VAR";
     static constexpr const char* VARIATION_COEFFICIENT =
         "VARIATION COEFFICIENT";
@@ -272,6 +273,11 @@ struct Parser<Aggregation>
                 return Aggregation::time_since_last_minimum;
             }
 
+        if ( _str == TREND )
+            {
+                return Aggregation::trend;
+            }
+
         if ( _str == VAR )
             {
                 return Aggregation::var;
@@ -411,6 +417,9 @@ struct Parser<Aggregation>
 
                 case Aggregation::time_since_last_minimum:
                     return TIME_SINCE_LAST_MINIMUM;
+
+                case Aggregation::trend:
+                    return TREND;
 
                 case Aggregation::var:
                     return VAR;

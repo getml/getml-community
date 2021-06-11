@@ -625,6 +625,65 @@ class Aggregations
         return p.first;
     }
 
+    /// trend extracts a linear trend from the variable.
+    template <class IteratorType>
+    static Float trend( IteratorType _begin, IteratorType _end )
+    {
+        const auto second_is_not_null = []( const auto& _pair ) -> bool {
+            return !NullChecker::is_null( _pair.second );
+        };
+
+        const auto get_first = []( const auto& _pair ) -> Float {
+            return _pair.first;
+        };
+
+        const auto get_second = []( const auto& _pair ) -> Float {
+            return _pair.second;
+        };
+
+        auto range = stl::Range( _begin, _end );
+
+        auto range_x = range | std::views::filter( second_is_not_null ) |
+                       std::views::transform( get_first );
+
+        auto range_y = range | std::views::filter( second_is_not_null ) |
+                       std::views::transform( get_second );
+
+        const auto mean_x = avg( range_x.begin(), range_x.end() );
+
+        const auto mean_y = avg( range_y.begin(), range_y.end() );
+
+        const auto calc_xx = [mean_x](
+                                 const Float _init, const Float _x ) -> Float {
+            const auto x_centered = _x - mean_x;
+            return _init + x_centered * x_centered;
+        };
+
+        const auto xx =
+            std::accumulate( range_x.begin(), range_x.end(), 0.0, calc_xx );
+
+        if ( xx == 0.0 )
+            {
+                return mean_y;
+            }
+
+        const auto calc_xy =
+            [mean_x, mean_y]( const Float _init, const auto& _pair ) -> Float {
+            const auto x_centered = _pair.first - mean_x;
+            const auto y_centered = _pair.second - mean_y;
+            return _init + x_centered * y_centered;
+        };
+
+        auto range_xy = range | std::views::filter( second_is_not_null );
+
+        const auto xy =
+            std::accumulate( range_xy.begin(), range_xy.end(), 0.0, calc_xy );
+
+        const auto beta = xy / xx;
+
+        return mean_y - mean_x * beta;
+    }
+
     /// Takes the variance of all non-null entries.
     template <class IteratorType>
     static Float var( IteratorType _begin, IteratorType _end )

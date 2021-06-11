@@ -53,7 +53,8 @@ class SQLMaker
             _agg == enums::Aggregation::time_since_first_maximum ||
             _agg == enums::Aggregation::time_since_first_minimum ||
             _agg == enums::Aggregation::time_since_last_maximum ||
-            _agg == enums::Aggregation::time_since_last_minimum );
+            _agg == enums::Aggregation::time_since_last_minimum ||
+            _agg == enums::Aggregation::trend );
     }
 
    private:

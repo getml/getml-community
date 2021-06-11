@@ -217,6 +217,9 @@ class Aggregator
                     return helpers::Aggregations::time_since_last_minimum(
                         _begin, _end );
 
+                case enums::Aggregation::trend:
+                    return helpers::Aggregations::trend( _begin, _end );
+
                 default:
                     assert_true(
                         false && "Unknown aggregation for first/last column" );
