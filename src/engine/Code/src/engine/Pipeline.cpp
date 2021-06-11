@@ -515,7 +515,7 @@ std::vector<Poco::JSON::Object::Ptr> Pipeline::extract_df_fingerprints(
     const auto placeholder = JSON::get_object( obj(), "population_" );
 
     std::vector<Poco::JSON::Object::Ptr> df_fingerprints = {
-        placeholder, _population_df.fingerprint() };
+        placeholder, _population_df.fingerprint()};
 
     for ( const auto& df : _peripheral_dfs )
         {
@@ -803,7 +803,7 @@ std::vector<std::string> Pipeline::feature_learners_to_sql(
         const auto features = stl::collect::vector<std::string>(
             autofeatures | std::views::transform( get_feature ) );
 
-        return stl::join::vector<std::string>( { subfeatures, features } );
+        return stl::join::vector<std::string>( {subfeatures, features} );
     };
 
     const auto iota = stl::iota<size_t>( 0, feature_learners_.size() );
@@ -1499,7 +1499,7 @@ Pipeline::init_feature_learners(
                 .peripheral_schema_ = _params.peripheral_schema_,
                 .placeholder_ = _params.placeholder_,
                 .population_schema_ = _params.population_schema_,
-                .target_num_ = _target_num };
+                .target_num_ = _target_num};
 
             return featurelearners::FeatureLearnerParser::parse( new_params );
         };
@@ -1542,14 +1542,14 @@ Pipeline::init_feature_learners(
             .placeholder_ = placeholder,
             .population_schema_ = impl_.modified_population_schema_,
             .target_num_ =
-                featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS };
+                featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS};
 
         const auto new_feature_learner =
             featurelearners::FeatureLearnerParser::parse( params );
 
         if ( new_feature_learner->supports_multiple_targets() )
             {
-                return { new_feature_learner };
+                return {new_feature_learner};
             }
 
         return make_fl_for_all_targets( params );
@@ -2172,10 +2172,10 @@ void Pipeline::make_feature_selector_impl(
 
     // --------------------------------------------------------------------
 
-    const auto blacklist = std::vector<helpers::Subrole>(
-        { helpers::Subrole::exclude_predictors,
-          helpers::Subrole::email_only,
-          helpers::Subrole::substring_only } );
+    const auto blacklist =
+        std::vector<helpers::Subrole>( {helpers::Subrole::exclude_predictors,
+                                        helpers::Subrole::email_only,
+                                        helpers::Subrole::substring_only} );
 
     // --------------------------------------------------------------------
 
@@ -2386,18 +2386,17 @@ Pipeline::make_staging_schemata() const
             std::views::filter( has_text_field_marker ) |
             std::views::transform( remove_text_field_marker ) );
 
-        return containers::Schema{
-            .categoricals_ = _schema.categoricals_,
-            .discretes_ = _schema.discretes_,
-            .join_keys_ = _schema.join_keys_,
-            .name_ = _schema.name_,
-            .numericals_ = _schema.numericals_,
-            .targets_ = _schema.targets_,
-            .text_ = stl::join::vector<std::string>(
-                { _schema.text_, text_fields } ),
-            .time_stamps_ = _schema.time_stamps_,
-            .unused_floats_ = _schema.unused_floats_,
-            .unused_strings_ = _schema.unused_strings_ };
+        return containers::Schema{.categoricals_ = _schema.categoricals_,
+                                  .discretes_ = _schema.discretes_,
+                                  .join_keys_ = _schema.join_keys_,
+                                  .name_ = _schema.name_,
+                                  .numericals_ = _schema.numericals_,
+                                  .targets_ = _schema.targets_,
+                                  .text_ = stl::join::vector<std::string>(
+                                      {_schema.text_, text_fields} ),
+                                  .time_stamps_ = _schema.time_stamps_,
+                                  .unused_floats_ = _schema.unused_floats_,
+                                  .unused_strings_ = _schema.unused_strings_};
     };
 
     const auto is_not_text_field =
@@ -2641,6 +2640,7 @@ bool Pipeline::retrieve_predictors(
 // ----------------------------------------------------------------------------
 
 void Pipeline::save(
+    const std::shared_ptr<const std::vector<strings::String>>& _categories,
     const std::string& _temp_dir,
     const std::string& _path,
     const std::string& _name ) const
@@ -2681,6 +2681,11 @@ void Pipeline::save(
     save_feature_selectors( tfile );
 
     save_predictors( tfile );
+
+    // ------------------------------------------------------------------
+
+    utils::SQLDependencyTracker( tfile.path() + "/SQL/" )
+        .save_dependencies( to_sql( _categories, true, true ) );
 
     // ------------------------------------------------------------------
 
@@ -3121,7 +3126,7 @@ std::string Pipeline::to_sql(
         feature_learners_to_sql( _categories, _targets, _subfeatures );
 
     const auto sql =
-        stl::join::vector<std::string>( { staging, preprocessing, features } );
+        stl::join::vector<std::string>( {staging, preprocessing, features} );
 
     const auto autofeatures = make_feature_names();
 

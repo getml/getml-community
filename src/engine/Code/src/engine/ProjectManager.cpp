@@ -575,7 +575,7 @@ void ProjectManager::save_pipeline(
 
     const auto path = project_directory() + "pipelines/";
 
-    pipeline.save( options_.temp_dir(), path, _name );
+    pipeline.save( categories().vector(), options_.temp_dir(), path, _name );
 
     FileHandler::save_encodings(
         project_directory(), categories(), containers::Encoding() );

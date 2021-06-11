@@ -35,6 +35,7 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/RequestHandler.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Seasonal.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Sender.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/SQLDependencyTracker.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Staging.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Substring.cpp
     ${ENGINE_SOURCE_DIRECTORY}/TextFieldSplitter.cpp

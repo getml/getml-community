@@ -73,6 +73,7 @@ class Pipeline
 
     /// Save the pipeline to disk.
     void save(
+        const std::shared_ptr<const std::vector<strings::String>>& _categories,
         const std::string& _temp_dir,
         const std::string& _path,
         const std::string& _name ) const;

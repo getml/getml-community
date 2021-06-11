@@ -6,6 +6,8 @@
 #include <cmath>
 
 #include <algorithm>
+#include <filesystem>
+#include <fstream>
 #include <map>
 #include <memory>
 #include <numeric>
@@ -34,6 +36,7 @@
 #include "engine/utils/Aggregations.hpp"
 #include "engine/utils/Endianness.hpp"
 #include "engine/utils/Getter.hpp"
+#include "engine/utils/SQLDependencyTracker.hpp"
 #include "engine/utils/Time.hpp"
 
 // ----------------------------------------------------------------------------
