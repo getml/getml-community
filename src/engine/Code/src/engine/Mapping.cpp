@@ -1509,6 +1509,8 @@ Poco::JSON::Object::Ptr Mapping::to_json_obj() const
 
     obj->set( "min_freq_", min_freq_ );
 
+    obj->set( "multithreading_", multithreading_ );
+
     obj->set( "prefix_", prefix_ );
 
     obj->set(
