@@ -33,10 +33,6 @@ class SQLDependencyTracker
     /// Infers the table name from the SQL code.
     std::string infer_table_name( const std::string& _sql ) const;
 
-    /// Generates a file name for the table name.
-    std::string make_file_name(
-        const size_t _i, const std::string& _table_name ) const;
-
     /// Writes content to a file.
     void write_to_file(
         const std::string& _fname, const std::string& _content ) const;

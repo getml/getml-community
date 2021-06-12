@@ -63,31 +63,6 @@ std::string SQLDependencyTracker::infer_table_name(
 
 // ------------------------------------------------------------------------
 
-std::string SQLDependencyTracker::make_file_name(
-    const size_t _i, const std::string& _table_name ) const
-{
-    const auto num = std::to_string( _i + 1 );
-
-    if ( num.size() > 4 )
-        {
-            throw std::runtime_error(
-                "More than 10,000 files in the SQL pipeline!" );
-        }
-
-    std::string fname =
-        std::string( static_cast<size_t>( 4 ) - num.size(), '0' );
-
-    fname += num + "-";
-
-    fname += _table_name;
-
-    fname += ".sql";
-
-    return fname;
-}
-
-// ------------------------------------------------------------------------
-
 void SQLDependencyTracker::save_dependencies( const std::string& _sql ) const
 {
     const auto tuples = save_sql( _sql );
@@ -126,19 +101,14 @@ typename SQLDependencyTracker::Tuples SQLDependencyTracker::save_sql(
     const auto table_names = stl::collect::vector<std::string>(
         sql | std::views::transform( get_table_name ) );
 
-    const auto make_pair = [&table_names]( size_t _i ) {
-        return std::make_pair( _i, table_names.at( _i ) );
-    };
-
-    const auto to_file_name = [this]( const auto& _pair ) -> std::string {
-        return make_file_name( _pair.first, _pair.second );
+    const auto to_file_name = [this]( const size_t _i ) -> std::string {
+        return std::to_string( _i ) + ".sql";
     };
 
     const auto iota = stl::iota<size_t>( 0, table_names.size() );
 
     const auto file_names = stl::collect::vector<std::string>(
-        iota | std::views::transform( make_pair ) |
-        std::views::transform( to_file_name ) );
+        iota | std::views::transform( to_file_name ) );
 
     for ( size_t i = 0; i < file_names.size(); ++i )
         {
