@@ -549,11 +549,6 @@ class Pipeline
     /// Expresses the staging scripts as SQL.
     std::vector<std::string> staging_to_sql( const bool _targets ) const;
 
-    /// Returns a the SQL features.
-    Poco::JSON::Array::Ptr to_sql_arr(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories )
-        const;
-
     /// Returns a transposed version Poco::JSON::Array::Ptr of the original
     /// vector-of-vectors.
     Poco::JSON::Array::Ptr transpose(
