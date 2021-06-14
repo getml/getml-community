@@ -219,6 +219,7 @@ void PipelineManager::check(
         peripheral_dfs,
         local_categories,
         preprocessor_tracker_,
+        warning_tracker_,
         _socket );
 
     // -------------------------------------------------------

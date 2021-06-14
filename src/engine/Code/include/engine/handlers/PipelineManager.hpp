@@ -35,7 +35,8 @@ class PipelineManager
         const std::shared_ptr<dependency::PredTracker>& _pred_tracker,
         const std::shared_ptr<dependency::PreprocessorTracker>&
             _preprocessor_tracker,
-        const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock )
+        const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock,
+        const std::shared_ptr<dependency::WarningTracker>& _warning_tracker )
         : categories_( _categories ),
           database_manager_( _database_manager ),
           data_frames_( _data_frames ),
@@ -49,7 +50,8 @@ class PipelineManager
           pipelines_( _pipelines ),
           pred_tracker_( _pred_tracker ),
           preprocessor_tracker_( _preprocessor_tracker ),
-          read_write_lock_( _read_write_lock )
+          read_write_lock_( _read_write_lock ),
+          warning_tracker_( _warning_tracker )
     {
     }
 
@@ -396,6 +398,9 @@ class PipelineManager
 
     /// For coordinating the read and write process of the data
     const std::shared_ptr<multithreading::ReadWriteLock> read_write_lock_;
+
+    /// Keeps track of all warnings.
+    const std::shared_ptr<dependency::WarningTracker> warning_tracker_;
 
     // ------------------------------------------------------------------------
 };

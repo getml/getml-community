@@ -9,6 +9,8 @@
 
 #include <Poco/JSON/Object.h>
 
+#include "engine/communication/communication.hpp"
+
 #include "engine/preprocessors/preprocessors.hpp"
 
 #include "engine/featurelearners/featurelearners.hpp"
@@ -26,6 +28,7 @@
 #include "engine/dependency/FETracker.hpp"
 #include "engine/dependency/PredTracker.hpp"
 #include "engine/dependency/PreprocessorTracker.hpp"
+#include "engine/dependency/WarningTracker.hpp"
 
 // ----------------------------------------------------
 

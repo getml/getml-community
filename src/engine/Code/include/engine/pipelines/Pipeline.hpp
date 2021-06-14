@@ -48,6 +48,7 @@ class Pipeline
         const std::shared_ptr<containers::Encoding>& _categories,
         const std::shared_ptr<dependency::PreprocessorTracker>&
             _preprocessor_tracker,
+        const std::shared_ptr<dependency::WarningTracker>& _warning_tracker,
         Poco::Net::StreamSocket* _socket ) const;
 
     /// Fit the pipeline.
@@ -220,7 +221,10 @@ class Pipeline
         const std::vector<containers::DataFrame>& _peripheral_dfs ) const;
 
     /// Extracts the fingerprints of the feature learners.
-    std::vector<Poco::JSON::Object::Ptr> extract_fe_fingerprints() const;
+    std::vector<Poco::JSON::Object::Ptr> extract_fl_fingerprints(
+        const std::vector<
+            std::shared_ptr<featurelearners::AbstractFeatureLearner>>&
+            _feature_learners ) const;
 
     /// Extracts fingerprints from feature selectors or predictors.
     std::vector<Poco::JSON::Object::Ptr> extract_fingerprints(
@@ -236,8 +240,9 @@ class Pipeline
         std::vector<std::vector<Float>>* _all_column_importances ) const;
 
     /// Extracts the fingerprints of the preprocessors.
-    std::vector<Poco::JSON::Object::Ptr> extract_preprocessor_fingerprints()
-        const;
+    std::vector<Poco::JSON::Object::Ptr> extract_preprocessor_fingerprints(
+        const std::vector<std::shared_ptr<preprocessors::Preprocessor>>&
+            _preprocessors ) const;
 
     /// Extracts the schemata as they are inserted into the feature learners.
     std::pair<
@@ -613,15 +618,15 @@ class Pipeline
     }
 
     /// Trivial accessor
-    std::vector<Poco::JSON::Object::Ptr>& fe_fingerprints()
+    std::vector<Poco::JSON::Object::Ptr>& fl_fingerprints()
     {
-        return impl_.fe_fingerprints_;
+        return impl_.fl_fingerprints_;
     }
 
     /// Trivial (const) accessor
-    const std::vector<Poco::JSON::Object::Ptr>& fe_fingerprints() const
+    const std::vector<Poco::JSON::Object::Ptr>& fl_fingerprints() const
     {
-        return impl_.fe_fingerprints_;
+        return impl_.fl_fingerprints_;
     }
 
     /// Trivial accessor
@@ -634,6 +639,16 @@ class Pipeline
     const std::vector<Poco::JSON::Object::Ptr>& fs_fingerprints() const
     {
         return impl_.fs_fingerprints_;
+    }
+
+    /// Generates the warning fingerprint
+    Poco::JSON::Object::Ptr make_warning_fingerprint(
+        const std::vector<Poco::JSON::Object::Ptr>& _fl_fingerprints ) const
+    {
+        auto arr = jsonutils::JSON::vector_to_array_ptr( _fl_fingerprints );
+        auto obj = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
+        obj->set( "fl_fingerprints_", arr );
+        return obj;
     }
 
     /// Trivial (private) accessor

@@ -1,5 +1,5 @@
-#ifndef ENGINE_COMMUNICATION_WARNER_HPP_
-#define ENGINE_COMMUNICATION_WARNER_HPP_
+#ifndef ENGINE_COMMUNICATION_WARNINGS_HPP_
+#define ENGINE_COMMUNICATION_WARNINGS_HPP_
 
 namespace engine
 {
@@ -7,47 +7,51 @@ namespace communication
 {
 // ------------------------------------------------------------------------
 
-class Warner
+class Warnings
 {
     // ------------------------------------------------------------------------
 
    public:
-    Warner() {}
+    Warnings(
+        Poco::JSON::Object::Ptr _fingerprint,
+        const std::shared_ptr<const std::vector<std::string>>& _warnings )
+        : fingerprint_( _fingerprint ), warnings_( _warnings )
+    {
+        assert_true( warnings_ );
+    }
 
-    ~Warner() = default;
+    ~Warnings() = default;
 
     // ------------------------------------------------------------------------
 
    public:
-    /// Adds a new warning to the list of warnings.
-    void add( const std::string& _warning ) { warnings_.push_back( _warning ); }
+    /// Creates a copy.
+    std::shared_ptr<Warnings> clone() const
+    {
+        return std::make_shared<Warnings>( *this );
+    }
+
+    /// Returns the fingerprint of the warnings (necessary to build
+    /// the dependency graphs).
+    Poco::JSON::Object::Ptr fingerprint() const { return fingerprint_; }
 
     /// Sends all warnings to the socket.
     void send( Poco::Net::StreamSocket* _socket ) const
     {
         Poco::JSON::Object obj;
-        obj.set( "warnings_", JSON::vector_to_array_ptr( warnings_ ) );
+        obj.set( "warnings_", JSON::vector_to_array_ptr( *warnings_ ) );
         const auto json_str = JSON::stringify( obj );
         Sender::send_string( json_str, _socket );
-    }
-
-    /// Trivial (const) getter
-    const std::vector<std::string>& warnings() const { return warnings_; }
-
-    /// Generates a warnings object that can be used for dependency tracking.
-    const std::shared_ptr<Warnings> to_warnings_obj(
-        Poco::JSON::Object::Ptr _fingerprints ) const
-    {
-        const auto ptr =
-            std::make_shared<const std::vector<std::string>>( warnings_ );
-        return std::make_shared<Warnings>( _fingerprints, ptr );
     }
 
     // ------------------------------------------------------------------------
 
    private:
+    /// The fingerprint to use for the warnings.
+    Poco::JSON::Object::Ptr fingerprint_;
+
     /// The list of warnings to send.
-    std::vector<std::string> warnings_;
+    const std::shared_ptr<const std::vector<std::string>> warnings_;
 
     // ------------------------------------------------------------------------
 };

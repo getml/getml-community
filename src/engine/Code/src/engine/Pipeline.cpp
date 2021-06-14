@@ -20,10 +20,10 @@ Pipeline::Pipeline( const Poco::JSON::Object& _obj )
         "feature_selectors_",
         1,
         impl_.feature_selector_impl_,
-        fe_fingerprints() );
+        fl_fingerprints() );
 
     init_predictors(
-        "predictors_", 1, impl_.predictor_impl_, fe_fingerprints() );
+        "predictors_", 1, impl_.predictor_impl_, fl_fingerprints() );
 }
 
 // ----------------------------------------------------------------------------
@@ -273,6 +273,7 @@ void Pipeline::check(
     const std::shared_ptr<containers::Encoding>& _categories,
     const std::shared_ptr<dependency::PreprocessorTracker>&
         _preprocessor_tracker,
+    const std::shared_ptr<dependency::WarningTracker>& _warning_tracker,
     Poco::Net::StreamSocket* _socket ) const
 {
     // -------------------------------------------------------------------------
@@ -280,15 +281,50 @@ void Pipeline::check(
     auto [population_df, peripheral_dfs] =
         modify_data_frames( _population_df, _peripheral_dfs );
 
-    const auto dependencies =
+    const auto df_fingerprints =
         extract_df_fingerprints( _population_df, _peripheral_dfs );
+
+    // -------------------------------------------------------------------------
+
+    const auto preprocessors = init_preprocessors( df_fingerprints );
+
+    const auto preprocessor_fingerprints =
+        preprocessors.size() > 0
+            ? extract_preprocessor_fingerprints( preprocessors )
+            : df_fingerprints;
+
+    const auto feature_learners =
+        init_feature_learners( 1, preprocessor_fingerprints );
+
+    const auto fl_fingerprints =
+        feature_learners.size() > 0
+            ? extract_fl_fingerprints( feature_learners )
+            : preprocessor_fingerprints;
+
+    // -------------------------------------------------------------------------
+
+    const auto warning_fingerprint =
+        make_warning_fingerprint( fl_fingerprints );
+
+    assert_true( _warning_tracker );
+
+    const auto retrieved = _warning_tracker->retrieve( warning_fingerprint );
+
+    if ( retrieved )
+        {
+            communication::Sender::send_string( "Success!", _socket );
+            retrieved->send( _socket );
+            return;
+        }
+
+    // -------------------------------------------------------------------------
 
     fit_transform_preprocessors(
         _cmd,
         _logger,
         _categories,
         _preprocessor_tracker,
-        dependencies,
+        df_fingerprints,
         &population_df,
         &peripheral_dfs,
         _socket );
@@ -297,20 +333,22 @@ void Pipeline::check(
 
     // -------------------------------------------------------------------------
 
-    const auto feature_learners = init_feature_learners( 1, {} );
-
-    // -------------------------------------------------------------------------
-
     const auto [placeholder, peripheral_names] = make_placeholder();
 
-    preprocessors::DataModelChecker::check(
+    const auto warner = preprocessors::DataModelChecker::check(
         placeholder,
         peripheral_names,
         population_df,
         peripheral_dfs,
-        feature_learners,
-        _logger,
-        _socket );
+        feature_learners );
+
+    // -------------------------------------------------------------------------
+
+    const auto warnings = warner.to_warnings_obj( warning_fingerprint );
+
+    warnings->send( _socket );
+
+    _warning_tracker->add( warnings );
 
     // -------------------------------------------------------------------------
 }
@@ -527,26 +565,6 @@ std::vector<Poco::JSON::Object::Ptr> Pipeline::extract_df_fingerprints(
 
 // ----------------------------------------------------------------------
 
-std::vector<Poco::JSON::Object::Ptr> Pipeline::extract_fe_fingerprints() const
-{
-    if ( feature_learners_.size() == 0 )
-        {
-            return preprocessor_fingerprints();
-        }
-
-    std::vector<Poco::JSON::Object::Ptr> fe_fingerprints;
-
-    for ( const auto& fe : feature_learners_ )
-        {
-            assert_true( fe );
-            fe_fingerprints.push_back( fe->fingerprint() );
-        }
-
-    return fe_fingerprints;
-}
-
-// ----------------------------------------------------------------------
-
 std::vector<Poco::JSON::Object::Ptr> Pipeline::extract_fingerprints(
     const std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>&
         _predictors ) const
@@ -567,12 +585,34 @@ std::vector<Poco::JSON::Object::Ptr> Pipeline::extract_fingerprints(
 
 // ----------------------------------------------------------------------
 
+std::vector<Poco::JSON::Object::Ptr> Pipeline::extract_fl_fingerprints(
+    const std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>&
+        _feature_learners ) const
+{
+    if ( _feature_learners.size() == 0 )
+        {
+            return preprocessor_fingerprints();
+        }
+
+    std::vector<Poco::JSON::Object::Ptr> fl_fingerprints;
+
+    for ( const auto& fl : _feature_learners )
+        {
+            assert_true( fl );
+            fl_fingerprints.push_back( fl->fingerprint() );
+        }
+
+    return fl_fingerprints;
+}
+
+// ----------------------------------------------------------------------
+
 std::vector<Poco::JSON::Object::Ptr> Pipeline::extract_fs_fingerprints() const
 {
     if ( feature_selectors_.size() == 0 ||
          feature_selectors_.at( 0 ).size() == 0 )
         {
-            return fe_fingerprints();
+            return fl_fingerprints();
         }
 
     return extract_fingerprints( feature_selectors_ );
@@ -597,16 +637,18 @@ void Pipeline::extract_importance_values(
 // ----------------------------------------------------------------------
 
 std::vector<Poco::JSON::Object::Ptr>
-Pipeline::extract_preprocessor_fingerprints() const
+Pipeline::extract_preprocessor_fingerprints(
+    const std::vector<std::shared_ptr<preprocessors::Preprocessor>>&
+        _preprocessors ) const
 {
-    if ( preprocessors_.size() == 0 )
+    if ( _preprocessors.size() == 0 )
         {
             return df_fingerprints();
         }
 
     std::vector<Poco::JSON::Object::Ptr> fingerprints;
 
-    for ( const auto& p : preprocessors_ )
+    for ( const auto& p : _preprocessors )
         {
             assert_true( p );
             fingerprints.push_back( p->fingerprint() );
@@ -1064,7 +1106,8 @@ void Pipeline::fit(
         &peripheral_dfs,
         _socket );
 
-    preprocessor_fingerprints() = extract_preprocessor_fingerprints();
+    preprocessor_fingerprints() =
+        extract_preprocessor_fingerprints( preprocessors_ );
 
     // -------------------------------------------------------------------------
 
@@ -1085,7 +1128,7 @@ void Pipeline::fit(
         "feature_selectors_",
         num_targets(),
         impl_.feature_selector_impl_,
-        fe_fingerprints() );
+        fl_fingerprints() );
 
     fit_predictors(
         _cmd,
@@ -1095,7 +1138,7 @@ void Pipeline::fit(
         peripheral_dfs,
         _data_frame_tracker,
         _pred_tracker,
-        fe_fingerprints(),
+        fl_fingerprints(),
         feature_selector_impl(),
         "feature selector",
         &autofeatures,
@@ -1221,7 +1264,7 @@ void Pipeline::fit_feature_learners(
 
     feature_learners_ = std::move( feature_learners );
 
-    fe_fingerprints() = extract_fe_fingerprints();
+    fl_fingerprints() = extract_fl_fingerprints( feature_learners_ );
 }
 
 // ----------------------------------------------------------------------------
@@ -1844,7 +1887,7 @@ void Pipeline::load_feature_selectors(
         "feature_selectors_",
         _pipeline->num_targets(),
         _pipeline->impl_.feature_selector_impl_,
-        _pipeline->fe_fingerprints() );
+        _pipeline->fl_fingerprints() );
 
     assert_true(
         _pipeline->num_targets() == _pipeline->feature_selectors_.size() );
@@ -1879,8 +1922,8 @@ void Pipeline::load_fingerprints(
     const auto preprocessor_fingerprints = JSON::array_to_obj_vector(
         JSON::get_array( _pipeline_json, "preprocessor_fingerprints_" ) );
 
-    const auto fe_fingerprints = JSON::array_to_obj_vector(
-        JSON::get_array( _pipeline_json, "fe_fingerprints_" ) );
+    const auto fl_fingerprints = JSON::array_to_obj_vector(
+        JSON::get_array( _pipeline_json, "fl_fingerprints_" ) );
 
     const auto fs_fingerprints = JSON::array_to_obj_vector(
         JSON::get_array( _pipeline_json, "fs_fingerprints_" ) );
@@ -1889,7 +1932,7 @@ void Pipeline::load_fingerprints(
 
     _pipeline->preprocessor_fingerprints() = preprocessor_fingerprints;
 
-    _pipeline->fe_fingerprints() = fe_fingerprints;
+    _pipeline->fl_fingerprints() = fl_fingerprints;
 
     _pipeline->fs_fingerprints() = fs_fingerprints;
 }
@@ -2759,7 +2802,7 @@ void Pipeline::save_pipeline_json( const Poco::TemporaryFile& _tfile ) const
         "df_fingerprints_", JSON::vector_to_array( df_fingerprints() ) );
 
     pipeline_json.set(
-        "fe_fingerprints_", JSON::vector_to_array( fe_fingerprints() ) );
+        "fl_fingerprints_", JSON::vector_to_array( fl_fingerprints() ) );
 
     pipeline_json.set(
         "fs_fingerprints_", JSON::vector_to_array( fs_fingerprints() ) );

@@ -57,7 +57,7 @@ struct PipelineImpl
     std::shared_ptr<const predictors::PredictorImpl> feature_selector_impl_;
 
     /// The fingerprints of the feature learners used for fitting.
-    std::vector<Poco::JSON::Object::Ptr> fe_fingerprints_;
+    std::vector<Poco::JSON::Object::Ptr> fl_fingerprints_;
 
     /// The fingerprints of the feature selectors used for fitting.
     std::vector<Poco::JSON::Object::Ptr> fs_fingerprints_;

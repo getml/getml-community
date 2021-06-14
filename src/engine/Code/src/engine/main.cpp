@@ -32,25 +32,6 @@ int main( int argc, char* argv[] )
         std::make_shared<const engine::communication::Logger>( monitor );
 
     // -------------------------------------------
-    // Instruct the user to log in and wait for the token.
-
-    /*std::cout << "getML - Automated Machine Learning and Automated Feature"
-              << " Learning for Relational Data and Time Series." << std::endl;
-
-    std::cout << "version: " << GETML_VERSION << std::endl << std::endl;
-
-    std::cout << "Please open a web browser (like Firefox, Chrome or Safari) "
-              << "and go to http://localhost:" << options.monitor().http_port()
-              << "/ to log in." << std::endl
-              << std::endl;
-
-    std::cout << "An HTTPS server that accepts remote connections has "
-                 "been launched "
-              << "on port " << options.monitor().https_port() << "."
-              << std::endl
-              << std::endl;*/
-
-    // std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
 
     const auto license_checker =
         std::make_shared<engine::licensing::LicenseChecker>(
@@ -88,6 +69,9 @@ int main( int argc, char* argv[] )
 
     const auto pred_tracker =
         std::make_shared<engine::dependency::PredTracker>();
+
+    const auto warning_tracker =
+        std::make_shared<engine::dependency::WarningTracker>();
 
     // -------------------------------------------
 
@@ -131,7 +115,8 @@ int main( int argc, char* argv[] )
             pipelines,
             pred_tracker,
             preprocessor_tracker,
-            read_write_lock );
+            read_write_lock,
+            warning_tracker );
 
     const auto project_manager =
         std::make_shared<engine::handlers::ProjectManager>(

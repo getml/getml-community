@@ -13,16 +13,14 @@ class DataModelChecker
 {
    public:
     /// Generates warnings, if there are obvious issues in the data model.
-    static void check(
+    static communication::Warner check(
         const std::shared_ptr<const helpers::Placeholder> _placeholder,
         const std::shared_ptr<const std::vector<std::string>> _peripheral_names,
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral,
         const std::vector<
             std::shared_ptr<featurelearners::AbstractFeatureLearner>>
-            _feature_learners,
-        const std::shared_ptr<const communication::Logger>& _logger,
-        Poco::Net::StreamSocket* _socket );
+            _feature_learners );
 
     /// Checks the plausibility of a categorical column.
     static void check_categorical_column(
@@ -312,7 +310,7 @@ class DataModelChecker
     /// Removes any macros from a colname.
     static std::string modify_colname( const std::string& _colname )
     {
-        const auto colnames = helpers::Macros::modify_colnames( {_colname} );
+        const auto colnames = helpers::Macros::modify_colnames( { _colname } );
         assert_true( colnames.size() == 1 );
         return colnames.at( 0 );
     }

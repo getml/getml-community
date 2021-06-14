@@ -6,15 +6,13 @@ namespace preprocessors
 {
 // ----------------------------------------------------------------------------
 
-void DataModelChecker::check(
+communication::Warner DataModelChecker::check(
     const std::shared_ptr<const helpers::Placeholder> _placeholder,
     const std::shared_ptr<const std::vector<std::string>> _peripheral_names,
     const containers::DataFrame& _population,
     const std::vector<containers::DataFrame>& _peripheral,
     const std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>
-        _feature_learners,
-    const std::shared_ptr<const communication::Logger>& _logger,
-    Poco::Net::StreamSocket* _socket )
+        _feature_learners )
 {
     // --------------------------------------------------------------------------
 
@@ -82,17 +80,7 @@ void DataModelChecker::check(
 
     // --------------------------------------------------------------------------
 
-    if ( _logger )
-        {
-            for ( const auto& warning : warner.warnings() )
-                {
-                    _logger->log( warning );
-                }
-        }
-
-    // --------------------------------------------------------------------------
-
-    warner.send( _socket );
+    return warner;
 
     // --------------------------------------------------------------------------
 }

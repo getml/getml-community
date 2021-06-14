@@ -5,7 +5,7 @@
 // Dependencies
 
 #if ( defined( _WIN32 ) || defined( _WIN64 ) )
-#define _WINSOCKAPI_    // stops windows.h including winsock.h
+#define _WINSOCKAPI_  // stops windows.h including winsock.h
 #endif
 
 #if ( defined( _WIN32 ) || defined( _WIN64 ) )
@@ -61,6 +61,9 @@
 #include "engine/communication/Sender.hpp"
 
 #include "engine/communication/SocketLogger.hpp"
+
+#include "engine/communication/Warnings.hpp"
+
 #include "engine/communication/Warner.hpp"
 
 // ----------------------------------------------------
