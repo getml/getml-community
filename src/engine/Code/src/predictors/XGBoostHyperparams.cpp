@@ -11,6 +11,8 @@ XGBoostHyperparams::XGBoostHyperparams( const Poco::JSON::Object &_json_obj )
           JSON::get_value<Float>( _json_obj, "colsample_bylevel_" ) ),
       colsample_bytree_(
           JSON::get_value<Float>( _json_obj, "colsample_bytree_" ) ),
+      early_stopping_rounds_(
+          JSON::get_value<size_t>( _json_obj, "early_stopping_rounds_" ) ),
       eta_( JSON::get_value<Float>( _json_obj, "learning_rate_" ) ),
       gamma_( JSON::get_value<Float>( _json_obj, "gamma_" ) ),
       lambda_( JSON::get_value<Float>( _json_obj, "reg_lambda_" ) ),

@@ -4,8 +4,26 @@ namespace predictors
 {
 // -----------------------------------------------------------------------------
 
-std::unique_ptr<BoosterHandle, XGBoostPredictor::BoosterDestructor>
-XGBoostPredictor::allocate_booster(
+void XGBoostPredictor::add_target(
+    const DMatrixPtr &_d_matrix, const CFloatColumn &_y ) const
+{
+    std::vector<float> y_float( _y->size() );
+
+    std::transform(
+        _y->begin(), _y->end(), y_float.begin(), []( const Float val ) {
+            return static_cast<float>( val );
+        } );
+
+    if ( XGDMatrixSetFloatInfo(
+             *_d_matrix, "label", y_float.data(), y_float.size() ) != 0 )
+        {
+            throw std::runtime_error( "Setting XGBoost labels failed!" );
+        }
+}
+
+// -----------------------------------------------------------------------------
+
+typename XGBoostPredictor::BoosterPtr XGBoostPredictor::allocate_booster(
     const DMatrixHandle _dmats[], bst_ulong _len ) const
 {
     BoosterHandle *booster = new BoosterHandle;
@@ -17,14 +35,12 @@ XGBoostPredictor::allocate_booster(
             throw std::runtime_error( "Could not create XGBoost handle!" );
         }
 
-    return std::unique_ptr<BoosterHandle, XGBoostPredictor::BoosterDestructor>(
-        booster, &XGBoostPredictor::delete_booster );
+    return BoosterPtr( booster, &XGBoostPredictor::delete_booster );
 }
 
 // -----------------------------------------------------------------------------
 
-std::unique_ptr<DMatrixHandle, XGBoostPredictor::DMatrixDestructor>
-XGBoostPredictor::convert_to_dmatrix(
+typename XGBoostPredictor::DMatrixPtr XGBoostPredictor::convert_to_dmatrix(
     const std::vector<CIntColumn> &_X_categorical,
     const std::vector<CFloatColumn> &_X_numerical ) const
 {
@@ -40,7 +56,7 @@ XGBoostPredictor::convert_to_dmatrix(
 
 // -----------------------------------------------------------------------------
 
-std::unique_ptr<DMatrixHandle, XGBoostPredictor::DMatrixDestructor>
+typename XGBoostPredictor::DMatrixPtr
 XGBoostPredictor::convert_to_dmatrix_dense(
     const std::vector<CFloatColumn> &_X_numerical ) const
 {
@@ -84,13 +100,12 @@ XGBoostPredictor::convert_to_dmatrix_dense(
                 "features contain NAN or infinite values?" );
         }
 
-    return std::unique_ptr<DMatrixHandle, XGBoostPredictor::DMatrixDestructor>(
-        d_matrix, &XGBoostPredictor::delete_dmatrix );
+    return DMatrixPtr( d_matrix, &XGBoostPredictor::delete_dmatrix );
 }
 
 // -----------------------------------------------------------------------------
 
-std::unique_ptr<DMatrixHandle, XGBoostPredictor::DMatrixDestructor>
+typename XGBoostPredictor::DMatrixPtr
 XGBoostPredictor::convert_to_dmatrix_sparse(
     const std::vector<CIntColumn> &_X_categorical,
     const std::vector<CFloatColumn> &_X_numerical ) const
@@ -124,8 +139,37 @@ XGBoostPredictor::convert_to_dmatrix_sparse(
                 "features contain NAN or infinite values?" );
         }
 
-    return std::unique_ptr<DMatrixHandle, XGBoostPredictor::DMatrixDestructor>(
-        d_matrix, &XGBoostPredictor::delete_dmatrix );
+    return DMatrixPtr( d_matrix, &XGBoostPredictor::delete_dmatrix );
+}
+
+// -----------------------------------------------------------------------------
+
+Float XGBoostPredictor::evaluate_iter(
+    const DMatrixPtr &_valid_set,
+    const BoosterPtr &_handle,
+    const int _n_iter ) const
+{
+    const char *eval_names[1] = { "getml_validation" };
+
+    const char *out_result = NULL;
+
+    if ( XGBoosterEvalOneIter(
+             *_handle, _n_iter, _valid_set.get(), eval_names, 1, &out_result ) )
+        {
+            std::runtime_error(
+                "XGBoost: Evaluating tree or linear model " +
+                std::to_string( _n_iter + 1 ) + " failed!" );
+        }
+
+    const auto out_result_str = std::string( out_result );
+
+    const auto pos = out_result_str.rfind( ":" );
+
+    assert_true( pos != std::string::npos );
+
+    const auto value_str = out_result_str.substr( pos + 1 );
+
+    return static_cast<Float>( std::stod( value_str ) );
 }
 
 // -----------------------------------------------------------------------------
@@ -214,41 +258,54 @@ std::string XGBoostPredictor::fit(
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     const std::vector<CIntColumn> &_X_categorical,
     const std::vector<CFloatColumn> &_X_numerical,
-    const CFloatColumn &_y )
+    const CFloatColumn &_y,
+    const std::optional<std::vector<CIntColumn>> &_X_categorical_valid,
+    const std::optional<std::vector<CFloatColumn>> &_X_numerical_valid,
+    const std::optional<CFloatColumn> &_y_valid )
 {
+    // --------------------------------------------------------------------
+
+    assert_true(
+        ( _X_categorical_valid && true ) == ( _X_numerical_valid && true ) );
+
+    assert_true( ( _X_categorical_valid && true ) == ( _y_valid && true ) );
+
     // --------------------------------------------------------------------
 
     impl().check_plausibility( _X_categorical, _X_numerical, _y );
 
     // --------------------------------------------------------------------
 
-    auto d_matrix = convert_to_dmatrix( _X_categorical, _X_numerical );
-
-    // convert_to_dmatrix(...) should make sure of this.
-    assert_true( _X_numerical.size() > 0 );
-
-    std::vector<float> y_float( _y->size() );
-
-    std::transform(
-        _y->begin(), _y->end(), y_float.begin(), []( const Float val ) {
-            return static_cast<float>( val );
-        } );
-
-    if ( XGDMatrixSetFloatInfo(
-             *d_matrix, "label", y_float.data(), y_float.size() ) != 0 )
-        {
-            throw std::runtime_error( "Setting XGBoost labels failed!" );
-        }
+    const auto make_d_matrix =
+        [this](
+            const std::vector<CIntColumn> &_X_categorical,
+            const std::vector<CFloatColumn> &_X_numerical,
+            const CFloatColumn &_y ) -> DMatrixPtr {
+        auto d_matrix = convert_to_dmatrix( _X_categorical, _X_numerical );
+        add_target( d_matrix, _y );
+        return d_matrix;
+    };
 
     // --------------------------------------------------------------------
 
-    auto handle = allocate_booster( d_matrix.get(), 1 );
+    const auto train_set = make_d_matrix( _X_categorical, _X_numerical, _y );
+
+    const auto valid_set = _y_valid
+                               ? std::make_optional<DMatrixPtr>( make_d_matrix(
+                                     _X_categorical_valid.value(),
+                                     _X_numerical_valid.value(),
+                                     _y_valid.value() ) )
+                               : std::optional<DMatrixPtr>();
+
+    // --------------------------------------------------------------------
+
+    auto handle = allocate_booster( train_set.get(), 1 );
 
     set_hyperparameters( handle );
 
     // --------------------------------------------------------------------
 
-    fit_handle( _logger, d_matrix, handle );
+    fit_handle( _logger, train_set, valid_set, handle );
 
     // ----------------------------------------------------------------
 
@@ -290,42 +347,90 @@ std::string XGBoostPredictor::fit(
 
 void XGBoostPredictor::fit_handle(
     const std::shared_ptr<const logging::AbstractLogger> _logger,
-    const std::unique_ptr<DMatrixHandle, XGBoostPredictor::DMatrixDestructor>
-        &_d_matrix,
-    const std::unique_ptr<BoosterHandle, XGBoostPredictor::BoosterDestructor>
-        &_handle ) const
+    const DMatrixPtr &_train_set,
+    const std::optional<DMatrixPtr> &_valid_set,
+    const BoosterPtr &_handle ) const
 {
+    // --------------------------------------------------------
+
+    const auto log = [this, _logger]( const int _i, const int _n_iter ) {
+        if ( !_logger )
+            {
+                return;
+            }
+
+        const auto progress = ( ( _i + 1 ) * 100 ) / _n_iter;
+
+        const auto progress_str =
+            "Progress: " + std::to_string( progress ) + "%.";
+
+        if ( hyperparams_.booster_ == "gblinear" )
+            {
+                _logger->log(
+                    "XGBoost: Trained linear model " +
+                    std::to_string( _i + 1 ) + ". " + progress_str );
+            }
+        else
+            {
+                _logger->log(
+                    "XGBoost: Trained tree " + std::to_string( _i + 1 ) + ". " +
+                    progress_str );
+            }
+    };
+
+    // --------------------------------------------------------
+
+    size_t n_no_improvement = 0;
+
+    Float best_value = std::numeric_limits<Float>::max();
+
+    const auto evaluate =
+        [this, &_valid_set, &n_no_improvement, &best_value, &_handle](
+            const int _i ) -> bool {
+        if ( !_valid_set )
+            {
+                return false;
+            }
+
+        const auto value = evaluate_iter( *_valid_set, _handle, _i );
+
+        if ( value < best_value )
+            {
+                n_no_improvement = 0;
+                best_value = value;
+                return false;
+            }
+
+        ++n_no_improvement;
+
+        if ( n_no_improvement < hyperparams_.early_stopping_rounds_ ) [[likely]]
+            {
+                return false;
+            }
+
+        return true;
+    };
+
+    // --------------------------------------------------------
+
     const auto n_iter = static_cast<int>( hyperparams_.n_iter_ );
 
     for ( int i = 0; i < n_iter; ++i )
         {
-            if ( XGBoosterUpdateOneIter( *_handle, i, *_d_matrix ) != 0 )
+            if ( XGBoosterUpdateOneIter( *_handle, i, *_train_set ) )
                 {
                     std::runtime_error(
                         "XGBoost: Fitting tree or linear model " +
                         std::to_string( i + 1 ) + " failed!" );
                 }
 
-            const auto progress = ( ( i + 1 ) * 100 ) / n_iter;
-
-            const auto progress_str =
-                "Progress: " + std::to_string( progress ) + "%.";
-
-            if ( _logger )
+            if ( evaluate( i ) ) [[unlikely]]
                 {
-                    if ( hyperparams_.booster_ == "gblinear" )
-                        {
-                            _logger->log(
-                                "XGBoost: Trained linear model " +
-                                std::to_string( i + 1 ) + ". " + progress_str );
-                        }
-                    else
-                        {
-                            _logger->log(
-                                "XGBoost: Trained tree " +
-                                std::to_string( i + 1 ) + ". " + progress_str );
-                        }
+                    log( i, i );
+                    break;
                 }
+
+            log( i, n_iter );
         }
 }
 
@@ -548,9 +653,7 @@ void XGBoostPredictor::save( const std::string &_fname ) const
 
 // -----------------------------------------------------------------------------
 
-void XGBoostPredictor::set_hyperparameters(
-    const std::unique_ptr<BoosterHandle, XGBoostPredictor::BoosterDestructor>
-        &_handle ) const
+void XGBoostPredictor::set_hyperparameters( const BoosterPtr &_handle ) const
 {
     XGBoosterSetParam(
         *_handle, "alpha", std::to_string( hyperparams_.alpha_ ).c_str() );

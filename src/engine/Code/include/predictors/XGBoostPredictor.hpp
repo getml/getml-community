@@ -9,14 +9,12 @@ namespace predictors
 class XGBoostPredictor : public Predictor
 {
     // -----------------------------------------
+   private:
+    typedef std::function<void( BoosterHandle* )> BoosterDestructor;
+    typedef std::function<void( DMatrixHandle* )> DMatrixDestructor;
 
-    /// Defines type BoosterDestructor as a function pointer
-    /// to a function of type void( BoosterHandle* ).
-    typedef void ( *BoosterDestructor )( BoosterHandle* );
-
-    /// Defines type DMatrixDestructor as a function pointer
-    /// to a function of type void( DMatrixHandle* ).
-    typedef void ( *DMatrixDestructor )( DMatrixHandle* );
+    typedef std::unique_ptr<BoosterHandle, BoosterDestructor> BoosterPtr;
+    typedef std::unique_ptr<DMatrixHandle, DMatrixDestructor> DMatrixPtr;
 
     // -----------------------------------------
 
@@ -41,19 +39,23 @@ class XGBoostPredictor : public Predictor
     std::vector<Float> feature_importances(
         const size_t _num_features ) const final;
 
+    /// Implements the fit(...) method in scikit-learn style,
+    /// but allows us to add an optional validation set.
+    std::string fit(
+        const std::shared_ptr<const logging::AbstractLogger> _logger,
+        const std::vector<CIntColumn>& _X_categorical,
+        const std::vector<CFloatColumn>& _X_numerical,
+        const CFloatColumn& _y,
+        const std::optional<std::vector<CIntColumn>>& _X_categorical_valid,
+        const std::optional<std::vector<CFloatColumn>>& _X_numerical_valid,
+        const std::optional<CFloatColumn>& _y_valid );
+
     /// Loads the predictor
     void load( const std::string& _fname ) final;
 
     /// Returns the fingerprint of the predictor (necessary to build
     /// the dependency graphs).
     Poco::JSON::Object::Ptr fingerprint() const final;
-
-    /// Implements the fit(...) method in scikit-learn style
-    std::string fit(
-        const std::shared_ptr<const logging::AbstractLogger> _logger,
-        const std::vector<CIntColumn>& _X_categorical,
-        const std::vector<CFloatColumn>& _X_numerical,
-        const CFloatColumn& _y ) final;
 
     /// Implements the predict(...) method in scikit-learn style
     CFloatColumn predict(
@@ -73,6 +75,23 @@ class XGBoostPredictor : public Predictor
     std::shared_ptr<Predictor> clone() const final
     {
         return std::make_shared<XGBoostPredictor>( *this );
+    }
+
+    /// Implements the fit(...) method in scikit-learn style
+    std::string fit(
+        const std::shared_ptr<const logging::AbstractLogger> _logger,
+        const std::vector<CIntColumn>& _X_categorical,
+        const std::vector<CFloatColumn>& _X_numerical,
+        const CFloatColumn& _y ) final
+    {
+        return fit(
+            _logger,
+            _X_categorical,
+            _X_numerical,
+            _y,
+            std::nullopt,
+            std::nullopt,
+            std::nullopt );
     }
 
     /// Whether the predictor is used for classification;
@@ -132,33 +151,40 @@ class XGBoostPredictor : public Predictor
     // -----------------------------------------
 
    private:
+    /// Adds a target to _d_matrix.
+    void add_target(
+        const DMatrixPtr& _d_matrix, const CFloatColumn& _y ) const;
+
     /// Allocates the booster
-    std::unique_ptr<BoosterHandle, XGBoostPredictor::BoosterDestructor>
-    allocate_booster( const DMatrixHandle _dmats[], bst_ulong _len ) const;
+    BoosterPtr allocate_booster(
+        const DMatrixHandle _dmats[], bst_ulong _len ) const;
 
     /// Convert matrix _mat to a DMatrixHandle
-    std::unique_ptr<DMatrixHandle, DMatrixDestructor> convert_to_dmatrix(
+    DMatrixPtr convert_to_dmatrix(
         const std::vector<CIntColumn>& _X_categorical,
         const std::vector<CFloatColumn>& _X_numerical ) const;
 
     /// Convert matrix _mat to a dense DMatrixHandle
-    std::unique_ptr<DMatrixHandle, DMatrixDestructor> convert_to_dmatrix_dense(
+    DMatrixPtr convert_to_dmatrix_dense(
         const std::vector<CFloatColumn>& _X_numerical ) const;
 
     /// Convert matrix _mat to a sparse DMatrixHandle
-    std::unique_ptr<DMatrixHandle, DMatrixDestructor> convert_to_dmatrix_sparse(
+    DMatrixPtr convert_to_dmatrix_sparse(
         const std::vector<CIntColumn>& _X_categorical,
         const std::vector<CFloatColumn>& _X_numerical ) const;
+
+    /// Evaluates the current iteration.
+    Float evaluate_iter(
+        const DMatrixPtr& _valid_set,
+        const BoosterPtr& _handle,
+        const int _n_iter ) const;
 
     /// Does the actual fitting.
     void fit_handle(
         const std::shared_ptr<const logging::AbstractLogger> _logger,
-        const std::unique_ptr<
-            DMatrixHandle,
-            XGBoostPredictor::DMatrixDestructor>& _d_matrix,
-        const std::unique_ptr<
-            BoosterHandle,
-            XGBoostPredictor::BoosterDestructor>& _handle ) const;
+        const DMatrixPtr& _d_matrix,
+        const std::optional<DMatrixPtr>& _valid_set,
+        const BoosterPtr& _handle ) const;
 
     /// Extracts feature importances from XGBoost dump
     void parse_dump(
@@ -166,10 +192,7 @@ class XGBoostPredictor : public Predictor
         std::vector<Float>* _feature_importances ) const;
 
     /// Sets the hyperparameter for the handle.
-    void set_hyperparameters(
-        const std::unique_ptr<
-            BoosterHandle,
-            XGBoostPredictor::BoosterDestructor>& _handle ) const;
+    void set_hyperparameters( const BoosterPtr& _handle ) const;
 
     // -----------------------------------------
 

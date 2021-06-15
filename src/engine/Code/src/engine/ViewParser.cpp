@@ -372,7 +372,10 @@ containers::DataFrame ViewParser::parse( const Poco::JSON::Object& _obj )
 
 // ----------------------------------------------------------------------------
 
-std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
+std::tuple<
+    containers::DataFrame,
+    std::vector<containers::DataFrame>,
+    std::optional<containers::DataFrame>>
 ViewParser::parse_all( const Poco::JSON::Object& _cmd )
 {
     const auto to_df =
@@ -386,12 +389,21 @@ ViewParser::parse_all( const Poco::JSON::Object& _cmd )
     const auto peripheral_objs =
         JSON::array_to_obj_vector( JSON::get_array( _cmd, "peripheral_dfs_" ) );
 
+    const auto validation_obj = _cmd.has( "validation_df_" )
+                                    ? JSON::get_object( _cmd, "validation_df_" )
+                                    : Poco::JSON::Object::Ptr();
+
     const auto population = to_df( population_obj );
 
     const auto peripheral = stl::collect::vector<containers::DataFrame>(
         peripheral_objs | std::views::transform( to_df ) );
 
-    return std::make_pair( population, peripheral );
+    const auto validation = validation_obj
+                                ? std::make_optional<containers::DataFrame>(
+                                      to_df( validation_obj ) )
+                                : std::optional<containers::DataFrame>();
+
+    return std::make_tuple( population, peripheral, validation );
 }
 
 // ----------------------------------------------------------------------------

@@ -28,6 +28,9 @@ struct XGBoostHyperparams
     /// Subsample ratio of columns when constructing each tree.
     const Float colsample_bytree_;
 
+    /// Maximum number of no improvements to trigger early stopping.
+    const size_t early_stopping_rounds_;
+
     /// Boosting learning rate
     const Float eta_;
 

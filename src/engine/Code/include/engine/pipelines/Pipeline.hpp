@@ -58,6 +58,7 @@ class Pipeline
         const std::map<std::string, containers::DataFrame>& _data_frames,
         const containers::DataFrame& _population_df,
         const std::vector<containers::DataFrame>& _peripheral_dfs,
+        const std::optional<containers::DataFrame>& _validation_df,
         const std::shared_ptr<containers::Encoding>& _categories,
         const dependency::DataFrameTracker& _data_frame_tracker,
         const std::shared_ptr<dependency::FETracker> _fe_tracker,
@@ -270,21 +271,7 @@ class Pipeline
         Poco::Net::StreamSocket* _socket );
 
     /// Fits the predictors.
-    void fit_predictors(
-        const Poco::JSON::Object& _cmd,
-        const std::map<std::string, containers::DataFrame>& _data_frames,
-        const std::shared_ptr<const communication::Logger>& _logger,
-        const containers::DataFrame& _population_df,
-        const std::vector<containers::DataFrame>& _peripheral_dfs,
-        const dependency::DataFrameTracker& _data_frame_tracker,
-        const std::shared_ptr<dependency::PredTracker> _pred_tracker,
-        const std::vector<Poco::JSON::Object::Ptr>& _dependencies,
-        const predictors::PredictorImpl& _predictor_impl,
-        const std::string& _purpose,
-        containers::Features* _autofeatures,
-        std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>*
-            _predictors,
-        Poco::Net::StreamSocket* _socket ) const;
+    void fit_predictors( const TransformParams& _params );
 
     /// Fits the preprocessors. Returns a map of transformed data frames.
     std::vector<std::shared_ptr<preprocessors::Preprocessor>>
@@ -434,17 +421,13 @@ class Pipeline
         containers::Features,
         containers::CategoricalFeatures,
         containers::Features>
-    make_features(
-        const Poco::JSON::Object& _cmd,
-        const std::map<std::string, containers::DataFrame>& _data_frames,
-        const dependency::DataFrameTracker& _data_frame_tracker,
-        const std::shared_ptr<const communication::Logger>& _logger,
-        const containers::DataFrame& _population_df,
-        const std::vector<containers::DataFrame>& _peripheral_dfs,
-        const std::vector<Poco::JSON::Object::Ptr>& _dependencies,
-        const predictors::PredictorImpl& _predictor_impl,
-        const std::optional<containers::Features> _autofeatures,
-        Poco::Net::StreamSocket* _socket ) const;
+    make_features( const TransformParams& _params ) const;
+
+    /// Generates the features for the validation set.
+    std::pair<
+        std::optional<containers::Features>,
+        std::optional<containers::CategoricalFeatures>>
+    make_features_validation( const TransformParams& _params );
 
     /// Generates the names of the features.
     std::vector<std::string> make_feature_names() const;
@@ -534,17 +517,7 @@ class Pipeline
     void save_preprocessors( const Poco::TemporaryFile& _tfile ) const;
 
     /// Conducts in-sample scoring after the pipeline has been fitted.
-    void score_after_fitting(
-        const Poco::JSON::Object& _cmd,
-        const std::map<std::string, containers::DataFrame>& _data_frames,
-        const dependency::DataFrameTracker& _data_frame_tracker,
-        const std::shared_ptr<const communication::Logger>& _logger,
-        const containers::DataFrame& _population_df,
-        const std::vector<containers::DataFrame>& _peripheral_dfs,
-        const std::vector<Poco::JSON::Object::Ptr>& _dependencies,
-        const predictors::PredictorImpl& _predictor_impl,
-        const containers::Features& _autofeatures,
-        Poco::Net::StreamSocket* _socket );
+    void score_after_fitting( const TransformParams& _params );
 
     /// Selects the autofeatures that are needed for the prediction.
     containers::Features select_autofeatures(

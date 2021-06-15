@@ -206,7 +206,7 @@ void PipelineManager::check(
 
     // -------------------------------------------------------
 
-    const auto [population_df, peripheral_dfs] =
+    const auto [population_df, peripheral_dfs, _] =
         ViewParser( local_categories, local_join_keys_encoding, data_frames_ )
             .parse_all( _cmd );
 
@@ -479,7 +479,7 @@ void PipelineManager::fit(
 
     // -------------------------------------------------------
 
-    const auto [population_df, peripheral_dfs] =
+    const auto [population_df, peripheral_dfs, validation_df] =
         ViewParser( local_categories, local_join_keys_encoding, data_frames_ )
             .parse_all( _cmd );
 
@@ -491,6 +491,7 @@ void PipelineManager::fit(
         data_frames(),
         population_df,
         peripheral_dfs,
+        validation_df,
         local_categories,
         data_frame_tracker(),
         fe_tracker_,
@@ -1067,7 +1068,7 @@ void PipelineManager::transform(
 
     // -------------------------------------------------------
 
-    const auto [population_df, peripheral_dfs] =
+    const auto [population_df, peripheral_dfs, _] =
         ViewParser(
             local_categories, local_join_keys_encoding, local_data_frames )
             .parse_all( cmd );

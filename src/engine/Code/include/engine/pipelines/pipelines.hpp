@@ -43,6 +43,8 @@
 
 #include "engine/pipelines/PipelineImpl.hpp"
 
+#include "engine/pipelines/TransformParams.hpp"
+
 #include "engine/pipelines/Pipeline.hpp"
 
 // ----------------------------------------------------

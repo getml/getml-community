@@ -67,8 +67,6 @@ void DataFrameModifier::add_join_keys(
                     helpers::Macros::multiple_join_key_sep() ) !=
                 std::string::npos )
                 {
-                    std::cout << 1 << std::endl;
-
                     auto peripheral_df = find_data_frame(
                         *ptr, _peripheral_names, _peripheral_dfs );
 
@@ -77,8 +75,6 @@ void DataFrameModifier::add_join_keys(
 
                     concat_join_keys(
                         join_keys_used.at( i ), encoding, _population_df );
-
-                    std::cout << 2 << std::endl;
                 }
 
             auto new_population =
