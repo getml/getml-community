@@ -1158,11 +1158,16 @@ void Pipeline::fit(
 
     // -------------------------------------------------------------------------
 
+    const auto validation_fingerprint =
+        _validation_df ? std::vector<Poco::JSON::Object::Ptr>(
+                             { _validation_df->fingerprint() } )
+                       : std::vector<Poco::JSON::Object::Ptr>();
+
+    const auto dependencies = stl::join::vector<Poco::JSON::Object::Ptr>(
+        { fs_fingerprints(), validation_fingerprint } );
+
     auto predictors = init_predictors(
-        "predictors_",
-        num_targets(),
-        impl_.predictor_impl_,
-        fs_fingerprints() );
+        "predictors_", num_targets(), impl_.predictor_impl_, dependencies );
 
     const auto prediction_params = TransformParams{
         .categories_ = _categories,
@@ -1357,29 +1362,14 @@ void Pipeline::fit_predictors( const TransformParams& _params )
                         p->type() + ": Training as " + _params.purpose_ +
                         "..." );
 
-                    if ( p->type() == "XGBoost" )
-                        {
-                            auto ptr =
-                                dynamic_cast<predictors::XGBoostPredictor*>(
-                                    p.get() );
-
-                            ptr->fit(
-                                socket_logger,
-                                categorical_features,
-                                numerical_features,
-                                target_col,
-                                categorical_features_valid,
-                                numerical_features_valid,
-                                target_col_valid );
-                        }
-                    else
-                        {
-                            p->fit(
-                                socket_logger,
-                                categorical_features,
-                                numerical_features,
-                                target_col );
-                        }
+                    p->fit(
+                        socket_logger,
+                        categorical_features,
+                        numerical_features,
+                        target_col,
+                        categorical_features_valid,
+                        numerical_features_valid,
+                        target_col_valid );
 
                     _params.pred_tracker_->add( p );
                 }

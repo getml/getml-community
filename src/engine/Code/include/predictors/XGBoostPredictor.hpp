@@ -48,7 +48,7 @@ class XGBoostPredictor : public Predictor
         const CFloatColumn& _y,
         const std::optional<std::vector<CIntColumn>>& _X_categorical_valid,
         const std::optional<std::vector<CFloatColumn>>& _X_numerical_valid,
-        const std::optional<CFloatColumn>& _y_valid );
+        const std::optional<CFloatColumn>& _y_valid ) final;
 
     /// Loads the predictor
     void load( const std::string& _fname ) final;
@@ -75,23 +75,6 @@ class XGBoostPredictor : public Predictor
     std::shared_ptr<Predictor> clone() const final
     {
         return std::make_shared<XGBoostPredictor>( *this );
-    }
-
-    /// Implements the fit(...) method in scikit-learn style
-    std::string fit(
-        const std::shared_ptr<const logging::AbstractLogger> _logger,
-        const std::vector<CIntColumn>& _X_categorical,
-        const std::vector<CFloatColumn>& _X_numerical,
-        const CFloatColumn& _y ) final
-    {
-        return fit(
-            _logger,
-            _X_categorical,
-            _X_numerical,
-            _y,
-            std::nullopt,
-            std::nullopt,
-            std::nullopt );
     }
 
     /// Whether the predictor is used for classification;

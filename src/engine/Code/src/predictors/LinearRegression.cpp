@@ -67,7 +67,10 @@ std::string LinearRegression::fit(
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     const std::vector<CIntColumn>& _X_categorical,
     const std::vector<CFloatColumn>& _X_numerical,
-    const CFloatColumn& _y )
+    const CFloatColumn& _y,
+    const std::optional<std::vector<CIntColumn>>& _X_categorical_valid,
+    const std::optional<std::vector<CFloatColumn>>& _X_numerical_valid,
+    const std::optional<CFloatColumn>& _y_valid )
 {
     // -------------------------------------------------------------------------
 
