@@ -1124,6 +1124,7 @@ void Pipeline::fit( const FitParams& _params )
         fl_fingerprints() );
 
     const auto feature_selection_params = TransformParams{
+        .categories_ = _params.categories_,
         .cmd_ = _params.cmd_,
         .data_frames_ = _params.data_frames_,
         .data_frame_tracker_ = _params.data_frame_tracker_,
@@ -1135,7 +1136,7 @@ void Pipeline::fit( const FitParams& _params )
         .pred_tracker_ = _params.pred_tracker_,
         .purpose_ = TransformParams::FEATURE_SELECTOR,
         .autofeatures_ = &autofeatures,
-        .predictors_ = &feature_selectors_,
+        .predictors_ = &feature_selectors,
         .socket_ = _params.socket_ };
 
     fit_predictors( feature_selection_params );
@@ -1198,6 +1199,7 @@ void Pipeline::fit( const FitParams& _params )
     if ( score )
         {
             const auto score_params = TransformParams{
+                .categories_ = _params.categories_,
                 .cmd_ = _params.cmd_,
                 .data_frames_ = _params.data_frames_,
                 .data_frame_tracker_ = _params.data_frame_tracker_,
