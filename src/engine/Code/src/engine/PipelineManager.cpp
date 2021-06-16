@@ -485,19 +485,21 @@ void PipelineManager::fit(
 
     // -------------------------------------------------------
 
-    pipeline.fit(
-        _cmd,
-        logger_,
-        data_frames(),
-        population_df,
-        peripheral_dfs,
-        validation_df,
-        local_categories,
-        data_frame_tracker(),
-        fe_tracker_,
-        pred_tracker_,
-        preprocessor_tracker_,
-        _socket );
+    const auto params = pipelines::FitParams{
+        .categories_ = local_categories,
+        .cmd_ = _cmd,
+        .data_frames_ = data_frames(),
+        .data_frame_tracker_ = data_frame_tracker(),
+        .fe_tracker_ = fe_tracker_,
+        .logger_ = logger_,
+        .peripheral_dfs_ = peripheral_dfs,
+        .population_df_ = population_df,
+        .pred_tracker_ = pred_tracker_,
+        .preprocessor_tracker_ = preprocessor_tracker_,
+        .validation_df_ = validation_df,
+        .socket_ = _socket };
+
+    pipeline.fit( params );
 
     // -------------------------------------------------------
 

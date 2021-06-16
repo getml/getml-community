@@ -41,9 +41,10 @@
 #include "engine/pipelines/DataFrameModifier.hpp"
 #include "engine/pipelines/Staging.hpp"
 
-#include "engine/pipelines/PipelineImpl.hpp"
-
+#include "engine/pipelines/FitParams.hpp"
 #include "engine/pipelines/TransformParams.hpp"
+
+#include "engine/pipelines/PipelineImpl.hpp"
 
 #include "engine/pipelines/Pipeline.hpp"
 

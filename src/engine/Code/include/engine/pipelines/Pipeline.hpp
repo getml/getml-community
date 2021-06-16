@@ -52,20 +52,7 @@ class Pipeline
         Poco::Net::StreamSocket* _socket ) const;
 
     /// Fit the pipeline.
-    void fit(
-        const Poco::JSON::Object& _cmd,
-        const std::shared_ptr<const communication::Logger>& _logger,
-        const std::map<std::string, containers::DataFrame>& _data_frames,
-        const containers::DataFrame& _population_df,
-        const std::vector<containers::DataFrame>& _peripheral_dfs,
-        const std::optional<containers::DataFrame>& _validation_df,
-        const std::shared_ptr<containers::Encoding>& _categories,
-        const dependency::DataFrameTracker& _data_frame_tracker,
-        const std::shared_ptr<dependency::FETracker> _fe_tracker,
-        const std::shared_ptr<dependency::PredTracker> _pred_tracker,
-        const std::shared_ptr<dependency::PreprocessorTracker>
-            _preprocessor_tracker,
-        Poco::Net::StreamSocket* _socket );
+    void fit( const FitParams& _params );
 
     /// Copy assignment operator.
     Pipeline& operator=( const Pipeline& _other );

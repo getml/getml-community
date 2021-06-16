@@ -1060,52 +1060,39 @@ containers::Features Pipeline::generate_predictions(
 
 // ----------------------------------------------------------------------------
 
-void Pipeline::fit(
-    const Poco::JSON::Object& _cmd,
-    const std::shared_ptr<const communication::Logger>& _logger,
-    const std::map<std::string, containers::DataFrame>& _data_frames,
-    const containers::DataFrame& _population_df,
-    const std::vector<containers::DataFrame>& _peripheral_dfs,
-    const std::optional<containers::DataFrame>& _validation_df,
-    const std::shared_ptr<containers::Encoding>& _categories,
-    const dependency::DataFrameTracker& _data_frame_tracker,
-    const std::shared_ptr<dependency::FETracker> _fe_tracker,
-    const std::shared_ptr<dependency::PredTracker> _pred_tracker,
-    const std::shared_ptr<dependency::PreprocessorTracker>
-        _preprocessor_tracker,
-    Poco::Net::StreamSocket* _socket )
+void Pipeline::fit( const FitParams& _params )
 {
     // -------------------------------------------------------------------------
 
-    assert_true( _fe_tracker );
-    assert_true( _pred_tracker );
+    assert_true( _params.fe_tracker_ );
+    assert_true( _params.pred_tracker_ );
 
     // -------------------------------------------------------------------------
 
-    targets() = get_targets( _population_df );
+    targets() = get_targets( _params.population_df_ );
 
     std::tie( population_schema(), peripheral_schema() ) =
-        extract_schemata( _population_df, _peripheral_dfs );
+        extract_schemata( _params.population_df_, _params.peripheral_dfs_ );
 
-    df_fingerprints() =
-        extract_df_fingerprints( _population_df, _peripheral_dfs );
+    df_fingerprints() = extract_df_fingerprints(
+        _params.population_df_, _params.peripheral_dfs_ );
 
     // -------------------------------------------------------------------------
 
     auto [population_df, peripheral_dfs] =
-        modify_data_frames( _population_df, _peripheral_dfs );
+        modify_data_frames( _params.population_df_, _params.peripheral_dfs_ );
 
     // -------------------------------------------------------------------------
 
     preprocessors_ = fit_transform_preprocessors(
-        _cmd,
-        _logger,
-        _categories,
-        _preprocessor_tracker,
+        _params.cmd_,
+        _params.logger_,
+        _params.categories_,
+        _params.preprocessor_tracker_,
         df_fingerprints(),
         &population_df,
         &peripheral_dfs,
-        _socket );
+        _params.socket_ );
 
     preprocessor_fingerprints() =
         extract_preprocessor_fingerprints( preprocessors_ );
@@ -1113,11 +1100,16 @@ void Pipeline::fit(
     // -------------------------------------------------------------------------
 
     fit_feature_learners(
-        _cmd, _logger, population_df, peripheral_dfs, _fe_tracker, _socket );
+        _params.cmd_,
+        _params.logger_,
+        population_df,
+        peripheral_dfs,
+        _params.fe_tracker_,
+        _params.socket_ );
 
     // -------------------------------------------------------------------------
 
-    make_feature_selector_impl( _cmd, population_df );
+    make_feature_selector_impl( _params.cmd_, population_df );
 
     // -------------------------------------------------------------------------
 
@@ -1132,19 +1124,19 @@ void Pipeline::fit(
         fl_fingerprints() );
 
     const auto feature_selection_params = TransformParams{
-        .cmd_ = _cmd,
-        .data_frames_ = _data_frames,
-        .data_frame_tracker_ = _data_frame_tracker,
+        .cmd_ = _params.cmd_,
+        .data_frames_ = _params.data_frames_,
+        .data_frame_tracker_ = _params.data_frame_tracker_,
         .dependencies_ = fl_fingerprints(),
-        .logger_ = _logger,
+        .logger_ = _params.logger_,
         .peripheral_dfs_ = peripheral_dfs,
         .population_df_ = population_df,
         .predictor_impl_ = feature_selector_impl(),
-        .pred_tracker_ = _pred_tracker,
+        .pred_tracker_ = _params.pred_tracker_,
         .purpose_ = TransformParams::FEATURE_SELECTOR,
         .autofeatures_ = &autofeatures,
         .predictors_ = &feature_selectors_,
-        .socket_ = _socket };
+        .socket_ = _params.socket_ };
 
     fit_predictors( feature_selection_params );
 
@@ -1154,14 +1146,14 @@ void Pipeline::fit(
 
     // -------------------------------------------------------------------------
 
-    make_predictor_impl( _cmd, population_df );
+    make_predictor_impl( _params.cmd_, population_df );
 
     // -------------------------------------------------------------------------
 
     const auto validation_fingerprint =
-        _validation_df ? std::vector<Poco::JSON::Object::Ptr>(
-                             { _validation_df->fingerprint() } )
-                       : std::vector<Poco::JSON::Object::Ptr>();
+        _params.validation_df_ ? std::vector<Poco::JSON::Object::Ptr>(
+                                     { _params.validation_df_->fingerprint() } )
+                               : std::vector<Poco::JSON::Object::Ptr>();
 
     const auto dependencies = stl::join::vector<Poco::JSON::Object::Ptr>(
         { fs_fingerprints(), validation_fingerprint } );
@@ -1170,22 +1162,22 @@ void Pipeline::fit(
         "predictors_", num_targets(), impl_.predictor_impl_, dependencies );
 
     const auto prediction_params = TransformParams{
-        .categories_ = _categories,
-        .cmd_ = _cmd,
-        .data_frames_ = _data_frames,
-        .data_frame_tracker_ = _data_frame_tracker,
+        .categories_ = _params.categories_,
+        .cmd_ = _params.cmd_,
+        .data_frames_ = _params.data_frames_,
+        .data_frame_tracker_ = _params.data_frame_tracker_,
         .dependencies_ = fs_fingerprints(),
-        .logger_ = _logger,
-        .original_peripheral_dfs_ = _peripheral_dfs,
+        .logger_ = _params.logger_,
+        .original_peripheral_dfs_ = _params.peripheral_dfs_,
         .peripheral_dfs_ = peripheral_dfs,
         .population_df_ = population_df,
         .predictor_impl_ = predictor_impl(),
-        .pred_tracker_ = _pred_tracker,
+        .pred_tracker_ = _params.pred_tracker_,
         .purpose_ = TransformParams::PREDICTOR,
-        .validation_df_ = _validation_df,
+        .validation_df_ = _params.validation_df_,
         .autofeatures_ = &autofeatures,
         .predictors_ = &predictors,
-        .socket_ = _socket };
+        .socket_ = _params.socket_ };
 
     fit_predictors( prediction_params );
 
@@ -1206,18 +1198,18 @@ void Pipeline::fit(
     if ( score )
         {
             const auto score_params = TransformParams{
-                .cmd_ = _cmd,
-                .data_frames_ = _data_frames,
-                .data_frame_tracker_ = _data_frame_tracker,
+                .cmd_ = _params.cmd_,
+                .data_frames_ = _params.data_frames_,
+                .data_frame_tracker_ = _params.data_frame_tracker_,
                 .dependencies_ = fs_fingerprints(),
-                .logger_ = _logger,
+                .logger_ = _params.logger_,
                 .peripheral_dfs_ = peripheral_dfs,
                 .population_df_ = population_df,
                 .predictor_impl_ = predictor_impl(),
-                .pred_tracker_ = _pred_tracker,
+                .pred_tracker_ = _params.pred_tracker_,
                 .autofeatures_ = &autofeatures,
                 .predictors_ = nullptr,
-                .socket_ = _socket };
+                .socket_ = _params.socket_ };
 
             score_after_fitting( score_params );
         }
