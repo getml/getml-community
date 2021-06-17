@@ -178,6 +178,12 @@ class DataFrameManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
+    /// Returns the unique values from a categorical column.
+    void get_categorical_column_unique(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Sends a column to the client
     void get_column(
         const std::string& _name,
@@ -186,6 +192,12 @@ class DataFrameManager
 
     /// Gets the number of rows in a float column.
     void get_column_nrows(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Returns the unique values from a float column.
+    void get_column_unique(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );

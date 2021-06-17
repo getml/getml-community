@@ -281,6 +281,11 @@ void RequestHandler::run()
                 {
                     data_frame_manager().set_unit( name, cmd, &socket() );
                 }
+            else if ( type == "FloatColumn.unique" )
+                {
+                    data_frame_manager().get_column_unique(
+                        name, cmd, &socket() );
+                }
             else if (
                 type == "GaussianHyperparameterSearch" ||
                 type == "LatinHypercubeSearch" || type == "RandomSearch" )
@@ -461,6 +466,11 @@ void RequestHandler::run()
             else if ( type == "StringColumn.set_unit" )
                 {
                     data_frame_manager().set_unit_categorical(
+                        name, cmd, &socket() );
+                }
+            else if ( type == "StringColumn.unique" )
+                {
+                    data_frame_manager().get_categorical_column_unique(
                         name, cmd, &socket() );
                 }
             else if ( type == "View.get_content" )

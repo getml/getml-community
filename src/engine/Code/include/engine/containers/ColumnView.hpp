@@ -88,6 +88,9 @@ class ColumnView
         const std::optional<size_t> _expected_length,
         const bool _nrows_must_match ) const;
 
+    /// Returns all unique values in the column view.
+    Column<T> unique() const;
+
     /// Returns a new column view with new subroles.
     ColumnView<T> with_subroles(
         const std::vector<std::string>& _subroles ) const;
@@ -772,6 +775,46 @@ std::shared_ptr<std::vector<T>> ColumnView<T>::to_vector(
         }
 
     return data_ptr;
+}
+
+// -------------------------------------------------------------------------
+
+template <class T>
+Column<T> ColumnView<T>::unique() const
+{
+    if ( is_infinite() )
+        {
+            throw std::invalid_argument(
+                "You cannot retrieve unique values from an infinite column!" );
+        }
+
+    auto unique_values = std::set<T>();
+
+    for ( size_t i = 0; true; ++i )
+        {
+            const auto val = value_func_( i );
+
+            if ( !val )
+                {
+                    break;
+                }
+
+            if ( helpers::NullChecker::is_null( *val ) )
+                {
+                    continue;
+                }
+
+            unique_values.insert( *val );
+        }
+
+    const auto data_ptr = std::make_shared<std::vector<T>>(
+        unique_values.begin(), unique_values.end() );
+
+    auto col = Column<T>( data_ptr );
+
+    col.set_unit( unit() );
+
+    return col;
 }
 
 // -------------------------------------------------------------------------

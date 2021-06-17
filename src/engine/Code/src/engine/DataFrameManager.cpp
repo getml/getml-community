@@ -1653,6 +1653,35 @@ void DataFrameManager::get_categorical_column_nrows(
 
     communication::Sender::send_string( column_view.nrows_to_str(), _socket );
 }
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::get_categorical_column_unique(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    const auto json_col = *JSON::get_object( _cmd, "col_" );
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    const auto column_view =
+        CatOpParser( categories_, join_keys_encoding_, data_frames_ )
+            .parse( json_col );
+
+    const auto col = column_view.unique();
+
+    read_lock.unlock();
+
+    const auto& vec = col.data_ptr();
+
+    assert_true( vec );
+
+    communication::Sender::send_string( "Found!", _socket );
+
+    communication::Sender::send_categorical_column( *vec, _socket );
+}
+
 // ------------------------------------------------------------------------
 
 void DataFrameManager::get_column(
@@ -1677,6 +1706,30 @@ void DataFrameManager::get_column(
         }
 
     const auto col = column_view.to_column( 0, std::nullopt, false );
+
+    read_lock.unlock();
+
+    communication::Sender::send_string( "Found!", _socket );
+
+    communication::Sender::send_column( col, _socket );
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::get_column_unique(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    const auto json_col = *JSON::get_object( _cmd, "col_" );
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    const auto column_view =
+        NumOpParser( categories_, join_keys_encoding_, data_frames_ )
+            .parse( json_col );
+
+    const auto col = column_view.unique();
 
     read_lock.unlock();
 
