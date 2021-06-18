@@ -402,6 +402,41 @@ void ProjectManager::list_projects( Poco::Net::StreamSocket* _socket ) const
 
 // ------------------------------------------------------------------------
 
+void ProjectManager::load_data_container(
+    const std::string& _name, Poco::Net::StreamSocket* _socket )
+{
+    const auto path =
+        project_directory() + "data_containers/" + _name + ".json";
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    std::ifstream input( path );
+
+    if ( !input.is_open() )
+        {
+            throw std::invalid_argument( "File '" + path + "' not found!" );
+        }
+
+    std::stringstream json;
+
+    std::string line;
+
+    while ( std::getline( input, line ) )
+        {
+            json << line;
+        }
+
+    input.close();
+
+    read_lock.unlock();
+
+    communication::Sender::send_string( "Success!", _socket );
+
+    communication::Sender::send_string( json.str(), _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void ProjectManager::load_data_frame(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
@@ -530,6 +565,29 @@ void ProjectManager::remove(
         {
             throw std::runtime_error( response );
         }
+}
+
+// ------------------------------------------------------------------------
+
+void ProjectManager::save_data_container(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
+
+    const auto path =
+        project_directory() + "data_containers/" + _name + ".json";
+
+    const auto obj = jsonutils::JSON::get_object( _cmd, "container_" );
+
+    assert_true( obj );
+
+    std::ofstream fs( path, std::ofstream::out );
+    Poco::JSON::Stringifier::stringify( *obj, fs );
+    fs.close();
+
+    communication::Sender::send_string( "Success!", _socket );
 }
 
 // ------------------------------------------------------------------------

@@ -109,6 +109,15 @@ void RequestHandler::run()
                 {
                     database_manager().sniff_table( name, cmd, &socket() );
                 }
+            else if ( type == "DataContainer.load" )
+                {
+                    project_manager().load_data_container( name, &socket() );
+                }
+            else if ( type == "DataContainer.save" )
+                {
+                    project_manager().save_data_container(
+                        name, cmd, &socket() );
+                }
             else if ( type == "DataFrame" )
                 {
                     project_manager().add_data_frame( name, &socket() );

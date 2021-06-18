@@ -153,6 +153,10 @@ class ProjectManager
     /// Returns a list of all projects.
     void list_projects( Poco::Net::StreamSocket* _socket ) const;
 
+    /// Loads a data container.
+    void load_data_container(
+        const std::string& _name, Poco::Net::StreamSocket* _socket );
+
     /// Loads a data frame
     void load_data_frame(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
@@ -170,6 +174,12 @@ class ProjectManager
 
     /// Updates the encodings in the client
     void refresh( Poco::Net::StreamSocket* _socket ) const;
+
+    /// Saves a data container to disk.
+    void save_data_container(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
 
     /// Saves a data frame
     void save_data_frame(

@@ -13,6 +13,8 @@ void FileHandler::create_project_directory(
 
     Poco::File( _project_directory + "data/" ).createDirectories();
 
+    Poco::File( _project_directory + "data_containers/" ).createDirectories();
+
     Poco::File( _project_directory + "hyperopts/" ).createDirectories();
 
     Poco::File( _project_directory + "pipelines/" ).createDirectories();
