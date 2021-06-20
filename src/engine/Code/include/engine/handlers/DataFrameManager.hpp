@@ -100,6 +100,9 @@ class DataFrameManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
+    /// Freezes the data frame (making it immutable).
+    void freeze( const std::string& _name, Poco::Net::StreamSocket* _socket );
+
     /// Creates a new data frame from a set of CSV files.
     void from_csv(
         const std::string& _name,

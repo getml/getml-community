@@ -9,6 +9,8 @@ namespace containers
 void DataFrame::add_float_column(
     const Column<Float> &_col, const std::string &_role )
 {
+    check_if_frozen();
+
     if ( _role == ROLE_NUMERICAL )
         {
             add_column( _col, &numericals_ );
@@ -66,6 +68,8 @@ void DataFrame::add_float_vectors(
 void DataFrame::add_int_column(
     const Column<Int> &_col, const std::string _role )
 {
+    check_if_frozen();
+
     if ( _role == ROLE_CATEGORICAL )
         {
             add_column( _col, &categoricals_ );
@@ -116,6 +120,8 @@ void DataFrame::add_int_vectors(
 void DataFrame::add_string_column(
     const Column<strings::String> &_col, const std::string &_role )
 {
+    check_if_frozen();
+
     if ( _role == ROLE_TEXT )
         {
             add_column( _col, &text_ );
@@ -158,6 +164,8 @@ void DataFrame::add_string_vectors(
 
 void DataFrame::append( const DataFrame &_other )
 {
+    check_if_frozen();
+
     // -------------------------------------------------------------------------
 
     if ( categoricals_.size() != _other.categoricals_.size() )
@@ -1751,6 +1759,12 @@ void DataFrame::load( const std::string &_path )
 
     // ---------------------------------------------------------------------
 
+    const auto frozen = load_textfile( _path, "frozen.txt" );
+
+    frozen_ = frozen && ( *frozen == "true" );
+
+    // ---------------------------------------------------------------------
+
     const auto last_change = load_textfile( _path, "last_change.txt" );
 
     if ( !last_change )
@@ -1930,6 +1944,8 @@ Poco::JSON::Object DataFrame::refresh() const
 
 bool DataFrame::remove_column( const std::string &_name )
 {
+    check_if_frozen();
+
     bool success = rm_col( _name, &categoricals_ );
 
     if ( success )
@@ -2099,6 +2115,8 @@ void DataFrame::save(
     save_matrices( unused_strings_, tpath, "unused_string_" );
 
     // ---------------------------------------------------------------------
+
+    save_text( tpath, "frozen.txt", frozen_ ? "true" : "false" );
 
     save_text( tpath, "last_change.txt", last_change_ );
 

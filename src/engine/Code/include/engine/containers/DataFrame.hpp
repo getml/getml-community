@@ -23,6 +23,7 @@ class DataFrame
    public:
     DataFrame()
         : categories_( std::make_shared<Encoding>() ),
+          frozen_( false ),
           join_keys_encoding_( std::make_shared<Encoding>() )
     {
         update_last_change();
@@ -33,6 +34,7 @@ class DataFrame
         const std::shared_ptr<Encoding> &_categories,
         const std::shared_ptr<Encoding> &_join_keys_encoding )
         : categories_( _categories ),
+          frozen_( false ),
           join_keys_encoding_( _join_keys_encoding ),
           name_( _name )
     {
@@ -240,6 +242,7 @@ class DataFrame
             }
 
         throw_column_does_not_exist( _name, "categorical column" );
+        return categorical( 0 );
     }
 
     /// Trivial accessor
@@ -252,6 +255,9 @@ class DataFrame
 
         return categories()[_i].str();
     }
+
+    /// Freezes the DataFrame, thus making it immutable.
+    void freeze() { frozen_ = true; }
 
     /// Whether the DataFrame has any column named _name.
     bool has( const std::string &_name ) const
@@ -420,6 +426,7 @@ class DataFrame
             }
 
         throw_column_does_not_exist( _name, "join key" );
+        return indices_.at( 0 );
     }
 
     /// Trivial accessor
@@ -454,6 +461,7 @@ class DataFrame
             }
 
         throw_column_does_not_exist( _name, "join key" );
+        return categorical( 0 );
     }
 
     /// Trivial accessor
@@ -535,6 +543,7 @@ class DataFrame
             }
 
         throw_column_does_not_exist( _name, "numerical column" );
+        return numerical( 0 );
     }
 
     /// Trivial setter
@@ -585,6 +594,7 @@ class DataFrame
             }
 
         throw_column_does_not_exist( _name, "target column" );
+        return target( 0 );
     }
 
     /// Trivial accessor
@@ -613,6 +623,7 @@ class DataFrame
             }
 
         throw_column_does_not_exist( _name, "text column" );
+        return text( 0 );
     }
 
     /// Trivial accessor
@@ -641,6 +652,7 @@ class DataFrame
             }
 
         throw_column_does_not_exist( _name, "time stamp" );
+        return time_stamp( 0 );
     }
 
     /// Trivial accessor
@@ -675,6 +687,7 @@ class DataFrame
             }
 
         throw_column_does_not_exist( _name, "unused float column" );
+        return unused_float( 0 );
     }
 
     /// Trivial accessor
@@ -704,6 +717,7 @@ class DataFrame
             }
 
         throw_column_does_not_exist( _name, "unused string column" );
+        return unused_string( 0 );
     }
 
     // -------------------------------
@@ -825,6 +839,17 @@ class DataFrame
         const std::string &_text ) const;
 
    private:
+    /// Checks whether the data frame has been frozen.
+    void check_if_frozen() const
+    {
+        if ( frozen_ )
+            {
+                throw std::runtime_error(
+                    "The DataFrame has been frozen, so in-place operations are "
+                    "no longer possible." );
+            }
+    }
+
     /// Throws an error that a particular column does not exist.
     void throw_column_does_not_exist(
         const std::string &_colname, const std::string &_coltype ) const
@@ -857,6 +882,9 @@ class DataFrame
 
     /// Maps integers to names of categories
     std::shared_ptr<Encoding> categories_;
+
+    /// Whether the DataFrame has been frozen.
+    bool frozen_;
 
     /// Performs the role of an "index" over the join keys
     std::vector<DataFrameIndex> indices_;

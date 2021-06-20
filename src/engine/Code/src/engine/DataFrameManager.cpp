@@ -966,6 +966,22 @@ void DataFrameManager::concat(
 
 // ------------------------------------------------------------------------
 
+void DataFrameManager::freeze(
+    const std::string& _name, Poco::Net::StreamSocket* _socket )
+{
+    multithreading::WriteLock write_lock( read_write_lock_ );
+
+    auto& df = utils::Getter::get( _name, &data_frames() );
+
+    df.freeze();
+
+    write_lock.unlock();
+
+    communication::Sender::send_string( "Success!", _socket );
+}
+
+// ------------------------------------------------------------------------
+
 void DataFrameManager::from_csv(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,

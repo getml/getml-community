@@ -155,6 +155,10 @@ void RequestHandler::run()
                 {
                     project_manager().delete_data_frame( name, cmd, &socket() );
                 }
+            else if ( type == "DataFrame.freeze" )
+                {
+                    data_frame_manager().freeze( name, &socket() );
+                }
             else if ( type == "DataFrame.from_db" )
                 {
                     project_manager().add_data_frame_from_db(
