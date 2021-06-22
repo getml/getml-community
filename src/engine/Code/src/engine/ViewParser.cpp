@@ -205,8 +205,11 @@ Poco::JSON::Array::Ptr ViewParser::make_data(
 // ----------------------------------------------------------------------------
 
 std::optional<size_t> ViewParser::make_nrows(
-    const std::vector<ColumnViewVariant>& _column_views ) const
+    const std::vector<ColumnViewVariant>& _column_views,
+    const size_t _force ) const
 {
+    // ------------------------------------------------------------------------
+
     const auto has_nrows = []( const ColumnViewVariant& _column_view ) -> bool {
         if ( std::holds_alternative<containers::ColumnView<Float>>(
                  _column_view ) )
@@ -219,6 +222,8 @@ std::optional<size_t> ViewParser::make_nrows(
             std::get<containers::ColumnView<std::string>>( _column_view );
         return std::holds_alternative<size_t>( str_col.nrows() );
     };
+
+    // ------------------------------------------------------------------------
 
     const auto get_nrows =
         []( const ColumnViewVariant& _column_view ) -> size_t {
@@ -235,11 +240,59 @@ std::optional<size_t> ViewParser::make_nrows(
         return std::get<size_t>( str_col.nrows() );
     };
 
+    // ------------------------------------------------------------------------
+
+    const auto calc_nrows =
+        []( const ColumnViewVariant& _column_view ) -> size_t {
+        if ( std::holds_alternative<containers::ColumnView<Float>>(
+                 _column_view ) )
+            {
+                const auto float_col =
+                    std::get<containers::ColumnView<Float>>( _column_view )
+                        .to_column( 0, std::nullopt, false );
+                return float_col.nrows();
+            }
+
+        const auto str_col =
+            std::get<containers::ColumnView<std::string>>( _column_view )
+                .to_column( 0, std::nullopt, false );
+        return str_col.nrows();
+    };
+
+    // ------------------------------------------------------------------------
+
+    const auto to_float = []( const size_t _nrows ) -> Float {
+        return static_cast<Float>( _nrows );
+    };
+
+    // ------------------------------------------------------------------------
+
     const auto it =
         std::find_if( _column_views.begin(), _column_views.end(), has_nrows );
 
-    return it == _column_views.end() ? std::optional<size_t>()
-                                     : std::make_optional( get_nrows( *it ) );
+    if ( it != _column_views.end() )
+        {
+            return std::make_optional( get_nrows( *it ) );
+        }
+
+    // ------------------------------------------------------------------------
+
+    if ( !_force )
+        {
+            return std::nullopt;
+        }
+
+    // ------------------------------------------------------------------------
+
+    auto range = _column_views | std::views::transform( calc_nrows ) |
+                 std::views::transform( to_float );
+
+    // ------------------------------------------------------------------------
+
+    return static_cast<size_t>(
+        helpers::Aggregations::assert_equal( range.begin(), range.end() ) );
+
+    // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -286,6 +339,7 @@ Poco::JSON::Object ViewParser::get_content(
     const size_t _draw,
     const size_t _start,
     const size_t _length,
+    const bool _force_nrows,
     const Poco::JSON::Array::Ptr& _cols ) const
 {
     // ------------------------------------------------------------------------
@@ -322,7 +376,7 @@ Poco::JSON::Object ViewParser::get_content(
 
     const auto data = make_data( string_vectors );
 
-    const auto nrows = make_nrows( column_views );
+    const auto nrows = make_nrows( column_views, _force_nrows );
 
     // ------------------------------------------------------------------------
 

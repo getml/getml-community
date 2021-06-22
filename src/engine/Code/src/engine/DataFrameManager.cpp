@@ -2046,7 +2046,7 @@ void DataFrameManager::get_view_content(
 
     const auto result =
         ViewParser( categories_, join_keys_encoding_, data_frames_ )
-            .get_content( draw, start, length, cols );
+            .get_content( draw, start, length, false, cols );
 
     read_lock.unlock();
 
@@ -2062,11 +2062,13 @@ void DataFrameManager::get_view_nrows(
 {
     const auto cols = jsonutils::JSON::get_object_array( _cmd, "cols_" );
 
+    const auto force = JSON::get_value<bool>( _cmd, "force_" );
+
     multithreading::ReadLock read_lock( read_write_lock_ );
 
     const auto result =
         ViewParser( categories_, join_keys_encoding_, data_frames_ )
-            .get_content( 1, 0, 0, cols );
+            .get_content( 1, 0, 0, force, cols );
 
     read_lock.unlock();
 

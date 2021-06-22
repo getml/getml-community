@@ -56,6 +56,7 @@ class ViewParser
         const size_t _draw,
         const size_t _start,
         const size_t _length,
+        const bool _force_nrows,
         const Poco::JSON::Array::Ptr& _cols ) const;
 
     /// Parses a view and turns it into a DataFrame.
@@ -107,7 +108,8 @@ class ViewParser
 
     /// Generates nrows for get_content(...).
     std::optional<size_t> make_nrows(
-        const std::vector<ColumnViewVariant>& _column_views ) const;
+        const std::vector<ColumnViewVariant>& _column_views,
+        const size_t _force ) const;
 
     /// Extracts a string vector from a column view - used by get_content(...).
     std::vector<std::string> make_string_vector(
