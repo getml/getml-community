@@ -550,7 +550,7 @@ std::vector<Poco::JSON::Object::Ptr> Pipeline::extract_df_fingerprints(
     const containers::DataFrame& _population_df,
     const std::vector<containers::DataFrame>& _peripheral_dfs ) const
 {
-    const auto placeholder = JSON::get_object( obj(), "population_" );
+    const auto placeholder = JSON::get_object( obj(), "data_model_" );
 
     std::vector<Poco::JSON::Object::Ptr> df_fingerprints = {
         placeholder, _population_df.fingerprint() };
@@ -2378,10 +2378,10 @@ std::pair<
     std::shared_ptr<const std::vector<std::string>>>
 Pipeline::make_placeholder() const
 {
-    const auto population = *JSON::get_object( obj(), "population_" );
+    const auto data_model = *JSON::get_object( obj(), "data_model_" );
 
     const auto placeholder = std::make_shared<const helpers::Placeholder>(
-        PlaceholderMaker::make_placeholder( population, "t1" ) );
+        PlaceholderMaker::make_placeholder( data_model, "t1" ) );
 
     const auto peripheral_names =
         std::make_shared<const std::vector<std::string>>(
@@ -2508,7 +2508,7 @@ Pipeline::modify_data_frames(
 {
     // ----------------------------------------------------------------------
 
-    const auto population = *JSON::get_object( obj(), "population_" );
+    const auto population = *JSON::get_object( obj(), "data_model_" );
 
     const auto peripheral_names = parse_peripheral();
 
@@ -2606,7 +2606,7 @@ Pipeline& Pipeline::operator=( Pipeline&& _other ) noexcept
 
 std::shared_ptr<std::string> Pipeline::parse_population() const
 {
-    const auto ptr = JSON::get_object( obj(), "population_" );
+    const auto ptr = JSON::get_object( obj(), "data_model_" );
 
     if ( !ptr )
         {
@@ -3085,7 +3085,7 @@ Poco::JSON::Object Pipeline::to_monitor(
 
     json_obj.set( "population_schema_", population_schema()->to_json_obj() );
 
-    json_obj.set( "population_", JSON::get_object( obj(), "population_" ) );
+    json_obj.set( "data_model_", JSON::get_object( obj(), "data_model_" ) );
 
     json_obj.set( "predictors_", JSON::get_array( obj(), "predictors_" ) );
 
