@@ -2518,8 +2518,12 @@ Pipeline::modify_data_frames(
 
     auto population_df = _population_df;
 
-    auto peripheral_dfs = DataFrameModifier::add_time_stamps(
-        population, *peripheral_names, _peripheral_dfs );
+    auto peripheral_dfs = _peripheral_dfs;
+
+    // ----------------------------------------------------------------------
+
+    DataFrameModifier::add_time_stamps(
+        population, *peripheral_names, &population_df, &peripheral_dfs );
 
     // ----------------------------------------------------------------------
 

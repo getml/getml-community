@@ -24,15 +24,19 @@ class DataFrameModifier
     /// Extracts upper time stamps from the memory parameter. (Memory is just
     /// syntactic sugar for upper time stamps. The feature learners don't know
     /// about this concept).
-    static std::vector<containers::DataFrame> add_time_stamps(
+    static void add_time_stamps(
         const Poco::JSON::Object& _population_placeholder,
         const std::vector<std::string>& _peripheral_names,
-        const std::vector<containers::DataFrame>& _peripheral_dfs );
+        containers::DataFrame* _population_df,
+        std::vector<containers::DataFrame>* _peripheral_dfs );
 
    private:
     /// Adds a constant join key. This is needed for when the user has not
     /// explicitly passed a join key.
     static void add_jk( containers::DataFrame* _df );
+
+    /// Adds a new rowid to the data frame, if applicable.
+    static void add_rowid( containers::DataFrame* _df );
 
     /// Adds lower and upper time stamps to the data frame.
     static void add_ts(

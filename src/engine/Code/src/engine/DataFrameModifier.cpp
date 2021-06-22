@@ -109,23 +109,40 @@ void DataFrameModifier::add_jk( containers::DataFrame* _df )
 
 // ----------------------------------------------------------------------------
 
-std::vector<containers::DataFrame> DataFrameModifier::add_time_stamps(
+void DataFrameModifier::add_rowid( containers::DataFrame* _df )
+{
+    if ( _df->has_time_stamp( helpers::Macros::rowid() ) )
+        {
+            return;
+        }
+
+    auto new_ts = containers::Column<Float>( _df->nrows() );
+
+    new_ts.set_name( helpers::Macros::rowid() );
+
+    new_ts.set_unit( helpers::Macros::rowid_comparison_only() );
+
+    std::iota( new_ts.begin(), new_ts.end(), static_cast<Float>( 0.0 ) );
+
+    _df->add_float_column( new_ts, containers::DataFrame::ROLE_TIME_STAMP );
+}
+
+// ----------------------------------------------------------------------------
+
+void DataFrameModifier::add_time_stamps(
     const Poco::JSON::Object& _population_placeholder,
     const std::vector<std::string>& _peripheral_names,
-    const std::vector<containers::DataFrame>& _peripheral_dfs )
+    containers::DataFrame* _population_df,
+    std::vector<containers::DataFrame>* _peripheral_dfs )
 {
     // ------------------------------------------------------------------------
 
-    auto peripheral_dfs = _peripheral_dfs;
-
-    // ------------------------------------------------------------------------
-
-    if ( _peripheral_names.size() != peripheral_dfs.size() )
+    if ( _peripheral_names.size() != _peripheral_dfs->size() )
         {
             throw std::invalid_argument(
                 "There must be one peripheral table for every peripheral "
                 "placeholder (" +
-                std::to_string( peripheral_dfs.size() ) + " vs. " +
+                std::to_string( _peripheral_dfs->size() ) + " vs. " +
                 std::to_string( _peripheral_names.size() ) + ")." );
         }
 
@@ -144,6 +161,9 @@ std::vector<containers::DataFrame> DataFrameModifier::add_time_stamps(
 
     // ------------------------------------------------------------------------
 
+    const auto time_stamps_used = extract_vector<std::string>(
+        _population_placeholder, "time_stamps_used_", expected_size );
+
     const auto other_time_stamps_used = extract_vector<std::string>(
         _population_placeholder, "other_time_stamps_used_", expected_size );
 
@@ -161,31 +181,39 @@ std::vector<containers::DataFrame> DataFrameModifier::add_time_stamps(
     for ( unsigned int i = 0; i < static_cast<unsigned int>( memory.size() );
           ++i )
         {
-            const auto joined_table = joined_tables_arr->getObject( i );
+            const auto ptr = joined_tables_arr->getObject( i );
 
-            if ( !joined_table )
+            if ( !ptr )
                 {
                     throw std::invalid_argument(
                         "Element " + std::to_string( i ) +
                         " in 'joined_tables_' is not a proper JSON object!" );
                 }
 
+            auto df =
+                find_data_frame( *ptr, _peripheral_names, _peripheral_dfs );
+
+            if ( time_stamps_used.at( i ) == helpers::Macros::rowid() )
+                {
+                    add_rowid( _population_df );
+                }
+
+            if ( other_time_stamps_used.at( i ) == helpers::Macros::rowid() )
+                {
+                    add_rowid( df );
+                }
+
             add_ts(
-                *joined_table,
+                *ptr,
                 other_time_stamps_used.at( i ),
                 upper_time_stamps_used.at( i ),
                 horizon.at( i ),
                 memory.at( i ),
                 _peripheral_names,
-                &peripheral_dfs );
+                _peripheral_dfs );
 
-            peripheral_dfs = add_time_stamps(
-                *joined_table, _peripheral_names, peripheral_dfs );
+            add_time_stamps( *ptr, _peripheral_names, df, _peripheral_dfs );
         }
-
-    // ------------------------------------------------------------------------
-
-    return peripheral_dfs;
 
     // ------------------------------------------------------------------------
 }
