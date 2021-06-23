@@ -69,13 +69,6 @@ communication::Warner DataModelChecker::check(
                 prob_pick,
                 _feature_learners,
                 &warner );
-
-            check_self_joins(
-                *_placeholder,
-                _population,
-                peripheral,
-                _feature_learners,
-                &warner );
         }
 
     // --------------------------------------------------------------------------
@@ -98,9 +91,7 @@ void DataModelChecker::check_all_propositionalization(
         assert_true( _fl );
         return (
             _fl->type() !=
-                featurelearners::AbstractFeatureLearner::FASTPROP_MODEL &&
-            _fl->type() !=
-                featurelearners::AbstractFeatureLearner::FASTPROP_TIME_SERIES );
+            featurelearners::AbstractFeatureLearner::FASTPROP_MODEL );
     };
 
     const bool any_non_fast_prop = std::any_of(
@@ -202,21 +193,17 @@ void DataModelChecker::check_data_frames(
 {
     // --------------------------------------------------------------------------
 
-    const auto [has_multirel, has_multirel_ts] = find_feature_learner(
+    const auto has_multirel = find_feature_learner(
         _feature_learners,
-        featurelearners::AbstractFeatureLearner::MULTIREL_MODEL,
-        featurelearners::AbstractFeatureLearner::MULTIREL_TIME_SERIES );
+        featurelearners::AbstractFeatureLearner::MULTIREL_MODEL );
 
-    const auto [has_relmt, has_relmt_ts] = find_feature_learner(
+    const auto has_relmt = find_feature_learner(
         _feature_learners,
-        featurelearners::AbstractFeatureLearner::RELMT_MODEL,
-        featurelearners::AbstractFeatureLearner::RELMT_TIME_SERIES );
+        featurelearners::AbstractFeatureLearner::RELMT_MODEL );
 
     // --------------------------------------------------------------------------
 
-    // Too many columns in the population table are only a problem if there is a
-    // multirel time series, as the population table is usually not aggregated.
-    check_df( _population, has_multirel_ts, _warner );
+    check_df( _population, false, _warner );
 
     for ( const auto& df : _peripheral )
         {
@@ -231,13 +218,6 @@ void DataModelChecker::check_data_frames(
                 {
                     check_num_columns_relmt( _population, df, _warner );
                 }
-        }
-
-    // --------------------------------------------------------------------------
-
-    if ( has_relmt_ts )
-        {
-            check_num_columns_relmt( _population, _population, _warner );
         }
 
     // --------------------------------------------------------------------------
@@ -354,9 +334,7 @@ void DataModelChecker::check_join(
         assert_true( _fl );
         return (
             _fl->type() ==
-                featurelearners::AbstractFeatureLearner::FASTPROP_MODEL ||
-            _fl->type() ==
-                featurelearners::AbstractFeatureLearner::FASTPROP_TIME_SERIES );
+            featurelearners::AbstractFeatureLearner::FASTPROP_MODEL );
     };
 
     const bool all_propositionalization = std::all_of(
@@ -370,9 +348,7 @@ void DataModelChecker::check_join(
         assert_true( _fl );
         return (
             _fl->type() ==
-                featurelearners::AbstractFeatureLearner::RELMT_MODEL ||
-            _fl->type() ==
-                featurelearners::AbstractFeatureLearner::RELMT_TIME_SERIES );
+            featurelearners::AbstractFeatureLearner::RELMT_MODEL );
     };
 
     const bool any_relmt = std::any_of(
@@ -626,19 +602,7 @@ void DataModelChecker::check_relational(
     const std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>
         _feature_learners )
 {
-    const auto is_not_ts =
-        []( const std::shared_ptr<featurelearners::AbstractFeatureLearner>&
-                _fl ) -> bool {
-        assert_true( _fl );
-        return !( _fl->is_time_series() );
-    };
-
-    const bool wrong_data_model =
-        _peripheral.size() == 0 &&
-        std::any_of(
-            _feature_learners.begin(), _feature_learners.end(), is_not_ts );
-
-    if ( wrong_data_model )
+    if ( _peripheral.size() == 0 )
         {
             throw std::invalid_argument(
                 "The data model you have passed is not relational (there are "
@@ -649,148 +613,22 @@ void DataModelChecker::check_relational(
 
 // ----------------------------------------------------------------------------
 
-void DataModelChecker::check_self_joins(
-    const helpers::Placeholder& _placeholder,
-    const containers::DataFrame& _population,
-    const std::vector<containers::DataFrame>& _peripheral,
-    const std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>
-        _feature_learners,
-    communication::Warner* _warner )
-{
-    // ------------------------------------------------------------------------
-
-    const auto old_size = _placeholder.joined_tables_.size();
-
-    // ------------------------------------------------------------------------
-
-    for ( const auto& fl : _feature_learners )
-        {
-            // ----------------------------------------------------------------
-
-            assert_true( fl );
-
-            if ( !fl->is_time_series() )
-                {
-                    continue;
-                }
-
-            // ----------------------------------------------------------------
-
-            const bool is_propositionalization =
-                ( fl->type() == featurelearners::AbstractFeatureLearner::
-                                    FASTPROP_TIME_SERIES );
-
-            // ----------------------------------------------------------------
-
-            const auto [new_population, new_peripheral] =
-                fl->modify_data_frames( _population, _peripheral );
-
-            // ----------------------------------------------------------------
-
-            const auto new_placeholder = fl->make_placeholder();
-
-            // ----------------------------------------------------------------
-
-            const auto& joined_tables = new_placeholder.joined_tables_;
-
-            const auto& join_keys_used = new_placeholder.join_keys_used_;
-
-            const auto& other_join_keys_used =
-                new_placeholder.other_join_keys_used_;
-
-            const auto& time_stamps_used = new_placeholder.time_stamps_used_;
-
-            const auto& other_time_stamps_used =
-                new_placeholder.other_time_stamps_used_;
-
-            const auto& upper_time_stamps_used =
-                new_placeholder.upper_time_stamps_used_;
-
-            // ----------------------------------------------------------------
-
-            const auto new_size = joined_tables.size();
-
-            assert_true( join_keys_used.size() == new_size );
-
-            assert_true( other_join_keys_used.size() == new_size );
-
-            assert_true( time_stamps_used.size() == new_size );
-
-            assert_true( other_time_stamps_used.size() == new_size );
-
-            assert_true( upper_time_stamps_used.size() == new_size );
-
-            // ----------------------------------------------------------------
-
-            assert_true( new_peripheral.size() == _peripheral.size() + 1 );
-
-            // The probability of being picked is equal for all rows in the
-            // population table.
-            const auto prob_pick = std::vector<Float>(
-                _population.nrows(),
-                1.0 / static_cast<Float>( _population.nrows() ) );
-
-            for ( size_t i = old_size; i < new_size; ++i )
-                {
-                    const auto
-                        [is_many_to_one,
-                         num_matches,
-                         num_expected,
-                         num_jk_not_found,
-                         _] =
-                            check_matches(
-                                join_keys_used.at( i ),
-                                other_join_keys_used.at( i ),
-                                time_stamps_used.at( i ),
-                                other_time_stamps_used.at( i ),
-                                upper_time_stamps_used.at( i ),
-                                new_population,
-                                new_peripheral.back(),
-                                prob_pick );
-
-                    raise_self_join_warnings(
-                        is_propositionalization,
-                        is_many_to_one,
-                        num_matches,
-                        new_population,
-                        _warner );
-                }
-
-            // ----------------------------------------------------------------
-        }
-
-    // ------------------------------------------------------------------------
-}
-
-// ----------------------------------------------------------------------------
-
-std::pair<bool, bool> DataModelChecker::find_feature_learner(
+bool DataModelChecker::find_feature_learner(
     const std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>&
         _feature_learners,
-    const std::string& _model,
-    const std::string& _ts )
+    const std::string& _model )
 {
-    const auto is_model_or_ts =
-        [_model, _ts]( const std::shared_ptr<
-                       const featurelearners::AbstractFeatureLearner>& fl ) {
+    const auto is_model =
+        [_model]( const std::shared_ptr<
+                  const featurelearners::AbstractFeatureLearner>& fl ) {
             assert_true( fl );
-            return fl->type() == _model || fl->type() == _ts;
+            return fl->type() == _model;
         };
 
-    const auto is_ts =
-        [_ts]( const std::shared_ptr<
-               const featurelearners::AbstractFeatureLearner>& fl ) {
-            assert_true( fl );
-            return fl->type() == _ts;
-        };
+    const bool has_model = std::any_of(
+        _feature_learners.begin(), _feature_learners.end(), is_model );
 
-    const bool has_model_or_ts = std::any_of(
-        _feature_learners.begin(), _feature_learners.end(), is_model_or_ts );
-
-    const bool has_ts = std::any_of(
-        _feature_learners.begin(), _feature_learners.end(), is_ts );
-
-    return std::make_pair( has_model_or_ts, has_ts );
+    return has_model;
 }
 
 // ----------------------------------------------------------------------------

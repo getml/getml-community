@@ -99,22 +99,11 @@ class DataModelChecker
             std::shared_ptr<featurelearners::AbstractFeatureLearner>>
             _feature_learners );
 
-    /// Checks the self joins for the time series models.
-    static void check_self_joins(
-        const helpers::Placeholder& _placeholder,
-        const containers::DataFrame& _population,
-        const std::vector<containers::DataFrame>& _peripheral,
-        const std::vector<
-            std::shared_ptr<featurelearners::AbstractFeatureLearner>>
-            _feature_learners,
-        communication::Warner* _warner );
-
     /// Checks whether there is a particular type of feature learner.
-    static std::pair<bool, bool> find_feature_learner(
+    static bool find_feature_learner(
         const std::vector<std::shared_ptr<
             featurelearners::AbstractFeatureLearner>>& _feature_learners,
-        const std::string& _model,
-        const std::string& _ts );
+        const std::string& _model );
 
     /// Finds the time stamps, if necessary.
     static std::tuple<

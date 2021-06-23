@@ -18,13 +18,9 @@ class AbstractFeatureLearner
     static constexpr Int IGNORE_TARGETS = -2;
 
     static constexpr const char* FASTPROP_MODEL = "FastPropModel";
-    static constexpr const char* FASTPROP_TIME_SERIES = "FastPropTimeSeries";
     static constexpr const char* MULTIREL_MODEL = "MultirelModel";
-    static constexpr const char* MULTIREL_TIME_SERIES = "MultirelTimeSeries";
     static constexpr const char* RELBOOST_MODEL = "RelboostModel";
     static constexpr const char* RELMT_MODEL = "RelMTModel";
-    static constexpr const char* RELBOOST_TIME_SERIES = "RelboostTimeSeries";
-    static constexpr const char* RELMT_TIME_SERIES = "RelMTTimeSeries";
 
     // --------------------------------------------------------
 
@@ -58,22 +54,12 @@ class AbstractFeatureLearner
     /// Whether this is a classification problem.
     virtual bool is_classification() const = 0;
 
-    /// Whether this is a time series model (based on a self-join).
-    virtual bool is_time_series() const = 0;
-
     /// Loads the feature learner from a file designated by _fname.
     virtual void load( const std::string& _fname ) = 0;
 
     /// Returns the placeholder not as passed by the user, but as seen by the
     /// feature learner (the difference matters for time series).
     virtual helpers::Placeholder make_placeholder() const = 0;
-
-    /// Data frames might have to be modified, such as adding upper time stamps
-    /// or self joins, for time series only.
-    virtual std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-    modify_data_frames(
-        const containers::DataFrame& _population_df,
-        const std::vector<containers::DataFrame>& _peripheral_df ) const = 0;
 
     /// Returns the number of features in the feature learner.
     virtual size_t num_features() const = 0;

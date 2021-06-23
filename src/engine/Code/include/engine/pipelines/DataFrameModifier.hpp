@@ -74,13 +74,20 @@ class DataFrameModifier
     static std::vector<containers::Column<Int>> get_old_join_keys(
         const std::string& _name, const containers::DataFrame& _df );
 
+    /// Generates the time stamps.
+    static std::vector<containers::Column<Float>> make_time_stamps(
+        const std::string& _ts_name,
+        const Float _horizon,
+        const Float _memory,
+        const containers::DataFrame& _df );
+
    private:
     /// Generates the name for the upper time stamp that is produced using
     /// memory.
     static std::string make_ts_name(
         const std::string& _ts_used, const Float _diff )
     {
-        return ts::TimeStampMaker::make_ts_name( _ts_used, _diff );
+        return PlaceholderMaker::make_ts_name( _ts_used, _diff );
     }
 };
 

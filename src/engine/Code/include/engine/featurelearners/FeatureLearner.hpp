@@ -17,17 +17,9 @@ class FeatureLearner : public AbstractFeatureLearner
     static constexpr bool is_fastprop_ =
         std::is_same<FeatureLearnerType, fastprop::algorithm::FastProp>();
 
-    /// Whether this is a FastPropTimeSeries
-    static constexpr bool is_fastprop_ts_ =
-        std::is_same<FeatureLearnerType, ts::FastPropTimeSeries>();
-
     /// Whether this is multirel.
     static constexpr bool is_multirel_ = std::
         is_same<FeatureLearnerType, multirel::ensemble::DecisionTreeEnsemble>();
-
-    /// Whether is is a multirel time series.
-    static constexpr bool is_multirel_ts_ =
-        std::is_same<FeatureLearnerType, ts::MultirelTimeSeries>();
 
     /// Whether this is relboost.
     static constexpr bool is_relboost_ = std::
@@ -37,19 +29,10 @@ class FeatureLearner : public AbstractFeatureLearner
     static constexpr bool is_relmt_ = std::
         is_same<FeatureLearnerType, relmt::ensemble::DecisionTreeEnsemble>();
 
-    /// Whether this is a relboost time series.
-    static constexpr bool is_relboost_ts_ =
-        std::is_same<FeatureLearnerType, ts::RelboostTimeSeries>();
-
-    /// Whether this is a relmt time series.
-    static constexpr bool is_relmt_ts_ =
-        std::is_same<FeatureLearnerType, ts::RelMTTimeSeries>();
-
-    /// Because FastProp and FastPropTimeSeries are propositionalization
+    /// Because FastProp are propositionalization
     /// approaches themselves, they do not have a propositionalization
     /// subfeature.
-    static constexpr bool has_propositionalization_ =
-        ( !is_fastprop_ && !is_fastprop_ts_ );
+    static constexpr bool has_propositionalization_ = !is_fastprop_;
 
     // --------------------------------------------------------
 
@@ -102,13 +85,6 @@ class FeatureLearner : public AbstractFeatureLearner
     /// Loads the feature learner from a file designated by _fname.
     void load( const std::string& _fname ) final;
 
-    /// Data frames might have to be modified, such as adding upper time stamps
-    /// or self joins.
-    std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-    modify_data_frames(
-        const containers::DataFrame& _population_df,
-        const std::vector<containers::DataFrame>& _peripheral_dfs ) const final;
-
     /// Saves the feature learner in JSON format, if applicable
     void save( const std::string& _fname ) const final;
 
@@ -151,12 +127,6 @@ class FeatureLearner : public AbstractFeatureLearner
         return ( loss_function != "SquareLoss" );
     }
 
-    /// Whether this is a time series model (based on a self-join).
-    bool is_time_series() const final
-    {
-        return FeatureLearnerType::is_time_series_;
-    }
-
     /// Returns the placeholder not as passed by the user, but as seen by the
     /// feature learner (the difference matters for time series).
     helpers::Placeholder make_placeholder() const final
@@ -172,17 +142,7 @@ class FeatureLearner : public AbstractFeatureLearner
 
     /// Determines whether the population table needs targets during
     /// transform (only for time series that include autoregression).
-    bool population_needs_targets() const final
-    {
-        if constexpr ( FeatureLearnerType::is_time_series_ )
-            {
-                return feature_learner()
-                    .hyperparameters()
-                    .allow_lagged_targets_;
-            }
-
-        return false;
-    }
+    bool population_needs_targets() const final { return false; }
 
     /// Whether the feature learner is for the premium version only.
     bool premium_only() const final
@@ -331,19 +291,7 @@ class FeatureLearner : public AbstractFeatureLearner
     }
 
     /// The minimum document frequency used for the vocabulary.
-    size_t min_df( const HypType& _hyp ) const
-    {
-        if constexpr ( FeatureLearnerType::is_time_series_ )
-            {
-                assert_true( _hyp.model_hyperparams_ );
-                return _hyp.model_hyperparams_->min_df_;
-            }
-
-        if constexpr ( !FeatureLearnerType::is_time_series_ )
-            {
-                return _hyp.min_df_;
-            }
-    }
+    size_t min_df( const HypType& _hyp ) const { return _hyp.min_df_; }
 
     /// Trivial accessor.
     const std::vector<std::string>& peripheral() const
@@ -356,13 +304,6 @@ class FeatureLearner : public AbstractFeatureLearner
     std::vector<helpers::Schema> peripheral_schema() const
     {
         assert_true( peripheral_schema_ );
-
-        if constexpr ( FeatureLearnerType::is_time_series_ )
-            {
-                assert_true( population_schema_ );
-                return feature_learner().create_peripheral_schema(
-                    *population_schema_, *peripheral_schema_ );
-            }
 
         return *peripheral_schema_;
     }
@@ -379,12 +320,6 @@ class FeatureLearner : public AbstractFeatureLearner
     {
         assert_true( population_schema_ );
 
-        if constexpr ( FeatureLearnerType::is_time_series_ )
-            {
-                return feature_learner().create_population_schema(
-                    *population_schema_ );
-            }
-
         return *population_schema_;
     }
 
@@ -394,16 +329,7 @@ class FeatureLearner : public AbstractFeatureLearner
     {
         if constexpr ( has_propositionalization_ )
             {
-                if constexpr ( FeatureLearnerType::is_time_series_ )
-                    {
-                        assert_true( _hyp.model_hyperparams_ );
-                        return _hyp.model_hyperparams_->propositionalization_;
-                    }
-
-                if constexpr ( !FeatureLearnerType::is_time_series_ )
-                    {
-                        return _hyp.propositionalization_;
-                    }
+                return _hyp.propositionalization_;
             }
 
         if constexpr ( !has_propositionalization_ )
@@ -419,19 +345,7 @@ class FeatureLearner : public AbstractFeatureLearner
     }
 
     /// The size of the vocabulary.
-    size_t vocab_size( const HypType& _hyp ) const
-    {
-        if constexpr ( FeatureLearnerType::is_time_series_ )
-            {
-                assert_true( _hyp.model_hyperparams_ );
-                return _hyp.model_hyperparams_->vocab_size_;
-            }
-
-        if constexpr ( !FeatureLearnerType::is_time_series_ )
-            {
-                return _hyp.vocab_size_;
-            }
-    }
+    size_t vocab_size( const HypType& _hyp ) const { return _hyp.vocab_size_; }
 
     // --------------------------------------------------------
 
@@ -718,13 +632,10 @@ void FeatureLearner<FeatureLearnerType>::fit(
 
     // ------------------------------------------------
 
-    const auto [population_df, peripheral_dfs] =
-        modify_data_frames( _population_df, _peripheral_dfs );
-
     const auto [population_table, peripheral_tables] =
         extract_tables_by_colnames(
-            population_df,
-            peripheral_dfs,
+            _population_df,
+            _peripheral_dfs,
             population_schema(),
             peripheral_schema(),
             true,
@@ -965,23 +876,6 @@ FeatureLearner<FeatureLearnerType>::make_feature_learner() const
         hyperparameters, peripheral_, placeholder_ );
 }
 
-// -----------------------------------------------------------------------------
-
-template <typename FeatureLearnerType>
-std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-FeatureLearner<FeatureLearnerType>::modify_data_frames(
-    const containers::DataFrame& _population_df,
-    const std::vector<containers::DataFrame>& _peripheral_dfs ) const
-{
-    if constexpr ( FeatureLearnerType::is_time_series_ )
-        {
-            return make_feature_learner()->create_data_frames(
-                _population_df, _peripheral_dfs );
-        }
-
-    return std::make_pair( _population_df, _peripheral_dfs );
-}
-
 // ----------------------------------------------------------------------------
 
 template <typename FeatureLearnerType>
@@ -993,28 +887,28 @@ bool FeatureLearner<FeatureLearnerType>::parse_subroles(
           helpers::Subrole::email_only,
           helpers::Subrole::substring_only } );
 
-    if constexpr ( is_fastprop_ || is_fastprop_ts_ )
+    if constexpr ( is_fastprop_ )
         {
             blacklist.push_back( helpers::Subrole::exclude_fastprop );
             return !helpers::SubroleParser::contains_any(
                 _subroles, blacklist );
         }
 
-    if constexpr ( is_multirel_ || is_multirel_ts_ )
+    if constexpr ( is_multirel_ )
         {
             blacklist.push_back( helpers::Subrole::exclude_multirel );
             return !helpers::SubroleParser::contains_any(
                 _subroles, blacklist );
         }
 
-    if constexpr ( is_relboost_ || is_relboost_ts_ )
+    if constexpr ( is_relboost_ )
         {
             blacklist.push_back( helpers::Subrole::exclude_relboost );
             return !helpers::SubroleParser::contains_any(
                 _subroles, blacklist );
         }
 
-    if constexpr ( is_relmt_ || is_relmt_ts_ )
+    if constexpr ( is_relmt_ )
         {
             blacklist.push_back( helpers::Subrole::exclude_relmt );
             return !helpers::SubroleParser::contains_any(
@@ -1179,16 +1073,6 @@ std::vector<std::string> FeatureLearner<FeatureLearnerType>::to_sql(
 
     std::vector<std::string> sql;
 
-    if constexpr ( FeatureLearnerType::is_time_series_ )
-        {
-            if ( _subfeatures )
-                {
-                    sql.push_back( feature_learner().additional_staging_table(
-                        population_schema().name_,
-                        peripheral_schema_->size() ) );
-                }
-        }
-
     throw_unless( vocabulary_, "Pipeline has not been fitted." );
 
     const auto vocabulary_tree = helpers::VocabularyTree(
@@ -1222,12 +1106,9 @@ containers::Features FeatureLearner<FeatureLearnerType>::transform(
 {
     // -------------------------------------------------------
 
-    const auto [population_df, peripheral_dfs] =
-        modify_data_frames( _population_df, _peripheral_dfs );
-
     const auto [population, peripheral] = extract_tables_by_colnames(
-        population_df,
-        peripheral_dfs,
+        _population_df,
+        _peripheral_dfs,
         feature_learner().population_schema(),
         feature_learner().peripheral_schema(),
         false,
@@ -1312,9 +1193,7 @@ std::string FeatureLearner<FeatureLearnerType>::type() const
     // ----------------------------------------------------------------------
 
     constexpr bool unknown_feature_learner =
-        !is_fastprop_ && !is_fastprop_ts_ && !is_multirel_ &&
-        !is_multirel_ts_ && !is_relboost_ && !is_relboost_ts_ && !is_relmt_ &&
-        !is_relmt_ts_;
+        !is_fastprop_ && !is_multirel_ && !is_relboost_ && !is_relmt_;
 
     static_assert( !unknown_feature_learner, "Unknown feature learner!" );
 
@@ -1325,19 +1204,9 @@ std::string FeatureLearner<FeatureLearnerType>::type() const
             return AbstractFeatureLearner::FASTPROP_MODEL;
         }
 
-    if constexpr ( is_fastprop_ts_ )
-        {
-            return AbstractFeatureLearner::FASTPROP_TIME_SERIES;
-        }
-
     if constexpr ( is_multirel_ )
         {
             return AbstractFeatureLearner::MULTIREL_MODEL;
-        }
-
-    if constexpr ( is_multirel_ts_ )
-        {
-            return AbstractFeatureLearner::MULTIREL_TIME_SERIES;
         }
 
     if constexpr ( is_relboost_ )
@@ -1348,16 +1217,6 @@ std::string FeatureLearner<FeatureLearnerType>::type() const
     if constexpr ( is_relmt_ )
         {
             return AbstractFeatureLearner::RELMT_MODEL;
-        }
-
-    if constexpr ( is_relboost_ts_ )
-        {
-            return AbstractFeatureLearner::RELBOOST_TIME_SERIES;
-        }
-
-    if constexpr ( is_relmt_ts_ )
-        {
-            return AbstractFeatureLearner::RELMT_TIME_SERIES;
         }
 
     // ----------------------------------------------------------------------

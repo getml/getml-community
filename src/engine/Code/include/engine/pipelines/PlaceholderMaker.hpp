@@ -30,6 +30,11 @@ class PlaceholderMaker
     static std::vector<std::string> make_peripheral(
         const helpers::Placeholder& _placeholder );
 
+    /// Generates the name for the time stamp that is produced using
+    /// memory.
+    static std::string make_ts_name(
+        const std::string& _ts_used, const Float _diff );
+
    private:
     template <typename T>
     static void append( const std::vector<T>& _vec2, std::vector<T>* _vec1 );
@@ -82,14 +87,6 @@ class PlaceholderMaker
         assert_true( _num_alias );
         auto& num_alias = *_num_alias;
         return "t" + std::to_string( ++num_alias );
-    }
-
-    /// Generates the name for the time stamp that is produced using
-    /// memory.
-    static std::string make_ts_name(
-        const std::string& _ts_used, const Float _diff )
-    {
-        return ts::TimeStampMaker::make_ts_name( _ts_used, _diff );
     }
 };
 

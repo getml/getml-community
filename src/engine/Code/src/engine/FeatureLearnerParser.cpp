@@ -17,22 +17,10 @@ std::shared_ptr<AbstractFeatureLearner> FeatureLearnerParser::parse(
                 FeatureLearner<fastprop::algorithm::FastProp>>( _params );
         }
 
-    if ( type == AbstractFeatureLearner::FASTPROP_TIME_SERIES )
-        {
-            return std::make_shared<FeatureLearner<ts::FastPropTimeSeries>>(
-                _params );
-        }
-
     if ( type == AbstractFeatureLearner::MULTIREL_MODEL )
         {
             return std::make_shared<
                 FeatureLearner<multirel::ensemble::DecisionTreeEnsemble>>(
-                _params );
-        }
-
-    if ( type == AbstractFeatureLearner::MULTIREL_TIME_SERIES )
-        {
-            return std::make_shared<FeatureLearner<ts::MultirelTimeSeries>>(
                 _params );
         }
 
@@ -47,18 +35,6 @@ std::shared_ptr<AbstractFeatureLearner> FeatureLearnerParser::parse(
         {
             return std::make_shared<
                 FeatureLearner<relmt::ensemble::DecisionTreeEnsemble>>(
-                _params );
-        }
-
-    if ( type == AbstractFeatureLearner::RELBOOST_TIME_SERIES )
-        {
-            return std::make_shared<FeatureLearner<ts::RelboostTimeSeries>>(
-                _params );
-        }
-
-    if ( type == AbstractFeatureLearner::RELMT_TIME_SERIES )
-        {
-            return std::make_shared<FeatureLearner<ts::RelMTTimeSeries>>(
                 _params );
         }
 

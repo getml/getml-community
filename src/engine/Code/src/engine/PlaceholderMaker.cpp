@@ -333,5 +333,25 @@ helpers::Placeholder PlaceholderMaker::make_placeholder(
 }
 
 // ----------------------------------------------------------------------------
+
+std::string PlaceholderMaker::make_ts_name(
+    const std::string& _ts_used, const Float _diff )
+{
+    const bool is_rowid =
+        ( _ts_used.find( helpers::Macros::rowid() ) != std::string::npos );
+
+    const auto diffstr =
+        helpers::SQLGenerator::make_time_stamp_diff( _diff, is_rowid );
+
+    if ( is_rowid )
+        {
+            return helpers::Macros::open_bracket() + _ts_used + diffstr +
+                   helpers::Macros::close_bracket();
+        }
+
+    return helpers::Macros::generated_ts() + _ts_used + diffstr;
+}
+
+// ----------------------------------------------------------------------------
 }  // namespace pipelines
 }  // namespace engine

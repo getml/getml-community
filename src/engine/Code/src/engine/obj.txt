@@ -39,7 +39,6 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/Staging.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Substring.cpp
     ${ENGINE_SOURCE_DIRECTORY}/TextFieldSplitter.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/TimeStampMaker.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Token.cpp
     ${ENGINE_SOURCE_DIRECTORY}/ViewParser.cpp
 )
