@@ -65,7 +65,7 @@ void ViewParser::add_column(
 
             if ( role == containers::DataFrame::ROLE_UNUSED ||
                  role == containers::DataFrame::ROLE_TEXT ||
-                 role == containers::DataFrame::ROLE_UNUSED_FLOAT )
+                 role == containers::DataFrame::ROLE_UNUSED_STRING )
                 {
                     add_string_column_to_df(
                         name, role, subroles, unit, *vec, _df );
