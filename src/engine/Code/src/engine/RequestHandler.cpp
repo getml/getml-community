@@ -486,6 +486,10 @@ void RequestHandler::run()
                     data_frame_manager().get_categorical_column_unique(
                         name, cmd, &socket() );
                 }
+            else if ( type == "temp_dir" )
+                {
+                    project_manager().temp_dir( &socket() );
+                }
             else if ( type == "View.get_content" )
                 {
                     data_frame_manager().get_view_content(

@@ -196,6 +196,9 @@ class ProjectManager
     /// Sets the current project
     void set_project( const std::string& _name );
 
+    /// Get the path of the directory for tempfiles.
+    void temp_dir( Poco::Net::StreamSocket* _socket ) const;
+
     // ------------------------------------------------------------------------
 
    public:

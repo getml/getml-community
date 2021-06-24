@@ -664,5 +664,12 @@ void ProjectManager::set_project( const std::string& _project )
 }
 
 // ------------------------------------------------------------------------
+
+void ProjectManager::temp_dir( Poco::Net::StreamSocket* _socket ) const
+{
+    communication::Sender::send_string( options_.temp_dir(), _socket );
+}
+
+// ------------------------------------------------------------------------
 }  // namespace handlers
 }  // namespace engine
