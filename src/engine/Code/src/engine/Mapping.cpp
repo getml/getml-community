@@ -938,11 +938,14 @@ std::shared_ptr<const std::map<Int, std::vector<Float>>> Mapping::make_mapping(
                  std::views::filter( greater_than_min_freq ) |
                  std::views::transform( calc_agg );
 
+#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+#else
     if ( multithreading_ )
         {
             return std::make_shared<const std::map<Int, std::vector<Float>>>(
                 stl::collect_parallel::map<Int, std::vector<Float>>( range ) );
         }
+#endif
 
     return std::make_shared<const std::map<Int, std::vector<Float>>>(
         range.begin(), range.end() );

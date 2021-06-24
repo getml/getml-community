@@ -18,8 +18,8 @@ class CatOpParser
 
     static constexpr UnknownSize NOT_KNOWABLE =
         containers::ColumnView<bool>::NOT_KNOWABLE;
-    static constexpr UnknownSize INFINITE =
-        containers::ColumnView<bool>::INFINITE;
+    static constexpr UnknownSize NROWS_INFINITE =
+        containers::ColumnView<bool>::NROWS_INFINITE;
 
     static constexpr bool NROWS_MUST_MATCH =
         containers::ColumnView<bool>::NROWS_MUST_MATCH;

@@ -202,7 +202,11 @@ class Aggregations
     static Float ewma(
         const Float _half_life, IteratorType _begin, IteratorType _end )
     {
-        constexpr Float log05 = std::log( 0.5 );
+#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+    const Float log05 = std::log( 0.5 );
+#else
+    constexpr Float log05 = std::log( 0.5 );
+#endif
 
         const auto get_first = [_half_life, log05](
                                    const Float _init,

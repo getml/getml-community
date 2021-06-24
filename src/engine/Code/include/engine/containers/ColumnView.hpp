@@ -17,7 +17,7 @@ class ColumnView
     typedef std::function<std::optional<T>( size_t )> ValueFunc;
 
     static constexpr UnknownSize NOT_KNOWABLE = true;
-    static constexpr UnknownSize INFINITE = false;
+    static constexpr UnknownSize NROWS_INFINITE = false;
 
     static constexpr bool NROWS_MUST_MATCH = true;
 
@@ -105,7 +105,7 @@ class ColumnView
     bool is_infinite() const
     {
         return std::holds_alternative<UnknownSize>( nrows() ) &&
-               std::get<UnknownSize>( nrows() ) == INFINITE;
+               std::get<UnknownSize>( nrows() ) == NROWS_INFINITE;
     }
     /// Accessor to data
     std::optional<T> operator[]( const size_t _i ) const
@@ -124,7 +124,7 @@ class ColumnView
                 return std::to_string( std::get<size_t>( nrows() ) );
             }
 
-        if ( std::get<UnknownSize>( nrows() ) == INFINITE )
+        if ( std::get<UnknownSize>( nrows() ) == NROWS_INFINITE )
             {
                 return "infinite";
             }
@@ -188,7 +188,7 @@ ColumnView<T> ColumnView<T>::from_bin_op(
     const auto check_nrows = []( const auto _operand, const auto _op ) {
         const bool nrows_do_not_match =
             ( std::holds_alternative<size_t>( _operand.nrows() ) ||
-              std::get<UnknownSize>( _operand.nrows() ) != INFINITE ) &&
+              std::get<UnknownSize>( _operand.nrows() ) != NROWS_INFINITE ) &&
             _op;
 
         if ( nrows_do_not_match )
@@ -509,7 +509,7 @@ ColumnView<T> ColumnView<T>::from_tern_op(
     const auto check_nrows = []( const auto _operand, const auto _op ) {
         const bool nrows_do_not_match =
             ( std::holds_alternative<size_t>( _operand.nrows() ) ||
-              std::get<UnknownSize>( _operand.nrows() ) != INFINITE ) &&
+              std::get<UnknownSize>( _operand.nrows() ) != NROWS_INFINITE ) &&
             _op;
 
         if ( nrows_do_not_match )
@@ -614,7 +614,7 @@ ColumnView<T> ColumnView<T>::from_value( const T _value )
         return _value;
     };
 
-    return ColumnView<T>( value_func, INFINITE );
+    return ColumnView<T>( value_func, NROWS_INFINITE );
 }
 
 // -------------------------------------------------------------------------
