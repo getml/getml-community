@@ -12,6 +12,10 @@
 
 #include "multithreading/multithreading.hpp"
 
+#include "stl/IotaIterator.hpp"
+
+#include "stl/IotaRange.hpp"
+
 #include "stl/iota.hpp"
 
 #include "stl/Range.hpp"

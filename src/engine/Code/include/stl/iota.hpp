@@ -6,17 +6,13 @@ namespace stl
 // -------------------------------------------------------------------------
 
 /// Necessary work-around, as iota is not supported on Windows yet.
-template<class T, class T1, class T2>
-inline auto iota( T1 _begin, T2 _end ) {
+template <class T, class T1, class T2>
+inline auto iota( T1 _begin, T2 _end )
+{
 #if ( defined( _WIN32 ) || defined( _WIN64 ) )
-    const auto begin = static_cast<T>( _begin );
-    const auto end = static_cast<T>( _end );
-    assert_true( end >= begin );
-    auto vec = std::vector<T>( end - begin );
-    std::iota( vec.begin(), vec.end(), begin );
-    return vec;
+    return IotaRange<T>( static_cast<T>( _begin ), static_cast<T>( _end ) );
 #else
-  return std::views::iota( static_cast<T>( _begin ), static_cast<T>( _end ) );
+    return std::views::iota( static_cast<T>( _begin ), static_cast<T>( _end ) );
 #endif
 }
 
