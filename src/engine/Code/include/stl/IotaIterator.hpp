@@ -6,8 +6,9 @@ namespace stl
 // -------------------------------------------------------------------------
 
 template <class T>
-struct IotaIterator
+class IotaIterator
 {
+   public:
     using iterator_category = std::bidirectional_iterator_tag;
     using difference_type = std::ptrdiff_t;
     using value_type = T;
@@ -15,23 +16,19 @@ struct IotaIterator
     using reference = value_type&;
 
     /// Default constructor.
-    IotaIterator() : ptr_( std::make_unique<value_type>( 0 ) ){};
+    IotaIterator() : i_( 0 ), ptr_( &i_ ){};
 
     /// Construct by value.
-    IotaIterator( const value_type& _value )
-        : ptr_( std::make_unique<value_type>( _value ) )
-    {
-    }
+    IotaIterator( const value_type& _i ) : i_( _i ), ptr_( &i_ ) {}
 
     /// Copy constructor.
-    IotaIterator( const IotaIterator<T>& _other )
-        : ptr_( std::make_unique<value_type>( *_other ) )
+    IotaIterator( const IotaIterator<T>& _other ) : i_( _other.i_ ), ptr_( &i_ )
     {
     }
 
     /// Move constructor.
     IotaIterator( IotaIterator<T>&& _other ) noexcept
-        : ptr_( std::make_unique<value_type>( *_other ) )
+        : i_( _other.i_ ), ptr_( &i_ )
     {
     }
 
@@ -41,32 +38,32 @@ struct IotaIterator
     /// Copy assignment operator.
     IotaIterator<T>& operator=( const IotaIterator<T>& _other )
     {
-        ptr_ = std::make_unique<value_type>( *_other );
+        i_ = _other.i_;
         return *this;
     }
 
     /// Move assignment operator.
     IotaIterator<T>& operator=( IotaIterator<T>&& _other ) noexcept
     {
-        ptr_ = std::make_unique<value_type>( *_other );
+        i_ = _other.i_;
         return *this;
     }
 
     /// Tricky: operator()* must be const, but provide a non-const reference.
-    reference operator*() const { return *ptr_; }
+    inline reference operator*() const { return *ptr_; }
 
     /// Returns a pointer to value_.
-    pointer operator->() { return ptr_.get(); }
+    inline pointer operator->() { return ptr_; }
 
     /// Prefix incrementor
-    IotaIterator<T>& operator++()
+    inline IotaIterator<T>& operator++()
     {
-        ++( *ptr_ );
+        ++i_;
         return *this;
     }
 
     /// Postfix incrementor.
-    IotaIterator<T> operator++( int )
+    inline IotaIterator<T> operator++( int )
     {
         IotaIterator<T> tmp = *this;
         ++( *this );
@@ -74,14 +71,14 @@ struct IotaIterator
     }
 
     /// Prefix decrementor
-    IotaIterator<T>& operator--()
+    inline IotaIterator<T>& operator--()
     {
-        --( *ptr_ );
+        --i_;
         return *this;
     }
 
     /// Postfix decrementor.
-    IotaIterator<T> operator--( int )
+    inline IotaIterator<T> operator--( int )
     {
         IotaIterator<T> tmp = *this;
         --( *this );
@@ -89,22 +86,25 @@ struct IotaIterator
     }
 
     /// Check equality.
-    friend bool operator==(
+    friend inline bool operator==(
         const IotaIterator<T>& _a, const IotaIterator<T>& _b )
     {
-        return *_a.ptr_ == *_b.ptr_;
+        return _a.i_ == _b.i_;
     };
 
     /// Check inequality.
-    friend bool operator!=(
+    friend inline bool operator!=(
         const IotaIterator<T>& _a, const IotaIterator<T>& _b )
     {
-        return *_a.ptr_ != *_b.ptr_;
+        return _a.i_ != _b.i_;
     };
 
    private:
-    /// Pointer to the value held.
-    std::unique_ptr<value_type> ptr_;
+    /// The current value.
+    value_type i_;
+
+    /// A pointer to the current value - necessary workaround.
+    pointer ptr_;
 };
 
 // -------------------------------------------------------------------------
