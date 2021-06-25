@@ -991,8 +991,8 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_int(
         const auto range = col | std::views::transform( get_val );
 
 #if ( defined( _WIN32 ) || defined( _WIN64 ) )
-    const auto ptr = std::make_shared<std::vector<Float>>( 
-        stl::collect::vector<Float>( range ) );
+        const auto ptr = std::make_shared<std::vector<Float>>(
+            stl::collect::vector<Float>( range ) );
 #else
         const auto ptr =
             multithreading_
@@ -1096,8 +1096,8 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_text(
         const auto range = iota | std::views::transform( get_val );
 
 #if ( defined( _WIN32 ) || defined( _WIN64 ) )
-    const auto ptr = std::make_shared<std::vector<Float>>( 
-        stl::collect::vector<Float>( range ) );
+        const auto ptr = std::make_shared<std::vector<Float>>(
+            stl::collect::vector<Float>( range ) );
 #else
         const auto ptr =
             multithreading_
