@@ -170,7 +170,7 @@ ValueContainerCreator<data_used_, is_population_>::create_same_unit_discrete(
 
 #ifndef NDEBUG
             const auto data_used1 =
-                std::get<0>( _same_units_numerical.at( _ix_column_used ) )
+                std::get<0>( _same_units_discrete.at( _ix_column_used ) )
                     .data_used;
 #endif  // NDEBUG
 

@@ -9,10 +9,7 @@ template <class iterator>
 class Range
 {
    public:
-    Range( iterator _begin, iterator _end ) : begin_( _begin ), end_( _end )
-    {
-        assert_true( _begin <= _end );
-    }
+    Range( iterator _begin, iterator _end ) : begin_( _begin ), end_( _end ) {}
 
     ~Range() = default;
 

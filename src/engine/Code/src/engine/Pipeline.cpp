@@ -1316,7 +1316,8 @@ void Pipeline::fit_predictors( const TransformParams& _params )
 
     // --------------------------------------------------------------------
 
-    assert_true( _population_df.num_targets() == _predictors->size() );
+    assert_true(
+        _params.population_df_.num_targets() == _params.predictors_->size() );
 
     // --------------------------------------------------------------------
 
