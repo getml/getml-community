@@ -90,81 +90,6 @@ containers::Column<Float> Receiver::recv_column(
 
 // -----------------------------------------------------------------------------
 
-std::vector<std::string> Receiver::recv_encoding(
-    Poco::Net::StreamSocket *_socket )
-{
-    // ------------------------------------------------
-    // Recv shape
-
-    std::array<Int, 2> shape;
-
-    recv<Int>( sizeof( Int ) * 2, _socket, shape.data() );
-
-    // ------------------------------------------------
-    // Check plausibility
-
-    if ( std::get<0>( shape ) <= 0 )
-        {
-            throw std::runtime_error(
-                "Your encoding must contain at least one row!" );
-        }
-
-    if ( std::get<1>( shape ) < 0 )
-        {
-            throw std::runtime_error(
-                "Encoding data volume cannot be negative!" );
-        }
-
-    // ------------------------------------------------
-    // Receive raw data
-
-    auto raw_data = std::vector<char>( std::get<1>( shape ) );
-
-    recv<char>(
-        static_cast<ULong>( std::get<1>( shape ) ), _socket, raw_data.data() );
-
-    // ------------------------------------------------
-    // Interpret raw data and read into col
-
-    std::vector<std::string> encoding( std::get<0>( shape ) );
-
-    const bool little_endian = utils::Endianness::is_little_endian();
-
-    auto ptr = raw_data.data();
-
-    for ( size_t i = 0; i < encoding.size(); ++i )
-        {
-            assert_true( ptr < raw_data.data() + raw_data.size() );
-
-            auto length = *reinterpret_cast<Int *>( ptr );
-
-            if ( little_endian )
-                {
-                    utils::Endianness::reverse_byte_order( &length );
-                }
-
-            ptr += sizeof( Int );
-
-            auto str = std::string( length, '0' );
-
-            std::copy( ptr, ptr + length, str.data() );
-
-            ptr += length;
-
-            encoding[i] = std::move( str );
-        }
-
-    assert_true( ptr == raw_data.data() + raw_data.size() );
-
-    // ------------------------------------------------
-
-    return encoding;
-
-    // ------------------------------------------------
-}
-
-// -----------------------------------------------------------------------------
-
 containers::Features Receiver::recv_features( Poco::Net::StreamSocket *_socket )
 {
     // -------------------------------------------------------------------------
@@ -270,60 +195,27 @@ std::vector<std::string> Receiver::recv_string_column(
     Poco::Net::StreamSocket *_socket )
 {
     // ------------------------------------------------
-    // Receive shape
 
-    std::array<Int, 2> shape;
+    std::uint64_t nbytes = 0;
 
-    recv<Int>( sizeof( Int ) * 2, _socket, shape.data() );
+    recv<std::uint64_t>( sizeof( std::uint64_t ), _socket, &nbytes );
 
-    // ------------------------------------------------
-    // Check shape
-
-    if ( std::get<0>( shape ) <= 0 )
+    if ( nbytes == 0 )
         {
-            throw std::runtime_error(
-                "Your data must contain at least one row!" );
-        }
-
-    if ( std::get<1>( shape ) != 1 )
-        {
-            throw std::runtime_error( "Must be a column!" );
-        }
-
-    // ------------------------------------------------
-    // Recv integers
-
-    containers::Column<Int> integers(
-        static_cast<size_t>( std::get<0>( shape ) ) );
-
-    recv<Int>(
-        sizeof( Int ) * static_cast<ULong>( integers.nrows() ),
-        _socket,
-        integers.data() );
-
-    // ------------------------------------------------
-    // Recv local_encoding
-
-    const auto local_encoding = recv_encoding( _socket );
-
-    // ------------------------------------------------
-    // Decode integers
-
-    std::vector<std::string> col( integers.nrows() );
-
-    for ( size_t i = 0; i < col.size(); ++i )
-        {
-            const auto ix = integers[i];
-
-            assert_true( ix >= 0 );
-            assert_true( static_cast<size_t>( ix ) < local_encoding.size() );
-
-            col[i] = local_encoding[ix];
+            return {};
         }
 
     // ------------------------------------------------
 
-    return col;
+    std::string str( static_cast<size_t>( nbytes ), '0' );
+
+    // ------------------------------------------------
+
+    recv<char>( static_cast<ULong>( nbytes ), _socket, &( str[0] ) );
+
+    // ------------------------------------------------
+
+    return helpers::StringSplitter::split( str, GETML_SEP );
 
     // ------------------------------------------------
 }

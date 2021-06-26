@@ -58,10 +58,6 @@ void Sender::send_categorical_column(
         return _init + _str.size();
     };
 
-    constexpr const char* GETML_SEP = "$GETML_SEP";
-
-    constexpr std::uint64_t SEP_SIZE = 10;
-
     const auto nbytes =
         _col.size() != 0
             ? static_cast<std::uint64_t>(

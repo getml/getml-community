@@ -9,6 +9,9 @@ namespace communication
 
 struct Sender
 {
+    static constexpr const char* GETML_SEP = Receiver::GETML_SEP;
+    static constexpr std::uint64_t SEP_SIZE = 10;
+
     /// Sends data of any kind to the client
     template <class T>
     static void send(
