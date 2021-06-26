@@ -9,23 +9,25 @@ std::vector<std::string> StringSplitter::split(
 {
     std::vector<std::string> splitted;
 
-    auto remaining = _str;
+    size_t begin = 0;
 
     while ( true )
         {
-            const auto pos = remaining.find( _sep );
+            const auto pos = _str.find( _sep, begin );
 
-            if ( pos == std::string::npos )
-                {
-                    splitted.push_back( remaining );
-                    break;
-                }
+            const auto len =
+                pos == std::string::npos ? std::string::npos : pos - begin;
 
-            const auto token = remaining.substr( 0, pos );
+            const auto token = _str.substr( begin, len );
 
             splitted.push_back( token );
 
-            remaining.erase( 0, pos + _sep.length() );
+            if ( pos == std::string::npos )
+                {
+                    break;
+                }
+
+            begin += _sep.size() + token.size();
         }
 
     return splitted;
