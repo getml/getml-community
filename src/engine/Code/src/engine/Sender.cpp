@@ -52,22 +52,58 @@ void Sender::send_categorical_column(
     const std::vector<std::string>& _col, Poco::Net::StreamSocket* _socket )
 {
     // ------------------------------------------------
-    // Send dimensions of matrix
 
-    std::array<Int, 2> shape;
+    const auto get_str_len = []( const size_t _init,
+                                 const std::string& _str ) -> size_t {
+        return _init + _str.size();
+    };
 
-    std::get<0>( shape ) = static_cast<Int>( _col.size() );
-    std::get<1>( shape ) = static_cast<Int>( 1 );
+    constexpr const char* GETML_SEP = "$GETML_SEP";
 
-    Sender::send<Int>( 2 * sizeof( Int ), shape.data(), _socket );
+    constexpr std::uint64_t SEP_SIZE = 10;
+
+    const auto nbytes =
+        _col.size() != 0
+            ? static_cast<std::uint64_t>(
+                  SEP_SIZE * ( _col.size() - 1 ) +
+                  std::accumulate( _col.begin(), _col.end(), 0, get_str_len ) )
+            : static_cast<std::uint64_t>( 0 );
 
     // ------------------------------------------------
-    // Send actual strings.
 
-    for ( const auto& str : _col )
+    Sender::send<std::uint64_t>( sizeof( std::uint64_t ), &nbytes, _socket );
+
+    // ------------------------------------------------
+
+    auto data = std::vector<char>( nbytes );
+
+    std::uint64_t i = 0;
+
+    for ( size_t j = 0; j < _col.size(); ++j )
         {
-            send_string( str, _socket );
+            if ( j != 0 ) [[likely]]
+                {
+                    std::copy(
+                        GETML_SEP, GETML_SEP + SEP_SIZE, data.data() + i );
+
+                    i += SEP_SIZE;
+                }
+
+            const auto& str = _col[j];
+
+            std::copy( str.begin(), str.end(), data.data() + i );
+
+            i += static_cast<std::uint64_t>( str.size() );
+
+            assert_msg(
+                i <= nbytes,
+                "i out of range! i: " + std::to_string( i ) +
+                    ", nbytes: " + std::to_string( nbytes ) );
         }
+
+    // ------------------------------------------------
+
+    Sender::send<char>( static_cast<ULong>( nbytes ), data.data(), _socket );
 
     // ------------------------------------------------
 }
