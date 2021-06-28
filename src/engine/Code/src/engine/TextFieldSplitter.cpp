@@ -66,17 +66,12 @@ Poco::JSON::Object::Ptr TextFieldSplitter::fingerprint() const
 // ----------------------------------------------------
 
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-TextFieldSplitter::fit_transform(
-    const Poco::JSON::Object& _cmd,
-    const std::shared_ptr<containers::Encoding>& _categories,
-    const containers::DataFrame& _population_df,
-    const std::vector<containers::DataFrame>& _peripheral_dfs,
-    const helpers::Placeholder& _placeholder,
-    const std::vector<std::string>& _peripheral_names )
+TextFieldSplitter::fit_transform( const FitParams& _params )
 {
-    cols_ = fit_df( _population_df, helpers::ColumnDescription::POPULATION );
+    cols_ = fit_df(
+        _params.population_df_, helpers::ColumnDescription::POPULATION );
 
-    for ( const auto& df : _peripheral_dfs )
+    for ( const auto& df : _params.peripheral_dfs_ )
         {
             const auto new_cols =
                 fit_df( df, helpers::ColumnDescription::PERIPHERAL );
@@ -84,13 +79,15 @@ TextFieldSplitter::fit_transform(
             cols_.insert( cols_.end(), new_cols.begin(), new_cols.end() );
         }
 
-    return transform(
-        _cmd,
-        _categories,
-        _population_df,
-        _peripheral_dfs,
-        _placeholder,
-        _peripheral_names );
+    const auto params = TransformParams{
+        .cmd_ = _params.cmd_,
+        .categories_ = _params.categories_,
+        .peripheral_dfs_ = _params.peripheral_dfs_,
+        .peripheral_names_ = _params.peripheral_names_,
+        .placeholder_ = _params.placeholder_,
+        .population_df_ = _params.population_df_ };
+
+    return transform( params );
 }
 
 // ----------------------------------------------------
@@ -236,13 +233,7 @@ std::vector<std::string> TextFieldSplitter::to_sql(
 // ----------------------------------------------------
 
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-TextFieldSplitter::transform(
-    const Poco::JSON::Object& _cmd,
-    const std::shared_ptr<const containers::Encoding> _categories,
-    const containers::DataFrame& _population_df,
-    const std::vector<containers::DataFrame>& _peripheral_dfs,
-    const helpers::Placeholder& _placeholder,
-    const std::vector<std::string>& _peripheral_names ) const
+TextFieldSplitter::transform( const TransformParams& _params ) const
 {
     const auto modify_if_applicable =
         [this]( const containers::DataFrame& _df ) -> containers::DataFrame {
@@ -250,19 +241,19 @@ TextFieldSplitter::transform(
                                    : remove_text_fields( add_rowid( _df ) );
     };
 
-    const auto population_df = modify_if_applicable( _population_df );
+    const auto population_df = modify_if_applicable( _params.population_df_ );
 
     const auto range =
-        _peripheral_dfs | std::views::transform( modify_if_applicable );
+        _params.peripheral_dfs_ | std::views::transform( modify_if_applicable );
 
     auto peripheral_dfs = stl::collect::vector<containers::DataFrame>( range );
 
     transform_df(
         helpers::ColumnDescription::POPULATION,
-        _population_df,
+        _params.population_df_,
         &peripheral_dfs );
 
-    for ( const auto& df : _peripheral_dfs )
+    for ( const auto& df : _params.peripheral_dfs_ )
         {
             transform_df(
                 helpers::ColumnDescription::PERIPHERAL, df, &peripheral_dfs );

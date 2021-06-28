@@ -128,13 +128,15 @@ Pipeline::apply_preprocessors(
 
             assert_true( p );
 
-            std::tie( population_df, peripheral_dfs ) = p->transform(
-                _cmd,
-                _categories,
-                population_df,
-                peripheral_dfs,
-                *placeholder,
-                *peripheral_names );
+            const auto params = preprocessors::TransformParams{
+                .cmd_ = _cmd,
+                .categories_ = _categories,
+                .peripheral_dfs_ = peripheral_dfs,
+                .peripheral_names_ = *peripheral_names,
+                .placeholder_ = *placeholder,
+                .population_df_ = population_df };
+
+            std::tie( population_df, peripheral_dfs ) = p->transform( params );
         }
 
     socket_logger.log( "Progress: 100%." );
@@ -1432,27 +1434,32 @@ Pipeline::fit_transform_preprocessors(
 
             if ( retrieved_preprocessor )
                 {
+                    const auto params = preprocessors::TransformParams{
+                        .cmd_ = _cmd,
+                        .categories_ = _categories,
+                        .peripheral_dfs_ = *_peripheral_dfs,
+                        .peripheral_names_ = *peripheral_names,
+                        .placeholder_ = *placeholder,
+                        .population_df_ = *_population_df };
+
                     p = retrieved_preprocessor;
 
                     std::tie( *_population_df, *_peripheral_dfs ) =
-                        p->transform(
-                            _cmd,
-                            _categories,
-                            *_population_df,
-                            *_peripheral_dfs,
-                            *placeholder,
-                            *peripheral_names );
+                        p->transform( params );
 
                     continue;
                 }
 
-            std::tie( *_population_df, *_peripheral_dfs ) = p->fit_transform(
-                _cmd,
-                _categories,
-                *_population_df,
-                *_peripheral_dfs,
-                *placeholder,
-                *peripheral_names );
+            const auto params = preprocessors::FitParams{
+                .cmd_ = _cmd,
+                .categories_ = _categories,
+                .peripheral_dfs_ = *_peripheral_dfs,
+                .peripheral_names_ = *peripheral_names,
+                .placeholder_ = *placeholder,
+                .population_df_ = *_population_df };
+
+            std::tie( *_population_df, *_peripheral_dfs ) =
+                p->fit_transform( params );
 
             _preprocessor_tracker->add( p );
         }

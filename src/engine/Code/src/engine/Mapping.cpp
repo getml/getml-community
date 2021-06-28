@@ -724,31 +724,25 @@ Mapping::extract_schemata(
 // ----------------------------------------------------
 
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-Mapping::fit_transform(
-    const Poco::JSON::Object& _cmd,
-    const std::shared_ptr<containers::Encoding>& _categories,
-    const containers::DataFrame& _population_df,
-    const std::vector<containers::DataFrame>& _peripheral_dfs,
-    const helpers::Placeholder& _placeholder,
-    const std::vector<std::string>& _peripheral_names )
+Mapping::fit_transform( const FitParams& _params )
 {
-    assert_true( _categories );
+    assert_true( _params.categories_ );
 
     std::tie( population_schema_, peripheral_schema_ ) =
-        extract_schemata( _population_df, _peripheral_dfs );
+        extract_schemata( _params.population_df_, _params.peripheral_dfs_ );
 
     const auto [population, table_holder, vocabulary] = build_prerequisites(
-        _population_df,
-        _peripheral_dfs,
-        _placeholder,
-        _peripheral_names,
+        _params.population_df_,
+        _params.peripheral_dfs_,
+        _params.placeholder_,
+        _params.peripheral_names_,
         true );
 
     vocabulary_ = vocabulary;
 
     submappings_ = fit_submappings( population, table_holder, {}, {} );
 
-    table_name_ = _population_df.name();
+    table_name_ = _params.population_df_.name();
 
     std::tie( categorical_, categorical_names_ ) =
         fit_on_categoricals( population, {}, {} );
@@ -758,13 +752,15 @@ Mapping::fit_transform(
 
     std::tie( text_, text_names_ ) = fit_on_text( population, {}, {} );
 
-    return transform(
-        _cmd,
-        _categories,
-        _population_df,
-        _peripheral_dfs,
-        _placeholder,
-        _peripheral_names );
+    const auto params = TransformParams{
+        .cmd_ = _params.cmd_,
+        .categories_ = _params.categories_,
+        .peripheral_dfs_ = _params.peripheral_dfs_,
+        .peripheral_names_ = _params.peripheral_names_,
+        .placeholder_ = _params.placeholder_,
+        .population_df_ = _params.population_df_ };
+
+    return transform( params );
 }
 
 // ----------------------------------------------------
@@ -1583,24 +1579,18 @@ std::vector<std::string> Mapping::to_sql(
 // ----------------------------------------------------
 
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-Mapping::transform(
-    const Poco::JSON::Object& _cmd,
-    const std::shared_ptr<const containers::Encoding> _categories,
-    const containers::DataFrame& _population_df,
-    const std::vector<containers::DataFrame>& _peripheral_dfs,
-    const helpers::Placeholder& _placeholder,
-    const std::vector<std::string>& _peripheral_names ) const
+Mapping::transform( const TransformParams& _params ) const
 {
     const auto [population, table_holder, _] = build_prerequisites(
-        _population_df,
-        _peripheral_dfs,
-        _placeholder,
-        _peripheral_names,
+        _params.population_df_,
+        _params.peripheral_dfs_,
+        _params.placeholder_,
+        _params.peripheral_names_,
         false );
 
-    auto population_df = _population_df;
+    auto population_df = _params.population_df_;
 
-    auto peripheral_dfs = _peripheral_dfs;
+    auto peripheral_dfs = _params.peripheral_dfs_;
 
     if ( table_holder )
         {

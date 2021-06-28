@@ -1,0 +1,35 @@
+#ifndef ENGINE_PREPROCESSORS_FITPARAMS_HPP_
+#define ENGINE_PREPROCESSORS_FITPARAMS_HPP_
+
+namespace engine
+{
+namespace preprocessors
+{
+// ----------------------------------------------------
+
+struct FitParams
+{
+    /// The command used to create the preprocessor.
+    const Poco::JSON::Object& cmd_;
+
+    /// Encoding for categorical variables.
+    const std::shared_ptr<containers::Encoding>& categories_;
+
+    /// The peripheral data frames.
+    const std::vector<containers::DataFrame>& peripheral_dfs_;
+
+    /// The names of the peripheral data frames as referred to in the SQL code.
+    const std::vector<std::string>& peripheral_names_;
+
+    /// The placeholder for the data model.
+    const helpers::Placeholder& placeholder_;
+
+    /// The population data frame.
+    const containers::DataFrame& population_df_;
+};
+
+// ----------------------------------------------------
+}  // namespace preprocessors
+}  // namespace engine
+
+#endif  // ENGINE_PREPROCESSORS_FITPARAMS_HPP_

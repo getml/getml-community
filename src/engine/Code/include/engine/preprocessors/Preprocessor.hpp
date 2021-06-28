@@ -34,23 +34,11 @@ class Preprocessor
 
     /// Fits the preprocessor. Returns the transformed data frames.
     virtual std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-    fit_transform(
-        const Poco::JSON::Object& _cmd,
-        const std::shared_ptr<containers::Encoding>& _categories,
-        const containers::DataFrame& _population_df,
-        const std::vector<containers::DataFrame>& _peripheral_dfs,
-        const helpers::Placeholder& _placeholder,
-        const std::vector<std::string>& _peripheral_names ) = 0;
+    fit_transform( const FitParams& _params ) = 0;
 
     /// Generates the new column.
     virtual std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-    transform(
-        const Poco::JSON::Object& _cmd,
-        const std::shared_ptr<const containers::Encoding> _categories,
-        const containers::DataFrame& _population_df,
-        const std::vector<containers::DataFrame>& _peripheral_dfs,
-        const helpers::Placeholder& _placeholder,
-        const std::vector<std::string>& _peripheral_names ) const = 0;
+    transform( const TransformParams& _params ) const = 0;
 
     /// Expresses the preprocessor as a JSON object.
     virtual Poco::JSON::Object::Ptr to_json_obj() const = 0;

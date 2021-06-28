@@ -37,13 +37,7 @@ class Imputation : public Preprocessor
 
     /// Identifies which features should be extracted from which time stamps.
     std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-    fit_transform(
-        const Poco::JSON::Object& _cmd,
-        const std::shared_ptr<containers::Encoding>& _categories,
-        const containers::DataFrame& _population_df,
-        const std::vector<containers::DataFrame>& _peripheral_dfs,
-        const helpers::Placeholder& _placeholder,
-        const std::vector<std::string>& _peripheral_names ) final;
+    fit_transform( const FitParams& _params ) final;
 
     /// Expresses the Seasonal preprocessor as a JSON object.
     Poco::JSON::Object::Ptr to_json_obj() const final;
@@ -51,13 +45,7 @@ class Imputation : public Preprocessor
     /// Transforms the data frames by adding the desired time series
     /// transformations.
     std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-    transform(
-        const Poco::JSON::Object& _cmd,
-        const std::shared_ptr<const containers::Encoding> _categories,
-        const containers::DataFrame& _population_df,
-        const std::vector<containers::DataFrame>& _peripheral_dfs,
-        const helpers::Placeholder& _placeholder,
-        const std::vector<std::string>& _peripheral_names ) const final;
+    transform( const TransformParams& _params ) const final;
 
    public:
     /// Creates a deep copy.

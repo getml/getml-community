@@ -99,24 +99,18 @@ Poco::JSON::Object::Ptr Imputation::fingerprint() const
 // ----------------------------------------------------
 
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-Imputation::fit_transform(
-    const Poco::JSON::Object& _cmd,
-    const std::shared_ptr<containers::Encoding>& _categories,
-    const containers::DataFrame& _population_df,
-    const std::vector<containers::DataFrame>& _peripheral_dfs,
-    const helpers::Placeholder& _placeholder,
-    const std::vector<std::string>& _peripheral_names )
+Imputation::fit_transform( const FitParams& _params )
 {
-    assert_true( _categories );
+    assert_true( _params.categories_ );
 
     const auto population_df = fit_transform_df(
-        _population_df, helpers::ColumnDescription::POPULATION, 0 );
+        _params.population_df_, helpers::ColumnDescription::POPULATION, 0 );
 
     auto peripheral_dfs = std::vector<containers::DataFrame>();
 
-    for ( size_t i = 0; i < _peripheral_dfs.size(); ++i )
+    for ( size_t i = 0; i < _params.peripheral_dfs_.size(); ++i )
         {
-            const auto& df = _peripheral_dfs.at( i );
+            const auto& df = _params.peripheral_dfs_.at( i );
 
             const auto new_df = fit_transform_df(
                 df, helpers::ColumnDescription::PERIPHERAL, i );
@@ -298,24 +292,18 @@ Poco::JSON::Object::Ptr Imputation::to_json_obj() const
 // ----------------------------------------------------
 
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-Imputation::transform(
-    const Poco::JSON::Object& _cmd,
-    const std::shared_ptr<const containers::Encoding> _categories,
-    const containers::DataFrame& _population_df,
-    const std::vector<containers::DataFrame>& _peripheral_dfs,
-    const helpers::Placeholder& _placeholder,
-    const std::vector<std::string>& _peripheral_names ) const
+Imputation::transform( const TransformParams& _params ) const
 {
-    assert_true( _categories );
+    assert_true( _params.categories_ );
 
     const auto population_df = transform_df(
-        _population_df, helpers::ColumnDescription::POPULATION, 0 );
+        _params.population_df_, helpers::ColumnDescription::POPULATION, 0 );
 
     auto peripheral_dfs = std::vector<containers::DataFrame>();
 
-    for ( size_t i = 0; i < _peripheral_dfs.size(); ++i )
+    for ( size_t i = 0; i < _params.peripheral_dfs_.size(); ++i )
         {
-            const auto& df = _peripheral_dfs.at( i );
+            const auto& df = _params.peripheral_dfs_.at( i );
 
             const auto new_df =
                 transform_df( df, helpers::ColumnDescription::PERIPHERAL, i );

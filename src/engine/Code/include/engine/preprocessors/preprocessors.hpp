@@ -28,6 +28,9 @@
 #include "engine/preprocessors/DataModelChecker.hpp"
 #include "engine/preprocessors/MappingAggregation.hpp"
 
+#include "engine/preprocessors/FitParams.hpp"
+#include "engine/preprocessors/TransformParams.hpp"
+
 #include "engine/preprocessors/Preprocessor.hpp"
 #include "engine/preprocessors/PreprocessorImpl.hpp"
 

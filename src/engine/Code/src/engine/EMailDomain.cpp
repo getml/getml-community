@@ -100,33 +100,27 @@ Poco::JSON::Object::Ptr EMailDomain::fingerprint() const
 // ----------------------------------------------------
 
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-EMailDomain::fit_transform(
-    const Poco::JSON::Object& _cmd,
-    const std::shared_ptr<containers::Encoding>& _categories,
-    const containers::DataFrame& _population_df,
-    const std::vector<containers::DataFrame>& _peripheral_dfs,
-    const helpers::Placeholder& _placeholder,
-    const std::vector<std::string>& _peripheral_names )
+EMailDomain::fit_transform( const FitParams& _params )
 {
-    assert_true( _categories );
+    assert_true( _params.categories_ );
 
     const auto population_df = fit_transform_df(
-        _population_df,
+        _params.population_df_,
         helpers::ColumnDescription::POPULATION,
         0,
-        _categories.get() );
+        _params.categories_.get() );
 
     auto peripheral_dfs = std::vector<containers::DataFrame>();
 
-    for ( size_t i = 0; i < _peripheral_dfs.size(); ++i )
+    for ( size_t i = 0; i < _params.peripheral_dfs_.size(); ++i )
         {
-            const auto& df = _peripheral_dfs.at( i );
+            const auto& df = _params.peripheral_dfs_.at( i );
 
             const auto new_df = fit_transform_df(
                 df,
                 helpers::ColumnDescription::PERIPHERAL,
                 i,
-                _categories.get() );
+                _params.categories_.get() );
 
             peripheral_dfs.push_back( new_df );
         }
@@ -222,30 +216,27 @@ Poco::JSON::Object::Ptr EMailDomain::to_json_obj() const
 // ----------------------------------------------------
 
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-EMailDomain::transform(
-    const Poco::JSON::Object& _cmd,
-    const std::shared_ptr<const containers::Encoding> _categories,
-    const containers::DataFrame& _population_df,
-    const std::vector<containers::DataFrame>& _peripheral_dfs,
-    const helpers::Placeholder& _placeholder,
-    const std::vector<std::string>& _peripheral_names ) const
+EMailDomain::transform( const TransformParams& _params ) const
 {
-    assert_true( _categories );
+    assert_true( _params.categories_ );
 
     const auto population_df = transform_df(
-        *_categories,
-        _population_df,
+        *_params.categories_,
+        _params.population_df_,
         helpers::ColumnDescription::POPULATION,
         0 );
 
     auto peripheral_dfs = std::vector<containers::DataFrame>();
 
-    for ( size_t i = 0; i < _peripheral_dfs.size(); ++i )
+    for ( size_t i = 0; i < _params.peripheral_dfs_.size(); ++i )
         {
-            const auto& df = _peripheral_dfs.at( i );
+            const auto& df = _params.peripheral_dfs_.at( i );
 
             const auto new_df = transform_df(
-                *_categories, df, helpers::ColumnDescription::PERIPHERAL, i );
+                *_params.categories_,
+                df,
+                helpers::ColumnDescription::PERIPHERAL,
+                i );
 
             peripheral_dfs.push_back( new_df );
         }
