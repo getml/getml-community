@@ -82,6 +82,9 @@ TextFieldSplitter::fit_transform( const FitParams& _params )
     const auto params = TransformParams{
         .cmd_ = _params.cmd_,
         .categories_ = _params.categories_,
+        .logger_ = _params.logger_,
+        .logging_begin_ = ( _params.logging_begin_ + _params.logging_end_ ) / 2,
+        .logging_end_ = _params.logging_end_,
         .peripheral_dfs_ = _params.peripheral_dfs_,
         .peripheral_names_ = _params.peripheral_names_,
         .placeholder_ = _params.placeholder_,

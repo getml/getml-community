@@ -15,6 +15,15 @@ struct TransformParams
     /// Encoding for categorical variables.
     const std::shared_ptr<const containers::Encoding>& categories_;
 
+    /// The logger used to log the progress.
+    const std::shared_ptr<const logging::AbstractLogger>& logger_;
+
+    /// The percentage at which we want the logging to begin.
+    const size_t logging_begin_;
+
+    /// The percentage at which we want the logging to end.
+    const size_t logging_end_;
+
     /// The peripheral data frames.
     const std::vector<containers::DataFrame>& peripheral_dfs_;
 

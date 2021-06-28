@@ -442,18 +442,23 @@ std::pair<typename Mapping::MappingForDf, typename Mapping::Colnames>
 Mapping::fit_on_categoricals(
     const helpers::DataFrame& _population,
     const std::vector<helpers::DataFrame>& _main_tables,
-    const std::vector<helpers::DataFrame>& _peripheral_tables ) const
+    const std::vector<helpers::DataFrame>& _peripheral_tables,
+    logging::ProgressLogger* _logger ) const
 {
     const auto include = [this]( const helpers::Column<Int>& _col ) -> bool {
         return parse_subroles( _col );
     };
 
     const auto col_to_mapping =
-        [this, &_population, &_main_tables, &_peripheral_tables](
+        [this, &_population, &_main_tables, &_peripheral_tables, _logger](
             const helpers::Column<Int>& _col ) {
             const auto rownum_map = make_rownum_map_categorical( _col );
             return make_mapping(
-                rownum_map, _population, _main_tables, _peripheral_tables );
+                rownum_map,
+                _population,
+                _main_tables,
+                _peripheral_tables,
+                _logger );
         };
 
     const auto get_colname =
@@ -487,18 +492,23 @@ std::pair<typename Mapping::MappingForDf, typename Mapping::Colnames>
 Mapping::fit_on_discretes(
     const helpers::DataFrame& _population,
     const std::vector<helpers::DataFrame>& _main_tables,
-    const std::vector<helpers::DataFrame>& _peripheral_tables ) const
+    const std::vector<helpers::DataFrame>& _peripheral_tables,
+    logging::ProgressLogger* _logger ) const
 {
     const auto include = [this]( const helpers::Column<Float>& _col ) -> bool {
         return parse_subroles( _col );
     };
 
     const auto col_to_mapping =
-        [this, &_population, &_main_tables, &_peripheral_tables](
+        [this, &_population, &_main_tables, &_peripheral_tables, _logger](
             const helpers::Column<Float>& _col ) {
             const auto rownum_map = make_rownum_map_discrete( _col );
             return make_mapping(
-                rownum_map, _population, _main_tables, _peripheral_tables );
+                rownum_map,
+                _population,
+                _main_tables,
+                _peripheral_tables,
+                _logger );
         };
 
     const auto get_colname =
@@ -531,7 +541,8 @@ Mapping Mapping::fit_on_table_holder(
     const helpers::TableHolder& _table_holder,
     const std::vector<helpers::DataFrame>& _main_tables,
     const std::vector<helpers::DataFrame>& _peripheral_tables,
-    const size_t _ix ) const
+    const size_t _ix,
+    logging::ProgressLogger* _logger ) const
 {
     // ----------------------------------------------------
 
@@ -575,16 +586,18 @@ Mapping Mapping::fit_on_table_holder(
         _population,
         _table_holder.subtables().at( _ix ),
         main_tables,
-        peripheral_tables );
+        peripheral_tables,
+        _logger );
 
     std::tie( mapping.categorical_, mapping.categorical_names_ ) =
-        fit_on_categoricals( _population, main_tables, peripheral_tables );
+        fit_on_categoricals(
+            _population, main_tables, peripheral_tables, _logger );
 
-    std::tie( mapping.discrete_, mapping.discrete_names_ ) =
-        fit_on_discretes( _population, main_tables, peripheral_tables );
+    std::tie( mapping.discrete_, mapping.discrete_names_ ) = fit_on_discretes(
+        _population, main_tables, peripheral_tables, _logger );
 
     std::tie( mapping.text_, mapping.text_names_ ) =
-        fit_on_text( _population, main_tables, peripheral_tables );
+        fit_on_text( _population, main_tables, peripheral_tables, _logger );
 
     return mapping;
 
@@ -597,15 +610,20 @@ std::pair<typename Mapping::MappingForDf, typename Mapping::Colnames>
 Mapping::fit_on_text(
     const helpers::DataFrame& _population,
     const std::vector<helpers::DataFrame>& _main_tables,
-    const std::vector<helpers::DataFrame>& _peripheral_tables ) const
+    const std::vector<helpers::DataFrame>& _peripheral_tables,
+    logging::ProgressLogger* _logger ) const
 {
     const auto word_index_to_mapping =
-        [this, &_population, &_main_tables, &_peripheral_tables](
+        [this, &_population, &_main_tables, &_peripheral_tables, _logger](
             const std::shared_ptr<const textmining::WordIndex>& _word_index ) {
             assert_true( _word_index );
             const auto rownum_map = make_rownum_map_text( *_word_index );
             return make_mapping(
-                rownum_map, _population, _main_tables, _peripheral_tables );
+                rownum_map,
+                _population,
+                _main_tables,
+                _peripheral_tables,
+                _logger );
         };
 
     const auto get_colname =
@@ -663,7 +681,8 @@ std::vector<Mapping> Mapping::fit_submappings(
     const helpers::DataFrame& _population,
     const std::optional<helpers::TableHolder>& _table_holder,
     const std::vector<helpers::DataFrame>& _main_tables,
-    const std::vector<helpers::DataFrame>& _peripheral_tables ) const
+    const std::vector<helpers::DataFrame>& _peripheral_tables,
+    logging::ProgressLogger* _logger ) const
 {
     // ----------------------------------------------------
 
@@ -678,13 +697,15 @@ std::vector<Mapping> Mapping::fit_submappings(
                       &_population,
                       &_table_holder,
                       &_main_tables,
-                      &_peripheral_tables]( const size_t _ix ) -> Mapping {
+                      &_peripheral_tables,
+                      _logger]( const size_t _ix ) -> Mapping {
         return fit_on_table_holder(
             _population,
             _table_holder.value(),
             _main_tables,
             _peripheral_tables,
-            _ix );
+            _ix,
+            _logger );
     };
 
     // ----------------------------------------------------
@@ -723,6 +744,71 @@ Mapping::extract_schemata(
 
 // ----------------------------------------------------
 
+size_t Mapping::infer_num_cols(
+    const helpers::TableHolder& _table_holder ) const
+{
+    if ( _table_holder.main_tables().size() == 0 )
+        {
+            return 0;
+        }
+
+    const auto infer_peripheral =
+        [this]( const helpers::DataFrame& _df ) -> size_t {
+        return infer_num_cols( _df );
+    };
+
+    const auto infer_subtable =
+        [this](
+            const std::optional<helpers::TableHolder>& _subtable ) -> size_t {
+        if ( !_subtable )
+            {
+                return 0;
+            }
+        return infer_num_cols( *_subtable );
+    };
+
+    auto range_peripherals = _table_holder.peripheral_tables() |
+                             std::views::transform( infer_peripheral );
+
+    auto range_subtables =
+        _table_holder.subtables() | std::views::transform( infer_subtable );
+
+    const auto num_cols_population =
+        infer_num_cols( _table_holder.main_tables().at( 0 ).df() );
+
+    const auto num_cols_peripherals = std::accumulate(
+        range_peripherals.begin(), range_peripherals.end(), 0 );
+
+    const auto num_cols_subtables =
+        std::accumulate( range_subtables.begin(), range_subtables.end(), 0 );
+
+    return num_cols_population + num_cols_peripherals + num_cols_subtables;
+}
+
+// ----------------------------------------------------
+
+size_t Mapping::infer_num_cols( const helpers::DataFrame& _df ) const
+{
+    const auto include = [this]( const auto& _col ) -> bool {
+        return parse_subroles( _col );
+    };
+
+    const auto get_length = []( auto _range ) -> size_t {
+        return static_cast<size_t>(
+            std::distance( _range.begin(), _range.end() ) );
+    };
+
+    const auto range1 = _df.categoricals_ | std::views::filter( include );
+
+    const auto range2 = _df.discretes_ | std::views::filter( include );
+
+    const auto range3 = _df.text_ | std::views::filter( include );
+
+    return get_length( range1 ) + get_length( range2 ) + get_length( range3 );
+}
+
+// ----------------------------------------------------
+
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
 Mapping::fit_transform( const FitParams& _params )
 {
@@ -738,23 +824,36 @@ Mapping::fit_transform( const FitParams& _params )
         _params.peripheral_names_,
         true );
 
+    const auto num_cols = table_holder ? infer_num_cols( *table_holder )
+                                       : infer_num_cols( population );
+
+    auto logger = logging::ProgressLogger(
+        "",
+        _params.logger_,
+        num_cols * 2,
+        _params.logging_begin_,
+        _params.logging_end_ );
+
     vocabulary_ = vocabulary;
 
-    submappings_ = fit_submappings( population, table_holder, {}, {} );
+    submappings_ = fit_submappings( population, table_holder, {}, {}, &logger );
 
     table_name_ = _params.population_df_.name();
 
     std::tie( categorical_, categorical_names_ ) =
-        fit_on_categoricals( population, {}, {} );
+        fit_on_categoricals( population, {}, {}, &logger );
 
     std::tie( discrete_, discrete_names_ ) =
-        fit_on_discretes( population, {}, {} );
+        fit_on_discretes( population, {}, {}, &logger );
 
-    std::tie( text_, text_names_ ) = fit_on_text( population, {}, {} );
+    std::tie( text_, text_names_ ) = fit_on_text( population, {}, {}, &logger );
 
     const auto params = TransformParams{
         .cmd_ = _params.cmd_,
         .categories_ = _params.categories_,
+        .logger_ = _params.logger_,
+        .logging_begin_ = ( _params.logging_begin_ + _params.logging_end_ ) / 2,
+        .logging_end_ = _params.logging_end_,
         .peripheral_dfs_ = _params.peripheral_dfs_,
         .peripheral_names_ = _params.peripheral_names_,
         .placeholder_ = _params.placeholder_,
@@ -910,7 +1009,8 @@ std::shared_ptr<const std::map<Int, std::vector<Float>>> Mapping::make_mapping(
     const std::map<Int, std::vector<size_t>>& _rownum_map,
     const helpers::DataFrame& _population,
     const std::vector<helpers::DataFrame>& _main_tables,
-    const std::vector<helpers::DataFrame>& _peripheral_tables ) const
+    const std::vector<helpers::DataFrame>& _peripheral_tables,
+    logging::ProgressLogger* _logger ) const
 {
     const auto match_rows = [this, &_main_tables, &_peripheral_tables](
                                 const RownumPair& _input ) -> RownumPair {
@@ -943,15 +1043,20 @@ std::shared_ptr<const std::map<Int, std::vector<Float>>> Mapping::make_mapping(
         }
 #endif
 
-    return std::make_shared<const std::map<Int, std::vector<Float>>>(
-        range.begin(), range.end() );
+    const auto mapping =
+        std::make_shared<const std::map<Int, std::vector<Float>>>(
+            range.begin(), range.end() );
+
+    _logger->increment();
+
+    return mapping;
 }
 
 // ----------------------------------------------------
 
 std::vector<containers::Column<Float>> Mapping::make_mapping_columns_int(
-    const std::pair<containers::Column<Int>, MappingForDf::value_type>& _p )
-    const
+    const std::pair<containers::Column<Int>, MappingForDf::value_type>& _p,
+    logging::ProgressLogger* _logger ) const
 {
     // ----------------------------------------------------
 
@@ -979,7 +1084,7 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_int(
     // ----------------------------------------------------
 
     const auto make_mapping_column =
-        [this, map_value, &col](
+        [this, map_value, &col, _logger](
             const size_t _weight_num ) -> containers::Column<Float> {
         const auto get_val =
             std::bind( map_value, _weight_num, std::placeholders::_1 );
@@ -1007,6 +1112,7 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_int(
 
     if ( mapping->size() <= 1 )
         {
+            _logger->increment();
             return std::vector<containers::Column<Float>>();
         }
 
@@ -1014,8 +1120,12 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_int(
 
     const auto iota = stl::iota<size_t>( 0, num_weights );
 
-    return stl::collect::vector<containers::Column<Float>>(
+    const auto vec = stl::collect::vector<containers::Column<Float>>(
         iota | std::views::transform( make_mapping_column ) );
+
+    _logger->increment();
+
+    return vec;
 
     // ----------------------------------------------------
 }
@@ -1026,7 +1136,8 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_text(
     const std::tuple<
         std::string,
         std::shared_ptr<const textmining::WordIndex>,
-        MappingForDf::value_type>& _t ) const
+        MappingForDf::value_type>& _t,
+    logging::ProgressLogger* _logger ) const
 {
     // ----------------------------------------------------
 
@@ -1112,6 +1223,7 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_text(
 
     if ( mapping->size() <= 1 )
         {
+            _logger->increment();
             return std::vector<containers::Column<Float>>();
         }
 
@@ -1121,6 +1233,8 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_text(
 
     const auto vec = stl::collect::vector<containers::Column<Float>>(
         iota | std::views::transform( make_mapping_column ) );
+
+    _logger->increment();
 
     return vec;
 
@@ -1588,16 +1702,26 @@ Mapping::transform( const TransformParams& _params ) const
         _params.peripheral_names_,
         false );
 
+    const auto num_cols = table_holder ? infer_num_cols( *table_holder )
+                                       : infer_num_cols( population );
+
+    auto logger = logging::ProgressLogger(
+        "",
+        _params.logger_,
+        num_cols,
+        _params.logging_begin_,
+        _params.logging_end_ );
+
     auto population_df = _params.population_df_;
 
     auto peripheral_dfs = _params.peripheral_dfs_;
 
     if ( table_holder )
         {
-            transform_peripherals( *table_holder, &peripheral_dfs );
+            transform_peripherals( *table_holder, &logger, &peripheral_dfs );
         }
 
-    transform_data_frame( population, &population_df );
+    transform_data_frame( population, &logger, &population_df );
 
     return std::make_pair( population_df, peripheral_dfs );
 }
@@ -1606,6 +1730,7 @@ Mapping::transform( const TransformParams& _params ) const
 
 void Mapping::transform_peripherals(
     const helpers::TableHolder& _table_holder,
+    logging::ProgressLogger* _logger,
     std::vector<containers::DataFrame>* _peripheral_dfs ) const
 {
     // ----------------------------------------------------
@@ -1643,14 +1768,14 @@ void Mapping::transform_peripherals(
                 {
                     assert_true( subtable );
                     mapping.transform_peripherals(
-                        subtable.value(), _peripheral_dfs );
+                        subtable.value(), _logger, _peripheral_dfs );
                 }
 
             const auto& immutable = _table_holder.peripheral_tables().at( i );
 
             const auto df = find_peripheral( mapping );
 
-            mapping.transform_data_frame( immutable, df );
+            mapping.transform_data_frame( immutable, _logger, df );
         }
 
     // ----------------------------------------------------
@@ -1659,7 +1784,7 @@ void Mapping::transform_peripherals(
 // ----------------------------------------------------
 
 std::vector<containers::Column<Float>> Mapping::transform_categorical(
-    const containers::DataFrame& _df ) const
+    const containers::DataFrame& _df, logging::ProgressLogger* _logger ) const
 {
     using Pair = std::pair<containers::Column<Int>, MappingForDf::value_type>;
 
@@ -1686,8 +1811,8 @@ std::vector<containers::Column<Float>> Mapping::transform_categorical(
 
     assert_true( categorical_.size() == categorical_names_->size() );
 
-    const auto make_cols = [this]( const Pair& _p ) {
-        return make_mapping_columns_int( _p );
+    const auto make_cols = [this, _logger]( const Pair& _p ) {
+        return make_mapping_columns_int( _p, _logger );
     };
 
     const auto iota = stl::iota<size_t>( 0, categorical_.size() );
@@ -1702,6 +1827,7 @@ std::vector<containers::Column<Float>> Mapping::transform_categorical(
 
 void Mapping::transform_data_frame(
     const helpers::DataFrame& _immutable,
+    logging::ProgressLogger* _logger,
     containers::DataFrame* _data_frame ) const
 {
     const auto add_columns =
@@ -1714,11 +1840,13 @@ void Mapping::transform_data_frame(
                 }
         };
 
-    const auto categorical_mappings = transform_categorical( *_data_frame );
+    const auto categorical_mappings =
+        transform_categorical( *_data_frame, _logger );
 
-    const auto discrete_mappings = transform_discrete( *_data_frame );
+    const auto discrete_mappings = transform_discrete( *_data_frame, _logger );
 
-    const auto text_mappings = transform_text( _immutable, *_data_frame );
+    const auto text_mappings =
+        transform_text( _immutable, *_data_frame, _logger );
 
     add_columns( categorical_mappings, _data_frame );
 
@@ -1730,7 +1858,7 @@ void Mapping::transform_data_frame(
 // ----------------------------------------------------
 
 std::vector<containers::Column<Float>> Mapping::transform_discrete(
-    const containers::DataFrame& _df ) const
+    const containers::DataFrame& _df, logging::ProgressLogger* _logger ) const
 {
     using Pair = std::pair<containers::Column<Int>, MappingForDf::value_type>;
 
@@ -1770,8 +1898,8 @@ std::vector<containers::Column<Float>> Mapping::transform_discrete(
 
     assert_true( discrete_.size() == discrete_names_->size() );
 
-    const auto make_cols = [this]( const Pair& _p ) {
-        return make_mapping_columns_int( _p );
+    const auto make_cols = [this, _logger]( const Pair& _p ) {
+        return make_mapping_columns_int( _p, _logger );
     };
 
     const auto iota = stl::iota<size_t>( 0, discrete_.size() );
@@ -1819,7 +1947,8 @@ Poco::JSON::Array::Ptr Mapping::transform_mapping(
 
 std::vector<containers::Column<Float>> Mapping::transform_text(
     const helpers::DataFrame& _immutable,
-    const containers::DataFrame& _df ) const
+    const containers::DataFrame& _df,
+    logging::ProgressLogger* _logger ) const
 {
     // --------------------------------------------------------------
 
@@ -1866,8 +1995,8 @@ std::vector<containers::Column<Float>> Mapping::transform_text(
 
     // --------------------------------------------------------------
 
-    const auto make_cols = [this]( const Tuple& _t ) {
-        return make_mapping_columns_text( _t );
+    const auto make_cols = [this, _logger]( const Tuple& _t ) {
+        return make_mapping_columns_text( _t, _logger );
     };
 
     // --------------------------------------------------------------

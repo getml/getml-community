@@ -113,15 +113,15 @@ Pipeline::apply_preprocessors(
     assert_true( _logger );
 
     const auto socket_logger =
-        communication::SocketLogger( _logger, true, _socket );
+        std::make_shared<communication::SocketLogger>( _logger, true, _socket );
 
-    socket_logger.log( "Preprocessing..." );
+    socket_logger->log( "Preprocessing..." );
 
     for ( size_t i = 0; i < preprocessors_.size(); ++i )
         {
             const auto progress = ( i * 100 ) / preprocessors_.size();
 
-            socket_logger.log(
+            socket_logger->log(
                 "Progress: " + std::to_string( progress ) + "%." );
 
             auto& p = preprocessors_.at( i );
@@ -131,6 +131,9 @@ Pipeline::apply_preprocessors(
             const auto params = preprocessors::TransformParams{
                 .cmd_ = _cmd,
                 .categories_ = _categories,
+                .logger_ = socket_logger,
+                .logging_begin_ = ( i * 100 ) / preprocessors_.size(),
+                .logging_end_ = ( ( i + 1 ) * 100 ) / preprocessors_.size(),
                 .peripheral_dfs_ = peripheral_dfs,
                 .peripheral_names_ = *peripheral_names,
                 .placeholder_ = *placeholder,
@@ -139,7 +142,7 @@ Pipeline::apply_preprocessors(
             std::tie( population_df, peripheral_dfs ) = p->transform( params );
         }
 
-    socket_logger.log( "Progress: 100%." );
+    socket_logger->log( "Progress: 100%." );
 
     return std::make_pair( population_df, peripheral_dfs );
 }
@@ -1405,9 +1408,9 @@ Pipeline::fit_transform_preprocessors(
     assert_true( _preprocessor_tracker );
 
     const auto socket_logger =
-        _logger ? std::make_optional<const communication::SocketLogger>(
+        _logger ? std::make_shared<const communication::SocketLogger>(
                       _logger, true, _socket )
-                : std::optional<const communication::SocketLogger>();
+                : std::shared_ptr<const communication::SocketLogger>();
 
     if ( socket_logger )
         {
@@ -1437,6 +1440,10 @@ Pipeline::fit_transform_preprocessors(
                     const auto params = preprocessors::TransformParams{
                         .cmd_ = _cmd,
                         .categories_ = _categories,
+                        .logger_ = socket_logger,
+                        .logging_begin_ = ( i * 100 ) / preprocessors.size(),
+                        .logging_end_ =
+                            ( ( i + 1 ) * 100 ) / preprocessors.size(),
                         .peripheral_dfs_ = *_peripheral_dfs,
                         .peripheral_names_ = *peripheral_names,
                         .placeholder_ = *placeholder,
@@ -1453,6 +1460,9 @@ Pipeline::fit_transform_preprocessors(
             const auto params = preprocessors::FitParams{
                 .cmd_ = _cmd,
                 .categories_ = _categories,
+                .logger_ = socket_logger,
+                .logging_begin_ = ( i * 100 ) / preprocessors.size(),
+                .logging_end_ = ( ( i + 1 ) * 100 ) / preprocessors.size(),
                 .peripheral_dfs_ = *_peripheral_dfs,
                 .peripheral_names_ = *peripheral_names,
                 .placeholder_ = *placeholder,

@@ -299,13 +299,15 @@ class Mapping : public Preprocessor
     std::pair<MappingForDf, Colnames> fit_on_categoricals(
         const helpers::DataFrame& _population,
         const std::vector<helpers::DataFrame>& _main_tables,
-        const std::vector<helpers::DataFrame>& _peripheral_tables ) const;
+        const std::vector<helpers::DataFrame>& _peripheral_tables,
+        logging::ProgressLogger* _logger ) const;
 
     /// Calculates the mappings for discrete columns.
     std::pair<MappingForDf, Colnames> fit_on_discretes(
         const helpers::DataFrame& _population,
         const std::vector<helpers::DataFrame>& _main_tables,
-        const std::vector<helpers::DataFrame>& _peripheral_tables ) const;
+        const std::vector<helpers::DataFrame>& _peripheral_tables,
+        logging::ProgressLogger* _logger ) const;
 
     /// Fits a new submapping on table holder.
     Mapping fit_on_table_holder(
@@ -313,20 +315,23 @@ class Mapping : public Preprocessor
         const helpers::TableHolder& _table_holder,
         const std::vector<helpers::DataFrame>& _main_tables,
         const std::vector<helpers::DataFrame>& _peripheral_tables,
-        const size_t _ix ) const;
+        const size_t _ix,
+        logging::ProgressLogger* _logger ) const;
 
     /// Calculates the mappings for text columns.
     std::pair<MappingForDf, Colnames> fit_on_text(
         const helpers::DataFrame& _population,
         const std::vector<helpers::DataFrame>& _main_tables,
-        const std::vector<helpers::DataFrame>& _peripheral_tables ) const;
+        const std::vector<helpers::DataFrame>& _peripheral_tables,
+        logging::ProgressLogger* _logger ) const;
 
     /// Fits the submappings on the subtables of a table holder.
     std::vector<Mapping> fit_submappings(
         const helpers::DataFrame& _population,
         const std::optional<helpers::TableHolder>& _table_holder,
         const std::vector<helpers::DataFrame>& _main_tables,
-        const std::vector<helpers::DataFrame>& _peripheral_tables ) const;
+        const std::vector<helpers::DataFrame>& _peripheral_tables,
+        logging::ProgressLogger* _logger ) const;
 
     /// Parses a JSON object.
     Mapping from_json_obj( const Poco::JSON::Object& _obj ) const;
@@ -339,6 +344,12 @@ class Mapping : public Preprocessor
         const helpers::DataFrame& _population,
         const std::vector<helpers::DataFrame>& _peripheral ) const;
 
+    /// Infers the number of relevant columns from a table holder.
+    size_t infer_num_cols( const helpers::TableHolder& _table_holder ) const;
+
+    /// Infers the number of relevant columns from a data frame.
+    size_t infer_num_cols( const helpers::DataFrame& _df ) const;
+
     /// Generates the name of the mapping column.
     std::string make_colname(
         const std::string& _name, const size_t _weight_num ) const;
@@ -348,19 +359,21 @@ class Mapping : public Preprocessor
         const std::map<Int, std::vector<size_t>>& _rownum_map,
         const helpers::DataFrame& _population,
         const std::vector<helpers::DataFrame>& _main_tables,
-        const std::vector<helpers::DataFrame>& _peripheral_tables ) const;
+        const std::vector<helpers::DataFrame>& _peripheral_tables,
+        logging::ProgressLogger* _logger ) const;
 
     /// Generates the mapping columns.
     std::vector<containers::Column<Float>> make_mapping_columns_int(
-        const std::pair<containers::Column<Int>, MappingForDf::value_type>& _p )
-        const;
+        const std::pair<containers::Column<Int>, MappingForDf::value_type>& _p,
+        logging::ProgressLogger* _logger ) const;
 
     /// Generates the mapping columns for text fields.
     std::vector<containers::Column<Float>> make_mapping_columns_text(
         const std::tuple<
             std::string,
             std::shared_ptr<const textmining::WordIndex>,
-            MappingForDf::value_type>& _t ) const;
+            MappingForDf::value_type>& _t,
+        logging::ProgressLogger* _logger ) const;
 
     /// Generates the pairs needed generate the create table statement.
     std::vector<std::pair<Int, Float>> make_pairs(
@@ -394,20 +407,24 @@ class Mapping : public Preprocessor
 
     /// Transforms the categorical columns in the DataFrame.
     std::vector<containers::Column<Float>> transform_categorical(
-        const containers::DataFrame& _df ) const;
+        const containers::DataFrame& _df,
+        logging::ProgressLogger* _logger ) const;
 
     /// Adds the columns produced by this mapping to the data frame.
     void transform_data_frame(
         const helpers::DataFrame& _immutable,
+        logging::ProgressLogger* _logger,
         containers::DataFrame* _data_frame ) const;
 
     /// Transforms the discrete columns in the DataFrame.
     std::vector<containers::Column<Float>> transform_discrete(
-        const containers::DataFrame& _df ) const;
+        const containers::DataFrame& _df,
+        logging::ProgressLogger* _logger ) const;
 
     /// Transforms the peripheral data frames.
     void transform_peripherals(
         const helpers::TableHolder& _table_holder,
+        logging::ProgressLogger* _logger,
         std::vector<containers::DataFrame>* _peripheral_dfs ) const;
 
     /// Transform the mapping into a Poco array.
@@ -417,7 +434,8 @@ class Mapping : public Preprocessor
     /// Transforms the text columns in the DataFrame.
     std::vector<containers::Column<Float>> transform_text(
         const helpers::DataFrame& _immutable,
-        const containers::DataFrame& _df ) const;
+        const containers::DataFrame& _df,
+        logging::ProgressLogger* _logger ) const;
 
     /// Transforms the text mapping into a JSON Array.
     Poco::JSON::Array::Ptr transform_text_mapping(
