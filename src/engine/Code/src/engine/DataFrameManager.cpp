@@ -911,35 +911,47 @@ void DataFrameManager::concat(
 {
     // ------------------------------------------------------------------------
 
-    const auto df_names = JSON::array_to_vector<std::string>(
-        JSON::get_array( _cmd, "df_names_" ) );
+    const auto data_frame_objs =
+        JSON::array_to_obj_vector( JSON::get_array( _cmd, "data_frames_" ) );
 
-    if ( df_names.size() == 0 )
+    if ( data_frame_objs.size() == 0 )
         {
             throw std::invalid_argument(
-                "You should provide at least one data frame to concatenate!" );
+                "You should provide at least one data frame or view to "
+                "concatenate!" );
         }
 
-    // ------------------------------------------------------------------------
+    // -------------------------------------------------------
 
     multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
+    const auto local_categories =
+        std::make_shared<containers::Encoding>( categories_ );
+
+    const auto local_join_keys_encoding =
+        std::make_shared<containers::Encoding>( join_keys_encoding_ );
+
+    // -------------------------------------------------------
+
+    auto view_parser =
+        ViewParser( local_categories, local_join_keys_encoding, data_frames_ );
+
+    const auto extract_df =
+        [&view_parser](
+            const Poco::JSON::Object::Ptr _ptr ) -> containers::DataFrame {
+        assert_true( _ptr );
+        return view_parser.parse( *_ptr );
+    };
+
+    auto range = data_frame_objs | std::views::transform( extract_df );
+
     // ------------------------------------------------------------------------
 
-    auto df_list = std::vector<containers::DataFrame>();
+    auto df = range[0].clone( _name );
 
-    for ( const auto& name : df_names )
+    for ( size_t i = 1; i < std::ranges::size( range ); ++i )
         {
-            df_list.push_back( utils::Getter::get( name, data_frames() ) );
-        }
-
-    // ------------------------------------------------------------------------
-
-    auto df = df_list.at( 0 ).clone( _name );
-
-    for ( size_t i = 1; i < df_list.size(); ++i )
-        {
-            df.append( df_list.at( i ) );
+            df.append( range[i] );
         }
 
     df.create_indices();
@@ -950,9 +962,15 @@ void DataFrameManager::concat(
 
     weak_write_lock.upgrade();
 
-    // ------------------------------------------------------------------------
+    categories_->append( *local_categories );
+
+    join_keys_encoding_->append( *local_join_keys_encoding );
 
     data_frames()[_name] = df;
+
+    // ------------------------------------------------------------------------
+
+    weak_write_lock.unlock();
 
     // ------------------------------------------------------------------------
 
