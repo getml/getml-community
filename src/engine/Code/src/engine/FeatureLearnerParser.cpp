@@ -11,27 +11,27 @@ std::shared_ptr<AbstractFeatureLearner> FeatureLearnerParser::parse(
 {
     const auto type = JSON::get_value<std::string>( _params.cmd_, "type_" );
 
-    if ( type == AbstractFeatureLearner::FASTPROP_MODEL )
+    if ( type == AbstractFeatureLearner::FASTPROP )
         {
             return std::make_shared<
                 FeatureLearner<fastprop::algorithm::FastProp>>( _params );
         }
 
-    if ( type == AbstractFeatureLearner::MULTIREL_MODEL )
+    if ( type == AbstractFeatureLearner::MULTIREL )
         {
             return std::make_shared<
                 FeatureLearner<multirel::ensemble::DecisionTreeEnsemble>>(
                 _params );
         }
 
-    if ( type == AbstractFeatureLearner::RELBOOST_MODEL )
+    if ( type == AbstractFeatureLearner::RELBOOST )
         {
             return std::make_shared<
                 FeatureLearner<relboost::ensemble::DecisionTreeEnsemble>>(
                 _params );
         }
 
-    if ( type == AbstractFeatureLearner::RELMT_MODEL )
+    if ( type == AbstractFeatureLearner::RELMT )
         {
             return std::make_shared<
                 FeatureLearner<relmt::ensemble::DecisionTreeEnsemble>>(

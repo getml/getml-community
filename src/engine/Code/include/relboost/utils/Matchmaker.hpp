@@ -18,7 +18,7 @@ struct Matchmaker
         const std::shared_ptr<const std::vector<Float>>& _sample_weights,
         const bool _use_timestamps );
 
-    /// Makes "matches" for when RelboostModel is used as a predictor.
+    /// Makes "matches" for when Relboost is used as a predictor.
     static std::vector<containers::Match> make_matches(
         const containers::DataFrameView& _population );
 

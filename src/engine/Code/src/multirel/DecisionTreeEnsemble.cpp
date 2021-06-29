@@ -849,7 +849,7 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj(
 
     // ------------------------------------------------------------------------
 
-    obj.set( "type_", "MultirelModel" );
+    obj.set( "type_", "Multirel" );
 
     // ----------------------------------------
 

@@ -90,8 +90,7 @@ void DataModelChecker::check_all_propositionalization(
                 _fl ) -> bool {
         assert_true( _fl );
         return (
-            _fl->type() !=
-            featurelearners::AbstractFeatureLearner::FASTPROP_MODEL );
+            _fl->type() != featurelearners::AbstractFeatureLearner::FASTPROP );
     };
 
     const bool any_non_fast_prop = std::any_of(
@@ -110,7 +109,7 @@ void DataModelChecker::check_all_propositionalization(
         {
             throw std::invalid_argument(
                 "All joins in the data model have been set to "
-                "propositionalization. You should use FastPropModel or "
+                "propositionalization. You should use FastProp or "
                 "FastPropTimeSeries instead." );
         }
 }
@@ -194,12 +193,10 @@ void DataModelChecker::check_data_frames(
     // --------------------------------------------------------------------------
 
     const auto has_multirel = find_feature_learner(
-        _feature_learners,
-        featurelearners::AbstractFeatureLearner::MULTIREL_MODEL );
+        _feature_learners, featurelearners::AbstractFeatureLearner::MULTIREL );
 
     const auto has_relmt = find_feature_learner(
-        _feature_learners,
-        featurelearners::AbstractFeatureLearner::RELMT_MODEL );
+        _feature_learners, featurelearners::AbstractFeatureLearner::RELMT );
 
     // --------------------------------------------------------------------------
 
@@ -333,8 +330,7 @@ void DataModelChecker::check_join(
                 _fl ) -> bool {
         assert_true( _fl );
         return (
-            _fl->type() ==
-            featurelearners::AbstractFeatureLearner::FASTPROP_MODEL );
+            _fl->type() == featurelearners::AbstractFeatureLearner::FASTPROP );
     };
 
     const bool all_propositionalization = std::all_of(
@@ -347,8 +343,7 @@ void DataModelChecker::check_join(
                 _fl ) -> bool {
         assert_true( _fl );
         return (
-            _fl->type() ==
-            featurelearners::AbstractFeatureLearner::RELMT_MODEL );
+            _fl->type() == featurelearners::AbstractFeatureLearner::RELMT );
     };
 
     const bool any_relmt = std::any_of(
@@ -1019,8 +1014,8 @@ void DataModelChecker::warn_propositionalization_with_relmt(
         "with many columns, as the propositionalization is likely to produce. "
         "This pipeline might take a very "
         "long time to fit. "
-        "You could replace RelMTModel or "
-        "RelMTTimeSeries with RelboostModel or "
+        "You could replace RelMT or "
+        "RelMTTimeSeries with Relboost or "
         "RelboostTimeSeries respectively. The relboost "
         "algorithm has been designed to scale well to situations like this.";
 
@@ -1181,8 +1176,8 @@ void DataModelChecker::warn_too_many_columns_multirel(
         "columns or preprocessors. You could use a column selection "
         "to pick the right columns. "
         "You could also replace "
-        "MultirelModel or "
-        "MultirelTimeSeries with RelboostModel or "
+        "Multirel or "
+        "MultirelTimeSeries with Relboost or "
         "RelboostTimeSeries respectively. The relboost "
         "algorithm has been designed to scale well to data "
         "frames with many columns." );
@@ -1222,8 +1217,8 @@ void DataModelChecker::warn_too_many_columns_relmt(
         "columns or preprocessors. You can use a column selection "
         "to pick the right columns. "
         "You could also replace "
-        "RelMTModel or "
-        "RelMTTimeSeries with RelboostModel or "
+        "RelMT or "
+        "RelMTTimeSeries with Relboost or "
         "RelboostTimeSeries respectively. The relboost "
         "algorithm has been designed to scale well to data "
         "frames with many columns.";
@@ -1269,7 +1264,7 @@ void DataModelChecker::warn_too_many_matches(
         "propositionalization, which would force the pipeline to use the "
         "FastProp algorithm for this particular join. You can also do that in "
         "the .join(...)-method of the Placeholder.\n"
-        "3) You could also use FastPropModel or FastPropTimeSeries for the "
+        "3) You could also use FastProp or FastPropTimeSeries for the "
         "entire pipeline." );
 }
 

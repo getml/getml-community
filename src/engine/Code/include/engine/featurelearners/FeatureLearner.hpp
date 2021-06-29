@@ -714,7 +714,7 @@ FeatureLearner<FeatureLearnerType>::fit_propositionalization(
                 {
                     throw std::invalid_argument(
                         "All joins in the data model have been set to "
-                        "propositionalization. You should use FastPropModel or "
+                        "propositionalization. You should use FastProp or "
                         "FastPropTimeSeries instead." );
                 }
 
@@ -1201,22 +1201,22 @@ std::string FeatureLearner<FeatureLearnerType>::type() const
 
     if constexpr ( is_fastprop_ )
         {
-            return AbstractFeatureLearner::FASTPROP_MODEL;
+            return AbstractFeatureLearner::FASTPROP;
         }
 
     if constexpr ( is_multirel_ )
         {
-            return AbstractFeatureLearner::MULTIREL_MODEL;
+            return AbstractFeatureLearner::MULTIREL;
         }
 
     if constexpr ( is_relboost_ )
         {
-            return AbstractFeatureLearner::RELBOOST_MODEL;
+            return AbstractFeatureLearner::RELBOOST;
         }
 
     if constexpr ( is_relmt_ )
         {
-            return AbstractFeatureLearner::RELMT_MODEL;
+            return AbstractFeatureLearner::RELMT;
         }
 
     // ----------------------------------------------------------------------

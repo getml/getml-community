@@ -2068,7 +2068,7 @@ Poco::JSON::Object FastProp::to_json_obj( const bool _schema_only ) const
 
     // ------------------------------------------------------------------------
 
-    obj.set( "type_", "FastPropModel" );
+    obj.set( "type_", "FastProp" );
 
     // ------------------------------------------------------------------------
 

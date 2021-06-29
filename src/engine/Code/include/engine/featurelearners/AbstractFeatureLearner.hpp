@@ -17,10 +17,10 @@ class AbstractFeatureLearner
     static constexpr Int USE_ALL_TARGETS = -1;
     static constexpr Int IGNORE_TARGETS = -2;
 
-    static constexpr const char* FASTPROP_MODEL = "FastPropModel";
-    static constexpr const char* MULTIREL_MODEL = "MultirelModel";
-    static constexpr const char* RELBOOST_MODEL = "RelboostModel";
-    static constexpr const char* RELMT_MODEL = "RelMTModel";
+    static constexpr const char* FASTPROP = "FastProp";
+    static constexpr const char* MULTIREL = "Multirel";
+    static constexpr const char* RELBOOST = "Relboost";
+    static constexpr const char* RELMT = "RelMT";
 
     // --------------------------------------------------------
 
