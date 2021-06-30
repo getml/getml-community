@@ -20,13 +20,13 @@ void HyperoptManager::launch(
 
     // -------------------------------------------------------
 
-    const auto population_training_name =
-        JSON::get_value<std::string>( _cmd, "population_training_name_" );
+    const auto population_training_df =
+        JSON::get_object( _cmd, "population_training_df_" );
 
-    const auto population_validation_name =
-        JSON::get_value<std::string>( _cmd, "population_validation_name_" );
+    const auto population_validation_df =
+        JSON::get_object( _cmd, "population_validation_df_" );
 
-    const auto peripheral_names = JSON::get_array( _cmd, "peripheral_names_" );
+    const auto peripheral_dfs = JSON::get_array( _cmd, "peripheral_dfs_" );
 
     // -------------------------------------------------------
 
@@ -34,11 +34,11 @@ void HyperoptManager::launch(
 
     auto cmd = hyperopt.obj();
 
-    cmd.set( "population_training_name_", population_training_name );
+    cmd.set( "population_training_df_", population_training_df );
 
-    cmd.set( "population_validation_name_", population_validation_name );
+    cmd.set( "population_validation_df_", population_validation_df );
 
-    cmd.set( "peripheral_names_", peripheral_names );
+    cmd.set( "peripheral_dfs_", peripheral_dfs );
 
     // -------------------------------------------------------
 

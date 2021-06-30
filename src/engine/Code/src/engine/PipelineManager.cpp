@@ -968,11 +968,11 @@ containers::DataFrame PipelineManager::to_df(
 
     const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
 
-    const auto population_name =
-        JSON::get_value<std::string>( _cmd, "population_name_" );
+    const auto population_obj = JSON::get_object( _cmd, "population_df_" );
 
     const auto& population_table =
-        utils::Getter::get( population_name, _local_data_frames.get() );
+        ViewParser( _categories, _join_keys_encoding, _local_data_frames )
+            .parse( *population_obj );
 
     // -------------------------------------------------------
 
