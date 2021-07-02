@@ -155,23 +155,18 @@ void PipelineManager::add_time_stamps_to_df(
 
 void PipelineManager::add_to_tracker(
     const pipelines::Pipeline& _pipeline,
-    const Poco::JSON::Object& _cmd,
-    const std::map<std::string, containers::DataFrame>& _data_frames,
+    const containers::DataFrame& _population_df,
+    const std::vector<containers::DataFrame>& _peripheral_dfs,
     containers::DataFrame* _df )
 {
-    // TODO
-    /*const auto dependencies = _pipeline.dependencies();
-
-    const auto df_fingerprints =
-        containers::DataFrameExtractor::extract_df_fingerprints(
-            _pipeline.obj(), _cmd, _data_frames );
+    const auto dependencies = _pipeline.dependencies();
 
     const auto build_history = data_frame_tracker().make_build_history(
-        dependencies, df_fingerprints );
+        dependencies, _population_df, _peripheral_dfs );
 
     _df->set_build_history( build_history );
 
-    data_frame_tracker().add( *_df );*/
+    data_frame_tracker().add( *_df );
 }
 
 // ------------------------------------------------------------------------
@@ -865,10 +860,10 @@ void PipelineManager::score(
 void PipelineManager::store_df(
     const pipelines::Pipeline& _pipeline,
     const Poco::JSON::Object& _cmd,
+    const containers::DataFrame& _population_df,
+    const std::vector<containers::DataFrame>& _peripheral_dfs,
     const std::shared_ptr<containers::Encoding>& _local_categories,
     const std::shared_ptr<containers::Encoding>& _local_join_keys_encoding,
-    const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
-        _local_data_frames,
     containers::DataFrame* _df,
     multithreading::WeakWriteLock* _weak_write_lock )
 {
@@ -886,7 +881,7 @@ void PipelineManager::store_df(
 
     if ( !predict )
         {
-            add_to_tracker( _pipeline, _cmd, *_local_data_frames, _df );
+            add_to_tracker( _pipeline, _population_df, _peripheral_dfs, _df );
         }
 
     data_frames()[_df->name()] = *_df;
@@ -902,23 +897,22 @@ void PipelineManager::store_df(
 void PipelineManager::to_db(
     const pipelines::Pipeline& _pipeline,
     const Poco::JSON::Object& _cmd,
+    const containers::DataFrame& _population_table,
     const containers::Features& _numerical_features,
     const containers::CategoricalFeatures& _categorical_features,
     const std::shared_ptr<containers::Encoding>& _categories,
-    const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
-    const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
-        _local_data_frames )
+    const std::shared_ptr<containers::Encoding>& _join_keys_encoding )
 {
     // -------------------------------------------------------
 
     const auto df = to_df(
         _pipeline,
         _cmd,
+        _population_table,
         _numerical_features,
         _categorical_features,
         _categories,
-        _join_keys_encoding,
-        _local_data_frames );
+        _join_keys_encoding );
 
     // -------------------------------------------------------
     // Write data frame to data base.
@@ -957,22 +951,15 @@ void PipelineManager::to_db(
 containers::DataFrame PipelineManager::to_df(
     const pipelines::Pipeline& _pipeline,
     const Poco::JSON::Object& _cmd,
+    const containers::DataFrame& _population_table,
     const containers::Features& _numerical_features,
     const containers::CategoricalFeatures& _categorical_features,
     const std::shared_ptr<containers::Encoding>& _categories,
-    const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
-    const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
-        _local_data_frames )
+    const std::shared_ptr<containers::Encoding>& _join_keys_encoding )
 {
     // -------------------------------------------------------
 
     const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
-
-    const auto population_obj = JSON::get_object( _cmd, "population_df_" );
-
-    const auto& population_table =
-        ViewParser( _categories, _join_keys_encoding, _local_data_frames )
-            .parse( *population_obj );
 
     // -------------------------------------------------------
 
@@ -990,13 +977,13 @@ containers::DataFrame PipelineManager::to_df(
 
     // -------------------------------------------------------
 
-    add_join_keys_to_df( population_table, &df );
+    add_join_keys_to_df( _population_table, &df );
 
-    add_time_stamps_to_df( population_table, &df );
+    add_time_stamps_to_df( _population_table, &df );
 
-    for ( size_t i = 0; i < population_table.num_targets(); ++i )
+    for ( size_t i = 0; i < _population_table.num_targets(); ++i )
         {
-            const auto col = population_table.target( i ).clone();
+            const auto col = _population_table.target( i ).clone();
             df.add_float_column( col, containers::DataFrame::ROLE_TARGET );
         }
 
@@ -1115,11 +1102,11 @@ void PipelineManager::transform(
             to_db(
                 pipeline,
                 cmd,
+                population_df,
                 numerical_features,
                 categorical_features,
                 local_categories,
-                local_join_keys_encoding,
-                local_data_frames );
+                local_join_keys_encoding );
         }
 
     // -------------------------------------------------------
@@ -1131,18 +1118,19 @@ void PipelineManager::transform(
             auto df = to_df(
                 pipeline,
                 cmd,
+                population_df,
                 numerical_features,
                 categorical_features,
                 local_categories,
-                local_join_keys_encoding,
-                local_data_frames );
+                local_join_keys_encoding );
 
             store_df(
                 pipeline,
                 cmd,
+                population_df,
+                peripheral_dfs,
                 local_categories,
                 local_join_keys_encoding,
-                local_data_frames,
                 &df,
                 &weak_write_lock );
         }

@@ -30,7 +30,8 @@ class DataFrameTracker
     /// the pipeline and the df_fingerprints.
     Poco::JSON::Object::Ptr make_build_history(
         const std::vector<Poco::JSON::Object::Ptr>& _dependencies,
-        const std::vector<Poco::JSON::Object::Ptr>& _df_fingerprints ) const;
+        const containers::DataFrame& _population_df,
+        const std::vector<containers::DataFrame>& _peripheral_dfs ) const;
 
     /// Retrieves a deep copy of an element from the tracker, if a data
     /// frame containing this build_history exists.
@@ -40,20 +41,13 @@ class DataFrameTracker
    public:
     /// Generates the build history and retrieves the data frame.
     std::optional<containers::DataFrame> retrieve(
-        const Poco::JSON::Object& _obj,
-        const Poco::JSON::Object& _cmd,
-        const std::map<std::string, containers::DataFrame>& _data_frames,
-        const std::vector<Poco::JSON::Object::Ptr>& _dependencies ) const
+        const std::vector<Poco::JSON::Object::Ptr>& _dependencies,
+        const containers::DataFrame& _population_df,
+        const std::vector<containers::DataFrame>& _peripheral_dfs ) const
     {
-        // TODO
-        return std::nullopt;
-
-        /*const auto df_fingerprints =
-            containers::DataFrameExtractor::extract_df_fingerprints(
-                _obj, _cmd, _data_frames );
-        const auto build_history =
-            make_build_history( _dependencies, df_fingerprints );
-        return retrieve( build_history );*/
+        const auto build_history = make_build_history(
+            _dependencies, _population_df, _peripheral_dfs );
+        return retrieve( build_history );
     }
 
    private:

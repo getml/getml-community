@@ -52,8 +52,6 @@ void DataFrameTracker::clear()
 
 // ----------------------------------------------------------------------
 
-// TODO: Use fingerprint, because it retrieves the build history if there is
-// one.
 std::optional<containers::DataFrame> DataFrameTracker::get_df(
     const size_t _b_hash ) const
 {
@@ -88,21 +86,22 @@ std::optional<containers::DataFrame> DataFrameTracker::get_df(
 
 Poco::JSON::Object::Ptr DataFrameTracker::make_build_history(
     const std::vector<Poco::JSON::Object::Ptr>& _dependencies,
-    const std::vector<Poco::JSON::Object::Ptr>& _df_fingerprints ) const
+    const containers::DataFrame& _population_df,
+    const std::vector<containers::DataFrame>& _peripheral_dfs ) const
 {
-    auto dependencies = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+    const auto dependencies = stl::collect::array( _dependencies );
 
-    for ( auto ptr : _dependencies )
-        {
-            dependencies->add( ptr );
-        }
+    const auto data_frames = stl::join::vector<containers::DataFrame>(
+        { std::vector<containers::DataFrame>( { _population_df } ),
+          _peripheral_dfs } );
 
-    auto df_fingerprints = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
+    const auto get_fingerprint =
+        []( const containers::DataFrame& _df ) -> Poco::JSON::Object::Ptr {
+        return _df.fingerprint();
+    };
 
-    for ( auto ptr : _df_fingerprints )
-        {
-            df_fingerprints->add( ptr );
-        }
+    const auto df_fingerprints = stl::collect::array(
+        data_frames | std::views::transform( get_fingerprint ) );
 
     auto build_history = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
 

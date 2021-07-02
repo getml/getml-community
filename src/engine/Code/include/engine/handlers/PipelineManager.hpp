@@ -170,8 +170,8 @@ class PipelineManager
     /// Adds a data frame to the data frame tracker.
     void add_to_tracker(
         const pipelines::Pipeline& _pipeline,
-        const Poco::JSON::Object& _cmd,
-        const std::map<std::string, containers::DataFrame>& _data_frames,
+        const containers::DataFrame& _population_df,
+        const std::vector<containers::DataFrame>& _peripheral_dfs,
         containers::DataFrame* _df );
 
     /// Makes sure that the user is allowed to transform this pipeline.
@@ -228,10 +228,10 @@ class PipelineManager
     void store_df(
         const pipelines::Pipeline& _pipeline,
         const Poco::JSON::Object& _cmd,
+        const containers::DataFrame& _population_df,
+        const std::vector<containers::DataFrame>& _peripheral_dfs,
         const std::shared_ptr<containers::Encoding>& _local_categories,
         const std::shared_ptr<containers::Encoding>& _local_join_keys_encoding,
-        const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
-            _local_data_frames,
         containers::DataFrame* _df,
         multithreading::WeakWriteLock* _weak_write_lock );
 
@@ -239,23 +239,21 @@ class PipelineManager
     void to_db(
         const pipelines::Pipeline& _pipeline,
         const Poco::JSON::Object& _cmd,
+        const containers::DataFrame& _population_table,
         const containers::Features& _numerical_features,
         const containers::CategoricalFeatures& _categorical_features,
         const std::shared_ptr<containers::Encoding>& _categories,
-        const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
-        const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
-            _local_data_frames );
+        const std::shared_ptr<containers::Encoding>& _join_keys_encoding );
 
     /// Writes a set of features to a DataFrame.
     containers::DataFrame to_df(
         const pipelines::Pipeline& _pipeline,
         const Poco::JSON::Object& _cmd,
+        const containers::DataFrame& _population_table,
         const containers::Features& _numerical_features,
         const containers::CategoricalFeatures& _categorical_features,
         const std::shared_ptr<containers::Encoding>& _categories,
-        const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
-        const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
-            _local_data_frames );
+        const std::shared_ptr<containers::Encoding>& _join_keys_encoding );
 
     // ------------------------------------------------------------------------
 

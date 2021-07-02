@@ -1135,6 +1135,8 @@ void Pipeline::fit( const FitParams& _params )
         .data_frame_tracker_ = _params.data_frame_tracker_,
         .dependencies_ = fl_fingerprints(),
         .logger_ = _params.logger_,
+        .original_peripheral_dfs_ = _params.peripheral_dfs_,
+        .original_population_df_ = _params.population_df_,
         .peripheral_dfs_ = peripheral_dfs,
         .population_df_ = population_df,
         .predictor_impl_ = feature_selector_impl(),
@@ -1175,6 +1177,7 @@ void Pipeline::fit( const FitParams& _params )
         .dependencies_ = fs_fingerprints(),
         .logger_ = _params.logger_,
         .original_peripheral_dfs_ = _params.peripheral_dfs_,
+        .original_population_df_ = _params.population_df_,
         .peripheral_dfs_ = peripheral_dfs,
         .population_df_ = population_df,
         .predictor_impl_ = predictor_impl(),
@@ -1210,6 +1213,8 @@ void Pipeline::fit( const FitParams& _params )
                 .data_frame_tracker_ = _params.data_frame_tracker_,
                 .dependencies_ = fs_fingerprints(),
                 .logger_ = _params.logger_,
+                .original_peripheral_dfs_ = _params.peripheral_dfs_,
+                .original_population_df_ = _params.population_df_,
                 .peripheral_dfs_ = peripheral_dfs,
                 .population_df_ = population_df,
                 .predictor_impl_ = predictor_impl(),
@@ -2172,8 +2177,14 @@ Pipeline::make_features( const TransformParams& _params ) const
 {
     // --------------------------------------------------------------------
 
+    assert_true( _params.original_population_df_ );
+
+    assert_true( _params.original_peripheral_dfs_ );
+
     const auto df = _params.data_frame_tracker_.retrieve(
-        obj(), _params.cmd_, _params.data_frames_, _params.dependencies_ );
+        dependencies(),
+        _params.original_population_df_.value(),
+        _params.original_peripheral_dfs_.value() );
 
     if ( df )
         {
@@ -2240,12 +2251,14 @@ Pipeline::make_features_validation( const TransformParams& _params )
                 std::optional<containers::CategoricalFeatures>() );
         }
 
+    assert_true( _params.original_peripheral_dfs_ );
+
     const auto [numerical_features, categorical_features] = transform(
         _params.cmd_,
         _params.logger_,
         _params.data_frames_,
-        *_params.validation_df_,
-        _params.original_peripheral_dfs_,
+        _params.validation_df_.value(),
+        _params.original_peripheral_dfs_.value(),
         _params.data_frame_tracker_,
         _params.categories_,
         _params.socket_ );
@@ -3259,12 +3272,14 @@ Pipeline::transform(
 
     // -------------------------------------------------------------------------
 
-    const auto make_feature_params = TransformParams{
+    const auto params = TransformParams{
         .cmd_ = _cmd,
         .data_frames_ = _data_frames,
         .data_frame_tracker_ = _data_frame_tracker,
         .dependencies_ = dependencies(),
         .logger_ = _logger,
+        .original_peripheral_dfs_ = _peripheral_dfs,
+        .original_population_df_ = _population_df,
         .peripheral_dfs_ = peripheral_dfs,
         .population_df_ = population_df,
         .predictor_impl_ = predictor_impl(),
@@ -3275,7 +3290,7 @@ Pipeline::transform(
         .socket_ = _socket };
 
     const auto [numerical_features, categorical_features, _] =
-        make_features( make_feature_params );
+        make_features( params );
 
     // -------------------------------------------------------------------------
     // If we do not want to score or predict, then we can stop here.

@@ -33,8 +33,12 @@ struct TransformParams
     /// Logs the progress.
     const std::shared_ptr<const communication::Logger>& logger_;
 
-    /// The peripheral tables, unmodified as they were passed.
-    const std::vector<containers::DataFrame> original_peripheral_dfs_;
+    /// The peripheral tables, without staging, as they were passed.
+    const std::optional<std::vector<containers::DataFrame>>
+        original_peripheral_dfs_;
+
+    /// The population table, without staging, as it was passed.
+    const std::optional<containers::DataFrame> original_population_df_;
 
     /// The peripheral tables.
     const std::vector<containers::DataFrame>& peripheral_dfs_;
