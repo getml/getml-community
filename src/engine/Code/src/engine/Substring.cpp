@@ -141,7 +141,7 @@ containers::DataFrame Substring::fit_transform_df(
 
     for ( size_t i = 0; i < _df.num_text(); ++i )
         {
-            const auto& original_col = _df.unused_string( i );
+            const auto& original_col = _df.text( i );
 
             extract_and_add( _marker, _table, original_col, _categories, &df );
         }
@@ -277,8 +277,8 @@ containers::DataFrame Substring::transform_df(
                 {
                     throw std::invalid_argument(
                         "'" + _df.name() +
-                        "' has no categorical or unused string column named '" +
-                        name + "'!" );
+                        "' has no categorical or text column named '" + name +
+                        "'!" );
                 }
         }
 
