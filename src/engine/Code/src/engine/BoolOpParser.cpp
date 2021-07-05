@@ -17,7 +17,8 @@ containers::ColumnView<bool> BoolOpParser::binary_operation(
     const auto operand2_type = JSON::get_value<std::string>(
         *JSON::get_object( _col, "operand2_" ), "type_" );
 
-    if ( operand_type != operand2_type )
+    if ( helpers::StringReplacer::replace_all( operand_type, "View", "" ) !=
+         helpers::StringReplacer::replace_all( operand2_type, "View", "" ) )
         {
             throw std::invalid_argument(
                 "You are trying to compare two different column types: " +
