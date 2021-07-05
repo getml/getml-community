@@ -14,6 +14,16 @@ containers::ColumnView<bool> BoolOpParser::binary_operation(
     const auto operand_type = JSON::get_value<std::string>(
         *JSON::get_object( _col, "operand1_" ), "type_" );
 
+    const auto operand2_type = JSON::get_value<std::string>(
+        *JSON::get_object( _col, "operand2_" ), "type_" );
+
+    if ( operand_type != operand2_type )
+        {
+            throw std::invalid_argument(
+                "You are trying to compare two different column types: " +
+                operand_type + " vs. " + operand2_type + "." );
+        }
+
     const auto is_boolean = ( operand_type == BOOLEAN_COLUMN_VIEW );
 
     const auto is_categorical = ( operand_type == STRING_COLUMN ) ||
