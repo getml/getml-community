@@ -7,9 +7,9 @@ namespace helpers
 
 struct SubroleParser
 {
-    static constexpr const char* COMPARISON_ONLY = "comparison only";
-    static constexpr const char* EMAIL = "email";
-    static constexpr const char* EMAIL_ONLY = "email only";
+    static constexpr const char* COMPARISON_ONLY = "only compare";
+    static constexpr const char* EMAIL = "include email";
+    static constexpr const char* EMAIL_ONLY = "only email";
     static constexpr const char* EXCLUDE_FASTPROP = "exclude fastprop";
     static constexpr const char* EXCLUDE_FEATURE_LEARNERS =
         "exclude feature learners";
@@ -24,8 +24,8 @@ struct SubroleParser
     static constexpr const char* EXCLUDE_SEASONAL = "exclude seasonal";
     static constexpr const char* EXCLUDE_TEXT_FIELD_SPLITTER =
         "exclude text field splitter";
-    static constexpr const char* SUBSTRING = "substring";
-    static constexpr const char* SUBSTRING_ONLY = "substring only";
+    static constexpr const char* SUBSTRING = "inlcude substring";
+    static constexpr const char* SUBSTRING_ONLY = "only substring";
 
     /// Whether the column returns contains any of the _targets.
     static bool contains_any(
