@@ -11,13 +11,13 @@ struct Token
 {
     Token(
         const Int _cores,
-        const std::string& _expiry_date,
+        const bool _currently_active,
+        const Int _expires_in,
         const std::string& _function_set_id,
         const Int _mem,
         const std::string& _msg_body,
         const std::string& _msg_title,
-        const std::string& _request_date,
-        const Int _response_id );
+        const std::string& _request_date );
 
     Token();
 
@@ -30,7 +30,7 @@ struct Token
     // --------------------------------
 
     /// Whether the token is currently active.
-    bool currently_active() const { return function_set_id_ != "none"; }
+    bool currently_active() const { return currently_active_; }
 
     /// Expresses the Token in JSON format
     std::string to_json() const { return JSON::stringify( to_json_obj() ); }
@@ -45,8 +45,11 @@ struct Token
     /// Maximum number of cores allowed.
     const Int cores_;
 
-    /// Date and time at which the token expires.
-    const std::string expiry_date_;
+    /// Whether the token is currently active
+    const bool currently_active_;
+
+    /// Number of seconds until token expires.
+    const Int expires_in_;
 
     /// The functions that are allowed.
     /// Possible values are "basic", "enterprise" and "none".
@@ -63,9 +66,6 @@ struct Token
 
     /// Date and time at which the request was sent.
     const std::string request_date_;
-
-    /// ID of the response.
-    const Int response_id_;
 
     /// Signature used to ensure that the token actually originated
     /// from the license server.

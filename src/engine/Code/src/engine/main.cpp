@@ -39,6 +39,12 @@ int main( int argc, char* argv[] )
 
     license_checker->receive_token( "main" );
 
+    if ( !license_checker->has_active_token() )
+        {
+            logger->log( "License server authentication failed." );
+            return 0;
+        }
+
     // -------------------------------------------
 
     const auto categories = std::make_shared<engine::containers::Encoding>();
@@ -164,7 +170,7 @@ int main( int argc, char* argv[] )
 
     srv.start();
 
-    monitor->log(
+    logger->log(
         "The getML engine launched successfully on port " +
         std::to_string( options.engine().port() ) + "." );
 

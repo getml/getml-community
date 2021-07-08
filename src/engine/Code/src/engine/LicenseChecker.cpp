@@ -88,8 +88,6 @@ void LicenseChecker::receive_token( const std::string& _caller_id )
 
     Poco::JSON::Parser parser;
 
-    logger_->log( "Attempting to receive a token..." );
-
     // -------------------------------------------------------------
 
     auto request = Poco::JSON::Object();
@@ -101,7 +99,6 @@ void LicenseChecker::receive_token( const std::string& _caller_id )
     request.set( "os_", os() );
 
     // -------------------------------------------------------------
-    // Get token
 
     auto [response, success] = send( request );
 
@@ -112,12 +109,10 @@ void LicenseChecker::receive_token( const std::string& _caller_id )
         }
 
     // --------------------------------------------------------------
-    // Initialize a write lock.
 
     multithreading::WriteLock write_lock( read_write_lock_ );
 
     // --------------------------------------------------------------
-    // Parse JSON token
 
     try
         {
@@ -136,12 +131,11 @@ void LicenseChecker::receive_token( const std::string& _caller_id )
         }
 
     // -------------------------------------------------------------
-    // Verify token
 
     if ( Token( *token_ ).signature_ != token_->signature_ )
         {
             logger_->log(
-                "Verification of the token failed. It appears that "
+                "Error: Verification of the token failed. It appears that "
                 "someone is attempting a 'man-in-the-middle' attack!" );
 
             token_.reset( new Token() );
@@ -150,7 +144,6 @@ void LicenseChecker::receive_token( const std::string& _caller_id )
         }
 
     // --------------------------------------------------------------
-    // Print message, if necessary
 
     if ( token_->msg_title_ != "" || token_->msg_body_ != "" )
         {
