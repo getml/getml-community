@@ -26,7 +26,7 @@ void DataFrame::add_float_column(
         {
             auto col = _col;
             if ( col.unit() == "" )
-                col.set_unit( "time stamp, comparison only" );
+                col.set_unit( "time stamp" );
             add_column( col, &time_stamps_ );
             update_last_change();
         }
