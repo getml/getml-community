@@ -24,7 +24,7 @@ struct SubroleParser
     static constexpr const char* EXCLUDE_SEASONAL = "exclude seasonal";
     static constexpr const char* EXCLUDE_TEXT_FIELD_SPLITTER =
         "exclude text field splitter";
-    static constexpr const char* SUBSTRING = "inlcude substring";
+    static constexpr const char* SUBSTRING = "include substring";
     static constexpr const char* SUBSTRING_ONLY = "only substring";
 
     /// Whether the column returns contains any of the _targets.
