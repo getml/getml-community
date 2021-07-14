@@ -2771,11 +2771,19 @@ void Pipeline::save(
 
     save_preprocessors( tfile );
 
+    std::cout << "Saving feature learners..." << std::endl;
+
     save_feature_learners( tfile );
+
+    std::cout << "Done" << std::endl;
 
     // ------------------------------------------------------------------
 
+    std::cout << "Saving pipeline..." << std::endl;
+
     save_pipeline_json( tfile );
+
+    std::cout << "Done" << std::endl;
 
     // ------------------------------------------------------------------
 
@@ -2800,8 +2808,12 @@ void Pipeline::save(
 
     // ------------------------------------------------------------------
 
+    std::cout << "Saving SQL code..." << std::endl;
+
     utils::SQLDependencyTracker( tfile.path() + "/SQL/" )
         .save_dependencies( to_sql( _categories, true, true ) );
+
+    std::cout << "Done" << std::endl;
 
     // ------------------------------------------------------------------
 

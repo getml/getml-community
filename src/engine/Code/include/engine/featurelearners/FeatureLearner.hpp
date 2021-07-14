@@ -785,6 +785,19 @@ FeatureLearner<FeatureLearnerType>::handle_text_fields(
             _population,
             _peripheral );
 
+#ifndef NDEBUG
+    assert_true( _population.num_text() == vocabulary->population().size() );
+
+    assert_true( _peripheral.size() == vocabulary->peripheral().size() );
+
+    for ( size_t i = 0; i < _peripheral.size(); ++i )
+        {
+            assert_true(
+                _peripheral.at( i ).num_text() ==
+                vocabulary->peripheral().at( i ).size() );
+        }
+#endif
+
     if ( any_text_fields ) _logger->log( "Progress: 33%." );
 
     const auto word_indices =
@@ -1060,16 +1073,7 @@ std::vector<std::string> FeatureLearner<FeatureLearnerType>::to_sql(
     const bool _subfeatures,
     const std::string& _prefix ) const
 {
-    const auto is_text_field =
-        [this]( const containers::Schema& _schema ) -> bool {
-        return _schema.name_.find( helpers::Macros::text_field() ) !=
-               std::string::npos;
-    };
-
     throw_unless( peripheral_schema_, "Pipeline has not been fitted." );
-
-    const auto split_text_fields = std::any_of(
-        peripheral_schema_->begin(), peripheral_schema_->end(), is_text_field );
 
     std::vector<std::string> sql;
 
@@ -1079,8 +1083,7 @@ std::vector<std::string> FeatureLearner<FeatureLearnerType>::to_sql(
         vocabulary_->population(),
         vocabulary_->peripheral(),
         feature_learner().placeholder(),
-        feature_learner().peripheral(),
-        split_text_fields );
+        feature_learner().peripheral() );
 
     propositionalization_to_sql(
         _categories, vocabulary_tree, _prefix, _subfeatures, &sql );

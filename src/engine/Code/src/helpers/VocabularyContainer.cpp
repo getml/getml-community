@@ -27,6 +27,18 @@ VocabularyContainer::VocabularyContainer(
     peripheral_ = stl::collect::vector<VocabForDf>( range );
 
     population_ = extract_from_df( _population );
+
+#ifndef NDEBUG
+    assert_true( _population.num_text() == population().size() );
+
+    assert_true( _peripheral.size() == peripheral().size() );
+
+    for ( size_t i = 0; i < _peripheral.size(); ++i )
+        {
+            assert_true(
+                _peripheral.at( i ).num_text() == peripheral().at( i ).size() );
+        }
+#endif
 }
 
 // ----------------------------------------------------------------------------

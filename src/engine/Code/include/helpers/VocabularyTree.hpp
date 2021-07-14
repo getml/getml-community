@@ -16,8 +16,7 @@ class VocabularyTree
         const VocabForDf& _population,
         const std::vector<VocabForDf>& _peripheral,
         const Placeholder& _placeholder,
-        const std::vector<std::string>& _peripheral_names,
-        const bool _split_text_fields );
+        const std::vector<std::string>& _peripheral_names );
 
     ~VocabularyTree();
 
@@ -46,16 +45,14 @@ class VocabularyTree
         const VocabForDf& _population,
         const std::vector<VocabForDf>& _peripheral,
         const Placeholder& _placeholder,
-        const std::vector<std::string>& _peripheral_names,
-        const bool _split_text_fields );
+        const std::vector<std::string>& _peripheral_names );
 
     /// Parses the subtrees.
     static std::vector<std::optional<VocabularyTree>> parse_subtrees(
         const VocabForDf& _population,
         const std::vector<VocabForDf>& _peripheral,
         const Placeholder& _placeholder,
-        const std::vector<std::string>& _peripheral_names,
-        const bool _split_text_fields );
+        const std::vector<std::string>& _peripheral_names );
 
    private:
     /// The vocabulary for the peripheral tables.

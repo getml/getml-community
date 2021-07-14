@@ -1,3 +1,4 @@
+
 #include "relboost/utils/utils.hpp"
 
 namespace relboost
@@ -239,7 +240,13 @@ std::string ConditionMaker::condition_greater(
 
             case enums::DataUsed::text_output:
                 {
-                    assert_true( _vocab_popul.size() == _output.num_text() );
+                    assert_msg(
+                        _vocab_popul.size() == _output.num_text(),
+                        "_vocab_popul.size(): " +
+                            std::to_string( _vocab_popul.size() ) +
+                            ", _output.num_text(): " +
+                            std::to_string( _output.num_text() ) );
+
                     assert_true( _split.column_ < _output.num_text() );
                     assert_true( _vocab_popul.at( _split.column_ ) );
 
@@ -549,7 +556,10 @@ std::string ConditionMaker::list_categories(
           it != _split.categories_used_end_;
           ++it )
         {
-            assert_true( *it < _categories.size() );
+            assert_msg(
+                *it < _categories.size(),
+                "*it: " + std::to_string( *it ) + ", _categories.size(): " +
+                    std::to_string( _categories.size() ) );
 
             categories += "'" + _categories.at( *it ).str() + "'";
 
