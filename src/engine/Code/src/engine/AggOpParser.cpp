@@ -12,7 +12,7 @@ Float AggOpParser::categorical_aggregation(
     const auto vec =
         *CatOpParser( categories_, join_keys_encoding_, data_frames_ )
              .parse( _json_col )
-             .to_vector( 0, num_elem_, true );
+             .to_vector( 0, std::nullopt, false );
 
     if ( _type == "count_categorical" )
         {
@@ -58,7 +58,7 @@ Float AggOpParser::numerical_aggregation(
     const auto col =
         NumOpParser( categories_, join_keys_encoding_, data_frames_ )
             .parse( _json_col )
-            .to_column( 0, num_elem_, true );
+            .to_column( 0, std::nullopt, false );
 
     if ( _type == "assert_equal" )
         {

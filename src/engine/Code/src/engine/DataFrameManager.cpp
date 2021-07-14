@@ -534,20 +534,12 @@ void DataFrameManager::aggregate(
 {
     const auto aggregation = *JSON::get_object( _cmd, "aggregation_" );
 
-    const auto df_name = JSON::get_value<std::string>( _cmd, "df_name_" );
+    auto response = containers::Column<Float>( 1 );
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    const auto df = utils::Getter::get( df_name, data_frames() );
-
-    check_nrows( aggregation, df_name, df.nrows() );
-
-    auto response = containers::Column<Float>( 1 );
-
-    response[0] =
-        AggOpParser(
-            categories_, join_keys_encoding_, data_frames_, df.nrows() )
-            .aggregate( aggregation );
+    response[0] = AggOpParser( categories_, join_keys_encoding_, data_frames_ )
+                      .aggregate( aggregation );
 
     read_lock.unlock();
 
