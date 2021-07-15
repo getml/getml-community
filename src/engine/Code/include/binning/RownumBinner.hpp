@@ -42,8 +42,11 @@ std::vector<size_t> RownumBinner<MatchType, GetRownumType>::bin(
 
     assert_true( _end >= _begin );
 
-    assert_true(
-        _bins->size() >= static_cast<size_t>( std::distance( _begin, _end ) ) );
+    assert_msg(
+        _bins->size() >= static_cast<size_t>( std::distance( _begin, _end ) ),
+        "_bins->size(): " + std::to_string( _bins->size() ) +
+            ", std::distance( _begin, _end ): " +
+            std::to_string( std::distance( _begin, _end ) ) );
 
     // ---------------------------------------------------------------------------
 

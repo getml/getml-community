@@ -2470,7 +2470,9 @@ void DecisionTreeNode::try_text_population(
     assert_true(
         _population.df().word_indices_.size() == _population.num_text() );
 
-    auto bins = std::vector<containers::Match *>();
+    // TODO: Stop reallocating bins all the time.
+    auto bins =
+        containers::MatchPtrs( _match_container_begin, _match_container_end );
 
     if ( _population.num_text() == 0 )
         {
@@ -2494,9 +2496,9 @@ void DecisionTreeNode::try_text_population(
                     continue;
                 }
 
-            const auto &row_index = _population.df().row_indices_.at( col );
+            const auto row_index = _population.df().row_indices_.at( col );
 
-            const auto &word_index = _population.df().word_indices_.at( col );
+            const auto word_index = _population.df().word_indices_.at( col );
 
             assert_true( row_index );
 
