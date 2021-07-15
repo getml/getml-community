@@ -597,7 +597,7 @@ void DataModelChecker::check_relational(
     const std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>
         _feature_learners )
 {
-    if ( _peripheral.size() == 0 )
+    if ( _peripheral.size() == 0 && _feature_learners.size() > 0 )
         {
             throw std::invalid_argument(
                 "The data model you have passed is not relational (there are "
