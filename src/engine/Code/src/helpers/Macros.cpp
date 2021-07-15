@@ -134,9 +134,7 @@ std::vector<std::string> Macros::modify_colnames(
 
     for ( auto& name : names )
         {
-            name = std::get<1>( parse_table_colname( "", name ) );
-
-            name = SQLGenerator::edit_colname( name, "" );
+            name = SQLGenerator::make_colname( name );
         }
 
     return names;
