@@ -25,8 +25,7 @@ void DataFrame::add_float_column(
     else if ( _role == ROLE_TIME_STAMP )
         {
             auto col = _col;
-            if ( col.unit() == "" )
-                col.set_unit( "time stamp" );
+            if ( col.unit() == "" ) col.set_unit( "time stamp" );
             add_column( col, &time_stamps_ );
             update_last_change();
         }
@@ -1080,14 +1079,14 @@ void DataFrame::from_query(
                 {
                     const auto &str = line[numerical_ix[i]];
                     numericals[i]->push_back(
-                        database::Getter::get_double( str, time_formats ) );
+                        database::Getter::get_double( str ) );
                 }
 
             for ( size_t i = 0; i < targets.size(); ++i )
                 {
                     const auto &str = line[target_ix[i]];
                     targets[i]->push_back(
-                        database::Getter::get_double( str, time_formats ) );
+                        database::Getter::get_double( str ) );
                 }
 
             for ( size_t i = 0; i < text.size(); ++i )
@@ -1107,7 +1106,7 @@ void DataFrame::from_query(
                 {
                     const auto &str = line[unused_float_ix[i]];
                     unused_floats[i]->push_back(
-                        database::Getter::get_double( str, time_formats ) );
+                        database::Getter::get_double( str ) );
                 }
 
             for ( size_t i = 0; i < unused_strings.size(); ++i )
@@ -1208,28 +1207,6 @@ void DataFrame::from_reader(
         }
 
     // ------------------------------------------------------------------------
-    // Define lambda expressions for parsing doubles.
-
-    const auto to_double = [_time_formats]( const std::string &_str ) {
-        auto [val, success] = io::Parser::to_double( _str );
-
-        if ( success )
-            {
-                return val;
-            }
-
-        std::tie( val, success ) =
-            io::Parser::to_time_stamp( _str, _time_formats );
-
-        if ( success )
-            {
-                return val;
-            }
-
-        return static_cast<Float>( NAN );
-    };
-
-    // ------------------------------------------------------------------------
     // Read CSV file content into the vectors
 
     size_t line_count = 0;
@@ -1269,20 +1246,24 @@ void DataFrame::from_reader(
                     ( *join_keys_encoding_ )[line[colname_indices[col++]]] );
 
             for ( auto &vec : numericals )
-                vec->push_back( to_double( line[colname_indices[col++]] ) );
+                vec->push_back( database::Getter::get_double(
+                    line[colname_indices[col++]] ) );
 
             for ( auto &vec : targets )
-                vec->push_back( to_double( line[colname_indices[col++]] ) );
+                vec->push_back( database::Getter::get_double(
+                    line[colname_indices[col++]] ) );
 
             for ( auto &vec : text )
                 vec->emplace_back(
                     strings::String( line[colname_indices[col++]] ) );
 
             for ( auto &vec : time_stamps )
-                vec->push_back( to_double( line[colname_indices[col++]] ) );
+                vec->push_back( database::Getter::get_time_stamp(
+                    line[colname_indices[col++]], _time_formats ) );
 
             for ( auto &vec : unused_floats )
-                vec->push_back( to_double( line[colname_indices[col++]] ) );
+                vec->push_back( database::Getter::get_double(
+                    line[colname_indices[col++]] ) );
 
             for ( auto &vec : unused_strings )
                 vec->emplace_back(
@@ -2441,17 +2422,16 @@ Schema DataFrame::to_schema( const bool _separate_discrete ) const
     const auto unused_strings = stl::collect::vector<std::string>(
         unused_strings_ | std::views::transform( get_name ) );
 
-    return Schema{
-        .categoricals_ = categoricals,
-        .discretes_ = discretes,
-        .join_keys_ = join_keys,
-        .name_ = name_,
-        .numericals_ = numericals,
-        .targets_ = targets,
-        .text_ = text,
-        .time_stamps_ = time_stamps,
-        .unused_floats_ = unused_floats,
-        .unused_strings_ = unused_strings };
+    return Schema{.categoricals_ = categoricals,
+                  .discretes_ = discretes,
+                  .join_keys_ = join_keys,
+                  .name_ = name_,
+                  .numericals_ = numericals,
+                  .targets_ = targets,
+                  .text_ = text,
+                  .time_stamps_ = time_stamps,
+                  .unused_floats_ = unused_floats,
+                  .unused_strings_ = unused_strings};
 }
 
 // ----------------------------------------------------------------------------

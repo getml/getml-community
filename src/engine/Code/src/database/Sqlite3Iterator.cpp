@@ -109,7 +109,7 @@ Float Sqlite3Iterator::get_double()
                     const auto str =
                         std::string( reinterpret_cast<const char*>( txt ) );
 
-                    val = Getter::get_double( str, time_formats_ );
+                    val = Getter::get_double( str );
                 }
             else
                 {

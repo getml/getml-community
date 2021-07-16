@@ -8,16 +8,9 @@ namespace database
 struct Getter
 {
     /// Returns a double .
-    static Float get_double(
-        const std::string& _str, const std::vector<std::string>& _time_formats )
+    static Float get_double( const std::string& _str )
     {
-        auto [val, success] = io::Parser::to_double( _str );
-
-        if ( !success )
-            {
-                std::tie( val, success ) =
-                    io::Parser::to_time_stamp( _str, _time_formats );
-            }
+        const auto [val, success] = io::Parser::to_double( _str );
 
         if ( !success )
             {

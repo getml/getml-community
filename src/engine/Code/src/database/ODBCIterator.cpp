@@ -205,7 +205,7 @@ Float ODBCIterator::get_double()
             return static_cast<Float>( NAN );
         }
 
-    return Getter::get_double( str, time_formats_ );
+    return Getter::get_double( str );
 }
 
 // ----------------------------------------------------------------------------

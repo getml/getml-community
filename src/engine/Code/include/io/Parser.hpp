@@ -28,43 +28,36 @@ class Parser
     /// Transforms a string to a double.
     static std::pair<Float, bool> to_double( const std::string& _str )
     {
-        try
+        const auto trimmed = trim( _str );
+
+        if ( trimmed.find_first_not_of( "0123456789.e-+" ) !=
+             std::string::npos )
             {
-                const auto trimmed = trim( _str );
-
-                if ( trimmed.find_first_not_of( "0123456789.e-+" ) !=
-                     std::string::npos )
+                if ( trimmed == "true" || trimmed == "TRUE" ||
+                     trimmed == "True" )
                     {
-                        if ( trimmed == "true" || trimmed == "TRUE" ||
-                             trimmed == "True" )
-                            {
-                                return std::pair<Float, bool>( 1.0, true );
-                            }
-
-                        if ( trimmed == "false" || trimmed == "FALSE" ||
-                             trimmed == "False" )
-                            {
-                                return std::pair<Float, bool>( 0.0, true );
-                            }
-
-                        return std::pair<Float, bool>( 0.0, false );
+                        return std::pair<Float, bool>( 1.0, true );
                     }
 
-                size_t size = 0;
-
-                const auto val = std::stod( trimmed, &size );
-
-                if ( size != trimmed.size() )
+                if ( trimmed == "false" || trimmed == "FALSE" ||
+                     trimmed == "False" )
                     {
-                        return std::pair<Float, bool>( 0.0, false );
+                        return std::pair<Float, bool>( 0.0, true );
                     }
 
-                return std::pair<Float, bool>( val, true );
+                return std::pair<Float, bool>( 0.0, false );
             }
-        catch ( std::exception& e )
+
+        char* ptr = nullptr;
+
+        const auto val = strtod( trimmed.c_str(), &ptr );
+
+        if ( val == 0.0 && ptr == trimmed.c_str() )
             {
                 return std::pair<Float, bool>( 0.0, false );
             }
+
+        return std::pair<Float, bool>( val, true );
     }
 
     // -------------------------------
