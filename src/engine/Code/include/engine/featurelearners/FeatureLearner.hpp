@@ -714,8 +714,8 @@ FeatureLearner<FeatureLearnerType>::fit_propositionalization(
                 {
                     throw std::invalid_argument(
                         "All joins in the data model have been set to "
-                        "propositionalization. You should use FastProp or "
-                        "FastPropTimeSeries instead." );
+                        "propositionalization. You should use FastProp "
+                        "instead." );
                 }
 
             const auto hyp =

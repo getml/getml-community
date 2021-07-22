@@ -149,14 +149,6 @@ class DataModelChecker
         const containers::DataFrame& _peripheral_df,
         communication::Warner* _warner );
 
-    /// Adds warning messages related to the joins.
-    static void raise_self_join_warnings(
-        const bool _propositionalization,
-        const bool _is_many_to_one,
-        const size_t _num_matches,
-        const containers::DataFrame& _population_df,
-        communication::Warner* _warner );
-
     /// Adds a warning that all values are equal.
     static void warn_all_equal(
         const bool _is_float,
@@ -167,18 +159,6 @@ class DataModelChecker
     /// Adds a warning that a data frame is empty.
     static void warn_is_empty(
         const std::string& _df_name, communication::Warner* _warner );
-
-    /// Adds a warning message for when there are no matches on a self-join.
-    static void warn_self_join_no_matches(
-        const containers::DataFrame& _population_df,
-        communication::Warner* _warner );
-
-    /// Adds a warning message for when there are too many matches on a
-    /// self-join.
-    static void warn_self_join_too_many_matches(
-        const size_t _num_matches,
-        const containers::DataFrame& _population_df,
-        communication::Warner* _warner );
 
     /// Adds a warning message related to many-to-one or one-to-one
     /// relationships.

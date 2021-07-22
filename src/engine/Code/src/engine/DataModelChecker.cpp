@@ -109,8 +109,7 @@ void DataModelChecker::check_all_propositionalization(
         {
             throw std::invalid_argument(
                 "All joins in the data model have been set to "
-                "propositionalization. You should use FastProp or "
-                "FastPropTimeSeries instead." );
+                "propositionalization. You should use FastProp instead." );
         }
 }
 
@@ -924,43 +923,6 @@ void DataModelChecker::raise_join_warnings(
 
 // ------------------------------------------------------------------------
 
-void DataModelChecker::raise_self_join_warnings(
-    const bool _is_propositionalization,
-    const bool _is_many_to_one,
-    const size_t _num_matches,
-    const containers::DataFrame& _population_df,
-    communication::Warner* _warner )
-{
-    // ------------------------------------------------------------------------
-
-    if ( _num_matches == 0 )
-        {
-            return;
-        }
-
-    // ------------------------------------------------------------------------
-
-    if ( _is_many_to_one )
-        {
-            warn_self_join_no_matches( _population_df, _warner );
-        }
-
-    // ------------------------------------------------------------------------
-
-    const auto avg_num_matches = static_cast<Float>( _num_matches ) /
-                                 static_cast<Float>( _population_df.nrows() );
-
-    if ( !_is_propositionalization && avg_num_matches > 300.0 )
-        {
-            warn_self_join_too_many_matches(
-                _num_matches, _population_df, _warner );
-        }
-
-    // ------------------------------------------------------------------------
-}
-
-// ------------------------------------------------------------------------
-
 void DataModelChecker::warn_all_equal(
     const bool _is_float,
     const std::string& _colname,
@@ -1009,15 +971,13 @@ void DataModelChecker::warn_propositionalization_with_relmt(
         "You have set the 'propositionalization' marker when joining " +
         population_name + " and " + peripheral_name + " over " + join_key_used +
         " and " + other_join_key_used +
-        ". At the same time, you are using relmt. The relmt "
+        ". At the same time, you are using RelMT. The RelMT "
         "algorithm does not scale very well to "
         "with many columns, as the propositionalization is likely to produce. "
         "This pipeline might take a very "
         "long time to fit. "
-        "You could replace RelMT or "
-        "RelMTTimeSeries with Relboost or "
-        "RelboostTimeSeries respectively. The relboost "
-        "algorithm has been designed to scale well to situations like this.";
+        "You could replace RelMT or with Relboost. Relboost "
+        "has been designed to scale well to situations like this.";
 
     _warner->add( warning );
 }
@@ -1118,45 +1078,6 @@ void DataModelChecker::warn_not_found(
 
 // ------------------------------------------------------------------------
 
-void DataModelChecker::warn_self_join_no_matches(
-    const containers::DataFrame& _population_df,
-    communication::Warner* _warner )
-{
-    const auto population_name = modify_df_name( _population_df.name() );
-
-    _warner->add(
-        data_model_can_be_improved() + "The self-join on " + population_name +
-        " created by the time series feature learner has no matches. "
-        "You should examine your join keys." );
-}
-
-// ------------------------------------------------------------------------
-
-void DataModelChecker::warn_self_join_too_many_matches(
-    const size_t _num_matches,
-    const containers::DataFrame& _population_df,
-    communication::Warner* _warner )
-{
-    const auto population_name = modify_df_name( _population_df.name() );
-
-    _warner->add(
-        might_take_long() + "The self-join on " + population_name +
-        " created by the time series feature learner "
-        "has a total of " +
-        std::to_string( _num_matches ) +
-        " matches.  This can take a long time to fit. "
-        "There are two possible ways to fix this: \n"
-        "1) You could impose a narrower limit on the scope of "
-        "this join by reducing the memory (the period of time until "
-        "the feature learner 'forgets' historical data). "
-        "Please note that a memory of 0.0 means that "
-        "the time series will not forget any past "
-        "data.\n"
-        "2) You could also use FastPropTimeSeries instead." );
-}
-
-// ------------------------------------------------------------------------
-
 void DataModelChecker::warn_too_many_columns_multirel(
     const size_t _num_columns,
     const std::string& _df_name,
@@ -1176,10 +1097,8 @@ void DataModelChecker::warn_too_many_columns_multirel(
         "columns or preprocessors. You could use a column selection "
         "to pick the right columns. "
         "You could also replace "
-        "Multirel or "
-        "MultirelTimeSeries with Relboost or "
-        "RelboostTimeSeries respectively. The relboost "
-        "algorithm has been designed to scale well to data "
+        "Multirel  with Relboost. Relboost "
+        "has been designed to scale well to data "
         "frames with many columns." );
 }
 
@@ -1217,10 +1136,8 @@ void DataModelChecker::warn_too_many_columns_relmt(
         "columns or preprocessors. You can use a column selection "
         "to pick the right columns. "
         "You could also replace "
-        "RelMT or "
-        "RelMTTimeSeries with Relboost or "
-        "RelboostTimeSeries respectively. The relboost "
-        "algorithm has been designed to scale well to data "
+        "RelMT with Relboost. Relboost "
+        "has been designed to scale well to data "
         "frames with many columns.";
 
     _warner->add( warning );
@@ -1264,7 +1181,7 @@ void DataModelChecker::warn_too_many_matches(
         "propositionalization, which would force the pipeline to use the "
         "FastProp algorithm for this particular join. You can also do that in "
         "the .join(...)-method of the Placeholder.\n"
-        "3) You could also use FastProp or FastPropTimeSeries for the "
+        "3) You could also use FastProp for the "
         "entire pipeline." );
 }
 
