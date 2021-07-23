@@ -97,7 +97,6 @@ containers::DataFrame Staging::find_peripheral(
 // ----------------------------------------------------------------------------
 
 containers::DataFrame Staging::join_all(
-    const bool _use_timestamps,
     const size_t _number,
     const bool _is_population,
     const std::string& _joined_name,
@@ -121,7 +120,6 @@ containers::DataFrame Staging::join_all(
     for ( size_t i = 1; i < splitted.size(); ++i )
         {
             population = join_one(
-                _use_timestamps,
                 splitted.at( i ),
                 population,
                 _peripheral_dfs,
@@ -138,7 +136,6 @@ containers::DataFrame Staging::join_all(
 // ----------------------------------------------------------------------------
 
 containers::DataFrame Staging::join_one(
-    const bool _use_timestamps,
     const std::string& _splitted,
     const containers::DataFrame& _population,
     const std::vector<containers::DataFrame>& _peripheral_dfs,
@@ -162,7 +159,6 @@ containers::DataFrame Staging::join_one(
         find_peripheral( name, _peripheral_names, _peripheral_dfs );
 
     const auto index = make_index(
-        _use_timestamps,
         name,
         alias,
         join_key,
@@ -238,7 +234,6 @@ containers::DataFrame Staging::join_one(
 // ----------------------------------------------------------------------------
 
 void Staging::join_tables(
-    const bool _use_timestamps,
     const std::vector<std::string>& _origin_peripheral_names,
     const std::string& _joined_population_name,
     const std::vector<std::string>& _joined_peripheral_names,
@@ -246,7 +241,6 @@ void Staging::join_tables(
     std::vector<containers::DataFrame>* _peripheral_dfs )
 {
     const auto population_df = join_all(
-        _use_timestamps,
         1,
         true,
         _joined_population_name,
@@ -260,7 +254,6 @@ void Staging::join_tables(
     for ( size_t i = 0; i < peripheral_dfs.size(); ++i )
         {
             peripheral_dfs.at( i ) = join_all(
-                _use_timestamps,
                 i + 2,
                 false,
                 _joined_peripheral_names.at( i ),
@@ -277,7 +270,6 @@ void Staging::join_tables(
 // ----------------------------------------------------------------------------
 
 std::vector<size_t> Staging::make_index(
-    const bool _use_timestamps,
     const std::string& _name,
     const std::string& _alias,
     const std::string& _join_key,

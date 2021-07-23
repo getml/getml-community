@@ -85,11 +85,6 @@ struct Hyperparameters
     /// Hyperparameters necessary for training the tree
     const std::shared_ptr<const TreeHyperparameters> tree_hyperparameters_;
 
-    /// Whether time stamps are to be used (should be set to true
-    /// for all but idiosyncratic cases - it is the golden rule of
-    /// predictive analytics)!
-    const bool use_timestamps_;
-
     /// The maximum size of the vocabulary.
     const size_t vocab_size_;
 };

@@ -14,16 +14,12 @@ class AggregationIndex
     AggregationIndex(
         const containers::DataFrameView& _input_table,
         const containers::DataFrameView& _output_table,
-        const std::shared_ptr<const std::map<Int, Int>>&
-            _input_map,
-        const std::shared_ptr<const std::map<Int, Int>>&
-            _output_map,
-        const bool _use_timestamps )
+        const std::shared_ptr<const std::map<Int, Int>>& _input_map,
+        const std::shared_ptr<const std::map<Int, Int>>& _output_map )
         : input_map_( _input_map ),
           input_table_( _input_table ),
           output_map_( _output_map ),
-          output_table_( _output_table ),
-          use_timestamps_( _use_timestamps )
+          output_table_( _output_table )
     {
     }
 
@@ -41,17 +37,15 @@ class AggregationIndex
     /// Matches the sample weights returned by the parent to make "sample
     /// weights" for the subfeatures.
     std::shared_ptr<std::vector<Float>> make_sample_weights(
-        const std::shared_ptr<const std::vector<Float>>
-            _sample_weights_parent ) const;
+        const std::shared_ptr<const std::vector<Float>> _sample_weights_parent )
+        const;
 
     /// Maps _ix_input to all indices
-    const std::vector<Int> transform(
-        const size_t _ix_input ) const;
+    const std::vector<Int> transform( const size_t _ix_input ) const;
 
     /// Transform ix_agg using the output map
     Int transform_ix_agg(
-        const Int _ix_agg,
-        const std::map<Int, Int>& _rows_map ) const;
+        const Int _ix_agg, const std::map<Int, Int>& _rows_map ) const;
 
     // ------------------------------------------------------------
 
@@ -87,9 +81,6 @@ class AggregationIndex
 
     /// Data frame on which the input table is joined (the left table)
     const containers::DataFrameView output_table_;
-
-    /// Whether we want to use timestamps
-    const bool use_timestamps_;
 };
 
 // ----------------------------------------------------------------------------

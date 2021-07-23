@@ -1492,12 +1492,7 @@ std::vector<std::vector<containers::Match>> FastProp::make_matches(
                 containers::Match,
                 decltype( make_match )>::
                 make_matches(
-                    population,
-                    peripheral,
-                    true,  // _use_timestamps
-                    _rownum,
-                    make_match,
-                    &matches );
+                    population, peripheral, _rownum, make_match, &matches );
 
             all_matches.push_back( matches );
         }
@@ -1774,7 +1769,6 @@ std::shared_ptr<std::vector<size_t>> FastProp::make_subfeature_rownums(
                 make_matches(
                     population,
                     peripheral,
-                    true,
                     ix_output,
                     get_ix_input,
                     &peripheral_indices );

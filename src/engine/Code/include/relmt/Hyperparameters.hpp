@@ -101,9 +101,6 @@ struct Hyperparameters
     /// Whether to print messages while running boosting
     const bool silent_;
 
-    /// Whether to use timestamps,
-    const bool use_timestamps_;
-
     /// The maximum size of the vocabulary.
     const size_t vocab_size_;
 };

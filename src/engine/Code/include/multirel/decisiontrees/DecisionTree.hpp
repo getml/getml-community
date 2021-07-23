@@ -77,15 +77,13 @@ class DecisionTree
         const helpers::VocabularyTree &_vocabulary,
         const std::string &_feature_prefix,
         const std::string &_feature_num,
-        const bool _use_timestamps,
         const std::tuple<bool, bool, bool> _has_subfeatures ) const;
 
     /// Transforms a set of raw data into extracted features
     std::shared_ptr<const std::vector<Float>> transform(
         const containers::DataFrameView &_population,
         const containers::DataFrame &_peripheral,
-        const containers::Subfeatures &_subfeatures,
-        const bool _use_timestamps ) const;
+        const containers::Subfeatures &_subfeatures ) const;
 
     // --------------------------------------
 

@@ -6,8 +6,7 @@ namespace aggregations
 {
 // ----------------------------------------------------------------------------
 
-const Float AggregationIndex::get_count(
-    const Int _ix_agg ) const
+const Float AggregationIndex::get_count( const Int _ix_agg ) const
 {
     assert_true( _ix_agg >= 0 );
     assert_true( _ix_agg < output_table_.nrows() );
@@ -22,12 +21,10 @@ const Float AggregationIndex::get_count(
 
     for ( auto ix_input : it->second )
         {
-            const bool use_this_sample =
-                ( !use_timestamps_ ||
-                  time_stamp_output_in_range(
-                      input_table_.df().time_stamp( ix_input ),
-                      input_table_.df().upper_time_stamp( ix_input ),
-                      time_stamp_output ) );
+            const bool use_this_sample = time_stamp_output_in_range(
+                input_table_.df().time_stamp( ix_input ),
+                input_table_.df().upper_time_stamp( ix_input ),
+                time_stamp_output );
 
             if ( use_this_sample )
                 {
@@ -40,10 +37,9 @@ const Float AggregationIndex::get_count(
 
 // ----------------------------------------------------------------------------
 
-std::shared_ptr<std::vector<Float>>
-AggregationIndex::make_sample_weights(
-    const std::shared_ptr<const std::vector<Float>>
-        _sample_weights_parent ) const
+std::shared_ptr<std::vector<Float>> AggregationIndex::make_sample_weights(
+    const std::shared_ptr<const std::vector<Float>> _sample_weights_parent )
+    const
 {
     assert_true( _sample_weights_parent->size() == output_table_.nrows() );
 
@@ -77,19 +73,15 @@ AggregationIndex::make_sample_weights(
                     const Float upper_time_stamp =
                         input_table_.df().upper_time_stamp( ix_input );
 
-                    const bool use_this_sample =
-                        ( !use_timestamps_ ||
-                          time_stamp_output_in_range(
-                              time_stamp_input,
-                              upper_time_stamp,
-                              output_table_.time_stamp( i ) ) );
+                    const bool use_this_sample = time_stamp_output_in_range(
+                        time_stamp_input,
+                        upper_time_stamp,
+                        output_table_.time_stamp( i ) );
 
                     if ( use_this_sample )
                         {
-                            auto ix_input_tr =
-                                transform_ix_agg(
-                                  static_cast<Int>( ix_input ),
-                                  *input_map_ );
+                            auto ix_input_tr = transform_ix_agg(
+                                static_cast<Int>( ix_input ), *input_map_ );
 
                             if ( ix_input_tr >= 0 )
                                 {
@@ -125,8 +117,7 @@ const std::vector<Int> AggregationIndex::transform(
 
     const Float time_stamp_input = input_table_.time_stamp( _ix_input );
 
-    const Float upper_time_stamp =
-        input_table_.upper_time_stamp( _ix_input );
+    const Float upper_time_stamp = input_table_.upper_time_stamp( _ix_input );
 
     std::vector<Int> indices;
 
@@ -135,22 +126,20 @@ const std::vector<Int> AggregationIndex::transform(
             assert_true( ix_agg >= 0 );
             assert_true( ix_agg < output_table_.df().nrows() );
 
-            const bool use_this_sample =
-                ( !use_timestamps_ ||
-                  time_stamp_output_in_range(
-                      time_stamp_input,
-                      upper_time_stamp,
-                      output_table_.df().time_stamp( ix_agg ) ) );
+            const bool use_this_sample = time_stamp_output_in_range(
+                time_stamp_input,
+                upper_time_stamp,
+                output_table_.df().time_stamp( ix_agg ) );
 
             if ( use_this_sample )
                 {
                     auto ix_agg_tr = transform_ix_agg(
-                      static_cast<Int>( ix_agg ),
-                      *output_map_ );
+                        static_cast<Int>( ix_agg ), *output_map_ );
 
                     if ( ix_agg_tr != -1 )
                         {
-                            assert_true( ix_agg == output_table_.rows()[ix_agg_tr] );
+                            assert_true(
+                                ix_agg == output_table_.rows()[ix_agg_tr] );
 
                             indices.push_back( ix_agg_tr );
                         }
@@ -163,8 +152,7 @@ const std::vector<Int> AggregationIndex::transform(
 // ----------------------------------------------------------------------------
 
 Int AggregationIndex::transform_ix_agg(
-    const Int _ix_agg,
-    const std::map<Int, Int>& _rows_map ) const
+    const Int _ix_agg, const std::map<Int, Int>& _rows_map ) const
 {
     assert_true( _rows_map.size() > 0 );
 

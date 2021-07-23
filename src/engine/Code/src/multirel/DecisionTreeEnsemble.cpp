@@ -400,8 +400,7 @@ void DecisionTreeEnsemble::fit(
                     matches.at( i ) = utils::Matchmaker::make_matches(
                         _table_holder->main_tables().at( i ),
                         _table_holder->peripheral_tables().at( i ),
-                        sample_weights,
-                        hyperparameters().use_timestamps_ );
+                        sample_weights );
 
                     match_ptrs.at( i ) =
                         utils::Matchmaker::make_pointers( &matches.at( i ) );
@@ -446,8 +445,7 @@ void DecisionTreeEnsemble::fit(
                             matches.at( i ) = utils::Matchmaker::make_matches(
                                 _table_holder->main_tables().at( i ),
                                 _table_holder->peripheral_tables().at( i ),
-                                sample_weights,
-                                hyperparameters().use_timestamps_ );
+                                sample_weights );
 
                             match_ptrs.at( i ) =
                                 utils::Matchmaker::make_pointers(
@@ -504,8 +502,7 @@ void DecisionTreeEnsemble::fit(
                     const auto new_feature = last_tree()->transform(
                         _table_holder->main_tables().at( ix ),
                         _table_holder->peripheral_tables().at( ix ),
-                        subfeatures.at( ix ),
-                        hyperparameters().use_timestamps_ );
+                        subfeatures.at( ix ) );
 
                     assert_true( new_feature );
 
@@ -999,7 +996,6 @@ std::vector<std::string> DecisionTreeEnsemble::to_sql(
                 _vocabulary,
                 _feature_prefix,
                 std::to_string( _offset + i + 1 ),
-                hyperparameters().use_timestamps_,
                 has_subfeatures ) );
         }
 
@@ -1127,8 +1123,7 @@ std::shared_ptr<const std::vector<Float>> DecisionTreeEnsemble::transform(
                            .transform(
                                _table_holder.main_tables().at( ix ),
                                _table_holder.peripheral_tables().at( ix ),
-                               _subfeatures.at( ix ),
-                               hyperparameters().use_timestamps_ );
+                               _subfeatures.at( ix ) );
 
     return new_feature;
 }

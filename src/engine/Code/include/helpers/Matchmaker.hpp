@@ -15,7 +15,6 @@ struct Matchmaker
         const PopulationType& _population,
         const DataFrame& _peripheral,
         const std::shared_ptr<const std::vector<Float>>& _sample_weights,
-        const bool _use_timestamps,
         const MakeMatchType _make_match );
 
     /// Identifies matches between a specific sample in the population table
@@ -23,7 +22,6 @@ struct Matchmaker
     static void make_matches(
         const PopulationType& _population,
         const DataFrame& _peripheral,
-        const bool _use_timestamps,
         const size_t _ix_output,
         const MakeMatchType _make_match,
         std::vector<MatchType>* _matches );
@@ -38,7 +36,6 @@ Matchmaker<PopulationType, MatchType, MakeMatchType>::make_matches(
     const PopulationType& _population,
     const DataFrame& _peripheral,
     const std::shared_ptr<const std::vector<Float>>& _sample_weights,
-    const bool _use_timestamps,
     const MakeMatchType _make_match )
 {
     std::vector<MatchType> matches;
@@ -56,12 +53,7 @@ Matchmaker<PopulationType, MatchType, MakeMatchType>::make_matches(
                 }
 
             Matchmaker::make_matches(
-                _population,
-                _peripheral,
-                _use_timestamps,
-                ix_output,
-                _make_match,
-                &matches );
+                _population, _peripheral, ix_output, _make_match, &matches );
         }
 
     return matches;
@@ -73,7 +65,6 @@ template <class PopulationType, class MatchType, class MakeMatchType>
 void Matchmaker<PopulationType, MatchType, MakeMatchType>::make_matches(
     const PopulationType& _population,
     const DataFrame& _peripheral,
-    const bool _use_timestamps,
     const size_t _ix_output,
     const MakeMatchType _make_match,
     std::vector<MatchType>* _matches )
@@ -96,7 +87,7 @@ void Matchmaker<PopulationType, MatchType, MakeMatchType>::make_matches(
                         lower <= time_stamp_out &&
                         ( std::isnan( upper ) || upper > time_stamp_out );
 
-                    if ( !_use_timestamps || match_in_range )
+                    if ( match_in_range )
                         {
                             _matches->push_back(
                                 _make_match( ix_input, _ix_output ) );

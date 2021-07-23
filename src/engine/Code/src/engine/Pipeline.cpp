@@ -2570,7 +2570,6 @@ Pipeline::modify_data_frames(
         PlaceholderMaker::make_peripheral( placeholder );
 
     Staging::join_tables(
-        true,
         *peripheral_names,
         placeholder.name_,
         joined_peripheral_names,

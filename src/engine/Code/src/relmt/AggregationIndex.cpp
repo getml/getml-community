@@ -21,12 +21,10 @@ const Float AggregationIndex::get_count( const Int _ix_agg ) const
 
     for ( auto ix_input : it->second )
         {
-            const bool use_this_sample =
-                ( !use_timestamps_ ||
-                  time_stamp_output_in_range(
-                      input_table_.df().time_stamp( ix_input ),
-                      input_table_.df().upper_time_stamp( ix_input ),
-                      time_stamp_output ) );
+            const bool use_this_sample = time_stamp_output_in_range(
+                input_table_.df().time_stamp( ix_input ),
+                input_table_.df().upper_time_stamp( ix_input ),
+                time_stamp_output );
 
             if ( use_this_sample )
                 {
@@ -75,12 +73,10 @@ std::shared_ptr<std::vector<Float>> AggregationIndex::make_sample_weights(
                     const Float upper_time_stamp =
                         input_table_.df().upper_time_stamp( ix_input );
 
-                    const bool use_this_sample =
-                        ( !use_timestamps_ ||
-                          time_stamp_output_in_range(
-                              time_stamp_input,
-                              upper_time_stamp,
-                              output_table_.time_stamp( i ) ) );
+                    const bool use_this_sample = time_stamp_output_in_range(
+                        time_stamp_input,
+                        upper_time_stamp,
+                        output_table_.time_stamp( i ) );
 
                     if ( use_this_sample )
                         {
@@ -130,12 +126,10 @@ const std::vector<Int> AggregationIndex::transform(
             assert_true( ix_agg >= 0 );
             assert_true( ix_agg < output_table_.df().nrows() );
 
-            const bool use_this_sample =
-                ( !use_timestamps_ ||
-                  time_stamp_output_in_range(
-                      time_stamp_input,
-                      upper_time_stamp,
-                      output_table_.df().time_stamp( ix_agg ) ) );
+            const bool use_this_sample = time_stamp_output_in_range(
+                time_stamp_input,
+                upper_time_stamp,
+                output_table_.df().time_stamp( ix_agg ) );
 
             if ( use_this_sample )
                 {

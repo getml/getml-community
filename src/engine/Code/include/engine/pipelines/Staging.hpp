@@ -15,7 +15,6 @@ class Staging
     /// Parses the joined names to execute the many-to-one joins required in the
     /// data model.
     static void join_tables(
-        const bool _use_timestamps,
         const std::vector<std::string>& _origin_peripheral_names,
         const std::string& _joined_population_name,
         const std::vector<std::string>& _joined_peripheral_names,
@@ -48,7 +47,6 @@ class Staging
         const std::vector<containers::DataFrame>& _peripheral_dfs );
 
     static containers::DataFrame join_all(
-        const bool _use_timestamps,
         const size_t _number,
         const bool _is_population,
         const std::string& _joined_name,
@@ -57,14 +55,12 @@ class Staging
         const std::vector<containers::DataFrame>& _peripheral_dfs );
 
     static containers::DataFrame join_one(
-        const bool _use_timestamps,
         const std::string& _splitted,
         const containers::DataFrame& _population,
         const std::vector<containers::DataFrame>& _peripheral_dfs,
         const std::vector<std::string>& _peripheral_names );
 
     static std::vector<size_t> make_index(
-        const bool _use_timestamps,
         const std::string& _name,
         const std::string& _alias,
         const std::string& _join_key,

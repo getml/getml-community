@@ -107,13 +107,6 @@ class TreeFitter
         return *hyperparameters_->tree_hyperparameters_;
     }
 
-    /// Trivial accessor
-    bool use_timestamps() const
-    {
-        assert_true( hyperparameters_ );
-        return hyperparameters_->use_timestamps_;
-    }
-
     // -------------------------------------------------------------------------
 
    private:

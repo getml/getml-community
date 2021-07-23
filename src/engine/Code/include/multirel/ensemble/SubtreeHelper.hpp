@@ -100,8 +100,7 @@ void SubtreeHelper::fit_subensemble(
         input_table,
         _table_holder->main_tables().at( _ix_perip_used ),
         input_map,
-        _output_map,
-        _hyperparameters.use_timestamps_ );
+        _output_map );
 
     const auto opt_impl =
         std::make_shared<aggregations::IntermediateAggregationImpl>(

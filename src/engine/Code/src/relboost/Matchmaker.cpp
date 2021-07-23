@@ -9,8 +9,7 @@ namespace utils
 std::vector<containers::Match> Matchmaker::make_matches(
     const containers::DataFrameView& _population,
     const containers::DataFrame& _peripheral,
-    const std::shared_ptr<const std::vector<Float>>& _sample_weights,
-    const bool _use_timestamps )
+    const std::shared_ptr<const std::vector<Float>>& _sample_weights )
 {
     const auto make_match = []( const size_t ix_input,
                                 const size_t ix_output ) {
@@ -21,12 +20,7 @@ std::vector<containers::Match> Matchmaker::make_matches(
         containers::DataFrameView,
         containers::Match,
         decltype( make_match )>::
-        make_matches(
-            _population,
-            _peripheral,
-            _sample_weights,
-            _use_timestamps,
-            make_match );
+        make_matches( _population, _peripheral, _sample_weights, make_match );
 }
 
 // ----------------------------------------------------------------------------
@@ -49,7 +43,6 @@ std::vector<containers::Match> Matchmaker::make_matches(
 void Matchmaker::make_matches(
     const containers::DataFrameView& _population,
     const containers::DataFrame& _peripheral,
-    const bool _use_timestamps,
     const size_t _ix_output,
     std::vector<containers::Match>* _matches )
 {
@@ -63,12 +56,7 @@ void Matchmaker::make_matches(
         containers::Match,
         decltype( make_match )>::
         make_matches(
-            _population,
-            _peripheral,
-            _use_timestamps,
-            _ix_output,
-            make_match,
-            _matches );
+            _population, _peripheral, _ix_output, make_match, _matches );
 }
 
 // ----------------------------------------------------------------------------

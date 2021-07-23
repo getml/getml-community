@@ -202,7 +202,6 @@ std::string DecisionTree::to_sql(
     const helpers::VocabularyTree& _vocabulary,
     const std::string& _feature_prefix,
     const std::string& _feature_num,
-    const bool _use_timestamps,
     const std::tuple<bool, bool, bool> _has_subfeatures ) const
 {
     // -------------------------------------------------------------------
@@ -311,8 +310,7 @@ std::string DecisionTree::to_sql(
 
     // -------------------------------------------------------------------
 
-    if ( _use_timestamps && input().num_time_stamps() > 0 &&
-         output().num_time_stamps() > 0 )
+    if ( input().num_time_stamps() > 0 && output().num_time_stamps() > 0 )
         {
             sql << "WHERE ";
 
@@ -368,11 +366,7 @@ std::shared_ptr<std::vector<Float>> DecisionTree::transform(
             std::vector<containers::Match> matches;
 
             utils::Matchmaker::make_matches(
-                _output,
-                _input,
-                hyperparameters_->use_timestamps_,
-                ix_output,
-                &matches );
+                _output, _input, ix_output, &matches );
 
             // ------------------------------------------------------------------------
 

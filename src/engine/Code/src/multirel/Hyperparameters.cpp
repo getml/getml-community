@@ -47,7 +47,6 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _json_obj )
               : false ),
       tree_hyperparameters_(
           std::make_shared<const TreeHyperparameters>( _json_obj ) ),
-      use_timestamps_( JSON::get_value<bool>( _json_obj, "use_timestamps_" ) ),
       vocab_size_(
           _json_obj.has( "vocab_size_" )
               ? JSON::get_value<size_t>( _json_obj, "vocab_size_" )
@@ -100,8 +99,6 @@ Poco::JSON::Object::Ptr Hyperparameters::to_json_obj() const
     obj->set( "include_categorical_", include_categorical_ );
 
     obj->set( "loss_function_", loss_function_ );
-
-    obj->set( "use_timestamps_", use_timestamps_ );
 
     obj->set( "num_features_", num_features_ );
 

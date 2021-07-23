@@ -24,7 +24,6 @@ Hyperparameters::Hyperparameters()
       share_selected_features_( 0.0 ),
       shrinkage_( 0.3 ),
       silent_( true ),
-      use_timestamps_( true ),
       vocab_size_( 500 )
 {
 }
@@ -69,7 +68,6 @@ Hyperparameters::Hyperparameters( const Poco::JSON::Object& _obj )
               : 1.0 ),  // TODO: Remove
       shrinkage_( JSON::get_value<Float>( _obj, "shrinkage_" ) ),
       silent_( JSON::get_value<bool>( _obj, "silent_" ) ),
-      use_timestamps_( JSON::get_value<bool>( _obj, "use_timestamps_" ) ),
       vocab_size_(
           _obj.has( "vocab_size_" )
               ? JSON::get_value<size_t>( _obj, "vocab_size_" )
@@ -152,8 +150,6 @@ Poco::JSON::Object::Ptr Hyperparameters::to_json_obj() const
     obj->set( "shrinkage_", shrinkage_ );
 
     obj->set( "silent_", silent_ );
-
-    obj->set( "use_timestamps_", use_timestamps_ );
 
     obj->set( "vocab_size_", vocab_size_ );
 

@@ -423,7 +423,6 @@ std::string DecisionTree::to_sql(
     const helpers::VocabularyTree &_vocabulary,
     const std::string &_feature_prefix,
     const std::string &_feature_num,
-    const bool _use_timestamps,
     const std::tuple<bool, bool, bool> _has_subfeatures ) const
 {
     // -------------------------------------------------------------------
@@ -501,8 +500,7 @@ std::string DecisionTree::to_sql(
     // -------------------------------------------------------------------
 
     const bool use_time_stamps =
-        ( _use_timestamps && input().num_time_stamps() > 0 &&
-          output().num_time_stamps() > 0 );
+        input().num_time_stamps() > 0 && output().num_time_stamps() > 0;
 
     if ( use_time_stamps )
         {
@@ -576,8 +574,7 @@ std::string DecisionTree::to_sql(
 std::shared_ptr<const std::vector<Float>> DecisionTree::transform(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
-    const containers::Subfeatures &_subfeatures,
-    const bool _use_timestamps ) const
+    const containers::Subfeatures &_subfeatures ) const
 {
     // ------------------------------------------------------
 
@@ -608,11 +605,7 @@ std::shared_ptr<const std::vector<Float>> DecisionTree::transform(
             containers::Matches matches;
 
             utils::Matchmaker::make_matches(
-                _population,
-                _peripheral,
-                _use_timestamps,
-                ix_x_popul,
-                &matches );
+                _population, _peripheral, ix_x_popul, &matches );
 
             auto match_ptrs = utils::Matchmaker::make_pointers( &matches );
 

@@ -513,10 +513,7 @@ DecisionTreeEnsemble::fit_candidate_features(
             // them anew when needed.
 
             auto matches = utils::Matchmaker::make_matches(
-                output_table,
-                *input_table,
-                _sample_weights,
-                hyperparameters().use_timestamps_ );
+                output_table, *input_table, _sample_weights );
 
             debug_log(
                 "Number of matches: " + std::to_string( matches.size() ) );
@@ -1316,7 +1313,6 @@ std::vector<std::string> DecisionTreeEnsemble::to_sql(
                 _vocabulary,
                 _feature_prefix,
                 std::to_string( _offset + i + 1 ),
-                hyperparameters().use_timestamps_,
                 has_subfeatures ) );
         }
 

@@ -41,8 +41,7 @@ void SubtreeHelper::fit_subensemble(
             input_table,
             _table_holder->main_tables()[_ix_perip_used],
             input_map,
-            _output_map,
-            _hyperparameters.use_timestamps_ );
+            _output_map );
 
     auto intermediate_agg = std::shared_ptr<lossfunctions::LossFunction>();
 

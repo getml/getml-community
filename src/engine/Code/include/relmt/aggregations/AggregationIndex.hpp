@@ -15,13 +15,11 @@ class AggregationIndex
         const containers::DataFrameView& _input_table,
         const containers::DataFrameView& _output_table,
         const std::shared_ptr<const std::map<Int, Int>>& _input_map,
-        const std::shared_ptr<const std::map<Int, Int>>& _output_map,
-        const bool _use_timestamps )
+        const std::shared_ptr<const std::map<Int, Int>>& _output_map )
         : input_map_( _input_map ),
           input_table_( _input_table ),
           output_map_( _output_map ),
-          output_table_( _output_table ),
-          use_timestamps_( _use_timestamps )
+          output_table_( _output_table )
     {
     }
 
@@ -90,9 +88,6 @@ class AggregationIndex
 
     /// Data frame on which the input table is joined (the left table)
     const containers::DataFrameView output_table_;
-
-    /// Whether we want to use timestamps
-    const bool use_timestamps_;
 };
 
 // ----------------------------------------------------------------------------
