@@ -454,7 +454,9 @@ class Pipeline
     std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
     modify_data_frames(
         const containers::DataFrame& _population_df,
-        const std::vector<containers::DataFrame>& _peripheral_dfs ) const;
+        const std::vector<containers::DataFrame>& _peripheral_dfs,
+        const std::shared_ptr<const communication::Logger>& _logger,
+        Poco::Net::StreamSocket* _socket ) const;
 
     /// Moves the temporary folder to its final destination at the end of
     /// .save(...).

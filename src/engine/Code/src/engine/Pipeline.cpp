@@ -284,7 +284,7 @@ void Pipeline::check(
     // -------------------------------------------------------------------------
 
     auto [population_df, peripheral_dfs] =
-        modify_data_frames( _population_df, _peripheral_dfs );
+        modify_data_frames( _population_df, _peripheral_dfs, _logger, _socket );
 
     const auto df_fingerprints =
         extract_df_fingerprints( _population_df, _peripheral_dfs );
@@ -1084,8 +1084,11 @@ void Pipeline::fit( const FitParams& _params )
 
     // -------------------------------------------------------------------------
 
-    auto [population_df, peripheral_dfs] =
-        modify_data_frames( _params.population_df_, _params.peripheral_dfs_ );
+    auto [population_df, peripheral_dfs] = modify_data_frames(
+        _params.population_df_,
+        _params.peripheral_dfs_,
+        _params.logger_,
+        _params.socket_ );
 
     // -------------------------------------------------------------------------
 
@@ -2535,8 +2538,17 @@ Pipeline::make_staging_schemata() const
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
 Pipeline::modify_data_frames(
     const containers::DataFrame& _population_df,
-    const std::vector<containers::DataFrame>& _peripheral_dfs ) const
+    const std::vector<containers::DataFrame>& _peripheral_dfs,
+    const std::shared_ptr<const communication::Logger>& _logger,
+    Poco::Net::StreamSocket* _socket ) const
 {
+    // ----------------------------------------------------------------------
+
+    const auto socket_logger =
+        std::make_shared<communication::SocketLogger>( _logger, true, _socket );
+
+    socket_logger->log( "Staging..." );
+
     // ----------------------------------------------------------------------
 
     const auto population = *JSON::get_object( obj(), "data_model_" );
@@ -2575,6 +2587,10 @@ Pipeline::modify_data_frames(
         joined_peripheral_names,
         &population_df,
         &peripheral_dfs );
+
+    // ----------------------------------------------------------------------
+
+    socket_logger->log( "Progress: 100%." );
 
     // ----------------------------------------------------------------------
 
@@ -3274,7 +3290,7 @@ Pipeline::transform(
     // -------------------------------------------------------------------------
 
     auto [population_df, peripheral_dfs] =
-        modify_data_frames( _population_df, _peripheral_dfs );
+        modify_data_frames( _population_df, _peripheral_dfs, _logger, _socket );
 
     // -------------------------------------------------------------------------
 
