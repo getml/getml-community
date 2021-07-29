@@ -284,7 +284,7 @@ void ProjectManager::list_data_frames( Poco::Net::StreamSocket* _socket ) const
 
     // ----------------------------------------------------------------
 
-    Poco::JSON::Array in_project_folder;
+    Poco::JSON::Array on_disk;
 
     Poco::DirectoryIterator end;
 
@@ -294,7 +294,7 @@ void ProjectManager::list_data_frames( Poco::Net::StreamSocket* _socket ) const
         {
             if ( it->isDirectory() )
                 {
-                    in_project_folder.add( it.name() );
+                    on_disk.add( it.name() );
                 }
         }
 
@@ -306,7 +306,7 @@ void ProjectManager::list_data_frames( Poco::Net::StreamSocket* _socket ) const
 
     obj.set( "in_memory", in_memory );
 
-    obj.set( "in_project_folder", in_project_folder );
+    obj.set( "on_disk", on_disk );
 
     // ----------------------------------------------------------------
 
