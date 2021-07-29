@@ -238,7 +238,7 @@ std::vector<std::string> Postgres::list_tables()
 {
     auto iterator = std::make_shared<PostgresIterator>(
         make_connection(),
-        std::vector<std::string>( {"table_name"} ),
+        std::vector<std::string>( { "table_name" } ),
         time_formats_,
         "information_schema.tables",
         "table_schema='public'" );
@@ -258,10 +258,15 @@ std::vector<std::string> Postgres::list_tables()
 std::string Postgres::make_connection_string(
     const Poco::JSON::Object& _obj, const std::string& _passwd )
 {
-    const auto host = jsonutils::JSON::get_value<std::string>( _obj, "host_" );
+    const auto host =
+        _obj.has( "host_" )
+            ? jsonutils::JSON::get_value<std::string>( _obj, "host_" )
+            : std::string( "" );
 
     const auto hostaddr =
-        jsonutils::JSON::get_value<std::string>( _obj, "hostaddr_" );
+        _obj.has( "hostaddr_" )
+            ? jsonutils::JSON::get_value<std::string>( _obj, "hostaddr_" )
+            : std::string( "" );
 
     const auto port = jsonutils::JSON::get_value<size_t>( _obj, "port_" );
 
@@ -270,7 +275,12 @@ std::string Postgres::make_connection_string(
 
     const auto user = jsonutils::JSON::get_value<std::string>( _obj, "user_" );
 
-    auto connection_string = std::string( "host=" ) + host + " ";
+    std::string connection_string;
+
+    if ( host.size() > 0 )
+        {
+            connection_string += std::string( "host=" ) + host + " ";
+        }
 
     if ( hostaddr.size() > 0 )
         {
