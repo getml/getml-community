@@ -91,7 +91,7 @@ void DataFrameManager::add_float_column(
 
     const auto make_col = [this, column_view, parser, name, unit, _socket](
                               const std::optional<size_t> _nrows ) {
-        auto col = column_view.to_column( 0, _nrows, true );
+        auto col = column_view.to_column( 0, _nrows, false );
 
         col.set_name( name );
 
@@ -431,7 +431,7 @@ void DataFrameManager::add_string_column(
 
     const auto make_vec = [this, column_view, parser, name, unit, _socket](
                               const std::optional<size_t> _nrows ) {
-        const auto vec = column_view.to_vector( 0, _nrows, true );
+        const auto vec = column_view.to_vector( 0, _nrows, false );
 
         assert_true( vec );
 
