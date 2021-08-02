@@ -976,17 +976,64 @@ void DataFrameManager::concat(
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::df_to_db(
-    const std::string& _conn_id,
-    const std::string& _table_name,
-    const containers::DataFrame& _df )
+void DataFrameManager::df_to_csv(
+    const std::string& _fname,
+    const size_t _batch_size,
+    const std::string& _quotechar,
+    const std::string& _sep,
+    const containers::DataFrame& _df,
+    const std::shared_ptr<containers::Encoding>& _categories,
+    const std::shared_ptr<containers::Encoding>& _join_keys_encoding )
 {
     // --------------------------------------------------------------------
 
     // We are using the bell character (\a) as the quotechar. It is least
     // likely to appear in any field.
     auto reader = containers::DataFrameReader(
-        _df, categories_, join_keys_encoding_, '\a', '|' );
+        _df, _categories, _join_keys_encoding, '\a', '|' );
+
+    const auto colnames = reader.colnames();
+
+    // --------------------------------------------------------------------
+
+    size_t fnum = 0;
+
+    while ( !reader.eof() )
+        {
+            auto fnum_str = std::to_string( ++fnum );
+
+            if ( fnum_str.size() < 5 )
+                {
+                    fnum_str =
+                        std::string( 5 - fnum_str.size(), '0' ) + fnum_str;
+                }
+
+            const auto current_fname = _batch_size == 0
+                                           ? _fname + ".csv"
+                                           : _fname + "-" + fnum_str + ".csv";
+
+            auto writer = io::CSVWriter(
+                current_fname, _batch_size, colnames, _quotechar, _sep );
+
+            writer.write( &reader );
+        }
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::df_to_db(
+    const std::string& _conn_id,
+    const std::string& _table_name,
+    const containers::DataFrame& _df,
+    const std::shared_ptr<containers::Encoding>& _categories,
+    const std::shared_ptr<containers::Encoding>& _join_keys_encoding )
+{
+    // --------------------------------------------------------------------
+
+    // We are using the bell character (\a) as the quotechar. It is least
+    // likely to appear in any field.
+    auto reader = containers::DataFrameReader(
+        _df, _categories, _join_keys_encoding, '\a', '|' );
 
     // --------------------------------------------------------------------
 
@@ -2495,8 +2542,6 @@ void DataFrameManager::to_csv(
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket* _socket )
 {
-    // --------------------------------------------------------------------
-
     const auto fname = JSON::get_value<std::string>( _cmd, "fname_" );
 
     const auto batch_size = JSON::get_value<size_t>( _cmd, "batch_size_" );
@@ -2505,51 +2550,22 @@ void DataFrameManager::to_csv(
 
     const auto sep = JSON::get_value<std::string>( _cmd, "sep_" );
 
-    // --------------------------------------------------------------------
-
     multithreading::ReadLock read_lock( read_write_lock_ );
-
-    // --------------------------------------------------------------------
-    // Set up the DataFrameReader.
 
     const auto& df = utils::Getter::get( _name, data_frames() );
 
-    // We are using the bell character (\a) as the quotechar. It is least
-    // likely to appear in any field.
-    auto reader = containers::DataFrameReader(
-        df, categories_, join_keys_encoding_, '\a', '|' );
+    df_to_csv(
+        fname,
+        batch_size,
+        quotechar,
+        sep,
+        df,
+        categories_,
+        join_keys_encoding_ );
 
-    const auto colnames = reader.colnames();
-
-    // --------------------------------------------------------------------
-
-    size_t fnum = 0;
-
-    while ( !reader.eof() )
-        {
-            auto fnum_str = std::to_string( ++fnum );
-
-            if ( fnum_str.size() < 5 )
-                {
-                    fnum_str =
-                        std::string( 5 - fnum_str.size(), '0' ) + fnum_str;
-                }
-
-            const auto current_fname = batch_size == 0
-                                           ? fname + ".csv"
-                                           : fname + "-" + fnum_str + ".csv";
-
-            auto writer = io::CSVWriter(
-                current_fname, batch_size, colnames, quotechar, sep );
-
-            writer.write( &reader );
-        }
-
-    // --------------------------------------------------------------------
+    read_lock.unlock();
 
     communication::Sender::send_string( "Success!", _socket );
-
-    // --------------------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
@@ -2567,7 +2583,9 @@ void DataFrameManager::to_db(
 
     const auto& df = utils::Getter::get( _name, data_frames() );
 
-    df_to_db( conn_id, table_name, df );
+    df_to_db( conn_id, table_name, df, categories_, join_keys_encoding_ );
+
+    read_lock.unlock();
 
     communication::Sender::send_string( "Success!", _socket );
 }
@@ -2652,16 +2670,20 @@ void DataFrameManager::to_s3(
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::view_to_db(
+void DataFrameManager::view_to_csv(
     const std::string& _name,
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket* _socket )
 {
-    const auto conn_id = JSON::get_value<std::string>( _cmd, "conn_id_" );
+    const auto fname = JSON::get_value<std::string>( _cmd, "fname_" );
+
+    const auto batch_size = JSON::get_value<size_t>( _cmd, "batch_size_" );
+
+    const auto quotechar = JSON::get_value<std::string>( _cmd, "quotechar_" );
+
+    const auto sep = JSON::get_value<std::string>( _cmd, "sep_" );
 
     const auto view = JSON::get_object( _cmd, "view_" );
-
-    const auto table_name = JSON::get_value<std::string>( _cmd, "table_name_" );
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
@@ -2677,7 +2699,49 @@ void DataFrameManager::view_to_db(
         ViewParser( local_categories, local_join_keys_encoding, data_frames_ )
             .parse( *view );
 
-    df_to_db( conn_id, table_name, df );
+    df_to_csv(
+        fname,
+        batch_size,
+        quotechar,
+        sep,
+        df,
+        categories_,
+        join_keys_encoding_ );
+
+    read_lock.unlock();
+
+    communication::Sender::send_string( "Success!", _socket );
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::view_to_db(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    const auto conn_id = JSON::get_value<std::string>( _cmd, "conn_id_" );
+
+    const auto table_name = JSON::get_value<std::string>( _cmd, "table_name_" );
+
+    const auto view = JSON::get_object( _cmd, "view_" );
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    const auto local_categories =
+        std::make_shared<containers::Encoding>( categories_ );
+
+    const auto local_join_keys_encoding =
+        std::make_shared<containers::Encoding>( join_keys_encoding_ );
+
+    assert_true( view );
+
+    const auto df =
+        ViewParser( local_categories, local_join_keys_encoding, data_frames_ )
+            .parse( *view );
+
+    df_to_db(
+        conn_id, table_name, df, local_categories, local_join_keys_encoding );
 
     read_lock.unlock();
 

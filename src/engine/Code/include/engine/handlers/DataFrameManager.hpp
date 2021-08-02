@@ -334,6 +334,12 @@ class DataFrameManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
+    /// Writes a view to CSV.
+    void view_to_csv(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Writes a view into a database.
     void view_to_db(
         const std::string& _name,
@@ -388,11 +394,23 @@ class DataFrameManager
         const std::string& _cmp_df_name = "",
         const size_t _cmp_nrows = 0 ) const;
 
+    /// Writes the data frame to CSV.
+    void df_to_csv(
+        const std::string& _fname,
+        const size_t _batch_size,
+        const std::string& _quotechar,
+        const std::string& _sep,
+        const containers::DataFrame& _df,
+        const std::shared_ptr<containers::Encoding>& _categories,
+        const std::shared_ptr<containers::Encoding>& _join_keys_encoding );
+
     /// Writes a data frame to a database.
     void df_to_db(
         const std::string& _conn_id,
         const std::string& _table_name,
-        const containers::DataFrame& _df );
+        const containers::DataFrame& _df,
+        const std::shared_ptr<containers::Encoding>& _categories,
+        const std::shared_ptr<containers::Encoding>& _join_keys_encoding );
 
     template <typename T, typename IterType>
     std::string make_column_string(
