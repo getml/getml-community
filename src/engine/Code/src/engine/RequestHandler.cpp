@@ -507,6 +507,10 @@ void RequestHandler::run()
                 {
                     data_frame_manager().view_to_db( name, cmd, &socket() );
                 }
+            else if ( type == "View.to_s3" )
+                {
+                    data_frame_manager().view_to_s3( name, cmd, &socket() );
+                }
             else
                 {
                     throw std::invalid_argument(

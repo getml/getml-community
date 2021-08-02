@@ -346,6 +346,12 @@ class DataFrameManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
+    /// Writes a view into an S3 bucket.
+    void view_to_s3(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     // ------------------------------------------------------------------------
 
    private:
@@ -408,6 +414,17 @@ class DataFrameManager
     void df_to_db(
         const std::string& _conn_id,
         const std::string& _table_name,
+        const containers::DataFrame& _df,
+        const std::shared_ptr<containers::Encoding>& _categories,
+        const std::shared_ptr<containers::Encoding>& _join_keys_encoding );
+
+    /// Writes a data frame into an S3 bucket.
+    void df_to_s3(
+        const size_t _batch_size,
+        const std::string& _bucket,
+        const std::string& _key,
+        const std::string& _region,
+        const std::string& _sep,
         const containers::DataFrame& _df,
         const std::shared_ptr<containers::Encoding>& _categories,
         const std::shared_ptr<containers::Encoding>& _join_keys_encoding );
