@@ -499,6 +499,10 @@ void RequestHandler::run()
                 {
                     data_frame_manager().get_view_nrows( name, cmd, &socket() );
                 }
+            else if ( type == "View.to_db" )
+                {
+                    data_frame_manager().view_to_db( name, cmd, &socket() );
+                }
             else
                 {
                     throw std::invalid_argument(

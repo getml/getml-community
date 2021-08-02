@@ -976,6 +976,46 @@ void DataFrameManager::concat(
 
 // ------------------------------------------------------------------------
 
+void DataFrameManager::df_to_db(
+    const std::string& _conn_id,
+    const std::string& _table_name,
+    const containers::DataFrame& _df )
+{
+    // --------------------------------------------------------------------
+
+    // We are using the bell character (\a) as the quotechar. It is least
+    // likely to appear in any field.
+    auto reader = containers::DataFrameReader(
+        _df, categories_, join_keys_encoding_, '\a', '|' );
+
+    // --------------------------------------------------------------------
+
+    const auto conn = connector( _conn_id );
+
+    assert_true( conn );
+
+    const auto statement = io::StatementMaker::make_statement(
+        _table_name,
+        conn->dialect(),
+        conn->describe(),
+        reader.colnames(),
+        reader.coltypes() );
+
+    logger().log( statement );
+
+    conn->execute( statement );
+
+    // --------------------------------------------------------------------
+
+    conn->read( _table_name, 0, &reader );
+
+    database_manager_->post_tables();
+
+    // --------------------------------------------------------------------
+}
+
+// ------------------------------------------------------------------------
+
 void DataFrameManager::freeze(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
@@ -2519,57 +2559,17 @@ void DataFrameManager::to_db(
     const Poco::JSON::Object& _cmd,
     Poco::Net::StreamSocket* _socket )
 {
-    // --------------------------------------------------------------------
-    // Parse the command.
-
     const auto conn_id = JSON::get_value<std::string>( _cmd, "conn_id_" );
 
     const auto table_name = JSON::get_value<std::string>( _cmd, "table_name_" );
 
-    // --------------------------------------------------------------------
-
     multithreading::ReadLock read_lock( read_write_lock_ );
-
-    // --------------------------------------------------------------------
-    // Set up the DataFrameReader.
 
     const auto& df = utils::Getter::get( _name, data_frames() );
 
-    // We are using the bell character (\a) as the quotechar. It is least
-    // likely to appear in any field.
-    auto reader = containers::DataFrameReader(
-        df, categories_, join_keys_encoding_, '\a', '|' );
-
-    // --------------------------------------------------------------------
-    // Create the table.
-
-    const auto conn = connector( conn_id );
-
-    assert_true( conn );
-
-    const auto statement = io::StatementMaker::make_statement(
-        table_name,
-        conn->dialect(),
-        conn->describe(),
-        reader.colnames(),
-        reader.coltypes() );
-
-    logger().log( statement );
-
-    conn->execute( statement );
-
-    // --------------------------------------------------------------------
-    // Write data to the data base.
-
-    conn->read( table_name, 0, &reader );
-
-    database_manager_->post_tables();
-
-    // --------------------------------------------------------------------
+    df_to_db( conn_id, table_name, df );
 
     communication::Sender::send_string( "Success!", _socket );
-
-    // --------------------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
@@ -2648,6 +2648,40 @@ void DataFrameManager::to_s3(
     // --------------------------------------------------------------------
 
 #endif
+}
+
+// ------------------------------------------------------------------------
+
+void DataFrameManager::view_to_db(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    const auto conn_id = JSON::get_value<std::string>( _cmd, "conn_id_" );
+
+    const auto view = JSON::get_object( _cmd, "view_" );
+
+    const auto table_name = JSON::get_value<std::string>( _cmd, "table_name_" );
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    const auto local_categories =
+        std::make_shared<containers::Encoding>( categories_ );
+
+    const auto local_join_keys_encoding =
+        std::make_shared<containers::Encoding>( join_keys_encoding_ );
+
+    assert_true( view );
+
+    const auto df =
+        ViewParser( local_categories, local_join_keys_encoding, data_frames_ )
+            .parse( *view );
+
+    df_to_db( conn_id, table_name, df );
+
+    read_lock.unlock();
+
+    communication::Sender::send_string( "Success!", _socket );
 }
 
 // ------------------------------------------------------------------------
