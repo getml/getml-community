@@ -708,7 +708,7 @@ std::string SQLGenerator::make_select(
             const std::string begin = "       ";
 
             const auto edited_colname =
-                helpers::SQLGenerator::edit_colname( manual.at( i ), "t1" );
+                "t1.\"" + modified_colnames.at( i ) + "\"";
 
             const std::string data_type =
                 ( i < _targets.size() + _numerical.size() ? "REAL" : "TEXT" );
