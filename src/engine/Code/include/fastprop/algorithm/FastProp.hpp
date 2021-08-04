@@ -444,7 +444,7 @@ class FastProp
     bool is_ts( const std::string& _name, const std::string& _unit ) const
     {
         const auto not_contains_rowid =
-            _name.find( "$GETML_ROWID" ) == std::string::npos;
+            _name.find( helpers::Macros::rowid() ) == std::string::npos;
         return not_contains_rowid &&
                ( _unit.find( "time stamp" ) != std::string::npos );
     }

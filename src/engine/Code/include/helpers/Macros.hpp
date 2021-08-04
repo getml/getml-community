@@ -199,11 +199,11 @@ class Macros
     /// For backwards compatability only, do not use.
     static std::string remove_char() { return "$GETML_REMOVE_CHAR"; }
 
-    static std::string rowid() { return "$GETML_ROWID"; }
+    static std::string rowid() { return "rowid"; }
 
     static std::string rowid_comparison_only()
     {
-        return "$GETML_ROWID, comparison only";
+        return "rowid, comparison only";
     }
 
     static std::string seasonal_end() { return "$GETML_SEASONAL_END"; }

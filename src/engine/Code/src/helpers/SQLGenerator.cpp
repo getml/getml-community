@@ -518,13 +518,19 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
 
     // ------------------------------------------------------------------------
 
-    const auto to_epoch_time =
-        []( const std::string& _colname ) -> std::string {
+    const auto is_rowid = []( const std::string& _colname ) -> bool {
+        return _colname.find( Macros::rowid() ) != std::string::npos;
+    };
+
+    // ------------------------------------------------------------------------
+
+    const auto to_epoch_time_or_rowid =
+        [&is_rowid]( const std::string& _colname ) -> std::string {
         const auto epoch_time =
-            _colname.find( Macros::rowid() ) == std::string::npos
-                ? "( julianday( " + edit_colname( _colname, "t1" ) +
-                      " ) - julianday( '1970-01-01' ) ) * 86400.0"
-                : edit_colname( _colname, "t1" );
+            is_rowid( _colname )
+                ? edit_colname( _colname, "t1" )
+                : "( julianday( " + edit_colname( _colname, "t1" ) +
+                      " ) - julianday( '1970-01-01' ) ) * 86400.0";
 
         return "CAST( " + epoch_time + " AS REAL ) AS \"" +
                to_lower( make_colname( _colname ) ) + "\"";
@@ -546,11 +552,11 @@ std::vector<std::string> SQLGenerator::make_staging_columns(
     // ------------------------------------------------------------------------
 
     const auto cast_as_time_stamp =
-        [to_epoch_time]( const std::vector<std::string>& _colnames )
+        [to_epoch_time_or_rowid]( const std::vector<std::string>& _colnames )
         -> std::vector<std::string> {
         return stl::collect::vector<std::string>(
             _colnames | std::views::filter( include_column ) |
-            std::views::transform( to_epoch_time ) );
+            std::views::transform( to_epoch_time_or_rowid ) );
     };
 
     // ------------------------------------------------------------------------
