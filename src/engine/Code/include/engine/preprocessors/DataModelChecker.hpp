@@ -20,7 +20,8 @@ class DataModelChecker
         const std::vector<containers::DataFrame>& _peripheral,
         const std::vector<
             std::shared_ptr<featurelearners::AbstractFeatureLearner>>
-            _feature_learners );
+            _feature_learners,
+        const std::shared_ptr<const communication::SocketLogger>& _logger );
 
     /// Checks the plausibility of a categorical column.
     static void check_categorical_column(
@@ -35,6 +36,9 @@ class DataModelChecker
         communication::Warner* _warner );
 
    private:
+    /// Calculates the number of joins in the placeholder.
+    static size_t calc_num_joins( const helpers::Placeholder& _placeholder );
+
     /// Checks whether all data frames are propositionalization frames.
     static void check_all_propositionalization(
         const std::shared_ptr<const helpers::Placeholder> _placeholder,
@@ -49,6 +53,7 @@ class DataModelChecker
         const std::vector<
             std::shared_ptr<featurelearners::AbstractFeatureLearner>>
             _feature_learners,
+        logging::ProgressLogger* _logger,
         communication::Warner* _warner );
 
     /// Checks all of the columns in the data frame make sense.
@@ -67,6 +72,7 @@ class DataModelChecker
         const std::vector<
             std::shared_ptr<featurelearners::AbstractFeatureLearner>>&
             _feature_learners,
+        logging::ProgressLogger* _logger,
         communication::Warner* _warner );
 
     /// Raises a warning if there is something wrong with the matches.

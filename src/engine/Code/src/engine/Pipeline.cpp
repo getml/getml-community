@@ -334,18 +334,24 @@ void Pipeline::check(
         &peripheral_dfs,
         _socket );
 
-    communication::Sender::send_string( "Success!", _socket );
-
     // -------------------------------------------------------------------------
 
     const auto [placeholder, peripheral_names] = make_placeholder();
+
+    const auto socket_logger =
+        _logger ? std::make_shared<const communication::SocketLogger>(
+                      _logger, true, _socket )
+                : std::shared_ptr<const communication::SocketLogger>();
 
     const auto warner = preprocessors::DataModelChecker::check(
         placeholder,
         peripheral_names,
         population_df,
         peripheral_dfs,
-        feature_learners );
+        feature_learners,
+        socket_logger );
+
+    communication::Sender::send_string( "Success!", _socket );
 
     // -------------------------------------------------------------------------
 

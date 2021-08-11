@@ -6,13 +6,26 @@ namespace preprocessors
 {
 // ----------------------------------------------------------------------------
 
+size_t DataModelChecker::calc_num_joins(
+    const helpers::Placeholder& _placeholder )
+{
+    auto range = _placeholder.joined_tables_ |
+                 std::views::transform( DataModelChecker::calc_num_joins );
+
+    return _placeholder.joined_tables_.size() +
+           std::accumulate( range.begin(), range.end(), 0 );
+}
+
+// ----------------------------------------------------------------------------
+
 communication::Warner DataModelChecker::check(
     const std::shared_ptr<const helpers::Placeholder> _placeholder,
     const std::shared_ptr<const std::vector<std::string>> _peripheral_names,
     const containers::DataFrame& _population,
     const std::vector<containers::DataFrame>& _peripheral,
     const std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>
-        _feature_learners )
+        _feature_learners,
+    const std::shared_ptr<const communication::SocketLogger>& _logger )
 {
     // --------------------------------------------------------------------------
 
@@ -41,7 +54,15 @@ communication::Warner DataModelChecker::check(
 
     // --------------------------------------------------------------------------
 
-    check_data_frames( _population, peripheral, _feature_learners, &warner );
+    const size_t num_total = _feature_learners.size() > 0 ? 50 : 100;
+
+    auto logger_df = logging::ProgressLogger(
+        "Checking...", _logger, peripheral.size() + 1, 0, num_total );
+
+    // --------------------------------------------------------------------------
+
+    check_data_frames(
+        _population, peripheral, _feature_learners, &logger_df, &warner );
 
     // --------------------------------------------------------------------------
 
@@ -49,6 +70,11 @@ communication::Warner DataModelChecker::check(
 
     if ( _feature_learners.size() > 0 )
         {
+            const auto num_joins = calc_num_joins( *_placeholder );
+
+            auto logger_joins =
+                logging::ProgressLogger( "", _logger, num_joins, 50, 100 );
+
             if ( _population.nrows() == 0 )
                 {
                     throw std::invalid_argument(
@@ -68,6 +94,7 @@ communication::Warner DataModelChecker::check(
                 peripheral,
                 prob_pick,
                 _feature_learners,
+                &logger_joins,
                 &warner );
         }
 
@@ -187,6 +214,7 @@ void DataModelChecker::check_data_frames(
     const std::vector<containers::DataFrame>& _peripheral,
     const std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>
         _feature_learners,
+    logging::ProgressLogger* _logger,
     communication::Warner* _warner )
 {
     // --------------------------------------------------------------------------
@@ -201,9 +229,12 @@ void DataModelChecker::check_data_frames(
 
     check_df( _population, false, _warner );
 
+    _logger->increment();
+
     for ( const auto& df : _peripheral )
         {
             check_df( df, has_multirel, _warner );
+            _logger->increment();
         }
 
     // --------------------------------------------------------------------------
@@ -320,6 +351,7 @@ void DataModelChecker::check_join(
     const std::vector<Float>& _prob_pick,
     const std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>&
         _feature_learners,
+    logging::ProgressLogger* _logger,
     communication::Warner* _warner )
 {
     // ------------------------------------------------------------------------
@@ -433,6 +465,8 @@ void DataModelChecker::check_join(
                 _peripheral.at( dist ),
                 _warner );
 
+            _logger->increment();
+
             check_join(
                 joined_tables.at( i ),
                 _peripheral_names,
@@ -440,6 +474,7 @@ void DataModelChecker::check_join(
                 _peripheral,
                 prob_pick,
                 _feature_learners,
+                _logger,
                 _warner );
         }
 
