@@ -846,14 +846,11 @@ std::string ConditionMaker::make_time_stamp_window(
 
     const auto colname2 = _input.time_stamps_name();
 
-    const bool is_rowid =
-        ( colname1.find( helpers::Macros::rowid() ) != std::string::npos );
-
     const auto diffstr1 =
-        helpers::SQLGenerator::make_time_stamp_diff( _diff, is_rowid );
+        helpers::SQLGenerator::make_time_stamp_diff( _diff, true );
 
     const auto diffstr2 =
-        helpers::SQLGenerator::make_time_stamp_diff( _diff + lag_, is_rowid );
+        helpers::SQLGenerator::make_time_stamp_diff( _diff + lag_, true );
 
     const auto condition1 = make_time_stamp_diff(
         helpers::SQLGenerator::make_relative_time( colname1, "t1" ),
