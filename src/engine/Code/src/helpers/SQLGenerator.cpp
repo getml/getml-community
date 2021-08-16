@@ -50,14 +50,6 @@ SQLGenerator::demangle_colname( const std::string& _raw_name )
 
     // --------------------------------------------------------------
 
-    const auto has_col_param =
-        ( new_name.find( Macros::column() ) != std::string::npos );
-
-    new_name = has_col_param ? Macros::get_param( new_name, Macros::column() )
-                             : new_name;
-
-    // --------------------------------------------------------------
-
     new_name = Macros::prefix() + new_name + Macros::postfix();
 
     new_name =
@@ -145,6 +137,14 @@ SQLGenerator::demangle_colname( const std::string& _raw_name )
         new_name.substr( pos2 ), Macros::postfix(), "" );
 
     new_name = new_name.substr( pos1, length );
+
+    // --------------------------------------------------------------
+
+    const auto has_col_param =
+        ( new_name.find( Macros::column() ) != std::string::npos );
+
+    new_name = has_col_param ? Macros::get_param( new_name, Macros::column() )
+                             : new_name;
 
     // --------------------------------------------------------------
 
