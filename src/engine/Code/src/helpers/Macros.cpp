@@ -455,17 +455,26 @@ std::string Macros::remove_substring( const std::string& _from_colname )
 
 std::string Macros::remove_seasonal( const std::string& _from_colname )
 {
-    auto to_colname = StringReplacer::replace_all( _from_colname, hour(), "" );
+    auto to_colname =
+        StringReplacer::replace_all( _from_colname, hour_begin(), "" );
 
-    to_colname = StringReplacer::replace_all( to_colname, minute(), "" );
+    to_colname = StringReplacer::replace_all( to_colname, hour_end(), "" );
 
-    to_colname = StringReplacer::replace_all( to_colname, month(), "" );
+    to_colname = StringReplacer::replace_all( to_colname, minute_begin(), "" );
 
-    to_colname = StringReplacer::replace_all( to_colname, weekday(), "" );
+    to_colname = StringReplacer::replace_all( to_colname, minute_end(), "" );
 
-    to_colname = StringReplacer::replace_all( to_colname, year(), "" );
+    to_colname = StringReplacer::replace_all( to_colname, month_begin(), "" );
 
-    to_colname = StringReplacer::replace_all( to_colname, seasonal_end(), "" );
+    to_colname = StringReplacer::replace_all( to_colname, month_end(), "" );
+
+    to_colname = StringReplacer::replace_all( to_colname, weekday_begin(), "" );
+
+    to_colname = StringReplacer::replace_all( to_colname, weekday_end(), "" );
+
+    to_colname = StringReplacer::replace_all( to_colname, year_begin(), "" );
+
+    to_colname = StringReplacer::replace_all( to_colname, year_end(), "" );
 
     return to_colname;
 }

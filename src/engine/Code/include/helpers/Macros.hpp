@@ -114,7 +114,9 @@ class Macros
 
     static std::string generated_ts() { return "$GETML_GENERATED_TS"; }
 
-    static std::string hour() { return "$GETML_HOUR"; }
+    static std::string hour_begin() { return "$GETML_HOUR_BEGIN"; }
+
+    static std::string hour_end() { return "$GETML_HOUR_END"; }
 
     static std::string imputation_begin() { return "$GETML_IMPUTATION_BEGIN"; }
 
@@ -154,9 +156,13 @@ class Macros
                Macros::column() + "=" + _colname + Macros::end();
     }
 
-    static std::string minute() { return "$GETML_MINUTE"; }
+    static std::string minute_begin() { return "$GETML_MINUTE_BEGIN"; }
 
-    static std::string month() { return "$GETML_MONTH"; }
+    static std::string minute_end() { return "$GETML_MINUTE_END"; }
+
+    static std::string month_begin() { return "$GETML_MONTH_BEGIN"; }
+
+    static std::string month_end() { return "$GETML_MONTH_END"; }
 
     static std::string multiple_join_key_begin()
     {
@@ -206,8 +212,6 @@ class Macros
         return "rowid, comparison only";
     }
 
-    static std::string seasonal_end() { return "$GETML_SEASONAL_END"; }
-
     // Deprecated - use no_join_key(...) instead.
     static std::string self_join_key() { return "$GETML_SELF_JOIN_KEY"; }
 
@@ -233,9 +237,13 @@ class Macros
 
     static std::string upper_ts() { return "$GETML_UPPER_TS"; }
 
-    static std::string weekday() { return "$GETML_WEEKDAY"; }
+    static std::string weekday_begin() { return "$GETML_WEEKDAY_BEGIN"; }
 
-    static std::string year() { return "$GETML_YEAR"; }
+    static std::string weekday_end() { return "$GETML_WEEKDAY_END"; }
+
+    static std::string year_begin() { return "$GETML_YEAR_BEGIN"; }
+
+    static std::string year_end() { return "$GETML_YEAR_END"; }
 };
 
 // -------------------------------------------------------------------------

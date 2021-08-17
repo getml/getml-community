@@ -14,8 +14,8 @@ std::optional<containers::Column<Int>> Seasonal::extract_hour(
         to_categorical( _col, ADD_ZERO, utils::Time::hour, _categories );
 
     result.set_name(
-        helpers::Macros::hour() + _col.name() +
-        helpers::Macros::seasonal_end() );
+        helpers::Macros::hour_begin() + _col.name() +
+        helpers::Macros::hour_end() );
     result.set_unit( "hour" );
 
     if ( PreprocessorImpl::has_warnings( result ) )
@@ -36,8 +36,8 @@ containers::Column<Int> Seasonal::extract_hour(
         to_categorical( _categories, _col, ADD_ZERO, utils::Time::hour );
 
     result.set_name(
-        helpers::Macros::hour() + _col.name() +
-        helpers::Macros::seasonal_end() );
+        helpers::Macros::hour_begin() + _col.name() +
+        helpers::Macros::hour_end() );
     result.set_unit( "hour" );
 
     return result;
@@ -53,8 +53,8 @@ std::optional<containers::Column<Int>> Seasonal::extract_minute(
         to_categorical( _col, ADD_ZERO, utils::Time::minute, _categories );
 
     result.set_name(
-        helpers::Macros::minute() + _col.name() +
-        helpers::Macros::seasonal_end() );
+        helpers::Macros::minute_begin() + _col.name() +
+        helpers::Macros::minute_end() );
     result.set_unit( "minute" );
 
     if ( PreprocessorImpl::has_warnings( result ) )
@@ -75,8 +75,8 @@ containers::Column<Int> Seasonal::extract_minute(
         to_categorical( _categories, _col, ADD_ZERO, utils::Time::minute );
 
     result.set_name(
-        helpers::Macros::minute() + _col.name() +
-        helpers::Macros::seasonal_end() );
+        helpers::Macros::minute_begin() + _col.name() +
+        helpers::Macros::minute_end() );
     result.set_unit( "minute" );
 
     return result;
@@ -92,8 +92,8 @@ std::optional<containers::Column<Int>> Seasonal::extract_month(
         to_categorical( _col, ADD_ZERO, utils::Time::month, _categories );
 
     result.set_name(
-        helpers::Macros::month() + _col.name() +
-        helpers::Macros::seasonal_end() );
+        helpers::Macros::month_begin() + _col.name() +
+        helpers::Macros::month_end() );
     result.set_unit( "month" );
 
     if ( PreprocessorImpl::has_warnings( result ) )
@@ -114,8 +114,8 @@ containers::Column<Int> Seasonal::extract_month(
         to_categorical( _categories, _col, ADD_ZERO, utils::Time::month );
 
     result.set_name(
-        helpers::Macros::month() + _col.name() +
-        helpers::Macros::seasonal_end() );
+        helpers::Macros::month_begin() + _col.name() +
+        helpers::Macros::month_end() );
     result.set_unit( "month" );
 
     return result;
@@ -131,8 +131,8 @@ std::optional<containers::Column<Int>> Seasonal::extract_weekday(
         _col, DONT_ADD_ZERO, utils::Time::weekday, _categories );
 
     result.set_name(
-        helpers::Macros::weekday() + _col.name() +
-        helpers::Macros::seasonal_end() );
+        helpers::Macros::weekday_begin() + _col.name() +
+        helpers::Macros::weekday_end() );
     result.set_unit( "weekday" );
 
     if ( PreprocessorImpl::has_warnings( result ) )
@@ -153,8 +153,8 @@ containers::Column<Int> Seasonal::extract_weekday(
         _categories, _col, DONT_ADD_ZERO, utils::Time::weekday );
 
     result.set_name(
-        helpers::Macros::weekday() + _col.name() +
-        helpers::Macros::seasonal_end() );
+        helpers::Macros::weekday_begin() + _col.name() +
+        helpers::Macros::weekday_end() );
     result.set_unit( "weekday" );
 
     return result;
@@ -168,8 +168,8 @@ std::optional<containers::Column<Float>> Seasonal::extract_year(
     auto result = to_numerical( _col, utils::Time::year );
 
     result.set_name(
-        helpers::Macros::year() + _col.name() +
-        helpers::Macros::seasonal_end() );
+        helpers::Macros::year_begin() + _col.name() +
+        helpers::Macros::year_end() );
     result.set_unit( "year, comparison only" );
 
     if ( PreprocessorImpl::has_warnings( result ) )
@@ -188,8 +188,8 @@ containers::Column<Float> Seasonal::extract_year(
     auto result = to_numerical( _col, utils::Time::year );
 
     result.set_name(
-        helpers::Macros::year() + _col.name() +
-        helpers::Macros::seasonal_end() );
+        helpers::Macros::year_begin() + _col.name() +
+        helpers::Macros::year_end() );
     result.set_unit( "year, comparison only" );
 
     return result;

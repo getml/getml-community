@@ -65,9 +65,6 @@ SQLGenerator::demangle_colname( const std::string& _raw_name )
         new_name, Macros::close_bracket(), Macros::postfix() + " )" );
 
     new_name = StringReplacer::replace_all(
-        new_name, Macros::seasonal_end(), Macros::postfix() + " )" );
-
-    new_name = StringReplacer::replace_all(
         new_name,
         Macros::email_domain_begin(),
         "email_domain( " + Macros::prefix() );
@@ -104,20 +101,41 @@ SQLGenerator::demangle_colname( const std::string& _raw_name )
     new_name = StringReplacer::replace_all(
         new_name, Macros::length(), Macros::postfix() + ", " );
 
-    new_name = StringReplacer::replace_all(
-        new_name, Macros::hour(), "strftime('%H', " + Macros::prefix() );
+    // --------------------------------------------------------------
 
     new_name = StringReplacer::replace_all(
-        new_name, Macros::minute(), "strftime('%M', " + Macros::prefix() );
+        new_name, Macros::hour_begin(), "strftime('%H', " + Macros::prefix() );
 
     new_name = StringReplacer::replace_all(
-        new_name, Macros::month(), "strftime('%m', " + Macros::prefix() );
+        new_name, Macros::hour_end(), Macros::postfix() + " )" );
 
     new_name = StringReplacer::replace_all(
-        new_name, Macros::weekday(), "strftime('%w', " + Macros::prefix() );
+        new_name,
+        Macros::minute_begin(),
+        "strftime('%M', " + Macros::prefix() );
 
     new_name = StringReplacer::replace_all(
-        new_name, Macros::year(), "strftime('%Y', " + Macros::prefix() );
+        new_name, Macros::minute_end(), Macros::postfix() + " )" );
+
+    new_name = StringReplacer::replace_all(
+        new_name, Macros::month_begin(), "strftime('%m', " + Macros::prefix() );
+
+    new_name = StringReplacer::replace_all(
+        new_name, Macros::month_end(), Macros::postfix() + " )" );
+
+    new_name = StringReplacer::replace_all(
+        new_name,
+        Macros::weekday_begin(),
+        "strftime('%w', " + Macros::prefix() );
+
+    new_name = StringReplacer::replace_all(
+        new_name, Macros::weekday_end(), Macros::postfix() + " )" );
+
+    new_name = StringReplacer::replace_all(
+        new_name, Macros::year_begin(), "strftime('%Y', " + Macros::prefix() );
+
+    new_name = StringReplacer::replace_all(
+        new_name, Macros::year_end(), Macros::postfix() + " )" );
 
     // --------------------------------------------------------------
 
