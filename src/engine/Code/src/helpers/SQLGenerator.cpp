@@ -737,18 +737,12 @@ std::string SQLGenerator::make_select(
             const std::string data_type =
                 ( i < _targets.size() + _numerical.size() ? "REAL" : "TEXT" );
 
-            const auto target_or_feature =
-                i < _targets.size()
-                    ? "\"target_" + std::to_string( i + 1 )
-                    : "\"" + std::to_string( i - _targets.size() + 1 );
-
             const bool no_comma = ( i == manual.size() - 1 );
 
             const auto end = no_comma ? "\"\n" : "\",\n";
 
             sql += begin + "CAST( " + edited_colname + " AS " + data_type +
-                   " ) AS " + target_or_feature + "__" +
-                   modified_colnames.at( i ) + end;
+                   " ) AS \"" + modified_colnames.at( i ) + end;
         }
 
     return sql;
