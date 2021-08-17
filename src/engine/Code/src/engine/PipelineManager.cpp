@@ -27,15 +27,11 @@ void PipelineManager::add_features_to_df(
             _df->add_float_column( col, containers::DataFrame::ROLE_NUMERICAL );
         }
 
-    size_t num_manual = 0;
-
     for ( size_t i = 0; i < numerical.size(); ++i )
         {
             auto col =
                 containers::Column( _numerical_features.at( j++ ) ).clone();
-            col.set_name(
-                "manual_feature_" + std::to_string( ++num_manual ) + "__" +
-                numerical.at( i ) );
+            col.set_name( numerical.at( i ) );
             _df->add_float_column( col, containers::DataFrame::ROLE_NUMERICAL );
         }
 
@@ -45,9 +41,7 @@ void PipelineManager::add_features_to_df(
         {
             auto col =
                 containers::Column( _categorical_features.at( i ) ).clone();
-            col.set_name(
-                "manual_feature_" + std::to_string( ++num_manual ) + "__" +
-                categorical.at( i ) );
+            col.set_name( categorical.at( i ) );
             _df->add_int_column( col, containers::DataFrame::ROLE_CATEGORICAL );
         }
 }

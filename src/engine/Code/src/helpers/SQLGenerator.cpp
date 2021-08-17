@@ -740,8 +740,7 @@ std::string SQLGenerator::make_select(
             const auto target_or_feature =
                 i < _targets.size()
                     ? "\"target_" + std::to_string( i + 1 )
-                    : "\"manual_feature_" +
-                          std::to_string( i - _targets.size() + 1 );
+                    : "\"" + std::to_string( i - _targets.size() + 1 );
 
             const bool no_comma = ( i == manual.size() - 1 );
 
