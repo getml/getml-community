@@ -899,7 +899,7 @@ Mapping Mapping::from_json_obj( const Poco::JSON::Object& _obj ) const
                 iota | std::views::transform( to_schema ) ) );
     };
 
-    Mapping that;
+    auto that = *this;
 
     that.aggregation_ = JSON::array_to_vector<std::string>(
         JSON::get_array( _obj, "aggregation_" ) );
@@ -947,6 +947,12 @@ Mapping Mapping::from_json_obj( const Poco::JSON::Object& _obj ) const
                 std::make_shared<const helpers::VocabularyContainer>(
                     *JSON::get_object( _obj, "vocabulary_" ) );
         }
+
+    assert_true( that.peripheral_schema_ );
+
+    assert_true( that.population_schema_ );
+
+    assert_true( that.vocabulary_ );
 
     const auto extract_submappings = [&that, &_obj]() {
         const auto arr = JSON::get_array( _obj, "submappings_" );
