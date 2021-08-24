@@ -757,10 +757,14 @@ std::shared_ptr<std::vector<T>> ColumnView<T>::to_vector(
                 "the length can be inferred from somewhere else." );
         }
 
+#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+    const auto data_ptr = make_sequential( _begin, expected_length, _nrows_must_match );
+#else
     const auto data_ptr =
         length_is_known
             ? make_parallel( _begin, expected_length )
             : make_sequential( _begin, expected_length, _nrows_must_match );
+#endif
 
     const bool exceeds_expected_by_unknown_number =
         _nrows_must_match && std::holds_alternative<UnknownSize>( nrows() ) &&
