@@ -19,9 +19,7 @@ struct ColumnToBeAggregated
           ix_perip_used( 0 ){};
 
     ColumnToBeAggregated(
-        size_t _ix_column_used,
-        enums::DataUsed _data_used,
-        size_t _ix_perip_used )
+        size_t _ix_column_used, enums::DataUsed _data_used, Int _ix_perip_used )
         : ix_column_used( _ix_column_used ),
           data_used( _data_used ),
           ix_perip_used( _ix_perip_used ){};
@@ -45,7 +43,7 @@ struct ColumnToBeAggregated
         col.data_used =
             JSON::int_to_data_used( JSON::get_value<int>( _obj, "data_" ) );
 
-        col.ix_perip_used = JSON::get_value<size_t>( _obj, "input_" );
+        col.ix_perip_used = JSON::get_value<Int>( _obj, "input_" );
 
         return col;
     }
@@ -72,7 +70,7 @@ struct ColumnToBeAggregated
 
     enums::DataUsed data_used;
 
-    size_t ix_perip_used;
+    Int ix_perip_used;
 
     // ------------------------------------------------------
 };

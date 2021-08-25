@@ -91,11 +91,15 @@ descriptors::SameUnitsContainer SameUnits::json_arr_to_same_units(
         {
             // -------------------------
 
-            auto& obj = *_json_arr.getObject( static_cast<unsigned int>( j ) );
+            auto ptr = _json_arr.getObject( static_cast<unsigned int>( j ) );
+
+            assert_true( ptr );
+
+            auto& obj = *ptr;
 
             // -------------------------
 
-            auto& child1 = *JSON::get_object( obj, "first" );
+            auto child1 = *JSON::get_object( obj, "first" );
 
             descriptors::ColumnToBeAggregated column_to_be_aggregated1;
 
@@ -106,11 +110,11 @@ descriptors::SameUnitsContainer SameUnits::json_arr_to_same_units(
                 JSON::get_value<int>( child1, "data_used" ) );
 
             column_to_be_aggregated1.ix_perip_used =
-                JSON::get_value<size_t>( child1, "ix_perip_used" );
+                JSON::get_value<Int>( child1, "ix_perip_used" );
 
             // -------------------------
 
-            auto& child2 = *JSON::get_object( obj, "second" );
+            auto child2 = *JSON::get_object( obj, "second" );
 
             descriptors::ColumnToBeAggregated column_to_be_aggregated2;
 
@@ -121,7 +125,7 @@ descriptors::SameUnitsContainer SameUnits::json_arr_to_same_units(
                 JSON::get_value<int>( child2, "data_used" ) );
 
             column_to_be_aggregated2.ix_perip_used =
-                JSON::get_value<size_t>( child2, "ix_perip_used" );
+                JSON::get_value<Int>( child2, "ix_perip_used" );
 
             // -------------------------
 
