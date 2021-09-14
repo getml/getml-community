@@ -36,8 +36,9 @@ class TextFieldSplitter : public Preprocessor
 
     /// Generates SQL code for the text field splitting.
     std::vector<std::string> to_sql(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories )
-        const final;
+        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const std::shared_ptr<const helpers::SQLDialectGenerator>&
+            _sql_dialect_generator ) const final;
 
     /// Transforms the data frames by adding the desired time series
     /// transformations.

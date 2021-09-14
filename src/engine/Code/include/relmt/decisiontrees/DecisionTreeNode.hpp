@@ -62,6 +62,8 @@ class DecisionTreeNode
         const std::vector<strings::String>& _categories,
         const VocabForDf& _vocab_popul,
         const VocabForDf& _vocab_perip,
+        const std::shared_ptr<const helpers::SQLDialectGenerator>&
+            _sql_dialect_generator,
         const std::string& _feature_prefix,
         const std::string& _feature_num,
         const std::string& _sql,

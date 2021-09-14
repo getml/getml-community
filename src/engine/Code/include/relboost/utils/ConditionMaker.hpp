@@ -28,6 +28,8 @@ class ConditionMaker
         const std::vector<strings::String>& _categories,
         const VocabForDf& _vocab_popul,
         const VocabForDf& _vocab_perip,
+        const std::shared_ptr<const helpers::SQLDialectGenerator>&
+            _sql_dialect_generator,
         const std::string& _feature_prefix,
         const helpers::Schema& _input,
         const helpers::Schema& _output,
@@ -37,6 +39,8 @@ class ConditionMaker
         const std::vector<strings::String>& _categories,
         const VocabForDf& _vocab_popul,
         const VocabForDf& _vocab_perip,
+        const std::shared_ptr<const helpers::SQLDialectGenerator>&
+            _sql_dialect_generator,
         const std::string& _feature_prefix,
         const helpers::Schema& _input,
         const helpers::Schema& _output,
@@ -51,20 +55,18 @@ class ConditionMaker
     /// Returns a list of the words.
     std::string list_words(
         const std::vector<strings::String>& _vocabulary,
+        const std::shared_ptr<const helpers::SQLDialectGenerator>&
+            _sql_dialect_generator,
         const containers::Split& _split,
         const std::string& _name,
         const bool _is_greater ) const;
 
     /// Generates the column name to insert into the conditions.
     std::string make_colname(
-        const std::string& _colname, const std::string& _alias ) const;
-
-    /// Transforms the time stamps diff into SQLite-compliant code.
-    std::string make_time_stamp_diff(
-        const std::string& _ts1,
-        const std::string& _ts2,
-        const Float _diff,
-        const bool _is_greater ) const;
+        const std::shared_ptr<const helpers::SQLDialectGenerator>&
+            _sql_dialect_generator,
+        const std::string& _colname,
+        const std::string& _alias ) const;
 
     /// Transforms the time stamps diff into SQLite-compliant code,
     /// when the colnames are already known.
@@ -75,12 +77,13 @@ class ConditionMaker
 
     /// Transforms the time stamps windows into SQLite-compliant code.
     std::string make_time_stamp_window(
+        const std::shared_ptr<const helpers::SQLDialectGenerator>&
+            _sql_dialect_generator,
         const helpers::Schema& _input,
         const helpers::Schema& _output,
         const Float _diff,
         const bool _is_greater ) const;
 
-   private:
    private:
     /// The lag variable used for the moving time window.
     const Float lag_;

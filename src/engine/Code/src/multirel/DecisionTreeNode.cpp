@@ -1223,6 +1223,8 @@ void DecisionTreeNode::to_sql(
     const std::vector<strings::String> &_categories,
     const VocabForDf &_vocab_popul,
     const VocabForDf &_vocab_perip,
+    const std::shared_ptr<const helpers::SQLDialectGenerator>
+        &_sql_dialect_generator,
     const std::string &_feature_prefix,
     const std::string &_feature_num,
     std::vector<std::string> &_conditions,
@@ -1234,7 +1236,10 @@ void DecisionTreeNode::to_sql(
                 ( apply_from_above() != is_activated_ );
 
             const auto sql_maker = utils::SQLMaker(
-                tree_->delta_t(), tree_->ix_perip_used(), tree_->same_units_ );
+                tree_->delta_t(),
+                tree_->ix_perip_used(),
+                tree_->same_units_,
+                _sql_dialect_generator );
 
             const auto prefix = ( _sql == "" ) ? "" : " AND ";
 
@@ -1268,6 +1273,7 @@ void DecisionTreeNode::to_sql(
                         _categories,
                         _vocab_popul,
                         _vocab_perip,
+                        _sql_dialect_generator,
                         _feature_prefix,
                         _feature_num,
                         _conditions,
@@ -1277,6 +1283,7 @@ void DecisionTreeNode::to_sql(
                         _categories,
                         _vocab_popul,
                         _vocab_perip,
+                        _sql_dialect_generator,
                         _feature_prefix,
                         _feature_num,
                         _conditions,

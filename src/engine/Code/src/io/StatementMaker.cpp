@@ -34,34 +34,45 @@ std::string StatementMaker::make_statement(
     const std::vector<std::string>& _colnames,
     const std::vector<Datatype>& _datatypes )
 {
-    if ( _dialect == "mysql" )
+    if ( _dialect == MYSQL )
         {
             return make_statement_mysql( _table_name, _colnames, _datatypes );
         }
-    else if ( _dialect == "odbc" )
+
+    if ( _dialect == ODBC )
         {
             return make_statement_odbc(
                 _table_name, _colnames, _datatypes, _description );
         }
-    else if ( _dialect == "postgres" )
+
+    if ( _dialect == POSTGRES )
         {
             return make_statement_postgres(
                 _table_name, _colnames, _datatypes );
         }
-    else if ( _dialect == "python" )
+
+    if ( _dialect == PYTHON )
         {
             return make_statement_python( _colnames, _datatypes );
         }
-    if ( _dialect == "sqlite" )
+
+    if ( _dialect == SAP_HANA )
+        {
+            const auto default_schema = jsonutils::JSON::get_value<std::string>(
+                _description, "default_schema" );
+
+            return make_statement_sap_hana(
+                _table_name, default_schema, _colnames, _datatypes );
+        }
+
+    if ( _dialect == SQLITE3 )
         {
             return make_statement_sqlite( _table_name, _colnames, _datatypes );
         }
-    else
-        {
-            throw std::invalid_argument(
-                "SQL dialect '" + _dialect + "' not known!" );
-            return "";
-        }
+
+    throw std::invalid_argument( "SQL dialect '" + _dialect + "' not known!" );
+
+    return "";
 }
 
 // ----------------------------------------------------------------------------
@@ -254,6 +265,58 @@ std::string StatementMaker::make_statement_python(
 
 // ----------------------------------------------------------------------------
 
+std::string StatementMaker::make_statement_sap_hana(
+    const std::string& _table_name,
+    const std::string& _schema_name,
+    const std::vector<std::string>& _colnames,
+    const std::vector<Datatype>& _datatypes )
+{
+    assert_true( _colnames.size() == _datatypes.size() );
+
+    const auto max_size = find_max_size( _colnames );
+
+    std::stringstream statement;
+
+    statement << "CREATE OR REPLACE PROCEDURE adhocdroptableifexists "
+              << "LANGUAGE SQLSCRIPT AS myrowid INTEGER;" << std::endl
+              << "BEGIN" << std::endl
+              << "myrowid := 0;" << std::endl
+              << "SELECT COUNT(*) INTO myrowid FROM PUBLIC.M_TABLES "
+              << "WHERE SCHEMA_NAME = '" << _schema_name
+              << "' AND TABLE_NAME = '" << _table_name << "';" << std::endl
+              << "IF ( :myrowid > 0 ) THEN" << std::endl
+              << "EXEC 'DROP TABLE " << _schema_name << "." << _table_name
+              << "';" << std::endl
+              << "END IF;" << std::endl
+              << "END;" << std::endl
+              << std::endl
+              << "CALL \"ADHOCDROPTABLEIFEXISTS\"();" << std::endl
+              << "DROP PROCEDURE ADHOCDROPTABLEIFEXISTS;" << std::endl
+              << std::endl;
+
+    statement << "CREATE TABLE \"" << _table_name << "\"(" << std::endl;
+
+    for ( size_t i = 0; i < _colnames.size(); ++i )
+        {
+            statement << "    \"" << _colnames.at( i ) << "\" "
+                      << make_gap( _colnames.at( i ), max_size )
+                      << to_string_sap_hana( _datatypes.at( i ) );
+
+            if ( i < _colnames.size() - 1 )
+                {
+                    statement << "," << std::endl;
+                }
+            else
+                {
+                    statement << ");" << std::endl;
+                }
+        }
+
+    return statement.str();
+}
+
+// ----------------------------------------------------------------------------
+
 std::string StatementMaker::make_statement_sqlite(
     const std::string& _table_name,
     const std::vector<std::string>& _colnames,
@@ -272,9 +335,9 @@ std::string StatementMaker::make_statement_sqlite(
 
     for ( size_t i = 0; i < _colnames.size(); ++i )
         {
-            statement << "    \"" << _colnames[i] << "\" "
-                      << make_gap( _colnames[i], max_size )
-                      << to_string_sqlite( _datatypes[i] );
+            statement << "    \"" << _colnames.at( i ) << "\" "
+                      << make_gap( _colnames.at( i ), max_size )
+                      << to_string_sqlite( _datatypes.at( i ) );
 
             if ( i < _colnames.size() - 1 )
                 {
@@ -349,6 +412,27 @@ std::string StatementMaker::to_string_postgres( const Datatype _type )
 
             case Datatype::string:
                 return "TEXT";
+
+            default:
+                assert_true( false );
+                return "";
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+std::string StatementMaker::to_string_sap_hana( const Datatype _type )
+{
+    switch ( _type )
+        {
+            case Datatype::double_precision:
+                return "REAL";
+
+            case Datatype::integer:
+                return "INTEGER";
+
+            case Datatype::string:
+                return "NVARCHAR(5000)";
 
             default:
                 assert_true( false );

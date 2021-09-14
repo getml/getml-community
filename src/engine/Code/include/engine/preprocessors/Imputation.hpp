@@ -63,8 +63,9 @@ class Imputation : public Preprocessor
 
     /// The preprocessor does not generate any SQL scripts.
     std::vector<std::string> to_sql(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories )
-        const final
+        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const std::shared_ptr<const helpers::SQLDialectGenerator>&
+            _sql_dialect_generator ) const final
     {
         return {};
     }

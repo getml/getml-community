@@ -32,7 +32,8 @@ class Macros
 
     /// Removes macros from a vector of column names.
     static std::vector<std::string> modify_colnames(
-        const std::vector<std::string>& _names );
+        const std::vector<std::string>& _names,
+        const SQLDialectGenerator* _sql_dialect_generator = nullptr );
 
     /// Removes macros from column importances.
     static helpers::ImportanceMaker modify_column_importances(

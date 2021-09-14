@@ -2000,6 +2000,8 @@ void FastProp::spawn_threads(
 void FastProp::subfeatures_to_sql(
     const std::shared_ptr<const std::vector<strings::String>> &_categories,
     const helpers::VocabularyTree &_vocabulary,
+    const std::shared_ptr<const helpers::SQLDialectGenerator>
+        &_sql_dialect_generator,
     const std::string &_feature_prefix,
     const size_t _offset,
     std::vector<std::string> *_sql ) const
@@ -2011,6 +2013,7 @@ void FastProp::subfeatures_to_sql(
                     const auto sub = subfeatures().at( i )->to_sql(
                         _categories,
                         _vocabulary,
+                        _sql_dialect_generator,
                         _feature_prefix + std::to_string( i + 1 ) + "_",
                         0,
                         true );
@@ -2179,6 +2182,8 @@ Poco::JSON::Object FastProp::to_json_obj( const bool _schema_only ) const
 std::vector<std::string> FastProp::to_sql(
     const std::shared_ptr<const std::vector<strings::String>> &_categories,
     const helpers::VocabularyTree &_vocabulary,
+    const std::shared_ptr<const helpers::SQLDialectGenerator>
+        &_sql_dialect_generator,
     const std::string &_feature_prefix,
     const size_t _offset,
     const bool _subfeatures ) const
@@ -2193,7 +2198,12 @@ std::vector<std::string> FastProp::to_sql(
     if ( _subfeatures )
         {
             subfeatures_to_sql(
-                _categories, _vocabulary, _feature_prefix, _offset, &sql );
+                _categories,
+                _vocabulary,
+                _sql_dialect_generator,
+                _feature_prefix,
+                _offset,
+                &sql );
         }
 
     for ( size_t i = 0; i < abstract_features().size(); ++i )
@@ -2212,6 +2222,7 @@ std::vector<std::string> FastProp::to_sql(
 
             sql.push_back( abstract_feature.to_sql(
                 *_categories,
+                _sql_dialect_generator,
                 _feature_prefix,
                 std::to_string( _offset + i + 1 ),
                 input_schema,

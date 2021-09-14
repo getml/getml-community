@@ -699,6 +699,8 @@ void DecisionTreeNode::to_sql(
     const std::vector<strings::String>& _categories,
     const VocabForDf& _vocab_popul,
     const VocabForDf& _vocab_perip,
+    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+        _sql_dialect_generator,
     const std::string& _feature_prefix,
     const std::string& _feature_num,
     const std::string& _sql,
@@ -715,6 +717,7 @@ void DecisionTreeNode::to_sql(
                                          _categories,
                                          _vocab_popul,
                                          _vocab_perip,
+                                         _sql_dialect_generator,
                                          _feature_prefix,
                                          input(),
                                          output(),
@@ -724,6 +727,7 @@ void DecisionTreeNode::to_sql(
                 _categories,
                 _vocab_popul,
                 _vocab_perip,
+                _sql_dialect_generator,
                 _feature_prefix,
                 _feature_num,
                 sql_greater,
@@ -734,6 +738,7 @@ void DecisionTreeNode::to_sql(
                                          _categories,
                                          _vocab_popul,
                                          _vocab_perip,
+                                         _sql_dialect_generator,
                                          _feature_prefix,
                                          input(),
                                          output(),
@@ -743,6 +748,7 @@ void DecisionTreeNode::to_sql(
                 _categories,
                 _vocab_popul,
                 _vocab_perip,
+                _sql_dialect_generator,
                 _feature_prefix,
                 _feature_num,
                 sql_smaller,
@@ -750,10 +756,13 @@ void DecisionTreeNode::to_sql(
         }
     else
         {
-            const auto condition =
-                _sql + " THEN " +
-                condition_maker_.make_equation(
-                    _feature_prefix, input(), output(), weights_ );
+            const auto condition = _sql + " THEN " +
+                                   condition_maker_.make_equation(
+                                       _sql_dialect_generator,
+                                       _feature_prefix,
+                                       input(),
+                                       output(),
+                                       weights_ );
 
             _conditions->push_back( condition );
         }

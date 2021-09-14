@@ -109,6 +109,8 @@ Poco::JSON::Object::Ptr AbstractFeature::to_json_obj() const
 
 std::string AbstractFeature::to_sql(
     const std::vector<strings::String> &_categories,
+    const std::shared_ptr<const helpers::SQLDialectGenerator>
+        &_sql_dialect_generator,
     const std::string &_feature_prefix,
     const std::string &_feature_num,
     const helpers::Schema &_input,
@@ -116,30 +118,44 @@ std::string AbstractFeature::to_sql(
 {
     // -------------------------------------------------------------------
 
+    assert_true( _sql_dialect_generator );
+
+    // -------------------------------------------------------------------
+
+    const auto quote1 = _sql_dialect_generator->quotechar1();
+    const auto quote2 = _sql_dialect_generator->quotechar2();
+
+    // -------------------------------------------------------------------
+
     std::stringstream sql;
 
     // -------------------------------------------------------------------
 
-    sql << "DROP TABLE IF EXISTS \"FEATURE_" << _feature_prefix << _feature_num
-        << "\";" << std::endl
+    sql << "DROP TABLE IF EXISTS " << quote1 << "FEATURE_" << _feature_prefix
+        << _feature_num << quote2 << ";" << std::endl
         << std::endl;
 
     // -------------------------------------------------------------------
 
-    sql << "CREATE TABLE \"FEATURE_" << _feature_prefix << _feature_num
-        << "\" AS" << std::endl;
+    sql << "CREATE TABLE " << quote1 << "FEATURE_" << _feature_prefix
+        << _feature_num << quote2 << " AS" << std::endl;
 
     // -------------------------------------------------------------------
 
     sql << "SELECT ";
 
-    sql << SQLMaker::select_statement(
-        _categories, _feature_prefix, *this, _input, _output );
+    sql << SQLMaker(
+               _categories,
+               _feature_prefix,
+               _input,
+               _output,
+               _sql_dialect_generator )
+               .select_statement( *this );
 
-    sql << " AS \"feature_" << _feature_prefix << _feature_num << "\","
-        << std::endl;
+    sql << " AS " << quote1 << "feature_" << _feature_prefix << _feature_num
+        << quote2 << "," << std::endl;
 
-    sql << "       t1.rowid AS \"rownum\"" << std::endl;
+    sql << "       t1.rowid AS " << quote1 << "rownum" << quote2 << std::endl;
 
     // -------------------------------------------------------------------
 
@@ -147,7 +163,7 @@ std::string AbstractFeature::to_sql(
 
     assert_true( _input.join_keys_.size() == 1 );
 
-    sql << helpers::SQLGenerator::make_joins(
+    sql << _sql_dialect_generator->make_joins(
         _output.name_,
         _input.name_,
         _output.join_keys_name(),
@@ -161,10 +177,11 @@ std::string AbstractFeature::to_sql(
                                 std::to_string( peripheral_ + 1 ) + "_" +
                                 std::to_string( input_col_ + 1 );
 
-            sql << "LEFT JOIN \"FEATURE_" << number << "\" f_" << number
-                << std::endl;
+            sql << "LEFT JOIN " << quote1 << "FEATURE_" << number << quote2
+                << " f_" << number << std::endl;
 
-            sql << "ON t2.rowid = f_" << number << ".\"rownum\"" << std::endl;
+            sql << "ON t2.rowid = f_" << number << "." << quote1 << "rownum"
+                << quote2 << std::endl;
         }
 
     // -------------------------------------------------------------------
@@ -180,7 +197,7 @@ std::string AbstractFeature::to_sql(
                                       ? _input.upper_time_stamps_name()
                                       : std::string( "" );
 
-            sql << helpers::SQLGenerator::make_time_stamps(
+            sql << _sql_dialect_generator->make_time_stamps(
                 _output.time_stamps_name(),
                 _input.time_stamps_name(),
                 upper_ts,
@@ -203,7 +220,11 @@ std::string AbstractFeature::to_sql(
                 }
 
             sql << conditions_.at( i ).to_sql(
-                       _categories, _feature_prefix, _input, _output )
+                       _categories,
+                       _sql_dialect_generator,
+                       _feature_prefix,
+                       _input,
+                       _output )
                 << std::endl;
         }
 

@@ -17,22 +17,32 @@ class SQLMaker
     typedef std::vector<VocabForDf> Vocabulary;
 
    public:
-    /// Creates a condition.
-    static std::string condition(
+    SQLMaker(
         const std::vector<strings::String>& _categories,
         const std::string& _feature_prefix,
-        const Condition& _condition,
         const helpers::Schema& _input,
-        const helpers::Schema& _output );
+        const helpers::Schema& _output,
+        const std::shared_ptr<const helpers::SQLDialectGenerator>&
+            _sql_dialect_generator )
+        : categories_( _categories ),
+          feature_prefix_( _feature_prefix ),
+          input_( _input ),
+          output_( _output ),
+          sql_dialect_generator_( _sql_dialect_generator )
+    {
+        assert_true( sql_dialect_generator_ );
+    }
+
+    ~SQLMaker() = default;
+
+   public:
+    /// Creates a condition.
+    std::string condition( const Condition& _condition ) const;
 
     /// Creates a select statement (SELECT AGGREGATION(VALUE TO TO BE
     /// AGGREGATED)).
-    static std::string select_statement(
-        const std::vector<strings::String>& _categories,
-        const std::string& _feature_prefix,
-        const AbstractFeature& _abstract_feature,
-        const helpers::Schema& _input,
-        const helpers::Schema& _output );
+    std::string select_statement(
+        const AbstractFeature& _abstract_feature ) const;
 
    public:
     /// Whether the aggregation is an aggregation that relies on the
@@ -59,41 +69,54 @@ class SQLMaker
 
    private:
     /// Returns the column name signified by _column_used and _data_used.
-    static std::string get_name(
-        const std::string& _feature_prefix,
+    std::string get_name(
         const enums::DataUsed _data_used,
         const size_t _peripheral,
         const size_t _input_col,
-        const size_t _output_col,
-        const helpers::Schema& _input,
-        const helpers::Schema& _output );
+        const size_t _output_col ) const;
 
     /// Returns the column names signified by _column_used and _data_used, for
     /// same_units_...
-    static std::pair<std::string, std::string> get_same_units(
+    std::pair<std::string, std::string> get_same_units(
         const enums::DataUsed _data_used,
         const size_t _input_col,
-        const size_t _output_col,
-        const helpers::Schema& _input,
-        const helpers::Schema& _output );
+        const size_t _output_col ) const;
 
     /// Generates an additional argument passed to the aggregation function.
-    static std::string make_additional_argument(
-        const enums::Aggregation& _aggregation,
-        const helpers::Schema& _input,
-        const helpers::Schema& _output );
+    std::string make_additional_argument(
+        const enums::Aggregation& _aggregation ) const;
 
     /// Returns the select statement for AVG_TIME_BETWEEN.
-    static std::string select_avg_time_between( const helpers::Schema& _input );
+    std::string select_avg_time_between() const;
 
     /// Creates the value to be aggregated (for instance a column name or the
     /// difference between two columns)
-    static std::string value_to_be_aggregated(
-        const std::vector<strings::String>& _categories,
-        const std::string& _feature_prefix,
-        const AbstractFeature& _abstract_feature,
-        const helpers::Schema& _input,
-        const helpers::Schema& _output );
+    std::string value_to_be_aggregated(
+        const AbstractFeature& _abstract_feature ) const;
+
+   private:
+    /// Trivial (const private) accessor.
+    const std::vector<strings::String>& categories() const
+    {
+        return categories_;
+    }
+
+   private:
+    /// The categorical encoding.
+    const std::vector<strings::String>& categories_;
+
+    /// The prefix to be used for each feature.
+    const std::string feature_prefix_;
+
+    /// The Schema of the input table.
+    const helpers::Schema input_;
+
+    /// The Schema of the output table.
+    const helpers::Schema output_;
+
+    /// Generates the right code for the required SQL dialect.
+    const std::shared_ptr<const helpers::SQLDialectGenerator>
+        sql_dialect_generator_;
 };
 
 // ------------------------------------------------------------------------

@@ -999,12 +999,16 @@ void PipelineManager::to_sql(
 
     const auto subfeatures = JSON::get_value<bool>( _cmd, "subfeatures_" );
 
+    const auto dialect = JSON::get_value<std::string>( _cmd, "dialect_" );
+
     multithreading::ReadLock read_lock( read_write_lock_ );
 
     const auto pipeline = get_pipeline( _name );
 
     const auto sql =
-        pipeline.to_sql( categories().vector(), targets, subfeatures );
+        pipeline.to_sql( categories().vector(), targets, subfeatures, dialect );
+
+    read_lock.unlock();
 
     communication::Sender::send_string( "Found!", _socket );
 

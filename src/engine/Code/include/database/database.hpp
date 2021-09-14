@@ -42,6 +42,8 @@ extern "C"
 
 #include "multithreading/multithreading.hpp"
 
+#include "stl/stl.hpp"
+
 // ----------------------------------------------------------------------------
 
 #include "database/Float.hpp"
@@ -52,7 +54,14 @@ extern "C"
 
 #include "database/Iterator.hpp"
 
+#include "database/GoutilsIterator.hpp"
+#include "database/GoutilsTypeInferrer.hpp"
+
 #include "database/Connector.hpp"
+
+#include "database/DatabaseParser.hpp"
+
+#include "database/SapHana.hpp"
 
 #include "database/Sqlite3Iterator.hpp"
 
@@ -78,7 +87,6 @@ extern "C"
 
 #include "database/Postgres.hpp"
 
-#include "database/DatabaseParser.hpp"
 #include "database/DatabaseReader.hpp"
 #include "database/DatabaseSniffer.hpp"
 

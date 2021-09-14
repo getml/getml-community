@@ -8,6 +8,14 @@ namespace io
 class StatementMaker
 {
    public:
+    static constexpr const char* MYSQL = "mysql";
+    static constexpr const char* ODBC = "odbc";
+    static constexpr const char* POSTGRES = "postgres";
+    static constexpr const char* PYTHON = "python";
+    static constexpr const char* SAP_HANA = "sap_hana";
+    static constexpr const char* SQLITE3 = "sqlite3";
+
+   public:
     /// Produces the CREATE TABLE statement.
     static std::string make_statement(
         const std::string& _table_name,
@@ -44,6 +52,13 @@ class StatementMaker
         const std::vector<std::string>& _colnames,
         const std::vector<Datatype>& _datatypes );
 
+    /// Produces the CREATE TABLE statement for SAP HANA.
+    static std::string make_statement_sap_hana(
+        const std::string& _table_name,
+        const std::string& _schema_name,
+        const std::vector<std::string>& _colnames,
+        const std::vector<Datatype>& _datatypes );
+
     /// Produces the CREATE TABLE statement for sqlite.
     static std::string make_statement_sqlite(
         const std::string& _table_name,
@@ -62,6 +77,9 @@ class StatementMaker
 
     /// Transforms a datatype to the string required for the postgres dialect.
     static std::string to_string_postgres( const Datatype _type );
+
+    /// Transforms a datatype to the string required for the sqlite dialect.
+    static std::string to_string_sap_hana( const Datatype _type );
 
     /// Transforms a datatype to the string required for the sqlite dialect.
     static std::string to_string_sqlite( const Datatype _type );

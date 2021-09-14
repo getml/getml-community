@@ -102,6 +102,8 @@ Poco::JSON::Object::Ptr FastPropContainer::to_json_obj() const
 void FastPropContainer::to_sql(
     const std::shared_ptr<const std::vector<strings::String>>& _categories,
     const helpers::VocabularyTree& _vocabulary,
+    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+        _sql_dialect_generator,
     const std::string& _prefix,
     const bool _subfeatures,
     std::vector<std::string>* _sql ) const
@@ -109,7 +111,12 @@ void FastPropContainer::to_sql(
     if ( has_fast_prop() )
         {
             const auto features = fast_prop().to_sql(
-                _categories, _vocabulary, _prefix, 0, _subfeatures );
+                _categories,
+                _vocabulary,
+                _sql_dialect_generator,
+                _prefix,
+                0,
+                _subfeatures );
 
             _sql->insert( _sql->end(), features.begin(), features.end() );
 
@@ -131,8 +138,10 @@ void FastPropContainer::to_sql(
                         helpers::SQLGenerator::make_staging_table_name(
                             fast_prop().placeholder().name() );
 
+                    assert_true( _sql_dialect_generator );
+
                     _sql->push_back(
-                        helpers::SQLGenerator::make_feature_table(
+                        _sql_dialect_generator->make_feature_table(
                             main_table,
                             autofeatures,
                             {},
@@ -152,6 +161,7 @@ void FastPropContainer::to_sql(
                             subcontainers( i )->to_sql(
                                 _categories,
                                 _vocabulary,
+                                _sql_dialect_generator,
                                 _prefix + std::to_string( i + 1 ) + "_",
                                 _subfeatures,
                                 _sql );

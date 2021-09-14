@@ -128,13 +128,21 @@ std::string Macros::make_table_name(
 // ----------------------------------------------------------------------------
 
 std::vector<std::string> Macros::modify_colnames(
-    const std::vector<std::string>& _names )
+    const std::vector<std::string>& _names,
+    const SQLDialectGenerator* _sql_dialect_generator )
 {
     auto names = _names;
 
     for ( auto& name : names )
         {
-            name = SQLGenerator::make_colname( name );
+            if ( _sql_dialect_generator )
+                {
+                    name = _sql_dialect_generator->make_colname( name );
+                }
+            else
+                {
+                    name = SQLite3Generator().make_colname( name );
+                }
         }
 
     return names;
@@ -168,7 +176,7 @@ helpers::ImportanceMaker Macros::modify_column_importances(
 
             to_colname = remove_time_diff( to_colname );
 
-            to_colname = SQLGenerator::edit_colname( to_colname, "" );
+            to_colname = SQLite3Generator().edit_colname( to_colname, "" );
 
             if ( from_desc.table_ != to_table || from_desc.name_ != to_colname )
                 {

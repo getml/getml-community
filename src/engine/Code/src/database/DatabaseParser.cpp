@@ -13,32 +13,38 @@ std::shared_ptr<Connector> DatabaseParser::parse(
     const auto time_formats = jsonutils::JSON::array_to_vector<std::string>(
         jsonutils::JSON::get_array( _obj, "time_formats_" ) );
 
-    if ( db == "sqlite3" )
+    if ( db == SQLITE3 )
         {
             const auto name =
                 jsonutils::JSON::get_value<std::string>( _obj, "name_" );
 
             return std::make_shared<Sqlite3>( name, time_formats );
         }
-    else if ( db == "mysql" || db == "mariadb" )
+
+    if ( db == MYSQL || db == MARIADB )
         {
             return std::make_shared<MySQL>( _obj, _password, time_formats );
         }
-    else if ( db == "odbc" )
+
+    if ( db == ODBC_DIALECT )
         {
             return std::make_shared<ODBC>( _obj, _password, time_formats );
         }
-    else if ( db == "postgres" || db == "greenplum" )
+
+    if ( db == POSTGRES || db == GREENPLUM )
         {
             return std::make_shared<Postgres>( _obj, _password, time_formats );
         }
-    else
-        {
-            throw std::invalid_argument(
-                "Database of type '" + db + "' not recognized." );
 
-            return std::shared_ptr<Connector>();
+    if ( db == SAP_HANA )
+        {
+            return std::make_shared<SapHana>( _obj, _password, time_formats );
         }
+
+    throw std::invalid_argument(
+        "Database of type '" + db + "' not recognized." );
+
+    return std::shared_ptr<Connector>();
 }
 
 // ----------------------------------------------------------------------------

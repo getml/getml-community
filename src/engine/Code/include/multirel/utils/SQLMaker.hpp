@@ -19,11 +19,15 @@ class SQLMaker
     SQLMaker(
         const Float _lag,
         const size_t _peripheral_used,
-        const descriptors::SameUnits& _same_units )
+        const descriptors::SameUnits& _same_units,
+        const std::shared_ptr<const helpers::SQLDialectGenerator>&
+            _sql_dialect_generator )
         : lag_( _lag ),
           peripheral_used_( _peripheral_used ),
-          same_units_( _same_units )
+          same_units_( _same_units ),
+          sql_dialect_generator_( _sql_dialect_generator )
     {
+        assert_true( sql_dialect_generator_ );
     }
 
     ~SQLMaker() = default;
@@ -111,16 +115,6 @@ class SQLMaker
     std::string make_colname(
         const std::string& _colname, const std::string& _alias ) const;
 
-    /// Transforms the time stamps diff into SQLite-compliant code.
-    std::string make_time_stamp_diff(
-        const helpers::Schema& _input,
-        const helpers::Schema& _output,
-        const std::shared_ptr<const descriptors::SameUnitsContainer>
-            _same_units,
-        const size_t _column_used,
-        const Float _diff,
-        const bool _is_greater ) const;
-
     /// Transforms the time stamps diff into SQLite-compliant given the
     /// colnames.
     std::string make_time_stamp_diff(
@@ -163,6 +157,10 @@ class SQLMaker
 
     /// Contains information on the same units
     const descriptors::SameUnits same_units_;
+
+    /// Generates the right code for the required SQL dialect.
+    const std::shared_ptr<const helpers::SQLDialectGenerator>
+        sql_dialect_generator_;
 };
 
 // ------------------------------------------------------------------------

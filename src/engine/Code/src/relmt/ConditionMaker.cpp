@@ -10,11 +10,21 @@ std::string ConditionMaker::condition_greater(
     const std::vector<strings::String>& _categories,
     const VocabForDf& _vocab_popul,
     const VocabForDf& _vocab_perip,
+    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+        _sql_dialect_generator,
     const std::string& _feature_prefix,
     const helpers::Schema& _input,
     const helpers::Schema& _output,
     const containers::Split& _split ) const
 {
+    assert_true( _sql_dialect_generator );
+
+    const auto make_colname = [this, _sql_dialect_generator](
+                                  const std::string& _colname,
+                                  const std::string& _alias ) -> std::string {
+        return this->make_colname( _sql_dialect_generator, _colname, _alias );
+    };
+
     switch ( _split.data_used_ )
         {
             case enums::DataUsed::categorical_input:
@@ -216,8 +226,13 @@ std::string ConditionMaker::condition_greater(
                         helpers::SQLGenerator::make_subfeature_identifier(
                             _feature_prefix, peripheral_used_ );
 
-                    return "( f_" + number + ".\"feature_" + number + "_" +
-                           std::to_string( _split.column_ + 1 ) + "\" > " +
+                    const auto quote1 = _sql_dialect_generator->quotechar1();
+
+                    const auto quote2 = _sql_dialect_generator->quotechar2();
+
+                    return "( f_" + number + "." + quote1 + "feature_" +
+                           number + "_" + std::to_string( _split.column_ + 1 ) +
+                           quote2 + " > " +
                            std::to_string( _split.critical_value_ ) + " )";
                 }
 
@@ -232,6 +247,7 @@ std::string ConditionMaker::condition_greater(
 
                     return list_words(
                         *_vocab_perip.at( _split.column_ ),
+                        _sql_dialect_generator,
                         _split,
                         colname,
                         true );
@@ -248,6 +264,7 @@ std::string ConditionMaker::condition_greater(
 
                     return list_words(
                         *_vocab_popul.at( _split.column_ ),
+                        _sql_dialect_generator,
                         _split,
                         colname,
                         true );
@@ -256,7 +273,11 @@ std::string ConditionMaker::condition_greater(
             case enums::DataUsed::time_stamps_window:
                 {
                     return make_time_stamp_window(
-                        _input, _output, _split.critical_value_, true );
+                        _sql_dialect_generator,
+                        _input,
+                        _output,
+                        _split.critical_value_,
+                        true );
                 }
 
             default:
@@ -271,11 +292,21 @@ std::string ConditionMaker::condition_smaller(
     const std::vector<strings::String>& _categories,
     const VocabForDf& _vocab_popul,
     const VocabForDf& _vocab_perip,
+    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+        _sql_dialect_generator,
     const std::string& _feature_prefix,
     const helpers::Schema& _input,
     const helpers::Schema& _output,
     const containers::Split& _split ) const
 {
+    assert_true( _sql_dialect_generator );
+
+    const auto make_colname = [this, _sql_dialect_generator](
+                                  const std::string& _colname,
+                                  const std::string& _alias ) -> std::string {
+        return this->make_colname( _sql_dialect_generator, _colname, _alias );
+    };
+
     switch ( _split.data_used_ )
         {
             case enums::DataUsed::categorical_input:
@@ -485,9 +516,14 @@ std::string ConditionMaker::condition_smaller(
                         helpers::SQLGenerator::make_subfeature_identifier(
                             _feature_prefix, peripheral_used_ );
 
-                    return "( f_" + number + ".\"feature_" + number + "_" +
-                           std::to_string( _split.column_ + 1 ) +
-                           "\" <= " + std::to_string( _split.critical_value_ ) +
+                    const auto quote1 = _sql_dialect_generator->quotechar1();
+
+                    const auto quote2 = _sql_dialect_generator->quotechar2();
+
+                    return "( f_" + number + "." + quote1 + "feature_" +
+                           number + "_" + std::to_string( _split.column_ + 1 ) +
+                           quote2 +
+                           " <= " + std::to_string( _split.critical_value_ ) +
                            " )";
                 }
 
@@ -502,6 +538,7 @@ std::string ConditionMaker::condition_smaller(
 
                     return list_words(
                         *_vocab_perip.at( _split.column_ ),
+                        _sql_dialect_generator,
                         _split,
                         colname,
                         false );
@@ -518,6 +555,7 @@ std::string ConditionMaker::condition_smaller(
 
                     return list_words(
                         *_vocab_popul.at( _split.column_ ),
+                        _sql_dialect_generator,
                         _split,
                         colname,
                         false );
@@ -526,7 +564,11 @@ std::string ConditionMaker::condition_smaller(
             case enums::DataUsed::time_stamps_window:
                 {
                     return make_time_stamp_window(
-                        _input, _output, _split.critical_value_, false );
+                        _sql_dialect_generator,
+                        _input,
+                        _output,
+                        _split.critical_value_,
+                        false );
                 }
 
             default:
@@ -568,10 +610,14 @@ std::string ConditionMaker::list_categories(
 
 std::string ConditionMaker::list_words(
     const std::vector<strings::String>& _vocabulary,
+    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+        _sql_dialect_generator,
     const containers::Split& _split,
     const std::string& _name,
     const bool _is_greater ) const
 {
+    assert_true( _sql_dialect_generator );
+
     std::stringstream words;
 
     words << "( ";
@@ -588,10 +634,8 @@ std::string ConditionMaker::list_words(
         {
             assert_true( *it < _vocabulary.size() );
 
-            words << "( contains( " + _name + ", '" +
-                         _vocabulary.at( *it ).str() + "' )";
-
-            words << comparison << ")";
+            _sql_dialect_generator->string_contains(
+                _name, _vocabulary.at( *it ).str(), _is_greater );
 
             if ( std::next( it, 1 ) != _split.categories_used_end_ )
                 {
@@ -607,8 +651,17 @@ std::string ConditionMaker::list_words(
 // ----------------------------------------------------------------------------
 
 std::string ConditionMaker::make_colname(
-    const std::string& _colname, const std::string& _alias ) const
+    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+        _sql_dialect_generator,
+    const std::string& _colname,
+    const std::string& _alias ) const
 {
+    assert_true( _sql_dialect_generator );
+
+    const auto quote1 = _sql_dialect_generator->quotechar1();
+
+    const auto quote2 = _sql_dialect_generator->quotechar2();
+
     if ( _colname.find( helpers::Macros::fast_prop_feature() ) !=
          std::string::npos )
         {
@@ -621,21 +674,23 @@ std::string ConditionMaker::make_colname(
 
             const auto alias = "p_" + stripped.substr( 0, pos );
 
-            return alias + ".\"" +
+            return alias + "." + quote1 +
                    helpers::StringReplacer::replace_all(
                        _colname,
                        helpers::Macros::fast_prop_feature(),
                        "feature_" ) +
-                   "\"";
+                   quote2;
         }
 
-    return _alias + ".\"" + helpers::SQLGenerator::make_colname( _colname ) +
-           "\"";
+    return _alias + "." + quote1 +
+           _sql_dialect_generator->make_colname( _colname ) + quote2;
 }
 
 // ----------------------------------------------------------------------------
 
 std::string ConditionMaker::make_equation_part(
+    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+        _sql_dialect_generator,
     const std::string& _raw_name,
     const std::string& _alias,
     const Float _weight,
@@ -679,7 +734,8 @@ std::string ConditionMaker::make_equation_part(
 
     // ------------------------------------------------------
 
-    const auto centered = center( make_colname( _raw_name, _alias ) );
+    const auto centered =
+        center( make_colname( _sql_dialect_generator, _raw_name, _alias ) );
 
     return impute( centered ) + " * " + to_string( _weight );
 }
@@ -687,6 +743,8 @@ std::string ConditionMaker::make_equation_part(
 // ----------------------------------------------------------------------------
 
 std::string ConditionMaker::make_equation(
+    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+        _sql_dialect_generator,
     const std::string& _feature_prefix,
     const helpers::Schema& _input,
     const helpers::Schema& _output,
@@ -726,6 +784,7 @@ std::string ConditionMaker::make_equation(
     for ( size_t j = 0; j < _output.num_discretes(); ++i, ++j )
         {
             const auto eq = make_equation_part(
+                _sql_dialect_generator,
                 _output.discrete_name( j ),
                 "t1",
                 rescaled_weights.at( i ),
@@ -738,6 +797,7 @@ std::string ConditionMaker::make_equation(
     for ( size_t j = 0; j < _output.num_numericals(); ++i, ++j )
         {
             const auto eq = make_equation_part(
+                _sql_dialect_generator,
                 _output.numerical_name( j ),
                 "t1",
                 rescaled_weights.at( i ),
@@ -750,6 +810,7 @@ std::string ConditionMaker::make_equation(
     for ( size_t j = 0; j < _input.num_discretes(); ++i, ++j )
         {
             const auto eq = make_equation_part(
+                _sql_dialect_generator,
                 _input.discrete_name( j ),
                 "t2",
                 rescaled_weights.at( i ),
@@ -762,6 +823,7 @@ std::string ConditionMaker::make_equation(
     for ( size_t j = 0; j < _input.num_numericals(); ++i, ++j )
         {
             const auto eq = make_equation_part(
+                _sql_dialect_generator,
                 _input.numerical_name( j ),
                 "t2",
                 rescaled_weights.at( i ),
@@ -778,6 +840,7 @@ std::string ConditionMaker::make_equation(
                     _feature_prefix, peripheral_used_ );
 
             const auto eq = make_equation_part(
+                _sql_dialect_generator,
                 "feature_" + number + "_" + std::to_string( j + 1 ),
                 "f_" + number,
                 rescaled_weights.at( i ),
@@ -790,35 +853,6 @@ std::string ConditionMaker::make_equation(
     equation << rescaled_weights.at( 0 );
 
     return equation.str();
-}
-
-// ----------------------------------------------------------------------------
-
-std::string ConditionMaker::make_time_stamp_diff(
-    const std::string& _ts1,
-    const std::string& _ts2,
-    const Float _diff,
-    const bool _is_greater ) const
-{
-    const auto diffstr =
-        helpers::SQLGenerator::make_time_stamp_diff( _diff, false );
-
-    const auto colname1 =
-        helpers::SQLGenerator::make_relative_time( _ts1, "t1" );
-
-    const auto colname2 =
-        helpers::SQLGenerator::make_relative_time( _ts2 + diffstr, "t2" );
-
-    const auto condition =
-        make_time_stamp_diff( colname1, colname2, _is_greater );
-
-    if ( _is_greater )
-        {
-            return "( " + condition + " )";
-        }
-
-    return "( " + condition + " OR " + colname1 + " IS NULL OR " + colname2 +
-           " IS NULL )";
 }
 
 // ----------------------------------------------------------------------------
@@ -837,11 +871,21 @@ std::string ConditionMaker::make_time_stamp_diff(
 // ----------------------------------------------------------------------------
 
 std::string ConditionMaker::make_time_stamp_window(
+    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+        _sql_dialect_generator,
     const helpers::Schema& _input,
     const helpers::Schema& _output,
     const Float _diff,
     const bool _is_greater ) const
 {
+    assert_true( _sql_dialect_generator );
+
+    const auto make_colname = [this, _sql_dialect_generator](
+                                  const std::string& _colname,
+                                  const std::string& _alias ) -> std::string {
+        return this->make_colname( _sql_dialect_generator, _colname, _alias );
+    };
+
     const auto colname1 = _output.time_stamps_name();
 
     const auto colname2 = _input.time_stamps_name();
@@ -853,13 +897,13 @@ std::string ConditionMaker::make_time_stamp_window(
         helpers::SQLGenerator::make_time_stamp_diff( _diff + lag_, true );
 
     const auto condition1 = make_time_stamp_diff(
-        helpers::SQLGenerator::make_relative_time( colname1, "t1" ),
-        helpers::SQLGenerator::make_relative_time( colname2 + diffstr1, "t2" ),
+        make_colname( colname1, "t1" ),
+        make_colname( colname2 + diffstr1, "t2" ),
         _is_greater );
 
     const auto condition2 = make_time_stamp_diff(
-        helpers::SQLGenerator::make_relative_time( colname1, "t1" ),
-        helpers::SQLGenerator::make_relative_time( colname2 + diffstr2, "t2" ),
+        make_colname( colname1, "t1" ),
+        make_colname( colname2 + diffstr2, "t2" ),
         !_is_greater );
 
     if ( _is_greater )

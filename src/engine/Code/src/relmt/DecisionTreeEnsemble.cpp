@@ -869,6 +869,25 @@ DecisionTreeEnsemble::make_aggregations(
 
 // ----------------------------------------------------------------------------
 
+std::shared_ptr<const std::map<std::string, std::string>>
+DecisionTreeEnsemble::make_peripheral_map() const
+{
+    assert_true( peripheral_schema().size() == peripheral().size() );
+
+    const auto peripheral_map =
+        std::make_shared<std::map<std::string, std::string>>();
+
+    for ( size_t i = 0; i < peripheral_schema().size(); ++i )
+        {
+            ( *peripheral_map )[peripheral().at( i )] =
+                peripheral_schema().at( i ).name();
+        }
+
+    return peripheral_map;
+}
+
+// ----------------------------------------------------------------------------
+
 std::vector<containers::Predictions> DecisionTreeEnsemble::make_subpredictions(
     const TableHolder &_table_holder,
     const std::shared_ptr<const logging::AbstractLogger> _logger,
@@ -927,13 +946,21 @@ DecisionTreeEnsemble &DecisionTreeEnsemble::operator=(
 void DecisionTreeEnsemble::subfeatures_to_sql(
     const std::shared_ptr<const std::vector<strings::String>> &_categories,
     const helpers::VocabularyTree &_vocabulary,
+    const std::shared_ptr<const helpers::SQLDialectGenerator>
+        &_sql_dialect_generator,
     const std::string &_feature_prefix,
     const size_t _offset,
+    const std::shared_ptr<const std::map<std::string, std::string>>
+        _peripheral_map,
     std::vector<std::string> *_sql ) const
 {
+    assert_true( _sql_dialect_generator );
+
     assert_true( subensembles_avg_.size() == subensembles_sum_.size() );
 
     assert_true( subensembles_avg_.size() == _vocabulary.subtrees().size() );
+
+    assert_true( _peripheral_map );
 
     for ( size_t i = 0; i < subensembles_avg_.size(); ++i )
         {
@@ -944,9 +971,11 @@ void DecisionTreeEnsemble::subfeatures_to_sql(
                     const auto sub_avg = subensembles_avg_.at( i )->to_sql(
                         _categories,
                         _vocabulary.subtrees().at( i ).value(),
+                        _sql_dialect_generator,
                         _feature_prefix + std::to_string( i + 1 ) + "_",
                         0,
-                        true );
+                        true,
+                        _peripheral_map );
 
                     _sql->insert( _sql->end(), sub_avg.begin(), sub_avg.end() );
 
@@ -955,9 +984,11 @@ void DecisionTreeEnsemble::subfeatures_to_sql(
                     const auto sub_sum = subensembles_sum_.at( i )->to_sql(
                         _categories,
                         _vocabulary.subtrees().at( i ).value(),
+                        _sql_dialect_generator,
                         _feature_prefix + std::to_string( i + 1 ) + "_",
                         subensembles_avg_.at( i )->num_features(),
-                        true );
+                        true,
+                        _peripheral_map );
 
                     _sql->insert( _sql->end(), sub_sum.begin(), sub_sum.end() );
 
@@ -977,15 +1008,16 @@ void DecisionTreeEnsemble::subfeatures_to_sql(
                     const auto autofeatures = stl::collect::vector<std::string>(
                         iota | std::views::transform( to_feature_name ) );
 
-                    const auto main_table =
-                        helpers::SQLGenerator::make_staging_table_name(
-                            subensembles_avg_.at( i )->placeholder().name() );
+                    const auto it = _peripheral_map->find(
+                        subensembles_avg_.at( i )->placeholder().name() );
+
+                    assert_true( it != _peripheral_map->end() );
 
                     if ( autofeatures.size() > 0 )
                         {
                             const auto feature_table =
-                                helpers::SQLGenerator::make_feature_table(
-                                    main_table,
+                                _sql_dialect_generator->make_feature_table(
+                                    it->second,
                                     autofeatures,
                                     {},
                                     {},
@@ -1269,9 +1301,13 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj(
 std::vector<std::string> DecisionTreeEnsemble::to_sql(
     const std::shared_ptr<const std::vector<strings::String>> &_categories,
     const helpers::VocabularyTree &_vocabulary,
+    const std::shared_ptr<const helpers::SQLDialectGenerator>
+        &_sql_dialect_generator,
     const std::string &_feature_prefix,
     const size_t _offset,
-    const bool _subfeatures ) const
+    const bool _subfeatures,
+    const std::shared_ptr<const std::map<std::string, std::string>>
+        &_peripheral_map ) const
 {
     assert_true( _categories );
 
@@ -1280,7 +1316,13 @@ std::vector<std::string> DecisionTreeEnsemble::to_sql(
     if ( _subfeatures )
         {
             subfeatures_to_sql(
-                _categories, _vocabulary, _feature_prefix, _offset, &sql );
+                _categories,
+                _vocabulary,
+                _sql_dialect_generator,
+                _feature_prefix,
+                _offset,
+                _peripheral_map ? _peripheral_map : make_peripheral_map(),
+                &sql );
         }
 
     for ( size_t i = 0; i < trees().size(); ++i )
@@ -1311,6 +1353,7 @@ std::vector<std::string> DecisionTreeEnsemble::to_sql(
             sql.push_back( tree.to_sql(
                 *_categories,
                 _vocabulary,
+                _sql_dialect_generator,
                 _feature_prefix,
                 std::to_string( _offset + i + 1 ),
                 has_subfeatures ) );

@@ -39,6 +39,8 @@
 #include "helpers/Float.hpp"
 #include "helpers/Int.hpp"
 
+#include "helpers/enums/enums.hpp"
+
 #include "helpers/Subrole.hpp"
 
 #include "helpers/SubroleParser.hpp"
@@ -81,9 +83,16 @@
 
 #include "helpers/TableHolder.hpp"
 
+#include "helpers/SQLDialectGenerator.hpp"
+
 #include "helpers/Macros.hpp"
 
 #include "helpers/SQLGenerator.hpp"
+
+#include "helpers/SQLite3Generator.hpp"
+#include "helpers/SparkSQLGenerator.hpp"
+
+#include "helpers/SQLDialectParser.hpp"
 
 #include "helpers/FitParams.hpp"
 #include "helpers/TransformParams.hpp"

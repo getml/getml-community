@@ -96,6 +96,8 @@ class FeatureLearner : public AbstractFeatureLearner
         const std::shared_ptr<const std::vector<strings::String>>& _categories,
         const bool _targets,
         const bool _subfeatures,
+        const std::shared_ptr<const helpers::SQLDialectGenerator>&
+            _sql_dialect_generator,
         const std::string& _prefix ) const final;
 
     /// Generate features.
@@ -227,6 +229,8 @@ class FeatureLearner : public AbstractFeatureLearner
     void propositionalization_to_sql(
         const std::shared_ptr<const std::vector<strings::String>>& _categories,
         const helpers::VocabularyTree& _vocabulary,
+        const std::shared_ptr<const helpers::SQLDialectGenerator>&
+            _sql_dialect_generator,
         const std::string& _prefix,
         const bool _subfeatures,
         std::vector<std::string>* _sql ) const;
@@ -979,6 +983,8 @@ template <typename FeatureLearnerType>
 void FeatureLearner<FeatureLearnerType>::propositionalization_to_sql(
     const std::shared_ptr<const std::vector<strings::String>>& _categories,
     const helpers::VocabularyTree& _vocabulary,
+    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+        _sql_dialect_generator,
     const std::string& _prefix,
     const bool _subfeatures,
     std::vector<std::string>* _sql ) const
@@ -991,7 +997,12 @@ void FeatureLearner<FeatureLearnerType>::propositionalization_to_sql(
                 }
 
             fast_prop_container_->to_sql(
-                _categories, _vocabulary, _prefix, _subfeatures, _sql );
+                _categories,
+                _vocabulary,
+                _sql_dialect_generator,
+                _prefix,
+                _subfeatures,
+                _sql );
         }
 }
 
@@ -1071,6 +1082,8 @@ std::vector<std::string> FeatureLearner<FeatureLearnerType>::to_sql(
     const std::shared_ptr<const std::vector<strings::String>>& _categories,
     const bool _targets,
     const bool _subfeatures,
+    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+        _sql_dialect_generator,
     const std::string& _prefix ) const
 {
     throw_unless( peripheral_schema_, "Pipeline has not been fitted." );
@@ -1086,10 +1099,20 @@ std::vector<std::string> FeatureLearner<FeatureLearnerType>::to_sql(
         feature_learner().peripheral() );
 
     propositionalization_to_sql(
-        _categories, vocabulary_tree, _prefix, _subfeatures, &sql );
+        _categories,
+        vocabulary_tree,
+        _sql_dialect_generator,
+        _prefix,
+        _subfeatures,
+        &sql );
 
     const auto features = feature_learner().to_sql(
-        _categories, vocabulary_tree, _prefix, 0, _subfeatures );
+        _categories,
+        vocabulary_tree,
+        _sql_dialect_generator,
+        _prefix,
+        0,
+        _subfeatures );
 
     sql.insert( sql.end(), features.begin(), features.end() );
 

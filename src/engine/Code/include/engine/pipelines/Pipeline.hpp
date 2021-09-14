@@ -93,7 +93,8 @@ class Pipeline
     std::string to_sql(
         const std::shared_ptr<const std::vector<strings::String>>& _categories,
         const bool _targets,
-        const bool _subfeatures ) const;
+        const bool _full_pipeline,
+        const std::string& _dialect ) const;
 
     // --------------------------------------------------------
 
@@ -277,7 +278,9 @@ class Pipeline
     std::vector<std::string> feature_learners_to_sql(
         const std::shared_ptr<const std::vector<strings::String>>& _categories,
         const bool _targets,
-        const bool _subfeatures ) const;
+        const bool _subfeatures,
+        const std::shared_ptr<const helpers::SQLDialectGenerator>&
+            _sql_dialect_generator ) const;
 
     /// Calculates the feature importances vis-a-vis each target.
     std::vector<std::vector<Float>> feature_importances(
@@ -473,8 +476,9 @@ class Pipeline
 
     /// Expresses the preprocessors as SQL code.
     std::vector<std::string> preprocessors_to_sql(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories )
-        const;
+        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const std::shared_ptr<const helpers::SQLDialectGenerator>&
+            _sql_dialect_generator ) const;
 
     /// Retrieves the features from a data frame.
     std::tuple<
@@ -514,7 +518,10 @@ class Pipeline
         const predictors::PredictorImpl& _predictor_impl ) const;
 
     /// Expresses the staging scripts as SQL.
-    std::vector<std::string> staging_to_sql( const bool _targets ) const;
+    std::vector<std::string> staging_to_sql(
+        const bool _targets,
+        const std::shared_ptr<const helpers::SQLDialectGenerator>&
+            _sql_dialect_generator ) const;
 
     /// Returns a transposed version Poco::JSON::Array::Ptr of the original
     /// vector-of-vectors.

@@ -480,26 +480,37 @@ std::set<size_t> DecisionTree::make_subfeatures_used() const
 std::string DecisionTree::to_sql(
     const std::vector<strings::String>& _categories,
     const helpers::VocabularyTree& _vocabulary,
+    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+        _sql_dialect_generator,
     const std::string& _feature_prefix,
     const std::string _feature_num,
     const std::tuple<bool, bool, bool> _has_subfeatures ) const
 {
     // -------------------------------------------------------------------
 
-    std::stringstream sql;
+    assert_true( _sql_dialect_generator );
+
+    // -------------------------------------------------------------------
+
+    const auto quote1 = _sql_dialect_generator->quotechar1();
+    const auto quote2 = _sql_dialect_generator->quotechar2();
 
     const std::string tab = "    ";
 
     // -------------------------------------------------------------------
 
-    sql << "DROP TABLE IF EXISTS \"FEATURE_" << _feature_prefix << _feature_num
-        << "\";" << std::endl
+    std::stringstream sql;
+
+    // -------------------------------------------------------------------
+
+    sql << "DROP TABLE IF EXISTS " << quote1 << "FEATURE_" << _feature_prefix
+        << _feature_num << quote2 << ";" << std::endl
         << std::endl;
 
     // -------------------------------------------------------------------
 
-    sql << "CREATE TABLE \"FEATURE_" << _feature_prefix << _feature_num
-        << "\" AS" << std::endl;
+    sql << "CREATE TABLE " << quote1 << "FEATURE_" << _feature_prefix
+        << _feature_num << quote2 << " AS" << std::endl;
 
     // -------------------------------------------------------------------
 
@@ -519,6 +530,7 @@ std::string DecisionTree::to_sql(
         _categories,
         _vocabulary.population(),
         _vocabulary.peripheral().at( peripheral_used() ),
+        _sql_dialect_generator,
         _feature_prefix,
         _feature_num,
         "",
@@ -547,14 +559,14 @@ std::string DecisionTree::to_sql(
 
     // -------------------------------------------------------------------
 
-    sql << ") AS \"feature_" << _feature_prefix << _feature_num << "\","
-        << std::endl;
+    sql << "AS " << quote1 << "feature_" << _feature_prefix << _feature_num
+        << quote2 << "," << std::endl;
 
-    sql << tab << " t1.rowid AS \"rownum\"" << std::endl;
+    sql << tab << " t1.rowid AS " << quote1 << "rownum" << quote2 << std::endl;
 
     // -------------------------------------------------------------------
 
-    sql << helpers::SQLGenerator::make_joins(
+    sql << _sql_dialect_generator->make_joins(
         output().name(),
         input().name(),
         output().join_keys_name(),
@@ -567,13 +579,13 @@ std::string DecisionTree::to_sql(
 
     if ( has_normal_subfeatures )
         {
-            sql << helpers::SQLGenerator::make_subfeature_joins(
+            sql << _sql_dialect_generator->make_subfeature_joins(
                 _feature_prefix, peripheral_used_ );
         }
 
     if ( output_has_prop )
         {
-            sql << helpers::SQLGenerator::make_subfeature_joins(
+            sql << _sql_dialect_generator->make_subfeature_joins(
                 _feature_prefix,
                 peripheral_used_,
                 "t1",
@@ -582,7 +594,7 @@ std::string DecisionTree::to_sql(
 
     if ( input_has_prop )
         {
-            sql << helpers::SQLGenerator::make_subfeature_joins(
+            sql << _sql_dialect_generator->make_subfeature_joins(
                 _feature_prefix,
                 peripheral_used_,
                 "t2",
@@ -599,7 +611,7 @@ std::string DecisionTree::to_sql(
                                       ? input().upper_time_stamps_name()
                                       : std::string( "" );
 
-            sql << helpers::SQLGenerator::make_time_stamps(
+            sql << _sql_dialect_generator->make_time_stamps(
                 output().time_stamps_name(),
                 input().time_stamps_name(),
                 upper_ts,

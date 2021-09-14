@@ -88,6 +88,8 @@ class AbstractFeatureLearner
         const std::shared_ptr<const std::vector<strings::String>>& _categories,
         const bool _targets,
         const bool _subfeatures,
+        const std::shared_ptr<const helpers::SQLDialectGenerator>&
+            _sql_dialect_generator,
         const std::string& _prefix ) const = 0;
 
     /// Generate features.

@@ -112,12 +112,19 @@ Poco::JSON::Object::Ptr Condition::to_json_obj() const
 
 std::string Condition::to_sql(
     const std::vector<strings::String> &_categories,
+    const std::shared_ptr<const helpers::SQLDialectGenerator>
+        &_sql_dialect_generator,
     const std::string &_feature_prefix,
     const helpers::Schema &_input,
     const helpers::Schema &_output ) const
 {
-    return SQLMaker::condition(
-        _categories, _feature_prefix, *this, _input, _output );
+    return SQLMaker(
+               _categories,
+               _feature_prefix,
+               _input,
+               _output,
+               _sql_dialect_generator )
+        .condition( *this );
 }
 
 // ----------------------------------------------------------------------------

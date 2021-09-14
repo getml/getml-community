@@ -55,6 +55,8 @@ class FastPropContainer
     void to_sql(
         const std::shared_ptr<const std::vector<strings::String>>& _categories,
         const helpers::VocabularyTree& _vocabulary,
+        const std::shared_ptr<const helpers::SQLDialectGenerator>&
+            _sql_dialect_generator,
         const std::string& _feature_prefix,
         const bool _subfeatures,
         std::vector<std::string>* _sql ) const;

@@ -37,6 +37,8 @@ struct Condition
     /// Expresses the abstract feature as SQL code.
     std::string to_sql(
         const std::vector<strings::String> &_categories,
+        const std::shared_ptr<const helpers::SQLDialectGenerator>
+            &_sql_dialect_generator,
         const std::string &_feature_prefix,
         const helpers::Schema &_input,
         const helpers::Schema &_output ) const;

@@ -61,7 +61,7 @@ class Sqlite3 : public Connector
 
    public:
     /// Returns the dialect of the connector.
-    std::string dialect() const final { return "sqlite"; }
+    std::string dialect() const final { return DatabaseParser::SQLITE3; }
 
     /// Drops a table and cleans up, if necessary.
     void drop_table( const std::string& _tname ) final

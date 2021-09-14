@@ -87,8 +87,9 @@ class Mapping : public Preprocessor
 
     /// Generates the mapping tables.
     std::vector<std::string> to_sql(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories )
-        const final;
+        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const std::shared_ptr<const helpers::SQLDialectGenerator>&
+            _sql_dialect_generator ) const final;
 
    public:
     /// Trivial (const) accessor.
@@ -250,12 +251,15 @@ class Mapping : public Preprocessor
 
     /// Transforms the mappings for the categorical columns to SQL.
     std::vector<std::string> categorical_columns_to_sql(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories )
-        const;
+        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const std::shared_ptr<const helpers::SQLDialectGenerator>&
+            _sql_dialect_generator ) const;
 
     /// Transforms a mapping for a categorical or text column to SQL.
     std::string categorical_or_text_column_to_sql(
         const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const std::shared_ptr<const helpers::SQLDialectGenerator>&
+            _sql_dialect_generator,
         const std::string& _name,
         const PtrType& _ptr,
         const size_t _weight_num,
@@ -263,15 +267,21 @@ class Mapping : public Preprocessor
 
     /// Transforms the mappings for a discrete columns to SQL.
     std::string discrete_column_to_sql(
+        const std::shared_ptr<const helpers::SQLDialectGenerator>&
+            _sql_dialect_generator,
         const std::string& _name,
         const PtrType& _ptr,
         const size_t _weight_num ) const;
 
     /// Transforms the mappings for the discrete columns to SQL.
-    std::vector<std::string> discrete_columns_to_sql() const;
+    std::vector<std::string> discrete_columns_to_sql(
+        const std::shared_ptr<const helpers::SQLDialectGenerator>&
+            _sql_dialect_generator ) const;
 
     /// Transforms the mappings for the text columns to SQL.
-    std::vector<std::string> text_columns_to_sql() const;
+    std::vector<std::string> text_columns_to_sql(
+        const std::shared_ptr<const helpers::SQLDialectGenerator>&
+            _sql_dialect_generator ) const;
 
     /// Extracts a mapping from JSON.
     MappingForDf extract_mapping(
@@ -390,10 +400,6 @@ class Mapping : public Preprocessor
     /// Generates the rownum map for the text columns.
     std::map<Int, std::vector<size_t>> make_rownum_map_text(
         const textmining::WordIndex& _word_index ) const;
-
-    /// Generates the table header for the resulting SQL code.
-    std::string make_table_header(
-        const std::string& _name, const bool _key_is_num ) const;
 
     /// Identifies the correct rownums to use by parsing through the main and
     /// peripheral tables.

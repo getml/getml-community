@@ -858,7 +858,7 @@ class DataFrame
             helpers::Macros::parse_table_colname( name_, _colname );
         throw std::invalid_argument(
             "Data frame '" + table + "' contains no " + _coltype + " named '" +
-            helpers::SQLGenerator::make_colname( colname ) + "'!" );
+            helpers::SQLite3Generator().make_colname( colname ) + "'!" );
     }
 
     /// Records the current time as the last time something was changed.

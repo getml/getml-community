@@ -288,8 +288,6 @@ std::string SQLMaker::condition_smaller(
 
 // ----------------------------------------------------------------------------
 
-// ----------------------------------------------------------------------------
-
 std::string SQLMaker::get_name(
     const std::string& _feature_prefix,
     const helpers::Schema& _input,
@@ -367,22 +365,22 @@ std::string SQLMaker::get_ts_name(
         {
             case enums::DataUsed::x_perip_discrete:
                 assert_true( _column_used < _input.num_discretes() );
-                return helpers::SQLGenerator::make_relative_time(
+                return make_colname(
                     _input.discrete_name( _column_used ) + _diffstr, "t2" );
 
             case enums::DataUsed::x_popul_discrete:
                 assert_true( _column_used < _output.num_discretes() );
-                return helpers::SQLGenerator::make_relative_time(
+                return make_colname(
                     _output.discrete_name( _column_used ) + _diffstr, "t1" );
 
             case enums::DataUsed::x_perip_numerical:
                 assert_true( _column_used < _input.num_numericals() );
-                return helpers::SQLGenerator::make_relative_time(
+                return make_colname(
                     _input.numerical_name( _column_used ) + _diffstr, "t2" );
 
             case enums::DataUsed::x_popul_numerical:
                 assert_true( _column_used < _output.num_numericals() );
-                return helpers::SQLGenerator::make_relative_time(
+                return make_colname(
                     _output.numerical_name( _column_used ) + _diffstr, "t1" );
 
             default:
@@ -492,6 +490,8 @@ std::string SQLMaker::list_words(
     const std::string& _name,
     const bool _is_greater ) const
 {
+    assert_true( sql_dialect_generator_ );
+
     std::stringstream words;
 
     words << "( ";
@@ -508,10 +508,8 @@ std::string SQLMaker::list_words(
         {
             assert_true( *it < _vocabulary.size() );
 
-            words << "( contains( " + _name + ", '" +
-                         _vocabulary.at( *it ).str() + "' )";
-
-            words << comparison << ")";
+            sql_dialect_generator_->string_contains(
+                _name, _vocabulary.at( *it ).str(), _is_greater );
 
             if ( std::next( it, 1 ) != _split.categories_used_end )
                 {
@@ -529,6 +527,12 @@ std::string SQLMaker::list_words(
 std::string SQLMaker::make_colname(
     const std::string& _colname, const std::string& _alias ) const
 {
+    assert_true( sql_dialect_generator_ );
+
+    const auto quote1 = sql_dialect_generator_->quotechar1();
+
+    const auto quote2 = sql_dialect_generator_->quotechar2();
+
     if ( _colname.find( helpers::Macros::fast_prop_feature() ) !=
          std::string::npos )
         {
@@ -541,48 +545,16 @@ std::string SQLMaker::make_colname(
 
             const auto alias = "p_" + stripped.substr( 0, pos );
 
-            return alias + ".\"" +
+            return alias + "." + quote1 +
                    helpers::StringReplacer::replace_all(
                        _colname,
                        helpers::Macros::fast_prop_feature(),
                        "feature_" ) +
-                   "\"";
+                   quote2;
         }
 
-    return _alias + ".\"" + helpers::SQLGenerator::make_colname( _colname ) +
-           "\"";
-}
-
-// ----------------------------------------------------------------------------
-
-std::string SQLMaker::make_time_stamp_diff(
-    const helpers::Schema& _input,
-    const helpers::Schema& _output,
-    const std::shared_ptr<const descriptors::SameUnitsContainer> _same_units,
-    const size_t _column_used,
-    const Float _diff,
-    const bool _is_greater ) const
-{
-    const auto diffstr =
-        helpers::SQLGenerator::make_time_stamp_diff( _diff, false );
-
-    const auto same_unit = _same_units->at( _column_used );
-
-    const auto colname1 = get_ts_name(
-        _input,
-        _output,
-        std::get<0>( same_unit ).ix_column_used,
-        std::get<0>( same_unit ).data_used,
-        diffstr );
-
-    const auto colname2 = get_ts_name(
-        _input,
-        _output,
-        std::get<1>( same_unit ).ix_column_used,
-        std::get<1>( same_unit ).data_used,
-        "" );
-
-    return make_time_stamp_diff( colname2, colname1, _is_greater );
+    return _alias + "." + quote1 +
+           sql_dialect_generator_->make_colname( _colname ) + quote2;
 }
 
 // ----------------------------------------------------------------------------
@@ -619,13 +591,13 @@ std::string SQLMaker::make_time_stamp_window(
         helpers::SQLGenerator::make_time_stamp_diff( _diff, true );
 
     const auto condition1 = make_time_stamp_diff(
-        helpers::SQLGenerator::make_relative_time( name1, "t1" ),
-        helpers::SQLGenerator::make_relative_time( name2 + diffstr1, "t2" ),
+        make_colname( name1, "t1" ),
+        make_colname( name2 + diffstr1, "t2" ),
         !_is_greater );
 
     const auto condition2 = make_time_stamp_diff(
-        helpers::SQLGenerator::make_relative_time( name1, "t1" ),
-        helpers::SQLGenerator::make_relative_time( name2 + diffstr2, "t2" ),
+        make_colname( name1, "t1" ),
+        make_colname( name2 + diffstr2, "t2" ),
         _is_greater );
 
     if ( _is_greater )
@@ -646,37 +618,22 @@ std::string SQLMaker::select_statement(
     const enums::DataUsed& _data_used,
     const std::string& _agg_type ) const
 {
+    assert_true( sql_dialect_generator_ );
+
+    const auto agg =
+        helpers::enums::Parser<helpers::enums::Aggregation>::parse( _agg_type );
+
     const auto value = value_to_be_aggregated(
         _feature_prefix, _input, _output, _column_used, _data_used );
 
-    std::string select;
-
-    if ( _agg_type == "COUNT DISTINCT" )
+    if ( agg == helpers::enums::Aggregation::first ||
+         agg == helpers::enums::Aggregation::last )
         {
-            select += "COUNT( DISTINCT ";
-        }
-    else if ( _agg_type == "COUNT MINUS COUNT DISTINCT" )
-        {
-            select += "COUNT( " + value + " ) - COUNT( DISTINCT ";
-        }
-    else
-        {
-            select += _agg_type;
-
-            select += "( ";
+            return sql_dialect_generator_->aggregation(
+                agg, value, make_colname( _input.time_stamps_name(), "t2" ) );
         }
 
-    select += value;
-
-    if ( _agg_type == "FIRST" || _agg_type == "LAST" )
-        {
-            select += ", " + helpers::SQLGenerator::make_epoch_time(
-                                 _input.time_stamps_name(), "t2" );
-        }
-
-    select += " )";
-
-    return select;
+    return sql_dialect_generator_->aggregation( agg, value, std::nullopt );
 }
 
 // ----------------------------------------------------------------------------

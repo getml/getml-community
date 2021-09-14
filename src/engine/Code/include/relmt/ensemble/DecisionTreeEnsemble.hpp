@@ -135,9 +135,13 @@ class DecisionTreeEnsemble
     std::vector<std::string> to_sql(
         const std::shared_ptr<const std::vector<strings::String>>& _categories,
         const helpers::VocabularyTree& _vocabulary,
+        const std::shared_ptr<const helpers::SQLDialectGenerator>&
+            _sql_dialect_generator,
         const std::string& _feature_prefix = "",
         const size_t _offset = 0,
-        const bool _subfeatures = true ) const;
+        const bool _subfeatures = true,
+        const std::shared_ptr<const std::map<std::string, std::string>>&
+            _peripheral_map = nullptr ) const;
 
     // -----------------------------------------------------------------
 
@@ -290,12 +294,21 @@ class DecisionTreeEnsemble
         const size_t _nrows,
         const std::vector<const containers::Match*>& _matches_ptr );
 
+    /// Maps the names of the peripheral placeholders to the names of the
+    /// corresponding staging tables.
+    std::shared_ptr<const std::map<std::string, std::string>>
+    make_peripheral_map() const;
+
     /// Expresses the subfeatures as SQL code.
     void subfeatures_to_sql(
         const std::shared_ptr<const std::vector<strings::String>>& _categories,
         const helpers::VocabularyTree& _vocabulary,
+        const std::shared_ptr<const helpers::SQLDialectGenerator>&
+            _sql_dialect_generator,
         const std::string& _feature_prefix,
         const size_t _offset,
+        const std::shared_ptr<const std::map<std::string, std::string>>
+            _peripheral_map,
         std::vector<std::string>* _sql ) const;
 
     /// Spawns the threads for the transform method.

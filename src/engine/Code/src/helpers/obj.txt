@@ -6,7 +6,10 @@ set(
     ${HELPERS_SOURCE_DIRECTORY}/Placeholder.cpp
     ${HELPERS_SOURCE_DIRECTORY}/RowIndexContainer.cpp
     ${HELPERS_SOURCE_DIRECTORY}/Schema.cpp
+    ${HELPERS_SOURCE_DIRECTORY}/SparkSQLGenerator.cpp
+    ${HELPERS_SOURCE_DIRECTORY}/SQLDialectParser.cpp
     ${HELPERS_SOURCE_DIRECTORY}/SQLGenerator.cpp
+    ${HELPERS_SOURCE_DIRECTORY}/SQLite3Generator.cpp
     ${HELPERS_SOURCE_DIRECTORY}/StringReplacer.cpp
     ${HELPERS_SOURCE_DIRECTORY}/StringSplitter.cpp
     ${HELPERS_SOURCE_DIRECTORY}/SubroleParser.cpp

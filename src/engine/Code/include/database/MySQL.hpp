@@ -81,7 +81,7 @@ class MySQL : public Connector
 
    public:
     /// Returns the dialect of the connector.
-    std::string dialect() const final { return "mysql"; }
+    std::string dialect() const final { return DatabaseParser::MYSQL; }
 
     /// Drops a table and cleans up, if necessary.
     void drop_table( const std::string& _tname ) final
@@ -99,7 +99,7 @@ class MySQL : public Connector
     /// Returns the number of rows in the table signified by _tname.
     std::int32_t get_nrows( const std::string& _tname ) final
     {
-        return select( {"COUNT(*)"}, _tname, "" )->get_int();
+        return select( { "COUNT(*)" }, _tname, "" )->get_int();
     }
 
     /// Returns a shared_ptr containing a MySQLIterator.

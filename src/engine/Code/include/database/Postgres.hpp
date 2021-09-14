@@ -62,7 +62,7 @@ class Postgres : public Connector
 
    public:
     /// Returns the dialect of the connector.
-    std::string dialect() const final { return "postgres"; }
+    std::string dialect() const final { return DatabaseParser::POSTGRES; }
 
     /// Drops a table and cleans up, if necessary.
     void drop_table( const std::string& _tname ) final
@@ -84,7 +84,7 @@ class Postgres : public Connector
     /// Returns the number of rows in the table signified by _tname.
     std::int32_t get_nrows( const std::string& _tname ) final
     {
-        return select( {"COUNT(*)"}, _tname, "" )->get_int();
+        return select( { "COUNT(*)" }, _tname, "" )->get_int();
     }
 
     /// Returns a shared_ptr containing a PostgresIterator.
@@ -172,13 +172,13 @@ class Postgres : public Connector
     static std::vector<std::string> typnames_double_precision()
     {
         return {
-            "float4", "float8", "_float4", "_float8", "numeric", "_numeric"};
+            "float4", "float8", "_float4", "_float8", "numeric", "_numeric" };
     }
 
     /// List of all typnames that will be interpreted as int.
     static std::vector<std::string> typnames_int()
     {
-        return {"int8", "int2", "int4", "_int2", "_int4"};
+        return { "int8", "int2", "int4", "_int2", "_int4" };
     }
 
     // -------------------------------

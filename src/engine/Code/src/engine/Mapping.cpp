@@ -165,19 +165,23 @@ std::pair<Int, std::vector<Float>> Mapping::calc_agg_targets(
 // ----------------------------------------------------
 
 std::vector<std::string> Mapping::categorical_columns_to_sql(
-    const std::shared_ptr<const std::vector<strings::String>>& _categories )
-    const
+    const std::shared_ptr<const std::vector<strings::String>>& _categories,
+    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+        _sql_dialect_generator ) const
 {
     assert_true( categorical_names_ );
 
-    const auto mapping_to_sql = [this, &_categories](
+    assert_true( _sql_dialect_generator );
+
+    const auto mapping_to_sql = [this, &_categories, &_sql_dialect_generator](
                                     const size_t _i,
                                     const size_t _weight_num ) -> std::string {
-        const auto name = helpers::SQLGenerator::make_colname(
+        const auto name = _sql_dialect_generator->make_colname(
             make_colname( categorical_names_->at( _i ), _weight_num ) );
 
         return categorical_or_text_column_to_sql(
             _categories,
+            _sql_dialect_generator,
             helpers::SQLGenerator::to_upper( name ),
             categorical_.at( _i ),
             _weight_num,
@@ -191,6 +195,8 @@ std::vector<std::string> Mapping::categorical_columns_to_sql(
 
 std::string Mapping::categorical_or_text_column_to_sql(
     const std::shared_ptr<const std::vector<strings::String>>& _categories,
+    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+        _sql_dialect_generator,
     const std::string& _name,
     const PtrType& _ptr,
     const size_t _weight_num,
@@ -200,11 +206,13 @@ std::string Mapping::categorical_or_text_column_to_sql(
 
     assert_true( _ptr );
 
+    assert_true( _sql_dialect_generator );
+
     const auto pairs = make_pairs( *_ptr, _weight_num );
 
     std::stringstream sql;
 
-    sql << make_table_header( _name, false );
+    sql << _sql_dialect_generator->make_mapping_table_header( _name, false );
 
     for ( size_t i = 0; i < pairs.size(); ++i )
         {
@@ -222,7 +230,9 @@ std::string Mapping::categorical_or_text_column_to_sql(
                 << io::Parser::to_precise_string( p.second ) << ")" << end;
         }
 
-    sql << helpers::SQLGenerator::join_mapping( table_name_, _name, _is_text );
+    assert_true( _sql_dialect_generator );
+
+    sql << _sql_dialect_generator->join_mapping( table_name_, _name, _is_text );
 
     return sql.str();
 }
@@ -230,17 +240,21 @@ std::string Mapping::categorical_or_text_column_to_sql(
 // ----------------------------------------------------
 
 std::string Mapping::discrete_column_to_sql(
+    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+        _sql_dialect_generator,
     const std::string& _name,
     const PtrType& _ptr,
     const size_t _weight_num ) const
 {
     assert_true( _ptr );
 
+    assert_true( _sql_dialect_generator );
+
     const auto pairs = make_pairs( *_ptr, _weight_num );
 
     std::stringstream sql;
 
-    sql << make_table_header( _name, true );
+    sql << _sql_dialect_generator->make_mapping_table_header( _name, true );
 
     for ( size_t i = 0; i < pairs.size(); ++i )
         {
@@ -254,23 +268,31 @@ std::string Mapping::discrete_column_to_sql(
                 << io::Parser::to_precise_string( p.second ) << ")" << end;
         }
 
-    sql << helpers::SQLGenerator::join_mapping( table_name_, _name, false );
+    assert_true( _sql_dialect_generator );
+
+    sql << _sql_dialect_generator->join_mapping( table_name_, _name, false );
 
     return sql.str();
 }
 
 // ----------------------------------------------------
 
-std::vector<std::string> Mapping::discrete_columns_to_sql() const
+std::vector<std::string> Mapping::discrete_columns_to_sql(
+    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+        _sql_dialect_generator ) const
 {
     assert_true( discrete_names_ );
 
-    const auto mapping_to_sql =
-        [this]( const size_t _i, const size_t _weight_num ) -> std::string {
-        const auto name = helpers::SQLGenerator::make_colname(
+    assert_true( _sql_dialect_generator );
+
+    const auto mapping_to_sql = [this, &_sql_dialect_generator](
+                                    const size_t _i,
+                                    const size_t _weight_num ) -> std::string {
+        const auto name = _sql_dialect_generator->make_colname(
             make_colname( discrete_names_->at( _i ), _weight_num ) );
 
         return discrete_column_to_sql(
+            _sql_dialect_generator,
             helpers::SQLGenerator::to_upper( name ),
             discrete_.at( _i ),
             _weight_num );
@@ -1368,23 +1390,6 @@ std::map<Int, std::vector<size_t>> Mapping::make_rownum_map_text(
 
 // ----------------------------------------------------
 
-std::string Mapping::make_table_header(
-    const std::string& _name, const bool _key_is_num ) const
-{
-    std::string sql = "DROP TABLE IF EXISTS \"" + _name + "\";\n\n";
-
-    const std::string key_type = _key_is_num ? "INTEGER" : "TEXT";
-
-    sql += "CREATE TABLE \"" + _name + "\"(key " + key_type +
-           " NOT NULL PRIMARY KEY, value REAL);\n\n";
-
-    sql += "INSERT INTO \"" + _name + "\"(key, value)\nVALUES";
-
-    return sql;
-}
-
-// ----------------------------------------------------
-
 typename Mapping::RownumPair Mapping::match_rownums(
     const std::vector<helpers::DataFrame>& _main_tables,
     const std::vector<helpers::DataFrame>& _peripheral_tables,
@@ -1551,7 +1556,9 @@ MappingAggregation Mapping::parse_aggregation( const std::string& _str ) const
 
 // ----------------------------------------------------
 
-std::vector<std::string> Mapping::text_columns_to_sql() const
+std::vector<std::string> Mapping::text_columns_to_sql(
+    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+        _sql_dialect_generator ) const
 {
     assert_true( text_names_ );
 
@@ -1586,14 +1593,17 @@ std::vector<std::string> Mapping::text_columns_to_sql() const
 
     assert_true( text_names_->size() == vocabulary.size() );
 
-    const auto mapping_to_sql = [this, &vocabulary](
+    assert_true( _sql_dialect_generator );
+
+    const auto mapping_to_sql = [this, &vocabulary, &_sql_dialect_generator](
                                     const size_t _i,
                                     const size_t _weight_num ) -> std::string {
-        const auto name = helpers::SQLGenerator::make_colname(
+        const auto name = _sql_dialect_generator->make_colname(
             make_colname( text_names_->at( _i ), _weight_num ) );
 
         return categorical_or_text_column_to_sql(
             vocabulary.at( _i ),
+            _sql_dialect_generator,
             helpers::SQLGenerator::to_upper( name ),
             text_.at( _i ),
             _weight_num,
@@ -1673,19 +1683,22 @@ Poco::JSON::Object::Ptr Mapping::to_json_obj() const
 // ----------------------------------------------------
 
 std::vector<std::string> Mapping::to_sql(
-    const std::shared_ptr<const std::vector<strings::String>>& _categories )
-    const
+    const std::shared_ptr<const std::vector<strings::String>>& _categories,
+    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+        _sql_dialect_generator ) const
 {
     const auto submapping_to_sql =
-        [&_categories]( const Mapping& _mapping ) -> std::vector<std::string> {
-        return _mapping.to_sql( _categories );
+        [&_categories, &_sql_dialect_generator](
+            const Mapping& _mapping ) -> std::vector<std::string> {
+        return _mapping.to_sql( _categories, _sql_dialect_generator );
     };
 
-    const auto categorical = categorical_columns_to_sql( _categories );
+    const auto categorical =
+        categorical_columns_to_sql( _categories, _sql_dialect_generator );
 
-    const auto discrete = discrete_columns_to_sql();
+    const auto discrete = discrete_columns_to_sql( _sql_dialect_generator );
 
-    const auto text = text_columns_to_sql();
+    const auto text = text_columns_to_sql( _sql_dialect_generator );
 
     const auto all_submappings =
         submappings_ | std::views::transform( submapping_to_sql );

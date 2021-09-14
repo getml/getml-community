@@ -822,10 +822,13 @@ Poco::JSON::Object Pipeline::feature_importances_as_obj() const
 std::vector<std::string> Pipeline::feature_learners_to_sql(
     const std::shared_ptr<const std::vector<strings::String>>& _categories,
     const bool _targets,
-    const bool _subfeatures ) const
+    const bool _subfeatures,
+    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+        _sql_dialect_generator ) const
 {
-    const auto to_sql = [this, _categories, _targets, _subfeatures](
-                            const size_t _i ) -> std::vector<std::string> {
+    const auto to_sql =
+        [this, _categories, _targets, _subfeatures, _sql_dialect_generator](
+            const size_t _i ) -> std::vector<std::string> {
         const auto& fl = feature_learners_.at( _i );
 
         assert_true( fl );
@@ -834,6 +837,7 @@ std::vector<std::string> Pipeline::feature_learners_to_sql(
             _categories,
             _targets,
             _subfeatures,
+            _sql_dialect_generator,
             std::to_string( _i + 1 ) + "_" );
 
         assert_true( all.size() >= fl->num_features() );
@@ -2792,19 +2796,11 @@ void Pipeline::save(
 
     save_preprocessors( tfile );
 
-    std::cout << "Saving feature learners..." << std::endl;
-
     save_feature_learners( tfile );
-
-    std::cout << "Done" << std::endl;
 
     // ------------------------------------------------------------------
 
-    std::cout << "Saving pipeline..." << std::endl;
-
     save_pipeline_json( tfile );
-
-    std::cout << "Done" << std::endl;
 
     // ------------------------------------------------------------------
 
@@ -2829,12 +2825,11 @@ void Pipeline::save(
 
     // ------------------------------------------------------------------
 
-    std::cout << "Saving SQL code..." << std::endl;
+    const auto sql_code =
+        to_sql( _categories, true, true, helpers::SQLDialectParser::SQLITE3 );
 
     utils::SQLDependencyTracker( tfile.path() + "/SQL/" )
-        .save_dependencies( to_sql( _categories, true, true ) );
-
-    std::cout << "Done" << std::endl;
+        .save_dependencies( sql_code );
 
     // ------------------------------------------------------------------
 
@@ -3187,15 +3182,16 @@ Poco::JSON::Object Pipeline::to_monitor(
 // ----------------------------------------------------------------------------
 
 std::vector<std::string> Pipeline::preprocessors_to_sql(
-    const std::shared_ptr<const std::vector<strings::String>>& _categories )
-    const
+    const std::shared_ptr<const std::vector<strings::String>>& _categories,
+    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+        _sql_dialect_generator ) const
 {
     const auto to_sql =
-        [_categories](
+        [_categories, _sql_dialect_generator](
             const std::shared_ptr<const preprocessors::Preprocessor>& _p )
         -> std::vector<std::string> {
         assert_true( _p );
-        return _p->to_sql( _categories );
+        return _p->to_sql( _categories, _sql_dialect_generator );
     };
 
     return stl::join::vector<std::string>(
@@ -3204,7 +3200,10 @@ std::vector<std::string> Pipeline::preprocessors_to_sql(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::string> Pipeline::staging_to_sql( const bool _targets ) const
+std::vector<std::string> Pipeline::staging_to_sql(
+    const bool _targets,
+    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+        _sql_dialect_generator ) const
 {
     const auto needs_targets =
         []( const std::shared_ptr<
@@ -3230,7 +3229,9 @@ std::vector<std::string> Pipeline::staging_to_sql( const bool _targets ) const
     const auto [staging_schema_population, staging_schema_peripheral] =
         make_staging_schemata();
 
-    return helpers::SQLGenerator::make_staging_tables(
+    assert_true( _sql_dialect_generator );
+
+    return _sql_dialect_generator->make_staging_tables(
         population_needs_targets,
         peripheral_needs_targets,
         staging_schema_population,
@@ -3242,20 +3243,26 @@ std::vector<std::string> Pipeline::staging_to_sql( const bool _targets ) const
 std::string Pipeline::to_sql(
     const std::shared_ptr<const std::vector<strings::String>>& _categories,
     const bool _targets,
-    const bool _subfeatures ) const
+    const bool _full_pipeline,
+    const std::string& _dialect ) const
 {
     assert_true(
         feature_learners_.size() == predictor_impl().autofeatures().size() );
 
-    const auto staging =
-        _subfeatures ? staging_to_sql( _targets ) : std::vector<std::string>();
+    const auto sql_dialect_generator =
+        helpers::SQLDialectParser::parse( _dialect );
 
-    const auto preprocessing = _subfeatures
-                                   ? preprocessors_to_sql( _categories )
-                                   : std::vector<std::string>();
+    const auto staging = _full_pipeline
+                             ? staging_to_sql( _targets, sql_dialect_generator )
+                             : std::vector<std::string>();
 
-    const auto features =
-        feature_learners_to_sql( _categories, _targets, _subfeatures );
+    const auto preprocessing =
+        _full_pipeline
+            ? preprocessors_to_sql( _categories, sql_dialect_generator )
+            : std::vector<std::string>();
+
+    const auto features = feature_learners_to_sql(
+        _categories, _targets, _full_pipeline, sql_dialect_generator );
 
     const auto sql =
         stl::join::vector<std::string>( { staging, preprocessing, features } );
@@ -3264,7 +3271,7 @@ std::string Pipeline::to_sql(
 
     const auto target_names = _targets ? targets() : std::vector<std::string>();
 
-    return helpers::SQLGenerator::make_sql(
+    return sql_dialect_generator->make_sql(
         modified_population_schema()->name_,
         autofeatures,
         sql,

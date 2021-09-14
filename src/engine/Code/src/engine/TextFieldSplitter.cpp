@@ -193,40 +193,17 @@ Poco::JSON::Object::Ptr TextFieldSplitter::to_json_obj() const
 // ----------------------------------------------------
 
 std::vector<std::string> TextFieldSplitter::to_sql(
-    const std::shared_ptr<const std::vector<strings::String>>& _categories )
-    const
+    const std::shared_ptr<const std::vector<strings::String>>& _categories,
+    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+        _sql_dialect_generator ) const
 {
+    assert_true( _sql_dialect_generator );
+
     const auto split =
-        [this]( const std::shared_ptr<helpers::ColumnDescription>& _desc )
+        [_sql_dialect_generator](
+            const std::shared_ptr<helpers::ColumnDescription>& _desc )
         -> std::string {
-        assert_true( _desc );
-
-        const auto staging_table = helpers::SQLGenerator::to_upper(
-            helpers::SQLGenerator::make_staging_table_name( _desc->table_ ) );
-
-        const auto colname = helpers::SQLGenerator::to_lower(
-            helpers::SQLGenerator::make_colname( _desc->name_ ) );
-
-        const auto new_table =
-            staging_table + "__" + helpers::SQLGenerator::to_upper( colname );
-
-        return "DROP TABLE IF EXISTS \"" + new_table +
-               "\";\n\n"
-               "CREATE TABLE \"" +
-               new_table +
-               "\" AS\nWITH RECURSIVE\nsplit_text_field(i, field, word, "
-               "rownum, n) AS (\n"
-               "SELECT 1, field, get_word(field, 1), rownum, num_words(field)\n"
-               "FROM ( SELECT t1.\"" +
-               colname + "\" AS field, rowid AS rownum FROM \"" +
-               staging_table +
-               "\" t1 )\n"
-               "UNION ALL\n"
-               "SELECT i + 1, field, get_word(field, i + 1), rownum, n FROM "
-               "split_text_field\n"
-               "WHERE i < n\n)\n"
-               "SELECT rownum, word AS \"" +
-               colname + "\" FROM split_text_field;\n\n\n";
+        return _sql_dialect_generator->split_text_fields( _desc );
     };
 
     return stl::collect::vector<std::string>(

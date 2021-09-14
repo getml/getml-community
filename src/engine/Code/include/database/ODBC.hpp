@@ -78,7 +78,7 @@ class ODBC : public Connector
 
    public:
     /// Returns the dialect of the connector.
-    std::string dialect() const final { return "odbc"; }
+    std::string dialect() const final { return DatabaseParser::ODBC_DIALECT; }
 
     /// Returns the number of rows in the table signified by _tname.
     std::int32_t get_nrows( const std::string& _tname ) final

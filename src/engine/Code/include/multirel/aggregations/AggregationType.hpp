@@ -9,69 +9,74 @@ namespace aggregations
 
 namespace AggregationType
 {
+using Aggregation = helpers::enums::Parser<helpers::enums::Aggregation>;
+
 struct Avg
 {
-    static const std::string type() { return "AVG"; }
+    static const std::string type() { return Aggregation::AVG; }
 };
 
 struct Count
 {
-    static const std::string type() { return "COUNT"; }
+    static const std::string type() { return Aggregation::COUNT; }
 };
 
 struct CountDistinct
 {
-    static const std::string type() { return "COUNT DISTINCT"; }
+    static const std::string type() { return Aggregation::COUNT_DISTINCT; }
 };
 
 struct CountMinusCountDistinct
 {
-    static const std::string type() { return "COUNT MINUS COUNT DISTINCT"; }
+    static const std::string type()
+    {
+        return Aggregation::COUNT_MINUS_COUNT_DISTINCT;
+    }
 };
 
 struct First
 {
-    static const std::string type() { return "FIRST"; }
+    static const std::string type() { return Aggregation::FIRST; }
 };
 
 struct Last
 {
-    static const std::string type() { return "LAST"; }
+    static const std::string type() { return Aggregation::LAST; }
 };
 
 struct Max
 {
-    static const std::string type() { return "MAX"; }
+    static const std::string type() { return Aggregation::MAX; }
 };
 
 struct Median
 {
-    static const std::string type() { return "MEDIAN"; }
+    static const std::string type() { return Aggregation::MEDIAN; }
 };
 
 struct Min
 {
-    static const std::string type() { return "MIN"; }
+    static const std::string type() { return Aggregation::MIN; }
 };
 
 struct Skewness
 {
-    static const std::string type() { return "SKEW"; }
+    static const std::string type() { return Aggregation::SKEW; }
 };
 
 struct Stddev
 {
-    static const std::string type() { return "STDDEV"; }
+    static const std::string type() { return Aggregation::STDDEV; }
 };
 
 struct Sum
 {
-    static const std::string type() { return "SUM"; }
+    static const std::string type() { return Aggregation::SUM; }
 };
 
 struct Var
 {
-    static const std::string type() { return "VAR"; }
+    static const std::string type() { return Aggregation::VAR; }
 };
 
 // ----------------------------------------------------------------------------
