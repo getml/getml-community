@@ -95,6 +95,9 @@ std::string SparkSQLGenerator::aggregation(
             case enums::Aggregation::skew:
                 return "SKEWNESS( " + _colname1 + " )";
 
+            case enums::Aggregation::stddev:
+                return "STDDEV_POP( " + _colname1 + " )";
+
             case enums::Aggregation::time_since_first_maximum:
                 assert_true( _colname2 );
                 return first_or_last_optimum_aggregation(
@@ -120,11 +123,11 @@ std::string SparkSQLGenerator::aggregation(
                 return make_trend_aggregation( _colname1, _colname2.value() );
 
             case enums::Aggregation::var:
-                return "VARIANCE( " + _colname1 + " )";
+                return "VAR_POP( " + _colname1 + " )";
 
             case enums::Aggregation::variation_coefficient:
                 return "CASE WHEN AVG( " + _colname1 +
-                       " ) != 0 THEN VARIANCE( " + _colname1 + " ) / AVG( " +
+                       " ) != 0 THEN VAR_POP( " + _colname1 + " ) / AVG( " +
                        _colname1 + " ) ELSE NULL END";
 
             default:
@@ -577,11 +580,12 @@ std::string SparkSQLGenerator::join_mapping(
         std::stringstream sql;
 
         sql << "CREATE TABLE `" << table_name << "`" << std::endl
-            << "SELECT t1.*, t3.`avg_value` AS `" << mapping_col << "`"
-            << std::endl
+            << "SELECT t1.*, COALESCE( t3.`avg_value`, 0.0 ) AS `"
+            << mapping_col << "`" << std::endl
             << "FROM `" << temp_table_name << "` t1" << std::endl
             << "LEFT JOIN ( SELECT t4.`" << orig_col
-            << "`, AVG( t2.`value` ) AS `avg_value`" << std::endl
+            << "`, AVG( COALESCE( t2.`value`, 0.0 ) ) AS `avg_value`"
+            << std::endl
             << "FROM `" << temp_table_name << "` t4" << std::endl
             << "LEFT JOIN `" << SQLGenerator::to_upper( mapping_col ) << "` t2"
             << std::endl
@@ -603,7 +607,8 @@ std::string SparkSQLGenerator::join_mapping(
         std::stringstream sql;
 
         sql << "CREATE TABLE `" << table_name << "`" << std::endl
-            << "SELECT t1.*, t2.`value` AS `" << mapping_col << "`" << std::endl
+            << "SELECT t1.*, COALESCE( t2.`value`, 0.0 ) AS `" << mapping_col
+            << "`" << std::endl
             << "FROM `" << temp_table_name << "` t1" << std::endl
             << "LEFT JOIN `" << SQLGenerator::to_upper( mapping_col ) << "` t2"
             << std::endl
@@ -661,11 +666,11 @@ std::string SparkSQLGenerator::make_ewma_aggregation(
     const auto make_ewma = []( const std::string& _value,
                                const std::string& _timestamp,
                                const Float _half_life ) -> std::string {
-        const auto exp = "EXP( " + _timestamp + " * LOG( 0.5 ) / " +
+        const auto exp = "EXP( ( " + _timestamp + " ) * LOG( 0.5 ) / " +
                          std::to_string( _half_life ) + " )";
 
         return "/* exponentially weighted moving average */ CASE WHEN COUNT( " +
-               _value + " ) > 0 THEN SUM( " + _value + " * " + exp +
+               _value + " ) > 0 THEN SUM( ( " + _value + " ) * " + exp +
                " ) / SUM( " + exp + " ) ELSE NULL END";
     };
 
@@ -858,10 +863,10 @@ std::string SparkSQLGenerator::make_mapping_table_header(
         << std::endl
         << std::endl;
 
-    const std::string key_type = _key_is_num ? "REAL" : "STRING";
+    const std::string key_type = _key_is_num ? "DOUBLE" : "STRING";
 
     sql << "CREATE TABLE " << quote1 << _name << quote2 << "(key " << key_type
-        << " NOT NULL, value REAL);" << std::endl
+        << " NOT NULL, value DOUBLE);" << std::endl
         << std::endl;
 
     sql << "INSERT INTO " << quote1 << _name << quote2 << " (key, value)"
@@ -908,7 +913,7 @@ std::vector<std::string> SparkSQLGenerator::make_staging_columns(
                 ? edit_colname( _colname, "t1" )
                 : "to_timestamp( " + edit_colname( _colname, "t1" ) + " )";
 
-        return "CAST( " + epoch_time + " AS REAL ) AS `" +
+        return "CAST( " + epoch_time + " AS DOUBLE ) AS `" +
                SQLGenerator::to_lower( make_colname( _colname ) ) + "`";
     };
 
@@ -918,7 +923,7 @@ std::vector<std::string> SparkSQLGenerator::make_staging_columns(
         [cast_column]( const std::vector<std::string>& _colnames )
         -> std::vector<std::string> {
         const auto cast =
-            std::bind( cast_column, std::placeholders::_1, "REAL" );
+            std::bind( cast_column, std::placeholders::_1, "DOUBLE" );
 
         return stl::collect::vector<std::string>(
             _colnames | std::views::filter( SQLGenerator::include_column ) |
@@ -1116,7 +1121,7 @@ std::string SparkSQLGenerator::make_select(
                           _autofeatures.at( i ), "feature_", "f_" );
 
             sql << begin << "CAST( COALESCE( " << alias << ".`"
-                << _autofeatures.at( i ) << "`, 0.0 ) AS REAL ) AS `"
+                << _autofeatures.at( i ) << "`, 0.0 ) AS DOUBLE ) AS `"
                 << _autofeatures.at( i ) << "`" << end << std::endl;
         }
 
@@ -1128,7 +1133,8 @@ std::string SparkSQLGenerator::make_select(
                 "t1.`" + modified_colnames.at( i ) + "`";
 
             const std::string data_type =
-                ( i < _targets.size() + _numerical.size() ? "REAL" : "STRING" );
+                ( i < _targets.size() + _numerical.size() ? "DOUBLE"
+                                                          : "STRING" );
 
             const bool no_comma = ( i == manual.size() - 1 );
 
