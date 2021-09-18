@@ -824,7 +824,7 @@ std::string SparkSQLGenerator::make_joins(
 
     sql << "FROM `" << output_name << "` t1" << std::endl;
 
-    sql << "LEFT JOIN `" << input_name << "` t2" << std::endl;
+    sql << "INNER JOIN `" << input_name << "` t2" << std::endl;
 
     if ( _output_join_keys_name == Macros::no_join_key() ||
          _output_join_keys_name == Macros::self_join_key() )
