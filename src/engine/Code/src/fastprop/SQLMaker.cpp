@@ -354,7 +354,7 @@ std::string SQLMaker::value_to_be_aggregated(
                     _abstract_feature.output_col_ );
 
             case enums::DataUsed::not_applicable:
-                return "*";
+                return "t2.rowid";
 
             case enums::DataUsed::same_units_categorical:
                 {

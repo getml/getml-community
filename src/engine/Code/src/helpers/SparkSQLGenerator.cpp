@@ -51,6 +51,9 @@ std::string SparkSQLGenerator::aggregation(
                 return first_last_aggregation(
                     _colname1, _colname2.value(), true );
 
+            case enums::Aggregation::kurtosis:
+                return "KURTOSIS(" + _colname1 + " ) + 3.0";
+
             case enums::Aggregation::last:
                 assert_true( _colname2 );
                 return first_last_aggregation(
