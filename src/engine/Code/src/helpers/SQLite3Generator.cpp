@@ -13,12 +13,8 @@ std::string SQLite3Generator::aggregation(
         {
             assert_true( _colname2 );
 
-            const auto ts_name = "t2." + quotechar1() +
-                                 make_colname( _colname2.value() ) +
-                                 quotechar2();
-
-            return "CASE WHEN COUNT( * ) > 1 THEN ( MAX( " + ts_name +
-                   " ) - MIN ( " + ts_name +
+            return "CASE WHEN COUNT( * ) > 1 THEN ( MAX( " + _colname2.value() +
+                   " ) - MIN ( " + _colname2.value() +
                    " ) ) / ( COUNT( * ) - 1 )  ELSE 0 END";
         }
 
@@ -495,14 +491,13 @@ std::vector<std::string> SQLite3Generator::make_staging_columns(
 
     // ------------------------------------------------------------------------
 
-    return stl::join::vector<std::string>(
-        { targets,
-          categoricals,
-          discretes,
-          join_keys,
-          numericals,
-          text,
-          time_stamps } );
+    return stl::join::vector<std::string>( {targets,
+                                            categoricals,
+                                            discretes,
+                                            join_keys,
+                                            numericals,
+                                            text,
+                                            time_stamps} );
 
     // ------------------------------------------------------------------------
 }
@@ -594,8 +589,8 @@ std::string SQLite3Generator::make_select(
     const std::vector<std::string>& _categorical,
     const std::vector<std::string>& _numerical ) const
 {
-    const auto manual = stl::join::vector<std::string>(
-        { _targets, _numerical, _categorical } );
+    const auto manual =
+        stl::join::vector<std::string>( {_targets, _numerical, _categorical} );
 
     const auto modified_colnames =
         helpers::Macros::modify_colnames( manual, this );
@@ -714,8 +709,8 @@ std::vector<std::string> SQLite3Generator::make_staging_tables(
 {
     // ------------------------------------------------------------------------
 
-    auto sql = std::vector<std::string>( { make_staging_table(
-        _population_needs_targets, _population_schema ) } );
+    auto sql = std::vector<std::string>(
+        {make_staging_table( _population_needs_targets, _population_schema )} );
 
     // ------------------------------------------------------------------------
 

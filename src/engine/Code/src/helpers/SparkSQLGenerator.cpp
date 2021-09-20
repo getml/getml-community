@@ -147,10 +147,8 @@ std::string SparkSQLGenerator::aggregation(
 std::string SparkSQLGenerator::avg_time_between_aggregation(
     const std::string& _colname1, const std::string& _colname2 ) const
 {
-    const auto ts_name = "t2." + quotechar1() + _colname2 + quotechar2();
-
-    return "CASE WHEN COUNT( * ) > 1 THEN ( MAX( " + ts_name + " ) - MIN ( " +
-           ts_name + " ) ) / ( COUNT( * ) - 1 )  ELSE 0 END";
+    return "CASE WHEN COUNT( * ) > 1 THEN ( MAX( " + _colname2 + " ) - MIN ( " +
+           _colname2 + " ) ) / ( COUNT( * ) - 1 )  ELSE 0 END";
 }
 
 // ----------------------------------------------------------------------------
@@ -580,8 +578,8 @@ std::string SparkSQLGenerator::join_mapping(
 
         const auto mapping_table = SQLGenerator::to_upper( mapping_col );
 
-        const auto split =
-            "SPLIT( t4.`" + orig_col + "`, '[" + make_separators() + "]' )";
+        const auto split = "SPLIT( lower( t4.`" + orig_col + "` ), '[" +
+                           make_separators() + "]' )";
 
         const auto contains = "ARRAY_CONTAINS( " + split + ", t2.`key` )";
 

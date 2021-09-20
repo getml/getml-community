@@ -286,10 +286,15 @@ std::string SQLMaker::select_statement(
     if ( _abstract_feature.aggregation_ ==
          enums::Aggregation::avg_time_between )
         {
+            const auto ts_name = "t2." + sql_dialect_generator_->quotechar1() +
+                                 sql_dialect_generator_->make_colname(
+                                     input_.time_stamps_name() ) +
+                                 sql_dialect_generator_->quotechar2();
+
             return sql_dialect_generator_->aggregation(
                 _abstract_feature.aggregation_,
                 value_to_be_aggregated( _abstract_feature ),
-                input_.time_stamps_name() );
+                ts_name );
         }
 
     if ( is_first_last( _abstract_feature.aggregation_ ) )
