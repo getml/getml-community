@@ -575,6 +575,11 @@ std::string SparkSQLGenerator::join_mapping(
                             &temp_table_name,
                             &mapping_col,
                             &orig_col]() -> std::string {
+        constexpr auto avg_value =
+            "AVG( COALESCE( t2.`value`, 0.0 ) ) AS `avg_value`";
+
+        const auto mapping_table = SQLGenerator::to_upper( mapping_col );
+
         const auto split =
             "SPLIT( t4.`" + orig_col + "`, '[" + make_separators() + "]' )";
 
@@ -583,18 +588,17 @@ std::string SparkSQLGenerator::join_mapping(
         std::stringstream sql;
 
         sql << "CREATE TABLE `" << table_name << "`" << std::endl
-            << "SELECT t1.*, COALESCE( t3.`avg_value`, 0.0 ) AS `"
+            << "SELECT t1.*, COALESCE( t2.`avg_value`, 0.0 ) AS `"
             << mapping_col << "`" << std::endl
             << "FROM `" << temp_table_name << "` t1" << std::endl
-            << "LEFT JOIN ( SELECT t4.`" << orig_col
-            << "`, AVG( COALESCE( t2.`value`, 0.0 ) ) AS `avg_value`"
-            << std::endl
-            << "FROM `" << temp_table_name << "` t4" << std::endl
-            << "LEFT JOIN `" << SQLGenerator::to_upper( mapping_col ) << "` t2"
-            << std::endl
-            << "ON " << contains << std::endl
-            << "GROUP BY t4.`" << orig_col + "` ) AS t3" << std::endl
-            << "ON t1.`" << orig_col << "` = t3.`" << orig_col << "`;"
+            << "LEFT JOIN (" << std::endl
+            << "    SELECT t4.`" << orig_col << "`, " << avg_value << std::endl
+            << "    FROM `" << temp_table_name << "` t4" << std::endl
+            << "    LEFT JOIN `" << mapping_table << "` t3" << std::endl
+            << "    ON " << contains << std::endl
+            << "    GROUP BY t4.`" << orig_col << "`" << std::endl
+            << ") AS t2" << std::endl
+            << "ON t1.`" << orig_col << "` = t2.`" << orig_col << "`;"
             << std::endl
             << std::endl;
 
@@ -976,14 +980,13 @@ std::vector<std::string> SparkSQLGenerator::make_staging_columns(
 
     // ------------------------------------------------------------------------
 
-    return stl::join::vector<std::string>(
-        { targets,
-          categoricals,
-          discretes,
-          join_keys,
-          numericals,
-          text,
-          time_stamps } );
+    return stl::join::vector<std::string>( {targets,
+                                            categoricals,
+                                            discretes,
+                                            join_keys,
+                                            numericals,
+                                            text,
+                                            time_stamps} );
 
     // ------------------------------------------------------------------------
 }
@@ -1088,8 +1091,8 @@ std::string SparkSQLGenerator::make_select(
     const std::vector<std::string>& _categorical,
     const std::vector<std::string>& _numerical ) const
 {
-    const auto manual = stl::join::vector<std::string>(
-        { _targets, _numerical, _categorical } );
+    const auto manual =
+        stl::join::vector<std::string>( {_targets, _numerical, _categorical} );
 
     const auto modified_colnames =
         helpers::Macros::modify_colnames( manual, this );
@@ -1278,8 +1281,8 @@ std::vector<std::string> SparkSQLGenerator::make_staging_tables(
 {
     // ------------------------------------------------------------------------
 
-    auto sql = std::vector<std::string>( { make_staging_table(
-        _population_needs_targets, _population_schema ) } );
+    auto sql = std::vector<std::string>(
+        {make_staging_table( _population_needs_targets, _population_schema )} );
 
     // ------------------------------------------------------------------------
 
