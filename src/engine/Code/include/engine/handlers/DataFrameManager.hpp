@@ -103,6 +103,13 @@ class DataFrameManager
     /// Freezes the data frame (making it immutable).
     void freeze( const std::string& _name, Poco::Net::StreamSocket* _socket );
 
+    /// Creates a new data frame from an Arrow DataFrame.
+    void from_arrow(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        const bool _append,
+        Poco::Net::StreamSocket* _socket );
+
     /// Creates a new data frame from a set of CSV files.
     void from_csv(
         const std::string& _name,
@@ -119,6 +126,13 @@ class DataFrameManager
 
     /// Creates a new data frame from a JSON string.
     void from_json(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        const bool _append,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Creates a new DataFrame from a parquet file.
+    void from_parquet(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         const bool _append,
@@ -316,6 +330,9 @@ class DataFrameManager
     void summarize(
         const std::string& _name, Poco::Net::StreamSocket* _socket );
 
+    /// Writes the dataframe to Arrow.
+    void to_arrow( const std::string& _name, Poco::Net::StreamSocket* _socket );
+
     /// Writes the dataframe to CSV.
     void to_csv(
         const std::string& _name,
@@ -328,8 +345,20 @@ class DataFrameManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
+    /// Writes the dataframe into a parquet file.
+    void to_parquet(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Writes the dataframe to CSV files located in an S3 bucket.
     void to_s3(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Writes a view to an arrow.Table.
+    void view_to_arrow(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
@@ -342,6 +371,12 @@ class DataFrameManager
 
     /// Writes a view into a database.
     void view_to_db(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Writes a view to a parquet file.
+    void view_to_parquet(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
@@ -367,7 +402,7 @@ class DataFrameManager
         const std::string& _name,
         const std::string& _role,
         const std::string& _unit,
-        const std::vector<std::string>& _vec,
+        const containers::Column<strings::String>& _col,
         containers::DataFrame* _df,
         multithreading::WeakWriteLock* _weak_write_lock,
         Poco::Net::StreamSocket* _socket );
@@ -377,7 +412,7 @@ class DataFrameManager
         const std::string& _name,
         const std::string& _role,
         const std::string& _unit,
-        const std::vector<std::string>& _vec,
+        const containers::Column<strings::String>& _col,
         const std::shared_ptr<containers::Encoding>& _local_categories,
         const std::shared_ptr<containers::Encoding>& _local_join_keys_encoding,
         containers::DataFrame* _df ) const;
@@ -387,7 +422,7 @@ class DataFrameManager
         const std::string& _name,
         const std::string& _role,
         const std::string& _unit,
-        const std::vector<std::string>& _vec,
+        const containers::Column<strings::String>& _col,
         containers::DataFrame* _df,
         multithreading::WeakWriteLock* _weak_write_lock ) const;
 

@@ -17,10 +17,6 @@ struct Sender
     static void send(
         const ULong _size, const T* _data, Poco::Net::StreamSocket* _socket );
 
-    /// Sends a bool column to the client
-    static void send_boolean_column(
-        const std::vector<bool>& _col, Poco::Net::StreamSocket* _socket );
-
     /// Sends a categorical column to the client
     static void send_categorical_column(
         const std::vector<std::string>& _col,

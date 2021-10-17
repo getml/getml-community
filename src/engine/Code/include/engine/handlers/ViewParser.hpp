@@ -71,6 +71,16 @@ class ViewParser
 
     // ------------------------------------------------------------------------
 
+   public:
+    /// Expresses the View as a arrow::Table.
+    std::shared_ptr<arrow::Table> to_table( const Poco::JSON::Object& _obj )
+    {
+        return ArrowHandler( categories_, join_keys_encoding_ )
+            .df_to_table( parse( _obj ) );
+    }
+
+    // ------------------------------------------------------------------------
+
    private:
     /// Adds a new column to the data frame.
     void add_column(

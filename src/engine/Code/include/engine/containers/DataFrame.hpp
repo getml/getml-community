@@ -245,6 +245,12 @@ class DataFrame
         return categorical( 0 );
     }
 
+    /// Trivial (const) accessor
+    const std::vector<Column<Int>> &categoricals() const
+    {
+        return categoricals_;
+    }
+
     /// Trivial accessor
     const Encoding &categories() const { return *categories_.get(); }
 
@@ -464,7 +470,7 @@ class DataFrame
         return categorical( 0 );
     }
 
-    /// Trivial accessor
+    /// Trivial (const) accessor
     const std::vector<Column<Int>> &join_keys() const { return join_keys_; }
 
     /// Primitive abstraction for member join_keys_encoding_
@@ -546,6 +552,9 @@ class DataFrame
         return numerical( 0 );
     }
 
+    /// Trivial (const) accessor
+    const std::vector<Column<Float>> &numericals() const { return numericals_; }
+
     /// Trivial setter
     void set_build_history( Poco::JSON::Object::Ptr _build_history )
     {
@@ -597,6 +606,9 @@ class DataFrame
         return target( 0 );
     }
 
+    /// Trivial (const) accessor
+    const std::vector<Column<Float>> &targets() const { return targets_; }
+
     /// Trivial accessor
     template <
         typename T,
@@ -625,6 +637,9 @@ class DataFrame
         throw_column_does_not_exist( _name, "text column" );
         return text( 0 );
     }
+
+    /// Trivial (const) accessor
+    const std::vector<Column<strings::String>> &text() const { return text_; }
 
     /// Trivial accessor
     template <
@@ -705,6 +720,12 @@ class DataFrame
     }
 
     /// Trivial accessor
+    const std::vector<Column<Float>> &unused_floats() const
+    {
+        return unused_floats_;
+    }
+
+    /// Trivial accessor
     const Column<strings::String> &unused_string(
         const std::string &_name ) const
     {
@@ -718,6 +739,12 @@ class DataFrame
 
         throw_column_does_not_exist( _name, "unused string column" );
         return unused_string( 0 );
+    }
+
+    /// Trivial (const) accessor
+    const std::vector<Column<strings::String>> &unused_strings() const
+    {
+        return unused_strings_;
     }
 
     // -------------------------------

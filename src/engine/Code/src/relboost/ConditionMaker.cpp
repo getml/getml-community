@@ -321,7 +321,8 @@ std::string ConditionMaker::condition_smaller(
 
                     const std::string condition =
                         "( " + colname + " NOT IN " +
-                        list_categories( _categories, _split ) + " )";
+                        list_categories( _categories, _split ) + " OR " +
+                        colname + " IS NULL )";
 
                     return condition;
                 }
@@ -335,7 +336,8 @@ std::string ConditionMaker::condition_smaller(
 
                     const std::string condition =
                         "( " + colname + " NOT IN " +
-                        list_categories( _categories, _split ) + " )";
+                        list_categories( _categories, _split ) + " OR " +
+                        colname + " IS NULL )";
 
                     return condition;
                 }

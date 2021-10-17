@@ -129,6 +129,24 @@ class Aggregations
     }
 
     /// Counts the non-null number of entries.
+    static Float count_categorical( const std::vector<strings::String>& _vec )
+    {
+        Float result = 0.0;
+
+        for ( const auto& str : _vec )
+            {
+                if ( NullChecker::is_null( str.str() ) )
+                    {
+                        continue;
+                    }
+
+                ++result;
+            }
+
+        return result;
+    }
+
+    /// Counts the non-null number of entries.
     static Float count_categorical( const std::vector<Int>& _vec )
     {
         Float result = 0.0;
@@ -203,9 +221,9 @@ class Aggregations
         const Float _half_life, IteratorType _begin, IteratorType _end )
     {
 #if ( defined( _WIN32 ) || defined( _WIN64 ) )
-    const Float log05 = std::log( 0.5 );
+        const Float log05 = std::log( 0.5 );
 #else
-    constexpr Float log05 = std::log( 0.5 );
+        constexpr Float log05 = std::log( 0.5 );
 #endif
 
         const auto get_first = [_half_life, log05](

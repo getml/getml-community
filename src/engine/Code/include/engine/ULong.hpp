@@ -3,7 +3,7 @@
 
 namespace engine
 {
-typedef std::uint_least64_t ULong;
+typedef std::uint64_t ULong;
 }
 
 #endif  // ENGINE_ULONG_HPP_

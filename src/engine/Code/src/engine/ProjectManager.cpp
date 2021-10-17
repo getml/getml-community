@@ -6,10 +6,14 @@ namespace handlers
 {
 // ------------------------------------------------------------------------
 
-void ProjectManager::add_data_frame(
-    const std::string& _name, Poco::Net::StreamSocket* _socket )
+void ProjectManager::add_data_frame_from_arrow(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
 {
-    data_frame_manager_->add_data_frame( _name, _socket );
+    const auto append = JSON::get_value<bool>( _cmd, "append_" );
+
+    data_frame_manager().from_arrow( _name, _cmd, append, _socket );
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
@@ -74,6 +78,22 @@ void ProjectManager::add_data_frame_from_json(
     const auto append = JSON::get_value<bool>( _cmd, "append_" );
 
     data_frame_manager_->from_json( _name, _cmd, append, _socket );
+
+    multithreading::ReadLock read_lock( read_write_lock_ );
+
+    post( "dataframe", data_frames()[_name].to_monitor() );
+}
+
+// ------------------------------------------------------------------------
+
+void ProjectManager::add_data_frame_from_parquet(
+    const std::string& _name,
+    const Poco::JSON::Object& _cmd,
+    Poco::Net::StreamSocket* _socket )
+{
+    const auto append = JSON::get_value<bool>( _cmd, "append_" );
+
+    data_frame_manager().from_parquet( _name, _cmd, append, _socket );
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 

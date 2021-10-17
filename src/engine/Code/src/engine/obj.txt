@@ -1,6 +1,7 @@
 set(
     ENGINE_OBJ
     ${ENGINE_SOURCE_DIRECTORY}/AggOpParser.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/ArrowHandler.cpp
     ${ENGINE_SOURCE_DIRECTORY}/BoolOpParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/CatOpParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DatabaseManager.cpp

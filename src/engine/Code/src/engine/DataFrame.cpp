@@ -2422,16 +2422,17 @@ Schema DataFrame::to_schema( const bool _separate_discrete ) const
     const auto unused_strings = stl::collect::vector<std::string>(
         unused_strings_ | std::views::transform( get_name ) );
 
-    return Schema{.categoricals_ = categoricals,
-                  .discretes_ = discretes,
-                  .join_keys_ = join_keys,
-                  .name_ = name_,
-                  .numericals_ = numericals,
-                  .targets_ = targets,
-                  .text_ = text,
-                  .time_stamps_ = time_stamps,
-                  .unused_floats_ = unused_floats,
-                  .unused_strings_ = unused_strings};
+    return Schema{
+        .categoricals_ = categoricals,
+        .discretes_ = discretes,
+        .join_keys_ = join_keys,
+        .name_ = name_,
+        .numericals_ = numericals,
+        .targets_ = targets,
+        .text_ = text,
+        .time_stamps_ = time_stamps,
+        .unused_floats_ = unused_floats,
+        .unused_strings_ = unused_strings };
 }
 
 // ----------------------------------------------------------------------------

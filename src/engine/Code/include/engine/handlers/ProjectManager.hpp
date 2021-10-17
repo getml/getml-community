@@ -65,19 +65,14 @@ class ProjectManager
     // ------------------------------------------------------------------------
 
    public:
-    /// Adds a new data frame
-    void add_data_frame(
-        const std::string& _name, Poco::Net::StreamSocket* _socket );
-
-    /// Creates a new data frame from one or several CSV files.
-    void add_data_frame_from_csv(
+    /// Adds a new data frame read from an arrow table.
+    void add_data_frame_from_arrow(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
-    /// Creates a new data frame from one or several CSV files located in an S3
-    /// bucket.
-    void add_data_frame_from_s3(
+    /// Creates a new data frame from one or several CSV files.
+    void add_data_frame_from_csv(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
@@ -94,8 +89,21 @@ class ProjectManager
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );
 
+    /// Adds a new data frame read from a parquet file.
+    void add_data_frame_from_parquet(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
     /// Adds a new data frame generated from a query.
     void add_data_frame_from_query(
+        const std::string& _name,
+        const Poco::JSON::Object& _cmd,
+        Poco::Net::StreamSocket* _socket );
+
+    /// Creates a new data frame from one or several CSV files located in an S3
+    /// bucket.
+    void add_data_frame_from_s3(
         const std::string& _name,
         const Poco::JSON::Object& _cmd,
         Poco::Net::StreamSocket* _socket );

@@ -4,6 +4,16 @@
 // ----------------------------------------------------------------------------
 // Dependencies
 
+#include <cstdint>
+#include <iostream>
+#include <vector>
+
+// For some weird reason, there are
+// some conflicts between sql.h and
+// arrow. These conflicts can be resolved
+// by including arrow/api.h before sql.h.
+#include <arrow/api.h>
+
 #include <array>
 #include <chrono>
 #include <cmath>
@@ -23,6 +33,7 @@
 #endif
 
 #include <libpq-fe.h>
+
 #include <sql.h>
 #include <sqlext.h>
 

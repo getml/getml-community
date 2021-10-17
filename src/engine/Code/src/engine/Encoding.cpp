@@ -36,7 +36,53 @@ Int Encoding::insert( const strings::String& _val )
 
 // ----------------------------------------------------------------------------
 
-Int Encoding::operator[]( const strings::String& _val )
+const strings::String& Encoding::int_to_string( const Int _i ) const
+{
+    if ( _i < 0 || static_cast<size_t>( _i ) >= size() )
+        {
+            return null_value_;
+        }
+
+    assert_true( size() > 0 );
+
+    assert_true( static_cast<size_t>( _i ) < size() );
+
+    if ( subencoding_ )
+        {
+            if ( _i < subsize_ )
+                {
+                    return ( *subencoding_ )[_i];
+                }
+            else
+                {
+                    return ( *vector_ )[_i - subsize_];
+                }
+        }
+    else
+        {
+            return ( *vector_ )[_i];
+        }
+}
+
+// ----------------------------------------------------------------------------
+
+Encoding& Encoding::operator=( const std::vector<std::string>& _vector )
+{
+    assert_true( !subencoding_ );
+
+    clear();
+
+    for ( const auto& val : _vector )
+        {
+            ( *this )[val];
+        }
+
+    return *this;
+}
+
+// ----------------------------------------------------------------------------
+
+Int Encoding::string_to_int( const strings::String& _val )
 {
     // -----------------------------------
     // If this is a NULL value, return -1.
@@ -78,7 +124,7 @@ Int Encoding::operator[]( const strings::String& _val )
 
 // ----------------------------------------------------------------------------
 
-Int Encoding::operator[]( const strings::String& _val ) const
+Int Encoding::string_to_int( const strings::String& _val ) const
 {
     // -----------------------------------
     // If this is a NULL value, return -1.
@@ -118,22 +164,6 @@ Int Encoding::operator[]( const strings::String& _val ) const
         {
             return it->second;
         }
-}
-
-// ----------------------------------------------------------------------------
-
-Encoding& Encoding::operator=( const std::vector<std::string>& _vector )
-{
-    assert_true( !subencoding_ );
-
-    clear();
-
-    for ( const auto& val : _vector )
-        {
-            ( *this )[val];
-        }
-
-    return *this;
 }
 
 // ----------------------------------------------------------------------------

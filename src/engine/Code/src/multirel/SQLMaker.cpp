@@ -29,7 +29,8 @@ std::string SQLMaker::condition_greater(
                         _split.data_used );
 
                     return "( " + name + " NOT IN " +
-                           list_categories( _categories, _split ) + " )";
+                           list_categories( _categories, _split ) + " OR " +
+                           name + " IS NULL )";
                 }
 
             case enums::DataUsed::x_perip_discrete:

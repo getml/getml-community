@@ -6,48 +6,6 @@ namespace communication
 {
 // ------------------------------------------------------------------------
 
-void Sender::send_boolean_column(
-    const std::vector<bool>& _col, Poco::Net::StreamSocket* _socket )
-{
-    // ------------------------------------------------
-    // Send dimensions of matrix
-
-    std::array<Int, 2> shape;
-
-    std::get<0>( shape ) = static_cast<Int>( _col.size() );
-    std::get<1>( shape ) = static_cast<Int>( 1 );
-
-    Sender::send<Int>( 2 * sizeof( Int ), shape.data(), _socket );
-
-    // ------------------------------------------------
-    // Transform to integer
-
-    auto int_col = std::vector<Int>( _col.size() );
-
-    const auto op = []( const bool val ) {
-        if ( val )
-            {
-                return 1;
-            }
-        else
-            {
-                return 0;
-            }
-    };
-
-    std::transform( _col.begin(), _col.end(), int_col.begin(), op );
-
-    // ------------------------------------------------
-    // Send actual data
-
-    Sender::send<Int>(
-        int_col.size() * sizeof( Int ), int_col.data(), _socket );
-
-    // ------------------------------------------------
-}
-
-// ------------------------------------------------------------------------
-
 void Sender::send_categorical_column(
     const std::vector<std::string>& _col, Poco::Net::StreamSocket* _socket )
 {
@@ -206,14 +164,12 @@ void Sender::send_string(
     std::vector<char> buf;
 
     // ------------------------------------------------
-    // Send size of string
 
     const Int str_size = static_cast<Int>( _string.size() );
 
     Sender::send<Int>( sizeof( Int ), &str_size, _socket );
 
     // ------------------------------------------------
-    // Send string itself
 
     Sender::send<char>(
         static_cast<ULong>( _string.length() ), &( _string[0] ), _socket );

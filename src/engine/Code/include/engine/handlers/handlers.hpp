@@ -13,6 +13,8 @@
 #endif
 
 #include <chrono>
+#include <cstdint>
+#include <iostream>
 #include <optional>
 #include <thread>
 #include <type_traits>
@@ -37,6 +39,12 @@
 #include <Poco/Net/StreamSocket.h>
 #include <Poco/Path.h>
 #include <Poco/Timestamp.h>
+
+#include <arrow/api.h>
+#include <arrow/io/api.h>
+#include <arrow/ipc/api.h>
+#include <parquet/arrow/reader.h>
+#include <parquet/arrow/writer.h>
 
 #include <multithreading/multithreading.hpp>
 
@@ -74,6 +82,11 @@
 #include "engine/handlers/CatOpParser.hpp"
 #include "engine/handlers/FileHandler.hpp"
 #include "engine/handlers/NumOpParser.hpp"
+
+#include "engine/handlers/ArrowSocketInputStream.hpp"
+#include "engine/handlers/ArrowSocketOutputStream.hpp"
+
+#include "engine/handlers/ArrowHandler.hpp"
 
 #include "engine/handlers/BoolOpParser.hpp"
 

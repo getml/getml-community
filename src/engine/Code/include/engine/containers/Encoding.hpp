@@ -27,16 +27,6 @@ class Encoding
     /// Appends all elements of a different encoding.
     void append( const Encoding& _other, bool _include_subencoding = false );
 
-    /// Returns the string mapped to an integer.
-    template <typename T>
-    const strings::String& operator[]( const T _i ) const;
-
-    /// Returns the integer mapped to a string.
-    Int operator[]( const strings::String& _val );
-
-    /// Returns the integer mapped to a string (const version).
-    Int operator[]( const strings::String& _val ) const;
-
     /// Copies a vector
     Encoding& operator=( const std::vector<std::string>& _vector );
 
@@ -63,15 +53,57 @@ class Encoding
     }
 
     /// Returns the integer mapped to a string.
-    Int operator[]( const std::string& _val )
+    template <class T>
+    std::conditional<
+        std::is_same<T, std::string>::value ||
+            std::is_same<T, strings::String>::value,
+        Int,
+        const strings::String&>::type
+    operator[]( const T& _val )
     {
-        return ( *this )[strings::String( _val )];
+        if constexpr ( std::is_same<T, std::string>() )
+            {
+                return string_to_int( strings::String( _val ) );
+            }
+
+        if constexpr ( std::is_same<T, strings::String>() )
+            {
+                return string_to_int( _val );
+            }
+
+        if constexpr (
+            !std::is_same<T, std::string>() &&
+            !std::is_same<T, strings::String>() )
+            {
+                return int_to_string( _val );
+            }
     }
 
     /// Returns the integer mapped to a string (const version).
-    Int operator[]( const std::string& _val ) const
+    template <class T>
+    std::conditional<
+        std::is_same<T, std::string>::value ||
+            std::is_same<T, strings::String>::value,
+        Int,
+        const strings::String&>::type
+    operator[]( const T& _val ) const
     {
-        return ( *this )[strings::String( _val )];
+        if constexpr ( std::is_same<T, std::string>() )
+            {
+                return string_to_int( strings::String( _val ) );
+            }
+
+        if constexpr ( std::is_same<T, strings::String>() )
+            {
+                return string_to_int( _val );
+            }
+
+        if constexpr (
+            !std::is_same<T, std::string>() &&
+            !std::is_same<T, strings::String>() )
+            {
+                return int_to_string( _val );
+            }
     }
 
     /// Number of encoded elements
@@ -89,6 +121,15 @@ class Encoding
    private:
     /// Adds an integer to map_ and vector_, assuming it is not already included
     Int insert( const strings::String& _val );
+
+    /// Returns the string mapped to an integer.
+    const strings::String& int_to_string( const Int _i ) const;
+
+    /// Returns the integer mapped to a string.
+    Int string_to_int( const strings::String& _val );
+
+    /// Returns the integer mapped to a string (const version).
+    Int string_to_int( const strings::String& _val ) const;
 
     // -------------------------------
 
@@ -110,40 +151,6 @@ class Encoding
     /// Maps integers to strings
     const std::shared_ptr<std::vector<strings::String>> vector_;
 };
-
-// -------------------------------------------------------------------------
-// -------------------------------------------------------------------------
-
-template <typename T>
-const strings::String& Encoding::operator[]( const T _i ) const
-{
-    static_assert( std::is_integral<T>::value, "Integral required." );
-
-    if ( _i < 0 || static_cast<size_t>( _i ) >= size() )
-        {
-            return null_value_;
-        }
-
-    assert_true( size() > 0 );
-
-    assert_true( _i < 0 || static_cast<size_t>( _i ) < size() );
-
-    if ( subencoding_ )
-        {
-            if ( _i < subsize_ )
-                {
-                    return ( *subencoding_ )[_i];
-                }
-            else
-                {
-                    return ( *vector_ )[_i - subsize_];
-                }
-        }
-    else
-        {
-            return ( *vector_ )[_i];
-        }
-}
 
 // -------------------------------------------------------------------------
 }  // namespace containers

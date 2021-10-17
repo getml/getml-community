@@ -57,7 +57,7 @@ containers::ColumnView<std::string> CatOpParser::boolean_as_string(
 // ----------------------------------------------------------------------------
 
 void CatOpParser::check(
-    const std::vector<std::string>& _col,
+    const containers::Column<strings::String>& _col,
     const std::string& _name,
     const std::shared_ptr<const communication::Logger>& _logger,
     Poco::Net::StreamSocket* _socket ) const
@@ -78,7 +78,8 @@ void CatOpParser::check(
 
     const Float length = static_cast<Float>( _col.size() );
 
-    const Float num_non_null = utils::Aggregations::count_categorical( _col );
+    const Float num_non_null =
+        utils::Aggregations::count_categorical( *_col.data_ptr() );
 
     const auto share_null = 1.0 - num_non_null / length;
 

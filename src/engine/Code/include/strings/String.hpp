@@ -24,6 +24,12 @@ class String
         chars_.get()[_str.size()] = '\0';
     }
 
+    String( const uint64_t _size )
+        : chars_( std::make_unique<char[]>( _size + 1 ) )
+    {
+        chars_.get()[_size] = '\0';
+    }
+
     String( const char* _str )
         : chars_( std::make_unique<char[]>( strlen( _str ) + 1 ) )
     {
@@ -45,6 +51,13 @@ class String
     bool contains( const strings::String& _other ) const
     {
         return ( strstr( c_str(), _other.c_str() ) != NULL );
+    }
+
+    /// Returns a pointer to the underlying C-String.
+    char* c_str()
+    {
+        assert_true( chars_ );
+        return chars_.get();
     }
 
     /// Returns a pointer to the underlying C-String.

@@ -76,8 +76,27 @@ class ColumnView
     // -------------------------------
 
    public:
+    /// Returns the number of rows, calculates them if necessary,
+    /// returns std::nullopt if and only if the number is infinite.
+    std::optional<size_t> calc_nrows() const;
+
+    /// Iterator to the beginning.
+    ColumnViewIterator<T> begin() const
+    {
+        return ColumnViewIterator<T>( value_func_ );
+    }
+
+    /// Iterator to the end.
+    ColumnViewIterator<T> end() const { return ColumnViewIterator<T>(); }
+
+    /// Transforms the ColumnView to an arrow::ChunkedArray.
+    std::shared_ptr<arrow::ChunkedArray> to_array(
+        const size_t _begin,
+        const std::optional<size_t> _expected_length,
+        const bool _nrows_must_match ) const;
+
     /// Transforms the ColumnView to a physical column.
-    Column<T> to_column(
+    auto to_column(
         const size_t _begin,
         const std::optional<size_t> _expected_length,
         const bool _nrows_must_match ) const;
@@ -89,7 +108,7 @@ class ColumnView
         const bool _nrows_must_match ) const;
 
     /// Returns all unique values in the column view.
-    Column<T> unique() const;
+    std::shared_ptr<arrow::ChunkedArray> unique() const;
 
     /// Returns a new column view with new subroles.
     ColumnView<T> with_subroles(
@@ -107,6 +126,7 @@ class ColumnView
         return std::holds_alternative<UnknownSize>( nrows() ) &&
                std::get<UnknownSize>( nrows() ) == NROWS_INFINITE;
     }
+
     /// Accessor to data
     std::optional<T> operator[]( const size_t _i ) const
     {
@@ -145,6 +165,23 @@ class ColumnView
         const std::optional<size_t> _expected_length,
         const bool _nrows_must_match ) const;
 
+    /// Checks whether the expected length was exceeded.
+    void check_exceeds_expected(
+        const size_t _begin,
+        const bool _nrows_must_match,
+        const size_t _expected_length ) const;
+
+    /// Checks the plausibility of the value passed to expected length.
+    void check_expected_length(
+        const size_t _expected_length,
+        const bool _nrows_must_match,
+        const bool _expected_length_not_passed ) const;
+
+    /// Generates the arrow::ChunkedArray.
+    template <class IteratorType>
+    std::shared_ptr<arrow::ChunkedArray> make_array(
+        const IteratorType _begin, const IteratorType _end ) const;
+
     /// Generates the vector in parallel.
     std::shared_ptr<std::vector<T>> make_parallel(
         const size_t _begin, const size_t _expected_length ) const;
@@ -174,6 +211,32 @@ class ColumnView
 };
 
 // -------------------------------------------------------------------------
+// -------------------------------------------------------------------------
+
+template <class T>
+std::optional<size_t> ColumnView<T>::calc_nrows() const
+{
+    if ( std::holds_alternative<size_t>( nrows() ) )
+        {
+            return std::get<size_t>( nrows() );
+        }
+
+    if ( is_infinite() )
+        {
+            return std::nullopt;
+        }
+
+    for ( size_t i = 0; true; ++i )
+        {
+            if ( !value_func_( i ) )
+                {
+                    return i;
+                }
+        }
+
+    return std::nullopt;
+}
+
 // -------------------------------------------------------------------------
 
 template <class T>
@@ -620,7 +683,54 @@ ColumnView<T> ColumnView<T>::from_value( const T _value )
 // -------------------------------------------------------------------------
 
 template <class T>
-Column<T> ColumnView<T>::to_column(
+template <class IteratorType>
+std::shared_ptr<arrow::ChunkedArray> ColumnView<T>::make_array(
+    const IteratorType _begin, const IteratorType _end ) const
+{
+    if constexpr ( std::is_same<T, bool>() )
+        {
+            return ArrayMaker::make_boolean_array( _begin, _end );
+        }
+
+    if constexpr ( std::is_same<T, Float>() )
+        {
+            if ( unit().find( "time stamp" ) != std::string::npos )
+                {
+                    return ArrayMaker::make_time_stamp_array( _begin, _end );
+                }
+
+            return ArrayMaker::make_float_array( _begin, _end );
+        }
+
+    if constexpr ( std::is_same<T, std::string>() )
+        {
+            return ArrayMaker::make_string_array( _begin, _end );
+        }
+}
+
+// -------------------------------------------------------------------------
+
+template <class T>
+std::shared_ptr<arrow::ChunkedArray> ColumnView<T>::to_array(
+    const size_t _begin,
+    const std::optional<size_t> _expected_length,
+    const bool _nrows_must_match ) const
+{
+    assert_true( _expected_length || !_nrows_must_match );
+
+    const auto [expected_length, length_is_known] =
+        calc_expected_length( _begin, _expected_length, _nrows_must_match );
+
+    check_expected_length(
+        expected_length, _nrows_must_match, !_expected_length );
+
+    return make_array( begin(), end() );
+}
+
+// -------------------------------------------------------------------------
+
+template <class T>
+auto ColumnView<T>::to_column(
     const size_t _begin,
     const std::optional<size_t> _expected_length,
     const bool _nrows_must_match ) const
@@ -628,11 +738,28 @@ Column<T> ColumnView<T>::to_column(
     const auto data_ptr =
         to_vector( _begin, _expected_length, _nrows_must_match );
 
-    auto col = Column<T>( data_ptr );
+    if constexpr ( !std::is_same<T, std::string>() )
+        {
+            auto col = Column<T>( data_ptr );
+            col.set_unit( unit() );
+            return col;
+        }
 
-    col.set_unit( unit() );
-
-    return col;
+    if constexpr ( std::is_same<T, std::string>() )
+        {
+            assert_true( data_ptr );
+            const auto to_str =
+                []( const std::string& _str ) -> strings::String {
+                return strings::String( _str );
+            };
+            const auto range = *data_ptr | std::views::transform( to_str );
+            const auto new_data_ptr =
+                std::make_shared<std::vector<strings::String>>(
+                    range.begin(), range.end() );
+            auto col = Column<strings::String>( new_data_ptr );
+            col.set_unit( unit() );
+            return col;
+        }
 }
 
 // -------------------------------------------------------------------------
@@ -654,6 +781,58 @@ std::pair<size_t, bool> ColumnView<T>::calc_expected_length(
         }
 
     return std::make_pair( std::numeric_limits<size_t>::max(), false );
+}
+
+// -------------------------------------------------------------------------
+
+template <class T>
+void ColumnView<T>::check_exceeds_expected(
+    const size_t _begin,
+    const bool _nrows_must_match,
+    const size_t _expected_length ) const
+{
+    const bool exceeds_expected_by_unknown_number =
+        _nrows_must_match && std::holds_alternative<UnknownSize>( nrows() ) &&
+        std::get<UnknownSize>( nrows() ) == NOT_KNOWABLE &&
+        value_func_( _begin + _expected_length );
+
+    if ( exceeds_expected_by_unknown_number )
+        {
+            throw std::invalid_argument(
+                "Expected " + std::to_string( _expected_length ) +
+                " nrows, but there were more." );
+        }
+}
+
+// -------------------------------------------------------------------------
+
+template <class T>
+void ColumnView<T>::check_expected_length(
+    const size_t _expected_length,
+    const bool _nrows_must_match,
+    const bool _expected_length_not_passed ) const
+{
+    const bool nrows_do_not_match =
+        _nrows_must_match && std::holds_alternative<size_t>( nrows() ) &&
+        std::get<size_t>( nrows() ) != _expected_length;
+
+    if ( nrows_do_not_match )
+        {
+            throw std::invalid_argument(
+                "Expected " + std::to_string( _expected_length ) +
+                " nrows, but got " +
+                std::to_string( std::get<size_t>( nrows() ) ) + "." );
+        }
+
+    if ( _expected_length_not_passed && is_infinite() )
+        {
+            throw std::invalid_argument(
+                "The length of the column view is infinite. You can look "
+                "at "
+                "it, but it cannot be transformed into an actual column "
+                "unless "
+                "the length can be inferred from somewhere else." );
+        }
 }
 
 // -------------------------------------------------------------------------
@@ -735,30 +914,12 @@ std::shared_ptr<std::vector<T>> ColumnView<T>::to_vector(
     const auto [expected_length, length_is_known] =
         calc_expected_length( _begin, _expected_length, _nrows_must_match );
 
-    const bool nrows_do_not_match =
-        _nrows_must_match && std::holds_alternative<size_t>( nrows() ) &&
-        std::get<size_t>( nrows() ) != expected_length;
-
-    if ( nrows_do_not_match )
-        {
-            throw std::invalid_argument(
-                "Expected " + std::to_string( expected_length ) +
-                " nrows, but got " +
-                std::to_string( std::get<size_t>( nrows() ) ) + "." );
-        }
-
-    if ( !_expected_length && is_infinite() )
-        {
-            throw std::invalid_argument(
-                "The length of the column view is infinite. You can look "
-                "at "
-                "it, but it cannot be transformed into an actual column "
-                "unless "
-                "the length can be inferred from somewhere else." );
-        }
+    check_expected_length(
+        expected_length, _nrows_must_match, !_expected_length );
 
 #if ( defined( _WIN32 ) || defined( _WIN64 ) )
-    const auto data_ptr = make_sequential( _begin, expected_length, _nrows_must_match );
+    const auto data_ptr =
+        make_sequential( _begin, expected_length, _nrows_must_match );
 #else
     const auto data_ptr =
         length_is_known
@@ -766,17 +927,7 @@ std::shared_ptr<std::vector<T>> ColumnView<T>::to_vector(
             : make_sequential( _begin, expected_length, _nrows_must_match );
 #endif
 
-    const bool exceeds_expected_by_unknown_number =
-        _nrows_must_match && std::holds_alternative<UnknownSize>( nrows() ) &&
-        std::get<UnknownSize>( nrows() ) == NOT_KNOWABLE &&
-        value_func_( _begin + expected_length );
-
-    if ( exceeds_expected_by_unknown_number )
-        {
-            throw std::invalid_argument(
-                "Expected " + std::to_string( expected_length ) +
-                " nrows, but there were more." );
-        }
+    check_exceeds_expected( _begin, _nrows_must_match, expected_length );
 
     return data_ptr;
 }
@@ -784,7 +935,7 @@ std::shared_ptr<std::vector<T>> ColumnView<T>::to_vector(
 // -------------------------------------------------------------------------
 
 template <class T>
-Column<T> ColumnView<T>::unique() const
+std::shared_ptr<arrow::ChunkedArray> ColumnView<T>::unique() const
 {
     if ( is_infinite() )
         {
@@ -811,14 +962,7 @@ Column<T> ColumnView<T>::unique() const
             unique_values.insert( *val );
         }
 
-    const auto data_ptr = std::make_shared<std::vector<T>>(
-        unique_values.begin(), unique_values.end() );
-
-    auto col = Column<T>( data_ptr );
-
-    col.set_unit( unit() );
-
-    return col;
+    return make_array( unique_values.begin(), unique_values.end() );
 }
 
 // -------------------------------------------------------------------------

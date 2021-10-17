@@ -33,6 +33,8 @@
 #include <Poco/TemporaryFile.h>
 #include <Poco/Timestamp.h>
 
+#include <arrow/api.h>
+
 #include "debug/debug.hpp"
 
 #include "database/database.hpp"
@@ -54,6 +56,7 @@
 // ----------------------------------------------------
 // Module files
 
+#include "engine/containers/ArrayMaker.hpp"
 #include "engine/containers/Optional.hpp"
 
 #include "engine/containers/CategoricalFeatures.hpp"
@@ -63,6 +66,8 @@
 #include "engine/containers/Column.hpp"
 #include "engine/containers/Encoding.hpp"
 #include "engine/containers/Index.hpp"
+
+#include "engine/containers/ColumnViewIterator.hpp"
 
 #include "engine/containers/ColumnView.hpp"
 

@@ -16,24 +16,12 @@ struct Receiver
     static void recv(
         const ULong _size, Poco::Net::StreamSocket *_socket, T *_data );
 
-    /// Receives a string column from the client
-    static std::vector<std::string> recv_string_column(
-        Poco::Net::StreamSocket *_socket );
-
     /// Receives a string from the client
     static std::string recv_string( Poco::Net::StreamSocket *_socket );
 
     /// Receives a command from the client
     static Poco::JSON::Object recv_cmd(
         const std::shared_ptr<const communication::Logger> &_logger,
-        Poco::Net::StreamSocket *_socket );
-
-    /// Receives features from the client, transposing them.
-    static containers::Features recv_features(
-        Poco::Net::StreamSocket *_socket );
-
-    /// Receives a Column from the client
-    static containers::Column<Float> recv_column(
         Poco::Net::StreamSocket *_socket );
 };
 

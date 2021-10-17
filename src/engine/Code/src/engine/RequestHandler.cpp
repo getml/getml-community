@@ -118,10 +118,6 @@ void RequestHandler::run()
                     project_manager().save_data_container(
                         name, cmd, &socket() );
                 }
-            else if ( type == "DataFrame" )
-                {
-                    project_manager().add_data_frame( name, &socket() );
-                }
             else if ( type == "DataFrame.add_categorical_column" )
                 {
                     data_frame_manager().add_string_column(
@@ -158,6 +154,11 @@ void RequestHandler::run()
             else if ( type == "DataFrame.freeze" )
                 {
                     data_frame_manager().freeze( name, &socket() );
+                }
+            else if ( type == "DataFrame.from_arrow" )
+                {
+                    project_manager().add_data_frame_from_arrow(
+                        name, cmd, &socket() );
                 }
             else if ( type == "DataFrame.from_db" )
                 {
@@ -219,6 +220,11 @@ void RequestHandler::run()
                     project_manager().add_data_frame_from_csv(
                         name, cmd, &socket() );
                 }
+            else if ( type == "DataFrame.read_parquet" )
+                {
+                    project_manager().add_data_frame_from_parquet(
+                        name, cmd, &socket() );
+                }
             else if ( type == "DataFrame.read_s3" )
                 {
                     project_manager().add_data_frame_from_s3(
@@ -240,6 +246,10 @@ void RequestHandler::run()
                 {
                     data_frame_manager().summarize( name, &socket() );
                 }
+            else if ( type == "DataFrame.to_arrow" )
+                {
+                    data_frame_manager().to_arrow( name, &socket() );
+                }
             else if ( type == "DataFrame.to_csv" )
                 {
                     data_frame_manager().to_csv( name, cmd, &socket() );
@@ -247,6 +257,10 @@ void RequestHandler::run()
             else if ( type == "DataFrame.to_db" )
                 {
                     data_frame_manager().to_db( name, cmd, &socket() );
+                }
+            else if ( type == "DataFrame.to_parquet" )
+                {
+                    data_frame_manager().to_parquet( name, cmd, &socket() );
                 }
             else if ( type == "DataFrame.to_s3" )
                 {
@@ -499,6 +513,10 @@ void RequestHandler::run()
                 {
                     data_frame_manager().get_view_nrows( name, cmd, &socket() );
                 }
+            else if ( type == "View.to_arrow" )
+                {
+                    data_frame_manager().view_to_arrow( name, cmd, &socket() );
+                }
             else if ( type == "View.to_csv" )
                 {
                     data_frame_manager().view_to_csv( name, cmd, &socket() );
@@ -506,6 +524,11 @@ void RequestHandler::run()
             else if ( type == "View.to_db" )
                 {
                     data_frame_manager().view_to_db( name, cmd, &socket() );
+                }
+            else if ( type == "View.to_parquet" )
+                {
+                    data_frame_manager().view_to_parquet(
+                        name, cmd, &socket() );
                 }
             else if ( type == "View.to_s3" )
                 {

@@ -60,7 +60,7 @@ class CatOpParser
    public:
     /// Checks the string column for any obvious problems.
     void check(
-        const std::vector<std::string>& _col,
+        const containers::Column<strings::String>& _col,
         const std::string& _name,
         const std::shared_ptr<const communication::Logger>& _logger,
         Poco::Net::StreamSocket* _socket ) const;
