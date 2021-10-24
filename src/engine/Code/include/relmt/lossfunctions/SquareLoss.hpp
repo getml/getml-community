@@ -32,7 +32,6 @@ class SquareLoss : public LossFunction
               g_,
               h_,
               hyperparameters_,
-              ncols_,
               nrows_,
               sample_index_,
               sample_weights_,

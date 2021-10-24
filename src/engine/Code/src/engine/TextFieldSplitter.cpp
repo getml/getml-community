@@ -34,7 +34,7 @@ containers::DataFrame TextFieldSplitter::remove_text_fields(
 
     const auto iota = stl::iota<size_t>( 0, _df.num_text() );
 
-    const auto names = iota | std::views::transform( get_name );
+    const auto names = iota | VIEWS::transform( get_name );
 
     auto df = _df;
 
@@ -106,7 +106,7 @@ TextFieldSplitter::fit_df(
 
     const auto iota = stl::iota<size_t>( 0, _df.num_text() );
 
-    const auto range = iota | std::views::transform( to_column_description );
+    const auto range = iota | VIEWS::transform( to_column_description );
 
     return stl::collect::vector<std::shared_ptr<helpers::ColumnDescription>>(
         range );
@@ -207,7 +207,7 @@ std::vector<std::string> TextFieldSplitter::to_sql(
     };
 
     return stl::collect::vector<std::string>(
-        cols_ | std::ranges::views::transform( split ) );
+        cols_ | VIEWS::transform( split ) );
 }
 
 // ----------------------------------------------------
@@ -224,7 +224,7 @@ TextFieldSplitter::transform( const TransformParams& _params ) const
     const auto population_df = modify_if_applicable( _params.population_df_ );
 
     const auto range =
-        _params.peripheral_dfs_ | std::views::transform( modify_if_applicable );
+        _params.peripheral_dfs_ | VIEWS::transform( modify_if_applicable );
 
     auto peripheral_dfs = stl::collect::vector<containers::DataFrame>( range );
 
@@ -278,9 +278,9 @@ void TextFieldSplitter::transform_df(
 
     // ----------------------------------------------------
 
-    auto data_frames = cols_ | std::views::filter( matching_description ) |
-                       std::views::transform( get_col ) |
-                       std::views::transform( make_df );
+    auto data_frames = cols_ | VIEWS::filter( matching_description ) |
+                       VIEWS::transform( get_col ) |
+                       VIEWS::transform( make_df );
 
     for ( const auto df : data_frames )
         {

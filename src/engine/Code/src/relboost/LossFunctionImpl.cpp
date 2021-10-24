@@ -321,7 +321,6 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_pair_avg_null(
     const auto& loss_w_fixed = *( sufficient_stats_global.data() + 7 );
 
     // ------------------------------------------------------------------------
-    // Transfer data to Eigen::Matrix.
 
     Eigen::Matrix<Float, 2, 1> g_eta;
     g_eta[0] = g_eta_arr[0];
@@ -337,15 +336,14 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_pair_avg_null(
     A( 1, 0 ) = A( 0, 1 ) = A_arr[1];
 
     // ------------------------------------------------------------------------
-    // Calculate b.
 
-    auto b = g_eta + h_w_const;
+    Eigen::Matrix<Float, 2, 1> b = g_eta + h_w_const;
 
     // ------------------------------------------------------------------------
-    // Calculate weight by solving A*weight = b.
 
     Eigen::Matrix<Float, 2, 1> weights = A.fullPivLu().solve( b );
 
+    // Calculate weight by solving A*weight = b.
     const auto partial_loss = -0.5 * weights.dot( b ) + loss_w_fixed;
 
     // ------------------------------------------------------------------------
@@ -403,7 +401,6 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_pair_non_null(
         _sufficient_stats );
 
     // ------------------------------------------------------------------------
-    // Reduce sufficient stats.
 
     auto sufficient_stats_global = *_sufficient_stats;
 
@@ -420,7 +417,6 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_pair_non_null(
     const auto& loss_w_fixed = *( sufficient_stats_global.data() + 12 );
 
     // ------------------------------------------------------------------------
-    // Transfer data to Eigen::Matrix.
 
     Eigen::Matrix<Float, 3, 1> g_eta;
     g_eta[0] = g_eta_arr[0];
@@ -441,18 +437,21 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_pair_non_null(
     A( 2, 1 ) = A( 1, 2 ) = A_arr[4];
 
     // ------------------------------------------------------------------------
-    // Calculate b.
 
-    auto b = g_eta + h_w_const;
+    Eigen::Matrix<Float, 3, 1> b = g_eta + h_w_const;
 
     // ------------------------------------------------------------------------
+
     // Calculate weights by solving A*weights = b.
-
-    const auto weights = A.fullPivLu().solve( b );
+    Eigen::Matrix<Float, 3, 1> weights = A.fullPivLu().solve( b );
 
     // ------------------------------------------------------------------------
+
+    debug_log( "Calculating partial loss..." );
 
     const Float partial_loss = -0.5 * b.dot( weights ) + loss_w_fixed;
+
+    debug_log( "Calculating weights_arr..." );
 
     const auto weights_arr =
         std::array<Float, 3>( { weights[0], weights[1], weights[2] } );
@@ -581,7 +580,6 @@ void LossFunctionImpl::calc_sufficient_stats_avg_null(
     auto& loss_w_fixed = *( _sufficient_stats->data() + 7 );
 
     // ------------------------------------------------------------------------
-    // Calculate g_eta.
 
     // The intercept term.
     g_eta_arr[0] = -sum_g_;
@@ -598,7 +596,6 @@ void LossFunctionImpl::calc_sufficient_stats_avg_null(
         }
 
     // ------------------------------------------------------------------------
-    // Calculate h_w_const.
 
     if ( _update == enums::Update::calc_all )
         {
@@ -632,7 +629,6 @@ void LossFunctionImpl::calc_sufficient_stats_avg_null(
         }
 
     // ------------------------------------------------------------------------
-    // Calculate A.
 
     if ( _update == enums::Update::calc_all )
         {
@@ -703,7 +699,6 @@ void LossFunctionImpl::calc_sufficient_stats_non_null(
     auto& loss_w_fixed = *( _sufficient_stats->data() + 12 );
 
     // ------------------------------------------------------------------------
-    // Calculate g_eta_arr.
 
     // The intercept term.
     g_eta_arr[0] = -sum_g_;
@@ -720,7 +715,6 @@ void LossFunctionImpl::calc_sufficient_stats_non_null(
         }
 
     // ------------------------------------------------------------------------
-    // Calculate h_w_const_arr and loss_w_fixed.
     // NOTE: w_fixed = yhat_committed - impact of old weight.
 
     // The intercept term
@@ -758,7 +752,6 @@ void LossFunctionImpl::calc_sufficient_stats_non_null(
         }
 
     // ------------------------------------------------------------------------
-    // Calculate A_arr.
 
     if ( _update == enums::Update::calc_all )
         {

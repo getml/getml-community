@@ -244,9 +244,8 @@ class Aggregator
 
         if ( _abstract_feature.conditions_.size() == 0 )
             {
-                auto range = _matches |
-                             std::views::transform( _extract_value ) |
-                             std::views::filter( is_non_null );
+                auto range = _matches | VIEWS::transform( _extract_value ) |
+                             VIEWS::filter( is_non_null );
 
                 return aggregate_categorical_range(
                     range.begin(),
@@ -256,9 +255,9 @@ class Aggregator
 
         // ---------------------------------------------------
 
-        auto range = _matches | std::views::filter( _condition_function ) |
-                     std::views::transform( _extract_value ) |
-                     std::views::filter( is_non_null );
+        auto range = _matches | VIEWS::filter( _condition_function ) |
+                     VIEWS::transform( _extract_value ) |
+                     VIEWS::filter( is_non_null );
 
         return aggregate_categorical_range(
             range.begin(), range.end(), _abstract_feature.aggregation_ );
@@ -283,9 +282,8 @@ class Aggregator
 
         if ( _abstract_feature.conditions_.size() == 0 )
             {
-                auto range = _matches |
-                             std::views::transform( _extract_value ) |
-                             std::views::filter( second_is_not_nan_or_inf );
+                auto range = _matches | VIEWS::transform( _extract_value ) |
+                             VIEWS::filter( second_is_not_nan_or_inf );
 
                 return aggregate_first_last(
                     range.begin(),
@@ -295,9 +293,9 @@ class Aggregator
 
         // ---------------------------------------------------
 
-        auto range = _matches | std::views::filter( _condition_function ) |
-                     std::views::transform( _extract_value ) |
-                     std::views::filter( second_is_not_nan_or_inf );
+        auto range = _matches | VIEWS::filter( _condition_function ) |
+                     VIEWS::transform( _extract_value ) |
+                     VIEWS::filter( second_is_not_nan_or_inf );
 
         return aggregate_first_last(
             range.begin(), range.end(), _abstract_feature.aggregation_ );
@@ -318,9 +316,8 @@ class Aggregator
 
         if ( _abstract_feature.conditions_.size() == 0 )
             {
-                auto range = _matches |
-                             std::views::transform( _extract_value ) |
-                             std::views::filter( is_not_nan_or_inf );
+                auto range = _matches | VIEWS::transform( _extract_value ) |
+                             VIEWS::filter( is_not_nan_or_inf );
 
                 return aggregate_numerical_range(
                     range.begin(),
@@ -330,9 +327,9 @@ class Aggregator
 
         // ---------------------------------------------------
 
-        auto range = _matches | std::views::filter( _condition_function ) |
-                     std::views::transform( _extract_value ) |
-                     std::views::filter( is_not_nan_or_inf );
+        auto range = _matches | VIEWS::filter( _condition_function ) |
+                     VIEWS::transform( _extract_value ) |
+                     VIEWS::filter( is_not_nan_or_inf );
 
         return aggregate_numerical_range(
             range.begin(), range.end(), _abstract_feature.aggregation_ );

@@ -281,10 +281,12 @@ std::vector<containers::Predictions> SubtreeHelper::make_predictions(
 
             const auto& subtable_holder = *_table_holder.subtables().at( i );
 
+            const auto is_true = []( const bool _val ) { return _val; };
+
             const auto all_propositionalization = std::all_of(
                 subtable_holder.propositionalization().begin(),
                 subtable_holder.propositionalization().end(),
-                std::identity() );
+                is_true );
 
             if ( all_propositionalization )
                 {

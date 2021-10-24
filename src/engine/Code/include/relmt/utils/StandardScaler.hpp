@@ -58,8 +58,9 @@ class StandardScaler
     Poco::JSON::Object::Ptr to_json_obj() const
     {
         auto obj = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
-        obj->set( "means_", JSON::vector_to_array( means_ ) );
-        obj->set( "inverse_stddev_", JSON::vector_to_array( inverse_stddev_ ) );
+        obj->set( "means_", JSON::vector_to_array_ptr( means_ ) );
+        obj->set(
+            "inverse_stddev_", JSON::vector_to_array_ptr( inverse_stddev_ ) );
         return obj;
     }
 

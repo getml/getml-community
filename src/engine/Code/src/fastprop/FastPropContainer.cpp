@@ -132,7 +132,7 @@ void FastPropContainer::to_sql(
                         stl::iota<size_t>( 0, fast_prop().num_features() );
 
                     const auto autofeatures = stl::collect::vector<std::string>(
-                        iota | std::views::transform( to_feature_name ) );
+                        iota | VIEWS::transform( to_feature_name ) );
 
                     const auto main_table =
                         helpers::SQLGenerator::make_staging_table_name(

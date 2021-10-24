@@ -40,7 +40,7 @@ class FeatureLearner : public AbstractFeatureLearner
     typedef typename FeatureLearnerType::DataFrameType DataFrameType;
     typedef typename FeatureLearnerType::HypType HypType;
 
-    typedef std::conditional<
+    typedef typename std::conditional<
         has_propositionalization_,
         std::shared_ptr<const fastprop::Hyperparameters>,
         int>::type PropType;
@@ -412,7 +412,7 @@ FeatureLearner<FeatureLearnerType>::column_importances(
 
     const auto filter_non_zeros = [is_non_zero]( const auto& _importances ) {
         return stl::collect::map<helpers::ColumnDescription, Float>(
-            _importances | std::views::filter( is_non_zero ) );
+            _importances | VIEWS::filter( is_non_zero ) );
     };
 
     if constexpr ( !has_propositionalization_ )
@@ -475,7 +475,7 @@ FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
     };
 
     const auto targets = stl::collect::vector<std::string>(
-        _schema.targets_ | std::views::filter( include_target ) );
+        _schema.targets_ | VIEWS::filter( include_target ) );
 
     // ------------------------------------------------------------------------
 
@@ -486,26 +486,23 @@ FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
     // ------------------------------------------------------------------------
 
     const auto categoricals =
-        _apply_subroles
-            ? stl::collect::vector<std::string>(
-                  _schema.categoricals_ | std::views::filter( include ) )
-            : _schema.categoricals_;
+        _apply_subroles ? stl::collect::vector<std::string>(
+                              _schema.categoricals_ | VIEWS::filter( include ) )
+                        : _schema.categoricals_;
 
     const auto discretes =
-        _apply_subroles
-            ? stl::collect::vector<std::string>(
-                  _schema.discretes_ | std::views::filter( include ) )
-            : _schema.discretes_;
+        _apply_subroles ? stl::collect::vector<std::string>(
+                              _schema.discretes_ | VIEWS::filter( include ) )
+                        : _schema.discretes_;
 
     const auto numericals =
-        _apply_subroles
-            ? stl::collect::vector<std::string>(
-                  _schema.numericals_ | std::views::filter( include ) )
-            : _schema.numericals_;
+        _apply_subroles ? stl::collect::vector<std::string>(
+                              _schema.numericals_ | VIEWS::filter( include ) )
+                        : _schema.numericals_;
 
     const auto text = _apply_subroles
                           ? stl::collect::vector<std::string>(
-                                _schema.text_ | std::views::filter( include ) )
+                                _schema.text_ | VIEWS::filter( include ) )
                           : _schema.text_;
 
     // ------------------------------------------------------------------------
@@ -591,7 +588,7 @@ FeatureLearner<FeatureLearnerType>::extract_tables_by_colnames(
     const auto iota = stl::iota<size_t>( 0, _peripheral_schema.size() );
 
     const auto peripheral_tables = stl::collect::vector<DataFrameType>(
-        iota | std::views::transform( to_peripheral ) );
+        iota | VIEWS::transform( to_peripheral ) );
 
     // ------------------------------------------------
 
@@ -704,6 +701,8 @@ FeatureLearner<FeatureLearnerType>::fit_propositionalization(
 {
     if constexpr ( has_propositionalization_ )
         {
+            const auto is_true = []( const bool _val ) { return _val; };
+
             const bool all_propositionalization =
                 ( _feature_learner.placeholder().propositionalization().size() >
                   0 ) &&
@@ -712,7 +711,7 @@ FeatureLearner<FeatureLearnerType>::fit_propositionalization(
                         .propositionalization()
                         .begin(),
                     _feature_learner.placeholder().propositionalization().end(),
-                    std::identity() );
+                    is_true );
 
             if ( all_propositionalization )
                 {

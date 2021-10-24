@@ -220,7 +220,7 @@ class Aggregations
     static Float ewma(
         const Float _half_life, IteratorType _begin, IteratorType _end )
     {
-#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+#if ( defined( _WIN32 ) || defined( _WIN64 ) || defined( __APPLE__ ) )
         const Float log05 = std::log( 0.5 );
 #else
         constexpr Float log05 = std::log( 0.5 );
@@ -277,7 +277,7 @@ class Aggregations
             return p1.first < p2.first;
         };
 
-        const auto p = *std::ranges::min_element( _begin, _end, ts_is_smaller );
+        const auto p = *RANGES::min_element( _begin, _end, ts_is_smaller );
 
         return p.second;
     }
@@ -333,7 +333,7 @@ class Aggregations
             return p1.first < p2.first;
         };
 
-        const auto p = *std::ranges::max_element( _begin, _end, ts_is_smaller );
+        const auto p = *RANGES::max_element( _begin, _end, ts_is_smaller );
 
         return p.second;
     }
@@ -463,7 +463,7 @@ class Aggregations
                 return NAN;
             }
 
-        std::ranges::sort( values );
+        RANGES::sort( values );
 
         const auto ix_float = static_cast<Float>( values.size() - 1 ) * _q;
 
@@ -558,7 +558,7 @@ class Aggregations
             return p1.second < p2.second;
         };
 
-        const auto p = *std::ranges::max_element( _begin, _end, is_smaller );
+        const auto p = *RANGES::max_element( _begin, _end, is_smaller );
 
         return p.first;
     }
@@ -586,7 +586,7 @@ class Aggregations
             return p1.second < p2.second;
         };
 
-        const auto p = *std::ranges::min_element( _begin, _end, is_smaller );
+        const auto p = *RANGES::min_element( _begin, _end, is_smaller );
 
         return p.first;
     }
@@ -614,7 +614,7 @@ class Aggregations
             return p1.second < p2.second;
         };
 
-        const auto p = *std::ranges::max_element( _begin, _end, is_smaller );
+        const auto p = *RANGES::max_element( _begin, _end, is_smaller );
 
         return p.first;
     }
@@ -642,7 +642,7 @@ class Aggregations
             return p1.second < p2.second;
         };
 
-        const auto p = *std::ranges::min_element( _begin, _end, is_smaller );
+        const auto p = *RANGES::min_element( _begin, _end, is_smaller );
 
         return p.first;
     }
@@ -665,11 +665,11 @@ class Aggregations
 
         auto range = stl::Range( _begin, _end );
 
-        auto range_x = range | std::views::filter( second_is_not_null ) |
-                       std::views::transform( get_first );
+        auto range_x = range | VIEWS::filter( second_is_not_null ) |
+                       VIEWS::transform( get_first );
 
-        auto range_y = range | std::views::filter( second_is_not_null ) |
-                       std::views::transform( get_second );
+        auto range_y = range | VIEWS::filter( second_is_not_null ) |
+                       VIEWS::transform( get_second );
 
         const auto mean_x = avg( range_x.begin(), range_x.end() );
 
@@ -696,7 +696,7 @@ class Aggregations
             return _init + x_centered * y_centered;
         };
 
-        auto range_xy = range | std::views::filter( second_is_not_null );
+        auto range_xy = range | VIEWS::filter( second_is_not_null );
 
         const auto xy =
             std::accumulate( range_xy.begin(), range_xy.end(), 0.0, calc_xy );

@@ -82,6 +82,8 @@ struct ODBCConn
             }
 
         handle_ = std::move( _other.handle_ );
+
+        return *this;
     }
 
     std::unique_ptr<SQLCHAR[]> to_ptr( const std::string& _str ) const

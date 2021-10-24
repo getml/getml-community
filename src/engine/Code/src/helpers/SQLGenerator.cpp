@@ -208,7 +208,7 @@ std::string SQLGenerator::make_postprocessing(
 {
     std::string sql;
 
-    for ( const auto feature : _sql )
+    for ( const auto& feature : _sql )
         {
             const auto pos = feature.find( "\";\n" );
 
@@ -387,7 +387,7 @@ std::string SQLGenerator::replace_non_alphanumeric( const std::string _old )
     };
 
     const auto replaced =
-        stl::collect::string( _old | std::views::transform( replace ) );
+        stl::collect::string( _old | VIEWS::transform( replace ) );
 
     return shorten( trim( replaced ) );
 };

@@ -7,7 +7,7 @@ namespace helpers
 RowIndexContainer::RowIndexContainer(
     const WordIndexContainer& _word_index_container )
 {
-    for ( const auto wic : _word_index_container.peripheral() )
+    for ( const auto& wic : _word_index_container.peripheral() )
         {
             peripheral_.push_back( make_row_indices( wic ) );
         }
@@ -38,7 +38,7 @@ typename RowIndexContainer::RowIndices RowIndexContainer::make_row_indices(
             return std::make_shared<const textmining::RowIndex>( *word_index );
         };
 
-    auto range = _word_indices | std::views::transform( make_row_index );
+    auto range = _word_indices | VIEWS::transform( make_row_index );
 
     return stl::collect::vector<std::shared_ptr<const textmining::RowIndex>>(
         range );

@@ -62,7 +62,7 @@ void ImportanceMaker::fill_zeros_from_columns(
     const std::string& _pname,
     const std::vector<std::string>& _colnames )
 {
-    for ( const auto colname : _colnames )
+    for ( const auto& colname : _colnames )
         {
             const auto desc = ColumnDescription( _marker, _pname, colname );
 

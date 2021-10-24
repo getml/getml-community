@@ -284,8 +284,8 @@ std::optional<size_t> ViewParser::make_nrows(
 
     // ------------------------------------------------------------------------
 
-    auto range = _column_views | std::views::transform( calc_nrows ) |
-                 std::views::transform( to_float );
+    auto range = _column_views | VIEWS::transform( calc_nrows ) |
+                 VIEWS::transform( to_float );
 
     // ------------------------------------------------------------------------
 
@@ -322,7 +322,7 @@ std::vector<std::string> ViewParser::make_string_vector(
     if ( float_col.unit().find( "time stamp" ) != std::string::npos )
         {
             return stl::collect::vector<std::string>(
-                float_vec | std::views::transform( io::Parser::ts_to_string ) );
+                float_vec | VIEWS::transform( io::Parser::ts_to_string ) );
         }
 
     const auto to_string = []( const Float _val ) {
@@ -330,7 +330,7 @@ std::vector<std::string> ViewParser::make_string_vector(
     };
 
     return stl::collect::vector<std::string>(
-        float_vec | std::views::transform( to_string ) );
+        float_vec | VIEWS::transform( to_string ) );
 }
 
 // ----------------------------------------------------------------------------
@@ -366,11 +366,11 @@ Poco::JSON::Object ViewParser::get_content(
     const auto iota = stl::iota<size_t>( 0, _cols->size() );
 
     const auto column_views = stl::collect::vector<ColumnViewVariant>(
-        iota | std::views::transform( get_object ) |
-        std::views::transform( to_column_view ) );
+        iota | VIEWS::transform( get_object ) |
+        VIEWS::transform( to_column_view ) );
 
     const auto string_vectors = stl::collect::vector<std::vector<std::string>>(
-        column_views | std::views::transform( to_string_vector ) );
+        column_views | VIEWS::transform( to_string_vector ) );
 
     // ------------------------------------------------------------------------
 
@@ -450,7 +450,7 @@ ViewParser::parse_all( const Poco::JSON::Object& _cmd )
     const auto population = to_df( population_obj );
 
     const auto peripheral = stl::collect::vector<containers::DataFrame>(
-        peripheral_objs | std::views::transform( to_df ) );
+        peripheral_objs | VIEWS::transform( to_df ) );
 
     const auto validation = validation_obj
                                 ? std::make_optional<containers::DataFrame>(

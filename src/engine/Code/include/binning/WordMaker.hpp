@@ -66,7 +66,7 @@ WordMaker<MatchType, GetRangeType>::make_words(
 
     const auto iota = stl::iota<Int>( 0, included.size() );
 
-    auto range = iota | std::views::filter( is_included );
+    auto range = iota | VIEWS::filter( is_included );
 
     // ------------------------------------------------------------------------
 

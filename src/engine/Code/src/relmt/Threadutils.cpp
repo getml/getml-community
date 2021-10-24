@@ -25,46 +25,50 @@ void Threadutils::copy(
 
 void Threadutils::fit_as_feature_learner( const ThreadutilsFitParams& _params )
 {
+    assert_true( _params.comm_ );
+    assert_true( _params.ensemble_ );
+
     const auto population_subview =
         utils::DataFrameScatterer::scatter_data_frame(
             _params.population_,
             _params.thread_nums_,
             _params.this_thread_num_ );
 
-    const auto [loss_function, table_holder] = _params.ensemble_.init(
+    const auto [loss_function, table_holder] = _params.ensemble_->init(
         population_subview,
         _params.peripheral_,
         _params.row_indices_,
         _params.word_indices_,
         _params.feature_container_ );
 
-    _params.ensemble_.fit_subensembles(
+    _params.ensemble_->fit_subensembles(
         table_holder, _params.logger_, loss_function );
 
-    auto predictions = _params.ensemble_.make_subpredictions(
-        *table_holder, _params.logger_, &_params.comm_ );
+    auto predictions = _params.ensemble_->make_subpredictions(
+        *table_holder, _params.logger_, _params.comm_ );
 
     auto subfeatures =
         SubtreeHelper::make_subfeatures( *table_holder, predictions );
 
-    const auto num_features = _params.ensemble_.hyperparameters().num_features_;
+    const auto num_features =
+        _params.ensemble_->hyperparameters().num_features_;
 
     utils::Logger::log(
-        "RelMT: Training features...", _params.logger_, &_params.comm_ );
+        "RelMT: Training features...", _params.logger_, _params.comm_ );
 
-    while ( _params.ensemble_.num_features() < num_features )
+    while ( _params.ensemble_->num_features() < num_features )
         {
-            _params.ensemble_.fit_new_features(
+            _params.ensemble_->fit_new_features(
                 loss_function, table_holder, subfeatures, num_features );
 
             const auto progress =
-                ( _params.ensemble_.num_features() * 100 ) / num_features;
+                ( _params.ensemble_->num_features() * 100 ) / num_features;
 
             utils::Logger::log(
                 "Trained new features. Progress: " +
                     std::to_string( progress ) + "%.",
                 _params.logger_,
-                &_params.comm_ );
+                _params.comm_ );
         }
 }
 
@@ -106,6 +110,9 @@ Int Threadutils::get_num_threads( const Int _num_threads )
 void Threadutils::transform_as_feature_learner(
     const ThreadutilsTransformParams& _params )
 {
+    assert_true( _params.comm_ );
+    assert_true( _params.features_ );
+
     auto population_subview =
         utils::DataFrameScatterer::DataFrameScatterer::scatter_data_frame(
             _params.population_,
@@ -122,15 +129,15 @@ void Threadutils::transform_as_feature_learner(
         _params.feature_container_ );
 
     auto predictions = _params.ensemble_.make_subpredictions(
-        table_holder, _params.logger_, &_params.comm_ );
+        table_holder, _params.logger_, _params.comm_ );
 
     auto subfeatures =
         SubtreeHelper::make_subfeatures( table_holder, predictions );
 
-    assert_true( _params.features_.size() == _params.index_.size() );
+    assert_true( _params.features_->size() == _params.index_.size() );
 
     utils::Logger::log(
-        "RelMT: Building features...", _params.logger_, &_params.comm_ );
+        "RelMT: Building features...", _params.logger_, _params.comm_ );
 
     for ( size_t i = 0; i < _params.index_.size(); ++i )
         {
@@ -144,7 +151,7 @@ void Threadutils::transform_as_feature_learner(
             copy(
                 population_subview.rows(),
                 *new_feature,
-                _params.features_.at( i ).get() );
+                _params.features_->at( i ).get() );
 
             const auto progress = ( ( i + 1 ) * 100 ) / _params.index_.size();
 
@@ -152,7 +159,7 @@ void Threadutils::transform_as_feature_learner(
                 "Built FEATURE_" + std::to_string( ix + 1 ) +
                     ". Progress: " + std::to_string( progress ) + "%.",
                 _params.logger_,
-                &_params.comm_ );
+                _params.comm_ );
         }
 }
 

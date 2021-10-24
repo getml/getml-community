@@ -17,16 +17,16 @@ struct MakerParams
         nullptr;
 
     /// The hyperparameters used to construct the FastProp algorithm.
-    const std::shared_ptr<const Hyperparameters>& hyperparameters_;
+    const std::shared_ptr<const Hyperparameters> hyperparameters_;
 
     /// The logger used to log the progress.
-    const std::shared_ptr<const logging::AbstractLogger>& logger_;
+    const std::shared_ptr<const logging::AbstractLogger> logger_;
 
     /// The peripheral tables used for training.
-    const std::vector<containers::DataFrame>& peripheral_;
+    const std::vector<containers::DataFrame> peripheral_;
 
     /// Names of the peripheral tables, as referenced by the placeholder.
-    const std::shared_ptr<const std::vector<std::string>>& peripheral_names_;
+    const std::shared_ptr<const std::vector<std::string>> peripheral_names_;
 
     /// The placeholder used.
     const containers::Placeholder placeholder_;

@@ -379,7 +379,7 @@ Float FastProp::calc_threshold( const std::vector<Float> &_r_squared ) const
 {
     auto r_squared = _r_squared;
 
-    std::ranges::sort( r_squared, std::ranges::greater() );
+    RANGES::sort( r_squared, RANGES::greater() );
 
     assert_true( r_squared.size() > hyperparameters().num_features_ );
 
@@ -531,15 +531,15 @@ std::vector<Int> FastProp::find_most_frequent_categories(
 
     auto pairs = std::vector<Pair>( frequencies.begin(), frequencies.end() );
 
-    std::ranges::sort( pairs, sort_by_second );
+    RANGES::sort( pairs, sort_by_second );
 
     const auto get_first = []( const Pair p ) -> Int { return p.first; };
 
     const auto is_not_null = []( const Int val ) -> bool { return val >= 0; };
 
-    const auto range = pairs | std::views::transform( get_first ) |
-                       std::views::filter( is_not_null ) |
-                       std::views::take( hyperparameters().n_most_frequent_ );
+    const auto range = pairs | VIEWS::transform( get_first ) |
+                       VIEWS::filter( is_not_null ) |
+                       VIEWS::take( hyperparameters().n_most_frequent_ );
 
     return stl::collect::vector<Int>( range );
 }
@@ -688,7 +688,7 @@ void FastProp::fit_on_categoricals(
                     continue;
                 }
 
-            for ( const auto agg : hyperparameters().aggregations_ )
+            for ( const auto &agg : hyperparameters().aggregations_ )
                 {
                     if ( !is_categorical( agg ) )
                         {
@@ -746,7 +746,7 @@ void FastProp::fit_on_categoricals_by_categories(
 
             for ( const auto categorical_value : most_frequent )
                 {
-                    for ( const auto agg : hyperparameters().aggregations_ )
+                    for ( const auto &agg : hyperparameters().aggregations_ )
                         {
                             if ( !is_numerical( agg ) )
                                 {
@@ -788,7 +788,7 @@ void FastProp::fit_on_discretes(
     for ( size_t input_col = 0; input_col < _peripheral.num_discretes();
           ++input_col )
         {
-            for ( const auto agg : hyperparameters().aggregations_ )
+            for ( const auto &agg : hyperparameters().aggregations_ )
                 {
                     if ( !is_numerical( agg ) )
                         {
@@ -831,7 +831,7 @@ void FastProp::fit_on_numericals(
     for ( size_t input_col = 0; input_col < _peripheral.num_numericals();
           ++input_col )
         {
-            for ( const auto agg : hyperparameters().aggregations_ )
+            for ( const auto &agg : hyperparameters().aggregations_ )
                 {
                     if ( !is_numerical( agg ) )
                         {
@@ -888,7 +888,7 @@ void FastProp::fit_on_same_units_categorical(
                             continue;
                         }
 
-                    for ( const auto agg : hyperparameters().aggregations_ )
+                    for ( const auto &agg : hyperparameters().aggregations_ )
                         {
                             if ( !is_numerical( agg ) )
                                 {
@@ -933,7 +933,7 @@ void FastProp::fit_on_same_units_discrete(
             for ( size_t input_col = 0; input_col < _peripheral.num_discretes();
                   ++input_col )
                 {
-                    for ( const auto agg : hyperparameters().aggregations_ )
+                    for ( const auto &agg : hyperparameters().aggregations_ )
                         {
                             const bool same_unit =
                                 _population.discrete_unit( output_col ) != "" &&
@@ -996,7 +996,7 @@ void FastProp::fit_on_same_units_numerical(
                   input_col < _peripheral.num_numericals();
                   ++input_col )
                 {
-                    for ( const auto agg : hyperparameters().aggregations_ )
+                    for ( const auto &agg : hyperparameters().aggregations_ )
                         {
                             const bool same_unit =
                                 _population.numerical_unit( output_col ) !=
@@ -1067,7 +1067,7 @@ void FastProp::fit_on_subfeatures(
           input_col < subfeatures().at( _peripheral_ix )->num_features();
           ++input_col )
         {
-            for ( const auto agg : hyperparameters().aggregations_ )
+            for ( const auto &agg : hyperparameters().aggregations_ )
                 {
                     if ( !is_numerical( agg ) )
                         {
@@ -1101,8 +1101,7 @@ void FastProp::fit_on_peripheral(
 {
     const auto condition_filter = make_condition_filter( _peripheral_ix );
 
-    auto filtered_conditions =
-        _conditions | std::views::filter( condition_filter );
+    auto filtered_conditions = _conditions | VIEWS::filter( condition_filter );
 
     for ( const auto &cond : filtered_conditions )
         {
@@ -1427,7 +1426,7 @@ std::vector<std::vector<Float>> FastProp::init_subimportance_factors() const
         return std::vector<Float>( sub->num_features() );
     };
 
-    const auto range = subfeatures() | std::views::transform( make_factors );
+    const auto range = subfeatures() | VIEWS::transform( make_factors );
 
     return std::vector<std::vector<Float>>( range.begin(), range.end() );
 }
@@ -1707,9 +1706,9 @@ std::vector<size_t> FastProp::make_subfeature_index(
         return f.input_col_;
     };
 
-    const auto range = _index | std::views::transform( get_feature ) |
-                       std::views::filter( is_relevant_feature ) |
-                       std::views::transform( get_input_col );
+    const auto range = _index | VIEWS::transform( get_feature ) |
+                       VIEWS::filter( is_relevant_feature ) |
+                       VIEWS::transform( get_input_col );
 
     const auto s = stl::collect::set<size_t>( range );
 
@@ -1848,7 +1847,7 @@ std::shared_ptr<std::vector<size_t>> FastProp::sample_from_population(
 
     auto iota = stl::iota<size_t>( 0, _nrows );
 
-    auto range = iota | std::views::filter( include );
+    auto range = iota | VIEWS::filter( include );
 
     return std::make_shared<std::vector<size_t>>(
         stl::collect::vector<size_t>( range ) );
@@ -1892,8 +1891,8 @@ FastProp::select_features(
 
     const auto iota = stl::iota<size_t>( 0, r_squared.size() );
 
-    const auto range = iota | std::views::filter( r_greater_threshold ) |
-                       std::views::transform( get_feature );
+    const auto range = iota | VIEWS::filter( r_greater_threshold ) |
+                       VIEWS::transform( get_feature );
 
     return std::make_shared<std::vector<containers::AbstractFeature>>(
         stl::collect::vector<containers::AbstractFeature>( range ) );

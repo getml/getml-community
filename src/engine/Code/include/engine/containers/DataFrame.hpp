@@ -1137,7 +1137,7 @@ DataFrameType DataFrame::to_immutable(
     };
 
     const auto categoricals = stl::collect::vector<IntColumnType>(
-        schema.categoricals_ | std::views::transform( get_categorical ) );
+        schema.categoricals_ | VIEWS::transform( get_categorical ) );
 
     // ------------------------------------------------------------------------
 
@@ -1148,7 +1148,7 @@ DataFrameType DataFrame::to_immutable(
     };
 
     const auto join_keys = stl::collect::vector<IntColumnType>(
-        schema.join_keys_ | std::views::transform( get_join_key ) );
+        schema.join_keys_ | VIEWS::transform( get_join_key ) );
 
     // ------------------------------------------------------------------------
 
@@ -1157,7 +1157,7 @@ DataFrameType DataFrame::to_immutable(
     };
 
     const auto indices = stl::collect::vector<std::shared_ptr<MapType>>(
-        schema.join_keys_ | std::views::transform( get_index ) );
+        schema.join_keys_ | VIEWS::transform( get_index ) );
 
     // ------------------------------------------------------------------------
 
@@ -1168,10 +1168,10 @@ DataFrameType DataFrame::to_immutable(
     };
 
     const auto discretes = stl::collect::vector<FloatColumnType>(
-        schema.discretes_ | std::views::transform( get_numerical ) );
+        schema.discretes_ | VIEWS::transform( get_numerical ) );
 
     const auto numericals = stl::collect::vector<FloatColumnType>(
-        schema.numericals_ | std::views::transform( get_numerical ) );
+        schema.numericals_ | VIEWS::transform( get_numerical ) );
 
     // ------------------------------------------------------------------------
 
@@ -1183,7 +1183,7 @@ DataFrameType DataFrame::to_immutable(
 
     const auto targets =
         _targets ? stl::collect::vector<FloatColumnType>(
-                       schema.targets_ | std::views::transform( get_target ) )
+                       schema.targets_ | VIEWS::transform( get_target ) )
                  : std::vector<FloatColumnType>();
 
     // ------------------------------------------------------------------------
@@ -1195,7 +1195,7 @@ DataFrameType DataFrame::to_immutable(
     };
 
     const auto text = stl::collect::vector<StringColumnType>(
-        schema.text_ | std::views::transform( get_text ) );
+        schema.text_ | VIEWS::transform( get_text ) );
 
     // ------------------------------------------------------------------------
 
@@ -1206,7 +1206,7 @@ DataFrameType DataFrame::to_immutable(
     };
 
     const auto time_stamps = stl::collect::vector<FloatColumnType>(
-        schema.time_stamps_ | std::views::transform( get_time_stamp ) );
+        schema.time_stamps_ | VIEWS::transform( get_time_stamp ) );
 
     // ------------------------------------------------------------------------
 

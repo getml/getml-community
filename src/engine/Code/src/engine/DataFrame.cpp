@@ -1599,8 +1599,8 @@ std::string DataFrame::get_html(
 
     const auto rows = get_rows( _max_rows );
 
-    return DataFramePrinter( nrows(), ncols() )
-        .get_html( colnames, roles, units, rows, _border );
+    return DataFramePrinter( ncols() ).get_html(
+        colnames, roles, units, rows, _border );
 }
 
 // ----------------------------------------------------------------------------
@@ -1677,8 +1677,8 @@ std::string DataFrame::get_string( const std::int32_t _max_rows ) const
 
     const auto rows = get_rows( _max_rows );
 
-    return DataFramePrinter( nrows(), ncols() )
-        .get_string( colnames, roles, units, rows );
+    return DataFramePrinter( ncols() ).get_string(
+        colnames, roles, units, rows );
 }
 
 // ----------------------------------------------------------------------------
@@ -2394,33 +2394,33 @@ Schema DataFrame::to_schema( const bool _separate_discrete ) const
     };
 
     const auto categoricals = stl::collect::vector<std::string>(
-        categoricals_ | std::views::transform( get_name ) );
+        categoricals_ | VIEWS::transform( get_name ) );
 
     const auto discretes = stl::collect::vector<std::string>(
-        numericals_ | std::views::filter( is_discrete ) |
-        std::views::transform( get_name ) );
+        numericals_ | VIEWS::filter( is_discrete ) |
+        VIEWS::transform( get_name ) );
 
     const auto join_keys = stl::collect::vector<std::string>(
-        join_keys_ | std::views::transform( get_name ) );
+        join_keys_ | VIEWS::transform( get_name ) );
 
     const auto numericals = stl::collect::vector<std::string>(
-        numericals_ | std::views::filter( is_not_discrete ) |
-        std::views::transform( get_name ) );
+        numericals_ | VIEWS::filter( is_not_discrete ) |
+        VIEWS::transform( get_name ) );
 
     const auto targets = stl::collect::vector<std::string>(
-        targets_ | std::views::transform( get_name ) );
+        targets_ | VIEWS::transform( get_name ) );
 
     const auto text = stl::collect::vector<std::string>(
-        text_ | std::views::transform( get_name ) );
+        text_ | VIEWS::transform( get_name ) );
 
     const auto time_stamps = stl::collect::vector<std::string>(
-        time_stamps_ | std::views::transform( get_name ) );
+        time_stamps_ | VIEWS::transform( get_name ) );
 
     const auto unused_floats = stl::collect::vector<std::string>(
-        unused_floats_ | std::views::transform( get_name ) );
+        unused_floats_ | VIEWS::transform( get_name ) );
 
     const auto unused_strings = stl::collect::vector<std::string>(
-        unused_strings_ | std::views::transform( get_name ) );
+        unused_strings_ | VIEWS::transform( get_name ) );
 
     return Schema{
         .categoricals_ = categoricals,

@@ -29,7 +29,7 @@ void DataFrameTracker::clean_up()
 {
     std::vector<size_t> remove_keys;
 
-    for ( const auto [key, _] : pairs_ )
+    for ( const auto& [key, _] : pairs_ )
         {
             if ( !get_df( key ) )
                 {
@@ -101,7 +101,7 @@ Poco::JSON::Object::Ptr DataFrameTracker::make_build_history(
     };
 
     const auto df_fingerprints = stl::collect::array(
-        data_frames | std::views::transform( get_fingerprint ) );
+        data_frames | VIEWS::transform( get_fingerprint ) );
 
     auto build_history = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
 

@@ -124,7 +124,7 @@ std::vector<Subrole> SubroleParser::parse(
     };
 
     return stl::collect::vector<Subrole>(
-        _vec | std::views::transform( to_subrole ) );
+        _vec | VIEWS::transform( to_subrole ) );
 }
 
 // ----------------------------------------------------------------------------

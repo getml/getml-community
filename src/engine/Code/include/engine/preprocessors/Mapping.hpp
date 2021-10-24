@@ -483,7 +483,7 @@ class Mapping : public Preprocessor
             const auto iota = stl::iota<size_t>( 0, num_weights );
 
             return stl::collect::vector<std::string>(
-                iota | std::views::transform( to_sql ) );
+                iota | VIEWS::transform( to_sql ) );
         };
 
         // -----------------------------------------------------------------------
@@ -491,7 +491,7 @@ class Mapping : public Preprocessor
         const auto iota = stl::iota<size_t>( 0, _mappings.size() );
 
         return stl::join::vector<std::string>(
-            iota | std::views::transform( all_weights_to_sql ) );
+            iota | VIEWS::transform( all_weights_to_sql ) );
     }
 
     /// Determines whether you want to include this column.

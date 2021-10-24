@@ -17,7 +17,9 @@
 
 // ----------------------------------------------------
 
+#ifndef __APPLE__
 #include "multithreading/parallel_for_each.hpp"
+#endif
 
 #include "multithreading/Barrier.hpp"
 

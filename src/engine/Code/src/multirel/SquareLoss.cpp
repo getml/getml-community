@@ -6,8 +6,7 @@ namespace lossfunctions
 {
 // ----------------------------------------------------------------------------
 
-SquareLoss::SquareLoss( multithreading::Communicator* _comm )
-    : LossFunction(), comm_( _comm ){};
+SquareLoss::SquareLoss( multithreading::Communicator* _comm ){};
 
 // ----------------------------------------------------------------------------
 

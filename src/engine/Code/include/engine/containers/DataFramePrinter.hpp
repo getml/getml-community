@@ -12,10 +12,7 @@ class DataFramePrinter
     // -------------------------------
 
    public:
-    DataFramePrinter( const size_t _nrows, const size_t _ncols )
-        : ncols_( _ncols ), nrows_( _nrows )
-    {
-    }
+    DataFramePrinter( const size_t _ncols ) : ncols_( _ncols ) {}
 
     ~DataFramePrinter() = default;
 
@@ -71,9 +68,6 @@ class DataFramePrinter
    private:
     /// The number of columns of the data frame to be printed.
     const size_t ncols_;
-
-    /// The number of rows of the data frame to be printed.
-    const size_t nrows_;
 
     // -------------------------------
 };

@@ -86,7 +86,7 @@ std::vector<std::string> SapHana::get_colnames(
     };
 
     return stl::collect::vector<std::string>(
-        *colnames | std::views::transform( to_string ) );
+        *colnames | VIEWS::transform( to_string ) );
 }
 
 // ----------------------------------------------------------------------------
@@ -106,8 +106,7 @@ std::vector<io::Datatype> SapHana::get_coltypes(
     assert_true( typenames );
 
     return stl::collect::vector<io::Datatype>(
-        *typenames |
-        std::views::transform( GoutilsTypeInferrer::to_datatype ) );
+        *typenames | VIEWS::transform( GoutilsTypeInferrer::to_datatype ) );
 }
 
 // ----------------------------------------------------------------------------
@@ -418,7 +417,7 @@ std::shared_ptr<Iterator> SapHana::select( const std::string& _sql )
     };
 
     const auto colnames = stl::collect::vector<std::string>(
-        *colnames_ptr | std::views::transform( to_string ) );
+        *colnames_ptr | VIEWS::transform( to_string ) );
 
     const auto data = goutils::SapHana::query(
         user_, password_, host_, port_, default_schema_, ping_interval_, _sql );

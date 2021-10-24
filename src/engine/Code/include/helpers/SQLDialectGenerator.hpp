@@ -8,6 +8,8 @@ namespace helpers
 class SQLDialectGenerator
 {
    public:
+    virtual ~SQLDialectGenerator() = default;
+
     /// Expresses an aggregation in the SQL dialect.
     virtual std::string aggregation(
         const enums::Aggregation& _agg,

@@ -250,7 +250,7 @@ Maker::make_subcontainers(
     const auto iota =
         stl::iota<size_t>( 0, placeholder.propositionalization_.size() );
 
-    const auto range = iota | std::views::transform( make_subcontainer );
+    const auto range = iota | VIEWS::transform( make_subcontainer );
 
     return std::make_shared<typename FastPropContainer::Subcontainers>(
         stl::collect::vector<std::shared_ptr<const FastPropContainer>>(

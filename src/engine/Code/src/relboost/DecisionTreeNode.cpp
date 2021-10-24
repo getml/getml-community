@@ -119,9 +119,6 @@ void DecisionTreeNode::add_candidates(
     const std::vector<containers::Match>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates )
 {
-    // -----------------------------------------------------------------
-    // Calculate weights.
-
     auto pairs = loss_function().calc_pairs(
         _revert,
         _update,
@@ -132,9 +129,6 @@ void DecisionTreeNode::add_candidates(
         _last_it,
         _it,
         _end );
-
-    // -----------------------------------------------------------------
-    // Calculate and store loss reduction.
 
     for ( const auto& [loss_reduction, new_weights] : pairs )
         {
@@ -155,15 +149,10 @@ void DecisionTreeNode::add_candidates(
                 loss_reduction, _split, new_weights ) );
         }
 
-    // -----------------------------------------------------------------
-    // Revert, if applicable
-
     if ( _revert == enums::Revert::True )
         {
             loss_function().revert( weight_ );
         }
-
-    // -----------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------

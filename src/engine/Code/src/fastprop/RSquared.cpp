@@ -22,7 +22,7 @@ std::vector<Float> RSquared::calculate(
             mean_targets, var_targets, _targets, feature, _rownums );
     };
 
-    auto range = _features | std::views::transform( calc_r );
+    auto range = _features | VIEWS::transform( calc_r );
 
     return std::vector<Float>( range.begin(), range.end() );
 }
@@ -55,7 +55,7 @@ Float RSquared::calc_for_feature(
 
     std::iota( iota.begin(), iota.end(), 0 );
 
-    auto range = iota | std::views::transform( calc );
+    auto range = iota | VIEWS::transform( calc );
 
     return helpers::Aggregations::avg( range.begin(), range.end() );
 }
@@ -88,9 +88,9 @@ Float RSquared::calc_for_target(
         return _targets[i];
     };
 
-    const auto feature = _rownums | std::views::transform( get_feature );
+    const auto feature = _rownums | VIEWS::transform( get_feature );
 
-    const auto targets = _rownums | std::views::transform( get_target );
+    const auto targets = _rownums | VIEWS::transform( get_target );
 
     const auto var_feature =
         helpers::Aggregations::var( feature.begin(), feature.end() );
@@ -135,12 +135,12 @@ std::vector<Float> RSquared::calc_mean_targets(
             return _target[i];
         };
 
-        const auto target = _rownums | std::views::transform( get_target );
+        const auto target = _rownums | VIEWS::transform( get_target );
 
         return helpers::Aggregations::avg( target.begin(), target.end() );
     };
 
-    auto range = _targets | std::views::transform( calc_mean );
+    auto range = _targets | VIEWS::transform( calc_mean );
 
     return std::vector<Float>( range.begin(), range.end() );
 }
@@ -158,12 +158,12 @@ std::vector<Float> RSquared::calc_var_targets(
             return _target[i];
         };
 
-        const auto target = _rownums | std::views::transform( get_target );
+        const auto target = _rownums | VIEWS::transform( get_target );
 
         return helpers::Aggregations::var( target.begin(), target.end() );
     };
 
-    auto range = _targets | std::views::transform( calc_var );
+    auto range = _targets | VIEWS::transform( calc_var );
 
     return std::vector<Float>( range.begin(), range.end() );
 }

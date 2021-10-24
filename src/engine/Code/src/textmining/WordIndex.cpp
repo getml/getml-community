@@ -44,9 +44,7 @@ WordIndex::make_indptr_and_words(
 
     // ----------------------------------------------------------------
 
-    const auto in_vocabulary = [&voc_map]( const Int val ) -> bool {
-        return val >= 0;
-    };
+    const auto in_vocabulary = []( const Int val ) -> bool { return val >= 0; };
 
     // ----------------------------------------------------------------
 
@@ -58,8 +56,8 @@ WordIndex::make_indptr_and_words(
         {
             const auto processed = Vocabulary::process_text_field( textfield );
 
-            auto range = processed | std::views::transform( to_number ) |
-                         std::views::filter( in_vocabulary );
+            auto range = processed | VIEWS::transform( to_number ) |
+                         VIEWS::filter( in_vocabulary );
 
             size_t num_words = 0;
 

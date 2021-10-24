@@ -59,11 +59,10 @@ std::string SQLite3Generator::create_indices(
 
     return stl::collect::string(
                _schema.join_keys_ |
-               std::ranges::views::filter( SQLGenerator::include_column ) |
-               std::ranges::views::transform( create_index ) ) +
+               VIEWS::filter( SQLGenerator::include_column ) |
+               VIEWS::transform( create_index ) ) +
            stl::collect::string(
-               _schema.time_stamps_ |
-               std::ranges::views::transform( create_index ) );
+               _schema.time_stamps_ | VIEWS::transform( create_index ) );
 
     // ------------------------------------------------------------------------
 }
@@ -445,8 +444,8 @@ std::vector<std::string> SQLite3Generator::make_staging_columns(
             std::bind( cast_column, std::placeholders::_1, "REAL" );
 
         return stl::collect::vector<std::string>(
-            _colnames | std::views::filter( SQLGenerator::include_column ) |
-            std::views::transform( cast ) );
+            _colnames | VIEWS::filter( SQLGenerator::include_column ) |
+            VIEWS::transform( cast ) );
     };
 
     // ------------------------------------------------------------------------
@@ -455,8 +454,8 @@ std::vector<std::string> SQLite3Generator::make_staging_columns(
         [to_epoch_time_or_rowid]( const std::vector<std::string>& _colnames )
         -> std::vector<std::string> {
         return stl::collect::vector<std::string>(
-            _colnames | std::views::filter( SQLGenerator::include_column ) |
-            std::views::transform( to_epoch_time_or_rowid ) );
+            _colnames | VIEWS::filter( SQLGenerator::include_column ) |
+            VIEWS::transform( to_epoch_time_or_rowid ) );
     };
 
     // ------------------------------------------------------------------------
@@ -468,8 +467,8 @@ std::vector<std::string> SQLite3Generator::make_staging_columns(
             std::bind( cast_column, std::placeholders::_1, "TEXT" );
 
         return stl::collect::vector<std::string>(
-            _colnames | std::views::filter( SQLGenerator::include_column ) |
-            std::views::transform( cast ) );
+            _colnames | VIEWS::filter( SQLGenerator::include_column ) |
+            VIEWS::transform( cast ) );
     };
 
     // ------------------------------------------------------------------------
@@ -491,13 +490,14 @@ std::vector<std::string> SQLite3Generator::make_staging_columns(
 
     // ------------------------------------------------------------------------
 
-    return stl::join::vector<std::string>( {targets,
-                                            categoricals,
-                                            discretes,
-                                            join_keys,
-                                            numericals,
-                                            text,
-                                            time_stamps} );
+    return stl::join::vector<std::string>(
+        { targets,
+          categoricals,
+          discretes,
+          join_keys,
+          numericals,
+          text,
+          time_stamps } );
 
     // ------------------------------------------------------------------------
 }
@@ -566,7 +566,7 @@ std::string SQLite3Generator::make_postprocessing(
 {
     std::string sql;
 
-    for ( const auto feature : _sql )
+    for ( const auto& feature : _sql )
         {
             const auto pos = feature.find( "\";\n" );
 
@@ -589,8 +589,8 @@ std::string SQLite3Generator::make_select(
     const std::vector<std::string>& _categorical,
     const std::vector<std::string>& _numerical ) const
 {
-    const auto manual =
-        stl::join::vector<std::string>( {_targets, _numerical, _categorical} );
+    const auto manual = stl::join::vector<std::string>(
+        { _targets, _numerical, _categorical } );
 
     const auto modified_colnames =
         helpers::Macros::modify_colnames( manual, this );
@@ -709,8 +709,8 @@ std::vector<std::string> SQLite3Generator::make_staging_tables(
 {
     // ------------------------------------------------------------------------
 
-    auto sql = std::vector<std::string>(
-        {make_staging_table( _population_needs_targets, _population_schema )} );
+    auto sql = std::vector<std::string>( { make_staging_table(
+        _population_needs_targets, _population_schema ) } );
 
     // ------------------------------------------------------------------------
 
@@ -808,7 +808,7 @@ std::string SQLite3Generator::make_updates(
 {
     std::string sql;
 
-    for ( const auto colname : _autofeatures )
+    for ( const auto& colname : _autofeatures )
         {
             const auto table = helpers::StringReplacer::replace_all(
                 colname, "feature", "FEATURE" );

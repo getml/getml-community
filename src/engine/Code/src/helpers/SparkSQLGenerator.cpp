@@ -372,7 +372,7 @@ std::string SparkSQLGenerator::drop_batch_tables(
         return sql.str();
     };
 
-    return stl::collect::string( iota | std::views::transform( drop_table ) );
+    return stl::collect::string( iota | VIEWS::transform( drop_table ) );
 }
 
 // ----------------------------------------------------------------------------
@@ -513,8 +513,7 @@ std::string SparkSQLGenerator::join_batch_tables(
 
     const auto iota = stl::iota<size_t>( 0, num_batches );
 
-    const auto join_table = [&_autofeatures,
-                             &_prefix]( size_t _i ) -> std::string {
+    const auto join_table = [&_prefix]( size_t _i ) -> std::string {
         std::stringstream sql;
 
         sql << "LEFT JOIN `FEATURES" << _prefix << "_BATCH_"
@@ -524,7 +523,7 @@ std::string SparkSQLGenerator::join_batch_tables(
         return sql.str();
     };
 
-    return stl::collect::string( iota | std::views::transform( join_table ) );
+    return stl::collect::string( iota | VIEWS::transform( join_table ) );
 }
 
 // ----------------------------------------------------------------------------
@@ -757,8 +756,8 @@ std::string SparkSQLGenerator::make_batch_tables(
                                 size_t _i ) -> std::string {
         const auto batch_begin = _i * BATCH_SIZE;
 
-        const auto range = _autofeatures | std::views::drop( batch_begin ) |
-                           std::views::take( BATCH_SIZE );
+        const auto range = _autofeatures | VIEWS::drop( batch_begin ) |
+                           VIEWS::take( BATCH_SIZE );
 
         const auto autofeatures = stl::collect::vector<std::string>( range );
 
@@ -776,7 +775,7 @@ std::string SparkSQLGenerator::make_batch_tables(
         return sql.str();
     };
 
-    return stl::collect::string( iota | std::views::transform( make_table ) );
+    return stl::collect::string( iota | VIEWS::transform( make_table ) );
 }
 // ----------------------------------------------------------------------------
 
@@ -931,8 +930,8 @@ std::vector<std::string> SparkSQLGenerator::make_staging_columns(
             std::bind( cast_column, std::placeholders::_1, "DOUBLE" );
 
         return stl::collect::vector<std::string>(
-            _colnames | std::views::filter( SQLGenerator::include_column ) |
-            std::views::transform( cast ) );
+            _colnames | VIEWS::filter( SQLGenerator::include_column ) |
+            VIEWS::transform( cast ) );
     };
 
     // ------------------------------------------------------------------------
@@ -941,8 +940,8 @@ std::vector<std::string> SparkSQLGenerator::make_staging_columns(
         [to_epoch_time_or_rowid]( const std::vector<std::string>& _colnames )
         -> std::vector<std::string> {
         return stl::collect::vector<std::string>(
-            _colnames | std::views::filter( SQLGenerator::include_column ) |
-            std::views::transform( to_epoch_time_or_rowid ) );
+            _colnames | VIEWS::filter( SQLGenerator::include_column ) |
+            VIEWS::transform( to_epoch_time_or_rowid ) );
     };
 
     // ------------------------------------------------------------------------
@@ -954,9 +953,8 @@ std::vector<std::string> SparkSQLGenerator::make_staging_columns(
             std::bind( cast_column, std::placeholders::_1, "STRING" );
 
         return stl::collect::vector<std::string>(
-            _colnames | std::views::filter( SQLGenerator::include_column ) |
-            std::views::filter( is_not_rowid ) |
-            std::views::transform( cast ) );
+            _colnames | VIEWS::filter( SQLGenerator::include_column ) |
+            VIEWS::filter( is_not_rowid ) | VIEWS::transform( cast ) );
     };
 
     // ------------------------------------------------------------------------
@@ -978,13 +976,14 @@ std::vector<std::string> SparkSQLGenerator::make_staging_columns(
 
     // ------------------------------------------------------------------------
 
-    return stl::join::vector<std::string>( {targets,
-                                            categoricals,
-                                            discretes,
-                                            join_keys,
-                                            numericals,
-                                            text,
-                                            time_stamps} );
+    return stl::join::vector<std::string>(
+        { targets,
+          categoricals,
+          discretes,
+          join_keys,
+          numericals,
+          text,
+          time_stamps } );
 
     // ------------------------------------------------------------------------
 }
@@ -996,7 +995,7 @@ std::string SparkSQLGenerator::make_feature_joins(
 {
     std::stringstream sql;
 
-    for ( const auto colname : _autofeatures )
+    for ( const auto& colname : _autofeatures )
         {
             const auto alias =
                 StringReplacer::replace_all( colname, "feature_", "f_" );
@@ -1066,7 +1065,7 @@ std::string SparkSQLGenerator::make_postprocessing(
 {
     std::stringstream sql;
 
-    for ( const auto feature : _sql )
+    for ( const auto& feature : _sql )
         {
             const auto pos = feature.find( "`;" );
 
@@ -1089,8 +1088,8 @@ std::string SparkSQLGenerator::make_select(
     const std::vector<std::string>& _categorical,
     const std::vector<std::string>& _numerical ) const
 {
-    const auto manual =
-        stl::join::vector<std::string>( {_targets, _numerical, _categorical} );
+    const auto manual = stl::join::vector<std::string>(
+        { _targets, _numerical, _categorical } );
 
     const auto modified_colnames =
         helpers::Macros::modify_colnames( manual, this );
@@ -1193,7 +1192,7 @@ std::string SparkSQLGenerator::make_separators() const
         std::string( textmining::StringSplitter::separators_ );
 
     return stl::collect::string(
-        separators | std::views::transform( handle_escape_char ) );
+        separators | VIEWS::transform( handle_escape_char ) );
 }
 
 // ----------------------------------------------------------------------------
@@ -1279,8 +1278,8 @@ std::vector<std::string> SparkSQLGenerator::make_staging_tables(
 {
     // ------------------------------------------------------------------------
 
-    auto sql = std::vector<std::string>(
-        {make_staging_table( _population_needs_targets, _population_schema )} );
+    auto sql = std::vector<std::string>( { make_staging_table(
+        _population_needs_targets, _population_schema ) } );
 
     // ------------------------------------------------------------------------
 

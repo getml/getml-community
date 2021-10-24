@@ -337,7 +337,7 @@ void DatabaseManager::post_tables()
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
-    for ( const auto [name, conn] : connector_map_ )
+    for ( const auto& [name, conn] : connector_map_ )
         {
             assert_true( conn );
 

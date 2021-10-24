@@ -23,8 +23,6 @@ class AggregationIndex
     {
     }
 
-    AggregationIndex() = default;
-
     ~AggregationIndex() = default;
 
     // ------------------------------------------------------------

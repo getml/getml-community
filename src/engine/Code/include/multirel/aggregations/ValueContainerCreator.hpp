@@ -19,13 +19,13 @@ class ValueContainerCreator
 
     typedef typename ValueContainerType::NumericalColumn NumericalColumn;
 
-    typedef std::conditional<
+    typedef typename std::conditional<
         data_used_ == enums::DataUsed::same_unit_discrete ||
             data_used_ == enums::DataUsed::same_unit_discrete_ts,
         ValueContainerType,
         void>::type SameUnitDiscreteType;
 
-    typedef std::conditional<
+    typedef typename std::conditional<
         data_used_ == enums::DataUsed::same_unit_numerical ||
             data_used_ == enums::DataUsed::same_unit_numerical_ts,
         ValueContainerType,

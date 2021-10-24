@@ -35,12 +35,6 @@ class SquareLoss : public LossFunction
     std::string type() const final { return "SquareLoss"; }
 
     // -----------------------------------------
-
-   private:
-    // Communicator object
-    multithreading::Communicator* comm_;
-
-    // -----------------------------------------
 };
 
 // ----------------------------------------------------------------------------

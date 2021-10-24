@@ -640,8 +640,8 @@ void DecisionTreeEnsemble::fit_spawn_threads(
             threads.push_back( std::thread(
                 Threadutils::fit_ensemble,
                 ThreadutilsFitParams{
-                    .comm_ = comm,
-                    .ensemble_ = ensembles.at( i ),
+                    .comm_ = &comm,
+                    .ensemble_ = &ensembles.at( i ),
                     .feature_container_ = _feature_container,
                     .peripheral_ = _peripheral,
                     .population_ = _population,
@@ -656,8 +656,8 @@ void DecisionTreeEnsemble::fit_spawn_threads(
     try
         {
             Threadutils::fit_ensemble( ThreadutilsFitParams{
-                .comm_ = comm,
-                .ensemble_ = *this,
+                .comm_ = &comm,
+                .ensemble_ = this,
                 .feature_container_ = _feature_container,
                 .logger_ = _logger,
                 .peripheral_ = _peripheral,
@@ -806,7 +806,7 @@ void DecisionTreeEnsemble::keep_best_candidates(
         return std::get<1>( t1 ) < std::get<1>( t2 );
     };
 
-    std::ranges::sort( *_candidates, loss_is_smaller );
+    RANGES::sort( *_candidates, loss_is_smaller );
 
     const auto num_remaining = _num_features - num_features();
 
@@ -1006,7 +1006,7 @@ void DecisionTreeEnsemble::subfeatures_to_sql(
                             subensembles_sum_.at( i )->num_features() );
 
                     const auto autofeatures = stl::collect::vector<std::string>(
-                        iota | std::views::transform( to_feature_name ) );
+                        iota | VIEWS::transform( to_feature_name ) );
 
                     const auto it = _peripheral_map->find(
                         subensembles_avg_.at( i )->placeholder().name() );
@@ -1051,7 +1051,7 @@ containers::Features DecisionTreeEnsemble::transform(
             _params.population_.nrows() );
     };
 
-    auto range = _params.index_ | std::views::transform( init_feature );
+    auto range = _params.index_ | VIEWS::transform( init_feature );
 
     auto features =
         stl::collect::vector<std::shared_ptr<std::vector<Float>>>( range );
@@ -1127,10 +1127,10 @@ void DecisionTreeEnsemble::transform_spawn_threads(
             threads.push_back( std::thread(
                 Threadutils::transform_ensemble,
                 ThreadutilsTransformParams{
-                    .comm_ = comm,
+                    .comm_ = &comm,
                     .ensemble_ = *this,
                     .feature_container_ = _feature_container,
-                    .features_ = *_features,
+                    .features_ = _features,
                     .index_ = _index,
                     .peripheral_ = _peripheral,
                     .population_ = _population,
@@ -1144,10 +1144,10 @@ void DecisionTreeEnsemble::transform_spawn_threads(
     try
         {
             Threadutils::transform_ensemble( ThreadutilsTransformParams{
-                .comm_ = comm,
+                .comm_ = &comm,
                 .ensemble_ = *this,
                 .feature_container_ = _feature_container,
-                .features_ = *_features,
+                .features_ = _features,
                 .index_ = _index,
                 .logger_ = _logger,
                 .peripheral_ = _peripheral,
@@ -1199,7 +1199,7 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj(
 
     if ( impl().peripheral_ )
         {
-            obj.set( "peripheral_", JSON::vector_to_array( peripheral() ) );
+            obj.set( "peripheral_", JSON::vector_to_array_ptr( peripheral() ) );
         }
 
     if ( impl().placeholder_ )
@@ -1341,11 +1341,13 @@ std::vector<std::string> DecisionTreeEnsemble::to_sql(
             const bool has_normal_subfeatures = std::any_of(
                 prop_in.begin(), prop_in.end(), std::logical_not() );
 
-            const bool output_has_prop = std::any_of(
-                prop_out.begin(), prop_out.end(), std::identity() );
+            const auto is_true = []( const bool _val ) { return _val; };
+
+            const bool output_has_prop =
+                std::any_of( prop_out.begin(), prop_out.end(), is_true );
 
             const bool input_has_prop =
-                std::any_of( prop_in.begin(), prop_in.end(), std::identity() );
+                std::any_of( prop_in.begin(), prop_in.end(), is_true );
 
             const auto has_subfeatures = std::make_tuple(
                 has_normal_subfeatures, output_has_prop, input_has_prop );

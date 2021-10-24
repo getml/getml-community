@@ -10,7 +10,7 @@ size_t DataModelChecker::calc_num_joins(
     const helpers::Placeholder& _placeholder )
 {
     auto range = _placeholder.joined_tables_ |
-                 std::views::transform( DataModelChecker::calc_num_joins );
+                 VIEWS::transform( DataModelChecker::calc_num_joins );
 
     return _placeholder.joined_tables_.size() +
            std::accumulate( range.begin(), range.end(), 0 );
@@ -40,7 +40,7 @@ communication::Warner DataModelChecker::check(
     };
 
     const auto peripheral = stl::collect::vector<containers::DataFrame>(
-        _peripheral | std::views::filter( is_not_text_field ) );
+        _peripheral | VIEWS::filter( is_not_text_field ) );
 
     // --------------------------------------------------------------------------
 
@@ -125,12 +125,14 @@ void DataModelChecker::check_all_propositionalization(
 
     assert_true( _placeholder );
 
+    const auto is_true = []( const bool _val ) { return _val; };
+
     const bool all_propositionalization =
         ( _placeholder->propositionalization().size() > 0 ) &&
         std::all_of(
             _placeholder->propositionalization().begin(),
             _placeholder->propositionalization().end(),
-            std::identity() );
+            is_true );
 
     if ( all_propositionalization && any_non_fast_prop )
         {

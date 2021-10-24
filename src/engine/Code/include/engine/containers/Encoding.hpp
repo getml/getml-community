@@ -54,7 +54,7 @@ class Encoding
 
     /// Returns the integer mapped to a string.
     template <class T>
-    std::conditional<
+    typename std::conditional<
         std::is_same<T, std::string>::value ||
             std::is_same<T, strings::String>::value,
         Int,
@@ -81,7 +81,7 @@ class Encoding
 
     /// Returns the integer mapped to a string (const version).
     template <class T>
-    std::conditional<
+    typename std::conditional<
         std::is_same<T, std::string>::value ||
             std::is_same<T, strings::String>::value,
         Int,

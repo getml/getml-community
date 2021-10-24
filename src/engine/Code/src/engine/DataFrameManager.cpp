@@ -909,13 +909,13 @@ void DataFrameManager::concat(
         return view_parser.parse( *_ptr );
     };
 
-    auto range = data_frame_objs | std::views::transform( extract_df );
+    auto range = data_frame_objs | VIEWS::transform( extract_df );
 
     // ------------------------------------------------------------------------
 
     auto df = range[0].clone( _name );
 
-    for ( size_t i = 1; i < std::ranges::size( range ); ++i )
+    for ( size_t i = 1; i < RANGES::size( range ); ++i )
         {
             df.append( range[i] );
         }

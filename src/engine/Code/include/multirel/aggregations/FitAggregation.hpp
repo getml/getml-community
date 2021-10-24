@@ -28,25 +28,27 @@ class FitAggregation : public AbstractFitAggregation
 
         assert_true( optimization_criterion_ );
 
+        assert_true( _params.matches_ );
+
         const auto null_value_separator =
-            separate_null_values_for_matches( &_params.matches_ );
+            separate_null_values_for_matches( _params.matches_ );
 
         if constexpr ( needs_sorting_ )
             {
                 sort_matches(
                     _params.peripheral_,
                     null_value_separator,
-                    _params.matches_.end() );
+                    _params.matches_->end() );
             }
 
         const auto dist =
-            std::distance( _params.matches_.begin(), null_value_separator );
+            std::distance( _params.matches_->begin(), null_value_separator );
 
         assert_true( dist >= 0 );
 
-        samples_begin_ = _params.matches_.data() + dist;
+        samples_begin_ = _params.matches_->data() + dist;
 
-        samples_end_ = _params.matches_.data() + _params.matches_.size();
+        samples_end_ = _params.matches_->data() + _params.matches_->size();
 
         reset();
     };
@@ -1397,7 +1399,7 @@ class FitAggregation : public AbstractFitAggregation
     inline Float value_to_be_aggregated( const containers::Match *_match ) const
     {
         using ReturnType =
-            ValueContainer<data_used_, is_population_>::ReturnType;
+            typename ValueContainer<data_used_, is_population_>::ReturnType;
 
         if constexpr ( std::is_same<ReturnType, Float>() )
             {

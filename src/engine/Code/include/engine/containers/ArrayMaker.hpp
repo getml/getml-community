@@ -55,7 +55,8 @@ std::shared_ptr<arrow::ChunkedArray> ArrayMaker::make_boolean_array(
 #ifdef NDEBUG
         _builder->UnsafeAppend( _val );
 #else
-        _builder->Append( _val );
+        const auto status = _builder->Append( _val );
+        assert_msg( status.ok(), status.message() );
 #endif
     };
 
@@ -75,7 +76,12 @@ std::vector<std::shared_ptr<arrow::Array>> ArrayMaker::make_chunks(
     const AppendFunctionType _append_function,
     BuilderType* _builder )
 {
-    _builder->Resize( MAX_CHUNKSIZE );
+    const auto status = _builder->Resize( MAX_CHUNKSIZE );
+
+    if ( !status.ok() )
+        {
+            throw std::runtime_error( status.message() );
+        }
 
     std::vector<std::shared_ptr<arrow::Array>> chunks;
 
@@ -114,14 +120,16 @@ std::shared_ptr<arrow::ChunkedArray> ArrayMaker::make_float_array(
                                      arrow::DoubleBuilder* _builder ) {
         if ( helpers::NullChecker::is_null( _val ) )
             {
-                _builder->AppendNull();
+                const auto status = _builder->AppendNull();
+                assert_msg( status.ok(), status.message() );
             }
         else
             {
 #ifdef NDEBUG
                 _builder->UnsafeAppend( _val );
 #else
-                _builder->Append( _val );
+                const auto status = _builder->Append( _val );
+                assert_msg( status.ok(), status.message() );
 #endif
             }
     };
@@ -143,13 +151,18 @@ std::shared_ptr<arrow::ChunkedArray> ArrayMaker::make_string_array(
                                      arrow::StringBuilder* _builder ) {
         if ( helpers::NullChecker::is_null( _val ) )
             {
-                _builder->AppendNull();
+                const auto status = _builder->AppendNull();
+                assert_msg( status.ok(), status.message() );
             }
         else
             {
                 // For some reason, UnsafeAppend
                 // doesn't work for strings.
-                _builder->Append( _val );
+                const auto status = _builder->Append( _val );
+                if ( !status.ok() )
+                    {
+                        throw std::runtime_error( status.message() );
+                    }
             }
     };
 
@@ -170,7 +183,8 @@ std::shared_ptr<arrow::ChunkedArray> ArrayMaker::make_time_stamp_array(
                                      arrow::TimestampBuilder* _builder ) {
         if ( helpers::NullChecker::is_null( _val ) )
             {
-                _builder->AppendNull();
+                const auto status = _builder->AppendNull();
+                assert_msg( status.ok(), status.message() );
             }
         else
             {
@@ -178,7 +192,9 @@ std::shared_ptr<arrow::ChunkedArray> ArrayMaker::make_time_stamp_array(
                 _builder->UnsafeAppend(
                     static_cast<std::int64_t>( _val * 1.0e+09 ) );
 #else
-                _builder->Append( static_cast<std::int64_t>( _val * 1.0e+09 ) );
+                const auto status = _builder->Append(
+                    static_cast<std::int64_t>( _val * 1.0e+09 ) );
+                assert_msg( status.ok(), status.message() );
 #endif
             }
     };

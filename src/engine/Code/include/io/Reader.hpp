@@ -8,6 +8,8 @@ namespace io
 class Reader
 {
    public:
+    virtual ~Reader() = default;
+
     /// Returns the colnames.
     virtual std::vector<std::string> colnames() = 0;
 

@@ -65,8 +65,8 @@ VocabularyTree::parse_peripheral(
         std::placeholders::_1,
         _peripheral_names );
 
-    const auto range = _placeholder.joined_tables_ |
-                       std::ranges::views::transform( extract_peripheral );
+    const auto range =
+        _placeholder.joined_tables_ | VIEWS::transform( extract_peripheral );
 
     return stl::collect::vector<VocabForDf>( range );
 }
@@ -104,8 +104,8 @@ std::vector<std::optional<VocabularyTree>> VocabularyTree::parse_subtrees(
             new_population, _peripheral, _p, _peripheral_names );
     };
 
-    const auto range = _placeholder.joined_tables_ |
-                       std::ranges::views::transform( make_subtree );
+    const auto range =
+        _placeholder.joined_tables_ | VIEWS::transform( make_subtree );
 
     return stl::collect::vector<std::optional<VocabularyTree>>( range );
 }

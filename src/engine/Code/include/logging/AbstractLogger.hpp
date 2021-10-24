@@ -14,7 +14,7 @@ class AbstractLogger
    public:
     AbstractLogger() {}
 
-    ~AbstractLogger() = default;
+    virtual ~AbstractLogger() = default;
 
     // --------------------------------------------------------
 

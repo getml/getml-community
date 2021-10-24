@@ -78,7 +78,7 @@ Mapping::build_prerequisites(
     const auto iota = stl::iota<size_t>( 0, _peripheral_dfs.size() );
 
     const auto peripheral = stl::collect::vector<helpers::DataFrame>(
-        iota | std::views::transform( to_immutable ) );
+        iota | VIEWS::transform( to_immutable ) );
 
     const auto [vocabulary, word_index_container] =
         handle_text_fields( population, peripheral );
@@ -135,7 +135,7 @@ std::pair<Int, std::vector<Float>> Mapping::calc_agg_targets(
             return _target_col[_i];
         };
 
-        const auto value_range = rownums | std::views::transform( get_value );
+        const auto value_range = rownums | VIEWS::transform( get_value );
 
         const auto agg =
             [this, value_range]( const MappingAggregation& _agg ) -> Float {
@@ -143,15 +143,14 @@ std::pair<Int, std::vector<Float>> Mapping::calc_agg_targets(
         };
 
         const auto aggregated_range =
-            aggregation_enums_ | std::views::transform( agg );
+            aggregation_enums_ | VIEWS::transform( agg );
 
         return stl::collect::vector<Float>( aggregated_range );
     };
 
     // -----------------------------------------------------------------------
 
-    const auto range =
-        _population.targets_ | std::views::transform( calc_aggs );
+    const auto range = _population.targets_ | VIEWS::transform( calc_aggs );
 
     const auto second = stl::join::vector<Float>( range );
 
@@ -339,7 +338,7 @@ typename Mapping::MappingForDf Mapping::extract_mapping(
 
     const auto iota = stl::iota<size_t>( 0, arr.size() );
 
-    const auto range = iota | std::views::transform( obj_to_map );
+    const auto range = iota | VIEWS::transform( obj_to_map );
 
     return stl::collect::vector<MappingForDf::value_type>( range );
 }
@@ -383,8 +382,8 @@ typename Mapping::TextMapping Mapping::extract_text_mapping(
 
     const auto iota = stl::iota<size_t>( 0, arr.size() );
 
-    const auto range = iota | std::views::transform( get_obj ) |
-                       std::views::transform( obj_to_map );
+    const auto range =
+        iota | VIEWS::transform( get_obj ) | VIEWS::transform( obj_to_map );
 
     return stl::collect::vector<TextMapping::value_type>( range );
 }
@@ -491,13 +490,11 @@ Mapping::fit_on_categoricals(
     const auto& data_frame =
         _peripheral_tables.size() > 0 ? _peripheral_tables.back() : _population;
 
-    const auto range1 = data_frame.categoricals_ |
-                        std::views::filter( include ) |
-                        std::views::transform( col_to_mapping );
+    const auto range1 = data_frame.categoricals_ | VIEWS::filter( include ) |
+                        VIEWS::transform( col_to_mapping );
 
-    const auto range2 = data_frame.categoricals_ |
-                        std::views::filter( include ) |
-                        std::views::transform( get_colname );
+    const auto range2 = data_frame.categoricals_ | VIEWS::filter( include ) |
+                        VIEWS::transform( get_colname );
 
     const auto mappings =
         stl::collect::vector<MappingForDf::value_type>( range1 );
@@ -541,11 +538,11 @@ Mapping::fit_on_discretes(
     const auto& data_frame =
         _peripheral_tables.size() > 0 ? _peripheral_tables.back() : _population;
 
-    const auto range1 = data_frame.discretes_ | std::views::filter( include ) |
-                        std::views::transform( col_to_mapping );
+    const auto range1 = data_frame.discretes_ | VIEWS::filter( include ) |
+                        VIEWS::transform( col_to_mapping );
 
-    const auto range2 = data_frame.discretes_ | std::views::filter( include ) |
-                        std::views::transform( get_colname );
+    const auto range2 = data_frame.discretes_ | VIEWS::filter( include ) |
+                        VIEWS::transform( get_colname );
 
     const auto mappings =
         stl::collect::vector<MappingForDf::value_type>( range1 );
@@ -681,12 +678,12 @@ Mapping::fit_on_text(
 
     const auto iota = stl::iota<size_t>( 0, data_frame.text_.size() );
 
-    const auto range1 = iota | std::views::filter( include_index ) |
-                        std::views::transform( get_word_index ) |
-                        std::views::transform( word_index_to_mapping );
+    const auto range1 = iota | VIEWS::filter( include_index ) |
+                        VIEWS::transform( get_word_index ) |
+                        VIEWS::transform( word_index_to_mapping );
 
-    const auto range2 = data_frame.text_ | std::views::filter( include ) |
-                        std::views::transform( get_colname );
+    const auto range2 = data_frame.text_ | VIEWS::filter( include ) |
+                        VIEWS::transform( get_colname );
 
     const auto mappings =
         stl::collect::vector<MappingForDf::value_type>( range1 );
@@ -735,7 +732,7 @@ std::vector<Mapping> Mapping::fit_submappings(
     const auto iota =
         stl::iota<size_t>( 0, _table_holder->main_tables().size() );
 
-    return stl::collect::vector<Mapping>( iota | std::views::transform( fit ) );
+    return stl::collect::vector<Mapping>( iota | VIEWS::transform( fit ) );
 
     // ----------------------------------------------------
 }
@@ -759,7 +756,7 @@ Mapping::extract_schemata(
     const auto peripheral_schema =
         std::make_shared<const std::vector<containers::Schema>>(
             stl::collect::vector<containers::Schema>(
-                _peripheral_dfs | std::views::transform( to_schema ) ) );
+                _peripheral_dfs | VIEWS::transform( to_schema ) ) );
 
     return std::make_pair( population_schema, peripheral_schema );
 }
@@ -790,10 +787,10 @@ size_t Mapping::infer_num_cols(
     };
 
     auto range_peripherals = _table_holder.peripheral_tables() |
-                             std::views::transform( infer_peripheral );
+                             VIEWS::transform( infer_peripheral );
 
     auto range_subtables =
-        _table_holder.subtables() | std::views::transform( infer_subtable );
+        _table_holder.subtables() | VIEWS::transform( infer_subtable );
 
     const auto num_cols_population =
         infer_num_cols( _table_holder.main_tables().at( 0 ).df() );
@@ -820,11 +817,11 @@ size_t Mapping::infer_num_cols( const helpers::DataFrame& _df ) const
             std::distance( _range.begin(), _range.end() ) );
     };
 
-    const auto range1 = _df.categoricals_ | std::views::filter( include );
+    const auto range1 = _df.categoricals_ | VIEWS::filter( include );
 
-    const auto range2 = _df.discretes_ | std::views::filter( include );
+    const auto range2 = _df.discretes_ | VIEWS::filter( include );
 
-    const auto range3 = _df.text_ | std::views::filter( include );
+    const auto range3 = _df.text_ | VIEWS::filter( include );
 
     return get_length( range1 ) + get_length( range2 ) + get_length( range3 );
 }
@@ -918,7 +915,7 @@ Mapping Mapping::from_json_obj( const Poco::JSON::Object& _obj ) const
 
         return std::make_shared<std::vector<containers::Schema>>(
             stl::collect::vector<containers::Schema>(
-                iota | std::views::transform( to_schema ) ) );
+                iota | VIEWS::transform( to_schema ) ) );
     };
 
     auto that = *this;
@@ -927,7 +924,7 @@ Mapping Mapping::from_json_obj( const Poco::JSON::Object& _obj ) const
         JSON::get_array( _obj, "aggregation_" ) );
 
     that.aggregation_enums_ = stl::collect::vector<MappingAggregation>(
-        that.aggregation_ | std::views::transform( parse ) );
+        that.aggregation_ | VIEWS::transform( parse ) );
 
     that.dependencies_ = dependencies_;
 
@@ -989,7 +986,7 @@ Mapping Mapping::from_json_obj( const Poco::JSON::Object& _obj ) const
         const auto iota = stl::iota<size_t>( 0, arr->size() );
 
         return stl::collect::vector<Mapping>(
-            iota | std::views::transform( to_mapping ) );
+            iota | VIEWS::transform( to_mapping ) );
     };
 
     that.submappings_ = extract_submappings();
@@ -1058,11 +1055,11 @@ std::shared_ptr<const std::map<Int, std::vector<Float>>> Mapping::make_mapping(
         return calc_agg_targets( _population, _pair );
     };
 
-    auto range = _rownum_map | std::views::transform( match_rows ) |
-                 std::views::filter( greater_than_min_freq ) |
-                 std::views::transform( calc_agg );
+    auto range = _rownum_map | VIEWS::transform( match_rows ) |
+                 VIEWS::filter( greater_than_min_freq ) |
+                 VIEWS::transform( calc_agg );
 
-#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+#if ( defined( _WIN32 ) || defined( _WIN64 ) || defined( __APPLE__ ) )
 #else
     if ( multithreading_ )
         {
@@ -1112,14 +1109,14 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_int(
     // ----------------------------------------------------
 
     const auto make_mapping_column =
-        [this, map_value, &col, _logger](
+        [this, map_value, &col](
             const size_t _weight_num ) -> containers::Column<Float> {
         const auto get_val =
             std::bind( map_value, _weight_num, std::placeholders::_1 );
 
-        const auto range = col | std::views::transform( get_val );
+        const auto range = col | VIEWS::transform( get_val );
 
-#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+#if ( defined( _WIN32 ) || defined( _WIN64 ) || defined( __APPLE__ ) )
         const auto ptr = std::make_shared<std::vector<Float>>(
             stl::collect::vector<Float>( range ) );
 #else
@@ -1149,7 +1146,7 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_int(
     const auto iota = stl::iota<size_t>( 0, num_weights );
 
     const auto vec = stl::collect::vector<containers::Column<Float>>(
-        iota | std::views::transform( make_mapping_column ) );
+        iota | VIEWS::transform( make_mapping_column ) );
 
     _logger->increment();
 
@@ -1205,7 +1202,7 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_text(
 
         const auto words = word_index->range( _i );
 
-        auto range = words | std::views::transform( map );
+        auto range = words | VIEWS::transform( map );
 
         const auto agg =
             helpers::Aggregations::avg( range.begin(), range.end() );
@@ -1228,9 +1225,9 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_text(
 
         const auto iota = stl::iota<size_t>( 0, word_index->nrows() );
 
-        const auto range = iota | std::views::transform( get_val );
+        const auto range = iota | VIEWS::transform( get_val );
 
-#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+#if ( defined( _WIN32 ) || defined( _WIN64 ) || defined( __APPLE__ ) )
         const auto ptr = std::make_shared<std::vector<Float>>(
             stl::collect::vector<Float>( range ) );
 #else
@@ -1260,7 +1257,7 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_text(
     const auto iota = stl::iota<size_t>( 0, num_weights );
 
     const auto vec = stl::collect::vector<containers::Column<Float>>(
-        iota | std::views::transform( make_mapping_column ) );
+        iota | VIEWS::transform( make_mapping_column ) );
 
     _logger->increment();
 
@@ -1654,8 +1651,7 @@ Poco::JSON::Object::Ptr Mapping::to_json_obj() const
 
     obj->set(
         "submappings_",
-        stl::collect::array(
-            submappings_ | std::views::transform( to_json_obj ) ) );
+        stl::collect::array( submappings_ | VIEWS::transform( to_json_obj ) ) );
 
     obj->set( "table_name_", table_name_ );
 
@@ -1669,8 +1665,7 @@ Poco::JSON::Object::Ptr Mapping::to_json_obj() const
             obj->set(
                 "peripheral_schema_",
                 stl::collect::array(
-                    *peripheral_schema_ |
-                    std::views::transform( to_json_obj ) ) );
+                    *peripheral_schema_ | VIEWS::transform( to_json_obj ) ) );
 
             obj->set( "population_schema_", population_schema_->to_json_obj() );
 
@@ -1701,7 +1696,7 @@ std::vector<std::string> Mapping::to_sql(
     const auto text = text_columns_to_sql( _sql_dialect_generator );
 
     const auto all_submappings =
-        submappings_ | std::views::transform( submapping_to_sql );
+        submappings_ | VIEWS::transform( submapping_to_sql );
 
     const auto submappings = stl::join::vector<std::string>( all_submappings );
 
@@ -1836,8 +1831,8 @@ std::vector<containers::Column<Float>> Mapping::transform_categorical(
 
     const auto iota = stl::iota<size_t>( 0, categorical_.size() );
 
-    const auto range = iota | std::views::transform( make_pair ) |
-                       std::views::transform( make_cols );
+    const auto range =
+        iota | VIEWS::transform( make_pair ) | VIEWS::transform( make_cols );
 
     return stl::join::vector<containers::Column<Float>>( range );
 }
@@ -1894,7 +1889,7 @@ std::vector<containers::Column<Float>> Mapping::transform_discrete(
 
         const auto col = _df.numerical( name );
 
-        const auto range = col | std::views::transform( cast_as_int );
+        const auto range = col | VIEWS::transform( cast_as_int );
 
         const auto ptr = std::make_shared<std::vector<Int>>(
             stl::collect::vector<Int>( range ) );
@@ -1923,8 +1918,8 @@ std::vector<containers::Column<Float>> Mapping::transform_discrete(
 
     const auto iota = stl::iota<size_t>( 0, discrete_.size() );
 
-    const auto range = iota | std::views::transform( make_pair ) |
-                       std::views::transform( make_cols );
+    const auto range =
+        iota | VIEWS::transform( make_pair ) | VIEWS::transform( make_cols );
 
     return stl::join::vector<containers::Column<Float>>( range );
 }
@@ -1955,7 +1950,7 @@ Poco::JSON::Array::Ptr Mapping::transform_mapping(
 
     // --------------------------------------------------------------
 
-    const auto range = _mapping | std::views::transform( map_to_object );
+    const auto range = _mapping | VIEWS::transform( map_to_object );
 
     return stl::collect::array( range );
 
@@ -2022,8 +2017,8 @@ std::vector<containers::Column<Float>> Mapping::transform_text(
 
     const auto iota = stl::iota<size_t>( 0, text_.size() );
 
-    const auto range = iota | std::views::transform( make_tuple ) |
-                       std::views::transform( make_cols );
+    const auto range =
+        iota | VIEWS::transform( make_tuple ) | VIEWS::transform( make_cols );
 
     return stl::join::vector<containers::Column<Float>>( range );
 }

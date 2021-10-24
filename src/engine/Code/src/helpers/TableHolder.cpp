@@ -74,7 +74,7 @@ std::vector<DataFrame> TableHolder::add_text_fields_to_peripheral_tables(
 
     const auto iota = stl::iota<size_t>( 0, _peripheral.size() );
 
-    auto range = iota | std::views::filter( is_relevant_text_field );
+    auto range = iota | VIEWS::filter( is_relevant_text_field );
 
     const auto relevant_text_fields_ix = stl::collect::vector<size_t>( range );
 
@@ -128,7 +128,7 @@ size_t TableHolder::count_text( const std::vector<DataFrame>& _peripheral )
                std::string::npos;
     };
 
-    return std::ranges::count_if( _peripheral, is_text );
+    return RANGES::count_if( _peripheral, is_text );
 };
 
 // ----------------------------------------------------------------------------
@@ -234,7 +234,7 @@ std::vector<DataFrameView> TableHolder::parse_main_tables(
     };
 
     auto relevant_text_fields =
-        _peripheral | std::views::filter( is_relevant_text_field );
+        _peripheral | VIEWS::filter( is_relevant_text_field );
 
     const auto num_fields = std::distance(
         relevant_text_fields.begin(), relevant_text_fields.end() );
@@ -532,7 +532,7 @@ std::vector<std::optional<TableHolder>> TableHolder::parse_subtables(
     };
 
     auto relevant_text_fields =
-        _peripheral | std::views::filter( is_relevant_text_field );
+        _peripheral | VIEWS::filter( is_relevant_text_field );
 
     const auto num_fields = std::distance(
         relevant_text_fields.begin(), relevant_text_fields.end() );
@@ -562,8 +562,7 @@ WordIndexContainer TableHolder::word_indices() const
 
     const auto population = extract_word_indices( main_tables_.at( 0 ).df() );
 
-    auto range =
-        peripheral_tables_ | std::views::transform( extract_word_indices );
+    auto range = peripheral_tables_ | VIEWS::transform( extract_word_indices );
 
     const auto peripheral = stl::collect::vector<WordIndices>( range );
 

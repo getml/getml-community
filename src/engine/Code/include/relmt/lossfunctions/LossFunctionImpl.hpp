@@ -18,7 +18,6 @@ class LossFunctionImpl
         const std::vector<Float>& _g,
         const std::vector<Float>& _h,
         const std::shared_ptr<const Hyperparameters>& _hyperparameters,
-        const size_t& _ncols,
         const size_t& _nrows,
         const std::vector<size_t>& _sample_index,
         const std::shared_ptr<const std::vector<Float>>& _sample_weights,
@@ -30,7 +29,6 @@ class LossFunctionImpl
         : g_( _g ),
           h_( _h ),
           hyperparameters_( _hyperparameters ),
-          ncols_( _ncols ),
           nrows_( _nrows ),
           sample_index_( _sample_index ),
           sample_weights_( _sample_weights ),
@@ -418,9 +416,6 @@ class LossFunctionImpl
 
     /// Shared pointer to hyperparameters
     const std::shared_ptr<const Hyperparameters> hyperparameters_;
-
-    /// The number of relevant that are inserted in the linear transformation.
-    const size_t& ncols_;
 
     /// The number rows in the population table.
     const size_t& nrows_;

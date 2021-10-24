@@ -12,7 +12,7 @@ std::vector<std::pair<strings::String, size_t>> Vocabulary::count_df(
         return Vocabulary::process_text_field( _text_field );
     };
 
-    const auto range = _range | std::views::transform( process );
+    const auto range = _range | VIEWS::transform( process );
 
     const auto df_map = make_map( range );
 
@@ -49,12 +49,12 @@ std::shared_ptr<const std::vector<strings::String>> Vocabulary::generate(
     };
 
     const auto range_with_max_size =
-        df_count | std::views::filter( count_greater_than_min_df ) |
-        std::views::transform( get_first ) | std::views::take( _max_size );
+        df_count | VIEWS::filter( count_greater_than_min_df ) |
+        VIEWS::transform( get_first ) | VIEWS::take( _max_size );
 
     const auto range_without_max_size =
-        df_count | std::views::filter( count_greater_than_min_df ) |
-        std::views::transform( get_first );
+        df_count | VIEWS::filter( count_greater_than_min_df ) |
+        VIEWS::transform( get_first );
 
     auto vocab = std::make_shared<std::vector<strings::String>>(
         _max_size > 0
@@ -91,7 +91,7 @@ std::vector<std::string> Vocabulary::split_text_field(
     const auto remove_empty =
         [is_non_empty](
             const std::vector<std::string>& vec ) -> std::vector<std::string> {
-        const auto range = vec | std::views::filter( is_non_empty );
+        const auto range = vec | VIEWS::filter( is_non_empty );
         return stl::collect::vector<std::string>( range );
     };
 

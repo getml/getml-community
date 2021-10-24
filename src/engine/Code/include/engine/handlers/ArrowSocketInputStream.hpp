@@ -50,13 +50,23 @@ class ArrowSocketInputStream : public arrow::io::InputStream
 
         arrow::BufferBuilder builder;
 
-        builder.Resize( _nbytes );
+        auto status = builder.Resize( _nbytes );
 
-        builder.Append( data.data(), _nbytes );
+        if ( !status.ok() )
+            {
+                throw std::runtime_error( status.message() );
+            }
+
+        status = builder.Append( data.data(), _nbytes );
+
+        if ( !status.ok() )
+            {
+                throw std::runtime_error( status.message() );
+            }
 
         std::shared_ptr<arrow::Buffer> buffer;
 
-        const auto status = builder.Finish( &buffer );
+        status = builder.Finish( &buffer );
 
         if ( !status.ok() )
             {

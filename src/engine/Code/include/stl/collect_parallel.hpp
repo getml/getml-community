@@ -31,7 +31,7 @@ struct collect_parallel
     template <class T, class RangeType>
     static std::vector<T> vector( RangeType _range )
     {
-        const auto size = std::ranges::size( _range );
+        const auto size = RANGES::size( _range );
 
         auto vec = std::vector<T>( size );
 

@@ -661,7 +661,7 @@ Poco::JSON::Object::Ptr DecisionTreeNode::to_json_obj() const
 
     obj->set( "output_", output().to_json_obj() );
 
-    obj->set( "weights_", JSON::vector_to_array( weights_ ) );
+    obj->set( "weights_", JSON::vector_to_array_ptr( weights_ ) );
 
     if ( child_greater_ )
         {
@@ -673,7 +673,7 @@ Poco::JSON::Object::Ptr DecisionTreeNode::to_json_obj() const
 
             obj->set(
                 "categories_used_",
-                JSON::vector_to_array( *split_.categories_used_ ) );
+                JSON::vector_to_array_ptr( *split_.categories_used_ ) );
 
             obj->set( "critical_value_", split_.critical_value_ );
 

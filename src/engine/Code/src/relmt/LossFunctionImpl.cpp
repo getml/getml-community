@@ -626,8 +626,6 @@ std::pair<Float, Eigen::VectorXd> LossFunctionImpl::calc_results(
             g( i ) = g_ptr[i];
         }
 
-    // std::cout << "g: " << std::endl << g << std::endl << std::endl;
-
     // ------------------------------------------------------------------------
 
     Eigen::VectorXd Hfwf( dim );
@@ -638,8 +636,6 @@ std::pair<Float, Eigen::VectorXd> LossFunctionImpl::calc_results(
                 !std::isnan( Hfwf_ptr[i] ) && !std::isinf( Hfwf_ptr[i] ) );
             Hfwf( i ) = Hfwf_ptr[i];
         }
-
-    // std::cout << "Hfwf: " << std::endl << Hfwf << std::endl << std::endl;
 
     // ------------------------------------------------------------------------
 
@@ -660,22 +656,10 @@ std::pair<Float, Eigen::VectorXd> LossFunctionImpl::calc_results(
             assert_true( !std::isnan( H( i, i ) ) && !std::isinf( H( i, i ) ) );
         }
 
-    /*std::cout << "H: " << std::endl << H << std::endl << std::endl;
-    std::cout << "H.det(): " << std::endl
-              << H.determinant() << std::endl
-              << std::endl;*/
-
     //------------------------------------------------------------------------
 
     const Eigen::VectorXd weights =
         H.completeOrthogonalDecomposition().solve( g + Hfwf );
-
-    /*std::cout << "g + Hfwf: " << std::endl << ( g + Hfwf ) << std::endl;
-
-    std::cout << "H * weights: " << std::endl << ( H * weights ) << std::endl;
-
-    std::cout << "weights: " << std::endl << weights << std::endl <<
-    std::endl;*/
 
     //------------------------------------------------------------------------
 

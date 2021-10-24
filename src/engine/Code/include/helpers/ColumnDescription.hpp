@@ -74,13 +74,13 @@ struct ColumnDescription
     // ---------------------------------------------------------------------
 
     /// [POPULATION] or [PERIPHERAL]
-    const std::string marker_;
+    std::string marker_;
 
     /// The name of the column.
-    const std::string name_;
+    std::string name_;
 
     /// The name of the table.
-    const std::string table_;
+    std::string table_;
 };
 
 // -------------------------------------------------------------------------

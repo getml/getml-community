@@ -182,9 +182,12 @@ class ColumnView
     std::shared_ptr<arrow::ChunkedArray> make_array(
         const IteratorType _begin, const IteratorType _end ) const;
 
+#if ( defined( _WIN32 ) || defined( _WIN64 ) || defined( __APPLE__ ) )
+#else
     /// Generates the vector in parallel.
     std::shared_ptr<std::vector<T>> make_parallel(
         const size_t _begin, const size_t _expected_length ) const;
+#endif
 
     /// Generates the vector sequentially.
     std::shared_ptr<std::vector<T>> make_sequential(
@@ -752,7 +755,7 @@ auto ColumnView<T>::to_column(
                 []( const std::string& _str ) -> strings::String {
                 return strings::String( _str );
             };
-            const auto range = *data_ptr | std::views::transform( to_str );
+            const auto range = *data_ptr | VIEWS::transform( to_str );
             const auto new_data_ptr =
                 std::make_shared<std::vector<strings::String>>(
                     range.begin(), range.end() );
@@ -837,6 +840,8 @@ void ColumnView<T>::check_expected_length(
 
 // -------------------------------------------------------------------------
 
+#if ( defined( _WIN32 ) || defined( _WIN64 ) || defined( __APPLE__ ) )
+#else
 template <class T>
 std::shared_ptr<std::vector<T>> ColumnView<T>::make_parallel(
     const size_t _begin, const size_t _expected_length ) const
@@ -868,6 +873,7 @@ std::shared_ptr<std::vector<T>> ColumnView<T>::make_parallel(
 
     return data_ptr;
 }
+#endif
 
 // -------------------------------------------------------------------------
 
@@ -917,7 +923,7 @@ std::shared_ptr<std::vector<T>> ColumnView<T>::to_vector(
     check_expected_length(
         expected_length, _nrows_must_match, !_expected_length );
 
-#if ( defined( _WIN32 ) || defined( _WIN64 ) )
+#if ( defined( _WIN32 ) || defined( _WIN64 ) || defined( __APPLE__ ) )
     const auto data_ptr =
         make_sequential( _begin, expected_length, _nrows_must_match );
 #else

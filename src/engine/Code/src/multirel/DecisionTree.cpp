@@ -213,8 +213,8 @@ void DecisionTree::handle_fast_prop_importances(
     if ( _fast_prop_container.has_fast_prop() )
         {
             const auto range = output().numericals_ |
-                               std::views::filter( is_fast_prop ) |
-                               std::views::transform( make_col_descs_output );
+                               VIEWS::filter( is_fast_prop ) |
+                               VIEWS::transform( make_col_descs_output );
 
             const auto descs =
                 stl::collect::vector<helpers::ColumnDescription>( range );
@@ -232,8 +232,8 @@ void DecisionTree::handle_fast_prop_importances(
     if ( fast_prop_input && fast_prop_input->has_fast_prop() )
         {
             const auto range = input().numericals_ |
-                               std::views::filter( is_fast_prop ) |
-                               std::views::transform( make_col_descs_input );
+                               VIEWS::filter( is_fast_prop ) |
+                               VIEWS::transform( make_col_descs_input );
 
             const auto descs =
                 stl::collect::vector<helpers::ColumnDescription>( range );

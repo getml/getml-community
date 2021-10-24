@@ -20,7 +20,7 @@ Poco::JSON::Object::Ptr SQLDependencyTracker::find_dependencies(
     const auto iota = stl::iota<size_t>( 0, _i );
 
     const auto dependencies =
-        stl::collect::array( iota | std::views::filter( is_dependency ) );
+        stl::collect::array( iota | VIEWS::filter( is_dependency ) );
 
     auto obj = Poco::JSON::Object::Ptr( new Poco::JSON::Object() );
 
@@ -75,7 +75,7 @@ void SQLDependencyTracker::save_dependencies( const std::string& _sql ) const
     const auto iota = stl::iota<size_t>( 0, tuples.size() );
 
     const auto dependencies =
-        stl::collect::array( iota | std::views::transform( to_obj ) );
+        stl::collect::array( iota | VIEWS::transform( to_obj ) );
 
     auto obj = Poco::JSON::Object();
 
@@ -99,16 +99,16 @@ typename SQLDependencyTracker::Tuples SQLDependencyTracker::save_sql(
     };
 
     const auto table_names = stl::collect::vector<std::string>(
-        sql | std::views::transform( get_table_name ) );
+        sql | VIEWS::transform( get_table_name ) );
 
-    const auto to_file_name = [this]( const size_t _i ) -> std::string {
+    const auto to_file_name = []( const size_t _i ) -> std::string {
         return std::to_string( _i ) + ".sql";
     };
 
     const auto iota = stl::iota<size_t>( 0, table_names.size() );
 
     const auto file_names = stl::collect::vector<std::string>(
-        iota | std::views::transform( to_file_name ) );
+        iota | VIEWS::transform( to_file_name ) );
 
     for ( size_t i = 0; i < file_names.size(); ++i )
         {
@@ -124,7 +124,7 @@ typename SQLDependencyTracker::Tuples SQLDependencyTracker::save_sql(
         };
 
     return stl::collect::vector<Tuples::value_type>(
-        iota | std::views::transform( make_tuple ) );
+        iota | VIEWS::transform( make_tuple ) );
 }
 
 // ------------------------------------------------------------------------

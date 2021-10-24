@@ -5,7 +5,6 @@
 // Dependencies
 
 #include <numeric>
-#include <ranges>
 #include <vector>
 
 #include "multithreading/multithreading.hpp"

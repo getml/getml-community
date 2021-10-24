@@ -154,8 +154,8 @@ auto TransformAggregation<AggType, data_used_, is_population_>::make_range(
             const auto get_value =
                 []( const containers::Match* _match ) -> Float { return 0.0; };
 
-            return _match_ptrs | std::views::drop( _skip ) |
-                   std::views::transform( get_value );
+            return _match_ptrs | VIEWS::drop( _skip ) |
+                   VIEWS::transform( get_value );
         }
 
     if constexpr ( is_first_or_last )
@@ -171,8 +171,8 @@ auto TransformAggregation<AggType, data_used_, is_population_>::make_range(
                 return std::pair( first, second );
             };
 
-            return _match_ptrs | std::views::drop( _skip ) |
-                   std::views::transform( get_pair );
+            return _match_ptrs | VIEWS::drop( _skip ) |
+                   VIEWS::transform( get_pair );
         }
 
     if constexpr ( !is_first_or_last && !is_count )
@@ -182,8 +182,8 @@ auto TransformAggregation<AggType, data_used_, is_population_>::make_range(
                 return value_container_.value_to_be_aggregated( _match );
             };
 
-            return _match_ptrs | std::views::drop( _skip ) |
-                   std::views::transform( get_value );
+            return _match_ptrs | VIEWS::drop( _skip ) |
+                   VIEWS::transform( get_value );
         }
 }
 

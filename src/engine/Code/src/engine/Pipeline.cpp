@@ -688,7 +688,7 @@ Pipeline::extract_modified_schemata(
     const auto peripheral_schema =
         std::make_shared<const std::vector<helpers::Schema>>(
             stl::collect::vector<helpers::Schema>(
-                _peripheral_dfs | std::views::transform( extract_schema ) ) );
+                _peripheral_dfs | VIEWS::transform( extract_schema ) ) );
 
     return std::make_pair( population_schema, peripheral_schema );
 }
@@ -713,7 +713,7 @@ Pipeline::extract_schemata(
     const auto peripheral_schema =
         std::make_shared<const std::vector<helpers::Schema>>(
             stl::collect::vector<helpers::Schema>(
-                _peripheral_dfs | std::views::transform( extract_schema ) ) );
+                _peripheral_dfs | VIEWS::transform( extract_schema ) ) );
 
     return std::make_pair( population_schema, peripheral_schema );
 }
@@ -845,7 +845,7 @@ std::vector<std::string> Pipeline::feature_learners_to_sql(
         const auto num_subfeatures = all.size() - fl->num_features();
 
         const auto subfeatures = stl::collect::vector<std::string>(
-            all | std::views::take( num_subfeatures ) );
+            all | VIEWS::take( num_subfeatures ) );
 
         const auto get_feature = [num_subfeatures,
                                   all]( const size_t _ix ) -> std::string {
@@ -858,15 +858,14 @@ std::vector<std::string> Pipeline::feature_learners_to_sql(
         const auto& autofeatures = predictor_impl().autofeatures().at( _i );
 
         const auto features = stl::collect::vector<std::string>(
-            autofeatures | std::views::transform( get_feature ) );
+            autofeatures | VIEWS::transform( get_feature ) );
 
         return stl::join::vector<std::string>( { subfeatures, features } );
     };
 
     const auto iota = stl::iota<size_t>( 0, feature_learners_.size() );
 
-    return stl::join::vector<std::string>(
-        iota | std::views::transform( to_sql ) );
+    return stl::join::vector<std::string>( iota | VIEWS::transform( to_sql ) );
 }
 
 // ----------------------------------------------------------------------------
@@ -1605,7 +1604,7 @@ Pipeline::init_feature_learners(
 
             const auto iota = stl::iota<Int>( 0, _num_targets );
 
-            const auto range = iota | std::views::transform( make );
+            const auto range = iota | VIEWS::transform( make );
 
             return stl::collect::vector<
                 std::shared_ptr<featurelearners::AbstractFeatureLearner>>(
@@ -1618,8 +1617,8 @@ Pipeline::init_feature_learners(
 
     const auto to_fl = [this,
                         &_dependencies,
-                        &placeholder,
-                        &peripheral,
+                        placeholder = placeholder,
+                        peripheral = peripheral,
                         make_fl_for_all_targets]( Poco::JSON::Object::Ptr _cmd )
         -> std::vector<
             std::shared_ptr<featurelearners::AbstractFeatureLearner>> {
@@ -1653,7 +1652,7 @@ Pipeline::init_feature_learners(
 
     return stl::join::vector<
         std::shared_ptr<featurelearners::AbstractFeatureLearner>>(
-        obj_vector | std::views::transform( to_fl ) );
+        obj_vector | VIEWS::transform( to_fl ) );
 
     // ----------------------------------------------------------------------
 }
@@ -1739,7 +1738,7 @@ Pipeline::init_preprocessors(
 
     const auto iota = stl::iota<size_t>( 0, arr->size() );
 
-    const auto range = iota | std::views::transform( parse );
+    const auto range = iota | VIEWS::transform( parse );
 
     auto vec =
         stl::collect::vector<std::shared_ptr<preprocessors::Preprocessor>>(
@@ -2056,7 +2055,7 @@ void Pipeline::load_pipeline_json(
         const auto vec = JSON::array_to_obj_vector( arr );
         return std::make_shared<const std::vector<helpers::Schema>>(
             stl::collect::vector<helpers::Schema>(
-                vec | std::views::transform( to_schema ) ) );
+                vec | VIEWS::transform( to_schema ) ) );
     };
 
     _pipeline->allow_http() =
@@ -2171,13 +2170,13 @@ std::vector<std::string> Pipeline::make_feature_names() const
         const auto& autofeatures = predictor_impl().autofeatures().at( _i );
 
         return stl::collect::vector<std::string>(
-            autofeatures | std::views::transform( make_name ) );
+            autofeatures | VIEWS::transform( make_name ) );
     };
 
     const auto iota = stl::iota<size_t>( 0, feature_learners_.size() );
 
     return stl::join::vector<std::string>(
-        iota | std::views::transform( to_names ) );
+        iota | VIEWS::transform( to_names ) );
 }
 
 // ----------------------------------------------------------------------------
@@ -2506,9 +2505,8 @@ Pipeline::make_staging_schemata() const
         [has_text_field_marker, remove_text_field_marker](
             const containers::Schema& _schema ) -> containers::Schema {
         const auto text_fields = stl::collect::vector<std::string>(
-            _schema.unused_strings_ |
-            std::views::filter( has_text_field_marker ) |
-            std::views::transform( remove_text_field_marker ) );
+            _schema.unused_strings_ | VIEWS::filter( has_text_field_marker ) |
+            VIEWS::transform( remove_text_field_marker ) );
 
         return containers::Schema{
             .categoricals_ = _schema.categoricals_,
@@ -2535,9 +2533,8 @@ Pipeline::make_staging_schemata() const
 
     const auto staging_schema_peripheral =
         stl::collect::vector<containers::Schema>(
-            *modified_peripheral_schema() |
-            std::views::filter( is_not_text_field ) |
-            std::views::transform( add_text_fields ) );
+            *modified_peripheral_schema() | VIEWS::filter( is_not_text_field ) |
+            VIEWS::transform( add_text_fields ) );
 
     return std::make_pair(
         staging_schema_population, staging_schema_peripheral );
@@ -2910,7 +2907,7 @@ void Pipeline::save_pipeline_json( const Poco::TemporaryFile& _tfile ) const
     pipeline_json.set(
         "modified_peripheral_schema_",
         stl::collect::array(
-            *modified_peripheral_schema() | std::views::transform( to_obj ) ) );
+            *modified_peripheral_schema() | VIEWS::transform( to_obj ) ) );
 
     pipeline_json.set(
         "modified_population_schema_",
@@ -2925,7 +2922,7 @@ void Pipeline::save_pipeline_json( const Poco::TemporaryFile& _tfile ) const
     pipeline_json.set(
         "peripheral_schema_",
         stl::collect::array(
-            *peripheral_schema() | std::views::transform( to_obj ) ) );
+            *peripheral_schema() | VIEWS::transform( to_obj ) ) );
 
     pipeline_json.set(
         "population_schema_", population_schema()->to_json_obj() );
@@ -3144,7 +3141,7 @@ Poco::JSON::Object Pipeline::to_monitor(
     json_obj.set(
         "peripheral_schema_",
         stl::collect::array(
-            *peripheral_schema() | std::views::transform( to_json_obj ) ) );
+            *peripheral_schema() | VIEWS::transform( to_json_obj ) ) );
 
     json_obj.set( "population_schema_", population_schema()->to_json_obj() );
 
@@ -3195,7 +3192,7 @@ std::vector<std::string> Pipeline::preprocessors_to_sql(
     };
 
     return stl::join::vector<std::string>(
-        preprocessors_ | std::views::transform( to_sql ) );
+        preprocessors_ | VIEWS::transform( to_sql ) );
 }
 
 // ----------------------------------------------------------------------------

@@ -153,7 +153,7 @@ class DecisionTree
             { .aggregation_impl_ = _aggregation_impl,
               .aggregation_type_ = aggregation_type(),
               .column_to_be_aggregated_ = column_to_be_aggregated(),
-              .matches_ = *_matches,
+              .matches_ = _matches,
               .optimization_criterion_ = _optimization_criterion,
               .population_ = _population,
               .peripheral_ = _peripheral,

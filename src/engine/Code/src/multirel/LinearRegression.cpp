@@ -19,8 +19,7 @@ void LinearRegression::fit(
     Float sum_sample_weights =
         std::accumulate( _sample_weights.begin(), _sample_weights.end(), 0.0 );
 
-    utils::Reducer::reduce(
-        std::plus<Float>(), &sum_sample_weights, comm_ );
+    utils::Reducer::reduce( std::plus<Float>(), &sum_sample_weights, comm_ );
 
     // ----------------------------------------------------
     // Calculate mean_new_feature
@@ -34,8 +33,7 @@ void LinearRegression::fit(
             mean_new_feature += _new_feature[i] * _sample_weights[i];
         }
 
-    utils::Reducer::reduce(
-        std::plus<Float>(), &mean_new_feature, comm_ );
+    utils::Reducer::reduce( std::plus<Float>(), &mean_new_feature, comm_ );
 
     mean_new_feature /= sum_sample_weights;
 
@@ -54,8 +52,7 @@ void LinearRegression::fit(
                 }
         }
 
-    utils::Reducer::reduce(
-        std::plus<Float>(), &mean_residuals, comm_ );
+    utils::Reducer::reduce( std::plus<Float>(), &mean_residuals, comm_ );
 
     std::for_each(
         mean_residuals.begin(),
@@ -76,8 +73,7 @@ void LinearRegression::fit(
                                _sample_weights[i];
         }
 
-    utils::Reducer::reduce(
-        std::plus<Float>(), &var_new_feature, comm_ );
+    utils::Reducer::reduce( std::plus<Float>(), &var_new_feature, comm_ );
 
     var_new_feature /= sum_sample_weights;
 
@@ -97,8 +93,7 @@ void LinearRegression::fit(
                 }
         }
 
-    utils::Reducer::reduce(
-        std::plus<Float>(), &cov_new_feature, comm_ );
+    utils::Reducer::reduce( std::plus<Float>(), &cov_new_feature, comm_ );
 
     std::for_each(
         cov_new_feature.begin(),
@@ -197,9 +192,9 @@ Poco::JSON::Object LinearRegression::to_json_obj() const
 
     // ----------------------------------------
 
-    obj.set( "update_rates_1_", JSON::vector_to_array( slopes_ ) );
+    obj.set( "update_rates_1_", JSON::vector_to_array_ptr( slopes_ ) );
 
-    obj.set( "update_rates_2_", JSON::vector_to_array( intercepts_ ) );
+    obj.set( "update_rates_2_", JSON::vector_to_array_ptr( intercepts_ ) );
 
     // ----------------------------------------
 

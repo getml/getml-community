@@ -184,10 +184,12 @@ void CandidateTreeBuilder::add_subfeature_aggs(
 
     const auto &subholder = *_table_holder.subtables().at( _ix_perip_used );
 
+    const auto is_true = []( const bool _var ) { return _var; };
+
     const bool all_propositionalization = std::all_of(
         subholder.propositionalization().begin(),
         subholder.propositionalization().end(),
-        std::identity() );
+        is_true );
 
     if ( all_propositionalization )
         {

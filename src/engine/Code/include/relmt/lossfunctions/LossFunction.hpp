@@ -12,6 +12,8 @@ namespace lossfunctions
 class LossFunction
 {
    public:
+    virtual ~LossFunction() = default;
+
     // Applies the inverse of the transformation function below. Some loss
     // functions (such as CrossEntropyLoss) require this. For others, this won't
     // do anything at all.

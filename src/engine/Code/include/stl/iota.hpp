@@ -12,7 +12,7 @@ inline auto iota( T1 _begin, T2 _end )
 #if ( defined( _WIN32 ) || defined( _WIN64 ) )
     return IotaRange<T>( static_cast<T>( _begin ), static_cast<T>( _end ) );
 #else
-    return std::views::iota( static_cast<T>( _begin ), static_cast<T>( _end ) );
+    return VIEWS::iota( static_cast<T>( _begin ), static_cast<T>( _end ) );
 #endif
 }
 

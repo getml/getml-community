@@ -178,7 +178,7 @@ struct JSON
     {
         Poco::JSON::Array arr;
 
-        for ( const auto& elem : _vector )
+        for ( T elem : _vector )
             {
                 if constexpr ( std::is_floating_point<T>() )
                     {
@@ -189,7 +189,7 @@ struct JSON
                             }
                     }
 
-                arr.add( elem );
+                arr.add( Poco::Dynamic::Var( elem ) );
             }
 
         return arr;

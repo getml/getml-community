@@ -29,6 +29,11 @@ void Threadutils::fit_ensemble( const ThreadutilsFitParams& _params )
         {
             // ----------------------------------------------------------------
 
+            assert_true( _params.comm_ );
+            assert_true( _params.ensemble_ );
+
+            // ----------------------------------------------------------------
+
             const auto population_subview = utils::DataFrameScatterer::
                 DataFrameScatterer::scatter_data_frame(
                     _params.population_,
@@ -39,10 +44,10 @@ void Threadutils::fit_ensemble( const ThreadutilsFitParams& _params )
 
             const auto table_holder =
                 std::make_shared<const decisiontrees::TableHolder>(
-                    _params.ensemble_.placeholder(),
+                    _params.ensemble_->placeholder(),
                     population_subview,
                     _params.peripheral_,
-                    _params.ensemble_.peripheral(),
+                    _params.ensemble_->peripheral(),
                     _params.row_indices_,
                     _params.word_indices_,
                     _params.feature_container_ );
@@ -51,18 +56,18 @@ void Threadutils::fit_ensemble( const ThreadutilsFitParams& _params )
 
             assert_true( table_holder->main_tables().size() > 0 );
 
-            const auto opt = _params.ensemble_.make_r_squared(
-                table_holder->main_tables().at( 0 ), &_params.comm_ );
+            const auto opt = _params.ensemble_->make_r_squared(
+                table_holder->main_tables().at( 0 ), _params.comm_ );
 
             // ----------------------------------------------------------------
 
-            _params.ensemble_.fit(
+            _params.ensemble_->fit(
                 table_holder,
                 _params.word_indices_,
                 _params.logger_,
-                _params.ensemble_.hyperparameters().num_features_,
+                _params.ensemble_->hyperparameters().num_features_,
                 opt,
-                &_params.comm_ );
+                _params.comm_ );
 
             // ----------------------------------------------------------------
         }
@@ -101,6 +106,10 @@ void Threadutils::transform_ensemble(
         {
             // ----------------------------------------------------------------
 
+            assert_true( _params.comm_ );
+
+            // ----------------------------------------------------------------
+
             const auto population_subview = utils::DataFrameScatterer::
                 DataFrameScatterer::scatter_data_frame(
                     _params.population_,
@@ -123,7 +132,7 @@ void Threadutils::transform_ensemble(
                 _params.ensemble_.subensembles_avg(),
                 _params.ensemble_.subensembles_sum(),
                 _params.logger_,
-                &_params.comm_ );
+                _params.comm_ );
 
             const auto subfeatures =
                 SubtreeHelper::make_subfeatures( table_holder, subpredictions );
@@ -139,12 +148,12 @@ void Threadutils::transform_ensemble(
             utils::Logger::log(
                 "Multirel: Building features...",
                 _params.logger_,
-                &_params.comm_ );
+                _params.comm_ );
 
             // ----------------------------------------------------------------
             // Build the actual features.
 
-            assert_true( _params.index_.size() == _params.features_.size() );
+            assert_true( _params.index_.size() == _params.features_->size() );
 
             for ( size_t i = 0; i < _params.index_.size(); ++i )
                 {
@@ -156,11 +165,12 @@ void Threadutils::transform_ensemble(
                         table_holder, subfeatures, ix, &impl );
 
                     assert_true( new_feature );
+                    assert_true( _params.features_ );
 
                     copy(
                         population_subview.rows(),
                         *new_feature,
-                        _params.features_.at( i ).get() );
+                        _params.features_->at( i ).get() );
 
                     const auto progress =
                         ( ( i + 1 ) * 100 ) / _params.index_.size();
@@ -169,7 +179,7 @@ void Threadutils::transform_ensemble(
                         "Built FEATURE_" + std::to_string( ix + 1 ) +
                             ". Progress: " + std::to_string( progress ) + "%.",
                         _params.logger_,
-                        &_params.comm_ );
+                        _params.comm_ );
                 }
 
             // ----------------------------------------------------------------

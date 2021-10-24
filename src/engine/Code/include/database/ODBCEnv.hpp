@@ -46,6 +46,8 @@ struct ODBCEnv
             }
 
         handle_ = std::move( _other.handle_ );
+
+        return *this;
     }
 
     SQLHENV handle_;

@@ -19,7 +19,7 @@ ConditionParser::make_condition_functions(
             _table_holder, _abstract_features.at( ix ) );
     };
 
-    auto range = _index | std::views::transform( make_function );
+    auto range = _index | VIEWS::transform( make_function );
 
     return std::vector<std::function<bool( const containers::Match & )>>(
         range.begin(), range.end() );
@@ -141,7 +141,7 @@ ConditionParser::parse_conditions(
             population, peripheral, cond );
     };
 
-    auto range = _abstract_feature.conditions_ | std::views::transform( parse );
+    auto range = _abstract_feature.conditions_ | VIEWS::transform( parse );
 
     return std::vector<std::function<bool( const containers::Match & )>>(
         range.begin(), range.end() );

@@ -42,26 +42,27 @@ class ValueContainer
     constexpr static bool needs_numerical_column_ =
         !categorical_column_ && data_used_ != enums::DataUsed::not_applicable;
 
-    typedef std::conditional<
+    typedef typename std::conditional<
         subfeature_,
         containers::ColumnView<Float, std::map<Int, Int>>,
         containers::Column<Float>>::type ColumnOrSubfeature;
 
    public:
-    typedef std::conditional<
+    typedef typename std::conditional<
         needs_categorical_column_,
         containers::Column<Int>,
         int>::type CategoricalColumn;
 
-    typedef std::conditional<
+    typedef typename std::conditional<
         needs_comparison_,
         containers::ColumnView<Float, std::vector<size_t>>,
         int>::type ComparisonColumn;
 
-    typedef std::conditional<needs_numerical_column_, ColumnOrSubfeature, int>::
-        type NumericalColumn;
+    typedef typename std::
+        conditional<needs_numerical_column_, ColumnOrSubfeature, int>::type
+            NumericalColumn;
 
-    typedef std::conditional<
+    typedef typename std::conditional<
         data_used_ != enums::DataUsed::not_applicable,
         Float,
         void>::type ReturnType;

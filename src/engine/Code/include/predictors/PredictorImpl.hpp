@@ -178,7 +178,7 @@ CSRMatrix<DataType, IndicesType, IndptrType> PredictorImpl::make_csr(
 {
     auto csr_mat = CSRMatrix<DataType, IndicesType, IndptrType>();
 
-    for ( const auto col : _X_numerical )
+    for ( const auto& col : _X_numerical )
         {
             csr_mat.add( col );
         }

@@ -760,7 +760,7 @@ Column<T> Column<T>::where( const std::vector<bool> &_condition ) const
     const auto iota = stl::iota<size_t>( 0, nrows() );
 
     const auto range =
-        iota | std::views::filter( include ) | std::views::transform( get_val );
+        iota | VIEWS::filter( include ) | VIEWS::transform( get_val );
 
     const auto data_ptr =
         std::make_shared<std::vector<T>>( stl::collect::vector<T>( range ) );

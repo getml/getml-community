@@ -7,7 +7,7 @@ namespace lossfunctions
 // ----------------------------------------------------------------------------
 
 CrossEntropyLoss::CrossEntropyLoss( multithreading::Communicator* _comm )
-    : LossFunction(), comm_( _comm ){};
+    : comm_( _comm ){};
 
 // ----------------------------------------------------------------------------
 

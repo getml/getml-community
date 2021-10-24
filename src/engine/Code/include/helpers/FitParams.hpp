@@ -8,22 +8,22 @@ namespace helpers
 struct FitParams
 {
     /// Contains the features trained by the propositionalization.
-    const std::optional<const FeatureContainer> &feature_container_;
+    const std::optional<const FeatureContainer> feature_container_;
 
     /// Uses to log progress.
-    const std::shared_ptr<const logging::AbstractLogger> &logger_;
+    const std::shared_ptr<const logging::AbstractLogger> logger_;
 
     /// The peripheral tables used.
-    const std::vector<DataFrame> &peripheral_;
+    const std::vector<DataFrame> peripheral_;
 
     /// The population table used.
-    const DataFrame &population_;
+    const DataFrame population_;
 
     /// Contains the row indices of the text fields.
-    const RowIndexContainer &row_indices_;
+    const RowIndexContainer row_indices_;
 
     /// Contains the word indices of the text fields.
-    const WordIndexContainer &word_indices_;
+    const WordIndexContainer word_indices_;
 };
 
 // ----------------------------------------------------------------------------

@@ -1198,7 +1198,7 @@ Poco::JSON::Object DecisionTreeNode::to_json_obj() const
 
             obj.set(
                 "categories_used_",
-                JSON::vector_to_array( categories_used() ) );
+                JSON::vector_to_array_ptr( categories_used() ) );
 
             obj.set( "critical_value_", critical_value() );
 
