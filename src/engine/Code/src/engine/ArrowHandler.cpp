@@ -527,6 +527,80 @@ ArrowHandler::write_boolean_to_string_column(
 
 // ----------------------------------------------------------------------------
 
+std::optional<typename ArrowHandler::FloatFunction>
+ArrowHandler::write_dict_to_float_column(
+    const std::shared_ptr<arrow::Array>& _chunk ) const
+{
+    // ------------------------------------------------------------------------
+
+    assert_true( _chunk );
+
+    // ------------------------------------------------------------------------
+
+    const auto dict_name =
+        arrow::dictionary( arrow::int32(), arrow::utf8() )->name();
+
+    if ( _chunk->type()->name() == dict_name )
+        {
+            const auto chunk =
+                std::static_pointer_cast<arrow::DictionaryArray>( _chunk );
+
+            assert_true( chunk );
+
+            const auto func =
+                write_to_float_column( chunk->dictionary(), "dictionary" );
+
+            return [func, chunk]( const std::int64_t _i ) -> Float {
+                return func( chunk->GetValueIndex( _i ) );
+            };
+        }
+
+    // ------------------------------------------------------------------------
+
+    return std::nullopt;
+
+    // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::optional<typename ArrowHandler::StringFunction>
+ArrowHandler::write_dict_to_string_column(
+    const std::shared_ptr<arrow::Array>& _chunk ) const
+{
+    // ------------------------------------------------------------------------
+
+    assert_true( _chunk );
+
+    // ------------------------------------------------------------------------
+
+    const auto dict_name =
+        arrow::dictionary( arrow::int32(), arrow::utf8() )->name();
+
+    if ( _chunk->type()->name() == dict_name )
+        {
+            const auto chunk =
+                std::static_pointer_cast<arrow::DictionaryArray>( _chunk );
+
+            assert_true( chunk );
+
+            const auto func =
+                write_to_string_column( chunk->dictionary(), "dictionary" );
+
+            return [func, chunk]( const std::int64_t _i ) -> strings::String {
+                return func( chunk->GetValueIndex( _i ) );
+            };
+        }
+
+    // ------------------------------------------------------------------------
+
+    return std::nullopt;
+
+    // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
 std::optional<typename ArrowHandler::StringFunction>
 ArrowHandler::write_float_to_string_column(
     const std::shared_ptr<arrow::Array>& _chunk ) const
@@ -941,57 +1015,6 @@ ArrowHandler::write_string_to_float_column(
 
 // ----------------------------------------------------------------------------
 
-bool ArrowHandler::write_dict_to_string_column(
-    const std::shared_ptr<arrow::Array>& _chunk,
-    const std::string& _name,
-    strings::String* _out ) const
-{
-    // ------------------------------------------------------------------------
-
-    assert_true( _chunk );
-
-    // ------------------------------------------------------------------------
-
-    const auto transform_dict_chunk = [_out]( const auto& chunk ) {
-        /*for ( std::int64_t i = 0; i < chunk.length(); ++i )
-            {
-                if ( chunk.IsNull( i ) )
-                    {
-                        *( _out + i ) = strings::String( "NULL" );
-                    }
-                else
-                    {
-                        *( _out + i ) = strings::String( chunk.GetString( i ) );
-                    }
-            }*/
-    };
-
-    // ------------------------------------------------------------------------
-
-    const auto dict_name =
-        arrow::dictionary( arrow::int32(), arrow::utf8() )->name();
-
-    if ( _chunk->type()->name() == dict_name )
-        {
-            const auto chunk =
-                std::static_pointer_cast<arrow::DictionaryArray>( _chunk );
-            assert_true( chunk );
-            transform_dict_chunk( *chunk );
-        }
-    else
-        {
-            return false;
-        }
-
-    // ------------------------------------------------------------------------
-
-    return true;
-
-    // ------------------------------------------------------------------------
-}
-
-// ----------------------------------------------------------------------------
-
 std::optional<typename ArrowHandler::StringFunction>
 ArrowHandler::write_string_to_string_column(
     const std::shared_ptr<arrow::Array>& _chunk ) const
@@ -1319,6 +1342,13 @@ typename ArrowHandler::FloatFunction ArrowHandler::write_to_float_column(
             return *func;
         }
 
+    func = write_dict_to_float_column( _chunk );
+
+    if ( func )
+        {
+            return *func;
+        }
+
     func = write_null_to_float_column( _chunk );
 
     if ( func )
@@ -1367,6 +1397,13 @@ typename ArrowHandler::StringFunction ArrowHandler::write_to_string_column(
     // ------------------------------------------------------------------------
 
     auto func = write_boolean_to_string_column( _chunk );
+
+    if ( func )
+        {
+            return *func;
+        }
+
+    func = write_dict_to_string_column( _chunk );
 
     if ( func )
         {

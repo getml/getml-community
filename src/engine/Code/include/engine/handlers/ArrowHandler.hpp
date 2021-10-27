@@ -94,11 +94,13 @@ class ArrowHandler
     std::optional<StringFunction> write_boolean_to_string_column(
         const std::shared_ptr<arrow::Array>& _chunk ) const;
 
+    /// Writes a dict chunk to a float column. Returns true on success.
+    std::optional<FloatFunction> write_dict_to_float_column(
+        const std::shared_ptr<arrow::Array>& _chunk ) const;
+
     /// Writes a dict chunk to a string column. Returns true on success.
-    bool write_dict_to_string_column(
-        const std::shared_ptr<arrow::Array>& _chunk,
-        const std::string& _name,
-        strings::String* _out ) const;
+    std::optional<StringFunction> write_dict_to_string_column(
+        const std::shared_ptr<arrow::Array>& _chunk ) const;
 
     /// Returns a function that writes a float chunk to a string column or
     /// std::nullopt, if the _chunk is not a float chunk.
