@@ -454,36 +454,58 @@ void ArrowHandler::to_parquet(
 
 // ----------------------------------------------------------------------------
 
-bool ArrowHandler::write_boolean_to_float_column(
-    const std::shared_ptr<arrow::Array>& _chunk,
-    const std::string& _name,
-    Float* _out ) const
+std::optional<typename ArrowHandler::FloatFunction>
+ArrowHandler::write_boolean_to_float_column(
+    const std::shared_ptr<arrow::Array>& _chunk ) const
 {
-    // ------------------------------------------------------------------------
-
     assert_true( _chunk );
-
-    // ------------------------------------------------------------------------
 
     const auto boolean_to_float = []( const bool val ) -> Float {
         return val ? 1.0 : 0.0;
     };
 
+    const auto transform_chunk = [boolean_to_float](
+                                     const std::int64_t _i,
+                                     const auto _chunk ) -> Float {
+        if ( _chunk->IsNull( _i ) )
+            {
+                return NAN;
+            }
+
+        return boolean_to_float( _chunk->Value( _i ) );
+    };
+
+    if ( _chunk->type()->Equals( arrow::boolean() ) )
+        {
+            const auto chunk =
+                std::static_pointer_cast<arrow::BooleanArray>( _chunk );
+            assert_true( chunk );
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
+        }
+
+    return std::nullopt;
+}
+
+// ----------------------------------------------------------------------------
+
+std::optional<typename ArrowHandler::StringFunction>
+ArrowHandler::write_boolean_to_string_column(
+    const std::shared_ptr<arrow::Array>& _chunk ) const
+{
     // ------------------------------------------------------------------------
 
-    const auto transform = [boolean_to_float,
-                            _out]( const arrow::BooleanArray& chunk ) {
-        for ( std::int64_t i = 0; i < chunk.length(); ++i )
+    assert_true( _chunk );
+
+    // ------------------------------------------------------------------------
+
+    const auto transform_chunk = []( const std::int64_t _i,
+                                     const auto _chunk ) -> strings::String {
+        if ( _chunk->IsNull( _i ) )
             {
-                if ( chunk.IsNull( i ) )
-                    {
-                        *( _out + i ) = NAN;
-                    }
-                else
-                    {
-                        *( _out + i ) = boolean_to_float( chunk.Value( i ) );
-                    }
+                return strings::String( "NULL" );
             }
+
+        return strings::String( io::Parser::to_string( _chunk->Value( _i ) ) );
     };
 
     // ------------------------------------------------------------------------
@@ -493,26 +515,21 @@ bool ArrowHandler::write_boolean_to_float_column(
             const auto chunk =
                 std::static_pointer_cast<arrow::BooleanArray>( _chunk );
             assert_true( chunk );
-            transform( *chunk );
-        }
-    else
-        {
-            return false;
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
         }
 
     // ------------------------------------------------------------------------
 
-    return true;
+    return std::nullopt;
 
     // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
 
-bool ArrowHandler::write_boolean_to_string_column(
-    const std::shared_ptr<arrow::Array>& _chunk,
-    const std::string& _name,
-    strings::String* _out ) const
+std::optional<typename ArrowHandler::StringFunction>
+ArrowHandler::write_float_to_string_column(
+    const std::shared_ptr<arrow::Array>& _chunk ) const
 {
     // ------------------------------------------------------------------------
 
@@ -520,69 +537,15 @@ bool ArrowHandler::write_boolean_to_string_column(
 
     // ------------------------------------------------------------------------
 
-    const auto transform_boolean_chunk =
-        [_out]( const arrow::BooleanArray& chunk ) {
-            for ( std::int64_t i = 0; i < chunk.length(); ++i )
-                {
-                    if ( chunk.IsNull( i ) )
-                        {
-                            *( _out + i ) = strings::String( "NULL" );
-                        }
-                    else
-                        {
-                            *( _out + i ) = strings::String(
-                                io::Parser::to_string( chunk.Value( i ) ) );
-                        }
-                }
-        };
-
-    // ------------------------------------------------------------------------
-
-    if ( _chunk->type()->Equals( arrow::boolean() ) )
-        {
-            const auto chunk =
-                std::static_pointer_cast<arrow::BooleanArray>( _chunk );
-            assert_true( chunk );
-            transform_boolean_chunk( *chunk );
-        }
-    else
-        {
-            return false;
-        }
-
-    // ------------------------------------------------------------------------
-
-    return true;
-
-    // ------------------------------------------------------------------------
-}
-
-// ----------------------------------------------------------------------------
-
-bool ArrowHandler::write_float_to_string_column(
-    const std::shared_ptr<arrow::Array>& _chunk,
-    const std::string& _name,
-    strings::String* _out ) const
-{
-    // ------------------------------------------------------------------------
-
-    assert_true( _chunk );
-
-    // ------------------------------------------------------------------------
-
-    const auto transform_float_chunk = [_out]( const auto& chunk ) {
-        for ( std::int64_t i = 0; i < chunk.length(); ++i )
+    const auto transform_chunk = []( const std::int64_t _i,
+                                     const auto _chunk ) -> strings::String {
+        if ( _chunk->IsNull( _i ) )
             {
-                if ( chunk.IsNull( i ) )
-                    {
-                        *( _out + i ) = strings::String( "NULL" );
-                    }
-                else
-                    {
-                        *( _out + i ) = strings::String( io::Parser::to_string(
-                            static_cast<Float>( chunk.Value( i ) ) ) );
-                    }
+                return strings::String( "NULL" );
             }
+
+        return strings::String( io::Parser::to_string(
+            static_cast<Float>( _chunk->Value( _i ) ) ) );
     };
 
     // ------------------------------------------------------------------------
@@ -592,40 +555,37 @@ bool ArrowHandler::write_float_to_string_column(
             const auto chunk =
                 std::static_pointer_cast<arrow::HalfFloatArray>( _chunk );
             assert_true( chunk );
-            transform_float_chunk( *chunk );
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
         }
-    else if ( _chunk->type()->Equals( arrow::float32() ) )
+
+    if ( _chunk->type()->Equals( arrow::float32() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::FloatArray>( _chunk );
             assert_true( chunk );
-            transform_float_chunk( *chunk );
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
         }
-    else if ( _chunk->type()->Equals( arrow::float64() ) )
+
+    if ( _chunk->type()->Equals( arrow::float64() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::DoubleArray>( _chunk );
             assert_true( chunk );
-            transform_float_chunk( *chunk );
-        }
-    else
-        {
-            return false;
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
         }
 
     // ------------------------------------------------------------------------
 
-    return true;
+    return std::nullopt;
 
     // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
 
-bool ArrowHandler::write_int_to_string_column(
-    const std::shared_ptr<arrow::Array>& _chunk,
-    const std::string& _name,
-    strings::String* _out ) const
+std::optional<typename ArrowHandler::StringFunction>
+ArrowHandler::write_int_to_string_column(
+    const std::shared_ptr<arrow::Array>& _chunk ) const
 {
     // ------------------------------------------------------------------------
 
@@ -633,19 +593,14 @@ bool ArrowHandler::write_int_to_string_column(
 
     // ------------------------------------------------------------------------
 
-    const auto transform_int_chunk = [_out]( const auto& chunk ) {
-        for ( std::int64_t i = 0; i < chunk.length(); ++i )
+    const auto transform_chunk = []( const std::int64_t _i,
+                                     const auto _chunk ) -> strings::String {
+        if ( _chunk->IsNull( _i ) )
             {
-                if ( chunk.IsNull( i ) )
-                    {
-                        *( _out + i ) = strings::String( "NULL" );
-                    }
-                else
-                    {
-                        *( _out + i ) = strings::String(
-                            std::to_string( chunk.Value( i ) ) );
-                    }
+                return strings::String( "NULL" );
             }
+
+        return strings::String( std::to_string( _chunk->Value( _i ) ) );
     };
 
     // ------------------------------------------------------------------------
@@ -655,86 +610,104 @@ bool ArrowHandler::write_int_to_string_column(
             const auto chunk =
                 std::static_pointer_cast<arrow::UInt8Array>( _chunk );
             assert_true( chunk );
-            transform_int_chunk( *chunk );
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
         }
-    else if ( _chunk->type()->Equals( arrow::int8() ) )
+
+    if ( _chunk->type()->Equals( arrow::int8() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Int8Array>( _chunk );
             assert_true( chunk );
-            transform_int_chunk( *chunk );
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
         }
-    else if ( _chunk->type()->Equals( arrow::uint16() ) )
+
+    if ( _chunk->type()->Equals( arrow::uint16() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::UInt16Array>( _chunk );
             assert_true( chunk );
-            transform_int_chunk( *chunk );
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
         }
-    else if ( _chunk->type()->Equals( arrow::int16() ) )
+
+    if ( _chunk->type()->Equals( arrow::int16() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Int16Array>( _chunk );
             assert_true( chunk );
-            transform_int_chunk( *chunk );
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
         }
-    else if ( _chunk->type()->Equals( arrow::uint32() ) )
+
+    if ( _chunk->type()->Equals( arrow::uint32() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::UInt32Array>( _chunk );
             assert_true( chunk );
-            transform_int_chunk( *chunk );
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
         }
-    else if ( _chunk->type()->Equals( arrow::int32() ) )
+
+    if ( _chunk->type()->Equals( arrow::int32() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Int32Array>( _chunk );
             assert_true( chunk );
-            transform_int_chunk( *chunk );
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
         }
-    else if ( _chunk->type()->Equals( arrow::uint64() ) )
+
+    if ( _chunk->type()->Equals( arrow::uint64() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::UInt64Array>( _chunk );
             assert_true( chunk );
-            transform_int_chunk( *chunk );
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
         }
-    else if ( _chunk->type()->Equals( arrow::int64() ) )
+
+    if ( _chunk->type()->Equals( arrow::int64() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Int64Array>( _chunk );
             assert_true( chunk );
-            transform_int_chunk( *chunk );
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
         }
-    else if (
-        _chunk->type()->name() ==
-        arrow::duration( arrow::TimeUnit::SECOND )
-            ->name() )  // the name will always be 'duration', regardless of the
-                        // TimeUnit.
+
+    if ( _chunk->type()->name() ==
+         arrow::duration( arrow::TimeUnit::SECOND )
+             ->name() )  // the name will always be 'duration', regardless of
+                         // the TimeUnit.
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::DurationArray>( _chunk );
             assert_true( chunk );
-            transform_int_chunk( *chunk );
-        }
-    else
-        {
-            return false;
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
         }
 
     // ------------------------------------------------------------------------
 
-    return true;
+    return std::nullopt;
 
     // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
 
-bool ArrowHandler::write_null_to_float_column(
-    const std::shared_ptr<arrow::Array>& _chunk,
-    const std::string& _name,
-    Float* _out ) const
+std::optional<typename ArrowHandler::FloatFunction>
+ArrowHandler::write_null_to_float_column(
+    const std::shared_ptr<arrow::Array>& _chunk ) const
+{
+    assert_true( _chunk );
+
+    if ( _chunk->type()->Equals( arrow::null() ) )
+        {
+            return []( const std::int64_t _i ) { return NAN; };
+        }
+
+    return std::nullopt;
+}
+
+// ----------------------------------------------------------------------------
+
+std::optional<typename ArrowHandler::StringFunction>
+ArrowHandler::write_null_to_string_column(
+    const std::shared_ptr<arrow::Array>& _chunk ) const
 {
     // ------------------------------------------------------------------------
 
@@ -744,55 +717,23 @@ bool ArrowHandler::write_null_to_float_column(
 
     if ( _chunk->type()->Equals( arrow::null() ) )
         {
-            std::fill( _out, _out + _chunk->length(), NAN );
-        }
-    else
-        {
-            return false;
+            return []( const std::int64_t _i ) {
+                return strings::String( "NULL" );
+            };
         }
 
     // ------------------------------------------------------------------------
 
-    return true;
+    return std::nullopt;
 
     // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
 
-bool ArrowHandler::write_null_to_string_column(
-    const std::shared_ptr<arrow::Array>& _chunk,
-    const std::string& _name,
-    strings::String* _out ) const
-{
-    // ------------------------------------------------------------------------
-
-    assert_true( _chunk );
-
-    // ------------------------------------------------------------------------
-
-    if ( _chunk->type()->Equals( arrow::null() ) )
-        {
-            std::fill( _out, _out + _chunk->length(), "NULL" );
-        }
-    else
-        {
-            return false;
-        }
-
-    // ------------------------------------------------------------------------
-
-    return true;
-
-    // ------------------------------------------------------------------------
-}
-
-// ----------------------------------------------------------------------------
-
-bool ArrowHandler::write_numeric_to_float_column(
-    const std::shared_ptr<arrow::Array>& _chunk,
-    const std::string& _name,
-    Float* _out ) const
+std::optional<typename ArrowHandler::FloatFunction>
+ArrowHandler::write_numeric_to_float_column(
+    const std::shared_ptr<arrow::Array>& _chunk ) const
 {
     // ------------------------------------------------------------------------
 
@@ -802,18 +743,14 @@ bool ArrowHandler::write_numeric_to_float_column(
 
     // ------------------------------------------------------------------------
 
-    const auto transform_numeric_chunk = [_out]( const auto& chunk ) {
-        for ( std::int64_t i = 0; i < chunk.length(); ++i )
+    const auto transform_chunk = []( const std::int64_t _i,
+                                     const auto _chunk ) -> Float {
+        if ( _chunk->IsNull( _i ) )
             {
-                if ( chunk.IsNull( i ) )
-                    {
-                        *( _out + i ) = NAN;
-                    }
-                else
-                    {
-                        *( _out + i ) = static_cast<Float>( chunk.Value( i ) );
-                    }
+                return NAN;
             }
+
+        return static_cast<Float>( _chunk->Value( _i ) );
     };
 
     // ------------------------------------------------------------------------
@@ -823,107 +760,112 @@ bool ArrowHandler::write_numeric_to_float_column(
             const auto chunk =
                 std::static_pointer_cast<arrow::UInt8Array>( _chunk );
             assert_true( chunk );
-            transform_numeric_chunk( *chunk );
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
         }
-    else if ( _chunk->type()->Equals( arrow::int8() ) )
+
+    if ( _chunk->type()->Equals( arrow::int8() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Int8Array>( _chunk );
             assert_true( chunk );
-            transform_numeric_chunk( *chunk );
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
         }
-    else if ( _chunk->type()->Equals( arrow::uint16() ) )
+
+    if ( _chunk->type()->Equals( arrow::uint16() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::UInt16Array>( _chunk );
             assert_true( chunk );
-            transform_numeric_chunk( *chunk );
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
         }
-    else if ( _chunk->type()->Equals( arrow::int16() ) )
+
+    if ( _chunk->type()->Equals( arrow::int16() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Int16Array>( _chunk );
             assert_true( chunk );
-            transform_numeric_chunk( *chunk );
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
         }
-    else if ( _chunk->type()->Equals( arrow::uint32() ) )
+
+    if ( _chunk->type()->Equals( arrow::uint32() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::UInt32Array>( _chunk );
             assert_true( chunk );
-            transform_numeric_chunk( *chunk );
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
         }
-    else if ( _chunk->type()->Equals( arrow::int32() ) )
+
+    if ( _chunk->type()->Equals( arrow::int32() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Int32Array>( _chunk );
             assert_true( chunk );
-            transform_numeric_chunk( *chunk );
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
         }
-    else if ( _chunk->type()->Equals( arrow::uint64() ) )
+
+    if ( _chunk->type()->Equals( arrow::uint64() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::UInt64Array>( _chunk );
             assert_true( chunk );
-            transform_numeric_chunk( *chunk );
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
         }
-    else if ( _chunk->type()->Equals( arrow::int64() ) )
+
+    if ( _chunk->type()->Equals( arrow::int64() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Int64Array>( _chunk );
             assert_true( chunk );
-            transform_numeric_chunk( *chunk );
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
         }
-    else if ( _chunk->type()->Equals( arrow::float16() ) )
+
+    if ( _chunk->type()->Equals( arrow::float16() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::HalfFloatArray>( _chunk );
             assert_true( chunk );
-            transform_numeric_chunk( *chunk );
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
         }
-    else if ( _chunk->type()->Equals( arrow::float32() ) )
+
+    if ( _chunk->type()->Equals( arrow::float32() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::FloatArray>( _chunk );
             assert_true( chunk );
-            transform_numeric_chunk( *chunk );
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
         }
-    else if ( _chunk->type()->Equals( arrow::float64() ) )
+
+    if ( _chunk->type()->Equals( arrow::float64() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::DoubleArray>( _chunk );
             assert_true( chunk );
-            transform_numeric_chunk( *chunk );
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
         }
-    else if (
-        _chunk->type()->name() ==
-        arrow::duration( arrow::TimeUnit::SECOND )
-            ->name() )  // the name will always be 'duration', regardless of the
-                        // TimeUnit.
+
+    if ( _chunk->type()->name() ==
+         arrow::duration( arrow::TimeUnit::SECOND )
+             ->name() )  // the name will always be 'duration', regardless of
+                         // the TimeUnit.
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::DurationArray>( _chunk );
             assert_true( chunk );
-            transform_numeric_chunk( *chunk );
-        }
-    else
-        {
-            return false;
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
         }
 
     // ------------------------------------------------------------------------
 
-    return true;
+    return std::nullopt;
 
     // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
 
-bool ArrowHandler::write_string_to_float_column(
-    const std::shared_ptr<arrow::Array>& _chunk,
-    const std::string& _name,
-    Float* _out ) const
+std::optional<typename ArrowHandler::FloatFunction>
+ArrowHandler::write_string_to_float_column(
+    const std::shared_ptr<arrow::Array>& _chunk ) const
 {
     // ------------------------------------------------------------------------
 
@@ -938,19 +880,14 @@ bool ArrowHandler::write_string_to_float_column(
 
     // ------------------------------------------------------------------------
 
-    const auto transform_string_chunk = [string_to_float,
-                                         _out]( const auto& chunk ) {
-        for ( std::int64_t i = 0; i < chunk.length(); ++i )
+    const auto transform_chunk =
+        [string_to_float]( const std::int64_t _i, const auto _chunk ) -> Float {
+        if ( _chunk->IsNull( _i ) )
             {
-                if ( chunk.IsNull( i ) )
-                    {
-                        *( _out + i ) = NAN;
-                    }
-                else
-                    {
-                        *( _out + i ) = string_to_float( chunk.GetString( i ) );
-                    }
+                return NAN;
             }
+
+        return string_to_float( _chunk->GetString( _i ) );
     };
 
     // ------------------------------------------------------------------------
@@ -960,51 +897,51 @@ bool ArrowHandler::write_string_to_float_column(
             const auto chunk =
                 std::static_pointer_cast<arrow::StringArray>( _chunk );
             assert_true( chunk );
-            transform_string_chunk( *chunk );
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
         }
-    else if ( _chunk->type()->Equals( arrow::large_utf8() ) )
+
+    if ( _chunk->type()->Equals( arrow::large_utf8() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::LargeStringArray>( _chunk );
             assert_true( chunk );
-            transform_string_chunk( *chunk );
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
         }
-    else if ( _chunk->type()->Equals( arrow::binary() ) )
+
+    if ( _chunk->type()->Equals( arrow::binary() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::BinaryArray>( _chunk );
             assert_true( chunk );
-            transform_string_chunk( *chunk );
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
         }
-    else if ( _chunk->type()->Equals( arrow::large_binary() ) )
+
+    if ( _chunk->type()->Equals( arrow::large_binary() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::LargeBinaryArray>( _chunk );
             assert_true( chunk );
-            transform_string_chunk( *chunk );
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
         }
-    else if ( arrow::is_fixed_size_binary( _chunk->type()->id() ) )
+
+    if ( arrow::is_fixed_size_binary( _chunk->type()->id() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::FixedSizeBinaryArray>( _chunk );
             assert_true( chunk );
-            transform_string_chunk( *chunk );
-        }
-    else
-        {
-            return false;
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
         }
 
     // ------------------------------------------------------------------------
 
-    return true;
+    return std::nullopt;
 
     // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
 
-bool ArrowHandler::write_string_to_string_column(
+bool ArrowHandler::write_dict_to_string_column(
     const std::shared_ptr<arrow::Array>& _chunk,
     const std::string& _name,
     strings::String* _out ) const
@@ -1015,8 +952,8 @@ bool ArrowHandler::write_string_to_string_column(
 
     // ------------------------------------------------------------------------
 
-    const auto transform_string_chunk = [_out]( const auto& chunk ) {
-        for ( std::int64_t i = 0; i < chunk.length(); ++i )
+    const auto transform_dict_chunk = [_out]( const auto& chunk ) {
+        /*for ( std::int64_t i = 0; i < chunk.length(); ++i )
             {
                 if ( chunk.IsNull( i ) )
                     {
@@ -1026,7 +963,53 @@ bool ArrowHandler::write_string_to_string_column(
                     {
                         *( _out + i ) = strings::String( chunk.GetString( i ) );
                     }
+            }*/
+    };
+
+    // ------------------------------------------------------------------------
+
+    const auto dict_name =
+        arrow::dictionary( arrow::int32(), arrow::utf8() )->name();
+
+    if ( _chunk->type()->name() == dict_name )
+        {
+            const auto chunk =
+                std::static_pointer_cast<arrow::DictionaryArray>( _chunk );
+            assert_true( chunk );
+            transform_dict_chunk( *chunk );
+        }
+    else
+        {
+            return false;
+        }
+
+    // ------------------------------------------------------------------------
+
+    return true;
+
+    // ------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::optional<typename ArrowHandler::StringFunction>
+ArrowHandler::write_string_to_string_column(
+    const std::shared_ptr<arrow::Array>& _chunk ) const
+{
+    // ------------------------------------------------------------------------
+
+    assert_true( _chunk );
+
+    // ------------------------------------------------------------------------
+
+    const auto transform_chunk = []( const std::int64_t _i,
+                                     const auto _chunk ) -> strings::String {
+        if ( _chunk->IsNull( _i ) )
+            {
+                return strings::String( "NULL" );
             }
+
+        return strings::String( _chunk->GetString( _i ) );
     };
 
     // ------------------------------------------------------------------------
@@ -1036,54 +1019,53 @@ bool ArrowHandler::write_string_to_string_column(
             const auto chunk =
                 std::static_pointer_cast<arrow::StringArray>( _chunk );
             assert_true( chunk );
-            transform_string_chunk( *chunk );
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
         }
-    else if ( _chunk->type()->Equals( arrow::large_utf8() ) )
+
+    if ( _chunk->type()->Equals( arrow::large_utf8() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::LargeStringArray>( _chunk );
             assert_true( chunk );
-            transform_string_chunk( *chunk );
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
         }
-    else if ( _chunk->type()->Equals( arrow::binary() ) )
+
+    if ( _chunk->type()->Equals( arrow::binary() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::BinaryArray>( _chunk );
             assert_true( chunk );
-            transform_string_chunk( *chunk );
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
         }
-    else if ( _chunk->type()->Equals( arrow::large_binary() ) )
+
+    if ( _chunk->type()->Equals( arrow::large_binary() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::LargeBinaryArray>( _chunk );
             assert_true( chunk );
-            transform_string_chunk( *chunk );
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
         }
-    else if ( arrow::is_fixed_size_binary( _chunk->type()->id() ) )
+
+    if ( arrow::is_fixed_size_binary( _chunk->type()->id() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::FixedSizeBinaryArray>( _chunk );
             assert_true( chunk );
-            transform_string_chunk( *chunk );
-        }
-    else
-        {
-            return false;
+            return std::bind( transform_chunk, std::placeholders::_1, chunk );
         }
 
     // ------------------------------------------------------------------------
 
-    return true;
+    return std::nullopt;
 
     // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
 
-bool ArrowHandler::write_time_to_float_column(
-    const std::shared_ptr<arrow::Array>& _chunk,
-    const std::string& _name,
-    Float* _out ) const
+std::optional<typename ArrowHandler::FloatFunction>
+ArrowHandler::write_time_to_float_column(
+    const std::shared_ptr<arrow::Array>& _chunk ) const
 {
     // ------------------------------------------------------------------------
 
@@ -1091,21 +1073,15 @@ bool ArrowHandler::write_time_to_float_column(
 
     // ------------------------------------------------------------------------
 
-    const auto transform_time_chunk = [_out](
-                                          const auto& chunk,
-                                          const Float& _factor ) {
-        for ( std::int64_t i = 0; i < chunk.length(); ++i )
+    const auto transform_chunk = []( const std::int64_t _i,
+                                     const auto _chunk,
+                                     const Float _factor ) -> Float {
+        if ( _chunk->IsNull( _i ) )
             {
-                if ( chunk.IsNull( i ) )
-                    {
-                        *( _out + i ) = NAN;
-                    }
-                else
-                    {
-                        *( _out + i ) =
-                            static_cast<Float>( chunk.Value( i ) ) / _factor;
-                    }
+                return NAN;
             }
+
+        return static_cast<Float>( _chunk->Value( _i ) ) * _factor;
     };
 
     // ------------------------------------------------------------------------
@@ -1115,95 +1091,103 @@ bool ArrowHandler::write_time_to_float_column(
             const auto chunk =
                 std::static_pointer_cast<arrow::TimestampArray>( _chunk );
             assert_true( chunk );
-            transform_time_chunk( *chunk, 1.0 );
+            return std::bind(
+                transform_chunk, std::placeholders::_1, chunk, 1.0 );
         }
-    else if ( _chunk->type()->Equals(
-                  arrow::timestamp( arrow::TimeUnit::MILLI ) ) )
+
+    if ( _chunk->type()->Equals( arrow::timestamp( arrow::TimeUnit::MILLI ) ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::TimestampArray>( _chunk );
             assert_true( chunk );
-            transform_time_chunk( *chunk, 1.0e3 );
+            return std::bind(
+                transform_chunk, std::placeholders::_1, chunk, 1.0e-3 );
         }
-    else if ( _chunk->type()->Equals(
-                  arrow::timestamp( arrow::TimeUnit::MICRO ) ) )
+
+    if ( _chunk->type()->Equals( arrow::timestamp( arrow::TimeUnit::MICRO ) ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::TimestampArray>( _chunk );
             assert_true( chunk );
-            transform_time_chunk( *chunk, 1.0e6 );
+            return std::bind(
+                transform_chunk, std::placeholders::_1, chunk, 1.0e-6 );
         }
-    else if ( _chunk->type()->Equals(
-                  arrow::timestamp( arrow::TimeUnit::NANO ) ) )
+
+    if ( _chunk->type()->Equals( arrow::timestamp( arrow::TimeUnit::NANO ) ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::TimestampArray>( _chunk );
             assert_true( chunk );
-            transform_time_chunk( *chunk, 1.0e9 );
+            return std::bind(
+                transform_chunk, std::placeholders::_1, chunk, 1.0e-9 );
         }
-    else if ( _chunk->type()->Equals(
-                  arrow::time32( arrow::TimeUnit::SECOND ) ) )
+
+    if ( _chunk->type()->Equals( arrow::time32( arrow::TimeUnit::SECOND ) ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Time32Array>( _chunk );
             assert_true( chunk );
-            transform_time_chunk( *chunk, 1.0 );
+            return std::bind(
+                transform_chunk, std::placeholders::_1, chunk, 1.0 );
         }
-    else if ( _chunk->type()->Equals(
-                  arrow::time32( arrow::TimeUnit::MILLI ) ) )
+
+    if ( _chunk->type()->Equals( arrow::time32( arrow::TimeUnit::MILLI ) ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Time32Array>( _chunk );
             assert_true( chunk );
-            transform_time_chunk( *chunk, 1.0e3 );
+            return std::bind(
+                transform_chunk, std::placeholders::_1, chunk, 1.0e-3 );
         }
-    else if ( _chunk->type()->Equals(
-                  arrow::time64( arrow::TimeUnit::MICRO ) ) )
+
+    if ( _chunk->type()->Equals( arrow::time64( arrow::TimeUnit::MICRO ) ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Time64Array>( _chunk );
             assert_true( chunk );
-            transform_time_chunk( *chunk, 1.0e6 );
+            return std::bind(
+                transform_chunk, std::placeholders::_1, chunk, 1.0e-6 );
         }
-    else if ( _chunk->type()->Equals( arrow::time64( arrow::TimeUnit::NANO ) ) )
+
+    if ( _chunk->type()->Equals( arrow::time64( arrow::TimeUnit::NANO ) ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Time64Array>( _chunk );
             assert_true( chunk );
-            transform_time_chunk( *chunk, 1.0e9 );
+            return std::bind(
+                transform_chunk, std::placeholders::_1, chunk, 1.0e-9 );
         }
-    else if ( _chunk->type()->Equals( arrow::date32() ) )
+
+    if ( _chunk->type()->Equals( arrow::date32() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Date32Array>( _chunk );
             assert_true( chunk );
-            transform_time_chunk( *chunk, 1.0 / 86400.0 );
+            return std::bind(
+                transform_chunk, std::placeholders::_1, chunk, 86400.0 );
         }
-    else if ( _chunk->type()->Equals( arrow::date64() ) )
+
+    if ( _chunk->type()->Equals( arrow::date64() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Date64Array>( _chunk );
             assert_true( chunk );
-            transform_time_chunk( *chunk, 1.0e3 );
-        }
-    else
-        {
-            return false;
+            return std::bind(
+                transform_chunk, std::placeholders::_1, chunk, 1.0e-3 );
         }
 
     // ------------------------------------------------------------------------
 
-    return true;
+    return std::nullopt;
 
     // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
 
-bool ArrowHandler::write_time_to_string_column(
-    const std::shared_ptr<arrow::Array>& _chunk,
-    const std::string& _name,
-    strings::String* _out ) const
+std::optional<typename ArrowHandler::StringFunction>
+ArrowHandler::write_time_to_string_column(
+    const std::shared_ptr<arrow::Array>& _chunk ) const
 {
     // ------------------------------------------------------------------------
 
@@ -1211,21 +1195,16 @@ bool ArrowHandler::write_time_to_string_column(
 
     // ------------------------------------------------------------------------
 
-    const auto transform_time_chunk = [_out](
-                                          const auto& chunk,
-                                          const Float& _factor ) {
-        for ( std::int64_t i = 0; i < chunk.length(); ++i )
+    const auto transform_chunk = []( const std::int64_t _i,
+                                     const auto _chunk,
+                                     const Float _factor ) -> strings::String {
+        if ( _chunk->IsNull( _i ) )
             {
-                if ( chunk.IsNull( i ) )
-                    {
-                        *( _out + i ) = "NULL";
-                    }
-                else
-                    {
-                        *( _out + i ) = io::Parser::ts_to_string(
-                            static_cast<Float>( chunk.Value( i ) ) / _factor );
-                    }
+                return strings::String( "NULL" );
             }
+
+        return strings::String( io::Parser::ts_to_string(
+            static_cast<Float>( _chunk->Value( _i ) ) * _factor ) );
     };
 
     // ------------------------------------------------------------------------
@@ -1235,147 +1214,211 @@ bool ArrowHandler::write_time_to_string_column(
             const auto chunk =
                 std::static_pointer_cast<arrow::TimestampArray>( _chunk );
             assert_true( chunk );
-            transform_time_chunk( *chunk, 1.0 );
+            return std::bind(
+                transform_chunk, std::placeholders::_1, chunk, 1.0 );
         }
-    else if ( _chunk->type()->Equals(
-                  arrow::timestamp( arrow::TimeUnit::MILLI ) ) )
+
+    if ( _chunk->type()->Equals( arrow::timestamp( arrow::TimeUnit::MILLI ) ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::TimestampArray>( _chunk );
             assert_true( chunk );
-            transform_time_chunk( *chunk, 1.0e3 );
+            return std::bind(
+                transform_chunk, std::placeholders::_1, chunk, 1.0e-3 );
         }
-    else if ( _chunk->type()->Equals(
-                  arrow::timestamp( arrow::TimeUnit::MICRO ) ) )
+
+    if ( _chunk->type()->Equals( arrow::timestamp( arrow::TimeUnit::MICRO ) ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::TimestampArray>( _chunk );
             assert_true( chunk );
-            transform_time_chunk( *chunk, 1.0e6 );
+            return std::bind(
+                transform_chunk, std::placeholders::_1, chunk, 1.0e-6 );
         }
-    else if ( _chunk->type()->Equals(
-                  arrow::timestamp( arrow::TimeUnit::NANO ) ) )
+
+    if ( _chunk->type()->Equals( arrow::timestamp( arrow::TimeUnit::NANO ) ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::TimestampArray>( _chunk );
             assert_true( chunk );
-            transform_time_chunk( *chunk, 1.0e9 );
+            return std::bind(
+                transform_chunk, std::placeholders::_1, chunk, 1.0e-9 );
         }
-    else if ( _chunk->type()->Equals(
-                  arrow::time32( arrow::TimeUnit::SECOND ) ) )
+
+    if ( _chunk->type()->Equals( arrow::time32( arrow::TimeUnit::SECOND ) ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Time32Array>( _chunk );
             assert_true( chunk );
-            transform_time_chunk( *chunk, 1.0 );
+            return std::bind(
+                transform_chunk, std::placeholders::_1, chunk, 1.0 );
         }
-    else if ( _chunk->type()->Equals(
-                  arrow::time32( arrow::TimeUnit::MILLI ) ) )
+
+    if ( _chunk->type()->Equals( arrow::time32( arrow::TimeUnit::MILLI ) ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Time32Array>( _chunk );
             assert_true( chunk );
-            transform_time_chunk( *chunk, 1.0e3 );
+            return std::bind(
+                transform_chunk, std::placeholders::_1, chunk, 1.0e-3 );
         }
-    else if ( _chunk->type()->Equals(
-                  arrow::time64( arrow::TimeUnit::MICRO ) ) )
+
+    if ( _chunk->type()->Equals( arrow::time64( arrow::TimeUnit::MICRO ) ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Time64Array>( _chunk );
             assert_true( chunk );
-            transform_time_chunk( *chunk, 1.0e6 );
+            return std::bind(
+                transform_chunk, std::placeholders::_1, chunk, 1.0e-6 );
         }
-    else if ( _chunk->type()->Equals( arrow::time64( arrow::TimeUnit::NANO ) ) )
+
+    if ( _chunk->type()->Equals( arrow::time64( arrow::TimeUnit::NANO ) ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Time64Array>( _chunk );
             assert_true( chunk );
-            transform_time_chunk( *chunk, 1.0e9 );
+            return std::bind(
+                transform_chunk, std::placeholders::_1, chunk, 1.0e-9 );
         }
-    else if ( _chunk->type()->Equals( arrow::date32() ) )
+
+    if ( _chunk->type()->Equals( arrow::date32() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Date32Array>( _chunk );
             assert_true( chunk );
-            transform_time_chunk( *chunk, 1.0 / 86400.0 );
+            return std::bind(
+                transform_chunk, std::placeholders::_1, chunk, 86400.0 );
         }
-    else if ( _chunk->type()->Equals( arrow::date64() ) )
+
+    if ( _chunk->type()->Equals( arrow::date64() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Date64Array>( _chunk );
             assert_true( chunk );
-            transform_time_chunk( *chunk, 1.0e3 );
-        }
-    else
-        {
-            return false;
+            return std::bind(
+                transform_chunk, std::placeholders::_1, chunk, 1.0e-3 );
         }
 
     // ------------------------------------------------------------------------
 
-    return true;
+    return std::nullopt;
 }
 
 // ----------------------------------------------------------------------------
 
-void ArrowHandler::write_to_float_column(
+typename ArrowHandler::FloatFunction ArrowHandler::write_to_float_column(
     const std::shared_ptr<arrow::Array>& _chunk,
-    const std::string& _name,
-    Float* _out ) const
+    const std::string& _name ) const
 {
     // ------------------------------------------------------------------------
 
-    bool success = write_boolean_to_float_column( _chunk, _name, _out );
+    auto func = write_boolean_to_float_column( _chunk );
 
-    success = success || write_null_to_float_column( _chunk, _name, _out );
-
-    success = success || write_numeric_to_float_column( _chunk, _name, _out );
-
-    success = success || write_string_to_float_column( _chunk, _name, _out );
-
-    success = success || write_time_to_float_column( _chunk, _name, _out );
-
-    // ------------------------------------------------------------------------
-
-    if ( !success )
+    if ( func )
         {
-            throw std::invalid_argument(
-                "Unsupported field type for field '" + _name +
-                "': " + _chunk->type()->name() + "." );
+            return *func;
+        }
+
+    func = write_null_to_float_column( _chunk );
+
+    if ( func )
+        {
+            return *func;
+        }
+
+    func = write_numeric_to_float_column( _chunk );
+
+    if ( func )
+        {
+            return *func;
+        }
+
+    func = write_string_to_float_column( _chunk );
+
+    if ( func )
+        {
+            return *func;
+        }
+
+    func = write_time_to_float_column( _chunk );
+
+    if ( func )
+        {
+            return *func;
         }
 
     // ------------------------------------------------------------------------
+
+    throw std::invalid_argument(
+        "Unsupported field type for field '" + _name +
+        "': " + _chunk->type()->name() + "." );
+
+    // ------------------------------------------------------------------------
+
+    return []( const std::int64_t _i ) -> Float { return 0.0; };
 }
 
 // ----------------------------------------------------------------------------
 
-void ArrowHandler::write_to_string_column(
+typename ArrowHandler::StringFunction ArrowHandler::write_to_string_column(
     const std::shared_ptr<arrow::Array>& _chunk,
-    const std::string& _name,
-    strings::String* _out ) const
+    const std::string& _name ) const
 {
     // ------------------------------------------------------------------------
 
-    bool success = write_boolean_to_string_column( _chunk, _name, _out );
+    auto func = write_boolean_to_string_column( _chunk );
 
-    success = success || write_float_to_string_column( _chunk, _name, _out );
+    if ( func )
+        {
+            return *func;
+        }
 
-    success = success || write_int_to_string_column( _chunk, _name, _out );
+    func = write_float_to_string_column( _chunk );
 
-    success = success || write_null_to_string_column( _chunk, _name, _out );
+    if ( func )
+        {
+            return *func;
+        }
 
-    success = success || write_string_to_string_column( _chunk, _name, _out );
+    func = write_int_to_string_column( _chunk );
 
-    success = success || write_time_to_string_column( _chunk, _name, _out );
+    if ( func )
+        {
+            return *func;
+        }
+
+    func = write_null_to_string_column( _chunk );
+
+    if ( func )
+        {
+            return *func;
+        }
+
+    func = write_string_to_string_column( _chunk );
+
+    if ( func )
+        {
+            return *func;
+        }
+
+    func = write_time_to_string_column( _chunk );
+
+    if ( func )
+        {
+            return *func;
+        }
 
     // ------------------------------------------------------------------------
 
-    if ( !success )
-        {
-            throw std::invalid_argument(
-                "Unsupported field type for field '" + _name +
-                "': " + _chunk->type()->name() + "." );
-        }
+    throw std::invalid_argument(
+        "Unsupported field type for field '" + _name +
+        "': " + _chunk->type()->name() + "." );
+
+    // ------------------------------------------------------------------------
+
+    return []( const std::int64_t _i ) -> strings::String {
+        return strings::String( "" );
+    };
 
     // ------------------------------------------------------------------------
 }

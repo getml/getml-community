@@ -9,6 +9,9 @@ namespace handlers
 
 class ArrowHandler
 {
+    using FloatFunction = std::function<Float( const std::int64_t )>;
+    using StringFunction = std::function<strings::String( const std::int64_t )>;
+
    public:
     ArrowHandler(
         const std::shared_ptr<containers::Encoding>& _categories,
@@ -81,83 +84,76 @@ class ArrowHandler
         const std::string& _name,
         const std::shared_ptr<arrow::ChunkedArray>& _arr ) const;
 
-    /// Writes a boolean chunk to a float column. Returns true on success.
-    bool write_boolean_to_float_column(
-        const std::shared_ptr<arrow::Array>& _chunk,
-        const std::string& _name,
-        Float* _out ) const;
+    /// Returns a function that writes a boolean chunk to a float column or
+    /// std::nullopt, if the _chunk is not a boolean chunk.
+    std::optional<FloatFunction> write_boolean_to_float_column(
+        const std::shared_ptr<arrow::Array>& _chunk ) const;
 
-    /// Writes a boolean chunk to a string column. Returns true on success.
-    bool write_boolean_to_string_column(
+    /// Returns a function that writes a boolean chunk to a string column or
+    /// std::nullopt, if the _chunk is not a boolean chunk.
+    std::optional<StringFunction> write_boolean_to_string_column(
+        const std::shared_ptr<arrow::Array>& _chunk ) const;
+
+    /// Writes a dict chunk to a string column. Returns true on success.
+    bool write_dict_to_string_column(
         const std::shared_ptr<arrow::Array>& _chunk,
         const std::string& _name,
         strings::String* _out ) const;
 
-    /// Writes a float chunk to a string column. Returns true on success.
-    bool write_float_to_string_column(
-        const std::shared_ptr<arrow::Array>& _chunk,
-        const std::string& _name,
-        strings::String* _out ) const;
+    /// Returns a function that writes a float chunk to a string column or
+    /// std::nullopt, if the _chunk is not a float chunk.
+    std::optional<StringFunction> write_float_to_string_column(
+        const std::shared_ptr<arrow::Array>& _chunk ) const;
 
-    /// Writes an int chunk to a string column. Returns true on success.
-    bool write_int_to_string_column(
-        const std::shared_ptr<arrow::Array>& _chunk,
-        const std::string& _name,
-        strings::String* _out ) const;
+    /// Returns a function that writes an int chunk to a string column or
+    /// std::nullopt, if the _chunk is not an int chunk.
+    std::optional<StringFunction> write_int_to_string_column(
+        const std::shared_ptr<arrow::Array>& _chunk ) const;
 
-    /// Writes a null chunk to a float column. Returns true on success.
-    bool write_null_to_float_column(
-        const std::shared_ptr<arrow::Array>& _chunk,
-        const std::string& _name,
-        Float* _out ) const;
+    /// Returns a function that writes a null chunk to a float column or
+    /// std::nullopt, if the _chunk is not a null chunk.
+    std::optional<FloatFunction> write_null_to_float_column(
+        const std::shared_ptr<arrow::Array>& _chunk ) const;
 
-    /// Writes a null chunk to a float column. Returns true on success.
-    bool write_null_to_string_column(
-        const std::shared_ptr<arrow::Array>& _chunk,
-        const std::string& _name,
-        strings::String* _out ) const;
+    /// Returns a function that writes a null chunk to a string column or
+    /// std::nullopt, if the _chunk is not a null chunk.
+    std::optional<StringFunction> write_null_to_string_column(
+        const std::shared_ptr<arrow::Array>& _chunk ) const;
 
-    /// Writes a numeric chunk to a float column. Returns true on success.
-    bool write_numeric_to_float_column(
-        const std::shared_ptr<arrow::Array>& _chunk,
-        const std::string& _name,
-        Float* _out ) const;
+    /// Returns a function that writes a numeric chunk to a float column or
+    /// std::nullopt, if the _chunk is not a numeric chunk.
+    std::optional<FloatFunction> write_numeric_to_float_column(
+        const std::shared_ptr<arrow::Array>& _chunk ) const;
 
-    /// Writes a string chunk to a float column. Returns true on success.
-    bool write_string_to_float_column(
-        const std::shared_ptr<arrow::Array>& _chunk,
-        const std::string& _name,
-        Float* _out ) const;
+    /// Returns a function that writes a string chunk to a float column or
+    /// std::nullopt, if the _chunk is not a string chunk.
+    std::optional<FloatFunction> write_string_to_float_column(
+        const std::shared_ptr<arrow::Array>& _chunk ) const;
 
-    /// Writes a string chunk to a string column. Returns true on success.
-    bool write_string_to_string_column(
-        const std::shared_ptr<arrow::Array>& _chunk,
-        const std::string& _name,
-        strings::String* _out ) const;
+    /// Returns a function writes a string chunk to a string column or
+    /// std::nullopt, if the _chunk is not a string chunk.
+    std::optional<StringFunction> write_string_to_string_column(
+        const std::shared_ptr<arrow::Array>& _chunk ) const;
 
-    /// Writes a time chunk to a float column. Returns true on success.
-    bool write_time_to_float_column(
-        const std::shared_ptr<arrow::Array>& _chunk,
-        const std::string& _name,
-        Float* _out ) const;
+    /// Returns a function that writes a time chunk to a float column or
+    /// std::nullopt, if the _chunk is not a time chunk.
+    std::optional<FloatFunction> write_time_to_float_column(
+        const std::shared_ptr<arrow::Array>& _chunk ) const;
 
-    /// Writes a time chunk to a string column. Returns true on success.
-    bool write_time_to_string_column(
-        const std::shared_ptr<arrow::Array>& _chunk,
-        const std::string& _name,
-        strings::String* _out ) const;
+    /// Returns a function writes a time chunk to a string column or
+    /// std::nullopt, if the _chunk is not a time chunk.
+    std::optional<StringFunction> write_time_to_string_column(
+        const std::shared_ptr<arrow::Array>& _chunk ) const;
 
-    /// Writes a chunk to a float column.
-    void write_to_float_column(
+    /// Returns a functions that writes a chunk to a float column.
+    FloatFunction write_to_float_column(
         const std::shared_ptr<arrow::Array>& _chunk,
-        const std::string& _name,
-        Float* _out ) const;
+        const std::string& _name ) const;
 
-    /// Writes a chunk to a string column.
-    void write_to_string_column(
+    /// Returns a functions that writes a chunk to a string column.
+    StringFunction write_to_string_column(
         const std::shared_ptr<arrow::Array>& _chunk,
-        const std::string& _name,
-        strings::String* _out ) const;
+        const std::string& _name ) const;
 
    private:
     /// Encodes the categories used.
@@ -225,14 +221,22 @@ containers::Column<T> ArrowHandler::to_column(
 
             if constexpr ( std::is_same<T, Float>() )
                 {
-                    write_to_float_column(
-                        chunk, _name, data_ptr->data() + begin );
+                    const auto func = write_to_float_column( chunk, _name );
+
+                    for ( std::int64_t i = 0; i < chunk->length(); ++i )
+                        {
+                            ( *data_ptr )[begin + i] = func( i );
+                        }
                 }
 
             if constexpr ( std::is_same<T, strings::String>() )
                 {
-                    write_to_string_column(
-                        chunk, _name, data_ptr->data() + begin );
+                    const auto func = write_to_string_column( chunk, _name );
+
+                    for ( std::int64_t i = 0; i < chunk->length(); ++i )
+                        {
+                            ( *data_ptr )[begin + i] = func( i );
+                        }
                 }
 
             begin += chunk->length();
