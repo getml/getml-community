@@ -295,75 +295,66 @@ containers::DataFrame ArrowHandler::table_to_df(
 
     for ( const auto& colname : _schema.categoricals_ )
         {
-            const auto field = schema->GetFieldByName( colname );
             const auto arr = _table->GetColumnByName( colname );
             const auto col = to_int_column(
-                to_column<strings::String>( colname, field, arr ),
-                categories_ );
+                to_column<strings::String>( colname, arr ), categories_ );
             df.add_int_column( col, containers::DataFrame::ROLE_CATEGORICAL );
         }
 
     for ( const auto& colname : _schema.join_keys_ )
         {
-            const auto field = schema->GetFieldByName( colname );
             const auto arr = _table->GetColumnByName( colname );
             const auto col = to_int_column(
-                to_column<strings::String>( colname, field, arr ),
+                to_column<strings::String>( colname, arr ),
                 join_keys_encoding_ );
             df.add_int_column( col, containers::DataFrame::ROLE_JOIN_KEY );
         }
 
     for ( const auto& colname : _schema.numericals_ )
         {
-            const auto field = schema->GetFieldByName( colname );
             const auto arr = _table->GetColumnByName( colname );
             df.add_float_column(
-                to_column<Float>( colname, field, arr ),
+                to_column<Float>( colname, arr ),
                 containers::DataFrame::ROLE_NUMERICAL );
         }
 
     for ( const auto& colname : _schema.targets_ )
         {
-            const auto field = schema->GetFieldByName( colname );
             const auto arr = _table->GetColumnByName( colname );
             df.add_float_column(
-                to_column<Float>( colname, field, arr ),
+                to_column<Float>( colname, arr ),
                 containers::DataFrame::ROLE_TARGET );
         }
 
     for ( const auto& colname : _schema.text_ )
         {
-            const auto field = schema->GetFieldByName( colname );
             const auto arr = _table->GetColumnByName( colname );
             df.add_string_column(
-                to_column<strings::String>( colname, field, arr ),
+                to_column<strings::String>( colname, arr ),
                 containers::DataFrame::ROLE_TEXT );
         }
 
     for ( const auto& colname : _schema.time_stamps_ )
         {
-            const auto field = schema->GetFieldByName( colname );
             const auto arr = _table->GetColumnByName( colname );
             df.add_float_column(
-                to_column<Float>( colname, field, arr ),
+                to_column<Float>( colname, arr ),
                 containers::DataFrame::ROLE_TIME_STAMP );
         }
 
     for ( const auto& colname : _schema.unused_floats_ )
         {
-            const auto field = schema->GetFieldByName( colname );
             const auto arr = _table->GetColumnByName( colname );
             df.add_float_column(
-                to_column<Float>( colname, field, arr ),
+                to_column<Float>( colname, arr ),
                 containers::DataFrame::ROLE_UNUSED_FLOAT );
         }
 
     for ( const auto& colname : _schema.unused_strings_ )
         {
-            const auto field = schema->GetFieldByName( colname );
             const auto arr = _table->GetColumnByName( colname );
             df.add_string_column(
-                to_column<strings::String>( colname, field, arr ),
+                to_column<strings::String>( colname, arr ),
                 containers::DataFrame::ROLE_UNUSED_STRING );
         }
 
@@ -466,7 +457,6 @@ void ArrowHandler::to_parquet(
 bool ArrowHandler::write_boolean_to_float_column(
     const std::shared_ptr<arrow::Array>& _chunk,
     const std::string& _name,
-    const arrow::DataType& _field_type,
     Float* _out ) const
 {
     // ------------------------------------------------------------------------
@@ -498,7 +488,7 @@ bool ArrowHandler::write_boolean_to_float_column(
 
     // ------------------------------------------------------------------------
 
-    if ( _field_type.Equals( arrow::boolean() ) )
+    if ( _chunk->type()->Equals( arrow::boolean() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::BooleanArray>( _chunk );
@@ -522,7 +512,6 @@ bool ArrowHandler::write_boolean_to_float_column(
 bool ArrowHandler::write_boolean_to_string_column(
     const std::shared_ptr<arrow::Array>& _chunk,
     const std::string& _name,
-    const arrow::DataType& _field_type,
     strings::String* _out ) const
 {
     // ------------------------------------------------------------------------
@@ -549,7 +538,7 @@ bool ArrowHandler::write_boolean_to_string_column(
 
     // ------------------------------------------------------------------------
 
-    if ( _field_type.Equals( arrow::boolean() ) )
+    if ( _chunk->type()->Equals( arrow::boolean() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::BooleanArray>( _chunk );
@@ -573,7 +562,6 @@ bool ArrowHandler::write_boolean_to_string_column(
 bool ArrowHandler::write_float_to_string_column(
     const std::shared_ptr<arrow::Array>& _chunk,
     const std::string& _name,
-    const arrow::DataType& _field_type,
     strings::String* _out ) const
 {
     // ------------------------------------------------------------------------
@@ -599,21 +587,21 @@ bool ArrowHandler::write_float_to_string_column(
 
     // ------------------------------------------------------------------------
 
-    if ( _field_type.Equals( arrow::float16() ) )
+    if ( _chunk->type()->Equals( arrow::float16() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::HalfFloatArray>( _chunk );
             assert_true( chunk );
             transform_float_chunk( *chunk );
         }
-    else if ( _field_type.Equals( arrow::float32() ) )
+    else if ( _chunk->type()->Equals( arrow::float32() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::FloatArray>( _chunk );
             assert_true( chunk );
             transform_float_chunk( *chunk );
         }
-    else if ( _field_type.Equals( arrow::float64() ) )
+    else if ( _chunk->type()->Equals( arrow::float64() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::DoubleArray>( _chunk );
@@ -637,7 +625,6 @@ bool ArrowHandler::write_float_to_string_column(
 bool ArrowHandler::write_int_to_string_column(
     const std::shared_ptr<arrow::Array>& _chunk,
     const std::string& _name,
-    const arrow::DataType& _field_type,
     strings::String* _out ) const
 {
     // ------------------------------------------------------------------------
@@ -663,56 +650,56 @@ bool ArrowHandler::write_int_to_string_column(
 
     // ------------------------------------------------------------------------
 
-    if ( _field_type.Equals( arrow::uint8() ) )
+    if ( _chunk->type()->Equals( arrow::uint8() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::UInt8Array>( _chunk );
             assert_true( chunk );
             transform_int_chunk( *chunk );
         }
-    else if ( _field_type.Equals( arrow::int8() ) )
+    else if ( _chunk->type()->Equals( arrow::int8() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Int8Array>( _chunk );
             assert_true( chunk );
             transform_int_chunk( *chunk );
         }
-    else if ( _field_type.Equals( arrow::uint16() ) )
+    else if ( _chunk->type()->Equals( arrow::uint16() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::UInt16Array>( _chunk );
             assert_true( chunk );
             transform_int_chunk( *chunk );
         }
-    else if ( _field_type.Equals( arrow::int16() ) )
+    else if ( _chunk->type()->Equals( arrow::int16() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Int16Array>( _chunk );
             assert_true( chunk );
             transform_int_chunk( *chunk );
         }
-    else if ( _field_type.Equals( arrow::uint32() ) )
+    else if ( _chunk->type()->Equals( arrow::uint32() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::UInt32Array>( _chunk );
             assert_true( chunk );
             transform_int_chunk( *chunk );
         }
-    else if ( _field_type.Equals( arrow::int32() ) )
+    else if ( _chunk->type()->Equals( arrow::int32() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Int32Array>( _chunk );
             assert_true( chunk );
             transform_int_chunk( *chunk );
         }
-    else if ( _field_type.Equals( arrow::uint64() ) )
+    else if ( _chunk->type()->Equals( arrow::uint64() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::UInt64Array>( _chunk );
             assert_true( chunk );
             transform_int_chunk( *chunk );
         }
-    else if ( _field_type.Equals( arrow::int64() ) )
+    else if ( _chunk->type()->Equals( arrow::int64() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Int64Array>( _chunk );
@@ -720,7 +707,7 @@ bool ArrowHandler::write_int_to_string_column(
             transform_int_chunk( *chunk );
         }
     else if (
-        _field_type.name() ==
+        _chunk->type()->name() ==
         arrow::duration( arrow::TimeUnit::SECOND )
             ->name() )  // the name will always be 'duration', regardless of the
                         // TimeUnit.
@@ -747,7 +734,6 @@ bool ArrowHandler::write_int_to_string_column(
 bool ArrowHandler::write_null_to_float_column(
     const std::shared_ptr<arrow::Array>& _chunk,
     const std::string& _name,
-    const arrow::DataType& _field_type,
     Float* _out ) const
 {
     // ------------------------------------------------------------------------
@@ -756,7 +742,7 @@ bool ArrowHandler::write_null_to_float_column(
 
     // ------------------------------------------------------------------------
 
-    if ( _field_type.Equals( arrow::null() ) )
+    if ( _chunk->type()->Equals( arrow::null() ) )
         {
             std::fill( _out, _out + _chunk->length(), NAN );
         }
@@ -777,7 +763,6 @@ bool ArrowHandler::write_null_to_float_column(
 bool ArrowHandler::write_null_to_string_column(
     const std::shared_ptr<arrow::Array>& _chunk,
     const std::string& _name,
-    const arrow::DataType& _field_type,
     strings::String* _out ) const
 {
     // ------------------------------------------------------------------------
@@ -786,7 +771,7 @@ bool ArrowHandler::write_null_to_string_column(
 
     // ------------------------------------------------------------------------
 
-    if ( _field_type.Equals( arrow::null() ) )
+    if ( _chunk->type()->Equals( arrow::null() ) )
         {
             std::fill( _out, _out + _chunk->length(), "NULL" );
         }
@@ -807,12 +792,13 @@ bool ArrowHandler::write_null_to_string_column(
 bool ArrowHandler::write_numeric_to_float_column(
     const std::shared_ptr<arrow::Array>& _chunk,
     const std::string& _name,
-    const arrow::DataType& _field_type,
     Float* _out ) const
 {
     // ------------------------------------------------------------------------
 
     assert_true( _chunk );
+
+    assert_true( _chunk->type() );
 
     // ------------------------------------------------------------------------
 
@@ -832,77 +818,77 @@ bool ArrowHandler::write_numeric_to_float_column(
 
     // ------------------------------------------------------------------------
 
-    if ( _field_type.Equals( arrow::uint8() ) )
+    if ( _chunk->type()->Equals( arrow::uint8() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::UInt8Array>( _chunk );
             assert_true( chunk );
             transform_numeric_chunk( *chunk );
         }
-    else if ( _field_type.Equals( arrow::int8() ) )
+    else if ( _chunk->type()->Equals( arrow::int8() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Int8Array>( _chunk );
             assert_true( chunk );
             transform_numeric_chunk( *chunk );
         }
-    else if ( _field_type.Equals( arrow::uint16() ) )
+    else if ( _chunk->type()->Equals( arrow::uint16() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::UInt16Array>( _chunk );
             assert_true( chunk );
             transform_numeric_chunk( *chunk );
         }
-    else if ( _field_type.Equals( arrow::int16() ) )
+    else if ( _chunk->type()->Equals( arrow::int16() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Int16Array>( _chunk );
             assert_true( chunk );
             transform_numeric_chunk( *chunk );
         }
-    else if ( _field_type.Equals( arrow::uint32() ) )
+    else if ( _chunk->type()->Equals( arrow::uint32() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::UInt32Array>( _chunk );
             assert_true( chunk );
             transform_numeric_chunk( *chunk );
         }
-    else if ( _field_type.Equals( arrow::int32() ) )
+    else if ( _chunk->type()->Equals( arrow::int32() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Int32Array>( _chunk );
             assert_true( chunk );
             transform_numeric_chunk( *chunk );
         }
-    else if ( _field_type.Equals( arrow::uint64() ) )
+    else if ( _chunk->type()->Equals( arrow::uint64() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::UInt64Array>( _chunk );
             assert_true( chunk );
             transform_numeric_chunk( *chunk );
         }
-    else if ( _field_type.Equals( arrow::int64() ) )
+    else if ( _chunk->type()->Equals( arrow::int64() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Int64Array>( _chunk );
             assert_true( chunk );
             transform_numeric_chunk( *chunk );
         }
-    else if ( _field_type.Equals( arrow::float16() ) )
+    else if ( _chunk->type()->Equals( arrow::float16() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::HalfFloatArray>( _chunk );
             assert_true( chunk );
             transform_numeric_chunk( *chunk );
         }
-    else if ( _field_type.Equals( arrow::float32() ) )
+    else if ( _chunk->type()->Equals( arrow::float32() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::FloatArray>( _chunk );
             assert_true( chunk );
             transform_numeric_chunk( *chunk );
         }
-    else if ( _field_type.Equals( arrow::float64() ) )
+    else if ( _chunk->type()->Equals( arrow::float64() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::DoubleArray>( _chunk );
@@ -910,7 +896,7 @@ bool ArrowHandler::write_numeric_to_float_column(
             transform_numeric_chunk( *chunk );
         }
     else if (
-        _field_type.name() ==
+        _chunk->type()->name() ==
         arrow::duration( arrow::TimeUnit::SECOND )
             ->name() )  // the name will always be 'duration', regardless of the
                         // TimeUnit.
@@ -937,7 +923,6 @@ bool ArrowHandler::write_numeric_to_float_column(
 bool ArrowHandler::write_string_to_float_column(
     const std::shared_ptr<arrow::Array>& _chunk,
     const std::string& _name,
-    const arrow::DataType& _field_type,
     Float* _out ) const
 {
     // ------------------------------------------------------------------------
@@ -970,35 +955,35 @@ bool ArrowHandler::write_string_to_float_column(
 
     // ------------------------------------------------------------------------
 
-    if ( _field_type.Equals( arrow::utf8() ) )
+    if ( _chunk->type()->Equals( arrow::utf8() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::StringArray>( _chunk );
             assert_true( chunk );
             transform_string_chunk( *chunk );
         }
-    else if ( _field_type.Equals( arrow::large_utf8() ) )
+    else if ( _chunk->type()->Equals( arrow::large_utf8() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::LargeStringArray>( _chunk );
             assert_true( chunk );
             transform_string_chunk( *chunk );
         }
-    else if ( _field_type.Equals( arrow::binary() ) )
+    else if ( _chunk->type()->Equals( arrow::binary() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::BinaryArray>( _chunk );
             assert_true( chunk );
             transform_string_chunk( *chunk );
         }
-    else if ( _field_type.Equals( arrow::large_binary() ) )
+    else if ( _chunk->type()->Equals( arrow::large_binary() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::LargeBinaryArray>( _chunk );
             assert_true( chunk );
             transform_string_chunk( *chunk );
         }
-    else if ( arrow::is_fixed_size_binary( _field_type.id() ) )
+    else if ( arrow::is_fixed_size_binary( _chunk->type()->id() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::FixedSizeBinaryArray>( _chunk );
@@ -1022,7 +1007,6 @@ bool ArrowHandler::write_string_to_float_column(
 bool ArrowHandler::write_string_to_string_column(
     const std::shared_ptr<arrow::Array>& _chunk,
     const std::string& _name,
-    const arrow::DataType& _field_type,
     strings::String* _out ) const
 {
     // ------------------------------------------------------------------------
@@ -1047,35 +1031,35 @@ bool ArrowHandler::write_string_to_string_column(
 
     // ------------------------------------------------------------------------
 
-    if ( _field_type.Equals( arrow::utf8() ) )
+    if ( _chunk->type()->Equals( arrow::utf8() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::StringArray>( _chunk );
             assert_true( chunk );
             transform_string_chunk( *chunk );
         }
-    else if ( _field_type.Equals( arrow::large_utf8() ) )
+    else if ( _chunk->type()->Equals( arrow::large_utf8() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::LargeStringArray>( _chunk );
             assert_true( chunk );
             transform_string_chunk( *chunk );
         }
-    else if ( _field_type.Equals( arrow::binary() ) )
+    else if ( _chunk->type()->Equals( arrow::binary() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::BinaryArray>( _chunk );
             assert_true( chunk );
             transform_string_chunk( *chunk );
         }
-    else if ( _field_type.Equals( arrow::large_binary() ) )
+    else if ( _chunk->type()->Equals( arrow::large_binary() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::LargeBinaryArray>( _chunk );
             assert_true( chunk );
             transform_string_chunk( *chunk );
         }
-    else if ( arrow::is_fixed_size_binary( _field_type.id() ) )
+    else if ( arrow::is_fixed_size_binary( _chunk->type()->id() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::FixedSizeBinaryArray>( _chunk );
@@ -1099,7 +1083,6 @@ bool ArrowHandler::write_string_to_string_column(
 bool ArrowHandler::write_time_to_float_column(
     const std::shared_ptr<arrow::Array>& _chunk,
     const std::string& _name,
-    const arrow::DataType& _field_type,
     Float* _out ) const
 {
     // ------------------------------------------------------------------------
@@ -1127,70 +1110,76 @@ bool ArrowHandler::write_time_to_float_column(
 
     // ------------------------------------------------------------------------
 
-    if ( _field_type.Equals( arrow::timestamp( arrow::TimeUnit::SECOND ) ) )
+    if ( _chunk->type()->Equals( arrow::timestamp( arrow::TimeUnit::SECOND ) ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::TimestampArray>( _chunk );
             assert_true( chunk );
             transform_time_chunk( *chunk, 1.0 );
         }
-    else if ( _field_type.Equals( arrow::timestamp( arrow::TimeUnit::MILLI ) ) )
+    else if ( _chunk->type()->Equals(
+                  arrow::timestamp( arrow::TimeUnit::MILLI ) ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::TimestampArray>( _chunk );
             assert_true( chunk );
             transform_time_chunk( *chunk, 1.0e3 );
         }
-    else if ( _field_type.Equals( arrow::timestamp( arrow::TimeUnit::MICRO ) ) )
+    else if ( _chunk->type()->Equals(
+                  arrow::timestamp( arrow::TimeUnit::MICRO ) ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::TimestampArray>( _chunk );
             assert_true( chunk );
             transform_time_chunk( *chunk, 1.0e6 );
         }
-    else if ( _field_type.Equals( arrow::timestamp( arrow::TimeUnit::NANO ) ) )
+    else if ( _chunk->type()->Equals(
+                  arrow::timestamp( arrow::TimeUnit::NANO ) ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::TimestampArray>( _chunk );
             assert_true( chunk );
             transform_time_chunk( *chunk, 1.0e9 );
         }
-    else if ( _field_type.Equals( arrow::time32( arrow::TimeUnit::SECOND ) ) )
+    else if ( _chunk->type()->Equals(
+                  arrow::time32( arrow::TimeUnit::SECOND ) ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Time32Array>( _chunk );
             assert_true( chunk );
             transform_time_chunk( *chunk, 1.0 );
         }
-    else if ( _field_type.Equals( arrow::time32( arrow::TimeUnit::MILLI ) ) )
+    else if ( _chunk->type()->Equals(
+                  arrow::time32( arrow::TimeUnit::MILLI ) ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Time32Array>( _chunk );
             assert_true( chunk );
             transform_time_chunk( *chunk, 1.0e3 );
         }
-    else if ( _field_type.Equals( arrow::time64( arrow::TimeUnit::MICRO ) ) )
+    else if ( _chunk->type()->Equals(
+                  arrow::time64( arrow::TimeUnit::MICRO ) ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Time64Array>( _chunk );
             assert_true( chunk );
             transform_time_chunk( *chunk, 1.0e6 );
         }
-    else if ( _field_type.Equals( arrow::time64( arrow::TimeUnit::NANO ) ) )
+    else if ( _chunk->type()->Equals( arrow::time64( arrow::TimeUnit::NANO ) ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Time64Array>( _chunk );
             assert_true( chunk );
             transform_time_chunk( *chunk, 1.0e9 );
         }
-    else if ( _field_type.Equals( arrow::date32() ) )
+    else if ( _chunk->type()->Equals( arrow::date32() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Date32Array>( _chunk );
             assert_true( chunk );
             transform_time_chunk( *chunk, 1.0 / 86400.0 );
         }
-    else if ( _field_type.Equals( arrow::date64() ) )
+    else if ( _chunk->type()->Equals( arrow::date64() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Date64Array>( _chunk );
@@ -1214,7 +1203,6 @@ bool ArrowHandler::write_time_to_float_column(
 bool ArrowHandler::write_time_to_string_column(
     const std::shared_ptr<arrow::Array>& _chunk,
     const std::string& _name,
-    const arrow::DataType& _field_type,
     strings::String* _out ) const
 {
     // ------------------------------------------------------------------------
@@ -1242,70 +1230,76 @@ bool ArrowHandler::write_time_to_string_column(
 
     // ------------------------------------------------------------------------
 
-    if ( _field_type.Equals( arrow::timestamp( arrow::TimeUnit::SECOND ) ) )
+    if ( _chunk->type()->Equals( arrow::timestamp( arrow::TimeUnit::SECOND ) ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::TimestampArray>( _chunk );
             assert_true( chunk );
             transform_time_chunk( *chunk, 1.0 );
         }
-    else if ( _field_type.Equals( arrow::timestamp( arrow::TimeUnit::MILLI ) ) )
+    else if ( _chunk->type()->Equals(
+                  arrow::timestamp( arrow::TimeUnit::MILLI ) ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::TimestampArray>( _chunk );
             assert_true( chunk );
             transform_time_chunk( *chunk, 1.0e3 );
         }
-    else if ( _field_type.Equals( arrow::timestamp( arrow::TimeUnit::MICRO ) ) )
+    else if ( _chunk->type()->Equals(
+                  arrow::timestamp( arrow::TimeUnit::MICRO ) ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::TimestampArray>( _chunk );
             assert_true( chunk );
             transform_time_chunk( *chunk, 1.0e6 );
         }
-    else if ( _field_type.Equals( arrow::timestamp( arrow::TimeUnit::NANO ) ) )
+    else if ( _chunk->type()->Equals(
+                  arrow::timestamp( arrow::TimeUnit::NANO ) ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::TimestampArray>( _chunk );
             assert_true( chunk );
             transform_time_chunk( *chunk, 1.0e9 );
         }
-    else if ( _field_type.Equals( arrow::time32( arrow::TimeUnit::SECOND ) ) )
+    else if ( _chunk->type()->Equals(
+                  arrow::time32( arrow::TimeUnit::SECOND ) ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Time32Array>( _chunk );
             assert_true( chunk );
             transform_time_chunk( *chunk, 1.0 );
         }
-    else if ( _field_type.Equals( arrow::time32( arrow::TimeUnit::MILLI ) ) )
+    else if ( _chunk->type()->Equals(
+                  arrow::time32( arrow::TimeUnit::MILLI ) ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Time32Array>( _chunk );
             assert_true( chunk );
             transform_time_chunk( *chunk, 1.0e3 );
         }
-    else if ( _field_type.Equals( arrow::time64( arrow::TimeUnit::MICRO ) ) )
+    else if ( _chunk->type()->Equals(
+                  arrow::time64( arrow::TimeUnit::MICRO ) ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Time64Array>( _chunk );
             assert_true( chunk );
             transform_time_chunk( *chunk, 1.0e6 );
         }
-    else if ( _field_type.Equals( arrow::time64( arrow::TimeUnit::NANO ) ) )
+    else if ( _chunk->type()->Equals( arrow::time64( arrow::TimeUnit::NANO ) ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Time64Array>( _chunk );
             assert_true( chunk );
             transform_time_chunk( *chunk, 1.0e9 );
         }
-    else if ( _field_type.Equals( arrow::date32() ) )
+    else if ( _chunk->type()->Equals( arrow::date32() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Date32Array>( _chunk );
             assert_true( chunk );
             transform_time_chunk( *chunk, 1.0 / 86400.0 );
         }
-    else if ( _field_type.Equals( arrow::date64() ) )
+    else if ( _chunk->type()->Equals( arrow::date64() ) )
         {
             const auto chunk =
                 std::static_pointer_cast<arrow::Date64Array>( _chunk );
@@ -1327,25 +1321,19 @@ bool ArrowHandler::write_time_to_string_column(
 void ArrowHandler::write_to_float_column(
     const std::shared_ptr<arrow::Array>& _chunk,
     const std::string& _name,
-    const arrow::DataType& _field_type,
     Float* _out ) const
 {
     // ------------------------------------------------------------------------
 
-    bool success =
-        write_boolean_to_float_column( _chunk, _name, _field_type, _out );
+    bool success = write_boolean_to_float_column( _chunk, _name, _out );
 
-    success = success ||
-              write_null_to_float_column( _chunk, _name, _field_type, _out );
+    success = success || write_null_to_float_column( _chunk, _name, _out );
 
-    success = success ||
-              write_numeric_to_float_column( _chunk, _name, _field_type, _out );
+    success = success || write_numeric_to_float_column( _chunk, _name, _out );
 
-    success = success ||
-              write_string_to_float_column( _chunk, _name, _field_type, _out );
+    success = success || write_string_to_float_column( _chunk, _name, _out );
 
-    success = success ||
-              write_time_to_float_column( _chunk, _name, _field_type, _out );
+    success = success || write_time_to_float_column( _chunk, _name, _out );
 
     // ------------------------------------------------------------------------
 
@@ -1353,7 +1341,7 @@ void ArrowHandler::write_to_float_column(
         {
             throw std::invalid_argument(
                 "Unsupported field type for field '" + _name +
-                "': " + _field_type.name() + "." );
+                "': " + _chunk->type()->name() + "." );
         }
 
     // ------------------------------------------------------------------------
@@ -1364,28 +1352,21 @@ void ArrowHandler::write_to_float_column(
 void ArrowHandler::write_to_string_column(
     const std::shared_ptr<arrow::Array>& _chunk,
     const std::string& _name,
-    const arrow::DataType& _field_type,
     strings::String* _out ) const
 {
     // ------------------------------------------------------------------------
 
-    bool success =
-        write_boolean_to_string_column( _chunk, _name, _field_type, _out );
+    bool success = write_boolean_to_string_column( _chunk, _name, _out );
 
-    success = success ||
-              write_float_to_string_column( _chunk, _name, _field_type, _out );
+    success = success || write_float_to_string_column( _chunk, _name, _out );
 
-    success = success ||
-              write_int_to_string_column( _chunk, _name, _field_type, _out );
+    success = success || write_int_to_string_column( _chunk, _name, _out );
 
-    success = success ||
-              write_null_to_string_column( _chunk, _name, _field_type, _out );
+    success = success || write_null_to_string_column( _chunk, _name, _out );
 
-    success = success ||
-              write_string_to_string_column( _chunk, _name, _field_type, _out );
+    success = success || write_string_to_string_column( _chunk, _name, _out );
 
-    success = success ||
-              write_time_to_string_column( _chunk, _name, _field_type, _out );
+    success = success || write_time_to_string_column( _chunk, _name, _out );
 
     // ------------------------------------------------------------------------
 
@@ -1393,7 +1374,7 @@ void ArrowHandler::write_to_string_column(
         {
             throw std::invalid_argument(
                 "Unsupported field type for field '" + _name +
-                "': " + _field_type.name() + "." );
+                "': " + _chunk->type()->name() + "." );
         }
 
     // ------------------------------------------------------------------------

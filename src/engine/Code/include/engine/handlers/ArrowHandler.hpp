@@ -79,98 +79,84 @@ class ArrowHandler
     template <class T>
     containers::Column<T> to_column(
         const std::string& _name,
-        const std::shared_ptr<arrow::Field>& _field,
         const std::shared_ptr<arrow::ChunkedArray>& _arr ) const;
 
     /// Writes a boolean chunk to a float column. Returns true on success.
     bool write_boolean_to_float_column(
         const std::shared_ptr<arrow::Array>& _chunk,
         const std::string& _name,
-        const arrow::DataType& _field_type,
         Float* _out ) const;
 
     /// Writes a boolean chunk to a string column. Returns true on success.
     bool write_boolean_to_string_column(
         const std::shared_ptr<arrow::Array>& _chunk,
         const std::string& _name,
-        const arrow::DataType& _field_type,
         strings::String* _out ) const;
 
     /// Writes a float chunk to a string column. Returns true on success.
     bool write_float_to_string_column(
         const std::shared_ptr<arrow::Array>& _chunk,
         const std::string& _name,
-        const arrow::DataType& _field_type,
         strings::String* _out ) const;
 
     /// Writes an int chunk to a string column. Returns true on success.
     bool write_int_to_string_column(
         const std::shared_ptr<arrow::Array>& _chunk,
         const std::string& _name,
-        const arrow::DataType& _field_type,
         strings::String* _out ) const;
 
     /// Writes a null chunk to a float column. Returns true on success.
     bool write_null_to_float_column(
         const std::shared_ptr<arrow::Array>& _chunk,
         const std::string& _name,
-        const arrow::DataType& _field_type,
         Float* _out ) const;
 
     /// Writes a null chunk to a float column. Returns true on success.
     bool write_null_to_string_column(
         const std::shared_ptr<arrow::Array>& _chunk,
         const std::string& _name,
-        const arrow::DataType& _field_type,
         strings::String* _out ) const;
 
     /// Writes a numeric chunk to a float column. Returns true on success.
     bool write_numeric_to_float_column(
         const std::shared_ptr<arrow::Array>& _chunk,
         const std::string& _name,
-        const arrow::DataType& _field_type,
         Float* _out ) const;
 
     /// Writes a string chunk to a float column. Returns true on success.
     bool write_string_to_float_column(
         const std::shared_ptr<arrow::Array>& _chunk,
         const std::string& _name,
-        const arrow::DataType& _field_type,
         Float* _out ) const;
 
     /// Writes a string chunk to a string column. Returns true on success.
     bool write_string_to_string_column(
         const std::shared_ptr<arrow::Array>& _chunk,
         const std::string& _name,
-        const arrow::DataType& _field_type,
         strings::String* _out ) const;
 
     /// Writes a time chunk to a float column. Returns true on success.
     bool write_time_to_float_column(
         const std::shared_ptr<arrow::Array>& _chunk,
         const std::string& _name,
-        const arrow::DataType& _field_type,
         Float* _out ) const;
 
     /// Writes a time chunk to a string column. Returns true on success.
     bool write_time_to_string_column(
         const std::shared_ptr<arrow::Array>& _chunk,
         const std::string& _name,
-        const arrow::DataType& _field_type,
         strings::String* _out ) const;
 
     /// Writes a chunk to a float column.
     void write_to_float_column(
         const std::shared_ptr<arrow::Array>& _chunk,
         const std::string& _name,
-        const arrow::DataType& _field_type,
         Float* _out ) const;
 
     /// Writes a chunk to a string column.
     void write_to_string_column(
         const std::shared_ptr<arrow::Array>& _chunk,
         const std::string& _name,
-        const arrow::DataType& _field_type,
         strings::String* _out ) const;
 
    private:
@@ -196,11 +182,9 @@ containers::Column<T> ArrowHandler::recv_column(
 
     assert_true( schema );
 
-    const auto field = schema->GetFieldByName( _colname );
-
     const auto arr = table->GetColumnByName( _colname );
 
-    return to_column<T>( _colname, field, arr );
+    return to_column<T>( _colname, arr );
 }
 
 // ----------------------------------------------------------------------------
@@ -208,29 +192,15 @@ containers::Column<T> ArrowHandler::recv_column(
 template <class T>
 containers::Column<T> ArrowHandler::to_column(
     const std::string& _name,
-    const std::shared_ptr<arrow::Field>& _field,
     const std::shared_ptr<arrow::ChunkedArray>& _arr ) const
 {
     static_assert(
         std::is_same<T, Float>() || std::is_same<T, strings::String>(),
         "T must be Float or String" );
 
-    if ( !_field )
-        {
-            throw std::runtime_error( "Column '" + _name + "' not found!" );
-        }
-
     if ( !_arr )
         {
             throw std::runtime_error( "Column '" + _name + "' not found!" );
-        }
-
-    const auto field_type = _field->type();
-
-    if ( !field_type )
-        {
-            throw std::runtime_error(
-                "Could not extract type from '" + _name + "'!" );
         }
 
     const auto data_ptr = std::make_shared<std::vector<T>>( _arr->length() );
@@ -244,6 +214,10 @@ containers::Column<T> ArrowHandler::to_column(
                 chunk, "Could not extract chunk from field '" + _name + "'!" );
 
             throw_unless(
+                chunk->type(),
+                "Could not extract type from field '" + _name + "'!" );
+
+            throw_unless(
                 begin + chunk->length() <= _arr->length(),
                 "Sum of chunks greater than the length of the chunked array in "
                 "field '" +
@@ -252,13 +226,13 @@ containers::Column<T> ArrowHandler::to_column(
             if constexpr ( std::is_same<T, Float>() )
                 {
                     write_to_float_column(
-                        chunk, _name, *field_type, data_ptr->data() + begin );
+                        chunk, _name, data_ptr->data() + begin );
                 }
 
             if constexpr ( std::is_same<T, strings::String>() )
                 {
                     write_to_string_column(
-                        chunk, _name, *field_type, data_ptr->data() + begin );
+                        chunk, _name, data_ptr->data() + begin );
                 }
 
             begin += chunk->length();
