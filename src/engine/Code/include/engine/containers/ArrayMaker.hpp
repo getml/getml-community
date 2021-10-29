@@ -147,7 +147,19 @@ template <class IteratorType>
 std::shared_ptr<arrow::ChunkedArray> ArrayMaker::make_string_array(
     const IteratorType _begin, const IteratorType _end )
 {
-    const auto append_function = []( const auto& _val,
+    const auto loc = std::locale( "en_US.UTF-8" );
+
+    const auto is_printable = [loc]( const char c ) -> bool {
+        return std::isprint( c, loc );
+    };
+
+    const auto filter_non_printable =
+        [is_printable]( const std::string& _str ) -> std::string {
+        return stl::collect::string( _str | VIEWS::filter( is_printable ) );
+    };
+
+    const auto append_function = [filter_non_printable](
+                                     const auto& _val,
                                      arrow::StringBuilder* _builder ) {
         if ( helpers::NullChecker::is_null( _val ) )
             {
@@ -158,7 +170,8 @@ std::shared_ptr<arrow::ChunkedArray> ArrayMaker::make_string_array(
             {
                 // For some reason, UnsafeAppend
                 // doesn't work for strings.
-                const auto status = _builder->Append( _val );
+                const auto status =
+                    _builder->Append( filter_non_printable( _val ) );
                 if ( !status.ok() )
                     {
                         throw std::runtime_error( status.message() );

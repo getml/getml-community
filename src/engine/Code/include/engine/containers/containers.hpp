@@ -12,6 +12,7 @@
 #include <iostream>
 #include <limits>
 #include <list>
+#include <locale>
 #include <map>
 #include <memory>
 #include <numeric>
