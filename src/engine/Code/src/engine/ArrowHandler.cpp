@@ -467,6 +467,9 @@ ArrowHandler::write_boolean_to_float_column(
     const auto transform_chunk = [boolean_to_float](
                                      const std::int64_t _i,
                                      const auto _chunk ) -> Float {
+        assert_true( _i >= 0 );
+        assert_true( _i < _chunk->length() );
+
         if ( _chunk->IsNull( _i ) )
             {
                 return NAN;
@@ -500,6 +503,9 @@ ArrowHandler::write_boolean_to_string_column(
 
     const auto transform_chunk = []( const std::int64_t _i,
                                      const auto _chunk ) -> strings::String {
+        assert_true( _i >= 0 );
+        assert_true( _i < _chunk->length() );
+
         if ( _chunk->IsNull( _i ) )
             {
                 return strings::String( "NULL" );
@@ -546,11 +552,18 @@ ArrowHandler::write_dict_to_float_column(
                 std::static_pointer_cast<arrow::DictionaryArray>( _chunk );
 
             assert_true( chunk );
+            assert_true( chunk->indices() );
 
             const auto func =
                 write_to_float_column( chunk->dictionary(), "dictionary" );
 
             return [func, chunk]( const std::int64_t _i ) -> Float {
+                assert_true( _i >= 0 );
+                assert_true( _i < chunk->indices()->length() );
+                if ( chunk->indices()->IsNull( _i ) )
+                    {
+                        return NAN;
+                    }
                 return func( chunk->GetValueIndex( _i ) );
             };
         }
@@ -583,11 +596,18 @@ ArrowHandler::write_dict_to_string_column(
                 std::static_pointer_cast<arrow::DictionaryArray>( _chunk );
 
             assert_true( chunk );
+            assert_true( chunk->indices() );
 
             const auto func =
                 write_to_string_column( chunk->dictionary(), "dictionary" );
 
             return [func, chunk]( const std::int64_t _i ) -> strings::String {
+                assert_true( _i >= 0 );
+                assert_true( _i < chunk->indices()->length() );
+                if ( chunk->indices()->IsNull( _i ) )
+                    {
+                        return strings::String( "NULL" );
+                    }
                 return func( chunk->GetValueIndex( _i ) );
             };
         }
@@ -613,6 +633,9 @@ ArrowHandler::write_float_to_string_column(
 
     const auto transform_chunk = []( const std::int64_t _i,
                                      const auto _chunk ) -> strings::String {
+        assert_true( _i >= 0 );
+        assert_true( _i < _chunk->length() );
+
         if ( _chunk->IsNull( _i ) )
             {
                 return strings::String( "NULL" );
@@ -669,6 +692,9 @@ ArrowHandler::write_int_to_string_column(
 
     const auto transform_chunk = []( const std::int64_t _i,
                                      const auto _chunk ) -> strings::String {
+        assert_true( _i >= 0 );
+        assert_true( _i < _chunk->length() );
+
         if ( _chunk->IsNull( _i ) )
             {
                 return strings::String( "NULL" );
@@ -819,6 +845,9 @@ ArrowHandler::write_numeric_to_float_column(
 
     const auto transform_chunk = []( const std::int64_t _i,
                                      const auto _chunk ) -> Float {
+        assert_true( _i >= 0 );
+        assert_true( _i < _chunk->length() );
+
         if ( _chunk->IsNull( _i ) )
             {
                 return NAN;
@@ -956,6 +985,9 @@ ArrowHandler::write_string_to_float_column(
 
     const auto transform_chunk =
         [string_to_float]( const std::int64_t _i, const auto _chunk ) -> Float {
+        assert_true( _i >= 0 );
+        assert_true( _i < _chunk->length() );
+
         if ( _chunk->IsNull( _i ) )
             {
                 return NAN;
@@ -1027,6 +1059,9 @@ ArrowHandler::write_string_to_string_column(
 
     const auto transform_chunk = []( const std::int64_t _i,
                                      const auto _chunk ) -> strings::String {
+        assert_true( _i >= 0 );
+        assert_true( _i < _chunk->length() );
+
         if ( _chunk->IsNull( _i ) )
             {
                 return strings::String( "NULL" );
@@ -1099,6 +1134,9 @@ ArrowHandler::write_time_to_float_column(
     const auto transform_chunk = []( const std::int64_t _i,
                                      const auto _chunk,
                                      const Float _factor ) -> Float {
+        assert_true( _i >= 0 );
+        assert_true( _i < _chunk->length() );
+
         if ( _chunk->IsNull( _i ) )
             {
                 return NAN;
@@ -1221,6 +1259,9 @@ ArrowHandler::write_time_to_string_column(
     const auto transform_chunk = []( const std::int64_t _i,
                                      const auto _chunk,
                                      const Float _factor ) -> strings::String {
+        assert_true( _i >= 0 );
+        assert_true( _i < _chunk->length() );
+
         if ( _chunk->IsNull( _i ) )
             {
                 return strings::String( "NULL" );
