@@ -890,9 +890,11 @@ std::vector<std::string> SparkSQLGenerator::make_staging_columns(
     const auto cast_column = [this](
                                  const std::string& _colname,
                                  const std::string& _coltype ) -> std::string {
-        return "CAST( " + edit_colname( _colname, "t1" ) + " AS " + _coltype +
-               " ) AS `" + SQLGenerator::to_lower( make_colname( _colname ) ) +
-               "`";
+        const auto only_alphanumeric =
+            SQLGenerator::replace_non_alphanumeric( _colname );
+        return "CAST( " + edit_colname( only_alphanumeric, "t1" ) + " AS " +
+               _coltype + " ) AS `" +
+               SQLGenerator::to_lower( make_colname( _colname ) ) + "`";
     };
 
     // ------------------------------------------------------------------------
@@ -1152,47 +1154,53 @@ std::string SparkSQLGenerator::make_select(
 
 // ----------------------------------------------------------------------------
 
+std::string SparkSQLGenerator::handle_escape_char( const char c ) const
+{
+    switch ( c )
+        {
+            case '\t':
+                return "\\t";
+
+            case '\"':
+                return "\\\"";
+
+            case '\v':
+                return "\\v";
+
+            case '\r':
+                return "\\r";
+
+            case '\n':
+                return "\\n";
+
+            case '\f':
+                return "\\f";
+
+            case '\'':
+                return "\\'";
+
+            case ';':
+            case '[':
+            case ']':
+                return "";
+
+            default:
+                return std::string( 1, c );
+        }
+}
+
+// ----------------------------------------------------------------------------
+
 std::string SparkSQLGenerator::make_separators() const
 {
-    const auto handle_escape_char = []( const char c ) -> std::string {
-        switch ( c )
-            {
-                case '\t':
-                    return "\\t";
-
-                case '\"':
-                    return "\\\"";
-
-                case '\v':
-                    return "\\v";
-
-                case '\r':
-                    return "\\r";
-
-                case '\n':
-                    return "\\n";
-
-                case '\f':
-                    return "\\f";
-
-                case '\'':
-                    return "\\'";
-
-                case ';':
-                case '[':
-                case ']':
-                    return "";
-
-                default:
-                    return std::string( 1, c );
-            }
+    const auto handle = [this]( const char c ) -> std::string {
+        return handle_escape_char( c );
     };
 
     const auto separators =
         std::string( textmining::StringSplitter::separators_ );
 
-    return stl::collect::string(
-        separators | VIEWS::transform( handle_escape_char ) );
+    return stl::collect::string( separators | VIEWS::transform( handle ) );
 }
 
 // ----------------------------------------------------------------------------
@@ -1428,6 +1436,41 @@ std::string SparkSQLGenerator::num_max_min_aggregation(
 
 // ----------------------------------------------------------------------------
 
+std::string SparkSQLGenerator::replace_separators(
+    const std::string& _col ) const
+{
+    const auto replace =
+        [this]( const std::string _str, const char _c ) -> std::string {
+        if ( _c == ' ' )
+            {
+                return _str;
+            }
+
+        const auto escape_char = handle_escape_char( _c );
+
+        if ( escape_char == "" )
+            {
+                return _str;
+            }
+
+        return "REPLACE( " + _str + ", '" + escape_char + "', ' ' )";
+    };
+
+    const auto separators =
+        std::string( textmining::StringSplitter::separators_ );
+
+    auto str = _col;
+
+    for ( const auto c : separators )
+        {
+            str = replace( str, c );
+        }
+
+    return str;
+}
+
+// ----------------------------------------------------------------------------
+
 std::string SparkSQLGenerator::split_text_fields(
     const std::shared_ptr<ColumnDescription>& _desc ) const
 {
@@ -1441,8 +1484,9 @@ std::string SparkSQLGenerator::split_text_fields(
     const auto new_table =
         staging_table + "__" + SQLGenerator::to_upper( colname );
 
-    const auto split =
-        "SPLIT( t1.`" + colname + "`, '[" + make_separators() + "]' )";
+    const auto replace = replace_separators( "t1.`" + colname + "`" );
+
+    const auto split = "SPLIT( " + replace + ", '[ ]' )";
 
     const auto filter = "FILTER( " + split + ", word -> word != \"\" )";
 

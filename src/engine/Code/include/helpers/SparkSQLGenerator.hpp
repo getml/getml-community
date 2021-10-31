@@ -156,6 +156,9 @@ class SparkSQLGenerator : public SQLDialectGenerator
         const bool _is_first,
         const bool _is_minimum ) const;
 
+    /// Escape chars need to be displayed properly in the resulting SQL code.
+    std::string handle_escape_char( const char c ) const;
+
     /// Generates the SQL code for joining a batch of features (for when there
     /// are too many features to join in one query).
     std::string join_batch_tables(
@@ -201,6 +204,9 @@ class SparkSQLGenerator : public SQLDialectGenerator
     /// Generates the SQL code for NUM_MAX and NUM_MIN.
     std::string num_max_min_aggregation(
         const std::string& _colname1, const bool _max ) const;
+
+    /// Returns a set of replace statements for the string separators.
+    std::string replace_separators( const std::string& _col ) const;
 };
 
 // -------------------------------------------------------------------------
