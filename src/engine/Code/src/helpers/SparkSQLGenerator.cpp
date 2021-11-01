@@ -573,14 +573,16 @@ std::string SparkSQLGenerator::join_mapping(
                             &mapping_col,
                             &orig_col]() -> std::string {
         constexpr auto avg_value =
-            "AVG( COALESCE( t2.`value`, 0.0 ) ) AS `avg_value`";
+            "AVG( COALESCE( t3.`value`, 0.0 ) ) AS `avg_value`";
 
         const auto mapping_table = SQLGenerator::to_upper( mapping_col );
 
-        const auto split = "SPLIT( lower( t4.`" + orig_col + "` ), '[" +
-                           make_separators() + "]' )";
+        const auto replace =
+            replace_separators( "lower( t4.`" + orig_col + "` )" );
 
-        const auto contains = "ARRAY_CONTAINS( " + split + ", t2.`key` )";
+        const auto split = "SPLIT( " + replace + ", '[ ]' )";
+
+        const auto contains = "ARRAY_CONTAINS( " + split + ", t3.`key` )";
 
         std::stringstream sql;
 
@@ -1514,10 +1516,14 @@ std::string SparkSQLGenerator::string_contains(
     const std::string& _keyword,
     const bool _contains ) const
 {
-    const auto split =
-        "SPLIT( t1.`" + _colname + "`, '[" + make_separators() + "]' )";
+    const auto replace = replace_separators( "t1.`" + _colname + "`" );
 
-    return "ARRAY_CONTAINS( " + split + ", '" + _keyword + "' )";
+    const auto split = "SPLIT( " + replace + ", '[ ]' )";
+
+    const std::string not_or_nothing = _contains ? "" : "!";
+
+    return not_or_nothing + "ARRAY_CONTAINS( " + split + ", '" + _keyword +
+           "' )";
 }
 
 // ----------------------------------------------------------------------------
