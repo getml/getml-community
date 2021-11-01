@@ -1095,7 +1095,8 @@ std::vector<std::string> FeatureLearner<FeatureLearnerType>::to_sql(
         vocabulary_->population(),
         vocabulary_->peripheral(),
         feature_learner().placeholder(),
-        feature_learner().peripheral() );
+        feature_learner().peripheral(),
+        feature_learner().peripheral_schema() );
 
     propositionalization_to_sql(
         _categories,

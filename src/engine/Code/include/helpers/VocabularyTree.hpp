@@ -16,7 +16,8 @@ class VocabularyTree
         const VocabForDf& _population,
         const std::vector<VocabForDf>& _peripheral,
         const Placeholder& _placeholder,
-        const std::vector<std::string>& _peripheral_names );
+        const std::vector<std::string>& _peripheral_names,
+        const std::vector<Schema>& _peripheral_schema );
 
     ~VocabularyTree();
 
@@ -34,25 +35,33 @@ class VocabularyTree
     }
 
    private:
-    /// Identifies the index for the associated peripheral table.
+    /// Identifies the vocabulary for the associated peripheral table.
     static VocabForDf find_peripheral(
         const std::vector<VocabForDf>& _peripheral,
         const Placeholder& _placeholder,
         const std::vector<std::string>& _peripheral_names );
+
+    /// Identifies the vorabulary for the assocaited text fields.
+    static std::vector<VocabForDf> find_text_fields(
+        const std::vector<VocabForDf>& _peripheral,
+        const Placeholder& _placeholder,
+        const std::vector<Schema>& _peripheral_schema );
 
     /// Parses the vocabulary for the peripheral tables.
     static std::vector<VocabForDf> parse_peripheral(
         const VocabForDf& _population,
         const std::vector<VocabForDf>& _peripheral,
         const Placeholder& _placeholder,
-        const std::vector<std::string>& _peripheral_names );
+        const std::vector<std::string>& _peripheral_names,
+        const std::vector<Schema>& _peripheral_schema );
 
     /// Parses the subtrees.
     static std::vector<std::optional<VocabularyTree>> parse_subtrees(
         const VocabForDf& _population,
         const std::vector<VocabForDf>& _peripheral,
         const Placeholder& _placeholder,
-        const std::vector<std::string>& _peripheral_names );
+        const std::vector<std::string>& _peripheral_names,
+        const std::vector<Schema>& _peripheral_schema );
 
    private:
     /// The vocabulary for the peripheral tables.
