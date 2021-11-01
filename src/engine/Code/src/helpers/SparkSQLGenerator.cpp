@@ -421,9 +421,13 @@ std::string SparkSQLGenerator::edit_colname(
             ? ""
             : "`";
 
+    const auto only_alphanumeric =
+        SQLGenerator::replace_non_alphanumeric( new_name );
+
     // --------------------------------------------------------------
 
-    return prefix + alias + dot + quotation + new_name + quotation + postfix;
+    return prefix + alias + dot + quotation + only_alphanumeric + quotation +
+           postfix;
 
     // --------------------------------------------------------------
 }
@@ -577,10 +581,7 @@ std::string SparkSQLGenerator::join_mapping(
 
         const auto mapping_table = SQLGenerator::to_upper( mapping_col );
 
-        const auto replace =
-            replace_separators( "lower( t4.`" + orig_col + "` )" );
-
-        const auto split = "SPLIT( " + replace + ", '[ ]' )";
+        const auto split = "SPLIT( " + orig_col + ", '[ ]' )";
 
         const auto contains = "ARRAY_CONTAINS( " + split + ", t3.`key` )";
 
@@ -891,11 +892,11 @@ std::vector<std::string> SparkSQLGenerator::make_staging_columns(
 
     const auto cast_column = [this](
                                  const std::string& _colname,
-                                 const std::string& _coltype ) -> std::string {
-        const auto only_alphanumeric =
-            SQLGenerator::replace_non_alphanumeric( _colname );
-        return "CAST( " + edit_colname( only_alphanumeric, "t1" ) + " AS " +
-               _coltype + " ) AS `" +
+                                 const std::string& _coltype,
+                                 const bool _replace ) -> std::string {
+        const auto edited = edit_colname( _colname, "t1" );
+        const auto replaced = _replace ? replace_separators( edited ) : edited;
+        return "CAST( " + replaced + " AS " + _coltype + " ) AS `" +
                SQLGenerator::to_lower( make_colname( _colname ) ) + "`";
     };
 
@@ -931,7 +932,7 @@ std::vector<std::string> SparkSQLGenerator::make_staging_columns(
         [cast_column]( const std::vector<std::string>& _colnames )
         -> std::vector<std::string> {
         const auto cast =
-            std::bind( cast_column, std::placeholders::_1, "DOUBLE" );
+            std::bind( cast_column, std::placeholders::_1, "DOUBLE", false );
 
         return stl::collect::vector<std::string>(
             _colnames | VIEWS::filter( SQLGenerator::include_column ) |
@@ -954,7 +955,20 @@ std::vector<std::string> SparkSQLGenerator::make_staging_columns(
                                   const std::vector<std::string>& _colnames )
         -> std::vector<std::string> {
         const auto cast =
-            std::bind( cast_column, std::placeholders::_1, "STRING" );
+            std::bind( cast_column, std::placeholders::_1, "STRING", false );
+
+        return stl::collect::vector<std::string>(
+            _colnames | VIEWS::filter( SQLGenerator::include_column ) |
+            VIEWS::filter( is_not_rowid ) | VIEWS::transform( cast ) );
+    };
+
+    // ------------------------------------------------------------------------
+
+    const auto replace_seps = [this, is_not_rowid, cast_column](
+                                  const std::vector<std::string>& _colnames )
+        -> std::vector<std::string> {
+        const auto cast =
+            std::bind( cast_column, std::placeholders::_1, "STRING", true );
 
         return stl::collect::vector<std::string>(
             _colnames | VIEWS::filter( SQLGenerator::include_column ) |
@@ -974,7 +988,7 @@ std::vector<std::string> SparkSQLGenerator::make_staging_columns(
     const auto targets = _include_targets ? cast_as_real( _schema.targets_ )
                                           : std::vector<std::string>();
 
-    const auto text = cast_as_text( _schema.text_ );
+    const auto text = replace_seps( _schema.text_ );
 
     const auto time_stamps = cast_as_time_stamp( _schema.time_stamps_ );
 
@@ -1486,9 +1500,7 @@ std::string SparkSQLGenerator::split_text_fields(
     const auto new_table =
         staging_table + "__" + SQLGenerator::to_upper( colname );
 
-    const auto replace = replace_separators( "t1.`" + colname + "`" );
-
-    const auto split = "SPLIT( " + replace + ", '[ ]' )";
+    const auto split = "SPLIT( t1.`" + colname + "`, '[ ]' )";
 
     const auto filter = "FILTER( " + split + ", word -> word != \"\" )";
 
@@ -1516,11 +1528,9 @@ std::string SparkSQLGenerator::string_contains(
     const std::string& _keyword,
     const bool _contains ) const
 {
-    const auto replace = replace_separators( "t1.`" + _colname + "`" );
+    const auto split = "SPLIT( " + _colname + ", '[ ]' )";
 
-    const auto split = "SPLIT( " + replace + ", '[ ]' )";
-
-    const std::string not_or_nothing = _contains ? "" : "!";
+    const std::string not_or_nothing = _contains ? "" : "! ";
 
     return not_or_nothing + "ARRAY_CONTAINS( " + split + ", '" + _keyword +
            "' )";
