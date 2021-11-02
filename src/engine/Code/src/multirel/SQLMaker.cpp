@@ -501,16 +501,14 @@ std::string SQLMaker::list_words(
 
     const std::string and_or_or = _is_greater ? " AND " : " OR ";
 
-    const std::string comparison = _is_greater ? " == 0 " : " > 0 ";
-
     for ( auto it = _split.categories_used_begin;
           it != _split.categories_used_end;
           ++it )
         {
             assert_true( *it < _vocabulary.size() );
 
-            sql_dialect_generator_->string_contains(
-                _name, _vocabulary.at( *it ).str(), _is_greater );
+            words << sql_dialect_generator_->string_contains(
+                _name, _vocabulary.at( *it ).str(), !_is_greater );
 
             if ( std::next( it, 1 ) != _split.categories_used_end )
                 {

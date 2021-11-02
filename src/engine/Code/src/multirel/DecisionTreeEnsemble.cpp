@@ -731,15 +731,23 @@ DecisionTreeEnsemble DecisionTreeEnsemble::from_json_obj(
 std::shared_ptr<const std::map<std::string, std::string>>
 DecisionTreeEnsemble::make_peripheral_map() const
 {
-    assert_true( peripheral_schema().size() == peripheral().size() );
-
     const auto peripheral_map =
         std::make_shared<std::map<std::string, std::string>>();
 
     for ( size_t i = 0; i < peripheral_schema().size(); ++i )
         {
-            ( *peripheral_map )[peripheral().at( i )] =
-                peripheral_schema().at( i ).name();
+            const auto schema_name = peripheral_schema().at( i ).name();
+
+            assert_true(
+                schema_name.find( helpers::Macros::staging_table_num() ) !=
+                std::string::npos );
+
+            const auto placeholder_name =
+                helpers::StringSplitter::split(
+                    schema_name, helpers::Macros::staging_table_num() )
+                    .at( 0 );
+
+            ( *peripheral_map )[placeholder_name] = schema_name;
         }
 
     return peripheral_map;
@@ -1012,12 +1020,12 @@ std::vector<std::string> DecisionTreeEnsemble::to_sql(
 
             const auto p = tree.ix_perip_used();
 
-            assert_true( p < placeholder().joined_tables_.size() );
-
             const auto &prop_out = placeholder().propositionalization_;
 
-            const auto &prop_in =
-                placeholder().joined_tables_.at( p ).propositionalization_;
+            const auto prop_in =
+                p < placeholder().joined_tables_.size()
+                    ? placeholder().joined_tables_.at( p ).propositionalization_
+                    : std::vector<bool>();
 
             const bool has_normal_subfeatures = std::any_of(
                 prop_in.begin(), prop_in.end(), std::logical_not() );
