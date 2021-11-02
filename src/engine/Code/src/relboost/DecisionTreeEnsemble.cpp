@@ -1264,7 +1264,7 @@ std::vector<std::string> DecisionTreeEnsemble::to_sql(
 
             const auto &prop_out = placeholder().propositionalization_;
 
-            const auto &prop_in =
+            const auto prop_in =
                 p < placeholder().joined_tables_.size()
                     ? placeholder().joined_tables_.at( p ).propositionalization_
                     : std::vector<bool>();
