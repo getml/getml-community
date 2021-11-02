@@ -636,7 +636,7 @@ std::string ConditionMaker::list_words(
         {
             assert_true( *it < _vocabulary.size() );
 
-            _sql_dialect_generator->string_contains(
+            words << _sql_dialect_generator->string_contains(
                 _name, _vocabulary.at( *it ).str(), _is_greater );
 
             if ( std::next( it, 1 ) != _split.categories_used_end_ )

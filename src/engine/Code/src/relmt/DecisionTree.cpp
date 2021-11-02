@@ -549,7 +549,8 @@ std::string DecisionTree::to_sql(
                 }
 
             sql << tab << tab << "ELSE NULL" << std::endl
-                << tab << "END" << std::endl;
+                << tab << "END" << std::endl
+                << ") ";
         }
     else
         {
