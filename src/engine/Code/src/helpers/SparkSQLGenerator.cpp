@@ -439,30 +439,22 @@ std::string SparkSQLGenerator::first_last_aggregation(
     const std::string& _colname2,
     const bool _first ) const
 {
-    const std::string zip_with = "ZIP_WITH( COLLECT_LIST( float( " + _colname1 +
-                                 " ) ), COLLECT_LIST( float( " + _colname2 +
-                                 " ) ), (value, ts) -> (value, ts) )";
+    const std::string collect_list =
+        "COLLECT_LIST( named_struct( \"value\", float( " + _colname1 +
+        " ), \"ts\", float( " + _colname2 + " ) ) )";
 
-    const std::string op = _first ? "<" : ">";
+    const auto array_sort = "ARRAY_SORT( " + collect_list +
+                            ", (left, right) -> CASE "
+                            "WHEN left.ts < right.ts THEN -1 "
+                            "WHEN left.ts > right.ts THEN 1 "
+                            "ELSE 0 END )";
 
-    constexpr auto init =
-        "named_struct(\"value\", float(NULL), \"ts\", float(NULL))";
+    const std::string first_or_last = _first ? "FIRST" : "LAST";
 
-    const auto update_struct =
-        "(struct1, struct2) -> ( CASE WHEN struct1.ts IS NULL OR "
-        "struct1.value IS NULL OR ( struct2.ts" +
-        op +
-        " struct1.ts AND struct2.value IS NOT NULL ) OR ( struct1.ts = "
-        "struct2.ts AND struct2.value < struct1.value ) THEN struct2 ELSE "
-        "struct1 END )";
+    const std::string index = _first ? "1" : "-1";
 
-    constexpr auto get_value = "s -> s.value";
-
-    const std::string comment = _first ? "FIRST" : "LAST";
-
-    return "/* " + comment + "( " + _colname1 + " ORDER BY " + _colname2 +
-           " ) */ AGGREGATE( " + zip_with + ", " + init + ", " + update_struct +
-           ", " + get_value + " )";
+    return "/* " + first_or_last + "*/ ELEMENT_AT( " + array_sort + ", " +
+           index + " ).value";
 };
 
 // ----------------------------------------------------------------------------
