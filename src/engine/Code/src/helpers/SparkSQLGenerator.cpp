@@ -252,20 +252,20 @@ SparkSQLGenerator::demangle_colname( const std::string& _raw_name ) const
     // --------------------------------------------------------------
 
     new_name = StringReplacer::replace_all(
-        new_name, Macros::hour_begin(), "date_format( " + Macros::prefix() );
+        new_name,
+        Macros::hour_begin(),
+        "lpad( string( hour( " + Macros::prefix() );
+
+    new_name = StringReplacer::replace_all(
+        new_name, Macros::hour_end(), Macros::postfix() + ") ), 2, '0' )" );
 
     new_name = StringReplacer::replace_all(
         new_name,
-        Macros::hour_end(),
-        Macros::postfix() + ", \"hh\" ) /* hour */" );
+        Macros::minute_begin(),
+        "lpad( string( minute( " + Macros::prefix() );
 
     new_name = StringReplacer::replace_all(
-        new_name, Macros::minute_begin(), "date_format( " + Macros::prefix() );
-
-    new_name = StringReplacer::replace_all(
-        new_name,
-        Macros::minute_end(),
-        Macros::postfix() + ", \"mm\" ) /* minute */" );
+        new_name, Macros::minute_end(), Macros::postfix() + ") ), 2, '0' )" );
 
     new_name = StringReplacer::replace_all(
         new_name, Macros::month_begin(), "date_format( " + Macros::prefix() );
