@@ -563,8 +563,7 @@ std::string SparkSQLGenerator::join_mapping(
 
     // ------------------------------------------------------------------------
 
-    const auto join_text = [this,
-                            &table_name,
+    const auto join_text = [&table_name,
                             &temp_table_name,
                             &mapping_col,
                             &orig_col]() -> std::string {
@@ -956,8 +955,8 @@ std::vector<std::string> SparkSQLGenerator::make_staging_columns(
 
     // ------------------------------------------------------------------------
 
-    const auto replace_seps = [this, is_not_rowid, cast_column](
-                                  const std::vector<std::string>& _colnames )
+    const auto replace_seps =
+        [is_not_rowid, cast_column]( const std::vector<std::string>& _colnames )
         -> std::vector<std::string> {
         const auto cast =
             std::bind( cast_column, std::placeholders::_1, "STRING", true );
