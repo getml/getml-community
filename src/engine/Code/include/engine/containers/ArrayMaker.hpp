@@ -52,12 +52,8 @@ std::shared_ptr<arrow::ChunkedArray> ArrayMaker::make_boolean_array(
 {
     const auto append_function = []( const bool _val,
                                      arrow::BooleanBuilder* _builder ) {
-#ifdef NDEBUG
-        _builder->UnsafeAppend( _val );
-#else
         const auto status = _builder->Append( _val );
-        assert_msg( status.ok(), status.message() );
-#endif
+        throw_unless( status.ok(), status.message() );
     };
 
     arrow::BooleanBuilder builder;
@@ -78,18 +74,22 @@ std::vector<std::shared_ptr<arrow::Array>> ArrayMaker::make_chunks(
 {
     const auto status = _builder->Resize( MAX_CHUNKSIZE );
 
-    if ( !status.ok() )
-        {
-            throw std::runtime_error( status.message() );
-        }
+    throw_unless( status.ok(), status.message() );
 
     std::vector<std::shared_ptr<arrow::Array>> chunks;
 
-    for ( auto it = _begin; it != _end; )
+    auto it = _begin;
+
+    while ( it != _end )
         {
-            for ( size_t i = 0; i < MAX_CHUNKSIZE && it != _end; ++i, ++it )
+            for ( size_t i = 0; i < MAX_CHUNKSIZE; ++i )
                 {
                     _append_function( *it, _builder );
+
+                    if ( ++it == _end )
+                        {
+                            break;
+                        }
                 }
 
             std::shared_ptr<arrow::Array> array;
@@ -99,7 +99,7 @@ std::vector<std::shared_ptr<arrow::Array>> ArrayMaker::make_chunks(
             if ( !status.ok() )
                 {
                     throw std::runtime_error(
-                        "Could not create boolean array: " + status.message() );
+                        "Could not create array: " + status.message() );
                 }
 
             chunks.emplace_back( std::move( array ) );
@@ -121,16 +121,12 @@ std::shared_ptr<arrow::ChunkedArray> ArrayMaker::make_float_array(
         if ( helpers::NullChecker::is_null( _val ) )
             {
                 const auto status = _builder->AppendNull();
-                assert_msg( status.ok(), status.message() );
+                throw_unless( status.ok(), status.message() );
             }
         else
             {
-#ifdef NDEBUG
-                _builder->UnsafeAppend( _val );
-#else
                 const auto status = _builder->Append( _val );
-                assert_msg( status.ok(), status.message() );
-#endif
+                throw_unless( status.ok(), status.message() );
             }
     };
 
@@ -164,18 +160,13 @@ std::shared_ptr<arrow::ChunkedArray> ArrayMaker::make_string_array(
         if ( helpers::NullChecker::is_null( _val ) )
             {
                 const auto status = _builder->AppendNull();
-                assert_msg( status.ok(), status.message() );
+                throw_unless( status.ok(), status.message() );
             }
         else
             {
-                // For some reason, UnsafeAppend
-                // doesn't work for strings.
                 const auto status =
                     _builder->Append( filter_non_printable( _val ) );
-                if ( !status.ok() )
-                    {
-                        throw std::runtime_error( status.message() );
-                    }
+                throw_unless( status.ok(), status.message() );
             }
     };
 
@@ -197,18 +188,13 @@ std::shared_ptr<arrow::ChunkedArray> ArrayMaker::make_time_stamp_array(
         if ( helpers::NullChecker::is_null( _val ) )
             {
                 const auto status = _builder->AppendNull();
-                assert_msg( status.ok(), status.message() );
+                throw_unless( status.ok(), status.message() );
             }
         else
             {
-#ifdef NDEBUG
-                _builder->UnsafeAppend(
-                    static_cast<std::int64_t>( _val * 1.0e+09 ) );
-#else
                 const auto status = _builder->Append(
                     static_cast<std::int64_t>( _val * 1.0e+09 ) );
-                assert_msg( status.ok(), status.message() );
-#endif
+                throw_unless( status.ok(), status.message() );
             }
     };
 
