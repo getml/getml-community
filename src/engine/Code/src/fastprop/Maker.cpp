@@ -268,7 +268,7 @@ helpers::FeatureContainer Maker::transform( const MakerParams& _params )
 
     assert_true(
         _params.fast_prop_container_->size() ==
-        placeholder.joined_tables_.size() );
+        _params.placeholder_.joined_tables_.size() );
 
     assert_true( _params.prefix_ != "" );
 
