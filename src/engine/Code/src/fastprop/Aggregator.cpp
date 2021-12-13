@@ -390,9 +390,7 @@ Float Aggregator::apply_subfeatures(
 {
     assert_true( _abstract_feature.input_col_ < _subfeatures.size() );
 
-    assert_true( _subfeatures.at( _abstract_feature.input_col_ ) );
-
-    const auto &col = *_subfeatures.at( _abstract_feature.input_col_ );
+    const auto &col = _subfeatures.at( _abstract_feature.input_col_ );
 
     const auto extract_value =
         [&col]( const containers::Match &match ) -> Float {

@@ -87,7 +87,7 @@ void ViewParser::add_int_column_to_df(
                               ? categories_
                               : join_keys_encoding_;
 
-    auto col = containers::Column<Int>( _vec.size() );
+    auto col = containers::Column<Int>( _df->pool(), _vec.size() );
 
     for ( size_t i = 0; i < _vec.size(); ++i )
         {
@@ -118,11 +118,11 @@ void ViewParser::add_string_column_to_df(
     const std::vector<std::string>& _vec,
     containers::DataFrame* _df )
 {
-    auto col = containers::Column<strings::String>( _vec.size() );
+    auto col = containers::Column<strings::String>( _df->pool() );
 
     for ( size_t i = 0; i < _vec.size(); ++i )
         {
-            col[i] = strings::String( _vec[i] );
+            col.push_back( strings::String( _vec[i] ) );
         }
 
     col.set_name( _name );

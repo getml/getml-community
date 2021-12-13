@@ -37,7 +37,8 @@ containers::ColumnView<bool> BoolOpParser::binary_operation(
         {
             return bin_op( _col, std::logical_and<bool>() );
         }
-    else if ( op == "contains" )
+
+    if ( op == "contains" )
         {
             const auto contains = []( const std::string& str1,
                                       const std::string& str2 ) {
@@ -46,62 +47,72 @@ containers::ColumnView<bool> BoolOpParser::binary_operation(
 
             return cat_bin_op( _col, contains );
         }
-    else if ( is_boolean && op == "equal_to" )
+
+    if ( is_boolean && op == "equal_to" )
         {
             return bin_op( _col, std::equal_to<bool>() );
         }
-    else if ( is_categorical && op == "equal_to" )
+
+    if ( is_categorical && op == "equal_to" )
         {
             return cat_bin_op( _col, std::equal_to<std::string>() );
         }
-    else if ( is_numerical && op == "equal_to" )
+
+    if ( is_numerical && op == "equal_to" )
         {
             return num_bin_op( _col, std::equal_to<Float>() );
         }
-    else if ( op == "greater" )
+
+    if ( op == "greater" )
         {
             return num_bin_op( _col, std::greater<Float>() );
         }
-    else if ( op == "greater_equal" )
+
+    if ( op == "greater_equal" )
         {
             return num_bin_op( _col, std::greater_equal<Float>() );
         }
-    else if ( op == "less" )
+
+    if ( op == "less" )
         {
             return num_bin_op( _col, std::less<Float>() );
         }
-    else if ( op == "less_equal" )
+
+    if ( op == "less_equal" )
         {
             return num_bin_op( _col, std::less_equal<Float>() );
         }
-    else if ( is_boolean && op == "not_equal_to" )
+
+    if ( is_boolean && op == "not_equal_to" )
         {
             return bin_op( _col, std::not_equal_to<bool>() );
         }
-    else if ( is_categorical && op == "not_equal_to" )
+
+    if ( is_categorical && op == "not_equal_to" )
         {
             return cat_bin_op( _col, std::not_equal_to<std::string>() );
         }
-    else if ( is_numerical && op == "not_equal_to" )
+
+    if ( is_numerical && op == "not_equal_to" )
         {
             return num_bin_op( _col, std::not_equal_to<Float>() );
         }
-    else if ( op == "or" )
+
+    if ( op == "or" )
         {
             return bin_op( _col, std::logical_or<bool>() );
         }
-    else if ( op == "xor" )
+
+    if ( op == "xor" )
         {
             // logical_xor for boolean is the same thing as not_equal_to.
             return bin_op( _col, std::not_equal_to<bool>() );
         }
-    else
-        {
-            throw std::invalid_argument(
-                "Operator '" + op + "' not recognized for boolean columns." );
 
-            return bin_op( _col, std::logical_and<bool>() );
-        }
+    throw std::invalid_argument(
+        "Operator '" + op + "' not recognized for boolean columns." );
+
+    return bin_op( _col, std::logical_and<bool>() );
 }
 
 // ----------------------------------------------------------------------------

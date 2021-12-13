@@ -18,6 +18,8 @@
 
 #include "strings/strings.hpp"
 
+#include "memmap/memmap.hpp"
+
 // ----------------------------------------------------------------------------
 
 #include "engine/communication/communication.hpp"

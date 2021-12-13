@@ -44,12 +44,7 @@ class AbstractFeatureLearner
     virtual Poco::JSON::Object::Ptr fingerprint() const = 0;
 
     /// Fits the model.
-    virtual void fit(
-        const Poco::JSON::Object& _cmd,
-        const std::string& _prefix,
-        const std::shared_ptr<const communication::SocketLogger>& _logger,
-        const containers::DataFrame& _population_df,
-        const std::vector<containers::DataFrame>& _peripheral_dfs ) = 0;
+    virtual void fit( const FitParams& _params ) = 0;
 
     /// Whether this is a classification problem.
     virtual bool is_classification() const = 0;
@@ -85,7 +80,7 @@ class AbstractFeatureLearner
 
     /// Return features as SQL code.
     virtual std::vector<std::string> to_sql(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const helpers::StringIterator& _categories,
         const bool _targets,
         const bool _subfeatures,
         const std::shared_ptr<const helpers::SQLDialectGenerator>&
@@ -93,13 +88,8 @@ class AbstractFeatureLearner
         const std::string& _prefix ) const = 0;
 
     /// Generate features.
-    virtual containers::Features transform(
-        const Poco::JSON::Object& _cmd,
-        const std::vector<size_t>& _index,
-        const std::string& _prefix,
-        const std::shared_ptr<const communication::SocketLogger>& _logger,
-        const containers::DataFrame& _population_df,
-        const std::vector<containers::DataFrame>& _peripheral_dfs ) const = 0;
+    virtual containers::NumericalFeatures transform(
+        const TransformParams& _params ) const = 0;
 
     /// Returns a string describing the type of the feature learner.
     virtual std::string type() const = 0;

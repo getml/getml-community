@@ -3,6 +3,7 @@ set(FASTPROP_SOURCE_DIRECTORY "${CODE_DIR}/src/fastprop")
 set(ENGINE_SOURCE_DIRECTORY "${CODE_DIR}/src/engine")
 set(HELPERS_SOURCE_DIRECTORY "${CODE_DIR}/src/helpers")
 set(IO_SOURCE_DIRECTORY "${CODE_DIR}/src/io")
+set(MEMMAP_SOURCE_DIRECTORY "${CODE_DIR}/src/memmap")
 set(METRICS_SOURCE_DIRECTORY "${CODE_DIR}/src/metrics")
 set(MULTIREL_SOURCE_DIRECTORY "${CODE_DIR}/src/multirel")
 set(PREDICTORS_SOURCE_DIRECTORY "${CODE_DIR}/src/predictors")
@@ -16,6 +17,7 @@ include(${FASTPROP_SOURCE_DIRECTORY}/obj.txt)
 include(${ENGINE_SOURCE_DIRECTORY}/obj.txt)
 include(${HELPERS_SOURCE_DIRECTORY}/obj.txt)
 include(${IO_SOURCE_DIRECTORY}/obj.txt)
+include(${MEMMAP_SOURCE_DIRECTORY}/obj.txt)
 include(${METRICS_SOURCE_DIRECTORY}/obj.txt)
 include(${MULTIREL_SOURCE_DIRECTORY}/obj.txt)
 include(${PREDICTORS_SOURCE_DIRECTORY}/obj.txt)
@@ -33,6 +35,7 @@ add_executable(
  	${DATABASE_OBJ}
  	${ENGINE_OBJ}
  	${METRICS_OBJ}
+ 	${MEMMAP_OBJ}
 	${PREDICTORS_OBJ}
  	${RELBOOST_OBJ}
 	${RELMT_OBJ}

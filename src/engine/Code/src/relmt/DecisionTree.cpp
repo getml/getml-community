@@ -479,7 +479,7 @@ std::set<size_t> DecisionTree::make_subfeatures_used() const
 // ----------------------------------------------------------------------------
 
 std::string DecisionTree::to_sql(
-    const std::vector<strings::String>& _categories,
+    const helpers::StringIterator& _categories,
     const helpers::VocabularyTree& _vocabulary,
     const std::shared_ptr<const helpers::SQLDialectGenerator>&
         _sql_dialect_generator,

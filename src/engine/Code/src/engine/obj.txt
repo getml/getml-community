@@ -13,16 +13,17 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/DataFrameTracker.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DataModelChecker.cpp
     ${ENGINE_SOURCE_DIRECTORY}/EMailDomain.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/Encoding.cpp
     ${ENGINE_SOURCE_DIRECTORY}/FeatureLearnerParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/FileHandler.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Hyperopt.cpp
     ${ENGINE_SOURCE_DIRECTORY}/HyperoptManager.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Imputation.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/InMemoryEncoding.cpp
     ${ENGINE_SOURCE_DIRECTORY}/JSON.cpp
     ${ENGINE_SOURCE_DIRECTORY}/LicenseChecker.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Logger.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Mapping.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/MemoryMappedEncoding.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Monitor.cpp
     ${ENGINE_SOURCE_DIRECTORY}/NumOpParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Options.cpp

@@ -626,7 +626,7 @@ std::string DataFrameManager::make_column_string(
 
     auto data = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
 
-    for ( auto it = _begin; it < _end; ++it )
+    for ( auto it = _begin; it != _end; ++it )
         {
             auto row = Poco::JSON::Array::Ptr( new Poco::JSON::Array() );
 

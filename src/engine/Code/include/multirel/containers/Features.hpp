@@ -7,7 +7,7 @@ namespace containers
 {
 // ----------------------------------------------------------------------------
 
-typedef std::vector<std::shared_ptr<std::vector<Float>>> Features;
+typedef helpers::Features Features;
 
 // ----------------------------------------------------------------------------
 }  // namespace containers

@@ -70,7 +70,7 @@ class FastProp
 
     /// Expresses FastProp as SQL code.
     std::vector<std::string> to_sql(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const helpers::StringIterator& _categories,
         const helpers::VocabularyTree& _vocabulary,
         const std::shared_ptr<const helpers::SQLDialectGenerator>&
             _sql_dialect_generator,
@@ -111,10 +111,7 @@ class FastProp
 
     /// Calculates the R-squared for each feature vis-a-vis the targets.
     std::vector<Float> calc_r_squared(
-        const containers::DataFrame& _population,
-        const std::vector<containers::DataFrame>& _peripheral,
-        const std::shared_ptr<const logging::AbstractLogger> _logger,
-        const helpers::WordIndexContainer& _word_indices,
+        const FitParams& _params,
         const std::shared_ptr<std::vector<size_t>>& _rownums ) const;
 
     /// Calculates the threshold on the basis of which we throw out features.
@@ -318,10 +315,7 @@ class FastProp
     /// Weeds out features for which the correlation coefficient is too small.
     std::shared_ptr<const std::vector<containers::AbstractFeature>>
     select_features(
-        const containers::DataFrame& _population,
-        const std::vector<containers::DataFrame>& _peripheral,
-        const std::shared_ptr<const logging::AbstractLogger> _logger,
-        const helpers::WordIndexContainer& _word_indices,
+        const FitParams& _params,
         const std::shared_ptr<std::vector<size_t>>& _rownums ) const;
 
     /// Returns true if _agg is FIRST or LAST, but there are no time stamps in
@@ -340,7 +334,7 @@ class FastProp
 
     /// Expresses the subfeatures as SQL code.
     void subfeatures_to_sql(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const helpers::StringIterator& _categories,
         const helpers::VocabularyTree& _vocabulary,
         const std::shared_ptr<const helpers::SQLDialectGenerator>&
             _sql_dialect_generator,

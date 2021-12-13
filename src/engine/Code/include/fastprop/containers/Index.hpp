@@ -7,7 +7,7 @@ namespace containers
 {
 // -------------------------------------------------------------------------
 
-typedef std::unordered_map<Int, std::vector<size_t>> Index;
+typedef helpers::Index Index;
 
 // -------------------------------------------------------------------------
 }  // namespace containers

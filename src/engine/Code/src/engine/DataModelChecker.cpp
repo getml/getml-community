@@ -158,7 +158,7 @@ void DataModelChecker::check_categorical_column(
     assert_true( _col.size() > 0 );
 
     const Float num_non_null =
-        utils::Aggregations::count_categorical( *_col.data_ptr() );
+        utils::Aggregations::count_categorical( _col.begin(), _col.end() );
 
     const auto share_null = 1.0 - num_non_null / length;
 
@@ -179,7 +179,7 @@ void DataModelChecker::check_categorical_column(
         ( _col.unit().find( "comparison only" ) != std::string::npos );
 
     const Float num_distinct =
-        utils::Aggregations::count_distinct( *_col.data_ptr() );
+        utils::Aggregations::count_distinct( _col.begin(), _col.end() );
 
     // --------------------------------------------------------------------------
 
@@ -504,12 +504,6 @@ DataModelChecker::check_matches(
 
     const auto jk1 = _population_df.join_key( _join_key_used );
 
-    const auto ptr2 = _peripheral_df.index( _other_join_key_used ).map();
-
-    assert_true( ptr2 );
-
-    const auto& map2 = *ptr2;
-
     // ------------------------------------------------------------------------
 
     const auto [ts1, ts2, upper] = find_time_stamps(
@@ -533,18 +527,24 @@ DataModelChecker::check_matches(
 
     // ------------------------------------------------------------------------
 
+    const auto idx2 = _peripheral_df.index( _other_join_key_used );
+
+    // ------------------------------------------------------------------------
+
     for ( size_t ix1 = 0; ix1 < jk1.size(); ++ix1 )
         {
-            const auto it2 = map2.find( jk1[ix1] );
+            const auto [begin, end] = idx2.find( jk1[ix1] );
 
-            if ( it2 == map2.end() )
+            if ( begin == nullptr )
                 {
                     num_jk_not_found++;
                     continue;
                 }
 
-            for ( const auto ix2 : it2->second )
+            for ( auto it = begin; it != end; ++it )
                 {
+                    const auto ix2 = *it;
+
                     const bool in_range = is_in_range(
                         ts1 ? ts1->at( ix1 ) : 0.0,
                         ts1 ? ts2->at( ix2 ) : 0.0,

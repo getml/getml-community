@@ -24,7 +24,7 @@ class RSquared
         const std::vector<Float>& _mean_targets,
         const std::vector<Float>& _var_targets,
         const std::vector<containers::Column<Float>>& _targets,
-        const std::shared_ptr<const std::vector<Float>>& _feature,
+        const helpers::Feature<Float, false>& _feature,
         const std::vector<size_t>& _rownums );
 
     /// Calculates the R-squared between a feature and a target.
@@ -32,7 +32,7 @@ class RSquared
         const Float _mean_target,
         const Float _var_target,
         const containers::Column<Float>& _targets,
-        const std::shared_ptr<const std::vector<Float>> _feature,
+        const helpers::Feature<Float, false>& _feature,
         const std::vector<size_t>& _rownums );
 
     /// Calculates the mean for each of the targets.

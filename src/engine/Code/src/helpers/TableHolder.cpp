@@ -164,11 +164,11 @@ std::shared_ptr<const std::vector<size_t>> TableHolder::make_subrows(
 
             if ( _peripheral_subview.has( jk ) )
                 {
-                    auto it = _peripheral_subview.find( jk );
+                    const auto [begin, end] = _peripheral_subview.find( jk );
 
-                    for ( const auto j : it->second )
+                    for ( auto it = begin; it != end; ++it )
                         {
-                            rows.insert( j );
+                            rows.insert( *it );
                         }
                 }
         }

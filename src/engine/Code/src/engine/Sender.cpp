@@ -88,24 +88,23 @@ void Sender::send_column(
 // -----------------------------------------------------------------------------
 
 void Sender::send_features(
-    const containers::Features& _features, Poco::Net::StreamSocket* _socket )
+    const containers::NumericalFeatures& _features,
+    Poco::Net::StreamSocket* _socket )
 {
     // ------------------------------------------------
-    // Get nrows and ncols.
 
     const ULong ncols = static_cast<ULong>( _features.size() );
     const ULong nrows =
-        ( ncols > 0 ) ? ( static_cast<ULong>( _features[0]->size() ) ) : ( 0 );
+        ( ncols > 0 ) ? ( static_cast<ULong>( _features[0].size() ) ) : ( 0 );
 
 #ifndef NDEBUG
     for ( auto& f : _features )
         {
-            assert_true( f->size() == nrows );
+            assert_true( f.size() == nrows );
         }
 #endif
 
     // ------------------------------------------------
-    // Send dimensions of features.
 
     std::array<Int, 2> shape;
 
@@ -115,7 +114,6 @@ void Sender::send_features(
     Sender::send<Int>( 2 * sizeof( Int ), shape.data(), _socket );
 
     // ------------------------------------------------
-    // Send actual data
 
     const ULong size = nrows * ncols;
 
@@ -128,7 +126,6 @@ void Sender::send_features(
     while ( true )
         {
             // ---------------------------------------------------------------
-            // Copy to buffer
 
             const ULong current_len = std::min( len, size - ix );
 
@@ -142,7 +139,7 @@ void Sender::send_features(
                     const ULong i = ix / ncols;
                     const ULong j = ix % ncols;
 
-                    buffer[ix2] = ( *_features[j] )[i];
+                    buffer[ix2] = _features[j][i];
                 }
 
             // ---------------------------------------------------------------

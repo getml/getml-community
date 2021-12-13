@@ -75,10 +75,12 @@ void Matchmaker<PopulationType, MatchType, MakeMatchType>::make_matches(
 
     if ( _peripheral.has( join_key ) )
         {
-            auto it = _peripheral.find( join_key );
+            const auto [begin, end] = _peripheral.find( join_key );
 
-            for ( size_t ix_input : it->second )
+            for ( auto it = begin; it != end; ++it )
                 {
+                    const auto ix_input = *it;
+
                     const auto lower = _peripheral.time_stamp( ix_input );
 
                     const auto upper = _peripheral.upper_time_stamp( ix_input );

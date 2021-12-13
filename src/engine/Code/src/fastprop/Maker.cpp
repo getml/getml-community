@@ -37,6 +37,7 @@ Maker::fit( const MakerParams& _params )
         .population_ = _params.population_,
         .prefix_ = _params.prefix_,
         .row_index_container_ = _params.row_index_container_,
+        .temp_dir_ = _params.temp_dir_,
         .word_index_container_ = _params.word_index_container_ } );
 
     return std::make_pair( fast_prop_container, feature_container );
@@ -68,6 +69,7 @@ std::shared_ptr<const FastPropContainer> Maker::fit_fast_prop_container(
         .peripheral_ = _params.peripheral_,
         .population_ = _params.population_,
         .row_indices_ = _params.row_index_container_.value(),
+        .temp_dir_ = _params.temp_dir_,
         .word_indices_ = _params.word_index_container_ };
 
     fast_prop->fit( params, true );
@@ -147,6 +149,7 @@ MakerParams Maker::make_params( const MakerParams& _params, const size_t _i )
         .population_ = _params.peripheral_.at( ix ),
         .prefix_ = _params.prefix_ + std::to_string( _i + 1 ) + "_",
         .row_index_container_ = row_index_container,
+        .temp_dir_ = _params.temp_dir_,
         .word_index_container_ = word_index_container };
 }
 
@@ -261,8 +264,6 @@ Maker::make_subcontainers(
 
 helpers::FeatureContainer Maker::transform( const MakerParams& _params )
 {
-    const auto& placeholder = _params.placeholder_;
-
     assert_true( _params.fast_prop_container_ );
 
     assert_true(
@@ -271,55 +272,80 @@ helpers::FeatureContainer Maker::transform( const MakerParams& _params )
 
     assert_true( _params.prefix_ != "" );
 
-    const auto features =
-        std::make_shared<std::vector<helpers::Column<Float>>>();
+    const auto features = transform_make_features( _params );
 
-    if ( _params.fast_prop_container_->has_fast_prop() )
-        {
-            const auto& fast_prop = _params.fast_prop_container_->fast_prop();
-
-            const auto index = stl::collect::vector<size_t>(
-                stl::iota<size_t>( 0, fast_prop.num_features() ) );
-
-            const auto params = algorithm::TransformParams{
-                .feature_container_ = std::nullopt,
-                .index_ = index,
-                .logger_ = _params.logger_,
-                .peripheral_ = _params.peripheral_,
-                .population_ = _params.population_,
-                .word_indices_ = _params.word_index_container_ };
-
-            const auto feature_ptrs =
-                fast_prop.transform( params, nullptr, true );
-
-            for ( size_t i = 0; i < feature_ptrs.size(); ++i )
-                {
-                    features->push_back( helpers::Column<Float>(
-                        feature_ptrs.at( i ),
-                        helpers::Macros::fast_prop_feature() + _params.prefix_ +
-                            std::to_string( i + 1 ),
-                        {},
-                        "" ) );
-                }
-        }
-
-    const auto subcontainers = std::make_shared<
-        std::vector<std::optional<helpers::FeatureContainer>>>();
-
-    for ( size_t i = 0; i < placeholder.joined_tables_.size(); ++i )
-        {
-            if ( !_params.fast_prop_container_->subcontainers( i ) )
-                {
-                    subcontainers->push_back( std::nullopt );
-                    continue;
-                }
-
-            const auto params = make_params( _params, i );
-
-            subcontainers->push_back( transform( params ) );
-        }
+    const auto subcontainers = transform_make_subcontainers( _params );
 
     return helpers::FeatureContainer( features, subcontainers );
+}
+
+// ----------------------------------------------------------------------------
+
+std::shared_ptr<std::vector<helpers::Column<Float>>>
+Maker::transform_make_features( const MakerParams& _params )
+{
+    if ( !_params.fast_prop_container_->has_fast_prop() )
+        {
+            return std::make_shared<std::vector<helpers::Column<Float>>>();
+        }
+
+    const auto& fast_prop = _params.fast_prop_container_->fast_prop();
+
+    const auto index = stl::collect::vector<size_t>(
+        stl::iota<size_t>( 0, fast_prop.num_features() ) );
+
+    const auto params = algorithm::TransformParams{
+        .feature_container_ = std::nullopt,
+        .index_ = index,
+        .logger_ = _params.logger_,
+        .peripheral_ = _params.peripheral_,
+        .population_ = _params.population_,
+        .temp_dir_ = _params.temp_dir_,
+        .word_indices_ = _params.word_index_container_ };
+
+    const auto features = fast_prop.transform( params, nullptr, true );
+
+    const auto to_column = [&_params,
+                            &features]( size_t _i ) -> helpers::Column<Float> {
+        return helpers::Column<Float>(
+            features.at( _i ).const_ptr(),
+            helpers::Macros::fast_prop_feature() + _params.prefix_ +
+                std::to_string( _i + 1 ),
+            {},
+            "" );
+    };
+
+    const auto iota = stl::iota<size_t>( 0, features.size() );
+
+    return std::make_shared<std::vector<helpers::Column<Float>>>(
+        stl::collect::vector<helpers::Column<Float>>(
+            iota | VIEWS::transform( to_column ) ) );
+}
+
+// ----------------------------------------------------------------------------
+
+std::shared_ptr<std::vector<std::optional<helpers::FeatureContainer>>>
+Maker::transform_make_subcontainers( const MakerParams& _params )
+{
+    const auto& placeholder = _params.placeholder_;
+
+    const auto make_subcontainer =
+        [&_params](
+            const size_t _i ) -> std::optional<helpers::FeatureContainer> {
+        if ( !_params.fast_prop_container_->subcontainers( _i ) )
+            {
+                return std::nullopt;
+            }
+        const auto params = make_params( _params, _i );
+        return transform( params );
+    };
+
+    const auto iota = stl::iota<size_t>( 0, placeholder.joined_tables_.size() );
+
+    return std::make_shared<
+        std::vector<std::optional<helpers::FeatureContainer>>>(
+        stl::collect::vector<std::optional<helpers::FeatureContainer>>(
+            iota | VIEWS::transform( make_subcontainer ) ) );
 }
 
 // ----------------------------------------------------------------------------

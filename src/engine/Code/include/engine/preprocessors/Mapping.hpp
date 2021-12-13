@@ -87,7 +87,7 @@ class Mapping : public Preprocessor
 
     /// Generates the mapping tables.
     std::vector<std::string> to_sql(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const helpers::StringIterator& _categories,
         const std::shared_ptr<const helpers::SQLDialectGenerator>&
             _sql_dialect_generator ) const final;
 
@@ -251,13 +251,13 @@ class Mapping : public Preprocessor
 
     /// Transforms the mappings for the categorical columns to SQL.
     std::vector<std::string> categorical_columns_to_sql(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const helpers::StringIterator& _categories,
         const std::shared_ptr<const helpers::SQLDialectGenerator>&
             _sql_dialect_generator ) const;
 
     /// Transforms a mapping for a categorical or text column to SQL.
     std::string categorical_or_text_column_to_sql(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const helpers::StringIterator& _categories,
         const std::shared_ptr<const helpers::SQLDialectGenerator>&
             _sql_dialect_generator,
         const std::string& _name,

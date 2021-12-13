@@ -396,7 +396,7 @@ containers::Column<Int> Seasonal::to_int(
         return ( *_categories )[str];
     };
 
-    auto result = containers::Column<Int>( _col.nrows() );
+    auto result = containers::Column<Int>( _col.pool(), _col.nrows() );
 
     std::transform( _col.begin(), _col.end(), result.begin(), to_str );
 
@@ -419,7 +419,7 @@ containers::Column<Int> Seasonal::to_int(
         return _categories[str];
     };
 
-    auto result = containers::Column<Int>( _col.nrows() );
+    auto result = containers::Column<Int>( _col.pool(), _col.nrows() );
 
     std::transform( _col.begin(), _col.end(), result.begin(), to_str );
 

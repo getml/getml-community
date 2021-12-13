@@ -14,6 +14,7 @@
 #include <Poco/DateTimeFormatter.h>
 #include <Poco/Timezone.h>
 
+#include "helpers/helpers.hpp"
 #include "jsonutils/jsonutils.hpp"
 #include "multithreading/multithreading.hpp"
 #include "strings/strings.hpp"

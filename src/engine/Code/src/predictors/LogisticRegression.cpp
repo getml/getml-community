@@ -130,14 +130,12 @@ void LogisticRegression::fit_dense(
         }
 
     // -------------------------------------------------------------------------
-    // Set some standard variables.
 
-    const auto nrows = X[0]->size();
+    const auto nrows = X[0].size();
 
     const auto nrows_float = static_cast<Float>( nrows );
 
     // -------------------------------------------------------------------------
-    // Use BFGS to find the weights.
 
     std::vector<Float> gradients( weights_.size() );
 
@@ -153,7 +151,7 @@ void LogisticRegression::fit_dense(
                 {
                     const auto yhat = predict_dense( X, i );
 
-                    const auto delta = yhat - ( *_y )[i];
+                    const auto delta = yhat - _y[i];
 
                     calculate_gradients( X, i, delta, &gradients );
 
@@ -205,20 +203,17 @@ void LogisticRegression::fit_sparse(
     const CFloatColumn& _y )
 {
     // -------------------------------------------------------------------------
-    // Build up CSRMatrix.
 
     auto csr_mat = impl().make_csr<Float, unsigned int, size_t>(
         _X_categorical, _X_numerical );
 
     // -------------------------------------------------------------------------
-    // Rescale CSRMatrix.
 
     scaler_.fit( csr_mat );
 
     csr_mat = scaler_.transform( csr_mat );
 
     // -------------------------------------------------------------------------
-    // Init weights.
 
     std::mt19937 rng;
 
@@ -232,14 +227,12 @@ void LogisticRegression::fit_sparse(
         }
 
     // -------------------------------------------------------------------------
-    // Set some standard variables.
 
     const size_t batch_size = 200;
 
     const auto bsize_float = static_cast<Float>( batch_size );
 
     // -------------------------------------------------------------------------
-    // Use Adam to find the weights.
 
     std::vector<Float> gradients( weights_.size() );
 
@@ -258,7 +251,7 @@ void LogisticRegression::fit_sparse(
                         csr_mat.indices(),
                         csr_mat.data() );
 
-                    const auto delta = yhat - ( *_y )[i];
+                    const auto delta = yhat - _y[i];
 
                     calculate_gradients(
                         csr_mat.indptr()[i],
@@ -367,7 +360,6 @@ CFloatColumn LogisticRegression::predict_dense(
     const std::vector<CFloatColumn>& _X_numerical ) const
 {
     // -------------------------------------------------------------------------
-    // Make sure that the X is plausible.
 
     if ( weights_.size() != _X_numerical.size() + 1 )
         {
@@ -378,38 +370,31 @@ CFloatColumn LogisticRegression::predict_dense(
         }
 
     // -------------------------------------------------------------------------
-    // Rescale input
 
     const auto X = scaler_.transform( _X_numerical );
 
     // -------------------------------------------------------------------------
-    // Calculate dot product with weights.
 
-    auto predictions = CFloatColumn();
+    assert_true( X.size() > 0 );
+
+    auto predictions = CFloatColumn(
+        std::make_shared<std::vector<Float>>( X.at( 0 ).size() ) );
 
     for ( size_t j = 0; j < X.size(); ++j )
         {
-            assert_true( X[0]->size() == X[j]->size() );
+            assert_true( X[0].size() == X[j].size() );
 
-            if ( !predictions )
+            for ( size_t i = 0; i < X[j].size(); ++i )
                 {
-                    predictions =
-                        std::make_shared<std::vector<Float>>( X[0]->size() );
-                }
-
-            for ( size_t i = 0; i < X[j]->size(); ++i )
-                {
-                    ( *predictions )[i] += weights_[j] * ( *X[j] )[i];
+                    predictions[i] += weights_[j] * X[j][i];
                 }
         }
 
     // -------------------------------------------------------------------------
-    // Add intercept and apply logistic_function
 
-    for ( auto& yhat : *predictions )
+    for ( auto& yhat : predictions )
         {
             yhat += weights_.back();
-
             yhat = logistic_function( yhat );
         }
 
@@ -427,18 +412,15 @@ CFloatColumn LogisticRegression::predict_sparse(
     const std::vector<CFloatColumn>& _X_numerical ) const
 {
     // -------------------------------------------------------------------------
-    // Build up CSRMatrix.
 
     auto csr_mat = impl().make_csr<Float, unsigned int, size_t>(
         _X_categorical, _X_numerical );
 
     // -------------------------------------------------------------------------
-    // Rescale CSRMatrix.
 
     csr_mat = scaler_.transform( csr_mat );
 
     // -------------------------------------------------------------------------
-    // Make sure that the CSRMatrix is plausible.
 
     if ( weights_.size() != csr_mat.ncols() + 1 )
         {
@@ -449,16 +431,15 @@ CFloatColumn LogisticRegression::predict_sparse(
         }
 
     // -------------------------------------------------------------------------
-    // Initialize predictions.
 
-    auto predictions = std::make_shared<std::vector<Float>>( csr_mat.nrows() );
+    auto predictions =
+        CFloatColumn( std::make_shared<std::vector<Float>>( csr_mat.nrows() ) );
 
     // -------------------------------------------------------------------------
-    // Generate predictions.
 
     for ( size_t i = 0; i < csr_mat.nrows(); ++i )
         {
-            ( *predictions )[i] = predict_sparse(
+            predictions[i] = predict_sparse(
                 csr_mat.indptr()[i],
                 csr_mat.indptr()[i + 1],
                 csr_mat.indices(),

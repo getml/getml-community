@@ -41,6 +41,7 @@
 #include "engine/pipelines/DataFrameModifier.hpp"
 #include "engine/pipelines/Staging.hpp"
 
+#include "engine/pipelines/CheckParams.hpp"
 #include "engine/pipelines/FitParams.hpp"
 #include "engine/pipelines/TransformParams.hpp"
 

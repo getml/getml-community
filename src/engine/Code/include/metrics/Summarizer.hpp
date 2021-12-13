@@ -127,12 +127,12 @@ class Summarizer
     }
 
     /// Helper function
-    static const Float& get(
+    static const Float get(
         const size_t _i, const size_t _j, const Features& _features )
     {
         assert_true( _j < _features.size() );
-        assert_true( _i < _features[_j]->size() );
-        return ( *_features[_j] )[_i];
+        assert_true( _i < _features[_j].size() );
+        return _features[_j][_i];
     }
 
     // ---------------------------------------------------------------------

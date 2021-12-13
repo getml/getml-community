@@ -5,7 +5,7 @@ namespace metrics
 {
 // ----------------------------------------------------------------------------
 
-typedef std::vector<std::shared_ptr<std::vector<Float>>> Features;
+typedef std::vector<helpers::Feature<Float>> Features;
 
 // ----------------------------------------------------------------------------
 }  // namespace metrics

@@ -46,14 +46,32 @@ struct collect
     template <class T, class RangeType>
     static std::vector<T> vector( RangeType range )
     {
-        auto vec = std::vector<T>();
+#ifdef __APPLE__
+        constexpr bool use_push_back = true;
+#else
+        constexpr bool use_push_back = !std::is_default_constructible<T>() ||
+                                       !std::is_move_assignable<T>() ||
+                                       !RANGES::sized_range<RangeType>;
+#endif
 
-        for ( const auto& val : range )
+        if constexpr ( use_push_back )
             {
-                vec.push_back( val );
+                auto vec = std::vector<T>();
+                for ( const auto& val : range )
+                    {
+                        vec.push_back( val );
+                    }
+                return vec;
             }
-
-        return vec;
+        else
+            {
+                auto vec = std::vector<T>( RANGES::size( range ) );
+                for ( size_t i = 0; i < vec.size(); ++i )
+                    {
+                        vec[i] = std::move( range[i] );
+                    }
+                return vec;
+            }
     }
 
     /// Generates a set from a range

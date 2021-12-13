@@ -9,7 +9,7 @@ namespace ensemble
 void Threadutils::copy(
     const std::vector<size_t> _rows,
     const std::vector<Float>& _local_feature,
-    std::vector<Float>* _global_feature )
+    helpers::Feature<Float, false>* _global_feature )
 {
     assert_true( _rows.size() == _local_feature.size() );
 
@@ -151,7 +151,7 @@ void Threadutils::transform_as_feature_learner(
             copy(
                 population_subview.rows(),
                 *new_feature,
-                _params.features_->at( i ).get() );
+                &_params.features_->at( i ) );
 
             const auto progress = ( ( i + 1 ) * 100 ) / _params.index_.size();
 

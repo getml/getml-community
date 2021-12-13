@@ -15,8 +15,11 @@ class ArrowHandler
    public:
     ArrowHandler(
         const std::shared_ptr<containers::Encoding>& _categories,
-        const std::shared_ptr<containers::Encoding>& _join_keys_encoding )
-        : categories_( _categories ), join_keys_encoding_( _join_keys_encoding )
+        const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
+        const config::Options& _options )
+        : categories_( _categories ),
+          join_keys_encoding_( _join_keys_encoding ),
+          options_( _options )
     {
         assert_true( categories_ );
         assert_true( join_keys_encoding_ );
@@ -36,7 +39,9 @@ class ArrowHandler
     /// Receives an arrow::Table from a stream socket.
     template <class T>
     containers::Column<T> recv_column(
-        const std::string& _colname, Poco::Net::StreamSocket* _socket ) const;
+        const std::shared_ptr<memmap::Pool>& _pool,
+        const std::string& _colname,
+        Poco::Net::StreamSocket* _socket ) const;
 
     /// Receives an arrow::Table from a stream socket.
     std::shared_ptr<arrow::Table> recv_table(
@@ -81,6 +86,7 @@ class ArrowHandler
     /// Converts a chunked array to a float column.
     template <class T>
     containers::Column<T> to_column(
+        const std::shared_ptr<memmap::Pool>& _pool,
         const std::string& _name,
         const std::shared_ptr<arrow::ChunkedArray>& _arr ) const;
 
@@ -163,6 +169,9 @@ class ArrowHandler
 
     /// Encodes the join keys used.
     const std::shared_ptr<containers::Encoding> join_keys_encoding_;
+
+    /// Settings for the engine and the monitor
+    const config::Options options_;
 };
 
 // -------------------------------------------------------------------------
@@ -170,7 +179,9 @@ class ArrowHandler
 
 template <class T>
 containers::Column<T> ArrowHandler::recv_column(
-    const std::string& _colname, Poco::Net::StreamSocket* _socket ) const
+    const std::shared_ptr<memmap::Pool>& _pool,
+    const std::string& _colname,
+    Poco::Net::StreamSocket* _socket ) const
 {
     const auto table = recv_table( _socket );
 
@@ -182,13 +193,14 @@ containers::Column<T> ArrowHandler::recv_column(
 
     const auto arr = table->GetColumnByName( _colname );
 
-    return to_column<T>( _colname, arr );
+    return to_column<T>( _pool, _colname, arr );
 }
 
 // ----------------------------------------------------------------------------
 
 template <class T>
 containers::Column<T> ArrowHandler::to_column(
+    const std::shared_ptr<memmap::Pool>& _pool,
     const std::string& _name,
     const std::shared_ptr<arrow::ChunkedArray>& _arr ) const
 {
@@ -201,7 +213,12 @@ containers::Column<T> ArrowHandler::to_column(
             throw std::runtime_error( "Column '" + _name + "' not found!" );
         }
 
-    const auto data_ptr = std::make_shared<std::vector<T>>( _arr->length() );
+    auto col = containers::Column<T>( _pool );
+
+    if constexpr ( std::is_same<T, Float>() )
+        {
+            col = containers::Column<T>( _pool, _arr->length() );
+        }
 
     for ( std::int64_t nchunk = 0, begin = 0; nchunk < _arr->num_chunks();
           ++nchunk )
@@ -227,7 +244,7 @@ containers::Column<T> ArrowHandler::to_column(
 
                     for ( std::int64_t i = 0; i < chunk->length(); ++i )
                         {
-                            ( *data_ptr )[begin + i] = func( i );
+                            col[begin + i] = func( i );
                         }
                 }
 
@@ -237,14 +254,16 @@ containers::Column<T> ArrowHandler::to_column(
 
                     for ( std::int64_t i = 0; i < chunk->length(); ++i )
                         {
-                            ( *data_ptr )[begin + i] = func( i );
+                            col.push_back( func( i ) );
                         }
                 }
 
             begin += chunk->length();
         }
 
-    return containers::Column<T>( data_ptr, _name );
+    col.set_name( _name );
+
+    return col;
 }
 
 // -------------------------------------------------------------------------

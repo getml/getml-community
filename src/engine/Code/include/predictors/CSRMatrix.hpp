@@ -99,18 +99,16 @@ template <typename DataType, typename IndicesType, typename IndptrType>
 CSRMatrix<DataType, IndicesType, IndptrType>::CSRMatrix(
     const CFloatColumn& _col )
 {
-    assert_true( _col );
-
-    data_ = std::vector<DataType>( _col->size() );
+    data_ = std::vector<DataType>( _col.size() );
 
     for ( size_t i = 0; i < data_.size(); ++i )
         {
-            data_[i] = static_cast<DataType>( ( *_col )[i] );
+            data_[i] = static_cast<DataType>( _col[i] );
         }
 
-    indices_ = std::vector<IndicesType>( _col->size() );
+    indices_ = std::vector<IndicesType>( _col.size() );
 
-    indptr_ = std::vector<IndptrType>( _col->size() + 1 );
+    indptr_ = std::vector<IndptrType>( _col.size() + 1 );
 
     for ( size_t i = 0; i < indptr_.size(); ++i )
         {
@@ -126,16 +124,13 @@ template <typename DataType, typename IndicesType, typename IndptrType>
 CSRMatrix<DataType, IndicesType, IndptrType>::CSRMatrix(
     const CIntColumn& _col, const size_t _n_unique )
 {
-    assert_true( _col );
+    indptr_ = std::vector<IndptrType>( _col.size() + 1 );
 
-    indptr_ = std::vector<IndptrType>( _col->size() + 1 );
-
-    for ( size_t i = 0; i < _col->size(); ++i )
+    for ( size_t i = 0; i < _col.size(); ++i )
         {
-            if ( ( *_col )[i] >= 0 )
+            if ( _col[i] >= 0 )
                 {
-                    indices_.push_back(
-                        static_cast<IndicesType>( ( *_col )[i] ) );
+                    indices_.push_back( static_cast<IndicesType>( _col[i] ) );
 
                     indptr_[i + 1] = indptr_[i] + 1;
                 }
@@ -158,23 +153,17 @@ void CSRMatrix<DataType, IndicesType, IndptrType>::add(
 {
     // -------------------------------------------------------------------------
 
-    assert_true( _col );
-
-    // -------------------------------------------------------------------------
-    // If the CSRMatrix is empty, simply construct it from the column.
-
     if ( ncols() == 0 )
         {
             *this = CSRMatrix<DataType, IndicesType, IndptrType>( _col );
             return;
         }
 
-    assert_true( _col->size() == nrows() );
+    assert_true( _col.size() == nrows() );
 
     // -------------------------------------------------------------------------
-    // Adapt data_.
 
-    auto data_temp = std::vector<DataType>( data_.size() + _col->size() );
+    auto data_temp = std::vector<DataType>( data_.size() + _col.size() );
 
     for ( size_t i = 0; i < nrows(); ++i )
         {
@@ -183,17 +172,15 @@ void CSRMatrix<DataType, IndicesType, IndptrType>::add(
                 data_.begin() + indptr_[i + 1],
                 data_temp.begin() + indptr_[i] + i );
 
-            data_temp[indptr_[i + 1] + i] =
-                static_cast<DataType>( ( *_col )[i] );
+            data_temp[indptr_[i + 1] + i] = static_cast<DataType>( _col[i] );
         }
 
     data_ = std::move( data_temp );
 
     // -------------------------------------------------------------------------
-    // Adapt indices_.
 
     auto indices_temp =
-        std::vector<IndicesType>( indices_.size() + _col->size() );
+        std::vector<IndicesType>( indices_.size() + _col.size() );
 
     for ( size_t i = 0; i < nrows(); ++i )
         {
@@ -232,29 +219,22 @@ void CSRMatrix<DataType, IndicesType, IndptrType>::add(
 {
     // -------------------------------------------------------------------------
 
-    assert_true( _col );
-
-    // -------------------------------------------------------------------------
-    // If the CSRMatrix is empty, simply construct it from the column.
-
     if ( ncols() == 0 )
         {
             *this = CSRMatrix( _col, _n_unique );
             return;
         }
 
-    assert_true( _col->size() == nrows() );
+    assert_true( _col.size() == nrows() );
 
     // -------------------------------------------------------------------------
-    // Count the number of non-negative entries in _col.
 
     auto is_non_negative = []( int val ) { return ( val >= 0 ); };
 
     const size_t num_non_negative =
-        std::count_if( _col->begin(), _col->end(), is_non_negative );
+        std::count_if( _col.begin(), _col.end(), is_non_negative );
 
     // -------------------------------------------------------------------------
-    // Adapt data_ and indices_
 
     auto data_temp = std::vector<DataType>( data_.size() + num_non_negative );
 
@@ -275,12 +255,13 @@ void CSRMatrix<DataType, IndicesType, IndptrType>::add(
                 indices_.begin() + indptr_[i + 1],
                 indices_temp.begin() + indptr_[i] + num_added );
 
-            if ( ( *_col )[i] >= 0 )
+            if ( _col[i] >= 0 )
                 {
                     data_temp[indptr_[i + 1] + num_added] = 1.0;
 
                     indices_temp[indptr_[i + 1] + num_added] =
-                        static_cast<IndicesType>( ( *_col )[i] ) + static_cast<IndicesType>( ncols() );
+                        static_cast<IndicesType>( _col[i] ) +
+                        static_cast<IndicesType>( ncols() );
 
                     ++num_added;
                 }
@@ -293,13 +274,12 @@ void CSRMatrix<DataType, IndicesType, IndptrType>::add(
     indices_ = std::move( indices_temp );
 
     // -------------------------------------------------------------------------
-    // Adapt indptr_.
 
     num_added = 0;
 
-    for ( size_t i = 0; i < _col->size(); ++i )
+    for ( size_t i = 0; i < _col.size(); ++i )
         {
-            if ( ( *_col )[i] >= 0 )
+            if ( _col[i] >= 0 )
                 {
                     ++num_added;
                 }
@@ -310,7 +290,6 @@ void CSRMatrix<DataType, IndicesType, IndptrType>::add(
     assert_true( num_added == num_non_negative );
 
     // -------------------------------------------------------------------------
-    // Finally, we must adapt ncols_.
 
     ncols_ += _n_unique;
 

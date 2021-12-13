@@ -28,8 +28,7 @@ class Staging
         const std::string& _alias,
         const std::string& _colname );
 
-    static std::shared_ptr<const typename containers::DataFrameIndex::MapType>
-    extract_map(
+    static containers::DataFrameIndex extract_index(
         const containers::DataFrame& _df,
         const std::string& _tname,
         const std::string& _alias,
@@ -78,7 +77,7 @@ class Staging
         const size_t _nrows,
         const Int _jk,
         const Float _ts,
-        const containers::DataFrameIndex::MapType& _peripheral_index,
+        const containers::DataFrameIndex& _peripheral_index,
         const std::optional<containers::Column<Float>>& _other_time_stamp,
         const std::optional<containers::Column<Float>>& _upper_time_stamp );
 

@@ -24,8 +24,7 @@ containers::Column<Int> Staging::extract_join_key(
 
 // ----------------------------------------------------------------------------
 
-std::shared_ptr<const typename containers::DataFrameIndex::MapType>
-Staging::extract_map(
+containers::DataFrameIndex Staging::extract_index(
     const containers::DataFrame& _df,
     const std::string& _tname,
     const std::string& _alias,
@@ -35,10 +34,10 @@ Staging::extract_map(
 
     if ( _df.has_join_key( name ) )
         {
-            return _df.index( name ).map();
+            return _df.index( name );
         }
 
-    return _df.index( _colname ).map();
+    return _df.index( _colname );
 }
 
 // ----------------------------------------------------------------------------
@@ -289,7 +288,7 @@ std::vector<size_t> Staging::make_index(
         _population, _joined_to_name, _joined_to_alias, _join_key );
 
     const auto peripheral_index =
-        extract_map( _peripheral, _name, _alias, _other_join_key );
+        extract_index( _peripheral, _name, _alias, _other_join_key );
 
     const auto time_stamp = extract_time_stamp(
         _population, _joined_to_name, _joined_to_alias, _time_stamp );
@@ -311,8 +310,6 @@ std::vector<size_t> Staging::make_index(
 
     // -------------------------------------------------------
 
-    assert_true( peripheral_index );
-
     std::vector<size_t> index( _population.nrows() );
 
     std::set<size_t> unique_indices;
@@ -325,7 +322,7 @@ std::vector<size_t> Staging::make_index(
                 _population.nrows(),
                 join_key[i],
                 ts,
-                *peripheral_index,
+                peripheral_index,
                 other_time_stamp,
                 upper_time_stamp );
 
@@ -371,21 +368,23 @@ std::pair<size_t, bool> Staging::retrieve_index(
     const size_t _nrows,
     const Int _jk,
     const Float _ts,
-    const containers::DataFrameIndex::MapType& _peripheral_index,
+    const containers::DataFrameIndex& _peripheral_index,
     const std::optional<containers::Column<Float>>& _other_time_stamp,
     const std::optional<containers::Column<Float>>& _upper_time_stamp )
 {
-    const auto it = _peripheral_index.find( _jk );
+    const auto [begin, end] = _peripheral_index.find( _jk );
 
-    if ( it == _peripheral_index.end() )
+    if ( begin == nullptr )
         {
             return std::make_pair( _nrows, true );
         }
 
     std::optional<size_t> local_index = std::nullopt;
 
-    for ( size_t ix : it->second )
+    for ( auto it = begin; it != end; ++it )
         {
+            const auto ix = *it;
+
             const auto lower =
                 _other_time_stamp ? ( *_other_time_stamp )[ix] : 0.0;
 

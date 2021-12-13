@@ -18,7 +18,7 @@ class SQLMaker
 
    public:
     SQLMaker(
-        const std::vector<strings::String>& _categories,
+        const helpers::StringIterator& _categories,
         const std::string& _feature_prefix,
         const helpers::Schema& _input,
         const helpers::Schema& _output,
@@ -96,14 +96,11 @@ class SQLMaker
 
    private:
     /// Trivial (const private) accessor.
-    const std::vector<strings::String>& categories() const
-    {
-        return categories_;
-    }
+    const helpers::StringIterator& categories() const { return categories_; }
 
    private:
     /// The categorical encoding.
-    const std::vector<strings::String>& categories_;
+    const helpers::StringIterator categories_;
 
     /// The prefix to be used for each feature.
     const std::string feature_prefix_;

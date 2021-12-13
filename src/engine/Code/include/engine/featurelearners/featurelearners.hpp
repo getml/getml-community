@@ -43,6 +43,9 @@
 // ----------------------------------------------------
 // Module files
 
+#include "engine/featurelearners/FitParams.hpp"
+#include "engine/featurelearners/TransformParams.hpp"
+
 #include "engine/featurelearners/AbstractFeatureLearner.hpp"
 #include "engine/featurelearners/FeatureLearnerParams.hpp"
 

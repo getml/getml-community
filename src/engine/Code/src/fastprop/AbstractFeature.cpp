@@ -108,7 +108,7 @@ Poco::JSON::Object::Ptr AbstractFeature::to_json_obj() const
 // ----------------------------------------------------------------------------
 
 std::string AbstractFeature::to_sql(
-    const std::vector<strings::String> &_categories,
+    const helpers::StringIterator &_categories,
     const std::shared_ptr<const helpers::SQLDialectGenerator>
         &_sql_dialect_generator,
     const std::string &_feature_prefix,

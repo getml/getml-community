@@ -3,7 +3,7 @@
 
 namespace predictors
 {
-typedef std::shared_ptr<std::vector<Int>> CIntColumn;
+typedef helpers::Feature<Int> CIntColumn;
 }
 
 #endif  // PREDICTORS_CINTCOLUMN_HPP_

@@ -12,6 +12,8 @@
 
 #include <Poco/File.h>
 
+#include "memmap/memmap.hpp"
+
 #include "engine/JSON.hpp"
 
 // ----------------------------------------------------

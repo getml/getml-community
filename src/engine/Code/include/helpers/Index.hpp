@@ -5,7 +5,7 @@ namespace helpers
 {
 // -------------------------------------------------------------------------
 
-typedef std::unordered_map<Int, std::vector<size_t>> Index;
+typedef std::variant<InMemoryIndex, MemoryMappedIndex> Index;
 
 // -------------------------------------------------------------------------
 }  // namespace helpers

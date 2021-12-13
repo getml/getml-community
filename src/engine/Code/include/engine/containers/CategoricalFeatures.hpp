@@ -7,7 +7,7 @@ namespace containers
 {
 // ----------------------------------------------------------------------------
 
-typedef std::vector<std::shared_ptr<std::vector<Int>>> CategoricalFeatures;
+typedef std::vector<helpers::Feature<Int>> CategoricalFeatures;
 
 // ----------------------------------------------------------------------------
 }  // namespace containers

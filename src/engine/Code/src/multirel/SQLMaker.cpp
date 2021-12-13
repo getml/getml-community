@@ -7,7 +7,7 @@ namespace utils
 // ----------------------------------------------------------------------------
 
 std::string SQLMaker::condition_greater(
-    const std::vector<strings::String>& _categories,
+    const helpers::StringIterator& _categories,
     const VocabForDf& _vocab_popul,
     const VocabForDf& _vocab_perip,
     const std::string& _feature_prefix,
@@ -148,7 +148,7 @@ std::string SQLMaker::condition_greater(
 // ----------------------------------------------------------------------------
 
 std::string SQLMaker::condition_smaller(
-    const std::vector<strings::String>& _categories,
+    const helpers::StringIterator& _categories,
     const VocabForDf& _vocab_popul,
     const VocabForDf& _vocab_perip,
     const std::string& _feature_prefix,
@@ -457,7 +457,7 @@ std::pair<std::string, std::string> SQLMaker::get_ts_names(
 // ----------------------------------------------------------------------------
 
 std::string SQLMaker::list_categories(
-    const std::vector<strings::String>& _categories,
+    const helpers::StringIterator& _categories,
     const descriptors::Split& _split ) const
 {
     std::string categories = "( ";

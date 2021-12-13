@@ -33,8 +33,40 @@ class VocabularyContainer
     /// Trivial (const) accessor
     const std::vector<VocabForDf>& peripheral() const { return peripheral_; }
 
+    /// Represents the peripheral vocabulary as a vector of iterators.
+    const std::vector<std::vector<StringIterator>> peripheral_iterators() const
+    {
+        const auto range = peripheral_ | VIEWS::transform( to_iterators );
+        return stl::collect::vector<std::vector<StringIterator>>( range );
+    }
+
     /// Trivial (const) accessor
     const VocabForDf& population() const { return population_; }
+
+    /// Represents the population vocabulary as a vector of iterators.
+    const std::vector<StringIterator> population_iterators() const
+    {
+        return to_iterators( population_ );
+    }
+
+   private:
+    /// Turns a vocab for df into a set of string iterators
+    static std::vector<StringIterator> to_iterators( const VocabForDf& _vocab )
+    {
+        using VecType = VocabForDf::value_type;
+        const auto get_value = []( const VecType& _vec,
+                                   const size_t _i ) -> strings::String {
+            return ( *_vec )[_i];
+        };
+        const auto make_iterator = [get_value]( const VecType& _vec ) {
+            assert_true( _vec );
+            return StringIterator(
+                std::bind( get_value, _vec, std::placeholders::_1 ),
+                _vec->size() );
+        };
+        const auto range = _vocab | VIEWS::transform( make_iterator );
+        return stl::collect::vector<StringIterator>( range );
+    }
 
    private:
     /// The vocabulary for the peripheral tables.

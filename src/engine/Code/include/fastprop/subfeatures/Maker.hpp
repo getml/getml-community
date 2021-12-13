@@ -43,6 +43,15 @@ class Maker
     /// Generates placeholder used to generate the propositionalization.
     static std::shared_ptr<const helpers::Placeholder> make_placeholder(
         const MakerParams& _params );
+
+    /// Generates the features in the transform step.
+    static std::shared_ptr<std::vector<helpers::Column<Float>>>
+    transform_make_features( const MakerParams& _params );
+
+    /// Generates the subcontainers in the transform step.
+    static std::shared_ptr<
+        std::vector<std::optional<helpers::FeatureContainer>>>
+    transform_make_subcontainers( const MakerParams& _params );
 };
 
 // ------------------------------------------------------------------------

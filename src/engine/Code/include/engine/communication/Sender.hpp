@@ -24,7 +24,7 @@ struct Sender
 
     /// Sends features to the client, transposing them.
     static void send_features(
-        const containers::Features& _features,
+        const containers::NumericalFeatures& _features,
         Poco::Net::StreamSocket* _socket );
 
     /// Sends a vector to the client

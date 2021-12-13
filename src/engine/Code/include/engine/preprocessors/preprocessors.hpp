@@ -15,6 +15,7 @@
 #include "helpers/helpers.hpp"
 #include "io/io.hpp"
 #include "jsonutils/jsonutils.hpp"
+#include "memmap/memmap.hpp"
 
 #include "engine/containers/containers.hpp"
 

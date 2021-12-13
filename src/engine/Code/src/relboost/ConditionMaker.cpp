@@ -8,7 +8,7 @@ namespace utils
 // ----------------------------------------------------------------------------
 
 std::string ConditionMaker::condition_greater(
-    const std::vector<strings::String>& _categories,
+    const helpers::StringIterator& _categories,
     const VocabForDf& _vocab_popul,
     const VocabForDf& _vocab_perip,
     const std::shared_ptr<const helpers::SQLDialectGenerator>&
@@ -294,7 +294,7 @@ std::string ConditionMaker::condition_greater(
 // ----------------------------------------------------------------------------
 
 std::string ConditionMaker::condition_smaller(
-    const std::vector<strings::String>& _categories,
+    const helpers::StringIterator& _categories,
     const VocabForDf& _vocab_popul,
     const VocabForDf& _vocab_perip,
     const std::shared_ptr<const helpers::SQLDialectGenerator>&
@@ -585,7 +585,7 @@ std::string ConditionMaker::condition_smaller(
 // ----------------------------------------------------------------------------
 
 std::string ConditionMaker::list_categories(
-    const std::vector<strings::String>& _categories,
+    const helpers::StringIterator& _categories,
     const containers::Split& _split ) const
 {
     std::string categories = "( ";

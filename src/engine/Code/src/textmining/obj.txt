@@ -3,6 +3,5 @@ set(
     ${TEXTMINING_SOURCE_DIRECTORY}/RowIndex.cpp
     ${TEXTMINING_SOURCE_DIRECTORY}/StringSplitter.cpp
     ${TEXTMINING_SOURCE_DIRECTORY}/Vocabulary.cpp
-    ${TEXTMINING_SOURCE_DIRECTORY}/WordIndex.cpp
 )
 

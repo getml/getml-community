@@ -9,18 +9,19 @@ namespace handlers
 Float AggOpParser::categorical_aggregation(
     const std::string& _type, const Poco::JSON::Object& _json_col )
 {
-    const auto vec =
-        *CatOpParser( categories_, join_keys_encoding_, data_frames_ )
-             .parse( _json_col )
-             .to_vector( 0, std::nullopt, false );
+    const auto col =
+        CatOpParser( categories_, join_keys_encoding_, data_frames_ )
+            .parse( _json_col );
 
     if ( _type == "count_categorical" )
         {
-            return utils::Aggregations::count_categorical( vec );
+            return utils::Aggregations::count_categorical(
+                col.begin(), col.end() );
         }
     else if ( _type == "count_distinct" )
         {
-            return utils::Aggregations::count_distinct( vec );
+            return utils::Aggregations::count_distinct(
+                col.begin(), col.end() );
         }
     else
         {
@@ -57,8 +58,7 @@ Float AggOpParser::numerical_aggregation(
 {
     const auto col =
         NumOpParser( categories_, join_keys_encoding_, data_frames_ )
-            .parse( _json_col )
-            .to_column( 0, std::nullopt, false );
+            .parse( _json_col );
 
     if ( _type == "assert_equal" )
         {

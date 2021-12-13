@@ -147,7 +147,7 @@ class PipelineManager
     /// Adds a pipeline's features to the data frame.
     void add_features_to_df(
         const pipelines::Pipeline& _pipeline,
-        const containers::Features& _numerical_features,
+        const containers::NumericalFeatures& _numerical_features,
         const containers::CategoricalFeatures& _categorical_features,
         containers::DataFrame* _df ) const;
 
@@ -159,7 +159,7 @@ class PipelineManager
     /// Adds a pipeline's predictions to the data frame.
     void add_predictions_to_df(
         const pipelines::Pipeline& _pipeline,
-        const containers::Features& _numerical_features,
+        const containers::NumericalFeatures& _numerical_features,
         containers::DataFrame* _df ) const;
 
     /// Adds the join keys from the population table to the data frame.
@@ -220,7 +220,7 @@ class PipelineManager
         const Poco::JSON::Object& _cmd,
         const std::string& _name,
         const containers::DataFrame& _population_df,
-        const containers::Features& _yhat,
+        const containers::NumericalFeatures& _yhat,
         pipelines::Pipeline* _pipeline,
         Poco::Net::StreamSocket* _socket );
 
@@ -240,7 +240,7 @@ class PipelineManager
         const pipelines::Pipeline& _pipeline,
         const Poco::JSON::Object& _cmd,
         const containers::DataFrame& _population_table,
-        const containers::Features& _numerical_features,
+        const containers::NumericalFeatures& _numerical_features,
         const containers::CategoricalFeatures& _categorical_features,
         const std::shared_ptr<containers::Encoding>& _categories,
         const std::shared_ptr<containers::Encoding>& _join_keys_encoding );
@@ -250,7 +250,7 @@ class PipelineManager
         const pipelines::Pipeline& _pipeline,
         const Poco::JSON::Object& _cmd,
         const containers::DataFrame& _population_table,
-        const containers::Features& _numerical_features,
+        const containers::NumericalFeatures& _numerical_features,
         const containers::CategoricalFeatures& _categorical_features,
         const std::shared_ptr<containers::Encoding>& _categories,
         const std::shared_ptr<containers::Encoding>& _join_keys_encoding );

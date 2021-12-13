@@ -15,18 +15,16 @@ containers::ColumnView<std::string> CatOpParser::binary_operation(
         {
             return bin_op( _col, std::plus<std::string>() );
         }
-    else if ( op == "update" )
-        {
-            return update( _col );
-        }
-    else
-        {
-            throw std::invalid_argument(
-                "Operator '" + op +
-                "' not recognized for categorical columns." );
 
+    if ( op == "update" )
+        {
             return update( _col );
         }
+
+    throw std::invalid_argument(
+        "Operator '" + op + "' not recognized for categorical columns." );
+
+    return update( _col );
 }
 
 // ----------------------------------------------------------------------------
@@ -45,10 +43,7 @@ containers::ColumnView<std::string> CatOpParser::boolean_as_string(
             {
                 return "true";
             }
-        else
-            {
-                return "false";
-            }
+        return "false";
     };
 
     return containers::ColumnView<std::string>::from_un_op( operand1, to_str );
@@ -79,7 +74,7 @@ void CatOpParser::check(
     const Float length = static_cast<Float>( _col.size() );
 
     const Float num_non_null =
-        utils::Aggregations::count_categorical( *_col.data_ptr() );
+        utils::Aggregations::count_categorical( _col.begin(), _col.end() );
 
     const auto share_null = 1.0 - num_non_null / length;
 

@@ -44,6 +44,8 @@
 
 #include "strings/strings.hpp"
 
+#include "memmap/memmap.hpp"
+
 #include "helpers/helpers.hpp"
 
 #include "engine/Float.hpp"
@@ -54,6 +56,8 @@
 
 #include "engine/utils/utils.hpp"
 
+#include "engine/config/config.hpp"
+
 // ----------------------------------------------------
 // Module files
 
@@ -61,14 +65,17 @@
 #include "engine/containers/Optional.hpp"
 
 #include "engine/containers/CategoricalFeatures.hpp"
-#include "engine/containers/Features.hpp"
+#include "engine/containers/NumericalFeatures.hpp"
 #include "engine/containers/Schema.hpp"
 
-#include "engine/containers/Column.hpp"
-#include "engine/containers/Encoding.hpp"
-#include "engine/containers/Index.hpp"
-
 #include "engine/containers/ColumnViewIterator.hpp"
+
+#include "engine/containers/Column.hpp"
+#include "engine/containers/InMemoryEncoding.hpp"
+#include "engine/containers/Index.hpp"
+#include "engine/containers/MemoryMappedEncoding.hpp"
+
+#include "engine/containers/Encoding.hpp"
 
 #include "engine/containers/ColumnView.hpp"
 

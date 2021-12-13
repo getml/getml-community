@@ -15,19 +15,20 @@ void DataFrameManager::add_data_frame(
 
     // --------------------------------------------------------------------
 
-    auto local_categories =
-        std::make_shared<containers::Encoding>( categories_ );
+    const auto pool = options_.make_pool();
 
-    auto local_join_keys_encoding =
-        std::make_shared<containers::Encoding>( join_keys_encoding_ );
+    const auto local_categories =
+        std::make_shared<containers::Encoding>( pool, categories_ );
+
+    const auto local_join_keys_encoding =
+        std::make_shared<containers::Encoding>( pool, join_keys_encoding_ );
 
     auto df = containers::DataFrame(
-        _name, local_categories, local_join_keys_encoding );
+        _name, local_categories, local_join_keys_encoding, pool );
 
     communication::Sender::send_string( "Success!", _socket );
 
     // --------------------------------------------------------------------
-    //  Note that this does not close the socket connection.
 
     receive_data( local_categories, local_join_keys_encoding, &df, _socket );
 
@@ -126,8 +127,10 @@ void DataFrameManager::add_float_column(
 
             const auto col = make_col( std::nullopt );
 
+            const auto pool = options_.make_pool();
+
             auto new_df = containers::DataFrame(
-                df_name, categories_, join_keys_encoding_ );
+                df_name, categories_, join_keys_encoding_, pool );
 
             add_float_column_to_df( role, col, &new_df, &weak_write_lock );
 
@@ -178,8 +181,10 @@ void DataFrameManager::add_float_column(
         }
     else
         {
+            const auto pool = options_.make_pool();
+
             auto new_df = containers::DataFrame(
-                df_name, categories_, join_keys_encoding_ );
+                df_name, categories_, join_keys_encoding_, pool );
 
             recv_and_add_float_column(
                 _cmd, &new_df, &weak_write_lock, _socket );
@@ -229,15 +234,17 @@ void DataFrameManager::add_int_column_to_df(
 {
     // ------------------------------------------------------------------------
 
-    auto local_categories =
-        std::make_shared<containers::Encoding>( categories_ );
+    const auto pool = options_.make_pool();
 
-    auto local_join_keys_encoding =
-        std::make_shared<containers::Encoding>( join_keys_encoding_ );
+    const auto local_categories =
+        std::make_shared<containers::Encoding>( pool, categories_ );
+
+    const auto local_join_keys_encoding =
+        std::make_shared<containers::Encoding>( pool, join_keys_encoding_ );
 
     // ------------------------------------------------------------------------
 
-    auto col = containers::Column<Int>( _col.nrows() );
+    auto col = containers::Column<Int>( _df->pool(), _col.nrows() );
 
     auto encoding = local_join_keys_encoding;
 
@@ -302,7 +309,7 @@ void DataFrameManager::add_int_column_to_df(
 {
     // ------------------------------------------------------------------------
 
-    auto col = containers::Column<Int>( _col.nrows() );
+    auto col = containers::Column<Int>( _df->pool(), _col.nrows() );
 
     auto encoding = _local_join_keys_encoding;
 
@@ -355,8 +362,10 @@ void DataFrameManager::add_string_column(
         }
     else
         {
+            const auto pool = options_.make_pool();
+
             auto new_df = containers::DataFrame(
-                df_name, categories_, join_keys_encoding_ );
+                df_name, categories_, join_keys_encoding_, pool );
 
             recv_and_add_string_column(
                 _cmd, &new_df, &weak_write_lock, _socket );
@@ -408,8 +417,10 @@ void DataFrameManager::add_string_column(
 
     // ------------------------------------------------------------------------
 
-    auto new_df =
-        containers::DataFrame( df_name, categories_, join_keys_encoding_ );
+    const auto pool = options_.make_pool();
+
+    auto new_df = containers::DataFrame(
+        df_name, categories_, join_keys_encoding_, pool );
 
     auto [df, exists] = utils::Getter::get_if_exists( df_name, &data_frames() );
 
@@ -508,7 +519,7 @@ void DataFrameManager::aggregate(
 {
     const auto aggregation = *JSON::get_object( _cmd, "aggregation_" );
 
-    auto response = containers::Column<Float>( 1 );
+    auto response = containers::Column<Float>( nullptr, 1 );
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
@@ -528,31 +539,27 @@ void DataFrameManager::append_to_data_frame(
     const std::string& _name, Poco::Net::StreamSocket* _socket )
 {
     // --------------------------------------------------------------------
-    // We need the weak write lock for the categories and join keys encoding.
 
     multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
     // --------------------------------------------------------------------
-    // Create the data frame itself.
 
-    auto local_categories =
-        std::make_shared<containers::Encoding>( categories_ );
+    const auto pool = options_.make_pool();
 
-    auto local_join_keys_encoding =
-        std::make_shared<containers::Encoding>( join_keys_encoding_ );
+    const auto local_categories =
+        std::make_shared<containers::Encoding>( pool, categories_ );
+
+    const auto local_join_keys_encoding =
+        std::make_shared<containers::Encoding>( pool, join_keys_encoding_ );
 
     auto df = containers::DataFrame(
-        _name, local_categories, local_join_keys_encoding );
+        _name, local_categories, local_join_keys_encoding, pool );
 
     // --------------------------------------------------------------------
-    // Fill the data frame with data. Note that this does not close the socket
-    // connection.
 
     receive_data( local_categories, local_join_keys_encoding, &df, _socket );
 
     // --------------------------------------------------------------------
-    // Now we upgrade the weak write lock to a strong write lock to commit
-    // the changes.
 
     weak_write_lock.upgrade();
 
@@ -573,7 +580,6 @@ void DataFrameManager::append_to_data_frame(
     data_frames()[_name].create_indices();
 
     // --------------------------------------------------------------------
-    // Update categories
 
     categories_->append( *local_categories );
 
@@ -746,7 +752,7 @@ void DataFrameManager::calc_column_plots(
 
     std::vector<const Float*> targets;
 
-    auto target_col = containers::Column<Float>();
+    auto target_col = containers::Column<Float>( df.pool() );
 
     if ( target_name != "" )
         {
@@ -757,7 +763,8 @@ void DataFrameManager::calc_column_plots(
 
     // --------------------------------------------------------------------
 
-    const containers::Features features = { col.data_ptr() };
+    const containers::NumericalFeatures features = {
+        helpers::Feature<Float>( col.to_vector_ptr() ) };
 
     const auto obj = metrics::Summarizer::calculate_feature_plots(
         features, col.nrows(), 1, num_bins, targets );
@@ -891,16 +898,18 @@ void DataFrameManager::concat(
 
     multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
+    const auto pool = options_.make_pool();
+
     const auto local_categories =
-        std::make_shared<containers::Encoding>( categories_ );
+        std::make_shared<containers::Encoding>( pool, categories_ );
 
     const auto local_join_keys_encoding =
-        std::make_shared<containers::Encoding>( join_keys_encoding_ );
+        std::make_shared<containers::Encoding>( pool, join_keys_encoding_ );
 
     // -------------------------------------------------------
 
-    auto view_parser =
-        ViewParser( local_categories, local_join_keys_encoding, data_frames_ );
+    auto view_parser = ViewParser(
+        local_categories, local_join_keys_encoding, data_frames_, options_ );
 
     const auto extract_df =
         [&view_parser](
@@ -1127,16 +1136,18 @@ void DataFrameManager::from_arrow(
 
     // --------------------------------------------------------------------
 
-    auto local_categories =
-        std::make_shared<containers::Encoding>( categories_ );
+    const auto pool = options_.make_pool();
 
-    auto local_join_keys_encoding =
-        std::make_shared<containers::Encoding>( join_keys_encoding_ );
+    const auto local_categories =
+        std::make_shared<containers::Encoding>( pool, categories_ );
+
+    const auto local_join_keys_encoding =
+        std::make_shared<containers::Encoding>( pool, join_keys_encoding_ );
 
     // --------------------------------------------------------------------
 
-    const auto arrow_handler =
-        handlers::ArrowHandler( local_categories, local_join_keys_encoding );
+    const auto arrow_handler = handlers::ArrowHandler(
+        local_categories, local_join_keys_encoding, options_ );
 
     auto df = arrow_handler.table_to_df(
         arrow_handler.recv_table( _socket ), _name, schema );
@@ -1224,16 +1235,18 @@ void DataFrameManager::from_csv(
 
     // --------------------------------------------------------------------
 
-    auto local_categories =
-        std::make_shared<containers::Encoding>( categories_ );
+    const auto pool = options_.make_pool();
 
-    auto local_join_keys_encoding =
-        std::make_shared<containers::Encoding>( join_keys_encoding_ );
+    const auto local_categories =
+        std::make_shared<containers::Encoding>( pool, categories_ );
 
-    // --------------------------------------------------------------------
+    const auto local_join_keys_encoding =
+        std::make_shared<containers::Encoding>( pool, join_keys_encoding_ );
 
     auto df = containers::DataFrame(
-        _name, local_categories, local_join_keys_encoding );
+        _name, local_categories, local_join_keys_encoding, pool );
+
+    // --------------------------------------------------------------------
 
     df.from_csv(
         colnames,
@@ -1290,7 +1303,6 @@ void DataFrameManager::from_db(
     Poco::Net::StreamSocket* _socket )
 {
     // --------------------------------------------------------------------
-    // Parse the command.
 
     const auto conn_id = JSON::get_value<std::string>( _cmd, "conn_id_" );
 
@@ -1299,32 +1311,29 @@ void DataFrameManager::from_db(
     const auto schema = containers::Schema::from_json( _cmd );
 
     // --------------------------------------------------------------------
-    // We need the weak write lock for the categories and join keys encoding.
 
     multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
     // --------------------------------------------------------------------
-    // Create the data frame itself.
 
-    auto local_categories =
-        std::make_shared<containers::Encoding>( categories_ );
+    const auto pool = options_.make_pool();
 
-    auto local_join_keys_encoding =
-        std::make_shared<containers::Encoding>( join_keys_encoding_ );
+    const auto local_categories =
+        std::make_shared<containers::Encoding>( pool, categories_ );
+
+    const auto local_join_keys_encoding =
+        std::make_shared<containers::Encoding>( pool, join_keys_encoding_ );
 
     auto df = containers::DataFrame(
-        _name, local_categories, local_join_keys_encoding );
+        _name, local_categories, local_join_keys_encoding, pool );
 
     // --------------------------------------------------------------------
-    // Get the data from the data base.
 
     df.from_db( connector( conn_id ), table_name, schema );
 
     license_checker().check_mem_size( data_frames(), df.nbytes() );
 
     // --------------------------------------------------------------------
-    // Now we upgrade the weak write lock to a strong write lock to commit
-    // the changes.
 
     weak_write_lock.upgrade();
 
@@ -1365,7 +1374,6 @@ void DataFrameManager::from_json(
     Poco::Net::StreamSocket* _socket )
 {
     // --------------------------------------------------------------------
-    // Create the data frame as an object.
 
     const auto json_str = communication::Receiver::recv_string( _socket );
 
@@ -1374,8 +1382,6 @@ void DataFrameManager::from_json(
                           .extract<Poco::JSON::Object::Ptr>();
 
     // --------------------------------------------------------------------
-    // Parse the command. Note that the JSON column from the HTTP endpoint
-    // does not necessarily include unused columns - so we make the optional.
 
     const auto time_formats = JSON::array_to_vector<std::string>(
         JSON::get_array( _cmd, "time_formats_" ) );
@@ -1383,32 +1389,29 @@ void DataFrameManager::from_json(
     const auto schema = containers::Schema::from_json( _cmd );
 
     // --------------------------------------------------------------------
-    // We need the weak write lock for the categories and join keys encoding.
 
     multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
     // --------------------------------------------------------------------
-    // Create the data frame itself.
 
-    auto local_categories =
-        std::make_shared<containers::Encoding>( categories_ );
+    const auto pool = options_.make_pool();
 
-    auto local_join_keys_encoding =
-        std::make_shared<containers::Encoding>( join_keys_encoding_ );
+    const auto local_categories =
+        std::make_shared<containers::Encoding>( pool, categories_ );
+
+    const auto local_join_keys_encoding =
+        std::make_shared<containers::Encoding>( pool, join_keys_encoding_ );
 
     auto df = containers::DataFrame(
-        _name, local_categories, local_join_keys_encoding );
+        _name, local_categories, local_join_keys_encoding, pool );
 
     // --------------------------------------------------------------------
-    // Parse the data from the JSON string.
 
     df.from_json( obj, time_formats, schema );
 
     license_checker().check_mem_size( data_frames(), df.nbytes() );
 
     // --------------------------------------------------------------------
-    // Now we upgrade the weak write lock to a strong write lock to commit
-    // the changes.
 
     weak_write_lock.upgrade();
 
@@ -1460,16 +1463,18 @@ void DataFrameManager::from_parquet(
 
     // --------------------------------------------------------------------
 
-    auto local_categories =
-        std::make_shared<containers::Encoding>( categories_ );
+    const auto pool = options_.make_pool();
 
-    auto local_join_keys_encoding =
-        std::make_shared<containers::Encoding>( join_keys_encoding_ );
+    const auto local_categories =
+        std::make_shared<containers::Encoding>( pool, categories_ );
+
+    const auto local_join_keys_encoding =
+        std::make_shared<containers::Encoding>( pool, join_keys_encoding_ );
 
     // --------------------------------------------------------------------
 
-    const auto arrow_handler =
-        handlers::ArrowHandler( local_categories, local_join_keys_encoding );
+    const auto arrow_handler = handlers::ArrowHandler(
+        local_categories, local_join_keys_encoding, options_ );
 
     auto df = arrow_handler.table_to_df(
         arrow_handler.read_parquet( fname ), _name, schema );
@@ -1523,7 +1528,6 @@ void DataFrameManager::from_query(
     Poco::Net::StreamSocket* _socket )
 {
     // --------------------------------------------------------------------
-    // Parse the command.
 
     const auto conn_id = JSON::get_value<std::string>( _cmd, "conn_id_" );
 
@@ -1532,32 +1536,29 @@ void DataFrameManager::from_query(
     const auto schema = containers::Schema::from_json( _cmd );
 
     // --------------------------------------------------------------------
-    // We need the weak write lock for the categories and join keys encoding.
 
     multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
     // --------------------------------------------------------------------
-    // Create the data frame itself.
 
-    auto local_categories =
-        std::make_shared<containers::Encoding>( categories_ );
+    const auto pool = options_.make_pool();
 
-    auto local_join_keys_encoding =
-        std::make_shared<containers::Encoding>( join_keys_encoding_ );
+    const auto local_categories =
+        std::make_shared<containers::Encoding>( pool, categories_ );
+
+    const auto local_join_keys_encoding =
+        std::make_shared<containers::Encoding>( pool, join_keys_encoding_ );
 
     auto df = containers::DataFrame(
-        _name, local_categories, local_join_keys_encoding );
+        _name, local_categories, local_join_keys_encoding, pool );
 
     // --------------------------------------------------------------------
-    // Get the data from the data base.
 
     df.from_query( connector( conn_id ), query, schema );
 
     license_checker().check_mem_size( data_frames(), df.nbytes() );
 
     // --------------------------------------------------------------------
-    // Now we upgrade the weak write lock to a strong write lock to commit
-    // the changes.
 
     weak_write_lock.upgrade();
 
@@ -1604,7 +1605,6 @@ void DataFrameManager::from_s3(
 #else
 
     // --------------------------------------------------------------------
-    // Parse the command.
 
     const auto bucket = JSON::get_value<std::string>( _cmd, "bucket_" );
 
@@ -1634,22 +1634,23 @@ void DataFrameManager::from_s3(
     const auto schema = containers::Schema::from_json( _cmd );
 
     // --------------------------------------------------------------------
-    // We need the weak write lock for the categories and join keys encoding.
 
     multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
     // --------------------------------------------------------------------
 
-    auto local_categories =
-        std::make_shared<containers::Encoding>( categories_ );
+    const auto pool = options_.make_pool();
 
-    auto local_join_keys_encoding =
-        std::make_shared<containers::Encoding>( join_keys_encoding_ );
+    const auto local_categories =
+        std::make_shared<containers::Encoding>( pool, categories_ );
 
-    // --------------------------------------------------------------------
+    const auto local_join_keys_encoding =
+        std::make_shared<containers::Encoding>( pool, join_keys_encoding_ );
 
     auto df = containers::DataFrame(
-        _name, local_categories, local_join_keys_encoding );
+        _name, local_categories, local_join_keys_encoding, pool );
+
+    // --------------------------------------------------------------------
 
     df.from_s3(
         bucket,
@@ -1665,8 +1666,6 @@ void DataFrameManager::from_s3(
     license_checker().check_mem_size( data_frames(), df.nbytes() );
 
     // --------------------------------------------------------------------
-    // Now we upgrade the weak write lock to a strong write lock to commit
-    // the changes.
 
     weak_write_lock.upgrade();
 
@@ -1713,30 +1712,30 @@ void DataFrameManager::from_view(
     const auto view = *JSON::get_object( _cmd, "view_" );
 
     // --------------------------------------------------------------------
-    // We need the weak write lock for the categories and join keys encoding.
 
     multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
     // --------------------------------------------------------------------
 
+    const auto pool = options_.make_pool();
+
     auto local_categories =
-        std::make_shared<containers::Encoding>( categories_ );
+        std::make_shared<containers::Encoding>( pool, categories_ );
 
     auto local_join_keys_encoding =
-        std::make_shared<containers::Encoding>( join_keys_encoding_ );
+        std::make_shared<containers::Encoding>( pool, join_keys_encoding_ );
 
     // --------------------------------------------------------------------
 
     auto df =
-        ViewParser( local_categories, local_join_keys_encoding, data_frames_ )
+        ViewParser(
+            local_categories, local_join_keys_encoding, data_frames_, options_ )
             .parse( view )
             .clone( _name );
 
     license_checker().check_mem_size( data_frames(), df.nbytes() );
 
     // --------------------------------------------------------------------
-    // Now we upgrade the weak write lock to a strong write lock to commit
-    // the changes.
 
     weak_write_lock.upgrade();
 
@@ -1797,7 +1796,7 @@ void DataFrameManager::get_boolean_column(
 
     const auto field = arrow::field( "column", arrow::boolean() );
 
-    handlers::ArrowHandler( categories_, join_keys_encoding_ )
+    handlers::ArrowHandler( categories_, join_keys_encoding_, options_ )
         .send_array( array, field, _socket );
 }
 
@@ -1886,7 +1885,7 @@ void DataFrameManager::get_categorical_column(
 
     const auto field = arrow::field( "column", arrow::utf8() );
 
-    handlers::ArrowHandler( categories_, join_keys_encoding_ )
+    handlers::ArrowHandler( categories_, join_keys_encoding_, options_ )
         .send_array( array, field, _socket );
 }
 
@@ -1968,7 +1967,7 @@ void DataFrameManager::get_categorical_column_unique(
 
     const auto field = arrow::field( "column", arrow::utf8() );
 
-    handlers::ArrowHandler( categories_, join_keys_encoding_ )
+    handlers::ArrowHandler( categories_, join_keys_encoding_, options_ )
         .send_array( array, field, _socket );
 }
 
@@ -2005,7 +2004,7 @@ void DataFrameManager::get_column(
                   "column", arrow::timestamp( arrow::TimeUnit::NANO ) )
             : arrow::field( "column", arrow::float64() );
 
-    handlers::ArrowHandler( categories_, join_keys_encoding_ )
+    handlers::ArrowHandler( categories_, join_keys_encoding_, options_ )
         .send_array( array, field, _socket );
 
     communication::Sender::send_string( "Success!", _socket );
@@ -2036,7 +2035,7 @@ void DataFrameManager::get_column_unique(
                   "column", arrow::timestamp( arrow::TimeUnit::NANO ) )
             : arrow::field( "column", arrow::float64() );
 
-    handlers::ArrowHandler( categories_, join_keys_encoding_ )
+    handlers::ArrowHandler( categories_, join_keys_encoding_, options_ )
         .send_array( array, field, _socket );
 
     communication::Sender::send_string( "Success!", _socket );
@@ -2333,7 +2332,7 @@ void DataFrameManager::get_view_content(
     multithreading::ReadLock read_lock( read_write_lock_ );
 
     const auto result =
-        ViewParser( categories_, join_keys_encoding_, data_frames_ )
+        ViewParser( categories_, join_keys_encoding_, data_frames_, options_ )
             .get_content( draw, start, length, false, cols );
 
     read_lock.unlock();
@@ -2355,7 +2354,7 @@ void DataFrameManager::get_view_nrows(
     multithreading::ReadLock read_lock( read_write_lock_ );
 
     const auto result =
-        ViewParser( categories_, join_keys_encoding_, data_frames_ )
+        ViewParser( categories_, join_keys_encoding_, data_frames_, options_ )
             .get_content( 1, 0, 0, force, cols );
 
     read_lock.unlock();
@@ -2439,8 +2438,8 @@ void DataFrameManager::recv_and_add_float_column(
 
     const auto name = JSON::get_value<std::string>( _cmd, "name_" );
 
-    auto col = ArrowHandler( categories_, join_keys_encoding_ )
-                   .recv_column<Float>( name, _socket );
+    auto col = ArrowHandler( categories_, join_keys_encoding_, options_ )
+                   .recv_column<Float>( _df->pool(), name, _socket );
 
     add_float_column_to_df( role, col, _df, _weak_write_lock );
 }
@@ -2459,8 +2458,9 @@ void DataFrameManager::recv_and_add_string_column(
 
     const auto name = JSON::get_value<std::string>( _cmd, "name_" );
 
-    const auto str_col = ArrowHandler( categories_, join_keys_encoding_ )
-                             .recv_column<strings::String>( name, _socket );
+    const auto str_col =
+        ArrowHandler( categories_, join_keys_encoding_, options_ )
+            .recv_column<strings::String>( _df->pool(), name, _socket );
 
     if ( role == containers::DataFrame::ROLE_UNUSED ||
          role == containers::DataFrame::ROLE_UNUSED_STRING ||
@@ -2490,8 +2490,8 @@ void DataFrameManager::recv_and_add_string_column(
     const auto name = JSON::get_value<std::string>( _cmd, "name_" );
 
     const auto str_col =
-        ArrowHandler( _local_categories, _local_join_keys_encoding )
-            .recv_column<strings::String>( name, _socket );
+        ArrowHandler( _local_categories, _local_join_keys_encoding, options_ )
+            .recv_column<strings::String>( _df->pool(), name, _socket );
 
     if ( role == containers::DataFrame::ROLE_UNUSED ||
          role == containers::DataFrame::ROLE_UNUSED_STRING ||
@@ -2738,7 +2738,7 @@ void DataFrameManager::to_arrow(
     const auto& df = utils::Getter::get( _name, data_frames() );
 
     const auto arrow_handler =
-        handlers::ArrowHandler( categories_, join_keys_encoding_ );
+        handlers::ArrowHandler( categories_, join_keys_encoding_, options_ );
 
     const auto table = arrow_handler.df_to_table( df );
 
@@ -2819,7 +2819,7 @@ void DataFrameManager::to_parquet(
     const auto& df = utils::Getter::get( _name, data_frames() );
 
     const auto arrow_handler =
-        handlers::ArrowHandler( categories_, join_keys_encoding_ );
+        handlers::ArrowHandler( categories_, join_keys_encoding_, options_ );
 
     const auto table = arrow_handler.df_to_table( df );
 
@@ -2897,21 +2897,24 @@ void DataFrameManager::view_to_arrow(
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
+    const auto pool = options_.make_pool();
+
     const auto local_categories =
-        std::make_shared<containers::Encoding>( categories_ );
+        std::make_shared<containers::Encoding>( pool, categories_ );
 
     const auto local_join_keys_encoding =
-        std::make_shared<containers::Encoding>( join_keys_encoding_ );
+        std::make_shared<containers::Encoding>( pool, join_keys_encoding_ );
 
     assert_true( view );
 
     const auto table =
-        ViewParser( local_categories, local_join_keys_encoding, data_frames_ )
+        ViewParser(
+            local_categories, local_join_keys_encoding, data_frames_, options_ )
             .to_table( *view );
 
     read_lock.unlock();
 
-    handlers::ArrowHandler( categories_, join_keys_encoding_ )
+    handlers::ArrowHandler( categories_, join_keys_encoding_, options_ )
         .send_table( table, _socket );
 }
 
@@ -2934,16 +2937,19 @@ void DataFrameManager::view_to_csv(
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
+    const auto pool = options_.make_pool();
+
     const auto local_categories =
-        std::make_shared<containers::Encoding>( categories_ );
+        std::make_shared<containers::Encoding>( pool, categories_ );
 
     const auto local_join_keys_encoding =
-        std::make_shared<containers::Encoding>( join_keys_encoding_ );
+        std::make_shared<containers::Encoding>( pool, join_keys_encoding_ );
 
     assert_true( view );
 
     const auto df =
-        ViewParser( local_categories, local_join_keys_encoding, data_frames_ )
+        ViewParser(
+            local_categories, local_join_keys_encoding, data_frames_, options_ )
             .parse( *view );
 
     df_to_csv(
@@ -2975,16 +2981,19 @@ void DataFrameManager::view_to_db(
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
+    const auto pool = options_.make_pool();
+
     const auto local_categories =
-        std::make_shared<containers::Encoding>( categories_ );
+        std::make_shared<containers::Encoding>( pool, categories_ );
 
     const auto local_join_keys_encoding =
-        std::make_shared<containers::Encoding>( join_keys_encoding_ );
+        std::make_shared<containers::Encoding>( pool, join_keys_encoding_ );
 
     assert_true( view );
 
     const auto df =
-        ViewParser( local_categories, local_join_keys_encoding, data_frames_ )
+        ViewParser(
+            local_categories, local_join_keys_encoding, data_frames_, options_ )
             .parse( *view );
 
     df_to_db(
@@ -3011,21 +3020,24 @@ void DataFrameManager::view_to_parquet(
 
     multithreading::ReadLock read_lock( read_write_lock_ );
 
+    const auto pool = options_.make_pool();
+
     const auto local_categories =
-        std::make_shared<containers::Encoding>( categories_ );
+        std::make_shared<containers::Encoding>( pool, categories_ );
 
     const auto local_join_keys_encoding =
-        std::make_shared<containers::Encoding>( join_keys_encoding_ );
+        std::make_shared<containers::Encoding>( pool, join_keys_encoding_ );
 
     assert_true( view );
 
     const auto table =
-        ViewParser( local_categories, local_join_keys_encoding, data_frames_ )
+        ViewParser(
+            local_categories, local_join_keys_encoding, data_frames_, options_ )
             .to_table( *view );
 
     read_lock.unlock();
 
-    handlers::ArrowHandler( categories_, join_keys_encoding_ )
+    handlers::ArrowHandler( categories_, join_keys_encoding_, options_ )
         .to_parquet( table, fname, compression );
 
     communication::Sender::send_string( "Success!", _socket );
@@ -3064,16 +3076,19 @@ void DataFrameManager::view_to_s3(
 
     // --------------------------------------------------------------------
 
+    const auto pool = options_.make_pool();
+
     const auto local_categories =
-        std::make_shared<containers::Encoding>( categories_ );
+        std::make_shared<containers::Encoding>( pool, categories_ );
 
     const auto local_join_keys_encoding =
-        std::make_shared<containers::Encoding>( join_keys_encoding_ );
+        std::make_shared<containers::Encoding>( pool, join_keys_encoding_ );
 
     assert_true( view );
 
     const auto df =
-        ViewParser( local_categories, local_join_keys_encoding, data_frames_ )
+        ViewParser(
+            local_categories, local_join_keys_encoding, data_frames_, options_ )
             .parse( *view );
 
     // --------------------------------------------------------------------

@@ -4,70 +4,6 @@ namespace textmining
 {
 // ----------------------------------------------------------------------------
 
-std::vector<std::pair<strings::String, size_t>> Vocabulary::count_df(
-    const stl::Range<const strings::String*> _range )
-{
-    const auto process =
-        []( const strings::String& _text_field ) -> std::set<std::string> {
-        return Vocabulary::process_text_field( _text_field );
-    };
-
-    const auto range = _range | VIEWS::transform( process );
-
-    const auto df_map = make_map( range );
-
-    using Pair = std::pair<strings::String, size_t>;
-
-    auto df_vec = std::vector<Pair>( df_map.begin(), df_map.end() );
-
-    const auto by_count = []( const Pair& p1, const Pair& p2 ) -> bool {
-        return p1.second > p2.second;
-    };
-
-    std::sort( df_vec.begin(), df_vec.end(), by_count );
-
-    return df_vec;
-}
-
-// ----------------------------------------------------------------------------
-
-std::shared_ptr<const std::vector<strings::String>> Vocabulary::generate(
-    const size_t _min_df,
-    const size_t _max_size,
-    const stl::Range<const strings::String*> _range )
-{
-    using Pair = std::pair<strings::String, size_t>;
-
-    const auto df_count = count_df( _range );
-
-    const auto count_greater_than_min_df = [_min_df]( const Pair& p ) -> bool {
-        return p.second >= _min_df;
-    };
-
-    const auto get_first = []( const Pair& p ) -> strings::String {
-        return p.first;
-    };
-
-    const auto range_with_max_size =
-        df_count | VIEWS::filter( count_greater_than_min_df ) |
-        VIEWS::transform( get_first ) | VIEWS::take( _max_size );
-
-    const auto range_without_max_size =
-        df_count | VIEWS::filter( count_greater_than_min_df ) |
-        VIEWS::transform( get_first );
-
-    auto vocab = std::make_shared<std::vector<strings::String>>(
-        _max_size > 0
-            ? stl::collect::vector<strings::String>( range_with_max_size )
-            : stl::collect::vector<strings::String>( range_without_max_size ) );
-
-    std::sort( vocab->begin(), vocab->end() );
-
-    return vocab;
-}
-
-// ----------------------------------------------------------------------------
-
 std::set<std::string> Vocabulary::process_text_field(
     const strings::String& _text_field )
 {
@@ -98,23 +34,6 @@ std::vector<std::string> Vocabulary::split_text_field(
     const auto splitted = StringSplitter::split( _text_field.to_lower().str() );
 
     return remove_empty( splitted );
-}
-
-// ----------------------------------------------------------------------------
-
-std::map<strings::String, Int> Vocabulary::to_map(
-    const stl::Range<const strings::String*> _range )
-{
-    Int value = 0;
-
-    auto m = std::map<strings::String, Int>();
-
-    for ( const auto& key : _range )
-        {
-            m[key] = value++;
-        }
-
-    return m;
 }
 
 // ----------------------------------------------------------------------------

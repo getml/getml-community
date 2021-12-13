@@ -41,13 +41,13 @@ struct TransformParams
     const std::optional<containers::DataFrame> original_population_df_;
 
     /// The peripheral tables.
-    const std::vector<containers::DataFrame> peripheral_dfs_;
+    const std::optional<std::vector<containers::DataFrame>> peripheral_dfs_;
 
     /// The population table.
-    const containers::DataFrame population_df_;
+    const std::optional<containers::DataFrame> population_df_;
 
     /// Impl for the predictors.
-    const predictors::PredictorImpl predictor_impl_;
+    const std::optional<predictors::PredictorImpl> predictor_impl_;
 
     /// The dependency tracker for the predictors.
     const std::shared_ptr<dependency::PredTracker> pred_tracker_;
@@ -60,7 +60,7 @@ struct TransformParams
     const std::optional<containers::DataFrame> validation_df_;
 
     /// Output: The autofeatures to be generated.
-    containers::Features* const autofeatures_ = nullptr;
+    containers::NumericalFeatures* const autofeatures_ = nullptr;
 
     /// Output: The predictors to be fitted.
     std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>* const

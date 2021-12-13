@@ -21,10 +21,11 @@ class DataFrame
     static constexpr const char *ROLE_UNUSED_STRING = "unused_string";
 
    public:
-    DataFrame()
-        : categories_( std::make_shared<Encoding>() ),
+    DataFrame( const std::shared_ptr<memmap::Pool> &_pool = nullptr )
+        : categories_( std::shared_ptr<Encoding>() ),
           frozen_( false ),
-          join_keys_encoding_( std::make_shared<Encoding>() )
+          join_keys_encoding_( std::shared_ptr<Encoding>() ),
+          pool_( _pool )
     {
         update_last_change();
     }
@@ -32,11 +33,13 @@ class DataFrame
     DataFrame(
         const std::string &_name,
         const std::shared_ptr<Encoding> &_categories,
-        const std::shared_ptr<Encoding> &_join_keys_encoding )
+        const std::shared_ptr<Encoding> &_join_keys_encoding,
+        const std::shared_ptr<memmap::Pool> &_pool )
         : categories_( _categories ),
           frozen_( false ),
           join_keys_encoding_( _join_keys_encoding ),
-          name_( _name )
+          name_( _name ),
+          pool_( _pool )
     {
         update_last_change();
     }
@@ -67,7 +70,7 @@ class DataFrame
     DataFrame clone( const std::string _name ) const;
 
     /// Builds indices_, which serve the role of
-    /// an "index" over the join keys
+    /// an index over the join keys
     void create_indices();
 
     /// Returns the fingerprint of the data frame (necessary to build the
@@ -555,6 +558,9 @@ class DataFrame
     /// Trivial (const) accessor
     const std::vector<Column<Float>> &numericals() const { return numericals_; }
 
+    /// Trivial (const) accessor
+    const std::shared_ptr<memmap::Pool> &pool() const { return pool_; }
+
     /// Trivial setter
     void set_build_history( Poco::JSON::Object::Ptr _build_history )
     {
@@ -877,6 +883,13 @@ class DataFrame
             }
     }
 
+    /// Generates a new pool
+    std::shared_ptr<memmap::Pool> make_pool() const
+    {
+        return pool_ ? std::make_shared<memmap::Pool>( pool_->temp_dir() )
+                     : std::shared_ptr<memmap::Pool>();
+    }
+
     /// Throws an error that a particular column does not exist.
     void throw_column_does_not_exist(
         const std::string &_colname, const std::string &_coltype ) const
@@ -927,6 +940,9 @@ class DataFrame
 
     /// Name of the data frame
     std::string name_;
+
+    /// The pool used for memory-mapped data.
+    std::shared_ptr<memmap::Pool> pool_;
 
     /// Numerical data
     std::vector<Column<Float>> numericals_;
@@ -1033,7 +1049,7 @@ std::vector<Column<T>> DataFrame::load_columns(
                     break;
                 }
 
-            Column<T> col;
+            Column<T> col( pool_ );
 
             col.load( fname );
 
@@ -1133,7 +1149,7 @@ DataFrameType DataFrame::to_immutable(
     const auto get_categorical = [this, parse]( const std::string &_name ) {
         const auto &col = categorical( _name );
         return IntColumnType(
-            col.data_ptr(), _name, parse( col.subroles() ), col.unit() );
+            col.const_data_ptr(), _name, parse( col.subroles() ), col.unit() );
     };
 
     const auto categoricals = stl::collect::vector<IntColumnType>(
@@ -1144,7 +1160,7 @@ DataFrameType DataFrame::to_immutable(
     const auto get_join_key = [this, parse]( const std::string &_name ) {
         const auto &col = join_key( _name );
         return IntColumnType(
-            col.data_ptr(), _name, parse( col.subroles() ), col.unit() );
+            col.const_data_ptr(), _name, parse( col.subroles() ), col.unit() );
     };
 
     const auto join_keys = stl::collect::vector<IntColumnType>(
@@ -1164,7 +1180,7 @@ DataFrameType DataFrame::to_immutable(
     const auto get_numerical = [this, parse]( const std::string &_name ) {
         const auto &col = numerical( _name );
         return FloatColumnType(
-            col.data_ptr(), _name, parse( col.subroles() ), col.unit() );
+            col.const_data_ptr(), _name, parse( col.subroles() ), col.unit() );
     };
 
     const auto discretes = stl::collect::vector<FloatColumnType>(
@@ -1178,7 +1194,7 @@ DataFrameType DataFrame::to_immutable(
     const auto get_target = [this, parse]( const std::string &_name ) {
         const auto &col = target( _name );
         return FloatColumnType(
-            col.data_ptr(), _name, parse( col.subroles() ), col.unit() );
+            col.const_data_ptr(), _name, parse( col.subroles() ), col.unit() );
     };
 
     const auto targets =
@@ -1191,7 +1207,7 @@ DataFrameType DataFrame::to_immutable(
     const auto get_text = [this, parse]( const std::string &_name ) {
         const auto &col = text( _name );
         return StringColumnType(
-            col.data_ptr(), _name, parse( col.subroles() ), col.unit() );
+            col.const_data_ptr(), _name, parse( col.subroles() ), col.unit() );
     };
 
     const auto text = stl::collect::vector<StringColumnType>(
@@ -1202,7 +1218,7 @@ DataFrameType DataFrame::to_immutable(
     const auto get_time_stamp = [this, parse]( const std::string &_name ) {
         const auto &col = time_stamp( _name );
         return FloatColumnType(
-            col.data_ptr(), _name, parse( col.subroles() ), col.unit() );
+            col.const_data_ptr(), _name, parse( col.subroles() ), col.unit() );
     };
 
     const auto time_stamps = stl::collect::vector<FloatColumnType>(

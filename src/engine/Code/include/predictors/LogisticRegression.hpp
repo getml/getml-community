@@ -131,7 +131,7 @@ class LogisticRegression : public Predictor
 
         for ( size_t j = 0; j < _X.size(); ++j )
             {
-                ( *_gradients )[j] += _delta * ( *_X[j] )[_i];
+                ( *_gradients )[j] += _delta * _X[j][_i];
             }
 
         _gradients->back() += _delta;
@@ -191,7 +191,7 @@ class LogisticRegression : public Predictor
         Float yhat = weights_.back();
         for ( size_t j = 0; j < _X.size(); ++j )
             {
-                yhat += ( *_X[j] )[_i] * weights_[j];
+                yhat += _X[j][_i] * weights_[j];
             }
         yhat = logistic_function( yhat );
 

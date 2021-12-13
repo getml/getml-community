@@ -47,10 +47,13 @@ int main( int argc, char* argv[] )
 
     // -------------------------------------------
 
-    const auto categories = std::make_shared<engine::containers::Encoding>();
+    const auto pool = options.make_pool();
+
+    const auto categories =
+        std::make_shared<engine::containers::Encoding>( pool );
 
     const auto join_keys_encoding =
-        std::make_shared<engine::containers::Encoding>();
+        std::make_shared<engine::containers::Encoding>( pool );
 
     // -------------------------------------------
 
@@ -145,7 +148,6 @@ int main( int argc, char* argv[] )
             read_write_lock );
 
     // -------------------------------------------
-    // This is where the actual communication begins
 
     const auto shutdown = std::make_shared<std::atomic<bool>>( false );
 

@@ -12,11 +12,11 @@ void StandardScaler::fit( const std::vector<CFloatColumn>& _X_numerical )
 
     for ( size_t j = 0; j < _X_numerical.size(); ++j )
         {
-            const auto n = static_cast<Float>( _X_numerical[j]->size() );
+            const auto n = static_cast<Float>( _X_numerical[j].size() );
 
             const auto mean =
                 std::accumulate(
-                    _X_numerical[j]->begin(), _X_numerical[j]->end(), 0.0 ) /
+                    _X_numerical[j].begin(), _X_numerical[j].end(), 0.0 ) /
                 n;
 
             auto mult = [mean, n]( Float val1, Float val2 ) {
@@ -24,9 +24,9 @@ void StandardScaler::fit( const std::vector<CFloatColumn>& _X_numerical )
             };
 
             std_[j] = std::inner_product(
-                _X_numerical[j]->begin(),
-                _X_numerical[j]->end(),
-                _X_numerical[j]->begin(),
+                _X_numerical[j].begin(),
+                _X_numerical[j].end(),
+                _X_numerical[j].begin(),
                 0.0,
                 std::plus<Float>(),
                 mult );
@@ -122,16 +122,16 @@ std::vector<CFloatColumn> StandardScaler::transform(
 
     for ( size_t j = 0; j < _X_numerical.size(); ++j )
         {
-            output.push_back( std::make_shared<std::vector<Float>>(
-                _X_numerical[j]->size() ) );
+            output.push_back(
+                CFloatColumn( std::make_shared<std::vector<Float>>(
+                    _X_numerical[j].size() ) ) );
 
             if ( std_[j] != 0.0 )
                 {
-                    for ( size_t i = 0; i < _X_numerical[j]->size(); ++i )
+                    for ( size_t i = 0; i < _X_numerical[j].size(); ++i )
                         {
-                            ( *output.back() )[i] =
-                                ( ( *_X_numerical[j] )[i] - mean_[j] ) /
-                                std_[j];
+                            output.back()[i] =
+                                ( _X_numerical[j][i] - mean_[j] ) / std_[j];
                         }
                 }
         }

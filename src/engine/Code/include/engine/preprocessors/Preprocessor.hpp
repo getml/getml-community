@@ -45,7 +45,7 @@ class Preprocessor
 
     /// Expresses the preprocessor as SQL, if applicable.
     virtual std::vector<std::string> to_sql(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const helpers::StringIterator& _categories,
         const std::shared_ptr<const helpers::SQLDialectGenerator>&
             _sql_dialect_generator ) const = 0;
 

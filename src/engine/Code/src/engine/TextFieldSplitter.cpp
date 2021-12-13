@@ -131,12 +131,13 @@ TextFieldSplitter TextFieldSplitter::from_json_obj(
 // ----------------------------------------------------
 
 containers::DataFrame TextFieldSplitter::make_new_df(
+    const std::shared_ptr<memmap::Pool> _pool,
     const std::string& _df_name,
     const containers::Column<strings::String>& _col ) const
 {
     const auto [rownums, words] = split_text_fields_on_col( _col );
 
-    auto df = containers::DataFrame();
+    auto df = containers::DataFrame( _pool );
 
     df.set_name( _df_name + helpers::Macros::text_field() + _col.name() );
 
@@ -193,7 +194,7 @@ Poco::JSON::Object::Ptr TextFieldSplitter::to_json_obj() const
 // ----------------------------------------------------
 
 std::vector<std::string> TextFieldSplitter::to_sql(
-    const std::shared_ptr<const std::vector<strings::String>>& _categories,
+    const helpers::StringIterator& _categories,
     const std::shared_ptr<const helpers::SQLDialectGenerator>&
         _sql_dialect_generator ) const
 {
@@ -269,10 +270,14 @@ void TextFieldSplitter::transform_df(
 
     // ----------------------------------------------------
 
+    const auto pool =
+        _df.pool() ? std::make_shared<memmap::Pool>( _df.pool()->temp_dir() )
+                   : std::shared_ptr<memmap::Pool>();
+
     const auto make_df =
-        [this, &_df]( const containers::Column<strings::String>& _col )
+        [this, pool, &_df]( const containers::Column<strings::String>& _col )
         -> containers::DataFrame {
-        const auto df = make_new_df( _df.name(), _col );
+        const auto df = make_new_df( pool, _df.name(), _col );
         return df;
     };
 

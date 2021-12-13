@@ -1,0 +1,4 @@
+set(
+    MEMMAP_OBJ
+    ${MEMMAP_SOURCE_DIRECTORY}/Pool.cpp
+)

@@ -12,7 +12,7 @@ std::optional<containers::Column<Int>> EMailDomain::extract_domain(
 {
     auto str_col = extract_domain_string( _col );
 
-    auto int_col = containers::Column<Int>( str_col.nrows() );
+    auto int_col = containers::Column<Int>( _col.pool(), str_col.nrows() );
 
     for ( size_t i = 0; i < str_col.nrows(); ++i )
         {
@@ -39,7 +39,7 @@ containers::Column<Int> EMailDomain::extract_domain(
 {
     auto str_col = extract_domain_string( _col );
 
-    auto int_col = containers::Column<Int>( str_col.nrows() );
+    auto int_col = containers::Column<Int>( _col.pool(), str_col.nrows() );
 
     for ( size_t i = 0; i < str_col.nrows(); ++i )
         {
@@ -58,9 +58,9 @@ containers::Column<Int> EMailDomain::extract_domain(
 containers::Column<strings::String> EMailDomain::extract_domain_string(
     const containers::Column<strings::String>& _col ) const
 {
-    auto result = containers::Column<strings::String>( _col.nrows() );
+    auto result = containers::Column<strings::String>( _col.pool() );
 
-    for ( size_t i = 0; i < result.nrows(); ++i )
+    for ( size_t i = 0; i < _col.nrows(); ++i )
         {
             const auto str = _col[i].str();
 
@@ -78,7 +78,7 @@ containers::Column<strings::String> EMailDomain::extract_domain_string(
                     continue;
                 }
 
-            result[i] = strings::String( domain );
+            result.push_back( strings::String( domain ) );
         }
 
     return result;

@@ -17,7 +17,7 @@ std::vector<Float> RSquared::calculate(
 
     const auto calc_r =
         [&mean_targets, &var_targets, &_targets, &_rownums](
-            const std::shared_ptr<const std::vector<Float>> feature ) -> Float {
+            const helpers::Feature<Float, false>& feature ) -> Float {
         return RSquared::calc_for_feature(
             mean_targets, var_targets, _targets, feature, _rownums );
     };
@@ -33,7 +33,7 @@ Float RSquared::calc_for_feature(
     const std::vector<Float>& _mean_targets,
     const std::vector<Float>& _var_targets,
     const std::vector<containers::Column<Float>>& _targets,
-    const std::shared_ptr<const std::vector<Float>>& _feature,
+    const helpers::Feature<Float, false>& _feature,
     const std::vector<size_t>& _rownums )
 {
     const auto calc =
@@ -66,7 +66,7 @@ Float RSquared::calc_for_target(
     const Float _mean_target,
     const Float _var_target,
     const containers::Column<Float>& _targets,
-    const std::shared_ptr<const std::vector<Float>> _feature,
+    const helpers::Feature<Float, false>& _feature,
     const std::vector<size_t>& _rownums )
 {
     if ( _var_target == 0.0 )
@@ -74,13 +74,11 @@ Float RSquared::calc_for_target(
             return 0.0;
         }
 
-    assert_true( _feature );
+    assert_true( _feature.size() == _targets.nrows_ );
 
-    assert_true( _feature->size() == _targets.nrows_ );
-
-    const auto get_feature = [_feature]( size_t i ) -> Float {
-        assert_true( i < _feature->size() );
-        return _feature->at( i );
+    const auto get_feature = [&_feature]( size_t i ) -> Float {
+        assert_true( i < _feature.size() );
+        return _feature[i];
     };
 
     const auto get_target = [_targets]( size_t i ) -> Float {

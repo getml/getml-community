@@ -52,11 +52,11 @@ void DataFrame::add_float_vectors(
 
     for ( size_t i = 0; i < _vectors.size(); ++i )
         {
-            assert_true( _vectors[i] );
+            assert_true( _vectors.at( i ) );
 
-            auto col = Column<Float>( _vectors[i] );
+            auto col = Column<Float>( _vectors.at( i ) );
 
-            col.set_name( _names[i] );
+            col.set_name( _names.at( i ) );
 
             add_float_column( col, _role );
         }
@@ -80,7 +80,7 @@ void DataFrame::add_int_column(
 
             assert_true( join_keys_.size() == indices_.size() + 1 );
 
-            indices_.push_back( DataFrameIndex() );
+            indices_.emplace_back( DataFrameIndex( pool_ ) );
 
             create_indices();
 
@@ -379,6 +379,7 @@ void DataFrame::check_null( const Column<Float> &_col ) const
     const auto is_nan_or_inf = []( const Float val ) {
         return std::isnan( val ) || std::isinf( val );
     };
+
     const bool any_null =
         std::any_of( _col.begin(), _col.end(), is_nan_or_inf );
 
@@ -480,7 +481,7 @@ void DataFrame::check_plausibility() const
 
 DataFrame DataFrame::clone( const std::string _name ) const
 {
-    auto df = DataFrame( _name, categories_, join_keys_encoding_ );
+    auto df = DataFrame( _name, categories_, join_keys_encoding_, make_pool() );
 
     for ( size_t i = 0; i < num_categoricals(); ++i )
         {
@@ -582,7 +583,8 @@ void DataFrame::create_indices()
 {
     if ( indices().size() != join_keys().size() )
         {
-            indices() = std::vector<DataFrameIndex>( join_keys().size() );
+            indices() = std::vector<DataFrameIndex>(
+                join_keys().size(), DataFrameIndex( pool_ ) );
         }
 
     for ( size_t i = 0; i < join_keys().size(); ++i )
@@ -677,12 +679,13 @@ void DataFrame::from_csv(
 
     // ------------------------------------------------------------------------
 
-    auto df = containers::DataFrame( name(), categories_, join_keys_encoding_ );
+    auto df = containers::DataFrame(
+        name(), categories_, join_keys_encoding_, make_pool() );
 
     for ( size_t i = 0; i < _fnames.size(); ++i )
         {
             auto local_df = containers::DataFrame(
-                name(), categories_, join_keys_encoding_ );
+                name(), categories_, join_keys_encoding_, make_pool() );
 
             const std::shared_ptr<io::Reader> reader =
                 std::make_shared<io::CSVReader>(
@@ -772,7 +775,8 @@ void DataFrame::from_db(
 
     // ----------------------------------------
 
-    auto df = DataFrame( name(), categories_, join_keys_encoding_ );
+    auto df =
+        DataFrame( name(), categories_, join_keys_encoding_, make_pool() );
 
     df.add_int_vectors( _schema.categoricals_, categoricals, ROLE_CATEGORICAL );
 
@@ -812,7 +816,8 @@ void DataFrame::from_json(
 {
     // ----------------------------------------
 
-    auto df = DataFrame( name(), categories_, join_keys_encoding_ );
+    auto df =
+        DataFrame( name(), categories_, join_keys_encoding_, make_pool() );
 
     df.from_json(
         _obj, _schema.categoricals_, ROLE_CATEGORICAL, categories_.get() );
@@ -859,7 +864,7 @@ void DataFrame::from_json(
 
             if ( _encoding )
                 {
-                    auto column = Column<Int>( arr->size() );
+                    auto column = Column<Int>( pool_, arr->size() );
 
                     for ( size_t j = 0; j < arr->size(); ++j )
                         {
@@ -875,11 +880,11 @@ void DataFrame::from_json(
                 }
             else
                 {
-                    auto column = Column<strings::String>( arr->size() );
+                    auto column = Column<strings::String>( pool_ );
 
                     for ( size_t j = 0; j < arr->size(); ++j )
-                        column[j] = arr->getElement<std::string>(
-                            static_cast<unsigned int>( j ) );
+                        column.push_back( arr->getElement<std::string>(
+                            static_cast<unsigned int>( j ) ) );
 
                     column.set_name( _names[i] );
 
@@ -909,12 +914,12 @@ void DataFrame::from_json(
             if ( _role == ROLE_UNUSED || _role == ROLE_UNUSED_STRING ||
                  _role == ROLE_TEXT )
                 {
-                    auto column = Column<strings::String>( arr->size() );
+                    auto column = Column<strings::String>( pool_ );
 
                     for ( size_t j = 0; j < arr->size(); ++j )
                         {
-                            column[j] = arr->getElement<std::string>(
-                                static_cast<unsigned int>( j ) );
+                            column.push_back( arr->getElement<std::string>(
+                                static_cast<unsigned int>( j ) ) );
                         }
 
                     column.set_name( _names[i] );
@@ -923,7 +928,7 @@ void DataFrame::from_json(
                 }
             else
                 {
-                    auto column = Column<Float>( arr->size() );
+                    auto column = Column<Float>( pool_, arr->size() );
 
                     for ( size_t j = 0; j < arr->size(); ++j )
                         {
@@ -951,7 +956,7 @@ void DataFrame::from_json(
 
             const auto arr = JSON::get_array( _obj, name );
 
-            auto column = Column<Float>( arr->size() );
+            auto column = Column<Float>( pool_, arr->size() );
 
             for ( size_t j = 0; j < arr->size(); ++j )
                 {
@@ -1118,7 +1123,8 @@ void DataFrame::from_query(
 
     // ----------------------------------------
 
-    auto df = DataFrame( name(), categories_, join_keys_encoding_ );
+    auto df =
+        DataFrame( name(), categories_, join_keys_encoding_, make_pool() );
 
     df.add_int_vectors( _schema.categoricals_, categoricals, ROLE_CATEGORICAL );
 
@@ -1274,7 +1280,8 @@ void DataFrame::from_reader(
 
     // ------------------------------------------------------------------------
 
-    auto df = DataFrame( name(), categories_, join_keys_encoding_ );
+    auto df =
+        DataFrame( name(), categories_, join_keys_encoding_, make_pool() );
 
     df.add_int_vectors( _schema.categoricals_, categoricals, ROLE_CATEGORICAL );
 
@@ -1343,12 +1350,13 @@ void DataFrame::from_s3(
 
     // ------------------------------------------------------------------------
 
-    auto df = containers::DataFrame( name(), categories_, join_keys_encoding_ );
+    auto df = containers::DataFrame(
+        name(), categories_, join_keys_encoding_, make_pool() );
 
     for ( size_t i = 0; i < _fnames.size(); ++i )
         {
             auto local_df = containers::DataFrame(
-                name(), categories_, join_keys_encoding_ );
+                name(), categories_, join_keys_encoding_, make_pool() );
 
             const std::shared_ptr<io::Reader> reader =
                 std::make_shared<io::S3Reader>(
@@ -2146,7 +2154,8 @@ void DataFrame::save_text(
 
 void DataFrame::sort_by_key( const std::vector<size_t> &_key )
 {
-    auto df = DataFrame( name(), categories_, join_keys_encoding_ );
+    auto df =
+        DataFrame( name(), categories_, join_keys_encoding_, make_pool() );
 
     for ( size_t i = 0; i < num_categoricals(); ++i )
         {
@@ -2439,7 +2448,8 @@ Schema DataFrame::to_schema( const bool _separate_discrete ) const
 
 void DataFrame::where( const std::vector<bool> &_condition )
 {
-    auto df = DataFrame( name(), categories_, join_keys_encoding_ );
+    auto df =
+        DataFrame( name(), categories_, join_keys_encoding_, make_pool() );
 
     for ( size_t i = 0; i < num_categoricals(); ++i )
         {

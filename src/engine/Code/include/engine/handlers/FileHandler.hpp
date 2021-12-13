@@ -28,9 +28,8 @@ struct FileHandler
         const std::map<std::string, containers::DataFrame>& _data_frames,
         const std::shared_ptr<containers::Encoding>& _categories,
         const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
-        const std::string& _project_directory,
-        const std::string& _name/*,
-        licensing::LicenseChecker& _license_checker*/ );
+        const config::Options& _options,
+        const std::string& _name );
 
     /// Load the encodings
     static void load_encodings(
@@ -64,8 +63,9 @@ struct FileHandler
     /// Saves the encodings to disk
     static void save_encodings(
         const std::string& _path,
-        const containers::Encoding& _categories,
-        const containers::Encoding& _join_keys_encodings );
+        const std::shared_ptr<const containers::Encoding> _categories,
+        const std::shared_ptr<const containers::Encoding>
+            _join_keys_encodings );
 
     /// Writes categories or join keys encoding to file
     static void write_string_big_endian(

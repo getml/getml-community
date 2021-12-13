@@ -291,13 +291,16 @@ containers::DataFrame ArrowHandler::table_to_df(
         return containers::Column<Int>( data_ptr, _col.name() );
     };
 
-    auto df = containers::DataFrame( _name, categories_, join_keys_encoding_ );
+    const auto pool = options_.make_pool();
+
+    auto df =
+        containers::DataFrame( _name, categories_, join_keys_encoding_, pool );
 
     for ( const auto& colname : _schema.categoricals_ )
         {
             const auto arr = _table->GetColumnByName( colname );
             const auto col = to_int_column(
-                to_column<strings::String>( colname, arr ), categories_ );
+                to_column<strings::String>( pool, colname, arr ), categories_ );
             df.add_int_column( col, containers::DataFrame::ROLE_CATEGORICAL );
         }
 
@@ -305,7 +308,7 @@ containers::DataFrame ArrowHandler::table_to_df(
         {
             const auto arr = _table->GetColumnByName( colname );
             const auto col = to_int_column(
-                to_column<strings::String>( colname, arr ),
+                to_column<strings::String>( pool, colname, arr ),
                 join_keys_encoding_ );
             df.add_int_column( col, containers::DataFrame::ROLE_JOIN_KEY );
         }
@@ -314,7 +317,7 @@ containers::DataFrame ArrowHandler::table_to_df(
         {
             const auto arr = _table->GetColumnByName( colname );
             df.add_float_column(
-                to_column<Float>( colname, arr ),
+                to_column<Float>( pool, colname, arr ),
                 containers::DataFrame::ROLE_NUMERICAL );
         }
 
@@ -322,7 +325,7 @@ containers::DataFrame ArrowHandler::table_to_df(
         {
             const auto arr = _table->GetColumnByName( colname );
             df.add_float_column(
-                to_column<Float>( colname, arr ),
+                to_column<Float>( pool, colname, arr ),
                 containers::DataFrame::ROLE_TARGET );
         }
 
@@ -330,7 +333,7 @@ containers::DataFrame ArrowHandler::table_to_df(
         {
             const auto arr = _table->GetColumnByName( colname );
             df.add_string_column(
-                to_column<strings::String>( colname, arr ),
+                to_column<strings::String>( pool, colname, arr ),
                 containers::DataFrame::ROLE_TEXT );
         }
 
@@ -338,7 +341,7 @@ containers::DataFrame ArrowHandler::table_to_df(
         {
             const auto arr = _table->GetColumnByName( colname );
             df.add_float_column(
-                to_column<Float>( colname, arr ),
+                to_column<Float>( pool, colname, arr ),
                 containers::DataFrame::ROLE_TIME_STAMP );
         }
 
@@ -346,7 +349,7 @@ containers::DataFrame ArrowHandler::table_to_df(
         {
             const auto arr = _table->GetColumnByName( colname );
             df.add_float_column(
-                to_column<Float>( colname, arr ),
+                to_column<Float>( pool, colname, arr ),
                 containers::DataFrame::ROLE_UNUSED_FLOAT );
         }
 
@@ -354,7 +357,7 @@ containers::DataFrame ArrowHandler::table_to_df(
         {
             const auto arr = _table->GetColumnByName( colname );
             df.add_string_column(
-                to_column<strings::String>( colname, arr ),
+                to_column<strings::String>( pool, colname, arr ),
                 containers::DataFrame::ROLE_UNUSED_STRING );
         }
 

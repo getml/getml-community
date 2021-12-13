@@ -22,6 +22,10 @@ struct TransformParams
     /// The population table used.
     const DataFrame population_;
 
+    /// The temporary directory to be used to place the memory mapping (when set
+    /// to nullopt, everything will be done in memory)
+    const std::optional<std::string> temp_dir_;
+
     /// Contains the word indices of the text fields.
     const WordIndexContainer word_indices_;
 };

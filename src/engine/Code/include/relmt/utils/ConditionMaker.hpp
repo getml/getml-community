@@ -35,7 +35,7 @@ class ConditionMaker
     /// Generates a condition for when the column is greater than the critical
     /// value.
     std::string condition_greater(
-        const std::vector<strings::String>& _categories,
+        const helpers::StringIterator& _categories,
         const VocabForDf& _vocab_popul,
         const VocabForDf& _vocab_perip,
         const std::shared_ptr<const helpers::SQLDialectGenerator>&
@@ -48,7 +48,7 @@ class ConditionMaker
     /// Generates a condition for when the column is smaller than the critical
     /// value.
     std::string condition_smaller(
-        const std::vector<strings::String>& _categories,
+        const helpers::StringIterator& _categories,
         const VocabForDf& _vocab_popul,
         const VocabForDf& _vocab_perip,
         const std::shared_ptr<const helpers::SQLDialectGenerator>&
@@ -70,7 +70,7 @@ class ConditionMaker
    private:
     /// Returns a list of the categories.
     std::string list_categories(
-        const std::vector<strings::String>& _categories,
+        const helpers::StringIterator& _categories,
         const containers::Split& _split ) const;
 
     /// Returns a list of the words.

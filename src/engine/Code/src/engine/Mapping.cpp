@@ -164,7 +164,7 @@ std::pair<Int, std::vector<Float>> Mapping::calc_agg_targets(
 // ----------------------------------------------------
 
 std::vector<std::string> Mapping::categorical_columns_to_sql(
-    const std::shared_ptr<const std::vector<strings::String>>& _categories,
+    const helpers::StringIterator& _categories,
     const std::shared_ptr<const helpers::SQLDialectGenerator>&
         _sql_dialect_generator ) const
 {
@@ -193,7 +193,7 @@ std::vector<std::string> Mapping::categorical_columns_to_sql(
 // ----------------------------------------------------
 
 std::string Mapping::categorical_or_text_column_to_sql(
-    const std::shared_ptr<const std::vector<strings::String>>& _categories,
+    const helpers::StringIterator& _categories,
     const std::shared_ptr<const helpers::SQLDialectGenerator>&
         _sql_dialect_generator,
     const std::string& _name,
@@ -201,8 +201,6 @@ std::string Mapping::categorical_or_text_column_to_sql(
     const size_t _weight_num,
     const bool _is_text ) const
 {
-    assert_true( _categories );
-
     assert_true( _ptr );
 
     assert_true( _sql_dialect_generator );
@@ -221,11 +219,11 @@ std::string Mapping::categorical_or_text_column_to_sql(
 
             assert_true( p.first >= 0 );
 
-            assert_true( static_cast<size_t>( p.first ) < _categories->size() );
+            assert_true( static_cast<size_t>( p.first ) < _categories.size() );
 
             const std::string end = ( i == pairs.size() - 1 ) ? ";\n\n" : ",\n";
 
-            sql << begin << "('" << _categories->at( p.first ).str() << "', "
+            sql << begin << "('" << _categories.at( p.first ).str() << "', "
                 << io::Parser::to_precise_string( p.second ) << ")" << end;
         }
 
@@ -414,14 +412,17 @@ std::vector<size_t> Mapping::find_output_ix(
                     continue;
                 }
 
-            const auto it = _output_table.find( _input_table.join_key( ix ) );
+            const auto [begin, end] =
+                _output_table.find( _input_table.join_key( ix ) );
 
             const auto time_stamp_input = _input_table.time_stamp( ix );
 
             const auto upper_time_stamp = _input_table.upper_time_stamp( ix );
 
-            for ( const auto ix_out : it->second )
+            for ( auto it = begin; it != end; ++it )
                 {
+                    const auto ix_out = *it;
+
                     assert_true( ix_out >= 0 );
                     assert_true( ix_out < _output_table.nrows() );
 
@@ -1569,21 +1570,20 @@ std::vector<std::string> Mapping::text_columns_to_sql(
     const auto find_vocabulary = [this]() {
         if ( prefix_ == "" )
             {
-                return vocabulary_->population();
+                return vocabulary_->population_iterators();
             }
 
         for ( size_t i = 0; i < peripheral_schema_->size(); ++i )
             {
                 if ( peripheral_schema_->at( i ).name_ == table_name_ )
                     {
-                        return vocabulary_->peripheral().at( i );
+                        return vocabulary_->peripheral_iterators().at( i );
                     }
             }
 
         assert_true( false );
 
-        return std::vector<
-            std::shared_ptr<const std::vector<strings::String>>>();
+        return std::vector<helpers::StringIterator>();
     };
 
     const auto& vocabulary = find_vocabulary();
@@ -1678,7 +1678,7 @@ Poco::JSON::Object::Ptr Mapping::to_json_obj() const
 // ----------------------------------------------------
 
 std::vector<std::string> Mapping::to_sql(
-    const std::shared_ptr<const std::vector<strings::String>>& _categories,
+    const helpers::StringIterator& _categories,
     const std::shared_ptr<const helpers::SQLDialectGenerator>&
         _sql_dialect_generator ) const
 {

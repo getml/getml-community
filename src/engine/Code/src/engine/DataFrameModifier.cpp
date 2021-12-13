@@ -9,14 +9,19 @@ namespace pipelines
 void DataFrameModifier::add_join_keys(
     const Poco::JSON::Object& _population_placeholder,
     const std::vector<std::string>& _peripheral_names,
+    const std::optional<std::string>& _temp_dir,
     containers::DataFrame* _population_df,
     std::vector<containers::DataFrame>* _peripheral_dfs,
     std::shared_ptr<containers::Encoding> _encoding )
 {
     // ------------------------------------------------------------------------
 
+    const auto pool = _encoding || !_temp_dir
+                          ? std::shared_ptr<memmap::Pool>()
+                          : std::make_shared<memmap::Pool>( *_temp_dir );
+
     const auto encoding =
-        _encoding ? _encoding : std::make_shared<containers::Encoding>();
+        _encoding ? _encoding : std::make_shared<containers::Encoding>( pool );
 
     // ------------------------------------------------------------------------
 
@@ -83,6 +88,7 @@ void DataFrameModifier::add_join_keys(
             add_join_keys(
                 *ptr,
                 _peripheral_names,
+                _temp_dir,
                 new_population,
                 _peripheral_dfs,
                 encoding );
@@ -100,7 +106,7 @@ void DataFrameModifier::add_jk( containers::DataFrame* _df )
             return;
         }
 
-    auto new_jk = containers::Column<Int>( _df->nrows() );
+    auto new_jk = containers::Column<Int>( _df->pool(), _df->nrows() );
 
     new_jk.set_name( helpers::Macros::no_join_key() );
 
@@ -116,7 +122,7 @@ void DataFrameModifier::add_rowid( containers::DataFrame* _df )
             return;
         }
 
-    auto new_ts = containers::Column<Float>( _df->nrows() );
+    auto new_ts = containers::Column<Float>( _df->pool(), _df->nrows() );
 
     new_ts.set_name( helpers::Macros::rowid() );
 
@@ -310,7 +316,7 @@ void DataFrameModifier::concat_join_keys(
 
     const auto old_join_keys = get_old_join_keys( _name, *_df );
 
-    auto new_join_key = containers::Column<Int>( _df->nrows() );
+    auto new_join_key = containers::Column<Int>( _df->pool(), _df->nrows() );
 
     new_join_key.set_name( _name );
 
@@ -427,7 +433,8 @@ std::vector<containers::Column<Float>> DataFrameModifier::make_time_stamps(
 
     if ( _horizon != 0.0 )
         {
-            cols.emplace_back( containers::Column<Float>( _df.nrows() ) );
+            cols.emplace_back(
+                containers::Column<Float>( _df.pool(), _df.nrows() ) );
 
             cols.back().set_unit( ts.unit() );
 
@@ -439,7 +446,8 @@ std::vector<containers::Column<Float>> DataFrameModifier::make_time_stamps(
 
     if ( _memory > 0.0 )
         {
-            cols.emplace_back( containers::Column<Float>( _df.nrows() ) );
+            cols.emplace_back(
+                containers::Column<Float>( _df.pool(), _df.nrows() ) );
 
             cols.back().set_unit( ts.unit() );
 

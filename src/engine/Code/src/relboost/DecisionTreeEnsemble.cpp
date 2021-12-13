@@ -872,27 +872,14 @@ void DecisionTreeEnsemble::select_features( const std::vector<size_t> &_index )
 containers::Features DecisionTreeEnsemble::transform(
     const TransformParams &_params ) const
 {
-    // ------------------------------------------------------
-
     if ( _params.population_.nrows() == 0 )
         {
             throw std::runtime_error(
                 "Population table needs to contain at least some data!" );
         }
 
-    // -------------------------------------------------------
-
-    const auto init_feature = [&_params]( const size_t ix ) {
-        return std::make_shared<std::vector<Float>>(
-            _params.population_.nrows() );
-    };
-
-    auto range = _params.index_ | VIEWS::transform( init_feature );
-
-    auto features =
-        stl::collect::vector<std::shared_ptr<std::vector<Float>>>( range );
-
-    // -------------------------------------------------------
+    auto features = containers::Features(
+        _params.population_.nrows(), _params.index_.size(), _params.temp_dir_ );
 
     transform_spawn_threads(
         _params.population_,
@@ -903,11 +890,7 @@ containers::Features DecisionTreeEnsemble::transform(
         _params.logger_,
         &features );
 
-    // -------------------------------------------------------
-
     return features;
-
-    // ------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -1135,7 +1118,7 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj(
 // ----------------------------------------------------------------------------
 
 void DecisionTreeEnsemble::subfeatures_to_sql(
-    const std::shared_ptr<const std::vector<strings::String>> &_categories,
+    const helpers::StringIterator &_categories,
     const helpers::VocabularyTree &_vocabulary,
     const std::shared_ptr<const helpers::SQLDialectGenerator>
         &_sql_dialect_generator,
@@ -1230,7 +1213,7 @@ void DecisionTreeEnsemble::subfeatures_to_sql(
 // ----------------------------------------------------------------------------
 
 std::vector<std::string> DecisionTreeEnsemble::to_sql(
-    const std::shared_ptr<const std::vector<strings::String>> &_categories,
+    const helpers::StringIterator &_categories,
     const helpers::VocabularyTree &_vocabulary,
     const std::shared_ptr<const helpers::SQLDialectGenerator>
         &_sql_dialect_generator,
@@ -1240,8 +1223,6 @@ std::vector<std::string> DecisionTreeEnsemble::to_sql(
     const std::shared_ptr<const std::map<std::string, std::string>>
         &_peripheral_map ) const
 {
-    assert_true( _categories );
-
     std::vector<std::string> sql;
 
     if ( _subfeatures )
@@ -1284,7 +1265,7 @@ std::vector<std::string> DecisionTreeEnsemble::to_sql(
                 has_normal_subfeatures, output_has_prop, input_has_prop );
 
             sql.push_back( tree.to_sql(
-                *_categories,
+                _categories,
                 _vocabulary,
                 _sql_dialect_generator,
                 _feature_prefix,

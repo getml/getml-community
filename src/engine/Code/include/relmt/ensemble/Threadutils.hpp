@@ -28,7 +28,7 @@ class Threadutils
     static void copy(
         const std::vector<size_t> _rows,
         const std::vector<Float>& _local_feature,
-        std::vector<Float>* _global_feature );
+        helpers::Feature<Float, false>* _global_feature );
 
     /// Fits the relboost ensemble as a feature learner.
     static void fit_as_feature_learner( const ThreadutilsFitParams& _params );

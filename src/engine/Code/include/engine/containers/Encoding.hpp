@@ -9,147 +9,218 @@ namespace containers
 
 class Encoding
 {
+    using InMemoryType = std::shared_ptr<InMemoryEncoding>;
+    using MemoryMappedType = std::shared_ptr<MemoryMappedEncoding>;
+
+    using ConstInMemoryType = std::shared_ptr<const InMemoryEncoding>;
+    using ConstMemoryMappedType = std::shared_ptr<const MemoryMappedEncoding>;
+
    public:
     Encoding(
+        const std::shared_ptr<memmap::Pool>& _pool,
         const std::shared_ptr<const Encoding> _subencoding =
             std::shared_ptr<const Encoding>() )
-        : null_value_( "NULL" ),
-          subencoding_( _subencoding ),
-          subsize_( _subencoding ? _subencoding->size() : 0 ),
-          vector_( std::make_shared<std::vector<strings::String>>( 0 ) )
     {
+        if ( _pool )
+            {
+                init<MemoryMappedEncoding>( _pool, _subencoding );
+            }
+        else
+            {
+                init<InMemoryEncoding>( _pool, _subencoding );
+            }
     }
 
     ~Encoding() = default;
 
-    // -------------------------------
-
+   public:
     /// Appends all elements of a different encoding.
-    void append( const Encoding& _other, bool _include_subencoding = false );
-
-    /// Copies a vector
-    Encoding& operator=( const std::vector<std::string>& _vector );
-
-    // -------------------------------
-
-    /// Returns beginning of unique integers
-    std::vector<strings::String>::const_iterator begin() const
+    void append( const Encoding& _other, bool _include_subencoding = false )
     {
-        return vector_->cbegin();
+        bool success = append<InMemoryType>( _other, _include_subencoding );
+        success =
+            success || append<MemoryMappedType>( _other, _include_subencoding );
+        assert_true( success );
     }
 
     /// Deletes all entries
     void clear()
     {
-        map_ =
-            std::unordered_map<strings::String, Int, strings::StringHasher>();
-        *vector_ = std::vector<strings::String>();
+        if ( std::holds_alternative<InMemoryType>( pimpl_ ) )
+            {
+                const auto pimpl = std::get<InMemoryType>( pimpl_ );
+                assert_true( pimpl );
+                pimpl->clear();
+                return;
+            }
+
+        assert_true( std::holds_alternative<MemoryMappedType>( pimpl_ ) );
+        const auto pimpl = std::get<MemoryMappedType>( pimpl_ );
+        assert_true( pimpl );
+        pimpl->clear();
     }
 
-    /// Returns end of unique integers
-    std::vector<strings::String>::const_iterator end() const
+    /// Copies a vector
+    Encoding& operator=( const std::vector<std::string>& _vector )
     {
-        return vector_->cend();
+        if ( std::holds_alternative<InMemoryType>( pimpl_ ) )
+            {
+                const auto pimpl = std::get<InMemoryType>( pimpl_ );
+                assert_true( pimpl );
+                *pimpl = _vector;
+                return *this;
+            }
+
+        assert_true( std::holds_alternative<MemoryMappedType>( pimpl_ ) );
+        const auto pimpl = std::get<MemoryMappedType>( pimpl_ );
+        assert_true( pimpl );
+        *pimpl = _vector;
+        return *this;
     }
 
-    /// Returns the integer mapped to a string.
+    /// Returns the integer mapped to a string or the string mapped to an
+    /// integer, updates the mapping, if necessary.
     template <class T>
-    typename std::conditional<
-        std::is_same<T, std::string>::value ||
-            std::is_same<T, strings::String>::value,
-        Int,
-        const strings::String&>::type
-    operator[]( const T& _val )
+    auto operator[]( const T& _val )
     {
-        if constexpr ( std::is_same<T, std::string>() )
+        if ( std::holds_alternative<InMemoryType>( pimpl_ ) )
             {
-                return string_to_int( strings::String( _val ) );
+                const auto pimpl = std::get<InMemoryType>( pimpl_ );
+                assert_true( pimpl );
+                return ( *pimpl )[_val];
             }
 
-        if constexpr ( std::is_same<T, strings::String>() )
-            {
-                return string_to_int( _val );
-            }
-
-        if constexpr (
-            !std::is_same<T, std::string>() &&
-            !std::is_same<T, strings::String>() )
-            {
-                return int_to_string( _val );
-            }
+        assert_true( std::holds_alternative<MemoryMappedType>( pimpl_ ) );
+        const auto pimpl = std::get<MemoryMappedType>( pimpl_ );
+        assert_true( pimpl );
+        return ( *pimpl )[_val];
     }
 
-    /// Returns the integer mapped to a string (const version).
+    /// Returns the integer mapped to a string or the string mapped to an
+    /// integer (const version).
     template <class T>
-    typename std::conditional<
-        std::is_same<T, std::string>::value ||
-            std::is_same<T, strings::String>::value,
-        Int,
-        const strings::String&>::type
-    operator[]( const T& _val ) const
+    auto operator[]( const T& _val ) const
     {
-        if constexpr ( std::is_same<T, std::string>() )
+        if ( std::holds_alternative<InMemoryType>( pimpl_ ) )
             {
-                return string_to_int( strings::String( _val ) );
+                const ConstInMemoryType pimpl =
+                    std::get<InMemoryType>( pimpl_ );
+                assert_true( pimpl );
+                return ( *pimpl )[_val];
             }
 
-        if constexpr ( std::is_same<T, strings::String>() )
-            {
-                return string_to_int( _val );
-            }
-
-        if constexpr (
-            !std::is_same<T, std::string>() &&
-            !std::is_same<T, strings::String>() )
-            {
-                return int_to_string( _val );
-            }
+        assert_true( std::holds_alternative<MemoryMappedType>( pimpl_ ) );
+        const ConstMemoryMappedType pimpl =
+            std::get<MemoryMappedType>( pimpl_ );
+        assert_true( pimpl );
+        return ( *pimpl )[_val];
     }
 
     /// Number of encoded elements
-    size_t size() const { return subsize_ + vector_->size(); }
-
-    /// Get the vector containing the names.
-    inline const std::shared_ptr<const std::vector<strings::String>> vector()
-        const
+    size_t size() const
     {
-        return vector_;
+        if ( std::holds_alternative<InMemoryType>( pimpl_ ) )
+            {
+                const ConstInMemoryType pimpl =
+                    std::get<InMemoryType>( pimpl_ );
+                assert_true( pimpl );
+                return pimpl->size();
+            }
+
+        assert_true( std::holds_alternative<MemoryMappedType>( pimpl_ ) );
+        const ConstMemoryMappedType pimpl =
+            std::get<MemoryMappedType>( pimpl_ );
+        assert_true( pimpl );
+        return pimpl->size();
     }
 
-    // -------------------------------
+    /// The temporary directory (only relevant for the MemoryMappedEncoding)
+    std::optional<std::string> temp_dir() const
+    {
+        if ( std::holds_alternative<InMemoryType>( pimpl_ ) )
+            {
+                return std::nullopt;
+            }
+
+        assert_true( std::holds_alternative<MemoryMappedType>( pimpl_ ) );
+        const ConstMemoryMappedType pimpl =
+            std::get<MemoryMappedType>( pimpl_ );
+        assert_true( pimpl );
+        return pimpl->temp_dir();
+    }
+
+    /// Get the vector containing the strings.
+    inline helpers::StringIterator strings() const
+    {
+        if ( std::holds_alternative<InMemoryType>( pimpl_ ) )
+            {
+                const ConstInMemoryType pimpl =
+                    std::get<InMemoryType>( pimpl_ );
+                assert_true( pimpl );
+                const auto func =
+                    [pimpl]( const size_t _i ) -> strings::String {
+                    return ( *pimpl )[_i];
+                };
+                return helpers::StringIterator( func, pimpl->size() );
+            }
+
+        assert_true( std::holds_alternative<MemoryMappedType>( pimpl_ ) );
+        const ConstMemoryMappedType pimpl =
+            std::get<MemoryMappedType>( pimpl_ );
+        assert_true( pimpl );
+        const auto func = [pimpl]( const size_t _i ) -> strings::String {
+            return ( *pimpl )[_i];
+        };
+        return helpers::StringIterator( func, pimpl->size() );
+    }
 
    private:
-    /// Adds an integer to map_ and vector_, assuming it is not already included
-    Int insert( const strings::String& _val );
+    /// Appends to the encoding.
+    template <class PtrType>
+    bool append( const Encoding& _other, bool _include_subencoding = false )
+    {
+        if ( std::holds_alternative<PtrType>( pimpl_ ) )
+            {
+                assert_true( std::holds_alternative<PtrType>( _other.pimpl_ ) );
+                const auto pimpl = std::get<PtrType>( pimpl_ );
+                const auto other = std::get<PtrType>( _other.pimpl_ );
+                assert_true( other );
+                pimpl->append( *other, _include_subencoding );
+                return true;
+            }
+        return false;
+    }
 
-    /// Returns the string mapped to an integer.
-    const strings::String& int_to_string( const Int _i ) const;
+    /// Initializes the encoding.
+    template <class EncodingType>
+    void init(
+        const std::shared_ptr<memmap::Pool>& _pool,
+        const std::shared_ptr<const Encoding> _subencoding )
+    {
+        using PtrType = std::shared_ptr<EncodingType>;
 
-    /// Returns the integer mapped to a string.
-    Int string_to_int( const strings::String& _val );
+        assert_true(
+            !_subencoding ||
+            std::holds_alternative<PtrType>( _subencoding->pimpl_ ) );
 
-    /// Returns the integer mapped to a string (const version).
-    Int string_to_int( const strings::String& _val ) const;
+        const auto subencoding = _subencoding
+                                     ? std::get<PtrType>( _subencoding->pimpl_ )
+                                     : PtrType();
 
-    // -------------------------------
+        if constexpr ( std::is_same<PtrType, InMemoryType>() )
+            {
+                pimpl_ = std::make_shared<EncodingType>( subencoding );
+            }
+
+        if constexpr ( std::is_same<PtrType, MemoryMappedType>() )
+            {
+                pimpl_ = std::make_shared<EncodingType>( _pool, subencoding );
+            }
+    }
 
    private:
-    /// For fast lookup
-    std::unordered_map<strings::String, Int, strings::StringHasher> map_;
-
-    /// The null value (needed because strings are returned by reference).
-    const strings::String null_value_;
-
-    /// A subencoding can be used to separate the existing encoding from new
-    /// data. Under some circumstance, we want to avoid the global encoding
-    /// being edited, such as when we process requests in parallel.
-    std::shared_ptr<const Encoding> subencoding_;
-
-    // The size of the subencoding at the time this encoding was created.
-    const size_t subsize_;
-
-    /// Maps integers to strings
-    const std::shared_ptr<std::vector<strings::String>> vector_;
+    /// Abstracts over an InMemoryEncoding and MemoryMappedEncoding.
+    std::variant<InMemoryType, MemoryMappedType> pimpl_;
 };
 
 // -------------------------------------------------------------------------

@@ -59,7 +59,7 @@ class Seasonal : public Preprocessor
 
     /// The preprocessor does not generate any SQL scripts.
     std::vector<std::string> to_sql(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const helpers::StringIterator& _categories,
         const std::shared_ptr<const helpers::SQLDialectGenerator>&
             _sql_dialect_generator ) const final
     {
@@ -162,10 +162,8 @@ class Seasonal : public Preprocessor
         const Operator& _op,
         containers::Encoding* _categories ) const
     {
-        auto result = containers::Column<Float>( _col.nrows() );
-
+        auto result = containers::Column<Float>( _col.pool(), _col.nrows() );
         std::transform( _col.begin(), _col.end(), result.begin(), _op );
-
         return to_int( result, _add_zero, _categories );
     }
 
@@ -178,10 +176,8 @@ class Seasonal : public Preprocessor
         const bool _add_zero,
         const Operator& _op ) const
     {
-        auto result = containers::Column<Float>( _col.nrows() );
-
+        auto result = containers::Column<Float>( _col.pool(), _col.nrows() );
         std::transform( _col.begin(), _col.end(), result.begin(), _op );
-
         return to_int( _categories, _add_zero, result );
     }
 
@@ -191,10 +187,8 @@ class Seasonal : public Preprocessor
     containers::Column<Float> to_numerical(
         const containers::Column<Float>& _col, const Operator& _op ) const
     {
-        auto result = containers::Column<Float>( _col.nrows() );
-
+        auto result = containers::Column<Float>( _col.pool(), _col.nrows() );
         std::transform( _col.begin(), _col.end(), result.begin(), _op );
-
         return result;
     }
 

@@ -34,7 +34,7 @@ class SQLMaker
 
     /// Creates a condition that must be greater than a critical value.
     std::string condition_greater(
-        const std::vector<strings::String>& _categories,
+        const helpers::StringIterator& _categories,
         const VocabForDf& _vocab_popul,
         const VocabForDf& _vocab_perip,
         const std::string& _feature_prefix,
@@ -45,7 +45,7 @@ class SQLMaker
 
     /// Creates a condition that must be smaller than a critical value.
     std::string condition_smaller(
-        const std::vector<strings::String>& _categories,
+        const helpers::StringIterator& _categories,
         const VocabForDf& _vocab_popul,
         const VocabForDf& _vocab_perip,
         const std::string& _feature_prefix,
@@ -101,7 +101,7 @@ class SQLMaker
 
     /// Returns a list of the categories.
     std::string list_categories(
-        const std::vector<strings::String>& _categories,
+        const helpers::StringIterator& _categories,
         const descriptors::Split& _split ) const;
 
     /// Returns a list of the words.

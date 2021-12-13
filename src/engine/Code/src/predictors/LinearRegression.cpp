@@ -194,37 +194,29 @@ CFloatColumn LinearRegression::predict_dense(
         }
 
     // -------------------------------------------------------------------------
-    // Rescale input
 
     const auto X = scaler_.transform( _X_numerical );
 
     // -------------------------------------------------------------------------
-    // Calculate dot product with weights.
 
-    auto predictions = CFloatColumn();
+    auto predictions =
+        CFloatColumn( std::make_shared<std::vector<Float>>( X[0].size() ) );
 
     for ( size_t j = 0; j < X.size(); ++j )
         {
-            assert_true( X[0]->size() == X[j]->size() );
+            assert_true( X[0].size() == X[j].size() );
 
-            if ( !predictions )
+            for ( size_t i = 0; i < X[j].size(); ++i )
                 {
-                    predictions =
-                        std::make_shared<std::vector<Float>>( X[0]->size() );
-                }
-
-            for ( size_t i = 0; i < X[j]->size(); ++i )
-                {
-                    ( *predictions )[i] += weights_[j] * ( *X[j] )[i];
+                    predictions[i] += weights_[j] * X[j][i];
                 }
         }
 
     // -------------------------------------------------------------------------
-    // Add intercept.
 
-    for ( size_t i = 0; i < predictions->size(); ++i )
+    for ( size_t i = 0; i < predictions.size(); ++i )
         {
-            ( *predictions )[i] += weights_[X.size()];
+            predictions[i] += weights_[X.size()];
         }
 
     // -------------------------------------------------------------------------
@@ -241,18 +233,15 @@ CFloatColumn LinearRegression::predict_sparse(
     const std::vector<CFloatColumn>& _X_numerical ) const
 {
     // -------------------------------------------------------------------------
-    // Build up CSRMatrix.
 
     auto csr_mat = impl().make_csr<Float, unsigned int, size_t>(
         _X_categorical, _X_numerical );
 
     // -------------------------------------------------------------------------
-    // Rescale CSRMatrix.
 
     csr_mat = scaler_.transform( csr_mat );
 
     // -------------------------------------------------------------------------
-    // Make sure that the CSRMatrix is plausible.
 
     if ( weights_.size() != csr_mat.ncols() + 1 )
         {
@@ -263,16 +252,15 @@ CFloatColumn LinearRegression::predict_sparse(
         }
 
     // -------------------------------------------------------------------------
-    // Initialize predictions.
 
-    auto predictions = std::make_shared<std::vector<Float>>( csr_mat.nrows() );
+    auto predictions =
+        CFloatColumn( std::make_shared<std::vector<Float>>( csr_mat.nrows() ) );
 
     // -------------------------------------------------------------------------
-    // Generate predictions.
 
     for ( size_t i = 0; i < csr_mat.nrows(); ++i )
         {
-            ( *predictions )[i] = predict_sparse(
+            predictions[i] = predict_sparse(
                 csr_mat.indptr()[i],
                 csr_mat.indptr()[i + 1],
                 csr_mat.indices(),
@@ -325,24 +313,22 @@ void LinearRegression::solve_arithmetically(
 
     for ( size_t i = 0; i < X.size(); ++i )
         {
-            assert_true( X[i] );
-
             for ( size_t j = 0; j <= i; ++j )
                 {
-                    assert_true( X[i]->size() == X[j]->size() );
+                    assert_true( X[i].size() == X[j].size() );
 
                     XtX( i, j ) = XtX( j, i ) = std::inner_product(
-                        X[i]->begin(), X[i]->end(), X[j]->begin(), 0.0 );
+                        X[i].begin(), X[i].end(), X[j].begin(), 0.0 );
                 }
         }
 
     for ( size_t i = 0; i < X.size(); ++i )
         {
             XtX( X.size(), i ) = XtX( i, X.size() ) =
-                std::accumulate( X[i]->begin(), X[i]->end(), 0.0 );
+                std::accumulate( X[i].begin(), X[i].end(), 0.0 );
         }
 
-    const auto n = static_cast<Float>( _y->size() );
+    const auto n = static_cast<Float>( _y.size() );
 
     XtX( X.size(), X.size() ) = n;
 
@@ -360,20 +346,17 @@ void LinearRegression::solve_arithmetically(
     // CAREFUL: Do NOT use "auto"!
     Eigen::MatrixXd Xy = Eigen::MatrixXd( X.size() + 1, 1 );
 
-    assert_true( _y );
-
     for ( size_t i = 0; i < X.size(); ++i )
         {
-            assert_true( X[i]->size() == _y->size() );
+            assert_true( X[i].size() == _y.size() );
 
-            Xy( i ) = std::inner_product(
-                X[i]->begin(), X[i]->end(), _y->begin(), 0.0 );
+            Xy( i ) =
+                std::inner_product( X[i].begin(), X[i].end(), _y.begin(), 0.0 );
         }
 
-    Xy( X.size() ) = std::accumulate( _y->begin(), _y->end(), 0.0 );
+    Xy( X.size() ) = std::accumulate( _y.begin(), _y.end(), 0.0 );
 
     // -------------------------------------------------------------------------
-    // Calculate weights_
 
     // CAREFUL: Do NOT use "auto"!
     Eigen::MatrixXd weights = XtX.fullPivLu().solve( Xy );
@@ -449,7 +432,7 @@ void LinearRegression::solve_numerically(
                         csr_mat.indices(),
                         csr_mat.data() );
 
-                    const auto delta = yhat - ( *_y )[i];
+                    const auto delta = yhat - _y[i];
 
                     calculate_gradients(
                         csr_mat.indptr()[i],

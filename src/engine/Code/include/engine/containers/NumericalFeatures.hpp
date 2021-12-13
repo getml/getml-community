@@ -1,5 +1,5 @@
-#ifndef ENGINE_CONTAINERS_FEATURES_HPP_
-#define ENGINE_CONTAINERS_FEATURES_HPP_
+#ifndef ENGINE_CONTAINERS_NUMERICALFEATURES_HPP_
+#define ENGINE_CONTAINERS_NUMERICALFEATURES_HPP_
 
 namespace engine
 {
@@ -7,10 +7,10 @@ namespace containers
 {
 // ----------------------------------------------------------------------------
 
-typedef std::vector<std::shared_ptr<std::vector<Float>>> Features;
+typedef std::vector<helpers::Feature<Float>> NumericalFeatures;
 
 // ----------------------------------------------------------------------------
 }  // namespace containers
 }  // namespace engine
 
-#endif  // ENGINE_CONTAINERS_FEATURES_HPP_
+#endif  // ENGINE_CONTAINERS_NUMERICALFEATURES_HPP_

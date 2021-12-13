@@ -174,7 +174,8 @@ void ProjectManager::copy_pipeline(
     set_pipeline( _name, other_pipeline );
 
     post(
-        "pipeline", other_pipeline.to_monitor( categories().vector(), _name ) );
+        "pipeline",
+        other_pipeline.to_monitor( categories().strings(), _name ) );
 
     communication::Sender::send_string( "Success!", _socket );
 }
@@ -467,11 +468,7 @@ void ProjectManager::load_data_frame(
     // --------------------------------------------------------------------
 
     auto df = FileHandler::load(
-        data_frames(),
-        categories_,
-        join_keys_encoding_,
-        project_directory(),
-        _name );
+        data_frames(), categories_, join_keys_encoding_, options_, _name );
 
     license_checker().check_mem_size( data_frames(), df.nbytes() );
 
@@ -525,7 +522,7 @@ void ProjectManager::load_pipeline(
 
     set_pipeline( _name, pipeline );
 
-    post( "pipeline", pipeline.to_monitor( categories().vector(), _name ) );
+    post( "pipeline", pipeline.to_monitor( categories().strings(), _name ) );
 
     engine::communication::Sender::send_string( "Success!", _socket );
 }
@@ -549,24 +546,6 @@ void ProjectManager::post(
 void ProjectManager::project_name( Poco::Net::StreamSocket* _socket ) const
 {
     communication::Sender::send_string( project_, _socket );
-}
-
-// ------------------------------------------------------------------------
-
-void ProjectManager::refresh( Poco::Net::StreamSocket* _socket ) const
-{
-    multithreading::ReadLock read_lock( read_write_lock_ );
-
-    Poco::JSON::Object obj;
-
-    obj.set( "categories_", JSON::vector_to_array( *categories().vector() ) );
-
-    obj.set(
-        "join_keys_encoding_",
-        JSON::vector_to_array( *join_keys_encoding().vector() ) );
-
-    engine::communication::Sender::send_string(
-        JSON::stringify( obj ), _socket );
 }
 
 // ------------------------------------------------------------------------
@@ -622,7 +601,7 @@ void ProjectManager::save_data_frame(
     df.save( options_.temp_dir(), project_directory() + "data/", _name );
 
     FileHandler::save_encodings(
-        project_directory(), categories(), join_keys_encoding() );
+        project_directory(), categories_, join_keys_encoding_ );
 
     communication::Sender::send_string( "Success!", _socket );
 }
@@ -653,10 +632,9 @@ void ProjectManager::save_pipeline(
 
     const auto path = project_directory() + "pipelines/";
 
-    pipeline.save( categories().vector(), options_.temp_dir(), path, _name );
+    pipeline.save( categories().strings(), options_.temp_dir(), path, _name );
 
-    FileHandler::save_encodings(
-        project_directory(), categories(), containers::Encoding() );
+    FileHandler::save_encodings( project_directory(), categories_, nullptr );
 
     engine::communication::Sender::send_string( "Success!", _socket );
 }

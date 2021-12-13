@@ -13,14 +13,17 @@ const Float AggregationIndex::get_count( const Int _ix_agg ) const
 
     assert_true( input_table_.df().has( output_table_.join_key( _ix_agg ) ) );
 
-    auto it = input_table_.df().find( output_table_.join_key( _ix_agg ) );
+    const auto [begin, end] =
+        input_table_.df().find( output_table_.join_key( _ix_agg ) );
 
     Float count = 0.0;
 
     const Float time_stamp_output = output_table_.time_stamp( _ix_agg );
 
-    for ( auto ix_input : it->second )
+    for ( auto it = begin; it != end; ++it )
         {
+            const auto ix_input = *it;
+
             const bool use_this_sample = time_stamp_output_in_range(
                 input_table_.df().time_stamp( ix_input ),
                 input_table_.df().upper_time_stamp( ix_input ),
@@ -60,10 +63,12 @@ std::shared_ptr<std::vector<Float>> AggregationIndex::make_sample_weights(
                     continue;
                 }
 
-            auto it = input_table_.df().find( jk );
+            const auto [begin, end] = input_table_.df().find( jk );
 
-            for ( auto ix_input : it->second )
+            for ( auto it = begin; it != end; ++it )
                 {
+                    const auto ix_input = *it;
+
                     assert_true( ix_input >= 0 );
                     assert_true( ix_input < input_table_.df().nrows() );
 
@@ -113,7 +118,8 @@ const std::vector<Int> AggregationIndex::transform(
             return std::vector<Int>();
         }
 
-    auto it = output_table_.df().find( input_table_.join_key( _ix_input ) );
+    const auto [begin, end] =
+        output_table_.df().find( input_table_.join_key( _ix_input ) );
 
     const Float time_stamp_input = input_table_.time_stamp( _ix_input );
 
@@ -121,8 +127,10 @@ const std::vector<Int> AggregationIndex::transform(
 
     std::vector<Int> indices;
 
-    for ( auto ix_agg : it->second )
+    for ( auto it = begin; it != end; ++it )
         {
+            const auto ix_agg = *it;
+
             assert_true( ix_agg >= 0 );
             assert_true( ix_agg < output_table_.df().nrows() );
 

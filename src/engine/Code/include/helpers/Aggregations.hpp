@@ -111,49 +111,14 @@ class Aggregations
     }
 
     /// Counts the non-null number of entries.
-    static Float count_categorical( const std::vector<std::string>& _vec )
+    template <class IteratorType>
+    static Float count_categorical( IteratorType _begin, IteratorType _end )
     {
         Float result = 0.0;
 
-        for ( const auto& str : _vec )
+        for ( auto it = _begin; it != _end; ++it )
             {
-                if ( NullChecker::is_null( str ) )
-                    {
-                        continue;
-                    }
-
-                ++result;
-            }
-
-        return result;
-    }
-
-    /// Counts the non-null number of entries.
-    static Float count_categorical( const std::vector<strings::String>& _vec )
-    {
-        Float result = 0.0;
-
-        for ( const auto& str : _vec )
-            {
-                if ( NullChecker::is_null( str.str() ) )
-                    {
-                        continue;
-                    }
-
-                ++result;
-            }
-
-        return result;
-    }
-
-    /// Counts the non-null number of entries.
-    static Float count_categorical( const std::vector<Int>& _vec )
-    {
-        Float result = 0.0;
-
-        for ( const auto& val : _vec )
-            {
-                if ( NullChecker::is_null( val ) )
+                if ( NullChecker::is_null( *it ) )
                     {
                         continue;
                     }

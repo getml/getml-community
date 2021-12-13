@@ -22,9 +22,40 @@ Options Options::make_options( int _argc, char* _argv[] )
 
 // ----------------------------------------------------------------------------
 
+bool Options::parse_boolean(
+    const std::string& _arg, const std::string& _flag, bool* _target ) const
+{
+    std::string str;
+
+    const auto success = parse_string( _arg, _flag, &str );
+
+    if ( !success )
+        {
+            return false;
+        }
+
+    if ( str == "true" )
+        {
+            *_target = true;
+            return true;
+        }
+
+    if ( str == "false" )
+        {
+            *_target = false;
+            return true;
+        }
+
+    return false;
+}
+
+// ----------------------------------------------------------------------------
+
 void Options::parse_flags( int _argc, char* argv[] )
 {
     std::string allow_push_notifications;
+
+    bool allow_remote_ips;
 
     std::string launch_browser;
 
@@ -38,6 +69,10 @@ void Options::parse_flags( int _argc, char* argv[] )
 
             bool success =
                 parse_size_t( arg, "engine-port", &( engine_.port_ ) );
+
+            success =
+                success ||
+                parse_boolean( arg, "in-memory", &( engine_.in_memory_ ) );
 
             success = success ||
                       parse_string( arg, "project", &( engine_.project_ ) );
@@ -66,6 +101,11 @@ void Options::parse_flags( int _argc, char* argv[] )
                                      arg,
                                      "allow-push-notifications",
                                      &allow_push_notifications );
+
+            // This is to avoid a warning message.
+            success =
+                success ||
+                parse_boolean( arg, "allow-remote-ips", &allow_remote_ips );
 
             // This is to avoid a warning message.
             success = success ||

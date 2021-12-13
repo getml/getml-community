@@ -15,6 +15,7 @@
 #include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
+#include <variant>
 #include <vector>
 
 #include <Poco/JSON/Object.h>
@@ -30,6 +31,8 @@
 #include "stl/stl.hpp"
 
 #include "strings/strings.hpp"
+
+#include "memmap/memmap.hpp"
 
 #include "textmining/textmining.hpp"
 
@@ -52,12 +55,21 @@
 #include "helpers/StringReplacer.hpp"
 #include "helpers/StringSplitter.hpp"
 
+#include "helpers/InMemoryIndex.hpp"
+#include "helpers/MemoryMappedIndex.hpp"
+
 #include "helpers/Index.hpp"
 
 #include "helpers/Column.hpp"
 #include "helpers/IntSet.hpp"
 #include "helpers/Placeholder.hpp"
 #include "helpers/Schema.hpp"
+
+#include "helpers/Feature.hpp"
+
+#include "helpers/Features.hpp"
+
+#include "helpers/StringIterator.hpp"
 
 #include "helpers/VocabularyTree.hpp"
 

@@ -127,16 +127,16 @@ size_t PredictorImpl::check_plausibility(
 
     if ( _X_categorical.size() > 0 )
         {
-            expected_size = _X_categorical[0]->size();
+            expected_size = _X_categorical[0].size();
         }
     else
         {
-            expected_size = _X_numerical[0]->size();
+            expected_size = _X_numerical[0].size();
         }
 
     for ( const auto& X : _X_categorical )
         {
-            if ( X->size() != expected_size )
+            if ( X.size() != expected_size )
                 {
                     throw std::invalid_argument(
                         "All input columns must have the same "
@@ -146,7 +146,7 @@ size_t PredictorImpl::check_plausibility(
 
     for ( const auto& X : _X_numerical )
         {
-            if ( X->size() != expected_size )
+            if ( X.size() != expected_size )
                 {
                     throw std::invalid_argument(
                         "All input columns must have the same length!" );
@@ -166,7 +166,7 @@ void PredictorImpl::check_plausibility(
     const auto expected_size =
         check_plausibility( _X_categorical, _X_numerical );
 
-    if ( _y->size() != expected_size )
+    if ( _y.size() != expected_size )
         {
             throw std::invalid_argument(
                 "Length of targets must be the same as the length of the input "

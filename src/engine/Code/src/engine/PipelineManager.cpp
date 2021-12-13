@@ -8,7 +8,7 @@ namespace handlers
 
 void PipelineManager::add_features_to_df(
     const pipelines::Pipeline& _pipeline,
-    const containers::Features& _numerical_features,
+    const containers::NumericalFeatures& _numerical_features,
     const containers::CategoricalFeatures& _categorical_features,
     containers::DataFrame* _df ) const
 {
@@ -22,7 +22,8 @@ void PipelineManager::add_features_to_df(
 
     for ( size_t i = 0; i < autofeatures.size(); ++i )
         {
-            auto col = containers::Column( _numerical_features.at( j++ ) );
+            auto col = containers::Column<Float>(
+                _numerical_features.at( j++ ).ptr() );
             col.set_name( autofeatures.at( i ) );
             _df->add_float_column( col, containers::DataFrame::ROLE_NUMERICAL );
         }
@@ -30,7 +31,8 @@ void PipelineManager::add_features_to_df(
     for ( size_t i = 0; i < numerical.size(); ++i )
         {
             auto col =
-                containers::Column( _numerical_features.at( j++ ) ).clone();
+                containers::Column<Float>( _numerical_features.at( j++ ).ptr() )
+                    .clone();
             col.set_name( numerical.at( i ) );
             _df->add_float_column( col, containers::DataFrame::ROLE_NUMERICAL );
         }
@@ -40,7 +42,8 @@ void PipelineManager::add_features_to_df(
     for ( size_t i = 0; i < categorical.size(); ++i )
         {
             auto col =
-                containers::Column( _categorical_features.at( i ) ).clone();
+                containers::Column<Int>( _categorical_features.at( i ).ptr() )
+                    .clone();
             col.set_name( categorical.at( i ) );
             _df->add_int_column( col, containers::DataFrame::ROLE_CATEGORICAL );
         }
@@ -80,7 +83,7 @@ void PipelineManager::add_join_keys_to_df(
 
 void PipelineManager::add_predictions_to_df(
     const pipelines::Pipeline& _pipeline,
-    const containers::Features& _numerical_features,
+    const containers::NumericalFeatures& _numerical_features,
     containers::DataFrame* _df ) const
 {
     const auto targets = _pipeline.targets();
@@ -89,7 +92,8 @@ void PipelineManager::add_predictions_to_df(
 
     for ( size_t i = 0; i < targets.size(); ++i )
         {
-            auto col = containers::Column( _numerical_features.at( i ) );
+            auto col =
+                containers::Column<Float>( _numerical_features.at( i ).ptr() );
             col.set_name(
                 "prediction_" + std::to_string( i + 1 ) + "__" +
                 targets.at( i ) );
@@ -187,29 +191,34 @@ void PipelineManager::check(
 
     multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
-    auto local_categories =
-        std::make_shared<containers::Encoding>( categories_ );
+    const auto pool = options_.make_pool();
 
-    auto local_join_keys_encoding =
-        std::make_shared<containers::Encoding>( join_keys_encoding_ );
+    const auto local_categories =
+        std::make_shared<containers::Encoding>( pool, categories_ );
+
+    const auto local_join_keys_encoding =
+        std::make_shared<containers::Encoding>( pool, join_keys_encoding_ );
 
     // -------------------------------------------------------
 
     const auto [population_df, peripheral_dfs, _] =
-        ViewParser( local_categories, local_join_keys_encoding, data_frames_ )
+        ViewParser(
+            local_categories, local_join_keys_encoding, data_frames_, options_ )
             .parse_all( _cmd );
 
     // -------------------------------------------------------
 
-    pipeline.check(
-        _cmd,
-        logger_,
-        population_df,
-        peripheral_dfs,
-        local_categories,
-        preprocessor_tracker_,
-        warning_tracker_,
-        _socket );
+    const auto params = pipelines::CheckParams{
+        .categories_ = local_categories,
+        .cmd_ = _cmd,
+        .logger_ = logger_,
+        .peripheral_dfs_ = peripheral_dfs,
+        .population_df_ = population_df,
+        .preprocessor_tracker_ = preprocessor_tracker_,
+        .warning_tracker_ = warning_tracker_,
+        .socket_ = _socket };
+
+    pipeline.check( params );
 
     // -------------------------------------------------------
 
@@ -329,7 +338,7 @@ void PipelineManager::deploy(
 
     set_pipeline( _name, pipeline );
 
-    post_pipeline( pipeline.to_monitor( categories().vector(), _name ) );
+    post_pipeline( pipeline.to_monitor( categories().strings(), _name ) );
 
     communication::Sender::send_string( "Success!", _socket );
 }
@@ -460,16 +469,19 @@ void PipelineManager::fit(
 
     multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
-    auto local_categories =
-        std::make_shared<containers::Encoding>( categories_ );
+    const auto pool = options_.make_pool();
 
-    auto local_join_keys_encoding =
-        std::make_shared<containers::Encoding>( join_keys_encoding_ );
+    const auto local_categories =
+        std::make_shared<containers::Encoding>( pool, categories_ );
+
+    const auto local_join_keys_encoding =
+        std::make_shared<containers::Encoding>( pool, join_keys_encoding_ );
 
     // -------------------------------------------------------
 
     const auto [population_df, peripheral_dfs, validation_df] =
-        ViewParser( local_categories, local_join_keys_encoding, data_frames_ )
+        ViewParser(
+            local_categories, local_join_keys_encoding, data_frames_, options_ )
             .parse_all( _cmd );
 
     // -------------------------------------------------------
@@ -512,7 +524,7 @@ void PipelineManager::fit(
 
     // -------------------------------------------------------
 
-    post_pipeline( pipeline.to_monitor( categories().vector(), _name ) );
+    post_pipeline( pipeline.to_monitor( categories().strings(), _name ) );
 
     communication::Sender::send_string( "Trained pipeline.", _socket );
 
@@ -824,7 +836,7 @@ void PipelineManager::score(
     const Poco::JSON::Object& _cmd,
     const std::string& _name,
     const containers::DataFrame& _population_df,
-    const containers::Features& _yhat,
+    const containers::NumericalFeatures& _yhat,
     pipelines::Pipeline* _pipeline,
     Poco::Net::StreamSocket* _socket )
 {
@@ -842,7 +854,7 @@ void PipelineManager::score(
 
     set_pipeline( _name, *_pipeline );
 
-    post_pipeline( _pipeline->to_monitor( categories().vector(), _name ) );
+    post_pipeline( _pipeline->to_monitor( categories().strings(), _name ) );
 
     communication::Sender::send_string( JSON::stringify( scores ), _socket );
 
@@ -892,7 +904,7 @@ void PipelineManager::to_db(
     const pipelines::Pipeline& _pipeline,
     const Poco::JSON::Object& _cmd,
     const containers::DataFrame& _population_table,
-    const containers::Features& _numerical_features,
+    const containers::NumericalFeatures& _numerical_features,
     const containers::CategoricalFeatures& _categorical_features,
     const std::shared_ptr<containers::Encoding>& _categories,
     const std::shared_ptr<containers::Encoding>& _join_keys_encoding )
@@ -946,7 +958,7 @@ containers::DataFrame PipelineManager::to_df(
     const pipelines::Pipeline& _pipeline,
     const Poco::JSON::Object& _cmd,
     const containers::DataFrame& _population_table,
-    const containers::Features& _numerical_features,
+    const containers::NumericalFeatures& _numerical_features,
     const containers::CategoricalFeatures& _categorical_features,
     const std::shared_ptr<containers::Encoding>& _categories,
     const std::shared_ptr<containers::Encoding>& _join_keys_encoding )
@@ -957,7 +969,10 @@ containers::DataFrame PipelineManager::to_df(
 
     // -------------------------------------------------------
 
-    containers::DataFrame df( df_name, _categories, _join_keys_encoding );
+    const auto pool = options_.make_pool();
+
+    auto df = containers::DataFrame(
+        df_name, _categories, _join_keys_encoding, pool );
 
     if ( !_cmd.has( "predict_" ) || !JSON::get_value<bool>( _cmd, "predict_" ) )
         {
@@ -1005,8 +1020,8 @@ void PipelineManager::to_sql(
 
     const auto pipeline = get_pipeline( _name );
 
-    const auto sql =
-        pipeline.to_sql( categories().vector(), targets, subfeatures, dialect );
+    const auto sql = pipeline.to_sql(
+        categories().strings(), targets, subfeatures, dialect );
 
     read_lock.unlock();
 
@@ -1034,11 +1049,13 @@ void PipelineManager::transform(
 
     multithreading::WeakWriteLock weak_write_lock( read_write_lock_ );
 
-    auto local_categories =
-        std::make_shared<containers::Encoding>( categories_ );
+    const auto pool = options_.make_pool();
 
-    auto local_join_keys_encoding =
-        std::make_shared<containers::Encoding>( join_keys_encoding_ );
+    const auto local_categories =
+        std::make_shared<containers::Encoding>( pool, categories_ );
+
+    const auto local_join_keys_encoding =
+        std::make_shared<containers::Encoding>( pool, join_keys_encoding_ );
 
     auto local_data_frames =
         std::make_shared<std::map<std::string, containers::DataFrame>>(
@@ -1057,22 +1074,28 @@ void PipelineManager::transform(
 
     const auto [population_df, peripheral_dfs, _] =
         ViewParser(
-            local_categories, local_join_keys_encoding, local_data_frames )
+            local_categories,
+            local_join_keys_encoding,
+            local_data_frames,
+            options_ )
             .parse_all( cmd );
 
     // -------------------------------------------------------
 
     // IMPORTANT: Use categories_, not local_categories, otherwise
     // .vector() might not work.
-    const auto [numerical_features, categorical_features] = pipeline.transform(
-        cmd,
-        logger_,
-        *local_data_frames,
-        population_df,
-        peripheral_dfs,
-        data_frame_tracker(),
-        categories_,
-        _socket );
+    const auto params = pipelines::TransformParams{
+        .categories_ = categories_,
+        .cmd_ = cmd,
+        .data_frames_ = *local_data_frames,
+        .data_frame_tracker_ = data_frame_tracker(),
+        .logger_ = logger_,
+        .original_peripheral_dfs_ = peripheral_dfs,
+        .original_population_df_ = population_df,
+        .socket_ = _socket };
+
+    const auto [numerical_features, categorical_features] =
+        pipeline.transform( params );
 
     // -------------------------------------------------------
 

@@ -12,7 +12,7 @@ std::optional<containers::Column<Int>> Substring::extract_substring(
 {
     auto str_col = extract_substring_string( _col );
 
-    auto int_col = containers::Column<Int>( str_col.nrows() );
+    auto int_col = containers::Column<Int>( _col.pool(), str_col.nrows() );
 
     for ( size_t i = 0; i < str_col.nrows(); ++i )
         {
@@ -39,7 +39,7 @@ containers::Column<Int> Substring::extract_substring(
 {
     auto str_col = extract_substring_string( _col );
 
-    auto int_col = containers::Column<Int>( str_col.nrows() );
+    auto int_col = containers::Column<Int>( _col.pool(), str_col.nrows() );
 
     for ( size_t i = 0; i < str_col.nrows(); ++i )
         {
@@ -58,15 +58,15 @@ containers::Column<Int> Substring::extract_substring(
 containers::Column<strings::String> Substring::extract_substring_string(
     const containers::Column<strings::String>& _col ) const
 {
-    auto result = containers::Column<strings::String>( _col.nrows() );
+    auto result = containers::Column<strings::String>( _col.pool() );
 
-    for ( size_t i = 0; i < result.nrows(); ++i )
+    for ( size_t i = 0; i < _col.nrows(); ++i )
         {
             const auto str = _col[i].str();
 
             const auto substr = str.substr( begin_, length_ );
 
-            result[i] = strings::String( substr );
+            result.push_back( strings::String( substr ) );
         }
 
     return result;
@@ -176,11 +176,11 @@ containers::Column<strings::String> Substring::make_str_col(
     const containers::Encoding& _categories,
     const containers::Column<Int>& _col ) const
 {
-    auto result = containers::Column<strings::String>( _col.nrows() );
+    auto result = containers::Column<strings::String>( _col.pool() );
 
     for ( size_t i = 0; i < _col.nrows(); ++i )
         {
-            result[i] = _categories[_col[i]];
+            result.push_back( _categories[_col[i]] );
         }
 
     result.set_name( _col.name() );

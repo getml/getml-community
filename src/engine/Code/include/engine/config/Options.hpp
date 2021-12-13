@@ -43,6 +43,12 @@ class Options
     /// Parses the command line flags
     void parse_flags( int _argc, char* _argv[] );
 
+    /// Parses a boolean flag.
+    bool parse_boolean(
+        const std::string& _arg,
+        const std::string& _flag,
+        bool* _target ) const;
+
     /// Parses the options from the config.json.
     static Options parse_from_file();
 
@@ -75,6 +81,14 @@ class Options
 
     /// Trivial accessor
     const MonitorOptions& monitor() const { return monitor_; }
+
+    /// Generates a new memory-mapped pool.
+    std::shared_ptr<memmap::Pool> make_pool() const
+    {
+        return engine_.in_memory_
+                   ? std::shared_ptr<memmap::Pool>()
+                   : std::make_shared<memmap::Pool>( temp_dir() );
+    }
 
     /// Generates the path for the project directory.
     std::string project_directory() const

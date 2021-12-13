@@ -26,34 +26,34 @@ containers::DataFrame FileHandler::load(
     const std::map<std::string, containers::DataFrame>& _data_frames,
     const std::shared_ptr<containers::Encoding>& _categories,
     const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
-    const std::string& _project_directory,
+    const config::Options& _options,
     const std::string& _name )
 {
-    const auto path = _project_directory + "data/" + _name + "/";
+    // ---------------------------------------------------------------------
+
+    const auto path = _options.project_directory() + "data/" + _name + "/";
 
     // ---------------------------------------------------------------------
-    // Make sure that the directory exists and is directory
 
-    {
-        Poco::File file( path );
+    Poco::File file( path );
 
-        if ( !file.exists() )
-            {
-                throw std::runtime_error(
-                    "File or directory '" + path + "' not found!" );
-            }
+    if ( !file.exists() )
+        {
+            throw std::runtime_error(
+                "File or directory '" + path + "' not found!" );
+        }
 
-        if ( !file.isDirectory() )
-            {
-                throw std::runtime_error(
-                    "'" + path + "' is not a directory!" );
-            }
-    }
+    if ( !file.isDirectory() )
+        {
+            throw std::runtime_error( "'" + path + "' is not a directory!" );
+        }
 
     // ---------------------------------------------------------------------
-    // Load data
 
-    auto df = containers::DataFrame( _name, _categories, _join_keys_encoding );
+    const auto pool = _options.make_pool();
+
+    auto df =
+        containers::DataFrame( _name, _categories, _join_keys_encoding, pool );
 
     df.load( path );
 
@@ -203,35 +203,35 @@ std::vector<std::string> FileHandler::read_strings_little_endian(
 
 void FileHandler::save_encodings(
     const std::string& _path,
-    const containers::Encoding& _categories,
-    const containers::Encoding& _join_keys_encodings )
+    const std::shared_ptr<const containers::Encoding> _categories,
+    const std::shared_ptr<const containers::Encoding> _join_keys_encodings )
 {
     if ( utils::Endianness::is_little_endian() )
         {
-            if ( _categories.size() > 0 )
+            if ( _categories && _categories->size() > 0 )
                 {
                     FileHandler::write_string_little_endian(
-                        _path + "categories", _categories );
+                        _path + "categories", *_categories );
                 }
 
-            if ( _join_keys_encodings.size() > 0 )
+            if ( _join_keys_encodings && _join_keys_encodings->size() > 0 )
                 {
                     FileHandler::write_string_little_endian(
-                        _path + "join_keys_encoding", _join_keys_encodings );
+                        _path + "join_keys_encoding", *_join_keys_encodings );
                 }
         }
     else
         {
-            if ( _categories.size() > 0 )
+            if ( _categories && _categories->size() > 0 )
                 {
                     FileHandler::write_string_big_endian(
-                        _path + "categories", _categories );
+                        _path + "categories", *_categories );
                 }
 
-            if ( _join_keys_encodings.size() > 0 )
+            if ( _join_keys_encodings && _join_keys_encodings->size() > 0 )
                 {
                     FileHandler::write_string_big_endian(
-                        _path + "join_keys_encoding", _join_keys_encodings );
+                        _path + "join_keys_encoding", *_join_keys_encodings );
                 }
         }
 }
@@ -252,7 +252,10 @@ void FileHandler::write_string_big_endian(
         output.write( _str.c_str(), _str.size() );
     };
 
-    std::for_each( _strings.begin(), _strings.end(), write_string );
+    for ( size_t i = 0; i < _strings.size(); ++i )
+        {
+            write_string( _strings[i] );
+        }
 }
 
 // ----------------------------------------------------------------------------
@@ -273,7 +276,10 @@ void FileHandler::write_string_little_endian(
         output.write( _str.c_str(), _str.size() );
     };
 
-    std::for_each( _strings.begin(), _strings.end(), write_string );
+    for ( size_t i = 0; i < _strings.size(); ++i )
+        {
+            write_string( _strings[i] );
+        }
 }
 
 // ------------------------------------------------------------------------

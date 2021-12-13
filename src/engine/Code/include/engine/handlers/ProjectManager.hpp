@@ -180,9 +180,6 @@ class ProjectManager
     /// Get the name of the current project.
     void project_name( Poco::Net::StreamSocket* _socket ) const;
 
-    /// Updates the encodings in the client
-    void refresh( Poco::Net::StreamSocket* _socket ) const;
-
     /// Saves a data container to disk.
     void save_data_container(
         const std::string& _name,

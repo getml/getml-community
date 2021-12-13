@@ -100,7 +100,7 @@ Poco::JSON::Object::Ptr FastPropContainer::to_json_obj() const
 // ----------------------------------------------------------------------------
 
 void FastPropContainer::to_sql(
-    const std::shared_ptr<const std::vector<strings::String>>& _categories,
+    const helpers::StringIterator& _categories,
     const helpers::VocabularyTree& _vocabulary,
     const std::shared_ptr<const helpers::SQLDialectGenerator>&
         _sql_dialect_generator,

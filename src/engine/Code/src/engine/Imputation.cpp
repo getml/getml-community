@@ -10,7 +10,8 @@ void Imputation::add_dummy(
     const containers::Column<Float>& _original_col,
     containers::DataFrame* _df ) const
 {
-    auto dummy_col = containers::Column<Float>( _original_col.nrows() );
+    auto dummy_col =
+        containers::Column<Float>( _df->pool(), _original_col.nrows() );
 
     for ( size_t i = 0; i < _original_col.nrows(); ++i )
         {
@@ -208,7 +209,8 @@ bool Imputation::impute(
 {
     bool any_imputation = false;
 
-    auto replacement_col = containers::Column<Float>( _original_col.nrows() );
+    auto replacement_col =
+        containers::Column<Float>( _df->pool(), _original_col.nrows() );
 
     for ( size_t i = 0; i < _original_col.nrows(); ++i )
         {

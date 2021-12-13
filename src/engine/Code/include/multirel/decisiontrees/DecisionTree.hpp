@@ -73,7 +73,7 @@ class DecisionTree
     /// Extracts the SQL statement underlying the tree
     /// as a string
     std::string to_sql(
-        const std::vector<strings::String> &_categories,
+        const helpers::StringIterator &_categories,
         const helpers::VocabularyTree &_vocabulary,
         const std::shared_ptr<const helpers::SQLDialectGenerator>
             &_sql_dialect_generator,

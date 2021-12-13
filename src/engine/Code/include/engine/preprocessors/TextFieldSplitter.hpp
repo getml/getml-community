@@ -36,7 +36,7 @@ class TextFieldSplitter : public Preprocessor
 
     /// Generates SQL code for the text field splitting.
     std::vector<std::string> to_sql(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const helpers::StringIterator& _categories,
         const std::shared_ptr<const helpers::SQLDialectGenerator>&
             _sql_dialect_generator ) const final;
 
@@ -75,6 +75,7 @@ class TextFieldSplitter : public Preprocessor
 
     /// Generates a new data frame.
     containers::DataFrame make_new_df(
+        const std::shared_ptr<memmap::Pool> _pool,
         const std::string& _df_name,
         const containers::Column<strings::String>& _col ) const;
 

@@ -36,10 +36,12 @@ class ViewParser
         const std::shared_ptr<containers::Encoding>& _categories,
         const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
         const std::shared_ptr<
-            const std::map<std::string, containers::DataFrame>>& _data_frames )
+            const std::map<std::string, containers::DataFrame>>& _data_frames,
+        const config::Options& _options )
         : categories_( _categories ),
           data_frames_( _data_frames ),
-          join_keys_encoding_( _join_keys_encoding )
+          join_keys_encoding_( _join_keys_encoding ),
+          options_( _options )
     {
         assert_true( categories_ );
         assert_true( data_frames_ );
@@ -75,7 +77,7 @@ class ViewParser
     /// Expresses the View as a arrow::Table.
     std::shared_ptr<arrow::Table> to_table( const Poco::JSON::Object& _obj )
     {
-        return ArrowHandler( categories_, join_keys_encoding_ )
+        return ArrowHandler( categories_, join_keys_encoding_, options_ )
             .df_to_table( parse( _obj ) );
     }
 
@@ -143,6 +145,9 @@ class ViewParser
 
     /// Encodes the join keys used.
     const std::shared_ptr<containers::Encoding> join_keys_encoding_;
+
+    /// Settings for the engine and the monitor
+    const config::Options options_;
 
     // ------------------------------------------------------------------------
 };

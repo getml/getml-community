@@ -97,72 +97,6 @@ DataFrame::DataFrame(
 
 // ----------------------------------------------------------------------------
 
-DataFrame::DataFrame(
-    const std::vector<Column<Int>>& _categorical,
-    const std::vector<Column<Float>>& _discrete,
-    const std::vector<Column<Int>>& _join_keys,
-    const std::string& _name,
-    const std::vector<Column<Float>>& _numerical,
-    const std::vector<Column<Float>>& _target,
-    const std::vector<Column<strings::String>>& _text,
-    const std::vector<Column<Float>>& _time_stamps )
-    : DataFrame(
-          _categorical,
-          _discrete,
-          DataFrame::create_indices( _join_keys ),
-          _join_keys,
-          _name,
-          _numerical,
-          _target,
-          _text,
-          _time_stamps )
-{
-}
-
-// ----------------------------------------------------------------------------
-
-std::shared_ptr<Index> DataFrame::create_index( const Column<Int>& _join_key )
-{
-    const auto new_index = std::make_shared<Index>();
-
-    for ( size_t ix = 0; ix < _join_key.nrows_; ++ix )
-        {
-            if ( _join_key[ix] >= 0 )
-                {
-                    const auto it = new_index->find( _join_key[ix] );
-
-                    if ( it == new_index->end() )
-                        {
-                            new_index->insert_or_assign(
-                                _join_key[ix], std::vector<size_t>( { ix } ) );
-                        }
-                    else
-                        {
-                            it->second.push_back( ix );
-                        }
-                }
-        }
-
-    return new_index;
-}
-
-// ----------------------------------------------------------------------------
-
-std::vector<std::shared_ptr<Index>> DataFrame::create_indices(
-    const std::vector<Column<Int>>& _join_keys )
-{
-    std::vector<std::shared_ptr<Index>> indices;
-
-    for ( const auto& jk : _join_keys )
-        {
-            indices.push_back( DataFrame::create_index( jk ) );
-        }
-
-    return indices;
-}
-
-// ----------------------------------------------------------------------------
-
 DataFrame DataFrame::create_subview(
     const std::string& _join_key,
     const std::string& _time_stamp,
@@ -174,22 +108,7 @@ DataFrame DataFrame::create_subview(
 {
     // ---------------------------------------------------------------------------
 
-    size_t ix_join_key = 0;
-
-    for ( ; ix_join_key < join_keys_.size(); ++ix_join_key )
-        {
-            if ( join_keys_[ix_join_key].name_ == _join_key )
-                {
-                    break;
-                }
-        }
-
-    if ( ix_join_key == join_keys_.size() )
-        {
-            throw std::runtime_error(
-                "Join key named '" + _join_key + "' not found in table '" +
-                name_ + "'!" );
-        }
+    const auto ix_join_key = find_ix_join_key( _join_key );
 
     // ---------------------------------------------------------------------------
     // All time stamps that are not upper time stamp are added to numerical
@@ -250,22 +169,7 @@ DataFrame DataFrame::create_subview(
 
     // ---------------------------------------------------------------------------
 
-    size_t ix_time_stamp = 0;
-
-    for ( ; ix_time_stamp < time_stamps_.size(); ++ix_time_stamp )
-        {
-            if ( time_stamps_[ix_time_stamp].name_ == _time_stamp )
-                {
-                    break;
-                }
-        }
-
-    if ( ix_time_stamp == time_stamps_.size() )
-        {
-            throw std::runtime_error(
-                "Time stamp named '" + _time_stamp + "' not found in table '" +
-                name_ + "'!" );
-        }
+    const auto ix_time_stamp = find_ix_time_stamp( _time_stamp );
 
     // ---------------------------------------------------------------------------
 
@@ -287,22 +191,7 @@ DataFrame DataFrame::create_subview(
 
     // ---------------------------------------------------------------------------
 
-    size_t ix_upper_time_stamp = 0;
-
-    for ( ; ix_upper_time_stamp < time_stamps_.size(); ++ix_upper_time_stamp )
-        {
-            if ( time_stamps_[ix_upper_time_stamp].name_ == _upper_time_stamp )
-                {
-                    break;
-                }
-        }
-
-    if ( ix_upper_time_stamp == time_stamps_.size() )
-        {
-            throw std::runtime_error(
-                "Time stamp named '" + _upper_time_stamp +
-                "' not found in table '" + name_ + "'!" );
-        }
+    const auto ix_upper_time_stamp = find_ix_time_stamp( _upper_time_stamp );
 
     // ---------------------------------------------------------------------------
 
@@ -321,6 +210,129 @@ DataFrame DataFrame::create_subview(
         _word_indices );
 
     // ---------------------------------------------------------------------------
+}
+
+// ----------------------------------------------------------------------------
+
+std::pair<const size_t*, const size_t*> DataFrame::find(
+    const Int _join_key ) const
+{
+    assert_true( indices().size() > 0 );
+
+    assert_true( indices_[0] );
+
+    if ( std::holds_alternative<InMemoryIndex>( *indices_[0] ) )
+        {
+            const auto& idx = std::get<InMemoryIndex>( *indices_[0] );
+
+            const auto it = idx.find( _join_key );
+
+            if ( it == idx.end() )
+                {
+                    return std::make_pair<const size_t*, const size_t*>(
+                        nullptr, nullptr );
+                }
+
+            return std::make_pair(
+                it->second.data(), it->second.data() + it->second.size() );
+        }
+
+    if ( std::holds_alternative<MemoryMappedIndex>( *indices_[0] ) )
+        {
+            const auto& idx = std::get<MemoryMappedIndex>( *indices_[0] );
+
+            const auto opt = idx[_join_key];
+
+            if ( !opt )
+                {
+                    return std::make_pair<const size_t*, const size_t*>(
+                        nullptr, nullptr );
+                }
+
+            const auto begin = opt->data();
+
+            return std::make_pair( begin, begin + opt->size() );
+        }
+
+    assert_true( false );
+
+    return std::make_pair<const size_t*, const size_t*>( nullptr, nullptr );
+}
+
+// ----------------------------------------------------------------------------
+
+size_t DataFrame::find_ix_join_key( const std::string& _colname ) const
+{
+    for ( size_t ix_join_key = 0; ix_join_key < join_keys_.size();
+          ++ix_join_key )
+        {
+            if ( join_keys_[ix_join_key].name_ == _colname )
+                {
+                    return ix_join_key;
+                }
+        }
+
+    const auto get_name = [this]( const auto& _col ) -> std::string {
+        const auto [table, colname] =
+            Macros::parse_table_colname( name_, _col.name_ );
+        return " '" + SQLite3Generator().make_colname( colname ) + "',";
+    };
+
+    auto names =
+        stl::collect::string( join_keys_ | VIEWS::transform( get_name ) );
+
+    if ( names.size() > 0 )
+        {
+            names.back() = '.';
+        }
+
+    const auto [table, colname] =
+        Macros::parse_table_colname( name_, _colname );
+
+    throw std::runtime_error(
+        "Join key named '" + SQLite3Generator().make_colname( colname ) +
+        "' not found in table '" + table + "'. Found " +
+        std::to_string( join_keys_.size() ) + " join keys:" + names );
+
+    return 0;
+}
+
+// ----------------------------------------------------------------------------
+
+size_t DataFrame::find_ix_time_stamp( const std::string& _colname ) const
+{
+    for ( size_t ix_time_stamp = 0; ix_time_stamp < time_stamps_.size();
+          ++ix_time_stamp )
+        {
+            if ( time_stamps_[ix_time_stamp].name_ == _colname )
+                {
+                    return ix_time_stamp;
+                }
+        }
+
+    const auto get_name = [this]( const auto& _col ) -> std::string {
+        const auto [table, colname] =
+            Macros::parse_table_colname( name_, _col.name_ );
+        return " '" + SQLite3Generator().make_colname( colname ) + "',";
+    };
+
+    auto names =
+        stl::collect::string( time_stamps_ | VIEWS::transform( get_name ) );
+
+    if ( names.size() > 0 )
+        {
+            names.back() = '.';
+        }
+
+    const auto [table, colname] =
+        Macros::parse_table_colname( name_, _colname );
+
+    throw std::runtime_error(
+        "Time stamp named '" + SQLite3Generator().make_colname( colname ) +
+        "' not found in table '" + table + "'. Found " +
+        std::to_string( time_stamps_.size() ) + " time stamps:" + names );
+
+    return 0;
 }
 
 // ----------------------------------------------------------------------------

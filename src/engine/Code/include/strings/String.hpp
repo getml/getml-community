@@ -36,6 +36,13 @@ class String
         strcpy( chars_.get(), _str );
     }
 
+    String( const char* _str, const size_t _size )
+        : chars_( std::make_unique<char[]>( _size + 1 ) )
+    {
+        std::copy( _str, _str + _size, chars_.get() );
+        chars_.get()[_size] = '\0';
+    }
+
     String( const String& _other )
         : chars_( std::make_unique<char[]>( _other.size() + 1 ) )
     {

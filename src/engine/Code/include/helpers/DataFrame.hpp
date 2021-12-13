@@ -39,24 +39,11 @@ struct DataFrame
         const RowIndices& _row_indices = RowIndices(),
         const WordIndices& _word_indices = WordIndices() );
 
-    DataFrame(
-        const std::vector<Column<Int>>& _categoricals,
-        const std::vector<Column<Float>>& _discretes,
-        const std::vector<Column<Int>>& _join_keys,
-        const std::string& _name,
-        const std::vector<Column<Float>>& _numericals,
-        const std::vector<Column<Float>>& _targets,
-        const std::vector<Column<strings::String>>& _text,
-        const std::vector<Column<Float>>& _time_stamps );
-
     ~DataFrame() = default;
 
     // ---------------------------------------------------------------------
 
    public:
-    /// Creates a new index.
-    static std::shared_ptr<Index> create_index( const Column<Int>& _join_key );
-
     /// Creates a subview.
     DataFrame create_subview(
         const std::string& _join_key,
@@ -66,6 +53,9 @@ struct DataFrame
         const RowIndices& _row_indices,
         const WordIndices& _word_indices,
         const AdditionalColumns& _additional ) const;
+
+    /// Find the indices associated with this join key.
+    std::pair<const size_t*, const size_t*> find( const Int _join_key ) const;
 
     // ---------------------------------------------------------------------
 
@@ -126,18 +116,11 @@ struct DataFrame
         return discretes_[_j].unit_;
     }
 
-    /// Find the indices associated with this join key.
-    Index::const_iterator find( const Int _join_key ) const
-    {
-        assert_true( indices().size() > 0 );
-        return indices_[0]->find( _join_key );
-    }
-
     /// Whether a certain join key is included in the indices.
     bool has( const Int _join_key ) const
     {
-        assert_true( indices().size() > 0 );
-        return indices_[0]->find( _join_key ) != indices_[0]->end();
+        const auto [begin, end] = find( _join_key );
+        return begin != nullptr;
     }
 
     /// Getter for the indices (TODO: make this private).
@@ -329,9 +312,11 @@ struct DataFrame
     // ---------------------------------------------------------------------
 
    private:
-    /// Creates the indices for this data frame
-    static std::vector<std::shared_ptr<Index>> create_indices(
-        const std::vector<Column<Int>>& _join_keys );
+    /// Finds the index of the join key named _colname
+    size_t find_ix_join_key( const std::string& _colname ) const;
+
+    /// Finds the index of the time stamp named _colname
+    size_t find_ix_time_stamp( const std::string& _colname ) const;
 
     /// Helper class that extracts the column names.
     template <typename T>
@@ -375,14 +360,7 @@ struct DataFrame
     const WordIndices word_indices_;
 };
 
-// -------------------------------------------------------------------------
-}  // namespace helpers
-
 // ----------------------------------------------------------------------------
-// ----------------------------------------------------------------------------
-
-namespace helpers
-{
 // ----------------------------------------------------------------------------
 
 template <typename T>

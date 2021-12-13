@@ -183,9 +183,7 @@ void FastProp::build_row(
             const auto &matches =
                 all_matches.at( abstract_feature.peripheral_ );
 
-            assert_true( _features->at( i ) );
-
-            assert_true( _rownum < _features->at( i )->size() );
+            assert_true( _rownum < _features->at( i ).size() );
 
             const auto &condition_function = _condition_functions.at( i );
 
@@ -197,7 +195,7 @@ void FastProp::build_row(
                 condition_function,
                 abstract_feature );
 
-            ( *( *_features )[i] )[_rownum] =
+            _features->at( _rownum, i ) =
                 ( std::isnan( value ) || std::isinf( value ) ) ? 0.0 : value;
         }
 }
@@ -275,7 +273,8 @@ std::vector<containers::Features> FastProp::build_subfeatures(
         {
             if ( !subfeatures().at( i ) )
                 {
-                    features.push_back( containers::Features() );
+                    features.push_back(
+                        containers::Features( 0, 0, std::nullopt ) );
                     continue;
                 }
 
@@ -306,6 +305,7 @@ std::vector<containers::Features> FastProp::build_subfeatures(
                 .logger_ = _params.logger_,
                 .peripheral_ = _params.peripheral_,
                 .population_ = new_population,
+                .temp_dir_ = _params.temp_dir_,
                 .word_indices_ = new_word_indices };
 
             const auto f = subfeatures().at( i )->transform(
@@ -323,10 +323,7 @@ std::vector<containers::Features> FastProp::build_subfeatures(
 // ----------------------------------------------------------------------------
 
 std::vector<Float> FastProp::calc_r_squared(
-    const containers::DataFrame &_population,
-    const std::vector<containers::DataFrame> &_peripheral,
-    const std::shared_ptr<const logging::AbstractLogger> _logger,
-    const helpers::WordIndexContainer &_word_indices,
+    const FitParams &_params,
     const std::shared_ptr<std::vector<size_t>> &_rownums ) const
 {
     assert_true( _rownums );
@@ -348,23 +345,24 @@ std::vector<Float> FastProp::calc_r_squared(
                 .feature_container_ = std::nullopt,
                 .index_ = index,
                 .logger_ = nullptr,
-                .peripheral_ = _peripheral,
-                .population_ = _population,
-                .word_indices_ = _word_indices };
+                .peripheral_ = _params.peripheral_,
+                .population_ = _params.population_,
+                .temp_dir_ = _params.temp_dir_,
+                .word_indices_ = _params.word_indices_ };
 
             const auto features = transform( params, _rownums, false );
 
             const auto r = RSquared::calculate(
-                _population.targets_, features, *_rownums );
+                _params.population_.targets_, features, *_rownums );
 
             r_squared.insert( r_squared.end(), r.begin(), r.end() );
 
-            if ( _logger )
+            if ( _params.logger_ )
                 {
                     const auto progress = std::to_string(
                         ( end * 100 ) / abstract_features().size() );
 
-                    _logger->log(
+                    _params.logger_->log(
                         "Built " + std::to_string( end ) +
                         " features. Progress: " + progress + "%." );
                 }
@@ -439,7 +437,8 @@ containers::Features FastProp::expand_subfeatures(
 {
     assert_true( _subfeatures.size() == _subfeature_index.size() );
 
-    auto expanded_subfeatures = containers::Features( _num_subfeatures );
+    std::vector<helpers::Feature<Float, false>> expanded_subfeatures(
+        _num_subfeatures );
 
     for ( size_t i = 0; i < _subfeatures.size(); ++i )
         {
@@ -450,7 +449,7 @@ containers::Features FastProp::expand_subfeatures(
             expanded_subfeatures.at( ix ) = _subfeatures.at( i );
         }
 
-    return expanded_subfeatures;
+    return helpers::Features( expanded_subfeatures );
 }
 
 // ----------------------------------------------------------------------------
@@ -644,12 +643,7 @@ void FastProp::fit( const FitParams &_params, const bool _as_subfeatures )
 
     if ( !_as_subfeatures )
         {
-            abstract_features_ = select_features(
-                _params.population_,
-                _params.peripheral_,
-                _params.logger_,
-                _params.word_indices_,
-                rownums );
+            abstract_features_ = select_features( _params, rownums );
         }
 }
 
@@ -1231,6 +1225,7 @@ FastProp::fit_subfeatures(
                 .peripheral_ = _params.peripheral_,
                 .population_ = new_population,
                 .row_indices_ = new_row_indices,
+                .temp_dir_ = _params.temp_dir_,
                 .word_indices_ = new_word_indices };
 
             subfeatures->back()->fit( params, true );
@@ -1499,24 +1494,6 @@ std::vector<std::vector<containers::Match>> FastProp::make_matches(
     // ------------------------------------------------------------
 
     return all_matches;
-}
-
-// ----------------------------------------------------------------------------
-
-containers::Features FastProp::init_features(
-    const size_t _nrows, const size_t _ncols ) const
-{
-    auto features = containers::Features();
-
-    for ( size_t col = 0; col < _ncols; ++col )
-        {
-            const auto new_feature =
-                std::make_shared<std::vector<Float>>( _nrows );
-
-            features.push_back( new_feature );
-        }
-
-    return features;
 }
 
 // ----------------------------------------------------------------------------
@@ -1857,24 +1834,20 @@ std::shared_ptr<std::vector<size_t>> FastProp::sample_from_population(
 
 std::shared_ptr<const std::vector<containers::AbstractFeature>>
 FastProp::select_features(
-    const containers::DataFrame &_population,
-    const std::vector<containers::DataFrame> &_peripheral,
-    const std::shared_ptr<const logging::AbstractLogger> _logger,
-    const helpers::WordIndexContainer &_word_indices,
+    const FitParams &_params,
     const std::shared_ptr<std::vector<size_t>> &_rownums ) const
 {
     if ( abstract_features().size() <= hyperparameters().num_features_ )
         {
-            if ( _logger )
+            if ( _params.logger_ )
                 {
-                    _logger->log( "Trained features. Progress: 100%." );
+                    _params.logger_->log( "Trained features. Progress: 100%." );
                 }
 
             return abstract_features_;
         }
 
-    const auto r_squared = calc_r_squared(
-        _population, _peripheral, _logger, _word_indices, _rownums );
+    const auto r_squared = calc_r_squared( _params, _rownums );
 
     const auto threshold = calc_threshold( r_squared );
 
@@ -1997,7 +1970,7 @@ void FastProp::spawn_threads(
 // ----------------------------------------------------------------------------
 
 void FastProp::subfeatures_to_sql(
-    const std::shared_ptr<const std::vector<strings::String>> &_categories,
+    const helpers::StringIterator &_categories,
     const helpers::VocabularyTree &_vocabulary,
     const std::shared_ptr<const helpers::SQLDialectGenerator>
         &_sql_dialect_generator,
@@ -2046,8 +2019,8 @@ containers::Features FastProp::transform(
             _params.logger_->log( msg );
         }
 
-    auto features =
-        init_features( _params.population_.nrows(), _params.index_.size() );
+    auto features = containers::Features(
+        _params.population_.nrows(), _params.index_.size(), _params.temp_dir_ );
 
     spawn_threads( _params, subfeatures, _rownums, &features );
 
@@ -2179,7 +2152,7 @@ Poco::JSON::Object FastProp::to_json_obj( const bool _schema_only ) const
 // ----------------------------------------------------------------------------
 
 std::vector<std::string> FastProp::to_sql(
-    const std::shared_ptr<const std::vector<strings::String>> &_categories,
+    const helpers::StringIterator &_categories,
     const helpers::VocabularyTree &_vocabulary,
     const std::shared_ptr<const helpers::SQLDialectGenerator>
         &_sql_dialect_generator,
@@ -2187,8 +2160,6 @@ std::vector<std::string> FastProp::to_sql(
     const size_t _offset,
     const bool _subfeatures ) const
 {
-    assert_true( _categories );
-
     assert_true(
         main_table_schemas().size() == peripheral_table_schemas().size() );
 
@@ -2220,7 +2191,7 @@ std::vector<std::string> FastProp::to_sql(
                 main_table_schemas().at( abstract_feature.peripheral_ );
 
             sql.push_back( abstract_feature.to_sql(
-                *_categories,
+                _categories,
                 _sql_dialect_generator,
                 _feature_prefix,
                 std::to_string( _offset + i + 1 ),

@@ -17,6 +17,7 @@ class DataFrameModifier
     static void add_join_keys(
         const Poco::JSON::Object& _population_placeholder,
         const std::vector<std::string>& _peripheral_names,
+        const std::optional<std::string>& _temp_dir,
         containers::DataFrame* _population_df,
         std::vector<containers::DataFrame>* _peripheral_dfs,
         std::shared_ptr<containers::Encoding> _encoding = nullptr );

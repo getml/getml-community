@@ -31,10 +31,7 @@ class MetricImpl
     size_t ncols() const { return y_.size(); }
 
     /// Trivial getter
-    size_t nrows() const
-    {
-        return ( ncols() == 0 ) ? ( 0 ) : ( y_[0]->size() );
-    }
+    size_t nrows() const { return ( ncols() == 0 ) ? ( 0 ) : ( y_[0].size() ); }
 
     /// Reduces a value in a multithreading context.
     template <typename OperatorType>
@@ -81,8 +78,8 @@ class MetricImpl
 
         for ( size_t i = 0; i < _y.size(); ++i )
             {
-                assert_true( _y[i]->size() == _yhat[i]->size() );
-                assert_true( _y[i]->size() == _y[0]->size() );
+                assert_true( _y[i].size() == _yhat[i].size() );
+                assert_true( _y[i].size() == _y[0].size() );
             }
 
         yhat_ = _yhat;
@@ -93,20 +90,16 @@ class MetricImpl
     Float y( size_t _i, size_t _j ) const
     {
         assert_true( _j < y_.size() );
-        assert_true( y_[_j] );
-        assert_true( _i < y_[_j]->size() );
-
-        return ( *y_[_j] )[_i];
+        assert_true( _i < y_[_j].size() );
+        return y_[_j][_i];
     }
 
     /// Trivial getter
     Float yhat( size_t _i, size_t _j ) const
     {
         assert_true( _j < yhat_.size() );
-        assert_true( yhat_[_j] );
-        assert_true( _i < yhat_[_j]->size() );
-
-        return ( *yhat_[_j] )[_i];
+        assert_true( _i < yhat_[_j].size() );
+        return yhat_[_j][_i];
     }
 
     // -----------------------------------------

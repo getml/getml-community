@@ -41,6 +41,10 @@ struct MakerParams
     const std::optional<helpers::RowIndexContainer> row_index_container_ =
         std::nullopt;
 
+    /// The temporary directory to be used to place the memory mapping (when set
+    /// to nullopt, everything will be done in memory)
+    const std::optional<std::string> temp_dir_;
+
     /// The word index container used to transform the text columns.
     const helpers::WordIndexContainer word_index_container_;
 };

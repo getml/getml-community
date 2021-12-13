@@ -135,7 +135,7 @@ class DecisionTreeEnsemble
 
     /// Expresses DecisionTreeEnsemble as SQL code.
     std::vector<std::string> to_sql(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const helpers::StringIterator& _categories,
         const helpers::VocabularyTree& _vocabulary,
         const std::shared_ptr<const helpers::SQLDialectGenerator>&
             _sql_dialect_generator,
@@ -264,7 +264,7 @@ class DecisionTreeEnsemble
 
     /// Transforms the subfeatures to SQL code.
     void subfeatures_to_sql(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const helpers::StringIterator& _categories,
         const helpers::VocabularyTree& _vocabulary,
         const std::shared_ptr<const helpers::SQLDialectGenerator>&
             _sql_dialect_generator,

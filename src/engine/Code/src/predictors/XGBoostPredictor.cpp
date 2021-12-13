@@ -7,10 +7,10 @@ namespace predictors
 void XGBoostPredictor::add_target(
     const DMatrixPtr &_d_matrix, const CFloatColumn &_y ) const
 {
-    std::vector<float> y_float( _y->size() );
+    std::vector<float> y_float( _y.size() );
 
     std::transform(
-        _y->begin(), _y->end(), y_float.begin(), []( const Float val ) {
+        _y.begin(), _y.end(), y_float.begin(), []( const Float val ) {
             return static_cast<float>( val );
         } );
 
@@ -67,20 +67,20 @@ XGBoostPredictor::convert_to_dmatrix_dense(
         }
 
     std::vector<float> mat_float(
-        _X_numerical.size() * _X_numerical[0]->size() );
+        _X_numerical.size() * _X_numerical[0].size() );
 
     for ( size_t j = 0; j < _X_numerical.size(); ++j )
         {
-            if ( _X_numerical[j]->size() != _X_numerical[0]->size() )
+            if ( _X_numerical[j].size() != _X_numerical[0].size() )
                 {
                     throw std::invalid_argument(
                         "All columns must have the same length!" );
                 }
 
-            for ( size_t i = 0; i < _X_numerical[j]->size(); ++i )
+            for ( size_t i = 0; i < _X_numerical[j].size(); ++i )
                 {
                     mat_float[i * _X_numerical.size() + j] =
-                        static_cast<float>( ( *_X_numerical[j] )[i] );
+                        static_cast<float>( _X_numerical[j][i] );
                 }
         }
 
@@ -88,7 +88,7 @@ XGBoostPredictor::convert_to_dmatrix_dense(
 
     if ( XGDMatrixCreateFromMat(
              mat_float.data(),
-             _X_numerical[0]->size(),
+             _X_numerical[0].size(),
              _X_numerical.size(),
              -1,
              d_matrix ) != 0 )
@@ -576,12 +576,10 @@ CFloatColumn XGBoostPredictor::predict(
         }
 
     // --------------------------------------------------------------------
-    // Build DMatrix
 
     auto d_matrix = convert_to_dmatrix( _X_categorical, _X_numerical );
 
     // --------------------------------------------------------------------
-    // Reload the booster
 
     auto handle = allocate_booster( d_matrix.get(), 1 );
 
@@ -591,9 +589,9 @@ CFloatColumn XGBoostPredictor::predict(
         }
 
     // --------------------------------------------------------------------
-    // Generate predictions
 
-    auto yhat = std::make_shared<std::vector<Float>>( _X_numerical[0]->size() );
+    auto yhat = CFloatColumn(
+        std::make_shared<std::vector<Float>>( _X_numerical[0].size() ) );
 
     bst_ulong nrows = 0;
 
@@ -605,10 +603,10 @@ CFloatColumn XGBoostPredictor::predict(
             std::runtime_error( "Generating XGBoost predictions failed!" );
         }
 
-    assert_true( static_cast<size_t>( nrows ) == yhat->size() );
+    assert_true( static_cast<size_t>( nrows ) == yhat.size() );
 
     std::transform(
-        yhat_float, yhat_float + nrows, yhat->begin(), []( const float val ) {
+        yhat_float, yhat_float + nrows, yhat.begin(), []( const float val ) {
             return static_cast<Float>( val );
         } );
 

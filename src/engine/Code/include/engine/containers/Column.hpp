@@ -11,6 +11,35 @@ template <class T>
 class Column
 {
    public:
+    typedef typename helpers::Column<T>::InMemoryVector InMemoryVector;
+    typedef typename helpers::Column<T>::MemmapVector MemmapVector;
+    typedef typename helpers::Column<T>::InMemoryPtr InMemoryPtr;
+    typedef typename helpers::Column<T>::MemmapPtr MemmapPtr;
+
+    typedef typename helpers::Column<T>::ConstInMemoryPtr ConstInMemoryPtr;
+    typedef typename helpers::Column<T>::ConstMemmapPtr ConstMemmapPtr;
+
+    typedef typename helpers::Column<T>::Variant Variant;
+    typedef typename helpers::Column<T>::ConstVariant ConstVariant;
+
+    // Strings need special treatment because of the memory mapping
+    typedef typename std::conditional<
+        std::is_same<T, strings::String>::value,
+        ColumnViewIterator<T>,
+        T *>::type iterator;
+
+    // Strings need special treatment because of the memory mapping
+    typedef typename std::conditional<
+        std::is_same<T, strings::String>::value,
+        ColumnViewIterator<T>,
+        const T *>::type const_iterator;
+
+    typedef T value_type;
+
+    static constexpr bool IN_MEMORY = config::EngineOptions::IN_MEMORY;
+    static constexpr bool MEMORY_MAPPING =
+        config::EngineOptions::MEMORY_MAPPING;
+
     static constexpr const char *FLOAT_COLUMN = "FloatColumn";
     static constexpr const char *STRING_COLUMN = "StringColumn";
 
@@ -19,14 +48,12 @@ class Column
     static constexpr const char *BOOLEAN_COLUMN_VIEW = "BooleanColumnView";
 
    public:
-    typedef T value_type;
-
-    Column( const size_t _nrows )
-        : data_ptr_( std::make_shared<std::vector<T>>( _nrows ) ),
-          name_( "" ),
-          nrows_( _nrows ),
-          unit_( "" )
+    Column( const Variant _data_ptr )
+        : data_ptr_( _data_ptr ), name_( "" ), unit_( "" )
     {
+        // TODO
+        // assert_true( data_ptr_ );
+
         static_assert(
             std::is_arithmetic<T>::value ||
                 std::is_same<T, std::string>::value ||
@@ -35,32 +62,40 @@ class Column
             "Column<T>(...)!" );
     }
 
-    Column( const std::shared_ptr<std::vector<T>> &_data_ptr )
-        : data_ptr_( _data_ptr ), name_( "" ), unit_( "" )
-    {
-        assert_true( data_ptr_ );
-        nrows_ = data_ptr_->size();
-    }
-
-    Column(
-        const std::shared_ptr<std::vector<T>> &_data_ptr,
-        const std::string &_name )
+    Column( const Variant _data_ptr, const std::string &_name )
         : Column( _data_ptr )
     {
         set_name( _name );
     }
 
-    Column() : Column( 0 ) {}
+    template <
+        typename IteratorType = iterator,
+        typename std::enable_if<std::is_same<IteratorType, T *>::value, int>::
+            type = 0>
+    Column( const std::shared_ptr<memmap::Pool> &_pool, const size_t _nrows )
+        : data_ptr_( make_data_ptr( _pool, _nrows ) ),
+          name_( "" ),
+          pool_( _pool ),
+          unit_( "" )
+    {
+    }
 
-    ~Column() {}
+    Column( const std::shared_ptr<memmap::Pool> &_pool )
+        : data_ptr_( make_data_ptr( _pool ) ),
+          name_( "" ),
+          pool_( _pool ),
+          unit_( "" )
+    {
+    }
+
+    ~Column() = default;
 
     // -------------------------------
 
     /// Appends another Column through rowbinding
     void append( const Column<T> &_other );
 
-    /// Sets nrows_, ncols_ to zero and intialises
-    /// data_ with an empty vector
+    /// Intialises data_ptr_ with an empty vector
     void clear();
 
     /// Generates a deep copy of the column itself.
@@ -79,66 +114,160 @@ class Column
     /// _key.
     Column<T> sort_by_key( const std::vector<size_t> &_key ) const;
 
-    /// Transforms Column to a std::vector
-    std::vector<T> to_vector() const;
-
     /// Returns a Column containing all rows for which _key is true.
     Column<T> where( const std::vector<bool> &_condition ) const;
 
     // -------------------------------
 
     /// Boundary-checked accessor to data
-    template <class T2>
+    template <
+        class T2,
+        typename IteratorType = iterator,
+        typename std::enable_if<std::is_same<IteratorType, T *>::value, int>::
+            type = 0>
     T &at( const T2 _i )
     {
-        if ( !data_ptr_ || _i < 0 || static_cast<size_t>( _i ) >= nrows() )
+        if ( _i < 0 || static_cast<size_t>( _i ) >= nrows() )
             {
                 throw std::invalid_argument(
                     "Out-of-bounds access to column '" + name_ + "'" );
             }
 
-        return ( *data_ptr_ )[_i];
+        if ( std::holds_alternative<InMemoryPtr>( data_ptr_ ) )
+            {
+                const auto ptr = std::get<InMemoryPtr>( data_ptr_ );
+                return ( *ptr )[_i];
+            }
+
+        assert_true( std::holds_alternative<MemmapPtr>( data_ptr_ ) );
+        const auto ptr = std::get<MemmapPtr>( data_ptr_ );
+        return ( *ptr )[_i];
     }
 
     /// Boundary-checker accessor to data
     template <class T2>
-    T at( const T2 _i ) const
+    const T at( const T2 _i ) const
     {
-        if ( !data_ptr_ || _i < 0 || static_cast<size_t>( _i ) >= nrows() )
+        if ( _i < 0 || static_cast<size_t>( _i ) >= nrows() )
             {
                 throw std::invalid_argument(
                     "Out-of-bounds access to column '" + name_ + "'" );
             }
 
-        return ( *data_ptr_ )[_i];
+        if ( std::holds_alternative<InMemoryPtr>( data_ptr_ ) )
+            {
+                const auto ptr = std::get<InMemoryPtr>( data_ptr_ );
+                return ( *ptr )[_i];
+            }
+
+        assert_true( std::holds_alternative<MemmapPtr>( data_ptr_ ) );
+        const auto ptr = std::get<MemmapPtr>( data_ptr_ );
+        return ( *ptr )[_i];
     }
 
     /// Iterator to beginning of data
-    T *begin() { return data_ptr_->data(); }
+    template <
+        typename IteratorType = iterator,
+        typename std::enable_if<std::is_same<IteratorType, T *>::value, int>::
+            type = 0>
+    iterator begin()
+    {
+        return data();
+    }
 
     /// Const iterator to beginning of data
-    T *begin() const { return data_ptr_->data(); }
-
-    /// Trivial getter
-    T *data() { return data_ptr_->data(); }
-
-    /// Trivial getter
-    const T *data() const { return data_ptr_->data(); }
-
-    /// Trivial getter
-    std::shared_ptr<std::vector<T>> &data_ptr() { return data_ptr_; }
-
-    /// Trivial getter
-    const std::shared_ptr<std::vector<T>> &data_ptr() const
+    const_iterator begin() const
     {
-        return data_ptr_;
+        if constexpr ( std::is_same<iterator, T *>() )
+            {
+                return data();
+            }
+
+        if constexpr ( !std::is_same<iterator, T *>() )
+            {
+                const auto value_func =
+                    [this]( const size_t _i ) -> std::optional<T> {
+                    if ( _i >= nrows() )
+                        {
+                            return std::nullopt;
+                        }
+                    return ( *this )[_i];
+                };
+                return ColumnViewIterator<T>( value_func );
+            }
+    }
+
+    /// Returns the data ptr as a constant.
+    ConstVariant const_data_ptr() const
+    {
+        if ( std::holds_alternative<InMemoryPtr>( data_ptr_ ) )
+            {
+                return ConstInMemoryPtr( std::get<InMemoryPtr>( data_ptr_ ) );
+            }
+        assert_true( std::holds_alternative<MemmapPtr>( data_ptr_ ) );
+        return ConstMemmapPtr( std::get<MemmapPtr>( data_ptr_ ) );
+    }
+
+    /// Trivial getter
+    template <
+        typename IteratorType = iterator,
+        typename std::enable_if<std::is_same<IteratorType, T *>::value, int>::
+            type = 0>
+    T *data()
+    {
+        if ( std::holds_alternative<InMemoryPtr>( data_ptr_ ) )
+            {
+                const auto ptr = std::get<InMemoryPtr>( data_ptr_ );
+                return ptr->data();
+            }
+        assert_true( std::holds_alternative<MemmapPtr>( data_ptr_ ) );
+        const auto ptr = std::get<MemmapPtr>( data_ptr_ );
+        return ptr->data();
+    }
+
+    /// Trivial getter
+    template <
+        typename IteratorType = iterator,
+        typename std::enable_if<std::is_same<IteratorType, T *>::value, int>::
+            type = 0>
+    const T *data() const
+    {
+        if ( std::holds_alternative<InMemoryPtr>( data_ptr_ ) )
+            {
+                const auto ptr = std::get<InMemoryPtr>( data_ptr_ );
+                return ptr->data();
+            }
+        assert_true( std::holds_alternative<MemmapPtr>( data_ptr_ ) );
+        const auto ptr = std::get<MemmapPtr>( data_ptr_ );
+        return ptr->data();
+    }
+
+    /// Trivial getter
+    Variant data_ptr() const { return data_ptr_; }
+
+    /// Iterator to end of data
+    template <
+        typename IteratorType = iterator,
+        typename std::enable_if<std::is_same<IteratorType, T *>::value, int>::
+            type = 0>
+    iterator end()
+    {
+        return data() + nrows();
     }
 
     /// Iterator to end of data
-    T *end() { return data_ptr_->data() + nrows(); }
+    const_iterator end() const
+    {
+        if constexpr ( std::is_same<iterator, T *>() )
+            {
+                return data() + nrows();
+            }
 
-    /// Iterator to end of data
-    T *end() const { return data_ptr_->data() + nrows(); }
+        if constexpr ( !std::is_same<iterator, T *>() )
+            {
+                return ColumnViewIterator<T>();
+            }
+    }
 
     /// Trivial getter
     const std::string &name() const { return name_; }
@@ -148,13 +277,14 @@ class Column
     {
         if constexpr ( std::is_same<T, strings::String>() )
             {
-                return std::accumulate(
-                    begin(),
-                    end(),
-                    static_cast<size_t>( nrows() * ( sizeof( T ) + 1 ) ),
-                    []( const size_t init, const T &_str ) {
-                        return init + _str.size();
-                    } );
+                ULong nbytes = nrows() * ( sizeof( T ) + 1 );
+
+                for ( size_t i = 0; i < nrows(); ++i )
+                    {
+                        nbytes += static_cast<ULong>( ( *this )[i].size() );
+                    }
+
+                return nbytes;
             }
         else
             {
@@ -163,27 +293,75 @@ class Column
     }
 
     /// Accessor to data
-    template <class T2>
+    template <
+        class T2,
+        typename IteratorType = iterator,
+        typename std::enable_if<std::is_same<IteratorType, T *>::value, int>::
+            type = 0>
     T &operator[]( const T2 _i )
     {
         assert_true( _i >= 0 );
         assert_true( static_cast<size_t>( _i ) < nrows() );
 
-        return ( *data_ptr_ )[_i];
+        if ( std::holds_alternative<InMemoryPtr>( data_ptr_ ) )
+            {
+                const auto ptr = std::get<InMemoryPtr>( data_ptr_ );
+                return ( *ptr )[_i];
+            }
+
+        assert_true( std::holds_alternative<MemmapPtr>( data_ptr_ ) );
+        const auto ptr = std::get<MemmapPtr>( data_ptr_ );
+        return ( *ptr )[_i];
     }
 
     /// Accessor to data
     template <class T2>
-    T operator[]( const T2 _i ) const
+    const T operator[]( const T2 _i ) const
     {
         assert_true( _i >= 0 );
         assert_true( static_cast<size_t>( _i ) < nrows() );
 
-        return ( *data_ptr_ )[_i];
+        if ( std::holds_alternative<InMemoryPtr>( data_ptr_ ) )
+            {
+                const auto ptr = std::get<InMemoryPtr>( data_ptr_ );
+                return ( *ptr )[_i];
+            }
+
+        assert_true( std::holds_alternative<MemmapPtr>( data_ptr_ ) );
+        const auto ptr = std::get<MemmapPtr>( data_ptr_ );
+        return ( *ptr )[_i];
     }
 
     /// Trivial getter
-    size_t nrows() const { return nrows_; }
+    size_t nrows() const
+    {
+        if ( std::holds_alternative<InMemoryPtr>( data_ptr_ ) )
+            {
+                const auto ptr = std::get<InMemoryPtr>( data_ptr_ );
+                return ptr->size();
+            }
+
+        assert_true( std::holds_alternative<MemmapPtr>( data_ptr_ ) );
+        const auto ptr = std::get<MemmapPtr>( data_ptr_ );
+        return ptr->size();
+    }
+
+    /// Trivial getter
+    std::shared_ptr<memmap::Pool> pool() const { return pool_; }
+
+    /// Appends data to the end
+    void push_back( const T &_val )
+    {
+        if ( std::holds_alternative<InMemoryPtr>( data_ptr_ ) )
+            {
+                const auto ptr = std::get<InMemoryPtr>( data_ptr_ );
+                return ptr->push_back( _val );
+            }
+
+        assert_true( std::holds_alternative<MemmapPtr>( data_ptr_ ) );
+        const auto ptr = std::get<MemmapPtr>( data_ptr_ );
+        return ptr->push_back( _val );
+    }
 
     /// Trivial setter
     void set_name( const std::string &_name ) { name_ = _name; }
@@ -202,59 +380,24 @@ class Column
     /// Trivial getter.
     const size_t size() const { return nrows(); }
 
-    /// For int types only: Transforms to a float column.
-    template <
-        typename T2 = T,
-        typename std::enable_if<std::is_same<T2, Int>::value, int>::type = 0>
-    Column<Float> to_float_column() const
-    {
-        auto float_col = Column<Float>( nrows() );
-
-        for ( size_t i = 0; i < nrows(); ++i )
-            {
-                const auto val = ( *this )[i];
-                if ( val == std::numeric_limits<Int>::lowest() )
-                    {
-                        float_col[i] = NAN;
-                    }
-                else
-                    {
-                        float_col[i] = static_cast<Float>( val );
-                    }
-            }
-
-        return float_col;
-    }
-
-    /// For float types only: Transforms to a Int column.
-    template <
-        typename T2 = T,
-        typename std::enable_if<std::is_same<T2, Float>::value, int>::type = 0>
-    Column<Int> to_int_column() const
-    {
-        auto int_col = Column<Int>( nrows() );
-
-        for ( size_t i = 0; i < nrows(); ++i )
-            {
-                const auto val = ( *this )[i];
-                if ( std::isnan( val ) || std::isinf( val ) )
-                    {
-                        int_col[i] = std::numeric_limits<Int>::lowest();
-                    }
-                else
-                    {
-                        int_col[i] = static_cast<Int>( val );
-                    }
-            }
-
-        return int_col;
-    }
-
     /// Trivial getter
     const std::vector<std::string> &subroles() const { return subroles_; }
 
     /// Trivial getter
     const std::string &unit() const { return unit_; }
+
+    /// Transforms Column to a std::vector
+    std::vector<T> to_vector() const
+    {
+        return std::vector<T>( begin(), end() );
+    }
+
+    /// Transforms Column to a std::vector
+    // TODO: remove this
+    std::shared_ptr<std::vector<T>> to_vector_ptr() const
+    {
+        return std::make_shared<std::vector<T>>( begin(), end() );
+    }
 
     // -------------------------------
 
@@ -278,6 +421,31 @@ class Column
     // -------------------------------
 
    private:
+    /// Initializes the data_ptr
+    static Variant make_data_ptr( const std::shared_ptr<memmap::Pool> &_pool )
+    {
+        if ( _pool )
+            {
+                return std::make_shared<MemmapVector>( _pool );
+            }
+        return std::make_shared<InMemoryVector>( 0 );
+    }
+
+    /// Initializes the data_ptr
+    template <
+        typename IteratorType = iterator,
+        typename std::enable_if<std::is_same<IteratorType, T *>::value, int>::
+            type = 0>
+    static Variant make_data_ptr(
+        const std::shared_ptr<memmap::Pool> &_pool, const size_t _nrows )
+    {
+        if ( _pool )
+            {
+                return std::make_shared<MemmapVector>( _pool, _nrows );
+            }
+        return std::make_shared<InMemoryVector>( _nrows );
+    }
+
     /// Called by load_big_endian(...).
     template <class StringType>
     void read_string_big_endian( StringType *_str, std::ifstream *_input ) const
@@ -351,13 +519,13 @@ class Column
 
    private:
     /// The actual data.
-    std::shared_ptr<std::vector<T>> data_ptr_;
+    Variant data_ptr_;
 
     /// Name of the column.
     std::string name_;
 
-    /// Number of rows.
-    size_t nrows_;
+    /// The memory pool, for memory mapping
+    std::shared_ptr<memmap::Pool> pool_;
 
     /// Subroles applied to this column.
     std::vector<std::string> subroles_;
@@ -374,15 +542,10 @@ class Column
 template <class T>
 void Column<T>::append( const Column<T> &_other )
 {
-    if ( !data_ptr_ )
+    for ( const auto &val : _other )
         {
-            throw std::invalid_argument(
-                "Cannot append to column! It contains no data!" );
+            push_back( val );
         }
-
-    data_ptr_->insert( data_ptr_->end(), _other.begin(), _other.end() );
-
-    nrows_ += _other.nrows();
 }
 
 // -------------------------------------------------------------------------
@@ -390,7 +553,7 @@ void Column<T>::append( const Column<T> &_other )
 template <class T>
 void Column<T>::clear()
 {
-    *this = Column<T>( 0, 0 );
+    *this = Column<T>( pool() );
 }
 
 // -------------------------------------------------------------------------
@@ -398,14 +561,16 @@ void Column<T>::clear()
 template <class T>
 Column<T> Column<T>::clone() const
 {
-    if ( !data_ptr_ )
+    // TODO: Fix clone!
+    /*if ( !data_ptr_ )
         {
             throw std::invalid_argument(
                 "Column cannot be cloned! It contains no data!" );
-        }
+        }*/
 
-    const auto vec = std::make_shared<std::vector<T>>(
-        data_ptr_->begin(), data_ptr_->end() );
+    const auto vec = std::holds_alternative<InMemoryPtr>( data_ptr_ )
+                         ? Variant( std::get<InMemoryPtr>( data_ptr_ ) )
+                         : Variant( std::get<MemmapPtr>( data_ptr_ ) );
 
     auto col = Column<T>( vec );
 
@@ -421,8 +586,7 @@ Column<T> Column<T>::clone() const
 template <class T>
 void Column<T>::load( const std::string &_fname )
 {
-    if ( std::is_same<T, char>::value == false &&
-         utils::Endianness::is_little_endian() )
+    if ( !std::is_same<T, char>() && utils::Endianness::is_little_endian() )
         {
             *this = load_little_endian( _fname );
         }
@@ -439,44 +603,36 @@ Column<T> Column<T>::load_big_endian( const std::string &_fname ) const
 {
     // -------------------------------------------------------------------------
 
-    debug_log( "Column.load: Big endian..." );
-
     std::ifstream input( _fname, std::ios::binary );
 
     // -------------------------------------------------------------------------
-    // Read nrows
-
-    debug_log( "Column.load: Read nrows..." );
 
     size_t nrows = 0;
 
     input.read( reinterpret_cast<char *>( &nrows ), sizeof( size_t ) );
 
     // -------------------------------------------------------------------------
-    // Init matrix
 
-    debug_log( "Column.load: Init Column..." );
-
-    auto col = Column<T>( nrows );
-
-    // -------------------------------------------------------------------------
-    // Read data
-
-    debug_log( "Column.load: Read data..." );
+    auto col = Column<T>( pool() );
 
     if constexpr ( std::is_same<T, strings::String>() )
         {
-            for ( auto &str : col ) read_string_big_endian( &str, &input );
+            for ( size_t i = 0; i < nrows; ++i )
+                {
+                    strings::String str;
+                    read_string_big_endian( &str, &input );
+                    col.push_back( str );
+                }
         }
     else
         {
+            col = Column<T>( pool(), nrows );
             input.read(
                 reinterpret_cast<char *>( col.data() ),
                 col.nrows() * sizeof( T ) );
         }
 
     // -------------------------------------------------------------------------
-    // Read name and unit
 
     read_string_big_endian( &col.name_, &input );
 
@@ -499,58 +655,45 @@ Column<T> Column<T>::load_little_endian( const std::string &_fname ) const
     std::ifstream input( _fname, std::ios::binary );
 
     // -------------------------------------------------------------------------
-    // Read nrows
-
-    debug_log( "Column.load: Read nrows..." );
 
     size_t nrows = 0;
 
     input.read( reinterpret_cast<char *>( &nrows ), sizeof( size_t ) );
 
-    // -------------------------------------------------------------------------
-    // Reverse byte order.
-
     utils::Endianness::reverse_byte_order( &nrows );
 
     // -------------------------------------------------------------------------
-    // Init Column
 
-    debug_log( "Column.load: Init Column..." );
-
-    auto col = Column<T>( nrows );
-
-    // -------------------------------------------------------------------------
-    // Read data
-
-    debug_log( "Column.load: Read data..." );
+    auto col = Column<T>( pool() );
 
     if constexpr ( std::is_same<T, strings::String>() )
         {
-            for ( auto &str : col ) read_string_little_endian( &str, &input );
+            for ( size_t i = 0; i < nrows; ++i )
+                {
+                    strings::String str;
+                    read_string_little_endian( &str, &input );
+                    col.push_back( str );
+                }
         }
     else
         {
+            col = Column<T>( pool(), nrows );
             input.read(
                 reinterpret_cast<char *>( col.data() ),
                 col.nrows() * sizeof( T ) );
         }
 
     // -------------------------------------------------------------------------
-    // Reverse byte order.
 
     if constexpr ( !std::is_same<T, strings::String>() )
         {
-            debug_log( "Column.load: Reverse byte order of data..." );
-
-            auto reverse_data = []( T &_val ) {
-                utils::Endianness::reverse_byte_order( &_val );
-            };
-
-            std::for_each( col.begin(), col.end(), reverse_data );
+            for ( size_t i = 0; i < nrows; ++i )
+                {
+                    utils::Endianness::reverse_byte_order( &col[i] );
+                }
         }
 
     // -------------------------------------------------------------------------
-    // Read colnames and units.
 
     read_string_little_endian( &col.name_, &input );
 
@@ -586,26 +729,23 @@ void Column<T>::save_big_endian( const std::string &_fname ) const
 {
     // -----------------------------------------------------------------
 
-    debug_log( "Column.save: Is big endian..." );
-
     std::ofstream output( _fname, std::ios::binary );
 
     // -----------------------------------------------------------------
-    // Write nrows
 
-    debug_log( "Column.save: Write nrows..." );
+    const auto num_rows = nrows();
 
-    output.write( reinterpret_cast<const char *>( &nrows_ ), sizeof( size_t ) );
+    output.write(
+        reinterpret_cast<const char *>( &num_rows ), sizeof( size_t ) );
 
     // -----------------------------------------------------------------
-    // Write data
-
-    debug_log( "Column.save: Write data..." );
 
     if constexpr ( std::is_same<T, strings::String>() )
         {
-            for ( auto it = begin(); it != end(); ++it )
-                write_string_big_endian( *it, &output );
+            for ( size_t i = 0; i < nrows(); ++i )
+                {
+                    write_string_big_endian( ( *this )[i], &output );
+                }
         }
     else
         {
@@ -615,9 +755,6 @@ void Column<T>::save_big_endian( const std::string &_fname ) const
         }
 
     // -----------------------------------------------------------------
-    // Write colnames and units
-
-    debug_log( "Column.save: Write colnames and units..." );
 
     write_string_big_endian( name_, &output );
 
@@ -633,34 +770,29 @@ void Column<T>::save_little_endian( const std::string &_fname ) const
 {
     // -----------------------------------------------------------------
 
-    debug_log( "Column.save: Is little endian..." );
-
     std::ofstream output( _fname, std::ios::binary );
 
     // -----------------------------------------------------------------
-    // Write nrows
 
-    debug_log( "Column.save: Write nrows..." );
+    auto num_rows = nrows();
 
-    auto nrows = nrows_;
+    utils::Endianness::reverse_byte_order( &num_rows );
 
-    utils::Endianness::reverse_byte_order( &nrows );
-
-    output.write( reinterpret_cast<const char *>( &nrows ), sizeof( size_t ) );
+    output.write(
+        reinterpret_cast<const char *>( &num_rows ), sizeof( size_t ) );
 
     // -----------------------------------------------------------------
-    // Write data
-
-    debug_log( "Column.save: Write data..." );
 
     if constexpr ( std::is_same<T, strings::String>() )
         {
-            for ( auto it = begin(); it != end(); ++it )
-                write_string_little_endian( *it, &output );
+            for ( size_t i = 0; i < nrows(); ++i )
+                {
+                    write_string_little_endian( ( *this )[i], &output );
+                }
         }
     else
         {
-            auto write_reversed_data = [&output]( T &_val ) {
+            auto write_reversed_data = [&output]( const T _val ) {
                 T val_reversed = _val;
 
                 utils::Endianness::reverse_byte_order( &val_reversed );
@@ -670,13 +802,13 @@ void Column<T>::save_little_endian( const std::string &_fname ) const
                     sizeof( T ) );
             };
 
-            std::for_each( begin(), end(), write_reversed_data );
+            for ( size_t i = 0; i < nrows(); ++i )
+                {
+                    write_reversed_data( ( *this )[i] );
+                }
         }
 
     // -----------------------------------------------------------------
-    // Write name and unit
-
-    debug_log( "Column.save: Write colname and unit..." );
 
     write_string_little_endian( name_, &output );
 
@@ -690,7 +822,39 @@ void Column<T>::save_little_endian( const std::string &_fname ) const
 template <class T>
 Column<T> Column<T>::sort_by_key( const std::vector<size_t> &_key ) const
 {
-    Column<T> sorted( _key.size() );
+    auto sorted = Column<T>( pool() );
+
+    if constexpr ( std::is_same<iterator, T *>() )
+        {
+            sorted = Column<T>( pool(), _key.size() );
+
+            for ( size_t i = 0; i < _key.size(); ++i )
+                {
+                    if ( _key[i] < nrows() )
+                        {
+                            sorted[i] = ( *this )[_key[i]];
+                        }
+                    else
+                        {
+                            sorted[i] = helpers::NullChecker::make_null<T>();
+                        }
+                }
+        }
+    else
+        {
+            for ( size_t i = 0; i < _key.size(); ++i )
+                {
+                    if ( _key[i] < nrows() )
+                        {
+                            sorted.push_back( ( *this )[_key[i]] );
+                        }
+                    else
+                        {
+                            sorted.push_back(
+                                helpers::NullChecker::make_null<T>() );
+                        }
+                }
+        }
 
     sorted.set_name( name() );
 
@@ -698,46 +862,7 @@ Column<T> Column<T>::sort_by_key( const std::vector<size_t> &_key ) const
 
     sorted.set_unit( unit() );
 
-    for ( size_t i = 0; i < _key.size(); ++i )
-        {
-            if ( _key[i] < nrows() )
-                {
-                    sorted[i] = ( *this )[_key[i]];
-                }
-            else
-                {
-                    if constexpr ( std::is_same<T, Float>() )
-                        {
-                            sorted[i] = static_cast<Float>( NAN );
-                        }
-                    else if constexpr ( std::is_same<T, strings::String>() )
-                        {
-                            sorted[i] = "";
-                        }
-                    else if ( std::is_same<T, Int>() )
-                        {
-                            sorted[i] = -1;
-                        }
-                    else
-                        {
-                            assert_true( false );
-                        }
-                }
-        }
-
     return sorted;
-}
-
-// -------------------------------------------------------------------------
-
-template <class T>
-std::vector<T> Column<T>::to_vector() const
-{
-    std::vector<T> vec( size() );
-
-    std::copy( begin(), end(), vec.begin() );
-
-    return vec;
 }
 
 // -----------------------------------------------------------------------------
@@ -755,15 +880,16 @@ Column<T> Column<T>::where( const std::vector<bool> &_condition ) const
         return _condition[_i];
     };
 
-    const auto get_val = [this]( size_t _i ) -> T { return *( begin() + _i ); };
+    const auto get_val = [this]( size_t _i ) -> T { return ( *this )[_i]; };
 
     const auto iota = stl::iota<size_t>( 0, nrows() );
 
-    const auto range =
-        iota | VIEWS::filter( include ) | VIEWS::transform( get_val );
+    auto range = iota | VIEWS::filter( include ) | VIEWS::transform( get_val );
 
-    const auto data_ptr =
-        std::make_shared<std::vector<T>>( stl::collect::vector<T>( range ) );
+    const auto data_ptr = pool() ? Variant( std::make_shared<MemmapVector>(
+                                       pool(), range.begin(), range.end() ) )
+                                 : Variant( std::make_shared<std::vector<T>>(
+                                       stl::collect::vector<T>( range ) ) );
 
     Column<T> trimmed( data_ptr );
 

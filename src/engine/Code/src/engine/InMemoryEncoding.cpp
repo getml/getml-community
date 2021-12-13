@@ -6,7 +6,8 @@ namespace containers
 {
 // ----------------------------------------------------------------------------
 
-void Encoding::append( const Encoding& _other, bool _include_subencoding )
+void InMemoryEncoding::append(
+    const InMemoryEncoding& _other, bool _include_subencoding )
 {
     for ( auto& elem : *_other.vector_ )
         {
@@ -21,7 +22,7 @@ void Encoding::append( const Encoding& _other, bool _include_subencoding )
 
 // ----------------------------------------------------------------------------
 
-Int Encoding::insert( const strings::String& _val )
+Int InMemoryEncoding::insert( const strings::String& _val )
 {
     assert_true( map_.find( _val ) == map_.end() );
 
@@ -36,7 +37,7 @@ Int Encoding::insert( const strings::String& _val )
 
 // ----------------------------------------------------------------------------
 
-const strings::String& Encoding::int_to_string( const Int _i ) const
+strings::String InMemoryEncoding::int_to_string( const Int _i ) const
 {
     if ( _i < 0 || static_cast<size_t>( _i ) >= size() )
         {
@@ -66,7 +67,8 @@ const strings::String& Encoding::int_to_string( const Int _i ) const
 
 // ----------------------------------------------------------------------------
 
-Encoding& Encoding::operator=( const std::vector<std::string>& _vector )
+InMemoryEncoding& InMemoryEncoding::operator=(
+    const std::vector<std::string>& _vector )
 {
     assert_true( !subencoding_ );
 
@@ -82,7 +84,7 @@ Encoding& Encoding::operator=( const std::vector<std::string>& _vector )
 
 // ----------------------------------------------------------------------------
 
-Int Encoding::string_to_int( const strings::String& _val )
+Int InMemoryEncoding::string_to_int( const strings::String& _val )
 {
     // -----------------------------------
     // If this is a NULL value, return -1.
@@ -124,7 +126,7 @@ Int Encoding::string_to_int( const strings::String& _val )
 
 // ----------------------------------------------------------------------------
 
-Int Encoding::string_to_int( const strings::String& _val ) const
+Int InMemoryEncoding::string_to_int( const strings::String& _val ) const
 {
     // -----------------------------------
     // If this is a NULL value, return -1.
@@ -169,3 +171,4 @@ Int Encoding::string_to_int( const strings::String& _val ) const
 // ----------------------------------------------------------------------------
 }  // namespace containers
 }  // namespace engine
+

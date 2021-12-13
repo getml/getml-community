@@ -40,16 +40,7 @@ class Pipeline
     feature_names() const;
 
     /// Checks the validity of the data model.
-    void check(
-        const Poco::JSON::Object& _cmd,
-        const std::shared_ptr<const communication::Logger>& _logger,
-        const containers::DataFrame& _population_df,
-        const std::vector<containers::DataFrame>& _peripheral_dfs,
-        const std::shared_ptr<containers::Encoding>& _categories,
-        const std::shared_ptr<dependency::PreprocessorTracker>&
-            _preprocessor_tracker,
-        const std::shared_ptr<dependency::WarningTracker>& _warning_tracker,
-        Poco::Net::StreamSocket* _socket ) const;
+    void check( const CheckParams& _params ) const;
 
     /// Fit the pipeline.
     void fit( const FitParams& _params );
@@ -62,7 +53,7 @@ class Pipeline
 
     /// Save the pipeline to disk.
     void save(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const helpers::StringIterator& _categories,
         const std::string& _temp_dir,
         const std::string& _path,
         const std::string& _name ) const;
@@ -71,27 +62,20 @@ class Pipeline
     Poco::JSON::Object score(
         const containers::DataFrame& _population_df,
         const std::string& _population_name,
-        const containers::Features& _yhat );
+        const containers::NumericalFeatures& _yhat );
 
     /// Generate features and predictions.
-    std::pair<containers::Features, containers::CategoricalFeatures> transform(
-        const Poco::JSON::Object& _cmd,
-        const std::shared_ptr<const communication::Logger>& _logger,
-        const std::map<std::string, containers::DataFrame>& _data_frames,
-        const containers::DataFrame& _population_df,
-        const std::vector<containers::DataFrame>& _peripheral_dfs,
-        const dependency::DataFrameTracker& _data_frame_tracker,
-        const std::shared_ptr<const containers::Encoding> _categories,
-        Poco::Net::StreamSocket* _socket );
+    std::pair<containers::NumericalFeatures, containers::CategoricalFeatures>
+    transform( const TransformParams& _params );
 
     /// Expresses the Pipeline in a form the monitor can understand.
     Poco::JSON::Object to_monitor(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const helpers::StringIterator& _categories,
         const std::string& _name ) const;
 
     /// Express features as SQL code
     std::string to_sql(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const helpers::StringIterator& _categories,
         const bool _targets,
         const bool _full_pipeline,
         const std::string& _dialect ) const;
@@ -151,7 +135,7 @@ class Pipeline
         const Poco::JSON::Object& _cmd,
         const containers::DataFrame& _population_df,
         const predictors::PredictorImpl& _predictor_impl,
-        containers::Features* _features ) const;
+        containers::NumericalFeatures* _features ) const;
 
     /// Applies the fitted preprocessors.
     std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
@@ -174,7 +158,7 @@ class Pipeline
 
     /// Calculates the feature statistics to be displayed in the monitor.
     void calculate_feature_stats(
-        const containers::Features _features,
+        const containers::NumericalFeatures _features,
         const size_t _nrows,
         const size_t _ncols,
         const Poco::JSON::Object& _cmd,
@@ -251,12 +235,9 @@ class Pipeline
 
     /// Fits the feature learning algorithms.
     void fit_feature_learners(
-        const Poco::JSON::Object& _cmd,
-        const std::shared_ptr<const communication::Logger>& _logger,
+        const FitParams& _params,
         const containers::DataFrame& _population_df,
-        const std::vector<containers::DataFrame>& _peripheral_dfs,
-        const std::shared_ptr<dependency::FETracker> _fe_tracker,
-        Poco::Net::StreamSocket* _socket );
+        const std::vector<containers::DataFrame>& _peripheral_dfs );
 
     /// Fits the predictors.
     void fit_predictors( const TransformParams& _params );
@@ -276,7 +257,7 @@ class Pipeline
 
     /// Expresses the feature learners as SQL code.
     std::vector<std::string> feature_learners_to_sql(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const helpers::StringIterator& _categories,
         const bool _targets,
         const bool _subfeatures,
         const std::shared_ptr<const helpers::SQLDialectGenerator>&
@@ -298,18 +279,13 @@ class Pipeline
         std::vector<helpers::ImportanceMaker>* _f_importances ) const;
 
     /// Generate the autofeatures.
-    containers::Features generate_autofeatures(
-        const Poco::JSON::Object& _cmd,
-        const std::shared_ptr<const communication::Logger>& _logger,
-        const containers::DataFrame& _population_df,
-        const std::vector<containers::DataFrame>& _peripheral_dfs,
-        const predictors::PredictorImpl& _predictor_impl,
-        Poco::Net::StreamSocket* _socket ) const;
+    containers::NumericalFeatures generate_autofeatures(
+        const TransformParams& _params ) const;
 
     /// Generates the predictions based on the features.
-    containers::Features generate_predictions(
+    containers::NumericalFeatures generate_predictions(
         const containers::CategoricalFeatures& _categorical_features,
-        const containers::Features& _numerical_features ) const;
+        const containers::NumericalFeatures& _numerical_features ) const;
 
     /// Gets the categorical columns in the population table that are to be
     /// included in the predictor.
@@ -320,8 +296,8 @@ class Pipeline
 
     /// Gets all of the numerical features needed from the autofeatures and the
     /// columns in the population table.
-    containers::Features get_numerical_features(
-        const containers::Features& _autofeatures,
+    containers::NumericalFeatures get_numerical_features(
+        const containers::NumericalFeatures& _autofeatures,
         const Poco::JSON::Object& _cmd,
         const containers::DataFrame& _population_df,
         const predictors::PredictorImpl& _predictor_impl ) const;
@@ -399,6 +375,10 @@ class Pipeline
             _preprocessor_tracker,
         Pipeline* _pipeline ) const;
 
+    /// Makes or retrieves the autofeatures as part of make_features(...).
+    containers::NumericalFeatures make_autofeatures(
+        const TransformParams& _params ) const;
+
     /// Generates a build history from the dependencies as the fingerprints of
     /// the inserted data frames.
     std::vector<Poco::JSON::Object::Ptr> make_build_history(
@@ -408,14 +388,14 @@ class Pipeline
     /// Generates the features we can insert into the feature selectors or
     /// predictors.
     std::tuple<
-        containers::Features,
+        containers::NumericalFeatures,
         containers::CategoricalFeatures,
-        containers::Features>
+        containers::NumericalFeatures>
     make_features( const TransformParams& _params ) const;
 
     /// Generates the features for the validation set.
     std::pair<
-        std::optional<containers::Features>,
+        std::optional<containers::NumericalFeatures>,
         std::optional<containers::CategoricalFeatures>>
     make_features_validation( const TransformParams& _params );
 
@@ -459,6 +439,7 @@ class Pipeline
         const containers::DataFrame& _population_df,
         const std::vector<containers::DataFrame>& _peripheral_dfs,
         const std::shared_ptr<const communication::Logger>& _logger,
+        const std::optional<std::string>& _temp_dir,
         Poco::Net::StreamSocket* _socket ) const;
 
     /// Moves the temporary folder to its final destination at the end of
@@ -476,15 +457,15 @@ class Pipeline
 
     /// Expresses the preprocessors as SQL code.
     std::vector<std::string> preprocessors_to_sql(
-        const std::shared_ptr<const std::vector<strings::String>>& _categories,
+        const helpers::StringIterator& _categories,
         const std::shared_ptr<const helpers::SQLDialectGenerator>&
             _sql_dialect_generator ) const;
 
     /// Retrieves the features from a data frame.
     std::tuple<
-        containers::Features,
+        containers::NumericalFeatures,
         containers::CategoricalFeatures,
-        containers::Features>
+        containers::NumericalFeatures>
     retrieve_features( const containers::DataFrame& _df ) const;
 
     /// Retrieves the predictors from the pred_tracker, if possible.
@@ -513,8 +494,8 @@ class Pipeline
     void score_after_fitting( const TransformParams& _params );
 
     /// Selects the autofeatures that are needed for the prediction.
-    containers::Features select_autofeatures(
-        const containers::Features& _autofeatures,
+    containers::NumericalFeatures select_autofeatures(
+        const containers::NumericalFeatures& _autofeatures,
         const predictors::PredictorImpl& _predictor_impl ) const;
 
     /// Expresses the staging scripts as SQL.
