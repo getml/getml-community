@@ -1,0 +1,812 @@
+#ifndef MULTIREL_DECISIONTREES_DECISIONTREENODE_HPP_
+#define MULTIREL_DECISIONTREES_DECISIONTREENODE_HPP_
+
+// ----------------------------------------------------------------------------
+
+#include <Poco/JSON/Object.h>
+
+// ----------------------------------------------------------------------------
+
+#include <algorithm>
+#include <memory>
+#include <optional>
+#include <set>
+#include <string>
+#include <tuple>
+
+// ----------------------------------------------------------------------------
+
+#include "fastprop/subfeatures/subfeatures.hpp"
+#include "helpers/helpers.hpp"
+#include "multithreading/multithreading.hpp"
+#include "strings/strings.hpp"
+
+// ----------------------------------------------------------------------------
+
+#include "multirel/Float.hpp"
+#include "multirel/Int.hpp"
+#include "multirel/aggregations/aggregations.hpp"
+#include "multirel/containers/containers.hpp"
+#include "multirel/lossfunctions/lossfunctions.hpp"
+#include "multirel/utils/utils.hpp"
+
+// ----------------------------------------------------------------------------
+
+#include "multirel/decisiontrees/DecisionTreeImpl.hpp"
+
+// ----------------------------------------------------------------------------
+
+namespace multirel {
+namespace decisiontrees {
+
+// ----------------------------------------------------------------------------
+
+class DecisionTreeNode {
+ private:
+  typedef std::vector<std::shared_ptr<const std::vector<strings::String>>>
+      VocabForDf;
+
+ public:
+  DecisionTreeNode(bool _is_activated, Int _depth,
+                   const DecisionTreeImpl *_tree);
+
+  ~DecisionTreeNode() = default;
+
+  // --------------------------------------
+
+  /// Adds the subfeatures used by this node and its children to the set.
+  void add_subfeatures(std::set<size_t> *_subfeatures_used) const;
+
+  /// Calculates the column importances for this node.
+  void column_importances(utils::ImportanceMaker *_importance_maker) const;
+
+  /// Fits the decision tree node
+  void fit(const containers::DataFrameView &_population,
+           const containers::DataFrame &_peripheral,
+           const containers::Subfeatures &_subfeatures,
+           containers::MatchPtrs::iterator _match_container_begin,
+           containers::MatchPtrs::iterator _match_container_end);
+
+  /// Calling this member functions means that this node is a root
+  /// and must undertake the necessary steps: It removes all samples
+  /// for which the sample weight is 0, activates all remaining samples
+  /// and commits this is in the aggregation and the optimization criterion
+  void fit_as_root(
+      const containers::DataFrameView &_population,
+      const containers::DataFrame &_peripheral,
+      const std::vector<containers::ColumnView<Float, std::map<Int, Int>>>
+          &_subfeatures,
+      containers::MatchPtrs::iterator _match_container_begin,
+      containers::MatchPtrs::iterator _match_container_end);
+
+  /// Builds the node from a Poco::JSON::Object.
+  void from_json_obj(const Poco::JSON::Object &_json_obj);
+
+  /// Extracts the node (and its children) as a Poco::JSON::Object
+  Poco::JSON::Object to_json_obj() const;
+
+  /// Returns the SQL condition associated with this node
+  void to_sql(const helpers::StringIterator &_categories,
+              const VocabForDf &_vocab_popul, const VocabForDf &_vocab_perip,
+              const std::shared_ptr<const helpers::SQLDialectGenerator>
+                  &_sql_dialect_generator,
+              const std::string &_feature_prefix,
+              const std::string &_feature_num,
+              std::vector<std::string> &_conditions, std::string _sql) const;
+
+  /// Transforms the inserted samples
+  bool transform(const containers::DataFrameView &_population,
+                 const containers::DataFrame &_peripheral,
+                 const containers::Subfeatures &_subfeatures,
+                 containers::Match *_match) const;
+
+  // --------------------------------------
+
+ public:
+  /// Trivial setter
+  void set_tree(DecisionTreeImpl *_tree) noexcept {
+    tree_ = _tree;
+
+    if (child_node_greater_) {
+      child_node_greater_.get()->set_tree(_tree);
+      child_node_smaller_.get()->set_tree(_tree);
+    }
+  }
+
+  // --------------------------------------
+
+ private:
+  /// Trivial accessor
+  inline aggregations::AbstractFitAggregation *aggregation() {
+    assert_true(tree_->aggregation_);
+    return tree_->aggregation_.get();
+  }
+
+  /// Trivial accessor
+  inline bool apply_from_above() const {
+    assert_true(split_);
+    return split_->apply_from_above;
+  }
+
+  /// Calculates the appropriate number of bins for a numerical column.
+  size_t calc_num_bins(const containers::MatchPtrs::const_iterator _begin,
+                       const containers::MatchPtrs::const_iterator _end) {
+    assert_true(_end >= _begin);
+    auto num_matches = static_cast<size_t>(std::distance(_begin, _end));
+    utils::Reducer::reduce(std::plus<size_t>(), &num_matches, comm());
+    return std::max(
+        static_cast<size_t>(tree_->grid_factor() *
+                            std::sqrt(static_cast<Float>(num_matches))),
+        static_cast<size_t>(1));
+  }
+
+  /// Calculates the appropriate number of critical values
+  inline Int calculate_num_critical_values(const size_t _num_matches_on_node) {
+    return std::max(
+        static_cast<Int>(tree_->grid_factor() *
+                         std::sqrt(static_cast<Float>(_num_matches_on_node))),
+        1);
+  }
+
+  /// Whether the data used is categorical
+  inline bool categorical_data_used() const {
+    assert_true(split_);
+    return (split_->data_used == enums::DataUsed::same_unit_categorical ||
+            split_->data_used == enums::DataUsed::x_perip_categorical ||
+            split_->data_used == enums::DataUsed::x_popul_categorical);
+  }
+
+  /// Trivial accessor
+  inline const std::vector<Int> &categories_used() const {
+    assert_true(split_);
+    assert_true(split_->categories_used->cbegin() ==
+                split_->categories_used_begin);
+    assert_true(split_->categories_used->cend() == split_->categories_used_end);
+
+    return *split_->categories_used;
+  }
+
+  /// Trivial accessor
+  inline std::vector<Int>::const_iterator categories_used_begin() const {
+    assert_true(split_);
+    return split_->categories_used_begin;
+  }
+
+  /// Trivial accessor
+  inline std::vector<Int>::const_iterator categories_used_end() const {
+    assert_true(split_);
+    return split_->categories_used_end;
+  }
+
+  /// Trivial accessor
+  inline multithreading::Communicator *comm() {
+    assert_true(tree_->comm_ != nullptr);
+    return tree_->comm_;
+  }
+
+  /// Trivial accessor
+  inline size_t column_used() const {
+    assert_true(split_);
+    return split_->column_used;
+  }
+
+  /// Trivial accessor
+  inline Float critical_value() const {
+    assert_true(split_);
+    return split_->critical_value;
+  }
+
+  /// Trivial accessor
+  inline enums::DataUsed data_used() const {
+    assert_true(split_);
+    return split_->data_used;
+  }
+
+  /// Whether the data used is discrete
+  inline bool discrete_data_used() const {
+    assert_true(split_);
+    return (split_->data_used == enums::DataUsed::same_unit_discrete ||
+            split_->data_used == enums::DataUsed::x_perip_discrete ||
+            split_->data_used == enums::DataUsed::x_popul_discrete);
+  }
+
+  /// Non-trivial getter
+  const Int get_same_unit_categorical(
+      const containers::DataFrameView &_population,
+      const containers::DataFrame &_peripheral,
+      const containers::Match *_sample, const size_t _col) const {
+    const auto col1 =
+        std::get<0>(tree_->same_units_categorical()[_col]).ix_column_used;
+
+    const auto col2 =
+        std::get<1>(tree_->same_units_categorical()[_col]).ix_column_used;
+
+    const auto val1 =
+        (std::get<0>(tree_->same_units_categorical()[_col]).data_used ==
+         enums::DataUsed::x_perip_categorical)
+            ? (get_x_perip_categorical(_peripheral, _sample, col1))
+            : (get_x_popul_categorical(_population, _sample, col1));
+
+    const auto val2 =
+        (std::get<1>(tree_->same_units_categorical()[_col]).data_used ==
+         enums::DataUsed::x_perip_categorical)
+            ? (get_x_perip_categorical(_peripheral, _sample, col2))
+            : (get_x_popul_categorical(_population, _sample, col2));
+
+    // Feature -1 will be ignored during training - because it is equivalent
+    // to != 0
+    return (val1 == val2) ? (0) : (-1);
+  }
+
+  /// Non-trivial getter
+  const Float get_same_unit_discrete(
+      const containers::DataFrameView &_population,
+      const containers::DataFrame &_peripheral,
+      const containers::Match *_sample, const size_t _col) const {
+    const auto col1 =
+        std::get<0>(tree_->same_units_discrete()[_col]).ix_column_used;
+
+    const auto col2 =
+        std::get<1>(tree_->same_units_discrete()[_col]).ix_column_used;
+
+    Float val1 = 0.0;
+
+    switch (std::get<0>(tree_->same_units_discrete()[_col]).data_used) {
+      case enums::DataUsed::x_perip_discrete:
+        val1 = get_x_perip_discrete(_peripheral, _sample, col1);
+        break;
+
+      case enums::DataUsed::x_popul_discrete:
+        val1 = get_x_popul_discrete(_population, _sample, col1);
+        break;
+
+      default:
+        assert_true(!"get_same_unit_discrete: enums::DataUsed not known!");
+        break;
+    }
+
+    Float val2 = 0.0;
+
+    switch (std::get<1>(tree_->same_units_discrete()[_col]).data_used) {
+      case enums::DataUsed::x_perip_discrete:
+        val2 = get_x_perip_discrete(_peripheral, _sample, col2);
+        break;
+
+      case enums::DataUsed::x_popul_discrete:
+        val2 = get_x_popul_discrete(_population, _sample, col2);
+        break;
+
+      default:
+        assert_true(!"get_same_unit_discrete: enums::DataUsed not known!");
+        break;
+    }
+
+    return val2 - val1;
+  }
+
+  /// Non-trivial getter
+  const Float get_same_unit_numerical(
+      const containers::DataFrameView &_population,
+      const containers::DataFrame &_peripheral,
+      const containers::Match *_sample, const size_t _col) const {
+    const auto col1 =
+        std::get<0>(tree_->same_units_numerical()[_col]).ix_column_used;
+
+    const auto col2 =
+        std::get<1>(tree_->same_units_numerical()[_col]).ix_column_used;
+
+    Float val1 = 0.0;
+
+    switch (std::get<0>(tree_->same_units_numerical()[_col]).data_used) {
+      case enums::DataUsed::x_perip_numerical:
+        val1 = get_x_perip_numerical(_peripheral, _sample, col1);
+        break;
+
+      case enums::DataUsed::x_popul_numerical:
+        val1 = get_x_popul_numerical(_population, _sample, col1);
+        break;
+
+      default:
+        assert_true(!"get_same_unit_numerical: enums::DataUsed not known!");
+        break;
+    }
+
+    Float val2 = 0.0;
+
+    switch (std::get<1>(tree_->same_units_numerical()[_col]).data_used) {
+      case enums::DataUsed::x_perip_numerical:
+        val2 = get_x_perip_numerical(_peripheral, _sample, col2);
+        break;
+
+      case enums::DataUsed::x_popul_numerical:
+        val2 = get_x_popul_numerical(_population, _sample, col2);
+        break;
+
+      default:
+        assert_true(!"get_same_unit_numerical: enums::DataUsed not known!");
+        break;
+    }
+
+    return val2 - val1;
+  }
+
+  /// Trivial getter
+  inline const Float get_time_stamps_diff(
+      const containers::DataFrameView &_population,
+      const containers::DataFrame &_peripheral,
+      const containers::Match *_sample) const {
+    return _population.time_stamp(_sample->ix_x_popul) -
+           _peripheral.time_stamp(_sample->ix_x_perip);
+  }
+
+  /// Trivial getter
+  inline const Int get_x_perip_categorical(
+      const containers::DataFrame &_peripheral,
+      const containers::Match *_sample, const size_t _col) const {
+    return _peripheral.categorical(_sample->ix_x_perip, _col);
+  }
+
+  /// Trivial getter
+  inline const Float get_x_perip_numerical(
+      const containers::DataFrame &_peripheral,
+      const containers::Match *_sample, const size_t _col) const {
+    return _peripheral.numerical(_sample->ix_x_perip, _col);
+  }
+
+  /// Trivial getter
+  inline const Float get_x_perip_discrete(
+      const containers::DataFrame &_peripheral,
+      const containers::Match *_sample, const size_t _col) const {
+    return _peripheral.discrete(_sample->ix_x_perip, _col);
+  }
+
+  /// Trivial getter
+  inline const Int get_x_popul_categorical(
+      const containers::DataFrameView &_population,
+      const containers::Match *_sample, const size_t _col) const {
+    return _population.categorical(_sample->ix_x_popul, _col);
+  }
+
+  /// Trivial getter
+  inline const Float get_x_popul_numerical(
+      const containers::DataFrameView &_population,
+      const containers::Match *_sample, const size_t _col) const {
+    return _population.numerical(_sample->ix_x_popul, _col);
+  }
+
+  /// Trivial getter
+  inline const Float get_x_popul_discrete(
+      const containers::DataFrameView &_population,
+      const containers::Match *_sample, const size_t _col) const {
+    return _population.discrete(_sample->ix_x_popul, _col);
+  }
+
+  /// Trivial getter
+  inline const Float get_x_subfeature(
+      const std::vector<containers::ColumnView<Float, std::map<Int, Int>>>
+          &_subfeatures,
+      const containers::Match *_sample, const size_t _col) const {
+    assert_true(_col < _subfeatures.size());
+    return _subfeatures[_col][static_cast<Int>(_sample->ix_x_perip)];
+  }
+
+  /// Trivial getter
+  const size_t ix_perip_used() const { return tree_->ix_perip_used(); }
+
+  /// Whether the data used is based on a lag variable
+  inline bool lag_used() const {
+    assert_true(split_);
+    return (split_->data_used == enums::DataUsed::time_stamps_window);
+  }
+
+  /// Trivial accessor
+  inline optimizationcriteria::OptimizationCriterion *optimization_criterion() {
+    assert_true(tree_->optimization_criterion_);
+    return tree_->optimization_criterion_;
+  }
+
+  /// Trivial accessor
+  inline const optimizationcriteria::OptimizationCriterion *
+  optimization_criterion() const {
+    assert_true(tree_->optimization_criterion_);
+    return tree_->optimization_criterion_;
+  }
+
+  /// Trivial getter
+  inline const descriptors::SameUnitsContainer &same_units_categorical() const {
+    assert_true(tree_->same_units_.same_units_categorical_);
+    return *tree_->same_units_.same_units_categorical_;
+  }
+
+  /// Trivial getter
+  inline const descriptors::SameUnitsContainer &same_units_discrete() const {
+    assert_true(tree_->same_units_.same_units_discrete_);
+    return *tree_->same_units_.same_units_discrete_;
+  }
+
+  /// Trivial getter
+  inline const descriptors::SameUnitsContainer &same_units_numerical() const {
+    assert_true(tree_->same_units_.same_units_numerical_);
+    return *tree_->same_units_.same_units_numerical_;
+  }
+
+  /// Determines whether we should skip a condition
+  inline const bool skip_condition() const {
+    if (tree_->share_conditions() >= 1.0) {
+      return false;
+    } else {
+      return tree_->rng().random_float(0.0, 1.0) > tree_->share_conditions();
+    }
+  }
+
+  /// Whether the data used is based on a text_field.
+  inline bool text_used() const {
+    assert_true(split_);
+    return (split_->data_used == enums::DataUsed::x_popul_text ||
+            split_->data_used == enums::DataUsed::x_perip_text);
+  }
+
+  // --------------------------------------
+
+ private:
+  /// Calculates the beginning and end of the categorical
+  /// values considered
+  std::shared_ptr<const std::vector<Int>> calculate_categories(
+      const size_t _sample_size,
+      containers::MatchPtrs::iterator _match_container_begin,
+      containers::MatchPtrs::iterator _match_container_end);
+
+  /// Given the sorted sample containers, this returns the critical_values
+  /// for discrete values
+  std::vector<Float> calculate_critical_values_discrete(
+      const size_t _sample_size,
+      containers::MatchPtrs::iterator _match_container_begin,
+      containers::MatchPtrs::iterator _match_container_end);
+
+  /// Given the sorted sample containers, this returns the critical_values
+  /// for numerical values
+  std::vector<Float> calculate_critical_values_numerical(
+      const size_t _sample_size,
+      containers::MatchPtrs::iterator _match_container_begin,
+      containers::MatchPtrs::iterator _match_container_end);
+
+  /// Does the actual job of calculating the critical values.
+  std::vector<Float> calculate_critical_values_numerical(
+      const Int _num_critical_values, const Float _min, const Float _max);
+
+  /// Given the sorted sample containers, this returns the critical_values
+  /// for the moving time windows (lag variables).
+  std::vector<Float> calculate_critical_values_window(
+      const Float _lag, containers::MatchPtrs::iterator _match_container_begin,
+      containers::MatchPtrs::iterator _match_container_end);
+
+  /// Commits the split and spawns child nodes
+  void commit(containers::MatchPtrs::iterator _match_container_begin,
+              containers::MatchPtrs::iterator _separator,
+              containers::MatchPtrs::iterator _match_container_end);
+
+  /// Determines whether a same unit numerical refers to time stamps.
+  bool is_ts_numerical(const containers::DataFrameView &_population,
+                       const containers::DataFrame &_peripheral,
+                       const size_t _col) const;
+
+  /// Returns the index necessary for catagorical data as well as the
+  /// associated categories.
+  std::pair<containers::CategoryIndex, std::shared_ptr<const std::vector<Int>>>
+  make_index_and_categories(
+      containers::MatchPtrs::iterator _match_container_begin,
+      containers::MatchPtrs::iterator _match_container_end);
+
+  /// Generates the indptr that matches each word to the corresponding
+  /// matches.
+  std::vector<size_t> make_word_indptr(
+      const textmining::WordIndex &_word_index,
+      const std::shared_ptr<const std::vector<Int>> &_sorted_words,
+      containers::MatchPtrs::iterator _match_container_begin,
+      containers::MatchPtrs::iterator _match_container_end,
+      containers::MatchPtrs *_bins) const;
+
+  /// Partitions the matches.
+  containers::MatchPtrs::iterator partition(
+      const containers::DataFrameView &_population,
+      const containers::DataFrame &_peripheral,
+      containers::MatchPtrs::iterator _match_container_begin,
+      containers::MatchPtrs::iterator _match_container_end) const;
+
+  /// Partitions the iterators according by the categories.
+  containers::MatchPtrs::iterator partition_by_categories_used(
+      containers::MatchPtrs::iterator _match_container_begin,
+      containers::MatchPtrs::iterator _match_container_end) const;
+
+  /// Partitions the iterators according by the categories.
+  containers::MatchPtrs::iterator partition_by_critical_value(
+      containers::MatchPtrs::iterator _match_container_begin,
+      containers::MatchPtrs::iterator _match_container_end) const;
+
+  /// Partitions the iterators according to the lag.
+  containers::MatchPtrs::iterator partition_by_lag(
+      containers::MatchPtrs::iterator _match_container_begin,
+      containers::MatchPtrs::iterator _match_container_end) const;
+
+  /// Partitions the iterator by text fields.
+  containers::MatchPtrs::iterator partition_by_text(
+      const containers::DataFrameView &_population,
+      const containers::DataFrame &_peripheral,
+      containers::MatchPtrs::iterator _match_container_begin,
+      containers::MatchPtrs::iterator _match_container_end) const;
+
+  /// Returns the sum of the sample sizes of all processes
+  size_t reduce_sample_size(const size_t _sample_size);
+
+  /// Separates the sample containers for which the numerical_value is NULL
+  /// - note the important difference to separate_null_values in
+  /// DecisionTree/Aggregation: This separates by the numerical_value,
+  /// whereas DecisionTree/Aggregation separates by the value to be
+  /// aggregated!
+  containers::MatchPtrs::iterator separate_null_values(
+      containers::MatchPtrs::iterator _match_container_begin,
+      containers::MatchPtrs::iterator _match_container_end,
+      bool _null_values_to_beginning = true) const;
+
+  /// Assigns a the right values to the samples for faster lookup.
+  void set_samples(const containers::DataFrameView &_population,
+                   const containers::DataFrame &_peripheral,
+                   const containers::Subfeatures &_subfeatures,
+                   containers::MatchPtrs::iterator _match_container_begin,
+                   containers::MatchPtrs::iterator _match_container_end) const;
+
+  /// Returns categories or words sorted by the corresponding optimization
+  /// criterion.
+  std::shared_ptr<const std::vector<Int>> sort_categories(
+      const std::shared_ptr<const std::vector<Int>> &_categories,
+      const size_t _begin, const size_t _end) const;
+
+  /// Spawns two new child nodes in the fit(...) function
+  void spawn_child_nodes(const containers::DataFrameView &_population,
+                         const containers::DataFrame &_peripheral,
+                         const containers::Subfeatures &_subfeatures,
+                         containers::MatchPtrs::iterator _match_container_begin,
+                         containers::MatchPtrs::iterator _separator,
+                         containers::MatchPtrs::iterator _match_container_end);
+
+  /// Tries to impose the peripheral categorical columns as a condition
+  void try_categorical_peripheral(
+      const containers::DataFrame &_peripheral, const size_t _sample_size,
+      containers::MatchPtrs::iterator _match_container_begin,
+      containers::MatchPtrs::iterator _match_container_end,
+      std::vector<descriptors::Split> *_candidate_splits);
+
+  /// Tries to impose the population categorical columns as a condition
+  void try_categorical_population(
+      const containers::DataFrameView &_population, const size_t _sample_size,
+      containers::MatchPtrs::iterator _match_container_begin,
+      containers::MatchPtrs::iterator _match_container_end,
+      std::vector<descriptors::Split> *_candidate_splits);
+
+  /// Tries whether the categorical values might constitute a good split
+  void try_categorical_values(
+      const size_t _column_used, const enums::DataUsed _data_used,
+      const size_t _sample_size,
+      containers::MatchPtrs::iterator _match_container_begin,
+      containers::MatchPtrs::iterator _match_container_end,
+      std::vector<descriptors::Split> *_candidate_splits);
+
+  /// Tries imposing combined categorical values as conditions.
+  void try_categorical_values_combined(
+      const size_t _column_used, const enums::DataUsed _data_used,
+      const size_t _sample_size, const containers::CategoryIndex &_index,
+      const std::shared_ptr<const std::vector<Int>> &_categories,
+      containers::MatchPtrs::iterator _match_container_begin,
+      containers::MatchPtrs::iterator _match_container_end,
+      std::vector<descriptors::Split> *_candidate_splits);
+
+  /// Tries imposing individual categorical values as conditions.
+  void try_categorical_values_individual(
+      const size_t _column_used, const enums::DataUsed _data_used,
+      const size_t _sample_size, const containers::CategoryIndex &_index,
+      const std::shared_ptr<const std::vector<Int>> &_categories,
+      containers::MatchPtrs::iterator _match_container_begin,
+      containers::MatchPtrs::iterator _match_container_end,
+      std::vector<descriptors::Split> *_candidate_splits);
+
+  /// Tries to impose different conditions
+  void try_conditions(
+      const containers::DataFrameView &_population,
+      const containers::DataFrame &_peripheral,
+      const std::vector<containers::ColumnView<Float, std::map<Int, Int>>>
+          &_subfeatures,
+      const size_t _sample_size,
+      containers::MatchPtrs::iterator _match_container_begin,
+      containers::MatchPtrs::iterator _match_container_end,
+      std::vector<descriptors::Split> *_candidate_splits);
+
+  /// Tries to impose the peripheral discrete columns as a condition
+  void try_discrete_peripheral(
+      const containers::DataFrame &_peripheral, const size_t _sample_size,
+      containers::MatchPtrs::iterator _match_container_begin,
+      containers::MatchPtrs::iterator _match_container_end,
+      std::vector<descriptors::Split> *_candidate_splits);
+
+  /// Tries to impose the population discrete columns as a condition
+  void try_discrete_population(
+      const containers::DataFrameView &_population, const size_t _sample_size,
+      containers::MatchPtrs::iterator _match_container_begin,
+      containers::MatchPtrs::iterator _match_container_end,
+      std::vector<descriptors::Split> *_candidate_splits);
+
+  /// Tries to impose the peripheral numerical columns as a condition
+  void try_numerical_peripheral(
+      const containers::DataFrame &_peripheral, const size_t _sample_size,
+      containers::MatchPtrs::iterator _match_container_begin,
+      containers::MatchPtrs::iterator _match_container_end,
+      std::vector<descriptors::Split> *_candidate_splits);
+
+  /// Tries to impose the population numerical columns as a condition
+  void try_numerical_population(
+      const containers::DataFrameView &_population, const size_t _sample_size,
+      containers::MatchPtrs::iterator _match_container_begin,
+      containers::MatchPtrs::iterator _match_container_end,
+      std::vector<descriptors::Split> *_candidate_splits);
+
+  /// Tries whether the discrete values might constitute a good split
+  void try_discrete_values(
+      const size_t _column_used, const enums::DataUsed _data_used,
+      const size_t _sample_size,
+      containers::MatchPtrs::iterator _match_container_begin,
+      containers::MatchPtrs::iterator _match_container_end,
+      std::vector<descriptors::Split> *_candidate_splits);
+
+  /// Called by try_discrete_values(...) and try_numerical_values(...)
+  void try_non_categorical_values(
+      const size_t _column_used, const enums::DataUsed _data_used,
+      const size_t _sample_size, const Float _max, const Float _step_size,
+      const std::vector<size_t> &_indptr, containers::MatchPtrs *_bins,
+      std::vector<descriptors::Split> *_candidate_splits);
+
+  /// Tries whether the numerical values might constitute a good split
+  void try_numerical_values(
+      const size_t _column_used, const enums::DataUsed _data_used,
+      const size_t _sample_size,
+      containers::MatchPtrs::iterator _match_container_begin,
+      containers::MatchPtrs::iterator _match_container_end,
+      std::vector<descriptors::Split> *_candidate_splits);
+
+  /// Tries to impose the same units categorical as a condition
+  void try_same_units_categorical(
+      const containers::DataFrameView &_population,
+      const containers::DataFrame &_peripheral, const size_t _sample_size,
+      containers::MatchPtrs::iterator _match_container_begin,
+      containers::MatchPtrs::iterator _match_container_end,
+      std::vector<descriptors::Split> *_candidate_splits);
+
+  /// Tries to impose the same units discrete as a condition
+  void try_same_units_discrete(
+      const containers::DataFrameView &_population,
+      const containers::DataFrame &_peripheral, const size_t _sample_size,
+      containers::MatchPtrs::iterator _match_container_begin,
+      containers::MatchPtrs::iterator _match_container_end,
+      std::vector<descriptors::Split> *_candidate_splits);
+
+  /// Tries to impose the same units numerical as a condition
+  void try_same_units_numerical(
+      const containers::DataFrameView &_population,
+      const containers::DataFrame &_peripheral, const size_t _sample_size,
+      containers::MatchPtrs::iterator _match_container_begin,
+      containers::MatchPtrs::iterator _match_container_end,
+      std::vector<descriptors::Split> *_candidate_splits);
+
+  /// Tries to impose the subfeatures as a condition
+  void try_subfeatures(const containers::Subfeatures &_subfeatures,
+                       const size_t _sample_size,
+                       containers::MatchPtrs::iterator _match_container_begin,
+                       containers::MatchPtrs::iterator _match_container_end,
+                       std::vector<descriptors::Split> *_candidate_splits);
+
+  /// Tries to impose conditions based on the text fields in the peripheral
+  /// table.
+  void try_text_peripheral(
+      const containers::DataFrame &_peripheral, const size_t _sample_size,
+      containers::MatchPtrs::iterator _match_container_begin,
+      containers::MatchPtrs::iterator _match_container_end,
+      std::vector<descriptors::Split> *_candidate_splits);
+
+  /// Tries to impose conditions based on the text fields in the population
+  /// table.
+  void try_text_population(
+      const containers::DataFrameView &_population, const size_t _sample_size,
+      containers::MatchPtrs::iterator _match_container_begin,
+      containers::MatchPtrs::iterator _match_container_end,
+      std::vector<descriptors::Split> *_candidate_splits);
+
+  /// Tries to impose conditions based on the text fields.
+  void try_text_values(const textmining::RowIndex &_row_index,
+                       const textmining::WordIndex &_word_index,
+                       const size_t _column_used,
+                       const enums::DataUsed _data_used,
+                       const size_t _sample_size,
+                       containers::MatchPtrs::iterator _match_container_begin,
+                       containers::MatchPtrs::iterator _match_container_end,
+                       std::vector<containers::Match *> *_bins,
+                       std::vector<descriptors::Split> *_candidate_splits);
+
+  /// Tries to impose conditions based on combined words.
+  void try_text_values_combined(
+      const size_t _column_used, const enums::DataUsed _data_used,
+      const size_t _sample_size, const textmining::WordIndex &_word_index,
+      const std::shared_ptr<const std::vector<Int>> &_words,
+      containers::MatchPtrs::iterator _match_container_begin,
+      containers::MatchPtrs::iterator _match_container_end,
+      std::vector<descriptors::Split> *_candidate_splits);
+
+  /// Tries to impose conditions based on individual words.
+  void try_text_values_individual(
+      const size_t _column_used, const enums::DataUsed _data_used,
+      const size_t _sample_size, const containers::WordIndex &_word_index,
+      const std::shared_ptr<const std::vector<Int>> &_words,
+      containers::MatchPtrs::iterator _match_container_begin,
+      containers::MatchPtrs::iterator _match_container_end,
+      std::vector<descriptors::Split> *_candidate_splits);
+
+  /// Tries to impose the difference between the time stamps as a
+  /// window condition, if delta_t is greater than 0.
+  void try_time_stamps_window(
+      const containers::DataFrameView &_population,
+      const containers::DataFrame &_peripheral, const size_t _sample_size,
+      containers::MatchPtrs::iterator _match_container_begin,
+      containers::MatchPtrs::iterator _match_container_end,
+      std::vector<descriptors::Split> *_candidate_splits);
+
+  /// Tries to apply a moving window, simulating a lag variable.
+  void try_window(containers::MatchPtrs::iterator _match_container_begin,
+                  containers::MatchPtrs::iterator _match_container_end,
+                  std::vector<descriptors::Split> *_candidate_splits);
+
+  /// Updates the aggregations and the optimization criterion.
+  void update(const auto _allow_deactivation,
+              containers::MatchPtrs::iterator _match_container_begin,
+              containers::MatchPtrs::iterator _separator,
+              containers::MatchPtrs::iterator _match_container_end,
+              aggregations::AbstractFitAggregation *_aggregation) const;
+
+  // --------------------------------------
+
+ private:
+  /// Child node containing samples greater than the critical value
+  containers::Optional<DecisionTreeNode> child_node_greater_;
+
+  /// Child node containing all samples smaller than or equal to the
+  /// critical value
+  containers::Optional<DecisionTreeNode> child_node_smaller_;
+
+  /// Depth at this node
+  Int depth_;
+
+  /// The improvement of the optimization criterion that was accomplished by
+  /// this node. If the node has no split, the improvement should be NAN.
+  Float improvement_;
+
+  /// The initial value of the optimization criterion after all matches have
+  /// been activated. Should be NAN for all nodes but the root node.
+  Float initial_value_;
+
+  /// Denotes whether this is an activated
+  /// or a deactivated node. If this is an activated node,
+  /// that means that all samples passed on by the parent
+  /// are activated and this node can deactivate some of
+  /// them and vice versa.
+  bool is_activated_;
+
+  /// If a node has a child_node_greater_ and child_node_smaller_, it must
+  /// have a split, but not necessarily the other way around.
+  containers::Optional<descriptors::Split> split_;
+
+  /// Pointer to tree impl of the tree that contains this node
+  DecisionTreeImpl const *tree_;
+};
+
+// ----------------------------------------------------------------------------
+
+}  // namespace decisiontrees
+}  // namespace multirel
+
+#endif  // MULTIREL_DECISIONTREES_DECISIONTREENODE_HPP_

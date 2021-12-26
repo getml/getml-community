@@ -1,0 +1,6 @@
+#ifndef ENGINE_HYPERPARAM_HYPERPARAM_HPP_
+#define ENGINE_HYPERPARAM_HYPERPARAM_HPP_
+
+#include "engine/hyperparam/Hyperopt.hpp"
+
+#endif  // ENGINE_HYPERPARAM_HYPERPARAM_HPP_
