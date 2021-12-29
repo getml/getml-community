@@ -87,11 +87,20 @@ Mapping::build_prerequisites(
                 std::nullopt, word_index_container)
           : std::optional<helpers::TableHolder>();
 
-  const auto population_with_word_indices = helpers::DataFrame(
-      population.categoricals_, population.discretes_, population.indices_,
-      population.join_keys_, population.name_, population.numericals_,
-      population.targets_, population.text_, population.time_stamps_, {},
-      word_index_container.population());
+  const auto params = helpers::DataFrameParams{
+      .categoricals_ = population.categoricals_,
+      .discretes_ = population.discretes_,
+      .indices_ = population.indices_,
+      .join_keys_ = population.join_keys_,
+      .name_ = population.name_,
+      .numericals_ = population.numericals_,
+      .targets_ = population.targets_,
+      .text_ = population.text_,
+      .time_stamps_ = population.time_stamps_,
+      .ts_index_ = population.ts_index_,
+      .word_indices_ = word_index_container.population()};
+
+  const auto population_with_word_indices = helpers::DataFrame(params);
 
   return std::make_tuple(population_with_word_indices, table_holder,
                          vocabulary);

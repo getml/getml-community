@@ -17,7 +17,9 @@ struct join {
     std::vector<T> result;
 
     for (const auto& r : _range) {
-      result.insert(result.end(), r.begin(), r.end());
+      for (const auto& v : r) {
+        result.emplace_back(v);
+      }
     }
 
     return result;
@@ -29,7 +31,9 @@ struct join {
     std::vector<T> result;
 
     for (const auto& r : _range) {
-      result.insert(result.end(), r.begin(), r.end());
+      for (const auto& v : r) {
+        result.emplace_back(v);
+      }
     }
 
     return result;

@@ -33,8 +33,15 @@ class ColumnView {
 
   // -------------------------------
 
+ public:
+  /// Returns an iterator to the beginning
+  inline auto begin() const { return make_range().begin(); }
+
   /// Returns the underlying column.
   inline const Column<T>& col() const { return col_; }
+
+  /// Returns an iterator to the end
+  inline auto end() const { return make_range().end(); }
 
   /// Accessor to data (when rows are std::vector<Int>)
   template <typename CType = ContainerType,
@@ -56,6 +63,15 @@ class ColumnView {
     auto it = rows_->find(_i);
     assert_true(it != rows_->end());
     return col_[it->second];
+  }
+
+  // -------------------------------
+ private:
+  /// Generates a range over the ColumnView
+  auto make_range() const {
+    assert_true(rows_);
+    const auto get_val = [this](const auto _i) -> T { return col_[_i]; };
+    return *rows_ | VIEWS::transform(get_val);
   }
 
   // -------------------------------

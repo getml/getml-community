@@ -82,10 +82,20 @@ std::vector<DataFrame> TableHolder::add_text_fields_to_peripheral_tables(
                                   ? _word_index_container->peripheral().at(j)
                                   : WordIndices();
 
-    const auto text_field =
-        DataFrame(df.categoricals_, df.discretes_, df.indices_, df.join_keys_,
-                  df.name_, df.numericals_, df.targets_, df.text_,
-                  df.time_stamps_, row_indices, word_indices);
+    const auto params = DataFrameParams{.categoricals_ = df.categoricals_,
+                                        .discretes_ = df.discretes_,
+                                        .indices_ = df.indices_,
+                                        .join_keys_ = df.join_keys_,
+                                        .name_ = df.name_,
+                                        .numericals_ = df.numericals_,
+                                        .row_indices_ = row_indices,
+                                        .targets_ = df.targets_,
+                                        .text_ = df.text_,
+                                        .time_stamps_ = df.time_stamps_,
+                                        .ts_index_ = df.ts_index_,
+                                        .word_indices_ = word_indices};
+
+    const auto text_field = DataFrame(params);
 
     result.push_back(text_field);
   }
@@ -178,10 +188,14 @@ std::vector<DataFrameView> TableHolder::parse_main_tables(
   // ---------------------------------------------------------------------
 
   for (size_t i = 0; i < _placeholder.joined_tables_.size(); ++i) {
-    result.push_back(
-        _population.create_subview(_placeholder.join_keys_used_.at(i),
-                                   _placeholder.time_stamps_used_.at(i), "",
-                                   row_indices, word_indices, features));
+    const auto params =
+        CreateSubviewParams{.additional_ = features,
+                            .join_key_ = _placeholder.join_keys_used_.at(i),
+                            .row_indices_ = row_indices,
+                            .time_stamp_ = _placeholder.time_stamps_used_.at(i),
+                            .word_indices_ = word_indices};
+
+    result.push_back(_population.create_subview(params));
   }
 
   // ---------------------------------------------------------------------
@@ -199,8 +213,12 @@ std::vector<DataFrameView> TableHolder::parse_main_tables(
       std::distance(relevant_text_fields.begin(), relevant_text_fields.end());
 
   for (Int i = 0; i < num_fields; ++i) {
-    result.push_back(_population.create_subview(
-        Macros::rowid(), "", "", row_indices, word_indices, features));
+    const auto params = CreateSubviewParams{.additional_ = features,
+                                            .join_key_ = Macros::rowid(),
+                                            .row_indices_ = row_indices,
+                                            .word_indices_ = word_indices};
+
+    result.push_back(_population.create_subview(params));
   }
 
   // ---------------------------------------------------------------------
@@ -267,12 +285,21 @@ std::vector<DataFrame> TableHolder::parse_peripheral_tables(
 
     const auto additional = make_additional_columns(i);
 
-    result.push_back(_peripheral.at(j).create_subview(
-        _placeholder.other_join_keys_used_.at(i),
-        _placeholder.other_time_stamps_used_.at(i),
-        _placeholder.upper_time_stamps_used_.at(i),
-        _placeholder.allow_lagged_targets_.at(i), row_indices, word_indices,
-        additional));
+    const auto jk_population = _placeholder.join_keys_used_.at(i);
+
+    const auto population_join_keys = _population.join_key_col(jk_population);
+
+    const auto params = CreateSubviewParams{
+        .additional_ = additional,
+        .allow_lagged_targets_ = _placeholder.allow_lagged_targets_.at(i),
+        .join_key_ = _placeholder.other_join_keys_used_.at(i),
+        .population_join_keys_ = population_join_keys,
+        .row_indices_ = row_indices,
+        .time_stamp_ = _placeholder.other_time_stamps_used_.at(i),
+        .upper_time_stamp_ = _placeholder.upper_time_stamps_used_.at(i),
+        .word_indices_ = word_indices};
+
+    result.push_back(_peripheral.at(j).create_subview(params));
   }
 
   // ---------------------------------------------------------------------
@@ -321,15 +348,22 @@ DataFrameView TableHolder::make_output(
     const Placeholder& _placeholder, const DataFrameView& _population,
     const std::vector<DataFrame>& _peripheral, const size_t _i,
     const size_t _j) {
-  const auto population_subview = _population.create_subview(
-      _placeholder.join_keys_used_.at(_i),
-      _placeholder.time_stamps_used_.at(_i), "", {}, {}, {});
+  const auto population_params =
+      CreateSubviewParams{.join_key_ = _placeholder.join_keys_used_.at(_i),
+                          .time_stamp_ = _placeholder.time_stamps_used_.at(_i)};
 
-  const auto peripheral_subview = _peripheral.at(_j).create_subview(
-      _placeholder.other_join_keys_used_.at(_i),
-      _placeholder.other_time_stamps_used_.at(_i),
-      _placeholder.upper_time_stamps_used_.at(_i),
-      _placeholder.allow_lagged_targets_.at(_i), {}, {}, {});
+  const auto population_subview = _population.create_subview(population_params);
+
+  const auto peripheral_params = CreateSubviewParams{
+      .allow_lagged_targets_ = _placeholder.allow_lagged_targets_.at(_i),
+      .join_key_ = _placeholder.other_join_keys_used_.at(_i),
+      .population_join_keys_ =
+          population_subview.join_key_col(population_params.join_key_),
+      .time_stamp_ = _placeholder.other_time_stamps_used_.at(_i),
+      .upper_time_stamp_ = _placeholder.upper_time_stamps_used_.at(_i)};
+
+  const auto peripheral_subview =
+      _peripheral.at(_j).create_subview(peripheral_params);
 
   return DataFrameView(_peripheral.at(_j),
                        make_subrows(population_subview, peripheral_subview));

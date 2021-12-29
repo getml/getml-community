@@ -13,73 +13,65 @@
 namespace helpers {
 // ----------------------------------------------------------------------------
 
-DataFrame::DataFrame(const std::vector<Column<Int>>& _categoricals,
-                     const std::vector<Column<Float>>& _discretes,
-                     const std::vector<std::shared_ptr<Index>>& _indices,
-                     const std::vector<Column<Int>>& _join_keys,
-                     const std::string& _name,
-                     const std::vector<Column<Float>>& _numericals,
-                     const std::vector<Column<Float>>& _targets,
-                     const std::vector<Column<strings::String>>& _text,
-                     const std::vector<Column<Float>>& _time_stamps,
-                     const RowIndices& _row_indices,
-                     const WordIndices& _word_indices)
-    : categoricals_(_categoricals),
-      discretes_(_discretes),
-      indices_(_indices),
-      join_keys_(_join_keys),
-      name_(_name),
-      numericals_(_numericals),
-      row_indices_(_row_indices),
-      targets_(_targets),
-      text_(_text),
-      time_stamps_(_time_stamps),
-      word_indices_(_word_indices) {
-  assert_true(_indices.size() == _join_keys.size());
+DataFrame::DataFrame(const DataFrameParams& _params)
+    : categoricals_(_params.categoricals_),
+      discretes_(_params.discretes_),
+      indices_(_params.indices_),
+      join_keys_(_params.join_keys_),
+      name_(_params.name_),
+      numericals_(_params.numericals_),
+      row_indices_(_params.row_indices_),
+      targets_(_params.targets_),
+      text_(_params.text_),
+      time_stamps_(_params.time_stamps_),
+      ts_index_(_params.ts_index_),
+      word_indices_(_params.word_indices_) {
+  assert_true(_params.indices_.size() == _params.join_keys_.size());
 
-  assert_true(_row_indices.size() == 0 || _row_indices.size() == _text.size());
+  assert_true(_params.row_indices_.size() == 0 ||
+              _params.row_indices_.size() == _params.text_.size());
 
-  assert_true(_word_indices.size() == 0 ||
-              _word_indices.size() == _text.size());
+  assert_true(_params.word_indices_.size() == 0 ||
+              _params.word_indices_.size() == _params.text_.size());
 
 #ifndef NDEBUG
-  for (auto& col : _categoricals) {
+  for (auto& col : _params.categoricals_) {
     assert_msg(col.nrows_ == nrows(),
                "categoricals: col.nrows_: " + std::to_string(col.nrows_) +
                    ", nrows(): " + std::to_string(nrows()));
   }
 
-  for (auto& col : _discretes) {
+  for (auto& col : _params.discretes_) {
     assert_msg(col.nrows_ == nrows(),
                "discretes: col.nrows_: " + std::to_string(col.nrows_) +
                    ", nrows(): " + std::to_string(nrows()));
   }
 
-  for (auto& col : _join_keys) {
+  for (auto& col : _params.join_keys_) {
     assert_msg(col.nrows_ == nrows(),
                "join_keys: col.nrows_: " + std::to_string(col.nrows_) +
                    ", nrows(): " + std::to_string(nrows()));
   }
 
-  for (auto& col : _numericals) {
+  for (auto& col : _params.numericals_) {
     assert_msg(col.nrows_ == nrows(),
                "numericals: col.nrows_: " + std::to_string(col.nrows_) +
                    ", nrows(): " + std::to_string(nrows()));
   }
 
-  for (auto& col : _targets) {
+  for (auto& col : _params.targets_) {
     assert_msg(col.nrows_ == nrows(),
                "targets: col.nrows_: " + std::to_string(col.nrows_) +
                    ", nrows(): " + std::to_string(nrows()));
   }
 
-  for (auto& col : _text) {
+  for (auto& col : _params.text_) {
     assert_msg(col.nrows_ == nrows(),
                "text: col.nrows_: " + std::to_string(col.nrows_) +
                    ", nrows(): " + std::to_string(nrows()));
   }
 
-  for (auto& col : _time_stamps) {
+  for (auto& col : _params.time_stamps_) {
     assert_msg(col.nrows_ == nrows(),
                "time_stamps: col.nrows_: " + std::to_string(col.nrows_) +
                    ", nrows(): " + std::to_string(nrows()));
@@ -89,97 +81,58 @@ DataFrame::DataFrame(const std::vector<Column<Int>>& _categoricals,
 
 // ----------------------------------------------------------------------------
 
-DataFrame DataFrame::create_subview(
-    const std::string& _join_key, const std::string& _time_stamp,
-    const std::string& _upper_time_stamp, const bool _allow_lagged_targets,
-    const RowIndices& _row_indices, const WordIndices& _word_indices,
-    const AdditionalColumns& _additional) const {
-  // ---------------------------------------------------------------------------
+DataFrame DataFrame::create_subview(const CreateSubviewParams& _params) const {
+  const auto ix_join_key = find_ix_join_key(_params.join_key_);
 
-  const auto ix_join_key = find_ix_join_key(_join_key);
+  const auto numericals_and_time_stamps = make_numericals_and_time_stamps(
+      _params.additional_, _params.allow_lagged_targets_,
+      _params.upper_time_stamp_);
 
-  // ---------------------------------------------------------------------------
-  // All time stamps that are not upper time stamp are added to numerical
-  // and given the unit time stamp - this is so the end users do not have
-  // to understand the difference between time stamps as a type and
-  // time stamps as a role.
+  const auto df_params =
+      DataFrameParams{.categoricals_ = categoricals_,
+                      .discretes_ = discretes_,
+                      .indices_ = {indices_.at(ix_join_key)},
+                      .join_keys_ = {join_keys_.at(ix_join_key)},
+                      .name_ = name_,
+                      .numericals_ = numericals_and_time_stamps,
+                      .row_indices_ = _params.row_indices_,
+                      .targets_ = targets_,
+                      .text_ = text_,
+                      .time_stamps_ = {},
+                      .word_indices_ = _params.word_indices_};
 
-  auto numericals_and_time_stamps = std::vector<Column<Float>>();
-
-  for (const auto& col : numericals_) {
-    numericals_and_time_stamps.push_back(col);
+  if (_params.time_stamp_ == "") {
+    return DataFrame(df_params);
   }
 
-  for (const auto& col : _additional) {
-    numericals_and_time_stamps.push_back(col);
+  const auto ix_time_stamp = find_ix_time_stamp(_params.time_stamp_);
+
+  if (_params.upper_time_stamp_ == "") {
+    return DataFrame(
+        df_params.with_time_stamps({time_stamps_.at(ix_time_stamp)}));
   }
 
-  if (_allow_lagged_targets) {
-    for (const auto& col : targets_) {
-      numericals_and_time_stamps.push_back(col);
-    }
-  }
+  const auto ts_index = make_ts_index(_params, ix_join_key, ix_time_stamp);
 
-  for (const auto& col : time_stamps_) {
-    if (_upper_time_stamp != "" && col.name_ == _upper_time_stamp) {
-      continue;
-    }
+  const auto ix_upper_time_stamp =
+      find_ix_time_stamp(_params.upper_time_stamp_);
 
-    const auto ts =
-        Column<Float>(col.ptr_, col.name_, col.subroles_, col.unit_);
-
-    numericals_and_time_stamps.push_back(ts);
-  }
-
-  // ---------------------------------------------------------------------------
-
-  if (_time_stamp == "") {
-    return DataFrame(categoricals_, discretes_, {indices_.at(ix_join_key)},
-                     {join_keys_.at(ix_join_key)}, name_,
-                     numericals_and_time_stamps, targets_, text_, {},
-                     _row_indices, _word_indices);
-  }
-
-  // ---------------------------------------------------------------------------
-
-  const auto ix_time_stamp = find_ix_time_stamp(_time_stamp);
-
-  // ---------------------------------------------------------------------------
-
-  if (_upper_time_stamp == "") {
-    return DataFrame(categoricals_, discretes_, {indices_.at(ix_join_key)},
-                     {join_keys_.at(ix_join_key)}, name_,
-                     numericals_and_time_stamps, targets_, text_,
-                     {time_stamps_.at(ix_time_stamp)}, _row_indices,
-                     _word_indices);
-  }
-
-  // ---------------------------------------------------------------------------
-
-  const auto ix_upper_time_stamp = find_ix_time_stamp(_upper_time_stamp);
-
-  // ---------------------------------------------------------------------------
-
-  return DataFrame(
-      categoricals_, discretes_, {indices_.at(ix_join_key)},
-      {join_keys_.at(ix_join_key)}, name_, numericals_and_time_stamps, targets_,
-      text_,
-      {time_stamps_.at(ix_time_stamp), time_stamps_.at(ix_upper_time_stamp)},
-      _row_indices, _word_indices);
-
-  // ---------------------------------------------------------------------------
+  return DataFrame(df_params
+                       .with_time_stamps({time_stamps_.at(ix_time_stamp),
+                                          time_stamps_.at(ix_upper_time_stamp)})
+                       .with_ts_index(ts_index));
 }
 
 // ----------------------------------------------------------------------------
 
 std::pair<const size_t*, const size_t*> DataFrame::find(
-    const Int _join_key) const {
-  assert_true(indices().size() > 0);
+    const Int _join_key, const size_t _ix_join_key) const {
+  assert_true(indices().size() > _ix_join_key);
 
-  assert_true(indices_[0]);
+  assert_true(indices_[_ix_join_key]);
 
-  if (std::holds_alternative<InMemoryIndex>(*indices_[0])) {
-    const auto& idx = std::get<InMemoryIndex>(*indices_[0]);
+  if (std::holds_alternative<InMemoryIndex>(*indices_[_ix_join_key])) {
+    const auto& idx = std::get<InMemoryIndex>(*indices_[_ix_join_key]);
 
     const auto it = idx.find(_join_key);
 
@@ -191,8 +144,8 @@ std::pair<const size_t*, const size_t*> DataFrame::find(
                           it->second.data() + it->second.size());
   }
 
-  if (std::holds_alternative<MemoryMappedIndex>(*indices_[0])) {
-    const auto& idx = std::get<MemoryMappedIndex>(*indices_[0]);
+  if (std::holds_alternative<MemoryMappedIndex>(*indices_[_ix_join_key])) {
+    const auto& idx = std::get<MemoryMappedIndex>(*indices_[_ix_join_key]);
 
     const auto opt = idx[_join_key];
 
@@ -271,6 +224,81 @@ size_t DataFrame::find_ix_time_stamp(const std::string& _colname) const {
       std::to_string(time_stamps_.size()) + " time stamps:" + names);
 
   return 0;
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<Column<Float>> DataFrame::make_numericals_and_time_stamps(
+    const AdditionalColumns& _additional, const bool _allow_lagged_targets,
+    const std::string& _upper_time_stamp) const {
+  const auto targets =
+      _allow_lagged_targets ? targets_ : std::vector<Column<Float>>();
+
+  const auto is_not_upper =
+      [&_upper_time_stamp](const Column<Float>& _ts) -> bool {
+    return _upper_time_stamp == "" || _ts.name_ != _upper_time_stamp;
+  };
+
+  const auto time_stamps = stl::collect::vector<Column<Float>>(
+      time_stamps_ | VIEWS::filter(is_not_upper));
+
+  return stl::join::vector<Column<Float>>(
+      {numericals_, _additional, targets, time_stamps});
+}
+
+// ----------------------------------------------------------------------------
+
+std::shared_ptr<tsindex::Index> DataFrame::make_ts_index(
+    const CreateSubviewParams& _params, const size_t _ix_join_key,
+    const size_t _ix_time_stamp) const {
+  if (nrows() == 0) {
+    return nullptr;
+  }
+
+  if (!_params.population_join_keys_) {
+    return nullptr;
+  }
+
+  const auto ix_upper_time_stamp =
+      find_ix_time_stamp(_params.upper_time_stamp_);
+
+  const auto upper_ts = time_stamps_.at(ix_upper_time_stamp);
+
+  const auto [_, colname] = Macros::parse_table_colname(name_, upper_ts.name_);
+
+  if (colname.find(Macros::generated_ts()) == std::string::npos) {
+    return nullptr;
+  }
+
+  const auto join_keys = stl::Range<const Int*>(
+      join_keys_.at(_ix_join_key).begin(), join_keys_.at(_ix_join_key).end());
+
+  const auto lower_ts =
+      stl::Range<const Float*>(time_stamps_.at(_ix_time_stamp).begin(),
+                               time_stamps_.at(_ix_time_stamp).end());
+
+  const auto memory = upper_ts[0] - lower_ts.begin()[0];
+
+  const auto unique_join_keys =
+      std::set<Int>(_params.population_join_keys_->begin(),
+                    _params.population_join_keys_->end());
+
+  const auto find_rownums =
+      [this, _ix_join_key](const Int jk) -> stl::Range<const size_t*> {
+    const auto p = find(jk, _ix_join_key);
+    return stl::Range<const size_t*>(p.first, p.second);
+  };
+
+  const auto rownums =
+      std::make_shared<std::vector<size_t>>(stl::join::vector<size_t>(
+          unique_join_keys | VIEWS::transform(find_rownums)));
+
+  const auto params = tsindex::IndexParams{.join_keys_ = join_keys,
+                                           .lower_ts_ = lower_ts,
+                                           .memory_ = memory,
+                                           .rownums_ = rownums};
+
+  return std::make_shared<tsindex::Index>(params);
 }
 
 // ----------------------------------------------------------------------------

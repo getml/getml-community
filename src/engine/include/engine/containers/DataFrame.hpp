@@ -1103,8 +1103,17 @@ DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
 
   // ------------------------------------------------------------------------
 
-  return DataFrameType(categoricals, discretes, indices, join_keys, name(),
-                       numericals, targets, text, time_stamps);
+  const auto params = helpers::DataFrameParams{.categoricals_ = categoricals,
+                                               .discretes_ = discretes,
+                                               .indices_ = indices,
+                                               .join_keys_ = join_keys,
+                                               .name_ = name(),
+                                               .numericals_ = numericals,
+                                               .targets_ = targets,
+                                               .text_ = text,
+                                               .time_stamps_ = time_stamps};
+
+  return DataFrameType(params);
 
   // ------------------------------------------------------------------------
 }

@@ -11,6 +11,7 @@ set(RELBOOST_SOURCE_DIRECTORY "${CODE_DIR}/src/relboost")
 set(RELMT_SOURCE_DIRECTORY "${CODE_DIR}/src/relmt")
 set(SQLITE3_SOURCE_DIRECTORY "${CODE_DIR}/src/sqlite3")
 set(TEXTMINING_SOURCE_DIRECTORY "${CODE_DIR}/src/textmining")
+set(TSINDEX_SOURCE_DIRECTORY "${CODE_DIR}/src/tsindex")
 
 include(${DATABASE_SOURCE_DIRECTORY}/obj.txt)
 include(${FASTPROP_SOURCE_DIRECTORY}/obj.txt)
@@ -25,6 +26,7 @@ include(${RELBOOST_SOURCE_DIRECTORY}/obj.txt)
 include(${RELMT_SOURCE_DIRECTORY}/obj.txt)
 include(${SQLITE3_SOURCE_DIRECTORY}/obj.txt)
 include(${TEXTMINING_SOURCE_DIRECTORY}/obj.txt)
+include(${TSINDEX_SOURCE_DIRECTORY}/obj.txt)
 
 add_executable(
  	${GETML_VERSION}-64bit
@@ -41,5 +43,6 @@ add_executable(
 	${RELMT_OBJ}
  	${SQLITE3_OBJ}
     ${TEXTMINING_OBJ}
+    ${TSINDEX_OBJ}
  	${ENGINE_SOURCE_DIRECTORY}/main.cpp
 )

@@ -68,7 +68,7 @@ struct collect {
     if constexpr (use_push_back) {
       auto vec = std::vector<T>();
       for (const auto val : range) {
-        vec.push_back(val);
+        vec.emplace_back(val);
       }
       return vec;
     } else {

@@ -18,45 +18,39 @@
 // -------------------------------------------------------------------------
 
 #include "helpers/Column.hpp"
+#include "helpers/CreateSubviewParams.hpp"
+#include "helpers/DataFrameParams.hpp"
 #include "helpers/Float.hpp"
 #include "helpers/Index.hpp"
 #include "helpers/Int.hpp"
 #include "helpers/Schema.hpp"
 
 // -------------------------------------------------------------------------
+
 namespace helpers {
+
 // -------------------------------------------------------------------------
 
 struct DataFrame {
   // ---------------------------------------------------------------------
 
  public:
-  typedef Column<Float> FloatColumnType;
+  typedef DataFrameParams::FloatColumnType FloatColumnType;
 
-  typedef Column<Int> IntColumnType;
+  typedef DataFrameParams::IntColumnType IntColumnType;
 
-  typedef std::vector<Column<Float>> AdditionalColumns;
+  typedef DataFrameParams::AdditionalColumns AdditionalColumns;
 
-  typedef std::vector<std::shared_ptr<const textmining::RowIndex>> RowIndices;
+  typedef DataFrameParams::RowIndices RowIndices;
 
-  typedef Column<strings::String> StringColumnType;
+  typedef DataFrameParams::StringColumnType StringColumnType;
 
-  typedef std::vector<std::shared_ptr<const textmining::WordIndex>> WordIndices;
+  typedef DataFrameParams::WordIndices WordIndices;
 
   // ---------------------------------------------------------------------
 
  public:
-  DataFrame(const std::vector<Column<Int>>& _categoricals,
-            const std::vector<Column<Float>>& _discretes,
-            const std::vector<std::shared_ptr<Index>>& _indices,
-            const std::vector<Column<Int>>& _join_keys,
-            const std::string& _name,
-            const std::vector<Column<Float>>& _numericals,
-            const std::vector<Column<Float>>& _targets,
-            const std::vector<Column<strings::String>>& _text,
-            const std::vector<Column<Float>>& _time_stamps,
-            const RowIndices& _row_indices = RowIndices(),
-            const WordIndices& _word_indices = WordIndices());
+  DataFrame(const DataFrameParams& _params);
 
   ~DataFrame() = default;
 
@@ -64,16 +58,11 @@ struct DataFrame {
 
  public:
   /// Creates a subview.
-  DataFrame create_subview(const std::string& _join_key,
-                           const std::string& _time_stamp,
-                           const std::string& _upper_time_stamp,
-                           const bool _allow_lagged_targets,
-                           const RowIndices& _row_indices,
-                           const WordIndices& _word_indices,
-                           const AdditionalColumns& _additional) const;
+  DataFrame create_subview(const CreateSubviewParams& _params) const;
 
   /// Find the indices associated with this join key.
-  std::pair<const size_t*, const size_t*> find(const Int _join_key) const;
+  std::pair<const size_t*, const size_t*> find(
+      const Int _join_key, const size_t _ix_join_key = 0) const;
 
   // ---------------------------------------------------------------------
 
@@ -144,6 +133,11 @@ struct DataFrame {
     return join_keys_[0][_i];
   }
 
+  /// Getter for a join key column.
+  const Column<Int>& join_key_col(const std::string& _colname) const {
+    const auto ix = find_ix_join_key(_colname);
+    return join_keys_.at(ix);
+  }
   /// Getter for a join keys.
   const std::vector<Column<Int>>& join_keys() const { return join_keys_; }
 
@@ -311,6 +305,19 @@ struct DataFrame {
   std::vector<std::string> get_colnames(
       const std::vector<Column<T>>& _columns) const;
 
+  /// All time stamps that are not upper time stamp are added to numerical
+  /// and given the unit time stamp - this is so the end users do not have
+  /// to understand the difference between time stamps as a type and
+  /// time stamps as a role.
+  std::vector<Column<Float>> make_numericals_and_time_stamps(
+      const AdditionalColumns& _additional, const bool _allow_lagged_targets,
+      const std::string& _upper_time_stamp) const;
+
+  /// Generates the ts_index_ for the subview.
+  std::shared_ptr<tsindex::Index> make_ts_index(
+      const CreateSubviewParams& _params, const size_t _ix_join_key,
+      const size_t _ix_time_stamp) const;
+
   // ---------------------------------------------------------------------
 
  public:
@@ -343,6 +350,10 @@ struct DataFrame {
 
   /// Time stamps of this data frame.
   const std::vector<Column<Float>> time_stamps_;
+
+  /// An index for the time stamps, which can increase performance in certain
+  /// scenarios.
+  const std::shared_ptr<tsindex::Index> ts_index_;
 
   /// Index returning words for each row.
   const WordIndices word_indices_;

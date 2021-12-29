@@ -66,16 +66,8 @@ class DataFrameView {
   }
 
   /// Creates a subview.
-  DataFrameView create_subview(const std::string& _join_key,
-                               const std::string& _time_stamp,
-                               const std::string& _upper_time_stamp,
-                               const RowIndices& _row_indices,
-                               const WordIndices& _word_indices,
-                               const AdditionalColumns& _additional) const {
-    return DataFrameView(
-        df_.create_subview(_join_key, _time_stamp, _upper_time_stamp, false,
-                           _row_indices, _word_indices, _additional),
-        rows_);
+  DataFrameView create_subview(const CreateSubviewParams& _params) const {
+    return DataFrameView(df_.create_subview(_params), rows_);
   }
 
   /// Getter for underlying data frame.
@@ -108,6 +100,13 @@ class DataFrameView {
 
   /// Getter for a join key.
   Int join_key(size_t _i) const { return df_.join_key(row(_i)); }
+
+  /// Getter for a join key column.
+  ColumnView<Int, std::vector<size_t>> join_key_col(
+      const std::string& _colname) const {
+    return ColumnView<Int, std::vector<size_t>>(df_.join_key_col(_colname),
+                                                rows_);
+  }
 
   /// Getter for a join keys.
   const std::vector<Column<Int>>& join_keys() const { return df_.join_keys(); }

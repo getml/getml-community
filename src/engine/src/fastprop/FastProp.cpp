@@ -1355,15 +1355,19 @@ std::shared_ptr<std::vector<size_t>> FastProp::make_subfeature_rownums(
 
   assert_true(_ix < placeholder().join_keys_used_.size());
 
-  const auto population = _population.create_subview(
-      placeholder().join_keys_used_.at(_ix),
-      placeholder().time_stamps_used_.at(_ix), "", false, {}, {}, {});
+  const auto params_population = helpers::CreateSubviewParams{
+      .join_key_ = placeholder().join_keys_used_.at(_ix),
+      .time_stamp_ = placeholder().time_stamps_used_.at(_ix)};
 
-  const auto peripheral = _peripheral.create_subview(
-      placeholder().other_join_keys_used_.at(_ix),
-      placeholder().other_time_stamps_used_.at(_ix),
-      placeholder().upper_time_stamps_used_.at(_ix),
-      placeholder().allow_lagged_targets_.at(_ix), {}, {}, {});
+  const auto population = _population.create_subview(params_population);
+
+  const auto params_peripheral = helpers::CreateSubviewParams{
+      .allow_lagged_targets_ = placeholder().allow_lagged_targets_.at(_ix),
+      .join_key_ = placeholder().other_join_keys_used_.at(_ix),
+      .time_stamp_ = placeholder().other_time_stamps_used_.at(_ix),
+      .upper_time_stamp_ = placeholder().upper_time_stamps_used_.at(_ix)};
+
+  const auto peripheral = _peripheral.create_subview(params_peripheral);
 
   const auto get_ix_input = [](size_t _ix_input, size_t _ix_output) -> size_t {
     return _ix_input;
