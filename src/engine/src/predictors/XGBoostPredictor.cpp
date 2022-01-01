@@ -400,9 +400,6 @@ void XGBoostPredictor::load(const std::string &_fname) {
 void XGBoostPredictor::parse_dump(
     const std::string &_dump,
     std::vector<Float> *_all_feature_importances) const {
-  // ----------------------------------------------------------------
-  // Split _dump
-
   std::vector<std::string> lines;
 
   {
@@ -478,29 +475,19 @@ void XGBoostPredictor::parse_dump(
 FloatFeature XGBoostPredictor::predict(
     const std::vector<IntFeature> &_X_categorical,
     const std::vector<FloatFeature> &_X_numerical) const {
-  // --------------------------------------------------------------------
-
   impl().check_plausibility(_X_categorical, _X_numerical);
-
-  // --------------------------------------------------------------------
 
   if (!is_fitted()) {
     throw std::runtime_error("XGBoostPredictor has not been fitted!");
   }
 
-  // --------------------------------------------------------------------
-
   auto d_matrix = convert_to_dmatrix(_X_categorical, _X_numerical);
-
-  // --------------------------------------------------------------------
 
   auto handle = allocate_booster(d_matrix.get(), 1);
 
   if (XGBoosterLoadModelFromBuffer(*handle, model(), len()) != 0) {
     std::runtime_error("Could not reload booster!");
   }
-
-  // --------------------------------------------------------------------
 
   auto yhat = FloatFeature(
       std::make_shared<std::vector<Float>>(_X_numerical[0].size()));
@@ -509,7 +496,7 @@ FloatFeature XGBoostPredictor::predict(
 
   const float *yhat_float = nullptr;
 
-  if (XGBoosterPredict(*handle, *d_matrix, 0, 0, &nrows, &yhat_float) != 0) {
+  if (XGBoosterPredict(*handle, *d_matrix, 0, 0, 0, &nrows, &yhat_float) != 0) {
     std::runtime_error("Generating XGBoost predictions failed!");
   }
 
@@ -518,24 +505,15 @@ FloatFeature XGBoostPredictor::predict(
   std::transform(yhat_float, yhat_float + nrows, yhat.begin(),
                  [](const float val) { return static_cast<Float>(val); });
 
-  // --------------------------------------------------------------------
-
   return yhat;
-
-  // --------------------------------------------------------------------
 }
 
 // -----------------------------------------------------------------------------
 
 void XGBoostPredictor::save(const std::string &_fname) const {
-  // --------------------------------------------------------------------
-
   if (len() == 0) {
     throw std::runtime_error("XGBoostPredictor has not been fitted!");
   }
-
-  // --------------------------------------------------------------------
-  // Load booster
 
   auto handle = allocate_booster(NULL, 0);
 
@@ -543,14 +521,9 @@ void XGBoostPredictor::save(const std::string &_fname) const {
     std::runtime_error("Could not reload booster!");
   }
 
-  // --------------------------------------------------------------------
-  // Save model
-
   if (XGBoosterSaveModel(*handle, _fname.c_str()) != 0) {
     throw std::runtime_error("Could not save XGBoostPredictor!");
   }
-
-  // --------------------------------------------------------------------
 }
 
 // -----------------------------------------------------------------------------
