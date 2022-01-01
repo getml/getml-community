@@ -236,10 +236,6 @@ void DecisionTreeEnsemble::fit(
 
   // ----------------------------------------------------------------
 
-  debug_log("fit: Beginning to fit features...");
-
-  // ----------------------------------------------------------------
-
   if (_table_holder->main_tables().size() == 0) {
     throw std::invalid_argument("You need to provide a population table!");
   }
@@ -254,14 +250,10 @@ void DecisionTreeEnsemble::fit(
   // Store the column numbers, so we can make sure that the user
   // passes properly formatted data to predict(...)
 
-  debug_log("fit: Storing column numbers...");
-
   assert_true(_table_holder->main_tables().size() > 0);
 
   // ----------------------------------------------------------------
   // Make sure that the data passed by the user is plausible
-
-  debug_log("fit: Checking plausibility of input...");
 
   assert_true(_table_holder->main_tables().size() > 0);
 
@@ -299,8 +291,6 @@ void DecisionTreeEnsemble::fit(
   // Columns that share the same units are candidates for direct
   // comparison
 
-  debug_log("fit: Identifying same units...");
-
   assert_true(_table_holder->main_tables().size() > 0);
 
   assert_true(_table_holder->main_tables().size() ==
@@ -313,8 +303,6 @@ void DecisionTreeEnsemble::fit(
   // ----------------------------------------------------------------
   // containers::Match weights are needed for the random-forest-like
   // functionality
-
-  debug_log("fit: Setting up sampling...");
 
   if (hyperparameters().seed_ < 0) {
     throw std::invalid_argument("Seed must be positive!");
@@ -333,8 +321,6 @@ void DecisionTreeEnsemble::fit(
   // containers::Match containers are pointers to simple structs, which
   // represent a match between a key in the peripheral table and a key in
   // the population table.
-
-  debug_log("fit: Creating matches...");
 
   const auto num_peripheral = _table_holder->peripheral_tables().size();
 
@@ -369,8 +355,6 @@ void DecisionTreeEnsemble::fit(
     // containers::Match for a random-forest-like algorithm - can be
     // turned off by setting _sampling_rate to 0.0
 
-    debug_log("fit: Sampling from population...");
-
     if (hyperparameters().sampling_factor_ > 0.0) {
       sample_weights = _opt->make_sample_weights();
 
@@ -393,21 +377,14 @@ void DecisionTreeEnsemble::fit(
     // generated
     // from the last prediction
 
-    debug_log("fit: Preparing optimization criterion...");
-
     _opt->init(*sample_weights);
 
     // ----------------------------------------------------------------
-
-    debug_log("fit: Building candidates...");
 
     auto candidate_trees =
         build_candidates(ix_feature, same_units, *_table_holder);
 
     // ----------------------------------------------------------------
-    // Fit the trees
-
-    debug_log("fit: Fitting features...");
 
     TreeFitter tree_fitter(impl().hyperparameters_,
                            random_number_generator().get(), comm());
@@ -418,8 +395,6 @@ void DecisionTreeEnsemble::fit(
     // -------------------------------------------------------------
     // Recalculate residuals, which is needed for the gradient
     // boosting algorithm.
-
-    debug_log("fit: Recalculating residuals...");
 
     if (hyperparameters().shrinkage_ > 0.0) {
       const auto ix = last_tree()->ix_perip_used();
@@ -436,8 +411,6 @@ void DecisionTreeEnsemble::fit(
     }
 
     // -------------------------------------------------------------
-
-    debug_log("Trained FEATURE_" + std::to_string(ix_feature + 1) + ".");
 
     const auto progress = ((ix_feature + 1) * 100) / _num_features;
 

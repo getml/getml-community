@@ -332,10 +332,6 @@ std::vector<Float> CriticalValues::calc_time_window(
       static_cast<size_t>((max - min) / _delta_t) + 1;
 
   if (num_critical_values > 100000) {
-    debug_log(
-        "calculate_critical_values_window...done (delta_t too "
-        "small).");
-
     return std::vector<Float>(0);
   }
 
@@ -391,9 +387,6 @@ void CriticalValues::find_min_max(
   utils::Reducer::reduce(multithreading::minimum<Int>(), _min, _comm);
 
   utils::Reducer::reduce(multithreading::maximum<Int>(), _max, _comm);
-
-  debug_log("find_min_max, min: " + std::to_string(*_min));
-  debug_log("find_min_max, max: " + std::to_string(*_max));
 }
 
 // ----------------------------------------------------------------------------
@@ -437,9 +430,6 @@ void CriticalValues::find_min_max(
   utils::Reducer::reduce(multithreading::minimum<Float>(), _min, _comm);
 
   utils::Reducer::reduce(multithreading::maximum<Float>(), _max, _comm);
-
-  debug_log("find_min_max, min: " + std::to_string(*_min));
-  debug_log("find_min_max, max: " + std::to_string(*_max));
 }
 
 // ----------------------------------------------------------------------------
@@ -503,9 +493,6 @@ void CriticalValues::find_min_max(
   utils::Reducer::reduce(multithreading::minimum<Float>(), _min, _comm);
 
   utils::Reducer::reduce(multithreading::maximum<Float>(), _max, _comm);
-
-  debug_log("find_min_max, min: " + std::to_string(*_min));
-  debug_log("find_min_max, max: " + std::to_string(*_max));
 }
 
 // ----------------------------------------------------------------------------

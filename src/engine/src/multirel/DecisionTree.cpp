@@ -9,8 +9,6 @@ DecisionTree::DecisionTree(
         &_tree_hyperparameters,
     const Poco::JSON::Object &_json_obj)
     : impl_(_tree_hyperparameters) {
-  debug_log("Feature: Normal constructor...");
-
   from_json_obj(_json_obj);
 
   impl_.comm_ = nullptr;
@@ -49,8 +47,6 @@ DecisionTree::DecisionTree(
 
 DecisionTree::DecisionTree(const DecisionTree &_other)
     : impl_(_other.impl_), root_(_other.root_), subtrees_(_other.subtrees()) {
-  debug_log("Feature: Copy constructor...");
-
   assert_true(_other.impl_.aggregation_type_ != "");
 
   if (root()) {
@@ -64,8 +60,6 @@ DecisionTree::DecisionTree(DecisionTree &&_other) noexcept
     : impl_(std::move(_other.impl_)),
       root_(std::move(_other.root_)),
       subtrees_(std::move(_other.subtrees())) {
-  debug_log("Feature: Move constructor...");
-
   if (root()) {
     root().get()->set_tree(impl());
   }
@@ -296,8 +290,6 @@ std::set<size_t> DecisionTree::make_subfeatures_used() const {
 // ---------------------------------------------------------------------------
 
 DecisionTree &DecisionTree::operator=(const DecisionTree &_other) {
-  debug_log("Feature: Copy assignment constructor...");
-
   DecisionTree temp(_other);
 
   *this = std::move(temp);
@@ -312,8 +304,6 @@ DecisionTree &DecisionTree::operator=(const DecisionTree &_other) {
 // ----------------------------------------------------------------------------
 
 DecisionTree &DecisionTree::operator=(DecisionTree &&_other) noexcept {
-  debug_log("Feature: Move assignment constructor...");
-
   if (this == &_other) {
     return *this;
   }

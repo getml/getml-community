@@ -146,19 +146,6 @@ std::vector<std::pair<Float, std::array<Float, 3>>> Sum::calc_pairs(
 
   // -------------------------------------------------------------
 
-  debug_log("Sum::calc_weights");
-
-  debug_log("std::distance(_begin, _split_begin): " +
-            std::to_string(std::distance(_begin, _split_begin)));
-
-  debug_log("std::distance(_split_begin, _split_end): " +
-            std::to_string(std::distance(_split_begin, _split_end)));
-
-  debug_log("std::distance(_split_end, _end): " +
-            std::to_string(std::distance(_split_end, _end)));
-
-  // -------------------------------------------------------------
-
   switch (_update) {
     case enums::Update::calc_all:
       calc_all(_revert, _begin, _split_begin, _split_end, _end);
@@ -233,8 +220,6 @@ void Sum::calc_yhat(const enums::Aggregation _agg, const Float _old_weight,
 void Sum::commit(const Float _old_intercept, const Float _old_weight,
                  const std::array<Float, 3>& _weights) {
   assert_true(eta1_.size() == eta2_.size());
-
-  debug_log("Sum::commit");
 
   impl_.commit(_weights);
 };

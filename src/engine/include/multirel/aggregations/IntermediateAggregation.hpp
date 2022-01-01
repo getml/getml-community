@@ -409,8 +409,6 @@ void IntermediateAggregation<AggType>::commit() {
 template <typename AggType>
 void IntermediateAggregation<AggType>::init_yhat(
     const std::vector<Float>& _yhat, const containers::IntSet& _indices) {
-  debug_log("IntermediateAgg: init_yhat...");
-
   assert_true(updates_current().size() == 0);
 
   for (auto ix_input : _indices) {
@@ -434,8 +432,6 @@ void IntermediateAggregation<AggType>::init_yhat(
   for (auto ix_agg : updates_stored()) {
     yhat_stored()[ix_agg] = yhat()[ix_agg];
   }
-
-  debug_log("IntermediateAgg: init_yhat...done");
 }
 
 // ----------------------------------------------------------------------------

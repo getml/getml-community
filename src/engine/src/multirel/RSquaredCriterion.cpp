@@ -22,21 +22,15 @@ std::vector<size_t> RSquaredCriterion::argsort(const size_t _begin,
                                                const size_t _end) const {
   // ---------------------------------------------------------------------
 
-  debug_log("argsort...");
-
   assert_true(_begin <= _end);
 
   assert_true(_begin >= 0);
   assert_true(_end <= impl().storage_ix());
 
-  debug_log("Preparing sufficient statistics...");
-
   const auto sufficient_statistics =
       impl().reduce_sufficient_statistics_stored();
 
   // ---------------------------------------------------------------------
-
-  debug_log("Calculating values...");
 
   std::vector<Float> values(_end - _begin);
 
@@ -45,8 +39,6 @@ std::vector<size_t> RSquaredCriterion::argsort(const size_t _begin,
   }
 
   // ---------------------------------------------------------------------
-
-  debug_log("Calculating indices...");
 
   std::vector<size_t> indices(_end - _begin);
 
@@ -103,10 +95,6 @@ Float RSquaredCriterion::calculate_r_squared(
 
     result += sum_sample_weights_ * (sum_y_centered_yhat / var_yhat) *
               (sum_y_centered_yhat / sum_y_centered_y_centered_[j]);
-
-    debug_log("result: " + std::to_string(result) +
-              ", sum_y_centered_yhat: " + std::to_string(sum_y_centered_yhat) +
-              ", var_yhat: " + std::to_string(var_yhat));
   }
 
   assert_true(sample_weights_.size() == y_centered_[0].size());
@@ -121,12 +109,8 @@ Int RSquaredCriterion::find_maximum() {
 
   Int max_ix = 0;
 
-  debug_log("Preparing sufficient statistics...");
-
   const auto sufficient_statistics =
       impl().reduce_sufficient_statistics_stored();
-
-  debug_log("Finding maximum...");
 
   assert_true(sample_weights_.size() == y_centered_[0].size());
 
@@ -153,10 +137,6 @@ Int RSquaredCriterion::find_maximum() {
     const Float num_samples_greater =
         sufficient_statistics[i][sufficient_statistics[i].size() - 1];
 
-    debug_log("num_samples_smaller: " + std::to_string(num_samples_smaller));
-
-    debug_log("num_samples_greater: " + std::to_string(num_samples_greater));
-
     assert_true(hyperparameters_);
 
     assert_true(hyperparameters_->tree_hyperparameters_);
@@ -180,8 +160,6 @@ Int RSquaredCriterion::find_maximum() {
 
   impl().set_max_ix(max_ix);
 
-  debug_log("Done finding maximum...");
-
   assert_true(sample_weights_.size() == y_centered_[0].size());
 
   return max_ix;
@@ -193,11 +171,6 @@ void RSquaredCriterion::init(const std::vector<Float>& _sample_weights) {
   // ---------------------------------------------------------------------
 
   assert_true(_sample_weights.size() > 0);
-
-  debug_log("Optimization init ");
-
-  debug_log("_sample_weights.size(): " +
-            std::to_string(_sample_weights.size()));
 
   // ---------------------------------------------------------------------
 
@@ -294,11 +267,7 @@ void RSquaredCriterion::init(const std::vector<Float>& _sample_weights) {
     assert_true(!std::isnan(sum_y_centered_y_centered_[j]));
   }
 
-  debug_log("y_centered_[0].size(): " + std::to_string(y_centered_[0].size()));
-
   // ---------------------------------------------------------------------
-
-  debug_log("Optimization done.");
 
   assert_true(sample_weights_.size() == y_centered_[0].size());
 
@@ -314,10 +283,6 @@ void RSquaredCriterion::init_yhat(const std::vector<Float>& _yhat,
   assert_true(sample_weights_.size() == y_centered_[0].size());
 
   // ---------------------------------------------------------------------
-
-  debug_log("init_yhat...");
-
-  debug_log("y_centered_[0].size(): " + std::to_string(y_centered_[0].size()));
 
   // ---------------------------------------------------------------------
   // Calculate y_hat_mean_
@@ -366,12 +331,6 @@ void RSquaredCriterion::init_yhat(const std::vector<Float>& _yhat,
           (_yhat[i] - y_hat_mean_) * y_centered_[j][i] * sample_weights_[i];
     }
   }
-
-  // ---------------------------------------------------------------------
-
-  debug_log("init_yhat...done");
-
-  // ---------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------

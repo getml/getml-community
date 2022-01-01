@@ -453,8 +453,6 @@ DecisionTreeEnsemble::fit_candidate_features(
     auto matches = utils::Matchmaker::make_matches(output_table, *input_table,
                                                    _sample_weights);
 
-    debug_log("Number of matches: " + std::to_string(matches.size()));
-
     // ------------------------------------------------------------------------
 
     const auto [output_rescaled, input_rescaled, output_scaler, input_scaler] =
@@ -781,8 +779,6 @@ std::vector<containers::Predictions> DecisionTreeEnsemble::make_subpredictions(
 
 DecisionTreeEnsemble &DecisionTreeEnsemble::operator=(
     const DecisionTreeEnsemble &_other) {
-  debug_log("DecisionTreeEnsemble: Copy assignment constructor...");
-
   DecisionTreeEnsemble temp(_other);
 
   *this = std::move(temp);
@@ -796,8 +792,6 @@ DecisionTreeEnsemble &DecisionTreeEnsemble::operator=(
 
 DecisionTreeEnsemble &DecisionTreeEnsemble::operator=(
     DecisionTreeEnsemble &&_other) noexcept {
-  debug_log("DecisionTreeEnsemble: Move assignment constructor...");
-
   if (this == &_other) {
     return *this;
   }

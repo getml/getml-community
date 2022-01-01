@@ -314,15 +314,6 @@ std::vector<std::pair<Float, std::array<Float, 3>>> Avg::calc_pairs(
   assert_true(eta1_.size() == eta2_.size());
   assert_true(eta1_.size() == count_committed_.size());
 
-  debug_log("std::distance(_begin, _split_begin): " +
-            std::to_string(std::distance(_begin, _split_begin)));
-
-  debug_log("std::distance(_split_begin, _split_end): " +
-            std::to_string(std::distance(_split_begin, _split_end)));
-
-  debug_log("std::distance(_split_begin, _split_end): " +
-            std::to_string(std::distance(_split_end, _end)));
-
   // -------------------------------------------------------------
 
   switch (_update) {

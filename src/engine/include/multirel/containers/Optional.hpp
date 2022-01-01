@@ -29,16 +29,12 @@ class Optional {
   Optional(T* _ptr) : thisptr_(_ptr) {}
 
   Optional(const Optional& _other) {
-    debug_log("Optional: Copy constructor...");
-
     if (_other.thisptr_) {
       thisptr().reset(new T(*_other.thisptr().get()));
     }
   }
 
-  Optional(Optional&& _other) noexcept : thisptr_(std::move(_other.thisptr_)) {
-    debug_log("Optional: Move constructor...");
-  }
+  Optional(Optional&& _other) noexcept : thisptr_(std::move(_other.thisptr_)) {}
 
   ~Optional() = default;
 
@@ -59,16 +55,12 @@ class Optional {
   operator bool() const { return (thisptr() ? true : false); }
 
   Optional& operator=(const Optional& _other) {
-    debug_log("Optional: Copy assignment constructor...");
-
     Optional temp(_other);
     *this = std::move(temp);
     return *this;
   }
 
   Optional& operator=(Optional&& _other) noexcept {
-    debug_log("Optional: Move assignment constructor...");
-
     if (this == &_other) {
       return *this;
     }

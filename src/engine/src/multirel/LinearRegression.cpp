@@ -21,8 +21,6 @@ namespace utils {
 void LinearRegression::fit(const std::vector<Float>& _new_feature,
                            const std::vector<std::vector<Float>>& _residuals,
                            const std::vector<Float>& _sample_weights) {
-  debug_log("Fitting linear regression...");
-
   // ----------------------------------------------------
 
   Float sum_sample_weights =
@@ -150,8 +148,6 @@ LinearRegression LinearRegression::from_json_obj(
 
 std::vector<std::vector<Float>> LinearRegression::predict(
     const std::vector<Float>& _yhat) const {
-  debug_log("Predicting using linear regression...");
-
   std::vector<std::vector<Float>> predictions(intercepts_.size());
 
   for (Int i = 0; i < predictions.size(); ++i) {

@@ -15,8 +15,6 @@ void TreeFitter::find_best_trees(
     std::vector<decisiontrees::DecisionTree> *_trees) {
   assert_true(_candidate_trees->size() == _values.size());
 
-  debug_log("Identifying best feature...");
-
   std::vector<std::tuple<size_t, Float>> tuples;
 
   for (size_t ix = 0; ix < _candidate_trees->size(); ++ix) {

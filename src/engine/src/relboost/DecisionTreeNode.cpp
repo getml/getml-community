@@ -187,7 +187,6 @@ void DecisionTreeNode::fit(
 
   if (hyperparameters().max_depth_ > 0 &&
       depth_ == hyperparameters().max_depth_) {
-    debug_log("Max depth reached.");
     return;
   }
 
@@ -197,10 +196,7 @@ void DecisionTreeNode::fit(
   auto candidates =
       try_all(*_intercept, _output, _input, _subfeatures, _begin, _end);
 
-  debug_log("candidates.size(): " + std::to_string(candidates.size()));
-
   if (candidates.size() == 0) {
-    debug_log("No candidates.");
     return;
   }
 
@@ -243,8 +239,6 @@ void DecisionTreeNode::fit(
 
   // ------------------------------------------------------------------------
   // If the loss reduction is sufficient, then take this split.
-
-  debug_log("loss_reduction: " + std::to_string(loss_reduction));
 
   if (loss_reduction < hyperparameters().gamma_) {
     loss_function().revert_to_commit();
@@ -716,8 +710,6 @@ void DecisionTreeNode::try_categorical_or_text(
     const enums::DataUsed _data_used, const std::vector<size_t>& _indptr,
     std::vector<containers::Match>* _bins,
     std::vector<containers::CandidateSplit>* _candidates) {
-  debug_log("try_categorical_or_text.");
-
   assert_true(_min >= 0);
 
   assert_true(_critical_values);
@@ -761,8 +753,6 @@ void DecisionTreeNode::try_categorical_input(
     const std::vector<containers::Match>::iterator _end,
     std::vector<containers::Match>* _bins,
     std::vector<containers::CandidateSplit>* _candidates) {
-  debug_log("try_categorical_input.");
-
   for (size_t j = 0; j < _input.num_categoricals(); ++j) {
     // ----------------------------------------------------------------
 
@@ -842,8 +832,6 @@ void DecisionTreeNode::try_categorical_output(
     const std::vector<containers::Match>::iterator _end,
     std::vector<containers::Match>* _bins,
     std::vector<containers::CandidateSplit>* _candidates) {
-  debug_log("try_categorical_output.");
-
   for (size_t j = 0; j < _output.num_categoricals(); ++j) {
     // ----------------------------------------------------------------
 
@@ -923,8 +911,6 @@ void DecisionTreeNode::try_discrete_input(
     const std::vector<containers::Match>::iterator _end,
     std::vector<containers::Match>* _bins,
     std::vector<containers::CandidateSplit>* _candidates) {
-  debug_log("try_discrete_input.");
-
   for (size_t j = 0; j < _input.num_discretes(); ++j) {
     if (_input.discrete_unit(j).find("comparison only") != std::string::npos) {
       continue;
@@ -972,8 +958,6 @@ void DecisionTreeNode::try_discrete_output(
     const std::vector<containers::Match>::iterator _end,
     std::vector<containers::Match>* _bins,
     std::vector<containers::CandidateSplit>* _candidates) {
-  debug_log("try_discrete_output.");
-
   for (size_t j = 0; j < _output.num_discretes(); ++j) {
     if (_output.discrete_unit(j).find("comparison only") != std::string::npos) {
       continue;
@@ -1054,8 +1038,6 @@ void DecisionTreeNode::try_numerical_input(
     const std::vector<containers::Match>::iterator _end,
     std::vector<containers::Match>* _bins,
     std::vector<containers::CandidateSplit>* _candidates) {
-  debug_log("try_numerical_input.");
-
   for (size_t j = 0; j < _input.num_numericals(); ++j) {
     if (_input.numerical_unit(j).find("comparison only") != std::string::npos) {
       continue;
@@ -1102,8 +1084,6 @@ void DecisionTreeNode::try_numerical_output(
     const std::vector<containers::Match>::iterator _end,
     std::vector<containers::Match>* _bins,
     std::vector<containers::CandidateSplit>* _candidates) {
-  debug_log("try_numerical_output.");
-
   for (size_t j = 0; j < _output.num_numericals(); ++j) {
     if (_output.numerical_unit(j).find("comparison only") !=
         std::string::npos) {
@@ -1151,8 +1131,6 @@ void DecisionTreeNode::try_same_units_categorical(
     const std::vector<containers::Match>::iterator _begin,
     const std::vector<containers::Match>::iterator _end,
     std::vector<containers::CandidateSplit>* _candidates) {
-  debug_log("try_same_units_categorical.");
-
   for (size_t output_col = 0; output_col < _output.num_categoricals();
        ++output_col) {
     for (size_t input_col = 0; input_col < _input.num_categoricals();
@@ -1194,8 +1172,6 @@ void DecisionTreeNode::try_same_units_discrete(
     const std::vector<containers::Match>::iterator _end,
     std::vector<containers::Match>* _bins,
     std::vector<containers::CandidateSplit>* _candidates) {
-  debug_log("try_same_units_discrete.");
-
   for (size_t output_col = 0; output_col < _output.num_discretes();
        ++output_col) {
     for (size_t input_col = 0; input_col < _input.num_discretes();
@@ -1267,8 +1243,6 @@ void DecisionTreeNode::try_same_units_numerical(
     const std::vector<containers::Match>::iterator _end,
     std::vector<containers::Match>* _bins,
     std::vector<containers::CandidateSplit>* _candidates) {
-  debug_log("try_same_units_numerical.");
-
   for (size_t output_col = 0; output_col < _output.num_numericals();
        ++output_col) {
     for (size_t input_col = 0; input_col < _input.num_numericals();
@@ -1334,8 +1308,6 @@ void DecisionTreeNode::try_subfeatures(
     const std::vector<containers::Match>::iterator _end,
     std::vector<containers::Match>* _bins,
     std::vector<containers::CandidateSplit>* _candidates) {
-  debug_log("try_subfeatures.");
-
   for (size_t j = 0; j < _subfeatures.size(); ++j) {
     assert_true(std::all_of(
         _subfeatures[j].col().begin(), _subfeatures[j].col().end(),
@@ -1375,8 +1347,6 @@ void DecisionTreeNode::try_text(
     const enums::DataUsed _data_used, const textmining::RowIndex& _row_index,
     const std::vector<size_t>& _indptr, std::vector<containers::Match>* _bins,
     std::vector<containers::CandidateSplit>* _candidates) {
-  debug_log("try_text (individual weights).");
-
   assert_true(_words);
 
   auto fake_candidates = std::vector<containers::CandidateSplit>();
@@ -1415,8 +1385,6 @@ void DecisionTreeNode::try_text_input(
     const std::vector<containers::Match>::iterator _end,
     std::vector<containers::Match>* _bins,
     std::vector<containers::CandidateSplit>* _candidates) {
-  debug_log("try_text_input.");
-
   assert_true(_input.num_text() == _input.word_indices_.size());
 
   assert_true(_input.num_text() == _input.row_indices_.size());
@@ -1593,8 +1561,6 @@ void DecisionTreeNode::try_text_output(
     const std::vector<containers::Match>::iterator _end,
     std::vector<containers::Match>* _bins,
     std::vector<containers::CandidateSplit>* _candidates) {
-  debug_log("try_text_output.");
-
   assert_true(_output.num_text() == _output.df().word_indices_.size());
 
   assert_true(_output.num_text() == _output.df().row_indices_.size());
@@ -1791,10 +1757,6 @@ void DecisionTreeNode::try_time_stamps_window(
   if (hyperparameters().delta_t_ <= 0.0) {
     return;
   }
-
-  // ------------------------------------------------------------------------
-
-  debug_log("Time windows.");
 
   // ------------------------------------------------------------------------
 

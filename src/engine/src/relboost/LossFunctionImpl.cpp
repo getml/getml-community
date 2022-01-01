@@ -402,11 +402,7 @@ std::pair<Float, std::array<Float, 3>> LossFunctionImpl::calc_pair_non_null(
 
   // ------------------------------------------------------------------------
 
-  debug_log("Calculating partial loss...");
-
   const Float partial_loss = -0.5 * b.dot(weights) + loss_w_fixed;
-
-  debug_log("Calculating weights_arr...");
 
   const auto weights_arr =
       std::array<Float, 3>({weights[0], weights[1], weights[2]});

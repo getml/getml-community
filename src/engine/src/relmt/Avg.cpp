@@ -181,17 +181,6 @@ std::pair<Float, containers::Weights> Avg::calc_pair(
     const std::vector<containers::Match>::iterator _end) {
   // -------------------------------------------------------------
 
-  debug_log("std::distance(_begin, _split_begin): " +
-            std::to_string(std::distance(_begin, _split_begin)));
-
-  debug_log("std::distance(_split_begin, _split_end): " +
-            std::to_string(std::distance(_split_begin, _split_end)));
-
-  debug_log("std::distance(_split_begin, _split_end): " +
-            std::to_string(std::distance(_split_end, _end)));
-
-  // -------------------------------------------------------------
-
   switch (_update) {
     case enums::Update::calc_one:
     case enums::Update::calc_all:

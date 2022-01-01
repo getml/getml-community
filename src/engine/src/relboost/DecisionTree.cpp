@@ -67,8 +67,6 @@ void DecisionTree::fit(const containers::DataFrameView& _output,
   // ------------------------------------------------------------------------
   // Set up and fit root node
 
-  debug_log("Set up and fit root node.");
-
   root_.reset(new DecisionTreeNode(
       utils::ConditionMaker(hyperparameters().delta_t_, peripheral_used()), 0,
       hyperparameters_, loss_function_, input_, output_, 0.0, &comm()));

@@ -11,8 +11,6 @@ SameUnitIdentifier::get_same_units_categorical(
   std::map<std::string, std::vector<descriptors::ColumnToBeAggregated>>
       unit_map;
 
-  debug_log("identify_same_units: Adding outputs (categorical)...");
-
   for (size_t j = 0; j < _population_table.num_categoricals(); ++j) {
     add_to_unit_map(enums::DataUsed::x_popul_categorical,
                     -1,  // -1 signifies that this is the population table
@@ -20,16 +18,12 @@ SameUnitIdentifier::get_same_units_categorical(
   }
 
   for (size_t i = 0; i < _peripheral_tables.size(); ++i) {
-    debug_log("identify_same_units: Adding inputs (categorical)...");
-
     for (size_t j = 0; j < _peripheral_tables.at(i).num_categoricals(); ++j) {
       add_to_unit_map(enums::DataUsed::x_perip_categorical, static_cast<Int>(i),
                       static_cast<Int>(j),
                       _peripheral_tables.at(i).categorical_col(j), &unit_map);
     }
   }
-
-  debug_log("identify_same_units: To containers (categorical)...");
 
   std::vector<descriptors::SameUnitsContainer> same_units_categorical(
       _peripheral_tables.size());
@@ -48,8 +42,6 @@ SameUnitIdentifier::get_same_units_discrete(
   std::map<std::string, std::vector<descriptors::ColumnToBeAggregated>>
       unit_map;
 
-  debug_log("identify_same_units: Adding outputs (discrete)...");
-
   for (size_t j = 0; j < _population_table.num_discretes(); ++j) {
     add_to_unit_map(enums::DataUsed::x_popul_discrete,
                     -1,  // -1 signifies that this is the population table
@@ -57,16 +49,12 @@ SameUnitIdentifier::get_same_units_discrete(
   }
 
   for (size_t i = 0; i < _peripheral_tables.size(); ++i) {
-    debug_log("identify_same_units: Adding inputs (discrete)...");
-
     for (size_t j = 0; j < _peripheral_tables[i].num_discretes(); ++j) {
       add_to_unit_map(enums::DataUsed::x_perip_discrete, static_cast<Int>(i),
                       static_cast<Int>(j),
                       _peripheral_tables[i].discrete_col(j), &unit_map);
     }
   }
-
-  debug_log("identify_same_units: To containers (discrete)...");
 
   std::vector<descriptors::SameUnitsContainer> same_units_discrete(
       _peripheral_tables.size());
@@ -85,8 +73,6 @@ SameUnitIdentifier::get_same_units_numerical(
   std::map<std::string, std::vector<descriptors::ColumnToBeAggregated>>
       unit_map;
 
-  debug_log("identify_same_units: Adding outputs (numerical)...");
-
   for (size_t j = 0; j < _population_table.num_numericals(); ++j) {
     add_to_unit_map(enums::DataUsed::x_popul_numerical,
                     -1,  // -1 signifies that this is the population table
@@ -94,16 +80,12 @@ SameUnitIdentifier::get_same_units_numerical(
   }
 
   for (size_t i = 0; i < _peripheral_tables.size(); ++i) {
-    debug_log("identify_same_units: Adding inputs (numerical)...");
-
     for (size_t j = 0; j < _peripheral_tables[i].num_numericals(); ++j) {
       add_to_unit_map(enums::DataUsed::x_perip_numerical, static_cast<Int>(i),
                       static_cast<Int>(j),
                       _peripheral_tables[i].numerical_col(j), &unit_map);
     }
   }
-
-  debug_log("identify_same_units: To containers (numerical)...");
 
   std::vector<descriptors::SameUnitsContainer> same_units_numerical(
       _peripheral_tables.size());

@@ -1393,8 +1393,6 @@ void FitAggregation<AggType, data_used_, is_population_>::activate_all(
     const bool _init_opt,
     containers::MatchPtrs::iterator _match_container_begin,
     containers::MatchPtrs::iterator _match_container_end) {
-  debug_log("activate_all...");
-
   for (auto it = _match_container_begin; it != _match_container_end; ++it) {
     (*it)->activated = false;
   }
@@ -1412,8 +1410,6 @@ void FitAggregation<AggType, data_used_, is_population_>::activate_all(
 
     init_optimization_criterion(_match_container_begin, _match_container_end);
   }
-
-  debug_log("activate_all...done");
 }
 
 // ----------------------------------------------------------------------------
@@ -2552,8 +2548,6 @@ void FitAggregation<AggType, data_used_, is_population_>::
     init_optimization_criterion(
         containers::MatchPtrs::iterator _match_container_begin,
         containers::MatchPtrs::iterator _match_container_end) {
-  debug_log("init_optimization_criterion...");
-
   optimization_criterion()->init_yhat(yhat_inline(), updates_stored());
 
   auto num_samples = static_cast<Float>(
@@ -2562,8 +2556,6 @@ void FitAggregation<AggType, data_used_, is_population_>::
   optimization_criterion()->store_current_stage(num_samples, num_samples);
 
   optimization_criterion()->find_maximum();
-
-  debug_log("init_optimization_criterion...done");
 }
 
 // ----------------------------------------------------------------------------

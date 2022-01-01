@@ -120,8 +120,6 @@ std::vector<Float> DecisionTreeNode::calculate_critical_values_discrete(
     containers::MatchPtrs::iterator _match_container_end) {
   // ---------------------------------------------------------------------------
 
-  debug_log("calculate_critical_values_discrete...");
-
   Float min = 0.0, max = 0.0;
 
   // ---------------------------------------------------------------------------
@@ -129,10 +127,6 @@ std::vector<Float> DecisionTreeNode::calculate_critical_values_discrete(
   // left in this process rank. In that case we effectively pass plus infinity
   // to min and minus infinity to max, ensuring that they not will be the
   // chosen minimum or maximum.
-
-  debug_log("std::distance( ... ): " +
-            std::to_string(
-                std::distance(_match_container_begin, _match_container_end)));
 
   if (std::distance(_match_container_begin, _match_container_end) > 0) {
     min = std::floor((*_match_container_begin)->numerical_value);
@@ -171,16 +165,10 @@ std::vector<Float> DecisionTreeNode::calculate_critical_values_discrete(
       c = std::floor(c);
     }
 
-    debug_log(
-        "calculate_critical_values_discrete (using numerical "
-        "approach)...done");
-
     return critical_values;
   }
 
   // ---------------------------------------------------------------------------
-
-  debug_log("num_critical_values: " + std::to_string(num_critical_values));
 
   std::vector<Float> critical_values(num_critical_values, 1);
 
@@ -189,8 +177,6 @@ std::vector<Float> DecisionTreeNode::calculate_critical_values_discrete(
   }
 
   // ---------------------------------------------------------------------------
-
-  debug_log("calculate_critical_values_discrete...done");
 
   return critical_values;
 
@@ -204,8 +190,6 @@ std::vector<Float> DecisionTreeNode::calculate_critical_values_numerical(
     containers::MatchPtrs::iterator _match_container_begin,
     containers::MatchPtrs::iterator _match_container_end) {
   // ---------------------------------------------------------------------------
-
-  debug_log("calculate_critical_values_numerical...");
 
   Float min = 0.0, max = 0.0;
 
@@ -232,10 +216,6 @@ std::vector<Float> DecisionTreeNode::calculate_critical_values_numerical(
   // This accounts for this edge case.
 
   if (min > max) {
-    debug_log(
-        "calculate_critical_values_numerical.distance..done (edge "
-        "case).");
-
     return std::vector<Float>(0);
   }
 
@@ -272,8 +252,6 @@ std::vector<Float> DecisionTreeNode::calculate_critical_values_window(
     containers::MatchPtrs::iterator _match_container_end) {
   // ---------------------------------------------------------------------------
 
-  debug_log("calculate_critical_values_window...");
-
   Float min = 0.0, max = 0.0;
 
   // ---------------------------------------------------------------------------
@@ -299,8 +277,6 @@ std::vector<Float> DecisionTreeNode::calculate_critical_values_window(
   // This accounts for this edge case.
 
   if (min > max) {
-    debug_log("calculate_critical_values_window...done (edge case).");
-
     return std::vector<Float>(0, 1);
   }
 
@@ -314,10 +290,6 @@ std::vector<Float> DecisionTreeNode::calculate_critical_values_window(
       static_cast<size_t>((max - min) / _delta_t) + 1;
 
   if (num_critical_values > 100000) {
-    debug_log(
-        "calculate_critical_values_window...done (delta_t too "
-        "small).");
-
     return std::vector<Float>(0, 1);
   }
 
@@ -328,8 +300,6 @@ std::vector<Float> DecisionTreeNode::calculate_critical_values_window(
   for (size_t i = 0; i < num_critical_values; ++i) {
     critical_values[i] = min + static_cast<Float>(i + 1) * _delta_t;
   }
-
-  debug_log("calculate_critical_values_window...done.");
 
   return critical_values;
 
@@ -370,23 +340,16 @@ void DecisionTreeNode::commit(
     containers::MatchPtrs::iterator _match_container_begin,
     containers::MatchPtrs::iterator _separator,
     containers::MatchPtrs::iterator _match_container_end) {
-  debug_log("fit: Improvement possible...");
-
   const auto old_value = optimization_criterion()->value();
 
   update(true, _match_container_begin, _separator, _match_container_end,
          aggregation());
-
-  debug_log("fit: Commit...");
 
   aggregation()->commit();
 
   optimization_criterion()->commit();
 
   improvement_ = optimization_criterion()->value() - old_value;
-
-  debug_log("commit: optimization_criterion()->value(): " +
-            std::to_string(optimization_criterion()->value()));
 }
 
 // ----------------------------------------------------------------------------
@@ -397,8 +360,6 @@ void DecisionTreeNode::fit(
     const containers::Subfeatures &_subfeatures,
     containers::MatchPtrs::iterator _match_container_begin,
     containers::MatchPtrs::iterator _match_container_end) {
-  debug_log("fit: Calculating sample size...");
-
   const size_t sample_size = reduce_sample_size(
       std::distance(_match_container_begin, _match_container_end));
 
@@ -418,16 +379,10 @@ void DecisionTreeNode::fit(
                  &candidate_splits);
 
   // ------------------------------------------------------------------------
-  // Find maximum
 
-  debug_log("fit: Find maximum...");
-
-  // Find maximum
   Int ix_max = optimization_criterion()->find_maximum();
 
   const Float max_value = optimization_criterion()->values_stored(ix_max);
-
-  debug_log("max_value:" + std::to_string(max_value));
 
   // ------------------------------------------------------------------------
   // DEBUG and parallel mode only: Make sure that the values_stored are
@@ -464,8 +419,6 @@ void DecisionTreeNode::fit(
 
   if (max_value >
       optimization_criterion()->value() + tree_->regularization() + 1e-07) {
-    debug_log("fit: Committing...");
-
     assert_true(ix_max < candidate_splits.size());
 
     split_.reset(new descriptors::Split(candidate_splits[ix_max].deep_copy()));
@@ -494,8 +447,6 @@ void DecisionTreeNode::fit_as_root(
     const containers::Subfeatures &_subfeatures,
     containers::MatchPtrs::iterator _match_container_begin,
     containers::MatchPtrs::iterator _match_container_end) {
-  debug_log("fit_as_root...");
-
   aggregation()->activate_all(true, _match_container_begin,
                               _match_container_end);
 
@@ -1131,8 +1082,6 @@ void DecisionTreeNode::try_categorical_peripheral(
     containers::MatchPtrs::iterator _match_container_begin,
     containers::MatchPtrs::iterator _match_container_end,
     std::vector<descriptors::Split> *_candidate_splits) {
-  debug_log("try_categorical_peripheral...");
-
   for (size_t col = 0; col < _peripheral.num_categoricals(); ++col) {
     if (_peripheral.categorical_unit(col).find("comparison only") !=
         std::string::npos) {
@@ -1151,8 +1100,6 @@ void DecisionTreeNode::try_categorical_peripheral(
                            _sample_size, _match_container_begin,
                            _match_container_end, _candidate_splits);
   }
-
-  debug_log("try_categorical_peripheral...done");
 }
 
 // ----------------------------------------------------------------------------
@@ -1162,8 +1109,6 @@ void DecisionTreeNode::try_categorical_population(
     containers::MatchPtrs::iterator _match_container_begin,
     containers::MatchPtrs::iterator _match_container_end,
     std::vector<descriptors::Split> *_candidate_splits) {
-  debug_log("try_categorical_population...");
-
   for (size_t col = 0; col < _population.num_categoricals(); ++col) {
     if (_population.categorical_unit(col).find("comparison only") !=
         std::string::npos) {
@@ -1182,8 +1127,6 @@ void DecisionTreeNode::try_categorical_population(
                            _sample_size, _match_container_begin,
                            _match_container_end, _candidate_splits);
   }
-
-  debug_log("try_categorical_population...done");
 }
 
 // ----------------------------------------------------------------------------
@@ -1193,8 +1136,6 @@ void DecisionTreeNode::try_discrete_peripheral(
     containers::MatchPtrs::iterator _match_container_begin,
     containers::MatchPtrs::iterator _match_container_end,
     std::vector<descriptors::Split> *_candidate_splits) {
-  debug_log("try_discrete_peripheral...");
-
   for (size_t col = 0; col < _peripheral.num_discretes(); ++col) {
     if (_peripheral.discrete_unit(col).find("comparison only") !=
         std::string::npos) {
@@ -1213,8 +1154,6 @@ void DecisionTreeNode::try_discrete_peripheral(
                         _match_container_begin, _match_container_end,
                         _candidate_splits);
   }
-
-  debug_log("try_discrete_peripheral...done");
 }
 
 // ----------------------------------------------------------------------------
@@ -1224,8 +1163,6 @@ void DecisionTreeNode::try_discrete_population(
     containers::MatchPtrs::iterator _match_container_begin,
     containers::MatchPtrs::iterator _match_container_end,
     std::vector<descriptors::Split> *_candidate_splits) {
-  debug_log("try_discrete_population...");
-
   for (size_t col = 0; col < _population.num_discretes(); ++col) {
     if (_population.discrete_unit(col).find("comparison only") !=
         std::string::npos) {
@@ -1244,8 +1181,6 @@ void DecisionTreeNode::try_discrete_population(
                         _match_container_begin, _match_container_end,
                         _candidate_splits);
   }
-
-  debug_log("try_discrete_population...done");
 }
 
 // ----------------------------------------------------------------------------
@@ -1255,8 +1190,6 @@ void DecisionTreeNode::try_numerical_peripheral(
     containers::MatchPtrs::iterator _match_container_begin,
     containers::MatchPtrs::iterator _match_container_end,
     std::vector<descriptors::Split> *_candidate_splits) {
-  debug_log("try_numerical_peripheral...");
-
   for (size_t col = 0; col < _peripheral.num_numericals(); ++col) {
     if (_peripheral.numerical_unit(col).find("comparison only") !=
         std::string::npos) {
@@ -1275,8 +1208,6 @@ void DecisionTreeNode::try_numerical_peripheral(
                          _match_container_begin, _match_container_end,
                          _candidate_splits);
   }
-
-  debug_log("try_numerical_peripheral...done");
 }
 
 // ----------------------------------------------------------------------------
@@ -1286,8 +1217,6 @@ void DecisionTreeNode::try_numerical_population(
     containers::MatchPtrs::iterator _match_container_begin,
     containers::MatchPtrs::iterator _match_container_end,
     std::vector<descriptors::Split> *_candidate_splits) {
-  debug_log("try_numerical_population...");
-
   for (size_t col = 0; col < _population.num_numericals(); ++col) {
     if (_population.numerical_unit(col).find("comparison only") !=
         std::string::npos) {
@@ -1306,8 +1235,6 @@ void DecisionTreeNode::try_numerical_population(
                          _match_container_begin, _match_container_end,
                          _candidate_splits);
   }
-
-  debug_log("try_numerical_population...done");
 }
 
 // ----------------------------------------------------------------------------
@@ -1590,12 +1517,6 @@ void DecisionTreeNode::try_discrete_values(
     containers::MatchPtrs::iterator _match_container_begin,
     containers::MatchPtrs::iterator _match_container_end,
     std::vector<descriptors::Split> *_candidate_splits) {
-  // -----------------------------------------------------------------------
-
-  debug_log("try_discrete_values...");
-
-  // -----------------------------------------------------------------------
-
   const auto nan_begin =
       separate_null_values(_match_container_begin, _match_container_end, false);
 
@@ -1625,8 +1546,6 @@ void DecisionTreeNode::try_discrete_values(
                              step_size, indptr, &bins, _candidate_splits);
 
   // -----------------------------------------------------------------------
-
-  debug_log("try_discrete_values...done.");
 }
 
 // ----------------------------------------------------------------------------
@@ -1638,8 +1557,6 @@ void DecisionTreeNode::try_non_categorical_values(
     std::vector<descriptors::Split> *_candidate_splits) {
   // -----------------------------------------------------------------------
 
-  debug_log("try_non_categorical_values...");
-
   // -----------------------------------------------------------------------
 
   if (_indptr.size() < 2) {
@@ -1648,8 +1565,6 @@ void DecisionTreeNode::try_non_categorical_values(
 
   // -----------------------------------------------------------------------
   // Add new splits to the candidate splits
-
-  debug_log("try_non_categorical_values: Add new splits.");
 
   for (size_t i = 1; i < _indptr.size(); ++i) {
     const auto cv = _max - static_cast<Float>(i) * _step_size;
@@ -1669,12 +1584,7 @@ void DecisionTreeNode::try_non_categorical_values(
   // If this is an activated node, we need to deactivate all samples for
   // which the numerical value is NULL
 
-  debug_log("try_non_categorical_values: Handle NULL.");
-
   if (is_activated_) {
-    debug_log("_indptr.back(): " + std::to_string(_indptr.back()));
-    debug_log("_bins->size(): " + std::to_string(_bins->size()));
-
     aggregation()->deactivate_matches_with_null_values(
         _bins->begin() + _indptr.back(), _bins->end());
   }
@@ -1707,13 +1617,9 @@ void DecisionTreeNode::try_non_categorical_values(
 
   // Apply changes and store resulting value of optimization criterion
   if (is_activated_) {
-    debug_log("Deactivate from above...");
-
     aggregation()->deactivate_matches_from_above(_indptr, _bins->begin(),
                                                  _bins->end());
   } else {
-    debug_log("Activate from below...");
-
     aggregation()->activate_matches_from_above(_indptr, _bins->begin(),
                                                _bins->end());
   }
@@ -1731,9 +1637,6 @@ void DecisionTreeNode::try_non_categorical_values(
   // all of the changes would have been reverted by revert_to_commit().
 
   if (is_activated_) {
-    debug_log("_indptr.back(): " + std::to_string(_indptr.back()));
-    debug_log("_bins->size(): " + std::to_string(_bins->size()));
-
     aggregation()->deactivate_matches_with_null_values(
         _bins->begin() + _indptr.back(), _bins->end());
   }
@@ -1741,17 +1644,11 @@ void DecisionTreeNode::try_non_categorical_values(
   // -----------------------------------------------------------------------
   // Try applying from below.
 
-  debug_log("try_non_categorical_values: Apply from below...");
-
   // Apply changes and store resulting value of optimization criterion
   if (is_activated_) {
-    debug_log("Deactivate from below...");
-
     aggregation()->deactivate_matches_from_below(_indptr, _bins->begin(),
                                                  _bins->end());
   } else {
-    debug_log("Activate from below...");
-
     aggregation()->activate_matches_from_below(_indptr, _bins->begin(),
                                                _bins->end());
   }
@@ -1759,15 +1656,11 @@ void DecisionTreeNode::try_non_categorical_values(
   // -----------------------------------------------------------------------
   // Revert to original situation
 
-  debug_log("try_non_categorical_values: Revert...");
-
   aggregation()->revert_to_commit();
 
   optimization_criterion()->revert_to_commit();
 
   // -----------------------------------------------------------------------
-
-  debug_log("try_non_categorical_values...done.");
 
   // -----------------------------------------------------------------------
 }
@@ -1820,8 +1713,6 @@ void DecisionTreeNode::try_same_units_categorical(
     containers::MatchPtrs::iterator _match_container_begin,
     containers::MatchPtrs::iterator _match_container_end,
     std::vector<descriptors::Split> *_candidate_splits) {
-  debug_log("try_same_units_categorical...");
-
   for (size_t col = 0; col < same_units_categorical().size(); ++col) {
     if (skip_condition()) {
       continue;
@@ -1836,8 +1727,6 @@ void DecisionTreeNode::try_same_units_categorical(
                            _sample_size, _match_container_begin,
                            _match_container_end, _candidate_splits);
   }
-
-  debug_log("try_same_units_categorical...done");
 }
 
 // ----------------------------------------------------------------------------
@@ -1848,8 +1737,6 @@ void DecisionTreeNode::try_same_units_discrete(
     containers::MatchPtrs::iterator _match_container_begin,
     containers::MatchPtrs::iterator _match_container_end,
     std::vector<descriptors::Split> *_candidate_splits) {
-  debug_log("try_same_units_discrete...");
-
   for (size_t col = 0; col < same_units_discrete().size(); ++col) {
     if (skip_condition()) {
       continue;
@@ -1868,8 +1755,6 @@ void DecisionTreeNode::try_same_units_discrete(
     try_discrete_values(col, data_used, _sample_size, _match_container_begin,
                         _match_container_end, _candidate_splits);
   }
-
-  debug_log("try_same_units_discrete...done");
 }
 
 // ----------------------------------------------------------------------------
@@ -1880,8 +1765,6 @@ void DecisionTreeNode::try_same_units_numerical(
     containers::MatchPtrs::iterator _match_container_begin,
     containers::MatchPtrs::iterator _match_container_end,
     std::vector<descriptors::Split> *_candidate_splits) {
-  debug_log("try_same_units_numerical...");
-
   for (size_t col = 0; col < same_units_numerical().size(); ++col) {
     if (skip_condition()) {
       continue;
@@ -1901,8 +1784,6 @@ void DecisionTreeNode::try_same_units_numerical(
     try_numerical_values(col, data_used, _sample_size, _match_container_begin,
                          _match_container_end, _candidate_splits);
   }
-
-  debug_log("try_same_units_numerical...done");
 }
 
 // ----------------------------------------------------------------------------
@@ -1912,8 +1793,6 @@ void DecisionTreeNode::try_subfeatures(
     containers::MatchPtrs::iterator _match_container_begin,
     containers::MatchPtrs::iterator _match_container_end,
     std::vector<descriptors::Split> *_candidate_splits) {
-  debug_log("try_subfeatures...");
-
   for (size_t col = 0; col < _subfeatures.size(); ++col) {
     if (skip_condition()) {
       continue;
@@ -1927,8 +1806,6 @@ void DecisionTreeNode::try_subfeatures(
                          _match_container_begin, _match_container_end,
                          _candidate_splits);
   }
-
-  debug_log("try_subfeatures...done");
 }
 
 // ----------------------------------------------------------------------------
@@ -1938,8 +1815,6 @@ void DecisionTreeNode::try_text_population(
     containers::MatchPtrs::iterator _match_container_begin,
     containers::MatchPtrs::iterator _match_container_end,
     std::vector<descriptors::Split> *_candidate_splits) {
-  debug_log("try_text_population...");
-
   assert_true(_population.df().row_indices_.size() == _population.num_text());
 
   assert_true(_population.df().word_indices_.size() == _population.num_text());
@@ -1977,8 +1852,6 @@ void DecisionTreeNode::try_text_population(
                     _sample_size, _match_container_begin, _match_container_end,
                     &bins, _candidate_splits);
   }
-
-  debug_log("try_text_population...done");
 }
 
 // ----------------------------------------------------------------------------
@@ -1988,8 +1861,6 @@ void DecisionTreeNode::try_text_peripheral(
     containers::MatchPtrs::iterator _match_container_begin,
     containers::MatchPtrs::iterator _match_container_end,
     std::vector<descriptors::Split> *_candidate_splits) {
-  debug_log("try_text_peripheral...");
-
   assert_true(_peripheral.row_indices_.size() == _peripheral.num_text());
 
   assert_true(_peripheral.word_indices_.size() == _peripheral.num_text());
@@ -2023,8 +1894,6 @@ void DecisionTreeNode::try_text_peripheral(
                     _sample_size, _match_container_begin, _match_container_end,
                     &bins, _candidate_splits);
   }
-
-  debug_log("try_text_population...done");
 }
 
 // ----------------------------------------------------------------------------
@@ -2399,8 +2268,6 @@ void DecisionTreeNode::try_time_stamps_window(
     containers::MatchPtrs::iterator _match_container_end,
     std::vector<descriptors::Split> *_candidate_splits) {
   if (tree_->delta_t() > 0.0) {
-    debug_log("try time_stamps_window...");
-
     if (skip_condition()) {
       return;
     }
@@ -2411,8 +2278,6 @@ void DecisionTreeNode::try_time_stamps_window(
     }
 
     try_window(_match_container_begin, _match_container_end, _candidate_splits);
-
-    debug_log("try_time_stamps_window...done");
   }
 }
 
@@ -2423,8 +2288,6 @@ void DecisionTreeNode::try_window(
     containers::MatchPtrs::iterator _match_container_end,
     std::vector<descriptors::Split> *_candidate_splits) {
   // -----------------------------------------------------------------------
-
-  debug_log("try_window...");
 
   assert_true(tree_->delta_t() > 0.0);
 
@@ -2465,8 +2328,6 @@ void DecisionTreeNode::try_window(
   // -----------------------------------------------------------------------
   // Add new splits to the candidate splits
 
-  debug_log("try_window: Add new splits.");
-
   for (size_t i = 1; i < indptr.size(); ++i) {
     const auto cv = max - static_cast<Float>(i - 1) * step_size;
 
@@ -2503,8 +2364,6 @@ void DecisionTreeNode::try_window(
   // -----------------------------------------------------------------------
   // Try applying outside the window
 
-  debug_log("try_window: Apply from above...");
-
   // Apply changes and store resulting value of optimization criterion
   if (is_activated_) {
     aggregation()->deactivate_matches_outside_window(indptr, bins.begin(),
@@ -2517,8 +2376,6 @@ void DecisionTreeNode::try_window(
   // -----------------------------------------------------------------------
   // Try applying inside the window
 
-  debug_log("try_window: Apply from below...");
-
   // Apply changes and store resulting value of optimization criterion
   if (is_activated_) {
     aggregation()->deactivate_matches_in_window(indptr, bins.begin(),
@@ -2528,8 +2385,6 @@ void DecisionTreeNode::try_window(
   }
 
   // -----------------------------------------------------------------------
-
-  debug_log("try_window...done.");
 
   // -----------------------------------------------------------------------
 }
