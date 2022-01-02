@@ -2,6 +2,7 @@
 *.bin
 *.o
 *.db
+*.cache
 projects/*
 
 *.swp
@@ -12,6 +13,8 @@ projects/*
 
 **/model.json
 **/model.sql
+
+compile_commands.json
 
 *~
 #~
