@@ -9,17 +9,13 @@
 
 #include "helpers/Column.hpp"
 
-// -------------------------------------------------------------------------
 namespace helpers {
-// -------------------------------------------------------------------------
 
 /// Unlike a Column<T>, a Feature is mutable and can only hold
 /// floating point values (therefore the complexity related to memory-mapped
 /// string columns does not apply here).
 template <class T, bool safe_mode_ = true>
 class Feature {
-  // ---------------------------------------------------------------------
-
  public:
   typedef typename Column<T>::MemmapVector MemmapVector;
   typedef typename Column<T>::InMemoryVector InMemoryVector;
@@ -46,8 +42,6 @@ class Feature {
   }
 
   ~Feature() = default;
-
-  // ---------------------------------------------------------------------
 
  public:
   /// Access operator
@@ -107,6 +101,11 @@ class Feature {
   /// Iterator end
   const T* end() const { return begin() + size(); }
 
+  /// Whether the feature is memory mapped.
+  bool is_memory_mapped() const {
+    return std::holds_alternative<MemmapPtr>(ptr_);
+  }
+
   /// Access operator
   T& operator[](const size_t _i) {
     assert_true(begin());
@@ -134,8 +133,6 @@ class Feature {
       return size_;
     }
   }
-
-  // ---------------------------------------------------------------------
 
  private:
   /// In the memory mapped version, it is possible that the
@@ -182,8 +179,6 @@ class Feature {
                : std::get<MemmapPtr>(_ptr)->size();
   }
 
-  /// ---------------------------------------------------------------------
-
  private:
   /// Pointer to the underlying data, for optimized access.
   T* data_;
@@ -193,8 +188,6 @@ class Feature {
 
   /// Number of rows
   size_t size_;
-
-  // ---------------------------------------------------------------------
 };
 
 // -------------------------------------------------------------------------

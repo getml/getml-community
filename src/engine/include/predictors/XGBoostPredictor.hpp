@@ -4,16 +4,14 @@
 // -----------------------------------------------------------------------------
 
 #include <Poco/JSON/Object.h>
+#include <xgboost/c_api.h>
 
 // -----------------------------------------------------------------------------
 
 #include <memory>
 #include <optional>
+#include <string>
 #include <vector>
-
-// -----------------------------------------------------------------------------
-
-#include <xgboost/c_api.h>
 
 // -----------------------------------------------------------------------------
 
@@ -28,6 +26,7 @@
 #include "predictors/PredictorImpl.hpp"
 #include "predictors/StandardScaler.hpp"
 #include "predictors/XGBoostHyperparams.hpp"
+#include "predictors/XGBoostMatrix.hpp"
 
 // -----------------------------------------------------------------------------
 
@@ -37,10 +36,10 @@ namespace predictors {
 class XGBoostPredictor : public Predictor {
  private:
   typedef std::function<void(BoosterHandle*)> BoosterDestructor;
-  typedef std::function<void(DMatrixHandle*)> DMatrixDestructor;
+  typedef XGBoostMatrix::DMatrixDestructor DMatrixDestructor;
 
   typedef std::unique_ptr<BoosterHandle, BoosterDestructor> BoosterPtr;
-  typedef std::unique_ptr<DMatrixHandle, DMatrixDestructor> DMatrixPtr;
+  typedef XGBoostMatrix::DMatrixPtr DMatrixPtr;
 
   // -----------------------------------------
 
@@ -121,13 +120,7 @@ class XGBoostPredictor : public Predictor {
   static void delete_booster(BoosterHandle* _ptr) {
     XGBoosterFree(*_ptr);
     delete _ptr;
-  };
-
-  /// Frees a DMatrixHandle pointer
-  static void delete_dmatrix(DMatrixHandle* _ptr) {
-    XGDMatrixFree(*_ptr);
-    delete _ptr;
-  };
+  }
 
   /// Trivial (private) accessor.
   const PredictorImpl& impl() const {
@@ -155,18 +148,24 @@ class XGBoostPredictor : public Predictor {
                               bst_ulong _len) const;
 
   /// Convert matrix _mat to a DMatrixHandle
-  DMatrixPtr convert_to_dmatrix(
+  DMatrixPtr convert_to_in_memory_dmatrix(
       const std::vector<IntFeature>& _X_categorical,
       const std::vector<FloatFeature>& _X_numerical) const;
 
   /// Convert matrix _mat to a dense DMatrixHandle
-  DMatrixPtr convert_to_dmatrix_dense(
+  DMatrixPtr convert_to_in_memory_dmatrix_dense(
       const std::vector<FloatFeature>& _X_numerical) const;
 
   /// Convert matrix _mat to a sparse DMatrixHandle
-  DMatrixPtr convert_to_dmatrix_sparse(
+  DMatrixPtr convert_to_in_memory_dmatrix_sparse(
       const std::vector<IntFeature>& _X_categorical,
       const std::vector<FloatFeature>& _X_numerical) const;
+
+  /// Convert to memory-mapped matrix.
+  XGBoostMatrix convert_to_memory_mapped_dmatrix(
+      const std::vector<IntFeature>& _X_categorical,
+      const std::vector<FloatFeature>& _X_numerical,
+      const std::optional<FloatFeature>& _y) const;
 
   /// Evaluates the current iteration.
   Float evaluate_iter(const DMatrixPtr& _valid_set, const BoosterPtr& _handle,
@@ -174,9 +173,14 @@ class XGBoostPredictor : public Predictor {
 
   /// Does the actual fitting.
   void fit_handle(const std::shared_ptr<const logging::AbstractLogger> _logger,
-                  const DMatrixPtr& _d_matrix,
-                  const std::optional<DMatrixPtr>& _valid_set,
+                  const XGBoostMatrix& _d_matrix,
+                  const std::optional<XGBoostMatrix>& _valid_set,
                   const BoosterPtr& _handle) const;
+
+  /// Generates a matrix for fitting or transformation.
+  XGBoostMatrix make_matrix(const std::vector<IntFeature>& _X_categorical,
+                            const std::vector<FloatFeature>& _X_numerical,
+                            const std::optional<FloatFeature>& _y) const;
 
   /// Extracts feature importances from XGBoost dump
   void parse_dump(const std::string& _dump,

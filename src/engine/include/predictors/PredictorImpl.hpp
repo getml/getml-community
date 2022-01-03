@@ -9,11 +9,13 @@
 
 #include <memory>
 #include <optional>
+#include <string>
 #include <vector>
 
 // -----------------------------------------------------------------------------
 
 #include "debug/debug.hpp"
+#include "memmap/memmap.hpp"
 
 // -----------------------------------------------------------------------------
 
@@ -28,18 +30,14 @@ namespace predictors {
 
 /// Impl class for a predictor.
 class PredictorImpl {
-  // -----------------------------------------
-
  public:
   PredictorImpl(const std::vector<size_t>& _num_autofeatures,
                 const std::vector<std::string>& _categorical_colnames,
                 const std::vector<std::string>& _numerical_colnames);
 
-  PredictorImpl(const Poco::JSON::Object& _obj);
+  explicit PredictorImpl(const Poco::JSON::Object& _obj);
 
   ~PredictorImpl();
-
-  // -----------------------------------------
 
  public:
   /// Compresses importances calculated for a CSR Matrix to aggregated

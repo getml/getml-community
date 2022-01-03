@@ -937,8 +937,6 @@ containers::NumericalFeatures Pipeline::generate_predictions(
 // ----------------------------------------------------------------------------
 
 void Pipeline::fit(const FitParams& _params) {
-  // -------------------------------------------------------------------------
-
   assert_true(_params.fe_tracker_);
   assert_true(_params.pred_tracker_);
 
@@ -1949,8 +1947,6 @@ std::vector<std::string> Pipeline::make_feature_names() const {
 std::tuple<containers::NumericalFeatures, containers::CategoricalFeatures,
            containers::NumericalFeatures>
 Pipeline::make_features(const TransformParams& _params) const {
-  // --------------------------------------------------------------------
-
   assert_true(_params.original_population_df_);
   assert_true(_params.original_peripheral_dfs_);
 
@@ -1962,11 +1958,7 @@ Pipeline::make_features(const TransformParams& _params) const {
     return retrieve_features(*df);
   }
 
-  // --------------------------------------------------------------------
-
   const auto autofeatures = make_autofeatures(_params);
-
-  // --------------------------------------------------------------------
 
   assert_true(_params.predictor_impl_);
   assert_true(_params.population_df_);
@@ -1975,18 +1967,12 @@ Pipeline::make_features(const TransformParams& _params) const {
       autofeatures, _params.cmd_, _params.population_df_.value(),
       _params.predictor_impl_.value());
 
-  // --------------------------------------------------------------------
-
   const auto categorical_features =
       get_categorical_features(_params.cmd_, _params.population_df_.value(),
                                _params.predictor_impl_.value());
 
-  // --------------------------------------------------------------------
-
   return std::make_tuple(numerical_features, categorical_features,
                          autofeatures);
-
-  // --------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -2015,13 +2001,9 @@ Pipeline::make_features_validation(const TransformParams& _params) {
 void Pipeline::make_feature_selector_impl(
     const Poco::JSON::Object& _cmd,
     const containers::DataFrame& _population_df) {
-  // --------------------------------------------------------------------
-
   const auto is_null = [](const Float val) {
     return (std::isnan(val) || std::isinf(val));
   };
-
-  // --------------------------------------------------------------------
 
   const auto blacklist = std::vector<helpers::Subrole>(
       {helpers::Subrole::exclude_predictors, helpers::Subrole::email_only,
@@ -2146,14 +2128,10 @@ Pipeline::make_placeholder() const {
 void Pipeline::make_predictor_impl(
     const Poco::JSON::Object& _cmd,
     const containers::DataFrame& _population_df) {
-  // --------------------------------------------------------------------
-
   const auto local_predictor_impl =
       std::make_shared<predictors::PredictorImpl>(feature_selector_impl());
 
   impl_.predictor_impl_ = local_predictor_impl;
-
-  // --------------------------------------------------------------------
 
   if (feature_selectors_.size() == 0 || feature_selectors_[0].size() == 0) {
     return;
@@ -2166,11 +2144,7 @@ void Pipeline::make_predictor_impl(
     return;
   }
 
-  // --------------------------------------------------------------------
-
   const auto index = calculate_importance_index();
-
-  // --------------------------------------------------------------------
 
   const auto n_selected =
       std::max(static_cast<size_t>(1),
@@ -2178,14 +2152,10 @@ void Pipeline::make_predictor_impl(
 
   local_predictor_impl->select_features(n_selected, index);
 
-  // --------------------------------------------------------------------
-
   auto categorical_features =
       get_categorical_features(_cmd, _population_df, *local_predictor_impl);
 
   local_predictor_impl->fit_encodings(categorical_features);
-
-  // --------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -2249,14 +2219,10 @@ Pipeline::modify_data_frames(
     const std::shared_ptr<const communication::Logger>& _logger,
     const std::optional<std::string>& _temp_dir,
     Poco::Net::StreamSocket* _socket) const {
-  // ----------------------------------------------------------------------
-
   const auto socket_logger =
       std::make_shared<communication::SocketLogger>(_logger, true, _socket);
 
   socket_logger->log("Staging...");
-
-  // ----------------------------------------------------------------------
 
   const auto population = *JSON::get_object(obj(), "data_model_");
 
@@ -2264,23 +2230,15 @@ Pipeline::modify_data_frames(
 
   assert_true(peripheral_names);
 
-  // ----------------------------------------------------------------------
-
   auto population_df = _population_df;
 
   auto peripheral_dfs = _peripheral_dfs;
 
-  // ----------------------------------------------------------------------
-
   DataFrameModifier::add_time_stamps(population, *peripheral_names,
                                      &population_df, &peripheral_dfs);
 
-  // ----------------------------------------------------------------------
-
   DataFrameModifier::add_join_keys(population, *peripheral_names, _temp_dir,
                                    &population_df, &peripheral_dfs);
-
-  // ----------------------------------------------------------------------
 
   const auto placeholder = PlaceholderMaker::make_placeholder(population, "t1");
 
@@ -2291,15 +2249,9 @@ Pipeline::modify_data_frames(
                        joined_peripheral_names, &population_df,
                        &peripheral_dfs);
 
-  // ----------------------------------------------------------------------
-
   socket_logger->log("Progress: 100%.");
 
-  // ----------------------------------------------------------------------
-
   return std::make_pair(population_df, peripheral_dfs);
-
-  // ----------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -2308,10 +2260,8 @@ void Pipeline::move_tfile(const std::string& _path, const std::string& _name,
                           Poco::TemporaryFile* _tfile) const {
   auto file = Poco::File(_path + _name);
 
-  // Create all parent directories, if necessary.
   file.createDirectories();
 
-  // If the actual folder already exists, delete it.
   file.remove(true);
 
   _tfile->renameTo(file.path());

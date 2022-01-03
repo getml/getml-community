@@ -1,5 +1,9 @@
 #include "predictors/XGBoostPredictor.hpp"
 
+#include <optional>
+#include <stdexcept>
+#include <variant>
+
 namespace predictors {
 
 void XGBoostPredictor::add_target(const DMatrixPtr &_d_matrix,
@@ -7,7 +11,7 @@ void XGBoostPredictor::add_target(const DMatrixPtr &_d_matrix,
   std::vector<float> y_float(_y.size());
 
   std::transform(_y.begin(), _y.end(), y_float.begin(),
-                 [](const Float val) { return static_cast<float>(val); });
+                 [](const Float _val) { return static_cast<float>(_val); });
 
   if (XGDMatrixSetFloatInfo(*_d_matrix, "label", y_float.data(),
                             y_float.size()) != 0) {
@@ -32,20 +36,86 @@ typename XGBoostPredictor::BoosterPtr XGBoostPredictor::allocate_booster(
 
 // -----------------------------------------------------------------------------
 
-typename XGBoostPredictor::DMatrixPtr XGBoostPredictor::convert_to_dmatrix(
+typename XGBoostPredictor::DMatrixPtr
+XGBoostPredictor::convert_to_in_memory_dmatrix(
     const std::vector<IntFeature> &_X_categorical,
     const std::vector<FloatFeature> &_X_numerical) const {
   if (_X_categorical.size() > 0) {
-    return convert_to_dmatrix_sparse(_X_categorical, _X_numerical);
-  } else {
-    return convert_to_dmatrix_dense(_X_numerical);
+    return convert_to_in_memory_dmatrix_sparse(_X_categorical, _X_numerical);
   }
+  return convert_to_in_memory_dmatrix_dense(_X_numerical);
+}
+
+// -----------------------------------------------------------------------------
+
+XGBoostMatrix XGBoostPredictor::convert_to_memory_mapped_dmatrix(
+    const std::vector<IntFeature> &_X_categorical,
+    const std::vector<FloatFeature> &_X_numerical,
+    const std::optional<FloatFeature> &_y) const {
+  if (_X_numerical.size() == 0) {
+    throw std::invalid_argument(
+        "You must provide at least one column of data!");
+  }
+
+  assert_true(_X_numerical.at(0).is_memory_mapped());
+
+  const auto memmap_ptr =
+      std::get<typename FloatFeature::MemmapPtr>(_X_numerical.at(0).ptr());
+
+  assert_true(memmap_ptr);
+
+  const auto pool =
+      std::make_shared<memmap::Pool>(memmap_ptr->pool().temp_dir());
+
+  const auto features = std::make_shared<memmap::Vector<float>>(
+      pool, _X_numerical.size() * _X_numerical.at(0).size());
+
+  for (size_t j = 0; j < _X_numerical.size(); ++j) {
+    if (_X_numerical.at(j).size() != _X_numerical.at(0).size()) {
+      throw std::invalid_argument("All columns must have the same length!");
+    }
+    for (size_t i = 0; i < _X_numerical[j].size(); ++i) {
+      (*features)[i * _X_numerical.size() + j] =
+          static_cast<float>(_X_numerical[j][i]);
+    }
+  }
+
+  const auto targets =
+      _y ? std::make_shared<memmap::Vector<float>>(pool, _y->size())
+         : std::shared_ptr<memmap::Vector<float>>();
+
+  if (_y && targets) {
+    std::transform(_y->begin(), _y->end(), targets->begin(),
+                   [](const Float _val) { return static_cast<float>(_val); });
+  }
+
+  auto iter = std::make_unique<XGBoostIterator>(features, targets,
+                                                _X_numerical.at(0).size());
+
+  DMatrixHandle *handle = new DMatrixHandle;
+
+  char config[] = "{\"missing\": NaN, \"cache_prefix\": \"cache\"}";
+
+  if (XGDMatrixCreateFromCallback(iter.get(), iter->proxy(),
+                                  XGBoostIterator__reset, XGBoostIterator__next,
+                                  config, handle) != 0) {
+    delete handle;
+
+    throw std::runtime_error(
+        std::string("Creating XGBoost DMatrix from Matrix failed: ") +
+        XGBGetLastError());
+  }
+
+  auto d_matrix = DMatrixPtr(handle, &XGBoostIterator::delete_dmatrix);
+
+  return XGBoostMatrix{.d_matrix_ = std::move(d_matrix),
+                       .iter_ = std::move(iter)};
 }
 
 // -----------------------------------------------------------------------------
 
 typename XGBoostPredictor::DMatrixPtr
-XGBoostPredictor::convert_to_dmatrix_dense(
+XGBoostPredictor::convert_to_in_memory_dmatrix_dense(
     const std::vector<FloatFeature> &_X_numerical) const {
   if (_X_numerical.size() == 0) {
     throw std::invalid_argument(
@@ -72,17 +142,19 @@ XGBoostPredictor::convert_to_dmatrix_dense(
     delete d_matrix;
 
     throw std::runtime_error(
-        "Creating XGBoost DMatrix from Matrix failed! Do your "
+        std::string("Creating XGBoost DMatrix from Matrix failed: ") +
+        XGBGetLastError() +
+        " Do your "
         "features contain NAN or infinite values?");
   }
 
-  return DMatrixPtr(d_matrix, &XGBoostPredictor::delete_dmatrix);
+  return DMatrixPtr(d_matrix, &XGBoostIterator::delete_dmatrix);
 }
 
 // -----------------------------------------------------------------------------
 
 typename XGBoostPredictor::DMatrixPtr
-XGBoostPredictor::convert_to_dmatrix_sparse(
+XGBoostPredictor::convert_to_in_memory_dmatrix_sparse(
     const std::vector<IntFeature> &_X_categorical,
     const std::vector<FloatFeature> &_X_numerical) const {
   if (impl().n_encodings() != _X_categorical.size()) {
@@ -104,11 +176,12 @@ XGBoostPredictor::convert_to_dmatrix_sparse(
     delete d_matrix;
 
     throw std::runtime_error(
-        "Creating XGBoost DMatrix from CSRMatrix failed! Do your "
-        "features contain NAN or infinite values?");
+        std::string("Creating XGBoost DMatrix from CSRMatrix failed: ") +
+        XGBGetLastError() +
+        " Do your features contain NAN or infinite values?");
   }
 
-  return DMatrixPtr(d_matrix, &XGBoostPredictor::delete_dmatrix);
+  return DMatrixPtr(d_matrix, &XGBoostIterator::delete_dmatrix);
 }
 
 // -----------------------------------------------------------------------------
@@ -123,7 +196,8 @@ Float XGBoostPredictor::evaluate_iter(const DMatrixPtr &_valid_set,
   if (XGBoosterEvalOneIter(*_handle, _n_iter, _valid_set.get(), eval_names, 1,
                            &out_result)) {
     std::runtime_error("XGBoost: Evaluating tree or linear model " +
-                       std::to_string(_n_iter + 1) + " failed!");
+                       std::to_string(_n_iter + 1) +
+                       " failed: " + XGBGetLastError());
   }
 
   const auto out_result_str = std::string(out_result);
@@ -141,28 +215,21 @@ Float XGBoostPredictor::evaluate_iter(const DMatrixPtr &_valid_set,
 
 std::vector<Float> XGBoostPredictor::feature_importances(
     const size_t _num_features) const {
-  // --------------------------------------------------------------------
-  // Reload the booster
-
   auto handle = allocate_booster(NULL, 0);
 
   if (XGBoosterLoadModelFromBuffer(*handle, model(), len()) != 0) {
-    std::runtime_error("Could not reload booster!");
+    std::runtime_error(std::string("Could not reload booster: ") +
+                       XGBGetLastError());
   }
-
-  // --------------------------------------------------------------------
-  // Generate dump
 
   bst_ulong out_len = 0;
 
   const char **out_dump_array = nullptr;
 
   if (XGBoosterDumpModel(*handle, "", 1, &out_len, &out_dump_array) != 0) {
-    std::runtime_error("Generating XGBoost dump failed!");
+    std::runtime_error(std::string("Generating XGBoost dump failed: ") +
+                       XGBGetLastError());
   }
-
-  // --------------------------------------------------------------------
-  // Parse dump
 
   std::vector<Float> all_feature_importances(impl().ncols_csr());
 
@@ -170,16 +237,9 @@ std::vector<Float> XGBoostPredictor::feature_importances(
     parse_dump(out_dump_array[i], &all_feature_importances);
   }
 
-  // --------------------------------------------------------------------
-  // Compress the sparse importances to calculate the importance of the entire
-  // categorical feature.
-
   std::vector<Float> feature_importances(_num_features);
 
   impl().compress_importances(all_feature_importances, &feature_importances);
-
-  // --------------------------------------------------------------------
-  // Normalize feature importances
 
   Float sum_importances = std::accumulate(feature_importances.begin(),
                                           feature_importances.end(), 0.0);
@@ -191,8 +251,6 @@ std::vector<Float> XGBoostPredictor::feature_importances(
       val = 0.0;
     }
   }
-
-  // --------------------------------------------------------------------
 
   return feature_importances;
 }
@@ -218,48 +276,25 @@ std::string XGBoostPredictor::fit(
     const std::optional<std::vector<IntFeature>> &_X_categorical_valid,
     const std::optional<std::vector<FloatFeature>> &_X_numerical_valid,
     const std::optional<FloatFeature> &_y_valid) {
-  // --------------------------------------------------------------------
-
   assert_true((_X_categorical_valid && true) == (_X_numerical_valid && true));
 
   assert_true((_X_categorical_valid && true) == (_y_valid && true));
 
-  // --------------------------------------------------------------------
-
   impl().check_plausibility(_X_categorical, _X_numerical, _y);
 
-  // --------------------------------------------------------------------
-
-  const auto make_d_matrix = [this](
-                                 const std::vector<IntFeature> &_X_categorical,
-                                 const std::vector<FloatFeature> &_X_numerical,
-                                 const FloatFeature &_y) -> DMatrixPtr {
-    auto d_matrix = convert_to_dmatrix(_X_categorical, _X_numerical);
-    add_target(d_matrix, _y);
-    return d_matrix;
-  };
-
-  // --------------------------------------------------------------------
-
-  const auto train_set = make_d_matrix(_X_categorical, _X_numerical, _y);
+  const auto train_set = make_matrix(_X_categorical, _X_numerical, _y);
 
   const auto valid_set =
-      _y_valid ? std::make_optional<DMatrixPtr>(make_d_matrix(
-                     _X_categorical_valid.value(), _X_numerical_valid.value(),
-                     _y_valid.value()))
-               : std::optional<DMatrixPtr>();
-
-  // --------------------------------------------------------------------
+      _y_valid ? std::make_optional<XGBoostMatrix>(
+                     make_matrix(_X_categorical_valid.value(),
+                                 _X_numerical_valid.value(), _y_valid.value()))
+               : std::optional<XGBoostMatrix>();
 
   auto handle = allocate_booster(train_set.get(), 1);
 
   set_hyperparameters(handle);
 
-  // --------------------------------------------------------------------
-
   fit_handle(_logger, train_set, valid_set, handle);
-
-  // ----------------------------------------------------------------
 
   const char *out_dptr;
 
@@ -271,8 +306,6 @@ std::string XGBoostPredictor::fit(
 
   model_ = std::vector<char>(out_dptr, out_dptr + len);
 
-  // ----------------------------------------------------------------
-
   std::stringstream msg;
 
   if (hyperparams_.booster_ == "gblinear") {
@@ -283,21 +316,16 @@ std::string XGBoostPredictor::fit(
         << "XGBoost: Trained " << hyperparams_.n_iter_ << " trees.";
   }
 
-  // ----------------------------------------------------------------
-
   return msg.str();
-
-  // ----------------------------------------------------------------
 }
 
 // -----------------------------------------------------------------------------
 
 void XGBoostPredictor::fit_handle(
     const std::shared_ptr<const logging::AbstractLogger> _logger,
-    const DMatrixPtr &_train_set, const std::optional<DMatrixPtr> &_valid_set,
+    const XGBoostMatrix &_train_set,
+    const std::optional<XGBoostMatrix> &_valid_set,
     const BoosterPtr &_handle) const {
-  // --------------------------------------------------------
-
   const auto log = [this, _logger](const int _i, const int _n_iter) {
     if (!_logger) {
       return;
@@ -316,8 +344,6 @@ void XGBoostPredictor::fit_handle(
     }
   };
 
-  // --------------------------------------------------------
-
   size_t n_no_improvement = 0;
 
   Float best_value = std::numeric_limits<Float>::max();
@@ -328,7 +354,7 @@ void XGBoostPredictor::fit_handle(
       return false;
     }
 
-    const auto value = evaluate_iter(*_valid_set, _handle, _i);
+    const auto value = evaluate_iter(_valid_set->d_matrix_, _handle, _i);
 
     if (value < best_value) {
       n_no_improvement = 0;
@@ -345,14 +371,13 @@ void XGBoostPredictor::fit_handle(
     return true;
   };
 
-  // --------------------------------------------------------
-
   const auto n_iter = static_cast<int>(hyperparams_.n_iter_);
 
   for (int i = 0; i < n_iter; ++i) {
-    if (XGBoosterUpdateOneIter(*_handle, i, *_train_set)) {
+    if (XGBoosterUpdateOneIter(*_handle, i, *_train_set.get())) {
       std::runtime_error("XGBoost: Fitting tree or linear model " +
-                         std::to_string(i + 1) + " failed!");
+                         std::to_string(i + 1) +
+                         " failed: " + XGBGetLastError());
     }
 
     if (evaluate(i)) [[unlikely]] {
@@ -367,20 +392,12 @@ void XGBoostPredictor::fit_handle(
 // -----------------------------------------------------------------------------
 
 void XGBoostPredictor::load(const std::string &_fname) {
-  // --------------------------------------------------------------------
-  // Allocate the booster
-
   auto handle = allocate_booster(NULL, 0);
 
-  // --------------------------------------------------------------------
-  // Load the booster
-
   if (XGBoosterLoadModel(*handle, _fname.c_str()) != 0) {
-    throw std::runtime_error("Could not load XGBoostPredictor!");
+    throw std::runtime_error(std::string("Could not load XGBoostPredictor: ") +
+                             XGBGetLastError());
   }
-
-  // ----------------------------------------------------------------
-  // Dump booster
 
   const char *out_dptr;
 
@@ -391,8 +408,33 @@ void XGBoostPredictor::load(const std::string &_fname) {
   }
 
   model_ = std::vector<char>(out_dptr, out_dptr + len);
+}
 
-  // --------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+
+XGBoostMatrix XGBoostPredictor::make_matrix(
+    const std::vector<IntFeature> &_X_categorical,
+    const std::vector<FloatFeature> &_X_numerical,
+    const std::optional<FloatFeature> &_y) const {
+  if (_X_categorical.size() == 0 && _X_numerical.size() == 0) {
+    throw std::invalid_argument("You must provide at least some features!");
+  }
+
+  const bool is_memory_mapped = _X_numerical.size() > 0
+                                    ? _X_numerical.at(0).is_memory_mapped()
+                                    : _X_categorical.at(0).is_memory_mapped();
+
+  if (is_memory_mapped) {
+    return convert_to_memory_mapped_dmatrix(_X_categorical, _X_numerical, _y);
+  }
+
+  auto d_matrix = convert_to_in_memory_dmatrix(_X_categorical, _X_numerical);
+
+  if (_y) {
+    add_target(d_matrix, *_y);
+  }
+
+  return XGBoostMatrix{.d_matrix_ = std::move(d_matrix), .iter_ = nullptr};
 }
 
 // -----------------------------------------------------------------------------
@@ -410,8 +452,6 @@ void XGBoostPredictor::parse_dump(
     }
   }
 
-  // ----------------------------------------------------------------
-
   if (hyperparams_.booster_ == "gblinear") {
     assert_true(lines.size() >= _all_feature_importances->size() + 3);
 
@@ -420,12 +460,9 @@ void XGBoostPredictor::parse_dump(
           std::abs(std::atof(lines[i + 3].c_str()));
     }
   } else {
-    // ----------------------------------------------------------------
     // Parse individual lines, extracting the gain
-
     // A typical node might look like this:
     // 4:[f3<42.5] yes=9,no=10,missing=9,gain=8119.99414,cover=144
-
     // And a leaf looks like this:
     // 9:leaf=3.354321,cover=80
 
@@ -435,17 +472,11 @@ void XGBoostPredictor::parse_dump(
       std::size_t end = line.find("<");
 
       if (end != std::string::npos) {
-        // -----------------------
-        // Identify feature
-
         int fnum = std::stoi(line.substr(begin, end - begin));
 
         assert_true(fnum >= 0);
 
         assert_true(fnum < static_cast<int>(_all_feature_importances->size()));
-
-        // -----------------------
-        // Extract gain
 
         begin = line.find("gain=") + 5;
 
@@ -457,17 +488,10 @@ void XGBoostPredictor::parse_dump(
 
         Float gain = std::stod(line.substr(begin, end - begin));
 
-        // -----------------------
-        // Add to feature importances
-
         (*_all_feature_importances)[fnum] += gain;
       }
     }
-
-    // ----------------------------------------------------------------
   }
-
-  // ------------------------------------------------------------------------
 }
 
 // -----------------------------------------------------------------------------
@@ -481,12 +505,13 @@ FloatFeature XGBoostPredictor::predict(
     throw std::runtime_error("XGBoostPredictor has not been fitted!");
   }
 
-  auto d_matrix = convert_to_dmatrix(_X_categorical, _X_numerical);
+  const auto matrix = make_matrix(_X_categorical, _X_numerical, std::nullopt);
 
-  auto handle = allocate_booster(d_matrix.get(), 1);
+  auto handle = allocate_booster(matrix.get(), 1);
 
   if (XGBoosterLoadModelFromBuffer(*handle, model(), len()) != 0) {
-    std::runtime_error("Could not reload booster!");
+    throw std::runtime_error(std::string("Could not reload booster: ") +
+                             XGBGetLastError());
   }
 
   auto yhat = FloatFeature(
@@ -496,11 +521,16 @@ FloatFeature XGBoostPredictor::predict(
 
   const float *yhat_float = nullptr;
 
-  if (XGBoosterPredict(*handle, *d_matrix, 0, 0, 0, &nrows, &yhat_float) != 0) {
-    std::runtime_error("Generating XGBoost predictions failed!");
+  if (XGBoosterPredict(*handle, *matrix.get(), 0, 0, 0, &nrows, &yhat_float) !=
+      0) {
+    throw std::runtime_error(
+        std::string("Generating XGBoost predictions failed!") +
+        XGBGetLastError());
   }
 
-  assert_true(static_cast<size_t>(nrows) == yhat.size());
+  assert_msg(static_cast<size_t>(nrows) == yhat.size(),
+             "nrows: " + std::to_string(nrows) +
+                 ", yhat.size(): " + std::to_string(yhat.size()));
 
   std::transform(yhat_float, yhat_float + nrows, yhat.begin(),
                  [](const float val) { return static_cast<Float>(val); });
@@ -518,11 +548,13 @@ void XGBoostPredictor::save(const std::string &_fname) const {
   auto handle = allocate_booster(NULL, 0);
 
   if (XGBoosterLoadModelFromBuffer(*handle, model(), len()) != 0) {
-    std::runtime_error("Could not reload booster!");
+    std::runtime_error(std::string("Could not reload booster: ") +
+                       XGBGetLastError());
   }
 
   if (XGBoosterSaveModel(*handle, _fname.c_str()) != 0) {
-    throw std::runtime_error("Could not save XGBoostPredictor!");
+    throw std::runtime_error(std::string("Could not save XGBoostPredictor: ") +
+                             XGBGetLastError());
   }
 }
 
