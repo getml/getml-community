@@ -121,7 +121,7 @@ class XGBoostIteratorSparse {
   template <class T>
   void update_array(const T *_ptr, const size_t _size,
                     const std::string &_typestr, char *_array) const {
-    char format[] =
+    const char format[] =
         "{\"data\": [%lu, false], \"shape\": [%lu], \"typestr\": "
         "\"%s\", \"version\": 3}";
     memset(_array, '\0', ARRAY_SIZE);

@@ -119,9 +119,9 @@ int XGBoostIteratorDense::next() {
     return END_IS_REACHED;
   }
 
-  set_array();
+  const char *array = update_array();
 
-  auto result = XGProxyDMatrixSetDataDense(proxy(), array_);
+  auto result = XGProxyDMatrixSetDataDense(proxy(), array);
 
   if (result != XGBOOST_SUCCESS) {
     throw std::runtime_error(
@@ -147,15 +147,21 @@ int XGBoostIteratorDense::next() {
 
 // ----------------------------------------------------------------------------
 
-void XGBoostIteratorDense::set_array() {
-  char array[] =
+char *XGBoostIteratorDense::update_array() {
+  const char endianness = helpers::Endianness::is_little_endian() ? '<' : '>';
+
+  const auto typestr = endianness + std::string("f4");
+
+  const char format[] =
       "{\"data\": [%lu, false], \"shape\":[%lu, %lu], \"typestr\": "
-      "\"<f4\", \"version\": 3}";
+      "\"%s\", \"version\": 3}";
 
   memset(array_, '\0', sizeof(array_));
 
-  sprintf(array_, array, (size_t)(current_feature_batch()),
-          current_batch_size(), num_features_);
+  sprintf(array_, format, (size_t)(current_feature_batch()),
+          current_batch_size(), num_features_, typestr.c_str());
+
+  return array_;
 }
 
 // ----------------------------------------------------------------------------

@@ -91,7 +91,7 @@ class XGBoostIteratorDense {
       const std::shared_ptr<memmap::Pool> &_pool);
 
   /// Update array_ to reflect the most recent batch.
-  void set_array();
+  char *update_array();
 
  private:
   /// Calculates the size of the current batch.
