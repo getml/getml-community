@@ -23,8 +23,6 @@ namespace helpers {
 
 template <typename T>
 struct Column {
-  // ---------------------------------------------------------------------
-
   typedef
       typename std::conditional<std::is_same<T, strings::String>::value,
                                 memmap::StringVector, memmap::Vector<T>>::type

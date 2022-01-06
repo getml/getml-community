@@ -7,6 +7,14 @@
 
 // -----------------------------------------------------------------------------
 
+#include <memory>
+
+// -----------------------------------------------------------------------------
+
+#include "memmap/memmap.hpp"
+
+// -----------------------------------------------------------------------------
+
 #include "predictors/Float.hpp"
 #include "predictors/FloatFeature.hpp"
 #include "predictors/Int.hpp"
@@ -36,7 +44,8 @@ class Encoding {
   Poco::JSON::Object to_json_obj() const;
 
   /// Transforms the column to the mapped integers.
-  IntFeature transform(const IntFeature& _val) const;
+  IntFeature transform(const IntFeature& _val,
+                       const std::shared_ptr<memmap::Pool>& _pool) const;
 
   // -------------------------------
 

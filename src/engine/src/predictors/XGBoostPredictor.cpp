@@ -72,14 +72,10 @@ XGBoostMatrix XGBoostPredictor::convert_to_memory_mapped_dmatrix_dense(
   }
 
   assert_true(_X_numerical.at(0).is_memory_mapped());
-
-  const auto memmap_ptr =
-      std::get<typename FloatFeature::MemmapPtr>(_X_numerical.at(0).ptr());
-
-  assert_true(memmap_ptr);
+  assert_true(_X_numerical.at(0).pool());
 
   const auto pool =
-      std::make_shared<memmap::Pool>(memmap_ptr->pool().temp_dir());
+      std::make_shared<memmap::Pool>(_X_numerical.at(0).pool()->temp_dir());
 
   auto iter = std::make_unique<XGBoostIteratorDense>(_X_numerical, _y, pool);
 

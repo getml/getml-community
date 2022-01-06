@@ -36,8 +36,8 @@ class Vector {
                             _pool ? _pool.get() : nullptr, 0)),
         pool_(_pool) {
     assert_true(pool_);
-    const auto new_capacity = sizeof(T) < pool().page_size()
-                                  ? pool().page_size() / sizeof(T)
+    const auto new_capacity = sizeof(T) < pool()->page_size()
+                                  ? pool()->page_size() / sizeof(T)
                                   : static_cast<size_t>(1);
     allocate(new_capacity);
   }
@@ -151,15 +151,15 @@ class Vector {
   void deallocate() { impl_.deallocate(); }
 
   /// Trivial (private) accessor
-  Pool &pool() {
+  std::shared_ptr<Pool> pool() {
     assert_true(pool_);
-    return *pool_;
+    return pool_;
   }
 
   /// Trivial (private) accessor
-  const Pool &pool() const {
+  std::shared_ptr<const Pool> pool() const {
     assert_true(pool_);
-    return *pool_;
+    return pool_;
   }
 
  private:

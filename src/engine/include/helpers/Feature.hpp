@@ -3,6 +3,10 @@
 
 // -------------------------------------------------------------------------
 
+#include <memory>
+
+// -------------------------------------------------------------------------
+
 #include "debug/debug.hpp"
 
 // -------------------------------------------------------------------------
@@ -132,6 +136,16 @@ class Feature {
     } else {
       return size_;
     }
+  }
+
+  /// Retrieve the underlying pool, if the column is memory mapped.
+  std::shared_ptr<memmap::Pool> pool() const {
+    if (std::holds_alternative<InMemoryPtr>(ptr_)) {
+      return nullptr;
+    }
+    assert_true(std::holds_alternative<MemmapPtr>(ptr_));
+    assert_true(std::get<MemmapPtr>(ptr_)->pool());
+    return std::get<MemmapPtr>(ptr_)->pool();
   }
 
  private:

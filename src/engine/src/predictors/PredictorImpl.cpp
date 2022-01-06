@@ -7,7 +7,6 @@
 // -----------------------------------------------------------------------------
 
 namespace predictors {
-// -----------------------------------------------------------------------------
 
 PredictorImpl::PredictorImpl(
     const std::vector<size_t>& _num_autofeatures,
@@ -31,8 +30,6 @@ PredictorImpl::PredictorImpl(const Poco::JSON::Object& _obj)
           JSON::get_array(_obj, "categorical_colnames_"))),
       numerical_colnames_(JSON::array_to_vector<std::string>(
           JSON::get_array(_obj, "numerical_colnames_"))) {
-  // -----------------------------------------------
-
   auto arr = JSON::get_array(_obj, "encodings_");
 
   for (size_t i = 0; i < arr->size(); ++i) {
@@ -271,10 +268,19 @@ std::vector<IntFeature> PredictorImpl::transform_encodings(
                              std::to_string(_X_categorical.size()) + ".");
   }
 
+  if (_X_categorical.size() == 0) {
+    return {};
+  }
+
+  const auto pool = _X_categorical.at(0).pool()
+                        ? std::make_shared<memmap::Pool>(
+                              _X_categorical.at(0).pool()->temp_dir())
+                        : _X_categorical.at(0).pool();
+
   std::vector<IntFeature> transformed(encodings_.size());
 
   for (size_t i = 0; i < encodings_.size(); ++i) {
-    transformed[i] = encodings_[i].transform(_X_categorical[i]);
+    transformed[i] = encodings_[i].transform(_X_categorical[i], pool);
   }
 
   return transformed;

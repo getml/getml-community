@@ -1,5 +1,7 @@
 #include "predictors/Encoding.hpp"
 
+#include <memory>
+
 namespace predictors {
 
 void Encoding::fit(const IntFeature& _col) {
@@ -18,8 +20,12 @@ Poco::JSON::Object Encoding::to_json_obj() const {
 
 // -----------------------------------------------------------------------------
 
-IntFeature Encoding::transform(const IntFeature& _col) const {
-  auto output = IntFeature(std::make_shared<std::vector<Int>>(_col.size()));
+IntFeature Encoding::transform(
+    const IntFeature& _col, const std::shared_ptr<memmap::Pool>& _pool) const {
+  auto output =
+      _pool ? IntFeature(
+                  std::make_shared<memmap::Vector<Int>>(_pool, _col.size()))
+            : IntFeature(std::make_shared<std::vector<Int>>(_col.size()));
 
   for (size_t i = 0; i < _col.size(); ++i) {
     if (_col[i] < min_ || _col[i] > max_) {
