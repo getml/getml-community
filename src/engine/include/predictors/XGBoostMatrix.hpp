@@ -9,24 +9,28 @@
 
 #include <functional>
 #include <memory>
+#include <variant>
 
 // -----------------------------------------------------------------------------
 
-#include "predictors/XGBoostIterator.hpp"
+#include "predictors/XGBoostIteratorDense.hpp"
+#include "predictors/XGBoostIteratorSparse.hpp"
 
 // ----------------------------------------------------------------------
 
 namespace predictors {
 
 struct XGBoostMatrix {
-  typedef XGBoostIterator::DMatrixDestructor DMatrixDestructor;
-  typedef XGBoostIterator::DMatrixPtr DMatrixPtr;
+  typedef XGBoostIteratorDense::DMatrixDestructor DMatrixDestructor;
+  typedef XGBoostIteratorDense::DMatrixPtr DMatrixPtr;
 
   /// A pointer to the underlying matrix.
   DMatrixPtr d_matrix_;
 
   /// A pointer to the underlying iterator, if such an iterator exists.
-  std::unique_ptr<XGBoostIterator> iter_;
+  std::variant<std::unique_ptr<XGBoostIteratorDense>,
+               std::unique_ptr<XGBoostIteratorSparse>>
+      iter_ = std::unique_ptr<XGBoostIteratorDense>();
 
   /// Returns the underlying handle
   DMatrixHandle* get() const { return d_matrix_.get(); }

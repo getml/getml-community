@@ -161,8 +161,19 @@ class XGBoostPredictor : public Predictor {
       const std::vector<IntFeature>& _X_categorical,
       const std::vector<FloatFeature>& _X_numerical) const;
 
-  /// Convert to memory-mapped matrix.
+  /// Convert to a memory-mapped matrix.
   XGBoostMatrix convert_to_memory_mapped_dmatrix(
+      const std::vector<IntFeature>& _X_categorical,
+      const std::vector<FloatFeature>& _X_numerical,
+      const std::optional<FloatFeature>& _y) const;
+
+  /// Convert to a dense memory-mapped matrix.
+  XGBoostMatrix convert_to_memory_mapped_dmatrix_dense(
+      const std::vector<FloatFeature>& _X_numerical,
+      const std::optional<FloatFeature>& _y) const;
+
+  /// Convert to a sparse memory-mapped matrix.
+  XGBoostMatrix convert_to_memory_mapped_dmatrix_sparse(
       const std::vector<IntFeature>& _X_categorical,
       const std::vector<FloatFeature>& _X_numerical,
       const std::optional<FloatFeature>& _y) const;

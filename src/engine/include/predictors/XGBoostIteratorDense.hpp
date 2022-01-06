@@ -1,5 +1,5 @@
-#ifndef PREDICTORS_XGBOOSTITERATOR_HPP_
-#define PREDICTORS_XGBOOSTITERATOR_HPP_
+#ifndef PREDICTORS_XGBOOSTITERATORDENSE_HPP_
+#define PREDICTORS_XGBOOSTITERATORDENSE_HPP_
 
 // ------------------------------------------------------------------------
 
@@ -13,6 +13,7 @@
 #include <cstring>
 #include <memory>
 #include <stdexcept>
+#include <vector>
 
 // ------------------------------------------------------------------------
 
@@ -20,11 +21,15 @@
 
 // ------------------------------------------------------------------------
 
+#include "predictors/FloatFeature.hpp"
+
+// ------------------------------------------------------------------------
+
 namespace predictors {
 
-/// The XGBoostIterator class is used for iterating through the memory-mapped
-/// features.
-class XGBoostIterator {
+/// The XGBoostIteratorDense class is used for iterating through the
+/// memory-mapped features.
+class XGBoostIteratorDense {
  private:
   static constexpr int CONTINUE = 1;
   static constexpr int END_IS_REACHED = 0;
@@ -36,11 +41,11 @@ class XGBoostIterator {
   typedef std::unique_ptr<DMatrixHandle, DMatrixDestructor> DMatrixPtr;
 
  public:
-  XGBoostIterator(const std::shared_ptr<memmap::Vector<float>> &_features,
-                  const std::shared_ptr<memmap::Vector<float>> &_targets,
-                  const size_t _nrows);
+  XGBoostIteratorDense(const std::vector<FloatFeature> &_X_numerical,
+                       const std::optional<FloatFeature> &_y,
+                       const std::shared_ptr<memmap::Pool> &_pool);
 
-  ~XGBoostIterator();
+  ~XGBoostIteratorDense();
 
  public:
   /// Moves to the next batch.
@@ -69,13 +74,21 @@ class XGBoostIterator {
   /// Calculates the number of features.
   static size_t calc_num_batches(const size_t _batch_size, const size_t _nrows);
 
-  /// Calculates the number of features from _features and _targets.
-  static size_t calc_num_features(
-      const std::shared_ptr<memmap::Vector<float>> &_features,
-      const size_t _nrows);
+  /// Initializes the features
+  static std::shared_ptr<memmap::Vector<float>> init_features(
+      const std::vector<FloatFeature> &_X_numerical,
+      const std::shared_ptr<memmap::Pool> &_pool);
+
+  /// Infers the number of rows.
+  static size_t init_nrows(const std::vector<FloatFeature> &_X_numerical);
 
   /// Initializes the proxy_ matrix.
   static DMatrixPtr init_proxy();
+
+  /// Initializes the targets
+  static std::shared_ptr<memmap::Vector<float>> init_targets(
+      const std::optional<FloatFeature> &_y,
+      const std::shared_ptr<memmap::Pool> &_pool);
 
   /// Update array_ to reflect the most recent batch.
   void set_array();
@@ -131,15 +144,15 @@ class XGBoostIterator {
 
 // ------------------------------------------------------------------------
 
-inline int XGBoostIterator__next(DataIterHandle _handle) {
-  auto iter = (XGBoostIterator *)(_handle);
+inline int XGBoostIteratorDense__next(DataIterHandle _handle) {
+  auto iter = reinterpret_cast<XGBoostIteratorDense *>(_handle);
   return iter->next();
 }
 
 // ------------------------------------------------------------------------
 
-inline void XGBoostIterator__reset(DataIterHandle _handle) {
-  auto iter = (XGBoostIterator *)(_handle);
+inline void XGBoostIteratorDense__reset(DataIterHandle _handle) {
+  auto iter = reinterpret_cast<XGBoostIteratorDense *>(_handle);
   iter->reset();
 }
 
@@ -147,4 +160,4 @@ inline void XGBoostIterator__reset(DataIterHandle _handle) {
 
 }  // namespace predictors
 
-#endif  // PREDICTORS_XGBOOSTITERATOR_HPP_
+#endif  // PREDICTORS_XGBOOSTITERATORDENSE_HPP_

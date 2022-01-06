@@ -11,11 +11,8 @@ void Encoding::fit(const IntFeature& _col) {
 
 Poco::JSON::Object Encoding::to_json_obj() const {
   Poco::JSON::Object obj;
-
   obj.set("max_", max_);
-
   obj.set("min_", min_);
-
   return obj;
 }
 

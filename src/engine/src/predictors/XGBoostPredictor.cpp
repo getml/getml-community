@@ -4,6 +4,8 @@
 #include <stdexcept>
 #include <variant>
 
+#include "predictors/XGBoostIteratorSparse.hpp"
+
 namespace predictors {
 
 void XGBoostPredictor::add_target(const DMatrixPtr &_d_matrix,
@@ -52,6 +54,18 @@ XGBoostMatrix XGBoostPredictor::convert_to_memory_mapped_dmatrix(
     const std::vector<IntFeature> &_X_categorical,
     const std::vector<FloatFeature> &_X_numerical,
     const std::optional<FloatFeature> &_y) const {
+  if (_X_categorical.size() > 0) {
+    return convert_to_memory_mapped_dmatrix_sparse(_X_categorical, _X_numerical,
+                                                   _y);
+  }
+  return convert_to_memory_mapped_dmatrix_dense(_X_numerical, _y);
+}
+
+// -----------------------------------------------------------------------------
+
+XGBoostMatrix XGBoostPredictor::convert_to_memory_mapped_dmatrix_dense(
+    const std::vector<FloatFeature> &_X_numerical,
+    const std::optional<FloatFeature> &_y) const {
   if (_X_numerical.size() == 0) {
     throw std::invalid_argument(
         "You must provide at least one column of data!");
@@ -67,38 +81,15 @@ XGBoostMatrix XGBoostPredictor::convert_to_memory_mapped_dmatrix(
   const auto pool =
       std::make_shared<memmap::Pool>(memmap_ptr->pool().temp_dir());
 
-  const auto features = std::make_shared<memmap::Vector<float>>(
-      pool, _X_numerical.size() * _X_numerical.at(0).size());
-
-  for (size_t j = 0; j < _X_numerical.size(); ++j) {
-    if (_X_numerical.at(j).size() != _X_numerical.at(0).size()) {
-      throw std::invalid_argument("All columns must have the same length!");
-    }
-    for (size_t i = 0; i < _X_numerical[j].size(); ++i) {
-      (*features)[i * _X_numerical.size() + j] =
-          static_cast<float>(_X_numerical[j][i]);
-    }
-  }
-
-  const auto targets =
-      _y ? std::make_shared<memmap::Vector<float>>(pool, _y->size())
-         : std::shared_ptr<memmap::Vector<float>>();
-
-  if (_y && targets) {
-    std::transform(_y->begin(), _y->end(), targets->begin(),
-                   [](const Float _val) { return static_cast<float>(_val); });
-  }
-
-  auto iter = std::make_unique<XGBoostIterator>(features, targets,
-                                                _X_numerical.at(0).size());
+  auto iter = std::make_unique<XGBoostIteratorDense>(_X_numerical, _y, pool);
 
   DMatrixHandle *handle = new DMatrixHandle;
 
   char config[] = "{\"missing\": NaN, \"cache_prefix\": \"cache\"}";
 
-  if (XGDMatrixCreateFromCallback(iter.get(), iter->proxy(),
-                                  XGBoostIterator__reset, XGBoostIterator__next,
-                                  config, handle) != 0) {
+  if (XGDMatrixCreateFromCallback(
+          iter.get(), iter->proxy(), XGBoostIteratorDense__reset,
+          XGBoostIteratorDense__next, config, handle) != 0) {
     delete handle;
 
     throw std::runtime_error(
@@ -106,7 +97,41 @@ XGBoostMatrix XGBoostPredictor::convert_to_memory_mapped_dmatrix(
         XGBGetLastError());
   }
 
-  auto d_matrix = DMatrixPtr(handle, &XGBoostIterator::delete_dmatrix);
+  auto d_matrix = DMatrixPtr(handle, &XGBoostIteratorDense::delete_dmatrix);
+
+  return XGBoostMatrix{.d_matrix_ = std::move(d_matrix),
+                       .iter_ = std::move(iter)};
+}
+
+// -----------------------------------------------------------------------------
+
+XGBoostMatrix XGBoostPredictor::convert_to_memory_mapped_dmatrix_sparse(
+    const std::vector<IntFeature> &_X_categorical,
+    const std::vector<FloatFeature> &_X_numerical,
+    const std::optional<FloatFeature> &_y) const {
+  if (_X_categorical.size() == 0) {
+    throw std::invalid_argument(
+        "You must provide at least one column of data!");
+  }
+
+  auto iter = std::make_unique<XGBoostIteratorSparse>(_X_categorical,
+                                                      _X_numerical, _y, impl_);
+
+  DMatrixHandle *handle = new DMatrixHandle;
+
+  char config[] = "{\"missing\": NaN, \"cache_prefix\": \"cache\"}";
+
+  if (XGDMatrixCreateFromCallback(
+          iter.get(), iter->proxy(), XGBoostIteratorSparse__reset,
+          XGBoostIteratorSparse__next, config, handle) != 0) {
+    delete handle;
+
+    throw std::runtime_error(
+        std::string("Creating sparse XGBoost DMatrix from Matrix failed: ") +
+        XGBGetLastError());
+  }
+
+  auto d_matrix = DMatrixPtr(handle, &XGBoostIteratorSparse::delete_dmatrix);
 
   return XGBoostMatrix{.d_matrix_ = std::move(d_matrix),
                        .iter_ = std::move(iter)};
@@ -148,7 +173,7 @@ XGBoostPredictor::convert_to_in_memory_dmatrix_dense(
         "features contain NAN or infinite values?");
   }
 
-  return DMatrixPtr(d_matrix, &XGBoostIterator::delete_dmatrix);
+  return DMatrixPtr(d_matrix, &XGBoostIteratorDense::delete_dmatrix);
 }
 
 // -----------------------------------------------------------------------------
@@ -181,7 +206,7 @@ XGBoostPredictor::convert_to_in_memory_dmatrix_sparse(
         " Do your features contain NAN or infinite values?");
   }
 
-  return DMatrixPtr(d_matrix, &XGBoostIterator::delete_dmatrix);
+  return DMatrixPtr(d_matrix, &XGBoostIteratorDense::delete_dmatrix);
 }
 
 // -----------------------------------------------------------------------------
@@ -434,7 +459,7 @@ XGBoostMatrix XGBoostPredictor::make_matrix(
     add_target(d_matrix, *_y);
   }
 
-  return XGBoostMatrix{.d_matrix_ = std::move(d_matrix), .iter_ = nullptr};
+  return XGBoostMatrix{.d_matrix_ = std::move(d_matrix)};
 }
 
 // -----------------------------------------------------------------------------

@@ -67,6 +67,12 @@ class PredictorImpl {
       const std::vector<IntFeature>& _X_categorical,
       const std::vector<FloatFeature>& _X_numerical) const;
 
+  /// Generates a CSRMatrix from the categorical and numerical ranges.
+  template <typename DataType, typename IndicesType, typename IndptrType>
+  CSRMatrix<DataType, IndicesType, IndptrType> make_csr(
+      const std::vector<stl::Range<const Int*>>& _X_categorical,
+      const std::vector<stl::Range<const Float*>>& _X_numerical) const;
+
   /// Select the columns that have made the cut during the feature selection.
   void select_features(const size_t _n_selected,
                        const std::vector<size_t>& _index);
@@ -179,6 +185,25 @@ template <typename DataType, typename IndicesType, typename IndptrType>
 CSRMatrix<DataType, IndicesType, IndptrType> PredictorImpl::make_csr(
     const std::vector<IntFeature>& _X_categorical,
     const std::vector<FloatFeature>& _X_numerical) const {
+  auto csr_mat = CSRMatrix<DataType, IndicesType, IndptrType>();
+
+  for (const auto& col : _X_numerical) {
+    csr_mat.add(col);
+  }
+
+  for (size_t i = 0; i < _X_categorical.size(); ++i) {
+    csr_mat.add(_X_categorical[i], n_unique(i));
+  }
+
+  return csr_mat;
+}
+
+// ----------------------------------------------------------------------------
+
+template <typename DataType, typename IndicesType, typename IndptrType>
+CSRMatrix<DataType, IndicesType, IndptrType> PredictorImpl::make_csr(
+    const std::vector<stl::Range<const Int*>>& _X_categorical,
+    const std::vector<stl::Range<const Float*>>& _X_numerical) const {
   auto csr_mat = CSRMatrix<DataType, IndicesType, IndptrType>();
 
   for (const auto& col : _X_numerical) {

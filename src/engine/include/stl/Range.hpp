@@ -1,8 +1,12 @@
 #ifndef STL_RANGE_HPP_
 #define STL_RANGE_HPP_
 
+#include <iterator>
+#include <type_traits>
+
+#include "debug/debug.hpp"
+
 namespace stl {
-// -------------------------------------------------------------------------
 
 template <class iterator>
 class Range {
@@ -17,6 +21,21 @@ class Range {
   /// Trivial (const) accessor.
   iterator end() const { return end_; }
 
+  /// Access operator
+  auto operator[](size_t _i) const {
+    assert_true(_i < size());
+    auto it = begin();
+    std::advance(it, _i);
+    return *it;
+  }
+
+  /// The distance between begin() and end().
+  size_t size() const {
+    const auto d = std::distance(begin_, end_);
+    assert_true(d >= 0);
+    return static_cast<size_t>(d);
+  }
+
  private:
   /// Iterator to the beginning of the rownums
   iterator begin_;
@@ -25,7 +44,6 @@ class Range {
   iterator end_;
 };
 
-// -------------------------------------------------------------------------
 }  // namespace stl
 
 #endif  // STL_RANGE_HPP_

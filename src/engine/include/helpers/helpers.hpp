@@ -3,7 +3,6 @@
 
 // ----------------------------------------------------------------------------
 
-// These are just typedefs
 #include "helpers/Aggregations.hpp"
 #include "helpers/Column.hpp"
 #include "helpers/ColumnDescription.hpp"
@@ -12,6 +11,7 @@
 #include "helpers/DataFrame.hpp"
 #include "helpers/DataFrameParams.hpp"
 #include "helpers/DataFrameView.hpp"
+#include "helpers/Endianness.hpp"
 #include "helpers/Feature.hpp"
 #include "helpers/FeatureContainer.hpp"
 #include "helpers/Features.hpp"
