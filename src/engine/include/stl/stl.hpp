@@ -4,6 +4,7 @@
 #include "stl/IotaIterator.hpp"
 #include "stl/IotaRange.hpp"
 #include "stl/Range.hpp"
+#include "stl/Ref.hpp"
 #include "stl/collect.hpp"
 #include "stl/iota.hpp"
 #include "stl/join.hpp"
