@@ -20,13 +20,9 @@
 
 namespace strings {
 
-// ----------------------------------------------------------------------------
-
 // String is an implementation of a string class that has
 // no memory overhead over a standard C-string.
 class String {
-  // -------------------------------------------------------
-
  public:
   String() : chars_(std::make_unique<char[]>(1)) { chars_.get()[0] = '\0'; }
 
@@ -144,24 +140,11 @@ class String {
     return upper;
   }
 
-  // -------------------------------------------------------
-
  private:
   /// The underlying data.
   std::unique_ptr<char[]> chars_;
 };
 
-// ----------------------------------------------------------------------------
 }  // namespace strings
 
-// ----------------------------------------------------------------------------
-// ----------------------------------------------------------------------------
-
-inline std::ostream& operator<<(std::ostream& _os,
-                                const strings::String& _str) {
-  _os << _str.c_str();
-  return _os;
-}
-
-// ----------------------------------------------------------------------------
 #endif  // STRINGS_STRING_HPP_
