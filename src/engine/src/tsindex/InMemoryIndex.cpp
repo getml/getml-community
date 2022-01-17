@@ -26,10 +26,10 @@ InMemoryIndex::~InMemoryIndex() = default;
 std::map<Key, size_t> InMemoryIndex::make_key_map(
     const IndexParams& _params, const std::vector<size_t>& _row_indices) {
   assert_true(_params.join_keys_.end() >= _params.join_keys_.begin());
-
+#ifndef NDEBUG
   const auto size = static_cast<size_t>(_params.join_keys_.end() -
                                         _params.join_keys_.begin());
-
+#endif  // NDEBUG
   assert_true(static_cast<size_t>(_params.lower_ts_.end() -
                                   _params.lower_ts_.begin()) == size);
 
@@ -57,8 +57,10 @@ std::vector<size_t> InMemoryIndex::make_row_indices(
     const IndexParams& _params) {
   assert_true(_params.join_keys_.end() >= _params.join_keys_.begin());
 
+#ifndef NDEBUG
   const auto size = static_cast<size_t>(_params.join_keys_.end() -
                                         _params.join_keys_.begin());
+#endif  // NDEBUG
 
   assert_true(static_cast<size_t>(_params.lower_ts_.end() -
                                   _params.lower_ts_.begin()) == size);
