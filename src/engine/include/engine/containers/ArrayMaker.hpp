@@ -33,39 +33,40 @@ class ArrayMaker {
   constexpr static size_t MAX_CHUNKSIZE = 100000;
 
   /// Generates a boolean array.
-  template <class IteratorType>
+  template <class IteratorType1, class IteratorType2>
   static std::shared_ptr<arrow::ChunkedArray> make_boolean_array(
-      const IteratorType _begin, const IteratorType _end);
+      const IteratorType1 _begin, const IteratorType2 _end);
 
   /// Generates a float array.
-  template <class IteratorType>
+  template <class IteratorType1, class IteratorType2>
   static std::shared_ptr<arrow::ChunkedArray> make_float_array(
-      const IteratorType _begin, const IteratorType _end);
+      const IteratorType1 _begin, const IteratorType2 _end);
 
   /// Generates a string array.
-  template <class IteratorType>
+  template <class IteratorType1, class IteratorType2>
   static std::shared_ptr<arrow::ChunkedArray> make_string_array(
-      const IteratorType _begin, const IteratorType _end);
+      const IteratorType1 _begin, const IteratorType2 _end);
 
   /// Generates a time stamp array.
-  template <class IteratorType>
+  template <class IteratorType1, class IteratorType2>
   static std::shared_ptr<arrow::ChunkedArray> make_time_stamp_array(
-      const IteratorType _begin, const IteratorType _end);
+      const IteratorType1 _begin, const IteratorType2 _end);
 
  private:
   /// Generate the chunks for the chunked array.
-  template <class IteratorType, class AppendFunctionType, class BuilderType>
+  template <class IteratorType1, class IteratorType2, class AppendFunctionType,
+            class BuilderType>
   static std::vector<std::shared_ptr<arrow::Array>> make_chunks(
-      const IteratorType _begin, const IteratorType _end,
+      const IteratorType1 _begin, const IteratorType2 _end,
       const AppendFunctionType _append_function, BuilderType* _builder);
 };
 
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
-template <class IteratorType>
+template <class IteratorType1, class IteratorType2>
 std::shared_ptr<arrow::ChunkedArray> ArrayMaker::make_boolean_array(
-    const IteratorType _begin, const IteratorType _end) {
+    const IteratorType1 _begin, const IteratorType2 _end) {
   const auto append_function = [](const bool _val,
                                   arrow::BooleanBuilder* _builder) {
     const auto status = _builder->Append(_val);
@@ -81,9 +82,10 @@ std::shared_ptr<arrow::ChunkedArray> ArrayMaker::make_boolean_array(
 
 // -------------------------------------------------------------------------
 
-template <class IteratorType, class AppendFunctionType, class BuilderType>
+template <class IteratorType1, class IteratorType2, class AppendFunctionType,
+          class BuilderType>
 std::vector<std::shared_ptr<arrow::Array>> ArrayMaker::make_chunks(
-    const IteratorType _begin, const IteratorType _end,
+    const IteratorType1 _begin, const IteratorType2 _end,
     const AppendFunctionType _append_function, BuilderType* _builder) {
   const auto status = _builder->Resize(MAX_CHUNKSIZE);
 
@@ -120,9 +122,9 @@ std::vector<std::shared_ptr<arrow::Array>> ArrayMaker::make_chunks(
 
 // ----------------------------------------------------------------------------
 
-template <class IteratorType>
+template <class IteratorType1, class IteratorType2>
 std::shared_ptr<arrow::ChunkedArray> ArrayMaker::make_float_array(
-    const IteratorType _begin, const IteratorType _end) {
+    const IteratorType1 _begin, const IteratorType2 _end) {
   const auto append_function = [](const Float _val,
                                   arrow::DoubleBuilder* _builder) {
     if (helpers::NullChecker::is_null(_val)) {
@@ -143,9 +145,9 @@ std::shared_ptr<arrow::ChunkedArray> ArrayMaker::make_float_array(
 
 // -------------------------------------------------------------------------
 
-template <class IteratorType>
+template <class IteratorType1, class IteratorType2>
 std::shared_ptr<arrow::ChunkedArray> ArrayMaker::make_string_array(
-    const IteratorType _begin, const IteratorType _end) {
+    const IteratorType1 _begin, const IteratorType2 _end) {
   const auto loc = std::locale("en_US.UTF-8");
 
   const auto is_printable = [loc](const char c) -> bool {
@@ -177,9 +179,9 @@ std::shared_ptr<arrow::ChunkedArray> ArrayMaker::make_string_array(
 
 // -------------------------------------------------------------------------
 
-template <class IteratorType>
+template <class IteratorType1, class IteratorType2>
 std::shared_ptr<arrow::ChunkedArray> ArrayMaker::make_time_stamp_array(
-    IteratorType _begin, IteratorType _end) {
+    IteratorType1 _begin, IteratorType2 _end) {
   const auto append_function = [](const Float _val,
                                   arrow::TimestampBuilder* _builder) {
     if (helpers::NullChecker::is_null(_val)) {
