@@ -14,6 +14,7 @@
 #include <random>
 #include <string>
 #include <tuple>
+#include <vector>
 
 // ----------------------------------------------------------------------------
 
@@ -31,17 +32,13 @@
 #include "multirel/utils/utils.hpp"
 
 // ----------------------------------------------------------------------------
+
 namespace multirel {
 namespace decisiontrees {
-// ----------------------------------------------------------------------------
 
 struct DecisionTreeImpl {
-  // ----------------------------------------
-
   typedef std::vector<containers::ColumnView<Float, std::map<Int, Int>>>
       SubfeatureType;
-
-  // ----------------------------------------
 
   DecisionTreeImpl(
       const std::shared_ptr<const descriptors::TreeHyperparameters>&
@@ -182,7 +179,6 @@ struct DecisionTreeImpl {
   std::shared_ptr<const descriptors::TreeHyperparameters> tree_hyperparameters_;
 };
 
-// ----------------------------------------------------------------------------
 }  // namespace decisiontrees
 }  // namespace multirel
 

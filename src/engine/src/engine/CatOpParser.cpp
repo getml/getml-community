@@ -9,7 +9,6 @@
 
 namespace engine {
 namespace handlers {
-// ----------------------------------------------------------------------------
 
 containers::ColumnView<std::string> CatOpParser::binary_operation(
     const Poco::JSON::Object& _col) const {
@@ -54,18 +53,12 @@ void CatOpParser::check(
     const containers::Column<strings::String>& _col, const std::string& _name,
     const std::shared_ptr<const communication::Logger>& _logger,
     Poco::Net::StreamSocket* _socket) const {
-  // --------------------------------------------------------------------------
-
   communication::Warner warner;
-
-  // --------------------------------------------------------------------------
 
   if (_col.size() == 0) {
     warner.send(_socket);
     return;
   }
-
-  // --------------------------------------------------------------------------
 
   const Float length = static_cast<Float>(_col.size());
 
@@ -79,19 +72,13 @@ void CatOpParser::check(
                "% of all entries of column '" + _name + "' are NULL values.");
   }
 
-  // --------------------------------------------------------------------------
-
   if (_logger) {
     for (const auto& warning : warner.warnings()) {
       _logger->log("WARNING: " + warning);
     }
   }
 
-  // --------------------------------------------------------------------------
-
   warner.send(_socket);
-
-  // --------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------

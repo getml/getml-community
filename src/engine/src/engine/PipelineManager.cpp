@@ -2,13 +2,16 @@
 
 // ------------------------------------------------------------------------
 
+#include "transpilation/transpilation.hpp"
+
+// ------------------------------------------------------------------------
+
 #include "engine/handlers/DataFrameManager.hpp"
 
 // ------------------------------------------------------------------------
 
 namespace engine {
 namespace handlers {
-// ------------------------------------------------------------------------
 
 void PipelineManager::add_features_to_df(
     const pipelines::Pipeline& _pipeline,
@@ -29,8 +32,8 @@ void PipelineManager::add_features_to_df(
   }
 
   for (size_t i = 0; i < numerical.size(); ++i) {
-    auto col =
-        containers::Column<Float>(_numerical_features.at(j++).ptr()).clone();
+    auto col = containers::Column<Float>(_numerical_features.at(j++).ptr())
+                   .clone(_df->pool());
     col.set_name(numerical.at(i));
     _df->add_float_column(col, containers::DataFrame::ROLE_NUMERICAL);
   }
@@ -38,8 +41,8 @@ void PipelineManager::add_features_to_df(
   assert_true(categorical.size() == _categorical_features.size());
 
   for (size_t i = 0; i < categorical.size(); ++i) {
-    auto col =
-        containers::Column<Int>(_categorical_features.at(i).ptr()).clone();
+    auto col = containers::Column<Int>(_categorical_features.at(i).ptr())
+                   .clone(_df->pool());
     col.set_name(categorical.at(i));
     _df->add_int_column(col, containers::DataFrame::ROLE_CATEGORICAL);
   }
@@ -51,7 +54,7 @@ void PipelineManager::add_join_keys_to_df(
     const containers::DataFrame& _population_table,
     containers::DataFrame* _df) const {
   for (size_t i = 0; i < _population_table.num_join_keys(); ++i) {
-    auto col = _population_table.join_key(i).clone();
+    auto col = _population_table.join_key(i).clone(_df->pool());
 
     if (col.name().find(helpers::Macros::multiple_join_key_begin()) !=
         std::string::npos) {
@@ -62,7 +65,15 @@ void PipelineManager::add_join_keys_to_df(
       continue;
     }
 
-    col.set_name(helpers::Macros::modify_colnames({col.name()}).at(0));
+    const auto make_staging_table_colname =
+        [](const std::string& _colname) -> std::string {
+      return transpilation::SQLite3Generator().make_staging_table_colname(
+          _colname);
+    };
+
+    col.set_name(helpers::Macros::modify_colnames({col.name()},
+                                                  make_staging_table_colname)
+                     .at(0));
 
     _df->add_int_column(col, containers::DataFrame::ROLE_JOIN_KEY);
   }
@@ -91,7 +102,7 @@ void PipelineManager::add_time_stamps_to_df(
     const containers::DataFrame& _population_table,
     containers::DataFrame* _df) const {
   for (size_t i = 0; i < _population_table.num_time_stamps(); ++i) {
-    auto col = _population_table.time_stamp(i).clone();
+    auto col = _population_table.time_stamp(i).clone(_df->pool());
 
     if (col.name().find(helpers::Macros::lower_ts()) != std::string::npos) {
       continue;
@@ -115,7 +126,15 @@ void PipelineManager::add_time_stamps_to_df(
       continue;
     }
 
-    col.set_name(helpers::Macros::modify_colnames({col.name()}).at(0));
+    const auto make_staging_table_colname =
+        [](const std::string& _colname) -> std::string {
+      return transpilation::SQLite3Generator().make_staging_table_colname(
+          _colname);
+    };
+
+    col.set_name(helpers::Macros::modify_colnames({col.name()},
+                                                  make_staging_table_colname)
+                     .at(0));
 
     _df->add_float_column(col, containers::DataFrame::ROLE_TIME_STAMP);
   }
@@ -788,14 +807,9 @@ void PipelineManager::to_db(
     const containers::CategoricalFeatures& _categorical_features,
     const std::shared_ptr<containers::Encoding>& _categories,
     const std::shared_ptr<containers::Encoding>& _join_keys_encoding) {
-  // -------------------------------------------------------
-
   const auto df =
       to_df(_pipeline, _cmd, _population_table, _numerical_features,
             _categorical_features, _categories, _join_keys_encoding);
-
-  // -------------------------------------------------------
-  // Write data frame to data base.
 
   const auto table_name = JSON::get_value<std::string>(_cmd, "table_name_");
 
@@ -819,8 +833,6 @@ void PipelineManager::to_db(
   conn->read(table_name, 0, &reader);
 
   database_manager_->post_tables();
-
-  // -------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
@@ -832,11 +844,7 @@ containers::DataFrame PipelineManager::to_df(
     const containers::CategoricalFeatures& _categorical_features,
     const std::shared_ptr<containers::Encoding>& _categories,
     const std::shared_ptr<containers::Encoding>& _join_keys_encoding) {
-  // -------------------------------------------------------
-
   const auto df_name = JSON::get_value<std::string>(_cmd, "df_name_");
-
-  // -------------------------------------------------------
 
   const auto pool = options_.make_pool();
 
@@ -850,22 +858,16 @@ containers::DataFrame PipelineManager::to_df(
     add_predictions_to_df(_pipeline, _numerical_features, &df);
   }
 
-  // -------------------------------------------------------
-
   add_join_keys_to_df(_population_table, &df);
 
   add_time_stamps_to_df(_population_table, &df);
 
   for (size_t i = 0; i < _population_table.num_targets(); ++i) {
-    const auto col = _population_table.target(i).clone();
+    const auto col = _population_table.target(i).clone(df.pool());
     df.add_float_column(col, containers::DataFrame::ROLE_TARGET);
   }
 
-  // -------------------------------------------------------
-
   return df;
-
-  // -------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
@@ -898,15 +900,11 @@ void PipelineManager::to_sql(const std::string& _name,
 void PipelineManager::transform(const std::string& _name,
                                 const Poco::JSON::Object& _cmd,
                                 Poco::Net::StreamSocket* _socket) {
-  // -------------------------------------------------------
-
   auto pipeline = get_pipeline(_name);
 
   check_user_privileges(pipeline, _name, _cmd);
 
   communication::Sender::send_string("Found!", _socket);
-
-  // -------------------------------------------------------
 
   multithreading::WeakWriteLock weak_write_lock(read_write_lock_);
 
@@ -927,14 +925,10 @@ void PipelineManager::transform(const std::string& _name,
   cmd = receive_data(cmd, local_categories, local_join_keys_encoding,
                      local_data_frames, _socket);
 
-  // -------------------------------------------------------
-
   const auto [population_df, peripheral_dfs, _] =
       ViewParser(local_categories, local_join_keys_encoding, local_data_frames,
                  options_)
           .parse_all(cmd);
-
-  // -------------------------------------------------------
 
   // IMPORTANT: Use categories_, not local_categories, otherwise
   // .vector() might not work.
@@ -951,15 +945,11 @@ void PipelineManager::transform(const std::string& _name,
   const auto [numerical_features, categorical_features] =
       pipeline.transform(params);
 
-  // -------------------------------------------------------
-
   const auto table_name = JSON::get_value<std::string>(cmd, "table_name_");
 
   const auto df_name = JSON::get_value<std::string>(cmd, "df_name_");
 
   const auto score = JSON::get_value<bool>(cmd, "score_");
-
-  // -------------------------------------------------------
 
   if (table_name == "" && df_name == "" && !score) {
     communication::Sender::send_string("Success!", _socket);
@@ -967,16 +957,12 @@ void PipelineManager::transform(const std::string& _name,
     return;
   }
 
-  // -------------------------------------------------------
-
   if (table_name != "") {
     license_checker().check_enterprise();
 
     to_db(pipeline, cmd, population_df, numerical_features,
           categorical_features, local_categories, local_join_keys_encoding);
   }
-
-  // -------------------------------------------------------
 
   if (df_name != "") {
     license_checker().check_enterprise();
@@ -989,11 +975,7 @@ void PipelineManager::transform(const std::string& _name,
              local_join_keys_encoding, &df, &weak_write_lock);
   }
 
-  // -------------------------------------------------------
-
   communication::Sender::send_string("Success!", _socket);
-
-  // -------------------------------------------------------
 
   weak_write_lock.unlock();
 
@@ -1003,8 +985,6 @@ void PipelineManager::transform(const std::string& _name,
     this->score(cmd, _name, population_df, numerical_features, &pipeline,
                 _socket);
   }
-
-  // -------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------

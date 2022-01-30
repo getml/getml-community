@@ -3,12 +3,12 @@
 // ----------------------------------------------------------------------------
 
 #include "relmt/ensemble/SubtreeHelper.hpp"
+#include "relmt/ensemble/TableHolderParams.hpp"
 
 // ----------------------------------------------------------------------------
 
 namespace relmt {
 namespace ensemble {
-// ----------------------------------------------------------------------------
 
 void Threadutils::copy(const std::vector<size_t> _rows,
                        const std::vector<Float>& _local_feature,
@@ -98,10 +98,23 @@ void Threadutils::transform_as_feature_learner(
       utils::DataFrameScatterer::DataFrameScatterer::scatter_data_frame(
           _params.population_, _params.thread_nums_, _params.this_thread_num_);
 
-  const auto table_holder = TableHolder(
-      _params.ensemble_.placeholder(), population_subview, _params.peripheral_,
-      _params.ensemble_.peripheral(), std::nullopt, _params.word_indices_,
-      _params.feature_container_);
+  const auto make_staging_table_colname =
+      [](const std::string& _colname) -> std::string {
+    return transpilation::SQLite3Generator().make_staging_table_colname(
+        _colname);
+  };
+
+  const auto params = TableHolderParams{
+      .feature_container_ = _params.feature_container_,
+      .make_staging_table_colname_ = make_staging_table_colname,
+      .peripheral_ = _params.peripheral_,
+      .peripheral_names_ = _params.ensemble_.peripheral(),
+      .placeholder_ = _params.ensemble_.placeholder(),
+      .population_ = population_subview,
+      .row_index_container_ = std::nullopt,
+      .word_index_container_ = _params.word_indices_};
+
+  const auto table_holder = TableHolder(params);
 
   auto predictions = _params.ensemble_.make_subpredictions(
       table_holder, _params.logger_, _params.comm_);

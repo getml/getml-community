@@ -7,7 +7,7 @@ namespace utils {
 std::string ConditionMaker::condition_greater(
     const helpers::StringIterator& _categories, const VocabForDf& _vocab_popul,
     const VocabForDf& _vocab_perip,
-    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+    const std::shared_ptr<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator,
     const std::string& _feature_prefix, const helpers::Schema& _input,
     const helpers::Schema& _output, const containers::Split& _split) const {
@@ -192,8 +192,9 @@ std::string ConditionMaker::condition_greater(
     }
 
     case enums::DataUsed::subfeatures: {
-      const auto number = helpers::SQLGenerator::make_subfeature_identifier(
-          _feature_prefix, peripheral_used_);
+      const auto number =
+          transpilation::SQLGenerator::make_subfeature_identifier(
+              _feature_prefix, peripheral_used_);
 
       const auto quote1 = _sql_dialect_generator->quotechar1();
 
@@ -243,7 +244,7 @@ std::string ConditionMaker::condition_greater(
 std::string ConditionMaker::condition_smaller(
     const helpers::StringIterator& _categories, const VocabForDf& _vocab_popul,
     const VocabForDf& _vocab_perip,
-    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+    const std::shared_ptr<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator,
     const std::string& _feature_prefix, const helpers::Schema& _input,
     const helpers::Schema& _output, const containers::Split& _split) const {
@@ -430,8 +431,9 @@ std::string ConditionMaker::condition_smaller(
     }
 
     case enums::DataUsed::subfeatures: {
-      const auto number = helpers::SQLGenerator::make_subfeature_identifier(
-          _feature_prefix, peripheral_used_);
+      const auto number =
+          transpilation::SQLGenerator::make_subfeature_identifier(
+              _feature_prefix, peripheral_used_);
 
       const auto quote1 = _sql_dialect_generator->quotechar1();
 
@@ -505,7 +507,7 @@ std::string ConditionMaker::list_categories(
 
 std::string ConditionMaker::list_words(
     const std::vector<strings::String>& _vocabulary,
-    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+    const std::shared_ptr<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator,
     const containers::Split& _split, const std::string& _name,
     const bool _is_greater) const {
@@ -541,7 +543,7 @@ std::string ConditionMaker::list_words(
 // ----------------------------------------------------------------------------
 
 std::string ConditionMaker::make_colname(
-    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+    const std::shared_ptr<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator,
     const std::string& _colname, const std::string& _alias) const {
   assert_true(_sql_dialect_generator);
@@ -568,13 +570,13 @@ std::string ConditionMaker::make_colname(
   }
 
   return _alias + "." + quote1 +
-         _sql_dialect_generator->make_colname(_colname) + quote2;
+         _sql_dialect_generator->make_staging_table_colname(_colname) + quote2;
 }
 
 // ----------------------------------------------------------------------------
 
 std::string ConditionMaker::make_equation_part(
-    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+    const std::shared_ptr<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator,
     const std::string& _raw_name, const std::string& _alias,
     const Float _weight, const Float _mean, const bool _is_ts) const {
@@ -623,7 +625,7 @@ std::string ConditionMaker::make_equation_part(
 // ----------------------------------------------------------------------------
 
 std::string ConditionMaker::make_equation(
-    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+    const std::shared_ptr<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator,
     const std::string& _feature_prefix, const helpers::Schema& _input,
     const helpers::Schema& _output, const std::vector<Float>& _weights) const {
@@ -688,7 +690,7 @@ std::string ConditionMaker::make_equation(
   }
 
   for (size_t j = 0; i < rescaled_weights.size(); ++i, ++j) {
-    const auto number = helpers::SQLGenerator::make_subfeature_identifier(
+    const auto number = transpilation::SQLGenerator::make_subfeature_identifier(
         _feature_prefix, peripheral_used_);
 
     const auto eq = make_equation_part(
@@ -718,7 +720,7 @@ std::string ConditionMaker::make_time_stamp_diff(const std::string& _colname1,
 // ----------------------------------------------------------------------------
 
 std::string ConditionMaker::make_time_stamp_window(
-    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+    const std::shared_ptr<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator,
     const helpers::Schema& _input, const helpers::Schema& _output,
     const Float _diff, const bool _is_greater) const {
@@ -735,10 +737,10 @@ std::string ConditionMaker::make_time_stamp_window(
   const auto colname2 = _input.time_stamps_name();
 
   const auto diffstr1 =
-      helpers::SQLGenerator::make_time_stamp_diff(_diff, true);
+      transpilation::SQLGenerator::make_time_stamp_diff(_diff, true);
 
   const auto diffstr2 =
-      helpers::SQLGenerator::make_time_stamp_diff(_diff + lag_, true);
+      transpilation::SQLGenerator::make_time_stamp_diff(_diff + lag_, true);
 
   const auto condition1 = make_time_stamp_diff(
       make_colname(colname1, "t1"), make_colname(colname2 + diffstr1, "t2"),

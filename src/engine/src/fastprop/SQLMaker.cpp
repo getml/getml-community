@@ -2,7 +2,6 @@
 
 namespace fastprop {
 namespace containers {
-// ----------------------------------------------------------------------------
 
 std::string SQLMaker::condition(const Condition& _condition) const {
   assert_true(sql_dialect_generator_);
@@ -11,11 +10,12 @@ std::string SQLMaker::condition(const Condition& _condition) const {
 
   const auto quote2 = sql_dialect_generator_->quotechar2();
 
-  const auto make_colname = [this, quote1, quote2](
-                                const std::string& _colname,
-                                const std::string& _alias) -> std::string {
+  const auto make_staging_table_colname =
+      [this, quote1, quote2](const std::string& _colname,
+                             const std::string& _alias) -> std::string {
     return _alias + "." + quote1 +
-           sql_dialect_generator_->make_colname(_colname) + quote2;
+           sql_dialect_generator_->make_staging_table_colname(_colname) +
+           quote2;
   };
 
   switch (_condition.data_used_) {
@@ -31,9 +31,11 @@ std::string SQLMaker::condition(const Condition& _condition) const {
     }
 
     case enums::DataUsed::lag: {
-      const auto col1 = make_colname(output_.time_stamps_name(), "t1");
+      const auto col1 =
+          make_staging_table_colname(output_.time_stamps_name(), "t1");
 
-      const auto col2 = make_colname(input_.time_stamps_name(), "t2");
+      const auto col2 =
+          make_staging_table_colname(input_.time_stamps_name(), "t2");
 
       return "( " + col2 + " + " + std::to_string(_condition.bound_upper_) +
              " > " + col1 + " AND " + col2 + " + " +
@@ -65,24 +67,25 @@ std::string SQLMaker::get_name(const enums::DataUsed _data_used,
 
   const auto quote2 = sql_dialect_generator_->quotechar2();
 
-  const auto make_colname =
+  const auto make_staging_table_colname =
       [this, quote1, quote2](const std::string& _colname) -> std::string {
-    return "t2." + quote1 + sql_dialect_generator_->make_colname(_colname) +
+    return "t2." + quote1 +
+           sql_dialect_generator_->make_staging_table_colname(_colname) +
            quote2 + "";
   };
 
   switch (_data_used) {
     case enums::DataUsed::categorical:
       assert_true(_input_col < input_.num_categoricals());
-      return make_colname(input_.categorical_name(_input_col));
+      return make_staging_table_colname(input_.categorical_name(_input_col));
 
     case enums::DataUsed::discrete:
       assert_true(_input_col < input_.num_discretes());
-      return make_colname(input_.discrete_name(_input_col));
+      return make_staging_table_colname(input_.discrete_name(_input_col));
 
     case enums::DataUsed::numerical:
       assert_true(_input_col < input_.num_numericals());
-      return make_colname(input_.numerical_name(_input_col));
+      return make_staging_table_colname(input_.numerical_name(_input_col));
 
     case enums::DataUsed::subfeatures: {
       const auto number = feature_prefix_ + std::to_string(_peripheral + 1) +
@@ -94,7 +97,7 @@ std::string SQLMaker::get_name(const enums::DataUsed _data_used,
 
     case enums::DataUsed::text:
       assert_true(_input_col < input_.num_text());
-      return make_colname(input_.text_name(_input_col));
+      return make_staging_table_colname(input_.text_name(_input_col));
 
     default:
       assert_true(false && "Unknown DataUsed!");
@@ -114,11 +117,12 @@ std::pair<std::string, std::string> SQLMaker::get_same_units(
 
   const auto quote2 = sql_dialect_generator_->quotechar2();
 
-  const auto make_colname = [this, quote1, quote2](
-                                const std::string& _colname,
-                                const std::string& _alias) -> std::string {
+  const auto make_staging_table_colname =
+      [this, quote1, quote2](const std::string& _colname,
+                             const std::string& _alias) -> std::string {
     return _alias + "." + quote1 +
-           sql_dialect_generator_->make_colname(_colname) + quote2;
+           sql_dialect_generator_->make_staging_table_colname(_colname) +
+           quote2;
   };
 
   switch (_data_used) {
@@ -127,11 +131,11 @@ std::pair<std::string, std::string> SQLMaker::get_same_units(
 
       assert_true(_input_col < input_.num_categoricals());
 
-      const auto name1 =
-          make_colname(output_.categorical_name(_output_col), "t1");
+      const auto name1 = make_staging_table_colname(
+          output_.categorical_name(_output_col), "t1");
 
       const auto name2 =
-          make_colname(input_.categorical_name(_input_col), "t2");
+          make_staging_table_colname(input_.categorical_name(_input_col), "t2");
 
       return std::make_pair(name1, name2);
     }
@@ -141,9 +145,11 @@ std::pair<std::string, std::string> SQLMaker::get_same_units(
 
       assert_true(_input_col < input_.num_discretes());
 
-      const auto name1 = make_colname(output_.discrete_name(_output_col), "t1");
+      const auto name1 =
+          make_staging_table_colname(output_.discrete_name(_output_col), "t1");
 
-      const auto name2 = make_colname(input_.discrete_name(_input_col), "t2");
+      const auto name2 =
+          make_staging_table_colname(input_.discrete_name(_input_col), "t2");
 
       return std::make_pair(name1, name2);
     }
@@ -153,9 +159,11 @@ std::pair<std::string, std::string> SQLMaker::get_same_units(
 
       assert_true(_input_col < input_.num_discretes());
 
-      const auto name1 = make_colname(output_.discrete_name(_output_col), "t1");
+      const auto name1 =
+          make_staging_table_colname(output_.discrete_name(_output_col), "t1");
 
-      const auto name2 = make_colname(input_.discrete_name(_input_col), "t2");
+      const auto name2 =
+          make_staging_table_colname(input_.discrete_name(_input_col), "t2");
 
       return std::make_pair(name1, name2);
     }
@@ -166,9 +174,10 @@ std::pair<std::string, std::string> SQLMaker::get_same_units(
       assert_true(_input_col < input_.num_numericals());
 
       const auto name1 =
-          make_colname(output_.numerical_name(_output_col), "t1");
+          make_staging_table_colname(output_.numerical_name(_output_col), "t1");
 
-      const auto name2 = make_colname(input_.numerical_name(_input_col), "t2");
+      const auto name2 =
+          make_staging_table_colname(input_.numerical_name(_input_col), "t2");
 
       return std::make_pair(name1, name2);
     }
@@ -179,9 +188,10 @@ std::pair<std::string, std::string> SQLMaker::get_same_units(
       assert_true(_input_col < input_.num_numericals());
 
       const auto name1 =
-          make_colname(output_.numerical_name(_output_col), "t1");
+          make_staging_table_colname(output_.numerical_name(_output_col), "t1");
 
-      const auto name2 = make_colname(input_.numerical_name(_input_col), "t2");
+      const auto name2 =
+          make_staging_table_colname(input_.numerical_name(_input_col), "t2");
 
       return std::make_pair(name1, name2);
     }
@@ -203,9 +213,10 @@ std::string SQLMaker::select_avg_time_between() const {
 
   const auto quote2 = sql_dialect_generator_->quotechar2();
 
-  const auto ts_name =
-      "t2." + quote1 +
-      sql_dialect_generator_->make_colname(input_.time_stamps_name()) + quote2;
+  const auto ts_name = "t2." + quote1 +
+                       sql_dialect_generator_->make_staging_table_colname(
+                           input_.time_stamps_name()) +
+                       quote2;
 
   return "CASE WHEN COUNT( * ) > 1 THEN ( MAX( " + ts_name + " ) - MIN ( " +
          ts_name + " ) ) / ( COUNT( * ) - 1 )  ELSE 0 END";
@@ -221,20 +232,21 @@ std::string SQLMaker::make_additional_argument(
 
   const auto quote2 = sql_dialect_generator_->quotechar2();
 
-  const auto make_colname = [this, quote1, quote2](
-                                const std::string& _colname,
-                                const std::string& _alias) -> std::string {
+  const auto make_staging_table_colname =
+      [this, quote1, quote2](const std::string& _colname,
+                             const std::string& _alias) -> std::string {
     return _alias + "." + quote1 +
-           sql_dialect_generator_->make_colname(_colname) + quote2;
+           sql_dialect_generator_->make_staging_table_colname(_colname) +
+           quote2;
   };
 
   if (_aggregation == enums::Aggregation::first ||
       _aggregation == enums::Aggregation::last) {
-    return make_colname(input_.time_stamps_name(), "t2");
+    return make_staging_table_colname(input_.time_stamps_name(), "t2");
   }
 
-  return make_colname(output_.time_stamps_name(), "t1") + " - " +
-         make_colname(input_.time_stamps_name(), "t2");
+  return make_staging_table_colname(output_.time_stamps_name(), "t1") + " - " +
+         make_staging_table_colname(input_.time_stamps_name(), "t2");
 }
 
 // ----------------------------------------------------------------------------
@@ -242,10 +254,10 @@ std::string SQLMaker::make_additional_argument(
 std::string SQLMaker::select_statement(
     const AbstractFeature& _abstract_feature) const {
   if (_abstract_feature.aggregation_ == enums::Aggregation::avg_time_between) {
-    const auto ts_name =
-        "t2." + sql_dialect_generator_->quotechar1() +
-        sql_dialect_generator_->make_colname(input_.time_stamps_name()) +
-        sql_dialect_generator_->quotechar2();
+    const auto ts_name = "t2." + sql_dialect_generator_->quotechar1() +
+                         sql_dialect_generator_->make_staging_table_colname(
+                             input_.time_stamps_name()) +
+                         sql_dialect_generator_->quotechar2();
 
     return sql_dialect_generator_->aggregation(
         _abstract_feature.aggregation_,

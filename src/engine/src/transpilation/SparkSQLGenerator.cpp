@@ -1,142 +1,143 @@
-#include "helpers/SparkSQLGenerator.hpp"
+#include "transpilation/SparkSQLGenerator.hpp"
 
 // ----------------------------------------------------------------------------
 
+#include "helpers/Macros.hpp"
+#include "helpers/StringReplacer.hpp"
 #include "stl/stl.hpp"
 #include "textmining/textmining.hpp"
 
 // ----------------------------------------------------------------------------
 
-#include "helpers/Macros.hpp"
-#include "helpers/SQLGenerator.hpp"
-#include "helpers/StringReplacer.hpp"
+#include "transpilation/SQLGenerator.hpp"
 
 // ----------------------------------------------------------------------------
-namespace helpers {
-// ----------------------------------------------------------------------------
+
+namespace transpilation {
 
 std::string SparkSQLGenerator::aggregation(
-    const enums::Aggregation& _agg, const std::string& _colname1,
+    const helpers::enums::Aggregation& _agg, const std::string& _colname1,
     const std::optional<std::string>& _colname2) const {
   switch (_agg) {
-    case enums::Aggregation::avg_time_between:
+    case helpers::enums::Aggregation::avg_time_between:
       assert_true(_colname2);
       return avg_time_between_aggregation(_colname1, _colname2.value());
 
-    case enums::Aggregation::count_above_mean:
+    case helpers::enums::Aggregation::count_above_mean:
       return count_above_below_mean_aggregation(_colname1, true);
 
-    case enums::Aggregation::count_below_mean:
+    case helpers::enums::Aggregation::count_below_mean:
       return count_above_below_mean_aggregation(_colname1, false);
 
-    case enums::Aggregation::count_distinct:
+    case helpers::enums::Aggregation::count_distinct:
       return "COUNT( DISTINCT " + _colname1 + " )";
 
-    case enums::Aggregation::count_distinct_over_count:
+    case helpers::enums::Aggregation::count_distinct_over_count:
       return "CASE WHEN COUNT( " + _colname1 +
              ") == 0 THEN 0 ELSE COUNT( DISTINCT " + _colname1 +
              " ) / COUNT( " + _colname1 + " ) END";
 
-    case enums::Aggregation::count_minus_count_distinct:
+    case helpers::enums::Aggregation::count_minus_count_distinct:
       return "COUNT( " + _colname1 + " ) - COUNT( DISTINCT " + _colname1 + " )";
 
-    case enums::Aggregation::ewma1s:
-    case enums::Aggregation::ewma1m:
-    case enums::Aggregation::ewma1h:
-    case enums::Aggregation::ewma1d:
-    case enums::Aggregation::ewma7d:
-    case enums::Aggregation::ewma30d:
-    case enums::Aggregation::ewma90d:
-    case enums::Aggregation::ewma365d:
+    case helpers::enums::Aggregation::ewma1s:
+    case helpers::enums::Aggregation::ewma1m:
+    case helpers::enums::Aggregation::ewma1h:
+    case helpers::enums::Aggregation::ewma1d:
+    case helpers::enums::Aggregation::ewma7d:
+    case helpers::enums::Aggregation::ewma30d:
+    case helpers::enums::Aggregation::ewma90d:
+    case helpers::enums::Aggregation::ewma365d:
       assert_true(_colname2);
       return make_ewma_aggregation(_agg, _colname1, _colname2.value());
 
-    case enums::Aggregation::first:
+    case helpers::enums::Aggregation::first:
       assert_true(_colname2);
       return first_last_aggregation(_colname1, _colname2.value(), true);
 
-    case enums::Aggregation::kurtosis:
+    case helpers::enums::Aggregation::kurtosis:
       return "KURTOSIS(" + _colname1 + " ) + 3.0";
 
-    case enums::Aggregation::last:
+    case helpers::enums::Aggregation::last:
       assert_true(_colname2);
       return first_last_aggregation(_colname1, _colname2.value(), false);
 
-    case enums::Aggregation::median:
+    case helpers::enums::Aggregation::median:
       return "PERCENTILE( " + _colname1 + ", 0.5 )";
 
-    case enums::Aggregation::mode:
+    case helpers::enums::Aggregation::mode:
       return mode_aggregation(_colname1);
 
-    case enums::Aggregation::num_max:
+    case helpers::enums::Aggregation::num_max:
       return num_max_min_aggregation(_colname1, true);
 
-    case enums::Aggregation::num_min:
+    case helpers::enums::Aggregation::num_min:
       return num_max_min_aggregation(_colname1, false);
 
-    case enums::Aggregation::q1:
+    case helpers::enums::Aggregation::q1:
       return "PERCENTILE( " + _colname1 + ", 0.01 )";
 
-    case enums::Aggregation::q5:
+    case helpers::enums::Aggregation::q5:
       return "PERCENTILE( " + _colname1 + ", 0.05 )";
 
-    case enums::Aggregation::q10:
+    case helpers::enums::Aggregation::q10:
       return "PERCENTILE( " + _colname1 + ", 0.1 )";
 
-    case enums::Aggregation::q25:
+    case helpers::enums::Aggregation::q25:
       return "PERCENTILE( " + _colname1 + ", 0.25 )";
 
-    case enums::Aggregation::q75:
+    case helpers::enums::Aggregation::q75:
       return "PERCENTILE( " + _colname1 + ", 0.75 )";
 
-    case enums::Aggregation::q90:
+    case helpers::enums::Aggregation::q90:
       return "PERCENTILE( " + _colname1 + ", 0.9 )";
 
-    case enums::Aggregation::q95:
+    case helpers::enums::Aggregation::q95:
       return "PERCENTILE( " + _colname1 + ", 0.95 )";
 
-    case enums::Aggregation::q99:
+    case helpers::enums::Aggregation::q99:
       return "PERCENTILE( " + _colname1 + ", 0.99 )";
 
-    case enums::Aggregation::skew:
+    case helpers::enums::Aggregation::skew:
       return "SKEWNESS( " + _colname1 + " )";
 
-    case enums::Aggregation::stddev:
+    case helpers::enums::Aggregation::stddev:
       return "STDDEV_POP( " + _colname1 + " )";
 
-    case enums::Aggregation::time_since_first_maximum:
+    case helpers::enums::Aggregation::time_since_first_maximum:
       assert_true(_colname2);
       return first_or_last_optimum_aggregation(_colname1, _colname2.value(),
                                                true, false);
 
-    case enums::Aggregation::time_since_first_minimum:
+    case helpers::enums::Aggregation::time_since_first_minimum:
       assert_true(_colname2);
       return first_or_last_optimum_aggregation(_colname1, _colname2.value(),
                                                true, true);
 
-    case enums::Aggregation::time_since_last_maximum:
+    case helpers::enums::Aggregation::time_since_last_maximum:
       assert_true(_colname2);
       return first_or_last_optimum_aggregation(_colname1, _colname2.value(),
                                                false, false);
 
-    case enums::Aggregation::time_since_last_minimum:
+    case helpers::enums::Aggregation::time_since_last_minimum:
       assert_true(_colname2);
       return first_or_last_optimum_aggregation(_colname1, _colname2.value(),
                                                false, true);
 
-    case enums::Aggregation::trend:
+    case helpers::enums::Aggregation::trend:
       assert_true(_colname2);
       return make_trend_aggregation(_colname1, _colname2.value());
 
-    case enums::Aggregation::var:
+    case helpers::enums::Aggregation::var:
       return "VAR_POP( " + _colname1 + " )";
 
-    case enums::Aggregation::variation_coefficient:
+    case helpers::enums::Aggregation::variation_coefficient:
       return "CASE WHEN AVG( " + _colname1 + " ) != 0 THEN VAR_POP( " +
              _colname1 + " ) / AVG( " + _colname1 + " ) ELSE NULL END";
 
     default:
-      const auto agg_type = enums::Parser<enums::Aggregation>::to_str(_agg);
+      const auto agg_type =
+          helpers::enums::Parser<helpers::enums::Aggregation>::to_str(_agg);
       return helpers::StringReplacer::replace_all(agg_type, " ", "_") + "( " +
              _colname1 + " )";
   }
@@ -181,135 +182,154 @@ std::string SparkSQLGenerator::count_above_below_mean_aggregation(
 
 // ----------------------------------------------------------------------------
 
+std::string SparkSQLGenerator::create_table(
+    const helpers::enums::Aggregation& _agg, const std::string& _feature_prefix,
+    const std::string& _feature_num) const {
+  std::stringstream sql;
+  sql << "CREATE TABLE " << quotechar1() << "FEATURE_" << _feature_prefix
+      << _feature_num << quotechar2() << " AS" << std::endl;
+  return sql.str();
+}
+
+// ----------------------------------------------------------------------------
+
 std::tuple<std::string, std::string, std::string>
 SparkSQLGenerator::demangle_colname(const std::string& _raw_name) const {
-  // --------------------------------------------------------------
-
   const auto m_pos = _raw_name.find("__mapping_");
 
-  auto new_name =
-      (m_pos != std::string::npos)
-          ? make_colname(_raw_name.substr(0, m_pos)) + _raw_name.substr(m_pos)
-          : _raw_name;
+  auto new_name = (m_pos != std::string::npos)
+                      ? make_staging_table_colname(_raw_name.substr(0, m_pos)) +
+                            _raw_name.substr(m_pos)
+                      : _raw_name;
 
-  // --------------------------------------------------------------
+  new_name = helpers::Macros::prefix() + new_name + helpers::Macros::postfix();
 
-  new_name = Macros::prefix() + new_name + Macros::postfix();
+  new_name = helpers::StringReplacer::replace_all(
+      new_name, helpers::Macros::generated_ts(), "");
 
-  new_name = StringReplacer::replace_all(new_name, Macros::generated_ts(), "");
+  new_name = helpers::StringReplacer::replace_all(
+      new_name, helpers::Macros::rowid(), "rowid");
 
-  new_name = StringReplacer::replace_all(new_name, Macros::rowid(), "rowid");
+  new_name = helpers::StringReplacer::replace_all(
+      new_name, helpers::Macros::open_bracket(),
+      "( " + helpers::Macros::prefix());
 
-  new_name = StringReplacer::replace_all(new_name, Macros::open_bracket(),
-                                         "( " + Macros::prefix());
+  new_name = helpers::StringReplacer::replace_all(
+      new_name, helpers::Macros::close_bracket(),
+      helpers::Macros::postfix() + " )");
 
-  new_name = StringReplacer::replace_all(new_name, Macros::close_bracket(),
-                                         Macros::postfix() + " )");
+  new_name = helpers::StringReplacer::replace_all(
+      new_name, helpers::Macros::email_domain_begin(),
+      "email_domain( " + helpers::Macros::prefix());
 
-  new_name = StringReplacer::replace_all(new_name, Macros::email_domain_begin(),
-                                         "email_domain( " + Macros::prefix());
+  new_name = helpers::StringReplacer::replace_all(
+      new_name, helpers::Macros::email_domain_end(),
+      helpers::Macros::postfix() + " )");
 
-  new_name = StringReplacer::replace_all(new_name, Macros::email_domain_end(),
-                                         Macros::postfix() + " )");
+  new_name = helpers::StringReplacer::replace_all(
+      new_name, helpers::Macros::imputation_begin(),
+      "COALESCE( " + helpers::Macros::prefix());
 
-  new_name = StringReplacer::replace_all(new_name, Macros::imputation_begin(),
-                                         "COALESCE( " + Macros::prefix());
+  new_name = helpers::StringReplacer::replace_all(
+      new_name, helpers::Macros::imputation_replacement(),
+      helpers::Macros::postfix() + ", ");
 
-  new_name = StringReplacer::replace_all(
-      new_name, Macros::imputation_replacement(), Macros::postfix() + ", ");
+  new_name = helpers::StringReplacer::replace_all(
+      new_name, helpers::Macros::imputation_end(),
+      helpers::Macros::postfix() + " )");
 
-  new_name = StringReplacer::replace_all(new_name, Macros::imputation_end(),
-                                         Macros::postfix() + " )");
+  new_name = helpers::StringReplacer::replace_all(
+      new_name, helpers::Macros::dummy_begin(),
+      "( CASE WHEN " + helpers::Macros::prefix());
 
-  new_name = StringReplacer::replace_all(new_name, Macros::dummy_begin(),
-                                         "( CASE WHEN " + Macros::prefix());
+  new_name = helpers::StringReplacer::replace_all(
+      new_name, helpers::Macros::dummy_end(),
+      helpers::Macros::postfix() + " IS NULL THEN 1 ELSE 0 END )");
 
-  new_name = StringReplacer::replace_all(
-      new_name, Macros::dummy_end(),
-      Macros::postfix() + " IS NULL THEN 1 ELSE 0 END )");
+  new_name = helpers::StringReplacer::replace_all(
+      new_name, helpers::Macros::diffstr(), helpers::Macros::postfix());
 
-  new_name = StringReplacer::replace_all(new_name, Macros::diffstr(),
-                                         Macros::postfix());
+  new_name = helpers::StringReplacer::replace_all(
+      new_name, helpers::Macros::substring(),
+      "substr( " + helpers::Macros::prefix());
 
-  new_name = StringReplacer::replace_all(new_name, Macros::substring(),
-                                         "substr( " + Macros::prefix());
+  new_name = helpers::StringReplacer::replace_all(
+      new_name, helpers::Macros::begin(), helpers::Macros::postfix() + ", ");
 
-  new_name = StringReplacer::replace_all(new_name, Macros::begin(),
-                                         Macros::postfix() + ", ");
+  new_name = helpers::StringReplacer::replace_all(
+      new_name, helpers::Macros::length(), helpers::Macros::postfix() + ", ");
 
-  new_name = StringReplacer::replace_all(new_name, Macros::length(),
-                                         Macros::postfix() + ", ");
+  new_name = helpers::StringReplacer::replace_all(
+      new_name, helpers::Macros::hour_begin(),
+      "lpad( string( hour( " + helpers::Macros::prefix());
 
-  // --------------------------------------------------------------
+  new_name = helpers::StringReplacer::replace_all(
+      new_name, helpers::Macros::hour_end(),
+      helpers::Macros::postfix() + ") ), 2, '0' )");
 
-  new_name =
-      StringReplacer::replace_all(new_name, Macros::hour_begin(),
-                                  "lpad( string( hour( " + Macros::prefix());
+  new_name = helpers::StringReplacer::replace_all(
+      new_name, helpers::Macros::minute_begin(),
+      "lpad( string( minute( " + helpers::Macros::prefix());
 
-  new_name = StringReplacer::replace_all(new_name, Macros::hour_end(),
-                                         Macros::postfix() + ") ), 2, '0' )");
+  new_name = helpers::StringReplacer::replace_all(
+      new_name, helpers::Macros::minute_end(),
+      helpers::Macros::postfix() + ") ), 2, '0' )");
 
-  new_name =
-      StringReplacer::replace_all(new_name, Macros::minute_begin(),
-                                  "lpad( string( minute( " + Macros::prefix());
+  new_name = helpers::StringReplacer::replace_all(
+      new_name, helpers::Macros::month_begin(),
+      "date_format( " + helpers::Macros::prefix());
 
-  new_name = StringReplacer::replace_all(new_name, Macros::minute_end(),
-                                         Macros::postfix() + ") ), 2, '0' )");
+  new_name = helpers::StringReplacer::replace_all(
+      new_name, helpers::Macros::month_end(),
+      helpers::Macros::postfix() + ", \"MM\" ) /* month */");
 
-  new_name = StringReplacer::replace_all(new_name, Macros::month_begin(),
-                                         "date_format( " + Macros::prefix());
+  new_name = helpers::StringReplacer::replace_all(
+      new_name, helpers::Macros::weekday_begin(),
+      "dayofweek( " + helpers::Macros::prefix());
 
-  new_name =
-      StringReplacer::replace_all(new_name, Macros::month_end(),
-                                  Macros::postfix() + ", \"MM\" ) /* month */");
+  new_name = helpers::StringReplacer::replace_all(
+      new_name, helpers::Macros::weekday_end(),
+      helpers::Macros::postfix() + " ) - 1");
 
-  new_name = StringReplacer::replace_all(new_name, Macros::weekday_begin(),
-                                         "dayofweek( " + Macros::prefix());
+  new_name = helpers::StringReplacer::replace_all(
+      new_name, helpers::Macros::year_begin(),
+      "date_format( " + helpers::Macros::prefix());
 
-  new_name = StringReplacer::replace_all(new_name, Macros::weekday_end(),
-                                         Macros::postfix() + " ) - 1");
+  new_name = helpers::StringReplacer::replace_all(
+      new_name, helpers::Macros::year_end(),
+      helpers::Macros::postfix() + ", \"yyyy\" ) /* year */");
 
-  new_name = StringReplacer::replace_all(new_name, Macros::year_begin(),
-                                         "date_format( " + Macros::prefix());
+  const auto pos1 = new_name.rfind(helpers::Macros::prefix()) +
+                    helpers::Macros::prefix().size();
 
-  new_name = StringReplacer::replace_all(
-      new_name, Macros::year_end(),
-      Macros::postfix() + ", \"yyyy\" ) /* year */");
+  const auto pos2 = new_name.find(helpers::Macros::postfix());
 
-  // --------------------------------------------------------------
-
-  const auto pos1 = new_name.rfind(Macros::prefix()) + Macros::prefix().size();
-
-  const auto pos2 = new_name.find(Macros::postfix());
-
-  throw_unless(pos2 >= pos1, "Error: Macros in colname do not make sense!");
+  throw_unless(pos2 >= pos1,
+               "Error: helpers::Macros in colname do not make sense!");
 
   const auto length = pos2 - pos1;
 
-  const auto prefix = StringReplacer::replace_all(new_name.substr(0, pos1),
-                                                  Macros::prefix(), "");
+  const auto prefix = helpers::StringReplacer::replace_all(
+      new_name.substr(0, pos1), helpers::Macros::prefix(), "");
 
-  const auto postfix =
-      StringReplacer::replace_all(new_name.substr(pos2), Macros::postfix(), "");
+  const auto postfix = helpers::StringReplacer::replace_all(
+      new_name.substr(pos2), helpers::Macros::postfix(), "");
 
   new_name = new_name.substr(pos1, length);
 
-  // --------------------------------------------------------------
-
   const auto has_col_param =
-      (new_name.find(Macros::column()) != std::string::npos);
+      (new_name.find(helpers::Macros::column()) != std::string::npos);
 
-  new_name =
-      has_col_param ? Macros::get_param(new_name, Macros::column()) : new_name;
-
-  // --------------------------------------------------------------
+  new_name = has_col_param ? helpers::Macros::get_param(
+                                 new_name, helpers::Macros::column())
+                           : new_name;
 
   const auto edited_postfix = [&_raw_name, &postfix]() -> std::string {
-    if (_raw_name.find(Macros::diffstr()) == std::string::npos) {
+    if (_raw_name.find(helpers::Macros::diffstr()) == std::string::npos) {
       return postfix;
     }
 
-    if (_raw_name.find(Macros::rowid()) != std::string::npos) {
+    if (_raw_name.find(helpers::Macros::rowid()) != std::string::npos) {
       return postfix;
     }
 
@@ -327,11 +347,7 @@ SparkSQLGenerator::demangle_colname(const std::string& _raw_name) const {
     return interval + postfix.substr(pos);
   };
 
-  // --------------------------------------------------------------
-
   return std::make_tuple(prefix, new_name, edited_postfix());
-
-  // --------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -359,53 +375,47 @@ std::string SparkSQLGenerator::drop_batch_tables(
 
 // ----------------------------------------------------------------------------
 
-std::string SparkSQLGenerator::edit_colname(const std::string& _raw_name,
-                                            const std::string& _alias) const {
-  // --------------------------------------------------------------
-
-  if (_raw_name.find(Macros::no_join_key()) != std::string::npos) {
+std::string SparkSQLGenerator::make_staging_table_column(
+    const std::string& _raw_name, const std::string& _alias) const {
+  if (_raw_name.find(helpers::Macros::no_join_key()) != std::string::npos) {
     return "1";
   }
 
-  if (_raw_name.find(Macros::self_join_key()) != std::string::npos) {
+  if (_raw_name.find(helpers::Macros::self_join_key()) != std::string::npos) {
     return "1";
   }
-
-  // --------------------------------------------------------------
 
   const auto [prefix, new_name, postfix] = demangle_colname(_raw_name);
 
-  // --------------------------------------------------------------
-
   const bool need_alias = (_alias != "");
 
-  const bool has_alias = (_raw_name.find(Macros::alias()) != std::string::npos);
+  const bool has_alias =
+      (_raw_name.find(helpers::Macros::alias()) != std::string::npos);
 
   const bool not_t1_or_t2 =
       has_alias &&
-      (Macros::get_param(_raw_name, Macros::alias()) != Macros::t1_or_t2());
+      (helpers::Macros::get_param(_raw_name, helpers::Macros::alias()) !=
+       helpers::Macros::t1_or_t2());
 
   const bool extract_alias = need_alias && has_alias && not_t1_or_t2;
 
-  const auto alias =
-      extract_alias ? Macros::get_param(_raw_name, Macros::alias()) : _alias;
+  const auto alias = extract_alias ? helpers::Macros::get_param(
+                                         _raw_name, helpers::Macros::alias())
+                                   : _alias;
 
   const auto dot = (alias == "") ? "" : ".";
 
   const auto quotation =
-      (_raw_name.find(Macros::rowid()) != std::string::npos || alias == "")
+      (_raw_name.find(helpers::Macros::rowid()) != std::string::npos ||
+       alias == "")
           ? ""
           : "`";
 
   const auto only_alphanumeric =
       SQLGenerator::replace_non_alphanumeric(new_name);
 
-  // --------------------------------------------------------------
-
   return prefix + alias + dot + quotation + only_alphanumeric + quotation +
          postfix;
-
-  // --------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -429,7 +439,7 @@ std::string SparkSQLGenerator::first_last_aggregation(
 
   return "/* " + first_or_last + "*/ ELEMENT_AT( " + array_sort + ", " + index +
          " ).value";
-};
+}
 
 // ----------------------------------------------------------------------------
 
@@ -465,7 +475,7 @@ std::string SparkSQLGenerator::first_or_last_optimum_aggregation(
 
   return "/* " + comment + " */ AGGREGATE( " + zip_with + ", " + init + ", " +
          fold + ", " + extract + " )";
-};
+}
 
 // ----------------------------------------------------------------------------
 
@@ -496,10 +506,8 @@ std::string SparkSQLGenerator::join_batch_tables(
 std::string SparkSQLGenerator::join_mapping(const std::string& _name,
                                             const std::string& _colname,
                                             const bool _is_text) const {
-  // ------------------------------------------------------------------------
-
   const bool is_text_field =
-      (_name.find(Macros::text_field()) != std::string::npos);
+      (_name.find(helpers::Macros::text_field()) != std::string::npos);
 
   const auto table_name =
       SQLGenerator::to_upper(SQLGenerator::make_staging_table_name(_name));
@@ -514,8 +522,6 @@ std::string SparkSQLGenerator::join_mapping(const std::string& _name,
 
   const auto orig_col = mapping_col.substr(0, pos);
 
-  // ------------------------------------------------------------------------
-
   const auto alter_tables = [&temp_table_name, &table_name]() -> std::string {
     std::stringstream sql;
 
@@ -527,8 +533,6 @@ std::string SparkSQLGenerator::join_mapping(const std::string& _name,
 
     return sql.str();
   };
-
-  // ------------------------------------------------------------------------
 
   const auto join_text = [&table_name, &temp_table_name, &mapping_col,
                           &orig_col]() -> std::string {
@@ -560,8 +564,6 @@ std::string SparkSQLGenerator::join_mapping(const std::string& _name,
     return sql.str();
   };
 
-  // ------------------------------------------------------------------------
-
   const auto join_other = [&table_name, &temp_table_name, &mapping_col,
                            &orig_col]() -> std::string {
     std::stringstream sql;
@@ -578,8 +580,6 @@ std::string SparkSQLGenerator::join_mapping(const std::string& _name,
     return sql.str();
   };
 
-  // ------------------------------------------------------------------------
-
   const auto drop_tables = [&temp_table_name, &mapping_col]() -> std::string {
     std::stringstream sql;
 
@@ -593,11 +593,7 @@ std::string SparkSQLGenerator::join_mapping(const std::string& _name,
     return sql.str();
   };
 
-  // ------------------------------------------------------------------------
-
   const auto join = (_is_text && !is_text_field) ? join_text() : join_other();
-
-  // ------------------------------------------------------------------------
 
   std::stringstream sql;
 
@@ -609,7 +605,7 @@ std::string SparkSQLGenerator::join_mapping(const std::string& _name,
 // ----------------------------------------------------------------------------
 
 std::string SparkSQLGenerator::make_ewma_aggregation(
-    const enums::Aggregation& _agg, const std::string& _value,
+    const helpers::enums::Aggregation& _agg, const std::string& _value,
     const std::string& _timestamp) const {
   constexpr Float t1s = 1.0;
   constexpr Float t1m = t1s * 60.0;
@@ -632,35 +628,35 @@ std::string SparkSQLGenerator::make_ewma_aggregation(
   };
 
   switch (_agg) {
-    case enums::Aggregation::ewma1s:
+    case helpers::enums::Aggregation::ewma1s:
       return make_ewma(_value, _timestamp, t1s);
 
-    case enums::Aggregation::ewma1m:
+    case helpers::enums::Aggregation::ewma1m:
       return make_ewma(_value, _timestamp, t1m);
 
-    case enums::Aggregation::ewma1h:
+    case helpers::enums::Aggregation::ewma1h:
       return make_ewma(_value, _timestamp, t1h);
 
-    case enums::Aggregation::ewma1d:
+    case helpers::enums::Aggregation::ewma1d:
       return make_ewma(_value, _timestamp, t1d);
 
-    case enums::Aggregation::ewma7d:
+    case helpers::enums::Aggregation::ewma7d:
       return make_ewma(_value, _timestamp, t7d);
 
-    case enums::Aggregation::ewma30d:
+    case helpers::enums::Aggregation::ewma30d:
       return make_ewma(_value, _timestamp, t30d);
 
-    case enums::Aggregation::ewma90d:
+    case helpers::enums::Aggregation::ewma90d:
       return make_ewma(_value, _timestamp, t90d);
 
-    case enums::Aggregation::ewma365d:
+    case helpers::enums::Aggregation::ewma365d:
       return make_ewma(_value, _timestamp, t365d);
 
     default:
       assert_true(false);
       return "";
   }
-};
+}
 
 // ----------------------------------------------------------------------------
 
@@ -723,23 +719,26 @@ std::string SparkSQLGenerator::make_batch_tables(
 }
 // ----------------------------------------------------------------------------
 
-std::string SparkSQLGenerator::make_colname(
+std::string SparkSQLGenerator::make_staging_table_colname(
     const std::string& _raw_name) const {
   const auto [prefix, new_name, postfix] = demangle_colname(_raw_name);
 
-  const bool has_alias = (_raw_name.find(Macros::alias()) != std::string::npos);
+  const bool has_alias =
+      (_raw_name.find(helpers::Macros::alias()) != std::string::npos);
 
   const bool not_t1_or_t2 =
       has_alias &&
-      (Macros::get_param(_raw_name, Macros::alias()) != Macros::t1_or_t2());
+      (helpers::Macros::get_param(_raw_name, helpers::Macros::alias()) !=
+       helpers::Macros::t1_or_t2());
 
   const bool is_not_mapping =
       (_raw_name.find("__mapping_") == std::string::npos);
 
   const bool extract_alias = has_alias && not_t1_or_t2 && is_not_mapping;
 
-  const auto alias =
-      extract_alias ? Macros::get_param(_raw_name, Macros::alias()) : "";
+  const auto alias = extract_alias ? helpers::Macros::get_param(
+                                         _raw_name, helpers::Macros::alias())
+                                   : "";
 
   const auto underscore = (alias == "") ? "" : "__";
 
@@ -765,14 +764,14 @@ std::string SparkSQLGenerator::make_joins(
 
   sql << "INNER JOIN `" << input_name << "` t2" << std::endl;
 
-  if (_output_join_keys_name == Macros::no_join_key() ||
-      _output_join_keys_name == Macros::self_join_key()) {
+  if (_output_join_keys_name == helpers::Macros::no_join_key() ||
+      _output_join_keys_name == helpers::Macros::self_join_key()) {
     assert_true(_output_join_keys_name == _input_join_keys_name);
 
     sql << "ON 1 = 1" << std::endl;
   } else {
-    assert_true(_input_join_keys_name != Macros::no_join_key() &&
-                _input_join_keys_name != Macros::self_join_key());
+    assert_true(_input_join_keys_name != helpers::Macros::no_join_key() &&
+                _input_join_keys_name != helpers::Macros::self_join_key());
 
     sql << SQLGenerator::handle_multiple_join_keys(
         _output_join_keys_name, _input_join_keys_name, "t1", "t2",
@@ -802,6 +801,19 @@ std::string SparkSQLGenerator::make_mapping_table_header(
       << " NOT NULL, value DOUBLE);" << std::endl
       << std::endl;
 
+  return sql.str();
+}
+
+// ----------------------------------------------------------------------------
+
+std::string SparkSQLGenerator::make_mapping_table_insert_into(
+    const std::string& _name) const {
+  const auto quote1 = quotechar1();
+
+  const auto quote2 = quotechar2();
+
+  std::stringstream sql;
+
   sql << "INSERT INTO " << quote1 << _name << quote2 << " (key, value)"
       << std::endl
       << "VALUES";
@@ -813,43 +825,34 @@ std::string SparkSQLGenerator::make_mapping_table_header(
 
 std::vector<std::string> SparkSQLGenerator::make_staging_columns(
     const bool& _include_targets, const helpers::Schema& _schema) const {
-  // ------------------------------------------------------------------------
-
   const auto cast_column = [this](const std::string& _colname,
                                   const std::string& _coltype,
                                   const bool _replace) -> std::string {
-    const auto edited = edit_colname(_colname, "t1");
+    const auto edited = make_staging_table_column(_colname, "t1");
     const auto replaced = _replace ? replace_separators(edited) : edited;
     return "CAST( " + replaced + " AS " + _coltype + " ) AS `" +
-           SQLGenerator::to_lower(make_colname(_colname)) + "`";
+           SQLGenerator::to_lower(make_staging_table_colname(_colname)) + "`";
   };
-
-  // ------------------------------------------------------------------------
 
   const auto is_rowid = [](const std::string& _colname) -> bool {
-    return _colname.find(Macros::rowid()) != std::string::npos;
+    return _colname.find(helpers::Macros::rowid()) != std::string::npos;
   };
-
-  // ------------------------------------------------------------------------
 
   const auto is_not_rowid = [&is_rowid](const std::string& _colname) -> bool {
     return !is_rowid(_colname);
   };
 
-  // ------------------------------------------------------------------------
-
   const auto to_epoch_time_or_rowid =
       [this, &is_rowid](const std::string& _colname) -> std::string {
     const auto epoch_time =
         is_rowid(_colname)
-            ? edit_colname(_colname, "t1")
-            : "to_timestamp( " + edit_colname(_colname, "t1") + " )";
+            ? make_staging_table_column(_colname, "t1")
+            : "to_timestamp( " + make_staging_table_column(_colname, "t1") +
+                  " )";
 
     return "CAST( " + epoch_time + " AS DOUBLE ) AS `" +
-           SQLGenerator::to_lower(make_colname(_colname)) + "`";
+           SQLGenerator::to_lower(make_staging_table_colname(_colname)) + "`";
   };
-
-  // ------------------------------------------------------------------------
 
   const auto cast_as_real =
       [cast_column](const std::vector<std::string>& _colnames)
@@ -862,8 +865,6 @@ std::vector<std::string> SparkSQLGenerator::make_staging_columns(
         VIEWS::transform(cast));
   };
 
-  // ------------------------------------------------------------------------
-
   const auto cast_as_time_stamp =
       [to_epoch_time_or_rowid](const std::vector<std::string>& _colnames)
       -> std::vector<std::string> {
@@ -871,8 +872,6 @@ std::vector<std::string> SparkSQLGenerator::make_staging_columns(
         _colnames | VIEWS::filter(SQLGenerator::include_column) |
         VIEWS::transform(to_epoch_time_or_rowid));
   };
-
-  // ------------------------------------------------------------------------
 
   const auto cast_as_text =
       [cast_column, &is_not_rowid](const std::vector<std::string>& _colnames)
@@ -885,8 +884,6 @@ std::vector<std::string> SparkSQLGenerator::make_staging_columns(
         VIEWS::filter(is_not_rowid) | VIEWS::transform(cast));
   };
 
-  // ------------------------------------------------------------------------
-
   const auto replace_seps =
       [is_not_rowid, cast_column](const std::vector<std::string>& _colnames)
       -> std::vector<std::string> {
@@ -897,8 +894,6 @@ std::vector<std::string> SparkSQLGenerator::make_staging_columns(
         _colnames | VIEWS::filter(SQLGenerator::include_column) |
         VIEWS::filter(is_not_rowid) | VIEWS::transform(cast));
   };
-
-  // ------------------------------------------------------------------------
 
   const auto categoricals = cast_as_text(_schema.categoricals_);
 
@@ -915,13 +910,9 @@ std::vector<std::string> SparkSQLGenerator::make_staging_columns(
 
   const auto time_stamps = cast_as_time_stamp(_schema.time_stamps_);
 
-  // ------------------------------------------------------------------------
-
   return stl::join::vector<std::string>({targets, categoricals, discretes,
                                          join_keys, numericals, text,
                                          time_stamps});
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -931,7 +922,8 @@ std::string SparkSQLGenerator::make_feature_joins(
   std::stringstream sql;
 
   for (const auto& colname : _autofeatures) {
-    const auto alias = StringReplacer::replace_all(colname, "feature_", "f_");
+    const auto alias =
+        helpers::StringReplacer::replace_all(colname, "feature_", "f_");
 
     sql << "LEFT JOIN `" << SQLGenerator::to_upper(colname) << "` " << alias
         << std::endl
@@ -1012,7 +1004,13 @@ std::string SparkSQLGenerator::make_select(
   const auto manual =
       stl::join::vector<std::string>({_targets, _numerical, _categorical});
 
-  const auto modified_colnames = helpers::Macros::modify_colnames(manual, this);
+  const auto make_staging_table_colname_lambda =
+      [this](const std::string& _colname) -> std::string {
+    return make_staging_table_colname(_colname);
+  };
+
+  const auto modified_colnames = helpers::Macros::modify_colnames(
+      manual, make_staging_table_colname_lambda);
 
   std::stringstream sql;
 
@@ -1033,8 +1031,8 @@ std::string SparkSQLGenerator::make_select(
 
     const auto alias = _autofeatures.size() > BATCH_SIZE
                            ? "b" + std::to_string(batch_num)
-                           : StringReplacer::replace_all(_autofeatures.at(i),
-                                                         "feature_", "f_");
+                           : helpers::StringReplacer::replace_all(
+                                 _autofeatures.at(i), "feature_", "f_");
 
     sql << begin << "CAST( COALESCE( " << alias << ".`" << _autofeatures.at(i)
         << "`, 0.0 ) AS DOUBLE ) AS `" << _autofeatures.at(i) << "`" << end
@@ -1130,23 +1128,15 @@ std::string SparkSQLGenerator::make_sql(
 
 std::string SparkSQLGenerator::make_staging_table(
     const bool& _include_targets, const helpers::Schema& _schema) const {
-  // ------------------------------------------------------------------------
-
   const auto columns = make_staging_columns(_include_targets, _schema);
 
   const auto name = SQLGenerator::make_staging_table_name(_schema.name_);
-
-  // ------------------------------------------------------------------------
 
   const auto gap = [](const size_t _i) -> std::string {
     return (_i == 0 ? "" : "       ");
   };
 
-  // ------------------------------------------------------------------------
-
   std::stringstream sql;
-
-  // ------------------------------------------------------------------------
 
   sql << "DROP TABLE IF EXISTS `" << SQLGenerator::to_upper(name) << "`;"
       << std::endl
@@ -1171,8 +1161,6 @@ std::string SparkSQLGenerator::make_staging_table(
 
   sql << std::endl;
 
-  // ------------------------------------------------------------------------
-
   return sql.str();
 }
 
@@ -1181,14 +1169,10 @@ std::string SparkSQLGenerator::make_staging_table(
 std::vector<std::string> SparkSQLGenerator::make_staging_tables(
     const bool _population_needs_targets,
     const std::vector<bool>& _peripheral_needs_targets,
-    const Schema& _population_schema,
-    const std::vector<Schema>& _peripheral_schema) const {
-  // ------------------------------------------------------------------------
-
+    const helpers::Schema& _population_schema,
+    const std::vector<helpers::Schema>& _peripheral_schema) const {
   auto sql = std::vector<std::string>(
       {make_staging_table(_population_needs_targets, _population_schema)});
-
-  // ------------------------------------------------------------------------
 
   assert_true(_peripheral_schema.size() == _peripheral_needs_targets.size());
 
@@ -1199,8 +1183,6 @@ std::vector<std::string> SparkSQLGenerator::make_staging_tables(
 
     sql.emplace_back(std::move(s));
   }
-
-  // ------------------------------------------------------------------------
 
   return sql;
 }
@@ -1243,7 +1225,7 @@ std::string SparkSQLGenerator::make_time_stamps(
 
   const auto make_ts_name = [this](const std::string& _raw_name,
                                    const std::string& _alias) {
-    const auto colname = make_colname(_raw_name);
+    const auto colname = make_staging_table_colname(_raw_name);
     return _alias + "." + quotechar1() + colname + quotechar2();
   };
 
@@ -1260,7 +1242,8 @@ std::string SparkSQLGenerator::make_time_stamps(
         << " IS NULL )" << std::endl;
   }
 
-  return StringReplacer::replace_all(sql.str(), Macros::t1_or_t2(), _t1_or_t2);
+  return helpers::StringReplacer::replace_all(
+      sql.str(), helpers::Macros::t1_or_t2(), _t1_or_t2);
 }
 
 // ----------------------------------------------------------------------------
@@ -1351,13 +1334,14 @@ std::string SparkSQLGenerator::replace_separators(
 // ----------------------------------------------------------------------------
 
 std::string SparkSQLGenerator::split_text_fields(
-    const std::shared_ptr<ColumnDescription>& _desc) const {
+    const std::shared_ptr<helpers::ColumnDescription>& _desc,
+    const bool _for_mapping) const {
   assert_true(_desc);
 
   const auto staging_table =
-      helpers::SQLGenerator::make_staging_table_name(_desc->table_);
+      transpilation::SQLGenerator::make_staging_table_name(_desc->table_);
 
-  const auto colname = make_colname(_desc->name_);
+  const auto colname = make_staging_table_colname(_desc->name_);
 
   const auto new_table = staging_table + "__" + SQLGenerator::to_upper(colname);
 
@@ -1395,4 +1379,4 @@ std::string SparkSQLGenerator::string_contains(const std::string& _colname,
 }
 
 // ----------------------------------------------------------------------------
-}  // namespace helpers
+}  // namespace transpilation

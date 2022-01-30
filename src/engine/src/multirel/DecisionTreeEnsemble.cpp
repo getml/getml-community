@@ -651,7 +651,7 @@ void DecisionTreeEnsemble::select_features(const std::vector<size_t> &_index) {
 void DecisionTreeEnsemble::subfeatures_to_sql(
     const helpers::StringIterator &_categories,
     const helpers::VocabularyTree &_vocabulary,
-    const std::shared_ptr<const helpers::SQLDialectGenerator>
+    const std::shared_ptr<const transpilation::SQLDialectGenerator>
         &_sql_dialect_generator,
     const std::string &_feature_prefix, const size_t _offset,
     const std::shared_ptr<const std::map<std::string, std::string>>
@@ -819,7 +819,7 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj(
 std::vector<std::string> DecisionTreeEnsemble::to_sql(
     const helpers::StringIterator &_categories,
     const helpers::VocabularyTree &_vocabulary,
-    const std::shared_ptr<const helpers::SQLDialectGenerator>
+    const std::shared_ptr<const transpilation::SQLDialectGenerator>
         &_sql_dialect_generator,
     const std::string &_feature_prefix, const size_t _offset,
     const bool _subfeatures,

@@ -16,15 +16,16 @@
 #include "fastprop/Int.hpp"
 #include "fastprop/enums/enums.hpp"
 #include "strings/strings.hpp"
+#include "transpilation/transpilation.hpp"
 
 // ----------------------------------------------------------------------------
 
 #include "fastprop/containers/Condition.hpp"
 
 // ----------------------------------------------------------------------------
+
 namespace fastprop {
 namespace containers {
-// -------------------------------------------------------------------------
 
 struct AbstractFeature {
   static constexpr Int NO_CATEGORICAL_VALUE = -1;
@@ -58,13 +59,12 @@ struct AbstractFeature {
   Poco::JSON::Object::Ptr to_json_obj() const;
 
   /// Expresses the abstract feature as SQL code.
-  std::string to_sql(const helpers::StringIterator &_categories,
-                     const std::shared_ptr<const helpers::SQLDialectGenerator>
-                         &_sql_dialect_generator,
-                     const std::string &_feature_prefix,
-                     const std::string &_feature_num,
-                     const helpers::Schema &_input,
-                     const helpers::Schema &_output) const;
+  std::string to_sql(
+      const helpers::StringIterator &_categories,
+      const std::shared_ptr<const transpilation::SQLDialectGenerator>
+          &_sql_dialect_generator,
+      const std::string &_feature_prefix, const std::string &_feature_num,
+      const helpers::Schema &_input, const helpers::Schema &_output) const;
 
   /// The aggregation to apply
   const enums::Aggregation aggregation_;

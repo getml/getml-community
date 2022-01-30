@@ -5,10 +5,10 @@
 #include "fastprop/algorithm/Aggregator.hpp"
 #include "fastprop/algorithm/ConditionParser.hpp"
 #include "fastprop/algorithm/RSquared.hpp"
+#include "fastprop/algorithm/TableHolderParams.hpp"
 
 namespace fastprop {
 namespace algorithm {
-// ----------------------------------------------------------------------------
 
 FastProp::FastProp(
     const std::shared_ptr<const Hyperparameters> &_hyperparameters,
@@ -39,42 +39,30 @@ FastProp::FastProp(const Poco::JSON::Object &_obj)
                        ? std::make_shared<const containers::Placeholder>(
                              *jsonutils::JSON::get_object(_obj, "placeholder_"))
                        : nullptr) {
-  // ------------------------------------------------------------------------
-
   if (_obj.has("population_schema_")) {
     population_schema_ =
         std::make_shared<const helpers::Schema>(helpers::Schema::from_json(
             *jsonutils::JSON::get_object(_obj, "population_schema_")));
   }
 
-  // ------------------------------------------------------------------------
-
   if (_obj.has("peripheral_schema_")) {
     peripheral_schema_ = helpers::Schema::from_json(
         *jsonutils::JSON::get_object_array(_obj, "peripheral_schema_"));
   }
-
-  // ------------------------------------------------------------------------
 
   if (_obj.has("main_table_schemas_")) {
     main_table_schemas_ = helpers::Schema::from_json(
         *jsonutils::JSON::get_object_array(_obj, "main_table_schemas_"));
   }
 
-  // ------------------------------------------------------------------------
-
   if (_obj.has("peripheral_table_schemas_")) {
     peripheral_table_schemas_ = helpers::Schema::from_json(
         *jsonutils::JSON::get_object_array(_obj, "peripheral_table_schemas_"));
   }
 
-  // ------------------------------------------------------------------------
-
   allow_http() = _obj.has("allow_http_")
                      ? jsonutils::JSON::get_value<bool>(_obj, "allow_http_")
                      : false;
-
-  // ------------------------------------------------------------------------
 
   if (_obj.has("features_")) {
     auto vec = jsonutils::JSON::get_type_vector<containers::AbstractFeature>(
@@ -83,8 +71,6 @@ FastProp::FastProp(const Poco::JSON::Object &_obj)
     abstract_features_ =
         std::make_shared<std::vector<containers::AbstractFeature>>(vec);
   }
-
-  // ------------------------------------------------------------------------
 
   if (_obj.has("subfeatures_")) {
     auto subfeatures_arr = jsonutils::JSON::get_array(_obj, "subfeatures_");
@@ -103,13 +89,9 @@ FastProp::FastProp(const Poco::JSON::Object &_obj)
     subfeatures_ = subfeatures;
   }
 
-  // ------------------------------------------------------------------------
-
   if (placeholder_) {
     placeholder().check_data_model(peripheral(), true);
   }
-
-  // ------------------------------------------------------------------------
 }
 
 // ---------------------------------------------------------------------------
@@ -183,9 +165,23 @@ void FastProp::build_rows(const TransformParams &_params,
   const auto population_view =
       containers::DataFrameView(_params.population_, rownums);
 
-  const auto table_holder =
-      TableHolder(placeholder(), population_view, _params.peripheral_,
-                  peripheral(), std::nullopt, _params.word_indices_);
+  const auto make_staging_table_colname =
+      [](const std::string &_colname) -> std::string {
+    return transpilation::SQLite3Generator().make_staging_table_colname(
+        _colname);
+  };
+
+  const auto params = TableHolderParams{
+      .feature_container_ = std::nullopt,
+      .make_staging_table_colname_ = make_staging_table_colname,
+      .peripheral_ = _params.peripheral_,
+      .peripheral_names_ = peripheral(),
+      .placeholder_ = placeholder(),
+      .population_ = population_view,
+      .row_index_container_ = std::nullopt,
+      .word_index_container_ = _params.word_indices_};
+
+  const auto table_holder = TableHolder(params);
 
   constexpr size_t log_iter = 5000;
 
@@ -504,9 +500,23 @@ void FastProp::fit(const FitParams &_params, const bool _as_subfeatures) {
   const auto population_view =
       containers::DataFrameView(_params.population_, rownums);
 
-  const auto table_holder =
-      TableHolder(placeholder(), population_view, _params.peripheral_,
-                  peripheral(), std::nullopt, _params.word_indices_);
+  const auto make_staging_table_colname =
+      [](const std::string &_colname) -> std::string {
+    return transpilation::SQLite3Generator().make_staging_table_colname(
+        _colname);
+  };
+
+  const auto params = TableHolderParams{
+      .feature_container_ = std::nullopt,
+      .make_staging_table_colname_ = make_staging_table_colname,
+      .peripheral_ = _params.peripheral_,
+      .peripheral_names_ = peripheral(),
+      .placeholder_ = placeholder(),
+      .population_ = population_view,
+      .row_index_container_ = std::nullopt,
+      .word_index_container_ = _params.word_indices_};
+
+  const auto table_holder = TableHolder(params);
 
   extract_schemas(table_holder);
 
@@ -1144,18 +1154,12 @@ bool FastProp::is_numerical(const std::string &_agg) const {
 
 std::vector<std::vector<containers::Match>> FastProp::make_matches(
     const TableHolder &_table_holder, const size_t _rownum) const {
-  // ------------------------------------------------------------
-
   const auto make_match = [](const size_t ix_input, const size_t ix_output) {
     return containers::Match{ix_input, ix_output};
   };
 
-  // ------------------------------------------------------------
-
   assert_true(_table_holder.main_tables().size() ==
               _table_holder.peripheral_tables().size());
-
-  // ------------------------------------------------------------
 
   auto all_matches = std::vector<std::vector<containers::Match>>();
 
@@ -1174,8 +1178,6 @@ std::vector<std::vector<containers::Match>> FastProp::make_matches(
 
     all_matches.push_back(matches);
   }
-
-  // ------------------------------------------------------------
 
   return all_matches;
 }
@@ -1355,8 +1357,15 @@ std::shared_ptr<std::vector<size_t>> FastProp::make_subfeature_rownums(
 
   assert_true(_ix < placeholder().join_keys_used_.size());
 
+  const auto make_staging_table_colname =
+      [](const std::string &_colname) -> std::string {
+    return transpilation::SQLite3Generator().make_staging_table_colname(
+        _colname);
+  };
+
   const auto params_population = helpers::CreateSubviewParams{
       .join_key_ = placeholder().join_keys_used_.at(_ix),
+      .make_staging_table_colname_ = make_staging_table_colname,
       .time_stamp_ = placeholder().time_stamps_used_.at(_ix)};
 
   const auto population = _population.create_subview(params_population);
@@ -1364,6 +1373,7 @@ std::shared_ptr<std::vector<size_t>> FastProp::make_subfeature_rownums(
   const auto params_peripheral = helpers::CreateSubviewParams{
       .allow_lagged_targets_ = placeholder().allow_lagged_targets_.at(_ix),
       .join_key_ = placeholder().other_join_keys_used_.at(_ix),
+      .make_staging_table_colname_ = make_staging_table_colname,
       .time_stamp_ = placeholder().other_time_stamps_used_.at(_ix),
       .upper_time_stamp_ = placeholder().upper_time_stamps_used_.at(_ix)};
 
@@ -1517,11 +1527,7 @@ void FastProp::spawn_threads(
     const std::vector<containers::Features> &_subfeatures,
     const std::shared_ptr<std::vector<size_t>> &_rownums,
     containers::Features *_features) const {
-  // ------------------------------------------------------------------------
-
   auto num_completed = std::atomic<size_t>(0);
-
-  // ------------------------------------------------------------------------
 
   const auto execute_task = [this, &_params, _subfeatures, _rownums,
                              &num_completed,
@@ -1536,8 +1542,6 @@ void FastProp::spawn_threads(
     }
   };
 
-  // ------------------------------------------------------------------------
-
   const size_t num_threads = get_num_threads();
 
   std::vector<std::thread> threads;
@@ -1545,8 +1549,6 @@ void FastProp::spawn_threads(
   for (size_t thread_num = 1; thread_num < num_threads; ++thread_num) {
     threads.push_back(std::thread(execute_task, thread_num));
   }
-
-  // ------------------------------------------------------------------------
 
   try {
     execute_task(0);
@@ -1558,17 +1560,11 @@ void FastProp::spawn_threads(
     throw std::runtime_error(e.what());
   }
 
-  // ------------------------------------------------------------------------
-
   for (auto &thr : threads) {
     thr.join();
   }
 
-  // ------------------------------------------------------------------------
-
   log_progress(_params.logger_, 100, 100);
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -1576,7 +1572,7 @@ void FastProp::spawn_threads(
 void FastProp::subfeatures_to_sql(
     const helpers::StringIterator &_categories,
     const helpers::VocabularyTree &_vocabulary,
-    const std::shared_ptr<const helpers::SQLDialectGenerator>
+    const std::shared_ptr<const transpilation::SQLDialectGenerator>
         &_sql_dialect_generator,
     const std::string &_feature_prefix, const size_t _offset,
     std::vector<std::string> *_sql) const {
@@ -1622,37 +1618,23 @@ containers::Features FastProp::transform(
 // ----------------------------------------------------------------------------
 
 Poco::JSON::Object FastProp::to_json_obj(const bool _schema_only) const {
-  // ------------------------------------------------------------------------
-
   Poco::JSON::Object obj;
-
-  // ------------------------------------------------------------------------
 
   obj.set("type_", "FastProp");
 
-  // ------------------------------------------------------------------------
-
   obj.set("hyperparameters_", hyperparameters().to_json_obj());
-
-  // ------------------------------------------------------------------------
 
   if (peripheral_) {
     obj.set("peripheral_", jsonutils::JSON::vector_to_array_ptr(peripheral()));
   }
 
-  // ------------------------------------------------------------------------
-
   if (placeholder_) {
     obj.set("placeholder_", placeholder().to_json_obj());
   }
 
-  // ----------------------------------------
-
   if (population_schema_) {
     obj.set("population_schema_", population_schema().to_json_obj());
   }
-
-  // ----------------------------------------
 
   if (peripheral_schema_) {
     auto arr = jsonutils::JSON::vector_to_object_array_ptr(peripheral_schema());
@@ -1660,13 +1642,9 @@ Poco::JSON::Object FastProp::to_json_obj(const bool _schema_only) const {
     obj.set("peripheral_schema_", arr);
   }
 
-  // ----------------------------------------
-
   if (_schema_only) {
     return obj;
   }
-
-  // ----------------------------------------
 
   if (main_table_schemas_) {
     auto arr =
@@ -1675,8 +1653,6 @@ Poco::JSON::Object FastProp::to_json_obj(const bool _schema_only) const {
     obj.set("main_table_schemas_", arr);
   }
 
-  // ----------------------------------------
-
   if (peripheral_table_schemas_) {
     auto arr =
         jsonutils::JSON::vector_to_object_array_ptr(peripheral_table_schemas());
@@ -1684,11 +1660,7 @@ Poco::JSON::Object FastProp::to_json_obj(const bool _schema_only) const {
     obj.set("peripheral_table_schemas_", arr);
   }
 
-  // ----------------------------------------
-
   obj.set("allow_http_", allow_http());
-
-  // ----------------------------------------
 
   if (abstract_features_) {
     Poco::JSON::Array::Ptr features_arr(new Poco::JSON::Array());
@@ -1699,8 +1671,6 @@ Poco::JSON::Object FastProp::to_json_obj(const bool _schema_only) const {
 
     obj.set("features_", features_arr);
   }
-
-  // ----------------------------------------
 
   if (subfeatures_) {
     Poco::JSON::Array::Ptr subfeatures_arr(new Poco::JSON::Array());
@@ -1718,8 +1688,6 @@ Poco::JSON::Object FastProp::to_json_obj(const bool _schema_only) const {
     obj.set("subfeatures_", subfeatures_arr);
   }
 
-  // ----------------------------------------
-
   return obj;
 }
 
@@ -1728,7 +1696,7 @@ Poco::JSON::Object FastProp::to_json_obj(const bool _schema_only) const {
 std::vector<std::string> FastProp::to_sql(
     const helpers::StringIterator &_categories,
     const helpers::VocabularyTree &_vocabulary,
-    const std::shared_ptr<const helpers::SQLDialectGenerator>
+    const std::shared_ptr<const transpilation::SQLDialectGenerator>
         &_sql_dialect_generator,
     const std::string &_feature_prefix, const size_t _offset,
     const bool _subfeatures) const {

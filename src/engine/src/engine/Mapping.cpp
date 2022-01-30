@@ -8,7 +8,6 @@
 
 namespace engine {
 namespace preprocessors {
-// ----------------------------------------------------
 
 std::tuple<helpers::DataFrame, std::optional<helpers::TableHolder>,
            std::shared_ptr<const helpers::VocabularyContainer>>
@@ -18,13 +17,9 @@ Mapping::build_prerequisites(
     const helpers::Placeholder& _placeholder,
     const std::vector<std::string>& _peripheral_names,
     const bool _targets) const {
-  // -----------------------------------------------------------------------
-
   assert_true(population_schema_);
 
   assert_true(peripheral_schema_);
-
-  // -----------------------------------------------------------------------
 
   const auto infer_needs_targets = [this, _targets, &_placeholder,
                                     &_peripheral_names]() -> std::vector<bool> {
@@ -43,19 +38,13 @@ Mapping::build_prerequisites(
     return needs_targets;
   };
 
-  // -----------------------------------------------------------------------
-
   const auto needs_targets = infer_needs_targets();
-
-  // -----------------------------------------------------------------------
 
   const auto to_immutable = [this, &_peripheral_dfs, &needs_targets](
                                 const size_t _i) -> helpers::DataFrame {
     return _peripheral_dfs.at(_i).to_immutable<helpers::DataFrame>(
         peripheral_schema_->at(_i), needs_targets.at(_i));
   };
-
-  // -----------------------------------------------------------------------
 
   if (peripheral_schema_->size() != _peripheral_dfs.size()) {
     throw std::invalid_argument("Mapping: Expected " +
@@ -80,14 +69,28 @@ Mapping::build_prerequisites(
 
   const auto population_view = helpers::DataFrameView(population, rownums);
 
+  const auto make_staging_table_colname =
+      [](const std::string& _colname) -> std::string {
+    return transpilation::SQLite3Generator().make_staging_table_colname(
+        _colname);
+  };
+
+  const auto table_holder_params = helpers::TableHolderParams{
+      .feature_container_ = std::nullopt,
+      .make_staging_table_colname_ = make_staging_table_colname,
+      .peripheral_ = peripheral,
+      .peripheral_names_ = _peripheral_names,
+      .placeholder_ = _placeholder,
+      .population_ = population_view,
+      .row_index_container_ = std::nullopt,
+      .word_index_container_ = word_index_container};
+
   const auto table_holder =
       peripheral.size() > 0
-          ? std::make_optional<helpers::TableHolder>(
-                _placeholder, population_view, peripheral, _peripheral_names,
-                std::nullopt, word_index_container)
+          ? std::make_optional<helpers::TableHolder>(table_holder_params)
           : std::optional<helpers::TableHolder>();
 
-  const auto params = helpers::DataFrameParams{
+  const auto data_frame_params = helpers::DataFrameParams{
       .categoricals_ = population.categoricals_,
       .discretes_ = population.discretes_,
       .indices_ = population.indices_,
@@ -100,7 +103,8 @@ Mapping::build_prerequisites(
       .ts_index_ = population.ts_index_,
       .word_indices_ = word_index_container.population()};
 
-  const auto population_with_word_indices = helpers::DataFrame(params);
+  const auto population_with_word_indices =
+      helpers::DataFrame(data_frame_params);
 
   return std::make_tuple(population_with_word_indices, table_holder,
                          vocabulary);
@@ -111,11 +115,7 @@ Mapping::build_prerequisites(
 std::pair<Int, std::vector<Float>> Mapping::calc_agg_targets(
     const helpers::DataFrame& _population,
     const std::pair<Int, std::vector<size_t>>& _input) const {
-  // -----------------------------------------------------------------------
-
   const auto& rownums = _input.second;
-
-  // -----------------------------------------------------------------------
 
   const auto calc_aggs =
       [this, &rownums](
@@ -136,24 +136,18 @@ std::pair<Int, std::vector<Float>> Mapping::calc_agg_targets(
     return stl::collect::vector<Float>(aggregated_range);
   };
 
-  // -----------------------------------------------------------------------
-
   const auto range = _population.targets_ | VIEWS::transform(calc_aggs);
 
   const auto second = stl::join::vector<Float>(range);
 
-  // -----------------------------------------------------------------------
-
   return std::make_pair(_input.first, second);
-
-  // -----------------------------------------------------------------------
 }
 
 // ----------------------------------------------------
 
 std::vector<std::string> Mapping::categorical_columns_to_sql(
     const helpers::StringIterator& _categories,
-    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+    const std::shared_ptr<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator) const {
   assert_true(categorical_names_);
 
@@ -162,13 +156,13 @@ std::vector<std::string> Mapping::categorical_columns_to_sql(
   const auto mapping_to_sql = [this, &_categories, &_sql_dialect_generator](
                                   const size_t _i,
                                   const size_t _weight_num) -> std::string {
-    const auto name = _sql_dialect_generator->make_colname(
-        make_colname(categorical_names_->at(_i), _weight_num));
+    const auto name = _sql_dialect_generator->make_staging_table_colname(
+        make_staging_table_colname(categorical_names_->at(_i), _weight_num));
 
     return categorical_or_text_column_to_sql(
         _categories, _sql_dialect_generator,
-        helpers::SQLGenerator::to_upper(name), categorical_.at(_i), _weight_num,
-        false);
+        transpilation::SQLGenerator::to_upper(name), categorical_.at(_i),
+        _weight_num, false);
   };
 
   return columns_to_sql(mapping_to_sql, categorical_, categorical_names_);
@@ -178,7 +172,7 @@ std::vector<std::string> Mapping::categorical_columns_to_sql(
 
 std::string Mapping::categorical_or_text_column_to_sql(
     const helpers::StringIterator& _categories,
-    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+    const std::shared_ptr<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator,
     const std::string& _name, const PtrType& _ptr, const size_t _weight_num,
     const bool _is_text) const {
@@ -192,19 +186,28 @@ std::string Mapping::categorical_or_text_column_to_sql(
 
   sql << _sql_dialect_generator->make_mapping_table_header(_name, false);
 
-  for (size_t i = 0; i < pairs.size(); ++i) {
-    const std::string begin = (i == 0) ? "" : "      ";
+  constexpr size_t batch_size = 500;
 
-    const auto& p = pairs.at(i);
+  for (size_t batch_begin = 0; batch_begin < pairs.size();
+       batch_begin += batch_size) {
+    const auto batch_end = std::min(pairs.size(), batch_begin + batch_size);
 
-    assert_true(p.first >= 0);
+    sql << _sql_dialect_generator->make_mapping_table_insert_into(_name);
 
-    assert_true(static_cast<size_t>(p.first) < _categories.size());
+    for (size_t i = batch_begin; i < batch_end; ++i) {
+      const std::string begin = (i == batch_begin) ? "" : "      ";
 
-    const std::string end = (i == pairs.size() - 1) ? ";\n\n" : ",\n";
+      const auto& p = pairs.at(i);
 
-    sql << begin << "('" << _categories.at(p.first).str() << "', "
-        << io::Parser::to_precise_string(p.second) << ")" << end;
+      assert_true(p.first >= 0);
+
+      assert_true(static_cast<size_t>(p.first) < _categories.size());
+
+      const std::string end = (i == batch_end - 1) ? ";\n\n" : ",\n";
+
+      sql << begin << "('" << _categories.at(p.first).str() << "', "
+          << io::Parser::to_precise_string(p.second) << ")" << end;
+    }
   }
 
   assert_true(_sql_dialect_generator);
@@ -217,7 +220,7 @@ std::string Mapping::categorical_or_text_column_to_sql(
 // ----------------------------------------------------
 
 std::string Mapping::discrete_column_to_sql(
-    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+    const std::shared_ptr<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator,
     const std::string& _name, const PtrType& _ptr,
     const size_t _weight_num) const {
@@ -231,15 +234,24 @@ std::string Mapping::discrete_column_to_sql(
 
   sql << _sql_dialect_generator->make_mapping_table_header(_name, true);
 
-  for (size_t i = 0; i < pairs.size(); ++i) {
-    const std::string begin = (i == 0) ? "" : "      ";
+  constexpr size_t batch_size = 500;
 
-    const auto& p = pairs.at(i);
+  for (size_t batch_begin = 0; batch_begin < pairs.size();
+       batch_begin += batch_size) {
+    const auto batch_end = std::min(pairs.size(), batch_begin + batch_size);
 
-    const std::string end = (i == pairs.size() - 1) ? ";\n\n" : ",\n";
+    sql << _sql_dialect_generator->make_mapping_table_insert_into(_name);
 
-    sql << begin << "(" << std::to_string(p.first) << ", "
-        << io::Parser::to_precise_string(p.second) << ")" << end;
+    for (size_t i = batch_begin; i < batch_end; ++i) {
+      const std::string begin = (i == batch_begin) ? "" : "      ";
+
+      const auto& p = pairs.at(i);
+
+      const std::string end = (i == batch_end - 1) ? ";\n\n" : ",\n";
+
+      sql << begin << "(" << std::to_string(p.first) << ", "
+          << io::Parser::to_precise_string(p.second) << ")" << end;
+    }
   }
 
   assert_true(_sql_dialect_generator);
@@ -252,7 +264,7 @@ std::string Mapping::discrete_column_to_sql(
 // ----------------------------------------------------
 
 std::vector<std::string> Mapping::discrete_columns_to_sql(
-    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+    const std::shared_ptr<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator) const {
   assert_true(discrete_names_);
 
@@ -261,11 +273,11 @@ std::vector<std::string> Mapping::discrete_columns_to_sql(
   const auto mapping_to_sql = [this, &_sql_dialect_generator](
                                   const size_t _i,
                                   const size_t _weight_num) -> std::string {
-    const auto name = _sql_dialect_generator->make_colname(
-        make_colname(discrete_names_->at(_i), _weight_num));
+    const auto name = _sql_dialect_generator->make_staging_table_colname(
+        make_staging_table_colname(discrete_names_->at(_i), _weight_num));
 
     return discrete_column_to_sql(_sql_dialect_generator,
-                                  helpers::SQLGenerator::to_upper(name),
+                                  transpilation::SQLGenerator::to_upper(name),
                                   discrete_.at(_i), _weight_num);
   };
 
@@ -276,11 +288,7 @@ std::vector<std::string> Mapping::discrete_columns_to_sql(
 
 typename Mapping::MappingForDf Mapping::extract_mapping(
     const Poco::JSON::Object& _obj, const std::string& _key) const {
-  // --------------------------------------------------------------
-
   const auto arr = *JSON::get_array(_obj, _key);
-
-  // --------------------------------------------------------------
 
   const auto obj_to_map = [&arr](const size_t _i) {
     auto ptr = arr.getObject(_i);
@@ -302,8 +310,6 @@ typename Mapping::MappingForDf Mapping::extract_mapping(
     return m;
   };
 
-  // --------------------------------------------------------------
-
   const auto iota = stl::iota<size_t>(0, arr.size());
 
   const auto range = iota | VIEWS::transform(obj_to_map);
@@ -315,8 +321,6 @@ typename Mapping::MappingForDf Mapping::extract_mapping(
 
 typename Mapping::TextMapping Mapping::extract_text_mapping(
     const Poco::JSON::Object& _obj, const std::string& _key) const {
-  // --------------------------------------------------------------
-
   const auto obj_to_map = [](const Poco::JSON::Object& _obj) {
     auto m = std::make_shared<std::map<std::string, std::vector<Float>>>();
 
@@ -332,8 +336,6 @@ typename Mapping::TextMapping Mapping::extract_text_mapping(
     return m;
   };
 
-  // --------------------------------------------------------------
-
   const auto arr = *JSON::get_array(_obj, _key);
 
   const auto get_obj = [&arr](const size_t _i) -> Poco::JSON::Object {
@@ -341,8 +343,6 @@ typename Mapping::TextMapping Mapping::extract_text_mapping(
     throw_unless(ptr, "Expected an object inside the mapping.");
     return *ptr;
   };
-
-  // --------------------------------------------------------------
 
   const auto iota = stl::iota<size_t>(0, arr.size());
 
@@ -504,8 +504,6 @@ Mapping Mapping::fit_on_table_holder(
     const std::vector<helpers::DataFrame>& _main_tables,
     const std::vector<helpers::DataFrame>& _peripheral_tables, const size_t _ix,
     logging::ProgressLogger* _logger) const {
-  // ----------------------------------------------------
-
   const auto append =
       [](const std::vector<helpers::DataFrame>& _vec,
          const helpers::DataFrame& _df) -> std::vector<helpers::DataFrame> {
@@ -513,8 +511,6 @@ Mapping Mapping::fit_on_table_holder(
     vec.push_back(_df);
     return vec;
   };
-
-  // ----------------------------------------------------
 
   assert_true(_table_holder.main_tables().size() ==
               _table_holder.peripheral_tables().size());
@@ -524,15 +520,11 @@ Mapping Mapping::fit_on_table_holder(
 
   assert_true(_ix < _table_holder.main_tables().size());
 
-  // ----------------------------------------------------
-
   const auto main_tables =
       append(_main_tables, _table_holder.main_tables().at(_ix).df());
 
   const auto peripheral_tables =
       append(_peripheral_tables, _table_holder.peripheral_tables().at(_ix));
-
-  // ----------------------------------------------------
 
   auto mapping = *this;
 
@@ -554,8 +546,6 @@ Mapping Mapping::fit_on_table_holder(
       fit_on_text(_population, main_tables, peripheral_tables, _logger);
 
   return mapping;
-
-  // ----------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -628,13 +618,9 @@ std::vector<Mapping> Mapping::fit_submappings(
     const std::vector<helpers::DataFrame>& _main_tables,
     const std::vector<helpers::DataFrame>& _peripheral_tables,
     logging::ProgressLogger* _logger) const {
-  // ----------------------------------------------------
-
   if (!_table_holder) {
     return {};
   }
-
-  // ----------------------------------------------------
 
   const auto fit = [this, &_population, &_table_holder, &_main_tables,
                     &_peripheral_tables, _logger](const size_t _ix) -> Mapping {
@@ -642,13 +628,9 @@ std::vector<Mapping> Mapping::fit_submappings(
                                _peripheral_tables, _ix, _logger);
   };
 
-  // ----------------------------------------------------
-
   const auto iota = stl::iota<size_t>(0, _table_holder->main_tables().size());
 
   return stl::collect::vector<Mapping>(iota | VIEWS::transform(fit));
-
-  // ----------------------------------------------------
 }
 
 // ----------------------------------------------------
@@ -907,15 +889,15 @@ Mapping::handle_text_fields(
 
 // ----------------------------------------------------
 
-std::string Mapping::make_colname(const std::string& _name,
-                                  const size_t _weight_num) const {
+std::string Mapping::make_staging_table_colname(
+    const std::string& _name, const size_t _weight_num) const {
   const auto agg_num = _weight_num % aggregation_.size();
 
   const auto target_num = _weight_num / aggregation_.size();
 
   return _name + "__mapping_" + prefix_ + "target_" +
          std::to_string(target_num + 1) + "_" +
-         helpers::SQLGenerator::to_lower(aggregation_.at(agg_num));
+         transpilation::SQLGenerator::to_lower(aggregation_.at(agg_num));
 }
 
 // ----------------------------------------------------
@@ -1012,7 +994,7 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_int(
                                stl::collect::vector<Float>(range));
 #endif
 
-    const auto name = make_colname(col.name(), _weight_num);
+    const auto name = make_staging_table_colname(col.name(), _weight_num);
 
     return containers::Column<Float>(ptr, name);
   };
@@ -1114,7 +1096,7 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_text(
                                stl::collect::vector<Float>(range));
 #endif
 
-    const auto name = make_colname(colname, _weight_num);
+    const auto name = make_staging_table_colname(colname, _weight_num);
 
     return containers::Column<Float>(ptr, name);
   };
@@ -1376,7 +1358,7 @@ MappingAggregation Mapping::parse_aggregation(const std::string& _str) const {
 // ----------------------------------------------------
 
 std::vector<std::string> Mapping::text_columns_to_sql(
-    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+    const std::shared_ptr<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator) const {
   assert_true(text_names_);
 
@@ -1411,12 +1393,13 @@ std::vector<std::string> Mapping::text_columns_to_sql(
   const auto mapping_to_sql = [this, &vocabulary, &_sql_dialect_generator](
                                   const size_t _i,
                                   const size_t _weight_num) -> std::string {
-    const auto name = _sql_dialect_generator->make_colname(
-        make_colname(text_names_->at(_i), _weight_num));
+    const auto name = _sql_dialect_generator->make_staging_table_colname(
+        make_staging_table_colname(text_names_->at(_i), _weight_num));
 
     return categorical_or_text_column_to_sql(
         vocabulary.at(_i), _sql_dialect_generator,
-        helpers::SQLGenerator::to_upper(name), text_.at(_i), _weight_num, true);
+        transpilation::SQLGenerator::to_upper(name), text_.at(_i), _weight_num,
+        true);
   };
 
   return columns_to_sql(mapping_to_sql, text_, text_names_);
@@ -1485,7 +1468,7 @@ Poco::JSON::Object::Ptr Mapping::to_json_obj() const {
 
 std::vector<std::string> Mapping::to_sql(
     const helpers::StringIterator& _categories,
-    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+    const std::shared_ptr<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator) const {
   const auto submapping_to_sql =
       [&_categories, &_sql_dialect_generator](

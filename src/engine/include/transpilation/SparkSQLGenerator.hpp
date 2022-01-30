@@ -1,5 +1,5 @@
-#ifndef HELPERS_SPARKSQLGENERATOR_HPP_
-#define HELPERS_SPARKSQLGENERATOR_HPP_
+#ifndef SQL_SPARKSQLGENERATOR_HPP_
+#define SQL_SPARKSQLGENERATOR_HPP_
 
 // -------------------------------------------------------------------------
 
@@ -17,17 +17,15 @@
 // -------------------------------------------------------------------------
 
 #include "helpers/enums/enums.hpp"
+#include "helpers/helpers.hpp"
 
 // -------------------------------------------------------------------------
 
-#include "helpers/ColumnDescription.hpp"
-#include "helpers/SQLDialectGenerator.hpp"
-#include "helpers/Schema.hpp"
+#include "transpilation/SQLDialectGenerator.hpp"
 
 // -------------------------------------------------------------------------
 
-namespace helpers {
-// -------------------------------------------------------------------------
+namespace transpilation {
 
 class SparkSQLGenerator : public SQLDialectGenerator {
  private:
@@ -41,22 +39,37 @@ class SparkSQLGenerator : public SQLDialectGenerator {
   ~SparkSQLGenerator() = default;
 
  public:
+  /// Generates the GROUP BY statement for the feature (it is not needed for
+  /// some aggregations in some dialects, therefore it needs to be abstracted
+  /// away.)
+  std::string group_by(
+      const helpers::enums::Aggregation _agg,
+      const std::string& _value_to_be_aggregated = "") const final {
+    return "GROUP BY t1.rowid";
+  }
+
   /// The first quotechar.
   std::string quotechar1() const final { return "`"; }
 
   /// The second quotechar.
   std::string quotechar2() const final { return "`"; }
 
+  /// How the SQL dialect expresses rowid
+  std::string rowid() const final { return "rowid"; }
+
+  /// How the SQL dialect expresses rownum
+  std::string rownum() const final { return "rownum"; }
+
  public:
   /// Expresses an aggregation in the SQL dialect.
   std::string aggregation(
-      const enums::Aggregation& _agg, const std::string& _colname1,
+      const helpers::enums::Aggregation& _agg, const std::string& _colname1,
       const std::optional<std::string>& _colname2) const final;
 
-  /// Removes the Macros from the colname and replaces it with proper SQLite3
-  /// code.
-  std::string edit_colname(const std::string& _raw_name,
-                           const std::string& _alias) const final;
+  /// Generates a CREATE TABLE statement, to be used for a feature.
+  std::string create_table(const helpers::enums::Aggregation& _agg,
+                           const std::string& _feature_prefix,
+                           const std::string& _feature_num) const final;
 
   /// Generates the SQL code necessary for joining the mapping tables onto the
   /// staged table.
@@ -64,8 +77,14 @@ class SparkSQLGenerator : public SQLDialectGenerator {
                            const std::string& _colname,
                            const bool _is_text) const final;
 
+  /// Removes the Macros from the colname and replaces it with proper SQLite3
+  /// code.
+  std::string make_staging_table_column(const std::string& _raw_name,
+                                        const std::string& _alias) const final;
+
   /// Makes a clean, but unique colname.
-  std::string make_colname(const std::string& _colname) const final;
+  std::string make_staging_table_colname(
+      const std::string& _colname) const final;
 
   /// Generates the table that contains all the features.
   std::string make_feature_table(const std::string& _main_table,
@@ -90,6 +109,10 @@ class SparkSQLGenerator : public SQLDialectGenerator {
   std::string make_mapping_table_header(const std::string& _name,
                                         const bool _key_is_num) const final;
 
+  /// Generates the INSERT INTO for the SQL code of the mapping.
+  std::string make_mapping_table_insert_into(
+      const std::string& _name) const final;
+
   /// Generates the select statement for the feature table.
   std::string make_select(
       const std::string& _main_table,
@@ -112,8 +135,8 @@ class SparkSQLGenerator : public SQLDialectGenerator {
   std::vector<std::string> make_staging_tables(
       const bool _population_needs_targets,
       const std::vector<bool>& _peripheral_needs_targets,
-      const Schema& _population_schema,
-      const std::vector<Schema>& _peripheral_schema) const final;
+      const helpers::Schema& _population_schema,
+      const std::vector<helpers::Schema>& _peripheral_schema) const final;
 
   /// Generates the code for joining the subfeature tables.
   std::string make_subfeature_joins(
@@ -129,9 +152,11 @@ class SparkSQLGenerator : public SQLDialectGenerator {
                                const std::string& _input_alias,
                                const std::string& _t1_or_t2) const final;
 
-  /// Generates code for the text field splitter.
+  /// Generates code for the text field splitter, and is also used by the
+  /// mapping.
   std::string split_text_fields(
-      const std::shared_ptr<ColumnDescription>& _desc) const final;
+      const std::shared_ptr<helpers::ColumnDescription>& _desc,
+      const bool _for_mapping) const final;
 
   /// Generates code to check whether a string contains another string.
   std::string string_contains(const std::string& _colname,
@@ -183,7 +208,7 @@ class SparkSQLGenerator : public SQLDialectGenerator {
                                 const std::string& _prefix) const;
 
   /// Generates the code for exponentially weighted moving averages.
-  std::string make_ewma_aggregation(const enums::Aggregation& _agg,
+  std::string make_ewma_aggregation(const helpers::enums::Aggregation& _agg,
                                     const std::string& _value,
                                     const std::string& _timestamp) const;
 
@@ -193,8 +218,8 @@ class SparkSQLGenerator : public SQLDialectGenerator {
       const std::vector<std::string>& _autofeatures) const;
 
   /// Generates the columns for a single staging table.
-  std::vector<std::string> make_staging_columns(const bool& _include_targets,
-                                                const Schema& _schema) const;
+  std::vector<std::string> make_staging_columns(
+      const bool& _include_targets, const helpers::Schema& _schema) const;
 
   /// Generates the SQL code for the MODE aggreagation.
   std::string mode_aggregation(const std::string& _colname1) const;
@@ -204,7 +229,7 @@ class SparkSQLGenerator : public SQLDialectGenerator {
 
   /// Generates a single staging table.
   std::string make_staging_table(const bool& _include_targets,
-                                 const Schema& _schema) const;
+                                 const helpers::Schema& _schema) const;
 
   /// Generates the code for a linear trend.
   std::string make_trend_aggregation(const std::string& _value,
@@ -219,6 +244,6 @@ class SparkSQLGenerator : public SQLDialectGenerator {
 };
 
 // -------------------------------------------------------------------------
-}  // namespace helpers
+}  // namespace transpilation
 
-#endif  // HELPERS_SPARKSQLGENERATOR_HPP_
+#endif  // SQL_SPARKSQLGENERATOR_HPP_

@@ -282,7 +282,7 @@ std::string PlaceholderMaker::make_ts_name(const std::string& _ts_used,
       (_ts_used.find(helpers::Macros::rowid()) != std::string::npos);
 
   const auto diffstr =
-      helpers::SQLGenerator::make_time_stamp_diff(_diff, is_rowid);
+      transpilation::SQLGenerator::make_time_stamp_diff(_diff, is_rowid);
 
   if (is_rowid) {
     return helpers::Macros::open_bracket() + _ts_used + diffstr +

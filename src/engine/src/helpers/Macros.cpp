@@ -1,11 +1,9 @@
 #include "helpers/Macros.hpp"
 
-#include "helpers/SQLite3Generator.hpp"
 #include "helpers/StringReplacer.hpp"
 #include "helpers/StringSplitter.hpp"
 
 namespace helpers {
-// ----------------------------------------------------------------------------
 
 std::vector<std::string> Macros::extract_table_names(
     const std::string& _joined_name) {
@@ -98,24 +96,20 @@ std::string Macros::make_table_name(
 
 std::vector<std::string> Macros::modify_colnames(
     const std::vector<std::string>& _names,
-    const SQLDialectGenerator* _sql_dialect_generator) {
+    const std::function<std::string(std::string)> _make_staging_table_colname) {
   auto names = _names;
-
   for (auto& name : names) {
-    if (_sql_dialect_generator) {
-      name = _sql_dialect_generator->make_colname(name);
-    } else {
-      name = SQLite3Generator().make_colname(name);
-    }
+    name = _make_staging_table_colname(name);
   }
-
   return names;
 }
 
 // ----------------------------------------------------------------------------
 
 helpers::ImportanceMaker Macros::modify_column_importances(
-    const helpers::ImportanceMaker& _importance_maker) {
+    const helpers::ImportanceMaker& _importance_maker,
+    const std::function<std::string(std::string, std::string)>
+        _make_staging_table_column) {
   auto importance_maker = helpers::ImportanceMaker(_importance_maker);
 
   for (const auto& [from_desc, _] : _importance_maker.importances()) {
@@ -138,7 +132,7 @@ helpers::ImportanceMaker Macros::modify_column_importances(
 
     to_colname = remove_time_diff(to_colname);
 
-    to_colname = SQLite3Generator().edit_colname(to_colname, "");
+    to_colname = _make_staging_table_column(to_colname, "");
 
     if (from_desc.table_ != to_table || from_desc.name_ != to_colname) {
       const auto to_desc =
@@ -298,20 +292,14 @@ std::string Macros::remove_email(const std::string& _from_colname) {
 // ----------------------------------------------------------------------------
 
 std::string Macros::remove_imputation(const std::string& _from_colname) {
-  // --------------------------------------------------------------
-
   auto to_colname =
       StringReplacer::replace_all(_from_colname, dummy_begin(), "");
 
   to_colname = StringReplacer::replace_all(to_colname, dummy_end(), "");
 
-  // --------------------------------------------------------------
-
   if (to_colname.find(Macros::imputation_begin()) == std::string::npos) {
     return to_colname;
   }
-
-  // --------------------------------------------------------------
 
   const auto begin = to_colname.find(Macros::imputation_begin()) +
                      Macros::imputation_begin().length();
@@ -322,11 +310,7 @@ std::string Macros::remove_imputation(const std::string& _from_colname) {
 
   const auto length = end - begin;
 
-  // --------------------------------------------------------------
-
   return to_colname.substr(begin, length);
-
-  // --------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -356,13 +340,9 @@ std::string Macros::remove_population(const std::string& _from_colname) {
 // ----------------------------------------------------------------------------
 
 std::string Macros::remove_substring(const std::string& _from_colname) {
-  // --------------------------------------------------------------
-
   if (_from_colname.find(Macros::substring()) == std::string::npos) {
     return _from_colname;
   }
-
-  // --------------------------------------------------------------
 
   const auto begin =
       _from_colname.find(Macros::substring()) + Macros::substring().length();
@@ -373,11 +353,7 @@ std::string Macros::remove_substring(const std::string& _from_colname) {
 
   const auto length = end - begin;
 
-  // --------------------------------------------------------------
-
   return _from_colname.substr(begin, length);
-
-  // --------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -422,13 +398,9 @@ std::string Macros::remove_text_field(const std::string& _from_table) {
 // ----------------------------------------------------------------------------
 
 std::string Macros::remove_time_diff(const std::string& _from_colname) {
-  // --------------------------------------------------------------
-
   if (_from_colname.find(Macros::generated_ts()) == std::string::npos) {
     return _from_colname;
   }
-
-  // --------------------------------------------------------------
 
   const auto pos = _from_colname.find(Macros::diffstr());
 
@@ -436,13 +408,8 @@ std::string Macros::remove_time_diff(const std::string& _from_colname) {
     return _from_colname;
   }
 
-  // --------------------------------------------------------------
-
   return _from_colname.substr(0, pos);
-
-  // --------------------------------------------------------------
 }
 
-// ----------------------------------------------------------------------------
 }  // namespace helpers
 

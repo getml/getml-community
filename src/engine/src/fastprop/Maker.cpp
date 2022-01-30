@@ -13,10 +13,23 @@ Maker::fit(const MakerParams& _params) {
 
   assert_true(_params.peripheral_names_);
 
-  const auto table_holder = helpers::TableHolder(
-      _params.placeholder_, population_view, _params.peripheral_,
-      *_params.peripheral_names_, _params.row_index_container_,
-      _params.word_index_container_);
+  const auto make_staging_table_colname =
+      [](const std::string& _colname) -> std::string {
+    return transpilation::SQLite3Generator().make_staging_table_colname(
+        _colname);
+  };
+
+  const auto params = helpers::TableHolderParams{
+      .feature_container_ = std::nullopt,
+      .make_staging_table_colname_ = make_staging_table_colname,
+      .peripheral_ = _params.peripheral_,
+      .peripheral_names_ = *_params.peripheral_names_,
+      .placeholder_ = _params.placeholder_,
+      .population_ = population_view,
+      .row_index_container_ = _params.row_index_container_,
+      .word_index_container_ = _params.word_index_container_};
+
+  const auto table_holder = helpers::TableHolder(params);
 
   const auto fast_prop_container =
       fit_fast_prop_container(table_holder, _params);

@@ -2,7 +2,6 @@
 
 namespace multirel {
 namespace decisiontrees {
-// ----------------------------------------------------------------------------
 
 DecisionTree::DecisionTree(
     const std::shared_ptr<const descriptors::TreeHyperparameters>
@@ -75,15 +74,11 @@ void DecisionTree::fit(
     containers::MatchPtrs::iterator _match_container_begin,
     containers::MatchPtrs::iterator _match_container_end,
     optimizationcriteria::OptimizationCriterion *_optimization_criterion) {
-  // ------------------------------------------------------------
-
   impl()->input_ =
       std::make_shared<const helpers::Schema>(_peripheral.to_schema());
 
   impl()->output_ =
       std::make_shared<const helpers::Schema>(_population.df().to_schema());
-
-  // ------------------------------------------------------------
 
   assert_true(_aggregation);
 
@@ -96,23 +91,15 @@ void DecisionTree::fit(
                                     impl()  // _tree
                                     ));
 
-  // ------------------------------------------------------------
-
   root()->fit_as_root(_population, _peripheral, _subfeatures,
                       _match_container_begin, _match_container_end);
 
-  // ------------------------------------------------------------
-
   impl()->clear();
-
-  // ------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
 
 void DecisionTree::from_json_obj(const Poco::JSON::Object &_json_obj) {
-  // -----------------------------------
-
   impl()->input_ = std::make_shared<const helpers::Schema>(
       helpers::Schema::from_json(*JSON::get_object(_json_obj, "input_")));
 
@@ -125,15 +112,11 @@ void DecisionTree::from_json_obj(const Poco::JSON::Object &_json_obj) {
   impl()->same_units_ =
       descriptors::SameUnits(*JSON::get_object(_json_obj, "same_units_"));
 
-  // -----------------------------------
-
   const auto agg = JSON::get_value<std::string>(_json_obj, "aggregation_");
 
   assert_true(agg != "");
 
   impl_.aggregation_type_ = agg;
-
-  // -----------------------------------
 
   root().reset(new DecisionTreeNode(true,   // _is_activated
                                     1,      // _depth
@@ -141,8 +124,6 @@ void DecisionTree::from_json_obj(const Poco::JSON::Object &_json_obj) {
                                     ));
 
   root()->from_json_obj(*JSON::get_object(_json_obj, "conditions_"));
-
-  // -----------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -212,8 +193,6 @@ void DecisionTree::handle_fast_prop_importances(
 inline std::shared_ptr<optimizationcriteria::OptimizationCriterion>
 DecisionTree::make_intermediate(
     std::shared_ptr<aggregations::IntermediateAggregationImpl> _impl) const {
-  // --------------------------------------------------
-
   const bool avg_intermediate =
       aggregation_type() == aggregations::AggregationType::Avg::type() ||
       aggregation_type() == aggregations::AggregationType::Max::type() ||
@@ -231,42 +210,30 @@ DecisionTree::make_intermediate(
 
   assert_true(!no_intermediate);
 
-  // --------------------------------------------------
-
   if (avg_intermediate) {
     return std::make_shared<aggregations::IntermediateAggregation<
         aggregations::AggregationType::Avg>>(_impl);
   }
-
-  // --------------------------------------------------
 
   if (aggregation_type() == aggregations::AggregationType::Stddev::type()) {
     return std::make_shared<aggregations::IntermediateAggregation<
         aggregations::AggregationType::Stddev>>(_impl);
   }
 
-  // --------------------------------------------------
-
   if (aggregation_type() == aggregations::AggregationType::Skewness::type()) {
     return std::make_shared<aggregations::IntermediateAggregation<
         aggregations::AggregationType::Skewness>>(_impl);
   }
-
-  // --------------------------------------------------
 
   if (aggregation_type() == aggregations::AggregationType::Sum::type()) {
     return std::make_shared<aggregations::IntermediateAggregation<
         aggregations::AggregationType::Sum>>(_impl);
   }
 
-  // --------------------------------------------------
-
   if (aggregation_type() == aggregations::AggregationType::Var::type()) {
     return std::make_shared<aggregations::IntermediateAggregation<
         aggregations::AggregationType::Var>>(_impl);
   }
-
-  // --------------------------------------------------
 
   assert_msg(false, "Unknown aggregation type: " + aggregation_type());
 
@@ -324,17 +291,11 @@ DecisionTree &DecisionTree::operator=(DecisionTree &&_other) noexcept {
 // ----------------------------------------------------------------------------
 
 Poco::JSON::Object DecisionTree::to_json_obj() const {
-  // -----------------------------------
-
   if (!impl()->input_ || !impl()->output_ || !root()) {
     throw std::runtime_error("Feature has not been trained!");
   }
 
-  // -----------------------------------
-
   Poco::JSON::Object obj;
-
-  // -----------------------------------
 
   obj.set("aggregation_", aggregation_type());
 
@@ -348,11 +309,7 @@ Poco::JSON::Object DecisionTree::to_json_obj() const {
 
   obj.set("same_units_", impl()->same_units_.to_json_obj());
 
-  // -----------------------------------
-
   return obj;
-
-  // -----------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -360,21 +317,18 @@ Poco::JSON::Object DecisionTree::to_json_obj() const {
 std::string DecisionTree::to_sql(
     const helpers::StringIterator &_categories,
     const helpers::VocabularyTree &_vocabulary,
-    const std::shared_ptr<const helpers::SQLDialectGenerator>
+    const std::shared_ptr<const transpilation::SQLDialectGenerator>
         &_sql_dialect_generator,
     const std::string &_feature_prefix, const std::string &_feature_num,
     const std::tuple<bool, bool, bool> _has_subfeatures) const {
-  // -------------------------------------------------------------------
-
   assert_true(_sql_dialect_generator);
 
-  // -------------------------------------------------------------------
+  const auto aggregation =
+      helpers::enums::Parser<helpers::enums::Aggregation>::parse(
+          impl()->aggregation_type_);
 
   const auto quote1 = _sql_dialect_generator->quotechar1();
-
   const auto quote2 = _sql_dialect_generator->quotechar2();
-
-  // -------------------------------------------------------------------
 
   std::stringstream sql;
 
@@ -382,18 +336,12 @@ std::string DecisionTree::to_sql(
       utils::SQLMaker(impl()->delta_t(), ix_perip_used(), impl()->same_units_,
                       _sql_dialect_generator);
 
-  // -------------------------------------------------------------------
-
   sql << "DROP TABLE IF EXISTS " << quote1 << "FEATURE_" << _feature_prefix
       << _feature_num << quote2 << ";" << std::endl
       << std::endl;
 
-  // -------------------------------------------------------------------
-
-  sql << "CREATE TABLE " << quote1 << "FEATURE_" << _feature_prefix
-      << _feature_num << quote2 << " AS" << std::endl;
-
-  // -------------------------------------------------------------------
+  sql << _sql_dialect_generator->create_table(aggregation, _feature_prefix,
+                                              _feature_num);
 
   sql << "SELECT ";
 
@@ -405,15 +353,12 @@ std::string DecisionTree::to_sql(
   sql << " AS " << quote1 << "feature_" << _feature_prefix << _feature_num
       << quote2 << "," << std::endl;
 
-  sql << "       t1.rowid AS " << quote1 << "rownum" << quote2 << std::endl;
-
-  // -------------------------------------------------------------------
+  sql << "       t1." << _sql_dialect_generator->rowid() << " AS "
+      << _sql_dialect_generator->rownum() << std::endl;
 
   sql << _sql_dialect_generator->make_joins(output().name(), input().name(),
                                             output().join_keys_name(),
                                             input().join_keys_name());
-
-  // -------------------------------------------------------------------
 
   const auto [has_normal_subfeatures, output_has_prop, input_has_prop] =
       _has_subfeatures;
@@ -433,8 +378,6 @@ std::string DecisionTree::to_sql(
         _feature_prefix, ix_perip_used(), "t2", "_PROPOSITIONALIZATION");
   }
 
-  // -------------------------------------------------------------------
-
   const bool use_time_stamps =
       input().num_time_stamps() > 0 && output().num_time_stamps() > 0;
 
@@ -452,8 +395,6 @@ std::string DecisionTree::to_sql(
     sql << ") ";
   }
 
-  // -------------------------------------------------------------------
-
   std::vector<std::string> conditions;
 
   assert_true(ix_perip_used() < _vocabulary.peripheral().size());
@@ -462,8 +403,6 @@ std::string DecisionTree::to_sql(
                  _vocabulary.peripheral().at(ix_perip_used()),
                  _sql_dialect_generator, _feature_prefix, _feature_num,
                  conditions, "");
-
-  // -------------------------------------------------------------------
 
   for (size_t i = 0; i < conditions.size(); ++i) {
     if (i == 0) {
@@ -482,11 +421,15 @@ std::string DecisionTree::to_sql(
 
   sql << std::endl;
 
-  // -------------------------------------------------------------------
+  const auto value_to_be_aggregated =
+      sql_maker.value_to_be_aggregated(_feature_prefix, input(), output(),
+                                       column_to_be_aggregated().ix_column_used,
+                                       column_to_be_aggregated().data_used);
 
-  sql << "GROUP BY t1.rowid;" << std::endl << std::endl << std::endl;
-
-  // -------------------------------------------------------------------
+  sql << _sql_dialect_generator->group_by(aggregation, value_to_be_aggregated)
+      << ";" << std::endl
+      << std::endl
+      << std::endl;
 
   return sql.str();
 }
@@ -497,8 +440,6 @@ std::shared_ptr<const std::vector<Float>> DecisionTree::transform(
     const containers::DataFrameView &_population,
     const containers::DataFrame &_peripheral,
     const containers::Subfeatures &_subfeatures) const {
-  // ------------------------------------------------------
-
   const auto aggregation =
       aggregations::TransformAggregationParser::parse_aggregation(
           {.aggregation_type_ = impl()->aggregation_type_,
@@ -511,23 +452,15 @@ std::shared_ptr<const std::vector<Float>> DecisionTree::transform(
 
   assert_true(aggregation);
 
-  // ------------------------------------------------------
-
   const auto yhat = std::make_shared<std::vector<Float>>(_population.nrows());
 
-  // ------------------------------------------------------
-
   for (size_t ix_x_popul = 0; ix_x_popul < _population.nrows(); ++ix_x_popul) {
-    // ------------------------------------------------------
-
     containers::Matches matches;
 
     utils::Matchmaker::make_matches(_population, _peripheral, ix_x_popul,
                                     &matches);
 
     auto match_ptrs = utils::Matchmaker::make_pointers(&matches);
-
-    // ------------------------------------------------------
 
     size_t skip = 0;
 
@@ -540,8 +473,6 @@ std::shared_ptr<const std::vector<Float>> DecisionTree::transform(
       skip = static_cast<size_t>(
           std::distance(match_ptrs.begin(), null_values_separator));
     }
-
-    // ------------------------------------------------------
 
     const auto is_deactivated = [this, _population, _peripheral,
                                  _subfeatures](containers::Match *_m) -> bool {
@@ -556,8 +487,6 @@ std::shared_ptr<const std::vector<Float>> DecisionTree::transform(
     skip = static_cast<size_t>(
         std::distance(match_ptrs.begin(), deactivated_separator));
 
-    // ------------------------------------------------------
-
     const auto time_stamp = _peripheral.num_time_stamps() > 0
                                 ? _peripheral.time_stamp_col()
                                 : std::optional<containers::Column<Float>>();
@@ -567,17 +496,10 @@ std::shared_ptr<const std::vector<Float>> DecisionTree::transform(
     if (std::isnan((*yhat)[ix_x_popul])) {
       (*yhat)[ix_x_popul] = 0.0;
     }
-
-    // ------------------------------------------------------
   }
 
-  // ------------------------------------------------------
-
   return yhat;
-
-  // ------------------------------------------------------
 }
 
-// ----------------------------------------------------------------------------
 }  // namespace decisiontrees
 }  // namespace multirel

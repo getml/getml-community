@@ -29,7 +29,6 @@
 
 namespace engine {
 namespace containers {
-// -------------------------------------------------------------------------
 
 template <class T>
 class Column {
@@ -106,7 +105,7 @@ class Column {
   void clear();
 
   /// Generates a deep copy of the column itself.
-  Column<T> clone() const;
+  Column<T> clone(const std::shared_ptr<memmap::Pool> &_pool) const;
 
   /// Loads the Column from binary format
   void load(const std::string &_fname);
@@ -504,19 +503,16 @@ void Column<T>::clear() {
 // -------------------------------------------------------------------------
 
 template <class T>
-Column<T> Column<T>::clone() const {
-  // TODO: Fix clone!
-  /*if ( !data_ptr_ )
-      {
-          throw std::invalid_argument(
-              "Column cannot be cloned! It contains no data!" );
-      }*/
+Column<T> Column<T>::clone(const std::shared_ptr<memmap::Pool> &_pool) const {
+  const auto new_pool =
+      _pool ? std::make_shared<memmap::Pool>(_pool->temp_dir()) : _pool;
 
-  const auto vec = std::holds_alternative<InMemoryPtr>(data_ptr_)
-                       ? Variant(std::get<InMemoryPtr>(data_ptr_))
-                       : Variant(std::get<MemmapPtr>(data_ptr_));
+  const auto data_ptr =
+      new_pool
+          ? Variant(std::make_shared<MemmapVector>(new_pool, begin(), end()))
+          : Variant(std::make_shared<std::vector<T>>(begin(), end()));
 
-  auto col = Column<T>(vec);
+  auto col = Column<T>(data_ptr);
 
   col.set_name(name_);
 
@@ -540,17 +536,11 @@ void Column<T>::load(const std::string &_fname) {
 
 template <class T>
 Column<T> Column<T>::load_big_endian(const std::string &_fname) const {
-  // -------------------------------------------------------------------------
-
   std::ifstream input(_fname, std::ios::binary);
-
-  // -------------------------------------------------------------------------
 
   size_t nrows = 0;
 
   input.read(reinterpret_cast<char *>(&nrows), sizeof(size_t));
-
-  // -------------------------------------------------------------------------
 
   auto col = Column<T>(pool());
 
@@ -565,36 +555,24 @@ Column<T> Column<T>::load_big_endian(const std::string &_fname) const {
     input.read(reinterpret_cast<char *>(col.data()), col.nrows() * sizeof(T));
   }
 
-  // -------------------------------------------------------------------------
-
   read_string_big_endian(&col.name_, &input);
 
   read_string_big_endian(&col.unit_, &input);
 
-  // -------------------------------------------------------------------------
-
   return col;
-
-  // -------------------------------------------------------------------------
 }
 
 // -----------------------------------------------------------------------------
 
 template <class T>
 Column<T> Column<T>::load_little_endian(const std::string &_fname) const {
-  // -------------------------------------------------------------------------
-
   std::ifstream input(_fname, std::ios::binary);
-
-  // -------------------------------------------------------------------------
 
   size_t nrows = 0;
 
   input.read(reinterpret_cast<char *>(&nrows), sizeof(size_t));
 
   utils::Endianness::reverse_byte_order(&nrows);
-
-  // -------------------------------------------------------------------------
 
   auto col = Column<T>(pool());
 
@@ -609,25 +587,17 @@ Column<T> Column<T>::load_little_endian(const std::string &_fname) const {
     input.read(reinterpret_cast<char *>(col.data()), col.nrows() * sizeof(T));
   }
 
-  // -------------------------------------------------------------------------
-
   if constexpr (!std::is_same<T, strings::String>()) {
     for (size_t i = 0; i < nrows; ++i) {
       utils::Endianness::reverse_byte_order(&col[i]);
     }
   }
 
-  // -------------------------------------------------------------------------
-
   read_string_little_endian(&col.name_, &input);
 
   read_string_little_endian(&col.unit_, &input);
 
-  // -------------------------------------------------------------------------
-
   return col;
-
-  // -------------------------------------------------------------------------
 }
 
 // -----------------------------------------------------------------------------
@@ -646,17 +616,11 @@ void Column<T>::save(const std::string &_fname) const {
 
 template <class T>
 void Column<T>::save_big_endian(const std::string &_fname) const {
-  // -----------------------------------------------------------------
-
   std::ofstream output(_fname, std::ios::binary);
-
-  // -----------------------------------------------------------------
 
   const auto num_rows = nrows();
 
   output.write(reinterpret_cast<const char *>(&num_rows), sizeof(size_t));
-
-  // -----------------------------------------------------------------
 
   if constexpr (std::is_same<T, strings::String>()) {
     for (size_t i = 0; i < nrows(); ++i) {
@@ -666,32 +630,22 @@ void Column<T>::save_big_endian(const std::string &_fname) const {
     output.write(reinterpret_cast<const char *>(data()), nrows() * sizeof(T));
   }
 
-  // -----------------------------------------------------------------
-
   write_string_big_endian(name_, &output);
 
   write_string_big_endian(unit_, &output);
-
-  // -----------------------------------------------------------------
 }
 
 // -----------------------------------------------------------------------------
 
 template <class T>
 void Column<T>::save_little_endian(const std::string &_fname) const {
-  // -----------------------------------------------------------------
-
   std::ofstream output(_fname, std::ios::binary);
-
-  // -----------------------------------------------------------------
 
   auto num_rows = nrows();
 
   utils::Endianness::reverse_byte_order(&num_rows);
 
   output.write(reinterpret_cast<const char *>(&num_rows), sizeof(size_t));
-
-  // -----------------------------------------------------------------
 
   if constexpr (std::is_same<T, strings::String>()) {
     for (size_t i = 0; i < nrows(); ++i) {
@@ -711,13 +665,9 @@ void Column<T>::save_little_endian(const std::string &_fname) const {
     }
   }
 
-  // -----------------------------------------------------------------
-
   write_string_little_endian(name_, &output);
 
   write_string_little_endian(unit_, &output);
-
-  // -----------------------------------------------------------------
 }
 
 // -------------------------------------------------------------------------

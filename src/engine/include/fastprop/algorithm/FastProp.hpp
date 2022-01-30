@@ -4,11 +4,15 @@
 // ----------------------------------------------------------------------------
 
 #include <map>
+#include <string>
+#include <utility>
+#include <vector>
 
 // ----------------------------------------------------------------------------
 
 #include "helpers/helpers.hpp"
 #include "multithreading/multithreading.hpp"
+#include "transpilation/transpilation.hpp"
 
 // ----------------------------------------------------------------------------
 
@@ -25,7 +29,6 @@
 
 namespace fastprop {
 namespace algorithm {
-// ------------------------------------------------------------------------
 
 class FastProp {
  public:
@@ -88,7 +91,7 @@ class FastProp {
   std::vector<std::string> to_sql(
       const helpers::StringIterator& _categories,
       const helpers::VocabularyTree& _vocabulary,
-      const std::shared_ptr<const helpers::SQLDialectGenerator>&
+      const std::shared_ptr<const transpilation::SQLDialectGenerator>&
           _sql_dialect_generator,
       const std::string& _feature_prefix = "", const size_t _offset = 0,
       const bool _subfeatures = true) const;
@@ -328,7 +331,7 @@ class FastProp {
   void subfeatures_to_sql(
       const helpers::StringIterator& _categories,
       const helpers::VocabularyTree& _vocabulary,
-      const std::shared_ptr<const helpers::SQLDialectGenerator>&
+      const std::shared_ptr<const transpilation::SQLDialectGenerator>&
           _sql_dialect_generator,
       const std::string& _feature_prefix, const size_t _offset,
       std::vector<std::string>* _sql) const;

@@ -9,7 +9,6 @@
 
 namespace engine {
 namespace handlers {
-// ----------------------------------------------------------------------------
 
 std::shared_ptr<arrow::Table> ArrowHandler::df_to_table(
     const containers::DataFrame& _df) const {
@@ -429,11 +428,7 @@ ArrowHandler::write_boolean_to_float_column(
 std::optional<typename ArrowHandler::StringFunction>
 ArrowHandler::write_boolean_to_string_column(
     const std::shared_ptr<arrow::Array>& _chunk) const {
-  // ------------------------------------------------------------------------
-
   assert_true(_chunk);
-
-  // ------------------------------------------------------------------------
 
   const auto transform_chunk = [](const std::int64_t _i,
                                   const auto _chunk) -> strings::String {
@@ -447,19 +442,13 @@ ArrowHandler::write_boolean_to_string_column(
     return strings::String(io::Parser::to_string(_chunk->Value(_i)));
   };
 
-  // ------------------------------------------------------------------------
-
   if (_chunk->type()->Equals(arrow::boolean())) {
     const auto chunk = std::static_pointer_cast<arrow::BooleanArray>(_chunk);
     assert_true(chunk);
     return std::bind(transform_chunk, std::placeholders::_1, chunk);
   }
 
-  // ------------------------------------------------------------------------
-
   return std::nullopt;
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -467,11 +456,7 @@ ArrowHandler::write_boolean_to_string_column(
 std::optional<typename ArrowHandler::FloatFunction>
 ArrowHandler::write_dict_to_float_column(
     const std::shared_ptr<arrow::Array>& _chunk) const {
-  // ------------------------------------------------------------------------
-
   assert_true(_chunk);
-
-  // ------------------------------------------------------------------------
 
   const auto dict_name =
       arrow::dictionary(arrow::int32(), arrow::utf8())->name();
@@ -494,11 +479,7 @@ ArrowHandler::write_dict_to_float_column(
     };
   }
 
-  // ------------------------------------------------------------------------
-
   return std::nullopt;
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -506,11 +487,7 @@ ArrowHandler::write_dict_to_float_column(
 std::optional<typename ArrowHandler::StringFunction>
 ArrowHandler::write_dict_to_string_column(
     const std::shared_ptr<arrow::Array>& _chunk) const {
-  // ------------------------------------------------------------------------
-
   assert_true(_chunk);
-
-  // ------------------------------------------------------------------------
 
   const auto dict_name =
       arrow::dictionary(arrow::int32(), arrow::utf8())->name();
@@ -533,11 +510,7 @@ ArrowHandler::write_dict_to_string_column(
     };
   }
 
-  // ------------------------------------------------------------------------
-
   return std::nullopt;
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -545,11 +518,7 @@ ArrowHandler::write_dict_to_string_column(
 std::optional<typename ArrowHandler::StringFunction>
 ArrowHandler::write_float_to_string_column(
     const std::shared_ptr<arrow::Array>& _chunk) const {
-  // ------------------------------------------------------------------------
-
   assert_true(_chunk);
-
-  // ------------------------------------------------------------------------
 
   const auto transform_chunk = [](const std::int64_t _i,
                                   const auto _chunk) -> strings::String {
@@ -563,8 +532,6 @@ ArrowHandler::write_float_to_string_column(
     return strings::String(
         io::Parser::to_string(static_cast<Float>(_chunk->Value(_i))));
   };
-
-  // ------------------------------------------------------------------------
 
   if (_chunk->type()->Equals(arrow::float16())) {
     const auto chunk = std::static_pointer_cast<arrow::HalfFloatArray>(_chunk);
@@ -584,11 +551,7 @@ ArrowHandler::write_float_to_string_column(
     return std::bind(transform_chunk, std::placeholders::_1, chunk);
   }
 
-  // ------------------------------------------------------------------------
-
   return std::nullopt;
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -596,11 +559,7 @@ ArrowHandler::write_float_to_string_column(
 std::optional<typename ArrowHandler::StringFunction>
 ArrowHandler::write_int_to_string_column(
     const std::shared_ptr<arrow::Array>& _chunk) const {
-  // ------------------------------------------------------------------------
-
   assert_true(_chunk);
-
-  // ------------------------------------------------------------------------
 
   const auto transform_chunk = [](const std::int64_t _i,
                                   const auto _chunk) -> strings::String {
@@ -613,8 +572,6 @@ ArrowHandler::write_int_to_string_column(
 
     return strings::String(std::to_string(_chunk->Value(_i)));
   };
-
-  // ------------------------------------------------------------------------
 
   if (_chunk->type()->Equals(arrow::uint8())) {
     const auto chunk = std::static_pointer_cast<arrow::UInt8Array>(_chunk);
@@ -674,11 +631,7 @@ ArrowHandler::write_int_to_string_column(
     return std::bind(transform_chunk, std::placeholders::_1, chunk);
   }
 
-  // ------------------------------------------------------------------------
-
   return std::nullopt;
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -700,21 +653,13 @@ ArrowHandler::write_null_to_float_column(
 std::optional<typename ArrowHandler::StringFunction>
 ArrowHandler::write_null_to_string_column(
     const std::shared_ptr<arrow::Array>& _chunk) const {
-  // ------------------------------------------------------------------------
-
   assert_true(_chunk);
-
-  // ------------------------------------------------------------------------
 
   if (_chunk->type()->Equals(arrow::null())) {
     return [](const std::int64_t _i) { return strings::String("NULL"); };
   }
 
-  // ------------------------------------------------------------------------
-
   return std::nullopt;
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -722,13 +667,9 @@ ArrowHandler::write_null_to_string_column(
 std::optional<typename ArrowHandler::FloatFunction>
 ArrowHandler::write_numeric_to_float_column(
     const std::shared_ptr<arrow::Array>& _chunk) const {
-  // ------------------------------------------------------------------------
-
   assert_true(_chunk);
 
   assert_true(_chunk->type());
-
-  // ------------------------------------------------------------------------
 
   const auto transform_chunk = [](const std::int64_t _i,
                                   const auto _chunk) -> Float {
@@ -741,8 +682,6 @@ ArrowHandler::write_numeric_to_float_column(
 
     return static_cast<Float>(_chunk->Value(_i));
   };
-
-  // ------------------------------------------------------------------------
 
   if (_chunk->type()->Equals(arrow::uint8())) {
     const auto chunk = std::static_pointer_cast<arrow::UInt8Array>(_chunk);
@@ -820,11 +759,7 @@ ArrowHandler::write_numeric_to_float_column(
     return std::bind(transform_chunk, std::placeholders::_1, chunk);
   }
 
-  // ------------------------------------------------------------------------
-
   return std::nullopt;
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -832,18 +767,12 @@ ArrowHandler::write_numeric_to_float_column(
 std::optional<typename ArrowHandler::FloatFunction>
 ArrowHandler::write_string_to_float_column(
     const std::shared_ptr<arrow::Array>& _chunk) const {
-  // ------------------------------------------------------------------------
-
   assert_true(_chunk);
-
-  // ------------------------------------------------------------------------
 
   const auto string_to_float = [](const std::string& str) -> Float {
     const auto [val, success] = io::Parser::to_double(str);
     return success ? val : NAN;
   };
-
-  // ------------------------------------------------------------------------
 
   const auto transform_chunk = [string_to_float](const std::int64_t _i,
                                                  const auto _chunk) -> Float {
@@ -857,8 +786,6 @@ ArrowHandler::write_string_to_float_column(
     return string_to_float(_chunk->GetString(_i));
   };
 
-  // ------------------------------------------------------------------------
-
   if (_chunk->type()->Equals(arrow::utf8())) {
     const auto chunk = std::static_pointer_cast<arrow::StringArray>(_chunk);
     assert_true(chunk);
@@ -892,11 +819,7 @@ ArrowHandler::write_string_to_float_column(
     return std::bind(transform_chunk, std::placeholders::_1, chunk);
   }
 
-  // ------------------------------------------------------------------------
-
   return std::nullopt;
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -904,11 +827,7 @@ ArrowHandler::write_string_to_float_column(
 std::optional<typename ArrowHandler::StringFunction>
 ArrowHandler::write_string_to_string_column(
     const std::shared_ptr<arrow::Array>& _chunk) const {
-  // ------------------------------------------------------------------------
-
   assert_true(_chunk);
-
-  // ------------------------------------------------------------------------
 
   const auto transform_chunk = [](const std::int64_t _i,
                                   const auto _chunk) -> strings::String {
@@ -922,8 +841,6 @@ ArrowHandler::write_string_to_string_column(
     return strings::String(_chunk->GetString(_i));
   };
 
-  // ------------------------------------------------------------------------
-
   if (_chunk->type()->Equals(arrow::utf8())) {
     const auto chunk = std::static_pointer_cast<arrow::StringArray>(_chunk);
     assert_true(chunk);
@@ -957,11 +874,7 @@ ArrowHandler::write_string_to_string_column(
     return std::bind(transform_chunk, std::placeholders::_1, chunk);
   }
 
-  // ------------------------------------------------------------------------
-
   return std::nullopt;
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -969,11 +882,7 @@ ArrowHandler::write_string_to_string_column(
 std::optional<typename ArrowHandler::FloatFunction>
 ArrowHandler::write_time_to_float_column(
     const std::shared_ptr<arrow::Array>& _chunk) const {
-  // ------------------------------------------------------------------------
-
   assert_true(_chunk);
-
-  // ------------------------------------------------------------------------
 
   const auto transform_chunk = [](const std::int64_t _i, const auto _chunk,
                                   const Float _factor) -> Float {
@@ -986,8 +895,6 @@ ArrowHandler::write_time_to_float_column(
 
     return static_cast<Float>(_chunk->Value(_i)) * _factor;
   };
-
-  // ------------------------------------------------------------------------
 
   if (_chunk->type()->Equals(arrow::timestamp(arrow::TimeUnit::SECOND))) {
     const auto chunk = std::static_pointer_cast<arrow::TimestampArray>(_chunk);
@@ -1049,11 +956,7 @@ ArrowHandler::write_time_to_float_column(
     return std::bind(transform_chunk, std::placeholders::_1, chunk, 1.0e-3);
   }
 
-  // ------------------------------------------------------------------------
-
   return std::nullopt;
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -1061,11 +964,7 @@ ArrowHandler::write_time_to_float_column(
 std::optional<typename ArrowHandler::StringFunction>
 ArrowHandler::write_time_to_string_column(
     const std::shared_ptr<arrow::Array>& _chunk) const {
-  // ------------------------------------------------------------------------
-
   assert_true(_chunk);
-
-  // ------------------------------------------------------------------------
 
   const auto transform_chunk = [](const std::int64_t _i, const auto _chunk,
                                   const Float _factor) -> strings::String {
@@ -1080,8 +979,6 @@ ArrowHandler::write_time_to_string_column(
         static_cast<Float>(_chunk->Value(_i)) * _factor));
   };
 
-  // ------------------------------------------------------------------------
-
   if (_chunk->type()->Equals(arrow::timestamp(arrow::TimeUnit::SECOND))) {
     const auto chunk = std::static_pointer_cast<arrow::TimestampArray>(_chunk);
     assert_true(chunk);
@@ -1142,8 +1039,6 @@ ArrowHandler::write_time_to_string_column(
     return std::bind(transform_chunk, std::placeholders::_1, chunk, 1.0e-3);
   }
 
-  // ------------------------------------------------------------------------
-
   return std::nullopt;
 }
 
@@ -1152,8 +1047,6 @@ ArrowHandler::write_time_to_string_column(
 typename ArrowHandler::FloatFunction ArrowHandler::write_to_float_column(
     const std::shared_ptr<arrow::Array>& _chunk,
     const std::string& _name) const {
-  // ------------------------------------------------------------------------
-
   auto func = write_boolean_to_float_column(_chunk);
 
   if (func) {
@@ -1190,12 +1083,8 @@ typename ArrowHandler::FloatFunction ArrowHandler::write_to_float_column(
     return *func;
   }
 
-  // ------------------------------------------------------------------------
-
   throw std::invalid_argument("Unsupported field type for field '" + _name +
                               "': " + _chunk->type()->name() + ".");
-
-  // ------------------------------------------------------------------------
 
   return [](const std::int64_t _i) -> Float { return 0.0; };
 }
@@ -1205,8 +1094,6 @@ typename ArrowHandler::FloatFunction ArrowHandler::write_to_float_column(
 typename ArrowHandler::StringFunction ArrowHandler::write_to_string_column(
     const std::shared_ptr<arrow::Array>& _chunk,
     const std::string& _name) const {
-  // ------------------------------------------------------------------------
-
   auto func = write_boolean_to_string_column(_chunk);
 
   if (func) {
@@ -1249,18 +1136,12 @@ typename ArrowHandler::StringFunction ArrowHandler::write_to_string_column(
     return *func;
   }
 
-  // ------------------------------------------------------------------------
-
   throw std::invalid_argument("Unsupported field type for field '" + _name +
                               "': " + _chunk->type()->name() + ".");
-
-  // ------------------------------------------------------------------------
 
   return [](const std::int64_t _i) -> strings::String {
     return strings::String("");
   };
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------

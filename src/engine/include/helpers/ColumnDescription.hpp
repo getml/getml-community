@@ -12,7 +12,6 @@
 // -------------------------------------------------------------------------
 
 namespace helpers {
-// -------------------------------------------------------------------------
 
 struct ColumnDescription {
   static constexpr const char* PERIPHERAL = "[PERIPHERAL]";
@@ -29,8 +28,6 @@ struct ColumnDescription {
             jsonutils::JSON::get_value<std::string>(_obj, "name_")) {}
 
   ~ColumnDescription() = default;
-
-  // ---------------------------------------------------------------------
 
   /// Generates the full name from the description.
   std::string name() const { return marker_ + " " + table_ + "." + name_; }
@@ -67,8 +64,6 @@ struct ColumnDescription {
     return obj;
   }
 
-  // ---------------------------------------------------------------------
-
   /// [POPULATION] or [PERIPHERAL]
   std::string marker_;
 
@@ -79,7 +74,6 @@ struct ColumnDescription {
   std::string table_;
 };
 
-// -------------------------------------------------------------------------
 }  // namespace helpers
 
 #endif  // HELPERS_COLUMNDESCRIPTION_HPP_

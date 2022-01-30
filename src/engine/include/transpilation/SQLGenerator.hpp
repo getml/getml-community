@@ -1,5 +1,5 @@
-#ifndef HELPERS_SQLGENERATOR_HPP_
-#define HELPERS_SQLGENERATOR_HPP_
+#ifndef SQL_SQLGENERATOR_HPP_
+#define SQL_SQLGENERATOR_HPP_
 
 // -------------------------------------------------------------------------
 
@@ -8,13 +8,12 @@
 
 // -------------------------------------------------------------------------
 
-#include "helpers/Float.hpp"
-#include "helpers/SQLDialectGenerator.hpp"
+#include "transpilation/Float.hpp"
+#include "transpilation/SQLDialectGenerator.hpp"
 
 // -------------------------------------------------------------------------
 
-namespace helpers {
-// -------------------------------------------------------------------------
+namespace transpilation {
 
 class SQLGenerator {
  public:
@@ -69,7 +68,6 @@ class SQLGenerator {
   static std::string to_upper(const std::string& _str);
 };
 
-// -------------------------------------------------------------------------
-}  // namespace helpers
+}  // namespace transpilation
 
 #endif

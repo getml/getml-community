@@ -219,11 +219,7 @@ class Aggregator {
       const ExtractValueType &_extract_value,
       const std::function<bool(const containers::Match &)> &_condition_function,
       const containers::AbstractFeature &_abstract_feature) {
-    // ---------------------------------------------------
-
     const auto is_non_null = [](Int val) { return val >= 0; };
-
-    // ---------------------------------------------------
 
     if (_abstract_feature.conditions_.size() == 0) {
       auto range = _matches | VIEWS::transform(_extract_value) |
@@ -233,15 +229,11 @@ class Aggregator {
                                          _abstract_feature.aggregation_);
     }
 
-    // ---------------------------------------------------
-
     auto range = _matches | VIEWS::filter(_condition_function) |
                  VIEWS::transform(_extract_value) | VIEWS::filter(is_non_null);
 
     return aggregate_categorical_range(range.begin(), range.end(),
                                        _abstract_feature.aggregation_);
-
-    // ---------------------------------------------------
   }
 
   /// Aggregates the matches using the extract_value lambda function.
@@ -251,11 +243,7 @@ class Aggregator {
       const ExtractValueType &_extract_value,
       const std::function<bool(const containers::Match &)> &_condition_function,
       const containers::AbstractFeature &_abstract_feature) {
-    // ---------------------------------------------------
-
     assert_true(is_first_last(_abstract_feature.aggregation_));
-
-    // ---------------------------------------------------
 
     if (_abstract_feature.conditions_.size() == 0) {
       auto range = _matches | VIEWS::transform(_extract_value) |
@@ -265,16 +253,12 @@ class Aggregator {
                                   _abstract_feature.aggregation_);
     }
 
-    // ---------------------------------------------------
-
     auto range = _matches | VIEWS::filter(_condition_function) |
                  VIEWS::transform(_extract_value) |
                  VIEWS::filter(second_is_not_nan_or_inf);
 
     return aggregate_first_last(range.begin(), range.end(),
                                 _abstract_feature.aggregation_);
-
-    // ---------------------------------------------------
   }
 
   /// Aggregates the matches using the extract_value lambda function.
@@ -284,8 +268,6 @@ class Aggregator {
       const ExtractValueType &_extract_value,
       const std::function<bool(const containers::Match &)> &_condition_function,
       const containers::AbstractFeature &_abstract_feature) {
-    // ---------------------------------------------------
-
     if (_abstract_feature.conditions_.size() == 0) {
       auto range = _matches | VIEWS::transform(_extract_value) |
                    VIEWS::filter(is_not_nan_or_inf);
@@ -294,16 +276,12 @@ class Aggregator {
                                        _abstract_feature.aggregation_);
     }
 
-    // ---------------------------------------------------
-
     auto range = _matches | VIEWS::filter(_condition_function) |
                  VIEWS::transform(_extract_value) |
                  VIEWS::filter(is_not_nan_or_inf);
 
     return aggregate_numerical_range(range.begin(), range.end(),
                                      _abstract_feature.aggregation_);
-
-    // ---------------------------------------------------
   }
 
   /// Aggregates the range from _begin to _end, applying the _aggregation.

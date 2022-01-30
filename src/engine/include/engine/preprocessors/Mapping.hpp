@@ -31,7 +31,6 @@
 
 namespace engine {
 namespace preprocessors {
-// ----------------------------------------------------
 
 class Mapping : public Preprocessor {
  public:
@@ -109,7 +108,7 @@ class Mapping : public Preprocessor {
   /// Generates the mapping tables.
   std::vector<std::string> to_sql(
       const helpers::StringIterator& _categories,
-      const std::shared_ptr<const helpers::SQLDialectGenerator>&
+      const std::shared_ptr<const transpilation::SQLDialectGenerator>&
           _sql_dialect_generator) const final;
 
  public:
@@ -225,11 +224,11 @@ class Mapping : public Preprocessor {
 
       case MappingAggregation::variation_coefficient:
         return helpers::Aggregations::variation_coefficient(_begin, _end);
-
-      default:
-        assert_true(false && "Unknown aggregation");
-        return 0.0;
     }
+    // This should never be reached - the compiler should
+    // generate a warning.
+    assert_true(false);
+    return 0.0;
   }
 
   /// Builds some of the objects required for fitting or transforming the
@@ -250,32 +249,32 @@ class Mapping : public Preprocessor {
   /// Transforms the mappings for the categorical columns to SQL.
   std::vector<std::string> categorical_columns_to_sql(
       const helpers::StringIterator& _categories,
-      const std::shared_ptr<const helpers::SQLDialectGenerator>&
+      const std::shared_ptr<const transpilation::SQLDialectGenerator>&
           _sql_dialect_generator) const;
 
   /// Transforms a mapping for a categorical or text column to SQL.
   std::string categorical_or_text_column_to_sql(
       const helpers::StringIterator& _categories,
-      const std::shared_ptr<const helpers::SQLDialectGenerator>&
+      const std::shared_ptr<const transpilation::SQLDialectGenerator>&
           _sql_dialect_generator,
       const std::string& _name, const PtrType& _ptr, const size_t _weight_num,
       const bool _is_text) const;
 
   /// Transforms the mappings for a discrete columns to SQL.
   std::string discrete_column_to_sql(
-      const std::shared_ptr<const helpers::SQLDialectGenerator>&
+      const std::shared_ptr<const transpilation::SQLDialectGenerator>&
           _sql_dialect_generator,
       const std::string& _name, const PtrType& _ptr,
       const size_t _weight_num) const;
 
   /// Transforms the mappings for the discrete columns to SQL.
   std::vector<std::string> discrete_columns_to_sql(
-      const std::shared_ptr<const helpers::SQLDialectGenerator>&
+      const std::shared_ptr<const transpilation::SQLDialectGenerator>&
           _sql_dialect_generator) const;
 
   /// Transforms the mappings for the text columns to SQL.
   std::vector<std::string> text_columns_to_sql(
-      const std::shared_ptr<const helpers::SQLDialectGenerator>&
+      const std::shared_ptr<const transpilation::SQLDialectGenerator>&
           _sql_dialect_generator) const;
 
   /// Extracts a mapping from JSON.
@@ -352,8 +351,8 @@ class Mapping : public Preprocessor {
   size_t infer_num_cols(const helpers::DataFrame& _df) const;
 
   /// Generates the name of the mapping column.
-  std::string make_colname(const std::string& _name,
-                           const size_t _weight_num) const;
+  std::string make_staging_table_colname(const std::string& _name,
+                                         const size_t _weight_num) const;
 
   /// Generates the mapping for a rownum map.
   std::shared_ptr<const std::map<Int, std::vector<Float>>> make_mapping(

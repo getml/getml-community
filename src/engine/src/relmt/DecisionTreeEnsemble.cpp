@@ -7,6 +7,7 @@
 // ----------------------------------------------------------------------------
 
 #include "relmt/ensemble/SubtreeHelper.hpp"
+#include "relmt/ensemble/TableHolderParams.hpp"
 #include "relmt/ensemble/Threadutils.hpp"
 #include "relmt/ensemble/ThreadutilsFitParams.hpp"
 #include "relmt/ensemble/ThreadutilsTransformParams.hpp"
@@ -642,8 +643,6 @@ DecisionTreeEnsemble::init(
     const helpers::RowIndexContainer &_row_indices,
     const helpers::WordIndexContainer &_word_indices,
     const std::optional<const helpers::FeatureContainer> &_feature_container) {
-  // ------------------------------------------------------------------------
-
   targets().resize(_population.nrows());
 
   assert_true(_population.num_targets() == 1);
@@ -652,11 +651,7 @@ DecisionTreeEnsemble::init(
     targets()[i] = _population.target(i, 0);
   }
 
-  // ------------------------------------------------------------------------
-
   calc_initial_prediction();
-
-  // ------------------------------------------------------------------------
 
   loss_function().init_yhat_old(initial_prediction());
 
@@ -665,17 +660,25 @@ DecisionTreeEnsemble::init(
   loss_function().calc_sampling_rate(false, hyperparameters().sampling_factor_,
                                      &comm());
 
-  // ------------------------------------------------------------------------
+  const auto make_staging_table_colname =
+      [](const std::string &_colname) -> std::string {
+    return transpilation::SQLite3Generator().make_staging_table_colname(
+        _colname);
+  };
 
-  const auto table_holder = std::make_shared<const TableHolder>(
-      placeholder(), _population, _peripheral, peripheral(), _row_indices,
-      _word_indices, _feature_container);
+  const auto params = TableHolderParams{
+      .feature_container_ = _feature_container,
+      .make_staging_table_colname_ = make_staging_table_colname,
+      .peripheral_ = _peripheral,
+      .peripheral_names_ = peripheral(),
+      .placeholder_ = placeholder(),
+      .population_ = _population,
+      .row_index_container_ = _row_indices,
+      .word_index_container_ = _word_indices};
 
-  // ------------------------------------------------------------------------
+  const auto table_holder = std::make_shared<const TableHolder>(params);
 
   return std::make_pair(loss_function_, table_holder);
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -817,7 +820,7 @@ DecisionTreeEnsemble &DecisionTreeEnsemble::operator=(
 void DecisionTreeEnsemble::subfeatures_to_sql(
     const helpers::StringIterator &_categories,
     const helpers::VocabularyTree &_vocabulary,
-    const std::shared_ptr<const helpers::SQLDialectGenerator>
+    const std::shared_ptr<const transpilation::SQLDialectGenerator>
         &_sql_dialect_generator,
     const std::string &_feature_prefix, const size_t _offset,
     const std::shared_ptr<const std::map<std::string, std::string>>
@@ -1110,7 +1113,7 @@ Poco::JSON::Object DecisionTreeEnsemble::to_json_obj(
 std::vector<std::string> DecisionTreeEnsemble::to_sql(
     const helpers::StringIterator &_categories,
     const helpers::VocabularyTree &_vocabulary,
-    const std::shared_ptr<const helpers::SQLDialectGenerator>
+    const std::shared_ptr<const transpilation::SQLDialectGenerator>
         &_sql_dialect_generator,
     const std::string &_feature_prefix, const size_t _offset,
     const bool _subfeatures,

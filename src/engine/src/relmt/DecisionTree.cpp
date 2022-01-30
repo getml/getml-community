@@ -73,8 +73,6 @@ std::tuple<Float, Float, std::vector<Float>> DecisionTree::calc_initial_weights(
 
 void DecisionTree::column_importances(
     utils::ImportanceMaker* _importance_maker) const {
-  // ------------------------------------------------------------------------
-
   assert_true(root_);
 
   assert_true(input_);
@@ -86,8 +84,6 @@ void DecisionTree::column_importances(
   assert_true(initial_weights_.size() >=
               input_->discretes_.size() + input_->numericals_.size() +
                   output_->discretes_.size() + output_->numericals_.size() + 1);
-
-  // ------------------------------------------------------------------------
 
   const auto sum_abs = [](const Float init, const Float val) {
     return init + std::abs(val);
@@ -106,8 +102,6 @@ void DecisionTree::column_importances(
     std::transform(initial_weights_.begin() + 1, initial_weights_.end(),
                    rescaled_weights.begin(), divide_by_sum);
   }
-
-  // ------------------------------------------------------------------------
 
   size_t i = 0;
 
@@ -135,18 +129,12 @@ void DecisionTree::column_importances(
                            initial_loss_reduction_ * rescaled_weights.at(i));
   }
 
-  // ------------------------------------------------------------------------
-
   for (size_t j = 0; i < rescaled_weights.size(); ++i, ++j) {
     _importance_maker->add(*input_, *output_, enums::DataUsed::subfeatures, j,
                            0, initial_loss_reduction_ * rescaled_weights.at(i));
   }
 
-  // ------------------------------------------------------------------------
-
   root_->column_importances(_importance_maker);
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -158,13 +146,9 @@ void DecisionTree::fit(const containers::DataFrameView& _output,
                        const containers::Rescaled& _input_rescaled,
                        const std::vector<containers::Match>::iterator _begin,
                        const std::vector<containers::Match>::iterator _end) {
-  // ------------------------------------------------------------------------
-
   input_ = std::make_shared<const helpers::Schema>(_input->to_schema());
 
   output_ = std::make_shared<const helpers::Schema>(_output.df().to_schema());
-
-  // ------------------------------------------------------------------------
 
   // TODO: Remove optional
   assert_true(_input);
@@ -173,8 +157,6 @@ void DecisionTree::fit(const containers::DataFrameView& _output,
       calc_initial_weights(_output, *_input, _subfeatures, _begin, _end);
 
   is_ts_ = make_is_ts(_output, *_input);
-
-  // ------------------------------------------------------------------------
 
   root_.reset(new DecisionTreeNode(
       utils::ConditionMaker(hyperparameters().delta_t_, peripheral_used(),
@@ -186,12 +168,9 @@ void DecisionTree::fit(const containers::DataFrameView& _output,
   root_->fit(_output, _input, _subfeatures, _output_rescaled, _input_rescaled,
              _begin, _end, &intercept_);
 
-  // ------------------------------------------------------------------------
-  // Reset the loss function, so that it can be used for the next tree.
-
+  // Reset the loss function, so that
+  // it can be used for the next tree.
   loss_function_->reset();
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -391,43 +370,33 @@ std::set<size_t> DecisionTree::make_subfeatures_used() const {
 std::string DecisionTree::to_sql(
     const helpers::StringIterator& _categories,
     const helpers::VocabularyTree& _vocabulary,
-    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+    const std::shared_ptr<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator,
     const std::string& _feature_prefix, const std::string _feature_num,
     const std::tuple<bool, bool, bool> _has_subfeatures) const {
-  // -------------------------------------------------------------------
-
   assert_true(_sql_dialect_generator);
 
-  // -------------------------------------------------------------------
+  const auto aggregation =
+      helpers::enums::Parser<helpers::enums::Aggregation>::parse(
+          loss_function().type());
 
   const auto quote1 = _sql_dialect_generator->quotechar1();
   const auto quote2 = _sql_dialect_generator->quotechar2();
 
   const std::string tab = "    ";
 
-  // -------------------------------------------------------------------
-
   std::stringstream sql;
-
-  // -------------------------------------------------------------------
 
   sql << "DROP TABLE IF EXISTS " << quote1 << "FEATURE_" << _feature_prefix
       << _feature_num << quote2 << ";" << std::endl
       << std::endl;
 
-  // -------------------------------------------------------------------
-
-  sql << "CREATE TABLE " << quote1 << "FEATURE_" << _feature_prefix
-      << _feature_num << quote2 << " AS" << std::endl;
-
-  // -------------------------------------------------------------------
+  sql << _sql_dialect_generator->create_table(aggregation, _feature_prefix,
+                                              _feature_num);
 
   sql << "SELECT ";
 
   sql << loss_function().type() << "( " << std::endl;
-
-  // -------------------------------------------------------------------
 
   std::vector<std::string> conditions;
 
@@ -439,8 +408,6 @@ std::string DecisionTree::to_sql(
                 _vocabulary.peripheral().at(peripheral_used()),
                 _sql_dialect_generator, _feature_prefix, _feature_num, "",
                 &conditions);
-
-  // -------------------------------------------------------------------
 
   if (conditions.size() > 1) {
     sql << tab << "CASE" << std::endl;
@@ -458,20 +425,15 @@ std::string DecisionTree::to_sql(
     sql << tab << conditions.at(0).substr(5) << std::endl;
   }
 
-  // -------------------------------------------------------------------
-
   sql << "AS " << quote1 << "feature_" << _feature_prefix << _feature_num
       << quote2 << "," << std::endl;
 
-  sql << tab << " t1.rowid AS " << quote1 << "rownum" << quote2 << std::endl;
-
-  // -------------------------------------------------------------------
+  sql << "       t1." << _sql_dialect_generator->rowid() << " AS "
+      << _sql_dialect_generator->rownum() << std::endl;
 
   sql << _sql_dialect_generator->make_joins(output().name(), input().name(),
                                             output().join_keys_name(),
                                             input().join_keys_name());
-
-  // -------------------------------------------------------------------
 
   const auto [has_normal_subfeatures, output_has_prop, input_has_prop] =
       _has_subfeatures;
@@ -491,8 +453,6 @@ std::string DecisionTree::to_sql(
         _feature_prefix, peripheral_used_, "t2", "_PROPOSITIONALIZATION");
   }
 
-  // -------------------------------------------------------------------
-
   if (input().num_time_stamps() > 0 && output().num_time_stamps() > 0) {
     sql << "WHERE ";
 
@@ -505,18 +465,11 @@ std::string DecisionTree::to_sql(
                                                     upper_ts, "t1", "t2", "t1");
   }
 
-  // -------------------------------------------------------------------
-
-  sql << "GROUP BY t1.rowid"
-      << ";" << std::endl
+  sql << _sql_dialect_generator->group_by(aggregation) << ";" << std::endl
       << std::endl
       << std::endl;
 
-  // -------------------------------------------------------------------
-
   return sql.str();
-
-  // -------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -525,11 +478,7 @@ std::shared_ptr<std::vector<Float>> DecisionTree::transform(
     const containers::DataFrameView& _output,
     const containers::DataFrame& _input,
     const containers::Subfeatures& _subfeatures) const {
-  // ------------------------------------------------------------------------
-
   assert_true(root_);
-
-  // ------------------------------------------------------------------------
 
   auto predictions = std::make_shared<std::vector<Float>>(_output.nrows());
 
@@ -539,24 +488,16 @@ std::shared_ptr<std::vector<Float>> DecisionTree::transform(
   const auto input_map = std::make_shared<containers::Rescaled::MapType>(
       _input.nrows(), _input.nrows());
 
-  // ------------------------------------------------------------------------
-
   for (size_t ix_output = 0; ix_output < _output.nrows(); ++ix_output) {
-    // ------------------------------------------------------------------------
-
     std::vector<containers::Match> matches;
 
     utils::Matchmaker::make_matches(_output, _input, ix_output, &matches);
-
-    // ------------------------------------------------------------------------
 
     const auto output_rescaled = output_scaler().transform(
         _output, std::nullopt, output_map, matches.begin(), matches.end());
 
     const auto input_rescaled = input_scaler().transform(
         _input, _subfeatures, input_map, matches.begin(), matches.end());
-
-    // ------------------------------------------------------------------------
 
     std::vector<Float> weights(matches.size());
 
@@ -566,18 +507,10 @@ std::shared_ptr<std::vector<Float>> DecisionTree::transform(
                            input_rescaled, matches[i]);
     }
 
-    // ------------------------------------------------------------------------
-
     (*predictions)[ix_output] = loss_function_->transform(weights);
-
-    // ------------------------------------------------------------------------
   }
 
-  // ------------------------------------------------------------------------
-
   return predictions;
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------

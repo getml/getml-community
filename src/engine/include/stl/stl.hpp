@@ -1,11 +1,13 @@
 #ifndef STL_STL_HPP_
 #define STL_STL_HPP_
 
+#include "stl/AccessIterator.hpp"
 #include "stl/IotaIterator.hpp"
 #include "stl/IotaRange.hpp"
 #include "stl/Range.hpp"
 #include "stl/Ref.hpp"
 #include "stl/collect.hpp"
+#include "stl/compose.hpp"
 #include "stl/iota.hpp"
 #include "stl/join.hpp"
 

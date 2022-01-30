@@ -2,12 +2,9 @@
 
 namespace engine {
 namespace containers {
-// ----------------------------------------------------------------------------
 
 std::vector<std::string> DataFrameReader::make_colnames(const DataFrame& _df,
                                                         char _quotechar) {
-  // ------------------------------------------------------------------------
-
   std::vector<std::string> colnames;
 
   for (size_t i = 0; i < _df.num_categoricals(); ++i) {
@@ -50,17 +47,11 @@ std::vector<std::string> DataFrameReader::make_colnames(const DataFrame& _df,
     colnames.push_back(colname);
   }
 
-  // ------------------------------------------------------------------------
-
   for (auto& name : colnames) {
     name = io::Parser::remove_quotechars(name, _quotechar);
   }
 
-  // ------------------------------------------------------------------------
-
   return colnames;
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -114,16 +105,11 @@ std::vector<io::Datatype> DataFrameReader::make_coltypes(const DataFrame& _df) {
 // ----------------------------------------------------------------------------
 
 std::vector<std::string> DataFrameReader::next_line() {
-  // ------------------------------------------------------------------------
   // Usually the calling function should make sure that we haven't reached
   // the end of file. But just to be sure, we do it again.
-
   if (eof()) {
     return std::vector<std::string>();
   }
-
-  // ------------------------------------------------------------------------
-  // Chop up lines into fields.
 
   assert_true(colnames().size() == coltypes().size());
 
@@ -179,15 +165,9 @@ std::vector<std::string> DataFrameReader::next_line() {
 
   assert_true(col == result.size());
 
-  // ------------------------------------------------------------------------
-
   ++rownum_;
 
-  // ------------------------------------------------------------------------
-
   return result;
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------

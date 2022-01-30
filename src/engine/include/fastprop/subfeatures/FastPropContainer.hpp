@@ -12,13 +12,16 @@
 
 // ----------------------------------------------------------------------------
 
+#include "transpilation/transpilation.hpp"
+
+// ----------------------------------------------------------------------------
+
 #include "fastprop/algorithm/algorithm.hpp"
 
 // ----------------------------------------------------------------------------
 
 namespace fastprop {
 namespace subfeatures {
-// ------------------------------------------------------------------------
 
 class FastPropContainer {
  public:
@@ -61,7 +64,7 @@ class FastPropContainer {
   /// Expresses the features to in SQL code.
   void to_sql(const helpers::StringIterator& _categories,
               const helpers::VocabularyTree& _vocabulary,
-              const std::shared_ptr<const helpers::SQLDialectGenerator>&
+              const std::shared_ptr<const transpilation::SQLDialectGenerator>&
                   _sql_dialect_generator,
               const std::string& _feature_prefix, const bool _subfeatures,
               std::vector<std::string>* _sql) const;
@@ -79,7 +82,6 @@ class FastPropContainer {
   const std::shared_ptr<const Subcontainers> subcontainers_;
 };
 
-// ------------------------------------------------------------------------
 }  // namespace subfeatures
 }  // namespace fastprop
 

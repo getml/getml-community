@@ -8,7 +8,6 @@
 
 namespace engine {
 namespace preprocessors {
-// ----------------------------------------------------
 
 containers::DataFrame TextFieldSplitter::add_rowid(
     const containers::DataFrame& _df) const {
@@ -181,7 +180,7 @@ Poco::JSON::Object::Ptr TextFieldSplitter::to_json_obj() const {
 
 std::vector<std::string> TextFieldSplitter::to_sql(
     const helpers::StringIterator& _categories,
-    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+    const std::shared_ptr<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator) const {
   assert_true(_sql_dialect_generator);
 

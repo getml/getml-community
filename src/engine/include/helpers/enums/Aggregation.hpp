@@ -5,7 +5,6 @@
 
 namespace helpers {
 namespace enums {
-// ------------------------------------------------------------------------
 
 enum class Aggregation {
   avg,
@@ -52,8 +51,6 @@ enum class Aggregation {
   var,
   variation_coefficient
 };
-
-// ----------------------------------------------------------------------------
 
 }  // namespace enums
 }  // namespace helpers

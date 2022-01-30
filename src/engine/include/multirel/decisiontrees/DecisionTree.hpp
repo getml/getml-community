@@ -10,8 +10,10 @@
 #include <algorithm>
 #include <memory>
 #include <optional>
+#include <set>
 #include <string>
 #include <tuple>
+#include <vector>
 
 // ----------------------------------------------------------------------------
 
@@ -34,9 +36,9 @@
 #include "multirel/decisiontrees/DecisionTreeNode.hpp"
 
 // ----------------------------------------------------------------------------
+
 namespace multirel {
 namespace decisiontrees {
-// ----------------------------------------------------------------------------
 
 class DecisionTree {
  public:
@@ -97,13 +99,13 @@ class DecisionTree {
 
   /// Extracts the SQL statement underlying the tree
   /// as a string
-  std::string to_sql(const helpers::StringIterator &_categories,
-                     const helpers::VocabularyTree &_vocabulary,
-                     const std::shared_ptr<const helpers::SQLDialectGenerator>
-                         &_sql_dialect_generator,
-                     const std::string &_feature_prefix,
-                     const std::string &_feature_num,
-                     const std::tuple<bool, bool, bool> _has_subfeatures) const;
+  std::string to_sql(
+      const helpers::StringIterator &_categories,
+      const helpers::VocabularyTree &_vocabulary,
+      const std::shared_ptr<const transpilation::SQLDialectGenerator>
+          &_sql_dialect_generator,
+      const std::string &_feature_prefix, const std::string &_feature_num,
+      const std::tuple<bool, bool, bool> _has_subfeatures) const;
 
   /// Transforms a set of raw data into extracted features
   std::shared_ptr<const std::vector<Float>> transform(
@@ -111,13 +113,9 @@ class DecisionTree {
       const containers::DataFrame &_peripheral,
       const containers::Subfeatures &_subfeatures) const;
 
-  // --------------------------------------
-
  private:
   /// Returns a set containing the unique subfeatures used.
   std::set<size_t> make_subfeatures_used() const;
-
-  // --------------------------------------
 
  public:
   /// Accessor for the aggregation.
@@ -209,8 +207,6 @@ class DecisionTree {
                                                   _num_samples_greater);
   }
 
-  // --------------------------------------
-
  private:
   /// Trivial accessor
   inline bool allow_sets() const { return impl_.allow_sets(); }
@@ -300,8 +296,6 @@ class DecisionTree {
 
   /// Needed for the snowflake data model
   std::vector<DecisionTree> subtrees_;
-
-  // --------------------------------------
 };
 
 // ----------------------------------------------------------------------------

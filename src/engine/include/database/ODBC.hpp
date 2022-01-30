@@ -18,7 +18,10 @@
 // ----------------------------------------------------------------------------
 
 #include <memory>
+#include <optional>
 #include <string>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 // ----------------------------------------------------------------------------
@@ -38,10 +41,10 @@
 // ----------------------------------------------------------------------------
 
 namespace database {
-// ----------------------------------------------------------------------------
 
 class ODBC : public Connector {
-  // -------------------------------
+ private:
+  static constexpr bool NO_AUTOCOMMIT = true;
 
  public:
   ODBC(const Poco::JSON::Object& _obj, const std::string& _passwd,
@@ -136,6 +139,11 @@ class ODBC : public Connector {
   /// target table.
   void check_colnames(const std::vector<std::string>& _colnames,
                       io::Reader* _reader);
+
+  /// Gets the next line from the reader.
+  std::optional<std::vector<std::string>> get_next_line(
+      const std::vector<io::Datatype>& _coltypes, const size_t _line_count,
+      io::Reader* _reader) const;
 
   /// Generate an iterator that is limited, trying different SQL statements.
   std::optional<ODBCIterator> make_limited_iterator(const std::string& _table,

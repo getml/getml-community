@@ -11,6 +11,7 @@
 
 #include "fastprop/enums/enums.hpp"
 #include "helpers/helpers.hpp"
+#include "transpilation/transpilation.hpp"
 
 // ----------------------------------------------------------------------------
 
@@ -20,7 +21,6 @@
 
 namespace fastprop {
 namespace containers {
-// ------------------------------------------------------------------------
 
 class SQLMaker {
  public:
@@ -32,7 +32,7 @@ class SQLMaker {
   SQLMaker(const helpers::StringIterator& _categories,
            const std::string& _feature_prefix, const helpers::Schema& _input,
            const helpers::Schema& _output,
-           const std::shared_ptr<const helpers::SQLDialectGenerator>&
+           const std::shared_ptr<const transpilation::SQLDialectGenerator>&
                _sql_dialect_generator)
       : categories_(_categories),
         feature_prefix_(_feature_prefix),
@@ -51,6 +51,11 @@ class SQLMaker {
   /// Creates a select statement (SELECT AGGREGATION(VALUE TO TO BE
   /// AGGREGATED)).
   std::string select_statement(const AbstractFeature& _abstract_feature) const;
+
+  /// Creates the value to be aggregated (for instance a column name or the
+  /// difference between two columns)
+  std::string value_to_be_aggregated(
+      const AbstractFeature& _abstract_feature) const;
 
  public:
   /// Whether the aggregation is an aggregation that relies on the
@@ -92,11 +97,6 @@ class SQLMaker {
   /// Returns the select statement for AVG_TIME_BETWEEN.
   std::string select_avg_time_between() const;
 
-  /// Creates the value to be aggregated (for instance a column name or the
-  /// difference between two columns)
-  std::string value_to_be_aggregated(
-      const AbstractFeature& _abstract_feature) const;
-
  private:
   /// Trivial (const private) accessor.
   const helpers::StringIterator& categories() const { return categories_; }
@@ -115,7 +115,7 @@ class SQLMaker {
   const helpers::Schema output_;
 
   /// Generates the right code for the required SQL dialect.
-  const std::shared_ptr<const helpers::SQLDialectGenerator>
+  const std::shared_ptr<const transpilation::SQLDialectGenerator>
       sql_dialect_generator_;
 };
 

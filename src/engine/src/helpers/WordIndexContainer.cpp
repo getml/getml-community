@@ -1,7 +1,6 @@
 #include "helpers/WordIndexContainer.hpp"
 
 namespace helpers {
-// ----------------------------------------------------------------------------
 
 WordIndexContainer::WordIndexContainer(
     const DataFrame& _population, const std::vector<DataFrame>& _peripheral,
@@ -64,6 +63,7 @@ typename WordIndexContainer::WordIndices WordIndexContainer::make_word_indices(
   const auto make_index = [&_df, &_vocabulary](const size_t ix) {
     const auto& col = _df.text_.at(ix);
     const auto& voc = _vocabulary.at(ix);
+    assert_msg(voc, "ix: " + std::to_string(ix));
     return std::make_shared<const textmining::WordIndex>(
         stl::Range(col.begin(), col.end()), voc);
   };

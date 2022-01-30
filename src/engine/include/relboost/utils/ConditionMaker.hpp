@@ -11,6 +11,7 @@
 
 #include "helpers/helpers.hpp"
 #include "strings/strings.hpp"
+#include "transpilation/transpilation.hpp"
 
 // ----------------------------------------------------------------------------
 
@@ -22,7 +23,6 @@
 
 namespace relboost {
 namespace utils {
-// ------------------------------------------------------------------------
 
 class ConditionMaker {
  private:
@@ -39,7 +39,7 @@ class ConditionMaker {
   std::string condition_greater(
       const helpers::StringIterator& _categories,
       const VocabForDf& _vocab_popul, const VocabForDf& _vocab_perip,
-      const std::shared_ptr<const helpers::SQLDialectGenerator>&
+      const std::shared_ptr<const transpilation::SQLDialectGenerator>&
           _sql_dialect_generator,
       const std::string& _feature_prefix, const helpers::Schema& _input,
       const helpers::Schema& _output, const containers::Split& _split) const;
@@ -47,7 +47,7 @@ class ConditionMaker {
   std::string condition_smaller(
       const helpers::StringIterator& _categories,
       const VocabForDf& _vocab_popul, const VocabForDf& _vocab_perip,
-      const std::shared_ptr<const helpers::SQLDialectGenerator>&
+      const std::shared_ptr<const transpilation::SQLDialectGenerator>&
           _sql_dialect_generator,
       const std::string& _feature_prefix, const helpers::Schema& _input,
       const helpers::Schema& _output, const containers::Split& _split) const;
@@ -60,14 +60,14 @@ class ConditionMaker {
   /// Returns a list of the words.
   std::string list_words(
       const std::vector<strings::String>& _vocabulary,
-      const std::shared_ptr<const helpers::SQLDialectGenerator>&
+      const std::shared_ptr<const transpilation::SQLDialectGenerator>&
           _sql_dialect_generator,
       const containers::Split& _split, const std::string& _name,
       const bool _is_greater) const;
 
   /// Generates the column name to insert into the conditions.
   std::string make_colname(
-      const std::shared_ptr<const helpers::SQLDialectGenerator>&
+      const std::shared_ptr<const transpilation::SQLDialectGenerator>&
           _sql_dialect_generator,
       const std::string& _colname, const std::string& _alias) const;
 
@@ -79,7 +79,7 @@ class ConditionMaker {
 
   /// Transforms the time stamps windows into SQLite-compliant code.
   std::string make_time_stamp_window(
-      const std::shared_ptr<const helpers::SQLDialectGenerator>&
+      const std::shared_ptr<const transpilation::SQLDialectGenerator>&
           _sql_dialect_generator,
       const helpers::Schema& _input, const helpers::Schema& _output,
       const Float _diff, const bool _is_greater) const;

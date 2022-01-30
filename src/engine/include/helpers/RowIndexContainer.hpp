@@ -18,7 +18,6 @@
 // -------------------------------------------------------------------------
 
 namespace helpers {
-// -------------------------------------------------------------------------
 
 class RowIndexContainer {
  public:
@@ -55,7 +54,6 @@ class RowIndexContainer {
   RowIndices population_;
 };
 
-// -------------------------------------------------------------------------
 }  // namespace helpers
 
 #endif  // HELPERS_ROWINDEXCONTAINER_HPP_

@@ -15,11 +15,12 @@
 #include "helpers/FeatureContainer.hpp"
 #include "helpers/Placeholder.hpp"
 #include "helpers/RowIndexContainer.hpp"
+#include "helpers/TableHolderParams.hpp"
 #include "helpers/WordIndexContainer.hpp"
 
 // ----------------------------------------------------------------------------
+
 namespace helpers {
-// ----------------------------------------------------------------------------
 
 class TableHolder {
  public:
@@ -29,15 +30,7 @@ class TableHolder {
 
   typedef typename WordIndexContainer::WordIndices WordIndices;
 
-  TableHolder(const Placeholder& _placeholder, const DataFrameView& _population,
-              const std::vector<DataFrame>& _peripheral,
-              const std::vector<std::string>& _peripheral_names,
-              const std::optional<RowIndexContainer>& _row_index_container =
-                  std::nullopt,
-              const std::optional<WordIndexContainer>& _word_index_container =
-                  std::nullopt,
-              const std::optional<const FeatureContainer>& _feature_container =
-                  std::nullopt);
+  explicit TableHolder(const TableHolderParams& _params);
 
   ~TableHolder();
 
@@ -46,13 +39,8 @@ class TableHolder {
  private:
   /// Adds the text fields to the peripheral tables.
   static std::vector<DataFrame> add_text_fields_to_peripheral_tables(
-      const std::vector<DataFrame>& _original, const Placeholder& _placeholder,
-      const DataFrameView& _population,
-      const std::vector<DataFrame>& _peripheral,
-      const std::vector<std::string>& _peripheral_names,
-      const std::optional<RowIndexContainer>& _row_index_container,
-      const std::optional<WordIndexContainer>& _word_index_container,
-      const std::optional<const FeatureContainer>& _feature_container);
+      const std::vector<DataFrame>& _original,
+      const TableHolderParams& _params);
 
   /// Counts the number of peripheral tables that have been created from text
   /// fields.
@@ -69,9 +57,7 @@ class TableHolder {
       const size_t _i);
 
   /// Generates a new output table to be used by a subtable.
-  static DataFrameView make_output(const Placeholder& _placeholder,
-                                   const DataFrameView& _population,
-                                   const std::vector<DataFrame>& _peripheral,
+  static DataFrameView make_output(const TableHolderParams& _params,
                                    const size_t _i, const size_t _j);
 
   /// Creates the row indices for the subtables.
@@ -81,20 +67,11 @@ class TableHolder {
 
   /// Creates the main tables during construction.
   static std::vector<DataFrameView> parse_main_tables(
-      const Placeholder& _placeholder, const DataFrameView& _population,
-      const std::vector<DataFrame>& _peripheral,
-      const std::optional<RowIndexContainer>& _row_index_container,
-      const std::optional<WordIndexContainer>& _word_index_container,
-      const std::optional<const FeatureContainer>& _feature_container);
+      const TableHolderParams& _params);
 
   /// Creates the peripheral tables during construction.
   static std::vector<DataFrame> parse_peripheral_tables(
-      const Placeholder& _placeholder, const DataFrameView& _population,
-      const std::vector<DataFrame>& _peripheral,
-      const std::vector<std::string>& _peripheral_names,
-      const std::optional<RowIndexContainer>& _row_index_container,
-      const std::optional<WordIndexContainer>& _word_index_container,
-      const std::optional<const FeatureContainer>& _feature_container);
+      const TableHolderParams& _params);
 
   /// Parses the propositionalization flag in the Placeholder
   static std::vector<bool> parse_propositionalization(
@@ -102,11 +79,7 @@ class TableHolder {
 
   /// Creates the subtables during construction.
   static std::vector<std::optional<TableHolder>> parse_subtables(
-      const Placeholder& _placeholder, const DataFrameView& _population,
-      const std::vector<DataFrame>& _peripheral,
-      const std::vector<std::string>& _peripheral_names,
-      const std::optional<RowIndexContainer>& _row_index_container,
-      const std::optional<WordIndexContainer>& _word_index_container);
+      const TableHolderParams& _params);
 
   // ------------------------------
 

@@ -21,14 +21,9 @@
 #include "helpers/Float.hpp"
 #include "helpers/NullChecker.hpp"
 
-// ------------------------------------------------------------------------
-
 namespace helpers {
-// ------------------------------------------------------------------------
 
 class Aggregations {
-  // ------------------------------------------------------------------------
-
  public:
   /// Throws an exception if not all values are the same.
   template <class IteratorType>

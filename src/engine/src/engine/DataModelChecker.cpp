@@ -12,7 +12,6 @@
 
 namespace engine {
 namespace preprocessors {
-// ----------------------------------------------------------------------------
 
 size_t DataModelChecker::calc_num_joins(
     const helpers::Placeholder& _placeholder) {
@@ -33,11 +32,7 @@ communication::Warner DataModelChecker::check(
     const std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>
         _feature_learners,
     const std::shared_ptr<const communication::SocketLogger>& _logger) {
-  // --------------------------------------------------------------------------
-
   check_relational(_peripheral, _feature_learners);
-
-  // --------------------------------------------------------------------------
 
   const auto is_not_text_field = [](const containers::DataFrame& _df) -> bool {
     return _df.name().find(helpers::Macros::text_field()) == std::string::npos;
@@ -46,29 +41,19 @@ communication::Warner DataModelChecker::check(
   const auto peripheral = stl::collect::vector<containers::DataFrame>(
       _peripheral | VIEWS::filter(is_not_text_field));
 
-  // --------------------------------------------------------------------------
-
   check_peripheral_size(_peripheral_names, peripheral);
 
   check_all_propositionalization(_placeholder, _feature_learners);
 
-  // --------------------------------------------------------------------------
-
   communication::Warner warner;
-
-  // --------------------------------------------------------------------------
 
   const size_t num_total = _feature_learners.size() > 0 ? 50 : 100;
 
   auto logger_df = logging::ProgressLogger("Checking...", _logger,
                                            peripheral.size() + 1, 0, num_total);
 
-  // --------------------------------------------------------------------------
-
   check_data_frames(_population, peripheral, _feature_learners, &logger_df,
                     &warner);
-
-  // --------------------------------------------------------------------------
 
   assert_true(_placeholder);
 
@@ -91,11 +76,7 @@ communication::Warner DataModelChecker::check(
                prob_pick, _feature_learners, &logger_joins, &warner);
   }
 
-  // --------------------------------------------------------------------------
-
   return warner;
-
-  // --------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -135,11 +116,7 @@ void DataModelChecker::check_all_propositionalization(
 void DataModelChecker::check_categorical_column(
     const containers::Column<Int>& _col, const std::string& _df_name,
     communication::Warner* _warner) {
-  // --------------------------------------------------------------------------
-
   const auto length = static_cast<Float>(_col.size());
-
-  // --------------------------------------------------------------------------
 
   assert_true(_col.size() > 0);
 
@@ -156,35 +133,25 @@ void DataModelChecker::check_categorical_column(
     return;
   }
 
-  // --------------------------------------------------------------------------
-
   const bool is_comparison_only =
       (_col.unit().find("comparison only") != std::string::npos);
 
   const Float num_distinct =
       utils::Aggregations::count_distinct(_col.begin(), _col.end());
 
-  // --------------------------------------------------------------------------
-
   if (num_distinct == 1.0 && !is_comparison_only) {
     warn_all_equal(false, _col.name(), _df_name, _warner);
   }
 
-  // --------------------------------------------------------------------------
-
   if (num_distinct > 1000.0 && !is_comparison_only) {
     warn_too_many_unique(num_distinct, _col.name(), _df_name, _warner);
   }
-
-  // --------------------------------------------------------------------------
 
   const auto unique_share = num_distinct / num_non_null;
 
   if (!is_comparison_only && unique_share > 0.25) {
     warn_unique_share_too_high(unique_share, _col.name(), _df_name, _warner);
   }
-
-  // --------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -195,15 +162,11 @@ void DataModelChecker::check_data_frames(
     const std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>
         _feature_learners,
     logging::ProgressLogger* _logger, communication::Warner* _warner) {
-  // --------------------------------------------------------------------------
-
   const auto has_multirel = find_feature_learner(
       _feature_learners, featurelearners::AbstractFeatureLearner::MULTIREL);
 
   const auto has_relmt = find_feature_learner(
       _feature_learners, featurelearners::AbstractFeatureLearner::RELMT);
-
-  // --------------------------------------------------------------------------
 
   check_df(_population, false, _warner);
 
@@ -214,15 +177,11 @@ void DataModelChecker::check_data_frames(
     _logger->increment();
   }
 
-  // --------------------------------------------------------------------------
-
   if (has_relmt) {
     for (const auto& df : _peripheral) {
       check_num_columns_relmt(_population, df, _warner);
     }
   }
-
-  // --------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -230,14 +189,10 @@ void DataModelChecker::check_data_frames(
 void DataModelChecker::check_df(const containers::DataFrame& _df,
                                 const bool _check_num_columns,
                                 communication::Warner* _warner) {
-  // --------------------------------------------------------------------------
-
   if (_df.nrows() == 0) {
     warn_is_empty(_df.name(), _warner);
     return;
   }
-
-  // --------------------------------------------------------------------------
 
   if (_check_num_columns) {
     const auto num_columns = _df.num_numericals() + _df.num_categoricals();
@@ -246,8 +201,6 @@ void DataModelChecker::check_df(const containers::DataFrame& _df,
       warn_too_many_columns_multirel(num_columns, _df.name(), _warner);
     }
   }
-
-  // --------------------------------------------------------------------------
 
   for (size_t i = 0; i < _df.num_categoricals(); ++i) {
     check_categorical_column(_df.categorical(i), _df.name(), _warner);
@@ -260,8 +213,6 @@ void DataModelChecker::check_df(const containers::DataFrame& _df,
   for (size_t i = 0; i < _df.num_time_stamps(); ++i) {
     check_float_column(_df.time_stamp(i), _df.name(), _warner);
   }
-
-  // --------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -269,11 +220,7 @@ void DataModelChecker::check_df(const containers::DataFrame& _df,
 void DataModelChecker::check_float_column(const containers::Column<Float>& _col,
                                           const std::string& _df_name,
                                           communication::Warner* _warner) {
-  // --------------------------------------------------------------------------
-
   const auto length = static_cast<Float>(_col.size());
-
-  // --------------------------------------------------------------------------
 
   assert_true(_col.size() > 0);
 
@@ -286,8 +233,6 @@ void DataModelChecker::check_float_column(const containers::Column<Float>& _col,
     warn_too_many_nulls(true, share_null, _col.name(), _df_name, _warner);
   }
 
-  // --------------------------------------------------------------------------
-
   const bool is_comparison_only =
       (_col.unit().find("comparison only") != std::string::npos);
 
@@ -296,8 +241,6 @@ void DataModelChecker::check_float_column(const containers::Column<Float>& _col,
   if (all_equal) {
     warn_all_equal(true, _col.name(), _df_name, _warner);
   }
-
-  // --------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -311,8 +254,6 @@ void DataModelChecker::check_join(
     const std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>&
         _feature_learners,
     logging::ProgressLogger* _logger, communication::Warner* _warner) {
-  // ------------------------------------------------------------------------
-
   const auto is_prop =
       [](const std::shared_ptr<featurelearners::AbstractFeatureLearner>& _fl)
       -> bool {
@@ -322,8 +263,6 @@ void DataModelChecker::check_join(
 
   const bool all_propositionalization =
       std::all_of(_feature_learners.begin(), _feature_learners.end(), is_prop);
-
-  // ------------------------------------------------------------------------
 
   const auto is_relmt =
       [](const std::shared_ptr<featurelearners::AbstractFeatureLearner>& _fl)
@@ -335,13 +274,9 @@ void DataModelChecker::check_join(
   const bool any_relmt =
       std::any_of(_feature_learners.begin(), _feature_learners.end(), is_relmt);
 
-  // ------------------------------------------------------------------------
-
   assert_true(_peripheral_names);
 
   assert_true(_peripheral_names->size() == _peripheral.size());
-
-  // ------------------------------------------------------------------------
 
   const auto& joined_tables = _placeholder.joined_tables_;
 
@@ -357,8 +292,6 @@ void DataModelChecker::check_join(
 
   const auto& upper_time_stamps_used = _placeholder.upper_time_stamps_used_;
 
-  // ------------------------------------------------------------------------
-
   const auto size = joined_tables.size();
 
   assert_true(join_keys_used.size() == size);
@@ -372,8 +305,6 @@ void DataModelChecker::check_join(
   assert_true(other_time_stamps_used.size() == size);
 
   assert_true(upper_time_stamps_used.size() == size);
-
-  // ------------------------------------------------------------------------
 
   for (size_t i = 0; i < size; ++i) {
     const auto& name = joined_tables.at(i).name_;
@@ -406,8 +337,6 @@ void DataModelChecker::check_join(
     check_join(joined_tables.at(i), _peripheral_names, _peripheral.at(dist),
                _peripheral, prob_pick, _feature_learners, _logger, _warner);
   }
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -421,21 +350,13 @@ DataModelChecker::check_matches(const std::string& _join_key_used,
                                 const containers::DataFrame& _population_df,
                                 const containers::DataFrame& _peripheral_df,
                                 const std::vector<Float>& _prob_pick) {
-  // ------------------------------------------------------------------------
-
   assert_true(_population_df.nrows() == _prob_pick.size());
 
-  // ------------------------------------------------------------------------
-
   const auto jk1 = _population_df.join_key(_join_key_used);
-
-  // ------------------------------------------------------------------------
 
   const auto [ts1, ts2, upper] =
       find_time_stamps(_time_stamp_used, _other_time_stamp_used,
                        _upper_time_stamp_used, _population_df, _peripheral_df);
-
-  // ------------------------------------------------------------------------
 
   bool is_many_to_one = true;
 
@@ -447,11 +368,7 @@ DataModelChecker::check_matches(const std::string& _join_key_used,
 
   auto local_num_matches = std::vector<Float>(_population_df.nrows());
 
-  // ------------------------------------------------------------------------
-
   const auto idx2 = _peripheral_df.index(_other_join_key_used);
-
-  // ------------------------------------------------------------------------
 
   for (size_t ix1 = 0; ix1 < jk1.size(); ++ix1) {
     const auto [begin, end] = idx2.find(jk1[ix1]);
@@ -484,18 +401,12 @@ DataModelChecker::check_matches(const std::string& _join_key_used,
     }
   }
 
-  // ------------------------------------------------------------------------
-
   const auto num_expected =
       std::inner_product(local_num_matches.begin(), local_num_matches.end(),
                          _prob_pick.begin(), 0.0);
 
-  // ------------------------------------------------------------------------
-
   return std::make_tuple(is_many_to_one, num_matches, num_expected,
                          num_jk_not_found, prob_pick);
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -576,8 +487,6 @@ DataModelChecker::find_time_stamps(
     const std::string& _upper_time_stamp_used,
     const containers::DataFrame& _population_df,
     const containers::DataFrame& _peripheral_df) {
-  // ------------------------------------------------------------------------
-
   if ((_time_stamp_used == "") != (_other_time_stamp_used == "")) {
     throw std::invalid_argument(
         "You have to pass both time_stamp_used and "
@@ -589,8 +498,6 @@ DataModelChecker::find_time_stamps(
         "If you pass no time_stamp_used, then passing an "
         "upper_time_stamp_used makes no sense.");
   }
-
-  // ------------------------------------------------------------------------
 
   auto ts1 = std::optional<containers::Column<Float>>();
 
@@ -610,11 +517,7 @@ DataModelChecker::find_time_stamps(
     upper = _peripheral_df.time_stamp(_upper_time_stamp_used);
   }
 
-  // ------------------------------------------------------------------------
-
   return std::make_tuple(ts1, ts2, upper);
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -624,8 +527,6 @@ std::tuple<std::vector<std::string>, std::vector<std::string>,
 DataModelChecker::get_time_stamps_used(
     const Poco::JSON::Object& _population_placeholder,
     const size_t _expected_size) {
-  // ------------------------------------------------------------------------
-
   const auto time_stamps_used_arr =
       _population_placeholder.getArray("time_stamps_used_");
 
@@ -652,8 +553,6 @@ DataModelChecker::get_time_stamps_used(
         "'upper_time_stamps_used_'!");
   }
 
-  // ------------------------------------------------------------------------
-
   const auto time_stamps_used =
       JSON::array_to_vector<std::string>(time_stamps_used_arr);
 
@@ -662,8 +561,6 @@ DataModelChecker::get_time_stamps_used(
 
   const auto upper_time_stamps_used =
       JSON::array_to_vector<std::string>(upper_time_stamps_used_arr);
-
-  // ------------------------------------------------------------------------
 
   if (_expected_size != time_stamps_used.size()) {
     throw std::invalid_argument(
@@ -683,12 +580,8 @@ DataModelChecker::get_time_stamps_used(
         "'upper_time_stamps_used_'.");
   }
 
-  // ------------------------------------------------------------------------
-
   return std::make_tuple(time_stamps_used, other_time_stamps_used,
                          upper_time_stamps_used);
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -719,7 +612,7 @@ bool DataModelChecker::is_all_equal(const containers::Column<Float>& _col) {
 // ------------------------------------------------------------------------
 
 std::string DataModelChecker::modify_df_name(const std::string& _df_name) {
-  return helpers::SQLGenerator::make_staging_table_name(_df_name);
+  return transpilation::SQLGenerator::make_staging_table_name(_df_name);
 }
 
 // ------------------------------------------------------------------------
@@ -759,8 +652,6 @@ void DataModelChecker::raise_join_warnings(
     const containers::DataFrame& _population_df,
     const containers::DataFrame& _peripheral_df,
     communication::Warner* _warner) {
-  // ------------------------------------------------------------------------
-
   if (_num_matches == 0) {
     warn_no_matches(_join_key_used, _other_join_key_used, _population_df,
                     _peripheral_df, _warner);
@@ -768,29 +659,21 @@ void DataModelChecker::raise_join_warnings(
     return;
   }
 
-  // ------------------------------------------------------------------------
-
   if (_is_many_to_one) {
     warn_many_to_one(_join_key_used, _other_join_key_used, _population_df,
                      _peripheral_df, _warner);
   }
-
-  // ------------------------------------------------------------------------
 
   if (!_is_propositionalization && _num_expected > 300.0) {
     warn_too_many_matches(_num_matches, _join_key_used, _other_join_key_used,
                           _population_df, _peripheral_df, _warner);
   }
 
-  // ------------------------------------------------------------------------
-
   if (_is_propositionalization_with_relmt) {
     warn_propositionalization_with_relmt(_join_key_used, _other_join_key_used,
                                          _population_df, _peripheral_df,
                                          _warner);
   }
-
-  // ------------------------------------------------------------------------
 
   const auto not_found_ratio = static_cast<Float>(_num_jk_not_found) /
                                static_cast<Float>(_population_df.nrows());
@@ -799,8 +682,6 @@ void DataModelChecker::raise_join_warnings(
     warn_not_found(not_found_ratio, _join_key_used, _other_join_key_used,
                    _population_df, _peripheral_df, _warner);
   }
-
-  // ------------------------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------

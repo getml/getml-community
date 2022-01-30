@@ -4,6 +4,7 @@
 // -------------------------------------------------------------------------
 
 #include <cstddef>
+#include <functional>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -12,11 +13,10 @@
 // -------------------------------------------------------------------------
 
 #include "helpers/ImportanceMaker.hpp"
-#include "helpers/SQLDialectGenerator.hpp"
 
 // -------------------------------------------------------------------------
+
 namespace helpers {
-// -------------------------------------------------------------------------
 
 class Macros {
  public:
@@ -40,11 +40,14 @@ class Macros {
   /// Removes macros from a vector of column names.
   static std::vector<std::string> modify_colnames(
       const std::vector<std::string>& _names,
-      const SQLDialectGenerator* _sql_dialect_generator = nullptr);
+      const std::function<std::string(std::string)>
+          _make_staging_table_colname);
 
   /// Removes macros from column importances.
   static helpers::ImportanceMaker modify_column_importances(
-      const helpers::ImportanceMaker& _importance_maker);
+      const helpers::ImportanceMaker& _importance_maker,
+      const std::function<std::string(std::string, std::string)>
+          _make_staging_table_column);
 
   /// Returns the names of the individual join keys from a composite join key
   /// name.

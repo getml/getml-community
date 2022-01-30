@@ -32,21 +32,26 @@ Float RSquared::calc_for_feature(
     const std::vector<containers::Column<Float>>& _targets,
     const helpers::Feature<Float, false>& _feature,
     const std::vector<size_t>& _rownums) {
-  const auto calc = [_mean_targets, _var_targets, _targets, _feature,
-                     &_rownums](const size_t ix) -> Float {
-    return RSquared::calc_for_target(_mean_targets.at(ix), _var_targets.at(ix),
-                                     _targets.at(ix), _feature, _rownums);
-  };
-
   assert_true(_mean_targets.size() == _targets.size());
 
   assert_true(_var_targets.size() == _targets.size());
 
-  auto iota = std::vector<size_t>(_targets.size());
+  const auto calc = [_feature, &_rownums](const Float _mean_target,
+                                          const Float _var_target,
+                                          const auto& _targets) -> Float {
+    return RSquared::calc_for_target(_mean_target, _var_target, _targets,
+                                     _feature, _rownums);
+  };
 
-  std::iota(iota.begin(), iota.end(), 0);
+  const auto apply = [&calc, &_mean_targets, &_var_targets,
+                      &_targets](const size_t _i) {
+    return std::apply(calc, std::make_tuple(_mean_targets[_i], _var_targets[_i],
+                                            _targets[_i]));
+  };
 
-  auto range = iota | VIEWS::transform(calc);
+  const auto iota = stl::iota<size_t>(0, _targets.size());
+
+  auto range = iota | VIEWS::transform(apply);
 
   return helpers::Aggregations::avg(range.begin(), range.end());
 }

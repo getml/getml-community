@@ -7,11 +7,10 @@
 // ----------------------------------------------------------------------------
 
 #include "helpers/Macros.hpp"
-#include "helpers/SQLite3Generator.hpp"
 
 // ----------------------------------------------------------------------------
+
 namespace helpers {
-// ----------------------------------------------------------------------------
 
 DataFrame::DataFrame(const DataFrameParams& _params)
     : categoricals_(_params.categoricals_),
@@ -82,7 +81,8 @@ DataFrame::DataFrame(const DataFrameParams& _params)
 // ----------------------------------------------------------------------------
 
 DataFrame DataFrame::create_subview(const CreateSubviewParams& _params) const {
-  const auto ix_join_key = find_ix_join_key(_params.join_key_);
+  const auto ix_join_key =
+      find_ix_join_key(_params.join_key_, _params.make_staging_table_colname_);
 
   const auto numericals_and_time_stamps = make_numericals_and_time_stamps(
       _params.additional_, _params.allow_lagged_targets_,
@@ -105,7 +105,8 @@ DataFrame DataFrame::create_subview(const CreateSubviewParams& _params) const {
     return DataFrame(df_params);
   }
 
-  const auto ix_time_stamp = find_ix_time_stamp(_params.time_stamp_);
+  const auto ix_time_stamp = find_ix_time_stamp(
+      _params.time_stamp_, _params.make_staging_table_colname_);
 
   if (_params.upper_time_stamp_ == "") {
     return DataFrame(
@@ -114,8 +115,8 @@ DataFrame DataFrame::create_subview(const CreateSubviewParams& _params) const {
 
   const auto ts_index = make_ts_index(_params, ix_join_key, ix_time_stamp);
 
-  const auto ix_upper_time_stamp =
-      find_ix_time_stamp(_params.upper_time_stamp_);
+  const auto ix_upper_time_stamp = find_ix_time_stamp(
+      _params.upper_time_stamp_, _params.make_staging_table_colname_);
 
   return DataFrame(df_params
                        .with_time_stamps({time_stamps_.at(ix_time_stamp),
@@ -165,17 +166,26 @@ std::pair<const size_t*, const size_t*> DataFrame::find(
 
 // ----------------------------------------------------------------------------
 
-size_t DataFrame::find_ix_join_key(const std::string& _colname) const {
+size_t DataFrame::find_ix_join_key(
+    const std::string& _colname,
+    const std::optional<std::function<std::string(std::string)>>&
+        _make_staging_table_colname) const {
   for (size_t ix_join_key = 0; ix_join_key < join_keys_.size(); ++ix_join_key) {
     if (join_keys_[ix_join_key].name_ == _colname) {
       return ix_join_key;
     }
   }
 
-  const auto get_name = [this](const auto& _col) -> std::string {
+  if (!_make_staging_table_colname) {
+    throw std::runtime_error("Join key named '" + _colname +
+                             "' not found in table '" + name_ + "'");
+  }
+
+  const auto get_name =
+      [this, &_make_staging_table_colname](const auto& _col) -> std::string {
     const auto [table, colname] =
         Macros::parse_table_colname(name_, _col.name_);
-    return " '" + SQLite3Generator().make_colname(colname) + "',";
+    return " '" + (*_make_staging_table_colname)(colname) + "',";
   };
 
   auto names = stl::collect::string(join_keys_ | VIEWS::transform(get_name));
@@ -187,7 +197,7 @@ size_t DataFrame::find_ix_join_key(const std::string& _colname) const {
   const auto [table, colname] = Macros::parse_table_colname(name_, _colname);
 
   throw std::runtime_error(
-      "Join key named '" + SQLite3Generator().make_colname(colname) +
+      "Join key named '" + (*_make_staging_table_colname)(colname) +
       "' not found in table '" + table + "'. Found " +
       std::to_string(join_keys_.size()) + " join keys:" + names);
 
@@ -196,7 +206,10 @@ size_t DataFrame::find_ix_join_key(const std::string& _colname) const {
 
 // ----------------------------------------------------------------------------
 
-size_t DataFrame::find_ix_time_stamp(const std::string& _colname) const {
+size_t DataFrame::find_ix_time_stamp(
+    const std::string& _colname,
+    const std::optional<std::function<std::string(std::string)>>&
+        _make_staging_table_colname) const {
   for (size_t ix_time_stamp = 0; ix_time_stamp < time_stamps_.size();
        ++ix_time_stamp) {
     if (time_stamps_[ix_time_stamp].name_ == _colname) {
@@ -204,10 +217,16 @@ size_t DataFrame::find_ix_time_stamp(const std::string& _colname) const {
     }
   }
 
-  const auto get_name = [this](const auto& _col) -> std::string {
+  if (!_make_staging_table_colname) {
+    throw std::runtime_error("Time stamp named '" + _colname +
+                             "' not found in table '" + name_ + "'");
+  }
+
+  const auto get_name =
+      [this, &_make_staging_table_colname](const auto& _col) -> std::string {
     const auto [table, colname] =
         Macros::parse_table_colname(name_, _col.name_);
-    return " '" + SQLite3Generator().make_colname(colname) + "',";
+    return (*_make_staging_table_colname)(colname);
   };
 
   auto names = stl::collect::string(time_stamps_ | VIEWS::transform(get_name));
@@ -219,7 +238,7 @@ size_t DataFrame::find_ix_time_stamp(const std::string& _colname) const {
   const auto [table, colname] = Macros::parse_table_colname(name_, _colname);
 
   throw std::runtime_error(
-      "Time stamp named '" + SQLite3Generator().make_colname(colname) +
+      "Time stamp named '" + (*_make_staging_table_colname)(colname) +
       "' not found in table '" + table + "'. Found " +
       std::to_string(time_stamps_.size()) + " time stamps:" + names);
 
@@ -259,8 +278,12 @@ std::shared_ptr<tsindex::Index> DataFrame::make_ts_index(
     return nullptr;
   }
 
-  const auto ix_upper_time_stamp =
-      find_ix_time_stamp(_params.upper_time_stamp_);
+  if (_params.population_join_keys_->nrows() == 0) {
+    return nullptr;
+  }
+
+  const auto ix_upper_time_stamp = find_ix_time_stamp(
+      _params.upper_time_stamp_, _params.make_staging_table_colname_);
 
   const auto upper_ts = time_stamps_.at(ix_upper_time_stamp);
 
@@ -280,8 +303,7 @@ std::shared_ptr<tsindex::Index> DataFrame::make_ts_index(
   const auto memory = upper_ts[0] - lower_ts.begin()[0];
 
   const auto unique_join_keys =
-      std::set<Int>(_params.population_join_keys_->begin(),
-                    _params.population_join_keys_->end());
+      stl::collect::set<Int>(*_params.population_join_keys_);
 
   const auto find_rownums =
       [this, _ix_join_key](const Int jk) -> stl::Range<const size_t*> {

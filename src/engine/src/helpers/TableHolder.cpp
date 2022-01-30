@@ -1,5 +1,7 @@
 #include "helpers/TableHolder.hpp"
 
+#include <stdexcept>
+
 // ----------------------------------------------------------------------------
 
 #include "stl/stl.hpp"
@@ -9,27 +11,15 @@
 #include "helpers/Macros.hpp"
 
 // ----------------------------------------------------------------------------
-namespace helpers {
-// ----------------------------------------------------------------------------
 
-TableHolder::TableHolder(
-    const Placeholder& _placeholder, const DataFrameView& _population,
-    const std::vector<DataFrame>& _peripheral,
-    const std::vector<std::string>& _peripheral_names,
-    const std::optional<RowIndexContainer>& _row_index_container,
-    const std::optional<WordIndexContainer>& _word_index_container,
-    const std::optional<const FeatureContainer>& _feature_container)
-    : main_tables_(TableHolder::parse_main_tables(
-          _placeholder, _population, _peripheral, _row_index_container,
-          _word_index_container, _feature_container)),
-      peripheral_tables_(TableHolder::parse_peripheral_tables(
-          _placeholder, _population, _peripheral, _peripheral_names,
-          _row_index_container, _word_index_container, _feature_container)),
-      propositionalization_(TableHolder::parse_propositionalization(
-          _placeholder, main_tables_.size())),
-      subtables_(TableHolder::parse_subtables(
-          _placeholder, _population, _peripheral, _peripheral_names,
-          _row_index_container, _word_index_container)) {
+namespace helpers {
+
+TableHolder::TableHolder(const TableHolderParams& _params)
+    : main_tables_(parse_main_tables(_params)),
+      peripheral_tables_(parse_peripheral_tables(_params)),
+      propositionalization_(parse_propositionalization(_params.placeholder_,
+                                                       main_tables_.size())),
+      subtables_(parse_subtables(_params)) {
   assert_true(main_tables_.size() == peripheral_tables_.size());
   assert_true(main_tables_.size() == propositionalization_.size());
   assert_true(main_tables_.size() == subtables_.size());
@@ -42,45 +32,30 @@ TableHolder::~TableHolder() = default;
 // ----------------------------------------------------------------------------
 
 std::vector<DataFrame> TableHolder::add_text_fields_to_peripheral_tables(
-    const std::vector<DataFrame>& _original, const Placeholder& _placeholder,
-    const DataFrameView& _population, const std::vector<DataFrame>& _peripheral,
-    const std::vector<std::string>& _peripheral_names,
-    const std::optional<RowIndexContainer>& _row_index_container,
-    const std::optional<WordIndexContainer>& _word_index_container,
-    const std::optional<const FeatureContainer>& _feature_container) {
-  // ---------------------------------------------------------------------
-
+    const std::vector<DataFrame>& _original, const TableHolderParams& _params) {
   auto result = _original;
 
-  // ---------------------------------------------------------------------
-
-  const auto is_relevant_text_field = [&_population,
-                                       &_peripheral](size_t i) -> bool {
-    assert_true(i < _peripheral.size());
-    return _peripheral.at(i).name_.find(
-               _population.name() + Macros::text_field()) != std::string::npos;
+  const auto is_relevant_text_field = [&_params](const auto _df) -> bool {
+    return _df.name().find(_params.population_.name() + Macros::text_field()) !=
+           std::string::npos;
   };
 
-  const auto iota = stl::iota<size_t>(0, _peripheral.size());
+  for (size_t i = 0; i < _params.peripheral_.size(); ++i) {
+    const auto& df = _params.peripheral_.at(i);
 
-  auto range = iota | VIEWS::filter(is_relevant_text_field);
+    if (!is_relevant_text_field(df)) {
+      continue;
+    }
 
-  const auto relevant_text_fields_ix = stl::collect::vector<size_t>(range);
+    const auto row_indices =
+        _params.row_index_container_
+            ? _params.row_index_container_->peripheral().at(i)
+            : RowIndices();
 
-  // ---------------------------------------------------------------------
-
-  for (size_t i = 0; i < relevant_text_fields_ix.size(); ++i) {
-    const auto j = relevant_text_fields_ix.at(i);
-
-    const auto& df = _peripheral.at(j);
-
-    const auto row_indices = _row_index_container
-                                 ? _row_index_container->peripheral().at(j)
-                                 : RowIndices();
-
-    const auto word_indices = _word_index_container
-                                  ? _word_index_container->peripheral().at(j)
-                                  : WordIndices();
+    const auto word_indices =
+        _params.word_index_container_
+            ? _params.word_index_container_->peripheral().at(i)
+            : WordIndices();
 
     const auto params = DataFrameParams{.categoricals_ = df.categoricals_,
                                         .discretes_ = df.discretes_,
@@ -100,11 +75,7 @@ std::vector<DataFrame> TableHolder::add_text_fields_to_peripheral_tables(
     result.push_back(text_field);
   }
 
-  // ---------------------------------------------------------------------
-
   return result;
-
-  // ---------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -158,70 +129,60 @@ std::shared_ptr<const std::vector<size_t>> TableHolder::make_subrows(
 // ----------------------------------------------------------------------------
 
 std::vector<DataFrameView> TableHolder::parse_main_tables(
-    const Placeholder& _placeholder, const DataFrameView& _population,
-    const std::vector<DataFrame>& _peripheral,
-    const std::optional<RowIndexContainer>& _row_index_container,
-    const std::optional<WordIndexContainer>& _word_index_container,
-    const std::optional<const FeatureContainer>& _feature_container) {
-  assert_true(_placeholder.joined_tables_.size() ==
-              _placeholder.join_keys_used_.size());
+    const TableHolderParams& _params) {
+  assert_true(_params.placeholder_.joined_tables_.size() ==
+              _params.placeholder_.join_keys_used_.size());
 
-  assert_true(_placeholder.joined_tables_.size() ==
-              _placeholder.time_stamps_used_.size());
+  assert_true(_params.placeholder_.joined_tables_.size() ==
+              _params.placeholder_.time_stamps_used_.size());
 
-  // ---------------------------------------------------------------------
+  const auto row_indices = _params.row_index_container_
+                               ? _params.row_index_container_->population()
+                               : RowIndices();
 
-  const auto row_indices =
-      _row_index_container ? _row_index_container->population() : RowIndices();
-
-  const auto word_indices = _word_index_container
-                                ? _word_index_container->population()
+  const auto word_indices = _params.word_index_container_
+                                ? _params.word_index_container_->population()
                                 : WordIndices();
 
-  const auto features =
-      _feature_container ? _feature_container->features() : AdditionalColumns();
-
-  // ---------------------------------------------------------------------
+  const auto features = _params.feature_container_
+                            ? _params.feature_container_->features()
+                            : AdditionalColumns();
 
   std::vector<DataFrameView> result;
 
-  // ---------------------------------------------------------------------
+  for (size_t i = 0; i < _params.placeholder_.joined_tables_.size(); ++i) {
+    const auto params = CreateSubviewParams{
+        .additional_ = features,
+        .join_key_ = _params.placeholder_.join_keys_used_.at(i),
+        .make_staging_table_colname_ = _params.make_staging_table_colname_,
+        .row_indices_ = row_indices,
+        .time_stamp_ = _params.placeholder_.time_stamps_used_.at(i),
+        .word_indices_ = word_indices};
 
-  for (size_t i = 0; i < _placeholder.joined_tables_.size(); ++i) {
-    const auto params =
-        CreateSubviewParams{.additional_ = features,
-                            .join_key_ = _placeholder.join_keys_used_.at(i),
-                            .row_indices_ = row_indices,
-                            .time_stamp_ = _placeholder.time_stamps_used_.at(i),
-                            .word_indices_ = word_indices};
-
-    result.push_back(_population.create_subview(params));
+    result.push_back(_params.population_.create_subview(params));
   }
 
-  // ---------------------------------------------------------------------
-
-  const auto is_relevant_text_field =
-      [&_population](const DataFrame& df) -> bool {
-    return df.name_.find(_population.name() + Macros::text_field()) !=
+  const auto is_relevant_text_field = [&_params](const DataFrame& df) -> bool {
+    return df.name_.find(_params.population_.name() + Macros::text_field()) !=
            std::string::npos;
   };
 
   auto relevant_text_fields =
-      _peripheral | VIEWS::filter(is_relevant_text_field);
+      _params.peripheral_ | VIEWS::filter(is_relevant_text_field);
 
   const auto num_fields =
       std::distance(relevant_text_fields.begin(), relevant_text_fields.end());
 
   for (Int i = 0; i < num_fields; ++i) {
-    const auto params = CreateSubviewParams{.additional_ = features,
-                                            .join_key_ = Macros::rowid(),
-                                            .row_indices_ = row_indices,
-                                            .word_indices_ = word_indices};
+    const auto params = CreateSubviewParams{
+        .additional_ = features,
+        .join_key_ = Macros::rowid(),
+        .make_staging_table_colname_ = _params.make_staging_table_colname_,
+        .row_indices_ = row_indices,
+        .word_indices_ = word_indices};
 
-    result.push_back(_population.create_subview(params));
+    result.push_back(_params.population_.create_subview(params));
   }
-
-  // ---------------------------------------------------------------------
 
   return result;
 }
@@ -229,86 +190,74 @@ std::vector<DataFrameView> TableHolder::parse_main_tables(
 // ----------------------------------------------------------------------------
 
 std::vector<DataFrame> TableHolder::parse_peripheral_tables(
-    const Placeholder& _placeholder, const DataFrameView& _population,
-    const std::vector<DataFrame>& _peripheral,
-    const std::vector<std::string>& _peripheral_names,
-    const std::optional<RowIndexContainer>& _row_index_container,
-    const std::optional<WordIndexContainer>& _word_index_container,
-    const std::optional<const FeatureContainer>& _feature_container) {
-  // ---------------------------------------------------------------------
-
+    const TableHolderParams& _params) {
 #ifndef NDEBUG
-  const size_t num_text = count_text(_peripheral);
+  const size_t num_text = count_text(_params.peripheral_);
 #endif  // NDEBUG
 
-  // ---------------------------------------------------------------------
+  assert_true(_params.placeholder_.joined_tables_.size() ==
+              _params.placeholder_.other_join_keys_used_.size());
 
-  assert_true(_placeholder.joined_tables_.size() ==
-              _placeholder.other_join_keys_used_.size());
+  assert_true(_params.placeholder_.joined_tables_.size() ==
+              _params.placeholder_.other_time_stamps_used_.size());
 
-  assert_true(_placeholder.joined_tables_.size() ==
-              _placeholder.other_time_stamps_used_.size());
+  assert_true(_params.peripheral_.size() > 0);
 
-  assert_true(_peripheral.size() > 0);
+  assert_true(_params.peripheral_names_.size() + num_text ==
+              _params.peripheral_.size());
 
-  assert_true(_peripheral_names.size() + num_text == _peripheral.size());
+  assert_true(!_params.row_index_container_ ||
+              _params.peripheral_.size() ==
+                  _params.row_index_container_->peripheral().size());
 
-  assert_true(!_row_index_container ||
-              _peripheral.size() == _row_index_container->peripheral().size());
+  assert_true(!_params.word_index_container_ ||
+              _params.peripheral_.size() ==
+                  _params.word_index_container_->peripheral().size());
 
-  assert_true(!_word_index_container ||
-              _peripheral.size() == _word_index_container->peripheral().size());
-
-  // ---------------------------------------------------------------------
-
-  const auto make_additional_columns = [&_feature_container](const size_t _i) {
-    return TableHolder::make_additional_columns(_feature_container, _i);
+  const auto make_additional_columns = [&_params](const size_t _i) {
+    return TableHolder::make_additional_columns(_params.feature_container_, _i);
   };
-
-  // ---------------------------------------------------------------------
 
   std::vector<DataFrame> result;
 
-  // ---------------------------------------------------------------------
+  for (size_t i = 0; i < _params.placeholder_.joined_tables_.size(); ++i) {
+    const auto j =
+        find_peripheral_ix(_params.peripheral_names_,
+                           _params.placeholder_.joined_tables_.at(i).name_);
 
-  for (size_t i = 0; i < _placeholder.joined_tables_.size(); ++i) {
-    const auto j = find_peripheral_ix(_peripheral_names,
-                                      _placeholder.joined_tables_.at(i).name_);
+    const auto row_indices =
+        _params.row_index_container_
+            ? _params.row_index_container_->peripheral().at(j)
+            : RowIndices();
 
-    const auto row_indices = _row_index_container
-                                 ? _row_index_container->peripheral().at(j)
-                                 : RowIndices();
-
-    const auto word_indices = _word_index_container
-                                  ? _word_index_container->peripheral().at(j)
-                                  : WordIndices();
+    const auto word_indices =
+        _params.word_index_container_
+            ? _params.word_index_container_->peripheral().at(j)
+            : WordIndices();
 
     const auto additional = make_additional_columns(i);
 
-    const auto jk_population = _placeholder.join_keys_used_.at(i);
+    const auto jk_population = _params.placeholder_.join_keys_used_.at(i);
 
-    const auto population_join_keys = _population.join_key_col(jk_population);
+    const auto population_join_keys =
+        _params.population_.join_key_col(jk_population);
 
     const auto params = CreateSubviewParams{
         .additional_ = additional,
-        .allow_lagged_targets_ = _placeholder.allow_lagged_targets_.at(i),
-        .join_key_ = _placeholder.other_join_keys_used_.at(i),
+        .allow_lagged_targets_ =
+            _params.placeholder_.allow_lagged_targets_.at(i),
+        .join_key_ = _params.placeholder_.other_join_keys_used_.at(i),
+        .make_staging_table_colname_ = _params.make_staging_table_colname_,
         .population_join_keys_ = population_join_keys,
         .row_indices_ = row_indices,
-        .time_stamp_ = _placeholder.other_time_stamps_used_.at(i),
-        .upper_time_stamp_ = _placeholder.upper_time_stamps_used_.at(i),
+        .time_stamp_ = _params.placeholder_.other_time_stamps_used_.at(i),
+        .upper_time_stamp_ = _params.placeholder_.upper_time_stamps_used_.at(i),
         .word_indices_ = word_indices};
 
-    result.push_back(_peripheral.at(j).create_subview(params));
+    result.push_back(_params.peripheral_.at(j).create_subview(params));
   }
 
-  // ---------------------------------------------------------------------
-
-  return add_text_fields_to_peripheral_tables(
-      result, _placeholder, _population, _peripheral, _peripheral_names,
-      _row_index_container, _word_index_container, _feature_container);
-
-  // ---------------------------------------------------------------------
+  return add_text_fields_to_peripheral_tables(result, _params);
 }
 
 // ----------------------------------------------------------------------------
@@ -344,109 +293,93 @@ std::vector<Column<Float>> TableHolder::make_additional_columns(
 
 // ----------------------------------------------------------------------------
 
-DataFrameView TableHolder::make_output(
-    const Placeholder& _placeholder, const DataFrameView& _population,
-    const std::vector<DataFrame>& _peripheral, const size_t _i,
-    const size_t _j) {
-  const auto population_params =
-      CreateSubviewParams{.join_key_ = _placeholder.join_keys_used_.at(_i),
-                          .time_stamp_ = _placeholder.time_stamps_used_.at(_i)};
+DataFrameView TableHolder::make_output(const TableHolderParams& _params,
+                                       const size_t _i, const size_t _j) {
+  const auto population_params = CreateSubviewParams{
+      .join_key_ = _params.placeholder_.join_keys_used_.at(_i),
+      .make_staging_table_colname_ = _params.make_staging_table_colname_,
+      .time_stamp_ = _params.placeholder_.time_stamps_used_.at(_i)};
 
-  const auto population_subview = _population.create_subview(population_params);
+  const auto population_subview =
+      _params.population_.create_subview(population_params);
 
   const auto peripheral_params = CreateSubviewParams{
-      .allow_lagged_targets_ = _placeholder.allow_lagged_targets_.at(_i),
-      .join_key_ = _placeholder.other_join_keys_used_.at(_i),
+      .allow_lagged_targets_ =
+          _params.placeholder_.allow_lagged_targets_.at(_i),
+      .join_key_ = _params.placeholder_.other_join_keys_used_.at(_i),
+      .make_staging_table_colname_ = _params.make_staging_table_colname_,
       .population_join_keys_ =
           population_subview.join_key_col(population_params.join_key_),
-      .time_stamp_ = _placeholder.other_time_stamps_used_.at(_i),
-      .upper_time_stamp_ = _placeholder.upper_time_stamps_used_.at(_i)};
+      .time_stamp_ = _params.placeholder_.other_time_stamps_used_.at(_i),
+      .upper_time_stamp_ = _params.placeholder_.upper_time_stamps_used_.at(_i)};
 
   const auto peripheral_subview =
-      _peripheral.at(_j).create_subview(peripheral_params);
+      _params.peripheral_.at(_j).create_subview(peripheral_params);
 
-  return DataFrameView(_peripheral.at(_j),
+  return DataFrameView(_params.peripheral_.at(_j),
                        make_subrows(population_subview, peripheral_subview));
 }
 
 // ----------------------------------------------------------------------------
 
 std::vector<std::optional<TableHolder>> TableHolder::parse_subtables(
-    const Placeholder& _placeholder, const DataFrameView& _population,
-    const std::vector<DataFrame>& _peripheral,
-    const std::vector<std::string>& _peripheral_names,
-    const std::optional<RowIndexContainer>& _row_index_container,
-    const std::optional<WordIndexContainer>& _word_index_container) {
-  // ---------------------------------------------------------------------
-
+    const TableHolderParams& _params) {
 #ifndef NDEBUG
-  const size_t num_text = count_text(_peripheral);
+  const size_t num_text = count_text(_params.peripheral_);
 #endif  // NDEBUG
 
-  // ---------------------------------------------------------------------
+  assert_true(_params.peripheral_.size() > 0);
 
-  assert_true(_peripheral.size() > 0);
+  assert_true(_params.peripheral_names_.size() + num_text ==
+              _params.peripheral_.size());
 
-  assert_true(_peripheral_names.size() + num_text == _peripheral.size());
+  assert_true(!_params.row_index_container_ ||
+              _params.row_index_container_->peripheral().size() ==
+                  _params.peripheral_.size());
 
-  assert_true(!_row_index_container ||
-              _row_index_container->peripheral().size() == _peripheral.size());
+  assert_true(!_params.word_index_container_ ||
+              _params.word_index_container_->peripheral().size() ==
+                  _params.peripheral_.size());
 
-  assert_true(!_word_index_container ||
-              _word_index_container->peripheral().size() == _peripheral.size());
-
-  // ---------------------------------------------------------------------
-
-  const auto make_output = [&_placeholder, &_population, &_peripheral](
-                               const size_t i,
-                               const size_t j) -> DataFrameView {
-    return TableHolder::make_output(_placeholder, _population, _peripheral, i,
-                                    j);
+  const auto make_output = [&_params](const size_t i,
+                                      const size_t j) -> DataFrameView {
+    return TableHolder::make_output(_params, i, j);
   };
-
-  // ---------------------------------------------------------------------
 
   const auto make_row_index_container =
-      [&_row_index_container](
-          const size_t j) -> std::optional<RowIndexContainer> {
-    if (_row_index_container) {
-      assert_true(j < _row_index_container->peripheral().size());
-      return RowIndexContainer(_row_index_container->peripheral().at(j),
-                               _row_index_container->peripheral());
+      [&_params](const size_t j) -> std::optional<RowIndexContainer> {
+    if (_params.row_index_container_) {
+      assert_true(j < _params.row_index_container_->peripheral().size());
+      return RowIndexContainer(_params.row_index_container_->peripheral().at(j),
+                               _params.row_index_container_->peripheral());
     }
 
     return std::nullopt;
   };
-
-  // ---------------------------------------------------------------------
 
   const auto make_word_index_container =
-      [&_word_index_container](
-          const size_t j) -> std::optional<WordIndexContainer> {
-    if (_word_index_container) {
-      assert_true(j < _word_index_container->peripheral().size());
-      return WordIndexContainer(_word_index_container->peripheral().at(j),
-                                _word_index_container->peripheral());
+      [&_params](const size_t j) -> std::optional<WordIndexContainer> {
+    if (_params.word_index_container_) {
+      assert_true(j < _params.word_index_container_->peripheral().size());
+      return WordIndexContainer(
+          _params.word_index_container_->peripheral().at(j),
+          _params.word_index_container_->peripheral());
     }
 
     return std::nullopt;
   };
-
-  // ---------------------------------------------------------------------
 
   std::vector<std::optional<TableHolder>> result;
 
-  // ---------------------------------------------------------------------
-
-  for (size_t i = 0; i < _placeholder.joined_tables_.size(); ++i) {
-    const auto& joined = _placeholder.joined_tables_.at(i);
+  for (size_t i = 0; i < _params.placeholder_.joined_tables_.size(); ++i) {
+    const auto& joined = _params.placeholder_.joined_tables_.at(i);
 
     if (joined.joined_tables_.size() == 0) {
       result.push_back(std::nullopt);
       continue;
     }
 
-    const auto j = find_peripheral_ix(_peripheral_names, joined.name_);
+    const auto j = find_peripheral_ix(_params.peripheral_names_, joined.name_);
 
     const auto output = make_output(i, j);
 
@@ -454,21 +387,25 @@ std::vector<std::optional<TableHolder>> TableHolder::parse_subtables(
 
     const auto word_index_container = make_word_index_container(j);
 
-    result.push_back(std::make_optional<TableHolder>(
-        joined, output, _peripheral, _peripheral_names, row_index_container,
-        word_index_container));
+    const auto params = TableHolderParams{
+        .make_staging_table_colname_ = _params.make_staging_table_colname_,
+        .peripheral_ = _params.peripheral_,
+        .peripheral_names_ = _params.peripheral_names_,
+        .placeholder_ = joined,
+        .population_ = output,
+        .row_index_container_ = row_index_container,
+        .word_index_container_ = word_index_container};
+
+    result.push_back(std::make_optional<TableHolder>(params));
   }
 
-  // ---------------------------------------------------------------------
-
-  const auto is_relevant_text_field =
-      [&_population](const DataFrame& df) -> bool {
-    return df.name_.find(_population.name() + Macros::text_field()) !=
+  const auto is_relevant_text_field = [&_params](const DataFrame& df) -> bool {
+    return df.name_.find(_params.population_.name() + Macros::text_field()) !=
            std::string::npos;
   };
 
   auto relevant_text_fields =
-      _peripheral | VIEWS::filter(is_relevant_text_field);
+      _params.peripheral_ | VIEWS::filter(is_relevant_text_field);
 
   const auto num_fields =
       std::distance(relevant_text_fields.begin(), relevant_text_fields.end());
@@ -476,8 +413,6 @@ std::vector<std::optional<TableHolder>> TableHolder::parse_subtables(
   for (Int i = 0; i < num_fields; ++i) {
     result.push_back(std::nullopt);
   }
-
-  // ---------------------------------------------------------------------
 
   return result;
 }

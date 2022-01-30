@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include "helpers/helpers.hpp"
+#include "transpilation/transpilation.hpp"
 
 // ----------------------------------------------------------------------------
 
@@ -23,7 +24,6 @@
 
 namespace engine {
 namespace preprocessors {
-// ----------------------------------------------------------------------------
 
 class DataModelChecker {
  public:
@@ -267,18 +267,21 @@ class DataModelChecker {
 
   /// Removes any macros from a colname.
   static std::string modify_colname(const std::string& _colname) {
-    const auto colnames = helpers::Macros::modify_colnames({_colname});
+    const auto make_staging_table_colname =
+        [](const std::string& _colname) -> std::string {
+      return transpilation::SQLite3Generator().make_staging_table_colname(
+          _colname);
+    };
+    const auto colnames = helpers::Macros::modify_colnames(
+        {_colname}, make_staging_table_colname);
     assert_true(colnames.size() == 1);
     return colnames.at(0);
   }
 
   /// Standard header for a warning message.
   static std::string warning() { return "WARNING "; }
-
-  // -------------------------------------------------------------------------
 };
 
-//  ----------------------------------------------------------------------------
 }  // namespace preprocessors
 }  // namespace engine
 

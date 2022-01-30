@@ -80,7 +80,7 @@ class Seasonal : public Preprocessor {
   /// The preprocessor does not generate any SQL scripts.
   std::vector<std::string> to_sql(
       const helpers::StringIterator& _categories,
-      const std::shared_ptr<const helpers::SQLDialectGenerator>&
+      const std::shared_ptr<const transpilation::SQLDialectGenerator>&
           _sql_dialect_generator) const final {
     return {};
   }

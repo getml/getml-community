@@ -20,15 +20,12 @@
 
 namespace multirel {
 namespace aggregations {
-// ----------------------------------------------------------------------------
 
 class AbstractFitAggregation {
  public:
   AbstractFitAggregation(){};
 
   virtual ~AbstractFitAggregation() = default;
-
-  // --------------------------------------
 
   /// Activates all samples
   virtual void activate_all(

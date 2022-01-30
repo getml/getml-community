@@ -31,18 +31,21 @@ class ColumnViewIterator {
 
   /// Iterator to the beginning.
   explicit ColumnViewIterator(const ValueFunc _value_func)
-      : i_(0), value_func_(_value_func) {}
+      : i_(0), value_(_value_func(0)), value_func_(_value_func) {}
 
   /// Iterator to the end.
-  ColumnViewIterator() : i_(0), value_func_(std::nullopt) {}
+  ColumnViewIterator()
+      : i_(0), value_(std::nullopt), value_func_(std::nullopt) {}
 
   /// Copy constructor.
   ColumnViewIterator(const ColumnViewIterator<T>& _other)
-      : i_(_other.i_), value_func_(_other.value_func_) {}
+      : i_(_other.i_), value_(_other.value_), value_func_(_other.value_func_) {}
 
   /// Move constructor.
   ColumnViewIterator(ColumnViewIterator<T>&& _other) noexcept
-      : i_(_other.i_), value_func_(std::move(_other.value_func_)) {}
+      : i_(_other.i_),
+        value_(std::move(_other.value_)),
+        value_func_(std::move(_other.value_func_)) {}
 
   /// Destructor.
   ~ColumnViewIterator() = default;
@@ -50,6 +53,7 @@ class ColumnViewIterator {
   /// Copy assignment operator.
   ColumnViewIterator<T>& operator=(const ColumnViewIterator<T>& _other) {
     i_ = _other.i_;
+    value_ = _other.value_;
     value_func_ = _other.value_func_;
     return *this;
   }
@@ -57,15 +61,15 @@ class ColumnViewIterator {
   /// Move assignment operator.
   ColumnViewIterator<T>& operator=(ColumnViewIterator<T>&& _other) noexcept {
     i_ = _other.i_;
+    value_ = std::move(_other.value_);
     value_func_ = std::move(_other.value_func_);
     return *this;
   }
 
   /// Deference operator
   inline value_type operator*() const {
-    assert_true(value_func_);
-    assert_true((*value_func_)(i_));
-    return *(*value_func_)(i_);
+    assert_true(value_);
+    return *value_;
   }
 
   /// Deference operator
@@ -74,6 +78,9 @@ class ColumnViewIterator {
   /// Prefix incrementor
   inline ColumnViewIterator<T>& operator++() {
     ++i_;
+    if (value_func_) {
+      value_ = (*value_func_)(i_);
+    }
     return *this;
   }
 
@@ -87,9 +94,8 @@ class ColumnViewIterator {
   /// Check equality
   friend inline bool operator==(const ColumnViewIterator<T>& _a,
                                 const ColumnViewIterator<T>& _b) {
-    const auto opt_a = _a.value_func_ ? (*_a.value_func_)(_a.i_) : std::nullopt;
-    const auto opt_b = _b.value_func_ ? (*_b.value_func_)(_b.i_) : std::nullopt;
-    return (!opt_a && !opt_b) || (opt_a && opt_b && _a.i_ == _b.i_);
+    return (!_a.value_ && !_b.value_) ||
+           (_a.value_ && _b.value_ && _a.i_ == _b.i_);
   }
 
   /// Inequality operator.
@@ -101,6 +107,9 @@ class ColumnViewIterator {
  private:
   /// The current index.
   size_t i_;
+
+  /// The current value.
+  std::optional<T> value_;
 
   /// The function returning the actual data point.
   std::optional<ValueFunc> value_func_;

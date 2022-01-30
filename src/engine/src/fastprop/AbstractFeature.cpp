@@ -4,7 +4,6 @@
 
 namespace fastprop {
 namespace containers {
-// ----------------------------------------------------------------------------
 
 AbstractFeature::AbstractFeature(const enums::Aggregation _aggregation,
                                  const std::vector<Condition> &_conditions,
@@ -95,48 +94,36 @@ Poco::JSON::Object::Ptr AbstractFeature::to_json_obj() const {
 
 std::string AbstractFeature::to_sql(
     const helpers::StringIterator &_categories,
-    const std::shared_ptr<const helpers::SQLDialectGenerator>
+    const std::shared_ptr<const transpilation::SQLDialectGenerator>
         &_sql_dialect_generator,
     const std::string &_feature_prefix, const std::string &_feature_num,
     const helpers::Schema &_input, const helpers::Schema &_output) const {
-  // -------------------------------------------------------------------
-
   assert_true(_sql_dialect_generator);
-
-  // -------------------------------------------------------------------
 
   const auto quote1 = _sql_dialect_generator->quotechar1();
   const auto quote2 = _sql_dialect_generator->quotechar2();
 
-  // -------------------------------------------------------------------
+  const auto sql_maker = SQLMaker(_categories, _feature_prefix, _input, _output,
+                                  _sql_dialect_generator);
 
   std::stringstream sql;
-
-  // -------------------------------------------------------------------
 
   sql << "DROP TABLE IF EXISTS " << quote1 << "FEATURE_" << _feature_prefix
       << _feature_num << quote2 << ";" << std::endl
       << std::endl;
 
-  // -------------------------------------------------------------------
-
-  sql << "CREATE TABLE " << quote1 << "FEATURE_" << _feature_prefix
-      << _feature_num << quote2 << " AS" << std::endl;
-
-  // -------------------------------------------------------------------
+  sql << _sql_dialect_generator->create_table(aggregation_, _feature_prefix,
+                                              _feature_num);
 
   sql << "SELECT ";
 
-  sql << SQLMaker(_categories, _feature_prefix, _input, _output,
-                  _sql_dialect_generator)
-             .select_statement(*this);
+  sql << sql_maker.select_statement(*this);
 
   sql << " AS " << quote1 << "feature_" << _feature_prefix << _feature_num
       << quote2 << "," << std::endl;
 
-  sql << "       t1.rowid AS " << quote1 << "rownum" << quote2 << std::endl;
-
-  // -------------------------------------------------------------------
+  sql << "       t1." << _sql_dialect_generator->rowid() << " AS "
+      << _sql_dialect_generator->rownum() << std::endl;
 
   assert_true(_output.join_keys_.size() == 1);
 
@@ -146,8 +133,6 @@ std::string AbstractFeature::to_sql(
                                             _output.join_keys_name(),
                                             _input.join_keys_name());
 
-  // -------------------------------------------------------------------
-
   if (data_used_ == enums::DataUsed::subfeatures) {
     const auto number = _feature_prefix + std::to_string(peripheral_ + 1) +
                         "_" + std::to_string(input_col_ + 1);
@@ -155,11 +140,9 @@ std::string AbstractFeature::to_sql(
     sql << "LEFT JOIN " << quote1 << "FEATURE_" << number << quote2 << " f_"
         << number << std::endl;
 
-    sql << "ON t2.rowid = f_" << number << "." << quote1 << "rownum" << quote2
-        << std::endl;
+    sql << "ON t2." << _sql_dialect_generator->rowid() << " = f_" << number
+        << "." << _sql_dialect_generator->rownum() << std::endl;
   }
-
-  // -------------------------------------------------------------------
 
   const bool use_time_stamps =
       (_input.num_time_stamps() > 0 && _output.num_time_stamps() > 0);
@@ -176,8 +159,6 @@ std::string AbstractFeature::to_sql(
                                                     upper_ts, "t1", "t2", "t1");
   }
 
-  // -------------------------------------------------------------------
-
   for (size_t i = 0; i < conditions_.size(); ++i) {
     if (i == 0 && !use_time_stamps) {
       sql << "WHERE ";
@@ -190,11 +171,11 @@ std::string AbstractFeature::to_sql(
         << std::endl;
   }
 
-  // -------------------------------------------------------------------
-
-  sql << "GROUP BY t1.rowid;" << std::endl << std::endl << std::endl;
-
-  // -------------------------------------------------------------------
+  sql << _sql_dialect_generator->group_by(
+             aggregation_, sql_maker.value_to_be_aggregated(*this))
+      << ";" << std::endl
+      << std::endl
+      << std::endl;
 
   return sql.str();
 }

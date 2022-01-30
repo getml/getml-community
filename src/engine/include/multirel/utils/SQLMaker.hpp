@@ -10,6 +10,7 @@
 
 #include "debug/debug.hpp"
 #include "strings/strings.hpp"
+#include "transpilation/transpilation.hpp"
 
 // ----------------------------------------------------------------------------
 
@@ -19,7 +20,6 @@
 
 namespace multirel {
 namespace utils {
-// ------------------------------------------------------------------------
 
 class SQLMaker {
  private:
@@ -29,7 +29,7 @@ class SQLMaker {
  public:
   SQLMaker(const Float _lag, const size_t _peripheral_used,
            const descriptors::SameUnits& _same_units,
-           const std::shared_ptr<const helpers::SQLDialectGenerator>&
+           const std::shared_ptr<const transpilation::SQLDialectGenerator>&
                _sql_dialect_generator)
       : lag_(_lag),
         peripheral_used_(_peripheral_used),
@@ -68,6 +68,14 @@ class SQLMaker {
                                const size_t _column_used,
                                const enums::DataUsed& _data_used,
                                const std::string& _agg_type) const;
+
+  /// Creates the value to be aggregated (for instance a column name or the
+  /// difference between two columns)
+  std::string value_to_be_aggregated(const std::string& _feature_prefix,
+                                     const helpers::Schema& _input,
+                                     const helpers::Schema& _output,
+                                     const size_t _column_used,
+                                     const enums::DataUsed& _data_used) const;
 
  private:
   /// Returns the column name signified by _column_used and _data_used.
@@ -109,8 +117,8 @@ class SQLMaker {
                          const bool _is_greater) const;
 
   /// Generates the colname to display in the SQL code.
-  std::string make_colname(const std::string& _colname,
-                           const std::string& _alias) const;
+  std::string make_staging_table_colname(const std::string& _colname,
+                                         const std::string& _alias) const;
 
   /// Transforms the time stamps diff into SQLite-compliant given the
   /// colnames.
@@ -123,14 +131,6 @@ class SQLMaker {
                                      const helpers::Schema& _output,
                                      const Float _diff,
                                      const bool _is_greater) const;
-
-  /// Creates the value to be aggregated (for instance a column name or the
-  /// difference between two columns)
-  std::string value_to_be_aggregated(const std::string& _feature_prefix,
-                                     const helpers::Schema& _input,
-                                     const helpers::Schema& _output,
-                                     const size_t _column_used,
-                                     const enums::DataUsed& _data_used) const;
 
  private:
   /// Returns the timediff string for time comparisons
@@ -152,11 +152,10 @@ class SQLMaker {
   const descriptors::SameUnits same_units_;
 
   /// Generates the right code for the required SQL dialect.
-  const std::shared_ptr<const helpers::SQLDialectGenerator>
+  const std::shared_ptr<const transpilation::SQLDialectGenerator>
       sql_dialect_generator_;
 };
 
-// ------------------------------------------------------------------------
 }  // namespace utils
 }  // namespace multirel
 

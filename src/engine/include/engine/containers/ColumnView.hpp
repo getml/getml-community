@@ -59,8 +59,6 @@ class ColumnView {
 
   ~ColumnView() {}
 
-  // -------------------------------
-
   /// Constructs a column view from a binary operation.
   template <class T1, class T2, class Operator>
   static ColumnView<T> from_bin_op(const ColumnView<T1>& _operand1,
@@ -92,8 +90,6 @@ class ColumnView {
 
   /// Constructs a column view from a value.
   static ColumnView<T> from_value(const T _value);
-
-  // -------------------------------
 
  public:
   /// Returns the number of rows, calculates them if necessary,
@@ -131,8 +127,6 @@ class ColumnView {
 
   /// Returns a new column view with a new unit.
   ColumnView<T> with_unit(const std::string& _unit) const;
-
-  // -------------------------------
 
  public:
   /// Whether the column view is infinite.
@@ -198,8 +192,6 @@ class ColumnView {
       const size_t _begin, const size_t _expected_length,
       const bool _nrows_must_match) const;
 
-  // -------------------------------
-
  private:
   /// Functiona returning the Number of rows (if that is knowable).
   const NRowsType nrows_;
@@ -212,8 +204,6 @@ class ColumnView {
 
   /// The function returning the actual data point.
   const ValueFunc value_func_;
-
-  // -------------------------------
 };
 
 // -------------------------------------------------------------------------
@@ -245,8 +235,6 @@ template <class T1, class T2, class Operator>
 ColumnView<T> ColumnView<T>::from_bin_op(const ColumnView<T1>& _operand1,
                                          const ColumnView<T2>& _operand2,
                                          const Operator _op) {
-  // -----------------------------------------------------------
-
   const auto check_nrows = [](const auto _operand, const auto _op) {
     const bool nrows_do_not_match =
         (std::holds_alternative<size_t>(_operand.nrows()) ||
@@ -260,8 +248,6 @@ ColumnView<T> ColumnView<T>::from_bin_op(const ColumnView<T1>& _operand1,
           "operations to be possible.");
     }
   };
-
-  // -----------------------------------------------------------
 
   const auto value_func = [_operand1, _operand2, _op,
                            check_nrows](const size_t _i) -> std::optional<T> {
@@ -281,8 +267,6 @@ ColumnView<T> ColumnView<T>::from_bin_op(const ColumnView<T1>& _operand1,
     return _op(*op1, *op2);
   };
 
-  // -----------------------------------------------------------
-
   const auto check_same_size = [_operand1, _operand2]() {
     const bool nrows_do_not_match =
         std::holds_alternative<size_t>(_operand2.nrows()) &&
@@ -298,8 +282,6 @@ ColumnView<T> ColumnView<T>::from_bin_op(const ColumnView<T1>& _operand1,
           std::to_string(std::get<size_t>(_operand2.nrows())) + ".");
     }
   };
-
-  // -----------------------------------------------------------
 
   const auto nrows_func = [_operand1, _operand2,
                            check_same_size]() -> NRowsType {
@@ -318,11 +300,7 @@ ColumnView<T> ColumnView<T>::from_bin_op(const ColumnView<T1>& _operand1,
            std::get<UnknownSize>(_operand2.nrows());
   };
 
-  // -----------------------------------------------------------
-
   return ColumnView<T>(value_func, nrows_func());
-
-  // -----------------------------------------------------------
 }
 
 // -------------------------------------------------------------------------
@@ -330,8 +308,6 @@ ColumnView<T> ColumnView<T>::from_bin_op(const ColumnView<T1>& _operand1,
 template <class T>
 ColumnView<T> ColumnView<T>::from_boolean_subselection(
     const ColumnView<T>& _data, const ColumnView<bool>& _indices) {
-  // -----------------------------------------------------------
-
   const bool nrows_do_not_match =
       std::holds_alternative<size_t>(_data.nrows()) &&
       std::holds_alternative<size_t>(_indices.nrows()) &&
@@ -346,15 +322,11 @@ ColumnView<T> ColumnView<T>::from_boolean_subselection(
         std::to_string(std::get<size_t>(_indices.nrows())) + ".");
   }
 
-  // -----------------------------------------------------------
-
   if (_data.is_infinite()) {
     throw std::invalid_argument(
         "The data or the indices must be finite for a boolean "
         "subselection to work!");
   }
-
-  // -----------------------------------------------------------
 
   const auto find_next =
       [_indices, _data](size_t _begin, size_t _skip) -> std::optional<size_t> {
@@ -402,8 +374,6 @@ ColumnView<T> ColumnView<T>::from_boolean_subselection(
     return 0;
   };
 
-  // -----------------------------------------------------------
-
   size_t ix = 0;
 
   size_t next = 0;
@@ -435,12 +405,8 @@ ColumnView<T> ColumnView<T>::from_boolean_subselection(
     return _data[ix++];
   };
 
-  // -----------------------------------------------------------
-
   return ColumnView<T>(value_func, NOT_KNOWABLE, _data.subroles(),
                        _data.unit());
-
-  // -----------------------------------------------------------
 }
 
 // -------------------------------------------------------------------------
@@ -448,8 +414,6 @@ ColumnView<T> ColumnView<T>::from_boolean_subselection(
 template <class T>
 ColumnView<T> ColumnView<T>::from_numerical_subselection(
     const ColumnView<T>& _data, const ColumnView<Float>& _indices) {
-  // -----------------------------------------------------------
-
   const auto value_func = [_data,
                            _indices](const size_t _i) -> std::optional<T> {
     const auto ix_float = _indices[_i];
@@ -457,6 +421,8 @@ ColumnView<T> ColumnView<T>::from_numerical_subselection(
     if (!ix_float) {
       return std::nullopt;
     }
+
+    assert_true(*ix_float >= 0.0);
 
     if (*ix_float < 0.0) {
       throw std::runtime_error(
@@ -468,6 +434,8 @@ ColumnView<T> ColumnView<T>::from_numerical_subselection(
 
     const auto d = _data[ix];
 
+    assert_true(d);
+
     if (!d) {
       throw std::runtime_error(
           "Index on a numerical subselection out of bounds!");
@@ -476,12 +444,8 @@ ColumnView<T> ColumnView<T>::from_numerical_subselection(
     return *d;
   };
 
-  // -----------------------------------------------------------
-
   return ColumnView<T>(value_func, _indices.nrows(), _data.subroles(),
                        _data.unit());
-
-  // -----------------------------------------------------------
 }
 
 // -------------------------------------------------------------------------
@@ -526,8 +490,6 @@ ColumnView<T> ColumnView<T>::from_tern_op(const ColumnView<T1>& _operand1,
                                           const ColumnView<T2>& _operand2,
                                           const ColumnView<T3>& _operand3,
                                           const Operator _op) {
-  // -----------------------------------------------------------
-
   const auto check_nrows = [](const auto _operand, const auto _op) {
     const bool nrows_do_not_match =
         (std::holds_alternative<size_t>(_operand.nrows()) ||
@@ -541,8 +503,6 @@ ColumnView<T> ColumnView<T>::from_tern_op(const ColumnView<T1>& _operand1,
           "operations to be possible.");
     }
   };
-
-  // -----------------------------------------------------------
 
   const auto value_func = [_operand1, _operand2, _operand3, _op,
                            check_nrows](const size_t _i) -> std::optional<T> {
@@ -571,8 +531,6 @@ ColumnView<T> ColumnView<T>::from_tern_op(const ColumnView<T1>& _operand1,
     return _op(*op1, *op2, *op3);
   };
 
-  // -----------------------------------------------------------
-
   const auto check_same_size = [](const auto& _operand1,
                                   const auto& _operand2) {
     const bool nrows_do_not_match =
@@ -587,8 +545,6 @@ ColumnView<T> ColumnView<T>::from_tern_op(const ColumnView<T1>& _operand1,
           "operations to be possible.");
     }
   };
-
-  // -----------------------------------------------------------
 
   const auto nrows_func = [_operand1, _operand2, _operand3,
                            check_same_size]() -> NRowsType {
@@ -612,11 +568,7 @@ ColumnView<T> ColumnView<T>::from_tern_op(const ColumnView<T1>& _operand1,
            std::get<UnknownSize>(_operand3.nrows());
   };
 
-  // -----------------------------------------------------------
-
   return ColumnView<T>(value_func, nrows_func());
-
-  // -----------------------------------------------------------
 }
 
 // -------------------------------------------------------------------------

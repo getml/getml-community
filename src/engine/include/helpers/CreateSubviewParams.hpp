@@ -3,6 +3,7 @@
 
 // -------------------------------------------------------------------------
 
+#include <functional>
 #include <optional>
 #include <string>
 #include <vector>
@@ -16,8 +17,6 @@
 
 namespace helpers {
 struct CreateSubviewParams {
-  // ---------------------------------------------------------------------
-
  public:
   typedef DataFrameParams::AdditionalColumns AdditionalColumns;
 
@@ -35,6 +34,11 @@ struct CreateSubviewParams {
 
   /// The name of the join key to be used.
   const std::string join_key_ = "";
+
+  /// The function needed to make the colname (only used when columns are not
+  /// found, for better error messages)
+  const std::optional<std::function<std::string(std::string)>>
+      make_staging_table_colname_ = std::nullopt;
 
   /// A column view on the join keys in the population table, if this is a
   /// peripheral table. This is needed to build the time series index.

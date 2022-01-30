@@ -2,7 +2,6 @@
 
 namespace engine {
 namespace dependency {
-// -------------------------------------------------------------------------
 
 void DataFrameTracker::add(const containers::DataFrame& _df) {
   clean_up();

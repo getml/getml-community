@@ -17,11 +17,12 @@
 #include "fastprop/Int.hpp"
 #include "fastprop/enums/enums.hpp"
 #include "helpers/helpers.hpp"
+#include "transpilation/transpilation.hpp"
 
 // -------------------------------------------------------------------------
+
 namespace fastprop {
 namespace containers {
-// -------------------------------------------------------------------------
 
 struct Condition {
   Condition(const enums::DataUsed _data_used, const size_t _input_col,
@@ -41,12 +42,12 @@ struct Condition {
   Poco::JSON::Object::Ptr to_json_obj() const;
 
   /// Expresses the abstract feature as SQL code.
-  std::string to_sql(const helpers::StringIterator &_categories,
-                     const std::shared_ptr<const helpers::SQLDialectGenerator>
-                         &_sql_dialect_generator,
-                     const std::string &_feature_prefix,
-                     const helpers::Schema &_input,
-                     const helpers::Schema &_output) const;
+  std::string to_sql(
+      const helpers::StringIterator &_categories,
+      const std::shared_ptr<const transpilation::SQLDialectGenerator>
+          &_sql_dialect_generator,
+      const std::string &_feature_prefix, const helpers::Schema &_input,
+      const helpers::Schema &_output) const;
 
   /// The lower bound (when data_used_ == lag).
   const Float bound_lower_;

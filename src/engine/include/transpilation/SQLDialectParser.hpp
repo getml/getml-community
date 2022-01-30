@@ -1,5 +1,5 @@
-#ifndef HELPERS_SQLDIALECTPARSER_HPP_
-#define HELPERS_SQLDIALECTPARSER_HPP_
+#ifndef SQL_SQLDIALECTPARSER_HPP_
+#define SQL_SQLDIALECTPARSER_HPP_
 
 // -------------------------------------------------------------------------
 
@@ -12,16 +12,16 @@
 
 // -------------------------------------------------------------------------
 
-#include "helpers/SQLDialectGenerator.hpp"
+#include "transpilation/SQLDialectGenerator.hpp"
 
 // -------------------------------------------------------------------------
 
-namespace helpers {
-// -------------------------------------------------------------------------
+namespace transpilation {
 
 struct SQLDialectParser {
   static constexpr const char* SPARK_SQL = "spark sql";
   static constexpr const char* SQLITE3 = "sqlite3";
+  static constexpr const char* TSQL = "tsql";
 
   /// Parse returns the SQLDialect generator for the dialect.
   static std::shared_ptr<const SQLDialectGenerator> parse(
@@ -29,6 +29,6 @@ struct SQLDialectParser {
 };
 
 // -------------------------------------------------------------------------
-}  // namespace helpers
+}  // namespace transpilation
 
-#endif  // HELPERS_SQLDIALECTPARSER_HPP_
+#endif  // SQL_SQLDIALECTPARSER_HPP_

@@ -30,7 +30,6 @@
 
 namespace multirel {
 namespace aggregations {
-// ----------------------------------------------------------------------------
 
 template <typename AggType, enums::DataUsed data_used_, bool is_population_>
 class FitAggregation : public AbstractFitAggregation {

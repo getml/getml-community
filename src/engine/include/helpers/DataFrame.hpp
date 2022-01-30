@@ -32,8 +32,6 @@ namespace helpers {
 // -------------------------------------------------------------------------
 
 struct DataFrame {
-  // ---------------------------------------------------------------------
-
  public:
   typedef DataFrameParams::FloatColumnType FloatColumnType;
 
@@ -135,7 +133,7 @@ struct DataFrame {
 
   /// Getter for a join key column.
   const Column<Int>& join_key_col(const std::string& _colname) const {
-    const auto ix = find_ix_join_key(_colname);
+    const auto ix = find_ix_join_key(_colname, std::nullopt);
     return join_keys_.at(ix);
   }
   /// Getter for a join keys.
@@ -295,10 +293,16 @@ struct DataFrame {
 
  private:
   /// Finds the index of the join key named _colname
-  size_t find_ix_join_key(const std::string& _colname) const;
+  size_t find_ix_join_key(
+      const std::string& _colname,
+      const std::optional<std::function<std::string(std::string)>>&
+          _make_staging_table_colname) const;
 
   /// Finds the index of the time stamp named _colname
-  size_t find_ix_time_stamp(const std::string& _colname) const;
+  size_t find_ix_time_stamp(
+      const std::string& _colname,
+      const std::optional<std::function<std::string(std::string)>>&
+          _make_staging_table_colname) const;
 
   /// Helper class that extracts the column names.
   template <typename T>

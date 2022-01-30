@@ -1,8 +1,9 @@
 #include "database/ODBC.hpp"
 
-// ----------------------------------------------------------------------------
+#include "helpers/NullChecker.hpp"
+#include "io/Datatype.hpp"
+
 namespace database {
-// ----------------------------------------------------------------------------
 
 void ODBC::check_colnames(const std::vector<std::string>& _colnames,
                           io::Reader* _reader) {
@@ -413,11 +414,7 @@ std::vector<std::string> ODBC::get_tables(const std::string& _catalog,
 // ----------------------------------------------------------------------------
 
 std::vector<std::string> ODBC::list_tables() {
-  // ------------------------------------------------------
-
   auto all_tables = std::vector<std::string>();
-
-  // ------------------------------------------------------
 
   const auto catalogs = get_catalogs();
 
@@ -641,8 +638,6 @@ std::optional<ODBCIterator> ODBC::make_limited_iterator(
 
 void ODBC::read(const std::string& _table, const size_t _skip,
                 io::Reader* _reader) {
-  // ------------------------------------------------------------------------
-
   const auto colnames = get_colnames(_table);
 
   const auto coldesc = get_coldescriptions(_table);
@@ -653,12 +648,7 @@ void ODBC::read(const std::string& _table, const size_t _skip,
         "number of retrieved column descriptions.");
   }
 
-  // ------------------------------------------------------------------------
-
   check_colnames(colnames, _reader);
-
-  // ------------------------------------------------------------------------
-  // Skip lines, if necessary.
 
   size_t line_count = 0;
 
@@ -667,10 +657,7 @@ void ODBC::read(const std::string& _table, const size_t _skip,
     ++line_count;
   }
 
-  // ------------------------------------------------------------------------
-
-  // true means that we want to explicitly turn of the AUTOCOMMIT.
-  auto conn = make_connection(true);
+  auto conn = make_connection(NO_AUTOCOMMIT);
 
   assert_true(conn);
 
@@ -685,7 +672,7 @@ void ODBC::read(const std::string& _table, const size_t _skip,
   for (size_t i = 0; i < colnames.size(); ++i) {
     fields.at(i) = std::make_unique<SQLCHAR[]>(buffer_length);
 
-    // https://docs.microsoft.com/en-us/sql/odbc/reference/syntax/sqlbindparameter-function?view=sql-server-ver15
+    // https://docs.microsoft.com/en-us/transpilation/odbc/reference/syntax/sqlbindparameter-function?view=sql-server-ver15
     const auto ret = SQLBindParameter(
         stmt.handle_, static_cast<SQLUSMALLINT>(i + 1), SQL_PARAM_INPUT,
         SQL_C_CHAR, std::get<1>(coldesc.at(i)), std::get<2>(coldesc.at(i)),
@@ -696,36 +683,39 @@ void ODBC::read(const std::string& _table, const size_t _skip,
                      SQL_HANDLE_DBC);
   }
 
-  // ----------------------------------------------------------------
-
   const auto query = to_ptr(make_bulk_insert_query(_table, colnames));
 
   auto ret = SQLPrepare(stmt.handle_, query.get(), SQL_NTS);
 
   ODBCError::check(ret, "SQLPrepare in read", stmt.handle_, SQL_HANDLE_DBC);
 
-  // ----------------------------------------------------------------
+  const auto coltypes = get_coltypes(_table, colnames);
 
-  while (!_reader->eof()) {
-    const std::vector<std::string> line = _reader->next_line();
+  assert_true(coltypes.size() == colnames.size());
 
-    ++line_count;
+  while (true) {
+    const auto line = get_next_line(coltypes, line_count, _reader);
 
-    if (line.size() == 0) {
-      continue;
-    } else if (line.size() != fields.size()) {
-      std::cout << "Corrupted line: " << line_count << ". Expected "
-                << fields.size() << " fields, saw " << line.size() << "."
-                << std::endl;
+    if (!line) {
+      break;
+    }
 
+    if (line->size() != coltypes.size()) {
       continue;
     }
 
-    for (size_t i = 0; i < fields.size(); ++i) {
-      flen[i] =
-          std::min(buffer_length - 1, static_cast<SQLLEN>(line[i].size()));
+    ++line_count;
 
-      std::copy(line[i].begin(), line[i].begin() + flen[i],
+    for (size_t i = 0; i < fields.size(); ++i) {
+      if (helpers::NullChecker::is_null(line->at(i))) {
+        flen[i] = SQL_NULL_DATA;
+        continue;
+      }
+
+      flen[i] =
+          std::min(buffer_length - 1, static_cast<SQLLEN>(line->at(i).size()));
+
+      std::copy(line->at(i).begin(), line->at(i).begin() + flen[i],
                 reinterpret_cast<char*>(fields[i].get()));
     }
 
@@ -734,14 +724,36 @@ void ODBC::read(const std::string& _table, const size_t _skip,
     ODBCError::check(ret, "SQLExecute in read", stmt.handle_, SQL_HANDLE_DBC);
   }
 
-  // ----------------------------------------------------------------
-
   ret = SQLEndTran(SQL_HANDLE_DBC, conn->handle_, SQL_COMMIT);
 
   ODBCError::check(ret, "SQLEndTran(SQL_COMMIT) in read", conn->handle_,
                    SQL_HANDLE_DBC);
+}
 
-  // ----------------------------------------------------------------
+// ----------------------------------------------------------------------------
+
+std::optional<std::vector<std::string>> ODBC::get_next_line(
+    const std::vector<io::Datatype>& _coltypes, const size_t _line_count,
+    io::Reader* _reader) const {
+  if (_reader->eof()) {
+    return std::nullopt;
+  }
+
+  auto line = _reader->next_line();
+
+  if (line.size() == 0) {
+    return line;
+  }
+
+  if (line.size() != _coltypes.size()) {
+    std::cout << "Corrupted line: " << _line_count + 1 << ". Expected "
+              << _coltypes.size() << " fields, saw " << line.size() << "."
+              << std::endl;
+
+    return line;
+  }
+
+  return line;
 }
 
 // ----------------------------------------------------------------------------

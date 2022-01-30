@@ -8,7 +8,6 @@
 
 namespace engine {
 namespace containers {
-// ----------------------------------------------------------------------------
 
 std::vector<size_t> DataFramePrinter::calc_max_sizes(
     const std::vector<size_t> &_max_sizes,
@@ -34,18 +33,12 @@ std::string DataFramePrinter::get_html(
     const std::vector<std::string> &_units,
     const std::vector<std::vector<std::string>> &_rows,
     const std::int32_t _border) const {
-  // ------------------------------------------------------------------------
-
   assert_true(_colnames.size() == _roles.size());
 
   assert_true(_colnames.size() == _units.size());
 
-  // ------------------------------------------------------------------------
-
   std::string html =
       "<table border=\"" + std::to_string(_border) + "\" class=\"dataframe\">";
-
-  // ------------------------------------------------------------------------
 
   html += "<thead>";
 
@@ -59,8 +52,6 @@ std::string DataFramePrinter::get_html(
 
   html += "</thead>";
 
-  // ------------------------------------------------------------------------
-
   html += "<tbody>";
 
   for (const auto &row : _rows) {
@@ -71,15 +62,9 @@ std::string DataFramePrinter::get_html(
 
   html += "</tbody>";
 
-  // ------------------------------------------------------------------------
-
   html += "</table>";
 
-  // ------------------------------------------------------------------------
-
   return html;
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -89,8 +74,6 @@ std::string DataFramePrinter::get_string(
     const std::vector<std::string> &_roles,
     const std::vector<std::string> &_units,
     const std::vector<std::vector<std::string>> &_rows) const {
-  // ------------------------------------------------------------------------
-
   const auto colnames = truncate_row(_colnames);
 
   const auto roles = truncate_row(_roles);
@@ -103,17 +86,11 @@ std::string DataFramePrinter::get_string(
     row = truncate_row(row);
   }
 
-  // ------------------------------------------------------------------------
-
   assert_true(colnames.size() == roles.size());
 
   assert_true(colnames.size() == units.size());
 
-  // ------------------------------------------------------------------------
-
   auto max_sizes = std::vector<size_t>(colnames.size());
-
-  // ------------------------------------------------------------------------
 
   max_sizes = calc_max_sizes(max_sizes, colnames);
 
@@ -124,8 +101,6 @@ std::string DataFramePrinter::get_string(
   for (const auto &row : rows) {
     max_sizes = calc_max_sizes(max_sizes, row);
   }
-
-  // ------------------------------------------------------------------------
 
   auto result = make_row_string(max_sizes, colnames);
 
@@ -146,11 +121,7 @@ std::string DataFramePrinter::get_string(
     result += make_row_string(max_sizes, row);
   }
 
-  // ------------------------------------------------------------------------
-
   return result;
-
-  // ------------------------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------

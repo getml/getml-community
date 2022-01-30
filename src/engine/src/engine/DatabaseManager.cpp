@@ -1,8 +1,9 @@
 #include "engine/handlers/DatabaseManager.hpp"
 
+#include "helpers/StringSplitter.hpp"
+
 namespace engine {
 namespace handlers {
-// ----------------------------------------------------------------------------
 
 DatabaseManager::DatabaseManager(
     const std::shared_ptr<const communication::Logger>& _logger,
@@ -28,8 +29,6 @@ DatabaseManager::~DatabaseManager() = default;
 
 void DatabaseManager::copy_table(const Poco::JSON::Object& _cmd,
                                  Poco::Net::StreamSocket* _socket) {
-  // -----------------------------------------------------------------------
-
   const auto source_conn_id =
       JSON::get_value<std::string>(_cmd, "source_conn_id_");
 
@@ -42,14 +41,10 @@ void DatabaseManager::copy_table(const Poco::JSON::Object& _cmd,
   const auto target_table_name =
       JSON::get_value<std::string>(_cmd, "target_table_");
 
-  // -----------------------------------------------------------------------
-
   if (source_conn_id == target_conn_id) {
     throw std::invalid_argument(
         "Tables must be copied from different database connections!");
   }
-
-  // -----------------------------------------------------------------------
 
   const auto source_conn = connector(source_conn_id);
 
@@ -59,18 +54,13 @@ void DatabaseManager::copy_table(const Poco::JSON::Object& _cmd,
 
   assert_true(target_conn);
 
-  // -----------------------------------------------------------------------
   // Infer the table schema from the source connection and create an
   // appropriate table in the target database.
-
   const auto stmt = database::DatabaseSniffer::sniff(
       source_conn, target_conn->dialect(), target_conn->describe(),
       source_table_name, target_table_name);
 
   target_conn->execute(stmt);
-
-  // -----------------------------------------------------------------------
-  // Transfer the table contents into the newly created table.
 
   const auto colnames = source_conn->get_colnames(source_table_name);
 
@@ -80,13 +70,9 @@ void DatabaseManager::copy_table(const Poco::JSON::Object& _cmd,
 
   target_conn->read(target_table_name, 0, &reader);
 
-  // -----------------------------------------------------------------------
-
   communication::Sender::send_string("Success!", _socket);
 
   post_tables();
-
-  // -----------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -121,9 +107,21 @@ void DatabaseManager::describe_connection(
 
 void DatabaseManager::execute(const std::string& _name,
                               Poco::Net::StreamSocket* _socket) {
-  const auto query = communication::Receiver::recv_string(_socket);
+  const auto queries_str = communication::Receiver::recv_string(_socket);
 
-  connector(_name)->execute(query);
+  const auto splitted = helpers::StringSplitter::split(queries_str, ";");
+
+  const auto is_not_empty = [](const std::string& _str) -> bool {
+    return _str != "";
+  };
+
+  auto queries = splitted | VIEWS::transform(io::Parser::trim) |
+                 VIEWS::filter(is_not_empty);
+
+  for (const auto query : queries) {
+    logger().log(query);
+    connector(_name)->execute(query);
+  }
 
   post_tables();
 
@@ -313,8 +311,6 @@ void DatabaseManager::post_tables() {
 void DatabaseManager::read_csv(const std::string& _name,
                                const Poco::JSON::Object& _cmd,
                                Poco::Net::StreamSocket* _socket) {
-  // --------------------------------------------------------------------
-
   auto colnames = std::optional<std::vector<std::string>>();
 
   if (_cmd.has("colnames_")) {
@@ -335,8 +331,6 @@ void DatabaseManager::read_csv(const std::string& _name,
 
   const auto skip = JSON::get_value<size_t>(_cmd, "skip_");
 
-  // --------------------------------------------------------------------
-
   if (quotechar.size() != 1) {
     throw std::invalid_argument(
         "The quotechar must consist of exactly one character!");
@@ -352,8 +346,6 @@ void DatabaseManager::read_csv(const std::string& _name,
   if (!colnames && limit > 0) {
     ++limit;
   }
-
-  // --------------------------------------------------------------------
 
   for (const auto& fname : fnames) {
     auto reader = io::CSVReader(colnames, fname, limit, quotechar[0], sep[0]);
@@ -363,11 +355,7 @@ void DatabaseManager::read_csv(const std::string& _name,
     logger().log("Read '" + fname + "'.");
   }
 
-  // --------------------------------------------------------------------
-
   communication::Sender::send_string("Success!", _socket);
-
-  // --------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -375,13 +363,9 @@ void DatabaseManager::read_csv(const std::string& _name,
 void DatabaseManager::read_s3(const std::string& _name,
                               const Poco::JSON::Object& _cmd,
                               Poco::Net::StreamSocket* _socket) {
-  // --------------------------------------------------------------------
-
 #if (defined(_WIN32) || defined(_WIN64))
   throw std::invalid_argument("S3 is not supported on Windows!");
 #else
-
-  // --------------------------------------------------------------------
 
   const auto bucket = JSON::get_value<std::string>(_cmd, "bucket_");
 
@@ -405,8 +389,6 @@ void DatabaseManager::read_s3(const std::string& _name,
 
   const auto skip = JSON::get_value<size_t>(_cmd, "skip_");
 
-  // --------------------------------------------------------------------
-
   if (sep.size() != 1) {
     throw std::invalid_argument(
         "The separator (sep) must consist of exactly one character!");
@@ -418,8 +400,6 @@ void DatabaseManager::read_s3(const std::string& _name,
     ++limit;
   }
 
-  // --------------------------------------------------------------------
-
   for (const auto& key : keys) {
     auto reader = io::S3Reader(bucket, colnames, key, limit, region, sep[0]);
 
@@ -428,11 +408,8 @@ void DatabaseManager::read_s3(const std::string& _name,
     logger().log("Read '" + key + "'.");
   }
 
-  // --------------------------------------------------------------------
-
   communication::Sender::send_string("Success!", _socket);
 
-  // --------------------------------------------------------------------
 #endif
 }
 
@@ -441,8 +418,6 @@ void DatabaseManager::read_s3(const std::string& _name,
 void DatabaseManager::sniff_csv(const std::string& _name,
                                 const Poco::JSON::Object& _cmd,
                                 Poco::Net::StreamSocket* _socket) const {
-  // --------------------------------------------------------------------
-
   auto colnames = std::optional<std::vector<std::string>>();
 
   if (_cmd.has("colnames_")) {
@@ -477,8 +452,6 @@ void DatabaseManager::sniff_csv(const std::string& _name,
         "If you explicitly pass a dialect, it must be 'python'!");
   }
 
-  // --------------------------------------------------------------------
-
   if (quotechar.size() != 1) {
     throw std::invalid_argument(
         "The quotechar must consist of exactly one character!");
@@ -489,21 +462,15 @@ void DatabaseManager::sniff_csv(const std::string& _name,
         "The separator (sep) must consist of exactly one character!");
   }
 
-  // --------------------------------------------------------------------
-
   auto sniffer =
       io::CSVSniffer(colnames, conn_description, dialect, fnames,
                      num_lines_sniffed, quotechar[0], sep[0], skip, _name);
 
   const auto create_table_statement = sniffer.sniff();
 
-  // --------------------------------------------------------------------
-
   communication::Sender::send_string("Success!", _socket);
 
   communication::Sender::send_string(create_table_statement, _socket);
-
-  // --------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -511,13 +478,9 @@ void DatabaseManager::sniff_csv(const std::string& _name,
 void DatabaseManager::sniff_s3(const std::string& _name,
                                const Poco::JSON::Object& _cmd,
                                Poco::Net::StreamSocket* _socket) const {
-  // --------------------------------------------------------------------
-
 #if (defined(_WIN32) || defined(_WIN64))
   throw std::invalid_argument("S3 is not supported on Windows!");
 #else
-
-  // --------------------------------------------------------------------
 
   const auto bucket = JSON::get_value<std::string>(_cmd, "bucket_");
 
@@ -555,14 +518,10 @@ void DatabaseManager::sniff_s3(const std::string& _name,
         "If you explicitly pass a dialect, it must be 'python'!");
   }
 
-  // --------------------------------------------------------------------
-
   if (sep.size() != 1) {
     throw std::invalid_argument(
         "The separator (sep) must consist of exactly one character!");
   }
-
-  // --------------------------------------------------------------------
 
   auto sniffer =
       io::S3Sniffer(bucket, colnames, conn_description, dialect, keys,
@@ -570,13 +529,9 @@ void DatabaseManager::sniff_s3(const std::string& _name,
 
   const auto create_table_statement = sniffer.sniff();
 
-  // --------------------------------------------------------------------
-
   communication::Sender::send_string("Success!", _socket);
 
   communication::Sender::send_string(create_table_statement, _socket);
-
-  // --------------------------------------------------------------------
 
 #endif
 }

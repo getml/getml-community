@@ -13,7 +13,6 @@
 
 namespace engine {
 namespace containers {
-// ----------------------------------------------------------------------------
 
 void DataFrame::add_float_column(const Column<Float> &_col,
                                  const std::string &_role) {
@@ -333,8 +332,6 @@ void DataFrame::check_null(const Column<Float> &_col) const {
 // ----------------------------------------------------------------------------
 
 void DataFrame::check_plausibility() const {
-  // -------------------------------------------------------------------------
-
   auto expected_nrows = nrows();
 
   const bool any_categorical_does_not_match =
@@ -385,8 +382,6 @@ void DataFrame::check_plausibility() const {
                     return mat.nrows() != expected_nrows;
                   });
 
-  // -------------------------------------------------------------------------
-
   const bool any_mismatch =
       any_categorical_does_not_match || any_join_key_does_not_match ||
       any_numerical_does_not_match || any_target_does_not_match ||
@@ -402,8 +397,6 @@ void DataFrame::check_plausibility() const {
         " do not "
         "match!");
   }
-
-  // -------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -412,35 +405,35 @@ DataFrame DataFrame::clone(const std::string _name) const {
   auto df = DataFrame(_name, categories_, join_keys_encoding_, make_pool());
 
   for (size_t i = 0; i < num_categoricals(); ++i) {
-    df.add_int_column(categorical(i).clone(), ROLE_CATEGORICAL);
+    df.add_int_column(categorical(i).clone(df.pool()), ROLE_CATEGORICAL);
   }
 
   for (size_t i = 0; i < num_join_keys(); ++i) {
-    df.add_int_column(join_key(i).clone(), ROLE_JOIN_KEY);
+    df.add_int_column(join_key(i).clone(df.pool()), ROLE_JOIN_KEY);
   }
 
   for (size_t i = 0; i < num_numericals(); ++i) {
-    df.add_float_column(numerical(i).clone(), ROLE_NUMERICAL);
+    df.add_float_column(numerical(i).clone(df.pool()), ROLE_NUMERICAL);
   }
 
   for (size_t i = 0; i < num_targets(); ++i) {
-    df.add_float_column(target(i).clone(), ROLE_TARGET);
+    df.add_float_column(target(i).clone(df.pool()), ROLE_TARGET);
   }
 
   for (size_t i = 0; i < num_text(); ++i) {
-    df.add_string_column(text(i).clone(), ROLE_TEXT);
+    df.add_string_column(text(i).clone(df.pool()), ROLE_TEXT);
   }
 
   for (size_t i = 0; i < num_time_stamps(); ++i) {
-    df.add_float_column(time_stamp(i).clone(), ROLE_TIME_STAMP);
+    df.add_float_column(time_stamp(i).clone(df.pool()), ROLE_TIME_STAMP);
   }
 
   for (size_t i = 0; i < num_unused_floats(); ++i) {
-    df.add_float_column(unused_float(i).clone(), ROLE_UNUSED_FLOAT);
+    df.add_float_column(unused_float(i).clone(df.pool()), ROLE_UNUSED_FLOAT);
   }
 
   for (size_t i = 0; i < num_unused_strings(); ++i) {
-    df.add_string_column(unused_string(i).clone(), ROLE_UNUSED_STRING);
+    df.add_string_column(unused_string(i).clone(df.pool()), ROLE_UNUSED_STRING);
   }
 
   df.create_indices();

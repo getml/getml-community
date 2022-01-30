@@ -9,12 +9,12 @@
 
 #include "helpers/helpers.hpp"
 #include "stl/stl.hpp"
+#include "transpilation/transpilation.hpp"
 
 // ------------------------------------------------------------------------
 
 namespace engine {
 namespace utils {
-// ------------------------------------------------------------------------
 
 Poco::JSON::Object::Ptr SQLDependencyTracker::find_dependencies(
     const Tuples& _tuples, const size_t _i) const {
@@ -62,7 +62,7 @@ std::string SQLDependencyTracker::infer_table_name(
     throw std::runtime_error("Could not find end of DROP TABLE statement.");
   }
 
-  return helpers::SQLGenerator::to_lower(_sql.substr(begin, end - begin));
+  return transpilation::SQLGenerator::to_lower(_sql.substr(begin, end - begin));
 }
 
 // ------------------------------------------------------------------------
@@ -117,7 +117,7 @@ typename SQLDependencyTracker::Tuples SQLDependencyTracker::save_sql(
 
   const auto make_tuple = [&table_names, &file_names, &sql](const size_t _i) {
     return std::make_tuple(table_names.at(_i), file_names.at(_i),
-                           helpers::SQLGenerator::to_lower(sql.at(_i)));
+                           transpilation::SQLGenerator::to_lower(sql.at(_i)));
   };
 
   return stl::collect::vector<Tuples::value_type>(iota |

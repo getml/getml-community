@@ -86,13 +86,13 @@ class DecisionTree {
       const containers::Subfeatures& _subfeatures) const;
 
   /// Expresses the decision tree as SQL code.
-  std::string to_sql(const helpers::StringIterator& _categories,
-                     const helpers::VocabularyTree& _vocabulary,
-                     const std::shared_ptr<const helpers::SQLDialectGenerator>&
-                         _sql_dialect_generator,
-                     const std::string& _feature_prefix,
-                     const std::string _feature_num,
-                     const std::tuple<bool, bool, bool> _has_subfeatures) const;
+  std::string to_sql(
+      const helpers::StringIterator& _categories,
+      const helpers::VocabularyTree& _vocabulary,
+      const std::shared_ptr<const transpilation::SQLDialectGenerator>&
+          _sql_dialect_generator,
+      const std::string& _feature_prefix, const std::string _feature_num,
+      const std::tuple<bool, bool, bool> _has_subfeatures) const;
 
   // -----------------------------------------------------------------
 

@@ -5,11 +5,9 @@
 
 namespace fastprop {
 namespace algorithm {
-// ----------------------------------------------------------------------------
 
 typedef typename helpers::TableHolder TableHolder;
 
-// ----------------------------------------------------------------------------
 }  // namespace algorithm
 }  // namespace fastprop
 

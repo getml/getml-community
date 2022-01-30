@@ -123,7 +123,7 @@ class FeatureLearner : public AbstractFeatureLearner {
   std::vector<std::string> to_sql(
       const helpers::StringIterator& _categories, const bool _targets,
       const bool _subfeatures,
-      const std::shared_ptr<const helpers::SQLDialectGenerator>&
+      const std::shared_ptr<const transpilation::SQLDialectGenerator>&
           _sql_dialect_generator,
       const std::string& _prefix) const final;
 
@@ -233,7 +233,7 @@ class FeatureLearner : public AbstractFeatureLearner {
   void propositionalization_to_sql(
       const helpers::StringIterator& _categories,
       const helpers::VocabularyTree& _vocabulary,
-      const std::shared_ptr<const helpers::SQLDialectGenerator>&
+      const std::shared_ptr<const transpilation::SQLDialectGenerator>&
           _sql_dialect_generator,
       const std::string& _prefix, const bool _subfeatures,
       std::vector<std::string>* _sql) const;
@@ -888,7 +888,7 @@ template <typename FeatureLearnerType>
 void FeatureLearner<FeatureLearnerType>::propositionalization_to_sql(
     const helpers::StringIterator& _categories,
     const helpers::VocabularyTree& _vocabulary,
-    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+    const std::shared_ptr<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator,
     const std::string& _prefix, const bool _subfeatures,
     std::vector<std::string>* _sql) const {
@@ -969,7 +969,7 @@ template <typename FeatureLearnerType>
 std::vector<std::string> FeatureLearner<FeatureLearnerType>::to_sql(
     const helpers::StringIterator& _categories, const bool _targets,
     const bool _subfeatures,
-    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+    const std::shared_ptr<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator,
     const std::string& _prefix) const {
   throw_unless(peripheral_schema_, "Pipeline has not been fitted.");

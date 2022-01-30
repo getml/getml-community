@@ -17,6 +17,7 @@
 
 #include "database/database.hpp"
 #include "strings/strings.hpp"
+#include "transpilation/transpilation.hpp"
 
 // -------------------------------------------------------------------------
 
@@ -799,7 +800,8 @@ class DataFrame {
         helpers::Macros::parse_table_colname(name_, _colname);
     throw std::invalid_argument(
         "Data frame '" + table + "' contains no " + _coltype + " named '" +
-        helpers::SQLite3Generator().make_colname(colname) + "'!");
+        transpilation::SQLite3Generator().make_staging_table_colname(colname) +
+        "'!");
   }
 
   /// Records the current time as the last time something was changed.

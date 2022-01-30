@@ -5,6 +5,7 @@
 #include "fastprop/algorithm/FastProp.hpp"
 #include "fastprop/algorithm/FitParams.hpp"
 #include "fastprop/algorithm/TableHolder.hpp"
+#include "fastprop/algorithm/TableHolderParams.hpp"
 #include "fastprop/algorithm/TransformParams.hpp"
 
 #endif  // FASTPROP_ALGORITHM_ALGORITHM_HPP_

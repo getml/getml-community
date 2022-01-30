@@ -9,6 +9,7 @@
 // -------------------------------------------------------------------------
 
 #include "memmap/memmap.hpp"
+#include "stl/AccessIterator.hpp"
 #include "stl/stl.hpp"
 #include "strings/strings.hpp"
 
@@ -19,7 +20,6 @@
 // -------------------------------------------------------------------------
 
 namespace helpers {
-// -------------------------------------------------------------------------
 
 template <typename T>
 struct Column {
@@ -59,8 +59,7 @@ struct Column {
       return data_;
     }
     if constexpr (std::is_same<T, strings::String>()) {
-      auto range = make_range();
-      return range.begin();
+      return stl::AccessIterator<T, Column<T>>(0, this);
     }
   }
 
@@ -126,8 +125,6 @@ struct Column {
     return iota | VIEWS::transform(get_value);
   }
 
-  // ---------------------------------------------------------------------
-
   /// Pointer to the underlying data.
   const T* const data_;
 
@@ -145,8 +142,6 @@ struct Column {
 
   /// Unit of the column
   const std::string unit_;
-
-  // ---------------------------------------------------------------------
 };
 
 // -------------------------------------------------------------------------

@@ -84,7 +84,7 @@ Poco::JSON::Object::Ptr FastPropContainer::to_json_obj() const {
 void FastPropContainer::to_sql(
     const helpers::StringIterator& _categories,
     const helpers::VocabularyTree& _vocabulary,
-    const std::shared_ptr<const helpers::SQLDialectGenerator>&
+    const std::shared_ptr<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator,
     const std::string& _prefix, const bool _subfeatures,
     std::vector<std::string>* _sql) const {
@@ -106,8 +106,9 @@ void FastPropContainer::to_sql(
       const auto autofeatures = stl::collect::vector<std::string>(
           iota | VIEWS::transform(to_feature_name));
 
-      const auto main_table = helpers::SQLGenerator::make_staging_table_name(
-          fast_prop().placeholder().name());
+      const auto main_table =
+          transpilation::SQLGenerator::make_staging_table_name(
+              fast_prop().placeholder().name());
 
       assert_true(_sql_dialect_generator);
 

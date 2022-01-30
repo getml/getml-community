@@ -14,34 +14,49 @@
 #include "helpers/Int.hpp"
 
 // -------------------------------------------------------------------------
+
 namespace helpers {
-// -------------------------------------------------------------------------
 
 template <class T, class ContainerType>
 class ColumnView {
-  // -------------------------------
-
  public:
   ColumnView(const Column<T>& _col)
       : col_(_col), rows_(std::shared_ptr<const ContainerType>()) {}
 
   ColumnView(const Column<T>& _col,
              const std::shared_ptr<const ContainerType>& _rows)
-      : col_(_col), rows_(_rows) {}
+      : col_(_col), rows_(_rows) {
+#ifndef NDEBUG
+    assert_true(rows_);
+    if constexpr (std::is_same<ContainerType, std::vector<size_t>>()) {
+      for (const auto row : *rows_) {
+        assert_msg(row < col_.nrows_,
+                   "row: " + std::to_string(row) +
+                       ", col_.nrows_:" + std::to_string(col_.nrows_));
+      }
+    }
+#endif  // NDEBUG
+  }
 
   ~ColumnView() = default;
 
-  // -------------------------------
-
  public:
-  /// Returns an iterator to the beginning
-  inline auto begin() const { return make_range().begin(); }
+  /// Iterator begin
+  inline auto begin() const {
+    return stl::AccessIterator<T, ColumnView<T, ContainerType>>(0, this);
+  }
 
   /// Returns the underlying column.
   inline const Column<T>& col() const { return col_; }
 
-  /// Returns an iterator to the end
-  inline auto end() const { return make_range().end(); }
+  /// Iterator end
+  inline auto end() const { return begin() + nrows(); }
+
+  /// Returns the number of rows.
+  inline size_t nrows() const {
+    assert_true(rows_);
+    return rows_->size();
+  }
 
   /// Accessor to data (when rows are std::vector<Int>)
   template <typename CType = ContainerType,
@@ -50,6 +65,9 @@ class ColumnView {
   inline T operator[](const size_t _i) const {
     assert_true(rows_);
     assert_true(_i < rows_->size());
+    assert_msg((*rows_)[_i] < col_.nrows_,
+               "(*rows_)[_i]: " + std::to_string((*rows_)[_i]) +
+                   ", col_.nrows_: " + std::to_string(col_.nrows_));
     return col_[(*rows_)[_i]];
   }
 
@@ -62,28 +80,22 @@ class ColumnView {
     assert_true(rows_);
     auto it = rows_->find(_i);
     assert_true(it != rows_->end());
+    assert_true(it->second < col_.nrows_);
     return col_[it->second];
   }
 
-  // -------------------------------
- private:
-  /// Generates a range over the ColumnView
-  auto make_range() const {
+  /// Returns the underlying column.
+  inline const ContainerType& rows() const {
     assert_true(rows_);
-    const auto get_val = [this](const auto _i) -> T { return col_[_i]; };
-    return *rows_ | VIEWS::transform(get_val);
+    return rows_;
   }
-
-  // -------------------------------
 
  private:
   /// Shallow copy of the column in which we are interested.
-  Column<T> col_;
+  const Column<T> col_;
 
   /// Indices indicating all of the rows that are part of this view
-  std::shared_ptr<const ContainerType> rows_;
-
-  // -------------------------------
+  const std::shared_ptr<const ContainerType> rows_;
 };
 
 // -------------------------------------------------------------------------

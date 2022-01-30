@@ -10,7 +10,6 @@
 
 namespace engine {
 namespace handlers {
-// ----------------------------------------------------------------------------
 
 Float AggOpParser::categorical_aggregation(
     const std::string& _type, const Poco::JSON::Object& _json_col) {
@@ -76,6 +75,5 @@ Float AggOpParser::numerical_aggregation(const std::string& _type,
   }
 }
 
-// ----------------------------------------------------------------------------
 }  // namespace handlers
 }  // namespace engine

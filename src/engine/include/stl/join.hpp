@@ -1,14 +1,10 @@
 #ifndef STL_JOIN_HPP_
 #define STL_JOIN_HPP_
 
-// -------------------------------------------------------------------------
-
+#include <sstream>
 #include <vector>
 
-// -------------------------------------------------------------------------
-
 namespace stl {
-// -------------------------------------------------------------------------
 
 /// Necessary work-around, as join is not supported on Windows yet.
 struct join {
@@ -37,6 +33,22 @@ struct join {
     }
 
     return result;
+  }
+
+  /// Generates a string from a range and inserts a seperator.
+  template <class RangeType>
+  static std::string string(RangeType range, const std::string& _sep = ", ") {
+    std::stringstream stream;
+
+    for (auto it = range.begin(); it != range.end();) {
+      stream << *it;
+      ++it;
+      if (it != range.end()) {
+        stream << _sep;
+      }
+    }
+
+    return stream.str();
   }
 };
 

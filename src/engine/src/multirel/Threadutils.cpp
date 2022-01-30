@@ -45,12 +45,24 @@ void Threadutils::fit_ensemble(const ThreadutilsFitParams& _params) {
 
     // ----------------------------------------------------------------
 
+    const auto make_staging_table_colname =
+        [](const std::string& _colname) -> std::string {
+      return transpilation::SQLite3Generator().make_staging_table_colname(
+          _colname);
+    };
+
+    const auto params = decisiontrees::TableHolderParams{
+        .feature_container_ = _params.feature_container_,
+        .make_staging_table_colname_ = make_staging_table_colname,
+        .peripheral_ = _params.peripheral_,
+        .peripheral_names_ = _params.ensemble_->peripheral(),
+        .placeholder_ = _params.ensemble_->placeholder(),
+        .population_ = population_subview,
+        .row_index_container_ = _params.row_indices_,
+        .word_index_container_ = _params.word_indices_};
+
     const auto table_holder =
-        std::make_shared<const decisiontrees::TableHolder>(
-            _params.ensemble_->placeholder(), population_subview,
-            _params.peripheral_, _params.ensemble_->peripheral(),
-            _params.row_indices_, _params.word_indices_,
-            _params.feature_container_);
+        std::make_shared<const decisiontrees::TableHolder>(params);
 
     // ----------------------------------------------------------------
 
@@ -92,23 +104,30 @@ size_t Threadutils::get_num_threads(const size_t _num_threads) {
 void Threadutils::transform_ensemble(
     const ThreadutilsTransformParams& _params) {
   try {
-    // ----------------------------------------------------------------
-
     assert_true(_params.comm_);
-
-    // ----------------------------------------------------------------
 
     const auto population_subview =
         utils::DataFrameScatterer::DataFrameScatterer::scatter_data_frame(
             _params.population_, _params.thread_nums_,
             _params.this_thread_num_);
 
-    const auto table_holder = decisiontrees::TableHolder(
-        _params.ensemble_.placeholder(), population_subview,
-        _params.peripheral_, _params.ensemble_.peripheral(), std::nullopt,
-        _params.word_indices_, _params.feature_container_);
+    const auto make_staging_table_colname =
+        [](const std::string& _colname) -> std::string {
+      return transpilation::SQLite3Generator().make_staging_table_colname(
+          _colname);
+    };
 
-    // ----------------------------------------------------------------
+    const auto params = decisiontrees::TableHolderParams{
+        .feature_container_ = _params.feature_container_,
+        .make_staging_table_colname_ = make_staging_table_colname,
+        .peripheral_ = _params.peripheral_,
+        .peripheral_names_ = _params.ensemble_.peripheral(),
+        .placeholder_ = _params.ensemble_.placeholder(),
+        .population_ = population_subview,
+        .row_index_container_ = std::nullopt,
+        .word_index_container_ = _params.word_indices_};
+
+    const auto table_holder = decisiontrees::TableHolder(params);
 
     const auto subpredictions = SubtreeHelper::make_predictions(
         table_holder, _params.ensemble_.subensembles_avg(),
@@ -117,17 +136,11 @@ void Threadutils::transform_ensemble(
     const auto subfeatures =
         SubtreeHelper::make_subfeatures(table_holder, subpredictions);
 
-    // ----------------------------------------------------------------
-
     auto impl = containers::Optional<aggregations::AggregationImpl>(
         new aggregations::AggregationImpl(population_subview.nrows()));
 
-    // ----------------------------------------------------------------
-
     utils::Logger::log("Multirel: Building features...", _params.logger_,
                        _params.comm_);
-
-    // ----------------------------------------------------------------
 
     assert_true(_params.index_.size() == _params.features_->size());
 
@@ -151,7 +164,6 @@ void Threadutils::transform_ensemble(
                          _params.logger_, _params.comm_);
     }
 
-    // ----------------------------------------------------------------
   } catch (std::exception& e) {
     if (_params.logger_) {
       throw std::runtime_error(e.what());

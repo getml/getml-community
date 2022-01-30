@@ -99,7 +99,7 @@ class AbstractFeatureLearner {
   virtual std::vector<std::string> to_sql(
       const helpers::StringIterator& _categories, const bool _targets,
       const bool _subfeatures,
-      const std::shared_ptr<const helpers::SQLDialectGenerator>&
+      const std::shared_ptr<const transpilation::SQLDialectGenerator>&
           _sql_dialect_generator,
       const std::string& _prefix) const = 0;
 

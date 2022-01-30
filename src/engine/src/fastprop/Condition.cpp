@@ -93,7 +93,7 @@ Poco::JSON::Object::Ptr Condition::to_json_obj() const {
 
 std::string Condition::to_sql(
     const helpers::StringIterator &_categories,
-    const std::shared_ptr<const helpers::SQLDialectGenerator>
+    const std::shared_ptr<const transpilation::SQLDialectGenerator>
         &_sql_dialect_generator,
     const std::string &_feature_prefix, const helpers::Schema &_input,
     const helpers::Schema &_output) const {

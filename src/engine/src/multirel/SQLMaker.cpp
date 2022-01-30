@@ -1,8 +1,9 @@
 #include "multirel/utils/SQLMaker.hpp"
 
+#include "transpilation/transpilation.hpp"
+
 namespace multirel {
 namespace utils {
-// ----------------------------------------------------------------------------
 
 std::string SQLMaker::condition_greater(
     const helpers::StringIterator& _categories, const VocabForDf& _vocab_popul,
@@ -197,39 +198,46 @@ std::string SQLMaker::get_name(const std::string& _feature_prefix,
   switch (_data_used) {
     case enums::DataUsed::x_perip_categorical:
       assert_true(_column_used < _input.num_categoricals());
-      return make_colname(_input.categorical_name(_column_used), "t2");
+      return make_staging_table_colname(_input.categorical_name(_column_used),
+                                        "t2");
 
     case enums::DataUsed::x_popul_categorical:
       assert_true(_column_used < _output.num_categoricals());
-      return make_colname(_output.categorical_name(_column_used), "t1");
+      return make_staging_table_colname(_output.categorical_name(_column_used),
+                                        "t1");
 
     case enums::DataUsed::x_perip_discrete:
       assert_true(_column_used < _input.num_discretes());
-      return make_colname(_input.discrete_name(_column_used), "t2");
+      return make_staging_table_colname(_input.discrete_name(_column_used),
+                                        "t2");
 
     case enums::DataUsed::x_popul_discrete:
       assert_true(_column_used < _output.num_discretes());
-      return make_colname(_output.discrete_name(_column_used), "t1");
+      return make_staging_table_colname(_output.discrete_name(_column_used),
+                                        "t1");
 
     case enums::DataUsed::x_perip_numerical:
       assert_true(_column_used < _input.num_numericals());
-      return make_colname(_input.numerical_name(_column_used), "t2");
+      return make_staging_table_colname(_input.numerical_name(_column_used),
+                                        "t2");
 
     case enums::DataUsed::x_popul_numerical:
       assert_true(_column_used < _output.num_numericals());
-      return make_colname(_output.numerical_name(_column_used), "t1");
+      return make_staging_table_colname(_output.numerical_name(_column_used),
+                                        "t1");
 
     case enums::DataUsed::x_perip_text:
       assert_true(_column_used < _input.num_text());
-      return make_colname(_input.text_name(_column_used), "t2");
+      return make_staging_table_colname(_input.text_name(_column_used), "t2");
 
     case enums::DataUsed::x_popul_text:
       assert_true(_column_used < _output.num_text());
-      return make_colname(_output.text_name(_column_used), "t1");
+      return make_staging_table_colname(_output.text_name(_column_used), "t1");
 
     case enums::DataUsed::x_subfeature: {
-      const auto number = helpers::SQLGenerator::make_subfeature_identifier(
-          _feature_prefix, peripheral_used_);
+      const auto number =
+          transpilation::SQLGenerator::make_subfeature_identifier(
+              _feature_prefix, peripheral_used_);
 
       return "f_" + number + ".\"feature_" + number + "_" +
              std::to_string(_column_used + 1) + "\"";
@@ -252,20 +260,23 @@ std::string SQLMaker::get_ts_name(const helpers::Schema& _input,
   switch (_data_used) {
     case enums::DataUsed::x_perip_discrete:
       assert_true(_column_used < _input.num_discretes());
-      return make_colname(_input.discrete_name(_column_used) + _diffstr, "t2");
+      return make_staging_table_colname(
+          _input.discrete_name(_column_used) + _diffstr, "t2");
 
     case enums::DataUsed::x_popul_discrete:
       assert_true(_column_used < _output.num_discretes());
-      return make_colname(_output.discrete_name(_column_used) + _diffstr, "t1");
+      return make_staging_table_colname(
+          _output.discrete_name(_column_used) + _diffstr, "t1");
 
     case enums::DataUsed::x_perip_numerical:
       assert_true(_column_used < _input.num_numericals());
-      return make_colname(_input.numerical_name(_column_used) + _diffstr, "t2");
+      return make_staging_table_colname(
+          _input.numerical_name(_column_used) + _diffstr, "t2");
 
     case enums::DataUsed::x_popul_numerical:
       assert_true(_column_used < _output.num_numericals());
-      return make_colname(_output.numerical_name(_column_used) + _diffstr,
-                          "t1");
+      return make_staging_table_colname(
+          _output.numerical_name(_column_used) + _diffstr, "t1");
 
     default:
       assert_true(false && "Unknown DataUsed!");
@@ -381,8 +392,8 @@ std::string SQLMaker::list_words(
 
 // ----------------------------------------------------------------------------
 
-std::string SQLMaker::make_colname(const std::string& _colname,
-                                   const std::string& _alias) const {
+std::string SQLMaker::make_staging_table_colname(
+    const std::string& _colname, const std::string& _alias) const {
   assert_true(sql_dialect_generator_);
 
   const auto quote1 = sql_dialect_generator_->quotechar1();
@@ -407,7 +418,7 @@ std::string SQLMaker::make_colname(const std::string& _colname,
   }
 
   return _alias + "." + quote1 +
-         sql_dialect_generator_->make_colname(_colname) + quote2;
+         sql_dialect_generator_->make_staging_table_colname(_colname) + quote2;
 }
 
 // ----------------------------------------------------------------------------
@@ -434,18 +445,18 @@ std::string SQLMaker::make_time_stamp_window(const helpers::Schema& _input,
   const auto name2 = _input.time_stamps_name();
 
   const auto diffstr1 =
-      helpers::SQLGenerator::make_time_stamp_diff(_diff - lag_, true);
+      transpilation::SQLGenerator::make_time_stamp_diff(_diff - lag_, true);
 
   const auto diffstr2 =
-      helpers::SQLGenerator::make_time_stamp_diff(_diff, true);
+      transpilation::SQLGenerator::make_time_stamp_diff(_diff, true);
 
-  const auto condition1 =
-      make_time_stamp_diff(make_colname(name1, "t1"),
-                           make_colname(name2 + diffstr1, "t2"), !_is_greater);
+  const auto condition1 = make_time_stamp_diff(
+      make_staging_table_colname(name1, "t1"),
+      make_staging_table_colname(name2 + diffstr1, "t2"), !_is_greater);
 
-  const auto condition2 =
-      make_time_stamp_diff(make_colname(name1, "t1"),
-                           make_colname(name2 + diffstr2, "t2"), _is_greater);
+  const auto condition2 = make_time_stamp_diff(
+      make_staging_table_colname(name1, "t1"),
+      make_staging_table_colname(name2 + diffstr2, "t2"), _is_greater);
 
   if (_is_greater) {
     return "( " + condition1 + " OR " + condition2 + " )";
@@ -473,7 +484,8 @@ std::string SQLMaker::select_statement(const std::string& _feature_prefix,
   if (agg == helpers::enums::Aggregation::first ||
       agg == helpers::enums::Aggregation::last) {
     return sql_dialect_generator_->aggregation(
-        agg, value, make_colname(_input.time_stamps_name(), "t2"));
+        agg, value,
+        make_staging_table_colname(_input.time_stamps_name(), "t2"));
   }
 
   return sql_dialect_generator_->aggregation(agg, value, std::nullopt);

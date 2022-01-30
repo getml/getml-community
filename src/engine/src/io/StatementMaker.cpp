@@ -333,7 +333,7 @@ std::string StatementMaker::to_string_odbc(const Datatype _type,
       return _integer;
 
     case Datatype::string:
-      return _integer;
+      return _text;
 
     default:
       assert_true(false);

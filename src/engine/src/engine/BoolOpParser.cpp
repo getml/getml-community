@@ -9,7 +9,6 @@
 
 namespace engine {
 namespace handlers {
-// ----------------------------------------------------------------------------
 
 containers::ColumnView<bool> BoolOpParser::binary_operation(
     const Poco::JSON::Object& _col) const {
