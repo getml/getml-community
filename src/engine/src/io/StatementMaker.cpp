@@ -310,13 +310,17 @@ std::string StatementMaker::to_string_mysql(const Datatype _type) {
     case Datatype::integer:
       return "INT";
 
+    case Datatype::time_stamp:
     case Datatype::string:
       return "TEXT";
 
-    default:
+    case Datatype::unknown:
       assert_true(false);
       return "";
   }
+
+  assert_true(false);
+  return "";
 }
 
 // ----------------------------------------------------------------------------
@@ -332,13 +336,17 @@ std::string StatementMaker::to_string_odbc(const Datatype _type,
     case Datatype::integer:
       return _integer;
 
+    case Datatype::time_stamp:
     case Datatype::string:
       return _text;
 
-    default:
+    case Datatype::unknown:
       assert_true(false);
       return "";
   }
+
+  assert_true(false);
+  return "";
 }
 
 // ----------------------------------------------------------------------------
@@ -351,13 +359,19 @@ std::string StatementMaker::to_string_postgres(const Datatype _type) {
     case Datatype::integer:
       return "INTEGER";
 
+    case Datatype::time_stamp:
+      return "TIMESTAMP";
+
     case Datatype::string:
       return "TEXT";
 
-    default:
+    case Datatype::unknown:
       assert_true(false);
       return "";
   }
+
+  assert_true(false);
+  return "";
 }
 
 // ----------------------------------------------------------------------------
@@ -370,13 +384,17 @@ std::string StatementMaker::to_string_sap_hana(const Datatype _type) {
     case Datatype::integer:
       return "INTEGER";
 
+    case Datatype::time_stamp:
     case Datatype::string:
       return "NVARCHAR(5000)";
 
-    default:
+    case Datatype::unknown:
       assert_true(false);
       return "";
   }
+
+  assert_true(false);
+  return "";
 }
 
 // ----------------------------------------------------------------------------
@@ -389,13 +407,17 @@ std::string StatementMaker::to_string_sqlite(const Datatype _type) {
     case Datatype::integer:
       return "INTEGER";
 
+    case Datatype::time_stamp:
     case Datatype::string:
       return "TEXT";
 
-    default:
+    case Datatype::unknown:
       assert_true(false);
       return "";
   }
+
+  assert_true(false);
+  return "";
 }
 
 // ----------------------------------------------------------------------------

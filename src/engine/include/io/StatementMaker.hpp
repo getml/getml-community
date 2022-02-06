@@ -21,7 +21,6 @@
 // ----------------------------------------------------------------------------
 
 namespace io {
-// ----------------------------------------------------------------------------
 
 class StatementMaker {
  public:
@@ -94,8 +93,6 @@ class StatementMaker {
   /// Transforms a datatype to the string required for the sqlite dialect.
   static std::string to_string_sqlite(const Datatype _type);
 
-  // -------------------------------
-
  private:
   /// Produces a gap to ensure that all types are aligned.
   static std::string make_gap(const std::string& _colname,
@@ -103,8 +100,6 @@ class StatementMaker {
     assert_true(_colname.size() <= _max_size);
     return std::string(_max_size - _colname.size(), ' ');
   }
-
-  // -------------------------------
 };
 
 // ----------------------------------------------------------------------------

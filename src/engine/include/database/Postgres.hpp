@@ -25,11 +25,8 @@
 // ----------------------------------------------------------------------------
 
 namespace database {
-// ----------------------------------------------------------------------------
 
 class Postgres : public Connector {
-  // -------------------------------
-
  public:
   Postgres(const Poco::JSON::Object& _obj, const std::string& _passwd,
            const std::vector<std::string>& _time_formats)
@@ -40,8 +37,6 @@ class Postgres : public Connector {
       : time_formats_(_time_formats) {}
 
   ~Postgres() = default;
-
-  // -------------------------------
 
  public:
   /// Returns a Poco::JSON::Object describing the connection.
@@ -68,8 +63,6 @@ class Postgres : public Connector {
   /// Reads a CSV file or another data source into a table.
   void read(const std::string& _table, const size_t _skip,
             io::Reader* _reader) final;
-
-  // -------------------------------
 
  public:
   /// Returns the dialect of the connector.
@@ -111,8 +104,6 @@ class Postgres : public Connector {
   /// Returns the time formats used.
   const std::vector<std::string>& time_formats() const { return time_formats_; }
 
-  // -------------------------------
-
  private:
   /// Makes sure that the colnames of the CSV file match the colnames of the
   /// target table.
@@ -126,8 +117,6 @@ class Postgres : public Connector {
   /// Called by the constructor.
   static std::string make_connection_string(const Poco::JSON::Object& _obj,
                                             const std::string& _passwd);
-
-  // -------------------------------
 
  private:
   /// Executes and SQL command given a connection.
@@ -172,16 +161,12 @@ class Postgres : public Connector {
     return {"int8", "int2", "int4", "_int2", "_int4"};
   }
 
-  // -------------------------------
-
  private:
   /// String containing the meta-information related to the connection.
   std::string connection_string_;
 
   /// Vector containing the time formats.
   const std::vector<std::string> time_formats_;
-
-  // -------------------------------
 };
 
 // ----------------------------------------------------------------------------

@@ -1,4 +1,6 @@
-#include "transpilation/TSQLGenerator.hpp"
+#include "transpilation/PostgreSQLGenerator.hpp"
+
+#include <ostream>
 
 // ----------------------------------------------------------------------------
 
@@ -18,7 +20,7 @@
 
 namespace transpilation {
 
-std::string TSQLGenerator::aggregation(
+std::string PostgreSQLGenerator::aggregation(
     const helpers::enums::Aggregation& _agg, const std::string& _colname1,
     const std::optional<std::string>& _colname2) const {
   if (_agg == helpers::enums::Aggregation::avg_time_between) {
@@ -135,14 +137,14 @@ std::string TSQLGenerator::aggregation(
       return make_trend_aggregation(_colname1, _colname2.value());
 
     case helpers::enums::Aggregation::stddev:
-      return "SQRT( VARP( " + _colname1 + " ) )";
+      return "STDDEV_POP( " + _colname1 + " )";
 
     case helpers::enums::Aggregation::var:
-      return "VARP( " + _colname1 + " )";
+      return "VAR_POP( " + _colname1 + " )";
 
     case helpers::enums::Aggregation::variation_coefficient:
-      return "CASE WHEN AVG( " + _colname1 + " ) != 0 THEN VARP( " + _colname1 +
-             " ) / AVG( " + _colname1 + " ) ELSE NULL END";
+      return "CASE WHEN AVG( " + _colname1 + " ) != 0 THEN VAR_POP( " +
+             _colname1 + " ) / AVG( " + _colname1 + " ) ELSE NULL END";
 
     default:
       const auto agg_type =
@@ -155,9 +157,9 @@ std::string TSQLGenerator::aggregation(
 
 // ----------------------------------------------------------------------------
 
-std::string TSQLGenerator::first_last_aggregation(const std::string& _colname1,
-                                                  const std::string& _colname2,
-                                                  const bool _first) const {
+std::string PostgreSQLGenerator::first_last_aggregation(
+    const std::string& _colname1, const std::string& _colname2,
+    const bool _first) const {
   const std::string ts_compare = _first ? "ASC" : "DESC";
 
   std::stringstream stream;
@@ -170,7 +172,7 @@ std::string TSQLGenerator::first_last_aggregation(const std::string& _colname1,
 
 // ----------------------------------------------------------------------------
 
-std::string TSQLGenerator::first_or_last_optimum_aggregation(
+std::string PostgreSQLGenerator::first_or_last_optimum_aggregation(
     const std::string& _colname1, const std::string& _colname2,
     const bool _is_first, const bool _is_minimum) const {
   const std::string ts_compare = _is_first ? "DESC" : "ASC";
@@ -188,7 +190,7 @@ std::string TSQLGenerator::first_or_last_optimum_aggregation(
 
 // ----------------------------------------------------------------------------
 
-std::string TSQLGenerator::handle_escape_char(const char c) const {
+std::string PostgreSQLGenerator::handle_escape_char(const char c) const {
   switch (c) {
     case '\t':
       return "\\t";
@@ -221,47 +223,45 @@ std::string TSQLGenerator::handle_escape_char(const char c) const {
 
 // ----------------------------------------------------------------------------
 
-std::string TSQLGenerator::create_indices(
+std::string PostgreSQLGenerator::create_index(
+    const std::string& _table_name, const std::string& _colname) const {
+  const auto colname = make_staging_table_colname(_colname);
+  const auto index_name = _table_name + "__" + colname;
+  std::stringstream stream;
+  stream << "DROP INDEX IF EXISTS " << quotechar1() << index_name
+         << quotechar2() << ";" << std::endl
+         << std::endl
+         << "CREATE INDEX " << quotechar1() << index_name << quotechar2()
+         << " ON " << quotechar1() << _table_name << quotechar2() << " ("
+         << quotechar1() << colname << quotechar2() << ");" << std::endl
+         << std::endl;
+  return stream.str();
+};
+
+// ----------------------------------------------------------------------------
+
+std::string PostgreSQLGenerator::create_indices(
     const std::string& _table_name, const helpers::Schema& _schema) const {
-  const auto create_index =
+  const auto make_index =
       [this, &_table_name](const std::string& _colname) -> std::string {
-    const auto colname = make_staging_table_colname(_colname);
-    const auto index_name = _table_name + "__" + colname;
-    std::stringstream stream;
-    stream << "DROP INDEX IF EXISTS " << quotechar1() << index_name
-           << quotechar2() << " ON " << quotechar1() << _table_name
-           << quotechar2() << ";" << std::endl
-           << std::endl
-           << "CREATE INDEX " << quotechar1() << index_name << quotechar2()
-           << " ON " << quotechar1() << _table_name << quotechar2() << " ("
-           << quotechar1() << colname << quotechar2() << ");" << std::endl
-           << std::endl;
-    return stream.str();
+    return create_index(_table_name, _colname);
   };
 
-  return stl::collect::string(_schema.join_keys_ |
+  return make_index(std::string("rowid")) +
+         stl::collect::string(_schema.join_keys_ |
                               VIEWS::filter(SQLGenerator::include_column) |
-                              VIEWS::transform(create_index)) +
+                              VIEWS::transform(make_index)) +
          stl::collect::string(_schema.time_stamps_ |
-                              VIEWS::transform(create_index));
+                              VIEWS::transform(make_index));
 }
 
 // ----------------------------------------------------------------------------
 
-std::optional<std::string> TSQLGenerator::make_outer_aggregation(
+std::optional<std::string> PostgreSQLGenerator::make_outer_aggregation(
     const helpers::enums::Aggregation& _agg) const {
   switch (_agg) {
     case helpers::enums::Aggregation::first:
     case helpers::enums::Aggregation::last:
-    case helpers::enums::Aggregation::median:
-    case helpers::enums::Aggregation::q1:
-    case helpers::enums::Aggregation::q5:
-    case helpers::enums::Aggregation::q10:
-    case helpers::enums::Aggregation::q25:
-    case helpers::enums::Aggregation::q75:
-    case helpers::enums::Aggregation::q90:
-    case helpers::enums::Aggregation::q95:
-    case helpers::enums::Aggregation::q99:
     case helpers::enums::Aggregation::time_since_first_maximum:
     case helpers::enums::Aggregation::time_since_first_minimum:
     case helpers::enums::Aggregation::time_since_last_maximum:
@@ -279,9 +279,9 @@ std::optional<std::string> TSQLGenerator::make_outer_aggregation(
 
 // ----------------------------------------------------------------------------
 
-std::string TSQLGenerator::create_table(const helpers::enums::Aggregation& _agg,
-                                        const std::string& _feature_prefix,
-                                        const std::string& _feature_num) const {
+std::string PostgreSQLGenerator::create_table(
+    const helpers::enums::Aggregation& _agg, const std::string& _feature_prefix,
+    const std::string& _feature_num) const {
   const auto col_name = "feature_" + _feature_prefix + _feature_num;
   const auto table_name = "FEATURE_" + _feature_prefix + _feature_num;
   const auto outer_aggregation = make_outer_aggregation(_agg);
@@ -290,18 +290,19 @@ std::string TSQLGenerator::create_table(const helpers::enums::Aggregation& _agg,
                                     col_name + quotechar2() + " )"
                               : "t0." + quotechar1() + col_name + quotechar2();
   std::stringstream sql;
-  sql << "SELECT " << aggregated << " AS " << quotechar1() << col_name
+  sql << "CREATE TABLE " << quotechar1() << table_name << quotechar2() << " AS"
+      << std::endl
+      << "SELECT " << aggregated << " AS " << quotechar1() << col_name
       << quotechar2() << ", " << std::endl
       << "       t0." << rowid() << " AS " << rowid() << std::endl
-      << "INTO " << quotechar1() << table_name << quotechar2() << " FROM ("
-      << std::endl;
+      << "FROM (" << std::endl;
   return sql.str();
 }
 
 // ----------------------------------------------------------------------------
 
 std::tuple<std::string, std::string, std::string>
-TSQLGenerator::demangle_colname(const std::string& _raw_name) const {
+PostgreSQLGenerator::demangle_colname(const std::string& _raw_name) const {
   const auto m_pos = _raw_name.find("__mapping_");
 
   auto new_name = (m_pos != std::string::npos)
@@ -358,7 +359,7 @@ TSQLGenerator::demangle_colname(const std::string& _raw_name) const {
 
   new_name = helpers::StringReplacer::replace_all(
       new_name, helpers::Macros::substring(),
-      "substring( " + helpers::Macros::prefix());
+      "SUBSTRING( " + helpers::Macros::prefix());
 
   new_name = helpers::StringReplacer::replace_all(
       new_name, helpers::Macros::begin(), helpers::Macros::postfix() + ", ");
@@ -368,7 +369,7 @@ TSQLGenerator::demangle_colname(const std::string& _raw_name) const {
 
   new_name = helpers::StringReplacer::replace_all(
       new_name, helpers::Macros::hour_begin(),
-      "right( '0' + CAST( datepart( hour, " + helpers::Macros::prefix());
+      "RIGHT( '0' || CAST( EXTRACT( HOUR FROM " + helpers::Macros::prefix());
 
   new_name = helpers::StringReplacer::replace_all(
       new_name, helpers::Macros::hour_end(),
@@ -376,7 +377,7 @@ TSQLGenerator::demangle_colname(const std::string& _raw_name) const {
 
   new_name = helpers::StringReplacer::replace_all(
       new_name, helpers::Macros::minute_begin(),
-      "right( '0' + CAST( datepart( minute, " + helpers::Macros::prefix());
+      "RIGHT( '0' || CAST( EXTRACT( MINUTE FROM " + helpers::Macros::prefix());
 
   new_name = helpers::StringReplacer::replace_all(
       new_name, helpers::Macros::minute_end(),
@@ -384,7 +385,7 @@ TSQLGenerator::demangle_colname(const std::string& _raw_name) const {
 
   new_name = helpers::StringReplacer::replace_all(
       new_name, helpers::Macros::month_begin(),
-      "right( '0' + CAST( datepart( month, " + helpers::Macros::prefix());
+      "RIGHT( '0' || CAST( EXTRACT( MONTH FROM " + helpers::Macros::prefix());
 
   new_name = helpers::StringReplacer::replace_all(
       new_name, helpers::Macros::month_end(),
@@ -392,16 +393,15 @@ TSQLGenerator::demangle_colname(const std::string& _raw_name) const {
 
   new_name = helpers::StringReplacer::replace_all(
       new_name, helpers::Macros::weekday_begin(),
-      "( datepart( weekday, " + helpers::Macros::prefix());
+      "EXTRACT( DOW FROM " + helpers::Macros::prefix());
 
   new_name = helpers::StringReplacer::replace_all(
       new_name, helpers::Macros::weekday_end(),
-      helpers::Macros::postfix() +
-          " ) - datepart( weekday, '2007-04-22' ) + 7 ) % 7");
+      helpers::Macros::postfix() + " )");
 
   new_name = helpers::StringReplacer::replace_all(
       new_name, helpers::Macros::year_begin(),
-      "datepart( year, " + helpers::Macros::prefix());
+      "EXTRACT( YEAR FROM " + helpers::Macros::prefix());
 
   new_name = helpers::StringReplacer::replace_all(
       new_name, helpers::Macros::year_end(), helpers::Macros::postfix() + " )");
@@ -438,7 +438,7 @@ TSQLGenerator::demangle_colname(const std::string& _raw_name) const {
 
 // ----------------------------------------------------------------------------
 
-std::string TSQLGenerator::make_staging_table_column(
+std::string PostgreSQLGenerator::make_staging_table_column(
     const std::string& _raw_name, const std::string& _alias) const {
   if (_raw_name.find(helpers::Macros::no_join_key()) != std::string::npos) {
     return "1";
@@ -477,7 +477,7 @@ std::string TSQLGenerator::make_staging_table_column(
 
 // ----------------------------------------------------------------------------
 
-std::pair<std::string, std::string> TSQLGenerator::edit_prefix_postfix(
+std::pair<std::string, std::string> PostgreSQLGenerator::edit_prefix_postfix(
     const std::string& _raw_name, const std::string& _prefix,
     const std::string& _postfix) const {
   const bool editing_required =
@@ -488,65 +488,35 @@ std::pair<std::string, std::string> TSQLGenerator::edit_prefix_postfix(
     return std::make_pair(_prefix, _postfix);
   }
 
-  const auto make_diff = [](const std::string& _postfix) {
-    const auto diff_float = SQLGenerator::parse_time_stamp_diff(_postfix);
-    const auto days = static_cast<std::int32_t>(diff_float) / 86400;
+  const auto edited_postfix = [&_raw_name, &_postfix]() -> std::string {
+    if (_raw_name.find(helpers::Macros::diffstr()) == std::string::npos) {
+      return _postfix;
+    }
 
-    const auto seconds_float = SQLGenerator::parse_time_stamp_diff(_postfix);
-    const auto seconds = static_cast<std::int32_t>(seconds_float) % 86400;
+    if (_raw_name.find(helpers::Macros::rowid()) != std::string::npos) {
+      return _postfix;
+    }
 
-    const auto fractional_float =
-        (diff_float - static_cast<Float>(86400 * days + seconds)) * 1e9;
-    const auto fractional = static_cast<std::int32_t>(fractional_float);
-
-    return std::make_tuple(days, seconds, fractional);
-  };
-
-  const auto edited_prefix = [make_diff, &_prefix, _postfix]() -> std::string {
-    const auto [days, seconds, fractional] = make_diff(_postfix);
-
-    const auto days_str = days == 0
-                              ? std::string()
-                              : "DATEADD( day, " + std::to_string(days) + ", ";
-
-    const auto seconds_str =
-        seconds == 0 ? std::string()
-                     : "DATEADD( second, " + std::to_string(seconds) + ", ";
-
-    const auto fractional_str =
-        fractional == 0
-            ? std::string()
-            : "DATEADD( nanosecond, " + std::to_string(fractional) + ", ";
-
-    return _prefix + days_str + seconds_str + fractional_str;
-  };
-
-  const auto edited_postfix = [make_diff, &_postfix]() -> std::string {
-    const auto [days, seconds, fractional] = make_diff(_postfix);
-
-    const auto days_str = days == 0 ? std::string() : " )";
-
-    const auto seconds_str = seconds == 0 ? std::string() : " )";
-
-    const auto fractional_str = fractional == 0 ? std::string() : " )";
-
-    const auto closing_brackets = days_str + seconds_str + fractional_str;
+    const auto interval =
+        " + INTERVAL '" +
+        std::to_string(SQLGenerator::parse_time_stamp_diff(_postfix)) +
+        " seconds'";
 
     const auto pos = _postfix.find(" )");
 
     if (pos == std::string::npos) {
-      return closing_brackets;
+      return interval;
     }
 
-    return closing_brackets + _postfix.substr(pos);
+    return interval + _postfix.substr(pos);
   };
 
-  return std::make_pair(edited_prefix(), edited_postfix());
+  return std::make_pair(_prefix, edited_postfix());
 }
 
 // ----------------------------------------------------------------------------
 
-std::string TSQLGenerator::group_by(
+std::string PostgreSQLGenerator::group_by(
     const helpers::enums::Aggregation _agg,
     const std::string& _value_to_be_aggregated) const {
   if (_agg == helpers::enums::Aggregation::mode) {
@@ -571,7 +541,7 @@ std::string TSQLGenerator::group_by(
 
 // ----------------------------------------------------------------------------
 
-std::string TSQLGenerator::make_ewma_aggregation(
+std::string PostgreSQLGenerator::make_ewma_aggregation(
     const helpers::enums::Aggregation& _agg, const std::string& _value,
     const std::string& _timestamp) const {
   constexpr Float t1s = 1.0;
@@ -586,7 +556,7 @@ std::string TSQLGenerator::make_ewma_aggregation(
   const auto make_ewma = [](const std::string& _value,
                             const std::string& _timestamp,
                             const Float _half_life) -> std::string {
-    const auto exp = "EXP( ( " + _timestamp + " ) * LOG( 0.5 ) / " +
+    const auto exp = "EXP( ( " + _timestamp + " ) * LN( 0.5 ) / " +
                      std::to_string(_half_life) + " )";
 
     return "CASE WHEN COUNT( " + _value + " ) > 0 THEN SUM( ( " + _value +
@@ -626,7 +596,7 @@ std::string TSQLGenerator::make_ewma_aggregation(
 
 // ----------------------------------------------------------------------------
 
-std::string TSQLGenerator::make_mode_aggregation(
+std::string PostgreSQLGenerator::make_mode_aggregation(
     const std::string& _colname) const {
   std::stringstream stream;
 
@@ -640,7 +610,7 @@ std::string TSQLGenerator::make_mode_aggregation(
 
 // ----------------------------------------------------------------------------
 
-std::string TSQLGenerator::make_staging_table_colname(
+std::string PostgreSQLGenerator::make_staging_table_colname(
     const std::string& _raw_name) const {
   const auto [prefix, new_name, postfix] = demangle_colname(_raw_name);
 
@@ -672,8 +642,8 @@ std::string TSQLGenerator::make_staging_table_colname(
 
 // ----------------------------------------------------------------------------
 
-std::string TSQLGenerator::num_max_min_aggregation(const std::string& _colname,
-                                                   const bool _max) const {
+std::string PostgreSQLGenerator::num_max_min_aggregation(
+    const std::string& _colname, const bool _max) const {
   const auto compare = _max ? "DESC" : "ASC";
 
   std::stringstream stream;
@@ -687,9 +657,9 @@ std::string TSQLGenerator::num_max_min_aggregation(const std::string& _colname,
 
 // ----------------------------------------------------------------------------
 
-std::string TSQLGenerator::join_mapping(const std::string& _name,
-                                        const std::string& _colname,
-                                        const bool _is_text) const {
+std::string PostgreSQLGenerator::join_mapping(const std::string& _name,
+                                              const std::string& _colname,
+                                              const bool _is_text) const {
   const bool is_text_field =
       (_name.find(helpers::Macros::text_field()) != std::string::npos);
 
@@ -722,10 +692,11 @@ std::string TSQLGenerator::join_mapping(const std::string& _name,
 
     stream << split_text_fields(desc, true);
 
-    stream << "SELECT t1." << quotechar1() << "rownum" << quotechar2() << ","
+    stream << "CREATE TABLE " << quotechar1() << grouped_table << quotechar2()
+           << " AS" << std::endl
+           << "SELECT t1." << quotechar1() << "rownum" << quotechar2() << ","
            << std::endl
            << "       AVG( t2.value ) AS value" << std::endl
-           << "INTO " << quotechar1() << grouped_table << quotechar2()
            << std::endl
            << "FROM " << quotechar1() << splitted_table << quotechar2() << " t1"
            << std::endl
@@ -813,7 +784,7 @@ std::string TSQLGenerator::join_mapping(const std::string& _name,
 
 // ----------------------------------------------------------------------------
 
-std::string TSQLGenerator::make_joins(
+std::string PostgreSQLGenerator::make_joins(
     const std::string& _output_name, const std::string& _input_name,
     const std::string& _output_join_keys_name,
     const std::string& _input_join_keys_name) const {
@@ -848,16 +819,17 @@ std::string TSQLGenerator::make_joins(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::string> TSQLGenerator::make_staging_columns(
+std::vector<std::string> PostgreSQLGenerator::make_staging_columns(
     const bool& _include_targets, const helpers::Schema& _schema) const {
   const auto cast_column = [this](const std::string& _colname,
-                                  const std::string& _coltype) -> std::string {
-    std::stringstream stream;
-    stream << "CAST( " << make_staging_table_column(_colname, "t1") << " AS "
-           << _coltype << " ) AS " << quotechar1()
-           << SQLGenerator::to_lower(make_staging_table_colname(_colname))
-           << quotechar2();
-    return stream.str();
+                                  const std::string& _coltype,
+                                  const bool _replace) -> std::string {
+    const auto edited = make_staging_table_column(_colname, "t1");
+    const auto replaced =
+        _replace ? replace_separators("LOWER( " + edited + " )") : edited;
+    return "CAST( " + replaced + " AS " + _coltype + " ) AS " + quotechar1() +
+           SQLGenerator::to_lower(make_staging_table_colname(_colname)) +
+           quotechar2();
   };
 
   const auto is_rowid = [](const std::string& _colname) -> bool {
@@ -873,7 +845,7 @@ std::vector<std::string> TSQLGenerator::make_staging_columns(
     const auto epoch_time =
         is_rowid(_colname)
             ? make_staging_table_column(_colname, "t1")
-            : "datediff( s, '1970-01-01', " +
+            : "EXTRACT( EPOCH FROM " +
                   make_staging_table_column(_colname, "t1") + " )";
     std::stringstream stream;
     stream << "CAST( " << epoch_time << " AS DOUBLE PRECISION ) AS "
@@ -883,11 +855,22 @@ std::vector<std::string> TSQLGenerator::make_staging_columns(
     return stream.str();
   };
 
+  const auto cast_as_categorical =
+      [is_not_rowid, cast_column](const std::vector<std::string>& _colnames)
+      -> std::vector<std::string> {
+    const auto cast =
+        std::bind(cast_column, std::placeholders::_1, "TEXT", false);
+
+    return stl::collect::vector<std::string>(
+        _colnames | VIEWS::filter(SQLGenerator::include_column) |
+        VIEWS::filter(is_not_rowid) | VIEWS::transform(cast));
+  };
+
   const auto cast_as_join_key =
       [is_not_rowid, cast_column](const std::vector<std::string>& _colnames)
       -> std::vector<std::string> {
     const auto cast =
-        std::bind(cast_column, std::placeholders::_1, "VARCHAR(100)");
+        std::bind(cast_column, std::placeholders::_1, "VARCHAR(100)", false);
 
     return stl::collect::vector<std::string>(
         _colnames | VIEWS::filter(SQLGenerator::include_column) |
@@ -897,8 +880,8 @@ std::vector<std::string> TSQLGenerator::make_staging_columns(
   const auto cast_as_real =
       [cast_column](const std::vector<std::string>& _colnames)
       -> std::vector<std::string> {
-    const auto cast =
-        std::bind(cast_column, std::placeholders::_1, "DOUBLE PRECISION");
+    const auto cast = std::bind(cast_column, std::placeholders::_1,
+                                "DOUBLE PRECISION", false);
 
     return stl::collect::vector<std::string>(
         _colnames | VIEWS::filter(SQLGenerator::include_column) |
@@ -917,14 +900,14 @@ std::vector<std::string> TSQLGenerator::make_staging_columns(
       [is_not_rowid, cast_column](const std::vector<std::string>& _colnames)
       -> std::vector<std::string> {
     const auto cast =
-        std::bind(cast_column, std::placeholders::_1, "VARCHAR(max)");
+        std::bind(cast_column, std::placeholders::_1, "TEXT", true);
 
     return stl::collect::vector<std::string>(
         _colnames | VIEWS::filter(SQLGenerator::include_column) |
         VIEWS::filter(is_not_rowid) | VIEWS::transform(cast));
   };
 
-  const auto categoricals = cast_as_text(_schema.categoricals_);
+  const auto categoricals = cast_as_categorical(_schema.categoricals_);
 
   const auto discretes = cast_as_real(_schema.discretes_);
 
@@ -946,7 +929,7 @@ std::vector<std::string> TSQLGenerator::make_staging_columns(
 
 // ----------------------------------------------------------------------------
 
-std::string TSQLGenerator::make_feature_table(
+std::string PostgreSQLGenerator::make_feature_table(
     const std::string& _main_table,
     const std::vector<std::string>& _autofeatures,
     const std::vector<std::string>& _targets,
@@ -955,29 +938,34 @@ std::string TSQLGenerator::make_feature_table(
     const std::string& _prefix) const {
   const auto main_table = SQLGenerator::make_staging_table_name(_main_table);
 
+  const auto feature_table = "FEATURES" + _prefix;
+
   std::stringstream stream;
-  stream << "DROP TABLE IF EXISTS " << quotechar1() << "FEATURES" << _prefix
+
+  stream << "DROP TABLE IF EXISTS " << quotechar1() << feature_table
          << quotechar2() << ";" << std::endl
          << std::endl
+         << "CREATE TABLE " << quotechar1() << feature_table << quotechar2()
+         << " AS" << std::endl
          << make_select(_main_table, _autofeatures, _targets, _categorical,
                         _numerical)
-         << "INTO " << quotechar1() << "FEATURES" << _prefix << quotechar2()
-         << std::endl
          << "FROM " << quotechar1() << main_table << quotechar2() << " t1"
          << std::endl
          << "ORDER BY t1." << rowid() << ";" << std::endl
          << std::endl
+         << create_index(feature_table, "rowid")
          << make_updates(_autofeatures, _prefix);
+
   return stream.str();
 }
 
 // ----------------------------------------------------------------------------
 
-std::string TSQLGenerator::make_kurtosis_aggregation(
+std::string PostgreSQLGenerator::make_kurtosis_aggregation(
     const std::string& _value) const {
   const auto x = _value;
   const auto m = "AVG( " + x + " )";
-  const auto v = "VARP( " + x + " )";
+  const auto v = "VAR_POP( " + x + " )";
   const auto x_4 = "AVG( POWER( " + x + ", 4 ) )";
   const auto x_3_m = "4 * AVG( POWER( " + x + ", 3 ) ) * " + m;
   const auto x_m_3 = "4 * AVG( " + x + ") * POWER( " + m + ", 3 )";
@@ -993,11 +981,11 @@ std::string TSQLGenerator::make_kurtosis_aggregation(
 
 // ----------------------------------------------------------------------------
 
-std::string TSQLGenerator::make_skewness_aggregation(
+std::string PostgreSQLGenerator::make_skewness_aggregation(
     const std::string& _value) const {
   const auto x = _value;
   const auto m = "AVG( " + x + " )";
-  const auto v = "VARP( " + x + " )";
+  const auto v = "VAR_POP( " + x + " )";
   const auto x_3 = "AVG( POWER( " + x + ", 3 ) )";
   const auto x_2_m = "3 * AVG( POWER( " + x + ", 2 ) ) * " + m;
   const auto x_m_2 = "3 * AVG( " + x + " ) * POWER( " + m + ", 2 )";
@@ -1012,7 +1000,7 @@ std::string TSQLGenerator::make_skewness_aggregation(
 
 // ----------------------------------------------------------------------------
 
-std::string TSQLGenerator::make_trend_aggregation(
+std::string PostgreSQLGenerator::make_trend_aggregation(
     const std::string& _value, const std::string& _timestamp) const {
   const auto mean_x = "AVG( CASE WHEN ( " + _value + " ) IS NOT NULL THEN " +
                       _timestamp + " ELSE NULL END )";
@@ -1039,7 +1027,7 @@ std::string TSQLGenerator::make_trend_aggregation(
 
 // ----------------------------------------------------------------------------
 
-std::string TSQLGenerator::make_mapping_table_header(
+std::string PostgreSQLGenerator::make_mapping_table_header(
     const std::string& _name, const bool _key_is_num) const {
   const auto quote1 = quotechar1();
 
@@ -1051,7 +1039,7 @@ std::string TSQLGenerator::make_mapping_table_header(
       << std::endl
       << std::endl;
 
-  const std::string key_type = _key_is_num ? "INTEGER" : "VARCHAR(max)";
+  const std::string key_type = _key_is_num ? "INTEGER" : "TEXT";
 
   sql << "CREATE TABLE " << quote1 << _name << quote2 << "( " << quote1 << "key"
       << quote2 << " " << key_type << ", value DOUBLE PRECISION);" << std::endl
@@ -1062,7 +1050,7 @@ std::string TSQLGenerator::make_mapping_table_header(
 
 // ----------------------------------------------------------------------------
 
-std::string TSQLGenerator::make_mapping_table_insert_into(
+std::string PostgreSQLGenerator::make_mapping_table_insert_into(
     const std::string& _name) const {
   const auto quote1 = quotechar1();
 
@@ -1079,17 +1067,17 @@ std::string TSQLGenerator::make_mapping_table_insert_into(
 
 // ----------------------------------------------------------------------------
 
-std::string TSQLGenerator::make_postprocessing(
+std::string PostgreSQLGenerator::make_postprocessing(
     const std::vector<std::string>& _sql) const {
   std::string sql;
 
   for (const auto& feature : _sql) {
-    const auto pos = feature.find("];\n");
+    const auto pos = feature.find(quotechar2() + ";\n");
 
     throw_unless(pos != std::string::npos,
                  "Could not find end of DROP TABLE IF EXISTS statement.");
 
-    sql += feature.substr(0, pos) + "];\n";
+    sql += feature.substr(0, pos) + quotechar2() + ";\n";
   }
 
   return sql;
@@ -1097,7 +1085,7 @@ std::string TSQLGenerator::make_postprocessing(
 
 // ----------------------------------------------------------------------------
 
-std::string TSQLGenerator::make_select(
+std::string PostgreSQLGenerator::make_select(
     const std::string& _main_table,
     const std::vector<std::string>& _autofeatures,
     const std::vector<std::string>& _targets,
@@ -1134,8 +1122,7 @@ std::string TSQLGenerator::make_select(
         "t1." + quotechar1() + modified_colnames.at(i) + quotechar2();
 
     const std::string data_type =
-        (i < _targets.size() + _numerical.size() ? "DOUBLE PRECISION"
-                                                 : "VARCHAR(max)");
+        (i < _targets.size() + _numerical.size() ? "DOUBLE PRECISION" : "TEXT");
 
     const bool no_comma = (i == manual.size() - 1);
 
@@ -1150,7 +1137,7 @@ std::string TSQLGenerator::make_select(
 
 // ----------------------------------------------------------------------------
 
-std::string TSQLGenerator::make_sql(
+std::string PostgreSQLGenerator::make_sql(
     const std::string& _main_table,
     const std::vector<std::string>& _autofeatures,
     const std::vector<std::string>& _sql,
@@ -1169,7 +1156,8 @@ std::string TSQLGenerator::make_sql(
 
 // ----------------------------------------------------------------------------
 
-std::string TSQLGenerator::make_order_by(const helpers::Schema& _schema) const {
+std::string PostgreSQLGenerator::make_order_by(
+    const helpers::Schema& _schema) const {
   const auto all_columns = stl::join::vector<std::string>(
       {_schema.join_keys_, _schema.time_stamps_, _schema.categoricals_,
        _schema.discretes_, _schema.numericals_, _schema.text_});
@@ -1189,7 +1177,7 @@ std::string TSQLGenerator::make_order_by(const helpers::Schema& _schema) const {
       all_columns | VIEWS::filter(include) | VIEWS::transform(to_colname));
 
   const auto format = [](const size_t _i, const std::string& _colname) {
-    const auto begin = _i == 0 ? std::string() : std::string(34, ' ');
+    const auto begin = _i == 0 ? std::string() : std::string(35, ' ');
     return begin + _colname;
   };
 
@@ -1206,15 +1194,15 @@ std::string TSQLGenerator::make_order_by(const helpers::Schema& _schema) const {
 
 // ----------------------------------------------------------------------------
 
-std::string TSQLGenerator::make_percentile_aggregation(
+std::string PostgreSQLGenerator::make_percentile_aggregation(
     const std::string& _colname1, const std::string& _q) const {
   return "PERCENTILE_CONT( " + _q + " ) WITHIN GROUP ( ORDER BY " + _colname1 +
-         " ) OVER ( PARTITION BY t1." + rowid() + " )";
+         " )";
 }
 
 // ----------------------------------------------------------------------------
 
-std::string TSQLGenerator::make_staging_table(
+std::string PostgreSQLGenerator::make_staging_table(
     const bool& _include_targets, const helpers::Schema& _schema) const {
   const auto columns = make_staging_columns(_include_targets, _schema);
 
@@ -1228,6 +1216,9 @@ std::string TSQLGenerator::make_staging_table(
 
   const auto order_by = make_order_by(_schema);
 
+  sql << "CREATE TABLE " << quotechar1() << SQLGenerator::to_upper(name)
+      << quotechar2() << " AS" << std::endl;
+
   sql << "SELECT ROW_NUMBER() OVER( ORDER BY " << order_by << ") AS " << rowid()
       << "," << std::endl;
 
@@ -1236,9 +1227,6 @@ std::string TSQLGenerator::make_staging_table(
     const auto end = (i == columns.size() - 1) ? "" : ",";
     sql << begin << columns.at(i) << end << std::endl;
   }
-
-  sql << "INTO " << quotechar1() << SQLGenerator::to_upper(name) << quotechar2()
-      << std::endl;
 
   sql << "FROM " << quotechar1() << SQLGenerator::get_table_name(_schema.name_)
       << quotechar2() << " t1" << std::endl;
@@ -1256,7 +1244,7 @@ std::string TSQLGenerator::make_staging_table(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::string> TSQLGenerator::make_staging_tables(
+std::vector<std::string> PostgreSQLGenerator::make_staging_tables(
     const bool _population_needs_targets,
     const std::vector<bool>& _peripheral_needs_targets,
     const helpers::Schema& _population_schema,
@@ -1279,7 +1267,7 @@ std::vector<std::string> TSQLGenerator::make_staging_tables(
 
 // ----------------------------------------------------------------------------
 
-std::string TSQLGenerator::make_subfeature_joins(
+std::string PostgreSQLGenerator::make_subfeature_joins(
     const std::string& _feature_prefix, const size_t _peripheral_used,
     const std::string& _alias, const std::string& _feature_postfix) const {
   assert_msg(_alias == "t1" || _alias == "t2", "_alias: " + _alias);
@@ -1307,7 +1295,7 @@ std::string TSQLGenerator::make_subfeature_joins(
 
 // ----------------------------------------------------------------------------
 
-std::string TSQLGenerator::make_time_stamps(
+std::string PostgreSQLGenerator::make_time_stamps(
     const std::string& _time_stamp_name,
     const std::string& _lower_time_stamp_name,
     const std::string& _upper_time_stamp_name, const std::string& _output_alias,
@@ -1339,7 +1327,7 @@ std::string TSQLGenerator::make_time_stamps(
 
 // ----------------------------------------------------------------------------
 
-std::string TSQLGenerator::make_updates(
+std::string PostgreSQLGenerator::make_updates(
     const std::vector<std::string>& _autofeatures,
     const std::string& _prefix) const {
   std::stringstream stream;
@@ -1365,7 +1353,8 @@ std::string TSQLGenerator::make_updates(
 
 // ----------------------------------------------------------------------------
 
-std::string TSQLGenerator::replace_separators(const std::string& _col) const {
+std::string PostgreSQLGenerator::replace_separators(
+    const std::string& _col) const {
   const auto replace = [this](const std::string _str,
                               const char _c) -> std::string {
     if (_c == ' ') {
@@ -1394,7 +1383,7 @@ std::string TSQLGenerator::replace_separators(const std::string& _col) const {
 
 // ----------------------------------------------------------------------------
 
-std::string TSQLGenerator::split_text_fields(
+std::string PostgreSQLGenerator::split_text_fields(
     const std::shared_ptr<helpers::ColumnDescription>& _desc,
     const bool _for_mapping) const {
   assert_true(_desc);
@@ -1405,11 +1394,6 @@ std::string TSQLGenerator::split_text_fields(
   const auto colname =
       SQLGenerator::to_lower(make_staging_table_colname(_desc->name_));
 
-  const auto lowered =
-      "LOWER( t1." + quotechar1() + colname + quotechar2() + " )";
-
-  const auto replaced = replace_separators(lowered);
-
   const auto new_table = staging_table + "__" + SQLGenerator::to_upper(colname);
 
   std::stringstream stream;
@@ -1417,14 +1401,18 @@ std::string TSQLGenerator::split_text_fields(
   stream << "DROP TABLE IF EXISTS " << quotechar1() << new_table << quotechar2()
          << ";" << std::endl
          << std::endl
+         << "CREATE TABLE " << quotechar1() << new_table << quotechar2()
+         << " AS" << std::endl
+         << "SELECT t0.* FROM (" << std::endl
          << "SELECT t1." << rowid() << " AS " << quotechar1() << "rownum"
-         << quotechar2() << ", value AS " << quotechar1() << colname
-         << quotechar2() << std::endl
-         << "INTO " << quotechar1() << new_table << quotechar2() << std::endl
+         << quotechar2() << "," << std::endl
+         << "UNNEST( REGEXP_SPLIT_TO_ARRAY( " << colname << ", ' ' ) ) AS "
+         << quotechar1() << colname << quotechar2() << std::endl
          << "FROM " << quotechar1() << staging_table << quotechar2() << " t1"
          << std::endl
-         << "CROSS APPLY STRING_SPLIT( " << replaced << ", ' ')" << std::endl
-         << "WHERE LEN( value ) > 0;" << std::endl
+         << ") t0" << std::endl
+         << "WHERE LENGTH( t0." << quotechar1() << colname << quotechar2()
+         << " ) > 0;" << std::endl
          << std::endl;
 
   if (!_for_mapping) {
@@ -1436,11 +1424,12 @@ std::string TSQLGenerator::split_text_fields(
 
 // ----------------------------------------------------------------------------
 
-std::string TSQLGenerator::string_contains(const std::string& _colname,
-                                           const std::string& _keyword,
-                                           const bool _contains) const {
-  const std::string comparison = _contains ? " LIKE " : " NOT LIKE ";
-  return "(" + _colname + comparison + "'%" + _keyword + "%' )" + ")";
+std::string PostgreSQLGenerator::string_contains(const std::string& _colname,
+                                                 const std::string& _keyword,
+                                                 const bool _contains) const {
+  const std::string comparison = _contains ? "" : "NOT ";
+  return "( " + comparison + "'" + _keyword +
+         "' = ANY( REGEXP_SPLIT_TO_ARRAY( " + _colname + ", ' ' ) ) )";
 }
 
 // ----------------------------------------------------------------------------

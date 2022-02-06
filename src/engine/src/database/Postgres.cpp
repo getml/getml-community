@@ -11,7 +11,6 @@
 // ----------------------------------------------------------------------------
 
 namespace database {
-// ----------------------------------------------------------------------------
 
 void Postgres::check_colnames(const std::vector<std::string>& _colnames,
                               io::Reader* _reader) {
@@ -95,19 +94,13 @@ Poco::JSON::Object Postgres::get_content(const std::string& _tname,
                                          const std::int32_t _draw,
                                          const std::int32_t _start,
                                          const std::int32_t _length) {
-  // ----------------------------------------
-
   const auto nrows = get_nrows(_tname);
 
   const auto colnames = get_colnames(_tname);
 
   const auto ncols = colnames.size();
 
-  // ----------------------------------------
-
   Poco::JSON::Object obj;
-
-  // ----------------------------------------
 
   obj.set("draw", _draw);
 
@@ -119,8 +112,6 @@ Poco::JSON::Object Postgres::get_content(const std::string& _tname,
     obj.set("data", Poco::JSON::Array());
     return obj;
   }
-
-  // ----------------------------------------
 
   if (_length < 0) {
     throw std::invalid_argument("length must be positive!");
@@ -134,18 +125,12 @@ Poco::JSON::Object Postgres::get_content(const std::string& _tname,
     throw std::invalid_argument("start must be smaller than number of rows!");
   }
 
-  // ----------------------------------------
-
   const auto begin = _start;
 
   const auto end = (_start + _length > nrows) ? nrows : _start + _length;
 
-  // ----------------------------------------
-
   auto iterator = std::make_shared<PostgresIterator>(
       make_connection(), colnames, time_formats_, _tname, "", begin, end);
-
-  // ----------------------------------------
 
   Poco::JSON::Array data;
 
@@ -159,23 +144,14 @@ Poco::JSON::Object Postgres::get_content(const std::string& _tname,
     data.add(row);
   }
 
-  // ----------------------------------------
-
   obj.set("data", data);
 
-  // ----------------------------------------
-
   return obj;
-
-  // ----------------------------------------
 }
 
 // ----------------------------------------------------------------------------
 
 io::Datatype Postgres::interpret_oid(Oid _oid) const {
-  // ------------------------------------------------------------------------
-  // Get the typname associated with the oid
-
   const std::string sql =
       "SELECT typname FROM pg_type WHERE oid=" + std::to_string(_oid) + ";";
 
@@ -190,17 +166,11 @@ io::Datatype Postgres::interpret_oid(Oid _oid) const {
 
   const std::string typname = PQgetvalue(result.get(), 0, 0);
 
-  // ------------------------------------------------------------------------
-  // Check whether it might be double precision.
-
   auto typnames = typnames_double_precision();
 
   if (std::find(typnames.begin(), typnames.end(), typname) != typnames.end()) {
     return io::Datatype::double_precision;
   }
-
-  // ------------------------------------------------------------------------
-  // Check whether it might be an integer.
 
   typnames = typnames_int();
 
@@ -208,12 +178,7 @@ io::Datatype Postgres::interpret_oid(Oid _oid) const {
     return io::Datatype::integer;
   }
 
-  // ------------------------------------------------------------------------
-  // Otherwise, interpret it as a string.
-
   return io::Datatype::string;
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -276,21 +241,13 @@ std::string Postgres::make_connection_string(const Poco::JSON::Object& _obj,
 
 void Postgres::read(const std::string& _table, const size_t _skip,
                     io::Reader* _reader) {
-  // ------------------------------------------------------------------------
-  // Get colnames and coltypes
-
   const std::vector<std::string> colnames = get_colnames(_table);
 
   const std::vector<io::Datatype> coltypes = get_coltypes(_table, colnames);
 
   assert_true(colnames.size() == coltypes.size());
 
-  // ------------------------------------------------------------------------
-
   check_colnames(colnames, _reader);
-
-  // ------------------------------------------------------------------------
-  // Skip lines, if necessary.
 
   size_t line_count = 0;
 
@@ -298,9 +255,6 @@ void Postgres::read(const std::string& _table, const size_t _skip,
     _reader->next_line();
     ++line_count;
   }
-
-  // ----------------------------------------------------------------
-  // Insert line by line.
 
   const auto copy_statement = std::string("COPY \"") + _table +
                               std::string("\" FROM STDIN DELIMITER '") +
@@ -350,16 +304,11 @@ void Postgres::read(const std::string& _table, const size_t _skip,
     throw std::runtime_error(e.what());
   }
 
-  // ------------------------------------------------------------------------
-  // End copying.
-
   if (PQputCopyEnd(conn.get(), NULL) == -1) {
     throw std::runtime_error(PQerrorMessage(conn.get()));
   }
 
   PQgetResult(conn.get());
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------

@@ -84,7 +84,7 @@ std::vector<io::Datatype> DataFrameReader::make_coltypes(const DataFrame& _df) {
   }
 
   for (size_t i = 0; i < _df.num_time_stamps(); ++i) {
-    coltypes.push_back(io::Datatype::string);
+    coltypes.push_back(io::Datatype::time_stamp);
   }
 
   for (size_t i = 0; i < _df.num_unused_floats(); ++i) {

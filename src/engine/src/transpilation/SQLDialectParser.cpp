@@ -1,5 +1,6 @@
 #include "transpilation/SQLDialectParser.hpp"
 
+#include "transpilation/PostgreSQLGenerator.hpp"
 #include "transpilation/SQLite3Generator.hpp"
 #include "transpilation/SparkSQLGenerator.hpp"
 #include "transpilation/TSQLGenerator.hpp"
@@ -8,6 +9,10 @@ namespace transpilation {
 
 std::shared_ptr<const SQLDialectGenerator> SQLDialectParser::parse(
     const std::string& _dialect) {
+  if (_dialect == POSTGRE_SQL) {
+    return std::make_shared<const PostgreSQLGenerator>();
+  }
+
   if (_dialect == SPARK_SQL) {
     return std::make_shared<const SparkSQLGenerator>();
   }
