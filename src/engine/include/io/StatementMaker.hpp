@@ -13,6 +13,8 @@
 // ----------------------------------------------------------------------------
 
 #include "debug/debug.hpp"
+#include "helpers/StringSplitter.hpp"
+#include "stl/stl.hpp"
 
 // ----------------------------------------------------------------------------
 
@@ -30,6 +32,15 @@ class StatementMaker {
   static constexpr const char* PYTHON = "python";
   static constexpr const char* SAP_HANA = "sap_hana";
   static constexpr const char* SQLITE3 = "sqlite3";
+
+ public:
+  /// Handles schemata that might be contained in the table name
+  static std::string handle_schema(const std::string& _table_name,
+                                   const std::string& _quotechar1,
+                                   const std::string& _quotechar2) {
+    return stl::join::string(helpers::StringSplitter::split(_table_name, "."),
+                             _quotechar2 + "." + _quotechar1);
+  }
 
  public:
   /// Produces the CREATE TABLE statement.

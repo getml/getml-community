@@ -99,7 +99,8 @@ class Pipeline {
   /// Express features as SQL code
   std::string to_sql(const helpers::StringIterator& _categories,
                      const bool _targets, const bool _full_pipeline,
-                     const std::string& _dialect) const;
+                     const std::string& _dialect,
+                     const std::string& _schema) const;
 
   // --------------------------------------------------------
 

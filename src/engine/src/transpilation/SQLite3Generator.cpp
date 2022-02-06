@@ -212,6 +212,17 @@ SQLite3Generator::demangle_colname(const std::string& _raw_name) const {
 
 // ----------------------------------------------------------------------------
 
+std::string SQLite3Generator::drop_table_if_exists(
+    const std::string& _table_name) const {
+  std::stringstream sql;
+  sql << "DROP TABLE IF EXISTS " << quotechar1() << _table_name << quotechar2()
+      << ";" << std::endl
+      << std::endl;
+  return sql.str();
+}
+
+// ----------------------------------------------------------------------------
+
 std::string SQLite3Generator::make_staging_table_column(
     const std::string& _raw_name, const std::string& _alias) const {
   if (_raw_name.find(helpers::Macros::no_join_key()) != std::string::npos) {

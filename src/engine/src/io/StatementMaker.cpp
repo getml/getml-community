@@ -170,12 +170,14 @@ std::string StatementMaker::make_statement_postgres(
 
   const auto max_size = find_max_size(_colnames);
 
+  const auto table_name = handle_schema(_table_name, "\"", "\"");
+
   std::stringstream statement;
 
-  statement << "DROP TABLE IF EXISTS \"" << _table_name << "\";" << std::endl
+  statement << "DROP TABLE IF EXISTS \"" << table_name << "\";" << std::endl
             << std::endl;
 
-  statement << "CREATE TABLE \"" << _table_name << "\"(" << std::endl;
+  statement << "CREATE TABLE \"" << table_name << "\"(" << std::endl;
 
   for (size_t i = 0; i < _colnames.size(); ++i) {
     statement << "    \"" << _colnames[i] << "\" "

@@ -29,7 +29,7 @@ namespace transpilation {
 
 class PostgreSQLGenerator : public SQLDialectGenerator {
  public:
-  PostgreSQLGenerator() {}
+  explicit PostgreSQLGenerator(const std::string& _schema) : schema_(_schema) {}
 
   ~PostgreSQLGenerator() = default;
 
@@ -48,6 +48,11 @@ class PostgreSQLGenerator : public SQLDialectGenerator {
   /// How the SQL dialect expresses rownum
   std::string rownum() const final { return rowid(); }
 
+  /// The schema to precede any newly created tables.
+  std::string schema() const final {
+    return schema_ == "" ? "" : quotechar1() + schema_ + quotechar2() + ".";
+  }
+
  public:
   /// Expresses an aggregation in the SQL dialect.
   std::string aggregation(
@@ -58,6 +63,9 @@ class PostgreSQLGenerator : public SQLDialectGenerator {
   std::string create_table(const helpers::enums::Aggregation& _agg,
                            const std::string& _feature_prefix,
                            const std::string& _feature_num) const final;
+
+  /// Generates a DROP TABLE IF EXISTS statement.
+  std::string drop_table_if_exists(const std::string& _table_name) const final;
 
   /// Generates the GROUP BY statement for the feature (it is not needed for
   /// some aggregations in some dialects, therefore it needs to be abstracted
@@ -239,6 +247,10 @@ class PostgreSQLGenerator : public SQLDialectGenerator {
 
   /// Returns a set of replace statements for the string separators.
   std::string replace_separators(const std::string& _col) const;
+
+ private:
+  /// The schema to use
+  const std::string schema_;
 };
 
 // -------------------------------------------------------------------------

@@ -8,9 +8,9 @@
 namespace transpilation {
 
 std::shared_ptr<const SQLDialectGenerator> SQLDialectParser::parse(
-    const std::string& _dialect) {
+    const std::string& _dialect, const std::string& _schema) {
   if (_dialect == POSTGRE_SQL) {
-    return std::make_shared<const PostgreSQLGenerator>();
+    return std::make_shared<const PostgreSQLGenerator>(_schema);
   }
 
   if (_dialect == SPARK_SQL) {

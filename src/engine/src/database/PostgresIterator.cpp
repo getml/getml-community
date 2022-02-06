@@ -1,7 +1,6 @@
 #include "database/PostgresIterator.hpp"
 
 namespace database {
-// ----------------------------------------------------------------------------
 // Refer to the following sources in the documentation:
 // https://www.postgresql.org/docs/8.4/libpq-example.html
 // https://www.postgresql.org/docs/8.1/sql-fetch.html
@@ -16,9 +15,6 @@ PostgresIterator::PostgresIterator(
       end_required_(false),
       rownum_(0),
       time_formats_(_time_formats) {
-  // ------------------------------------------------------------------------
-  // Begin transaction and prepare cursor.
-
   execute("BEGIN");
 
   end_required_ = true;
@@ -26,10 +22,6 @@ PostgresIterator::PostgresIterator(
   execute("DECLARE getmlcursor CURSOR FOR " + _sql);
 
   close_required_ = true;
-
-  // ------------------------------------------------------------------------
-  // If _begin and _end are not -1, then we are probably using the DataTables
-  // API.
 
   if (_begin >= 0 && _end >= _begin) {
     skip_next(_begin);
@@ -41,8 +33,6 @@ PostgresIterator::PostgresIterator(
     fetch_next(10000);
   }
 
-  // ------------------------------------------------------------------------
-
   num_cols_ = PQnfields(result());
 
   if (num_cols_ <= 0) {
@@ -50,8 +40,6 @@ PostgresIterator::PostgresIterator(
         "Your query must contain at least"
         " one column!");
   }
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -178,18 +166,9 @@ std::string PostgresIterator::make_sql(
     }
   }
 
-  // Note that the user might want to pass information on the schema.
-  const auto pos = _tname.find(".");
+  const auto tname = io::StatementMaker::handle_schema(_tname, "\"", "\"");
 
-  if (pos != std::string::npos) {
-    const auto schema = _tname.substr(0, pos);
-
-    const auto table_name = _tname.substr(pos + 1);
-
-    sql += " FROM " + schema + ".\"" + table_name + "\"";
-  } else {
-    sql += " FROM \"" + _tname + "\"";
-  }
+  sql += " FROM \"" + tname + "\"";
 
   if (_where != "") {
     sql += " WHERE " + _where;

@@ -24,12 +24,10 @@
 #include "database/Iterator.hpp"
 
 // ----------------------------------------------------------------------------
+
 namespace database {
-// -----------------------------------------------------------------------------
 
 class PostgresIterator : public Iterator {
-  // -------------------------------------------------------------------------
-
  public:
   PostgresIterator(const std::shared_ptr<PGconn>& _connection,
                    const std::string& _sql,
@@ -45,8 +43,6 @@ class PostgresIterator : public Iterator {
                    const std::int32_t _end = -1);
 
   ~PostgresIterator();
-
-  // -------------------------------------------------------------------------
 
  public:
   /// Returns the column names of the query.
@@ -64,13 +60,9 @@ class PostgresIterator : public Iterator {
   /// Returns a string .
   std::string get_string() final;
 
-  // -------------------------------------------------------------------------
-
  public:
   /// Whether the end is reached.
   bool end() const final { return (PQntuples(result()) == 0); }
-
-  // -------------------------------------------------------------------------
 
  private:
   /// Executes an SQL command.
@@ -81,8 +73,6 @@ class PostgresIterator : public Iterator {
   static std::string make_sql(const std::vector<std::string>& _colnames,
                               const std::string& _tname,
                               const std::string& _where);
-
-  // -------------------------------------------------------------------------
 
  private:
   /// Prevents segfaults before getting the next entry.
@@ -170,8 +160,6 @@ class PostgresIterator : public Iterator {
         execute("MOVE FORWARD " + std::to_string(_n) + " IN getmlcursor;");
   }
 
-  // -------------------------------------------------------------------------
-
  private:
   /// Whether we have to close the cursor upon destruction.
   bool close_required_;
@@ -196,8 +184,6 @@ class PostgresIterator : public Iterator {
 
   /// Vector containing the time formats.
   const std::vector<std::string> time_formats_;
-
-  // -------------------------------------------------------------------------
 };
 
 // ----------------------------------------------------------------------------

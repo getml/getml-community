@@ -8,7 +8,6 @@
 
 namespace relmt {
 namespace decisiontrees {
-// ----------------------------------------------------------------------------
 
 DecisionTree::DecisionTree(
     const std::shared_ptr<const Hyperparameters>& _hyperparameters,
@@ -387,9 +386,8 @@ std::string DecisionTree::to_sql(
 
   std::stringstream sql;
 
-  sql << "DROP TABLE IF EXISTS " << quote1 << "FEATURE_" << _feature_prefix
-      << _feature_num << quote2 << ";" << std::endl
-      << std::endl;
+  sql << _sql_dialect_generator->drop_table_if_exists(
+      "FEATURE_" + _feature_prefix + _feature_num);
 
   sql << _sql_dialect_generator->create_table(aggregation, _feature_prefix,
                                               _feature_num);

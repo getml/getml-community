@@ -62,8 +62,8 @@ std::string SQLGenerator::handle_many_to_one_joins(
                 joined_to_alias, _] =
         helpers::Macros::parse_table_name(joins.at(i));
 
-    sql << "LEFT JOIN " << quote1 << name << quote2 << " " << alias
-        << std::endl;
+    sql << "LEFT JOIN " << _sql_dialect_generator->schema() << quote1 << name
+        << quote2 << " " << alias << std::endl;
 
     sql << handle_multiple_join_keys(join_key, other_join_key, joined_to_alias,
                                      alias, FOR_STAGING,

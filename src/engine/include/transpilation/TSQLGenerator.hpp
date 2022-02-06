@@ -48,6 +48,13 @@ class TSQLGenerator : public SQLDialectGenerator {
   /// How the SQL dialect expresses rownum
   std::string rownum() const final { return rowid(); }
 
+  /// The schema to precede any newly created tables.
+  std::string schema() const final {
+    // TODO
+    return "";
+    // return schema_ == "" ? "" : quotechar1() + schema_ + quotechar2() + ".";
+  }
+
  public:
   /// Expresses an aggregation in the SQL dialect.
   std::string aggregation(
@@ -58,6 +65,9 @@ class TSQLGenerator : public SQLDialectGenerator {
   std::string create_table(const helpers::enums::Aggregation& _agg,
                            const std::string& _feature_prefix,
                            const std::string& _feature_num) const final;
+
+  /// Generates a DROP TABLE IF EXISTS statement.
+  std::string drop_table_if_exists(const std::string& _table_name) const final;
 
   /// Generates the GROUP BY statement for the feature (it is not needed for
   /// some aggregations in some dialects, therefore it needs to be abstracted

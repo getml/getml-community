@@ -108,9 +108,8 @@ std::string AbstractFeature::to_sql(
 
   std::stringstream sql;
 
-  sql << "DROP TABLE IF EXISTS " << quote1 << "FEATURE_" << _feature_prefix
-      << _feature_num << quote2 << ";" << std::endl
-      << std::endl;
+  sql << _sql_dialect_generator->drop_table_if_exists(
+      "FEATURE_" + _feature_prefix + _feature_num);
 
   sql << _sql_dialect_generator->create_table(aggregation_, _feature_prefix,
                                               _feature_num);
@@ -137,8 +136,8 @@ std::string AbstractFeature::to_sql(
     const auto number = _feature_prefix + std::to_string(peripheral_ + 1) +
                         "_" + std::to_string(input_col_ + 1);
 
-    sql << "LEFT JOIN " << quote1 << "FEATURE_" << number << quote2 << " f_"
-        << number << std::endl;
+    sql << "LEFT JOIN " << _sql_dialect_generator->schema() << quote1
+        << "FEATURE_" << number << quote2 << " f_" << number << std::endl;
 
     sql << "ON t2." << _sql_dialect_generator->rowid() << " = f_" << number
         << "." << _sql_dialect_generator->rownum() << std::endl;

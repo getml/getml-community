@@ -37,6 +37,10 @@ class SQLDialectGenerator {
                                    const std::string& _feature_prefix,
                                    const std::string& _feature_num) const = 0;
 
+  /// Generates a DROP TABLE IF EXISTS statement.
+  virtual std::string drop_table_if_exists(
+      const std::string& _table_name) const = 0;
+
   /// Generates the GROUP BY statement for the feature (it is not needed for
   /// some aggregations in some dialects, therefore it needs to be abstracted
   /// away.)
@@ -138,6 +142,9 @@ class SQLDialectGenerator {
 
   /// The second quotechar.
   virtual std::string quotechar2() const = 0;
+
+  /// The schema to precede any newly created tables.
+  virtual std::string schema() const = 0;
 
   /// Generates code for the text field splitter, and is also used by the
   /// mapping.

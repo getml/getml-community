@@ -47,7 +47,9 @@ Poco::JSON::Object Postgres::describe() const {
 
 std::vector<std::string> Postgres::get_colnames(
     const std::string& _table) const {
-  const std::string sql = "SELECT * FROM \"" + _table + "\" LIMIT 0";
+  const auto table = io::StatementMaker::handle_schema(_table, "\"", "\"");
+
+  const std::string sql = "SELECT * FROM \"" + table + "\" LIMIT 0";
 
   const auto connection = make_connection();
 
@@ -69,7 +71,9 @@ std::vector<std::string> Postgres::get_colnames(
 std::vector<io::Datatype> Postgres::get_coltypes(
     const std::string& _table,
     const std::vector<std::string>& _colnames) const {
-  const std::string sql = "SELECT * FROM \"" + _table + "\" LIMIT 0";
+  const auto table = io::StatementMaker::handle_schema(_table, "\"", "\"");
+
+  const std::string sql = "SELECT * FROM \"" + table + "\" LIMIT 0";
 
   const auto connection = make_connection();
 
@@ -256,7 +260,9 @@ void Postgres::read(const std::string& _table, const size_t _skip,
     ++line_count;
   }
 
-  const auto copy_statement = std::string("COPY \"") + _table +
+  const auto table = io::StatementMaker::handle_schema(_table, "\"", "\"");
+
+  const auto copy_statement = std::string("COPY \"") + table +
                               std::string("\" FROM STDIN DELIMITER '") +
                               _reader->sep() + std::string("' CSV QUOTE '") +
                               _reader->quotechar() + std::string("';");

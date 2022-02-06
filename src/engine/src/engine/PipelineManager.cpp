@@ -881,12 +881,14 @@ void PipelineManager::to_sql(const std::string& _name,
 
   const auto dialect = JSON::get_value<std::string>(_cmd, "dialect_");
 
+  const auto schema = JSON::get_value<std::string>(_cmd, "schema_");
+
   multithreading::ReadLock read_lock(read_write_lock_);
 
   const auto pipeline = get_pipeline(_name);
 
-  const auto sql =
-      pipeline.to_sql(categories().strings(), targets, subfeatures, dialect);
+  const auto sql = pipeline.to_sql(categories().strings(), targets, subfeatures,
+                                   dialect, schema);
 
   read_lock.unlock();
 

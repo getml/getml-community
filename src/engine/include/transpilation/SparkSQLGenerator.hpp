@@ -60,6 +60,9 @@ class SparkSQLGenerator : public SQLDialectGenerator {
   /// How the SQL dialect expresses rownum
   std::string rownum() const final { return "rownum"; }
 
+  /// The schema to precede any newly created tables.
+  std::string schema() const final { return ""; }
+
  public:
   /// Expresses an aggregation in the SQL dialect.
   std::string aggregation(
@@ -70,6 +73,9 @@ class SparkSQLGenerator : public SQLDialectGenerator {
   std::string create_table(const helpers::enums::Aggregation& _agg,
                            const std::string& _feature_prefix,
                            const std::string& _feature_num) const final;
+
+  /// Generates a DROP TABLE IF EXISTS statement.
+  std::string drop_table_if_exists(const std::string& _table_name) const final;
 
   /// Generates the SQL code necessary for joining the mapping tables onto the
   /// staged table.

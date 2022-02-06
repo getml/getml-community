@@ -2270,8 +2270,8 @@ void Pipeline::save(const helpers::StringIterator& _categories,
 
   save_predictors(tfile);
 
-  const auto sql_code =
-      to_sql(_categories, true, true, transpilation::SQLDialectParser::SQLITE3);
+  const auto sql_code = to_sql(_categories, true, true,
+                               transpilation::SQLDialectParser::SQLITE3, "");
 
   utils::SQLDependencyTracker(tfile.path() + "/SQL/")
       .save_dependencies(sql_code);
@@ -2608,12 +2608,13 @@ std::vector<std::string> Pipeline::staging_to_sql(
 
 std::string Pipeline::to_sql(const helpers::StringIterator& _categories,
                              const bool _targets, const bool _full_pipeline,
-                             const std::string& _dialect) const {
+                             const std::string& _dialect,
+                             const std::string& _schema) const {
   assert_true(feature_learners_.size() ==
               predictor_impl().autofeatures().size());
 
   const auto sql_dialect_generator =
-      transpilation::SQLDialectParser::parse(_dialect);
+      transpilation::SQLDialectParser::parse(_dialect, _schema);
 
   const auto staging = _full_pipeline
                            ? staging_to_sql(_targets, sql_dialect_generator)

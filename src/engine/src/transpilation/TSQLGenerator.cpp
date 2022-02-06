@@ -155,6 +155,17 @@ std::string TSQLGenerator::aggregation(
 
 // ----------------------------------------------------------------------------
 
+std::string TSQLGenerator::drop_table_if_exists(
+    const std::string& _table_name) const {
+  std::stringstream sql;
+  sql << "DROP TABLE IF EXISTS " << quotechar1() << _table_name << quotechar2()
+      << ";" << std::endl
+      << std::endl;
+  return sql.str();
+}
+
+// ----------------------------------------------------------------------------
+
 std::string TSQLGenerator::first_last_aggregation(const std::string& _colname1,
                                                   const std::string& _colname2,
                                                   const bool _first) const {
