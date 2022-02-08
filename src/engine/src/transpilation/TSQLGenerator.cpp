@@ -862,10 +862,14 @@ std::string TSQLGenerator::make_joins(
 std::vector<std::string> TSQLGenerator::make_staging_columns(
     const bool& _include_targets, const helpers::Schema& _schema) const {
   const auto cast_column = [this](const std::string& _colname,
-                                  const std::string& _coltype) -> std::string {
+                                  const std::string& _coltype,
+                                  const bool _replace) -> std::string {
+    const auto edited = make_staging_table_column(_colname, "t1");
+    const auto replaced =
+        _replace ? replace_separators("LOWER( " + edited + " )") : edited;
     std::stringstream stream;
-    stream << "CAST( " << make_staging_table_column(_colname, "t1") << " AS "
-           << _coltype << " ) AS " << quotechar1()
+    stream << "CAST( " << replaced << " AS " << _coltype << " ) AS "
+           << quotechar1()
            << SQLGenerator::to_lower(make_staging_table_colname(_colname))
            << quotechar2();
     return stream.str();
@@ -894,11 +898,22 @@ std::vector<std::string> TSQLGenerator::make_staging_columns(
     return stream.str();
   };
 
+  const auto cast_as_categorical =
+      [is_not_rowid, cast_column](const std::vector<std::string>& _colnames)
+      -> std::vector<std::string> {
+    const auto cast =
+        std::bind(cast_column, std::placeholders::_1, "VARCHAR(max)", false);
+
+    return stl::collect::vector<std::string>(
+        _colnames | VIEWS::filter(SQLGenerator::include_column) |
+        VIEWS::filter(is_not_rowid) | VIEWS::transform(cast));
+  };
+
   const auto cast_as_join_key =
       [is_not_rowid, cast_column](const std::vector<std::string>& _colnames)
       -> std::vector<std::string> {
     const auto cast =
-        std::bind(cast_column, std::placeholders::_1, "VARCHAR(100)");
+        std::bind(cast_column, std::placeholders::_1, "VARCHAR(100)", false);
 
     return stl::collect::vector<std::string>(
         _colnames | VIEWS::filter(SQLGenerator::include_column) |
@@ -908,8 +923,8 @@ std::vector<std::string> TSQLGenerator::make_staging_columns(
   const auto cast_as_real =
       [cast_column](const std::vector<std::string>& _colnames)
       -> std::vector<std::string> {
-    const auto cast =
-        std::bind(cast_column, std::placeholders::_1, "DOUBLE PRECISION");
+    const auto cast = std::bind(cast_column, std::placeholders::_1,
+                                "DOUBLE PRECISION", false);
 
     return stl::collect::vector<std::string>(
         _colnames | VIEWS::filter(SQLGenerator::include_column) |
@@ -928,14 +943,14 @@ std::vector<std::string> TSQLGenerator::make_staging_columns(
       [is_not_rowid, cast_column](const std::vector<std::string>& _colnames)
       -> std::vector<std::string> {
     const auto cast =
-        std::bind(cast_column, std::placeholders::_1, "VARCHAR(max)");
+        std::bind(cast_column, std::placeholders::_1, "VARCHAR(max)", true);
 
     return stl::collect::vector<std::string>(
         _colnames | VIEWS::filter(SQLGenerator::include_column) |
         VIEWS::filter(is_not_rowid) | VIEWS::transform(cast));
   };
 
-  const auto categoricals = cast_as_text(_schema.categoricals_);
+  const auto categoricals = cast_as_categorical(_schema.categoricals_);
 
   const auto discretes = cast_as_real(_schema.discretes_);
 
@@ -1422,11 +1437,6 @@ std::string TSQLGenerator::split_text_fields(
   const auto colname =
       SQLGenerator::to_lower(make_staging_table_colname(_desc->name_));
 
-  const auto lowered =
-      "LOWER( t1." + quotechar1() + colname + quotechar2() + " )";
-
-  const auto replaced = replace_separators(lowered);
-
   const auto new_table = staging_table + "__" + SQLGenerator::to_upper(colname);
 
   std::stringstream stream;
@@ -1438,7 +1448,7 @@ std::string TSQLGenerator::split_text_fields(
          << std::endl
          << "FROM " << schema() << quotechar1() << staging_table << quotechar2()
          << " t1" << std::endl
-         << "CROSS APPLY STRING_SPLIT( " << replaced << ", ' ')" << std::endl
+         << "CROSS APPLY STRING_SPLIT( " << colname << ", ' ')" << std::endl
          << "WHERE LEN( value ) > 0;" << std::endl
          << std::endl;
 
