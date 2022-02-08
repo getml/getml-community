@@ -22,7 +22,7 @@ std::shared_ptr<const SQLDialectGenerator> SQLDialectParser::parse(
   }
 
   if (_dialect == TSQL) {
-    return std::make_shared<const TSQLGenerator>();
+    return std::make_shared<const TSQLGenerator>(_schema);
   }
 
   throw std::invalid_argument("Unknown SQL dialect: '" + _dialect + "'.");

@@ -1,5 +1,7 @@
 #include "database/ODBCIterator.hpp"
 
+#include "io/StatementMaker.hpp"
+
 namespace database {
 // ----------------------------------------------------------------------------
 
@@ -211,11 +213,7 @@ std::string ODBCIterator::make_query(const std::vector<std::string>& _colnames,
                                      const std::string& _where,
                                      const char _escape_char1,
                                      const char _escape_char2) {
-  // ---------------------------------------------------
-
   std::string query = "SELECT ";
-
-  // ---------------------------------------------------
 
   for (size_t i = 0; i < _colnames.size(); ++i) {
     const auto& cname = _colnames[i];
@@ -237,54 +235,23 @@ std::string ODBCIterator::make_query(const std::vector<std::string>& _colnames,
     }
   }
 
-  // ---------------------------------------------------
+  const auto tname = _escape_char1 != ' ' && _escape_char2 != ' '
+                         ? io::StatementMaker::handle_schema(
+                               _tname, std::string(1, _escape_char1),
+                               std::string(1, _escape_char2))
+                         : _tname;
 
-  // Note that the user might want to pass information on the schema.
-  const auto pos = _tname.find(".");
+  query += std::string(" FROM ");
 
-  if (pos != std::string::npos) {
-    const auto schema = _tname.substr(0, pos);
-
-    const auto table_name = _tname.substr(pos + 1);
-
-    query += std::string(" FROM ");
-
-    if (_escape_char1 != ' ') {
-      query += _escape_char1;
-    }
-
-    query += schema;
-
-    if (_escape_char2 != ' ') {
-      query += _escape_char2;
-    }
-
-    query += ".";
-
-    if (_escape_char1 != ' ') {
-      query += _escape_char1;
-    }
-
-    query += table_name;
-
-    if (_escape_char2 != ' ') {
-      query += _escape_char2;
-    }
-  } else {
-    query += std::string(" FROM ");
-
-    if (_escape_char1 != ' ') {
-      query += _escape_char1;
-    }
-
-    query += _tname;
-
-    if (_escape_char2 != ' ') {
-      query += _escape_char2;
-    }
+  if (_escape_char1 != ' ') {
+    query += _escape_char1;
   }
 
-  // ---------------------------------------------------
+  query += tname;
+
+  if (_escape_char2 != ' ') {
+    query += _escape_char2;
+  }
 
   if (_where != "") {
     query += std::string(" WHERE ") + _where;
@@ -292,11 +259,7 @@ std::string ODBCIterator::make_query(const std::vector<std::string>& _colnames,
 
   query += ";";
 
-  // ---------------------------------------------------
-
   return query;
-
-  // ---------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------

@@ -158,8 +158,8 @@ std::string TSQLGenerator::aggregation(
 std::string TSQLGenerator::drop_table_if_exists(
     const std::string& _table_name) const {
   std::stringstream sql;
-  sql << "DROP TABLE IF EXISTS " << quotechar1() << _table_name << quotechar2()
-      << ";" << std::endl
+  sql << "DROP TABLE IF EXISTS " << schema() << quotechar1() << _table_name
+      << quotechar2() << ";" << std::endl
       << std::endl;
   return sql.str();
 }
@@ -240,12 +240,13 @@ std::string TSQLGenerator::create_indices(
     const auto index_name = _table_name + "__" + colname;
     std::stringstream stream;
     stream << "DROP INDEX IF EXISTS " << quotechar1() << index_name
-           << quotechar2() << " ON " << quotechar1() << _table_name
+           << quotechar2() << " ON " << schema() << quotechar1() << _table_name
            << quotechar2() << ";" << std::endl
            << std::endl
            << "CREATE INDEX " << quotechar1() << index_name << quotechar2()
-           << " ON " << quotechar1() << _table_name << quotechar2() << " ("
-           << quotechar1() << colname << quotechar2() << ");" << std::endl
+           << " ON " << schema() << quotechar1() << _table_name << quotechar2()
+           << " (" << quotechar1() << colname << quotechar2() << ");"
+           << std::endl
            << std::endl;
     return stream.str();
   };
@@ -304,8 +305,8 @@ std::string TSQLGenerator::create_table(const helpers::enums::Aggregation& _agg,
   sql << "SELECT " << aggregated << " AS " << quotechar1() << col_name
       << quotechar2() << ", " << std::endl
       << "       t0." << rowid() << " AS " << rowid() << std::endl
-      << "INTO " << quotechar1() << table_name << quotechar2() << " FROM ("
-      << std::endl;
+      << "INTO " << schema() << quotechar1() << table_name << quotechar2()
+      << " FROM (" << std::endl;
   return sql.str();
 }
 
@@ -738,9 +739,9 @@ std::string TSQLGenerator::join_mapping(const std::string& _name,
            << "       AVG( t2.value ) AS value" << std::endl
            << "INTO " << quotechar1() << grouped_table << quotechar2()
            << std::endl
-           << "FROM " << quotechar1() << splitted_table << quotechar2() << " t1"
-           << std::endl
-           << "LEFT JOIN " << quotechar1()
+           << "FROM " << schema() << quotechar1() << splitted_table
+           << quotechar2() << " t1" << std::endl
+           << "LEFT JOIN " << schema() << quotechar1()
            << SQLGenerator::to_upper(mapping_col) << quotechar2() << " t2"
            << std::endl
            << "ON t1." << quotechar1() << orig_col << quotechar2() << " = t2."
@@ -749,23 +750,23 @@ std::string TSQLGenerator::join_mapping(const std::string& _name,
            << std::endl
            << std::endl;
 
-    stream << "UPDATE " << quotechar1() << table_name << quotechar2()
-           << std::endl
+    stream << "UPDATE " << schema() << quotechar1() << table_name
+           << quotechar2() << std::endl
            << "SET " << quotechar1() << mapping_col << quotechar2() << " = t2."
            << quotechar1() << "value" << quotechar2() << std::endl
-           << "FROM " << quotechar1() << grouped_table << quotechar2()
-           << " AS t2" << std::endl
+           << "FROM " << schema() << quotechar1() << grouped_table
+           << quotechar2() << " AS t2" << std::endl
            << "WHERE " << quotechar1() << table_name << quotechar2() << "."
            << rowid() << " = t2." << quotechar1() << "rownum" << quotechar2()
            << ";" << std::endl
            << std::endl;
 
-    stream << "DROP TABLE IF EXISTS " << quotechar1() << grouped_table
-           << quotechar2() << ";" << std::endl
+    stream << "DROP TABLE IF EXISTS " << schema() << quotechar1()
+           << grouped_table << quotechar2() << ";" << std::endl
            << std::endl;
 
-    stream << "DROP TABLE IF EXISTS " << quotechar1() << splitted_table
-           << quotechar2() << ";" << std::endl
+    stream << "DROP TABLE IF EXISTS " << schema() << quotechar1()
+           << splitted_table << quotechar2() << ";" << std::endl
            << std::endl;
 
     return stream.str();
@@ -774,12 +775,13 @@ std::string TSQLGenerator::join_mapping(const std::string& _name,
   const auto join_other = [this, &mapping_col, &table_name,
                            &orig_col]() -> std::string {
     std::stringstream stream;
-    stream << "UPDATE " << quotechar1() << table_name << quotechar2()
-           << std::endl
+    stream << "UPDATE " << schema() << quotechar1() << table_name
+           << quotechar2() << std::endl
            << "SET " << quotechar1() << mapping_col << quotechar2() << " = t2."
            << quotechar1() << "value" << quotechar2() << std::endl
-           << "FROM " << quotechar1() << SQLGenerator::to_upper(mapping_col)
-           << quotechar2() << " AS t2" << std::endl
+           << "FROM " << schema() << quotechar1()
+           << SQLGenerator::to_upper(mapping_col) << quotechar2() << " AS t2"
+           << std::endl
            << "WHERE " << quotechar1() << table_name << quotechar2() << "."
            << quotechar1() << orig_col << quotechar2() << " = t2."
            << quotechar1() << "key" << quotechar2() << ";" << std::endl
@@ -789,28 +791,26 @@ std::string TSQLGenerator::join_mapping(const std::string& _name,
 
   const auto alter_table = [this, &_colname, &table_name]() -> std::string {
     std::stringstream stream;
-    stream << "ALTER TABLE " << quotechar1() << table_name << quotechar2()
-           << " ADD " << quotechar1() << SQLGenerator::to_lower(_colname)
-           << quotechar2() << " DOUBLE PRECISION;" << std::endl
+    stream << "ALTER TABLE " << schema() << quotechar1() << table_name
+           << quotechar2() << " ADD " << quotechar1()
+           << SQLGenerator::to_lower(_colname) << quotechar2()
+           << " DOUBLE PRECISION;" << std::endl
            << std::endl;
     return stream.str();
   };
 
   const auto set_to_zero = [this, &table_name, &mapping_col]() -> std::string {
     std::stringstream stream;
-    stream << "UPDATE " << quotechar1() << table_name << quotechar2() << " SET "
-           << quotechar1() << mapping_col << quotechar2() << " = 0.0;"
-           << std::endl
+    stream << "UPDATE " << schema() << quotechar1() << table_name
+           << quotechar2() << " SET " << quotechar1() << mapping_col
+           << quotechar2() << " = 0.0;" << std::endl
            << std::endl;
     return stream.str();
   };
 
   const auto drop_table = [this, &_colname]() -> std::string {
     std::stringstream stream;
-    stream << "DROP TABLE IF EXISTS " << quotechar1()
-           << SQLGenerator::to_upper(_colname) << quotechar2() << ";"
-           << std::endl
-           << std::endl
+    stream << drop_table_if_exists(SQLGenerator::to_upper(_colname))
            << std::endl;
     return stream.str();
   };
@@ -834,11 +834,11 @@ std::string TSQLGenerator::make_joins(
 
   std::stringstream sql;
 
-  sql << "FROM " << quotechar1() << output_name << quotechar2() << " t1"
-      << std::endl;
+  sql << "FROM " << schema() << quotechar1() << output_name << quotechar2()
+      << " t1" << std::endl;
 
-  sql << "INNER JOIN " << quotechar1() << input_name << quotechar2() << " t2"
-      << std::endl;
+  sql << "INNER JOIN " << schema() << quotechar1() << input_name << quotechar2()
+      << " t2" << std::endl;
 
   if (_output_join_keys_name == helpers::Macros::no_join_key() ||
       _output_join_keys_name == helpers::Macros::self_join_key()) {
@@ -967,15 +967,12 @@ std::string TSQLGenerator::make_feature_table(
   const auto main_table = SQLGenerator::make_staging_table_name(_main_table);
 
   std::stringstream stream;
-  stream << "DROP TABLE IF EXISTS " << quotechar1() << "FEATURES" << _prefix
-         << quotechar2() << ";" << std::endl
-         << std::endl
-         << make_select(_main_table, _autofeatures, _targets, _categorical,
+  stream << make_select(_main_table, _autofeatures, _targets, _categorical,
                         _numerical)
-         << "INTO " << quotechar1() << "FEATURES" << _prefix << quotechar2()
-         << std::endl
-         << "FROM " << quotechar1() << main_table << quotechar2() << " t1"
-         << std::endl
+         << "INTO " << schema() << quotechar1() << "FEATURES" << _prefix
+         << quotechar2() << std::endl
+         << "FROM " << schema() << quotechar1() << main_table << quotechar2()
+         << " t1" << std::endl
          << "ORDER BY t1." << rowid() << ";" << std::endl
          << std::endl
          << make_updates(_autofeatures, _prefix);
@@ -1058,14 +1055,15 @@ std::string TSQLGenerator::make_mapping_table_header(
 
   std::stringstream sql;
 
-  sql << "DROP TABLE IF EXISTS " << quote1 << _name << quote2 << ";"
+  sql << "DROP TABLE IF EXISTS " << schema() << quote1 << _name << quote2 << ";"
       << std::endl
       << std::endl;
 
   const std::string key_type = _key_is_num ? "INTEGER" : "VARCHAR(max)";
 
-  sql << "CREATE TABLE " << quote1 << _name << quote2 << "( " << quote1 << "key"
-      << quote2 << " " << key_type << ", value DOUBLE PRECISION);" << std::endl
+  sql << "CREATE TABLE " << schema() << quote1 << _name << quote2 << "( "
+      << quote1 << "key" << quote2 << " " << key_type
+      << ", value DOUBLE PRECISION);" << std::endl
       << std::endl;
 
   return sql.str();
@@ -1081,8 +1079,9 @@ std::string TSQLGenerator::make_mapping_table_insert_into(
 
   std::stringstream sql;
 
-  sql << "INSERT INTO " << quote1 << _name << quote2 << " (" << quote1 << "key"
-      << quote2 << ", " << quote1 << "value" << quote2 << ")" << std::endl
+  sql << "INSERT INTO " << schema() << quote1 << _name << quote2 << " ("
+      << quote1 << "key" << quote2 << ", " << quote1 << "value" << quote2 << ")"
+      << std::endl
       << "VALUES";
 
   return sql.str();
@@ -1233,9 +1232,15 @@ std::string TSQLGenerator::make_staging_table(
 
   std::stringstream sql;
 
-  sql << "DROP TABLE IF EXISTS " << quotechar1() << SQLGenerator::to_upper(name)
-      << quotechar2() << ";" << std::endl
-      << std::endl;
+  sql << drop_table_if_exists(SQLGenerator::to_upper(name));
+
+  if (schema_ != "") {
+    sql << "IF NOT EXISTS ( SELECT * FROM sys.schemas WHERE name = N'"
+        << schema_ << "' ) " << std::endl
+        << "    EXEC('CREATE SCHEMA " << quotechar1() << schema_ << quotechar2()
+        << "');" << std::endl
+        << std::endl;
+  }
 
   const auto order_by = make_order_by(_schema);
 
@@ -1248,11 +1253,12 @@ std::string TSQLGenerator::make_staging_table(
     sql << begin << columns.at(i) << end << std::endl;
   }
 
-  sql << "INTO " << quotechar1() << SQLGenerator::to_upper(name) << quotechar2()
-      << std::endl;
+  sql << "INTO " << schema() << quotechar1() << SQLGenerator::to_upper(name)
+      << quotechar2() << std::endl;
 
-  sql << "FROM " << quotechar1() << SQLGenerator::get_table_name(_schema.name_)
-      << quotechar2() << " t1" << std::endl;
+  sql << "FROM " << schema() << quotechar1()
+      << SQLGenerator::get_table_name(_schema.name_) << quotechar2() << " t1"
+      << std::endl;
 
   sql << SQLGenerator::handle_many_to_one_joins(_schema.name_, "t1", this);
 
@@ -1359,13 +1365,13 @@ std::string TSQLGenerator::make_updates(
     const auto table =
         helpers::StringReplacer::replace_all(colname, "feature", "FEATURE");
 
-    stream << "UPDATE " << quotechar1() << "FEATURES" << _prefix << quotechar2()
-           << std::endl
+    stream << "UPDATE " << schema() << quotechar1() << "FEATURES" << _prefix
+           << quotechar2() << std::endl
            << "SET " << quotechar1() << colname << quotechar2()
            << " = COALESCE( t2." << quotechar1() << colname << quotechar2()
            << ", 0.0 )" << std::endl
-           << "FROM " << quotechar1() << table << quotechar2() << " AS t2"
-           << std::endl
+           << "FROM " << schema() << quotechar1() << table << quotechar2()
+           << " AS t2" << std::endl
            << "WHERE " << quotechar1() << "FEATURES" << _prefix << quotechar2()
            << "." << rowid() << "= t2." << rowid() << ";" << std::endl
            << std::endl;
@@ -1425,15 +1431,13 @@ std::string TSQLGenerator::split_text_fields(
 
   std::stringstream stream;
 
-  stream << "DROP TABLE IF EXISTS " << quotechar1() << new_table << quotechar2()
-         << ";" << std::endl
+  stream << drop_table_if_exists(new_table) << "SELECT t1." << rowid() << " AS "
+         << quotechar1() << "rownum" << quotechar2() << ", value AS "
+         << quotechar1() << colname << quotechar2() << std::endl
+         << "INTO " << schema() << quotechar1() << new_table << quotechar2()
          << std::endl
-         << "SELECT t1." << rowid() << " AS " << quotechar1() << "rownum"
-         << quotechar2() << ", value AS " << quotechar1() << colname
-         << quotechar2() << std::endl
-         << "INTO " << quotechar1() << new_table << quotechar2() << std::endl
-         << "FROM " << quotechar1() << staging_table << quotechar2() << " t1"
-         << std::endl
+         << "FROM " << schema() << quotechar1() << staging_table << quotechar2()
+         << " t1" << std::endl
          << "CROSS APPLY STRING_SPLIT( " << replaced << ", ' ')" << std::endl
          << "WHERE LEN( value ) > 0;" << std::endl
          << std::endl;

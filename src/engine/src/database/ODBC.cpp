@@ -60,7 +60,11 @@ void ODBC::drop_table(const std::string& _tname) {
     query += escape_char1_;
   }
 
-  query += _tname;
+  const auto tname = escape_char1_ != ' ' && escape_char2_ != ' '
+                         ? handle_schema(_tname)
+                         : _tname;
+
+  query += tname;
 
   if (escape_char2_ != ' ') {
     query += escape_char2_;
@@ -235,19 +239,13 @@ Poco::JSON::Object ODBC::get_content(const std::string& _tname,
                                      const std::int32_t _draw,
                                      const std::int32_t _start,
                                      const std::int32_t _length) {
-  // ----------------------------------------
-
   const auto nrows = get_nrows(_tname);
 
   const auto colnames = get_colnames(_tname);
 
   const auto ncols = colnames.size();
 
-  // ----------------------------------------
-
   Poco::JSON::Object obj;
-
-  // ----------------------------------------
 
   obj.set("draw", _draw);
 
@@ -260,8 +258,6 @@ Poco::JSON::Object ODBC::get_content(const std::string& _tname,
     return obj;
   }
 
-  // ----------------------------------------
-
   if (_length < 0) {
     throw std::invalid_argument("length must be positive!");
   }
@@ -273,8 +269,6 @@ Poco::JSON::Object ODBC::get_content(const std::string& _tname,
   if (_start >= nrows) {
     throw std::invalid_argument("start must be smaller than number of rows!");
   }
-
-  // ----------------------------------------
 
   const auto begin = _start;
 
@@ -291,8 +285,6 @@ Poco::JSON::Object ODBC::get_content(const std::string& _tname,
         "syntax.");
   }
 
-  // ----------------------------------------
-
   Poco::JSON::Array data;
 
   for (auto i = begin; i < end; ++i) {
@@ -305,15 +297,9 @@ Poco::JSON::Object ODBC::get_content(const std::string& _tname,
     data.add(row);
   }
 
-  // ----------------------------------------
-
   obj.set("data", data);
 
-  // ----------------------------------------
-
   return obj;
-
-  // ----------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -542,7 +528,9 @@ std::string ODBC::make_bulk_insert_query(
     query += escape_char1_;
   }
 
-  query += _table;
+  const auto table = handle_schema(_table);
+
+  query += table;
 
   if (escape_char2_ != ' ') {
     query += escape_char2_;
@@ -766,7 +754,9 @@ std::string ODBC::simple_limit_standard(const std::string& _table,
     query += escape_char1_;
   }
 
-  query += _table;
+  const auto table = handle_schema(_table);
+
+  query += table;
 
   if (escape_char2_ != ' ') {
     query += escape_char2_;
@@ -792,7 +782,9 @@ std::string ODBC::simple_limit_most(const std::string& _table,
     query += escape_char1_;
   }
 
-  query += _table;
+  const auto table = handle_schema(_table);
+
+  query += table;
 
   if (escape_char2_ != ' ') {
     query += escape_char2_;
@@ -824,7 +816,9 @@ std::string ODBC::simple_limit_oracle(const std::string& _table,
     query += escape_char1_;
   }
 
-  query += _table;
+  const auto table = handle_schema(_table);
+
+  query += table;
 
   if (escape_char2_ != ' ') {
     query += escape_char2_;
@@ -861,7 +855,9 @@ std::string ODBC::simple_limit_mssql(const std::string& _table,
       query += escape_char1_;
     }
 
-    query += _table;
+    const auto table = handle_schema(_table);
+
+    query += table;
 
     if (escape_char2_ != ' ') {
       query += escape_char2_;
@@ -940,7 +936,9 @@ std::string ODBC::simple_select(const std::string& _table) const {
     query += escape_char1_;
   }
 
-  query += _table;
+  const auto table = handle_schema(_table);
+
+  query += table;
 
   if (escape_char2_ != ' ') {
     query += escape_char2_;

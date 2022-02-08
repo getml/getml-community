@@ -29,7 +29,7 @@ namespace transpilation {
 
 class TSQLGenerator : public SQLDialectGenerator {
  public:
-  TSQLGenerator() {}
+  explicit TSQLGenerator(const std::string& _schema) : schema_(_schema) {}
 
   ~TSQLGenerator() = default;
 
@@ -50,9 +50,7 @@ class TSQLGenerator : public SQLDialectGenerator {
 
   /// The schema to precede any newly created tables.
   std::string schema() const final {
-    // TODO
-    return "";
-    // return schema_ == "" ? "" : quotechar1() + schema_ + quotechar2() + ".";
+    return schema_ == "" ? "" : quotechar1() + schema_ + quotechar2() + ".";
   }
 
  public:
@@ -245,6 +243,10 @@ class TSQLGenerator : public SQLDialectGenerator {
 
   /// Returns a set of replace statements for the string separators.
   std::string replace_separators(const std::string& _col) const;
+
+ private:
+  /// The schema to use
+  const std::string schema_;
 };
 
 // -------------------------------------------------------------------------

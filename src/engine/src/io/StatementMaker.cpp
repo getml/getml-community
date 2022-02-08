@@ -127,7 +127,13 @@ std::string StatementMaker::make_statement_odbc(
     statement << escape_char1;
   }
 
-  statement << _table_name;
+  const auto table_name =
+      escape_char1 != ' ' && escape_char2 != ' '
+          ? handle_schema(_table_name, std::string(1, escape_char1),
+                          std::string(1, escape_char2))
+          : _table_name;
+
+  statement << table_name;
 
   if (escape_char2 != ' ') {
     statement << escape_char2;
