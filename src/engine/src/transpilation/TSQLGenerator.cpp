@@ -866,7 +866,8 @@ std::vector<std::string> TSQLGenerator::make_staging_columns(
                                   const bool _replace) -> std::string {
     const auto edited = make_staging_table_column(_colname, "t1");
     const auto replaced =
-        _replace ? replace_separators("LOWER( " + edited + " )") : edited;
+        _replace ? replace_separators("LOWER( ' ' + " + edited + " + ' ' )")
+                 : edited;
     std::stringstream stream;
     stream << "CAST( " << replaced << " AS " << _coltype << " ) AS "
            << quotechar1()
@@ -1465,7 +1466,7 @@ std::string TSQLGenerator::string_contains(const std::string& _colname,
                                            const std::string& _keyword,
                                            const bool _contains) const {
   const std::string comparison = _contains ? " LIKE " : " NOT LIKE ";
-  return "(" + _colname + comparison + "'%" + _keyword + "%' )" + ")";
+  return "( " + _colname + comparison + "'% " + _keyword + " %' )";
 }
 
 // ----------------------------------------------------------------------------
