@@ -13,7 +13,6 @@
 
 namespace helpers {
 namespace enums {
-// ----------------------------------------------------------------------------
 
 template <class T>
 class Parser {};
@@ -390,11 +389,7 @@ struct Parser<Aggregation> {
   }
 };
 
-// ----------------------------------------------------------------------------
-
 }  // namespace enums
 }  // namespace helpers
-
-// ----------------------------------------------------------------------------
 
 #endif  // HELPERS_ENUMS_PARSER_HPP_

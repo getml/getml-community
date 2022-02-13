@@ -11,6 +11,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <vector>
 
 // ------------------------------------------------------------------------
 
@@ -25,12 +26,12 @@
 
 #include "engine/communication/communication.hpp"
 #include "engine/config/config.hpp"
+#include "engine/utils/utils.hpp"
 
 // ------------------------------------------------------------------------
 
 namespace engine {
 namespace handlers {
-// ------------------------------------------------------------------------
 
 class DatabaseManager {
  private:
@@ -43,8 +44,6 @@ class DatabaseManager {
                   const config::Options& _options);
 
   ~DatabaseManager();
-
-  // ------------------------------------------------------------------------
 
  public:
   /// Copy a table from one database connection to another.
@@ -118,8 +117,6 @@ class DatabaseManager {
                    const Poco::JSON::Object& _cmd,
                    Poco::Net::StreamSocket* _socket) const;
 
-  // ------------------------------------------------------------------------
-
  public:
   /// Trivial accessor
   const std::shared_ptr<database::Connector> connector(
@@ -162,13 +159,13 @@ class DatabaseManager {
 #endif
   }
 
-  // ------------------------------------------------------------------------
+ private:
+  /// Splits the query into its components. Also handles the DELIMITER syntax.
+  std::vector<std::string> split_queries(const std::string& _queries_str) const;
 
  private:
   /// Trivial accessor
   const communication::Logger& logger() { return *logger_; }
-
-  // ------------------------------------------------------------------------
 
  private:
   /// Keeps the connectors to the databases.

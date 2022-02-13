@@ -26,8 +26,6 @@ namespace utils {
 // ------------------------------------------------------------------------
 
 class CriticalValues {
-  // --------------------------------------------------------------------
-
  public:
   /// Calculates the critical values for categorical columns.
   static const std::shared_ptr<const std::vector<Int>> calc_categorical(

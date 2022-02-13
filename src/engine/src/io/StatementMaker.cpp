@@ -319,6 +319,8 @@ std::string StatementMaker::to_string_mysql(const Datatype _type) {
       return "INT";
 
     case Datatype::time_stamp:
+      return "VARCHAR(50)";
+
     case Datatype::string:
       return "TEXT";
 

@@ -18,7 +18,6 @@
 
 namespace relboost {
 namespace containers {
-// -------------------------------------------------------------------------
 
 struct CandidateSplit {
   CandidateSplit(const Float _partial_loss, const Split& _split,
@@ -34,7 +33,6 @@ struct CandidateSplit {
   const std::array<Float, 3> weights_;
 };
 
-// -------------------------------------------------------------------------
 }  // namespace containers
 }  // namespace relboost
 

@@ -9,7 +9,6 @@
 #include "database/CSVBuffer.hpp"
 
 namespace database {
-// ----------------------------------------------------------------------------
 
 void MySQL::check_colnames(const std::vector<std::string>& _colnames,
                            io::Reader* _reader) {

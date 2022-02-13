@@ -489,15 +489,9 @@ Float DecisionTreeNode::transform(
     const std::optional<containers::DataFrame>& _input,
     const containers::Subfeatures& _subfeatures,
     const containers::Match& _match) const {
-  // ------------------------------------------------------------------------
-  // If the node has no children, then return its weight.
-
   if (!child_greater_) {
     return weight_;
   }
-
-  // ------------------------------------------------------------------------
-  // Calculate the value used for determining the split.
 
   assert_true(child_smaller_);
 
@@ -636,16 +630,11 @@ Float DecisionTreeNode::transform(
       assert_true(false && "Unknown data_used_");
   }
 
-  // ------------------------------------------------------------------------
-  // Based on the value send problem to one of the child nodes.
-
   if (is_greater) {
     return child_greater_->transform(_output, _input, _subfeatures, _match);
   } else {
     return child_smaller_->transform(_output, _input, _subfeatures, _match);
   }
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -1593,8 +1582,6 @@ void DecisionTreeNode::try_text_output_single_word(
     const std::vector<containers::Match>::iterator _end,
     std::vector<containers::Match>* _bins,
     std::vector<containers::CandidateSplit>* _candidates) {
-  // ----------------------------------------------------------------
-
   const auto& df = _output.df();
 
   const auto& rows = _output.rows();
@@ -1602,8 +1589,6 @@ void DecisionTreeNode::try_text_output_single_word(
   const auto& word_index = df.word_indices_.at(_num_column);
 
   assert_true(word_index);
-
-  // ----------------------------------------------------------------
 
   const auto get_range = [&word_index, &rows](const containers::Match& m) {
     assert_true(m.ix_output < rows.size());
@@ -1619,8 +1604,6 @@ void DecisionTreeNode::try_text_output_single_word(
     return;
   }
 
-  // ----------------------------------------------------------------
-
   const auto get_rownum = [&rows](const containers::Match& m) {
     assert_true(m.ix_output < rows.size());
     return rows[m.ix_output];
@@ -1633,12 +1616,8 @@ void DecisionTreeNode::try_text_output_single_word(
 
   assert_true(row_index);
 
-  // ----------------------------------------------------------------
-
   try_text(words, _num_column, _old_intercept, enums::DataUsed::text_output,
            *row_index, rownum_indptr, _bins, _candidates);
-
-  // ----------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -1650,16 +1629,12 @@ void DecisionTreeNode::try_text_output_multiple_words(
     const std::vector<containers::Match>::iterator _end,
     std::vector<containers::Match>* _bins,
     std::vector<containers::CandidateSplit>* _candidates) {
-  // ----------------------------------------------------------------
   // Sort words by their associated weights in DESCENDING
   // order.
-
   const auto sorted_words = utils::CriticalValueSorter::sort(
       _candidates->begin() + _begin_ix, _candidates->end());
 
   assert_true(sorted_words);
-
-  // ----------------------------------------------------------------
 
   const auto& df = _output.df();
 
@@ -1668,8 +1643,6 @@ void DecisionTreeNode::try_text_output_multiple_words(
   const auto& word_index = df.word_indices_.at(_num_column);
 
   assert_true(word_index);
-
-  // ----------------------------------------------------------------
 
   const auto extract_word = [&word_index, sorted_words,
                              &rows](const containers::Match& m) -> Int {
@@ -1694,9 +1667,7 @@ void DecisionTreeNode::try_text_output_multiple_words(
     return -1;
   };
 
-  // ----------------------------------------------------------------
   // Extracting the words is expensive, so we precalculate it.
-
   constexpr Int WORD_NOT_SET = -2;
 
   auto words = std::vector<Int>(rows.size(), WORD_NOT_SET);
@@ -1711,14 +1682,10 @@ void DecisionTreeNode::try_text_output_multiple_words(
     words[it->ix_output] = extract_word(*it);
   }
 
-  // ----------------------------------------------------------------
-
   const auto get_word = [&words](const containers::Match& m) -> Int {
     assert_true(m.ix_output < words.size());
     return words[m.ix_output];
   };
-
-  // ----------------------------------------------------------------
 
   const auto is_not_nan = [get_word](const containers::Match& m) -> bool {
     return (get_word(m) >= 0);
@@ -1727,20 +1694,14 @@ void DecisionTreeNode::try_text_output_multiple_words(
   /// Moves text fields without words from the vocabulary to the end.
   const auto nan_begin = std::partition(_begin, _end, is_not_nan);
 
-  // ----------------------------------------------------------------
-
   const auto word_indptr = utils::WordBinner<decltype(get_word)>::bin(
       word_index->vocabulary(), get_word, _begin, nan_begin, _end, _bins);
-
-  //  ----------------------------------------------------------------
 
   try_categorical_or_text(enums::Revert::False,
                           0,  // _min
                           sorted_words, _num_column, _old_intercept,
                           enums::DataUsed::text_output, word_indptr, _bins,
                           _candidates);
-
-  //  ----------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -1752,13 +1713,9 @@ void DecisionTreeNode::try_time_stamps_window(
     const std::vector<containers::Match>::iterator _end,
     std::vector<containers::Match>* _bins,
     std::vector<containers::CandidateSplit>* _candidates) {
-  // ------------------------------------------------------------------------
-
   if (hyperparameters().delta_t_ <= 0.0) {
     return;
   }
-
-  // ------------------------------------------------------------------------
 
   const auto get_value = [&_input, &_output](const containers::Match& m) {
     const auto i1 = m.ix_output;
@@ -1785,8 +1742,6 @@ void DecisionTreeNode::try_time_stamps_window(
     return;
   }
 
-  // ------------------------------------------------------------------------
-
   // Note that this bins in DESCENDING order.
   const auto indptr =
       utils::NumericalBinner<decltype(get_value)>::bin_given_step_size(
@@ -1795,8 +1750,6 @@ void DecisionTreeNode::try_time_stamps_window(
   if (indptr.size() == 0) {
     return;
   }
-
-  // ------------------------------------------------------------------------
 
   for (size_t i = 1; i < indptr.size(); ++i) {
     assert_true(indptr[i - 1] <= indptr[i]);
@@ -1819,8 +1772,6 @@ void DecisionTreeNode::try_time_stamps_window(
   }
 
   loss_function().revert_to_commit();
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------

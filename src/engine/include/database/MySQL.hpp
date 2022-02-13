@@ -26,11 +26,8 @@
 // ----------------------------------------------------------------------------
 
 namespace database {
-// ----------------------------------------------------------------------------
 
 class MySQL : public Connector {
-  // -------------------------------
-
  public:
   MySQL(const Poco::JSON::Object& _obj, const std::string& _passwd,
         const std::vector<std::string>& _time_formats)
@@ -57,8 +54,6 @@ class MySQL : public Connector {
 
   ~MySQL() = default;
 
-  // -------------------------------
-
  public:
   /// Returns a Poco::JSON::Object describing the connection.
   Poco::JSON::Object describe() const final;
@@ -84,8 +79,6 @@ class MySQL : public Connector {
   /// Reads a CSV file or another data source into a table.
   void read(const std::string& _table, const size_t _skip,
             io::Reader* _reader) final;
-
-  // -------------------------------
 
  public:
   /// Returns the dialect of the connector.
@@ -124,8 +117,6 @@ class MySQL : public Connector {
   /// Returns the time formats used.
   const std::vector<std::string>& time_formats() const { return time_formats_; }
 
-  // -------------------------------
-
  private:
   /// Makes sure that the colnames of the CSV file match the colnames of the
   /// target table.
@@ -150,8 +141,6 @@ class MySQL : public Connector {
                                      const std::vector<std::string>& _colnames,
                                      const std::int32_t _begin,
                                      const std::int32_t _end) const;
-
-  // -------------------------------
 
  private:
   /// Returns a new connection based on the connection_string_
@@ -180,8 +169,6 @@ class MySQL : public Connector {
     throw std::runtime_error(msg);
   }
 
-  // -------------------------------
-
  private:
   /// The database to be accessed.
   const std::string dbname_;
@@ -203,8 +190,6 @@ class MySQL : public Connector {
 
   /// The user name.
   const std::string user_;
-
-  // -------------------------------
 };
 
 // ----------------------------------------------------------------------------

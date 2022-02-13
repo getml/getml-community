@@ -13,9 +13,6 @@
 
 namespace relboost {
 namespace utils {
-// ----------------------------------------------------------------------------
-// This uses template specialization to implement different partition functions
-// for the different enumerations of DataUsed.
 
 template <enums::DataUsed>
 struct Partitioner {};
@@ -24,8 +21,6 @@ struct Partitioner {};
 
 template <>
 struct Partitioner<enums::DataUsed::categorical_input> {
-  // --------------------------------------------------------------------
-
   static std::vector<containers::Match>::iterator partition(
       const containers::Split& _split, const containers::DataFrame& _input,
       const std::vector<containers::Match>::iterator _begin,
@@ -36,8 +31,6 @@ struct Partitioner<enums::DataUsed::categorical_input> {
 
     return std::partition(_begin, _end, partition_function);
   }
-
-  // --------------------------------------------------------------------
 
   static bool is_greater(const containers::Split& _split,
                          const containers::DataFrame& _input,
@@ -54,16 +47,12 @@ struct Partitioner<enums::DataUsed::categorical_input> {
 
     return it != _split.categories_used_end_;
   }
-
-  // --------------------------------------------------------------------
 };
 
 // ----------------------------------------------------------------------------
 
 template <>
 struct Partitioner<enums::DataUsed::categorical_output> {
-  // --------------------------------------------------------------------
-
   static std::vector<containers::Match>::iterator partition(
       const containers::Split& _split, const containers::DataFrameView& _output,
       const std::vector<containers::Match>::iterator _begin,
@@ -74,8 +63,6 @@ struct Partitioner<enums::DataUsed::categorical_output> {
 
     return std::partition(_begin, _end, partition_function);
   }
-
-  // --------------------------------------------------------------------
 
   static bool is_greater(const containers::Split& _split,
                          const containers::DataFrameView& _output,
@@ -92,16 +79,12 @@ struct Partitioner<enums::DataUsed::categorical_output> {
 
     return it != _split.categories_used_end_;
   }
-
-  // --------------------------------------------------------------------
 };
 
 // ----------------------------------------------------------------------------
 
 template <>
 struct Partitioner<enums::DataUsed::discrete_input> {
-  // --------------------------------------------------------------------
-
   static std::vector<containers::Match>::iterator partition(
       const containers::Split& _split, const containers::DataFrame& _input,
       const std::vector<containers::Match>::iterator _begin,
@@ -112,8 +95,6 @@ struct Partitioner<enums::DataUsed::discrete_input> {
 
     return std::partition(_begin, _end, partition_function);
   }
-
-  // --------------------------------------------------------------------
 
   static bool is_greater(const containers::Split& _split,
                          const containers::DataFrame& _input,
@@ -126,8 +107,6 @@ struct Partitioner<enums::DataUsed::discrete_input> {
 
     return _input.discrete(i, j) > _split.critical_value_;
   }
-
-  // --------------------------------------------------------------------
 };
 
 // ----------------------------------------------------------------------------
@@ -445,8 +424,6 @@ struct Partitioner<enums::DataUsed::same_units_discrete> {
 
 template <>
 struct Partitioner<enums::DataUsed::same_units_discrete_is_nan> {
-  // --------------------------------------------------------------------
-
   static std::vector<containers::Match>::iterator partition(
       const size_t _input_col, const size_t _output_col,
       const containers::DataFrame& _input,
@@ -460,8 +437,6 @@ struct Partitioner<enums::DataUsed::same_units_discrete_is_nan> {
 
     return std::partition(_begin, _end, partition_function);
   }
-
-  // --------------------------------------------------------------------
 
   static bool is_greater(const size_t _input_col, const size_t _output_col,
                          const containers::DataFrame& _input,
@@ -479,16 +454,12 @@ struct Partitioner<enums::DataUsed::same_units_discrete_is_nan> {
     return !std::isnan(val1) && !std::isnan(val2) && !std::isinf(val1) &&
            !std::isinf(val2);
   }
-
-  // --------------------------------------------------------------------
 };
 
 // ----------------------------------------------------------------------------
 
 template <>
 struct Partitioner<enums::DataUsed::same_units_numerical> {
-  // --------------------------------------------------------------------
-
   static std::vector<containers::Match>::iterator partition(
       const containers::Split& _split, const containers::DataFrame& _input,
       const containers::DataFrameView& _output,
@@ -501,8 +472,6 @@ struct Partitioner<enums::DataUsed::same_units_numerical> {
 
     return std::partition(_begin, _end, partition_function);
   }
-
-  // --------------------------------------------------------------------
 
   static bool is_greater(const containers::Split& _split,
                          const containers::DataFrame& _input,
@@ -519,16 +488,12 @@ struct Partitioner<enums::DataUsed::same_units_numerical> {
 
     return (diff > _split.critical_value_);
   }
-
-  // --------------------------------------------------------------------
 };
 
 // ----------------------------------------------------------------------------
 
 template <>
 struct Partitioner<enums::DataUsed::same_units_numerical_is_nan> {
-  // --------------------------------------------------------------------
-
   static std::vector<containers::Match>::iterator partition(
       const size_t _input_col, const size_t _output_col,
       const containers::DataFrame& _input,
@@ -542,8 +507,6 @@ struct Partitioner<enums::DataUsed::same_units_numerical_is_nan> {
 
     return std::partition(_begin, _end, partition_function);
   }
-
-  // --------------------------------------------------------------------
 
   static bool is_greater(const size_t _input_col, const size_t _output_col,
                          const containers::DataFrame& _input,
@@ -561,16 +524,12 @@ struct Partitioner<enums::DataUsed::same_units_numerical_is_nan> {
     return !std::isnan(val1) && !std::isnan(val2) && !std::isinf(val1) &&
            !std::isinf(val2);
   }
-
-  // --------------------------------------------------------------------
 };
 
 // ----------------------------------------------------------------------------
 
 template <>
 struct Partitioner<enums::DataUsed::subfeatures> {
-  // --------------------------------------------------------------------
-
   static std::vector<containers::Match>::iterator partition(
       const containers::Split& _split,
       const containers::Subfeatures& _subfeatures,
@@ -584,8 +543,6 @@ struct Partitioner<enums::DataUsed::subfeatures> {
     return std::partition(_begin, _end, partition_function);
   }
 
-  // --------------------------------------------------------------------
-
   static bool is_greater(const containers::Split& _split,
                          const containers::Subfeatures& _subfeatures,
                          const containers::Match& _match) {
@@ -596,16 +553,12 @@ struct Partitioner<enums::DataUsed::subfeatures> {
 
     return _subfeatures[j][i] > _split.critical_value_;
   }
-
-  // --------------------------------------------------------------------
 };
 
 // ----------------------------------------------------------------------------
 
 template <>
 struct Partitioner<enums::DataUsed::text_input> {
-  // --------------------------------------------------------------------
-
   static std::vector<containers::Match>::iterator partition(
       const containers::Split& _split, const containers::DataFrame& _input,
       const std::vector<containers::Match>::iterator _begin,
@@ -616,8 +569,6 @@ struct Partitioner<enums::DataUsed::text_input> {
 
     return std::partition(_begin, _end, partition_function);
   }
-
-  // --------------------------------------------------------------------
 
   static bool is_greater(const containers::Split& _split,
                          const containers::DataFrame& _input,
@@ -648,16 +599,12 @@ struct Partitioner<enums::DataUsed::text_input> {
 
     return it != _split.categories_used_end_;
   }
-
-  // --------------------------------------------------------------------
 };
 
 // ----------------------------------------------------------------------------
 
 template <>
 struct Partitioner<enums::DataUsed::text_output> {
-  // --------------------------------------------------------------------
-
   static std::vector<containers::Match>::iterator partition(
       const containers::Split& _split, const containers::DataFrameView& _output,
       const std::vector<containers::Match>::iterator _begin,
@@ -668,8 +615,6 @@ struct Partitioner<enums::DataUsed::text_output> {
 
     return std::partition(_begin, _end, partition_function);
   }
-
-  // --------------------------------------------------------------------
 
   static bool is_greater(const containers::Split& _split,
                          const containers::DataFrameView& _output,
@@ -700,16 +645,12 @@ struct Partitioner<enums::DataUsed::text_output> {
 
     return it != _split.categories_used_end_;
   }
-
-  // --------------------------------------------------------------------
 };
 
 // ----------------------------------------------------------------------------
 
 template <>
 struct Partitioner<enums::DataUsed::time_stamps_window> {
-  // --------------------------------------------------------------------
-
   static std::vector<containers::Match>::iterator partition(
       const containers::Split& _split, const Float _lag,
       const containers::DataFrame& _input,
@@ -723,8 +664,6 @@ struct Partitioner<enums::DataUsed::time_stamps_window> {
 
     return std::partition(_begin, _end, partition_function);
   }
-
-  // --------------------------------------------------------------------
 
   static bool is_greater(const containers::Split& _split, const Float _lag,
                          const containers::DataFrame& _input,
@@ -741,8 +680,6 @@ struct Partitioner<enums::DataUsed::time_stamps_window> {
     return ((diff > _split.critical_value_) &&
             (diff <= _split.critical_value_ + _lag));
   }
-
-  // --------------------------------------------------------------------
 };
 
 // ----------------------------------------------------------------------------

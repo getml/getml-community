@@ -1,6 +1,7 @@
 #include "engine/handlers/DatabaseManager.hpp"
 
 #include "helpers/StringSplitter.hpp"
+#include "io/Parser.hpp"
 
 namespace engine {
 namespace handlers {
@@ -107,9 +108,8 @@ void DatabaseManager::describe_connection(
 
 void DatabaseManager::execute(const std::string& _name,
                               Poco::Net::StreamSocket* _socket) {
-  const auto queries_str = communication::Receiver::recv_string(_socket);
-
-  const auto splitted = helpers::StringSplitter::split(queries_str, ";");
+  const auto splitted =
+      split_queries(communication::Receiver::recv_string(_socket));
 
   const auto is_not_empty = [](const std::string& _str) -> bool {
     return _str != "";
@@ -415,6 +415,13 @@ void DatabaseManager::read_s3(const std::string& _name,
 
 // ----------------------------------------------------------------------------
 
+void DatabaseManager::refresh(Poco::Net::StreamSocket* _socket) {
+  post_tables();
+  communication::Sender::send_string("Success!", _socket);
+}
+
+// ----------------------------------------------------------------------------
+
 void DatabaseManager::sniff_csv(const std::string& _name,
                                 const Poco::JSON::Object& _cmd,
                                 Poco::Net::StreamSocket* _socket) const {
@@ -538,13 +545,6 @@ void DatabaseManager::sniff_s3(const std::string& _name,
 
 // ----------------------------------------------------------------------------
 
-void DatabaseManager::refresh(Poco::Net::StreamSocket* _socket) {
-  post_tables();
-  communication::Sender::send_string("Success!", _socket);
-}
-
-// ----------------------------------------------------------------------------
-
 void DatabaseManager::sniff_table(const std::string& _name,
                                   const Poco::JSON::Object& _cmd,
                                   Poco::Net::StreamSocket* _socket) const {
@@ -556,6 +556,56 @@ void DatabaseManager::sniff_table(const std::string& _name,
   communication::Sender::send_string("Success!", _socket);
 
   communication::Sender::send_string(roles, _socket);
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<std::string> DatabaseManager::split_queries(
+    const std::string& _queries_str) const {
+  std::string delimiter = ";";
+
+  size_t pos = 0;
+
+  std::vector<std::string> queries;
+
+  while (true) {
+    const auto pos_keyword = std::min(_queries_str.find("DELIMITER", pos),
+                                      _queries_str.find("delimiter", pos));
+
+    const auto pos_sep = _queries_str.find(delimiter, pos);
+
+    if (pos_keyword != std::string::npos && pos_keyword < pos_sep)
+        [[unlikely]] {
+      const auto pos_newline = _queries_str.find("\n", pos_keyword);
+
+      if (pos_newline == std::string::npos) {
+        break;
+      }
+
+      delimiter = io::Parser::trim(
+          _queries_str.substr(pos_keyword + 9, pos_newline - pos_keyword - 9));
+
+      pos = pos_newline + 1;
+
+      continue;
+    }
+
+    assert_true(pos_sep >= pos);
+
+    const auto query = pos_sep == std::string::npos
+                           ? _queries_str.substr(pos)
+                           : _queries_str.substr(pos, pos_sep - pos);
+
+    queries.push_back(query);
+
+    if (pos_sep == std::string::npos) {
+      break;
+    }
+
+    pos = pos_sep + 1;
+  }
+
+  return queries;
 }
 
 // ----------------------------------------------------------------------------

@@ -1,5 +1,6 @@
 #include "transpilation/SQLDialectParser.hpp"
 
+#include "transpilation/MySQLGenerator.hpp"
 #include "transpilation/PostgreSQLGenerator.hpp"
 #include "transpilation/SQLite3Generator.hpp"
 #include "transpilation/SparkSQLGenerator.hpp"
@@ -9,6 +10,10 @@ namespace transpilation {
 
 std::shared_ptr<const SQLDialectGenerator> SQLDialectParser::parse(
     const std::string& _dialect, const std::string& _schema) {
+  if (_dialect == MYSQL) {
+    return std::make_shared<const MySQLGenerator>(_schema);
+  }
+
   if (_dialect == POSTGRE_SQL) {
     return std::make_shared<const PostgreSQLGenerator>(_schema);
   }
