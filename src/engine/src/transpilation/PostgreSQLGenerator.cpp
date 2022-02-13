@@ -832,7 +832,8 @@ std::vector<std::string> PostgreSQLGenerator::make_staging_columns(
                                   const bool _replace) -> std::string {
     const auto edited = make_staging_table_column(_colname, "t1");
     const auto replaced =
-        _replace ? replace_separators("LOWER( " + edited + " )") : edited;
+        _replace ? replace_separators("LOWER( ' ' || " + edited + " || ' ' )")
+                 : edited;
     return "CAST( " + replaced + " AS " + _coltype + " ) AS " + quotechar1() +
            SQLGenerator::to_lower(make_staging_table_colname(_colname)) +
            quotechar2();
@@ -1441,9 +1442,11 @@ std::string PostgreSQLGenerator::split_text_fields(
 std::string PostgreSQLGenerator::string_contains(const std::string& _colname,
                                                  const std::string& _keyword,
                                                  const bool _contains) const {
-  const std::string comparison = _contains ? "" : "NOT ";
-  return "( " + comparison + "'" + _keyword +
-         "' = ANY( REGEXP_SPLIT_TO_ARRAY( " + _colname + ", ' ' ) ) )";
+  const std::string comparison = _contains ? " LIKE " : " NOT LIKE ";
+  const std::string equality = _contains ? " = " : " != ";
+  const std::string and_or_or = _contains ? " OR " : " AND ";
+  return "( " + _colname + comparison + "'% " + _keyword + " %'" + and_or_or +
+         _colname + equality + "'" + _keyword + "' )";
 }
 
 // ----------------------------------------------------------------------------
