@@ -2,13 +2,10 @@
 
 // ----------------------------------------------------------------------------
 
-#include "transpilation/transpilation.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "engine/pipelines/DataFrameModifier.hpp"
 #include "engine/pipelines/PlaceholderMaker.hpp"
 #include "engine/pipelines/Staging.hpp"
+#include "transpilation/SQLDialectParser.hpp"
 
 // ----------------------------------------------------------------------------
 
@@ -2270,8 +2267,14 @@ void Pipeline::save(const helpers::StringIterator& _categories,
 
   save_predictors(tfile);
 
-  const auto sql_code = to_sql(_categories, true, true,
-                               transpilation::SQLDialectParser::SQLITE3, "");
+  const auto params = transpilation::TranspilationParams{
+      .dialect_ = transpilation::SQLDialectParser::SQLITE3,
+      .nchar_categorical_ = 128,
+      .nchar_join_key_ = 128,
+      .nchar_text_ = 4096,
+      .schema_ = ""};
+
+  const auto sql_code = to_sql(_categories, true, true, params);
 
   utils::SQLDependencyTracker(tfile.path() + "/SQL/")
       .save_dependencies(sql_code);
@@ -2606,15 +2609,15 @@ std::vector<std::string> Pipeline::staging_to_sql(
 
 // ----------------------------------------------------------------------------
 
-std::string Pipeline::to_sql(const helpers::StringIterator& _categories,
-                             const bool _targets, const bool _full_pipeline,
-                             const std::string& _dialect,
-                             const std::string& _schema) const {
+std::string Pipeline::to_sql(
+    const helpers::StringIterator& _categories, const bool _targets,
+    const bool _full_pipeline,
+    const transpilation::TranspilationParams& _params) const {
   assert_true(feature_learners_.size() ==
               predictor_impl().autofeatures().size());
 
   const auto sql_dialect_generator =
-      transpilation::SQLDialectParser::parse(_dialect, _schema);
+      transpilation::SQLDialectParser::parse(_params);
 
   const auto staging = _full_pipeline
                            ? staging_to_sql(_targets, sql_dialect_generator)

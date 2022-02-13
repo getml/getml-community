@@ -5,32 +5,34 @@
 #include "transpilation/SQLite3Generator.hpp"
 #include "transpilation/SparkSQLGenerator.hpp"
 #include "transpilation/TSQLGenerator.hpp"
+#include "transpilation/TranspilationParams.hpp"
 
 namespace transpilation {
 
 std::shared_ptr<const SQLDialectGenerator> SQLDialectParser::parse(
-    const std::string& _dialect, const std::string& _schema) {
-  if (_dialect == MYSQL) {
-    return std::make_shared<const MySQLGenerator>(_schema);
+    const TranspilationParams& _params) {
+  if (_params.dialect_ == MYSQL) {
+    return std::make_shared<const MySQLGenerator>(_params);
   }
 
-  if (_dialect == POSTGRE_SQL) {
-    return std::make_shared<const PostgreSQLGenerator>(_schema);
+  if (_params.dialect_ == POSTGRE_SQL) {
+    return std::make_shared<const PostgreSQLGenerator>(_params);
   }
 
-  if (_dialect == SPARK_SQL) {
+  if (_params.dialect_ == SPARK_SQL) {
     return std::make_shared<const SparkSQLGenerator>();
   }
 
-  if (_dialect == SQLITE3) {
+  if (_params.dialect_ == SQLITE3) {
     return std::make_shared<const SQLite3Generator>();
   }
 
-  if (_dialect == TSQL) {
-    return std::make_shared<const TSQLGenerator>(_schema);
+  if (_params.dialect_ == TSQL) {
+    return std::make_shared<const TSQLGenerator>(_params);
   }
 
-  throw std::invalid_argument("Unknown SQL dialect: '" + _dialect + "'.");
+  throw std::invalid_argument("Unknown SQL dialect: '" + _params.dialect_ +
+                              "'.");
 
   return std::shared_ptr<const SQLDialectGenerator>();
 }

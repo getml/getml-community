@@ -22,6 +22,7 @@
 // -------------------------------------------------------------------------
 
 #include "transpilation/SQLDialectGenerator.hpp"
+#include "transpilation/TranspilationParams.hpp"
 
 // -------------------------------------------------------------------------
 
@@ -29,7 +30,8 @@ namespace transpilation {
 
 class TSQLGenerator : public SQLDialectGenerator {
  public:
-  explicit TSQLGenerator(const std::string& _schema) : schema_(_schema) {}
+  explicit TSQLGenerator(const TranspilationParams& _params)
+      : params_(_params) {}
 
   ~TSQLGenerator() = default;
 
@@ -50,7 +52,9 @@ class TSQLGenerator : public SQLDialectGenerator {
 
   /// The schema to precede any newly created tables.
   std::string schema() const final {
-    return schema_ == "" ? "" : quotechar1() + schema_ + quotechar2() + ".";
+    return params_.schema_ == ""
+               ? ""
+               : quotechar1() + params_.schema_ + quotechar2() + ".";
   }
 
  public:
@@ -245,8 +249,8 @@ class TSQLGenerator : public SQLDialectGenerator {
   std::string replace_separators(const std::string& _col) const;
 
  private:
-  /// The schema to use
-  const std::string schema_;
+  /// The underlying parameters
+  const TranspilationParams params_;
 };
 
 // -------------------------------------------------------------------------

@@ -887,21 +887,24 @@ std::vector<std::string> MySQLGenerator::make_staging_columns(
   };
 
   const auto cast_as_categorical =
-      [is_not_rowid, cast_column](const std::vector<std::string>& _colnames)
+      [this, is_not_rowid,
+       cast_column](const std::vector<std::string>& _colnames)
       -> std::vector<std::string> {
-    const auto cast =
-        std::bind(cast_column, std::placeholders::_1, "VARCHAR(128)", false);
+    const auto cast = std::bind(
+        cast_column, std::placeholders::_1,
+        "VARCHAR(" + std::to_string(params_.nchar_categorical_) + ")", false);
 
     return stl::collect::vector<std::string>(
         _colnames | VIEWS::filter(SQLGenerator::include_column) |
         VIEWS::filter(is_not_rowid) | VIEWS::transform(cast));
   };
 
-  const auto cast_as_join_key =
-      [is_not_rowid, cast_column](const std::vector<std::string>& _colnames)
+  const auto cast_as_join_key = [this, is_not_rowid, cast_column](
+                                    const std::vector<std::string>& _colnames)
       -> std::vector<std::string> {
-    const auto cast =
-        std::bind(cast_column, std::placeholders::_1, "VARCHAR(128)", false);
+    const auto cast = std::bind(
+        cast_column, std::placeholders::_1,
+        "VARCHAR(" + std::to_string(params_.nchar_categorical_) + ")", false);
 
     return stl::collect::vector<std::string>(
         _colnames | VIEWS::filter(SQLGenerator::include_column) |
@@ -927,11 +930,12 @@ std::vector<std::string> MySQLGenerator::make_staging_columns(
         VIEWS::transform(to_epoch_time_or_rowid));
   };
 
-  const auto cast_as_text =
-      [is_not_rowid, cast_column](const std::vector<std::string>& _colnames)
+  const auto cast_as_text = [this, is_not_rowid, cast_column](
+                                const std::vector<std::string>& _colnames)
       -> std::vector<std::string> {
     const auto cast =
-        std::bind(cast_column, std::placeholders::_1, "VARCHAR(4096)", true);
+        std::bind(cast_column, std::placeholders::_1,
+                  "VARCHAR(" + std::to_string(params_.nchar_text_) + ")", true);
 
     return stl::collect::vector<std::string>(
         _colnames | VIEWS::filter(SQLGenerator::include_column) |
@@ -1065,7 +1069,10 @@ std::string MySQLGenerator::make_mapping_table_header(
 
   sql << drop_table_if_exists(_name);
 
-  const std::string key_type = _key_is_num ? "INTEGER" : "VARCHAR(255)";
+  const std::string key_type =
+      _key_is_num
+          ? "INTEGER"
+          : "VARCHAR(" + std::to_string(params_.nchar_categorical_) + ")";
 
   sql << "CREATE TABLE " << schema() << quote1 << _name << quote2 << "( "
       << quote1 << "key" << quote2 << " " << key_type << ", value DOUBLE);"
@@ -1150,7 +1157,9 @@ std::string MySQLGenerator::make_select(
         "t1." + quotechar1() + modified_colnames.at(i) + quotechar2();
 
     const std::string data_type =
-        (i < _targets.size() + _numerical.size() ? "DOUBLE" : "VARCHAR(255)");
+        (i < _targets.size() + _numerical.size()
+             ? "DOUBLE"
+             : "VARCHAR(" + std::to_string(params_.nchar_categorical_) + ")");
 
     const bool no_comma = (i == manual.size() - 1);
 
@@ -1241,8 +1250,8 @@ std::string MySQLGenerator::make_staging_table(
 
   sql << drop_table_if_exists(SQLGenerator::to_upper(name));
 
-  if (schema_ != "") {
-    sql << "CREATE SCHEMA IF NOT EXISTS " << quotechar1() << schema_
+  if (params_.schema_ != "") {
+    sql << "CREATE SCHEMA IF NOT EXISTS " << quotechar1() << params_.schema_
         << quotechar2() << ";" << std::endl
         << std::endl;
   }
@@ -1436,14 +1445,16 @@ std::string MySQLGenerator::split_text_fields(
       << drop_table_if_exists(new_table) << "CREATE TABLE " << schema()
       << quotechar1() << new_table << quotechar2() << " ( " << quotechar1()
       << "rownum" << quotechar2() << " INT, " << quotechar1() << colname
-      << quotechar2() << " VARCHAR(4096) );" << std::endl
+      << quotechar2() << " VARCHAR(" << params_.nchar_text_ << ") );"
+      << std::endl
       << std::endl
       << "DELIMITER $$" << std::endl
       << "   CREATE OR REPLACE FUNCTION SPLIT_STRING(textfield "
-         "VARCHAR(4096), pos INT) RETURNS TEXT"
-      << std::endl
+         "VARCHAR("
+      << params_.nchar_text_ << "), pos INT) RETURNS TEXT" << std::endl
       << "    BEGIN" << std::endl
-      << "        DECLARE token VARCHAR(4096);" << std::endl
+      << "        DECLARE token VARCHAR(" << params_.nchar_text_ << ");"
+      << std::endl
       << "        SET token = REPLACE(SUBSTRING(SUBSTRING_INDEX(textfield, "
       << "' ', pos), CHAR_LENGTH(SUBSTRING_INDEX(textfield, ' ', pos - 1)) + "
       << "1), ' ', '');" << std::endl

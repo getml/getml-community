@@ -2,6 +2,7 @@
 
 // ------------------------------------------------------------------------
 
+#include "transpilation/TranspilationParams.hpp"
 #include "transpilation/transpilation.hpp"
 
 // ------------------------------------------------------------------------
@@ -879,16 +880,14 @@ void PipelineManager::to_sql(const std::string& _name,
 
   const auto subfeatures = JSON::get_value<bool>(_cmd, "subfeatures_");
 
-  const auto dialect = JSON::get_value<std::string>(_cmd, "dialect_");
-
-  const auto schema = JSON::get_value<std::string>(_cmd, "schema_");
+  const auto params = transpilation::TranspilationParams::from_json(_cmd);
 
   multithreading::ReadLock read_lock(read_write_lock_);
 
   const auto pipeline = get_pipeline(_name);
 
-  const auto sql = pipeline.to_sql(categories().strings(), targets, subfeatures,
-                                   dialect, schema);
+  const auto sql =
+      pipeline.to_sql(categories().strings(), targets, subfeatures, params);
 
   read_lock.unlock();
 

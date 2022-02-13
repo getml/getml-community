@@ -22,6 +22,7 @@
 // -------------------------------------------------------------------------
 
 #include "transpilation/SQLDialectGenerator.hpp"
+#include "transpilation/TranspilationParams.hpp"
 
 // -------------------------------------------------------------------------
 
@@ -29,7 +30,8 @@ namespace transpilation {
 
 class MySQLGenerator : public SQLDialectGenerator {
  public:
-  explicit MySQLGenerator(const std::string& _schema) : schema_(_schema) {}
+  explicit MySQLGenerator(const TranspilationParams& _params)
+      : params_(_params) {}
 
   ~MySQLGenerator() = default;
 
@@ -50,7 +52,9 @@ class MySQLGenerator : public SQLDialectGenerator {
 
   /// The schema to precede any newly created tables.
   std::string schema() const final {
-    return schema_ == "" ? "" : quotechar1() + schema_ + quotechar2() + ".";
+    return params_.schema_ == ""
+               ? ""
+               : quotechar1() + params_.schema_ + quotechar2() + ".";
   }
 
  public:
@@ -249,8 +253,8 @@ class MySQLGenerator : public SQLDialectGenerator {
   std::string replace_separators(const std::string& _col) const;
 
  private:
-  /// The schema to use
-  const std::string schema_;
+  /// The underlying parameters
+  const TranspilationParams params_;
 };
 
 // -------------------------------------------------------------------------

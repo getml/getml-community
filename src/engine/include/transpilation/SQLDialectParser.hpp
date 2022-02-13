@@ -13,6 +13,7 @@
 // -------------------------------------------------------------------------
 
 #include "transpilation/SQLDialectGenerator.hpp"
+#include "transpilation/TranspilationParams.hpp"
 
 // -------------------------------------------------------------------------
 
@@ -27,7 +28,7 @@ struct SQLDialectParser {
 
   /// Parse returns the SQLDialect generator for the dialect.
   static std::shared_ptr<const SQLDialectGenerator> parse(
-      const std::string& _dialect, const std::string& _schema);
+      const TranspilationParams& _params);
 };
 
 // -------------------------------------------------------------------------

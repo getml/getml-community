@@ -900,21 +900,24 @@ std::vector<std::string> TSQLGenerator::make_staging_columns(
   };
 
   const auto cast_as_categorical =
-      [is_not_rowid, cast_column](const std::vector<std::string>& _colnames)
+      [this, is_not_rowid,
+       cast_column](const std::vector<std::string>& _colnames)
       -> std::vector<std::string> {
-    const auto cast =
-        std::bind(cast_column, std::placeholders::_1, "VARCHAR(max)", false);
+    const auto cast = std::bind(
+        cast_column, std::placeholders::_1,
+        "VARCHAR(" + std::to_string(params_.nchar_categorical_) + ")", false);
 
     return stl::collect::vector<std::string>(
         _colnames | VIEWS::filter(SQLGenerator::include_column) |
         VIEWS::filter(is_not_rowid) | VIEWS::transform(cast));
   };
 
-  const auto cast_as_join_key =
-      [is_not_rowid, cast_column](const std::vector<std::string>& _colnames)
+  const auto cast_as_join_key = [this, is_not_rowid, cast_column](
+                                    const std::vector<std::string>& _colnames)
       -> std::vector<std::string> {
-    const auto cast =
-        std::bind(cast_column, std::placeholders::_1, "VARCHAR(100)", false);
+    const auto cast = std::bind(
+        cast_column, std::placeholders::_1,
+        "VARCHAR(" + std::to_string(params_.nchar_join_key_) + ")", false);
 
     return stl::collect::vector<std::string>(
         _colnames | VIEWS::filter(SQLGenerator::include_column) |
@@ -940,11 +943,12 @@ std::vector<std::string> TSQLGenerator::make_staging_columns(
         VIEWS::transform(to_epoch_time_or_rowid));
   };
 
-  const auto cast_as_text =
-      [is_not_rowid, cast_column](const std::vector<std::string>& _colnames)
+  const auto cast_as_text = [this, is_not_rowid, cast_column](
+                                const std::vector<std::string>& _colnames)
       -> std::vector<std::string> {
     const auto cast =
-        std::bind(cast_column, std::placeholders::_1, "VARCHAR(max)", true);
+        std::bind(cast_column, std::placeholders::_1,
+                  "VARCHAR(" + std::to_string(params_.nchar_text_) + ")", true);
 
     return stl::collect::vector<std::string>(
         _colnames | VIEWS::filter(SQLGenerator::include_column) |
@@ -1075,7 +1079,10 @@ std::string TSQLGenerator::make_mapping_table_header(
       << std::endl
       << std::endl;
 
-  const std::string key_type = _key_is_num ? "INTEGER" : "VARCHAR(max)";
+  const std::string key_type =
+      _key_is_num
+          ? "INTEGER"
+          : "VARCHAR(" + std::to_string(params_.nchar_categorical_) + ")";
 
   sql << "CREATE TABLE " << schema() << quote1 << _name << quote2 << "( "
       << quote1 << "key" << quote2 << " " << key_type
@@ -1160,8 +1167,9 @@ std::string TSQLGenerator::make_select(
         "t1." + quotechar1() + modified_colnames.at(i) + quotechar2();
 
     const std::string data_type =
-        (i < _targets.size() + _numerical.size() ? "DOUBLE PRECISION"
-                                                 : "VARCHAR(max)");
+        (i < _targets.size() + _numerical.size()
+             ? "DOUBLE PRECISION"
+             : "VARCHAR(" + std::to_string(params_.nchar_categorical_) + ")");
 
     const bool no_comma = (i == manual.size() - 1);
 
@@ -1250,11 +1258,11 @@ std::string TSQLGenerator::make_staging_table(
 
   sql << drop_table_if_exists(SQLGenerator::to_upper(name));
 
-  if (schema_ != "") {
+  if (params_.schema_ != "") {
     sql << "IF NOT EXISTS ( SELECT * FROM sys.schemas WHERE name = N'"
-        << schema_ << "' ) " << std::endl
-        << "    EXEC('CREATE SCHEMA " << quotechar1() << schema_ << quotechar2()
-        << "');" << std::endl
+        << params_.schema_ << "' ) " << std::endl
+        << "    EXEC('CREATE SCHEMA " << quotechar1() << params_.schema_
+        << quotechar2() << "');" << std::endl
         << std::endl;
   }
 
