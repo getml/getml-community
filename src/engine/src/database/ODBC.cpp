@@ -395,6 +395,8 @@ std::vector<std::string> ODBC::get_tables(const std::string& _catalog,
           std::string(reinterpret_cast<const char*>(std::get<0>(data).get())));
     }
   }
+
+  return vec;
 }
 
 // ----------------------------------------------------------------------------
@@ -472,12 +474,13 @@ std::vector<std::string> ODBC::list_tables() {
   }
 
   // ------------------------------------------------------
-  // Postgres, MSSQL style
+  // TSQL style
 
   try {
-    auto iter = ODBCIterator(
-        make_connection(), "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES;",
-        time_formats_);
+    auto iter = ODBCIterator(make_connection(),
+                             "SELECT TABLE_SCHEMA + '.' + TABLE_NAME FROM "
+                             "INFORMATION_SCHEMA.TABLES;",
+                             time_formats_);
 
     while (!iter.end()) {
       all_tables.push_back(iter.get_string());
@@ -488,6 +491,27 @@ std::vector<std::string> ODBC::list_tables() {
     }
   }
 
+  if (all_tables.size() > 0) {
+    return all_tables;
+  }
+
+  // ------------------------------------------------------
+  // Postgres style
+
+  try {
+    auto iter = ODBCIterator(make_connection(),
+                             "SELECT TABLE_SCHEMA | '.' | TABLE_NAME FROM "
+                             "INFORMATION_SCHEMA.TABLES;",
+                             time_formats_);
+
+    while (!iter.end()) {
+      all_tables.push_back(iter.get_string());
+    }
+  } catch (std::exception& e) {
+    if (std::string(e.what()).find("(SQL_ERROR)") == std::string::npos) {
+      throw std::runtime_error(e.what());
+    }
+  }
   // ------------------------------------------------------
 
   if (all_tables.size() > 0) {
@@ -501,9 +525,8 @@ std::vector<std::string> ODBC::list_tables() {
     auto iter = ODBCIterator(make_connection(), "LIST TABLES;", time_formats_);
 
     while (!iter.end()) {
-      iter.get_string();                        // TABLE_SCHEM
-      all_tables.push_back(iter.get_string());  // TABLE_NAME
-      iter.get_string();                        // TABLE_TYPE
+      all_tables.push_back(iter.get_string() + "." + iter.get_string());
+      iter.get_string();  // TABLE_TYPE
     }
   } catch (std::exception& e) {
     if (std::string(e.what()).find("(SQL_ERROR)") == std::string::npos) {
@@ -907,7 +930,9 @@ std::string ODBC::simple_limit_mssql(const std::string& _table,
       query += escape_char1_;
     }
 
-    query += _table;
+    const auto table = handle_schema(_table);
+
+    query += table;
 
     if (escape_char2_ != ' ') {
       query += escape_char2_;

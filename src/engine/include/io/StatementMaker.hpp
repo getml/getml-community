@@ -26,6 +26,7 @@ namespace io {
 
 class StatementMaker {
  public:
+  static constexpr const char* BIGQUERY = "bigquery";
   static constexpr const char* MYSQL = "mysql";
   static constexpr const char* ODBC = "odbc";
   static constexpr const char* POSTGRES = "postgres";
@@ -53,6 +54,12 @@ class StatementMaker {
  private:
   /// Finds the maximum size of the colnames.
   static size_t find_max_size(const std::vector<std::string>& _colnames);
+
+  /// Produces the CREATE TABLE statement for BigQuery.
+  static std::string make_statement_bigquery(
+      const std::string& _project_id, const std::string& _database_id,
+      const std::string& _table_name, const std::vector<std::string>& _colnames,
+      const std::vector<Datatype>& _datatypes);
 
   /// Produces the CREATE TABLE statement for MySQL.
   static std::string make_statement_mysql(
@@ -85,6 +92,9 @@ class StatementMaker {
   static std::string make_statement_sqlite(
       const std::string& _table_name, const std::vector<std::string>& _colnames,
       const std::vector<Datatype>& _datatypes);
+
+  /// Transforms a datatype to the string required for the bigquery dialect.
+  static std::string to_string_bigquery(const Datatype _type);
 
   /// Transforms a datatype to the string required for the mysql dialect.
   static std::string to_string_mysql(const Datatype _type);

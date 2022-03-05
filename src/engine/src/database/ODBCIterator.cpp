@@ -3,7 +3,6 @@
 #include "io/StatementMaker.hpp"
 
 namespace database {
-// ----------------------------------------------------------------------------
 
 ODBCIterator::ODBCIterator(const std::shared_ptr<ODBCConn>& _connection,
                            const std::string& _query,

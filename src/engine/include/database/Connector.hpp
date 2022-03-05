@@ -22,17 +22,12 @@
 // ----------------------------------------------------------------------------
 
 namespace database {
-// ----------------------------------------------------------------------------
 
 class Connector {
-  // -------------------------------
-
  public:
   Connector() {}
 
   virtual ~Connector() = default;
-
-  // -------------------------------
 
  public:
   /// Returns a Poco::JSON::Object describing the connection.
@@ -83,8 +78,6 @@ class Connector {
 
   /// Returns the time formats used.
   virtual const std::vector<std::string>& time_formats() const = 0;
-
-  // -------------------------------
 };
 
 // ----------------------------------------------------------------------------

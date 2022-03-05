@@ -1,5 +1,6 @@
 set(
     DATABASE_OBJ
+    ${DATABASE_SOURCE_DIRECTORY}/BigQuery.cpp
     ${DATABASE_SOURCE_DIRECTORY}/CSVBuffer.cpp
     ${DATABASE_SOURCE_DIRECTORY}/DatabaseParser.cpp
     ${DATABASE_SOURCE_DIRECTORY}/DatabaseSniffer.cpp
@@ -10,6 +11,7 @@ set(
     ${DATABASE_SOURCE_DIRECTORY}/ODBCIterator.cpp
     ${DATABASE_SOURCE_DIRECTORY}/Postgres.cpp
     ${DATABASE_SOURCE_DIRECTORY}/PostgresIterator.cpp    
+    ${DATABASE_SOURCE_DIRECTORY}/QuerySplitter.cpp
     ${DATABASE_SOURCE_DIRECTORY}/SapHana.cpp
     ${DATABASE_SOURCE_DIRECTORY}/Sqlite3.cpp
     ${DATABASE_SOURCE_DIRECTORY}/Sqlite3Iterator.cpp

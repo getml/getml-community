@@ -1,5 +1,6 @@
 #include "transpilation/SQLDialectParser.hpp"
 
+#include "transpilation/BigQueryGenerator.hpp"
 #include "transpilation/MySQLGenerator.hpp"
 #include "transpilation/PostgreSQLGenerator.hpp"
 #include "transpilation/SQLite3Generator.hpp"
@@ -11,6 +12,10 @@ namespace transpilation {
 
 std::shared_ptr<const SQLDialectGenerator> SQLDialectParser::parse(
     const TranspilationParams& _params) {
+  if (_params.dialect_ == BIG_QUERY) {
+    return std::make_shared<const BigQueryGenerator>(_params);
+  }
+
   if (_params.dialect_ == MYSQL) {
     return std::make_shared<const MySQLGenerator>(_params);
   }

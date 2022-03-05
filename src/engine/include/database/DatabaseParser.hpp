@@ -21,9 +21,9 @@
 // ----------------------------------------------------------------------------
 
 namespace database {
-// ----------------------------------------------------------------------------
 
 struct DatabaseParser {
+  static constexpr const char* BIGQUERY = io::StatementMaker::BIGQUERY;
   static constexpr const char* GREENPLUM = "greenplum";
   static constexpr const char* MARIADB = "mariadb";
   static constexpr const char* MYSQL = io::StatementMaker::MYSQL;

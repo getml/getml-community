@@ -12,6 +12,7 @@
 #include "database/Getter.hpp"
 #include "database/Int.hpp"
 #include "database/Iterator.hpp"
+#include "database/QuerySplitter.hpp"
 #include "database/Sqlite3.hpp"
 
 // ----------------------------------------------------------------------------

@@ -1,5 +1,5 @@
-#ifndef DATABASE_SAP_HANA_HPP_
-#define DATABASE_SAP_HANA_HPP_
+#ifndef DATABASE_BIGQUERY_HPP_
+#define DATABASE_BIGQUERY_HPP_
 
 // ----------------------------------------------------------------------------
 
@@ -26,34 +26,29 @@
 
 namespace database {
 
-class SapHana : public Connector {
+class BigQuery : public Connector {
   typedef goutils::Helpers::RecordType RecordType;
 
  public:
-  SapHana(const Poco::JSON::Object& _obj, const std::string& _password,
-          const std::vector<std::string>& _time_formats)
-      : default_schema_(
-            jsonutils::JSON::get_value<std::string>(_obj, "default_schema_")),
-        host_(jsonutils::JSON::get_value<std::string>(_obj, "host_")),
-        password_(_password),
-        ping_interval_(jsonutils::JSON::get_value<Int>(_obj, "ping_interval_")),
-        port_(jsonutils::JSON::get_value<Int>(_obj, "port_")),
-        time_formats_(_time_formats),
-        user_(jsonutils::JSON::get_value<std::string>(_obj, "user_")) {}
+  BigQuery(const Poco::JSON::Object& _obj,
+           const std::vector<std::string>& _time_formats)
+      : database_id_(
+            jsonutils::JSON::get_value<std::string>(_obj, "database_id_")),
+        google_application_credentials_(jsonutils::JSON::get_value<std::string>(
+            _obj, "google_application_credentials_")),
+        project_id_(
+            jsonutils::JSON::get_value<std::string>(_obj, "project_id_")),
+        time_formats_(_time_formats) {}
 
-  SapHana(const std::string& _default_schema, const std::string& _host,
-          const std::string& _password, const Int _ping_interval,
-          const Int _port, const std::vector<std::string>& _time_formats,
-          const std::string& _user)
-      : default_schema_(_default_schema),
-        host_(_host),
-        password_(_password),
-        ping_interval_(_ping_interval),
-        port_(_port),
-        time_formats_(_time_formats),
-        user_(_user) {}
+  BigQuery(const std::string& _project_id, const std::string& _database_id,
+           const std::string& _google_application_credentials,
+           const std::vector<std::string>& _time_formats)
+      : database_id_(_database_id),
+        google_application_credentials_(_google_application_credentials),
+        project_id_(_project_id),
+        time_formats_(_time_formats) {}
 
-  ~SapHana() = default;
+  ~BigQuery() = default;
 
  public:
   /// Returns a Poco::JSON::Object describing the connection.
@@ -94,7 +89,7 @@ class SapHana : public Connector {
 
  public:
   /// Returns the dialect of the connector.
-  std::string dialect() const final { return DatabaseParser::SAP_HANA; }
+  std::string dialect() const final { return DatabaseParser::BIGQUERY; }
 
   /// Drops a table and cleans up, if necessary.
   void drop_table(const std::string& _tname) final {
@@ -111,12 +106,10 @@ class SapHana : public Connector {
 
  private:
   /// Extracts pointers from the current batch of data.
-  std::vector<char*> extract_ptrs(
-      const std::vector<typename SapHana::RecordType>& _batch) const;
+  std::vector<char*> extract_ptrs(const std::vector<RecordType>& _batch) const;
 
   /// Generates a new batch of data we want to read into the database.
-  std::vector<typename SapHana::RecordType> make_batch(
-      io::Reader* _reader) const;
+  std::vector<RecordType> make_batch(io::Reader* _reader) const;
 
   /// Merge the procedures into one.
   std::vector<std::string> merge_procedures(
@@ -128,36 +121,29 @@ class SapHana : public Connector {
                                      const std::int32_t _begin,
                                      const std::int32_t _end) const;
 
-  /// Split the procedures.
-  std::vector<std::string> split(const std::string& _sql) const;
+ private:
+  /// Mock select query (for retrieving colnames or coltypes)
+  const std::string mock_query(const std::string& _table) const {
+    return "SELECT * FROM `" + database_id_ + "." + _table + "` LIMIT 1;";
+  }
 
  private:
-  /// The default schema to use.
-  const std::string default_schema_;
+  /// The database ID to use.
+  const std::string database_id_;
 
-  /// The host address.
-  const std::string host_;
+  /// The location of the google application credentials
+  const std::string google_application_credentials_;
 
-  /// The password used.
-  const std::string password_;
-
-  /// Interval in seconds at which you
-  /// want to ping the server.
-  const Int ping_interval_;
-
-  /// The port to be accessed.
-  const Int port_;
+  /// The project ID to use.
+  const std::string project_id_;
 
   /// Vector containing the time formats.
   const std::vector<std::string> time_formats_;
-
-  /// The user name.
-  const std::string user_;
 };
 
 // ----------------------------------------------------------------------------
 
 }  // namespace database
 
-#endif  // DATABASE_SAP_HANA_HPP_
+#endif  // DATABASE_BIGQUERY_HPP_
 

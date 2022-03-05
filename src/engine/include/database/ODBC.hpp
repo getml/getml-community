@@ -111,8 +111,7 @@ class ODBC : public Connector {
 
   /// Returns the number of rows in the table signified by _tname.
   std::int32_t get_nrows(const std::string& _tname) final {
-    const auto tname = handle_schema(_tname);
-    return select({"COUNT(*)"}, tname, "")->get_int();
+    return select({"COUNT(*)"}, _tname, "")->get_int();
   }
 
   /// Returns a shared_ptr containing a MySQLIterator.

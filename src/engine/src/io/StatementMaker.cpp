@@ -27,6 +27,17 @@ std::string StatementMaker::make_statement(
     const Poco::JSON::Object& _description,
     const std::vector<std::string>& _colnames,
     const std::vector<Datatype>& _datatypes) {
+  if (_dialect == BIGQUERY) {
+    const auto project_id =
+        jsonutils::JSON::get_value<std::string>(_description, "project_id");
+
+    const auto database_id =
+        jsonutils::JSON::get_value<std::string>(_description, "database_id");
+
+    return make_statement_bigquery(project_id, database_id, _table_name,
+                                   _colnames, _datatypes);
+  }
+
   if (_dialect == MYSQL) {
     return make_statement_mysql(_table_name, _colnames, _datatypes);
   }
@@ -59,6 +70,40 @@ std::string StatementMaker::make_statement(
   throw std::invalid_argument("SQL dialect '" + _dialect + "' not known!");
 
   return "";
+}
+
+// ----------------------------------------------------------------------------
+
+std::string StatementMaker::make_statement_bigquery(
+    const std::string& _project_id, const std::string& _database_id,
+    const std::string& _table_name, const std::vector<std::string>& _colnames,
+    const std::vector<Datatype>& _datatypes) {
+  assert_true(_colnames.size() == _datatypes.size());
+
+  const auto max_size = find_max_size(_colnames);
+
+  std::stringstream statement;
+
+  statement << "DROP TABLE IF EXISTS `" << _database_id << "`.`" << _table_name
+            << "`;" << std::endl
+            << std::endl;
+
+  statement << "CREATE TABLE `" << _database_id << "`.`" << _table_name << "`("
+            << std::endl;
+
+  for (size_t i = 0; i < _colnames.size(); ++i) {
+    statement << "    `" << _colnames[i] << "` "
+              << make_gap(_colnames[i], max_size)
+              << to_string_bigquery(_datatypes[i]);
+
+    if (i < _colnames.size() - 1) {
+      statement << "," << std::endl;
+    } else {
+      statement << ");" << std::endl;
+    }
+  }
+
+  return statement.str();
 }
 
 // ----------------------------------------------------------------------------
@@ -306,6 +351,31 @@ std::string StatementMaker::make_statement_sqlite(
   }
 
   return statement.str();
+}
+
+// ----------------------------------------------------------------------------
+
+std::string StatementMaker::to_string_bigquery(const Datatype _type) {
+  switch (_type) {
+    case Datatype::double_precision:
+      return "FLOAT64";
+
+    case Datatype::integer:
+      return "INTEGER";
+
+    case Datatype::time_stamp:
+      return "TIMESTAMP";
+
+    case Datatype::string:
+      return "STRING";
+
+    case Datatype::unknown:
+      assert_true(false);
+      return "";
+  }
+
+  assert_true(false);
+  return "";
 }
 
 // ----------------------------------------------------------------------------

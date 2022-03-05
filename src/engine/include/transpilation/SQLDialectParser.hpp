@@ -20,6 +20,7 @@
 namespace transpilation {
 
 struct SQLDialectParser {
+  static constexpr const char* BIG_QUERY = "bigquery";
   static constexpr const char* MYSQL = "mysql";
   static constexpr const char* POSTGRE_SQL = "postgres";
   static constexpr const char* SPARK_SQL = "spark sql";

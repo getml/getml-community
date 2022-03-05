@@ -160,10 +160,6 @@ class DatabaseManager {
   }
 
  private:
-  /// Splits the query into its components. Also handles the DELIMITER syntax.
-  std::vector<std::string> split_queries(const std::string& _queries_str) const;
-
- private:
   /// Trivial accessor
   const communication::Logger& logger() { return *logger_; }
 
