@@ -36,7 +36,7 @@ PostgresIterator::PostgresIterator(
   num_cols_ = PQnfields(result());
 
   if (num_cols_ <= 0) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "Your query must contain at least"
         " one column!");
   }

@@ -69,7 +69,7 @@ std::shared_ptr<memmap::Vector<float>> XGBoostIteratorDense::init_features(
 
   for (size_t j = 0; j < _X_numerical.size(); ++j) {
     if (_X_numerical.at(j).size() != _X_numerical.at(0).size()) {
-      throw std::invalid_argument("All columns must have the same length!");
+      throw std::runtime_error("All columns must have the same length!");
     }
     for (size_t i = 0; i < _X_numerical[j].size(); ++i) {
       (*features)[i * _X_numerical.size() + j] =

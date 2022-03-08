@@ -90,7 +90,7 @@ class GoutilsIterator : public Iterator {
   /// Returns the raw value.
   std::pair<std::string, bool> get_value() {
     if (end()) {
-      throw std::invalid_argument("End of data reached.");
+      throw std::runtime_error("End of data reached.");
     }
 
     const auto& ptr = fields()[field_num_];

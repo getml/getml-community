@@ -124,8 +124,8 @@ std::vector<T> PlaceholderMaker::extract_vector(
   // ------------------------------------------------------------------------
 
   if (!_population_placeholder.getArray(_name)) {
-    throw std::invalid_argument("The placeholder has no array named '" + _name +
-                                "'!");
+    throw std::runtime_error("The placeholder has no array named '" + _name +
+                             "'!");
   }
 
   const auto vec =
@@ -134,10 +134,9 @@ std::vector<T> PlaceholderMaker::extract_vector(
   // ------------------------------------------------------------------------
 
   if (vec.size() != _expected_size) {
-    throw std::invalid_argument("Size of '" + _name +
-                                "' unexpected. Expected " +
-                                std::to_string(_expected_size) + ", got " +
-                                std::to_string(vec.size()) + ".");
+    throw std::runtime_error("Size of '" + _name + "' unexpected. Expected " +
+                             std::to_string(_expected_size) + ", got " +
+                             std::to_string(vec.size()) + ".");
   }
 
   // ------------------------------------------------------------------------

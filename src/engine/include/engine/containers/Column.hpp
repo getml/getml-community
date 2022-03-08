@@ -131,8 +131,8 @@ class Column {
                                     int>::type = 0>
   T &at(const T2 _i) {
     if (_i < 0 || static_cast<size_t>(_i) >= nrows()) {
-      throw std::invalid_argument("Out-of-bounds access to column '" + name_ +
-                                  "'");
+      throw std::runtime_error("Out-of-bounds access to column '" + name_ +
+                               "'");
     }
 
     if (std::holds_alternative<InMemoryPtr>(data_ptr_)) {
@@ -149,8 +149,8 @@ class Column {
   template <class T2>
   const T at(const T2 _i) const {
     if (_i < 0 || static_cast<size_t>(_i) >= nrows()) {
-      throw std::invalid_argument("Out-of-bounds access to column '" + name_ +
-                                  "'");
+      throw std::runtime_error("Out-of-bounds access to column '" + name_ +
+                               "'");
     }
 
     if (std::holds_alternative<InMemoryPtr>(data_ptr_)) {
@@ -710,7 +710,7 @@ Column<T> Column<T>::sort_by_key(const std::vector<size_t> &_key) const {
 template <class T>
 Column<T> Column<T>::where(const std::vector<bool> &_condition) const {
   if (_condition.size() != nrows()) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "Size of keys must be identical to number of rows!");
   }
 

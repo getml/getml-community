@@ -25,7 +25,7 @@ std::shared_ptr<Predictor> PredictorParser::parse(
              type == "XGBoostRegressor") {
     return std::make_shared<XGBoostPredictor>(_json_obj, _impl, _dependencies);
   } else {
-    throw std::invalid_argument("Predictor of type '" + type + "' not known!");
+    throw std::runtime_error("Predictor of type '" + type + "' not known!");
   }
 }
 

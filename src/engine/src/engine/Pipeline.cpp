@@ -143,7 +143,7 @@ Pipeline::apply_preprocessors(
 
 std::vector<std::string> Pipeline::autofeature_names() const {
   if (!impl_.predictor_impl_) {
-    throw std::invalid_argument("Pipeline has not been fitted!");
+    throw std::runtime_error("Pipeline has not been fitted!");
   }
 
   std::vector<std::string> autofeatures;
@@ -714,7 +714,7 @@ std::tuple<std::vector<std::string>, std::vector<std::string>,
            std::vector<std::string>>
 Pipeline::feature_names() const {
   if (!impl_.predictor_impl_) {
-    throw std::invalid_argument("Pipeline has not been fitted!");
+    throw std::runtime_error("Pipeline has not been fitted!");
   }
 
   assert_true(feature_learners_.size() ==
@@ -1281,7 +1281,7 @@ Pipeline::init_feature_learners(
     const size_t _num_targets,
     const std::vector<Poco::JSON::Object::Ptr>& _dependencies) const {
   if (_num_targets == 0) {
-    throw std::invalid_argument("You must provide at least one target.");
+    throw std::runtime_error("You must provide at least one target.");
   }
 
   const auto make_fl_for_one_target =
@@ -1375,10 +1375,10 @@ Pipeline::init_predictors(
       const auto ptr = arr->getObject(i);
 
       if (!ptr) {
-        throw std::invalid_argument("Element " + std::to_string(i) + " in " +
-                                    _elem +
-                                    " is not a proper JSON "
-                                    "object.");
+        throw std::runtime_error("Element " + std::to_string(i) + " in " +
+                                 _elem +
+                                 " is not a proper JSON "
+                                 "object.");
       }
 
       auto new_predictor = predictors::PredictorParser::parse(
@@ -1481,7 +1481,7 @@ bool Pipeline::is_classification() const {
   }
 
   if (!all_classifiers && !all_regressors) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "You are mixing classification and regression algorithms. "
         "Please make sure that all of your feature learners, feature "
         "selectors and predictors are either all regression algorithms "
@@ -1489,7 +1489,7 @@ bool Pipeline::is_classification() const {
   }
 
   if (all_classifiers == all_regressors) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "The pipelines needs at least one feature learner, feature "
         "selector or predictor.");
   }
@@ -1640,7 +1640,7 @@ Poco::JSON::Object Pipeline::load_json_obj(const std::string& _fname) const {
 
     input.close();
   } else {
-    throw std::invalid_argument("File '" + _fname + "' not found!");
+    throw std::runtime_error("File '" + _fname + "' not found!");
   }
 
   const auto ptr =
@@ -2151,7 +2151,7 @@ std::shared_ptr<std::string> Pipeline::parse_population() const {
   const auto ptr = JSON::get_object(obj(), "data_model_");
 
   if (!ptr) {
-    throw std::invalid_argument("'population_' is not a proper JSON object!");
+    throw std::runtime_error("'population_' is not a proper JSON object!");
   }
 
   const auto name = JSON::get_value<std::string>(*ptr, "name_");
@@ -2172,9 +2172,9 @@ std::shared_ptr<std::vector<std::string>> Pipeline::parse_peripheral() const {
     const auto ptr = arr->getObject(i);
 
     if (!ptr) {
-      throw std::invalid_argument("Element " + std::to_string(i) +
-                                  " in peripheral_ is not a proper JSON "
-                                  "object.");
+      throw std::runtime_error("Element " + std::to_string(i) +
+                               " in peripheral_ is not a proper JSON "
+                               "object.");
     }
 
     const auto name = JSON::get_value<std::string>(*ptr, "name_");
@@ -2289,8 +2289,8 @@ void Pipeline::save_feature_learners(const Poco::TemporaryFile& _tfile) const {
     const auto& fe = feature_learners_.at(i);
 
     if (!fe) {
-      throw std::invalid_argument("Feature learning algorithm #" +
-                                  std::to_string(i) + " has not been fitted!");
+      throw std::runtime_error("Feature learning algorithm #" +
+                               std::to_string(i) + " has not been fitted!");
     }
 
     fe->save(_tfile.path() + "/feature-learner-" + std::to_string(i) + ".json");
@@ -2305,9 +2305,8 @@ void Pipeline::save_feature_selectors(const Poco::TemporaryFile& _tfile) const {
       const auto& p = feature_selectors_.at(i).at(j);
 
       if (!p) {
-        throw std::invalid_argument("Feature selector " + std::to_string(i) +
-                                    "-" + std::to_string(j) +
-                                    " has not been fitted!");
+        throw std::runtime_error("Feature selector " + std::to_string(i) + "-" +
+                                 std::to_string(j) + " has not been fitted!");
       }
 
       p->save(_tfile.path() + "/feature-selector-" + std::to_string(i) + "-" +
@@ -2365,9 +2364,8 @@ void Pipeline::save_predictors(const Poco::TemporaryFile& _tfile) const {
       const auto& p = predictors_.at(i).at(j);
 
       if (!p) {
-        throw std::invalid_argument("Predictor " + std::to_string(i) + "-" +
-                                    std::to_string(j) +
-                                    " has not been fitted!");
+        throw std::runtime_error("Predictor " + std::to_string(i) + "-" +
+                                 std::to_string(j) + " has not been fitted!");
       }
 
       p->save(_tfile.path() + "/predictor-" + std::to_string(i) + "-" +
@@ -2383,8 +2381,8 @@ void Pipeline::save_preprocessors(const Poco::TemporaryFile& _tfile) const {
     const auto& p = preprocessors_.at(i);
 
     if (!p) {
-      throw std::invalid_argument("Preprocessor #" + std::to_string(i) +
-                                  " has not been fitted!");
+      throw std::runtime_error("Preprocessor #" + std::to_string(i) +
+                               " has not been fitted!");
     }
 
     const auto ptr = p->to_json_obj();
@@ -2408,7 +2406,7 @@ Poco::JSON::Object Pipeline::score(const containers::DataFrame& _population_df,
   }
 
   if (_yhat.size() != y.size()) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "Number of columns in predictions and targets do not "
         "match! "
         "Number of columns in predictions: " +
@@ -2418,7 +2416,7 @@ Poco::JSON::Object Pipeline::score(const containers::DataFrame& _population_df,
 
   for (size_t i = 0; i < y.size(); ++i) {
     if (_yhat[i].size() != y[i].size()) {
-      throw std::invalid_argument(
+      throw std::runtime_error(
           "Number of rows in predictions and targets do not "
           "match! "
           "Number of rows in predictions: " +
@@ -2697,7 +2695,7 @@ Pipeline::transform(const TransformParams& _params) {
   }
 
   if (num_predictors_per_set() == 0) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "You cannot call .predict(...) or .score(...) on a pipeline "
         "that doesn't have any predictors.");
   }

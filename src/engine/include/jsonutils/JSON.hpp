@@ -77,9 +77,9 @@ struct JSON {
       const auto ptr = arr->getObject(i);
 
       if (!ptr) {
-        throw std::invalid_argument("Element " + std::to_string(i) +
-                                    " in array '" + _key +
-                                    "' is not a proper JSON object.");
+        throw std::runtime_error("Element " + std::to_string(i) +
+                                 " in array '" + _key +
+                                 "' is not a proper JSON object.");
       }
     }
 
@@ -127,7 +127,7 @@ struct JSON {
 
       input.close();
     } else {
-      throw std::invalid_argument("File '" + _fname + "' not found!");
+      throw std::runtime_error("File '" + _fname + "' not found!");
     }
 
     const auto ptr = Poco::JSON::Parser()

@@ -20,14 +20,14 @@ namespace predictors {
 std::vector<Float> LinearRegression::feature_importances(
     const size_t _num_features) const {
   if (weights_.size() == 0) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "Cannot retrieve feature importances! Linear Regression has "
         "not been trained!");
   }
 
   if (_num_features !=
       impl().num_autofeatures() + impl().num_manual_features()) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "Incorrect number of features when retrieving in feature "
         "importances! Expected " +
         std::to_string(impl().num_autofeatures() +
@@ -132,7 +132,7 @@ Poco::JSON::Object LinearRegression::load_json_obj(
 
     input.close();
   } else {
-    throw std::invalid_argument("File '" + _fname + "' not found!");
+    throw std::runtime_error("File '" + _fname + "' not found!");
   }
 
   const auto ptr =

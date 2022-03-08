@@ -139,7 +139,7 @@ class DatabaseManager {
   /// Sets the S3 Access Key ID
   void set_s3_access_key_id(Poco::Net::StreamSocket* _socket) const {
 #if (defined(_WIN32) || defined(_WIN64))
-    throw std::invalid_argument("S3 is not supported on Windows!");
+    throw std::runtime_error("S3 is not supported on Windows!");
 #else
     const auto value = communication::Receiver::recv_string(_socket);
     goutils::S3::set_access_key_id(value);
@@ -151,7 +151,7 @@ class DatabaseManager {
   /// Sets the S3 Access Key ID
   void set_s3_secret_access_key(Poco::Net::StreamSocket* _socket) const {
 #if (defined(_WIN32) || defined(_WIN64))
-    throw std::invalid_argument("S3 is not supported on Windows!");
+    throw std::runtime_error("S3 is not supported on Windows!");
 #else
     const auto value = communication::Receiver::recv_string(_socket);
     goutils::S3::set_secret_access_key(value);

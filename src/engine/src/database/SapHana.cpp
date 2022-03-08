@@ -127,15 +127,15 @@ Poco::JSON::Object SapHana::get_content(const std::string& _tname,
   // ----------------------------------------
 
   if (_length < 0) {
-    throw std::invalid_argument("length must be positive!");
+    throw std::runtime_error("length must be positive!");
   }
 
   if (_start < 0) {
-    throw std::invalid_argument("start must be positive!");
+    throw std::runtime_error("start must be positive!");
   }
 
   if (_start >= nrows) {
-    throw std::invalid_argument("start must be smaller than number of rows!");
+    throw std::runtime_error("start must be smaller than number of rows!");
   }
 
   // ----------------------------------------

@@ -7,7 +7,7 @@ void Placeholder::check_data_model(
     const std::vector<std::string>& _peripheral_names,
     const bool _is_population) const {
   if (_is_population && joined_tables_.size() == 0) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "The population placeholder contains no joined tables!");
   }
 
@@ -16,7 +16,7 @@ void Placeholder::check_data_model(
                               _peripheral_names.end(), joined_table.name_);
 
     if (it == _peripheral_names.end()) {
-      throw std::invalid_argument(
+      throw std::runtime_error(
           "Placeholder '" + joined_table.name_ +
           "' is contained in the relational tree, but not among "
           "the peripheral placeholders!");
@@ -32,7 +32,7 @@ void Placeholder::check_vector_length() {
   const size_t expected = joined_tables_.size();
 
   if (allow_lagged_targets_.size() != expected) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "Length of 'allow lagged targets' does not match length "
         "of joined tables (expected: " +
         std::to_string(expected) +
@@ -40,34 +40,34 @@ void Placeholder::check_vector_length() {
   }
 
   if (join_keys_used_.size() != expected) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "Error: Length of join keys used does not match length of "
         "joined tables!");
   }
 
   if (other_join_keys_used_.size() != expected) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "Error: Length of other join keys used does not match "
         "length of "
         "joined tables!");
   }
 
   if (time_stamps_used_.size() != expected) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "Error: Length of time stamps used does not match length "
         "of "
         "joined tables!");
   }
 
   if (other_time_stamps_used_.size() != expected) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "Error: Length of other time stamps used does not match "
         "length of "
         "joined tables!");
   }
 
   if (upper_time_stamps_used_.size() != expected) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "Error: Length of upper time stamps used does not match "
         "length of "
         "joined tables!");
@@ -98,8 +98,8 @@ std::vector<bool> Placeholder::infer_needs_targets(
           std::find(_peripheral_names.begin(), _peripheral_names.end(), name);
 
       if (it == _peripheral_names.end()) {
-        throw std::invalid_argument("Peripheral placeholder named '" + name +
-                                    "' not found!");
+        throw std::runtime_error("Peripheral placeholder named '" + name +
+                                 "' not found!");
       }
 
       const auto dist = std::distance(_peripheral_names.begin(), it);

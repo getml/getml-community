@@ -102,7 +102,7 @@ void DataFrameManager::add_float_column(const std::string& _name,
                        communication::Monitor::TIMEOUT_ON);
   } else {
     if (column_view.is_infinite()) {
-      throw std::invalid_argument(
+      throw std::runtime_error(
           "Column length could not be inferred! This is because "
           "you have "
           "tried to add an infinite length ColumnView to a data "
@@ -320,7 +320,7 @@ void DataFrameManager::add_string_column(const std::string& _name,
   const auto column_view = parser.parse(json_col);
 
   if (!exists && column_view.is_infinite()) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "Column length could not be inferred! This is because you have "
         "tried to add an infinite length ColumnView to a data frame "
         "that does not contain any columns yet.");
@@ -488,7 +488,7 @@ void DataFrameManager::calc_categorical_column_plots(
       vec[i] = col[i];
     }
   } else {
-    throw std::invalid_argument("Role '" + role + "' not known!");
+    throw std::runtime_error("Role '" + role + "' not known!");
   }
 
   std::vector<Float> targets;
@@ -572,7 +572,7 @@ std::pair<size_t, bool> DataFrameManager::check_nrows(
     df_name = JSON::get_value<std::string>(_obj, "df_name_");
 
     if (df_name == "") {
-      throw std::invalid_argument("df_name_ cannot be an empty string!");
+      throw std::runtime_error("df_name_ cannot be an empty string!");
     }
 
     if (df_name != _cmp_df_name) {
@@ -583,7 +583,7 @@ std::pair<size_t, bool> DataFrameManager::check_nrows(
       any_df_found = true;
 
       if (_cmp_df_name != "" && _cmp_nrows != nrows) {
-        throw std::invalid_argument(
+        throw std::runtime_error(
             "Cannot execute binary operation: '" + _cmp_df_name + "' has " +
             std::to_string(_cmp_nrows) + " rows, but '" + df_name + "' has " +
             std::to_string(nrows) + " rows.");
@@ -615,7 +615,7 @@ std::pair<size_t, bool> DataFrameManager::check_nrows(
       const auto ptr = arr->getObject(i);
 
       if (!ptr) {
-        throw std::invalid_argument("Could not parse aggregations!");
+        throw std::runtime_error("Could not parse aggregations!");
       }
 
       check_nrows(*ptr, df_name, nrows);
@@ -634,7 +634,7 @@ void DataFrameManager::concat(const std::string& _name,
       JSON::array_to_obj_vector(JSON::get_array(_cmd, "data_frames_"));
 
   if (data_frame_objs.size() == 0) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "You should provide at least one data frame or view to "
         "concatenate!");
   }
@@ -759,7 +759,7 @@ void DataFrameManager::df_to_s3(
     const std::shared_ptr<containers::Encoding>& _categories,
     const std::shared_ptr<containers::Encoding>& _join_keys_encoding) {
 #if (defined(_WIN32) || defined(_WIN64))
-  throw std::invalid_argument("S3 is not supported on Windows!");
+  throw std::runtime_error("S3 is not supported on Windows!");
 #else
 
   // We are using the bell character (\a) as the quotechar. It is least
@@ -1145,7 +1145,7 @@ void DataFrameManager::from_s3(const std::string& _name,
                                const bool _append,
                                Poco::Net::StreamSocket* _socket) {
 #if (defined(_WIN32) || defined(_WIN64))
-  throw std::invalid_argument("S3 is not supported on Windows!");
+  throw std::runtime_error("S3 is not supported on Windows!");
 #else
 
   const auto bucket = JSON::get_value<std::string>(_cmd, "bucket_");
@@ -1274,7 +1274,7 @@ void DataFrameManager::get_boolean_column(const std::string& _name,
           .parse(json_col);
 
   if (column_view.is_infinite()) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "The length of the column view is infinite! You can look at "
         "the column view, "
         "but you cannot retrieve it.");
@@ -1356,7 +1356,7 @@ void DataFrameManager::get_categorical_column(
           .parse(json_col);
 
   if (column_view.is_infinite()) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "The length of the column view is infinite! You can look at "
         "the column view, "
         "but you cannot retrieve it.");
@@ -1462,7 +1462,7 @@ void DataFrameManager::get_column(const std::string& _name,
           .parse(json_col);
 
   if (column_view.is_infinite()) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "The length of the column view is infinite! You can look at "
         "the column view, "
         "but you cannot retrieve it.");
@@ -1945,8 +1945,8 @@ void DataFrameManager::remove_column(const std::string& _name,
   const bool success = df.remove_column(name);
 
   if (!success) {
-    throw std::invalid_argument("Could not remove column. Column named '" +
-                                _name + "' not found.");
+    throw std::runtime_error("Could not remove column. Column named '" + _name +
+                             "' not found.");
   }
 
   monitor_->send_tcp("postdataframe", df.to_monitor(),
@@ -2200,7 +2200,7 @@ void DataFrameManager::to_s3(const std::string& _name,
                              const Poco::JSON::Object& _cmd,
                              Poco::Net::StreamSocket* _socket) {
 #if (defined(_WIN32) || defined(_WIN64))
-  throw std::invalid_argument("S3 is not supported on Windows!");
+  throw std::runtime_error("S3 is not supported on Windows!");
 #else
 
   const auto batch_size = JSON::get_value<size_t>(_cmd, "batch_size_");
@@ -2370,7 +2370,7 @@ void DataFrameManager::view_to_s3(const std::string& _name,
                                   const Poco::JSON::Object& _cmd,
                                   Poco::Net::StreamSocket* _socket) {
 #if (defined(_WIN32) || defined(_WIN64))
-  throw std::invalid_argument("S3 is not supported on Windows!");
+  throw std::runtime_error("S3 is not supported on Windows!");
 #else
 
   const auto batch_size = JSON::get_value<size_t>(_cmd, "batch_size_");

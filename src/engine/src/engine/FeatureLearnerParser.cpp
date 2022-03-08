@@ -41,8 +41,8 @@ std::shared_ptr<AbstractFeatureLearner> FeatureLearnerParser::parse(
         FeatureLearner<relmt::ensemble::DecisionTreeEnsemble>>(_params);
   }
 
-  throw std::invalid_argument("Feature learning algorithm of type '" + type +
-                              "' not known!");
+  throw std::runtime_error("Feature learning algorithm of type '" + type +
+                           "' not known!");
 
   return std::shared_ptr<AbstractFeatureLearner>();
 }

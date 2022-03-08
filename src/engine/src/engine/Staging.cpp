@@ -54,7 +54,7 @@ containers::DataFrame Staging::find_peripheral(
     const std::string& _name, const std::vector<std::string>& _peripheral_names,
     const std::vector<containers::DataFrame>& _peripheral_dfs) {
   if (_peripheral_dfs.size() != _peripheral_names.size()) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "The number of peripheral tables must match the number of "
         "placeholders passed. This is the point of having "
         "placeholders!");
@@ -66,8 +66,8 @@ containers::DataFrame Staging::find_peripheral(
     }
   }
 
-  throw std::invalid_argument("Could not find any placeholder named '" + _name +
-                              "' among the peripheral placeholders!");
+  throw std::runtime_error("Could not find any placeholder named '" + _name +
+                           "' among the peripheral placeholders!");
 
   return _peripheral_dfs.at(0);
 }
@@ -222,7 +222,7 @@ std::vector<size_t> Staging::make_index(
   // -------------------------------------------------------
 
   if ((time_stamp && true) != (other_time_stamp && true)) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "If you pass a time stamp, there must also be another time "
         "stamp and vice versa!");
   }
@@ -241,22 +241,21 @@ std::vector<size_t> Staging::make_index(
                        other_time_stamp, upper_time_stamp);
 
     if (!ok) {
-      throw std::invalid_argument("The join of '" + _population.name() +
-                                  "' and '" + _peripheral.name() +
-                                  "' was marked many-to-one or one-to-one, "
-                                  "but there is more than one "
-                                  "match in '" +
-                                  _peripheral.name() + "'.");
+      throw std::runtime_error("The join of '" + _population.name() +
+                               "' and '" + _peripheral.name() +
+                               "' was marked many-to-one or one-to-one, "
+                               "but there is more than one "
+                               "match in '" +
+                               _peripheral.name() + "'.");
     }
 
     if (_one_to_one && ix < _population.nrows()) {
       if (unique_indices.find(ix) != unique_indices.end()) {
-        throw std::invalid_argument(
-            "The join of '" + _population.name() + "' and '" +
-            _peripheral.name() +
-            "' was marked one-to-one, but there is more "
-            "than one match in '" +
-            _population.name() + "'.");
+        throw std::runtime_error("The join of '" + _population.name() +
+                                 "' and '" + _peripheral.name() +
+                                 "' was marked one-to-one, but there is more "
+                                 "than one match in '" +
+                                 _population.name() + "'.");
       }
 
       unique_indices.insert(ix);

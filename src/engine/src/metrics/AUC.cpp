@@ -284,7 +284,7 @@ Poco::JSON::Object AUC::score(const Features _yhat, const Features _y) {
   // -----------------------------------------------------
 
   if (nrows() < 1) {
-    std::invalid_argument(
+    std::runtime_error(
         "There needs to be at least one row for the AUC score to "
         "work!");
   }

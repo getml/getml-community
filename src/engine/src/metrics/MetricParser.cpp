@@ -25,7 +25,7 @@ std::shared_ptr<Metric> MetricParser::parse(
   } else if (_type == "rsquared_") {
     return std::make_shared<RSquared>(_comm);
   } else {
-    throw std::invalid_argument("Metric of type '" + _type + "' not known!");
+    throw std::runtime_error("Metric of type '" + _type + "' not known!");
   }
 }
 

@@ -21,8 +21,8 @@ Float AggOpParser::categorical_aggregation(
   } else if (_type == "count_distinct") {
     return utils::Aggregations::count_distinct(col.begin(), col.end());
   } else {
-    throw std::invalid_argument("Aggregation '" + _type +
-                                "' not recognized for a categorical column.");
+    throw std::runtime_error("Aggregation '" + _type +
+                             "' not recognized for a categorical column.");
 
     return 0.0;
   }
@@ -68,8 +68,8 @@ Float AggOpParser::numerical_aggregation(const std::string& _type,
   } else if (_type == "var") {
     return utils::Aggregations::var(col.begin(), col.end());
   } else {
-    throw std::invalid_argument("Aggregation '" + _type +
-                                "' not recognized for a numerical column.");
+    throw std::runtime_error("Aggregation '" + _type +
+                             "' not recognized for a numerical column.");
 
     return 0.0;
   }

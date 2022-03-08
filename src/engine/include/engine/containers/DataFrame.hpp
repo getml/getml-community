@@ -798,10 +798,11 @@ class DataFrame {
                                    const std::string &_coltype) const {
     const auto [table, colname] =
         helpers::Macros::parse_table_colname(name_, _colname);
-    throw std::invalid_argument(
-        "Data frame '" + table + "' contains no " + _coltype + " named '" +
-        transpilation::SQLite3Generator().make_staging_table_colname(colname) +
-        "'!");
+    const auto staging_table_colname =
+        transpilation::SQLite3Generator().make_staging_table_colname(colname);
+    throw std::runtime_error("Data frame '" + table + "' contains no " +
+                             _coltype + " named '" + staging_table_colname +
+                             "'!");
   }
 
   /// Records the current time as the last time something was changed.
@@ -1005,25 +1006,17 @@ void DataFrame::save_matrices(const std::vector<Column<T>> &_matrices,
 template <typename DataFrameType>
 DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
                                       const bool _targets) const {
-  // ------------------------------------------------------------------------
-
   using FloatColumnType = typename DataFrameType::FloatColumnType;
   using IntColumnType = typename DataFrameType::IntColumnType;
   using MapType = typename containers::DataFrameIndex::MapType;
   using StringColumnType = typename DataFrameType::StringColumnType;
 
-  // ------------------------------------------------------------------------
-
   const auto schema = _schema.value_or(to_schema(true));
-
-  // ------------------------------------------------------------------------
 
   const auto parse = [](const std::vector<std::string> &_vec)
       -> std::vector<helpers::Subrole> {
     return helpers::SubroleParser::parse(_vec);
   };
-
-  // ------------------------------------------------------------------------
 
   const auto get_categorical = [this, parse](const std::string &_name) {
     const auto &col = categorical(_name);
@@ -1034,8 +1027,6 @@ DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
   const auto categoricals = stl::collect::vector<IntColumnType>(
       schema.categoricals_ | VIEWS::transform(get_categorical));
 
-  // ------------------------------------------------------------------------
-
   const auto get_join_key = [this, parse](const std::string &_name) {
     const auto &col = join_key(_name);
     return IntColumnType(col.const_data_ptr(), _name, parse(col.subroles()),
@@ -1045,16 +1036,12 @@ DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
   const auto join_keys = stl::collect::vector<IntColumnType>(
       schema.join_keys_ | VIEWS::transform(get_join_key));
 
-  // ------------------------------------------------------------------------
-
   const auto get_index = [this](const std::string &_name) {
     return index(_name).map();
   };
 
   const auto indices = stl::collect::vector<std::shared_ptr<MapType>>(
       schema.join_keys_ | VIEWS::transform(get_index));
-
-  // ------------------------------------------------------------------------
 
   const auto get_numerical = [this, parse](const std::string &_name) {
     const auto &col = numerical(_name);
@@ -1068,8 +1055,6 @@ DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
   const auto numericals = stl::collect::vector<FloatColumnType>(
       schema.numericals_ | VIEWS::transform(get_numerical));
 
-  // ------------------------------------------------------------------------
-
   const auto get_target = [this, parse](const std::string &_name) {
     const auto &col = target(_name);
     return FloatColumnType(col.const_data_ptr(), _name, parse(col.subroles()),
@@ -1081,8 +1066,6 @@ DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
                                  schema.targets_ | VIEWS::transform(get_target))
                            : std::vector<FloatColumnType>();
 
-  // ------------------------------------------------------------------------
-
   const auto get_text = [this, parse](const std::string &_name) {
     const auto &col = text(_name);
     return StringColumnType(col.const_data_ptr(), _name, parse(col.subroles()),
@@ -1092,8 +1075,6 @@ DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
   const auto text = stl::collect::vector<StringColumnType>(
       schema.text_ | VIEWS::transform(get_text));
 
-  // ------------------------------------------------------------------------
-
   const auto get_time_stamp = [this, parse](const std::string &_name) {
     const auto &col = time_stamp(_name);
     return FloatColumnType(col.const_data_ptr(), _name, parse(col.subroles()),
@@ -1102,8 +1083,6 @@ DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
 
   const auto time_stamps = stl::collect::vector<FloatColumnType>(
       schema.time_stamps_ | VIEWS::transform(get_time_stamp));
-
-  // ------------------------------------------------------------------------
 
   const auto params = helpers::DataFrameParams{.categoricals_ = categoricals,
                                                .discretes_ = discretes,
@@ -1116,9 +1095,8 @@ DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
                                                .time_stamps_ = time_stamps};
 
   return DataFrameType(params);
-
-  // ------------------------------------------------------------------------
 }
+
 // -------------------------------------------------------------------------
 }  // namespace containers
 }  // namespace engine

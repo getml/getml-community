@@ -167,8 +167,8 @@ parquet::Compression::type ArrowHandler::parse_compression(
     return parquet::Compression::ZSTD;
   }
 
-  throw std::invalid_argument("Unknown compression format: '" + _compression +
-                              "'.");
+  throw std::runtime_error("Unknown compression format: '" + _compression +
+                           "'.");
 }
 
 // ----------------------------------------------------------------------------
@@ -1083,8 +1083,8 @@ typename ArrowHandler::FloatFunction ArrowHandler::write_to_float_column(
     return *func;
   }
 
-  throw std::invalid_argument("Unsupported field type for field '" + _name +
-                              "': " + _chunk->type()->name() + ".");
+  throw std::runtime_error("Unsupported field type for field '" + _name +
+                           "': " + _chunk->type()->name() + ".");
 
   return [](const std::int64_t _i) -> Float { return 0.0; };
 }
@@ -1136,8 +1136,8 @@ typename ArrowHandler::StringFunction ArrowHandler::write_to_string_column(
     return *func;
   }
 
-  throw std::invalid_argument("Unsupported field type for field '" + _name +
-                              "': " + _chunk->type()->name() + ".");
+  throw std::runtime_error("Unsupported field type for field '" + _name +
+                           "': " + _chunk->type()->name() + ".");
 
   return [](const std::int64_t _i) -> strings::String {
     return strings::String("");

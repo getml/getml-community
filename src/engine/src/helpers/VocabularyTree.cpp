@@ -39,8 +39,8 @@ typename VocabularyTree::VocabForDf VocabularyTree::find_peripheral(
                             _placeholder.name_);
 
   if (it == _peripheral_names.end()) {
-    throw std::invalid_argument("Peripheral table named '" +
-                                _placeholder.name_ + "' not found!");
+    throw std::runtime_error("Peripheral table named '" + _placeholder.name_ +
+                             "' not found!");
   }
 
   const auto ix = std::distance(_peripheral_names.begin(), it);

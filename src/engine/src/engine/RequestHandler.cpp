@@ -7,10 +7,10 @@ namespace srv {
 void RequestHandler::run() {
   try {
     if (socket().peerAddress().host().toString() != "127.0.0.1") {
-      throw std::invalid_argument("Illegal connection attempt from " +
-                                  socket().peerAddress().toString() +
-                                  "! Only connections from localhost "
-                                  "(127.0.0.1) are allowed!");
+      throw std::runtime_error("Illegal connection attempt from " +
+                               socket().peerAddress().toString() +
+                               "! Only connections from localhost "
+                               "(127.0.0.1) are allowed!");
     }
 
     const Poco::JSON::Object cmd =
@@ -256,7 +256,7 @@ void RequestHandler::run() {
     } else if (type == "View.to_s3") {
       data_frame_manager().view_to_s3(name, cmd, &socket());
     } else {
-      throw std::invalid_argument("Unknown command: '" + type + "'");
+      throw std::runtime_error("Unknown command: '" + type + "'");
     }
   } catch (std::exception& e) {
     logger_->log(std::string("Error: ") + e.what());

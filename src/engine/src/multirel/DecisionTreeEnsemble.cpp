@@ -72,7 +72,7 @@ std::pair<Int, std::vector<size_t>> DecisionTreeEnsemble::calc_thread_nums(
 void DecisionTreeEnsemble::check_plausibility_of_targets(
     const containers::DataFrame &_population_table) {
   if (_population_table.num_targets() < 1) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "The population table must have at least one target "
         "column!");
   }
@@ -81,7 +81,7 @@ void DecisionTreeEnsemble::check_plausibility_of_targets(
     for (size_t i = 0; i < _population_table.nrows(); ++i) {
       if (std::isnan(_population_table.target(i, j)) ||
           std::isinf(_population_table.target(i, j))) {
-        throw std::invalid_argument(
+        throw std::runtime_error(
             "Target values can not be NULL or "
             "infinite!");
       }
@@ -93,7 +93,7 @@ void DecisionTreeEnsemble::check_plausibility_of_targets(
       for (size_t i = 0; i < _population_table.nrows(); ++i) {
         if (_population_table.target(i, j) != 0.0 &&
             _population_table.target(i, j) != 1.0) {
-          throw std::invalid_argument(
+          throw std::runtime_error(
               "Target values for a "
               "classification "
               "problem have to be 0.0 or 1.0!");
@@ -237,11 +237,11 @@ void DecisionTreeEnsemble::fit(
   // ----------------------------------------------------------------
 
   if (_table_holder->main_tables().size() == 0) {
-    throw std::invalid_argument("You need to provide a population table!");
+    throw std::runtime_error("You need to provide a population table!");
   }
 
   if (_table_holder->main_tables()[0].nrows() == 0) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "Your population table needs to contain at least one "
         "row!");
   }
@@ -305,7 +305,7 @@ void DecisionTreeEnsemble::fit(
   // functionality
 
   if (hyperparameters().seed_ < 0) {
-    throw std::invalid_argument("Seed must be positive!");
+    throw std::runtime_error("Seed must be positive!");
   }
 
   assert_true(_table_holder->main_tables().size() > 0);

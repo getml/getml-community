@@ -17,7 +17,7 @@ std::shared_ptr<LossFunction> LossFunctionParser::parse_loss_function(
     warning_message.append(_loss_function);
     warning_message.append("' not known!");
 
-    throw std::invalid_argument(warning_message);
+    throw std::runtime_error(warning_message);
   }
 }
 

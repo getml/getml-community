@@ -44,7 +44,7 @@ void DatabaseManager::copy_table(const Poco::JSON::Object& _cmd,
       JSON::get_value<std::string>(_cmd, "target_table_");
 
   if (source_conn_id == target_conn_id) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "Tables must be copied from different database connections!");
   }
 
@@ -335,12 +335,12 @@ void DatabaseManager::read_csv(const std::string& _name,
   const auto skip = JSON::get_value<size_t>(_cmd, "skip_");
 
   if (quotechar.size() != 1) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "The quotechar must consist of exactly one character!");
   }
 
   if (sep.size() != 1) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "The separator (sep) must consist of exactly one character!");
   }
 
@@ -367,7 +367,7 @@ void DatabaseManager::read_s3(const std::string& _name,
                               const Poco::JSON::Object& _cmd,
                               Poco::Net::StreamSocket* _socket) {
 #if (defined(_WIN32) || defined(_WIN64))
-  throw std::invalid_argument("S3 is not supported on Windows!");
+  throw std::runtime_error("S3 is not supported on Windows!");
 #else
 
   const auto bucket = JSON::get_value<std::string>(_cmd, "bucket_");
@@ -393,7 +393,7 @@ void DatabaseManager::read_s3(const std::string& _name,
   const auto skip = JSON::get_value<size_t>(_cmd, "skip_");
 
   if (sep.size() != 1) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "The separator (sep) must consist of exactly one character!");
   }
 
@@ -458,17 +458,17 @@ void DatabaseManager::sniff_csv(const std::string& _name,
                                     : connector(conn_id)->describe();
 
   if (_cmd.has("dialect_") && dialect != "python") {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "If you explicitly pass a dialect, it must be 'python'!");
   }
 
   if (quotechar.size() != 1) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "The quotechar must consist of exactly one character!");
   }
 
   if (sep.size() != 1) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "The separator (sep) must consist of exactly one character!");
   }
 
@@ -489,7 +489,7 @@ void DatabaseManager::sniff_s3(const std::string& _name,
                                const Poco::JSON::Object& _cmd,
                                Poco::Net::StreamSocket* _socket) const {
 #if (defined(_WIN32) || defined(_WIN64))
-  throw std::invalid_argument("S3 is not supported on Windows!");
+  throw std::runtime_error("S3 is not supported on Windows!");
 #else
 
   const auto bucket = JSON::get_value<std::string>(_cmd, "bucket_");
@@ -524,12 +524,12 @@ void DatabaseManager::sniff_s3(const std::string& _name,
                                     : connector(conn_id)->describe();
 
   if (_cmd.has("dialect_") && dialect != "python") {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "If you explicitly pass a dialect, it must be 'python'!");
   }
 
   if (sep.size() != 1) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "The separator (sep) must consist of exactly one character!");
   }
 

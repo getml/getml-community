@@ -217,7 +217,7 @@ std::pair<Int, std::vector<size_t>> DecisionTreeEnsemble::calc_thread_nums(
 void DecisionTreeEnsemble::check_plausibility_of_targets(
     const containers::DataFrame &_population_table) {
   if (_population_table.num_targets() < 1) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "The population table must have at least one target column!");
   }
 
@@ -225,8 +225,7 @@ void DecisionTreeEnsemble::check_plausibility_of_targets(
     for (size_t i = 0; i < _population_table.nrows(); ++i) {
       if (std::isnan(_population_table.target(i, j)) ||
           std::isinf(_population_table.target(i, j))) {
-        throw std::invalid_argument(
-            "Target values can not be NULL or infinite!");
+        throw std::runtime_error("Target values can not be NULL or infinite!");
       }
     }
   }
@@ -236,7 +235,7 @@ void DecisionTreeEnsemble::check_plausibility_of_targets(
       for (size_t i = 0; i < _population_table.nrows(); ++i) {
         if (_population_table.target(i, j) != 0.0 &&
             _population_table.target(i, j) != 1.0) {
-          throw std::invalid_argument(
+          throw std::runtime_error(
               "Target values for a classification "
               "problem have to be 0.0 or 1.0!");
         }
@@ -580,7 +579,7 @@ void DecisionTreeEnsemble::fit_spawn_threads(
       thr.join();
     }
 
-    throw std::invalid_argument(e.what());
+    throw std::runtime_error(e.what());
   }
 
   // ------------------------------------------------------
@@ -992,7 +991,7 @@ void DecisionTreeEnsemble::transform_spawn_threads(
       thr.join();
     }
 
-    throw std::invalid_argument(e.what());
+    throw std::runtime_error(e.what());
   }
 
   // ------------------------------------------------------

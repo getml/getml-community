@@ -463,7 +463,7 @@ containers::DataFrame FastProp::find_peripheral(
     const std::vector<containers::DataFrame> &_peripheral,
     const std::string &_name) const {
   if (_peripheral.size() < peripheral().size()) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "The number of peripheral tables does not match the number "
         "of "
         "peripheral placeholders.");
@@ -485,7 +485,7 @@ size_t FastProp::find_peripheral_ix(const std::string &_name) const {
     }
   }
 
-  throw std::invalid_argument("Placeholder named '" + _name + "' not found.");
+  throw std::runtime_error("Placeholder named '" + _name + "' not found.");
 
   return 0;
 }
@@ -1269,14 +1269,14 @@ void FastProp::make_lag_conditions(
   }
 
   if (hyperparameters().delta_t_ <= 0.0 && hyperparameters().max_lag_ > 0) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "FastProp: If you pass a max_lag, you must also pass a delta_t "
         "that is "
         "greater than 0.");
   }
 
   if (hyperparameters().delta_t_ > 0.0 && hyperparameters().max_lag_ == 0) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "FastProp: If you pass a delta_t, you must also pass a max_lag "
         "that is "
         "greater than 0.");

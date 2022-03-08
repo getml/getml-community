@@ -219,7 +219,7 @@ AggregationParser<BaseAggregationType, ParamsType>::parse_aggregation(
   const auto warning_message =
       "Aggregation of type '" + _params.aggregation_type_ + "' not known!";
 
-  throw std::invalid_argument(warning_message);
+  throw std::runtime_error(warning_message);
 }
 
 // ----------------------------------------------------------------------------

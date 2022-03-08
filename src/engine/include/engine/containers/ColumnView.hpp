@@ -242,7 +242,7 @@ ColumnView<T> ColumnView<T>::from_bin_op(const ColumnView<T1>& _operand1,
         _op;
 
     if (nrows_do_not_match) {
-      throw std::invalid_argument(
+      throw std::runtime_error(
           "Number of rows between two columns do not "
           "match, which is necessary for binary "
           "operations to be possible.");
@@ -274,7 +274,7 @@ ColumnView<T> ColumnView<T>::from_bin_op(const ColumnView<T1>& _operand1,
             std::get<size_t>(_operand2.nrows());
 
     if (nrows_do_not_match) {
-      throw std::invalid_argument(
+      throw std::runtime_error(
           "Number of rows between two columns do not "
           "match, which is necessary for binary "
           "operations to be possible: " +
@@ -314,7 +314,7 @@ ColumnView<T> ColumnView<T>::from_boolean_subselection(
       std::get<size_t>(_data.nrows()) != std::get<size_t>(_indices.nrows());
 
   if (nrows_do_not_match) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "Number of rows between two columns do not "
         "match, which is necessary for subselection "
         "operations on a boolean column to be possible: " +
@@ -323,7 +323,7 @@ ColumnView<T> ColumnView<T>::from_boolean_subselection(
   }
 
   if (_data.is_infinite()) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "The data or the indices must be finite for a boolean "
         "subselection to work!");
   }
@@ -497,7 +497,7 @@ ColumnView<T> ColumnView<T>::from_tern_op(const ColumnView<T1>& _operand1,
         _op;
 
     if (nrows_do_not_match) {
-      throw std::invalid_argument(
+      throw std::runtime_error(
           "Number of rows between two columns do not "
           "match, which is necessary for ternary "
           "operations to be possible.");
@@ -539,7 +539,7 @@ ColumnView<T> ColumnView<T>::from_tern_op(const ColumnView<T1>& _operand1,
             std::get<size_t>(_operand2.nrows());
 
     if (nrows_do_not_match) {
-      throw std::invalid_argument(
+      throw std::runtime_error(
           "Number of rows between two columns do not "
           "match, which is necessary for ternary "
           "operations to be possible.");
@@ -678,8 +678,8 @@ void ColumnView<T>::check_exceeds_expected(
       value_func_(_begin + _expected_length);
 
   if (exceeds_expected_by_unknown_number) {
-    throw std::invalid_argument("Expected " + std::to_string(_expected_length) +
-                                " nrows, but there were more.");
+    throw std::runtime_error("Expected " + std::to_string(_expected_length) +
+                             " nrows, but there were more.");
   }
 }
 
@@ -694,13 +694,13 @@ void ColumnView<T>::check_expected_length(
                                   std::get<size_t>(nrows()) != _expected_length;
 
   if (nrows_do_not_match) {
-    throw std::invalid_argument(
-        "Expected " + std::to_string(_expected_length) + " nrows, but got " +
-        std::to_string(std::get<size_t>(nrows())) + ".");
+    throw std::runtime_error("Expected " + std::to_string(_expected_length) +
+                             " nrows, but got " +
+                             std::to_string(std::get<size_t>(nrows())) + ".");
   }
 
   if (_expected_length_not_passed && is_infinite()) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "The length of the column view is infinite. You can look "
         "at "
         "it, but it cannot be transformed into an actual column "
@@ -760,9 +760,9 @@ std::shared_ptr<std::vector<T>> ColumnView<T>::make_sequential(
   }
 
   if (_nrows_must_match && data_ptr->size() != _expected_length) {
-    throw std::invalid_argument("Expected " + std::to_string(_expected_length) +
-                                " nrows, but got " +
-                                std::to_string(data_ptr->size()) + ".");
+    throw std::runtime_error("Expected " + std::to_string(_expected_length) +
+                             " nrows, but got " +
+                             std::to_string(data_ptr->size()) + ".");
   }
 
   return data_ptr;
@@ -801,7 +801,7 @@ std::shared_ptr<std::vector<T>> ColumnView<T>::to_vector(
 template <class T>
 std::shared_ptr<arrow::ChunkedArray> ColumnView<T>::unique() const {
   if (is_infinite()) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "You cannot retrieve unique values from an infinite column!");
   }
 

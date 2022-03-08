@@ -67,7 +67,7 @@ std::string StatementMaker::make_statement(
     return make_statement_sqlite(_table_name, _colnames, _datatypes);
   }
 
-  throw std::invalid_argument("SQL dialect '" + _dialect + "' not known!");
+  throw std::runtime_error("SQL dialect '" + _dialect + "' not known!");
 
   return "";
 }

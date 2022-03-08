@@ -45,18 +45,17 @@ void DataFrameScatterer::check_plausibility(
     const std::vector<containers::Column<Int>>& _keys,
     const size_t _num_threads) {
   if (_keys.size() == 0) {
-    throw std::invalid_argument("You must provide at least one join key!");
+    throw std::runtime_error("You must provide at least one join key!");
   }
 
   for (auto& key : _keys) {
     if (key.nrows_ != _keys[0].nrows_) {
-      throw std::invalid_argument(
-          "All keys must have the same number of rows!");
+      throw std::runtime_error("All keys must have the same number of rows!");
     }
   }
 
   if (_num_threads <= 0) {
-    throw std::invalid_argument("Number of threads must be positive!");
+    throw std::runtime_error("Number of threads must be positive!");
   }
 }
 

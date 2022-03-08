@@ -98,11 +98,11 @@ class MySQLIterator : public Iterator {
   /// Prevents segfaults before getting the next entry.
   void check() {
     if (end()) {
-      throw std::invalid_argument("End of query is reached.");
+      throw std::runtime_error("End of query is reached.");
     }
 
     if (colnum_ >= num_cols_) {
-      throw std::invalid_argument("Row number out of bounds.");
+      throw std::runtime_error("Row number out of bounds.");
     }
   }
 

@@ -258,7 +258,7 @@ class FeatureLearner : public AbstractFeatureLearner {
   /// Trivial accessor.
   FeatureLearnerType& feature_learner() {
     if (!feature_learner_) {
-      throw std::invalid_argument(
+      throw std::runtime_error(
           "Feature learning algorithm has not been fitted!");
     }
 
@@ -268,7 +268,7 @@ class FeatureLearner : public AbstractFeatureLearner {
   /// Trivial accessor.
   const FeatureLearnerType& feature_learner() const {
     if (!feature_learner_) {
-      throw std::invalid_argument(
+      throw std::runtime_error(
           "Feature learning algorithm has not been fitted!");
     }
 
@@ -416,8 +416,6 @@ typename FeatureLearnerType::DataFrameType
 FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
     const SchemaType& _schema, const containers::DataFrame& _df,
     const Int _target_num, const bool _apply_subroles) const {
-  // ------------------------------------------------------------------------
-
   assert_true(_target_num < 0 ||
               static_cast<size_t>(_target_num) < _schema.targets_.size());
 
@@ -437,11 +435,11 @@ FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
       return true;
     }
 
-    throw std::invalid_argument("Target '" + _name +
-                                "' not found in data frame '" + _df.name() +
-                                "', but is required to generate the "
-                                "prediction. This is because you have set "
-                                "allow_lagged_targets to True.");
+    throw std::runtime_error("Target '" + _name +
+                             "' not found in data frame '" + _df.name() +
+                             "', but is required to generate the "
+                             "prediction. This is because you have set "
+                             "allow_lagged_targets to True.");
 
     return false;
   };
@@ -449,13 +447,9 @@ FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
   const auto targets = stl::collect::vector<std::string>(
       _schema.targets_ | VIEWS::filter(include_target));
 
-  // ------------------------------------------------------------------------
-
   const auto include = [this, &_df](const std::string& _colname) -> bool {
     return parse_subroles(_df.subroles(_colname));
   };
-
-  // ------------------------------------------------------------------------
 
   const auto categoricals =
       _apply_subroles ? stl::collect::vector<std::string>(
@@ -477,8 +471,6 @@ FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
                               _schema.text_ | VIEWS::filter(include))
                         : _schema.text_;
 
-  // ------------------------------------------------------------------------
-
   const auto schema =
       containers::Schema{.categoricals_ = categoricals,
                          .discretes_ = discretes,
@@ -490,11 +482,7 @@ FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
                          .unused_floats_ = _schema.unused_floats_,
                          .unused_strings_ = _schema.unused_strings_};
 
-  // ------------------------------------------------------------------------
-
   return _df.to_immutable<typename FeatureLearnerType::DataFrameType>(schema);
-
-  // ------------------------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
@@ -508,30 +496,22 @@ FeatureLearner<FeatureLearnerType>::extract_tables_by_colnames(
     const helpers::Schema& _population_schema,
     const std::vector<helpers::Schema>& _peripheral_schema,
     const bool _apply_subroles, const bool _population_needs_targets) const {
-  // -------------------------------------------------------------------------
-
   const auto population_table = extract_table_by_colnames(
       _population_schema, _population_df,
       _population_needs_targets ? target_num_
                                 : AbstractFeatureLearner::IGNORE_TARGETS,
       _apply_subroles);
 
-  // ------------------------------------------------
-
   if (_peripheral_schema.size() != _peripheral_dfs.size()) {
-    throw std::invalid_argument("Expected " +
-                                std::to_string(_peripheral_schema.size()) +
-                                " peripheral tables, got " +
-                                std::to_string(_peripheral_dfs.size()) + ".");
+    throw std::runtime_error("Expected " +
+                             std::to_string(_peripheral_schema.size()) +
+                             " peripheral tables, got " +
+                             std::to_string(_peripheral_dfs.size()) + ".");
   }
-
-  // ------------------------------------------------
 
   const auto peripheral_needs_targets = infer_needs_targets();
 
   assert_true(peripheral_needs_targets.size() == _peripheral_schema.size());
-
-  // ------------------------------------------------
 
   const auto to_peripheral =
       [this, &peripheral_needs_targets, &_peripheral_schema, &_peripheral_dfs,
@@ -549,11 +529,7 @@ FeatureLearner<FeatureLearnerType>::extract_tables_by_colnames(
   const auto peripheral_tables = stl::collect::vector<DataFrameType>(
       iota | VIEWS::transform(to_peripheral));
 
-  // ------------------------------------------------
-
   return std::make_pair(population_table, peripheral_tables);
-
-  // ------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -654,7 +630,7 @@ FeatureLearner<FeatureLearnerType>::fit_propositionalization(
             is_true);
 
     if (all_propositionalization) {
-      throw std::invalid_argument(
+      throw std::runtime_error(
           "All joins in the data model have been set to "
           "propositionalization. You should use FastProp "
           "instead.");
@@ -787,7 +763,7 @@ Poco::JSON::Object FeatureLearner<FeatureLearnerType>::load_json_obj(
 
     input.close();
   } else {
-    throw std::invalid_argument("File '" + _fname + "' not found!");
+    throw std::runtime_error("File '" + _fname + "' not found!");
   }
 
   const auto ptr =

@@ -104,7 +104,7 @@ size_t PredictorImpl::check_plausibility(
     const std::vector<IntFeature>& _X_categorical,
     const std::vector<FloatFeature>& _X_numerical) const {
   if (_X_categorical.size() == 0 && _X_numerical.size() == 0) {
-    throw std::invalid_argument("You must provide at least one input column!");
+    throw std::runtime_error("You must provide at least one input column!");
   }
 
   size_t expected_size = 0;
@@ -117,7 +117,7 @@ size_t PredictorImpl::check_plausibility(
 
   for (const auto& X : _X_categorical) {
     if (X.size() != expected_size) {
-      throw std::invalid_argument(
+      throw std::runtime_error(
           "All input columns must have the same "
           "length!");
     }
@@ -125,8 +125,7 @@ size_t PredictorImpl::check_plausibility(
 
   for (const auto& X : _X_numerical) {
     if (X.size() != expected_size) {
-      throw std::invalid_argument(
-          "All input columns must have the same length!");
+      throw std::runtime_error("All input columns must have the same length!");
     }
   }
 
@@ -142,7 +141,7 @@ void PredictorImpl::check_plausibility(
   const auto expected_size = check_plausibility(_X_categorical, _X_numerical);
 
   if (_y.size() != expected_size) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "Length of targets must be the same as the length of the input "
         "columns!");
   }

@@ -67,8 +67,7 @@ XGBoostMatrix XGBoostPredictor::convert_to_memory_mapped_dmatrix_dense(
     const std::vector<FloatFeature> &_X_numerical,
     const std::optional<FloatFeature> &_y) const {
   if (_X_numerical.size() == 0) {
-    throw std::invalid_argument(
-        "You must provide at least one column of data!");
+    throw std::runtime_error("You must provide at least one column of data!");
   }
 
   assert_true(_X_numerical.at(0).is_memory_mapped());
@@ -106,8 +105,7 @@ XGBoostMatrix XGBoostPredictor::convert_to_memory_mapped_dmatrix_sparse(
     const std::vector<FloatFeature> &_X_numerical,
     const std::optional<FloatFeature> &_y) const {
   if (_X_categorical.size() == 0) {
-    throw std::invalid_argument(
-        "You must provide at least one column of data!");
+    throw std::runtime_error("You must provide at least one column of data!");
   }
 
   auto iter = std::make_unique<XGBoostIteratorSparse>(_X_categorical,
@@ -139,15 +137,14 @@ typename XGBoostPredictor::DMatrixPtr
 XGBoostPredictor::convert_to_in_memory_dmatrix_dense(
     const std::vector<FloatFeature> &_X_numerical) const {
   if (_X_numerical.size() == 0) {
-    throw std::invalid_argument(
-        "You must provide at least one column of data!");
+    throw std::runtime_error("You must provide at least one column of data!");
   }
 
   std::vector<float> mat_float(_X_numerical.size() * _X_numerical[0].size());
 
   for (size_t j = 0; j < _X_numerical.size(); ++j) {
     if (_X_numerical[j].size() != _X_numerical[0].size()) {
-      throw std::invalid_argument("All columns must have the same length!");
+      throw std::runtime_error("All columns must have the same length!");
     }
 
     for (size_t i = 0; i < _X_numerical[j].size(); ++i) {
@@ -179,10 +176,10 @@ XGBoostPredictor::convert_to_in_memory_dmatrix_sparse(
     const std::vector<IntFeature> &_X_categorical,
     const std::vector<FloatFeature> &_X_numerical) const {
   if (impl().n_encodings() != _X_categorical.size()) {
-    throw std::invalid_argument("Expected " +
-                                std::to_string(impl().n_encodings()) +
-                                " categorical columns, got " +
-                                std::to_string(_X_categorical.size()) + ".");
+    throw std::runtime_error("Expected " +
+                             std::to_string(impl().n_encodings()) +
+                             " categorical columns, got " +
+                             std::to_string(_X_categorical.size()) + ".");
   }
 
   const auto csr_mat = impl().make_csr<float, unsigned int, size_t>(
@@ -322,7 +319,7 @@ std::string XGBoostPredictor::fit(
   bst_ulong len = 0;
 
   if (XGBoosterGetModelRaw(*handle, &len, &out_dptr) != 0) {
-    throw std::invalid_argument("Storing of booster failed!");
+    throw std::runtime_error("Storing of booster failed!");
   }
 
   model_ = std::vector<char>(out_dptr, out_dptr + len);
@@ -425,7 +422,7 @@ void XGBoostPredictor::load(const std::string &_fname) {
   bst_ulong len = 0;
 
   if (XGBoosterGetModelRaw(*handle, &len, &out_dptr) != 0) {
-    throw std::invalid_argument("Storing of booster failed!");
+    throw std::runtime_error("Storing of booster failed!");
   }
 
   model_ = std::vector<char>(out_dptr, out_dptr + len);
@@ -438,7 +435,7 @@ XGBoostMatrix XGBoostPredictor::make_matrix(
     const std::vector<FloatFeature> &_X_numerical,
     const std::optional<FloatFeature> &_y) const {
   if (_X_categorical.size() == 0 && _X_numerical.size() == 0) {
-    throw std::invalid_argument("You must provide at least some features!");
+    throw std::runtime_error("You must provide at least some features!");
   }
 
   const bool is_memory_mapped = _X_numerical.size() > 0

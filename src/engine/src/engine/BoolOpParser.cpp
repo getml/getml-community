@@ -22,7 +22,7 @@ containers::ColumnView<bool> BoolOpParser::binary_operation(
 
   if (helpers::StringReplacer::replace_all(operand_type, "View", "") !=
       helpers::StringReplacer::replace_all(operand2_type, "View", "")) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "You are trying to compare two different column types: " +
         operand_type + " vs. " + operand2_type + ".");
   }
@@ -96,8 +96,8 @@ containers::ColumnView<bool> BoolOpParser::binary_operation(
     return bin_op(_col, std::not_equal_to<bool>());
   }
 
-  throw std::invalid_argument("Operator '" + op +
-                              "' not recognized for boolean columns.");
+  throw std::runtime_error("Operator '" + op +
+                           "' not recognized for boolean columns.");
 
   return bin_op(_col, std::logical_and<bool>());
 }
@@ -127,8 +127,8 @@ containers::ColumnView<bool> BoolOpParser::parse(
     }
   }
 
-  throw std::invalid_argument("Column of type '" + type +
-                              "' not recognized for boolean columns.");
+  throw std::runtime_error("Column of type '" + type +
+                           "' not recognized for boolean columns.");
 
   return unary_operation(_col);
 }
@@ -174,8 +174,8 @@ containers::ColumnView<bool> BoolOpParser::unary_operation(
   } else if (op == "not") {
     return un_op(_col, std::logical_not<bool>());
   } else {
-    throw std::invalid_argument("Operator '" + op +
-                                "' not recognized for boolen columns.");
+    throw std::runtime_error("Operator '" + op +
+                             "' not recognized for boolen columns.");
 
     return un_op(_col, std::logical_not<bool>());
   }

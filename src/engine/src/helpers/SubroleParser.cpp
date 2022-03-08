@@ -97,7 +97,7 @@ Subrole SubroleParser::parse(const std::string& _str) {
     return Subrole::substring_only;
   }
 
-  throw std::invalid_argument("Unknown subrole: '" + _str + "'.");
+  throw std::runtime_error("Unknown subrole: '" + _str + "'.");
 
   return Subrole::comparison_only;
 }

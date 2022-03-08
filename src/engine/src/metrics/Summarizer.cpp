@@ -8,8 +8,7 @@ Poco::JSON::Object Summarizer::calc_categorical_column_plot(
   // ------------------------------------------------------------------------
 
   if (_num_bins > 100000) {
-    throw std::invalid_argument(
-        "Number of bins cannot be greater than 100000!");
+    throw std::runtime_error("Number of bins cannot be greater than 100000!");
   }
 
   // ------------------------------------------------------------------------
@@ -54,8 +53,7 @@ Poco::JSON::Object Summarizer::calc_categorical_column_plot(
   // ------------------------------------------------------------------------
 
   if (_num_bins > 100000) {
-    throw std::invalid_argument(
-        "Number of bins cannot be greater than 100000!");
+    throw std::runtime_error("Number of bins cannot be greater than 100000!");
   }
 
   // ------------------------------------------------------------------------
@@ -227,8 +225,7 @@ Poco::JSON::Object Summarizer::calculate_feature_plots(
   // ------------------------------------------------------------------------
 
   if (_num_bins > 100000) {
-    throw std::invalid_argument(
-        "Number of bins cannot be greater than 100000!");
+    throw std::runtime_error("Number of bins cannot be greater than 100000!");
   }
 
   // ------------------------------------------------------------------------
@@ -561,7 +558,7 @@ Poco::JSON::Object Summarizer::make_object(
   // ------------------------------------------------------------------------
 
   if (_num_bins == 0) {
-    throw std::invalid_argument("Number of bins cannot be 0!");
+    throw std::runtime_error("Number of bins cannot be 0!");
   }
 
   // ------------------------------------------------------------------------
@@ -639,7 +636,7 @@ Poco::JSON::Object Summarizer::make_object(
   // ------------------------------------------------------------------------
 
   if (_num_bins == 0) {
-    throw std::invalid_argument("Number of bins cannot be 0!");
+    throw std::runtime_error("Number of bins cannot be 0!");
   }
 
   // ------------------------------------------------------------------------

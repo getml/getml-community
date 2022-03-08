@@ -47,10 +47,10 @@ Mapping::build_prerequisites(
   };
 
   if (peripheral_schema_->size() != _peripheral_dfs.size()) {
-    throw std::invalid_argument("Mapping: Expected " +
-                                std::to_string(peripheral_schema_->size()) +
-                                " peripheral tables, got " +
-                                std::to_string(_peripheral_dfs.size()) + ".");
+    throw std::runtime_error("Mapping: Expected " +
+                             std::to_string(peripheral_schema_->size()) +
+                             " peripheral tables, got " +
+                             std::to_string(_peripheral_dfs.size()) + ".");
   }
 
   const auto population =

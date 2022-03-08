@@ -21,7 +21,7 @@ void DataFrameModifier::add_join_keys(
       _population_placeholder.getArray("joined_tables_");
 
   if (!joined_tables_arr) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "The placeholder has no array named 'joined_tables_'!");
   }
 
@@ -108,7 +108,7 @@ void DataFrameModifier::add_time_stamps(
     containers::DataFrame* _population_df,
     std::vector<containers::DataFrame>* _peripheral_dfs) {
   if (_peripheral_names.size() != _peripheral_dfs->size()) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "There must be one peripheral table for every peripheral "
         "placeholder (" +
         std::to_string(_peripheral_dfs->size()) + " vs. " +
@@ -119,7 +119,7 @@ void DataFrameModifier::add_time_stamps(
       _population_placeholder.getArray("joined_tables_");
 
   if (!joined_tables_arr) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "The placeholder has no array named 'joined_tables_'!");
   }
 
@@ -144,7 +144,7 @@ void DataFrameModifier::add_time_stamps(
     const auto ptr = joined_tables_arr->getObject(i);
 
     if (!ptr) {
-      throw std::invalid_argument(
+      throw std::runtime_error(
           "Element " + std::to_string(i) +
           " in 'joined_tables_' is not a proper JSON object!");
     }
@@ -174,19 +174,19 @@ void DataFrameModifier::add_ts(
     const Float _memory, const std::vector<std::string>& _peripheral_names,
     std::vector<containers::DataFrame>* _peripheral_dfs) {
   if (_memory > 0.0 && _upper_ts_used != "") {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "You can either set an upper time stamp or memory, but not "
         "both!");
   }
 
   if (_ts_used == "" && _horizon != 0.0) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "If the horizon is non-zero, you must pass a time stamp to the "
         ".join(...) method in the placeholder!");
   }
 
   if (_ts_used == "" && _memory > 0.0) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "If the memory is non-zero, you must pass a time stamp to the "
         ".join(...) method in the placeholder!");
   }
@@ -274,8 +274,8 @@ containers::DataFrame* DataFrameModifier::find_data_frame(
     }
   }
 
-  throw std::invalid_argument("Placeholder named '" + name +
-                              "' not among the peripheral tables.");
+  throw std::runtime_error("Placeholder named '" + name +
+                           "' not among the peripheral tables.");
 
   return nullptr;
 }
@@ -305,8 +305,8 @@ std::vector<containers::Column<Float>> DataFrameModifier::make_time_stamps(
   }
 
   if (_df.num_time_stamps() == 0) {
-    throw std::invalid_argument("DataFrame '" + _df.name() +
-                                "' has no time stamps!");
+    throw std::runtime_error("DataFrame '" + _df.name() +
+                             "' has no time stamps!");
   }
 
   const auto horizon_op = [_horizon](const Float val) {

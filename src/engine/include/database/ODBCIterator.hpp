@@ -113,7 +113,7 @@ class ODBCIterator : public Iterator {
   /// Prevents segfaults before getting the next entry.
   void check() {
     if (end()) {
-      throw std::invalid_argument("End of query is reached.");
+      throw std::runtime_error("End of query is reached.");
     }
   }
 

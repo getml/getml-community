@@ -97,8 +97,8 @@ size_t TableHolder::find_peripheral_ix(
       std::find(_peripheral_names.begin(), _peripheral_names.end(), _name);
 
   if (it == _peripheral_names.end()) {
-    throw std::invalid_argument("Peripheral table named '" + _name +
-                                "' not found!");
+    throw std::runtime_error("Peripheral table named '" + _name +
+                             "' not found!");
   }
 
   return static_cast<size_t>(std::distance(_peripheral_names.begin(), it));

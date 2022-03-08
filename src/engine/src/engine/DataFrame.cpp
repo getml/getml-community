@@ -34,8 +34,8 @@ void DataFrame::add_float_column(const Column<Float> &_col,
     add_column(_col, &unused_floats_);
     update_last_change();
   } else {
-    throw std::invalid_argument("Role '" + _role +
-                                "' for float column not known!");
+    throw std::runtime_error("Role '" + _role +
+                             "' for float column not known!");
   }
 }
 
@@ -78,8 +78,7 @@ void DataFrame::add_int_column(const Column<Int> &_col,
 
     update_last_change();
   } else {
-    throw std::invalid_argument("Role '" + _role +
-                                "' for int column not known!");
+    throw std::runtime_error("Role '" + _role + "' for int column not known!");
   }
 }
 
@@ -115,8 +114,8 @@ void DataFrame::add_string_column(const Column<strings::String> &_col,
     add_column(_col, &unused_strings_);
     update_last_change();
   } else {
-    throw std::invalid_argument("Role '" + _role +
-                                "' for string column not known!");
+    throw std::runtime_error("Role '" + _role +
+                             "' for string column not known!");
   }
 }
 
@@ -147,43 +146,43 @@ void DataFrame::append(const DataFrame &_other) {
   // -------------------------------------------------------------------------
 
   if (categoricals_.size() != _other.categoricals_.size()) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "Can not append: Number of categorical columns does not "
         "match!");
   }
 
   if (join_keys_.size() != _other.join_keys_.size()) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "Can not append: Number of join keys does not match!");
   }
 
   if (numericals_.size() != _other.numericals_.size()) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "Can not append: Number of numerical columns does not match!");
   }
 
   if (targets_.size() != _other.targets_.size()) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "Can not append: Number of targets does not match!");
   }
 
   if (text_.size() != _other.text_.size()) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "Can not append: Number of text columns does not match!");
   }
 
   if (time_stamps_.size() != _other.time_stamps_.size()) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "Can not append: Number of time stamps does not match!");
   }
 
   if (unused_floats_.size() != _other.unused_floats_.size()) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "Can not append: Number of unused floats does not match!");
   }
 
   if (unused_strings_.size() != _other.unused_strings_.size()) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "Can not append: Number of unused integers does not match!");
   }
 
@@ -191,65 +190,63 @@ void DataFrame::append(const DataFrame &_other) {
 
   for (const auto &col : categoricals_) {
     if (!_other.has_categorical(col.name())) {
-      throw std::invalid_argument(
-          "Can not append: Data frame '" + _other.name() +
-          "' has no categorical column named '" + col.name() + "'!");
+      throw std::runtime_error("Can not append: Data frame '" + _other.name() +
+                               "' has no categorical column named '" +
+                               col.name() + "'!");
     }
   }
 
   for (const auto &col : join_keys_) {
     if (!_other.has_join_key(col.name())) {
-      throw std::invalid_argument("Can not append: Data frame '" +
-                                  _other.name() + "' has no join key named '" +
-                                  col.name() + "'!");
+      throw std::runtime_error("Can not append: Data frame '" + _other.name() +
+                               "' has no join key named '" + col.name() + "'!");
     }
   }
 
   for (const auto &col : numericals_) {
     if (!_other.has_numerical(col.name())) {
-      throw std::invalid_argument(
-          "Can not append: Data frame '" + _other.name() +
-          "' has no numerical column named '" + col.name() + "'!");
+      throw std::runtime_error("Can not append: Data frame '" + _other.name() +
+                               "' has no numerical column named '" +
+                               col.name() + "'!");
     }
   }
 
   for (const auto &col : targets_) {
     if (!_other.has_target(col.name())) {
-      throw std::invalid_argument("Can not append: Data frame '" +
-                                  _other.name() + "' has no target named '" +
-                                  col.name() + "'!");
+      throw std::runtime_error("Can not append: Data frame '" + _other.name() +
+                               "' has no target named '" + col.name() + "'!");
     }
   }
 
   for (const auto &col : text_) {
     if (!_other.has_text(col.name())) {
-      throw std::invalid_argument(
-          "Can not append: Data frame '" + _other.name() +
-          "' has no text column named '" + col.name() + "'!");
+      throw std::runtime_error("Can not append: Data frame '" + _other.name() +
+                               "' has no text column named '" + col.name() +
+                               "'!");
     }
   }
 
   for (const auto &col : time_stamps_) {
     if (!_other.has_time_stamp(col.name())) {
-      throw std::invalid_argument(
-          "Can not append: Data frame '" + _other.name() +
-          "' has no time stamp named '" + col.name() + "'!");
+      throw std::runtime_error("Can not append: Data frame '" + _other.name() +
+                               "' has no time stamp named '" + col.name() +
+                               "'!");
     }
   }
 
   for (const auto &col : unused_floats_) {
     if (!_other.has_unused_float(col.name())) {
-      throw std::invalid_argument(
-          "Can not append: Data frame '" + _other.name() +
-          "' has no unused float column named '" + col.name() + "'!");
+      throw std::runtime_error("Can not append: Data frame '" + _other.name() +
+                               "' has no unused float column named '" +
+                               col.name() + "'!");
     }
   }
 
   for (const auto &col : unused_strings_) {
     if (!_other.has_unused_string(col.name())) {
-      throw std::invalid_argument(
-          "Can not append: Data frame '" + _other.name() +
-          "' has no unused string column named '" + col.name() + "'!");
+      throw std::runtime_error("Can not append: Data frame '" + _other.name() +
+                               "' has no unused string column named '" +
+                               col.name() + "'!");
     }
   }
 
@@ -323,7 +320,7 @@ void DataFrame::check_null(const Column<Float> &_col) const {
   const bool any_null = std::any_of(_col.begin(), _col.end(), is_nan_or_inf);
 
   if (any_null) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "Values in the target column cannot be NULL or "
         "infinite!");
   }
@@ -503,7 +500,7 @@ const Column<Float> &DataFrame::float_column(const std::string &_role,
     return unused_float(_num);
   }
 
-  throw std::invalid_argument("Role '" + _role + "' not known!");
+  throw std::runtime_error("Role '" + _role + "' not known!");
 }
 
 // ----------------------------------------------------------------------------
@@ -520,7 +517,7 @@ const Column<Float> &DataFrame::float_column(const std::string &_name,
     return unused_float(_name);
   }
 
-  throw std::invalid_argument("Role '" + _role + "' not known!");
+  throw std::runtime_error("Role '" + _role + "' not known!");
 }
 
 // ----------------------------------------------------------------------------
@@ -533,12 +530,12 @@ void DataFrame::from_csv(
   // ------------------------------------------------------------------------
 
   if (_quotechar.size() != 1) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "The quotechar must contain exactly one character!");
   }
 
   if (_sep.size() != 1) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "The separator must contain exactly one character!");
   }
 
@@ -849,7 +846,7 @@ void DataFrame::from_query(
           std::find(iter_colnames.begin(), iter_colnames.end(), name);
 
       if (it == _names.end()) {
-        throw std::invalid_argument("No column named '" + name + "' in query!");
+        throw std::runtime_error("No column named '" + name + "' in query!");
       }
 
       indices.push_back(
@@ -1114,13 +1111,13 @@ void DataFrame::from_s3(
   // --------------------------------------------------------------------
 
 #if (defined(_WIN32) || defined(_WIN64))
-  throw std::invalid_argument("S3 is not supported on Windows!");
+  throw std::runtime_error("S3 is not supported on Windows!");
 #else
 
   // ------------------------------------------------------------------------
 
   if (_sep.size() != 1) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "The separator must contain exactly one character!");
   }
 
@@ -1190,15 +1187,15 @@ Poco::JSON::Object DataFrame::get_content(const std::int32_t _draw,
   // ----------------------------------------
 
   if (_length < 0) {
-    throw std::invalid_argument("length must be positive!");
+    throw std::runtime_error("length must be positive!");
   }
 
   if (_start < 0) {
-    throw std::invalid_argument("start must be positive!");
+    throw std::runtime_error("start must be positive!");
   }
 
   if (_start >= nrows()) {
-    throw std::invalid_argument("start must be smaller than number of rows!");
+    throw std::runtime_error("start must be smaller than number of rows!");
   }
 
   // ----------------------------------------
@@ -1427,7 +1424,7 @@ const Column<Int> &DataFrame::int_column(const std::string &_role,
     return join_key(_num);
   }
 
-  throw std::invalid_argument("Role '" + _role + "' not known!");
+  throw std::runtime_error("Role '" + _role + "' not known!");
 }
 
 // ----------------------------------------------------------------------------
@@ -1440,7 +1437,7 @@ const Column<Int> &DataFrame::int_column(const std::string &_name,
     return join_key(_name);
   }
 
-  throw std::invalid_argument("Role '" + _role + "' not known!");
+  throw std::runtime_error("Role '" + _role + "' not known!");
 }
 
 // ----------------------------------------------------------------------------
@@ -1452,15 +1449,14 @@ void DataFrame::load(const std::string &_path) {
   Poco::File file(_path);
 
   if (!file.exists()) {
-    throw std::invalid_argument("No file or directory named '" +
-                                Poco::Path(_path).makeAbsolute().toString() +
-                                "'!");
+    throw std::runtime_error("No file or directory named '" +
+                             Poco::Path(_path).makeAbsolute().toString() +
+                             "'!");
   }
 
   if (!file.isDirectory()) {
-    throw std::invalid_argument("'" +
-                                Poco::Path(_path).makeAbsolute().toString() +
-                                "' is not a directory!");
+    throw std::runtime_error("'" + Poco::Path(_path).makeAbsolute().toString() +
+                             "' is not a directory!");
   }
 
   // ---------------------------------------------------------------------
@@ -1872,7 +1868,7 @@ const Column<strings::String> &DataFrame::string_column(
     return unused_string(_num);
   }
 
-  throw std::invalid_argument("Role '" + _role + "' not known!");
+  throw std::runtime_error("Role '" + _role + "' not known!");
 }
 
 // ----------------------------------------------------------------------------
@@ -1885,7 +1881,7 @@ const Column<strings::String> &DataFrame::string_column(
     return unused_string(_name);
   }
 
-  throw std::invalid_argument("Role '" + _role + "' not known!");
+  throw std::runtime_error("Role '" + _role + "' not known!");
 }
 
 // ----------------------------------------------------------------------------
