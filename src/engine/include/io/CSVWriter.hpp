@@ -40,13 +40,13 @@ class CSVWriter {
     }
 
     if (quotechar_.size() != 1) {
-      throw std::invalid_argument(
+      throw std::runtime_error(
           "The quotechar must consist of exactly one "
           "character!");
     }
 
     if (sep_.size() != 1) {
-      throw std::invalid_argument(
+      throw std::runtime_error(
           "The separator must consist of exactly one "
           "character!");
     }

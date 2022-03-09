@@ -24,7 +24,7 @@ MySQLIterator::MySQLIterator(const std::shared_ptr<MYSQL>& _connection,
   num_cols_ = mysql_field_count(connection());
 
   if (num_cols_ == 0) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "Your query must contain at least"
         " one column!");
   }

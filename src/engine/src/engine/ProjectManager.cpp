@@ -242,7 +242,7 @@ void ProjectManager::delete_project(const std::string& _name,
   multithreading::WriteLock write_lock(read_write_lock_);
 
   if (_name == "") {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "Project name can not be an "
         "empty string!");
   }
@@ -387,7 +387,7 @@ void ProjectManager::load_data_container(const std::string& _name,
   std::ifstream input(path);
 
   if (!input.is_open()) {
-    throw std::invalid_argument("File '" + path + "' not found!");
+    throw std::runtime_error("File '" + path + "' not found!");
   }
 
   std::stringstream json;
@@ -578,7 +578,7 @@ void ProjectManager::save_pipeline(const std::string& _name,
 
 void ProjectManager::set_project(const std::string& _project) {
   if (_project == "") {
-    throw std::invalid_argument("Project name can not be an empty string!");
+    throw std::runtime_error("Project name can not be an empty string!");
   }
 
   handlers::FileHandler::create_project_directory(project_directory());

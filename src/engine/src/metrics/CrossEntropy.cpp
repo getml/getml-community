@@ -22,7 +22,7 @@ Poco::JSON::Object CrossEntropy::score(const Features _yhat,
       } else if (y(i, j) == 1.0) {
         cross_entropy[j] -= std::log(yhat(i, j));
       } else {
-        throw std::invalid_argument(
+        throw std::runtime_error(
             "Target must either be 0 or 1 for "
             "cross entropy score to work!");
       }

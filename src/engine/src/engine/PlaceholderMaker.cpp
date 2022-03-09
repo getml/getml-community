@@ -182,7 +182,7 @@ std::vector<std::string> PlaceholderMaker::handle_memory(
     }
 
     if (upper_time_stamps_used.at(i) != "") {
-      throw std::invalid_argument(
+      throw std::runtime_error(
           "You can either set an upper time stamp or "
           "memory, but not both!");
     }

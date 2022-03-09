@@ -36,8 +36,7 @@ std::shared_ptr<const SQLDialectGenerator> SQLDialectParser::parse(
     return std::make_shared<const TSQLGenerator>(_params);
   }
 
-  throw std::invalid_argument("Unknown SQL dialect: '" + _params.dialect_ +
-                              "'.");
+  throw std::runtime_error("Unknown SQL dialect: '" + _params.dialect_ + "'.");
 
   return std::shared_ptr<const SQLDialectGenerator>();
 }

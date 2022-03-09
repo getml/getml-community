@@ -64,7 +64,7 @@ communication::Warner DataModelChecker::check(
         logging::ProgressLogger("", _logger, num_joins, 50, 100);
 
     if (_population.nrows() == 0) {
-      throw std::invalid_argument("There are no rows in the population table.");
+      throw std::runtime_error("There are no rows in the population table.");
     }
 
     // The probability of being picked is equal for all rows in the
@@ -105,7 +105,7 @@ void DataModelChecker::check_all_propositionalization(
                   _placeholder->propositionalization().end(), is_true);
 
   if (all_propositionalization && any_non_fast_prop) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "All joins in the data model have been set to "
         "propositionalization. You should use FastProp instead.");
   }
@@ -313,8 +313,8 @@ void DataModelChecker::check_join(
         std::find(_peripheral_names->begin(), _peripheral_names->end(), name);
 
     if (it == _peripheral_names->end()) {
-      throw std::invalid_argument("No placeholder called '" + name +
-                                  "' among the peripheral placeholders.");
+      throw std::runtime_error("No placeholder called '" + name +
+                               "' among the peripheral placeholders.");
     }
 
     const auto dist = std::distance(_peripheral_names->begin(), it);
@@ -417,7 +417,7 @@ void DataModelChecker::check_peripheral_size(
   assert_true(_peripheral_names);
 
   if (_peripheral_names->size() != _peripheral.size()) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "The number of peripheral tables in the placeholder must "
         "be "
         "equal to the number of peripheral tables passed (" +
@@ -449,7 +449,7 @@ void DataModelChecker::check_relational(
     const std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>
         _feature_learners) {
   if (_peripheral.size() == 0 && _feature_learners.size() > 0) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "The data model you have passed is not relational (there are "
         "no joins in it that aren't many-to-one or one-to-one), yet "
         "you have passed relational feature learners.");
@@ -488,13 +488,13 @@ DataModelChecker::find_time_stamps(
     const containers::DataFrame& _population_df,
     const containers::DataFrame& _peripheral_df) {
   if ((_time_stamp_used == "") != (_other_time_stamp_used == "")) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "You have to pass both time_stamp_used and "
         "other_time_stamps_used or neither of them.");
   }
 
   if (_time_stamp_used == "" && _upper_time_stamp_used != "") {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "If you pass no time_stamp_used, then passing an "
         "upper_time_stamp_used makes no sense.");
   }
@@ -531,7 +531,7 @@ DataModelChecker::get_time_stamps_used(
       _population_placeholder.getArray("time_stamps_used_");
 
   if (!time_stamps_used_arr) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "The placeholder has no array named 'time_stamps_used_'!");
   }
 
@@ -539,7 +539,7 @@ DataModelChecker::get_time_stamps_used(
       _population_placeholder.getArray("other_time_stamps_used_");
 
   if (!other_time_stamps_used_arr) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "The placeholder has no array named "
         "'other_time_stamps_used_'!");
   }
@@ -548,7 +548,7 @@ DataModelChecker::get_time_stamps_used(
       _population_placeholder.getArray("upper_time_stamps_used_");
 
   if (!upper_time_stamps_used_arr) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "The placeholder has no array named "
         "'upper_time_stamps_used_'!");
   }
@@ -563,19 +563,19 @@ DataModelChecker::get_time_stamps_used(
       JSON::array_to_vector<std::string>(upper_time_stamps_used_arr);
 
   if (_expected_size != time_stamps_used.size()) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "Length of 'joined_tables_' must match length of "
         "'time_stamps_used_'.");
   }
 
   if (_expected_size != other_time_stamps_used.size()) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "Length of 'joined_tables_' must match length of "
         "'other_time_stamps_used_'.");
   }
 
   if (_expected_size != upper_time_stamps_used.size()) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "Length of 'joined_tables_' must match length of "
         "'upper_time_stamps_used_'.");
   }

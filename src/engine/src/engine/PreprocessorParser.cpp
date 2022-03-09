@@ -44,7 +44,7 @@ std::shared_ptr<Preprocessor> PreprocessorParser::parse(
     return std::make_shared<TextFieldSplitter>(_obj, _dependencies);
   }
 
-  throw std::invalid_argument("Preprocessor of type '" + type + "' not known!");
+  throw std::runtime_error("Preprocessor of type '" + type + "' not known!");
 
   return std::shared_ptr<Preprocessor>();
 }

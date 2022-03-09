@@ -47,7 +47,7 @@ T &Getter::get(const std::string &_name, std::map<std::string, T> *_map) {
     warning_message.append(_name);
     warning_message.append("' not found. ");
 
-    throw std::invalid_argument(warning_message);
+    throw std::runtime_error(warning_message);
   }
 
   return it->second;
@@ -64,7 +64,7 @@ T Getter::get(const std::string &_name, const std::map<std::string, T> &_map) {
     warning_message.append(_name);
     warning_message.append("' not found. ");
 
-    throw std::invalid_argument(warning_message);
+    throw std::runtime_error(warning_message);
   }
 
   return it->second;

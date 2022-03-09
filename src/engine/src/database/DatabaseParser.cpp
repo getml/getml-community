@@ -42,7 +42,7 @@ std::shared_ptr<Connector> DatabaseParser::parse(const Poco::JSON::Object& _obj,
     return std::make_shared<Sqlite3>(name, time_formats);
   }
 
-  throw std::invalid_argument("Database of type '" + db + "' not recognized.");
+  throw std::runtime_error("Database of type '" + db + "' not recognized.");
 
   return std::shared_ptr<Connector>();
 }

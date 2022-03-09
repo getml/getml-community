@@ -187,10 +187,10 @@ void Sniffer<ReaderType>::check(const std::vector<std::string>& _csv_colnames,
                                 const std::vector<std::string>& _colnames,
                                 const std::string& _fname) const {
   if (_csv_colnames.size() != _colnames.size()) {
-    throw std::invalid_argument("Wrong number of columns in '" + _fname +
-                                "'. Expected " +
-                                std::to_string(_colnames.size()) + ", saw " +
-                                std::to_string(_csv_colnames.size()) + ".");
+    throw std::runtime_error("Wrong number of columns in '" + _fname +
+                             "'. Expected " + std::to_string(_colnames.size()) +
+                             ", saw " + std::to_string(_csv_colnames.size()) +
+                             ".");
   }
 
   for (size_t i = 0; i < _csv_colnames.size(); ++i) {

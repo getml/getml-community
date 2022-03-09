@@ -235,9 +235,9 @@ containers::DataFrame Substring::transform_df(
 
       df.add_int_column(col, containers::DataFrame::ROLE_CATEGORICAL);
     } else {
-      throw std::invalid_argument(
-          "'" + _df.name() + "' has no categorical or text column named '" +
-          name + "'!");
+      throw std::runtime_error("'" + _df.name() +
+                               "' has no categorical or text column named '" +
+                               name + "'!");
     }
   }
 

@@ -38,11 +38,11 @@ containers::ColumnView<Float> NumOpParser::arange(
   };
 
   if (step == 0.0) {
-    throw std::invalid_argument("arange: step cannot be zero.");
+    throw std::runtime_error("arange: step cannot be zero.");
   }
 
   if ((stop - start) * step < 0.0) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "arange: stop - start must have the same sign as step.");
   }
 
@@ -190,7 +190,7 @@ containers::ColumnView<Float> NumOpParser::binary_operation(
     return update(_col);
   }
 
-  throw std::invalid_argument("Operator '" + op + "' not recognized.");
+  throw std::runtime_error("Operator '" + op + "' not recognized.");
 
   return update(_col);
 }
@@ -226,8 +226,8 @@ containers::ColumnView<Float> NumOpParser::get_column(
   const auto it = data_frames_->find(df_name);
 
   if (it == data_frames_->end()) {
-    throw std::invalid_argument("Column '" + name + "' is from DataFrame '" +
-                                df_name + "', but no such DataFrame exists.");
+    throw std::runtime_error("Column '" + name + "' is from DataFrame '" +
+                             df_name + "', but no such DataFrame exists.");
   }
 
   const auto role = it->second.role(name);
@@ -236,7 +236,7 @@ containers::ColumnView<Float> NumOpParser::get_column(
       role != containers::DataFrame::ROLE_TARGET &&
       role != containers::DataFrame::ROLE_UNUSED_FLOAT &&
       role != containers::DataFrame::ROLE_TIME_STAMP) {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "Column '" + name + "' from DataFrame '" + df_name +
         "' is expected to be a FloatColumn, but it appears to be a "
         "StringColumn. You have most likely changed the type when "
@@ -289,8 +289,8 @@ containers::ColumnView<Float> NumOpParser::parse(
     return unary_operation(_col);
   }
 
-  throw std::invalid_argument("Column of type '" + type +
-                              "' not recognized for numerical columns.");
+  throw std::runtime_error("Column of type '" + type +
+                           "' not recognized for numerical columns.");
 }
 
 // ----------------------------------------------------------------------------
@@ -465,8 +465,8 @@ containers::ColumnView<Float> NumOpParser::unary_operation(
     return un_op(_col, utils::Time::yearday);
   }
 
-  throw std::invalid_argument("Operator '" + op +
-                              "' not recognized for numerical columns.");
+  throw std::runtime_error("Operator '" + op +
+                           "' not recognized for numerical columns.");
 
   return un_op(_col, utils::Time::yearday);
 }

@@ -58,7 +58,7 @@ class ReadWriteLock {
     const auto acquired = reader_cond_.wait_for(
         lock, _duration, [this] { return no_active_writers(); });
     if (!acquired) {
-      throw std::invalid_argument("Could not acquire lock: Timeout.");
+      throw std::runtime_error("Could not acquire lock: Timeout.");
     }
     ++num_active_readers_;
     lock.unlock();
@@ -108,7 +108,7 @@ class ReadWriteLock {
       return no_active_writers() && no_active_weak_writers();
     });
     if (!acquired) {
-      throw std::invalid_argument("Could not acquire lock: Timeout.");
+      throw std::runtime_error("Could not acquire lock: Timeout.");
     }
     --num_waiting_weak_writers_;
     active_weak_writer_exists_ = true;
@@ -150,7 +150,7 @@ class ReadWriteLock {
              no_active_weak_writers();
     });
     if (!acquired) {
-      throw std::invalid_argument("Could not acquire lock: Timeout.");
+      throw std::runtime_error("Could not acquire lock: Timeout.");
     }
     --num_waiting_writers_;
     active_writer_exists_ = true;

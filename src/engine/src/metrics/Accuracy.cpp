@@ -60,7 +60,7 @@ Poco::JSON::Object Accuracy::score(const Features _yhat, const Features _y) {
 
     for (size_t i = 0; i < nrows(); ++i) {
       if (y(i, j) != 0.0 && y(i, j) != 1.0) {
-        throw std::invalid_argument(
+        throw std::runtime_error(
             "For the accuracy metric, the target "
             "values can only be zero or one! Found "
             "value: " +

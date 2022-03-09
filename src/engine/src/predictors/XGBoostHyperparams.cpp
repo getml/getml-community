@@ -37,7 +37,7 @@ XGBoostHyperparams::XGBoostHyperparams(const Poco::JSON::Object &_json_obj)
       skip_drop_(JSON::get_value<Float>(_json_obj, "skip_drop_")),
       subsample_(JSON::get_value<Float>(_json_obj, "subsample_")) {
   if (booster_ != "gbtree" && booster_ != "gblinear" && booster_ != "dart") {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "Booster of type '" + booster_ +
         "' not known! Please use 'gbtree', 'gblinear' or 'dart'!");
   }
@@ -45,7 +45,7 @@ XGBoostHyperparams::XGBoostHyperparams(const Poco::JSON::Object &_json_obj)
   if (objective_ != "reg:linear" && objective_ != "reg:squarederror" &&
       objective_ != "reg:logistic" && objective_ != "binary:logistic" &&
       objective_ != "binary:logitraw" && objective_ != "reg:tweedie") {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "Objective of type '" + objective_ +
         "' not known! Please use 'reg:squarederror', 'reg:linear', "
         "'reg:logistic', "
@@ -53,12 +53,12 @@ XGBoostHyperparams::XGBoostHyperparams(const Poco::JSON::Object &_json_obj)
   }
 
   if (normalize_type_ != "tree" && normalize_type_ != "forest") {
-    throw std::invalid_argument("Normalize_type of type '" + normalize_type_ +
-                                "' not known! Please use 'tree' or 'forest'!");
+    throw std::runtime_error("Normalize_type of type '" + normalize_type_ +
+                             "' not known! Please use 'tree' or 'forest'!");
   }
 
   if (sample_type_ != "uniform" && sample_type_ != "weighted") {
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "Sample_type of type '" + sample_type_ +
         "' not known! Please use 'uniform' or 'weighted'!");
   }

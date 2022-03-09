@@ -482,7 +482,7 @@ void DecisionTreeNode::from_json_obj(const Poco::JSON::Object &_json_obj) {
 
     if (_json_obj.has("sub1_")) {
       if (!_json_obj.has("sub2_")) {
-        std::invalid_argument(
+        std::runtime_error(
             "Error in JSON: Has 'sub1_', but not "
             "'sub2_'!");
       }

@@ -22,8 +22,8 @@ containers::ColumnView<std::string> CatOpParser::binary_operation(
     return update(_col);
   }
 
-  throw std::invalid_argument("Operator '" + op +
-                              "' not recognized for categorical columns.");
+  throw std::runtime_error("Operator '" + op +
+                           "' not recognized for categorical columns.");
 
   return update(_col);
 }
@@ -134,9 +134,9 @@ containers::ColumnView<std::string> CatOpParser::parse(
     const auto it = data_frames_->find(df_name);
 
     if (it == data_frames_->end()) {
-      throw std::invalid_argument("Column '" + name + "' is from DataFrame '" +
-                                  df_name +
-                                  "', but such a DataFrame is not known.");
+      throw std::runtime_error("Column '" + name + "' is from DataFrame '" +
+                               df_name +
+                               "', but such a DataFrame is not known.");
     }
 
     const auto role = it->second.role(name);
@@ -158,7 +158,7 @@ containers::ColumnView<std::string> CatOpParser::parse(
       return to_view(it->second.unused_string(name));
     }
 
-    throw std::invalid_argument(
+    throw std::runtime_error(
         "Column '" + name + "' from DataFrame '" + df_name +
         "' is expected to be a StringColumn, but it appears to be a "
         "FloatColumn. You have most likely changed the type when "
@@ -192,8 +192,8 @@ containers::ColumnView<std::string> CatOpParser::parse(
     return unary_operation(_col);
   }
 
-  throw std::invalid_argument("Column of type '" + type +
-                              "' not recognized for categorical columns.");
+  throw std::runtime_error("Column of type '" + type +
+                           "' not recognized for categorical columns.");
 
   return unary_operation(_col);
 }
@@ -260,8 +260,8 @@ containers::ColumnView<std::string> CatOpParser::unary_operation(
     return un_op(_col, substr);
   }
 
-  throw std::invalid_argument("Operator '" + op +
-                              "' not recognized for categorical columns.");
+  throw std::runtime_error("Operator '" + op +
+                           "' not recognized for categorical columns.");
 
   return boolean_as_string(_col);
 }

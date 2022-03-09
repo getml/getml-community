@@ -230,7 +230,7 @@ void PipelineManager::check_user_privileges(
 
   if (JSON::get_value<bool>(_cmd, "http_request_")) {
     if (!_pipeline.allow_http()) {
-      throw std::invalid_argument(
+      throw std::runtime_error(
           "Pipeline '" + _name +
           "' does not allow HTTP requests. You can activate "
           "this "
@@ -274,7 +274,7 @@ void PipelineManager::column_importances(const std::string& _name,
     }
 
     if (static_cast<size_t>(target_num) >= vec.size()) {
-      throw std::invalid_argument("target_num out of range!");
+      throw std::runtime_error("target_num out of range!");
     }
 
     importances.push_back(vec.at(target_num));
@@ -337,7 +337,7 @@ void PipelineManager::feature_correlations(const std::string& _name,
 
   for (const auto& vec : scores.feature_correlations()) {
     if (static_cast<size_t>(target_num) >= vec.size()) {
-      throw std::invalid_argument("target_num out of range!");
+      throw std::runtime_error("target_num out of range!");
     }
 
     correlations.push_back(vec.at(target_num));
@@ -381,7 +381,7 @@ void PipelineManager::feature_importances(const std::string& _name,
 
   for (const auto& vec : scores.feature_importances()) {
     if (static_cast<size_t>(target_num) >= vec.size()) {
-      throw std::invalid_argument("target_num out of range!");
+      throw std::runtime_error("target_num out of range!");
     }
 
     importances.push_back(vec.at(target_num));
@@ -501,7 +501,7 @@ Poco::JSON::Array::Ptr PipelineManager::get_array(
       msg += " Did you maybe for get to call .score(...)?";
     }
 
-    throw std::invalid_argument(msg);
+    throw std::runtime_error(msg);
   }
 
   return arr->getArray(_target_num);

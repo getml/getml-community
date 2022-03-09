@@ -154,7 +154,7 @@ Imputation Imputation::from_json_obj(const Poco::JSON::Object& _obj) const {
 
     if (column_descriptions->size() != means.size() ||
         needs_dummies.size() != means.size()) {
-      throw std::invalid_argument(
+      throw std::runtime_error(
           "Could not load Imputation preprocessor. JSON is "
           "poorly "
           "formatted.");
