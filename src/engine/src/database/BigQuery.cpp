@@ -285,7 +285,7 @@ std::shared_ptr<Iterator> BigQuery::select(
 
   for (size_t i = 0; i < _colnames.size(); ++i) {
     if (_colnames.at(i) != "COUNT(*)") {
-      sql << "\"" << _colnames.at(i) << "\"";
+      sql << "`" << _colnames.at(i) << "`";
     } else {
       sql << _colnames.at(i);
     }
@@ -295,7 +295,7 @@ std::shared_ptr<Iterator> BigQuery::select(
     }
   }
 
-  sql << " FROM \"" << _tname << "\"";
+  sql << " FROM `" << _tname << "`";
 
   if (_where != "") {
     sql << "WHERE " << _where;
