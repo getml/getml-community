@@ -143,8 +143,6 @@ void DataFrame::add_string_vectors(
 void DataFrame::append(const DataFrame &_other) {
   check_if_frozen();
 
-  // -------------------------------------------------------------------------
-
   if (categoricals_.size() != _other.categoricals_.size()) {
     throw std::runtime_error(
         "Can not append: Number of categorical columns does not "
@@ -185,8 +183,6 @@ void DataFrame::append(const DataFrame &_other) {
     throw std::runtime_error(
         "Can not append: Number of unused integers does not match!");
   }
-
-  // -------------------------------------------------------------------------
 
   for (const auto &col : categoricals_) {
     if (!_other.has_categorical(col.name())) {
@@ -250,8 +246,6 @@ void DataFrame::append(const DataFrame &_other) {
     }
   }
 
-  // -------------------------------------------------------------------------
-
   for (auto &col : categoricals_) {
     col.append(_other.categorical(col.name()));
   }
@@ -284,15 +278,11 @@ void DataFrame::append(const DataFrame &_other) {
     col.append(_other.unused_string(col.name()));
   }
 
-  // -------------------------------------------------------------------------
-
   create_indices();
 
   check_plausibility();
 
   update_last_change();
-
-  // -------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -527,8 +517,6 @@ void DataFrame::from_csv(
     const std::vector<std::string> &_fnames, const std::string &_quotechar,
     const std::string &_sep, const size_t _num_lines_read, const size_t _skip,
     const std::vector<std::string> &_time_formats, const Schema &_schema) {
-  // ------------------------------------------------------------------------
-
   if (_quotechar.size() != 1) {
     throw std::runtime_error(
         "The quotechar must contain exactly one character!");
@@ -545,8 +533,6 @@ void DataFrame::from_csv(
   if (!_colnames && limit > 0) {
     ++limit;
   }
-
-  // ------------------------------------------------------------------------
 
   auto df = containers::DataFrame(name(), categories_, join_keys_encoding_,
                                   make_pool());
@@ -567,19 +553,13 @@ void DataFrame::from_csv(
     }
   }
 
-  // ------------------------------------------------------------------------
-
   *this = std::move(df);
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
 
 void DataFrame::from_db(const std::shared_ptr<database::Connector> _connector,
                         const std::string &_tname, const Schema &_schema) {
-  // ----------------------------------------
-
   auto categoricals = make_vectors<Int>(_schema.categoricals_.size());
 
   auto join_keys = make_vectors<Int>(_schema.join_keys_.size());
@@ -597,11 +577,7 @@ void DataFrame::from_db(const std::shared_ptr<database::Connector> _connector,
   auto unused_strings =
       make_vectors<strings::String>(_schema.unused_strings_.size());
 
-  // ----------------------------------------
-
   const auto all_colnames = concat_colnames(_schema);
-
-  // ----------------------------------------
 
   auto iterator = _connector->select(all_colnames, _tname, "");
 
@@ -627,8 +603,6 @@ void DataFrame::from_db(const std::shared_ptr<database::Connector> _connector,
       vec->emplace_back(strings::String(iterator->get_string()));
   }
 
-  // ----------------------------------------
-
   auto df = DataFrame(name(), categories_, join_keys_encoding_, make_pool());
 
   df.add_int_vectors(_schema.categoricals_, categoricals, ROLE_CATEGORICAL);
@@ -649,15 +623,9 @@ void DataFrame::from_db(const std::shared_ptr<database::Connector> _connector,
   df.add_string_vectors(_schema.unused_strings_, unused_strings,
                         ROLE_UNUSED_STRING);
 
-  // ----------------------------------------
-
   df.check_plausibility();
 
-  // ----------------------------------------
-
   *this = std::move(df);
-
-  // ----------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -665,8 +633,6 @@ void DataFrame::from_db(const std::shared_ptr<database::Connector> _connector,
 void DataFrame::from_json(const Poco::JSON::Object &_obj,
                           const std::vector<std::string> _time_formats,
                           const Schema &_schema) {
-  // ----------------------------------------
-
   auto df = DataFrame(name(), categories_, join_keys_encoding_, make_pool());
 
   df.from_json(_obj, _schema.categoricals_, ROLE_CATEGORICAL,
@@ -687,15 +653,9 @@ void DataFrame::from_json(const Poco::JSON::Object &_obj,
 
   df.from_json(_obj, _schema.unused_strings_, ROLE_UNUSED_STRING);
 
-  // ----------------------------------------
-
   df.check_plausibility();
 
-  // ----------------------------------------
-
   *this = std::move(df);
-
-  // ----------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -829,13 +789,9 @@ void DataFrame::from_query(
   auto unused_strings =
       make_vectors<strings::String>(_schema.unused_strings_.size());
 
-  // ----------------------------------------
-
   auto iterator = _connector->select(_query);
 
   const auto iter_colnames = iterator->colnames();
-
-  // ----------------------------------------
 
   const auto make_column_indices = [iter_colnames](
                                        const std::vector<std::string> &_names) {
@@ -856,8 +812,6 @@ void DataFrame::from_query(
     return indices;
   };
 
-  // ----------------------------------------
-
   const auto categorical_ix = make_column_indices(_schema.categoricals_);
 
   const auto join_key_ix = make_column_indices(_schema.join_keys_);
@@ -873,8 +827,6 @@ void DataFrame::from_query(
   const auto unused_float_ix = make_column_indices(_schema.unused_floats_);
 
   const auto unused_string_ix = make_column_indices(_schema.unused_strings_);
-
-  // ----------------------------------------
 
   const auto time_formats = _connector->time_formats();
 
@@ -927,8 +879,6 @@ void DataFrame::from_query(
     }
   }
 
-  // ----------------------------------------
-
   auto df = DataFrame(name(), categories_, join_keys_encoding_, make_pool());
 
   df.add_int_vectors(_schema.categoricals_, categoricals, ROLE_CATEGORICAL);
@@ -949,15 +899,9 @@ void DataFrame::from_query(
   df.add_string_vectors(_schema.unused_strings_, unused_strings,
                         ROLE_UNUSED_STRING);
 
-  // ----------------------------------------
-
   df.check_plausibility();
 
-  // ----------------------------------------
-
   *this = std::move(df);
-
-  // ----------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -966,13 +910,9 @@ void DataFrame::from_reader(const std::shared_ptr<io::Reader> &_reader,
                             const std::string &_fname, const size_t _skip,
                             const std::vector<std::string> &_time_formats,
                             const Schema &_schema) {
-  // ------------------------------------------------------------------------
-
   assert_true(_reader);
 
   const auto csv_colnames = _reader->colnames();
-
-  // ------------------------------------------------------------------------
 
   auto categoricals = make_vectors<Int>(_schema.categoricals_.size());
 
@@ -991,9 +931,6 @@ void DataFrame::from_reader(const std::shared_ptr<io::Reader> &_reader,
   auto unused_strings =
       make_vectors<strings::String>(_schema.unused_strings_.size());
 
-  // ------------------------------------------------------------------------
-  // Define column_indices.
-
   const auto df_colnames = concat_colnames(_schema);
 
   auto colname_indices = std::vector<size_t>(0);
@@ -1010,9 +947,6 @@ void DataFrame::from_reader(const std::shared_ptr<io::Reader> &_reader,
     colname_indices.push_back(
         static_cast<size_t>(std::distance(csv_colnames.begin(), it)));
   }
-
-  // ------------------------------------------------------------------------
-  // Read CSV file content into the vectors
 
   size_t line_count = 0;
 
@@ -1067,8 +1001,6 @@ void DataFrame::from_reader(const std::shared_ptr<io::Reader> &_reader,
     assert_true(col == colname_indices.size());
   }
 
-  // ------------------------------------------------------------------------
-
   auto df = DataFrame(name(), categories_, join_keys_encoding_, make_pool());
 
   df.add_int_vectors(_schema.categoricals_, categoricals, ROLE_CATEGORICAL);
@@ -1089,15 +1021,9 @@ void DataFrame::from_reader(const std::shared_ptr<io::Reader> &_reader,
   df.add_string_vectors(_schema.unused_strings_, unused_strings,
                         ROLE_UNUSED_STRING);
 
-  // ------------------------------------------------------------------------
-
   df.check_plausibility();
 
-  // ------------------------------------------------------------------------
-
   *this = std::move(df);
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -1108,13 +1034,9 @@ void DataFrame::from_s3(
     const std::vector<std::string> &_fnames, const std::string &_region,
     const std::string &_sep, const size_t _num_lines_read, const size_t _skip,
     const std::vector<std::string> &_time_formats, const Schema &_schema) {
-  // --------------------------------------------------------------------
-
 #if (defined(_WIN32) || defined(_WIN64))
   throw std::runtime_error("S3 is not supported on Windows!");
 #else
-
-  // ------------------------------------------------------------------------
 
   if (_sep.size() != 1) {
     throw std::runtime_error(
@@ -1127,8 +1049,6 @@ void DataFrame::from_s3(
   if (!_colnames && limit > 0) {
     ++limit;
   }
-
-  // ------------------------------------------------------------------------
 
   auto df = containers::DataFrame(name(), categories_, join_keys_encoding_,
                                   make_pool());
@@ -1149,11 +1069,7 @@ void DataFrame::from_s3(
     }
   }
 
-  // ------------------------------------------------------------------------
-
   *this = std::move(df);
-
-  // ------------------------------------------------------------------------
 
 #endif
 }
@@ -1327,17 +1243,11 @@ std::string DataFrame::get_html(const std::int32_t _max_rows,
 
 std::vector<std::vector<std::string>> DataFrame::get_rows(
     const std::int32_t _max_rows) const {
-  // ------------------------------------------------------------------------
-
   std::vector<std::vector<std::string>> rows;
-
-  // ------------------------------------------------------------------------
 
   if (nrows() == 0 || _max_rows <= 0) {
     return rows;
   }
-
-  // ------------------------------------------------------------------------
 
   const auto obj = get_content(1, 0, _max_rows);
 
@@ -1361,8 +1271,6 @@ std::vector<std::vector<std::string>> DataFrame::get_rows(
     rows.emplace_back(row);
   }
 
-  // ------------------------------------------------------------------------
-
   if (_max_rows < nrows()) {
     assert_true(rows.size() > 0);
 
@@ -1375,11 +1283,7 @@ std::vector<std::vector<std::string>> DataFrame::get_rows(
     rows.emplace_back(std::move(row));
   }
 
-  // ------------------------------------------------------------------------
-
   return rows;
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -1421,9 +1325,6 @@ const Column<Int> &DataFrame::int_column(const std::string &_name,
 // ----------------------------------------------------------------------------
 
 void DataFrame::load(const std::string &_path) {
-  //---------------------------------------------------------------------
-  // Make sure that the _path exists and is directory
-
   Poco::File file(_path);
 
   if (!file.exists()) {
@@ -1437,13 +1338,9 @@ void DataFrame::load(const std::string &_path) {
                              "' is not a directory!");
   }
 
-  // ---------------------------------------------------------------------
-
   const auto frozen = load_textfile(_path, "frozen.txt");
 
   frozen_ = frozen && (*frozen == "true");
-
-  // ---------------------------------------------------------------------
 
   const auto last_change = load_textfile(_path, "last_change.txt");
 
@@ -1453,8 +1350,6 @@ void DataFrame::load(const std::string &_path) {
 
   last_change_ = *last_change;
 
-  // ---------------------------------------------------------------------
-
   const auto build_history = load_textfile(_path, "build_history.json");
 
   if (build_history) {
@@ -1462,8 +1357,6 @@ void DataFrame::load(const std::string &_path) {
     build_history_ =
         parser.parse(*build_history).extract<Poco::JSON::Object::Ptr>();
   }
-
-  // ---------------------------------------------------------------------
 
   categoricals_ = load_columns<Int>(_path, "categorical_");
 
@@ -1481,11 +1374,7 @@ void DataFrame::load(const std::string &_path) {
 
   unused_strings_ = load_columns<strings::String>(_path, "unused_string_");
 
-  // ---------------------------------------------------------------------
-
   check_plausibility();
-
-  // ---------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -1574,11 +1463,7 @@ const size_t DataFrame::nrows() const {
 // ----------------------------------------------------------------------------
 
 Poco::JSON::Object DataFrame::refresh() const {
-  // ----------------------------------------
-
   Poco::JSON::Object obj;
-
-  // ----------------------------------------
 
   obj.set(ROLE_CATEGORICAL, get_colnames(categoricals_));
 
@@ -1596,11 +1481,7 @@ Poco::JSON::Object DataFrame::refresh() const {
 
   obj.set(ROLE_UNUSED_STRING, get_colnames(unused_strings_));
 
-  // ----------------------------------------
-
   return obj;
-
-  // ----------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -1670,8 +1551,6 @@ bool DataFrame::remove_column(const std::string &_name) {
 // ----------------------------------------------------------------------------
 
 std::string DataFrame::role(const std::string &_name) const {
-  // ----------------------------------------
-
   const auto name_in = [_name](const auto &_columns) -> bool {
     for (size_t i = 0; i < _columns.size(); ++i) {
       if (_columns[i].name() == _name) {
@@ -1680,8 +1559,6 @@ std::string DataFrame::role(const std::string &_name) const {
     }
     return false;
   };
-
-  // ----------------------------------------
 
   if (name_in(categoricals_)) {
     return ROLE_CATEGORICAL;
@@ -1715,28 +1592,20 @@ std::string DataFrame::role(const std::string &_name) const {
     return ROLE_UNUSED_STRING;
   }
 
-  // ----------------------------------------
-
   throw_column_does_not_exist(_name, "column");
 
   return "";
-
-  // ----------------------------------------
 }
 
 // ----------------------------------------------------------------------------
 
 void DataFrame::save(const std::string &_temp_dir, const std::string &_path,
                      const std::string &_name) const {
-  // ---------------------------------------------------------------------
-
   auto tfile = Poco::TemporaryFile(_temp_dir);
 
   tfile.createDirectories();
 
   const auto tpath = tfile.path() + "/";
-
-  // ---------------------------------------------------------------------
 
   save_matrices(categoricals_, tpath, "categorical_");
 
@@ -1754,21 +1623,13 @@ void DataFrame::save(const std::string &_temp_dir, const std::string &_path,
 
   save_matrices(unused_strings_, tpath, "unused_string_");
 
-  // ---------------------------------------------------------------------
-
   save_text(tpath, "frozen.txt", frozen_ ? "true" : "false");
 
   save_text(tpath, "last_change.txt", last_change_);
 
-  // ---------------------------------------------------------------------
-
   if (build_history_) {
     save_text(tpath, "build_history.json", JSON::stringify(*build_history_));
   }
-
-  // ---------------------------------------------------------------------
-  // If the path already exists, delete it to avoid
-  // conflicts with already existing files.
 
   auto file = Poco::File(_path + _name);
 
@@ -1779,8 +1640,6 @@ void DataFrame::save(const std::string &_temp_dir, const std::string &_path,
   tfile.renameTo(file.path());
 
   tfile.keep();
-
-  // ---------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -1865,8 +1724,6 @@ const Column<strings::String> &DataFrame::string_column(
 // ----------------------------------------------------------------------------
 
 std::vector<std::string> DataFrame::subroles(const std::string &_name) const {
-  // ----------------------------------------
-
   const auto name_in = [_name](const auto &_columns) -> bool {
     for (size_t i = 0; i < _columns.size(); ++i) {
       if (_columns[i].name() == _name) {
@@ -1875,8 +1732,6 @@ std::vector<std::string> DataFrame::subroles(const std::string &_name) const {
     }
     return false;
   };
-
-  // ----------------------------------------
 
   if (name_in(categoricals_)) {
     return int_column(_name, ROLE_CATEGORICAL).subroles();
@@ -1910,23 +1765,15 @@ std::vector<std::string> DataFrame::subroles(const std::string &_name) const {
     return string_column(_name, ROLE_UNUSED_STRING).subroles();
   }
 
-  // ----------------------------------------
-
   throw_column_does_not_exist(_name, "column");
 
   return {};
-
-  // ----------------------------------------
 }
 
 // ----------------------------------------------------------------------------
 
 Poco::JSON::Object DataFrame::to_monitor() const {
-  // ---------------------------------------------------------------------
-
   Poco::JSON::Object obj;
-
-  // ---------------------------------------------------------------------
 
   obj.set("categorical_", get_colnames(categoricals_));
 
@@ -1978,11 +1825,7 @@ Poco::JSON::Object DataFrame::to_monitor() const {
 
   obj.set("unused_string_units_", get_units(unused_strings_));
 
-  // ---------------------------------------------------------------------
-
   return obj;
-
-  // ---------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
