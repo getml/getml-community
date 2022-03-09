@@ -1163,15 +1163,9 @@ void DataFrame::from_s3(
 Poco::JSON::Object DataFrame::get_content(const std::int32_t _draw,
                                           const std::int32_t _start,
                                           const std::int32_t _length) const {
-  // ----------------------------------------
-
   check_plausibility();
 
-  // ----------------------------------------
-
   Poco::JSON::Object obj;
-
-  // ----------------------------------------
 
   obj.set("draw", _draw);
 
@@ -1184,8 +1178,6 @@ Poco::JSON::Object DataFrame::get_content(const std::int32_t _draw,
     return obj;
   }
 
-  // ----------------------------------------
-
   if (_length < 0) {
     throw std::runtime_error("length must be positive!");
   }
@@ -1197,8 +1189,6 @@ Poco::JSON::Object DataFrame::get_content(const std::int32_t _draw,
   if (_start >= nrows()) {
     throw std::runtime_error("start must be smaller than number of rows!");
   }
-
-  // ----------------------------------------
 
   auto data = Poco::JSON::Array::Ptr(new Poco::JSON::Array());
 
@@ -1256,11 +1246,7 @@ Poco::JSON::Object DataFrame::get_content(const std::int32_t _draw,
 
   obj.set("data", data);
 
-  // ----------------------------------------
-
   return obj;
-
-  // ----------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -1268,15 +1254,11 @@ Poco::JSON::Object DataFrame::get_content(const std::int32_t _draw,
 std::tuple<std::vector<std::string>, std::vector<std::string>,
            std::vector<std::string>>
 DataFrame::get_headers() const {
-  // ------------------------------------------------------------------------
-
   std::vector<std::string> colnames;
 
   std::vector<std::string> roles;
 
   std::vector<std::string> units;
-
-  // ------------------------------------------------------------------------
 
   for (size_t j = 0; j < num_time_stamps(); ++j) {
     colnames.push_back(time_stamp(j).name());
@@ -1326,11 +1308,7 @@ DataFrame::get_headers() const {
     units.push_back(unused_string(j).unit());
   }
 
-  // ------------------------------------------------------------------------
-
   return std::make_tuple(colnames, roles, units);
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
