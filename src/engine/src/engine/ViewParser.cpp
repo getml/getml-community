@@ -238,7 +238,7 @@ std::optional<size_t> ViewParser::make_nrows(
     return static_cast<Float>(_nrows);
   };
 
-  const auto calc_nrows_float = stl::compose(calc_nrows, to_float);
+  const auto calc_nrows_float = fct::compose(calc_nrows, to_float);
 
   auto range = _column_views | VIEWS::transform(calc_nrows_float);
 
@@ -266,7 +266,7 @@ std::vector<std::string> ViewParser::make_string_vector(
   const auto float_vec = *float_col.to_vector(_start, _length, false);
 
   if (float_col.unit().find("time stamp") != std::string::npos) {
-    return stl::collect::vector<std::string>(
+    return fct::collect::vector<std::string>(
         float_vec | VIEWS::transform(io::Parser::ts_to_string));
   }
 
@@ -274,7 +274,7 @@ std::vector<std::string> ViewParser::make_string_vector(
     return io::Parser::to_string(_val);
   };
 
-  return stl::collect::vector<std::string>(float_vec |
+  return fct::collect::vector<std::string>(float_vec |
                                            VIEWS::transform(to_string));
 }
 
@@ -298,14 +298,14 @@ Poco::JSON::Object ViewParser::get_content(
     return make_string_vector(_start, _length, _column_view);
   };
 
-  const auto make_column_view = stl::compose(get_object, to_column_view);
+  const auto make_column_view = fct::compose(get_object, to_column_view);
 
-  const auto iota = stl::iota<size_t>(0, _cols->size());
+  const auto iota = fct::iota<size_t>(0, _cols->size());
 
-  const auto column_views = stl::collect::vector<ColumnViewVariant>(
+  const auto column_views = fct::collect::vector<ColumnViewVariant>(
       iota | VIEWS::transform(make_column_view));
 
-  const auto string_vectors = stl::collect::vector<std::vector<std::string>>(
+  const auto string_vectors = fct::collect::vector<std::vector<std::string>>(
       column_views | VIEWS::transform(to_string_vector));
 
   const auto data = make_data(string_vectors);
@@ -374,7 +374,7 @@ ViewParser::parse_all(const Poco::JSON::Object& _cmd) {
 
   const auto population = to_df(population_obj);
 
-  const auto peripheral = stl::collect::vector<containers::DataFrame>(
+  const auto peripheral = fct::collect::vector<containers::DataFrame>(
       peripheral_objs | VIEWS::transform(to_df));
 
   const auto validation =

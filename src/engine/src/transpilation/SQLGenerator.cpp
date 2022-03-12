@@ -2,7 +2,7 @@
 
 // ----------------------------------------------------------------------------
 
-#include "stl/stl.hpp"
+#include "fct/fct.hpp"
 
 // ----------------------------------------------------------------------------
 
@@ -341,7 +341,7 @@ std::string SQLGenerator::replace_non_alphanumeric(const std::string _old) {
     return str;
   };
 
-  const auto replaced = stl::collect::string(_old | VIEWS::transform(replace));
+  const auto replaced = fct::collect::string(_old | VIEWS::transform(replace));
 
   return shorten(trim(replaced));
 };

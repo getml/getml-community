@@ -10,7 +10,7 @@
 // -------------------------------------------------------------------------
 
 #include "debug/debug.hpp"
-#include "stl/stl.hpp"
+#include "fct/fct.hpp"
 #include "strings/strings.hpp"
 
 // -------------------------------------------------------------------------
@@ -36,12 +36,12 @@ class WordIndex {
 
  public:
   /// Returns the word range for the _i'th row
-  stl::Range<const Int*> range(const size_t _i) const {
+  fct::Range<const Int*> range(const size_t _i) const {
     assert_msg(_i + 1 < indptr_.size(),
                "_i: " + std::to_string(_i) +
                    ", indptr_.size(): " + std::to_string(indptr_.size()));
     assert_true(indptr_[_i + 1] <= words_.size());
-    return stl::Range(words_.data() + indptr_[_i],
+    return fct::Range(words_.data() + indptr_[_i],
                       words_.data() + indptr_[_i + 1]);
   }
 
@@ -74,7 +74,7 @@ class WordIndex {
   template <class RangeType>
   std::pair<std::vector<size_t>, std::vector<Int>> make_indptr_and_words(
       const RangeType& _range) const {
-    const auto voc_range = stl::Range<const strings::String*>(
+    const auto voc_range = fct::Range<const strings::String*>(
         vocabulary().data(), vocabulary().data() + vocabulary().size());
 
     const auto voc_map = Vocabulary::to_map(voc_range);

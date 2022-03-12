@@ -1,8 +1,8 @@
 #include "database/QuerySplitter.hpp"
 
 #include "debug/debug.hpp"
+#include "fct/fct.hpp"
 #include "io/io.hpp"
-#include "stl/stl.hpp"
 
 namespace database {
 
@@ -62,7 +62,7 @@ std::vector<std::string> QuerySplitter::sanitize(
     return _str != "";
   };
 
-  return stl::collect::vector<std::string>(_splitted |
+  return fct::collect::vector<std::string>(_splitted |
                                            VIEWS::transform(io::Parser::trim) |
                                            VIEWS::filter(is_not_empty));
 }

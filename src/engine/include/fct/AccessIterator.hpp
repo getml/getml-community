@@ -1,5 +1,5 @@
-#ifndef STL_ACCESSITERATOR_HPP_
-#define STL_ACCESSITERATOR_HPP_
+#ifndef FCT_ACCESSITERATOR_HPP_
+#define FCT_ACCESSITERATOR_HPP_
 
 // -------------------------------------------------------------------------
 
@@ -11,7 +11,7 @@
 
 // -------------------------------------------------------------------------
 
-namespace stl {
+namespace fct {
 
 /// Implements an iterator for any container that supports
 /// operator[].
@@ -104,6 +104,6 @@ class AccessIterator {
 };
 
 // -------------------------------------------------------------------------
-}  // namespace stl
+}  // namespace fct
 
-#endif  // STL_IOTAITERATOR_HPP_
+#endif  // FCT_IOTAITERATOR_HPP_

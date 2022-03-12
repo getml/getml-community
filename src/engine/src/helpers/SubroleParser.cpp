@@ -6,7 +6,7 @@
 
 // ----------------------------------------------------------------------------
 
-#include "stl/stl.hpp"
+#include "fct/fct.hpp"
 
 // ----------------------------------------------------------------------------
 namespace helpers {
@@ -110,7 +110,7 @@ std::vector<Subrole> SubroleParser::parse(
     return SubroleParser::parse(_str);
   };
 
-  return stl::collect::vector<Subrole>(_vec | VIEWS::transform(to_subrole));
+  return fct::collect::vector<Subrole>(_vec | VIEWS::transform(to_subrole));
 }
 
 // ----------------------------------------------------------------------------

@@ -2,7 +2,7 @@
 
 // ----------------------------------------------------------------------------
 
-#include "stl/stl.hpp"
+#include "fct/fct.hpp"
 
 // ----------------------------------------------------------------------------
 
@@ -188,7 +188,7 @@ size_t DataFrame::find_ix_join_key(
     return " '" + (*_make_staging_table_colname)(colname) + "',";
   };
 
-  auto names = stl::collect::string(join_keys_ | VIEWS::transform(get_name));
+  auto names = fct::collect::string(join_keys_ | VIEWS::transform(get_name));
 
   if (names.size() > 0) {
     names.back() = '.';
@@ -229,7 +229,7 @@ size_t DataFrame::find_ix_time_stamp(
     return (*_make_staging_table_colname)(colname);
   };
 
-  auto names = stl::collect::string(time_stamps_ | VIEWS::transform(get_name));
+  auto names = fct::collect::string(time_stamps_ | VIEWS::transform(get_name));
 
   if (names.size() > 0) {
     names.back() = '.';
@@ -258,10 +258,10 @@ std::vector<Column<Float>> DataFrame::make_numericals_and_time_stamps(
     return _upper_time_stamp == "" || _ts.name_ != _upper_time_stamp;
   };
 
-  const auto time_stamps = stl::collect::vector<Column<Float>>(
+  const auto time_stamps = fct::collect::vector<Column<Float>>(
       time_stamps_ | VIEWS::filter(is_not_upper));
 
-  return stl::join::vector<Column<Float>>(
+  return fct::join::vector<Column<Float>>(
       {numericals_, _additional, targets, time_stamps});
 }
 
@@ -293,26 +293,26 @@ std::shared_ptr<tsindex::Index> DataFrame::make_ts_index(
     return nullptr;
   }
 
-  const auto join_keys = stl::Range<const Int*>(
+  const auto join_keys = fct::Range<const Int*>(
       join_keys_.at(_ix_join_key).begin(), join_keys_.at(_ix_join_key).end());
 
   const auto lower_ts =
-      stl::Range<const Float*>(time_stamps_.at(_ix_time_stamp).begin(),
+      fct::Range<const Float*>(time_stamps_.at(_ix_time_stamp).begin(),
                                time_stamps_.at(_ix_time_stamp).end());
 
   const auto memory = upper_ts[0] - lower_ts.begin()[0];
 
   const auto unique_join_keys =
-      stl::collect::set<Int>(*_params.population_join_keys_);
+      fct::collect::set<Int>(*_params.population_join_keys_);
 
   const auto find_rownums =
-      [this, _ix_join_key](const Int jk) -> stl::Range<const size_t*> {
+      [this, _ix_join_key](const Int jk) -> fct::Range<const size_t*> {
     const auto p = find(jk, _ix_join_key);
-    return stl::Range<const size_t*>(p.first, p.second);
+    return fct::Range<const size_t*>(p.first, p.second);
   };
 
   const auto rownums =
-      std::make_shared<std::vector<size_t>>(stl::join::vector<size_t>(
+      std::make_shared<std::vector<size_t>>(fct::join::vector<size_t>(
           unique_join_keys | VIEWS::transform(find_rownums)));
 
   const auto params = tsindex::IndexParams{.join_keys_ = join_keys,

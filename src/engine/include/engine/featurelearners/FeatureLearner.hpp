@@ -392,7 +392,7 @@ FeatureLearner<FeatureLearnerType>::column_importances(
   const auto is_non_zero = [](const auto& p) -> bool { return p.second > 0.0; };
 
   const auto filter_non_zeros = [is_non_zero](const auto& _importances) {
-    return stl::collect::map<helpers::ColumnDescription, Float>(
+    return fct::collect::map<helpers::ColumnDescription, Float>(
         _importances | VIEWS::filter(is_non_zero));
   };
 
@@ -444,7 +444,7 @@ FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
     return false;
   };
 
-  const auto targets = stl::collect::vector<std::string>(
+  const auto targets = fct::collect::vector<std::string>(
       _schema.targets_ | VIEWS::filter(include_target));
 
   const auto include = [this, &_df](const std::string& _colname) -> bool {
@@ -452,22 +452,22 @@ FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
   };
 
   const auto categoricals =
-      _apply_subroles ? stl::collect::vector<std::string>(
+      _apply_subroles ? fct::collect::vector<std::string>(
                             _schema.categoricals_ | VIEWS::filter(include))
                       : _schema.categoricals_;
 
   const auto discretes = _apply_subroles
-                             ? stl::collect::vector<std::string>(
+                             ? fct::collect::vector<std::string>(
                                    _schema.discretes_ | VIEWS::filter(include))
                              : _schema.discretes_;
 
   const auto numericals =
-      _apply_subroles ? stl::collect::vector<std::string>(
+      _apply_subroles ? fct::collect::vector<std::string>(
                             _schema.numericals_ | VIEWS::filter(include))
                       : _schema.numericals_;
 
   const auto text = _apply_subroles
-                        ? stl::collect::vector<std::string>(
+                        ? fct::collect::vector<std::string>(
                               _schema.text_ | VIEWS::filter(include))
                         : _schema.text_;
 
@@ -524,9 +524,9 @@ FeatureLearner<FeatureLearnerType>::extract_tables_by_colnames(
         _peripheral_schema.at(_i), _peripheral_dfs.at(_i), t, _apply_subroles);
   };
 
-  const auto iota = stl::iota<size_t>(0, _peripheral_schema.size());
+  const auto iota = fct::iota<size_t>(0, _peripheral_schema.size());
 
-  const auto peripheral_tables = stl::collect::vector<DataFrameType>(
+  const auto peripheral_tables = fct::collect::vector<DataFrameType>(
       iota | VIEWS::transform(to_peripheral));
 
   return std::make_pair(population_table, peripheral_tables);

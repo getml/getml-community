@@ -6,7 +6,7 @@
 
 // ----------------------------------------------------------------------------
 
-#include "stl/stl.hpp"
+#include "fct/fct.hpp"
 
 // ----------------------------------------------------------------------------
 
@@ -38,7 +38,7 @@ communication::Warner DataModelChecker::check(
     return _df.name().find(helpers::Macros::text_field()) == std::string::npos;
   };
 
-  const auto peripheral = stl::collect::vector<containers::DataFrame>(
+  const auto peripheral = fct::collect::vector<containers::DataFrame>(
       _peripheral | VIEWS::filter(is_not_text_field));
 
   check_peripheral_size(_peripheral_names, peripheral);

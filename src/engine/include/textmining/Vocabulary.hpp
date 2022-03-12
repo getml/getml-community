@@ -12,7 +12,7 @@
 
 // -------------------------------------------------------------------------
 
-#include "stl/stl.hpp"
+#include "fct/fct.hpp"
 #include "strings/strings.hpp"
 
 // -------------------------------------------------------------------------
@@ -30,7 +30,7 @@ class Vocabulary {
   template <class IteratorType>
   static std::shared_ptr<const std::vector<strings::String>> generate(
       const size_t _min_df, const size_t _max_size,
-      const stl::Range<IteratorType> _range) {
+      const fct::Range<IteratorType> _range) {
     using Pair = std::pair<strings::String, size_t>;
 
     const auto df_count = count_df(_range);
@@ -53,8 +53,8 @@ class Vocabulary {
 
     auto vocab = std::make_shared<std::vector<strings::String>>(
         _max_size > 0
-            ? stl::collect::vector<strings::String>(range_with_max_size)
-            : stl::collect::vector<strings::String>(range_without_max_size));
+            ? fct::collect::vector<strings::String>(range_with_max_size)
+            : fct::collect::vector<strings::String>(range_without_max_size));
 
     std::sort(vocab->begin(), vocab->end());
 
@@ -72,7 +72,7 @@ class Vocabulary {
   /// Generates an unordered_map for the vocabulary.
   template <class IteratorType>
   static std::map<strings::String, Int> to_map(
-      const stl::Range<IteratorType> _range) {
+      const fct::Range<IteratorType> _range) {
     Int value = 0;
 
     auto m = std::map<strings::String, Int>();
@@ -88,7 +88,7 @@ class Vocabulary {
   /// Counts the document frequency for each individual word.
   template <class IteratorType>
   static std::vector<std::pair<strings::String, size_t>> count_df(
-      const stl::Range<IteratorType> _range) {
+      const fct::Range<IteratorType> _range) {
     const auto process =
         [](const strings::String& _text_field) -> std::set<std::string> {
       return Vocabulary::process_text_field(_text_field);

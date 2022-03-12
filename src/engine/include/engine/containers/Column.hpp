@@ -720,14 +720,14 @@ Column<T> Column<T>::where(const std::vector<bool> &_condition) const {
 
   const auto get_val = [this](size_t _i) -> T { return (*this)[_i]; };
 
-  const auto iota = stl::iota<size_t>(0, nrows());
+  const auto iota = fct::iota<size_t>(0, nrows());
 
   auto range = iota | VIEWS::filter(include) | VIEWS::transform(get_val);
 
   const auto data_ptr = pool() ? Variant(std::make_shared<MemmapVector>(
                                      pool(), range.begin(), range.end()))
                                : Variant(std::make_shared<std::vector<T>>(
-                                     stl::collect::vector<T>(range)));
+                                     fct::collect::vector<T>(range)));
 
   Column<T> trimmed(data_ptr);
 

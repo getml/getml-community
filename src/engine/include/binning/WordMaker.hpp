@@ -10,8 +10,8 @@
 // ----------------------------------------------------------------------------
 
 #include "debug/debug.hpp"
+#include "fct/fct.hpp"
 #include "multithreading/multithreading.hpp"
-#include "stl/stl.hpp"
 #include "strings/strings.hpp"
 
 // ----------------------------------------------------------------------------
@@ -76,14 +76,14 @@ WordMaker<MatchType, GetRangeType>::make_words(
     return included[i] == 1;
   };
 
-  const auto iota = stl::iota<Int>(0, included.size());
+  const auto iota = fct::iota<Int>(0, included.size());
 
   auto range = iota | VIEWS::filter(is_included);
 
   // ------------------------------------------------------------------------
 
   return std::make_shared<const std::vector<Int>>(
-      stl::collect::vector<Int>(range));
+      fct::collect::vector<Int>(range));
 
   // ------------------------------------------------------------------------
 }

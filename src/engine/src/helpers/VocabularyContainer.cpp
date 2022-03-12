@@ -9,7 +9,7 @@ VocabularyContainer::VocabularyContainer(
   const auto extract_from_col =
       [_min_df, _max_size](const Column<strings::String>& col) {
         return textmining::Vocabulary::generate(
-            _min_df, _max_size, stl::Range(col.begin(), col.end()));
+            _min_df, _max_size, fct::Range(col.begin(), col.end()));
       };
 
   const auto extract_from_df =
@@ -20,7 +20,7 @@ VocabularyContainer::VocabularyContainer(
 
   auto range = _peripheral | VIEWS::transform(extract_from_df);
 
-  peripheral_ = stl::collect::vector<VocabForDf>(range);
+  peripheral_ = fct::collect::vector<VocabForDf>(range);
 
   population_ = extract_from_df(_population);
 
@@ -61,7 +61,7 @@ VocabularyContainer::VocabularyContainer(const Poco::JSON::Object& _obj) {
     auto range = vec | VIEWS::transform(to_str);
 
     return std::make_shared<const std::vector<strings::String>>(
-        stl::collect::vector<strings::String>(range));
+        fct::collect::vector<strings::String>(range));
   };
 
   // ------------------------------------------------------------------
@@ -113,7 +113,7 @@ Poco::JSON::Object::Ptr VocabularyContainer::to_json_obj() const {
   const auto handle_vocab = [to_str](const std::vector<strings::String>& _vocab)
       -> Poco::JSON::Array::Ptr {
     auto range = _vocab | VIEWS::transform(to_str);
-    const auto vec = stl::collect::vector<std::string>(range);
+    const auto vec = fct::collect::vector<std::string>(range);
     return jsonutils::JSON::vector_to_array_ptr(vec);
   };
 

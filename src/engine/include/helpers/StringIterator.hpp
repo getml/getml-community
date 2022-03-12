@@ -7,7 +7,7 @@
 
 // -------------------------------------------------------------------------
 
-#include "stl/stl.hpp"
+#include "fct/fct.hpp"
 #include "strings/strings.hpp"
 
 // -------------------------------------------------------------------------
@@ -32,7 +32,7 @@ class StringIterator {
 
   /// Iterator to the beginning.
   auto begin() const {
-    auto iota = stl::iota<size_t>(0, size_);
+    auto iota = fct::iota<size_t>(0, size_);
     auto range = iota | VIEWS::transform(func_);
     return range.begin();
   }

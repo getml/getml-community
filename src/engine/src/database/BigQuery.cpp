@@ -1,6 +1,6 @@
 #include "database/BigQuery.hpp"
 
-#include "stl/stl.hpp"
+#include "fct/fct.hpp"
 
 // ----------------------------------------------------------------------------
 
@@ -67,7 +67,7 @@ std::vector<std::string> BigQuery::get_colnames(
     return std::string(_ptr.get());
   };
 
-  return stl::collect::vector<std::string>(*colnames |
+  return fct::collect::vector<std::string>(*colnames |
                                            VIEWS::transform(to_string));
 }
 
@@ -81,7 +81,7 @@ std::vector<io::Datatype> BigQuery::get_coltypes(
 
   assert_true(typenames);
 
-  return stl::collect::vector<io::Datatype>(
+  return fct::collect::vector<io::Datatype>(
       *typenames | VIEWS::transform(GoutilsTypeInferrer::to_datatype));
 }
 
@@ -204,7 +204,7 @@ std::string BigQuery::make_get_content_query(
 
   query << "SELECT ";
 
-  query << "`" << stl::join::string(_colnames, "`,`") << "`";
+  query << "`" << fct::join::string(_colnames, "`,`") << "`";
 
   query << " FROM `";
 
@@ -318,7 +318,7 @@ std::shared_ptr<Iterator> BigQuery::select(const std::string& _sql) {
     return std::string(_ptr.get());
   };
 
-  const auto colnames = stl::collect::vector<std::string>(
+  const auto colnames = fct::collect::vector<std::string>(
       *colnames_ptr | VIEWS::transform(to_string));
 
   const auto data = goutils::BigQuery::query(google_application_credentials_,

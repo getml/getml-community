@@ -88,13 +88,13 @@ XGBoostIteratorSparse::make_proxy_csr() const {
 
   const auto get_subrange = [begin, end](const auto &_col) {
     assert_true(end <= _col.size());
-    return stl::Range(_col.data() + begin, _col.data() + end);
+    return fct::Range(_col.data() + begin, _col.data() + end);
   };
 
-  const auto ranges_categorical = stl::collect::vector<stl::Range<const Int *>>(
+  const auto ranges_categorical = fct::collect::vector<fct::Range<const Int *>>(
       X_categorical_ | VIEWS::transform(get_subrange));
 
-  const auto ranges_numerical = stl::collect::vector<stl::Range<const Float *>>(
+  const auto ranges_numerical = fct::collect::vector<fct::Range<const Float *>>(
       X_numerical_ | VIEWS::transform(get_subrange));
 
   using DataType = CSRMatrixType::DataType;

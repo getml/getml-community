@@ -2,7 +2,7 @@
 
 // ----------------------------------------------------------------------------
 
-#include "stl/stl.hpp"
+#include "fct/fct.hpp"
 
 // ----------------------------------------------------------------------------
 
@@ -56,10 +56,10 @@ std::string SQLite3Generator::create_indices(
            "\" (\"" + colname + "\");\n\n";
   };
 
-  return stl::collect::string(_schema.join_keys_ |
+  return fct::collect::string(_schema.join_keys_ |
                               VIEWS::filter(SQLGenerator::include_column) |
                               VIEWS::transform(create_index)) +
-         stl::collect::string(_schema.time_stamps_ |
+         fct::collect::string(_schema.time_stamps_ |
                               VIEWS::transform(create_index));
 }
 
@@ -413,7 +413,7 @@ std::vector<std::string> SQLite3Generator::make_staging_columns(
       -> std::vector<std::string> {
     const auto cast = std::bind(cast_column, std::placeholders::_1, "REAL");
 
-    return stl::collect::vector<std::string>(
+    return fct::collect::vector<std::string>(
         _colnames | VIEWS::filter(SQLGenerator::include_column) |
         VIEWS::transform(cast));
   };
@@ -421,7 +421,7 @@ std::vector<std::string> SQLite3Generator::make_staging_columns(
   const auto cast_as_time_stamp =
       [to_epoch_time_or_rowid](const std::vector<std::string>& _colnames)
       -> std::vector<std::string> {
-    return stl::collect::vector<std::string>(
+    return fct::collect::vector<std::string>(
         _colnames | VIEWS::filter(SQLGenerator::include_column) |
         VIEWS::transform(to_epoch_time_or_rowid));
   };
@@ -431,7 +431,7 @@ std::vector<std::string> SQLite3Generator::make_staging_columns(
       -> std::vector<std::string> {
     const auto cast = std::bind(cast_column, std::placeholders::_1, "TEXT");
 
-    return stl::collect::vector<std::string>(
+    return fct::collect::vector<std::string>(
         _colnames | VIEWS::filter(SQLGenerator::include_column) |
         VIEWS::transform(cast));
   };
@@ -451,7 +451,7 @@ std::vector<std::string> SQLite3Generator::make_staging_columns(
 
   const auto time_stamps = cast_as_time_stamp(_schema.time_stamps_);
 
-  return stl::join::vector<std::string>({targets, categoricals, discretes,
+  return fct::join::vector<std::string>({targets, categoricals, discretes,
                                          join_keys, numericals, text,
                                          time_stamps});
 }
@@ -550,7 +550,7 @@ std::string SQLite3Generator::make_select(
     const std::vector<std::string>& _categorical,
     const std::vector<std::string>& _numerical) const {
   const auto manual =
-      stl::join::vector<std::string>({_targets, _numerical, _categorical});
+      fct::join::vector<std::string>({_targets, _numerical, _categorical});
 
   const auto make_staging_table_colname_lambda =
       [this](const std::string& _colname) -> std::string {
@@ -609,7 +609,7 @@ std::string SQLite3Generator::make_sql(
 
   sql.push_back(make_postprocessing(_sql));
 
-  return stl::collect::string(sql);
+  return fct::collect::string(sql);
 }
 
 // ----------------------------------------------------------------------------

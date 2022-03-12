@@ -2,9 +2,9 @@
 
 // ----------------------------------------------------------------------------
 
+#include "fct/fct.hpp"
 #include "helpers/Macros.hpp"
 #include "helpers/StringReplacer.hpp"
-#include "stl/stl.hpp"
 #include "textmining/textmining.hpp"
 
 // ----------------------------------------------------------------------------
@@ -359,7 +359,7 @@ std::string SparkSQLGenerator::drop_batch_tables(
                                ? _autofeatures.size() / BATCH_SIZE
                                : _autofeatures.size() / BATCH_SIZE + 1;
 
-  const auto iota = stl::iota<size_t>(0, num_batches);
+  const auto iota = fct::iota<size_t>(0, num_batches);
 
   const auto drop_table = [&_prefix](size_t _i) -> std::string {
     std::stringstream sql;
@@ -370,7 +370,7 @@ std::string SparkSQLGenerator::drop_batch_tables(
     return sql.str();
   };
 
-  return stl::collect::string(iota | VIEWS::transform(drop_table));
+  return fct::collect::string(iota | VIEWS::transform(drop_table));
 }
 
 // ----------------------------------------------------------------------------
@@ -497,7 +497,7 @@ std::string SparkSQLGenerator::join_batch_tables(
                                ? _autofeatures.size() / BATCH_SIZE
                                : _autofeatures.size() / BATCH_SIZE + 1;
 
-  const auto iota = stl::iota<size_t>(0, num_batches);
+  const auto iota = fct::iota<size_t>(0, num_batches);
 
   const auto join_table = [&_prefix](size_t _i) -> std::string {
     std::stringstream sql;
@@ -509,7 +509,7 @@ std::string SparkSQLGenerator::join_batch_tables(
     return sql.str();
   };
 
-  return stl::collect::string(iota | VIEWS::transform(join_table));
+  return fct::collect::string(iota | VIEWS::transform(join_table));
 }
 
 // ----------------------------------------------------------------------------
@@ -706,7 +706,7 @@ std::string SparkSQLGenerator::make_batch_tables(
                                ? _autofeatures.size() / BATCH_SIZE
                                : _autofeatures.size() / BATCH_SIZE + 1;
 
-  const auto iota = stl::iota<size_t>(0, num_batches);
+  const auto iota = fct::iota<size_t>(0, num_batches);
 
   const auto make_table = [this, &_main_table, &_autofeatures,
                            &_prefix](size_t _i) -> std::string {
@@ -715,7 +715,7 @@ std::string SparkSQLGenerator::make_batch_tables(
     const auto range =
         _autofeatures | VIEWS::drop(batch_begin) | VIEWS::take(BATCH_SIZE);
 
-    const auto autofeatures = stl::collect::vector<std::string>(range);
+    const auto autofeatures = fct::collect::vector<std::string>(range);
 
     std::stringstream sql;
 
@@ -726,7 +726,7 @@ std::string SparkSQLGenerator::make_batch_tables(
     return sql.str();
   };
 
-  return stl::collect::string(iota | VIEWS::transform(make_table));
+  return fct::collect::string(iota | VIEWS::transform(make_table));
 }
 // ----------------------------------------------------------------------------
 
@@ -871,7 +871,7 @@ std::vector<std::string> SparkSQLGenerator::make_staging_columns(
     const auto cast =
         std::bind(cast_column, std::placeholders::_1, "DOUBLE", false);
 
-    return stl::collect::vector<std::string>(
+    return fct::collect::vector<std::string>(
         _colnames | VIEWS::filter(SQLGenerator::include_column) |
         VIEWS::transform(cast));
   };
@@ -879,7 +879,7 @@ std::vector<std::string> SparkSQLGenerator::make_staging_columns(
   const auto cast_as_time_stamp =
       [to_epoch_time_or_rowid](const std::vector<std::string>& _colnames)
       -> std::vector<std::string> {
-    return stl::collect::vector<std::string>(
+    return fct::collect::vector<std::string>(
         _colnames | VIEWS::filter(SQLGenerator::include_column) |
         VIEWS::transform(to_epoch_time_or_rowid));
   };
@@ -890,7 +890,7 @@ std::vector<std::string> SparkSQLGenerator::make_staging_columns(
     const auto cast =
         std::bind(cast_column, std::placeholders::_1, "STRING", false);
 
-    return stl::collect::vector<std::string>(
+    return fct::collect::vector<std::string>(
         _colnames | VIEWS::filter(SQLGenerator::include_column) |
         VIEWS::filter(is_not_rowid) | VIEWS::transform(cast));
   };
@@ -901,7 +901,7 @@ std::vector<std::string> SparkSQLGenerator::make_staging_columns(
     const auto cast =
         std::bind(cast_column, std::placeholders::_1, "STRING", true);
 
-    return stl::collect::vector<std::string>(
+    return fct::collect::vector<std::string>(
         _colnames | VIEWS::filter(SQLGenerator::include_column) |
         VIEWS::filter(is_not_rowid) | VIEWS::transform(cast));
   };
@@ -921,7 +921,7 @@ std::vector<std::string> SparkSQLGenerator::make_staging_columns(
 
   const auto time_stamps = cast_as_time_stamp(_schema.time_stamps_);
 
-  return stl::join::vector<std::string>({targets, categoricals, discretes,
+  return fct::join::vector<std::string>({targets, categoricals, discretes,
                                          join_keys, numericals, text,
                                          time_stamps});
 }
@@ -1013,7 +1013,7 @@ std::string SparkSQLGenerator::make_select(
     const std::vector<std::string>& _categorical,
     const std::vector<std::string>& _numerical) const {
   const auto manual =
-      stl::join::vector<std::string>({_targets, _numerical, _categorical});
+      fct::join::vector<std::string>({_targets, _numerical, _categorical});
 
   const auto make_staging_table_colname_lambda =
       [this](const std::string& _colname) -> std::string {
@@ -1113,7 +1113,7 @@ std::string SparkSQLGenerator::make_separators() const {
 
   const auto separators = std::string(textmining::StringSplitter::separators_);
 
-  return stl::collect::string(separators | VIEWS::transform(handle));
+  return fct::collect::string(separators | VIEWS::transform(handle));
 }
 
 // ----------------------------------------------------------------------------
@@ -1132,7 +1132,7 @@ std::string SparkSQLGenerator::make_sql(
 
   sql.push_back(make_postprocessing(_sql));
 
-  return stl::collect::string(sql);
+  return fct::collect::string(sql);
 }
 
 // ----------------------------------------------------------------------------

@@ -8,7 +8,7 @@
 
 // ----------------------------------------------------------------------------
 
-#include "stl/stl.hpp"
+#include "fct/fct.hpp"
 
 // ----------------------------------------------------------------------------
 
@@ -21,10 +21,10 @@ namespace tsindex {
 class IndexParams {
  public:
   /// The join keys used for the index.
-  const stl::Range<const Int*> join_keys_;
+  const fct::Range<const Int*> join_keys_;
 
   /// The lower time stamps used for the the index.
-  const stl::Range<const Float*> lower_ts_;
+  const fct::Range<const Float*> lower_ts_;
 
   /// The difference between the lower_ts and the upper_ts.
   const Float memory_;

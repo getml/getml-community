@@ -868,10 +868,10 @@ void DecisionTreeEnsemble::subfeatures_to_sql(
       };
 
       const auto iota =
-          stl::iota<size_t>(0, subensembles_avg_.at(i)->num_features() +
+          fct::iota<size_t>(0, subensembles_avg_.at(i)->num_features() +
                                    subensembles_sum_.at(i)->num_features());
 
-      const auto autofeatures = stl::collect::vector<std::string>(
+      const auto autofeatures = fct::collect::vector<std::string>(
           iota | VIEWS::transform(to_feature_name));
 
       const auto it =

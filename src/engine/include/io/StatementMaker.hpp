@@ -13,8 +13,8 @@
 // ----------------------------------------------------------------------------
 
 #include "debug/debug.hpp"
+#include "fct/fct.hpp"
 #include "helpers/StringSplitter.hpp"
-#include "stl/stl.hpp"
 
 // ----------------------------------------------------------------------------
 
@@ -39,7 +39,7 @@ class StatementMaker {
   static std::string handle_schema(const std::string& _table_name,
                                    const std::string& _quotechar1,
                                    const std::string& _quotechar2) {
-    return stl::join::string(helpers::StringSplitter::split(_table_name, "."),
+    return fct::join::string(helpers::StringSplitter::split(_table_name, "."),
                              _quotechar2 + "." + _quotechar1);
   }
 

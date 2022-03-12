@@ -9,7 +9,7 @@
 // -----------------------------------------------------------------------------
 
 #include "debug/debug.hpp"
-#include "stl/stl.hpp"
+#include "fct/fct.hpp"
 
 // -----------------------------------------------------------------------------
 
@@ -35,37 +35,37 @@ class CSRMatrix {
   CSRMatrix() : indptr_(std::vector<IndptrType>(1)), ncols_(0) {}
 
   /// Constructs a CSRMatrix from a discrete or numerical range.
-  explicit CSRMatrix(const stl::Range<const Float*>& _col);
+  explicit CSRMatrix(const fct::Range<const Float*>& _col);
 
   /// Constructs a CSRMatrix from a categorical range.
-  CSRMatrix(const stl::Range<const Int*>& _col, const size_t _n_unique);
+  CSRMatrix(const fct::Range<const Int*>& _col, const size_t _n_unique);
 
   /// Constructs a CSRMatrix from a discrete or numerical column.
   explicit CSRMatrix(const FloatFeature& _f)
-      : CSRMatrix(stl::Range(_f.begin(), _f.end())) {}
+      : CSRMatrix(fct::Range(_f.begin(), _f.end())) {}
 
   /// Constructs a CSRMatrix from a categorical feature.
   CSRMatrix(const IntFeature& _f, const size_t _n_unique)
-      : CSRMatrix(stl::Range(_f.begin(), _f.end())) {}
+      : CSRMatrix(fct::Range(_f.begin(), _f.end())) {}
 
   // -----------------------------------------------------------
 
  public:
   /// Adds a discrete or numerical range.
-  void add(const stl::Range<const Float*>& _col);
+  void add(const fct::Range<const Float*>& _col);
 
   /// Adds a categorical column.
-  void add(const stl::Range<const Int*>& _col, const size_t _n_unique);
+  void add(const fct::Range<const Int*>& _col, const size_t _n_unique);
 
   // -----------------------------------------------------------
 
  public:
   /// Adds a discrete or numerical range.
-  void add(const FloatFeature& _f) { add(stl::Range(_f.begin(), _f.end())); }
+  void add(const FloatFeature& _f) { add(fct::Range(_f.begin(), _f.end())); }
 
   /// Adds a categorical column.
   void add(const IntFeature& _f, const size_t _n_unique) {
-    add(stl::Range(_f.begin(), _f.end()), _n_unique);
+    add(fct::Range(_f.begin(), _f.end()), _n_unique);
   }
 
   /// Deletes all data in the CSRMatrix.
@@ -101,22 +101,22 @@ class CSRMatrix {
  private:
   /// Generates a new data_ by adding the new range.
   std::vector<DataType> update_data_from_float(
-      const stl::Range<const Float*>& _col) const;
+      const fct::Range<const Float*>& _col) const;
 
   /// Generates a new indices_ by adding the new range.
   std::vector<IndicesType> update_indices_from_float(
-      const stl::Range<const Float*>& _col) const;
+      const fct::Range<const Float*>& _col) const;
 
   /// Generates a new data_ by adding the new range.
   std::vector<DataType> update_data_from_int(
-      const stl::Range<const Int*>& _col, const size_t _num_non_negative) const;
+      const fct::Range<const Int*>& _col, const size_t _num_non_negative) const;
 
   /// Generates a new indices_ by adding the new range.
   std::vector<IndicesType> update_indices_from_int(
-      const stl::Range<const Int*>& _col, const size_t _num_non_negative) const;
+      const fct::Range<const Int*>& _col, const size_t _num_non_negative) const;
 
   /// Updates the indptr_ when adding an Int range.
-  void update_indptr_from_int(const stl::Range<const Int*>& _col,
+  void update_indptr_from_int(const fct::Range<const Int*>& _col,
                               const size_t _num_non_negative);
 
   // -----------------------------------------------------------
@@ -147,7 +147,7 @@ namespace predictors {
 
 template <typename DataType, typename IndicesType, typename IndptrType>
 CSRMatrix<DataType, IndicesType, IndptrType>::CSRMatrix(
-    const stl::Range<const Float*>& _col) {
+    const fct::Range<const Float*>& _col) {
   data_ = std::vector<DataType>(_col.size());
 
   const auto to_data = [](const auto val) {
@@ -175,7 +175,7 @@ CSRMatrix<DataType, IndicesType, IndptrType>::CSRMatrix(
 
 template <typename DataType, typename IndicesType, typename IndptrType>
 CSRMatrix<DataType, IndicesType, IndptrType>::CSRMatrix(
-    const stl::Range<const Int*>& _col, const size_t _n_unique) {
+    const fct::Range<const Int*>& _col, const size_t _n_unique) {
   indptr_ = std::vector<IndptrType>(_col.size() + 1);
 
   for (size_t i = 0; i < _col.size(); ++i) {
@@ -197,7 +197,7 @@ CSRMatrix<DataType, IndicesType, IndptrType>::CSRMatrix(
 
 template <typename DataType, typename IndicesType, typename IndptrType>
 void CSRMatrix<DataType, IndicesType, IndptrType>::add(
-    const stl::Range<const Float*>& _col) {
+    const fct::Range<const Float*>& _col) {
   if (ncols() == 0) {
     *this = CSRMatrix<DataType, IndicesType, IndptrType>(_col);
     return;
@@ -218,7 +218,7 @@ void CSRMatrix<DataType, IndicesType, IndptrType>::add(
 
 template <typename DataType, typename IndicesType, typename IndptrType>
 void CSRMatrix<DataType, IndicesType, IndptrType>::add(
-    const stl::Range<const Int*>& _col, const size_t _n_unique) {
+    const fct::Range<const Int*>& _col, const size_t _n_unique) {
   if (ncols() == 0) {
     *this = CSRMatrix(_col, _n_unique);
     return;
@@ -253,7 +253,7 @@ void CSRMatrix<DataType, IndicesType, IndptrType>::add(
 template <typename DataType, typename IndicesType, typename IndptrType>
 std::vector<DataType>
 CSRMatrix<DataType, IndicesType, IndptrType>::update_data_from_float(
-    const stl::Range<const Float*>& _col) const {
+    const fct::Range<const Float*>& _col) const {
   auto data_temp = std::vector<DataType>(data_.size() + _col.size());
 
   for (size_t i = 0; i < nrows(); ++i) {
@@ -271,7 +271,7 @@ CSRMatrix<DataType, IndicesType, IndptrType>::update_data_from_float(
 template <typename DataType, typename IndicesType, typename IndptrType>
 std::vector<IndicesType>
 CSRMatrix<DataType, IndicesType, IndptrType>::update_indices_from_float(
-    const stl::Range<const Float*>& _col) const {
+    const fct::Range<const Float*>& _col) const {
   auto indices_temp = std::vector<IndicesType>(indices_.size() + _col.size());
 
   for (size_t i = 0; i < nrows(); ++i) {
@@ -289,7 +289,7 @@ CSRMatrix<DataType, IndicesType, IndptrType>::update_indices_from_float(
 template <typename DataType, typename IndicesType, typename IndptrType>
 std::vector<DataType>
 CSRMatrix<DataType, IndicesType, IndptrType>::update_data_from_int(
-    const stl::Range<const Int*>& _col, const size_t _num_non_negative) const {
+    const fct::Range<const Int*>& _col, const size_t _num_non_negative) const {
   auto data_temp = std::vector<DataType>(data_.size() + _num_non_negative);
 
   IndptrType num_added = 0;
@@ -315,7 +315,7 @@ CSRMatrix<DataType, IndicesType, IndptrType>::update_data_from_int(
 template <typename DataType, typename IndicesType, typename IndptrType>
 std::vector<IndicesType>
 CSRMatrix<DataType, IndicesType, IndptrType>::update_indices_from_int(
-    const stl::Range<const Int*>& _col, const size_t _num_non_negative) const {
+    const fct::Range<const Int*>& _col, const size_t _num_non_negative) const {
   auto indices_temp =
       std::vector<IndicesType>(indices_.size() + _num_non_negative);
 
@@ -342,7 +342,7 @@ CSRMatrix<DataType, IndicesType, IndptrType>::update_indices_from_int(
 
 template <typename DataType, typename IndicesType, typename IndptrType>
 void CSRMatrix<DataType, IndicesType, IndptrType>::update_indptr_from_int(
-    const stl::Range<const Int*>& _col, const size_t _num_non_negative) {
+    const fct::Range<const Int*>& _col, const size_t _num_non_negative) {
   assert_true(_col.size() + 1 == indptr_.size());
 
   IndptrType num_added = 0;

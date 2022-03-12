@@ -14,7 +14,7 @@
 
 // ------------------------------------------------------------------------
 
-#include "stl/stl.hpp"
+#include "fct/fct.hpp"
 
 // ------------------------------------------------------------------------
 
@@ -560,7 +560,7 @@ class Aggregations {
       return _pair.second;
     };
 
-    auto range = stl::Range(_begin, _end);
+    auto range = fct::Range(_begin, _end);
 
     auto range_x =
         range | VIEWS::filter(second_is_not_null) | VIEWS::transform(get_first);

@@ -56,16 +56,16 @@ Mapping::build_prerequisites(
   const auto population =
       _population_df.to_immutable<helpers::DataFrame>(*population_schema_);
 
-  const auto iota = stl::iota<size_t>(0, _peripheral_dfs.size());
+  const auto iota = fct::iota<size_t>(0, _peripheral_dfs.size());
 
-  const auto peripheral = stl::collect::vector<helpers::DataFrame>(
+  const auto peripheral = fct::collect::vector<helpers::DataFrame>(
       iota | VIEWS::transform(to_immutable));
 
   const auto [vocabulary, word_index_container] =
       handle_text_fields(population, peripheral);
 
   const auto rownums = std::make_shared<std::vector<size_t>>(
-      stl::collect::vector<size_t>(stl::iota<size_t>(0, population.nrows())));
+      fct::collect::vector<size_t>(fct::iota<size_t>(0, population.nrows())));
 
   const auto population_view = helpers::DataFrameView(population, rownums);
 
@@ -133,12 +133,12 @@ std::pair<Int, std::vector<Float>> Mapping::calc_agg_targets(
 
     const auto aggregated_range = aggregation_enums_ | VIEWS::transform(agg);
 
-    return stl::collect::vector<Float>(aggregated_range);
+    return fct::collect::vector<Float>(aggregated_range);
   };
 
   const auto range = _population.targets_ | VIEWS::transform(calc_aggs);
 
-  const auto second = stl::join::vector<Float>(range);
+  const auto second = fct::join::vector<Float>(range);
 
   return std::make_pair(_input.first, second);
 }
@@ -310,11 +310,11 @@ typename Mapping::MappingForDf Mapping::extract_mapping(
     return m;
   };
 
-  const auto iota = stl::iota<size_t>(0, arr.size());
+  const auto iota = fct::iota<size_t>(0, arr.size());
 
   const auto range = iota | VIEWS::transform(obj_to_map);
 
-  return stl::collect::vector<MappingForDf::value_type>(range);
+  return fct::collect::vector<MappingForDf::value_type>(range);
 }
 
 // ----------------------------------------------------
@@ -344,12 +344,12 @@ typename Mapping::TextMapping Mapping::extract_text_mapping(
     return *ptr;
   };
 
-  const auto iota = stl::iota<size_t>(0, arr.size());
+  const auto iota = fct::iota<size_t>(0, arr.size());
 
   const auto range =
       iota | VIEWS::transform(get_obj) | VIEWS::transform(obj_to_map);
 
-  return stl::collect::vector<TextMapping::value_type>(range);
+  return fct::collect::vector<TextMapping::value_type>(range);
 }
 
 // ----------------------------------------------------
@@ -446,10 +446,10 @@ Mapping::fit_on_categoricals(
   const auto range2 = data_frame.categoricals_ | VIEWS::filter(include) |
                       VIEWS::transform(get_colname);
 
-  const auto mappings = stl::collect::vector<MappingForDf::value_type>(range1);
+  const auto mappings = fct::collect::vector<MappingForDf::value_type>(range1);
 
   const auto colnames = std::make_shared<const std::vector<std::string>>(
-      stl::collect::vector<std::string>(range2));
+      fct::collect::vector<std::string>(range2));
 
   return std::make_pair(mappings, colnames);
 }
@@ -488,10 +488,10 @@ Mapping::fit_on_discretes(
   const auto range2 = data_frame.discretes_ | VIEWS::filter(include) |
                       VIEWS::transform(get_colname);
 
-  const auto mappings = stl::collect::vector<MappingForDf::value_type>(range1);
+  const auto mappings = fct::collect::vector<MappingForDf::value_type>(range1);
 
   const auto colnames = std::make_shared<const std::vector<std::string>>(
-      stl::collect::vector<std::string>(range2));
+      fct::collect::vector<std::string>(range2));
 
   return std::make_pair(mappings, colnames);
 }
@@ -593,7 +593,7 @@ Mapping::fit_on_text(const helpers::DataFrame& _population,
                  ", data_frame.text_.size(): " +
                  std::to_string(data_frame.text_.size()));
 
-  const auto iota = stl::iota<size_t>(0, data_frame.text_.size());
+  const auto iota = fct::iota<size_t>(0, data_frame.text_.size());
 
   const auto range1 = iota | VIEWS::filter(include_index) |
                       VIEWS::transform(get_word_index) |
@@ -602,10 +602,10 @@ Mapping::fit_on_text(const helpers::DataFrame& _population,
   const auto range2 =
       data_frame.text_ | VIEWS::filter(include) | VIEWS::transform(get_colname);
 
-  const auto mappings = stl::collect::vector<MappingForDf::value_type>(range1);
+  const auto mappings = fct::collect::vector<MappingForDf::value_type>(range1);
 
   const auto colnames = std::make_shared<const std::vector<std::string>>(
-      stl::collect::vector<std::string>(range2));
+      fct::collect::vector<std::string>(range2));
 
   return std::make_pair(mappings, colnames);
 }
@@ -628,9 +628,9 @@ std::vector<Mapping> Mapping::fit_submappings(
                                _peripheral_tables, _ix, _logger);
   };
 
-  const auto iota = stl::iota<size_t>(0, _table_holder->main_tables().size());
+  const auto iota = fct::iota<size_t>(0, _table_holder->main_tables().size());
 
-  return stl::collect::vector<Mapping>(iota | VIEWS::transform(fit));
+  return fct::collect::vector<Mapping>(iota | VIEWS::transform(fit));
 }
 
 // ----------------------------------------------------
@@ -649,7 +649,7 @@ Mapping::extract_schemata(
 
   const auto peripheral_schema =
       std::make_shared<const std::vector<containers::Schema>>(
-          stl::collect::vector<containers::Schema>(
+          fct::collect::vector<containers::Schema>(
               _peripheral_dfs | VIEWS::transform(to_schema)));
 
   return std::make_pair(population_schema, peripheral_schema);
@@ -791,10 +791,10 @@ Mapping Mapping::from_json_obj(const Poco::JSON::Object& _obj) const {
       return containers::Schema::from_json(*ptr);
     };
 
-    const auto iota = stl::iota<size_t>(0, arr->size());
+    const auto iota = fct::iota<size_t>(0, arr->size());
 
     return std::make_shared<std::vector<containers::Schema>>(
-        stl::collect::vector<containers::Schema>(iota |
+        fct::collect::vector<containers::Schema>(iota |
                                                  VIEWS::transform(to_schema)));
   };
 
@@ -803,7 +803,7 @@ Mapping Mapping::from_json_obj(const Poco::JSON::Object& _obj) const {
   that.aggregation_ =
       JSON::array_to_vector<std::string>(JSON::get_array(_obj, "aggregation_"));
 
-  that.aggregation_enums_ = stl::collect::vector<MappingAggregation>(
+  that.aggregation_enums_ = fct::collect::vector<MappingAggregation>(
       that.aggregation_ | VIEWS::transform(parse));
 
   that.dependencies_ = dependencies_;
@@ -859,9 +859,9 @@ Mapping Mapping::from_json_obj(const Poco::JSON::Object& _obj) const {
       return mapping.from_json_obj(*ptr);
     };
 
-    const auto iota = stl::iota<size_t>(0, arr->size());
+    const auto iota = fct::iota<size_t>(0, arr->size());
 
-    return stl::collect::vector<Mapping>(iota | VIEWS::transform(to_mapping));
+    return fct::collect::vector<Mapping>(iota | VIEWS::transform(to_mapping));
   };
 
   that.submappings_ = extract_submappings();
@@ -933,7 +933,7 @@ std::shared_ptr<const std::map<Int, std::vector<Float>>> Mapping::make_mapping(
 #else
   if (multithreading_) {
     return std::make_shared<const std::map<Int, std::vector<Float>>>(
-        stl::collect_parallel::map<Int, std::vector<Float>>(range));
+        fct::collect_parallel::map<Int, std::vector<Float>>(range));
   }
 #endif
 
@@ -985,13 +985,13 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_int(
 
 #if (defined(_WIN32) || defined(_WIN64) || defined(__APPLE__))
     const auto ptr = std::make_shared<std::vector<Float>>(
-        stl::collect::vector<Float>(range));
+        fct::collect::vector<Float>(range));
 #else
     const auto ptr = multithreading_
                          ? std::make_shared<std::vector<Float>>(
-                               stl::collect_parallel::vector<Float>(range))
+                               fct::collect_parallel::vector<Float>(range))
                          : std::make_shared<std::vector<Float>>(
-                               stl::collect::vector<Float>(range));
+                               fct::collect::vector<Float>(range));
 #endif
 
     const auto name = make_staging_table_colname(col.name(), _weight_num);
@@ -1008,9 +1008,9 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_int(
 
   const auto num_weights = mapping->begin()->second.size();
 
-  const auto iota = stl::iota<size_t>(0, num_weights);
+  const auto iota = fct::iota<size_t>(0, num_weights);
 
-  const auto vec = stl::collect::vector<containers::Column<Float>>(
+  const auto vec = fct::collect::vector<containers::Column<Float>>(
       iota | VIEWS::transform(make_mapping_column));
 
   _logger->increment();
@@ -1081,19 +1081,19 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_text(
     const auto get_val =
         std::bind(map_text_field, _weight_num, std::placeholders::_1);
 
-    const auto iota = stl::iota<size_t>(0, word_index->nrows());
+    const auto iota = fct::iota<size_t>(0, word_index->nrows());
 
     const auto range = iota | VIEWS::transform(get_val);
 
 #if (defined(_WIN32) || defined(_WIN64) || defined(__APPLE__))
     const auto ptr = std::make_shared<std::vector<Float>>(
-        stl::collect::vector<Float>(range));
+        fct::collect::vector<Float>(range));
 #else
     const auto ptr = multithreading_
                          ? std::make_shared<std::vector<Float>>(
-                               stl::collect_parallel::vector<Float>(range))
+                               fct::collect_parallel::vector<Float>(range))
                          : std::make_shared<std::vector<Float>>(
-                               stl::collect::vector<Float>(range));
+                               fct::collect::vector<Float>(range));
 #endif
 
     const auto name = make_staging_table_colname(colname, _weight_num);
@@ -1110,9 +1110,9 @@ std::vector<containers::Column<Float>> Mapping::make_mapping_columns_text(
 
   const auto num_weights = mapping->begin()->second.size();
 
-  const auto iota = stl::iota<size_t>(0, num_weights);
+  const auto iota = fct::iota<size_t>(0, num_weights);
 
-  const auto vec = stl::collect::vector<containers::Column<Float>>(
+  const auto vec = fct::collect::vector<containers::Column<Float>>(
       iota | VIEWS::transform(make_mapping_column));
 
   _logger->increment();
@@ -1442,7 +1442,7 @@ Poco::JSON::Object::Ptr Mapping::to_json_obj() const {
   obj->set("prefix_", prefix_);
 
   obj->set("submappings_",
-           stl::collect::array(submappings_ | VIEWS::transform(to_json_obj)));
+           fct::collect::array(submappings_ | VIEWS::transform(to_json_obj)));
 
   obj->set("table_name_", table_name_);
 
@@ -1453,7 +1453,7 @@ Poco::JSON::Object::Ptr Mapping::to_json_obj() const {
   /// For reasons for memory efficiency, we do not duplicate the vocabulary.
   if (prefix_ == "") {
     obj->set("peripheral_schema_",
-             stl::collect::array(*peripheral_schema_ |
+             fct::collect::array(*peripheral_schema_ |
                                  VIEWS::transform(to_json_obj)));
 
     obj->set("population_schema_", population_schema_->to_json_obj());
@@ -1486,9 +1486,9 @@ std::vector<std::string> Mapping::to_sql(
   const auto all_submappings =
       submappings_ | VIEWS::transform(submapping_to_sql);
 
-  const auto submappings = stl::join::vector<std::string>(all_submappings);
+  const auto submappings = fct::join::vector<std::string>(all_submappings);
 
-  return stl::join::vector<std::string>(
+  return fct::join::vector<std::string>(
       {submappings, categorical, discrete, text});
 }
 
@@ -1598,12 +1598,12 @@ std::vector<containers::Column<Float>> Mapping::transform_categorical(
     return make_mapping_columns_int(_p, _logger);
   };
 
-  const auto iota = stl::iota<size_t>(0, categorical_.size());
+  const auto iota = fct::iota<size_t>(0, categorical_.size());
 
   const auto range =
       iota | VIEWS::transform(make_pair) | VIEWS::transform(make_cols);
 
-  return stl::join::vector<containers::Column<Float>>(range);
+  return fct::join::vector<containers::Column<Float>>(range);
 }
 
 // ----------------------------------------------------
@@ -1655,7 +1655,7 @@ std::vector<containers::Column<Float>> Mapping::transform_discrete(
     const auto range = col | VIEWS::transform(cast_as_int);
 
     const auto ptr =
-        std::make_shared<std::vector<Int>>(stl::collect::vector<Int>(range));
+        std::make_shared<std::vector<Int>>(fct::collect::vector<Int>(range));
 
     return containers::Column<Int>(ptr, col.name());
   };
@@ -1677,12 +1677,12 @@ std::vector<containers::Column<Float>> Mapping::transform_discrete(
     return make_mapping_columns_int(_p, _logger);
   };
 
-  const auto iota = stl::iota<size_t>(0, discrete_.size());
+  const auto iota = fct::iota<size_t>(0, discrete_.size());
 
   const auto range =
       iota | VIEWS::transform(make_pair) | VIEWS::transform(make_cols);
 
-  return stl::join::vector<containers::Column<Float>>(range);
+  return fct::join::vector<containers::Column<Float>>(range);
 }
 
 // ----------------------------------------------------
@@ -1709,7 +1709,7 @@ Poco::JSON::Array::Ptr Mapping::transform_mapping(
 
   const auto range = _mapping | VIEWS::transform(map_to_object);
 
-  return stl::collect::array(range);
+  return fct::collect::array(range);
 
   // --------------------------------------------------------------
 }
@@ -1768,12 +1768,12 @@ std::vector<containers::Column<Float>> Mapping::transform_text(
 
   // --------------------------------------------------------------
 
-  const auto iota = stl::iota<size_t>(0, text_.size());
+  const auto iota = fct::iota<size_t>(0, text_.size());
 
   const auto range =
       iota | VIEWS::transform(make_tuple) | VIEWS::transform(make_cols);
 
-  return stl::join::vector<containers::Column<Float>>(range);
+  return fct::join::vector<containers::Column<Float>>(range);
 }
 
 // ----------------------------------------------------

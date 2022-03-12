@@ -43,7 +43,7 @@ class ColumnView {
  public:
   /// Iterator begin
   inline auto begin() const {
-    return stl::AccessIterator<T, ColumnView<T, ContainerType>>(0, this);
+    return fct::AccessIterator<T, ColumnView<T, ContainerType>>(0, this);
   }
 
   /// Returns the underlying column.

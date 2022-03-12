@@ -1,12 +1,12 @@
-#ifndef STL_RANGE_HPP_
-#define STL_RANGE_HPP_
+#ifndef FCT_RANGE_HPP_
+#define FCT_RANGE_HPP_
 
 #include <iterator>
 #include <type_traits>
 
 #include "debug/debug.hpp"
 
-namespace stl {
+namespace fct {
 
 template <class iterator>
 class Range {
@@ -44,6 +44,6 @@ class Range {
   iterator end_;
 };
 
-}  // namespace stl
+}  // namespace fct
 
-#endif  // STL_RANGE_HPP_
+#endif  // FCT_RANGE_HPP_

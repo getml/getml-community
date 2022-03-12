@@ -156,7 +156,7 @@ std::shared_ptr<arrow::ChunkedArray> ArrayMaker::make_string_array(
 
   const auto filter_non_printable =
       [is_printable](const std::string& _str) -> std::string {
-    return stl::collect::string(_str | VIEWS::filter(is_printable));
+    return fct::collect::string(_str | VIEWS::filter(is_printable));
   };
 
   const auto append_function =

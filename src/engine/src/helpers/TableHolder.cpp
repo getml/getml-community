@@ -4,7 +4,7 @@
 
 // ----------------------------------------------------------------------------
 
-#include "stl/stl.hpp"
+#include "fct/fct.hpp"
 
 // ----------------------------------------------------------------------------
 
@@ -432,7 +432,7 @@ WordIndexContainer TableHolder::word_indices() const {
 
   auto range = peripheral_tables_ | VIEWS::transform(extract_word_indices);
 
-  const auto peripheral = stl::collect::vector<WordIndices>(range);
+  const auto peripheral = fct::collect::vector<WordIndices>(range);
 
   return WordIndexContainer(population, peripheral);
 }

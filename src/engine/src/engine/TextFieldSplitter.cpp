@@ -11,10 +11,10 @@ namespace preprocessors {
 
 containers::DataFrame TextFieldSplitter::add_rowid(
     const containers::DataFrame& _df) const {
-  const auto range = stl::iota<Int>(0, _df.nrows());
+  const auto range = fct::iota<Int>(0, _df.nrows());
 
   const auto ptr =
-      std::make_shared<std::vector<Int>>(stl::collect::vector<Int>(range));
+      std::make_shared<std::vector<Int>>(fct::collect::vector<Int>(range));
 
   const auto rowid = containers::Column<Int>(ptr, helpers::Macros::rowid());
 
@@ -33,7 +33,7 @@ containers::DataFrame TextFieldSplitter::remove_text_fields(
     return _df.text(_i).name();
   };
 
-  const auto iota = stl::iota<size_t>(0, _df.num_text());
+  const auto iota = fct::iota<size_t>(0, _df.num_text());
 
   const auto names = iota | VIEWS::transform(get_name);
 
@@ -98,11 +98,11 @@ TextFieldSplitter::fit_df(const containers::DataFrame& _df,
                                                         _df.text(_i).name());
   };
 
-  const auto iota = stl::iota<size_t>(0, _df.num_text());
+  const auto iota = fct::iota<size_t>(0, _df.num_text());
 
   const auto range = iota | VIEWS::transform(to_column_description);
 
-  return stl::collect::vector<std::shared_ptr<helpers::ColumnDescription>>(
+  return fct::collect::vector<std::shared_ptr<helpers::ColumnDescription>>(
       range);
 }
 
@@ -191,7 +191,7 @@ std::vector<std::string> TextFieldSplitter::to_sql(
     return _sql_dialect_generator->split_text_fields(_desc);
   };
 
-  return stl::collect::vector<std::string>(cols_ | VIEWS::transform(split));
+  return fct::collect::vector<std::string>(cols_ | VIEWS::transform(split));
 }
 
 // ----------------------------------------------------
@@ -208,7 +208,7 @@ TextFieldSplitter::transform(const TransformParams& _params) const {
   const auto range =
       _params.peripheral_dfs_ | VIEWS::transform(modify_if_applicable);
 
-  auto peripheral_dfs = stl::collect::vector<containers::DataFrame>(range);
+  auto peripheral_dfs = fct::collect::vector<containers::DataFrame>(range);
 
   transform_df(helpers::ColumnDescription::POPULATION, _params.population_df_,
                &peripheral_dfs);

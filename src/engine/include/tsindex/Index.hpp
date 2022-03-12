@@ -3,7 +3,7 @@
 
 // ----------------------------------------------------------------------------
 
-#include "stl/stl.hpp"
+#include "fct/fct.hpp"
 
 // ----------------------------------------------------------------------------
 
@@ -24,7 +24,7 @@ class Index {
   /// Finds a range of rownums for which .join_key_ == _join_key and
   /// .time_stamp_
   /// <= _time_stamp and time_stamp_ + memory_ > _time_stamp.
-  stl::Range<const size_t*> find_range(const Int _join_key,
+  fct::Range<const size_t*> find_range(const Int _join_key,
                                        const Float _time_stamp) const {
     return impl_.find_range(_join_key, _time_stamp);
   }

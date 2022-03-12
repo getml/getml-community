@@ -1,10 +1,10 @@
-#ifndef STL_JOIN_HPP_
-#define STL_JOIN_HPP_
+#ifndef FCT_JOIN_HPP_
+#define FCT_JOIN_HPP_
 
 #include <sstream>
 #include <vector>
 
-namespace stl {
+namespace fct {
 
 /// Necessary work-around, as join is not supported on Windows yet.
 struct join {
@@ -53,6 +53,6 @@ struct join {
 };
 
 // -------------------------------------------------------------------------
-}  // namespace stl
+}  // namespace fct
 
-#endif  // STL_JOIN_HPP_
+#endif  // FCT_JOIN_HPP_

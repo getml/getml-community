@@ -28,7 +28,7 @@ std::vector<std::string> Vocabulary::split_text_field(
       [is_non_empty](
           const std::vector<std::string>& vec) -> std::vector<std::string> {
     const auto range = vec | VIEWS::filter(is_non_empty);
-    return stl::collect::vector<std::string>(range);
+    return fct::collect::vector<std::string>(range);
   };
 
   const auto splitted = StringSplitter::split(_text_field.to_lower().str());

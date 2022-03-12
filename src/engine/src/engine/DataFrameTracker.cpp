@@ -75,9 +75,9 @@ Poco::JSON::Object::Ptr DataFrameTracker::make_build_history(
     const std::vector<Poco::JSON::Object::Ptr>& _dependencies,
     const containers::DataFrame& _population_df,
     const std::vector<containers::DataFrame>& _peripheral_dfs) const {
-  const auto dependencies = stl::collect::array(_dependencies);
+  const auto dependencies = fct::collect::array(_dependencies);
 
-  const auto data_frames = stl::join::vector<containers::DataFrame>(
+  const auto data_frames = fct::join::vector<containers::DataFrame>(
       {std::vector<containers::DataFrame>({_population_df}), _peripheral_dfs});
 
   const auto get_fingerprint =
@@ -86,7 +86,7 @@ Poco::JSON::Object::Ptr DataFrameTracker::make_build_history(
   };
 
   const auto df_fingerprints =
-      stl::collect::array(data_frames | VIEWS::transform(get_fingerprint));
+      fct::collect::array(data_frames | VIEWS::transform(get_fingerprint));
 
   auto build_history = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
 

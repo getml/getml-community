@@ -101,9 +101,9 @@ void FastPropContainer::to_sql(
         return "feature_" + _prefix + std::to_string(_feature_num + 1);
       };
 
-      const auto iota = stl::iota<size_t>(0, fast_prop().num_features());
+      const auto iota = fct::iota<size_t>(0, fast_prop().num_features());
 
-      const auto autofeatures = stl::collect::vector<std::string>(
+      const auto autofeatures = fct::collect::vector<std::string>(
           iota | VIEWS::transform(to_feature_name));
 
       const auto main_table =

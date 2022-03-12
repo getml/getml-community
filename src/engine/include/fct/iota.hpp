@@ -1,9 +1,9 @@
-#ifndef STL_IOTA_HPP_
-#define STL_IOTA_HPP_
+#ifndef FCT_IOTA_HPP_
+#define FCT_IOTA_HPP_
 
-#include "stl/ranges.hpp"
+#include "fct/ranges.hpp"
 
-namespace stl {
+namespace fct {
 
 /// Necessary work-around, as iota is not supported on Windows yet.
 template <class T, class T1, class T2>
@@ -15,6 +15,6 @@ inline auto iota(T1 _begin, T2 _end) {
 #endif
 }
 
-}  // namespace stl
+}  // namespace fct
 
-#endif  // STL_IOTA_HPP_
+#endif  // FCT_IOTA_HPP_

@@ -49,7 +49,7 @@ Float RSquared::calc_for_feature(
                                             _targets[_i]));
   };
 
-  const auto iota = stl::iota<size_t>(0, _targets.size());
+  const auto iota = fct::iota<size_t>(0, _targets.size());
 
   auto range = iota | VIEWS::transform(apply);
 

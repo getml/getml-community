@@ -1,7 +1,7 @@
-#ifndef STL_COMPOSE_HPP_
-#define STL_COMPOSE_HPP_
+#ifndef FCT_COMPOSE_HPP_
+#define FCT_COMPOSE_HPP_
 
-namespace stl {
+namespace fct {
 
 /// Composes two functions.
 template <class FunctionType1, class FunctionType2>
@@ -17,6 +17,6 @@ inline auto compose(const FunctionType1& _func1,
   return [_func1, func2](auto... args) { return func2(_func1(args...)); };
 }
 
-}  // namespace stl
+}  // namespace fct
 
-#endif  // STL_COMPOSE_HPP_
+#endif  // FCT_COMPOSE_HPP_

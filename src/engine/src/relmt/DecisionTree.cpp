@@ -249,7 +249,7 @@ void DecisionTree::handle_fast_prop_importances(
     const auto range = output().numericals_ | VIEWS::filter(is_fast_prop) |
                        VIEWS::transform(make_col_descs_output);
 
-    const auto descs = stl::collect::vector<helpers::ColumnDescription>(range);
+    const auto descs = fct::collect::vector<helpers::ColumnDescription>(range);
 
     const auto importance_factors =
         _importance_maker->retrieve_fast_prop(descs);
@@ -265,7 +265,7 @@ void DecisionTree::handle_fast_prop_importances(
     const auto range = input().numericals_ | VIEWS::filter(is_fast_prop) |
                        VIEWS::transform(make_col_descs_input);
 
-    const auto descs = stl::collect::vector<helpers::ColumnDescription>(range);
+    const auto descs = fct::collect::vector<helpers::ColumnDescription>(range);
 
     const auto importance_factors =
         _importance_maker->retrieve_fast_prop(descs);

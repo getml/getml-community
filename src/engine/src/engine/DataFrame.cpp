@@ -1850,32 +1850,32 @@ Schema DataFrame::to_schema(const bool _separate_discrete) const {
     return _col.name();
   };
 
-  const auto categoricals = stl::collect::vector<std::string>(
+  const auto categoricals = fct::collect::vector<std::string>(
       categoricals_ | VIEWS::transform(get_name));
 
-  const auto discretes = stl::collect::vector<std::string>(
+  const auto discretes = fct::collect::vector<std::string>(
       numericals_ | VIEWS::filter(is_discrete) | VIEWS::transform(get_name));
 
-  const auto join_keys = stl::collect::vector<std::string>(
+  const auto join_keys = fct::collect::vector<std::string>(
       join_keys_ | VIEWS::transform(get_name));
 
-  const auto numericals = stl::collect::vector<std::string>(
+  const auto numericals = fct::collect::vector<std::string>(
       numericals_ | VIEWS::filter(is_not_discrete) |
       VIEWS::transform(get_name));
 
   const auto targets =
-      stl::collect::vector<std::string>(targets_ | VIEWS::transform(get_name));
+      fct::collect::vector<std::string>(targets_ | VIEWS::transform(get_name));
 
   const auto text =
-      stl::collect::vector<std::string>(text_ | VIEWS::transform(get_name));
+      fct::collect::vector<std::string>(text_ | VIEWS::transform(get_name));
 
-  const auto time_stamps = stl::collect::vector<std::string>(
+  const auto time_stamps = fct::collect::vector<std::string>(
       time_stamps_ | VIEWS::transform(get_name));
 
-  const auto unused_floats = stl::collect::vector<std::string>(
+  const auto unused_floats = fct::collect::vector<std::string>(
       unused_floats_ | VIEWS::transform(get_name));
 
-  const auto unused_strings = stl::collect::vector<std::string>(
+  const auto unused_strings = fct::collect::vector<std::string>(
       unused_strings_ | VIEWS::transform(get_name));
 
   return Schema{.categoricals_ = categoricals,

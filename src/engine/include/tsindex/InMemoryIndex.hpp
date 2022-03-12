@@ -11,7 +11,7 @@
 // ----------------------------------------------------------------------------
 
 #include "debug/debug.hpp"
-#include "stl/stl.hpp"
+#include "fct/fct.hpp"
 
 // ----------------------------------------------------------------------------
 
@@ -33,11 +33,11 @@ class InMemoryIndex {
   /// Finds a range of rownums for which .join_key_ == _join_key and
   /// .time_stamp_
   /// <= _time_stamp and time_stamp_ + memory_ > _time_stamp.
-  stl::Range<const size_t*> find_range(const Int _join_key,
+  fct::Range<const size_t*> find_range(const Int _join_key,
                                        const Float _time_stamp) const {
     const auto ix_begin = find_ix(_join_key, _time_stamp - memory_);
     const auto ix_end = find_ix(_join_key, _time_stamp);
-    return stl::Range<const size_t*>(row_indices_.data() + ix_begin,
+    return fct::Range<const size_t*>(row_indices_.data() + ix_begin,
                                      row_indices_.data() + ix_end);
   }
 

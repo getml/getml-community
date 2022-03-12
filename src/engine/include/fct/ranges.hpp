@@ -1,5 +1,5 @@
-#ifndef STL_RANGES_HPP_
-#define STL_RANGES_HPP_
+#ifndef FCT_RANGES_HPP_
+#define FCT_RANGES_HPP_
 
 // TODO(patrick): Remove this temporary fix as soon as
 // clang fully supports the ranges library.
@@ -17,4 +17,4 @@
 
 #endif
 
-#endif  // STL_RANGES_HPP_
+#endif  // FCT_RANGES_HPP_

@@ -4,13 +4,13 @@
 
 // ----------------------------------------------------------------------------
 
+#include "fct/fct.hpp"
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/Macros.hpp"
 #include "helpers/Schema.hpp"
 #include "helpers/StringReplacer.hpp"
 #include "helpers/enums/Aggregation.hpp"
 #include "helpers/enums/enums.hpp"
-#include "stl/stl.hpp"
 
 // ----------------------------------------------------------------------------
 
@@ -240,7 +240,7 @@ std::string BigQueryGenerator::make_cluster(
     return make_staging_table_colname(_colname);
   };
 
-  const auto cluster_by = stl::join::string(
+  const auto cluster_by = fct::join::string(
       _schema.join_keys_ | VIEWS::filter(SQLGenerator::include_column) |
           VIEWS::take(4) | VIEWS::transform(to_colname),
       "`, `");
@@ -904,7 +904,7 @@ std::vector<std::string> BigQueryGenerator::make_staging_columns(
     const auto cast =
         std::bind(cast_column, std::placeholders::_1, "STRING", false);
 
-    return stl::collect::vector<std::string>(
+    return fct::collect::vector<std::string>(
         _colnames | VIEWS::filter(SQLGenerator::include_column) |
         VIEWS::filter(is_not_rowid) | VIEWS::transform(cast));
   };
@@ -915,7 +915,7 @@ std::vector<std::string> BigQueryGenerator::make_staging_columns(
     const auto cast =
         std::bind(cast_column, std::placeholders::_1, "STRING", false);
 
-    return stl::collect::vector<std::string>(
+    return fct::collect::vector<std::string>(
         _colnames | VIEWS::filter(SQLGenerator::include_column) |
         VIEWS::filter(is_not_rowid) | VIEWS::transform(cast));
   };
@@ -926,7 +926,7 @@ std::vector<std::string> BigQueryGenerator::make_staging_columns(
     const auto cast =
         std::bind(cast_column, std::placeholders::_1, "FLOAT64", false);
 
-    return stl::collect::vector<std::string>(
+    return fct::collect::vector<std::string>(
         _colnames | VIEWS::filter(SQLGenerator::include_column) |
         VIEWS::transform(cast));
   };
@@ -934,7 +934,7 @@ std::vector<std::string> BigQueryGenerator::make_staging_columns(
   const auto cast_as_time_stamp =
       [to_epoch_time_or_rowid](const std::vector<std::string>& _colnames)
       -> std::vector<std::string> {
-    return stl::collect::vector<std::string>(
+    return fct::collect::vector<std::string>(
         _colnames | VIEWS::filter(SQLGenerator::include_column) |
         VIEWS::transform(to_epoch_time_or_rowid));
   };
@@ -945,7 +945,7 @@ std::vector<std::string> BigQueryGenerator::make_staging_columns(
     const auto cast =
         std::bind(cast_column, std::placeholders::_1, "STRING", true);
 
-    return stl::collect::vector<std::string>(
+    return fct::collect::vector<std::string>(
         _colnames | VIEWS::filter(SQLGenerator::include_column) |
         VIEWS::filter(is_not_rowid) | VIEWS::transform(cast));
   };
@@ -965,7 +965,7 @@ std::vector<std::string> BigQueryGenerator::make_staging_columns(
 
   const auto time_stamps = cast_as_time_stamp(_schema.time_stamps_);
 
-  return stl::join::vector<std::string>({targets, categoricals, discretes,
+  return fct::join::vector<std::string>({targets, categoricals, discretes,
                                          join_keys, numericals, text,
                                          time_stamps});
 }
@@ -1131,7 +1131,7 @@ std::string BigQueryGenerator::make_select(
     const std::vector<std::string>& _categorical,
     const std::vector<std::string>& _numerical) const {
   const auto manual =
-      stl::join::vector<std::string>({_targets, _numerical, _categorical});
+      fct::join::vector<std::string>({_targets, _numerical, _categorical});
 
   const auto make_staging_table_colname_lambda =
       [this](const std::string& _colname) -> std::string {
@@ -1190,14 +1190,14 @@ std::string BigQueryGenerator::make_sql(
 
   sql.push_back(make_postprocessing(_sql));
 
-  return stl::collect::string(sql);
+  return fct::collect::string(sql);
 }
 
 // ----------------------------------------------------------------------------
 
 std::string BigQueryGenerator::make_order_by(
     const helpers::Schema& _schema) const {
-  const auto all_columns = stl::join::vector<std::string>(
+  const auto all_columns = fct::join::vector<std::string>(
       {_schema.join_keys_, _schema.time_stamps_, _schema.categoricals_,
        _schema.discretes_, _schema.numericals_, _schema.text_});
 
@@ -1212,7 +1212,7 @@ std::string BigQueryGenerator::make_order_by(
     return make_staging_table_column(_colname, "t1");
   };
 
-  const auto relevant_columns = stl::collect::vector<std::string>(
+  const auto relevant_columns = fct::collect::vector<std::string>(
       all_columns | VIEWS::filter(include) | VIEWS::transform(to_colname));
 
   const auto format = [](const size_t _i, const std::string& _colname) {
@@ -1224,11 +1224,11 @@ std::string BigQueryGenerator::make_order_by(
     return format(_i, relevant_columns[_i]);
   };
 
-  const auto iota = stl::iota<size_t>(0, relevant_columns.size());
+  const auto iota = fct::iota<size_t>(0, relevant_columns.size());
 
   const auto formatted = iota | VIEWS::transform(apply);
 
-  return stl::join::string(formatted, ",\n");
+  return fct::join::string(formatted, ",\n");
 }
 
 // ----------------------------------------------------------------------------

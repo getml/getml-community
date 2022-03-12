@@ -718,7 +718,7 @@ std::shared_ptr<std::vector<T>> ColumnView<T>::make_parallel(
     const size_t _begin, const size_t _expected_length) const {
   const auto data_ptr = std::make_shared<std::vector<T>>(_expected_length);
 
-  const auto range = stl::iota<size_t>(0, _expected_length);
+  const auto range = fct::iota<size_t>(0, _expected_length);
 
   const auto deep_copy = *this;
 

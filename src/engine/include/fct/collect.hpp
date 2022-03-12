@@ -1,5 +1,5 @@
-#ifndef STL_COLLECT_HPP_
-#define STL_COLLECT_HPP_
+#ifndef FCT_COLLECT_HPP_
+#define FCT_COLLECT_HPP_
 
 // -------------------------------------------------------------------------
 
@@ -16,12 +16,11 @@
 
 // -------------------------------------------------------------------------
 
-#include "stl/ranges.hpp"
+#include "fct/ranges.hpp"
 
 // -------------------------------------------------------------------------
 
-namespace stl {
-// -------------------------------------------------------------------------
+namespace fct {
 
 struct collect {
   /// Generates Poco::JSON::Array::Ptr from a range
@@ -94,6 +93,6 @@ struct collect {
 };
 
 // -------------------------------------------------------------------------
-}  // namespace stl
+}  // namespace fct
 
-#endif  // STL_COLLECT_HPP_
+#endif  // FCT_COLLECT_HPP_

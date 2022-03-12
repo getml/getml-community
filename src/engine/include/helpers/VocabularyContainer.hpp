@@ -12,7 +12,7 @@
 
 // -------------------------------------------------------------------------
 
-#include "stl/stl.hpp"
+#include "fct/fct.hpp"
 #include "strings/strings.hpp"
 
 // -------------------------------------------------------------------------
@@ -52,7 +52,7 @@ class VocabularyContainer {
   /// Represents the peripheral vocabulary as a vector of iterators.
   const std::vector<std::vector<StringIterator>> peripheral_iterators() const {
     const auto range = peripheral_ | VIEWS::transform(to_iterators);
-    return stl::collect::vector<std::vector<StringIterator>>(range);
+    return fct::collect::vector<std::vector<StringIterator>>(range);
   }
 
   /// Trivial (const) accessor
@@ -77,7 +77,7 @@ class VocabularyContainer {
                             _vec->size());
     };
     const auto range = _vocab | VIEWS::transform(make_iterator);
-    return stl::collect::vector<StringIterator>(range);
+    return fct::collect::vector<StringIterator>(range);
   }
 
  private:

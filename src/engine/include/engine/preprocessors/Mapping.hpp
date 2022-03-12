@@ -460,16 +460,16 @@ class Mapping : public Preprocessor {
 
       const auto to_sql = std::bind(_mapping_to_sql, _i, std::placeholders::_1);
 
-      const auto iota = stl::iota<size_t>(0, num_weights);
+      const auto iota = fct::iota<size_t>(0, num_weights);
 
-      return stl::collect::vector<std::string>(iota | VIEWS::transform(to_sql));
+      return fct::collect::vector<std::string>(iota | VIEWS::transform(to_sql));
     };
 
     // -----------------------------------------------------------------------
 
-    const auto iota = stl::iota<size_t>(0, _mappings.size());
+    const auto iota = fct::iota<size_t>(0, _mappings.size());
 
-    return stl::join::vector<std::string>(iota |
+    return fct::join::vector<std::string>(iota |
                                           VIEWS::transform(all_weights_to_sql));
   }
 

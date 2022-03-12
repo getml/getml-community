@@ -228,12 +228,12 @@ Maker::make_subcontainers(const helpers::TableHolder& _table_holder,
               placeholder.propositionalization_.size());
 
   const auto iota =
-      stl::iota<size_t>(0, placeholder.propositionalization_.size());
+      fct::iota<size_t>(0, placeholder.propositionalization_.size());
 
   const auto range = iota | VIEWS::transform(make_subcontainer);
 
   return std::make_shared<typename FastPropContainer::Subcontainers>(
-      stl::collect::vector<std::shared_ptr<const FastPropContainer>>(range));
+      fct::collect::vector<std::shared_ptr<const FastPropContainer>>(range));
 }
 
 // ----------------------------------------------------------------------------
@@ -263,8 +263,8 @@ Maker::transform_make_features(const MakerParams& _params) {
 
   const auto& fast_prop = _params.fast_prop_container_->fast_prop();
 
-  const auto index = stl::collect::vector<size_t>(
-      stl::iota<size_t>(0, fast_prop.num_features()));
+  const auto index = fct::collect::vector<size_t>(
+      fct::iota<size_t>(0, fast_prop.num_features()));
 
   const auto params = algorithm::TransformParams{
       .feature_container_ = std::nullopt,
@@ -285,10 +285,10 @@ Maker::transform_make_features(const MakerParams& _params) {
                                   {}, "");
   };
 
-  const auto iota = stl::iota<size_t>(0, features.size());
+  const auto iota = fct::iota<size_t>(0, features.size());
 
   return std::make_shared<std::vector<helpers::Column<Float>>>(
-      stl::collect::vector<helpers::Column<Float>>(
+      fct::collect::vector<helpers::Column<Float>>(
           iota | VIEWS::transform(to_column)));
 }
 
@@ -307,11 +307,11 @@ Maker::transform_make_subcontainers(const MakerParams& _params) {
     return transform(params);
   };
 
-  const auto iota = stl::iota<size_t>(0, placeholder.joined_tables_.size());
+  const auto iota = fct::iota<size_t>(0, placeholder.joined_tables_.size());
 
   return std::make_shared<
       std::vector<std::optional<helpers::FeatureContainer>>>(
-      stl::collect::vector<std::optional<helpers::FeatureContainer>>(
+      fct::collect::vector<std::optional<helpers::FeatureContainer>>(
           iota | VIEWS::transform(make_subcontainer)));
 }
 

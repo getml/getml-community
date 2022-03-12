@@ -1,5 +1,5 @@
-#ifndef STL_IOTAITERATOR_HPP_
-#define STL_IOTAITERATOR_HPP_
+#ifndef FCT_IOTAITERATOR_HPP_
+#define FCT_IOTAITERATOR_HPP_
 
 // -------------------------------------------------------------------------
 
@@ -7,7 +7,7 @@
 
 // -------------------------------------------------------------------------
 
-namespace stl {
+namespace fct {
 // -------------------------------------------------------------------------
 
 template <class T>
@@ -99,6 +99,6 @@ class IotaIterator {
 };
 
 // -------------------------------------------------------------------------
-}  // namespace stl
+}  // namespace fct
 
-#endif  // STL_IOTAITERATOR_HPP_
+#endif  // FCT_IOTAITERATOR_HPP_

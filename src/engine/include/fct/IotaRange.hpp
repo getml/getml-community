@@ -1,9 +1,9 @@
-#ifndef STL_IOTARANGE_HPP_
-#define STL_IOTARANGE_HPP_
+#ifndef FCT_IOTARANGE_HPP_
+#define FCT_IOTARANGE_HPP_
 
-#include "stl/IotaIterator.hpp"
+#include "fct/IotaIterator.hpp"
 
-namespace stl {
+namespace fct {
 // -------------------------------------------------------------------------
 
 template <class T>
@@ -29,6 +29,6 @@ class IotaRange {
 };
 
 // -------------------------------------------------------------------------
-}  // namespace stl
+}  // namespace fct
 
-#endif  // STL_IOTARANGE_HPP_
+#endif  // FCT_IOTARANGE_HPP_

@@ -8,9 +8,9 @@
 
 // -------------------------------------------------------------------------
 
+#include "fct/AccessIterator.hpp"
+#include "fct/fct.hpp"
 #include "memmap/memmap.hpp"
-#include "stl/AccessIterator.hpp"
-#include "stl/stl.hpp"
 #include "strings/strings.hpp"
 
 // -------------------------------------------------------------------------
@@ -59,7 +59,7 @@ struct Column {
       return data_;
     }
     if constexpr (std::is_same<T, strings::String>()) {
-      return stl::AccessIterator<T, Column<T>>(0, this);
+      return fct::AccessIterator<T, Column<T>>(0, this);
     }
   }
 
@@ -121,7 +121,7 @@ struct Column {
   auto make_range() const {
     const auto col = *this;
     const auto get_value = [col](const size_t _i) -> T { return col[_i]; };
-    auto iota = stl::iota<size_t>(0, nrows_);
+    auto iota = fct::iota<size_t>(0, nrows_);
     return iota | VIEWS::transform(get_value);
   }
 

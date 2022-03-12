@@ -4,6 +4,8 @@
 
 // ----------------------------------------------------------------------------
 
+#include "fct/collect.hpp"
+#include "fct/fct.hpp"
 #include "helpers/Aggregations.hpp"
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/Macros.hpp"
@@ -11,8 +13,6 @@
 #include "helpers/StringReplacer.hpp"
 #include "helpers/enums/Aggregation.hpp"
 #include "helpers/enums/enums.hpp"
-#include "stl/collect.hpp"
-#include "stl/stl.hpp"
 
 // ----------------------------------------------------------------------------
 
@@ -239,7 +239,7 @@ std::string MySQLGenerator::create_index(const std::string& _table_name,
   const auto colname = make_staging_table_colname(_colname);
   const auto index_name = _table_name + "__" + colname;
   const auto index_name_truncated =
-      stl::collect::string(index_name | VIEWS::take(64));
+      fct::collect::string(index_name | VIEWS::take(64));
   std::stringstream stream;
   stream << "DROP INDEX IF EXISTS " << schema() << quotechar1()
          << index_name_truncated << quotechar2() << " ON " << schema()
@@ -263,13 +263,13 @@ std::string MySQLGenerator::create_indices(
   };
 
   return make_index(std::string("rowid")) +
-         stl::collect::string(_schema.categoricals_ |
+         fct::collect::string(_schema.categoricals_ |
                               VIEWS::filter(SQLGenerator::include_column) |
                               VIEWS::transform(make_index)) +
-         stl::collect::string(_schema.join_keys_ |
+         fct::collect::string(_schema.join_keys_ |
                               VIEWS::filter(SQLGenerator::include_column) |
                               VIEWS::transform(make_index)) +
-         stl::collect::string(_schema.time_stamps_ |
+         fct::collect::string(_schema.time_stamps_ |
                               VIEWS::transform(make_index));
 }
 
@@ -894,7 +894,7 @@ std::vector<std::string> MySQLGenerator::make_staging_columns(
         cast_column, std::placeholders::_1,
         "VARCHAR(" + std::to_string(params_.nchar_categorical_) + ")", false);
 
-    return stl::collect::vector<std::string>(
+    return fct::collect::vector<std::string>(
         _colnames | VIEWS::filter(SQLGenerator::include_column) |
         VIEWS::filter(is_not_rowid) | VIEWS::transform(cast));
   };
@@ -906,7 +906,7 @@ std::vector<std::string> MySQLGenerator::make_staging_columns(
         cast_column, std::placeholders::_1,
         "VARCHAR(" + std::to_string(params_.nchar_categorical_) + ")", false);
 
-    return stl::collect::vector<std::string>(
+    return fct::collect::vector<std::string>(
         _colnames | VIEWS::filter(SQLGenerator::include_column) |
         VIEWS::filter(is_not_rowid) | VIEWS::transform(cast));
   };
@@ -917,7 +917,7 @@ std::vector<std::string> MySQLGenerator::make_staging_columns(
     const auto cast =
         std::bind(cast_column, std::placeholders::_1, "DOUBLE", false);
 
-    return stl::collect::vector<std::string>(
+    return fct::collect::vector<std::string>(
         _colnames | VIEWS::filter(SQLGenerator::include_column) |
         VIEWS::transform(cast));
   };
@@ -925,7 +925,7 @@ std::vector<std::string> MySQLGenerator::make_staging_columns(
   const auto cast_as_time_stamp =
       [to_epoch_time_or_rowid](const std::vector<std::string>& _colnames)
       -> std::vector<std::string> {
-    return stl::collect::vector<std::string>(
+    return fct::collect::vector<std::string>(
         _colnames | VIEWS::filter(SQLGenerator::include_column) |
         VIEWS::transform(to_epoch_time_or_rowid));
   };
@@ -937,7 +937,7 @@ std::vector<std::string> MySQLGenerator::make_staging_columns(
         std::bind(cast_column, std::placeholders::_1,
                   "VARCHAR(" + std::to_string(params_.nchar_text_) + ")", true);
 
-    return stl::collect::vector<std::string>(
+    return fct::collect::vector<std::string>(
         _colnames | VIEWS::filter(SQLGenerator::include_column) |
         VIEWS::filter(is_not_rowid) | VIEWS::transform(cast));
   };
@@ -957,7 +957,7 @@ std::vector<std::string> MySQLGenerator::make_staging_columns(
 
   const auto time_stamps = cast_as_time_stamp(_schema.time_stamps_);
 
-  return stl::join::vector<std::string>({targets, categoricals, discretes,
+  return fct::join::vector<std::string>({targets, categoricals, discretes,
                                          join_keys, numericals, text,
                                          time_stamps});
 }
@@ -1127,7 +1127,7 @@ std::string MySQLGenerator::make_select(
     const std::vector<std::string>& _categorical,
     const std::vector<std::string>& _numerical) const {
   const auto manual =
-      stl::join::vector<std::string>({_targets, _numerical, _categorical});
+      fct::join::vector<std::string>({_targets, _numerical, _categorical});
 
   const auto make_staging_table_colname_lambda =
       [this](const std::string& _colname) -> std::string {
@@ -1188,14 +1188,14 @@ std::string MySQLGenerator::make_sql(
 
   sql.push_back(make_postprocessing(_sql));
 
-  return stl::collect::string(sql);
+  return fct::collect::string(sql);
 }
 
 // ----------------------------------------------------------------------------
 
 std::string MySQLGenerator::make_order_by(
     const helpers::Schema& _schema) const {
-  const auto all_columns = stl::join::vector<std::string>(
+  const auto all_columns = fct::join::vector<std::string>(
       {_schema.join_keys_, _schema.time_stamps_, _schema.categoricals_,
        _schema.discretes_, _schema.numericals_, _schema.text_});
 
@@ -1210,7 +1210,7 @@ std::string MySQLGenerator::make_order_by(
     return make_staging_table_column(_colname, "t1");
   };
 
-  const auto relevant_columns = stl::collect::vector<std::string>(
+  const auto relevant_columns = fct::collect::vector<std::string>(
       all_columns | VIEWS::filter(include) | VIEWS::transform(to_colname));
 
   const auto format = [](const size_t _i, const std::string& _colname) {
@@ -1222,11 +1222,11 @@ std::string MySQLGenerator::make_order_by(
     return format(_i, relevant_columns[_i]);
   };
 
-  const auto iota = stl::iota<size_t>(0, relevant_columns.size());
+  const auto iota = fct::iota<size_t>(0, relevant_columns.size());
 
   const auto formatted = iota | VIEWS::transform(apply);
 
-  return stl::join::string(formatted, ",\n");
+  return fct::join::string(formatted, ",\n");
 }
 
 // ----------------------------------------------------------------------------

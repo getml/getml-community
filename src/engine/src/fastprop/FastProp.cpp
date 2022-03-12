@@ -277,7 +277,7 @@ std::vector<Float> FastProp::calc_r_squared(
     const auto end = std::min(abstract_features().size(), begin + batch_size);
 
     const auto index =
-        stl::collect::vector<size_t>(stl::iota<size_t>(begin, end));
+        fct::collect::vector<size_t>(fct::iota<size_t>(begin, end));
 
     const auto params = TransformParams{.feature_container_ = std::nullopt,
                                         .index_ = index,
@@ -454,7 +454,7 @@ std::vector<Int> FastProp::find_most_frequent_categories(
                      VIEWS::filter(is_not_null) |
                      VIEWS::take(hyperparameters().n_most_frequent_);
 
-  return stl::collect::vector<Int>(range);
+  return fct::collect::vector<Int>(range);
 }
 
 // ----------------------------------------------------------------------------
@@ -1340,7 +1340,7 @@ std::vector<size_t> FastProp::make_subfeature_index(
                      VIEWS::filter(is_relevant_feature) |
                      VIEWS::transform(get_input_col);
 
-  const auto s = stl::collect::set<size_t>(range);
+  const auto s = fct::collect::set<size_t>(range);
 
   return std::vector<size_t>(s.begin(), s.end());
 }
@@ -1460,12 +1460,12 @@ std::shared_ptr<std::vector<size_t>> FastProp::sample_from_population(
     return dist(rng) < hyperparameters().sampling_factor_;
   };
 
-  auto iota = stl::iota<size_t>(0, _nrows);
+  auto iota = fct::iota<size_t>(0, _nrows);
 
   auto range = iota | VIEWS::filter(include);
 
   return std::make_shared<std::vector<size_t>>(
-      stl::collect::vector<size_t>(range));
+      fct::collect::vector<size_t>(range));
 }
 
 // ----------------------------------------------------------------------------
@@ -1496,13 +1496,13 @@ FastProp::select_features(
 
   assert_true(r_squared.size() == abstract_features().size());
 
-  const auto iota = stl::iota<size_t>(0, r_squared.size());
+  const auto iota = fct::iota<size_t>(0, r_squared.size());
 
   const auto range =
       iota | VIEWS::filter(r_greater_threshold) | VIEWS::transform(get_feature);
 
   return std::make_shared<std::vector<containers::AbstractFeature>>(
-      stl::collect::vector<containers::AbstractFeature>(range));
+      fct::collect::vector<containers::AbstractFeature>(range));
 }
 
 // ----------------------------------------------------------------------------

@@ -10,7 +10,7 @@
 // -------------------------------------------------------------------------
 
 #include "debug/debug.hpp"
-#include "stl/stl.hpp"
+#include "fct/fct.hpp"
 #include "strings/strings.hpp"
 
 // -------------------------------------------------------------------------
@@ -31,11 +31,11 @@ class RowIndex {
 
  public:
   /// Returns the range for the _i'th word in the vocabulary
-  stl::Range<const size_t*> range(const Int _i) const {
+  fct::Range<const size_t*> range(const Int _i) const {
     assert_true(_i >= 0);
     assert_true(static_cast<size_t>(_i + 1) < indptr_.size());
     assert_true(indptr_[_i + 1] <= rownums_.size());
-    return stl::Range(rownums_.data() + indptr_[_i],
+    return fct::Range(rownums_.data() + indptr_[_i],
                       rownums_.data() + indptr_[_i + 1]);
   }
 

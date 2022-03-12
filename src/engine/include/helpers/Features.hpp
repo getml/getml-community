@@ -4,7 +4,7 @@
 // -------------------------------------------------------------------------
 
 #include "debug/debug.hpp"
-#include "stl/stl.hpp"
+#include "fct/fct.hpp"
 
 // -------------------------------------------------------------------------
 
@@ -68,7 +68,7 @@ class Features {
 
   /// Returns a set of safe features.
   std::vector<Feature<Float>> to_safe_features() const {
-    return stl::collect::vector<Feature<Float>>(
+    return fct::collect::vector<Feature<Float>>(
         vec_ | VIEWS::transform(get_ptr<false>) |
         VIEWS::transform(to_feature<true>));
   }
@@ -106,7 +106,7 @@ class Features {
     const auto pool = _temp_dir ? std::make_shared<memmap::Pool>(*_temp_dir)
                                 : std::shared_ptr<memmap::Pool>();
     const auto variants = make_variants(_nrows, _ncols, pool);
-    return stl::collect::vector<Feature<Float, false>>(
+    return fct::collect::vector<Feature<Float, false>>(
         variants | VIEWS::transform(to_feature<false>));
   }
 

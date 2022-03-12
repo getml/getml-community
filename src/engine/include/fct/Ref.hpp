@@ -1,13 +1,12 @@
-#ifndef STL_REF_HPP_
-#define STL_REF_HPP_
+#ifndef FCT_REF_HPP_
+#define FCT_REF_HPP_
 
 #include <memory>
 
-namespace stl {
+namespace fct {
 
 /// The Ref class behaves very similarly to the shared_ptr, but unlike the
 /// shared_ptr, it is 100% guaranteed to be filled at all times.
-/// This saves us from a lot of checks.
 template <class T>
 class Ref {
  public:
@@ -39,7 +38,7 @@ class Ref {
   std::shared_ptr<T> ptr_;
 };
 
-}  // namespace stl
+}  // namespace fct
 
-#endif  // STL_REF_HPP_
+#endif  // FCT_REF_HPP_
 
