@@ -10,6 +10,7 @@
 // -------------------------------------------------------------------------
 
 #include "debug/debug.hpp"
+#include "helpers/StringIterator.hpp"
 #include "helpers/helpers.hpp"
 
 // -------------------------------------------------------------------------
@@ -53,32 +54,20 @@ class Encoding {
 
   /// Deletes all entries
   void clear() {
-    if (std::holds_alternative<InMemoryType>(pimpl_)) {
-      const auto pimpl = std::get<InMemoryType>(pimpl_);
-      assert_true(pimpl);
-      pimpl->clear();
-      return;
-    }
-
-    assert_true(std::holds_alternative<MemoryMappedType>(pimpl_));
-    const auto pimpl = std::get<MemoryMappedType>(pimpl_);
-    assert_true(pimpl);
-    pimpl->clear();
+    const auto clear_pimpl = [](auto&& _pimpl) {
+      assert_true(_pimpl);
+      _pimpl->clear();
+    };
+    std::visit(clear_pimpl, pimpl_);
   }
 
   /// Copies a vector
   Encoding& operator=(const std::vector<std::string>& _vector) {
-    if (std::holds_alternative<InMemoryType>(pimpl_)) {
-      const auto pimpl = std::get<InMemoryType>(pimpl_);
-      assert_true(pimpl);
-      *pimpl = _vector;
-      return *this;
-    }
-
-    assert_true(std::holds_alternative<MemoryMappedType>(pimpl_));
-    const auto pimpl = std::get<MemoryMappedType>(pimpl_);
-    assert_true(pimpl);
-    *pimpl = _vector;
+    const auto set_pimpl = [&_vector](auto&& _pimpl) {
+      assert_true(_pimpl);
+      *_pimpl = _vector;
+    };
+    std::visit(set_pimpl, pimpl_);
     return *this;
   }
 
@@ -86,46 +75,36 @@ class Encoding {
   /// integer, updates the mapping, if necessary.
   template <class T>
   auto operator[](const T& _val) {
-    if (std::holds_alternative<InMemoryType>(pimpl_)) {
-      const auto pimpl = std::get<InMemoryType>(pimpl_);
-      assert_true(pimpl);
-      return (*pimpl)[_val];
-    }
-
-    assert_true(std::holds_alternative<MemoryMappedType>(pimpl_));
-    const auto pimpl = std::get<MemoryMappedType>(pimpl_);
-    assert_true(pimpl);
-    return (*pimpl)[_val];
+    const auto get = [&_val](auto&& _pimpl) {
+      assert_true(_pimpl);
+      return (*_pimpl)[_val];
+    };
+    return std::visit(get, pimpl_);
   }
 
   /// Returns the integer mapped to a string or the string mapped to an
   /// integer (const version).
   template <class T>
   auto operator[](const T& _val) const {
-    if (std::holds_alternative<InMemoryType>(pimpl_)) {
-      const ConstInMemoryType pimpl = std::get<InMemoryType>(pimpl_);
-      assert_true(pimpl);
-      return (*pimpl)[_val];
-    }
+    const auto handle = [&_val](auto&& _ptr) {
+      using PimplType = std::decay_t<decltype(_ptr)>;
 
-    assert_true(std::holds_alternative<MemoryMappedType>(pimpl_));
-    const ConstMemoryMappedType pimpl = std::get<MemoryMappedType>(pimpl_);
-    assert_true(pimpl);
-    return (*pimpl)[_val];
+      if constexpr (std::is_same_v<PimplType, InMemoryType>)
+        return (*ConstInMemoryType(_ptr))[_val];
+
+      if constexpr (std::is_same_v<PimplType, MemoryMappedType>)
+        return (*ConstMemoryMappedType(_ptr))[_val];
+    };
+    return std::visit(handle, pimpl_);
   }
 
   /// Number of encoded elements
   size_t size() const {
-    if (std::holds_alternative<InMemoryType>(pimpl_)) {
-      const ConstInMemoryType pimpl = std::get<InMemoryType>(pimpl_);
-      assert_true(pimpl);
-      return pimpl->size();
-    }
-
-    assert_true(std::holds_alternative<MemoryMappedType>(pimpl_));
-    const ConstMemoryMappedType pimpl = std::get<MemoryMappedType>(pimpl_);
-    assert_true(pimpl);
-    return pimpl->size();
+    const auto get_size = [](auto&& _pimpl) -> size_t {
+      assert_true(_pimpl);
+      return _pimpl->size();
+    };
+    return std::visit(get_size, pimpl_);
   }
 
   /// The temporary directory (only relevant for the MemoryMappedEncoding)
@@ -142,22 +121,15 @@ class Encoding {
 
   /// Get the vector containing the strings.
   inline helpers::StringIterator strings() const {
-    if (std::holds_alternative<InMemoryType>(pimpl_)) {
-      const ConstInMemoryType pimpl = std::get<InMemoryType>(pimpl_);
-      assert_true(pimpl);
-      const auto func = [pimpl](const size_t _i) -> strings::String {
-        return (*pimpl)[_i];
+    const auto make_string_iterator =
+        [](auto&& _pimpl) -> helpers::StringIterator {
+      assert_true(_pimpl);
+      const auto func = [_pimpl](const size_t _i) -> strings::String {
+        return (*_pimpl)[_i];
       };
-      return helpers::StringIterator(func, pimpl->size());
-    }
-
-    assert_true(std::holds_alternative<MemoryMappedType>(pimpl_));
-    const ConstMemoryMappedType pimpl = std::get<MemoryMappedType>(pimpl_);
-    assert_true(pimpl);
-    const auto func = [pimpl](const size_t _i) -> strings::String {
-      return (*pimpl)[_i];
+      return helpers::StringIterator(func, _pimpl->size());
     };
-    return helpers::StringIterator(func, pimpl->size());
+    return std::visit(make_string_iterator, pimpl_);
   }
 
  private:

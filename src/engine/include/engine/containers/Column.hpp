@@ -134,15 +134,8 @@ class Column {
       throw std::runtime_error("Out-of-bounds access to column '" + name_ +
                                "'");
     }
-
-    if (std::holds_alternative<InMemoryPtr>(data_ptr_)) {
-      const auto ptr = std::get<InMemoryPtr>(data_ptr_);
-      return (*ptr)[_i];
-    }
-
-    assert_true(std::holds_alternative<MemmapPtr>(data_ptr_));
-    const auto ptr = std::get<MemmapPtr>(data_ptr_);
-    return (*ptr)[_i];
+    const auto get = [_i](auto &&_ptr) -> T & { return (*_ptr)[_i]; };
+    return std::visit(get, data_ptr_);
   }
 
   /// Boundary-checker accessor to data
@@ -152,15 +145,8 @@ class Column {
       throw std::runtime_error("Out-of-bounds access to column '" + name_ +
                                "'");
     }
-
-    if (std::holds_alternative<InMemoryPtr>(data_ptr_)) {
-      const auto ptr = std::get<InMemoryPtr>(data_ptr_);
-      return (*ptr)[_i];
-    }
-
-    assert_true(std::holds_alternative<MemmapPtr>(data_ptr_));
-    const auto ptr = std::get<MemmapPtr>(data_ptr_);
-    return (*ptr)[_i];
+    const auto get = [_i](auto &&_ptr) -> T { return (*_ptr)[_i]; };
+    return std::visit(get, data_ptr_);
   }
 
   /// Iterator to beginning of data
@@ -190,11 +176,17 @@ class Column {
 
   /// Returns the data ptr as a constant.
   ConstVariant const_data_ptr() const {
-    if (std::holds_alternative<InMemoryPtr>(data_ptr_)) {
-      return ConstInMemoryPtr(std::get<InMemoryPtr>(data_ptr_));
-    }
-    assert_true(std::holds_alternative<MemmapPtr>(data_ptr_));
-    return ConstMemmapPtr(std::get<MemmapPtr>(data_ptr_));
+    const auto to_const = [](auto &&_ptr) -> ConstVariant {
+      using PtrType = std::decay_t<decltype(_ptr)>;
+
+      if constexpr (std::is_same_v<PtrType, InMemoryPtr>)
+        return ConstInMemoryPtr(_ptr);
+
+      if constexpr (std::is_same_v<PtrType, MemmapPtr>)
+        return ConstMemmapPtr(_ptr);
+    };
+
+    return std::visit(to_const, data_ptr_);
   }
 
   /// Trivial getter
@@ -202,13 +194,8 @@ class Column {
             typename std::enable_if<std::is_same<IteratorType, T *>::value,
                                     int>::type = 0>
   T *data() {
-    if (std::holds_alternative<InMemoryPtr>(data_ptr_)) {
-      const auto ptr = std::get<InMemoryPtr>(data_ptr_);
-      return ptr->data();
-    }
-    assert_true(std::holds_alternative<MemmapPtr>(data_ptr_));
-    const auto ptr = std::get<MemmapPtr>(data_ptr_);
-    return ptr->data();
+    const auto get_data = [](auto &&_ptr) -> T * { return _ptr->data(); };
+    return std::visit(get_data, data_ptr_);
   }
 
   /// Trivial getter
@@ -216,13 +203,8 @@ class Column {
             typename std::enable_if<std::is_same<IteratorType, T *>::value,
                                     int>::type = 0>
   const T *data() const {
-    if (std::holds_alternative<InMemoryPtr>(data_ptr_)) {
-      const auto ptr = std::get<InMemoryPtr>(data_ptr_);
-      return ptr->data();
-    }
-    assert_true(std::holds_alternative<MemmapPtr>(data_ptr_));
-    const auto ptr = std::get<MemmapPtr>(data_ptr_);
-    return ptr->data();
+    const auto get_data = [](auto &&_ptr) -> const T * { return _ptr->data(); };
+    return std::visit(get_data, data_ptr_);
   }
 
   /// Trivial getter
@@ -272,15 +254,8 @@ class Column {
   T &operator[](const T2 _i) {
     assert_true(_i >= 0);
     assert_true(static_cast<size_t>(_i) < nrows());
-
-    if (std::holds_alternative<InMemoryPtr>(data_ptr_)) {
-      const auto ptr = std::get<InMemoryPtr>(data_ptr_);
-      return (*ptr)[_i];
-    }
-
-    assert_true(std::holds_alternative<MemmapPtr>(data_ptr_));
-    const auto ptr = std::get<MemmapPtr>(data_ptr_);
-    return (*ptr)[_i];
+    const auto get = [_i](auto &&_ptr) -> T & { return (*_ptr)[_i]; };
+    return std::visit(get, data_ptr_);
   }
 
   /// Accessor to data
@@ -288,27 +263,14 @@ class Column {
   const T operator[](const T2 _i) const {
     assert_true(_i >= 0);
     assert_true(static_cast<size_t>(_i) < nrows());
-
-    if (std::holds_alternative<InMemoryPtr>(data_ptr_)) {
-      const auto ptr = std::get<InMemoryPtr>(data_ptr_);
-      return (*ptr)[_i];
-    }
-
-    assert_true(std::holds_alternative<MemmapPtr>(data_ptr_));
-    const auto ptr = std::get<MemmapPtr>(data_ptr_);
-    return (*ptr)[_i];
+    const auto get = [_i](auto &&_ptr) -> T { return (*_ptr)[_i]; };
+    return std::visit(get, data_ptr_);
   }
 
   /// Trivial getter
   size_t nrows() const {
-    if (std::holds_alternative<InMemoryPtr>(data_ptr_)) {
-      const auto ptr = std::get<InMemoryPtr>(data_ptr_);
-      return ptr->size();
-    }
-
-    assert_true(std::holds_alternative<MemmapPtr>(data_ptr_));
-    const auto ptr = std::get<MemmapPtr>(data_ptr_);
-    return ptr->size();
+    const auto get_size = [](auto &&_ptr) -> size_t { return _ptr->size(); };
+    return std::visit(get_size, data_ptr_);
   }
 
   /// Trivial getter
@@ -316,14 +278,8 @@ class Column {
 
   /// Appends data to the end
   void push_back(const T &_val) {
-    if (std::holds_alternative<InMemoryPtr>(data_ptr_)) {
-      const auto ptr = std::get<InMemoryPtr>(data_ptr_);
-      return ptr->push_back(_val);
-    }
-
-    assert_true(std::holds_alternative<MemmapPtr>(data_ptr_));
-    const auto ptr = std::get<MemmapPtr>(data_ptr_);
-    return ptr->push_back(_val);
+    const auto push_back = [&_val](auto &&_ptr) { _ptr->push_back(_val); };
+    std::visit(push_back, data_ptr_);
   }
 
   /// Trivial setter
