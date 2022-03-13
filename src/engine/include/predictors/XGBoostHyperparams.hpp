@@ -47,6 +47,10 @@ struct XGBoostHyperparams {
   /// Boosting learning rate
   const Float eta_;
 
+  /// Whether you want to use external_memory_ (only as an affect when
+  /// memory mapping is used).
+  const bool external_memory_;
+
   /// Minimum loss reduction required to make a further partition on a leaf
   /// node of the tree.
   const Float gamma_;

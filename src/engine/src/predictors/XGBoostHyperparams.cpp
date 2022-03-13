@@ -17,6 +17,10 @@ XGBoostHyperparams::XGBoostHyperparams(const Poco::JSON::Object &_json_obj)
       early_stopping_rounds_(
           JSON::get_value<size_t>(_json_obj, "early_stopping_rounds_")),
       eta_(JSON::get_value<Float>(_json_obj, "learning_rate_")),
+      external_memory_(
+          _json_obj.has("external_memory_")
+              ? JSON::get_value<bool>(_json_obj, "external_memory_")
+              : true),
       gamma_(JSON::get_value<Float>(_json_obj, "gamma_")),
       lambda_(JSON::get_value<Float>(_json_obj, "reg_lambda_")),
       max_delta_step_(JSON::get_value<Float>(_json_obj, "max_delta_step_")),

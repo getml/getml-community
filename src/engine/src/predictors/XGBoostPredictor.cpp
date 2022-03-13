@@ -310,7 +310,7 @@ std::string XGBoostPredictor::fit(
 
   auto handle = allocate_booster(train_set.get(), 1);
 
-  set_hyperparameters(handle);
+  set_hyperparameters(handle, _y.is_memory_mapped());
 
   fit_handle(_logger, train_set, valid_set, handle);
 
@@ -442,7 +442,7 @@ XGBoostMatrix XGBoostPredictor::make_matrix(
                                     ? _X_numerical.at(0).is_memory_mapped()
                                     : _X_categorical.at(0).is_memory_mapped();
 
-  if (is_memory_mapped) {
+  if (is_memory_mapped && hyperparams_.external_memory_) {
     return convert_to_memory_mapped_dmatrix(_X_categorical, _X_numerical, _y);
   }
 
@@ -578,7 +578,8 @@ void XGBoostPredictor::save(const std::string &_fname) const {
 
 // -----------------------------------------------------------------------------
 
-void XGBoostPredictor::set_hyperparameters(const BoosterPtr &_handle) const {
+void XGBoostPredictor::set_hyperparameters(const BoosterPtr &_handle,
+                                           const bool _is_memory_mapped) const {
   XGBoosterSetParam(*_handle, "alpha",
                     std::to_string(hyperparams_.alpha_).c_str());
 
@@ -646,6 +647,11 @@ void XGBoostPredictor::set_hyperparameters(const BoosterPtr &_handle) const {
 
   XGBoosterSetParam(*_handle, "subsample",
                     std::to_string(hyperparams_.subsample_).c_str());
+
+  // This is recommended by the XGBoost documentation.
+  if (_is_memory_mapped && hyperparams_.external_memory_) {
+    XGBoosterSetParam(*_handle, "tree_method", "approx");
+  }
 }
 
 // -----------------------------------------------------------------------------

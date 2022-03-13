@@ -198,7 +198,8 @@ class XGBoostPredictor : public Predictor {
                   std::vector<Float>* _feature_importances) const;
 
   /// Sets the hyperparameter for the handle.
-  void set_hyperparameters(const BoosterPtr& _handle) const;
+  void set_hyperparameters(const BoosterPtr& _handle,
+                           const bool _is_memory_mapped) const;
 
   // -----------------------------------------
 
