@@ -101,6 +101,9 @@ class Pool {
   std::pair<size_t, bool> block_is_sufficiently_large(
       const size_t _first_page, const size_t _block_size) const;
 
+  /// Make sure that enough space is left on the machine.
+  void check_space_left(const size_t _num_bytes) const;
+
   /// Creates a new file (either for the raw data or for the pages).
   std::pair<std::string, int> create_file(const std::string &_temp_dir) const;
 

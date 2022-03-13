@@ -7,6 +7,8 @@
 // ----------------------------------------------------------------------------
 
 #include <cstring>
+#include <filesystem>
+#include <iostream>
 #include <string>
 #include <tuple>
 
@@ -108,26 +110,15 @@ std::pair<size_t, bool> Pool::block_is_sufficiently_large(
 
 // ----------------------------------------------------------------------------
 
-bool Pool::current_block_can_be_extended(const size_t _block_size,
-                                         const size_t _current_page) const {
-  if (_current_page == NOT_ALLOCATED) {
-    return false;
+void Pool::check_space_left(const size_t _additional_bytes) const {
+  std::error_code err_code;
+  const auto info = std::filesystem::space(temp_dir_, err_code);
+  const auto available_bytes = static_cast<size_t>(info.available);
+  if (available_bytes < _additional_bytes) {
+    throw std::runtime_error(
+        "Could not allocate memory-mapped ressources: Not enough space "
+        "available.");
   }
-
-  if (_current_page + _block_size >= num_pages_) {
-    return false;
-  }
-
-  if (_block_size <= pages_[_current_page].block_size_) [[unlikely]] {
-    return true;
-  }
-
-  const auto is_free = [](const Page& _page) -> bool {
-    return !_page.is_allocated_;
-  };
-
-  return std::all_of(pages_ + _current_page + pages_[_current_page].block_size_,
-                     pages_ + _current_page + _block_size, is_free);
 }
 
 // ----------------------------------------------------------------------------
@@ -150,6 +141,30 @@ std::pair<std::string, int> Pool::create_file(
   }
 
   return std::make_pair(path, fd);
+}
+
+// ----------------------------------------------------------------------------
+
+bool Pool::current_block_can_be_extended(const size_t _block_size,
+                                         const size_t _current_page) const {
+  if (_current_page == NOT_ALLOCATED) {
+    return false;
+  }
+
+  if (_current_page + _block_size >= num_pages_) {
+    return false;
+  }
+
+  if (_block_size <= pages_[_current_page].block_size_) [[unlikely]] {
+    return true;
+  }
+
+  const auto is_free = [](const Page& _page) -> bool {
+    return !_page.is_allocated_;
+  };
+
+  return std::all_of(pages_ + _current_page + pages_[_current_page].block_size_,
+                     pages_ + _current_page + _block_size, is_free);
 }
 
 // ----------------------------------------------------------------------------
@@ -273,6 +288,11 @@ void Pool::resize_file(const int _fd, const size_t _num_bytes) const {
 // ----------------------------------------------------------------------------
 
 void Pool::resize_pool(const size_t _num_pages) {
+  if (_num_pages > num_pages_) {
+    const auto additional_bytes =
+        (_num_pages - num_pages_) * (page_size_ + sizeof(Page));
+    check_space_left(additional_bytes);
+  }
   if (num_pages_ != 0) {
     unmap();
   }
