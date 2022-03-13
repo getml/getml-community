@@ -116,7 +116,7 @@ void Pool::check_space_left(const size_t _additional_bytes) const {
   const auto available_bytes = static_cast<size_t>(info.available);
   if (available_bytes < _additional_bytes) {
     throw std::runtime_error(
-        "Could not allocate memory-mapped ressources: Not enough space "
+        "Could not allocate memory-mapped ressources: Not enough disk space "
         "available.");
   }
 }
