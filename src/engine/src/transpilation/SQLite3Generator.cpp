@@ -310,42 +310,105 @@ std::string SQLite3Generator::join_mapping(const std::string& _name,
 
   const auto orig_col = mapping_col.substr(0, pos);
 
-  const auto join_text = [&table_name, &mapping_col,
+  const auto join_text = [this, &table_name, &mapping_col,
                           &orig_col]() -> std::string {
-    return "UPDATE \"" + table_name + "\"\nSET \"" + mapping_col +
-           "\" = t3.\"avg_value\"\nFROM ( SELECT t1.\"" + orig_col +
-           "\", AVG( t2.\"value\" ) AS \"avg_value\"\n       FROM \"" +
-           table_name + "\" t1\n       LEFT JOIN \"" +
-           SQLGenerator::to_upper(mapping_col) +
-           "\" t2\n       ON contains( t1.\"" + orig_col +
-           "\", t2.\"key\" ) > 0\n       GROUP BY t1.\"" + orig_col +
-           "\" ) AS t3\nWHERE \"" + table_name + "\".\"" + orig_col +
-           "\" = t3.\"" + orig_col + "\";\n\n";
+    const auto splitted_table =
+        table_name + "__" + SQLGenerator::to_upper(orig_col);
+
+    const auto grouped_table =
+        SQLGenerator::to_upper(mapping_col + "__GROUPED");
+
+    const auto desc =
+        std::make_shared<helpers::ColumnDescription>("", table_name, orig_col);
+
+    const auto colname =
+        SQLGenerator::to_lower(make_staging_table_colname(desc->name_));
+
+    std::stringstream stream;
+
+    stream << split_text_fields(desc, true);
+
+    stream << "CREATE TABLE " << quotechar1() << grouped_table << quotechar2()
+           << " AS" << std::endl
+           << "SELECT t1." << quotechar1() << "rownum" << quotechar2() << ","
+           << std::endl
+           << "       AVG( t2.value ) AS value" << std::endl
+           << std::endl
+           << "FROM " << quotechar1() << splitted_table << quotechar2() << " t1"
+           << std::endl
+           << "LEFT JOIN " << quotechar1()
+           << SQLGenerator::to_upper(mapping_col) << quotechar2() << " t2"
+           << std::endl
+           << "ON t1." << quotechar1() << orig_col << quotechar2() << " = t2."
+           << quotechar1() << "key" << quotechar2() << std::endl
+           << "GROUP BY t1." << quotechar1() << "rownum" << quotechar2() << ";"
+           << std::endl
+           << std::endl;
+
+    stream << "UPDATE " << quotechar1() << table_name << quotechar2()
+           << std::endl
+           << "SET " << quotechar1() << mapping_col << quotechar2() << " = t2."
+           << quotechar1() << "value" << quotechar2() << std::endl
+           << "FROM " << quotechar1() << grouped_table << quotechar2()
+           << " AS t2" << std::endl
+           << "WHERE " << quotechar1() << table_name << quotechar2() << "."
+           << rowid() << " = t2." << quotechar1() << "rownum" << quotechar2()
+           << ";" << std::endl
+           << std::endl;
+
+    stream << drop_table_if_exists(grouped_table);
+
+    stream << drop_table_if_exists(splitted_table);
+
+    return stream.str();
   };
 
-  const auto join_other = [&table_name, &mapping_col,
+  const auto join_other = [this, &table_name, &mapping_col,
                            &orig_col]() -> std::string {
-    return "UPDATE \"" + table_name + "\"\nSET \"" + mapping_col +
-           "\" = t2.\"value\"\nFROM \"" + SQLGenerator::to_upper(mapping_col) +
-           "\" AS t2\nWHERE \"" + table_name + "\".\"" + orig_col +
-           "\" = t2.\"key\";\n\n";
+    std::stringstream stream;
+    stream << "UPDATE " << quotechar1() << table_name << quotechar2()
+           << std::endl
+           << "SET " << quotechar1() << mapping_col << quotechar2() << " = t2."
+           << quotechar1() << "value" << quotechar2() << std::endl
+           << "FROM " << quotechar1() << SQLGenerator::to_upper(mapping_col)
+           << quotechar2() << " AS t2" << std::endl
+           << "WHERE " << quotechar1() << table_name << quotechar2() << "."
+           << quotechar1() << orig_col << quotechar2() << " = t2."
+           << quotechar1() << "key" << quotechar2() << ";" << std::endl
+           << std::endl;
+    return stream.str();
   };
 
-  const std::string alter_table = "ALTER TABLE \"" + table_name +
-                                  "\" ADD COLUMN \"" +
-                                  SQLGenerator::to_lower(_colname) + "\";\n\n";
+  const auto alter_table = [this, &_colname, &table_name]() -> std::string {
+    std::stringstream stream;
+    stream << "ALTER TABLE " << quotechar1() << table_name << quotechar2()
+           << " ADD COLUMN " << quotechar1() << SQLGenerator::to_lower(_colname)
+           << quotechar2() << ";" << std::endl
+           << std::endl;
+    return stream.str();
+  };
 
-  const std::string set_to_zero =
-      "UPDATE \"" + table_name + "\" SET \"" + mapping_col + "\" = 0.0;\n\n";
+  const auto set_to_zero = [this, &table_name, &mapping_col]() -> std::string {
+    std::stringstream stream;
+    stream << "UPDATE " << quotechar1() << table_name << quotechar2() << " SET "
+           << quotechar1() << mapping_col << quotechar2() << " = 0.0;"
+           << std::endl
+           << std::endl;
+    return stream.str();
+  };
 
-  const std::string drop_table = "DROP TABLE IF EXISTS \"" +
-                                 SQLGenerator::to_upper(_colname) + "\";\n\n\n";
+  const auto drop_table = [this, &_colname]() -> std::string {
+    std::stringstream stream;
+    stream << drop_table_if_exists(SQLGenerator::to_upper(_colname))
+           << std::endl;
+    return stream.str();
+  };
 
   if (_is_text && !is_text_field) {
-    return alter_table + set_to_zero + join_text() + drop_table;
+    return alter_table() + set_to_zero() + join_text() + drop_table();
   }
 
-  return alter_table + set_to_zero + join_other() + drop_table;
+  return alter_table() + set_to_zero() + join_other() + drop_table();
 }
 
 // ----------------------------------------------------------------------------
@@ -763,22 +826,32 @@ std::string SQLite3Generator::split_text_fields(
 
   const auto new_table = staging_table + "__" + SQLGenerator::to_upper(colname);
 
-  return "DROP TABLE IF EXISTS \"" + new_table +
-         "\";\n\n"
-         "CREATE TABLE \"" +
-         new_table +
-         "\" AS\nWITH RECURSIVE\nsplit_text_field(i, field, word, "
-         "rownum, n) AS (\n"
-         "SELECT 1, field, get_word(field, 1), rownum, num_words(field)\n"
-         "FROM ( SELECT t1.\"" +
-         colname + "\" AS field, rowid AS rownum FROM \"" + staging_table +
-         "\" t1 )\n"
-         "UNION ALL\n"
-         "SELECT i + 1, field, get_word(field, i + 1), rownum, n FROM "
-         "split_text_field\n"
-         "WHERE i < n\n)\n"
-         "SELECT rownum, word AS \"" +
-         colname + "\" FROM split_text_field;\n\n\n";
+  std::stringstream stream;
+
+  stream << drop_table_if_exists(new_table) << "CREATE TABLE " << quotechar1()
+         << new_table << quotechar2() << " AS" << std::endl
+         << "WITH RECURSIVE" << std::endl
+         << "split_text_field(i, field, word, rownum, n) AS (" << std::endl
+         << "SELECT 1, field, get_word(field, 1), rownum, num_words(field)"
+         << std::endl
+         << "FROM ( SELECT t1." << quotechar1() << colname << quotechar2()
+         << " AS field, rowid AS rownum FROM " << quotechar1() << staging_table
+         << quotechar2() << " t1 )" << std::endl
+         << "UNION ALL" << std::endl
+         << "SELECT i + 1, field, get_word(field, i + 1), rownum, n FROM "
+            "split_text_field"
+         << std::endl
+         << "WHERE i < n" << std::endl
+         << ")" << std::endl
+         << "SELECT rownum, word AS " << quotechar1() << colname << quotechar2()
+         << " FROM split_text_field;" << std::endl
+         << std::endl;
+
+  if (!_for_mapping) {
+    stream << std::endl;
+  }
+
+  return stream.str();
 }
 
 // ----------------------------------------------------------------------------
