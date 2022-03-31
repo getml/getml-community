@@ -213,9 +213,9 @@ Float XGBoostPredictor::evaluate_iter(const DMatrixPtr &_valid_set,
 
   if (XGBoosterEvalOneIter(*_handle, _n_iter, _valid_set.get(), eval_names, 1,
                            &out_result)) {
-    std::runtime_error("XGBoost: Evaluating tree or linear model " +
-                       std::to_string(_n_iter + 1) +
-                       " failed: " + XGBGetLastError());
+    throw std::runtime_error("XGBoost: Evaluating tree or linear model " +
+                             std::to_string(_n_iter + 1) +
+                             " failed: " + XGBGetLastError());
   }
 
   const auto out_result_str = std::string(out_result);
@@ -236,8 +236,8 @@ std::vector<Float> XGBoostPredictor::feature_importances(
   auto handle = allocate_booster(NULL, 0);
 
   if (XGBoosterLoadModelFromBuffer(*handle, model(), len()) != 0) {
-    std::runtime_error(std::string("Could not reload booster: ") +
-                       XGBGetLastError());
+    throw std::runtime_error(std::string("Could not reload booster: ") +
+                             XGBGetLastError());
   }
 
   bst_ulong out_len = 0;
@@ -245,8 +245,8 @@ std::vector<Float> XGBoostPredictor::feature_importances(
   const char **out_dump_array = nullptr;
 
   if (XGBoosterDumpModel(*handle, "", 1, &out_len, &out_dump_array) != 0) {
-    std::runtime_error(std::string("Generating XGBoost dump failed: ") +
-                       XGBGetLastError());
+    throw std::runtime_error(std::string("Generating XGBoost dump failed: ") +
+                             XGBGetLastError());
   }
 
   std::vector<Float> all_feature_importances(impl().ncols_csr());
@@ -303,6 +303,7 @@ std::string XGBoostPredictor::fit(
   const auto train_set = make_matrix(_X_categorical, _X_numerical, _y);
 
   const auto valid_set =
+
       _y_valid ? std::make_optional<XGBoostMatrix>(
                      make_matrix(_X_categorical_valid.value(),
                                  _X_numerical_valid.value(), _y_valid.value()))
@@ -393,9 +394,9 @@ void XGBoostPredictor::fit_handle(
 
   for (int i = 0; i < n_iter; ++i) {
     if (XGBoosterUpdateOneIter(*_handle, i, *_train_set.get())) {
-      std::runtime_error("XGBoost: Fitting tree or linear model " +
-                         std::to_string(i + 1) +
-                         " failed: " + XGBGetLastError());
+      throw std::runtime_error("XGBoost: Fitting tree or linear model " +
+                               std::to_string(i + 1) +
+                               " failed: " + XGBGetLastError());
     }
 
     if (evaluate(i)) [[unlikely]] {
