@@ -1846,7 +1846,27 @@ Pipeline::make_features_validation(const TransformParams& _params) {
 
   assert_true(_params.original_peripheral_dfs_);
 
-  const auto [numerical_features, categorical_features] = transform(_params);
+  const auto params = TransformParams{
+      .categories_ = _params.categories_,
+      .cmd_ = _params.cmd_,  // cmd_ is the fit command - it won't contain
+                             // score or predict
+      .data_frames_ = _params.data_frames_,
+      .data_frame_tracker_ = _params.data_frame_tracker_,
+      .dependencies_ = _params.dependencies_,
+      .logger_ = _params.logger_,
+      .original_peripheral_dfs_ = _params.original_peripheral_dfs_,
+      .original_population_df_ =
+          _params
+              .validation_df_,  // NOTE: We want to take the validation_df here
+      .predictor_impl_ = _params.predictor_impl_,
+      .pred_tracker_ = _params.pred_tracker_,
+      .purpose_ = _params.purpose_,
+      .validation_df_ = std::nullopt,  // NOTE: No more validation_df - it is
+                                       // the new original population df
+      .predictors_ = _params.predictors_,
+      .socket_ = _params.socket_};
+
+  const auto [numerical_features, categorical_features] = transform(params);
 
   return std::make_pair(
       std::make_optional<containers::NumericalFeatures>(numerical_features),
