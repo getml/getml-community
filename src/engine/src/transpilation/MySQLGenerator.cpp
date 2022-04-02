@@ -396,7 +396,7 @@ MySQLGenerator::demangle_colname(const std::string& _raw_name) const {
 
   new_name = helpers::StringReplacer::replace_all(
       new_name, helpers::Macros::hour_begin(),
-      "RIGHT( CONCAT( '0', CAST( HOUR(" + helpers::Macros::prefix());
+      "RIGHT( CONCAT( '0', CAST( HOUR( " + helpers::Macros::prefix());
 
   new_name = helpers::StringReplacer::replace_all(
       new_name, helpers::Macros::hour_end(),
