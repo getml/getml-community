@@ -1,9 +1,17 @@
 #include "engine/handlers/PipelineManager.hpp"
 
+#include <stdexcept>
+
 // ------------------------------------------------------------------------
 
+#include "engine/pipelines/ToSQL.hpp"
+#include "engine/pipelines/ToSQLParams.hpp"
 #include "transpilation/TranspilationParams.hpp"
 #include "transpilation/transpilation.hpp"
+
+// ------------------------------------------------------------------------
+
+#include "engine/pipelines/pipelines.hpp"
 
 // ------------------------------------------------------------------------
 
@@ -15,11 +23,11 @@ namespace engine {
 namespace handlers {
 
 void PipelineManager::add_features_to_df(
-    const pipelines::Pipeline& _pipeline,
+    const pipelines::FittedPipeline& _fitted,
     const containers::NumericalFeatures& _numerical_features,
     const containers::CategoricalFeatures& _categorical_features,
     containers::DataFrame* _df) const {
-  const auto [autofeatures, numerical, categorical] = _pipeline.feature_names();
+  const auto [autofeatures, numerical, categorical] = _fitted.feature_names();
 
   assert_true(autofeatures.size() + numerical.size() ==
               _numerical_features.size());
@@ -83,10 +91,10 @@ void PipelineManager::add_join_keys_to_df(
 // ------------------------------------------------------------------------
 
 void PipelineManager::add_predictions_to_df(
-    const pipelines::Pipeline& _pipeline,
+    const pipelines::FittedPipeline& _fitted,
     const containers::NumericalFeatures& _numerical_features,
     containers::DataFrame* _df) const {
-  const auto targets = _pipeline.targets();
+  const auto& targets = _fitted.targets_;
 
   assert_true(targets.size() == _numerical_features.size());
 
@@ -144,11 +152,11 @@ void PipelineManager::add_time_stamps_to_df(
 // ------------------------------------------------------------------------
 
 void PipelineManager::add_to_tracker(
-    const pipelines::Pipeline& _pipeline,
+    const pipelines::FittedPipeline& _fitted,
     const containers::DataFrame& _population_df,
     const std::vector<containers::DataFrame>& _peripheral_dfs,
     containers::DataFrame* _df) {
-  const auto dependencies = _pipeline.dependencies();
+  const auto dependencies = _fitted.fs_fingerprints_;
 
   const auto build_history = data_frame_tracker().make_build_history(
       dependencies, _population_df, _peripheral_dfs);
@@ -163,19 +171,9 @@ void PipelineManager::add_to_tracker(
 void PipelineManager::check(const std::string& _name,
                             const Poco::JSON::Object& _cmd,
                             Poco::Net::StreamSocket* _socket) {
-  // -------------------------------------------------------
-
   const auto pipeline = get_pipeline(_name);
 
-  // -------------------------------------------------------
-
-  if (pipeline.premium_only()) {
-    license_checker().check_enterprise();
-  }
-
   communication::Sender::send_string("Found!", _socket);
-
-  // -------------------------------------------------------
 
   multithreading::WeakWriteLock weak_write_lock(read_write_lock_);
 
@@ -187,14 +185,10 @@ void PipelineManager::check(const std::string& _name,
   const auto local_join_keys_encoding =
       std::make_shared<containers::Encoding>(pool, join_keys_encoding_);
 
-  // -------------------------------------------------------
-
   const auto [population_df, peripheral_dfs, _] =
       ViewParser(local_categories, local_join_keys_encoding, data_frames_,
                  options_)
           .parse_all(_cmd);
-
-  // -------------------------------------------------------
 
   const auto params =
       pipelines::CheckParams{.categories_ = local_categories,
@@ -206,17 +200,13 @@ void PipelineManager::check(const std::string& _name,
                              .warning_tracker_ = warning_tracker_,
                              .socket_ = _socket};
 
-  pipeline.check(params);
-
-  // -------------------------------------------------------
+  pipelines::Check::check(pipeline, params);
 
   weak_write_lock.upgrade();
 
   categories_->append(*local_categories);
 
   weak_write_lock.unlock();
-
-  // -------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
@@ -224,10 +214,6 @@ void PipelineManager::check(const std::string& _name,
 void PipelineManager::check_user_privileges(
     const pipelines::Pipeline& _pipeline, const std::string& _name,
     const Poco::JSON::Object& _cmd) const {
-  if (_pipeline.premium_only()) {
-    license_checker().check_enterprise();
-  }
-
   if (JSON::get_value<bool>(_cmd, "http_request_")) {
     if (!_pipeline.allow_http()) {
       throw std::runtime_error(
@@ -235,10 +221,6 @@ void PipelineManager::check_user_privileges(
           "' does not allow HTTP requests. You can activate "
           "this "
           "via the API or the getML monitor!");
-    }
-
-    if (!_pipeline.premium_only()) {
-      license_checker().check_enterprise();
     }
   }
 }
@@ -248,17 +230,11 @@ void PipelineManager::check_user_privileges(
 void PipelineManager::column_importances(const std::string& _name,
                                          const Poco::JSON::Object& _cmd,
                                          Poco::Net::StreamSocket* _socket) {
-  // -------------------------------------------------------
-
   const auto target_num = JSON::get_value<Int>(_cmd, "target_num_");
-
-  // -------------------------------------------------------
 
   const auto pipeline = get_pipeline(_name);
 
   const auto scores = pipeline.scores();
-
-  // -------------------------------------------------------
 
   auto importances = std::vector<Float>();
 
@@ -280,8 +256,6 @@ void PipelineManager::column_importances(const std::string& _name,
     importances.push_back(vec.at(target_num));
   }
 
-  // -------------------------------------------------------
-
   Poco::JSON::Object response;
 
   response.set("column_descriptions_",
@@ -289,13 +263,9 @@ void PipelineManager::column_importances(const std::string& _name,
 
   response.set("column_importances_", JSON::vector_to_array(importances));
 
-  // -------------------------------------------------------
-
   communication::Sender::send_string("Success!", _socket);
 
   communication::Sender::send_string(JSON::stringify(response), _socket);
-
-  // -------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
@@ -305,9 +275,7 @@ void PipelineManager::deploy(const std::string& _name,
                              Poco::Net::StreamSocket* _socket) {
   const bool deploy = JSON::get_value<bool>(_cmd, "deploy_");
 
-  auto pipeline = get_pipeline(_name);
-
-  pipeline.allow_http() = deploy;
+  const auto pipeline = get_pipeline(_name).with_allow_http(deploy);
 
   set_pipeline(_name, pipeline);
 
@@ -321,17 +289,11 @@ void PipelineManager::deploy(const std::string& _name,
 void PipelineManager::feature_correlations(const std::string& _name,
                                            const Poco::JSON::Object& _cmd,
                                            Poco::Net::StreamSocket* _socket) {
-  // -------------------------------------------------------
-
   const auto target_num = JSON::get_value<unsigned int>(_cmd, "target_num_");
-
-  // -------------------------------------------------------
 
   const auto pipeline = get_pipeline(_name);
 
   const auto scores = pipeline.scores();
-
-  // -------------------------------------------------------
 
   auto correlations = std::vector<Float>();
 
@@ -343,21 +305,15 @@ void PipelineManager::feature_correlations(const std::string& _name,
     correlations.push_back(vec.at(target_num));
   }
 
-  // -------------------------------------------------------
-
   Poco::JSON::Object response;
 
   response.set("feature_names_", JSON::vector_to_array(scores.feature_names()));
 
   response.set("feature_correlations_", JSON::vector_to_array(correlations));
 
-  // -------------------------------------------------------
-
   communication::Sender::send_string("Success!", _socket);
 
   communication::Sender::send_string(JSON::stringify(response), _socket);
-
-  // -------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
@@ -365,17 +321,11 @@ void PipelineManager::feature_correlations(const std::string& _name,
 void PipelineManager::feature_importances(const std::string& _name,
                                           const Poco::JSON::Object& _cmd,
                                           Poco::Net::StreamSocket* _socket) {
-  // -------------------------------------------------------
-
   const auto target_num = JSON::get_value<unsigned int>(_cmd, "target_num_");
-
-  // -------------------------------------------------------
 
   const auto pipeline = get_pipeline(_name);
 
   const auto scores = pipeline.scores();
-
-  // -------------------------------------------------------
 
   auto importances = std::vector<Float>();
 
@@ -387,21 +337,15 @@ void PipelineManager::feature_importances(const std::string& _name,
     importances.push_back(vec.at(target_num));
   }
 
-  // -------------------------------------------------------
-
   Poco::JSON::Object response;
 
   response.set("feature_names_", JSON::vector_to_array(scores.feature_names()));
 
   response.set("feature_importances_", JSON::vector_to_array(importances));
 
-  // -------------------------------------------------------
-
   communication::Sender::send_string("Success!", _socket);
 
   communication::Sender::send_string(JSON::stringify(response), _socket);
-
-  // -------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
@@ -409,19 +353,9 @@ void PipelineManager::feature_importances(const std::string& _name,
 void PipelineManager::fit(const std::string& _name,
                           const Poco::JSON::Object& _cmd,
                           Poco::Net::StreamSocket* _socket) {
-  // -------------------------------------------------------
-
   auto pipeline = get_pipeline(_name);
 
-  // -------------------------------------------------------
-
-  if (pipeline.premium_only()) {
-    license_checker().check_enterprise();
-  }
-
   communication::Sender::send_string("Found!", _socket);
-
-  // -------------------------------------------------------
 
   multithreading::WeakWriteLock weak_write_lock(read_write_lock_);
 
@@ -433,14 +367,10 @@ void PipelineManager::fit(const std::string& _name,
   const auto local_join_keys_encoding =
       std::make_shared<containers::Encoding>(pool, join_keys_encoding_);
 
-  // -------------------------------------------------------
-
   const auto [population_df, peripheral_dfs, validation_df] =
       ViewParser(local_categories, local_join_keys_encoding, data_frames_,
                  options_)
           .parse_all(_cmd);
-
-  // -------------------------------------------------------
 
   const auto params =
       pipelines::FitParams{.categories_ = local_categories,
@@ -456,17 +386,15 @@ void PipelineManager::fit(const std::string& _name,
                            .validation_df_ = validation_df,
                            .socket_ = _socket};
 
-  pipeline.fit(params);
+  const auto [fitted, scores] = pipelines::Fit::fit(pipeline, params);
 
-  // -------------------------------------------------------
+  pipeline = pipeline.with_fitted(fitted).with_scores(scores);
 
-  auto it = pipelines().find(_name);
+  const auto it = pipelines().find(_name);
 
   if (it == pipelines().end()) {
     throw std::runtime_error("Pipeline '" + _name + "' does not exist!");
   }
-
-  // -------------------------------------------------------
 
   weak_write_lock.upgrade();
 
@@ -476,13 +404,9 @@ void PipelineManager::fit(const std::string& _name,
 
   weak_write_lock.unlock();
 
-  // -------------------------------------------------------
-
   post_pipeline(pipeline.to_monitor(categories().strings(), _name));
 
   communication::Sender::send_string("Trained pipeline.", _socket);
-
-  // -------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
@@ -531,17 +455,11 @@ Poco::JSON::Object PipelineManager::get_scores(
 void PipelineManager::lift_curve(const std::string& _name,
                                  const Poco::JSON::Object& _cmd,
                                  Poco::Net::StreamSocket* _socket) {
-  // -------------------------------------------------------
-
   const auto target_num = JSON::get_value<unsigned int>(_cmd, "target_num_");
-
-  // -------------------------------------------------------
 
   const auto pipeline = get_pipeline(_name);
 
   const auto scores = pipeline.scores().to_json_obj();
-
-  // -------------------------------------------------------
 
   Poco::JSON::Object response;
 
@@ -549,13 +467,9 @@ void PipelineManager::lift_curve(const std::string& _name,
 
   response.set("lift_", get_array(scores, "lift_", target_num));
 
-  // -------------------------------------------------------
-
   communication::Sender::send_string("Success!", _socket);
 
   communication::Sender::send_string(JSON::stringify(response), _socket);
-
-  // -------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
@@ -574,17 +488,11 @@ void PipelineManager::post_pipeline(const Poco::JSON::Object& _obj) {
 void PipelineManager::precision_recall_curve(const std::string& _name,
                                              const Poco::JSON::Object& _cmd,
                                              Poco::Net::StreamSocket* _socket) {
-  // -------------------------------------------------------
-
   const auto target_num = JSON::get_value<unsigned int>(_cmd, "target_num_");
-
-  // -------------------------------------------------------
 
   const auto pipeline = get_pipeline(_name);
 
   const auto scores = pipeline.scores().to_json_obj();
-
-  // -------------------------------------------------------
 
   Poco::JSON::Object response;
 
@@ -592,13 +500,9 @@ void PipelineManager::precision_recall_curve(const std::string& _name,
 
   response.set("tpr_", get_array(scores, "tpr_", target_num));
 
-  // -------------------------------------------------------
-
   communication::Sender::send_string("Success!", _socket);
 
   communication::Sender::send_string(JSON::stringify(response), _socket);
-
-  // -------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
@@ -610,7 +514,6 @@ Poco::JSON::Object PipelineManager::receive_data(
     const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
         _data_frames,
     Poco::Net::StreamSocket* _socket) {
-  // -------------------------------------------------------
   // Declare local variables. The idea of the local variables
   // is to prevent the global variables from being affected
   // by local data frames.
@@ -623,9 +526,6 @@ Poco::JSON::Object PipelineManager::receive_data(
   auto local_data_frame_manager = DataFrameManager(
       _categories, database_manager_, _data_frames, _join_keys_encoding,
       license_checker_, logger_, monitor_, options_, local_read_write_lock);
-
-  // -------------------------------------------------------
-  // Receive data.
 
   auto cmd = _cmd;
 
@@ -653,11 +553,7 @@ Poco::JSON::Object PipelineManager::receive_data(
     cmd = communication::Receiver::recv_cmd(logger_, _socket);
   }
 
-  // -------------------------------------------------------
-
   return cmd;
-
-  // -------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
@@ -701,7 +597,9 @@ Poco::JSON::Object PipelineManager::refresh_pipeline(
 
   obj.set("scores", get_scores(_pipeline));
 
-  obj.set("targets", JSON::vector_to_array(_pipeline.targets()));
+  if (_pipeline.fitted()) {
+    obj.set("targets", JSON::vector_to_array(_pipeline.fitted()->targets_));
+  }
 
   return obj;
 }
@@ -711,17 +609,11 @@ Poco::JSON::Object PipelineManager::refresh_pipeline(
 void PipelineManager::roc_curve(const std::string& _name,
                                 const Poco::JSON::Object& _cmd,
                                 Poco::Net::StreamSocket* _socket) {
-  // -------------------------------------------------------
-
   const auto target_num = JSON::get_value<unsigned int>(_cmd, "target_num_");
-
-  // -------------------------------------------------------
 
   const auto pipeline = get_pipeline(_name);
 
   const auto scores = pipeline.scores().to_json_obj();
-
-  // -------------------------------------------------------
 
   Poco::JSON::Object response;
 
@@ -729,13 +621,9 @@ void PipelineManager::roc_curve(const std::string& _name,
 
   response.set("tpr_", get_array(scores, "tpr_", target_num));
 
-  // -------------------------------------------------------
-
   communication::Sender::send_string("Success!", _socket);
 
   communication::Sender::send_string(JSON::stringify(response), _socket);
-
-  // -------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
@@ -744,33 +632,37 @@ void PipelineManager::score(const Poco::JSON::Object& _cmd,
                             const std::string& _name,
                             const containers::DataFrame& _population_df,
                             const containers::NumericalFeatures& _yhat,
-                            pipelines::Pipeline* _pipeline,
+                            const pipelines::Pipeline& _pipeline,
                             Poco::Net::StreamSocket* _socket) {
-  // -------------------------------------------------------
-
   const auto population_json = *JSON::get_object(_cmd, "population_df_");
 
   const auto name = JSON::get_value<std::string>(population_json, "name_");
 
-  const auto scores = _pipeline->score(_population_df, name, _yhat);
+  const auto fitted = _pipeline.fitted();
+
+  if (!fitted) {
+    throw std::runtime_error(
+        "Could not score the pipeline, because it has not been fitted.");
+  }
+
+  const auto [scores, scores_obj] =
+      pipelines::Score::score(_pipeline, *fitted, _population_df, name, _yhat);
+
+  const auto pipeline = _pipeline.with_scores(scores);
 
   communication::Sender::send_string("Success!", _socket);
 
-  // -------------------------------------------------------
+  set_pipeline(_name, pipeline);
 
-  set_pipeline(_name, *_pipeline);
+  post_pipeline(pipeline.to_monitor(categories().strings(), _name));
 
-  post_pipeline(_pipeline->to_monitor(categories().strings(), _name));
-
-  communication::Sender::send_string(JSON::stringify(scores), _socket);
-
-  // -------------------------------------------------------
+  communication::Sender::send_string(JSON::stringify(scores_obj), _socket);
 }
 
 // ------------------------------------------------------------------------
 
 void PipelineManager::store_df(
-    const pipelines::Pipeline& _pipeline, const Poco::JSON::Object& _cmd,
+    const pipelines::FittedPipeline& _fitted, const Poco::JSON::Object& _cmd,
     const containers::DataFrame& _population_df,
     const std::vector<containers::DataFrame>& _peripheral_dfs,
     const std::shared_ptr<containers::Encoding>& _local_categories,
@@ -790,7 +682,7 @@ void PipelineManager::store_df(
   const auto predict = JSON::get_value<bool>(_cmd, "predict_");
 
   if (!predict) {
-    add_to_tracker(_pipeline, _population_df, _peripheral_dfs, _df);
+    add_to_tracker(_fitted, _population_df, _peripheral_dfs, _df);
   }
 
   data_frames()[_df->name()] = *_df;
@@ -802,14 +694,14 @@ void PipelineManager::store_df(
 // ------------------------------------------------------------------------
 
 void PipelineManager::to_db(
-    const pipelines::Pipeline& _pipeline, const Poco::JSON::Object& _cmd,
+    const pipelines::FittedPipeline& _fitted, const Poco::JSON::Object& _cmd,
     const containers::DataFrame& _population_table,
     const containers::NumericalFeatures& _numerical_features,
     const containers::CategoricalFeatures& _categorical_features,
     const std::shared_ptr<containers::Encoding>& _categories,
     const std::shared_ptr<containers::Encoding>& _join_keys_encoding) {
   const auto df =
-      to_df(_pipeline, _cmd, _population_table, _numerical_features,
+      to_df(_fitted, _cmd, _population_table, _numerical_features,
             _categorical_features, _categories, _join_keys_encoding);
 
   const auto table_name = JSON::get_value<std::string>(_cmd, "table_name_");
@@ -839,7 +731,7 @@ void PipelineManager::to_db(
 // ------------------------------------------------------------------------
 
 containers::DataFrame PipelineManager::to_df(
-    const pipelines::Pipeline& _pipeline, const Poco::JSON::Object& _cmd,
+    const pipelines::FittedPipeline& _fitted, const Poco::JSON::Object& _cmd,
     const containers::DataFrame& _population_table,
     const containers::NumericalFeatures& _numerical_features,
     const containers::CategoricalFeatures& _categorical_features,
@@ -853,10 +745,10 @@ containers::DataFrame PipelineManager::to_df(
       containers::DataFrame(df_name, _categories, _join_keys_encoding, pool);
 
   if (!_cmd.has("predict_") || !JSON::get_value<bool>(_cmd, "predict_")) {
-    add_features_to_df(_pipeline, _numerical_features, _categorical_features,
+    add_features_to_df(_fitted, _numerical_features, _categorical_features,
                        &df);
   } else {
-    add_predictions_to_df(_pipeline, _numerical_features, &df);
+    add_predictions_to_df(_fitted, _numerical_features, &df);
   }
 
   add_join_keys_to_df(_population_table, &df);
@@ -880,14 +772,30 @@ void PipelineManager::to_sql(const std::string& _name,
 
   const auto subfeatures = JSON::get_value<bool>(_cmd, "subfeatures_");
 
-  const auto params = transpilation::TranspilationParams::from_json(_cmd);
+  const auto transpilation_params =
+      transpilation::TranspilationParams::from_json(_cmd);
 
   multithreading::ReadLock read_lock(read_write_lock_);
 
   const auto pipeline = get_pipeline(_name);
 
-  const auto sql =
-      pipeline.to_sql(categories().strings(), targets, subfeatures, params);
+  const auto fitted = pipeline.fitted();
+
+  if (!fitted) {
+    throw std::runtime_error(
+        "Could not transpile the pipeline to SQL, because it has not been "
+        "fitted.");
+  }
+
+  const auto params =
+      pipelines::ToSQLParams{.categories_ = categories().strings(),
+                             .fitted_ = *fitted,
+                             .full_pipeline_ = subfeatures,
+                             .pipeline_ = pipeline,
+                             .targets_ = targets,
+                             .transpilation_params_ = transpilation_params};
+
+  const auto sql = pipelines::ToSQL::to_sql(params);
 
   read_lock.unlock();
 
@@ -943,8 +851,18 @@ void PipelineManager::transform(const std::string& _name,
                                  .original_population_df_ = population_df,
                                  .socket_ = _socket};
 
-  const auto [numerical_features, categorical_features] =
-      pipeline.transform(params);
+  const auto fitted = pipeline.fitted();
+
+  if (!fitted) {
+    throw std::runtime_error("The pipeline has not been fitted.");
+  }
+
+  const auto [numerical_features, categorical_features, scores] =
+      pipelines::Transform::transform(params, pipeline, *fitted);
+
+  if (scores) {
+    pipeline = pipeline.with_scores(fct::Ref<const metrics::Scores>(scores));
+  }
 
   const auto table_name = JSON::get_value<std::string>(cmd, "table_name_");
 
@@ -959,20 +877,18 @@ void PipelineManager::transform(const std::string& _name,
   }
 
   if (table_name != "") {
-    license_checker().check_enterprise();
-
-    to_db(pipeline, cmd, population_df, numerical_features,
-          categorical_features, local_categories, local_join_keys_encoding);
+    to_db(*fitted, cmd, population_df, numerical_features, categorical_features,
+          local_categories, local_join_keys_encoding);
   }
 
   if (df_name != "") {
     license_checker().check_enterprise();
 
     auto df =
-        to_df(pipeline, cmd, population_df, numerical_features,
+        to_df(*fitted, cmd, population_df, numerical_features,
               categorical_features, local_categories, local_join_keys_encoding);
 
-    store_df(pipeline, cmd, population_df, peripheral_dfs, local_categories,
+    store_df(*fitted, cmd, population_df, peripheral_dfs, local_categories,
              local_join_keys_encoding, &df, &weak_write_lock);
   }
 
@@ -981,9 +897,7 @@ void PipelineManager::transform(const std::string& _name,
   weak_write_lock.unlock();
 
   if (score) {
-    assert_true(local_data_frames);
-
-    this->score(cmd, _name, population_df, numerical_features, &pipeline,
+    this->score(cmd, _name, population_df, numerical_features, pipeline,
                 _socket);
   }
 }

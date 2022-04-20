@@ -22,7 +22,6 @@
 
 namespace engine {
 namespace pipelines {
-// ----------------------------------------------------------------------------
 
 struct TransformParams {
   static constexpr const char* FEATURE_SELECTOR = "feature selector";

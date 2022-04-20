@@ -1,15 +1,13 @@
-#ifndef ENGINE_PIPELINES_CHECKPARAMS_HPP_
-#define ENGINE_PIPELINES_CHECKPARAMS_HPP_
+#ifndef ENGINE_PIPELINES_FITPREPROCESSORSPARAMS_HPP_
+#define ENGINE_PIPELINES_FITPREPROCESSORSPARAMS_HPP_
 
 // ----------------------------------------------------------------------------
 
-#include <Poco/JSON/Object.h>
 #include <Poco/Net/StreamSocket.h>
 
 // ----------------------------------------------------------------------------
 
-#include <memory>
-#include <optional>
+#include <string>
 #include <vector>
 
 // ----------------------------------------------------------------------------
@@ -23,8 +21,8 @@
 namespace engine {
 namespace pipelines {
 
-struct CheckParams {
-  /// The Encoding used for the categories.
+struct FitPreprocessorsParams {
+  /// The categorical encoding.
   const std::shared_ptr<containers::Encoding> categories_;
 
   /// The command used.
@@ -42,15 +40,12 @@ struct CheckParams {
   /// The dependency tracker for the preprocessors.
   const std::shared_ptr<dependency::PreprocessorTracker> preprocessor_tracker_;
 
-  /// Tracks the warnings to be shown in the Python API.
-  const std::shared_ptr<dependency::WarningTracker> warning_tracker_;
-
   /// Output: The socket with which we communicate.
   Poco::Net::StreamSocket* const socket_;
 };
 
-// ----------------------------------------------------------------------------
 }  // namespace pipelines
 }  // namespace engine
 
-#endif  // ENGINE_PIPELINES_CHECKPARAMS_HPP_
+#endif  // ENGINE_PIPELINES_FITPREPROCESSORSPARAMS_HPP_
+

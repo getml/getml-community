@@ -21,6 +21,7 @@
 #include "engine/communication/communication.hpp"
 #include "engine/config/config.hpp"
 #include "engine/licensing/licensing.hpp"
+#include "engine/pipelines/FittedPipeline.hpp"
 #include "engine/pipelines/pipelines.hpp"
 
 // ------------------------------------------------------------------------
@@ -34,8 +35,6 @@ namespace engine {
 namespace handlers {
 
 class PipelineManager {
-  // ------------------------------------------------------------------------
-
  public:
   typedef std::map<std::string, pipelines::Pipeline> PipelineMapType;
 
@@ -151,7 +150,7 @@ class PipelineManager {
  private:
   /// Adds a pipeline's features to the data frame.
   void add_features_to_df(
-      const pipelines::Pipeline& _pipeline,
+      const pipelines::FittedPipeline& _fitted,
       const containers::NumericalFeatures& _numerical_features,
       const containers::CategoricalFeatures& _categorical_features,
       containers::DataFrame* _df) const;
@@ -162,7 +161,7 @@ class PipelineManager {
 
   /// Adds a pipeline's predictions to the data frame.
   void add_predictions_to_df(
-      const pipelines::Pipeline& _pipeline,
+      const pipelines::FittedPipeline& _fitted,
       const containers::NumericalFeatures& _numerical_features,
       containers::DataFrame* _df) const;
 
@@ -171,7 +170,7 @@ class PipelineManager {
                              containers::DataFrame* _df) const;
 
   /// Adds a data frame to the data frame tracker.
-  void add_to_tracker(const pipelines::Pipeline& _pipeline,
+  void add_to_tracker(const pipelines::FittedPipeline& _fitted,
                       const containers::DataFrame& _population_df,
                       const std::vector<containers::DataFrame>& _peripheral_dfs,
                       containers::DataFrame* _df);
@@ -219,11 +218,12 @@ class PipelineManager {
   void score(const Poco::JSON::Object& _cmd, const std::string& _name,
              const containers::DataFrame& _population_df,
              const containers::NumericalFeatures& _yhat,
-             pipelines::Pipeline* _pipeline, Poco::Net::StreamSocket* _socket);
+             const pipelines::Pipeline& _pipeline,
+             Poco::Net::StreamSocket* _socket);
 
   /// Stores the newly created data frame.
   void store_df(
-      const pipelines::Pipeline& _pipeline, const Poco::JSON::Object& _cmd,
+      const pipelines::FittedPipeline& _fitted, const Poco::JSON::Object& _cmd,
       const containers::DataFrame& _population_df,
       const std::vector<containers::DataFrame>& _peripheral_dfs,
       const std::shared_ptr<containers::Encoding>& _local_categories,
@@ -232,7 +232,7 @@ class PipelineManager {
       multithreading::WeakWriteLock* _weak_write_lock);
 
   /// Writes a set of features to the data base.
-  void to_db(const pipelines::Pipeline& _pipeline,
+  void to_db(const pipelines::FittedPipeline& _fitted,
              const Poco::JSON::Object& _cmd,
              const containers::DataFrame& _population_table,
              const containers::NumericalFeatures& _numerical_features,
@@ -242,7 +242,7 @@ class PipelineManager {
 
   /// Writes a set of features to a DataFrame.
   containers::DataFrame to_df(
-      const pipelines::Pipeline& _pipeline, const Poco::JSON::Object& _cmd,
+      const pipelines::FittedPipeline& _fitted, const Poco::JSON::Object& _cmd,
       const containers::DataFrame& _population_table,
       const containers::NumericalFeatures& _numerical_features,
       const containers::CategoricalFeatures& _categorical_features,
@@ -379,8 +379,6 @@ class PipelineManager {
 
   /// Keeps track of all warnings.
   const std::shared_ptr<dependency::WarningTracker> warning_tracker_;
-
-  // ------------------------------------------------------------------------
 };
 
 // ------------------------------------------------------------------------

@@ -41,6 +41,9 @@ struct FitParams {
   /// The dependency tracker for the feature learners.
   const std::shared_ptr<dependency::FETracker> fe_tracker_;
 
+  /// The fingerprints of the feature selectors used for fitting.
+  const std::vector<Poco::JSON::Object::Ptr> fs_fingerprints_;
+
   /// Logs the progress.
   const std::shared_ptr<const communication::Logger> logger_;
 

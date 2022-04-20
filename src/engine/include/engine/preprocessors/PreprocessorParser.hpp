@@ -12,9 +12,12 @@
 
 // ----------------------------------------------------------------------------
 
+#include "engine/preprocessors/Preprocessor.hpp"
+
+// ----------------------------------------------------------------------------
+
 namespace engine {
 namespace preprocessors {
-// ----------------------------------------------------
 
 struct PreprocessorParser {
   /// Returns the correct preprocessor to use based on the JSON object.
@@ -23,7 +26,6 @@ struct PreprocessorParser {
       const std::vector<Poco::JSON::Object::Ptr>& _dependencies);
 };
 
-// ----------------------------------------------------
 }  // namespace preprocessors
 }  // namespace engine
 
