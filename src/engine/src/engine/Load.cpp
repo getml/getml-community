@@ -51,8 +51,7 @@ Pipeline Load::load(
           .peripheral_schema_ = pipeline_json.peripheral_schema_,
           .population_schema_ = pipeline_json.population_schema_,
           .predictors_ = predictors,
-          .preprocessors_ = preprocessors,
-          .targets_ = pipeline_json.targets_});
+          .preprocessors_ = preprocessors});
 
   return pipeline.with_allow_http(pipeline_json.allow_http_)
       .with_fitted(fitted);

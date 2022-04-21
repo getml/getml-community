@@ -94,7 +94,7 @@ void PipelineManager::add_predictions_to_df(
     const pipelines::FittedPipeline& _fitted,
     const containers::NumericalFeatures& _numerical_features,
     containers::DataFrame* _df) const {
-  const auto& targets = _fitted.targets_;
+  const auto& targets = _fitted.targets();
 
   assert_true(targets.size() == _numerical_features.size());
 
@@ -598,7 +598,7 @@ Poco::JSON::Object PipelineManager::refresh_pipeline(
   obj.set("scores", get_scores(_pipeline));
 
   if (_pipeline.fitted()) {
-    obj.set("targets", JSON::vector_to_array(_pipeline.fitted()->targets_));
+    obj.set("targets", JSON::vector_to_array(_pipeline.fitted()->targets()));
   }
 
   return obj;

@@ -262,9 +262,11 @@ Poco::JSON::Object PredictorImpl::to_json_obj() const {
 std::vector<IntFeature> PredictorImpl::transform_encodings(
     const std::vector<IntFeature>& _X_categorical) const {
   if (_X_categorical.size() != encodings_.size()) {
-    throw std::runtime_error("Expected " + std::to_string(encodings_.size()) +
-                             " categorical columns, got " +
-                             std::to_string(_X_categorical.size()) + ".");
+    const auto msg = "Expected " + std::to_string(encodings_.size()) +
+                     " categorical columns, got " +
+                     std::to_string(_X_categorical.size()) + ".";
+    assert_msg(false, msg);
+    throw std::runtime_error(msg);
   }
 
   if (_X_categorical.size() == 0) {

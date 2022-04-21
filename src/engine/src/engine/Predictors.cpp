@@ -31,9 +31,6 @@ std::vector<std::string> Predictors::autofeature_names() const {
 std::tuple<std::vector<std::string>, std::vector<std::string>,
            std::vector<std::string>>
 Predictors::feature_names() const {
-  assert_true(feature_learners_.size() ==
-              predictor_impl_->autofeatures().size());
-
   const auto autofeatures = autofeature_names();
 
   const auto make_staging_table_colname =

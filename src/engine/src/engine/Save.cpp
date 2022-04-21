@@ -120,7 +120,7 @@ void Save::save_pipeline_json(const SaveParams& _params,
       "preprocessor_fingerprints_",
       JSON::vector_to_array(f.fingerprints_.preprocessor_fingerprints_));
 
-  pipeline_json.set("targets_", JSON::vector_to_array(f.targets_));
+  pipeline_json.set("targets_", JSON::vector_to_array(f.targets()));
 
   pipeline_json.set(
       "peripheral_schema_",

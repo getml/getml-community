@@ -213,7 +213,7 @@ Fit::fit(const Pipeline& _pipeline, const FitParams& _params) {
                           .pipeline_ = _pipeline,
                           .population_df_ = preprocessed.population_df_,
                           .preprocessors_ = preprocessed.preprocessors_,
-                          .purpose_ = TransformParams::FEATURE_SELECTOR};
+                          .purpose_ = "feature_selectors_"};
 
   const auto [feature_selectors, fs_fingerprints] =
       fit_predictors(fit_feature_selectors_params);
@@ -239,7 +239,7 @@ Fit::fit(const Pipeline& _pipeline, const FitParams& _params) {
                           .pipeline_ = _pipeline,
                           .population_df_ = preprocessed.population_df_,
                           .preprocessors_ = preprocessed.preprocessors_,
-                          .purpose_ = TransformParams::PREDICTOR};
+                          .purpose_ = "predictors_"};
 
   const auto [predictors, _] = fit_predictors(fit_predictors_params);
 
@@ -532,8 +532,6 @@ Fit::fit_transform_preprocessors(
 
     auto& p = preprocessors.at(i);
 
-    assert_true(p);
-
     const auto fingerprint = p->fingerprint();
 
     const auto retrieved_preprocessor =
@@ -583,24 +581,6 @@ Fit::fit_transform_preprocessors(
 
   return std::make_pair(to_const(preprocessors),
                         std::move(preprocessor_fingerprints));
-}
-
-// ----------------------------------------------------------------------------
-
-containers::CategoricalFeatures Fit::get_categorical_features(
-    const Pipeline& _pipeline, const Poco::JSON::Object& _cmd,
-    const containers::DataFrame& _population_df,
-    const predictors::PredictorImpl& _predictor_impl) {
-  if (!_pipeline.include_categorical()) {
-    return containers::CategoricalFeatures();
-  }
-
-  const auto get_feature = [](const auto& col) -> helpers::Feature<Int> {
-    return helpers::Feature<Int>(col.data_ptr());
-  };
-
-  return fct::collect::vector<helpers::Feature<Int>>(
-      _population_df.categoricals() | VIEWS::transform(get_feature));
 }
 
 // ----------------------------------------------------------------------
@@ -797,7 +777,7 @@ fct::Ref<const predictors::PredictorImpl> Fit::make_feature_selector_impl(
   };
 
   const auto is_not_on_blacklist = [&blacklist](const auto& _col) -> bool {
-    return helpers::SubroleParser::contains_any(_col.subroles(), blacklist);
+    return !helpers::SubroleParser::contains_any(_col.subroles(), blacklist);
   };
 
   const auto is_null = [](const Float _val) {
@@ -835,8 +815,8 @@ fct::Ref<const predictors::PredictorImpl> Fit::make_feature_selector_impl(
   const auto fs_impl = fct::Ref<predictors::PredictorImpl>::make(
       num_autofeatures, categorical_colnames, numerical_colnames);
 
-  const auto categorical_features =
-      get_categorical_features(_pipeline, _cmd, _population_df, *fs_impl);
+  const auto categorical_features = Transform::get_categorical_features(
+      _pipeline, _cmd, _population_df, *fs_impl);
 
   fs_impl->fit_encodings(categorical_features);
 
@@ -921,7 +901,7 @@ fct::Ref<const predictors::PredictorImpl> Fit::make_predictor_impl(
 
   predictor_impl->select_features(n_selected, index);
 
-  auto categorical_features = get_categorical_features(
+  auto categorical_features = Transform::get_categorical_features(
       _pipeline, _cmd, _population_df, *predictor_impl);
 
   predictor_impl->fit_encodings(categorical_features);
@@ -967,8 +947,6 @@ Fit::retrieve_predictors(
     std::vector<std::shared_ptr<predictors::Predictor>> r;
 
     for (auto& p : vec) {
-      assert_true(p);
-
       const auto ptr = _pred_tracker->retrieve(p->fingerprint());
 
       if (!ptr) {

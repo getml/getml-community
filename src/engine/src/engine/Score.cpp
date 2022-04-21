@@ -173,7 +173,7 @@ void Score::column_importances_manual(
 
     auto j = _fitted.predictors_.impl_->num_autofeatures();
 
-    assert_true(j + _fitted.predictor_impl_->num_manual_features() ==
+    assert_true(j + _fitted.predictors_.impl_->num_manual_features() ==
                 f_imp_for_target.size());
 
     const auto population_name = _pipeline.parse_population();
@@ -273,7 +273,11 @@ Poco::JSON::Object Score::feature_importances_as_obj(
   const auto feature_importances_transposed =
       feature_importances(_fitted.predictors_);
 
-  assert_true(feature_importances_transposed.size() == _fitted.targets_.size());
+  assert_msg(feature_importances_transposed.size() == _fitted.targets().size(),
+             "feature_importances_transposed.size(): " +
+                 std::to_string(feature_importances_transposed.size()) +
+                 ", _fitted.targets().size(): " +
+                 std::to_string(_fitted.targets().size()));
 
   if (feature_importances_transposed.size() == 0) {
     return Poco::JSON::Object();

@@ -173,12 +173,6 @@ class Fit {
       containers::DataFrame* _population_df,
       std::vector<containers::DataFrame>* _peripheral_dfs);
 
-  /// Retrieves the categorical features from _population_df.
-  static containers::CategoricalFeatures get_categorical_features(
-      const Pipeline& _pipeline, const Poco::JSON::Object& _cmd,
-      const containers::DataFrame& _population_df,
-      const predictors::PredictorImpl& _predictor_impl);
-
   /// Retrieves the targets from the population dataframe.
   static std::vector<std::string> get_targets(
       const containers::DataFrame& _population_df);

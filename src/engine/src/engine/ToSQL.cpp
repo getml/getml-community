@@ -31,7 +31,7 @@ std::vector<std::string> ToSQL::feature_learners_to_sql(
       return all.at(num_subfeatures + _ix);
     };
 
-    assert_true(_i < _params.fitted_.predictor_impl_->autofeatures().size());
+    assert_true(_i < _params.fitted_.predictors_.impl_->autofeatures().size());
 
     const auto& autofeatures =
         _params.fitted_.predictors_.impl_->autofeatures().at(_i);
@@ -59,7 +59,7 @@ std::vector<std::string> ToSQL::make_autofeature_names(
              std::to_string(_ix + 1);
     };
 
-    assert_true(_i < _fitted.predictor_impl_->autofeatures().size());
+    assert_true(_i < _fitted.predictors_.impl_->autofeatures().size());
 
     const auto& autofeatures = _fitted.predictors_.impl_->autofeatures().at(_i);
 
@@ -177,7 +177,7 @@ std::vector<std::string> ToSQL::staging_to_sql(
 
 std::string ToSQL::to_sql(const ToSQLParams& _params) {
   assert_true(_params.fitted_.feature_learners_.size() ==
-              _params.fitted_.predictor_impl_->autofeatures().size());
+              _params.fitted_.predictors_.impl_->autofeatures().size());
 
   // TODO: This needs to return fct::Ref.
   const auto sql_dialect_generator =
@@ -202,7 +202,7 @@ std::string ToSQL::to_sql(const ToSQLParams& _params) {
   const auto autofeatures = make_autofeature_names(_params.fitted_);
 
   const auto target_names =
-      _params.targets_ ? _params.fitted_.targets_ : std::vector<std::string>();
+      _params.targets_ ? _params.fitted_.targets() : std::vector<std::string>();
 
   return sql_dialect_generator->make_sql(
       _params.fitted_.modified_population_schema_->name_, autofeatures, sql,

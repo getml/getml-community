@@ -123,7 +123,7 @@ Poco::JSON::Object Pipeline::to_monitor(
     json_obj.set("population_schema_",
                  fitted()->population_schema_->to_json_obj());
 
-    json_obj.set("targets_", JSON::vector_to_array(fitted()->targets_));
+    json_obj.set("targets_", JSON::vector_to_array(fitted()->targets()));
   }
 
   auto scores_obj = scores().to_json_obj();

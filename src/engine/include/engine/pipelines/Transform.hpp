@@ -41,6 +41,12 @@ class Transform {
       const containers::CategoricalFeatures& _categorical_features,
       const containers::NumericalFeatures& _numerical_features);
 
+  /// Gets the categorical features from _population_df.
+  static containers::CategoricalFeatures get_categorical_features(
+      const Pipeline& _pipeline, const Poco::JSON::Object& _cmd,
+      const containers::DataFrame& _population_df,
+      const predictors::PredictorImpl& _predictor_impl);
+
   /// Makes all of the features, both automatic and manual.
   static std::tuple<containers::NumericalFeatures,
                     containers::CategoricalFeatures,
@@ -88,12 +94,6 @@ class Transform {
       const Pipeline& _pipeline, const containers::NumericalFeatures _features,
       const size_t _ncols, const Poco::JSON::Object& _cmd,
       const containers::DataFrame& _population_df);
-
-  /// Gets the categorical features from _population_df.
-  static containers::CategoricalFeatures get_categorical_features(
-      const Pipeline& _pipeline, const Poco::JSON::Object& _cmd,
-      const containers::DataFrame& _population_df,
-      const predictors::PredictorImpl& _predictor_impl);
 
   /// Gets the numerical columns from _population_df and
   /// returns a combination of the autofeatures and the

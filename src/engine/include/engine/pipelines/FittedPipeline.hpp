@@ -47,6 +47,9 @@ struct FittedPipeline {
     return predictors_.num_predictors_per_set();
   }
 
+  /// The names of the target columns
+  const auto& targets() const { return modified_population_schema_->targets_; }
+
   /// Whether this is a classification pipeline.
   bool is_classification() const;
 
@@ -80,9 +83,6 @@ struct FittedPipeline {
 
   /// The preprocessors used in this pipeline.
   const std::vector<fct::Ref<const preprocessors::Preprocessor>> preprocessors_;
-
-  /// The names of the target columns
-  const std::vector<std::string> targets_;
 };
 
 }  // namespace pipelines

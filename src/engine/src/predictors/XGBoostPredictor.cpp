@@ -176,10 +176,11 @@ XGBoostPredictor::convert_to_in_memory_dmatrix_sparse(
     const std::vector<IntFeature> &_X_categorical,
     const std::vector<FloatFeature> &_X_numerical) const {
   if (impl().n_encodings() != _X_categorical.size()) {
-    throw std::runtime_error("Expected " +
-                             std::to_string(impl().n_encodings()) +
-                             " categorical columns, got " +
-                             std::to_string(_X_categorical.size()) + ".");
+    const auto msg = "Expected " + std::to_string(impl().n_encodings()) +
+                     " categorical columns, got " +
+                     std::to_string(_X_categorical.size()) + ".";
+    assert_msg(false, msg);
+    throw std::runtime_error(msg);
   }
 
   const auto csr_mat = impl().make_csr<float, unsigned int, size_t>(

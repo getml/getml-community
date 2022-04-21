@@ -396,8 +396,6 @@ Transform::stage_data_frames(
 
   const auto peripheral_names = _pipeline.parse_peripheral();
 
-  assert_true(peripheral_names);
-
   auto population_df = _population_df;
 
   auto peripheral_dfs = _peripheral_dfs;
