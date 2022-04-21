@@ -17,11 +17,8 @@ namespace pipelines {
 // ------------------------------------------------------------------------
 
 std::vector<size_t> Fit::calculate_importance_index(
-    const FittedPipeline& _fitted,
-    const std::vector<std::vector<fct::Ref<const predictors::Predictor>>>&
-        _feature_selectors) {
-  const auto sum_importances =
-      calculate_sum_importances(_fitted, _feature_selectors);
+    const Predictors& _feature_selectors) {
+  const auto sum_importances = calculate_sum_importances(_feature_selectors);
 
   const auto make_pair =
       [&sum_importances](const size_t _i) -> std::pair<size_t, Float> {
@@ -44,11 +41,8 @@ std::vector<size_t> Fit::calculate_importance_index(
 // ------------------------------------------------------------------------
 
 std::vector<Float> Fit::calculate_sum_importances(
-    const FittedPipeline& _fitted,
-    const std::vector<std::vector<fct::Ref<const predictors::Predictor>>>&
-        _feature_selectors) {
-  const auto importances =
-      Score::feature_importances(_fitted, _feature_selectors);
+    const Predictors& _feature_selectors) {
+  const auto importances = Score::feature_importances(_feature_selectors);
 
   assert_true(importances.size() == _feature_selectors.size());
 
@@ -224,28 +218,8 @@ Fit::fit(const Pipeline& _pipeline, const FitParams& _params) {
   const auto [feature_selectors, fs_fingerprints] =
       fit_predictors(fit_feature_selectors_params);
 
-  // TODO: Encapsulate everything needed to calculate feature importances in a
-  // separate class.
-  const auto temp_fingerprints = Fingerprints{
-      .df_fingerprints_ = preprocessed.df_fingerprints_,
-      .fl_fingerprints_ = fl_fingerprints,
-      .fs_fingerprints_ = fs_fingerprints,
-      .preprocessor_fingerprints_ = preprocessed.preprocessor_fingerprints_};
-
-  const auto temp_fitted_pipeline =
-      FittedPipeline{.feature_learners_ = feature_learners,
-                     .feature_selectors_ = feature_selectors,
-                     .fingerprints_ = temp_fingerprints,
-                     .modified_peripheral_schema_ = modified_peripheral_schema,
-                     .modified_population_schema_ = modified_population_schema,
-                     .peripheral_schema_ = peripheral_schema,
-                     .population_schema_ = population_schema,
-                     .predictors_ = feature_selectors,
-                     .preprocessors_ = preprocessed.preprocessors_};
-
-  const auto predictor_impl =
-      make_predictor_impl(_pipeline, temp_fitted_pipeline, _params.cmd_,
-                          feature_selectors, preprocessed.population_df_);
+  const auto predictor_impl = make_predictor_impl(
+      _pipeline, _params.cmd_, feature_selectors, preprocessed.population_df_);
 
   const auto validation_fingerprint =
       _params.validation_df_ ? std::vector<Poco::JSON::Object::Ptr>(
@@ -922,8 +896,8 @@ Fit::make_features_validation(const TransformParams& _params,
 // ------------------------------------------------------------------------
 
 fct::Ref<const predictors::PredictorImpl> Fit::make_predictor_impl(
-    const Pipeline& _pipeline, const FittedPipeline& _fitted,
-    const Poco::JSON::Object& _cmd, const Predictors& _feature_selectors,
+    const Pipeline& _pipeline, const Poco::JSON::Object& _cmd,
+    const Predictors& _feature_selectors,
     const containers::DataFrame& _population_df) {
   const auto predictor_impl =
       fct::Ref<predictors::PredictorImpl>::make(*_feature_selectors.impl_);
@@ -939,8 +913,7 @@ fct::Ref<const predictors::PredictorImpl> Fit::make_predictor_impl(
     return predictor_impl;
   }
 
-  const auto index =
-      calculate_importance_index(_fitted, _feature_selectors.predictors_);
+  const auto index = calculate_importance_index(_feature_selectors);
 
   const auto n_selected =
       std::max(static_cast<size_t>(1),

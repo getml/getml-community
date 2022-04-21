@@ -65,8 +65,7 @@ Score::column_importances(const Pipeline& _pipeline,
     return std::make_pair(c_desc, c_importances);
   }
 
-  const auto f_importances =
-      feature_importances(_fitted, _fitted.predictors_.predictors_);
+  const auto f_importances = feature_importances(_fitted.predictors_);
 
   auto importance_makers =
       std::vector<helpers::ImportanceMaker>(f_importances.size());
@@ -232,12 +231,8 @@ void Score::extract_importance_values(
 // ----------------------------------------------------------------------------
 
 std::vector<std::vector<Float>> Score::feature_importances(
-    const FittedPipeline& _fitted,
-    const std::vector<std::vector<fct::Ref<const predictors::Predictor>>>&
-        _predictors) {
-  assert_true(_predictors.size() == _fitted.targets_.size());
-
-  const auto n_features = _fitted.num_features();
+    const Predictors& _predictors) {
+  const auto n_features = _predictors.num_features();
 
   std::vector<std::vector<Float>> fi;
 
@@ -268,8 +263,6 @@ std::vector<std::vector<Float>> Score::feature_importances(
     fi.push_back(current_fi);
   }
 
-  assert_true(fi.size() == _fitted.targets_.size());
-
   return fi;
 }
 
@@ -278,7 +271,7 @@ std::vector<std::vector<Float>> Score::feature_importances(
 Poco::JSON::Object Score::feature_importances_as_obj(
     const FittedPipeline& _fitted) {
   const auto feature_importances_transposed =
-      feature_importances(_fitted, _fitted.predictors_.predictors_);
+      feature_importances(_fitted.predictors_);
 
   assert_true(feature_importances_transposed.size() == _fitted.targets_.size());
 

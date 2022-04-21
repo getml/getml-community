@@ -136,15 +136,11 @@ class Fit {
  private:
   /// Calculates an index ranking the features by importance.
   static std::vector<size_t> calculate_importance_index(
-      const FittedPipeline& _fitted,
-      const std::vector<std::vector<fct::Ref<const predictors::Predictor>>>&
-          _feature_selectors);
+      const Predictors& _feature_selectors);
 
   /// Calculates the sum of importances over all indices.
   static std::vector<Float> calculate_sum_importances(
-      const FittedPipeline& _fitted,
-      const std::vector<std::vector<fct::Ref<const predictors::Predictor>>>&
-          _feature_selectors);
+      const Predictors& _feature_selectors);
 
   /// Extracts the fingerprints from the predictors.
   static std::vector<Poco::JSON::Object::Ptr> extract_predictor_fingerprints(
@@ -203,8 +199,8 @@ class Fit {
 
   /// Generates the impl for the predictors.
   static fct::Ref<const predictors::PredictorImpl> make_predictor_impl(
-      const Pipeline& _pipeline, const FittedPipeline& _fitted,
-      const Poco::JSON::Object& _cmd, const Predictors& _feature_selectors,
+      const Pipeline& _pipeline, const Poco::JSON::Object& _cmd,
+      const Predictors& _feature_selectors,
       const containers::DataFrame& _population_df);
 
   /// Generates the metrics::Scores object which is also returned by fit.

@@ -28,6 +28,7 @@
 
 #include "engine/pipelines/FittedPipeline.hpp"
 #include "engine/pipelines/Pipeline.hpp"
+#include "engine/pipelines/Predictors.hpp"
 
 // ----------------------------------------------------------------------------
 
@@ -54,9 +55,7 @@ class Score {
 
   /// Calculate the feature importances.
   static std::vector<std::vector<Float>> feature_importances(
-      const FittedPipeline& _fitted,
-      const std::vector<std::vector<fct::Ref<const predictors::Predictor>>>&
-          _predictors);
+      const Predictors& _predictors);
 
   /// Extracts the feature importances as a Poco::JSON::Object.
   static Poco::JSON::Object feature_importances_as_obj(
