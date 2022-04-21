@@ -1,6 +1,6 @@
 cd ../../
 MONOREPO_DIR=$PWD
-cd src/relboost-engine
+cd src/engine
 
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     cp $MONOREPO_DIR/linux/build/compile_commands.json .
