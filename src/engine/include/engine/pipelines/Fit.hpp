@@ -165,9 +165,7 @@ class Fit {
 
   /// Fits the predictors. Returns the fitted predictors and their
   /// fingerprints.
-  static std::pair<
-      std::vector<std::vector<fct::Ref<const predictors::Predictor>>>,
-      std::vector<Poco::JSON::Object::Ptr>>
+  static std::pair<Predictors, std::vector<Poco::JSON::Object::Ptr>>
   fit_predictors(const FitPredictorsParams& _params);
 
   /// Fits the preprocessors and applies them to the training set.
@@ -206,10 +204,7 @@ class Fit {
   /// Generates the impl for the predictors.
   static fct::Ref<const predictors::PredictorImpl> make_predictor_impl(
       const Pipeline& _pipeline, const FittedPipeline& _fitted,
-      const Poco::JSON::Object& _cmd,
-      const fct::Ref<const predictors::PredictorImpl>& _feature_selector_impl,
-      const std::vector<std::vector<fct::Ref<const predictors::Predictor>>>&
-          _feature_selectors,
+      const Poco::JSON::Object& _cmd, const Predictors& _feature_selectors,
       const containers::DataFrame& _population_df);
 
   /// Generates the metrics::Scores object which is also returned by fit.

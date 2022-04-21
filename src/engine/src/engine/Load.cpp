@@ -43,7 +43,6 @@ Pipeline Load::load(
       fct::Ref<const pipelines::FittedPipeline>::make(pipelines::FittedPipeline{
           .feature_learners_ = feature_learners,
           .feature_selectors_ = feature_selectors,
-          .feature_selector_impl_ = feature_selector_impl,
           .fingerprints_ = pipeline_json.fingerprints_,
           .modified_peripheral_schema_ =
               pipeline_json.modified_peripheral_schema_,
@@ -52,7 +51,6 @@ Pipeline Load::load(
           .peripheral_schema_ = pipeline_json.peripheral_schema_,
           .population_schema_ = pipeline_json.population_schema_,
           .predictors_ = predictors,
-          .predictor_impl_ = predictor_impl,
           .preprocessors_ = preprocessors,
           .targets_ = pipeline_json.targets_});
 
@@ -94,8 +92,7 @@ Load::load_feature_learners(
 
 // ------------------------------------------------------------------------
 
-std::vector<std::vector<fct::Ref<const predictors::Predictor>>>
-Load::load_feature_selectors(
+Predictors Load::load_feature_selectors(
     const std::string& _path,
     const std::shared_ptr<dependency::PredTracker> _pred_tracker,
     const fct::Ref<const predictors::PredictorImpl>& _feature_selector_impl,
@@ -114,7 +111,9 @@ Load::load_feature_selectors(
     }
   }
 
-  return Fit::to_const(Fit::to_ref(feature_selectors));
+  return Predictors{
+      .impl_ = _feature_selector_impl,
+      .predictors_ = Fit::to_const(Fit::to_ref(feature_selectors))};
 }
 
 // ------------------------------------------------------------------------
@@ -239,8 +238,7 @@ PipelineJSON Load::load_pipeline_json(const std::string& _path) {
 
 // ------------------------------------------------------------------------
 
-std::vector<std::vector<fct::Ref<const predictors::Predictor>>>
-Load::load_predictors(
+Predictors Load::load_predictors(
     const std::string& _path,
     const std::shared_ptr<dependency::PredTracker> _pred_tracker,
     const fct::Ref<const predictors::PredictorImpl>& _predictor_impl,
@@ -259,7 +257,8 @@ Load::load_predictors(
     }
   }
 
-  return Fit::to_const(Fit::to_ref(predictors));
+  return Predictors{.impl_ = _predictor_impl,
+                    .predictors_ = Fit::to_const(Fit::to_ref(predictors))};
 }
 
 // ------------------------------------------------------------------------

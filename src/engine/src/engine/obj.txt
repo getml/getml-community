@@ -34,6 +34,7 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/Pipeline.cpp
     ${ENGINE_SOURCE_DIRECTORY}/PipelineManager.cpp
     ${ENGINE_SOURCE_DIRECTORY}/PlaceholderMaker.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/Predictors.cpp
     ${ENGINE_SOURCE_DIRECTORY}/PreprocessorImpl.cpp
     ${ENGINE_SOURCE_DIRECTORY}/PreprocessorParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/ProjectManager.cpp

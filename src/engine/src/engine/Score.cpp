@@ -61,11 +61,12 @@ Score::column_importances(const Pipeline& _pipeline,
 
   auto c_importances = std::vector<std::vector<Float>>();
 
-  if (_fitted.predictors_.size() == 0) {
+  if (_fitted.predictors_.predictors_.size() == 0) {
     return std::make_pair(c_desc, c_importances);
   }
 
-  const auto f_importances = feature_importances(_fitted, _fitted.predictors_);
+  const auto f_importances =
+      feature_importances(_fitted, _fitted.predictors_.predictors_);
 
   auto importance_makers =
       std::vector<helpers::ImportanceMaker>(f_importances.size());
@@ -132,7 +133,7 @@ void Score::column_importances_auto(
     std::vector<helpers::ImportanceMaker>* _importance_makers) {
   assert_true(_f_importances.size() == _importance_makers->size());
 
-  const auto autofeatures = _fitted.predictor_impl_->autofeatures();
+  const auto autofeatures = _fitted.predictors_.impl_->autofeatures();
 
   assert_true(autofeatures.size() == _fitted.feature_learners_.size());
 
@@ -171,7 +172,7 @@ void Score::column_importances_manual(
   for (size_t i = 0; i < _f_importances.size(); ++i) {
     const auto& f_imp_for_target = _f_importances.at(i);
 
-    auto j = _fitted.predictor_impl_->num_autofeatures();
+    auto j = _fitted.predictors_.impl_->num_autofeatures();
 
     assert_true(j + _fitted.predictor_impl_->num_manual_features() ==
                 f_imp_for_target.size());
@@ -180,7 +181,8 @@ void Score::column_importances_manual(
 
     assert_true(population_name);
 
-    for (const auto& colname : _fitted.predictor_impl_->numerical_colnames()) {
+    for (const auto& colname :
+         _fitted.predictors_.impl_->numerical_colnames()) {
       const auto desc = helpers::ColumnDescription(
           _importance_makers->at(i).population(), *population_name, colname);
 
@@ -190,7 +192,7 @@ void Score::column_importances_manual(
     }
 
     for (const auto& colname :
-         _fitted.predictor_impl_->categorical_colnames()) {
+         _fitted.predictors_.impl_->categorical_colnames()) {
       const auto desc = helpers::ColumnDescription(
           _importance_makers->at(i).population(), *population_name, colname);
 
@@ -274,11 +276,9 @@ std::vector<std::vector<Float>> Score::feature_importances(
 // ----------------------------------------------------------------------------
 
 Poco::JSON::Object Score::feature_importances_as_obj(
-    const FittedPipeline& _fitted,
-    const std::vector<std::vector<fct::Ref<const predictors::Predictor>>>&
-        _predictors) {
+    const FittedPipeline& _fitted) {
   const auto feature_importances_transposed =
-      feature_importances(_fitted, _predictors);
+      feature_importances(_fitted, _fitted.predictors_.predictors_);
 
   assert_true(feature_importances_transposed.size() == _fitted.targets_.size());
 

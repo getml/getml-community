@@ -18,6 +18,7 @@
 // ----------------------------------------------------------------------------
 
 #include "engine/pipelines/Fingerprints.hpp"
+#include "engine/pipelines/Predictors.hpp"
 
 // ----------------------------------------------------------------------------
 
@@ -26,34 +27,35 @@ namespace pipelines {
 
 struct FittedPipeline {
   /// Returns the names of the autofeatures.
-  std::vector<std::string> autofeature_names() const;
+  std::vector<std::string> autofeature_names() const {
+    return predictors_.autofeature_names();
+  }
 
   /// Returns the names of the autofeatures, the numerical manual features and
   /// the categorical manual features.
   std::tuple<std::vector<std::string>, std::vector<std::string>,
              std::vector<std::string>>
-  feature_names() const;
+  feature_names() const {
+    return predictors_.feature_names();
+  }
+
+  /// Calculates the number of automated and manual features used.
+  size_t num_features() const { return predictors_.num_features(); }
+
+  /// Calculates the number of predictors per set.
+  size_t num_predictors_per_set() const {
+    return predictors_.num_predictors_per_set();
+  }
 
   /// Whether this is a classification pipeline.
   bool is_classification() const;
-
-  /// Calculates the number of automated and manual features used.
-  size_t num_features() const;
-
-  /// Calculates the number of predictors per set.
-  size_t num_predictors_per_set() const;
 
   /// The feature learners used in this pipeline.
   const std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>
       feature_learners_;
 
-  /// The feature selectors used in this pipeline (every target has its own
-  /// set of feature selectors).
-  const std::vector<std::vector<fct::Ref<const predictors::Predictor>>>
-      feature_selectors_;
-
-  /// Pimpl for the feature selectors.
-  const fct::Ref<const predictors::PredictorImpl> feature_selector_impl_;
+  /// The feature selectors used in this pipeline.
+  const Predictors feature_selectors_;
 
   /// The fingerprints used for this pipeline
   const Fingerprints fingerprints_;
@@ -73,13 +75,8 @@ struct FittedPipeline {
   /// The schema of the population as originally passed.
   const fct::Ref<const helpers::Schema> population_schema_;
 
-  /// The predictors used in this pipeline (every target has its own set of
-  /// predictors).
-  const std::vector<std::vector<fct::Ref<const predictors::Predictor>>>
-      predictors_;
-
-  /// Pimpl for the predictors.
-  const fct::Ref<const predictors::PredictorImpl> predictor_impl_;
+  /// The predictors used in this pipeline.
+  const Predictors predictors_;
 
   /// The preprocessors used in this pipeline.
   const std::vector<fct::Ref<const preprocessors::Preprocessor>> preprocessors_;

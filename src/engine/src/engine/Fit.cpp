@@ -235,19 +235,17 @@ Fit::fit(const Pipeline& _pipeline, const FitParams& _params) {
   const auto temp_fitted_pipeline =
       FittedPipeline{.feature_learners_ = feature_learners,
                      .feature_selectors_ = feature_selectors,
-                     .feature_selector_impl_ = feature_selector_impl,
                      .fingerprints_ = temp_fingerprints,
                      .modified_peripheral_schema_ = modified_peripheral_schema,
                      .modified_population_schema_ = modified_population_schema,
                      .peripheral_schema_ = peripheral_schema,
                      .population_schema_ = population_schema,
                      .predictors_ = feature_selectors,
-                     .predictor_impl_ = feature_selector_impl,
                      .preprocessors_ = preprocessed.preprocessors_};
 
-  const auto predictor_impl = make_predictor_impl(
-      _pipeline, temp_fitted_pipeline, _params.cmd_, feature_selector_impl,
-      feature_selectors, preprocessed.population_df_);
+  const auto predictor_impl =
+      make_predictor_impl(_pipeline, temp_fitted_pipeline, _params.cmd_,
+                          feature_selectors, preprocessed.population_df_);
 
   const auto validation_fingerprint =
       _params.validation_df_ ? std::vector<Poco::JSON::Object::Ptr>(
@@ -303,16 +301,13 @@ Fit::fit(const Pipeline& _pipeline, const FitParams& _params) {
       fct::Ref<const FittedPipeline>::make(FittedPipeline{
           .feature_learners_ = std::move(feature_learners),
           .feature_selectors_ = std::move(feature_selectors),
-          .feature_selector_impl_ = std::move(feature_selector_impl),
           .fingerprints_ = std::move(fingerprints),
           .modified_peripheral_schema_ = std::move(modified_peripheral_schema),
           .modified_population_schema_ = std::move(modified_population_schema),
           .peripheral_schema_ = std::move(peripheral_schema),
           .population_schema_ = std::move(population_schema),
           .predictors_ = std::move(predictors),
-          .predictor_impl_ = std::move(predictor_impl),
-          .preprocessors_ = std::move(preprocessed.preprocessors_),
-      });
+          .preprocessors_ = std::move(preprocessed.preprocessors_)});
 
   const auto scores = make_scores(score_params, _pipeline, *fitted_pipeline);
 
@@ -385,9 +380,8 @@ Fit::fit_feature_learners(
 
 // ----------------------------------------------------------------------------
 
-std::pair<std::vector<std::vector<fct::Ref<const predictors::Predictor>>>,
-          std::vector<Poco::JSON::Object::Ptr>>
-Fit::fit_predictors(const FitPredictorsParams& _params) {
+std::pair<Predictors, std::vector<Poco::JSON::Object::Ptr>> Fit::fit_predictors(
+    const FitPredictorsParams& _params) {
   // TODO: This needs to be a fct::Ref
   auto predictors = init_predictors(_params.pipeline_, _params.purpose_,
                                     _params.impl_, _params.dependencies_,
@@ -399,7 +393,10 @@ Fit::fit_predictors(const FitPredictorsParams& _params) {
   if (all_retrieved) {
     const auto fingerprints = extract_predictor_fingerprints(
         to_ref(retrieved_predictors), _params.dependencies_);
-    return std::make_pair(to_const(to_ref(retrieved_predictors)), fingerprints);
+    const auto predictors_struct =
+        Predictors{.impl_ = _params.impl_,
+                   .predictors_ = to_const(to_ref(retrieved_predictors))};
+    return std::make_pair(predictors_struct, fingerprints);
   }
 
   const auto transform_params = TransformParams{
@@ -489,7 +486,10 @@ Fit::fit_predictors(const FitPredictorsParams& _params) {
   auto fingerprints =
       extract_predictor_fingerprints(to_ref(predictors), _params.dependencies_);
 
-  return std::make_pair(to_const(to_ref(predictors)), std::move(fingerprints));
+  const auto predictors_struct = Predictors{
+      .impl_ = _params.impl_, .predictors_ = to_const(to_ref(predictors))};
+
+  return std::make_pair(std::move(predictors_struct), std::move(fingerprints));
 }
 
 // ----------------------------------------------------------------------
@@ -923,13 +923,10 @@ Fit::make_features_validation(const TransformParams& _params,
 
 fct::Ref<const predictors::PredictorImpl> Fit::make_predictor_impl(
     const Pipeline& _pipeline, const FittedPipeline& _fitted,
-    const Poco::JSON::Object& _cmd,
-    const fct::Ref<const predictors::PredictorImpl>& _feature_selector_impl,
-    const std::vector<std::vector<fct::Ref<const predictors::Predictor>>>&
-        _feature_selectors,
+    const Poco::JSON::Object& _cmd, const Predictors& _feature_selectors,
     const containers::DataFrame& _population_df) {
   const auto predictor_impl =
-      fct::Ref<predictors::PredictorImpl>::make(*_feature_selector_impl);
+      fct::Ref<predictors::PredictorImpl>::make(*_feature_selectors.impl_);
 
   if (_feature_selectors.size() == 0 || _feature_selectors.at(0).size() == 0) {
     return predictor_impl;
@@ -942,7 +939,8 @@ fct::Ref<const predictors::PredictorImpl> Fit::make_predictor_impl(
     return predictor_impl;
   }
 
-  const auto index = calculate_importance_index(_fitted, _feature_selectors);
+  const auto index =
+      calculate_importance_index(_fitted, _feature_selectors.predictors_);
 
   const auto n_selected =
       std::max(static_cast<size_t>(1),
@@ -967,8 +965,7 @@ fct::Ref<const metrics::Scores> Fit::make_scores(
 
   scores->from_json_obj(Score::column_importances_as_obj(_pipeline, _fitted));
 
-  scores->from_json_obj(
-      Score::feature_importances_as_obj(_fitted, _fitted.predictors_));
+  scores->from_json_obj(Score::feature_importances_as_obj(_fitted));
 
   scores->from_json_obj(Score::feature_names_as_obj(_fitted));
 
@@ -1020,11 +1017,11 @@ fct::Ref<const metrics::Scores> Fit::score_after_fitting(
     const TransformParams& _params, const Pipeline& _pipeline,
     const FittedPipeline& _fitted) {
   auto [numerical_features, categorical_features, _] = Transform::make_features(
-      _params, _pipeline, _fitted.feature_learners_, *_fitted.predictor_impl_,
+      _params, _pipeline, _fitted.feature_learners_, *_fitted.predictors_.impl_,
       _fitted.fingerprints_.fs_fingerprints_);
 
   categorical_features =
-      _fitted.predictor_impl_->transform_encodings(categorical_features);
+      _fitted.predictors_.impl_->transform_encodings(categorical_features);
 
   const auto yhat = Transform::generate_predictions(
       _fitted, categorical_features, numerical_features);

@@ -60,9 +60,7 @@ class Score {
 
   /// Extracts the feature importances as a Poco::JSON::Object.
   static Poco::JSON::Object feature_importances_as_obj(
-      const FittedPipeline& _fitted,
-      const std::vector<std::vector<fct::Ref<const predictors::Predictor>>>&
-          _predictors);
+      const FittedPipeline& _fitted);
 
   /// Extracts the feature names as a Poco::JSON::Object.
   static Poco::JSON::Object feature_names_as_obj(const FittedPipeline& _fitted);

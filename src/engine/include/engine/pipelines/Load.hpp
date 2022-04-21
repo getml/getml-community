@@ -10,6 +10,8 @@
 #include <memory>
 #include <string>
 #include <tuple>
+#include <utility>
+#include <vector>
 
 // ----------------------------------------------------------------------------
 
@@ -24,6 +26,7 @@
 #include "engine/pipelines/Fingerprints.hpp"
 #include "engine/pipelines/Pipeline.hpp"
 #include "engine/pipelines/PipelineJSON.hpp"
+#include "engine/pipelines/Predictors.hpp"
 
 // ----------------------------------------------------------------------------
 
@@ -49,8 +52,7 @@ class Load {
       const PipelineJSON& _pipeline_json, const Pipeline& _pipeline);
 
   /// Loads the feature selectors.
-  static std::vector<std::vector<fct::Ref<const predictors::Predictor>>>
-  load_feature_selectors(
+  static Predictors load_feature_selectors(
       const std::string& _path,
       const std::shared_ptr<dependency::PredTracker> _pred_tracker,
       const fct::Ref<const predictors::PredictorImpl>& _feature_selector_impl,
@@ -73,8 +75,7 @@ class Load {
   static PipelineJSON load_pipeline_json(const std::string& _path);
 
   /// Loads the predictors.
-  static std::vector<std::vector<fct::Ref<const predictors::Predictor>>>
-  load_predictors(
+  static Predictors load_predictors(
       const std::string& _path,
       const std::shared_ptr<dependency::PredTracker> _pred_tracker,
       const fct::Ref<const predictors::PredictorImpl>& _predictor_impl,

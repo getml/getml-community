@@ -40,15 +40,16 @@ void Save::save(const SaveParams& _params) {
 
   _params.pipeline_.scores().save(tfile.path() + "/scores.json");
 
-  _params.fitted_.feature_selector_impl_->save(tfile.path() +
-                                               "/feature-selector-impl.json");
+  _params.fitted_.feature_selectors_.impl_->save(tfile.path() +
+                                                 "/feature-selector-impl.json");
 
-  _params.fitted_.predictor_impl_->save(tfile.path() + "/predictor-impl.json");
+  _params.fitted_.predictors_.impl_->save(tfile.path() +
+                                          "/predictor-impl.json");
 
-  save_predictors(_params.fitted_.feature_selectors_, "feature-selector",
-                  tfile);
+  save_predictors(_params.fitted_.feature_selectors_.predictors_,
+                  "feature-selector", tfile);
 
-  save_predictors(_params.fitted_.feature_selectors_, "predictor", tfile);
+  save_predictors(_params.fitted_.predictors_.predictors_, "predictor", tfile);
 
   const auto transpilation_params = transpilation::TranspilationParams{
       .dialect_ = transpilation::SQLDialectParser::SQLITE3,

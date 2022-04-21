@@ -126,9 +126,9 @@ containers::NumericalFeatures Transform::generate_predictions(
   const auto predictor =
       [&_fitted](const size_t _i,
                  const size_t _j) -> fct::Ref<const predictors::Predictor> {
-    assert_true(_i < _fitted.predictors_.size());
+    assert_true(_i < _fitted.predictors_.predictors_.size());
     assert_true(_j < _fitted.predictors_[_i].size());
-    return _fitted.predictors_.at(_i).at(_j);
+    return _fitted.predictors_.predictors_.at(_i).at(_j);
   };
 
   const auto nrows = [&_numerical_features,
@@ -353,7 +353,7 @@ Transform::transform(const TransformParams& _params, const Pipeline& _pipeline,
       .feature_learners_ = _fitted.feature_learners_,
       .pipeline_ = _pipeline,
       .preprocessors_ = _fitted.preprocessors_,
-      .predictor_impl_ = _fitted.predictor_impl_,
+      .predictor_impl_ = _fitted.predictors_.impl_,
       .transform_params_ = _params};
 
   const auto [numerical_features, categorical_features, population_df] =
@@ -369,7 +369,7 @@ Transform::transform(const TransformParams& _params, const Pipeline& _pipeline,
                             : nullptr;
 
   const auto transformed_categorical_features =
-      _fitted.predictor_impl_->transform_encodings(categorical_features);
+      _fitted.predictors_.impl_->transform_encodings(categorical_features);
 
   const auto predictions = generate_predictions(
       _fitted, transformed_categorical_features, numerical_features);
