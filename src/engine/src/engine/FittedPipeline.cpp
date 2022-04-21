@@ -92,5 +92,28 @@ bool FittedPipeline::is_classification() const {
 
   return all_classifiers;
 }
+// ----------------------------------------------------------------------------
+
+size_t FittedPipeline::num_features() const {
+  const auto [autofeatures, manual1, manual2] = feature_names();
+  return autofeatures.size() + manual1.size() + manual2.size();
+}
+
+// ----------------------------------------------------------------------------
+
+size_t FittedPipeline::num_predictors_per_set() const {
+  if (predictors_.size() == 0) {
+    return 0;
+  }
+  const auto n_expected = predictors_.at(0).size();
+#ifndef NDEBUG
+  for (const auto& pset : predictors_) {
+    assert_true(pset.size() == n_expected);
+  }
+#endif  // NDEBUG
+  return n_expected;
+}
+
+// ----------------------------------------------------------------------------
 }  // namespace pipelines
 }  // namespace engine

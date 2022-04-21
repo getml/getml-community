@@ -348,13 +348,13 @@ Transform::transform(const TransformParams& _params, const Pipeline& _pipeline,
         "that doesn't have any predictors.");
   }
 
-  const auto features_only_params =
-      FeaturesOnlyParams{.dependencies_ = _fitted.fs_fingerprints_,
-                         .feature_learners_ = _fitted.feature_learners_,
-                         .pipeline_ = _pipeline,
-                         .preprocessors_ = _fitted.preprocessors_,
-                         .predictor_impl_ = _fitted.predictor_impl_,
-                         .transform_params_ = _params};
+  const auto features_only_params = FeaturesOnlyParams{
+      .dependencies_ = _fitted.fingerprints_.fs_fingerprints_,
+      .feature_learners_ = _fitted.feature_learners_,
+      .pipeline_ = _pipeline,
+      .preprocessors_ = _fitted.preprocessors_,
+      .predictor_impl_ = _fitted.predictor_impl_,
+      .transform_params_ = _params};
 
   const auto [numerical_features, categorical_features, population_df] =
       transform_features_only(features_only_params);

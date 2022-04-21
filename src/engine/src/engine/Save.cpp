@@ -100,13 +100,13 @@ void Save::save_pipeline_json(const SaveParams& _params,
   pipeline_json.set("creation_time_", p.creation_time());
 
   pipeline_json.set("df_fingerprints_",
-                    JSON::vector_to_array(f.df_fingerprints_));
+                    JSON::vector_to_array(f.fingerprints_.df_fingerprints_));
 
   pipeline_json.set("fl_fingerprints_",
-                    JSON::vector_to_array(f.fl_fingerprints_));
+                    JSON::vector_to_array(f.fingerprints_.fl_fingerprints_));
 
   pipeline_json.set("fs_fingerprints_",
-                    JSON::vector_to_array(f.fs_fingerprints_));
+                    JSON::vector_to_array(f.fingerprints_.fs_fingerprints_));
 
   pipeline_json.set("modified_peripheral_schema_",
                     fct::collect::array(*f.modified_peripheral_schema_ |
@@ -115,8 +115,9 @@ void Save::save_pipeline_json(const SaveParams& _params,
   pipeline_json.set("modified_population_schema_",
                     f.modified_population_schema_->to_json_obj());
 
-  pipeline_json.set("preprocessor_fingerprints_",
-                    JSON::vector_to_array(f.preprocessor_fingerprints_));
+  pipeline_json.set(
+      "preprocessor_fingerprints_",
+      JSON::vector_to_array(f.fingerprints_.preprocessor_fingerprints_));
 
   pipeline_json.set("targets_", JSON::vector_to_array(f.targets_));
 

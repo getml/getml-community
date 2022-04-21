@@ -17,6 +17,10 @@
 
 // ----------------------------------------------------------------------------
 
+#include "engine/pipelines/Fingerprints.hpp"
+
+// ----------------------------------------------------------------------------
+
 namespace engine {
 namespace pipelines {
 
@@ -34,27 +38,10 @@ struct FittedPipeline {
   bool is_classification() const;
 
   /// Calculates the number of automated and manual features used.
-  size_t num_features() const {
-    const auto [autofeatures, manual1, manual2] = feature_names();
-    return autofeatures.size() + manual1.size() + manual2.size();
-  }
+  size_t num_features() const;
 
   /// Calculates the number of predictors per set.
-  size_t num_predictors_per_set() const {
-    if (predictors_.size() == 0) {
-      return 0;
-    }
-    const auto n_expected = predictors_.at(0).size();
-#ifndef NDEBUG
-    for (const auto& pset : predictors_) {
-      assert_true(pset.size() == n_expected);
-    }
-#endif  // NDEBUG
-    return n_expected;
-  }
-
-  /// The fingerprints of the data frames used for fitting.
-  const std::vector<Poco::JSON::Object::Ptr> df_fingerprints_;
+  size_t num_predictors_per_set() const;
 
   /// The feature learners used in this pipeline.
   const std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>
@@ -68,11 +55,8 @@ struct FittedPipeline {
   /// Pimpl for the feature selectors.
   const fct::Ref<const predictors::PredictorImpl> feature_selector_impl_;
 
-  /// The fingerprints of the feature learners used for fitting.
-  const std::vector<Poco::JSON::Object::Ptr> fl_fingerprints_;
-
-  /// The fingerprints of the feature selectors used for fitting.
-  const std::vector<Poco::JSON::Object::Ptr> fs_fingerprints_;
+  /// The fingerprints used for this pipeline
+  const Fingerprints fingerprints_;
 
   /// The schema of the peripheral tables as they are inserted into the
   /// feature learners.
@@ -99,9 +83,6 @@ struct FittedPipeline {
 
   /// The preprocessors used in this pipeline.
   const std::vector<fct::Ref<const preprocessors::Preprocessor>> preprocessors_;
-
-  /// The fingerprints of the preprocessor used for fitting.
-  const std::vector<Poco::JSON::Object::Ptr> preprocessor_fingerprints_;
 
   /// The names of the target columns
   const std::vector<std::string> targets_;

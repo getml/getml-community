@@ -156,7 +156,7 @@ void PipelineManager::add_to_tracker(
     const containers::DataFrame& _population_df,
     const std::vector<containers::DataFrame>& _peripheral_dfs,
     containers::DataFrame* _df) {
-  const auto dependencies = _fitted.fs_fingerprints_;
+  const auto dependencies = _fitted.fingerprints_.fs_fingerprints_;
 
   const auto build_history = data_frame_tracker().make_build_history(
       dependencies, _population_df, _peripheral_dfs);

@@ -226,21 +226,24 @@ Fit::fit(const Pipeline& _pipeline, const FitParams& _params) {
 
   // TODO: Encapsulate everything needed to calculate feature importances in a
   // separate class.
-  const auto temp_fitted_pipeline = FittedPipeline{
+  const auto temp_fingerprints = Fingerprints{
       .df_fingerprints_ = preprocessed.df_fingerprints_,
-      .feature_learners_ = feature_learners,
-      .feature_selectors_ = feature_selectors,
-      .feature_selector_impl_ = feature_selector_impl,
       .fl_fingerprints_ = fl_fingerprints,
       .fs_fingerprints_ = fs_fingerprints,
-      .modified_peripheral_schema_ = modified_peripheral_schema,
-      .modified_population_schema_ = modified_population_schema,
-      .peripheral_schema_ = peripheral_schema,
-      .population_schema_ = population_schema,
-      .predictors_ = feature_selectors,
-      .predictor_impl_ = feature_selector_impl,
-      .preprocessors_ = preprocessed.preprocessors_,
       .preprocessor_fingerprints_ = preprocessed.preprocessor_fingerprints_};
+
+  const auto temp_fitted_pipeline =
+      FittedPipeline{.feature_learners_ = feature_learners,
+                     .feature_selectors_ = feature_selectors,
+                     .feature_selector_impl_ = feature_selector_impl,
+                     .fingerprints_ = temp_fingerprints,
+                     .modified_peripheral_schema_ = modified_peripheral_schema,
+                     .modified_population_schema_ = modified_population_schema,
+                     .peripheral_schema_ = peripheral_schema,
+                     .population_schema_ = population_schema,
+                     .predictors_ = feature_selectors,
+                     .predictor_impl_ = feature_selector_impl,
+                     .preprocessors_ = preprocessed.preprocessors_};
 
   const auto predictor_impl = make_predictor_impl(
       _pipeline, temp_fitted_pipeline, _params.cmd_, feature_selector_impl,
@@ -289,14 +292,19 @@ Fit::fit(const Pipeline& _pipeline, const FitParams& _params) {
                   .socket_ = _params.socket_})
             : std::nullopt;
 
+  const auto fingerprints =
+      Fingerprints{.df_fingerprints_ = std::move(preprocessed.df_fingerprints_),
+                   .fl_fingerprints_ = std::move(fl_fingerprints),
+                   .fs_fingerprints_ = std::move(fs_fingerprints),
+                   .preprocessor_fingerprints_ =
+                       std::move(preprocessed.preprocessor_fingerprints_)};
+
   const auto fitted_pipeline =
       fct::Ref<const FittedPipeline>::make(FittedPipeline{
-          .df_fingerprints_ = std::move(preprocessed.df_fingerprints_),
           .feature_learners_ = std::move(feature_learners),
           .feature_selectors_ = std::move(feature_selectors),
           .feature_selector_impl_ = std::move(feature_selector_impl),
-          .fl_fingerprints_ = std::move(fl_fingerprints),
-          .fs_fingerprints_ = std::move(fs_fingerprints),
+          .fingerprints_ = std::move(fingerprints),
           .modified_peripheral_schema_ = std::move(modified_peripheral_schema),
           .modified_population_schema_ = std::move(modified_population_schema),
           .peripheral_schema_ = std::move(peripheral_schema),
@@ -304,8 +312,7 @@ Fit::fit(const Pipeline& _pipeline, const FitParams& _params) {
           .predictors_ = std::move(predictors),
           .predictor_impl_ = std::move(predictor_impl),
           .preprocessors_ = std::move(preprocessed.preprocessors_),
-          .preprocessor_fingerprints_ =
-              std::move(preprocessed.preprocessor_fingerprints_)});
+      });
 
   const auto scores = make_scores(score_params, _pipeline, *fitted_pipeline);
 
@@ -1014,7 +1021,7 @@ fct::Ref<const metrics::Scores> Fit::score_after_fitting(
     const FittedPipeline& _fitted) {
   auto [numerical_features, categorical_features, _] = Transform::make_features(
       _params, _pipeline, _fitted.feature_learners_, *_fitted.predictor_impl_,
-      _fitted.fs_fingerprints_);
+      _fitted.fingerprints_.fs_fingerprints_);
 
   categorical_features =
       _fitted.predictor_impl_->transform_encodings(categorical_features);

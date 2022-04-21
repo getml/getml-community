@@ -41,12 +41,10 @@ Pipeline Load::load(
 
   const auto fitted =
       fct::Ref<const pipelines::FittedPipeline>::make(pipelines::FittedPipeline{
-          .df_fingerprints_ = pipeline_json.fingerprints_.df_fingerprints_,
           .feature_learners_ = feature_learners,
           .feature_selectors_ = feature_selectors,
           .feature_selector_impl_ = feature_selector_impl,
-          .fl_fingerprints_ = pipeline_json.fingerprints_.fl_fingerprints_,
-          .fs_fingerprints_ = pipeline_json.fingerprints_.fs_fingerprints_,
+          .fingerprints_ = pipeline_json.fingerprints_,
           .modified_peripheral_schema_ =
               pipeline_json.modified_peripheral_schema_,
           .modified_population_schema_ =
@@ -56,8 +54,6 @@ Pipeline Load::load(
           .predictors_ = predictors,
           .predictor_impl_ = predictor_impl,
           .preprocessors_ = preprocessors,
-          .preprocessor_fingerprints_ =
-              pipeline_json.fingerprints_.preprocessor_fingerprints_,
           .targets_ = pipeline_json.targets_});
 
   return pipeline.with_allow_http(pipeline_json.allow_http_)
