@@ -342,7 +342,7 @@ Transform::transform(const TransformParams& _params, const Pipeline& _pipeline,
   const bool predict = _params.cmd_.has("predict_") &&
                        JSON::get_value<bool>(_params.cmd_, "predict_");
 
-  if (_fitted.num_predictors_per_set() == 0) {
+  if ((score || predict) && _fitted.num_predictors_per_set() == 0) {
     throw std::runtime_error(
         "You cannot call .predict(...) or .score(...) on a pipeline "
         "that doesn't have any predictors.");
