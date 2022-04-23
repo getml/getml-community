@@ -11,7 +11,13 @@
 
 const auto shutdown_flag = std::make_shared<std::atomic<bool>>(false);
 
-void handle_signal(int signum) { *shutdown_flag = true; }
+void handle_signal(int signum) {
+#ifdef GETML_PROFILING
+  ProfilerStop();
+#endif
+
+  *shutdown_flag = true;
+}
 
 int main(int argc, char* argv[]) {
   signal(SIGINT, handle_signal);

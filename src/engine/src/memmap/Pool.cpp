@@ -1,14 +1,11 @@
-// ----------------------------------------------------------------------------
+#include "memmap/Pool.hpp"
 
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <unistd.h>
 
-// ----------------------------------------------------------------------------
-
 #include <cstring>
 #include <filesystem>
-#include <iostream>
 #include <string>
 #include <tuple>
 
@@ -16,10 +13,6 @@
 
 #include <Poco/File.h>
 #include <Poco/TemporaryFile.h>
-
-// ----------------------------------------------------------------------------
-
-#include "memmap/Pool.hpp"
 
 // ----------------------------------------------------------------------------
 
@@ -58,18 +51,25 @@ void Pool::allocate_page(const size_t _block_size, const size_t _page_num) {
 
 size_t Pool::allocate_block(const size_t _block_size,
                             const size_t _current_page) {
+  assert_true(_block_size > 0);
+
   const bool extend_current_block =
       current_block_can_be_extended(_block_size, _current_page);
 
   if (extend_current_block) {
+    assert_true(_current_page < num_pages_);
+    const auto page_num = _current_page + pages_[_current_page].block_size_;
+    const auto by = _block_size - pages_[_current_page].block_size_;
+    free_blocks_tracker_.extend_block(page_num, by);
     allocate_page(_block_size, _current_page);
     return _current_page;
   }
 
   while (true) {
-    const auto page_num = find_free_block(_block_size);
+    const auto [page_num, found] =
+        free_blocks_tracker_.allocate_block(_block_size);
 
-    if (page_num == num_pages_) {
+    if (!found) {
       resize_pool(num_pages_ * 2);
       continue;
     }
@@ -88,24 +88,6 @@ size_t Pool::allocate_block(const size_t _block_size,
   assert_true(false);
 
   return 0;
-}
-
-// ----------------------------------------------------------------------------
-
-std::pair<size_t, bool> Pool::block_is_sufficiently_large(
-    const size_t _first_page, const size_t _block_size) const {
-  assert_true(_first_page + _block_size < num_pages_);
-
-  for (auto page_num = _first_page; page_num < _first_page + _block_size;
-       ++page_num) {
-    const auto& page = *(pages_ + page_num);
-
-    if (page.is_allocated_) {
-      return std::make_pair(page_num + page.block_size_, false);
-    }
-  }
-
-  return std::make_pair(_first_page, true);
 }
 
 // ----------------------------------------------------------------------------
@@ -175,6 +157,8 @@ void Pool::deallocate(const size_t _page_num) {
   assert_true(old_page.block_size_ != 0);
   assert_true(old_page.is_allocated_);
 
+  free_blocks_tracker_.free_block(_page_num, _page_num + old_page.block_size_);
+
   old_page = Page();
 }
 
@@ -185,32 +169,6 @@ void Pool::init_pages(const size_t _first_new_page,
   for (size_t i = _first_new_page; i < _last_new_page; ++i) {
     pages_[i] = Page();
   }
-}
-
-// ----------------------------------------------------------------------------
-
-size_t Pool::find_free_block(const size_t _block_size) const {
-  size_t page_num = 0;
-
-  while (page_num + _block_size < num_pages_) {
-    const auto& page = *(pages_ + page_num);
-
-    if (page.is_allocated_) {
-      page_num += page.block_size_;
-      continue;
-    }
-
-    const auto [new_page_num, ok] =
-        block_is_sufficiently_large(page_num, _block_size);
-
-    if (ok) {
-      return page_num;
-    }
-
-    page_num = new_page_num;
-  }
-
-  return num_pages_;
 }
 
 // ----------------------------------------------------------------------------
@@ -288,11 +246,10 @@ void Pool::resize_file(const int _fd, const size_t _num_bytes) const {
 // ----------------------------------------------------------------------------
 
 void Pool::resize_pool(const size_t _num_pages) {
-  if (_num_pages > num_pages_) {
-    const auto additional_bytes =
-        (_num_pages - num_pages_) * (page_size_ + sizeof(Page));
-    check_space_left(additional_bytes);
-  }
+  assert_true(_num_pages > num_pages_);
+  const auto additional_bytes =
+      (_num_pages - num_pages_) * (page_size_ + sizeof(Page));
+  check_space_left(additional_bytes);
   if (num_pages_ != 0) {
     unmap();
   }
@@ -301,6 +258,7 @@ void Pool::resize_pool(const size_t _num_pages) {
   remap(_num_pages);
   init_pages(num_pages_, _num_pages);
   num_pages_ = _num_pages;
+  free_blocks_tracker_.increase_pool_size(num_pages_);
 }
 
 // ----------------------------------------------------------------------------

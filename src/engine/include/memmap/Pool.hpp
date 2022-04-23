@@ -16,6 +16,7 @@
 
 // ----------------------------------------------------------------------------
 
+#include "memmap/FreeBlocksTracker.hpp"
 #include "memmap/Page.hpp"
 
 // ----------------------------------------------------------------------------
@@ -96,11 +97,6 @@ class Pool {
   /// Allocates the first page in the block.
   void allocate_page(const size_t _block_size, const size_t _page_num);
 
-  /// If the block is sufficiently large, returns _first_page and true.
-  /// Otherwise, returns the next page_num to look for and false.
-  std::pair<size_t, bool> block_is_sufficiently_large(
-      const size_t _first_page, const size_t _block_size) const;
-
   /// Make sure that enough space is left on the machine.
   void check_space_left(const size_t _num_bytes) const;
 
@@ -110,9 +106,6 @@ class Pool {
   /// Whether the current block can just be extended
   bool current_block_can_be_extended(const size_t _num_pages,
                                      const size_t _current_page) const;
-
-  /// Finds the first available free block.
-  size_t find_free_block(const size_t _block_size) const;
 
   /// Initializes the pages (RAII does not work for memory mapping,
   /// so we need to do this manually).
@@ -150,6 +143,9 @@ class Pool {
 
   /// The file descriptor of the file containing the pages.
   int fd_pages_;
+
+  /// Helps us find free blocks more quickly
+  FreeBlocksTracker free_blocks_tracker_;
 
   /// The number of pages currently allocated.
   size_t num_pages_;
