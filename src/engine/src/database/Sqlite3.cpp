@@ -1,7 +1,6 @@
 #include "database/Sqlite3.hpp"
 
 namespace database {
-// ----------------------------------------------------------------------------
 
 void Sqlite3::check_colnames(const std::vector<std::string>& _colnames,
                              io::Reader* _reader) {
@@ -58,17 +57,10 @@ void Sqlite3::execute(const std::string& _sql) {
 
 std::vector<std::string> Sqlite3::get_colnames(
     const std::string& _table) const {
-  // ------------------------------------------------------------------------
-
   multithreading::ReadLock read_lock(read_write_lock_,
                                      std::chrono::milliseconds(1000));
 
-  // ------------------------------------------------------------------------
-  // Prepare statement.
-
   const std::string sql = "SELECT * FROM \"" + _table + "\" LIMIT 0";
-
-  // ------------------------------------------------------------------------
 
   // We set this to nullptr, so it will not be deleted if doesn't point to
   // anything.
@@ -92,9 +84,6 @@ std::vector<std::string> Sqlite3::get_colnames(
     throw std::runtime_error(sqlite3_errmsg(db()));
   }
 
-  // ------------------------------------------------------------------------
-  // Fill colnames.
-
   std::vector<std::string> colnames;
 
   const int num_cols = sqlite3_column_count(stmt);
@@ -105,11 +94,7 @@ std::vector<std::string> Sqlite3::get_colnames(
     colnames.push_back(name);
   }
 
-  // ------------------------------------------------------------------------
-
   return colnames;
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -170,19 +155,13 @@ Poco::JSON::Object Sqlite3::get_content(const std::string& _tname,
                                         const std::int32_t _draw,
                                         const std::int32_t _start,
                                         const std::int32_t _length) {
-  // ----------------------------------------
-
   const auto nrows = get_nrows(_tname);
 
   const auto colnames = get_colnames(_tname);
 
   const auto ncols = colnames.size();
 
-  // ----------------------------------------
-
   Poco::JSON::Object obj;
-
-  // ----------------------------------------
 
   obj.set("draw", _draw);
 
@@ -194,8 +173,6 @@ Poco::JSON::Object Sqlite3::get_content(const std::string& _tname,
     obj.set("data", Poco::JSON::Array());
     return obj;
   }
-
-  // ----------------------------------------
 
   if (_length < 0) {
     throw std::runtime_error("length must be positive!");
@@ -209,20 +186,14 @@ Poco::JSON::Object Sqlite3::get_content(const std::string& _tname,
     throw std::runtime_error("start must be smaller than number of rows!");
   }
 
-  // ----------------------------------------
-
   const auto begin = _start;
 
   const auto end = (_start + _length > nrows) ? nrows : _start + _length;
-
-  // ----------------------------------------
 
   const auto where = std::string("rowid > ") + std::to_string(begin) +
                      std::string(" AND rowid <= ") + std::to_string(end);
 
   auto iterator = select(colnames, _tname, where);
-
-  // ----------------------------------------
 
   Poco::JSON::Array data;
 
@@ -236,15 +207,9 @@ Poco::JSON::Object Sqlite3::get_content(const std::string& _tname,
     data.add(row);
   }
 
-  // ----------------------------------------
-
   obj.set("data", data);
 
-  // ----------------------------------------
-
   return obj;
-
-  // ----------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -371,13 +336,8 @@ std::unique_ptr<sqlite3_stmt, int (*)(sqlite3_stmt*)>
 Sqlite3::make_insert_statement(
     const std::string& _table,
     const std::vector<std::string>& _colnames) const {
-  // ------------------------------------------------------------------------
-
   multithreading::ReadLock read_lock(read_write_lock_,
                                      std::chrono::milliseconds(1000));
-
-  // ------------------------------------------------------------------------
-  // Prepare statement as string
 
   std::string sql = "INSERT INTO \"";
   sql += _table;
@@ -392,9 +352,6 @@ Sqlite3::make_insert_statement(
       sql += ')';
     }
   }
-
-  // ------------------------------------------------------------------------
-  // Make actual sqlite statement.
 
   // We set this to nullptr, so it will not be deleted if doesn't
   // point to anything.
@@ -418,20 +375,13 @@ Sqlite3::make_insert_statement(
     throw std::runtime_error(sqlite3_errmsg(db()));
   }
 
-  // ------------------------------------------------------------------------
-
   return stmt;
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
 
 void Sqlite3::read(const std::string& _table, const size_t _skip,
                    io::Reader* _reader) {
-  // ------------------------------------------------------------------------
-  // Get colnames and coltypes
-
   const std::vector<std::string> colnames = get_colnames(_table);
 
   const std::vector<io::Datatype> coltypes = get_coltypes(_table, colnames);
@@ -441,17 +391,9 @@ void Sqlite3::read(const std::string& _table, const size_t _skip,
                              "' has been altered while reading!");
   }
 
-  // ------------------------------------------------------------------------
-  // Prepare INSERT INTO SQL statement.
-
   const auto stmt = make_insert_statement(_table, colnames);
 
-  // ------------------------------------------------------------------------
-
   check_colnames(colnames, _reader);
-
-  // ------------------------------------------------------------------------
-  // Skip lines, if necessary.
 
   size_t line_count = 0;
 
@@ -460,18 +402,9 @@ void Sqlite3::read(const std::string& _table, const size_t _skip,
     ++line_count;
   }
 
-  // ------------------------------------------------------------------------
-
   execute("BEGIN;");
 
-  // ----------------------------------------------------------------
-  // Insert line by line, then COMMIT.
-  // If something goes wrong, call ROLLBACK.
-
   try {
-    // ----------------------------------------------------------------
-    // Insert line by line.
-
     multithreading::WriteLock write_lock(read_write_lock_);
 
     while (!_reader->eof()) {
@@ -493,18 +426,13 @@ void Sqlite3::read(const std::string& _table, const size_t _skip,
 
     write_lock.unlock();
 
-    // ----------------------------------------------------------------
-
     execute("COMMIT;");
 
-    // ----------------------------------------------------------------
   } catch (std::exception& e) {
     execute("ROLLBACK;");
 
     throw std::runtime_error(e.what());
   }
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------

@@ -30,13 +30,9 @@ extern "C" {
 #include "database/Int.hpp"
 #include "database/Sqlite3Iterator.hpp"
 
-// ----------------------------------------------------------------------------
 namespace database {
-// ----------------------------------------------------------------------------
 
 class Sqlite3 : public Connector {
-  // -------------------------------
-
  public:
   Sqlite3(const std::string& _name,
           const std::vector<std::string>& _time_formats)

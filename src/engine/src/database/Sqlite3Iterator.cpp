@@ -15,9 +15,6 @@ Sqlite3Iterator::Sqlite3Iterator(
       stmt_(std::unique_ptr<sqlite3_stmt, int (*)(sqlite3_stmt*)>(
           nullptr, sqlite3_finalize)),
       time_formats_(_time_formats) {
-  // ------------------------------------------------------------------------
-  // Prepare statement.
-
   // We set this to nullptr, so it will not be deleted if doesn't point to
   // anything.
   // https://en.cppreference.com/w/cpp/memory/unique_ptr/operator_bool
@@ -39,15 +36,9 @@ Sqlite3Iterator::Sqlite3Iterator(
     throw std::runtime_error(sqlite3_errmsg(db()));
   }
 
-  // ------------------------------------------------------------------------
-
   num_cols_ = sqlite3_column_count(stmt_.get());
 
-  // ------------------------------------------------------------------------
-
   next_row();
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------

@@ -2,7 +2,6 @@
 
 namespace fastprop {
 namespace algorithm {
-// ----------------------------------------------------------------------------
 
 Float Aggregator::apply_aggregation(
     const containers::DataFrame &_population,

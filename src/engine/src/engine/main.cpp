@@ -1,13 +1,30 @@
 #include <Poco/Net/TCPServer.h>
 
+#include <chrono>
+#include <csignal>
+
+#ifdef GETML_PROFILING
+#include <gperftools/profiler.h>
+#endif
+
 #include "engine/engine.hpp"
 
+const auto shutdown_flag = std::make_shared<std::atomic<bool>>(false);
+
+void handle_signal(int signum) { *shutdown_flag = true; }
+
 int main(int argc, char* argv[]) {
-  // -------------------------------------------
+  signal(SIGINT, handle_signal);
+#ifdef GETML_PROFILING
+  // The resulting profile will be
+  // located in $HOME/.getml/getml-.../bin
+  //
+  // To analyze the profile, run the following:
+  // google-pprof --svg getml-... getml_profile.log getml_profile.svg
+  ProfilerStart("getml_profile.log");
+#endif
 
   const auto options = engine::config::Options::make_options(argc, argv);
-
-  // -------------------------------------------
 
   try {
     engine::handlers::FileHandler::create_project_directory(
@@ -21,15 +38,11 @@ int main(int argc, char* argv[]) {
 
   engine::handlers::FileHandler::delete_temp_dir(options.temp_dir());
 
-  // -------------------------------------------
-
   const auto monitor =
       std::make_shared<const engine::communication::Monitor>(options);
 
   const auto logger =
       std::make_shared<const engine::communication::Logger>(monitor);
-
-  // -------------------------------------------
 
   const auto license_checker =
       std::make_shared<engine::licensing::LicenseChecker>(logger, monitor,
@@ -42,16 +55,12 @@ int main(int argc, char* argv[]) {
     return 0;
   }
 
-  // -------------------------------------------
-
   const auto pool = options.make_pool();
 
   const auto categories = std::make_shared<engine::containers::Encoding>(pool);
 
   const auto join_keys_encoding =
       std::make_shared<engine::containers::Encoding>(pool);
-
-  // -------------------------------------------
 
   const auto data_frames =
       std::make_shared<std::map<std::string, engine::containers::DataFrame>>();
@@ -61,8 +70,6 @@ int main(int argc, char* argv[]) {
 
   const auto pipelines =
       std::make_shared<engine::handlers::PipelineManager::PipelineMapType>();
-
-  // -------------------------------------------
 
   const auto data_frame_tracker =
       std::make_shared<engine::dependency::DataFrameTracker>(data_frames);
@@ -76,8 +83,6 @@ int main(int argc, char* argv[]) {
 
   const auto warning_tracker =
       std::make_shared<engine::dependency::WarningTracker>();
-
-  // -------------------------------------------
 
   const auto project_lock = std::make_shared<multithreading::ReadWriteLock>();
 
@@ -111,10 +116,6 @@ int main(int argc, char* argv[]) {
           monitor, options, pipelines, pred_tracker, preprocessor_tracker,
           options.engine().project_, project_lock, read_write_lock);
 
-  // -------------------------------------------
-
-  const auto shutdown = std::make_shared<std::atomic<bool>>(false);
-
   Poco::Net::ServerSocket server_socket(
       static_cast<Poco::UInt16>(options.engine().port()), 64);
 
@@ -125,7 +126,7 @@ int main(int argc, char* argv[]) {
   Poco::Net::TCPServer srv(
       new engine::srv::ServerConnectionFactoryImpl(
           database_manager, data_frame_manager, hyperopt_manager, logger,
-          options, pipeline_manager, project_manager, shutdown),
+          options, pipeline_manager, project_manager, shutdown_flag),
       server_socket);
 
   srv.start();
@@ -133,15 +134,15 @@ int main(int argc, char* argv[]) {
   logger->log("The getML engine launched successfully on port " +
               std::to_string(options.engine().port()) + ".");
 
-  while (*shutdown == false) {
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+  while (!(*shutdown_flag)) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
   }
 
-  // -------------------------------------------
+#ifdef GETML_PROFILING
+  ProfilerStop();
+#endif
 
   engine::handlers::FileHandler::delete_temp_dir(options.temp_dir());
-
-  // -------------------------------------------
 
   return 0;
 }
