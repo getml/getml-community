@@ -21,9 +21,10 @@ Pipeline Load::load(
   const auto scores = fct::Ref<const metrics::Scores>::make(
       load_json_obj(_path + "scores.json"));
 
-  const auto pipeline = Pipeline(obj).with_scores(scores);
-
   const auto pipeline_json = load_pipeline_json(_path);
+
+  const auto pipeline = Pipeline(obj).with_scores(scores).with_creation_time(
+      pipeline_json.creation_time_);
 
   const auto [feature_selector_impl, predictor_impl] = load_impls(_path);
 

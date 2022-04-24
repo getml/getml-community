@@ -92,6 +92,13 @@ class Pipeline {
     return new_pipeline;
   }
 
+  /// Returns a new pipeline with a new value for creation_time_.
+  Pipeline with_creation_time(const std::string& _creation_time) const {
+    auto new_pipeline = *this;
+    new_pipeline.creation_time_ = _creation_time;
+    return new_pipeline;
+  }
+
   /// Returns a new pipeline with a new value for fitted_.
   Pipeline with_fitted(const fct::Ref<const FittedPipeline>& _fitted) const {
     auto new_pipeline = *this;
