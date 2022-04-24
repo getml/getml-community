@@ -102,7 +102,8 @@ void FastProp::build_row(
     const std::vector<size_t> &_index,
     const std::vector<std::function<bool(const containers::Match &)>>
         &_condition_functions,
-    const size_t _rownum, containers::Features *_features) const {
+    const size_t _rownum, const fct::Ref<Memoization> &_memoization,
+    containers::Features *_features) const {
   assert_true(_condition_functions.size() == _index.size());
 
   assert_true(_features->size() == _index.size());
@@ -142,9 +143,9 @@ void FastProp::build_row(
 
     const auto &condition_function = _condition_functions.at(i);
 
-    const auto value =
-        Aggregator::apply_aggregation(population, peripheral, subf, matches,
-                                      condition_function, abstract_feature);
+    const auto value = Aggregator::apply_aggregation(
+        population, peripheral, subf, matches, condition_function,
+        abstract_feature, _memoization);
 
     _features->at(_rownum, i) =
         (std::isnan(value) || std::isinf(value)) ? 0.0 : value;
@@ -183,6 +184,8 @@ void FastProp::build_rows(const TransformParams &_params,
 
   const auto table_holder = TableHolder(params);
 
+  const auto memoization = fct::Ref<Memoization>::make();
+
   constexpr size_t log_iter = 5000;
 
   const auto condition_functions = ConditionParser::make_condition_functions(
@@ -191,8 +194,10 @@ void FastProp::build_rows(const TransformParams &_params,
   const auto nrows = _rownums ? _rownums->size() : _params.population_.nrows();
 
   for (size_t i = 0; i < rownums->size(); ++i) {
+    memoization->reset();
+
     build_row(table_holder, _subfeatures, _params.index_, condition_functions,
-              rownums->at(i), _features);
+              rownums->at(i), memoization, _features);
 
     if (i % log_iter == 0 && i != 0) {
       _num_completed->fetch_add(log_iter);

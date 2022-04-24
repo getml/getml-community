@@ -69,7 +69,7 @@ class DataFrameView {
   }
 
   /// Getter for underlying data frame.
-  const DataFrame df() const { return df_; }
+  const DataFrame& df() const { return df_; }
 
   /// Getter for a discrete value.
   Float discrete(size_t _i, size_t _j) const {

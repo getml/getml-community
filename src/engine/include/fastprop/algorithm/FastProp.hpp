@@ -10,6 +10,7 @@
 
 // ----------------------------------------------------------------------------
 
+#include "fct/Ref.hpp"
 #include "helpers/helpers.hpp"
 #include "multithreading/multithreading.hpp"
 #include "transpilation/transpilation.hpp"
@@ -22,6 +23,7 @@
 // ----------------------------------------------------------------------------
 
 #include "fastprop/algorithm/FitParams.hpp"
+#include "fastprop/algorithm/Memoization.hpp"
 #include "fastprop/algorithm/TableHolder.hpp"
 #include "fastprop/algorithm/TransformParams.hpp"
 
@@ -110,7 +112,8 @@ class FastProp {
       const std::vector<size_t>& _index,
       const std::vector<std::function<bool(const containers::Match&)>>&
           _condition_functions,
-      const size_t _rownum, containers::Features* _features) const;
+      const size_t _rownum, const fct::Ref<Memoization>& _memoization,
+      containers::Features* _features) const;
 
   /// Builds all rows for the thread associated with _thread_num
   void build_rows(const TransformParams& _params,

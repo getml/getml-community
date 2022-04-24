@@ -49,6 +49,19 @@ struct Condition {
       const std::string &_feature_prefix, const helpers::Schema &_input,
       const helpers::Schema &_output) const;
 
+  /// Equality operator
+  bool operator==(const Condition &_other) const {
+    return (
+        bound_lower_ == _other.bound_lower_ &&
+        bound_upper_ == _other.bound_upper_ &&
+        category_used_ == _other.category_used_ &&
+        data_used_ == _other.data_used_ && input_col_ == _other.input_col_ &&
+        output_col_ == _other.output_col_ && peripheral_ == _other.peripheral_);
+  }
+
+  /// Non-equality operator
+  bool operator!=(const Condition &_other) const { return !(*this == _other); }
+
   /// The lower bound (when data_used_ == lag).
   const Float bound_lower_;
 

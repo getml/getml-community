@@ -9,6 +9,7 @@
 // ----------------------------------------------------------------------------
 
 #include "debug/debug.hpp"
+#include "fct/Ref.hpp"
 
 // ----------------------------------------------------------------------------
 
@@ -19,9 +20,12 @@
 
 // ----------------------------------------------------------------------------
 
+#include "fastprop/algorithm/Memoization.hpp"
+
+// ----------------------------------------------------------------------------
+
 namespace fastprop {
 namespace algorithm {
-// ------------------------------------------------------------------------
 
 class Aggregator {
  public:
@@ -36,7 +40,8 @@ class Aggregator {
       const std::optional<containers::Features> &_subfeatures,
       const std::vector<containers::Match> &_matches,
       const std::function<bool(const containers::Match &)> &_condition_function,
-      const containers::AbstractFeature &_abstract_feature);
+      const containers::AbstractFeature &_abstract_feature,
+      const fct::Ref<Memoization> &_memoization);
 
  public:
   /// Whether the aggregation is an aggregation that relies on the
@@ -52,7 +57,8 @@ class Aggregator {
       const containers::DataFrame &_peripheral,
       const std::vector<containers::Match> &_matches,
       const std::function<bool(const containers::Match &)> &_condition_function,
-      const containers::AbstractFeature &_abstract_feature);
+      const containers::AbstractFeature &_abstract_feature,
+      const fct::Ref<Memoization> &_memoization);
 
   /// Determines whether a condition is true w.r.t. a match.
   static bool apply_condition(const containers::Condition &_condition,
@@ -64,14 +70,16 @@ class Aggregator {
       const containers::DataFrame &_peripheral,
       const std::vector<containers::Match> &_matches,
       const std::function<bool(const containers::Match &)> &_condition_function,
-      const containers::AbstractFeature &_abstract_feature);
+      const containers::AbstractFeature &_abstract_feature,
+      const fct::Ref<Memoization> &_memoization);
 
   /// Applies a COUNT aggregation
   static Float apply_not_applicable(
       const containers::DataFrame &_peripheral,
       const std::vector<containers::Match> &_matches,
       const std::function<bool(const containers::Match &)> &_condition_function,
-      const containers::AbstractFeature &_abstract_feature);
+      const containers::AbstractFeature &_abstract_feature,
+      const fct::Ref<Memoization> &_memoization);
 
   /// Applies the aggregation to a numerical column.
   static Float apply_numerical(
@@ -79,7 +87,8 @@ class Aggregator {
       const containers::DataFrame &_peripheral,
       const std::vector<containers::Match> &_matches,
       const std::function<bool(const containers::Match &)> &_condition_function,
-      const containers::AbstractFeature &_abstract_feature);
+      const containers::AbstractFeature &_abstract_feature,
+      const fct::Ref<Memoization> &_memoization);
 
   /// Applies the aggregation to categorical columns with the same unit.
   static Float apply_same_units_categorical(
@@ -87,7 +96,8 @@ class Aggregator {
       const containers::DataFrame &_peripheral,
       const std::vector<containers::Match> &_matches,
       const std::function<bool(const containers::Match &)> &_condition_function,
-      const containers::AbstractFeature &_abstract_feature);
+      const containers::AbstractFeature &_abstract_feature,
+      const fct::Ref<Memoization> &_memoization);
 
   /// Applies the aggregation to discrete columns with the same unit.
   static Float apply_same_units_discrete(
@@ -95,7 +105,8 @@ class Aggregator {
       const containers::DataFrame &_peripheral,
       const std::vector<containers::Match> &_matches,
       const std::function<bool(const containers::Match &)> &_condition_function,
-      const containers::AbstractFeature &_abstract_feature);
+      const containers::AbstractFeature &_abstract_feature,
+      const fct::Ref<Memoization> &_memoization);
 
   /// Applies the aggregation to numerical columns with the same unit.
   static Float apply_same_units_numerical(
@@ -103,7 +114,8 @@ class Aggregator {
       const containers::DataFrame &_peripheral,
       const std::vector<containers::Match> &_matches,
       const std::function<bool(const containers::Match &)> &_condition_function,
-      const containers::AbstractFeature &_abstract_feature);
+      const containers::AbstractFeature &_abstract_feature,
+      const fct::Ref<Memoization> &_memoization);
 
   /// Applies the aggregation to a subfeature.
   static Float apply_subfeatures(
@@ -112,7 +124,8 @@ class Aggregator {
       const containers::Features &_subfeatures,
       const std::vector<containers::Match> &_matches,
       const std::function<bool(const containers::Match &)> &_condition_function,
-      const containers::AbstractFeature &_abstract_feature);
+      const containers::AbstractFeature &_abstract_feature,
+      const fct::Ref<Memoization> &_memoization);
 
   /// Applies the aggregation to text fields.
   static Float apply_text(
@@ -120,7 +133,8 @@ class Aggregator {
       const containers::DataFrame &_peripheral,
       const std::vector<containers::Match> &_matches,
       const std::function<bool(const containers::Match &)> &_condition_function,
-      const containers::AbstractFeature &_abstract_feature);
+      const containers::AbstractFeature &_abstract_feature,
+      const fct::Ref<Memoization> &_memoization);
 
  private:
   /// Aggregates the range from _begin to _end, applying the _aggregation.
@@ -236,54 +250,6 @@ class Aggregator {
                                        _abstract_feature.aggregation_);
   }
 
-  /// Aggregates the matches using the extract_value lambda function.
-  template <class ExtractValueType>
-  static Float aggregate_matches_first_last(
-      const std::vector<containers::Match> &_matches,
-      const ExtractValueType &_extract_value,
-      const std::function<bool(const containers::Match &)> &_condition_function,
-      const containers::AbstractFeature &_abstract_feature) {
-    assert_true(is_first_last(_abstract_feature.aggregation_));
-
-    if (_abstract_feature.conditions_.size() == 0) {
-      auto range = _matches | VIEWS::transform(_extract_value) |
-                   VIEWS::filter(second_is_not_nan_or_inf);
-
-      return aggregate_first_last(range.begin(), range.end(),
-                                  _abstract_feature.aggregation_);
-    }
-
-    auto range = _matches | VIEWS::filter(_condition_function) |
-                 VIEWS::transform(_extract_value) |
-                 VIEWS::filter(second_is_not_nan_or_inf);
-
-    return aggregate_first_last(range.begin(), range.end(),
-                                _abstract_feature.aggregation_);
-  }
-
-  /// Aggregates the matches using the extract_value lambda function.
-  template <class ExtractValueType>
-  static Float aggregate_matches_numerical(
-      const std::vector<containers::Match> &_matches,
-      const ExtractValueType &_extract_value,
-      const std::function<bool(const containers::Match &)> &_condition_function,
-      const containers::AbstractFeature &_abstract_feature) {
-    if (_abstract_feature.conditions_.size() == 0) {
-      auto range = _matches | VIEWS::transform(_extract_value) |
-                   VIEWS::filter(is_not_nan_or_inf);
-
-      return aggregate_numerical_range(range.begin(), range.end(),
-                                       _abstract_feature.aggregation_);
-    }
-
-    auto range = _matches | VIEWS::filter(_condition_function) |
-                 VIEWS::transform(_extract_value) |
-                 VIEWS::filter(is_not_nan_or_inf);
-
-    return aggregate_numerical_range(range.begin(), range.end(),
-                                     _abstract_feature.aggregation_);
-  }
-
   /// Aggregates the range from _begin to _end, applying the _aggregation.
   template <class IteratorType>
   static Float aggregate_numerical_range(
@@ -389,43 +355,52 @@ class Aggregator {
       const std::vector<containers::Match> &_matches,
       const ExtractValueType &_extract_value,
       const std::function<bool(const containers::Match &)> &_condition_function,
-      const containers::AbstractFeature &_abstract_feature) {
+      const containers::AbstractFeature &_abstract_feature,
+      const fct::Ref<Memoization> &_memoization) {
     assert_true(is_first_last(_abstract_feature.aggregation_));
 
     assert_true(_peripheral.num_time_stamps() > 0);
 
     using Pair = std::pair<Float, Float>;
 
-    if (_abstract_feature.aggregation_ == enums::Aggregation::first ||
-        _abstract_feature.aggregation_ == enums::Aggregation::last) {
-      const auto &ts_col = _peripheral.time_stamp_col();
+    const auto &ts_col_input = _peripheral.time_stamp_col();
 
-      const auto extract_pair = [_extract_value,
-                                 &ts_col](const containers::Match &m) -> Pair {
-        const auto key = ts_col[m.ix_input];
-        const auto value = _extract_value(m);
-        return std::make_pair(key, value);
-      };
-
-      return aggregate_matches_first_last(
-          _matches, extract_pair, _condition_function, _abstract_feature);
-    }
-
-    assert_true(_population.num_time_stamps() > 0);
-
-    const auto &ts_col1 = _population.time_stamp_col();
-
-    const auto &ts_col2 = _peripheral.time_stamp_col();
-
-    const auto extract_pair = [_extract_value, &ts_col1,
-                               &ts_col2](const containers::Match &m) -> Pair {
-      const auto key = ts_col1[m.ix_output] - ts_col2[m.ix_input];
+    const auto extract_pair =
+        [_extract_value, &ts_col_input](const containers::Match &m) -> Pair {
+      const auto key = ts_col_input[m.ix_input];
       const auto value = _extract_value(m);
       return std::make_pair(key, value);
     };
 
-    return aggregate_matches_first_last(_matches, extract_pair,
-                                        _condition_function, _abstract_feature);
+    memorize_pairs_range(_matches, extract_pair, _condition_function,
+                         _abstract_feature, _memoization);
+
+    if (_abstract_feature.aggregation_ == enums::Aggregation::first ||
+        _abstract_feature.aggregation_ == enums::Aggregation::last) {
+      return aggregate_first_last(_memoization->pairs_begin(),
+                                  _memoization->pairs_end(),
+                                  _abstract_feature.aggregation_);
+    }
+
+    assert_true(_population.num_time_stamps() > 0);
+
+    const auto &ts_col_output = _population.time_stamp_col();
+
+    const auto ts_output =
+        _matches.size() > 0 ? ts_col_output[_matches[0].ix_output] : NAN;
+
+    const auto substract_from_ts_output = [ts_output](const Pair &_p) -> Pair {
+      const auto diff = ts_output - std::get<0>(_p);
+      return std::make_pair(diff, std::get<1>(_p));
+    };
+
+    const auto pairs =
+        fct::Range(_memoization->pairs_begin(), _memoization->pairs_end());
+
+    auto range = pairs | VIEWS::transform(substract_from_ts_output);
+
+    return aggregate_first_last(range.begin(), range.end(),
+                                _abstract_feature.aggregation_);
   }
 
   /// Calculates the average time between the time stamps.
@@ -455,6 +430,45 @@ class Aggregator {
   /// Determines whether a value is nan or inf
   static bool second_is_not_nan_or_inf(const std::pair<Float, Float> &_p) {
     return !std::isnan(_p.second) && !std::isinf(_p.second);
+  }
+
+  /// Memorizes the range for numerical values.
+  template <class ExtractValueType>
+  static void memorize_numerical_range(
+      const std::vector<containers::Match> &_matches,
+      const ExtractValueType &_extract_value,
+      const std::function<bool(const containers::Match &)> &_condition_function,
+      const containers::AbstractFeature &_abstract_feature,
+      const fct::Ref<Memoization> &_memoization) {
+    if (_abstract_feature.conditions_.size() == 0) {
+      const auto range = _matches | VIEWS::transform(_extract_value) |
+                         VIEWS::filter(is_not_nan_or_inf);
+      _memoization->memorize_numerical(_abstract_feature, range);
+    }
+    const auto range = _matches | VIEWS::filter(_condition_function) |
+                       VIEWS::transform(_extract_value) |
+                       VIEWS::filter(is_not_nan_or_inf);
+    _memoization->memorize_numerical(_abstract_feature, range);
+  }
+
+  /// Memorizes the range for pairs.
+  template <class ExtractValueType>
+  static void memorize_pairs_range(
+      const std::vector<containers::Match> &_matches,
+      const ExtractValueType &_extract_value,
+      const std::function<bool(const containers::Match &)> &_condition_function,
+      const containers::AbstractFeature &_abstract_feature,
+      const fct::Ref<Memoization> &_memoization) {
+    assert_true(is_first_last(_abstract_feature.aggregation_));
+    if (_abstract_feature.conditions_.size() == 0) {
+      const auto range = _matches | VIEWS::transform(_extract_value) |
+                         VIEWS::filter(second_is_not_nan_or_inf);
+      _memoization->memorize_pairs(_abstract_feature, range);
+    }
+    const auto range = _matches | VIEWS::filter(_condition_function) |
+                       VIEWS::transform(_extract_value) |
+                       VIEWS::filter(second_is_not_nan_or_inf);
+    _memoization->memorize_pairs(_abstract_feature, range);
   }
 };
 

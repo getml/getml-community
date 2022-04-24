@@ -18,7 +18,6 @@
 
 namespace fastprop {
 namespace algorithm {
-// ------------------------------------------------------------------------
 
 class RSquared {
  public:
