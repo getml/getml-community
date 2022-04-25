@@ -41,16 +41,15 @@ class DataFrameManager {
 
  public:
   DataFrameManager(
-      const std::shared_ptr<containers::Encoding>& _categories,
-      const std::shared_ptr<DatabaseManager>& _database_manager,
-      const std::shared_ptr<std::map<std::string, containers::DataFrame>>
-          _data_frames,
-      const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
-      const std::shared_ptr<licensing::LicenseChecker>& _license_checker,
-      const std::shared_ptr<const communication::Logger>& _logger,
-      const std::shared_ptr<const communication::Monitor>& _monitor,
+      const fct::Ref<containers::Encoding>& _categories,
+      const fct::Ref<DatabaseManager>& _database_manager,
+      const fct::Ref<std::map<std::string, containers::DataFrame>> _data_frames,
+      const fct::Ref<containers::Encoding>& _join_keys_encoding,
+      const fct::Ref<licensing::LicenseChecker>& _license_checker,
+      const fct::Ref<const communication::Logger>& _logger,
+      const fct::Ref<const communication::Monitor>& _monitor,
       const config::Options& _options,
-      const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock)
+      const fct::Ref<multithreading::ReadWriteLock>& _read_write_lock)
       : categories_(_categories),
         database_manager_(_database_manager),
         data_frames_(_data_frames),
@@ -345,8 +344,8 @@ class DataFrameManager {
   void add_int_column_to_df(
       const std::string& _name, const std::string& _role,
       const std::string& _unit, const containers::Column<strings::String>& _col,
-      const std::shared_ptr<containers::Encoding>& _local_categories,
-      const std::shared_ptr<containers::Encoding>& _local_join_keys_encoding,
+      const fct::Ref<containers::Encoding>& _local_categories,
+      const fct::Ref<containers::Encoding>& _local_join_keys_encoding,
       containers::DataFrame* _df) const;
 
   /// Adds a string column to the data frame.
@@ -365,27 +364,24 @@ class DataFrameManager {
                                       const size_t _cmp_nrows = 0) const;
 
   /// Writes the data frame to CSV.
-  void df_to_csv(
-      const std::string& _fname, const size_t _batch_size,
-      const std::string& _quotechar, const std::string& _sep,
-      const containers::DataFrame& _df,
-      const std::shared_ptr<containers::Encoding>& _categories,
-      const std::shared_ptr<containers::Encoding>& _join_keys_encoding);
+  void df_to_csv(const std::string& _fname, const size_t _batch_size,
+                 const std::string& _quotechar, const std::string& _sep,
+                 const containers::DataFrame& _df,
+                 const fct::Ref<containers::Encoding>& _categories,
+                 const fct::Ref<containers::Encoding>& _join_keys_encoding);
 
   /// Writes a data frame to a database.
-  void df_to_db(
-      const std::string& _conn_id, const std::string& _table_name,
-      const containers::DataFrame& _df,
-      const std::shared_ptr<containers::Encoding>& _categories,
-      const std::shared_ptr<containers::Encoding>& _join_keys_encoding);
+  void df_to_db(const std::string& _conn_id, const std::string& _table_name,
+                const containers::DataFrame& _df,
+                const fct::Ref<containers::Encoding>& _categories,
+                const fct::Ref<containers::Encoding>& _join_keys_encoding);
 
   /// Writes a data frame into an S3 bucket.
-  void df_to_s3(
-      const size_t _batch_size, const std::string& _bucket,
-      const std::string& _key, const std::string& _region,
-      const std::string& _sep, const containers::DataFrame& _df,
-      const std::shared_ptr<containers::Encoding>& _categories,
-      const std::shared_ptr<containers::Encoding>& _join_keys_encoding);
+  void df_to_s3(const size_t _batch_size, const std::string& _bucket,
+                const std::string& _key, const std::string& _region,
+                const std::string& _sep, const containers::DataFrame& _df,
+                const fct::Ref<containers::Encoding>& _categories,
+                const fct::Ref<containers::Encoding>& _join_keys_encoding);
 
   template <typename T, typename IterType>
   std::string make_column_string(const Int _draw, const size_t _nrows,
@@ -393,8 +389,8 @@ class DataFrameManager {
 
   /// Receives the actual data contained in a DataFrame
   void receive_data(
-      const std::shared_ptr<containers::Encoding>& _local_categories,
-      const std::shared_ptr<containers::Encoding>& _local_join_keys_encoding,
+      const fct::Ref<containers::Encoding>& _local_categories,
+      const fct::Ref<containers::Encoding>& _local_join_keys_encoding,
       containers::DataFrame* _df, Poco::Net::StreamSocket* _socket) const;
 
   /// Receives a FloatColumn and adds it to the DataFrame.
@@ -412,34 +408,28 @@ class DataFrameManager {
   /// Adds a string column to a data frame.
   void recv_and_add_string_column(
       const Poco::JSON::Object& _cmd,
-      const std::shared_ptr<containers::Encoding>& _local_categories,
-      const std::shared_ptr<containers::Encoding>& _local_join_keys_encoding,
+      const fct::Ref<containers::Encoding>& _local_categories,
+      const fct::Ref<containers::Encoding>& _local_join_keys_encoding,
       containers::DataFrame* _df, Poco::Net::StreamSocket* _socket) const;
 
   // ------------------------------------------------------------------------
 
  private:
   /// Trivial accessor
-  containers::Encoding& categories() {
-    assert_true(categories_);
-    return *categories_;
-  }
+  containers::Encoding& categories() { return *categories_; }
 
   /// Trivial accessor
   std::shared_ptr<database::Connector> connector(const std::string& _name) {
-    assert_true(database_manager_);
     return database_manager_->connector(_name);
   }
 
   /// Trivial accessor
   std::map<std::string, containers::DataFrame>& data_frames() {
-    assert_true(data_frames_);
     return *data_frames_;
   }
 
   /// Trivial accessor
   const std::map<std::string, containers::DataFrame>& data_frames() const {
-    assert_true(data_frames_);
     return *data_frames_;
   }
 
@@ -450,20 +440,13 @@ class DataFrameManager {
   }
 
   /// Trivial accessor
-  containers::Encoding& join_keys_encoding() {
-    assert_true(join_keys_encoding_);
-    return *join_keys_encoding_;
-  }
+  containers::Encoding& join_keys_encoding() { return *join_keys_encoding_; }
 
   /// Trivial accessor
-  licensing::LicenseChecker& license_checker() {
-    assert_true(license_checker_);
-    return *license_checker_;
-  }
+  licensing::LicenseChecker& license_checker() { return *license_checker_; }
 
   /// Trivial accessor
   const licensing::LicenseChecker& license_checker() const {
-    assert_true(license_checker_);
     return *license_checker_;
   }
 
@@ -474,32 +457,31 @@ class DataFrameManager {
 
  private:
   /// Maps integeres to category names
-  const std::shared_ptr<containers::Encoding> categories_;
+  const fct::Ref<containers::Encoding> categories_;
 
   /// Connector to the underlying database.
-  const std::shared_ptr<DatabaseManager> database_manager_;
+  const fct::Ref<DatabaseManager> database_manager_;
 
   /// The data frames currently held in memory
-  const std::shared_ptr<std::map<std::string, containers::DataFrame>>
-      data_frames_;
+  const fct::Ref<std::map<std::string, containers::DataFrame>> data_frames_;
 
   /// Maps integers to join key names
-  const std::shared_ptr<containers::Encoding> join_keys_encoding_;
+  const fct::Ref<containers::Encoding> join_keys_encoding_;
 
   /// For checking the license and memory usage
-  const std::shared_ptr<licensing::LicenseChecker> license_checker_;
+  const fct::Ref<licensing::LicenseChecker> license_checker_;
 
   /// For logging
-  const std::shared_ptr<const communication::Logger> logger_;
+  const fct::Ref<const communication::Logger> logger_;
 
   /// For communication with the monitor
-  const std::shared_ptr<const communication::Monitor> monitor_;
+  const fct::Ref<const communication::Monitor> monitor_;
 
   /// Settings for the engine and the monitor
   const config::Options options_;
 
   /// For coordinating the read and write process of the data
-  const std::shared_ptr<multithreading::ReadWriteLock> read_write_lock_;
+  const fct::Ref<multithreading::ReadWriteLock> read_write_lock_;
 
   // ------------------------------------------------------------------------
 };
@@ -512,11 +494,7 @@ std::string DataFrameManager::make_column_string(const Int _draw,
                                                  const size_t _nrows,
                                                  IterType _begin,
                                                  IterType _end) const {
-  // ----------------------------------------
-
   Poco::JSON::Object obj;
-
-  // ----------------------------------------
 
   obj.set("draw", _draw);
 
@@ -529,8 +507,6 @@ std::string DataFrameManager::make_column_string(const Int _draw,
 
     return JSON::stringify(obj);
   }
-
-  // ----------------------------------------
 
   auto data = Poco::JSON::Array::Ptr(new Poco::JSON::Array());
 
@@ -548,15 +524,9 @@ std::string DataFrameManager::make_column_string(const Int _draw,
     data->add(row);
   }
 
-  // ----------------------------------------
-
   obj.set("data", data);
 
-  // ----------------------------------------
-
   return JSON::stringify(obj);
-
-  // ----------------------------------------
 }
 
 // ------------------------------------------------------------------------

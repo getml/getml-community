@@ -2,7 +2,6 @@
 
 namespace engine {
 namespace srv {
-// ------------------------------------------------------------------------
 
 void RequestHandler::run() {
   try {

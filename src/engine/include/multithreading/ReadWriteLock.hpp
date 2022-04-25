@@ -10,16 +10,16 @@
 // ----------------------------------------------------------------------------
 
 #include "debug/debug.hpp"
+#include "fct/Ref.hpp"
 
 // ----------------------------------------------------------------------------
 
 namespace multithreading {
-// ----------------------------------------------------------------------------
+
 /// We diverge from the usual design of a ReadWriteLock by introducing a
 /// a weak writer: A weak writer still tolerates readers, but does
 /// not tolerate other weak writer or strong writers. Also, a weak writer
 /// can be upgraded to a strong writer.
-
 class ReadWriteLock {
  public:
   ReadWriteLock()

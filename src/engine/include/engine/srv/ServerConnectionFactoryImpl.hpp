@@ -25,6 +25,7 @@
 // -----------------------------------------------------------------
 
 #include "debug/debug.hpp"
+#include "fct/Ref.hpp"
 
 // -----------------------------------------------------------------
 
@@ -44,18 +45,16 @@ namespace srv {
 
 class ServerConnectionFactoryImpl
     : public Poco::Net::TCPServerConnectionFactory {
-  // -------------------------------------------------------------
-
  public:
   ServerConnectionFactoryImpl(
-      const std::shared_ptr<handlers::DatabaseManager>& _database_manager,
-      const std::shared_ptr<handlers::DataFrameManager>& _data_frame_manager,
-      const std::shared_ptr<handlers::HyperoptManager>& _hyperopt_manager,
-      const std::shared_ptr<const communication::Logger>& _logger,
+      const fct::Ref<handlers::DatabaseManager>& _database_manager,
+      const fct::Ref<handlers::DataFrameManager>& _data_frame_manager,
+      const fct::Ref<handlers::HyperoptManager>& _hyperopt_manager,
+      const fct::Ref<const communication::Logger>& _logger,
       const config::Options& _options,
-      const std::shared_ptr<handlers::PipelineManager>& _pipeline_manager,
-      const std::shared_ptr<handlers::ProjectManager>& _project_manager,
-      const std::shared_ptr<std::atomic<bool>>& _shutdown)
+      const fct::Ref<handlers::PipelineManager>& _pipeline_manager,
+      const fct::Ref<handlers::ProjectManager>& _project_manager,
+      const fct::Ref<std::atomic<bool>>& _shutdown)
       : database_manager_(_database_manager),
         data_frame_manager_(_data_frame_manager),
         hyperopt_manager_(_hyperopt_manager),
@@ -78,29 +77,29 @@ class ServerConnectionFactoryImpl
 
  private:
   /// Handles requests related to the database.
-  const std::shared_ptr<handlers::DatabaseManager> database_manager_;
+  const fct::Ref<handlers::DatabaseManager> database_manager_;
 
   /// Handles requests related to the data frames.
-  const std::shared_ptr<handlers::DataFrameManager> data_frame_manager_;
+  const fct::Ref<handlers::DataFrameManager> data_frame_manager_;
 
   /// Handles requests related to the hyperparameter optimization.
-  const std::shared_ptr<handlers::HyperoptManager> hyperopt_manager_;
+  const fct::Ref<handlers::HyperoptManager> hyperopt_manager_;
 
   /// Logs commands.
-  const std::shared_ptr<const communication::Logger> logger_;
+  const fct::Ref<const communication::Logger> logger_;
 
   /// Contains information on the port of the monitor process
   const config::Options options_;
 
   /// Handles requests related to pipelines.
-  const std::shared_ptr<handlers::PipelineManager> pipeline_manager_;
+  const fct::Ref<handlers::PipelineManager> pipeline_manager_;
 
   /// Handles requests related to the project as a whole, such as save or
   /// load.
-  const std::shared_ptr<handlers::ProjectManager> project_manager_;
+  const fct::Ref<handlers::ProjectManager> project_manager_;
 
   /// Signals to the main process that we want to shut down.
-  const std::shared_ptr<std::atomic<bool>>& shutdown_;
+  const fct::Ref<std::atomic<bool>>& shutdown_;
 
   // -------------------------------------------------------------
 };

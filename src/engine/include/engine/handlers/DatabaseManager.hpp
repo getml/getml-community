@@ -39,8 +39,8 @@ class DatabaseManager {
       ConnectorMap;
 
  public:
-  DatabaseManager(const std::shared_ptr<const communication::Logger>& _logger,
-                  const std::shared_ptr<const communication::Monitor>& _monitor,
+  DatabaseManager(const fct::Ref<const communication::Logger>& _logger,
+                  const fct::Ref<const communication::Monitor>& _monitor,
                   const config::Options& _options);
 
   ~DatabaseManager();
@@ -169,19 +169,17 @@ class DatabaseManager {
   ConnectorMap connector_map_;
 
   /// For logging
-  const std::shared_ptr<const communication::Logger> logger_;
+  const fct::Ref<const communication::Logger> logger_;
 
   /// For communication with the monitor
-  const std::shared_ptr<const communication::Monitor> monitor_;
+  const fct::Ref<const communication::Monitor> monitor_;
 
   /// Settings for the engine and the monitor
   const config::Options options_;
 
   /// Protects the shared_ptr of the connector - the connector might have to
   /// implement its own locking strategy!
-  const std::shared_ptr<multithreading::ReadWriteLock> read_write_lock_;
-
-  // ------------------------------------------------------------------------
+  const fct::Ref<multithreading::ReadWriteLock> read_write_lock_;
 };
 
 // ------------------------------------------------------------------------

@@ -9,6 +9,7 @@
 // ----------------------------------------------------------------------------
 
 #include "debug/debug.hpp"
+#include "fct/Ref.hpp"
 
 // ----------------------------------------------------------------------------
 
@@ -17,20 +18,17 @@
 // ----------------------------------------------------------------------------
 
 namespace multithreading {
-// ----------------------------------------------------------------------------
 
 class ReadLock {
-  // -------------------------------
-
  public:
   /// ReadLock without a timeout.
-  ReadLock(const std::shared_ptr<ReadWriteLock>& _lock)
+  explicit ReadLock(const fct::Ref<ReadWriteLock>& _lock)
       : lock_(_lock), released_(false) {
     lock_->read_lock();
   }
 
   /// Read lock with timeout.
-  ReadLock(const std::shared_ptr<ReadWriteLock>& _lock,
+  ReadLock(const fct::Ref<ReadWriteLock>& _lock,
            const std::chrono::milliseconds _duration)
       : lock_(_lock), released_(false) {
     lock_->read_lock(_duration);
@@ -58,10 +56,9 @@ class ReadLock {
     }
   }
 
-  // -------------------------------
  private:
   /// Lock to the ReadLock.
-  const std::shared_ptr<ReadWriteLock> lock_;
+  const fct::Ref<ReadWriteLock> lock_;
 
   /// Whether the Acquirer has been released.
   bool released_;

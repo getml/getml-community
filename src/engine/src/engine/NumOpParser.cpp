@@ -9,7 +9,6 @@
 
 namespace engine {
 namespace handlers {
-// ----------------------------------------------------------------------------
 
 containers::ColumnView<Float> NumOpParser::arange(
     const Poco::JSON::Object& _col) const {
@@ -105,22 +104,15 @@ containers::ColumnView<Float> NumOpParser::as_ts(
 
 // ----------------------------------------------------------------------------
 
-void NumOpParser::check(
-    const containers::Column<Float>& _col,
-    const std::shared_ptr<const communication::Logger>& _logger,
-    Poco::Net::StreamSocket* _socket) const {
-  // --------------------------------------------------------------------------
-
+void NumOpParser::check(const containers::Column<Float>& _col,
+                        const fct::Ref<const communication::Logger>& _logger,
+                        Poco::Net::StreamSocket* _socket) const {
   communication::Warner warner;
-
-  // --------------------------------------------------------------------------
 
   if (_col.size() == 0) {
     warner.send(_socket);
     return;
   }
-
-  // --------------------------------------------------------------------------
 
   const Float length = static_cast<Float>(_col.size());
 
@@ -135,19 +127,11 @@ void NumOpParser::check(
                "' are NULL values.");
   }
 
-  // --------------------------------------------------------------------------
-
-  if (_logger) {
-    for (const auto& warning : warner.warnings()) {
-      _logger->log("WARNING: " + warning);
-    }
+  for (const auto& warning : warner.warnings()) {
+    _logger->log("WARNING: " + warning);
   }
 
-  // --------------------------------------------------------------------------
-
   warner.send(_socket);
-
-  // --------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------

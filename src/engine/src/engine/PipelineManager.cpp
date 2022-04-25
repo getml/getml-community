@@ -180,25 +180,25 @@ void PipelineManager::check(const std::string& _name,
   const auto pool = options_.make_pool();
 
   const auto local_categories =
-      std::make_shared<containers::Encoding>(pool, categories_);
+      fct::Ref<containers::Encoding>::make(pool, categories_.ptr());
 
   const auto local_join_keys_encoding =
-      std::make_shared<containers::Encoding>(pool, join_keys_encoding_);
+      fct::Ref<containers::Encoding>::make(pool, join_keys_encoding_.ptr());
 
   const auto [population_df, peripheral_dfs, _] =
       ViewParser(local_categories, local_join_keys_encoding, data_frames_,
                  options_)
           .parse_all(_cmd);
 
-  const auto params =
-      pipelines::CheckParams{.categories_ = local_categories,
-                             .cmd_ = _cmd,
-                             .logger_ = logger_,
-                             .peripheral_dfs_ = peripheral_dfs,
-                             .population_df_ = population_df,
-                             .preprocessor_tracker_ = preprocessor_tracker_,
-                             .warning_tracker_ = warning_tracker_,
-                             .socket_ = _socket};
+  const auto params = pipelines::CheckParams{
+      .categories_ = local_categories.ptr(),  // TODO
+      .cmd_ = _cmd,
+      .logger_ = logger_.ptr(),
+      .peripheral_dfs_ = peripheral_dfs,
+      .population_df_ = population_df,
+      .preprocessor_tracker_ = preprocessor_tracker_.ptr(),
+      .warning_tracker_ = warning_tracker_.ptr(),
+      .socket_ = _socket};
 
   pipelines::Check::check(pipeline, params);
 
@@ -362,10 +362,10 @@ void PipelineManager::fit(const std::string& _name,
   const auto pool = options_.make_pool();
 
   const auto local_categories =
-      std::make_shared<containers::Encoding>(pool, categories_);
+      fct::Ref<containers::Encoding>::make(pool, categories_.ptr());
 
   const auto local_join_keys_encoding =
-      std::make_shared<containers::Encoding>(pool, join_keys_encoding_);
+      fct::Ref<containers::Encoding>::make(pool, join_keys_encoding_.ptr());
 
   const auto [population_df, peripheral_dfs, validation_df] =
       ViewParser(local_categories, local_join_keys_encoding, data_frames_,
@@ -373,16 +373,16 @@ void PipelineManager::fit(const std::string& _name,
           .parse_all(_cmd);
 
   const auto params =
-      pipelines::FitParams{.categories_ = local_categories,
+      pipelines::FitParams{.categories_ = local_categories.ptr(),
                            .cmd_ = _cmd,
                            .data_frames_ = data_frames(),
                            .data_frame_tracker_ = data_frame_tracker(),
-                           .fe_tracker_ = fe_tracker_,
-                           .logger_ = logger_,
+                           .fe_tracker_ = fe_tracker_.ptr(),
+                           .logger_ = logger_.ptr(),
                            .peripheral_dfs_ = peripheral_dfs,
                            .population_df_ = population_df,
-                           .pred_tracker_ = pred_tracker_,
-                           .preprocessor_tracker_ = preprocessor_tracker_,
+                           .pred_tracker_ = pred_tracker_.ptr(),
+                           .preprocessor_tracker_ = preprocessor_tracker_.ptr(),
                            .validation_df_ = validation_df,
                            .socket_ = _socket};
 
@@ -509,10 +509,9 @@ void PipelineManager::precision_recall_curve(const std::string& _name,
 
 Poco::JSON::Object PipelineManager::receive_data(
     const Poco::JSON::Object& _cmd,
-    const std::shared_ptr<containers::Encoding>& _categories,
-    const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
-    const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
-        _data_frames,
+    const fct::Ref<containers::Encoding>& _categories,
+    const fct::Ref<containers::Encoding>& _join_keys_encoding,
+    const fct::Ref<std::map<std::string, containers::DataFrame>>& _data_frames,
     Poco::Net::StreamSocket* _socket) {
   // Declare local variables. The idea of the local variables
   // is to prevent the global variables from being affected
@@ -521,7 +520,7 @@ Poco::JSON::Object PipelineManager::receive_data(
   multithreading::ReadLock read_lock(read_write_lock_);
 
   const auto local_read_write_lock =
-      std::make_shared<multithreading::ReadWriteLock>();
+      fct::Ref<multithreading::ReadWriteLock>::make();
 
   auto local_data_frame_manager = DataFrameManager(
       _categories, database_manager_, _data_frames, _join_keys_encoding,
@@ -665,8 +664,8 @@ void PipelineManager::store_df(
     const pipelines::FittedPipeline& _fitted, const Poco::JSON::Object& _cmd,
     const containers::DataFrame& _population_df,
     const std::vector<containers::DataFrame>& _peripheral_dfs,
-    const std::shared_ptr<containers::Encoding>& _local_categories,
-    const std::shared_ptr<containers::Encoding>& _local_join_keys_encoding,
+    const fct::Ref<containers::Encoding>& _local_categories,
+    const fct::Ref<containers::Encoding>& _local_join_keys_encoding,
     containers::DataFrame* _df,
     multithreading::WeakWriteLock* _weak_write_lock) {
   _weak_write_lock->upgrade();
@@ -675,9 +674,9 @@ void PipelineManager::store_df(
 
   join_keys_encoding_->append(*_local_join_keys_encoding);
 
-  _df->set_categories(categories_);
+  _df->set_categories(categories_.ptr());  // TODO
 
-  _df->set_join_keys_encoding(join_keys_encoding_);
+  _df->set_join_keys_encoding(join_keys_encoding_.ptr());  // TODO
 
   const auto predict = JSON::get_value<bool>(_cmd, "predict_");
 
@@ -698,8 +697,8 @@ void PipelineManager::to_db(
     const containers::DataFrame& _population_table,
     const containers::NumericalFeatures& _numerical_features,
     const containers::CategoricalFeatures& _categorical_features,
-    const std::shared_ptr<containers::Encoding>& _categories,
-    const std::shared_ptr<containers::Encoding>& _join_keys_encoding) {
+    const fct::Ref<containers::Encoding>& _categories,
+    const fct::Ref<containers::Encoding>& _join_keys_encoding) {
   const auto df =
       to_df(_fitted, _cmd, _population_table, _numerical_features,
             _categorical_features, _categories, _join_keys_encoding);
@@ -708,8 +707,9 @@ void PipelineManager::to_db(
 
   // We are using the bell character (\a) as the quotechar. It is least likely
   // to appear in any field.
-  auto reader = containers::DataFrameReader(df, _categories,
-                                            _join_keys_encoding, '\a', '|');
+  // TODO
+  auto reader = containers::DataFrameReader(
+      df, _categories.ptr(), _join_keys_encoding.ptr(), '\a', '|');
 
   const auto conn = connector("default");
 
@@ -735,14 +735,14 @@ containers::DataFrame PipelineManager::to_df(
     const containers::DataFrame& _population_table,
     const containers::NumericalFeatures& _numerical_features,
     const containers::CategoricalFeatures& _categorical_features,
-    const std::shared_ptr<containers::Encoding>& _categories,
-    const std::shared_ptr<containers::Encoding>& _join_keys_encoding) {
+    const fct::Ref<containers::Encoding>& _categories,
+    const fct::Ref<containers::Encoding>& _join_keys_encoding) {
   const auto df_name = JSON::get_value<std::string>(_cmd, "df_name_");
 
   const auto pool = options_.make_pool();
 
-  auto df =
-      containers::DataFrame(df_name, _categories, _join_keys_encoding, pool);
+  auto df = containers::DataFrame(df_name, _categories.ptr(),
+                                  _join_keys_encoding.ptr(), pool);  // TODO
 
   if (!_cmd.has("predict_") || !JSON::get_value<bool>(_cmd, "predict_")) {
     add_features_to_df(_fitted, _numerical_features, _categorical_features,
@@ -820,13 +820,13 @@ void PipelineManager::transform(const std::string& _name,
   const auto pool = options_.make_pool();
 
   const auto local_categories =
-      std::make_shared<containers::Encoding>(pool, categories_);
+      fct::Ref<containers::Encoding>::make(pool, categories_.ptr());
 
   const auto local_join_keys_encoding =
-      std::make_shared<containers::Encoding>(pool, join_keys_encoding_);
+      fct::Ref<containers::Encoding>::make(pool, join_keys_encoding_.ptr());
 
   auto local_data_frames =
-      std::make_shared<std::map<std::string, containers::DataFrame>>(
+      fct::Ref<std::map<std::string, containers::DataFrame>>::make(
           data_frames());
 
   auto cmd = communication::Receiver::recv_cmd(logger_, _socket);
@@ -842,11 +842,11 @@ void PipelineManager::transform(const std::string& _name,
   // IMPORTANT: Use categories_, not local_categories, otherwise
   // .vector() might not work.
   const auto params =
-      pipelines::TransformParams{.categories_ = categories_,
+      pipelines::TransformParams{.categories_ = categories_.ptr(),  // TODO
                                  .cmd_ = cmd,
                                  .data_frames_ = *local_data_frames,
                                  .data_frame_tracker_ = data_frame_tracker(),
-                                 .logger_ = logger_,
+                                 .logger_ = logger_.ptr(),  // TODO
                                  .original_peripheral_dfs_ = peripheral_dfs,
                                  .original_population_df_ = population_df,
                                  .socket_ = _socket};

@@ -390,8 +390,9 @@ void ProjectManager::load_data_frame(const std::string& _name,
                                      Poco::Net::StreamSocket* _socket) {
   multithreading::WeakWriteLock weak_write_lock(read_write_lock_);
 
-  auto df = FileHandler::load(data_frames(), categories_, join_keys_encoding_,
-                              options_, _name);
+  // TODO
+  auto df = FileHandler::load(data_frames(), categories_.ptr(),
+                              join_keys_encoding_.ptr(), options_, _name);
 
   license_checker().check_mem_size(data_frames(), df.nbytes());
 
@@ -431,8 +432,9 @@ void ProjectManager::load_pipeline(const std::string& _name,
                                    Poco::Net::StreamSocket* _socket) {
   const auto path = project_directory() + "pipelines/" + _name + "/";
 
-  auto pipeline = pipelines::Load::load(path, fe_tracker_, pred_tracker_,
-                                        preprocessor_tracker_);
+  auto pipeline =
+      pipelines::Load::load(path, fe_tracker_.ptr(), pred_tracker_.ptr(),
+                            preprocessor_tracker_.ptr());
 
   set_pipeline(_name, pipeline);
 
@@ -505,8 +507,8 @@ void ProjectManager::save_data_frame(const std::string& _name,
 
   df.save(options_.temp_dir(), project_directory() + "data/", _name);
 
-  FileHandler::save_encodings(project_directory(), categories_,
-                              join_keys_encoding_);
+  FileHandler::save_encodings(project_directory(), categories_.ptr(),
+                              join_keys_encoding_.ptr());
 
   communication::Sender::send_string("Success!", _socket);
 }
@@ -551,7 +553,7 @@ void ProjectManager::save_pipeline(const std::string& _name,
 
   pipelines::Save::save(params);
 
-  FileHandler::save_encodings(project_directory(), categories_, nullptr);
+  FileHandler::save_encodings(project_directory(), categories_.ptr(), nullptr);
 
   engine::communication::Sender::send_string("Success!", _socket);
 }

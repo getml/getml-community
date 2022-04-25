@@ -49,10 +49,10 @@ containers::ColumnView<std::string> CatOpParser::boolean_as_string(
 
 // ----------------------------------------------------------------------------
 
-void CatOpParser::check(
-    const containers::Column<strings::String>& _col, const std::string& _name,
-    const std::shared_ptr<const communication::Logger>& _logger,
-    Poco::Net::StreamSocket* _socket) const {
+void CatOpParser::check(const containers::Column<strings::String>& _col,
+                        const std::string& _name,
+                        const fct::Ref<const communication::Logger>& _logger,
+                        Poco::Net::StreamSocket* _socket) const {
   communication::Warner warner;
 
   if (_col.size() == 0) {
@@ -72,10 +72,8 @@ void CatOpParser::check(
                "% of all entries of column '" + _name + "' are NULL values.");
   }
 
-  if (_logger) {
-    for (const auto& warning : warner.warnings()) {
-      _logger->log("WARNING: " + warning);
-    }
+  for (const auto& warning : warner.warnings()) {
+    _logger->log("WARNING: " + warning);
   }
 
   warner.send(_socket);
@@ -270,9 +268,7 @@ containers::ColumnView<std::string> CatOpParser::unary_operation(
 
 containers::ColumnView<std::string> CatOpParser::to_view(
     const containers::Column<Int>& _col,
-    const std::shared_ptr<const containers::Encoding>& _encoding) const {
-  assert_true(_encoding);
-
+    const fct::Ref<const containers::Encoding>& _encoding) const {
   const auto to_str = [_encoding,
                        _col](size_t _i) -> std::optional<std::string> {
     if (_i >= _col.nrows()) {

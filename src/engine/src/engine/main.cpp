@@ -9,7 +9,7 @@
 
 #include "engine/engine.hpp"
 
-const auto shutdown_flag = std::make_shared<std::atomic<bool>>(false);
+const auto shutdown_flag = fct::Ref<std::atomic<bool>>::make(false);
 
 void handle_signal(int signum) {
 #ifdef GETML_PROFILING
@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
   // located in $HOME/.getml/getml-.../bin
   //
   // To analyze the profile, run the following:
-  // google-pprof --svg getml-... getml_profile.log getml_profile.svg
+  // google-pprof --pdf getml-... getml_profile.log getml_profile.pdf
   ProfilerStart("getml_profile.log");
 #endif
 
@@ -45,14 +45,14 @@ int main(int argc, char* argv[]) {
   engine::handlers::FileHandler::delete_temp_dir(options.temp_dir());
 
   const auto monitor =
-      std::make_shared<const engine::communication::Monitor>(options);
+      fct::Ref<const engine::communication::Monitor>::make(options);
 
-  const auto logger =
-      std::make_shared<const engine::communication::Logger>(monitor);
+  const auto logger = fct::Ref<const engine::communication::Logger>::make(
+      monitor.ptr());  // TODO
 
   const auto license_checker =
-      std::make_shared<engine::licensing::LicenseChecker>(logger, monitor,
-                                                          options);
+      fct::Ref<engine::licensing::LicenseChecker>::make(logger, monitor,
+                                                        options);
 
   license_checker->receive_token("main");
 
@@ -63,64 +63,63 @@ int main(int argc, char* argv[]) {
 
   const auto pool = options.make_pool();
 
-  const auto categories = std::make_shared<engine::containers::Encoding>(pool);
+  const auto categories = fct::Ref<engine::containers::Encoding>::make(pool);
 
   const auto join_keys_encoding =
-      std::make_shared<engine::containers::Encoding>(pool);
+      fct::Ref<engine::containers::Encoding>::make(pool);
 
   const auto data_frames =
-      std::make_shared<std::map<std::string, engine::containers::DataFrame>>();
+      fct::Ref<std::map<std::string, engine::containers::DataFrame>>::make();
 
   const auto hyperopts =
-      std::make_shared<std::map<std::string, engine::hyperparam::Hyperopt>>();
+      fct::Ref<std::map<std::string, engine::hyperparam::Hyperopt>>::make();
 
   const auto pipelines =
-      std::make_shared<engine::handlers::PipelineManager::PipelineMapType>();
+      fct::Ref<engine::handlers::PipelineManager::PipelineMapType>::make();
 
   const auto data_frame_tracker =
-      std::make_shared<engine::dependency::DataFrameTracker>(data_frames);
+      fct::Ref<engine::dependency::DataFrameTracker>::make(
+          data_frames.ptr());  // TODO
 
   const auto preprocessor_tracker =
-      std::make_shared<engine::dependency::PreprocessorTracker>();
+      fct::Ref<engine::dependency::PreprocessorTracker>::make();
 
-  const auto fe_tracker = std::make_shared<engine::dependency::FETracker>();
+  const auto fe_tracker = fct::Ref<engine::dependency::FETracker>::make();
 
-  const auto pred_tracker = std::make_shared<engine::dependency::PredTracker>();
+  const auto pred_tracker = fct::Ref<engine::dependency::PredTracker>::make();
 
   const auto warning_tracker =
-      std::make_shared<engine::dependency::WarningTracker>();
+      fct::Ref<engine::dependency::WarningTracker>::make();
 
-  const auto project_lock = std::make_shared<multithreading::ReadWriteLock>();
+  const auto project_lock = fct::Ref<multithreading::ReadWriteLock>::make();
 
-  const auto read_write_lock =
-      std::make_shared<multithreading::ReadWriteLock>();
+  const auto read_write_lock = fct::Ref<multithreading::ReadWriteLock>::make();
 
   const auto database_manager =
-      std::make_shared<engine::handlers::DatabaseManager>(logger, monitor,
-                                                          options);
+      fct::Ref<engine::handlers::DatabaseManager>::make(logger, monitor,
+                                                        options);
 
   const auto data_frame_manager =
-      std::make_shared<engine::handlers::DataFrameManager>(
+      fct::Ref<engine::handlers::DataFrameManager>::make(
           categories, database_manager, data_frames, join_keys_encoding,
           license_checker, logger, monitor, options, read_write_lock);
 
   const auto hyperopt_manager =
-      std::make_shared<engine::handlers::HyperoptManager>(
+      fct::Ref<engine::handlers::HyperoptManager>::make(
           hyperopts, monitor, project_lock, read_write_lock);
 
   const auto pipeline_manager =
-      std::make_shared<engine::handlers::PipelineManager>(
+      fct::Ref<engine::handlers::PipelineManager>::make(
           categories, database_manager, data_frames, data_frame_tracker,
           fe_tracker, join_keys_encoding, license_checker, logger, monitor,
           options, pipelines, pred_tracker, preprocessor_tracker,
           read_write_lock, warning_tracker);
 
-  const auto project_manager =
-      std::make_shared<engine::handlers::ProjectManager>(
-          categories, data_frame_manager, data_frames, data_frame_tracker,
-          fe_tracker, join_keys_encoding, hyperopts, license_checker, logger,
-          monitor, options, pipelines, pred_tracker, preprocessor_tracker,
-          options.engine().project_, project_lock, read_write_lock);
+  const auto project_manager = fct::Ref<engine::handlers::ProjectManager>::make(
+      categories, data_frame_manager, data_frames, data_frame_tracker,
+      fe_tracker, join_keys_encoding, hyperopts, license_checker, logger,
+      monitor, options, pipelines, pred_tracker, preprocessor_tracker,
+      options.engine().project_, project_lock, read_write_lock);
 
   Poco::Net::ServerSocket server_socket(
       static_cast<Poco::UInt16>(options.engine().port()), 64);

@@ -7,25 +7,26 @@
 
 // ----------------------------------------------------------------------------
 
+#include "fct/Ref.hpp"
+
+// ----------------------------------------------------------------------------
+
 #include "multithreading/ReadWriteLock.hpp"
 
 // ----------------------------------------------------------------------------
 
 namespace multithreading {
-// ----------------------------------------------------------------------------
 
 class WriteLock {
-  // -------------------------------
-
  public:
   /// WriteLock without a timeout.
-  explicit WriteLock(const std::shared_ptr<ReadWriteLock>& _lock)
+  explicit WriteLock(const fct::Ref<ReadWriteLock>& _lock)
       : lock_(_lock), released_(false) {
     lock_->write_lock();
   }
 
   /// WriteLock with timeout.
-  WriteLock(const std::shared_ptr<ReadWriteLock>& _lock,
+  WriteLock(const fct::Ref<ReadWriteLock>& _lock,
             const std::chrono::milliseconds _duration)
       : lock_(_lock), released_(false) {
     lock_->write_lock(_duration);
@@ -53,10 +54,9 @@ class WriteLock {
     }
   }
 
-  // -------------------------------
  private:
   /// Lock to the WriteLock.
-  const std::shared_ptr<ReadWriteLock> lock_;
+  const fct::Ref<ReadWriteLock> lock_;
 
   /// Whether the Acquirer has been released.
   bool released_;

@@ -29,22 +29,20 @@ extern "C" {
 #include "database/Iterator.hpp"
 
 // ----------------------------------------------------------------------------
+
 namespace database {
-// ----------------------------------------------------------------------------
 
 class Sqlite3Iterator : public Iterator {
-  // -------------------------------
-
  public:
   Sqlite3Iterator(
       const std::shared_ptr<sqlite3>& _db, const std::string& _sql,
-      const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock,
+      const fct::Ref<multithreading::ReadWriteLock>& _read_write_lock,
       const std::vector<std::string>& _time_formats);
 
   Sqlite3Iterator(
       const std::shared_ptr<sqlite3>& _db,
       const std::vector<std::string>& _colnames,
-      const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock,
+      const fct::Ref<multithreading::ReadWriteLock>& _read_write_lock,
       const std::vector<std::string>& _time_formats, const std::string& _tname,
       const std::string& _where);
 

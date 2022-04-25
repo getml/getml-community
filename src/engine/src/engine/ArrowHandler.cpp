@@ -26,10 +26,6 @@ std::vector<std::shared_ptr<arrow::ChunkedArray>> ArrowHandler::extract_arrays(
     const containers::DataFrame& _df) const {
   using Array = std::shared_ptr<arrow::ChunkedArray>;
 
-  assert_true(categories_);
-
-  assert_true(join_keys_encoding_);
-
   const auto categoricals_to_string_array = [this](const auto& _col) -> Array {
     const auto to_str = [this](const Int _i) -> std::string {
       return (*categories_)[_i].str();
@@ -256,20 +252,23 @@ containers::DataFrame ArrowHandler::table_to_df(
 
   const auto pool = options_.make_pool();
 
-  auto df =
-      containers::DataFrame(_name, categories_, join_keys_encoding_, pool);
+  // TODO
+  auto df = containers::DataFrame(_name, categories_.ptr(),
+                                  join_keys_encoding_.ptr(), pool);
 
   for (const auto& colname : _schema.categoricals_) {
     const auto arr = _table->GetColumnByName(colname);
-    const auto col = to_int_column(
-        to_column<strings::String>(pool, colname, arr), categories_);
+    const auto col =
+        to_int_column(to_column<strings::String>(pool, colname, arr),
+                      categories_.ptr());  // TODO
     df.add_int_column(col, containers::DataFrame::ROLE_CATEGORICAL);
   }
 
   for (const auto& colname : _schema.join_keys_) {
     const auto arr = _table->GetColumnByName(colname);
-    const auto col = to_int_column(
-        to_column<strings::String>(pool, colname, arr), join_keys_encoding_);
+    const auto col =
+        to_int_column(to_column<strings::String>(pool, colname, arr),
+                      join_keys_encoding_.ptr());  // TODO
     df.add_int_column(col, containers::DataFrame::ROLE_JOIN_KEY);
   }
 

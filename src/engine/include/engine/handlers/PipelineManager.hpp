@@ -38,29 +38,23 @@ class PipelineManager {
  public:
   typedef std::map<std::string, pipelines::Pipeline> PipelineMapType;
 
-  // ------------------------------------------------------------------------
-
  public:
   PipelineManager(
-      const std::shared_ptr<containers::Encoding>& _categories,
-      const std::shared_ptr<DatabaseManager>& _database_manager,
-      const std::shared_ptr<std::map<std::string, containers::DataFrame>>
-          _data_frames,
-      const std::shared_ptr<engine::dependency::DataFrameTracker>&
-          _data_frame_tracker,
-      const std::shared_ptr<dependency::FETracker>& _fe_tracker,
-      const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
-      const std::shared_ptr<engine::licensing::LicenseChecker>&
-          _license_checker,
-      const std::shared_ptr<const communication::Logger>& _logger,
-      const std::shared_ptr<const communication::Monitor>& _monitor,
+      const fct::Ref<containers::Encoding>& _categories,
+      const fct::Ref<DatabaseManager>& _database_manager,
+      const fct::Ref<std::map<std::string, containers::DataFrame>> _data_frames,
+      const fct::Ref<engine::dependency::DataFrameTracker>& _data_frame_tracker,
+      const fct::Ref<dependency::FETracker>& _fe_tracker,
+      const fct::Ref<containers::Encoding>& _join_keys_encoding,
+      const fct::Ref<engine::licensing::LicenseChecker>& _license_checker,
+      const fct::Ref<const communication::Logger>& _logger,
+      const fct::Ref<const communication::Monitor>& _monitor,
       const config::Options& _options,
-      const std::shared_ptr<PipelineMapType>& _pipelines,
-      const std::shared_ptr<dependency::PredTracker>& _pred_tracker,
-      const std::shared_ptr<dependency::PreprocessorTracker>&
-          _preprocessor_tracker,
-      const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock,
-      const std::shared_ptr<dependency::WarningTracker>& _warning_tracker)
+      const fct::Ref<PipelineMapType>& _pipelines,
+      const fct::Ref<dependency::PredTracker>& _pred_tracker,
+      const fct::Ref<dependency::PreprocessorTracker>& _preprocessor_tracker,
+      const fct::Ref<multithreading::ReadWriteLock>& _read_write_lock,
+      const fct::Ref<dependency::WarningTracker>& _warning_tracker)
       : categories_(_categories),
         database_manager_(_database_manager),
         data_frames_(_data_frames),
@@ -196,9 +190,9 @@ class PipelineManager {
   /// will be deleted.
   Poco::JSON::Object receive_data(
       const Poco::JSON::Object& _cmd,
-      const std::shared_ptr<containers::Encoding>& _categories,
-      const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
-      const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
+      const fct::Ref<containers::Encoding>& _categories,
+      const fct::Ref<containers::Encoding>& _join_keys_encoding,
+      const fct::Ref<std::map<std::string, containers::DataFrame>>&
           _data_frames,
       Poco::Net::StreamSocket* _socket);
 
@@ -208,11 +202,10 @@ class PipelineManager {
 
   /// Under some circumstances, we might want to send data to the client, such
   /// as targets from the population or the results of a transform call.
-  void send_data(
-      const std::shared_ptr<containers::Encoding>& _categories,
-      const std::shared_ptr<std::map<std::string, containers::DataFrame>>&
-          _local_data_frames,
-      Poco::Net::StreamSocket* _socket);
+  void send_data(const fct::Ref<containers::Encoding>& _categories,
+                 const fct::Ref<std::map<std::string, containers::DataFrame>>&
+                     _local_data_frames,
+                 Poco::Net::StreamSocket* _socket);
 
   /// Scores a pipeline
   void score(const Poco::JSON::Object& _cmd, const std::string& _name,
@@ -222,14 +215,14 @@ class PipelineManager {
              Poco::Net::StreamSocket* _socket);
 
   /// Stores the newly created data frame.
-  void store_df(
-      const pipelines::FittedPipeline& _fitted, const Poco::JSON::Object& _cmd,
-      const containers::DataFrame& _population_df,
-      const std::vector<containers::DataFrame>& _peripheral_dfs,
-      const std::shared_ptr<containers::Encoding>& _local_categories,
-      const std::shared_ptr<containers::Encoding>& _local_join_keys_encoding,
-      containers::DataFrame* _df,
-      multithreading::WeakWriteLock* _weak_write_lock);
+  void store_df(const pipelines::FittedPipeline& _fitted,
+                const Poco::JSON::Object& _cmd,
+                const containers::DataFrame& _population_df,
+                const std::vector<containers::DataFrame>& _peripheral_dfs,
+                const fct::Ref<containers::Encoding>& _local_categories,
+                const fct::Ref<containers::Encoding>& _local_join_keys_encoding,
+                containers::DataFrame* _df,
+                multithreading::WeakWriteLock* _weak_write_lock);
 
   /// Writes a set of features to the data base.
   void to_db(const pipelines::FittedPipeline& _fitted,
@@ -237,8 +230,8 @@ class PipelineManager {
              const containers::DataFrame& _population_table,
              const containers::NumericalFeatures& _numerical_features,
              const containers::CategoricalFeatures& _categorical_features,
-             const std::shared_ptr<containers::Encoding>& _categories,
-             const std::shared_ptr<containers::Encoding>& _join_keys_encoding);
+             const fct::Ref<containers::Encoding>& _categories,
+             const fct::Ref<containers::Encoding>& _join_keys_encoding);
 
   /// Writes a set of features to a DataFrame.
   containers::DataFrame to_df(
@@ -246,33 +239,27 @@ class PipelineManager {
       const containers::DataFrame& _population_table,
       const containers::NumericalFeatures& _numerical_features,
       const containers::CategoricalFeatures& _categorical_features,
-      const std::shared_ptr<containers::Encoding>& _categories,
-      const std::shared_ptr<containers::Encoding>& _join_keys_encoding);
+      const fct::Ref<containers::Encoding>& _categories,
+      const fct::Ref<containers::Encoding>& _join_keys_encoding);
 
   // ------------------------------------------------------------------------
 
  private:
   /// Trivial accessor
-  const containers::Encoding& categories() const {
-    assert_true(categories_);
-    return *categories_;
-  }
+  const containers::Encoding& categories() const { return *categories_; }
 
   /// Trivial accessor
   std::shared_ptr<database::Connector> connector(const std::string& _name) {
-    assert_true(database_manager_);
     return database_manager_->connector(_name);
   }
 
   /// Trivial accessor
   std::map<std::string, containers::DataFrame>& data_frames() {
-    assert_true(data_frames_);
     return *data_frames_;
   }
 
   /// Trivial accessor
   dependency::DataFrameTracker& data_frame_tracker() {
-    assert_true(data_frame_tracker_);
     return *data_frame_tracker_;
   }
 
@@ -285,31 +272,20 @@ class PipelineManager {
 
   /// Trivial accessor
   const licensing::LicenseChecker& license_checker() const {
-    assert_true(license_checker_);
     return *license_checker_;
   }
 
   /// Trivial (private) accessor
-  const communication::Logger& logger() {
-    assert_true(logger_);
-    return *logger_;
-  }
+  const communication::Logger& logger() { return *logger_; }
 
   /// Trivial (private) accessor
-  const communication::Monitor& monitor() {
-    assert_true(monitor_);
-    return *monitor_;
-  }
+  const communication::Monitor& monitor() { return *monitor_; }
 
   /// Trivial (private) accessor
-  PipelineMapType& pipelines() {
-    assert_true(pipelines_);
-    return *pipelines_;
-  }
+  PipelineMapType& pipelines() { return *pipelines_; }
 
   /// Trivial (private) accessor
   const PipelineMapType& pipelines() const {
-    assert_true(pipelines_);
     multithreading::ReadLock read_lock(read_write_lock_);
     return *pipelines_;
   }
@@ -334,51 +310,50 @@ class PipelineManager {
 
  private:
   /// Maps integers to category names
-  const std::shared_ptr<containers::Encoding> categories_;
+  const fct::Ref<containers::Encoding> categories_;
 
   /// Connector to the underlying database.
-  const std::shared_ptr<DatabaseManager> database_manager_;
+  const fct::Ref<DatabaseManager> database_manager_;
 
   /// The data frames currently held in memory
-  const std::shared_ptr<std::map<std::string, containers::DataFrame>>
-      data_frames_;
+  const fct::Ref<std::map<std::string, containers::DataFrame>> data_frames_;
 
   /// Keeps track of all data frames, so we don't have to
   /// reconstruct the features all of the time.
-  const std::shared_ptr<dependency::DataFrameTracker> data_frame_tracker_;
+  const fct::Ref<dependency::DataFrameTracker> data_frame_tracker_;
 
   /// Keeps track of all feature learners.
-  const std::shared_ptr<dependency::FETracker> fe_tracker_;
+  const fct::Ref<dependency::FETracker> fe_tracker_;
 
   /// Maps integers to join key names
-  const std::shared_ptr<containers::Encoding> join_keys_encoding_;
+  const fct::Ref<containers::Encoding> join_keys_encoding_;
 
   /// For checking the number of cores and memory usage
-  const std::shared_ptr<licensing::LicenseChecker> license_checker_;
+  const fct::Ref<licensing::LicenseChecker> license_checker_;
 
   /// For logging
-  const std::shared_ptr<const communication::Logger> logger_;
+  const fct::Ref<const communication::Logger> logger_;
 
   /// For communication with the monitor
-  const std::shared_ptr<const communication::Monitor> monitor_;
+  const fct::Ref<const communication::Monitor> monitor_;
 
   /// Settings for the engine and the monitor
   const config::Options options_;
 
   /// The pipelines currently held in memory
-  const std::shared_ptr<PipelineMapType> pipelines_;
+  const fct::Ref<PipelineMapType> pipelines_;
 
   /// Keeps track of all predictors.
-  const std::shared_ptr<dependency::PredTracker> pred_tracker_;
+  const fct::Ref<dependency::PredTracker> pred_tracker_;
 
   /// Keeps track of all preprocessors.
-  const std::shared_ptr<dependency::PreprocessorTracker> preprocessor_tracker_;
+  const fct::Ref<dependency::PreprocessorTracker> preprocessor_tracker_;
 
   /// For coordinating the read and write process of the data
-  const std::shared_ptr<multithreading::ReadWriteLock> read_write_lock_;
+  const fct::Ref<multithreading::ReadWriteLock> read_write_lock_;
 
   /// Keeps track of all warnings.
-  const std::shared_ptr<dependency::WarningTracker> warning_tracker_;
+  const fct::Ref<dependency::WarningTracker> warning_tracker_;
 };
 
 // ------------------------------------------------------------------------

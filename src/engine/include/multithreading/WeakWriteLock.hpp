@@ -7,32 +7,31 @@
 
 // ----------------------------------------------------------------------------
 
+#include "fct/Ref.hpp"
+
+// ----------------------------------------------------------------------------
+
 #include "multithreading/ReadWriteLock.hpp"
 
 // ----------------------------------------------------------------------------
 
 namespace multithreading {
-// ----------------------------------------------------------------------------
 
 class WeakWriteLock {
-  // -------------------------------
-
  public:
   /// WeakWriteLock without a timeout.
-  explicit WeakWriteLock(const std::shared_ptr<ReadWriteLock>& _lock)
+  explicit WeakWriteLock(const fct::Ref<ReadWriteLock>& _lock)
       : lock_(_lock), released_(true), weak_released_(false) {
     lock_->weak_write_lock();
   }
   /// WeakWriteLock with timeout.
-  WeakWriteLock(const std::shared_ptr<ReadWriteLock>& _lock,
+  WeakWriteLock(const fct::Ref<ReadWriteLock>& _lock,
                 const std::chrono::milliseconds _duration)
       : lock_(_lock), released_(true), weak_released_(false) {
     lock_->weak_write_lock(_duration);
   }
 
   ~WeakWriteLock() { unlock(); }
-
-  // -------------------------------
 
   /// Because of the boolean variable, this operator is forbidden.
   WeakWriteLock& operator=(const WeakWriteLock& _other) = delete;
@@ -67,10 +66,9 @@ class WeakWriteLock {
     released_ = false;
   }
 
-  // -------------------------------
  private:
   /// Lock to the WeakWriteLock.
-  const std::shared_ptr<ReadWriteLock> lock_;
+  const fct::Ref<ReadWriteLock> lock_;
 
   /// Whether the acquirer has been released.
   bool released_;

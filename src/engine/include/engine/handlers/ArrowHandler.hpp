@@ -34,22 +34,18 @@
 
 namespace engine {
 namespace handlers {
-// -------------------------------------------------------------------------
 
 class ArrowHandler {
   using FloatFunction = std::function<Float(const std::int64_t)>;
   using StringFunction = std::function<strings::String(const std::int64_t)>;
 
  public:
-  ArrowHandler(const std::shared_ptr<containers::Encoding>& _categories,
-               const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
+  ArrowHandler(const fct::Ref<containers::Encoding>& _categories,
+               const fct::Ref<containers::Encoding>& _join_keys_encoding,
                const config::Options& _options)
       : categories_(_categories),
         join_keys_encoding_(_join_keys_encoding),
-        options_(_options) {
-    assert_true(categories_);
-    assert_true(join_keys_encoding_);
-  }
+        options_(_options) {}
 
   ~ArrowHandler() = default;
 
@@ -185,10 +181,10 @@ class ArrowHandler {
 
  private:
   /// Encodes the categories used.
-  const std::shared_ptr<containers::Encoding> categories_;
+  const fct::Ref<containers::Encoding> categories_;
 
   /// Encodes the join keys used.
-  const std::shared_ptr<containers::Encoding> join_keys_encoding_;
+  const fct::Ref<containers::Encoding> join_keys_encoding_;
 
   /// Settings for the engine and the monitor
   const config::Options options_;

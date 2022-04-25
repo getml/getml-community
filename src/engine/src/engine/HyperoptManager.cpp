@@ -7,14 +7,10 @@ namespace handlers {
 void HyperoptManager::launch(const std::string& _name,
                              const Poco::JSON::Object& _cmd,
                              Poco::Net::StreamSocket* _socket) {
-  // -------------------------------------------------------
   // The project guard will prevent any attempts to
   // change or delete the project while the hyperparameter
   // optimization is running.
-
   multithreading::ReadLock project_guard(project_lock_);
-
-  // -------------------------------------------------------
 
   const auto population_training_df =
       JSON::get_object(_cmd, "population_training_df_");
@@ -23,8 +19,6 @@ void HyperoptManager::launch(const std::string& _name,
       JSON::get_object(_cmd, "population_validation_df_");
 
   const auto peripheral_dfs = JSON::get_array(_cmd, "peripheral_dfs_");
-
-  // -------------------------------------------------------
 
   const auto hyperopt = get_hyperopt(_name);
 
@@ -36,8 +30,6 @@ void HyperoptManager::launch(const std::string& _name,
 
   cmd.set("peripheral_dfs_", peripheral_dfs);
 
-  // -------------------------------------------------------
-
   const auto monitor_socket =
       monitor().connect(communication::Monitor::TIMEOUT_OFF);
 
@@ -45,11 +37,7 @@ void HyperoptManager::launch(const std::string& _name,
 
   communication::Sender::send_string(cmd_str, monitor_socket.get());
 
-  // -------------------------------------------------------
-
-  handle_logging(monitor_socket, _socket);
-
-  // -------------------------------------------------------
+  handle_logging(fct::Ref(monitor_socket), _socket);  // TODO
 
   const auto evaluations_str =
       communication::Receiver::recv_string(monitor_socket.get());
@@ -83,10 +71,8 @@ void HyperoptManager::launch(const std::string& _name,
 // ------------------------------------------------------------------------
 
 void HyperoptManager::handle_logging(
-    const std::shared_ptr<Poco::Net::StreamSocket>& _monitor_socket,
+    const fct::Ref<Poco::Net::StreamSocket>& _monitor_socket,
     Poco::Net::StreamSocket* _socket) const {
-  assert_true(_monitor_socket);
-
   while (true) {
     const auto msg =
         communication::Receiver::recv_string(_monitor_socket.get());
@@ -128,14 +114,10 @@ void HyperoptManager::post_hyperopt(const Poco::JSON::Object& _obj) {
 void HyperoptManager::tune(const std::string& _name,
                            const Poco::JSON::Object& _cmd,
                            Poco::Net::StreamSocket* _socket) {
-  // -------------------------------------------------------
   // The project guard will prevent any attempts to
   // change or delete the project while the hyperparameter
   // optimization is running.
-
   multithreading::ReadLock project_guard(project_lock_);
-
-  // -------------------------------------------------------
 
   const auto monitor_socket =
       monitor().connect(communication::Monitor::TIMEOUT_OFF);
@@ -144,22 +126,14 @@ void HyperoptManager::tune(const std::string& _name,
 
   communication::Sender::send_string(cmd_str, monitor_socket.get());
 
-  // -------------------------------------------------------
-
-  handle_logging(monitor_socket, _socket);
-
-  // -------------------------------------------------------
+  handle_logging(fct::Ref(monitor_socket), _socket);  // TODO
 
   const auto best_pipeline_name =
       communication::Receiver::recv_string(monitor_socket.get());
 
-  // -------------------------------------------------------
-
   communication::Sender::send_string("Success!", _socket);
 
   communication::Sender::send_string(best_pipeline_name, _socket);
-
-  // -------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------

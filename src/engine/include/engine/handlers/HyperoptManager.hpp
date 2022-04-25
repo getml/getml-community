@@ -26,16 +26,14 @@
 
 namespace engine {
 namespace handlers {
-// ------------------------------------------------------------------------
 
 class HyperoptManager {
  public:
   HyperoptManager(
-      const std::shared_ptr<std::map<std::string, hyperparam::Hyperopt>>&
-          _hyperopts,
-      const std::shared_ptr<const communication::Monitor>& _monitor,
-      const std::shared_ptr<multithreading::ReadWriteLock>& _project_lock,
-      const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock)
+      const fct::Ref<std::map<std::string, hyperparam::Hyperopt>>& _hyperopts,
+      const fct::Ref<const communication::Monitor>& _monitor,
+      const fct::Ref<multithreading::ReadWriteLock>& _project_lock,
+      const fct::Ref<multithreading::ReadWriteLock>& _read_write_lock)
       : hyperopts_(_hyperopts),
         monitor_(_monitor),
         project_lock_(_project_lock),
@@ -58,9 +56,8 @@ class HyperoptManager {
 
  private:
   /// Handles the logging for the hyperparameter optimization.
-  void handle_logging(
-      const std::shared_ptr<Poco::Net::StreamSocket>& _monitor_socket,
-      Poco::Net::StreamSocket* _socket) const;
+  void handle_logging(const fct::Ref<Poco::Net::StreamSocket>& _monitor_socket,
+                      Poco::Net::StreamSocket* _socket) const;
 
   /// Sends the hyperopt object to the monitor.
   void post_hyperopt(const Poco::JSON::Object& _obj);
@@ -68,7 +65,6 @@ class HyperoptManager {
  private:
   /// Trivial (private) accessor
   std::map<std::string, hyperparam::Hyperopt>& hyperopts() {
-    assert_true(hyperopts_);
     return *hyperopts_;
   }
 
@@ -79,29 +75,23 @@ class HyperoptManager {
   }
 
   /// Trivial (private) accessor
-  const communication::Monitor& monitor() const {
-    assert_true(monitor_);
-    return *monitor_;
-  }
+  const communication::Monitor& monitor() const { return *monitor_; }
 
   /// Trivial (private) accessor
-  multithreading::ReadWriteLock& project_lock() {
-    assert_true(project_lock_);
-    return *project_lock_;
-  }
+  multithreading::ReadWriteLock& project_lock() { return *project_lock_; }
 
  private:
   /// The Hyperopts currently held in memory
-  const std::shared_ptr<std::map<std::string, hyperparam::Hyperopt>> hyperopts_;
+  const fct::Ref<std::map<std::string, hyperparam::Hyperopt>> hyperopts_;
 
   /// For communication with the monitor
-  const std::shared_ptr<const communication::Monitor> monitor_;
+  const fct::Ref<const communication::Monitor> monitor_;
 
   /// It is sometimes necessary to prevent us from changing the project.
-  const std::shared_ptr<multithreading::ReadWriteLock> project_lock_;
+  const fct::Ref<multithreading::ReadWriteLock> project_lock_;
 
   /// For coordinating the read and write process of the data
-  const std::shared_ptr<multithreading::ReadWriteLock> read_write_lock_;
+  const fct::Ref<multithreading::ReadWriteLock> read_write_lock_;
 };
 
 // ------------------------------------------------------------------------

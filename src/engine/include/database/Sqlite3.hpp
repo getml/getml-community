@@ -19,6 +19,7 @@ extern "C" {
 
 // ----------------------------------------------------------------------------
 
+#include "fct/Ref.hpp"
 #include "io/io.hpp"
 #include "multithreading/multithreading.hpp"
 
@@ -38,7 +39,7 @@ class Sqlite3 : public Connector {
           const std::vector<std::string>& _time_formats)
       : db_(make_db(_name)),
         name_(_name),
-        read_write_lock_(std::make_shared<multithreading::ReadWriteLock>()),
+        read_write_lock_(fct::Ref<multithreading::ReadWriteLock>::make()),
         time_formats_(_time_formats) {}
 
   ~Sqlite3() = default;
@@ -171,7 +172,7 @@ class Sqlite3 : public Connector {
   const std::string name_;
 
   /// For coordination.
-  const std::shared_ptr<multithreading::ReadWriteLock> read_write_lock_;
+  const fct::Ref<multithreading::ReadWriteLock> read_write_lock_;
 
   /// Vector containing the time formats.
   const std::vector<std::string> time_formats_;

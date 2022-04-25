@@ -29,13 +29,14 @@ void DataFrameManager::add_data_frame(const std::string& _name,
   const auto pool = options_.make_pool();
 
   const auto local_categories =
-      std::make_shared<containers::Encoding>(pool, categories_);
+      fct::Ref<containers::Encoding>::make(pool, categories_.ptr());  // TODO
 
-  const auto local_join_keys_encoding =
-      std::make_shared<containers::Encoding>(pool, join_keys_encoding_);
+  const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
+      pool, join_keys_encoding_.ptr());  // TODO
 
-  auto df = containers::DataFrame(_name, local_categories,
-                                  local_join_keys_encoding, pool);
+  // TODO
+  auto df = containers::DataFrame(_name, local_categories.ptr(),
+                                  local_join_keys_encoding.ptr(), pool);
 
   communication::Sender::send_string("Success!", _socket);
 
@@ -47,9 +48,9 @@ void DataFrameManager::add_data_frame(const std::string& _name,
 
   join_keys_encoding_->append(*local_join_keys_encoding);
 
-  df.set_categories(categories_);
+  df.set_categories(categories_.ptr());
 
-  df.set_join_keys_encoding(join_keys_encoding_);
+  df.set_join_keys_encoding(join_keys_encoding_.ptr());
 
   data_frames()[_name] = df;
 
@@ -114,8 +115,9 @@ void DataFrameManager::add_float_column(const std::string& _name,
 
     const auto pool = options_.make_pool();
 
-    auto new_df =
-        containers::DataFrame(df_name, categories_, join_keys_encoding_, pool);
+    // TODO
+    auto new_df = containers::DataFrame(df_name, categories_.ptr(),
+                                        join_keys_encoding_.ptr(), pool);
 
     add_float_column_to_df(role, col, &new_df, &weak_write_lock);
 
@@ -148,8 +150,9 @@ void DataFrameManager::add_float_column(const Poco::JSON::Object& _cmd,
   } else {
     const auto pool = options_.make_pool();
 
-    auto new_df =
-        containers::DataFrame(df_name, categories_, join_keys_encoding_, pool);
+    // TODO
+    auto new_df = containers::DataFrame(df_name, categories_.ptr(),
+                                        join_keys_encoding_.ptr(), pool);
 
     recv_and_add_float_column(_cmd, &new_df, &weak_write_lock, _socket);
 
@@ -187,10 +190,10 @@ void DataFrameManager::add_int_column_to_df(
   const auto pool = options_.make_pool();
 
   const auto local_categories =
-      std::make_shared<containers::Encoding>(pool, categories_);
+      std::make_shared<containers::Encoding>(pool, categories_.ptr());  // TODO
 
   const auto local_join_keys_encoding =
-      std::make_shared<containers::Encoding>(pool, join_keys_encoding_);
+      std::make_shared<containers::Encoding>(pool, join_keys_encoding_.ptr());
 
   auto col = containers::Column<Int>(_df->pool(), _col.nrows());
 
@@ -230,8 +233,8 @@ void DataFrameManager::add_int_column_to_df(
 void DataFrameManager::add_int_column_to_df(
     const std::string& _name, const std::string& _role,
     const std::string& _unit, const containers::Column<strings::String>& _col,
-    const std::shared_ptr<containers::Encoding>& _local_categories,
-    const std::shared_ptr<containers::Encoding>& _local_join_keys_encoding,
+    const fct::Ref<containers::Encoding>& _local_categories,
+    const fct::Ref<containers::Encoding>& _local_join_keys_encoding,
     containers::DataFrame* _df) const {
   auto col = containers::Column<Int>(_df->pool(), _col.nrows());
 
@@ -270,8 +273,9 @@ void DataFrameManager::add_string_column(const Poco::JSON::Object& _cmd,
   } else {
     const auto pool = options_.make_pool();
 
-    auto new_df =
-        containers::DataFrame(df_name, categories_, join_keys_encoding_, pool);
+    // TODO
+    auto new_df = containers::DataFrame(df_name, categories_.ptr(),
+                                        join_keys_encoding_.ptr(), pool);
 
     recv_and_add_string_column(_cmd, &new_df, &weak_write_lock, _socket);
 
@@ -308,8 +312,9 @@ void DataFrameManager::add_string_column(const std::string& _name,
 
   const auto pool = options_.make_pool();
 
-  auto new_df =
-      containers::DataFrame(df_name, categories_, join_keys_encoding_, pool);
+  // TODO
+  auto new_df = containers::DataFrame(df_name, categories_.ptr(),
+                                      join_keys_encoding_.ptr(), pool);
 
   auto [df, exists] = utils::Getter::get_if_exists(df_name, &data_frames());
 
@@ -403,13 +408,14 @@ void DataFrameManager::append_to_data_frame(const std::string& _name,
   const auto pool = options_.make_pool();
 
   const auto local_categories =
-      std::make_shared<containers::Encoding>(pool, categories_);
+      fct::Ref<containers::Encoding>::make(pool, categories_.ptr());  // TODO
 
-  const auto local_join_keys_encoding =
-      std::make_shared<containers::Encoding>(pool, join_keys_encoding_);
+  const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
+      pool, join_keys_encoding_.ptr());  // TODO
 
-  auto df = containers::DataFrame(_name, local_categories,
-                                  local_join_keys_encoding, pool);
+  // TODO
+  auto df = containers::DataFrame(_name, local_categories.ptr(),
+                                  local_join_keys_encoding.ptr(), pool);
 
   receive_data(local_categories, local_join_keys_encoding, &df, _socket);
 
@@ -644,10 +650,10 @@ void DataFrameManager::concat(const std::string& _name,
   const auto pool = options_.make_pool();
 
   const auto local_categories =
-      std::make_shared<containers::Encoding>(pool, categories_);
+      fct::Ref<containers::Encoding>::make(pool, categories_.ptr());  // TODO
 
-  const auto local_join_keys_encoding =
-      std::make_shared<containers::Encoding>(pool, join_keys_encoding_);
+  const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
+      pool, join_keys_encoding_.ptr());  // TODO
 
   auto view_parser = ViewParser(local_categories, local_join_keys_encoding,
                                 data_frames_, options_);
@@ -693,12 +699,13 @@ void DataFrameManager::df_to_csv(
     const std::string& _fname, const size_t _batch_size,
     const std::string& _quotechar, const std::string& _sep,
     const containers::DataFrame& _df,
-    const std::shared_ptr<containers::Encoding>& _categories,
-    const std::shared_ptr<containers::Encoding>& _join_keys_encoding) {
+    const fct::Ref<containers::Encoding>& _categories,
+    const fct::Ref<containers::Encoding>& _join_keys_encoding) {
   // We are using the bell character (\a) as the quotechar. It is least
   // likely to appear in any field.
-  auto reader = containers::DataFrameReader(_df, _categories,
-                                            _join_keys_encoding, '\a', '|');
+  // TODO
+  auto reader = containers::DataFrameReader(
+      _df, _categories.ptr(), _join_keys_encoding.ptr(), '\a', '|');
 
   const auto colnames = reader.colnames();
 
@@ -726,12 +733,13 @@ void DataFrameManager::df_to_csv(
 void DataFrameManager::df_to_db(
     const std::string& _conn_id, const std::string& _table_name,
     const containers::DataFrame& _df,
-    const std::shared_ptr<containers::Encoding>& _categories,
-    const std::shared_ptr<containers::Encoding>& _join_keys_encoding) {
+    const fct::Ref<containers::Encoding>& _categories,
+    const fct::Ref<containers::Encoding>& _join_keys_encoding) {
   // We are using the bell character (\a) as the quotechar. It is least
   // likely to appear in any field.
-  auto reader = containers::DataFrameReader(_df, _categories,
-                                            _join_keys_encoding, '\a', '|');
+  // TODO
+  auto reader = containers::DataFrameReader(
+      _df, _categories.ptr(), _join_keys_encoding.ptr(), '\a', '|');
 
   const auto conn = connector(_conn_id);
 
@@ -756,16 +764,17 @@ void DataFrameManager::df_to_s3(
     const size_t _batch_size, const std::string& _bucket,
     const std::string& _key, const std::string& _region,
     const std::string& _sep, const containers::DataFrame& _df,
-    const std::shared_ptr<containers::Encoding>& _categories,
-    const std::shared_ptr<containers::Encoding>& _join_keys_encoding) {
+    const fct::Ref<containers::Encoding>& _categories,
+    const fct::Ref<containers::Encoding>& _join_keys_encoding) {
 #if (defined(_WIN32) || defined(_WIN64))
   throw std::runtime_error("S3 is not supported on Windows!");
 #else
 
   // We are using the bell character (\a) as the quotechar. It is least
   // likely to appear in any field.
-  auto reader = containers::DataFrameReader(_df, _categories,
-                                            _join_keys_encoding, '\a', '|');
+  // TODO
+  auto reader = containers::DataFrameReader(
+      _df, _categories.ptr(), _join_keys_encoding.ptr(), '\a', '|');
 
   const auto colnames = reader.colnames();
 
@@ -822,10 +831,10 @@ void DataFrameManager::from_arrow(const std::string& _name,
   const auto pool = options_.make_pool();
 
   const auto local_categories =
-      std::make_shared<containers::Encoding>(pool, categories_);
+      fct::Ref<containers::Encoding>::make(pool, categories_.ptr());  // TODO
 
-  const auto local_join_keys_encoding =
-      std::make_shared<containers::Encoding>(pool, join_keys_encoding_);
+  const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
+      pool, join_keys_encoding_.ptr());  // TODO
 
   const auto arrow_handler = handlers::ArrowHandler(
       local_categories, local_join_keys_encoding, options_);
@@ -843,9 +852,9 @@ void DataFrameManager::from_arrow(const std::string& _name,
 
   join_keys_encoding_->append(*local_join_keys_encoding);
 
-  df.set_categories(categories_);
+  df.set_categories(categories_.ptr());
 
-  df.set_join_keys_encoding(join_keys_encoding_);
+  df.set_join_keys_encoding(join_keys_encoding_.ptr());
 
   if (!_append || data_frames().find(_name) == data_frames().end()) {
     data_frames()[_name] = df;
@@ -895,10 +904,10 @@ void DataFrameManager::from_csv(const std::string& _name,
   const auto pool = options_.make_pool();
 
   const auto local_categories =
-      std::make_shared<containers::Encoding>(pool, categories_);
+      std::make_shared<containers::Encoding>(pool, categories_.ptr());
 
   const auto local_join_keys_encoding =
-      std::make_shared<containers::Encoding>(pool, join_keys_encoding_);
+      std::make_shared<containers::Encoding>(pool, join_keys_encoding_.ptr());
 
   auto df = containers::DataFrame(_name, local_categories,
                                   local_join_keys_encoding, pool);
@@ -916,9 +925,9 @@ void DataFrameManager::from_csv(const std::string& _name,
 
   join_keys_encoding_->append(*local_join_keys_encoding);
 
-  df.set_categories(categories_);
+  df.set_categories(categories_.ptr());
 
-  df.set_join_keys_encoding(join_keys_encoding_);
+  df.set_join_keys_encoding(join_keys_encoding_.ptr());
 
   if (!_append || data_frames().find(_name) == data_frames().end()) {
     data_frames()[_name] = df;
@@ -948,10 +957,10 @@ void DataFrameManager::from_db(const std::string& _name,
   const auto pool = options_.make_pool();
 
   const auto local_categories =
-      std::make_shared<containers::Encoding>(pool, categories_);
+      std::make_shared<containers::Encoding>(pool, categories_.ptr());  // TODO
 
-  const auto local_join_keys_encoding =
-      std::make_shared<containers::Encoding>(pool, join_keys_encoding_);
+  const auto local_join_keys_encoding = std::make_shared<containers::Encoding>(
+      pool, join_keys_encoding_.ptr());  // TODO
 
   auto df = containers::DataFrame(_name, local_categories,
                                   local_join_keys_encoding, pool);
@@ -966,9 +975,9 @@ void DataFrameManager::from_db(const std::string& _name,
 
   join_keys_encoding_->append(*local_join_keys_encoding);
 
-  df.set_categories(categories_);
+  df.set_categories(categories_.ptr());
 
-  df.set_join_keys_encoding(join_keys_encoding_);
+  df.set_join_keys_encoding(join_keys_encoding_.ptr());
 
   if (!_append || data_frames().find(_name) == data_frames().end()) {
     data_frames()[_name] = df;
@@ -1002,10 +1011,10 @@ void DataFrameManager::from_json(const std::string& _name,
   const auto pool = options_.make_pool();
 
   const auto local_categories =
-      std::make_shared<containers::Encoding>(pool, categories_);
+      std::make_shared<containers::Encoding>(pool, categories_.ptr());  // TODO
 
-  const auto local_join_keys_encoding =
-      std::make_shared<containers::Encoding>(pool, join_keys_encoding_);
+  const auto local_join_keys_encoding = std::make_shared<containers::Encoding>(
+      pool, join_keys_encoding_.ptr());  // TODO
 
   auto df = containers::DataFrame(_name, local_categories,
                                   local_join_keys_encoding, pool);
@@ -1020,9 +1029,9 @@ void DataFrameManager::from_json(const std::string& _name,
 
   join_keys_encoding_->append(*local_join_keys_encoding);
 
-  df.set_categories(categories_);
+  df.set_categories(categories_.ptr());
 
-  df.set_join_keys_encoding(join_keys_encoding_);
+  df.set_join_keys_encoding(join_keys_encoding_.ptr());
 
   if (!_append || data_frames().find(_name) == data_frames().end()) {
     data_frames()[_name] = df;
@@ -1050,10 +1059,10 @@ void DataFrameManager::from_parquet(const std::string& _name,
   const auto pool = options_.make_pool();
 
   const auto local_categories =
-      std::make_shared<containers::Encoding>(pool, categories_);
+      fct::Ref<containers::Encoding>::make(pool, categories_.ptr());
 
   const auto local_join_keys_encoding =
-      std::make_shared<containers::Encoding>(pool, join_keys_encoding_);
+      fct::Ref<containers::Encoding>::make(pool, join_keys_encoding_.ptr());
 
   const auto arrow_handler = handlers::ArrowHandler(
       local_categories, local_join_keys_encoding, options_);
@@ -1071,9 +1080,9 @@ void DataFrameManager::from_parquet(const std::string& _name,
 
   join_keys_encoding_->append(*local_join_keys_encoding);
 
-  df.set_categories(categories_);
+  df.set_categories(categories_.ptr());
 
-  df.set_join_keys_encoding(join_keys_encoding_);
+  df.set_join_keys_encoding(join_keys_encoding_.ptr());
 
   if (!_append || data_frames().find(_name) == data_frames().end()) {
     data_frames()[_name] = df;
@@ -1105,10 +1114,10 @@ void DataFrameManager::from_query(const std::string& _name,
   const auto pool = options_.make_pool();
 
   const auto local_categories =
-      std::make_shared<containers::Encoding>(pool, categories_);
+      std::make_shared<containers::Encoding>(pool, categories_.ptr());
 
   const auto local_join_keys_encoding =
-      std::make_shared<containers::Encoding>(pool, join_keys_encoding_);
+      std::make_shared<containers::Encoding>(pool, join_keys_encoding_.ptr());
 
   auto df = containers::DataFrame(_name, local_categories,
                                   local_join_keys_encoding, pool);
@@ -1123,9 +1132,9 @@ void DataFrameManager::from_query(const std::string& _name,
 
   join_keys_encoding_->append(*local_join_keys_encoding);
 
-  df.set_categories(categories_);
+  df.set_categories(categories_.ptr());
 
-  df.set_join_keys_encoding(join_keys_encoding_);
+  df.set_join_keys_encoding(join_keys_encoding_.ptr());
 
   if (!_append || data_frames().find(_name) == data_frames().end()) {
     data_frames()[_name] = df;
@@ -1178,10 +1187,10 @@ void DataFrameManager::from_s3(const std::string& _name,
   const auto pool = options_.make_pool();
 
   const auto local_categories =
-      std::make_shared<containers::Encoding>(pool, categories_);
+      std::make_shared<containers::Encoding>(pool, categories_.ptr());
 
   const auto local_join_keys_encoding =
-      std::make_shared<containers::Encoding>(pool, join_keys_encoding_);
+      std::make_shared<containers::Encoding>(pool, join_keys_encoding_.ptr());
 
   auto df = containers::DataFrame(_name, local_categories,
                                   local_join_keys_encoding, pool);
@@ -1197,9 +1206,9 @@ void DataFrameManager::from_s3(const std::string& _name,
 
   join_keys_encoding_->append(*local_join_keys_encoding);
 
-  df.set_categories(categories_);
+  df.set_categories(categories_.ptr());
 
-  df.set_join_keys_encoding(join_keys_encoding_);
+  df.set_join_keys_encoding(join_keys_encoding_.ptr());
 
   if (!_append || data_frames().find(_name) == data_frames().end()) {
     data_frames()[_name] = df;
@@ -1227,10 +1236,10 @@ void DataFrameManager::from_view(const std::string& _name,
   const auto pool = options_.make_pool();
 
   auto local_categories =
-      std::make_shared<containers::Encoding>(pool, categories_);
+      fct::Ref<containers::Encoding>::make(pool, categories_.ptr());
 
   auto local_join_keys_encoding =
-      std::make_shared<containers::Encoding>(pool, join_keys_encoding_);
+      fct::Ref<containers::Encoding>::make(pool, join_keys_encoding_.ptr());
 
   auto df = ViewParser(local_categories, local_join_keys_encoding, data_frames_,
                        options_)
@@ -1245,9 +1254,9 @@ void DataFrameManager::from_view(const std::string& _name,
 
   join_keys_encoding_->append(*local_join_keys_encoding);
 
-  df.set_categories(categories_);
+  df.set_categories(categories_.ptr());
 
-  df.set_join_keys_encoding(join_keys_encoding_);
+  df.set_join_keys_encoding(join_keys_encoding_.ptr());
 
   if (!_append || data_frames().find(_name) == data_frames().end()) {
     data_frames()[_name] = df;
@@ -1815,8 +1824,8 @@ void DataFrameManager::last_change(const std::string& _name,
 // ------------------------------------------------------------------------
 
 void DataFrameManager::receive_data(
-    const std::shared_ptr<containers::Encoding>& _local_categories,
-    const std::shared_ptr<containers::Encoding>& _local_join_keys_encoding,
+    const fct::Ref<containers::Encoding>& _local_categories,
+    const fct::Ref<containers::Encoding>& _local_join_keys_encoding,
     containers::DataFrame* _df, Poco::Net::StreamSocket* _socket) const {
   while (true) {
     Poco::JSON::Object cmd =
@@ -1893,8 +1902,8 @@ void DataFrameManager::recv_and_add_string_column(
 
 void DataFrameManager::recv_and_add_string_column(
     const Poco::JSON::Object& _cmd,
-    const std::shared_ptr<containers::Encoding>& _local_categories,
-    const std::shared_ptr<containers::Encoding>& _local_join_keys_encoding,
+    const fct::Ref<containers::Encoding>& _local_categories,
+    const fct::Ref<containers::Encoding>& _local_join_keys_encoding,
     containers::DataFrame* _df, Poco::Net::StreamSocket* _socket) const {
   const auto role = JSON::get_value<std::string>(_cmd, "role_");
 
@@ -2239,10 +2248,10 @@ void DataFrameManager::view_to_arrow(const std::string& _name,
   const auto pool = options_.make_pool();
 
   const auto local_categories =
-      std::make_shared<containers::Encoding>(pool, categories_);
+      fct::Ref<containers::Encoding>::make(pool, categories_.ptr());
 
   const auto local_join_keys_encoding =
-      std::make_shared<containers::Encoding>(pool, join_keys_encoding_);
+      fct::Ref<containers::Encoding>::make(pool, join_keys_encoding_.ptr());
 
   assert_true(view);
 
@@ -2276,10 +2285,10 @@ void DataFrameManager::view_to_csv(const std::string& _name,
   const auto pool = options_.make_pool();
 
   const auto local_categories =
-      std::make_shared<containers::Encoding>(pool, categories_);
+      fct::Ref<containers::Encoding>::make(pool, categories_.ptr());
 
   const auto local_join_keys_encoding =
-      std::make_shared<containers::Encoding>(pool, join_keys_encoding_);
+      fct::Ref<containers::Encoding>::make(pool, join_keys_encoding_.ptr());
 
   assert_true(view);
 
@@ -2311,10 +2320,10 @@ void DataFrameManager::view_to_db(const std::string& _name,
   const auto pool = options_.make_pool();
 
   const auto local_categories =
-      std::make_shared<containers::Encoding>(pool, categories_);
+      fct::Ref<containers::Encoding>::make(pool, categories_.ptr());
 
   const auto local_join_keys_encoding =
-      std::make_shared<containers::Encoding>(pool, join_keys_encoding_);
+      fct::Ref<containers::Encoding>::make(pool, join_keys_encoding_.ptr());
 
   assert_true(view);
 
@@ -2345,10 +2354,10 @@ void DataFrameManager::view_to_parquet(const std::string& _name,
   const auto pool = options_.make_pool();
 
   const auto local_categories =
-      std::make_shared<containers::Encoding>(pool, categories_);
+      fct::Ref<containers::Encoding>::make(pool, categories_.ptr());
 
   const auto local_join_keys_encoding =
-      std::make_shared<containers::Encoding>(pool, join_keys_encoding_);
+      fct::Ref<containers::Encoding>::make(pool, join_keys_encoding_.ptr());
 
   assert_true(view);
 
@@ -2390,10 +2399,10 @@ void DataFrameManager::view_to_s3(const std::string& _name,
   const auto pool = options_.make_pool();
 
   const auto local_categories =
-      std::make_shared<containers::Encoding>(pool, categories_);
+      fct::Ref<containers::Encoding>::make(pool, categories_.ptr());
 
   const auto local_join_keys_encoding =
-      std::make_shared<containers::Encoding>(pool, join_keys_encoding_);
+      fct::Ref<containers::Encoding>::make(pool, join_keys_encoding_.ptr());
 
   assert_true(view);
 

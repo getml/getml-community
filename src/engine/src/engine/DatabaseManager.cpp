@@ -8,13 +8,13 @@ namespace engine {
 namespace handlers {
 
 DatabaseManager::DatabaseManager(
-    const std::shared_ptr<const communication::Logger>& _logger,
-    const std::shared_ptr<const communication::Monitor>& _monitor,
+    const fct::Ref<const communication::Logger>& _logger,
+    const fct::Ref<const communication::Monitor>& _monitor,
     const config::Options& _options)
     : logger_(_logger),
       monitor_(_monitor),
       options_(_options),
-      read_write_lock_(std::make_shared<multithreading::ReadWriteLock>()) {
+      read_write_lock_(fct::Ref<multithreading::ReadWriteLock>::make()) {
   connector_map_["default"] =
       std::make_shared<database::Sqlite3>(database::Sqlite3(
           options_.project_directory() + "database.db",

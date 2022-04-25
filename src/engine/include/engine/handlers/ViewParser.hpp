@@ -30,11 +30,8 @@
 
 namespace engine {
 namespace handlers {
-// ----------------------------------------------------------------------------
 
 class ViewParser {
-  // ------------------------------------------------------------------------
-
  public:
   static constexpr const char* FLOAT_COLUMN =
       containers::Column<bool>::FLOAT_COLUMN;
@@ -55,20 +52,15 @@ class ViewParser {
   // ------------------------------------------------------------------------
 
  public:
-  ViewParser(
-      const std::shared_ptr<containers::Encoding>& _categories,
-      const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
-      const std::shared_ptr<const std::map<std::string, containers::DataFrame>>&
-          _data_frames,
-      const config::Options& _options)
+  ViewParser(const fct::Ref<containers::Encoding>& _categories,
+             const fct::Ref<containers::Encoding>& _join_keys_encoding,
+             const fct::Ref<const std::map<std::string, containers::DataFrame>>&
+                 _data_frames,
+             const config::Options& _options)
       : categories_(_categories),
         data_frames_(_data_frames),
         join_keys_encoding_(_join_keys_encoding),
-        options_(_options) {
-    assert_true(categories_);
-    assert_true(data_frames_);
-    assert_true(join_keys_encoding_);
-  }
+        options_(_options) {}
 
   ~ViewParser() = default;
 
@@ -148,14 +140,14 @@ class ViewParser {
 
  private:
   /// Encodes the categories used.
-  const std::shared_ptr<containers::Encoding> categories_;
+  const fct::Ref<containers::Encoding> categories_;
 
   /// The DataFrames this is based on.
-  const std::shared_ptr<const std::map<std::string, containers::DataFrame>>
+  const fct::Ref<const std::map<std::string, containers::DataFrame>>
       data_frames_;
 
   /// Encodes the join keys used.
-  const std::shared_ptr<containers::Encoding> join_keys_encoding_;
+  const fct::Ref<containers::Encoding> join_keys_encoding_;
 
   /// Settings for the engine and the monitor
   const config::Options options_;

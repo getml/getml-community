@@ -26,11 +26,8 @@
 
 namespace engine {
 namespace handlers {
-// ----------------------------------------------------------------------------
 
 class CatOpParser {
-  // ------------------------------------------------------------------------
-
  public:
   typedef containers::ColumnView<bool>::UnknownSize UnknownSize;
   typedef containers::ColumnView<bool>::NRowsType NRowsType;
@@ -60,17 +57,13 @@ class CatOpParser {
 
  public:
   CatOpParser(
-      const std::shared_ptr<const containers::Encoding>& _categories,
-      const std::shared_ptr<const containers::Encoding>& _join_keys_encoding,
-      const std::shared_ptr<const std::map<std::string, containers::DataFrame>>&
+      const fct::Ref<const containers::Encoding>& _categories,
+      const fct::Ref<const containers::Encoding>& _join_keys_encoding,
+      const fct::Ref<const std::map<std::string, containers::DataFrame>>&
           _data_frames)
       : categories_(_categories),
         data_frames_(_data_frames),
-        join_keys_encoding_(_join_keys_encoding) {
-    assert_true(categories_);
-    assert_true(data_frames_);
-    assert_true(join_keys_encoding_);
-  }
+        join_keys_encoding_(_join_keys_encoding) {}
 
   ~CatOpParser() = default;
 
@@ -80,7 +73,7 @@ class CatOpParser {
   /// Checks the string column for any obvious problems.
   void check(const containers::Column<strings::String>& _col,
              const std::string& _name,
-             const std::shared_ptr<const communication::Logger>& _logger,
+             const fct::Ref<const communication::Logger>& _logger,
              Poco::Net::StreamSocket* _socket) const;
 
   /// Parses a numerical column.
@@ -109,7 +102,7 @@ class CatOpParser {
   /// Transforms an int column to a column view.
   containers::ColumnView<std::string> to_view(
       const containers::Column<Int>& _col,
-      const std::shared_ptr<const containers::Encoding>& _encoding) const;
+      const fct::Ref<const containers::Encoding>& _encoding) const;
 
   /// Transforms a string column to a column view.
   containers::ColumnView<std::string> to_view(
@@ -160,14 +153,14 @@ class CatOpParser {
 
  private:
   /// Encodes the categories used.
-  const std::shared_ptr<const containers::Encoding> categories_;
+  const fct::Ref<const containers::Encoding> categories_;
 
   /// The DataFrames this is based on.
-  const std::shared_ptr<const std::map<std::string, containers::DataFrame>>
+  const fct::Ref<const std::map<std::string, containers::DataFrame>>
       data_frames_;
 
   /// Encodes the join keys used.
-  const std::shared_ptr<const containers::Encoding> join_keys_encoding_;
+  const fct::Ref<const containers::Encoding> join_keys_encoding_;
 
   // ------------------------------------------------------------------------
 };

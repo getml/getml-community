@@ -34,11 +34,8 @@
 
 namespace engine {
 namespace handlers {
-// ------------------------------------------------------------------------
 
 class ProjectManager {
-  // ------------------------------------------------------------------------
-
  public:
   typedef PipelineManager::PipelineMapType PipelineMapType;
 
@@ -46,27 +43,23 @@ class ProjectManager {
 
  public:
   ProjectManager(
-      const std::shared_ptr<containers::Encoding>& _categories,
-      const std::shared_ptr<DataFrameManager>& _data_frame_manager,
-      const std::shared_ptr<std::map<std::string, containers::DataFrame>>
-          _data_frames,
-      const std::shared_ptr<engine::dependency::DataFrameTracker>&
-          _data_frame_tracker,
-      const std::shared_ptr<dependency::FETracker>& _fe_tracker,
-      const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
-      const std::shared_ptr<std::map<std::string, hyperparam::Hyperopt>>&
-          _hyperopts,
-      const std::shared_ptr<licensing::LicenseChecker>& _license_checker,
-      const std::shared_ptr<const communication::Logger>& _logger,
-      const std::shared_ptr<const communication::Monitor>& _monitor,
+      const fct::Ref<containers::Encoding>& _categories,
+      const fct::Ref<DataFrameManager>& _data_frame_manager,
+      const fct::Ref<std::map<std::string, containers::DataFrame>> _data_frames,
+      const fct::Ref<engine::dependency::DataFrameTracker>& _data_frame_tracker,
+      const fct::Ref<dependency::FETracker>& _fe_tracker,
+      const fct::Ref<containers::Encoding>& _join_keys_encoding,
+      const fct::Ref<std::map<std::string, hyperparam::Hyperopt>>& _hyperopts,
+      const fct::Ref<licensing::LicenseChecker>& _license_checker,
+      const fct::Ref<const communication::Logger>& _logger,
+      const fct::Ref<const communication::Monitor>& _monitor,
       const config::Options& _options,
-      const std::shared_ptr<PipelineMapType>& _pipelines,
-      const std::shared_ptr<dependency::PredTracker>& _pred_tracker,
-      const std::shared_ptr<dependency::PreprocessorTracker>&
-          _preprocessor_tracker,
+      const fct::Ref<PipelineMapType>& _pipelines,
+      const fct::Ref<dependency::PredTracker>& _pred_tracker,
+      const fct::Ref<dependency::PreprocessorTracker>& _preprocessor_tracker,
       const std::string& _project,
-      const std::shared_ptr<multithreading::ReadWriteLock>& _project_lock,
-      const std::shared_ptr<multithreading::ReadWriteLock>& _read_write_lock)
+      const fct::Ref<multithreading::ReadWriteLock>& _project_lock,
+      const fct::Ref<multithreading::ReadWriteLock>& _read_write_lock)
       : categories_(_categories),
         data_frame_manager_(_data_frame_manager),
         data_frames_(_data_frames),
@@ -251,33 +244,24 @@ class ProjectManager {
 
   /// Trivial (const) accessor
   const std::map<std::string, containers::DataFrame>& data_frames() const {
-    assert_true(data_frames_);
     return *data_frames_;
   }
 
   /// Trivial accessor
   dependency::DataFrameTracker& data_frame_tracker() {
-    assert_true(data_frame_tracker_);
     return *data_frame_tracker_;
   }
 
   /// Trivial accessor
-  DataFrameManager& data_frame_manager() {
-    assert_true(data_frame_manager_);
-    return *data_frame_manager_;
-  }
+  DataFrameManager& data_frame_manager() { return *data_frame_manager_; }
 
   /// Trivial (const) accessor
   const DataFrameManager& data_frame_manager() const {
-    assert_true(data_frame_manager_);
     return *data_frame_manager_;
   }
 
   /// Trivial accessor
-  dependency::FETracker& fe_tracker() {
-    assert_true(fe_tracker_);
-    return *fe_tracker_;
-  }
+  dependency::FETracker& fe_tracker() { return *fe_tracker_; }
 
   /// Returns a deep copy of a pipeline.
   pipelines::Pipeline get_pipeline(const std::string& _name) const {
@@ -296,51 +280,33 @@ class ProjectManager {
 
   /// Trivial (private) accessor
   std::map<std::string, hyperparam::Hyperopt>& hyperopts() {
-    assert_true(hyperopts_);
     return *hyperopts_;
   }
 
   /// Trivial (private) accessor
   const std::map<std::string, hyperparam::Hyperopt>& hyperopts() const {
-    assert_true(hyperopts_);
     return *hyperopts_;
   }
 
   /// Trivial accessor
   engine::licensing::LicenseChecker& license_checker() {
-    assert_true(license_checker_);
     return *license_checker_;
   }
 
   /// Trivial (private) accessor
-  const communication::Logger& logger() {
-    assert_true(logger_);
-    return *logger_;
-  }
+  const communication::Logger& logger() { return *logger_; }
 
   /// Trivial (private) accessor
-  const communication::Monitor& monitor() const {
-    assert_true(monitor_);
-    return *monitor_;
-  }
+  const communication::Monitor& monitor() const { return *monitor_; }
 
   /// Trivial (private) accessor
-  PipelineMapType& pipelines() {
-    assert_true(pipelines_);
-    return *pipelines_;
-  }
+  PipelineMapType& pipelines() { return *pipelines_; }
 
   /// Trivial (const private) accessor
-  const PipelineMapType& pipelines() const {
-    assert_true(pipelines_);
-    return *pipelines_;
-  }
+  const PipelineMapType& pipelines() const { return *pipelines_; }
 
   /// Trivial accessor
-  dependency::PredTracker& pred_tracker() {
-    assert_true(pred_tracker_);
-    return *pred_tracker_;
-  }
+  dependency::PredTracker& pred_tracker() { return *pred_tracker_; }
 
   /// Trivial (private) setter.
   void set_hyperopt(const std::string& _name,
@@ -360,59 +326,56 @@ class ProjectManager {
 
  private:
   /// Maps integeres to category names
-  const std::shared_ptr<containers::Encoding> categories_;
+  const fct::Ref<containers::Encoding> categories_;
 
   /// We need some methods from the data frame manager.
-  const std::shared_ptr<DataFrameManager> data_frame_manager_;
+  const fct::Ref<DataFrameManager> data_frame_manager_;
 
   /// The data frames currently held in memory
-  const std::shared_ptr<std::map<std::string, containers::DataFrame>>
-      data_frames_;
+  const fct::Ref<std::map<std::string, containers::DataFrame>> data_frames_;
 
   /// Keeps track of all data frames, so we don't have to
   /// reconstruct the features all of the time.
-  const std::shared_ptr<dependency::DataFrameTracker> data_frame_tracker_;
+  const fct::Ref<dependency::DataFrameTracker> data_frame_tracker_;
 
   /// Keeps track of all feature learners.
-  const std::shared_ptr<dependency::FETracker> fe_tracker_;
+  const fct::Ref<dependency::FETracker> fe_tracker_;
 
   /// Maps integers to join key names
-  const std::shared_ptr<containers::Encoding> join_keys_encoding_;
+  const fct::Ref<containers::Encoding> join_keys_encoding_;
 
   /// The Hyperopts currently held in memory
-  const std::shared_ptr<std::map<std::string, hyperparam::Hyperopt>> hyperopts_;
+  const fct::Ref<std::map<std::string, hyperparam::Hyperopt>> hyperopts_;
 
   /// For checking the license and memory usage
-  const std::shared_ptr<licensing::LicenseChecker> license_checker_;
+  const fct::Ref<licensing::LicenseChecker> license_checker_;
 
   /// For logging
-  const std::shared_ptr<const communication::Logger> logger_;
+  const fct::Ref<const communication::Logger> logger_;
 
   /// For communication with the monitor
-  const std::shared_ptr<const communication::Monitor> monitor_;
+  const fct::Ref<const communication::Monitor> monitor_;
 
   /// Settings for the engine and the monitor
   const config::Options options_;
 
   /// The pipelines currently held in memory
-  const std::shared_ptr<PipelineMapType> pipelines_;
+  const fct::Ref<PipelineMapType> pipelines_;
 
   /// Keeps track of all predictors.
-  const std::shared_ptr<dependency::PredTracker> pred_tracker_;
+  const fct::Ref<dependency::PredTracker> pred_tracker_;
 
   /// Keeps track of all preprocessors.
-  const std::shared_ptr<dependency::PreprocessorTracker> preprocessor_tracker_;
+  const fct::Ref<dependency::PreprocessorTracker> preprocessor_tracker_;
 
   /// The name of the current project
   const std::string project_;
 
   /// It is sometimes necessary to prevent us from changing the project.
-  const std::shared_ptr<multithreading::ReadWriteLock> project_lock_;
+  const fct::Ref<multithreading::ReadWriteLock> project_lock_;
 
   /// For synchronization
-  const std::shared_ptr<multithreading::ReadWriteLock>& read_write_lock_;
-
-  // ------------------------------------------------------------------------
+  const fct::Ref<multithreading::ReadWriteLock> read_write_lock_;
 };
 
 // ------------------------------------------------------------------------

@@ -48,13 +48,13 @@ namespace licensing {
 
 class LicenseChecker {
  public:
-  LicenseChecker(const std::shared_ptr<const communication::Logger> _logger,
-                 const std::shared_ptr<const communication::Monitor> _monitor,
+  LicenseChecker(const fct::Ref<const communication::Logger> _logger,
+                 const fct::Ref<const communication::Monitor> _monitor,
                  const config::Options& _options)
       : logger_(_logger),
         monitor_(_monitor),
         options_(_options),
-        read_write_lock_(std::make_shared<multithreading::ReadWriteLock>()),
+        read_write_lock_(fct::Ref<multithreading::ReadWriteLock>::make()),
         token_(new Token()) {}
 
   ~LicenseChecker(){};
@@ -119,16 +119,16 @@ class LicenseChecker {
 
  private:
   /// For logging the licensing process.
-  const std::shared_ptr<const communication::Logger> logger_;
+  const fct::Ref<const communication::Logger> logger_;
 
   /// The user management and licensing process is handled by the monitor.
-  const std::shared_ptr<const communication::Monitor> monitor_;
+  const fct::Ref<const communication::Monitor> monitor_;
 
   /// Contains information on the port of the license checker process
   const config::Options options_;
 
   /// For protecting the token.
-  const std::shared_ptr<multithreading::ReadWriteLock> read_write_lock_;
+  const fct::Ref<multithreading::ReadWriteLock> read_write_lock_;
 
   /// The token containing information on the memory limit
   std::unique_ptr<const Token> token_;

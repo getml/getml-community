@@ -25,6 +25,7 @@
 // -----------------------------------------------------------------
 
 #include "debug/debug.hpp"
+#include "fct/Ref.hpp"
 
 // -----------------------------------------------------------------
 
@@ -51,14 +52,14 @@ class RequestHandler : public Poco::Net::TCPServerConnection {
  public:
   RequestHandler(
       const Poco::Net::StreamSocket& _socket,
-      const std::shared_ptr<handlers::DatabaseManager>& _database_manager,
-      const std::shared_ptr<handlers::DataFrameManager>& _data_frame_manager,
-      const std::shared_ptr<handlers::HyperoptManager>& _hyperopt_manager,
-      const std::shared_ptr<const communication::Logger>& _logger,
-      const std::shared_ptr<handlers::PipelineManager>& _pipeline_manager,
+      const fct::Ref<handlers::DatabaseManager>& _database_manager,
+      const fct::Ref<handlers::DataFrameManager>& _data_frame_manager,
+      const fct::Ref<handlers::HyperoptManager>& _hyperopt_manager,
+      const fct::Ref<const communication::Logger>& _logger,
+      const fct::Ref<handlers::PipelineManager>& _pipeline_manager,
       const config::Options& _options,
-      const std::shared_ptr<handlers::ProjectManager>& _project_manager,
-      const std::shared_ptr<std::atomic<bool>>& _shutdown)
+      const fct::Ref<handlers::ProjectManager>& _project_manager,
+      const fct::Ref<std::atomic<bool>>& _shutdown)
       : Poco::Net::TCPServerConnection(_socket),
         database_manager_(_database_manager),
         data_frame_manager_(_data_frame_manager),
@@ -78,67 +79,52 @@ class RequestHandler : public Poco::Net::TCPServerConnection {
 
  private:
   /// Trivial accessor
-  handlers::DatabaseManager& database_manager() {
-    assert_true(database_manager_);
-    return *database_manager_;
-  }
+  handlers::DatabaseManager& database_manager() { return *database_manager_; }
 
   /// Trivial accessor
   handlers::DataFrameManager& data_frame_manager() {
-    assert_true(data_frame_manager_);
     return *data_frame_manager_;
   }
 
   /// Trivial accessor
-  handlers::HyperoptManager& hyperopt_manager() {
-    assert_true(hyperopt_manager_);
-    return *hyperopt_manager_;
-  }
+  handlers::HyperoptManager& hyperopt_manager() { return *hyperopt_manager_; }
 
   /// Trivial accessor
   const communication::Logger& logger() { return *logger_; }
 
   /// Trivial accessor
-  handlers::PipelineManager& pipeline_manager() {
-    assert_true(pipeline_manager_);
-    return *pipeline_manager_;
-  }
+  handlers::PipelineManager& pipeline_manager() { return *pipeline_manager_; }
 
   /// Trivial accessor
-  handlers::ProjectManager& project_manager() {
-    assert_true(project_manager_);
-    return *project_manager_;
-  }
+  handlers::ProjectManager& project_manager() { return *project_manager_; }
 
   // -------------------------------------------------------------
 
  private:
   /// Handles requests related to the database.
-  const std::shared_ptr<handlers::DatabaseManager> database_manager_;
+  const fct::Ref<handlers::DatabaseManager> database_manager_;
 
   /// Handles requests related to the data frames.
-  const std::shared_ptr<handlers::DataFrameManager> data_frame_manager_;
+  const fct::Ref<handlers::DataFrameManager> data_frame_manager_;
 
   /// Handles all requests related to the hyperparameter optimization
-  const std::shared_ptr<handlers::HyperoptManager>& hyperopt_manager_;
+  const fct::Ref<handlers::HyperoptManager>& hyperopt_manager_;
 
   /// Logs commands.
-  const std::shared_ptr<const communication::Logger> logger_;
+  const fct::Ref<const communication::Logger> logger_;
 
   /// Handles requests related to a pipeline
-  const std::shared_ptr<handlers::PipelineManager> pipeline_manager_;
+  const fct::Ref<handlers::PipelineManager> pipeline_manager_;
 
   /// Contains information on the port of the monitor process
   const config::Options options_;
 
   /// Handles requests related to the project as a whole, such as save or
   /// load.
-  const std::shared_ptr<handlers::ProjectManager> project_manager_;
+  const fct::Ref<handlers::ProjectManager> project_manager_;
 
   /// Signals to the main process that we want to shut down.
-  const std::shared_ptr<std::atomic<bool>>& shutdown_;
-
-  // -------------------------------------------------------------
+  const fct::Ref<std::atomic<bool>>& shutdown_;
 };
 
 // -----------------------------------------------------------------
