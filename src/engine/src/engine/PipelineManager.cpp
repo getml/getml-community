@@ -190,15 +190,15 @@ void PipelineManager::check(const std::string& _name,
                  options_)
           .parse_all(_cmd);
 
-  const auto params = pipelines::CheckParams{
-      .categories_ = local_categories.ptr(),  // TODO
-      .cmd_ = _cmd,
-      .logger_ = logger_.ptr(),
-      .peripheral_dfs_ = peripheral_dfs,
-      .population_df_ = population_df,
-      .preprocessor_tracker_ = preprocessor_tracker_.ptr(),
-      .warning_tracker_ = warning_tracker_.ptr(),
-      .socket_ = _socket};
+  const auto params =
+      pipelines::CheckParams{.categories_ = local_categories,
+                             .cmd_ = _cmd,
+                             .logger_ = logger_.ptr(),
+                             .peripheral_dfs_ = peripheral_dfs,
+                             .population_df_ = population_df,
+                             .preprocessor_tracker_ = preprocessor_tracker_,
+                             .warning_tracker_ = warning_tracker_,
+                             .socket_ = _socket};
 
   pipelines::Check::check(pipeline, params);
 
@@ -373,16 +373,16 @@ void PipelineManager::fit(const std::string& _name,
           .parse_all(_cmd);
 
   const auto params =
-      pipelines::FitParams{.categories_ = local_categories.ptr(),
+      pipelines::FitParams{.categories_ = local_categories,
                            .cmd_ = _cmd,
                            .data_frames_ = data_frames(),
                            .data_frame_tracker_ = data_frame_tracker(),
-                           .fe_tracker_ = fe_tracker_.ptr(),
+                           .fe_tracker_ = fe_tracker_,
                            .logger_ = logger_.ptr(),
                            .peripheral_dfs_ = peripheral_dfs,
                            .population_df_ = population_df,
-                           .pred_tracker_ = pred_tracker_.ptr(),
-                           .preprocessor_tracker_ = preprocessor_tracker_.ptr(),
+                           .pred_tracker_ = pred_tracker_,
+                           .preprocessor_tracker_ = preprocessor_tracker_,
                            .validation_df_ = validation_df,
                            .socket_ = _socket};
 
@@ -842,13 +842,14 @@ void PipelineManager::transform(const std::string& _name,
   // IMPORTANT: Use categories_, not local_categories, otherwise
   // .vector() might not work.
   const auto params =
-      pipelines::TransformParams{.categories_ = categories_.ptr(),  // TODO
+      pipelines::TransformParams{.categories_ = categories_,
                                  .cmd_ = cmd,
                                  .data_frames_ = *local_data_frames,
                                  .data_frame_tracker_ = data_frame_tracker(),
                                  .logger_ = logger_.ptr(),  // TODO
                                  .original_peripheral_dfs_ = peripheral_dfs,
                                  .original_population_df_ = population_df,
+                                 .pred_tracker_ = pred_tracker_,
                                  .socket_ = _socket};
 
   const auto fitted = pipeline.fitted();

@@ -14,6 +14,7 @@
 
 // ----------------------------------------------------------------------------
 
+#include "fct/Ref.hpp"
 #include "helpers/helpers.hpp"
 #include "logging/logging.hpp"
 
@@ -31,7 +32,7 @@ struct FitParams {
   const Poco::JSON::Object cmd_;
 
   /// Encoding for categorical variables.
-  const std::shared_ptr<containers::Encoding> categories_;
+  const fct::Ref<containers::Encoding> categories_;
 
   /// The logger used to log the progress.
   const std::shared_ptr<const logging::AbstractLogger> logger_;

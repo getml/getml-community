@@ -10,6 +10,7 @@
 
 #include <memory>
 #include <optional>
+#include <string>
 #include <vector>
 
 // ----------------------------------------------------------------------------
@@ -22,11 +23,10 @@
 
 namespace engine {
 namespace pipelines {
-// ----------------------------------------------------------------------------
 
 struct FitParams {
   /// The categorical encoding.
-  const std::shared_ptr<containers::Encoding> categories_;
+  const fct::Ref<containers::Encoding> categories_;
 
   /// The command used.
   const Poco::JSON::Object cmd_;
@@ -39,7 +39,7 @@ struct FitParams {
   const dependency::DataFrameTracker data_frame_tracker_;
 
   /// The dependency tracker for the feature learners.
-  const std::shared_ptr<dependency::FETracker> fe_tracker_;
+  const fct::Ref<dependency::FETracker> fe_tracker_;
 
   /// The fingerprints of the feature selectors used for fitting.
   const std::vector<Poco::JSON::Object::Ptr> fs_fingerprints_;
@@ -54,10 +54,10 @@ struct FitParams {
   const containers::DataFrame population_df_;
 
   /// The dependency tracker for the predictors.
-  const std::shared_ptr<dependency::PredTracker> pred_tracker_;
+  const fct::Ref<dependency::PredTracker> pred_tracker_;
 
   /// The dependency tracker for the preprocessors.
-  const std::shared_ptr<dependency::PreprocessorTracker> preprocessor_tracker_;
+  const fct::Ref<dependency::PreprocessorTracker> preprocessor_tracker_;
 
   /// The population table used for validation (only relevant for
   /// early stopping).

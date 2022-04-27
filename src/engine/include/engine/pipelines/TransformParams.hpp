@@ -8,8 +8,10 @@
 
 // ----------------------------------------------------------------------------
 
+#include <map>
 #include <memory>
 #include <optional>
+#include <string>
 #include <vector>
 
 // ----------------------------------------------------------------------------
@@ -28,7 +30,7 @@ struct TransformParams {
   static constexpr const char* PREDICTOR = "predictor";
 
   /// The categorical encoding.
-  const std::shared_ptr<containers::Encoding> categories_;
+  const fct::Ref<containers::Encoding> categories_;
 
   /// The command used.
   const Poco::JSON::Object cmd_;
@@ -63,7 +65,7 @@ struct TransformParams {
   const std::optional<predictors::PredictorImpl> predictor_impl_;
 
   /// The dependency tracker for the predictors.
-  const std::shared_ptr<dependency::PredTracker> pred_tracker_;
+  const fct::Ref<dependency::PredTracker> pred_tracker_;
 
   /// Purpose: FEATURE_SELECTOR or PREDICTOR
   const std::string purpose_;
@@ -76,8 +78,7 @@ struct TransformParams {
   containers::NumericalFeatures* const autofeatures_ = nullptr;
 
   /// Output: The predictors to be fitted.
-  std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>* const
-      predictors_;
+  std::vector<std::vector<fct::Ref<predictors::Predictor>>>* const predictors_;
 
   /// Output: The socket with which we communicate.
   Poco::Net::StreamSocket* const socket_;

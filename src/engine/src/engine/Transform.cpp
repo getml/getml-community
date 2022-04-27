@@ -77,8 +77,6 @@ containers::NumericalFeatures Transform::generate_autofeatures(
     const std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>&
         _feature_learners,
     const predictors::PredictorImpl& _predictor_impl) {
-  assert_true(_params.categories_);
-
   assert_true(_params.predictor_impl_);
 
   assert_true(_feature_learners.size() ==
@@ -97,7 +95,6 @@ containers::NumericalFeatures Transform::generate_autofeatures(
 
     assert_true(_params.peripheral_dfs_);
     assert_true(_params.population_df_);
-    assert_true(_params.categories_);
 
     const auto params = featurelearners::TransformParams{
         .cmd_ = _params.cmd_,
@@ -425,7 +422,6 @@ Transform::stage_data_frames(
 std::tuple<containers::NumericalFeatures, containers::CategoricalFeatures,
            containers::DataFrame>
 Transform::transform_features_only(const FeaturesOnlyParams& _params) {
-  assert_true(_params.transform_params_.categories_);
   assert_true(_params.transform_params_.original_population_df_);
   assert_true(_params.transform_params_.original_peripheral_dfs_);
 
@@ -455,7 +451,7 @@ Transform::transform_features_only(const FeaturesOnlyParams& _params) {
       .population_df_ = population_df,
       .predictor_impl_ =
           *_params.predictor_impl_,  // TODO: This must be fct::Ref
-      .pred_tracker_ = nullptr,
+      .pred_tracker_ = _params.transform_params_.pred_tracker_,
       .purpose_ = "",
       .validation_df_ = std::nullopt,
       .autofeatures_ = nullptr,

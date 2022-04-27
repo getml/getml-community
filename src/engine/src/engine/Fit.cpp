@@ -161,9 +161,6 @@ Fit::extract_schemata(const containers::DataFrame& _population_df,
 
 std::pair<fct::Ref<const FittedPipeline>, fct::Ref<const metrics::Scores>>
 Fit::fit(const Pipeline& _pipeline, const FitParams& _params) {
-  assert_true(_params.fe_tracker_);
-  assert_true(_params.pred_tracker_);
-
   const auto fit_preprocessors_params = FitPreprocessorsParams{
       .categories_ = _params.categories_,
       .cmd_ = _params.cmd_,
@@ -308,8 +305,6 @@ Fit::fit_feature_learners(
   const auto [modified_population_schema, modified_peripheral_schema] =
       extract_schemata(_population_df, _peripheral_dfs, true);
 
-  assert_true(_params.categories_);
-
   for (size_t i = 0; i < feature_learners.size(); ++i) {
     auto& fe = feature_learners.at(i);
 
@@ -356,13 +351,12 @@ Fit::fit_feature_learners(
 
 std::pair<Predictors, std::vector<Poco::JSON::Object::Ptr>> Fit::fit_predictors(
     const FitPredictorsParams& _params) {
-  // TODO: This needs to be a fct::Ref
   auto predictors = init_predictors(_params.pipeline_, _params.purpose_,
                                     _params.impl_, _params.dependencies_,
                                     _params.population_df_.num_targets());
 
-  const auto [retrieved_predictors, all_retrieved] = retrieve_predictors(
-      _params.fit_params_.pred_tracker_, to_ref(predictors));
+  const auto [retrieved_predictors, all_retrieved] =
+      retrieve_predictors(_params.fit_params_.pred_tracker_, predictors);
 
   if (all_retrieved) {
     const auto fingerprints = extract_predictor_fingerprints(
@@ -441,7 +435,7 @@ std::pair<Predictors, std::vector<Poco::JSON::Object::Ptr>> Fit::fit_predictors(
       if (retrieved_predictors.at(t).at(i)) {
         socket_logger->log("Retrieving predictor...");
         socket_logger->log("Progress: 100%.");
-        p = retrieved_predictors.at(t).at(i);
+        p = fct::Ref(retrieved_predictors.at(t).at(i));
         continue;
       }
 
@@ -453,15 +447,15 @@ std::pair<Predictors, std::vector<Poco::JSON::Object::Ptr>> Fit::fit_predictors(
              target_col_valid);
 
       // TODO: This needs to accept fct::Ref
-      _params.fit_params_.pred_tracker_->add(p);
+      _params.fit_params_.pred_tracker_->add(p.ptr());
     }
   }
 
   auto fingerprints =
-      extract_predictor_fingerprints(to_ref(predictors), _params.dependencies_);
+      extract_predictor_fingerprints(predictors, _params.dependencies_);
 
-  const auto predictors_struct = Predictors{
-      .impl_ = _params.impl_, .predictors_ = to_const(to_ref(predictors))};
+  const auto predictors_struct =
+      Predictors{.impl_ = _params.impl_, .predictors_ = to_const(predictors)};
 
   return std::make_pair(std::move(predictors_struct), std::move(fingerprints));
 }
@@ -474,8 +468,6 @@ Preprocessed Fit::fit_preprocessors_only(
 
   const auto df_fingerprints = extract_df_fingerprints(
       _pipeline, _params.population_df_, _params.peripheral_dfs_);
-
-  assert_true(_params.categories_);
 
   auto [population_df, peripheral_dfs] = Transform::stage_data_frames(
       _pipeline, _params.population_df_, _params.peripheral_dfs_,
@@ -512,8 +504,6 @@ Fit::fit_transform_preprocessors(
   assert_true(placeholder);
 
   assert_true(peripheral_names);
-
-  assert_true(_params.preprocessor_tracker_);
 
   const auto socket_logger =
       _params.logger_ ? std::make_shared<const communication::SocketLogger>(
@@ -672,19 +662,17 @@ Fit::init_feature_learners(
 
 // ----------------------------------------------------------------------
 
-// TODO: fct::Ref
-std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>
-Fit::init_predictors(
+std::vector<std::vector<fct::Ref<predictors::Predictor>>> Fit::init_predictors(
     const Pipeline& _pipeline, const std::string& _elem,
     const fct::Ref<const predictors::PredictorImpl>& _predictor_impl,
     const std::vector<Poco::JSON::Object::Ptr>& _dependencies,
     const size_t _num_targets) {
   const auto arr = JSON::get_array(_pipeline.obj(), _elem);
 
-  std::vector<std::vector<std::shared_ptr<predictors::Predictor>>> predictors;
+  std::vector<std::vector<fct::Ref<predictors::Predictor>>> predictors;
 
   for (size_t t = 0; t < _num_targets; ++t) {
-    std::vector<std::shared_ptr<predictors::Predictor>> predictors_for_target;
+    std::vector<fct::Ref<predictors::Predictor>> predictors_for_target;
 
     auto target_num = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
 
@@ -704,7 +692,6 @@ Fit::init_predictors(
                                  "object.");
       }
 
-      // TODO: parse needs to return fct::Ref
       auto new_predictor = predictors::PredictorParser::parse(
           *ptr, _predictor_impl.ptr(), dependencies);
 
@@ -935,7 +922,7 @@ fct::Ref<const metrics::Scores> Fit::make_scores(
 std::pair<std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>,
           bool>
 Fit::retrieve_predictors(
-    const std::shared_ptr<dependency::PredTracker>& _pred_tracker,
+    const fct::Ref<dependency::PredTracker>& _pred_tracker,
     const std::vector<std::vector<fct::Ref<predictors::Predictor>>>&
         _predictors) {
   bool all_retrieved = true;

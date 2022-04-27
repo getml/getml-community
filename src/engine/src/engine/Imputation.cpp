@@ -89,8 +89,6 @@ Poco::JSON::Object::Ptr Imputation::fingerprint() const {
 
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
 Imputation::fit_transform(const FitParams& _params) {
-  assert_true(_params.categories_);
-
   const auto population_df = fit_transform_df(
       _params.population_df_, helpers::ColumnDescription::POPULATION, 0);
 
@@ -255,8 +253,6 @@ Poco::JSON::Object::Ptr Imputation::to_json_obj() const {
 
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
 Imputation::transform(const TransformParams& _params) const {
-  assert_true(_params.categories_);
-
   const auto population_df = transform_df(
       _params.population_df_, helpers::ColumnDescription::POPULATION, 0);
 
@@ -279,11 +275,7 @@ Imputation::transform(const TransformParams& _params) const {
 containers::DataFrame Imputation::transform_df(const containers::DataFrame& _df,
                                                const std::string& _marker,
                                                const size_t _table) const {
-  // ----------------------------------------------------
-
   auto df = _df;
-
-  // ----------------------------------------------------
 
   const auto all_cols = get_all_cols();
 
@@ -310,11 +302,7 @@ containers::DataFrame Imputation::transform_df(const containers::DataFrame& _df,
     }
   }
 
-  // ----------------------------------------------------
-
   return df;
-
-  // ----------------------------------------------------
 }
 
 // ----------------------------------------------------

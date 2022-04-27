@@ -51,8 +51,6 @@ void Check::check(const Pipeline& _pipeline, const CheckParams& _params) {
 
   const auto warning_fingerprint = make_warning_fingerprint(fl_fingerprints);
 
-  assert_true(_params.warning_tracker_);
-
   const auto retrieved =
       _params.warning_tracker_->retrieve(warning_fingerprint);
 

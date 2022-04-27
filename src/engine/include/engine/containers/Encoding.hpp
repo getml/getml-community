@@ -5,6 +5,7 @@
 
 #include <memory>
 #include <optional>
+#include <string>
 #include <variant>
 
 // -------------------------------------------------------------------------
@@ -22,7 +23,6 @@
 
 namespace engine {
 namespace containers {
-// -------------------------------------------------------------------------
 
 class Encoding {
   using InMemoryType = std::shared_ptr<InMemoryEncoding>;

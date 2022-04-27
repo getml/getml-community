@@ -7,6 +7,7 @@
 
 // ----------------------------------------------------------------------------
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -23,7 +24,7 @@ namespace pipelines {
 
 struct FitPreprocessorsParams {
   /// The categorical encoding.
-  const std::shared_ptr<containers::Encoding> categories_;
+  const fct::Ref<containers::Encoding> categories_;
 
   /// The command used.
   const Poco::JSON::Object cmd_;
@@ -38,7 +39,7 @@ struct FitPreprocessorsParams {
   const containers::DataFrame population_df_;
 
   /// The dependency tracker for the preprocessors.
-  const std::shared_ptr<dependency::PreprocessorTracker> preprocessor_tracker_;
+  const fct::Ref<dependency::PreprocessorTracker> preprocessor_tracker_;
 
   /// Output: The socket with which we communicate.
   Poco::Net::StreamSocket* const socket_;

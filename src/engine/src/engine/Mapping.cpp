@@ -718,8 +718,6 @@ size_t Mapping::infer_num_cols(const helpers::DataFrame& _df) const {
 
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
 Mapping::fit_transform(const FitParams& _params) {
-  assert_true(_params.categories_);
-
   std::tie(population_schema_, peripheral_schema_) =
       extract_schemata(_params.population_df_, _params.peripheral_dfs_);
 

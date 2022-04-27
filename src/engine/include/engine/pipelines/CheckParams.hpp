@@ -25,7 +25,7 @@ namespace pipelines {
 
 struct CheckParams {
   /// The Encoding used for the categories.
-  const std::shared_ptr<containers::Encoding> categories_;
+  const fct::Ref<containers::Encoding> categories_;
 
   /// The command used.
   const Poco::JSON::Object cmd_;
@@ -40,10 +40,10 @@ struct CheckParams {
   const containers::DataFrame population_df_;
 
   /// The dependency tracker for the preprocessors.
-  const std::shared_ptr<dependency::PreprocessorTracker> preprocessor_tracker_;
+  const fct::Ref<dependency::PreprocessorTracker> preprocessor_tracker_;
 
   /// Tracks the warnings to be shown in the Python API.
-  const std::shared_ptr<dependency::WarningTracker> warning_tracker_;
+  const fct::Ref<dependency::WarningTracker> warning_tracker_;
 
   /// Output: The socket with which we communicate.
   Poco::Net::StreamSocket* const socket_;

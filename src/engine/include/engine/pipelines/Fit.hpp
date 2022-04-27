@@ -81,7 +81,7 @@ class Fit {
       const size_t _num_targets);
 
   /// Initializes the predictors or feature selectors.
-  static std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>
+  static std::vector<std::vector<fct::Ref<predictors::Predictor>>>
   init_predictors(
       const Pipeline& _pipeline, const std::string& _elem,
       const fct::Ref<const predictors::PredictorImpl>& _predictor_impl,
@@ -206,7 +206,7 @@ class Fit {
   static std::pair<
       std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>, bool>
   retrieve_predictors(
-      const std::shared_ptr<dependency::PredTracker>& _pred_tracker,
+      const fct::Ref<dependency::PredTracker>& _pred_tracker,
       const std::vector<std::vector<fct::Ref<predictors::Predictor>>>&
           _predictors);
 

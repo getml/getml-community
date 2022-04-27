@@ -107,13 +107,12 @@ Predictors Load::load_feature_selectors(
       const auto& p = feature_selectors.at(i).at(j);
       p->load(_path + "feature-selector-" + std::to_string(i) + "-" +
               std::to_string(j));
-      _pred_tracker->add(p);
+      _pred_tracker->add(p.ptr());  // TODO
     }
   }
 
-  return Predictors{
-      .impl_ = _feature_selector_impl,
-      .predictors_ = Fit::to_const(Fit::to_ref(feature_selectors))};
+  return Predictors{.impl_ = _feature_selector_impl,
+                    .predictors_ = Fit::to_const(feature_selectors)};
 }
 
 // ------------------------------------------------------------------------
@@ -253,12 +252,12 @@ Predictors Load::load_predictors(
       const auto& p = predictors.at(i).at(j);
       p->load(_path + "predictor-" + std::to_string(i) + "-" +
               std::to_string(j));
-      _pred_tracker->add(p);
+      _pred_tracker->add(p.ptr());  // TODO
     }
   }
 
   return Predictors{.impl_ = _predictor_impl,
-                    .predictors_ = Fit::to_const(Fit::to_ref(predictors))};
+                    .predictors_ = Fit::to_const(predictors)};
 }
 
 // ------------------------------------------------------------------------

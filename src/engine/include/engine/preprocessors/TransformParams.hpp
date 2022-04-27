@@ -14,6 +14,7 @@
 
 // ----------------------------------------------------------------------------
 
+#include "fct/Ref.hpp"
 #include "helpers/helpers.hpp"
 #include "logging/logging.hpp"
 
@@ -25,14 +26,13 @@
 
 namespace engine {
 namespace preprocessors {
-// ----------------------------------------------------
 
 struct TransformParams {
   /// The command used to create the preprocessor.
   const Poco::JSON::Object cmd_;
 
   /// Encoding for categorical variables.
-  const std::shared_ptr<const containers::Encoding> categories_;
+  const fct::Ref<const containers::Encoding> categories_;
 
   /// The logger used to log the progress.
   const std::shared_ptr<const logging::AbstractLogger> logger_;

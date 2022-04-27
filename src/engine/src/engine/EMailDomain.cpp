@@ -96,8 +96,6 @@ Poco::JSON::Object::Ptr EMailDomain::fingerprint() const {
 
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
 EMailDomain::fit_transform(const FitParams& _params) {
-  assert_true(_params.categories_);
-
   const auto population_df = fit_transform_df(
       _params.population_df_, helpers::ColumnDescription::POPULATION, 0,
       _params.categories_.get());
@@ -193,8 +191,6 @@ Poco::JSON::Object::Ptr EMailDomain::to_json_obj() const {
 
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
 EMailDomain::transform(const TransformParams& _params) const {
-  assert_true(_params.categories_);
-
   const auto population_df =
       transform_df(*_params.categories_, _params.population_df_,
                    helpers::ColumnDescription::POPULATION, 0);

@@ -12,6 +12,10 @@
 
 // -----------------------------------------------------------------------------
 
+#include "fct/Ref.hpp"
+
+// -----------------------------------------------------------------------------
+
 #include "predictors/Predictor.hpp"
 #include "predictors/PredictorImpl.hpp"
 
@@ -21,7 +25,7 @@ namespace predictors {
 
 struct PredictorParser {
   /// Parses the predictor.
-  static std::shared_ptr<Predictor> parse(
+  static fct::Ref<Predictor> parse(
       const Poco::JSON::Object& _json_obj,
       const std::shared_ptr<const PredictorImpl>& _impl,
       const std::vector<Poco::JSON::Object::Ptr>& _dependencies);
