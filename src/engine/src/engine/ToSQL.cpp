@@ -158,10 +158,6 @@ std::vector<std::string> ToSQL::staging_to_sql(
   const auto [placeholder, peripheral_names] =
       _params.pipeline_.make_placeholder();
 
-  assert_true(placeholder);
-
-  assert_true(peripheral_names);
-
   const auto peripheral_needs_targets =
       placeholder->infer_needs_targets(*peripheral_names);
 

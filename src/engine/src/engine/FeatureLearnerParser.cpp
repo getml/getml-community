@@ -15,7 +15,6 @@
 
 namespace engine {
 namespace featurelearners {
-// ----------------------------------------------------------------------
 
 std::shared_ptr<AbstractFeatureLearner> FeatureLearnerParser::parse(
     const FeatureLearnerParams& _params) {

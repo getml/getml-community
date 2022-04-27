@@ -185,9 +185,9 @@ Fit::fit(const Pipeline& _pipeline, const FitParams& _params) {
   const auto feature_learner_params = featurelearners::FeatureLearnerParams{
       .cmd_ = Poco::JSON::Object(),
       .dependencies_ = preprocessed.preprocessor_fingerprints_,
-      .peripheral_ = peripheral,
+      .peripheral_ = peripheral.ptr(),  // TODO
       .peripheral_schema_ = modified_peripheral_schema.ptr(),
-      .placeholder_ = placeholder,
+      .placeholder_ = placeholder.ptr(),  // TODO
       .population_schema_ = modified_population_schema.ptr(),
       .target_num_ = featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS};
 
@@ -500,10 +500,6 @@ Fit::fit_transform_preprocessors(
   }
 
   const auto [placeholder, peripheral_names] = _pipeline.make_placeholder();
-
-  assert_true(placeholder);
-
-  assert_true(peripheral_names);
 
   const auto socket_logger =
       _params.logger_ ? std::make_shared<const communication::SocketLogger>(

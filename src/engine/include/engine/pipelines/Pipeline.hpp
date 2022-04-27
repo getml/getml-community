@@ -118,8 +118,8 @@ class Pipeline {
  public:
   /// Generates the placeholder and the peripheral names, integrating the
   /// many-to-one joins and all other modifications.
-  std::pair<std::shared_ptr<const helpers::Placeholder>,
-            std::shared_ptr<const std::vector<std::string>>>
+  std::pair<fct::Ref<const helpers::Placeholder>,
+            fct::Ref<const std::vector<std::string>>>
   make_placeholder() const;
 
   /// Returns the names of the peripheral tables.

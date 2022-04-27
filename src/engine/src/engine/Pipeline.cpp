@@ -25,17 +25,16 @@ Pipeline::~Pipeline() = default;
 
 // ------------------------------------------------------------------------
 
-std::pair<std::shared_ptr<const helpers::Placeholder>,
-          std::shared_ptr<const std::vector<std::string>>>
+std::pair<fct::Ref<const helpers::Placeholder>,
+          fct::Ref<const std::vector<std::string>>>
 Pipeline::make_placeholder() const {
   const auto data_model = *JSON::get_object(obj(), "data_model_");
 
-  const auto placeholder = std::make_shared<const helpers::Placeholder>(
+  const auto placeholder = fct::Ref<const helpers::Placeholder>::make(
       PlaceholderMaker::make_placeholder(data_model, "t1"));
 
-  const auto peripheral_names =
-      std::make_shared<const std::vector<std::string>>(
-          PlaceholderMaker::make_peripheral(*placeholder));
+  const auto peripheral_names = fct::Ref<const std::vector<std::string>>::make(
+      PlaceholderMaker::make_peripheral(*placeholder));
 
   return std::make_pair(placeholder, peripheral_names);
 }

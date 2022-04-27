@@ -32,10 +32,6 @@ Transform::apply_preprocessors(
   const auto [placeholder, peripheral_names] =
       _params.pipeline_.make_placeholder();
 
-  assert_true(placeholder);
-
-  assert_true(peripheral_names);
-
   assert_true(_params.transform_params_.logger_);
 
   const auto socket_logger = std::make_shared<communication::SocketLogger>(

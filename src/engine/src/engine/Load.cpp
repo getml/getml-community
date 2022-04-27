@@ -72,9 +72,9 @@ Load::load_feature_learners(
   const auto feature_learner_params = featurelearners::FeatureLearnerParams{
       .cmd_ = Poco::JSON::Object(),
       .dependencies_ = _pipeline_json.fingerprints_.preprocessor_fingerprints_,
-      .peripheral_ = peripheral,
+      .peripheral_ = peripheral.ptr(),  // TODO
       .peripheral_schema_ = _pipeline_json.modified_peripheral_schema_.ptr(),
-      .placeholder_ = placeholder,
+      .placeholder_ = placeholder.ptr(),  // TODO
       .population_schema_ = _pipeline_json.modified_population_schema_.ptr(),
       .target_num_ = featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS};
 

@@ -40,9 +40,9 @@ void Check::check(const Pipeline& _pipeline, const CheckParams& _params) {
   const auto feature_learner_params = featurelearners::FeatureLearnerParams{
       .cmd_ = Poco::JSON::Object(),
       .dependencies_ = preprocessed.preprocessor_fingerprints_,
-      .peripheral_ = peripheral_names,
+      .peripheral_ = peripheral_names.ptr(),  // TODO
       .peripheral_schema_ = modified_peripheral_schema.ptr(),
-      .placeholder_ = placeholder,
+      .placeholder_ = placeholder.ptr(),  // TODO
       .population_schema_ = modified_population_schema.ptr(),
       .target_num_ = featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS};
 
@@ -72,8 +72,9 @@ void Check::check(const Pipeline& _pipeline, const CheckParams& _params) {
       std::shared_ptr<featurelearners::AbstractFeatureLearner>>(
       feature_learners | VIEWS::transform(to_ptr));
 
+  // TODO: fct::Ref
   const auto warner = preprocessors::DataModelChecker::check(
-      placeholder, peripheral_names, preprocessed.population_df_,
+      placeholder.ptr(), peripheral_names.ptr(), preprocessed.population_df_,
       preprocessed.peripheral_dfs_, fl_shared_ptr, socket_logger);
 
   communication::Sender::send_string("Success!", _params.socket_);
