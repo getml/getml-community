@@ -18,14 +18,18 @@ fct::Ref<Predictor> PredictorParser::parse(
 
   if (type == "LinearRegression") {
     return fct::Ref<LinearRegression>::make(_json_obj, _impl, _dependencies);
-  } else if (type == "LogisticRegression") {
-    return fct::Ref<LogisticRegression>::make(_json_obj, _impl, _dependencies);
-  } else if (type == "XGBoostPredictor" || type == "XGBoostClassifier" ||
-             type == "XGBoostRegressor") {
-    return fct::Ref<XGBoostPredictor>::make(_json_obj, _impl, _dependencies);
-  } else {
-    throw std::runtime_error("Predictor of type '" + type + "' not known!");
   }
+
+  if (type == "LogisticRegression") {
+    return fct::Ref<LogisticRegression>::make(_json_obj, _impl, _dependencies);
+  }
+
+  if (type == "XGBoostPredictor" || type == "XGBoostClassifier" ||
+      type == "XGBoostRegressor") {
+    return fct::Ref<XGBoostPredictor>::make(_json_obj, _impl, _dependencies);
+  }
+
+  throw std::runtime_error("Predictor of type '" + type + "' not known!");
 }
 
 }  // namespace predictors

@@ -603,9 +603,7 @@ Fit::init_feature_learners(
         .population_schema_ = _params.population_schema_,
         .target_num_ = _target_num};
 
-    // TODO: The parser needs to directly return fct::Ref.
-    return fct::Ref<featurelearners::AbstractFeatureLearner>(
-        featurelearners::FeatureLearnerParser::parse(new_params));
+    return featurelearners::FeatureLearnerParser::parse(new_params);
   };
 
   const auto make_fl_for_all_targets =
@@ -636,10 +634,8 @@ Fit::init_feature_learners(
         .target_num_ =
             featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS};
 
-    // TODO: This needs to directly return fct::Ref
     const auto new_feature_learner =
-        fct::Ref<featurelearners::AbstractFeatureLearner>(
-            featurelearners::FeatureLearnerParser::parse(params));
+        featurelearners::FeatureLearnerParser::parse(params);
 
     if (new_feature_learner->supports_multiple_targets()) {
       return {new_feature_learner};
@@ -714,8 +710,7 @@ std::vector<fct::Ref<preprocessors::Preprocessor>> Fit::init_preprocessors(
   const auto parse = [&arr, &_dependencies](const size_t _i) {
     const auto ptr = arr->getObject(_i);
     assert_true(ptr);
-    return fct::Ref<preprocessors::Preprocessor>(
-        preprocessors::PreprocessorParser::parse(*ptr, _dependencies));
+    return preprocessors::PreprocessorParser::parse(*ptr, _dependencies);
   };
 
   const auto iota = fct::iota<size_t>(0, arr->size());

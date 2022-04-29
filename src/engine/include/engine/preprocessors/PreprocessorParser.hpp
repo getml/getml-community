@@ -7,8 +7,11 @@
 
 // ----------------------------------------------------------------------------
 
-#include <memory>
 #include <vector>
+
+// ----------------------------------------------------------------------------
+
+#include "fct/Ref.hpp"
 
 // ----------------------------------------------------------------------------
 
@@ -21,7 +24,7 @@ namespace preprocessors {
 
 struct PreprocessorParser {
   /// Returns the correct preprocessor to use based on the JSON object.
-  static std::shared_ptr<Preprocessor> parse(
+  static fct::Ref<Preprocessor> parse(
       const Poco::JSON::Object& _obj,
       const std::vector<Poco::JSON::Object::Ptr>& _dependencies);
 };

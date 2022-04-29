@@ -283,9 +283,8 @@ Load::load_preprocessors(const std::string& _path,
     const auto json_obj =
         load_json_obj(_path + "preprocessor-" + std::to_string(i) + ".json");
 
-    const auto p = fct::Ref<const preprocessors::Preprocessor>(
-        preprocessors::PreprocessorParser::parse(
-            json_obj, _fingerprints.df_fingerprints_));
+    const auto p = preprocessors::PreprocessorParser::parse(
+        json_obj, _fingerprints.df_fingerprints_);
 
     preprocessors.push_back(p);
 

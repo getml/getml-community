@@ -16,34 +16,32 @@
 namespace engine {
 namespace featurelearners {
 
-std::shared_ptr<AbstractFeatureLearner> FeatureLearnerParser::parse(
+fct::Ref<AbstractFeatureLearner> FeatureLearnerParser::parse(
     const FeatureLearnerParams& _params) {
   const auto type = JSON::get_value<std::string>(_params.cmd_, "type_");
 
   if (type == AbstractFeatureLearner::FASTPROP) {
-    return std::make_shared<FeatureLearner<fastprop::algorithm::FastProp>>(
+    return fct::Ref<FeatureLearner<fastprop::algorithm::FastProp>>::make(
         _params);
   }
 
   if (type == AbstractFeatureLearner::MULTIREL) {
-    return std::make_shared<
-        FeatureLearner<multirel::ensemble::DecisionTreeEnsemble>>(_params);
+    return fct::Ref<FeatureLearner<multirel::ensemble::DecisionTreeEnsemble>>::
+        make(_params);
   }
 
   if (type == AbstractFeatureLearner::RELBOOST) {
-    return std::make_shared<
-        FeatureLearner<relboost::ensemble::DecisionTreeEnsemble>>(_params);
+    return fct::Ref<FeatureLearner<relboost::ensemble::DecisionTreeEnsemble>>::
+        make(_params);
   }
 
   if (type == AbstractFeatureLearner::RELMT) {
-    return std::make_shared<
-        FeatureLearner<relmt::ensemble::DecisionTreeEnsemble>>(_params);
+    return fct::Ref<
+        FeatureLearner<relmt::ensemble::DecisionTreeEnsemble>>::make(_params);
   }
 
   throw std::runtime_error("Feature learning algorithm of type '" + type +
                            "' not known!");
-
-  return std::shared_ptr<AbstractFeatureLearner>();
 }
 
 // ----------------------------------------------------------------------

@@ -3,7 +3,7 @@
 
 // ----------------------------------------------------------------------------
 
-#include <memory>
+#include "fct/Ref.hpp"
 
 // ----------------------------------------------------------------------------
 
@@ -14,11 +14,10 @@
 
 namespace engine {
 namespace featurelearners {
-// ----------------------------------------------------------------------------
 
 struct FeatureLearnerParser {
   /// Returns the correct feature learner
-  static std::shared_ptr<AbstractFeatureLearner> parse(
+  static fct::Ref<AbstractFeatureLearner> parse(
       const FeatureLearnerParams& _params);
 };
 
