@@ -9,10 +9,12 @@
 
 #include <map>
 #include <memory>
+#include <string>
 
 // -------------------------------------------------------------------------
 
 #include "debug/debug.hpp"
+#include "fct/Ref.hpp"
 
 // -------------------------------------------------------------------------
 
@@ -32,7 +34,7 @@ class Tracker {
 
  public:
   /// Adds a new element to be tracked.
-  void add(std::shared_ptr<const T> _elem);
+  void add(const fct::Ref<const T>& _elem);
 
   /// Removes all elements.
   void clear();
@@ -43,16 +45,14 @@ class Tracker {
 
  private:
   /// A map keeping track of the elements.
-  std::map<size_t, std::shared_ptr<const T>> elements_;
+  std::map<size_t, fct::Ref<const T>> elements_;
 };
 
 // -------------------------------------------------------------------------
 // -------------------------------------------------------------------------
 
 template <class T>
-void Tracker<T>::add(std::shared_ptr<const T> _elem) {
-  assert_true(_elem);
-
+void Tracker<T>::add(const fct::Ref<const T>& _elem) {
   const auto fingerprint = _elem->fingerprint();
 
   assert_true(fingerprint);
@@ -85,7 +85,7 @@ std::shared_ptr<T> Tracker<T>::retrieve(
   const auto it = elements_.find(f_hash);
 
   if (it == elements_.end()) {
-    return std::shared_ptr<T>();
+    return nullptr;
   }
 
   const auto ptr = it->second;
@@ -98,7 +98,7 @@ std::shared_ptr<T> Tracker<T>::retrieve(
 
   /// On the off-chance that there was a collision, we double-check.
   if (f_str != f2_str) {
-    return std::shared_ptr<T>();
+    return nullptr;
   }
 
   return ptr->clone();

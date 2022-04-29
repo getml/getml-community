@@ -18,6 +18,10 @@
 
 // ----------------------------------------------------------------------------
 
+#include "fct/Ref.hpp"
+
+// ----------------------------------------------------------------------------
+
 #include "engine/communication/Sender.hpp"
 #include "engine/communication/Warnings.hpp"
 
@@ -48,20 +52,16 @@ class Warner {
   const std::vector<std::string>& warnings() const { return warnings_; }
 
   /// Generates a warnings object that can be used for dependency tracking.
-  const std::shared_ptr<Warnings> to_warnings_obj(
+  const fct::Ref<Warnings> to_warnings_obj(
       Poco::JSON::Object::Ptr _fingerprints) const {
     const auto ptr =
         std::make_shared<const std::vector<std::string>>(warnings_);
-    return std::make_shared<Warnings>(_fingerprints, ptr);
+    return fct::Ref<Warnings>::make(_fingerprints, ptr);
   }
-
-  // ------------------------------------------------------------------------
 
  private:
   /// The list of warnings to send.
   std::vector<std::string> warnings_;
-
-  // ------------------------------------------------------------------------
 };
 
 // ------------------------------------------------------------------------

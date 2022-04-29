@@ -84,7 +84,7 @@ Load::load_feature_learners(
   for (size_t i = 0; i < feature_learners.size(); ++i) {
     auto& fe = feature_learners.at(i);
     fe->load(_path + "feature-learner-" + std::to_string(i) + ".json");
-    _fe_tracker->add(fe.ptr());
+    _fe_tracker->add(fe);
   }
 
   return Fit::to_const(feature_learners);
@@ -107,7 +107,7 @@ Predictors Load::load_feature_selectors(
       const auto& p = feature_selectors.at(i).at(j);
       p->load(_path + "feature-selector-" + std::to_string(i) + "-" +
               std::to_string(j));
-      _pred_tracker->add(p.ptr());  // TODO
+      _pred_tracker->add(p);
     }
   }
 
@@ -252,7 +252,7 @@ Predictors Load::load_predictors(
       const auto& p = predictors.at(i).at(j);
       p->load(_path + "predictor-" + std::to_string(i) + "-" +
               std::to_string(j));
-      _pred_tracker->add(p.ptr());  // TODO
+      _pred_tracker->add(p);
     }
   }
 
@@ -289,7 +289,7 @@ Load::load_preprocessors(const std::string& _path,
 
     preprocessors.push_back(p);
 
-    _preprocessor_tracker->add(p.ptr());
+    _preprocessor_tracker->add(p);
   }
 
   return preprocessors;

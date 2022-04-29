@@ -72,7 +72,6 @@ void Check::check(const Pipeline& _pipeline, const CheckParams& _params) {
       std::shared_ptr<featurelearners::AbstractFeatureLearner>>(
       feature_learners | VIEWS::transform(to_ptr));
 
-  // TODO: fct::Ref
   const auto warner = preprocessors::DataModelChecker::check(
       placeholder.ptr(), peripheral_names.ptr(), preprocessed.population_df_,
       preprocessed.peripheral_dfs_, fl_shared_ptr, socket_logger);

@@ -338,7 +338,7 @@ Fit::fit_feature_learners(
 
     fe->fit(params);
 
-    _params.fe_tracker_->add(fe.ptr());
+    _params.fe_tracker_->add(fe);
   }
 
   auto fl_fingerprints = extract_fl_fingerprints(
@@ -446,8 +446,7 @@ std::pair<Predictors, std::vector<Poco::JSON::Object::Ptr>> Fit::fit_predictors(
              target_col, categorical_features_valid, numerical_features_valid,
              target_col_valid);
 
-      // TODO: This needs to accept fct::Ref
-      _params.fit_params_.pred_tracker_->add(p.ptr());
+      _params.fit_params_.pred_tracker_->add(p);
     }
   }
 
@@ -555,7 +554,7 @@ Fit::fit_transform_preprocessors(
 
     std::tie(*_population_df, *_peripheral_dfs) = p->fit_transform(params);
 
-    _params.preprocessor_tracker_->add(p.ptr());
+    _params.preprocessor_tracker_->add(p);
   }
 
   if (socket_logger) {
