@@ -28,7 +28,7 @@
 // ------------------------------------------------------------------------
 
 #include "engine/handlers/DataFrameManager.hpp"
-#include "engine/handlers/PipelineManager.hpp"
+#include "engine/handlers/ProjectManagerParams.hpp"
 
 // ------------------------------------------------------------------------
 
@@ -37,47 +37,13 @@ namespace handlers {
 
 class ProjectManager {
  public:
-  typedef PipelineManager::PipelineMapType PipelineMapType;
+  typedef ProjectManagerParams::PipelineMapType PipelineMapType;
 
   // ------------------------------------------------------------------------
 
  public:
-  ProjectManager(
-      const fct::Ref<containers::Encoding>& _categories,
-      const fct::Ref<DataFrameManager>& _data_frame_manager,
-      const fct::Ref<std::map<std::string, containers::DataFrame>> _data_frames,
-      const fct::Ref<engine::dependency::DataFrameTracker>& _data_frame_tracker,
-      const fct::Ref<dependency::FETracker>& _fe_tracker,
-      const fct::Ref<containers::Encoding>& _join_keys_encoding,
-      const fct::Ref<std::map<std::string, hyperparam::Hyperopt>>& _hyperopts,
-      const fct::Ref<licensing::LicenseChecker>& _license_checker,
-      const fct::Ref<const communication::Logger>& _logger,
-      const fct::Ref<const communication::Monitor>& _monitor,
-      const config::Options& _options,
-      const fct::Ref<PipelineMapType>& _pipelines,
-      const fct::Ref<dependency::PredTracker>& _pred_tracker,
-      const fct::Ref<dependency::PreprocessorTracker>& _preprocessor_tracker,
-      const std::string& _project,
-      const fct::Ref<multithreading::ReadWriteLock>& _project_lock,
-      const fct::Ref<multithreading::ReadWriteLock>& _read_write_lock)
-      : categories_(_categories),
-        data_frame_manager_(_data_frame_manager),
-        data_frames_(_data_frames),
-        data_frame_tracker_(_data_frame_tracker),
-        fe_tracker_(_fe_tracker),
-        join_keys_encoding_(_join_keys_encoding),
-        hyperopts_(_hyperopts),
-        license_checker_(_license_checker),
-        logger_(_logger),
-        monitor_(_monitor),
-        options_(_options),
-        pipelines_(_pipelines),
-        pred_tracker_(_pred_tracker),
-        preprocessor_tracker_(_preprocessor_tracker),
-        project_(_project),
-        project_lock_(_project_lock),
-        read_write_lock_(_read_write_lock) {
-    set_project(_project);
+  ProjectManager(const ProjectManagerParams& _params) : params_(_params) {
+    set_project(_params.project_);
   }
 
   ~ProjectManager() = default;
@@ -210,7 +176,9 @@ class ProjectManager {
 
  public:
   /// Trivial accessor
-  std::string project_directory() const { return options_.project_directory(); }
+  std::string project_directory() const {
+    return params_.options_.project_directory();
+  }
 
   // ------------------------------------------------------------------------
 
@@ -232,150 +200,107 @@ class ProjectManager {
 
  private:
   /// Trivial accessor
-  containers::Encoding& categories() { return *categories_; }
+  containers::Encoding& categories() { return *params_.categories_; }
 
   /// Trivial accessor
-  const containers::Encoding& categories() const { return *categories_; }
+  const containers::Encoding& categories() const {
+    return *params_.categories_;
+  }
 
   /// Trivial accessor
   std::map<std::string, containers::DataFrame>& data_frames() {
-    return *data_frames_;
+    return *params_.data_frames_;
   }
 
   /// Trivial (const) accessor
   const std::map<std::string, containers::DataFrame>& data_frames() const {
-    return *data_frames_;
+    return *params_.data_frames_;
   }
 
   /// Trivial accessor
   dependency::DataFrameTracker& data_frame_tracker() {
-    return *data_frame_tracker_;
+    return *params_.data_frame_tracker_;
   }
 
   /// Trivial accessor
-  DataFrameManager& data_frame_manager() { return *data_frame_manager_; }
+  DataFrameManager& data_frame_manager() {
+    return *params_.data_frame_manager_;
+  }
 
   /// Trivial (const) accessor
   const DataFrameManager& data_frame_manager() const {
-    return *data_frame_manager_;
+    return *params_.data_frame_manager_;
   }
 
   /// Trivial accessor
-  dependency::FETracker& fe_tracker() { return *fe_tracker_; }
+  dependency::FETracker& fe_tracker() { return *params_.fe_tracker_; }
 
   /// Returns a deep copy of a pipeline.
   pipelines::Pipeline get_pipeline(const std::string& _name) const {
-    multithreading::ReadLock read_lock(read_write_lock_);
+    multithreading::ReadLock read_lock(params_.read_write_lock_);
     auto p = utils::Getter::get(_name, pipelines());
     return p;
   }
 
   /// Trivial accessor
-  containers::Encoding& join_keys_encoding() { return *join_keys_encoding_; }
+  containers::Encoding& join_keys_encoding() {
+    return *params_.join_keys_encoding_;
+  }
 
   /// Trivial accessor
   const containers::Encoding& join_keys_encoding() const {
-    return *join_keys_encoding_;
+    return *params_.join_keys_encoding_;
   }
 
   /// Trivial (private) accessor
   std::map<std::string, hyperparam::Hyperopt>& hyperopts() {
-    return *hyperopts_;
+    return *params_.hyperopts_;
   }
 
   /// Trivial (private) accessor
   const std::map<std::string, hyperparam::Hyperopt>& hyperopts() const {
-    return *hyperopts_;
+    return *params_.hyperopts_;
   }
 
   /// Trivial accessor
   engine::licensing::LicenseChecker& license_checker() {
-    return *license_checker_;
+    return *params_.license_checker_;
   }
 
   /// Trivial (private) accessor
-  const communication::Logger& logger() { return *logger_; }
+  const communication::Logger& logger() { return *params_.logger_; }
 
   /// Trivial (private) accessor
-  const communication::Monitor& monitor() const { return *monitor_; }
+  const communication::Monitor& monitor() const { return *params_.monitor_; }
 
   /// Trivial (private) accessor
-  PipelineMapType& pipelines() { return *pipelines_; }
+  PipelineMapType& pipelines() { return *params_.pipelines_; }
 
   /// Trivial (const private) accessor
-  const PipelineMapType& pipelines() const { return *pipelines_; }
+  const PipelineMapType& pipelines() const { return *params_.pipelines_; }
 
   /// Trivial accessor
-  dependency::PredTracker& pred_tracker() { return *pred_tracker_; }
+  dependency::PredTracker& pred_tracker() { return *params_.pred_tracker_; }
 
   /// Trivial (private) setter.
   void set_hyperopt(const std::string& _name,
                     const hyperparam::Hyperopt& _hyperopt) {
-    multithreading::WriteLock write_lock(read_write_lock_);
+    multithreading::WriteLock write_lock(params_.read_write_lock_);
     hyperopts().insert_or_assign(_name, _hyperopt);
   }
 
   /// Trivial (private) setter.
   void set_pipeline(const std::string& _name,
                     const pipelines::Pipeline& _pipeline) {
-    multithreading::WriteLock write_lock(read_write_lock_);
+    multithreading::WriteLock write_lock(params_.read_write_lock_);
     pipelines().insert_or_assign(_name, _pipeline);
   }
 
   // ------------------------------------------------------------------------
 
  private:
-  /// Maps integeres to category names
-  const fct::Ref<containers::Encoding> categories_;
-
-  /// We need some methods from the data frame manager.
-  const fct::Ref<DataFrameManager> data_frame_manager_;
-
-  /// The data frames currently held in memory
-  const fct::Ref<std::map<std::string, containers::DataFrame>> data_frames_;
-
-  /// Keeps track of all data frames, so we don't have to
-  /// reconstruct the features all of the time.
-  const fct::Ref<dependency::DataFrameTracker> data_frame_tracker_;
-
-  /// Keeps track of all feature learners.
-  const fct::Ref<dependency::FETracker> fe_tracker_;
-
-  /// Maps integers to join key names
-  const fct::Ref<containers::Encoding> join_keys_encoding_;
-
-  /// The Hyperopts currently held in memory
-  const fct::Ref<std::map<std::string, hyperparam::Hyperopt>> hyperopts_;
-
-  /// For checking the license and memory usage
-  const fct::Ref<licensing::LicenseChecker> license_checker_;
-
-  /// For logging
-  const fct::Ref<const communication::Logger> logger_;
-
-  /// For communication with the monitor
-  const fct::Ref<const communication::Monitor> monitor_;
-
-  /// Settings for the engine and the monitor
-  const config::Options options_;
-
-  /// The pipelines currently held in memory
-  const fct::Ref<PipelineMapType> pipelines_;
-
-  /// Keeps track of all predictors.
-  const fct::Ref<dependency::PredTracker> pred_tracker_;
-
-  /// Keeps track of all preprocessors.
-  const fct::Ref<dependency::PreprocessorTracker> preprocessor_tracker_;
-
-  /// The name of the current project
-  const std::string project_;
-
-  /// It is sometimes necessary to prevent us from changing the project.
-  const fct::Ref<multithreading::ReadWriteLock> project_lock_;
-
-  /// For synchronization
-  const fct::Ref<multithreading::ReadWriteLock> read_write_lock_;
+  /// The underlying parameters.
+  const ProjectManagerParams params_;
 };
 
 // ------------------------------------------------------------------------

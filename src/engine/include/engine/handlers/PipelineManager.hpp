@@ -27,6 +27,7 @@
 // ------------------------------------------------------------------------
 
 #include "engine/handlers/DatabaseManager.hpp"
+#include "engine/handlers/PipelineManagerParams.hpp"
 #include "engine/handlers/ViewParser.hpp"
 
 // ------------------------------------------------------------------------
@@ -39,37 +40,7 @@ class PipelineManager {
   typedef std::map<std::string, pipelines::Pipeline> PipelineMapType;
 
  public:
-  PipelineManager(
-      const fct::Ref<containers::Encoding>& _categories,
-      const fct::Ref<DatabaseManager>& _database_manager,
-      const fct::Ref<std::map<std::string, containers::DataFrame>> _data_frames,
-      const fct::Ref<engine::dependency::DataFrameTracker>& _data_frame_tracker,
-      const fct::Ref<dependency::FETracker>& _fe_tracker,
-      const fct::Ref<containers::Encoding>& _join_keys_encoding,
-      const fct::Ref<engine::licensing::LicenseChecker>& _license_checker,
-      const fct::Ref<const communication::Logger>& _logger,
-      const fct::Ref<const communication::Monitor>& _monitor,
-      const config::Options& _options,
-      const fct::Ref<PipelineMapType>& _pipelines,
-      const fct::Ref<dependency::PredTracker>& _pred_tracker,
-      const fct::Ref<dependency::PreprocessorTracker>& _preprocessor_tracker,
-      const fct::Ref<multithreading::ReadWriteLock>& _read_write_lock,
-      const fct::Ref<dependency::WarningTracker>& _warning_tracker)
-      : categories_(_categories),
-        database_manager_(_database_manager),
-        data_frames_(_data_frames),
-        data_frame_tracker_(_data_frame_tracker),
-        fe_tracker_(_fe_tracker),
-        join_keys_encoding_(_join_keys_encoding),
-        license_checker_(_license_checker),
-        logger_(_logger),
-        monitor_(_monitor),
-        options_(_options),
-        pipelines_(_pipelines),
-        pred_tracker_(_pred_tracker),
-        preprocessor_tracker_(_preprocessor_tracker),
-        read_write_lock_(_read_write_lock),
-        warning_tracker_(_warning_tracker) {}
+  PipelineManager(const PipelineManagerParams& _params) : params_(_params) {}
 
   ~PipelineManager() = default;
 
@@ -246,54 +217,56 @@ class PipelineManager {
 
  private:
   /// Trivial accessor
-  const containers::Encoding& categories() const { return *categories_; }
+  const containers::Encoding& categories() const {
+    return *params_.categories_;
+  }
 
   /// Trivial accessor
   std::shared_ptr<database::Connector> connector(const std::string& _name) {
-    return database_manager_->connector(_name);
+    return params_.database_manager_->connector(_name);
   }
 
   /// Trivial accessor
   std::map<std::string, containers::DataFrame>& data_frames() {
-    return *data_frames_;
+    return *params_.data_frames_;
   }
 
   /// Trivial accessor
   dependency::DataFrameTracker& data_frame_tracker() {
-    return *data_frame_tracker_;
+    return *params_.data_frame_tracker_;
   }
 
   /// Returns a deep copy of a pipeline.
   pipelines::Pipeline get_pipeline(const std::string& _name) {
-    multithreading::ReadLock read_lock(read_write_lock_);
+    multithreading::ReadLock read_lock(params_.read_write_lock_);
     const auto& p = utils::Getter::get(_name, &pipelines());
     return p;
   }
 
   /// Trivial accessor
   const licensing::LicenseChecker& license_checker() const {
-    return *license_checker_;
+    return *params_.license_checker_;
   }
 
   /// Trivial (private) accessor
-  const communication::Logger& logger() { return *logger_; }
+  const communication::Logger& logger() { return *params_.logger_; }
 
   /// Trivial (private) accessor
-  const communication::Monitor& monitor() { return *monitor_; }
+  const communication::Monitor& monitor() { return *params_.monitor_; }
 
   /// Trivial (private) accessor
-  PipelineMapType& pipelines() { return *pipelines_; }
+  PipelineMapType& pipelines() { return *params_.pipelines_; }
 
   /// Trivial (private) accessor
   const PipelineMapType& pipelines() const {
-    multithreading::ReadLock read_lock(read_write_lock_);
-    return *pipelines_;
+    multithreading::ReadLock read_lock(params_.read_write_lock_);
+    return *params_.pipelines_;
   }
 
   /// Sets a pipeline.
   void set_pipeline(const std::string& _name,
                     const pipelines::Pipeline& _pipeline) {
-    multithreading::WeakWriteLock weak_write_lock(read_write_lock_);
+    multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
     auto it = pipelines().find(_name);
 
@@ -309,51 +282,8 @@ class PipelineManager {
   // ------------------------------------------------------------------------
 
  private:
-  /// Maps integers to category names
-  const fct::Ref<containers::Encoding> categories_;
-
-  /// Connector to the underlying database.
-  const fct::Ref<DatabaseManager> database_manager_;
-
-  /// The data frames currently held in memory
-  const fct::Ref<std::map<std::string, containers::DataFrame>> data_frames_;
-
-  /// Keeps track of all data frames, so we don't have to
-  /// reconstruct the features all of the time.
-  const fct::Ref<dependency::DataFrameTracker> data_frame_tracker_;
-
-  /// Keeps track of all feature learners.
-  const fct::Ref<dependency::FETracker> fe_tracker_;
-
-  /// Maps integers to join key names
-  const fct::Ref<containers::Encoding> join_keys_encoding_;
-
-  /// For checking the number of cores and memory usage
-  const fct::Ref<licensing::LicenseChecker> license_checker_;
-
-  /// For logging
-  const fct::Ref<const communication::Logger> logger_;
-
-  /// For communication with the monitor
-  const fct::Ref<const communication::Monitor> monitor_;
-
-  /// Settings for the engine and the monitor
-  const config::Options options_;
-
-  /// The pipelines currently held in memory
-  const fct::Ref<PipelineMapType> pipelines_;
-
-  /// Keeps track of all predictors.
-  const fct::Ref<dependency::PredTracker> pred_tracker_;
-
-  /// Keeps track of all preprocessors.
-  const fct::Ref<dependency::PreprocessorTracker> preprocessor_tracker_;
-
-  /// For coordinating the read and write process of the data
-  const fct::Ref<multithreading::ReadWriteLock> read_write_lock_;
-
-  /// Keeps track of all warnings.
-  const fct::Ref<dependency::WarningTracker> warning_tracker_;
+  /// The underlying parameters.
+  const PipelineManagerParams params_;
 };
 
 // ------------------------------------------------------------------------

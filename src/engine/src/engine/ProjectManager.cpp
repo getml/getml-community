@@ -8,8 +8,12 @@
 
 // ------------------------------------------------------------------------
 
-#include "engine/handlers/FileHandler.hpp"
 #include "engine/pipelines/SaveParams.hpp"
+
+// ------------------------------------------------------------------------
+
+#include "engine/handlers/FileHandler.hpp"
+#include "engine/handlers/PipelineManager.hpp"
 
 // ------------------------------------------------------------------------
 
@@ -23,7 +27,7 @@ void ProjectManager::add_data_frame_from_arrow(
 
   data_frame_manager().from_arrow(_name, _cmd, append, _socket);
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   post("dataframe", data_frames()[_name].to_monitor());
 }
@@ -37,7 +41,7 @@ void ProjectManager::add_data_frame_from_csv(const std::string& _name,
 
   data_frame_manager().from_csv(_name, _cmd, append, _socket);
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   post("dataframe", data_frames()[_name].to_monitor());
 }
@@ -51,7 +55,7 @@ void ProjectManager::add_data_frame_from_s3(const std::string& _name,
 
   data_frame_manager().from_s3(_name, _cmd, append, _socket);
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   post("dataframe", data_frames()[_name].to_monitor());
 }
@@ -63,9 +67,9 @@ void ProjectManager::add_data_frame_from_db(const std::string& _name,
                                             Poco::Net::StreamSocket* _socket) {
   const auto append = JSON::get_value<bool>(_cmd, "append_");
 
-  data_frame_manager_->from_db(_name, _cmd, append, _socket);
+  params_.data_frame_manager_->from_db(_name, _cmd, append, _socket);
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   post("dataframe", data_frames()[_name].to_monitor());
 }
@@ -77,9 +81,9 @@ void ProjectManager::add_data_frame_from_json(
     Poco::Net::StreamSocket* _socket) {
   const auto append = JSON::get_value<bool>(_cmd, "append_");
 
-  data_frame_manager_->from_json(_name, _cmd, append, _socket);
+  params_.data_frame_manager_->from_json(_name, _cmd, append, _socket);
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   post("dataframe", data_frames()[_name].to_monitor());
 }
@@ -93,7 +97,7 @@ void ProjectManager::add_data_frame_from_parquet(
 
   data_frame_manager().from_parquet(_name, _cmd, append, _socket);
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   post("dataframe", data_frames()[_name].to_monitor());
 }
@@ -105,9 +109,9 @@ void ProjectManager::add_data_frame_from_query(
     Poco::Net::StreamSocket* _socket) {
   const auto append = JSON::get_value<bool>(_cmd, "append_");
 
-  data_frame_manager_->from_query(_name, _cmd, append, _socket);
+  params_.data_frame_manager_->from_query(_name, _cmd, append, _socket);
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   post("dataframe", data_frames()[_name].to_monitor());
 }
@@ -121,7 +125,7 @@ void ProjectManager::add_data_frame_from_view(
 
   data_frame_manager().from_view(_name, _cmd, append, _socket);
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   post("dataframe", data_frames()[_name].to_monitor());
 }
@@ -199,7 +203,7 @@ void ProjectManager::clear() {
 void ProjectManager::delete_data_frame(const std::string& _name,
                                        const Poco::JSON::Object& _cmd,
                                        Poco::Net::StreamSocket* _socket) {
-  multithreading::WriteLock write_lock(read_write_lock_);
+  multithreading::WriteLock write_lock(params_.read_write_lock_);
 
   FileHandler::remove(_name, project_directory(), _cmd, &data_frames());
 
@@ -213,7 +217,7 @@ void ProjectManager::delete_data_frame(const std::string& _name,
 void ProjectManager::delete_pipeline(const std::string& _name,
                                      const Poco::JSON::Object& _cmd,
                                      Poco::Net::StreamSocket* _socket) {
-  multithreading::WriteLock write_lock(read_write_lock_);
+  multithreading::WriteLock write_lock(params_.read_write_lock_);
 
   FileHandler::remove(_name, project_directory(), _cmd, &pipelines());
 
@@ -228,9 +232,9 @@ void ProjectManager::delete_project(const std::string& _name,
                                     Poco::Net::StreamSocket* _socket) {
   // Some methods, particularly the hyperparameter optimization,
   // require us to keep the project fixed while they run.
-  multithreading::WriteLock project_guard(project_lock_);
+  multithreading::WriteLock project_guard(params_.project_lock_);
 
-  multithreading::WriteLock write_lock(read_write_lock_);
+  multithreading::WriteLock write_lock(params_.read_write_lock_);
 
   if (_name == "") {
     throw std::runtime_error(
@@ -238,11 +242,13 @@ void ProjectManager::delete_project(const std::string& _name,
         "empty string!");
   }
 
-  Poco::File(options_.all_projects_directory() + _name + "/").remove(true);
+  Poco::File(params_.options_.all_projects_directory() + _name + "/")
+      .remove(true);
 
   engine::communication::Sender::send_string("Success!", _socket);
 
-  if (project_directory() == options_.all_projects_directory() + _name + "/") {
+  if (project_directory() ==
+      params_.options_.all_projects_directory() + _name + "/") {
     exit(0);
   }
 }
@@ -252,7 +258,7 @@ void ProjectManager::delete_project(const std::string& _name,
 void ProjectManager::list_data_frames(Poco::Net::StreamSocket* _socket) const {
   Poco::JSON::Object obj;
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   Poco::JSON::Array in_memory;
 
@@ -287,7 +293,7 @@ void ProjectManager::list_data_frames(Poco::Net::StreamSocket* _socket) const {
 void ProjectManager::list_hyperopts(Poco::Net::StreamSocket* _socket) const {
   Poco::JSON::Object obj;
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   Poco::JSON::Array names;
 
@@ -309,7 +315,7 @@ void ProjectManager::list_hyperopts(Poco::Net::StreamSocket* _socket) const {
 void ProjectManager::list_pipelines(Poco::Net::StreamSocket* _socket) const {
   Poco::JSON::Object obj;
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   Poco::JSON::Array names;
 
@@ -333,12 +339,12 @@ void ProjectManager::list_projects(Poco::Net::StreamSocket* _socket) const {
 
   Poco::JSON::Array project_names;
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   Poco::DirectoryIterator end;
 
-  for (Poco::DirectoryIterator it(options_.all_projects_directory()); it != end;
-       ++it) {
+  for (Poco::DirectoryIterator it(params_.options_.all_projects_directory());
+       it != end; ++it) {
     if (it->isDirectory()) {
       project_names.add(it.name());
     }
@@ -359,7 +365,7 @@ void ProjectManager::load_data_container(const std::string& _name,
                                          Poco::Net::StreamSocket* _socket) {
   const auto path = project_directory() + "data_containers/" + _name + ".json";
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   std::ifstream input(path);
 
@@ -388,11 +394,12 @@ void ProjectManager::load_data_container(const std::string& _name,
 
 void ProjectManager::load_data_frame(const std::string& _name,
                                      Poco::Net::StreamSocket* _socket) {
-  multithreading::WeakWriteLock weak_write_lock(read_write_lock_);
+  multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
   // TODO
-  auto df = FileHandler::load(data_frames(), categories_.ptr(),
-                              join_keys_encoding_.ptr(), options_, _name);
+  auto df = FileHandler::load(data_frames(), params_.categories_.ptr(),
+                              params_.join_keys_encoding_.ptr(),
+                              params_.options_, _name);
 
   license_checker().check_mem_size(data_frames(), df.nbytes());
 
@@ -432,9 +439,9 @@ void ProjectManager::load_pipeline(const std::string& _name,
                                    Poco::Net::StreamSocket* _socket) {
   const auto path = project_directory() + "pipelines/" + _name + "/";
 
-  auto pipeline =
-      pipelines::Load::load(path, fe_tracker_.ptr(), pred_tracker_.ptr(),
-                            preprocessor_tracker_.ptr());
+  auto pipeline = pipelines::Load::load(path, params_.fe_tracker_.ptr(),
+                                        params_.pred_tracker_.ptr(),
+                                        params_.preprocessor_tracker_.ptr());
 
   set_pipeline(_name, pipeline);
 
@@ -458,7 +465,7 @@ void ProjectManager::post(const std::string& _what,
 // ------------------------------------------------------------------------
 
 void ProjectManager::project_name(Poco::Net::StreamSocket* _socket) const {
-  communication::Sender::send_string(project_, _socket);
+  communication::Sender::send_string(params_.project_, _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -482,7 +489,7 @@ void ProjectManager::remove(const std::string& _what,
 void ProjectManager::save_data_container(const std::string& _name,
                                          const Poco::JSON::Object& _cmd,
                                          Poco::Net::StreamSocket* _socket) {
-  multithreading::WeakWriteLock weak_write_lock(read_write_lock_);
+  multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
   const auto path = project_directory() + "data_containers/" + _name + ".json";
 
@@ -501,14 +508,14 @@ void ProjectManager::save_data_container(const std::string& _name,
 
 void ProjectManager::save_data_frame(const std::string& _name,
                                      Poco::Net::StreamSocket* _socket) {
-  multithreading::WeakWriteLock weak_write_lock(read_write_lock_);
+  multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
   auto& df = utils::Getter::get(_name, &data_frames());
 
-  df.save(options_.temp_dir(), project_directory() + "data/", _name);
+  df.save(params_.options_.temp_dir(), project_directory() + "data/", _name);
 
-  FileHandler::save_encodings(project_directory(), categories_.ptr(),
-                              join_keys_encoding_.ptr());
+  FileHandler::save_encodings(project_directory(), params_.categories_.ptr(),
+                              params_.join_keys_encoding_.ptr());
 
   communication::Sender::send_string("Success!", _socket);
 }
@@ -517,11 +524,12 @@ void ProjectManager::save_data_frame(const std::string& _name,
 
 void ProjectManager::save_hyperopt(const std::string& _name,
                                    Poco::Net::StreamSocket* _socket) {
-  multithreading::WeakWriteLock weak_write_lock(read_write_lock_);
+  multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
   const auto hyperopt = utils::Getter::get(_name, hyperopts());
 
-  hyperopt.save(options_.temp_dir(), project_directory() + "hyperopts/", _name);
+  hyperopt.save(params_.options_.temp_dir(), project_directory() + "hyperopts/",
+                _name);
 
   communication::Sender::send_string("Success!", _socket);
 }
@@ -530,7 +538,7 @@ void ProjectManager::save_hyperopt(const std::string& _name,
 
 void ProjectManager::save_pipeline(const std::string& _name,
                                    Poco::Net::StreamSocket* _socket) {
-  multithreading::WeakWriteLock weak_write_lock(read_write_lock_);
+  multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
   const auto pipeline = get_pipeline(_name);
 
@@ -549,11 +557,12 @@ void ProjectManager::save_pipeline(const std::string& _name,
                             .name_ = _name,
                             .path_ = path,
                             .pipeline_ = pipeline,
-                            .temp_dir_ = options_.temp_dir()};
+                            .temp_dir_ = params_.options_.temp_dir()};
 
   pipelines::Save::save(params);
 
-  FileHandler::save_encodings(project_directory(), categories_.ptr(), nullptr);
+  FileHandler::save_encodings(project_directory(), params_.categories_.ptr(),
+                              nullptr);
 
   engine::communication::Sender::send_string("Success!", _socket);
 }
@@ -567,7 +576,7 @@ void ProjectManager::set_project(const std::string& _project) {
 
   handlers::FileHandler::create_project_directory(project_directory());
 
-  multithreading::WriteLock write_lock(read_write_lock_);
+  multithreading::WriteLock write_lock(params_.read_write_lock_);
 
   clear();
 
@@ -580,7 +589,7 @@ void ProjectManager::set_project(const std::string& _project) {
 // ------------------------------------------------------------------------
 
 void ProjectManager::temp_dir(Poco::Net::StreamSocket* _socket) const {
-  communication::Sender::send_string(options_.temp_dir(), _socket);
+  communication::Sender::send_string(params_.options_.temp_dir(), _socket);
 }
 
 // ------------------------------------------------------------------------

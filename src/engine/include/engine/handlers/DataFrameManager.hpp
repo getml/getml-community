@@ -25,6 +25,7 @@
 
 // ------------------------------------------------------------------------
 
+#include "engine/handlers/DataFrameManagerParams.hpp"
 #include "engine/handlers/DatabaseManager.hpp"
 
 // ------------------------------------------------------------------------
@@ -40,25 +41,8 @@ class DataFrameManager {
       containers::Column<bool>::STRING_COLUMN;
 
  public:
-  DataFrameManager(
-      const fct::Ref<containers::Encoding>& _categories,
-      const fct::Ref<DatabaseManager>& _database_manager,
-      const fct::Ref<std::map<std::string, containers::DataFrame>> _data_frames,
-      const fct::Ref<containers::Encoding>& _join_keys_encoding,
-      const fct::Ref<licensing::LicenseChecker>& _license_checker,
-      const fct::Ref<const communication::Logger>& _logger,
-      const fct::Ref<const communication::Monitor>& _monitor,
-      const config::Options& _options,
-      const fct::Ref<multithreading::ReadWriteLock>& _read_write_lock)
-      : categories_(_categories),
-        database_manager_(_database_manager),
-        data_frames_(_data_frames),
-        join_keys_encoding_(_join_keys_encoding),
-        license_checker_(_license_checker),
-        logger_(_logger),
-        monitor_(_monitor),
-        options_(_options),
-        read_write_lock_(_read_write_lock) {}
+  explicit DataFrameManager(const DataFrameManagerParams& _params)
+      : params_(_params) {}
 
   ~DataFrameManager() = default;
 
@@ -416,21 +400,21 @@ class DataFrameManager {
 
  private:
   /// Trivial accessor
-  containers::Encoding& categories() { return *categories_; }
+  containers::Encoding& categories() { return *params_.categories_; }
 
   /// Trivial accessor
   std::shared_ptr<database::Connector> connector(const std::string& _name) {
-    return database_manager_->connector(_name);
+    return params_.database_manager_->connector(_name);
   }
 
   /// Trivial accessor
   std::map<std::string, containers::DataFrame>& data_frames() {
-    return *data_frames_;
+    return *params_.data_frames_;
   }
 
   /// Trivial accessor
   const std::map<std::string, containers::DataFrame>& data_frames() const {
-    return *data_frames_;
+    return *params_.data_frames_;
   }
 
   /// Checks whether a data frame of a certain name exists
@@ -440,50 +424,28 @@ class DataFrameManager {
   }
 
   /// Trivial accessor
-  containers::Encoding& join_keys_encoding() { return *join_keys_encoding_; }
-
-  /// Trivial accessor
-  licensing::LicenseChecker& license_checker() { return *license_checker_; }
-
-  /// Trivial accessor
-  const licensing::LicenseChecker& license_checker() const {
-    return *license_checker_;
+  containers::Encoding& join_keys_encoding() {
+    return *params_.join_keys_encoding_;
   }
 
   /// Trivial accessor
-  const communication::Logger& logger() { return *logger_; }
+  licensing::LicenseChecker& license_checker() {
+    return *params_.license_checker_;
+  }
+
+  /// Trivial accessor
+  const licensing::LicenseChecker& license_checker() const {
+    return *params_.license_checker_;
+  }
+
+  /// Trivial accessor
+  const communication::Logger& logger() { return *params_.logger_; }
 
   // ------------------------------------------------------------------------
 
  private:
-  /// Maps integeres to category names
-  const fct::Ref<containers::Encoding> categories_;
-
-  /// Connector to the underlying database.
-  const fct::Ref<DatabaseManager> database_manager_;
-
-  /// The data frames currently held in memory
-  const fct::Ref<std::map<std::string, containers::DataFrame>> data_frames_;
-
-  /// Maps integers to join key names
-  const fct::Ref<containers::Encoding> join_keys_encoding_;
-
-  /// For checking the license and memory usage
-  const fct::Ref<licensing::LicenseChecker> license_checker_;
-
-  /// For logging
-  const fct::Ref<const communication::Logger> logger_;
-
-  /// For communication with the monitor
-  const fct::Ref<const communication::Monitor> monitor_;
-
-  /// Settings for the engine and the monitor
-  const config::Options options_;
-
-  /// For coordinating the read and write process of the data
-  const fct::Ref<multithreading::ReadWriteLock> read_write_lock_;
-
-  // ------------------------------------------------------------------------
+  /// The underlying parameters.
+  const DataFrameManagerParams params_;
 };
 
 // ------------------------------------------------------------------------

@@ -175,36 +175,36 @@ void PipelineManager::check(const std::string& _name,
 
   communication::Sender::send_string("Found!", _socket);
 
-  multithreading::WeakWriteLock weak_write_lock(read_write_lock_);
+  multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
-  const auto pool = options_.make_pool();
+  const auto pool = params_.options_.make_pool();
 
   const auto local_categories =
-      fct::Ref<containers::Encoding>::make(pool, categories_.ptr());
+      fct::Ref<containers::Encoding>::make(pool, params_.categories_.ptr());
 
-  const auto local_join_keys_encoding =
-      fct::Ref<containers::Encoding>::make(pool, join_keys_encoding_.ptr());
+  const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
+      pool, params_.join_keys_encoding_.ptr());
 
   const auto [population_df, peripheral_dfs, _] =
-      ViewParser(local_categories, local_join_keys_encoding, data_frames_,
-                 options_)
+      ViewParser(local_categories, local_join_keys_encoding,
+                 params_.data_frames_, params_.options_)
           .parse_all(_cmd);
 
-  const auto params =
-      pipelines::CheckParams{.categories_ = local_categories,
-                             .cmd_ = _cmd,
-                             .logger_ = logger_.ptr(),
-                             .peripheral_dfs_ = peripheral_dfs,
-                             .population_df_ = population_df,
-                             .preprocessor_tracker_ = preprocessor_tracker_,
-                             .warning_tracker_ = warning_tracker_,
-                             .socket_ = _socket};
+  const auto params = pipelines::CheckParams{
+      .categories_ = local_categories,
+      .cmd_ = _cmd,
+      .logger_ = params_.logger_.ptr(),
+      .peripheral_dfs_ = peripheral_dfs,
+      .population_df_ = population_df,
+      .preprocessor_tracker_ = params_.preprocessor_tracker_,
+      .warning_tracker_ = params_.warning_tracker_,
+      .socket_ = _socket};
 
   pipelines::Check::check(pipeline, params);
 
   weak_write_lock.upgrade();
 
-  categories_->append(*local_categories);
+  params_.categories_->append(*local_categories);
 
   weak_write_lock.unlock();
 }
@@ -357,34 +357,34 @@ void PipelineManager::fit(const std::string& _name,
 
   communication::Sender::send_string("Found!", _socket);
 
-  multithreading::WeakWriteLock weak_write_lock(read_write_lock_);
+  multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
-  const auto pool = options_.make_pool();
+  const auto pool = params_.options_.make_pool();
 
   const auto local_categories =
-      fct::Ref<containers::Encoding>::make(pool, categories_.ptr());
+      fct::Ref<containers::Encoding>::make(pool, params_.categories_.ptr());
 
-  const auto local_join_keys_encoding =
-      fct::Ref<containers::Encoding>::make(pool, join_keys_encoding_.ptr());
+  const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
+      pool, params_.join_keys_encoding_.ptr());
 
   const auto [population_df, peripheral_dfs, validation_df] =
-      ViewParser(local_categories, local_join_keys_encoding, data_frames_,
-                 options_)
+      ViewParser(local_categories, local_join_keys_encoding,
+                 params_.data_frames_, params_.options_)
           .parse_all(_cmd);
 
-  const auto params =
-      pipelines::FitParams{.categories_ = local_categories,
-                           .cmd_ = _cmd,
-                           .data_frames_ = data_frames(),
-                           .data_frame_tracker_ = data_frame_tracker(),
-                           .fe_tracker_ = fe_tracker_,
-                           .logger_ = logger_.ptr(),
-                           .peripheral_dfs_ = peripheral_dfs,
-                           .population_df_ = population_df,
-                           .pred_tracker_ = pred_tracker_,
-                           .preprocessor_tracker_ = preprocessor_tracker_,
-                           .validation_df_ = validation_df,
-                           .socket_ = _socket};
+  const auto params = pipelines::FitParams{
+      .categories_ = local_categories,
+      .cmd_ = _cmd,
+      .data_frames_ = data_frames(),
+      .data_frame_tracker_ = data_frame_tracker(),
+      .fe_tracker_ = params_.fe_tracker_,
+      .logger_ = params_.logger_.ptr(),
+      .peripheral_dfs_ = peripheral_dfs,
+      .population_df_ = population_df,
+      .pred_tracker_ = params_.pred_tracker_,
+      .preprocessor_tracker_ = params_.preprocessor_tracker_,
+      .validation_df_ = validation_df,
+      .socket_ = _socket};
 
   const auto [fitted, scores] = pipelines::Fit::fit(pipeline, params);
 
@@ -398,7 +398,7 @@ void PipelineManager::fit(const std::string& _name,
 
   weak_write_lock.upgrade();
 
-  categories_->append(*local_categories);
+  params_.categories_->append(*local_categories);
 
   it->second = pipeline;
 
@@ -517,14 +517,23 @@ Poco::JSON::Object PipelineManager::receive_data(
   // is to prevent the global variables from being affected
   // by local data frames.
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto local_read_write_lock =
       fct::Ref<multithreading::ReadWriteLock>::make();
 
-  auto local_data_frame_manager = DataFrameManager(
-      _categories, database_manager_, _data_frames, _join_keys_encoding,
-      license_checker_, logger_, monitor_, options_, local_read_write_lock);
+  const auto data_frame_manager_params =
+      DataFrameManagerParams{.categories_ = _categories,
+                             .database_manager_ = params_.database_manager_,
+                             .data_frames_ = _data_frames,
+                             .join_keys_encoding_ = _join_keys_encoding,
+                             .license_checker_ = params_.license_checker_,
+                             .logger_ = params_.logger_,
+                             .monitor_ = params_.monitor_,
+                             .options_ = params_.options_,
+                             .read_write_lock_ = local_read_write_lock};
+
+  auto local_data_frame_manager = DataFrameManager(data_frame_manager_params);
 
   auto cmd = _cmd;
 
@@ -549,7 +558,7 @@ Poco::JSON::Object PipelineManager::receive_data(
       break;
     }
 
-    cmd = communication::Receiver::recv_cmd(logger_, _socket);
+    cmd = communication::Receiver::recv_cmd(params_.logger_, _socket);
   }
 
   return cmd;
@@ -573,7 +582,7 @@ void PipelineManager::refresh_all(Poco::Net::StreamSocket* _socket) {
 
   Poco::JSON::Array pipelines_arr;
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   for (const auto& [_, pipe] : pipelines()) {
     pipelines_arr.add(refresh_pipeline(pipe));
@@ -670,13 +679,13 @@ void PipelineManager::store_df(
     multithreading::WeakWriteLock* _weak_write_lock) {
   _weak_write_lock->upgrade();
 
-  categories_->append(*_local_categories);
+  params_.categories_->append(*_local_categories);
 
-  join_keys_encoding_->append(*_local_join_keys_encoding);
+  params_.join_keys_encoding_->append(*_local_join_keys_encoding);
 
-  _df->set_categories(categories_.ptr());  // TODO
+  _df->set_categories(params_.categories_.ptr());  // TODO
 
-  _df->set_join_keys_encoding(join_keys_encoding_.ptr());  // TODO
+  _df->set_join_keys_encoding(params_.join_keys_encoding_.ptr());  // TODO
 
   const auto predict = JSON::get_value<bool>(_cmd, "predict_");
 
@@ -686,8 +695,8 @@ void PipelineManager::store_df(
 
   data_frames()[_df->name()] = *_df;
 
-  monitor_->send_tcp("postdataframe", _df->to_monitor(),
-                     communication::Monitor::TIMEOUT_ON);
+  params_.monitor_->send_tcp("postdataframe", _df->to_monitor(),
+                             communication::Monitor::TIMEOUT_ON);
 }
 
 // ------------------------------------------------------------------------
@@ -725,7 +734,7 @@ void PipelineManager::to_db(
 
   conn->read(table_name, 0, &reader);
 
-  database_manager_->post_tables();
+  params_.database_manager_->post_tables();
 }
 
 // ------------------------------------------------------------------------
@@ -739,7 +748,7 @@ containers::DataFrame PipelineManager::to_df(
     const fct::Ref<containers::Encoding>& _join_keys_encoding) {
   const auto df_name = JSON::get_value<std::string>(_cmd, "df_name_");
 
-  const auto pool = options_.make_pool();
+  const auto pool = params_.options_.make_pool();
 
   auto df = containers::DataFrame(df_name, _categories.ptr(),
                                   _join_keys_encoding.ptr(), pool);  // TODO
@@ -775,7 +784,7 @@ void PipelineManager::to_sql(const std::string& _name,
   const auto transpilation_params =
       transpilation::TranspilationParams::from_json(_cmd);
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto pipeline = get_pipeline(_name);
 
@@ -815,41 +824,41 @@ void PipelineManager::transform(const std::string& _name,
 
   communication::Sender::send_string("Found!", _socket);
 
-  multithreading::WeakWriteLock weak_write_lock(read_write_lock_);
+  multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
-  const auto pool = options_.make_pool();
+  const auto pool = params_.options_.make_pool();
 
   const auto local_categories =
-      fct::Ref<containers::Encoding>::make(pool, categories_.ptr());
+      fct::Ref<containers::Encoding>::make(pool, params_.categories_.ptr());
 
-  const auto local_join_keys_encoding =
-      fct::Ref<containers::Encoding>::make(pool, join_keys_encoding_.ptr());
+  const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
+      pool, params_.join_keys_encoding_.ptr());
 
   auto local_data_frames =
       fct::Ref<std::map<std::string, containers::DataFrame>>::make(
           data_frames());
 
-  auto cmd = communication::Receiver::recv_cmd(logger_, _socket);
+  auto cmd = communication::Receiver::recv_cmd(params_.logger_, _socket);
 
   cmd = receive_data(cmd, local_categories, local_join_keys_encoding,
                      local_data_frames, _socket);
 
   const auto [population_df, peripheral_dfs, _] =
       ViewParser(local_categories, local_join_keys_encoding, local_data_frames,
-                 options_)
+                 params_.options_)
           .parse_all(cmd);
 
   // IMPORTANT: Use categories_, not local_categories, otherwise
   // .vector() might not work.
   const auto params =
-      pipelines::TransformParams{.categories_ = categories_,
+      pipelines::TransformParams{.categories_ = params_.categories_,
                                  .cmd_ = cmd,
                                  .data_frames_ = *local_data_frames,
                                  .data_frame_tracker_ = data_frame_tracker(),
-                                 .logger_ = logger_.ptr(),  // TODO
+                                 .logger_ = params_.logger_.ptr(),
                                  .original_peripheral_dfs_ = peripheral_dfs,
                                  .original_population_df_ = population_df,
-                                 .pred_tracker_ = pred_tracker_,
+                                 .pred_tracker_ = params_.pred_tracker_,
                                  .socket_ = _socket};
 
   const auto fitted = pipeline.fitted();

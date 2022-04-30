@@ -3,6 +3,8 @@
 #include <chrono>
 #include <csignal>
 
+#include "engine/handlers/DataFrameManagerParams.hpp"
+
 #ifdef GETML_PROFILING
 #include <gperftools/profiler.h>
 #endif
@@ -99,27 +101,69 @@ int main(int argc, char* argv[]) {
       fct::Ref<engine::handlers::DatabaseManager>::make(logger, monitor,
                                                         options);
 
+  const auto data_frame_manager_params =
+      engine::handlers::DataFrameManagerParams{
+          .categories_ = categories,
+          .database_manager_ = database_manager,
+          .data_frames_ = data_frames,
+          .join_keys_encoding_ = join_keys_encoding,
+          .license_checker_ = license_checker,
+          .logger_ = logger,
+          .monitor_ = monitor,
+          .options_ = options,
+          .read_write_lock_ = read_write_lock};
+
   const auto data_frame_manager =
       fct::Ref<engine::handlers::DataFrameManager>::make(
-          categories, database_manager, data_frames, join_keys_encoding,
-          license_checker, logger, monitor, options, read_write_lock);
+          data_frame_manager_params);
 
   const auto hyperopt_manager =
       fct::Ref<engine::handlers::HyperoptManager>::make(
           hyperopts, monitor, project_lock, read_write_lock);
 
+  const auto pipeline_manager_params = engine::handlers::PipelineManagerParams{
+      .categories_ = categories,
+      .database_manager_ = database_manager,
+      .data_frames_ = data_frames,
+      .data_frame_tracker_ = data_frame_tracker,
+      .fe_tracker_ = fe_tracker,
+      .join_keys_encoding_ = join_keys_encoding,
+      .license_checker_ = license_checker,
+      .logger_ = logger,
+      .monitor_ = monitor,
+      .options_ = options,
+      .pipelines_ = pipelines,
+      .pred_tracker_ = pred_tracker,
+      .preprocessor_tracker_ = preprocessor_tracker,
+      .read_write_lock_ = read_write_lock,
+      .warning_tracker_ = warning_tracker};
+
   const auto pipeline_manager =
       fct::Ref<engine::handlers::PipelineManager>::make(
-          categories, database_manager, data_frames, data_frame_tracker,
-          fe_tracker, join_keys_encoding, license_checker, logger, monitor,
-          options, pipelines, pred_tracker, preprocessor_tracker,
-          read_write_lock, warning_tracker);
+          pipeline_manager_params);
 
-  const auto project_manager = fct::Ref<engine::handlers::ProjectManager>::make(
-      categories, data_frame_manager, data_frames, data_frame_tracker,
-      fe_tracker, join_keys_encoding, hyperopts, license_checker, logger,
-      monitor, options, pipelines, pred_tracker, preprocessor_tracker,
-      options.engine().project_, project_lock, read_write_lock);
+  const auto project_manager_params = engine::handlers::ProjectManagerParams{
+      .categories_ = categories,
+      .database_manager_ = database_manager,
+      .data_frame_manager_ = data_frame_manager,
+      .data_frames_ = data_frames,
+      .data_frame_tracker_ = data_frame_tracker,
+      .fe_tracker_ = fe_tracker,
+      .hyperopts_ = hyperopts,
+      .join_keys_encoding_ = join_keys_encoding,
+      .license_checker_ = license_checker,
+      .logger_ = logger,
+      .monitor_ = monitor,
+      .options_ = options,
+      .pipelines_ = pipelines,
+      .pred_tracker_ = pred_tracker,
+      .preprocessor_tracker_ = preprocessor_tracker,
+      .project_ = options.engine().project_,
+      .project_lock_ = project_lock,
+      .read_write_lock_ = read_write_lock};
+
+  const auto project_manager =
+      fct::Ref<engine::handlers::ProjectManager>::make(project_manager_params);
 
   Poco::Net::ServerSocket server_socket(
       static_cast<Poco::UInt16>(options.engine().port()), 64);

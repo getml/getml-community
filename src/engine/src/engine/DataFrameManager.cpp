@@ -24,15 +24,15 @@ namespace handlers {
 
 void DataFrameManager::add_data_frame(const std::string& _name,
                                       Poco::Net::StreamSocket* _socket) {
-  multithreading::WeakWriteLock weak_write_lock(read_write_lock_);
+  multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
-  const auto pool = options_.make_pool();
+  const auto pool = params_.options_.make_pool();
 
-  const auto local_categories =
-      fct::Ref<containers::Encoding>::make(pool, categories_.ptr());  // TODO
+  const auto local_categories = fct::Ref<containers::Encoding>::make(
+      pool, params_.categories_.ptr());  // TODO
 
   const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
-      pool, join_keys_encoding_.ptr());  // TODO
+      pool, params_.join_keys_encoding_.ptr());  // TODO
 
   // TODO
   auto df = containers::DataFrame(_name, local_categories.ptr(),
@@ -44,13 +44,13 @@ void DataFrameManager::add_data_frame(const std::string& _name,
 
   weak_write_lock.upgrade();
 
-  categories_->append(*local_categories);
+  params_.categories_->append(*local_categories);
 
-  join_keys_encoding_->append(*local_join_keys_encoding);
+  params_.join_keys_encoding_->append(*local_join_keys_encoding);
 
-  df.set_categories(categories_.ptr());
+  df.set_categories(params_.categories_.ptr());
 
-  df.set_join_keys_encoding(join_keys_encoding_.ptr());
+  df.set_join_keys_encoding(params_.join_keys_encoding_.ptr());
 
   data_frames()[_name] = df;
 
@@ -62,7 +62,7 @@ void DataFrameManager::add_data_frame(const std::string& _name,
 void DataFrameManager::add_float_column(const std::string& _name,
                                         const Poco::JSON::Object& _cmd,
                                         Poco::Net::StreamSocket* _socket) {
-  multithreading::WeakWriteLock weak_write_lock(read_write_lock_);
+  multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
   const auto role = JSON::get_value<std::string>(_cmd, "role_");
 
@@ -74,8 +74,8 @@ void DataFrameManager::add_float_column(const std::string& _name,
 
   const auto df_name = JSON::get_value<std::string>(_cmd, "df_name_");
 
-  const auto parser =
-      NumOpParser(categories_, join_keys_encoding_, data_frames_);
+  const auto parser = NumOpParser(
+      params_.categories_, params_.join_keys_encoding_, params_.data_frames_);
 
   const auto column_view = parser.parse(json_col);
 
@@ -87,7 +87,7 @@ void DataFrameManager::add_float_column(const std::string& _name,
 
     col.set_unit(unit);
 
-    parser.check(col, logger_, _socket);
+    parser.check(col, params_.logger_, _socket);
 
     return col;
   };
@@ -99,8 +99,8 @@ void DataFrameManager::add_float_column(const std::string& _name,
 
     add_float_column_to_df(role, col, df, &weak_write_lock);
 
-    monitor_->send_tcp("postdataframe", df->to_monitor(),
-                       communication::Monitor::TIMEOUT_ON);
+    params_.monitor_->send_tcp("postdataframe", df->to_monitor(),
+                               communication::Monitor::TIMEOUT_ON);
   } else {
     if (column_view.is_infinite()) {
       throw std::runtime_error(
@@ -113,11 +113,12 @@ void DataFrameManager::add_float_column(const std::string& _name,
 
     const auto col = make_col(std::nullopt);
 
-    const auto pool = options_.make_pool();
+    const auto pool = params_.options_.make_pool();
 
     // TODO
-    auto new_df = containers::DataFrame(df_name, categories_.ptr(),
-                                        join_keys_encoding_.ptr(), pool);
+    auto new_df =
+        containers::DataFrame(df_name, params_.categories_.ptr(),
+                              params_.join_keys_encoding_.ptr(), pool);
 
     add_float_column_to_df(role, col, &new_df, &weak_write_lock);
 
@@ -125,8 +126,8 @@ void DataFrameManager::add_float_column(const std::string& _name,
 
     data_frames()[df_name].create_indices();
 
-    monitor_->send_tcp("postdataframe", new_df.to_monitor(),
-                       communication::Monitor::TIMEOUT_ON);
+    params_.monitor_->send_tcp("postdataframe", new_df.to_monitor(),
+                               communication::Monitor::TIMEOUT_ON);
   }
 
   communication::Sender::send_string("Success!", _socket);
@@ -138,21 +139,22 @@ void DataFrameManager::add_float_column(const Poco::JSON::Object& _cmd,
                                         Poco::Net::StreamSocket* _socket) {
   const auto df_name = JSON::get_value<std::string>(_cmd, "df_name_");
 
-  multithreading::WeakWriteLock weak_write_lock(read_write_lock_);
+  multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
   auto [df, exists] = utils::Getter::get_if_exists(df_name, &data_frames());
 
   if (exists) {
     recv_and_add_float_column(_cmd, df, &weak_write_lock, _socket);
 
-    monitor_->send_tcp("postdataframe", df->to_monitor(),
-                       communication::Monitor::TIMEOUT_ON);
+    params_.monitor_->send_tcp("postdataframe", df->to_monitor(),
+                               communication::Monitor::TIMEOUT_ON);
   } else {
-    const auto pool = options_.make_pool();
+    const auto pool = params_.options_.make_pool();
 
     // TODO
-    auto new_df = containers::DataFrame(df_name, categories_.ptr(),
-                                        join_keys_encoding_.ptr(), pool);
+    auto new_df =
+        containers::DataFrame(df_name, params_.categories_.ptr(),
+                              params_.join_keys_encoding_.ptr(), pool);
 
     recv_and_add_float_column(_cmd, &new_df, &weak_write_lock, _socket);
 
@@ -160,8 +162,8 @@ void DataFrameManager::add_float_column(const Poco::JSON::Object& _cmd,
 
     data_frames()[df_name].create_indices();
 
-    monitor_->send_tcp("postdataframe", new_df.to_monitor(),
-                       communication::Monitor::TIMEOUT_ON);
+    params_.monitor_->send_tcp("postdataframe", new_df.to_monitor(),
+                               communication::Monitor::TIMEOUT_ON);
   }
 
   communication::Sender::send_string("Success!", _socket);
@@ -187,13 +189,13 @@ void DataFrameManager::add_int_column_to_df(
     const std::string& _unit, const containers::Column<strings::String>& _col,
     containers::DataFrame* _df, multithreading::WeakWriteLock* _weak_write_lock,
     Poco::Net::StreamSocket* _socket) {
-  const auto pool = options_.make_pool();
+  const auto pool = params_.options_.make_pool();
 
   const auto local_categories =
-      std::make_shared<containers::Encoding>(pool, categories_.ptr());  // TODO
+      std::make_shared<containers::Encoding>(pool, params_.categories_.ptr());
 
-  const auto local_join_keys_encoding =
-      std::make_shared<containers::Encoding>(pool, join_keys_encoding_.ptr());
+  const auto local_join_keys_encoding = std::make_shared<containers::Encoding>(
+      pool, params_.join_keys_encoding_.ptr());
 
   auto col = containers::Column<Int>(_df->pool(), _col.nrows());
 
@@ -220,9 +222,9 @@ void DataFrameManager::add_int_column_to_df(
   _df->add_int_column(col, _role);
 
   if (_role == containers::DataFrame::ROLE_CATEGORICAL) {
-    categories_->append(*local_categories);
+    params_.categories_->append(*local_categories);
   } else if (_role == containers::DataFrame::ROLE_JOIN_KEY) {
-    join_keys_encoding_->append(*local_join_keys_encoding);
+    params_.join_keys_encoding_->append(*local_join_keys_encoding);
   } else {
     assert_true(false);
   }
@@ -261,21 +263,22 @@ void DataFrameManager::add_string_column(const Poco::JSON::Object& _cmd,
                                          Poco::Net::StreamSocket* _socket) {
   const auto df_name = JSON::get_value<std::string>(_cmd, "df_name_");
 
-  multithreading::WeakWriteLock weak_write_lock(read_write_lock_);
+  multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
   auto [df, exists] = utils::Getter::get_if_exists(df_name, &data_frames());
 
   if (exists) {
     recv_and_add_string_column(_cmd, df, &weak_write_lock, _socket);
 
-    monitor_->send_tcp("postdataframe", df->to_monitor(),
-                       communication::Monitor::TIMEOUT_ON);
+    params_.monitor_->send_tcp("postdataframe", df->to_monitor(),
+                               communication::Monitor::TIMEOUT_ON);
   } else {
-    const auto pool = options_.make_pool();
+    const auto pool = params_.options_.make_pool();
 
     // TODO
-    auto new_df = containers::DataFrame(df_name, categories_.ptr(),
-                                        join_keys_encoding_.ptr(), pool);
+    auto new_df =
+        containers::DataFrame(df_name, params_.categories_.ptr(),
+                              params_.join_keys_encoding_.ptr(), pool);
 
     recv_and_add_string_column(_cmd, &new_df, &weak_write_lock, _socket);
 
@@ -283,8 +286,8 @@ void DataFrameManager::add_string_column(const Poco::JSON::Object& _cmd,
 
     data_frames()[df_name].create_indices();
 
-    monitor_->send_tcp("postdataframe", new_df.to_monitor(),
-                       communication::Monitor::TIMEOUT_ON);
+    params_.monitor_->send_tcp("postdataframe", new_df.to_monitor(),
+                               communication::Monitor::TIMEOUT_ON);
   }
 
   communication::Sender::send_string("Success!", _socket);
@@ -295,7 +298,7 @@ void DataFrameManager::add_string_column(const Poco::JSON::Object& _cmd,
 void DataFrameManager::add_string_column(const std::string& _name,
                                          const Poco::JSON::Object& _cmd,
                                          Poco::Net::StreamSocket* _socket) {
-  multithreading::WeakWriteLock weak_write_lock(read_write_lock_);
+  multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
   const auto role = JSON::get_value<std::string>(_cmd, "role_");
 
@@ -307,14 +310,14 @@ void DataFrameManager::add_string_column(const std::string& _name,
 
   const auto df_name = JSON::get_value<std::string>(_cmd, "df_name_");
 
-  const auto parser =
-      CatOpParser(categories_, join_keys_encoding_, data_frames_);
+  const auto parser = CatOpParser(
+      params_.categories_, params_.join_keys_encoding_, params_.data_frames_);
 
-  const auto pool = options_.make_pool();
+  const auto pool = params_.options_.make_pool();
 
   // TODO
-  auto new_df = containers::DataFrame(df_name, categories_.ptr(),
-                                      join_keys_encoding_.ptr(), pool);
+  auto new_df = containers::DataFrame(df_name, params_.categories_.ptr(),
+                                      params_.join_keys_encoding_.ptr(), pool);
 
   auto [df, exists] = utils::Getter::get_if_exists(df_name, &data_frames());
 
@@ -334,7 +337,7 @@ void DataFrameManager::add_string_column(const std::string& _name,
   const auto col = exists ? column_view.to_column(0, df->nrows(), false)
                           : column_view.to_column(0, std::nullopt, false);
 
-  parser.check(col, name, logger_, _socket);
+  parser.check(col, name, params_.logger_, _socket);
 
   if (role == containers::DataFrame::ROLE_UNUSED ||
       role == containers::DataFrame::ROLE_UNUSED_STRING ||
@@ -350,8 +353,8 @@ void DataFrameManager::add_string_column(const std::string& _name,
     data_frames()[df_name].create_indices();
   }
 
-  monitor_->send_tcp("postdataframe", df->to_monitor(),
-                     communication::Monitor::TIMEOUT_ON);
+  params_.monitor_->send_tcp("postdataframe", df->to_monitor(),
+                             communication::Monitor::TIMEOUT_ON);
 
   communication::Sender::send_string("Success!", _socket);
 }
@@ -387,9 +390,10 @@ void DataFrameManager::aggregate(const std::string& _name,
 
   auto response = containers::Column<Float>(nullptr, 1);
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
-  response[0] = AggOpParser(categories_, join_keys_encoding_, data_frames_)
+  response[0] = AggOpParser(params_.categories_, params_.join_keys_encoding_,
+                            params_.data_frames_)
                     .aggregate(aggregation);
 
   read_lock.unlock();
@@ -403,15 +407,15 @@ void DataFrameManager::aggregate(const std::string& _name,
 
 void DataFrameManager::append_to_data_frame(const std::string& _name,
                                             Poco::Net::StreamSocket* _socket) {
-  multithreading::WeakWriteLock weak_write_lock(read_write_lock_);
+  multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
-  const auto pool = options_.make_pool();
+  const auto pool = params_.options_.make_pool();
 
-  const auto local_categories =
-      fct::Ref<containers::Encoding>::make(pool, categories_.ptr());  // TODO
+  const auto local_categories = fct::Ref<containers::Encoding>::make(
+      pool, params_.categories_.ptr());  // TODO
 
   const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
-      pool, join_keys_encoding_.ptr());  // TODO
+      pool, params_.join_keys_encoding_.ptr());  // TODO
 
   // TODO
   auto df = containers::DataFrame(_name, local_categories.ptr(),
@@ -431,12 +435,12 @@ void DataFrameManager::append_to_data_frame(const std::string& _name,
 
   data_frames()[_name].create_indices();
 
-  categories_->append(*local_categories);
+  params_.categories_->append(*local_categories);
 
-  join_keys_encoding_->append(*local_join_keys_encoding);
+  params_.join_keys_encoding_->append(*local_join_keys_encoding);
 
-  monitor_->send_tcp("postdataframe", data_frames()[_name].to_monitor(),
-                     communication::Monitor::TIMEOUT_ON);
+  params_.monitor_->send_tcp("postdataframe", data_frames()[_name].to_monitor(),
+                             communication::Monitor::TIMEOUT_ON);
 }
 
 // ------------------------------------------------------------------------
@@ -454,7 +458,7 @@ void DataFrameManager::calc_categorical_column_plots(
 
   const auto target_role = JSON::get_value<std::string>(_cmd, "target_role_");
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto& df = utils::Getter::get(df_name, data_frames());
 
@@ -536,7 +540,7 @@ void DataFrameManager::calc_column_plots(const std::string& _name,
 
   const auto target_role = JSON::get_value<std::string>(_cmd, "target_role_");
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto& df = utils::Getter::get(df_name, data_frames());
 
@@ -645,18 +649,18 @@ void DataFrameManager::concat(const std::string& _name,
         "concatenate!");
   }
 
-  multithreading::WeakWriteLock weak_write_lock(read_write_lock_);
+  multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
-  const auto pool = options_.make_pool();
+  const auto pool = params_.options_.make_pool();
 
-  const auto local_categories =
-      fct::Ref<containers::Encoding>::make(pool, categories_.ptr());  // TODO
+  const auto local_categories = fct::Ref<containers::Encoding>::make(
+      pool, params_.categories_.ptr());  // TODO
 
   const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
-      pool, join_keys_encoding_.ptr());  // TODO
+      pool, params_.join_keys_encoding_.ptr());  // TODO
 
   auto view_parser = ViewParser(local_categories, local_join_keys_encoding,
-                                data_frames_, options_);
+                                params_.data_frames_, params_.options_);
 
   const auto extract_df =
       [&view_parser](
@@ -679,9 +683,9 @@ void DataFrameManager::concat(const std::string& _name,
 
   weak_write_lock.upgrade();
 
-  categories_->append(*local_categories);
+  params_.categories_->append(*local_categories);
 
-  join_keys_encoding_->append(*local_join_keys_encoding);
+  params_.join_keys_encoding_->append(*local_join_keys_encoding);
 
   data_frames()[_name] = df;
 
@@ -689,8 +693,8 @@ void DataFrameManager::concat(const std::string& _name,
 
   communication::Sender::send_string("Success!", _socket);
 
-  monitor_->send_tcp("postdataframe", df.to_monitor(),
-                     communication::Monitor::TIMEOUT_ON);
+  params_.monitor_->send_tcp("postdataframe", df.to_monitor(),
+                             communication::Monitor::TIMEOUT_ON);
 }
 
 // ------------------------------------------------------------------------
@@ -755,7 +759,7 @@ void DataFrameManager::df_to_db(
 
   conn->read(_table_name, 0, &reader);
 
-  database_manager_->post_tables();
+  params_.database_manager_->post_tables();
 }
 
 // ------------------------------------------------------------------------
@@ -781,7 +785,7 @@ void DataFrameManager::df_to_s3(
   size_t fnum = 0;
 
   while (!reader.eof()) {
-    auto tfile = Poco::TemporaryFile(options_.temp_dir());
+    auto tfile = Poco::TemporaryFile(params_.options_.temp_dir());
 
     auto writer =
         io::CSVWriter(tfile.path(), _batch_size, colnames, "\"", _sep);
@@ -807,7 +811,7 @@ void DataFrameManager::df_to_s3(
 
 void DataFrameManager::freeze(const std::string& _name,
                               Poco::Net::StreamSocket* _socket) {
-  multithreading::WriteLock write_lock(read_write_lock_);
+  multithreading::WriteLock write_lock(params_.read_write_lock_);
 
   auto& df = utils::Getter::get(_name, &data_frames());
 
@@ -826,18 +830,18 @@ void DataFrameManager::from_arrow(const std::string& _name,
                                   Poco::Net::StreamSocket* _socket) {
   const auto schema = containers::Schema::from_json(_cmd);
 
-  multithreading::WeakWriteLock weak_write_lock(read_write_lock_);
+  multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
-  const auto pool = options_.make_pool();
+  const auto pool = params_.options_.make_pool();
 
-  const auto local_categories =
-      fct::Ref<containers::Encoding>::make(pool, categories_.ptr());  // TODO
+  const auto local_categories = fct::Ref<containers::Encoding>::make(
+      pool, params_.categories_.ptr());  // TODO
 
   const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
-      pool, join_keys_encoding_.ptr());  // TODO
+      pool, params_.join_keys_encoding_.ptr());  // TODO
 
   const auto arrow_handler = handlers::ArrowHandler(
-      local_categories, local_join_keys_encoding, options_);
+      local_categories, local_join_keys_encoding, params_.options_);
 
   auto df = arrow_handler.table_to_df(arrow_handler.recv_table(_socket), _name,
                                       schema);
@@ -848,13 +852,13 @@ void DataFrameManager::from_arrow(const std::string& _name,
   // the changes.
   weak_write_lock.upgrade();
 
-  categories_->append(*local_categories);
+  params_.categories_->append(*local_categories);
 
-  join_keys_encoding_->append(*local_join_keys_encoding);
+  params_.join_keys_encoding_->append(*local_join_keys_encoding);
 
-  df.set_categories(categories_.ptr());
+  df.set_categories(params_.categories_.ptr());
 
-  df.set_join_keys_encoding(join_keys_encoding_.ptr());
+  df.set_join_keys_encoding(params_.join_keys_encoding_.ptr());
 
   if (!_append || data_frames().find(_name) == data_frames().end()) {
     data_frames()[_name] = df;
@@ -899,15 +903,15 @@ void DataFrameManager::from_csv(const std::string& _name,
   const auto schema = containers::Schema::from_json(_cmd);
 
   // We need the weak write lock for the categories and join keys encoding.
-  multithreading::WeakWriteLock weak_write_lock(read_write_lock_);
+  multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
-  const auto pool = options_.make_pool();
+  const auto pool = params_.options_.make_pool();
 
   const auto local_categories =
-      std::make_shared<containers::Encoding>(pool, categories_.ptr());
+      std::make_shared<containers::Encoding>(pool, params_.categories_.ptr());
 
-  const auto local_join_keys_encoding =
-      std::make_shared<containers::Encoding>(pool, join_keys_encoding_.ptr());
+  const auto local_join_keys_encoding = std::make_shared<containers::Encoding>(
+      pool, params_.join_keys_encoding_.ptr());
 
   auto df = containers::DataFrame(_name, local_categories,
                                   local_join_keys_encoding, pool);
@@ -921,13 +925,13 @@ void DataFrameManager::from_csv(const std::string& _name,
   // the changes.
   weak_write_lock.upgrade();
 
-  categories_->append(*local_categories);
+  params_.categories_->append(*local_categories);
 
-  join_keys_encoding_->append(*local_join_keys_encoding);
+  params_.join_keys_encoding_->append(*local_join_keys_encoding);
 
-  df.set_categories(categories_.ptr());
+  df.set_categories(params_.categories_.ptr());
 
-  df.set_join_keys_encoding(join_keys_encoding_.ptr());
+  df.set_join_keys_encoding(params_.join_keys_encoding_.ptr());
 
   if (!_append || data_frames().find(_name) == data_frames().end()) {
     data_frames()[_name] = df;
@@ -952,15 +956,15 @@ void DataFrameManager::from_db(const std::string& _name,
 
   const auto schema = containers::Schema::from_json(_cmd);
 
-  multithreading::WeakWriteLock weak_write_lock(read_write_lock_);
+  multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
-  const auto pool = options_.make_pool();
+  const auto pool = params_.options_.make_pool();
 
-  const auto local_categories =
-      std::make_shared<containers::Encoding>(pool, categories_.ptr());  // TODO
+  const auto local_categories = std::make_shared<containers::Encoding>(
+      pool, params_.categories_.ptr());  // TODO
 
   const auto local_join_keys_encoding = std::make_shared<containers::Encoding>(
-      pool, join_keys_encoding_.ptr());  // TODO
+      pool, params_.join_keys_encoding_.ptr());  // TODO
 
   auto df = containers::DataFrame(_name, local_categories,
                                   local_join_keys_encoding, pool);
@@ -971,13 +975,13 @@ void DataFrameManager::from_db(const std::string& _name,
 
   weak_write_lock.upgrade();
 
-  categories_->append(*local_categories);
+  params_.categories_->append(*local_categories);
 
-  join_keys_encoding_->append(*local_join_keys_encoding);
+  params_.join_keys_encoding_->append(*local_join_keys_encoding);
 
-  df.set_categories(categories_.ptr());
+  df.set_categories(params_.categories_.ptr());
 
-  df.set_join_keys_encoding(join_keys_encoding_.ptr());
+  df.set_join_keys_encoding(params_.join_keys_encoding_.ptr());
 
   if (!_append || data_frames().find(_name) == data_frames().end()) {
     data_frames()[_name] = df;
@@ -1006,15 +1010,15 @@ void DataFrameManager::from_json(const std::string& _name,
 
   const auto schema = containers::Schema::from_json(_cmd);
 
-  multithreading::WeakWriteLock weak_write_lock(read_write_lock_);
+  multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
-  const auto pool = options_.make_pool();
+  const auto pool = params_.options_.make_pool();
 
-  const auto local_categories =
-      std::make_shared<containers::Encoding>(pool, categories_.ptr());  // TODO
+  const auto local_categories = std::make_shared<containers::Encoding>(
+      pool, params_.categories_.ptr());  // TODO
 
   const auto local_join_keys_encoding = std::make_shared<containers::Encoding>(
-      pool, join_keys_encoding_.ptr());  // TODO
+      pool, params_.join_keys_encoding_.ptr());  // TODO
 
   auto df = containers::DataFrame(_name, local_categories,
                                   local_join_keys_encoding, pool);
@@ -1025,13 +1029,13 @@ void DataFrameManager::from_json(const std::string& _name,
 
   weak_write_lock.upgrade();
 
-  categories_->append(*local_categories);
+  params_.categories_->append(*local_categories);
 
-  join_keys_encoding_->append(*local_join_keys_encoding);
+  params_.join_keys_encoding_->append(*local_join_keys_encoding);
 
-  df.set_categories(categories_.ptr());
+  df.set_categories(params_.categories_.ptr());
 
-  df.set_join_keys_encoding(join_keys_encoding_.ptr());
+  df.set_join_keys_encoding(params_.join_keys_encoding_.ptr());
 
   if (!_append || data_frames().find(_name) == data_frames().end()) {
     data_frames()[_name] = df;
@@ -1054,18 +1058,18 @@ void DataFrameManager::from_parquet(const std::string& _name,
 
   const auto schema = containers::Schema::from_json(_cmd);
 
-  multithreading::WeakWriteLock weak_write_lock(read_write_lock_);
+  multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
-  const auto pool = options_.make_pool();
+  const auto pool = params_.options_.make_pool();
 
   const auto local_categories =
-      fct::Ref<containers::Encoding>::make(pool, categories_.ptr());
+      fct::Ref<containers::Encoding>::make(pool, params_.categories_.ptr());
 
-  const auto local_join_keys_encoding =
-      fct::Ref<containers::Encoding>::make(pool, join_keys_encoding_.ptr());
+  const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
+      pool, params_.join_keys_encoding_.ptr());
 
   const auto arrow_handler = handlers::ArrowHandler(
-      local_categories, local_join_keys_encoding, options_);
+      local_categories, local_join_keys_encoding, params_.options_);
 
   auto df = arrow_handler.table_to_df(arrow_handler.read_parquet(fname), _name,
                                       schema);
@@ -1076,13 +1080,13 @@ void DataFrameManager::from_parquet(const std::string& _name,
   // the changes.
   weak_write_lock.upgrade();
 
-  categories_->append(*local_categories);
+  params_.categories_->append(*local_categories);
 
-  join_keys_encoding_->append(*local_join_keys_encoding);
+  params_.join_keys_encoding_->append(*local_join_keys_encoding);
 
-  df.set_categories(categories_.ptr());
+  df.set_categories(params_.categories_.ptr());
 
-  df.set_join_keys_encoding(join_keys_encoding_.ptr());
+  df.set_join_keys_encoding(params_.join_keys_encoding_.ptr());
 
   if (!_append || data_frames().find(_name) == data_frames().end()) {
     data_frames()[_name] = df;
@@ -1109,15 +1113,15 @@ void DataFrameManager::from_query(const std::string& _name,
 
   const auto schema = containers::Schema::from_json(_cmd);
 
-  multithreading::WeakWriteLock weak_write_lock(read_write_lock_);
+  multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
-  const auto pool = options_.make_pool();
+  const auto pool = params_.options_.make_pool();
 
   const auto local_categories =
-      std::make_shared<containers::Encoding>(pool, categories_.ptr());
+      std::make_shared<containers::Encoding>(pool, params_.categories_.ptr());
 
-  const auto local_join_keys_encoding =
-      std::make_shared<containers::Encoding>(pool, join_keys_encoding_.ptr());
+  const auto local_join_keys_encoding = std::make_shared<containers::Encoding>(
+      pool, params_.join_keys_encoding_.ptr());
 
   auto df = containers::DataFrame(_name, local_categories,
                                   local_join_keys_encoding, pool);
@@ -1128,13 +1132,13 @@ void DataFrameManager::from_query(const std::string& _name,
 
   weak_write_lock.upgrade();
 
-  categories_->append(*local_categories);
+  params_.categories_->append(*local_categories);
 
-  join_keys_encoding_->append(*local_join_keys_encoding);
+  params_.join_keys_encoding_->append(*local_join_keys_encoding);
 
-  df.set_categories(categories_.ptr());
+  df.set_categories(params_.categories_.ptr());
 
-  df.set_join_keys_encoding(join_keys_encoding_.ptr());
+  df.set_join_keys_encoding(params_.join_keys_encoding_.ptr());
 
   if (!_append || data_frames().find(_name) == data_frames().end()) {
     data_frames()[_name] = df;
@@ -1182,15 +1186,15 @@ void DataFrameManager::from_s3(const std::string& _name,
 
   const auto schema = containers::Schema::from_json(_cmd);
 
-  multithreading::WeakWriteLock weak_write_lock(read_write_lock_);
+  multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
-  const auto pool = options_.make_pool();
+  const auto pool = params_.options_.make_pool();
 
   const auto local_categories =
-      std::make_shared<containers::Encoding>(pool, categories_.ptr());
+      std::make_shared<containers::Encoding>(pool, params_.categories_.ptr());
 
-  const auto local_join_keys_encoding =
-      std::make_shared<containers::Encoding>(pool, join_keys_encoding_.ptr());
+  const auto local_join_keys_encoding = std::make_shared<containers::Encoding>(
+      pool, params_.join_keys_encoding_.ptr());
 
   auto df = containers::DataFrame(_name, local_categories,
                                   local_join_keys_encoding, pool);
@@ -1202,13 +1206,13 @@ void DataFrameManager::from_s3(const std::string& _name,
 
   weak_write_lock.upgrade();
 
-  categories_->append(*local_categories);
+  params_.categories_->append(*local_categories);
 
-  join_keys_encoding_->append(*local_join_keys_encoding);
+  params_.join_keys_encoding_->append(*local_join_keys_encoding);
 
-  df.set_categories(categories_.ptr());
+  df.set_categories(params_.categories_.ptr());
 
-  df.set_join_keys_encoding(join_keys_encoding_.ptr());
+  df.set_join_keys_encoding(params_.join_keys_encoding_.ptr());
 
   if (!_append || data_frames().find(_name) == data_frames().end()) {
     data_frames()[_name] = df;
@@ -1231,18 +1235,18 @@ void DataFrameManager::from_view(const std::string& _name,
                                  Poco::Net::StreamSocket* _socket) {
   const auto view = *JSON::get_object(_cmd, "view_");
 
-  multithreading::WeakWriteLock weak_write_lock(read_write_lock_);
+  multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
-  const auto pool = options_.make_pool();
+  const auto pool = params_.options_.make_pool();
 
   auto local_categories =
-      fct::Ref<containers::Encoding>::make(pool, categories_.ptr());
+      fct::Ref<containers::Encoding>::make(pool, params_.categories_.ptr());
 
-  auto local_join_keys_encoding =
-      fct::Ref<containers::Encoding>::make(pool, join_keys_encoding_.ptr());
+  auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
+      pool, params_.join_keys_encoding_.ptr());
 
-  auto df = ViewParser(local_categories, local_join_keys_encoding, data_frames_,
-                       options_)
+  auto df = ViewParser(local_categories, local_join_keys_encoding,
+                       params_.data_frames_, params_.options_)
                 .parse(view)
                 .clone(_name);
 
@@ -1250,13 +1254,13 @@ void DataFrameManager::from_view(const std::string& _name,
 
   weak_write_lock.upgrade();
 
-  categories_->append(*local_categories);
+  params_.categories_->append(*local_categories);
 
-  join_keys_encoding_->append(*local_join_keys_encoding);
+  params_.join_keys_encoding_->append(*local_join_keys_encoding);
 
-  df.set_categories(categories_.ptr());
+  df.set_categories(params_.categories_.ptr());
 
-  df.set_join_keys_encoding(join_keys_encoding_.ptr());
+  df.set_join_keys_encoding(params_.join_keys_encoding_.ptr());
 
   if (!_append || data_frames().find(_name) == data_frames().end()) {
     data_frames()[_name] = df;
@@ -1276,10 +1280,11 @@ void DataFrameManager::get_boolean_column(const std::string& _name,
                                           Poco::Net::StreamSocket* _socket) {
   const auto json_col = *JSON::get_object(_cmd, "col_");
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto column_view =
-      BoolOpParser(categories_, join_keys_encoding_, data_frames_)
+      BoolOpParser(params_.categories_, params_.join_keys_encoding_,
+                   params_.data_frames_)
           .parse(json_col);
 
   if (column_view.is_infinite()) {
@@ -1295,7 +1300,8 @@ void DataFrameManager::get_boolean_column(const std::string& _name,
 
   const auto field = arrow::field("column", arrow::boolean());
 
-  handlers::ArrowHandler(categories_, join_keys_encoding_, options_)
+  handlers::ArrowHandler(params_.categories_, params_.join_keys_encoding_,
+                         params_.options_)
       .send_array(array, field, _socket);
 }
 
@@ -1312,10 +1318,11 @@ void DataFrameManager::get_boolean_column_content(
 
   const auto json_col = *JSON::get_object(_cmd, "col_");
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto column_view =
-      BoolOpParser(categories_, join_keys_encoding_, data_frames_)
+      BoolOpParser(params_.categories_, params_.join_keys_encoding_,
+                   params_.data_frames_)
           .parse(json_col);
 
   const auto data_ptr = column_view.to_vector(start, length, false);
@@ -1339,10 +1346,11 @@ void DataFrameManager::get_boolean_column_nrows(
     Poco::Net::StreamSocket* _socket) {
   const auto json_col = *JSON::get_object(_cmd, "col_");
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto column_view =
-      BoolOpParser(categories_, join_keys_encoding_, data_frames_)
+      BoolOpParser(params_.categories_, params_.join_keys_encoding_,
+                   params_.data_frames_)
           .parse(json_col);
 
   read_lock.unlock();
@@ -1358,10 +1366,11 @@ void DataFrameManager::get_categorical_column(
     Poco::Net::StreamSocket* _socket) {
   const auto json_col = *JSON::get_object(_cmd, "col_");
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto column_view =
-      CatOpParser(categories_, join_keys_encoding_, data_frames_)
+      CatOpParser(params_.categories_, params_.join_keys_encoding_,
+                  params_.data_frames_)
           .parse(json_col);
 
   if (column_view.is_infinite()) {
@@ -1377,7 +1386,8 @@ void DataFrameManager::get_categorical_column(
 
   const auto field = arrow::field("column", arrow::utf8());
 
-  handlers::ArrowHandler(categories_, join_keys_encoding_, options_)
+  handlers::ArrowHandler(params_.categories_, params_.join_keys_encoding_,
+                         params_.options_)
       .send_array(array, field, _socket);
 }
 
@@ -1394,10 +1404,11 @@ void DataFrameManager::get_categorical_column_content(
 
   const auto json_col = *JSON::get_object(_cmd, "col_");
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto column_view =
-      CatOpParser(categories_, join_keys_encoding_, data_frames_)
+      CatOpParser(params_.categories_, params_.join_keys_encoding_,
+                  params_.data_frames_)
           .parse(json_col);
 
   const auto data_ptr = column_view.to_vector(start, length, false);
@@ -1421,10 +1432,11 @@ void DataFrameManager::get_categorical_column_nrows(
     Poco::Net::StreamSocket* _socket) {
   const auto json_col = *JSON::get_object(_cmd, "col_");
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto column_view =
-      CatOpParser(categories_, join_keys_encoding_, data_frames_)
+      CatOpParser(params_.categories_, params_.join_keys_encoding_,
+                  params_.data_frames_)
           .parse(json_col);
 
   read_lock.unlock();
@@ -1441,10 +1453,11 @@ void DataFrameManager::get_categorical_column_unique(
     Poco::Net::StreamSocket* _socket) {
   const auto json_col = *JSON::get_object(_cmd, "col_");
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto column_view =
-      CatOpParser(categories_, join_keys_encoding_, data_frames_)
+      CatOpParser(params_.categories_, params_.join_keys_encoding_,
+                  params_.data_frames_)
           .parse(json_col);
 
   const auto array = column_view.unique();
@@ -1453,7 +1466,8 @@ void DataFrameManager::get_categorical_column_unique(
 
   const auto field = arrow::field("column", arrow::utf8());
 
-  handlers::ArrowHandler(categories_, join_keys_encoding_, options_)
+  handlers::ArrowHandler(params_.categories_, params_.join_keys_encoding_,
+                         params_.options_)
       .send_array(array, field, _socket);
 }
 
@@ -1464,10 +1478,11 @@ void DataFrameManager::get_column(const std::string& _name,
                                   Poco::Net::StreamSocket* _socket) {
   const auto json_col = *JSON::get_object(_cmd, "col_");
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto column_view =
-      NumOpParser(categories_, join_keys_encoding_, data_frames_)
+      NumOpParser(params_.categories_, params_.join_keys_encoding_,
+                  params_.data_frames_)
           .parse(json_col);
 
   if (column_view.is_infinite()) {
@@ -1486,7 +1501,8 @@ void DataFrameManager::get_column(const std::string& _name,
           ? arrow::field("column", arrow::timestamp(arrow::TimeUnit::NANO))
           : arrow::field("column", arrow::float64());
 
-  handlers::ArrowHandler(categories_, join_keys_encoding_, options_)
+  handlers::ArrowHandler(params_.categories_, params_.join_keys_encoding_,
+                         params_.options_)
       .send_array(array, field, _socket);
 
   communication::Sender::send_string("Success!", _socket);
@@ -1499,10 +1515,11 @@ void DataFrameManager::get_column_unique(const std::string& _name,
                                          Poco::Net::StreamSocket* _socket) {
   const auto json_col = *JSON::get_object(_cmd, "col_");
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto column_view =
-      NumOpParser(categories_, join_keys_encoding_, data_frames_)
+      NumOpParser(params_.categories_, params_.join_keys_encoding_,
+                  params_.data_frames_)
           .parse(json_col);
 
   const auto array = column_view.unique();
@@ -1514,7 +1531,8 @@ void DataFrameManager::get_column_unique(const std::string& _name,
           ? arrow::field("column", arrow::timestamp(arrow::TimeUnit::NANO))
           : arrow::field("column", arrow::float64());
 
-  handlers::ArrowHandler(categories_, join_keys_encoding_, options_)
+  handlers::ArrowHandler(params_.categories_, params_.join_keys_encoding_,
+                         params_.options_)
       .send_array(array, field, _socket);
 
   communication::Sender::send_string("Success!", _socket);
@@ -1531,7 +1549,7 @@ void DataFrameManager::get_data_frame_content(
 
   const auto start = JSON::get_value<Int>(_cmd, "start_");
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto& df = utils::Getter::get(_name, &data_frames());
 
@@ -1549,10 +1567,11 @@ void DataFrameManager::get_column_nrows(const std::string& _name,
                                         Poco::Net::StreamSocket* _socket) {
   const auto json_col = *JSON::get_object(_cmd, "col_");
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto column_view =
-      NumOpParser(categories_, join_keys_encoding_, data_frames_)
+      NumOpParser(params_.categories_, params_.join_keys_encoding_,
+                  params_.data_frames_)
           .parse(json_col);
 
   read_lock.unlock();
@@ -1571,7 +1590,7 @@ void DataFrameManager::get_data_frame_html(const std::string& _name,
 
   const auto border = JSON::get_value<std::int32_t>(_cmd, "border_");
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto& df = utils::Getter::get(_name, &data_frames());
 
@@ -1588,7 +1607,7 @@ void DataFrameManager::get_data_frame_html(const std::string& _name,
 
 void DataFrameManager::get_data_frame_string(const std::string& _name,
                                              Poco::Net::StreamSocket* _socket) {
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto& df = utils::Getter::get(_name, &data_frames());
 
@@ -1602,11 +1621,11 @@ void DataFrameManager::get_data_frame_string(const std::string& _name,
 // ------------------------------------------------------------------------
 
 void DataFrameManager::get_data_frame(Poco::Net::StreamSocket* _socket) {
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   while (true) {
     Poco::JSON::Object cmd =
-        communication::Receiver::recv_cmd(logger_, _socket);
+        communication::Receiver::recv_cmd(params_.logger_, _socket);
 
     const auto name = JSON::get_value<std::string>(cmd, "name_");
 
@@ -1638,10 +1657,11 @@ void DataFrameManager::get_float_column_content(
 
   const auto json_col = *JSON::get_object(_cmd, "col_");
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto column_view =
-      NumOpParser(categories_, join_keys_encoding_, data_frames_)
+      NumOpParser(params_.categories_, params_.join_keys_encoding_,
+                  params_.data_frames_)
           .parse(json_col);
 
   const auto col = column_view.to_column(start, length, false);
@@ -1660,7 +1680,7 @@ void DataFrameManager::get_float_column_content(
 
 void DataFrameManager::get_nbytes(const std::string& _name,
                                   Poco::Net::StreamSocket* _socket) {
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   auto& df = utils::Getter::get(_name, &data_frames());
 
@@ -1673,7 +1693,7 @@ void DataFrameManager::get_nbytes(const std::string& _name,
 
 void DataFrameManager::get_nrows(const std::string& _name,
                                  Poco::Net::StreamSocket* _socket) {
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   auto& df = utils::Getter::get(_name, &data_frames());
 
@@ -1689,10 +1709,11 @@ void DataFrameManager::get_subroles(const std::string& _name,
                                     Poco::Net::StreamSocket* _socket) {
   const auto json_col = *JSON::get_object(_cmd, "col_");
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto column_view =
-      NumOpParser(categories_, join_keys_encoding_, data_frames_)
+      NumOpParser(params_.categories_, params_.join_keys_encoding_,
+                  params_.data_frames_)
           .parse(json_col);
 
   read_lock.unlock();
@@ -1710,10 +1731,11 @@ void DataFrameManager::get_subroles_categorical(
     Poco::Net::StreamSocket* _socket) {
   const auto json_col = *JSON::get_object(_cmd, "col_");
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto column_view =
-      CatOpParser(categories_, join_keys_encoding_, data_frames_)
+      CatOpParser(params_.categories_, params_.join_keys_encoding_,
+                  params_.data_frames_)
           .parse(json_col);
 
   read_lock.unlock();
@@ -1731,10 +1753,11 @@ void DataFrameManager::get_unit(const std::string& _name,
                                 Poco::Net::StreamSocket* _socket) {
   const auto json_col = *JSON::get_object(_cmd, "col_");
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto column_view =
-      NumOpParser(categories_, join_keys_encoding_, data_frames_)
+      NumOpParser(params_.categories_, params_.join_keys_encoding_,
+                  params_.data_frames_)
           .parse(json_col);
 
   read_lock.unlock();
@@ -1751,10 +1774,11 @@ void DataFrameManager::get_unit_categorical(const std::string& _name,
                                             Poco::Net::StreamSocket* _socket) {
   const auto json_col = *JSON::get_object(_cmd, "col_");
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto column_view =
-      CatOpParser(categories_, join_keys_encoding_, data_frames_)
+      CatOpParser(params_.categories_, params_.join_keys_encoding_,
+                  params_.data_frames_)
           .parse(json_col);
 
   read_lock.unlock();
@@ -1777,10 +1801,11 @@ void DataFrameManager::get_view_content(const std::string& _name,
 
   const auto cols = jsonutils::JSON::get_object_array(_cmd, "cols_");
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto result =
-      ViewParser(categories_, join_keys_encoding_, data_frames_, options_)
+      ViewParser(params_.categories_, params_.join_keys_encoding_,
+                 params_.data_frames_, params_.options_)
           .get_content(draw, start, length, false, cols);
 
   read_lock.unlock();
@@ -1797,10 +1822,11 @@ void DataFrameManager::get_view_nrows(const std::string& _name,
 
   const auto force = JSON::get_value<bool>(_cmd, "force_");
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto result =
-      ViewParser(categories_, join_keys_encoding_, data_frames_, options_)
+      ViewParser(params_.categories_, params_.join_keys_encoding_,
+                 params_.data_frames_, params_.options_)
           .get_content(1, 0, 0, force, cols);
 
   read_lock.unlock();
@@ -1812,7 +1838,7 @@ void DataFrameManager::get_view_nrows(const std::string& _name,
 
 void DataFrameManager::last_change(const std::string& _name,
                                    Poco::Net::StreamSocket* _socket) {
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto df = utils::Getter::get(_name, data_frames());
 
@@ -1829,7 +1855,7 @@ void DataFrameManager::receive_data(
     containers::DataFrame* _df, Poco::Net::StreamSocket* _socket) const {
   while (true) {
     Poco::JSON::Object cmd =
-        communication::Receiver::recv_cmd(logger_, _socket);
+        communication::Receiver::recv_cmd(params_.logger_, _socket);
 
     const auto type = JSON::get_value<std::string>(cmd, "type_");
 
@@ -1866,7 +1892,8 @@ void DataFrameManager::recv_and_add_float_column(
 
   const auto name = JSON::get_value<std::string>(_cmd, "name_");
 
-  auto col = ArrowHandler(categories_, join_keys_encoding_, options_)
+  auto col = ArrowHandler(params_.categories_, params_.join_keys_encoding_,
+                          params_.options_)
                  .recv_column<Float>(_df->pool(), name, _socket);
 
   add_float_column_to_df(role, col, _df, _weak_write_lock);
@@ -1885,7 +1912,8 @@ void DataFrameManager::recv_and_add_string_column(
   const auto name = JSON::get_value<std::string>(_cmd, "name_");
 
   const auto str_col =
-      ArrowHandler(categories_, join_keys_encoding_, options_)
+      ArrowHandler(params_.categories_, params_.join_keys_encoding_,
+                   params_.options_)
           .recv_column<strings::String>(_df->pool(), name, _socket);
 
   if (role == containers::DataFrame::ROLE_UNUSED ||
@@ -1910,7 +1938,8 @@ void DataFrameManager::recv_and_add_string_column(
   const auto name = JSON::get_value<std::string>(_cmd, "name_");
 
   const auto str_col =
-      ArrowHandler(_local_categories, _local_join_keys_encoding, options_)
+      ArrowHandler(_local_categories, _local_join_keys_encoding,
+                   params_.options_)
           .recv_column<strings::String>(_df->pool(), name, _socket);
 
   if (role == containers::DataFrame::ROLE_UNUSED ||
@@ -1927,7 +1956,7 @@ void DataFrameManager::recv_and_add_string_column(
 
 void DataFrameManager::refresh(const std::string& _name,
                                Poco::Net::StreamSocket* _socket) {
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto df = utils::Getter::get(_name, data_frames());
 
@@ -1947,7 +1976,7 @@ void DataFrameManager::remove_column(const std::string& _name,
 
   const auto name = JSON::get_value<std::string>(_cmd, "name_");
 
-  multithreading::WriteLock write_lock(read_write_lock_);
+  multithreading::WriteLock write_lock(params_.read_write_lock_);
 
   auto& df = utils::Getter::get(df_name, &data_frames());
 
@@ -1958,8 +1987,8 @@ void DataFrameManager::remove_column(const std::string& _name,
                              "' not found.");
   }
 
-  monitor_->send_tcp("postdataframe", df.to_monitor(),
-                     communication::Monitor::TIMEOUT_ON);
+  params_.monitor_->send_tcp("postdataframe", df.to_monitor(),
+                             communication::Monitor::TIMEOUT_ON);
 
   communication::Sender::send_string("Success!", _socket);
 }
@@ -1976,7 +2005,7 @@ void DataFrameManager::set_subroles(const std::string& _name,
   const auto subroles =
       JSON::array_to_vector<std::string>(JSON::get_array(_cmd, "subroles_"));
 
-  multithreading::WriteLock write_lock(read_write_lock_);
+  multithreading::WriteLock write_lock(params_.read_write_lock_);
 
   auto& df = utils::Getter::get(df_name, &data_frames());
 
@@ -1986,8 +2015,8 @@ void DataFrameManager::set_subroles(const std::string& _name,
 
   df.add_float_column(column, role);
 
-  monitor_->send_tcp("postdataframe", df.to_monitor(),
-                     communication::Monitor::TIMEOUT_ON);
+  params_.monitor_->send_tcp("postdataframe", df.to_monitor(),
+                             communication::Monitor::TIMEOUT_ON);
 
   write_lock.unlock();
 
@@ -2006,7 +2035,7 @@ void DataFrameManager::set_subroles_categorical(
   const auto subroles =
       JSON::array_to_vector<std::string>(JSON::get_array(_cmd, "subroles_"));
 
-  multithreading::WriteLock write_lock(read_write_lock_);
+  multithreading::WriteLock write_lock(params_.read_write_lock_);
 
   auto& df = utils::Getter::get(df_name, &data_frames());
 
@@ -2025,8 +2054,8 @@ void DataFrameManager::set_subroles_categorical(
     df.add_int_column(column, role);
   }
 
-  monitor_->send_tcp("postdataframe", df.to_monitor(),
-                     communication::Monitor::TIMEOUT_ON);
+  params_.monitor_->send_tcp("postdataframe", df.to_monitor(),
+                             communication::Monitor::TIMEOUT_ON);
 
   write_lock.unlock();
 
@@ -2044,7 +2073,7 @@ void DataFrameManager::set_unit(const std::string& _name,
 
   const auto unit = JSON::get_value<std::string>(_cmd, "unit_");
 
-  multithreading::WriteLock write_lock(read_write_lock_);
+  multithreading::WriteLock write_lock(params_.read_write_lock_);
 
   auto& df = utils::Getter::get(df_name, &data_frames());
 
@@ -2054,8 +2083,8 @@ void DataFrameManager::set_unit(const std::string& _name,
 
   df.add_float_column(column, role);
 
-  monitor_->send_tcp("postdataframe", df.to_monitor(),
-                     communication::Monitor::TIMEOUT_ON);
+  params_.monitor_->send_tcp("postdataframe", df.to_monitor(),
+                             communication::Monitor::TIMEOUT_ON);
 
   write_lock.unlock();
 
@@ -2073,7 +2102,7 @@ void DataFrameManager::set_unit_categorical(const std::string& _name,
 
   const auto unit = JSON::get_value<std::string>(_cmd, "unit_");
 
-  multithreading::WriteLock write_lock(read_write_lock_);
+  multithreading::WriteLock write_lock(params_.read_write_lock_);
 
   auto& df = utils::Getter::get(df_name, &data_frames());
 
@@ -2092,8 +2121,8 @@ void DataFrameManager::set_unit_categorical(const std::string& _name,
     df.add_int_column(column, role);
   }
 
-  monitor_->send_tcp("postdataframe", df.to_monitor(),
-                     communication::Monitor::TIMEOUT_ON);
+  params_.monitor_->send_tcp("postdataframe", df.to_monitor(),
+                             communication::Monitor::TIMEOUT_ON);
 
   write_lock.unlock();
 
@@ -2104,7 +2133,7 @@ void DataFrameManager::set_unit_categorical(const std::string& _name,
 
 void DataFrameManager::summarize(const std::string& _name,
                                  Poco::Net::StreamSocket* _socket) {
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   auto& df = utils::Getter::get(_name, &data_frames());
 
@@ -2119,12 +2148,12 @@ void DataFrameManager::summarize(const std::string& _name,
 
 void DataFrameManager::to_arrow(const std::string& _name,
                                 Poco::Net::StreamSocket* _socket) {
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto& df = utils::Getter::get(_name, data_frames());
 
-  const auto arrow_handler =
-      handlers::ArrowHandler(categories_, join_keys_encoding_, options_);
+  const auto arrow_handler = handlers::ArrowHandler(
+      params_.categories_, params_.join_keys_encoding_, params_.options_);
 
   const auto table = arrow_handler.df_to_table(df);
 
@@ -2146,12 +2175,12 @@ void DataFrameManager::to_csv(const std::string& _name,
 
   const auto sep = JSON::get_value<std::string>(_cmd, "sep_");
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto& df = utils::Getter::get(_name, data_frames());
 
-  df_to_csv(fname, batch_size, quotechar, sep, df, categories_,
-            join_keys_encoding_);
+  df_to_csv(fname, batch_size, quotechar, sep, df, params_.categories_,
+            params_.join_keys_encoding_);
 
   read_lock.unlock();
 
@@ -2167,11 +2196,12 @@ void DataFrameManager::to_db(const std::string& _name,
 
   const auto table_name = JSON::get_value<std::string>(_cmd, "table_name_");
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto& df = utils::Getter::get(_name, data_frames());
 
-  df_to_db(conn_id, table_name, df, categories_, join_keys_encoding_);
+  df_to_db(conn_id, table_name, df, params_.categories_,
+           params_.join_keys_encoding_);
 
   read_lock.unlock();
 
@@ -2187,12 +2217,12 @@ void DataFrameManager::to_parquet(const std::string& _name,
 
   const auto compression = JSON::get_value<std::string>(_cmd, "compression_");
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto& df = utils::Getter::get(_name, data_frames());
 
-  const auto arrow_handler =
-      handlers::ArrowHandler(categories_, join_keys_encoding_, options_);
+  const auto arrow_handler = handlers::ArrowHandler(
+      params_.categories_, params_.join_keys_encoding_, params_.options_);
 
   const auto table = arrow_handler.df_to_table(df);
 
@@ -2222,12 +2252,12 @@ void DataFrameManager::to_s3(const std::string& _name,
 
   const auto sep = JSON::get_value<std::string>(_cmd, "sep_");
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto& df = utils::Getter::get(_name, data_frames());
 
-  df_to_s3(batch_size, bucket, key, region, sep, df, categories_,
-           join_keys_encoding_);
+  df_to_s3(batch_size, bucket, key, region, sep, df, params_.categories_,
+           params_.join_keys_encoding_);
 
   read_lock.unlock();
 
@@ -2243,25 +2273,26 @@ void DataFrameManager::view_to_arrow(const std::string& _name,
                                      Poco::Net::StreamSocket* _socket) {
   const auto view = JSON::get_object(_cmd, "view_");
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
-  const auto pool = options_.make_pool();
+  const auto pool = params_.options_.make_pool();
 
   const auto local_categories =
-      fct::Ref<containers::Encoding>::make(pool, categories_.ptr());
+      fct::Ref<containers::Encoding>::make(pool, params_.categories_.ptr());
 
-  const auto local_join_keys_encoding =
-      fct::Ref<containers::Encoding>::make(pool, join_keys_encoding_.ptr());
+  const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
+      pool, params_.join_keys_encoding_.ptr());
 
   assert_true(view);
 
   const auto table = ViewParser(local_categories, local_join_keys_encoding,
-                                data_frames_, options_)
+                                params_.data_frames_, params_.options_)
                          .to_table(*view);
 
   read_lock.unlock();
 
-  handlers::ArrowHandler(categories_, join_keys_encoding_, options_)
+  handlers::ArrowHandler(params_.categories_, params_.join_keys_encoding_,
+                         params_.options_)
       .send_table(table, _socket);
 }
 
@@ -2280,24 +2311,24 @@ void DataFrameManager::view_to_csv(const std::string& _name,
 
   const auto view = JSON::get_object(_cmd, "view_");
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
-  const auto pool = options_.make_pool();
+  const auto pool = params_.options_.make_pool();
 
   const auto local_categories =
-      fct::Ref<containers::Encoding>::make(pool, categories_.ptr());
+      fct::Ref<containers::Encoding>::make(pool, params_.categories_.ptr());
 
-  const auto local_join_keys_encoding =
-      fct::Ref<containers::Encoding>::make(pool, join_keys_encoding_.ptr());
+  const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
+      pool, params_.join_keys_encoding_.ptr());
 
   assert_true(view);
 
   const auto df = ViewParser(local_categories, local_join_keys_encoding,
-                             data_frames_, options_)
+                             params_.data_frames_, params_.options_)
                       .parse(*view);
 
-  df_to_csv(fname, batch_size, quotechar, sep, df, categories_,
-            join_keys_encoding_);
+  df_to_csv(fname, batch_size, quotechar, sep, df, params_.categories_,
+            params_.join_keys_encoding_);
 
   read_lock.unlock();
 
@@ -2315,20 +2346,20 @@ void DataFrameManager::view_to_db(const std::string& _name,
 
   const auto view = JSON::get_object(_cmd, "view_");
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
-  const auto pool = options_.make_pool();
+  const auto pool = params_.options_.make_pool();
 
   const auto local_categories =
-      fct::Ref<containers::Encoding>::make(pool, categories_.ptr());
+      fct::Ref<containers::Encoding>::make(pool, params_.categories_.ptr());
 
-  const auto local_join_keys_encoding =
-      fct::Ref<containers::Encoding>::make(pool, join_keys_encoding_.ptr());
+  const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
+      pool, params_.join_keys_encoding_.ptr());
 
   assert_true(view);
 
   const auto df = ViewParser(local_categories, local_join_keys_encoding,
-                             data_frames_, options_)
+                             params_.data_frames_, params_.options_)
                       .parse(*view);
 
   df_to_db(conn_id, table_name, df, local_categories, local_join_keys_encoding);
@@ -2349,25 +2380,26 @@ void DataFrameManager::view_to_parquet(const std::string& _name,
 
   const auto view = JSON::get_object(_cmd, "view_");
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
-  const auto pool = options_.make_pool();
+  const auto pool = params_.options_.make_pool();
 
   const auto local_categories =
-      fct::Ref<containers::Encoding>::make(pool, categories_.ptr());
+      fct::Ref<containers::Encoding>::make(pool, params_.categories_.ptr());
 
-  const auto local_join_keys_encoding =
-      fct::Ref<containers::Encoding>::make(pool, join_keys_encoding_.ptr());
+  const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
+      pool, params_.join_keys_encoding_.ptr());
 
   assert_true(view);
 
   const auto table = ViewParser(local_categories, local_join_keys_encoding,
-                                data_frames_, options_)
+                                params_.data_frames_, params_.options_)
                          .to_table(*view);
 
   read_lock.unlock();
 
-  handlers::ArrowHandler(categories_, join_keys_encoding_, options_)
+  handlers::ArrowHandler(params_.categories_, params_.join_keys_encoding_,
+                         params_.options_)
       .to_parquet(table, fname, compression);
 
   communication::Sender::send_string("Success!", _socket);
@@ -2394,20 +2426,20 @@ void DataFrameManager::view_to_s3(const std::string& _name,
 
   const auto view = JSON::get_object(_cmd, "view_");
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
 
-  const auto pool = options_.make_pool();
+  const auto pool = params_.options_.make_pool();
 
   const auto local_categories =
-      fct::Ref<containers::Encoding>::make(pool, categories_.ptr());
+      fct::Ref<containers::Encoding>::make(pool, params_.categories_.ptr());
 
-  const auto local_join_keys_encoding =
-      fct::Ref<containers::Encoding>::make(pool, join_keys_encoding_.ptr());
+  const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
+      pool, params_.join_keys_encoding_.ptr());
 
   assert_true(view);
 
   const auto df = ViewParser(local_categories, local_join_keys_encoding,
-                             data_frames_, options_)
+                             params_.data_frames_, params_.options_)
                       .parse(*view);
 
   df_to_s3(batch_size, bucket, key, region, sep, df, local_categories,
