@@ -254,7 +254,10 @@ class DataFrame {
   const std::vector<Column<Int>> &categoricals() const { return categoricals_; }
 
   /// Trivial accessor
-  const Encoding &categories() const { return *categories_.get(); }
+  const Encoding &categories() const {
+    assert_true(categories_);
+    return *categories_.get();
+  }
 
   /// Trivial accessor
   std::string category(const size_t _i) const {
@@ -439,6 +442,7 @@ class DataFrame {
 
   /// Primitive abstraction for member join_keys_encoding_
   const Encoding &join_keys_encoding() const {
+    assert_true(join_keys_encoding_);
     return *join_keys_encoding_.get();
   }
 
