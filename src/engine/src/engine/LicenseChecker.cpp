@@ -17,19 +17,6 @@ ULong LicenseChecker::calc_mem_size(
 
 // ------------------------------------------------------------------------
 
-void LicenseChecker::check_enterprise() const {
-  // TODO
-  /*if ( !is_enterprise() )
-      {
-          throw std::runtime_error(
-              "This operation is only allowed for premium users. Please "
-              "upgrade to the getML premium version to access this "
-              "function." );
-      }*/
-}
-
-// ------------------------------------------------------------------------
-
 void LicenseChecker::check_mem_size(
     const std::map<std::string, containers::DataFrame>& _data_frames,
     const ULong _new_size) const {

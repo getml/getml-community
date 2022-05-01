@@ -545,10 +545,8 @@ Poco::JSON::Object PipelineManager::receive_data(
     if (type == "DataFrame") {
       local_data_frame_manager.add_data_frame(name, _socket);
     } else if (type == "DataFrame.from_query") {
-      license_checker().check_enterprise();
       local_data_frame_manager.from_query(name, cmd, false, _socket);
     } else if (type == "DataFrame.from_json") {
-      license_checker().check_enterprise();
       local_data_frame_manager.from_json(name, cmd, false, _socket);
     } else if (type == "FloatColumn.set_unit") {
       local_data_frame_manager.set_unit(name, cmd, _socket);
@@ -892,8 +890,6 @@ void PipelineManager::transform(const std::string& _name,
   }
 
   if (df_name != "") {
-    license_checker().check_enterprise();
-
     auto df =
         to_df(*fitted, cmd, population_df, numerical_features,
               categorical_features, local_categories, local_join_keys_encoding);
