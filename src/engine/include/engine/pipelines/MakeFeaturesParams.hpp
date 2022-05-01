@@ -1,5 +1,5 @@
-#ifndef ENGINE_PIPELINES_TRANSFORMPARAMS_HPP_
-#define ENGINE_PIPELINES_TRANSFORMPARAMS_HPP_
+#ifndef ENGINE_PIPELINES_MAKEFEATURESPARAMS_HPP_
+#define ENGINE_PIPELINES_MAKEFEATURESPARAMS_HPP_
 
 // ----------------------------------------------------------------------------
 
@@ -16,18 +16,27 @@
 
 // ----------------------------------------------------------------------------
 
+#include "fct/Ref.hpp"
+
+// ----------------------------------------------------------------------------
+
 #include "engine/communication/communication.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/dependency/dependency.hpp"
 
 // ----------------------------------------------------------------------------
 
+#include "engine/pipelines/TransformParams.hpp"
+
+// ----------------------------------------------------------------------------
+
 namespace engine {
 namespace pipelines {
 
-struct TransformParams {
-  static constexpr const char* FEATURE_SELECTOR = "feature selector";
-  static constexpr const char* PREDICTOR = "predictor";
+struct MakeFeaturesParams {
+  static constexpr const char* FEATURE_SELECTOR =
+      TransformParams::FEATURE_SELECTOR;
+  static constexpr const char* PREDICTOR = TransformParams::PREDICTOR;
 
   /// The categorical encoding.
   const fct::Ref<containers::Encoding> categories_;
@@ -35,12 +44,11 @@ struct TransformParams {
   /// The command used.
   const Poco::JSON::Object cmd_;
 
-  /// Contains all of the data frames - we need this, because it might be
-  /// possible that the features are retrieved.
-  const std::map<std::string, containers::DataFrame> data_frames_;
-
   /// Keeps track of the data frames and their fingerprints.
   const dependency::DataFrameTracker data_frame_tracker_;
+
+  /// The depedencies of the predictors.
+  const std::vector<Poco::JSON::Object::Ptr> dependencies_;
 
   /// Logs the progress.
   const std::shared_ptr<const communication::Logger> logger_;
@@ -51,6 +59,18 @@ struct TransformParams {
   /// The population table, without staging, as it was passed.
   const containers::DataFrame original_population_df_;
 
+  /// The peripheral tables.
+  const std::vector<containers::DataFrame> peripheral_dfs_;
+
+  /// The population table.
+  const containers::DataFrame population_df_;
+
+  /// Impl for the predictors.
+  const fct::Ref<const predictors::PredictorImpl> predictor_impl_;
+
+  /// Output: The autofeatures to be generated.
+  containers::NumericalFeatures* const autofeatures_ = nullptr;
+
   /// Output: The socket with which we communicate.
   Poco::Net::StreamSocket* const socket_;
 };
@@ -59,4 +79,4 @@ struct TransformParams {
 }  // namespace pipelines
 }  // namespace engine
 
-#endif  // ENGINE_PIPELINES_TRANSFORMPARAMS_HPP_
+#endif  // ENGINE_PIPELINES_MAKEFEATURESPARAMS_HPP_

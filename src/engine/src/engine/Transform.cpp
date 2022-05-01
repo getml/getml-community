@@ -69,15 +69,10 @@ Transform::apply_preprocessors(
 // ----------------------------------------------------------------------------
 
 containers::NumericalFeatures Transform::generate_autofeatures(
-    const TransformParams& _params,
+    const MakeFeaturesParams& _params,
     const std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>&
         _feature_learners,
     const predictors::PredictorImpl& _predictor_impl) {
-  assert_true(_params.predictor_impl_);
-
-  assert_true(_feature_learners.size() ==
-              _params.predictor_impl_.value().autofeatures().size());
-
   auto autofeatures = containers::NumericalFeatures();
 
   for (size_t i = 0; i < _feature_learners.size(); ++i) {
@@ -87,17 +82,14 @@ containers::NumericalFeatures Transform::generate_autofeatures(
         std::make_shared<const communication::SocketLogger>(
             _params.logger_, fe->silent(), _params.socket_);
 
-    const auto& index = _params.predictor_impl_.value().autofeatures().at(i);
-
-    assert_true(_params.peripheral_dfs_);
-    assert_true(_params.population_df_);
+    const auto& index = _params.predictor_impl_->autofeatures().at(i);
 
     const auto params = featurelearners::TransformParams{
         .cmd_ = _params.cmd_,
         .index_ = index,
         .logger_ = socket_logger,
-        .peripheral_dfs_ = _params.peripheral_dfs_.value(),
-        .population_df_ = _params.population_df_.value(),
+        .peripheral_dfs_ = _params.peripheral_dfs_,
+        .population_df_ = _params.population_df_,
         .prefix_ = std::to_string(i + 1) + "_",
         .temp_dir_ = _params.categories_->temp_dir()};
 
@@ -171,8 +163,7 @@ containers::NumericalFeatures Transform::generate_predictions(
 // ----------------------------------------------------------------------------
 
 containers::CategoricalFeatures Transform::get_categorical_features(
-    const Pipeline& _pipeline, const Poco::JSON::Object& _cmd,
-    const containers::DataFrame& _population_df,
+    const Pipeline& _pipeline, const containers::DataFrame& _population_df,
     const predictors::PredictorImpl& _predictor_impl) {
   auto categorical_features = containers::CategoricalFeatures();
 
@@ -192,7 +183,7 @@ containers::CategoricalFeatures Transform::get_categorical_features(
 
 containers::NumericalFeatures Transform::get_numerical_features(
     const containers::NumericalFeatures& _autofeatures,
-    const Poco::JSON::Object& _cmd, const containers::DataFrame& _population_df,
+    const containers::DataFrame& _population_df,
     const predictors::PredictorImpl& _predictor_impl) {
   auto numerical_features = _autofeatures;
   for (const auto& col : _predictor_impl.numerical_colnames()) {
@@ -205,15 +196,13 @@ containers::NumericalFeatures Transform::get_numerical_features(
 // ----------------------------------------------------------------------------
 
 containers::NumericalFeatures Transform::make_autofeatures(
-    const TransformParams& _params,
+    const MakeFeaturesParams& _params,
     const std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>&
         _feature_learners,
     const predictors::PredictorImpl& _predictor_impl) {
-  assert_true(_params.predictor_impl_);
-
   if (_params.autofeatures_ &&
       _params.autofeatures_->size() ==
-          _params.predictor_impl_.value().num_autofeatures()) {
+          _params.predictor_impl_->num_autofeatures()) {
     return *_params.autofeatures_;
   }
 
@@ -230,17 +219,14 @@ containers::NumericalFeatures Transform::make_autofeatures(
 std::tuple<containers::NumericalFeatures, containers::CategoricalFeatures,
            containers::NumericalFeatures>
 Transform::make_features(
-    const TransformParams& _params, const Pipeline& _pipeline,
+    const MakeFeaturesParams& _params, const Pipeline& _pipeline,
     const std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>&
         _feature_learners,
     const predictors::PredictorImpl& _predictor_impl,
     const std::vector<Poco::JSON::Object::Ptr>& _fs_fingerprints) {
-  assert_true(_params.original_population_df_);
-  assert_true(_params.original_peripheral_dfs_);
-
   const auto df = _params.data_frame_tracker_.retrieve(
-      _fs_fingerprints, _params.original_population_df_.value(),
-      _params.original_peripheral_dfs_.value());
+      _fs_fingerprints, _params.original_population_df_,
+      _params.original_peripheral_dfs_);
 
   if (df) {
     return retrieve_features_from_cache(*df);
@@ -249,16 +235,11 @@ Transform::make_features(
   const auto autofeatures =
       make_autofeatures(_params, _feature_learners, _predictor_impl);
 
-  assert_true(_params.predictor_impl_);
-  assert_true(_params.population_df_);
-
   const auto numerical_features = get_numerical_features(
-      autofeatures, _params.cmd_, _params.population_df_.value(),
-      _params.predictor_impl_.value());
+      autofeatures, _params.population_df_, *_params.predictor_impl_);
 
   const auto categorical_features = get_categorical_features(
-      _pipeline, _params.cmd_, _params.population_df_.value(),
-      _params.predictor_impl_.value());
+      _pipeline, _params.population_df_, *_params.predictor_impl_);
 
   return std::make_tuple(numerical_features, categorical_features,
                          autofeatures);
@@ -418,13 +399,9 @@ Transform::stage_data_frames(
 std::tuple<containers::NumericalFeatures, containers::CategoricalFeatures,
            containers::DataFrame>
 Transform::transform_features_only(const FeaturesOnlyParams& _params) {
-  assert_true(_params.transform_params_.original_population_df_);
-  assert_true(_params.transform_params_.original_peripheral_dfs_);
-
   auto [population_df, peripheral_dfs] = stage_data_frames(
-      _params.pipeline_,
-      _params.transform_params_.original_population_df_.value(),
-      _params.transform_params_.original_peripheral_dfs_.value(),
+      _params.pipeline_, _params.transform_params_.original_population_df_,
+      _params.transform_params_.original_peripheral_dfs_,
       _params.transform_params_.logger_,
       _params.transform_params_.categories_->temp_dir(),
       _params.transform_params_.socket_);
@@ -432,31 +409,21 @@ Transform::transform_features_only(const FeaturesOnlyParams& _params) {
   std::tie(population_df, peripheral_dfs) =
       apply_preprocessors(_params, population_df, peripheral_dfs);
 
-  const auto params = TransformParams{
+  const auto make_features_params = MakeFeaturesParams{
       .categories_ = _params.transform_params_.categories_,
       .cmd_ = _params.transform_params_.cmd_,
-      .data_frames_ = _params.transform_params_.data_frames_,
       .data_frame_tracker_ = _params.transform_params_.data_frame_tracker_,
       .dependencies_ = _params.dependencies_,
       .logger_ = _params.transform_params_.logger_,
-      .original_peripheral_dfs_ =
-          _params.transform_params_.original_peripheral_dfs_,
-      .original_population_df_ =
-          _params.transform_params_.original_population_df_,
       .peripheral_dfs_ = peripheral_dfs,
       .population_df_ = population_df,
-      .predictor_impl_ =
-          *_params.predictor_impl_,  // TODO: This must be fct::Ref
-      .pred_tracker_ = _params.transform_params_.pred_tracker_,
-      .purpose_ = "",
-      .validation_df_ = std::nullopt,
+      .predictor_impl_ = _params.predictor_impl_,
       .autofeatures_ = nullptr,
-      .predictors_ = nullptr,
       .socket_ = _params.transform_params_.socket_};
 
-  const auto [numerical_features, categorical_features, _] =
-      make_features(params, _params.pipeline_, _params.feature_learners_,
-                    *_params.predictor_impl_, _params.fs_fingerprints_);
+  const auto [numerical_features, categorical_features, _] = make_features(
+      make_features_params, _params.pipeline_, _params.feature_learners_,
+      *_params.predictor_impl_, _params.fs_fingerprints_);
 
   return std::make_tuple(numerical_features, categorical_features,
                          population_df);

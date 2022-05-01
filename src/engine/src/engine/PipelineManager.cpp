@@ -856,7 +856,6 @@ void PipelineManager::transform(const std::string& _name,
                                  .logger_ = params_.logger_.ptr(),
                                  .original_peripheral_dfs_ = peripheral_dfs,
                                  .original_population_df_ = population_df,
-                                 .pred_tracker_ = params_.pred_tracker_,
                                  .socket_ = _socket};
 
   const auto fitted = pipeline.fitted();

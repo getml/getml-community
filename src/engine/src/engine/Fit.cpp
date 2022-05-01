@@ -5,6 +5,7 @@
 #include "engine/featurelearners/AbstractFeatureLearner.hpp"
 #include "engine/pipelines/Score.hpp"
 #include "engine/pipelines/Transform.hpp"
+#include "engine/pipelines/TransformParams.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
 #include "fct/collect.hpp"
 #include "predictors/Predictor.hpp"
@@ -243,10 +244,9 @@ Fit::fit(const Pipeline& _pipeline, const FitParams& _params) {
   const bool score = predictors.size() > 0 && predictors.at(0).size() > 0;
 
   const auto score_params =
-      score ? std::make_optional<TransformParams>(TransformParams{
+      score ? std::make_optional<MakeFeaturesParams>(MakeFeaturesParams{
                   .categories_ = _params.categories_,
                   .cmd_ = _params.cmd_,
-                  .data_frames_ = _params.data_frames_,
                   .data_frame_tracker_ = _params.data_frame_tracker_,
                   .dependencies_ = fs_fingerprints,
                   .logger_ = _params.logger_,
@@ -254,10 +254,8 @@ Fit::fit(const Pipeline& _pipeline, const FitParams& _params) {
                   .original_population_df_ = _params.population_df_,
                   .peripheral_dfs_ = preprocessed.peripheral_dfs_,
                   .population_df_ = preprocessed.population_df_,
-                  .predictor_impl_ = *predictor_impl,
-                  .pred_tracker_ = _params.pred_tracker_,
+                  .predictor_impl_ = predictor_impl,
                   .autofeatures_ = &autofeatures,
-                  .predictors_ = nullptr,
                   .socket_ = _params.socket_})
             : std::nullopt;
 
@@ -367,27 +365,20 @@ std::pair<Predictors, std::vector<Poco::JSON::Object::Ptr>> Fit::fit_predictors(
     return std::make_pair(predictors_struct, fingerprints);
   }
 
-  const auto transform_params = TransformParams{
+  const auto make_features_params = MakeFeaturesParams{
       .categories_ = _params.fit_params_.categories_,
       .cmd_ = _params.fit_params_.cmd_,
-      .data_frames_ = _params.fit_params_.data_frames_,
       .data_frame_tracker_ = _params.fit_params_.data_frame_tracker_,
       .dependencies_ = _params.dependencies_,
       .logger_ = _params.fit_params_.logger_,
-      .original_peripheral_dfs_ = _params.fit_params_.peripheral_dfs_,
-      .original_population_df_ = _params.fit_params_.population_df_,
       .peripheral_dfs_ = _params.peripheral_dfs_,
       .population_df_ = _params.population_df_,
-      .predictor_impl_ = *_params.impl_,  // TODO: Needs to be a fct::Ref
-      .pred_tracker_ = _params.fit_params_.pred_tracker_,
-      .purpose_ = _params.purpose_,
-      .validation_df_ = _params.fit_params_.validation_df_,
+      .predictor_impl_ = _params.impl_,
       .autofeatures_ = _params.autofeatures_,
-      .predictors_ = &predictors,
       .socket_ = _params.fit_params_.socket_};
 
   auto [numerical_features, categorical_features, autofeatures] =
-      Transform::make_features(transform_params, _params.pipeline_,
+      Transform::make_features(make_features_params, _params.pipeline_,
                                _params.feature_learners_, *_params.impl_,
                                _params.fit_params_.fs_fingerprints_);
 
@@ -397,7 +388,7 @@ std::pair<Predictors, std::vector<Poco::JSON::Object::Ptr>> Fit::fit_predictors(
       _params.impl_->transform_encodings(categorical_features);
 
   auto [numerical_features_valid, categorical_features_valid] =
-      make_features_validation(transform_params, _params);
+      make_features_validation(_params);
 
   if (categorical_features_valid) {
     *categorical_features_valid =
@@ -792,8 +783,8 @@ fct::Ref<const predictors::PredictorImpl> Fit::make_feature_selector_impl(
   const auto fs_impl = fct::Ref<predictors::PredictorImpl>::make(
       num_autofeatures, categorical_colnames, numerical_colnames);
 
-  const auto categorical_features = Transform::get_categorical_features(
-      _pipeline, _cmd, _population_df, *fs_impl);
+  const auto categorical_features =
+      Transform::get_categorical_features(_pipeline, _population_df, *fs_impl);
 
   fs_impl->fit_encodings(categorical_features);
 
@@ -804,42 +795,32 @@ fct::Ref<const predictors::PredictorImpl> Fit::make_feature_selector_impl(
 
 std::pair<std::optional<containers::NumericalFeatures>,
           std::optional<containers::CategoricalFeatures>>
-Fit::make_features_validation(const TransformParams& _params,
-                              const FitPredictorsParams& _fit_pred_params) {
-  if (!_params.validation_df_ ||
+Fit::make_features_validation(const FitPredictorsParams& _params) {
+  if (!_params.fit_params_.validation_df_ ||
       _params.purpose_ != TransformParams::PREDICTOR) {
     return std::make_pair(std::optional<containers::NumericalFeatures>(),
                           std::optional<containers::CategoricalFeatures>());
   }
 
-  assert_true(_params.original_peripheral_dfs_);
-
   const auto transform_params = TransformParams{
-      .categories_ = _params.categories_,
-      .cmd_ = _params.cmd_,
-      .data_frames_ = _params.data_frames_,
-      .data_frame_tracker_ = _params.data_frame_tracker_,
-      .dependencies_ = _params.dependencies_,
-      .logger_ = _params.logger_,
-      .original_peripheral_dfs_ = _params.original_peripheral_dfs_,
+      .categories_ = _params.fit_params_.categories_,
+      .cmd_ = _params.fit_params_.cmd_,
+      .data_frames_ = _params.fit_params_.data_frames_,
+      .data_frame_tracker_ = _params.fit_params_.data_frame_tracker_,
+      .logger_ = _params.fit_params_.logger_,
+      .original_peripheral_dfs_ = _params.fit_params_.peripheral_dfs_,
       .original_population_df_ =
-          _params
-              .validation_df_,  // NOTE: We want to take the validation_df here
-      .predictor_impl_ = _params.predictor_impl_,
-      .pred_tracker_ = _params.pred_tracker_,
-      .purpose_ = _params.purpose_,
-      .validation_df_ = std::nullopt,  // NOTE: No more validation_df - it is
-                                       // the new original population df
-      .predictors_ = _params.predictors_,
-      .socket_ = _params.socket_};
+          *_params.fit_params_
+               .validation_df_,  // NOTE: We want to take the validation_df here
+      .socket_ = _params.fit_params_.socket_};
 
-  const auto features_only_params = FeaturesOnlyParams{
-      .dependencies_ = _fit_pred_params.dependencies_,
-      .feature_learners_ = _fit_pred_params.feature_learners_,
-      .pipeline_ = _fit_pred_params.pipeline_,
-      .preprocessors_ = _fit_pred_params.preprocessors_,
-      .predictor_impl_ = _fit_pred_params.impl_,
-      .transform_params_ = transform_params};
+  const auto features_only_params =
+      FeaturesOnlyParams{.dependencies_ = _params.dependencies_,
+                         .feature_learners_ = _params.feature_learners_,
+                         .pipeline_ = _params.pipeline_,
+                         .preprocessors_ = _params.preprocessors_,
+                         .predictor_impl_ = _params.impl_,
+                         .transform_params_ = transform_params};
 
   const auto [numerical_features, categorical_features, _] =
       Transform::transform_features_only(features_only_params);
@@ -879,7 +860,7 @@ fct::Ref<const predictors::PredictorImpl> Fit::make_predictor_impl(
   predictor_impl->select_features(n_selected, index);
 
   auto categorical_features = Transform::get_categorical_features(
-      _pipeline, _cmd, _population_df, *predictor_impl);
+      _pipeline, _population_df, *predictor_impl);
 
   predictor_impl->fit_encodings(categorical_features);
 
@@ -889,7 +870,7 @@ fct::Ref<const predictors::PredictorImpl> Fit::make_predictor_impl(
 // ----------------------------------------------------------------------------
 
 fct::Ref<const metrics::Scores> Fit::make_scores(
-    const std::optional<TransformParams>& _score_params,
+    const std::optional<MakeFeaturesParams>& _score_params,
     const Pipeline& _pipeline, const FittedPipeline& _fitted) {
   auto scores = fct::Ref<metrics::Scores>::make(_pipeline.scores());
 
@@ -942,7 +923,7 @@ Fit::retrieve_predictors(
 // ----------------------------------------------------------------------------
 
 fct::Ref<const metrics::Scores> Fit::score_after_fitting(
-    const TransformParams& _params, const Pipeline& _pipeline,
+    const MakeFeaturesParams& _params, const Pipeline& _pipeline,
     const FittedPipeline& _fitted) {
   auto [numerical_features, categorical_features, _] = Transform::make_features(
       _params, _pipeline, _fitted.feature_learners_, *_fitted.predictors_.impl_,
@@ -959,10 +940,8 @@ fct::Ref<const metrics::Scores> Fit::score_after_fitting(
 
   const auto name = JSON::get_value<std::string>(population_json, "name_");
 
-  assert_true(_params.population_df_);
-
-  return std::get<0>(Score::score(_pipeline, _fitted,
-                                  _params.population_df_.value(), name, yhat));
+  return std::get<0>(
+      Score::score(_pipeline, _fitted, _params.population_df_, name, yhat));
 }
 
 // ----------------------------------------------------------------------------

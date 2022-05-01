@@ -31,6 +31,7 @@
 #include "engine/pipelines/FitPredictorsParams.hpp"
 #include "engine/pipelines/FitPreprocessorsParams.hpp"
 #include "engine/pipelines/FittedPipeline.hpp"
+#include "engine/pipelines/MakeFeaturesParams.hpp"
 #include "engine/pipelines/Pipeline.hpp"
 #include "engine/pipelines/Preprocessed.hpp"
 
@@ -188,8 +189,7 @@ class Fit {
   /// Generates the features for the validation.
   static std::pair<std::optional<containers::NumericalFeatures>,
                    std::optional<containers::CategoricalFeatures>>
-  make_features_validation(const TransformParams& _params,
-                           const FitPredictorsParams& _fit_pred_params);
+  make_features_validation(const FitPredictorsParams& _params);
 
   /// Generates the impl for the predictors.
   static fct::Ref<const predictors::PredictorImpl> make_predictor_impl(
@@ -199,7 +199,7 @@ class Fit {
 
   /// Generates the metrics::Scores object which is also returned by fit.
   static fct::Ref<const metrics::Scores> make_scores(
-      const std::optional<TransformParams>& _score_params,
+      const std::optional<MakeFeaturesParams>& _score_params,
       const Pipeline& _pipeline, const FittedPipeline& _fitted);
 
   /// Retrieves the predictors from the tracker.
@@ -212,7 +212,7 @@ class Fit {
 
   /// Scores the pipeline in-sample after it has been successfully fitted.
   static fct::Ref<const metrics::Scores> score_after_fitting(
-      const TransformParams& _params, const Pipeline& _pipeline,
+      const MakeFeaturesParams& _params, const Pipeline& _pipeline,
       const FittedPipeline& _fitted);
 };
 

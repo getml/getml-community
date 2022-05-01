@@ -25,6 +25,7 @@
 
 #include "engine/pipelines/FeaturesOnlyParams.hpp"
 #include "engine/pipelines/FittedPipeline.hpp"
+#include "engine/pipelines/MakeFeaturesParams.hpp"
 #include "engine/pipelines/Pipeline.hpp"
 #include "engine/pipelines/TransformParams.hpp"
 
@@ -43,15 +44,14 @@ class Transform {
 
   /// Gets the categorical features from _population_df.
   static containers::CategoricalFeatures get_categorical_features(
-      const Pipeline& _pipeline, const Poco::JSON::Object& _cmd,
-      const containers::DataFrame& _population_df,
+      const Pipeline& _pipeline, const containers::DataFrame& _population_df,
       const predictors::PredictorImpl& _predictor_impl);
 
   /// Makes all of the features, both automatic and manual.
   static std::tuple<containers::NumericalFeatures,
                     containers::CategoricalFeatures,
                     containers::NumericalFeatures>
-  make_features(const TransformParams& _params, const Pipeline& _pipeline,
+  make_features(const MakeFeaturesParams& _params, const Pipeline& _pipeline,
                 const std::vector<
                     fct::Ref<const featurelearners::AbstractFeatureLearner>>&
                     _feature_learners,
@@ -100,13 +100,12 @@ class Transform {
   /// numerical columns.
   static containers::NumericalFeatures get_numerical_features(
       const containers::NumericalFeatures& _autofeatures,
-      const Poco::JSON::Object& _cmd,
       const containers::DataFrame& _population_df,
       const predictors::PredictorImpl& _predictor_impl);
 
   /// Generates the autofeatures.
   static containers::NumericalFeatures generate_autofeatures(
-      const TransformParams& _params,
+      const MakeFeaturesParams& _params,
       const std::vector<
           fct::Ref<const featurelearners::AbstractFeatureLearner>>&
           _feature_learners,
@@ -114,7 +113,7 @@ class Transform {
 
   /// Makes or retrieves the autofeatures as part of make_features(...).
   static containers::NumericalFeatures make_autofeatures(
-      const TransformParams& _params,
+      const MakeFeaturesParams& _params,
       const std::vector<
           fct::Ref<const featurelearners::AbstractFeatureLearner>>&
           _feature_learners,
