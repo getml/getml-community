@@ -78,8 +78,8 @@ Score::column_importances(const Pipeline& _pipeline,
   const auto make_staging_table_column =
       [](const std::string& _colname,
          const std::string& _alias) -> std::string {
-    return transpilation::SQLite3Generator().make_staging_table_column(_colname,
-                                                                       _alias);
+    return transpilation::HumanReadableSQLGenerator().make_staging_table_column(
+        _colname, _alias);
   };
 
   for (auto& i_maker : importance_makers) {

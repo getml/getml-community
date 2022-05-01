@@ -102,8 +102,8 @@ void Threadutils::transform_as_feature_learner(
 
   const auto make_staging_table_colname =
       [](const std::string& _colname) -> std::string {
-    return transpilation::SQLite3Generator().make_staging_table_colname(
-        _colname);
+    return transpilation::HumanReadableSQLGenerator()
+        .make_staging_table_colname(_colname);
   };
 
   const auto params = TableHolderParams{

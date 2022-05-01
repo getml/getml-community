@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include "helpers/helpers.hpp"
+#include "transpilation/HumanReadableSQLGenerator.hpp"
 #include "transpilation/transpilation.hpp"
 
 // ----------------------------------------------------------------------------
@@ -269,8 +270,8 @@ class DataModelChecker {
   static std::string modify_colname(const std::string& _colname) {
     const auto make_staging_table_colname =
         [](const std::string& _colname) -> std::string {
-      return transpilation::SQLite3Generator().make_staging_table_colname(
-          _colname);
+      return transpilation::HumanReadableSQLGenerator()
+          .make_staging_table_colname(_colname);
     };
     const auto colnames = helpers::Macros::modify_colnames(
         {_colname}, make_staging_table_colname);

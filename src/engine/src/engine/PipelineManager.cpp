@@ -76,8 +76,8 @@ void PipelineManager::add_join_keys_to_df(
 
     const auto make_staging_table_colname =
         [](const std::string& _colname) -> std::string {
-      return transpilation::SQLite3Generator().make_staging_table_colname(
-          _colname);
+      return transpilation::HumanReadableSQLGenerator()
+          .make_staging_table_colname(_colname);
     };
 
     col.set_name(helpers::Macros::modify_colnames({col.name()},
@@ -137,8 +137,8 @@ void PipelineManager::add_time_stamps_to_df(
 
     const auto make_staging_table_colname =
         [](const std::string& _colname) -> std::string {
-      return transpilation::SQLite3Generator().make_staging_table_colname(
-          _colname);
+      return transpilation::HumanReadableSQLGenerator()
+          .make_staging_table_colname(_colname);
     };
 
     col.set_name(helpers::Macros::modify_colnames({col.name()},

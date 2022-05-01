@@ -47,8 +47,8 @@ void Threadutils::fit_ensemble(const ThreadutilsFitParams& _params) {
 
     const auto make_staging_table_colname =
         [](const std::string& _colname) -> std::string {
-      return transpilation::SQLite3Generator().make_staging_table_colname(
-          _colname);
+      return transpilation::HumanReadableSQLGenerator()
+          .make_staging_table_colname(_colname);
     };
 
     const auto params = decisiontrees::TableHolderParams{
@@ -113,8 +113,8 @@ void Threadutils::transform_ensemble(
 
     const auto make_staging_table_colname =
         [](const std::string& _colname) -> std::string {
-      return transpilation::SQLite3Generator().make_staging_table_colname(
-          _colname);
+      return transpilation::HumanReadableSQLGenerator()
+          .make_staging_table_colname(_colname);
     };
 
     const auto params = decisiontrees::TableHolderParams{

@@ -12,6 +12,10 @@
 
 // -------------------------------------------------------------------------
 
+#include "fct/Ref.hpp"
+
+// -------------------------------------------------------------------------
+
 #include "transpilation/SQLDialectGenerator.hpp"
 #include "transpilation/TranspilationParams.hpp"
 
@@ -21,6 +25,7 @@ namespace transpilation {
 
 struct SQLDialectParser {
   static constexpr const char* BIG_QUERY = "bigquery";
+  static constexpr const char* HUMAN_READABLE_SQL = "human-readable sql";
   static constexpr const char* MYSQL = "mysql";
   static constexpr const char* POSTGRE_SQL = "postgres";
   static constexpr const char* SPARK_SQL = "spark sql";
@@ -28,7 +33,7 @@ struct SQLDialectParser {
   static constexpr const char* TSQL = "tsql";
 
   /// Parse returns the SQLDialect generator for the dialect.
-  static std::shared_ptr<const SQLDialectGenerator> parse(
+  static fct::Ref<const SQLDialectGenerator> parse(
       const TranspilationParams& _params);
 };
 

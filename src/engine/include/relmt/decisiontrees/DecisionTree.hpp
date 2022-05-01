@@ -136,7 +136,7 @@ class DecisionTree {
       const std::shared_ptr<lossfunctions::LossFunction>& _loss_function);
 
   /// We need to know which columns associated with the weights are actually
-  /// time stamps, so we can correctly generate the SQLite3 code.
+  /// time stamps, so we can correctly generate the SQL code.
   std::vector<bool> make_is_ts(const containers::DataFrameView& _output,
                                const containers::DataFrame& _input) const;
 

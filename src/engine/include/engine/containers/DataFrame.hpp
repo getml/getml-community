@@ -17,6 +17,7 @@
 
 #include "database/database.hpp"
 #include "strings/strings.hpp"
+#include "transpilation/HumanReadableSQLGenerator.hpp"
 #include "transpilation/transpilation.hpp"
 
 // -------------------------------------------------------------------------
@@ -803,7 +804,8 @@ class DataFrame {
     const auto [table, colname] =
         helpers::Macros::parse_table_colname(name_, _colname);
     const auto staging_table_colname =
-        transpilation::SQLite3Generator().make_staging_table_colname(colname);
+        transpilation::HumanReadableSQLGenerator().make_staging_table_colname(
+            colname);
     throw std::runtime_error("Data frame '" + table + "' contains no " +
                              _coltype + " named '" + staging_table_colname +
                              "'!");

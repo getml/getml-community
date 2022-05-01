@@ -6,6 +6,7 @@
 #include "fastprop/algorithm/ConditionParser.hpp"
 #include "fastprop/algorithm/RSquared.hpp"
 #include "fastprop/algorithm/TableHolderParams.hpp"
+#include "transpilation/HumanReadableSQLGenerator.hpp"
 
 namespace fastprop {
 namespace algorithm {
@@ -168,8 +169,8 @@ void FastProp::build_rows(const TransformParams &_params,
 
   const auto make_staging_table_colname =
       [](const std::string &_colname) -> std::string {
-    return transpilation::SQLite3Generator().make_staging_table_colname(
-        _colname);
+    return transpilation::HumanReadableSQLGenerator()
+        .make_staging_table_colname(_colname);
   };
 
   const auto params = TableHolderParams{
@@ -507,8 +508,8 @@ void FastProp::fit(const FitParams &_params, const bool _as_subfeatures) {
 
   const auto make_staging_table_colname =
       [](const std::string &_colname) -> std::string {
-    return transpilation::SQLite3Generator().make_staging_table_colname(
-        _colname);
+    return transpilation::HumanReadableSQLGenerator()
+        .make_staging_table_colname(_colname);
   };
 
   const auto params = TableHolderParams{
@@ -1364,8 +1365,8 @@ std::shared_ptr<std::vector<size_t>> FastProp::make_subfeature_rownums(
 
   const auto make_staging_table_colname =
       [](const std::string &_colname) -> std::string {
-    return transpilation::SQLite3Generator().make_staging_table_colname(
-        _colname);
+    return transpilation::HumanReadableSQLGenerator()
+        .make_staging_table_colname(_colname);
   };
 
   const auto params_population = helpers::CreateSubviewParams{
