@@ -74,11 +74,7 @@ std::string LicenseChecker::os() const {
 // ------------------------------------------------------------------------
 
 void LicenseChecker::receive_token(const std::string& _caller_id) {
-  // -------------------------------------------------------------
-
   Poco::JSON::Parser parser;
-
-  // -------------------------------------------------------------
 
   auto request = Poco::JSON::Object();
 
@@ -88,8 +84,6 @@ void LicenseChecker::receive_token(const std::string& _caller_id) {
 
   request.set("os_", os());
 
-  // -------------------------------------------------------------
-
   auto [response, success] = send(request);
 
   while (!success) {
@@ -97,11 +91,7 @@ void LicenseChecker::receive_token(const std::string& _caller_id) {
     std::tie(response, success) = send(request);
   }
 
-  // --------------------------------------------------------------
-
   multithreading::WriteLock write_lock(read_write_lock_);
-
-  // --------------------------------------------------------------
 
   try {
     auto json_obj = parser.parse(response).extract<Poco::JSON::Object::Ptr>();
@@ -115,8 +105,6 @@ void LicenseChecker::receive_token(const std::string& _caller_id) {
     return;
   }
 
-  // -------------------------------------------------------------
-
   if (Token(*token_).signature_ != token_->signature_) {
     logger_->log(
         "Error: Verification of the token failed. It appears that "
@@ -127,13 +115,9 @@ void LicenseChecker::receive_token(const std::string& _caller_id) {
     return;
   }
 
-  // --------------------------------------------------------------
-
   if (token_->msg_title_ != "" || token_->msg_body_ != "") {
     logger_->log(token_->msg_title_ + ": " + token_->msg_body_);
   }
-
-  // --------------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
