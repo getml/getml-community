@@ -23,6 +23,8 @@ namespace strings {
 // String is an implementation of a string class that has
 // no memory overhead over a standard C-string.
 class String {
+  static constexpr char nullstr = '\0';
+
  public:
   String() : chars_(std::make_unique<char[]>(1)) { chars_.get()[0] = '\0'; }
 
@@ -37,20 +39,21 @@ class String {
     chars_.get()[_size] = '\0';
   }
 
-  String(const char* _str)
-      : chars_(std::make_unique<char[]>(strlen(_str) + 1)) {
-    strcpy(chars_.get(), _str);
-  }
+  String(const char* _str) : String(_str, _str ? strlen(_str) : 0) {}
 
   String(const char* _str, const size_t _size)
-      : chars_(std::make_unique<char[]>(_size + 1)) {
-    std::copy(_str, _str + _size, chars_.get());
-    chars_.get()[_size] = '\0';
+      : chars_(_str ? std::make_unique<char[]>(_size + 1) : nullptr) {
+    if (chars_) {
+      std::copy(_str, _str + _size, chars_.get());
+      chars_.get()[_size] = '\0';
+    }
   }
 
   String(const String& _other)
-      : chars_(std::make_unique<char[]>(_other.size() + 1)) {
-    strcpy(chars_.get(), _other.c_str());
+      : chars_(_other ? std::make_unique<char[]>(_other.size() + 1) : nullptr) {
+    if (chars_) {
+      strcpy(chars_.get(), _other.c_str());
+    }
   }
 
   String(String&& _other) noexcept : chars_(std::move(_other.chars_)) {}
@@ -64,14 +67,10 @@ class String {
   }
 
   /// Returns a pointer to the underlying C-String.
-  char* c_str() {
-    assert_true(chars_);
-    return chars_.get();
-  }
-
-  /// Returns a pointer to the underlying C-String.
   const char* c_str() const {
-    assert_true(chars_);
+    if (!chars_) {
+      return &nullstr;
+    }
     return chars_.get();
   }
 
@@ -80,6 +79,9 @@ class String {
   size_t hash() const {
     return std::hash<std::string_view>()(std::string_view(c_str(), size()));
   }
+
+  /// Whether the string is set.
+  operator bool() const { return (chars_ && true); }
 
   /// Copy assignment operator.
   String& operator=(const String& _other) {
@@ -112,13 +114,17 @@ class String {
 
   /// Returns the size of the underlying string.
   size_t size() const {
-    assert_true(chars_);
+    if (!chars_) {
+      return 0;
+    }
     return static_cast<size_t>(strlen(chars_.get()));
   }
 
   /// Returns a std::string created from the underlying data.
   std::string str() const {
-    assert_true(chars_);
+    if (!chars_) {
+      return "NULL";
+    }
     return std::string(chars_.get());
   }
 

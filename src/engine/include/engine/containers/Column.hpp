@@ -67,9 +67,6 @@ class Column {
 
  public:
   Column(const Variant _data_ptr) : data_ptr_(_data_ptr), name_(""), unit_("") {
-    // TODO
-    // assert_true( data_ptr_ );
-
     static_assert(std::is_arithmetic<T>::value ||
                       std::is_same<T, std::string>::value ||
                       std::is_same<T, strings::String>::value,
@@ -161,9 +158,7 @@ class Column {
   const_iterator begin() const {
     if constexpr (std::is_same<iterator, T *>()) {
       return data();
-    }
-
-    if constexpr (!std::is_same<iterator, T *>()) {
+    } else {
       const auto value_func = [this](const size_t _i) -> std::optional<T> {
         if (_i >= nrows()) {
           return std::nullopt;
@@ -222,9 +217,7 @@ class Column {
   const_iterator end() const {
     if constexpr (std::is_same<iterator, T *>()) {
       return data() + nrows();
-    }
-
-    if constexpr (!std::is_same<iterator, T *>()) {
+    } else {
       return ColumnViewIterator<T>();
     }
   }
