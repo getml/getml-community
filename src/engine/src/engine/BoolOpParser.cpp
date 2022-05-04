@@ -165,20 +165,22 @@ containers::ColumnView<bool> BoolOpParser::unary_operation(
 
   if (op == "is_inf") {
     const auto is_inf = [](const Float val) { return std::isinf(val); };
-
     return num_un_op(_col, is_inf);
-  } else if (op == "is_nan") {
+  }
+
+  if (op == "is_nan") {
     const auto is_nan = [](const Float val) { return std::isnan(val); };
-
     return num_un_op(_col, is_nan);
-  } else if (op == "not") {
-    return un_op(_col, std::logical_not<bool>());
-  } else {
-    throw std::runtime_error("Operator '" + op +
-                             "' not recognized for boolen columns.");
+  }
 
+  if (op == "not") {
     return un_op(_col, std::logical_not<bool>());
   }
+
+  throw std::runtime_error("Operator '" + op +
+                           "' not recognized for boolen columns.");
+
+  return un_op(_col, std::logical_not<bool>());
 }
 
 // ----------------------------------------------------------------------------

@@ -983,7 +983,8 @@ void DataFrame::from_reader(const std::shared_ptr<io::Reader> &_reader,
           database::Getter::get_double(line[colname_indices[col++]]));
 
     for (auto &vec : text)
-      vec->emplace_back(strings::String(line[colname_indices[col++]]));
+      vec->emplace_back(
+          strings::String::parse_null(line[colname_indices[col++]]));
 
     for (auto &vec : time_stamps)
       vec->push_back(database::Getter::get_time_stamp(
@@ -994,7 +995,8 @@ void DataFrame::from_reader(const std::shared_ptr<io::Reader> &_reader,
           database::Getter::get_double(line[colname_indices[col++]]));
 
     for (auto &vec : unused_strings)
-      vec->emplace_back(strings::String(line[colname_indices[col++]]));
+      vec->emplace_back(
+          strings::String::parse_null(line[colname_indices[col++]]));
 
     assert_true(col == colname_indices.size());
   }

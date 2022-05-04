@@ -435,7 +435,7 @@ ArrowHandler::write_boolean_to_string_column(
     assert_true(_i < _chunk->length());
 
     if (_chunk->IsNull(_i)) {
-      return strings::String("NULL");
+      return strings::String(nullptr);
     }
 
     return strings::String(io::Parser::to_string(_chunk->Value(_i)));
@@ -503,7 +503,7 @@ ArrowHandler::write_dict_to_string_column(
       assert_true(_i >= 0);
       assert_true(_i < chunk->indices()->length());
       if (chunk->indices()->IsNull(_i)) {
-        return strings::String("NULL");
+        return strings::String(nullptr);
       }
       return func(chunk->GetValueIndex(_i));
     };
@@ -525,7 +525,7 @@ ArrowHandler::write_float_to_string_column(
     assert_true(_i < _chunk->length());
 
     if (_chunk->IsNull(_i)) {
-      return strings::String("NULL");
+      return strings::String(nullptr);
     }
 
     return strings::String(
@@ -566,7 +566,7 @@ ArrowHandler::write_int_to_string_column(
     assert_true(_i < _chunk->length());
 
     if (_chunk->IsNull(_i)) {
-      return strings::String("NULL");
+      return strings::String(nullptr);
     }
 
     return strings::String(std::to_string(_chunk->Value(_i)));
@@ -655,7 +655,7 @@ ArrowHandler::write_null_to_string_column(
   assert_true(_chunk);
 
   if (_chunk->type()->Equals(arrow::null())) {
-    return [](const std::int64_t _i) { return strings::String("NULL"); };
+    return [](const std::int64_t _i) { return strings::String(nullptr); };
   }
 
   return std::nullopt;
@@ -834,7 +834,7 @@ ArrowHandler::write_string_to_string_column(
     assert_true(_i < _chunk->length());
 
     if (_chunk->IsNull(_i)) {
-      return strings::String("NULL");
+      return strings::String(nullptr);
     }
 
     return strings::String(_chunk->GetString(_i));
@@ -971,7 +971,7 @@ ArrowHandler::write_time_to_string_column(
     assert_true(_i < _chunk->length());
 
     if (_chunk->IsNull(_i)) {
-      return strings::String("NULL");
+      return strings::String(nullptr);
     }
 
     return strings::String(io::Parser::ts_to_string(

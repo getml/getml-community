@@ -18,7 +18,6 @@
 // ----------------------------------------------------------------------------
 
 namespace helpers {
-// ----------------------------------------------------------------------------
 
 struct NullChecker {
   /// When ever we us integers, they signify encodings. -1 means that they are
@@ -29,14 +28,11 @@ struct NullChecker {
   static bool is_null(const Float _val) { return std::isnan(_val); }
 
   /// Checks whether a string is on the list of strings interpreted as NULL.
-  static bool is_null(const strings::String& _val) {
-    return (_val == "" || _val == "nan" || _val == "NaN" || _val == "NA" ||
-            _val == "NULL" || _val == "none" || _val == "None");
-  }
+  static bool is_null(const strings::String& _val) { return !_val; }
 
   /// Checks whether a string is on the list of strings interpreted as NULL.
   static bool is_null(const std::string& _val) {
-    return is_null(strings::String(_val));
+    return is_null(strings::String::parse_null(_val));
   }
 
   /// Returns the NULL value for a particular type.

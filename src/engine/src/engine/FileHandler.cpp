@@ -24,11 +24,7 @@ containers::DataFrame FileHandler::load(
     const std::shared_ptr<containers::Encoding>& _categories,
     const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
     const config::Options& _options, const std::string& _name) {
-  // ---------------------------------------------------------------------
-
   const auto path = _options.project_directory() + "data/" + _name + "/";
-
-  // ---------------------------------------------------------------------
 
   Poco::File file(path);
 
@@ -40,8 +36,6 @@ containers::DataFrame FileHandler::load(
     throw std::runtime_error("'" + path + "' is not a directory!");
   }
 
-  // ---------------------------------------------------------------------
-
   const auto pool = _options.make_pool();
 
   auto df =
@@ -49,11 +43,7 @@ containers::DataFrame FileHandler::load(
 
   df.load(path);
 
-  // ---------------------------------------------------------------------
-
   return df;
-
-  // ---------------------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------
@@ -87,10 +77,6 @@ void FileHandler::load_encodings(const std::string& _path,
 
 std::vector<std::string> FileHandler::read_strings_big_endian(
     const std::string& _fname) {
-  // ---------------------------------------------------------------------
-  // Define a lambda function for the encoding of the categories and
-  // join keys
-
   auto read_string = [](std::ifstream& _input) {
     std::string str;
 
@@ -105,9 +91,6 @@ std::vector<std::string> FileHandler::read_strings_big_endian(
     return str;
   };
 
-  // ---------------------------------------------------------------------
-  // Read strings
-
   std::ifstream input(_fname, std::ios::binary);
 
   auto strings = std::vector<std::string>(0);
@@ -120,21 +103,13 @@ std::vector<std::string> FileHandler::read_strings_big_endian(
     }
   }
 
-  // ---------------------------------------------------------------------
-
   return strings;
-
-  // ---------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
 
 std::vector<std::string> FileHandler::read_strings_little_endian(
     const std::string& _fname) {
-  // ---------------------------------------------------------------------
-  // Define a lambda function for the encoding of the categories and
-  // join keys
-
   auto read_string = [](std::ifstream& _input) {
     std::string str;
 
@@ -151,9 +126,6 @@ std::vector<std::string> FileHandler::read_strings_little_endian(
     return str;
   };
 
-  // ---------------------------------------------------------------------
-  // Read strings
-
   std::ifstream input(_fname, std::ios::binary);
 
   auto strings = std::vector<std::string>(0);
@@ -166,11 +138,7 @@ std::vector<std::string> FileHandler::read_strings_little_endian(
     }
   }
 
-  // ---------------------------------------------------------------------
-
   return strings;
-
-  // ---------------------------------------------------------------------
 }
 
 // ------------------------------------------------------------------------

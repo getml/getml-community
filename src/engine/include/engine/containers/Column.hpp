@@ -251,12 +251,28 @@ class Column {
     return std::visit(get, data_ptr_);
   }
 
-  /// Accessor to data
-  template <class T2>
+  /// Accessor to data (for Float and Int)
+  template <class T2, typename IteratorType = iterator,
+            typename std::enable_if<std::is_same<IteratorType, T *>::value,
+                                    int>::type = 0>
   const T operator[](const T2 _i) const {
     assert_true(_i >= 0);
     assert_true(static_cast<size_t>(_i) < nrows());
     const auto get = [_i](auto &&_ptr) -> T { return (*_ptr)[_i]; };
+    return std::visit(get, data_ptr_);
+  }
+
+  /// Accessor to data (for strings::String)
+  template <class T2, typename IteratorType = iterator,
+            typename std::enable_if<!std::is_same<IteratorType, T *>::value,
+                                    int>::type = 0>
+  const T operator[](const T2 _i) const {
+    assert_true(_i >= 0);
+    assert_true(static_cast<size_t>(_i) < nrows());
+    const auto get = [_i](auto &&_ptr) -> T {
+      const auto str = (*_ptr)[_i];
+      return str.c_str()[0] != '\0' ? str : strings::String(nullptr);
+    };
     return std::visit(get, data_ptr_);
   }
 

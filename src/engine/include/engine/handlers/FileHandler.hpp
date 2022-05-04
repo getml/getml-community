@@ -136,11 +136,7 @@ std::string FileHandler::file_ending() {
 template <class ColumnType>
 ColumnType FileHandler::load(const std::string& _name,
                              Poco::Net::StreamSocket* _socket) {
-  // ---------------------------------------------------------------------
-
   std::string fname = _name + FileHandler::file_ending<ColumnType>();
-
-  // ---------------------------------------------------------------------
 
   if (!Poco::File(fname).exists()) {
     throw std::runtime_error("File '" +
@@ -150,13 +146,9 @@ ColumnType FileHandler::load(const std::string& _name,
 
   communication::Sender::send_string("Found!", _socket);
 
-  // ---------------------------------------------------------------------
-
   ColumnType mat;
 
   mat.load(fname);
-
-  // ---------------------------------------------------------------------
 
   return mat;
 }

@@ -275,7 +275,6 @@ void DataFrameManager::add_string_column(const Poco::JSON::Object& _cmd,
   } else {
     const auto pool = params_.options_.make_pool();
 
-    // TODO
     auto new_df =
         containers::DataFrame(df_name, params_.categories_.ptr(),
                               params_.join_keys_encoding_.ptr(), pool);
@@ -315,7 +314,6 @@ void DataFrameManager::add_string_column(const std::string& _name,
 
   const auto pool = params_.options_.make_pool();
 
-  // TODO
   auto new_df = containers::DataFrame(df_name, params_.categories_.ptr(),
                                       params_.join_keys_encoding_.ptr(), pool);
 

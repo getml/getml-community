@@ -26,6 +26,16 @@ class String {
   static constexpr char nullstr = '\0';
 
  public:
+  /// Parses the string and interprets NULL values.
+  static String parse_null(const std::string& _val) {
+    if (_val.size() < 5 &&
+        (_val == "" || _val == "nan" || _val == "NaN" || _val == "NA" ||
+         _val == "NULL" || _val == "none" || _val == "None")) {
+      return String(nullptr);
+    }
+    return String(_val);
+  }
+
   String() : chars_(std::make_unique<char[]>(1)) { chars_.get()[0] = '\0'; }
 
   String(const std::string& _str)

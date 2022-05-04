@@ -73,7 +73,8 @@ struct Column {
 
     if constexpr (std::is_same<T, strings::String>()) {
       if (std::holds_alternative<ConstMemmapPtr>(ptr_)) {
-        return (*std::get<ConstMemmapPtr>(ptr_))[_i];
+        const auto str = (*std::get<ConstMemmapPtr>(ptr_))[_i];
+        return str.c_str()[0] != '\0' ? str : strings::String(nullptr);
       }
     }
 

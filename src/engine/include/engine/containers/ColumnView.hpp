@@ -633,12 +633,10 @@ auto ColumnView<T>::to_column(const size_t _begin,
     auto col = Column<T>(data_ptr);
     col.set_unit(unit());
     return col;
-  }
-
-  if constexpr (std::is_same<T, std::string>()) {
+  } else {
     assert_true(data_ptr);
     const auto to_str = [](const std::string& _str) -> strings::String {
-      return strings::String(_str);
+      return strings::String::parse_null(_str);
     };
     const auto range = *data_ptr | VIEWS::transform(to_str);
     const auto new_data_ptr = std::make_shared<std::vector<strings::String>>(
