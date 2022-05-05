@@ -513,7 +513,7 @@ Column<T> Column<T>::load_big_endian(const std::string &_fname) const {
     for (size_t i = 0; i < nrows; ++i) {
       strings::String str;
       read_string_big_endian(&str, &input);
-      col.push_back(str);
+      col.push_back(str.c_str()[0] != '\0' ? str : strings::String(nullptr));
     }
   } else {
     col = Column<T>(pool(), nrows);
@@ -545,7 +545,7 @@ Column<T> Column<T>::load_little_endian(const std::string &_fname) const {
     for (size_t i = 0; i < nrows; ++i) {
       strings::String str;
       read_string_little_endian(&str, &input);
-      col.push_back(str);
+      col.push_back(str.c_str()[0] != '\0' ? str : strings::String(nullptr));
     }
   } else {
     col = Column<T>(pool(), nrows);
