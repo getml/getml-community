@@ -60,8 +60,8 @@ containers::ColumnView<Float> NumOpParser::as_num(
       CatOpParser(categories_, join_keys_encoding_, data_frames_)
           .parse(*JSON::get_object(_col, "operand1_"));
 
-  const auto to_double = [](const std::string& _str) {
-    const auto [val, success] = io::Parser::to_double(_str);
+  const auto to_double = [](const strings::String& _str) {
+    const auto [val, success] = io::Parser::to_double(_str.str());
     if (success) {
       return val;
     } else {
@@ -83,14 +83,14 @@ containers::ColumnView<Float> NumOpParser::as_ts(
       CatOpParser(categories_, join_keys_encoding_, data_frames_)
           .parse(*JSON::get_object(_col, "operand1_"));
 
-  const auto to_time_stamp = [time_formats](const std::string& _str) {
-    auto [val, success] = io::Parser::to_time_stamp(_str, time_formats);
+  const auto to_time_stamp = [time_formats](const strings::String& _str) {
+    auto [val, success] = io::Parser::to_time_stamp(_str.str(), time_formats);
 
     if (success) {
       return val;
     }
 
-    std::tie(val, success) = io::Parser::to_double(_str);
+    std::tie(val, success) = io::Parser::to_double(_str.str());
 
     if (success) {
       return val;

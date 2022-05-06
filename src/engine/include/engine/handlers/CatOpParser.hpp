@@ -76,52 +76,52 @@ class CatOpParser {
              const fct::Ref<const communication::Logger>& _logger,
              Poco::Net::StreamSocket* _socket) const;
 
-  /// Parses a numerical column.
-  containers::ColumnView<std::string> parse(
+  /// Parses a string column.
+  containers::ColumnView<strings::String> parse(
       const Poco::JSON::Object& _col) const;
 
   // ------------------------------------------------------------------------
 
  private:
   /// Parses the operator and undertakes a binary operation.
-  containers::ColumnView<std::string> binary_operation(
+  containers::ColumnView<strings::String> binary_operation(
       const Poco::JSON::Object& _col) const;
 
   /// Transforms a boolean column to a string.
-  containers::ColumnView<std::string> boolean_as_string(
+  containers::ColumnView<strings::String> boolean_as_string(
       const Poco::JSON::Object& _col) const;
 
   /// Transforms a float column to a string.
-  containers::ColumnView<std::string> numerical_as_string(
+  containers::ColumnView<strings::String> numerical_as_string(
       const Poco::JSON::Object& _col) const;
 
   /// Returns a subselection on the column.
-  containers::ColumnView<std::string> subselection(
+  containers::ColumnView<strings::String> subselection(
       const Poco::JSON::Object& _col) const;
 
   /// Transforms an int column to a column view.
-  containers::ColumnView<std::string> to_view(
+  containers::ColumnView<strings::String> to_view(
       const containers::Column<Int>& _col,
       const fct::Ref<const containers::Encoding>& _encoding) const;
 
   /// Transforms a string column to a column view.
-  containers::ColumnView<std::string> to_view(
+  containers::ColumnView<strings::String> to_view(
       const containers::Column<strings::String>& _col) const;
 
   /// Parses the operator and undertakes a unary operation.
-  containers::ColumnView<std::string> unary_operation(
+  containers::ColumnView<strings::String> unary_operation(
       const Poco::JSON::Object& _col) const;
 
   /// Returns an updated version of the column.
-  containers::ColumnView<std::string> update(
+  containers::ColumnView<strings::String> update(
       const Poco::JSON::Object& _col) const;
 
   /// Returns a new column with new subroles.
-  containers::ColumnView<std::string> with_subroles(
+  containers::ColumnView<strings::String> with_subroles(
       const Poco::JSON::Object& _col) const;
 
   /// Returns a new column with a new unit.
-  containers::ColumnView<std::string> with_unit(
+  containers::ColumnView<strings::String> with_unit(
       const Poco::JSON::Object& _col) const;
 
   // ------------------------------------------------------------------------
@@ -129,24 +129,24 @@ class CatOpParser {
   /// Undertakes a binary operation based on template class
   /// Operator.
   template <class Operator>
-  containers::ColumnView<std::string> bin_op(const Poco::JSON::Object& _col,
-                                             const Operator& _op) const {
+  containers::ColumnView<strings::String> bin_op(const Poco::JSON::Object& _col,
+                                                 const Operator& _op) const {
     const auto operand1 = parse(*JSON::get_object(_col, "operand1_"));
 
     const auto operand2 = parse(*JSON::get_object(_col, "operand2_"));
 
-    return containers::ColumnView<std::string>::from_bin_op(operand1, operand2,
-                                                            _op);
+    return containers::ColumnView<strings::String>::from_bin_op(operand1,
+                                                                operand2, _op);
   }
 
   /// Undertakes a unary operation based on template class
   /// Operator.
   template <class Operator>
-  containers::ColumnView<std::string> un_op(const Poco::JSON::Object& _col,
-                                            const Operator& _op) const {
+  containers::ColumnView<strings::String> un_op(const Poco::JSON::Object& _col,
+                                                const Operator& _op) const {
     const auto operand1 = parse(*JSON::get_object(_col, "operand1_"));
 
-    return containers::ColumnView<std::string>::from_un_op(operand1, _op);
+    return containers::ColumnView<strings::String>::from_un_op(operand1, _op);
   }
 
   // ------------------------------------------------------------------------

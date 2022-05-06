@@ -45,7 +45,7 @@ class ViewParser {
   static constexpr const char* BOOLEAN_COLUMN_VIEW =
       containers::Column<bool>::BOOLEAN_COLUMN_VIEW;
 
-  typedef std::variant<containers::ColumnView<std::string>,
+  typedef std::variant<containers::ColumnView<strings::String>,
                        containers::ColumnView<Float>>
       ColumnViewVariant;
 
@@ -99,7 +99,7 @@ class ViewParser {
   void add_int_column_to_df(const std::string& _name, const std::string& _role,
                             const std::vector<std::string>& _subroles,
                             const std::string& _unit,
-                            const std::vector<std::string>& _vec,
+                            const std::vector<strings::String>& _vec,
                             containers::DataFrame* _df);
 
   /// Adds a new string column to the DataFrame.
@@ -107,7 +107,7 @@ class ViewParser {
                                const std::string& _role,
                                const std::vector<std::string>& _subroles,
                                const std::string& _unit,
-                               const std::vector<std::string>& _vec,
+                               const std::vector<strings::String>& _vec,
                                containers::DataFrame* _df);
 
   /// Drop a set of columns.

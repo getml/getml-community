@@ -475,11 +475,11 @@ std::string DataFrameManager::make_column_string(const Int _draw,
   for (auto it = _begin; it != _end; ++it) {
     auto row = Poco::JSON::Array::Ptr(new Poco::JSON::Array());
 
-    if constexpr (std::is_same<T, std::string>()) {
+    if constexpr (std::is_same<T, strings::String>()) {
+      row->add(it->str());
+    } else if constexpr (std::is_same<T, std::string>()) {
       row->add(*it);
-    }
-
-    if constexpr (!std::is_same<T, std::string>()) {
+    } else {
       row->add(io::Parser::to_string(*it));
     }
 

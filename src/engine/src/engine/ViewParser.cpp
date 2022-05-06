@@ -76,7 +76,7 @@ void ViewParser::add_int_column_to_df(const std::string& _name,
                                       const std::string& _role,
                                       const std::vector<std::string>& _subroles,
                                       const std::string& _unit,
-                                      const std::vector<std::string>& _vec,
+                                      const std::vector<strings::String>& _vec,
                                       containers::DataFrame* _df) {
   const auto encoding = _role == containers::DataFrame::ROLE_CATEGORICAL
                             ? categories_
@@ -106,11 +106,11 @@ void ViewParser::add_int_column_to_df(const std::string& _name,
 void ViewParser::add_string_column_to_df(
     const std::string& _name, const std::string& _role,
     const std::vector<std::string>& _subroles, const std::string& _unit,
-    const std::vector<std::string>& _vec, containers::DataFrame* _df) {
+    const std::vector<strings::String>& _vec, containers::DataFrame* _df) {
   auto col = containers::Column<strings::String>(_df->pool());
 
   for (size_t i = 0; i < _vec.size(); ++i) {
-    col.push_back(strings::String(_vec[i]));
+    col.push_back(_vec[i]);
   }
 
   col.set_name(_name);
@@ -193,7 +193,7 @@ std::optional<size_t> ViewParser::make_nrows(
       return std::holds_alternative<size_t>(float_col.nrows());
     }
     const auto str_col =
-        std::get<containers::ColumnView<std::string>>(_column_view);
+        std::get<containers::ColumnView<strings::String>>(_column_view);
     return std::holds_alternative<size_t>(str_col.nrows());
   };
 
@@ -205,7 +205,7 @@ std::optional<size_t> ViewParser::make_nrows(
     }
 
     const auto str_col =
-        std::get<containers::ColumnView<std::string>>(_column_view);
+        std::get<containers::ColumnView<strings::String>>(_column_view);
     return std::get<size_t>(str_col.nrows());
   };
 
@@ -218,7 +218,7 @@ std::optional<size_t> ViewParser::make_nrows(
     }
 
     const auto str_col =
-        std::get<containers::ColumnView<std::string>>(_column_view)
+        std::get<containers::ColumnView<strings::String>>(_column_view)
             .to_column(0, std::nullopt, false);
     return str_col.nrows();
   };
@@ -252,13 +252,19 @@ std::vector<std::string> ViewParser::make_string_vector(
     const size_t _start, const size_t _length,
     const ColumnViewVariant& _column_view) const {
   const bool is_string_column =
-      std::holds_alternative<containers::ColumnView<std::string>>(_column_view);
+      std::holds_alternative<containers::ColumnView<strings::String>>(
+          _column_view);
 
   if (is_string_column) {
     const auto str_col =
-        std::get<containers::ColumnView<std::string>>(_column_view);
+        std::get<containers::ColumnView<strings::String>>(_column_view);
 
-    return *str_col.to_vector(_start, _length, false);
+    const auto to_str = [](const strings::String& _str) -> std::string {
+      return _str.str();
+    };
+
+    return fct::collect::vector<std::string>(
+        *str_col.to_vector(_start, _length, false) | VIEWS::transform(to_str));
   }
 
   const auto float_col = std::get<containers::ColumnView<Float>>(_column_view);

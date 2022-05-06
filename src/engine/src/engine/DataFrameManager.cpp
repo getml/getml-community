@@ -1417,7 +1417,7 @@ void DataFrameManager::get_categorical_column_content(
                          ? std::get<size_t>(column_view.nrows())
                          : length;
 
-  const auto col_str = make_column_string<std::string>(
+  const auto col_str = make_column_string<strings::String>(
       draw, nrows, data_ptr->begin(), data_ptr->end());
 
   communication::Sender::send_string(col_str, _socket);

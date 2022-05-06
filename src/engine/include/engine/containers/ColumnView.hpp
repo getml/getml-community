@@ -26,6 +26,7 @@
 
 // -------------------------------------------------------------------------
 
+#include "engine/containers/ArrayMaker.hpp"
 #include "engine/containers/ColumnViewIterator.hpp"
 
 // -------------------------------------------------------------------------
@@ -600,7 +601,7 @@ std::shared_ptr<arrow::ChunkedArray> ColumnView<T>::make_array(
     return ArrayMaker::make_float_array(_begin, _end);
   }
 
-  if constexpr (std::is_same<T, std::string>()) {
+  if constexpr (std::is_same<T, strings::String>()) {
     return ArrayMaker::make_string_array(_begin, _end);
   }
 }
@@ -618,7 +619,13 @@ std::shared_ptr<arrow::ChunkedArray> ColumnView<T>::to_array(
 
   check_expected_length(expected_length, _nrows_must_match, !_expected_length);
 
-  return make_array(begin(), end());
+  if constexpr (std::is_same<T, strings::String>()) {
+    const auto to_str = [](const strings::String& _str) { return _str.str(); };
+    auto range = *this | VIEWS::transform(to_str);
+    return make_array(range.begin(), range.end());
+  } else {
+    return make_array(begin(), end());
+  }
 }
 
 // -------------------------------------------------------------------------
@@ -819,7 +826,13 @@ std::shared_ptr<arrow::ChunkedArray> ColumnView<T>::unique() const {
     unique_values.insert(*val);
   }
 
-  return make_array(unique_values.begin(), unique_values.end());
+  if constexpr (std::is_same<T, strings::String>()) {
+    const auto to_str = [](const strings::String& _str) { return _str.str(); };
+    auto range = unique_values | VIEWS::transform(to_str);
+    return make_array(range.begin(), range.end());
+  } else {
+    return make_array(unique_values.begin(), unique_values.end());
+  }
 }
 
 // -------------------------------------------------------------------------

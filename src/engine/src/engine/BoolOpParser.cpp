@@ -40,8 +40,12 @@ containers::ColumnView<bool> BoolOpParser::binary_operation(
   }
 
   if (op == "contains") {
-    const auto contains = [](const std::string& str1, const std::string& str2) {
-      return (str1.find(str2) != std::string::npos);
+    const auto contains = [](const strings::String& _str1,
+                             const strings::String& _str2) {
+      if (!_str1 || !_str2) {
+        return false;
+      }
+      return (_str1.str().find(_str2.c_str()) != std::string::npos);
     };
 
     return cat_bin_op(_col, contains);
@@ -52,7 +56,7 @@ containers::ColumnView<bool> BoolOpParser::binary_operation(
   }
 
   if (is_categorical && op == "equal_to") {
-    return cat_bin_op(_col, std::equal_to<std::string>());
+    return cat_bin_op(_col, std::equal_to<strings::String>());
   }
 
   if (is_numerical && op == "equal_to") {
@@ -80,7 +84,7 @@ containers::ColumnView<bool> BoolOpParser::binary_operation(
   }
 
   if (is_categorical && op == "not_equal_to") {
-    return cat_bin_op(_col, std::not_equal_to<std::string>());
+    return cat_bin_op(_col, std::not_equal_to<strings::String>());
   }
 
   if (is_numerical && op == "not_equal_to") {

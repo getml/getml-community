@@ -1,5 +1,7 @@
 #include "engine/handlers/AggOpParser.hpp"
 
+#include <string>
+
 // ----------------------------------------------------------------------------
 
 #include "engine/handlers/BoolOpParser.hpp"
@@ -16,16 +18,22 @@ Float AggOpParser::categorical_aggregation(
   const auto col = CatOpParser(categories_, join_keys_encoding_, data_frames_)
                        .parse(_json_col);
 
-  if (_type == "count_categorical") {
-    return utils::Aggregations::count_categorical(col.begin(), col.end());
-  } else if (_type == "count_distinct") {
-    return utils::Aggregations::count_distinct(col.begin(), col.end());
-  } else {
-    throw std::runtime_error("Aggregation '" + _type +
-                             "' not recognized for a categorical column.");
+  const auto to_str = [](const strings::String& _str) -> std::string {
+    return _str.str();
+  };
 
-    return 0.0;
+  auto range = col | VIEWS::transform(to_str);
+
+  if (_type == "count_categorical") {
+    return utils::Aggregations::count_categorical(range.begin(), range.end());
   }
+
+  if (_type == "count_distinct") {
+    return utils::Aggregations::count_distinct(range.begin(), range.end());
+  }
+
+  throw std::runtime_error("Aggregation '" + _type +
+                           "' not recognized for a categorical column.");
 }
 
 // ----------------------------------------------------------------------------
