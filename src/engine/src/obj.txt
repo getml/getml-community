@@ -5,10 +5,7 @@ set(HELPERS_SOURCE_DIRECTORY "${CODE_DIR}/src/helpers")
 set(IO_SOURCE_DIRECTORY "${CODE_DIR}/src/io")
 set(MEMMAP_SOURCE_DIRECTORY "${CODE_DIR}/src/memmap")
 set(METRICS_SOURCE_DIRECTORY "${CODE_DIR}/src/metrics")
-set(MULTIREL_SOURCE_DIRECTORY "${CODE_DIR}/src/multirel")
 set(PREDICTORS_SOURCE_DIRECTORY "${CODE_DIR}/src/predictors")
-set(RELBOOST_SOURCE_DIRECTORY "${CODE_DIR}/src/relboost")
-set(RELMT_SOURCE_DIRECTORY "${CODE_DIR}/src/relmt")
 set(SQLITE3_SOURCE_DIRECTORY "${CODE_DIR}/src/sqlite3")
 set(TEXTMINING_SOURCE_DIRECTORY "${CODE_DIR}/src/textmining")
 set(TRANSPILATION_SOURCE_DIRECTORY "${CODE_DIR}/src/transpilation")
@@ -21,10 +18,7 @@ include(${HELPERS_SOURCE_DIRECTORY}/obj.txt)
 include(${IO_SOURCE_DIRECTORY}/obj.txt)
 include(${MEMMAP_SOURCE_DIRECTORY}/obj.txt)
 include(${METRICS_SOURCE_DIRECTORY}/obj.txt)
-include(${MULTIREL_SOURCE_DIRECTORY}/obj.txt)
 include(${PREDICTORS_SOURCE_DIRECTORY}/obj.txt)
-include(${RELBOOST_SOURCE_DIRECTORY}/obj.txt)
-include(${RELMT_SOURCE_DIRECTORY}/obj.txt)
 include(${SQLITE3_SOURCE_DIRECTORY}/obj.txt)
 include(${TEXTMINING_SOURCE_DIRECTORY}/obj.txt)
 include(${TRANSPILATION_SOURCE_DIRECTORY}/obj.txt)
@@ -34,15 +28,12 @@ add_executable(
  	${GETML_VERSION}-64bit
     ${FASTPROP_OBJ}
     ${HELPERS_OBJ}
-    ${MULTIREL_OBJ}
     ${IO_OBJ}
  	${DATABASE_OBJ}
  	${ENGINE_OBJ}
  	${METRICS_OBJ}
  	${MEMMAP_OBJ}
 	${PREDICTORS_OBJ}
- 	${RELBOOST_OBJ}
-	${RELMT_OBJ}
  	${SQLITE3_OBJ}
     ${TEXTMINING_OBJ}
  	${TRANSPILATION_OBJ}

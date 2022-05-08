@@ -3,9 +3,6 @@
 // ----------------------------------------------------------------------
 
 #include "fastprop/algorithm/algorithm.hpp"
-#include "multirel/ensemble/ensemble.hpp"
-#include "relboost/ensemble/ensemble.hpp"
-#include "relmt/ensemble/ensemble.hpp"
 
 // ----------------------------------------------------------------------
 
@@ -25,19 +22,11 @@ fct::Ref<AbstractFeatureLearner> FeatureLearnerParser::parse(
         _params);
   }
 
-  if (type == AbstractFeatureLearner::MULTIREL) {
-    return fct::Ref<FeatureLearner<multirel::ensemble::DecisionTreeEnsemble>>::
-        make(_params);
-  }
-
-  if (type == AbstractFeatureLearner::RELBOOST) {
-    return fct::Ref<FeatureLearner<relboost::ensemble::DecisionTreeEnsemble>>::
-        make(_params);
-  }
-
-  if (type == AbstractFeatureLearner::RELMT) {
-    return fct::Ref<
-        FeatureLearner<relmt::ensemble::DecisionTreeEnsemble>>::make(_params);
+  if (type == AbstractFeatureLearner::MULTIREL ||
+      type == AbstractFeatureLearner::RELBOOST ||
+      AbstractFeatureLearner::RELMT) {
+    throw std::runtime_error(
+        "'" + type + "' is not supported in the getML community edition!");
   }
 
   throw std::runtime_error("Feature learning algorithm of type '" + type +
