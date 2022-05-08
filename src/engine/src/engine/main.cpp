@@ -52,17 +52,6 @@ int main(int argc, char* argv[]) {
   const auto logger = fct::Ref<const engine::communication::Logger>::make(
       monitor.ptr());  // TODO
 
-  const auto license_checker =
-      fct::Ref<engine::licensing::LicenseChecker>::make(logger, monitor,
-                                                        options);
-
-  license_checker->receive_token("main");
-
-  if (!license_checker->has_active_token()) {
-    logger->log("License server authentication failed.");
-    return 0;
-  }
-
   const auto pool = options.make_pool();
 
   const auto categories = fct::Ref<engine::containers::Encoding>::make(pool);
@@ -107,7 +96,6 @@ int main(int argc, char* argv[]) {
           .database_manager_ = database_manager,
           .data_frames_ = data_frames,
           .join_keys_encoding_ = join_keys_encoding,
-          .license_checker_ = license_checker,
           .logger_ = logger,
           .monitor_ = monitor,
           .options_ = options,
@@ -128,7 +116,6 @@ int main(int argc, char* argv[]) {
       .data_frame_tracker_ = data_frame_tracker,
       .fe_tracker_ = fe_tracker,
       .join_keys_encoding_ = join_keys_encoding,
-      .license_checker_ = license_checker,
       .logger_ = logger,
       .monitor_ = monitor,
       .options_ = options,
@@ -151,7 +138,6 @@ int main(int argc, char* argv[]) {
       .fe_tracker_ = fe_tracker,
       .hyperopts_ = hyperopts,
       .join_keys_encoding_ = join_keys_encoding,
-      .license_checker_ = license_checker,
       .logger_ = logger,
       .monitor_ = monitor,
       .options_ = options,

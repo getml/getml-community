@@ -22,7 +22,6 @@
 #include "engine/config/config.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/hyperparam/hyperparam.hpp"
-#include "engine/licensing/licensing.hpp"
 #include "engine/pipelines/pipelines.hpp"
 
 // ------------------------------------------------------------------------
@@ -61,9 +60,6 @@ struct ProjectManagerParams {
 
   /// Maps integers to join key names
   const fct::Ref<containers::Encoding> join_keys_encoding_;
-
-  /// For checking the number of cores and memory usage
-  const fct::Ref<licensing::LicenseChecker> license_checker_;
 
   /// For logging
   const fct::Ref<const communication::Logger> logger_;

@@ -175,8 +175,6 @@ void DataFrameManager::add_float_column_to_df(
     const std::string& _role, const containers::Column<Float>& _col,
     containers::DataFrame* _df,
     multithreading::WeakWriteLock* _weak_write_lock) const {
-  license_checker().check_mem_size(data_frames(), _col.nbytes());
-
   if (_weak_write_lock) _weak_write_lock->upgrade();
 
   _df->add_float_column(_col, _role);
@@ -212,8 +210,6 @@ void DataFrameManager::add_int_column_to_df(
   col.set_name(_name);
 
   col.set_unit(_unit);
-
-  license_checker().check_mem_size(data_frames(), col.nbytes());
 
   assert_true(_weak_write_lock);
 
@@ -369,8 +365,6 @@ void DataFrameManager::add_string_column_to_df(
   col.set_name(_name);
 
   col.set_unit(_unit);
-
-  license_checker().check_mem_size(data_frames(), col.nbytes());
 
   if (_weak_write_lock) {
     _weak_write_lock->upgrade();
@@ -796,8 +790,6 @@ void DataFrameManager::from_arrow(const std::string& _name,
   auto df = arrow_handler.table_to_df(arrow_handler.recv_table(_socket), _name,
                                       schema);
 
-  license_checker().check_mem_size(data_frames(), df.nbytes());
-
   // Now we upgrade the weak write lock to a strong write lock to commit
   // the changes.
   weak_write_lock.upgrade();
@@ -869,8 +861,6 @@ void DataFrameManager::from_csv(const std::string& _name,
   df.from_csv(colnames, fnames, quotechar, sep, num_lines_read, skip,
               time_formats, schema);
 
-  license_checker().check_mem_size(data_frames(), df.nbytes());
-
   // Now we upgrade the weak write lock to a strong write lock to commit
   // the changes.
   weak_write_lock.upgrade();
@@ -920,8 +910,6 @@ void DataFrameManager::from_db(const std::string& _name,
                                   local_join_keys_encoding, pool);
 
   df.from_db(connector(conn_id), table_name, schema);
-
-  license_checker().check_mem_size(data_frames(), df.nbytes());
 
   weak_write_lock.upgrade();
 
@@ -975,8 +963,6 @@ void DataFrameManager::from_json(const std::string& _name,
 
   df.from_json(obj, time_formats, schema);
 
-  license_checker().check_mem_size(data_frames(), df.nbytes());
-
   weak_write_lock.upgrade();
 
   params_.categories_->append(*local_categories);
@@ -1023,8 +1009,6 @@ void DataFrameManager::from_parquet(const std::string& _name,
 
   auto df = arrow_handler.table_to_df(arrow_handler.read_parquet(fname), _name,
                                       schema);
-
-  license_checker().check_mem_size(data_frames(), df.nbytes());
 
   // Now we upgrade the weak write lock to a strong write lock to commit
   // the changes.
@@ -1078,8 +1062,6 @@ void DataFrameManager::from_query(const std::string& _name,
 
   df.from_query(connector(conn_id), query, schema);
 
-  license_checker().check_mem_size(data_frames(), df.nbytes());
-
   weak_write_lock.upgrade();
 
   params_.categories_->append(*local_categories);
@@ -1123,8 +1105,6 @@ void DataFrameManager::from_view(const std::string& _name,
                        params_.data_frames_, params_.options_)
                 .parse(view)
                 .clone(_name);
-
-  license_checker().check_mem_size(data_frames(), df.nbytes());
 
   weak_write_lock.upgrade();
 
@@ -1745,8 +1725,6 @@ void DataFrameManager::receive_data(
 
       communication::Sender::send_string("Success!", _socket);
     } else if (type == "DataFrame.close") {
-      license_checker().check_mem_size(data_frames(), _df->nbytes());
-
       communication::Sender::send_string("Success!", _socket);
 
       break;

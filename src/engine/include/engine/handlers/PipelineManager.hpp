@@ -20,7 +20,6 @@
 
 #include "engine/communication/communication.hpp"
 #include "engine/config/config.hpp"
-#include "engine/licensing/licensing.hpp"
 #include "engine/pipelines/FittedPipeline.hpp"
 #include "engine/pipelines/pipelines.hpp"
 
@@ -241,11 +240,6 @@ class PipelineManager {
     multithreading::ReadLock read_lock(params_.read_write_lock_);
     const auto& p = utils::Getter::get(_name, &pipelines());
     return p;
-  }
-
-  /// Trivial accessor
-  const licensing::LicenseChecker& license_checker() const {
-    return *params_.license_checker_;
   }
 
   /// Trivial (private) accessor

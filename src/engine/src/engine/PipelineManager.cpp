@@ -527,7 +527,6 @@ Poco::JSON::Object PipelineManager::receive_data(
                              .database_manager_ = params_.database_manager_,
                              .data_frames_ = _data_frames,
                              .join_keys_encoding_ = _join_keys_encoding,
-                             .license_checker_ = params_.license_checker_,
                              .logger_ = params_.logger_,
                              .monitor_ = params_.monitor_,
                              .options_ = params_.options_,

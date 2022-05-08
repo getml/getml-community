@@ -22,7 +22,6 @@
 #include "engine/config/config.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/hyperparam/hyperparam.hpp"
-#include "engine/licensing/licensing.hpp"
 #include "engine/pipelines/pipelines.hpp"
 
 // ------------------------------------------------------------------------
@@ -254,11 +253,6 @@ class ProjectManager {
   /// Trivial (private) accessor
   const std::map<std::string, hyperparam::Hyperopt>& hyperopts() const {
     return *params_.hyperopts_;
-  }
-
-  /// Trivial accessor
-  engine::licensing::LicenseChecker& license_checker() {
-    return *params_.license_checker_;
   }
 
   /// Trivial (private) accessor

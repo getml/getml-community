@@ -387,8 +387,6 @@ void ProjectManager::load_data_frame(const std::string& _name,
                               params_.join_keys_encoding_.ptr(),
                               params_.options_, _name);
 
-  license_checker().check_mem_size(data_frames(), df.nbytes());
-
   df.create_indices();
 
   weak_write_lock.upgrade();

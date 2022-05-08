@@ -22,7 +22,6 @@
 #include "engine/communication/communication.hpp"
 #include "engine/config/config.hpp"
 #include "engine/containers/containers.hpp"
-#include "engine/licensing/licensing.hpp"
 
 // ------------------------------------------------------------------------
 
@@ -423,16 +422,6 @@ class DataFrameManager {
   /// Trivial accessor
   containers::Encoding& join_keys_encoding() {
     return *params_.join_keys_encoding_;
-  }
-
-  /// Trivial accessor
-  licensing::LicenseChecker& license_checker() {
-    return *params_.license_checker_;
-  }
-
-  /// Trivial accessor
-  const licensing::LicenseChecker& license_checker() const {
-    return *params_.license_checker_;
   }
 
   /// Trivial accessor
