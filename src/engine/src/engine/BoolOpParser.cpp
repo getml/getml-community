@@ -177,6 +177,11 @@ containers::ColumnView<bool> BoolOpParser::unary_operation(
     return num_un_op(_col, is_nan);
   }
 
+  if (op == "is_null") {
+    const auto is_null = [](const strings::String& _val) { return !_val; };
+    return cat_un_op(_col, is_null);
+  }
+
   if (op == "not") {
     return un_op(_col, std::logical_not<bool>());
   }

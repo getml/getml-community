@@ -593,14 +593,14 @@ void DataFrame::from_db(const std::shared_ptr<database::Connector> _connector,
     for (auto &vec : targets) vec->push_back(iterator->get_double());
 
     for (auto &vec : text)
-      vec->emplace_back(strings::String(iterator->get_string()));
+      vec->emplace_back(strings::String::parse_null(iterator->get_string()));
 
     for (auto &vec : time_stamps) vec->push_back(iterator->get_time_stamp());
 
     for (auto &vec : unused_floats) vec->push_back(iterator->get_double());
 
     for (auto &vec : unused_strings)
-      vec->emplace_back(strings::String(iterator->get_string()));
+      vec->emplace_back(strings::String::parse_null(iterator->get_string()));
   }
 
   auto df = DataFrame(name(), categories_, join_keys_encoding_, make_pool());
@@ -857,7 +857,7 @@ void DataFrame::from_query(
 
     for (size_t i = 0; i < text.size(); ++i) {
       const auto &str = line[text_ix[i]];
-      text[i]->push_back(strings::String(str));
+      text[i]->push_back(strings::String::parse_null(str));
     }
 
     for (size_t i = 0; i < time_stamps.size(); ++i) {
@@ -873,7 +873,7 @@ void DataFrame::from_query(
 
     for (size_t i = 0; i < unused_strings.size(); ++i) {
       const auto &str = line[unused_string_ix[i]];
-      unused_strings[i]->emplace_back(strings::String(str));
+      unused_strings[i]->emplace_back(strings::String::parse_null(str));
     }
   }
 

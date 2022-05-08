@@ -107,6 +107,18 @@ class BoolOpParser {
     return containers::ColumnView<bool>::from_bin_op(operand1, operand2, _op);
   }
 
+  /// Undertakes a unary operation based on template class
+  /// Operator for categorical columns.
+  template <class Operator>
+  containers::ColumnView<bool> cat_un_op(const Poco::JSON::Object& _col,
+                                         const Operator& _op) const {
+    const auto operand1 =
+        CatOpParser(categories_, join_keys_encoding_, data_frames_)
+            .parse(*JSON::get_object(_col, "operand1_"));
+
+    return containers::ColumnView<bool>::from_un_op(operand1, _op);
+  }
+
   /// Undertakes a binary operation based on template class
   /// Operator for categorical columns.
   template <class Operator>
