@@ -125,10 +125,6 @@ class DataFrameManager {
   void from_query(const std::string& _name, const Poco::JSON::Object& _cmd,
                   const bool _append, Poco::Net::StreamSocket* _socket);
 
-  /// Creates a new data frame from a set of S3 files located in a bucket.
-  void from_s3(const std::string& _name, const Poco::JSON::Object& _cmd,
-               const bool _append, Poco::Net::StreamSocket* _socket);
-
   /// Creates a new data frame from a view.
   void from_view(const std::string& _name, const Poco::JSON::Object& _cmd,
                  const bool _append, Poco::Net::StreamSocket* _socket);

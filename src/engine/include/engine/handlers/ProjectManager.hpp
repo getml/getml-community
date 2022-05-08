@@ -81,12 +81,6 @@ class ProjectManager {
                                  const Poco::JSON::Object& _cmd,
                                  Poco::Net::StreamSocket* _socket);
 
-  /// Creates a new data frame from one or several CSV files located in an S3
-  /// bucket.
-  void add_data_frame_from_s3(const std::string& _name,
-                              const Poco::JSON::Object& _cmd,
-                              Poco::Net::StreamSocket* _socket);
-
   /// Adds a new data frame generated from a view.
   void add_data_frame_from_view(const std::string& _name,
                                 const Poco::JSON::Object& _cmd,

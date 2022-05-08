@@ -17,7 +17,6 @@
 #include "io/CSVReader.hpp"
 #include "io/Datatype.hpp"
 #include "io/Parser.hpp"
-#include "io/S3Reader.hpp"
 #include "io/StatementMaker.hpp"
 
 // ----------------------------------------------------------------------------
@@ -53,35 +52,6 @@ class Sniffer {
       throw std::runtime_error("You need to provide at least one input file!");
     }
   }
-
-#if (defined(_WIN32) || defined(_WIN64))
-  // S3 is not supported on windows
-#else
-  /// Constructer for S3Sniffer
-  template <typename R = ReaderType>
-  Sniffer(const std::string& _bucket,
-          const std::optional<std::vector<std::string>>& _colnames,
-          const Poco::JSON::Object& _conn_description,
-          const std::string& _dialect, const std::vector<std::string>& _files,
-          const size_t _num_lines_sniffed, const std::string& _region,
-          const char _sep, const size_t _skip, const std::string& _table_name,
-          typename std::enable_if<std::is_same<R, S3Reader>::value>::type* = 0)
-      : bucket_(_bucket),
-        colnames_(_colnames),
-        conn_description_(_conn_description),
-        dialect_(_dialect),
-        files_(_files),
-        num_lines_sniffed_(_num_lines_sniffed),
-        quotechar_('"'),
-        region_(_region),
-        sep_(_sep),
-        skip_(_skip),
-        table_name_(_table_name) {
-    if (_files.size() == 0) {
-      throw std::runtime_error("You need to provide at least one input key!");
-    }
-  }
-#endif
 
   ~Sniffer() = default;
 
@@ -125,19 +95,6 @@ class Sniffer {
     const auto limit = num_lines_sniffed_ + skip_;
     return CSVReader(colnames_, _fname, limit, quotechar_, sep_);
   }
-
-#if (defined(_WIN32) || defined(_WIN64))
-  // S3 is not supported on windows
-#else
-  /// Makes a S3Reader, when this is the required type for the reader.
-  template <
-      typename R = ReaderType,
-      typename std::enable_if<std::is_same<R, S3Reader>::value, int>::type = 0>
-  S3Reader make_reader(const std::string& _fname) const {
-    const auto limit = static_cast<Int>(num_lines_sniffed_ + skip_);
-    return S3Reader(bucket_, colnames_, _fname, limit, region_, sep_);
-  }
-#endif
 
   // -------------------------------
 

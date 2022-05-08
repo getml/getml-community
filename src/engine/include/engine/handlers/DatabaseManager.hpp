@@ -97,19 +97,10 @@ class DatabaseManager {
   /// Posts a list of all tables in all databases.
   void refresh(Poco::Net::StreamSocket* _socket);
 
-  /// Reads CSV files located in an S3 bucket into the database.
-  void read_s3(const std::string& _name, const Poco::JSON::Object& _cmd,
-               Poco::Net::StreamSocket* _socket);
-
   /// Sniffs one or several CSV files and returns the CREATE TABLE statement
   /// to the client.
   void sniff_csv(const std::string& _name, const Poco::JSON::Object& _cmd,
                  Poco::Net::StreamSocket* _socket) const;
-
-  /// Sniffs one or several CSV files in an S3 bucket and returns the CREATE
-  /// TABLE statement to the client.
-  void sniff_s3(const std::string& _name, const Poco::JSON::Object& _cmd,
-                Poco::Net::StreamSocket* _socket) const;
 
   /// Sniffs a table and generates suitable keyword arguments
   /// to build a DataFrame.

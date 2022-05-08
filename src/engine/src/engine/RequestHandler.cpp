@@ -49,14 +49,10 @@ void RequestHandler::run() {
       database_manager().new_db(cmd, &socket());
     } else if (type == "Database.read_csv") {
       database_manager().read_csv(name, cmd, &socket());
-    } else if (type == "Database.read_s3") {
-      database_manager().read_s3(name, cmd, &socket());
     } else if (type == "Database.refresh") {
       database_manager().refresh(&socket());
     } else if (type == "Database.sniff_csv") {
       database_manager().sniff_csv(name, cmd, &socket());
-    } else if (type == "Database.sniff_s3") {
-      database_manager().sniff_s3(name, cmd, &socket());
     } else if (type == "Database.sniff_table") {
       database_manager().sniff_table(name, cmd, &socket());
     } else if (type == "DataContainer.load") {
@@ -109,8 +105,6 @@ void RequestHandler::run() {
       project_manager().add_data_frame_from_csv(name, cmd, &socket());
     } else if (type == "DataFrame.read_parquet") {
       project_manager().add_data_frame_from_parquet(name, cmd, &socket());
-    } else if (type == "DataFrame.read_s3") {
-      project_manager().add_data_frame_from_s3(name, cmd, &socket());
     } else if (type == "DataFrame.refresh") {
       data_frame_manager().refresh(name, &socket());
     } else if (type == "DataFrame.remove_column") {
@@ -214,10 +208,6 @@ void RequestHandler::run() {
       pipeline_manager().to_sql(name, cmd, &socket());
     } else if (type == "Pipeline.transform") {
       pipeline_manager().transform(name, cmd, &socket());
-    } else if (type == "set_s3_access_key_id") {
-      database_manager().set_s3_access_key_id(&socket());
-    } else if (type == "set_s3_secret_access_key") {
-      database_manager().set_s3_secret_access_key(&socket());
     } else if (type == "shutdown") {
       *shutdown_ = true;
     } else if (type == STRING_COLUMN) {
@@ -252,8 +242,6 @@ void RequestHandler::run() {
       data_frame_manager().view_to_db(name, cmd, &socket());
     } else if (type == "View.to_parquet") {
       data_frame_manager().view_to_parquet(name, cmd, &socket());
-    } else if (type == "View.to_s3") {
-      data_frame_manager().view_to_s3(name, cmd, &socket());
     } else {
       throw std::runtime_error("Unknown command: '" + type + "'");
     }

@@ -131,16 +131,6 @@ class DataFrame {
   void from_query(const fct::Ref<database::Connector> _connector,
                   const std::string &_query, const Schema &_schema);
 
-  /// Builds a dataframe from one or several CSV files located in an S3
-  /// bucket.
-  void from_s3(const std::string &_bucket,
-               const std::optional<std::vector<std::string>> &_colnames,
-               const std::vector<std::string> &_fnames,
-               const std::string &_region, const std::string &_sep,
-               const size_t _num_lines_read, const size_t _skip,
-               const std::vector<std::string> &_time_formats,
-               const Schema &_schema);
-
   /// Returns the content of the data frame in a format that is compatible
   /// with the DataTables.js server-side processing API.
   Poco::JSON::Object get_content(const std::int32_t _draw,

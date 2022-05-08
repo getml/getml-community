@@ -14,13 +14,6 @@
 #include "io/Sniffer.hpp"
 #include "io/StatementMaker.hpp"
 
-#if (defined(_WIN32) || defined(_WIN64))
-// goutils is not supported on windows
-#else
-#include "io/S3Reader.hpp"
-#include "io/S3Sniffer.hpp"
-#endif
-
 // ----------------------------------------------------------------------------
 
 #endif  // IO_IO_HPP_

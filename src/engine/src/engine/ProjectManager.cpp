@@ -48,20 +48,6 @@ void ProjectManager::add_data_frame_from_csv(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void ProjectManager::add_data_frame_from_s3(const std::string& _name,
-                                            const Poco::JSON::Object& _cmd,
-                                            Poco::Net::StreamSocket* _socket) {
-  const auto append = JSON::get_value<bool>(_cmd, "append_");
-
-  data_frame_manager().from_s3(_name, _cmd, append, _socket);
-
-  multithreading::ReadLock read_lock(params_.read_write_lock_);
-
-  post("dataframe", data_frames()[_name].to_monitor());
-}
-
-// ------------------------------------------------------------------------
-
 void ProjectManager::add_data_frame_from_db(const std::string& _name,
                                             const Poco::JSON::Object& _cmd,
                                             Poco::Net::StreamSocket* _socket) {
