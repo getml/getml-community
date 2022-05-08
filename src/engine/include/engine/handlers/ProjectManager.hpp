@@ -183,9 +183,6 @@ class ProjectManager {
   /// Loads a JSON object from a file.
   Poco::JSON::Object load_json_obj(const std::string& _fname) const;
 
-  /// Posts an object to the monitor.
-  void post(const std::string& _what, const Poco::JSON::Object& _obj) const;
-
   /// Removes an object from the monitor.
   void remove(const std::string& _what, const std::string& _name) const;
 

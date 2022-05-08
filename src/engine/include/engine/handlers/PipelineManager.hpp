@@ -152,9 +152,6 @@ class PipelineManager {
   /// Retrieves the scores from the pipeline, adding set_used if available.
   Poco::JSON::Object get_scores(const pipelines::Pipeline& _pipeline) const;
 
-  /// Posts a pipeline to the monitor.
-  void post_pipeline(const Poco::JSON::Object& _obj);
-
   /// Receives data from the client. This data will not be stored permanently,
   /// but locally. Once the training/transformation process is complete, it
   /// will be deleted.

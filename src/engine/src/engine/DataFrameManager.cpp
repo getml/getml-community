@@ -99,8 +99,6 @@ void DataFrameManager::add_float_column(const std::string& _name,
 
     add_float_column_to_df(role, col, df, &weak_write_lock);
 
-    params_.monitor_->send_tcp("postdataframe", df->to_monitor(),
-                               communication::Monitor::TIMEOUT_ON);
   } else {
     if (column_view.is_infinite()) {
       throw std::runtime_error(
@@ -125,9 +123,6 @@ void DataFrameManager::add_float_column(const std::string& _name,
     data_frames()[df_name] = new_df;
 
     data_frames()[df_name].create_indices();
-
-    params_.monitor_->send_tcp("postdataframe", new_df.to_monitor(),
-                               communication::Monitor::TIMEOUT_ON);
   }
 
   communication::Sender::send_string("Success!", _socket);
@@ -146,8 +141,6 @@ void DataFrameManager::add_float_column(const Poco::JSON::Object& _cmd,
   if (exists) {
     recv_and_add_float_column(_cmd, df, &weak_write_lock, _socket);
 
-    params_.monitor_->send_tcp("postdataframe", df->to_monitor(),
-                               communication::Monitor::TIMEOUT_ON);
   } else {
     const auto pool = params_.options_.make_pool();
 
@@ -161,9 +154,6 @@ void DataFrameManager::add_float_column(const Poco::JSON::Object& _cmd,
     data_frames()[df_name] = new_df;
 
     data_frames()[df_name].create_indices();
-
-    params_.monitor_->send_tcp("postdataframe", new_df.to_monitor(),
-                               communication::Monitor::TIMEOUT_ON);
   }
 
   communication::Sender::send_string("Success!", _socket);
@@ -266,8 +256,6 @@ void DataFrameManager::add_string_column(const Poco::JSON::Object& _cmd,
   if (exists) {
     recv_and_add_string_column(_cmd, df, &weak_write_lock, _socket);
 
-    params_.monitor_->send_tcp("postdataframe", df->to_monitor(),
-                               communication::Monitor::TIMEOUT_ON);
   } else {
     const auto pool = params_.options_.make_pool();
 
@@ -280,9 +268,6 @@ void DataFrameManager::add_string_column(const Poco::JSON::Object& _cmd,
     data_frames()[df_name] = new_df;
 
     data_frames()[df_name].create_indices();
-
-    params_.monitor_->send_tcp("postdataframe", new_df.to_monitor(),
-                               communication::Monitor::TIMEOUT_ON);
   }
 
   communication::Sender::send_string("Success!", _socket);
@@ -346,9 +331,6 @@ void DataFrameManager::add_string_column(const std::string& _name,
 
     data_frames()[df_name].create_indices();
   }
-
-  params_.monitor_->send_tcp("postdataframe", df->to_monitor(),
-                             communication::Monitor::TIMEOUT_ON);
 
   communication::Sender::send_string("Success!", _socket);
 }
@@ -430,9 +412,6 @@ void DataFrameManager::append_to_data_frame(const std::string& _name,
   params_.categories_->append(*local_categories);
 
   params_.join_keys_encoding_->append(*local_join_keys_encoding);
-
-  params_.monitor_->send_tcp("postdataframe", data_frames()[_name].to_monitor(),
-                             communication::Monitor::TIMEOUT_ON);
 }
 
 // ------------------------------------------------------------------------
@@ -684,9 +663,6 @@ void DataFrameManager::concat(const std::string& _name,
   weak_write_lock.unlock();
 
   communication::Sender::send_string("Success!", _socket);
-
-  params_.monitor_->send_tcp("postdataframe", df.to_monitor(),
-                             communication::Monitor::TIMEOUT_ON);
 }
 
 // ------------------------------------------------------------------------
@@ -1839,9 +1815,6 @@ void DataFrameManager::remove_column(const std::string& _name,
                              "' not found.");
   }
 
-  params_.monitor_->send_tcp("postdataframe", df.to_monitor(),
-                             communication::Monitor::TIMEOUT_ON);
-
   communication::Sender::send_string("Success!", _socket);
 }
 
@@ -1866,9 +1839,6 @@ void DataFrameManager::set_subroles(const std::string& _name,
   column.set_subroles(subroles);
 
   df.add_float_column(column, role);
-
-  params_.monitor_->send_tcp("postdataframe", df.to_monitor(),
-                             communication::Monitor::TIMEOUT_ON);
 
   write_lock.unlock();
 
@@ -1906,9 +1876,6 @@ void DataFrameManager::set_subroles_categorical(
     df.add_int_column(column, role);
   }
 
-  params_.monitor_->send_tcp("postdataframe", df.to_monitor(),
-                             communication::Monitor::TIMEOUT_ON);
-
   write_lock.unlock();
 
   communication::Sender::send_string("Success!", _socket);
@@ -1934,9 +1901,6 @@ void DataFrameManager::set_unit(const std::string& _name,
   column.set_unit(unit);
 
   df.add_float_column(column, role);
-
-  params_.monitor_->send_tcp("postdataframe", df.to_monitor(),
-                             communication::Monitor::TIMEOUT_ON);
 
   write_lock.unlock();
 
@@ -1972,9 +1936,6 @@ void DataFrameManager::set_unit_categorical(const std::string& _name,
     column.set_unit(unit);
     df.add_int_column(column, role);
   }
-
-  params_.monitor_->send_tcp("postdataframe", df.to_monitor(),
-                             communication::Monitor::TIMEOUT_ON);
 
   write_lock.unlock();
 

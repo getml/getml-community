@@ -279,8 +279,6 @@ void PipelineManager::deploy(const std::string& _name,
 
   set_pipeline(_name, pipeline);
 
-  post_pipeline(pipeline.to_monitor(categories().strings(), _name));
-
   communication::Sender::send_string("Success!", _socket);
 }
 
@@ -404,8 +402,6 @@ void PipelineManager::fit(const std::string& _name,
 
   weak_write_lock.unlock();
 
-  post_pipeline(pipeline.to_monitor(categories().strings(), _name));
-
   communication::Sender::send_string("Trained pipeline.", _socket);
 }
 
@@ -470,17 +466,6 @@ void PipelineManager::lift_curve(const std::string& _name,
   communication::Sender::send_string("Success!", _socket);
 
   communication::Sender::send_string(JSON::stringify(response), _socket);
-}
-
-// ------------------------------------------------------------------------
-
-void PipelineManager::post_pipeline(const Poco::JSON::Object& _obj) {
-  const auto response = monitor().send_tcp("postpipeline", _obj,
-                                           communication::Monitor::TIMEOUT_ON);
-
-  if (response != "Success!") {
-    throw std::runtime_error(response);
-  }
 }
 
 // ------------------------------------------------------------------------
@@ -658,8 +643,6 @@ void PipelineManager::score(const Poco::JSON::Object& _cmd,
   communication::Sender::send_string("Success!", _socket);
 
   set_pipeline(_name, pipeline);
-
-  post_pipeline(pipeline.to_monitor(categories().strings(), _name));
 
   communication::Sender::send_string(JSON::stringify(scores_obj), _socket);
 }
