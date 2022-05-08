@@ -759,51 +759,6 @@ void DataFrameManager::df_to_db(
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::df_to_s3(
-    const size_t _batch_size, const std::string& _bucket,
-    const std::string& _key, const std::string& _region,
-    const std::string& _sep, const containers::DataFrame& _df,
-    const fct::Ref<containers::Encoding>& _categories,
-    const fct::Ref<containers::Encoding>& _join_keys_encoding) {
-#if (defined(_WIN32) || defined(_WIN64))
-  throw std::runtime_error("S3 is not supported on Windows!");
-#else
-
-  // We are using the bell character (\a) as the quotechar. It is least
-  // likely to appear in any field.
-  // TODO
-  auto reader = containers::DataFrameReader(
-      _df, _categories.ptr(), _join_keys_encoding.ptr(), '\a', '|');
-
-  const auto colnames = reader.colnames();
-
-  size_t fnum = 0;
-
-  while (!reader.eof()) {
-    auto tfile = Poco::TemporaryFile(params_.options_.temp_dir());
-
-    auto writer =
-        io::CSVWriter(tfile.path(), _batch_size, colnames, "\"", _sep);
-
-    writer.write(&reader);
-
-    auto fnum_str = std::to_string(++fnum);
-
-    if (fnum_str.size() < 5) {
-      fnum_str = std::string(5 - fnum_str.size(), '0') + fnum_str;
-    }
-
-    const auto current_key =
-        _batch_size == 0 ? _key + ".csv" : _key + "-" + fnum_str + ".csv";
-
-    goutils::S3::upload_file(tfile.path(), _bucket, current_key, _region);
-  }
-
-#endif
-}
-
-// ------------------------------------------------------------------------
-
 void DataFrameManager::freeze(const std::string& _name,
                               Poco::Net::StreamSocket* _socket) {
   multithreading::WriteLock write_lock(params_.read_write_lock_);
@@ -2154,39 +2109,6 @@ void DataFrameManager::to_parquet(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::to_s3(const std::string& _name,
-                             const Poco::JSON::Object& _cmd,
-                             Poco::Net::StreamSocket* _socket) {
-#if (defined(_WIN32) || defined(_WIN64))
-  throw std::runtime_error("S3 is not supported on Windows!");
-#else
-
-  const auto batch_size = JSON::get_value<size_t>(_cmd, "batch_size_");
-
-  const auto bucket = JSON::get_value<std::string>(_cmd, "bucket_");
-
-  const auto key = JSON::get_value<std::string>(_cmd, "key_");
-
-  const auto region = JSON::get_value<std::string>(_cmd, "region_");
-
-  const auto sep = JSON::get_value<std::string>(_cmd, "sep_");
-
-  multithreading::ReadLock read_lock(params_.read_write_lock_);
-
-  const auto& df = utils::Getter::get(_name, data_frames());
-
-  df_to_s3(batch_size, bucket, key, region, sep, df, params_.categories_,
-           params_.join_keys_encoding_);
-
-  read_lock.unlock();
-
-  communication::Sender::send_string("Success!", _socket);
-
-#endif
-}
-
-// ------------------------------------------------------------------------
-
 void DataFrameManager::view_to_arrow(const std::string& _name,
                                      const Poco::JSON::Object& _cmd,
                                      Poco::Net::StreamSocket* _socket) {
@@ -2323,54 +2245,6 @@ void DataFrameManager::view_to_parquet(const std::string& _name,
 
   communication::Sender::send_string("Success!", _socket);
 }
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::view_to_s3(const std::string& _name,
-                                  const Poco::JSON::Object& _cmd,
-                                  Poco::Net::StreamSocket* _socket) {
-#if (defined(_WIN32) || defined(_WIN64))
-  throw std::runtime_error("S3 is not supported on Windows!");
-#else
-
-  const auto batch_size = JSON::get_value<size_t>(_cmd, "batch_size_");
-
-  const auto bucket = JSON::get_value<std::string>(_cmd, "bucket_");
-
-  const auto key = JSON::get_value<std::string>(_cmd, "key_");
-
-  const auto region = JSON::get_value<std::string>(_cmd, "region_");
-
-  const auto sep = JSON::get_value<std::string>(_cmd, "sep_");
-
-  const auto view = JSON::get_object(_cmd, "view_");
-
-  multithreading::ReadLock read_lock(params_.read_write_lock_);
-
-  const auto pool = params_.options_.make_pool();
-
-  const auto local_categories =
-      fct::Ref<containers::Encoding>::make(pool, params_.categories_.ptr());
-
-  const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
-      pool, params_.join_keys_encoding_.ptr());
-
-  assert_true(view);
-
-  const auto df = ViewParser(local_categories, local_join_keys_encoding,
-                             params_.data_frames_, params_.options_)
-                      .parse(*view);
-
-  df_to_s3(batch_size, bucket, key, region, sep, df, local_categories,
-           local_join_keys_encoding);
-
-  read_lock.unlock();
-
-  communication::Sender::send_string("Success!", _socket);
-
-#endif
-}
-// ------------------------------------------------------------------------
 
 }  // namespace handlers
 }  // namespace engine

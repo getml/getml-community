@@ -121,8 +121,6 @@ void RequestHandler::run() {
       data_frame_manager().to_db(name, cmd, &socket());
     } else if (type == "DataFrame.to_parquet") {
       data_frame_manager().to_parquet(name, cmd, &socket());
-    } else if (type == "DataFrame.to_s3") {
-      data_frame_manager().to_s3(name, cmd, &socket());
     } else if (type == "delete_project") {
       project_manager().delete_project(name, &socket());
     } else if (type == FLOAT_COLUMN) {
