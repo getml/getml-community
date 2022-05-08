@@ -739,13 +739,10 @@ void DataFrameManager::df_to_db(
     const fct::Ref<containers::Encoding>& _join_keys_encoding) {
   // We are using the bell character (\a) as the quotechar. It is least
   // likely to appear in any field.
-  // TODO
   auto reader = containers::DataFrameReader(
       _df, _categories.ptr(), _join_keys_encoding.ptr(), '\a', '|');
 
   const auto conn = connector(_conn_id);
-
-  assert_true(conn);
 
   const auto statement = io::StatementMaker::make_statement(
       _table_name, conn->dialect(), conn->describe(), reader.colnames(),

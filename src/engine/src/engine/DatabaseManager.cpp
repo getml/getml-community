@@ -1,6 +1,7 @@
 #include "engine/handlers/DatabaseManager.hpp"
 
 #include "database/QuerySplitter.hpp"
+#include "fct/Ref.hpp"
 #include "helpers/StringSplitter.hpp"
 #include "io/Parser.hpp"
 
@@ -15,11 +16,11 @@ DatabaseManager::DatabaseManager(
       monitor_(_monitor),
       options_(_options),
       read_write_lock_(fct::Ref<multithreading::ReadWriteLock>::make()) {
-  connector_map_["default"] =
-      std::make_shared<database::Sqlite3>(database::Sqlite3(
+  connector_map_.emplace(std::make_pair(
+      "default",
+      fct::Ref<database::Sqlite3>::make(database::Sqlite3(
           options_.project_directory() + "database.db",
-          {"%Y-%m-%dT%H:%M:%s%z", "%Y/%m/%d %H:%M:%S", "%Y-%m-%d %H:%M:%S"}));
-
+          {"%Y-%m-%dT%H:%M:%s%z", "%Y/%m/%d %H:%M:%S", "%Y-%m-%d %H:%M:%S"}))));
   post_tables();
 }
 
@@ -50,11 +51,7 @@ void DatabaseManager::copy_table(const Poco::JSON::Object& _cmd,
 
   const auto source_conn = connector(source_conn_id);
 
-  assert_true(source_conn);
-
   const auto target_conn = connector(target_conn_id);
-
-  assert_true(target_conn);
 
   // Infer the table schema from the source connection and create an
   // appropriate table in the target database.
@@ -281,7 +278,14 @@ void DatabaseManager::new_db(const Poco::JSON::Object& _cmd,
 
   multithreading::WriteLock write_lock(read_write_lock_);
 
-  connector_map_[conn_id] = database::DatabaseParser::parse(_cmd, password);
+  const auto it = connector_map_.find(conn_id);
+
+  if (it != connector_map_.end()) {
+    connector_map_.erase(it);
+  }
+
+  connector_map_.emplace(conn_id,
+                         database::DatabaseParser::parse(_cmd, password));
 
   write_lock.unlock();
 
@@ -298,10 +302,7 @@ void DatabaseManager::post_tables() {
   multithreading::ReadLock read_lock(read_write_lock_);
 
   for (const auto& [name, conn] : connector_map_) {
-    assert_true(conn);
-
     const auto tables = conn->list_tables();
-
     obj.set(name, jsonutils::JSON::vector_to_array_ptr(tables));
   }
 

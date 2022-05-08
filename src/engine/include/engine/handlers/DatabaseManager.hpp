@@ -21,6 +21,7 @@
 
 #include "database/database.hpp"
 #include "debug/debug.hpp"
+#include "fct/Ref.hpp"
 
 // ------------------------------------------------------------------------
 
@@ -35,8 +36,7 @@ namespace handlers {
 
 class DatabaseManager {
  private:
-  typedef std::map<std::string, std::shared_ptr<database::Connector>>
-      ConnectorMap;
+  typedef std::map<std::string, fct::Ref<database::Connector>> ConnectorMap;
 
  public:
   DatabaseManager(const fct::Ref<const communication::Logger>& _logger,
@@ -119,20 +119,17 @@ class DatabaseManager {
 
  public:
   /// Trivial accessor
-  const std::shared_ptr<database::Connector> connector(
-      const std::string& _name) {
+  const fct::Ref<database::Connector> connector(const std::string& _name) {
     multithreading::ReadLock read_lock(read_write_lock_);
     const auto conn = utils::Getter::get(_name, connector_map_);
-    assert_true(conn);
     return conn;
   }
 
   /// Trivial accessor
-  const std::shared_ptr<const database::Connector> connector(
+  const fct::Ref<const database::Connector> connector(
       const std::string& _name) const {
     multithreading::ReadLock read_lock(read_write_lock_);
     const auto conn = utils::Getter::get(_name, connector_map_);
-    assert_true(conn);
     return conn;
   }
 

@@ -15,6 +15,7 @@
 // ------------------------------------------------------------------------
 
 #include "debug/debug.hpp"
+#include "fct/Ref.hpp"
 
 // ------------------------------------------------------------------------
 
@@ -403,7 +404,7 @@ class DataFrameManager {
   containers::Encoding& categories() { return *params_.categories_; }
 
   /// Trivial accessor
-  std::shared_ptr<database::Connector> connector(const std::string& _name) {
+  fct::Ref<database::Connector> connector(const std::string& _name) {
     return params_.database_manager_->connector(_name);
   }
 

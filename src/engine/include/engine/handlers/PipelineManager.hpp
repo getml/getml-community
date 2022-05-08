@@ -222,7 +222,7 @@ class PipelineManager {
   }
 
   /// Trivial accessor
-  std::shared_ptr<database::Connector> connector(const std::string& _name) {
+  fct::Ref<database::Connector> connector(const std::string& _name) {
     return params_.database_manager_->connector(_name);
   }
 

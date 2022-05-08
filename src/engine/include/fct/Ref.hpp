@@ -52,10 +52,11 @@ class Ref {
   template <class Y>
   Ref<T>& operator=(const Ref<Y>& _other) {
     ptr_ = _other.ptr();
+    return *this;
   }
 
  private:
-  /// Only make is allowed to used this constructor.
+  /// Only make is allowed to use this constructor.
   explicit Ref(T* _ptr) : ptr_(std::shared_ptr<T>(_ptr)) {}
 
  private:

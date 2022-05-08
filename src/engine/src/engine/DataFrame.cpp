@@ -558,7 +558,7 @@ void DataFrame::from_csv(
 
 // ----------------------------------------------------------------------------
 
-void DataFrame::from_db(const std::shared_ptr<database::Connector> _connector,
+void DataFrame::from_db(fct::Ref<database::Connector> _connector,
                         const std::string &_tname, const Schema &_schema) {
   auto categoricals = make_vectors<Int>(_schema.categoricals_.size());
 
@@ -767,9 +767,8 @@ void DataFrame::from_json(const Poco::JSON::Object &_obj,
 
 // ----------------------------------------------------------------------------
 
-void DataFrame::from_query(
-    const std::shared_ptr<database::Connector> _connector,
-    const std::string &_query, const Schema &_schema) {
+void DataFrame::from_query(const fct::Ref<database::Connector> _connector,
+                           const std::string &_query, const Schema &_schema) {
   auto categoricals = make_vectors<Int>(_schema.categoricals_.size());
 
   auto join_keys = make_vectors<Int>(_schema.join_keys_.size());

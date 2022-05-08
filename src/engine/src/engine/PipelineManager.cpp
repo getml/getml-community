@@ -714,13 +714,10 @@ void PipelineManager::to_db(
 
   // We are using the bell character (\a) as the quotechar. It is least likely
   // to appear in any field.
-  // TODO
   auto reader = containers::DataFrameReader(
       df, _categories.ptr(), _join_keys_encoding.ptr(), '\a', '|');
 
   const auto conn = connector("default");
-
-  assert_true(conn);
 
   const auto statement = io::StatementMaker::make_statement(
       table_name, conn->dialect(), conn->describe(), reader.colnames(),

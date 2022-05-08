@@ -1,15 +1,12 @@
 #include "database/DatabaseSniffer.hpp"
 
 namespace database {
-// ----------------------------------------------------------------------------
 
-std::string DatabaseSniffer::sniff(
-    const std::shared_ptr<const Connector>& _conn, const std::string& _dialect,
-    const Poco::JSON::Object& _description,
-    const std::string& _source_table_name,
-    const std::string& _target_table_name) {
-  assert_true(_conn);
-
+std::string DatabaseSniffer::sniff(const fct::Ref<const Connector>& _conn,
+                                   const std::string& _dialect,
+                                   const Poco::JSON::Object& _description,
+                                   const std::string& _source_table_name,
+                                   const std::string& _target_table_name) {
   const auto colnames = _conn->get_colnames(_source_table_name);
 
   const auto coltypes = _conn->get_coltypes(_source_table_name, colnames);
@@ -20,5 +17,4 @@ std::string DatabaseSniffer::sniff(
                                             _description, colnames, coltypes);
 }
 
-// ----------------------------------------------------------------------------
 }  // namespace database
