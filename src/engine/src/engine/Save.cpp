@@ -52,7 +52,7 @@ void Save::save(const SaveParams& _params) {
   save_predictors(_params.fitted_.predictors_.predictors_, "predictor", tfile);
 
   const auto transpilation_params = transpilation::TranspilationParams{
-      .dialect_ = transpilation::SQLDialectParser::SQLITE3,
+      .dialect_ = transpilation::SQLDialectParser::HUMAN_READABLE_SQL,
       .nchar_categorical_ = 128,
       .nchar_join_key_ = 128,
       .nchar_text_ = 4096,

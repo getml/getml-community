@@ -175,7 +175,6 @@ std::string ToSQL::to_sql(const ToSQLParams& _params) {
   assert_true(_params.fitted_.feature_learners_.size() ==
               _params.fitted_.predictors_.impl_->autofeatures().size());
 
-  // TODO: This needs to return fct::Ref.
   const auto sql_dialect_generator =
       fct::Ref<const transpilation::SQLDialectGenerator>(
           transpilation::SQLDialectParser::parse(
