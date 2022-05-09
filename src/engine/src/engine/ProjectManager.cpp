@@ -143,14 +143,6 @@ void ProjectManager::copy_pipeline(const std::string& _name,
 // ------------------------------------------------------------------------
 
 void ProjectManager::clear() {
-  for (auto& pair : data_frames()) {
-    remove("dataframe", pair.first);
-  }
-
-  for (auto& pair : pipelines()) {
-    remove("pipeline", pair.first);
-  }
-
   data_frames() = std::map<std::string, engine::containers::DataFrame>();
 
   hyperopts() = std::map<std::string, engine::hyperparam::Hyperopt>();
@@ -177,8 +169,6 @@ void ProjectManager::delete_data_frame(const std::string& _name,
 
   FileHandler::remove(_name, project_directory(), _cmd, &data_frames());
 
-  remove("dataframe", _name);
-
   engine::communication::Sender::send_string("Success!", _socket);
 }
 
@@ -190,8 +180,6 @@ void ProjectManager::delete_pipeline(const std::string& _name,
   multithreading::WriteLock write_lock(params_.read_write_lock_);
 
   FileHandler::remove(_name, project_directory(), _cmd, &pipelines());
-
-  remove("pipeline", _name);
 
   communication::Sender::send_string("Success!", _socket);
 }
@@ -416,22 +404,6 @@ void ProjectManager::load_pipeline(const std::string& _name,
 
 void ProjectManager::project_name(Poco::Net::StreamSocket* _socket) const {
   communication::Sender::send_string(params_.project_, _socket);
-}
-
-// ------------------------------------------------------------------------
-
-void ProjectManager::remove(const std::string& _what,
-                            const std::string& _name) const {
-  auto obj = Poco::JSON::Object();
-
-  obj.set("name", _name);
-
-  const auto response = monitor().send_tcp("remove" + _what, obj,
-                                           communication::Monitor::TIMEOUT_ON);
-
-  if (response != "Success!") {
-    throw std::runtime_error(response);
-  }
 }
 
 // ------------------------------------------------------------------------
