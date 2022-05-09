@@ -49,7 +49,6 @@ class ServerConnectionFactoryImpl
   ServerConnectionFactoryImpl(
       const fct::Ref<handlers::DatabaseManager>& _database_manager,
       const fct::Ref<handlers::DataFrameManager>& _data_frame_manager,
-      const fct::Ref<handlers::HyperoptManager>& _hyperopt_manager,
       const fct::Ref<const communication::Logger>& _logger,
       const config::Options& _options,
       const fct::Ref<handlers::PipelineManager>& _pipeline_manager,
@@ -57,7 +56,6 @@ class ServerConnectionFactoryImpl
       const fct::Ref<std::atomic<bool>>& _shutdown)
       : database_manager_(_database_manager),
         data_frame_manager_(_data_frame_manager),
-        hyperopt_manager_(_hyperopt_manager),
         logger_(_logger),
         options_(_options),
         pipeline_manager_(_pipeline_manager),
@@ -69,8 +67,8 @@ class ServerConnectionFactoryImpl
   Poco::Net::TCPServerConnection* createConnection(
       const Poco::Net::StreamSocket& _socket) {
     return new RequestHandler(_socket, database_manager_, data_frame_manager_,
-                              hyperopt_manager_, logger_, pipeline_manager_,
-                              options_, project_manager_, shutdown_);
+                              logger_, pipeline_manager_, options_,
+                              project_manager_, shutdown_);
   }
 
   // -------------------------------------------------------------
@@ -81,9 +79,6 @@ class ServerConnectionFactoryImpl
 
   /// Handles requests related to the data frames.
   const fct::Ref<handlers::DataFrameManager> data_frame_manager_;
-
-  /// Handles requests related to the hyperparameter optimization.
-  const fct::Ref<handlers::HyperoptManager> hyperopt_manager_;
 
   /// Logs commands.
   const fct::Ref<const communication::Logger> logger_;

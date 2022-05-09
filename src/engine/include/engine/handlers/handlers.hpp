@@ -5,7 +5,6 @@
 #include "engine/handlers/DataFrameManagerParams.hpp"
 #include "engine/handlers/DatabaseManager.hpp"
 #include "engine/handlers/FileHandler.hpp"
-#include "engine/handlers/HyperoptManager.hpp"
 #include "engine/handlers/PipelineManager.hpp"
 #include "engine/handlers/PipelineManagerParams.hpp"
 #include "engine/handlers/ProjectManager.hpp"

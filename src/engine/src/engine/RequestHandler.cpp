@@ -143,23 +143,8 @@ void RequestHandler::run() {
       data_frame_manager().set_unit(name, cmd, &socket());
     } else if (type == "FloatColumn.unique") {
       data_frame_manager().get_column_unique(name, cmd, &socket());
-    } else if (type == "GaussianHyperparameterSearch" ||
-               type == "LatinHypercubeSearch" || type == "RandomSearch") {
-      project_manager().add_hyperopt(name, cmd, &socket());
-    } else if (type == "Hyperopt.launch") {
-      hyperopt_manager().launch(name, cmd, &socket());
-    } else if (type == "Hyperopt.load") {
-      project_manager().load_hyperopt(name, &socket());
-    } else if (type == "Hyperopt.refresh") {
-      hyperopt_manager().refresh(name, &socket());
-    } else if (type == "Hyperopt.save") {
-      project_manager().save_hyperopt(name, &socket());
-    } else if (type == "Hyperopt.tune") {
-      hyperopt_manager().tune(name, cmd, &socket());
     } else if (type == "list_data_frames") {
       project_manager().list_data_frames(&socket());
-    } else if (type == "list_hyperopts") {
-      project_manager().list_hyperopts(&socket());
     } else if (type == "list_pipelines") {
       project_manager().list_pipelines(&socket());
     } else if (type == "list_projects") {

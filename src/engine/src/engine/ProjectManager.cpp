@@ -104,18 +104,6 @@ void ProjectManager::add_data_frame_from_view(
 
 // ------------------------------------------------------------------------
 
-void ProjectManager::add_hyperopt(const std::string& _name,
-                                  const Poco::JSON::Object& _cmd,
-                                  Poco::Net::StreamSocket* _socket) {
-  const auto hyperopt = hyperparam::Hyperopt(_cmd);
-
-  set_hyperopt(_name, hyperopt);
-
-  communication::Sender::send_string("Success!", _socket);
-}
-
-// ------------------------------------------------------------------------
-
 void ProjectManager::add_pipeline(const std::string& _name,
                                   const Poco::JSON::Object& _cmd,
                                   Poco::Net::StreamSocket* _socket) {
@@ -144,8 +132,6 @@ void ProjectManager::copy_pipeline(const std::string& _name,
 
 void ProjectManager::clear() {
   data_frames() = std::map<std::string, engine::containers::DataFrame>();
-
-  hyperopts() = std::map<std::string, engine::hyperparam::Hyperopt>();
 
   pipelines() = engine::handlers::PipelineManager::PipelineMapType();
 
@@ -188,8 +174,6 @@ void ProjectManager::delete_pipeline(const std::string& _name,
 
 void ProjectManager::delete_project(const std::string& _name,
                                     Poco::Net::StreamSocket* _socket) {
-  // Some methods, particularly the hyperparameter optimization,
-  // require us to keep the project fixed while they run.
   multithreading::WriteLock project_guard(params_.project_lock_);
 
   multithreading::WriteLock write_lock(params_.read_write_lock_);
@@ -240,28 +224,6 @@ void ProjectManager::list_data_frames(Poco::Net::StreamSocket* _socket) const {
   obj.set("in_memory", in_memory);
 
   obj.set("on_disk", on_disk);
-
-  engine::communication::Sender::send_string("Success!", _socket);
-
-  engine::communication::Sender::send_string(JSON::stringify(obj), _socket);
-}
-
-// ------------------------------------------------------------------------
-
-void ProjectManager::list_hyperopts(Poco::Net::StreamSocket* _socket) const {
-  Poco::JSON::Object obj;
-
-  multithreading::ReadLock read_lock(params_.read_write_lock_);
-
-  Poco::JSON::Array names;
-
-  for (const auto& [key, value] : hyperopts()) {
-    names.add(key);
-  }
-
-  read_lock.unlock();
-
-  obj.set("names", names);
 
   engine::communication::Sender::send_string("Success!", _socket);
 
@@ -374,19 +336,6 @@ void ProjectManager::load_data_frame(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void ProjectManager::load_hyperopt(const std::string& _name,
-                                   Poco::Net::StreamSocket* _socket) {
-  const auto path = project_directory() + "hyperopts/" + _name + "/";
-
-  const auto hyperopt = hyperparam::Hyperopt(path);
-
-  set_hyperopt(_name, hyperopt);
-
-  engine::communication::Sender::send_string("Success!", _socket);
-}
-
-// ------------------------------------------------------------------------
-
 void ProjectManager::load_pipeline(const std::string& _name,
                                    Poco::Net::StreamSocket* _socket) {
   const auto path = project_directory() + "pipelines/" + _name + "/";
@@ -438,20 +387,6 @@ void ProjectManager::save_data_frame(const std::string& _name,
 
   FileHandler::save_encodings(project_directory(), params_.categories_.ptr(),
                               params_.join_keys_encoding_.ptr());
-
-  communication::Sender::send_string("Success!", _socket);
-}
-
-// ------------------------------------------------------------------------
-
-void ProjectManager::save_hyperopt(const std::string& _name,
-                                   Poco::Net::StreamSocket* _socket) {
-  multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
-
-  const auto hyperopt = utils::Getter::get(_name, hyperopts());
-
-  hyperopt.save(params_.options_.temp_dir(), project_directory() + "hyperopts/",
-                _name);
 
   communication::Sender::send_string("Success!", _socket);
 }
