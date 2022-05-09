@@ -305,9 +305,6 @@ void DatabaseManager::post_tables() {
     const auto tables = conn->list_tables();
     obj.set(name, jsonutils::JSON::vector_to_array_ptr(tables));
   }
-
-  monitor_->send_tcp("postdatabasetables", obj,
-                     communication::Monitor::TIMEOUT_ON);
 }
 
 // ----------------------------------------------------------------------------

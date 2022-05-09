@@ -674,9 +674,6 @@ void PipelineManager::store_df(
   }
 
   data_frames()[_df->name()] = *_df;
-
-  params_.monitor_->send_tcp("postdataframe", _df->to_monitor(),
-                             communication::Monitor::TIMEOUT_ON);
 }
 
 // ------------------------------------------------------------------------
