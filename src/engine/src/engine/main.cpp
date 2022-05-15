@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <csignal>
+#include <stdexcept>
 
 #include "engine/handlers/DataFrameManagerParams.hpp"
 
@@ -49,8 +50,8 @@ int main(int argc, char* argv[]) {
   const auto monitor =
       fct::Ref<const engine::communication::Monitor>::make(options);
 
-  const auto logger = fct::Ref<const engine::communication::Logger>::make(
-      monitor.ptr());  // TODO
+  const auto logger =
+      fct::Ref<const engine::communication::Logger>::make(monitor.ptr());
 
   const auto pool = options.make_pool();
 
@@ -66,8 +67,7 @@ int main(int argc, char* argv[]) {
       fct::Ref<engine::handlers::PipelineManager::PipelineMapType>::make();
 
   const auto data_frame_tracker =
-      fct::Ref<engine::dependency::DataFrameTracker>::make(
-          data_frames.ptr());  // TODO
+      fct::Ref<engine::dependency::DataFrameTracker>::make(data_frames.ptr());
 
   const auto preprocessor_tracker =
       fct::Ref<engine::dependency::PreprocessorTracker>::make();
