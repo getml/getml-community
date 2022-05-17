@@ -177,9 +177,9 @@ class ColumnView {
                              const bool _expected_length_not_passed) const;
 
   /// Generates the arrow::ChunkedArray.
-  template <class IteratorType>
+  template <class IteratorType1, class IteratorType2>
   std::shared_ptr<arrow::ChunkedArray> make_array(
-      const IteratorType _begin, const IteratorType _end) const;
+      const IteratorType1 _begin, const IteratorType2 _end) const;
 
 #if (defined(_WIN32) || defined(_WIN64) || defined(__APPLE__))
 #else
@@ -586,9 +586,9 @@ ColumnView<T> ColumnView<T>::from_value(const T _value) {
 // -------------------------------------------------------------------------
 
 template <class T>
-template <class IteratorType>
+template <class IteratorType1, class IteratorType2>
 std::shared_ptr<arrow::ChunkedArray> ColumnView<T>::make_array(
-    const IteratorType _begin, const IteratorType _end) const {
+    const IteratorType1 _begin, const IteratorType2 _end) const {
   if constexpr (std::is_same<T, bool>()) {
     return ArrayMaker::make_boolean_array(_begin, _end);
   }

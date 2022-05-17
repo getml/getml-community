@@ -112,8 +112,8 @@ class Aggregations {
   }
 
   /// Counts the non-null number of entries.
-  template <class IteratorType>
-  static Float count_categorical(IteratorType _begin, IteratorType _end) {
+  template <class IteratorType1, class IteratorType2>
+  static Float count_categorical(IteratorType1 _begin, IteratorType2 _end) {
     Float result = 0.0;
 
     for (auto it = _begin; it != _end; ++it) {
@@ -138,8 +138,8 @@ class Aggregations {
   }
 
   /// Counts the distinct number of entries.
-  template <class IteratorType>
-  static Float count_distinct(IteratorType _begin, IteratorType _end) {
+  template <class IteratorType1, class IteratorType2>
+  static Float count_distinct(IteratorType1 _begin, IteratorType2 _end) {
     using ConstValueType =
         typename std::remove_reference<decltype(*_begin)>::type;
 
