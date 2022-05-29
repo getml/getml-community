@@ -222,8 +222,6 @@ Poco::JSON::Array::Ptr Summarizer::calculate_average_targets(
 Poco::JSON::Object Summarizer::calculate_feature_plots(
     const Features& _features, const size_t _nrows, const size_t _ncols,
     const size_t _num_bins, const std::vector<const Float*>& _targets) {
-  // ------------------------------------------------------------------------
-
   if (_num_bins > 100000) {
     throw std::runtime_error("Number of bins cannot be greater than 100000!");
   }
@@ -498,7 +496,8 @@ void Summarizer::calculate_step_sizes_and_num_bins(
 
     const auto max = _maxima[j];
 
-    if (min >= max) {
+    if (min >= max || std::isinf(min) || std::isnan(min) || std::isinf(max) ||
+        std::isnan(max)) {
       continue;
     }
 
