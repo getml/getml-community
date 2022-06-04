@@ -2,6 +2,9 @@
 
 #include <algorithm>
 
+#include "fct/collect.hpp"
+#include "transpilation/SQLGenerator.hpp"
+
 namespace engine {
 namespace pipelines {
 
@@ -126,6 +129,57 @@ ToSQL::make_staging_schemata(const FittedPipeline& _fitted) {
 
 // ----------------------------------------------------------------------------
 
+std::vector<std::string> ToSQL::overwrite_oversized_features(
+    const fct::Ref<const transpilation::SQLDialectGenerator>&
+        _sql_dialect_generator,
+    const std::vector<std::string>& _feature_names,
+    const std::vector<std::string>& _features,
+    const std::optional<size_t> _size_threshold) {
+  if (!_size_threshold) {
+    return _features;
+  }
+
+  assert_true(_features.size() == _feature_names.size());
+
+  const auto make_feature = [&_sql_dialect_generator, &_feature_names,
+                             &_features,
+                             &_size_threshold](const size_t _i) -> std::string {
+    const auto& feature = _features.at(_i);
+
+    if (feature.size() <= *_size_threshold) {
+      return feature;
+    }
+
+    std::stringstream sql;
+
+    const auto feature_name =
+        transpilation::SQLGenerator::to_upper(_feature_names.at(_i));
+
+    sql << "-- The size of the SQL code of " << feature_name << " is "
+        << feature.size()
+        << " characters, which is greater than the size_threshold of "
+        << *_size_threshold << "!" << std::endl
+        << "-- To display very long features like this anyway, "
+        << "increase the size_threshold or "
+        << "set the size_threshold to None." << std::endl
+        << _sql_dialect_generator->drop_table_if_exists(feature_name)
+        << "CREATE TABLE " << _sql_dialect_generator->quotechar1()
+        << feature_name << _sql_dialect_generator->quotechar2() << ";"
+        << std::endl
+        << std::endl
+        << std::endl;
+
+    return sql.str();
+  };
+
+  const auto iota = fct::iota<size_t>(0, _features.size());
+
+  return fct::collect::vector<std::string>(iota |
+                                           VIEWS::transform(make_feature));
+}
+
+// ----------------------------------------------------------------------------
+
 std::vector<std::string> ToSQL::preprocessors_to_sql(
     const ToSQLParams& _params,
     const fct::Ref<const transpilation::SQLDialectGenerator>&
@@ -175,11 +229,8 @@ std::string ToSQL::to_sql(const ToSQLParams& _params) {
   assert_true(_params.fitted_.feature_learners_.size() ==
               _params.fitted_.predictors_.impl_->autofeatures().size());
 
-  // TODO: This needs to return fct::Ref.
   const auto sql_dialect_generator =
-      fct::Ref<const transpilation::SQLDialectGenerator>(
-          transpilation::SQLDialectParser::parse(
-              _params.transpilation_params_));
+      transpilation::SQLDialectParser::parse(_params.transpilation_params_);
 
   const auto staging = _params.full_pipeline_
                            ? staging_to_sql(_params, sql_dialect_generator)
@@ -190,18 +241,21 @@ std::string ToSQL::to_sql(const ToSQLParams& _params) {
           ? preprocessors_to_sql(_params, sql_dialect_generator)
           : std::vector<std::string>();
 
-  const auto features = feature_learners_to_sql(_params, sql_dialect_generator);
+  const auto feature_names = make_autofeature_names(_params.fitted_);
+
+  const auto features = overwrite_oversized_features(
+      sql_dialect_generator, feature_names,
+      feature_learners_to_sql(_params, sql_dialect_generator),
+      _params.size_threshold_);
 
   const auto sql =
       fct::join::vector<std::string>({staging, preprocessing, features});
-
-  const auto autofeatures = make_autofeature_names(_params.fitted_);
 
   const auto target_names =
       _params.targets_ ? _params.fitted_.targets() : std::vector<std::string>();
 
   return sql_dialect_generator->make_sql(
-      _params.fitted_.modified_population_schema_->name_, autofeatures, sql,
+      _params.fitted_.modified_population_schema_->name_, feature_names, sql,
       target_names, _params.fitted_.predictors_.impl_->categorical_colnames(),
       _params.fitted_.predictors_.impl_->numerical_colnames());
 }

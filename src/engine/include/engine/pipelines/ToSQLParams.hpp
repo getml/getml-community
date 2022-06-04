@@ -40,6 +40,11 @@ struct ToSQLParams {
   /// The underlying pipeline,
   const Pipeline pipeline_;
 
+  /// If the feature is longer than the threshold, it will not be sent. This is
+  /// to prevent the iPython notebook from overflowing and/or unexpectedly high
+  /// memory usage in Python.
+  const std::optional<size_t> size_threshold_;
+
   /// Whether we want to include the targets in the transpiled code (needed to
   /// generate a training set)
   const bool targets_;

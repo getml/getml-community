@@ -776,6 +776,11 @@ void PipelineManager::to_sql(const std::string& _name,
 
   const auto subfeatures = JSON::get_value<bool>(_cmd, "subfeatures_");
 
+  const auto size_threshold =
+      _cmd.has("size_threshold_")
+          ? JSON::get_value<size_t>(_cmd, "size_threshold_")
+          : std::optional<size_t>();
+
   const auto transpilation_params =
       transpilation::TranspilationParams::from_json(_cmd);
 
@@ -796,6 +801,7 @@ void PipelineManager::to_sql(const std::string& _name,
                              .fitted_ = *fitted,
                              .full_pipeline_ = subfeatures,
                              .pipeline_ = pipeline,
+                             .size_threshold_ = size_threshold,
                              .targets_ = targets,
                              .transpilation_params_ = transpilation_params};
 

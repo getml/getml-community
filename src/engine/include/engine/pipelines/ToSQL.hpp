@@ -44,6 +44,15 @@ class ToSQL {
   static std::pair<containers::Schema, std::vector<containers::Schema>>
   make_staging_schemata(const FittedPipeline& _fitted);
 
+  /// Sometimes features can get excessively long, which makes it hard to
+  /// display them in the iPython notebook. This takes care of this problem.
+  static std::vector<std::string> overwrite_oversized_features(
+      const fct::Ref<const transpilation::SQLDialectGenerator>&
+          _sql_dialect_generator,
+      const std::vector<std::string>& _autofeature_names,
+      const std::vector<std::string>& _autofeatures,
+      const std::optional<size_t> _size_threshold);
+
   /// Expresses the preprocessing part as SQL code.
   static std::vector<std::string> preprocessors_to_sql(
       const ToSQLParams& _params,
