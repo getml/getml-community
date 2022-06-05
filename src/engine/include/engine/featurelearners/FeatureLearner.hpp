@@ -19,10 +19,8 @@
 
 #include "debug/debug.hpp"
 #include "fastprop/algorithm/algorithm.hpp"
+#include "fastprop/subfeatures/subfeatures.hpp"
 #include "helpers/helpers.hpp"
-#include "multirel/ensemble/ensemble.hpp"
-#include "relboost/ensemble/ensemble.hpp"
-#include "relmt/ensemble/ensemble.hpp"
 
 // ----------------------------------------------------------------------------
 
@@ -49,20 +47,6 @@ class FeatureLearner : public AbstractFeatureLearner {
   /// Whether this is a FastProp algorithm
   static constexpr bool is_fastprop_ =
       std::is_same<FeatureLearnerType, fastprop::algorithm::FastProp>();
-
-  /// Whether this is multirel.
-  static constexpr bool is_multirel_ =
-      std::is_same<FeatureLearnerType,
-                   multirel::ensemble::DecisionTreeEnsemble>();
-
-  /// Whether this is relboost.
-  static constexpr bool is_relboost_ =
-      std::is_same<FeatureLearnerType,
-                   relboost::ensemble::DecisionTreeEnsemble>();
-
-  /// Whether this is relmt.
-  static constexpr bool is_relmt_ =
-      std::is_same<FeatureLearnerType, relmt::ensemble::DecisionTreeEnsemble>();
 
   /// Because FastProp are propositionalization
   /// approaches themselves, they do not have a propositionalization
@@ -790,21 +774,6 @@ bool FeatureLearner<FeatureLearnerType>::parse_subroles(
     return !helpers::SubroleParser::contains_any(_subroles, blacklist);
   }
 
-  if constexpr (is_multirel_) {
-    blacklist.push_back(helpers::Subrole::exclude_multirel);
-    return !helpers::SubroleParser::contains_any(_subroles, blacklist);
-  }
-
-  if constexpr (is_relboost_) {
-    blacklist.push_back(helpers::Subrole::exclude_relboost);
-    return !helpers::SubroleParser::contains_any(_subroles, blacklist);
-  }
-
-  if constexpr (is_relmt_) {
-    blacklist.push_back(helpers::Subrole::exclude_relmt);
-    return !helpers::SubroleParser::contains_any(_subroles, blacklist);
-  }
-
   assert_true(false);
 
   return true;
@@ -1032,25 +1001,12 @@ FeatureLearner<FeatureLearnerType>::transform_propositionalization(
 
 template <typename FeatureLearnerType>
 std::string FeatureLearner<FeatureLearnerType>::type() const {
-  constexpr bool unknown_feature_learner =
-      !is_fastprop_ && !is_multirel_ && !is_relboost_ && !is_relmt_;
+  constexpr bool unknown_feature_learner = !is_fastprop_;
 
   static_assert(!unknown_feature_learner, "Unknown feature learner!");
 
   if constexpr (is_fastprop_) {
     return AbstractFeatureLearner::FASTPROP;
-  }
-
-  if constexpr (is_multirel_) {
-    return AbstractFeatureLearner::MULTIREL;
-  }
-
-  if constexpr (is_relboost_) {
-    return AbstractFeatureLearner::RELBOOST;
-  }
-
-  if constexpr (is_relmt_) {
-    return AbstractFeatureLearner::RELMT;
   }
 }
 

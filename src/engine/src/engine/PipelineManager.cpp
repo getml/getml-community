@@ -279,8 +279,6 @@ void PipelineManager::deploy(const std::string& _name,
 
   set_pipeline(_name, pipeline);
 
-  post_pipeline(pipeline.to_monitor(categories().strings(), _name));
-
   communication::Sender::send_string("Success!", _socket);
 }
 
@@ -404,8 +402,6 @@ void PipelineManager::fit(const std::string& _name,
 
   weak_write_lock.unlock();
 
-  post_pipeline(pipeline.to_monitor(categories().strings(), _name));
-
   communication::Sender::send_string("Trained pipeline.", _socket);
 }
 
@@ -474,17 +470,6 @@ void PipelineManager::lift_curve(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::post_pipeline(const Poco::JSON::Object& _obj) {
-  const auto response = monitor().send_tcp("postpipeline", _obj,
-                                           communication::Monitor::TIMEOUT_ON);
-
-  if (response != "Success!") {
-    throw std::runtime_error(response);
-  }
-}
-
-// ------------------------------------------------------------------------
-
 void PipelineManager::precision_recall_curve(const std::string& _name,
                                              const Poco::JSON::Object& _cmd,
                                              Poco::Net::StreamSocket* _socket) {
@@ -527,7 +512,6 @@ Poco::JSON::Object PipelineManager::receive_data(
                              .database_manager_ = params_.database_manager_,
                              .data_frames_ = _data_frames,
                              .join_keys_encoding_ = _join_keys_encoding,
-                             .license_checker_ = params_.license_checker_,
                              .logger_ = params_.logger_,
                              .monitor_ = params_.monitor_,
                              .options_ = params_.options_,
@@ -660,8 +644,6 @@ void PipelineManager::score(const Poco::JSON::Object& _cmd,
 
   set_pipeline(_name, pipeline);
 
-  post_pipeline(pipeline.to_monitor(categories().strings(), _name));
-
   communication::Sender::send_string(JSON::stringify(scores_obj), _socket);
 }
 
@@ -692,9 +674,6 @@ void PipelineManager::store_df(
   }
 
   data_frames()[_df->name()] = *_df;
-
-  params_.monitor_->send_tcp("postdataframe", _df->to_monitor(),
-                             communication::Monitor::TIMEOUT_ON);
 }
 
 // ------------------------------------------------------------------------

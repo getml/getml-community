@@ -22,7 +22,6 @@
 #include "engine/communication/communication.hpp"
 #include "engine/config/config.hpp"
 #include "engine/containers/containers.hpp"
-#include "engine/licensing/licensing.hpp"
 
 // ------------------------------------------------------------------------
 
@@ -124,10 +123,6 @@ class DataFrameManager {
   /// Creates a new data frame from a database query.
   void from_query(const std::string& _name, const Poco::JSON::Object& _cmd,
                   const bool _append, Poco::Net::StreamSocket* _socket);
-
-  /// Creates a new data frame from a set of S3 files located in a bucket.
-  void from_s3(const std::string& _name, const Poco::JSON::Object& _cmd,
-               const bool _append, Poco::Net::StreamSocket* _socket);
 
   /// Creates a new data frame from a view.
   void from_view(const std::string& _name, const Poco::JSON::Object& _cmd,
@@ -427,16 +422,6 @@ class DataFrameManager {
   /// Trivial accessor
   containers::Encoding& join_keys_encoding() {
     return *params_.join_keys_encoding_;
-  }
-
-  /// Trivial accessor
-  licensing::LicenseChecker& license_checker() {
-    return *params_.license_checker_;
-  }
-
-  /// Trivial accessor
-  const licensing::LicenseChecker& license_checker() const {
-    return *params_.license_checker_;
   }
 
   /// Trivial accessor

@@ -2,7 +2,6 @@ set(
     IO_OBJ 
     ${IO_SOURCE_DIRECTORY}/CSVReader.cpp
     ${IO_SOURCE_DIRECTORY}/CSVWriter.cpp
-    ${IO_SOURCE_DIRECTORY}/S3Reader.cpp
     ${IO_SOURCE_DIRECTORY}/StatementMaker.cpp
 )
 

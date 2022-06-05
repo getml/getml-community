@@ -226,9 +226,6 @@ Poco::JSON::Object Summarizer::calculate_feature_plots(
     throw std::runtime_error("Number of bins cannot be greater than 100000!");
   }
 
-  // ------------------------------------------------------------------------
-  // Find minima and maxima
-
   auto minima = std::vector<Float>(0);
 
   auto maxima = std::vector<Float>(0);
@@ -502,6 +499,11 @@ void Summarizer::calculate_step_sizes_and_num_bins(
     }
 
     (*_step_sizes)[j] = (max - min) / _num_bins;
+
+    if (min >= max || std::isinf(min) || std::isnan(min) || std::isinf(max) ||
+        std::isnan(max)) {
+      continue;
+    }
 
     (*_actual_num_bins)[j] =
         static_cast<size_t>((max - min) / (*_step_sizes)[j]);

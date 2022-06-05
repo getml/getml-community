@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <csignal>
+#include <stdexcept>
 
 #include "engine/handlers/DataFrameManagerParams.hpp"
 
@@ -49,19 +50,8 @@ int main(int argc, char* argv[]) {
   const auto monitor =
       fct::Ref<const engine::communication::Monitor>::make(options);
 
-  const auto logger = fct::Ref<const engine::communication::Logger>::make(
-      monitor.ptr());  // TODO
-
-  const auto license_checker =
-      fct::Ref<engine::licensing::LicenseChecker>::make(logger, monitor,
-                                                        options);
-
-  license_checker->receive_token("main");
-
-  if (!license_checker->has_active_token()) {
-    logger->log("License server authentication failed.");
-    return 0;
-  }
+  const auto logger =
+      fct::Ref<const engine::communication::Logger>::make(monitor.ptr());
 
   const auto pool = options.make_pool();
 
@@ -73,15 +63,11 @@ int main(int argc, char* argv[]) {
   const auto data_frames =
       fct::Ref<std::map<std::string, engine::containers::DataFrame>>::make();
 
-  const auto hyperopts =
-      fct::Ref<std::map<std::string, engine::hyperparam::Hyperopt>>::make();
-
   const auto pipelines =
       fct::Ref<engine::handlers::PipelineManager::PipelineMapType>::make();
 
   const auto data_frame_tracker =
-      fct::Ref<engine::dependency::DataFrameTracker>::make(
-          data_frames.ptr());  // TODO
+      fct::Ref<engine::dependency::DataFrameTracker>::make(data_frames.ptr());
 
   const auto preprocessor_tracker =
       fct::Ref<engine::dependency::PreprocessorTracker>::make();
@@ -107,7 +93,6 @@ int main(int argc, char* argv[]) {
           .database_manager_ = database_manager,
           .data_frames_ = data_frames,
           .join_keys_encoding_ = join_keys_encoding,
-          .license_checker_ = license_checker,
           .logger_ = logger,
           .monitor_ = monitor,
           .options_ = options,
@@ -117,10 +102,6 @@ int main(int argc, char* argv[]) {
       fct::Ref<engine::handlers::DataFrameManager>::make(
           data_frame_manager_params);
 
-  const auto hyperopt_manager =
-      fct::Ref<engine::handlers::HyperoptManager>::make(
-          hyperopts, monitor, project_lock, read_write_lock);
-
   const auto pipeline_manager_params = engine::handlers::PipelineManagerParams{
       .categories_ = categories,
       .database_manager_ = database_manager,
@@ -128,7 +109,6 @@ int main(int argc, char* argv[]) {
       .data_frame_tracker_ = data_frame_tracker,
       .fe_tracker_ = fe_tracker,
       .join_keys_encoding_ = join_keys_encoding,
-      .license_checker_ = license_checker,
       .logger_ = logger,
       .monitor_ = monitor,
       .options_ = options,
@@ -149,9 +129,7 @@ int main(int argc, char* argv[]) {
       .data_frames_ = data_frames,
       .data_frame_tracker_ = data_frame_tracker,
       .fe_tracker_ = fe_tracker,
-      .hyperopts_ = hyperopts,
       .join_keys_encoding_ = join_keys_encoding,
-      .license_checker_ = license_checker,
       .logger_ = logger,
       .monitor_ = monitor,
       .options_ = options,
@@ -174,8 +152,8 @@ int main(int argc, char* argv[]) {
 
   Poco::Net::TCPServer srv(
       new engine::srv::ServerConnectionFactoryImpl(
-          database_manager, data_frame_manager, hyperopt_manager, logger,
-          options, pipeline_manager, project_manager, shutdown_flag),
+          database_manager, data_frame_manager, logger, options,
+          pipeline_manager, project_manager, shutdown_flag),
       server_socket);
 
   srv.start();

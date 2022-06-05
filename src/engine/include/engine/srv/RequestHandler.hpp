@@ -54,7 +54,6 @@ class RequestHandler : public Poco::Net::TCPServerConnection {
       const Poco::Net::StreamSocket& _socket,
       const fct::Ref<handlers::DatabaseManager>& _database_manager,
       const fct::Ref<handlers::DataFrameManager>& _data_frame_manager,
-      const fct::Ref<handlers::HyperoptManager>& _hyperopt_manager,
       const fct::Ref<const communication::Logger>& _logger,
       const fct::Ref<handlers::PipelineManager>& _pipeline_manager,
       const config::Options& _options,
@@ -63,7 +62,6 @@ class RequestHandler : public Poco::Net::TCPServerConnection {
       : Poco::Net::TCPServerConnection(_socket),
         database_manager_(_database_manager),
         data_frame_manager_(_data_frame_manager),
-        hyperopt_manager_(_hyperopt_manager),
         logger_(_logger),
         pipeline_manager_(_pipeline_manager),
         options_(_options),
@@ -87,9 +85,6 @@ class RequestHandler : public Poco::Net::TCPServerConnection {
   }
 
   /// Trivial accessor
-  handlers::HyperoptManager& hyperopt_manager() { return *hyperopt_manager_; }
-
-  /// Trivial accessor
   const communication::Logger& logger() { return *logger_; }
 
   /// Trivial accessor
@@ -106,9 +101,6 @@ class RequestHandler : public Poco::Net::TCPServerConnection {
 
   /// Handles requests related to the data frames.
   const fct::Ref<handlers::DataFrameManager> data_frame_manager_;
-
-  /// Handles all requests related to the hyperparameter optimization
-  const fct::Ref<handlers::HyperoptManager>& hyperopt_manager_;
 
   /// Logs commands.
   const fct::Ref<const communication::Logger> logger_;

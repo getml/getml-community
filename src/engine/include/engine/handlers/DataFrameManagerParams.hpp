@@ -21,7 +21,6 @@
 #include "engine/communication/communication.hpp"
 #include "engine/config/config.hpp"
 #include "engine/containers/containers.hpp"
-#include "engine/licensing/licensing.hpp"
 
 // ------------------------------------------------------------------------
 
@@ -44,9 +43,6 @@ struct DataFrameManagerParams {
 
   /// Maps integers to join key names
   const fct::Ref<containers::Encoding> join_keys_encoding_;
-
-  /// For checking the license and memory usage
-  const fct::Ref<licensing::LicenseChecker> license_checker_;
 
   /// For logging
   const fct::Ref<const communication::Logger> logger_;

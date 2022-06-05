@@ -18,12 +18,9 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/FileHandler.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Fit.cpp
     ${ENGINE_SOURCE_DIRECTORY}/FittedPipeline.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/Hyperopt.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/HyperoptManager.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Imputation.cpp
     ${ENGINE_SOURCE_DIRECTORY}/InMemoryEncoding.cpp
     ${ENGINE_SOURCE_DIRECTORY}/JSON.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/LicenseChecker.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Load.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Logger.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Mapping.cpp
@@ -50,6 +47,5 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/ToSQL.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Transform.cpp
     ${ENGINE_SOURCE_DIRECTORY}/TextFieldSplitter.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/Token.cpp
     ${ENGINE_SOURCE_DIRECTORY}/ViewParser.cpp
 )

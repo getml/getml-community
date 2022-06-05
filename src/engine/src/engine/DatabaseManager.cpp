@@ -305,9 +305,6 @@ void DatabaseManager::post_tables() {
     const auto tables = conn->list_tables();
     obj.set(name, jsonutils::JSON::vector_to_array_ptr(tables));
   }
-
-  monitor_->send_tcp("postdatabasetables", obj,
-                     communication::Monitor::TIMEOUT_ON);
 }
 
 // ----------------------------------------------------------------------------
@@ -360,61 +357,6 @@ void DatabaseManager::read_csv(const std::string& _name,
   }
 
   communication::Sender::send_string("Success!", _socket);
-}
-
-// ----------------------------------------------------------------------------
-
-void DatabaseManager::read_s3(const std::string& _name,
-                              const Poco::JSON::Object& _cmd,
-                              Poco::Net::StreamSocket* _socket) {
-#if (defined(_WIN32) || defined(_WIN64))
-  throw std::runtime_error("S3 is not supported on Windows!");
-#else
-
-  const auto bucket = JSON::get_value<std::string>(_cmd, "bucket_");
-
-  auto colnames = std::optional<std::vector<std::string>>();
-
-  if (_cmd.has("colnames_")) {
-    colnames =
-        JSON::array_to_vector<std::string>(JSON::get_array(_cmd, "colnames_"));
-  }
-
-  const auto conn_id = JSON::get_value<std::string>(_cmd, "conn_id_");
-
-  const auto keys =
-      JSON::array_to_vector<std::string>(JSON::get_array(_cmd, "keys_"));
-
-  const auto num_lines_read = JSON::get_value<size_t>(_cmd, "num_lines_read_");
-
-  const auto region = JSON::get_value<std::string>(_cmd, "region_");
-
-  const auto sep = JSON::get_value<std::string>(_cmd, "sep_");
-
-  const auto skip = JSON::get_value<size_t>(_cmd, "skip_");
-
-  if (sep.size() != 1) {
-    throw std::runtime_error(
-        "The separator (sep) must consist of exactly one character!");
-  }
-
-  auto limit = num_lines_read > 0 ? num_lines_read + skip : num_lines_read;
-
-  if (!colnames && limit > 0) {
-    ++limit;
-  }
-
-  for (const auto& key : keys) {
-    auto reader = io::S3Reader(bucket, colnames, key, limit, region, sep[0]);
-
-    connector(conn_id)->read(_name, skip, &reader);
-
-    logger().log("Read '" + key + "'.");
-  }
-
-  communication::Sender::send_string("Success!", _socket);
-
-#endif
 }
 
 // ----------------------------------------------------------------------------
@@ -482,69 +424,6 @@ void DatabaseManager::sniff_csv(const std::string& _name,
   communication::Sender::send_string("Success!", _socket);
 
   communication::Sender::send_string(create_table_statement, _socket);
-}
-
-// ----------------------------------------------------------------------------
-
-void DatabaseManager::sniff_s3(const std::string& _name,
-                               const Poco::JSON::Object& _cmd,
-                               Poco::Net::StreamSocket* _socket) const {
-#if (defined(_WIN32) || defined(_WIN64))
-  throw std::runtime_error("S3 is not supported on Windows!");
-#else
-
-  const auto bucket = JSON::get_value<std::string>(_cmd, "bucket_");
-
-  auto colnames = std::optional<std::vector<std::string>>();
-
-  if (_cmd.has("colnames_")) {
-    colnames =
-        JSON::array_to_vector<std::string>(JSON::get_array(_cmd, "colnames_"));
-  }
-
-  const auto conn_id = JSON::get_value<std::string>(_cmd, "conn_id_");
-
-  const auto keys =
-      JSON::array_to_vector<std::string>(JSON::get_array(_cmd, "keys_"));
-
-  const auto num_lines_sniffed =
-      JSON::get_value<size_t>(_cmd, "num_lines_sniffed_");
-
-  const auto region = JSON::get_value<std::string>(_cmd, "region_");
-
-  const auto sep = JSON::get_value<std::string>(_cmd, "sep_");
-
-  const auto skip = JSON::get_value<size_t>(_cmd, "skip_");
-
-  const auto dialect = _cmd.has("dialect_")
-                           ? JSON::get_value<std::string>(_cmd, "dialect_")
-                           : connector(conn_id)->dialect();
-
-  const auto conn_description = _cmd.has("dialect_")
-                                    ? Poco::JSON::Object()
-                                    : connector(conn_id)->describe();
-
-  if (_cmd.has("dialect_") && dialect != "python") {
-    throw std::runtime_error(
-        "If you explicitly pass a dialect, it must be 'python'!");
-  }
-
-  if (sep.size() != 1) {
-    throw std::runtime_error(
-        "The separator (sep) must consist of exactly one character!");
-  }
-
-  auto sniffer =
-      io::S3Sniffer(bucket, colnames, conn_description, dialect, keys,
-                    num_lines_sniffed, region, sep[0], skip, _name);
-
-  const auto create_table_statement = sniffer.sniff();
-
-  communication::Sender::send_string("Success!", _socket);
-
-  communication::Sender::send_string(create_table_statement, _socket);
-
-#endif
 }
 
 // ----------------------------------------------------------------------------

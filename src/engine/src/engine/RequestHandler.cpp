@@ -49,14 +49,10 @@ void RequestHandler::run() {
       database_manager().new_db(cmd, &socket());
     } else if (type == "Database.read_csv") {
       database_manager().read_csv(name, cmd, &socket());
-    } else if (type == "Database.read_s3") {
-      database_manager().read_s3(name, cmd, &socket());
     } else if (type == "Database.refresh") {
       database_manager().refresh(&socket());
     } else if (type == "Database.sniff_csv") {
       database_manager().sniff_csv(name, cmd, &socket());
-    } else if (type == "Database.sniff_s3") {
-      database_manager().sniff_s3(name, cmd, &socket());
     } else if (type == "Database.sniff_table") {
       database_manager().sniff_table(name, cmd, &socket());
     } else if (type == "DataContainer.load") {
@@ -109,8 +105,6 @@ void RequestHandler::run() {
       project_manager().add_data_frame_from_csv(name, cmd, &socket());
     } else if (type == "DataFrame.read_parquet") {
       project_manager().add_data_frame_from_parquet(name, cmd, &socket());
-    } else if (type == "DataFrame.read_s3") {
-      project_manager().add_data_frame_from_s3(name, cmd, &socket());
     } else if (type == "DataFrame.refresh") {
       data_frame_manager().refresh(name, &socket());
     } else if (type == "DataFrame.remove_column") {
@@ -127,8 +121,6 @@ void RequestHandler::run() {
       data_frame_manager().to_db(name, cmd, &socket());
     } else if (type == "DataFrame.to_parquet") {
       data_frame_manager().to_parquet(name, cmd, &socket());
-    } else if (type == "DataFrame.to_s3") {
-      data_frame_manager().to_s3(name, cmd, &socket());
     } else if (type == "delete_project") {
       project_manager().delete_project(name, &socket());
     } else if (type == FLOAT_COLUMN) {
@@ -151,23 +143,8 @@ void RequestHandler::run() {
       data_frame_manager().set_unit(name, cmd, &socket());
     } else if (type == "FloatColumn.unique") {
       data_frame_manager().get_column_unique(name, cmd, &socket());
-    } else if (type == "GaussianHyperparameterSearch" ||
-               type == "LatinHypercubeSearch" || type == "RandomSearch") {
-      project_manager().add_hyperopt(name, cmd, &socket());
-    } else if (type == "Hyperopt.launch") {
-      hyperopt_manager().launch(name, cmd, &socket());
-    } else if (type == "Hyperopt.load") {
-      project_manager().load_hyperopt(name, &socket());
-    } else if (type == "Hyperopt.refresh") {
-      hyperopt_manager().refresh(name, &socket());
-    } else if (type == "Hyperopt.save") {
-      project_manager().save_hyperopt(name, &socket());
-    } else if (type == "Hyperopt.tune") {
-      hyperopt_manager().tune(name, cmd, &socket());
     } else if (type == "list_data_frames") {
       project_manager().list_data_frames(&socket());
-    } else if (type == "list_hyperopts") {
-      project_manager().list_hyperopts(&socket());
     } else if (type == "list_pipelines") {
       project_manager().list_pipelines(&socket());
     } else if (type == "list_projects") {
@@ -214,10 +191,6 @@ void RequestHandler::run() {
       pipeline_manager().to_sql(name, cmd, &socket());
     } else if (type == "Pipeline.transform") {
       pipeline_manager().transform(name, cmd, &socket());
-    } else if (type == "set_s3_access_key_id") {
-      database_manager().set_s3_access_key_id(&socket());
-    } else if (type == "set_s3_secret_access_key") {
-      database_manager().set_s3_secret_access_key(&socket());
     } else if (type == "shutdown") {
       *shutdown_ = true;
     } else if (type == STRING_COLUMN) {
@@ -252,8 +225,6 @@ void RequestHandler::run() {
       data_frame_manager().view_to_db(name, cmd, &socket());
     } else if (type == "View.to_parquet") {
       data_frame_manager().view_to_parquet(name, cmd, &socket());
-    } else if (type == "View.to_s3") {
-      data_frame_manager().view_to_s3(name, cmd, &socket());
     } else {
       throw std::runtime_error("Unknown command: '" + type + "'");
     }

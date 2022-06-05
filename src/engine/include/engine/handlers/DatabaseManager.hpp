@@ -15,10 +15,6 @@
 
 // ------------------------------------------------------------------------
 
-#include <goutils.hpp>
-
-// ------------------------------------------------------------------------
-
 #include "database/database.hpp"
 #include "debug/debug.hpp"
 #include "fct/Ref.hpp"
@@ -97,19 +93,10 @@ class DatabaseManager {
   /// Posts a list of all tables in all databases.
   void refresh(Poco::Net::StreamSocket* _socket);
 
-  /// Reads CSV files located in an S3 bucket into the database.
-  void read_s3(const std::string& _name, const Poco::JSON::Object& _cmd,
-               Poco::Net::StreamSocket* _socket);
-
   /// Sniffs one or several CSV files and returns the CREATE TABLE statement
   /// to the client.
   void sniff_csv(const std::string& _name, const Poco::JSON::Object& _cmd,
                  Poco::Net::StreamSocket* _socket) const;
-
-  /// Sniffs one or several CSV files in an S3 bucket and returns the CREATE
-  /// TABLE statement to the client.
-  void sniff_s3(const std::string& _name, const Poco::JSON::Object& _cmd,
-                Poco::Net::StreamSocket* _socket) const;
 
   /// Sniffs a table and generates suitable keyword arguments
   /// to build a DataFrame.
@@ -131,29 +118,6 @@ class DatabaseManager {
     multithreading::ReadLock read_lock(read_write_lock_);
     const auto conn = utils::Getter::get(_name, connector_map_);
     return conn;
-  }
-
-  /// Sets the S3 Access Key ID
-  void set_s3_access_key_id(Poco::Net::StreamSocket* _socket) const {
-#if (defined(_WIN32) || defined(_WIN64))
-    throw std::runtime_error("S3 is not supported on Windows!");
-#else
-    const auto value = communication::Receiver::recv_string(_socket);
-    goutils::S3::set_access_key_id(value);
-    communication::Sender::send_string("Success!", _socket);
-
-#endif
-  }
-
-  /// Sets the S3 Access Key ID
-  void set_s3_secret_access_key(Poco::Net::StreamSocket* _socket) const {
-#if (defined(_WIN32) || defined(_WIN64))
-    throw std::runtime_error("S3 is not supported on Windows!");
-#else
-    const auto value = communication::Receiver::recv_string(_socket);
-    goutils::S3::set_secret_access_key(value);
-    communication::Sender::send_string("Success!", _socket);
-#endif
   }
 
  private:

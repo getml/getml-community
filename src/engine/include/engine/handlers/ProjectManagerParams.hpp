@@ -21,8 +21,6 @@
 #include "engine/communication/communication.hpp"
 #include "engine/config/config.hpp"
 #include "engine/containers/containers.hpp"
-#include "engine/hyperparam/hyperparam.hpp"
-#include "engine/licensing/licensing.hpp"
 #include "engine/pipelines/pipelines.hpp"
 
 // ------------------------------------------------------------------------
@@ -57,13 +55,8 @@ struct ProjectManagerParams {
   /// Keeps track of all feature learners.
   const fct::Ref<dependency::FETracker> fe_tracker_;
 
-  const fct::Ref<std::map<std::string, hyperparam::Hyperopt>>& hyperopts_;
-
   /// Maps integers to join key names
   const fct::Ref<containers::Encoding> join_keys_encoding_;
-
-  /// For checking the number of cores and memory usage
-  const fct::Ref<licensing::LicenseChecker> license_checker_;
 
   /// For logging
   const fct::Ref<const communication::Logger> logger_;

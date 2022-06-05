@@ -1027,54 +1027,6 @@ void DataFrame::from_reader(const std::shared_ptr<io::Reader> &_reader,
 
 // ----------------------------------------------------------------------------
 
-void DataFrame::from_s3(
-    const std::string &_bucket,
-    const std::optional<std::vector<std::string>> &_colnames,
-    const std::vector<std::string> &_fnames, const std::string &_region,
-    const std::string &_sep, const size_t _num_lines_read, const size_t _skip,
-    const std::vector<std::string> &_time_formats, const Schema &_schema) {
-#if (defined(_WIN32) || defined(_WIN64))
-  throw std::runtime_error("S3 is not supported on Windows!");
-#else
-
-  if (_sep.size() != 1) {
-    throw std::runtime_error(
-        "The separator must contain exactly one character!");
-  }
-
-  auto limit = (_num_lines_read > 0) ? static_cast<Int>(_num_lines_read + _skip)
-                                     : static_cast<Int>(0);
-
-  if (!_colnames && limit > 0) {
-    ++limit;
-  }
-
-  auto df = containers::DataFrame(name(), categories_, join_keys_encoding_,
-                                  make_pool());
-
-  for (size_t i = 0; i < _fnames.size(); ++i) {
-    auto local_df = containers::DataFrame(name(), categories_,
-                                          join_keys_encoding_, make_pool());
-
-    const std::shared_ptr<io::Reader> reader = std::make_shared<io::S3Reader>(
-        _bucket, _colnames, _fnames[i], limit, _region, _sep[0]);
-
-    local_df.from_reader(reader, _fnames[i], _skip, _time_formats, _schema);
-
-    if (i == 0) {
-      df = std::move(local_df);
-    } else {
-      df.append(local_df);
-    }
-  }
-
-  *this = std::move(df);
-
-#endif
-}
-
-// ----------------------------------------------------------------------------
-
 Poco::JSON::Object DataFrame::get_content(const std::int32_t _draw,
                                           const std::int32_t _start,
                                           const std::int32_t _length) const {

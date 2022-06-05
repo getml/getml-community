@@ -99,8 +99,6 @@ void DataFrameManager::add_float_column(const std::string& _name,
 
     add_float_column_to_df(role, col, df, &weak_write_lock);
 
-    params_.monitor_->send_tcp("postdataframe", df->to_monitor(),
-                               communication::Monitor::TIMEOUT_ON);
   } else {
     if (column_view.is_infinite()) {
       throw std::runtime_error(
@@ -125,9 +123,6 @@ void DataFrameManager::add_float_column(const std::string& _name,
     data_frames()[df_name] = new_df;
 
     data_frames()[df_name].create_indices();
-
-    params_.monitor_->send_tcp("postdataframe", new_df.to_monitor(),
-                               communication::Monitor::TIMEOUT_ON);
   }
 
   communication::Sender::send_string("Success!", _socket);
@@ -146,8 +141,6 @@ void DataFrameManager::add_float_column(const Poco::JSON::Object& _cmd,
   if (exists) {
     recv_and_add_float_column(_cmd, df, &weak_write_lock, _socket);
 
-    params_.monitor_->send_tcp("postdataframe", df->to_monitor(),
-                               communication::Monitor::TIMEOUT_ON);
   } else {
     const auto pool = params_.options_.make_pool();
 
@@ -161,9 +154,6 @@ void DataFrameManager::add_float_column(const Poco::JSON::Object& _cmd,
     data_frames()[df_name] = new_df;
 
     data_frames()[df_name].create_indices();
-
-    params_.monitor_->send_tcp("postdataframe", new_df.to_monitor(),
-                               communication::Monitor::TIMEOUT_ON);
   }
 
   communication::Sender::send_string("Success!", _socket);
@@ -175,8 +165,6 @@ void DataFrameManager::add_float_column_to_df(
     const std::string& _role, const containers::Column<Float>& _col,
     containers::DataFrame* _df,
     multithreading::WeakWriteLock* _weak_write_lock) const {
-  license_checker().check_mem_size(data_frames(), _col.nbytes());
-
   if (_weak_write_lock) _weak_write_lock->upgrade();
 
   _df->add_float_column(_col, _role);
@@ -212,8 +200,6 @@ void DataFrameManager::add_int_column_to_df(
   col.set_name(_name);
 
   col.set_unit(_unit);
-
-  license_checker().check_mem_size(data_frames(), col.nbytes());
 
   assert_true(_weak_write_lock);
 
@@ -270,8 +256,6 @@ void DataFrameManager::add_string_column(const Poco::JSON::Object& _cmd,
   if (exists) {
     recv_and_add_string_column(_cmd, df, &weak_write_lock, _socket);
 
-    params_.monitor_->send_tcp("postdataframe", df->to_monitor(),
-                               communication::Monitor::TIMEOUT_ON);
   } else {
     const auto pool = params_.options_.make_pool();
 
@@ -284,9 +268,6 @@ void DataFrameManager::add_string_column(const Poco::JSON::Object& _cmd,
     data_frames()[df_name] = new_df;
 
     data_frames()[df_name].create_indices();
-
-    params_.monitor_->send_tcp("postdataframe", new_df.to_monitor(),
-                               communication::Monitor::TIMEOUT_ON);
   }
 
   communication::Sender::send_string("Success!", _socket);
@@ -351,9 +332,6 @@ void DataFrameManager::add_string_column(const std::string& _name,
     data_frames()[df_name].create_indices();
   }
 
-  params_.monitor_->send_tcp("postdataframe", df->to_monitor(),
-                             communication::Monitor::TIMEOUT_ON);
-
   communication::Sender::send_string("Success!", _socket);
 }
 
@@ -369,8 +347,6 @@ void DataFrameManager::add_string_column_to_df(
   col.set_name(_name);
 
   col.set_unit(_unit);
-
-  license_checker().check_mem_size(data_frames(), col.nbytes());
 
   if (_weak_write_lock) {
     _weak_write_lock->upgrade();
@@ -436,9 +412,6 @@ void DataFrameManager::append_to_data_frame(const std::string& _name,
   params_.categories_->append(*local_categories);
 
   params_.join_keys_encoding_->append(*local_join_keys_encoding);
-
-  params_.monitor_->send_tcp("postdataframe", data_frames()[_name].to_monitor(),
-                             communication::Monitor::TIMEOUT_ON);
 }
 
 // ------------------------------------------------------------------------
@@ -690,9 +663,6 @@ void DataFrameManager::concat(const std::string& _name,
   weak_write_lock.unlock();
 
   communication::Sender::send_string("Success!", _socket);
-
-  params_.monitor_->send_tcp("postdataframe", df.to_monitor(),
-                             communication::Monitor::TIMEOUT_ON);
 }
 
 // ------------------------------------------------------------------------
@@ -759,51 +729,6 @@ void DataFrameManager::df_to_db(
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::df_to_s3(
-    const size_t _batch_size, const std::string& _bucket,
-    const std::string& _key, const std::string& _region,
-    const std::string& _sep, const containers::DataFrame& _df,
-    const fct::Ref<containers::Encoding>& _categories,
-    const fct::Ref<containers::Encoding>& _join_keys_encoding) {
-#if (defined(_WIN32) || defined(_WIN64))
-  throw std::runtime_error("S3 is not supported on Windows!");
-#else
-
-  // We are using the bell character (\a) as the quotechar. It is least
-  // likely to appear in any field.
-  // TODO
-  auto reader = containers::DataFrameReader(
-      _df, _categories.ptr(), _join_keys_encoding.ptr(), '\a', '|');
-
-  const auto colnames = reader.colnames();
-
-  size_t fnum = 0;
-
-  while (!reader.eof()) {
-    auto tfile = Poco::TemporaryFile(params_.options_.temp_dir());
-
-    auto writer =
-        io::CSVWriter(tfile.path(), _batch_size, colnames, "\"", _sep);
-
-    writer.write(&reader);
-
-    auto fnum_str = std::to_string(++fnum);
-
-    if (fnum_str.size() < 5) {
-      fnum_str = std::string(5 - fnum_str.size(), '0') + fnum_str;
-    }
-
-    const auto current_key =
-        _batch_size == 0 ? _key + ".csv" : _key + "-" + fnum_str + ".csv";
-
-    goutils::S3::upload_file(tfile.path(), _bucket, current_key, _region);
-  }
-
-#endif
-}
-
-// ------------------------------------------------------------------------
-
 void DataFrameManager::freeze(const std::string& _name,
                               Poco::Net::StreamSocket* _socket) {
   multithreading::WriteLock write_lock(params_.read_write_lock_);
@@ -840,8 +765,6 @@ void DataFrameManager::from_arrow(const std::string& _name,
 
   auto df = arrow_handler.table_to_df(arrow_handler.recv_table(_socket), _name,
                                       schema);
-
-  license_checker().check_mem_size(data_frames(), df.nbytes());
 
   // Now we upgrade the weak write lock to a strong write lock to commit
   // the changes.
@@ -914,8 +837,6 @@ void DataFrameManager::from_csv(const std::string& _name,
   df.from_csv(colnames, fnames, quotechar, sep, num_lines_read, skip,
               time_formats, schema);
 
-  license_checker().check_mem_size(data_frames(), df.nbytes());
-
   // Now we upgrade the weak write lock to a strong write lock to commit
   // the changes.
   weak_write_lock.upgrade();
@@ -965,8 +886,6 @@ void DataFrameManager::from_db(const std::string& _name,
                                   local_join_keys_encoding, pool);
 
   df.from_db(connector(conn_id), table_name, schema);
-
-  license_checker().check_mem_size(data_frames(), df.nbytes());
 
   weak_write_lock.upgrade();
 
@@ -1020,8 +939,6 @@ void DataFrameManager::from_json(const std::string& _name,
 
   df.from_json(obj, time_formats, schema);
 
-  license_checker().check_mem_size(data_frames(), df.nbytes());
-
   weak_write_lock.upgrade();
 
   params_.categories_->append(*local_categories);
@@ -1068,8 +985,6 @@ void DataFrameManager::from_parquet(const std::string& _name,
 
   auto df = arrow_handler.table_to_df(arrow_handler.read_parquet(fname), _name,
                                       schema);
-
-  license_checker().check_mem_size(data_frames(), df.nbytes());
 
   // Now we upgrade the weak write lock to a strong write lock to commit
   // the changes.
@@ -1123,8 +1038,6 @@ void DataFrameManager::from_query(const std::string& _name,
 
   df.from_query(connector(conn_id), query, schema);
 
-  license_checker().check_mem_size(data_frames(), df.nbytes());
-
   weak_write_lock.upgrade();
 
   params_.categories_->append(*local_categories);
@@ -1144,82 +1057,6 @@ void DataFrameManager::from_query(const std::string& _name,
   data_frames()[_name].create_indices();
 
   communication::Sender::send_string("Success!", _socket);
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::from_s3(const std::string& _name,
-                               const Poco::JSON::Object& _cmd,
-                               const bool _append,
-                               Poco::Net::StreamSocket* _socket) {
-#if (defined(_WIN32) || defined(_WIN64))
-  throw std::runtime_error("S3 is not supported on Windows!");
-#else
-
-  const auto bucket = JSON::get_value<std::string>(_cmd, "bucket_");
-
-  auto colnames = std::optional<std::vector<std::string>>();
-
-  if (_cmd.has("colnames_")) {
-    colnames =
-        JSON::array_to_vector<std::string>(JSON::get_array(_cmd, "colnames_"));
-  }
-
-  const auto keys =
-      JSON::array_to_vector<std::string>(JSON::get_array(_cmd, "keys_"));
-
-  const auto region = JSON::get_value<std::string>(_cmd, "region_");
-
-  const auto num_lines_read = JSON::get_value<size_t>(_cmd, "num_lines_read_");
-
-  const auto sep = JSON::get_value<std::string>(_cmd, "sep_");
-
-  const auto skip = JSON::get_value<size_t>(_cmd, "skip_");
-
-  const auto time_formats = JSON::array_to_vector<std::string>(
-      JSON::get_array(_cmd, "time_formats_"));
-
-  const auto schema = containers::Schema::from_json(_cmd);
-
-  multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
-
-  const auto pool = params_.options_.make_pool();
-
-  const auto local_categories =
-      std::make_shared<containers::Encoding>(pool, params_.categories_.ptr());
-
-  const auto local_join_keys_encoding = std::make_shared<containers::Encoding>(
-      pool, params_.join_keys_encoding_.ptr());
-
-  auto df = containers::DataFrame(_name, local_categories,
-                                  local_join_keys_encoding, pool);
-
-  df.from_s3(bucket, colnames, keys, region, sep, num_lines_read, skip,
-             time_formats, schema);
-
-  license_checker().check_mem_size(data_frames(), df.nbytes());
-
-  weak_write_lock.upgrade();
-
-  params_.categories_->append(*local_categories);
-
-  params_.join_keys_encoding_->append(*local_join_keys_encoding);
-
-  df.set_categories(params_.categories_.ptr());
-
-  df.set_join_keys_encoding(params_.join_keys_encoding_.ptr());
-
-  if (!_append || data_frames().find(_name) == data_frames().end()) {
-    data_frames()[_name] = df;
-  } else {
-    data_frames()[_name].append(df);
-  }
-
-  data_frames()[_name].create_indices();
-
-  communication::Sender::send_string("Success!", _socket);
-
-#endif
 }
 
 // ------------------------------------------------------------------------
@@ -1244,8 +1081,6 @@ void DataFrameManager::from_view(const std::string& _name,
                        params_.data_frames_, params_.options_)
                 .parse(view)
                 .clone(_name);
-
-  license_checker().check_mem_size(data_frames(), df.nbytes());
 
   weak_write_lock.upgrade();
 
@@ -1866,8 +1701,6 @@ void DataFrameManager::receive_data(
 
       communication::Sender::send_string("Success!", _socket);
     } else if (type == "DataFrame.close") {
-      license_checker().check_mem_size(data_frames(), _df->nbytes());
-
       communication::Sender::send_string("Success!", _socket);
 
       break;
@@ -1982,9 +1815,6 @@ void DataFrameManager::remove_column(const std::string& _name,
                              "' not found.");
   }
 
-  params_.monitor_->send_tcp("postdataframe", df.to_monitor(),
-                             communication::Monitor::TIMEOUT_ON);
-
   communication::Sender::send_string("Success!", _socket);
 }
 
@@ -2009,9 +1839,6 @@ void DataFrameManager::set_subroles(const std::string& _name,
   column.set_subroles(subroles);
 
   df.add_float_column(column, role);
-
-  params_.monitor_->send_tcp("postdataframe", df.to_monitor(),
-                             communication::Monitor::TIMEOUT_ON);
 
   write_lock.unlock();
 
@@ -2049,9 +1876,6 @@ void DataFrameManager::set_subroles_categorical(
     df.add_int_column(column, role);
   }
 
-  params_.monitor_->send_tcp("postdataframe", df.to_monitor(),
-                             communication::Monitor::TIMEOUT_ON);
-
   write_lock.unlock();
 
   communication::Sender::send_string("Success!", _socket);
@@ -2077,9 +1901,6 @@ void DataFrameManager::set_unit(const std::string& _name,
   column.set_unit(unit);
 
   df.add_float_column(column, role);
-
-  params_.monitor_->send_tcp("postdataframe", df.to_monitor(),
-                             communication::Monitor::TIMEOUT_ON);
 
   write_lock.unlock();
 
@@ -2115,9 +1936,6 @@ void DataFrameManager::set_unit_categorical(const std::string& _name,
     column.set_unit(unit);
     df.add_int_column(column, role);
   }
-
-  params_.monitor_->send_tcp("postdataframe", df.to_monitor(),
-                             communication::Monitor::TIMEOUT_ON);
 
   write_lock.unlock();
 
@@ -2226,39 +2044,6 @@ void DataFrameManager::to_parquet(const std::string& _name,
   arrow_handler.to_parquet(table, fname, compression);
 
   communication::Sender::send_string("Success!", _socket);
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::to_s3(const std::string& _name,
-                             const Poco::JSON::Object& _cmd,
-                             Poco::Net::StreamSocket* _socket) {
-#if (defined(_WIN32) || defined(_WIN64))
-  throw std::runtime_error("S3 is not supported on Windows!");
-#else
-
-  const auto batch_size = JSON::get_value<size_t>(_cmd, "batch_size_");
-
-  const auto bucket = JSON::get_value<std::string>(_cmd, "bucket_");
-
-  const auto key = JSON::get_value<std::string>(_cmd, "key_");
-
-  const auto region = JSON::get_value<std::string>(_cmd, "region_");
-
-  const auto sep = JSON::get_value<std::string>(_cmd, "sep_");
-
-  multithreading::ReadLock read_lock(params_.read_write_lock_);
-
-  const auto& df = utils::Getter::get(_name, data_frames());
-
-  df_to_s3(batch_size, bucket, key, region, sep, df, params_.categories_,
-           params_.join_keys_encoding_);
-
-  read_lock.unlock();
-
-  communication::Sender::send_string("Success!", _socket);
-
-#endif
 }
 
 // ------------------------------------------------------------------------
@@ -2399,54 +2184,6 @@ void DataFrameManager::view_to_parquet(const std::string& _name,
 
   communication::Sender::send_string("Success!", _socket);
 }
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::view_to_s3(const std::string& _name,
-                                  const Poco::JSON::Object& _cmd,
-                                  Poco::Net::StreamSocket* _socket) {
-#if (defined(_WIN32) || defined(_WIN64))
-  throw std::runtime_error("S3 is not supported on Windows!");
-#else
-
-  const auto batch_size = JSON::get_value<size_t>(_cmd, "batch_size_");
-
-  const auto bucket = JSON::get_value<std::string>(_cmd, "bucket_");
-
-  const auto key = JSON::get_value<std::string>(_cmd, "key_");
-
-  const auto region = JSON::get_value<std::string>(_cmd, "region_");
-
-  const auto sep = JSON::get_value<std::string>(_cmd, "sep_");
-
-  const auto view = JSON::get_object(_cmd, "view_");
-
-  multithreading::ReadLock read_lock(params_.read_write_lock_);
-
-  const auto pool = params_.options_.make_pool();
-
-  const auto local_categories =
-      fct::Ref<containers::Encoding>::make(pool, params_.categories_.ptr());
-
-  const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
-      pool, params_.join_keys_encoding_.ptr());
-
-  assert_true(view);
-
-  const auto df = ViewParser(local_categories, local_join_keys_encoding,
-                             params_.data_frames_, params_.options_)
-                      .parse(*view);
-
-  df_to_s3(batch_size, bucket, key, region, sep, df, local_categories,
-           local_join_keys_encoding);
-
-  read_lock.unlock();
-
-  communication::Sender::send_string("Success!", _socket);
-
-#endif
-}
-// ------------------------------------------------------------------------
 
 }  // namespace handlers
 }  // namespace engine

@@ -21,8 +21,6 @@
 #include "engine/communication/communication.hpp"
 #include "engine/config/config.hpp"
 #include "engine/containers/containers.hpp"
-#include "engine/hyperparam/hyperparam.hpp"
-#include "engine/licensing/licensing.hpp"
 #include "engine/pipelines/pipelines.hpp"
 
 // ------------------------------------------------------------------------
@@ -81,20 +79,10 @@ class ProjectManager {
                                  const Poco::JSON::Object& _cmd,
                                  Poco::Net::StreamSocket* _socket);
 
-  /// Creates a new data frame from one or several CSV files located in an S3
-  /// bucket.
-  void add_data_frame_from_s3(const std::string& _name,
-                              const Poco::JSON::Object& _cmd,
-                              Poco::Net::StreamSocket* _socket);
-
   /// Adds a new data frame generated from a view.
   void add_data_frame_from_view(const std::string& _name,
                                 const Poco::JSON::Object& _cmd,
                                 Poco::Net::StreamSocket* _socket);
-
-  /// Adds a new hyperparameter optimization.
-  void add_hyperopt(const std::string& _name, const Poco::JSON::Object& _cmd,
-                    Poco::Net::StreamSocket* _socket);
 
   /// Adds a new Pipeline to the project.
   void add_pipeline(const std::string& _name, const Poco::JSON::Object& _cmd,
@@ -121,9 +109,6 @@ class ProjectManager {
   /// in the project directory.
   void list_data_frames(Poco::Net::StreamSocket* _socket) const;
 
-  /// Returns a list of all hyperopts currently held in memory.
-  void list_hyperopts(Poco::Net::StreamSocket* _socket) const;
-
   /// Returns a list of all pipelines currently held in memory.
   void list_pipelines(Poco::Net::StreamSocket* _socket) const;
 
@@ -137,10 +122,6 @@ class ProjectManager {
   /// Loads a data frame
   void load_data_frame(const std::string& _name,
                        Poco::Net::StreamSocket* _socket);
-
-  /// Loads a hyperopt
-  void load_hyperopt(const std::string& _name,
-                     Poco::Net::StreamSocket* _socket);
 
   /// Loads a pipeline
   void load_pipeline(const std::string& _name,
@@ -157,10 +138,6 @@ class ProjectManager {
   /// Saves a data frame
   void save_data_frame(const std::string& _name,
                        Poco::Net::StreamSocket* _socket);
-
-  /// Saves a hyperparameter optimization object
-  void save_hyperopt(const std::string& _name,
-                     Poco::Net::StreamSocket* _socket);
 
   /// Saves a pipeline to disc.
   void save_pipeline(const std::string& _name,
@@ -189,12 +166,6 @@ class ProjectManager {
 
   /// Loads a JSON object from a file.
   Poco::JSON::Object load_json_obj(const std::string& _fname) const;
-
-  /// Posts an object to the monitor.
-  void post(const std::string& _what, const Poco::JSON::Object& _obj) const;
-
-  /// Removes an object from the monitor.
-  void remove(const std::string& _what, const std::string& _name) const;
 
   // ------------------------------------------------------------------------
 
@@ -253,21 +224,6 @@ class ProjectManager {
   }
 
   /// Trivial (private) accessor
-  std::map<std::string, hyperparam::Hyperopt>& hyperopts() {
-    return *params_.hyperopts_;
-  }
-
-  /// Trivial (private) accessor
-  const std::map<std::string, hyperparam::Hyperopt>& hyperopts() const {
-    return *params_.hyperopts_;
-  }
-
-  /// Trivial accessor
-  engine::licensing::LicenseChecker& license_checker() {
-    return *params_.license_checker_;
-  }
-
-  /// Trivial (private) accessor
   const communication::Logger& logger() { return *params_.logger_; }
 
   /// Trivial (private) accessor
@@ -281,13 +237,6 @@ class ProjectManager {
 
   /// Trivial accessor
   dependency::PredTracker& pred_tracker() { return *params_.pred_tracker_; }
-
-  /// Trivial (private) setter.
-  void set_hyperopt(const std::string& _name,
-                    const hyperparam::Hyperopt& _hyperopt) {
-    multithreading::WriteLock write_lock(params_.read_write_lock_);
-    hyperopts().insert_or_assign(_name, _hyperopt);
-  }
 
   /// Trivial (private) setter.
   void set_pipeline(const std::string& _name,
