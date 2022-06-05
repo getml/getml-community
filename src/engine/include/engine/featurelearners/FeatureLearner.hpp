@@ -556,11 +556,7 @@ Poco::JSON::Object::Ptr FeatureLearner<FeatureLearnerType>::fingerprint()
 
 template <typename FeatureLearnerType>
 void FeatureLearner<FeatureLearnerType>::fit(const FitParams& _params) {
-  // ------------------------------------------------
-
   feature_learner_ = make_feature_learner();
-
-  // ------------------------------------------------
 
   const auto [population_table, peripheral_tables] = extract_tables_by_colnames(
       _params.population_df_, _params.peripheral_dfs_, population_schema(),
@@ -569,12 +565,8 @@ void FeatureLearner<FeatureLearnerType>::fit(const FitParams& _params) {
   const auto [population, peripheral, vocabulary, row_indices, word_indices] =
       handle_text_fields(population_table, peripheral_tables, _params.logger_);
 
-  // ------------------------------------------------
-
   const auto prop_pair = fit_propositionalization(
       population, peripheral, row_indices, word_indices, _params);
-
-  // ------------------------------------------------
 
   const auto params = typename FeatureLearnerType::FitParamsType{
       .feature_container_ =
@@ -589,16 +581,12 @@ void FeatureLearner<FeatureLearnerType>::fit(const FitParams& _params) {
 
   feature_learner_->fit(params);
 
-  // ------------------------------------------------
-
   fast_prop_container_ =
       prop_pair
           ? prop_pair->first
           : std::shared_ptr<const fastprop::subfeatures::FastPropContainer>();
 
   vocabulary_ = vocabulary;
-
-  // ------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -884,14 +872,10 @@ void FeatureLearner<FeatureLearnerType>::propositionalization_to_sql(
 template <typename FeatureLearnerType>
 std::string FeatureLearner<FeatureLearnerType>::remove_time_diff(
     const std::string& _from_colname) const {
-  // --------------------------------------------------------------
-
   if (_from_colname.find(helpers::Macros::generated_ts()) ==
       std::string::npos) {
     return _from_colname;
   }
-
-  // --------------------------------------------------------------
 
   const auto pos = _from_colname.find("\", '");
 
@@ -899,11 +883,7 @@ std::string FeatureLearner<FeatureLearnerType>::remove_time_diff(
     return _from_colname;
   }
 
-  // --------------------------------------------------------------
-
   return _from_colname.substr(0, pos);
-
-  // --------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -977,8 +957,6 @@ std::vector<std::string> FeatureLearner<FeatureLearnerType>::to_sql(
 template <typename FeatureLearnerType>
 containers::NumericalFeatures FeatureLearner<FeatureLearnerType>::transform(
     const TransformParams& _params) const {
-  // -------------------------------------------------------
-
   const auto [population, peripheral] = extract_tables_by_colnames(
       _params.population_df_, _params.peripheral_dfs_,
       feature_learner().population_schema(),
@@ -989,12 +967,8 @@ containers::NumericalFeatures FeatureLearner<FeatureLearnerType>::transform(
   const auto word_indices =
       helpers::WordIndexContainer(population, peripheral, *vocabulary_);
 
-  // -------------------------------------------------------
-
   const auto feature_container = transform_propositionalization(
       population, peripheral, word_indices, _params);
-
-  // -------------------------------------------------------
 
   using FLTransformParams = typename FeatureLearnerType::TransformParamsType;
 
@@ -1058,14 +1032,10 @@ FeatureLearner<FeatureLearnerType>::transform_propositionalization(
 
 template <typename FeatureLearnerType>
 std::string FeatureLearner<FeatureLearnerType>::type() const {
-  // ----------------------------------------------------------------------
-
   constexpr bool unknown_feature_learner =
       !is_fastprop_ && !is_multirel_ && !is_relboost_ && !is_relmt_;
 
   static_assert(!unknown_feature_learner, "Unknown feature learner!");
-
-  // ----------------------------------------------------------------------
 
   if constexpr (is_fastprop_) {
     return AbstractFeatureLearner::FASTPROP;
@@ -1082,8 +1052,6 @@ std::string FeatureLearner<FeatureLearnerType>::type() const {
   if constexpr (is_relmt_) {
     return AbstractFeatureLearner::RELMT;
   }
-
-  // ----------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------

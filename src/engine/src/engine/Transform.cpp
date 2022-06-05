@@ -1,5 +1,7 @@
 #include "engine/pipelines/Transform.hpp"
 
+#include <stdexcept>
+
 // ----------------------------------------------------------------------------
 
 #include "metrics/Scores.hpp"
@@ -185,10 +187,23 @@ containers::NumericalFeatures Transform::get_numerical_features(
     const containers::NumericalFeatures& _autofeatures,
     const containers::DataFrame& _population_df,
     const predictors::PredictorImpl& _predictor_impl) {
+  const auto is_null = [](const Float _val) {
+    return (std::isnan(_val) || std::isinf(_val));
+  };
+
+  const auto contains_null = [is_null](const auto& _col) -> bool {
+    return std::any_of(_col.begin(), _col.end(), is_null);
+  };
+
   auto numerical_features = _autofeatures;
+
   for (const auto& col : _predictor_impl.numerical_colnames()) {
     numerical_features.push_back(
         helpers::Feature<Float>(_population_df.numerical(col).data_ptr()));
+    if (contains_null(numerical_features.back())) {
+      throw std::runtime_error("Column '" + col +
+                               "' contains values that are nan or infinite!");
+    }
   }
   return numerical_features;
 }
