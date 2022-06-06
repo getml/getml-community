@@ -193,7 +193,9 @@ void FastProp::build_rows(const TransformParams &_params,
 
   const auto ncols = _features->size();
 
-  auto cache = std::vector<Float>(log_iter * ncols);
+  const auto cache_size = std::min(log_iter, rownums->size());
+
+  auto cache = std::vector<Float>(cache_size * ncols);
 
   for (size_t i = 0; i < rownums->size(); ++i) {
     if (i % log_iter == 0 && i != 0) {
@@ -214,8 +216,9 @@ void FastProp::build_rows(const TransformParams &_params,
               (*rownums)[i], memoization, &cache[ncols * (i % log_iter)]);
   }
 
-  const size_t begin = rownums->size() > log_iter ? rownums->size() - log_iter
-                                                  : static_cast<size_t>(0);
+  const size_t begin = rownums->size() > log_iter
+                           ? rownums->size() - (rownums->size() % log_iter)
+                           : static_cast<size_t>(0);
 
   cache_to_features(*rownums, begin, cache, _features);
 
