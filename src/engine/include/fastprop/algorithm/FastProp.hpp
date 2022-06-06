@@ -113,7 +113,7 @@ class FastProp {
       const std::vector<std::function<bool(const containers::Match&)>>&
           _condition_functions,
       const size_t _rownum, const fct::Ref<Memoization>& _memoization,
-      containers::Features* _features) const;
+      Float* _row) const;
 
   /// Builds all rows for the thread associated with _thread_num
   void build_rows(const TransformParams& _params,
@@ -126,6 +126,11 @@ class FastProp {
   std::vector<containers::Features> build_subfeatures(
       const TransformParams& _params,
       const std::shared_ptr<std::vector<size_t>>& _rownums) const;
+
+  /// Copies the data from the cache into the actual features.
+  void cache_to_features(const std::vector<size_t>& _rownums,
+                         const size_t _begin, const std::vector<Float>& _cache,
+                         containers::Features* _features) const;
 
   /// Calculates the R-squared for each feature vis-a-vis the targets.
   std::vector<Float> calc_r_squared(

@@ -104,10 +104,8 @@ void FastProp::build_row(
     const std::vector<std::function<bool(const containers::Match &)>>
         &_condition_functions,
     const size_t _rownum, const fct::Ref<Memoization> &_memoization,
-    containers::Features *_features) const {
+    Float *_row) const {
   assert_true(_condition_functions.size() == _index.size());
-
-  assert_true(_features->size() == _index.size());
 
   const auto all_matches = make_matches(_table_holder, _rownum);
 
@@ -140,16 +138,13 @@ void FastProp::build_row(
 
     const auto &matches = all_matches.at(abstract_feature.peripheral_);
 
-    assert_true(_rownum < _features->at(i).size());
-
     const auto &condition_function = _condition_functions.at(i);
 
     const auto value = Aggregator::apply_aggregation(
         population, peripheral, subf, matches, condition_function,
         abstract_feature, _memoization);
 
-    _features->at(_rownum, i) =
-        (std::isnan(value) || std::isinf(value)) ? 0.0 : value;
+    _row[i] = (std::isnan(value) || std::isinf(value)) ? 0.0 : value;
   }
 }
 
@@ -194,20 +189,35 @@ void FastProp::build_rows(const TransformParams &_params,
 
   const auto nrows = _rownums ? _rownums->size() : _params.population_.nrows();
 
+  assert_true(_features->size() == _params.index_.size());
+
+  const auto ncols = _features->size();
+
+  auto cache = std::vector<Float>(log_iter * ncols);
+
   for (size_t i = 0; i < rownums->size(); ++i) {
-    memoization->reset();
-
-    build_row(table_holder, _subfeatures, _params.index_, condition_functions,
-              rownums->at(i), memoization, _features);
-
     if (i % log_iter == 0 && i != 0) {
+      cache_to_features(*rownums, i - log_iter, cache, _features);
+
       _num_completed->fetch_add(log_iter);
 
       if (_thread_num == 0) {
         log_progress(_params.logger_, nrows, _num_completed->load());
       }
     }
+
+    memoization->reset();
+
+    assert_true(ncols * (i % log_iter) < cache.size());
+
+    build_row(table_holder, _subfeatures, _params.index_, condition_functions,
+              (*rownums)[i], memoization, &cache[ncols * (i % log_iter)]);
   }
+
+  const size_t begin = rownums->size() > log_iter ? rownums->size() - log_iter
+                                                  : static_cast<size_t>(0);
+
+  cache_to_features(*rownums, begin, cache, _features);
 
   _num_completed->fetch_add(nrows % log_iter);
 }
@@ -265,6 +275,31 @@ std::vector<containers::Features> FastProp::build_subfeatures(
   }
 
   return features;
+}
+
+// ----------------------------------------------------------------------------
+
+void FastProp::cache_to_features(const std::vector<size_t> &_rownums,
+                                 const size_t _begin,
+                                 const std::vector<Float> &_cache,
+                                 containers::Features *_features) const {
+  const size_t ncols = _features->size();
+
+  const size_t nrows =
+      std::min(_cache.size() / ncols, _rownums.size() - _begin);
+
+  for (size_t j = 0; j < ncols; ++j) {
+    for (size_t i = 0; i < nrows; ++i) {
+      assert_true(_begin + i < _rownums.size());
+      assert_true(i * ncols + j < _cache.size());
+
+      const auto rownum = _rownums[_begin + i];
+
+      assert_true(rownum < _features->at(j).size());
+
+      _features->at(rownum, j) = _cache[i * ncols + j];
+    }
+  }
 }
 
 // ----------------------------------------------------------------------------
