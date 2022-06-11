@@ -2,6 +2,7 @@
 
 // ----------------------------------------------------
 
+#include "engine/preprocessors/CategoryTrimmer.hpp"
 #include "engine/preprocessors/EMailDomain.hpp"
 #include "engine/preprocessors/Imputation.hpp"
 #include "engine/preprocessors/Mapping.hpp"
@@ -18,6 +19,10 @@ fct::Ref<Preprocessor> PreprocessorParser::parse(
     const Poco::JSON::Object& _obj,
     const std::vector<Poco::JSON::Object::Ptr>& _dependencies) {
   const auto type = jsonutils::JSON::get_value<std::string>(_obj, "type_");
+
+  if (type == Preprocessor::CATEGORY_TRIMMER) {
+    return fct::Ref<CategoryTrimmer>::make(_obj, _dependencies);
+  }
 
   if (type == Preprocessor::EMAILDOMAIN) {
     return fct::Ref<EMailDomain>::make(_obj, _dependencies);

@@ -32,6 +32,7 @@ namespace preprocessors {
 
 class Preprocessor {
  public:
+  static constexpr const char* CATEGORY_TRIMMER = "CategoryTrimmer";
   static constexpr const char* EMAILDOMAIN = "EmailDomain";
   static constexpr const char* IMPUTATION = "Imputation";
   static constexpr const char* MAPPING = "Mapping";

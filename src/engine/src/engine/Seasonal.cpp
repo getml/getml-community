@@ -8,6 +8,7 @@
 
 namespace engine {
 namespace preprocessors {
+
 // ----------------------------------------------------
 
 std::optional<containers::Column<Int>> Seasonal::extract_hour(
