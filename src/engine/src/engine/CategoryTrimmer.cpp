@@ -6,6 +6,7 @@
 #include "engine/containers/DataFrame.hpp"
 #include "engine/preprocessors/PreprocessorImpl.hpp"
 #include "fct/IotaRange.hpp"
+#include "fct/collect.hpp"
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/NullChecker.hpp"
 
@@ -16,12 +17,46 @@ namespace preprocessors {
 
 // ----------------------------------------------------
 
+typename CategoryTrimmer::CategoryPair CategoryTrimmer::category_pair_from_obj(
+    const Poco::JSON::Object::Ptr& _ptr) const {
+  throw_unless(_ptr, "CategoryPair: Not an object.");
+
+  const auto first = helpers::ColumnDescription(
+      *JSON::get_object(*_ptr, "column_description_"));
+
+  const auto vec = JSON::array_to_vector<Int>(JSON::get_array(*_ptr, "set_"));
+
+  const auto second = fct::Ref<std::set<Int>>::make(vec.begin(), vec.end());
+
+  return std::make_pair(first, second);
+}
+
+// ----------------------------------------------------
+
+Poco::JSON::Object::Ptr CategoryTrimmer::category_pair_to_obj(
+    const CategoryPair& _pair) const {
+  auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
+
+  obj->set("column_description_", _pair.first.to_json_obj());
+
+  obj->set("set_", JSON::vector_to_array_ptr(std::vector<Int>(
+                       _pair.second->begin(), _pair.second->end())));
+
+  return obj;
+}
+
+// ----------------------------------------------------
+
 Poco::JSON::Object::Ptr CategoryTrimmer::fingerprint() const {
   auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
 
-  obj->set("type_", type());
-
   obj->set("dependencies_", JSON::vector_to_array_ptr(dependencies_));
+
+  obj->set("max_num_categories_", max_num_categories_);
+
+  obj->set("min_freq_", min_freq_);
+
+  obj->set("type_", type());
 
   return obj;
 }
@@ -147,13 +182,65 @@ CategoryTrimmer CategoryTrimmer::from_json_obj(
     const Poco::JSON::Object& _obj) const {
   CategoryTrimmer that;
 
+  that.max_num_categories_ =
+      JSON::get_value<size_t>(_obj, "max_num_categories_");
+
+  that.min_freq_ = JSON::get_value<size_t>(_obj, "min_freq_");
+
+  if (!_obj.has("population_sets_")) {
+    return that;
+  }
+
+  const auto population_sets_arr = JSON::get_array(_obj, "population_sets_");
+
+  for (size_t i = 0; i < population_sets_arr->size(); ++i) {
+    that.population_sets_.push_back(
+        category_pair_from_obj(population_sets_arr->getObject(i)));
+  }
+
+  const auto peripheral_sets_arr = JSON::get_array(_obj, "peripheral_sets_");
+
+  for (size_t i = 0; i < peripheral_sets_arr->size(); ++i) {
+    const auto& arr = peripheral_sets_arr->getArray(i);
+
+    throw_unless(arr, "CategoryTrimmer: Not an array!");
+
+    auto vec = std::vector<CategoryPair>();
+
+    for (size_t j = 0; j < peripheral_sets_arr->size(); ++j) {
+      vec.push_back(category_pair_from_obj(arr->getObject(i)));
+    }
+
+    that.peripheral_sets_.push_back(vec);
+  }
+
   return that;
 }
 
 // ----------------------------------------------------
 
 Poco::JSON::Object::Ptr CategoryTrimmer::to_json_obj() const {
+  const auto to_obj = [this](const auto& _pair) -> Poco::JSON::Object::Ptr {
+    return category_pair_to_obj(_pair);
+  };
+
+  const auto to_arr = [to_obj](const auto& _vec) -> Poco::JSON::Array::Ptr {
+    return fct::collect::array(_vec | VIEWS::transform(to_obj));
+  };
+
   auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
+
+  obj->set("dependencies_", JSON::vector_to_array_ptr(dependencies_));
+
+  obj->set("max_num_categories_", max_num_categories_);
+
+  obj->set("min_freq_", min_freq_);
+
+  obj->set("peripheral_sets_",
+           fct::collect::array(peripheral_sets_ | VIEWS::transform(to_arr)));
+
+  obj->set("population_sets_",
+           fct::collect::array(population_sets_ | VIEWS::transform(to_obj)));
 
   obj->set("type_", type());
 
@@ -230,7 +317,7 @@ containers::DataFrame CategoryTrimmer::transform_df(
 
     auto new_col = containers::Column<Int>(_pool, orig_col.nrows());
 
-    new_col.set_name(orig_col.name() + "__trimmed");
+    new_col.set_name(orig_col.name());
     new_col.set_subroles(orig_col.subroles());
     new_col.set_unit(orig_col.unit());
 
@@ -241,17 +328,13 @@ containers::DataFrame CategoryTrimmer::transform_df(
     return new_col;
   };
 
-  auto trimmed_columns =
+  const auto trimmed_columns =
       _sets | VIEWS::transform(get_col) | VIEWS::transform(make_trimmed_column);
 
   auto df = _df;
 
   for (const auto col : trimmed_columns) {
     df.add_int_column(col, containers::DataFrame::ROLE_CATEGORICAL);
-  }
-
-  for (const auto& s : _sets) {
-    df.remove_column(s.first.name_);
   }
 
   return df;

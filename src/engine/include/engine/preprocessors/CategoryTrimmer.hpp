@@ -22,6 +22,7 @@
 
 // ----------------------------------------------------------------------------
 
+#include "engine/JSON.hpp"
 #include "engine/containers/containers.hpp"
 
 // ----------------------------------------------------------------------------
@@ -42,12 +43,12 @@ class CategoryTrimmer : public Preprocessor {
   static constexpr const char* TRIMMED = "(trimmed)";
 
  public:
-  CategoryTrimmer() : max_num_categories_(1000), min_freq_(0) {}
+  CategoryTrimmer() : max_num_categories_(999), min_freq_(30) {}
 
   CategoryTrimmer(const Poco::JSON::Object& _obj,
                   const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
-      : min_freq_(0) {
-    dependencies_ = _dependencies;
+      : dependencies_(_dependencies) {
+    *this = from_json_obj(_obj);
   }
 
   ~CategoryTrimmer() = default;
@@ -97,6 +98,13 @@ class CategoryTrimmer : public Preprocessor {
   size_t min_freq() const { return min_freq_; }
 
  private:
+  /// Transform a JSON object to a category pair.
+  CategoryPair category_pair_from_obj(
+      const Poco::JSON::Object::Ptr& _ptr) const;
+
+  /// Transform a category pair to a JSON object.
+  Poco::JSON::Object::Ptr category_pair_to_obj(const CategoryPair& _pair) const;
+
   /// Fits on a single data frame.
   std::vector<CategoryPair> fit_df(const containers::DataFrame& _df,
                                    const std::string& _marker) const;
@@ -132,11 +140,11 @@ class CategoryTrimmer : public Preprocessor {
   /// The minimum number required for a category to be included.
   size_t min_freq_;
 
-  /// The sets for the population table.
-  std::vector<CategoryPair> population_sets_;
-
   /// The sets for the population tables.
   std::vector<std::vector<CategoryPair>> peripheral_sets_;
+
+  /// The sets for the population table.
+  std::vector<CategoryPair> population_sets_;
 };
 
 // ----------------------------------------------------
