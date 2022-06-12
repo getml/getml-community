@@ -105,6 +105,13 @@ class CategoryTrimmer : public Preprocessor {
   /// Transform a category pair to a JSON object.
   Poco::JSON::Object::Ptr category_pair_to_obj(const CategoryPair& _pair) const;
 
+  /// Expresses the transformation of a particular column in SQL code.
+  std::string column_to_sql(
+      const helpers::StringIterator& _categories,
+      const std::shared_ptr<const transpilation::SQLDialectGenerator>&
+          _sql_dialect_generator,
+      const CategoryPair& _pair) const;
+
   /// Fits on a single data frame.
   std::vector<CategoryPair> fit_df(const containers::DataFrame& _df,
                                    const std::string& _marker) const;

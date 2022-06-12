@@ -21,6 +21,7 @@
 
 // -------------------------------------------------------------------------
 
+#include "transpilation/HumanReadableTrimming.hpp"
 #include "transpilation/SQLDialectGenerator.hpp"
 
 // -------------------------------------------------------------------------
@@ -57,6 +58,11 @@ class HumanReadableSQLGenerator : public SQLDialectGenerator {
 
   /// The schema to precede any newly created tables.
   std::string schema() const final { return ""; }
+
+  /// Only needed for the CategoryTrimmer preprocesser.
+  fct::Ref<TrimmingGenerator> trimming() const final {
+    return fct::Ref<HumanReadableTrimming>::make(this);
+  };
 
  public:
   /// Expresses an aggregation in the SQL dialect.

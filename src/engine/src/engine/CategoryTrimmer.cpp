@@ -9,6 +9,7 @@
 #include "fct/collect.hpp"
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/NullChecker.hpp"
+#include "transpilation/SQLGenerator.hpp"
 
 // ----------------------------------------------------
 
@@ -43,6 +44,61 @@ Poco::JSON::Object::Ptr CategoryTrimmer::category_pair_to_obj(
                        _pair.second->begin(), _pair.second->end())));
 
   return obj;
+}
+
+// ----------------------------------------------------
+
+std::string CategoryTrimmer::column_to_sql(
+    const helpers::StringIterator& _categories,
+    const std::shared_ptr<const transpilation::SQLDialectGenerator>&
+        _sql_dialect_generator,
+    const CategoryPair& _pair) const {
+  assert_true(_sql_dialect_generator);
+
+  const auto staging_table =
+      transpilation::SQLGenerator::make_staging_table_name(_pair.first.table_);
+
+  const auto colname =
+      _sql_dialect_generator->make_staging_table_colname(_pair.first.name_);
+
+  std::stringstream sql;
+
+  sql << _sql_dialect_generator->trimming()->make_header(staging_table,
+                                                         colname);
+
+  const auto vec = std::vector<Int>(_pair.second->begin(), _pair.second->end());
+
+  constexpr size_t batch_size = 500;
+
+  for (size_t batch_begin = 0; batch_begin < _pair.second->size();
+       batch_begin += batch_size) {
+    const auto batch_end =
+        std::min(_pair.second->size(), batch_begin + batch_size);
+
+    sql << _sql_dialect_generator->trimming()->make_insert_into(staging_table,
+                                                                colname);
+
+    for (size_t i = batch_begin; i < batch_end; ++i) {
+      const std::string begin = (i == batch_begin) ? "" : "      ";
+
+      const auto val = vec.at(i);
+
+      assert_true(val >= 0);
+
+      assert_true(static_cast<size_t>(val) < _categories.size());
+
+      const auto end = (i == batch_end - 1) ? ";\n\n" : ",\n";
+
+      sql << begin << "( '" << _categories.at(val).str() << "' )" << end;
+    }
+  }
+
+  assert_true(_sql_dialect_generator);
+
+  sql << _sql_dialect_generator->trimming()->join(staging_table, colname,
+                                                  TRIMMED);
+
+  return sql.str();
 }
 
 // ----------------------------------------------------
@@ -255,7 +311,21 @@ std::vector<std::string> CategoryTrimmer::to_sql(
         _sql_dialect_generator) const {
   assert_true(_sql_dialect_generator);
 
-  return {};
+  std::vector<std::string> sql_code;
+
+  for (const auto& pair : population_sets_) {
+    sql_code.push_back(
+        column_to_sql(_categories, _sql_dialect_generator, pair));
+  }
+
+  for (const auto& vec : peripheral_sets_) {
+    for (const auto& pair : vec) {
+      sql_code.push_back(
+          column_to_sql(_categories, _sql_dialect_generator, pair));
+    }
+  }
+
+  return sql_code;
 }
 
 // ----------------------------------------------------
