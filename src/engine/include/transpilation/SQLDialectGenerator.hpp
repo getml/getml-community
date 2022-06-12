@@ -21,6 +21,10 @@
 
 // -------------------------------------------------------------------------
 
+#include "transpilation/TrimmingGenerator.hpp"
+
+// -------------------------------------------------------------------------
+
 namespace transpilation {
 
 class SQLDialectGenerator {
@@ -156,6 +160,9 @@ class SQLDialectGenerator {
   virtual std::string string_contains(const std::string& _colname,
                                       const std::string& _keyword,
                                       const bool _contains) const = 0;
+
+  /// Only needed for the CategoryTrimmer preprocesser.
+  virtual fct::Ref<TrimmingGenerator> trimming() const = 0;
 };
 
 // -------------------------------------------------------------------------
