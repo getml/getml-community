@@ -5,7 +5,6 @@
 #include "engine/preprocessors/CategoryTrimmer.hpp"
 #include "engine/preprocessors/EMailDomain.hpp"
 #include "engine/preprocessors/Imputation.hpp"
-#include "engine/preprocessors/Mapping.hpp"
 #include "engine/preprocessors/Seasonal.hpp"
 #include "engine/preprocessors/Substring.hpp"
 #include "engine/preprocessors/TextFieldSplitter.hpp"
@@ -30,10 +29,6 @@ fct::Ref<Preprocessor> PreprocessorParser::parse(
 
   if (type == Preprocessor::IMPUTATION) {
     return fct::Ref<Imputation>::make(_obj, _dependencies);
-  }
-
-  if (type == Preprocessor::MAPPING) {
-    return fct::Ref<Mapping>::make(_obj, _dependencies);
   }
 
   if (type == Preprocessor::SEASONAL) {

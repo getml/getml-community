@@ -24,7 +24,6 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/JSON.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Load.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Logger.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/Mapping.cpp
     ${ENGINE_SOURCE_DIRECTORY}/MemoryMappedEncoding.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Monitor.cpp
     ${ENGINE_SOURCE_DIRECTORY}/NumOpParser.cpp

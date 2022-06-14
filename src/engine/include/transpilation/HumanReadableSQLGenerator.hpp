@@ -83,12 +83,6 @@ class HumanReadableSQLGenerator : public SQLDialectGenerator {
   std::string make_staging_table_column(const std::string& _raw_name,
                                         const std::string& _alias) const final;
 
-  /// Generates the SQL code necessary for joining the mapping tables onto the
-  /// staged table.
-  std::string join_mapping(const std::string& _name,
-                           const std::string& _colname,
-                           const bool _is_text) const final;
-
   /// Makes a clean, but unique colname.
   std::string make_staging_table_colname(
       const std::string& _colname) const final;
@@ -106,14 +100,6 @@ class HumanReadableSQLGenerator : public SQLDialectGenerator {
                          const std::string& _input_name,
                          const std::string& _output_join_keys_name,
                          const std::string& _input_join_keys_name) const final;
-
-  /// Generates the table header for the SQL code of the mapping
-  std::string make_mapping_table_header(const std::string& _name,
-                                        const bool _key_is_num) const final;
-
-  /// Generates the INSERT INTO for the SQL code of the mapping.
-  std::string make_mapping_table_insert_into(
-      const std::string& _name) const final;
 
   /// Generates the SQL code needed to impute the features and drop the
   /// feature tables.

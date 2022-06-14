@@ -52,12 +52,6 @@ class SQLDialectGenerator {
       const helpers::enums::Aggregation _agg,
       const std::string& _value_to_be_aggregated = "") const = 0;
 
-  /// Generates the SQL code necessary for joining the mapping tables onto the
-  /// staged table.
-  virtual std::string join_mapping(const std::string& _name,
-                                   const std::string& _colname,
-                                   const bool _is_text) const = 0;
-
   /// Removes the Macros from the colname and replaces it with proper SQLite3
   /// code.
   virtual std::string make_staging_table_column(
@@ -81,14 +75,6 @@ class SQLDialectGenerator {
       const std::string& _output_name, const std::string& _input_name,
       const std::string& _output_join_keys_name,
       const std::string& _input_join_keys_name) const = 0;
-
-  /// Generates the table header for the resulting SQL code.
-  virtual std::string make_mapping_table_header(
-      const std::string& _name, const bool _key_is_num) const = 0;
-
-  /// Generates the INSERT INTO for the SQL code of the mapping.
-  virtual std::string make_mapping_table_insert_into(
-      const std::string& _name) const = 0;
 
   /// Generates the SQL code needed to impute the features and drop the
   /// feature tables.
