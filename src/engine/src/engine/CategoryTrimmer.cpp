@@ -151,6 +151,14 @@ CategoryTrimmer::fit_transform(const FitParams& _params) {
 
 std::vector<typename CategoryTrimmer::CategoryPair> CategoryTrimmer::fit_df(
     const containers::DataFrame& _df, const std::string& _marker) const {
+  const auto include = [](const auto& _col) -> bool {
+    const auto blacklist = std::vector<helpers::Subrole>(
+        {helpers::Subrole::exclude_preprocessors, helpers::Subrole::email_only,
+         helpers::Subrole::substring_only,
+         helpers::Subrole::exclude_category_trimmer});
+    return !helpers::SubroleParser::contains_any(_col.subroles(), blacklist);
+  };
+
   const auto to_column_description = [&_df, &_marker](const auto& _col) {
     return helpers::ColumnDescription(_marker, _df.name(), _col.name());
   };
@@ -164,7 +172,8 @@ std::vector<typename CategoryTrimmer::CategoryPair> CategoryTrimmer::fit_df(
     return std::make_pair(to_column_description(_col), to_set(_col));
   };
 
-  const auto range = _df.categoricals() | VIEWS::transform(to_pair);
+  const auto range =
+      _df.categoricals() | VIEWS::filter(include) | VIEWS::transform(to_pair);
 
   return fct::collect::vector<CategoryPair>(range);
 }

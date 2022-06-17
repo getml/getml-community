@@ -45,6 +45,10 @@ Subrole SubroleParser::parse(const std::string& _str) {
     return Subrole::email_only;
   }
 
+  if (_str == EXCLUDE_CATEGORY_TRIMMER) {
+    return Subrole::exclude_category_trimmer;
+  }
+
   if (_str == EXCLUDE_FASTPROP) {
     return Subrole::exclude_fastprop;
   }

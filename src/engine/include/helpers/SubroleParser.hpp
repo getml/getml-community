@@ -19,6 +19,8 @@ struct SubroleParser {
   static constexpr const char* COMPARISON_ONLY = "only compare";
   static constexpr const char* EMAIL = "include email";
   static constexpr const char* EMAIL_ONLY = "only email";
+  static constexpr const char* EXCLUDE_CATEGORY_TRIMMER =
+      "exclude category trimmer";
   static constexpr const char* EXCLUDE_FASTPROP = "exclude fastprop";
   static constexpr const char* EXCLUDE_FEATURE_LEARNERS =
       "exclude feature learners";

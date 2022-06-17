@@ -10,6 +10,7 @@ enum class Subrole {
   comparison_only,
   email,
   email_only,
+  exclude_category_trimmer,
   exclude_fastprop,
   exclude_feature_learners,
   exclude_imputation,
