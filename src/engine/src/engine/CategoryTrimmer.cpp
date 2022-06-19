@@ -20,6 +20,8 @@ namespace preprocessors {
 
 typename CategoryTrimmer::CategoryPair CategoryTrimmer::category_pair_from_obj(
     const Poco::JSON::Object::Ptr& _ptr) const {
+  assert_true(_ptr);
+
   throw_unless(_ptr, "CategoryPair: Not an object.");
 
   const auto first = helpers::ColumnDescription(
@@ -262,7 +264,6 @@ CategoryTrimmer CategoryTrimmer::from_json_obj(
     that.population_sets_.push_back(
         category_pair_from_obj(population_sets_arr->getObject(i)));
   }
-
   const auto peripheral_sets_arr = JSON::get_array(_obj, "peripheral_sets_");
 
   for (size_t i = 0; i < peripheral_sets_arr->size(); ++i) {
@@ -272,8 +273,8 @@ CategoryTrimmer CategoryTrimmer::from_json_obj(
 
     auto vec = std::vector<CategoryPair>();
 
-    for (size_t j = 0; j < peripheral_sets_arr->size(); ++j) {
-      vec.push_back(category_pair_from_obj(arr->getObject(i)));
+    for (size_t j = 0; j < arr->size(); ++j) {
+      vec.push_back(category_pair_from_obj(arr->getObject(j)));
     }
 
     that.peripheral_sets_.push_back(vec);
