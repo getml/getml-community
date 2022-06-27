@@ -49,9 +49,14 @@ class ToSQL {
   static std::vector<std::string> overwrite_oversized_features(
       const fct::Ref<const transpilation::SQLDialectGenerator>&
           _sql_dialect_generator,
-      const std::vector<std::string>& _autofeature_names,
       const std::vector<std::string>& _autofeatures,
       const std::optional<size_t> _size_threshold);
+
+  /// Parses the feature name from the code.
+  static std::string parse_feature_name(
+      const fct::Ref<const transpilation::SQLDialectGenerator>&
+          _sql_dialect_generator,
+      const std::string& _code);
 
   /// Expresses the preprocessing part as SQL code.
   static std::vector<std::string> preprocessors_to_sql(

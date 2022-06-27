@@ -156,6 +156,10 @@ void FastProp::build_rows(const TransformParams &_params,
                           const size_t _thread_num,
                           std::atomic<size_t> *_num_completed,
                           containers::Features *_features) const {
+  if (_features->size() == 0) {
+    return;
+  }
+
   const auto rownums =
       make_rownums(_thread_num, _params.population_.nrows(), _rownums);
 
@@ -210,7 +214,10 @@ void FastProp::build_rows(const TransformParams &_params,
 
     memoization->reset();
 
-    assert_true(ncols * (i % log_iter) < cache.size());
+    assert_msg(ncols * (i % log_iter) < cache.size(),
+               "ncols: " + std::to_string(ncols) + ", i: " + std::to_string(i) +
+                   ", log_iter: " + std::to_string(log_iter) +
+                   ", cache.size(): " + std::to_string(cache.size()));
 
     build_row(table_holder, _subfeatures, _params.index_, condition_functions,
               (*rownums)[i], memoization, &cache[ncols * (i % log_iter)]);

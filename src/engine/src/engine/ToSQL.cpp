@@ -129,20 +129,49 @@ ToSQL::make_staging_schemata(const FittedPipeline& _fitted) {
 
 // ----------------------------------------------------------------------------
 
+std::string ToSQL::parse_feature_name(
+    const fct::Ref<const transpilation::SQLDialectGenerator>&
+        _sql_dialect_generator,
+    const std::string& _code) {
+  constexpr const char* FEATURE_NAME = "$FEATURE_NAME_PLACEHOLDER";
+
+  const auto drop_table =
+      _sql_dialect_generator->drop_table_if_exists(FEATURE_NAME);
+
+  const auto feature_name_pos = drop_table.find(FEATURE_NAME);
+
+  assert_true(feature_name_pos != std::string::npos);
+
+  const auto drop_table_first_part = drop_table.substr(0, feature_name_pos);
+
+  const auto pos_begin =
+      _code.find(drop_table_first_part) + drop_table_first_part.size();
+
+  assert_true(pos_begin != std::string::npos);
+
+  const auto pos_end =
+      _code.find(_sql_dialect_generator->quotechar2(), pos_begin);
+
+  assert_true(pos_end != std::string::npos);
+
+  assert_true(pos_end > pos_begin);
+
+  return transpilation::SQLGenerator::to_upper(
+      _code.substr(pos_begin, pos_end - pos_begin));
+}
+
+// ----------------------------------------------------------------------------
+
 std::vector<std::string> ToSQL::overwrite_oversized_features(
     const fct::Ref<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator,
-    const std::vector<std::string>& _feature_names,
     const std::vector<std::string>& _features,
     const std::optional<size_t> _size_threshold) {
   if (!_size_threshold) {
     return _features;
   }
 
-  assert_true(_features.size() == _feature_names.size());
-
-  const auto make_feature = [&_sql_dialect_generator, &_feature_names,
-                             &_features,
+  const auto make_feature = [&_sql_dialect_generator, &_features,
                              &_size_threshold](const size_t _i) -> std::string {
     const auto& feature = _features.at(_i);
 
@@ -153,9 +182,9 @@ std::vector<std::string> ToSQL::overwrite_oversized_features(
     std::stringstream sql;
 
     const auto feature_name =
-        transpilation::SQLGenerator::to_upper(_feature_names.at(_i));
+        ToSQL::parse_feature_name(_sql_dialect_generator, feature);
 
-    sql << "-- The size of the SQL code of " << feature_name << " is "
+    sql << "-- The size of the SQL code for " << feature_name << " is "
         << feature.size()
         << " characters, which is greater than the size_threshold of "
         << *_size_threshold << "!" << std::endl
@@ -244,7 +273,7 @@ std::string ToSQL::to_sql(const ToSQLParams& _params) {
   const auto feature_names = make_autofeature_names(_params.fitted_);
 
   const auto features = overwrite_oversized_features(
-      sql_dialect_generator, feature_names,
+      sql_dialect_generator,
       feature_learners_to_sql(_params, sql_dialect_generator),
       _params.size_threshold_);
 
