@@ -20,8 +20,8 @@ namespace pipelines {
 
 std::string Fit::beautify_purpose(const std::string& _purpose) {
   const auto purpose = helpers::StringReplacer::replace_all(_purpose, "_", " ");
-  const auto pos = purpose.find_last_not_of("s ");
-  return purpose.substr(0, pos);
+  const auto len = purpose.find_last_not_of("s ") + 1;
+  return purpose.substr(0, len);
 }
 
 // ------------------------------------------------------------------------
