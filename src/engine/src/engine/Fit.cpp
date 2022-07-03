@@ -8,12 +8,21 @@
 #include "engine/pipelines/TransformParams.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
 #include "fct/collect.hpp"
+#include "helpers/StringReplacer.hpp"
 #include "predictors/Predictor.hpp"
 
 // ----------------------------------------------------------------------------
 
 namespace engine {
 namespace pipelines {
+
+// ------------------------------------------------------------------------
+
+std::string Fit::beautify_purpose(const std::string& _purpose) {
+  const auto purpose = helpers::StringReplacer::replace_all(_purpose, "_", " ");
+  const auto pos = purpose.find_last_not_of("s ");
+  return purpose.substr(0, pos);
+}
 
 // ------------------------------------------------------------------------
 
@@ -430,8 +439,8 @@ std::pair<Predictors, std::vector<Poco::JSON::Object::Ptr>> Fit::fit_predictors(
         continue;
       }
 
-      socket_logger->log(p->type() + ": Training as " + _params.purpose_ +
-                         "...");
+      socket_logger->log(p->type() + ": Training as " +
+                         beautify_purpose(_params.purpose_) + "...");
 
       p->fit(socket_logger, categorical_features, numerical_features,
              target_col, categorical_features_valid, numerical_features_valid,

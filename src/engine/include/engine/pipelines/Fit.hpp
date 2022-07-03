@@ -135,6 +135,9 @@ class Fit {
   }
 
  private:
+  /// Prints the purpose in a more readable format.
+  static std::string beautify_purpose(const std::string& _purpose);
+
   /// Calculates an index ranking the features by importance.
   static std::vector<size_t> calculate_importance_index(
       const Predictors& _feature_selectors);
