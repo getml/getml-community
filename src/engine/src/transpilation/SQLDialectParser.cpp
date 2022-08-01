@@ -7,13 +7,13 @@ namespace transpilation {
 
 fct::Ref<const SQLDialectGenerator> SQLDialectParser::parse(
     const TranspilationParams& _params) {
-  if (_params.dialect_ == HUMAN_READABLE_SQL) {
+  if (_params.dialect_ == HUMAN_READABLE_SQL || _params.dialect_ == SQLITE3) {
     return fct::Ref<const HumanReadableSQLGenerator>::make();
   }
 
   if (_params.dialect_ == BIG_QUERY || _params.dialect_ == MYSQL ||
       _params.dialect_ == POSTGRE_SQL || _params.dialect_ == SPARK_SQL ||
-      _params.dialect_ == SQLITE3 || _params.dialect_ == TSQL) {
+      _params.dialect_ == TSQL) {
     throw std::runtime_error(
         "Transpiling to '" + _params.dialect_ +
         "' is not supported in the getML community edition.");
