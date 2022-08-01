@@ -43,6 +43,11 @@ fct::Ref<Preprocessor> PreprocessorParser::parse(
     return fct::Ref<TextFieldSplitter>::make(_obj, _dependencies);
   }
 
+  if (type == Preprocessor::MAPPING) {
+    throw std::runtime_error("Preprocessor of type '" + type +
+                             "' is not supported in the community edition!");
+  }
+
   throw std::runtime_error("Preprocessor of type '" + type + "' not known!");
 }
 
