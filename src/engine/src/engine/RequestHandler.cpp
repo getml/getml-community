@@ -152,7 +152,8 @@ void RequestHandler::run() {
     } else if (type == "is_alive") {
       return;
     } else if (type == "monitor_url") {
-      communication::Sender::send_string(options_.monitor().url(), &socket());
+      // The community edition does not have a monitor.
+      communication::Sender::send_string("", &socket());
     } else if (type == "Pipeline") {
       project_manager().add_pipeline(name, cmd, &socket());
     } else if (type == "Pipeline.check") {
