@@ -1,0 +1,4 @@
+set(
+    TSINDEX_OBJ
+    ${TSINDEX_SOURCE_DIRECTORY}/InMemoryIndex.cpp
+)

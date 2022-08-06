@@ -1,0 +1,7 @@
+set(
+    TEXTMINING_OBJ 
+    ${TEXTMINING_SOURCE_DIRECTORY}/RowIndex.cpp
+    ${TEXTMINING_SOURCE_DIRECTORY}/StringSplitter.cpp
+    ${TEXTMINING_SOURCE_DIRECTORY}/Vocabulary.cpp
+)
+

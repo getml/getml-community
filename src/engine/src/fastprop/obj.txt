@@ -1,0 +1,14 @@
+set(
+    FASTPROP_OBJ 
+    ${FASTPROP_SOURCE_DIRECTORY}/AbstractFeature.cpp
+    ${FASTPROP_SOURCE_DIRECTORY}/Aggregator.cpp
+    ${FASTPROP_SOURCE_DIRECTORY}/Condition.cpp
+    ${FASTPROP_SOURCE_DIRECTORY}/ConditionParser.cpp
+    ${FASTPROP_SOURCE_DIRECTORY}/FastProp.cpp
+    ${FASTPROP_SOURCE_DIRECTORY}/FastPropContainer.cpp
+    ${FASTPROP_SOURCE_DIRECTORY}/Hyperparameters.cpp
+    ${FASTPROP_SOURCE_DIRECTORY}/Maker.cpp
+    ${FASTPROP_SOURCE_DIRECTORY}/RSquared.cpp
+    ${FASTPROP_SOURCE_DIRECTORY}/SQLMaker.cpp
+)
+
