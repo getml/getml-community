@@ -1,0 +1,98 @@
+#+TITLE: 0.16.0 docs release
+
+
+* Getting Started
+  - [X] Update examples
+* User Guide
+** getML suite
+*** Monitor
+    - [ ] Update screenshots
+    - [ ] Update projects
+    - [ ] Hyperopt view
+    - [ ] Filter
+    - [X] Models -> Pipelines
+*** Engine
+    - [X] Reference to [[Project Management]]
+    - [X] Move "Managing data..." to [[Project Management]]
+*** Python API
+    - [X] Remove port
+    - [ ] Update Session management
+    - [ ] Reference [[Project Management]]
+** Annotating Data
+   - [ ] Update examples
+** Data Model
+   - [ ] Re-style data schemata
+   - [X] Remove reference to blog post
+   - [ ] Re-create reference to blog post (as blog relaunches)
+** DONE Project Management
+   - [X] Engines are spawned implicitly
+   - [X] Models -> Pipelines
+   - [X] Make bundling of projects/engine instances clear
+   - [ ] Detailed introduction to project module
+   - [ ] Examples
+     + [ ] List projects
+     + [ ] Set projects/Switch projects
+     + [ ] Delete projects
+     + [ ] Restart projects
+     + [ ] Exporting/Importing
+     + [ ] Project name
+     + [ ] ~Pipelines~
+       - [ ] ~sort~
+       - [ ] ~filter~
+     + [ ] ~DataFrames~
+       - [ ] ~load_all~
+       - [ ] ~retrieve_all~
+       - [ ] ~save_all~
+     + [ ] ~Hyperopts~
+** DONE Preprocessing
+   - [X] General definition
+   - [X] Example
+   - [X] Mapping
+   - [X] Text fields
+** Feature Engineering
+   - [X] Description/differentiation of propositionalization vs. feature learning
+   - [X] Add RelMT and FastProp
+   - [ ] Feature Engineering -> Feature Learning
+   - [ ] Sublearner + Example
+* API Documentation
+** DONE Project management
+** Data handling
+*** Update examples
+   - [ ] ~DataFrame~
+     + [ ] ~load~
+   - [ ] Examples on real data
+     + [ ] ~DataModel~
+     + [ ] ~Container~
+     + [ ] ~StarSchema~
+     + [ ] ~TimeSeries~
+*** Add/Augment docs
+**** Container
+    - [ ] ~add~: Document ~*args~ and ~*kwargs~
+    - [ ] ~freeze~: Cross-reference to deep_copy; more detail
+    - [ ] ~save~: More detail, what about ~deep_copy~?
+    - [ ] ~sync~: More detail; make clear: what might have changed? what's synced with what? How exactly is ~deep_copy~ related to this?
+**** DataFrame
+    - [ ] Update ~DataFrame~'s general docstring
+      - [ ] Improve wording
+      - [ ] ~load_data_frame~ vs. ~project.data_frames~, ...
+    - [ ] ~to_placeholder~: More detail (what about the signature?)
+    - [ ] ~add~: More detail: e.g. make clear for which cases ~time_formats~ matter
+**** Columns
+    - [ ] ~column~'s sub-modules and classes are not documented at all
+**** Preprocessors
+   - [ ] Augment module docstring
+   - [ ] Augment Seasonal docstring
+   - [ ] Augment Substring docstring
+   - [ ] Augment EmailDomain docstring
+**** Feature Learning
+   - [X] Add FastProp
+**** Hyperopt
+   - [X] Add FastProp
+   - [X] Add RelMT
+* General
+** DONE Resolve undefined references
+** TODO Add missing blank lines (definition lists)
+** DONE Fix unexpected indentations
+** TODO Fix over-/underlines
+** References
+   - /tables/ <-> /data frames/?

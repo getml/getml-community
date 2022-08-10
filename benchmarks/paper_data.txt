@@ -1,0 +1,733 @@
+FASTPROP: A CUSTOMIZED DATABASE ENGINE FOR FAST PROPOSITIONALIZATION 1
+FastProp: A Customized Database Engine for Fast
+Propositionalization
+Patrick Urbanke, Soeren Nikolaus
+Abstract—We present the design of a database engine that has
+been customized for automated feature engineering on relational
+data and time series. Using public-domain datasets, we demon-
+strate that an implementation of a static propositionalization
+algorithm based on this database engine is at least about 60
+times and up to 1000 times faster than implementations based
+on standard in-memory database engines. This speedup is com-
+parable to the speedup attained by introducing GPUs to training
+neural networks, which is considered to be a revolutionary step
+in the deep learning literature [1], [2].
+Index Terms—Automated Feature Engineering, Feature Learn-
+ing, Propositionalization, Relational Learning, Time Series
+I. INTRODUCTION
+A
+UTOMATED feature engineering on relational data and
+time series describes the process of automatically gen-
+erating features that can be inserted into standard machine
+learning algorithms from relational data and time series. This
+is an important topic: Automated feature engineering promises
+to drastically reduce the time spent on data preparation, thus
+substantially decreasing the costs of applied machine learning
+projects.
+In the relational learning literature, the process of generating
+features from relational data and time series for the purpose
+of inserting them into a standard machine learning algorithm
+is referred to as propositionalization [3]. Popular implementa-
+tions include Deep Feature Synthesis [4], tsfresh [5], TSFEL
+[6] and tsflex [7]. More specifically, these implementations
+can be categorized as static propositionalization approaches.
+Unlike some other propositionalization algorithms, they do not
+apply machine learning paradigms such as decision trees or
+graphical models to the domain of relational learning. Instead,
+they generate a large number of features using simple static
+rules. The best features are then selected using standard feature
+selection approaches.
+We argue that implementation speed is a key measure for
+static propositionalization algorithms. As indicated, the idea
+of such algorithms is to generate a large amount of features
+to then evaluate which of these features are effective for the
+problem domain. Being able to generate more features per
+second will enable us to generate more features overall, which
+is highly likely to improve the predictive accuracy.
+In this study, we present the design of a database engine
+that has been customized for automated feature engineering
+on relational data. We demonstrate that an implementation of
+a static propositionalization algorithm based on this database
+engine is at least about 60 times and up to 1000 times faster
+than implementations based on existing in-memory database
+systems. This speedup is about the same as the speedup
+attained by introducing GPUs to neural networks which is
+considered to be a revolutionary step in the deep learning
+literature [1], [2]. We argue that the speedup attained through
+customized database systems has the potential to be similarly
+important for the applicability of relational learning.
+The remainder of this study is organized as follows: In
+Section 2, we introduce literature related to automated feature
+engineering on relational data and time series. In Section 3, we
+introduce the proposed algorithm. In Section 4, we evaluate
+the algorithms against existing implementation of the static
+propositionalization approach. Section 5 concludes this study.
+II. RELATED LITERATURE
+A. Relational Learning
+Relational learning refers to learning from data that is
+either laid out in an explicit relational structure, like in an
+relational database, or has a complex internal structure that
+is relational [8]. There are different approaches to learning
+from relational structures that can be classified into one of
+those two categories: Inductive logic programming (ILP) is
+the classical approach to learning from internal (relational)
+structures. Propositionalization is set in the context of learning
+from explicit relational structures, like multi-relational data
+mining or statistical relational learning.
+B. Propositionalization
+From a classical machine learning or database/data mining
+perspective, approaches dealing with flat tables are classified
+as propositional, where approaches dealing with multiple
+tables are classified as relational. The term propositional
+originates from classical formal logic and deals with simple
+propositions in attribute-value form [9]. The logical equivalent
+to relational representations if first-order logic [10]. Proposi-
+tionalization is the process of transforming first-order logic
+or relational representations into propositional ones [3]. From
+a process perspective, propositionalization can be viewed as
+an intermediate step in the machine learning pipeline, where
+data is transformed into intermediate representations which
+are then provided as inputs to propositional learners (machine
+learning algorithms). Among machine learning pracitioners
+propositionalization is know as feature engineering, refer to
+[11], [12], or [13], [14] for more recent usages of the term.
+The two most important reasons for using propositionaliza-
+tion (in contrast to learning from relational data directly) are
+to reduce complexity, to reduce learning times and to be able
+to use well-established machine learning algorithms [15].
+The simplest approach to propositionalization is static
+propositionalization, which involves generating a large amount
+of features based on a predetermined rule set and then usingFASTPROP: A CUSTOMIZED DATABASE ENGINE FOR FAST PROPOSITIONALIZATION 2
+some feature selection methods to keep the relevant portion.
+This approach is also known as expand-reduce [16]. Using
+static propositionalization is a good approach to address the
+problem of information loss inherent to propositionalization
+algorithms [17].
+C. Implementations
+Deep feature synthesis [4] is a static propositionalization
+algorithm that applies a pre-defined set of transformations fol-
+lowed by a feature selection and hyperparameter optimization.
+OneBM builds features by traversing a joining path – defined
+by a sequence of primary keys and tables – and applying
+a pre-defined set of aggregation functions to the resulting
+projection. LazyBum [17] is a lazy version of OneBM that
+tries to avoid unnecessary computations. Approaches in the
+classical ILP setting are POLKA [18] and RELAGGS [19].
+FORF [20] uses ensemble learning to learn a set of first-order
+logic query augmented by aggregation functions. NFOIL [21]
+integrates na¨ıve baise learning into ILP-based rule learning.
+MODL [22] is an example for a probabalistic approach to
+static propositinalization. Wordifaction [23] is special case
+of static propositionalization that applies simple text mining
+techniques to a bag-of-words representation of relational data.
+MRDTL [24]–[26] is a supervised tree-based algorithm that
+uses surrogate criteria to learn an optimal set of conditional
+aggregation.
+As discussed in [reference to discussion about framing time
+series as relational problems], time series can be understood
+as special case of relational data, where one observation is
+related to historical observation of itself and other attributes.
+CesiumML is [27] one of the first libraries that applies
+propositionalization to time series. Seglearn [28] is the first
+library that utilized sliding window segmentation. tsfresh [5]
+is a popular library for time series propositonalization that
+comes with a large set of pre-defined aggregations and a
+feature selection technique. TSFEL [6] is another time series
+propositinalization library with a special focus on spectral
+features. tsflex [7] is a meta time-series propositinalization
+library that comes with interfaces for applying Seqlearn,
+tsfresh, or TSFEL aggregations.
+1) Propositionalization:
+1) Static Propositionalization
+a) Relational
+⊠ Featuretools/Deep feature synthesis [4]
+⊠ OneBM [29]
+⊠ Lazy Bum [17]
+⊠ POLKA [18]
+⊠ RELAGGS [19]
+⊠ FORF [20]
+⊠ MODL [22]
+⊠ Wordification [23]
+⊠ MRDTL [24]–[26]
+b) Time Series Feature Extraction
+⊠ tsfresh [5]
+⊠ Seglearn [28]
+⊠ tsfel [6]
+⊠ tsflex [7]
+⊠ cesium ml [27]
+D. Contribution
+As we have seen above, propositionalization is a well-
+researched approach for which numerous implementations
+exist. However, researchers have paid comparatively little
+attention to an efficient implementation of propositionalization
+algorithms. The purpose of this study is to contribute to the
+closing of this gap.
+We design a database engine that is customized for propo-
+sitionalization. We demonstate that propositionalization algo-
+rithms implemented on top of this engine are at least 60 times
+and up to 1000 times faster than implementations cited above.
+This speedup is about the same as the speedup attained by
+introducing GPUs to deep learning which is considered to be
+a major milestone in the deep learning literature [1], [2]. We
+argue that the speedup attained through customized database
+systems has the potential to be similarly important for the
+applicability of relational learning.
+III. PROPOSED ALGORITHM
+A. Terminology
+We begin by introducing terminology.
+A relational learning problem contains exactly one table
+which defines the statistical population and contains the target
+variables. We refer to such a table as a population table.
+Furthermore, there is at least one table that is joined onto the
+population table. Such a table is referred to as a peripheral
+table. Note that a peripheral table might be identical to the
+population table, particularly for time series problems. Such a
+scenario is called a self join.
+When joining a peripheral table onto a population table,
+we have to find the rows in the peripheral table that match a
+specific row in the population table. Such rows are referred
+to as matches. Matches are determined by several factors. A
+common scenario is to join the two tables based on a particular
+key, called a join key.
+Moreover, in relational learning problems, we often use time
+stamps to limit the number of matches. In predictive analytics,
+it is common to limit the rows in the peripheral tables to a
+subset where a time stamp in the peripheral table is smaller
+than the a time stamp in the population table in order to avoid
+using the data from the future [30]. We refer to said time stamp
+in the population table as a reference date.
+Note that every row in the population table has its own set
+of matches and that these matches might overlap.
+After we have identified the matches, we need a value to be
+aggregated. A value to be aggregated can simply be a value
+in a column in the peripheral table, but it could also be a
+combination of several column. For instance, it is a common
+scenario to calculate the aggregate time since since something
+occured. For instance, we might want to the time since the last
+transaction a customer made. In order to accomplish this, we
+would substract the reference date from all transaction dates
+and then find the minimum.
+Furthermore, we might want to add a condition to our
+feature. The means that would only consider those matches forFASTPROP: A CUSTOMIZED DATABASE ENGINE FOR FAST PROPOSITIONALIZATION 3
+our aggregation for which the condition is true. This is par-
+ticularly important for identifying seasonalites. For instance,
+we might want to calculate the average traffic volume on the
+same weekday on the same hour of the day as the reference
+date.
+We might also want to define a prediction horizon. The
+horizon is the amount of time we want to predict into the
+future. For instance, we might want to predict the traffic
+volume in the next hour or 24 hours from now.
+Likewise, we might want to instruct the algorithm not to use
+data that is older than a specified amount of time in relation
+to the reference data. We refer to this amount of time as
+the memory of the algorithm. For instance, we might want
+configure the algorithm such that it only aggregates data from
+the last seven days before the reference date and disregard
+everything before that.
+In time series problems in particular, it is very common to
+have both a horizon and memory, with a fixed amount time
+between them. We refer to such a scenario as sliding windows.
+B. Optimizations
+We propose the following optimizations to increase the
+performance of static propositionalization approaches:
+1) Indexing join keys: We reduce the time it takes to find
+the appropriate matches by creating an index over the join
+key in the peripheral table. Such an index is implemented as a
+hash map, which maps each unique join key value onto a list of
+indices indicating the rows in the peripheral tables containing
+that unique join key value.
+2) Encoding join keys: Join keys are often strings. Com-
+paring and hashing strings is more expensive than comparing
+and hashing integers. We therefore map every unique join key
+value onto a unique integer. The join key columns then contain
+the integers instead of the corresponding strings. The encoding
+is kept globally, meaning that the same string corresponds to
+the same integer for all of the join keys in our data set.
+3) Indexing time stamps: When we have a time series
+problem with sliding windows we often have to find all rows in
+between some upper and lower bound. We therefore index the
+time stamps using a red-black tree with the time stamp value
+as the key and the corresponding row indices as the value.
+Unlike a hash map, a red-black tree also enables us to find all
+values smaller or greater than a particular value, which makes
+it a useful instrument for sliding windows. How we build such
+an index is expressed in pseudo-code in Figure 1. How it can
+be used to efficiently find the matching rows is expressed in
+pseudo-code in Figure 2.
+4) Row-wise generation of feature sets: Despite the op-
+timizations described in the previous subsections, finding
+matches is still a very expensive operation. However, simply
+calculating the matches for all peripheral tables and then
+storing them could be prohibitively expensive in terms of
+memory usage, particularly for large cross joins. The libraries
+used for reference therefore find the matches for every fea-
+ture separately, which results in significant redundancies. We
+circumvent this problem by row-wise generation: Instead of
+calculating each feature seperately, we calculate a batch of
+▷ Evaluates whether t1 is smaller than t2
+▷ t1 (Tuple[int, float]): A tuple consisting of a join key
+and a time stamp
+▷ t2 (Tuple[int, float]): A tuple consisting of a join key
+and a time stamp
+1: procedure ISSMALLER(t1, t2)
+2: if t1.joinKey = t2.joinKey then
+3: return t1.timeStamp < t2.timeStamp
+4: end if
+5: return t1.joinKey < t2.joinKey
+6: end procedure
+7:
+▷ Generates an index consisting that maps join keys and
+time stamps to row numbers.
+▷ table (Table): The table to index. We the join key in
+question is denoted jk and the time stamp ts.
+8: procedure MAKETIMESTAMPINDEX(table)
+9: t ← []
+10: for i = 0; i < n; i ← i + 1 do
+11: t ← t + [((table.jk[i], table.ts[i]), i)]
+12: end for
+▷ Generates a red-black trees, sorting them by using
+IsSmaller.
+13: return TOREDBLACKTREE(t, IsSmaller)
+14: end procedure
+Fig. 1. Procedure for generating a time stamp index.
+▷ Returns a range of all of the row numbers in per that
+correspond to row r in pop.
+▷ r (int): Signifies a row number in pop.
+▷ pop (Table): The population table.
+▷ join (Join): A struct describing the join. Includes per,
+the peripheral table used for this join.
+1: procedure FINDMATCHES(r, pop, join)
+2: lower ← pop.ts[r] − join.horizon − join.memory
+3: upper ← pop.ts[r] − join.horizon
+4: tsIndex ← join.per.tsIndex
+▷ UpperBound is a function that returns the first element
+greater than the given element. It can be relatively easily
+implemented on a red-black-tree.
+5: begin ← UPPERBOUND(tsIndex,(pop.jk[r], lower))
+6: end ← UPPERBOUND(tsIndex,(pop.jk[r], upper))
+▷ MakeRange returns a range over all of the row numbers
+in the time stamp index between begin and end.
+7: return MAKERANGE(begin, end)
+8: end procedure
+Fig. 2. Procedure to find matches using the time stamp index
+features (usually 100 at a time) row-by-row. This allows us
+to find the matches for a particular row in the population
+table and use them to calculate the values for many features
+at a time, significantly reducing the amount of redundant
+operations. This idea is expressed in pseudo-code in Figures
+3 and 4.
+5) Memoization: In static propositionalization, we often
+apply different aggregations to the same set of values. EvenFASTPROP: A CUSTOMIZED DATABASE ENGINE FOR FAST PROPOSITIONALIZATION 4
+▷ Generates the features column-wise.
+▷ pop (Table): The population table.
+▷ joins (List[Join]): A list of classes describing the joins.
+Includes per, the peripheral table used for this join.
+▷ features (List[Feature]): A list of classes describing the
+features, both in abstract form as well as the underlying
+data.
+1: procedure GENERATECOLUMNWISE(pop, joins,
+features)
+2: for f in features do
+3: for r = 0; r < pop.nrows; r ← r + 1 do
+4: m ← FINDMATCHES(r, pop, f.join)
+5: f[r] ← AGGREGATE(pop, m, f)
+6: end for
+7: end for
+8: end procedure
+Fig. 3. Column-wise generation of feature sets. This is the approach used by
+most of the benchmarking libaries. Note that that FindMatches, a relatively
+expensive operation, is called more often than for row-wise generation. Due
+to memory constraints, storing the results of FindMatches for repeated use is
+not an option in column-wise generation.
+▷ Generates the features row-wise.
+▷ pop (Table): The population table.
+▷ joins (List[Join]): A list of classes describing the joins.
+Includes per, the peripheral table used for this join.
+▷ features (List[Feature]): A list of classes describing the
+features, both in abstract form as well as the underlying
+data.
+1: procedure GENERATEROWWISE(pop, joins, features)
+2: for r = 0; r < pop.nrows; r ← r + 1 do
+3: m ← []
+4: for j in joins do
+5: m ← m + [FINDMATCHES(r, pop, j)]
+6: end for
+7: for f in features do
+8: f[r] ← AGGREGATE(pop, m, f)
+9: end for
+10: end for
+11: end procedure
+Fig. 4. Row-wise generation of feature sets. The pseudo-code is simplified.
+In practice, we do not calculate the entire feature set as once, but in batches
+of 100 features at a time.
+when we have the matches, we still have to retrieve the values
+to be aggregated which might not be located adjacent to one
+another, leading to frequent cache misses. We therefore mem-
+orize the values to be aggregated in a separate vector and then
+apply the different aggregations to that vector. In functional
+programming, a pattern such as this is called memoization.
+This idea is expressed in pseudo-code in Figure 5.
+6) Caching: We use columnar storage for both our data and
+the generated features. This serves to speed up aggregation, but
+it creates a problem for the row-wise generation of the data, as
+the index is forced jump from feature to feature as we generate
+the row, leading to many cache misses. In order to overcome
+this, we also use a caching technique, expressed in Figure 6.
+▷ Tests whether features f1 and f2 are based
+▷ on the same values.
+1: procedure HAVESAMEVALUES(f1, f2)
+2: return f1.dataUsed = f2.dataUsed ∧ f1.perCol =
+f2.perCol ∧ f1.popCol = f2.popCol ∧ f1.per =
+f2.per ∧ f1.cond = f2.cond
+3: end procedure
+4:
+▷ Executes the aggregation using the memoization tech-
+nique.
+▷ pop (Table): The population table.
+▷ m (List[int]): A list indicating the matching rows in the
+peripheral table.
+▷ f (Feature): A class describing the feature, both in
+abstract form as well as the underlying data.
+5: mem ← None
+6: procedure AGGREGATE(pop, m, f)
+7: if ¬mem ∨ ¬HAVESAMEVALUES(f, mem.f) then
+8: mem.f ← f
+▷ GetValues returns an array of values
+▷ from pop based on the abstract
+▷ metadata that is also used in HaveSameValues.
+9: mem.vals ← GETVALUES(pop, m, f)
+10: end if
+▷ AggregateVals aggregates the values
+▷ according to the aggration function
+▷ defined in f.
+11: return AGGREGATEVALS(f, mem.vals)
+12: end procedure
+Fig. 5. Memoization
+C. Implementation
+We recognize that it is possible to implement some of
+the optimizations using existing database frameworks. For
+instance, tsflex uses pandas time stamps as indices to achieve
+similar optimizations as we describe with the time stamp
+index, albeit without the join keys [7]. However, to the best
+of our knowledge, it is not possible to implement all of
+the optimizations described above using existing database
+frameworks. We therefore implement a customized database
+engine in C++ which is specifically designed for the purpose
+of relational learning and makes use of all of the opimizations
+described above.
+IV. EVALUATION
+A. Approach
+We evaluate the proposed algorithm by benchmarking it
+against five open-source implementations of static proposition-
+alization on five different public-domain datasets.
+The five open-source benchmark implementations are the
+following featuretools [4], tsfresh [5], TSFEL [6], tsflex [7]
+and KATS [31]. These particular implementations have been
+chosen based on their popularity, availablity and quality of
+implementation.
+Since all of the benchmark implementations with the sole
+exception of featuretools only support time series and notFASTPROP: A CUSTOMIZED DATABASE ENGINE FOR FAST PROPOSITIONALIZATION 5
+▷ Calculates a new row in the feature set.
+▷ r (int): The row number
+▷ pop (Table): The population table.
+▷ joins (List[Join]): A list of classes describing the joins.
+Includes per, the peripheral table used for this join.
+▷ features (List[Feature]): A list of classes describing the
+features, both in abstract form as well as the underlying
+data.
+▷ c (Array[float]): The cache we use to store the data.
+1: procedure MAKEROWWITHCACHING(r, pop, joins,
+features, c)
+2: m ← []
+3: for j in joins do
+4: m ← m + [FINDMATCHES(r, pop, j)]
+5: end for
+6: cacheSize ← LENGTH(c)
+LENGTH(f eatures)
+7: m ← r mod cacheSize
+8: n ← LENGTH(features)
+9: for i = 0; i < n; i ← i + 1 do
+10: c[m ∗ n + i] ← AGGREGATE(pop, joins, m, f)
+11: end for
+12: if (r + 1) mod cacheSize = 0 then
+13: for i = 0; i < n; i ← i + 1 do
+14: for j = 0; j < cacheSize; j ← j + 1 do
+15: k ← r + 1 − cacheSize + j
+16: features[i][k] ← c[j ∗ n + i]
+17: end for
+18: end for
+19: end if
+20: end procedure
+Fig. 6. Row-wise generation of feature sets with caching. This is a simpli-
+fication, because we assume that the number of rows can be exactly divided
+by the number of lines in c, which is usually not the case.
+relational data in general, our analysis is limited to time series
+problems.
+The benchmark datasets considered are the following:
+1) Air pollution [32] The dataset contains hourly data on air
+pollution and weather in Beijing, China. The challenge
+is to predict the pm2.5 concentration for the next hour.
+2) Dodgers [33] The dataset contains five-minute measure-
+ments of traffic near Los Angeles. The traffic volume
+can be affected by a game hosted by the LA Dodgers
+in the nearby stadium, but not to the extent that it is
+very obvious to spot such an event in the data. The LA
+Dodgers are a popular baseball team from Los Angeles.
+The challenge is to predict the traffic volume for the
+next five-minute interval.
+3) Energy The dataset contains measurements of the elec-
+tricity consumption of a single household in ten-minute-
+intervals. The challenge is to predict the energy con-
+sumption of all household appliances for the next ten-
+minute interval.
+4) Interstate94 The dataset contains hourly data on traffic
+volume on the Interstate 94 from Minneapolis to StPaul. ˙
+The challenge is to predict the traffic volume for the next
+hour.
+5) Tetouan [34] The dataset contains the electricity con-
+sumption of three different zones in Tetouan City, Mex-
+ico measured in ten-minute intervals. The challenge is
+to predict the electricity consumption in Zone 1 for the
+next ten-minute interval.
+With the exception of tsflex, the different implementations
+contain their own set of aggregations, which only partially
+intersect with the aggregations we have implemented for the
+purposes of this benchmark. This makes it difficult to conduct
+a fair comparison of the overall runtime of the different
+implementations.
+To overcome this difficulty, we have chosen the runtime
+per generated feature as the key metric by which we compare
+the different implementations. We justify this approach on the
+basis of the following arguments:
+1) The main idea of the static propositionalization algo-
+rithm is to produce a large number of features in a
+short period of time. Therefore, the number of features
+generated per second is a key metric by which such
+approaches should be evaluated.
+2) If algorithm A produces 10 features per second and
+algorithm B produces 20 features per second, it would
+be reasonable to say that algorithm B is twice as fast
+as algorithm A. Therefore, the speed of static proposi-
+tionalization algorithms should be measured in terms of
+generated features per second or its inverse, runtime per
+generated feature.
+For the case of tsflex, which does not provide its own set
+of aggregations, we use the exact same aggregations we have
+implemented for our own approach, which makes the results
+very comparable. Note that the overall number of generated
+features still differs, because tsflex considers fewer values to be
+aggregated. For instance, our approach would also consider the
+difference between the time stamp “now” and the time stamp
+of the instances we are aggregating as an additional value to
+be aggregated.
+In addition to the runtime, we also consider the quality of
+the generated features. For this purpose, we train an untuned
+gradient boosting regressor on the generated features. We then
+evaluate key metrics for predictive accuracy on a testing set.
+The key metrics are root mean squared error (RMSE), mean
+absolute error (MAE) and the predictive r-squared. All of
+these metrics are commonly used for regression problems in
+a machine learning context.
+B. Results
+This section contains the results of our evaluation. For each
+of the five benchmark datasets and the algorithm considered,
+we present the following metrics:
+• Number of features: The number of features generated by
+the algorithm.
+• Runtime: The overall runtime taken relative to the runtime
+of the fastest approach.
+• Runtime/feat.: The overall runtime per feature relative to
+the runtime of the fastest approach.
+• R-squared: Even though we have measured three different
+metrics, we only choose to present the preditive R2 dueFASTPROP: A CUSTOMIZED DATABASE ENGINE FOR FAST PROPOSITIONALIZATION 6
+TABLE I
+RESULTS FOR THE AIR POLLUTION DATASET
+algorithm features runtime runtime/feat. R2
+fastprop 453 1.0 1.0 0.949
+tsflex 259 63.5 99.3 0.944
+featuretools 125 85.5 309.7 0.948
+tsfel 378 254.3 304.8 0.308
+tsfresh 84 47.7 257.0 0.781
+kats 189 482.7 1156.7 0.349
+TABLE II
+RESULTS FOR THE INTERSTATE94 DATASET
+algorithm features runtime runtime/feat. R2
+fastprop 125 1.0 1.0 0.979
+tsflex 36 18.8 59.3 0.979
+featuretools 59 74.1 157.9 0.972
+tsfel 54 97.1 224.8 0.876
+tsfresh 12 20.7 215.8 0.172
+kats 27 141.1 653.3 0.941
+to space restrictions. We have done so after determining
+that the three metrics considered coincide.
+Results are shown in Tables I, II, III, IV and V.
+We find that the proposed algorithm is at least about 60
+times faster than any of the benchmark algorithms in terms of
+runtime per feature. In some cases, it is over 1000 times faster
+than the benchmark algorithm.
+The predictive accuracy is comparable to tsflex, and con-
+siderably better than all other benchmark algorithms on all of
+the datasets considered. As we configured tsflex to mimic the
+aggregations we use for our own approach, it is not surprising
+that the predictive accuracy is comparable.
+V. CONCLUSION
+In this study, we have designed a customized database
+engine for automated feature engineering on relational data
+and time series. Our goal was to improve the speed of static
+propositionalization approaches.
+TABLE III
+RESULTS FOR THE DODGERS DATASET
+algorithm features runtime runtime/feat. R2
+fastprop 207 1.0 1.0 0.795
+tsflex 38 14.8 70.9 0.802
+featuretools 59 57.3 201.1 0.794
+tsfel 54 74.5 285.5 0.00
+tsfresh 12 14.8 255.6 0.667
+kats 27 95.6 732.6 0.001
+TABLE IV
+RESULTS FOR THE ENERGY DATASET
+algorithm features runtime runtime/feat. R2
+fastprop 1273 1.0 1.0 0.171
+tsflex 1058 87.1 108.6 0.114
+featuretools 367 77.7 269.7 0.100
+tsfel 1566 72.0 58.5 0.114
+tsfresh 348 59.3 217.0 0.108
+kats1
+– – – –
+Throughout this study, we have argued that features gener-
+ated per second (or its inverse runtime per feature) is a key
+measure for static propositionalization approaches. The results
+from our benchmarks support this argument. Even though our
+implementation was consistently faster than other approaches
+in terms of overall runtime, it generated more features in
+that shorter amount of time. This enabled us to consistently
+outperform the benchmark algorithms in terms of predictive
+accuracy, with the exception of tsflex which we have set
+have up to apply the same aggregations and therefore yield
+comparable results in terms of predictive accuracy.
+We have demonstrated that a static propositionalization
+approach implemented using this customized database engine
+is at least about 60 times and up to 1000 times faster
+than implementations on non-customized database engines.
+This speedup is about the same as the speedup attained by
+introducing GPUs to the deep learning literature [1]. We
+therefore conclude that using customized database enginesFASTPROP: A CUSTOMIZED DATABASE ENGINE FOR FAST PROPOSITIONALIZATION 7
+TABLE V
+RESULTS FOR THE TETOUAN DATASET
+algorithm features runtime runtime/feat. R2
+fastprop 412 1.0 1.0 0.997
+tsflex 296 69.8 85.1 0.996
+featuretools 136 88.1 266.9 0.981
+tsfel 432 275.6 262.8 0.983
+tsfresh 96 52.9 227.0 0.940
+kats 216 556.5 1061.5 0.978
+could potentially revolutionize the applicability of relational
+learning approaches.
+REFERENCES
+[1] R. Raina, A. Madhavan, and A. Y. Ng, “Large-scale deep unsupervised
+learning using graphics processors,” in Proceedings of the 26th annual
+international conference on machine learning, 2009, pp. 873–880.
+[2] S. Mittal and S. Vaishay, “A survey of techniques for optimizing deep
+learning on gpus,” Journal of Systems Architecture, vol. 99, p. 101635,
+2019.
+[3] S. Kramer, N. Lavrac, and P. Flach, “Propositionalization Approaches ˇ
+to Relational Data Mining,” in Relational Data Mining, S. Dzeroski and ˇ
+N. Lavrac, Eds. Berlin, Heidelberg: Springer, 2001, pp. 262–291. ˇ
+[4] J. M. Kanter and K. Veeramachaneni, “Deep feature synthesis: Towards
+automating data science endeavors,” in 2015 IEEE International Con-
+ference on Data Science and Advanced Analytics (DSAA), Oct. 2015,
+pp. 1–10.
+[5] M. Christ, N. Braun, J. Neuffer, and A. W. Kempa-Liehr, “Time Series
+FeatuRe Extraction on basis of Scalable Hypothesis tests (tsfresh – A
+Python package),” Neurocomputing, vol. 307, pp. 72–77, Sep. 2018.
+[6] M. Barandas, D. Folgado, L. Fernandes, S. Santos, M. Abreu, P. Bota,
+H. Liu, T. Schultz, and H. Gamboa, “TSFEL: Time Series Feature
+Extraction Library,” SoftwareX, vol. 11, p. 100456, Jan. 2020.
+[7] J. Van Der Donckt, J. Van Der Donckt, E. Deprost, and S. Van Hoecke,
+“Tsflex: Flexible time series processing & feature extraction,”
+arXiv:2111.12429 [cs, eess, stat], Dec. 2021.
+[8] J. Struyf and H. Blockeel, “Relational Learning,” in Encyclopedia of
+Machine Learning and Data Mining, C. Sammut and G. I. Webb, Eds.
+Boston, MA: Springer US, 2017.
+[9] “Propositional Logic,” in Encyclopedia of Machine Learning and Data
+Mining, C. Sammut and G. I. Webb, Eds. Boston, MA: Springer US,
+2017.
+[10] P. A. Flach, “First-Order Logic,” in Encyclopedia of Machine Learning
+and Data Mining, C. Sammut and G. I. Webb, Eds. Boston, MA:
+Springer US, 2017.
+[11] S. Scott and S. Matwin, “Feature engineering for text classification,” in
+ICML, vol. 99. Citeseer, 1999, pp. 379–388.
+[12] G. Forman, “Feature engineering for a gene regulation prediction task,”
+ACM SIGKDD Explorations Newsletter, vol. 4, no. 2, pp. 106–107, Dec.
+2002.
+[13] P. Domingos, “A few useful things to know about machine learning,”
+Communications of the ACM, vol. 55, no. 10, pp. 78–87, 2012.
+[14] H. Kobdani, H. Schutze, A. Burkovski, W. Kessler, and G. Heidemann, ¨
+“Relational feature engineering of natural language processing,” in
+Proceedings of the 19th ACM International Conference on Information
+and Knowledge Management, ser. CIKM ’10. New York, NY, USA:
+Association for Computing Machinery, Oct. 2010, pp. 1705–1708.
+[15] N. Lachiche, “Propositionalization,” in Encyclopedia of Machine Learn-
+ing and Data Mining, C. Sammut and G. I. Webb, Eds. Boston, MA:
+Springer US, 2017.
+[16] U. Khurana, H. Samulowitz, and D. Turaga, “Feature engineering for
+predictive modeling using reinforcement learning,” in Proceedings of the
+AAAI Conference on Artificial Intelligence, vol. 32, 2018.
+[17] J. Schouterden, J. Davis, and H. Blockeel, “LazyBum: Decision Tree
+Learning Using Lazy Propositionalization,” in Inductive Logic Program-
+ming, ser. Lecture Notes in Computer Science, D. Kazakov and C. Erten,
+Eds. Cham: Springer International Publishing, 2020, pp. 98–113.
+[18] A. J. Knobbe, M. D. Haas, and A. Siebes, “Propositionalisation and
+aggregates,” in In Proceedings of the Fifth European Conference on
+Principles of Data Mining and Knowledge Discovery, 2001.
+[19] M.-A. Krogel and S. Wrobel, “Transformation-based learning using
+multirelational aggregation,” in International Conference on Inductive
+Logic Programming. Springer, 2001, pp. 142–155.
+[20] A. Van Assche, C. Vens, H. Blockeel, and S. Dzeroski, “First order ˇ
+random forests: Learning relational classifiers with complex aggregates,”
+Machine Learning, vol. 64, no. 1, pp. 149–182, Sep. 2006.
+[21] N. Landwehr, K. Kersting, and L. D. Raedt, “Integrating Naive Bayes
+and FOIL,” The Journal of Machine Learning Research, vol. 8, pp. 481–
+507, Dec. 2007.
+[22] M. Boulle, C. Charnay, and N. Lachiche, “A scalable robust and ´
+automatic propositionalization approach for Bayesian classification of
+large mixed numerical and categorical data,” Machine Learning, vol.
+108, no. 2, pp. 229–266, 2019.
+[23] M. Perovsek, A. Vavpeti ˇ c, J. Kranjc, B. Cestnik, and N. Lavra ˇ c,ˇ
+“Wordification: Propositionalization by unfolding relational data into
+bags of words,” Expert Systems with Applications, vol. 42, no. 17, pp.
+6442–6456, Oct. 2015.
+[24] A. J. Knobbe, A. Siebes, and D. Van Der Wallen, “Multi-relational
+decision tree induction,” in European Conference on Principles of Data
+Mining and Knowledge Discovery. Springer, 1999, pp. 378–383.
+[25] H. A. Leiva, “MRDTL: A multi-relational decision tree learning algo-
+rithm,” 2002.
+[26] A. Atramentov, H. Leiva, and V. Honavar, “A multi-relational decision
+tree learning algorithm–implementation and experiments,” in Interna-
+tional Conference on Inductive Logic Programming. Springer, 2003,
+pp. 38–56.
+[27] A. Crellin-Quick, “Cesium: Open-Source Platform for Time Series
+Inference,” cesium-ml, Jan. 2022.
+[28] D. M. Burns and C. M. Whyne, “Seglearn: A Python Package for
+Learning Sequences and Time Series,” Journal of Machine Learning
+Research, vol. 19, no. 83, pp. 1–7, 2018.
+[29] H. T. Lam, J.-M. Thiebaut, M. Sinn, B. Chen, T. Mai, and O. Alkan,
+“One button machine for automating feature engineering in relational
+databases,” arXiv:1706.00327 [cs], Jun. 2017.
+[30] G. Shmueli and O. R. Koppius, “Predictive analytics in information
+systems research,” MIS quarterly, pp. 553–572, 2011.
+[31] F. I. D. S. Team, “Kats,” https://github.com/facebookresearch/Kats, 2021.
+[32] S. De Vito, E. Massera, M. Piga, L. Martinotto, and G. Di Francia,
+“On field calibration of an electronic nose for benzene estimation in
+an urban pollution monitoring scenario,” Sensors and Actuators B:
+Chemical, vol. 129, no. 2, pp. 750–757, 2008. [Online]. Available:
+https://www.sciencedirect.com/science/article/pii/S0925400507007691
+[33] A. Ihler, J. Hutchins, and P. Smyth, “Adaptive event detection with time-
+varying poisson processes,” in Proceedings of the 12th ACM SIGKDD
+international conference on Knowledge discovery and data mining,
+2006, pp. 207–216.
+[34] A. Salam and A. El Hibaoui, “Comparison of machine learning al-
+gorithms for the power consumption prediction:-case study of tetouan
+city–,” in 2018 6th International Renewable and Sustainable Energy
+Conference (IRSEC). IEEE, 2018, pp. 1–5.

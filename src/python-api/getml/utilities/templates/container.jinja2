@@ -1,0 +1,63 @@
+<style>
+  th {
+    text-align: left !important;
+  }
+  td {
+    text-align: left !important;
+  }
+  th:nth-child(1) {
+    text-align: right;
+    border-right: 1px solid LightGray;
+  }
+  th.float {
+    text-align: right !important;
+  }
+  td.float {
+    text-align: right !important;
+  }
+  th.int {
+    text-align: right !important;
+  }
+  td.int {
+    text-align: right !important;
+  }
+</style>
+
+<table class="dataframe">
+  <thead>
+    <tr>
+      {% for cell in headers[0] %}
+        {% if cell.dtype %}
+          <th class="{{ cell.dtype }}">{{ cell.value }}</th>
+        {% else %}
+          <th>{{ cell.value }}</th>
+        {% endif %}
+      {% endfor %}
+    </tr>
+    {% for header in headers[1:] %}
+      <tr>
+        {% for cell in header %}
+          {% if cell.role %}
+            <th class="sub-header {{ cell.dtype }}">{{ cell.value }}</th>
+          {% else %}
+            <th class="sub-header">{{ cell.value }}</th>
+          {% endif %}
+        {% endfor %}
+      </tr>
+    {% endfor %}
+  </thead>
+  <tbody>
+    {% for row in rows %}
+      <tr>
+        <th>{{ row[0].value }}</th>
+          {% for cell in row[1:] %}
+            {% if cell.dtype %}
+              <td class="{{ cell.dtype }}">{{ cell.value }}</td>
+            {% else %}
+              <td>{{ cell.value }}</td>
+            {% endif %}
+          {% endfor %}
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>

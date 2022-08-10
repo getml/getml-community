@@ -1,0 +1,100 @@
+<style>
+  th {
+    text-align: left !important;
+  }
+  th.sub-header {
+    font-weight: normal;
+    font-style: italic;
+    text-align: left !important;
+  }
+  td {
+    text-align: left !important;
+  }
+  th:nth-child(1) {
+    text-align: right !important;
+    border-right: 1px solid LightGray;
+  }
+  th.numerical {
+    text-align: right !important;
+  }
+  td.numerical {
+    text-align: right !important;
+  }
+
+  td.char-align {
+    text-align: right !important;
+  }
+  span.left {
+    text-align: right;
+    width: 3em;
+  }
+  span.right {
+    float: right;
+    text-align: left;
+  }
+</style>
+
+<table class="dataframe">
+  <thead>
+    <tr>
+      {% for cell in headers[0] %}
+        {% if cell.role %}
+          <th class="{{ cell.role }}">{{ cell.value }}</th>
+        {% else %}
+          <th>{{ cell.value }}</th>
+        {% endif %}
+      {% endfor %}
+    </tr>
+    {% for header in headers[1:] %}
+      <tr>
+        {% for cell in header %}
+          {% if cell.role %}
+            <th class="sub-header {{ cell.role }}">{{ cell.value }}</th>
+          {% else %}
+            <th class="sub-header">{{ cell.value }}</th>
+          {% endif %}
+        {% endfor %}
+      </tr>
+    {% endfor %}
+  </thead>
+  <tbody>
+    {% for row in rows %}
+      <tr>
+        <th>{{ row[0].value }}</th>
+        {% for cell in row[1:] %}
+          {% if cell.role in ["numerical", "target", "unused_float"] %}
+            {% if "." in cell.value and cell.value != "..."  %}
+              {% set int, frac = cell.value.split(".") %}
+              {% set sep = "." %}
+            {% else %}
+              {% set int, frac = (cell.value, "&nbsp;") %}
+              {% set sep = "" %}
+            {% endif %}
+          <td class="char-align numerical">
+            <span class="left">{{ int }}</span
+            ><span class="right" style="width: {{ precisions[loop.index] }}ch"
+              >{{ sep + frac }}</span
+            >
+          </td>
+          {% elif cell.role %}
+            <td class="{{ cell.role }}">{{ cell.value }}</td>
+          {% else %}
+            <td>{{ cell.value }}</td>
+          {% endif %}
+        {% endfor %}
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% if footer %}
+  <p>
+    {{ footer.n_rows }} rows<br />
+    {% if footer.data_frame %}
+      data frame: {{ footer.data_frame }}<br />
+    {% endif %}
+    type: {{ footer.type }}<br />
+    {% if footer.url %}
+      url: <a href="{{ footer.url }}" target="_blank"> {{ footer.url }}</a>
+    {% endif %}
+  </p>
+{% endif %}

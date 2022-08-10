@@ -1,0 +1,749 @@
+:root {
+  --main-bg-color: #ffffff;
+
+  --warning-color: #fffae8; /* pale orange */
+  --warning-title: #ffa421; /* vivid blue */
+
+  --note-color: #e4f5ff; /* pale blue */
+  --note-title: #1c83e1; /* vivid blue */
+
+  --tip-color: #dffde9; /* pale green */
+  --tip-title: #21c354; /* vivid green */
+
+  --important-color: #fff6d0; /* pale orange */
+  --important-title: #ff8700; /* vivid orage */
+
+  --st-gray-70: #808495;
+  --st-gray-60: #a3a8b8;
+  --st-gray-50: #bfc5d3;
+  --st-gray-40: #d5dae5;
+  --st-gray-20: #f0f2f6;
+  --st-gray-15: #f4f6fa;
+  --st-gray-10: #fafafa;
+  --st-red: #513294;
+
+  --st-black: #0e1117;
+  --st-blue-80: #0068c9;
+  --st-blue-60: #3d9df3;
+
+  --small-font: 14px;
+  --normal-padding: 1.618rem;
+}
+
+body.wy-body-for-nav {
+  background: var(--main-bg-color);
+  height: 100%;
+}
+
+body,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+input[type="text"],
+li {
+  font-family: Graphik, sans-serif;
+  color: var(--st-black);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  padding-top: 1em;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+a,
+a:visited {
+  color: var(--st-blue-80);
+}
+
+a:active {
+  color: var(--st-red);
+}
+
+a:hover {
+  color: var(--st-blue-60);
+}
+
+strong {
+  font-weight: 500;
+}
+
+/* Fix logo placement and size */
+.wy-side-nav-search > a img.logo,
+.wy-nav-top img.logo {
+  height: 25px;
+  width: auto;
+  background: none;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+}
+
+/* Sidebar headings */
+.wy-menu-vertical p.caption {
+  color: var(--st-gray-70);
+  font-weight: 400;
+}
+
+/* Sidebar links */
+.wy-menu-vertical li a {
+  color: var(--st-black);
+  font-weight: 400;
+}
+
+/* For mobile, top bar */
+.wy-nav-top {
+  background: none;
+  display: none;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+@media screen and (max-width: 768px) {
+  .wy-nav-top {
+    display: flex;
+  }
+}
+
+/* Hamburger menu icon */
+.wy-nav-top .fa-bars {
+  color: var(--st-gray-60);
+  position: absolute;
+  left: 1.6rem;
+}
+
+/* background of content */
+.wy-nav-content {
+  background: none;
+}
+
+/* Sidebar background color */
+.wy-nav-side,
+.wy-menu-vertical li.current {
+  background: none;
+}
+
+.wy-nav-content-wrap {
+  background: none;
+}
+
+/* Basic font settings for sidebar */
+.wy-menu-vertical li.toctree-l1.current > a,
+.wy-menu-vertical li.toctree-l1.current li.toctree-l2 > a,
+.wy-menu-vertical li.toctree-l2.current > a,
+.wy-menu-vertical li.toctree-l2.current li.toctree-l3 > a,
+.wy-menu-vertical li.toctree-l3.current > a,
+.wy-menu-vertical li.toctree-l3.current li.toctree-l4 > a,
+.wy-menu-vertical li ul li a {
+  background: none;
+  font-weight: 400;
+  border-radius: 5px;
+}
+
+/* Clicked color */
+.wy-menu-vertical li.toctree-l1.current > a:active,
+.wy-menu-vertical li.toctree-l1.current li.toctree-l2 > a:active,
+.wy-menu-vertical li.toctree-l2.current > a:active,
+.wy-menu-vertical li.toctree-l2.current li.toctree-l3 > a:active,
+.wy-menu-vertical li.toctree-l3.current > a:active,
+.wy-menu-vertical li.toctree-l3.current li.toctree-l4 > a:active,
+.wy-menu-vertical a:active,
+.wy-menu-vertical li ul li a:active {
+  color: var(--st-black);
+}
+
+/* Hover/selection color */
+.wy-menu-vertical li.toctree-l1.current > a:hover,
+.wy-menu-vertical li.toctree-l1.current li.toctree-l2 > a:hover,
+.wy-menu-vertical li.toctree-l2.current > a:hover,
+.wy-menu-vertical li.toctree-l2.current li.toctree-l3 > a:hover,
+.wy-menu-vertical li.toctree-l3.current > a:hover,
+.wy-menu-vertical li.toctree-l3.current li.toctree-l4 > a:hover,
+.wy-menu-vertical a:hover,
+.wy-menu-vertical li ul li a:hover {
+  background: var(--st-gray-15);
+}
+
+/* Current sidebar item color */
+.wy-menu.wy-menu-vertical > ul.current > li.current > a,
+.wy-menu.wy-menu-vertical > ul.current > li.toctree-l1.current > a,
+.wy-menu.wy-menu-vertical > ul.current li.toctree-l2.current > a,
+.wy-menu.wy-menu-vertical > ul.current li.toctree-l3.current > a,
+.wy-menu.wy-menu-vertical > ul.current li.toctree-l4.current > a {
+  font-weight: 600;
+  color: var(--st-red);
+}
+
+/* Top-level font color */
+.wy-menu-vertical a {
+  color: var(--st-gray-70);
+  font-size: var(--small-font);
+}
+
+.wy-side-nav-search {
+  text-align: left;
+}
+
+/* Style search bar */
+/* #rtd-search-form > input[type="text"] {
+  width: 220px;
+  border-radius: 50px;
+  border: 1px solid var(--st-gray-50);
+  box-shadow: none;
+  padding: 0.5em 0.5em 0.3em 0.5em;
+  margin: 0;
+  line-height: 1;
+}
+
+#search-results .search li {
+  border-bottom: 1px solid var(--st-gray-50);
+}
+
+#search-results .search li a {
+  margin-bottom: 0;
+} */
+
+/* Boxed content */
+.wy-alert,
+.rst-content .note,
+.rst-content .attention,
+.rst-content .caution,
+.rst-content .danger,
+.rst-content .error,
+.rst-content .hint,
+.rst-content .important,
+.rst-content .tip,
+.rst-content .warning,
+.rst-content .seealso,
+.rst-content .admonition-todo,
+.rst-content .admonition {
+  border-radius: 5px;
+  padding: var(--normal-padding);
+  margin: var(--normal-padding) 0;
+  overflow-x: auto;
+}
+
+.rst-content pre.literal-block,
+.rst-content div[class^="highlight"] {
+  border-radius: 5px;
+  background-color: var(--st-gray-15);
+  border: none;
+}
+
+.rst-content div[class^="highlight"] pre {
+  padding: var(--normal-padding);
+}
+
+.rst-content .admonition p {
+  font-size: var(--small-font);
+}
+
+.rst-content .admonition-title {
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-top: 0;
+  font-weight: 500;
+  font-size: var(--small-font);
+  text-transform: uppercase;
+}
+
+/* style warnings */
+.rst-content .warning,
+.rst-content .warning .admonition-title {
+  background: var(--warning-color);
+}
+.rst-content .warning .admonition-title {
+  color: var(--warning-title);
+}
+
+/* style notes */
+.rst-content .note,
+.rst-content .note .admonition-title {
+  background: var(--note-color);
+}
+.rst-content .note .admonition-title {
+  color: var(--note-title);
+}
+
+/* style tip boxes */
+.rst-content .tip,
+.rst-content .tip .admonition-title {
+  background: var(--tip-color);
+}
+.rst-content .tip .admonition-title {
+  color: var(--tip-title);
+}
+
+/* style important boxes */
+.rst-content .important,
+.rst-content .important .admonition-title {
+  background: var(--important-color);
+}
+.rst-content .important .admonition-title {
+  color: var(--important-title);
+}
+
+/* Breadcrumbs */
+
+.wy-breadcrumbs {
+  font-size: var(--small-font);
+}
+
+.wy-breadcrumbs li {
+  color: var(--st-gray-70);
+  display: inline-block;
+  /* Remove space around the ">>" */
+  display: inline-flex;
+  align-items: center;
+}
+
+.wy-breadcrumbs a {
+  color: var(--st-gray-70);
+}
+
+.wy-breadcrumbs a:hover {
+  text-decoration: underline;
+}
+
+footer,
+footer p {
+  color: var(--st-gray-70);
+}
+
+/* Add spacing between bottom of content and previous/next buttons */
+footer {
+  padding-top: var(--normal-padding);
+}
+
+hr {
+  border: none;
+  margin: var(--normal-padding);
+}
+
+hr.docutils {
+  background-color: var(--st-gray-50);
+}
+
+/* Make Youtube embeds responsive (requires wrapping with .embed-container div) */
+
+.embed-container {
+  position: relative;
+  padding-bottom: 56.25%;
+  height: 0;
+  overflow: hidden;
+  max-width: 100%;
+  margin: var(--normal-padding) 0;
+}
+
+.embed-container iframe,
+.embed-container object,
+.embed-container embed {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Injected Read-the-docs version box */
+
+.rst-versions {
+  background: var(--main-bg-color) !important;
+  border: 1px solid transparent !important;
+  border-radius: 5px !important;
+  margin: 0 auto !important;
+  margin-left: max(-550px, -50vw) !important;
+  left: 50vw !important;
+}
+
+.rst-versions .rst-current-version {
+  background: transparent !important;
+  line-height: 1 !important;
+}
+
+.rst-versions .rst-current-version .fa,
+.rst-versions .rst-current-version .wy-menu-vertical li span.toctree-expand,
+.wy-menu-vertical li .rst-versions .rst-current-version span.toctree-expand,
+.rst-versions .rst-current-version .rst-content .admonition-title,
+.rst-content .rst-versions .rst-current-version .admonition-title,
+.rst-versions .rst-current-version .rst-content h1 .headerlink,
+.rst-content h1 .rst-versions .rst-current-version .headerlink,
+.rst-versions .rst-current-version .rst-content h2 .headerlink,
+.rst-content h2 .rst-versions .rst-current-version .headerlink,
+.rst-versions .rst-current-version .rst-content h3 .headerlink,
+.rst-content h3 .rst-versions .rst-current-version .headerlink,
+.rst-versions .rst-current-version .rst-content h4 .headerlink,
+.rst-content h4 .rst-versions .rst-current-version .headerlink,
+.rst-versions .rst-current-version .rst-content h5 .headerlink,
+.rst-content h5 .rst-versions .rst-current-version .headerlink,
+.rst-versions .rst-current-version .rst-content h6 .headerlink,
+.rst-content h6 .rst-versions .rst-current-version .headerlink,
+.rst-versions .rst-current-version .rst-content dl dt .headerlink,
+.rst-content dl dt .rst-versions .rst-current-version .headerlink,
+.rst-versions .rst-current-version .rst-content p.caption .headerlink,
+.rst-content p.caption .rst-versions .rst-current-version .headerlink,
+.rst-versions .rst-current-version .rst-content table > caption .headerlink,
+.rst-content table > caption .rst-versions .rst-current-version .headerlink,
+.rst-versions .rst-current-version .rst-content .code-block-caption .headerlink,
+.rst-content .code-block-caption .rst-versions .rst-current-version .headerlink,
+.rst-versions .rst-current-version .rst-content tt.download span:first-child,
+.rst-content tt.download .rst-versions .rst-current-version span:first-child,
+.rst-versions .rst-current-version .rst-content code.download span:first-child,
+.rst-content code.download .rst-versions .rst-current-version span:first-child,
+.rst-versions .rst-current-version .icon {
+  color: var(--st-gray-70) !important;
+}
+
+.rst-versions .rst-other-versions dd a {
+  color: var(--st-gray-60) !important;
+}
+
+.rst-versions .rst-other-versions hr {
+  border: none !important;
+  margin: 0.5rem 0 0 0 !important;
+}
+
+.rst-versions.shift-up {
+  border-color: var(--st-gray-50) !important;
+  bottom: 0.5rem !important;
+}
+
+/* Add small amount of padding to separate bullet points */
+.wy-plain-list-disc li,
+.rst-content .section ul li,
+.rst-content .toctree-wrapper ul li,
+.wy-plain-list-decimal li,
+.rst-content .section ol li,
+.rst-content ol.arabic li,
+article ol li,
+article ul li {
+  padding: 2px;
+}
+
+/* Tighten spacing for lists, so that top and bottom spacing around p looks even */
+.rst-content .section ol p,
+.rst-content .section ul p {
+  margin-bottom: 5px;
+}
+
+/* 960 is where the RTD mobile/responsive theme kicks in to move nav to header */
+@media (min-width: 960px) {
+  h1 {
+    font-size: 44px;
+  }
+
+  h2 {
+    font-size: 28px;
+  }
+
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-size: 20px;
+    font-weight: 500;
+  }
+
+  body,
+  #search-results .search li a,
+  .wy-plain-list-disc,
+  .rst-content .section ul,
+  .rst-content .toctree-wrapper ul,
+  article ul {
+    line-height: 26px;
+    /* getml */
+    /* font-size: 17px; */
+  }
+
+  p {
+    /* line-height: 26px;
+    font-size: 17px;
+    margin-bottom: 10px;
+    font-weight: 400; */
+  }
+
+  footer p {
+    font-size: var(--small-font);
+  }
+
+  /* Align text from Documentation with H1 of document */
+  .wy-side-nav-search {
+    padding-top: var(--normal-padding);
+    padding-bottom: var(--normal-padding);
+  }
+
+  .wy-nav-content {
+    min-height: 100vh;
+  }
+
+  /* Float search box to right of navbar */
+  div[role="search"] {
+    float: right;
+  }
+
+  /* Borders for hover */
+  .wy-menu-vertical li.toctree-l1.current > a,
+  .wy-menu-vertical li.current a {
+    border: none;
+  }
+
+  /* Site centering code */
+
+  .wy-grid-for-nav {
+    position: relative;
+    max-width: 1100px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  /**
+   * TODO: Make the nav have position: relative
+   *
+   * But first need to make the template we use not call scrollIntoView() for the selected nav item
+   * as that would put the user in the wrong scroll position.
+   * */
+  .wy-nav-side {
+    position: fixed;
+    left: auto;
+  }
+}
+
+
+
+
+
+/* 
+*
+* getML custom 
+*
+*/
+
+
+
+/* #rtd-search-form > input[type="text"] {
+  width: 220px;
+  border-radius: 50px;
+  border: 1px solid var(--st-gray-50);
+  box-shadow: none;
+  padding: 0.5em 0.5em 0.3em 0.5em;
+  margin: 0;
+  line-height: 1;
+}
+
+#search-results .search li {
+  border-bottom: 1px solid var(--st-gray-50);
+}
+
+#search-results .search li a {
+  margin-bottom: 0;
+} */
+
+
+.wy-search-aside {
+  float: right;
+  display: inline-block;
+}
+
+
+div[role=search] input[type=text] {
+  -webkit-appearance: none;
+  padding: 6px;
+  /* padding: .3rem 0 0; */
+  display: inline-block;
+  border: 1px solid #eaeaea;
+  font-size: 15px;
+  /* font-family: Lato, proxima-nova, Helvetica Neue, Arial, sans-serif; */
+  box-shadow: none;
+  /* inset 0 1px 3px #ddd; */
+
+  /* -webkit-transition: background .3s linear; */
+  /* -moz-transition: background .3s linear; */
+  /* transition: background .3s linear; */
+  background: #f2f2f2;
+  width: 200px;
+  margin: 8px 0;
+  padding: 8px 18px;
+  border-radius: 3px;
+}
+
+div[role=search] input[type=text]:focus {
+  outline: 0;
+  outline: thin dotted\9;
+  border-color: #dadada;
+  /* background: #efefef; */
+}
+
+div[role=navigation] .wy-breadcrumbs {
+}
+
+div[role=navigation] .wy-breadcrumbs li{
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+@media (max-width: 768px) {
+  .wy-search-aside {
+      float: right;
+      display: block;
+      width: 100%;
+  }
+  div[role=search] input[type=text] {
+    width: 100%;
+    margin: 6px 0 0;
+    padding: 12px 18px;
+  }
+  .algolia-autocomplete {
+    display: block !important;
+  }
+  div[role=navigation] .wy-breadcrumbs li{
+    /* display: none; */
+  }
+  hr {
+    border: none;
+  }
+}
+
+
+
+/* 
+*
+* getML algolia 
+*
+*/
+
+
+.algolia-autocomplete .algolia-docsearch-footer {
+  display: none !important;
+}
+
+@media (min-width: 769px) and (max-width: 900px) {
+  .algolia-autocomplete .ds-dropdown-menu {
+    /* max-width: calc(100vw - 32px - 300px) !important;
+    min-width: calc(100vw - 32px - 300px) !important;
+    width: calc(100vw - 32px - 300px) !important;
+    margin-left: 16px !important; */
+    max-width: calc(100vw - 100px - 300px) !important;
+    min-width: calc(100vw - 100px - 300px) !important;
+    width: calc(100vw - 100px - 300px) !important;
+    margin-left: 0px !important;
+  }
+
+  .algolia-autocomplete .algolia-docsearch-suggestion--content {
+    width: 100% !important;
+    padding-left: 0 !important;
+  }
+
+  .algolia-autocomplete .algolia-docsearch-suggestion--content:before {
+    display: none !important;
+  }
+
+  .algolia-autocomplete .algolia-docsearch-suggestion--subcategory-column {
+    display: none !important;
+  }
+
+  .algolia-autocomplete.algolia-autocomplete-right .ds-dropdown-menu {
+    /* right: -36px !important; */
+    right: 0px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .algolia-autocomplete .ds-dropdown-menu {
+    /* max-width: calc(100vw - 20px) !important;
+    min-width: calc(100vw - 20px) !important;
+    width: calc(100vw - 20px) !important;
+    margin-left: 16px !important; */
+    min-width: 100%;
+    max-width: 100%;
+    width: 100%;
+    /* margin: 0; */
+  }
+
+  .algolia-autocomplete .algolia-docsearch-suggestion--content {
+    width: 100% !important;
+    padding-left: 0 !important;
+  }
+
+  .algolia-autocomplete .algolia-docsearch-suggestion--content:before {
+    display: none !important;
+  }
+
+  .algolia-autocomplete .algolia-docsearch-suggestion--subcategory-column {
+    display: none !important;
+  }
+
+  .algolia-autocomplete.algolia-autocomplete-right .ds-dropdown-menu {
+    right: -16px !important;
+  }
+}
+
+
+.wy-side-nav-search {
+  text-align: left;
+  padding: 0 1.618em;
+}
+
+@media (min-width: 769px) {
+  .wy-side-nav-search {
+    margin-bottom: 1.9em;/* 3.8em; */
+  }
+}
+
+
+.wy-side-nav-search .wy-dropdown>a, .wy-side-nav-search>a {
+  padding: 0px;
+  margin: 0px;
+  margin: 2.8em auto .8em;
+}
+
+.wy-side-nav-search img {
+  padding: 0px;
+}
+
+.wy-side-nav-search>div.version {
+  margin: 0;
+}
+
+.wy-side-nav-search .wy-dropdown>a:hover, .wy-side-nav-search>a:hover {
+  background: none;
+}
+
+/* algolia hide subcategory-column */
+.algolia-autocomplete .algolia-docsearch-suggestion--content:before,
+.algolia-autocomplete .algolia-docsearch-suggestion--subcategory-column {
+  display: none !important;
+}
+
+.algolia-autocomplete .algolia-docsearch-suggestion--content {
+  width: 100%;
+}
+
+/* Footer to page bottom */
+
+/* div.rst-content {
+  display: flex;
+  height: 100vh;
+}
+
+div.rst-content > div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+footer {
+  margin-bottom: auto;
+} */
+
+
