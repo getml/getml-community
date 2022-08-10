@@ -1,0 +1,13 @@
+set(
+    PREDICTORS_OBJ
+    ${PREDICTORS_SOURCE_DIRECTORY}/Encoding.cpp
+    ${PREDICTORS_SOURCE_DIRECTORY}/LinearRegression.cpp
+    ${PREDICTORS_SOURCE_DIRECTORY}/LogisticRegression.cpp
+    ${PREDICTORS_SOURCE_DIRECTORY}/PredictorImpl.cpp
+    ${PREDICTORS_SOURCE_DIRECTORY}/PredictorParser.cpp
+    ${PREDICTORS_SOURCE_DIRECTORY}/StandardScaler.cpp
+    ${PREDICTORS_SOURCE_DIRECTORY}/XGBoostHyperparams.cpp
+    ${PREDICTORS_SOURCE_DIRECTORY}/XGBoostIteratorDense.cpp
+    ${PREDICTORS_SOURCE_DIRECTORY}/XGBoostIteratorSparse.cpp
+    ${PREDICTORS_SOURCE_DIRECTORY}/XGBoostPredictor.cpp
+)

@@ -1,0 +1,14 @@
+{
+  "authentication": {
+    "key": "AIzaSyD5qdERurTk7_rQ-IaAB7lo8IBCISr8hmk",
+    "refreshToken": "",
+    "userId": ""
+  },
+  "monitor": {
+    "eventURL": "https://mp.getml.com/analytics",
+    "licenseSeedStatic": "-1",
+    "baseURL": "https://admin.getml.com/api/",
+    "apiSuite": "suite-v0"
+  },
+  "signature": "2b82e55af86e06c581242bf9126ddd1a820733c027e138da43ac19d386b2ae99"
+}

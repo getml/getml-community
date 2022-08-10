@@ -1,0 +1,8 @@
+[tool.mypy]
+ingnore_errors = true
+
+[tool.isort]
+multi_line_output = 3
+profile = "black"
+sections = ['FUTURE', 'STDLIB', 'THIRDPARTY', 'GETML', 'FIRSTPARTY', 'LOCALFOLDER']
+known_getml = ['getml']

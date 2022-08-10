@@ -1,0 +1,16 @@
+{
+    "engine": {
+        "port": 1708
+    },
+    "monitor": {
+        "allowPushNotifications": true,
+        "allowRemoteIPs": false,
+        "launchBrowser": true,
+        "log": false,
+        "httpPort": 1709,
+        "proxyUrl": "",
+        "tcpPort": 1711
+    },
+    "inMemory": true,
+    "projectDirectory": "../projects/"
+}
