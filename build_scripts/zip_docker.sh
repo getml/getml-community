@@ -4,7 +4,7 @@ function zip_docker() {
 
     cd $HOMEDIR/../docker || exit 1
 
-    export ZIPFILE=getml-$VERSION_NUMBER-docker.zip
+    export ZIPFILE=getml-$VERSION_NUMBER-community-edition-docker.zip
 
     zip $ZIPFILE * src/*
 
