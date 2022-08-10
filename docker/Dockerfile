@@ -44,7 +44,10 @@ RUN tar -xzvf python.tar.gz
 WORKDIR python
 RUN pip3 install .
 
-# TODO clone the getml-community git repository
+WORKDIR /home/getml
+RUN git clone https://github.com/getml/getml-community.git
+WORKDIR /home/getml/getml-community/demo-notebooks
+RUN git checkout $VERSION_NUMBER
 
 WORKDIR /home/getml
 
@@ -56,6 +59,7 @@ if [ -z \${1} ]; then export TOKEN=\$(openssl rand -hex 16); else export TOKEN=\
 export URL_JUPYTER_NOTEBOOK=\$2\n\
 cd /home/getml/storage\n\
 mkdir -p notebooks\n\
+cp -u /home/getml/getml-community/demo-notebooks/*.ipynb notebooks\n\
 echo 'To access Jupyter Lab, please open a browser and point it to the following URL:'\n\
 echo \$URL_JUPYTER_NOTEBOOK'/?token='\$TOKEN\n\
 echo\n\
