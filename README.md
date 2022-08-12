@@ -15,6 +15,20 @@ between 60x to 1000x faster than other open-source tools for automated
 feature engineering.
 
 
+## Table of contents
+
+- [Benchmarks](#benchmarks)
+- [Example](#example)
+- [Demo notebooks](#demo-notebooks)
+- [Installation](#installation)
+    - [Linux](#linux)
+    - [Docker (for macOS, Windows or Linux)](#docker-for-macos-windows-or-linux)
+- [Deinstallation](#deinstallation)
+    - [Linux](#linux-1)
+    - [Docker](#docker)
+- [Compiling from source](#compiling-from-source)
+
+
 ## Benchmarks
 
 We evaluated the performance of getML's FastProp algorithm against five other open-source tools for automated feature engineering: _tsflex_, _featuretools_, _tsfel_, _tsfresh_ and _kats_. The datasets used include:
