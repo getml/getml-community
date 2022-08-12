@@ -4,6 +4,16 @@
     <img width="400" style="width: 50% !important; max-width: 400px;" src="assets/getml_logo.png#gh-light-mode-only" />
 </p>
 
+<p align="center" style="text-align: center;">
+        <a href="https://getml.com/contact/lets-talk/" target="_blank">
+        <img src="https://img.shields.io/badge/schedule-a_meeting-blueviolet.svg" /></a>
+        <a href="mailto:contact@getml.com" target="_blank">
+        <img src="https://img.shields.io/badge/contact-us_by_mail-orange.svg" /></a>
+        <a href="LICENSE.txt" target="_blank">
+        <img src="https://img.shields.io/badge/LICENSE-ELv2-green" /></a>
+</p>
+
+
 # getML - Automated Feature Engineering for Relational Data and Time Series
 
 getML is a tool for automating feature engineering on relational data
