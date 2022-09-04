@@ -1,6 +1,6 @@
 ,Community edition,Enterprise edition
-License,MIT license,Proprietary
-Operating systems,Linux & Docker,Also macOS
+License,Elastic Licence v2,Proprietary
+Platform,Linux & Docker,Also macOS
 Preprocessors,"EmailDomain, Imputation, Seasonal, Substring, TextFieldSplitter",Also Mapping
 Feature learners,FastProp,"Also Multirel, Relboost, RelMT"
 Predictors,"LinearRegression, LogisticRegression, XGBoost",Same

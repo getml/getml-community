@@ -51,10 +51,13 @@ extensions = [
     "sphinx_rtd_theme",
     "sphinx.ext.autosummary",
     "sphinx_automodapi.automodapi",
+    'sphinx.ext.autosectionlabel'
 ]
 
 autosummary_generate = True
 autosummary_imported_members = True
+
+autosectionlabel_prefix_document = True
 
 numpydoc_show_class_members = False
 

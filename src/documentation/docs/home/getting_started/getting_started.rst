@@ -16,10 +16,14 @@ will learn how to do the following:
 3. `Building a pipeline <#building-a-pipeline>`__
 4. `Working with a pipeline <#working-with-a-pipeline>`__
 
-You have not installed getML on your machine yet? Head over to the
-`installation
-instructions <https://docs.get.ml/latest/tutorial/installation.html>`__
-before you get started.
+The guide is applicable to both the enterprise and the community editions of 
+getML. The highlights of the two are mentioned under 
+`community vs enterprise edition <#community-vs-enterprise-edition>`__ section below.
+
+You have not installed getML on your machine yet? Before you get started,
+head over to the installation instructions: 
+`for the enterprise edition <https://docs.get.ml/latest/tutorial/installation.html>`__ or 
+`for the community edition <https://github.com/getml/getml-community#installation>`__.
 
 
 Introduction
@@ -64,9 +68,9 @@ covered in other material.
 All functionality of getML is implemented in the so-called *getML
 engine*. It is written in C++ to achieve the highest performance and
 efficiency possible and is responsible for all the heavy lifting. The
-getML Python API acts as a bridge to communicate with engine. In
-addition, the *getML monitor* provides a Go-based graphical user
-interface to ease working with getML and significantly accelerate your
+getML Python API acts as a bridge to communicate with engine. In addition, the
+*getML monitor* (available in enterprise edition) provides a Go-based graphical
+user interface to ease working with getML and significantly accelerate your
 workflow.
 
 In this article, we start with a brief glimpse of different toolsets offered by 
@@ -98,62 +102,69 @@ open-source getML community edition and full-featured getML enterprise edition:
 Starting a new project
 ----------------------
 
-After you’ve successfully
-`installed <https://docs.get.ml/latest/tutorial/installation.html>`__
-getML, you can launch it as follows:
-
-* -- On Mac, execute  ``getml-cli`` or double-click the application icon.  
-* -- On Windows/docker, execute ``run.sh`` in Git Bash.  
-* -- On Linux, execute ``getML``.  
-* -- On all operating systems, open a jupyter-notebook and execute ``getml.engine.launch()``.
-
-This launches both the getML engine and monitor.
-
-Before diving into the actual project, you need to log into the getML
-suite. This happens in the getML Monitor, the frontend to the engine. If
-you open the browser of your choice and visit http://localhost:1709/,
-you’ll see a login screen. Click ‘create new account’ and follow the
-indicated steps. After you’ve activated your account by clicking the
-link in the activation E-mail you’re ready to go. From now on, the
-entire analysis is run from Python. We will cover the getML monitor in a
-later tutorial but feel free to check what is going on while following
-this guide.
-
+After you’ve successfully installed getML (`enterprise
+<https://docs.get.ml/latest/tutorial/installation.html>`__ or `community
+<https://github.com/getml/getml-community#installation>`__), you can begin by
+executing the following in a jupyter-notebook:
 
 .. code:: python
 
     >>> import getml
-    >>> print("getML version: {}".format(getml.__version__))
-    getML version: 1.0.0
+    >>> print(f"getML API version: {getml.__version__}\n")
+    getML API version: 1.3.0
 
-The entry-point for your project ist the :mod:`~getml.project` module. From here,
+    >>> getml.engine.launch()
+    Launched the getML engine. The log output will be stored in
+    /home/xxxxx/.getML/logs/xxxxxxxxxxxxxx.log.
+
+This will import the getML Python API, launch the engine and the monitor.
+
+Alternatively, you can also launch the getML engine and the monitor as follows:
+
+- -- On Mac, execute  ``getml-cli`` inside a terminal or double-click the
+  application icon.  
+- -- On Windows/docker, execute ``run.sh`` in Git Bash.  
+- -- On Linux, execute ``getML`` inside a terminal.
+  
+Now, inside Python, execute ``import getml`` to import the API.
+
+The getML Monitor, available in the enterprise edition, is the frontend to the
+engine. It should open automatically by launching the engine. In case it
+does not, visit http://localhost:1709/ to open it. From now on, the entire
+analysis is run from Python. We will cover the getML monitor in a later tutorial
+but feel free to check what is going on while following this guide.
+
+The entry-point for your project is the :mod:`~getml.project` module. From here,
 you can start projects and control running projects. Further, you have access to
 all project specific entities, and you can export a project as a ``.getml`` bundle
-to disk or load a ``.getml`` bundle from disk.
-
+to disk or load a ``.getml`` bundle from disk. To see the running projects, you
+can execute:
 
 .. code:: python
 
     >>> getml.project
     Cannot reach the getML engine. Please make sure you have set a project.
-
     To set: `getml.engine.set_project`
+    Available projects:
+
 
 This message tells us, that we have no running engine instance because we have
 not set a project. So, we follow the advice and create a new project. All data
-sets and models belonging to a project will be stored in
-``~/.getML/getml-VERSION/projects``.
-
+sets and models belonging to a project will be stored in ``~/.getML/projects``.
 
 .. code:: python
 
-    >>> getml.engine.set_project("getting_started")
-    Connected to project 'getting_started'
+     >>> getml.engine.set_project("getting_started")
+     Connected to project 'getting_started'
+     http://localhost:1709/#/listprojects/getting_started/
+
+Now, when you check the current projects:
+
+.. code:: python
 
     >>> getml.project
     Current project:
-
-    doctest
+    getting_started
 
 
 Data set
@@ -163,7 +174,7 @@ The data set used in this tutorial consists of 2 tables. The so-called
 population table represents the entities we want to make a prediction
 about in the analysis. The peripheral table contains additional
 information and is related to the population table via a join key. Such
-a data set could appear for example in a customer churn analysis where
+a data set could appear, for example, in a customer churn analysis where
 each row in the population table represents a customer and each row in
 the peripheral table represents a transaction. It could also be part of
 a predictive maintenance campaign where each row in the population table
@@ -230,7 +241,7 @@ relationship via ``join_key``. This means that one row in the population
 table is associated to many rows in the peripheral table. In order to
 use the information from the peripheral table, we need to merge the many
 rows corresponding to one entry in the population table into so-called
-features. This done using certain aggregations.
+features. This is done using certain aggregations.
 
 .. image:: getting_started_files/getting_started_18_0.png
 
@@ -295,8 +306,8 @@ This example is no exception, so we will use the predefined
 
     >>> star_schema.join(peripheral_table,
     ...                  alias="peripheral",
-    ...                  join_key="join_key",
-    ...                  time_stamp="time_stamp",
+    ...                  on="join_key",
+    ...                  time_stamps="time_stamp",
     ... )
 
 
@@ -310,13 +321,12 @@ when building features.
 
 .. code:: python
 
-   >>> multirel = getml.feature_learning.Multirel(
+   >>> fastprop = getml.feature_learning.FastProp(
    ...     num_features=10,
    ...     aggregation=[
    ...         getml.feature_learning.aggregations.Count,
    ...         getml.feature_learning.aggregations.Sum
    ...     ],
-   ...     seed=1706,
    ... )
 
 getML bundles the sequential operations of a data science project
@@ -331,12 +341,12 @@ getML bundles the sequential operations of a data science project
 
    >>> pipe = getml.pipeline.Pipeline(
    ...     data_model=star_schema.data_model,
-   ...     feature_learners=[multirel],
+   ...     feature_learners=[fastprop],
    ...     predictors=[getml.predictors.LinearRegression()],
    ... )
 
 We have chosen a narrow search field in aggregation space by only
-letting Multirel use ``Count`` and ``Sum``. For the sake of
+letting FastProp use ``Count`` and ``Sum``. For the sake of
 demonstration, we use a simple ``LinearRegression`` and construct only
 10 different features. In real world projects you would construct at
 least ten times this number and get results significantly better than
@@ -367,27 +377,48 @@ in the getML engine – the :class:`~getml.data.DataFrame`\ s.
 
 .. code:: python
 
-    >>> pipe.fit(star_schema.fit)
+    >>> pipe.fit(star_schema.train)
     Checking data model...
+
+    Staging...
+    [========================================] 100%
+
+    Checking...
+    [========================================] 100%
+
+
     OK.
 
     Staging...
     [========================================] 100%
     
-    Multirel: Training features...
+    FastProp: Training 5 features...
     [========================================] 100%
 
-    Multirel: Building features...
+    FastProp: Building features...
     [========================================] 100%
 
     LinearRegression: Training as predictor...
     [========================================] 100%
 
     Trained pipeline.
-    Time taken: 0h:0m:0.229547
+    Time taken: 0h:0m:0.049154
+
+    Pipeline(data_model='population',
+            feature_learners=['FastProp'],
+            feature_selectors=[],
+            include_categorical=False,
+            loss_function='SquareLoss',
+            peripheral=['peripheral'],
+            predictors=['LinearRegression'],
+            preprocessors=[],
+            share_selected_features=0.5,
+            tags=['container-s0mKB6'])
+
+    url: http://localhost:1709/#/getpipeline/getting_started/MXzNDT/0/
 
 That’s it. The features learned by
-:class:`~getml.feature_learning.Multirel` as well as the
+:class:`~getml.feature_learning.FastProp` as well as the
 :class:`~getml.predictors.LinearRegression` in are now trained on our data set.
 
 Scoring
@@ -398,12 +429,24 @@ We can also score our algorithms on the test set.
 .. code:: python
  
     >>> pipe.score(star_schema.test)
-        date time             set used                    target         mae      rmse   rsquared
-    0   2021-05-21 17:36:09   numerical_population_1709   targets    0.11722    0.2443     0.9999
-    1   2021-05-23 17:01:07   numerical_population_1710   targets    0.07079    0.1638     0.9995
 
-Our model is able to predict the target variable in the newly generated
-data set very accurately.
+    Staging...
+    [========================================] 100%
+
+    Preprocessing...
+    [========================================] 100%
+
+    FastProp: Building features...
+    [========================================] 100%
+
+        date time             set used    target         mae      rmse   rsquared
+    0   2022-09-02 10:14:12   train       targets     3.3721    4.1891     0.9853
+    1   2022-09-02 10:14:12   test        targets     3.7548    4.7093     0.981
+
+Our model is able to predict the target variable in the newly generated data set
+pretty accurately. Though, the enterprise feature learner
+:class:`~getml.feature_learning.Multirel` performs even better here with R\ :sup:`2`
+of 0.9995 and MAE and RMSE of 0.07079 and 0.1638 respectively.
 
 Making predictions
 ~~~~~~~~~~~~~~~~~~
@@ -427,17 +470,26 @@ and can just use a :class:`~getml.data.Container` instead of a
 
     >>> yhat = pipe.predict(container_unseen.full)
 
+    Staging...
+    [========================================] 100%
+
+    Preprocessing...
+    [========================================] 100%
+
+    FastProp: Building features...
+    [========================================] 100%
+
     >>> print(yhat[:10])
-    [[ 5.00268213]
-     [14.00858787]
-     [24.00367308]
-     [ 1.00441267]
-     [27.00394183]
-     [20.00157795]
-     [16.00315811]
-     [ 4.00264301]
-     [19.00271721]
-     [25.00384922]]
+    [[ 4.16876676]
+     [17.32933   ]
+     [26.62467516]
+     [-5.30655759]
+     [27.4984785 ]
+     [21.48631811]
+     [18.16896219]
+     [ 5.2784719 ]
+     [20.5992354 ]
+     [26.20538556]]
 
 
 Extracting features
@@ -450,29 +502,29 @@ learning algorithm.
 
 .. code:: python
 
-    >>> features = model.transform(container_unseen.full)
+    >>> features = pipe.transform(container_unseen.full)
 
     >>> print(features)
-    [[ 5.          0.99524429  5.         ...  0.26285526  0.26285526
-      -0.31856832]
-     [14.          3.80100605 14.         ...  3.15211846  3.15211846
-       0.39465668]
-     [24.          5.29167009 24.         ...  5.92441112  5.92441112
-       0.12470039]
+    [[-7.14232213e-01  2.39745475e-01  2.62855261e-01  1.28462060e-02
+       5.00000000e+00 -3.18568319e-01]
+     [-1.17601634e-01  3.42472663e+00  3.61423201e+00  3.24305583e-02
+       1.40000000e+01  3.94656676e-01]
+     [-2.48645436e+00  1.27495266e+01  1.33228011e+01  1.99520872e-02
+       3.60000000e+01  1.24700392e-01]
      ...
-     [ 8.          2.00532951  8.         ...  0.94089783  0.94089783
-      -0.74996369]
-     [15.          1.90051102 15.         ...  2.11328521  2.11562428
-      -0.72788024]
-     [ 2.          0.6167304   2.         ...  0.05360352  0.05360352
-      -0.35370042]]
+     [ 9.55124379e-01  9.16437833e-01  9.40897830e-01  2.73040074e-02
+       8.00000000e+00 -7.49963688e-01]
+     [-3.56023429e+00  3.37346772e+00  2.11562428e+00  2.53698895e-02
+       1.50000000e+01 -7.27880243e-01]
+     [ 2.72804029e-02  2.87302783e-02  5.36035230e-02  2.77103542e-02
+       2.00000000e+00 -3.53700424e-01]]
 
 
 If you want to see a SQL transpilation of a feature's logic, you can do so by
-clicking on the feature in the monitor or by inspecting the sql attribute on a
-feature. A :class:`~getml.pipeline.Pipeline`\ s features are hold by the
-:class:`~getml.pipeline.Features` container. For example, to inspect the sql
-code of the second feature:
+clicking on the feature in the monitor (enterprise edition only) or by
+inspecting the sql attribute on a feature. A :class:`~getml.pipeline.Pipeline`\
+s features are hold by the :class:`~getml.pipeline.Features` container. For
+example, to inspect the sql code of one of the features:
 
 .. code:: python
 
@@ -482,24 +534,20 @@ That should return something like this:
 
 .. code:: sql
 
-   DROP TABLE IF EXISTS "FEATURE_1_2";
+   DROP TABLE IF EXISTS "FEATURE_1_5";
 
-   CREATE TABLE "FEATURE_1_2" AS
-   SELECT COUNT( * ) AS "feature_1_2",
-         t1.rowid AS "rownum"
-   FROM "NUMERICAL_POPULATION_1709__STAGING_TABLE_1" t1
-   LEFT JOIN "NUMERICAL_PERIPHERAL_1709__STAGING_TABLE_2" t2
+   CREATE TABLE "FEATURE_1_5" AS
+   SELECT COUNT( * ) AS "feature_1_5",
+         t1.rowid AS rownum
+   FROM "POPULATION__STAGING_TABLE_1" t1
+   INNER JOIN "PERIPHERAL__STAGING_TABLE_2" t2
    ON t1."join_key" = t2."join_key"
-   WHERE ( t2."time_stamp" <= t1."time_stamp"
-   ) AND (
-     ( ( t1."time_stamp" - t2."time_stamp" <= 0.499075 ) )
-   )
+   WHERE t2."time_stamp" <= t1."time_stamp"
    GROUP BY t1.rowid;
 
-This very much resembles the ad hoc definition we tried in the
-beginning. The correct aggregation to use on this data set is ``Count``
-with the subcondition that only entries within a time window of 0.5 are
-considered. getML extracted this definition completely autonomously.
+This very much resembles the ad hoc definition we tried in the beginning. The
+correct aggregation to use on this data set is ``Count``. getML extracted this
+definition completely autonomously.
 
 Next steps
 ----------

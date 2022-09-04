@@ -13,8 +13,8 @@ ____
 .. note::
    Some components of getML have been open sourced as part of **getML community edition**. 
    You may have a look at 
-   `community vs enterprise edition table <https://docs.getml.com/latest/home/getting_started/getting_started.html#community-vs-enterprise-edition>`_ to see the highlights of both the editions. 
-
+   :ref:`community vs enterprise edition table <home/getting_started/getting_started:Community vs enterprise edition>`
+   to see the highlights of both the editions. 
 
 
 getML in one minute 
