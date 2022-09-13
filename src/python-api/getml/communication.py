@@ -18,6 +18,8 @@ import sys
 from typing import Any, Dict, Optional, Union
 
 import numpy as np
+from tqdm import tqdm
+
 
 from .version import __version__
 
@@ -123,8 +125,18 @@ class _GetmlEncoder(json.JSONEncoder):
 class _ProgressBar:
     """Displays progress in bar form."""
 
-    def __init__(self):
-        self.length = 40
+    def __init__(self, description: str):
+        self.done = 0
+        self.pbar = tqdm(unit="%", total=100, desc=description)
+
+    def close(self):
+        """
+        Closes the progress bar so we can display
+        the next thing.
+        """
+        if self.done < 100:
+            self.pbar.update(100 - self.done)
+        self.pbar.close()
 
     def show(self, progress: float):
         """Displays an updated version of the progress bar.
@@ -133,17 +145,10 @@ class _ProgressBar:
             progress (float): The progress to be shown. Must
                 be between 0 and 100.
         """
-        done = int(progress * self.length / 100.0)
-
-        remaining = self.length - done
-
-        pbar = "[" + "=" * done
-        pbar += " " * remaining + "] "
-        pbar += str(progress) + "%"
-
-        end = "\r"
-
-        print(pbar, end=end, flush=True)
+        done = int(progress)
+        if done > self.done:
+            self.pbar.update(done - self.done)
+            self.done = done
 
 
 # --------------------------------------------------------------------
@@ -516,14 +521,15 @@ def log(sock: socket.socket):
     """
     Prints all the logs received by the socket.
     """
-    pbar = _ProgressBar()
+
+    pbar: Optional[_ProgressBar] = None
 
     while True:
         msg = recv_string(sock)
 
         if msg[:5] != "log: ":
-            print()
-            print()
+            if pbar is not None:
+                pbar.close()
             return msg
 
         msg = msg[5:]
@@ -531,13 +537,13 @@ def log(sock: socket.socket):
         if "Progress: " in msg:
             msg = msg.split("Progress: ")[1].split("%")[0]
             progress = int(msg)
-            pbar.show(progress)
+            if pbar is not None:
+                pbar.show(progress)
             continue
 
-        print()
-        print()
-        print(msg)
-        pbar.show(0)
+        if pbar is not None:
+            pbar.close()
+        pbar = _ProgressBar(description=msg)
 
 
 # --------------------------------------------------------------------

@@ -1,9 +1,9 @@
 # Copyright 2022 The SQLNet Company GmbH
-# 
-# This file is licensed under the Elastic License 2.0 (ELv2). 
-# Refer to the LICENSE.txt file in the root of the repository 
+#
+# This file is licensed under the Elastic License 2.0 (ELv2).
+# Refer to the LICENSE.txt file in the root of the repository
 # for details.
-# 
+#
 
 """setup.py for getml"""
 
@@ -41,6 +41,7 @@ setup(
         "numpy>=1.22",
         "jinja2",
         "scipy",
+        "tqdm>=4.64",
     ],
     setup_requires=["pytest-runner"],
     tests_require=["pytest"],
