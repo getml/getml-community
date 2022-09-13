@@ -1,35 +1,23 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef FASTPROP_ALGORITHM_AGGREGATOR_HPP_
 #define FASTPROP_ALGORITHM_AGGREGATOR_HPP_
 
-// ----------------------------------------------------------------------------
-
 #include <memory>
 #include <utility>
 
-// ----------------------------------------------------------------------------
-
 #include "debug/debug.hpp"
-#include "fct/Ref.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "fastprop/Float.hpp"
 #include "fastprop/Hyperparameters.hpp"
 #include "fastprop/Int.hpp"
-#include "fastprop/containers/containers.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "fastprop/algorithm/Memoization.hpp"
-
-// ----------------------------------------------------------------------------
+#include "fastprop/containers/containers.hpp"
+#include "fct/Ref.hpp"
 
 namespace fastprop {
 namespace algorithm {
@@ -188,29 +176,53 @@ class Aggregator {
       case enums::Aggregation::last:
         return helpers::Aggregations::last(_begin, _end);
 
-      case enums::Aggregation::ewma1s:
+      case enums::Aggregation::ewma_1s:
         return helpers::Aggregations::ewma(t1s, _begin, _end);
 
-      case enums::Aggregation::ewma1m:
+      case enums::Aggregation::ewma_1m:
         return helpers::Aggregations::ewma(t1m, _begin, _end);
 
-      case enums::Aggregation::ewma1h:
+      case enums::Aggregation::ewma_1h:
         return helpers::Aggregations::ewma(t1h, _begin, _end);
 
-      case enums::Aggregation::ewma1d:
+      case enums::Aggregation::ewma_1d:
         return helpers::Aggregations::ewma(t1d, _begin, _end);
 
-      case enums::Aggregation::ewma7d:
+      case enums::Aggregation::ewma_7d:
         return helpers::Aggregations::ewma(t7d, _begin, _end);
 
-      case enums::Aggregation::ewma30d:
+      case enums::Aggregation::ewma_30d:
         return helpers::Aggregations::ewma(t30d, _begin, _end);
 
-      case enums::Aggregation::ewma90d:
+      case enums::Aggregation::ewma_90d:
         return helpers::Aggregations::ewma(t90d, _begin, _end);
 
-      case enums::Aggregation::ewma365d:
+      case enums::Aggregation::ewma_365d:
         return helpers::Aggregations::ewma(t365d, _begin, _end);
+
+      case enums::Aggregation::ewma_trend_1s:
+        return helpers::Aggregations::ewma_trend(t1s, _begin, _end);
+
+      case enums::Aggregation::ewma_trend_1m:
+        return helpers::Aggregations::ewma_trend(t1m, _begin, _end);
+
+      case enums::Aggregation::ewma_trend_1h:
+        return helpers::Aggregations::ewma_trend(t1h, _begin, _end);
+
+      case enums::Aggregation::ewma_trend_1d:
+        return helpers::Aggregations::ewma_trend(t1d, _begin, _end);
+
+      case enums::Aggregation::ewma_trend_7d:
+        return helpers::Aggregations::ewma_trend(t7d, _begin, _end);
+
+      case enums::Aggregation::ewma_trend_30d:
+        return helpers::Aggregations::ewma_trend(t30d, _begin, _end);
+
+      case enums::Aggregation::ewma_trend_90d:
+        return helpers::Aggregations::ewma_trend(t90d, _begin, _end);
+
+      case enums::Aggregation::ewma_trend_365d:
+        return helpers::Aggregations::ewma_trend(t365d, _begin, _end);
 
       case enums::Aggregation::time_since_first_maximum:
         return helpers::Aggregations::time_since_first_maximum(_begin, _end);
