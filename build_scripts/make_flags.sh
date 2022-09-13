@@ -70,7 +70,7 @@ for arg in $@; do
 
         docker run -it --rm --ulimit memlock=-1 \
             -v "$PWD/..":"/home/getml/storage" \
-            -w "/home/getml/storage/linux" \
+            -w "/home/getml/storage/$FOLDER" \
             ${DOCKER_IMAGE_NAME} bash build.sh $arg 
 
     else

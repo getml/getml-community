@@ -1,0 +1,34 @@
+FROM almalinux:8
+
+RUN useradd getml
+
+RUN dnf -y update
+RUN dnf -y install git
+RUN dnf -y install make
+RUN dnf -y install cmake
+RUN dnf -y install wget
+RUN dnf -y install unzip
+RUN dnf -y install zip
+RUN dnf -y install gcc-toolset-10-gcc-c++
+
+# Install node.js and npm
+RUN wget https://nodejs.org/dist/v16.16.0/node-v16.16.0-linux-arm64.tar.xz
+RUN tar -C /usr/local -xJvf node-v16.16.0-linux-arm64.tar.xz
+ENV PATH=$PATH:/usr/local/node-v16.16.0-linux-arm64/bin
+
+# Required for building PostgreSQL
+RUN dnf install -y bison readline-devel zlib-devel openssl-devel wget
+RUN dnf groupinstall -y 'Development Tools'
+
+# Required for profiling, but not an 
+# actual dependency.
+RUN dnf install -y https://extras.getpagespeed.com/release-latest.rpm
+
+WORKDIR /home/getml
+
+# Setup go
+RUN wget https://go.dev/dl/go1.18.3.linux-arm64.tar.gz  
+RUN tar -C /usr/local -xzf go1.18.3.linux-arm64.tar.gz
+ENV PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
+
+COPY version.sh /home/getml/version.sh

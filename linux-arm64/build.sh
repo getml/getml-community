@@ -3,9 +3,11 @@
 # --------------------------------------------------------------------
 
 export OPERATING_SYSTEM="linux"
-export FOLDER="linux"
+export FOLDER="linux-arm64"
 
 source ../build_scripts/import_all_functions.sh || exit 1
+source ../proxy_url.sh || export PROXY_URL=localhost
+echo "The proxy URL is set to "$PROXY_URL
 
 # Don't trust the version.sh script to detect the right version. The
 # docker build can be done on both Linux and macOS but the binary is
@@ -29,9 +31,15 @@ GETML_GOUTILS_FOLDER="$HOMEDIR/../src/goutils"
 # Folder the final package will be located in.
 GETML_PACKAGE_FOLDER="$GETML_BUILD_FOLDER/$GETML_VERSION"
 
+# The package to download when the engine code is not present.
+export PRE_BUILD_PACKAGE="getml-1.0.0-linux-preview2"
+
+# The package to download when the engine code is not present.
+export PRE_BUILD_PACKAGE="getml-1.0.0-linux-preview2"
+
 # --------------------------------------------------------------------
 
-export CMAKE_BINARY_DIR="/home/getml/storage/linux/build/"
+export CMAKE_BINARY_DIR="/home/getml/storage/$FOLDER/build/"
 export CODE_DIR="/home/getml/storage/src/engine"
 
 export DEPENDENCY_DIR="/home/getml/storage/src/dependencies" 
@@ -75,7 +83,6 @@ export CMAKE_OPTIONS_POCO="\
     -DCMAKE_C_COMPILER=$CC \
     -DCMAKE_CXX_COMPILER=$CXX \
     -DBUILD_SHARED_LIBS=NO"
-
 
 # --------------------------------------------------------------------
 
