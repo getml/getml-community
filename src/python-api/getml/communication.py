@@ -18,7 +18,7 @@ import sys
 from typing import Any, Dict, Optional, Union
 
 import numpy as np
-from tqdm import tqdm
+from tqdm import tqdm  # type: ignore
 
 
 from .version import __version__
