@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 package main
 
@@ -64,6 +64,13 @@ func main() {
 	}
 
 	err := os.Chdir(install.GetBinDir(commandLine.HomeDir, version))
+
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+
+	err = os.MkdirAll(conf.ProjectDirectory, 0750)
 
 	if err != nil {
 		log.Println(err.Error())
