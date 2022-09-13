@@ -125,9 +125,12 @@ class _GetmlEncoder(json.JSONEncoder):
 class _ProgressBar:
     """Displays progress in bar form."""
 
-    def __init__(self, description: str):
+    def __init__(self, description: str = ""):
         self.done = 0
-        self.pbar = tqdm(unit="%", total=100, desc=description)
+        bar_format = (
+            "{l_bar}{bar}| [elapsed: {elapsed}, remaining: {remaining}{postfix}]"
+        )
+        self.pbar = tqdm(desc=description, total=100, bar_format=bar_format)
 
     def close(self):
         """
