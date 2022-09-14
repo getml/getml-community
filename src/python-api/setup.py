@@ -41,7 +41,6 @@ setup(
         "numpy>=1.22",
         "jinja2",
         "scipy",
-        "tqdm>=4.64",
     ],
     setup_requires=["pytest-runner"],
     tests_require=["pytest"],

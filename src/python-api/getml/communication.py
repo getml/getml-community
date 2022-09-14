@@ -18,9 +18,9 @@ import sys
 from typing import Any, Dict, Optional, Union
 
 import numpy as np
-from tqdm import tqdm  # type: ignore
 
 
+from .progress_bar import _ProgressBar
 from .version import __version__
 
 # --------------------------------------------------------------------
@@ -117,41 +117,6 @@ class _GetmlEncoder(json.JSONEncoder):
             return obj._getml_deserialize()
 
         return json.JSONEncoder.default(self, obj)
-
-
-# --------------------------------------------------------------------
-
-
-class _ProgressBar:
-    """Displays progress in bar form."""
-
-    def __init__(self, description: str = ""):
-        self.done = 0
-        bar_format = (
-            "{l_bar}{bar}| [elapsed: {elapsed}, remaining: {remaining}{postfix}]"
-        )
-        self.pbar = tqdm(desc=description, total=100, bar_format=bar_format)
-
-    def close(self):
-        """
-        Closes the progress bar so we can display
-        the next thing.
-        """
-        if self.done < 100:
-            self.pbar.update(100 - self.done)
-        self.pbar.close()
-
-    def show(self, progress: float):
-        """Displays an updated version of the progress bar.
-
-        Args:
-            progress (float): The progress to be shown. Must
-                be between 0 and 100.
-        """
-        done = int(progress)
-        if done > self.done:
-            self.pbar.update(done - self.done)
-            self.done = done
 
 
 # --------------------------------------------------------------------
