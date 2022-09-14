@@ -8,7 +8,6 @@ set(CODE_DIR $ENV{CODE_DIR})
 # Set the path containing arrow
 set(ARROW_DIR $ENV{ARROW_DIR})
 
-
 # Set the path containing mariadb
 # Should include folders "include" and "build"
 set(MARIADB_DIR $ENV{MARIADB_DIR})
