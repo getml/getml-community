@@ -11,6 +11,7 @@ RUN dnf -y install unzip
 RUN dnf -y install nodejs 
 RUN dnf -y install zip
 RUN dnf -y install gcc-toolset-10-gcc-c++
+RUN dnf -y install python38 python38-devel python38-pip
 
 # Required for building PostgreSQL
 RUN dnf install -y bison readline-devel zlib-devel openssl-devel wget
@@ -27,5 +28,10 @@ WORKDIR /home/getml
 RUN wget https://dl.google.com/go/go1.17.linux-amd64.tar.gz
 RUN tar -C /usr/local -xzf go1.17.linux-amd64.tar.gz
 ENV PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
+
+# Setup the uploader
+COPY uploader /home/getml/uploader/
+WORKDIR uploader
+RUN pip3 install .
 
 COPY version.sh /home/getml/version.sh
