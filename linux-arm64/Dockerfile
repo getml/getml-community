@@ -10,6 +10,7 @@ RUN dnf -y install wget
 RUN dnf -y install unzip
 RUN dnf -y install zip
 RUN dnf -y install gcc-toolset-10-gcc-c++
+RUN dnf -y install python38 python38-devel python38-pip
 
 # Install node.js and npm
 RUN wget https://nodejs.org/dist/v16.16.0/node-v16.16.0-linux-arm64.tar.xz
@@ -30,5 +31,12 @@ WORKDIR /home/getml
 RUN wget https://go.dev/dl/go1.18.3.linux-arm64.tar.gz  
 RUN tar -C /usr/local -xzf go1.18.3.linux-arm64.tar.gz
 ENV PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
+
+# Setup the uploader
+COPY uploader /home/getml/uploader/
+WORKDIR uploader
+RUN pip3 install .
+
+WORKDIR /home/getml
 
 COPY version.sh /home/getml/version.sh
