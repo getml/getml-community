@@ -3,7 +3,7 @@
 # --------------------------------------------------------------------
 
 export OPERATING_SYSTEM="linux"
-export FOLDER="linux"
+export FOLDER="linux-x64"
 
 source ../build_scripts/import_all_functions.sh || exit 1
 
@@ -31,7 +31,7 @@ GETML_PACKAGE_FOLDER="$GETML_BUILD_FOLDER/$GETML_VERSION"
 
 # --------------------------------------------------------------------
 
-export CMAKE_BINARY_DIR="/home/getml/storage/linux/build/"
+export CMAKE_BINARY_DIR="/home/getml/storage/$FOLDER/build/"
 export CODE_DIR="/home/getml/storage/src/engine"
 
 export DEPENDENCY_DIR="/home/getml/storage/src/dependencies" 
