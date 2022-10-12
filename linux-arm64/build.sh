@@ -88,4 +88,3 @@ export CMAKE_OPTIONS_POCO="\
 
 source ../build_scripts/make_flags.sh
 
-# --------------------------------------------------------------------

@@ -19,9 +19,6 @@ set(POSTGRES_DIR $ENV{POSTGRES_DIR})
 # Should contain the folder "Net", among others.
 set(POCO_DIR $ENV{POCO_DIR})
 
-# Set the path containing unixODBC
-set(UNIX_ODBC_DIR $ENV{UNIX_ODBC_DIR})
-
 # Set the path containing xgboost
 # Should include folders "include", "lib" and "rabit"
 set(XGBOOST_DIR $ENV{XGBOOST_DIR})
@@ -51,7 +48,6 @@ include_directories(
     "${POCO_DIR}/NetSSL_OpenSSL/include"
     "${POCO_DIR}/Foundation/include"
     "${POSTGRES_DIR}/build/include"
-    "${UNIX_ODBC_DIR}/build/include"
     "${XGBOOST_DIR}/include"
     "${XGBOOST_DIR}/rabit/include"
 )
@@ -59,7 +55,6 @@ include_directories(
 link_directories(
     "${GOUTILS_DIR}/lib"
     "${MARIADB_DIR}/build/libmariadb"
-    "${UNIX_ODBC_DIR}/build/lib"
     "${XGBOOST_DIR}/lib"
 )
 
@@ -104,7 +99,6 @@ target_link_libraries(
    ssl
    crypto
    mariadb
-   odbc
    xgboost
    dl
    z
