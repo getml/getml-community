@@ -8,10 +8,6 @@ set(GETML_VERSION $ENV{GETML_VERSION})
  # Set the path containing arrow
  set(ARROW_DIR $ENV{ARROW_DIR})
 
- # Set the path containing goutils
- # Should include folders "include" and "lib"
- set(GOUTILS_DIR $ENV{GOUTILS_DIR})
-
  # Set the path containing mariadb
  # Should include folders "include" and "build"
  set(MARIADB_DIR $ENV{MARIADB_DIR})
@@ -22,9 +18,6 @@ set(GETML_VERSION $ENV{GETML_VERSION})
  # Set the path containing poco.
  # Should contain the folder "Net", among others.
  set(POCO_DIR $ENV{POCO_DIR})
-
- # Set the path containing unixODBC
- set(UNIX_ODBC_DIR $ENV{UNIX_ODBC_DIR})
 
  # Set the path containing xgboost
  # Should include folders "include", "lib" and "rabit"
@@ -46,7 +39,6 @@ set(GETML_VERSION $ENV{GETML_VERSION})
      "${CODE_DIR}/include"
      "${ARROW_DIR}/cpp/src"
      "${ARROW_DIR}/cpp/release/src"
-     "${GOUTILS_DIR}/include"
      "${MARIADB_DIR}/include"
      "${MARIADB_DIR}/build/include"
      "${POCO_DIR}/Crypto/include"
@@ -55,15 +47,12 @@ set(GETML_VERSION $ENV{GETML_VERSION})
      "${POCO_DIR}/NetSSL_OpenSSL/include"
      "${POCO_DIR}/Foundation/include"
      "${POSTGRES_DIR}/build/include"
-     "${UNIX_ODBC_DIR}/build/include"
      "${XGBOOST_DIR}/include"
      "${XGBOOST_DIR}/rabit/include"
  )
 
  link_directories(
-     "${GOUTILS_DIR}/lib"
      "${MARIADB_DIR}/build/libmariadb"
-     "${UNIX_ODBC_DIR}/build/lib"
      "${XGBOOST_DIR}/lib"
  )
 
@@ -105,11 +94,9 @@ set(GETML_VERSION $ENV{GETML_VERSION})
     "${ARROW_DIR}/cpp/release/release/libparquet.a"
     "${ARROW_DIR}/cpp/release/release/libarrow.a"
     "${ARROW_DIR}/cpp/release/release/libarrow_bundled_dependencies.a"
-    goutils
     ssl
     crypto
     mariadb
-    odbc
     xgboost
     dl
     z
