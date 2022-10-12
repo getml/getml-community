@@ -1,33 +1,21 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_PIPELINES_FITTEDPIPELINE_HPP_
 #define ENGINE_PIPELINES_FITTEDPIPELINE_HPP_
 
-// ----------------------------------------------------------------------------
-
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
-#include "fct/fct.hpp"
-#include "predictors/predictors.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "engine/featurelearners/featurelearners.hpp"
-#include "engine/preprocessors/preprocessors.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "engine/pipelines/Fingerprints.hpp"
 #include "engine/pipelines/Predictors.hpp"
-
-// ----------------------------------------------------------------------------
+#include "engine/preprocessors/preprocessors.hpp"
+#include "fct/fct.hpp"
+#include "predictors/predictors.hpp"
 
 namespace engine {
 namespace pipelines {
