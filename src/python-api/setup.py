@@ -29,6 +29,8 @@ setup(
     version=__version__,
     author="getML",
     author_email="support@getml.com",
+    license_files=("LICENSE",),
+    license="Elastic License 2.0 (ELv2)",
     url="https://docs.getml.com/" + __version__,
     download_url="https://github.com/getml/getml-python-api",
     description="Python API for getML",
