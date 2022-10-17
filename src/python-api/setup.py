@@ -35,6 +35,7 @@ setup(
     long_description=long_description,
     packages=find_packages(),
     package_data={"getml": ["py.typed", "utilities/templates/*.jinja2"]},
+    python_requires='>=3.8.0',
     install_requires=[
         "pandas",
         "pyarrow>=7.0,<7.1",
@@ -48,7 +49,7 @@ setup(
     classifiers=[
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
         "Intended Audience :: Education",
         "Intended Audience :: Science/Research",
