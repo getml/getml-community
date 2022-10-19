@@ -1,13 +1,14 @@
 #! /bin/bash
 
- # --------------------------------------------------------------------
+# --------------------------------------------------------------------
 
- export OPERATING_SYSTEM="linux"
- export FOLDER="linux-arm64"
+export OPERATING_SYSTEM="linux"
+export FOLDER="linux-arm64"
+export ARCHITECTURE="arm64"
 
- source ../build_scripts/import_all_functions.sh || exit 1
- source ../proxy_url.sh || export PROXY_URL=localhost
- echo "The proxy URL is set to "$PROXY_URL
+source ../build_scripts/import_all_functions.sh || exit 1
+source ../proxy_url.sh || export PROXY_URL=localhost
+echo "The proxy URL is set to "$PROXY_URL
 
  # Don't trust the version.sh script to detect the right version. The
  # docker build can be done on both Linux and macOS but the binary is
