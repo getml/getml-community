@@ -25,7 +25,7 @@ include(${TRANSPILATION_SOURCE_DIRECTORY}/obj.txt)
 include(${TSINDEX_SOURCE_DIRECTORY}/obj.txt)
 
 add_executable(
- 	${GETML_VERSION}-64bit
+ 	${GETML_VERSION}-engine
     ${FASTPROP_OBJ}
     ${HELPERS_OBJ}
     ${IO_OBJ}
