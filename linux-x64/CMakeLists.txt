@@ -29,7 +29,7 @@ set(DEBUG_MODE $ENV{DEBUG_MODE})
 # Whether you want to activate profiling using gperftools 
 set(PROFILING_MODE $ENV{PROFILING_MODE})
 
-project(${GETML_VERSION}-64bit)
+project(${GETML_VERSION})
 
 set(CMAKE_BINARY_DIR $ENV{CMAKE_BINARY_DIR})
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
@@ -82,7 +82,7 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s -O2 -fopenmp '-Wl,-rpat
 add_definitions(-DGETML_VERSION="${GETML_VERSION}")
 
 target_link_libraries(
-   ${GETML_VERSION}-64bit
+   ${GETML_VERSION}
    "${POCO_DIR}/cmake-build/lib/libPocoNetSSL.a"
    "${POCO_DIR}/cmake-build/lib/libPocoCrypto.a"
    "${POCO_DIR}/cmake-build/lib/libPocoNet.a"
@@ -107,7 +107,7 @@ target_link_libraries(
 
 if(${PROFILING_MODE} STREQUAL "ON")
 target_link_libraries(
-   ${GETML_VERSION}-64bit
+   ${GETML_VERSION}
    profiler
 )
 endif()

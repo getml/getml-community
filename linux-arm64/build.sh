@@ -4,6 +4,7 @@
 
 export OPERATING_SYSTEM="linux"
 export FOLDER="linux-arm64"
+export ARCHITECTURE="arm64"
 
 source ../build_scripts/import_all_functions.sh || exit 1
 source ../proxy_url.sh || export PROXY_URL=localhost

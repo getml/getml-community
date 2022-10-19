@@ -4,6 +4,7 @@
 
 export OPERATING_SYSTEM="linux"
 export FOLDER="linux-x64"
+export ARCHITECTURE="x64"
 
 source ../build_scripts/import_all_functions.sh || exit 1
 

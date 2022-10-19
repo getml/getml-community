@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 package tcp
 
@@ -581,7 +581,7 @@ func (m *MainHandler) SetProject(
 		return
 	}
 
-	fname := m.version + "-64bit"
+	fname := m.version + "-engine"
 
 	enginePort, err := m.findFreePort()
 
