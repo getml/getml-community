@@ -1,9 +1,9 @@
 # Copyright 2022 The SQLNet Company GmbH
-# 
-# This file is licensed under the Elastic License 2.0 (ELv2). 
-# Refer to the LICENSE.txt file in the root of the repository 
+#
+# This file is licensed under the Elastic License 2.0 (ELv2).
+# Refer to the LICENSE.txt file in the root of the repository
 # for details.
-# 
+#
 
 """setup.py for getml"""
 
@@ -36,8 +36,17 @@ setup(
     description="Python API for getML",
     long_description=long_description,
     packages=find_packages(),
-    package_data={"getml": ["py.typed", "utilities/templates/*.jinja2"]},
-    python_requires='>=3.8.0',
+    package_data={
+        "getml": [
+            "py.typed",
+            "utilities/templates/*.jinja2",
+            ".getML/**/*",
+            ".getML/**/**/*",
+            ".getML/**/**/**/*",
+            ".getML/**/**/**/**/*",
+        ]
+    },
+    python_requires=">=3.8.0",
     install_requires=[
         "pandas",
         "pyarrow>=7.0,<7.1",

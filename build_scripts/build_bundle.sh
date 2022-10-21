@@ -35,4 +35,10 @@ function build_bundle() {
     tar -czvf python-$GETML_VERSION.tar.gz python >/dev/null 2>&1
 
     # ----------------------------------------------------------------
+
+    rm -rf  $HOMEDIR/../src/python-api/getml/.getML/ || exit 1
+    mkdir -p $HOMEDIR/../src/python-api/getml/.getML/ || exit 1 
+    cp -r $GETML_VERSION $HOMEDIR/../src/python-api/getml/.getML/ || exit 1
+
+    # ----------------------------------------------------------------
 }

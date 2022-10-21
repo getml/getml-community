@@ -61,6 +61,7 @@
 /**/src/arrow
 /**/src/utf8proc 
 /**/src/vcpkg 
+/**/python-api/getml/.getML/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
