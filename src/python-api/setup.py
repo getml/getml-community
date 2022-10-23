@@ -36,8 +36,17 @@ setup(
     description="Python API for getML",
     long_description=long_description,
     packages=find_packages(),
-    package_data={"getml": ["py.typed", "utilities/templates/*.jinja2"]},
-    python_requires='>=3.8.0',
+    package_data={
+        "getml": [
+            "py.typed",
+            "utilities/templates/*.jinja2",
+            ".getML/**/*",
+            ".getML/**/**/*",
+            ".getML/**/**/**/*",
+            ".getML/**/**/**/**/*",
+        ]
+    },
+    python_requires=">=3.8.0",
     install_requires=[
         "pandas",
         "pyarrow>=7.0,<7.1",
