@@ -11,6 +11,6 @@ function build_wheel() {
     mv getml-$VERSION_NUMBER-py3-none-any.whl getml-$VERSION_NUMBER-cp38-manylinux_2_28-$WHEEL_ARCH.whl || exit 1
 
     rm -rf wheelhouse || exit 1
-    auditwheel addtag dist/getml-$VERSION_NUMBER-cp38-manylinux_2_28-$WHEEL_ARCH.whl || exit 1
+    auditwheel addtag getml-$VERSION_NUMBER-cp38-manylinux_2_28-$WHEEL_ARCH.whl || exit 1
     cp wheelhouse/getml-*.whl $GETML_BUILD_FOLDER || exit 1
 }
