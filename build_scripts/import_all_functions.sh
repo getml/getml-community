@@ -9,6 +9,7 @@ source ../build_scripts/build_main_entry_point.sh || exit 1
 source ../build_scripts/build_macos_entry_point.sh || exit 1
 source ../build_scripts/build_monitor.sh || exit 1
 source ../build_scripts/build_package.sh || exit 1
+source ../build_scripts/build_wheel.sh || exit 1
 source ../build_scripts/checkout_arrow.sh || exit 1
 source ../build_scripts/checkout_engine.sh || exit 1
 source ../build_scripts/checkout_postgres.sh || exit 1
