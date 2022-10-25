@@ -144,7 +144,8 @@ struct Parser<Aggregation> {
       return Aggregation::ewma_365d;
     }
 
-    if (_str == EWMA_TREND_1S) {
+    // Temporarily uncommented...will be released with getML 1.4
+    /*if (_str == EWMA_TREND_1S) {
       return Aggregation::ewma_trend_1s;
     }
 
@@ -174,7 +175,7 @@ struct Parser<Aggregation> {
 
     if (_str == EWMA_TREND_365D) {
       return Aggregation::ewma_trend_365d;
-    }
+    }*/
 
     if (_str == FIRST) {
       return Aggregation::first;
@@ -340,29 +341,30 @@ struct Parser<Aggregation> {
       case Aggregation::ewma_365d:
         return EWMA_365D;
 
-      case Aggregation::ewma_trend_1s:
-        return EWMA_TREND_1S;
+        // Temporarily uncommented...will be released with getML 1.4
+        /*case Aggregation::ewma_trend_1s:
+          return EWMA_TREND_1S;
 
-      case Aggregation::ewma_trend_1m:
-        return EWMA_TREND_1M;
+        case Aggregation::ewma_trend_1m:
+          return EWMA_TREND_1M;
 
-      case Aggregation::ewma_trend_1h:
-        return EWMA_TREND_1H;
+        case Aggregation::ewma_trend_1h:
+          return EWMA_TREND_1H;
 
-      case Aggregation::ewma_trend_1d:
-        return EWMA_TREND_1D;
+        case Aggregation::ewma_trend_1d:
+          return EWMA_TREND_1D;
 
-      case Aggregation::ewma_trend_7d:
-        return EWMA_TREND_7D;
+        case Aggregation::ewma_trend_7d:
+          return EWMA_TREND_7D;
 
-      case Aggregation::ewma_trend_30d:
-        return EWMA_TREND_30D;
+        case Aggregation::ewma_trend_30d:
+          return EWMA_TREND_30D;
 
-      case Aggregation::ewma_trend_90d:
-        return EWMA_TREND_90D;
+        case Aggregation::ewma_trend_90d:
+          return EWMA_TREND_90D;
 
-      case Aggregation::ewma_trend_365d:
-        return EWMA_TREND_365D;
+        case Aggregation::ewma_trend_365d:
+          return EWMA_TREND_365D;*/
 
       case Aggregation::first:
         return FIRST;
