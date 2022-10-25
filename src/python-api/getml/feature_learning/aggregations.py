@@ -49,14 +49,6 @@ Aggregation = Literal[
     "LAST",
     "KURTOSIS",
     "FIRST",
-    "EWMA_TREND_365D",
-    "EWMA_TREND_90D",
-    "EWMA_TREND_30D",
-    "EWMA_TREND_7D",
-    "EWMA_TREND_1D",
-    "EWMA_TREND_1H",
-    "EWMA_TREND_1M",
-    "EWMA_TREND_1S",
     "EWMA_365D",
     "EWMA_90D",
     "EWMA_30D",
@@ -180,66 +172,6 @@ not supported by
 :class:`~getml.feature_learning.Multirel`.
 """
 
-EWMA_TREND_1s: Aggregation = "EWMA_TREND_1S"
-"""
-Exponentially weighted trend with a half-life of 1 second.
-"""
-
-EWMA_TREND_1m: Aggregation = "EWMA_TREND_1M"
-"""
-Exponentially weighted trend with a half-life of 1 minute.
-Please note that this aggregation is
-not supported by
-:class:`~getml.feature_learning.Multirel`.
-"""
-
-EWMA_TREND_1h: Aggregation = "EWMA_TREND_1H"
-"""
-Exponentially weighted trend with a half-life of 1 hour.
-Please note that this aggregation is
-not supported by
-:class:`~getml.feature_learning.Multirel`.
-"""
-
-EWMA_TREND_1d: Aggregation = "EWMA_TREND_1D"
-"""
-Exponentially weighted trend with a half-life of 1 day.
-Please note that this aggregation is
-not supported by
-:class:`~getml.feature_learning.Multirel`.
-"""
-
-EWMA_TREND_7d: Aggregation = "EWMA_TREND_7D"
-"""
-Exponentially weighted trend with a half-life of 7 days.
-Please note that this aggregation is
-not supported by
-:class:`~getml.feature_learning.Multirel`.
-"""
-
-EWMA_TREND_30d: Aggregation = "EWMA_TREND_30D"
-"""
-Exponentially weighted trend with a half-life of 30 days.
-Please note that this aggregation is
-not supported by
-:class:`~getml.feature_learning.Multirel`.
-"""
-
-EWMA_TREND_90d: Aggregation = "EWMA_TREND_90D"
-"""
-Exponentially weighted trend with a half-life of 90 days.
-Please note that this aggregation is
-not supported by
-:class:`~getml.feature_learning.Multirel`.
-"""
-
-EWMA_TREND_365d: Aggregation = "EWMA_TREND_365D"
-"""
-Exponentially weighted trend with a half-life of 365 days.
-Please note that this aggregation is
-not supported by
-:class:`~getml.feature_learning.Multirel`.
-"""
 
 First: Aggregation = "FIRST"
 """
@@ -481,14 +413,6 @@ _additional_aggregations_for_fast_prop = [
     EWMA_30d,
     EWMA_90d,
     EWMA_365d,
-    EWMA_TREND_1s,
-    EWMA_TREND_1m,
-    EWMA_TREND_1h,
-    EWMA_TREND_1d,
-    EWMA_TREND_7d,
-    EWMA_TREND_30d,
-    EWMA_TREND_90d,
-    EWMA_TREND_365d,
     Kurtosis,
     Mode,
     NumMax,
