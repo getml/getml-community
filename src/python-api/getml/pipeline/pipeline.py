@@ -885,9 +885,9 @@ class Pipeline:
         self._targets = targets
 
         peripheral_metadata = [
-            _parse_metadata(**m) for m in all_json_objs["peripheral_metadata"]
+            _parse_metadata(m) for m in all_json_objs["peripheral_metadata"]
         ]
-        population_metadata = _parse_metadata(all_json_objs["population_roles"])
+        population_metadata = _parse_metadata(all_json_objs["population_metadata"])
 
         self._metadata = AllMetadata(
             peripheral=peripheral_metadata,

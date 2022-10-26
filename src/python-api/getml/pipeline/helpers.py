@@ -298,7 +298,7 @@ def _parse_fe(dict_: Dict[str, Any]) -> Union[FastProp, Multirel, Relboost, RelM
 
 
 def _parse_metadata(dict_: Dict[str, Any]) -> Metadata:
-    return Metadata(name=dict_["name"], roles=Roles(dict_["roles"]))
+    return Metadata(name=dict_["name"], roles=Roles(**dict_["roles"]))
 
 
 # --------------------------------------------------------------------
