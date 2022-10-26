@@ -581,7 +581,10 @@ Poco::JSON::Object PipelineManager::refresh_pipeline(
     const pipelines::Pipeline& _pipeline) const {
   const auto extract_roles =
       [](const helpers::Schema& _schema) -> Poco::JSON::Object::Ptr {
-    return containers::Roles::from_schema(_schema).to_json_obj();
+    auto ptr = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
+    ptr->set("name", _schema.name_);
+    ptr->set("roles", containers::Roles::from_schema(_schema).to_json_obj());
+    return ptr;
   };
 
   Poco::JSON::Object obj;
@@ -592,12 +595,12 @@ Poco::JSON::Object PipelineManager::refresh_pipeline(
 
   if (_pipeline.fitted()) {
     obj.set(
-        "peripheral_roles",
+        "peripheral_metadata",
         JSON::vector_to_array_ptr(fct::collect::vector<Poco::JSON::Object::Ptr>(
             *_pipeline.fitted()->peripheral_schema_ |
             VIEWS::transform(extract_roles))));
 
-    obj.set("population_roles",
+    obj.set("population_metadata",
             extract_roles(*_pipeline.fitted()->population_schema_));
 
     obj.set("targets", JSON::vector_to_array(_pipeline.fitted()->targets()));
