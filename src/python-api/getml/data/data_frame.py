@@ -18,7 +18,6 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 import pandas as pd  # type: ignore
 import pyarrow as pa  # type: ignore
-from pyarrow import parquet  # type: ignore
 
 import getml.communication as comm
 from getml import constants, database
@@ -2087,7 +2086,7 @@ class DataFrame:
 
         Note:
             For columns containing :class:`pandas.Timestamp` there can
-            occur small inconsistencies in the order to microseconds
+            be small inconsistencies in the order to microseconds
             when sending the data to the getML engine. This is due to
             the way the underlying information is stored.
         """
@@ -2316,6 +2315,109 @@ class DataFrame:
         comm.send(cmd)
 
         # ------------------------------------------------------------
+
+        return self
+
+    # --------------------------------------------------------------------------
+
+    def read_json(self, json_str, append=False, time_formats=None):
+        """Fill from JSON
+
+        Fills the data frame with data from a JSON string.
+
+        Args:
+
+            json_str (str):
+                The JSON string containing the data.
+
+            append (bool, optional):
+                If a data frame object holding the same ``name`` is
+                already present in the getML, should the content of
+                `json_str` be appended or replace the existing data?
+
+            time_formats (List[str], optional):
+                The list of formats tried when parsing time stamps.
+                The formats are allowed to contain the following
+                special characters:
+                * %w - abbreviated weekday (Mon, Tue, ...)
+                * %W - full weekday (Monday, Tuesday, ...)
+                * %b - abbreviated month (Jan, Feb, ...)
+                * %B - full month (January, February, ...)
+                * %d - zero-padded day of month (01 .. 31)
+                * %e - day of month (1 .. 31)
+                * %f - space-padded day of month ( 1 .. 31)
+                * %m - zero-padded month (01 .. 12)
+                * %n - month (1 .. 12)
+                * %o - space-padded month ( 1 .. 12)
+                * %y - year without century (70)
+                * %Y - year with century (1970)
+                * %H - hour (00 .. 23)
+                * %h - hour (00 .. 12)
+                * %a - am/pm
+                * %A - AM/PM
+                * %M - minute (00 .. 59)
+                * %S - second (00 .. 59)
+                * %s - seconds and microseconds (equivalent to %S.%F)
+                * %i - millisecond (000 .. 999)
+                * %c - centisecond (0 .. 9)
+                * %F - fractional seconds/microseconds (000000 - 999999)
+                * %z - time zone differential in ISO 8601 format (Z or +NN.NN)
+                * %Z - time zone differential in RFC format (GMT or +NNNN)
+                * %% - percent sign
+
+        Returns:
+            :class:`~getml.DataFrame`:
+                Handler of the underlying data.
+
+        Note:
+            This does not support NaN values. If you want support for NaN,
+            use :meth:`~getml.DataFrame.from_json` instead.
+        """
+
+        time_formats = time_formats or constants.TIME_FORMATS
+
+        if self.ncols() == 0:
+            raise Exception(
+                """Reading data is only possible in a DataFrame with more than zero
+                columns. You can pre-define columns during
+                initialization of the DataFrame or use the classmethod
+                from_json(...)."""
+            )
+
+        if not isinstance(json_str, str):
+            raise TypeError("'json_str' must be of type str")
+
+        if not isinstance(append, bool):
+            raise TypeError("'append' must be of type bool")
+
+        if not _is_non_empty_typed_list(time_formats, str):
+            raise TypeError(
+                """'time_formats' must be a list of strings
+                containing at least one time format"""
+            )
+
+        cmd: Dict[str, Any] = {}
+        cmd["type_"] = "DataFrame.from_json"
+        cmd["name_"] = self.name
+
+        cmd["categorical_"] = self._categorical_names
+        cmd["join_keys_"] = self._join_key_names
+        cmd["numerical_"] = self._numerical_names
+        cmd["targets_"] = self._target_names
+        cmd["text_"] = self._text_names
+        cmd["time_stamps_"] = self._time_stamp_names
+        cmd["unused_floats_"] = self._unused_float_names
+        cmd["unused_strings_"] = self._unused_string_names
+
+        cmd["append_"] = append
+        cmd["time_formats_"] = time_formats
+
+        with comm.send_and_get_socket(cmd) as sock:
+            comm.send_string(sock, json_str)
+            msg = comm.recv_string(sock)
+
+        if msg != "Success!":
+            comm.engine_exception_handler(msg)
 
         return self
 
