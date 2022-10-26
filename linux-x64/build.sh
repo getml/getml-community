@@ -20,7 +20,7 @@ S3_BUCKET="dummy-testerella"
 # Get user name
 USER_NAME=$USER
 HOMEDIR=$PWD
-export DOCKER_IMAGE_NAME=almalinux8
+export DOCKER_IMAGE_NAME="manylinux2014"
 
 # Folder the results of the compilation will be stored in.
 GETML_BUILD_FOLDER="$HOMEDIR/build"
@@ -58,12 +58,11 @@ export DEBUG_MODE=OFF
 # Should always be OFF for releases.
 export PROFILING_MODE=OFF
 
-export GCC_TOOLSET_DIR=/opt/rh/gcc-toolset-10/root/usr
-export CC=$GCC_TOOLSET_DIR/bin/gcc
-export CXX=$GCC_TOOLSET_DIR/bin/g++
+export CC=gcc
+export CXX=g++
 
 # Program the compilation will be done with.
-export CMAKE_COMMAND="cmake3 . -B"
+export CMAKE_COMMAND="cmake . -B"
 
 # Settings specific for the compilations of the engine. (XGBoost and
 # Poco will be compiled by Docker in the `Dockerfile`).

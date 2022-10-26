@@ -62,13 +62,14 @@ from .helpers import (
     _infer_peripheral,
     _make_id,
     _parse_fe,
+    _parse_metadata,
     _parse_pred,
     _parse_preprocessor,
     _print_time_taken,
     _replace_with_nan_maybe,
     _transform_peripheral,
 )
-from .metadata import Metadata
+from .metadata import AllMetadata
 from .metrics import (
     _all_metrics,
     _classification_metrics,
@@ -545,7 +546,7 @@ class Pipeline:
         self.share_selected_features = share_selected_features
         self.tags = Tags(tags)
 
-        self._metadata: Optional[Metadata] = None
+        self._metadata: Optional[AllMetadata] = None
 
         self._scores: Dict[str, Any] = {}
 
@@ -883,9 +884,14 @@ class Pipeline:
 
         self._targets = targets
 
-        self._metadata = Metadata(
-            peripheral=[Roles(**p) for p in all_json_objs["peripheral_roles"]],
-            population=Roles(**all_json_objs["population_roles"]),
+        peripheral_metadata = [
+            _parse_metadata(**m) for m in all_json_objs["peripheral_metadata"]
+        ]
+        population_metadata = _parse_metadata(all_json_objs["population_roles"])
+
+        self._metadata = AllMetadata(
+            peripheral=peripheral_metadata,
+            population=population_metadata,
         )
 
         return self
@@ -1342,7 +1348,7 @@ class Pipeline:
     # ------------------------------------------------------------
 
     @property
-    def metadata(self) -> Optional[Metadata]:
+    def metadata(self) -> Optional[AllMetadata]:
         """
         Contains information on the data frames
         that were passed to .fit(...). The roles

@@ -96,6 +96,7 @@ target_link_libraries(
    "${ARROW_DIR}/cpp/release/release/libparquet.a"
    "${ARROW_DIR}/cpp/release/release/libarrow.a"
    "${ARROW_DIR}/cpp/release/release/libarrow_bundled_dependencies.a"
+   bz2
    ssl
    crypto
    mariadb

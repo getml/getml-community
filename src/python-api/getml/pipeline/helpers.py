@@ -19,7 +19,7 @@ from typing import Any, Dict, List, Literal, Optional, Sequence, Union, get_args
 
 import numpy as np
 
-from getml.data import DataFrame, Placeholder, View
+from getml.data import DataFrame, Placeholder, Roles, View
 from getml.data.helpers import _is_typed_list, _remove_trailing_underscores
 from getml.feature_learning.fastprop import FastProp
 from getml.feature_learning.loss_functions import _all_loss_functions
@@ -43,6 +43,8 @@ from getml.preprocessors import (
     TextFieldSplitter,
 )
 from getml.preprocessors.preprocessor import _Preprocessor
+
+from .metadata import AllMetadata, Metadata
 
 # --------------------------------------------------------------------
 
@@ -290,6 +292,13 @@ def _parse_fe(dict_: Dict[str, Any]) -> Union[FastProp, Multirel, Relboost, RelM
         return RelMT(**kwargs)
 
     raise ValueError("Unknown feature learning algorithm: " + fe_type)
+
+
+# --------------------------------------------------------------------
+
+
+def _parse_metadata(dict_: Dict[str, Any]) -> Metadata:
+    return Metadata(name=dict_["name"], roles=Roles(dict_["roles"]))
 
 
 # --------------------------------------------------------------------

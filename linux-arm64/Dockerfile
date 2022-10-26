@@ -1,41 +1,58 @@
-FROM almalinux:8
+FROM quay.io/pypa/manylinux2014_aarch64
 
 RUN useradd getml
 
-RUN dnf -y update
-RUN dnf -y install git
-RUN dnf -y install make
-RUN dnf -y install cmake
-RUN dnf -y install wget
-RUN dnf -y install unzip
-RUN dnf -y install zip
-RUN dnf -y install gcc-toolset-10-gcc-c++
-RUN dnf -y install python38 python38-devel python38-pip
+RUN yum -y update
+RUN yum -y install git
+RUN yum -y install make
+RUN yum -y install cmake
+RUN yum -y install wget
+RUN yum -y install unzip
+RUN yum -y install zip
+
+# Required for building PostgreSQL
+RUN yum install -y bison readline-devel zlib-devel openssl-devel wget 
+RUN yum install -y flex
+
+RUN yum -y install epel-release
+RUN yum -y install libzstd-devel
+RUN yum install -y bzip2-devel libffi-devel 
+
+# Required for profiling, but not an 
+# actual dependency.
+RUN yum install -y https://extras.getpagespeed.com/release-latest.rpm
+
+WORKDIR /home/getml
 
 # Install node.js and npm
 RUN wget https://nodejs.org/dist/v16.16.0/node-v16.16.0-linux-arm64.tar.xz
 RUN tar -C /usr/local -xJvf node-v16.16.0-linux-arm64.tar.xz
 ENV PATH=$PATH:/usr/local/node-v16.16.0-linux-arm64/bin
 
-# Required for building PostgreSQL
-RUN dnf install -y bison readline-devel zlib-devel openssl-devel wget
-RUN dnf groupinstall -y 'Development Tools'
-
-# Required for profiling, but not an 
-# actual dependency.
-RUN dnf install -y https://extras.getpagespeed.com/release-latest.rpm
-
-WORKDIR /home/getml
-
-# Setup go
+# Install Golang
 RUN wget https://go.dev/dl/go1.18.3.linux-arm64.tar.gz  
 RUN tar -C /usr/local -xzf go1.18.3.linux-arm64.tar.gz
 ENV PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
 
+
+WORKDIR /home/getml
+
+# Build and setup Python 3.8
+WORKDIR /home/getml
+RUN wget https://www.python.org/ftp/python/3.8.12/Python-3.8.12.tgz
+RUN tar xvf Python-3.8.12.tgz
+WORKDIR /home/getml/Python-3.8.12
+RUN ./configure --enable-optimizations
+RUN make altinstall
+
+RUN python3.8 -m pip install wheel auditwheel 
+
+WORKDIR /home/getml
+
 # Setup the uploader
 COPY uploader /home/getml/uploader/
 WORKDIR uploader
-RUN pip3 install .
+RUN python3.8 -m pip  install .
 
 WORKDIR /home/getml
 

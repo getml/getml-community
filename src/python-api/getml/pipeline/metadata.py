@@ -12,9 +12,20 @@ from getml.data import Roles
 class Metadata(NamedTuple):
     """
     Contains the metadata related
-    to the data frames that were originally
-    passed to .fit(...).
+    to a data frame that
+    were originally passed to .fit(...).
     """
 
-    peripheral: List[Roles]
-    population: Roles
+    name: str
+    roles: Roles
+
+
+class AllMetadata(NamedTuple):
+    """
+    Contains the metadata related
+    to all of the data frames that
+    were originally passed to .fit(...).
+    """
+
+    peripheral: List[Metadata]
+    population: Metadata

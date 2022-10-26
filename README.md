@@ -72,6 +72,9 @@ Here is how you can build a complete Data Science pipeline for a time series pro
 ```python
 import getml
 
+getml.engine.launch()
+getml.set_project("interstate94")
+
 # Load the data.
 traffic = getml.datasets.load_interstate94(roles=False, units=False)
 
@@ -127,6 +130,10 @@ predictions = pipe.predict(time_series.test)
 ```
 
 To see the full example, check out the Interstate94 notebook ([interstate94.ipynb](demo-notebooks/interstate94.ipynb)).
+
+## Documentation
+
+Check out the full documentation on https://docs.getml.com/latest/.
 
 ## Demo notebooks
 
