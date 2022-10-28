@@ -154,36 +154,38 @@ To experience getML in action, the following example notebooks are provided in t
 ### Linux
 
 Before the installation, make sure your Linux meets the following requirements:
-- GLIBC 2.28 or above (check by using `ldd --version`)
+- GLIBC 2.17 or above (check by using `ldd --version`)
 - On Fedora 30, you need _libxcrypt-compat_. Install using: `yum install libxcrypt-compat`.
 - Python 3.7 or above, _numpy_ and _pandas_ (for the Python API).
 
 
 There are two components of the getML community edition: 
-1. The getML engine | The C++ backend of getML
-2. The Python API | Helps you interact with the getML engine
-
-The getML engine can be installed by executing the following in a terminal:
-
-```bash
-# Downloads the tar file of the engine
-wget https://static.getml.com/download/1.3.0/getml-1.3.0-community-edition-linux.tar.gz
-
-# Extracts the tar file
-tar -xf getml-1.3.0-community-edition-linux.tar.gz
-
-# Changes directory 
-cd getml-1.3.0-community-edition-linux
-
-# Installs the engine
-./getML install
-```
+1. The Python API | Helps you interact with the getML engine
+2. The getML engine | The C++ backend of getML
 
 The Python API can be installed from the Python Package Index by executing the following command in a terminal:
 
 ```bash
 pip install getml
 ```
+
+The getML engine comes with the Python API and is installed automatically. However, if you want to install it separately, please execute the following commands: 
+
+```bash
+# Downloads the tar file of the engine
+wget https://static.getml.com/download/1.3.1/getml-1.3.1-community-edition-linux.tar.gz
+
+# Extracts the tar file
+tar -xf getml-1.3.1-community-edition-linux.tar.gz
+
+# Changes directory 
+cd getml-1.3.1-community-edition-linux
+
+# Installs the engine
+./getML install
+```
+
+
 
 Alternatively, you install the API from this repository:
 
@@ -207,16 +209,16 @@ Before the installation, make sure your system meets the following requirements:
 
 Once the requirements are met, the following steps should be followed:
 
-1. Download the getml community edition for Docker from the following URL: https://static.getml.com/download/1.3.0/getml-1.3.0-community-edition-docker.zip
+1. Download the getml community edition for Docker from the following URL: https://static.getml.com/download/1.3.1/getml-1.3.1-community-edition-docker.zip
 
-2. Extract `getml-1.3.0-community-edition-docker.zip` in a folder.
+2. Extract `getml-1.3.1-community-edition-docker.zip` in a folder.
 
 3. Make sure that Docker (the Docker daemon) is running.
 
 4. Execute `setup.sh`. On Windows, open the folder in which the zip file was extracted and just click on `setup.sh`. On macOS and Linux, do the following:
 
     ``` bash
-    cd getml-1.3.0-community-edition-docker
+    cd getml-1.3.1-community-edition-docker
     bash setup.sh # or ./setup.sh
     ```
 
