@@ -156,7 +156,7 @@ To experience getML in action, the following example notebooks are provided in t
 Before the installation, make sure your Linux meets the following requirements:
 - GLIBC 2.17 or above (check by using `ldd --version`)
 - On Fedora 30, you need _libxcrypt-compat_. Install using: `yum install libxcrypt-compat`.
-- Python 3.7 or above, _numpy_ and _pandas_ (for the Python API).
+- Python 3.8 or above, _numpy_ and _pandas_ (for the Python API).
 
 
 There are two components of the getML community edition: 
@@ -185,9 +185,7 @@ cd getml-1.3.1-community-edition-linux
 ./getML install
 ```
 
-
-
-Alternatively, you install the API from this repository:
+Alternatively, you install the API from this repository. If you do this, you also have to install the engine as indicated above:
 
 ```bash
 # Changes directory 
