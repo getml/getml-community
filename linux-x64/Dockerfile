@@ -47,11 +47,4 @@ RUN python3.8 -m pip install wheel auditwheel
 
 WORKDIR /home/getml
 
-# Setup the uploader
-COPY uploader /home/getml/uploader/
-WORKDIR uploader
-RUN python3.8 -m pip  install .
-
-WORKDIR /home/getml
-
 COPY version.sh /home/getml/version.sh
