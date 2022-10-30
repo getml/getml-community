@@ -36,7 +36,7 @@ GETML_PACKAGE_FOLDER="$GETML_BUILD_FOLDER/$GETML_VERSION"
 export CMAKE_BINARY_DIR="/home/getml/storage/$FOLDER/build/"
 export CODE_DIR="/home/getml/storage/src/engine"
 
-export DEPENDENCY_DIR="/home/getml/storage/src/dependencies" 
+export DEPENDENCY_DIR="/home/getml/storage/src/dependencies/$ARCHITECTURE" 
 export ARROW_DIR="$DEPENDENCY_DIR/arrow"
 export MARIADB_DIR="$DEPENDENCY_DIR/mariadb-connector-c"
 export POCO_DIR="$DEPENDENCY_DIR/poco"

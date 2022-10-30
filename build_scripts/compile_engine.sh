@@ -19,9 +19,8 @@ function compile_engine() {
     mkdir -p $GETML_PACKAGE_FOLDER/bin || exit 1
     mkdir -p $GETML_PACKAGE_FOLDER/lib || exit 1
 
-
     echo "Copying to $GETML_PACKAGE_FOLDER..."
-    cp bin/$GETML_VERSION-engine $GETML_PACKAGE_FOLDER/bin/ || exit 1
+    cp $GETML_BUILD_FOLDER/bin/$GETML_VERSION-engine $GETML_PACKAGE_FOLDER/bin/ || exit 1
     copy_libs
 }
 
