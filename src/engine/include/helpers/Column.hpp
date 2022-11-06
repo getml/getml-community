@@ -1,30 +1,21 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef HELPERS_COLUMN_HPP_
 #define HELPERS_COLUMN_HPP_
 
-// -------------------------------------------------------------------------
-
 #include <type_traits>
 #include <variant>
 
-// -------------------------------------------------------------------------
-
 #include "fct/AccessIterator.hpp"
 #include "fct/fct.hpp"
+#include "helpers/Subrole.hpp"
 #include "memmap/memmap.hpp"
 #include "strings/strings.hpp"
-
-// -------------------------------------------------------------------------
-
-#include "helpers/Subrole.hpp"
-
-// -------------------------------------------------------------------------
 
 namespace helpers {
 
@@ -45,8 +36,6 @@ struct Column {
   typedef std::variant<InMemoryPtr, MemmapPtr> Variant;
   typedef std::variant<ConstInMemoryPtr, ConstMemmapPtr> ConstVariant;
 
-  // ---------------------------------------------------------------------
-
   Column(const ConstVariant& _ptr, const std::string& _name,
          const std::vector<Subrole>& _subroles, const std::string& _unit)
       : data_(get_data(_ptr)),
@@ -57,8 +46,6 @@ struct Column {
         unit_(_unit) {}
 
   ~Column() = default;
-
-  // ---------------------------------------------------------------------
 
   /// Iterator begin
   auto begin() const {
@@ -87,8 +74,6 @@ struct Column {
 
     return *(data_ + _i);
   }
-
-  // ---------------------------------------------------------------------
 
   /// Retrieves the data, when this is a mmap string vector, it returns
   /// nullptr.
@@ -152,7 +137,6 @@ struct Column {
   const std::string unit_;
 };
 
-// -------------------------------------------------------------------------
 }  // namespace helpers
 
 #endif  // HELPERS_COLUMN_HPP_
