@@ -82,7 +82,7 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s -O2 -fopenmp '-Wl,-rpat
 add_definitions(-DGETML_VERSION="${GETML_VERSION}")
 
 target_link_libraries(
-   ${GETML_VERSION}
+   ${GETML_VERSION}-engine
    "${POCO_DIR}/cmake-build/lib/libPocoNetSSL.a"
    "${POCO_DIR}/cmake-build/lib/libPocoCrypto.a"
    "${POCO_DIR}/cmake-build/lib/libPocoNet.a"
