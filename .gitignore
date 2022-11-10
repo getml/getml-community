@@ -28,6 +28,7 @@
 /**/linux/version.sh
 /**/macos/version.sh
 /**/windows/version.sh
+linux-x64/version.sh
 
 /**/src/frontend/node_modules
 /**/src/frontend/dist
