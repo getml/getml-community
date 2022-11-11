@@ -1,38 +1,26 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_CONTAINERS_ARRAYMAKER_HPP_
 #define ENGINE_CONTAINERS_ARRAYMAKER_HPP_
 
-// -------------------------------------------------------------------------
-
 #include <arrow/api.h>
-
-// -------------------------------------------------------------------------
 
 #include <cctype>
 #include <memory>
 #include <utility>
 #include <vector>
 
-// -------------------------------------------------------------------------
-
 #include "debug/debug.hpp"
-#include "helpers/helpers.hpp"
-
-// -------------------------------------------------------------------------
-
 #include "engine/Float.hpp"
-
-// -------------------------------------------------------------------------
+#include "helpers/helpers.hpp"
 
 namespace engine {
 namespace containers {
-// -------------------------------------------------------------------------
 
 class ArrayMaker {
  public:
@@ -60,6 +48,10 @@ class ArrayMaker {
       const IteratorType1 _begin, const IteratorType2 _end);
 
  private:
+  /// Generate a single chunk for the chunked array.
+  template <class BuilderType>
+  static std::shared_ptr<arrow::Array> make_chunk(BuilderType* _builder);
+
   /// Generate the chunks for the chunked array.
   template <class IteratorType1, class IteratorType2, class AppendFunctionType,
             class BuilderType>
@@ -89,6 +81,23 @@ std::shared_ptr<arrow::ChunkedArray> ArrayMaker::make_boolean_array(
 
 // -------------------------------------------------------------------------
 
+template <class BuilderType>
+std::shared_ptr<arrow::Array> ArrayMaker::make_chunk(BuilderType* _builder) {
+  std::shared_ptr<arrow::Array> array;
+
+  const auto status = _builder->Finish(&array);
+
+  if (!status.ok()) {
+    throw std::runtime_error("Could not create array: " + status.message());
+  }
+
+  _builder->Reset();
+
+  return array;
+}
+
+// -------------------------------------------------------------------------
+
 template <class IteratorType1, class IteratorType2, class AppendFunctionType,
           class BuilderType>
 std::vector<std::shared_ptr<arrow::Array>> ArrayMaker::make_chunks(
@@ -99,6 +108,10 @@ std::vector<std::shared_ptr<arrow::Array>> ArrayMaker::make_chunks(
   throw_unless(status.ok(), status.message());
 
   std::vector<std::shared_ptr<arrow::Array>> chunks;
+
+  if (_begin == _end) {
+    chunks.emplace_back(make_chunk(_builder));
+  }
 
   auto it = _begin;
 
@@ -111,17 +124,7 @@ std::vector<std::shared_ptr<arrow::Array>> ArrayMaker::make_chunks(
       }
     }
 
-    std::shared_ptr<arrow::Array> array;
-
-    const auto status = _builder->Finish(&array);
-
-    if (!status.ok()) {
-      throw std::runtime_error("Could not create array: " + status.message());
-    }
-
-    chunks.emplace_back(std::move(array));
-
-    _builder->Reset();
+    chunks.emplace_back(make_chunk(_builder));
   }
 
   return chunks;
