@@ -4,5 +4,14 @@
 # Refer to the LICENSE.txt file in the root of the repository
 # for details.
 #
-export VERSION_NUMBER=1.3.0
-export GETML_VERSION=getml-$VERSION_NUMBER-community-edition-linux
+export VERSION_NUMBER=1.3.1
+
+export ARCH=$(uname -m)
+
+if [[ $ARCH -eq "aarch64" ]]; then
+    export GETML_ARCH="arm64";
+else
+    export GETML_ARCH="x64";
+fi
+
+export GETML_VERSION=getml-$VERSION_NUMBER-$GETML_ARCH-community-edition-linux
