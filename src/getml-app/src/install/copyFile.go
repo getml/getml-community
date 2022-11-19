@@ -34,8 +34,7 @@ func copyFile(
 		}
 
 		if sourceStat.IsDir() {
-			copyDir(file, mainDir, overwrite)
-			return nil
+			return copyDir(file, mainDir, overwrite)
 		}
 
 		if overwrite {
