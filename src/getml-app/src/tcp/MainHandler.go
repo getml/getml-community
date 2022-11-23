@@ -605,6 +605,7 @@ func (m *MainHandler) SetProject(
 
 	for isRunning, _ := isAlive(enginePort); !isRunning; {
 		time.Sleep(time.Millisecond * 100)
+		isRunning, _ = isAlive(enginePort)
 	}
 
 	err = m.loadAllPipelines(name, enginePort, c, logger)
