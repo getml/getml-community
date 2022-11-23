@@ -4,6 +4,7 @@ function build_wheel() {
 
     cd $HOMEDIR/../src/python-api || exit 1
     rm -f *.whl || exit 1
+    rm -rf build || exit 1
     python3.8 -m pip wheel --no-deps . || exit 1
 
     # Necessary workaround because of a bug in auditwheel
