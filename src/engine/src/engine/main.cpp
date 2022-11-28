@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include <Poco/Net/TCPServer.h>
 
@@ -18,6 +18,10 @@
 #endif
 
 #include "engine/engine.hpp"
+#include "fct/NamedTuple.hpp"
+#include "fct/define_named_tuple.hpp"
+#include "fct/make_named_tuple.hpp"
+#include "json/json.hpp"
 
 const auto shutdown_flag = fct::Ref<std::atomic<bool>>::make(false);
 
