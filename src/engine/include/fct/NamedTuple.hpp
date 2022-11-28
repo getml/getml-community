@@ -1,0 +1,263 @@
+// Copyright 2022 The SQLNet Company GmbH
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
+// for details.
+//
+
+#ifndef FCT_NAMEDTUPLE_HPP_
+#define FCT_NAMEDTUPLE_HPP_
+
+#include <algorithm>
+#include <string_view>
+#include <tuple>
+#include <utility>
+
+#include "fct/Field.hpp"
+#include "fct/StringLiteral.hpp"
+#include "fct/find_index.hpp"
+#include "fct/get.hpp"
+
+namespace fct {
+
+/// A named tuple behaves like std::tuple,
+/// but the fields have explicit names, which
+/// allows for reflection.
+template <class... FieldTypes>
+class NamedTuple {
+ public:
+  using Fields = std::tuple<FieldTypes...>;
+
+ public:
+  /// Construct from the fields.
+  NamedTuple(FieldTypes... _fields)
+      : values_(std::forward_as_tuple(_fields.value_...)) {
+    static_assert(no_duplicate_field_names(),
+                  "Duplicate field names are not allowed");
+  }
+
+  /// Construct from a tuple containing fields.
+  NamedTuple(const std::tuple<FieldTypes...>& _tup)
+      : NamedTuple(std::make_from_tuple<NamedTuple<FieldTypes...>>(_tup)) {
+    static_assert(no_duplicate_field_names(),
+                  "Duplicate field names are not allowed");
+  }
+
+  /// Copy constructor.
+  NamedTuple(const NamedTuple<FieldTypes...>& _other)
+      : values_(_other.values_) {
+    static_assert(no_duplicate_field_names(),
+                  "Duplicate field names are not allowed");
+  }
+
+  /// Move constructor.
+  NamedTuple(NamedTuple<FieldTypes...>&& _other)
+      : values_(std::move(_other.values_)) {
+    static_assert(no_duplicate_field_names(),
+                  "Duplicate field names are not allowed");
+  }
+
+  /// Copy constructor.
+  template <class... OtherFieldTypes>
+  NamedTuple(const NamedTuple<OtherFieldTypes...>& _other)
+      : NamedTuple(retrieve_fields(_other.fields())) {
+    static_assert(no_duplicate_field_names(),
+                  "Duplicate field names are not allowed");
+  }
+
+  /// Move constructor.
+  template <class... OtherFieldTypes>
+  NamedTuple(NamedTuple<OtherFieldTypes...>&& _other)
+      : NamedTuple(retrieve_fields(_other.fields())) {
+    static_assert(no_duplicate_field_names(),
+                  "Duplicate field names are not allowed");
+  }
+
+  ~NamedTuple() = default;
+
+  /// Returns a new named tuple with additional fields.
+  template <class Head, class... Tail>
+  auto add(const Head& _head, const Tail&... _tail) const {
+    return NamedTuple<FieldTypes..., Head, Tail...>(
+        make_fields<sizeof...(Tail) + 1, Head, Tail...>(_head, _tail...));
+  }
+
+  /// Template specialization for std::tuple, so we can pass fields from other
+  /// named tuples.
+  template <class... TupContent, class... Tail>
+  auto add(const std::tuple<TupContent...>& _tuple,
+           const Tail&... _tail) const {
+    return add_tuple(_tuple, _tail...,
+                     std::make_index_sequence<sizeof...(TupContent)>{});
+  }
+
+  /// Template specialization for NamedTuple, so we can pass fields from other
+  /// named tuples.
+  template <class... TupContent, class... Tail>
+  auto add(const NamedTuple<TupContent...>& _named_tuple,
+           const Tail&... _tail) const {
+    return add(_named_tuple.fields(), _tail...);
+  }
+
+  /// Returns a tuple containing the fields.
+  Fields fields() const { return make_fields(); }
+
+  /// Replaces one or several fields, returning a new version
+  /// with the non-replaced fields left unchanged.
+  template <class RField, class... OtherRFields>
+  NamedTuple<FieldTypes...> replace(
+      const RField& _field, const OtherRFields&... _other_fields) const {
+    constexpr auto num_other_fields = sizeof...(OtherRFields);
+    if constexpr (num_other_fields == 0) {
+      return replace<RField>(_field.value_);
+    } else {
+      return replace<RField>(_field.value_).replace(_other_fields...);
+    }
+  }
+
+  /// Template specialization for std::tuple, so we can pass fields from other
+  /// named tuples.
+  template <class... TupContent, class... Tail>
+  auto replace(const std::tuple<TupContent...>& _tuple,
+               const Tail&... _tail) const {
+    return replace_tuple(_tuple, _tail...,
+                         std::make_index_sequence<sizeof...(TupContent)>{});
+  }
+
+  /// Template specialization for NamedTuple, so we can pass fields from other
+  /// named tuples.
+  template <class... TupContent, class... Tail>
+  auto replace(const NamedTuple<TupContent...>& _named_tuple,
+               const Tail&... _tail) const {
+    return replace(_named_tuple.fields(), _tail...);
+  }
+
+  /// Returns the underlying std::tuple.
+  const auto& values() const { return values_; }
+
+ private:
+  /// Adds the elements of a tuple to a newly created named tuple,
+  /// and other elements to a newly created named tuple.
+  template <class Tuple, class... Tail, size_t... Is>
+  constexpr auto add_tuple(const Tuple& _tuple, const Tail&... _tail,
+                           const std::index_sequence<Is...>) const {
+    return add(std::get<Is>(_tuple)..., _tail...);
+  }
+
+  /// Generates the fields.
+  template <int num_additional_fields = 0, class... Args>
+  auto make_fields(const Args&... _args) const {
+    constexpr auto size = sizeof...(Args) - num_additional_fields;
+    constexpr auto num_fields = std::tuple_size<Fields>{};
+    constexpr auto i = num_fields - size - 1;
+
+    constexpr bool retrieved_all_fields = size == num_fields;
+
+    if constexpr (retrieved_all_fields) {
+      return std::make_tuple(_args...);
+    } else {
+      // When we add additional fields, it is more intuitive to add
+      // them to the end, that is why we do it like this.
+      using FieldType = typename std::tuple_element<i, Fields>::type;
+      return make_fields<num_additional_fields>(FieldType(get<i>(*this)),
+                                                _args...);
+    }
+  }
+
+  /// Generates a new named tuple with one value replaced with a new value.
+  template <int _index, class T, class... Args>
+  auto make_replaced(const T& _val, const Args&... _args) const {
+    constexpr auto size = sizeof...(Args);
+
+    constexpr bool retrieved_all_fields = size == std::tuple_size<Fields>{};
+
+    if constexpr (retrieved_all_fields) {
+      return NamedTuple<FieldTypes...>(_args...);
+    } else {
+      using FieldType = typename std::tuple_element<size, Fields>::type;
+
+      if constexpr (size == _index) {
+        return make_replaced<_index, T>(_val, _args..., FieldType(_val));
+      } else {
+        return make_replaced<_index, T>(_val, _args...,
+                                        FieldType(get<size>(*this)));
+      }
+    }
+  }
+
+  /// We cannot allow duplicate field names.
+  template <int _i = 1, int _j = 0>
+  constexpr static bool no_duplicate_field_names() {
+    constexpr auto num_fields = std::tuple_size<Fields>{};
+
+    if constexpr (_i == num_fields) {
+      return true;
+    } else if constexpr (_j == -1) {
+      return no_duplicate_field_names<_i + 1, _i>();
+    } else {
+      constexpr auto field_name_i = std::tuple_element<_i, Fields>::type::name_;
+      constexpr auto field_name_j = std::tuple_element<_j, Fields>::type::name_;
+
+      constexpr bool no_duplicate = (field_name_i != field_name_j);
+
+      static_assert(no_duplicate, "Duplicate field names are not allowed");
+
+      return no_duplicate && no_duplicate_field_names<_i, _j - 1>();
+    }
+  }
+
+  /// Replaced the field signified by the field type.
+  template <class Field, class T>
+  NamedTuple<FieldTypes...> replace(const T& _val) const {
+    constexpr auto index = find_index<Field::name_, Fields>();
+    static_assert(
+        std::is_same<typename std::tuple_element<index, Fields>::type::Type,
+                     typename Field::Type>(),
+        "If two fields have the same name, "
+        "their type must be the same as "
+        "well.");
+    return make_replaced<index, T>(_val);
+  }
+
+  /// Adds the elements of a tuple to a newly created named tuple,
+  /// and other elements to a newly created named tuple.
+  template <class Tuple, class... Tail, size_t... Is>
+  constexpr auto replace_tuple(const Tuple& _tuple, const Tail&... _tail,
+                               const std::index_sequence<Is...>) const {
+    return replace(std::get<Is>(_tuple)..., _tail...);
+  }
+  /// Retrieves the fields from another tuple.
+  template <class... OtherFieldTypes, class... Args>
+  constexpr static Fields retrieve_fields(
+      const std::tuple<OtherFieldTypes...>& _other_fields,
+      const Args&... _args) {
+    constexpr auto size = sizeof...(Args);
+
+    constexpr bool retrieved_all_fields = size == std::tuple_size<Fields>{};
+
+    if constexpr (retrieved_all_fields) {
+      return std::make_tuple(_args...);
+    } else {
+      constexpr auto field_name = std::tuple_element<size, Fields>::type::name_;
+
+      constexpr auto index =
+          find_index<field_name, std::tuple<OtherFieldTypes...>>();
+
+      using FieldType = typename std::tuple_element<size, Fields>::type;
+
+      return retrieve_fields(_other_fields, _args...,
+                             FieldType(std::get<index>(_other_fields).value_));
+    }
+  }
+
+ private:
+  /// The values actually contained in the named tuple.
+  /// As you can see, a NamedTuple is just a normal tuple under-the-hood,
+  /// everything else is resolved at compile time. It should have no
+  /// runtime overhead over a normal std::tuple.
+  const std::tuple<typename FieldTypes::Type...> values_;
+};
+
+}  // namespace fct
+
+#endif  // FCT_NAMEDTUPLE_HPP_
