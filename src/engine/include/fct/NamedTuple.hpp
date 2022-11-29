@@ -102,6 +102,24 @@ class NamedTuple {
   /// Returns a tuple containing the fields.
   Fields fields() const { return make_fields(); }
 
+  /// Gets a field by index.
+  template <int _index>
+  inline const auto& get() const {
+    return fct::get<_index>(*this);
+  }
+
+  /// Gets a field by name.
+  template <StringLiteral _field_name>
+  inline const auto& get() const {
+    return fct::get<_field_name>(*this);
+  }
+
+  /// Gets a field by the field type.
+  template <class Field>
+  inline const auto& get() const {
+    return fct::get<Field>(*this);
+  }
+
   /// Replaces one or several fields, returning a new version
   /// with the non-replaced fields left unchanged.
   template <class RField, class... OtherRFields>
@@ -159,7 +177,7 @@ class NamedTuple {
       // When we add additional fields, it is more intuitive to add
       // them to the end, that is why we do it like this.
       using FieldType = typename std::tuple_element<i, Fields>::type;
-      return make_fields<num_additional_fields>(FieldType(get<i>(*this)),
+      return make_fields<num_additional_fields>(FieldType(fct::get<i>(*this)),
                                                 _args...);
     }
   }
@@ -180,7 +198,7 @@ class NamedTuple {
         return make_replaced<_index, T>(_val, _args..., FieldType(_val));
       } else {
         return make_replaced<_index, T>(_val, _args...,
-                                        FieldType(get<size>(*this)));
+                                        FieldType(fct::get<size>(*this)));
       }
     }
   }
@@ -257,6 +275,32 @@ class NamedTuple {
   /// runtime overhead over a normal std::tuple.
   const std::tuple<typename FieldTypes::Type...> values_;
 };
+
+// ----------------------------------------------------------------------------
+
+template <StringLiteral _name1, class Type1, StringLiteral _name2, class Type2>
+inline auto operator*(const Field<_name1, Type1>& _f1,
+                      const Field<_name2, Type2>& _f2) {
+  return NamedTuple(_f1, _f2);
+}
+
+template <StringLiteral _name, class Type, class... FieldTypes>
+inline auto operator*(const NamedTuple<FieldTypes...>& _tup,
+                      const Field<_name, Type>& _f) {
+  return _tup.add(_f);
+}
+
+template <StringLiteral _name, class Type, class... FieldTypes>
+inline auto operator*(const Field<_name, Type>& _f,
+                      const NamedTuple<FieldTypes...>& _tup) {
+  return NamedTuple(_f).add(_tup);
+}
+
+template <class... FieldTypes1, class... FieldTypes2>
+inline auto operator*(const NamedTuple<FieldTypes1...>& _tup1,
+                      const NamedTuple<FieldTypes2...>& _tup2) {
+  return _tup1.add(_tup2);
+}
 
 }  // namespace fct
 
