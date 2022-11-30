@@ -19,6 +19,10 @@ namespace fct {
 /// Used to define a field in the NamedTuple.
 template <StringLiteral _name, class _Type>
 struct Field {
+  Field(const Type& _value) : value_(_value) {}
+
+  ~Field() = default;
+
   using Type = _Type;
 
   /// The name of the field.
