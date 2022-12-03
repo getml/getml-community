@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <string_view>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 
 #include "fct/Field.hpp"
@@ -77,26 +78,26 @@ class NamedTuple {
 
   /// Returns a new named tuple with additional fields.
   template <class Head, class... Tail>
-  auto add(const Head& _head, const Tail&... _tail) const {
-    return NamedTuple<FieldTypes..., Head, Tail...>(
-        make_fields<sizeof...(Tail) + 1, Head, Tail...>(_head, _tail...));
+  auto add(Head&& _head, Tail&&... _tail) const {
+    return NamedTuple<FieldTypes..., std::decay_t<Head>, Tail...>(
+        make_fields<sizeof...(Tail) + 1, Head, Tail...>(
+            std::forward<Head>(_head), std::forward<Tail>(_tail)...));
   }
 
   /// Template specialization for std::tuple, so we can pass fields from other
   /// named tuples.
   template <class... TupContent, class... Tail>
-  auto add(const std::tuple<TupContent...>& _tuple,
-           const Tail&... _tail) const {
-    return add_tuple(_tuple, _tail...,
+  auto add(std::tuple<TupContent...>&& _tuple, Tail&&... _tail) const {
+    return add_tuple(std::forward<std::tuple<TupContent...>>(_tuple),
+                     std::forward<Tail>(_tail)...,
                      std::make_index_sequence<sizeof...(TupContent)>{});
   }
 
   /// Template specialization for NamedTuple, so we can pass fields from other
   /// named tuples.
   template <class... TupContent, class... Tail>
-  auto add(const NamedTuple<TupContent...>& _named_tuple,
-           const Tail&... _tail) const {
-    return add(_named_tuple.fields(), _tail...);
+  auto add(NamedTuple<TupContent...>&& _named_tuple, Tail&&... _tail) const {
+    return add(_named_tuple.fields(), std::forward<Tail>(_tail)...);
   }
 
   /// Returns a tuple containing the fields.
@@ -123,31 +124,32 @@ class NamedTuple {
   /// Replaces one or several fields, returning a new version
   /// with the non-replaced fields left unchanged.
   template <class RField, class... OtherRFields>
-  NamedTuple<FieldTypes...> replace(
-      const RField& _field, const OtherRFields&... _other_fields) const {
+  NamedTuple<FieldTypes...> replace(RField&& _field,
+                                    OtherRFields&&... _other_fields) const {
     constexpr auto num_other_fields = sizeof...(OtherRFields);
     if constexpr (num_other_fields == 0) {
-      return replace<RField>(_field.value_);
+      return replace_value<RField>(_field.value_);
     } else {
-      return replace<RField>(_field.value_).replace(_other_fields...);
+      return replace_value<RField>(_field.value_)
+          .replace(std::forward<OtherRFields>(_other_fields)...);
     }
   }
 
   /// Template specialization for std::tuple, so we can pass fields from other
   /// named tuples.
   template <class... TupContent, class... Tail>
-  auto replace(const std::tuple<TupContent...>& _tuple,
-               const Tail&... _tail) const {
-    return replace_tuple(_tuple, _tail...,
+  auto replace(std::tuple<TupContent...>&& _tuple, Tail&&... _tail) const {
+    return replace_tuple(std::forward<std::tuple<TupContent...>>(_tuple),
+                         std::forward<Tail>(_tail)...,
                          std::make_index_sequence<sizeof...(TupContent)>{});
   }
 
   /// Template specialization for NamedTuple, so we can pass fields from other
   /// named tuples.
   template <class... TupContent, class... Tail>
-  auto replace(const NamedTuple<TupContent...>& _named_tuple,
-               const Tail&... _tail) const {
-    return replace(_named_tuple.fields(), _tail...);
+  auto replace(NamedTuple<TupContent...>&& _named_tuple,
+               Tail&&... _tail) const {
+    return replace(_named_tuple.fields(), std::forward<Tail>(_tail)...);
   }
 
   /// Returns the underlying std::tuple.
@@ -164,7 +166,7 @@ class NamedTuple {
 
   /// Generates the fields.
   template <int num_additional_fields = 0, class... Args>
-  auto make_fields(const Args&... _args) const {
+  auto make_fields(Args&&... _args) const {
     constexpr auto size = sizeof...(Args) - num_additional_fields;
     constexpr auto num_fields = std::tuple_size<Fields>{};
     constexpr auto i = num_fields - size - 1;
@@ -172,33 +174,36 @@ class NamedTuple {
     constexpr bool retrieved_all_fields = size == num_fields;
 
     if constexpr (retrieved_all_fields) {
-      return std::make_tuple(_args...);
+      return std::make_tuple(std::forward<Args>(_args)...);
     } else {
       // When we add additional fields, it is more intuitive to add
       // them to the end, that is why we do it like this.
       using FieldType = typename std::tuple_element<i, Fields>::type;
-      return make_fields<num_additional_fields>(FieldType(fct::get<i>(*this)),
-                                                _args...);
+      return make_fields<num_additional_fields>(FieldType(std::get<i>(values_)),
+                                                std::forward<Args>(_args)...);
     }
   }
 
   /// Generates a new named tuple with one value replaced with a new value.
   template <int _index, class T, class... Args>
-  auto make_replaced(const T& _val, const Args&... _args) const {
+  auto make_replaced(T&& _val, Args&&... _args) const {
     constexpr auto size = sizeof...(Args);
 
     constexpr bool retrieved_all_fields = size == std::tuple_size<Fields>{};
 
     if constexpr (retrieved_all_fields) {
-      return NamedTuple<FieldTypes...>(_args...);
+      return NamedTuple<FieldTypes...>(std::forward<Args>(_args)...);
     } else {
       using FieldType = typename std::tuple_element<size, Fields>::type;
 
       if constexpr (size == _index) {
-        return make_replaced<_index, T>(_val, _args..., FieldType(_val));
+        return make_replaced<_index, T>(std::forward<T>(_val),
+                                        std::forward<Args>(_args)...,
+                                        FieldType(_val));
       } else {
-        return make_replaced<_index, T>(_val, _args...,
-                                        FieldType(fct::get<size>(*this)));
+        return make_replaced<_index, T>(std::forward<T>(_val),
+                                        std::forward<Args>(_args)...,
+                                        FieldType(std::get<size>(values_)));
       }
     }
   }
@@ -226,7 +231,7 @@ class NamedTuple {
 
   /// Replaced the field signified by the field type.
   template <class Field, class T>
-  NamedTuple<FieldTypes...> replace(const T& _val) const {
+  NamedTuple<FieldTypes...> replace_value(T&& _val) const {
     constexpr auto index = find_index<Field::name_, Fields>();
     static_assert(
         std::is_same<typename std::tuple_element<index, Fields>::type::Type,
@@ -240,21 +245,21 @@ class NamedTuple {
   /// Adds the elements of a tuple to a newly created named tuple,
   /// and other elements to a newly created named tuple.
   template <class Tuple, class... Tail, size_t... Is>
-  constexpr auto replace_tuple(const Tuple& _tuple, const Tail&... _tail,
+  constexpr auto replace_tuple(Tuple&& _tuple, Tail&&... _tail,
                                const std::index_sequence<Is...>) const {
-    return replace(std::get<Is>(_tuple)..., _tail...);
+    return replace(std::get<Is>(_tuple)..., std::forward<Tail>(_tail)...);
   }
+
   /// Retrieves the fields from another tuple.
   template <class... OtherFieldTypes, class... Args>
   constexpr static Fields retrieve_fields(
-      const std::tuple<OtherFieldTypes...>& _other_fields,
-      const Args&... _args) {
+      std::tuple<OtherFieldTypes...>&& _other_fields, Args&&... _args) {
     constexpr auto size = sizeof...(Args);
 
     constexpr bool retrieved_all_fields = size == std::tuple_size<Fields>{};
 
     if constexpr (retrieved_all_fields) {
-      return std::make_tuple(_args...);
+      return std::make_tuple(std::forward<Args>(_args)...);
     } else {
       constexpr auto field_name = std::tuple_element<size, Fields>::type::name_;
 
@@ -263,8 +268,10 @@ class NamedTuple {
 
       using FieldType = typename std::tuple_element<size, Fields>::type;
 
-      return retrieve_fields(_other_fields, _args...,
-                             FieldType(std::get<index>(_other_fields).value_));
+      return retrieve_fields(
+          std::forward<std::tuple<OtherFieldTypes...>>(_other_fields),
+          std::forward<Args>(_args)...,
+          FieldType(std::get<index>(_other_fields).value_));
     }
   }
 
@@ -273,7 +280,7 @@ class NamedTuple {
   /// As you can see, a NamedTuple is just a normal tuple under-the-hood,
   /// everything else is resolved at compile time. It should have no
   /// runtime overhead over a normal std::tuple.
-  const std::tuple<typename FieldTypes::Type...> values_;
+  std::tuple<typename FieldTypes::Type...> values_;
 };
 
 // ----------------------------------------------------------------------------
@@ -300,6 +307,31 @@ template <class... FieldTypes1, class... FieldTypes2>
 inline auto operator*(const NamedTuple<FieldTypes1...>& _tup1,
                       const NamedTuple<FieldTypes2...>& _tup2) {
   return _tup1.add(_tup2);
+}
+
+template <StringLiteral _name1, class Type1, StringLiteral _name2, class Type2>
+inline auto operator*(Field<_name1, Type1>&& _f1, Field<_name2, Type2>&& _f2) {
+  return NamedTuple(std::forward<Field<_name1, Type1>>(_f1),
+                    std::forward<Field<_name2, Type2>>(_f2));
+}
+
+template <StringLiteral _name, class Type, class... FieldTypes>
+inline auto operator*(NamedTuple<FieldTypes...>&& _tup,
+                      Field<_name, Type>&& _f) {
+  return _tup.add(std::forward<Field<_name, Type>>(_f));
+}
+
+template <StringLiteral _name, class Type, class... FieldTypes>
+inline auto operator*(Field<_name, Type>&& _f,
+                      NamedTuple<FieldTypes...>&& _tup) {
+  return NamedTuple(std::forward<Field<_name, Type>>(_f))
+      .add(std::forward<NamedTuple<FieldTypes...>>(_tup));
+}
+
+template <class... FieldTypes1, class... FieldTypes2>
+inline auto operator*(NamedTuple<FieldTypes1...>&& _tup1,
+                      NamedTuple<FieldTypes2...>&& _tup2) {
+  return _tup1.add(std::forward<NamedTuple<FieldTypes2...>>(_tup2));
 }
 
 }  // namespace fct

@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <string_view>
 #include <tuple>
+#include <utility>
 
 #include "fct/StringLiteral.hpp"
 
@@ -20,6 +21,8 @@ namespace fct {
 template <StringLiteral _name, class _Type>
 struct Field {
   Field(const _Type& _value) : value_(_value) {}
+
+  Field(_Type&& _value) : value_(std::forward<Type>(_value)) {}
 
   ~Field() = default;
 
