@@ -105,6 +105,24 @@ class NamedTuple {
 
   /// Gets a field by index.
   template <int _index>
+  inline auto& get() {
+    return fct::get<_index>(*this);
+  }
+
+  /// Gets a field by name.
+  template <StringLiteral _field_name>
+  inline auto& get() {
+    return fct::get<_field_name>(*this);
+  }
+
+  /// Gets a field by the field type.
+  template <class Field>
+  inline auto& get() {
+    return fct::get<Field>(*this);
+  }
+
+  /// Gets a field by index.
+  template <int _index>
   inline const auto& get() const {
     return fct::get<_index>(*this);
   }
@@ -119,6 +137,23 @@ class NamedTuple {
   template <class Field>
   inline const auto& get() const {
     return fct::get<Field>(*this);
+  }
+
+  /// Copy assignment operator.
+  NamedTuple<FieldTypes...>& operator=(
+      const NamedTuple<FieldTypes...>& _other) {
+    values_ = _other.values;
+    return *this;
+  }
+
+  /// Move assignment operator.
+  NamedTuple<FieldTypes...>& operator=(
+      NamedTuple<FieldTypes...>&& _other) noexcept {
+    if (this == &_other) {
+      return *this;
+    }
+    values_ = std::move(_other.values_);
+    return *this;
   }
 
   /// Replaces one or several fields, returning a new version
@@ -151,6 +186,9 @@ class NamedTuple {
                Tail&&... _tail) const {
     return replace(_named_tuple.fields(), std::forward<Tail>(_tail)...);
   }
+
+  /// Returns the underlying std::tuple.
+  auto& values() { return values_; }
 
   /// Returns the underlying std::tuple.
   const auto& values() const { return values_; }
