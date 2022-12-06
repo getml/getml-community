@@ -199,6 +199,14 @@ You can also check out our other resources
 
 
 .. toctree::
+   :caption: Integration
+   :titlesonly:
+   :hidden:
+
+   Fast API <integration/fastapi/fastapi>
+
+
+.. toctree::
    :hidden:
    
    about
