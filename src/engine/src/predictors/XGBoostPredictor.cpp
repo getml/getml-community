@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "predictors/XGBoostPredictor.hpp"
 
@@ -392,8 +392,8 @@ void XGBoostPredictor::fit_handle(
     ++n_no_improvement;
 
     if (n_no_improvement < hyperparams_.early_stopping_rounds_) [[likely]] {
-      return false;
-    }
+        return false;
+      }
 
     return true;
   };
@@ -408,9 +408,9 @@ void XGBoostPredictor::fit_handle(
     }
 
     if (evaluate(i)) [[unlikely]] {
-      log(i, i);
-      break;
-    }
+        log(i, i);
+        break;
+      }
 
     log(i, n_iter);
   }
@@ -541,8 +541,12 @@ FloatFeature XGBoostPredictor::predict(
                              XGBGetLastError());
   }
 
-  auto yhat = FloatFeature(
-      std::make_shared<std::vector<Float>>(_X_numerical[0].size()));
+  assert_true(_X_numerical.size() > 0 || _X_categorical.size() > 0);
+
+  const auto size = _X_numerical.size() > 0 ? _X_numerical.at(0).size()
+                                            : _X_categorical.at(0).size();
+
+  auto yhat = FloatFeature(std::make_shared<std::vector<Float>>(size));
 
   bst_ulong nrows = 0;
 
