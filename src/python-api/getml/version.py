@@ -5,4 +5,6 @@
 # for details.
 #
 
-__version__ = "1.3.1"
+import importlib.metadata
+
+__version__ = importlib.metadata.version("getml")

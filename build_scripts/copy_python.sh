@@ -10,6 +10,8 @@ function copy_python() {
 
     cp -r ./getml/* $GETML_BUILD_FOLDER/python/getml || exit 1
     cp -r ./setup.py $GETML_BUILD_FOLDER/python || exit 1
+    cp -r ./pyproject.toml $GETML_BUILD_FOLDER/python || exit 1
+    cp -r ./README.md $TML_BUILD_FOLDER/python || exit 1
     cp -r ./LICENSE $GETML_BUILD_FOLDER/python || exit 1
 
     rm -rf $GETML_BUILD_FOLDER/python/getml/.getML || exit 1

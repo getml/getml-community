@@ -1,0 +1,98 @@
+# copyright 2022 the sqlnet company gmbh
+#
+# this file is licensed under the elastic license 2.0 (elv2).
+# refer to the license.txt file in the root of the repository
+# for details.
+#
+
+
+[project]
+
+name = "getml"
+version = "1.3.1"
+description = "Python API for getML"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "Elastic License 2.0 (ELv2)" }
+authors = [ { name="getML", email="getml@getml.com" }, ]
+keywords = [ "AutoML", "feature learning" ]
+classifiers = [
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Financial and Insurance Industry",
+    "Intended Audience :: Telecommunications Industry",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: Manufacturing",
+    "Intended Audience :: Healthcare Industry",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "pandas",
+    "pyarrow>=7.0,<7.1",
+    "numpy>=1.22",
+    "jinja2",
+    "scipy",
+]
+
+
+[project.urls]
+
+"Hompage" = "https://getml.com"
+"Documentation" = "https://docs.getml.com/1.3.1"
+"Bug Tracker" = "https://github.com/getml/getml-community/issues"
+"Download" = "https://getml.com/product/download/"
+"Source Code" = "https://github.com/getml/getml-community"
+
+
+[project.optional-dependencies]
+
+test = [ "pytest", "pyspark" ]
+development = [ "black", "mypy", "pylint" ]
+
+
+[tool.setuptools]
+
+packages = [
+    "getml",
+    "getml.data",
+    "getml.data.columns",
+    "getml.data.split",
+    "getml.data.subroles",
+    "getml.database",
+    "getml.datasets",
+    "getml.engine",
+    "getml.feature_learning",
+    "getml.hyperopt",
+    "getml.pipeline",
+    "getml.pipeline",
+    "getml.predictors",
+    "getml.preprocessors",
+    "getml.project",
+    "getml.project.containers",
+    "getml.sqlite3",
+    "getml.utilities",
+    "getml.utilities.formatting",
+    "getml.utilities.templates"
+]
+
+
+[tool.setuptools.package-data]
+
+getml = [
+    "py.typed",
+    "utilities/templates/*.jinja2",
+    "./.getML/**/*",
+]
+
+
+[build-system]
+
+requires = [ "setuptools>=42", "wheel" ]   # PEP 508 specifications.
+build-backend = "setuptools.build_meta"
+
