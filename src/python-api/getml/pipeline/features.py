@@ -586,7 +586,9 @@ class Features:
 
                 dialect (string):
                     The SQL dialect to use. Must be from
-                    :mod:`~getml.pipeline.dialect`.
+                    :mod:`~getml.pipeline.dialect`. Please
+                    note that not all dialects are supported
+                    in the getML community edition.
 
                 schema (string, optional):
                     The schema in which to wrap all generated tables and

@@ -44,6 +44,9 @@ AllDialects = Literal[
 
 bigquery = get_args(AllDialects)[0]
 """BigQuery is a proprietary database system used by the Google Cloud.
+
+Note:
+    Not supported in the getML community edition.
 """
 
 human_readable_sql = get_args(AllDialects)[1]
@@ -53,12 +56,18 @@ human_readable_sql = get_args(AllDialects)[1]
 mysql = get_args(AllDialects)[2]
 """MySQL and its fork MariaDB are among the most popular open-source
 database systems.
+
+Note:
+    Not supported in the getML community edition.
 """
 
 postgres = get_args(AllDialects)[3]
 """The PostgreSQL or postgres dialect is a popular SQL dialect
 used by PostgreSQL and its many derivatives like Redshift
 or Greenplum.
+
+Note:
+    Not supported in the getML community edition.
 """
 
 spark_sql = get_args(AllDialects)[4]
@@ -67,18 +76,27 @@ spark_sql = get_args(AllDialects)[4]
 Apache Spark is an open-source, distributed, in-memory
 engine for large-scale data processing and a popular
 choice for producutionizing machine learning pipelines.
+
+Note:
+    Not supported in the getML community edition.
 """
 
 sqlite3 = get_args(AllDialects)[5]
-"""The SQLite3 dialect is the default dialect used by getML.
+"""SQLite3 is a light-weight and widely used database system.
 
 It is recommended for live prediction systems or when the amount
 of data handled is unlikely to be too large.
+
+Note:
+    Not supported in the getML community edition.
 """
 
 tsql = get_args(AllDialects)[6]
 """TSQL or Transact-SQL is the dialect used by most Microsoft
 databases.
+
+Note:
+    Not supported in the getML community edition.
 """
 
 
