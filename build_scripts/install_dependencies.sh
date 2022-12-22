@@ -8,10 +8,6 @@ function install_dependencies_linux() {
     checkout_arrow
     compile_arrow
 
-    # Only needed for profiling,
-    # not a dependency in release mode.
-    checkout_gperftools
-
     checkout_mariadb
     compile_mariadb
 
