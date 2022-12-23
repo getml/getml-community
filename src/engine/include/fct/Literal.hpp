@@ -8,18 +8,25 @@
 #ifndef FCT_LITERAL_HPP_
 #define FCT_LITERAL_HPP_
 
+#include <cstdint>
+#include <limits>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 
 #include "debug/debug.hpp"
 #include "fct/StringLiteral.hpp"
 
 namespace fct {
 
+/// Helper class to retrieve the value at compile time.
 template <StringLiteral name_, StringLiteral... fields_>
 struct GetValueOf {
+ public:
+  /// Retrieves the value.
   static constexpr auto get() { return find_value_of<fields_...>(); }
 
+ private:
   /// Finds the value of a string literal at compile time.
   template <StringLiteral _head, StringLiteral... _tail>
   static constexpr auto find_value_of() {
@@ -35,17 +42,23 @@ struct GetValueOf {
 template <StringLiteral... fields_>
 class Literal {
  public:
-  using ValueType = size_t;
+  using ValueType =
+      typename std::conditional<sizeof...(fields_) <=
+                                    std::numeric_limits<std::uint8_t>::max(),
+                                std::uint8_t, std::uint16_t>::type;
 
   /// Constructs a Literal from a string.
-  Literal(const std::string& _str) : value_(find_value<fields_...>(_str)) {}
+  Literal(const std::string& _str) : value_(find_value<fields_...>(_str)) {
+    static_assert(sizeof...(fields_) <= std::numeric_limits<ValueType>::max(),
+                  "Too many fields.");
+  }
 
   ~Literal() = default;
 
   /// Constructs a new Literal.
-  template <StringLiteral _str>
+  template <StringLiteral _name>
   static Literal<fields_...> make() {
-    return Literal(find_name<0, fields_...>());
+    return Literal(GetValueOf<_name, fields_...>::get());
   }
 
   /// The name defined by the Literal.
@@ -88,7 +101,10 @@ class Literal {
 
  private:
   /// Only make is allowed to use this constructor.
-  Literal(const ValueType _value) : value_(_value) {}
+  Literal(const ValueType _value) : value_(_value) {
+    static_assert(sizeof...(fields_) <= std::numeric_limits<ValueType>::max(),
+                  "Too many fields.");
+  }
 
   /// Finds the correct index associated with
   /// the string.
