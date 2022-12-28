@@ -1,11 +1,14 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/srv/RequestHandler.hpp"
+
+#include "engine/commands/commands.hpp"
+#include "json/json.hpp"
 
 namespace engine {
 namespace srv {
@@ -22,9 +25,11 @@ void RequestHandler::run() {
     const Poco::JSON::Object cmd =
         communication::Receiver::recv_cmd(logger_, &socket());
 
-    const auto type = JSON::get_value<std::string>(cmd, "type_");
+    const auto basic_command = json::from_json<commands::BasicCommand>(cmd);
 
-    const auto name = JSON::get_value<std::string>(cmd, "name_");
+    const auto& type = basic_command.get<"type_">();
+
+    const auto& name = basic_command.get<"name_">();
 
     if (type == "BooleanColumn.get") {
       data_frame_manager().get_boolean_column(name, cmd, &socket());

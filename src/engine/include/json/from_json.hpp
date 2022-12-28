@@ -25,6 +25,12 @@ T from_json(const std::string& _json_str) {
   return Parser<T>::from_json(json_obj);
 }
 
+/// Parses an object from JSON using reflection.
+template <class T>
+T from_json(const Poco::JSON::Object& _json_obj) {
+  return Parser<T>::from_json(_json_obj);
+}
+
 }  // namespace json
 
 #endif  // JSON_FROM_JSON_HPP_
