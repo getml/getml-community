@@ -1,21 +1,13 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/handlers/DataFrameManager.hpp"
 
-// ------------------------------------------------------------------------
-
 #include <Poco/TemporaryFile.h>
-
-// ------------------------------------------------------------------------
-
-#include "metrics/metrics.hpp"
-
-// ------------------------------------------------------------------------
 
 #include "engine/handlers/AggOpParser.hpp"
 #include "engine/handlers/ArrowHandler.hpp"
@@ -23,8 +15,7 @@
 #include "engine/handlers/CatOpParser.hpp"
 #include "engine/handlers/NumOpParser.hpp"
 #include "engine/handlers/ViewParser.hpp"
-
-// ------------------------------------------------------------------------
+#include "metrics/metrics.hpp"
 
 namespace engine {
 namespace handlers {
