@@ -22,7 +22,7 @@ using BooleanUnaryOpLiteral =
     fct::Literal<"is_inf", "is_nan", "is_null", "not">;
 
 /// The command used for boolean binary operations.
-using BooleanBinaryOp =
+using BooleanUnaryOp =
     fct::NamedTuple<fct::Field<"operand1_", Column>,
                     fct::Field<"operator_", BooleanUnaryOpLiteral>,
                     fct::Field<"type_", fct::Literal<"BooleanColumnView">>>;

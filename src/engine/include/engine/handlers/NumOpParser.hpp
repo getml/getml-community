@@ -1,44 +1,30 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_HANDLERS_NUMOPPARSER_HPP_
 #define ENGINE_HANDLERS_NUMOPPARSER_HPP_
 
-// ----------------------------------------------------------------------------
-
 #include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------------
 
 #include <map>
 #include <memory>
 #include <random>
 #include <string>
 
-// ----------------------------------------------------------------------------
-
 #include "debug/debug.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
 #include "engine/communication/communication.hpp"
 #include "engine/containers/containers.hpp"
 
-// ----------------------------------------------------------------------------
-
 namespace engine {
 namespace handlers {
-// ----------------------------------------------------------------------------
 
 class NumOpParser {
-  // ------------------------------------------------------------------------
-
  public:
   typedef containers::ColumnView<bool>::UnknownSize UnknownSize;
   typedef containers::ColumnView<bool>::NRowsType NRowsType;
@@ -64,8 +50,6 @@ class NumOpParser {
   static constexpr const char* BOOLEAN_COLUMN_VIEW =
       containers::Column<bool>::BOOLEAN_COLUMN_VIEW;
 
-  // ------------------------------------------------------------------------
-
  public:
   NumOpParser(
       const fct::Ref<const containers::Encoding>& _categories,
@@ -78,8 +62,6 @@ class NumOpParser {
 
   ~NumOpParser() = default;
 
-  // ------------------------------------------------------------------------
-
  public:
   /// Checks a column for any obvious issues (such as high share of NULL
   /// values).
@@ -89,8 +71,6 @@ class NumOpParser {
 
   /// Parses a numerical column.
   containers::ColumnView<Float> parse(const Poco::JSON::Object& _col) const;
-
-  // ------------------------------------------------------------------------
 
  private:
   /// Implements numpy's arange in a lazy fashion.
@@ -131,8 +111,6 @@ class NumOpParser {
 
   /// Returns a new column with a new unit.
   containers::ColumnView<Float> with_unit(const Poco::JSON::Object& _col) const;
-
-  // ------------------------------------------------------------------------
 
   /// Undertakes a binary operation based on template class
   /// Operator.
@@ -194,8 +172,6 @@ class NumOpParser {
     return containers::ColumnView<Float>::from_un_op(operand1, _op);
   }
 
-  // ------------------------------------------------------------------------
-
  private:
   /// Encodes the categories used.
   const fct::Ref<const containers::Encoding> categories_;
@@ -206,11 +182,8 @@ class NumOpParser {
 
   /// Encodes the join keys used.
   const fct::Ref<const containers::Encoding> join_keys_encoding_;
-
-  // ------------------------------------------------------------------------
 };
 
-// ----------------------------------------------------------------------------
 }  // namespace handlers
 }  // namespace engine
 
