@@ -5,12 +5,12 @@
 // for details.
 //
 
+#ifndef ENGINE_COMMANDS_BOOLEANUNARYOP_HPP_
+#define ENGINE_COMMANDS_BOOLEANUNARYOP_HPP_
+
 #include "fct/Field.hpp"
 #include "fct/Literal.hpp"
 #include "fct/NamedTuple.hpp"
-
-#ifndef ENGINE_COMMANDS_BOOLEANUNARYOP_HPP_
-#define ENGINE_COMMANDS_BOOLEANUNARYOP_HPP_
 
 namespace engine {
 namespace commands {

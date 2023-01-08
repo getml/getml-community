@@ -5,13 +5,13 @@
 // for details.
 //
 
+#ifndef ENGINE_COMMANDS_STRINGCOLUMNORSTRINGCOLUMNVIEW_HPP_
+#define ENGINE_COMMANDS_STRINGCOLUMNORSTRINGCOLUMNVIEW_HPP_
+
 #include <variant>
 
 #include "engine/commands/StringColumn.hpp"
 #include "engine/commands/StringColumnView.hpp"
-
-#ifndef ENGINE_COMMANDS_STRINGCOLUMNORSTRINGCOLUMNVIEW_HPP_
-#define ENGINE_COMMANDS_STRINGCOLUMNORSTRINGCOLUMNVIEW_HPP_
 
 namespace engine {
 namespace commands {

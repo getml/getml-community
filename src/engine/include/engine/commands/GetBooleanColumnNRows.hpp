@@ -5,11 +5,10 @@
 // for details.
 //
 
-#include "engine/commands/GetBooleanColumn.hpp"
-
 #ifndef ENGINE_COMMANDS_GETBOOLEANCOLUMNNROWS_HPP_
 #define ENGINE_COMMANDS_GETBOOLEANCOLUMNNROWS_HPP_
 
+#include "engine/commands/GetBooleanColumn.hpp"
 #include "engine/commands/GetBooleanColumnNRows.hpp"
 
 namespace engine {

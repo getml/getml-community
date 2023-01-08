@@ -5,15 +5,15 @@
 // for details.
 //
 
+#ifndef ENGINE_COMMANDS_STRINGWITHSUBROLESOP_HPP_
+#define ENGINE_COMMANDS_STRINGWITHSUBROLESOP_HPP_
+
 #include <string>
 #include <vector>
 
 #include "fct/Field.hpp"
 #include "fct/Literal.hpp"
 #include "fct/NamedTuple.hpp"
-
-#ifndef ENGINE_COMMANDS_STRINGWITHSUBROLESOP_HPP_
-#define ENGINE_COMMANDS_STRINGWITHSUBROLESOP_HPP_
 
 namespace engine {
 namespace commands {

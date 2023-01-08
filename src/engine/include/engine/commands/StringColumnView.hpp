@@ -5,6 +5,9 @@
 // for details.
 //
 
+#ifndef ENGINE_COMMANDS_STRINGCOLUMNVIEW_HPP_
+#define ENGINE_COMMANDS_STRINGCOLUMNVIEW_HPP_
+
 #include <variant>
 
 #include "engine/commands/StringBinaryOp.hpp"
@@ -13,9 +16,6 @@
 #include "engine/commands/StringUnaryOp.hpp"
 #include "engine/commands/StringWithSubrolesOp.hpp"
 #include "engine/commands/StringWithUnitOp.hpp"
-
-#ifndef ENGINE_COMMANDS_STRINGCOLUMNVIEW_HPP_
-#define ENGINE_COMMANDS_STRINGCOLUMNVIEW_HPP_
 
 namespace engine {
 namespace commands {

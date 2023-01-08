@@ -5,15 +5,15 @@
 // for details.
 //
 
+#ifndef ENGINE_COMMANDS_BOOLEANBINARYOP_HPP_
+#define ENGINE_COMMANDS_BOOLEANBINARYOP_HPP_
+
 #include <variant>
 
 #include "engine/commands/BooleanBinaryOp.hpp"
 #include "engine/commands/BooleanConstOp.hpp"
 #include "engine/commands/BooleanSubselectionOp.hpp"
 #include "engine/commands/BooleanUnaryOp.hpp"
-
-#ifndef ENGINE_COMMANDS_BOOLEANBINARYOP_HPP_
-#define ENGINE_COMMANDS_BOOLEANBINARYOP_HPP_
 
 namespace engine {
 namespace commands {

@@ -5,13 +5,13 @@
 // for details.
 //
 
+#ifndef ENGINE_COMMANDS_GETCONTENT_HPP_
+#define ENGINE_COMMANDS_GETCONTENT_HPP_
+
 #include <cstddef>
 
 #include "fct/Field.hpp"
 #include "fct/NamedTuple.hpp"
-
-#ifndef ENGINE_COMMANDS_GETCONTENT_HPP_
-#define ENGINE_COMMANDS_GETCONTENT_HPP_
 
 namespace engine {
 namespace commands {

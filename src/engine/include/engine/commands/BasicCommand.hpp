@@ -5,11 +5,11 @@
 // for details.
 //
 
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
-
 #ifndef ENGINE_COMMANDS_BASICCOMMAND_HPP_
 #define ENGINE_COMMANDS_BASICCOMMAND_HPP_
+
+#include "fct/Field.hpp"
+#include "fct/NamedTuple.hpp"
 
 namespace engine {
 namespace commands {
