@@ -22,9 +22,9 @@ using StringUnaryOpLiteral =
     fct::Literal<"as_str", "categorical_value", "substr">;
 
 /// The command used for boolean binary operations.
-using BooleanBinaryOp =
+using StringUnaryOp =
     fct::NamedTuple<fct::Field<"operand1_", Column>,
-                    fct::Field<"operator_", BooleanUnaryOpLiteral>,
+                    fct::Field<"operator_", StringUnaryOpLiteral>,
                     fct::Field<"type_", fct::Literal<"BooleanColumnView">>>;
 
 }  // namespace commands

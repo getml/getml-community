@@ -1,14 +1,12 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_CONTAINERS_COLUMN_HPP_
 #define ENGINE_CONTAINERS_COLUMN_HPP_
-
-// -------------------------------------------------------------------------
 
 #include <stdexcept>
 #include <string>
@@ -16,23 +14,13 @@
 #include <variant>
 #include <vector>
 
-// -------------------------------------------------------------------------
-
 #include "debug/debug.hpp"
-#include "helpers/helpers.hpp"
-#include "strings/strings.hpp"
-
-// -------------------------------------------------------------------------
-
 #include "engine/ULong.hpp"
 #include "engine/config/config.hpp"
-#include "engine/utils/utils.hpp"
-
-// -------------------------------------------------------------------------
-
 #include "engine/containers/ColumnViewIterator.hpp"
-
-// -------------------------------------------------------------------------
+#include "engine/utils/utils.hpp"
+#include "helpers/helpers.hpp"
+#include "strings/strings.hpp"
 
 namespace engine {
 namespace containers {
