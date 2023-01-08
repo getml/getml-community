@@ -5,10 +5,6 @@
 // for details.
 //
 
-#include "fct/Field.hpp"
-#include "fct/Literal.hpp"
-#include "fct/NamedTuple.hpp"
-
 #ifndef ENGINE_COMMANDS_STRINGCOLUMN_HPP_
 #define ENGINE_COMMANDS_STRINGCOLUMN_HPP_
 

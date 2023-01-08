@@ -5,14 +5,14 @@
 // for details.
 //
 
+#ifndef ENGINE_COMMANDS_STRINGWITHUNITOP_HPP_
+#define ENGINE_COMMANDS_STRINGWITHUNITOP_HPP_
+
 #include <string>
 
 #include "fct/Field.hpp"
 #include "fct/Literal.hpp"
 #include "fct/NamedTuple.hpp"
-
-#ifndef ENGINE_COMMANDS_STRINGWITHUNITOP_HPP_
-#define ENGINE_COMMANDS_STRINGWITHUNITOP_HPP_
 
 namespace engine {
 namespace commands {

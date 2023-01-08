@@ -5,13 +5,13 @@
 // for details.
 //
 
+#ifndef ENGINE_COMMANDS_GETBOOLEANCOLUMN_HPP_
+#define ENGINE_COMMANDS_GETBOOLEANCOLUMN_HPP_
+
 #include "engine/commands/BasicCommand.hpp"
 #include "engine/commands/BooleanColumnView.hpp"
 #include "fct/Field.hpp"
 #include "fct/make_named_tuple.hpp"
-
-#ifndef ENGINE_COMMANDS_GETBOOLEANCOLUMN_HPP_
-#define ENGINE_COMMANDS_GETBOOLEANCOLUMN_HPP_
 
 namespace engine {
 namespace commands {
