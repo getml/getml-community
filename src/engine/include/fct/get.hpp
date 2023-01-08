@@ -8,8 +8,7 @@
 #ifndef FCT_GET_HPP_
 #define FCT_GET_HPP_
 
-#include <tuple>
-
+#include "fct/Getter.hpp"
 #include "fct/StringLiteral.hpp"
 #include "fct/find_index.hpp"
 
@@ -18,7 +17,7 @@ namespace fct {
 /// Gets a field by index.
 template <int _index, class NamedTupleType>
 inline auto& get(NamedTupleType& _tup) {
-  return std::get<_index>(_tup.values());
+  return Getter<NamedTupleType, _index>::get(_tup);
 }
 
 /// Gets a field by name.
@@ -26,7 +25,7 @@ template <StringLiteral _field_name, class NamedTupleType>
 inline auto& get(NamedTupleType& _tup) {
   constexpr auto index =
       find_index<_field_name, typename NamedTupleType::Fields>();
-  return std::get<index>(_tup.values());
+  return Getter<NamedTupleType, index>::get(_tup);
 }
 
 /// Gets a field by the field type.
@@ -41,13 +40,13 @@ inline auto& get(NamedTupleType& _tup) {
       "If two fields have the same name, "
       "their type must be the same as "
       "well.");
-  return std::get<index>(_tup.values());
+  return Getter<NamedTupleType, index>::get(_tup);
 }
 
 /// Gets a field by index.
 template <int _index, class NamedTupleType>
 inline const auto& get(const NamedTupleType& _tup) {
-  return std::get<_index>(_tup.values());
+  return Getter<NamedTupleType, _index>::get_const(_tup);
 }
 
 /// Gets a field by name.
@@ -55,7 +54,7 @@ template <StringLiteral _field_name, class NamedTupleType>
 inline const auto& get(const NamedTupleType& _tup) {
   constexpr auto index =
       find_index<_field_name, typename NamedTupleType::Fields>();
-  return std::get<index>(_tup.values());
+  return Getter<NamedTupleType, index>::get_const(_tup);
 }
 
 /// Gets a field by the field type.
@@ -70,7 +69,7 @@ inline const auto& get(const NamedTupleType& _tup) {
       "If two fields have the same name, "
       "their type must be the same as "
       "well.");
-  return std::get<index>(_tup.values());
+  return Getter<NamedTupleType, index>::get_const(_tup);
 }
 
 }  // namespace fct
