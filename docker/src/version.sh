@@ -17,4 +17,3 @@ else
 fi
 
 export GETML_VERSION=getml-$VERSION_NUMBER-$GETML_ARCH-community-edition-linux
-echo $GETML_VERSION
