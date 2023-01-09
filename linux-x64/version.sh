@@ -1,0 +1,5 @@
+export VERSION_NUMBER=1.3.1
+
+export GETML_VERSION_BASE=getml-$VERSION_NUMBER-$ARCHITECTURE-community-edition
+export GETML_VERSION=$GETML_VERSION_BASE-linux
+
