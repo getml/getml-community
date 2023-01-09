@@ -169,17 +169,19 @@ The Python API can be installed from the Python Package Index by executing the f
 pip install getml
 ```
 
-The getML engine comes with the Python API and is installed automatically. However, if you want to install it separately, please execute the following commands: 
+The getML engine comes with the Python API and is installed automatically. However, if you want to install it separately, please execute the following commands,
+replacing `ARCH` with either `x64` or `arm64`, depending on your architecture. If you are unsure, `x64` is probably the right choice. You can also use
+`uname -m` to figure out the architecture. If it says something like `aarch64` or `arm64`, you need to use `arm64`, otherwise go with `x64`.
 
 ```bash
 # Downloads the tar file of the engine
-wget https://static.getml.com/download/1.3.1/getml-1.3.1-community-edition-linux.tar.gz
+wget https://static.getml.com/download/1.3.1/getml-1.3.1-ARCH-community-edition-linux.tar.gz
 
 # Extracts the tar file
-tar -xf getml-1.3.1-community-edition-linux.tar.gz
+tar -xf getml-1.3.1-ARCH-community-edition-linux.tar.gz
 
 # Changes directory 
-cd getml-1.3.1-community-edition-linux
+cd getml-1.3.1-ARCH-community-edition-linux
 
 # Installs the engine
 ./getML install
@@ -266,11 +268,11 @@ can launch Docker without root rights:
 
 https://docs.docker.com/engine/install/linux-postinstall/
 
-Then, do the following:
+Then, do the following, again replacing `ARCH` with either `x64` or `arm64`:
 
 ```bash
 # Go to the linux folder inside the repository
-cd linux
+cd linux-ARCH
 
 # Set up the Docker container (you only have to do this once)
 ./build.sh init_docker
