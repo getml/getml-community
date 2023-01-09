@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_PIPELINES_PIPELINE_HPP_
 #define ENGINE_PIPELINES_PIPELINE_HPP_
@@ -14,8 +14,6 @@
 #include <Poco/Net/StreamSocket.h>
 #include <Poco/TemporaryFile.h>
 
-// ----------------------------------------------------------------------------
-
 #include <fstream>
 #include <memory>
 #include <optional>
@@ -24,26 +22,16 @@
 #include <utility>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
-#include "helpers/helpers.hpp"
-#include "metrics/Scores.hpp"
-#include "transpilation/transpilation.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
 #include "engine/containers/containers.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "engine/pipelines/CheckParams.hpp"
 #include "engine/pipelines/FitParams.hpp"
 #include "engine/pipelines/FittedPipeline.hpp"
 #include "engine/pipelines/TransformParams.hpp"
-
-// ----------------------------------------------------------------------------
+#include "helpers/helpers.hpp"
+#include "metrics/Scores.hpp"
+#include "transpilation/transpilation.hpp"
 
 namespace engine {
 namespace pipelines {
@@ -54,14 +42,10 @@ class Pipeline {
 
   ~Pipeline();
 
-  // --------------------------------------------------------
-
  public:
   /// Expresses the Pipeline in a form the monitor can understand.
   Poco::JSON::Object to_monitor(const helpers::StringIterator& _categories,
                                 const std::string& _name) const;
-
-  // --------------------------------------------------------
 
  private:
   // Helper function for the creation time.
@@ -70,8 +54,6 @@ class Pipeline {
     return Poco::DateTimeFormatter::format(
         now, Poco::DateTimeFormat::SORTABLE_FORMAT);
   }
-
-  // --------------------------------------------------------
 
  public:
   /// Trivial (const) accessor
@@ -120,8 +102,6 @@ class Pipeline {
     return new_pipeline;
   }
 
-  // --------------------------------------------------------
-
  public:
   /// Generates the placeholder and the peripheral names, integrating the
   /// many-to-one joins and all other modifications.
@@ -134,8 +114,6 @@ class Pipeline {
 
   /// Parses the population name.
   std::shared_ptr<std::string> parse_population() const;
-
-  // --------------------------------------------------------
 
  private:
   /// Whether the pipeline is allowed to handle HTTP requests.
@@ -156,8 +134,6 @@ class Pipeline {
   /// The scores used to evaluate this pipeline
   fct::Ref<const metrics::Scores> scores_;
 };
-
-//  ----------------------------------------------------------------------------
 
 }  // namespace pipelines
 }  // namespace engine

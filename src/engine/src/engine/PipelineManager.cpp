@@ -1,30 +1,21 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/handlers/PipelineManager.hpp"
 
 #include <stdexcept>
 
-// ------------------------------------------------------------------------
-
+#include "engine/containers/Roles.hpp"
+#include "engine/handlers/DataFrameManager.hpp"
 #include "engine/pipelines/ToSQL.hpp"
 #include "engine/pipelines/ToSQLParams.hpp"
+#include "engine/pipelines/pipelines.hpp"
 #include "transpilation/TranspilationParams.hpp"
 #include "transpilation/transpilation.hpp"
-
-// ------------------------------------------------------------------------
-
-#include "engine/pipelines/pipelines.hpp"
-
-// ------------------------------------------------------------------------
-
-#include "engine/handlers/DataFrameManager.hpp"
-
-// ------------------------------------------------------------------------
 
 namespace engine {
 namespace handlers {
@@ -588,6 +579,14 @@ void PipelineManager::refresh_all(Poco::Net::StreamSocket* _socket) {
 
 Poco::JSON::Object PipelineManager::refresh_pipeline(
     const pipelines::Pipeline& _pipeline) const {
+  const auto extract_roles =
+      [](const helpers::Schema& _schema) -> Poco::JSON::Object::Ptr {
+    auto ptr = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
+    ptr->set("name", _schema.name_);
+    ptr->set("roles", containers::Roles::from_schema(_schema).to_json_obj());
+    return ptr;
+  };
+
   Poco::JSON::Object obj;
 
   obj.set("obj", _pipeline.obj());
@@ -595,6 +594,15 @@ Poco::JSON::Object PipelineManager::refresh_pipeline(
   obj.set("scores", get_scores(_pipeline));
 
   if (_pipeline.fitted()) {
+    obj.set(
+        "peripheral_metadata",
+        JSON::vector_to_array_ptr(fct::collect::vector<Poco::JSON::Object::Ptr>(
+            *_pipeline.fitted()->peripheral_schema_ |
+            VIEWS::transform(extract_roles))));
+
+    obj.set("population_metadata",
+            extract_roles(*_pipeline.fitted()->population_schema_));
+
     obj.set("targets", JSON::vector_to_array(_pipeline.fitted()->targets()));
   }
 

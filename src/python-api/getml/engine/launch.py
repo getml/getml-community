@@ -38,11 +38,24 @@ class _Options(NamedTuple):
         """
         Generates the command to be passed to Popen.
         """
-        return [str(binary_path)] + [
+        return ["./getML"] + [
             "--" + key.replace("_", "-") + "=" + _handle_value(value)
             for (key, value) in self._asdict().items()  # pylint: disable=E1101
             if value is not None
         ]
+
+
+def _make_home_path(home_directory: Optional[str]) -> Path:
+    if home_directory is not None:
+        return Path(home_directory)
+    paths = [Path.home(), Path("/usr/local"), Path(__file__).parent.parent]
+    home_paths = [p for p in paths if _try_find_binary(p) is not None]
+    if home_paths:
+        return home_paths[0]
+    raise OSError(
+        "Could not find an installation of the getML binary in "
+        + f"any of the following locations: {[str(p) for p in paths]}"
+    )
 
 
 def _map_version_directories(
@@ -75,8 +88,23 @@ def _extract_getml_exec_path(getml_directory: Path, directories: List[Path]) -> 
     return getml_directory / directories[0] / "getml-cli"
 
 
+def _try_find_binary(home_directory: Path) -> Optional[Path]:
+    try:
+        _find_binary(home_directory)
+        return home_directory
+    except OSError:
+        return None
+
+
 def _find_binary(home_directory: Path) -> Path:
-    getml_directory = home_directory / ".getML"
+    getml_directory = (
+        home_directory / ".getML"
+        if home_directory != Path("/usr/local")
+        else home_directory / "getML"
+    )
+
+    if not getml_directory.exists():
+        raise OSError(f"{getml_directory} does not exist.")
 
     _reduce = partial(
         _map_version_directories,
@@ -121,7 +149,12 @@ def _handle_value(value: Union[str, int, bool]) -> str:
 
 
 def _make_log_path(home_directory: Path) -> Path:
-    getml_directory = home_directory / ".getML"
+    getml_directory = (
+        home_directory / ".getML"
+        if home_directory != Path("/usr/local")
+        and home_directory != Path(__file__).parent.parent
+        else Path.home() / ".getML"
+    )
     makedirs(getml_directory / "logs", exist_ok=True)
     return getml_directory / "logs" / datetime.now().strftime("%Y%m%d%H%M%S.log")
 
@@ -199,14 +232,14 @@ def launch(
     if _is_monitor_alive():
         print("getML engine is already running.")
         return
-    home_path = Path(home_directory) if home_directory is not None else Path.home()
+    home_path = _make_home_path(home_directory)
     binary_path = _find_binary(home_path)
     log_path = _make_log_path(home_path)
     logfile = open(str(log_path), "w", encoding="utf-8")
     cmd = _Options(
         allow_push_notifications=allow_push_notifications,
         allow_remote_ips=allow_remote_ips,
-        home_directory=home_directory,
+        home_directory=str(home_path),
         http_port=http_port,
         in_memory=in_memory,
         install=install,
@@ -216,11 +249,9 @@ def launch(
         proxy_url=proxy_url,
         token=token,
     ).to_cmd(binary_path)
-    Popen(cmd, shell=False, stdout=logfile, stdin=logfile, stderr=logfile)
+    cwd = str(binary_path.parent)
+    print(f"Launching {' '.join(cmd)} in {cwd}...")
+    Popen(cmd, cwd=cwd, shell=False, stdout=logfile, stdin=logfile, stderr=logfile)
     while not _is_monitor_alive():
         sleep(0.1)
-    print(
-        "Launched the getML engine. The log output will be stored in "
-        + str(log_path)
-        + "."
-    )
+    print(f"Launched the getML engine. The log output will be stored in {log_path}.")

@@ -1,22 +1,15 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef HELPERS_ENUMS_PARSER_HPP_
 #define HELPERS_ENUMS_PARSER_HPP_
 
-// ----------------------------------------------------------------------------
-
 #include "debug/debug.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "helpers/enums/Aggregation.hpp"
-
-// ----------------------------------------------------------------------------
 
 namespace helpers {
 namespace enums {
@@ -25,7 +18,6 @@ template <class T>
 class Parser {};
 
 // ----------------------------------------------------------------------------
-
 template <>
 struct Parser<Aggregation> {
   static constexpr const char* AVG = "AVG";
@@ -38,14 +30,22 @@ struct Parser<Aggregation> {
       "COUNT DISTINCT OVER COUNT";
   static constexpr const char* COUNT_MINUS_COUNT_DISTINCT =
       "COUNT MINUS COUNT DISTINCT";
-  static constexpr const char* EWMA1S = "EWMA_1S";
-  static constexpr const char* EWMA1M = "EWMA_1M";
-  static constexpr const char* EWMA1H = "EWMA_1H";
-  static constexpr const char* EWMA1D = "EWMA_1D";
-  static constexpr const char* EWMA7D = "EWMA_7D";
-  static constexpr const char* EWMA30D = "EWMA_30D";
-  static constexpr const char* EWMA90D = "EWMA_90D";
-  static constexpr const char* EWMA365D = "EWMA_365D";
+  static constexpr const char* EWMA_1S = "EWMA_1S";
+  static constexpr const char* EWMA_1M = "EWMA_1M";
+  static constexpr const char* EWMA_1H = "EWMA_1H";
+  static constexpr const char* EWMA_1D = "EWMA_1D";
+  static constexpr const char* EWMA_7D = "EWMA_7D";
+  static constexpr const char* EWMA_30D = "EWMA_30D";
+  static constexpr const char* EWMA_90D = "EWMA_90D";
+  static constexpr const char* EWMA_365D = "EWMA_365D";
+  static constexpr const char* EWMA_TREND_1S = "EWMA_TREND_1S";
+  static constexpr const char* EWMA_TREND_1M = "EWMA_TREND_1M";
+  static constexpr const char* EWMA_TREND_1H = "EWMA_TREND_1H";
+  static constexpr const char* EWMA_TREND_1D = "EWMA_TREND_1D";
+  static constexpr const char* EWMA_TREND_7D = "EWMA_TREND_7D";
+  static constexpr const char* EWMA_TREND_30D = "EWMA_TREND_30D";
+  static constexpr const char* EWMA_TREND_90D = "EWMA_TREND_90D";
+  static constexpr const char* EWMA_TREND_365D = "EWMA_TREND_365D";
   static constexpr const char* FIRST = "FIRST";
   static constexpr const char* LAST = "LAST";
   static constexpr const char* KURTOSIS = "KURTOSIS";
@@ -112,37 +112,70 @@ struct Parser<Aggregation> {
       return Aggregation::count_distinct_over_count;
     }
 
-    if (_str == EWMA1S) {
-      return Aggregation::ewma1s;
+    if (_str == EWMA_1S) {
+      return Aggregation::ewma_1s;
     }
 
-    if (_str == EWMA1M) {
-      return Aggregation::ewma1m;
+    if (_str == EWMA_1M) {
+      return Aggregation::ewma_1m;
     }
 
-    if (_str == EWMA1H) {
-      return Aggregation::ewma1h;
+    if (_str == EWMA_1H) {
+      return Aggregation::ewma_1h;
     }
 
-    if (_str == EWMA1D) {
-      return Aggregation::ewma1d;
+    if (_str == EWMA_1D) {
+      return Aggregation::ewma_1d;
     }
 
-    if (_str == EWMA7D) {
-      return Aggregation::ewma7d;
+    if (_str == EWMA_7D) {
+      return Aggregation::ewma_7d;
     }
 
-    if (_str == EWMA30D) {
-      return Aggregation::ewma30d;
+    if (_str == EWMA_30D) {
+      return Aggregation::ewma_30d;
     }
 
-    if (_str == EWMA90D) {
-      return Aggregation::ewma90d;
+    if (_str == EWMA_90D) {
+      return Aggregation::ewma_90d;
     }
 
-    if (_str == EWMA365D) {
-      return Aggregation::ewma365d;
+    if (_str == EWMA_365D) {
+      return Aggregation::ewma_365d;
     }
+
+    // Temporarily uncommented...will be released with getML 1.4
+    /*if (_str == EWMA_TREND_1S) {
+      return Aggregation::ewma_trend_1s;
+    }
+
+    if (_str == EWMA_TREND_1M) {
+      return Aggregation::ewma_trend_1m;
+    }
+
+    if (_str == EWMA_TREND_1H) {
+      return Aggregation::ewma_trend_1h;
+    }
+
+    if (_str == EWMA_TREND_1D) {
+      return Aggregation::ewma_trend_1d;
+    }
+
+    if (_str == EWMA_TREND_7D) {
+      return Aggregation::ewma_trend_7d;
+    }
+
+    if (_str == EWMA_TREND_30D) {
+      return Aggregation::ewma_trend_30d;
+    }
+
+    if (_str == EWMA_TREND_90D) {
+      return Aggregation::ewma_trend_90d;
+    }
+
+    if (_str == EWMA_TREND_365D) {
+      return Aggregation::ewma_trend_365d;
+    }*/
 
     if (_str == FIRST) {
       return Aggregation::first;
@@ -278,35 +311,60 @@ struct Parser<Aggregation> {
       case Aggregation::count_distinct:
         return COUNT_DISTINCT;
 
-      case Aggregation::count_minus_count_distinct:
-        return COUNT_MINUS_COUNT_DISTINCT;
-
       case Aggregation::count_distinct_over_count:
         return COUNT_DISTINCT_OVER_COUNT;
 
-      case Aggregation::ewma1s:
-        return EWMA1S;
+      case Aggregation::count_minus_count_distinct:
+        return COUNT_MINUS_COUNT_DISTINCT;
 
-      case Aggregation::ewma1m:
-        return EWMA1M;
+      case Aggregation::ewma_1s:
+        return EWMA_1S;
 
-      case Aggregation::ewma1h:
-        return EWMA1H;
+      case Aggregation::ewma_1m:
+        return EWMA_1M;
 
-      case Aggregation::ewma1d:
-        return EWMA1D;
+      case Aggregation::ewma_1h:
+        return EWMA_1H;
 
-      case Aggregation::ewma7d:
-        return EWMA7D;
+      case Aggregation::ewma_1d:
+        return EWMA_1D;
 
-      case Aggregation::ewma30d:
-        return EWMA30D;
+      case Aggregation::ewma_7d:
+        return EWMA_7D;
 
-      case Aggregation::ewma90d:
-        return EWMA90D;
+      case Aggregation::ewma_30d:
+        return EWMA_30D;
 
-      case Aggregation::ewma365d:
-        return EWMA365D;
+      case Aggregation::ewma_90d:
+        return EWMA_90D;
+
+      case Aggregation::ewma_365d:
+        return EWMA_365D;
+
+        // Temporarily uncommented...will be released with getML 1.4
+        /*case Aggregation::ewma_trend_1s:
+          return EWMA_TREND_1S;
+
+        case Aggregation::ewma_trend_1m:
+          return EWMA_TREND_1M;
+
+        case Aggregation::ewma_trend_1h:
+          return EWMA_TREND_1H;
+
+        case Aggregation::ewma_trend_1d:
+          return EWMA_TREND_1D;
+
+        case Aggregation::ewma_trend_7d:
+          return EWMA_TREND_7D;
+
+        case Aggregation::ewma_trend_30d:
+          return EWMA_TREND_30D;
+
+        case Aggregation::ewma_trend_90d:
+          return EWMA_TREND_90D;
+
+        case Aggregation::ewma_trend_365d:
+          return EWMA_TREND_365D;*/
 
       case Aggregation::first:
         return FIRST;
@@ -390,7 +448,7 @@ struct Parser<Aggregation> {
         return VARIATION_COEFFICIENT;
 
       default:
-        throw_unless(false, "FastProp: Unknown aggregation.");
+        assert_true(false);
         return "";
     }
   }

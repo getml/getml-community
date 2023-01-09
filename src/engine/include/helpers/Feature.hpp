@@ -1,24 +1,19 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef HELPERS_FEATURE_HPP_
 #define HELPERS_FEATURE_HPP_
 
-// -------------------------------------------------------------------------
-
 #include <memory>
-
-// -------------------------------------------------------------------------
+#include <optional>
 
 #include "debug/debug.hpp"
-
-// -------------------------------------------------------------------------
-
 #include "helpers/Column.hpp"
+#include "memmap/Pool.hpp"
 
 namespace helpers {
 
@@ -40,8 +35,6 @@ class Feature {
   typedef typename Column<T>::Variant Variant;
   typedef typename Column<T>::ConstVariant ConstVariant;
 
-  // ---------------------------------------------------------------------
-
  public:
   Feature(const Variant& _ptr = InMemoryPtr())
       : data_(safe_mode_ ? nullptr : get_data(_ptr)),
@@ -51,6 +44,10 @@ class Feature {
         std::is_floating_point<T>::value || std::is_integral<T>::value,
         "T must floating point or integral!");
   }
+
+  Feature(const std::shared_ptr<memmap::Pool>& _pool, const size_t _size)
+      : Feature(_pool ? std::make_shared<std::vector<T>>(_size)
+                      : std::make_shared<memmap::Vector<T>>(_pool, _size)) {}
 
   ~Feature() = default;
 
@@ -211,7 +208,6 @@ class Feature {
   size_t size_;
 };
 
-// -------------------------------------------------------------------------
 }  // namespace helpers
 
 #endif  // HELPERS_COLUMN_HPP_

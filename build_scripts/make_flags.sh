@@ -30,30 +30,7 @@ for arg in $@; do
             exit 1
         fi
 
-        # ------------------------------------------------------------
-
         git_branch_update $BRANCH_NAME
-
-        # ------------------------------------------------------------
-
-    elif [ "$(echo $arg | grep '^upload=' | wc -l)" -gt "0" ];then
-
-        # ------------------------------------------------------------
-
-        # Trim the prefix to obtain the name of the branch.
-        FILE_NAME=$(echo $arg | awk 'BEGIN { FS="=" } { print $2 }')
-
-        # Sanity check
-        if [ "$(echo $FILE_NAME | grep '"' | wc -l)" -gt "0" ];then
-            echo -e "\n * ${COLOR_RED}Usage of quotes are forbidden in the file name!${COLOR_RESET}\n"
-            exit 1
-        fi
-
-        # ------------------------------------------------------------
-
-        build_upload $FILE_NAME
-
-        # ------------------------------------------------------------
 
     elif [[ $arg == "doc" ]]; then
 
@@ -63,14 +40,16 @@ for arg in $@; do
 
         init_docker 
 
-        # ------------------------------------------------------------
+    elif [[ $arg == "release" ]]; then
+
+        release
 
     elif [ $arg != "x" ] && [ $arg != "s" ] && [ $arg != "serve" ] && [ "$USER" != "" ] && [ "$OSTYPE" == "linux-gnu" ]; then
         echo " * Launching docker..."
 
         docker run -it --rm --ulimit memlock=-1 \
             -v "$PWD/..":"/home/getml/storage" \
-            -w "/home/getml/storage/linux" \
+            -w "/home/getml/storage/$FOLDER" \
             ${DOCKER_IMAGE_NAME} bash build.sh $arg 
 
     else
@@ -88,6 +67,8 @@ for arg in $@; do
                 cmd="init_repositories";;
             p|pkg)
                 cmd="build_package";;
+            r|release)
+                cmd="release";;
             x)
                 cmd="exec_getml";;
             z|zip)

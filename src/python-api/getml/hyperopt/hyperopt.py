@@ -380,15 +380,9 @@ class _Hyperopt:
     def refresh(self):
         """Reloads the hyperparameter optimization from the engine.
 
-        <<<<<<< HEAD
-                Raises:
-                    IOError: If the engine did not send a proper model.
-
-        =======
-        >>>>>>> develop
-                Returns:
-                    :class:`~getml.Pipeline`:
-                        Current instance
+        Returns:
+            :class:`~getml.Pipeline`:
+                Current instance
         """
         json_obj = _get_json_obj(self.id)
         return self._parse_json_obj(json_obj)
@@ -740,7 +734,7 @@ class GaussianHyperparameterSearch(_Hyperopt):
                 all_hyp = hyperopt.list_hyperopts()
 
                 best_pipeline = gaussian_search.best_pipeline
-    
+
     Note:
         Not supported in the getML community edition.
     """
@@ -1003,9 +997,9 @@ class LatinHypercubeSearch(_Hyperopt):
                     population_table_validation=population_table,
                     peripheral_tables=[peripheral_table]
                 )
-    
+
     Note:
-        Not supported in the getML community edition.    
+        Not supported in the getML community edition.
     """
 
     def __init__(
@@ -1240,7 +1234,7 @@ class RandomSearch(_Hyperopt):
                     population_table_validation=population_table,
                     peripheral_tables=[peripheral_table]
                 )
-    
+
     Note:
         Not supported in the getML community edition.
     """

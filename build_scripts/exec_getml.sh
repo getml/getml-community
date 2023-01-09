@@ -3,5 +3,5 @@ function exec_getml() {
 
     cd $GETML_PACKAGE_FOLDER || exit 1
 
-    ./getML --install || exit 1
+    ./getML --install --log || exit 1
 }

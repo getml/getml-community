@@ -9,6 +9,7 @@ source ../build_scripts/build_main_entry_point.sh || exit 1
 source ../build_scripts/build_macos_entry_point.sh || exit 1
 source ../build_scripts/build_monitor.sh || exit 1
 source ../build_scripts/build_package.sh || exit 1
+source ../build_scripts/build_wheel.sh || exit 1
 source ../build_scripts/checkout_arrow.sh || exit 1
 source ../build_scripts/checkout_engine.sh || exit 1
 source ../build_scripts/checkout_postgres.sh || exit 1
@@ -42,10 +43,10 @@ source ../build_scripts/install_python.sh || exit 1
 source ../build_scripts/install_unixodbc.sh || exit 1
 source ../build_scripts/macos_start_docker.sh || exit 1
 source ../build_scripts/make_checksum.sh || exit 1
+source ../build_scripts/release.sh || exit 1
 source ../build_scripts/relink_dylibs_in_executable.sh || exit 1
 source ../build_scripts/relink_dylibs_in_odbc.sh || exit 1
 source ../build_scripts/relink_dylibs_in_ssl.sh || exit 1
 source ../build_scripts/relink_dylibs_in_xgboost.sh || exit 1
 source ../build_scripts/serve_frontend.sh || exit 1
-source ../build_scripts/upload.sh || exit 1
 source ../build_scripts/zip_docker.sh || exit 1

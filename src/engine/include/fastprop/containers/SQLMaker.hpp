@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef FASTPROP_CONTAINERS_SQLMAKER_HPP_
 #define FASTPROP_CONTAINERS_SQLMAKER_HPP_
@@ -70,14 +70,22 @@ class SQLMaker {
   static bool is_first_last(const enums::Aggregation _agg) {
     return (_agg == enums::Aggregation::first ||
             _agg == enums::Aggregation::last ||
-            _agg == enums::Aggregation::ewma1s ||
-            _agg == enums::Aggregation::ewma1m ||
-            _agg == enums::Aggregation::ewma1h ||
-            _agg == enums::Aggregation::ewma1d ||
-            _agg == enums::Aggregation::ewma7d ||
-            _agg == enums::Aggregation::ewma30d ||
-            _agg == enums::Aggregation::ewma90d ||
-            _agg == enums::Aggregation::ewma365d ||
+            _agg == enums::Aggregation::ewma_1s ||
+            _agg == enums::Aggregation::ewma_1m ||
+            _agg == enums::Aggregation::ewma_1h ||
+            _agg == enums::Aggregation::ewma_1d ||
+            _agg == enums::Aggregation::ewma_7d ||
+            _agg == enums::Aggregation::ewma_30d ||
+            _agg == enums::Aggregation::ewma_90d ||
+            _agg == enums::Aggregation::ewma_365d ||
+            _agg == enums::Aggregation::ewma_trend_1s ||
+            _agg == enums::Aggregation::ewma_trend_1m ||
+            _agg == enums::Aggregation::ewma_trend_1h ||
+            _agg == enums::Aggregation::ewma_trend_1d ||
+            _agg == enums::Aggregation::ewma_trend_7d ||
+            _agg == enums::Aggregation::ewma_trend_30d ||
+            _agg == enums::Aggregation::ewma_trend_90d ||
+            _agg == enums::Aggregation::ewma_trend_365d ||
             _agg == enums::Aggregation::time_since_first_maximum ||
             _agg == enums::Aggregation::time_since_first_minimum ||
             _agg == enums::Aggregation::time_since_last_maximum ||

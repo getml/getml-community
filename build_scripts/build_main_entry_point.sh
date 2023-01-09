@@ -8,33 +8,10 @@ function build_main_entry_point() {
 
     cd $GOPATH/src || exit 1
 
-    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-
-        GOOS=linux go install || exit 1
-
-    elif [[ "$OSTYPE" == "darwin"* ]]; then
-
-        GOOS=darwin go install || exit 1
-        cd $HOMEDIR/../src/getml-app || exit 1
-        chmod +x bin/getML || exit 1
-
-    elif [[ "$OSTYPE" == "msys"* ]]; then
-
-        GOOS=windows go install || exit 1
-        cd $HOMEDIR/../src/getml-app || exit 1
-        chmod +x bin/getML || exit 1
-
-    fi
+    go install -buildvcs=false || exit 1
 
     cd $HOMEDIR/../src/getml-app || exit 1
 
     mv ./bin/getML $GETML_PACKAGE_FOLDER || exit 1
-
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        cd $GETML_PACKAGE_FOLDER || exit 1
-        cp getML getml-cli || exit 1
-        chmod +x getml-cli || exit 1
-    fi
-
 
 }

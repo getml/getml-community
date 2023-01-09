@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef HELPERS_ENUMS_AGGREGATION_HPP_
 #define HELPERS_ENUMS_AGGREGATION_HPP_
@@ -22,14 +22,22 @@ enum class Aggregation {
   count_distinct,
   count_distinct_over_count,
   count_minus_count_distinct,
-  ewma1s,
-  ewma1m,
-  ewma1h,
-  ewma1d,
-  ewma7d,
-  ewma30d,
-  ewma90d,
-  ewma365d,
+  ewma_1s,
+  ewma_1m,
+  ewma_1h,
+  ewma_1d,
+  ewma_7d,
+  ewma_30d,
+  ewma_90d,
+  ewma_365d,
+  ewma_trend_1s,
+  ewma_trend_1m,
+  ewma_trend_1h,
+  ewma_trend_1d,
+  ewma_trend_7d,
+  ewma_trend_30d,
+  ewma_trend_90d,
+  ewma_trend_365d,
   first,
   kurtosis,
   last,

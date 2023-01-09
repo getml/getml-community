@@ -19,6 +19,8 @@ from typing import Any, Dict, Optional, Union
 
 import numpy as np
 
+
+from .progress_bar import _ProgressBar
 from .version import __version__
 
 # --------------------------------------------------------------------
@@ -115,35 +117,6 @@ class _GetmlEncoder(json.JSONEncoder):
             return obj._getml_deserialize()
 
         return json.JSONEncoder.default(self, obj)
-
-
-# --------------------------------------------------------------------
-
-
-class _ProgressBar:
-    """Displays progress in bar form."""
-
-    def __init__(self):
-        self.length = 40
-
-    def show(self, progress: float):
-        """Displays an updated version of the progress bar.
-
-        Args:
-            progress (float): The progress to be shown. Must
-                be between 0 and 100.
-        """
-        done = int(progress * self.length / 100.0)
-
-        remaining = self.length - done
-
-        pbar = "[" + "=" * done
-        pbar += " " * remaining + "] "
-        pbar += str(progress) + "%"
-
-        end = "\r"
-
-        print(pbar, end=end, flush=True)
 
 
 # --------------------------------------------------------------------
@@ -516,14 +489,15 @@ def log(sock: socket.socket):
     """
     Prints all the logs received by the socket.
     """
-    pbar = _ProgressBar()
+
+    pbar: Optional[_ProgressBar] = None
 
     while True:
         msg = recv_string(sock)
 
         if msg[:5] != "log: ":
-            print()
-            print()
+            if pbar is not None:
+                pbar.close()
             return msg
 
         msg = msg[5:]
@@ -531,13 +505,13 @@ def log(sock: socket.socket):
         if "Progress: " in msg:
             msg = msg.split("Progress: ")[1].split("%")[0]
             progress = int(msg)
-            pbar.show(progress)
+            if pbar is not None:
+                pbar.show(progress)
             continue
 
-        print()
-        print()
-        print(msg)
-        pbar.show(0)
+        if pbar is not None:
+            pbar.close()
+        pbar = _ProgressBar(description=msg)
 
 
 # --------------------------------------------------------------------

@@ -4,6 +4,16 @@
     <img width="400" style="width: 50% !important; max-width: 400px;" src="assets/getml_logo.png#gh-light-mode-only" />
 </p>
 
+<p align="center" style="text-align: center;">
+        <a href="https://getml.com/contact/lets-talk/" target="_blank">
+        <img src="https://img.shields.io/badge/schedule-a_meeting-blueviolet.svg" /></a>
+        <a href="mailto:contact@getml.com" target="_blank">
+        <img src="https://img.shields.io/badge/contact-us_by_mail-orange.svg" /></a>
+        <a href="LICENSE.txt" target="_blank">
+        <img src="https://img.shields.io/badge/LICENSE-ELv2-green" /></a>
+</p>
+
+
 # getML - Automated Feature Engineering for Relational Data and Time Series
 
 getML is a tool for automating feature engineering on relational data
@@ -13,6 +23,20 @@ that has been customized for this very purpose.
 Because of this customized database engine, it is very fast. In fact, it is
 between 60x to 1000x faster than other open-source tools for automated
 feature engineering.
+
+
+## Table of contents
+
+- [Benchmarks](#benchmarks)
+- [Example](#example)
+- [Demo notebooks](#demo-notebooks)
+- [Installation](#installation)
+    - [Linux](#linux)
+    - [Docker (for macOS, Windows or Linux)](#docker-for-macos-windows-or-linux)
+- [Deinstallation](#deinstallation)
+    - [Linux](#linux-1)
+    - [Docker](#docker)
+- [Compiling from source](#compiling-from-source)
 
 
 ## Benchmarks
@@ -47,6 +71,9 @@ Here is how you can build a complete Data Science pipeline for a time series pro
 
 ```python
 import getml
+
+getml.engine.launch()
+getml.set_project("interstate94")
 
 # Load the data.
 traffic = getml.datasets.load_interstate94(roles=False, units=False)
@@ -104,6 +131,10 @@ predictions = pipe.predict(time_series.test)
 
 To see the full example, check out the Interstate94 notebook ([interstate94.ipynb](demo-notebooks/interstate94.ipynb)).
 
+## Documentation
+
+Check out the full documentation on https://docs.getml.com/latest/.
+
 ## Demo notebooks
 
 To experience getML in action, the following example notebooks are provided in the [demo-notebooks](demo-notebooks) directory:
@@ -123,30 +154,14 @@ To experience getML in action, the following example notebooks are provided in t
 ### Linux
 
 Before the installation, make sure your Linux meets the following requirements:
-- GLIBC 2.28 or above (check by using `ldd --version`)
+- GLIBC 2.17 or above (check by using `ldd --version`)
 - On Fedora 30, you need _libxcrypt-compat_. Install using: `yum install libxcrypt-compat`.
-- Python 3.7 or above, _numpy_ and _pandas_ (for the Python API).
+- Python 3.8 or above, _numpy_ and _pandas_ (for the Python API).
 
 
 There are two components of the getML community edition: 
-1. The getML engine | The C++ backend of getML
-2. The Python API | Helps you interact with the getML engine
-
-The getML engine can be installed by executing the following in a terminal:
-
-```bash
-# Downloads the tar file of the engine
-wget https://static.getml.com/download/1.3.0/getml-1.3.0-community-edition-linux.tar.gz
-
-# Extracts the tar file
-tar -xf getml-1.3.0-community-edition-linux.tar.gz
-
-# Changes directory 
-cd getml-1.3.0-community-edition-linux
-
-# Installs the engine
-./getML install
-```
+1. The Python API | Helps you interact with the getML engine
+2. The getML engine | The C++ backend of getML
 
 The Python API can be installed from the Python Package Index by executing the following command in a terminal:
 
@@ -154,7 +169,23 @@ The Python API can be installed from the Python Package Index by executing the f
 pip install getml
 ```
 
-Alternatively, you install the API from this repository:
+The getML engine comes with the Python API and is installed automatically. However, if you want to install it separately, please execute the following commands: 
+
+```bash
+# Downloads the tar file of the engine
+wget https://static.getml.com/download/1.3.1/getml-1.3.1-community-edition-linux.tar.gz
+
+# Extracts the tar file
+tar -xf getml-1.3.1-community-edition-linux.tar.gz
+
+# Changes directory 
+cd getml-1.3.1-community-edition-linux
+
+# Installs the engine
+./getML install
+```
+
+Alternatively, you install the API from this repository. If you do this, you also have to install the engine as indicated above:
 
 ```bash
 # Changes directory 
@@ -176,16 +207,16 @@ Before the installation, make sure your system meets the following requirements:
 
 Once the requirements are met, the following steps should be followed:
 
-1. Download the getml community edition for Docker from the following URL: https://static.getml.com/download/1.3.0/getml-1.3.0-community-edition-docker.zip
+1. Download the getml community edition for Docker from the following URL: https://static.getml.com/download/1.3.1/getml-1.3.1-community-edition-docker.zip
 
-2. Extract `getml-1.3.0-community-edition-docker.zip` in a folder.
+2. Extract `getml-1.3.1-community-edition-docker.zip` in a folder.
 
 3. Make sure that Docker (the Docker daemon) is running.
 
 4. Execute `setup.sh`. On Windows, open the folder in which the zip file was extracted and just click on `setup.sh`. On macOS and Linux, do the following:
 
     ``` bash
-    cd getml-1.3.0-community-edition-docker
+    cd getml-1.3.1-community-edition-docker
     bash setup.sh # or ./setup.sh
     ```
 

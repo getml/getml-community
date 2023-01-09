@@ -33,8 +33,7 @@ from getml.data.helpers import (
     _is_typed_list,
     _remove_trailing_underscores,
 )
-from getml.data.placeholder import Placeholder
-from getml.data.view import View
+from getml.data import Placeholder, Roles, View
 from getml.feature_learning import _FeatureLearner
 from getml.feature_learning.fastprop import FastProp
 from getml.feature_learning.loss_functions import _classification_loss
@@ -63,12 +62,14 @@ from .helpers import (
     _infer_peripheral,
     _make_id,
     _parse_fe,
+    _parse_metadata,
     _parse_pred,
     _parse_preprocessor,
     _print_time_taken,
     _replace_with_nan_maybe,
     _transform_peripheral,
 )
+from .metadata import AllMetadata
 from .metrics import (
     _all_metrics,
     _classification_metrics,
@@ -545,6 +546,8 @@ class Pipeline:
         self.share_selected_features = share_selected_features
         self.tags = Tags(tags)
 
+        self._metadata: Optional[AllMetadata] = None
+
         self._scores: Dict[str, Any] = {}
 
         self._targets: List[str] = []
@@ -731,6 +734,7 @@ class Pipeline:
             cmd[key + "_"] = value
 
         del cmd["_id_"]
+        del cmd["_metadata_"]
         del cmd["_scores_"]
         del cmd["_targets_"]
 
@@ -879,6 +883,16 @@ class Pipeline:
         self._scores = scores
 
         self._targets = targets
+
+        peripheral_metadata = [
+            _parse_metadata(m) for m in all_json_objs["peripheral_metadata"]
+        ]
+        population_metadata = _parse_metadata(all_json_objs["population_metadata"])
+
+        self._metadata = AllMetadata(
+            peripheral=peripheral_metadata,
+            population=population_metadata,
+        )
 
         return self
 
@@ -1330,6 +1344,20 @@ class Pipeline:
         Whether the pipeline can used for regression problems.
         """
         return not self.is_classification
+
+    # ------------------------------------------------------------
+
+    @property
+    def metadata(self) -> Optional[AllMetadata]:
+        """
+        Contains information on the data frames
+        that were passed to .fit(...). The roles
+        contained therein can be directly passed
+        to existing data frames to correctly reassign
+        the roles of existing columns. If the pipeline
+        has not been fitted, this is None.
+        """
+        return self._metadata
 
     # ------------------------------------------------------------
 

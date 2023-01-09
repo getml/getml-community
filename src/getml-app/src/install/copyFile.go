@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 package install
 
@@ -13,7 +13,11 @@ import (
 	"path/filepath"
 )
 
-func copyFile(file string, newFileName string, mainDir string, overwrite bool) {
+func copyFile(
+	file string,
+	newFileName string,
+	mainDir string,
+	overwrite bool) error {
 
 	if newFileName == "" {
 		newFileName = file
@@ -26,12 +30,11 @@ func copyFile(file string, newFileName string, mainDir string, overwrite bool) {
 		sourceStat, err := os.Stat(file)
 
 		if err != nil {
-			return
+			return err
 		}
 
 		if sourceStat.IsDir() {
-			copyDir(file, mainDir, overwrite)
-			return
+			return copyDir(file, mainDir, overwrite)
 		}
 
 		if overwrite {
@@ -40,22 +43,23 @@ func copyFile(file string, newFileName string, mainDir string, overwrite bool) {
 				sourceStat.ModTime().Equal(destStat.ModTime()))
 
 			if createdLater {
-				return
+				return nil
 			}
 		}
 
 		input, err := ioutil.ReadFile(file)
 
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		err = ioutil.WriteFile(destination, input, sourceStat.Mode())
 
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 	}
 
+	return nil
 }

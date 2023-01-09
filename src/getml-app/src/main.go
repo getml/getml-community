@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 package main
 
@@ -14,15 +14,14 @@ import (
 	"getML/tcp"
 	"log"
 	"os"
-	"runtime"
 	"strconv"
 )
 
 func main() {
 
-	changeToExecutableDir()
-
 	version := makeVersion()
+
+	changeToResourceDir(version)
 
 	commandLine, conf := commands.Parse(version)
 
@@ -47,11 +46,7 @@ func main() {
 	}
 
 	if commandLine.Uninstall {
-
-		if runtime.GOOS != "windows" {
-			os.RemoveAll(install.GetMainDir(commandLine.HomeDir, version))
-		}
-
+		uninstall(commandLine.HomeDir, version)
 		os.Exit(0)
 	}
 
@@ -63,7 +58,14 @@ func main() {
 		os.Exit(0)
 	}
 
-	err := os.Chdir(install.GetBinDir(commandLine.HomeDir, version))
+	err := changeToBinDir(commandLine.HomeDir, version)
+
+	if err != nil {
+		log.Println("Could not start getML!")
+		return
+	}
+
+	err = os.MkdirAll(conf.ProjectDirectory, 0750)
 
 	if err != nil {
 		log.Println(err.Error())

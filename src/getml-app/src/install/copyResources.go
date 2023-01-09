@@ -1,23 +1,21 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 package install
 
 import (
+	"errors"
 	"os"
 	"runtime"
 )
 
-// CopyResources copies the resources into a
-// newly created hidden folder in HOME, if
-// necessary.
-func copyResources(homeDir string, version string) {
-
-	// ------------------------------------------------------------------------
+// copyResources copies the resources into the
+// targetDir, if necessary.
+func copyResources(targetDir string, version string) error {
 
 	allFiles := []string{
 		"config.json",
@@ -28,48 +26,79 @@ func copyResources(homeDir string, version string) {
 	// Make sure that we don't copy any
 	// random folder called "templates"
 	if !filesExists(allFiles) {
-		return
+		return errors.New(
+			"Could not find all necessary files, quitting installation.")
 	}
-
-	// ------------------------------------------------------------------------
 
 	println("Installing getML...")
 
-	// ------------------------------------------------------------------------
+	mainDir := GetMainDir(targetDir, version)
 
-	mainDir := GetMainDir(homeDir, version)
+	err := os.MkdirAll(mainDir, os.ModePerm)
 
-	os.MkdirAll(mainDir, os.ModePerm)
+	if err != nil {
+		return err
+	}
 
-	// ------------------------------------------------------------------------
+	err = copyFile("config.json", "", mainDir, true)
 
-	copyFile("config.json", "", mainDir, true)
+	if err != nil {
+		return err
+	}
 
-	copyFile("config.json", "defaultConfig.json", mainDir, false)
+	err = copyFile("config.json", "defaultConfig.json", mainDir, false)
 
-	copyFile("environment.json", "", mainDir, false)
+	if err != nil {
+		return err
+	}
 
-	copyFile("bin", "", mainDir, true)
+	err = copyFile("environment.json", "", mainDir, false)
 
-	copyFile("projects", "", mainDir, false)
+	if err != nil {
+		return err
+	}
 
-	copyFile("tests", "", mainDir, true)
+	err = copyFile("bin", "", mainDir, true)
 
-	copyFile("getML", "", mainDir, true)
+	if err != nil {
+		return err
+	}
+
+	err = copyFile("tests", "", mainDir, true)
+
+	if err != nil {
+		return err
+	}
+
+	err = copyFile("getML", "", mainDir, true)
+
+	if err != nil {
+		return err
+	}
 
 	if runtime.GOOS == "linux" {
-		copyFile("lib", "", mainDir, true)
-		copyFile("shape-main.png", "", mainDir, false)
+		err = copyFile("lib", "", mainDir, true)
+		if err != nil {
+			return err
+		}
+		err = copyFile("shape-main.png", "", mainDir, false)
+		if err != nil {
+			return err
+		}
 	}
 
 	if runtime.GOOS == "darwin" {
-		copyFile("Frameworks", "", mainDir, true)
-		copyFile("getml-cli", "", mainDir, true)
+		err = copyFile("Frameworks", "", mainDir, true)
+		if err != nil {
+			return err
+		}
+		err = copyFile("getml-cli", "", mainDir, true)
+		if err != nil {
+			return err
+		}
 	}
 
-	// ------------------------------------------------------------------------
+	println("Successfully installed getML into '" + mainDir + "'.")
 
-	println("Successfully installed getML.")
-
-	// ------------------------------------------------------------------------
+	return nil
 }

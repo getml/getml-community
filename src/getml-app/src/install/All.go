@@ -1,30 +1,30 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 package install
-
-import (
-	"runtime"
-)
 
 // All installs everything.
 func All(homeDir string, version string) {
 
-	if runtime.GOOS == "windows" {
-		copyFile("config.json", "defaultConfig.json", "", false)
+	err := copyResources(UsrLocal, version)
+
+	if err != nil {
+		println("Could not install into '" + UsrLocal + "': " + err.Error())
+		println("Global installation failed, most likely due to " +
+			"missing root rights. Trying local installation instead.")
+	} else {
+		copyFile("getML", "", UsrLocalBin, true)
+		return
 	}
 
-	if runtime.GOOS == "darwin" {
-		copyResources(homeDir, version)
-	}
+	err = copyResources(homeDir, version)
 
-	if runtime.GOOS == "linux" {
-		copyResources(homeDir, version)
-		MakeDesktopEntry(homeDir, version)
+	if err != nil {
+		println("Could not install into '" + homeDir + "': " + err.Error())
 	}
 
 }
