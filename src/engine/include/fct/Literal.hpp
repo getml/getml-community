@@ -219,7 +219,7 @@ inline constexpr auto value_of() {
 /// Implements the visitor pattern for Literals.
 template <class Visitor, int i = 0, StringLiteral... _fields, class... Args>
 inline auto visit(const Visitor& _visitor, const Literal<_fields...> _literal,
-                  Args&&... _args) {
+                  const Args&... _args) {
   constexpr typename Literal<_fields...>::ValueType value = i;
   if (_literal.value() == value) {
     return _visitor(name_of<Literal<_fields...>, i>());
@@ -230,4 +230,5 @@ inline auto visit(const Visitor& _visitor, const Literal<_fields...> _literal,
 }
 
 }  // namespace fct
-#endif  // FCT_LITERAL`_HPP_
+
+#endif  // FCT_LITERAL_HPP_
