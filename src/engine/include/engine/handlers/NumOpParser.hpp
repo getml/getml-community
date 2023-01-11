@@ -18,6 +18,7 @@
 #include "debug/debug.hpp"
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
+#include "engine/commands/FloatColumnOrFloatColumnView.hpp"
 #include "engine/communication/communication.hpp"
 #include "engine/containers/containers.hpp"
 
@@ -26,9 +27,12 @@ namespace handlers {
 
 class NumOpParser {
  public:
-  typedef containers::ColumnView<bool>::UnknownSize UnknownSize;
-  typedef containers::ColumnView<bool>::NRowsType NRowsType;
-  typedef containers::ColumnView<bool>::ValueFunc ValueFunc;
+  typedef typename containers::ColumnView<bool>::UnknownSize UnknownSize;
+  typedef typename containers::ColumnView<bool>::NRowsType NRowsType;
+  typedef typename containers::ColumnView<bool>::ValueFunc ValueFunc;
+
+  typedef typename commands::FloatColumnOrFloatColumnView::FloatArangeOp
+      FloatArangeOp;
 
   static constexpr UnknownSize NOT_KNOWABLE =
       containers::ColumnView<bool>::NOT_KNOWABLE;
@@ -74,7 +78,7 @@ class NumOpParser {
 
  private:
   /// Implements numpy's arange in a lazy fashion.
-  containers::ColumnView<Float> arange(const Poco::JSON::Object& _col) const;
+  containers::ColumnView<Float> arange(const FloatArangeOp& _col) const;
 
   /// Transforms a string column to a float.
   containers::ColumnView<Float> as_num(const Poco::JSON::Object& _col) const;

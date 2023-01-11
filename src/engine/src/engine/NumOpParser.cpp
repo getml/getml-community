@@ -9,17 +9,18 @@
 
 #include "engine/handlers/BoolOpParser.hpp"
 #include "engine/handlers/CatOpParser.hpp"
+#include "json/json.hpp"
 
 namespace engine {
 namespace handlers {
 
 containers::ColumnView<Float> NumOpParser::arange(
-    const Poco::JSON::Object& _col) const {
-  const auto start = JSON::get_value<Float>(_col, "start_");
+    const FloatArangeOp& _col) const {
+  const auto start = _col.get<"start_">();
 
-  const auto stop = JSON::get_value<Float>(_col, "stop_");
+  const auto stop = _col.get<"stop_">();
 
-  const auto step = JSON::get_value<Float>(_col, "step_");
+  const auto step = _col.get<"step_">();
 
   const auto value_func = [start, stop,
                            step](const size_t _i) -> std::optional<Float> {
@@ -253,7 +254,8 @@ containers::ColumnView<Float> NumOpParser::parse(
   }
 
   if (type == FLOAT_COLUMN_VIEW && op == "arange") {
-    return arange(_col);
+    const auto col = json::from_json<FloatArangeOp>(_col);
+    return arange(col);
   }
 
   if (type == FLOAT_COLUMN_VIEW && op == "with_subroles") {
