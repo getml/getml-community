@@ -8,9 +8,9 @@ export VERSION_NUMBER=1.3.1
 
 export ARCH=$(uname -m)
 
-if [[ $ARCH -eq "aarch64" ]]; then
+if [[ $ARCH == "aarch64" ]]; then
     export GETML_ARCH="arm64";
-elif [[ $ARCH -eq "arm64" ]]; then
+elif [[ $ARCH == "arm64" ]]; then
     export GETML_ARCH="arm64";
 else
     export GETML_ARCH="x64";
