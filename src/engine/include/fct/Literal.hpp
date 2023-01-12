@@ -221,11 +221,13 @@ template <class Visitor, int i = 0, StringLiteral... _fields, class... Args>
 inline auto visit(const Visitor& _visitor, const Literal<_fields...> _literal,
                   const Args&... _args) {
   constexpr typename Literal<_fields...>::ValueType value = i;
-  if (_literal.value() == value) {
-    return _visitor(name_of<Literal<_fields...>, i>());
-  }
   if constexpr (i + 1 < sizeof...(_fields)) {
+    if (_literal.value() == value) {
+      return _visitor(name_of<Literal<_fields...>, i>(), _args...);
+    }
     return visit<Visitor, i + 1, _fields...>(_visitor, _literal, _args...);
+  } else {
+    return _visitor(name_of<Literal<_fields...>, i>(), _args...);
   }
 }
 

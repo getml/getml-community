@@ -21,6 +21,7 @@
 #include "engine/commands/FloatColumnOrFloatColumnView.hpp"
 #include "engine/communication/communication.hpp"
 #include "engine/containers/containers.hpp"
+#include "json/json.hpp"
 
 namespace engine {
 namespace handlers {
@@ -33,6 +34,18 @@ class NumOpParser {
 
   typedef typename commands::FloatColumnOrFloatColumnView::FloatArangeOp
       FloatArangeOp;
+  typedef typename commands::FloatColumnOrFloatColumnView::FloatBinaryOp
+      FloatBinaryOp;
+  typedef typename commands::FloatColumnOrFloatColumnView::FloatColumnOp
+      FloatColumnOp;
+  typedef typename commands::FloatColumnOrFloatColumnView::FloatConstOp
+      FloatConstOp;
+  typedef typename commands::FloatColumnOrFloatColumnView::FloatWithUnitOp
+      FloatWithUnitOp;
+  typedef typename commands::FloatColumnOrFloatColumnView::FloatWithSubrolesOp
+      FloatWithSubrolesOp;
+  typedef typename commands::FloatColumnOrFloatColumnView::FloatSubselectionOp
+      FloatSubselectionOp;
 
   static constexpr UnknownSize NOT_KNOWABLE =
       containers::ColumnView<bool>::NOT_KNOWABLE;
@@ -74,7 +87,15 @@ class NumOpParser {
              Poco::Net::StreamSocket* _socket) const;
 
   /// Parses a numerical column.
-  containers::ColumnView<Float> parse(const Poco::JSON::Object& _col) const;
+  containers::ColumnView<Float> parse(
+      const commands::FloatColumnOrFloatColumnView& _cmd) const;
+
+  /// TODO: Remove this temporary solution.
+  containers::ColumnView<Float> parse(const Poco::JSON::Object& _cmd) const {
+    const auto cmd =
+        json::from_json<commands::FloatColumnOrFloatColumnView>(_cmd);
+    return parse(cmd);
+  }
 
  private:
   /// Implements numpy's arange in a lazy fashion.
@@ -88,19 +109,18 @@ class NumOpParser {
 
   /// Parses the operator and undertakes a binary operation.
   containers::ColumnView<Float> binary_operation(
-      const Poco::JSON::Object& _col) const;
+      const FloatBinaryOp& _col) const;
 
   /// Transforms a boolean column to a float column.
   containers::ColumnView<Float> boolean_as_num(
       const Poco::JSON::Object& _col) const;
 
   /// Returns an actual column.
-  containers::ColumnView<Float> get_column(
-      const Poco::JSON::Object& _col) const;
+  containers::ColumnView<Float> get_column(const FloatColumnOp& _cmd) const;
 
   /// Returns a subselection on the column.
   containers::ColumnView<Float> subselection(
-      const Poco::JSON::Object& _col) const;
+      const FloatSubselectionOp& _cmd) const;
 
   /// Parses the operator and undertakes a unary operation.
   containers::ColumnView<Float> unary_operation(
@@ -111,20 +131,18 @@ class NumOpParser {
 
   /// Returns a new column with new subroles.
   containers::ColumnView<Float> with_subroles(
-      const Poco::JSON::Object& _col) const;
+      const FloatWithSubrolesOp& _col) const;
 
   /// Returns a new column with a new unit.
-  containers::ColumnView<Float> with_unit(const Poco::JSON::Object& _col) const;
+  containers::ColumnView<Float> with_unit(const FloatWithUnitOp& _col) const;
 
   /// Undertakes a binary operation based on template class
   /// Operator.
   template <class Operator>
-  containers::ColumnView<Float> bin_op(const Poco::JSON::Object& _col,
+  containers::ColumnView<Float> bin_op(const FloatBinaryOp& _cmd,
                                        const Operator& _op) const {
-    const auto operand1 = parse(*JSON::get_object(_col, "operand1_"));
-
-    const auto operand2 = parse(*JSON::get_object(_col, "operand2_"));
-
+    const auto operand1 = parse(*_cmd.get<"operand1_">());
+    const auto operand2 = parse(*_cmd.get<"operand2_">());
     return containers::ColumnView<Float>::from_bin_op(operand1, operand2, _op);
   }
 
