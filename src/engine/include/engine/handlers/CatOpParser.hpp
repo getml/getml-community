@@ -8,8 +8,6 @@
 #ifndef ENGINE_HANDLERS_CATOPPARSER_HPP_
 #define ENGINE_HANDLERS_CATOPPARSER_HPP_
 
-// ----------------------------------------------------------------------------
-
 #include <Poco/JSON/Object.h>
 
 #include <map>
@@ -19,8 +17,10 @@
 #include "debug/debug.hpp"
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
+#include "engine/commands/StringColumnOrStringColumnView.hpp"
 #include "engine/communication/communication.hpp"
 #include "engine/containers/containers.hpp"
+#include "json/json.hpp"
 
 namespace engine {
 namespace handlers {
@@ -30,6 +30,22 @@ class CatOpParser {
   typedef containers::ColumnView<bool>::UnknownSize UnknownSize;
   typedef containers::ColumnView<bool>::NRowsType NRowsType;
   typedef containers::ColumnView<bool>::ValueFunc ValueFunc;
+
+  typedef typename commands::StringColumnOrStringColumnView::StringBinaryOp
+      StringBinaryOp;
+  typedef typename commands::StringColumnOrStringColumnView::StringColumnOp
+      StringColumnOp;
+  typedef typename commands::StringColumnOrStringColumnView::StringConstOp
+      StringConstOp;
+  typedef typename commands::StringColumnOrStringColumnView::StringSubstringOp
+      StringSubstringOp;
+  typedef
+      typename commands::StringColumnOrStringColumnView::StringWithSubrolesOp
+          StringWithSubrolesOp;
+  typedef typename commands::StringColumnOrStringColumnView::StringUnaryOp
+      StringUnaryOp;
+  typedef typename commands::StringColumnOrStringColumnView::StringWithUnitOp
+      StringWithUnitOp;
 
   static constexpr UnknownSize NOT_KNOWABLE =
       containers::ColumnView<bool>::NOT_KNOWABLE;
@@ -51,8 +67,6 @@ class CatOpParser {
   static constexpr const char* BOOLEAN_COLUMN_VIEW =
       containers::Column<bool>::BOOLEAN_COLUMN_VIEW;
 
-  // ------------------------------------------------------------------------
-
  public:
   CatOpParser(
       const fct::Ref<const containers::Encoding>& _categories,
@@ -65,8 +79,6 @@ class CatOpParser {
 
   ~CatOpParser() = default;
 
-  // ------------------------------------------------------------------------
-
  public:
   /// Checks the string column for any obvious problems.
   void check(const containers::Column<strings::String>& _col,
@@ -76,18 +88,28 @@ class CatOpParser {
 
   /// Parses a string column.
   containers::ColumnView<strings::String> parse(
-      const Poco::JSON::Object& _col) const;
+      const commands::StringColumnOrStringColumnView& _cmd) const;
 
-  // ------------------------------------------------------------------------
+  /// TODO: Remove this temporary solution.
+  containers::ColumnView<strings::String> parse(
+      const Poco::JSON::Object& _cmd) const {
+    const auto cmd =
+        json::from_json<commands::StringColumnOrStringColumnView>(_cmd);
+    return parse(cmd);
+  }
 
  private:
   /// Parses the operator and undertakes a binary operation.
   containers::ColumnView<strings::String> binary_operation(
-      const Poco::JSON::Object& _col) const;
+      const StringBinaryOp& _cmd) const;
 
   /// Transforms a boolean column to a string.
   containers::ColumnView<strings::String> boolean_as_string(
       const Poco::JSON::Object& _col) const;
+
+  /// Retrieves a column from a data frame.
+  containers::ColumnView<strings::String> get_column(
+      const StringColumnOp& _cmd) const;
 
   /// Transforms a float column to a string.
   containers::ColumnView<strings::String> numerical_as_string(
@@ -96,6 +118,10 @@ class CatOpParser {
   /// Returns a subselection on the column.
   containers::ColumnView<strings::String> subselection(
       const Poco::JSON::Object& _col) const;
+
+  /// Retrieves a substring from a string.
+  containers::ColumnView<strings::String> substring(
+      const StringSubstringOp& _cmd) const;
 
   /// Transforms an int column to a column view.
   containers::ColumnView<strings::String> to_view(
@@ -108,7 +134,7 @@ class CatOpParser {
 
   /// Parses the operator and undertakes a unary operation.
   containers::ColumnView<strings::String> unary_operation(
-      const Poco::JSON::Object& _col) const;
+      const StringUnaryOp& _cmd) const;
 
   /// Returns an updated version of the column.
   containers::ColumnView<strings::String> update(
@@ -116,23 +142,21 @@ class CatOpParser {
 
   /// Returns a new column with new subroles.
   containers::ColumnView<strings::String> with_subroles(
-      const Poco::JSON::Object& _col) const;
+      const StringWithSubrolesOp& _cmd) const;
 
   /// Returns a new column with a new unit.
   containers::ColumnView<strings::String> with_unit(
-      const Poco::JSON::Object& _col) const;
+      const StringWithUnitOp& _cmd) const;
 
   // ------------------------------------------------------------------------
 
   /// Undertakes a binary operation based on template class
   /// Operator.
   template <class Operator>
-  containers::ColumnView<strings::String> bin_op(const Poco::JSON::Object& _col,
+  containers::ColumnView<strings::String> bin_op(const StringBinaryOp& _cmd,
                                                  const Operator& _op) const {
-    const auto operand1 = parse(*JSON::get_object(_col, "operand1_"));
-
-    const auto operand2 = parse(*JSON::get_object(_col, "operand2_"));
-
+    const auto operand1 = parse(*_cmd.get<"operand1_">());
+    const auto operand2 = parse(*_cmd.get<"operand2_">());
     return containers::ColumnView<strings::String>::from_bin_op(operand1,
                                                                 operand2, _op);
   }
@@ -140,10 +164,9 @@ class CatOpParser {
   /// Undertakes a unary operation based on template class
   /// Operator.
   template <class Operator>
-  containers::ColumnView<strings::String> un_op(const Poco::JSON::Object& _col,
+  containers::ColumnView<strings::String> un_op(const StringUnaryOp& _cmd,
                                                 const Operator& _op) const {
-    const auto operand1 = parse(*JSON::get_object(_col, "operand1_"));
-
+    const auto operand1 = parse(*_cmd.get<"operand1_">());
     return containers::ColumnView<strings::String>::from_un_op(operand1, _op);
   }
 
@@ -159,11 +182,8 @@ class CatOpParser {
 
   /// Encodes the join keys used.
   const fct::Ref<const containers::Encoding> join_keys_encoding_;
-
-  // ------------------------------------------------------------------------
 };
 
-// ----------------------------------------------------------------------------
 }  // namespace handlers
 }  // namespace engine
 
