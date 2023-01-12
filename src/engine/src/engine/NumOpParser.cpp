@@ -141,46 +141,44 @@ void NumOpParser::check(const containers::Column<Float>& _col,
 // ----------------------------------------------------------------------------
 
 containers::ColumnView<Float> NumOpParser::binary_operation(
-    const Poco::JSON::Object& _col) const {
-  const auto op = JSON::get_value<std::string>(_col, "operator_");
+    const FloatBinaryOp& _cmd) const {
+  const auto handle =
+      [this](const auto& _literal,
+             const FloatBinaryOp& _cmd) -> containers::ColumnView<Float> {
+    using Type = std::decay_t<decltype(_literal)>;
 
-  if (op == "divides") {
-    return bin_op(_col, std::divides<Float>());
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"divides">>()) {
+      return bin_op(_cmd, std::divides<Float>());
+    }
 
-  if (op == "fmod") {
-    const auto fmod = [](const Float val1, const Float val2) {
-      return std::fmod(val1, val2);
-    };
-    return bin_op(_col, fmod);
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"fmod">>()) {
+      const auto fmod = [](const Float val1, const Float val2) {
+        return std::fmod(val1, val2);
+      };
+      return bin_op(_cmd, fmod);
+    }
 
-  if (op == "minus") {
-    return bin_op(_col, std::minus<Float>());
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"minus">>()) {
+      return bin_op(_cmd, std::minus<Float>());
+    }
 
-  if (op == "multiplies") {
-    return bin_op(_col, std::multiplies<Float>());
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"multiplies">>()) {
+      return bin_op(_cmd, std::multiplies<Float>());
+    }
 
-  if (op == "plus") {
-    return bin_op(_col, std::plus<Float>());
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"plus">>()) {
+      return bin_op(_cmd, std::plus<Float>());
+    }
 
-  if (op == "pow") {
-    const auto pow = [](const Float val1, const Float val2) {
-      return std::pow(val1, val2);
-    };
-    return bin_op(_col, pow);
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"pow">>()) {
+      const auto pow = [](const Float val1, const Float val2) {
+        return std::pow(val1, val2);
+      };
+      return bin_op(_cmd, pow);
+    }
+  };
 
-  if (op == "update") {
-    return update(_col);
-  }
-
-  throw std::runtime_error("Operator '" + op + "' not recognized.");
-
-  return update(_col);
+  return fct::visit(handle, _cmd.get<"operator_">(), _cmd);
 }
 
 // ----------------------------------------------------------------------------
@@ -206,10 +204,10 @@ containers::ColumnView<Float> NumOpParser::boolean_as_num(
 // ----------------------------------------------------------------------------
 
 containers::ColumnView<Float> NumOpParser::get_column(
-    const Poco::JSON::Object& _col) const {
-  const auto name = JSON::get_value<std::string>(_col, "name_");
+    const FloatColumnOp& _cmd) const {
+  const auto name = _cmd.get<"name_">();
 
-  const auto df_name = JSON::get_value<std::string>(_col, "df_name_");
+  const auto df_name = _cmd.get<"df_name_">();
 
   const auto it = data_frames_->find(df_name);
 
@@ -239,72 +237,66 @@ containers::ColumnView<Float> NumOpParser::get_column(
 // ----------------------------------------------------------------------------
 
 containers::ColumnView<Float> NumOpParser::parse(
-    const Poco::JSON::Object& _col) const {
-  const auto type = JSON::get_value<std::string>(_col, "type_");
+    const commands::FloatColumnOrFloatColumnView& _cmd) const {
+  const auto handle =
+      [this](const auto& _cmd) -> containers::ColumnView<Float> {
+    using Type = std::decay_t<decltype(_cmd)>;
 
-  if (type == FLOAT_COLUMN) {
-    return get_column(_col);
-  }
+    if constexpr (std::is_same<Type, FloatArangeOp>()) {
+      return arange(_cmd);
+    }
 
-  const auto op = JSON::get_value<std::string>(_col, "operator_");
+    if constexpr (std::is_same<Type, FloatBinaryOp>()) {
+      return binary_operation(_cmd);
+    }
 
-  if (op == "const") {
-    const auto val = JSON::get_value<Float>(_col, "value_");
-    return containers::ColumnView<Float>::from_value(val);
-  }
+    if constexpr (std::is_same<Type, FloatColumnOp>()) {
+      return get_column(_cmd);
+    }
 
-  if (type == FLOAT_COLUMN_VIEW && op == "arange") {
-    const auto col = json::from_json<FloatArangeOp>(_col);
-    return arange(col);
-  }
+    if constexpr (std::is_same<Type, FloatConstOp>()) {
+      const auto val = fct::get<"value_">(_cmd);
+      return containers::ColumnView<Float>::from_value(val);
+    }
 
-  if (type == FLOAT_COLUMN_VIEW && op == "with_subroles") {
-    return with_subroles(_col);
-  }
+    if constexpr (std::is_same<Type, FloatWithSubrolesOp>()) {
+      return with_subroles(_cmd);
+    }
 
-  if (type == FLOAT_COLUMN_VIEW && op == "with_unit") {
-    return with_unit(_col);
-  }
+    if constexpr (std::is_same<Type, FloatWithUnitOp>()) {
+      return with_unit(_cmd);
+    }
 
-  if (type == FLOAT_COLUMN_VIEW && op == "subselection") {
-    return subselection(_col);
-  }
+    if constexpr (std::is_same<Type, FloatSubselectionOp>()) {
+      return subselection(_cmd);
+    }
+    // TODO
+    /*
 
-  if (type == FLOAT_COLUMN_VIEW && _col.has("operand2_")) {
-    return binary_operation(_col);
-  }
+        if (type == FLOAT_COLUMN_VIEW && !_col.has("operand2_")) {
+          return unary_operation(_col);
+        }*/
+  };
 
-  if (type == FLOAT_COLUMN_VIEW && !_col.has("operand2_")) {
-    return unary_operation(_col);
-  }
-
-  throw std::runtime_error("Column of type '" + type +
-                           "' not recognized for numerical columns.");
+  return std::visit(handle, _cmd.val_);
 }
 
 // ----------------------------------------------------------------------------
 
 containers::ColumnView<Float> NumOpParser::subselection(
-    const Poco::JSON::Object& _col) const {
-  const auto data = parse(*JSON::get_object(_col, "operand1_"));
+    const FloatSubselectionOp& _cmd) const {
+  const auto data = parse(*_cmd.get<"operand1_">());
+  const auto indices = parse(*_cmd.get<"operand2_">());
+  return containers::ColumnView<Float>::from_numerical_subselection(data,
+                                                                    indices);
 
-  const auto indices_json = *JSON::get_object(_col, "operand2_");
-
-  const auto type = JSON::get_value<std::string>(indices_json, "type_");
-
-  if (type == FLOAT_COLUMN || type == FLOAT_COLUMN_VIEW) {
-    const auto indices = parse(indices_json);
-
-    return containers::ColumnView<Float>::from_numerical_subselection(data,
-                                                                      indices);
-  }
-
-  const auto indices =
+  // TODO: handle this.
+  /*const auto indices =
       BoolOpParser(categories_, join_keys_encoding_, data_frames_)
           .parse(indices_json);
 
   return containers::ColumnView<Float>::from_boolean_subselection(data,
-                                                                  indices);
+                                                                  indices);*/
 }
 
 // ----------------------------------------------------------------------------
@@ -483,23 +475,18 @@ containers::ColumnView<Float> NumOpParser::update(
 // ----------------------------------------------------------------------------
 
 containers::ColumnView<Float> NumOpParser::with_subroles(
-    const Poco::JSON::Object& _col) const {
-  const auto col = parse(*JSON::get_object(_col, "operand1_"));
-
-  const auto subroles =
-      JSON::array_to_vector<std::string>(JSON::get_array(_col, "subroles_"));
-
+    const FloatWithSubrolesOp& _cmd) const {
+  const auto col = parse(*_cmd.get<"operand1_">());
+  const auto subroles = _cmd.get<"subroles_">();
   return col.with_subroles(subroles);
 }
 
 // ----------------------------------------------------------------------------
 
 containers::ColumnView<Float> NumOpParser::with_unit(
-    const Poco::JSON::Object& _col) const {
-  const auto col = parse(*JSON::get_object(_col, "operand1_"));
-
-  const auto unit = JSON::get_value<std::string>(_col, "unit_");
-
+    const FloatWithUnitOp& _cmd) const {
+  const auto col = parse(*_cmd.get<"operand1_">());
+  const auto unit = _cmd.get<"unit_">();
   return col.with_unit(unit);
 }
 

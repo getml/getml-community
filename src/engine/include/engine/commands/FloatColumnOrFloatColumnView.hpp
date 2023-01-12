@@ -29,10 +29,9 @@ class FloatColumnOrFloatColumnView {
 
   /// The possible operators.
   using FloatBinaryOpLiteral =
-      fct::Literal<"divides", "fmod", "minus", "multiplies", "plus", "pow",
-                   "update">;
+      fct::Literal<"divides", "fmod", "minus", "multiplies", "plus", "pow">;
 
-  /// The command used for boolean binary operations.
+  /// The command used for float binary operations.
   using FloatBinaryOp = fct::NamedTuple<
       fct::Field<"operand1_", fct::Ref<FloatColumnOrFloatColumnView>>,
       fct::Field<"operand2_", fct::Ref<FloatColumnOrFloatColumnView>>,
@@ -40,14 +39,14 @@ class FloatColumnOrFloatColumnView {
       fct::Field<"type_", fct::Literal<"FloatColumnView">>>;
 
   /// The command used for retrieving float columns from a data frame.
-  using FloatColumn =
+  using FloatColumnOp =
       fct::NamedTuple<fct::Field<"df_name_", std::string>,
                       fct::Field<"name_", std::string>,
                       fct::Field<"type_", fct::Literal<"FloatColumn">>>;
 
   /// The command used for float const operations.
   using FloatConstOp =
-      fct::NamedTuple<fct::Field<"value_", std::string>,
+      fct::NamedTuple<fct::Field<"value_", Float>,
                       fct::Field<"operator_", fct::Literal<"const">>,
                       fct::Field<"type_", fct::Literal<"FloatColumnView">>>;
 
@@ -72,6 +71,17 @@ class FloatColumnOrFloatColumnView {
       fct::Field<"operator_", FloatUnaryOpLiteral>,
       fct::Field<"type_", fct::Literal<"FloatColumnView">>>;
 
+  /// The command used for float binary operations.
+  using FloatUpdateOp = fct::NamedTuple<
+      fct::Field<"operand1_", fct::Ref<FloatColumnOrFloatColumnView>>,
+      fct::Field<"operand2_", fct::Ref<FloatColumnOrFloatColumnView>>,
+      fct::Field<"condition_",
+                 fct::Ref<FloatColumnOrFloatColumnView>>,  // TODO: This needs
+                                                           // to be a boolean
+                                                           // column view
+      fct::Field<"operator_", fct::Literal<"update">>,
+      fct::Field<"type_", fct::Literal<"FloatColumnView">>>;
+
   /// The command used for string with subtoles operations.
   using FloatWithSubrolesOp = fct::NamedTuple<
       fct::Field<"operand1_", fct::Ref<FloatColumnOrFloatColumnView>>,
@@ -90,7 +100,11 @@ class FloatColumnOrFloatColumnView {
                    FloatSubselectionOp, FloatUnaryOp, FloatWithSubrolesOp,
                    FloatWithUnitOp>;
 
-  using RecursiveType = std::variant<FloatColumn, FloatColumnView>;
+  // TODO: Include FloatUpdateOp
+  using RecursiveType =
+      std::variant<FloatColumnOp, FloatArangeOp, FloatBinaryOp, FloatConstOp,
+                   FloatSubselectionOp,
+                   /*FloatUnaryOp,*/ FloatWithSubrolesOp, FloatWithUnitOp>;
 
   /// Used to break the recursive definition.
   RecursiveType val_;
