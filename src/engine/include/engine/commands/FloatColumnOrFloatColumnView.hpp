@@ -50,6 +50,12 @@ class FloatColumnOrFloatColumnView {
                       fct::Field<"operator_", fct::Literal<"const">>,
                       fct::Field<"type_", fct::Literal<"FloatColumnView">>>;
 
+  /// The command used for random operations.
+  using FloatRandomOp =
+      fct::NamedTuple<fct::Field<"seed_", unsigned int>,
+                      fct::Field<"operator_", fct::Literal<"random">>,
+                      fct::Field<"type_", fct::Literal<"FloatColumnView">>>;
+
   /// The command used for float subselection operations.
   using FloatSubselectionOp = fct::NamedTuple<
       fct::Field<"operand1_", fct::Ref<FloatColumnOrFloatColumnView>>,
@@ -59,11 +65,11 @@ class FloatColumnOrFloatColumnView {
 
   /// The possible operators.
   using FloatUnaryOpLiteral =
-      fct::Literal<"abs", "acos", "as_num", "as_ts", "asin", "atan",
-                   "boolean_as_num", "cbrt", "ceil", "cos", "day", "erf", "exp",
-                   "floor", "hour", "lgamma", "log", "minute", "month",
-                   "random", "round", "rowid", "second", "sin", "sqrt", "tan",
-                   "tgamma", "value", "weekday", "year", "yearday">;
+      fct::Literal<"abs", "acos", /*"as_num", "as_ts",*/ "asin", "atan",
+                   /*"boolean_as_num",*/ "cbrt", "ceil", "cos", "day", "erf",
+                   "exp", "floor", "hour", "lgamma", "log", "minute", "month",
+                   "round", "rowid", "second", "sin", "sqrt", "tan", "tgamma",
+                   "weekday", "year", "yearday">;
 
   /// The command used for float unary operations.
   using FloatUnaryOp = fct::NamedTuple<
@@ -96,15 +102,15 @@ class FloatColumnOrFloatColumnView {
 
   /// Combines the definitions of all different possible FloatColumnViews.
   using FloatColumnView =
-      std::variant<FloatArangeOp, FloatBinaryOp, FloatConstOp,
+      std::variant<FloatArangeOp, FloatBinaryOp, FloatConstOp, FloatRandomOp,
                    FloatSubselectionOp, FloatUnaryOp, FloatWithSubrolesOp,
                    FloatWithUnitOp>;
 
   // TODO: Include FloatUpdateOp
   using RecursiveType =
       std::variant<FloatColumnOp, FloatArangeOp, FloatBinaryOp, FloatConstOp,
-                   FloatSubselectionOp,
-                   /*FloatUnaryOp,*/ FloatWithSubrolesOp, FloatWithUnitOp>;
+                   FloatRandomOp, FloatSubselectionOp, FloatUnaryOp,
+                   FloatWithSubrolesOp, FloatWithUnitOp>;
 
   /// Used to break the recursive definition.
   RecursiveType val_;

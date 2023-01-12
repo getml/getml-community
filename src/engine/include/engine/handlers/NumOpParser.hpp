@@ -40,12 +40,16 @@ class NumOpParser {
       FloatColumnOp;
   typedef typename commands::FloatColumnOrFloatColumnView::FloatConstOp
       FloatConstOp;
+  typedef typename commands::FloatColumnOrFloatColumnView::FloatRandomOp
+      FloatRandomOp;
+  typedef typename commands::FloatColumnOrFloatColumnView::FloatSubselectionOp
+      FloatSubselectionOp;
+  typedef typename commands::FloatColumnOrFloatColumnView::FloatUnaryOp
+      FloatUnaryOp;
   typedef typename commands::FloatColumnOrFloatColumnView::FloatWithUnitOp
       FloatWithUnitOp;
   typedef typename commands::FloatColumnOrFloatColumnView::FloatWithSubrolesOp
       FloatWithSubrolesOp;
-  typedef typename commands::FloatColumnOrFloatColumnView::FloatSubselectionOp
-      FloatSubselectionOp;
 
   static constexpr UnknownSize NOT_KNOWABLE =
       containers::ColumnView<bool>::NOT_KNOWABLE;
@@ -123,8 +127,7 @@ class NumOpParser {
       const FloatSubselectionOp& _cmd) const;
 
   /// Parses the operator and undertakes a unary operation.
-  containers::ColumnView<Float> unary_operation(
-      const Poco::JSON::Object& _col) const;
+  containers::ColumnView<Float> unary_operation(const FloatUnaryOp& _col) const;
 
   /// Returns an updated version of the column.
   containers::ColumnView<Float> update(const Poco::JSON::Object& _col) const;
@@ -147,8 +150,8 @@ class NumOpParser {
   }
 
   /// Returns a columns containing random values.
-  containers::ColumnView<Float> random(const Poco::JSON::Object& _col) const {
-    const auto seed = JSON::get_value<unsigned int>(_col, "seed_");
+  containers::ColumnView<Float> random(const FloatRandomOp& _cmd) const {
+    const auto seed = _cmd.get<"seed_">();
 
     auto rng = std::mt19937(seed);
 
@@ -187,10 +190,9 @@ class NumOpParser {
   /// Undertakes a unary operation based on template class
   /// Operator.
   template <class Operator>
-  containers::ColumnView<Float> un_op(const Poco::JSON::Object& _col,
+  containers::ColumnView<Float> un_op(const FloatUnaryOp& _cmd,
                                       const Operator& _op) const {
-    const auto operand1 = parse(*JSON::get_object(_col, "operand1_"));
-
+    const auto operand1 = parse(*_cmd.get<"operand1_">());
     return containers::ColumnView<Float>::from_un_op(operand1, _op);
   }
 

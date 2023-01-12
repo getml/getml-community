@@ -259,6 +259,14 @@ containers::ColumnView<Float> NumOpParser::parse(
       return containers::ColumnView<Float>::from_value(val);
     }
 
+    if constexpr (std::is_same<Type, FloatRandomOp>()) {
+      return random(_cmd);
+    }
+
+    if constexpr (std::is_same<Type, FloatUnaryOp>()) {
+      return unary_operation(_cmd);
+    }
+
     if constexpr (std::is_same<Type, FloatWithSubrolesOp>()) {
       return with_subroles(_cmd);
     }
@@ -270,12 +278,6 @@ containers::ColumnView<Float> NumOpParser::parse(
     if constexpr (std::is_same<Type, FloatSubselectionOp>()) {
       return subselection(_cmd);
     }
-    // TODO
-    /*
-
-        if (type == FLOAT_COLUMN_VIEW && !_col.has("operand2_")) {
-          return unary_operation(_col);
-        }*/
   };
 
   return std::visit(handle, _cmd.val_);
@@ -302,154 +304,155 @@ containers::ColumnView<Float> NumOpParser::subselection(
 // ----------------------------------------------------------------------------
 
 containers::ColumnView<Float> NumOpParser::unary_operation(
-    const Poco::JSON::Object& _col) const {
-  const auto op = JSON::get_value<std::string>(_col, "operator_");
+    const FloatUnaryOp& _cmd) const {
+  const auto handle =
+      [this](const auto& _literal,
+             const FloatUnaryOp& _cmd) -> containers::ColumnView<Float> {
+    using Type = std::decay_t<decltype(_literal)>;
 
-  if (op == "abs") {
-    const auto abs = [](const Float val) { return std::abs(val); };
-    return un_op(_col, abs);
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"abs">>()) {
+      const auto abs = [](const Float val) { return std::abs(val); };
+      return un_op(_cmd, abs);
+    }
 
-  if (op == "acos") {
-    const auto acos = [](const Float val) { return std::acos(val); };
-    return un_op(_col, acos);
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"acos">>()) {
+      const auto acos = [](const Float val) { return std::acos(val); };
+      return un_op(_cmd, acos);
+    }
 
-  if (op == "as_num") {
-    return as_num(_col);
-  }
+    // TODO
+    /*
+        if (op == "as_num") {
+          return as_num(_cmd);
+        }
 
-  if (op == "as_ts") {
-    return as_ts(_col);
-  }
+        if (op == "as_ts") {
+          return as_ts(_cmd);
+        }
+    */
 
-  if (op == "asin") {
-    const auto asin = [](const Float val) { return std::asin(val); };
-    return un_op(_col, asin);
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"asin">>()) {
+      const auto asin = [](const Float val) { return std::asin(val); };
+      return un_op(_cmd, asin);
+    }
 
-  if (op == "atan") {
-    const auto atan = [](const Float val) { return std::atan(val); };
-    return un_op(_col, atan);
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"atan">>()) {
+      const auto atan = [](const Float val) { return std::atan(val); };
+      return un_op(_cmd, atan);
+    }
+    /*
+        if (op == "boolean_as_num") {
+          return boolean_as_num(_cmd);
+        }
+    */
 
-  if (op == "boolean_as_num") {
-    return boolean_as_num(_col);
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"cbrt">>()) {
+      const auto cbrt = [](const Float val) { return std::cbrt(val); };
+      return un_op(_cmd, cbrt);
+    }
 
-  if (op == "cbrt") {
-    const auto cbrt = [](const Float val) { return std::cbrt(val); };
-    return un_op(_col, cbrt);
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"ceil">>()) {
+      const auto ceil = [](const Float val) { return std::ceil(val); };
+      return un_op(_cmd, ceil);
+    }
 
-  if (op == "ceil") {
-    const auto ceil = [](const Float val) { return std::ceil(val); };
-    return un_op(_col, ceil);
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"cos">>()) {
+      const auto cos = [](const Float val) { return std::cos(val); };
+      return un_op(_cmd, cos);
+    }
 
-  if (op == "cos") {
-    const auto cos = [](const Float val) { return std::cos(val); };
-    return un_op(_col, cos);
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"day">>()) {
+      return un_op(_cmd, utils::Time::day);
+    }
 
-  if (op == "day") {
-    return un_op(_col, utils::Time::day);
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"erf">>()) {
+      const auto erf = [](const Float val) { return std::erf(val); };
+      return un_op(_cmd, erf);
+    }
 
-  if (op == "erf") {
-    const auto erf = [](const Float val) { return std::erf(val); };
-    return un_op(_col, erf);
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"exp">>()) {
+      const auto exp = [](const Float val) { return std::exp(val); };
+      return un_op(_cmd, exp);
+    }
 
-  if (op == "exp") {
-    const auto exp = [](const Float val) { return std::exp(val); };
-    return un_op(_col, exp);
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"floor">>()) {
+      const auto floor = [](const Float val) { return std::floor(val); };
+      return un_op(_cmd, floor);
+    }
 
-  if (op == "floor") {
-    const auto floor = [](const Float val) { return std::floor(val); };
-    return un_op(_col, floor);
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"hour">>()) {
+      return un_op(_cmd, utils::Time::hour);
+    }
 
-  if (op == "hour") {
-    return un_op(_col, utils::Time::hour);
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"lgamma">>()) {
+      const auto lgamma = [](const Float val) { return std::lgamma(val); };
+      return un_op(_cmd, lgamma);
+    }
 
-  if (op == "lgamma") {
-    const auto lgamma = [](const Float val) { return std::lgamma(val); };
-    return un_op(_col, lgamma);
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"log">>()) {
+      const auto log = [](const Float val) { return std::log(val); };
+      return un_op(_cmd, log);
+    }
 
-  if (op == "log") {
-    const auto log = [](const Float val) { return std::log(val); };
-    return un_op(_col, log);
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"minute">>()) {
+      return un_op(_cmd, utils::Time::minute);
+    }
 
-  if (op == "minute") {
-    return un_op(_col, utils::Time::minute);
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"month">>()) {
+      return un_op(_cmd, utils::Time::month);
+    }
 
-  if (op == "month") {
-    return un_op(_col, utils::Time::month);
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"round">>()) {
+      const auto round = [](const Float val) { return std::round(val); };
+      return un_op(_cmd, round);
+    }
 
-  if (op == "random") {
-    return random(_col);
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"rowid">>()) {
+      return rowid();
+    }
 
-  if (op == "round") {
-    const auto round = [](const Float val) { return std::round(val); };
-    return un_op(_col, round);
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"second">>()) {
+      return un_op(_cmd, utils::Time::second);
+    }
 
-  if (op == "rowid") {
-    return rowid();
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"sin">>()) {
+      const auto sin = [](const Float val) { return std::sin(val); };
+      return un_op(_cmd, sin);
+    }
 
-  if (op == "second") {
-    return un_op(_col, utils::Time::second);
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"sqrt">>()) {
+      const auto sqrt = [](const Float val) { return std::sqrt(val); };
+      return un_op(_cmd, sqrt);
+    }
 
-  if (op == "sin") {
-    const auto sin = [](const Float val) { return std::sin(val); };
-    return un_op(_col, sin);
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"tan">>()) {
+      const auto tan = [](const Float val) { return std::tan(val); };
+      return un_op(_cmd, tan);
+    }
 
-  if (op == "sqrt") {
-    const auto sqrt = [](const Float val) { return std::sqrt(val); };
-    return un_op(_col, sqrt);
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"tgamma">>()) {
+      const auto tgamma = [](const Float val) { return std::tgamma(val); };
+      return un_op(_cmd, tgamma);
+    }
 
-  if (op == "tan") {
-    const auto tan = [](const Float val) { return std::tan(val); };
-    return un_op(_col, tan);
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"sqrt">>()) {
+      return parse(*_cmd.get<"operand1_">());
+    }
 
-  if (op == "tgamma") {
-    const auto tgamma = [](const Float val) { return std::tgamma(val); };
-    return un_op(_col, tgamma);
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"weekday">>()) {
+      return un_op(_cmd, utils::Time::weekday);
+    }
 
-  if (op == "value") {
-    return parse(*JSON::get_object(_col, "operand1_"));
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"year">>()) {
+      return un_op(_cmd, utils::Time::year);
+    }
 
-  if (op == "weekday") {
-    return un_op(_col, utils::Time::weekday);
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"yearday">>()) {
+      return un_op(_cmd, utils::Time::yearday);
+    }
+  };
 
-  if (op == "year") {
-    return un_op(_col, utils::Time::year);
-  }
-
-  if (op == "yearday") {
-    return un_op(_col, utils::Time::yearday);
-  }
-
-  throw std::runtime_error("Operator '" + op +
-                           "' not recognized for numerical columns.");
-
-  return un_op(_col, utils::Time::yearday);
+  return fct::visit(handle, _cmd.get<"operator_">(), _cmd);
 }
 
 // ----------------------------------------------------------------------------
