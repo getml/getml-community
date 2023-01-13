@@ -34,12 +34,16 @@ class NumOpParser {
 
   typedef typename commands::FloatColumnOrFloatColumnView::FloatArangeOp
       FloatArangeOp;
+  typedef
+      typename commands::FloatColumnOrFloatColumnView::FloatAsTSOp FloatAsTSOp;
   typedef typename commands::FloatColumnOrFloatColumnView::FloatBinaryOp
       FloatBinaryOp;
   typedef typename commands::FloatColumnOrFloatColumnView::FloatColumnOp
       FloatColumnOp;
   typedef typename commands::FloatColumnOrFloatColumnView::FloatConstOp
       FloatConstOp;
+  typedef typename commands::FloatColumnOrFloatColumnView::FloatFromStringOp
+      FloatFromStringOp;
   typedef typename commands::FloatColumnOrFloatColumnView::FloatRandomOp
       FloatRandomOp;
   typedef typename commands::FloatColumnOrFloatColumnView::FloatSubselectionOp
@@ -106,10 +110,10 @@ class NumOpParser {
   containers::ColumnView<Float> arange(const FloatArangeOp& _col) const;
 
   /// Transforms a string column to a float.
-  containers::ColumnView<Float> as_num(const Poco::JSON::Object& _col) const;
+  containers::ColumnView<Float> as_num(const FloatFromStringOp& _col) const;
 
   /// Transforms a string column to a time stamp.
-  containers::ColumnView<Float> as_ts(const Poco::JSON::Object& _col) const;
+  containers::ColumnView<Float> as_ts(const FloatAsTSOp& _col) const;
 
   /// Parses the operator and undertakes a binary operation.
   containers::ColumnView<Float> binary_operation(
@@ -118,6 +122,10 @@ class NumOpParser {
   /// Transforms a boolean column to a float column.
   containers::ColumnView<Float> boolean_as_num(
       const Poco::JSON::Object& _col) const;
+
+  /// Retrieves a float column from a string.
+  containers::ColumnView<Float> from_string(
+      const FloatFromStringOp& _col) const;
 
   /// Returns an actual column.
   containers::ColumnView<Float> get_column(const FloatColumnOp& _cmd) const;

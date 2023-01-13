@@ -112,32 +112,34 @@ containers::ColumnView<bool> BoolOpParser::binary_operation(
 // ----------------------------------------------------------------------------
 
 containers::ColumnView<bool> BoolOpParser::parse(
-    const Poco::JSON::Object& _col) const {
-  const auto type = JSON::get_value<std::string>(_col, "type_");
+    const commands::BooleanColumnView& _cmd) const {
+  const auto handle = [this](const auto& _cmd) -> containers::ColumnView<bool> {
+    using Type = std::decay_t<decltype(_cmd)>;
 
-  const auto op = JSON::get_value<std::string>(_col, "operator_");
-
-  if (op == "const") {
-    const auto value = JSON::get_value<bool>(_col, "value_");
-    return containers::ColumnView<bool>::from_value(value);
-  }
-
-  if (type == BOOLEAN_COLUMN_VIEW && op == "subselection") {
-    return subselection(_col);
-  }
-
-  if (type == BOOLEAN_COLUMN_VIEW) {
-    if (_col.has("operand2_")) {
-      return binary_operation(_col);
-    } else {
-      return unary_operation(_col);
+    if constexpr (std::is_same<Type, BooleanConstOp>()) {
+      const auto value = fct::get<"value_">(_cmd);
+      return containers::ColumnView<bool>::from_value(value);
     }
-  }
+  };
 
-  throw std::runtime_error("Column of type '" + type +
-                           "' not recognized for boolean columns.");
+  return std::visit(handle, _cmd);
 
-  return unary_operation(_col);
+  /*  if (type == BOOLEAN_COLUMN_VIEW && op == "subselection") {
+      return subselection(_col);
+    }
+
+    if (type == BOOLEAN_COLUMN_VIEW) {
+      if (_col.has("operand2_")) {
+        return binary_operation(_col);
+      } else {
+        return unary_operation(_col);
+      }
+    }
+
+    throw std::runtime_error("Column of type '" + type +
+                             "' not recognized for boolean columns.");
+
+    return unary_operation(_col);*/
 }
 
 // ----------------------------------------------------------------------------
