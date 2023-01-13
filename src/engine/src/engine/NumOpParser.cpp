@@ -59,10 +59,10 @@ containers::ColumnView<Float> NumOpParser::arange(
 // ----------------------------------------------------------------------------
 
 containers::ColumnView<Float> NumOpParser::as_num(
-    const Poco::JSON::Object& _col) const {
+    const FloatFromStringOp& _cmd) const {
   const auto operand1 =
       CatOpParser(categories_, join_keys_encoding_, data_frames_)
-          .parse(*JSON::get_object(_col, "operand1_"));
+          .parse(*_cmd.get<"operand1_">());
 
   const auto to_double = [](const strings::String& _str) {
     const auto [val, success] = io::Parser::to_double(_str.str());
@@ -79,13 +79,12 @@ containers::ColumnView<Float> NumOpParser::as_num(
 // ----------------------------------------------------------------------------
 
 containers::ColumnView<Float> NumOpParser::as_ts(
-    const Poco::JSON::Object& _col) const {
-  const auto time_formats = JSON::array_to_vector<std::string>(
-      JSON::get_array(_col, "time_formats_"));
+    const FloatAsTSOp& _cmd) const {
+  const auto time_formats = _cmd.get<"time_formats_">();
 
   const auto operand1 =
       CatOpParser(categories_, join_keys_encoding_, data_frames_)
-          .parse(*JSON::get_object(_col, "operand1_"));
+          .parse(*_cmd.get<"operand1_">());
 
   const auto to_time_stamp = [time_formats](const strings::String& _str) {
     auto [val, success] = io::Parser::to_time_stamp(_str.str(), time_formats);
@@ -246,6 +245,10 @@ containers::ColumnView<Float> NumOpParser::parse(
       return arange(_cmd);
     }
 
+    if constexpr (std::is_same<Type, FloatAsTSOp>()) {
+      return as_ts(_cmd);
+    }
+
     if constexpr (std::is_same<Type, FloatBinaryOp>()) {
       return binary_operation(_cmd);
     }
@@ -257,6 +260,10 @@ containers::ColumnView<Float> NumOpParser::parse(
     if constexpr (std::is_same<Type, FloatConstOp>()) {
       const auto val = fct::get<"value_">(_cmd);
       return containers::ColumnView<Float>::from_value(val);
+    }
+
+    if constexpr (std::is_same<Type, FloatFromStringOp>()) {
+      return as_num(_cmd);
     }
 
     if constexpr (std::is_same<Type, FloatRandomOp>()) {
@@ -319,17 +326,6 @@ containers::ColumnView<Float> NumOpParser::unary_operation(
       const auto acos = [](const Float val) { return std::acos(val); };
       return un_op(_cmd, acos);
     }
-
-    // TODO
-    /*
-        if (op == "as_num") {
-          return as_num(_cmd);
-        }
-
-        if (op == "as_ts") {
-          return as_ts(_cmd);
-        }
-    */
 
     if constexpr (std::is_same<Type, fct::Literal<"asin">>()) {
       const auto asin = [](const Float val) { return std::asin(val); };

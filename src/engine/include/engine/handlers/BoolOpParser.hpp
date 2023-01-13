@@ -1,40 +1,29 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_HANDLERS_BOOLOPPARSER_HPP_
 #define ENGINE_HANDLERS_BOOLOPPARSER_HPP_
 
-// ----------------------------------------------------------------------------
-
 #include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------------
 
 #include <map>
 #include <memory>
 #include <string>
 
-// ----------------------------------------------------------------------------
-
 #include "debug/debug.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
+#include "engine/commands/BooleanColumnView.hpp"
+#include "engine/commands/BooleanConstOp.hpp"
 #include "engine/communication/communication.hpp"
 #include "engine/containers/containers.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "engine/handlers/CatOpParser.hpp"
 #include "engine/handlers/NumOpParser.hpp"
-
-// ----------------------------------------------------------------------------
+#include "json/json.hpp"
 
 namespace engine {
 namespace handlers {
@@ -44,6 +33,8 @@ class BoolOpParser {
   typedef containers::ColumnView<bool>::UnknownSize UnknownSize;
   typedef containers::ColumnView<bool>::NRowsType NRowsType;
   typedef containers::ColumnView<bool>::ValueFunc ValueFunc;
+
+  typedef typename commands::BooleanConstOp BooleanConstOp;
 
   static constexpr UnknownSize NOT_KNOWABLE =
       containers::ColumnView<bool>::NOT_KNOWABLE;
@@ -79,13 +70,16 @@ class BoolOpParser {
 
   ~BoolOpParser() = default;
 
-  // ------------------------------------------------------------------------
-
  public:
   /// Parses a numerical column.
-  containers::ColumnView<bool> parse(const Poco::JSON::Object& _col) const;
+  containers::ColumnView<bool> parse(
+      const commands::BooleanColumnView& _cmd) const;
 
-  // ------------------------------------------------------------------------
+  /// TODO: Remove this temporary solution.
+  containers::ColumnView<bool> parse(const Poco::JSON::Object& _cmd) const {
+    const auto cmd = json::from_json<commands::BooleanColumnView>(_cmd);
+    return parse(cmd);
+  }
 
  private:
   /// Parses the operator and undertakes a binary operation.

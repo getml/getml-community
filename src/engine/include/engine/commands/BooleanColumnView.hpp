@@ -19,8 +19,8 @@ namespace engine {
 namespace commands {
 
 /// Defines a boolean column view.
-using BooleanColumnView = std::variant<BooleanBinaryOp, BooleanConstOp,
-                                       BooleanSubselectionOp, BooleanUnaryOp>;
+using BooleanColumnView = std::variant</*BooleanBinaryOp,*/ BooleanConstOp/*,
+                                       BooleanSubselectionOp, BooleanUnaryOp*/>;
 
 }  // namespace commands
 }  // namespace engine
