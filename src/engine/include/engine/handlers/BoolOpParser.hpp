@@ -18,7 +18,6 @@
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
 #include "engine/commands/BooleanColumnView.hpp"
-#include "engine/commands/BooleanConstOp.hpp"
 #include "engine/communication/communication.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/handlers/CatOpParser.hpp"
@@ -34,7 +33,11 @@ class BoolOpParser {
   typedef containers::ColumnView<bool>::NRowsType NRowsType;
   typedef containers::ColumnView<bool>::ValueFunc ValueFunc;
 
-  typedef typename commands::BooleanConstOp BooleanConstOp;
+  typedef typename commands::BooleanColumnView::BooleanConstOp BooleanConstOp;
+  typedef typename commands::BooleanColumnView::BooleanBinaryOp BooleanBinaryOp;
+  typedef typename commands::BooleanColumnView::BooleanIsInfOp BooleanIsInfOp;
+  typedef typename commands::BooleanColumnView::BooleanIsNullOp BooleanIsNullOp;
+  typedef typename commands::BooleanColumnView::BooleanNotOp BooleanNotOp;
 
   static constexpr UnknownSize NOT_KNOWABLE =
       containers::ColumnView<bool>::NOT_KNOWABLE;
@@ -55,8 +58,6 @@ class BoolOpParser {
       containers::Column<bool>::STRING_COLUMN_VIEW;
   static constexpr const char* BOOLEAN_COLUMN_VIEW =
       containers::Column<bool>::BOOLEAN_COLUMN_VIEW;
-
-  // ------------------------------------------------------------------------
 
  public:
   BoolOpParser(
@@ -84,11 +85,10 @@ class BoolOpParser {
  private:
   /// Parses the operator and undertakes a binary operation.
   containers::ColumnView<bool> binary_operation(
-      const Poco::JSON::Object& _col) const;
+      const BooleanBinaryOp& _cmd) const;
 
   /// Parses the operator and undertakes a unary operation.
-  containers::ColumnView<bool> unary_operation(
-      const Poco::JSON::Object& _col) const;
+  containers::ColumnView<bool> is_null(const BooleanIsNullOp& _cmd) const;
 
   /// Returns a subselection on the column.
   containers::ColumnView<bool> subselection(
@@ -99,24 +99,21 @@ class BoolOpParser {
   /// Undertakes a binary operation based on template class
   /// Operator.
   template <class Operator>
-  containers::ColumnView<bool> bin_op(const Poco::JSON::Object& _col,
+  containers::ColumnView<bool> bin_op(const BooleanBinaryOp& _col,
                                       const Operator& _op) const {
-    const auto operand1 = parse(*JSON::get_object(_col, "operand1_"));
-
-    const auto operand2 = parse(*JSON::get_object(_col, "operand2_"));
-
+    const auto operand1 = parse(*_col.get<"operand1_">());
+    const auto operand2 = parse(*_col.get<"operand2_">());
     return containers::ColumnView<bool>::from_bin_op(operand1, operand2, _op);
   }
 
   /// Undertakes a unary operation based on template class
   /// Operator for categorical columns.
   template <class Operator>
-  containers::ColumnView<bool> cat_un_op(const Poco::JSON::Object& _col,
-                                         const Operator& _op) const {
+  containers::ColumnView<bool> cat_un_op(
+      const commands::StringColumnOrStringColumnView& _col,
+      const Operator& _op) const {
     const auto operand1 =
-        CatOpParser(categories_, join_keys_encoding_, data_frames_)
-            .parse(*JSON::get_object(_col, "operand1_"));
-
+        CatOpParser(categories_, join_keys_encoding_, data_frames_).parse(_col);
     return containers::ColumnView<bool>::from_un_op(operand1, _op);
   }
 
@@ -155,12 +152,11 @@ class BoolOpParser {
   /// Undertakes a unary operation based on template class
   /// Operator for numerical columns.
   template <class Operator>
-  containers::ColumnView<bool> num_un_op(const Poco::JSON::Object& _col,
-                                         const Operator& _op) const {
+  containers::ColumnView<bool> num_un_op(
+      const commands::FloatColumnOrFloatColumnView& _col,
+      const Operator& _op) const {
     const auto operand1 =
-        NumOpParser(categories_, join_keys_encoding_, data_frames_)
-            .parse(*JSON::get_object(_col, "operand1_"));
-
+        NumOpParser(categories_, join_keys_encoding_, data_frames_).parse(_col);
     return containers::ColumnView<bool>::from_un_op(operand1, _op);
   }
 
