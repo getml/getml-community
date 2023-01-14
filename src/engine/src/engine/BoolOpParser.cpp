@@ -26,6 +26,14 @@ containers::ColumnView<bool> BoolOpParser::binary_operation(
       return bin_op(_cmd, std::logical_and<bool>());
     }
 
+    if constexpr (std::is_same<Type, fct::Literal<"equal_to">>()) {
+      return bin_op(_cmd, std::equal_to<bool>());
+    }
+
+    if constexpr (std::is_same<Type, fct::Literal<"not_equal_to">>()) {
+      return bin_op(_cmd, std::not_equal_to<bool>());
+    }
+
     if constexpr (std::is_same<Type, fct::Literal<"or">>()) {
       return bin_op(_cmd, std::logical_or<bool>());
     }
@@ -37,60 +45,44 @@ containers::ColumnView<bool> BoolOpParser::binary_operation(
   };
 
   return fct::visit(handle, _cmd.get<"operator_">(), _cmd);
+}
 
-  /*
-  if (op == "contains") {
-    const auto contains = [](const strings::String& _str1,
-                             const strings::String& _str2) {
-      if (!_str1 || !_str2) {
-        return false;
-      }
-      return (_str1.str().find(_str2.c_str()) != std::string::npos);
-    };
+// ----------------------------------------------------------------------------
 
-    return cat_bin_op(_col, contains);
-  }
+containers::ColumnView<bool> BoolOpParser::numerical_comparison(
+    const BooleanNumComparisonOp& _cmd) const {
+  const auto handle =
+      [this](
+          const auto& _literal,
+          const BooleanNumComparisonOp& _cmd) -> containers::ColumnView<bool> {
+    using Type = std::decay_t<decltype(_literal)>;
 
-  if (is_boolean && op == "equal_to") {
-    return bin_op(_col, std::equal_to<bool>());
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"equal_to">>()) {
+      return num_bin_op(_cmd, std::equal_to<Float>());
+    }
 
-  if (is_categorical && op == "equal_to") {
-    return cat_bin_op(_col, std::equal_to<strings::String>());
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"greater">>()) {
+      return num_bin_op(_cmd, std::greater<Float>());
+    }
 
-  if (is_numerical && op == "equal_to") {
-    return num_bin_op(_col, std::equal_to<Float>());
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"greater_equal">>()) {
+      return num_bin_op(_cmd, std::greater_equal<Float>());
+    }
 
-  if (op == "greater") {
-    return num_bin_op(_col, std::greater<Float>());
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"less">>()) {
+      return num_bin_op(_cmd, std::less<Float>());
+    }
 
-  if (op == "greater_equal") {
-    return num_bin_op(_col, std::greater_equal<Float>());
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"less_equal">>()) {
+      return num_bin_op(_cmd, std::less_equal<Float>());
+    }
 
-  if (op == "less") {
-    return num_bin_op(_col, std::less<Float>());
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"not_equal_to">>()) {
+      return num_bin_op(_cmd, std::not_equal_to<Float>());
+    }
+  };
 
-  if (op == "less_equal") {
-    return num_bin_op(_col, std::less_equal<Float>());
-  }
-
-  if (is_boolean && op == "not_equal_to") {
-    return bin_op(_col, std::not_equal_to<bool>());
-  }
-
-  if (is_categorical && op == "not_equal_to") {
-    return cat_bin_op(_col, std::not_equal_to<strings::String>());
-  }
-
-  if (is_numerical && op == "not_equal_to") {
-    return num_bin_op(_col, std::not_equal_to<Float>());
-  }
-*/
+  return fct::visit(handle, _cmd.get<"operator_">(), _cmd);
 }
 
 // ----------------------------------------------------------------------------
@@ -124,50 +116,81 @@ containers::ColumnView<bool> BoolOpParser::parse(
       return containers::ColumnView<bool>::from_un_op(col,
                                                       std::logical_not<bool>());
     }
+
+    if constexpr (std::is_same<Type, BooleanNumComparisonOp>()) {
+      return numerical_comparison(_cmd);
+    }
+
+    if constexpr (std::is_same<Type, BooleanStrComparisonOp>()) {
+      return string_comparison(_cmd);
+    }
+
+    if constexpr (std::is_same<Type, BooleanSubselectionOp>()) {
+      return subselection(_cmd);
+    }
   };
 
   return std::visit(handle, _cmd.val_);
-
-  /*  if (type == BOOLEAN_COLUMN_VIEW && op == "subselection") {
-      return subselection(_col);
-    }
-
-    if (type == BOOLEAN_COLUMN_VIEW) {
-      if (_col.has("operand2_")) {
-        return binary_operation(_col);
-      } else {
-        return unary_operation(_col);
-      }
-    }
-
-    throw std::runtime_error("Column of type '" + type +
-                             "' not recognized for boolean columns.");
-
-    return unary_operation(_col);*/
 }
 
 // ----------------------------------------------------------------------------
 
 containers::ColumnView<bool> BoolOpParser::subselection(
-    const Poco::JSON::Object& _col) const {
-  const auto data = parse(*JSON::get_object(_col, "operand1_"));
+    const BooleanSubselectionOp& _cmd) const {
+  const auto handle =
+      [this, &_cmd](const auto& _operand2) -> containers::ColumnView<bool> {
+    using Type = std::decay_t<decltype(_operand2)>;
 
-  const auto indices_json = *JSON::get_object(_col, "operand2_");
+    const auto data = parse(*_cmd.get<"operand1_">());
 
-  const auto type = JSON::get_value<std::string>(indices_json, "type_");
-
-  if (type == FLOAT_COLUMN || type == FLOAT_COLUMN_VIEW) {
-    const auto indices =
-        NumOpParser(categories_, join_keys_encoding_, data_frames_)
-            .parse(indices_json);
-
-    return containers::ColumnView<bool>::from_numerical_subselection(data,
+    if constexpr (std::is_same<
+                      Type,
+                      fct::Ref<commands::FloatColumnOrFloatColumnView>>()) {
+      const auto indices =
+          NumOpParser(categories_, join_keys_encoding_, data_frames_)
+              .parse(*_operand2);
+      return containers::ColumnView<bool>::from_numerical_subselection(data,
+                                                                       indices);
+    } else {
+      const auto indices = parse(*_operand2);
+      return containers::ColumnView<bool>::from_boolean_subselection(data,
                                                                      indices);
-  }
+    }
+  };
 
-  const auto indices = parse(indices_json);
+  return std::visit(handle, _cmd.get<"operand2_">());
+}
 
-  return containers::ColumnView<bool>::from_boolean_subselection(data, indices);
+// ----------------------------------------------------------------------------
+
+containers::ColumnView<bool> BoolOpParser::string_comparison(
+    const BooleanStrComparisonOp& _cmd) const {
+  const auto handle =
+      [this](
+          const auto& _literal,
+          const BooleanStrComparisonOp& _cmd) -> containers::ColumnView<bool> {
+    using Type = std::decay_t<decltype(_literal)>;
+
+    if constexpr (std::is_same<Type, fct::Literal<"contains">>()) {
+      const auto contains = [](const auto& _str1, const auto& _str2) {
+        if (!_str1 || !_str2) {
+          return false;
+        }
+        return (_str1.str().find(_str2.c_str()) != std::string::npos);
+      };
+      return cat_bin_op(_cmd, contains);
+    }
+
+    if constexpr (std::is_same<Type, fct::Literal<"equal_to">>()) {
+      return cat_bin_op(_cmd, std::equal_to<Float>());
+    }
+
+    if constexpr (std::is_same<Type, fct::Literal<"not_equal_to">>()) {
+      return cat_bin_op(_cmd, std::not_equal_to<Float>());
+    }
+  };
+
+  return fct::visit(handle, _cmd.get<"operator_">(), _cmd);
 }
 
 // ----------------------------------------------------------------------------
