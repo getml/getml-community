@@ -37,6 +37,9 @@ class CatOpParser {
       StringColumnOp;
   typedef typename commands::StringColumnOrStringColumnView::StringConstOp
       StringConstOp;
+  typedef
+      typename commands::StringColumnOrStringColumnView::StringSubselectionOp
+          StringSubselectionOp;
   typedef typename commands::StringColumnOrStringColumnView::StringSubstringOp
       StringSubstringOp;
   typedef
@@ -44,6 +47,8 @@ class CatOpParser {
           StringWithSubrolesOp;
   typedef typename commands::StringColumnOrStringColumnView::StringUnaryOp
       StringUnaryOp;
+  typedef typename commands::StringColumnOrStringColumnView::StringUpdateOp
+      StringUpdateOp;
   typedef typename commands::StringColumnOrStringColumnView::StringWithUnitOp
       StringWithUnitOp;
 
@@ -105,7 +110,7 @@ class CatOpParser {
 
   /// Transforms a boolean column to a string.
   containers::ColumnView<strings::String> boolean_as_string(
-      const Poco::JSON::Object& _col) const;
+      const commands::BooleanColumnView& _col) const;
 
   /// Retrieves a column from a data frame.
   containers::ColumnView<strings::String> get_column(
@@ -113,11 +118,11 @@ class CatOpParser {
 
   /// Transforms a float column to a string.
   containers::ColumnView<strings::String> numerical_as_string(
-      const Poco::JSON::Object& _col) const;
+      const commands::FloatColumnOrFloatColumnView& _col) const;
 
   /// Returns a subselection on the column.
   containers::ColumnView<strings::String> subselection(
-      const Poco::JSON::Object& _col) const;
+      const StringSubselectionOp& _cmd) const;
 
   /// Retrieves a substring from a string.
   containers::ColumnView<strings::String> substring(
@@ -138,7 +143,7 @@ class CatOpParser {
 
   /// Returns an updated version of the column.
   containers::ColumnView<strings::String> update(
-      const Poco::JSON::Object& _col) const;
+      const StringUpdateOp& _cmd) const;
 
   /// Returns a new column with new subroles.
   containers::ColumnView<strings::String> with_subroles(
@@ -147,8 +152,6 @@ class CatOpParser {
   /// Returns a new column with a new unit.
   containers::ColumnView<strings::String> with_unit(
       const StringWithUnitOp& _cmd) const;
-
-  // ------------------------------------------------------------------------
 
   /// Undertakes a binary operation based on template class
   /// Operator.
@@ -160,17 +163,6 @@ class CatOpParser {
     return containers::ColumnView<strings::String>::from_bin_op(operand1,
                                                                 operand2, _op);
   }
-
-  /// Undertakes a unary operation based on template class
-  /// Operator.
-  template <class Operator>
-  containers::ColumnView<strings::String> un_op(const StringUnaryOp& _cmd,
-                                                const Operator& _op) const {
-    const auto operand1 = parse(*_cmd.get<"operand1_">());
-    return containers::ColumnView<strings::String>::from_un_op(operand1, _op);
-  }
-
-  // ------------------------------------------------------------------------
 
  private:
   /// Encodes the categories used.

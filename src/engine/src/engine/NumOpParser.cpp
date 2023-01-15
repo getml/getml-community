@@ -183,11 +183,10 @@ containers::ColumnView<Float> NumOpParser::binary_operation(
 // ----------------------------------------------------------------------------
 
 containers::ColumnView<Float> NumOpParser::boolean_as_num(
-    const Poco::JSON::Object& _col) const {
-  const auto obj = *JSON::get_object(_col, "operand1_");
-
+    const FloatFromBooleanOp& _cmd) const {
   const auto operand1 =
-      BoolOpParser(categories_, join_keys_encoding_, data_frames_).parse(obj);
+      BoolOpParser(categories_, join_keys_encoding_, data_frames_)
+          .parse(*_cmd.get<"operand1_">());
 
   const auto as_num = [](const bool val) {
     if (val) {
@@ -253,6 +252,10 @@ containers::ColumnView<Float> NumOpParser::parse(
       return binary_operation(_cmd);
     }
 
+    if constexpr (std::is_same<Type, FloatFromBooleanOp>()) {
+      return boolean_as_num(_cmd);
+    }
+
     if constexpr (std::is_same<Type, FloatColumnOp>()) {
       return get_column(_cmd);
     }
@@ -272,6 +275,10 @@ containers::ColumnView<Float> NumOpParser::parse(
 
     if constexpr (std::is_same<Type, FloatUnaryOp>()) {
       return unary_operation(_cmd);
+    }
+
+    if constexpr (std::is_same<Type, FloatUpdateOp>()) {
+      return update(_cmd);
     }
 
     if constexpr (std::is_same<Type, FloatWithSubrolesOp>()) {
@@ -294,18 +301,28 @@ containers::ColumnView<Float> NumOpParser::parse(
 
 containers::ColumnView<Float> NumOpParser::subselection(
     const FloatSubselectionOp& _cmd) const {
-  const auto data = parse(*_cmd.get<"operand1_">());
-  const auto indices = parse(*_cmd.get<"operand2_">());
-  return containers::ColumnView<Float>::from_numerical_subselection(data,
-                                                                    indices);
+  const auto handle =
+      [this, &_cmd](const auto& _operand2) -> containers::ColumnView<Float> {
+    using Type = std::decay_t<decltype(_operand2)>;
 
-  // TODO: handle this.
-  /*const auto indices =
-      BoolOpParser(categories_, join_keys_encoding_, data_frames_)
-          .parse(indices_json);
+    const auto data = parse(*_cmd.get<"operand1_">());
 
-  return containers::ColumnView<Float>::from_boolean_subselection(data,
-                                                                  indices);*/
+    if constexpr (std::is_same<
+                      Type,
+                      fct::Ref<commands::FloatColumnOrFloatColumnView>>()) {
+      const auto indices = parse(*_operand2);
+      return containers::ColumnView<Float>::from_numerical_subselection(
+          data, indices);
+    } else {
+      const auto indices =
+          BoolOpParser(categories_, join_keys_encoding_, data_frames_)
+              .parse(*_operand2);
+      return containers::ColumnView<Float>::from_boolean_subselection(data,
+                                                                      indices);
+    }
+  };
+
+  return std::visit(handle, _cmd.get<"operand2_">());
 }
 
 // ----------------------------------------------------------------------------
@@ -454,16 +471,17 @@ containers::ColumnView<Float> NumOpParser::unary_operation(
 // ----------------------------------------------------------------------------
 
 containers::ColumnView<Float> NumOpParser::update(
-    const Poco::JSON::Object& _col) const {
-  const auto operand1 = parse(*JSON::get_object(_col, "operand1_"));
+    const FloatUpdateOp& _cmd) const {
+  const auto operand1 = parse(*_cmd.get<"operand1_">());
 
-  const auto operand2 = parse(*JSON::get_object(_col, "operand2_"));
+  const auto operand2 = parse(*_cmd.get<"operand2_">());
 
   const auto condition =
       BoolOpParser(categories_, join_keys_encoding_, data_frames_)
-          .parse(*JSON::get_object(_col, "condition_"));
+          .parse(*_cmd.get<"condition_">());
 
-  const auto op = [](const Float _val1, const Float _val2, const bool _cond) {
+  const auto op = [](const auto& _val1, const auto& _val2,
+                     const bool _cond) -> Float {
     return _cond ? _val2 : _val1;
   };
 

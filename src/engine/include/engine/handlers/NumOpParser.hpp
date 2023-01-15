@@ -42,6 +42,8 @@ class NumOpParser {
       FloatColumnOp;
   typedef typename commands::FloatColumnOrFloatColumnView::FloatConstOp
       FloatConstOp;
+  typedef typename commands::FloatColumnOrFloatColumnView::FloatFromBooleanOp
+      FloatFromBooleanOp;
   typedef typename commands::FloatColumnOrFloatColumnView::FloatFromStringOp
       FloatFromStringOp;
   typedef typename commands::FloatColumnOrFloatColumnView::FloatRandomOp
@@ -50,6 +52,8 @@ class NumOpParser {
       FloatSubselectionOp;
   typedef typename commands::FloatColumnOrFloatColumnView::FloatUnaryOp
       FloatUnaryOp;
+  typedef typename commands::FloatColumnOrFloatColumnView::FloatUpdateOp
+      FloatUpdateOp;
   typedef typename commands::FloatColumnOrFloatColumnView::FloatWithUnitOp
       FloatWithUnitOp;
   typedef typename commands::FloatColumnOrFloatColumnView::FloatWithSubrolesOp
@@ -121,7 +125,7 @@ class NumOpParser {
 
   /// Transforms a boolean column to a float column.
   containers::ColumnView<Float> boolean_as_num(
-      const Poco::JSON::Object& _col) const;
+      const FloatFromBooleanOp& _cmd) const;
 
   /// Retrieves a float column from a string.
   containers::ColumnView<Float> from_string(
@@ -138,7 +142,7 @@ class NumOpParser {
   containers::ColumnView<Float> unary_operation(const FloatUnaryOp& _col) const;
 
   /// Returns an updated version of the column.
-  containers::ColumnView<Float> update(const Poco::JSON::Object& _col) const;
+  containers::ColumnView<Float> update(const FloatUpdateOp& _cmd) const;
 
   /// Returns a new column with new subroles.
   containers::ColumnView<Float> with_subroles(

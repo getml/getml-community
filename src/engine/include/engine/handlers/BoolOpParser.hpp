@@ -108,8 +108,6 @@ class BoolOpParser {
   containers::ColumnView<bool> subselection(
       const BooleanSubselectionOp& _cmd) const;
 
-  // ------------------------------------------------------------------------
-
   /// Undertakes a binary operation based on template class
   /// Operator.
   template <class Operator>
@@ -170,8 +168,6 @@ class BoolOpParser {
     return containers::ColumnView<bool>::from_un_op(operand1, _op);
   }
 
-  // ------------------------------------------------------------------------
-
  private:
   /// Encodes the categories used.
   const fct::Ref<const containers::Encoding> categories_;
@@ -182,11 +178,8 @@ class BoolOpParser {
 
   /// Encodes the join keys used.
   const fct::Ref<const containers::Encoding> join_keys_encoding_;
-
-  // ------------------------------------------------------------------------
 };
 
-// ----------------------------------------------------------------------------
 }  // namespace handlers
 }  // namespace engine
 
