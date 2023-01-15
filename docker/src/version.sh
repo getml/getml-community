@@ -4,11 +4,13 @@
 # Refer to the LICENSE.txt file in the root of the repository
 # for details.
 #
-export VERSION_NUMBER=1.3.1
+export VERSION_NUMBER=1.3.2
 
 export ARCH=$(uname -m)
 
-if [[ $ARCH -eq "aarch64" ] || [ $ARCH -eq "arm64"]]; then
+if [[ $ARCH == "aarch64" ]]; then
+    export GETML_ARCH="arm64";
+elif [[ $ARCH == "arm64" ]]; then
     export GETML_ARCH="arm64";
 else
     export GETML_ARCH="x64";
