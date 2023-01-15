@@ -29,11 +29,9 @@ containers::ColumnView<strings::String> CatOpParser::binary_operation(
 // ----------------------------------------------------------------------------
 
 containers::ColumnView<strings::String> CatOpParser::boolean_as_string(
-    const Poco::JSON::Object& _col) const {
-  const auto obj = *JSON::get_object(_col, "operand1_");
-
+    const commands::BooleanColumnView& _col) const {
   const auto operand1 =
-      BoolOpParser(categories_, join_keys_encoding_, data_frames_).parse(obj);
+      BoolOpParser(categories_, join_keys_encoding_, data_frames_).parse(_col);
 
   const auto to_str = [](const bool val) -> strings::String {
     if (val) {
@@ -121,41 +119,45 @@ containers::ColumnView<strings::String> CatOpParser::get_column(
 // ----------------------------------------------------------------------------
 
 containers::ColumnView<strings::String> CatOpParser::numerical_as_string(
-    const Poco::JSON::Object& _col) const {
-  const auto obj = *JSON::get_object(_col, "operand1_");
+    const commands::FloatColumnOrFloatColumnView& _col) const {
+  const auto role = [&_col]() -> std::string {
+    using FloatColumnOp =
+        typename commands::FloatColumnOrFloatColumnView::FloatColumnOp;
+    if (const auto val = std::get_if<FloatColumnOp>(&_col.val_)) {
+      return fct::get<"role_">(*val);
+    }
+    return "";
+  };
 
-  const auto operand1 =
-      NumOpParser(categories_, join_keys_encoding_, data_frames_).parse(obj);
+  const auto ts_as_str = [](const Float val) -> strings::String {
+    if (std::isnan(val) || std::isinf(val)) {
+      return strings::String(nullptr);
+    }
 
-  const auto role = obj.has("role_")
-                        ? JSON::get_value<std::string>(obj, "role_")
-                        : std::string("");
+    const auto microseconds_since_epoch =
+        static_cast<Poco::Timestamp::TimeVal>(1.0e06 * val);
 
-  if (role == containers::DataFrame::ROLE_TIME_STAMP ||
-      operand1.unit().find("time stamp") != std::string::npos) {
-    const auto as_str = [](const Float val) -> strings::String {
-      if (std::isnan(val) || std::isinf(val)) {
-        return strings::String(nullptr);
-      }
+    const auto time_stamp = Poco::Timestamp(microseconds_since_epoch);
 
-      const auto microseconds_since_epoch =
-          static_cast<Poco::Timestamp::TimeVal>(1.0e06 * val);
+    return strings::String(Poco::DateTimeFormatter::format(
+        time_stamp, Poco::DateTimeFormat::ISO8601_FRAC_FORMAT));
+  };
 
-      const auto time_stamp = Poco::Timestamp(microseconds_since_epoch);
-
-      return strings::String(Poco::DateTimeFormatter::format(
-          time_stamp, Poco::DateTimeFormat::ISO8601_FRAC_FORMAT));
-    };
-
-    return containers::ColumnView<strings::String>::from_un_op(operand1,
-                                                               as_str);
-  }
-
-  const auto as_str = [](const Float val) {
+  const auto float_as_str = [](const Float val) {
     return io::Parser::to_string(val);
   };
 
-  return containers::ColumnView<strings::String>::from_un_op(operand1, as_str);
+  const auto operand1 =
+      NumOpParser(categories_, join_keys_encoding_, data_frames_).parse(_col);
+
+  if (role() == containers::DataFrame::ROLE_TIME_STAMP ||
+      operand1.unit().find("time stamp") != std::string::npos) {
+    return containers::ColumnView<strings::String>::from_un_op(operand1,
+                                                               ts_as_str);
+  }
+
+  return containers::ColumnView<strings::String>::from_un_op(operand1,
+                                                             float_as_str);
 }
 
 // ----------------------------------------------------------------------------
@@ -179,8 +181,20 @@ containers::ColumnView<strings::String> CatOpParser::parse(
       return containers::ColumnView<strings::String>::from_value(val);
     }
 
+    if constexpr (std::is_same<Type, StringSubselectionOp>()) {
+      return subselection(_cmd);
+    }
+
     if constexpr (std::is_same<Type, StringSubstringOp>()) {
       return substring(_cmd);
+    }
+
+    if constexpr (std::is_same<Type, StringUnaryOp>()) {
+      return unary_operation(_cmd);
+    }
+
+    if constexpr (std::is_same<Type, StringUpdateOp>()) {
+      return update(_cmd);
     }
 
     if constexpr (std::is_same<Type, StringWithSubrolesOp>()) {
@@ -193,60 +207,37 @@ containers::ColumnView<strings::String> CatOpParser::parse(
   };
 
   return std::visit(handle, _cmd.val_);
-
-  /*
-
-  if (type == STRING_COLUMN_VIEW && op == "with_subroles") {
-    return with_subroles(_col);
-  }
-
-  if (type == STRING_COLUMN_VIEW && op == "with_unit") {
-    return with_unit(_col);
-  }
-
-  if (type == STRING_COLUMN_VIEW && op == "subselection") {
-    return subselection(_col);
-  }
-
-  if (type == STRING_COLUMN_VIEW) {
-    if (_col.has("operand2_")) {
-      return binary_operation(_col);
-    }
-
-    return unary_operation(_col);
-  }
-
-  throw std::runtime_error("Column of type '" + type +
-                           "' not recognized for categorical columns.");
-
-  return unary_operation(_col);*/
 }
 
 // ----------------------------------------------------------------------------
 
 containers::ColumnView<strings::String> CatOpParser::subselection(
-    const Poco::JSON::Object& _col) const {
-  const auto data = parse(*JSON::get_object(_col, "operand1_"));
+    const StringSubselectionOp& _cmd) const {
+  const auto handle =
+      [this, &_cmd](
+          const auto& _operand2) -> containers::ColumnView<strings::String> {
+    using Type = std::decay_t<decltype(_operand2)>;
 
-  const auto indices_json = *JSON::get_object(_col, "operand2_");
+    const auto data = parse(*_cmd.get<"operand1_">());
 
-  const auto type = JSON::get_value<std::string>(indices_json, "type_");
+    if constexpr (std::is_same<
+                      Type,
+                      fct::Ref<commands::FloatColumnOrFloatColumnView>>()) {
+      const auto indices =
+          NumOpParser(categories_, join_keys_encoding_, data_frames_)
+              .parse(*_operand2);
+      return containers::ColumnView<
+          strings::String>::from_numerical_subselection(data, indices);
+    } else {
+      const auto indices =
+          BoolOpParser(categories_, join_keys_encoding_, data_frames_)
+              .parse(*_operand2);
+      return containers::ColumnView<strings::String>::from_boolean_subselection(
+          data, indices);
+    }
+  };
 
-  if (type == FLOAT_COLUMN || type == FLOAT_COLUMN_VIEW) {
-    const auto indices =
-        NumOpParser(categories_, join_keys_encoding_, data_frames_)
-            .parse(indices_json);
-
-    return containers::ColumnView<strings::String>::from_numerical_subselection(
-        data, indices);
-  }
-
-  const auto indices =
-      BoolOpParser(categories_, join_keys_encoding_, data_frames_)
-          .parse(indices_json);
-
-  return containers::ColumnView<strings::String>::from_boolean_subselection(
-      data, indices);
+  return std::visit(handle, _cmd.get<"operand2_">());
 }
 
 // ----------------------------------------------------------------------------
@@ -267,22 +258,22 @@ containers::ColumnView<strings::String> CatOpParser::substring(
 
 containers::ColumnView<strings::String> CatOpParser::unary_operation(
     const StringUnaryOp& _cmd) const {
-  // TODO
+  const auto handle =
+      [this](const auto& _col) -> containers::ColumnView<strings::String> {
+    using Type = std::decay_t<decltype(_col)>;
 
-  /*  const auto op = JSON::get_value<std::string>(_col, "operator_");
+    if constexpr (std::is_same<Type, fct::Ref<commands::BooleanColumnView>>()) {
+      return boolean_as_string(*_col);
+    }
 
-const auto operand_type = JSON::get_value<std::string>(
-    *JSON::get_object(_col, "operand1_"), "type_");
+    if constexpr (std::is_same<
+                      Type,
+                      fct::Ref<commands::FloatColumnOrFloatColumnView>>()) {
+      return numerical_as_string(*_col);
+    }
+  };
 
-const auto is_boolean = (operand_type == BOOLEAN_COLUMN_VIEW);
-
-if (is_boolean && op == "as_str") {
-  return boolean_as_string(_col);
-}
-
-if (!is_boolean && op == "as_str") {
-  return numerical_as_string(_col);
-}*/
+  return std::visit(handle, _cmd.get<"operand1_">());
 }
 
 // ----------------------------------------------------------------------------
@@ -322,16 +313,16 @@ containers::ColumnView<strings::String> CatOpParser::to_view(
 // ----------------------------------------------------------------------------
 
 containers::ColumnView<strings::String> CatOpParser::update(
-    const Poco::JSON::Object& _col) const {
-  const auto operand1 = parse(*JSON::get_object(_col, "operand1_"));
+    const StringUpdateOp& _cmd) const {
+  const auto operand1 = parse(*_cmd.get<"operand1_">());
 
-  const auto operand2 = parse(*JSON::get_object(_col, "operand2_"));
+  const auto operand2 = parse(*_cmd.get<"operand2_">());
 
   const auto condition =
       BoolOpParser(categories_, join_keys_encoding_, data_frames_)
-          .parse(*JSON::get_object(_col, "condition_"));
+          .parse(*_cmd.get<"condition_">());
 
-  const auto op = [](const strings::String& _val1, const strings::String& _val2,
+  const auto op = [](const auto& _val1, const auto& _val2,
                      const bool _cond) -> strings::String {
     return _cond ? _val2 : _val1;
   };
