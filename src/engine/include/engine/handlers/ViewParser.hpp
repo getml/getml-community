@@ -17,6 +17,7 @@
 
 #include "debug/debug.hpp"
 #include "engine/commands/DataFrameOrView.hpp"
+#include "engine/commands/DataFramesOrViews.hpp"
 #include "engine/communication/communication.hpp"
 #include "engine/config/config.hpp"
 #include "engine/containers/containers.hpp"
@@ -77,7 +78,13 @@ class ViewParser {
   /// Returns the population and peripheral data frames.
   std::tuple<containers::DataFrame, std::vector<containers::DataFrame>,
              std::optional<containers::DataFrame>>
-  parse_all(const Poco::JSON::Object& _cmd);
+  parse_all(const commands::DataFramesOrViews& _cmd) const;
+
+  /// TODO: Remove this temporary solution.
+  auto parse_all(const Poco::JSON::Object& _cmd) const {
+    const auto cmd = json::from_json<commands::DataFramesOrViews>(_cmd);
+    return parse_all(cmd);
+  }
 
   /// Expresses the View as a arrow::Table.
   std::shared_ptr<arrow::Table> to_table(const Poco::JSON::Object& _obj) {

@@ -376,21 +376,16 @@ containers::DataFrame ViewParser::parse(
 
 std::tuple<containers::DataFrame, std::vector<containers::DataFrame>,
            std::optional<containers::DataFrame>>
-ViewParser::parse_all(const Poco::JSON::Object& _cmd) {
-  const auto to_df =
-      [this](const Poco::JSON::Object::Ptr& _obj) -> containers::DataFrame {
-    assert_true(_obj);
-    return parse(*_obj);
+ViewParser::parse_all(const commands::DataFramesOrViews& _cmd) const {
+  const auto to_df = [this](const auto& _obj) -> containers::DataFrame {
+    return parse(_obj);
   };
 
-  const auto population_obj = JSON::get_object(_cmd, "population_df_");
+  const auto population_obj = _cmd.get<"population_df_">();
 
-  const auto peripheral_objs =
-      JSON::array_to_obj_vector(JSON::get_array(_cmd, "peripheral_dfs_"));
+  const auto peripheral_objs = _cmd.get<"peripheral_dfs_">();
 
-  const auto validation_obj = _cmd.has("validation_df_")
-                                  ? JSON::get_object(_cmd, "validation_df_")
-                                  : Poco::JSON::Object::Ptr();
+  const auto validation_obj = _cmd.get<"validation_df_">();
 
   const auto population = to_df(population_obj);
 
@@ -399,7 +394,7 @@ ViewParser::parse_all(const Poco::JSON::Object& _cmd) {
 
   const auto validation =
       validation_obj
-          ? std::make_optional<containers::DataFrame>(to_df(validation_obj))
+          ? std::make_optional<containers::DataFrame>(to_df(*validation_obj))
           : std::optional<containers::DataFrame>();
 
   return std::make_tuple(population, peripheral, validation);
