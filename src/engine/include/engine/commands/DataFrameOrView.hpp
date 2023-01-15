@@ -5,8 +5,8 @@
 // for details.
 //
 
-#ifndef ENGINE_COMMANDS_DATE_FRAME_OR_VIEW_HPP_
-#define ENGINE_COMMANDS_DATE_FRAME_OR_VIEW_HPP_
+#ifndef ENGINE_COMMANDS_DATA_FRAME_OR_VIEW_HPP_
+#define ENGINE_COMMANDS_DATA_FRAME_OR_VIEW_HPP_
 
 #include <optional>
 #include <string>
@@ -58,4 +58,4 @@ class DataFrameOrView {
 }  // namespace commands
 }  // namespace engine
 
-#endif  // ENGINE_COMMANDS_DATE_FRAME_OR_VIEW_HPP_
+#endif  // ENGINE_COMMANDS_DATA_FRAME_OR_VIEW_HPP_
