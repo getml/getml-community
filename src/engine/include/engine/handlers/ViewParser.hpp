@@ -1,39 +1,27 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_HANDLERS_VIEWPARSER_HPP_
 #define ENGINE_HANDLERS_VIEWPARSER_HPP_
 
-// ------------------------------------------------------------------------
-
 #include <Poco/JSON/Object.h>
 #include <Poco/Net/StreamSocket.h>
-
-// ------------------------------------------------------------------------
 
 #include <map>
 #include <memory>
 #include <string>
 
-// ------------------------------------------------------------------------
-
 #include "debug/debug.hpp"
-
-// ------------------------------------------------------------------------
-
+#include "engine/commands/DataFrameOrView.hpp"
 #include "engine/communication/communication.hpp"
 #include "engine/config/config.hpp"
 #include "engine/containers/containers.hpp"
-
-// ------------------------------------------------------------------------
-
 #include "engine/handlers/ArrowHandler.hpp"
-
-// ------------------------------------------------------------------------
+#include "json/json.hpp"
 
 namespace engine {
 namespace handlers {
@@ -55,8 +43,8 @@ class ViewParser {
   typedef std::variant<containers::ColumnView<strings::String>,
                        containers::ColumnView<Float>>
       ColumnViewVariant;
-
-  // ------------------------------------------------------------------------
+  typedef typename commands::DataFrameOrView::DataFrameOp DataFrameOp;
+  typedef typename commands::DataFrameOrView::ViewOp ViewOp;
 
  public:
   ViewParser(const fct::Ref<containers::Encoding>& _categories,
@@ -71,8 +59,6 @@ class ViewParser {
 
   ~ViewParser() = default;
 
-  // ------------------------------------------------------------------------
-
  public:
   /// Returns the content of a view.
   Poco::JSON::Object get_content(const size_t _draw, const size_t _start,
@@ -80,34 +66,35 @@ class ViewParser {
                                  const Poco::JSON::Array::Ptr& _cols) const;
 
   /// Parses a view and turns it into a DataFrame.
-  containers::DataFrame parse(const Poco::JSON::Object& _obj);
+  containers::DataFrame parse(const commands::DataFrameOrView& _cmd) const;
+
+  /// TODO: Remove this temporary solution.
+  containers::DataFrame parse(const Poco::JSON::Object& _cmd) const {
+    const auto cmd = json::from_json<commands::DataFrameOrView>(_cmd);
+    return parse(cmd);
+  }
 
   /// Returns the population and peripheral data frames.
   std::tuple<containers::DataFrame, std::vector<containers::DataFrame>,
              std::optional<containers::DataFrame>>
   parse_all(const Poco::JSON::Object& _cmd);
 
-  // ------------------------------------------------------------------------
-
- public:
   /// Expresses the View as a arrow::Table.
   std::shared_ptr<arrow::Table> to_table(const Poco::JSON::Object& _obj) {
     return ArrowHandler(categories_, join_keys_encoding_, options_)
         .df_to_table(parse(_obj));
   }
 
-  // ------------------------------------------------------------------------
-
  private:
   /// Adds a new column to the data frame.
-  void add_column(const Poco::JSON::Object& _obj, containers::DataFrame* _df);
+  void add_column(const ViewOp& _cmd, containers::DataFrame* _df) const;
 
   /// Adds a new int column to the data frame.
   void add_int_column_to_df(const std::string& _name, const std::string& _role,
                             const std::vector<std::string>& _subroles,
                             const std::string& _unit,
                             const std::vector<strings::String>& _vec,
-                            containers::DataFrame* _df);
+                            containers::DataFrame* _df) const;
 
   /// Adds a new string column to the DataFrame.
   void add_string_column_to_df(const std::string& _name,
@@ -115,11 +102,10 @@ class ViewParser {
                                const std::vector<std::string>& _subroles,
                                const std::string& _unit,
                                const std::vector<strings::String>& _vec,
-                               containers::DataFrame* _df);
+                               containers::DataFrame* _df) const;
 
   /// Drop a set of columns.
-  void drop_columns(const Poco::JSON::Object& _obj,
-                    containers::DataFrame* _df) const;
+  void drop_columns(const ViewOp& _cmd, containers::DataFrame* _df) const;
 
   /// Generates a column view from a JSON::Object::Ptr - used by
   /// get_content(...).
@@ -140,10 +126,7 @@ class ViewParser {
       const ColumnViewVariant& _column_view) const;
 
   /// Applies the subselection.
-  void subselection(const Poco::JSON::Object& _obj,
-                    containers::DataFrame* _df) const;
-
-  // ------------------------------------------------------------------------
+  void subselection(const ViewOp& _cmd, containers::DataFrame* _df) const;
 
  private:
   /// Encodes the categories used.
@@ -158,11 +141,8 @@ class ViewParser {
 
   /// Settings for the engine and the monitor
   const config::Options options_;
-
-  // ------------------------------------------------------------------------
 };
 
-// ----------------------------------------------------------------------------
 }  // namespace handlers
 }  // namespace engine
 
