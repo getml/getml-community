@@ -1,42 +1,29 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_HANDLERS_PIPELINEMANAGER_HPP_
 #define ENGINE_HANDLERS_PIPELINEMANAGER_HPP_
 
-// ------------------------------------------------------------------------
-
 #include <Poco/JSON/Object.h>
 #include <Poco/Net/StreamSocket.h>
-
-// ------------------------------------------------------------------------
 
 #include <map>
 #include <memory>
 #include <string>
 
-// ------------------------------------------------------------------------
-
 #include "debug/debug.hpp"
-
-// ------------------------------------------------------------------------
-
+#include "engine/commands/CheckPipeline.hpp"
 #include "engine/communication/communication.hpp"
 #include "engine/config/config.hpp"
-#include "engine/pipelines/FittedPipeline.hpp"
-#include "engine/pipelines/pipelines.hpp"
-
-// ------------------------------------------------------------------------
-
 #include "engine/handlers/DatabaseManager.hpp"
 #include "engine/handlers/PipelineManagerParams.hpp"
 #include "engine/handlers/ViewParser.hpp"
-
-// ------------------------------------------------------------------------
+#include "engine/pipelines/FittedPipeline.hpp"
+#include "engine/pipelines/pipelines.hpp"
 
 namespace engine {
 namespace handlers {
@@ -50,11 +37,9 @@ class PipelineManager {
 
   ~PipelineManager() = default;
 
-  // ------------------------------------------------------------------------
-
  public:
   /// Checks the validity of the data model.
-  void check(const std::string& _name, const Poco::JSON::Object& _cmd,
+  void check(const std::string& _name, const commands::CheckPipeline& _cmd,
              Poco::Net::StreamSocket* _socket);
 
   /// Returns the column importances of a pipeline.

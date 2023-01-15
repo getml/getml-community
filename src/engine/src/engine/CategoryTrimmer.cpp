@@ -1,13 +1,11 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/preprocessors/CategoryTrimmer.hpp"
-
-// ----------------------------------------------------
 
 #include "engine/containers/Column.hpp"
 #include "engine/containers/DataFrame.hpp"
@@ -17,8 +15,6 @@
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/NullChecker.hpp"
 #include "transpilation/SQLGenerator.hpp"
-
-// ----------------------------------------------------
 
 namespace engine {
 namespace preprocessors {

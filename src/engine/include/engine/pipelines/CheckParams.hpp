@@ -1,31 +1,24 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_PIPELINES_CHECKPARAMS_HPP_
 #define ENGINE_PIPELINES_CHECKPARAMS_HPP_
 
-// ----------------------------------------------------------------------------
-
 #include <Poco/JSON/Object.h>
 #include <Poco/Net/StreamSocket.h>
-
-// ----------------------------------------------------------------------------
 
 #include <memory>
 #include <optional>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
+#include "engine/commands/DataFramesOrViews.hpp"
 #include "engine/communication/communication.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/dependency/dependency.hpp"
-
-// ----------------------------------------------------------------------------
 
 namespace engine {
 namespace pipelines {
@@ -35,7 +28,7 @@ struct CheckParams {
   const fct::Ref<containers::Encoding> categories_;
 
   /// The command used.
-  const Poco::JSON::Object cmd_;
+  const commands::DataFramesOrViews cmd_;
 
   /// Logs the progress.
   const std::shared_ptr<const communication::Logger> logger_;
@@ -56,7 +49,6 @@ struct CheckParams {
   Poco::Net::StreamSocket* const socket_;
 };
 
-// ----------------------------------------------------------------------------
 }  // namespace pipelines
 }  // namespace engine
 

@@ -9,6 +9,7 @@
 
 #include <stdexcept>
 
+#include "engine/commands/DataFramesOrViews.hpp"
 #include "engine/containers/Roles.hpp"
 #include "engine/handlers/DataFrameManager.hpp"
 #include "engine/pipelines/ToSQL.hpp"
@@ -167,7 +168,7 @@ void PipelineManager::add_to_tracker(
 // ------------------------------------------------------------------------
 
 void PipelineManager::check(const std::string& _name,
-                            const Poco::JSON::Object& _cmd,
+                            const commands::CheckPipeline& _cmd,
                             Poco::Net::StreamSocket* _socket) {
   const auto pipeline = get_pipeline(_name);
 
@@ -183,10 +184,12 @@ void PipelineManager::check(const std::string& _name,
   const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
       pool, params_.join_keys_encoding_.ptr());
 
+  const commands::DataFramesOrViews cmd = _cmd;
+
   const auto [population_df, peripheral_dfs, _] =
       ViewParser(local_categories, local_join_keys_encoding,
                  params_.data_frames_, params_.options_)
-          .parse_all(_cmd);
+          .parse_all(cmd);
 
   const auto params = pipelines::CheckParams{
       .categories_ = local_categories,
