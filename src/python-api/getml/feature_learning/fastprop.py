@@ -11,7 +11,7 @@ Feature learning based on propositionalization.
 """
 
 from dataclasses import dataclass, field
-from typing import Any, ClassVar, Dict, List, Literal, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional, Union
 
 from .aggregations import _Aggregations
 from .aggregations import fastprop as fastprop_aggregations
@@ -123,7 +123,7 @@ class FastProp(_FeatureLearner):
         default_factory=lambda: fastprop_aggregations.Default
     )
     delta_t: float = 0.0
-    loss_function: Optional[Literal["CrossEntropyLoss", "SquareLoss"]] = None
+    loss_function: Optional[str] = None
     max_lag: int = 0
     min_df: int = 30
     n_most_frequent: int = 0

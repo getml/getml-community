@@ -11,7 +11,7 @@ Feature learning based on Gradient Boosting.
 """
 
 from dataclasses import dataclass
-from typing import Any, Dict, Literal, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 from .fastprop import FastProp
 from .feature_learner import _FeatureLearner
@@ -144,7 +144,7 @@ class RelMT(_FeatureLearner):
             of words that are extracted in total from :const:`getml.data.roles.text`
             columns. This can be interpreted as the maximum size of the bag of words.
             Range: [0, :math:`\\infty`]
-    
+
     Note:
         Not supported in the getML community edition.
     """
@@ -154,7 +154,7 @@ class RelMT(_FeatureLearner):
     allow_avg: bool = True
     delta_t: float = 0.0
     gamma: float = 0.0
-    loss_function: Optional[Literal["CrossEntropyLoss", "SquareLoss"]] = None
+    loss_function: Optional[str] = None
     max_depth: int = 2
     min_df: int = 30
     min_num_samples: int = 1

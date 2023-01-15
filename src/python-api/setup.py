@@ -46,11 +46,11 @@ setup(
             ".getML/**/**/**/**/*",
         ]
     },
-    python_requires=">=3.8.0",
+    python_requires=">=3.7.0",
     install_requires=[
         "pandas",
         "pyarrow>=7.0,<7.1",
-        "numpy>=1.22",
+        "numpy>=1.21",
         "jinja2",
         "scipy",
     ],

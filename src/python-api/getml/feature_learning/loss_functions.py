@@ -5,11 +5,6 @@
 # for details.
 #
 
-
-from typing import Literal
-
-LossFunction = Literal["CrossEntropyLoss", "SquareLoss"]
-
 """
 Loss functions used by the feature learning algorithms.
 
