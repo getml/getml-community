@@ -9,8 +9,8 @@
 
 #include <algorithm>
 
-#include "engine/handlers/CatOpParser.hpp"
-#include "engine/handlers/NumOpParser.hpp"
+#include "engine/handlers/FloatOpParser.hpp"
+#include "engine/handlers/StringOpParser.hpp"
 
 namespace engine {
 namespace handlers {
@@ -147,7 +147,7 @@ containers::ColumnView<bool> BoolOpParser::subselection(
                       Type,
                       fct::Ref<commands::FloatColumnOrFloatColumnView>>()) {
       const auto indices =
-          NumOpParser(categories_, join_keys_encoding_, data_frames_)
+          FloatOpParser(categories_, join_keys_encoding_, data_frames_)
               .parse(*_operand2);
       return containers::ColumnView<bool>::from_numerical_subselection(data,
                                                                        indices);

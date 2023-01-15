@@ -5,16 +5,15 @@
 // for details.
 //
 
-#include "engine/handlers/NumOpParser.hpp"
+#include "engine/handlers/FloatOpParser.hpp"
 
 #include "engine/handlers/BoolOpParser.hpp"
-#include "engine/handlers/CatOpParser.hpp"
-#include "json/json.hpp"
+#include "engine/handlers/StringOpParser.hpp"
 
 namespace engine {
 namespace handlers {
 
-containers::ColumnView<Float> NumOpParser::arange(
+containers::ColumnView<Float> FloatOpParser::arange(
     const FloatArangeOp& _col) const {
   const auto start = _col.get<"start_">();
 
@@ -58,10 +57,10 @@ containers::ColumnView<Float> NumOpParser::arange(
 
 // ----------------------------------------------------------------------------
 
-containers::ColumnView<Float> NumOpParser::as_num(
+containers::ColumnView<Float> FloatOpParser::as_num(
     const FloatFromStringOp& _cmd) const {
   const auto operand1 =
-      CatOpParser(categories_, join_keys_encoding_, data_frames_)
+      StringOpParser(categories_, join_keys_encoding_, data_frames_)
           .parse(*_cmd.get<"operand1_">());
 
   const auto to_double = [](const strings::String& _str) {
@@ -78,12 +77,12 @@ containers::ColumnView<Float> NumOpParser::as_num(
 
 // ----------------------------------------------------------------------------
 
-containers::ColumnView<Float> NumOpParser::as_ts(
+containers::ColumnView<Float> FloatOpParser::as_ts(
     const FloatAsTSOp& _cmd) const {
   const auto time_formats = _cmd.get<"time_formats_">();
 
   const auto operand1 =
-      CatOpParser(categories_, join_keys_encoding_, data_frames_)
+      StringOpParser(categories_, join_keys_encoding_, data_frames_)
           .parse(*_cmd.get<"operand1_">());
 
   const auto to_time_stamp = [time_formats](const strings::String& _str) {
@@ -107,9 +106,9 @@ containers::ColumnView<Float> NumOpParser::as_ts(
 
 // ----------------------------------------------------------------------------
 
-void NumOpParser::check(const containers::Column<Float>& _col,
-                        const fct::Ref<const communication::Logger>& _logger,
-                        Poco::Net::StreamSocket* _socket) const {
+void FloatOpParser::check(const containers::Column<Float>& _col,
+                          const fct::Ref<const communication::Logger>& _logger,
+                          Poco::Net::StreamSocket* _socket) const {
   communication::Warner warner;
 
   if (_col.size() == 0) {
@@ -139,7 +138,7 @@ void NumOpParser::check(const containers::Column<Float>& _col,
 
 // ----------------------------------------------------------------------------
 
-containers::ColumnView<Float> NumOpParser::binary_operation(
+containers::ColumnView<Float> FloatOpParser::binary_operation(
     const FloatBinaryOp& _cmd) const {
   const auto handle =
       [this](const auto& _literal,
@@ -182,7 +181,7 @@ containers::ColumnView<Float> NumOpParser::binary_operation(
 
 // ----------------------------------------------------------------------------
 
-containers::ColumnView<Float> NumOpParser::boolean_as_num(
+containers::ColumnView<Float> FloatOpParser::boolean_as_num(
     const FloatFromBooleanOp& _cmd) const {
   const auto operand1 =
       BoolOpParser(categories_, join_keys_encoding_, data_frames_)
@@ -201,7 +200,7 @@ containers::ColumnView<Float> NumOpParser::boolean_as_num(
 
 // ----------------------------------------------------------------------------
 
-containers::ColumnView<Float> NumOpParser::get_column(
+containers::ColumnView<Float> FloatOpParser::get_column(
     const FloatColumnOp& _cmd) const {
   const auto name = _cmd.get<"name_">();
 
@@ -234,7 +233,7 @@ containers::ColumnView<Float> NumOpParser::get_column(
 
 // ----------------------------------------------------------------------------
 
-containers::ColumnView<Float> NumOpParser::parse(
+containers::ColumnView<Float> FloatOpParser::parse(
     const commands::FloatColumnOrFloatColumnView& _cmd) const {
   const auto handle =
       [this](const auto& _cmd) -> containers::ColumnView<Float> {
@@ -299,7 +298,7 @@ containers::ColumnView<Float> NumOpParser::parse(
 
 // ----------------------------------------------------------------------------
 
-containers::ColumnView<Float> NumOpParser::subselection(
+containers::ColumnView<Float> FloatOpParser::subselection(
     const FloatSubselectionOp& _cmd) const {
   const auto handle =
       [this, &_cmd](const auto& _operand2) -> containers::ColumnView<Float> {
@@ -327,7 +326,7 @@ containers::ColumnView<Float> NumOpParser::subselection(
 
 // ----------------------------------------------------------------------------
 
-containers::ColumnView<Float> NumOpParser::unary_operation(
+containers::ColumnView<Float> FloatOpParser::unary_operation(
     const FloatUnaryOp& _cmd) const {
   const auto handle =
       [this](const auto& _literal,
@@ -470,7 +469,7 @@ containers::ColumnView<Float> NumOpParser::unary_operation(
 
 // ----------------------------------------------------------------------------
 
-containers::ColumnView<Float> NumOpParser::update(
+containers::ColumnView<Float> FloatOpParser::update(
     const FloatUpdateOp& _cmd) const {
   const auto operand1 = parse(*_cmd.get<"operand1_">());
 
@@ -491,7 +490,7 @@ containers::ColumnView<Float> NumOpParser::update(
 
 // ----------------------------------------------------------------------------
 
-containers::ColumnView<Float> NumOpParser::with_subroles(
+containers::ColumnView<Float> FloatOpParser::with_subroles(
     const FloatWithSubrolesOp& _cmd) const {
   const auto col = parse(*_cmd.get<"operand1_">());
   const auto subroles = _cmd.get<"subroles_">();
@@ -500,7 +499,7 @@ containers::ColumnView<Float> NumOpParser::with_subroles(
 
 // ----------------------------------------------------------------------------
 
-containers::ColumnView<Float> NumOpParser::with_unit(
+containers::ColumnView<Float> FloatOpParser::with_unit(
     const FloatWithUnitOp& _cmd) const {
   const auto col = parse(*_cmd.get<"operand1_">());
   const auto unit = _cmd.get<"unit_">();

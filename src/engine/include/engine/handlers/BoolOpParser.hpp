@@ -20,8 +20,8 @@
 #include "engine/commands/BooleanColumnView.hpp"
 #include "engine/communication/communication.hpp"
 #include "engine/containers/containers.hpp"
-#include "engine/handlers/CatOpParser.hpp"
-#include "engine/handlers/NumOpParser.hpp"
+#include "engine/handlers/FloatOpParser.hpp"
+#include "engine/handlers/StringOpParser.hpp"
 #include "json/json.hpp"
 
 namespace engine {
@@ -125,7 +125,8 @@ class BoolOpParser {
       const commands::StringColumnOrStringColumnView& _col,
       const Operator& _op) const {
     const auto operand1 =
-        CatOpParser(categories_, join_keys_encoding_, data_frames_).parse(_col);
+        StringOpParser(categories_, join_keys_encoding_, data_frames_)
+            .parse(_col);
     return containers::ColumnView<bool>::from_un_op(operand1, _op);
   }
 
@@ -135,10 +136,10 @@ class BoolOpParser {
   containers::ColumnView<bool> cat_bin_op(const BooleanStrComparisonOp& _cmd,
                                           const Operator& _op) const {
     const auto operand1 =
-        CatOpParser(categories_, join_keys_encoding_, data_frames_)
+        StringOpParser(categories_, join_keys_encoding_, data_frames_)
             .parse(*_cmd.get<"operand1_">());
     const auto operand2 =
-        CatOpParser(categories_, join_keys_encoding_, data_frames_)
+        StringOpParser(categories_, join_keys_encoding_, data_frames_)
             .parse(*_cmd.get<"operand2_">());
     return containers::ColumnView<bool>::from_bin_op(operand1, operand2, _op);
   }
@@ -149,10 +150,10 @@ class BoolOpParser {
   containers::ColumnView<bool> num_bin_op(const BooleanNumComparisonOp& _cmd,
                                           const Operator& _op) const {
     const auto operand1 =
-        NumOpParser(categories_, join_keys_encoding_, data_frames_)
+        FloatOpParser(categories_, join_keys_encoding_, data_frames_)
             .parse(*_cmd.get<"operand1_">());
     const auto operand2 =
-        NumOpParser(categories_, join_keys_encoding_, data_frames_)
+        FloatOpParser(categories_, join_keys_encoding_, data_frames_)
             .parse(*_cmd.get<"operand1_">());
     return containers::ColumnView<bool>::from_bin_op(operand1, operand2, _op);
   }
@@ -164,7 +165,8 @@ class BoolOpParser {
       const commands::FloatColumnOrFloatColumnView& _col,
       const Operator& _op) const {
     const auto operand1 =
-        NumOpParser(categories_, join_keys_encoding_, data_frames_).parse(_col);
+        FloatOpParser(categories_, join_keys_encoding_, data_frames_)
+            .parse(_col);
     return containers::ColumnView<bool>::from_un_op(operand1, _op);
   }
 
