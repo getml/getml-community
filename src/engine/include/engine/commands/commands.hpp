@@ -9,6 +9,7 @@
 #define ENGINE_COMMANDS_COMMANDS_HPP_
 
 #include "engine/commands/BasicCommand.hpp"
+#include "engine/commands/Command.hpp"
 
 #endif  // ENGINE_COMMANDS_COMMANDS_HPP_
 

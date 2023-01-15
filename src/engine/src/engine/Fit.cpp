@@ -1,13 +1,11 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/pipelines/Fit.hpp"
-
-// ----------------------------------------------------------------------------
 
 #include "engine/featurelearners/AbstractFeatureLearner.hpp"
 #include "engine/pipelines/Score.hpp"
@@ -17,8 +15,6 @@
 #include "fct/collect.hpp"
 #include "helpers/StringReplacer.hpp"
 #include "predictors/Predictor.hpp"
-
-// ----------------------------------------------------------------------------
 
 namespace engine {
 namespace pipelines {
@@ -213,7 +209,7 @@ Fit::fit(const Pipeline& _pipeline, const FitParams& _params) {
       preprocessed.peripheral_dfs_, feature_learner_params);
 
   const auto feature_selector_impl = make_feature_selector_impl(
-      _pipeline, _params.cmd_, feature_learners, preprocessed.population_df_);
+      _pipeline, feature_learners, preprocessed.population_df_);
 
   containers::NumericalFeatures autofeatures;
 
@@ -232,8 +228,8 @@ Fit::fit(const Pipeline& _pipeline, const FitParams& _params) {
   const auto [feature_selectors, fs_fingerprints] =
       fit_predictors(fit_feature_selectors_params);
 
-  const auto predictor_impl = make_predictor_impl(
-      _pipeline, _params.cmd_, feature_selectors, preprocessed.population_df_);
+  const auto predictor_impl = make_predictor_impl(_pipeline, feature_selectors,
+                                                  preprocessed.population_df_);
 
   const auto validation_fingerprint =
       _params.validation_df_ ? std::vector<Poco::JSON::Object::Ptr>(
@@ -748,7 +744,7 @@ std::vector<fct::Ref<preprocessors::Preprocessor>> Fit::init_preprocessors(
 // ------------------------------------------------------------------------
 
 fct::Ref<const predictors::PredictorImpl> Fit::make_feature_selector_impl(
-    const Pipeline& _pipeline, const Poco::JSON::Object& _cmd,
+    const Pipeline& _pipeline,
     const std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>&
         _feature_learners,
     const containers::DataFrame& _population_df) {
@@ -850,8 +846,7 @@ Fit::make_features_validation(const FitPredictorsParams& _params) {
 // ------------------------------------------------------------------------
 
 fct::Ref<const predictors::PredictorImpl> Fit::make_predictor_impl(
-    const Pipeline& _pipeline, const Poco::JSON::Object& _cmd,
-    const Predictors& _feature_selectors,
+    const Pipeline& _pipeline, const Predictors& _feature_selectors,
     const containers::DataFrame& _population_df) {
   const auto predictor_impl =
       fct::Ref<predictors::PredictorImpl>::make(*_feature_selectors.impl_);
@@ -951,10 +946,7 @@ fct::Ref<const metrics::Scores> Fit::score_after_fitting(
   const auto yhat = Transform::generate_predictions(
       _fitted, categorical_features, numerical_features);
 
-  const auto population_json =
-      *JSON::get_object(_params.cmd_, "population_df_");
-
-  const auto name = JSON::get_value<std::string>(population_json, "name_");
+  const auto& name = _params.cmd_.get<"population_df_">().val_.get<"name_">();
 
   return std::get<0>(
       Score::score(_pipeline, _fitted, _params.population_df_, name, yhat));

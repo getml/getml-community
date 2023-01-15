@@ -169,7 +169,8 @@ void RequestHandler::run() {
     } else if (type == "Pipeline") {
       project_manager().add_pipeline(name, cmd, &socket());
     } else if (type == "Pipeline.check") {
-      pipeline_manager().check(name, cmd, &socket());
+      const auto c = json::from_json<commands::CheckPipeline>(cmd);
+      pipeline_manager().check(name, c, &socket());
     } else if (type == "Pipeline.column_importances") {
       pipeline_manager().column_importances(name, cmd, &socket());
     } else if (type == "Pipeline.copy") {

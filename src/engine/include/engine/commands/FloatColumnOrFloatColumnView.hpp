@@ -124,7 +124,6 @@ class FloatColumnOrFloatColumnView {
       fct::Field<"operand1_", fct::Ref<FloatColumnOrFloatColumnView>>,
       fct::Field<"type_", fct::Literal<"FloatColumnView">>>;
 
-  // TODO: Include FloatUpdateOp
   using RecursiveType =
       std::variant<FloatColumnOp, FloatArangeOp, FloatAsTSOp, FloatBinaryOp,
                    FloatConstOp, FloatFromBooleanOp, FloatFromStringOp,

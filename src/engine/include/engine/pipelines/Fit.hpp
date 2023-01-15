@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_PIPELINES_FIT_HPP_
 #define ENGINE_PIPELINES_FIT_HPP_
@@ -190,7 +190,7 @@ class Fit {
 
   /// Generates the impl for the feature selectors.
   static fct::Ref<const predictors::PredictorImpl> make_feature_selector_impl(
-      const Pipeline& _pipeline, const Poco::JSON::Object& _cmd,
+      const Pipeline& _pipeline,
       const std::vector<
           fct::Ref<const featurelearners::AbstractFeatureLearner>>&
           _feature_learners,
@@ -203,8 +203,7 @@ class Fit {
 
   /// Generates the impl for the predictors.
   static fct::Ref<const predictors::PredictorImpl> make_predictor_impl(
-      const Pipeline& _pipeline, const Poco::JSON::Object& _cmd,
-      const Predictors& _feature_selectors,
+      const Pipeline& _pipeline, const Predictors& _feature_selectors,
       const containers::DataFrame& _population_df);
 
   /// Generates the metrics::Scores object which is also returned by fit.
