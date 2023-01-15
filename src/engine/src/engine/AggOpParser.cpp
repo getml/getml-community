@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/handlers/AggOpParser.hpp"
 
@@ -12,8 +12,8 @@
 // ----------------------------------------------------------------------------
 
 #include "engine/handlers/BoolOpParser.hpp"
-#include "engine/handlers/CatOpParser.hpp"
-#include "engine/handlers/NumOpParser.hpp"
+#include "engine/handlers/FloatOpParser.hpp"
+#include "engine/handlers/StringOpParser.hpp"
 
 // ----------------------------------------------------------------------------
 
@@ -22,8 +22,9 @@ namespace handlers {
 
 Float AggOpParser::categorical_aggregation(
     const std::string& _type, const Poco::JSON::Object& _json_col) {
-  const auto col = CatOpParser(categories_, join_keys_encoding_, data_frames_)
-                       .parse(_json_col);
+  const auto col =
+      StringOpParser(categories_, join_keys_encoding_, data_frames_)
+          .parse(_json_col);
 
   const auto to_str = [](const strings::String& _str) -> std::string {
     return _str.str();
@@ -61,7 +62,7 @@ Float AggOpParser::aggregate(const Poco::JSON::Object& _aggregation) {
 
 Float AggOpParser::numerical_aggregation(const std::string& _type,
                                          const Poco::JSON::Object& _json_col) {
-  const auto col = NumOpParser(categories_, join_keys_encoding_, data_frames_)
+  const auto col = FloatOpParser(categories_, join_keys_encoding_, data_frames_)
                        .parse(_json_col);
 
   if (_type == "assert_equal") {

@@ -5,8 +5,8 @@
 // for details.
 //
 
-#ifndef ENGINE_HANDLERS_NUMOPPARSER_HPP_
-#define ENGINE_HANDLERS_NUMOPPARSER_HPP_
+#ifndef ENGINE_HANDLERS_FLOATOPPARSER_HPP_
+#define ENGINE_HANDLERS_FLOATOPPARSER_HPP_
 
 #include <Poco/JSON/Object.h>
 
@@ -26,7 +26,7 @@
 namespace engine {
 namespace handlers {
 
-class NumOpParser {
+class FloatOpParser {
  public:
   typedef typename containers::ColumnView<bool>::UnknownSize UnknownSize;
   typedef typename containers::ColumnView<bool>::NRowsType NRowsType;
@@ -80,7 +80,7 @@ class NumOpParser {
       containers::Column<bool>::BOOLEAN_COLUMN_VIEW;
 
  public:
-  NumOpParser(
+  FloatOpParser(
       const fct::Ref<const containers::Encoding>& _categories,
       const fct::Ref<const containers::Encoding>& _join_keys_encoding,
       const fct::Ref<const std::map<std::string, containers::DataFrame>>&
@@ -89,7 +89,7 @@ class NumOpParser {
         data_frames_(_data_frames),
         join_keys_encoding_(_join_keys_encoding) {}
 
-  ~NumOpParser() = default;
+  ~FloatOpParser() = default;
 
  public:
   /// Checks a column for any obvious issues (such as high share of NULL
@@ -223,4 +223,4 @@ class NumOpParser {
 }  // namespace handlers
 }  // namespace engine
 
-#endif  // ENGINE_HANDLERS_NUMOPPARSER_HPP_
+#endif  // ENGINE_HANDLERS_FLOATOPPARSER_HPP_

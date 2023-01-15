@@ -12,8 +12,8 @@
 #include "engine/handlers/AggOpParser.hpp"
 #include "engine/handlers/ArrowHandler.hpp"
 #include "engine/handlers/BoolOpParser.hpp"
-#include "engine/handlers/CatOpParser.hpp"
-#include "engine/handlers/NumOpParser.hpp"
+#include "engine/handlers/FloatOpParser.hpp"
+#include "engine/handlers/StringOpParser.hpp"
 #include "engine/handlers/ViewParser.hpp"
 #include "metrics/metrics.hpp"
 
@@ -72,7 +72,7 @@ void DataFrameManager::add_float_column(const std::string& _name,
 
   const auto df_name = JSON::get_value<std::string>(_cmd, "df_name_");
 
-  const auto parser = NumOpParser(
+  const auto parser = FloatOpParser(
       params_.categories_, params_.join_keys_encoding_, params_.data_frames_);
 
   const auto column_view = parser.parse(json_col);
@@ -288,7 +288,7 @@ void DataFrameManager::add_string_column(const std::string& _name,
 
   const auto df_name = JSON::get_value<std::string>(_cmd, "df_name_");
 
-  const auto parser = CatOpParser(
+  const auto parser = StringOpParser(
       params_.categories_, params_.join_keys_encoding_, params_.data_frames_);
 
   const auto pool = params_.options_.make_pool();
@@ -1197,8 +1197,8 @@ void DataFrameManager::get_categorical_column(
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto column_view =
-      CatOpParser(params_.categories_, params_.join_keys_encoding_,
-                  params_.data_frames_)
+      StringOpParser(params_.categories_, params_.join_keys_encoding_,
+                     params_.data_frames_)
           .parse(json_col);
 
   if (column_view.is_infinite()) {
@@ -1235,8 +1235,8 @@ void DataFrameManager::get_categorical_column_content(
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto column_view =
-      CatOpParser(params_.categories_, params_.join_keys_encoding_,
-                  params_.data_frames_)
+      StringOpParser(params_.categories_, params_.join_keys_encoding_,
+                     params_.data_frames_)
           .parse(json_col);
 
   const auto data_ptr = column_view.to_vector(start, length, false);
@@ -1263,8 +1263,8 @@ void DataFrameManager::get_categorical_column_nrows(
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto column_view =
-      CatOpParser(params_.categories_, params_.join_keys_encoding_,
-                  params_.data_frames_)
+      StringOpParser(params_.categories_, params_.join_keys_encoding_,
+                     params_.data_frames_)
           .parse(json_col);
 
   read_lock.unlock();
@@ -1284,8 +1284,8 @@ void DataFrameManager::get_categorical_column_unique(
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto column_view =
-      CatOpParser(params_.categories_, params_.join_keys_encoding_,
-                  params_.data_frames_)
+      StringOpParser(params_.categories_, params_.join_keys_encoding_,
+                     params_.data_frames_)
           .parse(json_col);
 
   const auto array = column_view.unique();
@@ -1309,8 +1309,8 @@ void DataFrameManager::get_column(const std::string& _name,
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto column_view =
-      NumOpParser(params_.categories_, params_.join_keys_encoding_,
-                  params_.data_frames_)
+      FloatOpParser(params_.categories_, params_.join_keys_encoding_,
+                    params_.data_frames_)
           .parse(json_col);
 
   if (column_view.is_infinite()) {
@@ -1346,8 +1346,8 @@ void DataFrameManager::get_column_unique(const std::string& _name,
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto column_view =
-      NumOpParser(params_.categories_, params_.join_keys_encoding_,
-                  params_.data_frames_)
+      FloatOpParser(params_.categories_, params_.join_keys_encoding_,
+                    params_.data_frames_)
           .parse(json_col);
 
   const auto array = column_view.unique();
@@ -1398,8 +1398,8 @@ void DataFrameManager::get_column_nrows(const std::string& _name,
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto column_view =
-      NumOpParser(params_.categories_, params_.join_keys_encoding_,
-                  params_.data_frames_)
+      FloatOpParser(params_.categories_, params_.join_keys_encoding_,
+                    params_.data_frames_)
           .parse(json_col);
 
   read_lock.unlock();
@@ -1488,8 +1488,8 @@ void DataFrameManager::get_float_column_content(
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto column_view =
-      NumOpParser(params_.categories_, params_.join_keys_encoding_,
-                  params_.data_frames_)
+      FloatOpParser(params_.categories_, params_.join_keys_encoding_,
+                    params_.data_frames_)
           .parse(json_col);
 
   const auto col = column_view.to_column(start, length, false);
@@ -1540,8 +1540,8 @@ void DataFrameManager::get_subroles(const std::string& _name,
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto column_view =
-      NumOpParser(params_.categories_, params_.join_keys_encoding_,
-                  params_.data_frames_)
+      FloatOpParser(params_.categories_, params_.join_keys_encoding_,
+                    params_.data_frames_)
           .parse(json_col);
 
   read_lock.unlock();
@@ -1562,8 +1562,8 @@ void DataFrameManager::get_subroles_categorical(
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto column_view =
-      CatOpParser(params_.categories_, params_.join_keys_encoding_,
-                  params_.data_frames_)
+      StringOpParser(params_.categories_, params_.join_keys_encoding_,
+                     params_.data_frames_)
           .parse(json_col);
 
   read_lock.unlock();
@@ -1584,8 +1584,8 @@ void DataFrameManager::get_unit(const std::string& _name,
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto column_view =
-      NumOpParser(params_.categories_, params_.join_keys_encoding_,
-                  params_.data_frames_)
+      FloatOpParser(params_.categories_, params_.join_keys_encoding_,
+                    params_.data_frames_)
           .parse(json_col);
 
   read_lock.unlock();
@@ -1605,8 +1605,8 @@ void DataFrameManager::get_unit_categorical(const std::string& _name,
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto column_view =
-      CatOpParser(params_.categories_, params_.join_keys_encoding_,
-                  params_.data_frames_)
+      StringOpParser(params_.categories_, params_.join_keys_encoding_,
+                     params_.data_frames_)
           .parse(json_col);
 
   read_lock.unlock();

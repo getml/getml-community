@@ -1,17 +1,17 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/handlers/ViewParser.hpp"
 
 // ----------------------------------------------------------------------------
 
 #include "engine/handlers/BoolOpParser.hpp"
-#include "engine/handlers/CatOpParser.hpp"
-#include "engine/handlers/NumOpParser.hpp"
+#include "engine/handlers/FloatOpParser.hpp"
+#include "engine/handlers/StringOpParser.hpp"
 
 // ----------------------------------------------------------------------------
 
@@ -41,7 +41,7 @@ void ViewParser::add_column(const Poco::JSON::Object& _obj,
 
   if (type == FLOAT_COLUMN || type == FLOAT_COLUMN_VIEW) {
     const auto column_view =
-        NumOpParser(categories_, join_keys_encoding_, data_frames_)
+        FloatOpParser(categories_, join_keys_encoding_, data_frames_)
             .parse(json_col);
 
     auto col = column_view.to_column(0, _df->nrows(), true);
@@ -57,7 +57,7 @@ void ViewParser::add_column(const Poco::JSON::Object& _obj,
 
   if (type == STRING_COLUMN || type == STRING_COLUMN_VIEW) {
     const auto column_view =
-        CatOpParser(categories_, join_keys_encoding_, data_frames_)
+        StringOpParser(categories_, join_keys_encoding_, data_frames_)
             .parse(json_col);
 
     const auto vec = column_view.to_vector(0, _df->nrows(), true);
@@ -150,11 +150,11 @@ typename ViewParser::ColumnViewVariant ViewParser::make_column_view(
   const auto type = JSON::get_value<std::string>(*_ptr, "type_");
 
   if (type == STRING_COLUMN || type == STRING_COLUMN_VIEW) {
-    return CatOpParser(categories_, join_keys_encoding_, data_frames_)
+    return StringOpParser(categories_, join_keys_encoding_, data_frames_)
         .parse(*_ptr);
   }
 
-  return NumOpParser(categories_, join_keys_encoding_, data_frames_)
+  return FloatOpParser(categories_, join_keys_encoding_, data_frames_)
       .parse(*_ptr);
 }
 
@@ -422,7 +422,7 @@ void ViewParser::subselection(const Poco::JSON::Object& _obj,
     _df->where(*data_ptr);
   } else {
     const auto data_ptr =
-        NumOpParser(categories_, join_keys_encoding_, data_frames_)
+        FloatOpParser(categories_, join_keys_encoding_, data_frames_)
             .parse(json_col)
             .to_vector(0, std::nullopt, false);
 

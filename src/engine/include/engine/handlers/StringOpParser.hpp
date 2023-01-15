@@ -5,8 +5,8 @@
 // for details.
 //
 
-#ifndef ENGINE_HANDLERS_CATOPPARSER_HPP_
-#define ENGINE_HANDLERS_CATOPPARSER_HPP_
+#ifndef ENGINE_HANDLERS_STRINGOPPARSER_HPP_
+#define ENGINE_HANDLERS_STRINGOPPARSER_HPP_
 
 #include <Poco/JSON/Object.h>
 
@@ -25,7 +25,7 @@
 namespace engine {
 namespace handlers {
 
-class CatOpParser {
+class StringOpParser {
  public:
   typedef containers::ColumnView<bool>::UnknownSize UnknownSize;
   typedef containers::ColumnView<bool>::NRowsType NRowsType;
@@ -73,7 +73,7 @@ class CatOpParser {
       containers::Column<bool>::BOOLEAN_COLUMN_VIEW;
 
  public:
-  CatOpParser(
+  StringOpParser(
       const fct::Ref<const containers::Encoding>& _categories,
       const fct::Ref<const containers::Encoding>& _join_keys_encoding,
       const fct::Ref<const std::map<std::string, containers::DataFrame>>&
@@ -82,7 +82,7 @@ class CatOpParser {
         data_frames_(_data_frames),
         join_keys_encoding_(_join_keys_encoding) {}
 
-  ~CatOpParser() = default;
+  ~StringOpParser() = default;
 
  public:
   /// Checks the string column for any obvious problems.
@@ -179,4 +179,4 @@ class CatOpParser {
 }  // namespace handlers
 }  // namespace engine
 
-#endif  // ENGINE_HANDLERS_CATOPPARSER_HPP_
+#endif  // ENGINE_HANDLERS_STRINGOPPARSER_HPP_

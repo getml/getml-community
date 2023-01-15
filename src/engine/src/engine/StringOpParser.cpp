@@ -5,15 +5,15 @@
 // for details.
 //
 
-#include "engine/handlers/CatOpParser.hpp"
+#include "engine/handlers/StringOpParser.hpp"
 
 #include "engine/handlers/BoolOpParser.hpp"
-#include "engine/handlers/NumOpParser.hpp"
+#include "engine/handlers/FloatOpParser.hpp"
 
 namespace engine {
 namespace handlers {
 
-containers::ColumnView<strings::String> CatOpParser::binary_operation(
+containers::ColumnView<strings::String> StringOpParser::binary_operation(
     const StringBinaryOp& _cmd) const {
   const auto concat = [](const strings::String& _val1,
                          const strings::String& _val2) -> strings::String {
@@ -28,7 +28,7 @@ containers::ColumnView<strings::String> CatOpParser::binary_operation(
 
 // ----------------------------------------------------------------------------
 
-containers::ColumnView<strings::String> CatOpParser::boolean_as_string(
+containers::ColumnView<strings::String> StringOpParser::boolean_as_string(
     const commands::BooleanColumnView& _col) const {
   const auto operand1 =
       BoolOpParser(categories_, join_keys_encoding_, data_frames_).parse(_col);
@@ -45,10 +45,10 @@ containers::ColumnView<strings::String> CatOpParser::boolean_as_string(
 
 // ----------------------------------------------------------------------------
 
-void CatOpParser::check(const containers::Column<strings::String>& _col,
-                        const std::string& _name,
-                        const fct::Ref<const communication::Logger>& _logger,
-                        Poco::Net::StreamSocket* _socket) const {
+void StringOpParser::check(const containers::Column<strings::String>& _col,
+                           const std::string& _name,
+                           const fct::Ref<const communication::Logger>& _logger,
+                           Poco::Net::StreamSocket* _socket) const {
   communication::Warner warner;
 
   if (_col.size() == 0) {
@@ -77,7 +77,7 @@ void CatOpParser::check(const containers::Column<strings::String>& _col,
 
 // ----------------------------------------------------------------------------
 
-containers::ColumnView<strings::String> CatOpParser::get_column(
+containers::ColumnView<strings::String> StringOpParser::get_column(
     const StringColumnOp& _cmd) const {
   const auto name = _cmd.get<"name_">();
 
@@ -118,7 +118,7 @@ containers::ColumnView<strings::String> CatOpParser::get_column(
 
 // ----------------------------------------------------------------------------
 
-containers::ColumnView<strings::String> CatOpParser::numerical_as_string(
+containers::ColumnView<strings::String> StringOpParser::numerical_as_string(
     const commands::FloatColumnOrFloatColumnView& _col) const {
   const auto role = [&_col]() -> std::string {
     using FloatColumnOp =
@@ -148,7 +148,7 @@ containers::ColumnView<strings::String> CatOpParser::numerical_as_string(
   };
 
   const auto operand1 =
-      NumOpParser(categories_, join_keys_encoding_, data_frames_).parse(_col);
+      FloatOpParser(categories_, join_keys_encoding_, data_frames_).parse(_col);
 
   if (role() == containers::DataFrame::ROLE_TIME_STAMP ||
       operand1.unit().find("time stamp") != std::string::npos) {
@@ -162,7 +162,7 @@ containers::ColumnView<strings::String> CatOpParser::numerical_as_string(
 
 // ----------------------------------------------------------------------------
 
-containers::ColumnView<strings::String> CatOpParser::parse(
+containers::ColumnView<strings::String> StringOpParser::parse(
     const commands::StringColumnOrStringColumnView& _cmd) const {
   const auto handle =
       [this](const auto& _cmd) -> containers::ColumnView<strings::String> {
@@ -211,7 +211,7 @@ containers::ColumnView<strings::String> CatOpParser::parse(
 
 // ----------------------------------------------------------------------------
 
-containers::ColumnView<strings::String> CatOpParser::subselection(
+containers::ColumnView<strings::String> StringOpParser::subselection(
     const StringSubselectionOp& _cmd) const {
   const auto handle =
       [this, &_cmd](
@@ -224,7 +224,7 @@ containers::ColumnView<strings::String> CatOpParser::subselection(
                       Type,
                       fct::Ref<commands::FloatColumnOrFloatColumnView>>()) {
       const auto indices =
-          NumOpParser(categories_, join_keys_encoding_, data_frames_)
+          FloatOpParser(categories_, join_keys_encoding_, data_frames_)
               .parse(*_operand2);
       return containers::ColumnView<
           strings::String>::from_numerical_subselection(data, indices);
@@ -242,7 +242,7 @@ containers::ColumnView<strings::String> CatOpParser::subselection(
 
 // ----------------------------------------------------------------------------
 
-containers::ColumnView<strings::String> CatOpParser::substring(
+containers::ColumnView<strings::String> StringOpParser::substring(
     const StringSubstringOp& _cmd) const {
   const auto begin = _cmd.get<"begin_">();
   const auto len = _cmd.get<"len_">();
@@ -256,7 +256,7 @@ containers::ColumnView<strings::String> CatOpParser::substring(
 
 // ----------------------------------------------------------------------------
 
-containers::ColumnView<strings::String> CatOpParser::unary_operation(
+containers::ColumnView<strings::String> StringOpParser::unary_operation(
     const StringUnaryOp& _cmd) const {
   const auto handle =
       [this](const auto& _col) -> containers::ColumnView<strings::String> {
@@ -278,7 +278,7 @@ containers::ColumnView<strings::String> CatOpParser::unary_operation(
 
 // ----------------------------------------------------------------------------
 
-containers::ColumnView<strings::String> CatOpParser::to_view(
+containers::ColumnView<strings::String> StringOpParser::to_view(
     const containers::Column<Int>& _col,
     const fct::Ref<const containers::Encoding>& _encoding) const {
   const auto to_str = [_encoding,
@@ -296,7 +296,7 @@ containers::ColumnView<strings::String> CatOpParser::to_view(
 
 // ----------------------------------------------------------------------------
 
-containers::ColumnView<strings::String> CatOpParser::to_view(
+containers::ColumnView<strings::String> StringOpParser::to_view(
     const containers::Column<strings::String>& _col) const {
   const auto to_str = [_col](size_t _i) -> std::optional<strings::String> {
     if (_i >= _col.nrows()) {
@@ -312,7 +312,7 @@ containers::ColumnView<strings::String> CatOpParser::to_view(
 
 // ----------------------------------------------------------------------------
 
-containers::ColumnView<strings::String> CatOpParser::update(
+containers::ColumnView<strings::String> StringOpParser::update(
     const StringUpdateOp& _cmd) const {
   const auto operand1 = parse(*_cmd.get<"operand1_">());
 
@@ -333,7 +333,7 @@ containers::ColumnView<strings::String> CatOpParser::update(
 
 // ----------------------------------------------------------------------------
 
-containers::ColumnView<strings::String> CatOpParser::with_subroles(
+containers::ColumnView<strings::String> StringOpParser::with_subroles(
     const StringWithSubrolesOp& _cmd) const {
   const auto col = parse(*_cmd.get<"operand1_">());
   const auto subroles = _cmd.get<"subroles_">();
@@ -342,7 +342,7 @@ containers::ColumnView<strings::String> CatOpParser::with_subroles(
 
 // ----------------------------------------------------------------------------
 
-containers::ColumnView<strings::String> CatOpParser::with_unit(
+containers::ColumnView<strings::String> StringOpParser::with_unit(
     const StringWithUnitOp& _cmd) const {
   const auto col = parse(*_cmd.get<"operand1_">());
   const auto unit = _cmd.get<"unit_">();

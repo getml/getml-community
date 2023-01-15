@@ -4,7 +4,6 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/ArrowHandler.cpp
     ${ENGINE_SOURCE_DIRECTORY}/BoolOpParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/CategoryTrimmer.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/CatOpParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Check.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DatabaseManager.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DataFrame.cpp
@@ -19,6 +18,7 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/FileHandler.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Fit.cpp
     ${ENGINE_SOURCE_DIRECTORY}/FittedPipeline.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/FloatOpParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Imputation.cpp
     ${ENGINE_SOURCE_DIRECTORY}/InMemoryEncoding.cpp
     ${ENGINE_SOURCE_DIRECTORY}/JSON.cpp
@@ -26,7 +26,6 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/Logger.cpp
     ${ENGINE_SOURCE_DIRECTORY}/MemoryMappedEncoding.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Monitor.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/NumOpParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Options.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Pipeline.cpp
     ${ENGINE_SOURCE_DIRECTORY}/PipelineManager.cpp
@@ -43,6 +42,7 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/Score.cpp
     ${ENGINE_SOURCE_DIRECTORY}/SQLDependencyTracker.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Staging.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/StringOpParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Substring.cpp
     ${ENGINE_SOURCE_DIRECTORY}/ToSQL.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Transform.cpp
