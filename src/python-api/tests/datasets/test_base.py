@@ -1,10 +1,9 @@
 # Copyright 2022 The SQLNet Company GmbH
-# 
-# This file is licensed under the Elastic License 2.0 (ELv2). 
-# Refer to the LICENSE.txt file in the root of the repository 
+#
+# This file is licensed under the Elastic License 2.0 (ELv2).
+# Refer to the LICENSE.txt file in the root of the repository
 # for details.
-# 
-
+#
 
 
 import pandas as pd  # type: ignore
@@ -21,6 +20,7 @@ def engine():
     code after 'yield' is exectued at the end of the test.
     """
     project_name = "test_base"
+    getml.engine.launch()
     getml.engine.set_project(project_name)
     yield None
     getml.engine.delete_project(project_name)

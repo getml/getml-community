@@ -1,10 +1,9 @@
 # Copyright 2022 The SQLNet Company GmbH
-# 
-# This file is licensed under the Elastic License 2.0 (ELv2). 
-# Refer to the LICENSE.txt file in the root of the repository 
+#
+# This file is licensed under the Elastic License 2.0 (ELv2).
+# Refer to the LICENSE.txt file in the root of the repository
 # for details.
-# 
-
+#
 
 
 """
@@ -35,13 +34,11 @@ def test_data_frames():
     """
     Tests the data frames cotainer.
     """
-    # ----------------
 
+    engine.launch()
     engine.set_project("examples")
 
-    # ----------------
     # Generate artificial datasets
-
     pop, _ = datasets.make_numerical()
     pop = pop.copy("pop_100")
 
