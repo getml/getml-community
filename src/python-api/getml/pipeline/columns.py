@@ -414,7 +414,7 @@ class Columns:
         self,
         by: Optional[str] = None,
         key: Optional[Callable[[Column], Any]] = None,
-        descending: bool = None,
+        descending: bool = False,
     ) -> Columns:
         """
         Sorts the Columns container. If no arguments are provided the

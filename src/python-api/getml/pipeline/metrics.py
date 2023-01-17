@@ -10,13 +10,18 @@
 Signifies different scoring methods.
 """
 
-from typing import List, Literal, get_args
+from typing import List
 
-# --------------------------------------------------------------
+# --------------------------------------------------------------------
 
-AllMetrics = Literal["auc", "accuracy", "cross_entropy", "mae", "rmse", "rsquared"]
-
-_all_metrics = get_args(AllMetrics)
+_all_metrics: List[str] = [
+    "auc",
+    "accuracy",
+    "cross_entropy",
+    "mae",
+    "rmse",
+    "rsquared",
+]
 
 # --------------------------------------------------------------------
 # Scores for classification problems.

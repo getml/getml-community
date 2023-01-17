@@ -19,7 +19,7 @@ import numbers
 import socket
 import time
 from datetime import datetime
-from typing import Any, Dict, List, Literal, Optional, Sequence, Union
+from typing import Any, Dict, List, Optional, Sequence, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -86,7 +86,7 @@ from .scores_container import Scores
 from .tags import Tags
 
 
-NOT_FITTED: Literal["NOT FITTED"] = "NOT FITTED"
+NOT_FITTED = "NOT FITTED"
 
 
 class Pipeline:
@@ -478,7 +478,7 @@ class Pipeline:
                 ],
             ]
         ] = None,
-        loss_function: Optional[Literal["SquareLoss", "CrossEntropyLoss"]] = None,
+        loss_function: Optional[str] = None,
         tags: Optional[list[str]] = None,
         include_categorical: bool = False,
         share_selected_features: float = 0.5,

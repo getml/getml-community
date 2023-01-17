@@ -15,7 +15,7 @@ from __future__ import annotations
 import random
 import string
 from copy import deepcopy
-from typing import Any, Dict, List, Literal, Optional, Sequence, Union, get_args
+from typing import Any, Dict, List, Optional, Sequence, Union
 
 import numpy as np
 
@@ -48,16 +48,14 @@ from .metadata import AllMetadata, Metadata
 
 # --------------------------------------------------------------------
 
-Population = Literal["[POPULATION]"]
-Peripheral = Literal["[PERIPHERAL]"]
 
-POPULATION: Population = get_args(Population)[0]
+POPULATION = "[POPULATION]"
 """
 Population marker - the names of the population and peripheral
 tables may overlap, so markers are necessary.
 """
 
-PERIPHERAL: Peripheral = get_args(Peripheral)[0]
+PERIPHERAL = "[PERIPHERAL]"
 """
 Peripheral marker - the names of the population and peripheral
 tables may overlap, so markers are necessary.
@@ -118,7 +116,7 @@ def _drop(
     base: Union[DataFrame, View],
     keep_columns: List[Dict[str, str]],
     table: Optional[str],
-    marker: Union[Population, Peripheral],
+    marker: str,
 ) -> View:
 
     assert isinstance(base, (DataFrame, View)), "Wrong type"
@@ -225,7 +223,7 @@ def _infer_peripheral(population: Placeholder) -> List[Placeholder]:
 
 def _handle_loss_function(
     feature_learner: Union[FastProp, Multirel, Relboost, RelMT],  # type: ignore
-    loss_function: Optional[Literal["CrossEntropyLoss", "SquareLoss"]],
+    loss_function: Optional[str],
 ) -> Union[FastProp, Multirel, Relboost, RelMT]:  # type: ignore
     if not isinstance(loss_function, str) and loss_function is not None:
         raise TypeError("'loss_function' must be str or None.")

@@ -1,10 +1,9 @@
 # Copyright 2022 The SQLNet Company GmbH
-# 
-# This file is licensed under the Elastic License 2.0 (ELv2). 
-# Refer to the LICENSE.txt file in the root of the repository 
+#
+# This file is licensed under the Elastic License 2.0 (ELv2).
+# Refer to the LICENSE.txt file in the root of the repository
 # for details.
-# 
-
+#
 
 
 import pathlib
@@ -17,8 +16,8 @@ import getml.engine as engine
 
 
 def test_column_operators():
-    # ----------------
 
+    engine.launch()
     engine.set_project("examples")
 
     # ----------------

@@ -11,7 +11,7 @@ Feature learning based on Multi-Relational Decision Tree Learning.
 """
 
 from dataclasses import dataclass, field
-from typing import Any, ClassVar, Dict, List, Literal, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional, Union
 
 from .aggregations import _Aggregations
 from .aggregations import multirel as multirel_aggregations
@@ -201,7 +201,7 @@ class Multirel(_FeatureLearner):
     allow_sets: bool = True
     delta_t: float = 0.0
     grid_factor: float = 1.0
-    loss_function: Optional[Literal["CrossEntropyLoss", "SquareLoss"]] = None
+    loss_function: Optional[str] = None
     max_length: int = 4
     min_df: int = 30
     min_num_samples: int = 1

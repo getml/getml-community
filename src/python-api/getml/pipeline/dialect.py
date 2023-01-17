@@ -26,11 +26,11 @@ Example:
 """
 
 import re
-from typing import Literal, Pattern, get_args
+from typing import Pattern
 
 # --------------------------------------------------------------
 
-AllDialects = Literal[
+_all_dialects = [
     "bigquery",
     "human-readable sql",
     "mysql",
@@ -42,18 +42,18 @@ AllDialects = Literal[
 
 # --------------------------------------------------------------
 
-bigquery = get_args(AllDialects)[0]
+bigquery = _all_dialects[0]
 """BigQuery is a proprietary database system used by the Google Cloud.
 
 Note:
     Not supported in the getML community edition.
 """
 
-human_readable_sql = get_args(AllDialects)[1]
+human_readable_sql = _all_dialects[1]
 """SQL that is not meant to be executed, but for interpretation by humans.
 """
 
-mysql = get_args(AllDialects)[2]
+mysql = _all_dialects[2]
 """MySQL and its fork MariaDB are among the most popular open-source
 database systems.
 
@@ -61,7 +61,7 @@ Note:
     Not supported in the getML community edition.
 """
 
-postgres = get_args(AllDialects)[3]
+postgres = _all_dialects[3]
 """The PostgreSQL or postgres dialect is a popular SQL dialect
 used by PostgreSQL and its many derivatives like Redshift
 or Greenplum.
@@ -70,7 +70,7 @@ Note:
     Not supported in the getML community edition.
 """
 
-spark_sql = get_args(AllDialects)[4]
+spark_sql = _all_dialects[4]
 """Spark SQL is the SQL dialect used by Apache Spark.
 
 Apache Spark is an open-source, distributed, in-memory
@@ -81,7 +81,7 @@ Note:
     Not supported in the getML community edition.
 """
 
-sqlite3 = get_args(AllDialects)[5]
+sqlite3 = _all_dialects[5]
 """SQLite3 is a light-weight and widely used database system.
 
 It is recommended for live prediction systems or when the amount
@@ -91,7 +91,7 @@ Note:
     Not supported in the getML community edition.
 """
 
-tsql = get_args(AllDialects)[6]
+tsql = _all_dialects[6]
 """TSQL or Transact-SQL is the dialect used by most Microsoft
 databases.
 
@@ -103,7 +103,7 @@ Note:
 # --------------------------------------------------------------
 
 
-def _drop_table(dialect: AllDialects, key: str) -> str:
+def _drop_table(dialect: str, key: str) -> str:
     if dialect in (bigquery, mysql, spark_sql):
         return "DROP TABLE IF EXISTS `" + key.upper() + "`"
 
@@ -117,14 +117,14 @@ def _drop_table(dialect: AllDialects, key: str) -> str:
         "Unknown dialect: '"
         + dialect
         + "'. Please choose one of the following: "
-        + str(get_args(AllDialects))
+        + str(_all_dialects)
     )
 
 
 # --------------------------------------------------------------
 
 
-def _table_pattern(dialect: AllDialects) -> Pattern:
+def _table_pattern(dialect: str) -> Pattern:
     if dialect in (bigquery, mysql, spark_sql):
         return re.compile("CREATE TABLE `(.+)`")
 
@@ -138,7 +138,7 @@ def _table_pattern(dialect: AllDialects) -> Pattern:
         "Unknown dialect: '"
         + dialect
         + "'. Please choose one of the following: "
-        + str(get_args(AllDialects))
+        + str(_all_dialects)
     )
 
 

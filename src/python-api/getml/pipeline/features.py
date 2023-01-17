@@ -24,7 +24,6 @@ from typing import (
     Sequence,
     Tuple,
     Union,
-    get_args,
 )
 
 import numpy as np
@@ -35,7 +34,7 @@ import getml.communication as comm
 from getml.data.helpers import _is_typed_list
 from getml.utilities.formatting import _Formatter
 
-from .dialect import AllDialects, sqlite3
+from .dialect import sqlite3, _all_dialects
 from .feature import Feature
 from .helpers import _attach_empty
 from .sql_code import SQLCode
@@ -565,7 +564,7 @@ class Features:
         self,
         targets: bool = True,
         subfeatures: bool = True,
-        dialect: AllDialects = sqlite3,
+        dialect: str = sqlite3,
         schema: Optional[str] = None,
         nchar_categorical: int = 128,
         nchar_join_key: int = 128,
@@ -659,11 +658,11 @@ class Features:
         if not isinstance(nchar_text, int):
             raise TypeError("'nchar_text' must be an int!")
 
-        if dialect not in get_args(AllDialects):
+        if dialect not in _all_dialects:
             raise ValueError(
                 "'dialect' must from getml.pipeline.dialect, "
                 + "meaning that is must be one of the following: "
-                + str(get_args(AllDialects))
+                + str(_all_dialects)
                 + "."
             )
 

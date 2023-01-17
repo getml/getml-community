@@ -35,15 +35,15 @@ RUN wget https://go.dev/dl/go1.18.3.linux-amd64.tar.gz
 RUN tar -C /usr/local -xzf go1.18.3.linux-amd64.tar.gz
 ENV PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
 
-# Build and setup Python 3.8
+# Build and setup Python 3.7
 WORKDIR /home/getml
-RUN wget https://www.python.org/ftp/python/3.8.12/Python-3.8.12.tgz
-RUN tar xvf Python-3.8.12.tgz
-WORKDIR /home/getml/Python-3.8.12
+RUN wget https://www.python.org/ftp/python/3.7.9/Python-3.7.9.tgz
+RUN tar xvf Python-3.7.9.tgz
+WORKDIR /home/getml/Python-3.7.9
 RUN ./configure --enable-optimizations
 RUN make altinstall
 
-RUN python3.8 -m pip install wheel auditwheel 
+RUN python3.7 -m pip install wheel auditwheel 
 
 WORKDIR /home/getml
 

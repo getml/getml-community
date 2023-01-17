@@ -4,7 +4,7 @@
 # Refer to the LICENSE.txt file in the root of the repository
 # for details.
 #
-export VERSION_NUMBER=1.3.1
+export VERSION_NUMBER=1.3.2
 
 export ARCH=$(uname -m)
 
