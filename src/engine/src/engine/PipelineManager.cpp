@@ -373,7 +373,7 @@ void PipelineManager::fit(const std::string& _name,
 
   const auto params = pipelines::FitParams{
       .categories_ = local_categories,
-      .cmd_ = _cmd,
+      .cmd_ = json::from_json<commands::DataFramesOrViews>(_cmd),
       .data_frames_ = data_frames(),
       .data_frame_tracker_ = data_frame_tracker(),
       .fe_tracker_ = params_.fe_tracker_,
@@ -848,15 +848,15 @@ void PipelineManager::transform(const std::string& _name,
 
   // IMPORTANT: Use categories_, not local_categories, otherwise
   // .vector() might not work.
-  const auto params =
-      pipelines::TransformParams{.categories_ = params_.categories_,
-                                 .cmd_ = cmd,
-                                 .data_frames_ = *local_data_frames,
-                                 .data_frame_tracker_ = data_frame_tracker(),
-                                 .logger_ = params_.logger_.ptr(),
-                                 .original_peripheral_dfs_ = peripheral_dfs,
-                                 .original_population_df_ = population_df,
-                                 .socket_ = _socket};
+  const auto params = pipelines::TransformParams{
+      .categories_ = params_.categories_,
+      .cmd_ = json::from_json<commands::DataFramesOrViews>(cmd),
+      .data_frames_ = *local_data_frames,
+      .data_frame_tracker_ = data_frame_tracker(),
+      .logger_ = params_.logger_.ptr(),
+      .original_peripheral_dfs_ = peripheral_dfs,
+      .original_population_df_ = population_df,
+      .socket_ = _socket};
 
   const auto fitted = pipeline.fitted();
 
