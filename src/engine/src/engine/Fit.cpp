@@ -946,7 +946,8 @@ fct::Ref<const metrics::Scores> Fit::score_after_fitting(
   const auto yhat = Transform::generate_predictions(
       _fitted, categorical_features, numerical_features);
 
-  const auto& name = _params.cmd_.get<"population_df_">().val_.get<"name_">();
+  const auto& name =
+      fct::get<"name_">(_params.cmd_.get<"population_df_">().val_);
 
   return std::get<0>(
       Score::score(_pipeline, _fitted, _params.population_df_, name, yhat));

@@ -42,6 +42,7 @@ class DataFrameOrView {
   /// Operation to parse a view
   using ViewOp = fct::NamedTuple<
       fct::Field<"type_", fct::Literal<"View">>,
+      fct::Field<"name_", std::string>,
       fct::Field<"base_", fct::Ref<DataFrameOrView>>,
       fct::Field<"added_", std::optional<AddedOp>>,
       fct::Field<"dropped_", std::optional<std::vector<std::string>>>,
