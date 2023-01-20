@@ -17,59 +17,37 @@ namespace fct {
 /// Gets a field by index.
 template <int _index, class NamedTupleType>
 inline auto& get(NamedTupleType& _tup) {
-  return Getter<NamedTupleType, _index>::get(_tup);
+  return Getter<NamedTupleType>::template get<index>(_tup);
 }
 
 /// Gets a field by name.
 template <StringLiteral _field_name, class NamedTupleType>
 inline auto& get(NamedTupleType& _tup) {
-  constexpr auto index =
-      find_index<_field_name, typename NamedTupleType::Fields>();
-  return Getter<NamedTupleType, index>::get(_tup);
+  return Getter<NamedTupleType>::template get<_field_name>(_tup);
 }
 
 /// Gets a field by the field type.
 template <class Field, class NamedTupleType>
 inline auto& get(NamedTupleType& _tup) {
-  constexpr auto index =
-      find_index<Field::name_, typename NamedTupleType::Fields>();
-  static_assert(
-      std::is_same<typename std::tuple_element<
-                       index, typename NamedTupleType::Fields>::type::Type,
-                   typename Field::Type>(),
-      "If two fields have the same name, "
-      "their type must be the same as "
-      "well.");
-  return Getter<NamedTupleType, index>::get(_tup);
+  return Getter<NamedTupleType>::template get<Field>(_tup);
 }
 
 /// Gets a field by index.
 template <int _index, class NamedTupleType>
 inline const auto& get(const NamedTupleType& _tup) {
-  return Getter<NamedTupleType, _index>::get_const(_tup);
+  return Getter<NamedTupleType>::template get_const<_index>(_tup);
 }
 
 /// Gets a field by name.
 template <StringLiteral _field_name, class NamedTupleType>
 inline const auto& get(const NamedTupleType& _tup) {
-  constexpr auto index =
-      find_index<_field_name, typename NamedTupleType::Fields>();
-  return Getter<NamedTupleType, index>::get_const(_tup);
+  return Getter<NamedTupleType>::template get_const<_field_name>(_tup);
 }
 
 /// Gets a field by the field type.
 template <class Field, class NamedTupleType>
 inline const auto& get(const NamedTupleType& _tup) {
-  constexpr auto index =
-      find_index<Field::name_, typename NamedTupleType::Fields>();
-  static_assert(
-      std::is_same<typename std::tuple_element<
-                       index, typename NamedTupleType::Fields>::type::Type,
-                   typename Field::Type>(),
-      "If two fields have the same name, "
-      "their type must be the same as "
-      "well.");
-  return Getter<NamedTupleType, index>::get_const(_tup);
+  return Getter<NamedTupleType>::template get_const<Field>(_tup);
 }
 
 }  // namespace fct
