@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "fastprop/subfeatures/Maker.hpp"
 
@@ -94,7 +94,7 @@ std::shared_ptr<const FastPropContainer> Maker::fit_fast_prop_container(
 size_t Maker::find_peripheral_ix(const MakerParams& _params, const size_t _i) {
   assert_true(_params.peripheral_names_);
 
-  const auto name = _params.placeholder_.joined_tables_.at(_i).name_;
+  const auto name = _params.placeholder_.joined_tables().at(_i).name();
 
   for (size_t ix = 0; ix < _params.peripheral_names_->size(); ++ix) {
     if (_params.peripheral_names_->at(ix) == name) {
@@ -113,7 +113,7 @@ MakerParams Maker::make_params(const MakerParams& _params, const size_t _i) {
   assert_true(!_params.fast_prop_container_ ||
               _params.fast_prop_container_->subcontainers(_i));
 
-  assert_true(_i < _params.placeholder_.joined_tables_.size());
+  assert_true(_i < _params.placeholder_.joined_tables().size());
 
   assert_true(_params.peripheral_names_);
 
@@ -139,20 +139,21 @@ MakerParams Maker::make_params(const MakerParams& _params, const size_t _i) {
       _params.word_index_container_.peripheral().at(ix),
       _params.word_index_container_.peripheral());
 
-  return MakerParams{.fast_prop_container_ =
-                         _params.fast_prop_container_
-                             ? _params.fast_prop_container_->subcontainers(_i)
-                             : std::shared_ptr<const FastPropContainer>(),
-                     .hyperparameters_ = _params.hyperparameters_,
-                     .logger_ = _params.logger_,
-                     .peripheral_ = _params.peripheral_,
-                     .peripheral_names_ = _params.peripheral_names_,
-                     .placeholder_ = _params.placeholder_.joined_tables_.at(_i),
-                     .population_ = _params.peripheral_.at(ix),
-                     .prefix_ = _params.prefix_ + std::to_string(_i + 1) + "_",
-                     .row_index_container_ = row_index_container,
-                     .temp_dir_ = _params.temp_dir_,
-                     .word_index_container_ = word_index_container};
+  return MakerParams{
+      .fast_prop_container_ =
+          _params.fast_prop_container_
+              ? _params.fast_prop_container_->subcontainers(_i)
+              : std::shared_ptr<const FastPropContainer>(),
+      .hyperparameters_ = _params.hyperparameters_,
+      .logger_ = _params.logger_,
+      .peripheral_ = _params.peripheral_,
+      .peripheral_names_ = _params.peripheral_names_,
+      .placeholder_ = _params.placeholder_.joined_tables().at(_i),
+      .population_ = _params.peripheral_.at(ix),
+      .prefix_ = _params.prefix_ + std::to_string(_i + 1) + "_",
+      .row_index_container_ = row_index_container,
+      .temp_dir_ = _params.temp_dir_,
+      .word_index_container_ = word_index_container};
 }
 
 // ----------------------------------------------------------------------------
@@ -177,36 +178,43 @@ std::shared_ptr<const helpers::Placeholder> Maker::make_placeholder(
 
   std::vector<std::string> upper_time_stamps_used;
 
-  for (size_t i = 0; i < placeholder.propositionalization_.size(); ++i) {
-    if (!placeholder.propositionalization_.at(i)) {
+  for (size_t i = 0; i < placeholder.propositionalization().size(); ++i) {
+    if (!placeholder.propositionalization().at(i)) {
       continue;
     }
 
-    allow_lagged_targets.push_back(placeholder.allow_lagged_targets_.at(i));
+    allow_lagged_targets.push_back(placeholder.allow_lagged_targets().at(i));
 
-    joined_tables.push_back(placeholder.joined_tables_.at(i));
+    joined_tables.push_back(placeholder.joined_tables().at(i));
 
-    join_keys_used.push_back(placeholder.join_keys_used_.at(i));
+    join_keys_used.push_back(placeholder.join_keys_used().at(i));
 
-    other_join_keys_used.push_back(placeholder.other_join_keys_used_.at(i));
+    other_join_keys_used.push_back(placeholder.other_join_keys_used().at(i));
 
-    other_time_stamps_used.push_back(placeholder.other_time_stamps_used_.at(i));
+    other_time_stamps_used.push_back(
+        placeholder.other_time_stamps_used().at(i));
 
     propositionalization.push_back(true);
 
-    time_stamps_used.push_back(placeholder.time_stamps_used_.at(i));
+    time_stamps_used.push_back(placeholder.time_stamps_used().at(i));
 
-    upper_time_stamps_used.push_back(placeholder.upper_time_stamps_used_.at(i));
+    upper_time_stamps_used.push_back(
+        placeholder.upper_time_stamps_used().at(i));
   }
 
   if (joined_tables.size() == 0) {
     return std::shared_ptr<const helpers::Placeholder>();
   }
 
-  return std::make_shared<const helpers::Placeholder>(
-      allow_lagged_targets, joined_tables, join_keys_used, placeholder.name_,
-      other_join_keys_used, other_time_stamps_used, propositionalization,
-      time_stamps_used, upper_time_stamps_used);
+  return std::make_shared<const helpers::Placeholder>(placeholder.val_.replace(
+      fct::make_field<"allow_lagged_targets_">(allow_lagged_targets),
+      fct::make_field<"joined_tables_">(joined_tables),
+      fct::make_field<"join_keys_used_">(join_keys_used),
+      fct::make_field<"other_join_keys_used_">(other_join_keys_used),
+      fct::make_field<"other_time_stamps_used_">(other_time_stamps_used),
+      fct::make_field<"propositionalization_">(propositionalization),
+      fct::make_field<"time_stamps_used_">(time_stamps_used),
+      fct::make_field<"upper_time_stamps_used_">(upper_time_stamps_used)));
 }
 
 // ----------------------------------------------------------------------------
@@ -221,7 +229,7 @@ Maker::make_subcontainers(const helpers::TableHolder& _table_holder,
 
   const auto make_subcontainer = [&_table_holder, &placeholder,
                                   &_params](size_t _i) {
-    if (placeholder.propositionalization_.at(_i)) {
+    if (placeholder.propositionalization().at(_i)) {
       return std::shared_ptr<const FastPropContainer>();
     }
 
@@ -232,10 +240,10 @@ Maker::make_subcontainers(const helpers::TableHolder& _table_holder,
   };
 
   assert_true(_table_holder.subtables().size() >=
-              placeholder.propositionalization_.size());
+              placeholder.propositionalization().size());
 
   const auto iota =
-      fct::iota<size_t>(0, placeholder.propositionalization_.size());
+      fct::iota<size_t>(0, placeholder.propositionalization().size());
 
   const auto range = iota | VIEWS::transform(make_subcontainer);
 
@@ -249,7 +257,7 @@ helpers::FeatureContainer Maker::transform(const MakerParams& _params) {
   assert_true(_params.fast_prop_container_);
 
   assert_true(_params.fast_prop_container_->size() ==
-              _params.placeholder_.joined_tables_.size());
+              _params.placeholder_.joined_tables().size());
 
   assert_true(_params.prefix_ != "");
 
@@ -314,7 +322,7 @@ Maker::transform_make_subcontainers(const MakerParams& _params) {
     return transform(params);
   };
 
-  const auto iota = fct::iota<size_t>(0, placeholder.joined_tables_.size());
+  const auto iota = fct::iota<size_t>(0, placeholder.joined_tables().size());
 
   return std::make_shared<
       std::vector<std::optional<helpers::FeatureContainer>>>(

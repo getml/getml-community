@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "fastprop/algorithm/FastProp.hpp"
 
@@ -256,17 +256,17 @@ std::vector<containers::Features> FastProp::build_subfeatures(
 
     assert_true(i < placeholder().joined_tables_.size());
 
-    const auto joined_table = placeholder().joined_tables_.at(i);
+    const auto joined_table = placeholder().joined_tables().at(i);
 
     const auto new_population =
-        find_peripheral(_params.peripheral_, joined_table.name_);
+        find_peripheral(_params.peripheral_, joined_table.name());
 
     const auto subfeature_index = make_subfeature_index(i, _params.index_);
 
     const auto subfeature_rownums = make_subfeature_rownums(
         _rownums, _params.population_, new_population, i);
 
-    const auto ix = find_peripheral_ix(joined_table.name_);
+    const auto ix = find_peripheral_ix(joined_table.name());
 
     assert_true(ix < _params.word_indices_.peripheral().size());
 
@@ -995,8 +995,8 @@ FastProp::fit_subfeatures(const FitParams &_params,
   const auto subfeatures =
       std::make_shared<std::vector<std::optional<FastProp>>>();
 
-  for (size_t i = 0; i < placeholder().joined_tables_.size(); ++i) {
-    const auto &joined_table = placeholder().joined_tables_.at(i);
+  for (size_t i = 0; i < placeholder().joined_tables().size(); ++i) {
+    const auto &joined_table = placeholder().joined_tables().at(i);
 
     if (!_table_holder.subtables().at(i)) {
       subfeatures->push_back(std::nullopt);
@@ -1008,9 +1008,9 @@ FastProp::fit_subfeatures(const FitParams &_params,
         std::make_shared<const containers::Placeholder>(joined_table)));
 
     const auto new_population =
-        find_peripheral(_params.peripheral_, joined_table.name_);
+        find_peripheral(_params.peripheral_, joined_table.name());
 
-    const auto ix = find_peripheral_ix(joined_table.name_);
+    const auto ix = find_peripheral_ix(joined_table.name());
 
     assert_true(ix < _params.row_indices_.peripheral().size());
 
@@ -1422,18 +1422,18 @@ std::shared_ptr<std::vector<size_t>> FastProp::make_subfeature_rownums(
   };
 
   const auto params_population = helpers::CreateSubviewParams{
-      .join_key_ = placeholder().join_keys_used_.at(_ix),
+      .join_key_ = placeholder().join_keys_used().at(_ix),
       .make_staging_table_colname_ = make_staging_table_colname,
-      .time_stamp_ = placeholder().time_stamps_used_.at(_ix)};
+      .time_stamp_ = placeholder().time_stamps_used().at(_ix)};
 
   const auto population = _population.create_subview(params_population);
 
   const auto params_peripheral = helpers::CreateSubviewParams{
-      .allow_lagged_targets_ = placeholder().allow_lagged_targets_.at(_ix),
-      .join_key_ = placeholder().other_join_keys_used_.at(_ix),
+      .allow_lagged_targets_ = placeholder().allow_lagged_targets().at(_ix),
+      .join_key_ = placeholder().other_join_keys_used().at(_ix),
       .make_staging_table_colname_ = make_staging_table_colname,
-      .time_stamp_ = placeholder().other_time_stamps_used_.at(_ix),
-      .upper_time_stamp_ = placeholder().upper_time_stamps_used_.at(_ix)};
+      .time_stamp_ = placeholder().other_time_stamps_used().at(_ix),
+      .upper_time_stamp_ = placeholder().upper_time_stamps_used().at(_ix)};
 
   const auto peripheral = _peripheral.create_subview(params_peripheral);
 

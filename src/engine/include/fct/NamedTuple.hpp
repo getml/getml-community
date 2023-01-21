@@ -324,19 +324,19 @@ class NamedTuple {
 // ----------------------------------------------------------------------------
 
 template <StringLiteral _name1, class Type1, StringLiteral _name2, class Type2>
-inline auto operator*(const Field<_name1, Type1>& _f1,
-                      const Field<_name2, Type2>& _f2) {
+inline auto operator*(const fct::Field<_name1, Type1>& _f1,
+                      const fct::Field<_name2, Type2>& _f2) {
   return NamedTuple(_f1, _f2);
 }
 
 template <StringLiteral _name, class Type, class... FieldTypes>
 inline auto operator*(const NamedTuple<FieldTypes...>& _tup,
-                      const Field<_name, Type>& _f) {
+                      const fct::Field<_name, Type>& _f) {
   return _tup.add(_f);
 }
 
 template <StringLiteral _name, class Type, class... FieldTypes>
-inline auto operator*(const Field<_name, Type>& _f,
+inline auto operator*(const fct::Field<_name, Type>& _f,
                       const NamedTuple<FieldTypes...>& _tup) {
   return NamedTuple(_f).add(_tup);
 }
@@ -348,19 +348,20 @@ inline auto operator*(const NamedTuple<FieldTypes1...>& _tup1,
 }
 
 template <StringLiteral _name1, class Type1, StringLiteral _name2, class Type2>
-inline auto operator*(Field<_name1, Type1>&& _f1, Field<_name2, Type2>&& _f2) {
+inline auto operator*(fct::Field<_name1, Type1>&& _f1,
+                      fct::Field<_name2, Type2>&& _f2) {
   return NamedTuple(std::forward<Field<_name1, Type1>>(_f1),
                     std::forward<Field<_name2, Type2>>(_f2));
 }
 
 template <StringLiteral _name, class Type, class... FieldTypes>
 inline auto operator*(NamedTuple<FieldTypes...>&& _tup,
-                      Field<_name, Type>&& _f) {
+                      fct::Field<_name, Type>&& _f) {
   return _tup.add(std::forward<Field<_name, Type>>(_f));
 }
 
 template <StringLiteral _name, class Type, class... FieldTypes>
-inline auto operator*(Field<_name, Type>&& _f,
+inline auto operator*(fct::Field<_name, Type>&& _f,
                       NamedTuple<FieldTypes...>&& _tup) {
   return NamedTuple(std::forward<Field<_name, Type>>(_f))
       .add(std::forward<NamedTuple<FieldTypes...>>(_tup));

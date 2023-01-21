@@ -1,41 +1,27 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_HANDLERS_DATAFRAMEMANAGER_HPP_
 #define ENGINE_HANDLERS_DATAFRAMEMANAGER_HPP_
 
-// ------------------------------------------------------------------------
-
 #include <Poco/JSON/Object.h>
 #include <Poco/Net/StreamSocket.h>
-
-// ------------------------------------------------------------------------
 
 #include <map>
 #include <memory>
 #include <string>
 
-// ------------------------------------------------------------------------
-
 #include "debug/debug.hpp"
-#include "fct/Ref.hpp"
-
-// ------------------------------------------------------------------------
-
 #include "engine/communication/communication.hpp"
 #include "engine/config/config.hpp"
 #include "engine/containers/containers.hpp"
-
-// ------------------------------------------------------------------------
-
 #include "engine/handlers/DataFrameManagerParams.hpp"
 #include "engine/handlers/DatabaseManager.hpp"
-
-// ------------------------------------------------------------------------
+#include "fct/Ref.hpp"
 
 namespace engine {
 namespace handlers {
@@ -52,8 +38,6 @@ class DataFrameManager {
       : params_(_params) {}
 
   ~DataFrameManager() = default;
-
-  // ------------------------------------------------------------------------
 
  public:
   /// Creates a new data frame and adds it to the map of data frames.
