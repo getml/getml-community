@@ -43,7 +43,9 @@ struct FittedPipeline {
   }
 
   /// The names of the target columns
-  const auto& targets() const { return modified_population_schema_->targets_; }
+  const auto& targets() const {
+    return modified_population_schema_->val_.get<"targets_">();
+  }
 
   /// Whether this is a classification pipeline.
   bool is_classification() const;

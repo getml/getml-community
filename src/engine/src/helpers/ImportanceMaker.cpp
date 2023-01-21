@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "helpers/ImportanceMaker.hpp"
 
@@ -45,15 +45,15 @@ void ImportanceMaker::fill_zeros(const Schema& _pl, const std::string& _tname,
                                  const bool _is_population) {
   const auto marker = _is_population ? population() : peripheral();
 
-  fill_zeros_from_columns(marker, _tname, _pl.categoricals_);
+  fill_zeros_from_columns(marker, _tname, _pl.val_.get<f_categoricals>());
 
-  fill_zeros_from_columns(marker, _tname, _pl.discretes_);
+  fill_zeros_from_columns(marker, _tname, _pl.val_.get<f_discretes>());
 
-  fill_zeros_from_columns(marker, _tname, _pl.numericals_);
+  fill_zeros_from_columns(marker, _tname, _pl.val_.get<f_numericals>());
 
-  fill_zeros_from_columns(marker, _tname, _pl.text_);
+  fill_zeros_from_columns(marker, _tname, _pl.val_.get<f_text>());
 
-  fill_zeros_from_columns(marker, _tname, _pl.time_stamps_);
+  fill_zeros_from_columns(marker, _tname, _pl.val_.get<f_time_stamps>());
 }
 
 // ----------------------------------------------------------------------------

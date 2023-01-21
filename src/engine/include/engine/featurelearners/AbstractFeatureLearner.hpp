@@ -1,42 +1,28 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_FEATURELEARNERS_ABSTRACTFEATURELEARNER_HPP_
 #define ENGINE_FEATURELEARNERS_ABSTRACTFEATURELEARNER_HPP_
 
-// ----------------------------------------------------------------------------
-
 #include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------------
 
 #include <map>
 #include <memory>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "engine/featurelearners/FitParams.hpp"
 #include "engine/featurelearners/TransformParams.hpp"
 
-// ----------------------------------------------------------------------------
-
 namespace engine {
 namespace featurelearners {
-// ----------------------------------------------------------------------------
 
 class AbstractFeatureLearner {
-  // --------------------------------------------------------
-
  public:
   static constexpr Int USE_ALL_TARGETS = -1;
   static constexpr Int IGNORE_TARGETS = -2;
@@ -46,14 +32,10 @@ class AbstractFeatureLearner {
   static constexpr const char* RELBOOST = "Relboost";
   static constexpr const char* RELMT = "RelMT";
 
-  // --------------------------------------------------------
-
  public:
   AbstractFeatureLearner() {}
 
   virtual ~AbstractFeatureLearner() = default;
-
-  // --------------------------------------------------------
 
  public:
   /// Calculates the column importances for this ensemble.
@@ -116,16 +98,10 @@ class AbstractFeatureLearner {
 
   /// Returns a string describing the type of the feature learner.
   virtual std::string type() const = 0;
-
-  // --------------------------------------------------------
 };
-
-// ----------------------------------------------------------------------------
 
 }  // namespace featurelearners
 }  // namespace engine
-
-// ----------------------------------------------------------------------------
 
 #endif  // ENGINE_FEATURELEARNERS_ABSTRACTFEATURELEARNER_HPP_
 

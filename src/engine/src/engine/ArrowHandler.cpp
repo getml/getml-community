@@ -1,18 +1,14 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/handlers/ArrowHandler.hpp"
 
-// ----------------------------------------------------------------------------
-
 #include "engine/handlers/ArrowSocketInputStream.hpp"
 #include "engine/handlers/ArrowSocketOutputStream.hpp"
-
-// ----------------------------------------------------------------------------
 
 namespace engine {
 namespace handlers {
@@ -263,7 +259,7 @@ containers::DataFrame ArrowHandler::table_to_df(
   auto df = containers::DataFrame(_name, categories_.ptr(),
                                   join_keys_encoding_.ptr(), pool);
 
-  for (const auto& colname : _schema.categoricals_) {
+  for (const auto& colname : _schema.val_.get<"categoricals_">()) {
     const auto arr = _table->GetColumnByName(colname);
     const auto col =
         to_int_column(to_column<strings::String>(pool, colname, arr),
@@ -271,7 +267,7 @@ containers::DataFrame ArrowHandler::table_to_df(
     df.add_int_column(col, containers::DataFrame::ROLE_CATEGORICAL);
   }
 
-  for (const auto& colname : _schema.join_keys_) {
+  for (const auto& colname : _schema.val_.get<"join_keys_">()) {
     const auto arr = _table->GetColumnByName(colname);
     const auto col =
         to_int_column(to_column<strings::String>(pool, colname, arr),
@@ -279,37 +275,37 @@ containers::DataFrame ArrowHandler::table_to_df(
     df.add_int_column(col, containers::DataFrame::ROLE_JOIN_KEY);
   }
 
-  for (const auto& colname : _schema.numericals_) {
+  for (const auto& colname : _schema.val_.get<"numericals_">()) {
     const auto arr = _table->GetColumnByName(colname);
     df.add_float_column(to_column<Float>(pool, colname, arr),
                         containers::DataFrame::ROLE_NUMERICAL);
   }
 
-  for (const auto& colname : _schema.targets_) {
+  for (const auto& colname : _schema.val_.get<"targets_">()) {
     const auto arr = _table->GetColumnByName(colname);
     df.add_float_column(to_column<Float>(pool, colname, arr),
                         containers::DataFrame::ROLE_TARGET);
   }
 
-  for (const auto& colname : _schema.text_) {
+  for (const auto& colname : _schema.val_.get<"text_">()) {
     const auto arr = _table->GetColumnByName(colname);
     df.add_string_column(to_column<strings::String>(pool, colname, arr),
                          containers::DataFrame::ROLE_TEXT);
   }
 
-  for (const auto& colname : _schema.time_stamps_) {
+  for (const auto& colname : _schema.val_.get<"time_stamps_">()) {
     const auto arr = _table->GetColumnByName(colname);
     df.add_float_column(to_column<Float>(pool, colname, arr),
                         containers::DataFrame::ROLE_TIME_STAMP);
   }
 
-  for (const auto& colname : _schema.unused_floats_) {
+  for (const auto& colname : _schema.val_.get<"unused_floats_">()) {
     const auto arr = _table->GetColumnByName(colname);
     df.add_float_column(to_column<Float>(pool, colname, arr),
                         containers::DataFrame::ROLE_UNUSED_FLOAT);
   }
 
-  for (const auto& colname : _schema.unused_strings_) {
+  for (const auto& colname : _schema.val_.get<"unused_strings_">()) {
     const auto arr = _table->GetColumnByName(colname);
     df.add_string_column(to_column<strings::String>(pool, colname, arr),
                          containers::DataFrame::ROLE_UNUSED_STRING);
