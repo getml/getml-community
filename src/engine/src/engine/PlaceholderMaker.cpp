@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/pipelines/PlaceholderMaker.hpp"
 
@@ -13,7 +13,7 @@ namespace pipelines {
 
 void PlaceholderMaker::extract_joined_tables(
     const helpers::Placeholder& _placeholder, std::set<std::string>* _names) {
-  for (const auto& p : _placeholder.joined_tables_) {
+  for (const auto& p : _placeholder.joined_tables()) {
     extract_joined_tables(p, _names);
     _names->insert(p.name());
   }
@@ -24,7 +24,7 @@ void PlaceholderMaker::extract_joined_tables(
 std::vector<std::string> PlaceholderMaker::handle_horizon(
     const helpers::Placeholder& _placeholder,
     const std::vector<Float>& _horizon) {
-  auto other_time_stamps_used = _placeholder.other_time_stamps_used_;
+  auto other_time_stamps_used = _placeholder.other_time_stamps_used();
 
   assert_true(other_time_stamps_used.size() == _horizon.size());
 
@@ -34,7 +34,7 @@ std::vector<std::string> PlaceholderMaker::handle_horizon(
     }
 
     other_time_stamps_used.at(i) = make_ts_name(
-        _placeholder.other_time_stamps_used_.at(i), _horizon.at(i));
+        _placeholder.other_time_stamps_used().at(i), _horizon.at(i));
   }
 
   return other_time_stamps_used;
@@ -56,15 +56,15 @@ helpers::Placeholder PlaceholderMaker::handle_joined_tables(
 
   assert_true(_relationship.size() == size);
 
-  assert_true(_placeholder.allow_lagged_targets_.size() == size);
+  assert_true(_placeholder.allow_lagged_targets().size() == size);
 
-  assert_true(_placeholder.join_keys_used_.size() == size);
+  assert_true(_placeholder.join_keys_used().size() == size);
 
-  assert_true(_placeholder.other_join_keys_used_.size() == size);
+  assert_true(_placeholder.other_join_keys_used().size() == size);
 
   assert_true(_other_time_stamps_used.size() == size);
 
-  assert_true(_placeholder.time_stamps_used_.size() == size);
+  assert_true(_placeholder.time_stamps_used().size() == size);
 
   assert_true(_upper_time_stamps_used.size() == size);
 
@@ -103,20 +103,20 @@ helpers::Placeholder PlaceholderMaker::handle_joined_tables(
       const auto joined_table = make_placeholder(
           *joined_table_obj, helpers::Macros::t1_or_t2(), _num_alias, false);
 
-      allow_lagged_targets.push_back(_placeholder.allow_lagged_targets_.at(i));
+      allow_lagged_targets.push_back(_placeholder.allow_lagged_targets().at(i));
 
-      join_keys_used.push_back(_placeholder.join_keys_used_.at(i));
+      join_keys_used.push_back(_placeholder.join_keys_used().at(i));
 
       joined_tables.push_back(joined_table);
 
-      other_join_keys_used.push_back(_placeholder.other_join_keys_used_.at(i));
+      other_join_keys_used.push_back(_placeholder.other_join_keys_used().at(i));
 
       other_time_stamps_used.push_back(_other_time_stamps_used.at(i));
 
       propositionalization.push_back(_relationship.at(i) ==
                                      RELATIONSHIP_PROPOSITIONALIZATION);
 
-      time_stamps_used.push_back(_placeholder.time_stamps_used_.at(i));
+      time_stamps_used.push_back(_placeholder.time_stamps_used().at(i));
 
       upper_time_stamps_used.push_back(_upper_time_stamps_used.at(i));
 
@@ -131,45 +131,49 @@ helpers::Placeholder PlaceholderMaker::handle_joined_tables(
     const auto joined_name =
         JSON::get_value<std::string>(*joined_table_obj, "name_");
 
-    append(joined_table.allow_lagged_targets_, &allow_lagged_targets);
+    append(joined_table.allow_lagged_targets(), &allow_lagged_targets);
 
     const auto modified_jk =
-        make_colnames(joined_name, alias, joined_table.join_keys_used_);
+        make_colnames(joined_name, alias, joined_table.join_keys_used());
 
     append(modified_jk, &join_keys_used);
 
-    append(joined_table.other_join_keys_used_, &other_join_keys_used);
+    append(joined_table.other_join_keys_used(), &other_join_keys_used);
 
-    append(joined_table.joined_tables_, &joined_tables);
+    append(joined_table.joined_tables(), &joined_tables);
 
-    append(joined_table.other_time_stamps_used_, &other_time_stamps_used);
+    append(joined_table.other_time_stamps_used(), &other_time_stamps_used);
 
-    append(joined_table.propositionalization_, &propositionalization);
+    append(joined_table.propositionalization(), &propositionalization);
 
     const auto modified_ts =
-        make_colnames(joined_name, alias, joined_table.time_stamps_used_);
+        make_colnames(joined_name, alias, joined_table.time_stamps_used());
 
     append(modified_ts, &time_stamps_used);
 
-    append(joined_table.upper_time_stamps_used_, &upper_time_stamps_used);
+    append(joined_table.upper_time_stamps_used(), &upper_time_stamps_used);
 
     const auto one_to_one = (_relationship.at(i) == RELATIONSHIP_ONE_TO_ONE);
 
     name += helpers::Macros::make_table_name(
-        _placeholder.join_keys_used_.at(i),
-        _placeholder.other_join_keys_used_.at(i),
-        _placeholder.time_stamps_used_.at(i),
-        _placeholder.other_time_stamps_used_.at(i),
-        _placeholder.upper_time_stamps_used_.at(i), joined_table.name(), alias,
+        _placeholder.join_keys_used().at(i),
+        _placeholder.other_join_keys_used().at(i),
+        _placeholder.time_stamps_used().at(i),
+        _placeholder.other_time_stamps_used().at(i),
+        _placeholder.upper_time_stamps_used().at(i), joined_table.name(), alias,
         _placeholder.name(), _alias, one_to_one);
   }
 
-  // ------------------------------------------------------------------------
-
-  return helpers::Placeholder(allow_lagged_targets, joined_tables,
-                              join_keys_used, name, other_join_keys_used,
-                              other_time_stamps_used, propositionalization,
-                              time_stamps_used, upper_time_stamps_used);
+  return helpers::Placeholder(
+      fct::make_field<"allow_lagged_targets_">(allow_lagged_targets) *
+      fct::make_field<"joined_tables_">(joined_tables) *
+      fct::make_field<"join_keys_used_">(join_keys_used) *
+      fct::make_field<"name_">(name) *
+      fct::make_field<"other_join_keys_used_">(other_join_keys_used) *
+      fct::make_field<"other_time_stamps_used_">(other_time_stamps_used) *
+      fct::make_field<"propositionalization_">(propositionalization) *
+      fct::make_field<"time_stamps_used_">(time_stamps_used) *
+      fct::make_field<"upper_time_stamps_used_">(upper_time_stamps_used));
 }
 
 // ----------------------------------------------------------------------------
@@ -177,11 +181,11 @@ helpers::Placeholder PlaceholderMaker::handle_joined_tables(
 std::vector<std::string> PlaceholderMaker::handle_memory(
     const helpers::Placeholder& _placeholder,
     const std::vector<Float>& _horizon, const std::vector<Float>& _memory) {
-  auto upper_time_stamps_used = _placeholder.upper_time_stamps_used_;
+  auto upper_time_stamps_used = _placeholder.upper_time_stamps_used();
 
   assert_true(_memory.size() == upper_time_stamps_used.size());
   assert_true(_memory.size() == _horizon.size());
-  assert_true(_memory.size() == _placeholder.other_time_stamps_used_.size());
+  assert_true(_memory.size() == _placeholder.other_time_stamps_used().size());
 
   for (size_t i = 0; i < _memory.size(); ++i) {
     if (_memory.at(i) <= 0.0) {
@@ -195,7 +199,7 @@ std::vector<std::string> PlaceholderMaker::handle_memory(
     }
 
     upper_time_stamps_used.at(i) =
-        make_ts_name(_placeholder.other_time_stamps_used_.at(i),
+        make_ts_name(_placeholder.other_time_stamps_used().at(i),
                      _horizon.at(i) + _memory.at(i));
   }
 

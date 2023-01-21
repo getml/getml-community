@@ -404,7 +404,7 @@ Transform::stage_data_frames(
   const auto joined_peripheral_names =
       PlaceholderMaker::make_peripheral(placeholder);
 
-  Staging::join_tables(*peripheral_names, placeholder.name_,
+  Staging::join_tables(*peripheral_names, placeholder.name(),
                        joined_peripheral_names, &population_df,
                        &peripheral_dfs);
 

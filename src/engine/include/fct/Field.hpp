@@ -35,6 +35,11 @@ struct Field {
   const Type value_;
 };
 
+template <StringLiteral _name, class _Type>
+inline auto make_field(const _Type& _value) {
+  return Field<_name, _Type>(_value);
+}
+
 }  // namespace fct
 
 #endif  // FCT_FIELD_HPP_
