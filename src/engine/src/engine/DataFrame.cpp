@@ -1,22 +1,17 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/containers/DataFrame.hpp"
-
-// ----------------------------------------------------------------------------
 
 #include <Poco/Path.h>
 #include <Poco/TemporaryFile.h>
 
-// ----------------------------------------------------------------------------
-
 #include "engine/containers/DataFramePrinter.hpp"
-
-// ----------------------------------------------------------------------------
+#include "fct/Field.hpp"
 
 namespace engine {
 namespace containers {
@@ -443,29 +438,29 @@ std::vector<std::string> DataFrame::concat_colnames(
     const Schema &_schema) const {
   auto all_colnames = std::vector<std::string>(0);
 
-  all_colnames.insert(all_colnames.end(), _schema.categoricals_.begin(),
-                      _schema.categoricals_.end());
+  all_colnames.insert(all_colnames.end(), _schema.categoricals().begin(),
+                      _schema.categoricals().end());
 
-  all_colnames.insert(all_colnames.end(), _schema.join_keys_.begin(),
-                      _schema.join_keys_.end());
+  all_colnames.insert(all_colnames.end(), _schema.join_keys().begin(),
+                      _schema.join_keys().end());
 
-  all_colnames.insert(all_colnames.end(), _schema.numericals_.begin(),
-                      _schema.numericals_.end());
+  all_colnames.insert(all_colnames.end(), _schema.numericals().begin(),
+                      _schema.numericals().end());
 
-  all_colnames.insert(all_colnames.end(), _schema.targets_.begin(),
-                      _schema.targets_.end());
+  all_colnames.insert(all_colnames.end(), _schema.targets().begin(),
+                      _schema.targets().end());
 
-  all_colnames.insert(all_colnames.end(), _schema.text_.begin(),
-                      _schema.text_.end());
+  all_colnames.insert(all_colnames.end(), _schema.text().begin(),
+                      _schema.text().end());
 
-  all_colnames.insert(all_colnames.end(), _schema.time_stamps_.begin(),
-                      _schema.time_stamps_.end());
+  all_colnames.insert(all_colnames.end(), _schema.time_stamps().begin(),
+                      _schema.time_stamps().end());
 
-  all_colnames.insert(all_colnames.end(), _schema.unused_floats_.begin(),
-                      _schema.unused_floats_.end());
+  all_colnames.insert(all_colnames.end(), _schema.unused_floats().begin(),
+                      _schema.unused_floats().end());
 
-  all_colnames.insert(all_colnames.end(), _schema.unused_strings_.begin(),
-                      _schema.unused_strings_.end());
+  all_colnames.insert(all_colnames.end(), _schema.unused_strings().begin(),
+                      _schema.unused_strings().end());
 
   return all_colnames;
 }
@@ -567,22 +562,22 @@ void DataFrame::from_csv(
 
 void DataFrame::from_db(fct::Ref<database::Connector> _connector,
                         const std::string &_tname, const Schema &_schema) {
-  auto categoricals = make_vectors<Int>(_schema.categoricals_.size());
+  auto categoricals = make_vectors<Int>(_schema.categoricals().size());
 
-  auto join_keys = make_vectors<Int>(_schema.join_keys_.size());
+  auto join_keys = make_vectors<Int>(_schema.join_keys().size());
 
-  auto numericals = make_vectors<Float>(_schema.numericals_.size());
+  auto numericals = make_vectors<Float>(_schema.numericals().size());
 
-  auto targets = make_vectors<Float>(_schema.targets_.size());
+  auto targets = make_vectors<Float>(_schema.targets().size());
 
-  auto text = make_vectors<strings::String>(_schema.text_.size());
+  auto text = make_vectors<strings::String>(_schema.text().size());
 
-  auto time_stamps = make_vectors<Float>(_schema.time_stamps_.size());
+  auto time_stamps = make_vectors<Float>(_schema.time_stamps().size());
 
-  auto unused_floats = make_vectors<Float>(_schema.unused_floats_.size());
+  auto unused_floats = make_vectors<Float>(_schema.unused_floats().size());
 
   auto unused_strings =
-      make_vectors<strings::String>(_schema.unused_strings_.size());
+      make_vectors<strings::String>(_schema.unused_strings().size());
 
   const auto all_colnames = concat_colnames(_schema);
 
@@ -612,22 +607,22 @@ void DataFrame::from_db(fct::Ref<database::Connector> _connector,
 
   auto df = DataFrame(name(), categories_, join_keys_encoding_, make_pool());
 
-  df.add_int_vectors(_schema.categoricals_, categoricals, ROLE_CATEGORICAL);
+  df.add_int_vectors(_schema.categoricals(), categoricals, ROLE_CATEGORICAL);
 
-  df.add_int_vectors(_schema.join_keys_, join_keys, ROLE_JOIN_KEY);
+  df.add_int_vectors(_schema.join_keys(), join_keys, ROLE_JOIN_KEY);
 
-  df.add_float_vectors(_schema.numericals_, numericals, ROLE_NUMERICAL);
+  df.add_float_vectors(_schema.numericals(), numericals, ROLE_NUMERICAL);
 
-  df.add_float_vectors(_schema.targets_, targets, ROLE_TARGET);
+  df.add_float_vectors(_schema.targets(), targets, ROLE_TARGET);
 
-  df.add_string_vectors(_schema.text_, text, ROLE_TEXT);
+  df.add_string_vectors(_schema.text(), text, ROLE_TEXT);
 
-  df.add_float_vectors(_schema.time_stamps_, time_stamps, ROLE_TIME_STAMP);
+  df.add_float_vectors(_schema.time_stamps(), time_stamps, ROLE_TIME_STAMP);
 
-  df.add_float_vectors(_schema.unused_floats_, unused_floats,
+  df.add_float_vectors(_schema.unused_floats(), unused_floats,
                        ROLE_UNUSED_FLOAT);
 
-  df.add_string_vectors(_schema.unused_strings_, unused_strings,
+  df.add_string_vectors(_schema.unused_strings(), unused_strings,
                         ROLE_UNUSED_STRING);
 
   df.check_plausibility();
@@ -642,23 +637,23 @@ void DataFrame::from_json(const Poco::JSON::Object &_obj,
                           const Schema &_schema) {
   auto df = DataFrame(name(), categories_, join_keys_encoding_, make_pool());
 
-  df.from_json(_obj, _schema.categoricals_, ROLE_CATEGORICAL,
+  df.from_json(_obj, _schema.categoricals(), ROLE_CATEGORICAL,
                categories_.get());
 
-  df.from_json(_obj, _schema.join_keys_, ROLE_JOIN_KEY,
+  df.from_json(_obj, _schema.join_keys(), ROLE_JOIN_KEY,
                join_keys_encoding_.get());
 
-  df.from_json(_obj, _schema.numericals_, ROLE_NUMERICAL);
+  df.from_json(_obj, _schema.numericals(), ROLE_NUMERICAL);
 
-  df.from_json(_obj, _schema.targets_, ROLE_TARGET);
+  df.from_json(_obj, _schema.targets(), ROLE_TARGET);
 
-  df.from_json(_obj, _schema.text_, ROLE_TEXT);
+  df.from_json(_obj, _schema.text(), ROLE_TEXT);
 
-  df.from_json(_obj, _schema.time_stamps_, _time_formats);
+  df.from_json(_obj, _schema.time_stamps(), _time_formats);
 
-  df.from_json(_obj, _schema.unused_floats_, ROLE_UNUSED_FLOAT);
+  df.from_json(_obj, _schema.unused_floats(), ROLE_UNUSED_FLOAT);
 
-  df.from_json(_obj, _schema.unused_strings_, ROLE_UNUSED_STRING);
+  df.from_json(_obj, _schema.unused_strings(), ROLE_UNUSED_STRING);
 
   df.check_plausibility();
 
@@ -776,22 +771,22 @@ void DataFrame::from_json(const Poco::JSON::Object &_obj,
 
 void DataFrame::from_query(const fct::Ref<database::Connector> _connector,
                            const std::string &_query, const Schema &_schema) {
-  auto categoricals = make_vectors<Int>(_schema.categoricals_.size());
+  auto categoricals = make_vectors<Int>(_schema.categoricals().size());
 
-  auto join_keys = make_vectors<Int>(_schema.join_keys_.size());
+  auto join_keys = make_vectors<Int>(_schema.join_keys().size());
 
-  auto numericals = make_vectors<Float>(_schema.numericals_.size());
+  auto numericals = make_vectors<Float>(_schema.numericals().size());
 
-  auto targets = make_vectors<Float>(_schema.targets_.size());
+  auto targets = make_vectors<Float>(_schema.targets().size());
 
-  auto text = make_vectors<strings::String>(_schema.text_.size());
+  auto text = make_vectors<strings::String>(_schema.text().size());
 
-  auto time_stamps = make_vectors<Float>(_schema.time_stamps_.size());
+  auto time_stamps = make_vectors<Float>(_schema.time_stamps().size());
 
-  auto unused_floats = make_vectors<Float>(_schema.unused_floats_.size());
+  auto unused_floats = make_vectors<Float>(_schema.unused_floats().size());
 
   auto unused_strings =
-      make_vectors<strings::String>(_schema.unused_strings_.size());
+      make_vectors<strings::String>(_schema.unused_strings().size());
 
   auto iterator = _connector->select(_query);
 
@@ -816,21 +811,21 @@ void DataFrame::from_query(const fct::Ref<database::Connector> _connector,
     return indices;
   };
 
-  const auto categorical_ix = make_column_indices(_schema.categoricals_);
+  const auto categorical_ix = make_column_indices(_schema.categoricals());
 
-  const auto join_key_ix = make_column_indices(_schema.join_keys_);
+  const auto join_key_ix = make_column_indices(_schema.join_keys());
 
-  const auto numerical_ix = make_column_indices(_schema.numericals_);
+  const auto numerical_ix = make_column_indices(_schema.numericals());
 
-  const auto target_ix = make_column_indices(_schema.targets_);
+  const auto target_ix = make_column_indices(_schema.targets());
 
-  const auto text_ix = make_column_indices(_schema.text_);
+  const auto text_ix = make_column_indices(_schema.text());
 
-  const auto time_stamp_ix = make_column_indices(_schema.time_stamps_);
+  const auto time_stamp_ix = make_column_indices(_schema.time_stamps());
 
-  const auto unused_float_ix = make_column_indices(_schema.unused_floats_);
+  const auto unused_float_ix = make_column_indices(_schema.unused_floats());
 
-  const auto unused_string_ix = make_column_indices(_schema.unused_strings_);
+  const auto unused_string_ix = make_column_indices(_schema.unused_strings());
 
   const auto time_formats = _connector->time_formats();
 
@@ -885,22 +880,22 @@ void DataFrame::from_query(const fct::Ref<database::Connector> _connector,
 
   auto df = DataFrame(name(), categories_, join_keys_encoding_, make_pool());
 
-  df.add_int_vectors(_schema.categoricals_, categoricals, ROLE_CATEGORICAL);
+  df.add_int_vectors(_schema.categoricals(), categoricals, ROLE_CATEGORICAL);
 
-  df.add_int_vectors(_schema.join_keys_, join_keys, ROLE_JOIN_KEY);
+  df.add_int_vectors(_schema.join_keys(), join_keys, ROLE_JOIN_KEY);
 
-  df.add_float_vectors(_schema.numericals_, numericals, ROLE_NUMERICAL);
+  df.add_float_vectors(_schema.numericals(), numericals, ROLE_NUMERICAL);
 
-  df.add_float_vectors(_schema.targets_, targets, ROLE_TARGET);
+  df.add_float_vectors(_schema.targets(), targets, ROLE_TARGET);
 
-  df.add_string_vectors(_schema.text_, text, ROLE_TEXT);
+  df.add_string_vectors(_schema.text(), text, ROLE_TEXT);
 
-  df.add_float_vectors(_schema.time_stamps_, time_stamps, ROLE_TIME_STAMP);
+  df.add_float_vectors(_schema.time_stamps(), time_stamps, ROLE_TIME_STAMP);
 
-  df.add_float_vectors(_schema.unused_floats_, unused_floats,
+  df.add_float_vectors(_schema.unused_floats(), unused_floats,
                        ROLE_UNUSED_FLOAT);
 
-  df.add_string_vectors(_schema.unused_strings_, unused_strings,
+  df.add_string_vectors(_schema.unused_strings(), unused_strings,
                         ROLE_UNUSED_STRING);
 
   df.check_plausibility();
@@ -918,22 +913,22 @@ void DataFrame::from_reader(const std::shared_ptr<io::Reader> &_reader,
 
   const auto csv_colnames = _reader->colnames();
 
-  auto categoricals = make_vectors<Int>(_schema.categoricals_.size());
+  auto categoricals = make_vectors<Int>(_schema.categoricals().size());
 
-  auto join_keys = make_vectors<Int>(_schema.join_keys_.size());
+  auto join_keys = make_vectors<Int>(_schema.join_keys().size());
 
-  auto numericals = make_vectors<Float>(_schema.numericals_.size());
+  auto numericals = make_vectors<Float>(_schema.numericals().size());
 
-  auto targets = make_vectors<Float>(_schema.targets_.size());
+  auto targets = make_vectors<Float>(_schema.targets().size());
 
-  auto text = make_vectors<strings::String>(_schema.text_.size());
+  auto text = make_vectors<strings::String>(_schema.text().size());
 
-  auto time_stamps = make_vectors<Float>(_schema.time_stamps_.size());
+  auto time_stamps = make_vectors<Float>(_schema.time_stamps().size());
 
-  auto unused_floats = make_vectors<Float>(_schema.unused_floats_.size());
+  auto unused_floats = make_vectors<Float>(_schema.unused_floats().size());
 
   auto unused_strings =
-      make_vectors<strings::String>(_schema.unused_strings_.size());
+      make_vectors<strings::String>(_schema.unused_strings().size());
 
   const auto df_colnames = concat_colnames(_schema);
 
@@ -1009,22 +1004,22 @@ void DataFrame::from_reader(const std::shared_ptr<io::Reader> &_reader,
 
   auto df = DataFrame(name(), categories_, join_keys_encoding_, make_pool());
 
-  df.add_int_vectors(_schema.categoricals_, categoricals, ROLE_CATEGORICAL);
+  df.add_int_vectors(_schema.categoricals(), categoricals, ROLE_CATEGORICAL);
 
-  df.add_int_vectors(_schema.join_keys_, join_keys, ROLE_JOIN_KEY);
+  df.add_int_vectors(_schema.join_keys(), join_keys, ROLE_JOIN_KEY);
 
-  df.add_float_vectors(_schema.numericals_, numericals, ROLE_NUMERICAL);
+  df.add_float_vectors(_schema.numericals(), numericals, ROLE_NUMERICAL);
 
-  df.add_float_vectors(_schema.targets_, targets, ROLE_TARGET);
+  df.add_float_vectors(_schema.targets(), targets, ROLE_TARGET);
 
-  df.add_string_vectors(_schema.text_, text, ROLE_TEXT);
+  df.add_string_vectors(_schema.text(), text, ROLE_TEXT);
 
-  df.add_float_vectors(_schema.time_stamps_, time_stamps, ROLE_TIME_STAMP);
+  df.add_float_vectors(_schema.time_stamps(), time_stamps, ROLE_TIME_STAMP);
 
-  df.add_float_vectors(_schema.unused_floats_, unused_floats,
+  df.add_float_vectors(_schema.unused_floats(), unused_floats,
                        ROLE_UNUSED_FLOAT);
 
-  df.add_string_vectors(_schema.unused_strings_, unused_strings,
+  df.add_string_vectors(_schema.unused_strings(), unused_strings,
                         ROLE_UNUSED_STRING);
 
   df.check_plausibility();
@@ -1836,16 +1831,16 @@ Schema DataFrame::to_schema(const bool _separate_discrete) const {
   const auto unused_strings = fct::collect::vector<std::string>(
       unused_strings_ | VIEWS::transform(get_name));
 
-  return Schema{.categoricals_ = categoricals,
-                .discretes_ = discretes,
-                .join_keys_ = join_keys,
-                .name_ = name_,
-                .numericals_ = numericals,
-                .targets_ = targets,
-                .text_ = text,
-                .time_stamps_ = time_stamps,
-                .unused_floats_ = unused_floats,
-                .unused_strings_ = unused_strings};
+  return Schema(fct::make_field<"categoricals_">(categoricals) *
+                fct::make_field<"discretes_">(discretes) *
+                fct::make_field<"join_keys_">(join_keys) *
+                fct::make_field<"name_">(name_) *
+                fct::make_field<"numericals_">(numericals) *
+                fct::make_field<"targets_">(targets) *
+                fct::make_field<"text_">(text) *
+                fct::make_field<"time_stamps_">(time_stamps) *
+                fct::make_field<"unused_floats_">(unused_floats) *
+                fct::make_field<"unused_strings_">(unused_strings));
 }
 
 // ----------------------------------------------------------------------------

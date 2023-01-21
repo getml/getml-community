@@ -10,6 +10,7 @@
 
 #include "fastprop/Float.hpp"
 #include "fastprop/Int.hpp"
+#include "fct/Literal.hpp"
 #include "fct/NamedTuple.hpp"
 #include "json/json.hpp"
 
@@ -48,6 +49,9 @@ using f_sampling_factor = fct::Field<"sampling_factor_", Float>;
 /// Whether we want logging.
 using f_silent = fct::Field<"silent_", bool>;
 
+/// Defines the type
+using f_type = fct::Field<"type_", fct::Literal<"FastProp">>;
+
 /// The maximum size of the vocabulary.
 using f_vocab_size = fct::Field<"vocab_size_", size_t>;
 
@@ -58,7 +62,8 @@ struct Hyperparameters {
   using RecursiveType =
       fct::NamedTuple<f_aggregations, f_delta_t, f_loss_function, f_max_lag,
                       f_min_df, f_n_most_frequent, f_num_features,
-                      f_num_threads, f_sampling_factor, f_silent, f_vocab_size>;
+                      f_num_threads, f_sampling_factor, f_silent, f_type,
+                      f_vocab_size>;
 
   Hyperparameters(const Poco::JSON::Object& _json_obj)
       : val_(json::from_json<RecursiveType>(_json_obj)) {}
@@ -74,7 +79,7 @@ struct Hyperparameters {
   std::string to_json() const { return json::to_json(*this); }
 
   /// Usually used to break a recursive definition, but in
-  /// this case it is temporarily used for backwards compabatability.
+  /// this case it is used for backwards compabatability.
   const RecursiveType val_;
 };
 

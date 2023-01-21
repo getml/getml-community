@@ -349,8 +349,6 @@ class FeatureLearner : public AbstractFeatureLearner {
 
   /// The vocabulary used for the text fields.
   std::shared_ptr<const helpers::VocabularyContainer> vocabulary_;
-
-  // --------------------------------------------------------
 };
 
 // ----------------------------------------------------------------------------
@@ -404,7 +402,7 @@ FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
       return false;
     }
 
-    if (_target_num >= 0 && _name != _schema.targets_.at(_target_num)) {
+    if (_target_num >= 0 && _name != _schema.targets().at(_target_num)) {
       return false;
     }
 
@@ -424,7 +422,7 @@ FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
   };
 
   const auto targets = fct::collect::vector<std::string>(
-      _schema.targets_ | VIEWS::filter(include_target));
+      _schema.targets() | VIEWS::filter(include_target));
 
   const auto include = [this, &_df](const std::string& _colname) -> bool {
     return parse_subroles(_df.subroles(_colname));
@@ -432,34 +430,29 @@ FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
 
   const auto categoricals =
       _apply_subroles ? fct::collect::vector<std::string>(
-                            _schema.categoricals_ | VIEWS::filter(include))
-                      : _schema.categoricals_;
+                            _schema.categoricals() | VIEWS::filter(include))
+                      : _schema.categoricals();
 
   const auto discretes = _apply_subroles
                              ? fct::collect::vector<std::string>(
-                                   _schema.discretes_ | VIEWS::filter(include))
-                             : _schema.discretes_;
+                                   _schema.discretes() | VIEWS::filter(include))
+                             : _schema.discretes();
 
   const auto numericals =
       _apply_subroles ? fct::collect::vector<std::string>(
-                            _schema.numericals_ | VIEWS::filter(include))
-                      : _schema.numericals_;
+                            _schema.numericals() | VIEWS::filter(include))
+                      : _schema.numericals();
 
   const auto text = _apply_subroles
                         ? fct::collect::vector<std::string>(
-                              _schema.text_ | VIEWS::filter(include))
-                        : _schema.text_;
+                              _schema.text() | VIEWS::filter(include))
+                        : _schema.text();
 
-  const auto schema =
-      containers::Schema{.categoricals_ = categoricals,
-                         .discretes_ = discretes,
-                         .join_keys_ = _schema.join_keys_,
-                         .numericals_ = numericals,
-                         .targets_ = targets,
-                         .text_ = text,
-                         .time_stamps_ = _schema.time_stamps_,
-                         .unused_floats_ = _schema.unused_floats_,
-                         .unused_strings_ = _schema.unused_strings_};
+  const auto schema = helpers::Schema(_schema.val_.replace(
+      fct::make_field<"categoricals_">(categoricals),
+      fct::make_field<"discretes_">(discretes),
+      fct::make_field<"numericals_">(numericals),
+      fct::make_field<"targets_">(targets), fct::make_field<"text_">(text)));
 
   return _df.to_immutable<typename FeatureLearnerType::DataFrameType>(schema);
 }

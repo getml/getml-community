@@ -585,7 +585,7 @@ Poco::JSON::Object PipelineManager::refresh_pipeline(
   const auto extract_roles =
       [](const helpers::Schema& _schema) -> Poco::JSON::Object::Ptr {
     auto ptr = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-    ptr->set("name", _schema.name_);
+    ptr->set("name", _schema.name());
     ptr->set("roles", containers::Roles::from_schema(_schema).to_json_obj());
     return ptr;
   };
