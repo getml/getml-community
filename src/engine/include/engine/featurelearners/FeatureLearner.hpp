@@ -1,18 +1,14 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_FEATURELEARNERS_FEATURELEARNER_HPP_
 #define ENGINE_FEATURELEARNERS_FEATURELEARNER_HPP_
 
-// ----------------------------------------------------------------------------
-
 #include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------------
 
 #include <map>
 #include <memory>
@@ -22,31 +18,21 @@
 #include <type_traits>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
 #include "debug/debug.hpp"
-#include "fastprop/algorithm/algorithm.hpp"
-#include "fastprop/subfeatures/subfeatures.hpp"
-#include "helpers/helpers.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
 #include "engine/containers/containers.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "engine/featurelearners/AbstractFeatureLearner.hpp"
 #include "engine/featurelearners/FeatureLearnerParams.hpp"
 #include "engine/featurelearners/FitParams.hpp"
 #include "engine/featurelearners/TransformParams.hpp"
-
-// ----------------------------------------------------------------------------
+#include "fastprop/algorithm/algorithm.hpp"
+#include "fastprop/subfeatures/subfeatures.hpp"
+#include "fct/get.hpp"
+#include "helpers/helpers.hpp"
 
 namespace engine {
 namespace featurelearners {
-// ----------------------------------------------------------------------------
 
 template <class FeatureLearnerType>
 class FeatureLearner : public AbstractFeatureLearner {
@@ -158,7 +144,7 @@ class FeatureLearner : public AbstractFeatureLearner {
 
   /// Whether the feature learner is to be silent.
   bool silent() const final {
-    return make_feature_learner()->hyperparameters().silent_;
+    return fct::get<"silent_">(make_feature_learner()->hyperparameters().val_);
   }
 
   /// Whether the feature learner supports multiple targets.
@@ -280,7 +266,9 @@ class FeatureLearner : public AbstractFeatureLearner {
   }
 
   /// The minimum document frequency used for the vocabulary.
-  size_t min_df(const HypType& _hyp) const { return _hyp.min_df_; }
+  size_t min_df(const HypType& _hyp) const {
+    return fct::get<"min_df_">(_hyp.val_);
+  }
 
   /// Trivial accessor.
   const std::vector<std::string>& peripheral() const {
@@ -291,7 +279,6 @@ class FeatureLearner : public AbstractFeatureLearner {
   /// Trivial accessor.
   std::vector<helpers::Schema> peripheral_schema() const {
     assert_true(peripheral_schema_);
-
     return *peripheral_schema_;
   }
 
@@ -304,7 +291,6 @@ class FeatureLearner : public AbstractFeatureLearner {
   /// Trivial accessor.
   helpers::Schema population_schema() const {
     assert_true(population_schema_);
-
     return *population_schema_;
   }
 
@@ -312,7 +298,7 @@ class FeatureLearner : public AbstractFeatureLearner {
   /// exist.
   PropType propositionalization(const HypType& _hyp) const {
     if constexpr (has_propositionalization_) {
-      return _hyp.propositionalization_;
+      return fct::get<"propositionalization_">(_hyp.val_);
     }
 
     if constexpr (!has_propositionalization_) {
@@ -326,7 +312,9 @@ class FeatureLearner : public AbstractFeatureLearner {
   }
 
   /// The size of the vocabulary.
-  size_t vocab_size(const HypType& _hyp) const { return _hyp.vocab_size_; }
+  size_t vocab_size(const HypType& _hyp) const {
+    return fct::get<"vocab_size_">(_hyp.val_);
+  }
 
   // --------------------------------------------------------
 
