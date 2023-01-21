@@ -1,40 +1,28 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef FASTPROP_ALGORITHM_FASTPROP_HPP_
 #define FASTPROP_ALGORITHM_FASTPROP_HPP_
-
-// ----------------------------------------------------------------------------
 
 #include <map>
 #include <string>
 #include <utility>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
-#include "fct/Ref.hpp"
-#include "helpers/helpers.hpp"
-#include "multithreading/multithreading.hpp"
-#include "transpilation/transpilation.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "fastprop/Hyperparameters.hpp"
-#include "fastprop/containers/containers.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "fastprop/algorithm/FitParams.hpp"
 #include "fastprop/algorithm/Memoization.hpp"
 #include "fastprop/algorithm/TableHolder.hpp"
 #include "fastprop/algorithm/TransformParams.hpp"
-
-// ----------------------------------------------------------------------------
+#include "fastprop/containers/containers.hpp"
+#include "fct/Ref.hpp"
+#include "helpers/helpers.hpp"
+#include "multithreading/multithreading.hpp"
+#include "transpilation/transpilation.hpp"
 
 namespace fastprop {
 namespace algorithm {
@@ -43,8 +31,6 @@ class FastProp {
  public:
   typedef typename helpers::VocabularyContainer::VocabForDf VocabForDf;
   typedef typename std::vector<VocabForDf> Vocabulary;
-
-  // ------------------------------------------------------------------------
 
  public:
   typedef FitParams FitParamsType;
@@ -374,7 +360,7 @@ class FastProp {
 
   /// Whether this is a classification problem
   const bool is_classification() const {
-    return hyperparameters().loss_function_ ==
+    return hyperparameters().val_.get<f_loss_function>() ==
            Hyperparameters::CROSS_ENTROPY_LOSS;
   }
 
@@ -427,8 +413,8 @@ class FastProp {
   /// Whether there is a COUNT aggregation among the aggregations in the
   /// hyperparameter.
   bool has_count() const {
-    return std::any_of(hyperparameters().aggregations_.begin(),
-                       hyperparameters().aggregations_.end(),
+    return std::any_of(hyperparameters().val_.get<f_aggregations>().begin(),
+                       hyperparameters().val_.get<f_aggregations>().end(),
                        [](const std::string& agg) -> bool {
                          return agg == enums::Parser<enums::Aggregation>::COUNT;
                        });

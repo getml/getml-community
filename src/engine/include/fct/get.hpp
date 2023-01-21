@@ -17,7 +17,7 @@ namespace fct {
 /// Gets a field by index.
 template <int _index, class NamedTupleType>
 inline auto& get(NamedTupleType& _tup) {
-  return Getter<NamedTupleType>::template get<index>(_tup);
+  return Getter<NamedTupleType>::template get<_index>(_tup);
 }
 
 /// Gets a field by name.
