@@ -1,14 +1,12 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_HANDLERS_ARROWHANDLER_HPP_
 #define ENGINE_HANDLERS_ARROWHANDLER_HPP_
-
-// -------------------------------------------------------------------------
 
 #include <Poco/Net/StreamSocket.h>
 #include <arrow/api.h>
@@ -17,27 +15,18 @@
 #include <parquet/arrow/reader.h>
 #include <parquet/arrow/writer.h>
 
-// -------------------------------------------------------------------------
-
 #include <cctype>
 #include <memory>
 #include <optional>
 #include <utility>
 #include <vector>
 
-// -------------------------------------------------------------------------
-
 #include "debug/debug.hpp"
-#include "helpers/helpers.hpp"
-#include "strings/strings.hpp"
-
-// -------------------------------------------------------------------------
-
 #include "engine/Float.hpp"
 #include "engine/config/config.hpp"
 #include "engine/containers/containers.hpp"
-
-// -------------------------------------------------------------------------
+#include "helpers/helpers.hpp"
+#include "strings/strings.hpp"
 
 namespace engine {
 namespace handlers {

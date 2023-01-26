@@ -352,11 +352,6 @@ containers::ColumnView<Float> FloatOpParser::unary_operation(
       const auto atan = [](const Float val) { return std::atan(val); };
       return un_op(_cmd, atan);
     }
-    /*
-        if (op == "boolean_as_num") {
-          return boolean_as_num(_cmd);
-        }
-    */
 
     if constexpr (std::is_same<Type, fct::Literal<"cbrt">>()) {
       const auto cbrt = [](const Float val) { return std::cbrt(val); };
