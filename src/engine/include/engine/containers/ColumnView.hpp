@@ -1,18 +1,14 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_CONTAINERS_COLUMNVIEW_HPP_
 #define ENGINE_CONTAINERS_COLUMNVIEW_HPP_
 
-// -------------------------------------------------------------------------
-
 #include <arrow/api.h>
-
-// -------------------------------------------------------------------------
 
 #include <stdexcept>
 #include <string>
@@ -20,23 +16,13 @@
 #include <variant>
 #include <vector>
 
-// -------------------------------------------------------------------------
-
 #include "debug/debug.hpp"
-#include "helpers/helpers.hpp"
-#include "strings/strings.hpp"
-
-// -------------------------------------------------------------------------
-
 #include "engine/ULong.hpp"
 #include "engine/config/config.hpp"
-
-// -------------------------------------------------------------------------
-
 #include "engine/containers/ArrayMaker.hpp"
 #include "engine/containers/ColumnViewIterator.hpp"
-
-// -------------------------------------------------------------------------
+#include "helpers/helpers.hpp"
+#include "strings/strings.hpp"
 
 namespace engine {
 namespace containers {
@@ -389,24 +375,28 @@ ColumnView<T> ColumnView<T>::from_boolean_subselection(
   const auto value_func = [_data, _indices, ix, next, find_next](
                               const size_t _i) mutable -> std::optional<T> {
     if (_i == next) [[likely]] {
-      const auto new_ix = find_next(ix, 0);
-      if (!new_ix) {
-        return std::nullopt;
+        const auto new_ix = find_next(ix, 0);
+        if (!new_ix) {
+          return std::nullopt;
+        }
+        ix = *new_ix;
       }
-      ix = *new_ix;
-    } else if (_i < next) [[unlikely]] {
-      const auto new_ix = find_next(0, _i);
-      if (!new_ix) {
-        return std::nullopt;
+    else if (_i < next)
+      [[unlikely]] {
+        const auto new_ix = find_next(0, _i);
+        if (!new_ix) {
+          return std::nullopt;
+        }
+        ix = *new_ix;
       }
-      ix = *new_ix;
-    } else if (_i > next) [[unlikely]] {
-      const auto new_ix = find_next(ix, _i - next);
-      if (!new_ix) {
-        return std::nullopt;
+    else if (_i > next)
+      [[unlikely]] {
+        const auto new_ix = find_next(ix, _i - next);
+        if (!new_ix) {
+          return std::nullopt;
+        }
+        ix = *new_ix;
       }
-      ix = *new_ix;
-    }
 
     next = _i + 1;
 

@@ -1,39 +1,34 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_HANDLERS_AGGOPPARSER_HPP_
 #define ENGINE_HANDLERS_AGGOPPARSER_HPP_
 
-// ----------------------------------------------------------------------------
-
 #include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------------
 
 #include <map>
 #include <memory>
 #include <string>
 
-// ----------------------------------------------------------------------------
-
 #include "debug/debug.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
+#include "engine/commands/Aggregation.hpp"
 #include "engine/containers/containers.hpp"
-
-// ----------------------------------------------------------------------------
+#include "json/json.hpp"
 
 namespace engine {
 namespace handlers {
 
 class AggOpParser {
+  using FloatAggregationOp = typename commands::Aggregation::FloatAggregationOp;
+  using StringAggregationOp =
+      typename commands::Aggregation::StringAggregationOp;
+
  public:
   AggOpParser(
       const fct::Ref<const containers::Encoding>& _categories,
@@ -48,16 +43,20 @@ class AggOpParser {
 
  public:
   /// Executes an aggregation.
-  Float aggregate(const Poco::JSON::Object& _aggregation);
+  Float aggregate(const commands::Aggregation& _aggregation) const;
+
+  /// TODO: Remove this temporary solution.
+  Float aggregate(const Poco::JSON::Object& _cmd) const {
+    const auto cmd = json::from_json<commands::Aggregation>(_cmd);
+    return aggregate(cmd);
+  }
 
  private:
-  /// Aggregates over a categorical column.
-  Float categorical_aggregation(const std::string& _type,
-                                const Poco::JSON::Object& _json_col);
+  /// Aggregations over a float column.
+  Float float_aggregation(const FloatAggregationOp& _cmd) const;
 
-  /// Parses a particular numerical aggregation.
-  Float numerical_aggregation(const std::string& _type,
-                              const Poco::JSON::Object& _json_col);
+  /// Aggregates over a string column.
+  Float string_aggregation(const StringAggregationOp& _cmd) const;
 
  private:
   /// Encodes the categories used.
@@ -71,7 +70,6 @@ class AggOpParser {
   const fct::Ref<const containers::Encoding> join_keys_encoding_;
 };
 
-// ----------------------------------------------------------------------------
 }  // namespace handlers
 }  // namespace engine
 
