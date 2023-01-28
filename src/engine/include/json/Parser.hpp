@@ -29,6 +29,7 @@
 #include "fct/collect.hpp"
 #include "fct/iota.hpp"
 #include "fct/join.hpp"
+#include "strings/strings.hpp"
 
 namespace json {
 
@@ -262,6 +263,21 @@ struct Parser<std::pair<FirstType, SecondType>> {
       const std::pair<FirstType, SecondType>& _p) {
     return Parser<std::tuple<FirstType, SecondType>>::to_json(
         std::make_tuple(_p.first, _p.second));
+  }
+};
+
+// ----------------------------------------------------------------------------
+
+template <>
+struct Parser<strings::String> {
+  /// Expresses the variables as type T.
+  static strings::String from_json(const Poco::Dynamic::Var& _var) {
+    return strings::String(Parser<std::string>::from_json(_var));
+  }
+
+  /// Transform a std::vector into a Poco::JSON::Array
+  static Poco::Dynamic::Var to_json(const strings::String& _s) {
+    return Parser<std::string>::to_json(_s.str());
   }
 };
 

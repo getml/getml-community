@@ -8,8 +8,6 @@
 #ifndef HELPERS_DATAFRAME_HPP_
 #define HELPERS_DATAFRAME_HPP_
 
-// -------------------------------------------------------------------------
-
 #include <map>
 #include <memory>
 #include <string>
@@ -17,13 +15,7 @@
 #include <utility>
 #include <vector>
 
-// -------------------------------------------------------------------------
-
 #include "debug/debug.hpp"
-#include "textmining/textmining.hpp"
-
-// -------------------------------------------------------------------------
-
 #include "helpers/Column.hpp"
 #include "helpers/CreateSubviewParams.hpp"
 #include "helpers/DataFrameParams.hpp"
@@ -31,8 +23,7 @@
 #include "helpers/Index.hpp"
 #include "helpers/Int.hpp"
 #include "helpers/Schema.hpp"
-
-// -------------------------------------------------------------------------
+#include "textmining/textmining.hpp"
 
 namespace helpers {
 
