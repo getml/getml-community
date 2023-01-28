@@ -1,33 +1,24 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef HELPERS_DATAFRAMEPARAMS_HPP_
 #define HELPERS_DATAFRAMEPARAMS_HPP_
-
-// -------------------------------------------------------------------------
 
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
-// -------------------------------------------------------------------------
-
-#include "textmining/textmining.hpp"
-#include "tsindex/tsindex.hpp"
-
-// -------------------------------------------------------------------------
-
 #include "helpers/Column.hpp"
 #include "helpers/Float.hpp"
 #include "helpers/Index.hpp"
 #include "helpers/Int.hpp"
-
-// -------------------------------------------------------------------------
+#include "textmining/textmining.hpp"
+#include "tsindex/tsindex.hpp"
 
 namespace helpers {
 
