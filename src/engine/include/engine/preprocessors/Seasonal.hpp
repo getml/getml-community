@@ -1,43 +1,28 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_PREPROCESSORS_SEASONAL_HPP_
 #define ENGINE_PREPROCESSORS_SEASONAL_HPP_
 
-// ----------------------------------------------------------------------------
-
 #include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------------
 
 #include <memory>
 #include <utility>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
-#include "helpers/helpers.hpp"
-#include "strings/strings.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "engine/containers/containers.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "engine/preprocessors/FitParams.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
 #include "engine/preprocessors/TransformParams.hpp"
-
-// ----------------------------------------------------------------------------
+#include "helpers/helpers.hpp"
+#include "strings/strings.hpp"
 
 namespace engine {
 namespace preprocessors {
-// ----------------------------------------------------
 
 class Seasonal : public Preprocessor {
  private:

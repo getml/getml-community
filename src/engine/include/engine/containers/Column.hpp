@@ -88,8 +88,6 @@ class Column {
 
   ~Column() = default;
 
-  // -------------------------------
-
   /// Appends another Column through rowbinding
   void append(const Column<T> &_other);
 
@@ -114,8 +112,6 @@ class Column {
 
   /// Returns a Column containing all rows for which _key is true.
   Column<T> where(const std::vector<bool> &_condition) const;
-
-  // -------------------------------
 
   /// Boundary-checked accessor to data
   template <class T2, typename IteratorType = iterator,
