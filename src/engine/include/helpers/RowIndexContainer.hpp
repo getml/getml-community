@@ -1,28 +1,19 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef HELPERS_ROWINDEXCONTAINER_HPP_
 #define HELPERS_ROWINDEXCONTAINER_HPP_
 
-// -------------------------------------------------------------------------
-
 #include <memory>
 #include <vector>
 
-// -------------------------------------------------------------------------
-
-#include "textmining/textmining.hpp"
-
-// -------------------------------------------------------------------------
-
 #include "helpers/VocabularyContainer.hpp"
 #include "helpers/WordIndexContainer.hpp"
-
-// -------------------------------------------------------------------------
+#include "textmining/textmining.hpp"
 
 namespace helpers {
 
