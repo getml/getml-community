@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/preprocessors/PreprocessorImpl.hpp"
 
@@ -40,8 +40,8 @@ std::vector<std::string> PreprocessorImpl::retrieve_names(
   for (const auto& ptr : _desc) {
     assert_true(ptr);
 
-    if (ptr->marker_ == _marker && ptr->table_ == table) {
-      names.push_back(ptr->name_);
+    if (ptr->marker() == _marker && ptr->table() == table) {
+      names.push_back(ptr->name());
     }
   }
 

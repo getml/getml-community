@@ -71,6 +71,12 @@ class Literal {
                   "Too many fields.");
   }
 
+  /// Constructs a Literal from another literal.
+  Literal(const Literal<fields_...>& _other) : value_(_other.value_) {}
+
+  /// Constructs a Literal from another literal.
+  Literal(Literal<fields_...>&& _other) noexcept : value_(_other.value_) {}
+
   /// A single-field literal is special because it
   /// can also have a default constructor.
   Literal() : value_(0) {
@@ -98,8 +104,20 @@ class Literal {
     return Literal<name>();
   }
 
+  /// Assigns from another literal.
+  Literal<fields_...> operator=(const Literal<fields_...>& _other) {
+    value_ = _other.value_;
+    return *this;
+  }
+
+  /// Assigns from another literal.
+  Literal<fields_...> operator=(Literal<fields_...>&& _other) noexcept {
+    value_ = _other.value_;
+    return *this;
+  }
+
   /// Assigns the literal from a string
-  Literal operator=(const std::string& _str) {
+  Literal<fields_...> operator=(const std::string& _str) {
     value_ = find_value<fields_...>(_str);
     return *this;
   }
@@ -180,7 +198,7 @@ class Literal {
  private:
   /// The underlying value.
   ValueType value_;
-};
+};  // namespace fct
 
 /// Helper class to retrieve a name from a literal.
 template <class LiteralType, int value_>

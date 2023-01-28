@@ -1,21 +1,16 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/preprocessors/Imputation.hpp"
 
-// ----------------------------------------------------
-
 #include "engine/preprocessors/PreprocessorImpl.hpp"
-
-// ----------------------------------------------------
 
 namespace engine {
 namespace preprocessors {
-// ----------------------------------------------------
 
 void Imputation::add_dummy(const containers::Column<Float>& _original_col,
                            containers::DataFrame* _df) const {
@@ -218,7 +213,7 @@ std::vector<std::pair<Float, bool>> Imputation::retrieve_pairs(
   std::vector<std::pair<Float, bool>> pairs;
 
   for (const auto& [key, value] : cols()) {
-    if (key.marker_ == _marker && key.table_ == table) {
+    if (key.marker() == _marker && key.table() == table) {
       pairs.push_back(value);
     }
   }

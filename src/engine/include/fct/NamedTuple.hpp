@@ -142,7 +142,7 @@ class NamedTuple {
   /// Copy assignment operator.
   NamedTuple<FieldTypes...>& operator=(
       const NamedTuple<FieldTypes...>& _other) {
-    values_ = _other.values;
+    values_ = _other.values_;
     return *this;
   }
 
@@ -322,6 +322,18 @@ class NamedTuple {
 };
 
 // ----------------------------------------------------------------------------
+
+template <class... FieldTypes>
+inline bool operator==(const fct::NamedTuple<FieldTypes...>& _nt1,
+                       const fct::NamedTuple<FieldTypes...>& _nt2) {
+  return _nt1.values() == _nt2.values();
+}
+
+template <class... FieldTypes>
+inline bool operator!=(const fct::NamedTuple<FieldTypes...>& _nt1,
+                       const fct::NamedTuple<FieldTypes...>& _nt2) {
+  return _nt1.values() != _nt2.values();
+}
 
 template <StringLiteral _name1, class Type1, StringLiteral _name2, class Type2>
 inline auto operator*(const fct::Field<_name1, Type1>& _f1,

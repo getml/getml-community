@@ -1,22 +1,20 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef HELPERS_COLUMNDESCRIPTION_HPP_
 #define HELPERS_COLUMNDESCRIPTION_HPP_
 
-// -------------------------------------------------------------------------
-
 #include <string>
 
-// -------------------------------------------------------------------------
-
+#include "fct/Field.hpp"
+#include "fct/Literal.hpp"
+#include "fct/NamedTuple.hpp"
+#include "json/json.hpp"
 #include "jsonutils/jsonutils.hpp"
-
-// -------------------------------------------------------------------------
 
 namespace helpers {
 
@@ -24,61 +22,77 @@ struct ColumnDescription {
   static constexpr const char* PERIPHERAL = "[PERIPHERAL]";
   static constexpr const char* POPULATION = "[POPULATION]";
 
+  using MarkerType = fct::Literal<"[PERIPHERAL]", "[POPULATION]">;
+
+  /// Which table are we referring to?
+  using f_marker = fct::Field<"marker_", MarkerType>;
+
+  /// The name of the column.
+  using f_name = fct::Field<"name_", std::string>;
+
+  /// The name of the table.
+  using f_table = fct::Field<"table_", std::string>;
+
+  using RecursiveType = fct::NamedTuple<f_marker, f_name, f_table>;
+
+  ColumnDescription(const MarkerType& _marker, const std::string& _table,
+                    const std::string& _name)
+      : val_(f_marker(_marker) * f_name(_name) * f_table(_table)) {}
+
   ColumnDescription(const std::string& _marker, const std::string& _table,
                     const std::string& _name)
-      : marker_(_marker), name_(_name), table_(_table) {}
+      : val_(f_marker(_marker) * f_name(_name) * f_table(_table)) {}
 
+  explicit ColumnDescription(const RecursiveType& _val) : val_(_val) {}
+
+  /// TODO: Get rid of this temporary fix.
   explicit ColumnDescription(const Poco::JSON::Object& _obj)
-      : ColumnDescription(
-            jsonutils::JSON::get_value<std::string>(_obj, "marker_"),
-            jsonutils::JSON::get_value<std::string>(_obj, "table_"),
-            jsonutils::JSON::get_value<std::string>(_obj, "name_")) {}
+      : val_(json::from_json<RecursiveType>(_obj)) {}
 
   ~ColumnDescription() = default;
 
   /// Generates the full name from the description.
-  std::string name() const { return marker_ + " " + table_ + "." + name_; }
+  std::string full_name() const {
+    return marker().name() + " " + table() + "." + name();
+  }
+
+  /// Trivial accessor
+  const MarkerType& marker() const { return val_.get<f_marker>(); }
+
+  /// Trivial accessor
+  const std::string& name() const { return val_.get<f_name>(); }
 
   /// Equal to operator
   bool operator==(const ColumnDescription& _other) const {
-    return marker_ == _other.marker_ && name_ == _other.name_ &&
-           table_ == _other.table_;
+    return val_ == _other.val_;
   }
 
   /// Less than operator
   bool operator<(const ColumnDescription& _other) const {
-    if (marker_ != _other.marker_) {
-      return (marker_ < _other.marker_);
+    if (marker() != _other.marker()) {
+      return (marker().value() < _other.marker().value());
     }
 
-    if (table_ != _other.table_) {
-      return (table_ < _other.table_);
+    if (table() != _other.table()) {
+      return (table() < _other.table());
     }
 
-    if (name_ != _other.name_) {
-      return (name_ < _other.name_);
+    if (name() != _other.name()) {
+      return (name() < _other.name());
     }
 
     return false;
   }
 
-  /// Expresses the column description as a JSON object.
+  /// Trivial accessor
+  const std::string& table() const { return val_.get<f_table>(); }
+
+  /// TODO: Get rid of this temporary fix
   Poco::JSON::Object::Ptr to_json_obj() const {
-    auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-    obj->set("marker_", marker_);
-    obj->set("name_", name_);
-    obj->set("table_", table_);
-    return obj;
+    return json::Parser<RecursiveType>().to_json(val_);
   }
 
-  /// [POPULATION] or [PERIPHERAL]
-  std::string marker_;
-
-  /// The name of the column.
-  std::string name_;
-
-  /// The name of the table.
-  std::string table_;
+  RecursiveType val_;
 };
 
 }  // namespace helpers

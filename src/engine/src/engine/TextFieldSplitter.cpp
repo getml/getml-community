@@ -1,17 +1,13 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/preprocessors/TextFieldSplitter.hpp"
 
-// ----------------------------------------------------
-
 #include "engine/preprocessors/PreprocessorImpl.hpp"
-
-// ----------------------------------------------------
 
 namespace engine {
 namespace preprocessors {
@@ -232,13 +228,11 @@ TextFieldSplitter::transform(const TransformParams& _params) const {
 void TextFieldSplitter::transform_df(
     const std::string& _marker, const containers::DataFrame& _df,
     std::vector<containers::DataFrame>* _peripheral_dfs) const {
-  // ----------------------------------------------------
-
   const auto matching_description =
       [&_marker,
        &_df](const std::shared_ptr<helpers::ColumnDescription>& _desc) -> bool {
     assert_true(_desc);
-    return _desc->marker_ == _marker && _desc->table_ == _df.name();
+    return _desc->marker() == _marker && _desc->table() == _df.name();
   };
 
   // ----------------------------------------------------
@@ -247,7 +241,7 @@ void TextFieldSplitter::transform_df(
       [&_df](const std::shared_ptr<helpers::ColumnDescription>& _desc)
       -> containers::Column<strings::String> {
     assert_true(_desc);
-    return _df.text(_desc->name_);
+    return _df.text(_desc->name());
   };
 
   // ----------------------------------------------------

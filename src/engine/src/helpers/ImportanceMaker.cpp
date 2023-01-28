@@ -143,8 +143,8 @@ void ImportanceMaker::transfer_population() {
   auto importance_maker = ImportanceMaker();
 
   for (const auto& [key, value] : importances()) {
-    const auto desc =
-        ColumnDescription(ColumnDescription::PERIPHERAL, key.table_, key.name_);
+    const auto desc = ColumnDescription(ColumnDescription::PERIPHERAL,
+                                        key.table(), key.name());
 
     importance_maker.add_to_importances(desc, value);
   }
