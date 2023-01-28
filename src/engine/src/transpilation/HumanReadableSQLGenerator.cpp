@@ -644,10 +644,10 @@ std::string HumanReadableSQLGenerator::split_text_fields(
   assert_true(_desc);
 
   const auto staging_table = SQLGenerator::to_upper(
-      transpilation::SQLGenerator::make_staging_table_name(_desc->table_));
+      transpilation::SQLGenerator::make_staging_table_name(_desc->table()));
 
   const auto colname =
-      SQLGenerator::to_lower(make_staging_table_colname(_desc->name_));
+      SQLGenerator::to_lower(make_staging_table_colname(_desc->name()));
 
   const auto new_table = staging_table + "__" + SQLGenerator::to_upper(colname);
 

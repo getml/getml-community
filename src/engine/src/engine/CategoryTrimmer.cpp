@@ -61,10 +61,10 @@ std::string CategoryTrimmer::column_to_sql(
   assert_true(_sql_dialect_generator);
 
   const auto staging_table =
-      transpilation::SQLGenerator::make_staging_table_name(_pair.first.table_);
+      transpilation::SQLGenerator::make_staging_table_name(_pair.first.table());
 
   const auto colname =
-      _sql_dialect_generator->make_staging_table_colname(_pair.first.name_);
+      _sql_dialect_generator->make_staging_table_colname(_pair.first.name());
 
   std::stringstream sql;
 
@@ -383,7 +383,7 @@ containers::DataFrame CategoryTrimmer::transform_df(
   const auto trimmed = (*_categories)[strings::String(TRIMMED)];
 
   const auto get_col = [&_df](const auto& _pair) -> ColumnAndSet {
-    return std::make_pair(_df.categorical(_pair.first.name_), _pair.second);
+    return std::make_pair(_df.categorical(_pair.first.name()), _pair.second);
   };
 
   const auto trim_value = [trimmed](const Int _value, const Set& _set) -> Int {
