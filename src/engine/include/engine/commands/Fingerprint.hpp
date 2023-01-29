@@ -5,13 +5,13 @@
 // for details.
 //
 
-#ifndef ENGINE_COMMANDS_FINGERPRINTS_HPP_
-#define ENGINE_COMMANDS_FINGERPRINTS_HPP_
+#ifndef ENGINE_COMMANDS_FINGERPRINT_HPP_
+#define ENGINE_COMMANDS_FINGERPRINT_HPP_
 
 #include <variant>
-#include <vector>
 
 #include "engine/commands/DataFrameOrView.hpp"
+#include "engine/commands/FeatureLearner.hpp"
 #include "engine/commands/Preprocessor.hpp"
 
 namespace engine {
@@ -19,12 +19,10 @@ namespace commands {
 
 /// Fingerprints are used to track the dirty states of a pipeline (which
 /// prevents the user from fitting the same thing over and over again).
-
-using Fingerprints =
-    std::variant<std::vector<DataFrameOrView>, std::vector<Preprocessor>>;
+using Fingerprint = std::variant<DataFrameOrView, Preprocessor, FeatureLearner>;
 
 }  // namespace commands
 }  // namespace engine
 
-#endif  // ENGINE_COMMANDS_FINGERPRINTS_HPP_
+#endif  // ENGINE_COMMANDS_FINGERPRINT_HPP_
 
