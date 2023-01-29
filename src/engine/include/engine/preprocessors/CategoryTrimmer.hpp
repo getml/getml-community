@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "engine/JSON.hpp"
+#include "engine/commands/Preprocessor.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/preprocessors/FitParams.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
@@ -32,6 +33,7 @@ namespace preprocessors {
 class CategoryTrimmer : public Preprocessor {
   using CategoryPair =
       std::pair<helpers::ColumnDescription, fct::Ref<const std::set<Int>>>;
+  using CategoryTrimmerOp = typename commands::Preprocessor::CategoryTrimmerOp;
 
   static constexpr const char* TRIMMED = "(trimmed)";
 
