@@ -1,115 +1,166 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef PREDICTORS_XGBOOSTHYPERPARMS_HPP_
 #define PREDICTORS_XGBOOSTHYPERPARMS_HPP_
 
-// ----------------------------------------------------------------------
-
 #include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------
+#include <xgboost/c_api.h>
 
 #include <cstddef>
-#include <string>
 
-// ----------------------------------------------------------------------
-
+#include "fct/Field.hpp"
+#include "fct/Literal.hpp"
+#include "fct/NamedTuple.hpp"
 #include "predictors/Float.hpp"
 #include "predictors/Int.hpp"
-
-// ----------------------------------------------------------------------
 
 namespace predictors {
 
 /// Hyperparameters for XGBoost.
 struct XGBoostHyperparams {
-  // -----------------------------------------
-
-  XGBoostHyperparams(const Poco::JSON::Object &_json_obj);
-
-  ~XGBoostHyperparams() = default;
-
-  // -----------------------------------------
-
   /// L1 regularization term on weights
-  const Float alpha_;
+  using f_alpha = fct::Field<"alpha_", Float>;
 
   /// Specify which booster to use: gbtree, gblinear or dart.
-  const std::string booster_;
+  using f_booster =
+      fct::Field<"booster_", fct::Literal<"gbtree", "gblinear", "dart">>;
 
   /// Subsample ratio of columns for each split, in each level.
-  const Float colsample_bylevel_;
+  using f_colsample_bylevel = fct::Field<"colsample_bylevel_", Float>;
 
   /// Subsample ratio of columns when constructing each tree.
-  const Float colsample_bytree_;
+  using f_colsample_bytree = fct::Field<"colsample_bytree_", Float>;
 
   /// Maximum number of no improvements to trigger early stopping.
-  const size_t early_stopping_rounds_;
+  using f_early_stopping_rounds = fct::Field<"early_stopping_rounds_", size_t>;
 
   /// Boosting learning rate
-  const Float eta_;
+  using f_eta = fct::Field<"eta_", Float>;
 
   /// Whether you want to use external_memory_ (only as an affect when
   /// memory mapping is used).
-  const bool external_memory_;
+  using f_external_memory = fct::Field<"external_memory_", bool>;
 
   /// Minimum loss reduction required to make a further partition on a leaf
   /// node of the tree.
-  const Float gamma_;
+  using f_gamma = fct::Field<"gamma_", Float>;
 
   /// L2 regularization term on weights
-  const Float lambda_;
+  using f_lambda = fct::Field<"lambda_", Float>;
 
   /// Maximum delta step we allow each tree’s weight estimation to be.
-  const Float max_delta_step_;
+  using f_max_delta_step = fct::Field<"max_delta_step_", Float>;
 
   /// Maximum tree depth for base learners
-  const size_t max_depth_;
+  using f_max_depth = fct::Field<"max_depth_", size_t>;
 
   /// Minimum sum of instance weight needed in a child
-  const Float min_child_weights_;
+  using f_min_child_weights = fct::Field<"min_child_weights_", Float>;
 
   /// Number of iterations (number of trees in boosted ensemble)
-  const size_t n_iter_;
+  using f_n_iter = fct::Field<"n_iter_", size_t>;
 
   /// For dart only. Which normalization to use.
-  const std::string normalize_type_;
+  using f_normalize_type =
+      fct::Field<"normalize_type_", fct::Literal<"tree", "forest">>;
 
   /// ...
-  const size_t num_parallel_tree_;
+  using f_num_parallel_tree = fct::Field<"num_parallel_tree_", size_t>;
 
   /// Number of parallel threads used to run xgboost
-  const Int nthread_;
+  using f_nthread = fct::Field<"nthread_", Int>;
 
   /// The objective for the learning function.
-  const std::string objective_;
+  using f_objective =
+      fct::Field<"objective_", fct::Literal<"reg:linear", "reg:squarederror",
+                                            "reg:logistic", "binary:logistic",
+                                            "binary:logitraw", "reg:tweedie">>;
 
   /// For dart only. If true, at least one tree will be dropped out.
-  const bool one_drop_;
+  using f_one_drop = fct::Field<"one_drop_", bool>;
 
   /// For dart only. Dropout rate.
-  const Float rate_drop_;
+  using f_rate_drop = fct::Field<"rate_drop_", Float>;
 
   /// For dart only. Whether you want to use "uniform" or "weighted"
   /// sampling
-  const std::string sample_type_;
+  using f_sample_type =
+      fct::Field<"sample_type_", fct::Literal<"uniform", "weighted">>;
 
   /// Whether to print messages while running boosting
-  const bool silent_;
+  using f_silent = fct::Field<"silent_", bool>;
 
   /// For dart only. Probability of skipping dropout.
-  const Float skip_drop_;
+  using f_skip_drop = fct::Field<"skip_drop_", Float>;
 
   /// Subsample ratio of the training instance.
-  const Float subsample_;
+  using f_subsample = fct::Field<"subsample_", Float>;
+
+  using RecursiveType = fct::NamedTuple<
+      f_alpha, f_booster, f_colsample_bylevel, f_colsample_bytree,
+      f_early_stopping_rounds, f_eta, f_external_memory, f_gamma, f_lambda,
+      f_max_delta_step, f_max_depth, f_min_child_weights, f_n_iter,
+      f_normalize_type, f_num_parallel_tree, f_nthread, f_objective, f_one_drop,
+      f_rate_drop, f_sample_type, f_silent, f_skip_drop, f_subsample>;
+
+  // TODO: Replace this quick fix.
+  XGBoostHyperparams(const Poco::JSON::Object &_json_obj)
+      : val_(json::from_json<RecursiveType>(_json_obj)) {}
+
+  ~XGBoostHyperparams() = default;
+
+  /// Applies the hyperparameters to an XGBoost Handler
+  template <int _i = 0>
+  inline void apply(BoosterHandle _handle) const {
+    using Fields = typename RecursiveType::Fields;
+
+    if constexpr (_i == std::tuple_size_v<Fields>) {
+      return;
+    } else {
+      using FieldType = typename std::tuple_element<_i, Fields>::type;
+
+      const auto name_with_underscore = FieldType::name_.str();
+
+      const auto name =
+          name_with_underscore.substr(0, name_with_underscore.size() - 1);
+
+      if (name == "early_stopping_rounds" || name == "external_memory" ||
+          name == "n_iter") {
+        apply<_i + 1>(_handle);
+        return;
+      }
+
+      using Type = typename FieldType::Type;
+
+      constexpr bool is_numeric = std::is_same<Type, Float>() ||
+                                  std::is_same<Type, Int>() ||
+                                  std::is_same<Type, size_t>();
+
+      constexpr bool is_bool = std::is_same<Type, bool>();
+
+      const auto value = val_.get<_i>();
+
+      if constexpr (is_numeric) {
+        XGBoosterSetParam(_handle, name.c_str(), std::to_string(value).c_str());
+      } else if constexpr (is_bool) {
+        XGBoosterSetParam(_handle, name.c_str(), value ? "1" : "0");
+      } else {
+        XGBoosterSetParam(_handle, name.c_str(), value.name().c_str());
+      }
+
+      apply<_i + 1>(_handle);
+    }
+  }
+
+  /// The underlying named tuple.
+  RecursiveType val_;
 };
 
-// ------------------------------------------------------------------------
 }  // namespace predictors
 
 #endif  // PREDICTORS_XGBOOSTHYPERPARMS_HPP_

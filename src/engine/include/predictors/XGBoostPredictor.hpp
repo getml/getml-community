@@ -1,31 +1,22 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef PREDICTORS_XGBOOSTPREDICTOR_HPP_
 #define PREDICTORS_XGBOOSTPREDICTOR_HPP_
 
-// -----------------------------------------------------------------------------
-
 #include <Poco/JSON/Object.h>
 #include <xgboost/c_api.h>
-
-// -----------------------------------------------------------------------------
 
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
 
-// -----------------------------------------------------------------------------
-
 #include "debug/debug.hpp"
-
-// -----------------------------------------------------------------------------
-
 #include "predictors/FloatFeature.hpp"
 #include "predictors/IntFeature.hpp"
 #include "predictors/LinearHyperparams.hpp"
@@ -34,8 +25,6 @@
 #include "predictors/StandardScaler.hpp"
 #include "predictors/XGBoostHyperparams.hpp"
 #include "predictors/XGBoostMatrix.hpp"
-
-// -----------------------------------------------------------------------------
 
 namespace predictors {
 
@@ -106,16 +95,18 @@ class XGBoostPredictor : public Predictor {
 
   /// Whether the predictor is used for classification;
   bool is_classification() const final {
-    return hyperparams_.objective_ == "reg:logistic" ||
-           hyperparams_.objective_ == "binary:logistic" ||
-           hyperparams_.objective_ == "binary:logitraw";
+    const auto objective = hyperparams_.val_.get<"objective_">();
+    using Objective = std::decay_t<decltype(objective)>;
+    return objective.value() == Objective::value_of<"reg:logistic">() ||
+           objective.value() == Objective::value_of<"binary:logistic">() ||
+           objective.value() == Objective::value_of<"binary:logitraw">();
   }
 
   /// Whether the predictor has been fitted.
   bool is_fitted() const final { return len() > 0; }
 
   /// Whether we want the predictor to be silent.
-  bool silent() const final { return hyperparams_.silent_; }
+  bool silent() const final { return hyperparams_.val_.get<"silent_">(); }
 
   /// The type of the predictor.
   std::string type() const final { return "XGBoost"; }
