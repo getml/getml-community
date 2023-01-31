@@ -54,13 +54,13 @@ using f_unused_strings =
     fct::Field<"unused_strings_", std::vector<std::string>>;
 
 struct Schema {
-  using RecursiveType =
+  using NamedTupleType =
       fct::NamedTuple<f_categoricals, f_discretes, f_join_keys, f_name,
                       f_numericals, f_targets, f_text, f_time_stamps,
                       f_unused_floats, f_unused_strings>;
 
   /// Constructs a new schema from a named tuple.
-  Schema(const RecursiveType& _val) : val_(_val) {}
+  Schema(const NamedTupleType& _val) : val_(_val) {}
 
   /// Constructs a new schema from a JSON object.
   static Schema from_json(const Poco::JSON::Object& _json_obj) {
@@ -229,7 +229,7 @@ struct Schema {
 
   /// Usually used to break a recursive definition, but in
   /// this case it is used for backwards compabatability.
-  const RecursiveType val_;
+  const NamedTupleType val_;
 };
 
 // ------------------------------------------------------------------------

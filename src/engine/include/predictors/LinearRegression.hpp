@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef PREDICTORS_LINEARREGRESSION_HPP_
 #define PREDICTORS_LINEARREGRESSION_HPP_
@@ -31,15 +31,10 @@
 #include "predictors/PredictorImpl.hpp"
 #include "predictors/StandardScaler.hpp"
 
-// -----------------------------------------------------------------------------
-
 namespace predictors {
-// -----------------------------------------------------------------------------
 
 /// Linear regression predictor.
 class LinearRegression : public Predictor {
-  // -------------------------------------------------------------------------
-
  public:
   LinearRegression(const Poco::JSON::Object& _cmd,
                    const std::shared_ptr<const PredictorImpl>& _impl,
@@ -50,8 +45,6 @@ class LinearRegression : public Predictor {
         impl_(_impl){};
 
   ~LinearRegression() = default;
-
-  // -------------------------------------------------------------------------
 
  public:
   /// Returns an importance measure for the individual features.
@@ -82,8 +75,6 @@ class LinearRegression : public Predictor {
   /// Stores the predictor
   void save(const std::string& _fname) const final;
 
-  // -------------------------------------------------------------------------
-
  public:
   /// Whether the predictor accepts null values.
   bool accepts_null() const final { return false; }
@@ -105,16 +96,12 @@ class LinearRegression : public Predictor {
   /// The type of the predictor.
   std::string type() const final { return "LinearRegression"; }
 
-  // -------------------------------------------------------------------------
-
  private:
   /// Trivial (private const) accessor.
   const LinearHyperparams& hyperparams() const {
     assert_true(hyperparams_);
     return *hyperparams_;
   }
-
-  // -------------------------------------------------------------------------
 
  private:
   Poco::JSON::Object load_json_obj(const std::string& _fname) const;
@@ -138,8 +125,6 @@ class LinearRegression : public Predictor {
   void solve_numerically(const std::vector<IntFeature>& _X_categorical,
                          const std::vector<FloatFeature>& _X_numerical,
                          const FloatFeature& _y);
-
-  // -------------------------------------------------------------------------
 
  private:
   /// Calculates the gradients needed for the updates.
@@ -185,8 +170,6 @@ class LinearRegression : public Predictor {
     return yhat;
   }
 
-  // -------------------------------------------------------------------------
-
  private:
   /// The JSON command used to construct this predictor.
   const Poco::JSON::Object cmd_;
@@ -206,8 +189,6 @@ class LinearRegression : public Predictor {
 
   /// The slopes of the linear regression.
   std::vector<Float> weights_;
-
-  // -------------------------------------------------------------------------
 };
 
 // -----------------------------------------------------------------------------

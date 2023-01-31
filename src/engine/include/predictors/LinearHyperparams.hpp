@@ -1,31 +1,22 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef PREDICTORS_LINEARHYPERPARMS_HPP_
 #define PREDICTORS_LINEARHYPERPARMS_HPP_
 
-// ----------------------------------------------------------------------
-
 #include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------
 
 #include "predictors/Float.hpp"
 #include "predictors/JSON.hpp"
 
-// ----------------------------------------------------------------------
-
 namespace predictors {
-// ----------------------------------------------------------------------
 
 /// Hyperparameters for Linear models.
 struct LinearHyperparams {
-  // -----------------------------------------
-
   LinearHyperparams(const Float &_reg_lambda, const Float &_learning_rate)
       : learning_rate_(_learning_rate), reg_lambda_(_reg_lambda) {}
 
@@ -35,8 +26,6 @@ struct LinearHyperparams {
 
   ~LinearHyperparams() = default;
 
-  // -----------------------------------------
-
   /// Learning rate used for the updates
   const Float learning_rate_;
 
@@ -44,7 +33,6 @@ struct LinearHyperparams {
   const Float reg_lambda_;
 };
 
-// ------------------------------------------------------------------------
 }  // namespace predictors
 
 #endif  // PREDICTORS_LINEARHYPERPARMS_HPP_

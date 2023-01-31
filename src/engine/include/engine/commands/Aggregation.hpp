@@ -39,10 +39,10 @@ class Aggregation {
       fct::NamedTuple<fct::Field<"type_", StringAggregationLiteral>,
                       fct::Field<"col_", StringColumnOrStringColumnView> >;
 
-  using RecursiveType = std::variant<FloatAggregationOp, StringAggregationOp>;
+  using NamedTupleType = std::variant<FloatAggregationOp, StringAggregationOp>;
 
   /// Used to break the recursive definition.
-  RecursiveType val_;
+  NamedTupleType val_;
 };
 
 }  // namespace commands

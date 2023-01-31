@@ -101,7 +101,7 @@ struct XGBoostHyperparams {
   /// Subsample ratio of the training instance.
   using f_subsample = fct::Field<"subsample_", Float>;
 
-  using RecursiveType = fct::NamedTuple<
+  using NamedTupleType = fct::NamedTuple<
       f_alpha, f_booster, f_colsample_bylevel, f_colsample_bytree,
       f_early_stopping_rounds, f_eta, f_external_memory, f_gamma, f_lambda,
       f_max_delta_step, f_max_depth, f_min_child_weights, f_n_iter,
@@ -110,14 +110,14 @@ struct XGBoostHyperparams {
 
   // TODO: Replace this quick fix.
   XGBoostHyperparams(const Poco::JSON::Object &_json_obj)
-      : val_(json::from_json<RecursiveType>(_json_obj)) {}
+      : val_(json::from_json<NamedTupleType>(_json_obj)) {}
 
   ~XGBoostHyperparams() = default;
 
   /// Applies the hyperparameters to an XGBoost Handler
   template <int _i = 0>
   inline void apply(BoosterHandle _handle) const {
-    using Fields = typename RecursiveType::Fields;
+    using Fields = typename NamedTupleType::Fields;
 
     if constexpr (_i == std::tuple_size_v<Fields>) {
       return;
@@ -158,7 +158,7 @@ struct XGBoostHyperparams {
   }
 
   /// The underlying named tuple.
-  RecursiveType val_;
+  NamedTupleType val_;
 };
 
 }  // namespace predictors

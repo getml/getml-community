@@ -47,10 +47,10 @@ class Preprocessor {
   using TextFieldSplitterOp =
       fct::NamedTuple<fct::Field<"type_", fct::Literal<"TextFieldSplitter">>>;
 
-  using RecursiveType = std::variant<CategoryTrimmerOp, EmailDomainOp,
-                                     ImputationOp, SeasonalOp, SubstringOp>;
+  using NamedTupleType = std::variant<CategoryTrimmerOp, EmailDomainOp,
+                                      ImputationOp, SeasonalOp, SubstringOp>;
 
-  RecursiveType val_;
+  NamedTupleType val_;
 };
 
 }  // namespace commands
