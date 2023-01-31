@@ -17,9 +17,9 @@ namespace commands {
 
 class FeatureLearner {
  public:
-  using RecursiveType = std::variant<fastprop::Hyperparameters>;
+  using NamedTupleType = std::variant<fastprop::Hyperparameters>;
 
-  RecursiveType val_;
+  NamedTupleType val_;
 };
 
 }  // namespace commands

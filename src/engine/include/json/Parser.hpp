@@ -43,17 +43,11 @@ struct Parser;
 /// Default case - anything that cannot be explicitly matched.
 template <class T>
 struct Parser {
-  /// NamedTuples cannot be declared recursively. The structs designed as a
-  /// workaround need to be parsed automatically as well.
-  static constexpr bool is_recursive_ =
-      std::is_class_v<std::decay_t<T>> &&
-      !std::is_same<std::string, std::decay_t<T>>();
-
   /// Expresses the variables as type T.
   static auto from_json(const Poco::Dynamic::Var& _var) {
-    if constexpr (is_recursive_) {
-      using RecursiveType = std::decay_t<typename T::RecursiveType>;
-      return T{Parser<RecursiveType>::from_json(_var)};
+    if constexpr (fct::has_named_tuple_type_v<T>) {
+      using NamedTupleType = std::decay_t<typename T::NamedTupleType>;
+      return T(Parser<NamedTupleType>::from_json(_var));
     } else {
       return _var.convert<std::decay_t<T>>();
     }
@@ -61,10 +55,14 @@ struct Parser {
 
   /// Converts the variable to a JSON type.
   static auto to_json(const T& _var) {
-    if constexpr (is_recursive_) {
-      using RecursiveType = std::decay_t<typename T::RecursiveType>;
-      const auto& [r] = _var;
-      return Parser<RecursiveType>::to_json(r);
+    if constexpr (fct::has_named_tuple_type_v<T>) {
+      using NamedTupleType = std::decay_t<typename T::NamedTupleType>;
+      if constexpr (fct::has_named_tuple_method_v<T>) {
+        return Parser<NamedTupleType>::to_json(_var.named_tuple());
+      } else {
+        const auto& [r] = _var;
+        return Parser<NamedTupleType>::to_json(r);
+      }
     } else {
       return _var;
     }

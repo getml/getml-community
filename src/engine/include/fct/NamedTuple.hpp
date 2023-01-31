@@ -18,6 +18,8 @@
 #include "fct/StringLiteral.hpp"
 #include "fct/find_index.hpp"
 #include "fct/get.hpp"
+#include "fct/has_named_tuple_method_v.hpp"
+#include "fct/has_named_tuple_type_v.hpp"
 
 namespace fct {
 

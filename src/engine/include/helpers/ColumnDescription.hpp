@@ -33,7 +33,7 @@ struct ColumnDescription {
   /// The name of the table.
   using f_table = fct::Field<"table_", std::string>;
 
-  using RecursiveType = fct::NamedTuple<f_marker, f_name, f_table>;
+  using NamedTupleType = fct::NamedTuple<f_marker, f_name, f_table>;
 
   ColumnDescription(const MarkerType& _marker, const std::string& _table,
                     const std::string& _name)
@@ -43,11 +43,11 @@ struct ColumnDescription {
                     const std::string& _name)
       : val_(f_marker(_marker) * f_name(_name) * f_table(_table)) {}
 
-  explicit ColumnDescription(const RecursiveType& _val) : val_(_val) {}
+  explicit ColumnDescription(const NamedTupleType& _val) : val_(_val) {}
 
   /// TODO: Get rid of this temporary fix.
   explicit ColumnDescription(const Poco::JSON::Object& _obj)
-      : val_(json::from_json<RecursiveType>(_obj)) {}
+      : val_(json::from_json<NamedTupleType>(_obj)) {}
 
   ~ColumnDescription() = default;
 
@@ -89,10 +89,10 @@ struct ColumnDescription {
 
   /// TODO: Get rid of this temporary fix
   Poco::JSON::Object::Ptr to_json_obj() const {
-    return json::Parser<RecursiveType>().to_json(val_);
+    return json::Parser<NamedTupleType>().to_json(val_);
   }
 
-  RecursiveType val_;
+  NamedTupleType val_;
 };
 
 }  // namespace helpers

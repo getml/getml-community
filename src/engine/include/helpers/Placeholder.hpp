@@ -93,7 +93,7 @@ struct Placeholder {
   using f_upper_time_stamps_used =
       fct::Field<"upper_time_stamps_used_", std::vector<std::string>>;
 
-  using RecursiveType =
+  using NamedTupleType =
       fct::NamedTuple<f_allow_lagged_targets, f_categoricals, f_discretes,
                       f_joined_tables, f_join_keys, f_join_keys_used, f_name,
                       f_numericals, f_other_join_keys_used,
@@ -113,7 +113,7 @@ struct Placeholder {
 
   /// TODO: Remove this temporary fix.
   explicit Placeholder(const Poco::JSON::Object& _json_obj)
-      : val_(json::from_json<RecursiveType>(_json_obj)) {
+      : val_(json::from_json<NamedTupleType>(_json_obj)) {
     check_vector_length();
   }
 
@@ -134,7 +134,7 @@ struct Placeholder {
              f_other_time_stamps_used({}) * f_propositionalization({}) *
              f_time_stamps_used({}) * f_upper_time_stamps_used({})) {}
 
-  explicit Placeholder(const RecursiveType& _val) : val_(_val) {}
+  explicit Placeholder(const NamedTupleType& _val) : val_(_val) {}
 
   ~Placeholder() = default;
 
@@ -343,7 +343,7 @@ struct Placeholder {
   }
 
   /// Used to break the recursive definition.
-  const RecursiveType val_;
+  const NamedTupleType val_;
 };
 
 // ------------------------------------------------------------------------

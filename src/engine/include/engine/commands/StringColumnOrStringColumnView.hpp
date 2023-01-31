@@ -93,13 +93,13 @@ class StringColumnOrStringColumnView {
                       fct::Field<"name_", std::string>,
                       fct::Field<"type_", fct::Literal<"StringColumn">>>;
 
-  using RecursiveType =
+  using NamedTupleType =
       std::variant<StringColumnOp, StringBinaryOp, StringConstOp,
                    StringSubselectionOp, StringSubstringOp, StringUnaryOp,
                    StringUpdateOp, StringWithSubrolesOp, StringWithUnitOp>;
 
   /// Used to break the recursive definition.
-  RecursiveType val_;
+  NamedTupleType val_;
 };
 
 }  // namespace commands

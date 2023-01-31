@@ -59,14 +59,14 @@ struct Hyperparameters {
   static constexpr const char* CROSS_ENTROPY_LOSS = "CrossEntropyLoss";
   static constexpr const char* SQUARE_LOSS = "SquareLoss";
 
-  using RecursiveType =
+  using NamedTupleType =
       fct::NamedTuple<f_aggregations, f_delta_t, f_loss_function, f_max_lag,
                       f_min_df, f_n_most_frequent, f_num_features,
                       f_num_threads, f_sampling_factor, f_silent, f_type,
                       f_vocab_size>;
 
   Hyperparameters(const Poco::JSON::Object& _json_obj)
-      : val_(json::from_json<RecursiveType>(_json_obj)) {}
+      : val_(json::from_json<NamedTupleType>(_json_obj)) {}
 
   ~Hyperparameters() = default;
 
@@ -80,7 +80,7 @@ struct Hyperparameters {
 
   /// Usually used to break a recursive definition, but in
   /// this case it is used for backwards compabatability.
-  const RecursiveType val_;
+  const NamedTupleType val_;
 };
 
 }  // namespace fastprop

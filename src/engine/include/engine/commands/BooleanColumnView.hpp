@@ -99,13 +99,13 @@ class BooleanColumnView {
       fct::Field<"type_", fct::Literal<"BooleanColumnView">>>;
 
   /// Defines a boolean column view.
-  using RecursiveType =
+  using NamedTupleType =
       std::variant<BooleanBinaryOp, BooleanConstOp, BooleanIsInfOp,
                    BooleanIsNullOp, BooleanNotOp, BooleanNumComparisonOp,
                    BooleanStrComparisonOp, BooleanSubselectionOp>;
 
   /// Used to break the recursive definition.
-  RecursiveType val_;
+  NamedTupleType val_;
 };
 
 }  // namespace commands

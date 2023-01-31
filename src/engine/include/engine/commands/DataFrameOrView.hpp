@@ -50,10 +50,10 @@ class DataFrameOrView {
                  std::optional<std::variant<BooleanColumnView,
                                             FloatColumnOrFloatColumnView>>>>;
 
-  using RecursiveType = std::variant<DataFrameOp, ViewOp>;
+  using NamedTupleType = std::variant<DataFrameOp, ViewOp>;
 
   /// Used to break the recursive definition.
-  RecursiveType val_;
+  NamedTupleType val_;
 };
 
 }  // namespace commands

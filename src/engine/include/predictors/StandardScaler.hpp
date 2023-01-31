@@ -1,23 +1,17 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef PREDICTORS_STANDARDSCALER_HPP_
 #define PREDICTORS_STANDARDSCALER_HPP_
 
-// -----------------------------------------------------------------------------
-
 #include <Poco/JSON/Object.h>
-
-// -----------------------------------------------------------------------------
 
 #include <memory>
 #include <vector>
-
-// -----------------------------------------------------------------------------
 
 #include "predictors/CSRMatrix.hpp"
 #include "predictors/Float.hpp"
@@ -26,8 +20,6 @@
 #include "predictors/IntFeature.hpp"
 #include "predictors/JSON.hpp"
 #include "predictors/PredictorImpl.hpp"
-
-// -----------------------------------------------------------------------------
 
 namespace predictors {
 
@@ -41,8 +33,6 @@ class StandardScaler {
         std_(JSON::array_to_vector<Float>(JSON::get_array(_obj, "std_"))){};
 
   ~StandardScaler() = default;
-
-  // -------------------------------------------------------------------------
 
   /// Calculates the standard deviations for dense data.
   void fit(const std::vector<FloatFeature>& _X_numerical);
@@ -58,8 +48,6 @@ class StandardScaler {
   const CSRMatrix<Float, unsigned int, size_t> transform(
       const CSRMatrix<Float, unsigned int, size_t>& _X_sparse) const;
 
-  // -------------------------------------------------------------------------
-
   // Transforms StandardScaler to JSON object.
   Poco::JSON::Object to_json_obj() const {
     Poco::JSON::Object obj;
@@ -68,19 +56,14 @@ class StandardScaler {
     return obj;
   }
 
-  // -------------------------------------------------------------------------
-
  private:
   /// Means of the individual columns.
   std::vector<Float> mean_;
 
   /// Standard deviations of the individual columns.
   std::vector<Float> std_;
-
-  // -------------------------------------------------------------------------
 };
 
-// -----------------------------------------------------------------------------
 }  // namespace predictors
 
 #endif  // PREDICTORS_STANDARDSCALER_HPP_
