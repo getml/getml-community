@@ -10,6 +10,8 @@
 
 #include <Poco/JSON/Object.h>
 
+#include "fct/Field.hpp"
+#include "fct/NamedTuple.hpp"
 #include "predictors/Float.hpp"
 #include "predictors/JSON.hpp"
 
@@ -17,20 +19,33 @@ namespace predictors {
 
 /// Hyperparameters for Linear models.
 struct LinearHyperparams {
-  LinearHyperparams(const Float &_reg_lambda, const Float &_learning_rate)
-      : learning_rate_(_learning_rate), reg_lambda_(_reg_lambda) {}
+  /// Learning rate used for the updates
+  using f_learning_rate = fct::Field<"learning_rate_", Float>;
 
+  /// L2 regularization term on weights
+  using f_reg_lambda = fct::Field<"reg_lambda_", Float>;
+
+  using NamedTupleType = fct::NamedTuple<f_learning_rate, f_reg_lambda>;
+
+  LinearHyperparams(const Float &_reg_lambda, const Float &_learning_rate)
+      : val_(f_learning_rate(_learning_rate) * f_reg_lambda(_reg_lambda)) {}
+
+  LinearHyperparams(const NamedTupleType &_val) : val_(_val) {}
+
+  /// TODO: Remove this quick fix.
   LinearHyperparams(const Poco::JSON::Object &_json_obj)
-      : learning_rate_(JSON::get_value<Float>(_json_obj, "learning_rate_")),
-        reg_lambda_(JSON::get_value<Float>(_json_obj, "reg_lambda_")) {}
+      : val_(json::from_json<NamedTupleType>(_json_obj)) {}
 
   ~LinearHyperparams() = default;
 
-  /// Learning rate used for the updates
-  const Float learning_rate_;
+  /// Trivial accessor
+  Float learning_rate() const { return val_.get<f_learning_rate>(); }
 
-  /// L2 regularization term on weights
-  const Float reg_lambda_;
+  /// Trivial accessor
+  Float reg_lambda() const { return val_.get<f_reg_lambda>(); }
+
+  /// The underlying named tuple
+  const NamedTupleType val_;
 };
 
 }  // namespace predictors

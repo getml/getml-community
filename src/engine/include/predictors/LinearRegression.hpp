@@ -8,22 +8,13 @@
 #ifndef PREDICTORS_LINEARREGRESSION_HPP_
 #define PREDICTORS_LINEARREGRESSION_HPP_
 
-// -----------------------------------------------------------------------------
-
 #include <Poco/JSON/Object.h>
-
-// -----------------------------------------------------------------------------
 
 #include <memory>
 #include <optional>
 #include <vector>
 
-// -----------------------------------------------------------------------------
-
 #include "debug/debug.hpp"
-
-// -----------------------------------------------------------------------------
-
 #include "predictors/FloatFeature.hpp"
 #include "predictors/IntFeature.hpp"
 #include "predictors/LinearHyperparams.hpp"
@@ -144,10 +135,10 @@ class LinearRegression : public Predictor {
   /// Applies the L2 regularization term for numerical optimization.
   const void calculate_regularization(const Float _bsize_float,
                                       std::vector<Float>* _gradients) {
-    if (hyperparams().reg_lambda_ > 0.0) {
+    if (hyperparams().reg_lambda() > 0.0) {
       for (size_t i = 0; i < weights_.size(); ++i) {
         (*_gradients)[i] +=
-            hyperparams().reg_lambda_ * weights_[i] * _bsize_float;
+            hyperparams().reg_lambda() * weights_[i] * _bsize_float;
       }
     }
   }
