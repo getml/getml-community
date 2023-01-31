@@ -13,6 +13,9 @@
 #include <memory>
 #include <vector>
 
+#include "fct/Field.hpp"
+#include "fct/NamedTuple.hpp"
+#include "json/json.hpp"
 #include "predictors/CSRMatrix.hpp"
 #include "predictors/Float.hpp"
 #include "predictors/FloatFeature.hpp"
@@ -26,11 +29,22 @@ namespace predictors {
 /// For rescaling the input data to a standard deviation of one.
 class StandardScaler {
  public:
-  StandardScaler(){};
+  /// Means of the individual columns.
+  using f_mean = fct::Field<"mean_", std::vector<Float>>;
 
+  /// Standard deviations of the individual columns.
+  using f_std = fct::Field<"std_", std::vector<Float>>;
+
+  using NamedTupleType = fct::NamedTuple<f_mean, f_std>;
+
+ public:
+  StandardScaler() : val_(f_mean({}) * f_std({})){};
+
+  StandardScaler(const NamedTupleType& _val) : val_(_val) {}
+
+  /// TODO: Remove this quick fix
   StandardScaler(const Poco::JSON::Object _obj)
-      : mean_(JSON::array_to_vector<Float>(JSON::get_array(_obj, "mean_"))),
-        std_(JSON::array_to_vector<Float>(JSON::get_array(_obj, "std_"))){};
+      : val_(json::from_json<NamedTupleType>(_obj)){};
 
   ~StandardScaler() = default;
 
@@ -48,20 +62,31 @@ class StandardScaler {
   const CSRMatrix<Float, unsigned int, size_t> transform(
       const CSRMatrix<Float, unsigned int, size_t>& _X_sparse) const;
 
-  // Transforms StandardScaler to JSON object.
+  /// TODO: Remove this quick fix
   Poco::JSON::Object to_json_obj() const {
-    Poco::JSON::Object obj;
-    obj.set("mean_", JSON::vector_to_array(mean_));
-    obj.set("std_", JSON::vector_to_array(std_));
-    return obj;
+    return *json::Parser<StandardScaler>::to_json(*this);
   }
 
- private:
-  /// Means of the individual columns.
-  std::vector<Float> mean_;
+ public:
+  /// Necessary for the automated parsing to work.
+  const NamedTupleType& named_tuple() const { return val_; }
 
-  /// Standard deviations of the individual columns.
-  std::vector<Float> std_;
+ private:
+  /// Trivial accessor
+  inline std::vector<Float>& mean() { return val_.get<f_mean>(); }
+
+  /// Trivial accessor
+  inline const std::vector<Float>& mean() const { return val_.get<f_mean>(); }
+
+  /// Trivial accessor
+  inline std::vector<Float>& std() { return val_.get<f_std>(); }
+
+  /// Trivial accessor
+  inline const std::vector<Float>& std() const { return val_.get<f_std>(); }
+
+ private:
+  /// The underlying named tuple.
+  NamedTupleType val_;
 };
 
 }  // namespace predictors
