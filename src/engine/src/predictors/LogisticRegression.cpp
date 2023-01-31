@@ -1,21 +1,15 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "predictors/LogisticRegression.hpp"
 
-// -----------------------------------------------------------------------------
-
 #include <random>
 
-// -----------------------------------------------------------------------------
-
 #include "optimizers/optimizers.hpp"
-
-// -----------------------------------------------------------------------------
 
 namespace predictors {
 
@@ -220,7 +214,7 @@ void LogisticRegression::fit_sparse(
 
   std::vector<Float> gradients(weights_.size());
 
-  auto optimizer = optimizers::Adam(hyperparams().learning_rate_, 0.999, 10.0,
+  auto optimizer = optimizers::Adam(hyperparams().learning_rate(), 0.999, 10.0,
                                     1e-10, weights_.size());
 
   for (size_t epoch = 0; epoch < 1000; ++epoch) {
@@ -404,9 +398,9 @@ FloatFeature LogisticRegression::predict_sparse(
 void LogisticRegression::save(const std::string& _fname) const {
   Poco::JSON::Object obj;
 
-  obj.set("learning_rate_", hyperparams().learning_rate_);
+  obj.set("learning_rate_", hyperparams().learning_rate());
 
-  obj.set("reg_lambda_", hyperparams().reg_lambda_);
+  obj.set("reg_lambda_", hyperparams().reg_lambda());
 
   obj.set("scaler_", scaler_.to_json_obj());
 

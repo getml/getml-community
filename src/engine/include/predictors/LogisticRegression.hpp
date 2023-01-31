@@ -1,29 +1,20 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef PREDICTORS_LOGISTICREGRESSION_HPP_
 #define PREDICTORS_LOGISTICREGRESSION_HPP_
 
-// -----------------------------------------------------------------------------
-
 #include <Poco/JSON/Object.h>
-
-// -----------------------------------------------------------------------------
 
 #include <memory>
 #include <optional>
 #include <vector>
 
-// -----------------------------------------------------------------------------
-
 #include "debug/debug.hpp"
-
-// -----------------------------------------------------------------------------
-
 #include "predictors/FloatFeature.hpp"
 #include "predictors/IntFeature.hpp"
 #include "predictors/LinearHyperparams.hpp"
@@ -31,14 +22,10 @@
 #include "predictors/PredictorImpl.hpp"
 #include "predictors/StandardScaler.hpp"
 
-// -----------------------------------------------------------------------------
-
 namespace predictors {
 
 /// LogisticRegression predictor.
 class LogisticRegression : public Predictor {
-  // -------------------------------------------------------------------------
-
  public:
   LogisticRegression(const Poco::JSON::Object& _cmd,
                      const std::shared_ptr<const PredictorImpl>& _impl,
@@ -174,10 +161,10 @@ class LogisticRegression : public Predictor {
   /// Applies the L2 regularization term for numerical optimization.
   const void calculate_regularization(const Float _bsize_float,
                                       std::vector<Float>* _gradients) {
-    if (hyperparams().reg_lambda_ > 0.0) {
+    if (hyperparams().reg_lambda() > 0.0) {
       for (size_t i = 0; i < weights_.size(); ++i) {
         (*_gradients)[i] +=
-            hyperparams().reg_lambda_ * weights_[i] * _bsize_float;
+            hyperparams().reg_lambda() * weights_[i] * _bsize_float;
       }
     }
   }
