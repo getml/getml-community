@@ -21,7 +21,6 @@
 #include "predictors/FloatFeature.hpp"
 #include "predictors/Int.hpp"
 #include "predictors/IntFeature.hpp"
-#include "predictors/JSON.hpp"
 #include "predictors/PredictorImpl.hpp"
 
 namespace predictors {

@@ -23,7 +23,6 @@
 #include "predictors/Encoding.hpp"
 #include "predictors/FloatFeature.hpp"
 #include "predictors/IntFeature.hpp"
-#include "predictors/JSON.hpp"
 
 namespace predictors {
 

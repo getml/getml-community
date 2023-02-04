@@ -13,7 +13,6 @@
 #include "fct/Field.hpp"
 #include "fct/NamedTuple.hpp"
 #include "predictors/Float.hpp"
-#include "predictors/JSON.hpp"
 
 namespace predictors {
 

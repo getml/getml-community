@@ -17,7 +17,7 @@ fct::Ref<Predictor> PredictorParser::parse(
     const Poco::JSON::Object& _json_obj,
     const std::shared_ptr<const PredictorImpl>& _impl,
     const std::vector<Poco::JSON::Object::Ptr>& _dependencies) {
-  const auto type = JSON::get_value<std::string>(_json_obj, "type_");
+  const std::string type = "TODO";
 
   if (type == "LinearRegression") {
     return fct::Ref<LinearRegression>::make(_json_obj, _impl, _dependencies);
