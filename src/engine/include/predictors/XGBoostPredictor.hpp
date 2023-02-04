@@ -37,8 +37,6 @@ class XGBoostPredictor : public Predictor {
   typedef std::unique_ptr<BoosterHandle, BoosterDestructor> BoosterPtr;
   typedef XGBoostMatrix::DMatrixPtr DMatrixPtr;
 
-  // -----------------------------------------
-
  public:
   XGBoostPredictor(const Poco::JSON::Object& _cmd,
                    const std::shared_ptr<const PredictorImpl>& _impl,
@@ -49,8 +47,6 @@ class XGBoostPredictor : public Predictor {
         impl_(_impl) {}
 
   ~XGBoostPredictor() = default;
-
-  // -----------------------------------------
 
  public:
   /// Returns an importance measure for the individual features
@@ -82,8 +78,6 @@ class XGBoostPredictor : public Predictor {
   /// Saves the predictor
   void save(const std::string& _fname) const final;
 
-  // -------------------------------------------------------------------------
-
  public:
   /// Whether the predictor accepts null values.
   bool accepts_null() const final { return false; }
@@ -111,8 +105,6 @@ class XGBoostPredictor : public Predictor {
   /// The type of the predictor.
   std::string type() const final { return "XGBoost"; }
 
-  // -----------------------------------------
-
  private:
   /// Frees a Booster pointer
   static void delete_booster(BoosterHandle* _ptr) {
@@ -134,8 +126,6 @@ class XGBoostPredictor : public Predictor {
     assert_true(model_.size() > 0);
     return model_.data();
   }
-
-  // -----------------------------------------
 
  private:
   /// Adds a target to _d_matrix.
@@ -199,8 +189,6 @@ class XGBoostPredictor : public Predictor {
   void set_hyperparameters(const BoosterPtr& _handle,
                            const bool _is_memory_mapped) const;
 
-  // -----------------------------------------
-
  private:
   /// The JSON command used to construct this predictor.
   const Poco::JSON::Object cmd_;
@@ -218,7 +206,6 @@ class XGBoostPredictor : public Predictor {
   std::vector<char> model_;
 };
 
-// ------------------------------------------------------------------------
 }  // namespace predictors
 
 #endif  // PREDICTORS_XGBOOSTPREDICTOR_HPP_

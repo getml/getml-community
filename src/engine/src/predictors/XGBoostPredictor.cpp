@@ -286,9 +286,10 @@ std::vector<Float> XGBoostPredictor::feature_importances(
 Poco::JSON::Object::Ptr XGBoostPredictor::fingerprint() const {
   auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
 
-  obj->set("cmd_", cmd_);
+  /// TODO
+  // obj->set("cmd_", cmd_);
   obj->set("dependencies_", JSON::vector_to_array_ptr(dependencies_));
-  obj->set("impl_", impl().to_json_obj());
+  // obj->set("impl_", impl().to_json_obj());
 
   return obj;
 }
