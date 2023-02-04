@@ -14,10 +14,15 @@
 #include <utility>
 #include <vector>
 
+#include "engine/commands/Preprocessor.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/preprocessors/FitParams.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
 #include "engine/preprocessors/TransformParams.hpp"
+#include "fct/Field.hpp"
+#include "fct/Literal.hpp"
+#include "fct/Ref.hpp"
+#include "fct/define_named_tuple.hpp"
 #include "helpers/helpers.hpp"
 #include "strings/strings.hpp"
 
@@ -25,6 +30,32 @@ namespace engine {
 namespace preprocessors {
 
 class Seasonal : public Preprocessor {
+ public:
+  using SeasonalOp = typename commands::Preprocessor::SeasonalOp;
+
+  using f_hour =
+      fct::Field<"hour_",
+                 std::vector<std::shared_ptr<helpers::ColumnDescription>>>;
+
+  using f_minute =
+      fct::Field<"minute_",
+                 std::vector<std::shared_ptr<helpers::ColumnDescription>>>;
+
+  using f_month =
+      fct::Field<"month_",
+                 std::vector<std::shared_ptr<helpers::ColumnDescription>>>;
+
+  using f_weekday =
+      fct::Field<"weekday_",
+                 std::vector<std::shared_ptr<helpers::ColumnDescription>>>;
+
+  using f_year =
+      fct::Field<"year_",
+                 std::vector<std::shared_ptr<helpers::ColumnDescription>>>;
+
+  using NamedTupleType = fct::define_named_tuple_t<SeasonalOp, f_hour, f_minute,
+                                                   f_month, f_weekday, f_year>;
+
  private:
   static constexpr bool ADD_ZERO = true;
   static constexpr bool DONT_ADD_ZERO = false;
@@ -32,11 +63,14 @@ class Seasonal : public Preprocessor {
  public:
   Seasonal() {}
 
+  Seasonal(const SeasonalOp& _op,
+           const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
+      : dependencies_(_dependencies) {}
+
+  /// TODO: Remove this quick fix.
   Seasonal(const Poco::JSON::Object& _obj,
-           const std::vector<Poco::JSON::Object::Ptr>& _dependencies) {
-    *this = from_json_obj(_obj);
-    dependencies_ = _dependencies;
-  }
+           const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
+      : Seasonal(json::from_json<SeasonalOp>(_obj), _dependencies) {}
 
   ~Seasonal() = default;
 
@@ -67,6 +101,13 @@ class Seasonal : public Preprocessor {
       c->dependencies_ = *_dependencies;
     }
     return c;
+  }
+
+  /// Necessary for the automated parsing to work.
+  NamedTupleType named_tuple() const {
+    return fct::make_field<"type_">(fct::Literal<"Seasonal">()) *
+           f_hour(hour_) * f_minute(minute_) * f_month(month_) *
+           f_weekday(weekday_) * f_year(year_);
   }
 
   /// The preprocessor does not generate any SQL scripts.

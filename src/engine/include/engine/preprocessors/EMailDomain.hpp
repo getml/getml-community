@@ -14,10 +14,15 @@
 #include <utility>
 #include <vector>
 
+#include "engine/commands/Preprocessor.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/preprocessors/FitParams.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
 #include "engine/preprocessors/TransformParams.hpp"
+#include "fct/Field.hpp"
+#include "fct/Literal.hpp"
+#include "fct/Ref.hpp"
+#include "fct/define_named_tuple.hpp"
 #include "helpers/helpers.hpp"
 #include "strings/strings.hpp"
 
@@ -26,13 +31,25 @@ namespace preprocessors {
 
 class EMailDomain : public Preprocessor {
  public:
+  using EMailDomainOp = typename commands::Preprocessor::EMailDomainOp;
+
+  using f_cols =
+      fct::Field<"cols_",
+                 std::vector<std::shared_ptr<helpers::ColumnDescription>>>;
+
+  using NamedTupleType = fct::define_named_tuple_t<EMailDomainOp, f_cols>;
+
+ public:
   EMailDomain() {}
 
+  EMailDomain(const EMailDomainOp& _op,
+              const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
+      : dependencies_(_dependencies) {}
+
+  /// TODO: Remove this quick fix.
   EMailDomain(const Poco::JSON::Object& _obj,
-              const std::vector<Poco::JSON::Object::Ptr>& _dependencies) {
-    *this = from_json_obj(_obj);
-    dependencies_ = _dependencies;
-  }
+              const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
+      : EMailDomain(json::from_json<EMailDomainOp>(_obj), _dependencies) {}
 
   ~EMailDomain() = default;
 
@@ -63,6 +80,12 @@ class EMailDomain : public Preprocessor {
       c->dependencies_ = *_dependencies;
     }
     return c;
+  }
+
+  /// Necessary for the automated parsing to work.
+  NamedTupleType named_tuple() const {
+    return fct::make_field<"type_">(fct::Literal<"EMailDomain">()) *
+           f_cols(cols_);
   }
 
   /// The preprocessor does not generate any SQL scripts.
@@ -96,9 +119,6 @@ class EMailDomain : public Preprocessor {
                                          const std::string& _marker,
                                          const size_t _table,
                                          containers::Encoding* _categories);
-
-  /// Parses a JSON object.
-  EMailDomain from_json_obj(const Poco::JSON::Object& _obj) const;
 
   /// Transforms a single data frame.
   containers::DataFrame transform_df(const containers::Encoding& _categories,

@@ -1,22 +1,16 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/preprocessors/EMailDomain.hpp"
 
-// ----------------------------------------------------
-
 #include "engine/preprocessors/PreprocessorImpl.hpp"
-
-// ----------------------------------------------------
 
 namespace engine {
 namespace preprocessors {
-
-// ----------------------------------------------------
 
 std::optional<containers::Column<Int>> EMailDomain::extract_domain(
     const containers::Column<strings::String>& _col,
@@ -137,24 +131,16 @@ containers::DataFrame EMailDomain::fit_transform_df(
   auto df = _df;
 
   for (size_t i = 0; i < _df.num_text(); ++i) {
-    // -----------------------------------
-
     const auto& email_col = _df.text(i);
-
-    // -----------------------------------
 
     if (!helpers::SubroleParser::contains_any(email_col.subroles(),
                                               whitelist)) {
       continue;
     }
 
-    // -----------------------------------
-
     if (helpers::SubroleParser::contains_any(email_col.subroles(), blacklist)) {
       continue;
     }
-
-    // -----------------------------------
 
     const auto col = extract_domain(email_col, _categories);
 
@@ -162,24 +148,9 @@ containers::DataFrame EMailDomain::fit_transform_df(
       PreprocessorImpl::add(_marker, _table, email_col.name(), &cols_);
       df.add_int_column(*col, containers::DataFrame::ROLE_CATEGORICAL);
     }
-
-    // -----------------------------------
   }
 
   return df;
-}
-
-// ----------------------------------------------------
-
-EMailDomain EMailDomain::from_json_obj(const Poco::JSON::Object& _obj) const {
-  EMailDomain that;
-
-  if (_obj.has("cols_")) {
-    that.cols_ = PreprocessorImpl::from_array(
-        jsonutils::JSON::get_object_array(_obj, "cols_"));
-  }
-
-  return that;
 }
 
 // ----------------------------------------------------
@@ -221,11 +192,7 @@ EMailDomain::transform(const TransformParams& _params) const {
 containers::DataFrame EMailDomain::transform_df(
     const containers::Encoding& _categories, const containers::DataFrame& _df,
     const std::string& _marker, const size_t _table) const {
-  // ----------------------------------------------------
-
   auto df = _df;
-
-  // ----------------------------------------------------
 
   auto names = PreprocessorImpl::retrieve_names(_marker, _table, cols_);
 
@@ -234,8 +201,6 @@ containers::DataFrame EMailDomain::transform_df(
 
     df.add_int_column(col, containers::DataFrame::ROLE_CATEGORICAL);
   }
-
-  // ----------------------------------------------------
 
   return df;
 }

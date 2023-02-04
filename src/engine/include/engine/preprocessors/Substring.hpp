@@ -8,19 +8,22 @@
 #ifndef ENGINE_PREPROCESSORS_SUBSTRING_HPP_
 #define ENGINE_PREPROCESSORS_SUBSTRING_HPP_
 
-// ----------------------------------------------------------------------------
-
 #include <Poco/JSON/Object.h>
 
 #include <memory>
 #include <utility>
 #include <vector>
 
+#include "engine/commands/Preprocessor.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/preprocessors/FitParams.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
 #include "engine/preprocessors/PreprocessorImpl.hpp"
 #include "engine/preprocessors/TransformParams.hpp"
+#include "fct/Field.hpp"
+#include "fct/Literal.hpp"
+#include "fct/Ref.hpp"
+#include "fct/define_named_tuple.hpp"
 #include "helpers/helpers.hpp"
 #include "strings/strings.hpp"
 
@@ -29,13 +32,28 @@ namespace preprocessors {
 
 class Substring : public Preprocessor {
  public:
+  using SubstringOp = typename commands::Preprocessor::SubstringOp;
+
+  using f_cols =
+      fct::Field<"cols_",
+                 std::vector<std::shared_ptr<helpers::ColumnDescription>>>;
+
+  using NamedTupleType = fct::define_named_tuple_t<SubstringOp, f_cols>;
+
+ public:
   Substring() : begin_(0), length_(0) {}
 
+  Substring(const SubstringOp& _op,
+            const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
+      : begin_(_op.get<"begin_">()),
+        dependencies_(_dependencies),
+        length_(_op.get<"length_">()),
+        unit_(_op.get<"unit_">()) {}
+
+  /// TODO: Remove this quick fix.
   Substring(const Poco::JSON::Object& _obj,
-            const std::vector<Poco::JSON::Object::Ptr>& _dependencies) {
-    *this = from_json_obj(_obj);
-    dependencies_ = _dependencies;
-  }
+            const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
+      : Substring(json::from_json<SubstringOp>(_obj), _dependencies) {}
 
   ~Substring() = default;
 
@@ -66,6 +84,14 @@ class Substring : public Preprocessor {
       c->dependencies_ = *_dependencies;
     }
     return c;
+  }
+
+  /// Necessary for the automated parsing to work.
+  NamedTupleType named_tuple() const {
+    return fct::make_field<"type_">(fct::Literal<"Substring">()) *
+           fct::make_field<"begin_">(begin_) * f_cols(cols_) *
+           fct::make_field<"length_">(length_) *
+           fct::make_field<"unit_">(unit_);
   }
 
   /// The preprocessor does not generate any SQL scripts.

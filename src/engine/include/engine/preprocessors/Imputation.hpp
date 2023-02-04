@@ -14,10 +14,15 @@
 #include <utility>
 #include <vector>
 
+#include "engine/commands/Preprocessor.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/preprocessors/FitParams.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
 #include "engine/preprocessors/TransformParams.hpp"
+#include "fct/Field.hpp"
+#include "fct/Literal.hpp"
+#include "fct/Ref.hpp"
+#include "fct/define_named_tuple.hpp"
 #include "helpers/helpers.hpp"
 #include "strings/strings.hpp"
 
@@ -30,15 +35,32 @@ class Imputation : public Preprocessor {
       ImputationMapType;
 
  public:
+  using ImputationOp = typename commands::Preprocessor::ImputationOp;
+
+  using f_column_descriptions =
+      fct::Field<"column_descriptions_",
+                 std::vector<helpers::ColumnDescription>>;
+
+  using f_means = fct::Field<"means_", std::vector<Float>>;
+
+  using f_needs_dummies = fct::Field<"needs_dummies_", std::vector<bool>>;
+
+  using NamedTupleType =
+      fct::define_named_tuple_t<ImputationOp, f_column_descriptions, f_means,
+                                f_needs_dummies>;
+
+ public:
   Imputation()
       : add_dummies_(false), cols_(std::make_shared<ImputationMapType>()) {}
 
+  Imputation(const ImputationOp& _op,
+             const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
+      : dependencies_(_dependencies) {}
+
+  /// TODO: Remove this quick fix.
   Imputation(const Poco::JSON::Object& _obj,
              const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
-      : add_dummies_(false), cols_(std::make_shared<ImputationMapType>()) {
-    *this = from_json_obj(_obj);
-    dependencies_ = _dependencies;
-  }
+      : Imputation(json::from_json<ImputationOp>(_obj), _dependencies) {}
 
   ~Imputation() = default;
 
@@ -71,6 +93,14 @@ class Imputation : public Preprocessor {
     return c;
   }
 
+  /// Necessary for the automated parsing to work.
+  NamedTupleType named_tuple() const {
+    return fct::make_field<"type_">(fct::Literal<"Imputation">()) *
+           fct::make_field<"add_dummies_">(add_dummies_) *
+           f_column_descriptions(column_descriptions()) * f_means(means()) *
+           f_needs_dummies(needs_dummies());
+  }
+
   /// The preprocessor does not generate any SQL scripts.
   std::vector<std::string> to_sql(
       const helpers::StringIterator& _categories,
@@ -97,9 +127,6 @@ class Imputation : public Preprocessor {
   containers::DataFrame fit_transform_df(const containers::DataFrame& _df,
                                          const std::string& _marker,
                                          const size_t _table);
-
-  /// Parses a JSON object.
-  Imputation from_json_obj(const Poco::JSON::Object& _obj) const;
 
   /// Replaces the original column with an imputed one. Returns a boolean
   /// indicating whether any value had to be imputed.
@@ -128,6 +155,16 @@ class Imputation : public Preprocessor {
     return *cols_;
   }
 
+  /// Retrieves the column description from the map.
+  std::vector<helpers::ColumnDescription> column_descriptions() const {
+    if (!cols_) {
+      throw std::runtime_error(
+          "The Imputation preprocessor has not been fitted.");
+    }
+    return fct::collect::vector<helpers::ColumnDescription>(*cols_ |
+                                                            VIEWS::keys);
+  }
+
   /// Retrieve the column description of all columns in cols_.
   std::vector<std::shared_ptr<helpers::ColumnDescription>> get_all_cols()
       const {
@@ -150,6 +187,24 @@ class Imputation : public Preprocessor {
     return helpers::Macros::imputation_begin() + _colname +
            helpers::Macros::imputation_replacement() +
            std::to_string(_replacement) + helpers::Macros::imputation_end();
+  }
+
+  /// Retrieves the means from the map.
+  std::vector<Float> means() const {
+    if (!cols_) {
+      throw std::runtime_error(
+          "The Imputation preprocessor has not been fitted.");
+    }
+    return fct::collect::vector<Float>(*cols_ | VIEWS::values | VIEWS::keys);
+  }
+
+  /// Retrieves the means from the map.
+  std::vector<bool> needs_dummies() const {
+    if (!cols_) {
+      throw std::runtime_error(
+          "The Imputation preprocessor has not been fitted.");
+    }
+    return fct::collect::vector<bool>(*cols_ | VIEWS::values | VIEWS::values);
   }
 
  private:

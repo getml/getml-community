@@ -21,38 +21,6 @@ namespace preprocessors {
 
 // ----------------------------------------------------
 
-typename CategoryTrimmer::CategoryPair CategoryTrimmer::category_pair_from_obj(
-    const Poco::JSON::Object::Ptr& _ptr) const {
-  assert_true(_ptr);
-
-  throw_unless(_ptr, "CategoryPair: Not an object.");
-
-  const auto first = helpers::ColumnDescription(
-      *JSON::get_object(*_ptr, "column_description_"));
-
-  const auto vec = JSON::array_to_vector<Int>(JSON::get_array(*_ptr, "set_"));
-
-  const auto second = fct::Ref<std::set<Int>>::make(vec.begin(), vec.end());
-
-  return std::make_pair(first, second);
-}
-
-// ----------------------------------------------------
-
-Poco::JSON::Object::Ptr CategoryTrimmer::category_pair_to_obj(
-    const CategoryPair& _pair) const {
-  auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-
-  obj->set("column_description_", _pair.first.to_json_obj());
-
-  obj->set("set_", JSON::vector_to_array_ptr(std::vector<Int>(
-                       _pair.second->begin(), _pair.second->end())));
-
-  return obj;
-}
-
-// ----------------------------------------------------
-
 std::string CategoryTrimmer::column_to_sql(
     const helpers::StringIterator& _categories,
     const std::shared_ptr<const transpilation::SQLDialectGenerator>&
@@ -248,56 +216,10 @@ std::map<Int, size_t> CategoryTrimmer::make_map(
 
 // ----------------------------------------------------
 
-CategoryTrimmer CategoryTrimmer::from_json_obj(
-    const Poco::JSON::Object& _obj) const {
-  CategoryTrimmer that;
-
-  that.max_num_categories_ =
-      JSON::get_value<size_t>(_obj, "max_num_categories_");
-
-  that.min_freq_ = JSON::get_value<size_t>(_obj, "min_freq_");
-
-  if (!_obj.has("population_sets_")) {
-    return that;
-  }
-
-  const auto population_sets_arr = JSON::get_array(_obj, "population_sets_");
-
-  for (size_t i = 0; i < population_sets_arr->size(); ++i) {
-    that.population_sets_.push_back(
-        category_pair_from_obj(population_sets_arr->getObject(i)));
-  }
-  const auto peripheral_sets_arr = JSON::get_array(_obj, "peripheral_sets_");
-
-  for (size_t i = 0; i < peripheral_sets_arr->size(); ++i) {
-    const auto& arr = peripheral_sets_arr->getArray(i);
-
-    throw_unless(arr, "CategoryTrimmer: Not an array!");
-
-    auto vec = std::vector<CategoryPair>();
-
-    for (size_t j = 0; j < arr->size(); ++j) {
-      vec.push_back(category_pair_from_obj(arr->getObject(j)));
-    }
-
-    that.peripheral_sets_.push_back(vec);
-  }
-
-  return that;
-}
-
-// ----------------------------------------------------
-
 Poco::JSON::Object::Ptr CategoryTrimmer::to_json_obj() const {
-  const auto to_obj = [this](const auto& _pair) -> Poco::JSON::Object::Ptr {
-    return category_pair_to_obj(_pair);
-  };
-
-  const auto to_arr = [to_obj](const auto& _vec) -> Poco::JSON::Array::Ptr {
-    return fct::collect::array(_vec | VIEWS::transform(to_obj));
-  };
-
   auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
+
+  // TODO
 
   obj->set("dependencies_", JSON::vector_to_array_ptr(dependencies_));
 
@@ -305,11 +227,11 @@ Poco::JSON::Object::Ptr CategoryTrimmer::to_json_obj() const {
 
   obj->set("min_freq_", min_freq_);
 
-  obj->set("peripheral_sets_",
-           fct::collect::array(peripheral_sets_ | VIEWS::transform(to_arr)));
+  // obj->set("peripheral_sets_",
+  //         fct::collect::array(peripheral_sets_ | VIEWS::transform(to_arr)));
 
-  obj->set("population_sets_",
-           fct::collect::array(population_sets_ | VIEWS::transform(to_obj)));
+  // obj->set("population_sets_",
+  //         fct::collect::array(population_sets_ | VIEWS::transform(to_obj)));
 
   obj->set("type_", type());
 
