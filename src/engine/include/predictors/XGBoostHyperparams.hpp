@@ -101,16 +101,19 @@ struct XGBoostHyperparams {
   /// Subsample ratio of the training instance.
   using f_subsample = fct::Field<"subsample_", Float>;
 
+  /// Signifies this as XGBoost hyperparameters.
+  using f_type =
+      fct::Field<"type_", fct::Literal<"XGBoostPredictor", "XGBoostClassifier",
+                                       "XGBoostRegressor">>;
+
   using NamedTupleType = fct::NamedTuple<
-      f_alpha, f_booster, f_colsample_bylevel, f_colsample_bytree,
+      f_type, f_alpha, f_booster, f_colsample_bylevel, f_colsample_bytree,
       f_early_stopping_rounds, f_eta, f_external_memory, f_gamma, f_lambda,
       f_max_delta_step, f_max_depth, f_min_child_weights, f_n_iter,
       f_normalize_type, f_num_parallel_tree, f_nthread, f_objective, f_one_drop,
       f_rate_drop, f_sample_type, f_silent, f_skip_drop, f_subsample>;
 
-  // TODO: Replace this quick fix.
-  XGBoostHyperparams(const Poco::JSON::Object &_json_obj)
-      : val_(json::from_json<NamedTupleType>(_json_obj)) {}
+  XGBoostHyperparams(const NamedTupleType &_val) : val_(_val) {}
 
   ~XGBoostHyperparams() = default;
 
@@ -129,8 +132,8 @@ struct XGBoostHyperparams {
       const auto name =
           name_with_underscore.substr(0, name_with_underscore.size() - 1);
 
-      if (name == "early_stopping_rounds" || name == "external_memory" ||
-          name == "n_iter") {
+      if (name == "type_" || name == "early_stopping_rounds" ||
+          name == "external_memory" || name == "n_iter") {
         apply<_i + 1>(_handle);
         return;
       }

@@ -336,13 +336,13 @@ std::string XGBoostPredictor::fit(
 
   std::stringstream msg;
 
-  if (hyperparams_.val_.get<"booster_">() == "gblinear") {
+  if (hyperparams_->val_.get<"booster_">() == "gblinear") {
     msg << std::endl
-        << "XGBoost: Trained " << hyperparams_.val_.get<"n_iter_">()
+        << "XGBoost: Trained " << hyperparams_->val_.get<"n_iter_">()
         << " linear models.";
   } else {
     msg << std::endl
-        << "XGBoost: Trained " << hyperparams_.val_.get<"n_iter_">()
+        << "XGBoost: Trained " << hyperparams_->val_.get<"n_iter_">()
         << " trees.";
   }
 
@@ -365,7 +365,7 @@ void XGBoostPredictor::fit_handle(
 
     const auto progress_str = "Progress: " + std::to_string(progress) + "%.";
 
-    if (hyperparams_.val_.get<"booster_">() == "gblinear") {
+    if (hyperparams_->val_.get<"booster_">() == "gblinear") {
       _logger->log("XGBoost: Trained linear model " + std::to_string(_i + 1) +
                    ". " + progress_str);
     } else {
@@ -394,13 +394,13 @@ void XGBoostPredictor::fit_handle(
 
     ++n_no_improvement;
 
-    if (n_no_improvement < hyperparams_.val_.get<"early_stopping_rounds_">())
+    if (n_no_improvement < hyperparams_->val_.get<"early_stopping_rounds_">())
       [[likely]] { return false; }
 
     return true;
   };
 
-  const auto n_iter = static_cast<int>(hyperparams_.val_.get<"n_iter_">());
+  const auto n_iter = static_cast<int>(hyperparams_->val_.get<"n_iter_">());
 
   for (int i = 0; i < n_iter; ++i) {
     if (XGBoosterUpdateOneIter(*_handle, i, *_train_set.get())) {
@@ -453,7 +453,7 @@ XGBoostMatrix XGBoostPredictor::make_matrix(
                                     ? _X_numerical.at(0).is_memory_mapped()
                                     : _X_categorical.at(0).is_memory_mapped();
 
-  if (is_memory_mapped && hyperparams_.val_.get<"external_memory_">()) {
+  if (is_memory_mapped && hyperparams_->val_.get<"external_memory_">()) {
     return convert_to_memory_mapped_dmatrix(_X_categorical, _X_numerical, _y);
   }
 
@@ -481,7 +481,7 @@ void XGBoostPredictor::parse_dump(
     }
   }
 
-  if (hyperparams_.val_.get<"booster_">() == "gblinear") {
+  if (hyperparams_->val_.get<"booster_">() == "gblinear") {
     assert_true(lines.size() >= _all_feature_importances->size() + 3);
 
     for (size_t i = 0; i < _all_feature_importances->size(); ++i) {
@@ -595,10 +595,10 @@ void XGBoostPredictor::save(const std::string &_fname) const {
 
 void XGBoostPredictor::set_hyperparameters(const BoosterPtr &_handle,
                                            const bool _is_memory_mapped) const {
-  hyperparams_.apply(*_handle);
+  hyperparams_->apply(*_handle);
 
   // This is recommended by the XGBoost documentation.
-  if (_is_memory_mapped && hyperparams_.val_.get<"external_memory_">()) {
+  if (_is_memory_mapped && hyperparams_->val_.get<"external_memory_">()) {
     XGBoosterSetParam(*_handle, "tree_method", "approx");
   }
 }

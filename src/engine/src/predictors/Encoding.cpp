@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "predictors/Encoding.hpp"
 
@@ -14,15 +14,6 @@ namespace predictors {
 void Encoding::fit(const IntFeature& _col) {
   min_ = *std::min_element(_col.begin(), _col.end());
   max_ = *std::max_element(_col.begin(), _col.end());
-}
-
-// -----------------------------------------------------------------------------
-
-Poco::JSON::Object Encoding::to_json_obj() const {
-  Poco::JSON::Object obj;
-  obj.set("max_", max_);
-  obj.set("min_", min_);
-  return obj;
 }
 
 // -----------------------------------------------------------------------------
