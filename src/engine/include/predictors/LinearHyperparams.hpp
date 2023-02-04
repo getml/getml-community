@@ -17,15 +17,18 @@
 
 namespace predictors {
 
+/// Learning rate used for the updates
+using f_learning_rate = fct::Field<"learning_rate_", Float>;
+
+/// L2 regularization term on weights
+using f_reg_lambda = fct::Field<"reg_lambda_", Float>;
+
+using LinearNamedTupleBase = fct::NamedTuple<f_learning_rate, f_reg_lambda>;
+
 /// Hyperparameters for Linear models.
+template <class T>
 struct LinearHyperparams {
-  /// Learning rate used for the updates
-  using f_learning_rate = fct::Field<"learning_rate_", Float>;
-
-  /// L2 regularization term on weights
-  using f_reg_lambda = fct::Field<"reg_lambda_", Float>;
-
-  using NamedTupleType = fct::NamedTuple<f_learning_rate, f_reg_lambda>;
+  using NamedTupleType = T;
 
   LinearHyperparams(const Float &_reg_lambda, const Float &_learning_rate)
       : val_(f_learning_rate(_learning_rate) * f_reg_lambda(_reg_lambda)) {}
@@ -39,10 +42,10 @@ struct LinearHyperparams {
   ~LinearHyperparams() = default;
 
   /// Trivial accessor
-  Float learning_rate() const { return val_.get<f_learning_rate>(); }
+  Float learning_rate() const { return fct::get<f_learning_rate>(val_); }
 
   /// Trivial accessor
-  Float reg_lambda() const { return val_.get<f_reg_lambda>(); }
+  Float reg_lambda() const { return fct::get<f_reg_lambda>(val_); }
 
   /// The underlying named tuple
   const NamedTupleType val_;

@@ -15,9 +15,11 @@
 #include <vector>
 
 #include "debug/debug.hpp"
+#include "fct/NamedTuple.hpp"
+#include "fct/Ref.hpp"
 #include "predictors/FloatFeature.hpp"
 #include "predictors/IntFeature.hpp"
-#include "predictors/LinearHyperparams.hpp"
+#include "predictors/LinearRegressionHyperparams.hpp"
 #include "predictors/Predictor.hpp"
 #include "predictors/PredictorImpl.hpp"
 #include "predictors/StandardScaler.hpp"
@@ -27,12 +29,20 @@ namespace predictors {
 /// Linear regression predictor.
 class LinearRegression : public Predictor {
  public:
-  LinearRegression(const Poco::JSON::Object& _cmd,
+  using f_scaler = fct::Field<"scaler_", StandardScaler>;
+
+  using f_weights = fct::Field<"weights_", std::vector<Float>>;
+
+  using NamedTupleType =
+      fct::NamedTuple<f_learning_rate, f_reg_lambda, f_scaler, f_weights>;
+
+ public:
+  LinearRegression(const Poco::JSON::Object& _cmd,  // TODO: Remove this fix.
                    const std::shared_ptr<const PredictorImpl>& _impl,
                    const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
-      : cmd_(_cmd),
-        dependencies_(_dependencies),
-        hyperparams_(std::make_shared<LinearHyperparams>(_cmd)),
+      : dependencies_(_dependencies),
+        hyperparams_(fct::Ref<LinearRegressionHyperparams>::make(
+            json::from_json<LinearRegressionHyperparams>(_cmd))),
         impl_(_impl){};
 
   ~LinearRegression() = default;
@@ -81,22 +91,28 @@ class LinearRegression : public Predictor {
   /// Whether the predictor has been fitted.
   bool is_fitted() const final { return weights_.size() > 0; }
 
+  /// Necessary for the automated parsing to work.
+  NamedTupleType named_tuple() const {
+    return f_learning_rate(hyperparams().learning_rate()) *
+           f_reg_lambda(hyperparams().reg_lambda()) * f_scaler(scaler_) *
+           f_weights(weights_);
+  }
+
   /// Whether we want the predictor to be silent.
   bool silent() const final { return true; }
 
   /// The type of the predictor.
-  std::string type() const final { return "LinearRegression"; }
+  std::string type() const final {
+    return hyperparams().val_.get<"type_">().name();
+  }
 
  private:
   /// Trivial (private const) accessor.
-  const LinearHyperparams& hyperparams() const {
-    assert_true(hyperparams_);
+  const LinearRegressionHyperparams& hyperparams() const {
     return *hyperparams_;
   }
 
  private:
-  Poco::JSON::Object load_json_obj(const std::string& _fname) const;
-
   /// Generates predictions when no categorical columns have been passed.
   FloatFeature predict_dense(
       const std::vector<FloatFeature>& _X_numerical) const;
@@ -162,14 +178,11 @@ class LinearRegression : public Predictor {
   }
 
  private:
-  /// The JSON command used to construct this predictor.
-  const Poco::JSON::Object cmd_;
-
   /// The dependencies used to build the fingerprint.
   std::vector<Poco::JSON::Object::Ptr> dependencies_;
 
   /// The hyperparameters used for the LinearRegression.
-  std::shared_ptr<const LinearHyperparams> hyperparams_;
+  fct::Ref<const LinearRegressionHyperparams> hyperparams_;
 
   /// Implementation class for member functions common to most predictors.
   std::shared_ptr<const PredictorImpl> impl_;

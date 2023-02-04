@@ -11,6 +11,8 @@
 #include <numeric>
 #include <random>
 
+#include "helpers/Loader.hpp"
+#include "helpers/Saver.hpp"
 #include "optimizers/optimizers.hpp"
 
 namespace predictors {
@@ -58,7 +60,8 @@ std::vector<Float> LinearRegression::feature_importances(
 Poco::JSON::Object::Ptr LinearRegression::fingerprint() const {
   auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
 
-  obj->set("cmd_", cmd_);
+  // TODO
+  // obj->set("cmd_", cmd_);
   obj->set("dependencies_", JSON::vector_to_array_ptr(dependencies_));
   obj->set("impl_", impl().to_json_obj());
 
@@ -74,11 +77,7 @@ std::string LinearRegression::fit(
     const std::optional<std::vector<IntFeature>>& _X_categorical_valid,
     const std::optional<std::vector<FloatFeature>>& _X_numerical_valid,
     const std::optional<FloatFeature>& _y_valid) {
-  // -------------------------------------------------------------------------
-
   impl().check_plausibility(_X_categorical, _X_numerical, _y);
-
-  // -------------------------------------------------------------------------
 
   if (_X_categorical.size() > 0) {
     solve_numerically(_X_categorical, _X_numerical, _y);
@@ -86,61 +85,20 @@ std::string LinearRegression::fit(
     solve_arithmetically(_X_numerical, _y);
   }
 
-  // -------------------------------------------------------------------------
-
   if (_logger) {
     _logger->log("Progress: 100%.");
   }
 
-  // -------------------------------------------------------------------------
-
   return "";
-
-  // -------------------------------------------------------------------------
 }
 
 // -----------------------------------------------------------------------------
 
 void LinearRegression::load(const std::string& _fname) {
-  const auto obj = load_json_obj(_fname + ".json");
-
-  hyperparams_ = std::make_shared<LinearHyperparams>(
-      JSON::get_value<Float>(obj, "reg_lambda_"),
-      JSON::get_value<Float>(obj, "learning_rate_"));
-
-  scaler_ = StandardScaler(*JSON::get_object(obj, "scaler_"));
-
-  weights_ = JSON::array_to_vector<Float>(JSON::get_array(obj, "weights_"));
-}
-
-// -----------------------------------------------------------------------------
-
-Poco::JSON::Object LinearRegression::load_json_obj(
-    const std::string& _fname) const {
-  std::ifstream input(_fname);
-
-  std::stringstream json;
-
-  std::string line;
-
-  if (input.is_open()) {
-    while (std::getline(input, line)) {
-      json << line;
-    }
-
-    input.close();
-  } else {
-    throw std::runtime_error("File '" + _fname + "' not found!");
-  }
-
-  const auto ptr =
-      Poco::JSON::Parser().parse(json.str()).extract<Poco::JSON::Object::Ptr>();
-
-  if (!ptr) {
-    throw std::runtime_error("JSON file did not contain an object!");
-  }
-
-  return *ptr;
+  const auto named_tuple =
+      helpers::Loader::load_from_json<NamedTupleType>(_fname);
+  scaler_ = named_tuple.get<f_scaler>();
+  weights_ = named_tuple.get<f_weights>();
 }
 
 // -----------------------------------------------------------------------------
@@ -165,20 +123,13 @@ FloatFeature LinearRegression::predict(
 
 FloatFeature LinearRegression::predict_dense(
     const std::vector<FloatFeature>& _X_numerical) const {
-  // -------------------------------------------------------------------------
-  // Make sure that the X is plausible.
-
   if (weights_.size() != _X_numerical.size() + 1) {
     throw std::runtime_error("Incorrect number of features! Expected " +
                              std::to_string(weights_.size() - 1) + ", got " +
                              std::to_string(_X_numerical.size()) + ".");
   }
 
-  // -------------------------------------------------------------------------
-
   const auto X = scaler_.transform(_X_numerical);
-
-  // -------------------------------------------------------------------------
 
   auto predictions =
       FloatFeature(std::make_shared<std::vector<Float>>(X[0].size()));
@@ -191,17 +142,11 @@ FloatFeature LinearRegression::predict_dense(
     }
   }
 
-  // -------------------------------------------------------------------------
-
   for (size_t i = 0; i < predictions.size(); ++i) {
     predictions[i] += weights_[X.size()];
   }
 
-  // -------------------------------------------------------------------------
-
   return predictions;
-
-  // -------------------------------------------------------------------------
 }
 
 // -----------------------------------------------------------------------------
@@ -209,16 +154,10 @@ FloatFeature LinearRegression::predict_dense(
 FloatFeature LinearRegression::predict_sparse(
     const std::vector<IntFeature>& _X_categorical,
     const std::vector<FloatFeature>& _X_numerical) const {
-  // -------------------------------------------------------------------------
-
   auto csr_mat = impl().make_csr<Float, unsigned int, size_t>(_X_categorical,
                                                               _X_numerical);
 
-  // -------------------------------------------------------------------------
-
   csr_mat = scaler_.transform(csr_mat);
-
-  // -------------------------------------------------------------------------
 
   if (weights_.size() != csr_mat.ncols() + 1) {
     throw std::runtime_error(
@@ -227,12 +166,8 @@ FloatFeature LinearRegression::predict_sparse(
         std::to_string(csr_mat.ncols()) + ".");
   }
 
-  // -------------------------------------------------------------------------
-
   auto predictions =
       FloatFeature(std::make_shared<std::vector<Float>>(csr_mat.nrows()));
-
-  // -------------------------------------------------------------------------
 
   for (size_t i = 0; i < csr_mat.nrows(); ++i) {
     predictions[i] =
@@ -240,44 +175,22 @@ FloatFeature LinearRegression::predict_sparse(
                        csr_mat.indices(), csr_mat.data());
   }
 
-  // -------------------------------------------------------------------------
-
   return predictions;
-
-  // -------------------------------------------------------------------------
 }
 
 // -----------------------------------------------------------------------------
 
 void LinearRegression::save(const std::string& _fname) const {
-  Poco::JSON::Object obj;
-
-  obj.set("learning_rate_", hyperparams().learning_rate());
-
-  obj.set("reg_lambda_", hyperparams().reg_lambda());
-
-  obj.set("scaler_", scaler_.to_json_obj());
-
-  obj.set("weights_", weights_);
-
-  auto output = std::ofstream(_fname + ".json");
-
-  Poco::JSON::Stringifier::stringify(obj, output);
+  helpers::Saver::save_as_json(_fname, *this);
 }
 
 // -----------------------------------------------------------------------------
 
 void LinearRegression::solve_arithmetically(
     const std::vector<FloatFeature>& _X_numerical, const FloatFeature& _y) {
-  // -------------------------------------------------------------------------
-  // Rescale training set.
-
   scaler_.fit(_X_numerical);
 
   const auto X = scaler_.transform(_X_numerical);
-
-  // -------------------------------------------------------------------------
-  // Calculate XtX
 
   // CAREFUL: Do NOT use "auto"!
   Eigen::MatrixXd XtX = Eigen::MatrixXd(X.size() + 1, X.size() + 1);
@@ -306,9 +219,6 @@ void LinearRegression::solve_arithmetically(
     }
   }
 
-  // -------------------------------------------------------------------------
-  // Calculate Xy
-
   // CAREFUL: Do NOT use "auto"!
   Eigen::MatrixXd Xy = Eigen::MatrixXd(X.size() + 1, 1);
 
@@ -320,8 +230,6 @@ void LinearRegression::solve_arithmetically(
 
   Xy(X.size()) = std::accumulate(_y.begin(), _y.end(), 0.0);
 
-  // -------------------------------------------------------------------------
-
   // CAREFUL: Do NOT use "auto"!
   Eigen::MatrixXd weights = XtX.fullPivLu().solve(Xy);
 
@@ -330,8 +238,6 @@ void LinearRegression::solve_arithmetically(
   for (size_t i = 0; i < weights_.size(); ++i) {
     weights_[i] = weights(i);
   }
-
-  // -------------------------------------------------------------------------
 }
 
 // -----------------------------------------------------------------------------
@@ -339,21 +245,12 @@ void LinearRegression::solve_arithmetically(
 void LinearRegression::solve_numerically(
     const std::vector<IntFeature>& _X_categorical,
     const std::vector<FloatFeature>& _X_numerical, const FloatFeature& _y) {
-  // -------------------------------------------------------------------------
-  // Build up CSRMatrix.
-
   auto csr_mat = impl().make_csr<Float, unsigned int, size_t>(_X_categorical,
                                                               _X_numerical);
-
-  // -------------------------------------------------------------------------
-  // Rescale CSRMatrix.
 
   scaler_.fit(csr_mat);
 
   csr_mat = scaler_.transform(csr_mat);
-
-  // -------------------------------------------------------------------------
-  // Init weights.
 
   std::mt19937 rng;
 
@@ -365,15 +262,9 @@ void LinearRegression::solve_numerically(
     w = dis(rng);
   }
 
-  // -------------------------------------------------------------------------
-  // Set some standard variables.
-
   const size_t batch_size = 200;
 
   const auto bsize_float = static_cast<Float>(batch_size);
-
-  // -------------------------------------------------------------------------
-  // Use Adam to find the weights.
 
   std::vector<Float> gradients(weights_.size());
 
@@ -402,8 +293,6 @@ void LinearRegression::solve_numerically(
       }
     }
   }
-
-  // -------------------------------------------------------------------------
 }
 
 // -----------------------------------------------------------------------------

@@ -1,19 +1,15 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "predictors/PredictorParser.hpp"
-
-// ----------------------------------------------------------------------
 
 #include "predictors/LinearRegression.hpp"
 #include "predictors/LogisticRegression.hpp"
 #include "predictors/XGBoostPredictor.hpp"
-
-// ----------------------------------------------------------------------
 
 namespace predictors {
 
