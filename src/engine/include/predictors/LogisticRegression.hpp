@@ -15,9 +15,11 @@
 #include <vector>
 
 #include "debug/debug.hpp"
+#include "fct/NamedTuple.hpp"
+#include "fct/Ref.hpp"
 #include "predictors/FloatFeature.hpp"
 #include "predictors/IntFeature.hpp"
-#include "predictors/LinearHyperparams.hpp"
+#include "predictors/LogisticRegressionHyperparams.hpp"
 #include "predictors/Predictor.hpp"
 #include "predictors/PredictorImpl.hpp"
 #include "predictors/StandardScaler.hpp"
@@ -27,17 +29,24 @@ namespace predictors {
 /// LogisticRegression predictor.
 class LogisticRegression : public Predictor {
  public:
+  using f_scaler = fct::Field<"scaler_", StandardScaler>;
+
+  using f_weights = fct::Field<"weights_", std::vector<Float>>;
+
+  using NamedTupleType =
+      fct::NamedTuple<f_learning_rate, f_reg_lambda, f_scaler, f_weights>;
+
+ public:
   LogisticRegression(const Poco::JSON::Object& _cmd,
                      const std::shared_ptr<const PredictorImpl>& _impl,
                      const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
       : cmd_(_cmd),
         dependencies_(_dependencies),
-        hyperparams_(std::make_shared<LinearHyperparams>(_cmd)),
+        hyperparams_(fct::Ref<LogisticRegressionHyperparams>::make(
+            json::from_json<LogisticRegressionHyperparams>(_cmd))),
         impl_(_impl){};
 
   ~LogisticRegression() = default;
-
-  // -------------------------------------------------------------------------
 
  public:
   /// Returns an importance measure for the individual features.
@@ -68,8 +77,6 @@ class LogisticRegression : public Predictor {
   /// Stores the predictor
   void save(const std::string& _fname) const final;
 
-  // -------------------------------------------------------------------------
-
  public:
   /// Whether the predictor accepts null values.
   bool accepts_null() const final { return false; }
@@ -85,26 +92,28 @@ class LogisticRegression : public Predictor {
   /// Whether the predictor has been fitted.
   bool is_fitted() const final { return weights_.size() > 0; }
 
+  /// Necessary for the automated parsing to work.
+  NamedTupleType named_tuple() const {
+    return f_learning_rate(hyperparams().learning_rate()) *
+           f_reg_lambda(hyperparams().reg_lambda()) * f_scaler(scaler_) *
+           f_weights(weights_);
+  }
+
   /// Whether we want the predictor to be silent.
   bool silent() const final { return true; }
 
   /// The type of the predictor.
-  std::string type() const final { return "LogisticRegression"; }
-
-  // -------------------------------------------------------------------------
+  std::string type() const final {
+    return hyperparams().val_.get<"type_">().name();
+  }
 
  private:
   /// Trivial (private const) accessor.
-  const LinearHyperparams& hyperparams() const {
-    assert_true(hyperparams_);
+  const LogisticRegressionHyperparams& hyperparams() const {
     return *hyperparams_;
   }
 
-  // -------------------------------------------------------------------------
-
  private:
-  Poco::JSON::Object load_json_obj(const std::string& _fname) const;
-
   /// Fit on dense data.
   void fit_dense(const std::shared_ptr<const logging::AbstractLogger> _logger,
                  const std::vector<FloatFeature>& _X_numerical,
@@ -125,8 +134,6 @@ class LogisticRegression : public Predictor {
   FloatFeature predict_sparse(
       const std::vector<IntFeature>& _X_categorical,
       const std::vector<FloatFeature>& _X_numerical) const;
-
-  // -------------------------------------------------------------------------
 
  private:
   /// Calculates the gradients needed for the updates (sparse).
@@ -205,8 +212,6 @@ class LogisticRegression : public Predictor {
     return yhat;
   }
 
-  // -------------------------------------------------------------------------
-
  private:
   /// The JSON command used to construct this predictor.
   const Poco::JSON::Object cmd_;
@@ -214,8 +219,8 @@ class LogisticRegression : public Predictor {
   /// The dependencies used to build the fingerprint.
   const std::vector<Poco::JSON::Object::Ptr> dependencies_;
 
-  /// The hyperparameters used for the LinearRegression.
-  std::shared_ptr<const LinearHyperparams> hyperparams_;
+  /// The hyperparameters used for the LogisticRegression.
+  fct::Ref<const LogisticRegressionHyperparams> hyperparams_;
 
   /// Implementation class for member functions common to most predictors.
   std::shared_ptr<const PredictorImpl> impl_;
@@ -224,10 +229,8 @@ class LogisticRegression : public Predictor {
   /// column is 1.0
   StandardScaler scaler_;
 
-  /// The slopes of the linear regression.
+  /// The slopes of the logistic regression.
   std::vector<Float> weights_;
-
-  // -------------------------------------------------------------------------
 };
 
 // -----------------------------------------------------------------------------
