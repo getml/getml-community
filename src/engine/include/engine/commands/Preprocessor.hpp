@@ -24,7 +24,7 @@ class Preprocessor {
                       fct::Field<"min_freq_", size_t>>;
 
   /// The command needed to produce an EmailDomain preprocessor.
-  using EmailDomainOp =
+  using EMailDomainOp =
       fct::NamedTuple<fct::Field<"type_", fct::Literal<"EMailDomain">>>;
 
   /// The command needed to produce an Imputation preprocessor.
@@ -47,7 +47,7 @@ class Preprocessor {
   using TextFieldSplitterOp =
       fct::NamedTuple<fct::Field<"type_", fct::Literal<"TextFieldSplitter">>>;
 
-  using NamedTupleType = std::variant<CategoryTrimmerOp, EmailDomainOp,
+  using NamedTupleType = std::variant<CategoryTrimmerOp, EMailDomainOp,
                                       ImputationOp, SeasonalOp, SubstringOp>;
 
   NamedTupleType val_;

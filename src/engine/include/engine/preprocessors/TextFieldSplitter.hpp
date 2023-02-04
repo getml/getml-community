@@ -14,10 +14,15 @@
 #include <utility>
 #include <vector>
 
+#include "engine/commands/Preprocessor.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/preprocessors/FitParams.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
 #include "engine/preprocessors/TransformParams.hpp"
+#include "fct/Field.hpp"
+#include "fct/Literal.hpp"
+#include "fct/Ref.hpp"
+#include "fct/define_named_tuple.hpp"
 #include "helpers/helpers.hpp"
 #include "strings/strings.hpp"
 
@@ -26,13 +31,27 @@ namespace preprocessors {
 
 class TextFieldSplitter : public Preprocessor {
  public:
+  using TextFieldSplitterOp =
+      typename commands::Preprocessor::TextFieldSplitterOp;
+
+  using f_cols =
+      fct::Field<"cols_",
+                 std::vector<std::shared_ptr<helpers::ColumnDescription>>>;
+
+  using NamedTupleType = fct::define_named_tuple_t<TextFieldSplitterOp, f_cols>;
+
+ public:
   TextFieldSplitter() {}
 
+  TextFieldSplitter(const TextFieldSplitterOp& _op,
+                    const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
+      : dependencies_(_dependencies) {}
+
+  /// TODO: Remove this quick fix.
   TextFieldSplitter(const Poco::JSON::Object& _obj,
-                    const std::vector<Poco::JSON::Object::Ptr>& _dependencies) {
-    *this = from_json_obj(_obj);
-    dependencies_ = _dependencies;
-  }
+                    const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
+      : TextFieldSplitter(json::from_json<TextFieldSplitterOp>(_obj),
+                          _dependencies) {}
 
   ~TextFieldSplitter() = default;
 
@@ -69,6 +88,12 @@ class TextFieldSplitter : public Preprocessor {
       c->dependencies_ = *_dependencies;
     }
     return c;
+  }
+
+  /// Necessary for the automated parsing to work.
+  NamedTupleType named_tuple() const {
+    return fct::make_field<"type_">(fct::Literal<"TextFieldSplitter">()) *
+           f_cols(cols_);
   }
 
   /// Returns the type of the preprocessor.
@@ -113,7 +138,6 @@ class TextFieldSplitter : public Preprocessor {
   std::vector<Poco::JSON::Object::Ptr> dependencies_;
 };
 
-// ----------------------------------------------------
 }  // namespace preprocessors
 }  // namespace engine
 

@@ -134,7 +134,7 @@ containers::DataFrame Imputation::fit_transform_df(
 }
 
 // ----------------------------------------------------
-
+/*
 Imputation Imputation::from_json_obj(const Poco::JSON::Object& _obj) const {
   Imputation that;
 
@@ -173,7 +173,7 @@ Imputation Imputation::from_json_obj(const Poco::JSON::Object& _obj) const {
 
   return that;
 }
-
+*/
 // ----------------------------------------------------
 
 bool Imputation::impute(const containers::Column<Float>& _original_col,

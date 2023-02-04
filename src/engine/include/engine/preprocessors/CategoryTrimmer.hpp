@@ -23,6 +23,9 @@
 #include "engine/preprocessors/FitParams.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
 #include "engine/preprocessors/TransformParams.hpp"
+#include "fct/Field.hpp"
+#include "fct/Literal.hpp"
+#include "fct/define_named_tuple.hpp"
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/helpers.hpp"
 #include "strings/strings.hpp"
@@ -31,20 +34,38 @@ namespace engine {
 namespace preprocessors {
 
 class CategoryTrimmer : public Preprocessor {
+ public:
   using CategoryPair =
       std::pair<helpers::ColumnDescription, fct::Ref<const std::set<Int>>>;
+
   using CategoryTrimmerOp = typename commands::Preprocessor::CategoryTrimmerOp;
+
+  using f_peripheral_sets =
+      fct::Field<"peripheral_sets_", std::vector<std::vector<CategoryPair>>>;
+
+  using f_population_sets =
+      fct::Field<"population_sets_", std::vector<CategoryPair>>;
+
+  using NamedTupleType =
+      fct::define_named_tuple_t<CategoryTrimmerOp, f_peripheral_sets,
+                                f_population_sets>;
 
   static constexpr const char* TRIMMED = "(trimmed)";
 
  public:
   CategoryTrimmer() : max_num_categories_(999), min_freq_(30) {}
 
+  CategoryTrimmer(const CategoryTrimmerOp& _op,
+                  const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
+      : dependencies_(_dependencies),
+        max_num_categories_(_op.get<"max_num_categories_">()),
+        min_freq_(_op.get<"min_freq_">()) {}
+
+  /// TODO: Remove this quick fix.
   CategoryTrimmer(const Poco::JSON::Object& _obj,
                   const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
-      : dependencies_(_dependencies) {
-    *this = from_json_obj(_obj);
-  }
+      : CategoryTrimmer(json::from_json<CategoryTrimmerOp>(_obj),
+                        _dependencies) {}
 
   ~CategoryTrimmer() = default;
 
@@ -92,14 +113,16 @@ class CategoryTrimmer : public Preprocessor {
   /// Trivial (const) accessor.
   size_t min_freq() const { return min_freq_; }
 
+  /// Necessary for the automated parsing to work.
+  NamedTupleType named_tuple() const {
+    return fct::make_field<"type_">(fct::Literal<"CategoryTrimmer">()) *
+           fct::make_field<"max_num_categories_">(max_num_categories_) *
+           fct::make_field<"min_freq_">(min_freq_) *
+           f_peripheral_sets(peripheral_sets_) *
+           f_population_sets(population_sets_);
+  }
+
  private:
-  /// Transform a JSON object to a category pair.
-  CategoryPair category_pair_from_obj(
-      const Poco::JSON::Object::Ptr& _ptr) const;
-
-  /// Transform a category pair to a JSON object.
-  Poco::JSON::Object::Ptr category_pair_to_obj(const CategoryPair& _pair) const;
-
   /// Expresses the transformation of a particular column in SQL code.
   std::string column_to_sql(
       const helpers::StringIterator& _categories,
@@ -110,9 +133,6 @@ class CategoryTrimmer : public Preprocessor {
   /// Fits on a single data frame.
   std::vector<CategoryPair> fit_df(const containers::DataFrame& _df,
                                    const std::string& _marker) const;
-
-  /// Parses a JSON object.
-  CategoryTrimmer from_json_obj(const Poco::JSON::Object& _obj) const;
 
   /// Generates a cateogory set for a column.
   fct::Ref<const std::set<Int>> make_category_set(
