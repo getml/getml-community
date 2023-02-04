@@ -7,6 +7,8 @@
 
 #include "predictors/PredictorParser.hpp"
 
+#include <variant>
+
 #include "predictors/LinearRegression.hpp"
 #include "predictors/LogisticRegression.hpp"
 #include "predictors/XGBoostPredictor.hpp"
@@ -14,25 +16,32 @@
 namespace predictors {
 
 fct::Ref<Predictor> PredictorParser::parse(
-    const Poco::JSON::Object& _json_obj,
+    const PredictorHyperparams& _hyperparams,
     const std::shared_ptr<const PredictorImpl>& _impl,
     const std::vector<Poco::JSON::Object::Ptr>& _dependencies) {
-  const std::string type = "TODO";
+  const auto handle = [&_impl, &_dependencies](
+                          const auto& _hyperparams) -> fct::Ref<Predictor> {
+    using Type = std::decay_t<decltype(_hyperparams)>;
 
-  if (type == "LinearRegression") {
-    return fct::Ref<LinearRegression>::make(_json_obj, _impl, _dependencies);
-  }
+    if constexpr (std::is_same<Type,
+                               fct::Ref<const LinearRegressionHyperparams>>()) {
+      return fct::Ref<LinearRegression>::make(_hyperparams, _impl,
+                                              _dependencies);
+    }
 
-  if (type == "LogisticRegression") {
-    return fct::Ref<LogisticRegression>::make(_json_obj, _impl, _dependencies);
-  }
+    if constexpr (std::is_same<
+                      Type, fct::Ref<const LogisticRegressionHyperparams>>()) {
+      return fct::Ref<LogisticRegression>::make(_hyperparams, _impl,
+                                                _dependencies);
+    }
 
-  if (type == "XGBoostPredictor" || type == "XGBoostClassifier" ||
-      type == "XGBoostRegressor") {
-    return fct::Ref<XGBoostPredictor>::make(_json_obj, _impl, _dependencies);
-  }
+    if constexpr (std::is_same<Type, fct::Ref<const XGBoostHyperparams>>()) {
+      return fct::Ref<XGBoostPredictor>::make(_hyperparams, _impl,
+                                              _dependencies);
+    }
+  };
 
-  throw std::runtime_error("Predictor of type '" + type + "' not known!");
+  return std::visit(handle, _hyperparams);
 }
 
 }  // namespace predictors

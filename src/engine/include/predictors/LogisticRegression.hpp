@@ -37,13 +37,12 @@ class LogisticRegression : public Predictor {
       fct::NamedTuple<f_learning_rate, f_reg_lambda, f_scaler, f_weights>;
 
  public:
-  LogisticRegression(const Poco::JSON::Object& _cmd,
-                     const std::shared_ptr<const PredictorImpl>& _impl,
-                     const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
-      : cmd_(_cmd),
-        dependencies_(_dependencies),
-        hyperparams_(fct::Ref<LogisticRegressionHyperparams>::make(
-            json::from_json<LogisticRegressionHyperparams>(_cmd))),
+  LogisticRegression(
+      const fct::Ref<const LogisticRegressionHyperparams>& _hyperparams,
+      const std::shared_ptr<const PredictorImpl>& _impl,
+      const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
+      : dependencies_(_dependencies),
+        hyperparams_(_hyperparams),
         impl_(_impl){};
 
   ~LogisticRegression() = default;

@@ -38,12 +38,11 @@ class XGBoostPredictor : public Predictor {
   typedef XGBoostMatrix::DMatrixPtr DMatrixPtr;
 
  public:
-  XGBoostPredictor(const Poco::JSON::Object& _cmd,
+  XGBoostPredictor(const fct::Ref<const XGBoostHyperparams>& _hyperparams,
                    const std::shared_ptr<const PredictorImpl>& _impl,
                    const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
-      : cmd_(_cmd),
-        dependencies_(_dependencies),
-        hyperparams_(XGBoostHyperparams(_cmd)),
+      : dependencies_(_dependencies),
+        hyperparams_(_hyperparams),
         impl_(_impl) {}
 
   ~XGBoostPredictor() = default;
@@ -89,7 +88,7 @@ class XGBoostPredictor : public Predictor {
 
   /// Whether the predictor is used for classification;
   bool is_classification() const final {
-    const auto objective = hyperparams_.val_.get<"objective_">();
+    const auto objective = hyperparams_->val_.get<"objective_">();
     using Objective = std::decay_t<decltype(objective)>;
     return objective.value() == Objective::value_of<"reg:logistic">() ||
            objective.value() == Objective::value_of<"binary:logistic">() ||
@@ -100,7 +99,7 @@ class XGBoostPredictor : public Predictor {
   bool is_fitted() const final { return len() > 0; }
 
   /// Whether we want the predictor to be silent.
-  bool silent() const final { return hyperparams_.val_.get<"silent_">(); }
+  bool silent() const final { return hyperparams_->val_.get<"silent_">(); }
 
   /// The type of the predictor.
   std::string type() const final { return "XGBoost"; }
@@ -190,14 +189,11 @@ class XGBoostPredictor : public Predictor {
                            const bool _is_memory_mapped) const;
 
  private:
-  /// The JSON command used to construct this predictor.
-  const Poco::JSON::Object cmd_;
-
   /// The dependencies used to build the fingerprint.
   std::vector<Poco::JSON::Object::Ptr> dependencies_;
 
   /// Hyperparameters for XGBoostPredictor
-  const XGBoostHyperparams hyperparams_;
+  const fct::Ref<const XGBoostHyperparams> hyperparams_;
 
   /// Implementation class for member functions common to most predictors.
   std::shared_ptr<const PredictorImpl> impl_;

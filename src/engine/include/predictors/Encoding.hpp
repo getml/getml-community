@@ -8,8 +8,6 @@
 #ifndef PREDICTORS_ENCODING_HPP_
 #define PREDICTORS_ENCODING_HPP_
 
-#include <Poco/JSON/Object.h>
-
 #include <memory>
 
 #include "fct/Field.hpp"
@@ -37,17 +35,10 @@ class Encoding {
   explicit Encoding(const NamedTupleType& _nt)
       : max_(_nt.get<f_max>()), min_(_nt.get<f_min>()) {}
 
-  /// TODO: Remove this temporary fix.
-  explicit Encoding(const Poco::JSON::Object& _obj)
-      : Encoding(json::from_json<Encoding>(_obj)) {}
-
   ~Encoding() = default;
 
   /// Adds column to map or vector, returning the transformed column.
   void fit(const IntFeature& _val);
-
-  /// Transform Encoding to JSON object.
-  Poco::JSON::Object to_json_obj() const;
 
   /// Transforms the column to the mapped integers.
   IntFeature transform(const IntFeature& _val,
