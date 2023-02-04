@@ -63,7 +63,7 @@ Poco::JSON::Object::Ptr LinearRegression::fingerprint() const {
   // TODO
   // obj->set("cmd_", cmd_);
   obj->set("dependencies_", JSON::vector_to_array_ptr(dependencies_));
-  obj->set("impl_", impl().to_json_obj());
+  // obj->set("impl_", impl().to_json_obj());
 
   return obj;
 }
