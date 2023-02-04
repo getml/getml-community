@@ -46,6 +46,9 @@ struct define_named_tuple<NamedTuple<TupContent...>> {
   using type = NamedTuple<TupContent...>;
 };
 
+template <class... FieldTypes>
+using define_named_tuple_t = typename define_named_tuple<FieldTypes...>::type;
+
 }  // namespace fct
 
 #endif  // FCT_DEFINENAMEDTUPLE_HPP_
