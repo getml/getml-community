@@ -16,6 +16,7 @@
 
 #include "debug/debug.hpp"
 #include "fct/StringLiteral.hpp"
+#include "fct/VisitTree.hpp"
 
 namespace fct {
 
@@ -234,19 +235,28 @@ inline constexpr auto value_of() {
   return GetValueOfLiteral<LiteralType, _name>::get();
 }
 
+/// Necessary for the VisitTree structure.
+template <class Visitor, StringLiteral... _fields>
+struct VisitorWrapper {
+  /// Calls the underlying visitor when required to do so.
+  template <int _i, class... Args>
+  inline auto visit(const Args&... _args) const {
+    return (*visitor_)(name_of<Literal<_fields...>, _i>(), _args...);
+  }
+
+  /// The underlying visitor.
+  const Visitor* visitor_;
+};
+
 /// Implements the visitor pattern for Literals.
-template <class Visitor, int i = 0, StringLiteral... _fields, class... Args>
+template <class Visitor, StringLiteral... _fields, class... Args>
 inline auto visit(const Visitor& _visitor, const Literal<_fields...> _literal,
                   const Args&... _args) {
-  constexpr typename Literal<_fields...>::ValueType value = i;
-  if constexpr (i + 1 < sizeof...(_fields)) {
-    if (_literal.value() == value) {
-      return _visitor(name_of<Literal<_fields...>, i>(), _args...);
-    }
-    return visit<Visitor, i + 1, _fields...>(_visitor, _literal, _args...);
-  } else {
-    return _visitor(name_of<Literal<_fields...>, i>(), _args...);
-  }
+  constexpr int size = sizeof...(_fields);
+  using WrapperType = VisitorWrapper<Visitor, _fields...>;
+  const auto wrapper = WrapperType(&_visitor);
+  return VisitTree::visit<0, size, WrapperType>(wrapper, _literal.value(),
+                                                _args...);
 }
 
 }  // namespace fct
