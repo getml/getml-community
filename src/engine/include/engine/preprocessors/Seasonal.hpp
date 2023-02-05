@@ -21,8 +21,8 @@
 #include "engine/preprocessors/TransformParams.hpp"
 #include "fct/Field.hpp"
 #include "fct/Literal.hpp"
+#include "fct/NamedTuple.hpp"
 #include "fct/Ref.hpp"
-#include "fct/define_named_tuple.hpp"
 #include "helpers/helpers.hpp"
 #include "strings/strings.hpp"
 
@@ -53,8 +53,8 @@ class Seasonal : public Preprocessor {
       fct::Field<"year_",
                  std::vector<std::shared_ptr<helpers::ColumnDescription>>>;
 
-  using NamedTupleType = fct::define_named_tuple_t<SeasonalOp, f_hour, f_minute,
-                                                   f_month, f_weekday, f_year>;
+  using NamedTupleType =
+      fct::NamedTuple<f_hour, f_minute, f_month, f_weekday, f_year>;
 
  private:
   static constexpr bool ADD_ZERO = true;
@@ -83,6 +83,9 @@ class Seasonal : public Preprocessor {
   std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
   fit_transform(const FitParams& _params) final;
 
+  /// Loads the predictor
+  void load(const std::string& _fname) final;
+
   /// Stores the preprocessor.
   void save(const std::string& _fname) const final;
 
@@ -105,8 +108,7 @@ class Seasonal : public Preprocessor {
 
   /// Necessary for the automated parsing to work.
   NamedTupleType named_tuple() const {
-    return fct::make_field<"type_">(fct::Literal<"Seasonal">()) *
-           f_hour(hour_) * f_minute(minute_) * f_month(month_) *
+    return f_hour(hour_) * f_minute(minute_) * f_month(month_) *
            f_weekday(weekday_) * f_year(year_);
   }
 

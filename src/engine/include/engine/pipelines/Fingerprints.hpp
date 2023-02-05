@@ -25,7 +25,7 @@ struct Fingerprints {
   /// The fingerprints of the feature selectors used for fitting.
   const std::vector<Poco::JSON::Object::Ptr> fs_fingerprints_;
 
-  /// The fingerprints of the preprocessor used for fitting.
+  /// The fingerprints of the preprocessors used for fitting.
   const std::vector<Poco::JSON::Object::Ptr> preprocessor_fingerprints_;
 };
 

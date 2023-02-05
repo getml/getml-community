@@ -52,6 +52,9 @@ class Preprocessor {
   virtual std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
   fit_transform(const FitParams& _params) = 0;
 
+  /// Loads the preprocessor.
+  virtual void load(const std::string& _fname) = 0;
+
   /// Stores the preprocessor.
   virtual void save(const std::string& _fname) const = 0;
 

@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/pipelines/Load.hpp"
 
@@ -35,8 +35,8 @@ Pipeline Load::load(
 
   const auto [feature_selector_impl, predictor_impl] = load_impls(_path);
 
-  const auto preprocessors = load_preprocessors(
-      _path, _preprocessor_tracker, obj, pipeline_json.fingerprints_);
+  const auto preprocessors =
+      load_preprocessors(_path, _preprocessor_tracker, pipeline_json, pipeline);
 
   const auto feature_learners =
       load_feature_learners(_path, _fe_tracker, pipeline_json, pipeline);
@@ -273,32 +273,20 @@ std::vector<fct::Ref<const preprocessors::Preprocessor>>
 Load::load_preprocessors(const std::string& _path,
                          const std::shared_ptr<dependency::PreprocessorTracker>
                              _preprocessor_tracker,
-                         const Poco::JSON::Object& _obj,
-                         const Fingerprints& _fingerprints) {
+                         const PipelineJSON& _pipeline_json,
+                         const Pipeline& _pipeline) {
   assert_true(_preprocessor_tracker);
 
-  if (!_obj.has("preprocessors_")) {
-    return {};
-  }
+  auto preprocessors = Fit::init_preprocessors(
+      _pipeline, _pipeline_json.fingerprints_.df_fingerprints_);
 
-  auto preprocessors =
-      std::vector<fct::Ref<const preprocessors::Preprocessor>>();
-
-  const auto arr = jsonutils::JSON::get_object_array(_obj, "preprocessors_");
-
-  for (size_t i = 0; i < arr->size(); ++i) {
-    const auto json_obj =
-        load_json_obj(_path + "preprocessor-" + std::to_string(i) + ".json");
-
-    const auto p = preprocessors::PreprocessorParser::parse(
-        json_obj, _fingerprints.df_fingerprints_);
-
-    preprocessors.push_back(p);
-
+  for (size_t i = 0; i < preprocessors.size(); ++i) {
+    const auto& p = preprocessors.at(i);
+    p->load(_path + "preprocessor-" + std::to_string(i) + ".json");
     _preprocessor_tracker->add(p);
   }
 
-  return preprocessors;
+  return Fit::to_const(preprocessors);
 }
 
 // ----------------------------------------------------------------------------

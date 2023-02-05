@@ -21,8 +21,8 @@
 #include "engine/preprocessors/TransformParams.hpp"
 #include "fct/Field.hpp"
 #include "fct/Literal.hpp"
+#include "fct/NamedTuple.hpp"
 #include "fct/Ref.hpp"
-#include "fct/define_named_tuple.hpp"
 #include "helpers/helpers.hpp"
 #include "strings/strings.hpp"
 
@@ -37,7 +37,7 @@ class EMailDomain : public Preprocessor {
       fct::Field<"cols_",
                  std::vector<std::shared_ptr<helpers::ColumnDescription>>>;
 
-  using NamedTupleType = fct::define_named_tuple_t<EMailDomainOp, f_cols>;
+  using NamedTupleType = fct::NamedTuple<f_cols>;
 
  public:
   EMailDomain() {}
@@ -62,6 +62,9 @@ class EMailDomain : public Preprocessor {
   std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
   fit_transform(const FitParams& _params) final;
 
+  /// Loads the predictor
+  void load(const std::string& _fname) final;
+
   /// Stores the preprocessor.
   void save(const std::string& _fname) const final;
 
@@ -83,10 +86,7 @@ class EMailDomain : public Preprocessor {
   }
 
   /// Necessary for the automated parsing to work.
-  NamedTupleType named_tuple() const {
-    return fct::make_field<"type_">(fct::Literal<"EMailDomain">()) *
-           f_cols(cols_);
-  }
+  NamedTupleType named_tuple() const { return NamedTupleType(f_cols(cols_)); }
 
   /// The preprocessor does not generate any SQL scripts.
   std::vector<std::string> to_sql(
