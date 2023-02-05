@@ -1,34 +1,25 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_PREPROCESSORS_DATAMODELCHECKER_HPP_
 #define ENGINE_PREPROCESSORS_DATAMODELCHECKER_HPP_
 
-// ----------------------------------------------------------------------------
-
 #include <memory>
 #include <string>
 #include <vector>
-
-// ----------------------------------------------------------------------------
-
-#include "helpers/helpers.hpp"
-#include "transpilation/HumanReadableSQLGenerator.hpp"
-#include "transpilation/transpilation.hpp"
-
-// ----------------------------------------------------------------------------
 
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
 #include "engine/communication/communication.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/featurelearners/AbstractFeatureLearner.hpp"
-
-// ----------------------------------------------------------------------------
+#include "helpers/helpers.hpp"
+#include "transpilation/HumanReadableSQLGenerator.hpp"
+#include "transpilation/transpilation.hpp"
 
 namespace engine {
 namespace preprocessors {

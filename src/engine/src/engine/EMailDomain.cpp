@@ -8,6 +8,7 @@
 #include "engine/preprocessors/EMailDomain.hpp"
 
 #include "engine/preprocessors/PreprocessorImpl.hpp"
+#include "helpers/Loader.hpp"
 #include "helpers/Saver.hpp"
 
 namespace engine {
@@ -152,6 +153,14 @@ containers::DataFrame EMailDomain::fit_transform_df(
   }
 
   return df;
+}
+
+// -----------------------------------------------------------------------------
+
+void EMailDomain::load(const std::string& _fname) {
+  const auto named_tuple =
+      helpers::Loader::load_from_json<NamedTupleType>(_fname);
+  cols_ = named_tuple.get<f_cols>();
 }
 
 // ----------------------------------------------------

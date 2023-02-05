@@ -8,6 +8,7 @@
 #include "engine/preprocessors/TextFieldSplitter.hpp"
 
 #include "engine/preprocessors/PreprocessorImpl.hpp"
+#include "helpers/Loader.hpp"
 #include "helpers/Saver.hpp"
 
 namespace engine {
@@ -112,16 +113,10 @@ TextFieldSplitter::fit_df(const containers::DataFrame& _df,
 
 // ----------------------------------------------------
 
-TextFieldSplitter TextFieldSplitter::from_json_obj(
-    const Poco::JSON::Object& _obj) const {
-  TextFieldSplitter that;
-
-  if (_obj.has("cols_")) {
-    that.cols_ = PreprocessorImpl::from_array(
-        jsonutils::JSON::get_object_array(_obj, "cols_"));
-  }
-
-  return that;
+void TextFieldSplitter::load(const std::string& _fname) {
+  const auto named_tuple =
+      helpers::Loader::load_from_json<NamedTupleType>(_fname);
+  cols_ = named_tuple.get<f_cols>();
 }
 
 // ----------------------------------------------------

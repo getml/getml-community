@@ -1,18 +1,14 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_PIPELINES_LOAD_HPP_
 #define ENGINE_PIPELINES_LOAD_HPP_
 
-// ----------------------------------------------------------------------------
-
 #include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------------
 
 #include <memory>
 #include <string>
@@ -20,22 +16,12 @@
 #include <utility>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
-#include "metrics/metrics.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "engine/dependency/dependency.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "engine/pipelines/Fingerprints.hpp"
 #include "engine/pipelines/Pipeline.hpp"
 #include "engine/pipelines/PipelineJSON.hpp"
 #include "engine/pipelines/Predictors.hpp"
-
-// ----------------------------------------------------------------------------
+#include "metrics/metrics.hpp"
 
 namespace engine {
 namespace pipelines {
@@ -93,8 +79,8 @@ class Load {
   load_preprocessors(const std::string& _path,
                      const std::shared_ptr<dependency::PreprocessorTracker>
                          _preprocessor_tracker,
-                     const Poco::JSON::Object& _obj,
-                     const Fingerprints& _fingerprints);
+                     const PipelineJSON& _pipeline_json,
+                     const Pipeline& _pipeline);
 };
 
 // ----------------------------------------------------------------------------

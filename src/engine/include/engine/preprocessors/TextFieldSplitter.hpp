@@ -21,8 +21,8 @@
 #include "engine/preprocessors/TransformParams.hpp"
 #include "fct/Field.hpp"
 #include "fct/Literal.hpp"
+#include "fct/NamedTuple.hpp"
 #include "fct/Ref.hpp"
-#include "fct/define_named_tuple.hpp"
 #include "helpers/helpers.hpp"
 #include "strings/strings.hpp"
 
@@ -38,7 +38,7 @@ class TextFieldSplitter : public Preprocessor {
       fct::Field<"cols_",
                  std::vector<std::shared_ptr<helpers::ColumnDescription>>>;
 
-  using NamedTupleType = fct::define_named_tuple_t<TextFieldSplitterOp, f_cols>;
+  using NamedTupleType = fct::NamedTuple<f_cols>;
 
  public:
   TextFieldSplitter() {}
@@ -63,6 +63,9 @@ class TextFieldSplitter : public Preprocessor {
   /// Identifies which features should be extracted from which time stamps.
   std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
   fit_transform(const FitParams& _params) final;
+
+  /// Loads the predictor
+  void load(const std::string& _fname) final;
 
   /// Stores the preprocessor.
   void save(const std::string& _fname) const final;
@@ -91,10 +94,7 @@ class TextFieldSplitter : public Preprocessor {
   }
 
   /// Necessary for the automated parsing to work.
-  NamedTupleType named_tuple() const {
-    return fct::make_field<"type_">(fct::Literal<"TextFieldSplitter">()) *
-           f_cols(cols_);
-  }
+  NamedTupleType named_tuple() const { return NamedTupleType(f_cols(cols_)); }
 
   /// Returns the type of the preprocessor.
   std::string type() const final { return Preprocessor::TEXT_FIELD_SPLITTER; }
@@ -106,9 +106,6 @@ class TextFieldSplitter : public Preprocessor {
   /// Fits and transforms an individual data frame.
   std::vector<std::shared_ptr<helpers::ColumnDescription>> fit_df(
       const containers::DataFrame& _df, const std::string& _marker) const;
-
-  /// Parses a JSON object.
-  TextFieldSplitter from_json_obj(const Poco::JSON::Object& _obj) const;
 
   /// Generates a new data frame.
   containers::DataFrame make_new_df(

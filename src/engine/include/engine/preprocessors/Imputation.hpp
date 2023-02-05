@@ -21,8 +21,8 @@
 #include "engine/preprocessors/TransformParams.hpp"
 #include "fct/Field.hpp"
 #include "fct/Literal.hpp"
+#include "fct/NamedTuple.hpp"
 #include "fct/Ref.hpp"
-#include "fct/define_named_tuple.hpp"
 #include "helpers/helpers.hpp"
 #include "strings/strings.hpp"
 
@@ -46,8 +46,7 @@ class Imputation : public Preprocessor {
   using f_needs_dummies = fct::Field<"needs_dummies_", std::vector<bool>>;
 
   using NamedTupleType =
-      fct::define_named_tuple_t<ImputationOp, f_column_descriptions, f_means,
-                                f_needs_dummies>;
+      fct::NamedTuple<f_column_descriptions, f_means, f_needs_dummies>;
 
  public:
   Imputation()
@@ -55,7 +54,7 @@ class Imputation : public Preprocessor {
 
   Imputation(const ImputationOp& _op,
              const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
-      : dependencies_(_dependencies) {}
+      : add_dummies_(_op.get<"add_dummies_">()), dependencies_(_dependencies) {}
 
   /// TODO: Remove this quick fix.
   Imputation(const Poco::JSON::Object& _obj,
@@ -72,6 +71,9 @@ class Imputation : public Preprocessor {
   /// Identifies which features should be extracted from which time stamps.
   std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
   fit_transform(const FitParams& _params) final;
+
+  /// Loads the predictor
+  void load(const std::string& _fname) final;
 
   /// Stores the preprocessor.
   void save(const std::string& _fname) const final;
@@ -95,9 +97,7 @@ class Imputation : public Preprocessor {
 
   /// Necessary for the automated parsing to work.
   NamedTupleType named_tuple() const {
-    return fct::make_field<"type_">(fct::Literal<"Imputation">()) *
-           fct::make_field<"add_dummies_">(add_dummies_) *
-           f_column_descriptions(column_descriptions()) * f_means(means()) *
+    return f_column_descriptions(column_descriptions()) * f_means(means()) *
            f_needs_dummies(needs_dummies());
   }
 

@@ -8,6 +8,7 @@
 #include "engine/preprocessors/Substring.hpp"
 
 #include "engine/preprocessors/PreprocessorImpl.hpp"
+#include "helpers/Loader.hpp"
 #include "helpers/Saver.hpp"
 
 namespace engine {
@@ -135,23 +136,12 @@ containers::DataFrame Substring::fit_transform_df(
   return df;
 }
 
-// ----------------------------------------------------
+// -----------------------------------------------------------------------------
 
-Substring Substring::from_json_obj(const Poco::JSON::Object& _obj) const {
-  Substring that;
-
-  that.begin_ = jsonutils::JSON::get_value<size_t>(_obj, "begin_");
-
-  that.length_ = jsonutils::JSON::get_value<size_t>(_obj, "length_");
-
-  that.unit_ = jsonutils::JSON::get_value<std::string>(_obj, "unit_");
-
-  if (_obj.has("cols_")) {
-    that.cols_ = PreprocessorImpl::from_array(
-        jsonutils::JSON::get_object_array(_obj, "cols_"));
-  }
-
-  return that;
+void Substring::load(const std::string& _fname) {
+  const auto named_tuple =
+      helpers::Loader::load_from_json<NamedTupleType>(_fname);
+  cols_ = named_tuple.get<f_cols>();
 }
 
 // ----------------------------------------------------

@@ -8,6 +8,7 @@
 #include "engine/preprocessors/Imputation.hpp"
 
 #include "engine/preprocessors/PreprocessorImpl.hpp"
+#include "helpers/Loader.hpp"
 #include "helpers/Saver.hpp"
 
 namespace engine {
@@ -135,46 +136,38 @@ containers::DataFrame Imputation::fit_transform_df(
 }
 
 // ----------------------------------------------------
-/*
-Imputation Imputation::from_json_obj(const Poco::JSON::Object& _obj) const {
+
+void Imputation::load(const std::string& _fname) {
+  const auto named_tuple =
+      helpers::Loader::load_from_json<NamedTupleType>(_fname);
+
   Imputation that;
 
-  that.add_dummies_ = jsonutils::JSON::get_value<bool>(_obj, "add_dummies_");
+  that.add_dummies_ = add_dummies_;
 
-  if (_obj.has("column_descriptions_")) {
-    const auto column_descriptions =
-        jsonutils::JSON::get_object_array(_obj, "column_descriptions_");
+  that.dependencies_ = dependencies_;
 
-    const auto means = jsonutils::JSON::array_to_vector<Float>(
-        jsonutils::JSON::get_array(_obj, "means_"));
+  const auto column_descriptions = named_tuple.get<f_column_descriptions>();
 
-    const auto needs_dummies = jsonutils::JSON::array_to_vector<bool>(
-        jsonutils::JSON::get_array(_obj, "needs_dummies_"));
+  const auto means = named_tuple.get<f_means>();
 
-    assert_true(column_descriptions);
+  const auto needs_dummies = named_tuple.get<f_needs_dummies>();
 
-    if (column_descriptions->size() != means.size() ||
-        needs_dummies.size() != means.size()) {
-      throw std::runtime_error(
-          "Could not load Imputation preprocessor. JSON is "
-          "poorly "
-          "formatted.");
-    }
-
-    for (size_t i = 0; i < means.size(); ++i) {
-      const auto ptr = column_descriptions->getObject(i);
-
-      assert_true(ptr);
-
-      const auto coldesc = helpers::ColumnDescription(*ptr);
-
-      that.cols()[coldesc] = std::make_pair(means.at(i), needs_dummies.at(i));
-    }
+  if (column_descriptions.size() != means.size() ||
+      needs_dummies.size() != means.size()) {
+    throw std::runtime_error(
+        "Could not load the Imputation preprocessor. JSON is "
+        "poorly formatted.");
   }
 
-  return that;
+  for (size_t i = 0; i < means.size(); ++i) {
+    const auto& coldesc = column_descriptions.at(i);
+    that.cols()[coldesc] = std::make_pair(means.at(i), needs_dummies.at(i));
+  }
+
+  *this = that;
 }
-*/
+
 // ----------------------------------------------------
 
 bool Imputation::impute(const containers::Column<Float>& _original_col,

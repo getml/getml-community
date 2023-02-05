@@ -25,7 +25,7 @@
 #include "engine/preprocessors/TransformParams.hpp"
 #include "fct/Field.hpp"
 #include "fct/Literal.hpp"
-#include "fct/define_named_tuple.hpp"
+#include "fct/NamedTuple.hpp"
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/helpers.hpp"
 #include "strings/strings.hpp"
@@ -46,9 +46,7 @@ class CategoryTrimmer : public Preprocessor {
   using f_population_sets =
       fct::Field<"population_sets_", std::vector<CategoryPair>>;
 
-  using NamedTupleType =
-      fct::define_named_tuple_t<CategoryTrimmerOp, f_peripheral_sets,
-                                f_population_sets>;
+  using NamedTupleType = fct::NamedTuple<f_peripheral_sets, f_population_sets>;
 
   static constexpr const char* TRIMMED = "(trimmed)";
 
@@ -77,6 +75,9 @@ class CategoryTrimmer : public Preprocessor {
   /// Identifies which features should be extracted from which time stamps.
   std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
   fit_transform(const FitParams& _params) final;
+
+  /// Loads the predictor
+  void load(const std::string& _fname) final;
 
   /// Stores the preprocessor.
   void save(const std::string& _fname) const final;
@@ -115,10 +116,7 @@ class CategoryTrimmer : public Preprocessor {
 
   /// Necessary for the automated parsing to work.
   NamedTupleType named_tuple() const {
-    return fct::make_field<"type_">(fct::Literal<"CategoryTrimmer">()) *
-           fct::make_field<"max_num_categories_">(max_num_categories_) *
-           fct::make_field<"min_freq_">(min_freq_) *
-           f_peripheral_sets(peripheral_sets_) *
+    return f_peripheral_sets(peripheral_sets_) *
            f_population_sets(population_sets_);
   }
 
