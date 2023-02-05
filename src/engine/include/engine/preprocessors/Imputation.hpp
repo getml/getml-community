@@ -49,19 +49,14 @@ class Imputation : public Preprocessor {
       fct::NamedTuple<f_column_descriptions, f_means, f_needs_dummies>;
 
  public:
-  Imputation()
-      : add_dummies_(false), cols_(std::make_shared<ImputationMapType>()) {}
-
   Imputation(const ImputationOp& _op,
              const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
       : add_dummies_(_op.get<"add_dummies_">()), dependencies_(_dependencies) {}
 
-  /// TODO: Remove this quick fix.
-  Imputation(const Poco::JSON::Object& _obj,
-             const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
-      : Imputation(json::from_json<ImputationOp>(_obj), _dependencies) {}
-
   ~Imputation() = default;
+
+ private:
+  Imputation() {}
 
  public:
   /// Returns the fingerprint of the preprocessor (necessary to build

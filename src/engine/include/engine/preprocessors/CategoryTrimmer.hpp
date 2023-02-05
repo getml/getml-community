@@ -51,19 +51,11 @@ class CategoryTrimmer : public Preprocessor {
   static constexpr const char* TRIMMED = "(trimmed)";
 
  public:
-  CategoryTrimmer() : max_num_categories_(999), min_freq_(30) {}
-
   CategoryTrimmer(const CategoryTrimmerOp& _op,
                   const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
       : dependencies_(_dependencies),
         max_num_categories_(_op.get<"max_num_categories_">()),
         min_freq_(_op.get<"min_freq_">()) {}
-
-  /// TODO: Remove this quick fix.
-  CategoryTrimmer(const Poco::JSON::Object& _obj,
-                  const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
-      : CategoryTrimmer(json::from_json<CategoryTrimmerOp>(_obj),
-                        _dependencies) {}
 
   ~CategoryTrimmer() = default;
 

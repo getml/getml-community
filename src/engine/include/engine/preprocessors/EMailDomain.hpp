@@ -40,16 +40,9 @@ class EMailDomain : public Preprocessor {
   using NamedTupleType = fct::NamedTuple<f_cols>;
 
  public:
-  EMailDomain() {}
-
   EMailDomain(const EMailDomainOp& _op,
               const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
       : dependencies_(_dependencies) {}
-
-  /// TODO: Remove this quick fix.
-  EMailDomain(const Poco::JSON::Object& _obj,
-              const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
-      : EMailDomain(json::from_json<EMailDomainOp>(_obj), _dependencies) {}
 
   ~EMailDomain() = default;
 

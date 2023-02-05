@@ -8,8 +8,6 @@
 #ifndef ENGINE_PIPELINES_PIPELINE_HPP_
 #define ENGINE_PIPELINES_PIPELINE_HPP_
 
-// ----------------------------------------------------------------------------
-
 #include <Poco/JSON/Object.h>
 #include <Poco/Net/StreamSocket.h>
 #include <Poco/TemporaryFile.h>
