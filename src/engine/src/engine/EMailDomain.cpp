@@ -8,6 +8,7 @@
 #include "engine/preprocessors/EMailDomain.hpp"
 
 #include "engine/preprocessors/PreprocessorImpl.hpp"
+#include "helpers/Saver.hpp"
 
 namespace engine {
 namespace preprocessors {
@@ -155,14 +156,8 @@ containers::DataFrame EMailDomain::fit_transform_df(
 
 // ----------------------------------------------------
 
-Poco::JSON::Object::Ptr EMailDomain::to_json_obj() const {
-  auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-
-  obj->set("type_", type());
-
-  obj->set("cols_", PreprocessorImpl::to_array(cols_));
-
-  return obj;
+void EMailDomain::save(const std::string& _fname) const {
+  helpers::Saver::save_as_json(_fname, *this);
 }
 
 // ----------------------------------------------------

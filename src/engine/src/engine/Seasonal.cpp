@@ -1,22 +1,17 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/preprocessors/Seasonal.hpp"
 
-// ----------------------------------------------------
-
 #include "engine/preprocessors/PreprocessorImpl.hpp"
-
-// ----------------------------------------------------
+#include "helpers/Saver.hpp"
 
 namespace engine {
 namespace preprocessors {
-
-// ----------------------------------------------------
 
 std::optional<containers::Column<Int>> Seasonal::extract_hour(
     const containers::Column<Float>& _col,
@@ -327,6 +322,12 @@ Seasonal Seasonal::from_json_obj(const Poco::JSON::Object& _obj) const {
 
 // ----------------------------------------------------
 
+void Seasonal::save(const std::string& _fname) const {
+  helpers::Saver::save_as_json(_fname, *this);
+}
+
+// ----------------------------------------------------
+
 containers::Column<Int> Seasonal::to_int(
     const containers::Column<Float>& _col, const bool _add_zero,
     containers::Encoding* _categories) const {
@@ -363,26 +364,6 @@ containers::Column<Int> Seasonal::to_int(
   std::transform(_col.begin(), _col.end(), result.begin(), to_str);
 
   return result;
-}
-
-// ----------------------------------------------------
-
-Poco::JSON::Object::Ptr Seasonal::to_json_obj() const {
-  auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-
-  obj->set("type_", type());
-
-  obj->set("hour_", PreprocessorImpl::to_array(hour_));
-
-  obj->set("minute_", PreprocessorImpl::to_array(minute_));
-
-  obj->set("month_", PreprocessorImpl::to_array(month_));
-
-  obj->set("weekday_", PreprocessorImpl::to_array(weekday_));
-
-  obj->set("year_", PreprocessorImpl::to_array(year_));
-
-  return obj;
 }
 
 // ----------------------------------------------------

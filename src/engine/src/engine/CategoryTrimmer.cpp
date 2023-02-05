@@ -14,6 +14,7 @@
 #include "fct/collect.hpp"
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/NullChecker.hpp"
+#include "helpers/Saver.hpp"
 #include "transpilation/SQLGenerator.hpp"
 
 namespace engine {
@@ -216,26 +217,8 @@ std::map<Int, size_t> CategoryTrimmer::make_map(
 
 // ----------------------------------------------------
 
-Poco::JSON::Object::Ptr CategoryTrimmer::to_json_obj() const {
-  auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-
-  // TODO
-
-  obj->set("dependencies_", JSON::vector_to_array_ptr(dependencies_));
-
-  obj->set("max_num_categories_", max_num_categories_);
-
-  obj->set("min_freq_", min_freq_);
-
-  // obj->set("peripheral_sets_",
-  //         fct::collect::array(peripheral_sets_ | VIEWS::transform(to_arr)));
-
-  // obj->set("population_sets_",
-  //         fct::collect::array(population_sets_ | VIEWS::transform(to_obj)));
-
-  obj->set("type_", type());
-
-  return obj;
+void CategoryTrimmer::save(const std::string& _fname) const {
+  helpers::Saver::save_as_json(_fname, *this);
 }
 
 // ----------------------------------------------------
