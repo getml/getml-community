@@ -8,6 +8,7 @@
 #include "engine/preprocessors/TextFieldSplitter.hpp"
 
 #include "engine/preprocessors/PreprocessorImpl.hpp"
+#include "helpers/Saver.hpp"
 
 namespace engine {
 namespace preprocessors {
@@ -143,6 +144,12 @@ containers::DataFrame TextFieldSplitter::make_new_df(
 
 // ----------------------------------------------------
 
+void TextFieldSplitter::save(const std::string& _fname) const {
+  helpers::Saver::save_as_json(_fname, *this);
+}
+
+// ----------------------------------------------------
+
 std::pair<containers::Column<Int>, containers::Column<strings::String>>
 TextFieldSplitter::split_text_fields_on_col(
     const containers::Column<strings::String>& _col) const {
@@ -165,18 +172,6 @@ TextFieldSplitter::split_text_fields_on_col(
       containers::Column<strings::String>(words_ptr, _col.name());
 
   return std::make_pair(rownums, words);
-}
-
-// ----------------------------------------------------
-
-Poco::JSON::Object::Ptr TextFieldSplitter::to_json_obj() const {
-  auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-
-  obj->set("type_", type());
-
-  obj->set("cols_", PreprocessorImpl::to_array(cols_));
-
-  return obj;
 }
 
 // ----------------------------------------------------

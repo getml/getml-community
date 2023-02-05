@@ -8,6 +8,7 @@
 #include "engine/preprocessors/Imputation.hpp"
 
 #include "engine/preprocessors/PreprocessorImpl.hpp"
+#include "helpers/Saver.hpp"
 
 namespace engine {
 namespace preprocessors {
@@ -223,32 +224,8 @@ std::vector<std::pair<Float, bool>> Imputation::retrieve_pairs(
 
 // ----------------------------------------------------
 
-Poco::JSON::Object::Ptr Imputation::to_json_obj() const {
-  auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-
-  obj->set("type_", type());
-
-  obj->set("add_dummies_", add_dummies_);
-
-  auto column_descriptions = Poco::JSON::Array::Ptr(new Poco::JSON::Array());
-
-  auto means = Poco::JSON::Array::Ptr(new Poco::JSON::Array());
-
-  auto needs_dummies = Poco::JSON::Array::Ptr(new Poco::JSON::Array());
-
-  for (const auto& [key, value] : cols()) {
-    column_descriptions->add(key.to_json_obj());
-    means->add(value.first);
-    needs_dummies->add(value.second);
-  }
-
-  obj->set("column_descriptions_", column_descriptions);
-
-  obj->set("means_", means);
-
-  obj->set("needs_dummies_", needs_dummies);
-
-  return obj;
+void Imputation::save(const std::string& _fname) const {
+  helpers::Saver::save_as_json(_fname, *this);
 }
 
 // ----------------------------------------------------

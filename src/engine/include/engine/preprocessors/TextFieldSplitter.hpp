@@ -64,8 +64,8 @@ class TextFieldSplitter : public Preprocessor {
   std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
   fit_transform(const FitParams& _params) final;
 
-  /// Expresses the Seasonal preprocessor as a JSON object.
-  Poco::JSON::Object::Ptr to_json_obj() const final;
+  /// Stores the preprocessor.
+  void save(const std::string& _fname) const final;
 
   /// Generates SQL code for the text field splitting.
   std::vector<std::string> to_sql(

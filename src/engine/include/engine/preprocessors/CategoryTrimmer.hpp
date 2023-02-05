@@ -78,8 +78,8 @@ class CategoryTrimmer : public Preprocessor {
   std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
   fit_transform(const FitParams& _params) final;
 
-  /// Expresses the Seasonal preprocessor as a JSON object.
-  Poco::JSON::Object::Ptr to_json_obj() const final;
+  /// Stores the preprocessor.
+  void save(const std::string& _fname) const final;
 
   /// Transforms the data frames by adding the desired time series
   /// transformations.

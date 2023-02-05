@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/pipelines/Save.hpp"
 
@@ -158,13 +158,7 @@ void Save::save_preprocessors(const SaveParams& _params,
                               const Poco::TemporaryFile& _tfile) {
   for (size_t i = 0; i < _params.fitted_.preprocessors_.size(); ++i) {
     const auto& p = _params.fitted_.preprocessors_.at(i);
-
-    const auto ptr = p->to_json_obj();
-
-    assert_true(ptr);
-
-    save_json_obj(
-        *ptr, _tfile.path() + "/preprocessor-" + std::to_string(i) + ".json");
+    p->save(_tfile.path() + "/preprocessor-" + std::to_string(i) + ".json");
   }
 }
 

@@ -52,12 +52,12 @@ class Preprocessor {
   virtual std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
   fit_transform(const FitParams& _params) = 0;
 
+  /// Stores the preprocessor.
+  virtual void save(const std::string& _fname) const = 0;
+
   /// Generates the new column.
   virtual std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
   transform(const TransformParams& _params) const = 0;
-
-  /// Expresses the preprocessor as a JSON object.
-  virtual Poco::JSON::Object::Ptr to_json_obj() const = 0;
 
   /// Expresses the preprocessor as SQL, if applicable.
   virtual std::vector<std::string> to_sql(

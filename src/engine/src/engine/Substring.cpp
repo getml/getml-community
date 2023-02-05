@@ -1,21 +1,17 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/preprocessors/Substring.hpp"
 
-// ----------------------------------------------------
-
 #include "engine/preprocessors/PreprocessorImpl.hpp"
-
-// ----------------------------------------------------
+#include "helpers/Saver.hpp"
 
 namespace engine {
 namespace preprocessors {
-// ----------------------------------------------------
 
 std::optional<containers::Column<Int>> Substring::extract_substring(
     const containers::Column<strings::String>& _col,
@@ -177,20 +173,8 @@ containers::Column<strings::String> Substring::make_str_col(
 
 // ----------------------------------------------------
 
-Poco::JSON::Object::Ptr Substring::to_json_obj() const {
-  auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-
-  obj->set("type_", type());
-
-  obj->set("cols_", PreprocessorImpl::to_array(cols_));
-
-  obj->set("begin_", begin_);
-
-  obj->set("length_", length_);
-
-  obj->set("unit_", unit_);
-
-  return obj;
+void Substring::save(const std::string& _fname) const {
+  helpers::Saver::save_as_json(_fname, *this);
 }
 
 // ----------------------------------------------------
