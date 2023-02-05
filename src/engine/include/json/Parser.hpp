@@ -29,6 +29,7 @@
 #include "fct/collect.hpp"
 #include "fct/iota.hpp"
 #include "fct/join.hpp"
+#include "json/ArrayGetter.hpp"
 #include "strings/strings.hpp"
 
 namespace json {
@@ -266,6 +267,36 @@ struct Parser<std::pair<FirstType, SecondType>> {
 
 // ----------------------------------------------------------------------------
 
+template <class T>
+struct Parser<std::set<T>> {
+ public:
+  /// Expresses the variables as type T.
+  static std::set<T> from_json(const Poco::Dynamic::Var& _var) {
+    const auto arr = ArrayGetter::get_array(_var);
+    const auto iota = fct::iota<size_t>(0, arr.size());
+    const auto get_value = [&arr](const size_t _i) {
+      try {
+        return Parser<std::decay_t<T>>::from_json(arr.get(_i));
+      } catch (std::exception& _exp) {
+        throw std::runtime_error("Error parsing element " + std::to_string(_i) +
+                                 ": " + _exp.what());
+      }
+    };
+    return fct::collect::set<T>(iota | VIEWS::transform(get_value));
+  }
+
+  /// Transform a std::vector into a Poco::JSON::Array
+  static Poco::JSON::Array::Ptr to_json(const std::set<T>& _s) {
+    auto ptr = Poco::JSON::Array::Ptr(new Poco::JSON::Array());
+    for (const auto& val : _s) {
+      ptr->add(Parser<std::decay_t<T>>::to_json(val));
+    }
+    return ptr;
+  }
+};
+
+// ----------------------------------------------------------------------------
+
 template <>
 struct Parser<strings::String> {
   /// Expresses the variables as type T.
@@ -286,7 +317,7 @@ struct Parser<std::tuple<Ts...>> {
  public:
   /// Expresses the variables as type T.
   static std::tuple<Ts...> from_json(const Poco::Dynamic::Var& _var) {
-    const auto arr = get_array(_var);
+    const auto arr = ArrayGetter::get_array(_var);
     if (arr.size() != sizeof...(Ts)) {
       throw std::runtime_error("Expected " + std::to_string(sizeof...(Ts)) +
                                " fields, got " + std::to_string(arr.size()) +
@@ -327,28 +358,6 @@ struct Parser<std::tuple<Ts...>> {
     } catch (std::exception& _exp) {
       throw std::runtime_error("Error parsing element " + std::to_string(_i) +
                                ": " + _exp.what());
-    }
-  }
-
-  /// Retrieves the array from the dynamic var.
-  static Poco::JSON::Array get_array(const Poco::Dynamic::Var& _var) {
-    try {
-      return _var.extract<Poco::JSON::Array>();
-
-    } catch (std::exception& _exp) {
-    }
-
-    try {
-      const auto ptr = _var.extract<Poco::JSON::Array::Ptr>();
-
-      if (!ptr) {
-        throw std::runtime_error("Poco::JSON::Array::Ptr is NULL.");
-      }
-
-      return *ptr;
-    } catch (std::exception& _exp) {
-      throw std::runtime_error(
-          "Expected a Poco::JSON::Array or a Poco::JSON::Array::Ptr.");
     }
   }
 
@@ -417,7 +426,7 @@ struct Parser<std::vector<T>> {
  public:
   /// Expresses the variables as type T.
   static std::vector<T> from_json(const Poco::Dynamic::Var& _var) {
-    const auto arr = get_array(_var);
+    const auto arr = ArrayGetter::get_array(_var);
     const auto iota = fct::iota<size_t>(0, arr.size());
     const auto get_value = [&arr](const size_t _i) {
       try {
@@ -437,29 +446,6 @@ struct Parser<std::vector<T>> {
       ptr->add(Parser<std::decay_t<T>>::to_json(_vec[i]));
     }
     return ptr;
-  }
-
- private:
-  /// Retrieves the array from the dynamic var.
-  static Poco::JSON::Array get_array(const Poco::Dynamic::Var& _var) {
-    try {
-      return _var.extract<Poco::JSON::Array>();
-
-    } catch (std::exception& _exp) {
-    }
-
-    try {
-      const auto ptr = _var.extract<Poco::JSON::Array::Ptr>();
-
-      if (!ptr) {
-        throw std::runtime_error("Poco::JSON::Array::Ptr is NULL.");
-      }
-
-      return *ptr;
-    } catch (std::exception& _exp) {
-      throw std::runtime_error(
-          "Expected a Poco::JSON::Array or a Poco::JSON::Array::Ptr.");
-    }
   }
 };
 
