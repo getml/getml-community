@@ -12,6 +12,7 @@
 
 #include <vector>
 
+#include "engine/commands/Preprocessor.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
 #include "fct/Ref.hpp"
 
@@ -19,10 +20,21 @@ namespace engine {
 namespace preprocessors {
 
 struct PreprocessorParser {
+  using PreprocessorHyperparams =
+      typename commands::Preprocessor::NamedTupleType;
+
   /// Returns the correct preprocessor to use based on the JSON object.
   static fct::Ref<Preprocessor> parse(
-      const Poco::JSON::Object& _obj,
+      const PreprocessorHyperparams& _cmd,
       const std::vector<Poco::JSON::Object::Ptr>& _dependencies);
+
+  /// TODO: Remove this temporary fix.
+  static fct::Ref<Preprocessor> parse(
+      const Poco::JSON::Object& _json_obj,
+      const std::vector<Poco::JSON::Object::Ptr>& _dependencies) {
+    return parse(json::from_json<PreprocessorHyperparams>(_json_obj),
+                 _dependencies);
+  }
 };
 
 }  // namespace preprocessors

@@ -41,19 +41,12 @@ class Substring : public Preprocessor {
   using NamedTupleType = fct::NamedTuple<f_cols>;
 
  public:
-  Substring() : begin_(0), length_(0) {}
-
   Substring(const SubstringOp& _op,
             const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
       : begin_(_op.get<"begin_">()),
         dependencies_(_dependencies),
         length_(_op.get<"length_">()),
         unit_(_op.get<"unit_">()) {}
-
-  /// TODO: Remove this quick fix.
-  Substring(const Poco::JSON::Object& _obj,
-            const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
-      : Substring(json::from_json<SubstringOp>(_obj), _dependencies) {}
 
   ~Substring() = default;
 
