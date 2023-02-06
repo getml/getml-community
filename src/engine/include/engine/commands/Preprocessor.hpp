@@ -11,6 +11,7 @@
 #include "fct/Field.hpp"
 #include "fct/Literal.hpp"
 #include "fct/NamedTuple.hpp"
+#include "fct/TaggedUnion.hpp"
 
 namespace engine {
 namespace commands {
@@ -47,8 +48,9 @@ class Preprocessor {
   using TextFieldSplitterOp =
       fct::NamedTuple<fct::Field<"type_", fct::Literal<"TextFieldSplitter">>>;
 
-  using NamedTupleType = std::variant<CategoryTrimmerOp, EMailDomainOp,
-                                      ImputationOp, SeasonalOp, SubstringOp>;
+  using NamedTupleType =
+      fct::TaggedUnion<"type_", CategoryTrimmerOp, EMailDomainOp, ImputationOp,
+                       SeasonalOp, SubstringOp>;
 
   NamedTupleType val_;
 };

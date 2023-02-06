@@ -26,10 +26,13 @@
 #include "fct/NamedTuple.hpp"
 #include "fct/Ref.hpp"
 #include "fct/StringLiteral.hpp"
+#include "fct/TaggedUnion.hpp"
 #include "fct/collect.hpp"
+#include "fct/find_index.hpp"
 #include "fct/iota.hpp"
 #include "fct/join.hpp"
 #include "json/ArrayGetter.hpp"
+#include "json/ObjectGetter.hpp"
 #include "strings/strings.hpp"
 
 namespace json {
@@ -98,7 +101,7 @@ struct Parser<fct::NamedTuple<FieldTypes...>> {
   /// Generates a NamedTuple from a JSON Object.
   static fct::NamedTuple<FieldTypes...> from_json(
       const Poco::Dynamic::Var& _var) {
-    const auto obj = get_object(_var);
+    const auto obj = ObjectGetter::get_object(_var);
     return build_named_tuple_recursively(obj);
   }
 
@@ -149,28 +152,6 @@ struct Parser<fct::NamedTuple<FieldTypes...>> {
       const auto name = FieldType::name_.str();
       _ptr->set(name, value);
       return build_object_recursively<_i + 1>(_tup, _ptr);
-    }
-  }
-
-  /// Retrieves the object from the dynamic var.
-  static Poco::JSON::Object get_object(const Poco::Dynamic::Var& _var) {
-    try {
-      return _var.extract<Poco::JSON::Object>();
-
-    } catch (std::exception& _exp) {
-    }
-
-    try {
-      const auto ptr = _var.extract<Poco::JSON::Object::Ptr>();
-
-      if (!ptr) {
-        throw std::runtime_error("Poco::JSON::Object::Ptr is NULL.");
-      }
-
-      return *ptr;
-    } catch (std::exception& _exp) {
-      throw std::runtime_error(
-          "Expected a Poco::JSON::Object or a Poco::JSON::Object::Ptr.");
     }
   }
 
@@ -307,6 +288,76 @@ struct Parser<strings::String> {
   /// Transform a std::vector into a Poco::JSON::Array
   static Poco::Dynamic::Var to_json(const strings::String& _s) {
     return Parser<std::string>::to_json(_s.str());
+  }
+};
+
+// ----------------------------------------------------------------------------
+
+template <fct::StringLiteral _discriminator, class... NamedTupleTypes>
+struct Parser<fct::TaggedUnion<_discriminator, NamedTupleTypes...>> {
+ public:
+  /// Expresses the variables as type T.
+  static fct::TaggedUnion<_discriminator, NamedTupleTypes...> from_json(
+      const Poco::Dynamic::Var& _var) {
+    const auto obj = ObjectGetter::get_object(_var);
+    const auto disc_value = get_discriminator(obj, _discriminator.str());
+    return find_matching_named_tuple(obj, disc_value);
+  }
+
+  /// Expresses the variables as a JSON type.
+  static Poco::Dynamic::Var to_json(
+      const fct::TaggedUnion<_discriminator, NamedTupleTypes...>&
+          _tagged_union) {
+    using VariantType =
+        typename fct::TaggedUnion<_discriminator,
+                                  NamedTupleTypes...>::VariantType;
+    return Parser<VariantType>::to_json(_tagged_union.variant_);
+  }
+
+ private:
+  template <int _i = 0>
+  static fct::TaggedUnion<_discriminator, NamedTupleTypes...>
+  find_matching_named_tuple(const Poco::JSON::Object& _obj,
+                            const std::string& _disc_value) {
+    if constexpr (_i == sizeof...(NamedTupleTypes)) {
+      throw std::runtime_error(
+          "Could not parse tagged union, could not match " +
+          _discriminator.str() + " '" + _disc_value + "'.");
+    } else {
+      using NamedTupleType = std::decay_t<
+          std::variant_alternative_t<_i, std::variant<NamedTupleTypes...>>>;
+
+      using Fields = typename NamedTupleType::Fields;
+
+      constexpr int ix = fct::find_index<_discriminator, Fields>();
+
+      using LiteralType = typename std::tuple_element<ix, Fields>::type::Type;
+
+      if (LiteralType::contains(_disc_value)) {
+        try {
+          return fct::TaggedUnion<_discriminator, NamedTupleTypes...>(
+              Parser<NamedTupleType>::from_json(_obj));
+        } catch (std::exception& _e) {
+          throw std::runtime_error(
+              "Could not parse tagged union with discrimininator " +
+              _discriminator.str() + " '" + _disc_value + "': " + _e.what());
+        }
+      } else {
+        return find_matching_named_tuple<_i + 1>(_obj, _disc_value);
+      }
+    }
+  }
+
+  /// Retrieves the discriminator.
+  static std::string get_discriminator(const Poco::JSON::Object& _obj,
+                                       const std::string& _field_name) {
+    try {
+      return _obj.get(_field_name).extract<std::string>();
+    } catch (std::exception& _e) {
+      throw std::runtime_error(
+          "Could not parse tagged union: Could not find field " + _field_name +
+          " or type of field was not a string.");
+    }
   }
 };
 
