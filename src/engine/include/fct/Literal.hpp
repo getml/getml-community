@@ -88,6 +88,11 @@ class Literal {
 
   ~Literal() = default;
 
+  /// Determines whether the literal contains the string.
+  inline static bool contains(const std::string& _str) {
+    return has_value<fields_...>(_str);
+  }
+
   /// Constructs a new Literal.
   template <StringLiteral _name>
   static Literal<fields_...> make() {
@@ -184,7 +189,7 @@ class Literal {
   /// Finds the correct value associated with
   /// the string at run time.
   template <StringLiteral _head, StringLiteral... _tail>
-  static int find_value(const std::string& _str) {
+  inline static int find_value(const std::string& _str) {
     if (_head.str() == _str) {
       return sizeof...(fields_) - sizeof...(_tail) - 1;
     }
@@ -193,6 +198,19 @@ class Literal {
                                "'.");
     } else {
       return find_value<_tail...>(_str);
+    }
+  }
+
+  /// Whether the literal contains this string.
+  template <StringLiteral _head, StringLiteral... _tail>
+  inline static bool has_value(const std::string& _str) {
+    if (_head.str() == _str) {
+      return true;
+    }
+    if constexpr (sizeof...(_tail) == 0) {
+      return false;
+    } else {
+      return has_value<_tail...>(_str);
     }
   }
 

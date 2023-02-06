@@ -58,7 +58,7 @@ fct::Ref<Preprocessor> PreprocessorParser::parse(
     }
   };
 
-  return std::visit(handle, _cmd);
+  return fct::visit(handle, _cmd);
 }
 
 // ----------------------------------------------------
