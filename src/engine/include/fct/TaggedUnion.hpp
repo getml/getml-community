@@ -25,13 +25,6 @@ struct TaggedUnion {
   VariantType variant_;
 };
 
-/// Implements the visitor pattern for Literals.
-template <class Visitor, StringLiteral _discriminator, class... Args>
-inline auto visit(const Visitor& _visitor,
-                  const TaggedUnion<_discriminator, Args...> _tagged_union) {
-  return std::visit(_visitor, _tagged_union.variant_);
-}
-
 }  // namespace fct
 
 #endif  // FCT_TAGGEDUNION_HPP_

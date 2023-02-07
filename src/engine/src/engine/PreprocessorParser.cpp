@@ -12,6 +12,7 @@
 #include "engine/preprocessors/Substring.hpp"
 #include "engine/preprocessors/TextFieldSplitter.hpp"
 #include "engine/preprocessors/preprocessors.hpp"
+#include "fct/visit.hpp"
 #include "json/json.hpp"
 
 namespace engine {
