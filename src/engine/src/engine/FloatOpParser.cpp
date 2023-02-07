@@ -9,6 +9,7 @@
 
 #include "engine/handlers/BoolOpParser.hpp"
 #include "engine/handlers/StringOpParser.hpp"
+#include "fct/visit.hpp"
 
 namespace engine {
 namespace handlers {

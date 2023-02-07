@@ -253,30 +253,6 @@ inline constexpr auto value_of() {
   return GetValueOfLiteral<LiteralType, _name>::get();
 }
 
-/// Necessary for the VisitTree structure.
-template <class Visitor, StringLiteral... _fields>
-struct VisitorWrapper {
-  /// Calls the underlying visitor when required to do so.
-  template <int _i, class... Args>
-  inline auto visit(const Args&... _args) const {
-    return (*visitor_)(name_of<Literal<_fields...>, _i>(), _args...);
-  }
-
-  /// The underlying visitor.
-  const Visitor* visitor_;
-};
-
-/// Implements the visitor pattern for Literals.
-template <class Visitor, StringLiteral... _fields, class... Args>
-inline auto visit(const Visitor& _visitor, const Literal<_fields...> _literal,
-                  const Args&... _args) {
-  constexpr int size = sizeof...(_fields);
-  using WrapperType = VisitorWrapper<Visitor, _fields...>;
-  const auto wrapper = WrapperType(&_visitor);
-  return VisitTree::visit<0, size, WrapperType>(wrapper, _literal.value(),
-                                                _args...);
-}
-
 }  // namespace fct
 
 #endif  // FCT_LITERAL_HPP_
