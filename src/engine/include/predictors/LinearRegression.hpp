@@ -37,12 +37,11 @@ class LinearRegression : public Predictor {
       fct::NamedTuple<f_learning_rate, f_reg_lambda, f_scaler, f_weights>;
 
  public:
-  LinearRegression(
-      const fct::Ref<const LinearRegressionHyperparams>& _hyperparams,
-      const std::shared_ptr<const PredictorImpl>& _impl,
-      const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
+  LinearRegression(const LinearRegressionHyperparams& _hyperparams,
+                   const std::shared_ptr<const PredictorImpl>& _impl,
+                   const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
       : dependencies_(_dependencies),
-        hyperparams_(_hyperparams),
+        hyperparams_(fct::Ref<LinearRegressionHyperparams>::make(_hyperparams)),
         impl_(_impl){};
 
   ~LinearRegression() = default;

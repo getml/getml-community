@@ -327,13 +327,7 @@ struct Parser<fct::TaggedUnion<_discriminator, NamedTupleTypes...>> {
       using NamedTupleType = std::decay_t<
           std::variant_alternative_t<_i, std::variant<NamedTupleTypes...>>>;
 
-      using Fields = typename NamedTupleType::Fields;
-
-      constexpr int ix = fct::find_index<_discriminator, Fields>();
-
-      using LiteralType = typename std::tuple_element<ix, Fields>::type::Type;
-
-      if (LiteralType::contains(_disc_value)) {
+      if (contains_disc_value<NamedTupleType>(_disc_value)) {
         try {
           return fct::TaggedUnion<_discriminator, NamedTupleTypes...>(
               Parser<NamedTupleType>::from_json(_obj));
@@ -357,6 +351,23 @@ struct Parser<fct::TaggedUnion<_discriminator, NamedTupleTypes...>> {
       throw std::runtime_error(
           "Could not parse tagged union: Could not find field " + _field_name +
           " or type of field was not a string.");
+    }
+  }
+
+  /// Determines whether the discriminating literal contains the value
+  /// retrieved from the object.
+  template <class T>
+  static inline bool contains_disc_value(const std::string& _disc_value) {
+    if constexpr (!fct::has_named_tuple_type_v<T>) {
+      using Fields = typename T::Fields;
+      constexpr int ix = fct::find_index<_discriminator, Fields>();
+      using LiteralType = typename std::tuple_element<ix, Fields>::type::Type;
+      return LiteralType::contains(_disc_value);
+    } else {
+      using Fields = typename T::NamedTupleType::Fields;
+      constexpr int ix = fct::find_index<_discriminator, Fields>();
+      using LiteralType = typename std::tuple_element<ix, Fields>::type::Type;
+      return LiteralType::contains(_disc_value);
     }
   }
 };

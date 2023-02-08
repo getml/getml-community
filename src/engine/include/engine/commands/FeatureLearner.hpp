@@ -8,16 +8,15 @@
 #ifndef ENGINE_COMMANDS_FEATURELEARNER_HPP_
 #define ENGINE_COMMANDS_FEATURELEARNER_HPP_
 
-#include <variant>
-
 #include "fastprop/Hyperparameters.hpp"
+#include "fct/TaggedUnion.hpp"
 
 namespace engine {
 namespace commands {
 
 class FeatureLearner {
  public:
-  using NamedTupleType = std::variant<fastprop::Hyperparameters>;
+  using NamedTupleType = fct::TaggedUnion<"type_", fastprop::Hyperparameters>;
 
   NamedTupleType val_;
 };

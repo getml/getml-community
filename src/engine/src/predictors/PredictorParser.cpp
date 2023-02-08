@@ -7,8 +7,7 @@
 
 #include "predictors/PredictorParser.hpp"
 
-#include <variant>
-
+#include "fct/visit.hpp"
 #include "predictors/LinearRegression.hpp"
 #include "predictors/LogisticRegression.hpp"
 #include "predictors/XGBoostPredictor.hpp"
@@ -23,25 +22,23 @@ fct::Ref<Predictor> PredictorParser::parse(
                           const auto& _hyperparams) -> fct::Ref<Predictor> {
     using Type = std::decay_t<decltype(_hyperparams)>;
 
-    if constexpr (std::is_same<Type,
-                               fct::Ref<const LinearRegressionHyperparams>>()) {
+    if constexpr (std::is_same<Type, LinearRegressionHyperparams>()) {
       return fct::Ref<LinearRegression>::make(_hyperparams, _impl,
                                               _dependencies);
     }
 
-    if constexpr (std::is_same<
-                      Type, fct::Ref<const LogisticRegressionHyperparams>>()) {
+    if constexpr (std::is_same<Type, LogisticRegressionHyperparams>()) {
       return fct::Ref<LogisticRegression>::make(_hyperparams, _impl,
                                                 _dependencies);
     }
 
-    if constexpr (std::is_same<Type, fct::Ref<const XGBoostHyperparams>>()) {
+    if constexpr (std::is_same<Type, XGBoostHyperparams>()) {
       return fct::Ref<XGBoostPredictor>::make(_hyperparams, _impl,
                                               _dependencies);
     }
   };
 
-  return std::visit(handle, _hyperparams);
+  return fct::visit(handle, _hyperparams);
 }
 
 }  // namespace predictors
