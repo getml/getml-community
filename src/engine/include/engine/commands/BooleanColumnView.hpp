@@ -17,6 +17,7 @@
 #include "fct/Literal.hpp"
 #include "fct/NamedTuple.hpp"
 #include "fct/Ref.hpp"
+#include "fct/TaggedUnion.hpp"
 
 namespace engine {
 namespace commands {
@@ -100,9 +101,9 @@ class BooleanColumnView {
 
   /// Defines a boolean column view.
   using NamedTupleType =
-      std::variant<BooleanBinaryOp, BooleanConstOp, BooleanIsInfOp,
-                   BooleanIsNullOp, BooleanNotOp, BooleanNumComparisonOp,
-                   BooleanStrComparisonOp, BooleanSubselectionOp>;
+      fct::TaggedUnion<"type_", BooleanBinaryOp, BooleanConstOp, BooleanIsInfOp,
+                       BooleanIsNullOp, BooleanNotOp, BooleanNumComparisonOp,
+                       BooleanStrComparisonOp, BooleanSubselectionOp>;
 
   /// Used to break the recursive definition.
   NamedTupleType val_;

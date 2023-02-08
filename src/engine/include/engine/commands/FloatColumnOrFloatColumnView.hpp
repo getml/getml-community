@@ -17,6 +17,7 @@
 #include "fct/Literal.hpp"
 #include "fct/NamedTuple.hpp"
 #include "fct/Ref.hpp"
+#include "fct/TaggedUnion.hpp"
 
 namespace engine {
 namespace commands {
@@ -125,10 +126,11 @@ class FloatColumnOrFloatColumnView {
       fct::Field<"type_", fct::Literal<"FloatColumnView">>>;
 
   using NamedTupleType =
-      std::variant<FloatColumnOp, FloatArangeOp, FloatAsTSOp, FloatBinaryOp,
-                   FloatConstOp, FloatFromBooleanOp, FloatFromStringOp,
-                   FloatRandomOp, FloatSubselectionOp, FloatUnaryOp,
-                   FloatUpdateOp, FloatWithSubrolesOp, FloatWithUnitOp>;
+      fct::TaggedUnion<"type_", FloatColumnOp, FloatArangeOp, FloatAsTSOp,
+                       FloatBinaryOp, FloatConstOp, FloatFromBooleanOp,
+                       FloatFromStringOp, FloatRandomOp, FloatSubselectionOp,
+                       FloatUnaryOp, FloatUpdateOp, FloatWithSubrolesOp,
+                       FloatWithUnitOp>;
 
   /// Used to break the recursive definition.
   NamedTupleType val_;

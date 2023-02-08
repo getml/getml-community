@@ -9,6 +9,7 @@
 
 #include "engine/handlers/BoolOpParser.hpp"
 #include "engine/handlers/FloatOpParser.hpp"
+#include "fct/visit.hpp"
 
 namespace engine {
 namespace handlers {
@@ -123,7 +124,7 @@ containers::ColumnView<strings::String> StringOpParser::numerical_as_string(
   const auto role = [&_col]() -> std::string {
     using FloatColumnOp =
         typename commands::FloatColumnOrFloatColumnView::FloatColumnOp;
-    if (const auto val = std::get_if<FloatColumnOp>(&_col.val_)) {
+    if (const auto val = std::get_if<FloatColumnOp>(&_col.val_.variant_)) {
       return fct::get<"role_">(*val);
     }
     return "";
@@ -206,7 +207,7 @@ containers::ColumnView<strings::String> StringOpParser::parse(
     }
   };
 
-  return std::visit(handle, _cmd.val_);
+  return fct::visit(handle, _cmd.val_);
 }
 
 // ----------------------------------------------------------------------------
