@@ -13,13 +13,15 @@
 #include "engine/commands/DataFrameOrView.hpp"
 #include "engine/commands/FeatureLearner.hpp"
 #include "engine/commands/Preprocessor.hpp"
+#include "predictors/PredictorHyperparams.hpp"
 
 namespace engine {
 namespace commands {
 
 /// Fingerprints are used to track the dirty states of a pipeline (which
 /// prevents the user from fitting the same thing over and over again).
-using Fingerprint = std::variant<DataFrameOrView, Preprocessor, FeatureLearner>;
+using Fingerprint = std::variant<DataFrameOrView, Preprocessor, FeatureLearner,
+                                 predictors::PredictorHyperparams>;
 
 }  // namespace commands
 }  // namespace engine
