@@ -8,28 +8,22 @@
 #ifndef FCT_HASNAMEDTUPLETYPEV_HPP_
 #define FCT_HASNAMEDTUPLETYPEV_HPP_
 
+#include <cstdint>
 #include <utility>
 
 namespace fct {
 template <class Wrapper>
 class HasNamedTupleType {
  private:
-  struct SizeOne {
-    char a[1];
-  };
-  struct SizeTwo {
-    char a[2];
-  };
+  template <class U>
+  static std::int32_t foo(typename U::NamedTupleType*);
 
   template <class U>
-  static SizeOne foo(typename U::NamedTupleType*);
-
-  template <class U>
-  static SizeTwo foo(...);
+  static std::int64_t foo(...);
 
  public:
   static constexpr bool value =
-      sizeof(foo<Wrapper>(nullptr)) == sizeof(SizeOne);
+      sizeof(foo<Wrapper>(nullptr)) == sizeof(std::int32_t);
 };
 
 /// Utility parameter for named tuple parsing, can be used by the
