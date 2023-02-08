@@ -38,11 +38,11 @@ class XGBoostPredictor : public Predictor {
   typedef XGBoostMatrix::DMatrixPtr DMatrixPtr;
 
  public:
-  XGBoostPredictor(const fct::Ref<const XGBoostHyperparams>& _hyperparams,
+  XGBoostPredictor(const XGBoostHyperparams& _hyperparams,
                    const std::shared_ptr<const PredictorImpl>& _impl,
                    const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
       : dependencies_(_dependencies),
-        hyperparams_(_hyperparams),
+        hyperparams_(fct::Ref<XGBoostHyperparams>::make(_hyperparams)),
         impl_(_impl) {}
 
   ~XGBoostPredictor() = default;

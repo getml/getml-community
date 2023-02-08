@@ -8,9 +8,7 @@
 #ifndef PREDICTORS_PREDICTORHYPERPARAMS_HPP_
 #define PREDICTORS_PREDICTORHYPERPARAMS_HPP_
 
-#include <variant>
-
-#include "fct/Ref.hpp"
+#include "fct/TaggedUnion.hpp"
 #include "predictors/LinearRegressionHyperparams.hpp"
 #include "predictors/LogisticRegressionHyperparams.hpp"
 #include "predictors/XGBoostHyperparams.hpp"
@@ -18,9 +16,8 @@
 namespace predictors {
 
 using PredictorHyperparams =
-    std::variant<fct::Ref<const LinearRegressionHyperparams>,
-                 fct::Ref<const LogisticRegressionHyperparams>,
-                 fct::Ref<const XGBoostHyperparams>>;
+    fct::TaggedUnion<"type_", LinearRegressionHyperparams,
+                     LogisticRegressionHyperparams, XGBoostHyperparams>;
 
 }  // namespace predictors
 
