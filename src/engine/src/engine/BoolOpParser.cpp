@@ -131,7 +131,7 @@ containers::ColumnView<bool> BoolOpParser::parse(
     }
   };
 
-  return std::visit(handle, _cmd.val_);
+  return fct::visit(handle, _cmd.val_);
 }
 
 // ----------------------------------------------------------------------------
