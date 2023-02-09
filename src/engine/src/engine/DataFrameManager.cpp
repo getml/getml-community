@@ -1948,13 +1948,13 @@ void DataFrameManager::summarize(const std::string& _name,
                                  Poco::Net::StreamSocket* _socket) {
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
-  auto& df = utils::Getter::get(_name, &data_frames());
+  const auto& df = utils::Getter::get(_name, &data_frames());
 
-  auto summary = df.to_monitor();
+  const auto summary = df.to_monitor();
 
   read_lock.unlock();
 
-  communication::Sender::send_string(JSON::stringify(summary), _socket);
+  communication::Sender::send_string(json::to_json(summary), _socket);
 }
 
 // ------------------------------------------------------------------------

@@ -23,6 +23,7 @@
 #include "engine/containers/DataFrameContent.hpp"
 #include "engine/containers/DataFrameIndex.hpp"
 #include "engine/containers/Encoding.hpp"
+#include "engine/containers/MonitorSummary.hpp"
 #include "engine/containers/Schema.hpp"
 #include "strings/strings.hpp"
 #include "transpilation/HumanReadableSQLGenerator.hpp"
@@ -187,7 +188,7 @@ class DataFrame {
 
   /// Extracts the data frame as a Poco::JSON::Object the monitor process can
   /// understand
-  Poco::JSON::Object to_monitor() const;
+  containers::MonitorSummary to_monitor() const;
 
   /// Expresses the schema of the DataFrame as a JSON object.
   Schema to_schema(const bool _separate_discrete) const;
@@ -714,11 +715,6 @@ class DataFrame {
                    const std::vector<std::string> &_time_formats,
                    const Schema &_schema);
 
-  /// Returns the colnames of a vector of columns
-  template <class T>
-  std::vector<std::string> get_colnames(
-      const std::vector<Column<T>> &_columns) const;
-
   /// Returns the colnames, roles and units of columns.
   std::tuple<std::vector<std::string>, std::vector<std::string>,
              std::vector<std::string>>
@@ -727,10 +723,6 @@ class DataFrame {
   /// Represents the first _max rows as a set of rows.
   std::vector<std::vector<std::string>> get_rows(
       const std::int32_t _max_rows) const;
-
-  /// Returns the units of a vector of columns
-  template <class T>
-  Poco::JSON::Array get_units(const std::vector<Column<T>> &_columns) const;
 
   /// Loads columns.
   template <class T>
@@ -880,30 +872,6 @@ ULong DataFrame::calc_nbytes(const std::vector<Column<T>> &_columns) const {
                          [](const ULong init, const Column<T> &col) {
                            return init + col.nbytes();
                          });
-}
-
-// -------------------------------------------------------------------------
-
-template <class T>
-std::vector<std::string> DataFrame::get_colnames(
-    const std::vector<Column<T>> &_columns) const {
-  const auto get_name = [](const auto &_col) { return _col.name(); };
-  return fct::collect::vector<std::string>(_columns |
-                                           VIEWS::transform(get_name));
-}
-
-// -------------------------------------------------------------------------
-
-template <class T>
-Poco::JSON::Array DataFrame::get_units(
-    const std::vector<Column<T>> &_columns) const {
-  std::vector<std::string> units;
-
-  std::for_each(
-      _columns.begin(), _columns.end(),
-      [&units](const Column<T> &col) { units.push_back(col.unit()); });
-
-  return JSON::vector_to_array(units);
 }
 
 // ----------------------------------------------------------------------------

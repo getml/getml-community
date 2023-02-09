@@ -1673,60 +1673,46 @@ std::vector<std::string> DataFrame::subroles(const std::string &_name) const {
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object DataFrame::to_monitor() const {
-  Poco::JSON::Object obj;
+containers::MonitorSummary DataFrame::to_monitor() const {
+  const auto get_colname = [](const auto &_col) { return _col.unit(); };
 
-  obj.set("categorical_", get_colnames(categoricals_));
+  const auto get_unit = [](const auto &_col) { return _col.unit(); };
 
-  obj.set("categorical_units_", get_units(categoricals_));
+  const auto get_colnames = [get_colname](const auto &_cols) {
+    return fct::collect::vector<std::string>(_cols |
+                                             VIEWS::transform(get_colname));
+  };
 
-  obj.set("join_keys_", get_colnames(join_keys_));
+  const auto get_units = [get_unit](const auto &_cols) {
+    return fct::collect::vector<std::string>(_cols |
+                                             VIEWS::transform(get_unit));
+  };
 
-  obj.set("name_", name_);
-
-  obj.set("num_categorical_", num_categoricals());
-
-  obj.set("num_join_keys_", num_join_keys());
-
-  obj.set("num_numerical_", num_numericals());
-
-  obj.set("num_rows_", nrows());
-
-  obj.set("num_targets_", num_targets());
-
-  obj.set("num_text_", num_text());
-
-  obj.set("num_time_stamps_", num_time_stamps());
-
-  obj.set("num_unused_floats_", num_unused_floats());
-
-  obj.set("num_unused_strings_", num_unused_strings());
-
-  obj.set("numerical_", get_colnames(numericals_));
-
-  obj.set("numerical_units_", get_units(numericals_));
-
-  obj.set("size_", static_cast<Float>(nbytes()) / 1000000.0);
-
-  obj.set("targets_", get_colnames(targets_));
-
-  obj.set("text_", get_colnames(text_));
-
-  obj.set("text_units_", get_units(text_));
-
-  obj.set("time_stamps_", get_colnames(time_stamps_));
-
-  obj.set("time_stamp_units_", get_units(time_stamps_));
-
-  obj.set("unused_floats_", get_colnames(unused_floats_));
-
-  obj.set("unused_float_units_", get_units(unused_floats_));
-
-  obj.set("unused_strings_", get_colnames(unused_strings_));
-
-  obj.set("unused_string_units_", get_units(unused_strings_));
-
-  return obj;
+  return fct::make_field<"categorical_">(get_colnames(categoricals_)) *
+         fct::make_field<"categorical_units_">(get_units(categoricals_)) *
+         fct::make_field<"join_keys_">(get_colnames(join_keys_)) *
+         fct::make_field<"name_">(name_) *
+         fct::make_field<"num_categorical_">(num_categoricals()) *
+         fct::make_field<"num_join_keys_">(num_join_keys()) *
+         fct::make_field<"num_numerical_">(num_numericals()) *
+         fct::make_field<"num_rows_">(nrows()) *
+         fct::make_field<"num_targets_">(num_targets()) *
+         fct::make_field<"num_text_">(num_text()) *
+         fct::make_field<"num_time_stamps_">(num_time_stamps()) *
+         fct::make_field<"num_unused_floats_">(num_unused_floats()) *
+         fct::make_field<"num_unused_strings_">(num_unused_strings()) *
+         fct::make_field<"numerical_">(get_colnames(numericals_)) *
+         fct::make_field<"numerical_units_">(get_units(numericals_)) *
+         fct::make_field<"size_">(static_cast<Float>(nbytes()) / 1000000.0) *
+         fct::make_field<"targets_">(get_colnames(targets_)) *
+         fct::make_field<"text_">(get_colnames(text_)) *
+         fct::make_field<"text_units_">(get_units(text_)) *
+         fct::make_field<"time_stamps_">(get_colnames(time_stamps_)) *
+         fct::make_field<"time_stamp_units_">(get_units(time_stamps_)) *
+         fct::make_field<"unused_floats_">(get_colnames(unused_floats_)) *
+         fct::make_field<"unused_float_units_">(get_units(unused_floats_)) *
+         fct::make_field<"unused_strings_">(get_colnames(unused_strings_)) *
+         fct::make_field<"unused_string_units_">(get_units(unused_strings_));
 }
 
 // ----------------------------------------------------------------------------
