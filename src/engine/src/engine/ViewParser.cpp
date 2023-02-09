@@ -369,7 +369,7 @@ containers::DataFrame ViewParser::parse(
     }
   };
 
-  return std::visit(handle, _cmd.val_);
+  return fct::visit(handle, _cmd.val_);
 }
 
 // ----------------------------------------------------------------------------

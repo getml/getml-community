@@ -10,7 +10,6 @@
 
 #include <optional>
 #include <string>
-#include <variant>
 #include <vector>
 
 #include "engine/commands/BooleanColumnView.hpp"
@@ -20,6 +19,7 @@
 #include "fct/Literal.hpp"
 #include "fct/NamedTuple.hpp"
 #include "fct/Ref.hpp"
+#include "fct/TaggedUnion.hpp"
 
 namespace engine {
 namespace commands {
@@ -50,7 +50,7 @@ class DataFrameOrView {
                  std::optional<std::variant<BooleanColumnView,
                                             FloatColumnOrFloatColumnView>>>>;
 
-  using NamedTupleType = std::variant<DataFrameOp, ViewOp>;
+  using NamedTupleType = fct::TaggedUnion<"type_", DataFrameOp, ViewOp>;
 
   /// Used to break the recursive definition.
   NamedTupleType val_;

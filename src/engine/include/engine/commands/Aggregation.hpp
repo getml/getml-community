@@ -8,13 +8,12 @@
 #ifndef ENGINE_COMMANDS_AGGREGATION_HPP_
 #define ENGINE_COMMANDS_AGGREGATION_HPP_
 
-#include <variant>
-
 #include "engine/commands/FloatColumnOrFloatColumnView.hpp"
 #include "engine/commands/StringColumnOrStringColumnView.hpp"
 #include "fct/Field.hpp"
 #include "fct/Literal.hpp"
 #include "fct/NamedTuple.hpp"
+#include "fct/TaggedUnion.hpp"
 
 namespace engine {
 namespace commands {
@@ -39,7 +38,8 @@ class Aggregation {
       fct::NamedTuple<fct::Field<"type_", StringAggregationLiteral>,
                       fct::Field<"col_", StringColumnOrStringColumnView> >;
 
-  using NamedTupleType = std::variant<FloatAggregationOp, StringAggregationOp>;
+  using NamedTupleType =
+      fct::TaggedUnion<"type_", FloatAggregationOp, StringAggregationOp>;
 
   /// Used to break the recursive definition.
   NamedTupleType val_;
