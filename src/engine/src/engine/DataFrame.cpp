@@ -1387,30 +1387,6 @@ const size_t DataFrame::nrows() const {
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object DataFrame::refresh() const {
-  Poco::JSON::Object obj;
-
-  obj.set(ROLE_CATEGORICAL, get_colnames(categoricals_));
-
-  obj.set(ROLE_JOIN_KEY, get_colnames(join_keys_));
-
-  obj.set(ROLE_NUMERICAL, get_colnames(numericals_));
-
-  obj.set(ROLE_TARGET, get_colnames(targets_));
-
-  obj.set(ROLE_TEXT, get_colnames(text_));
-
-  obj.set(ROLE_TIME_STAMP, get_colnames(time_stamps_));
-
-  obj.set(ROLE_UNUSED_FLOAT, get_colnames(unused_floats_));
-
-  obj.set(ROLE_UNUSED_STRING, get_colnames(unused_strings_));
-
-  return obj;
-}
-
-// ----------------------------------------------------------------------------
-
 bool DataFrame::remove_column(const std::string &_name) {
   check_if_frozen();
 

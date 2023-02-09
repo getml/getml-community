@@ -66,8 +66,6 @@ class DataFrame {
 
   ~DataFrame() = default;
 
-  // -------------------------------
-
   /// Setter for a float_column
   void add_float_column(const Column<Float> &_col, const std::string &_role);
 
@@ -156,9 +154,6 @@ class DataFrame {
   /// Get the number of rows or return 0, if the DataFrame contains no
   /// columns.
   const size_t nrows() const;
-
-  /// Returns the colnames expressed as their respective roles
-  Poco::JSON::Object refresh() const;
 
   /// Returns the role of the column signified by _name.
   std::string role(const std::string &_name) const;
@@ -721,7 +716,7 @@ class DataFrame {
 
   /// Returns the colnames of a vector of columns
   template <class T>
-  Poco::JSON::Array::Ptr get_colnames(
+  std::vector<std::string> get_colnames(
       const std::vector<Column<T>> &_columns) const;
 
   /// Returns the colnames, roles and units of columns.
@@ -890,15 +885,11 @@ ULong DataFrame::calc_nbytes(const std::vector<Column<T>> &_columns) const {
 // -------------------------------------------------------------------------
 
 template <class T>
-Poco::JSON::Array::Ptr DataFrame::get_colnames(
+std::vector<std::string> DataFrame::get_colnames(
     const std::vector<Column<T>> &_columns) const {
-  std::vector<std::string> colnames;
-
-  std::for_each(
-      _columns.begin(), _columns.end(),
-      [&colnames](const Column<T> &col) { colnames.push_back(col.name()); });
-
-  return JSON::vector_to_array_ptr(colnames);
+  const auto get_name = [](const auto &_col) { return _col.name(); };
+  return fct::collect::vector<std::string>(_columns |
+                                           VIEWS::transform(get_name));
 }
 
 // -------------------------------------------------------------------------
