@@ -20,6 +20,7 @@
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
 #include "engine/containers/Column.hpp"
+#include "engine/containers/DataFrameContent.hpp"
 #include "engine/containers/DataFrameIndex.hpp"
 #include "engine/containers/Encoding.hpp"
 #include "engine/containers/Schema.hpp"
@@ -126,9 +127,9 @@ class DataFrame {
 
   /// Returns the content of the data frame in a format that is compatible
   /// with the DataTables.js server-side processing API.
-  Poco::JSON::Object get_content(const std::int32_t _draw,
-                                 const std::int32_t _start,
-                                 const std::int32_t _length) const;
+  DataFrameContent get_content(const std::int32_t _draw,
+                               const std::int32_t _start,
+                               const std::int32_t _length) const;
 
   /// Returns the first _n rows as a html that is compatible with Jupyter
   /// notebooks.
@@ -1087,10 +1088,7 @@ DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
   return DataFrameType(params);
 }
 
-// -------------------------------------------------------------------------
 }  // namespace containers
 }  // namespace engine
-
-// -------------------------------------------------------------------------
 
 #endif  // ENGINE_CONTAINERS_DATAFRAME_HPP_

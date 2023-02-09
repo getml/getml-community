@@ -7,6 +7,7 @@
 
 #include "engine/handlers/ViewParser.hpp"
 
+#include "engine/containers/DataFrameContent.hpp"
 #include "engine/handlers/BoolOpParser.hpp"
 #include "engine/handlers/FloatOpParser.hpp"
 #include "engine/handlers/StringOpParser.hpp"
@@ -293,7 +294,7 @@ std::vector<std::string> ViewParser::make_string_vector(
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object ViewParser::get_content(
+containers::ViewContent ViewParser::get_content(
     const size_t _draw, const size_t _start, const size_t _length,
     const bool _force_nrows, const Poco::JSON::Array::Ptr& _cols) const {
   const auto get_object = [_cols](const size_t _i) {
@@ -318,26 +319,21 @@ Poco::JSON::Object ViewParser::get_content(
   const auto column_views = fct::collect::vector<ColumnViewVariant>(
       iota | VIEWS::transform(make_column_view));
 
-  const auto string_vectors = fct::collect::vector<std::vector<std::string>>(
+  const auto data = fct::collect::vector<std::vector<std::string>>(
       column_views | VIEWS::transform(to_string_vector));
-
-  const auto data = make_data(string_vectors);
 
   const auto nrows = make_nrows(column_views, _force_nrows);
 
-  Poco::JSON::Object obj;
+  const auto basis = fct::make_field<"draw", std::int32_t>(_draw) *
+                     fct::make_field<"data">(data);
 
-  obj.set("draw", _draw);
-
-  obj.set("data", data);
-
-  if (nrows) {
-    obj.set("recordsTotal", *nrows);
-
-    obj.set("recordsFiltered", *nrows);
+  if (!nrows) {
+    return basis;
   }
 
-  return obj;
+  return containers::DataFrameContent(
+      basis * fct::make_field<"recordsTotal">(*nrows) *
+      fct::make_field<"recordsFiltered">(*nrows));
 }
 
 // ----------------------------------------------------------------------------
