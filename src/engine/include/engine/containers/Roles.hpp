@@ -24,7 +24,7 @@ struct Roles {
   using f_categorical = fct::Field<"categorical", std::vector<std::string>>;
 
   /// The names of the join keys
-  using f_join_key = fct::Field<"join_keys", std::vector<std::string>>;
+  using f_join_key = fct::Field<"join_key", std::vector<std::string>>;
 
   /// The names of the numerical columns
   using f_numerical = fct::Field<"numerical", std::vector<std::string>>;

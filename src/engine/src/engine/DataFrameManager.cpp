@@ -9,6 +9,7 @@
 
 #include <Poco/TemporaryFile.h>
 
+#include "engine/containers/Roles.hpp"
 #include "engine/handlers/AggOpParser.hpp"
 #include "engine/handlers/ArrowHandler.hpp"
 #include "engine/handlers/BoolOpParser.hpp"
@@ -1787,11 +1788,11 @@ void DataFrameManager::refresh(const std::string& _name,
 
   const auto df = utils::Getter::get(_name, data_frames());
 
-  Poco::JSON::Object encodings = df.refresh();
+  const auto roles = containers::Roles::from_schema(df.to_schema(false));
 
   read_lock.unlock();
 
-  communication::Sender::send_string(JSON::stringify(encodings), _socket);
+  communication::Sender::send_string(json::to_json(roles), _socket);
 }
 
 // ------------------------------------------------------------------------
