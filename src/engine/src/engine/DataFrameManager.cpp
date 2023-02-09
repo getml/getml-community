@@ -15,6 +15,7 @@
 #include "engine/handlers/FloatOpParser.hpp"
 #include "engine/handlers/StringOpParser.hpp"
 #include "engine/handlers/ViewParser.hpp"
+#include "json/json.hpp"
 #include "metrics/metrics.hpp"
 
 namespace engine {
@@ -1381,11 +1382,11 @@ void DataFrameManager::get_data_frame_content(
 
   const auto& df = utils::Getter::get(_name, &data_frames());
 
-  auto obj = df.get_content(draw, start, length);
+  const auto content = df.get_content(draw, start, length);
 
   read_lock.unlock();
 
-  communication::Sender::send_string(JSON::stringify(obj), _socket);
+  communication::Sender::send_string(json::to_json(content), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -1631,14 +1632,14 @@ void DataFrameManager::get_view_content(const std::string& _name,
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
-  const auto result =
+  const auto content =
       ViewParser(params_.categories_, params_.join_keys_encoding_,
                  params_.data_frames_, params_.options_)
           .get_content(draw, start, length, false, cols);
 
   read_lock.unlock();
 
-  communication::Sender::send_string(JSON::stringify(result), _socket);
+  communication::Sender::send_string(json::to_json(content), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -1652,14 +1653,14 @@ void DataFrameManager::get_view_nrows(const std::string& _name,
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
-  const auto result =
+  const auto content =
       ViewParser(params_.categories_, params_.join_keys_encoding_,
                  params_.data_frames_, params_.options_)
           .get_content(1, 0, 0, force, cols);
 
   read_lock.unlock();
 
-  communication::Sender::send_string(JSON::stringify(result), _socket);
+  communication::Sender::send_string(json::to_json(content), _socket);
 }
 
 // ------------------------------------------------------------------------

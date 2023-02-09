@@ -1029,22 +1029,18 @@ void DataFrame::from_reader(const std::shared_ptr<io::Reader> &_reader,
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object DataFrame::get_content(const std::int32_t _draw,
-                                          const std::int32_t _start,
-                                          const std::int32_t _length) const {
+DataFrameContent DataFrame::get_content(const std::int32_t _draw,
+                                        const std::int32_t _start,
+                                        const std::int32_t _length) const {
   check_plausibility();
 
-  Poco::JSON::Object obj;
-
-  obj.set("draw", _draw);
-
-  obj.set("recordsTotal", nrows());
-
-  obj.set("recordsFiltered", nrows());
+  const auto basis = fct::make_field<"draw">(_draw) *
+                     fct::make_field<"recordsTotal", std::int32_t>(nrows()) *
+                     fct::make_field<"recordsFiltered", std::int32_t>(nrows());
 
   if (nrows() == 0) {
-    obj.set("data", Poco::JSON::Array());
-    return obj;
+    return basis *
+           fct::make_field<"data">(std::vector<std::vector<std::string>>());
   }
 
   if (_length < 0) {
@@ -1059,7 +1055,7 @@ Poco::JSON::Object DataFrame::get_content(const std::int32_t _draw,
     throw std::runtime_error("start must be smaller than number of rows!");
   }
 
-  auto data = Poco::JSON::Array::Ptr(new Poco::JSON::Array());
+  auto data = std::vector<std::vector<std::string>>();
 
   const auto begin = static_cast<unsigned int>(_start);
 
@@ -1068,54 +1064,52 @@ Poco::JSON::Object DataFrame::get_content(const std::int32_t _draw,
                        : static_cast<unsigned int>(_start + _length);
 
   for (auto i = begin; i < end; ++i) {
-    auto row = Poco::JSON::Array::Ptr(new Poco::JSON::Array());
+    auto row = std::vector<std::string>();
 
     for (size_t j = 0; j < num_time_stamps(); ++j) {
-      row->add(io::Parser::ts_to_string(time_stamp(j)[i]));
+      row.push_back(io::Parser::ts_to_string(time_stamp(j)[i]));
     }
 
     for (size_t j = 0; j < num_join_keys(); ++j) {
-      row->add(join_keys_encoding()[join_key(j)[i]].str());
+      row.push_back(join_keys_encoding()[join_key(j)[i]].str());
     }
 
     for (size_t j = 0; j < num_targets(); ++j) {
-      row->add(io::Parser::to_string(target(j)[i]));
+      row.push_back(io::Parser::to_string(target(j)[i]));
     }
 
     for (size_t j = 0; j < num_categoricals(); ++j) {
-      row->add(categories()[categorical(j)[i]].str());
+      row.push_back(categories()[categorical(j)[i]].str());
     }
 
     for (size_t j = 0; j < num_numericals(); ++j) {
       if (numerical(j).unit().find("time stamp") != std::string::npos) {
-        row->add(io::Parser::ts_to_string(numerical(j)[i]));
+        row.push_back(io::Parser::ts_to_string(numerical(j)[i]));
       } else {
-        row->add(io::Parser::to_string(numerical(j)[i]));
+        row.push_back(io::Parser::to_string(numerical(j)[i]));
       }
     }
 
     for (size_t j = 0; j < num_text(); ++j) {
-      row->add(text(j)[i].str());
+      row.push_back(text(j)[i].str());
     }
 
     for (size_t j = 0; j < num_unused_floats(); ++j) {
       if (unused_float(j).unit().find("time stamp") != std::string::npos) {
-        row->add(io::Parser::ts_to_string(unused_float(j)[i]));
+        row.push_back(io::Parser::ts_to_string(unused_float(j)[i]));
       } else {
-        row->add(io::Parser::to_string(unused_float(j)[i]));
+        row.push_back(io::Parser::to_string(unused_float(j)[i]));
       }
     }
 
     for (size_t j = 0; j < num_unused_strings(); ++j) {
-      row->add(unused_string(j)[i].str());
+      row.push_back(unused_string(j)[i].str());
     }
 
-    data->add(row);
+    data.push_back(row);
   }
 
-  obj.set("data", data);
-
-  return obj;
+  return basis * fct::make_field<"data">(data);
 }
 
 // ----------------------------------------------------------------------------
@@ -1196,38 +1190,16 @@ std::string DataFrame::get_html(const std::int32_t _max_rows,
 
 std::vector<std::vector<std::string>> DataFrame::get_rows(
     const std::int32_t _max_rows) const {
-  std::vector<std::vector<std::string>> rows;
-
   if (nrows() == 0 || _max_rows <= 0) {
-    return rows;
+    return std::vector<std::vector<std::string>>();
   }
 
-  const auto obj = get_content(1, 0, _max_rows);
-
-  const auto data = JSON::get_array(obj, "data");
-
-  assert_true(data);
-
-  for (size_t i = 0; i < data->size(); ++i) {
-    const auto json_row = data->getArray(static_cast<unsigned int>(i));
-
-    assert_true(json_row);
-
-    assert_true(json_row->size() == ncols());
-
-    auto row = std::vector<std::string>(json_row->size());
-
-    for (size_t j = 0; j < row.size(); ++j) {
-      row[j] = json_row->getElement<std::string>(j);
-    }
-
-    rows.emplace_back(row);
-  }
+  auto rows = get_content(1, 0, _max_rows).get<"data">();
 
   if (_max_rows < nrows()) {
     assert_true(rows.size() > 0);
 
-    auto row = std::vector<std::string>(rows.at(0));
+    auto row = std::vector<std::string>(rows.at(0).size());
 
     for (auto &r : row) {
       r = "...";

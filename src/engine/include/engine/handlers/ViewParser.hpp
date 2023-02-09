@@ -20,6 +20,7 @@
 #include "engine/commands/DataFramesOrViews.hpp"
 #include "engine/communication/communication.hpp"
 #include "engine/config/config.hpp"
+#include "engine/containers/ViewContent.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/handlers/ArrowHandler.hpp"
 #include "json/json.hpp"
@@ -62,9 +63,9 @@ class ViewParser {
 
  public:
   /// Returns the content of a view.
-  Poco::JSON::Object get_content(const size_t _draw, const size_t _start,
-                                 const size_t _length, const bool _force_nrows,
-                                 const Poco::JSON::Array::Ptr& _cols) const;
+  containers::ViewContent get_content(
+      const size_t _draw, const size_t _start, const size_t _length,
+      const bool _force_nrows, const Poco::JSON::Array::Ptr& _cols) const;
 
   /// Parses a view and turns it into a DataFrame.
   containers::DataFrame parse(const commands::DataFrameOrView& _cmd) const;
