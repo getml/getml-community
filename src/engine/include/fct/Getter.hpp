@@ -12,6 +12,7 @@
 #include <variant>
 
 #include "fct/StringLiteral.hpp"
+#include "fct/TaggedUnion.hpp"
 #include "fct/find_index.hpp"
 
 namespace fct {
@@ -153,6 +154,61 @@ struct Getter<std::variant<NamedTupleTypes...>> {
       return Getter<NamedTupleType>::template get_const<Field>(_t);
     };
     return std::visit(apply, _tup);
+  }
+};
+
+// ----------------------------------------------------------------------------
+
+/// For handling std::variant.
+template <StringLiteral _discriminator, class... NamedTupleTypes>
+struct Getter<TaggedUnion<_discriminator, NamedTupleTypes...>> {
+ public:
+  /// Retrieves the indicated value from the tuple.
+  template <int _index>
+  static inline auto& get(
+      TaggedUnion<_discriminator, NamedTupleTypes...>& _tu) {
+    return Getter<std::variant<NamedTupleTypes...>>::template get<_index>(
+        _tu.variant_);
+  }
+
+  /// Gets a field by name.
+  template <StringLiteral _field_name>
+  static inline auto& get(
+      TaggedUnion<_discriminator, NamedTupleTypes...>& _tu) {
+    return Getter<std::variant<NamedTupleTypes...>>::template get<_field_name>(
+        _tu.variant_);
+  }
+
+  /// Gets a field by the field type.
+  template <class Field>
+  static inline auto& get(
+      TaggedUnion<_discriminator, NamedTupleTypes...>& _tu) {
+    return Getter<std::variant<NamedTupleTypes...>>::template get<Field>(
+        _tu.variant_);
+  }
+
+  /// Retrieves the indicated value from the tuple.
+  template <int _index>
+  static inline const auto& get_const(
+      const TaggedUnion<_discriminator, NamedTupleTypes...>& _tu) {
+    return Getter<std::variant<NamedTupleTypes...>>::template get_const<_index>(
+        _tu.variant_);
+  }
+
+  /// Gets a field by name.
+  template <StringLiteral _field_name>
+  static inline const auto& get_const(
+      const TaggedUnion<_discriminator, NamedTupleTypes...>& _tu) {
+    return Getter<std::variant<NamedTupleTypes...>>::template get_const<
+        _field_name>(_tu.variant_);
+  }
+
+  /// Gets a field by the field type.
+  template <class Field>
+  static inline const auto& get_const(
+      const TaggedUnion<_discriminator, NamedTupleTypes...>& _tu) {
+    return Getter<std::variant<NamedTupleTypes...>>::template get_const<Field>(
+        _tu.variant_);
   }
 };
 
