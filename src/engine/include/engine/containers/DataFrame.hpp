@@ -19,6 +19,8 @@
 #include "database/database.hpp"
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
+#include "engine/commands/DataFrameFingerprint.hpp"
+#include "engine/commands/DataFrameOrView.hpp"
 #include "engine/containers/Column.hpp"
 #include "engine/containers/DataFrameContent.hpp"
 #include "engine/containers/DataFrameIndex.hpp"
@@ -43,6 +45,8 @@ class DataFrame {
   static constexpr const char *ROLE_UNUSED = "unused";
   static constexpr const char *ROLE_UNUSED_FLOAT = "unused_float";
   static constexpr const char *ROLE_UNUSED_STRING = "unused_string";
+
+  using ViewOp = typename commands::DataFrameOrView::ViewOp;
 
  public:
   DataFrame(const std::shared_ptr<memmap::Pool> &_pool = nullptr)
@@ -93,7 +97,7 @@ class DataFrame {
 
   /// Returns the fingerprint of the data frame (necessary to build the
   /// dependency graphs).
-  Poco::JSON::Object::Ptr fingerprint() const;
+  commands::DataFrameFingerprint fingerprint() const;
 
   /// Getter for a float_column.
   const Column<Float> &float_column(const std::string &_role,
@@ -200,12 +204,7 @@ class DataFrame {
   // -------------------------------
 
   /// Trivial accessor
-  Poco::JSON::Object::Ptr build_history() const {
-    if (!build_history_) {
-      return nullptr;
-    }
-    return Poco::JSON::Object::Ptr(new Poco::JSON::Object(*build_history_));
-  }
+  std::optional<ViewOp> build_history() const { return build_history_; }
 
   /// Trivial accessor
   template <typename T,
@@ -500,7 +499,7 @@ class DataFrame {
   const std::shared_ptr<memmap::Pool> &pool() const { return pool_; }
 
   /// Trivial setter
-  void set_build_history(Poco::JSON::Object::Ptr _build_history) {
+  void set_build_history(const ViewOp &_build_history) {
     build_history_ = _build_history;
   }
 
@@ -784,7 +783,7 @@ class DataFrame {
 
   /// Records the current time as the last time something was changed.
   void update_last_change() {
-    build_history_ = nullptr;
+    build_history_ = std::nullopt;
     const auto now = Poco::Timestamp();
     last_change_ = Poco::DateTimeFormatter::format(
         now, Poco::DateTimeFormat::ISO8601_FRAC_FORMAT);
@@ -795,7 +794,7 @@ class DataFrame {
  private:
   /// The build history is relevant for when the data frame contains generated
   /// features. It enables us to retrieve features we have already build.
-  Poco::JSON::Object::Ptr build_history_;
+  std::optional<ViewOp> build_history_;
 
   /// Categorical data
   std::vector<Column<Int>> categoricals_;

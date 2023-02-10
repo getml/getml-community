@@ -1,11 +1,13 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/dependency/DataFrameTracker.hpp"
+
+#include "json/json.hpp"
 
 namespace engine {
 namespace dependency {
@@ -17,7 +19,7 @@ void DataFrameTracker::add(const containers::DataFrame& _df) {
 
   assert_true(build_history);
 
-  const auto b_str = JSON::stringify(*build_history);
+  const auto b_str = json::to_json(*build_history);
 
   const auto b_hash = std::hash<std::string>()(b_str);
 
@@ -87,9 +89,10 @@ Poco::JSON::Object::Ptr DataFrameTracker::make_build_history(
   const auto data_frames = fct::join::vector<containers::DataFrame>(
       {std::vector<containers::DataFrame>({_population_df}), _peripheral_dfs});
 
-  const auto get_fingerprint =
-      [](const containers::DataFrame& _df) -> Poco::JSON::Object::Ptr {
-    return _df.fingerprint();
+  // TODO: Remove this temporary fix.
+  const auto get_fingerprint = [](const containers::DataFrame& _df) {
+    return json::Parser<commands::DataFrameFingerprint>::to_json(
+        _df.fingerprint());
   };
 
   const auto df_fingerprints =

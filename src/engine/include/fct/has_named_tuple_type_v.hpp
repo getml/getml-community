@@ -16,10 +16,10 @@ template <class Wrapper>
 class HasNamedTupleType {
  private:
   template <class U>
-  static std::int32_t foo(typename U::NamedTupleType*);
+  static std::int64_t foo(...);
 
   template <class U>
-  static std::int64_t foo(...);
+  static std::int32_t foo(typename U::NamedTupleType*);
 
  public:
   static constexpr bool value =

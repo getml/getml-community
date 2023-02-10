@@ -160,7 +160,8 @@ void PipelineManager::add_to_tracker(
   const auto build_history = data_frame_tracker().make_build_history(
       dependencies, _population_df, _peripheral_dfs);
 
-  _df->set_build_history(build_history);
+  // TODO
+  // _df->set_build_history(build_history);
 
   data_frame_tracker().add(*_df);
 }
