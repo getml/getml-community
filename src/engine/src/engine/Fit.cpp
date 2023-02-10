@@ -79,14 +79,15 @@ std::vector<Poco::JSON::Object::Ptr> Fit::extract_df_fingerprints(
     const std::vector<containers::DataFrame>& _peripheral_dfs) {
   const auto placeholder = JSON::get_object(_pipeline.obj(), "data_model_");
 
-  std::vector<Poco::JSON::Object::Ptr> df_fingerprints = {
+  // TODO: Insert data frames.
+  /*std::vector<Poco::JSON::Object::Ptr> df_fingerprints = {
       placeholder, _population_df.fingerprint()};
 
   for (const auto& df : _peripheral_dfs) {
     df_fingerprints.push_back(df.fingerprint());
-  }
+  }*/
 
-  return df_fingerprints;
+  return {placeholder};
 }
 
 // ----------------------------------------------------------------------
@@ -231,10 +232,12 @@ Fit::fit(const Pipeline& _pipeline, const FitParams& _params) {
   const auto predictor_impl = make_predictor_impl(_pipeline, feature_selectors,
                                                   preprocessed.population_df_);
 
+  // TODO: This is a temporary fix.
   const auto validation_fingerprint =
-      _params.validation_df_ ? std::vector<Poco::JSON::Object::Ptr>(
+      /*_params.validation_df_ ? std::vector<Poco::JSON::Object::Ptr>(
                                    {_params.validation_df_->fingerprint()})
-                             : std::vector<Poco::JSON::Object::Ptr>();
+                             :*/
+      std::vector<Poco::JSON::Object::Ptr>();
 
   const auto dependencies = fct::join::vector<Poco::JSON::Object::Ptr>(
       {fs_fingerprints, validation_fingerprint});

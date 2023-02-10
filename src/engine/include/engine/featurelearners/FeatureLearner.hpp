@@ -46,8 +46,6 @@ class FeatureLearner : public AbstractFeatureLearner {
   /// subfeature.
   static constexpr bool has_propositionalization_ = !is_fastprop_;
 
-  // --------------------------------------------------------
-
  private:
   typedef typename FeatureLearnerType::DataFrameType DataFrameType;
   typedef typename FeatureLearnerType::HypType HypType;
@@ -55,8 +53,6 @@ class FeatureLearner : public AbstractFeatureLearner {
   typedef typename std::conditional<
       has_propositionalization_,
       std::shared_ptr<const fastprop::Hyperparameters>, int>::type PropType;
-
-  // --------------------------------------------------------
 
  public:
   FeatureLearner(const FeatureLearnerParams& _params)
@@ -72,8 +68,6 @@ class FeatureLearner : public AbstractFeatureLearner {
   }
 
   ~FeatureLearner() = default;
-
-  // --------------------------------------------------------
 
  public:
   /// Calculates the column importances for this ensemble.
@@ -110,8 +104,6 @@ class FeatureLearner : public AbstractFeatureLearner {
 
   /// Returns a string describing the type of the feature learner.
   std::string type() const final;
-
-  // --------------------------------------------------------
 
  public:
   /// Creates a deep copy.
@@ -151,8 +143,6 @@ class FeatureLearner : public AbstractFeatureLearner {
   bool supports_multiple_targets() const final {
     return FeatureLearnerType::supports_multiple_targets_;
   }
-
-  // --------------------------------------------------------
 
  private:
   /// Extract a data frame of type FeatureLearnerType::DataFrameType from
@@ -228,8 +218,6 @@ class FeatureLearner : public AbstractFeatureLearner {
       const std::vector<DataFrameType>& _peripheral,
       const helpers::WordIndexContainer& _word_indices,
       const TransformParams& _params) const;
-
-  // --------------------------------------------------------
 
  private:
   /// Trivial accessor.
@@ -316,8 +304,6 @@ class FeatureLearner : public AbstractFeatureLearner {
     return fct::get<"vocab_size_">(_hyp.val_);
   }
 
-  // --------------------------------------------------------
-
  private:
   /// The command used to create the feature learner.
   Poco::JSON::Object cmd_;
@@ -351,7 +337,6 @@ class FeatureLearner : public AbstractFeatureLearner {
   std::shared_ptr<const helpers::VocabularyContainer> vocabulary_;
 };
 
-// ----------------------------------------------------------------------------
 }  // namespace featurelearners
 }  // namespace engine
 
@@ -360,7 +345,6 @@ class FeatureLearner : public AbstractFeatureLearner {
 
 namespace engine {
 namespace featurelearners {
-// ----------------------------------------------------------------------------
 
 template <typename FeatureLearnerType>
 std::map<helpers::ColumnDescription, Float>

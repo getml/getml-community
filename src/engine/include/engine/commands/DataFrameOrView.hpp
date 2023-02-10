@@ -46,6 +46,7 @@ class DataFrameOrView {
       fct::Field<"base_", fct::Ref<DataFrameOrView>>,
       fct::Field<"added_", std::optional<AddedOp>>,
       fct::Field<"dropped_", std::optional<std::vector<std::string>>>,
+      fct::Field<"last_change_", std::string>,
       fct::Field<"subselection_",
                  std::optional<std::variant<BooleanColumnView,
                                             FloatColumnOrFloatColumnView>>>>;

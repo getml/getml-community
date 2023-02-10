@@ -12,6 +12,7 @@
 
 #include "engine/containers/DataFramePrinter.hpp"
 #include "fct/Field.hpp"
+#include "json/json.hpp"
 
 namespace engine {
 namespace containers {
@@ -289,17 +290,12 @@ void DataFrame::append(const DataFrame &_other) {
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object::Ptr DataFrame::fingerprint() const {
+commands::DataFrameFingerprint DataFrame::fingerprint() const {
   if (build_history_) {
-    return build_history_;
+    return *build_history_;
   }
-
-  auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-
-  obj->set("name_", name_);
-  obj->set("last_change_", last_change_);
-
-  return obj;
+  return fct::make_field<"name_">(name_) *
+         fct::make_field<"last_change_">(last_change_);
 }
 
 // ----------------------------------------------------------------------------
@@ -1278,9 +1274,7 @@ void DataFrame::load(const std::string &_path) {
   const auto build_history = load_textfile(_path, "build_history.json");
 
   if (build_history) {
-    Poco::JSON::Parser parser;
-    build_history_ =
-        parser.parse(*build_history).extract<Poco::JSON::Object::Ptr>();
+    build_history_ = json::from_json<ViewOp>(*build_history);
   }
 
   categoricals_ = load_columns<Int>(_path, "categorical_");
@@ -1529,7 +1523,7 @@ void DataFrame::save(const std::string &_temp_dir, const std::string &_path,
   save_text(tpath, "last_change.txt", last_change_);
 
   if (build_history_) {
-    save_text(tpath, "build_history.json", JSON::stringify(*build_history_));
+    save_text(tpath, "build_history.json", json::to_json(*build_history_));
   }
 
   auto file = Poco::File(_path + _name);
