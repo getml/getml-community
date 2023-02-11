@@ -28,6 +28,7 @@
 #include "fct/StringLiteral.hpp"
 #include "fct/TaggedUnion.hpp"
 #include "fct/collect.hpp"
+#include "fct/field_type.hpp"
 #include "fct/find_index.hpp"
 #include "fct/iota.hpp"
 #include "fct/join.hpp"
@@ -359,14 +360,11 @@ struct Parser<fct::TaggedUnion<_discriminator, NamedTupleTypes...>> {
   template <class T>
   static inline bool contains_disc_value(const std::string& _disc_value) {
     if constexpr (!fct::has_named_tuple_type_v<T>) {
-      using Fields = typename T::Fields;
-      constexpr int ix = fct::find_index<_discriminator, Fields>();
-      using LiteralType = typename std::tuple_element<ix, Fields>::type::Type;
+      using LiteralType = fct::field_type_t<_discriminator, T>;
       return LiteralType::contains(_disc_value);
     } else {
-      using Fields = typename T::NamedTupleType::Fields;
-      constexpr int ix = fct::find_index<_discriminator, Fields>();
-      using LiteralType = typename std::tuple_element<ix, Fields>::type::Type;
+      using LiteralType =
+          fct::field_type_t<_discriminator, typename T::NamedTupleType>;
       return LiteralType::contains(_disc_value);
     }
   }
