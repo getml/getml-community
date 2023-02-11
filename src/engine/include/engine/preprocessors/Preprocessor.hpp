@@ -8,16 +8,16 @@
 #ifndef ENGINE_PREPROCESSORS_PREPROCESSOR_HPP_
 #define ENGINE_PREPROCESSORS_PREPROCESSOR_HPP_
 
-#include <Poco/JSON/Object.h>
-
 #include <memory>
 #include <optional>
 #include <utility>
 #include <vector>
 
+#include "engine/commands/PreprocessorFingerprint.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/preprocessors/FitParams.hpp"
 #include "engine/preprocessors/TransformParams.hpp"
+#include "fct/Ref.hpp"
 #include "helpers/helpers.hpp"
 
 namespace engine {
@@ -33,6 +33,9 @@ class Preprocessor {
   static constexpr const char* SUBSTRING = "Substring";
   static constexpr const char* TEXT_FIELD_SPLITTER = "TextFieldSplitter";
 
+  using DependencyType =
+      typename commands::PreprocessorFingerprint::DependencyType;
+
  public:
   Preprocessor(){};
 
@@ -40,13 +43,13 @@ class Preprocessor {
 
  public:
   /// Returns a deep copy.
-  virtual std::shared_ptr<Preprocessor> clone(
-      const std::optional<std::vector<Poco::JSON::Object::Ptr>>& _dependencies =
+  virtual fct::Ref<Preprocessor> clone(
+      const std::optional<std::vector<DependencyType>>& _dependencies =
           std::nullopt) const = 0;
 
   /// Returns the fingerprint of the feature learner (necessary to build
   /// the dependency graphs).
-  virtual Poco::JSON::Object::Ptr fingerprint() const = 0;
+  virtual commands::PreprocessorFingerprint fingerprint() const = 0;
 
   /// Fits the preprocessor. Returns the transformed data frames.
   virtual std::pair<containers::DataFrame, std::vector<containers::DataFrame>>

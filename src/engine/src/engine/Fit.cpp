@@ -139,12 +139,15 @@ std::vector<Poco::JSON::Object::Ptr> Fit::extract_preprocessor_fingerprints(
     return _dependencies;
   }
 
-  const auto get_fingerprint = [](const auto& _fl) -> Poco::JSON::Object::Ptr {
-    return _fl->fingerprint();
+  return _dependencies;
+
+  // TODO
+  /*const auto get_fingerprint = [](const auto& _fl) -> Poco::JSON::Object::Ptr
+  { return _fl->fingerprint();
   };
 
   return fct::collect::vector<Poco::JSON::Object::Ptr>(
-      _preprocessors | VIEWS::transform(get_fingerprint));
+      _preprocessors | VIEWS::transform(get_fingerprint));*/
 }
 
 // ----------------------------------------------------------------------
@@ -523,7 +526,8 @@ Fit::fit_transform_preprocessors(
 
     auto& p = preprocessors.at(i);
 
-    const auto fingerprint = p->fingerprint();
+    // TODO
+    /*const auto fingerprint = p->fingerprint();
 
     const auto retrieved_preprocessor =
         _params.preprocessor_tracker_->retrieve(fingerprint);
@@ -545,7 +549,7 @@ Fit::fit_transform_preprocessors(
       std::tie(*_population_df, *_peripheral_dfs) = p->transform(params);
 
       continue;
-    }
+    }*/
 
     const auto params = preprocessors::FitParams{
         .cmd_ = _params.cmd_,
@@ -733,13 +737,14 @@ std::vector<fct::Ref<preprocessors::Preprocessor>> Fit::init_preprocessors(
 
   // We need to take into consideration that preprocessors can also depend on
   // each other.
-  auto dependencies = _dependencies;
+  // TODO
+  /*auto dependencies = _dependencies;
 
   for (auto& p : vec) {
     const auto copy = p->clone(dependencies);
     dependencies.push_back(p->fingerprint());
     p = fct::Ref<preprocessors::Preprocessor>(copy);
-  }
+  }*/
 
   return vec;
 }

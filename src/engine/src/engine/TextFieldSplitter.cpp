@@ -56,18 +56,6 @@ containers::DataFrame TextFieldSplitter::remove_text_fields(
 
 // ----------------------------------------------------
 
-Poco::JSON::Object::Ptr TextFieldSplitter::fingerprint() const {
-  auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-
-  obj->set("type_", type());
-
-  obj->set("dependencies_", JSON::vector_to_array_ptr(dependencies_));
-
-  return obj;
-}
-
-// ----------------------------------------------------
-
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
 TextFieldSplitter::fit_transform(const FitParams& _params) {
   cols_ =

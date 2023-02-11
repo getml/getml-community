@@ -50,7 +50,7 @@ class Preprocessor {
 
   using NamedTupleType =
       fct::TaggedUnion<"type_", CategoryTrimmerOp, EMailDomainOp, ImputationOp,
-                       SeasonalOp, SubstringOp>;
+                       SeasonalOp, SubstringOp, TextFieldSplitterOp>;
 
   NamedTupleType val_;
 };

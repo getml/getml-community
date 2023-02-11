@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "engine/commands/Preprocessor.hpp"
+#include "engine/commands/PreprocessorFingerprint.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
 #include "fct/Ref.hpp"
 
@@ -20,20 +21,24 @@ namespace engine {
 namespace preprocessors {
 
 struct PreprocessorParser {
+  using DependencyType =
+      typename commands::PreprocessorFingerprint::DependencyType;
+
   using PreprocessorHyperparams =
       typename commands::Preprocessor::NamedTupleType;
 
   /// Returns the correct preprocessor to use based on the JSON object.
   static fct::Ref<Preprocessor> parse(
       const PreprocessorHyperparams& _cmd,
-      const std::vector<Poco::JSON::Object::Ptr>& _dependencies);
+      const std::vector<DependencyType>& _dependencies);
 
   /// TODO: Remove this temporary fix.
   static fct::Ref<Preprocessor> parse(
       const Poco::JSON::Object& _json_obj,
       const std::vector<Poco::JSON::Object::Ptr>& _dependencies) {
-    return parse(json::from_json<PreprocessorHyperparams>(_json_obj),
-                 _dependencies);
+    return parse(
+        json::from_json<PreprocessorHyperparams>(_json_obj),
+        json::Parser<std::vector<DependencyType>>::from_json(_dependencies));
   }
 };
 
