@@ -77,20 +77,6 @@ void Imputation::extract_and_add(const std::string& _marker,
 
 // ----------------------------------------------------
 
-Poco::JSON::Object::Ptr Imputation::fingerprint() const {
-  auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-
-  obj->set("type_", type());
-
-  obj->set("add_dummies_", add_dummies_);
-
-  obj->set("dependencies_", JSON::vector_to_array_ptr(dependencies_));
-
-  return obj;
-}
-
-// ----------------------------------------------------
-
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
 Imputation::fit_transform(const FitParams& _params) {
   const auto population_df = fit_transform_df(

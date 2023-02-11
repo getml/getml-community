@@ -78,22 +78,6 @@ std::string CategoryTrimmer::column_to_sql(
 
 // ----------------------------------------------------
 
-Poco::JSON::Object::Ptr CategoryTrimmer::fingerprint() const {
-  auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-
-  obj->set("dependencies_", JSON::vector_to_array_ptr(dependencies_));
-
-  obj->set("max_num_categories_", max_num_categories_);
-
-  obj->set("min_freq_", min_freq_);
-
-  obj->set("type_", type());
-
-  return obj;
-}
-
-// ----------------------------------------------------
-
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
 CategoryTrimmer::fit_transform(const FitParams& _params) {
   const auto fit_peripheral = [this](const auto& _df) {

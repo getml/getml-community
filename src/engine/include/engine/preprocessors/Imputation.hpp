@@ -8,8 +8,6 @@
 #ifndef ENGINE_PREPROCESSORS_IMPUTATION_HPP_
 #define ENGINE_PREPROCESSORS_IMPUTATION_HPP_
 
-#include <Poco/JSON/Object.h>
-
 #include <memory>
 #include <utility>
 #include <vector>
@@ -50,7 +48,7 @@ class Imputation : public Preprocessor {
 
  public:
   Imputation(const ImputationOp& _op,
-             const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
+             const std::vector<DependencyType>& _dependencies)
       : add_dummies_(_op.get<"add_dummies_">()), dependencies_(_dependencies) {}
 
   ~Imputation() = default;
@@ -59,10 +57,6 @@ class Imputation : public Preprocessor {
   Imputation() {}
 
  public:
-  /// Returns the fingerprint of the preprocessor (necessary to build
-  /// the dependency graphs).
-  Poco::JSON::Object::Ptr fingerprint() const final;
-
   /// Identifies which features should be extracted from which time stamps.
   std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
   fit_transform(const FitParams& _params) final;
@@ -80,14 +74,24 @@ class Imputation : public Preprocessor {
 
  public:
   /// Creates a deep copy.
-  std::shared_ptr<Preprocessor> clone(
-      const std::optional<std::vector<Poco::JSON::Object::Ptr>>& _dependencies =
-          std::nullopt) const final {
-    const auto c = std::make_shared<Imputation>(*this);
+  fct::Ref<Preprocessor> clone(const std::optional<std::vector<DependencyType>>&
+                                   _dependencies = std::nullopt) const final {
+    const auto c = fct::Ref<Imputation>::make(*this);
     if (_dependencies) {
       c->dependencies_ = *_dependencies;
     }
     return c;
+  }
+
+  /// Returns the fingerprint of the preprocessor (necessary to build
+  /// the dependency graphs).
+  commands::PreprocessorFingerprint fingerprint() const final {
+    using FingerprintType =
+        typename commands::PreprocessorFingerprint::ImputationFingerprint;
+    return commands::PreprocessorFingerprint(
+        FingerprintType(fct::make_field<"dependencies_">(dependencies_),
+                        fct::make_field<"type_">(fct::Literal<"Imputation">()),
+                        fct::make_field<"add_dummies_">(add_dummies_)));
   }
 
   /// Necessary for the automated parsing to work.
@@ -211,7 +215,7 @@ class Imputation : public Preprocessor {
   std::shared_ptr<ImputationMapType> cols_;
 
   /// The dependencies inserted into the the preprocessor.
-  std::vector<Poco::JSON::Object::Ptr> dependencies_;
+  std::vector<DependencyType> dependencies_;
 };
 
 // ----------------------------------------------------

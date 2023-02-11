@@ -8,8 +8,6 @@
 #ifndef ENGINE_PREPROCESSORS_EMAILDOMAIN_HPP_
 #define ENGINE_PREPROCESSORS_EMAILDOMAIN_HPP_
 
-#include <Poco/JSON/Object.h>
-
 #include <memory>
 #include <utility>
 #include <vector>
@@ -41,16 +39,12 @@ class EMailDomain : public Preprocessor {
 
  public:
   EMailDomain(const EMailDomainOp& _op,
-              const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
+              const std::vector<DependencyType>& _dependencies)
       : dependencies_(_dependencies) {}
 
   ~EMailDomain() = default;
 
  public:
-  /// Returns the fingerprint of the preprocessor (necessary to build
-  /// the dependency graphs).
-  Poco::JSON::Object::Ptr fingerprint() const final;
-
   /// Identifies which features should be extracted from which time stamps.
   std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
   fit_transform(const FitParams& _params) final;
@@ -68,14 +62,23 @@ class EMailDomain : public Preprocessor {
 
  public:
   /// Creates a deep copy.
-  std::shared_ptr<Preprocessor> clone(
-      const std::optional<std::vector<Poco::JSON::Object::Ptr>>& _dependencies =
-          std::nullopt) const final {
-    auto c = std::make_shared<EMailDomain>(*this);
+  fct::Ref<Preprocessor> clone(const std::optional<std::vector<DependencyType>>&
+                                   _dependencies = std::nullopt) const final {
+    const auto c = fct::Ref<EMailDomain>::make(*this);
     if (_dependencies) {
       c->dependencies_ = *_dependencies;
     }
     return c;
+  }
+
+  /// Returns the fingerprint of the preprocessor (necessary to build
+  /// the dependency graphs).
+  commands::PreprocessorFingerprint fingerprint() const final {
+    using FingerprintType =
+        typename commands::PreprocessorFingerprint::EMailDomainFingerprint;
+    return commands::PreprocessorFingerprint(FingerprintType(
+        fct::make_field<"dependencies_">(dependencies_),
+        fct::make_field<"type_">(fct::Literal<"EMailDomain">())));
   }
 
   /// Necessary for the automated parsing to work.
@@ -131,7 +134,7 @@ class EMailDomain : public Preprocessor {
   std::vector<std::shared_ptr<helpers::ColumnDescription>> cols_;
 
   /// The dependencies inserted into the the preprocessor.
-  std::vector<Poco::JSON::Object::Ptr> dependencies_;
+  std::vector<DependencyType> dependencies_;
 };
 
 // ----------------------------------------------------

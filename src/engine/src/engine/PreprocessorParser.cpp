@@ -20,7 +20,7 @@ namespace preprocessors {
 
 fct::Ref<Preprocessor> PreprocessorParser::parse(
     const PreprocessorHyperparams& _cmd,
-    const std::vector<Poco::JSON::Object::Ptr>& _dependencies) {
+    const std::vector<DependencyType>& _dependencies) {
   const auto handle =
       [&_dependencies](const auto& _hyperparams) -> fct::Ref<Preprocessor> {
     using CategoryTrimmerOp =

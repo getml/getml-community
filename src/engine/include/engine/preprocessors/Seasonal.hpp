@@ -8,8 +8,6 @@
 #ifndef ENGINE_PREPROCESSORS_SEASONAL_HPP_
 #define ENGINE_PREPROCESSORS_SEASONAL_HPP_
 
-#include <Poco/JSON/Object.h>
-
 #include <memory>
 #include <utility>
 #include <vector>
@@ -62,16 +60,12 @@ class Seasonal : public Preprocessor {
 
  public:
   Seasonal(const SeasonalOp& _op,
-           const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
+           const std::vector<DependencyType>& _dependencies)
       : dependencies_(_dependencies) {}
 
   ~Seasonal() = default;
 
  public:
-  /// Returns the fingerprint of the preprocessor (necessary to build
-  /// the dependency graphs).
-  Poco::JSON::Object::Ptr fingerprint() const final;
-
   /// Identifies which features should be extracted from which time stamps.
   std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
   fit_transform(const FitParams& _params) final;
@@ -89,14 +83,23 @@ class Seasonal : public Preprocessor {
 
  public:
   /// Creates a deep copy.
-  std::shared_ptr<Preprocessor> clone(
-      const std::optional<std::vector<Poco::JSON::Object::Ptr>>& _dependencies =
-          std::nullopt) const final {
-    const auto c = std::make_shared<Seasonal>(*this);
+  fct::Ref<Preprocessor> clone(const std::optional<std::vector<DependencyType>>&
+                                   _dependencies = std::nullopt) const final {
+    const auto c = fct::Ref<Seasonal>::make(*this);
     if (_dependencies) {
       c->dependencies_ = *_dependencies;
     }
     return c;
+  }
+
+  /// Returns the fingerprint of the preprocessor (necessary to build
+  /// the dependency graphs).
+  commands::PreprocessorFingerprint fingerprint() const final {
+    using FingerprintType =
+        typename commands::PreprocessorFingerprint::SeasonalFingerprint;
+    return commands::PreprocessorFingerprint(
+        FingerprintType(fct::make_field<"dependencies_">(dependencies_),
+                        fct::make_field<"type_">(fct::Literal<"Seasonal">())));
   }
 
   /// Necessary for the automated parsing to work.
@@ -176,9 +179,6 @@ class Seasonal : public Preprocessor {
                                          const size_t _table,
                                          containers::Encoding* _categories);
 
-  /// Parses a JSON object.
-  Seasonal from_json_obj(const Poco::JSON::Object& _obj) const;
-
   // Transforms a float column to a categorical column.
   containers::Column<Int> to_int(const containers::Column<Float>& _col,
                                  const bool _add_zero,
@@ -231,7 +231,7 @@ class Seasonal : public Preprocessor {
 
  private:
   /// The dependencies inserted into the the preprocessor.
-  std::vector<Poco::JSON::Object::Ptr> dependencies_;
+  std::vector<DependencyType> dependencies_;
 
   /// List of all columns to which the hour transformation applies.
   std::vector<std::shared_ptr<helpers::ColumnDescription>> hour_;

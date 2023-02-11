@@ -8,8 +8,6 @@
 #ifndef ENGINE_PREPROCESSORS_CATEGORYTRIMMER_HPP_
 #define ENGINE_PREPROCESSORS_CATEGORYTRIMMER_HPP_
 
-#include <Poco/JSON/Object.h>
-
 #include <map>
 #include <memory>
 #include <set>
@@ -17,8 +15,8 @@
 #include <utility>
 #include <vector>
 
-#include "engine/JSON.hpp"
 #include "engine/commands/Preprocessor.hpp"
+#include "engine/commands/PreprocessorFingerprint.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/preprocessors/FitParams.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
@@ -52,7 +50,7 @@ class CategoryTrimmer : public Preprocessor {
 
  public:
   CategoryTrimmer(const CategoryTrimmerOp& _op,
-                  const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
+                  const std::vector<DependencyType>& _dependencies)
       : dependencies_(_dependencies),
         max_num_categories_(_op.get<"max_num_categories_">()),
         min_freq_(_op.get<"min_freq_">()) {}
@@ -60,10 +58,6 @@ class CategoryTrimmer : public Preprocessor {
   ~CategoryTrimmer() = default;
 
  public:
-  /// Returns the fingerprint of the preprocessor (necessary to build
-  /// the dependency graphs).
-  Poco::JSON::Object::Ptr fingerprint() const final;
-
   /// Identifies which features should be extracted from which time stamps.
   std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
   fit_transform(const FitParams& _params) final;
@@ -87,14 +81,25 @@ class CategoryTrimmer : public Preprocessor {
 
  public:
   /// Creates a deep copy.
-  std::shared_ptr<Preprocessor> clone(
-      const std::optional<std::vector<Poco::JSON::Object::Ptr>>& _dependencies =
-          std::nullopt) const final {
-    const auto c = std::make_shared<CategoryTrimmer>(*this);
+  fct::Ref<Preprocessor> clone(const std::optional<std::vector<DependencyType>>&
+                                   _dependencies = std::nullopt) const final {
+    const auto c = fct::Ref<CategoryTrimmer>::make(*this);
     if (_dependencies) {
       c->dependencies_ = *_dependencies;
     }
     return c;
+  }
+
+  /// Returns the fingerprint of the preprocessor (necessary to build
+  /// the dependency graphs).
+  commands::PreprocessorFingerprint fingerprint() const final {
+    using CategoryTrimmerFingerprint =
+        typename commands::PreprocessorFingerprint::CategoryTrimmerFingerprint;
+    return commands::PreprocessorFingerprint(CategoryTrimmerFingerprint(
+        fct::make_field<"dependencies_">(dependencies_),
+        fct::make_field<"type_">(fct::Literal<"CategoryTrimmer">()),
+        fct::make_field<"max_num_categories_">(max_num_categories_),
+        fct::make_field<"min_freq_">(min_freq_)));
   }
 
   /// Returns the type of the preprocessor.
@@ -144,7 +149,7 @@ class CategoryTrimmer : public Preprocessor {
 
  private:
   /// The dependencies inserted into the the preprocessor.
-  std::vector<Poco::JSON::Object::Ptr> dependencies_;
+  std::vector<DependencyType> dependencies_;
 
   /// The maximum number of categories.
   size_t max_num_categories_;

@@ -8,8 +8,6 @@
 #ifndef ENGINE_PREPROCESSORS_SUBSTRING_HPP_
 #define ENGINE_PREPROCESSORS_SUBSTRING_HPP_
 
-#include <Poco/JSON/Object.h>
-
 #include <memory>
 #include <utility>
 #include <vector>
@@ -42,7 +40,7 @@ class Substring : public Preprocessor {
 
  public:
   Substring(const SubstringOp& _op,
-            const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
+            const std::vector<DependencyType>& _dependencies)
       : begin_(_op.get<"begin_">()),
         dependencies_(_dependencies),
         length_(_op.get<"length_">()),
@@ -51,10 +49,6 @@ class Substring : public Preprocessor {
   ~Substring() = default;
 
  public:
-  /// Returns the fingerprint of the preprocessor (necessary to build
-  /// the dependency graphs).
-  Poco::JSON::Object::Ptr fingerprint() const final;
-
   /// Identifies which features should be extracted from which time stamps.
   std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
   fit_transform(const FitParams& _params) final;
@@ -72,14 +66,25 @@ class Substring : public Preprocessor {
 
  public:
   /// Creates a deep copy.
-  std::shared_ptr<Preprocessor> clone(
-      const std::optional<std::vector<Poco::JSON::Object::Ptr>>& _dependencies =
-          std::nullopt) const final {
-    const auto c = std::make_shared<Substring>(*this);
+  fct::Ref<Preprocessor> clone(const std::optional<std::vector<DependencyType>>&
+                                   _dependencies = std::nullopt) const final {
+    const auto c = fct::Ref<Substring>::make(*this);
     if (_dependencies) {
       c->dependencies_ = *_dependencies;
     }
     return c;
+  }
+
+  /// Returns the fingerprint of the preprocessor (necessary to build
+  /// the dependency graphs).
+  commands::PreprocessorFingerprint fingerprint() const final {
+    using FingerprintType =
+        typename commands::PreprocessorFingerprint::SubstringFingerprint;
+    return commands::PreprocessorFingerprint(FingerprintType(
+        fct::make_field<"dependencies_">(dependencies_),
+        fct::make_field<"type_">(fct::Literal<"Substring">()),
+        fct::make_field<"begin_">(begin_), fct::make_field<"length_">(length_),
+        fct::make_field<"unit_">(unit_)));
   }
 
   /// Necessary for the automated parsing to work.
@@ -116,9 +121,6 @@ class Substring : public Preprocessor {
                                          const std::string& _marker,
                                          const size_t _table,
                                          containers::Encoding* _categories);
-
-  /// Parses a JSON object.
-  Substring from_json_obj(const Poco::JSON::Object& _obj) const;
 
   /// Generates a string column from the _categories and the int column.
   containers::Column<strings::String> make_str_col(
@@ -204,7 +206,7 @@ class Substring : public Preprocessor {
   std::vector<std::shared_ptr<helpers::ColumnDescription>> cols_;
 
   /// The dependencies inserted into the the preprocessor.
-  std::vector<Poco::JSON::Object::Ptr> dependencies_;
+  std::vector<DependencyType> dependencies_;
 
   /// The length of the substring to extract.
   size_t length_;
