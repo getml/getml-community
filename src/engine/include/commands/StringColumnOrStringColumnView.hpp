@@ -5,22 +5,21 @@
 // for details.
 //
 
-#ifndef ENGINE_COMMANDS_STRINGCOLUMNORSTRINGCOLUMNVIEW_HPP_
-#define ENGINE_COMMANDS_STRINGCOLUMNORSTRINGCOLUMNVIEW_HPP_
+#ifndef COMMANDS_STRINGCOLUMNORSTRINGCOLUMNVIEW_HPP_
+#define COMMANDS_STRINGCOLUMNORSTRINGCOLUMNVIEW_HPP_
 
 #include <string>
 #include <variant>
 
-#include "engine/Float.hpp"
-#include "engine/commands/BooleanColumnView.hpp"
-#include "engine/commands/FloatColumnOrFloatColumnView.hpp"
+#include "commands/BooleanColumnView.hpp"
+#include "commands/Float.hpp"
+#include "commands/FloatColumnOrFloatColumnView.hpp"
 #include "fct/Field.hpp"
 #include "fct/Literal.hpp"
 #include "fct/NamedTuple.hpp"
 #include "fct/Ref.hpp"
 #include "fct/TaggedUnion.hpp"
 
-namespace engine {
 namespace commands {
 
 class BooleanColumnView;
@@ -104,6 +103,5 @@ class StringColumnOrStringColumnView {
 };
 
 }  // namespace commands
-}  // namespace engine
 
 #endif  //

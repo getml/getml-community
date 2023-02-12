@@ -5,15 +5,14 @@
 // for details.
 //
 
-#ifndef ENGINE_COMMANDS_GETBOOLEANCOLUMN_HPP_
-#define ENGINE_COMMANDS_GETBOOLEANCOLUMN_HPP_
+#ifndef COMMANDS_GETBOOLEANCOLUMN_HPP_
+#define COMMANDS_GETBOOLEANCOLUMN_HPP_
 
-#include "engine/commands/BasicCommand.hpp"
-#include "engine/commands/BooleanColumnView.hpp"
+#include "commands/BasicCommand.hpp"
+#include "commands/BooleanColumnView.hpp"
 #include "fct/Field.hpp"
 #include "fct/make_named_tuple.hpp"
 
-namespace engine {
 namespace commands {
 
 /// Defines the command necessary tp retrieve a boolean column.
@@ -21,7 +20,6 @@ using GetBooleanColumn =
     fct::make_named_tuple<BasicCommand, fct::Field<"col_", BooleanColumnView>>;
 
 }  // namespace commands
-}  // namespace engine
 
-#endif  // ENGINE_COMMANDS_GETBOOLEANCOLUMN_HPP_
+#endif  // COMMANDS_GETBOOLEANCOLUMN_HPP_
 

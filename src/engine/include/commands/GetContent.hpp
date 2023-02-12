@@ -5,15 +5,14 @@
 // for details.
 //
 
-#ifndef ENGINE_COMMANDS_GETCONTENT_HPP_
-#define ENGINE_COMMANDS_GETCONTENT_HPP_
+#ifndef COMMANDS_GETCONTENT_HPP_
+#define COMMANDS_GETCONTENT_HPP_
 
 #include <cstddef>
 
 #include "fct/Field.hpp"
 #include "fct/NamedTuple.hpp"
 
-namespace engine {
 namespace commands {
 
 /// Defines the three fields necessary to the content of a column.
@@ -22,7 +21,6 @@ using GetContent =
                     fct::Field<"start_", size_t>>;
 
 }  // namespace commands
-}  // namespace engine
 
-#endif  // ENGINE_COMMANDS_GETCONTENT_HPP_
+#endif  // COMMANDS_GETCONTENT_HPP_
 

@@ -5,18 +5,16 @@
 // for details.
 //
 
-#ifndef ENGINE_COMMANDS_FEATURELEARNER_HPP_
-#define ENGINE_COMMANDS_FEATURELEARNER_HPP_
+#ifndef COMMANDS_FEATURELEARNER_HPP_
+#define COMMANDS_FEATURELEARNER_HPP_
 
 #include "fastprop/Hyperparameters.hpp"
 #include "fct/TaggedUnion.hpp"
 
-namespace engine {
 namespace commands {
 
 using FeatureLearner = fct::TaggedUnion<"type_", fastprop::Hyperparameters>;
 
 }  // namespace commands
-}  // namespace engine
 
-#endif  // ENGINE_COMMANDS_FEATURELEARNER_HPP_
+#endif  // COMMANDS_FEATURELEARNER_HPP_

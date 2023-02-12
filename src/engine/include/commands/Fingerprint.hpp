@@ -5,17 +5,16 @@
 // for details.
 //
 
-#ifndef ENGINE_COMMANDS_FINGERPRINT_HPP_
-#define ENGINE_COMMANDS_FINGERPRINT_HPP_
+#ifndef COMMANDS_FINGERPRINT_HPP_
+#define COMMANDS_FINGERPRINT_HPP_
 
 #include <variant>
 
-#include "engine/commands/DataFrameOrView.hpp"
-#include "engine/commands/FeatureLearner.hpp"
-#include "engine/commands/Preprocessor.hpp"
+#include "commands/DataFrameOrView.hpp"
+#include "commands/FeatureLearner.hpp"
+#include "commands/Preprocessor.hpp"
 #include "predictors/PredictorHyperparams.hpp"
 
-namespace engine {
 namespace commands {
 
 /// Fingerprints are used to track the dirty states of a pipeline (which
@@ -24,7 +23,6 @@ using Fingerprint = std::variant<DataFrameOrView, Preprocessor, FeatureLearner,
                                  predictors::PredictorHyperparams>;
 
 }  // namespace commands
-}  // namespace engine
 
-#endif  // ENGINE_COMMANDS_FINGERPRINT_HPP_
+#endif  // COMMANDS_FINGERPRINT_HPP_
 

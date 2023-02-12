@@ -5,13 +5,12 @@
 // for details.
 //
 
-#ifndef ENGINE_COMMANDS_BASICCOMMAND_HPP_
-#define ENGINE_COMMANDS_BASICCOMMAND_HPP_
+#ifndef COMMANDS_BASICCOMMAND_HPP_
+#define COMMANDS_BASICCOMMAND_HPP_
 
 #include "fct/Field.hpp"
 #include "fct/NamedTuple.hpp"
 
-namespace engine {
 namespace commands {
 
 /// Infers the type of the command.
@@ -24,6 +23,5 @@ using f_type = fct::Field<"type_", std::string>;
 using BasicCommand = fct::NamedTuple<f_name, f_type>;
 
 }  // namespace commands
-}  // namespace engine
 
-#endif  // ENGINE_COMMANDS_BASICCOMMAND_HPP_
+#endif  // COMMANDS_BASICCOMMAND_HPP_

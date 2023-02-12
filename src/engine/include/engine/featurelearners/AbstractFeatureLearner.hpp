@@ -14,9 +14,9 @@
 #include <memory>
 #include <vector>
 
+#include "commands/FeatureLearnerFingerprint.hpp"
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
-#include "engine/commands/FeatureLearnerFingerprint.hpp"
 #include "engine/featurelearners/FitParams.hpp"
 #include "engine/featurelearners/TransformParams.hpp"
 

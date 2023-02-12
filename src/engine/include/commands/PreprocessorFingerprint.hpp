@@ -5,18 +5,17 @@
 // for details.
 //
 
-#ifndef ENGINE_COMMANDS_PREPROCESSORFINGERPRINT_HPP_
-#define ENGINE_COMMANDS_PREPROCESSORFINGERPRINT_HPP_
+#ifndef COMMANDS_PREPROCESSORFINGERPRINT_HPP_
+#define COMMANDS_PREPROCESSORFINGERPRINT_HPP_
 
-#include "engine/commands/DataFrameFingerprint.hpp"
-#include "engine/commands/Preprocessor.hpp"
+#include "commands/DataFrameFingerprint.hpp"
+#include "commands/Preprocessor.hpp"
 #include "fct/Field.hpp"
 #include "fct/Literal.hpp"
 #include "fct/NamedTuple.hpp"
 #include "fct/TaggedUnion.hpp"
 #include "fct/define_named_tuple.hpp"
 
-namespace engine {
 namespace commands {
 
 struct PreprocessorFingerprint {
@@ -76,6 +75,5 @@ struct PreprocessorFingerprint {
 };
 
 }  // namespace commands
-}  // namespace engine
 
-#endif  // ENGINE_COMMANDS_PREPROCESSORFINGERPRINT_HPP_
+#endif  // COMMANDS_PREPROCESSORFINGERPRINT_HPP_

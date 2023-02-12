@@ -15,8 +15,8 @@
 #include <memory>
 #include <string>
 
+#include "commands/CheckPipeline.hpp"
 #include "debug/debug.hpp"
-#include "engine/commands/CheckPipeline.hpp"
 #include "engine/communication/communication.hpp"
 #include "engine/config/config.hpp"
 #include "engine/handlers/DatabaseManager.hpp"

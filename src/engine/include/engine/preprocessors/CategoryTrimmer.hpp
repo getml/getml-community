@@ -15,8 +15,8 @@
 #include <utility>
 #include <vector>
 
-#include "engine/commands/Preprocessor.hpp"
-#include "engine/commands/PreprocessorFingerprint.hpp"
+#include "commands/Preprocessor.hpp"
+#include "commands/PreprocessorFingerprint.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/preprocessors/FitParams.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"

@@ -5,19 +5,17 @@
 // for details.
 //
 
-#ifndef ENGINE_COMMANDS_COMMAND_HPP_
-#define ENGINE_COMMANDS_COMMAND_HPP_
+#ifndef COMMANDS_COMMAND_HPP_
+#define COMMANDS_COMMAND_HPP_
 
 #include <variant>
 
-#include "engine/commands/CheckPipeline.hpp"
+#include "commands/CheckPipeline.hpp"
 
-namespace engine {
 namespace commands {
 
 using Command = std::variant<CheckPipeline>;
 
 }  // namespace commands
-}  // namespace engine
 
-#endif  // ENGINE_COMMANDS_COMMAND_HPP_
+#endif  // COMMANDS_COMMAND_HPP_

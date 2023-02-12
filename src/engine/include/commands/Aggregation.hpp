@@ -5,17 +5,16 @@
 // for details.
 //
 
-#ifndef ENGINE_COMMANDS_AGGREGATION_HPP_
-#define ENGINE_COMMANDS_AGGREGATION_HPP_
+#ifndef COMMANDS_AGGREGATION_HPP_
+#define COMMANDS_AGGREGATION_HPP_
 
-#include "engine/commands/FloatColumnOrFloatColumnView.hpp"
-#include "engine/commands/StringColumnOrStringColumnView.hpp"
+#include "commands/FloatColumnOrFloatColumnView.hpp"
+#include "commands/StringColumnOrStringColumnView.hpp"
 #include "fct/Field.hpp"
 #include "fct/Literal.hpp"
 #include "fct/NamedTuple.hpp"
 #include "fct/TaggedUnion.hpp"
 
-namespace engine {
 namespace commands {
 
 class Aggregation {
@@ -46,6 +45,5 @@ class Aggregation {
 };
 
 }  // namespace commands
-}  // namespace engine
 
 #endif

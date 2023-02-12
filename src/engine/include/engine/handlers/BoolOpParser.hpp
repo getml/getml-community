@@ -14,10 +14,10 @@
 #include <memory>
 #include <string>
 
+#include "commands/BooleanColumnView.hpp"
 #include "debug/debug.hpp"
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
-#include "engine/commands/BooleanColumnView.hpp"
 #include "engine/communication/communication.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/handlers/FloatOpParser.hpp"

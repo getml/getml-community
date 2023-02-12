@@ -5,16 +5,15 @@
 // for details.
 //
 
-#ifndef ENGINE_COMMANDS_DATAFRAMEFINGERPRINT_HPP_
-#define ENGINE_COMMANDS_DATAFRAMEFINGERPRINT_HPP_
+#ifndef COMMANDS_DATAFRAMEFINGERPRINT_HPP_
+#define COMMANDS_DATAFRAMEFINGERPRINT_HPP_
 
 #include <variant>
 
-#include "engine/commands/DataFrameOrView.hpp"
+#include "commands/DataFrameOrView.hpp"
 #include "fct/Field.hpp"
 #include "fct/NamedTuple.hpp"
 
-namespace engine {
 namespace commands {
 
 /// Fingerprints are used to track the dirty states of a pipeline (which
@@ -25,7 +24,6 @@ using DataFrameFingerprint =
                                  fct::Field<"last_change_", std::string>>>;
 
 }  // namespace commands
-}  // namespace engine
 
-#endif  // ENGINE_COMMANDS_DATAFRAMEFINGERPRINT_HPP_
+#endif  // COMMANDS_DATAFRAMEFINGERPRINT_HPP_
 

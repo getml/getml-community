@@ -18,10 +18,10 @@
 #include <type_traits>
 #include <vector>
 
+#include "commands/FeatureLearnerFingerprint.hpp"
 #include "debug/debug.hpp"
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
-#include "engine/commands/FeatureLearnerFingerprint.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/featurelearners/AbstractFeatureLearner.hpp"
 #include "engine/featurelearners/FeatureLearnerParams.hpp"

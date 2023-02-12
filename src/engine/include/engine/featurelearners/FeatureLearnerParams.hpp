@@ -12,8 +12,8 @@
 #include <string>
 #include <vector>
 
+#include "commands/FeatureLearnerFingerprint.hpp"
 #include "engine/Int.hpp"
-#include "engine/commands/FeatureLearnerFingerprint.hpp"
 #include "fct/Field.hpp"
 #include "fct/NamedTuple.hpp"
 #include "fct/Ref.hpp"
