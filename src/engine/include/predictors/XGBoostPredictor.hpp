@@ -8,7 +8,6 @@
 #ifndef PREDICTORS_XGBOOSTPREDICTOR_HPP_
 #define PREDICTORS_XGBOOSTPREDICTOR_HPP_
 
-#include <Poco/JSON/Object.h>
 #include <xgboost/c_api.h>
 
 #include <memory>
@@ -19,8 +18,8 @@
 #include "debug/debug.hpp"
 #include "predictors/FloatFeature.hpp"
 #include "predictors/IntFeature.hpp"
-#include "predictors/LinearHyperparams.hpp"
 #include "predictors/Predictor.hpp"
+#include "predictors/PredictorFingerprint.hpp"
 #include "predictors/PredictorImpl.hpp"
 #include "predictors/StandardScaler.hpp"
 #include "predictors/XGBoostHyperparams.hpp"
@@ -31,6 +30,8 @@ namespace predictors {
 /// Implements the XGBoostPredictors
 class XGBoostPredictor : public Predictor {
  private:
+  using DependencyType = typename PredictorFingerprint::DependencyType;
+
   typedef std::function<void(BoosterHandle*)> BoosterDestructor;
   typedef XGBoostMatrix::DMatrixDestructor DMatrixDestructor;
 
@@ -40,7 +41,7 @@ class XGBoostPredictor : public Predictor {
  public:
   XGBoostPredictor(const XGBoostHyperparams& _hyperparams,
                    const fct::Ref<const PredictorImpl>& _impl,
-                   const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
+                   const std::vector<DependencyType>& _dependencies)
       : dependencies_(_dependencies),
         hyperparams_(fct::Ref<XGBoostHyperparams>::make(_hyperparams)),
         impl_(_impl) {}
@@ -64,10 +65,6 @@ class XGBoostPredictor : public Predictor {
 
   /// Loads the predictor
   void load(const std::string& _fname) final;
-
-  /// Returns the fingerprint of the predictor (necessary to build
-  /// the dependency graphs).
-  Poco::JSON::Object::Ptr fingerprint() const final;
 
   /// Implements the predict(...) method in scikit-learn style
   FloatFeature predict(
@@ -97,6 +94,16 @@ class XGBoostPredictor : public Predictor {
 
   /// Whether the predictor has been fitted.
   bool is_fitted() const final { return len() > 0; }
+
+  /// Returns the fingerprint of the predictor (necessary to build
+  /// the dependency graphs).
+  PredictorFingerprint fingerprint() const final {
+    using XGBoostFingerprint =
+        typename PredictorFingerprint::XGBoostFingerprint;
+    return PredictorFingerprint(XGBoostFingerprint(
+        hyperparams_->val_ * fct::make_field<"dependencies_">(dependencies_) *
+        impl().named_tuple()));
+  }
 
   /// Whether we want the predictor to be silent.
   bool silent() const final { return hyperparams_->val_.get<"silent_">(); }
@@ -190,7 +197,7 @@ class XGBoostPredictor : public Predictor {
 
  private:
   /// The dependencies used to build the fingerprint.
-  std::vector<Poco::JSON::Object::Ptr> dependencies_;
+  std::vector<DependencyType> dependencies_;
 
   /// Hyperparameters for XGBoostPredictor
   const fct::Ref<const XGBoostHyperparams> hyperparams_;

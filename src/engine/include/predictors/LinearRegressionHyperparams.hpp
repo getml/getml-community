@@ -8,20 +8,11 @@
 #ifndef PREDICTORS_LINEARREGRESSIONHYPERPARMAS_HPP_
 #define PREDICTORS_LINEARREGRESSIONHYPERPARMAS_HPP_
 
-#include <Poco/JSON/Object.h>
-
-#include "fct/Field.hpp"
-#include "fct/Literal.hpp"
-#include "fct/define_named_tuple.hpp"
-#include "predictors/LinearHyperparams.hpp"
+#include "commands/LinearRegressionHyperparams.hpp"
 
 namespace predictors {
 
-using f_linear_regression =
-    fct::Field<"type_", fct::Literal<"LinearRegression">>;
-
-using LinearRegressionHyperparams = LinearHyperparams<
-    fct::define_named_tuple_t<LinearNamedTupleBase, f_linear_regression>>;
+using LinearRegressionHyperparams = commands::LinearRegressionHyperparams;
 
 }  // namespace predictors
 

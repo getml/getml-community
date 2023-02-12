@@ -5,15 +5,15 @@
 // for details.
 //
 
-#ifndef PREDICTORS_XGBOOSTHYPERPARMS_HPP_
-#define PREDICTORS_XGBOOSTHYPERPARMS_HPP_
+#ifndef PREDICTORS_PREDICTORFINGERPRINT_HPP_
+#define PREDICTORS_PREDICTORFINGERPRINT_HPP_
 
-#include "commands/XGBoostHyperparams.hpp"
+#include "commands/PredictorFingerprint.hpp"
 
 namespace predictors {
 
-using XGBoostHyperparams = commands::XGBoostHyperparams;
+using PredictorFingerprint = commands::PredictorFingerprint;
 
 }  // namespace predictors
 
-#endif  // PREDICTORS_XGBOOSTHYPERPARMS_HPP_
+#endif  // PREDICTORS_PREDICTORFINGERPRINT_HPP_
