@@ -8,8 +8,6 @@
 #ifndef PREDICTORS_LOGISTICREGRESSION_HPP_
 #define PREDICTORS_LOGISTICREGRESSION_HPP_
 
-#include <Poco/JSON/Object.h>
-
 #include <memory>
 #include <optional>
 #include <vector>
@@ -21,6 +19,7 @@
 #include "predictors/IntFeature.hpp"
 #include "predictors/LogisticRegressionHyperparams.hpp"
 #include "predictors/Predictor.hpp"
+#include "predictors/PredictorFingerprint.hpp"
 #include "predictors/PredictorImpl.hpp"
 #include "predictors/StandardScaler.hpp"
 
@@ -29,17 +28,19 @@ namespace predictors {
 /// LogisticRegression predictor.
 class LogisticRegression : public Predictor {
  public:
-  using f_scaler = fct::Field<"scaler_", StandardScaler>;
+  using DependencyType = typename PredictorFingerprint::DependencyType;
 
+  using f_scaler = fct::Field<"scaler_", StandardScaler>;
   using f_weights = fct::Field<"weights_", std::vector<Float>>;
 
   using NamedTupleType =
-      fct::NamedTuple<f_learning_rate, f_reg_lambda, f_scaler, f_weights>;
+      fct::NamedTuple<fct::Field<"learning_rate_", Float>,
+                      fct::Field<"reg_lambda_", Float>, f_scaler, f_weights>;
 
  public:
   LogisticRegression(const LogisticRegressionHyperparams& _hyperparams,
                      const fct::Ref<const PredictorImpl>& _impl,
-                     const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
+                     const std::vector<DependencyType>& _dependencies)
       : dependencies_(_dependencies),
         hyperparams_(
             fct::Ref<LogisticRegressionHyperparams>::make(_hyperparams)),
@@ -51,10 +52,6 @@ class LogisticRegression : public Predictor {
   /// Returns an importance measure for the individual features.
   std::vector<Float> feature_importances(
       const size_t _num_features) const final;
-
-  /// Returns the fingerprint of the predictor (necessary to build
-  /// the dependency graphs).
-  Poco::JSON::Object::Ptr fingerprint() const final;
 
   /// Implements the fit(...) method in scikit-learn style
   std::string fit(
@@ -93,9 +90,19 @@ class LogisticRegression : public Predictor {
 
   /// Necessary for the automated parsing to work.
   NamedTupleType named_tuple() const {
-    return f_learning_rate(hyperparams().learning_rate()) *
-           f_reg_lambda(hyperparams().reg_lambda()) * f_scaler(scaler_) *
-           f_weights(weights_);
+    return fct::make_field<"learning_rate_">(hyperparams().learning_rate()) *
+           fct::make_field<"reg_lambda_">(hyperparams().reg_lambda()) *
+           f_scaler(scaler_) * f_weights(weights_);
+  }
+
+  /// Returns the fingerprint of the predictor (necessary to build
+  /// the dependency graphs).
+  PredictorFingerprint fingerprint() const final {
+    using LogisticRegressionFingerprint =
+        typename PredictorFingerprint::LogisticRegressionFingerprint;
+    return PredictorFingerprint(LogisticRegressionFingerprint(
+        hyperparams().val_ * fct::make_field<"dependencies_">(dependencies_) *
+        impl().named_tuple()));
   }
 
   /// Whether we want the predictor to be silent.
@@ -212,11 +219,8 @@ class LogisticRegression : public Predictor {
   }
 
  private:
-  /// The JSON command used to construct this predictor.
-  const Poco::JSON::Object cmd_;
-
   /// The dependencies used to build the fingerprint.
-  const std::vector<Poco::JSON::Object::Ptr> dependencies_;
+  const std::vector<DependencyType> dependencies_;
 
   /// The hyperparameters used for the LogisticRegression.
   fct::Ref<const LogisticRegressionHyperparams> hyperparams_;
@@ -232,7 +236,6 @@ class LogisticRegression : public Predictor {
   std::vector<Float> weights_;
 };
 
-// -----------------------------------------------------------------------------
 }  // namespace predictors
 
 #endif  // PREDICTORS_LOGISTICREGRESSION_HPP_

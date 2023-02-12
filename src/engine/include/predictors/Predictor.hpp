@@ -8,8 +8,6 @@
 #ifndef PREDICTORS_PREDICTOR_HPP_
 #define PREDICTORS_PREDICTOR_HPP_
 
-#include <Poco/JSON/Object.h>
-
 #include <memory>
 #include <optional>
 #include <vector>
@@ -17,6 +15,7 @@
 #include "debug/debug.hpp"
 #include "predictors/FloatFeature.hpp"
 #include "predictors/IntFeature.hpp"
+#include "predictors/PredictorFingerprint.hpp"
 
 namespace predictors {
 
@@ -39,7 +38,7 @@ class Predictor {
 
   /// Returns the fingerprint of the predictor (necessary to build
   /// the dependency graphs).
-  virtual Poco::JSON::Object::Ptr fingerprint() const = 0;
+  virtual PredictorFingerprint fingerprint() const = 0;
 
   /// Implements the fit(...) method in scikit-learn style
   virtual std::string fit(

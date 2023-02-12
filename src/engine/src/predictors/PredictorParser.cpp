@@ -17,7 +17,7 @@ namespace predictors {
 fct::Ref<Predictor> PredictorParser::parse(
     const PredictorHyperparams& _hyperparams,
     const fct::Ref<const PredictorImpl>& _impl,
-    const std::vector<Poco::JSON::Object::Ptr>& _dependencies) {
+    const std::vector<DependencyType>& _dependencies) {
   const auto handle = [&_impl, &_dependencies](
                           const auto& _hyperparams) -> fct::Ref<Predictor> {
     using Type = std::decay_t<decltype(_hyperparams)>;

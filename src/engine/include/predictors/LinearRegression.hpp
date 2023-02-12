@@ -8,8 +8,6 @@
 #ifndef PREDICTORS_LINEARREGRESSION_HPP_
 #define PREDICTORS_LINEARREGRESSION_HPP_
 
-#include <Poco/JSON/Object.h>
-
 #include <memory>
 #include <optional>
 #include <vector>
@@ -21,6 +19,7 @@
 #include "predictors/IntFeature.hpp"
 #include "predictors/LinearRegressionHyperparams.hpp"
 #include "predictors/Predictor.hpp"
+#include "predictors/PredictorFingerprint.hpp"
 #include "predictors/PredictorImpl.hpp"
 #include "predictors/StandardScaler.hpp"
 
@@ -29,17 +28,19 @@ namespace predictors {
 /// Linear regression predictor.
 class LinearRegression : public Predictor {
  public:
-  using f_scaler = fct::Field<"scaler_", StandardScaler>;
+  using DependencyType = typename PredictorFingerprint::DependencyType;
 
+  using f_scaler = fct::Field<"scaler_", StandardScaler>;
   using f_weights = fct::Field<"weights_", std::vector<Float>>;
 
   using NamedTupleType =
-      fct::NamedTuple<f_learning_rate, f_reg_lambda, f_scaler, f_weights>;
+      fct::NamedTuple<fct::Field<"learning_rate_", Float>,
+                      fct::Field<"reg_lambda_", Float>, f_scaler, f_weights>;
 
  public:
   LinearRegression(const LinearRegressionHyperparams& _hyperparams,
                    const fct::Ref<const PredictorImpl>& _impl,
-                   const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
+                   const std::vector<DependencyType>& _dependencies)
       : dependencies_(_dependencies),
         hyperparams_(fct::Ref<LinearRegressionHyperparams>::make(_hyperparams)),
         impl_(_impl){};
@@ -50,10 +51,6 @@ class LinearRegression : public Predictor {
   /// Returns an importance measure for the individual features.
   std::vector<Float> feature_importances(
       const size_t _num_features) const final;
-
-  /// Returns the fingerprint of the predictor (necessary to build
-  /// the dependency graphs).
-  Poco::JSON::Object::Ptr fingerprint() const final;
 
   /// Implements the fit(...) method in scikit-learn style
   std::string fit(
@@ -84,6 +81,16 @@ class LinearRegression : public Predictor {
     return std::make_shared<LinearRegression>(*this);
   }
 
+  /// Returns the fingerprint of the predictor (necessary to build
+  /// the dependency graphs).
+  PredictorFingerprint fingerprint() const final {
+    using LinearRegressionFingerprint =
+        typename PredictorFingerprint::LinearRegressionFingerprint;
+    return PredictorFingerprint(LinearRegressionFingerprint(
+        hyperparams().val_ * fct::make_field<"dependencies_">(dependencies_) *
+        impl().named_tuple()));
+  }
+
   /// Whether the predictor is used for classification;
   bool is_classification() const final { return false; }
 
@@ -92,9 +99,9 @@ class LinearRegression : public Predictor {
 
   /// Necessary for the automated parsing to work.
   NamedTupleType named_tuple() const {
-    return f_learning_rate(hyperparams().learning_rate()) *
-           f_reg_lambda(hyperparams().reg_lambda()) * f_scaler(scaler_) *
-           f_weights(weights_);
+    return fct::make_field<"learning_rate_">(hyperparams().learning_rate()) *
+           fct::make_field<"reg_lambda_">(hyperparams().reg_lambda()) *
+           f_scaler(scaler_) * f_weights(weights_);
   }
 
   /// Whether we want the predictor to be silent.
@@ -178,7 +185,7 @@ class LinearRegression : public Predictor {
 
  private:
   /// The dependencies used to build the fingerprint.
-  std::vector<Poco::JSON::Object::Ptr> dependencies_;
+  std::vector<DependencyType> dependencies_;
 
   /// The hyperparameters used for the LinearRegression.
   fct::Ref<const LinearRegressionHyperparams> hyperparams_;

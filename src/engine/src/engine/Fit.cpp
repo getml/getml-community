@@ -124,7 +124,10 @@ std::vector<Poco::JSON::Object::Ptr> Fit::extract_predictor_fingerprints(
     return _dependencies;
   }
 
-  const auto get_fingerprint = [](const auto& _p) -> Poco::JSON::Object::Ptr {
+  return _dependencies;
+
+  // TODO
+  /*const auto get_fingerprint = [](const auto& _p) -> Poco::JSON::Object::Ptr {
     return _p->fingerprint();
   };
 
@@ -133,7 +136,7 @@ std::vector<Poco::JSON::Object::Ptr> Fit::extract_predictor_fingerprints(
   };
 
   return fct::join::vector<Poco::JSON::Object::Ptr>(
-      _predictors | VIEWS::transform(get_fingerprints));
+      _predictors | VIEWS::transform(get_fingerprints));*/
 }
 
 // ----------------------------------------------------------------------

@@ -57,19 +57,6 @@ std::vector<Float> LinearRegression::feature_importances(
 
 // -----------------------------------------------------------------------------
 
-Poco::JSON::Object::Ptr LinearRegression::fingerprint() const {
-  auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-
-  // TODO
-  // obj->set("cmd_", cmd_);
-  // obj->set("dependencies_", JSON::vector_to_array_ptr(dependencies_));
-  // obj->set("impl_", impl().to_json_obj());
-
-  return obj;
-}
-
-// -----------------------------------------------------------------------------
-
 std::string LinearRegression::fit(
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     const std::vector<IntFeature>& _X_categorical,

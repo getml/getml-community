@@ -8,20 +8,11 @@
 #ifndef PREDICTORS_LOGISTICREGRESSIONHYPERPARMAS_HPP_
 #define PREDICTORS_LOGISTICREGRESSIONHYPERPARMAS_HPP_
 
-#include <Poco/JSON/Object.h>
-
-#include "fct/Field.hpp"
-#include "fct/Literal.hpp"
-#include "fct/define_named_tuple.hpp"
-#include "predictors/LinearHyperparams.hpp"
+#include "commands/LogisticRegressionHyperparams.hpp"
 
 namespace predictors {
 
-using f_logistic_regression =
-    fct::Field<"type_", fct::Literal<"LogisticRegression">>;
-
-using LogisticRegressionHyperparams = LinearHyperparams<
-    fct::define_named_tuple_t<LinearNamedTupleBase, f_logistic_regression>>;
+using LogisticRegressionHyperparams = commands::LogisticRegressionHyperparams;
 
 }  // namespace predictors
 
