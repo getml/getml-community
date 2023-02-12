@@ -39,7 +39,7 @@ class XGBoostPredictor : public Predictor {
 
  public:
   XGBoostPredictor(const XGBoostHyperparams& _hyperparams,
-                   const std::shared_ptr<const PredictorImpl>& _impl,
+                   const fct::Ref<const PredictorImpl>& _impl,
                    const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
       : dependencies_(_dependencies),
         hyperparams_(fct::Ref<XGBoostHyperparams>::make(_hyperparams)),
@@ -196,7 +196,7 @@ class XGBoostPredictor : public Predictor {
   const fct::Ref<const XGBoostHyperparams> hyperparams_;
 
   /// Implementation class for member functions common to most predictors.
-  std::shared_ptr<const PredictorImpl> impl_;
+  const fct::Ref<const PredictorImpl> impl_;
 
   /// The underlying XGBoost model, expressed in bytes
   std::vector<char> model_;

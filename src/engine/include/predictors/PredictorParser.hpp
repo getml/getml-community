@@ -25,13 +25,13 @@ struct PredictorParser {
   /// Parses the predictor.
   static fct::Ref<Predictor> parse(
       const PredictorHyperparams& _cmd,
-      const std::shared_ptr<const PredictorImpl>& _impl,
+      const fct::Ref<const PredictorImpl>& _impl,
       const std::vector<Poco::JSON::Object::Ptr>& _dependencies);
 
   /// TODO: Remove this temporary fix.
   static fct::Ref<Predictor> parse(
       const Poco::JSON::Object& _json_obj,
-      const std::shared_ptr<const PredictorImpl>& _impl,
+      const fct::Ref<const PredictorImpl>& _impl,
       const std::vector<Poco::JSON::Object::Ptr>& _dependencies) {
     return parse(json::from_json<PredictorHyperparams>(_json_obj), _impl,
                  _dependencies);

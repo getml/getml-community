@@ -701,7 +701,7 @@ std::vector<std::vector<fct::Ref<predictors::Predictor>>> Fit::init_predictors(
       }
 
       auto new_predictor = predictors::PredictorParser::parse(
-          *ptr, _predictor_impl.ptr(), dependencies);
+          *ptr, _predictor_impl, dependencies);
 
       predictors_for_target.emplace_back(std::move(new_predictor));
     }
