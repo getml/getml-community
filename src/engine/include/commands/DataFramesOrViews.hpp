@@ -5,17 +5,16 @@
 // for details.
 //
 
-#ifndef ENGINE_COMMANDS_DATA_FRAMES_OR_VIEW_HPP_
-#define ENGINE_COMMANDS_DATA_FRAMES_OR_VIEW_HPP_
+#ifndef COMMANDS_DATA_FRAMES_OR_VIEW_HPP_
+#define COMMANDS_DATA_FRAMES_OR_VIEW_HPP_
 
 #include <optional>
 #include <vector>
 
-#include "engine/commands/DataFrameOrView.hpp"
+#include "commands/DataFrameOrView.hpp"
 #include "fct/Field.hpp"
 #include "fct/NamedTuple.hpp"
 
-namespace engine {
 namespace commands {
 
 /// The commands to retrieve data frames or view,
@@ -26,6 +25,5 @@ using DataFramesOrViews = fct::NamedTuple<
     fct::Field<"validation_df_", std::optional<DataFrameOrView>>>;
 
 }  // namespace commands
-}  // namespace engine
 
-#endif  // ENGINE_COMMANDS_DATA_FRAMES_OR_VIEW_HPP_
+#endif  // COMMANDS_DATA_FRAMES_OR_VIEW_HPP_

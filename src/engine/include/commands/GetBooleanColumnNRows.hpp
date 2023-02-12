@@ -5,20 +5,18 @@
 // for details.
 //
 
-#ifndef ENGINE_COMMANDS_GETBOOLEANCOLUMNNROWS_HPP_
-#define ENGINE_COMMANDS_GETBOOLEANCOLUMNNROWS_HPP_
+#ifndef COMMANDS_GETBOOLEANCOLUMNNROWS_HPP_
+#define COMMANDS_GETBOOLEANCOLUMNNROWS_HPP_
 
-#include "engine/commands/GetBooleanColumn.hpp"
-#include "engine/commands/GetBooleanColumnNRows.hpp"
+#include "commands/GetBooleanColumn.hpp"
+#include "commands/GetBooleanColumnNRows.hpp"
 
-namespace engine {
 namespace commands {
 
 /// Defines the command necessary tp retrieve a boolean column.
 using GetBooleanColumnNRows = GetBooleanColumn;
 
 }  // namespace commands
-}  // namespace engine
 
-#endif  // ENGINE_COMMANDS_GETBOOLEANCOLUMNNROWS_HPP_
+#endif  // COMMANDS_GETBOOLEANCOLUMNNROWS_HPP_
 

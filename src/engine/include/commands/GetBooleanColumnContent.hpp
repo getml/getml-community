@@ -5,16 +5,15 @@
 // for details.
 //
 
-#ifndef ENGINE_COMMANDS_GETBOOLEANCOLUMNCONTENT_HPP_
-#define ENGINE_COMMANDS_GETBOOLEANCOLUMNCONTENT_HPP_
+#ifndef COMMANDS_GETBOOLEANCOLUMNCONTENT_HPP_
+#define COMMANDS_GETBOOLEANCOLUMNCONTENT_HPP_
 
-#include "engine/commands/BasicCommand.hpp"
-#include "engine/commands/BooleanColumnView.hpp"
-#include "engine/commands/GetContent.hpp"
+#include "commands/BasicCommand.hpp"
+#include "commands/BooleanColumnView.hpp"
+#include "commands/GetContent.hpp"
 #include "fct/Field.hpp"
 #include "fct/make_named_tuple.hpp"
 
-namespace engine {
 namespace commands {
 
 /// Defines the command necessary to retrieve the content of
@@ -24,7 +23,6 @@ using GetBooleanColumnContent =
                           fct::Field<"col_", BooleanColumnView>>;
 
 }  // namespace commands
-}  // namespace engine
 
-#endif  // ENGINE_COMMANDS_GETBOOLEANCOLUMN_HPP_
+#endif  // COMMANDS_GETBOOLEANCOLUMN_HPP_
 

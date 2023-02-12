@@ -14,10 +14,10 @@
 #include <memory>
 #include <string>
 
+#include "commands/StringColumnOrStringColumnView.hpp"
 #include "debug/debug.hpp"
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
-#include "engine/commands/StringColumnOrStringColumnView.hpp"
 #include "engine/communication/communication.hpp"
 #include "engine/containers/containers.hpp"
 #include "json/json.hpp"

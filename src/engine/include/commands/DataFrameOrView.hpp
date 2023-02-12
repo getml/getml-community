@@ -5,23 +5,22 @@
 // for details.
 //
 
-#ifndef ENGINE_COMMANDS_DATA_FRAME_OR_VIEW_HPP_
-#define ENGINE_COMMANDS_DATA_FRAME_OR_VIEW_HPP_
+#ifndef COMMANDS_DATA_FRAME_OR_VIEW_HPP_
+#define COMMANDS_DATA_FRAME_OR_VIEW_HPP_
 
 #include <optional>
 #include <string>
 #include <vector>
 
-#include "engine/commands/BooleanColumnView.hpp"
-#include "engine/commands/FloatColumnOrFloatColumnView.hpp"
-#include "engine/commands/StringColumnOrStringColumnView.hpp"
+#include "commands/BooleanColumnView.hpp"
+#include "commands/FloatColumnOrFloatColumnView.hpp"
+#include "commands/StringColumnOrStringColumnView.hpp"
 #include "fct/Field.hpp"
 #include "fct/Literal.hpp"
 #include "fct/NamedTuple.hpp"
 #include "fct/Ref.hpp"
 #include "fct/TaggedUnion.hpp"
 
-namespace engine {
 namespace commands {
 
 class DataFrameOrView {
@@ -58,6 +57,5 @@ class DataFrameOrView {
 };
 
 }  // namespace commands
-}  // namespace engine
 
-#endif  // ENGINE_COMMANDS_DATA_FRAME_OR_VIEW_HPP_
+#endif  // COMMANDS_DATA_FRAME_OR_VIEW_HPP_

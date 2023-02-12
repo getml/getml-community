@@ -7,7 +7,7 @@
 
 #include "engine/pipelines/Fit.hpp"
 
-#include "engine/commands/FeatureLearner.hpp"
+#include "commands/FeatureLearner.hpp"
 #include "engine/featurelearners/AbstractFeatureLearner.hpp"
 #include "engine/pipelines/Score.hpp"
 #include "engine/pipelines/Transform.hpp"

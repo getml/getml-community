@@ -9,7 +9,7 @@
 
 #include <stdexcept>
 
-#include "engine/commands/DataFramesOrViews.hpp"
+#include "commands/DataFramesOrViews.hpp"
 #include "engine/containers/Roles.hpp"
 #include "engine/handlers/DataFrameManager.hpp"
 #include "engine/pipelines/ToSQL.hpp"

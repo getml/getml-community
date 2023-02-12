@@ -5,18 +5,17 @@
 // for details.
 //
 
-#ifndef ENGINE_COMMANDS_CHECK_PIPELINE_HPP_
-#define ENGINE_COMMANDS_CHECK_PIPELINE_HPP_
+#ifndef COMMANDS_CHECK_PIPELINE_HPP_
+#define COMMANDS_CHECK_PIPELINE_HPP_
 
 #include <optional>
 #include <vector>
 
-#include "engine/commands/DataFramesOrViews.hpp"
+#include "commands/DataFramesOrViews.hpp"
 #include "fct/Field.hpp"
 #include "fct/NamedTuple.hpp"
 #include "fct/define_named_tuple.hpp"
 
-namespace engine {
 namespace commands {
 
 using CheckPipeline = typename fct::define_named_tuple<
@@ -24,6 +23,5 @@ using CheckPipeline = typename fct::define_named_tuple<
     fct::Field<"name_", std::string>, DataFramesOrViews>::type;
 
 }  // namespace commands
-}  // namespace engine
 
-#endif  // ENGINE_COMMANDS_CHECK_PIPELINE_HPP_
+#endif  // COMMANDS_CHECK_PIPELINE_HPP_

@@ -5,15 +5,14 @@
 // for details.
 //
 
-#ifndef ENGINE_COMMANDS_PREPROCESSOR_HPP_
-#define ENGINE_COMMANDS_PREPROCESSOR_HPP_
+#ifndef COMMANDS_PREPROCESSOR_HPP_
+#define COMMANDS_PREPROCESSOR_HPP_
 
 #include "fct/Field.hpp"
 #include "fct/Literal.hpp"
 #include "fct/NamedTuple.hpp"
 #include "fct/TaggedUnion.hpp"
 
-namespace engine {
 namespace commands {
 
 class Preprocessor {
@@ -56,6 +55,5 @@ class Preprocessor {
 };
 
 }  // namespace commands
-}  // namespace engine
 
-#endif  // ENGINE_COMMANDS_DATA_FRAME_OR_VIEW_HPP_
+#endif  // COMMANDS_DATA_FRAME_OR_VIEW_HPP_

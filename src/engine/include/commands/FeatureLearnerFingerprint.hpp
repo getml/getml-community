@@ -5,14 +5,15 @@
 // for details.
 //
 
-#ifndef ENGINE_COMMANDS_FEATURELEARNERFINGERPRINT_HPP_
-#define ENGINE_COMMANDS_FEATURELEARNERFINGERPRINT_HPP_
+#ifndef COMMANDS_FEATURELEARNERFINGERPRINT_HPP_
+#define COMMANDS_FEATURELEARNERFINGERPRINT_HPP_
 
 #include <vector>
 
-#include "engine/commands/DataFrameFingerprint.hpp"
-#include "engine/commands/FeatureLearner.hpp"
-#include "engine/commands/PreprocessorFingerprint.hpp"
+#include "commands/DataFrameFingerprint.hpp"
+#include "commands/FeatureLearner.hpp"
+#include "commands/Int.hpp"
+#include "commands/PreprocessorFingerprint.hpp"
 #include "fct/Field.hpp"
 #include "fct/Literal.hpp"
 #include "fct/NamedTuple.hpp"
@@ -21,7 +22,6 @@
 #include "fct/define_named_tuple.hpp"
 #include "helpers/Placeholder.hpp"
 
-namespace engine {
 namespace commands {
 
 struct FeatureLearnerFingerprint {
@@ -58,6 +58,5 @@ struct FeatureLearnerFingerprint {
 };
 
 }  // namespace commands
-}  // namespace engine
 
-#endif  // ENGINE_COMMANDS_FEATURELEARNERFINGERPRINT_HPP_
+#endif  // COMMANDS_FEATURELEARNERFINGERPRINT_HPP_

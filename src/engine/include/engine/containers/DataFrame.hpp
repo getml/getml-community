@@ -16,11 +16,11 @@
 #include <string>
 #include <vector>
 
+#include "commands/DataFrameFingerprint.hpp"
+#include "commands/DataFrameOrView.hpp"
 #include "database/database.hpp"
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
-#include "engine/commands/DataFrameFingerprint.hpp"
-#include "engine/commands/DataFrameOrView.hpp"
 #include "engine/containers/Column.hpp"
 #include "engine/containers/DataFrameContent.hpp"
 #include "engine/containers/DataFrameIndex.hpp"

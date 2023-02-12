@@ -5,21 +5,20 @@
 // for details.
 //
 
-#ifndef ENGINE_COMMANDS_BOOLEANBINARYOP_HPP_
-#define ENGINE_COMMANDS_BOOLEANBINARYOP_HPP_
+#ifndef COMMANDS_BOOLEANBINARYOP_HPP_
+#define COMMANDS_BOOLEANBINARYOP_HPP_
 
 #include <variant>
 
-#include "engine/Float.hpp"
-#include "engine/commands/FloatColumnOrFloatColumnView.hpp"
-#include "engine/commands/StringColumnOrStringColumnView.hpp"
+#include "commands/Float.hpp"
+#include "commands/FloatColumnOrFloatColumnView.hpp"
+#include "commands/StringColumnOrStringColumnView.hpp"
 #include "fct/Field.hpp"
 #include "fct/Literal.hpp"
 #include "fct/NamedTuple.hpp"
 #include "fct/Ref.hpp"
 #include "fct/TaggedUnion.hpp"
 
-namespace engine {
 namespace commands {
 
 class FloatColumnOrFloatColumnView;
@@ -110,6 +109,5 @@ class BooleanColumnView {
 };
 
 }  // namespace commands
-}  // namespace engine
 
-#endif  // ENGINE_COMMANDS_BOOLEANBINARYOP_HPP_
+#endif  // COMMANDS_BOOLEANBINARYOP_HPP_
