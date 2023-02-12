@@ -7,13 +7,16 @@
 
 #include "engine/pipelines/Fit.hpp"
 
+#include "engine/commands/FeatureLearner.hpp"
 #include "engine/featurelearners/AbstractFeatureLearner.hpp"
 #include "engine/pipelines/Score.hpp"
 #include "engine/pipelines/Transform.hpp"
 #include "engine/pipelines/TransformParams.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
+#include "fct/Field.hpp"
 #include "fct/collect.hpp"
 #include "helpers/StringReplacer.hpp"
+#include "json/json.hpp"
 #include "predictors/Predictor.hpp"
 
 namespace engine {
@@ -100,12 +103,15 @@ std::vector<Poco::JSON::Object::Ptr> Fit::extract_fl_fingerprints(
     return _dependencies;
   }
 
-  const auto get_fingerprint = [](const auto& _fl) -> Poco::JSON::Object::Ptr {
-    return _fl->fingerprint();
+  return {};
+
+  // TODO
+  /*const auto get_fingerprint = [](const auto& _fl) -> Poco::JSON::Object::Ptr
+  { return _fl->fingerprint();
   };
 
   return fct::collect::vector<Poco::JSON::Object::Ptr>(
-      _feature_learners | VIEWS::transform(get_fingerprint));
+      _feature_learners | VIEWS::transform(get_fingerprint));*/
 }
 
 // ----------------------------------------------------------------------
@@ -199,14 +205,19 @@ Fit::fit(const Pipeline& _pipeline, const FitParams& _params) {
 
   const auto [placeholder, peripheral] = _pipeline.make_placeholder();
 
-  const auto feature_learner_params = featurelearners::FeatureLearnerParams{
-      .cmd_ = Poco::JSON::Object(),
-      .dependencies_ = preprocessed.preprocessor_fingerprints_,
-      .peripheral_ = peripheral.ptr(),  // TODO
-      .peripheral_schema_ = modified_peripheral_schema.ptr(),
-      .placeholder_ = placeholder.ptr(),  // TODO
-      .population_schema_ = modified_population_schema.ptr(),
-      .target_num_ = featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS};
+  const featurelearners::FeatureLearnerParams feature_learner_params =
+      fct::make_field<"dependencies_">(
+          json::Parser<fct::Ref<const std::vector<
+              typename commands::FeatureLearnerFingerprint::DependencyType>>>::
+              from_json(
+                  preprocessed
+                      .preprocessor_fingerprints_)) *  // TODO: Remove from_json
+      fct::make_field<"peripheral_">(peripheral) *
+      fct::make_field<"peripheral_schema_">(modified_peripheral_schema) *
+      fct::make_field<"placeholder_">(placeholder) *
+      fct::make_field<"population_schema_">(modified_population_schema) *
+      fct::make_field<"target_num_">(
+          featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS);
 
   const auto [feature_learners, fl_fingerprints] = fit_feature_learners(
       _pipeline, _params, preprocessed.population_df_,
@@ -314,8 +325,10 @@ Fit::fit_feature_learners(
       _pipeline, _feature_learner_params, _population_df.num_targets());
 
   if (feature_learners.size() == 0) {
-    return std::make_pair(to_const(feature_learners),
-                          _feature_learner_params.dependencies_);
+    return std::make_pair(
+        to_const(feature_learners),
+        std::vector<Poco::JSON::Object::Ptr>(
+            {}) /*TODO _feature_learner_params.get<"dependencies_">()*/);
   }
 
   const auto [modified_population_schema, modified_peripheral_schema] =
@@ -358,7 +371,9 @@ Fit::fit_feature_learners(
   }
 
   auto fl_fingerprints = extract_fl_fingerprints(
-      feature_learners, _feature_learner_params.dependencies_);
+      feature_learners,
+      std::vector<Poco::JSON::Object::Ptr>(
+          {}) /*TODO _feature_learner_params.get<"dependencies_">()*/);
 
   return std::make_pair(to_const(feature_learners), std::move(fl_fingerprints));
 }
@@ -602,25 +617,22 @@ Fit::init_feature_learners(
 
   const auto make_fl_for_one_target =
       [](const featurelearners::FeatureLearnerParams& _params,
+         const commands::FeatureLearner& _hyperparameters,
          const Int _target_num)
       -> fct::Ref<featurelearners::AbstractFeatureLearner> {
-    const auto new_params = featurelearners::FeatureLearnerParams{
-        .cmd_ = _params.cmd_,
-        .dependencies_ = _params.dependencies_,
-        .peripheral_ = _params.peripheral_,
-        .peripheral_schema_ = _params.peripheral_schema_,
-        .placeholder_ = _params.placeholder_,
-        .population_schema_ = _params.population_schema_,
-        .target_num_ = _target_num};
+    const auto new_params =
+        _params.replace(fct::make_field<"target_num_">(_target_num));
 
-    return featurelearners::FeatureLearnerParser::parse(new_params);
+    return featurelearners::FeatureLearnerParser::parse(new_params,
+                                                        _hyperparameters);
   };
 
   const auto make_fl_for_all_targets =
       [_num_targets, make_fl_for_one_target](
-          const featurelearners::FeatureLearnerParams& _params) {
-        const auto make =
-            std::bind(make_fl_for_one_target, _params, std::placeholders::_1);
+          const featurelearners::FeatureLearnerParams& _params,
+          const commands::FeatureLearner& _hyperparameters) {
+        const auto make = std::bind(make_fl_for_one_target, _params,
+                                    _hyperparameters, std::placeholders::_1);
 
         const auto iota = fct::iota<Int>(0, _num_targets);
 
@@ -629,33 +641,28 @@ Fit::init_feature_learners(
             iota | VIEWS::transform(make));
       };
 
-  const auto to_fl = [&_feature_learner_params,
-                      make_fl_for_all_targets](Poco::JSON::Object::Ptr _cmd)
+  const auto to_fl = [&_feature_learner_params, make_fl_for_all_targets](
+                         const commands::FeatureLearner& _hyperparameters)
       -> std::vector<fct::Ref<featurelearners::AbstractFeatureLearner>> {
-    assert_true(_cmd);
-
-    const auto params = featurelearners::FeatureLearnerParams{
-        .cmd_ = *_cmd,
-        .dependencies_ = _feature_learner_params.dependencies_,
-        .peripheral_ = _feature_learner_params.peripheral_,
-        .peripheral_schema_ = _feature_learner_params.peripheral_schema_,
-        .placeholder_ = _feature_learner_params.placeholder_,
-        .population_schema_ = _feature_learner_params.population_schema_,
-        .target_num_ =
-            featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS};
+    const auto new_params =
+        _feature_learner_params.replace(fct::make_field<"target_num_">(
+            featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS));
 
     const auto new_feature_learner =
-        featurelearners::FeatureLearnerParser::parse(params);
+        featurelearners::FeatureLearnerParser::parse(new_params,
+                                                     _hyperparameters);
 
     if (new_feature_learner->supports_multiple_targets()) {
       return {new_feature_learner};
     }
 
-    return make_fl_for_all_targets(params);
+    return make_fl_for_all_targets(new_params, _hyperparameters);
   };
 
-  const auto obj_vector = JSON::array_to_obj_vector(
-      JSON::get_array(_pipeline.obj(), "feature_learners_"));
+  // TODO: Get rid for from_json
+  const auto obj_vector =
+      json::Parser<std::vector<commands::FeatureLearner>>::from_json(
+          JSON::get_array(_pipeline.obj(), "feature_learners_"));
 
   return fct::join::vector<fct::Ref<featurelearners::AbstractFeatureLearner>>(
       obj_vector | VIEWS::transform(to_fl));

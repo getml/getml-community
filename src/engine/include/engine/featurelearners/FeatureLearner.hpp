@@ -21,6 +21,7 @@
 #include "debug/debug.hpp"
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
+#include "engine/commands/FeatureLearnerFingerprint.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/featurelearners/AbstractFeatureLearner.hpp"
 #include "engine/featurelearners/FeatureLearnerParams.hpp"
@@ -28,6 +29,7 @@
 #include "engine/featurelearners/TransformParams.hpp"
 #include "fastprop/algorithm/algorithm.hpp"
 #include "fastprop/subfeatures/subfeatures.hpp"
+#include "fct/Field.hpp"
 #include "fct/get.hpp"
 #include "helpers/helpers.hpp"
 
@@ -48,24 +50,29 @@ class FeatureLearner : public AbstractFeatureLearner {
 
  private:
   typedef typename FeatureLearnerType::DataFrameType DataFrameType;
+  typedef typename commands::FeatureLearnerFingerprint::DependencyType
+      DependencyType;
   typedef typename FeatureLearnerType::HypType HypType;
+  typedef fct::define_named_tuple_t<
+      typename HypType::NamedTupleType,
+      typename commands::FeatureLearnerFingerprint::Dependencies,
+      typename commands::FeatureLearnerFingerprint::OtherRequirements>
+      FingerprintType;
 
   typedef typename std::conditional<
       has_propositionalization_,
       std::shared_ptr<const fastprop::Hyperparameters>, int>::type PropType;
 
  public:
-  FeatureLearner(const FeatureLearnerParams& _params)
-      : cmd_(_params.cmd_),
-        dependencies_(_params.dependencies_),
-        peripheral_(_params.peripheral_),
-        peripheral_schema_(_params.peripheral_schema_),
-        placeholder_(_params.placeholder_),
-        population_schema_(_params.population_schema_),
-        target_num_(_params.target_num_) {
-    assert_true(placeholder_);
-    assert_true(peripheral_);
-  }
+  FeatureLearner(const FeatureLearnerParams& _params,
+                 const HypType& _hyperparameters)
+      : dependencies_(_params.get<"dependencies_">()),
+        hyperparameters_(_hyperparameters),
+        peripheral_(_params.get<"peripheral_">()),
+        peripheral_schema_(_params.get<"peripheral_schema_">()),
+        placeholder_(_params.get<"placeholder_">()),
+        population_schema_(_params.get<"population_schema_">()),
+        target_num_(_params.get<"target_num_">()) {}
 
   ~FeatureLearner() = default;
 
@@ -76,7 +83,7 @@ class FeatureLearner : public AbstractFeatureLearner {
 
   /// Returns the fingerprint of the feature learner (necessary to build
   /// the dependency graphs).
-  Poco::JSON::Object::Ptr fingerprint() const final;
+  commands::FeatureLearnerFingerprint fingerprint() const final;
 
   /// Fits the model.
   void fit(const FitParams& _params) final;
@@ -114,14 +121,14 @@ class FeatureLearner : public AbstractFeatureLearner {
   /// Whether the feature learner is used for classification.
   bool is_classification() const final {
     const auto loss_function =
-        JSON::get_value<std::string>(cmd_, "loss_function_");
+        fct::get<"loss_function_">(hyperparameters_.val_);
     return (loss_function != "SquareLoss");
   }
 
   /// Returns the placeholder not as passed by the user, but as seen by the
   /// feature learner (the difference matters for time series).
   helpers::Placeholder make_placeholder() const final {
-    return make_feature_learner()->placeholder();
+    return make_feature_learner().placeholder();
   }
 
   /// Returns the number of features in the feature learner.
@@ -136,7 +143,7 @@ class FeatureLearner : public AbstractFeatureLearner {
 
   /// Whether the feature learner is to be silent.
   bool silent() const final {
-    return fct::get<"silent_">(make_feature_learner()->hyperparameters().val_);
+    return fct::get<"silent_">(make_feature_learner().hyperparameters().val_);
   }
 
   /// Whether the feature learner supports multiple targets.
@@ -185,7 +192,7 @@ class FeatureLearner : public AbstractFeatureLearner {
       const std::shared_ptr<const logging::AbstractLogger> _logger) const;
 
   /// Initializes the feature learner.
-  std::optional<FeatureLearnerType> make_feature_learner() const;
+  FeatureLearnerType make_feature_learner() const;
 
   /// Interprets the subroles and indicates whether the column they belong to
   /// should be included.
@@ -259,28 +266,18 @@ class FeatureLearner : public AbstractFeatureLearner {
   }
 
   /// Trivial accessor.
-  const std::vector<std::string>& peripheral() const {
-    assert_true(peripheral_);
-    return *peripheral_;
-  }
+  const std::vector<std::string>& peripheral() const { return *peripheral_; }
 
   /// Trivial accessor.
   std::vector<helpers::Schema> peripheral_schema() const {
-    assert_true(peripheral_schema_);
     return *peripheral_schema_;
   }
 
   /// Trivial accessor.
-  const helpers::Placeholder& placeholder() const {
-    assert_true(placeholder_);
-    return *placeholder_;
-  }
+  const helpers::Placeholder& placeholder() const { return *placeholder_; }
 
   /// Trivial accessor.
-  helpers::Schema population_schema() const {
-    assert_true(population_schema_);
-    return *population_schema_;
-  }
+  helpers::Schema population_schema() const { return *population_schema_; }
 
   /// Extracts the propositionalization from the hyperparameters, if they
   /// exist.
@@ -305,11 +302,8 @@ class FeatureLearner : public AbstractFeatureLearner {
   }
 
  private:
-  /// The command used to create the feature learner.
-  Poco::JSON::Object cmd_;
-
   /// The dependencies used to build the fingerprint.
-  std::vector<Poco::JSON::Object::Ptr> dependencies_;
+  fct::Ref<const std::vector<DependencyType>> dependencies_;
 
   /// The containers for the propositionalization.
   std::shared_ptr<const fastprop::subfeatures::FastPropContainer>
@@ -318,17 +312,20 @@ class FeatureLearner : public AbstractFeatureLearner {
   /// The underlying feature learning algorithm.
   std::optional<FeatureLearnerType> feature_learner_;
 
+  /// The underlying hyperparameters.
+  HypType hyperparameters_;
+
   /// The names of the peripheral tables
-  std::shared_ptr<const std::vector<std::string>> peripheral_;
+  fct::Ref<const std::vector<std::string>> peripheral_;
 
   /// The schema of the peripheral tables.
-  std::shared_ptr<const std::vector<helpers::Schema>> peripheral_schema_;
+  fct::Ref<const std::vector<helpers::Schema>> peripheral_schema_;
 
   /// The placeholder describing the data schema.
-  std::shared_ptr<const helpers::Placeholder> placeholder_;
+  fct::Ref<const helpers::Placeholder> placeholder_;
 
   /// The schema of the population table.
-  std::shared_ptr<const helpers::Schema> population_schema_;
+  fct::Ref<const helpers::Schema> population_schema_;
 
   /// Indicates which target to use
   Int target_num_;
@@ -491,21 +488,13 @@ FeatureLearner<FeatureLearnerType>::extract_tables_by_colnames(
 // ----------------------------------------------------------------------------
 
 template <typename FeatureLearnerType>
-Poco::JSON::Object::Ptr FeatureLearner<FeatureLearnerType>::fingerprint()
-    const {
-  auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-
-  obj->set("cmd_", cmd_);
-
-  obj->set("dependencies_", JSON::vector_to_array_ptr(dependencies_));
-
-  obj->set("peripheral_", JSON::vector_to_array_ptr(peripheral()));
-
-  obj->set("placeholder_", placeholder().to_json_obj());
-
-  obj->set("target_num_", target_num_);
-
-  return obj;
+commands::FeatureLearnerFingerprint
+FeatureLearner<FeatureLearnerType>::fingerprint() const {
+  return commands::FeatureLearnerFingerprint(FingerprintType(
+      hyperparameters_.val_ * fct::make_field<"dependencies_">(dependencies_) *
+      fct::make_field<"peripheral_">(peripheral_) *
+      fct::make_field<"placeholder_">(placeholder_) *
+      fct::make_field<"target_num_">(target_num_)));
 }
 
 // ----------------------------------------------------------------------------
@@ -624,9 +613,6 @@ FeatureLearner<FeatureLearnerType>::handle_text_fields(
     const std::shared_ptr<const logging::AbstractLogger> _logger) const {
   assert_true(_logger);
 
-  const auto hyperparameters =
-      std::make_shared<typename FeatureLearnerType::HypType>(cmd_);
-
   const auto has_text_fields = [](const helpers::DataFrame& _df) -> bool {
     return _df.num_text() > 0;
   };
@@ -638,7 +624,7 @@ FeatureLearner<FeatureLearnerType>::handle_text_fields(
   if (any_text_fields) _logger->log("Indexing text fields...");
 
   const auto vocabulary = std::make_shared<const helpers::VocabularyContainer>(
-      min_df(*hyperparameters), vocab_size(*hyperparameters), _population,
+      min_df(hyperparameters_), vocab_size(hyperparameters_), _population,
       _peripheral);
 
 #ifndef NDEBUG
@@ -723,13 +709,11 @@ Poco::JSON::Object FeatureLearner<FeatureLearnerType>::load_json_obj(
 // ----------------------------------------------------------------------------
 
 template <typename FeatureLearnerType>
-std::optional<FeatureLearnerType>
-FeatureLearner<FeatureLearnerType>::make_feature_learner() const {
-  const auto hyperparameters =
-      std::make_shared<typename FeatureLearnerType::HypType>(cmd_);
-
-  return std::make_optional<FeatureLearnerType>(hyperparameters, peripheral_,
-                                                placeholder_);
+FeatureLearnerType FeatureLearner<FeatureLearnerType>::make_feature_learner()
+    const {
+  // TODO: Remove the shared_ptr
+  return FeatureLearnerType(std::make_shared<const HypType>(hyperparameters_),
+                            peripheral_.ptr(), placeholder_.ptr());
 }
 
 // ----------------------------------------------------------------------------
@@ -869,8 +853,6 @@ std::vector<std::string> FeatureLearner<FeatureLearnerType>::to_sql(
     const std::shared_ptr<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator,
     const std::string& _prefix) const {
-  throw_unless(peripheral_schema_, "Pipeline has not been fitted.");
-
   std::vector<std::string> sql;
 
   throw_unless(vocabulary_, "Pipeline has not been fitted.");

@@ -16,6 +16,7 @@
 
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
+#include "engine/commands/FeatureLearnerFingerprint.hpp"
 #include "engine/featurelearners/FitParams.hpp"
 #include "engine/featurelearners/TransformParams.hpp"
 
@@ -47,7 +48,7 @@ class AbstractFeatureLearner {
 
   /// Returns the fingerprint of the feature learner (necessary to build
   /// the dependency graphs).
-  virtual Poco::JSON::Object::Ptr fingerprint() const = 0;
+  virtual commands::FeatureLearnerFingerprint fingerprint() const = 0;
 
   /// Fits the model.
   virtual void fit(const FitParams& _params) = 0;
