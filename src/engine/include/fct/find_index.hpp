@@ -9,6 +9,7 @@
 #define FCT_FIND_INDEX_HPP_
 
 #include <tuple>
+#include <type_traits>
 
 #include "fct/StringLiteral.hpp"
 
@@ -17,8 +18,9 @@ namespace fct {
 /// Finds the index of the field signified by _field_name
 template <StringLiteral _field_name, class _Fields, int I = 0>
 constexpr static int find_index() {
-  constexpr bool name_i_matches =
-      std::tuple_element<I, _Fields>::type::name_ == _field_name;
+  using FieldType = std::decay_t<typename std::tuple_element<I, _Fields>::type>;
+
+  constexpr bool name_i_matches = (FieldType::name_ == _field_name);
 
   if constexpr (name_i_matches) {
     return I;
