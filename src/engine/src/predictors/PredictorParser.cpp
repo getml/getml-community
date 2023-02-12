@@ -16,7 +16,7 @@ namespace predictors {
 
 fct::Ref<Predictor> PredictorParser::parse(
     const PredictorHyperparams& _hyperparams,
-    const std::shared_ptr<const PredictorImpl>& _impl,
+    const fct::Ref<const PredictorImpl>& _impl,
     const std::vector<Poco::JSON::Object::Ptr>& _dependencies) {
   const auto handle = [&_impl, &_dependencies](
                           const auto& _hyperparams) -> fct::Ref<Predictor> {

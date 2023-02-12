@@ -38,7 +38,7 @@ class LinearRegression : public Predictor {
 
  public:
   LinearRegression(const LinearRegressionHyperparams& _hyperparams,
-                   const std::shared_ptr<const PredictorImpl>& _impl,
+                   const fct::Ref<const PredictorImpl>& _impl,
                    const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
       : dependencies_(_dependencies),
         hyperparams_(fct::Ref<LinearRegressionHyperparams>::make(_hyperparams)),
@@ -184,7 +184,7 @@ class LinearRegression : public Predictor {
   fct::Ref<const LinearRegressionHyperparams> hyperparams_;
 
   /// Implementation class for member functions common to most predictors.
-  std::shared_ptr<const PredictorImpl> impl_;
+  fct::Ref<const PredictorImpl> impl_;
 
   /// For rescaling the input data such that the standard deviation of each
   /// column is 1.0

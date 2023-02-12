@@ -1,19 +1,15 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef PREDICTORS_XGBOOSTITERATORSPARSE_HPP_
 #define PREDICTORS_XGBOOSTITERATORSPARSE_HPP_
 
-// ------------------------------------------------------------------------
-
 #include <unistd.h>
 #include <xgboost/c_api.h>
-
-// ------------------------------------------------------------------------
 
 #include <algorithm>
 #include <cstddef>
@@ -25,19 +21,13 @@
 #include <tuple>
 #include <vector>
 
-// ------------------------------------------------------------------------
-
+#include "fct/Ref.hpp"
 #include "memmap/memmap.hpp"
-
-// ------------------------------------------------------------------------
-
 #include "predictors/CSRMatrix.hpp"
 #include "predictors/FloatFeature.hpp"
 #include "predictors/IntFeature.hpp"
 #include "predictors/PredictorImpl.hpp"
 #include "predictors/XGBoostIteratorDense.hpp"
-
-// ------------------------------------------------------------------------
 
 namespace predictors {
 
@@ -61,7 +51,7 @@ class XGBoostIteratorSparse {
   XGBoostIteratorSparse(const std::vector<IntFeature> &_X_categorical,
                         const std::vector<FloatFeature> &_X_numerical,
                         const std::optional<FloatFeature> &_y,
-                        const std::shared_ptr<const PredictorImpl> &_impl);
+                        const fct::Ref<const PredictorImpl> &_impl);
 
   ~XGBoostIteratorSparse();
 
@@ -119,10 +109,7 @@ class XGBoostIteratorSparse {
   }
 
   /// Trivial accessor for the impl
-  const PredictorImpl &impl() const {
-    assert_true(impl_);
-    return *impl_;
-  }
+  const PredictorImpl &impl() const { return *impl_; }
 
   /// Updates an array for the indptr, indices or data
   template <class T>
@@ -152,7 +139,7 @@ class XGBoostIteratorSparse {
   size_t cur_it_;
 
   /// We need the impl to create the CSRMatrix on-the-fly.
-  const std::shared_ptr<const PredictorImpl> impl_;
+  const fct::Ref<const PredictorImpl> impl_;
 
   /// The number of rows.
   const size_t nrows_;
