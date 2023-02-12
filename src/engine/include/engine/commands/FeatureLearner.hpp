@@ -14,12 +14,7 @@
 namespace engine {
 namespace commands {
 
-class FeatureLearner {
- public:
-  using NamedTupleType = fct::TaggedUnion<"type_", fastprop::Hyperparameters>;
-
-  NamedTupleType val_;
-};
+using FeatureLearner = fct::TaggedUnion<"type_", fastprop::Hyperparameters>;
 
 }  // namespace commands
 }  // namespace engine

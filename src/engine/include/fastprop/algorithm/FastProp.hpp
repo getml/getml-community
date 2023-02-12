@@ -50,8 +50,6 @@ class FastProp {
   constexpr static bool premium_only_ = false;
   constexpr static bool supports_multiple_targets_ = true;
 
-  // ------------------------------------------------------------------------
-
  public:
   FastProp(const std::shared_ptr<const Hyperparameters>& _hyperparameters,
            const std::shared_ptr<const std::vector<std::string>>& _peripheral,

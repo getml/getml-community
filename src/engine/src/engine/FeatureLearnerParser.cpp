@@ -7,30 +7,31 @@
 
 #include "engine/featurelearners/FeatureLearnerParser.hpp"
 
+#include <type_traits>
+
 #include "engine/featurelearners/FeatureLearner.hpp"
+#include "fastprop/Hyperparameters.hpp"
 #include "fastprop/algorithm/algorithm.hpp"
+#include "fct/visit.hpp"
 
 namespace engine {
 namespace featurelearners {
 
 fct::Ref<AbstractFeatureLearner> FeatureLearnerParser::parse(
-    const FeatureLearnerParams& _params) {
-  const auto type = JSON::get_value<std::string>(_params.cmd_, "type_");
+    const FeatureLearnerParams& _params,
+    const commands::FeatureLearner& _hyperparameters) {
+  const auto handle =
+      [&_params](
+          const auto& _hyperparameters) -> fct::Ref<AbstractFeatureLearner> {
+    using Type = std::decay_t<decltype(_hyperparameters)>;
 
-  if (type == AbstractFeatureLearner::FASTPROP) {
-    return fct::Ref<FeatureLearner<fastprop::algorithm::FastProp>>::make(
-        _params);
-  }
+    if constexpr (std::is_same<Type, fastprop::Hyperparameters>()) {
+      return fct::Ref<FeatureLearner<fastprop::algorithm::FastProp>>::make(
+          _params, _hyperparameters);
+    }
+  };
 
-  if (type == AbstractFeatureLearner::MULTIREL ||
-      type == AbstractFeatureLearner::RELBOOST ||
-      AbstractFeatureLearner::RELMT) {
-    throw std::runtime_error(
-        "'" + type + "' is not supported in the getML community edition!");
-  }
-
-  throw std::runtime_error("Feature learning algorithm of type '" + type +
-                           "' not known!");
+  return fct::visit(handle, _hyperparameters);
 }
 
 // ----------------------------------------------------------------------

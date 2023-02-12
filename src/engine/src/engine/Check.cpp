@@ -9,7 +9,9 @@
 
 #include "engine/pipelines/Fit.hpp"
 #include "engine/pipelines/FitPreprocessorsParams.hpp"
+#include "fct/Field.hpp"
 #include "fct/collect.hpp"
+#include "json/json.hpp"
 #include "jsonutils/jsonutils.hpp"
 
 namespace engine {
@@ -37,14 +39,19 @@ void Check::check(const Pipeline& _pipeline, const CheckParams& _params) {
 
   const auto [placeholder, peripheral_names] = _pipeline.make_placeholder();
 
-  const auto feature_learner_params = featurelearners::FeatureLearnerParams{
-      .cmd_ = Poco::JSON::Object(),
-      .dependencies_ = preprocessed.preprocessor_fingerprints_,
-      .peripheral_ = peripheral_names.ptr(),  // TODO
-      .peripheral_schema_ = modified_peripheral_schema.ptr(),
-      .placeholder_ = placeholder.ptr(),  // TODO
-      .population_schema_ = modified_population_schema.ptr(),
-      .target_num_ = featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS};
+  const featurelearners::FeatureLearnerParams feature_learner_params =
+      fct::make_field<"dependencies_">(
+          json::Parser<fct::Ref<const std::vector<
+              typename commands::FeatureLearnerFingerprint::DependencyType>>>::
+              from_json(
+                  preprocessed
+                      .preprocessor_fingerprints_)) *  // TODO: Remove from_json
+      fct::make_field<"peripheral_">(peripheral_names) *
+      fct::make_field<"peripheral_schema_">(modified_peripheral_schema) *
+      fct::make_field<"placeholder_">(placeholder) *
+      fct::make_field<"population_schema_">(modified_population_schema) *
+      fct::make_field<"target_num_">(
+          featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS);
 
   const auto [feature_learners, fl_fingerprints] =
       init_feature_learners(_pipeline, feature_learner_params, _params);

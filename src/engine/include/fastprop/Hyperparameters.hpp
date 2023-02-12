@@ -65,6 +65,8 @@ struct Hyperparameters {
                       f_num_threads, f_sampling_factor, f_silent, f_type,
                       f_vocab_size>;
 
+  Hyperparameters(const NamedTupleType& _val) : val_(_val) {}
+
   Hyperparameters(const Poco::JSON::Object& _json_obj)
       : val_(json::from_json<NamedTupleType>(_json_obj)) {}
 

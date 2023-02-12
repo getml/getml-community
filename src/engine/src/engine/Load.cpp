@@ -76,14 +76,21 @@ Load::load_feature_learners(
 
   const auto [placeholder, peripheral] = _pipeline.make_placeholder();
 
-  const auto feature_learner_params = featurelearners::FeatureLearnerParams{
-      .cmd_ = Poco::JSON::Object(),
-      .dependencies_ = _pipeline_json.fingerprints_.preprocessor_fingerprints_,
-      .peripheral_ = peripheral.ptr(),  // TODO
-      .peripheral_schema_ = _pipeline_json.modified_peripheral_schema_.ptr(),
-      .placeholder_ = placeholder.ptr(),  // TODO
-      .population_schema_ = _pipeline_json.modified_population_schema_.ptr(),
-      .target_num_ = featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS};
+  const auto feature_learner_params = featurelearners::FeatureLearnerParams(
+      fct::make_field<"dependencies_">(
+          json::Parser<fct::Ref<const std::vector<
+              typename commands::FeatureLearnerFingerprint::DependencyType>>>::
+              from_json(
+                  _pipeline_json.fingerprints_
+                      .preprocessor_fingerprints_)),  // TODO: Remove from_json
+      fct::make_field<"peripheral_">(peripheral),
+      fct::make_field<"peripheral_schema_">(
+          _pipeline_json.modified_peripheral_schema_),
+      fct::make_field<"placeholder_">(placeholder),
+      fct::make_field<"population_schema_">(
+          _pipeline_json.modified_population_schema_),
+      fct::make_field<"target_num_">(
+          featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS));
 
   const auto feature_learners = Fit::init_feature_learners(
       _pipeline, feature_learner_params, _pipeline_json.targets_.size());
