@@ -258,8 +258,13 @@ class NamedTuple {
     } else if constexpr (_j == -1) {
       return no_duplicate_field_names<_i + 1, _i>();
     } else {
-      constexpr auto field_name_i = std::tuple_element<_i, Fields>::type::name_;
-      constexpr auto field_name_j = std::tuple_element<_j, Fields>::type::name_;
+      using FieldType1 =
+          std::decay_t<typename std::tuple_element<_i, Fields>::type>;
+      using FieldType2 =
+          std::decay_t<typename std::tuple_element<_j, Fields>::type>;
+
+      constexpr auto field_name_i = FieldType1::name_;
+      constexpr auto field_name_j = FieldType2::name_;
 
       constexpr bool no_duplicate = (field_name_i != field_name_j);
 
@@ -320,7 +325,7 @@ class NamedTuple {
   /// As you can see, a NamedTuple is just a normal tuple under-the-hood,
   /// everything else is resolved at compile time. It should have no
   /// runtime overhead over a normal std::tuple.
-  std::tuple<typename FieldTypes::Type...> values_;
+  std::tuple<typename std::decay<FieldTypes>::type::Type...> values_;
 };
 
 // ----------------------------------------------------------------------------
