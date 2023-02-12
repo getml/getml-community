@@ -29,7 +29,7 @@ namespace fct {
 template <class... FieldTypes>
 class NamedTuple {
  public:
-  using Fields = std::tuple<FieldTypes...>;
+  using Fields = std::tuple<std::decay_t<FieldTypes>...>;
 
  public:
   /// Construct from the fields.
