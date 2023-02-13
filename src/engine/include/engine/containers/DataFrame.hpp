@@ -9,7 +9,6 @@
 #define ENGINE_CONTAINERS_DATAFRAME_HPP_
 
 #include <Poco/File.h>
-#include <Poco/JSON/Object.h>
 
 #include <memory>
 #include <optional>
@@ -17,6 +16,7 @@
 #include <vector>
 
 #include "commands/DataFrameFingerprint.hpp"
+#include "commands/DataFrameFromJSON.hpp"
 #include "commands/DataFrameOrView.hpp"
 #include "database/database.hpp"
 #include "engine/Float.hpp"
@@ -120,7 +120,7 @@ class DataFrame {
                const std::string &_tname, const Schema &_schema);
 
   /// Builds a dataframe from a JSON Object.
-  void from_json(const Poco::JSON::Object &_obj,
+  void from_json(const commands::DataFrameFromJSON &_obj,
                  const std::vector<std::string> _time_formats,
                  const Schema &_schema);
 
@@ -692,17 +692,17 @@ class DataFrame {
   std::vector<std::string> concat_colnames(const Schema &_schema) const;
 
   /// Parses int columns.
-  void from_json(const Poco::JSON::Object &_obj,
+  void from_json(const commands::DataFrameFromJSON &_obj,
                  const std::vector<std::string> &_names,
                  const std::string &_role, Encoding *_encoding);
 
   /// Parses float columns.
-  void from_json(const Poco::JSON::Object &_obj,
+  void from_json(const commands::DataFrameFromJSON &_obj,
                  const std::vector<std::string> &_names,
                  const std::string &_role);
 
   /// Parses time stamp columns.
-  void from_json(const Poco::JSON::Object &_obj,
+  void from_json(const commands::DataFrameFromJSON &_obj,
                  const std::vector<std::string> &_names,
                  const std::vector<std::string> &_time_formats);
 

@@ -937,8 +937,7 @@ void DataFrameManager::from_json(const std::string& _name,
   auto df = containers::DataFrame(_name, local_categories,
                                   local_join_keys_encoding, pool);
 
-  // TODO
-  // df.from_json(obj, time_formats, schema);
+  df.from_json(obj, time_formats, schema);
 
   weak_write_lock.upgrade();
 
