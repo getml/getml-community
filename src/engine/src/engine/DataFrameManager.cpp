@@ -9,6 +9,7 @@
 
 #include <Poco/TemporaryFile.h>
 
+#include "commands/DataFrameFromJSON.hpp"
 #include "engine/containers/Roles.hpp"
 #include "engine/handlers/AggOpParser.hpp"
 #include "engine/handlers/ArrowHandler.hpp"
@@ -916,8 +917,7 @@ void DataFrameManager::from_json(const std::string& _name,
                                  Poco::Net::StreamSocket* _socket) {
   const auto json_str = communication::Receiver::recv_string(_socket);
 
-  const auto obj =
-      *Poco::JSON::Parser().parse(json_str).extract<Poco::JSON::Object::Ptr>();
+  const auto obj = json::from_json<commands::DataFrameFromJSON>(json_str);
 
   const auto time_formats = JSON::array_to_vector<std::string>(
       JSON::get_array(_cmd, "time_formats_"));
@@ -937,7 +937,8 @@ void DataFrameManager::from_json(const std::string& _name,
   auto df = containers::DataFrame(_name, local_categories,
                                   local_join_keys_encoding, pool);
 
-  df.from_json(obj, time_formats, schema);
+  // TODO
+  // df.from_json(obj, time_formats, schema);
 
   weak_write_lock.upgrade();
 
