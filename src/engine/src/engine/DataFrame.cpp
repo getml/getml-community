@@ -10,6 +10,8 @@
 #include <Poco/Path.h>
 #include <Poco/TemporaryFile.h>
 
+#include <stdexcept>
+
 #include "engine/containers/DataFramePrinter.hpp"
 #include "fct/Field.hpp"
 #include "json/json.hpp"
@@ -628,7 +630,7 @@ void DataFrame::from_db(fct::Ref<database::Connector> _connector,
 
 // ----------------------------------------------------------------------------
 
-void DataFrame::from_json(const Poco::JSON::Object &_obj,
+void DataFrame::from_json(const commands::DataFrameFromJSON &_obj,
                           const std::vector<std::string> _time_formats,
                           const Schema &_schema) {
   auto df = DataFrame(name(), categories_, join_keys_encoding_, make_pool());
@@ -658,21 +660,31 @@ void DataFrame::from_json(const Poco::JSON::Object &_obj,
 
 // ----------------------------------------------------------------------------
 
-void DataFrame::from_json(const Poco::JSON::Object &_obj,
+void DataFrame::from_json(const commands::DataFrameFromJSON &_obj,
                           const std::vector<std::string> &_names,
                           const std::string &_role, Encoding *_encoding) {
   for (size_t i = 0; i < _names.size(); ++i) {
     const auto &name = _names[i];
 
-    const auto arr = JSON::get_array(_obj, name);
+    const auto it = _obj.find(name);
+
+    if (it == _obj.end()) {
+      throw std::runtime_error("Column named '" + name +
+                               "' not found in the provided JSON.");
+    }
+
+    const auto vec = std::get_if<std::vector<std::string>>(&(it->second));
+
+    if (!vec) {
+      throw std::runtime_error("Column named '" + name +
+                               "' must be a string column.");
+    }
 
     if (_encoding) {
-      auto column = Column<Int>(pool_, arr->size());
+      auto column = Column<Int>(pool_, vec->size());
 
-      for (size_t j = 0; j < arr->size(); ++j) {
-        const auto str =
-            arr->getElement<std::string>(static_cast<unsigned int>(j));
-
+      for (size_t j = 0; j < vec->size(); ++j) {
+        const auto str = vec->at(j);
         column[j] = (*_encoding)[str];
       }
 
@@ -682,9 +694,9 @@ void DataFrame::from_json(const Poco::JSON::Object &_obj,
     } else {
       auto column = Column<strings::String>(pool_);
 
-      for (size_t j = 0; j < arr->size(); ++j)
-        column.push_back(
-            arr->getElement<std::string>(static_cast<unsigned int>(j)));
+      for (size_t j = 0; j < vec->size(); ++j) {
+        column.push_back(vec->at(j));
+      }
 
       column.set_name(_names[i]);
 
@@ -695,35 +707,53 @@ void DataFrame::from_json(const Poco::JSON::Object &_obj,
 
 // ----------------------------------------------------------------------------
 
-void DataFrame::from_json(const Poco::JSON::Object &_obj,
+void DataFrame::from_json(const commands::DataFrameFromJSON &_obj,
                           const std::vector<std::string> &_names,
                           const std::string &_role) {
   for (size_t i = 0; i < _names.size(); ++i) {
     const auto &name = _names[i];
 
-    if (_role == ROLE_TARGET && !_obj.has(name)) {
+    const auto it = _obj.find(name);
+
+    if (_role == ROLE_TARGET && it == _obj.end()) {
       continue;
     }
 
-    const auto arr = JSON::get_array(_obj, name);
+    if (it == _obj.end()) {
+      throw std::runtime_error("Column named '" + name +
+                               "' not found in the provided JSON.");
+    }
 
     if (_role == ROLE_UNUSED || _role == ROLE_UNUSED_STRING ||
         _role == ROLE_TEXT) {
+      const auto vec = std::get_if<std::vector<std::string>>(&(it->second));
+
+      if (!vec) {
+        throw std::runtime_error("Column named '" + name +
+                                 "' must be a string column.");
+      }
+
       auto column = Column<strings::String>(pool_);
 
-      for (size_t j = 0; j < arr->size(); ++j) {
-        column.push_back(
-            arr->getElement<std::string>(static_cast<unsigned int>(j)));
+      for (size_t j = 0; j < vec->size(); ++j) {
+        column.push_back(vec->at(j));
       }
 
       column.set_name(_names[i]);
 
       add_string_column(column, _role);
     } else {
-      auto column = Column<Float>(pool_, arr->size());
+      const auto vec = std::get_if<std::vector<Float>>(&(it->second));
 
-      for (size_t j = 0; j < arr->size(); ++j) {
-        column[j] = arr->getElement<Float>(static_cast<unsigned int>(j));
+      if (!vec) {
+        throw std::runtime_error("Column named '" + name +
+                                 "' must be a numerical column.");
+      }
+
+      auto column = Column<Float>(pool_, vec->size());
+
+      for (size_t j = 0; j < vec->size(); ++j) {
+        column[j] = vec->at(j);
       }
 
       column.set_name(_names[i]);
@@ -735,27 +765,40 @@ void DataFrame::from_json(const Poco::JSON::Object &_obj,
 
 // ----------------------------------------------------------------------------
 
-void DataFrame::from_json(const Poco::JSON::Object &_obj,
+void DataFrame::from_json(const commands::DataFrameFromJSON &_obj,
                           const std::vector<std::string> &_names,
                           const std::vector<std::string> &_time_formats) {
+  const auto make_column = [this,
+                            &_time_formats](const auto &_vec) -> Column<Float> {
+    using Type = std::decay_t<decltype(_vec)>;
+
+    auto column = Column<Float>(pool_);
+
+    if constexpr (std::is_same<Type, std::vector<std::string>>()) {
+      for (size_t j = 0; j < _vec.size(); ++j) {
+        const auto [val, _] = io::Parser::to_time_stamp(_vec[j], _time_formats);
+        column.push_back(val);
+      }
+    } else {
+      for (size_t j = 0; j < _vec.size(); ++j) {
+        column.push_back(_vec[j]);
+      }
+    }
+
+    return column;
+  };
+
   for (size_t i = 0; i < _names.size(); ++i) {
     const auto &name = _names[i];
 
-    const auto arr = JSON::get_array(_obj, name);
+    const auto it = _obj.find(name);
 
-    auto column = Column<Float>(pool_, arr->size());
-
-    for (size_t j = 0; j < arr->size(); ++j) {
-      bool success = true;
-
-      std::tie(column[j], success) = io::Parser::to_time_stamp(
-          arr->getElement<std::string>(static_cast<unsigned int>(j)),
-          _time_formats);
-
-      if (!success) {
-        column[j] = arr->getElement<Float>(static_cast<unsigned int>(j));
-      }
+    if (it == _obj.end()) {
+      throw std::runtime_error("Column named '" + name +
+                               "' not found in the provided JSON.");
     }
+
+    auto column = std::visit(make_column, it->second);
 
     column.set_name(_names[i]);
 
@@ -1711,7 +1754,6 @@ containers::MonitorSummary DataFrame::to_monitor() const {
 
 // ----------------------------------------------------------------------------
 
-/// Expresses the schema of the DataFrame as a JSON object.
 Schema DataFrame::to_schema(const bool _separate_discrete) const {
   const auto is_full = [](const Float _val) -> bool {
     return helpers::NullChecker::is_null(_val) || (std::floor(_val) == _val);
