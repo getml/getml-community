@@ -15,6 +15,7 @@
 
 #include <cstddef>
 #include <exception>
+#include <map>
 #include <memory>
 #include <stdexcept>
 #include <tuple>
@@ -91,6 +92,35 @@ struct Parser<fct::Literal<_fields...>> {
   /// Expresses the variable a a JSON.
   static auto to_json(const fct::Literal<_fields...>& _literal) {
     return _literal.name();
+  }
+};
+
+// ----------------------------------------------------------------------------
+
+template <class ValueType>
+struct Parser<std::map<std::string, ValueType>> {
+  /// Expresses the variables as a std::map.
+  static std::map<std::string, ValueType> from_json(
+      const Poco::Dynamic::Var& _var) {
+    const auto obj = ObjectGetter::get_object(_var);
+    const auto names = obj.getNames();
+    const auto get_value =
+        [&obj](const auto& _name) -> std::pair<std::string, ValueType> {
+      return std::make_pair(
+          _name, Parser<std::decay_t<ValueType>>::from_json(obj.get(_name)));
+    };
+    return fct::collect::map<std::string, ValueType>(
+        names | VIEWS::transform(get_value));
+  }
+
+  /// Transform a std::vector into a Poco::JSON::Object
+  static Poco::JSON::Object::Ptr to_json(
+      const std::map<std::string, ValueType>& _m) {
+    auto ptr = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
+    for (const auto& [k, v] : _m) {
+      ptr->set(k, Parser<std::decay_t<ValueType>>::to_json(v));
+    }
+    return ptr;
   }
 };
 

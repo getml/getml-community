@@ -190,18 +190,16 @@ class DataFrame {
       const std::optional<Schema> &_schema = std::nullopt,
       const bool _targets = true) const;
 
-  /// Extracts the data frame as a Poco::JSON::Object the monitor process can
+  /// Extracts the data frame in a format the monitor can
   /// understand
   containers::MonitorSummary to_monitor() const;
 
-  /// Expresses the schema of the DataFrame as a JSON object.
+  /// Expresses the schema of the DataFrame.
   Schema to_schema(const bool _separate_discrete) const;
 
   /// Selects all rows for which the corresponding entry in _condition is
   /// true.
   void where(const std::vector<bool> &_condition);
-
-  // -------------------------------
 
   /// Trivial accessor
   std::optional<ViewOp> build_history() const { return build_history_; }
