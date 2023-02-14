@@ -8,12 +8,8 @@
 #ifndef ENGINE_PIPELINES_FIT_HPP_
 #define ENGINE_PIPELINES_FIT_HPP_
 
-// ----------------------------------------------------------------------------
-
 #include <Poco/JSON/Object.h>
 #include <Poco/Net/StreamSocket.h>
-
-// ----------------------------------------------------------------------------
 
 #include <algorithm>
 #include <memory>
@@ -22,18 +18,9 @@
 #include <utility>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
-#include "metrics/metrics.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "engine/communication/communication.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/dependency/dependency.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "engine/pipelines/FitParams.hpp"
 #include "engine/pipelines/FitPredictorsParams.hpp"
 #include "engine/pipelines/FitPreprocessorsParams.hpp"
@@ -41,8 +28,7 @@
 #include "engine/pipelines/MakeFeaturesParams.hpp"
 #include "engine/pipelines/Pipeline.hpp"
 #include "engine/pipelines/Preprocessed.hpp"
-
-// ----------------------------------------------------------------------------
+#include "metrics/metrics.hpp"
 
 namespace engine {
 namespace pipelines {

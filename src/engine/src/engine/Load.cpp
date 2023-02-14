@@ -7,8 +7,11 @@
 
 #include "engine/pipelines/Load.hpp"
 
+#include "commands/Pipeline.hpp"
 #include "engine/pipelines/Fit.hpp"
 #include "engine/pipelines/FittedPipeline.hpp"
+#include "helpers/Loader.hpp"
+#include "json/json.hpp"
 
 namespace engine {
 namespace pipelines {
@@ -23,7 +26,9 @@ Pipeline Load::load(
   assert_true(_pred_tracker);
   assert_true(_preprocessor_tracker);
 
-  const auto obj = load_json_obj(_path + "obj.json");
+  const auto obj =
+      helpers::Loader::load_from_json<fct::Ref<const commands::Pipeline>>(
+          _path + "obj.json");
 
   const auto scores = fct::Ref<const metrics::Scores>::make(
       load_json_obj(_path + "scores.json"));

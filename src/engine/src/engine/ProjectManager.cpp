@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/handlers/ProjectManager.hpp"
 
@@ -114,7 +114,9 @@ void ProjectManager::add_data_frame_from_view(
 void ProjectManager::add_pipeline(const std::string& _name,
                                   const Poco::JSON::Object& _cmd,
                                   Poco::Net::StreamSocket* _socket) {
-  const auto pipeline = pipelines::Pipeline(_cmd);
+  const auto obj = json::from_json<fct::Ref<const commands::Pipeline>>(_cmd);
+
+  const auto pipeline = pipelines::Pipeline(obj);
 
   set_pipeline(_name, pipeline);
 

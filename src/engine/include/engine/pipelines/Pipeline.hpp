@@ -8,7 +8,6 @@
 #ifndef ENGINE_PIPELINES_PIPELINE_HPP_
 #define ENGINE_PIPELINES_PIPELINE_HPP_
 
-#include <Poco/JSON/Object.h>
 #include <Poco/Net/StreamSocket.h>
 #include <Poco/TemporaryFile.h>
 
@@ -20,6 +19,7 @@
 #include <utility>
 #include <vector>
 
+#include "commands/Pipeline.hpp"
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
 #include "engine/containers/containers.hpp"
@@ -36,7 +36,7 @@ namespace pipelines {
 
 class Pipeline {
  public:
-  Pipeline(const Poco::JSON::Object& _obj);
+  Pipeline(const fct::Ref<const commands::Pipeline>& _obj);
 
   ~Pipeline();
 
@@ -67,7 +67,7 @@ class Pipeline {
   bool include_categorical() const { return include_categorical_; }
 
   /// Trivial (const) accessor
-  const auto& obj() const { return obj_; }
+  const commands::Pipeline& obj() const { return *obj_; }
 
   /// Trivial (const) accessor
   const auto& scores() const { return *scores_; }
@@ -127,7 +127,7 @@ class Pipeline {
   bool include_categorical_;
 
   /// The JSON Object used to construct the pipeline.
-  Poco::JSON::Object obj_;
+  fct::Ref<const commands::Pipeline> obj_;
 
   /// The scores used to evaluate this pipeline
   fct::Ref<const metrics::Scores> scores_;
@@ -136,5 +136,4 @@ class Pipeline {
 }  // namespace pipelines
 }  // namespace engine
 
-// ----------------------------------------------------------------------------
 #endif  // ENGINE_PIPELINES_PIPELINE_HPP_
