@@ -1,28 +1,25 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/pipelines/Pipeline.hpp"
-
-// ----------------------------------------------------------------------------
 
 #include "engine/pipelines/DataFrameModifier.hpp"
 #include "engine/pipelines/PlaceholderMaker.hpp"
 #include "engine/pipelines/Staging.hpp"
+#include "fct/collect.hpp"
 #include "transpilation/SQLDialectParser.hpp"
-
-// ----------------------------------------------------------------------------
 
 namespace engine {
 namespace pipelines {
 
-Pipeline::Pipeline(const Poco::JSON::Object& _obj)
+Pipeline::Pipeline(const fct::Ref<const commands::Pipeline>& _obj)
     : allow_http_(false),
       creation_time_(make_creation_time()),
-      include_categorical_(JSON::get_value<bool>(_obj, "include_categorical_")),
+      include_categorical_(_obj->get<"include_categorical_">()),
       obj_(_obj),
       scores_(fct::Ref<const metrics::Scores>::make()) {}
 
@@ -35,55 +32,33 @@ Pipeline::~Pipeline() = default;
 std::pair<fct::Ref<const helpers::Placeholder>,
           fct::Ref<const std::vector<std::string>>>
 Pipeline::make_placeholder() const {
-  const auto data_model = *JSON::get_object(obj(), "data_model_");
+  const auto data_model =
+      fct::Ref<const helpers::Placeholder>::make(obj().get<"data_model_">());
 
-  const auto placeholder = fct::Ref<const helpers::Placeholder>::make(
+  // TODO
+  /*const auto placeholder = fct::Ref<const helpers::Placeholder>::make(
       PlaceholderMaker::make_placeholder(data_model, "t1"));
 
   const auto peripheral_names = fct::Ref<const std::vector<std::string>>::make(
-      PlaceholderMaker::make_peripheral(*placeholder));
+      PlaceholderMaker::make_peripheral(*placeholder));*/
 
-  return std::make_pair(placeholder, peripheral_names);
+  return std::make_pair(data_model,
+                        fct::Ref<const std::vector<std::string>>::make());
 }
 
 // ----------------------------------------------------------------------
 
 fct::Ref<std::vector<std::string>> Pipeline::parse_peripheral() const {
-  auto peripheral = fct::Ref<std::vector<std::string>>::make();
-
-  const auto arr = JSON::get_array(obj(), "peripheral_");
-
-  assert_true(arr);
-
-  for (size_t i = 0; i < arr->size(); ++i) {
-    const auto ptr = arr->getObject(i);
-
-    if (!ptr) {
-      throw std::runtime_error("Element " + std::to_string(i) +
-                               " in peripheral_ is not a proper JSON "
-                               "object.");
-    }
-
-    const auto name = JSON::get_value<std::string>(*ptr, "name_");
-
-    peripheral->push_back(name);
-  }
-
-  return peripheral;
+  const auto get_name = [](const auto& _p) -> std::string { return _p.name(); };
+  return fct::Ref<std::vector<std::string>>::make(
+      fct::collect::vector<std::string>(obj().get<"peripheral_">() |
+                                        VIEWS::transform(get_name)));
 }
 
 // ----------------------------------------------------------------------
 
 std::shared_ptr<std::string> Pipeline::parse_population() const {
-  const auto ptr = JSON::get_object(obj(), "data_model_");
-
-  if (!ptr) {
-    throw std::runtime_error("'population_' is not a proper JSON object!");
-  }
-
-  const auto name = JSON::get_value<std::string>(*ptr, "name_");
-
-  return std::make_shared<std::string>(name);
+  return std::make_shared<std::string>(obj().get<"data_model_">().name());
 }
 
 // ----------------------------------------------------------------------------
@@ -91,15 +66,16 @@ std::shared_ptr<std::string> Pipeline::parse_population() const {
 Poco::JSON::Object Pipeline::to_monitor(
     const helpers::StringIterator& _categories,
     const std::string& _name) const {
-  const auto to_json_obj = [](const containers::Schema& _schema) {
+  /*const auto to_json_obj = [](const containers::Schema& _schema) {
     return _schema.to_json_obj();
   };
 
-  auto feature_learners = Poco::JSON::Array::Ptr(new Poco::JSON::Array());
+  auto feature_learners = Poco::JSON::Array::Ptr(new Poco::JSON::Array());*/
 
   Poco::JSON::Object json_obj;
 
-  json_obj.set("name_", _name);
+  // TODO
+  /*json_obj.set("name_", _name);
 
   json_obj.set("allow_http_", allow_http());
 
@@ -147,7 +123,7 @@ Poco::JSON::Object Pipeline::to_monitor(
 
   scores_obj.set("feature_names_", feature_names);
 
-  json_obj.set("scores_", scores_obj);
+  json_obj.set("scores_", scores_obj);*/
 
   return json_obj;
 }

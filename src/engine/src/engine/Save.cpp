@@ -7,12 +7,9 @@
 
 #include "engine/pipelines/Save.hpp"
 
-// ----------------------------------------------------------------------------
-
 #include "engine/pipelines/ToSQL.hpp"
 #include "engine/pipelines/ToSQLParams.hpp"
-
-// ----------------------------------------------------------------------------
+#include "helpers/Saver.hpp"
 
 namespace engine {
 namespace pipelines {
@@ -43,7 +40,8 @@ void Save::save(const SaveParams& _params) {
 
   save_pipeline_json(_params, tfile);
 
-  save_json_obj(_params.pipeline_.obj(), tfile.path() + "/obj.json");
+  helpers::Saver::save_as_json(tfile.path() + "/obj.json",
+                               _params.pipeline_.obj());
 
   _params.pipeline_.scores().save(tfile.path() + "/scores.json");
 

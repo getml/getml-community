@@ -8,16 +8,11 @@
 #ifndef PREDICTORS_PREDICTORHYPERPARAMS_HPP_
 #define PREDICTORS_PREDICTORHYPERPARAMS_HPP_
 
-#include "fct/TaggedUnion.hpp"
-#include "predictors/LinearRegressionHyperparams.hpp"
-#include "predictors/LogisticRegressionHyperparams.hpp"
-#include "predictors/XGBoostHyperparams.hpp"
+#include "commands/Predictor.hpp"
 
 namespace predictors {
 
-using PredictorHyperparams =
-    fct::TaggedUnion<"type_", LinearRegressionHyperparams,
-                     LogisticRegressionHyperparams, XGBoostHyperparams>;
+using PredictorHyperparams = commands::Predictor;
 
 }  // namespace predictors
 

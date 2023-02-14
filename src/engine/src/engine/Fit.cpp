@@ -80,9 +80,9 @@ std::vector<Float> Fit::calculate_sum_importances(
 std::vector<Poco::JSON::Object::Ptr> Fit::extract_df_fingerprints(
     const Pipeline& _pipeline, const containers::DataFrame& _population_df,
     const std::vector<containers::DataFrame>& _peripheral_dfs) {
-  const auto placeholder = JSON::get_object(_pipeline.obj(), "data_model_");
-
   // TODO: Insert data frames.
+  // const auto placeholder = JSON::get_object(_pipeline.obj(), "data_model_");
+
   /*std::vector<Poco::JSON::Object::Ptr> df_fingerprints = {
       placeholder, _population_df.fingerprint()};
 
@@ -90,7 +90,7 @@ std::vector<Poco::JSON::Object::Ptr> Fit::extract_df_fingerprints(
     df_fingerprints.push_back(df.fingerprint());
   }*/
 
-  return {placeholder};
+  return {};
 }
 
 // ----------------------------------------------------------------------
@@ -662,10 +662,7 @@ Fit::init_feature_learners(
     return make_fl_for_all_targets(new_params, _hyperparameters);
   };
 
-  // TODO: Get rid for from_json
-  const auto obj_vector =
-      json::Parser<std::vector<commands::FeatureLearner>>::from_json(
-          JSON::get_array(_pipeline.obj(), "feature_learners_"));
+  const auto obj_vector = _pipeline.obj().get<"feature_learners_">();
 
   return fct::join::vector<fct::Ref<featurelearners::AbstractFeatureLearner>>(
       obj_vector | VIEWS::transform(to_fl));
@@ -678,7 +675,7 @@ std::vector<std::vector<fct::Ref<predictors::Predictor>>> Fit::init_predictors(
     const fct::Ref<const predictors::PredictorImpl>& _predictor_impl,
     const std::vector<Poco::JSON::Object::Ptr>& _dependencies,
     const size_t _num_targets) {
-  const auto arr = JSON::get_array(_pipeline.obj(), _elem);
+  const auto commands = _pipeline.obj().get<"predictors_">();
 
   std::vector<std::vector<fct::Ref<predictors::Predictor>>> predictors;
 
@@ -693,19 +690,12 @@ std::vector<std::vector<fct::Ref<predictors::Predictor>>> Fit::init_predictors(
 
     dependencies.push_back(target_num);
 
-    for (size_t i = 0; i < arr->size(); ++i) {
-      const auto ptr = arr->getObject(i);
-
-      if (!ptr) {
-        throw std::runtime_error("Element " + std::to_string(i) + " in " +
-                                 _elem +
-                                 " is not a proper JSON "
-                                 "object.");
-      }
-
+    for (const auto& cmd : commands) {
+      // TODO: Insert dependencies.
       auto new_predictor = predictors::PredictorParser::parse(
-          *ptr, _predictor_impl, dependencies);
-
+          cmd, _predictor_impl,
+          std::vector<typename predictors::PredictorParser::DependencyType>(
+              {}));
       predictors_for_target.emplace_back(std::move(new_predictor));
     }
 
@@ -720,27 +710,21 @@ std::vector<std::vector<fct::Ref<predictors::Predictor>>> Fit::init_predictors(
 std::vector<fct::Ref<preprocessors::Preprocessor>> Fit::init_preprocessors(
     const Pipeline& _pipeline,
     const std::vector<Poco::JSON::Object::Ptr>& _dependencies) {
-  if (!_pipeline.obj().has("preprocessors_")) {
-    return std::vector<fct::Ref<preprocessors::Preprocessor>>();
-  }
+  const auto commands = _pipeline.obj().get<"preprocessors_">();
 
-  const auto arr =
-      jsonutils::JSON::get_object_array(_pipeline.obj(), "preprocessors_");
-
-  const auto parse = [&arr, &_dependencies](const size_t _i) {
-    const auto ptr = arr->getObject(_i);
-    assert_true(ptr);
-    return preprocessors::PreprocessorParser::parse(*ptr, _dependencies);
+  const auto parse = [&commands, &_dependencies](const auto& _cmd) {
+    // TODO: Insert dependencies
+    return preprocessors::PreprocessorParser::parse(
+        _cmd.val_,
+        std::vector<typename preprocessors::PreprocessorParser::DependencyType>(
+            {}));
   };
 
-  const auto iota = fct::iota<size_t>(0, arr->size());
-
   auto vec = fct::collect::vector<fct::Ref<preprocessors::Preprocessor>>(
-      iota | VIEWS::transform(parse));
+      commands | VIEWS::transform(parse));
 
-  const auto mapping_to_end =
-      [](const fct::Ref<preprocessors::Preprocessor>& _ptr) -> bool {
-    return _ptr->type() != preprocessors::Preprocessor::MAPPING;
+  const auto mapping_to_end = [](const auto& _p) -> bool {
+    return _p->type() != preprocessors::Preprocessor::MAPPING;
   };
 
   std::stable_partition(vec.begin(), vec.end(), mapping_to_end);
@@ -874,7 +858,7 @@ fct::Ref<const predictors::PredictorImpl> Fit::make_predictor_impl(
   }
 
   const auto share_selected_features =
-      JSON::get_value<Float>(_pipeline.obj(), "share_selected_features_");
+      _pipeline.obj().get<"share_selected_features_">();
 
   if (share_selected_features <= 0.0) {
     return predictor_impl;

@@ -385,7 +385,7 @@ Transform::stage_data_frames(
 
   socket_logger->log("Staging...");
 
-  const auto population = *JSON::get_object(_pipeline.obj(), "data_model_");
+  const auto population = _pipeline.obj().get<"data_model_">();
 
   const auto peripheral_names = _pipeline.parse_peripheral();
 
@@ -393,20 +393,23 @@ Transform::stage_data_frames(
 
   auto peripheral_dfs = _peripheral_dfs;
 
-  DataFrameModifier::add_time_stamps(population, *peripheral_names,
+  // TODO
+  /*
+    DataFrameModifier::add_time_stamps(population, *peripheral_names,
+                                       &population_df, &peripheral_dfs);
+
+    DataFrameModifier::add_join_keys(population, *peripheral_names, _temp_dir,
                                      &population_df, &peripheral_dfs);
 
-  DataFrameModifier::add_join_keys(population, *peripheral_names, _temp_dir,
-                                   &population_df, &peripheral_dfs);
-
-  const auto placeholder = PlaceholderMaker::make_placeholder(population, "t1");
+  const auto placeholder =
+    PlaceholderMaker::make_placeholder(population, "t1");
 
   const auto joined_peripheral_names =
       PlaceholderMaker::make_peripheral(placeholder);
 
   Staging::join_tables(*peripheral_names, placeholder.name(),
                        joined_peripheral_names, &population_df,
-                       &peripheral_dfs);
+                       &peripheral_dfs);*/
 
   socket_logger->log("Progress: 100%.");
 
