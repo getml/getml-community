@@ -44,7 +44,6 @@ struct FitParams {
   const std::optional<std::string> temp_dir_;
 };
 
-// ----------------------------------------------------------------------------
 }  // namespace featurelearners
 }  // namespace engine
 

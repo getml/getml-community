@@ -26,6 +26,7 @@
 #include "engine/pipelines/CheckParams.hpp"
 #include "engine/pipelines/FitParams.hpp"
 #include "engine/pipelines/FittedPipeline.hpp"
+#include "engine/pipelines/MonitorSummary.hpp"
 #include "engine/pipelines/TransformParams.hpp"
 #include "helpers/helpers.hpp"
 #include "metrics/Scores.hpp"
@@ -42,8 +43,8 @@ class Pipeline {
 
  public:
   /// Expresses the Pipeline in a form the monitor can understand.
-  Poco::JSON::Object to_monitor(const helpers::StringIterator& _categories,
-                                const std::string& _name) const;
+  MonitorSummary to_monitor(const helpers::StringIterator& _categories,
+                            const std::string& _name) const;
 
  private:
   // Helper function for the creation time.

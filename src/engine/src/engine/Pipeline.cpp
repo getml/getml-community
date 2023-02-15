@@ -10,6 +10,7 @@
 #include "engine/pipelines/DataFrameModifier.hpp"
 #include "engine/pipelines/PlaceholderMaker.hpp"
 #include "engine/pipelines/Staging.hpp"
+#include "fct/Field.hpp"
 #include "fct/collect.hpp"
 #include "transpilation/SQLDialectParser.hpp"
 
@@ -63,69 +64,41 @@ std::shared_ptr<std::string> Pipeline::parse_population() const {
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object Pipeline::to_monitor(
-    const helpers::StringIterator& _categories,
-    const std::string& _name) const {
-  /*const auto to_json_obj = [](const containers::Schema& _schema) {
-    return _schema.to_json_obj();
-  };
+MonitorSummary Pipeline::to_monitor(const helpers::StringIterator& _categories,
+                                    const std::string& _name) const {
+  const auto summary_not_fitted =
+      obj() * fct::make_field<"name_">(_name) *
+      fct::make_field<"allow_http_">(allow_http()) *
+      fct::make_field<"creation_time_">(creation_time());
 
-  auto feature_learners = Poco::JSON::Array::Ptr(new Poco::JSON::Array());*/
-
-  Poco::JSON::Object json_obj;
-
-  // TODO
-  /*json_obj.set("name_", _name);
-
-  json_obj.set("allow_http_", allow_http());
-
-  json_obj.set("creation_time_", creation_time());
-
-  json_obj.set("feature_learners_",
-               JSON::get_array(obj(), "feature_learners_"));
-
-  json_obj.set("feature_selectors_",
-               JSON::get_array(obj(), "feature_selectors_"));
-
-  json_obj.set("data_model_", JSON::get_object(obj(), "data_model_"));
-
-  json_obj.set("predictors_", JSON::get_array(obj(), "predictors_"));
-
-  json_obj.set("preprocessors_", JSON::get_array(obj(), "preprocessors_"));
-
-  json_obj.set("tags_", JSON::get_array(obj(), "tags_"));
-
-  if (fitted()) {
-    json_obj.set("num_features_", fitted()->num_features());
-
-    json_obj.set("peripheral_schema_",
-                 fct::collect::array(*fitted()->peripheral_schema_ |
-                                     VIEWS::transform(to_json_obj)));
-
-    json_obj.set("population_schema_",
-                 fitted()->population_schema_->to_json_obj());
-
-    json_obj.set("targets_", JSON::vector_to_array(fitted()->targets()));
+  if (!fitted()) {
+    return summary_not_fitted;
   }
 
-  auto scores_obj = scores().to_json_obj();
+  return summary_not_fitted *
+         fct::make_field<"num_features_">(fitted()->num_features()) *
+         fct::make_field<"peripheral_schema_">(fitted()->peripheral_schema_) *
+         fct::make_field<"population_schema_">(fitted()->population_schema_) *
+         fct::make_field<"targets_">(fitted()->targets());
 
-  const auto make_staging_table_colname =
-      [](const std::string& _colname) -> std::string {
-    return transpilation::HumanReadableSQLGenerator()
-        .make_staging_table_colname(_colname);
-  };
+  // TODO
+  /*
+    auto scores_obj = scores().to_json_obj();
 
-  const auto modified_names = helpers::Macros::modify_colnames(
-      scores().feature_names(), make_staging_table_colname);
+    const auto make_staging_table_colname =
+        [](const std::string& _colname) -> std::string {
+      return transpilation::HumanReadableSQLGenerator()
+          .make_staging_table_colname(_colname);
+    };
 
-  const auto feature_names = JSON::vector_to_array(modified_names);
+    const auto modified_names = helpers::Macros::modify_colnames(
+        scores().feature_names(), make_staging_table_colname);
 
-  scores_obj.set("feature_names_", feature_names);
+    const auto feature_names = JSON::vector_to_array(modified_names);
 
-  json_obj.set("scores_", scores_obj);*/
+    scores_obj.set("feature_names_", feature_names);
 
-  return json_obj;
+    json_obj.set("scores_", scores_obj);*/
 }
 
 // ----------------------------------------------------------------------------

@@ -1,38 +1,28 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef METRICS_SCORES_HPP_
 #define METRICS_SCORES_HPP_
 
-// ----------------------------------------------------------------------------
-
 #include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------------
 
 #include <string>
 #include <utility>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
 #include "metrics/Features.hpp"
 #include "metrics/Float.hpp"
 #include "metrics/Int.hpp"
 
-// ----------------------------------------------------------------------------
-
 namespace metrics {
-// ----------------------------------------------------------------------------
 
 /// Scores are measure by which the predictive performance of the model is
 /// evaluated.
 class Scores {
-  // ------------------------------------------------------
  public:
   Scores() {}
 
@@ -41,8 +31,6 @@ class Scores {
   }
 
   ~Scores() = default;
-
-  // ------------------------------------------------------
 
  public:
   /// Parses a JSON object.
@@ -56,8 +44,6 @@ class Scores {
 
   /// Stores the current state of the metrics in the history
   void to_history();
-
-  // ------------------------------------------------------
 
  public:
   /// Trivial accessor
@@ -92,8 +78,6 @@ class Scores {
 
   /// Trivial (const) accessor.
   const std::string& set_used() const { return set_used_; }
-
-  // ------------------------------------------------------
 
  private:
   /// Trivial accessor
@@ -284,8 +268,6 @@ class Scores {
     return arr;
   }
 
-  // ------------------------------------------------------
-
  private:
   /// Accuracy
   std::vector<Float> accuracy_;
@@ -360,7 +342,6 @@ class Scores {
   std::vector<std::vector<Float>> tpr_;
 };
 
-// ----------------------------------------------------------------------------
 }  // namespace metrics
 
 #endif  // METRICS_SCORES_HPP_
