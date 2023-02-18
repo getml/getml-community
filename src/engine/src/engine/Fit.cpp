@@ -887,11 +887,22 @@ fct::Ref<const metrics::Scores> Fit::make_scores(
     const Pipeline& _pipeline, const FittedPipeline& _fitted) {
   auto scores = fct::Ref<metrics::Scores>::make(_pipeline.scores());
 
-  scores->from_json_obj(Score::column_importances_as_obj(_pipeline, _fitted));
+  const auto [c_desc, c_importances] =
+      Score::column_importances(_pipeline, _fitted);
 
-  scores->from_json_obj(Score::feature_importances_as_obj(_fitted));
+  const auto feature_importances =
+      Score::feature_importances(_fitted.predictors_);
 
-  scores->from_json_obj(Score::feature_names_as_obj(_fitted));
+  const auto [n1, n2, n3] = _fitted.feature_names();
+
+  const auto feature_names = fct::join::vector<std::string>({n1, n2, n3});
+
+  scores->update(
+      fct::make_field<"column_descriptions_">(c_desc),
+      fct::make_field<"column_importances_">(Score::transpose(c_importances)),
+      fct::make_field<"feature_importances_">(
+          Score::transpose(feature_importances)),
+      fct::make_field<"feature_names_">(feature_names));
 
   if (!_score_params) {
     return scores;
@@ -951,8 +962,7 @@ fct::Ref<const metrics::Scores> Fit::score_after_fitting(
   const auto& name =
       fct::get<"name_">(_params.cmd_.get<"population_df_">().val_);
 
-  return std::get<0>(
-      Score::score(_pipeline, _fitted, _params.population_df_, name, yhat));
+  return Score::score(_pipeline, _fitted, _params.population_df_, name, yhat);
 }
 
 // ----------------------------------------------------------------------------

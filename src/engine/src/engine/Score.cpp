@@ -1,21 +1,15 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/pipelines/Score.hpp"
 
-// ----------------------------------------------------------------------------
-
-#include "metrics/Scores.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "engine/pipelines/FittedPipeline.hpp"
-
-// ----------------------------------------------------------------------------
+#include "fct/Field.hpp"
+#include "metrics/Scores.hpp"
 
 namespace engine {
 namespace pipelines {
@@ -23,7 +17,6 @@ namespace pipelines {
 std::shared_ptr<const metrics::Scores> Score::calculate_feature_stats(
     const Pipeline& _pipeline, const FittedPipeline& _fitted,
     const containers::NumericalFeatures _features,
-    const Poco::JSON::Object& _cmd,
     const containers::DataFrame& _population_df) {
   if (_features.size() == 0) {
     return nullptr;
@@ -47,13 +40,16 @@ std::shared_ptr<const metrics::Scores> Score::calculate_feature_stats(
 
   auto scores = std::make_shared<metrics::Scores>(_pipeline.scores());
 
-  scores->from_json_obj(metrics::Summarizer::calculate_feature_correlations(
+  scores->update(metrics::Summarizer::calculate_feature_correlations(
       _features, nrows, ncols, targets));
 
-  scores->from_json_obj(metrics::Summarizer::calculate_feature_plots(
+  scores->update(metrics::Summarizer::calculate_feature_plots(
       _features, nrows, ncols, num_bins, targets));
 
-  scores->from_json_obj(feature_names_as_obj(_fitted));
+  const auto [n1, n2, n3] = _fitted.feature_names();
+
+  scores->update(fct::make_field<"feature_names_">(
+      fct::join::vector<std::string>({n1, n2, n3})));
 
   return scores;
 }
@@ -102,33 +98,6 @@ Score::column_importances(const Pipeline& _pipeline,
   }
 
   return std::make_pair(c_desc, c_importances);
-}
-
-// ----------------------------------------------------------------------------
-
-Poco::JSON::Object Score::column_importances_as_obj(
-    const Pipeline& _pipeline, const FittedPipeline& _fitted) {
-  const auto [c_desc, c_importances] = column_importances(_pipeline, _fitted);
-
-  if (c_importances.size() == 0) {
-    return Poco::JSON::Object();
-  }
-
-  auto column_descriptions = Poco::JSON::Array::Ptr(new Poco::JSON::Array());
-
-  for (const auto& desc : c_desc) {
-    column_descriptions->add(desc.to_json_obj());
-  }
-
-  const auto column_importances = transpose(c_importances);
-
-  Poco::JSON::Object obj;
-
-  obj.set("column_descriptions_", column_descriptions);
-
-  obj.set("column_importances_", column_importances);
-
-  return obj;
 }
 
 // ----------------------------------------------------------------------------
@@ -275,58 +244,6 @@ std::vector<std::vector<Float>> Score::feature_importances(
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object Score::feature_importances_as_obj(
-    const FittedPipeline& _fitted) {
-  const auto feature_importances_transposed =
-      feature_importances(_fitted.predictors_);
-
-  assert_msg(feature_importances_transposed.size() == _fitted.targets().size(),
-             "feature_importances_transposed.size(): " +
-                 std::to_string(feature_importances_transposed.size()) +
-                 ", _fitted.targets().size(): " +
-                 std::to_string(_fitted.targets().size()));
-
-  if (feature_importances_transposed.size() == 0) {
-    return Poco::JSON::Object();
-  }
-
-  const auto feature_importances = transpose(feature_importances_transposed);
-
-  Poco::JSON::Object obj;
-
-  obj.set("feature_importances_", feature_importances);
-
-  return obj;
-}
-
-// ----------------------------------------------------------------------------
-
-Poco::JSON::Object Score::feature_names_as_obj(const FittedPipeline& _fitted) {
-  const auto fn = _fitted.feature_names();
-
-  Poco::JSON::Array::Ptr all_names(new Poco::JSON::Array());
-
-  for (const auto& name : std::get<0>(fn)) {
-    all_names->add(name);
-  }
-
-  for (const auto& name : std::get<1>(fn)) {
-    all_names->add(name);
-  }
-
-  for (const auto& name : std::get<2>(fn)) {
-    all_names->add(name);
-  }
-
-  Poco::JSON::Object obj;
-
-  obj.set("feature_names_", all_names);
-
-  return obj;
-}
-
-// ----------------------------------------------------------------------------
-
 void Score::fill_zeros(std::vector<helpers::ImportanceMaker>* _f_importances) {
   if (_f_importances->size() == 0) {
     return;
@@ -374,7 +291,7 @@ std::vector<Float> Score::make_importance_factors(
 
 // ----------------------------------------------------------------------------
 
-std::pair<fct::Ref<const metrics::Scores>, Poco::JSON::Object> Score::score(
+fct::Ref<const metrics::Scores> Score::score(
     const Pipeline& _pipeline, const FittedPipeline& _fitted,
     const containers::DataFrame& _population_df,
     const std::string& _population_name,
@@ -406,40 +323,46 @@ std::pair<fct::Ref<const metrics::Scores>, Poco::JSON::Object> Score::score(
     }
   }
 
-  auto obj = metrics::Scorer::score(_fitted.is_classification(), _yhat, y);
-
   auto scores = fct::Ref<metrics::Scores>::make(_pipeline.scores());
 
-  obj.set("set_used_", _population_name);
+  const auto update = [&scores, &_population_name](const auto& _res) {
+    scores->update(_res, fct::make_field<"set_used_">(_population_name));
+    return scores;
+  };
 
-  scores->from_json_obj(obj);
+  const auto result =
+      metrics::Scorer::score(_fitted.is_classification(), _yhat, y);
+
+  scores = std::visit(update, result);
 
   scores->to_history();
 
-  return std::make_pair(scores, metrics::Scorer::get_metrics(obj));
+  return scores;
 }
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Array::Ptr Score::transpose(
+std::vector<std::vector<Float>> Score::transpose(
     const std::vector<std::vector<Float>>& _original) {
-  assert_true(_original.size() > 0);
+  if (_original.size() == 0) {
+    return _original;
+  }
 
   const auto n = _original.at(0).size();
 
-  Poco::JSON::Array::Ptr transposed(new Poco::JSON::Array());
+  auto transposed = std::vector<std::vector<Float>>();
 
   for (std::size_t i = 0; i < n; ++i) {
-    Poco::JSON::Array::Ptr temp(new Poco::JSON::Array());
+    auto temp = std::vector<Float>();
 
     for (const auto& vec : _original) {
       assert_msg(vec.size() == n, "vec.size(): " + std::to_string(vec.size()) +
                                       ", n: " + std::to_string(n));
 
-      temp->add(vec.at(i));
+      temp.push_back(vec.at(i));
     }
 
-    transposed->add(temp);
+    transposed.push_back(temp);
   }
 
   return transposed;
