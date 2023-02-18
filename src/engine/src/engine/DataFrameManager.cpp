@@ -483,18 +483,19 @@ void DataFrameManager::calc_categorical_column_plots(
 
   read_lock.unlock();
 
-  Poco::JSON::Object obj;
+  std::string json_str;
 
   if (targets.size() == vec.size()) {
-    obj = metrics::Summarizer::calc_categorical_column_plot(num_bins, vec,
-                                                            targets);
+    json_str = json::to_json(metrics::Summarizer::calc_categorical_column_plot(
+        num_bins, vec, targets));
   } else {
-    obj = metrics::Summarizer::calc_categorical_column_plot(num_bins, vec);
+    json_str = json::to_json(
+        metrics::Summarizer::calc_categorical_column_plot(num_bins, vec));
   }
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(JSON::stringify(obj), _socket);
+  communication::Sender::send_string(json_str, _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -536,7 +537,7 @@ void DataFrameManager::calc_column_plots(const std::string& _name,
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(JSON::stringify(obj), _socket);
+  communication::Sender::send_string(json::to_json(obj), _socket);
 }
 
 // ------------------------------------------------------------------------

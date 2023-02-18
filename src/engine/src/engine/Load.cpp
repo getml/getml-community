@@ -30,8 +30,9 @@ Pipeline Load::load(
       helpers::Loader::load_from_json<fct::Ref<const commands::Pipeline>>(
           _path + "obj.json");
 
-  const auto scores = fct::Ref<const metrics::Scores>::make(
-      load_json_obj(_path + "scores.json"));
+  const auto scores =
+      helpers::Loader::load_from_json<fct::Ref<const metrics::Scores>>(
+          _path + "scores.json");
 
   const auto pipeline_json = load_pipeline_json(_path);
 

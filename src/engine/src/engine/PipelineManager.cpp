@@ -435,17 +435,13 @@ Poco::JSON::Object PipelineManager::get_scores(
     const pipelines::Pipeline& _pipeline) const {
   const auto scores = _pipeline.scores();
 
-  const auto obj = scores.to_json_obj();
+  const auto named_tuple = scores.metrics() *
+                           fct::make_field<"set_used_">(scores) *
+                           fct::make_field<"history_">(scores.history());
 
-  auto response = metrics::Scorer::get_metrics(obj);
-
-  if (scores.set_used() != "") {
-    response.set("set_used_", scores.set_used());
-  }
-
-  response.set("history_", JSON::vector_to_array_ptr(scores.history()));
-
-  return response;
+  // TODO: This is a temporary workaround.
+  return *json::Parser<std::decay_t<decltype(named_tuple)>>::to_json(
+      named_tuple);
 }
 
 // ------------------------------------------------------------------------
@@ -457,17 +453,15 @@ void PipelineManager::lift_curve(const std::string& _name,
 
   const auto pipeline = get_pipeline(_name);
 
-  const auto scores = pipeline.scores().to_json_obj();
+  const auto& scores = pipeline.scores();
 
-  Poco::JSON::Object response;
-
-  response.set("proportion_", get_array(scores, "proportion_", target_num));
-
-  response.set("lift_", get_array(scores, "lift_", target_num));
+  const auto result =
+      fct::make_field<"proportion_">(scores.proportion(target_num)) *
+      fct::make_field<"lift_">(scores.lift(target_num));
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(JSON::stringify(response), _socket);
+  communication::Sender::send_string(json::to_json(result), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -479,17 +473,15 @@ void PipelineManager::precision_recall_curve(const std::string& _name,
 
   const auto pipeline = get_pipeline(_name);
 
-  const auto scores = pipeline.scores().to_json_obj();
+  const auto& scores = pipeline.scores();
 
-  Poco::JSON::Object response;
-
-  response.set("precision_", get_array(scores, "precision_", target_num));
-
-  response.set("tpr_", get_array(scores, "tpr_", target_num));
+  const auto result =
+      fct::make_field<"precision_">(scores.precision(target_num)) *
+      fct::make_field<"tpr_">(scores.tpr(target_num));
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(JSON::stringify(response), _socket);
+  communication::Sender::send_string(json::to_json(result), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -622,17 +614,14 @@ void PipelineManager::roc_curve(const std::string& _name,
 
   const auto pipeline = get_pipeline(_name);
 
-  const auto scores = pipeline.scores().to_json_obj();
+  const auto& scores = pipeline.scores();
 
-  Poco::JSON::Object response;
-
-  response.set("fpr_", get_array(scores, "fpr_", target_num));
-
-  response.set("tpr_", get_array(scores, "tpr_", target_num));
+  const auto result = fct::make_field<"fpr_">(scores.fpr(target_num)) *
+                      fct::make_field<"tpr_">(scores.tpr(target_num));
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(JSON::stringify(response), _socket);
+  communication::Sender::send_string(json::to_json(result), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -654,7 +643,7 @@ void PipelineManager::score(const Poco::JSON::Object& _cmd,
         "Could not score the pipeline, because it has not been fitted.");
   }
 
-  const auto [scores, scores_obj] =
+  const auto scores =
       pipelines::Score::score(_pipeline, *fitted, _population_df, name, _yhat);
 
   const auto pipeline = _pipeline.with_scores(scores);
@@ -663,7 +652,7 @@ void PipelineManager::score(const Poco::JSON::Object& _cmd,
 
   set_pipeline(_name, pipeline);
 
-  communication::Sender::send_string(JSON::stringify(scores_obj), _socket);
+  communication::Sender::send_string(json::to_json(scores->metrics()), _socket);
 }
 
 // ------------------------------------------------------------------------

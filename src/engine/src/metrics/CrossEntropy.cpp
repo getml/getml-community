@@ -1,26 +1,19 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "metrics/CrossEntropy.hpp"
 
 namespace metrics {
-// ----------------------------------------------------------------------------
 
-Poco::JSON::Object CrossEntropy::score(const Features _yhat,
-                                       const Features _y) {
-  // -----------------------------------------
-
+typename CrossEntropy::ResultType CrossEntropy::score(const Features _yhat,
+                                                      const Features _y) {
   impl_.set_data(_yhat, _y);
 
-  // -----------------------------------------
-
   std::vector<Float> cross_entropy(ncols());
-
-  // -----------------------------------------------------
 
   for (size_t i = 0; i < nrows(); ++i) {
     for (size_t j = 0; j < ncols(); ++j) {
@@ -36,11 +29,7 @@ Poco::JSON::Object CrossEntropy::score(const Features _yhat,
     }
   }
 
-  // -----------------------------------------------------
-
   Float nrows_float = static_cast<Float>(nrows());
-
-  // -----------------------------------------------------
 
   if (impl_.has_comm()) {
     impl_.reduce(std::plus<Float>(), &cross_entropy);
@@ -48,13 +37,9 @@ Poco::JSON::Object CrossEntropy::score(const Features _yhat,
     impl_.reduce(std::plus<Float>(), &nrows_float);
   }
 
-  // -----------------------------------------------------
-
   for (size_t j = 0; j < ncols(); ++j) {
     cross_entropy[j] /= nrows_float;
   }
-
-  // -----------------------------------------------------
 
   for (size_t j = 0; j < ncols(); ++j) {
     if (std::isinf(cross_entropy[j]) || std::isnan(cross_entropy[j])) {
@@ -62,17 +47,7 @@ Poco::JSON::Object CrossEntropy::score(const Features _yhat,
     }
   }
 
-  // -----------------------------------------------------
-
-  Poco::JSON::Object obj;
-
-  obj.set("cross_entropy_",
-          jsonutils::JSON::vector_to_array_ptr(cross_entropy));
-
-  // -----------------------------------------------------
-
-  return obj;
+  return fct::make_field<"cross_entropy_">(cross_entropy);
 }
 
-// ----------------------------------------------------------------------------
 }  // namespace metrics

@@ -1,19 +1,15 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_PIPELINES_SCORE_HPP_
 #define ENGINE_PIPELINES_SCORE_HPP_
 
-// ----------------------------------------------------------------------------
-
 #include <Poco/JSON/Object.h>
 #include <Poco/Net/StreamSocket.h>
-
-// ----------------------------------------------------------------------------
 
 #include <algorithm>
 #include <map>
@@ -23,21 +19,11 @@
 #include <utility>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
-#include "metrics/metrics.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "engine/containers/containers.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "engine/pipelines/FittedPipeline.hpp"
 #include "engine/pipelines/Pipeline.hpp"
 #include "engine/pipelines/Predictors.hpp"
-
-// ----------------------------------------------------------------------------
+#include "metrics/metrics.hpp"
 
 namespace engine {
 namespace pipelines {
@@ -48,7 +34,6 @@ class Score {
   static std::shared_ptr<const metrics::Scores> calculate_feature_stats(
       const Pipeline& _pipeline, const FittedPipeline& _fitted,
       const containers::NumericalFeatures _features,
-      const Poco::JSON::Object& _cmd,
       const containers::DataFrame& _population_df);
 
   /// Calculates the column importances.
@@ -56,27 +41,20 @@ class Score {
                    std::vector<std::vector<Float>>>
   column_importances(const Pipeline& _pipeline, const FittedPipeline& _fitted);
 
-  /// Returns the column importances as JSON objects.
-  static Poco::JSON::Object column_importances_as_obj(
-      const Pipeline& _pipeline, const FittedPipeline& _fitted);
-
   /// Calculate the feature importances.
   static std::vector<std::vector<Float>> feature_importances(
       const Predictors& _predictors);
 
-  /// Extracts the feature importances as a Poco::JSON::Object.
-  static Poco::JSON::Object feature_importances_as_obj(
-      const FittedPipeline& _fitted);
-
-  /// Extracts the feature names as a Poco::JSON::Object.
-  static Poco::JSON::Object feature_names_as_obj(const FittedPipeline& _fitted);
-
   /// Scores the pipeline.
-  static std::pair<fct::Ref<const metrics::Scores>, Poco::JSON::Object> score(
+  static fct::Ref<const metrics::Scores> score(
       const Pipeline& _pipeline, const FittedPipeline& _fitted,
       const containers::DataFrame& _population_df,
       const std::string& _population_name,
       const containers::NumericalFeatures& _yhat);
+
+  /// Expresses a nested vector in transposed form.
+  static std::vector<std::vector<Float>> transpose(
+      const std::vector<std::vector<Float>>& _original);
 
  private:
   /// Calculates the column importances for the autofeatures.
@@ -111,10 +89,6 @@ class Score {
       const size_t _num_features, const std::vector<size_t>& _autofeatures,
       const std::vector<Float>::const_iterator _begin,
       const std::vector<Float>::const_iterator _end);
-
-  /// Expresses a nested vector as a transposed Poco::JSON::Array::Ptr.
-  static Poco::JSON::Array::Ptr transpose(
-      const std::vector<std::vector<Float>>& _original);
 };
 
 // ----------------------------------------------------------------------------
