@@ -15,6 +15,8 @@
 
 #include "fct/NamedTuple.hpp"
 #include "fct/Ref.hpp"
+#include "fct/define_named_tuple.hpp"
+#include "fct/remove_fields.hpp"
 #include "json/json.hpp"
 #include "jsonutils/jsonutils.hpp"
 
@@ -93,23 +95,23 @@ struct Placeholder {
   using f_upper_time_stamps_used =
       fct::Field<"upper_time_stamps_used_", std::vector<std::string>>;
 
-  using NamedTupleType =
-      fct::NamedTuple<f_allow_lagged_targets, f_categoricals, f_discretes,
-                      f_joined_tables, f_join_keys, f_join_keys_used, f_name,
-                      f_numericals, f_other_join_keys_used,
-                      f_other_time_stamps_used, f_propositionalization,
-                      f_targets, f_text, f_time_stamps, f_time_stamps_used,
-                      f_upper_time_stamps_used>;
-
+  /// Subset of the fields that are actually needed for training.
   using NeededForTraining =
       fct::NamedTuple<f_allow_lagged_targets, f_joined_tables, f_join_keys_used,
                       f_name, f_other_join_keys_used, f_other_time_stamps_used,
                       f_propositionalization, f_time_stamps_used,
                       f_upper_time_stamps_used>;
 
+  /// Subset of the fields that simply required for the refresh command in the
+  /// Python API.
   using NeededForPythonAPI =
       fct::NamedTuple<f_categoricals, f_discretes, f_join_keys, f_name,
                       f_numericals, f_targets, f_text, f_time_stamps>;
+
+  /// The main JSON representation of a Placeholder. Combines NeededForTraiing
+  /// and NeededForPythonAPI.
+  using NamedTupleType = fct::define_named_tuple_t<
+      fct::remove_fields_t<NeededForTraining, "name_">, NeededForPythonAPI>;
 
   /// TODO: Remove this temporary fix.
   explicit Placeholder(const Poco::JSON::Object& _json_obj)
