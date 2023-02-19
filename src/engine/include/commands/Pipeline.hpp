@@ -17,16 +17,18 @@
 #include "commands/Preprocessor.hpp"
 #include "fct/Field.hpp"
 #include "fct/NamedTuple.hpp"
+#include "fct/Ref.hpp"
 #include "helpers/Placeholder.hpp"
 
 namespace commands {
 
 using Pipeline = fct::NamedTuple<
-    fct::Field<"data_model_", helpers::Placeholder>,
+    fct::Field<"data_model_", fct::Ref<const helpers::Placeholder>>,
     fct::Field<"feature_learners_", std::vector<FeatureLearner>>,
     fct::Field<"feature_selectors_", std::vector<Predictor>>,
     fct::Field<"include_categorical_", bool>,
-    fct::Field<"peripheral_", std::vector<helpers::Placeholder>>,
+    fct::Field<"peripheral_",
+               fct::Ref<const std::vector<helpers::Placeholder>>>,
     fct::Field<"predictors_", std::vector<Predictor>>,
     fct::Field<"preprocessors_", std::vector<Preprocessor>>,
     fct::Field<"share_selected_features_", Float>,

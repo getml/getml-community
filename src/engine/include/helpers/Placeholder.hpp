@@ -138,8 +138,6 @@ struct Placeholder {
 
   ~Placeholder() = default;
 
-  // --------------------------------------------------------
-
   /// Makes sure that all joined tables are found in the peripheral names.
   void check_data_model(const std::vector<std::string>& _peripheral_names,
                         const bool _is_population) const;
@@ -162,8 +160,6 @@ struct Placeholder {
 
   /// Transforms the placeholder into a JSON object
   Poco::JSON::Object::Ptr to_json_obj() const;
-
-  // --------------------------------------------------------
 
   /// Trivial getter.
   const std::vector<bool>& allow_lagged_targets() const {
@@ -346,7 +342,6 @@ struct Placeholder {
   const NamedTupleType val_;
 };
 
-// ------------------------------------------------------------------------
 }  // namespace helpers
 
 #endif  // HELPERS_PLACEHOLDER_HPP_

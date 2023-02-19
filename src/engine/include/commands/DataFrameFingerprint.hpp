@@ -13,6 +13,8 @@
 #include "commands/DataFrameOrView.hpp"
 #include "fct/Field.hpp"
 #include "fct/NamedTuple.hpp"
+#include "fct/Ref.hpp"
+#include "helpers/Placeholder.hpp"
 
 namespace commands {
 
@@ -21,7 +23,8 @@ namespace commands {
 using DataFrameFingerprint =
     std::variant<typename DataFrameOrView::ViewOp,
                  fct::NamedTuple<fct::Field<"name_", std::string>,
-                                 fct::Field<"last_change_", std::string>>>;
+                                 fct::Field<"last_change_", std::string>>,
+                 fct::Ref<const helpers::Placeholder>>;
 
 }  // namespace commands
 

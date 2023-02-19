@@ -33,8 +33,7 @@ Pipeline::~Pipeline() = default;
 std::pair<fct::Ref<const helpers::Placeholder>,
           fct::Ref<const std::vector<std::string>>>
 Pipeline::make_placeholder() const {
-  const auto data_model =
-      fct::Ref<const helpers::Placeholder>::make(obj().get<"data_model_">());
+  const auto data_model = obj().get<"data_model_">();
 
   // TODO
   /*const auto placeholder = fct::Ref<const helpers::Placeholder>::make(
@@ -52,14 +51,14 @@ Pipeline::make_placeholder() const {
 fct::Ref<std::vector<std::string>> Pipeline::parse_peripheral() const {
   const auto get_name = [](const auto& _p) -> std::string { return _p.name(); };
   return fct::Ref<std::vector<std::string>>::make(
-      fct::collect::vector<std::string>(obj().get<"peripheral_">() |
+      fct::collect::vector<std::string>(*obj().get<"peripheral_">() |
                                         VIEWS::transform(get_name)));
 }
 
 // ----------------------------------------------------------------------
 
 std::shared_ptr<std::string> Pipeline::parse_population() const {
-  return std::make_shared<std::string>(obj().get<"data_model_">().name());
+  return std::make_shared<std::string>(obj().get<"data_model_">()->name());
 }
 
 // ----------------------------------------------------------------------------
