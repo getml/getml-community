@@ -29,11 +29,16 @@
 namespace commands {
 
 struct PredictorFingerprint {
+  /// There are different predictors for every target, so the target number must
+  /// also be supported as a dependency.
+  using TargetNumber = fct::NamedTuple<fct::Field<"target_num_", size_t>>;
+
   /// Because predictors can also be feature selectors, the recursive definition
   /// is necessary.
   using DependencyType =
-      std::variant<DataFrameFingerprint, PreprocessorFingerprint,
-                   FeatureLearnerFingerprint, PredictorFingerprint>;
+      std::variant<typename FeatureLearnerFingerprint::DependencyType,
+                   FeatureLearnerFingerprint, PredictorFingerprint,
+                   TargetNumber>;
 
   /// This needs to be added to every fingerprint.
   using Dependencies =

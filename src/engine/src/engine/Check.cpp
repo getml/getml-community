@@ -56,7 +56,8 @@ void Check::check(const Pipeline& _pipeline, const CheckParams& _params) {
   const auto [feature_learners, fl_fingerprints] =
       init_feature_learners(_pipeline, feature_learner_params, _params);
 
-  const auto warning_fingerprint = make_warning_fingerprint(fl_fingerprints);
+  const auto warning_fingerprint = commands::WarningFingerprint(
+      fct::make_field<"fl_fingerprints_">(fl_fingerprints));
 
   const auto retrieved =
       _params.warning_tracker_->retrieve(warning_fingerprint);
@@ -95,7 +96,7 @@ void Check::check(const Pipeline& _pipeline, const CheckParams& _params) {
 // ----------------------------------------------------------------------------
 
 std::pair<std::vector<fct::Ref<featurelearners::AbstractFeatureLearner>>,
-          std::vector<Poco::JSON::Object::Ptr>>
+          std::vector<typename Check::PredictorDependencyType>>
 Check::init_feature_learners(
     const Pipeline& _pipeline,
     const featurelearners::FeatureLearnerParams& _feature_learner_params,
@@ -119,14 +120,5 @@ Check::init_feature_learners(
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object::Ptr Check::make_warning_fingerprint(
-    const std::vector<Poco::JSON::Object::Ptr>& _fl_fingerprints) {
-  auto arr = jsonutils::JSON::vector_to_array_ptr(_fl_fingerprints);
-  auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-  obj->set("fl_fingerprints_", arr);
-  return obj;
-}
-
-// ----------------------------------------------------------------------------
 }  // namespace pipelines
 }  // namespace engine

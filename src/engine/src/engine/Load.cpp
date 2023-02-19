@@ -119,7 +119,7 @@ Predictors Load::load_feature_selectors(
     const PipelineJSON& _pipeline_json, const Pipeline& _pipeline) {
   const auto feature_selectors = Fit::init_predictors(
       _pipeline, "feature_selectors_", _feature_selector_impl,
-      _pipeline_json.fingerprints_.fl_fingerprints_,
+      {},  // TODO _pipeline_json.fingerprints_.fl_fingerprints_,
       _pipeline_json.targets_.size());
 
   for (size_t i = 0; i < feature_selectors.size(); ++i) {
@@ -262,10 +262,10 @@ Predictors Load::load_predictors(
     const std::shared_ptr<dependency::PredTracker> _pred_tracker,
     const fct::Ref<const predictors::PredictorImpl>& _predictor_impl,
     const PipelineJSON& _pipeline_json, const Pipeline& _pipeline) {
-  const auto predictors =
-      Fit::init_predictors(_pipeline, "predictors_", _predictor_impl,
-                           _pipeline_json.fingerprints_.fs_fingerprints_,
-                           _pipeline_json.targets_.size());
+  const auto predictors = Fit::init_predictors(
+      _pipeline, "predictors_", _predictor_impl,
+      {},  // TODO _pipeline_json.fingerprints_.fs_fingerprints_,
+      _pipeline_json.targets_.size());
 
   for (size_t i = 0; i < predictors.size(); ++i) {
     for (size_t j = 0; j < predictors.at(i).size(); ++j) {
@@ -290,8 +290,8 @@ Load::load_preprocessors(const std::string& _path,
                          const Pipeline& _pipeline) {
   assert_true(_preprocessor_tracker);
 
-  auto preprocessors = Fit::init_preprocessors(
-      _pipeline, _pipeline_json.fingerprints_.df_fingerprints_);
+  // TODO: Insert df_fingerprints
+  auto preprocessors = Fit::init_preprocessors(_pipeline, {});
 
   for (size_t i = 0; i < preprocessors.size(); ++i) {
     const auto& p = preprocessors.at(i);

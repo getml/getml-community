@@ -11,6 +11,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <type_traits>
 
 #include "debug/debug.hpp"
 #include "fct/Ref.hpp"
@@ -91,7 +92,15 @@ std::shared_ptr<T> Tracker<T>::retrieve(
     return nullptr;
   }
 
-  return ptr->clone();
+  const auto clone = ptr->clone();
+
+  using Type = std::decay_t<decltype(clone)>;
+
+  if constexpr (std::is_same<Type, fct::Ref<T>>()) {
+    return clone.ptr();
+  } else {
+    return clone;
+  }
 }
 
 // -------------------------------------------------------------------------
