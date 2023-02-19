@@ -80,11 +80,9 @@ class Literal {
 
   /// A single-field literal is special because it
   /// can also have a default constructor.
-  Literal() : value_(0) {
-    static_assert(
-        num_fields_ == 1,
-        "Only Literals with a single field can use the default constructor.");
-  }
+  template <ValueType num_fields = num_fields_,
+            typename = std::enable_if_t<num_fields == 1>>
+  Literal() : value_(0) {}
 
   ~Literal() = default;
 
