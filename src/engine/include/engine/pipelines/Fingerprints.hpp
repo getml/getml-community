@@ -8,26 +8,38 @@
 #ifndef ENGINE_PIPELINES_FINGERPRINTS_HPP_
 #define ENGINE_PIPELINES_FINGERPRINTS_HPP_
 
-#include <Poco/JSON/Object.h>
-
 #include <vector>
+
+#include "commands/DataFrameFingerprint.hpp"
+#include "commands/FeatureLearnerFingerprint.hpp"
+#include "commands/PredictorFingerprint.hpp"
+#include "fct/Field.hpp"
+#include "fct/NamedTuple.hpp"
+#include "fct/Ref.hpp"
 
 namespace engine {
 namespace pipelines {
 
-struct Fingerprints {
-  /// The fingerprints of the data frames used for fitting.
-  const std::vector<Poco::JSON::Object::Ptr> df_fingerprints_;
+using Fingerprints = fct::NamedTuple<
+    /// The fingerprints of the data frames used for fitting.
+    fct::Field<"df_fingerprints_",
+               fct::Ref<const std::vector<commands::DataFrameFingerprint>>>,
 
-  /// The fingerprints of the feature learners used for fitting.
-  const std::vector<Poco::JSON::Object::Ptr> fl_fingerprints_;
+    /// The fingerprints of the preprocessors used for fitting.
+    fct::Field<
+        "preprocessor_fingerprints_",
+        fct::Ref<const std::vector<
+            typename commands::FeatureLearnerFingerprint::DependencyType>>>,
 
-  /// The fingerprints of the feature selectors used for fitting.
-  const std::vector<Poco::JSON::Object::Ptr> fs_fingerprints_;
+    /// The fingerprints of the feature learners used for fitting.
+    fct::Field<"fl_fingerprints_",
+               fct::Ref<const std::vector<
+                   typename commands::PredictorFingerprint::DependencyType>>>,
 
-  /// The fingerprints of the preprocessors used for fitting.
-  const std::vector<Poco::JSON::Object::Ptr> preprocessor_fingerprints_;
-};
+    /// The fingerprints of the feature selectors used for fitting.
+    fct::Field<"fs_fingerprints_",
+               fct::Ref<const std::vector<
+                   typename commands::PredictorFingerprint::DependencyType>>>>;
 
 }  // namespace pipelines
 }  // namespace engine

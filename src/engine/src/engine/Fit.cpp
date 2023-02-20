@@ -288,12 +288,12 @@ Fit::fit(const Pipeline& _pipeline, const FitParams& _params) {
                   .socket_ = _params.socket_})
             : std::nullopt;
 
-  const auto fingerprints =
-      Fingerprints{.df_fingerprints_ = std::move(preprocessed.df_fingerprints_),
-                   .fl_fingerprints_ = {},  // std::move(fl_fingerprints),
-                   .fs_fingerprints_ = {},  // std::move(fs_fingerprints),
-                   .preprocessor_fingerprints_ =
-                       std::move(preprocessed.preprocessor_fingerprints_)};
+  const Fingerprints fingerprints =
+      fct::make_field<"df_fingerprints_">(preprocessed.df_fingerprints_) *
+      fct::make_field<"fl_fingerprints_">(fl_fingerprints) *
+      fct::make_field<"fs_fingerprints_">(fs_fingerprints) *
+      fct::make_field<"preprocessor_fingerprints_">(
+          preprocessed.preprocessor_fingerprints_);
 
   const auto fitted_pipeline =
       fct::Ref<const FittedPipeline>::make(FittedPipeline{
@@ -944,7 +944,7 @@ fct::Ref<const metrics::Scores> Fit::score_after_fitting(
     const FittedPipeline& _fitted) {
   auto [numerical_features, categorical_features, _] = Transform::make_features(
       _params, _pipeline, _fitted.feature_learners_, *_fitted.predictors_.impl_,
-      _fitted.fingerprints_.fs_fingerprints_);
+      {});  // TODO _fitted.fingerprints_.get<"fs_fingerprints_">());
 
   categorical_features =
       _fitted.predictors_.impl_->transform_encodings(categorical_features);

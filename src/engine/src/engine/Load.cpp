@@ -34,10 +34,11 @@ Pipeline Load::load(
       helpers::Loader::load_from_json<fct::Ref<const metrics::Scores>>(
           _path + "scores.json");
 
-  const auto pipeline_json = load_pipeline_json(_path);
+  const auto pipeline_json =
+      helpers::Loader::load_from_json<PipelineJSON>(_path + "pipeline.json");
 
   const auto pipeline = Pipeline(obj).with_scores(scores).with_creation_time(
-      pipeline_json.creation_time_);
+      pipeline_json.get<"creation_time_">());
 
   const auto [feature_selector_impl, predictor_impl] = load_impls(_path);
 
@@ -57,17 +58,17 @@ Pipeline Load::load(
       fct::Ref<const pipelines::FittedPipeline>::make(pipelines::FittedPipeline{
           .feature_learners_ = feature_learners,
           .feature_selectors_ = feature_selectors,
-          .fingerprints_ = pipeline_json.fingerprints_,
+          .fingerprints_ = pipeline_json,
           .modified_peripheral_schema_ =
-              pipeline_json.modified_peripheral_schema_,
+              pipeline_json.get<"modified_peripheral_schema_">(),
           .modified_population_schema_ =
-              pipeline_json.modified_population_schema_,
-          .peripheral_schema_ = pipeline_json.peripheral_schema_,
-          .population_schema_ = pipeline_json.population_schema_,
+              pipeline_json.get<"modified_population_schema_">(),
+          .peripheral_schema_ = pipeline_json.get<"peripheral_schema_">(),
+          .population_schema_ = pipeline_json.get<"population_schema_">(),
           .predictors_ = predictors,
           .preprocessors_ = preprocessors});
 
-  return pipeline.with_allow_http(pipeline_json.allow_http_)
+  return pipeline.with_allow_http(pipeline_json.get<"allow_http_">())
       .with_fitted(fitted);
 }
 
@@ -82,24 +83,21 @@ Load::load_feature_learners(
 
   const auto [placeholder, peripheral] = _pipeline.make_placeholder();
 
-  const auto feature_learner_params = featurelearners::FeatureLearnerParams(
+  const featurelearners::FeatureLearnerParams feature_learner_params =
       fct::make_field<"dependencies_">(
-          json::Parser<fct::Ref<const std::vector<
-              typename commands::FeatureLearnerFingerprint::DependencyType>>>::
-              from_json(
-                  _pipeline_json.fingerprints_
-                      .preprocessor_fingerprints_)),  // TODO: Remove from_json
-      fct::make_field<"peripheral_">(peripheral),
+          _pipeline_json.get<"preprocessor_fingerprints_">()) *
+      fct::make_field<"peripheral_">(peripheral) *
       fct::make_field<"peripheral_schema_">(
-          _pipeline_json.modified_peripheral_schema_),
-      fct::make_field<"placeholder_">(placeholder),
+          _pipeline_json.get<"modified_peripheral_schema_">()) *
+      fct::make_field<"placeholder_">(placeholder) *
       fct::make_field<"population_schema_">(
-          _pipeline_json.modified_population_schema_),
+          _pipeline_json.get<"modified_population_schema_">()) *
       fct::make_field<"target_num_">(
-          featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS));
+          featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS);
 
-  const auto feature_learners = Fit::init_feature_learners(
-      _pipeline, feature_learner_params, _pipeline_json.targets_.size());
+  const auto feature_learners =
+      Fit::init_feature_learners(_pipeline, feature_learner_params,
+                                 _pipeline_json.get<"targets_">().size());
 
   for (size_t i = 0; i < feature_learners.size(); ++i) {
     auto& fe = feature_learners.at(i);
@@ -119,8 +117,8 @@ Predictors Load::load_feature_selectors(
     const PipelineJSON& _pipeline_json, const Pipeline& _pipeline) {
   const auto feature_selectors = Fit::init_predictors(
       _pipeline, "feature_selectors_", _feature_selector_impl,
-      {},  // TODO _pipeline_json.fingerprints_.fl_fingerprints_,
-      _pipeline_json.targets_.size());
+      _pipeline_json.get<"fl_fingerprints_">(),
+      _pipeline_json.get<"targets_">().size());
 
   for (size_t i = 0; i < feature_selectors.size(); ++i) {
     for (size_t j = 0; j < feature_selectors.at(i).size(); ++j) {
@@ -133,29 +131,6 @@ Predictors Load::load_feature_selectors(
 
   return Predictors{.impl_ = _feature_selector_impl,
                     .predictors_ = Fit::to_const(feature_selectors)};
-}
-
-// ------------------------------------------------------------------------
-
-Fingerprints Load::load_fingerprints(const Poco::JSON::Object& _pipeline_json) {
-  const auto df_fingerprints = JSON::array_to_obj_vector(
-      JSON::get_array(_pipeline_json, "df_fingerprints_"));
-
-  const auto fl_fingerprints = JSON::array_to_obj_vector(
-      JSON::get_array(_pipeline_json, "fl_fingerprints_"));
-
-  const auto fs_fingerprints = JSON::array_to_obj_vector(
-      JSON::get_array(_pipeline_json, "fs_fingerprints_"));
-
-  const auto preprocessor_fingerprints = JSON::array_to_obj_vector(
-      JSON::get_array(_pipeline_json, "preprocessor_fingerprints_"));
-
-  return Fingerprints{
-      .df_fingerprints_ = df_fingerprints,
-      .fl_fingerprints_ = fl_fingerprints,
-      .fs_fingerprints_ = fs_fingerprints,
-      .preprocessor_fingerprints_ = preprocessor_fingerprints,
-  };
 }
 
 // ------------------------------------------------------------------------
@@ -204,68 +179,15 @@ Poco::JSON::Object Load::load_json_obj(const std::string& _fname) {
 
 // ----------------------------------------------------------------------------
 
-PipelineJSON Load::load_pipeline_json(const std::string& _path) {
-  const auto to_schema =
-      [](const Poco::JSON::Object::Ptr& _obj) -> helpers::Schema {
-    assert_true(_obj);
-    return helpers::Schema::from_json(*_obj);
-  };
-
-  const auto pipeline_json = load_json_obj(_path + "pipeline.json");
-
-  const auto get_peripheral_schema = [&pipeline_json,
-                                      to_schema](const std::string& _name) {
-    auto arr = JSON::get_array(pipeline_json, _name);
-    const auto vec = JSON::array_to_obj_vector(arr);
-    return fct::Ref<const std::vector<helpers::Schema>>::make(
-        fct::collect::vector<helpers::Schema>(vec |
-                                              VIEWS::transform(to_schema)));
-  };
-
-  const bool allow_http = JSON::get_value<bool>(pipeline_json, "allow_http_");
-
-  const auto creation_time =
-      JSON::get_value<std::string>(pipeline_json, "creation_time_");
-
-  const auto modified_peripheral_schema =
-      get_peripheral_schema("modified_peripheral_schema_");
-
-  const auto modified_population_schema =
-      fct::Ref<const helpers::Schema>::make(helpers::Schema::from_json(
-          *JSON::get_object(pipeline_json, "modified_population_schema_")));
-
-  const auto peripheral_schema = get_peripheral_schema("peripheral_schema_");
-
-  const auto population_schema =
-      fct::Ref<const helpers::Schema>::make(helpers::Schema::from_json(
-          *JSON::get_object(pipeline_json, "population_schema_")));
-
-  const auto targets = JSON::array_to_vector<std::string>(
-      JSON::get_array(pipeline_json, "targets_"));
-
-  const auto fingerprints = load_fingerprints(pipeline_json);
-
-  return PipelineJSON{.allow_http_ = allow_http,
-                      .creation_time_ = creation_time,
-                      .fingerprints_ = fingerprints,
-                      .modified_peripheral_schema_ = modified_peripheral_schema,
-                      .modified_population_schema_ = modified_population_schema,
-                      .peripheral_schema_ = peripheral_schema,
-                      .population_schema_ = population_schema,
-                      .targets_ = targets};
-}
-
-// ------------------------------------------------------------------------
-
 Predictors Load::load_predictors(
     const std::string& _path,
     const std::shared_ptr<dependency::PredTracker> _pred_tracker,
     const fct::Ref<const predictors::PredictorImpl>& _predictor_impl,
     const PipelineJSON& _pipeline_json, const Pipeline& _pipeline) {
-  const auto predictors = Fit::init_predictors(
-      _pipeline, "predictors_", _predictor_impl,
-      {},  // TODO _pipeline_json.fingerprints_.fs_fingerprints_,
-      _pipeline_json.targets_.size());
+  const auto predictors =
+      Fit::init_predictors(_pipeline, "predictors_", _predictor_impl,
+                           _pipeline_json.get<"fs_fingerprints_">(),
+                           _pipeline_json.get<"targets_">().size());
 
   for (size_t i = 0; i < predictors.size(); ++i) {
     for (size_t j = 0; j < predictors.at(i).size(); ++j) {
@@ -290,8 +212,8 @@ Load::load_preprocessors(const std::string& _path,
                          const Pipeline& _pipeline) {
   assert_true(_preprocessor_tracker);
 
-  // TODO: Insert df_fingerprints
-  auto preprocessors = Fit::init_preprocessors(_pipeline, {});
+  auto preprocessors = Fit::init_preprocessors(
+      _pipeline, _pipeline_json.get<"df_fingerprints_">());
 
   for (size_t i = 0; i < preprocessors.size(); ++i) {
     const auto& p = preprocessors.at(i);
