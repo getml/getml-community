@@ -99,42 +99,20 @@ void Save::save_pipeline_json(const SaveParams& _params,
 
   const auto& f = _params.fitted_;
 
-  Poco::JSON::Object pipeline_json;
+  const PipelineJSON pipeline_json =
+      f.fingerprints_ * fct::make_field<"allow_http_">(p.allow_http()) *
+      fct::make_field<"creation_time_">(p.creation_time()) *
+      fct::make_field<"modified_peripheral_schema_">(
+          f.modified_peripheral_schema_) *
+      fct::make_field<"modified_population_schema_">(
+          f.modified_population_schema_) *
+      fct::make_field<"peripheral_schema_">(f.peripheral_schema_) *
+      fct::make_field<"population_schema_">(f.population_schema_) *
+      fct::make_field<"targets_">(f.targets());
 
-  pipeline_json.set("allow_http_", p.allow_http());
-
-  pipeline_json.set("creation_time_", p.creation_time());
-
-  pipeline_json.set("df_fingerprints_",
-                    JSON::vector_to_array(f.fingerprints_.df_fingerprints_));
-
-  pipeline_json.set("fl_fingerprints_",
-                    JSON::vector_to_array(f.fingerprints_.fl_fingerprints_));
-
-  pipeline_json.set("fs_fingerprints_",
-                    JSON::vector_to_array(f.fingerprints_.fs_fingerprints_));
-
-  pipeline_json.set("modified_peripheral_schema_",
-                    fct::collect::array(*f.modified_peripheral_schema_ |
-                                        VIEWS::transform(to_obj)));
-
-  pipeline_json.set("modified_population_schema_",
-                    f.modified_population_schema_->to_json_obj());
-
-  pipeline_json.set(
-      "preprocessor_fingerprints_",
-      JSON::vector_to_array(f.fingerprints_.preprocessor_fingerprints_));
-
-  pipeline_json.set("targets_", JSON::vector_to_array(f.targets()));
-
-  pipeline_json.set(
-      "peripheral_schema_",
-      fct::collect::array(*f.peripheral_schema_ | VIEWS::transform(to_obj)));
-
-  pipeline_json.set("population_schema_", f.population_schema_->to_json_obj());
-
-  save_json_obj(pipeline_json, _tfile.path() + "/pipeline.json");
+  helpers::Saver::save_as_json(tfile.path() + "/pipeline.json", pipeline_json);
 }
+
 // ----------------------------------------------------------------------------
 
 void Save::save_predictors(

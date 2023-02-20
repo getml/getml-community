@@ -51,10 +51,6 @@ class Load {
       const fct::Ref<const predictors::PredictorImpl>& _feature_selector_impl,
       const PipelineJSON& _pipeline_json, const Pipeline& _pipeline);
 
-  /// Loads fingerprints for all components of the pipeline.
-  static Fingerprints load_fingerprints(
-      const Poco::JSON::Object& _pipeline_json);
-
   /// Loads the impls for the feature selectors and predictors.
   static std::pair<fct::Ref<const predictors::PredictorImpl>,
                    fct::Ref<const predictors::PredictorImpl>>
