@@ -46,6 +46,38 @@ struct DataModel {
                            "joined_tables_">,
       f_horizon, f_joined_tables, f_memory, f_relationship>;
 
+  /// The DataModel requires additional checks after parsing,
+  /// which is why we have a default constructor.
+  DataModel(const NamedTupleType& _val) : val_(_val) {
+    check_length<"allow_lagged_targets_">();
+    check_length<"join_keys_used_">();
+    check_length<"other_join_keys_used_">();
+    check_length<"time_stamps_used_">();
+    check_length<"other_time_stamps_used_">();
+    check_length<"upper_time_stamps_used_">();
+    check_length<"horizon_">();
+    check_length<"memory_">();
+    check_length<"relationship_">();
+  }
+
+  ~DataModel() = default;
+
+  /// Helper function to check the length of the inputs.
+  template <fct::StringLiteral _name>
+  void check_length() const {
+    const size_t expected = val_.get<"joined_tables_">().size();
+    const size_t actual = val_.get<_name>().size();
+
+    if (actual != expected) {
+      throw std::runtime_error(
+          "Length of '" + _name.str() +
+          "' does not match length "
+          "of 'joined_tables_'. " +
+          "Length of 'joined_tables_': " + std::to_string(expected) +
+          ", length of '" + _name.str() + "': " + std::to_string(actual) + ".");
+    }
+  }
+
   /// The underlying value.
   const NamedTupleType val_;
 };

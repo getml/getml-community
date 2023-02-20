@@ -230,8 +230,6 @@ fct::Ref<const helpers::Placeholder> PlaceholderMaker::make_placeholder(
 
   const auto& joined_tables = _data_model.val_.get<"joined_tables_">();
 
-  const auto expected_size = joined_tables.size();
-
   const auto& horizon = _data_model.val_.get<"horizon_">();
 
   const auto& memory = _data_model.val_.get<"memory_">();
