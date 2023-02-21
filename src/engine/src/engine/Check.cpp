@@ -96,7 +96,7 @@ void Check::check(const Pipeline& _pipeline, const CheckParams& _params) {
 // ----------------------------------------------------------------------------
 
 std::pair<std::vector<fct::Ref<featurelearners::AbstractFeatureLearner>>,
-          std::vector<typename Check::PredictorDependencyType>>
+          fct::Ref<const std::vector<typename Check::PredictorDependencyType>>>
 Check::init_feature_learners(
     const Pipeline& _pipeline,
     const featurelearners::FeatureLearnerParams& _feature_learner_params,

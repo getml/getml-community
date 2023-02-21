@@ -117,7 +117,7 @@ Predictors Load::load_feature_selectors(
     const PipelineJSON& _pipeline_json, const Pipeline& _pipeline) {
   const auto feature_selectors = Fit::init_predictors(
       _pipeline, "feature_selectors_", _feature_selector_impl,
-      _pipeline_json.get<"fl_fingerprints_">(),
+      *_pipeline_json.get<"fl_fingerprints_">(),
       _pipeline_json.get<"targets_">().size());
 
   for (size_t i = 0; i < feature_selectors.size(); ++i) {
@@ -186,7 +186,7 @@ Predictors Load::load_predictors(
     const PipelineJSON& _pipeline_json, const Pipeline& _pipeline) {
   const auto predictors =
       Fit::init_predictors(_pipeline, "predictors_", _predictor_impl,
-                           _pipeline_json.get<"fs_fingerprints_">(),
+                           *_pipeline_json.get<"fs_fingerprints_">(),
                            _pipeline_json.get<"targets_">().size());
 
   for (size_t i = 0; i < predictors.size(); ++i) {

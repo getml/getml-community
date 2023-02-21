@@ -7,6 +7,7 @@
 
 #include "engine/pipelines/Save.hpp"
 
+#include "engine/pipelines/PipelineJSON.hpp"
 #include "engine/pipelines/ToSQL.hpp"
 #include "engine/pipelines/ToSQLParams.hpp"
 #include "helpers/Saver.hpp"
@@ -110,7 +111,7 @@ void Save::save_pipeline_json(const SaveParams& _params,
       fct::make_field<"population_schema_">(f.population_schema_) *
       fct::make_field<"targets_">(f.targets());
 
-  helpers::Saver::save_as_json(tfile.path() + "/pipeline.json", pipeline_json);
+  helpers::Saver::save_as_json(_tfile.path() + "/pipeline.json", pipeline_json);
 }
 
 // ----------------------------------------------------------------------------

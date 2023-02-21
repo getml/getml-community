@@ -35,7 +35,7 @@ class Check {
   /// warning.
   static std::pair<
       std::vector<fct::Ref<featurelearners::AbstractFeatureLearner>>,
-      std::vector<PredictorDependencyType>>
+      fct::Ref<const std::vector<PredictorDependencyType>>>
   init_feature_learners(
       const Pipeline& _pipeline,
       const featurelearners::FeatureLearnerParams& _feature_learner_params,
