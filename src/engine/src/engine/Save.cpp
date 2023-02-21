@@ -94,8 +94,6 @@ void Save::save_feature_learners(const SaveParams& _params,
 
 void Save::save_pipeline_json(const SaveParams& _params,
                               const Poco::TemporaryFile& _tfile) {
-  const auto to_obj = [](const helpers::Schema& s) { return s.to_json_obj(); };
-
   const auto& p = _params.pipeline_;
 
   const auto& f = _params.fitted_;
