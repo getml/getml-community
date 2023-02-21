@@ -340,7 +340,7 @@ Transform::transform(const TransformParams& _params, const Pipeline& _pipeline,
   }
 
   const auto features_only_params = FeaturesOnlyParams{
-      .dependencies_ = _fitted.fingerprints_.fs_fingerprints_,
+      .dependencies_ = {},  // TODO _fitted.fingerprints_.fs_fingerprints_,
       .feature_learners_ = _fitted.feature_learners_,
       .pipeline_ = _pipeline,
       .preprocessors_ = _fitted.preprocessors_,
