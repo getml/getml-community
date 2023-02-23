@@ -138,43 +138,14 @@ Predictors Load::load_feature_selectors(
 std::pair<fct::Ref<const predictors::PredictorImpl>,
           fct::Ref<const predictors::PredictorImpl>>
 Load::load_impls(const std::string& _path) {
-  const auto feature_selector_impl =
-      fct::Ref<const predictors::PredictorImpl>::make(
-          load_json_obj(_path + "feature-selector-impl.json"));
+  const auto feature_selector_impl = helpers::Loader::load_from_json<
+      fct::Ref<const predictors::PredictorImpl>>(_path +
+                                                 "feature-selector-impl.json");
 
-  const auto predictor_impl = fct::Ref<predictors::PredictorImpl>::make(
-      load_json_obj(_path + "predictor-impl.json"));
+  const auto predictor_impl = helpers::Loader::load_from_json<
+      fct::Ref<const predictors::PredictorImpl>>(_path + "predictor-impl.json");
 
   return std::make_pair(feature_selector_impl, predictor_impl);
-}
-
-// ------------------------------------------------------------------------
-
-Poco::JSON::Object Load::load_json_obj(const std::string& _fname) {
-  std::ifstream input(_fname);
-
-  std::stringstream json;
-
-  std::string line;
-
-  if (input.is_open()) {
-    while (std::getline(input, line)) {
-      json << line;
-    }
-
-    input.close();
-  } else {
-    throw std::runtime_error("File '" + _fname + "' not found!");
-  }
-
-  const auto ptr =
-      Poco::JSON::Parser().parse(json.str()).extract<Poco::JSON::Object::Ptr>();
-
-  if (!ptr) {
-    throw std::runtime_error("JSON file did not contain an object!");
-  }
-
-  return *ptr;
 }
 
 // ----------------------------------------------------------------------------

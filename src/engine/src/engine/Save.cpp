@@ -85,8 +85,8 @@ void Save::save(const SaveParams& _params) {
 void Save::save_feature_learners(const SaveParams& _params,
                                  const Poco::TemporaryFile& _tfile) {
   for (size_t i = 0; i < _params.fitted_.feature_learners_.size(); ++i) {
-    const auto& fe = _params.fitted_.feature_learners_.at(i);
-    fe->save(_tfile.path() + "/feature-learner-" + std::to_string(i) + ".json");
+    const auto& fl = _params.fitted_.feature_learners_.at(i);
+    fl->save(_tfile.path() + "/feature-learner-" + std::to_string(i) + ".json");
   }
 }
 

@@ -19,6 +19,8 @@
 #include "fastprop/algorithm/TableHolder.hpp"
 #include "fastprop/algorithm/TransformParams.hpp"
 #include "fastprop/containers/containers.hpp"
+#include "fct/Field.hpp"
+#include "fct/NamedTuple.hpp"
 #include "fct/Ref.hpp"
 #include "helpers/helpers.hpp"
 #include "multithreading/multithreading.hpp"
@@ -55,11 +57,7 @@ class FastProp {
            const std::shared_ptr<const std::vector<std::string>>& _peripheral,
            const std::shared_ptr<const containers::Placeholder>& _placeholder);
 
-  explicit FastProp(const Poco::JSON::Object& _obj);
-
   ~FastProp() = default;
-
-  // ------------------------------------------------------------------------
 
  public:
   /// Calculates the column importances for this ensemble.
@@ -76,9 +74,6 @@ class FastProp {
       const TransformParams& _params,
       const std::shared_ptr<std::vector<size_t>>& _rownums = nullptr,
       const bool _as_subfeatures = false) const;
-
-  /// Expresses FastProp as Poco::JSON::Object.
-  Poco::JSON::Object to_json_obj(const bool _schema_only = false) const;
 
   /// Expresses FastProp as SQL code.
   std::vector<std::string> to_sql(
