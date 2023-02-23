@@ -8,8 +8,6 @@
 #ifndef ENGINE_FEATURELEARNERS_FEATURELEARNER_HPP_
 #define ENGINE_FEATURELEARNERS_FEATURELEARNER_HPP_
 
-#include <Poco/JSON/Object.h>
-
 #include <map>
 #include <memory>
 #include <optional>
@@ -30,7 +28,10 @@
 #include "fastprop/algorithm/algorithm.hpp"
 #include "fastprop/subfeatures/subfeatures.hpp"
 #include "fct/Field.hpp"
+#include "fct/define_named_tuple.hpp"
 #include "fct/get.hpp"
+#include "helpers/Loader.hpp"
+#include "helpers/Saver.hpp"
 #include "helpers/helpers.hpp"
 
 namespace engine {
@@ -38,6 +39,16 @@ namespace featurelearners {
 
 template <class FeatureLearnerType>
 class FeatureLearner : public AbstractFeatureLearner {
+ public:
+  using NamedTupleType = fct::define_named_tuple_t<
+      typename FeatureLearnerType::NamedTupleType,
+      fct::Field<
+          "fast_prop_container_",
+          std::shared_ptr<const fastprop::subfeatures::FastPropContainer>>,
+      fct::Field<"target_num_", Int>,
+      fct::Field<"vocabulary_",
+                 std::shared_ptr<const helpers::VocabularyContainer>>>;
+
  private:
   /// Whether this is a FastProp algorithm
   static constexpr bool is_fastprop_ =
@@ -94,8 +105,17 @@ class FeatureLearner : public AbstractFeatureLearner {
   /// Saves the feature learner in JSON format, if applicable
   void save(const std::string& _fname) const final;
 
-  /// Return model as a JSON Object.
-  Poco::JSON::Object to_json_obj(const bool _schema_only) const final;
+  /// Necessary for the automatic parsing to work.
+  NamedTupleType named_tuple() const {
+    if (!feature_learner_) {
+      throw std::runtime_error(
+          "Feature learner has not been fitted, cannot save.");
+    }
+    return feature_learner_.val().named_tuple() *
+           fct::make_field<"fast_prop_container_">(fast_prop_container_) *
+           fct::make_field<"target_num_">(target_num_) *
+           fct::make_field<"vocabulary_">(vocabulary_);
+  }
 
   /// Return feature learner as SQL code.
   std::vector<std::string> to_sql(
@@ -215,9 +235,6 @@ class FeatureLearner : public AbstractFeatureLearner {
   /// Removes the time difference marker from the colnames, needed for the
   /// column importances.
   std::string remove_time_diff(const std::string& _from_colname) const;
-
-  /// Helper function for loading a json object.
-  Poco::JSON::Object load_json_obj(const std::string& _fname) const;
 
   /// Transforms the proppsitionalization.
   std::optional<const helpers::FeatureContainer> transform_propositionalization(
@@ -657,56 +674,14 @@ FeatureLearner<FeatureLearnerType>::handle_text_fields(
 
 template <typename FeatureLearnerType>
 void FeatureLearner<FeatureLearnerType>::load(const std::string& _fname) {
-  const auto obj = load_json_obj(_fname);
-
-  feature_learner_ = std::make_optional<FeatureLearnerType>(obj);
-
-  if (obj.has("fast_prop_container_")) {
-    fast_prop_container_ =
-        std::make_shared<const fastprop::subfeatures::FastPropContainer>(
-            *JSON::get_object(obj, "fast_prop_container_"));
-  }
-
-  if (obj.has("vocabulary_")) {
-    vocabulary_ = std::make_shared<const helpers::VocabularyContainer>(
-        *JSON::get_object(obj, "vocabulary_"));
-  }
-
-  target_num_ = JSON::get_value<Int>(obj, "target_num_");
+  const auto val = helpers::Loader::load_from_json<NamedTupleType>(_fname);
+  fast_prop_container_ = fct::get<"fast_prop_container_">(val);
+  feature_learner_ = FeatureLearnerType(val);
+  target_num_ = fct::get<"target_num_">(val);
+  vocabulary_ = fct::get<"vocabulary_">(val);
 }
 
 // ------------------------------------------------------------------------
-
-template <typename FeatureLearnerType>
-Poco::JSON::Object FeatureLearner<FeatureLearnerType>::load_json_obj(
-    const std::string& _fname) const {
-  std::ifstream input(_fname);
-
-  std::stringstream json;
-
-  std::string line;
-
-  if (input.is_open()) {
-    while (std::getline(input, line)) {
-      json << line;
-    }
-
-    input.close();
-  } else {
-    throw std::runtime_error("File '" + _fname + "' not found!");
-  }
-
-  const auto ptr =
-      Poco::JSON::Parser().parse(json.str()).extract<Poco::JSON::Object::Ptr>();
-
-  if (!ptr) {
-    throw std::runtime_error("JSON file did not contain an object!");
-  }
-
-  return *ptr;
-}
-
-// ----------------------------------------------------------------------------
 
 template <typename FeatureLearnerType>
 FeatureLearnerType FeatureLearner<FeatureLearnerType>::make_feature_learner()
@@ -815,33 +790,7 @@ std::string FeatureLearner<FeatureLearnerType>::remove_time_diff(
 
 template <typename FeatureLearnerType>
 void FeatureLearner<FeatureLearnerType>::save(const std::string& _fname) const {
-  std::ofstream fs(_fname, std::ofstream::out);
-  Poco::JSON::Stringifier::stringify(to_json_obj(false), fs);
-  fs.close();
-}
-
-// ----------------------------------------------------------------------------
-
-template <typename FeatureLearnerType>
-Poco::JSON::Object FeatureLearner<FeatureLearnerType>::to_json_obj(
-    const bool _schema_only) const {
-  auto obj = feature_learner().to_json_obj(_schema_only);
-
-  if (_schema_only) {
-    return obj;
-  }
-
-  if (fast_prop_container_) {
-    obj.set("fast_prop_container_", fast_prop_container_->to_json_obj());
-  }
-
-  if (vocabulary_) {
-    obj.set("vocabulary_", vocabulary_->to_json_obj());
-  }
-
-  obj.set("target_num_", target_num_);
-
-  return obj;
+  helpers::Saver::save_as_json(_fname, *this);
 }
 
 // ----------------------------------------------------------------------------

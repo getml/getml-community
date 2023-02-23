@@ -8,8 +8,6 @@
 #ifndef HELPERS_VOCABULARYCONTAINER_HPP_
 #define HELPERS_VOCABULARYCONTAINER_HPP_
 
-#include <Poco/JSON/Object.h>
-
 #include <memory>
 #include <vector>
 
@@ -46,10 +44,6 @@ class VocabularyContainer {
                       const std::vector<VocabForDf>& _peripheral)
       : val_(f_peripheral(_peripheral) * f_population(_population)) {}
 
-  /// TODO: Remove this temporary fix.
-  explicit VocabularyContainer(const Poco::JSON::Object& _obj)
-      : val_(json::from_json<NamedTupleType>(_obj)) {}
-
   explicit VocabularyContainer(const NamedTupleType& _val) : val_(_val) {}
 
   ~VocabularyContainer() = default;
@@ -72,11 +66,6 @@ class VocabularyContainer {
   /// Represents the population vocabulary as a vector of iterators.
   const std::vector<StringIterator> population_iterators() const {
     return to_iterators(population());
-  }
-
-  /// Transforms the VocabularyContainer into a JSON object.
-  Poco::JSON::Object::Ptr to_json_obj() const {
-    return json::Parser<NamedTupleType>::to_json(val_);
   }
 
  private:

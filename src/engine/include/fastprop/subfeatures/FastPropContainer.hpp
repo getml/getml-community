@@ -1,44 +1,40 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef FASTPROP_SUBFEATURES_FASTPROPCONTAINER_HPP_
 #define FASTPROP_SUBFEATURES_FASTPROPCONTAINER_HPP_
 
-// ----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------------
-
 #include <memory>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
-#include "transpilation/transpilation.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "fastprop/algorithm/algorithm.hpp"
-
-// ----------------------------------------------------------------------------
+#include "fct/Field.hpp"
+#include "fct/NamedTuple.hpp"
+#include "transpilation/transpilation.hpp"
 
 namespace fastprop {
 namespace subfeatures {
 
 class FastPropContainer {
  public:
-  typedef std::vector<std::shared_ptr<const FastPropContainer>> Subcontainers;
+  using Subcontainers = std::vector<std::shared_ptr<const FastPropContainer>>;
 
+  using NamedTupleType = fct::NamedTuple<
+      fct::Field<"fast_prop_", std::shared_ptr<const algorithm::FastProp>>,
+      fct::Field<"subcontainers_", std::shared_ptr<const Subcontainers>>>;
+
+ public:
   FastPropContainer(
       const std::shared_ptr<const algorithm::FastProp>& _fast_prop,
       const std::shared_ptr<const Subcontainers>& _subcontainers);
 
-  explicit FastPropContainer(const Poco::JSON::Object& _obj);
+  FastPropContainer(const NamedTupleType& _val)
+      : fast_prop_(_val.get<"fast_prop_">()),
+        subcontainers_(_val.get<"subcontainers_">()) {}
 
   ~FastPropContainer();
 
@@ -51,6 +47,12 @@ class FastPropContainer {
 
   /// Whether there is a fast_prop contained in the container.
   bool has_fast_prop() const { return (fast_prop_ && true); }
+
+  /// Necessary for the automated parsing to work.
+  NamedTupleType to_named_tuple() const {
+    return fct::make_field<"fast_prop_">(fast_prop_) *
+           fct::make_field<"subcontainers_">(subcontainers_);
+  }
 
   /// Returns the number of peripheral tables
   size_t size() const {
@@ -65,9 +67,6 @@ class FastPropContainer {
     return subcontainers_->at(_i);
   }
 
-  /// Expresses the containers as a JSON object.
-  Poco::JSON::Object::Ptr to_json_obj() const;
-
   /// Expresses the features to in SQL code.
   void to_sql(const helpers::StringIterator& _categories,
               const helpers::VocabularyTree& _vocabulary,
@@ -75,11 +74,6 @@ class FastPropContainer {
                   _sql_dialect_generator,
               const std::string& _feature_prefix, const bool _subfeatures,
               std::vector<std::string>* _sql) const;
-
- private:
-  /// Parses the subcontainers.
-  std::shared_ptr<Subcontainers> parse_subcontainers(
-      const Poco::JSON::Object& _obj);
 
  private:
   /// The algorithm used to generate new features.

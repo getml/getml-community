@@ -20,11 +20,20 @@ namespace commands {
 
 /// Fingerprints are used to track the dirty states of a pipeline (which
 /// prevents the user from fitting the same thing over and over again).
-using DataFrameFingerprint =
-    std::variant<typename DataFrameOrView::ViewOp,
-                 fct::NamedTuple<fct::Field<"name_", std::string>,
-                                 fct::Field<"last_change_", std::string>>,
-                 fct::Ref<const DataModel>>;
+struct DataFrameFingerprint {
+  /// For retrieving ordinary data frames that were neither created by a view
+  /// nor a pipeline.
+  using OrdinaryDataFrame =
+      fct::NamedTuple<fct::Field<"name_", std::string>,
+                      fct::Field<"last_change_", std::string>>;
+
+  using NamedTupleType =
+      std::variant<typename DataFrameOrView::ViewOp, OrdinaryDataFrame,
+                   fct::Ref<const DataModel>>;
+
+  /// The underlying value
+  NamedTupleType val_;
+};
 
 }  // namespace commands
 

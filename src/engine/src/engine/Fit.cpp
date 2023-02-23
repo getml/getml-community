@@ -86,7 +86,7 @@ Fit::extract_df_fingerprints(
   };
 
   const auto placeholder = std::vector<commands::DataFrameFingerprint>(
-      {_pipeline.obj().get<"data_model_">()});
+      {commands::DataFrameFingerprint(_pipeline.obj().get<"data_model_">())});
 
   const auto population = std::vector<commands::DataFrameFingerprint>(
       {_population_df.fingerprint()});

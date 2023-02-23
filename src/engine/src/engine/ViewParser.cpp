@@ -357,9 +357,7 @@ containers::DataFrame ViewParser::parse(
 
       subselection(_cmd, &df);
 
-      // TODO: Handle the build history.
-      /*df.set_build_history(
-          Poco::JSON::Object::Ptr(new Poco::JSON::Object(_obj)));*/
+      df.set_build_history(_cmd);
 
       return df;
     }

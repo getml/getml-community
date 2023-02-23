@@ -8,8 +8,6 @@
 #ifndef ENGINE_PIPELINES_LOAD_HPP_
 #define ENGINE_PIPELINES_LOAD_HPP_
 
-#include <Poco/JSON/Object.h>
-
 #include <memory>
 #include <string>
 #include <tuple>
@@ -56,9 +54,6 @@ class Load {
                    fct::Ref<const predictors::PredictorImpl>>
   load_impls(const std::string& _path);
 
-  /// Loads a generic JSON object.
-  static Poco::JSON::Object load_json_obj(const std::string& _fname);
-
   /// Loads the pipeline json (which records the original command passed by the
   /// user)
   static PipelineJSON load_pipeline_json(const std::string& _path);
@@ -79,7 +74,6 @@ class Load {
                      const Pipeline& _pipeline);
 };
 
-// ----------------------------------------------------------------------------
 }  // namespace pipelines
 }  // namespace engine
 

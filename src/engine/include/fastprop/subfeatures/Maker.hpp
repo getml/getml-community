@@ -1,14 +1,12 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef FASTPROP_SUBFEATURES_MAKER_HPP_
 #define FASTPROP_SUBFEATURES_MAKER_HPP_
-
-// ----------------------------------------------------------------------------
 
 #include <algorithm>
 #include <memory>
@@ -16,16 +14,11 @@
 #include <utility>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
 #include "fastprop/subfeatures/FastPropContainer.hpp"
 #include "fastprop/subfeatures/MakerParams.hpp"
 
-// ----------------------------------------------------------------------------
-
 namespace fastprop {
 namespace subfeatures {
-// ------------------------------------------------------------------------
 
 class Maker {
  public:
@@ -67,7 +60,6 @@ class Maker {
   transform_make_subcontainers(const MakerParams& _params);
 };
 
-// ------------------------------------------------------------------------
 }  // namespace subfeatures
 }  // namespace fastprop
 
