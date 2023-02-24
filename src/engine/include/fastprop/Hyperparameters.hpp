@@ -10,6 +10,7 @@
 
 #include "fastprop/Float.hpp"
 #include "fastprop/Int.hpp"
+#include "fastprop/enums/Aggregation.hpp"
 #include "fct/Literal.hpp"
 #include "fct/NamedTuple.hpp"
 #include "json/json.hpp"
@@ -17,7 +18,8 @@
 namespace fastprop {
 
 /// Describes the aggregations that may be used
-using f_aggregations = fct::Field<"aggregations_", std::vector<std::string>>;
+using f_aggregations =
+    fct::Field<"aggregations_", std::vector<enums::Aggregation>>;
 
 /// Size of the moving time windows.
 using f_delta_t = fct::Field<"delta_t_", Float>;

@@ -17,22 +17,23 @@ std::string HumanReadableSQLGenerator::aggregation(
     const helpers::enums::Aggregation& _agg, const std::string& _colname1,
     const std::optional<std::string>& _colname2) const {
   const auto sep =
-      _agg == helpers::enums::Aggregation::trend ? ", " : " ORDER BY ";
+      _agg.value() == helpers::enums::Aggregation::value_of<"TREND">()
+          ? ", "
+          : " ORDER BY ";
 
   const auto value = _colname2 ? _colname1 + sep + *_colname2 : _colname1;
 
-  if (_agg == helpers::enums::Aggregation::count_distinct) {
+  if (_agg.value() ==
+      helpers::enums::Aggregation::value_of<"COUNT DISTINCT">()) {
     return "COUNT( DISTINCT " + value + " )";
   }
 
-  if (_agg == helpers::enums::Aggregation::count_minus_count_distinct) {
+  if (_agg.value() ==
+      helpers::enums::Aggregation::value_of<"COUNT MINUS COUNT DISTINCT">()) {
     return "COUNT( " + value + "  ) - COUNT( DISTINCT " + value + " )";
   }
 
-  const auto agg_type =
-      helpers::enums::Parser<helpers::enums::Aggregation>::to_str(_agg);
-
-  return helpers::StringReplacer::replace_all(agg_type, " ", "_") + "( " +
+  return helpers::StringReplacer::replace_all(_agg.name(), " ", "_") + "( " +
          value + " )";
 }
 

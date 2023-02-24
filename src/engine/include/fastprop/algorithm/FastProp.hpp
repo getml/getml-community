@@ -34,6 +34,25 @@ class FastProp {
   typedef typename helpers::VocabularyContainer::VocabForDf VocabForDf;
   typedef typename std::vector<VocabForDf> Vocabulary;
 
+  using NamedTupleType = fct::NamedTuple<
+      fct::Field<"allow_http_", bool>,
+      fct::Field<"features_", std::shared_ptr<const std::vector<
+                                  containers::AbstractFeature>>>,
+      fct::Field<"hyperparameters_", std::shared_ptr<const Hyperparameters>>,
+      fct::Field<"main_table_schemas_",
+                 std::shared_ptr<const std::vector<helpers::Schema>>>,
+      fct::Field<"peripheral_schema_",
+                 std::shared_ptr<const std::vector<helpers::Schema>>>,
+      fct::Field<"peripheral_table_schemas_",
+                 std::shared_ptr<const std::vector<helpers::Schema>>>,
+      fct::Field<"peripheral_",
+                 std::shared_ptr<const std::vector<std::string>>>,
+      fct::Field<"placeholder_",
+                 std::shared_ptr<const containers::Placeholder>>,
+      fct::Field<"population_schema_", std::shared_ptr<const helpers::Schema>>,
+      fct::Field<"subfeatures_",
+                 std::shared_ptr<const std::vector<std::optional<FastProp>>>>>;
+
  public:
   typedef FitParams FitParamsType;
   typedef TransformParams TransformParamsType;
@@ -57,6 +76,8 @@ class FastProp {
            const std::shared_ptr<const std::vector<std::string>>& _peripheral,
            const std::shared_ptr<const containers::Placeholder>& _placeholder);
 
+  explicit FastProp(const NamedTupleType& _val);
+
   ~FastProp() = default;
 
  public:
@@ -67,6 +88,9 @@ class FastProp {
 
   /// Fits the FastProp.
   void fit(const FitParams& _params, const bool _as_subfeatures = false);
+
+  /// Necessary for the automated serialization.
+  NamedTupleType named_tuple() const;
 
   /// Returns the features underlying the model (the predictions of the
   /// individual trees as opposed to the entire prediction)
@@ -247,11 +271,11 @@ class FastProp {
   std::vector<std::vector<Float>> init_subimportance_factors() const;
 
   /// Infers whether the aggregation _agg can be applied to a categorical.
-  bool is_categorical(const std::string& _agg) const;
+  bool is_categorical(const enums::Aggregation _agg) const;
 
   /// Infers whether the aggregation _agg can be applied to a numerical or
   /// discrete column.
-  bool is_numerical(const std::string& _agg) const;
+  bool is_numerical(const enums::Aggregation _agg) const;
 
   /// Logs the progress of building the features.
   void log_progress(
@@ -311,7 +335,7 @@ class FastProp {
 
   /// Returns true if _agg is FIRST or LAST, but there are no time stamps in
   /// _peripheral.
-  bool skip_first_last(const std::string& _agg,
+  bool skip_first_last(const enums::Aggregation _agg,
                        const containers::DataFrame& _population,
                        const containers::DataFrame& _peripheral) const;
 
@@ -329,8 +353,6 @@ class FastProp {
           _sql_dialect_generator,
       const std::string& _feature_prefix, const size_t _offset,
       std::vector<std::string>* _sql) const;
-
-  // ------------------------------------------------------------------------
 
  public:
   /// Trivial accessor
@@ -394,8 +416,6 @@ class FastProp {
     return *population_schema_;
   }
 
-  // ------------------------------------------------------------------------
-
  private:
   /// Trivial accessor
   const std::vector<containers::AbstractFeature>& abstract_features() const {
@@ -408,8 +428,9 @@ class FastProp {
   bool has_count() const {
     return std::any_of(hyperparameters().val_.get<f_aggregations>().begin(),
                        hyperparameters().val_.get<f_aggregations>().end(),
-                       [](const std::string& agg) -> bool {
-                         return agg == enums::Parser<enums::Aggregation>::COUNT;
+                       [](const auto& agg) -> bool {
+                         return agg.value() ==
+                                enums::Aggregation::value_of<"COUNT">();
                        });
   }
 
@@ -456,8 +477,6 @@ class FastProp {
     return *subfeatures_;
   }
 
-  // ------------------------------------------------------------------------
-
  private:
   /// Abstract representation of the features.
   std::shared_ptr<const std::vector<containers::AbstractFeature>>
@@ -496,11 +515,8 @@ class FastProp {
 
   /// Contains the algorithms for the subfeatures.
   std::shared_ptr<const std::vector<std::optional<FastProp>>> subfeatures_;
-
-  // ------------------------------------------------------------------------
 };
 
-// ------------------------------------------------------------------------
 }  // namespace algorithm
 }  // namespace fastprop
 

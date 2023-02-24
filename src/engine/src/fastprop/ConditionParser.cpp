@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "fastprop/algorithm/ConditionParser.hpp"
 
@@ -146,18 +146,19 @@ ConditionParser::parse_single_condition(
     const containers::DataFrame &_population,
     const containers::DataFrame &_peripheral,
     const containers::Condition &_condition) {
-  switch (_condition.data_used_) {
-    case enums::DataUsed::categorical:
+  switch (_condition.data_used_.value()) {
+    case enums::DataUsed::value_of<"categorical">():
       return make_categorical(_peripheral, _condition);
 
-    case enums::DataUsed::lag:
+    case enums::DataUsed::value_of<"lag">():
       return make_lag(_population, _peripheral, _condition);
 
-    case enums::DataUsed::same_units_categorical:
+    case enums::DataUsed::value_of<"same_units_categorical">():
       return make_same_units_categorical(_population, _peripheral, _condition);
 
     default:
-      throw_unless(false, "Unknown condition");
+      throw_unless(false,
+                   "Unknown condition: '" + _condition.data_used_.name() + "'");
       return [](const containers::Match &match) { return true; };
   }
 }

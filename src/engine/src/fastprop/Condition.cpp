@@ -75,7 +75,7 @@ typename Condition::NamedTupleType Condition::named_tuple() const {
          fct::make_field<"data_used_">(data_used_) *
          fct::make_field<"input_col_">(input_col_) *
          fct::make_field<"output_col_">(output_col_) *
-         fct::make_field<"peripheral_">(peripheral);
+         fct::make_field<"peripheral_">(peripheral_);
 }
 
 // ----------------------------------------------------------------------------

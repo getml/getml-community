@@ -8,8 +8,6 @@
 #ifndef ENGINE_FEATURELEARNERS_ABSTRACTFEATURELEARNER_HPP_
 #define ENGINE_FEATURELEARNERS_ABSTRACTFEATURELEARNER_HPP_
 
-#include <Poco/JSON/Object.h>
-
 #include <map>
 #include <memory>
 #include <vector>
@@ -81,9 +79,6 @@ class AbstractFeatureLearner {
 
   /// Whether the feature learner supports multiple targets.
   virtual bool supports_multiple_targets() const = 0;
-
-  /// Return model as a JSON Object.
-  virtual Poco::JSON::Object to_json_obj(const bool _schema_only) const = 0;
 
   /// Return features as SQL code.
   virtual std::vector<std::string> to_sql(

@@ -50,6 +50,9 @@ class VocabularyContainer {
 
  public:
   /// Trivial (const) accessor
+  const NamedTupleType& named_tuple() const { return val_; }
+
+  /// Trivial (const) accessor
   const std::vector<VocabForDf>& peripheral() const {
     return val_.get<f_peripheral>();
   }
