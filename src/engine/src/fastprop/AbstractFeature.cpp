@@ -123,7 +123,7 @@ std::string AbstractFeature::to_sql(
                                             _output.join_keys_name(),
                                             _input.join_keys_name());
 
-  if (data_used_ == enums::DataUsed::subfeatures) {
+  if (data_used_.value() == enums::DataUsed::value_of<"subfeatures">()) {
     const auto number = _feature_prefix + std::to_string(peripheral_ + 1) +
                         "_" + std::to_string(input_col_ + 1);
 

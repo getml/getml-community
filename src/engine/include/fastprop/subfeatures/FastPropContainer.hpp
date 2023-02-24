@@ -49,7 +49,7 @@ class FastPropContainer {
   bool has_fast_prop() const { return (fast_prop_ && true); }
 
   /// Necessary for the automated parsing to work.
-  NamedTupleType to_named_tuple() const {
+  NamedTupleType named_tuple() const {
     return fct::make_field<"fast_prop_">(fast_prop_) *
            fct::make_field<"subcontainers_">(subcontainers_);
   }

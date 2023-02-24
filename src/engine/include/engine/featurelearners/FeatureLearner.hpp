@@ -111,7 +111,7 @@ class FeatureLearner : public AbstractFeatureLearner {
       throw std::runtime_error(
           "Feature learner has not been fitted, cannot save.");
     }
-    return feature_learner_.val().named_tuple() *
+    return feature_learner_->named_tuple() *
            fct::make_field<"fast_prop_container_">(fast_prop_container_) *
            fct::make_field<"target_num_">(target_num_) *
            fct::make_field<"vocabulary_">(vocabulary_);
@@ -674,9 +674,10 @@ FeatureLearner<FeatureLearnerType>::handle_text_fields(
 
 template <typename FeatureLearnerType>
 void FeatureLearner<FeatureLearnerType>::load(const std::string& _fname) {
+  using FLNamedTupleType = typename FeatureLearnerType::NamedTupleType;
   const auto val = helpers::Loader::load_from_json<NamedTupleType>(_fname);
   fast_prop_container_ = fct::get<"fast_prop_container_">(val);
-  feature_learner_ = FeatureLearnerType(val);
+  feature_learner_ = FeatureLearnerType(FLNamedTupleType(val));
   target_num_ = fct::get<"target_num_">(val);
   vocabulary_ = fct::get<"vocabulary_">(val);
 }
