@@ -1,51 +1,38 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef DATABASE_MYSQL_HPP_
 #define DATABASE_MYSQL_HPP_
 
-// ----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
 #include <mysql.h>
-
-// ----------------------------------------------------------------------------
 
 #include <memory>
 #include <string>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
-#include "io/io.hpp"
-#include "jsonutils/jsonutils.hpp"
-
-// ----------------------------------------------------------------------------
-
+#include "database/Command.hpp"
 #include "database/Connector.hpp"
 #include "database/DatabaseParser.hpp"
 #include "database/MySQLIterator.hpp"
-
-// ----------------------------------------------------------------------------
+#include "io/io.hpp"
+#include "jsonutils/jsonutils.hpp"
 
 namespace database {
 
 class MySQL : public Connector {
  public:
-  MySQL(const Poco::JSON::Object& _obj, const std::string& _passwd,
-        const std::vector<std::string>& _time_formats)
-      : dbname_(jsonutils::JSON::get_value<std::string>(_obj, "dbname_")),
-        host_(jsonutils::JSON::get_value<std::string>(_obj, "host_")),
+  MySQL(const typename Command::MySQLOp& _obj, const std::string& _passwd)
+      : dbname_(_obj.get<"dbname_">()),
+        host_(_obj.get<"host_">()),
         passwd_(_passwd),
-        port_(jsonutils::JSON::get_value<unsigned int>(_obj, "port_")),
-        time_formats_(_time_formats),
-        unix_socket_(
-            jsonutils::JSON::get_value<std::string>(_obj, "unix_socket_")),
-        user_(jsonutils::JSON::get_value<std::string>(_obj, "user_")) {}
+        port_(_obj.get<"port_">()),
+        time_formats_(_obj.get<"time_formats_">()),
+        unix_socket_(_obj.get<"unix_socket_">()),
+        user_(_obj.get<"user_">()) {}
 
   MySQL(const std::string& _dbname, const std::string& _host,
         const std::string& _passwd, const unsigned int _port,
@@ -62,8 +49,8 @@ class MySQL : public Connector {
   ~MySQL() = default;
 
  public:
-  /// Returns a Poco::JSON::Object describing the connection.
-  Poco::JSON::Object describe() const final;
+  /// Returns a std::string describing the connection.
+  std::string describe() const final;
 
   /// Returns the names of the table columns.
   std::vector<std::string> get_colnames(const std::string& _table) const final;
@@ -89,7 +76,7 @@ class MySQL : public Connector {
 
  public:
   /// Returns the dialect of the connector.
-  std::string dialect() const final { return DatabaseParser::MYSQL; }
+  std::string dialect() const final { return "mysql"; }
 
   /// Drops a table and cleans up, if necessary.
   void drop_table(const std::string& _tname) final {
@@ -198,8 +185,6 @@ class MySQL : public Connector {
   /// The user name.
   const std::string user_;
 };
-
-// ----------------------------------------------------------------------------
 
 }  // namespace database
 

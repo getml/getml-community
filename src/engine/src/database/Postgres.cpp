@@ -1,21 +1,14 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "database/Postgres.hpp"
 
-// ----------------------------------------------------------------------------
-
-#include "jsonutils/jsonutils.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "database/CSVBuffer.hpp"
-
-// ----------------------------------------------------------------------------
+#include "json/json.hpp"
 
 namespace database {
 
@@ -40,14 +33,11 @@ void Postgres::check_colnames(const std::vector<std::string>& _colnames,
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object Postgres::describe() const {
-  Poco::JSON::Object obj;
-
-  obj.set("connection_string", connection_string_);
-
-  obj.set("dialect", dialect());
-
-  return obj;
+std::string Postgres::describe() const {
+  const auto description =
+      fct::make_field<"connection_string">(connection_string_) *
+      fct::make_field<"dialect">(dialect());
+  return json::to_json(description);
 }
 
 // ----------------------------------------------------------------------------
@@ -210,31 +200,26 @@ std::vector<std::string> Postgres::list_tables() {
 
 // ----------------------------------------------------------------------------
 
-std::string Postgres::make_connection_string(const Poco::JSON::Object& _obj,
-                                             const std::string& _passwd) {
-  const auto host = _obj.has("host_")
-                        ? jsonutils::JSON::get_value<std::string>(_obj, "host_")
-                        : std::string("");
+std::string Postgres::make_connection_string(
+    const typename Command::PostgresOp& _obj, const std::string& _passwd) {
+  const auto& host = _obj.get<"host_">();
 
-  const auto hostaddr =
-      _obj.has("hostaddr_")
-          ? jsonutils::JSON::get_value<std::string>(_obj, "hostaddr_")
-          : std::string("");
+  const auto& hostaddr = _obj.get<"hostaddr_">();
 
-  const auto port = jsonutils::JSON::get_value<size_t>(_obj, "port_");
+  const auto port = _obj.get<"port_">();
 
-  const auto dbname = jsonutils::JSON::get_value<std::string>(_obj, "dbname_");
+  const auto& dbname = _obj.get<"dbname_">();
 
-  const auto user = jsonutils::JSON::get_value<std::string>(_obj, "user_");
+  const auto& user = _obj.get<"user_">();
 
   std::string connection_string;
 
-  if (host.size() > 0) {
-    connection_string += std::string("host=") + host + " ";
+  if (host) {
+    connection_string += std::string("host=") + *host + " ";
   }
 
-  if (hostaddr.size() > 0) {
-    connection_string += std::string("hostaddr=") + hostaddr + " ";
+  if (hostaddr) {
+    connection_string += std::string("hostaddr=") + *hostaddr + " ";
   }
 
   connection_string += std::string("port=") + std::to_string(port) + " ";

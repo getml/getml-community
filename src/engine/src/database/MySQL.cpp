@@ -1,19 +1,15 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "database/MySQL.hpp"
 
-// ----------------------------------------------------------------------------
-
-#include "jsonutils/jsonutils.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "database/CSVBuffer.hpp"
+#include "json/json.hpp"
+#include "jsonutils/jsonutils.hpp"
 
 namespace database {
 
@@ -38,18 +34,12 @@ void MySQL::check_colnames(const std::vector<std::string>& _colnames,
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object MySQL::describe() const {
-  Poco::JSON::Object obj;
-
-  obj.set("dbname", dbname_);
-
-  obj.set("dialect", dialect());
-
-  obj.set("host", host_);
-
-  obj.set("port", port_);
-
-  return obj;
+std::string MySQL::describe() const {
+  const auto description = fct::make_field<"dbname">(dbname_) *
+                           fct::make_field<"dialect">(dialect()) *
+                           fct::make_field<"host">(host_) *
+                           fct::make_field<"port">(port_);
+  return json::to_json(description);
 }
 
 // ----------------------------------------------------------------------------

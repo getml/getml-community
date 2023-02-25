@@ -1,13 +1,15 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/handlers/DatabaseManager.hpp"
 
+#include "database/Command.hpp"
 #include "database/QuerySplitter.hpp"
+#include "fct/Field.hpp"
 #include "fct/Ref.hpp"
 #include "helpers/StringSplitter.hpp"
 #include "io/Parser.hpp"
@@ -23,11 +25,17 @@ DatabaseManager::DatabaseManager(
       monitor_(_monitor),
       options_(_options),
       read_write_lock_(fct::Ref<multithreading::ReadWriteLock>::make()) {
+  const auto obj =
+      fct::Field<"db_", fct::Literal<"sqlite3">>(fct::Literal<"sqlite3">()) *
+      fct::Field<"conn_id_", std::string>("default") *
+      fct::Field<"name_", std::string>(options_.project_directory() +
+                                       "database.db") *
+      fct::Field<"time_formats_", std::vector<std::string>>(
+          {"%Y-%m-%dT%H:%M:%s%z", "%Y/%m/%d %H:%M:%S", "%Y-%m-%d %H:%M:%S"});
+
   connector_map_.emplace(std::make_pair(
-      "default",
-      fct::Ref<database::Sqlite3>::make(database::Sqlite3(
-          options_.project_directory() + "database.db",
-          {"%Y-%m-%dT%H:%M:%s%z", "%Y/%m/%d %H:%M:%S", "%Y-%m-%d %H:%M:%S"}))));
+      "default", fct::Ref<database::Sqlite3>::make(database::Sqlite3(obj))));
+
   post_tables();
 }
 
@@ -62,9 +70,9 @@ void DatabaseManager::copy_table(const Poco::JSON::Object& _cmd,
 
   // Infer the table schema from the source connection and create an
   // appropriate table in the target database.
-  const auto stmt = database::DatabaseSniffer::sniff(
-      source_conn, target_conn->dialect(), target_conn->describe(),
-      source_table_name, target_table_name);
+  const auto stmt =
+      database::DatabaseSniffer::sniff(source_conn, target_conn->dialect(),
+                                       source_table_name, target_table_name);
 
   target_conn->execute(stmt);
 
@@ -99,14 +107,11 @@ void DatabaseManager::drop_table(const std::string& _name,
 
 void DatabaseManager::describe_connection(
     const std::string& _name, Poco::Net::StreamSocket* _socket) const {
-  auto description = connector(_name)->describe();
-
-  description.set("conn_id", _name);
+  const auto description = connector(_name)->describe();
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(jsonutils::JSON::stringify(description),
-                                     _socket);
+  communication::Sender::send_string(description, _socket);
 }
 
 // ----------------------------------------------------------------------------
@@ -279,7 +284,9 @@ void DatabaseManager::list_tables(const std::string& _name,
 
 void DatabaseManager::new_db(const Poco::JSON::Object& _cmd,
                              Poco::Net::StreamSocket* _socket) {
-  const auto conn_id = JSON::get_value<std::string>(_cmd, "conn_id_");
+  const auto cmd = json::Parser<database::Command>::from_json(_cmd);
+
+  const auto conn_id = fct::get<"conn_id_">(cmd.val_);
 
   const auto password = communication::Receiver::recv_string(_socket);
 
@@ -292,7 +299,7 @@ void DatabaseManager::new_db(const Poco::JSON::Object& _cmd,
   }
 
   connector_map_.emplace(conn_id,
-                         database::DatabaseParser::parse(_cmd, password));
+                         database::DatabaseParser::parse(cmd, password));
 
   write_lock.unlock();
 
@@ -403,10 +410,6 @@ void DatabaseManager::sniff_csv(const std::string& _name,
                            ? JSON::get_value<std::string>(_cmd, "dialect_")
                            : connector(conn_id)->dialect();
 
-  const auto conn_description = _cmd.has("dialect_")
-                                    ? Poco::JSON::Object()
-                                    : connector(conn_id)->describe();
-
   if (_cmd.has("dialect_") && dialect != "python") {
     throw std::runtime_error(
         "If you explicitly pass a dialect, it must be 'python'!");
@@ -422,9 +425,8 @@ void DatabaseManager::sniff_csv(const std::string& _name,
         "The separator (sep) must consist of exactly one character!");
   }
 
-  auto sniffer =
-      io::CSVSniffer(colnames, conn_description, dialect, fnames,
-                     num_lines_sniffed, quotechar[0], sep[0], skip, _name);
+  auto sniffer = io::CSVSniffer(colnames, dialect, fnames, num_lines_sniffed,
+                                quotechar[0], sep[0], skip, _name);
 
   const auto create_table_statement = sniffer.sniff();
 
@@ -440,8 +442,8 @@ void DatabaseManager::sniff_table(const std::string& _name,
                                   Poco::Net::StreamSocket* _socket) const {
   const auto conn_id = JSON::get_value<std::string>(_cmd, "conn_id_");
 
-  const auto roles = database::DatabaseSniffer::sniff(
-      connector(conn_id), "python", Poco::JSON::Object(), _name, _name);
+  const auto roles = database::DatabaseSniffer::sniff(connector(conn_id),
+                                                      "python", _name, _name);
 
   communication::Sender::send_string("Success!", _socket);
 

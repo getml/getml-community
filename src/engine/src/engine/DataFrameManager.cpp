@@ -717,8 +717,7 @@ void DataFrameManager::df_to_db(
   const auto conn = connector(_conn_id);
 
   const auto statement = io::StatementMaker::make_statement(
-      _table_name, conn->dialect(), conn->describe(), reader.colnames(),
-      reader.coltypes());
+      _table_name, conn->dialect(), reader.colnames(), reader.coltypes());
 
   logger().log(statement);
 

@@ -1,11 +1,13 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "database/Sqlite3.hpp"
+
+#include "json/json.hpp"
 
 namespace database {
 
@@ -30,14 +32,10 @@ void Sqlite3::check_colnames(const std::vector<std::string>& _colnames,
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object Sqlite3::describe() const {
-  Poco::JSON::Object obj;
-
-  obj.set("dialect", dialect());
-
-  obj.set("name", name_);
-
-  return obj;
+std::string Sqlite3::describe() const {
+  const auto description =
+      fct::make_field<"dialect">(dialect()) * fct::make_field<"name">(name_);
+  return json::to_json(description);
 }
 
 // ----------------------------------------------------------------------------
