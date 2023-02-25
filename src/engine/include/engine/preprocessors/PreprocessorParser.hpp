@@ -8,8 +8,6 @@
 #ifndef ENGINE_PREPROCESSORS_PREPROCESSORPARSER_HPP_
 #define ENGINE_PREPROCESSORS_PREPROCESSORPARSER_HPP_
 
-#include <Poco/JSON/Object.h>
-
 #include <vector>
 
 #include "commands/Preprocessor.hpp"
@@ -31,15 +29,6 @@ struct PreprocessorParser {
   static fct::Ref<Preprocessor> parse(
       const PreprocessorHyperparams& _cmd,
       const std::vector<DependencyType>& _dependencies);
-
-  /// TODO: Remove this temporary fix.
-  static fct::Ref<Preprocessor> parse(
-      const Poco::JSON::Object& _json_obj,
-      const std::vector<Poco::JSON::Object::Ptr>& _dependencies) {
-    return parse(
-        json::from_json<PreprocessorHyperparams>(_json_obj),
-        json::Parser<std::vector<DependencyType>>::from_json(_dependencies));
-  }
 };
 
 }  // namespace preprocessors

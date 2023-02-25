@@ -8,8 +8,6 @@
 #ifndef PREDICTORS_STANDARDSCALER_HPP_
 #define PREDICTORS_STANDARDSCALER_HPP_
 
-#include <Poco/JSON/Object.h>
-
 #include <memory>
 #include <vector>
 
@@ -41,10 +39,6 @@ class StandardScaler {
 
   StandardScaler(const NamedTupleType& _val) : val_(_val) {}
 
-  /// TODO: Remove this quick fix
-  StandardScaler(const Poco::JSON::Object _obj)
-      : val_(json::from_json<NamedTupleType>(_obj)){};
-
   ~StandardScaler() = default;
 
   /// Calculates the standard deviations for dense data.
@@ -60,11 +54,6 @@ class StandardScaler {
   /// Transforms sparse data.
   const CSRMatrix<Float, unsigned int, size_t> transform(
       const CSRMatrix<Float, unsigned int, size_t>& _X_sparse) const;
-
-  /// TODO: Remove this quick fix
-  Poco::JSON::Object to_json_obj() const {
-    return *json::Parser<StandardScaler>::to_json(*this);
-  }
 
  public:
   /// Necessary for the automated parsing to work.

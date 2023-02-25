@@ -8,9 +8,6 @@
 #ifndef HELPERS_SCHEMA_HPP_
 #define HELPERS_SCHEMA_HPP_
 
-#include <Poco/JSON/Array.h>
-#include <Poco/JSON/Object.h>
-
 #include <memory>
 #include <string>
 #include <vector>
@@ -61,23 +58,6 @@ struct Schema {
 
   /// Constructs a new schema from a named tuple.
   Schema(const NamedTupleType& _val) : val_(_val) {}
-
-  /// Constructs a new schema from a JSON object.
-  static Schema from_json(const Poco::JSON::Object& _json_obj) {
-    return json::from_json<Schema>(_json_obj);
-  }
-
-  /// Constructs a vector of schemata from a JSON array.
-  static std::shared_ptr<const std::vector<Schema>> from_json(
-      const Poco::JSON::Array& _json_arr) {
-    return json::Parser<std::shared_ptr<std::vector<Schema>>>::from_json(
-        _json_arr);
-  }
-
-  /// Expresses the Schema as a JSON object.
-  Poco::JSON::Object::Ptr to_json_obj() const {
-    return json::Parser<Schema>::to_json(*this);
-  }
 
   /// Trivial getter
   const std::vector<std::string>& categoricals() const {
@@ -153,19 +133,6 @@ struct Schema {
     return val_.get<f_numericals>().at(_j);
   }
 
-  /// Checks whether an array exists,
-  /// and returns and empty array, if it doesn't.
-  template <typename T>
-  static std::vector<T> parse_columns(const Poco::JSON::Object& _json_obj,
-                                      const std::string& _name) {
-    if (_json_obj.has(_name)) {
-      return jsonutils::JSON::array_to_vector<T>(
-          jsonutils::JSON::get_array(_json_obj, _name));
-    } else {
-      return std::vector<T>();
-    }
-  }
-
   /// Trivial getter
   const std::vector<std::string>& targets() const {
     return val_.get<f_targets>();
@@ -205,11 +172,7 @@ struct Schema {
   }
 
   /// Transforms the placeholder into a JSON string
-  std::string to_json() const {
-    const auto ptr = to_json_obj();
-    assert_true(ptr);
-    return jsonutils::JSON::stringify(*ptr);
-  }
+  std::string to_json() const { return json::to_json(*this); }
 
   /// Getter for the time stamps name.
   const std::string& upper_time_stamps_name() const {
@@ -232,7 +195,6 @@ struct Schema {
   const NamedTupleType val_;
 };
 
-// ------------------------------------------------------------------------
 }  // namespace helpers
 
 #endif  // HELPERS_SCHEMA_HPP_

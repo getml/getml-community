@@ -45,10 +45,6 @@ struct ColumnDescription {
 
   explicit ColumnDescription(const NamedTupleType& _val) : val_(_val) {}
 
-  /// TODO: Get rid of this temporary fix.
-  explicit ColumnDescription(const Poco::JSON::Object& _obj)
-      : val_(json::from_json<NamedTupleType>(_obj)) {}
-
   ~ColumnDescription() = default;
 
   /// Generates the full name from the description.
@@ -86,11 +82,6 @@ struct ColumnDescription {
 
   /// Trivial accessor
   const std::string& table() const { return val_.get<f_table>(); }
-
-  /// TODO: Get rid of this temporary fix
-  Poco::JSON::Object::Ptr to_json_obj() const {
-    return json::Parser<NamedTupleType>().to_json(val_);
-  }
 
   NamedTupleType val_;
 };

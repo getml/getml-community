@@ -115,43 +115,4 @@ std::vector<bool> Placeholder::infer_needs_targets(
 }
 
 // ----------------------------------------------------------------------------
-
-Poco::JSON::Array::Ptr Placeholder::joined_tables_to_array(
-    const std::vector<Placeholder>& _vector) {
-  Poco::JSON::Array::Ptr arr(new Poco::JSON::Array());
-
-  for (auto& elem : _vector) {
-    arr->add(elem.to_json_obj());
-  }
-
-  return arr;
-}
-
-// ----------------------------------------------------------------------------
-
-std::vector<Placeholder> Placeholder::parse_joined_tables(
-    const Poco::JSON::Array::Ptr _array) {
-  std::vector<Placeholder> vec;
-
-  if (_array.isNull()) {
-    return vec;
-  }
-
-  for (size_t i = 0; i < _array->size(); ++i) {
-    vec.push_back(
-        Placeholder(*_array->getObject(static_cast<unsigned int>(i))));
-  }
-
-  return vec;
-}
-
-// ----------------------------------------------------------------------------
-
-// TODO: Remove this
-Poco::JSON::Object::Ptr Placeholder::to_json_obj() const {
-  Poco::JSON::Object::Ptr obj(new Poco::JSON::Object());
-  return obj;
-}
-
-// ----------------------------------------------------------------------------
 }  // namespace helpers

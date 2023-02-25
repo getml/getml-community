@@ -8,7 +8,6 @@
 #ifndef COMMANDS_XGBOOSTHYPERPARMS_HPP_
 #define COMMANDS_XGBOOSTHYPERPARMS_HPP_
 
-#include <Poco/JSON/Object.h>
 #include <xgboost/c_api.h>
 
 #include <cstddef>

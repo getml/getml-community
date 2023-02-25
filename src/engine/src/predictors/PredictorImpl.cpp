@@ -39,11 +39,6 @@ PredictorImpl::PredictorImpl(const NamedTupleType& _nt)
 
 // -----------------------------------------------------------------------------
 
-PredictorImpl::PredictorImpl(const Poco::JSON::Object& _obj)
-    : PredictorImpl(json::from_json<NamedTupleType>(_obj)) {}
-
-// -----------------------------------------------------------------------------
-
 PredictorImpl::~PredictorImpl() = default;
 
 // -----------------------------------------------------------------------------

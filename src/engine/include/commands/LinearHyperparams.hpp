@@ -8,8 +8,6 @@
 #ifndef COMMANDS_LINEARHYPERPARMS_HPP_
 #define COMMANDS_LINEARHYPERPARMS_HPP_
 
-#include <Poco/JSON/Object.h>
-
 #include "commands/Float.hpp"
 #include "fct/Field.hpp"
 #include "fct/NamedTuple.hpp"
@@ -30,10 +28,6 @@ struct LinearHyperparams {
              fct::make_field<"reg_lambda_">(_reg_lambda)) {}
 
   LinearHyperparams(const NamedTupleType &_val) : val_(_val) {}
-
-  /// TODO: Remove this quick fix.
-  LinearHyperparams(const Poco::JSON::Object &_json_obj)
-      : val_(json::from_json<NamedTupleType>(_json_obj)) {}
 
   ~LinearHyperparams() = default;
 
