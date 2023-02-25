@@ -31,7 +31,8 @@ using Pipeline = fct::NamedTuple<
     fct::Field<"predictors_", std::vector<Predictor>>,
     fct::Field<"preprocessors_", std::vector<Preprocessor>>,
     fct::Field<"share_selected_features_", Float>,
-    fct::Field<"tags_", std::vector<std::string>>>;
+    fct::Field<"tags_", std::vector<std::string>>,
+    fct::Field<"type_", fct::Literal<"Pipeline">>>;
 
 }  // namespace commands
 

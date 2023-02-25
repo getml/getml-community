@@ -10,6 +10,7 @@
 
 #include <variant>
 
+#include "fct/Literal.hpp"
 #include "fct/StringLiteral.hpp"
 
 namespace fct {
