@@ -8,8 +8,6 @@
 #ifndef DATABASE_CONNECTOR_HPP_
 #define DATABASE_CONNECTOR_HPP_
 
-#include <Poco/JSON/Object.h>
-
 #include <memory>
 #include <string>
 #include <vector>

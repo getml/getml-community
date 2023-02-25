@@ -12,8 +12,6 @@ extern "C" {
 #include <sqlite3/sqlite3.h>
 }
 
-#include <Poco/JSON/Object.h>
-
 #include <memory>
 #include <string>
 #include <vector>
