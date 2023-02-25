@@ -8,8 +8,6 @@
 #ifndef HELPERS_PLACEHOLDER_HPP_
 #define HELPERS_PLACEHOLDER_HPP_
 
-#include <Poco/JSON/Object.h>
-
 #include <string>
 #include <vector>
 
@@ -113,16 +111,6 @@ struct Placeholder {
   using NamedTupleType = fct::define_named_tuple_t<
       fct::remove_fields_t<NeededForTraining, "name_">, NeededForPythonAPI>;
 
-  /// TODO: Remove this temporary fix.
-  explicit Placeholder(const Poco::JSON::Object& _json_obj)
-      : val_(json::from_json<NamedTupleType>(_json_obj)) {
-    check_vector_length();
-  }
-
-  /// TODO: Remove this temporary fix.
-  explicit Placeholder(const Poco::JSON::Object::Ptr& _json_obj)
-      : Placeholder(*_json_obj) {}
-
   explicit Placeholder(const NeededForTraining& _params)
       : val_(_params * f_categoricals({}) * f_discretes({}) * f_join_keys({}) *
              f_numericals({}) * f_targets({}) * f_text({}) *
@@ -151,17 +139,6 @@ struct Placeholder {
   /// lagged targets.
   std::vector<bool> infer_needs_targets(
       const std::vector<std::string>& _peripheral_names) const;
-
-  /// Returns the joined tables as a JSON array
-  static Poco::JSON::Array::Ptr joined_tables_to_array(
-      const std::vector<Placeholder>& _vector);
-
-  /// Parses the joined tables
-  static std::vector<Placeholder> parse_joined_tables(
-      const Poco::JSON::Array::Ptr _array);
-
-  /// Transforms the placeholder into a JSON object
-  Poco::JSON::Object::Ptr to_json_obj() const;
 
   /// Trivial getter.
   const std::vector<bool>& allow_lagged_targets() const {
@@ -262,19 +239,6 @@ struct Placeholder {
     return val_.get<f_other_time_stamps_used>();
   }
 
-  /// Checks whether an array exists (because only the Python API has one),
-  /// and returns and empty array, if it doesn't.
-  template <typename T>
-  static std::vector<T> parse_columns(const Poco::JSON::Object& _json_obj,
-                                      const std::string& _name) {
-    if (_json_obj.has(_name)) {
-      return jsonutils::JSON::array_to_vector<T>(
-          jsonutils::JSON::get_array(_json_obj, _name));
-    } else {
-      return std::vector<T>();
-    }
-  }
-
   /// Getter for the propositionalization vector
   const std::vector<bool>& propositionalization() const {
     return val_.get<f_propositionalization>();
@@ -323,11 +287,7 @@ struct Placeholder {
   }
 
   /// Transforms the placeholder into a JSON string
-  std::string to_json() const {
-    const auto ptr = to_json_obj();
-    assert_true(ptr);
-    return jsonutils::JSON::stringify(*ptr);
-  }
+  std::string to_json() const { return json::to_json(*this); }
 
   /// Getter for the time stamps name.
   const std::string& upper_time_stamps_name() const {

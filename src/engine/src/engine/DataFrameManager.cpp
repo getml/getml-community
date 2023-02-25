@@ -750,7 +750,7 @@ void DataFrameManager::from_arrow(const std::string& _name,
                                   const Poco::JSON::Object& _cmd,
                                   const bool _append,
                                   Poco::Net::StreamSocket* _socket) {
-  const auto schema = containers::Schema::from_json(_cmd);
+  const auto schema = json::Parser<containers::Schema>::from_json(_cmd);
 
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
@@ -820,7 +820,7 @@ void DataFrameManager::from_csv(const std::string& _name,
   const auto time_formats = JSON::array_to_vector<std::string>(
       JSON::get_array(_cmd, "time_formats_"));
 
-  const auto schema = containers::Schema::from_json(_cmd);
+  const auto schema = json::Parser<containers::Schema>::from_json(_cmd);
 
   // We need the weak write lock for the categories and join keys encoding.
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
@@ -872,7 +872,7 @@ void DataFrameManager::from_db(const std::string& _name,
 
   const auto table_name = JSON::get_value<std::string>(_cmd, "table_name_");
 
-  const auto schema = containers::Schema::from_json(_cmd);
+  const auto schema = json::Parser<containers::Schema>::from_json(_cmd);
 
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
@@ -923,7 +923,7 @@ void DataFrameManager::from_json(const std::string& _name,
   const auto time_formats = JSON::array_to_vector<std::string>(
       JSON::get_array(_cmd, "time_formats_"));
 
-  const auto schema = containers::Schema::from_json(_cmd);
+  const auto schema = json::Parser<containers::Schema>::from_json(_cmd);
 
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
@@ -969,7 +969,7 @@ void DataFrameManager::from_parquet(const std::string& _name,
                                     Poco::Net::StreamSocket* _socket) {
   const auto fname = JSON::get_value<std::string>(_cmd, "fname_");
 
-  const auto schema = containers::Schema::from_json(_cmd);
+  const auto schema = json::Parser<containers::Schema>::from_json(_cmd);
 
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
@@ -1022,7 +1022,7 @@ void DataFrameManager::from_query(const std::string& _name,
 
   const auto query = JSON::get_value<std::string>(_cmd, "query_");
 
-  const auto schema = containers::Schema::from_json(_cmd);
+  const auto schema = json::Parser<containers::Schema>::from_json(_cmd);
 
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 

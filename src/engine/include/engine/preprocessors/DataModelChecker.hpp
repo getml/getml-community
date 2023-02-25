@@ -128,12 +128,6 @@ class DataModelChecker {
                    const containers::DataFrame& _population_df,
                    const containers::DataFrame& _peripheral_df);
 
-  /// Extracts the time stamps from the population placeholder.
-  static std::tuple<std::vector<std::string>, std::vector<std::string>,
-                    std::vector<std::string>>
-  get_time_stamps_used(const Poco::JSON::Object& _population_placeholder,
-                       const size_t _expected_size);
-
   /// Checks whether all non-NULL elements in _col are equal to each other
   static bool is_all_equal(const containers::Column<Float>& _col);
 

@@ -9,24 +9,6 @@
 
 namespace engine {
 namespace preprocessors {
-// ----------------------------------------------------
-
-std::vector<std::shared_ptr<helpers::ColumnDescription>>
-PreprocessorImpl::from_array(const Poco::JSON::Array::Ptr& _arr) {
-  assert_true(_arr);
-
-  auto desc = std::vector<std::shared_ptr<helpers::ColumnDescription>>();
-
-  for (size_t i = 0; i < _arr->size(); ++i) {
-    const auto ptr = _arr->getObject(i);
-
-    assert_true(ptr);
-
-    desc.push_back(std::make_shared<helpers::ColumnDescription>(*ptr));
-  }
-
-  return desc;
-}
 
 // ----------------------------------------------------
 
@@ -46,20 +28,6 @@ std::vector<std::string> PreprocessorImpl::retrieve_names(
   }
 
   return names;
-}
-
-// ----------------------------------------------------
-
-Poco::JSON::Array::Ptr PreprocessorImpl::to_array(
-    const std::vector<std::shared_ptr<helpers::ColumnDescription>>& _desc) {
-  auto arr = Poco::JSON::Array::Ptr(new Poco::JSON::Array());
-
-  for (const auto& ptr : _desc) {
-    assert_true(ptr);
-    arr->add(ptr->to_json_obj());
-  }
-
-  return arr;
 }
 
 // ----------------------------------------------------

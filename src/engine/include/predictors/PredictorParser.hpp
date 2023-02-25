@@ -8,8 +8,6 @@
 #ifndef PREDICTORS_PREDICTORPARSER_HPP_
 #define PREDICTORS_PREDICTORPARSER_HPP_
 
-#include <Poco/JSON/Object.h>
-
 #include <memory>
 #include <vector>
 
@@ -30,16 +28,6 @@ struct PredictorParser {
       const PredictorHyperparams& _cmd,
       const fct::Ref<const PredictorImpl>& _impl,
       const std::vector<DependencyType>& _dependencies);
-
-  /// TODO: Remove this temporary fix.
-  static fct::Ref<Predictor> parse(
-      const Poco::JSON::Object& _json_obj,
-      const fct::Ref<const PredictorImpl>& _impl,
-      const std::vector<Poco::JSON::Object::Ptr>& _dependencies) {
-    return parse(
-        json::from_json<PredictorHyperparams>(_json_obj), _impl,
-        json::Parser<std::vector<DependencyType> >::from_json(_dependencies));
-  }
 };
 
 }  // namespace predictors

@@ -8,8 +8,6 @@
 #ifndef PREDICTORS_PREDICTORIMPL_HPP_
 #define PREDICTORS_PREDICTORIMPL_HPP_
 
-#include <Poco/JSON/Object.h>
-
 #include <memory>
 #include <optional>
 #include <string>
@@ -49,9 +47,6 @@ class PredictorImpl {
                 const std::vector<std::string>& _numerical_colnames);
 
   explicit PredictorImpl(const NamedTupleType& _nt);
-
-  // TODO: Remove this.
-  explicit PredictorImpl(const Poco::JSON::Object& _obj);
 
   ~PredictorImpl();
 

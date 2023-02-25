@@ -69,15 +69,7 @@ struct Hyperparameters {
 
   Hyperparameters(const NamedTupleType& _val) : val_(_val) {}
 
-  Hyperparameters(const Poco::JSON::Object& _json_obj)
-      : val_(json::from_json<NamedTupleType>(_json_obj)) {}
-
   ~Hyperparameters() = default;
-
-  /// Transforms the hyperparameters into a JSON object
-  Poco::JSON::Object::Ptr to_json_obj() const {
-    return json::Parser<Hyperparameters>::to_json(*this);
-  }
 
   /// Transforms the hyperparameters into a JSON string
   std::string to_json() const { return json::to_json(*this); }

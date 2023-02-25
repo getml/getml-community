@@ -8,8 +8,6 @@
 #ifndef ENGINE_PREPROCESSORS_TRANSFORMPARAMS_HPP_
 #define ENGINE_PREPROCESSORS_TRANSFORMPARAMS_HPP_
 
-#include <Poco/JSON/Object.h>
-
 #include <memory>
 #include <string>
 #include <utility>
