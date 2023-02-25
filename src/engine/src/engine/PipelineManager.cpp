@@ -707,8 +707,7 @@ void PipelineManager::to_db(
   const auto conn = connector("default");
 
   const auto statement = io::StatementMaker::make_statement(
-      table_name, conn->dialect(), conn->describe(), reader.colnames(),
-      reader.coltypes());
+      table_name, conn->dialect(), reader.colnames(), reader.coltypes());
 
   logger().log(statement);
 

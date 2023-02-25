@@ -1,61 +1,48 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef DATABASE_SQLITE3_HPP_
 #define DATABASE_SQLITE3_HPP_
-
-// ----------------------------------------------------------------------------
 
 extern "C" {
 #include <sqlite3/sqlite3.h>
 }
 
-// ----------------------------------------------------------------------------
-
 #include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------------
 
 #include <memory>
 #include <string>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
-#include "fct/Ref.hpp"
-#include "io/io.hpp"
-#include "multithreading/multithreading.hpp"
-
-// ----------------------------------------------------------------------------
-
+#include "database/Command.hpp"
 #include "database/Connector.hpp"
 #include "database/DatabaseParser.hpp"
 #include "database/Float.hpp"
 #include "database/Int.hpp"
 #include "database/Sqlite3Iterator.hpp"
+#include "fct/Ref.hpp"
+#include "io/io.hpp"
+#include "multithreading/multithreading.hpp"
 
 namespace database {
 
 class Sqlite3 : public Connector {
  public:
-  Sqlite3(const std::string& _name,
-          const std::vector<std::string>& _time_formats)
-      : db_(make_db(_name)),
-        name_(_name),
+  Sqlite3(const typename Command::SQLite3Op& _obj)
+      : db_(make_db(_obj.get<"name_">())),
+        name_(_obj.get<"name_">()),
         read_write_lock_(fct::Ref<multithreading::ReadWriteLock>::make()),
-        time_formats_(_time_formats) {}
+        time_formats_(_obj.get<"time_formats_">()) {}
 
   ~Sqlite3() = default;
 
-  // -------------------------------
-
  public:
-  /// Returns a Poco::JSON::Object describing the connection.
-  Poco::JSON::Object describe() const final;
+  /// Returns a std::string describing the connection.
+  std::string describe() const final;
 
   /// Executes an SQL query.
   void execute(const std::string& _sql) final;
@@ -86,7 +73,7 @@ class Sqlite3 : public Connector {
 
  public:
   /// Returns the dialect of the connector.
-  std::string dialect() const final { return DatabaseParser::SQLITE3; }
+  std::string dialect() const final { return "sqlite3"; }
 
   /// Drops a table and cleans up, if necessary.
   void drop_table(const std::string& _tname) final {

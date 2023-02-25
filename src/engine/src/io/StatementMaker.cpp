@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "io/StatementMaker.hpp"
 
@@ -31,7 +31,6 @@ size_t StatementMaker::find_max_size(
 
 std::string StatementMaker::make_statement(
     const std::string& _table_name, const std::string& _dialect,
-    const Poco::JSON::Object& _description,
     const std::vector<std::string>& _colnames,
     const std::vector<Datatype>& _datatypes) {
   if (_dialect == MYSQL) {

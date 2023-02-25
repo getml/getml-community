@@ -48,7 +48,6 @@ class StatementMaker {
   /// Produces the CREATE TABLE statement.
   static std::string make_statement(const std::string& _table_name,
                                     const std::string& _dialect,
-                                    const Poco::JSON::Object& _description,
                                     const std::vector<std::string>& _colnames,
                                     const std::vector<Datatype>& _datatypes);
 

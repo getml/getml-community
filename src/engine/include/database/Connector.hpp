@@ -1,32 +1,21 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef DATABASE_CONNECTOR_HPP_
 #define DATABASE_CONNECTOR_HPP_
 
-// ----------------------------------------------------------------------------
-
 #include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------------
 
 #include <memory>
 #include <string>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
-#include "io/io.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "database/Iterator.hpp"
-
-// ----------------------------------------------------------------------------
+#include "io/io.hpp"
 
 namespace database {
 
@@ -38,7 +27,7 @@ class Connector {
 
  public:
   /// Returns a Poco::JSON::Object describing the connection.
-  virtual Poco::JSON::Object describe() const = 0;
+  virtual std::string describe() const = 0;
 
   /// Describes the dialect used by the connector.
   virtual std::string dialect() const = 0;
@@ -86,8 +75,6 @@ class Connector {
   /// Returns the time formats used.
   virtual const std::vector<std::string>& time_formats() const = 0;
 };
-
-// ----------------------------------------------------------------------------
 
 }  // namespace database
 

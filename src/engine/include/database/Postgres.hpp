@@ -1,45 +1,34 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef DATABASE_POSTGRES_HPP_
 #define DATABASE_POSTGRES_HPP_
 
-// ----------------------------------------------------------------------------
-
 #include <Poco/JSON/Object.h>
 #include <libpq-fe.h>
-
-// ----------------------------------------------------------------------------
 
 #include <string>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
-#include "io/StatementMaker.hpp"
-#include "io/io.hpp"
-#include "jsonutils/jsonutils.hpp"
-
-// ----------------------------------------------------------------------------
-
+#include "database/Command.hpp"
 #include "database/Connector.hpp"
 #include "database/DatabaseParser.hpp"
 #include "database/PostgresIterator.hpp"
-
-// ----------------------------------------------------------------------------
+#include "io/StatementMaker.hpp"
+#include "io/io.hpp"
+#include "jsonutils/jsonutils.hpp"
 
 namespace database {
 
 class Postgres : public Connector {
  public:
-  Postgres(const Poco::JSON::Object& _obj, const std::string& _passwd,
-           const std::vector<std::string>& _time_formats)
+  Postgres(const typename Command::PostgresOp& _obj, const std::string& _passwd)
       : connection_string_(make_connection_string(_obj, _passwd)),
-        time_formats_(_time_formats) {}
+        time_formats_(_obj.get<"time_formats_">()) {}
 
   explicit Postgres(const std::vector<std::string>& _time_formats)
       : time_formats_(_time_formats) {}
@@ -48,7 +37,7 @@ class Postgres : public Connector {
 
  public:
   /// Returns a Poco::JSON::Object describing the connection.
-  Poco::JSON::Object describe() const final;
+  std::string describe() const final;
 
   /// Returns the names of the table columns.
   std::vector<std::string> get_colnames(const std::string& _table) const final;
@@ -74,7 +63,7 @@ class Postgres : public Connector {
 
  public:
   /// Returns the dialect of the connector.
-  std::string dialect() const final { return DatabaseParser::POSTGRES; }
+  std::string dialect() const final { return "postgres"; }
 
   /// Drops a table and cleans up, if necessary.
   void drop_table(const std::string& _tname) final {
@@ -125,8 +114,8 @@ class Postgres : public Connector {
 
   /// Prepares a shared ptr to the connection object
   /// Called by the constructor.
-  static std::string make_connection_string(const Poco::JSON::Object& _obj,
-                                            const std::string& _passwd);
+  static std::string make_connection_string(
+      const typename Command::PostgresOp& _obj, const std::string& _passwd);
 
  private:
   /// Executes and SQL command given a connection.
