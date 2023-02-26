@@ -8,7 +8,6 @@
 #ifndef ENGINE_HANDLERS_DATAFRAMEMANAGER_HPP_
 #define ENGINE_HANDLERS_DATAFRAMEMANAGER_HPP_
 
-#include <Poco/JSON/Object.h>
 #include <Poco/Net/StreamSocket.h>
 
 #include <map>
@@ -324,14 +323,6 @@ class DataFrameManager {
       const std::string& _unit, const containers::Column<strings::String>& _col,
       containers::DataFrame* _df,
       multithreading::WeakWriteLock* _weak_write_lock) const;
-
-  /// Makes sure that all referenced DataFrames exist, that they
-  /// have the same number of rows.
-  /// Returns the inferred number of rows and whether any df has
-  /// been found.
-  std::pair<size_t, bool> check_nrows(const Poco::JSON::Object& _obj,
-                                      const std::string& _cmp_df_name = "",
-                                      const size_t _cmp_nrows = 0) const;
 
   /// Writes the data frame to CSV.
   void df_to_csv(const std::string& _fname, const size_t _batch_size,
