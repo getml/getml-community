@@ -423,39 +423,31 @@ std::string DataFrameManager::make_column_string(const Int _draw,
                                                  const size_t _nrows,
                                                  IterType _begin,
                                                  IterType _end) const {
-  Poco::JSON::Object obj;
+  const auto base = fct::make_field<"draw">(_draw) *
+                    fct::make_field<"recordsTotal">(_nrows) *
+                    fct::make_field<"recordsFiltered">(_nrows);
 
-  obj.set("draw", _draw);
-
-  obj.set("recordsTotal", _nrows);
-
-  obj.set("recordsFiltered", _nrows);
+  auto data = std::vector<std::vector<std::string>>();
 
   if (_nrows == 0) {
-    obj.set("data", Poco::JSON::Array());
-
-    return JSON::stringify(obj);
+    return json::to_json(base * fct::make_field<"data">(data));
   }
-
-  auto data = Poco::JSON::Array::Ptr(new Poco::JSON::Array());
 
   for (auto it = _begin; it != _end; ++it) {
-    auto row = Poco::JSON::Array::Ptr(new Poco::JSON::Array());
+    auto row = std::vector<std::string>();
 
     if constexpr (std::is_same<T, strings::String>()) {
-      row->add(it->str());
+      row.push_back(it->str());
     } else if constexpr (std::is_same<T, std::string>()) {
-      row->add(*it);
+      row.push_back(*it);
     } else {
-      row->add(io::Parser::to_string(*it));
+      row.push_back(io::Parser::to_string(*it));
     }
 
-    data->add(row);
+    data.push_back(row);
   }
 
-  obj.set("data", data);
-
-  return JSON::stringify(obj);
+  return json::to_json(base * fct::make_field<"data">(data));
 }
 
 // ------------------------------------------------------------------------
