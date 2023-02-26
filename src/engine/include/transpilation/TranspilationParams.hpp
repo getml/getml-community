@@ -1,23 +1,19 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef TRANSPILATION_TRANSPILATIONPARAMS_HPP_
 #define TRANSPILATION_TRANSPILATIONPARAMS_HPP_
 
-// -------------------------------------------------------------------------
-
 #include <cstddef>
 #include <string>
 
-// -------------------------------------------------------------------------
-
+#include "fct/Field.hpp"
+#include "fct/NamedTuple.hpp"
 #include "jsonutils/jsonutils.hpp"
-
-// -------------------------------------------------------------------------
 
 namespace transpilation {
 
