@@ -745,11 +745,14 @@ void DataFrameManager::freeze(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::from_arrow(const std::string& _name,
-                                  const Poco::JSON::Object& _cmd,
-                                  const bool _append,
-                                  Poco::Net::StreamSocket* _socket) {
-  const auto schema = json::Parser<containers::Schema>::from_json(_cmd);
+void DataFrameManager::from_arrow(
+    const typename Command::AddDfFromArrowOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
+  const auto append = _cmd.get<"append_">();
+
+  const auto& name = _cmd.get<"name_">();
+
+  const auto schema = containers::Schema(_cmd);
 
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
@@ -764,7 +767,7 @@ void DataFrameManager::from_arrow(const std::string& _name,
   const auto arrow_handler = handlers::ArrowHandler(
       local_categories, local_join_keys_encoding, params_.options_);
 
-  auto df = arrow_handler.table_to_df(arrow_handler.recv_table(_socket), _name,
+  auto df = arrow_handler.table_to_df(arrow_handler.recv_table(_socket), name,
                                       schema);
 
   // Now we upgrade the weak write lock to a strong write lock to commit
@@ -779,13 +782,13 @@ void DataFrameManager::from_arrow(const std::string& _name,
 
   df.set_join_keys_encoding(params_.join_keys_encoding_.ptr());
 
-  if (!_append || data_frames().find(_name) == data_frames().end()) {
-    data_frames()[_name] = df;
+  if (!append || data_frames().find(name) == data_frames().end()) {
+    data_frames()[name] = df;
   } else {
-    data_frames()[_name].append(df);
+    data_frames()[name].append(df);
   }
 
-  data_frames()[_name].create_indices();
+  data_frames()[name].create_indices();
 
   weak_write_lock.unlock();
 
@@ -794,32 +797,27 @@ void DataFrameManager::from_arrow(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::from_csv(const std::string& _name,
-                                const Poco::JSON::Object& _cmd,
-                                const bool _append,
+void DataFrameManager::from_csv(const typename Command::AddDfFromCSVOp& _cmd,
                                 Poco::Net::StreamSocket* _socket) {
-  auto colnames = std::optional<std::vector<std::string>>();
+  const auto append = _cmd.get<"append_">();
 
-  if (_cmd.has("colnames_")) {
-    colnames =
-        JSON::array_to_vector<std::string>(JSON::get_array(_cmd, "colnames_"));
-  }
+  const auto& name = _cmd.get<"name_">();
 
-  const auto fnames =
-      JSON::array_to_vector<std::string>(JSON::get_array(_cmd, "fnames_"));
+  const auto& colnames = _cmd.get<"colnames_">();
 
-  const auto num_lines_read = JSON::get_value<size_t>(_cmd, "num_lines_read_");
+  const auto& fnames = _cmd.get<"fnames_">();
 
-  const auto quotechar = JSON::get_value<std::string>(_cmd, "quotechar_");
+  const auto num_lines_read = _cmd.get<"num_lines_read_">();
 
-  const auto sep = JSON::get_value<std::string>(_cmd, "sep_");
+  const auto quotechar = _cmd.get<"quotechar_">();
 
-  const auto skip = JSON::get_value<size_t>(_cmd, "skip_");
+  const auto sep = _cmd.get<"sep_">();
 
-  const auto time_formats = JSON::array_to_vector<std::string>(
-      JSON::get_array(_cmd, "time_formats_"));
+  const auto skip = _cmd.get<"skip_">();
 
-  const auto schema = json::Parser<containers::Schema>::from_json(_cmd);
+  const auto& time_formats = _cmd.get<"time_formats_">();
+
+  const auto schema = containers::Schema(_cmd);
 
   // We need the weak write lock for the categories and join keys encoding.
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
@@ -832,7 +830,7 @@ void DataFrameManager::from_csv(const std::string& _name,
   const auto local_join_keys_encoding = std::make_shared<containers::Encoding>(
       pool, params_.join_keys_encoding_.ptr());
 
-  auto df = containers::DataFrame(_name, local_categories,
+  auto df = containers::DataFrame(name, local_categories,
                                   local_join_keys_encoding, pool);
 
   df.from_csv(colnames, fnames, quotechar, sep, num_lines_read, skip,
@@ -850,28 +848,30 @@ void DataFrameManager::from_csv(const std::string& _name,
 
   df.set_join_keys_encoding(params_.join_keys_encoding_.ptr());
 
-  if (!_append || data_frames().find(_name) == data_frames().end()) {
-    data_frames()[_name] = df;
+  if (!append || data_frames().find(name) == data_frames().end()) {
+    data_frames()[name] = df;
   } else {
-    data_frames()[_name].append(df);
+    data_frames()[name].append(df);
   }
 
-  data_frames()[_name].create_indices();
+  data_frames()[name].create_indices();
 
   communication::Sender::send_string("Success!", _socket);
 }
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::from_db(const std::string& _name,
-                               const Poco::JSON::Object& _cmd,
-                               const bool _append,
+void DataFrameManager::from_db(const typename Command::AddDfFromDBOp& _cmd,
                                Poco::Net::StreamSocket* _socket) {
-  const auto conn_id = JSON::get_value<std::string>(_cmd, "conn_id_");
+  const auto append = _cmd.get<"append_">();
 
-  const auto table_name = JSON::get_value<std::string>(_cmd, "table_name_");
+  const auto& name = _cmd.get<"name_">();
 
-  const auto schema = json::Parser<containers::Schema>::from_json(_cmd);
+  const auto& conn_id = _cmd.get<"conn_id_">();
+
+  const auto& table_name = _cmd.get<"table_name_">();
+
+  const auto schema = containers::Schema(_cmd);
 
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
@@ -883,7 +883,7 @@ void DataFrameManager::from_db(const std::string& _name,
   const auto local_join_keys_encoding = std::make_shared<containers::Encoding>(
       pool, params_.join_keys_encoding_.ptr());  // TODO
 
-  auto df = containers::DataFrame(_name, local_categories,
+  auto df = containers::DataFrame(name, local_categories,
                                   local_join_keys_encoding, pool);
 
   df.from_db(connector(conn_id), table_name, schema);
@@ -898,31 +898,32 @@ void DataFrameManager::from_db(const std::string& _name,
 
   df.set_join_keys_encoding(params_.join_keys_encoding_.ptr());
 
-  if (!_append || data_frames().find(_name) == data_frames().end()) {
-    data_frames()[_name] = df;
+  if (!append || data_frames().find(name) == data_frames().end()) {
+    data_frames()[name] = df;
   } else {
-    data_frames()[_name].append(df);
+    data_frames()[name].append(df);
   }
 
-  data_frames()[_name].create_indices();
+  data_frames()[name].create_indices();
 
   communication::Sender::send_string("Success!", _socket);
 }
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::from_json(const std::string& _name,
-                                 const Poco::JSON::Object& _cmd,
-                                 const bool _append,
+void DataFrameManager::from_json(const typename Command::AddDfFromJSONOp& _cmd,
                                  Poco::Net::StreamSocket* _socket) {
   const auto json_str = communication::Receiver::recv_string(_socket);
 
+  const auto append = _cmd.get<"append_">();
+
+  const auto& name = _cmd.get<"name_">();
+
+  const auto time_formats = _cmd.get<"time_formats_">();
+
+  const auto schema = containers::Schema(_cmd);
+
   const auto obj = json::from_json<commands::DataFrameFromJSON>(json_str);
-
-  const auto time_formats = JSON::array_to_vector<std::string>(
-      JSON::get_array(_cmd, "time_formats_"));
-
-  const auto schema = json::Parser<containers::Schema>::from_json(_cmd);
 
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
@@ -934,7 +935,7 @@ void DataFrameManager::from_json(const std::string& _name,
   const auto local_join_keys_encoding = std::make_shared<containers::Encoding>(
       pool, params_.join_keys_encoding_.ptr());  // TODO
 
-  auto df = containers::DataFrame(_name, local_categories,
+  auto df = containers::DataFrame(name, local_categories,
                                   local_join_keys_encoding, pool);
 
   df.from_json(obj, time_formats, schema);
@@ -949,26 +950,29 @@ void DataFrameManager::from_json(const std::string& _name,
 
   df.set_join_keys_encoding(params_.join_keys_encoding_.ptr());
 
-  if (!_append || data_frames().find(_name) == data_frames().end()) {
-    data_frames()[_name] = df;
+  if (!append || data_frames().find(name) == data_frames().end()) {
+    data_frames()[name] = df;
   } else {
-    data_frames()[_name].append(df);
+    data_frames()[name].append(df);
   }
 
-  data_frames()[_name].create_indices();
+  data_frames()[name].create_indices();
 
   communication::Sender::send_string("Success!", _socket);
 }
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::from_parquet(const std::string& _name,
-                                    const Poco::JSON::Object& _cmd,
-                                    const bool _append,
-                                    Poco::Net::StreamSocket* _socket) {
-  const auto fname = JSON::get_value<std::string>(_cmd, "fname_");
+void DataFrameManager::from_parquet(
+    const typename Command::AddDfFromParquetOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
+  const auto append = _cmd.get<"append_">();
 
-  const auto schema = json::Parser<containers::Schema>::from_json(_cmd);
+  const auto& name = _cmd.get<"name_">();
+
+  const auto& fname = _cmd.get<"fname_">();
+
+  const auto schema = containers::Schema(_cmd);
 
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
@@ -983,7 +987,7 @@ void DataFrameManager::from_parquet(const std::string& _name,
   const auto arrow_handler = handlers::ArrowHandler(
       local_categories, local_join_keys_encoding, params_.options_);
 
-  auto df = arrow_handler.table_to_df(arrow_handler.read_parquet(fname), _name,
+  auto df = arrow_handler.table_to_df(arrow_handler.read_parquet(fname), name,
                                       schema);
 
   // Now we upgrade the weak write lock to a strong write lock to commit
@@ -998,13 +1002,13 @@ void DataFrameManager::from_parquet(const std::string& _name,
 
   df.set_join_keys_encoding(params_.join_keys_encoding_.ptr());
 
-  if (!_append || data_frames().find(_name) == data_frames().end()) {
-    data_frames()[_name] = df;
+  if (!append || data_frames().find(name) == data_frames().end()) {
+    data_frames()[name] = df;
   } else {
-    data_frames()[_name].append(df);
+    data_frames()[name].append(df);
   }
 
-  data_frames()[_name].create_indices();
+  data_frames()[name].create_indices();
 
   weak_write_lock.unlock();
 
@@ -1013,15 +1017,18 @@ void DataFrameManager::from_parquet(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::from_query(const std::string& _name,
-                                  const Poco::JSON::Object& _cmd,
-                                  const bool _append,
-                                  Poco::Net::StreamSocket* _socket) {
-  const auto conn_id = JSON::get_value<std::string>(_cmd, "conn_id_");
+void DataFrameManager::from_query(
+    const typename Command::AddDfFromQueryOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
+  const auto append = _cmd.get<"append_">();
 
-  const auto query = JSON::get_value<std::string>(_cmd, "query_");
+  const auto& name = _cmd.get<"name_">();
 
-  const auto schema = json::Parser<containers::Schema>::from_json(_cmd);
+  const auto& conn_id = _cmd.get<"conn_id_">();
+
+  const auto& query = _cmd.get<"query_">();
+
+  const auto schema = containers::Schema(_cmd);
 
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
@@ -1033,7 +1040,7 @@ void DataFrameManager::from_query(const std::string& _name,
   const auto local_join_keys_encoding = std::make_shared<containers::Encoding>(
       pool, params_.join_keys_encoding_.ptr());
 
-  auto df = containers::DataFrame(_name, local_categories,
+  auto df = containers::DataFrame(name, local_categories,
                                   local_join_keys_encoding, pool);
 
   df.from_query(connector(conn_id), query, schema);
@@ -1048,24 +1055,26 @@ void DataFrameManager::from_query(const std::string& _name,
 
   df.set_join_keys_encoding(params_.join_keys_encoding_.ptr());
 
-  if (!_append || data_frames().find(_name) == data_frames().end()) {
-    data_frames()[_name] = df;
+  if (!append || data_frames().find(name) == data_frames().end()) {
+    data_frames()[name] = df;
   } else {
-    data_frames()[_name].append(df);
+    data_frames()[name].append(df);
   }
 
-  data_frames()[_name].create_indices();
+  data_frames()[name].create_indices();
 
   communication::Sender::send_string("Success!", _socket);
 }
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::from_view(const std::string& _name,
-                                 const Poco::JSON::Object& _cmd,
-                                 const bool _append,
+void DataFrameManager::from_view(const typename Command::AddDfFromViewOp& _cmd,
                                  Poco::Net::StreamSocket* _socket) {
-  const auto view = *JSON::get_object(_cmd, "view_");
+  const auto append = _cmd.get<"append_">();
+
+  const auto& name = _cmd.get<"name_">();
+
+  const auto view = _cmd.get<"view_">();
 
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
@@ -1080,7 +1089,7 @@ void DataFrameManager::from_view(const std::string& _name,
   auto df = ViewParser(local_categories, local_join_keys_encoding,
                        params_.data_frames_, params_.options_)
                 .parse(view)
-                .clone(_name);
+                .clone(name);
 
   weak_write_lock.upgrade();
 
@@ -1092,13 +1101,13 @@ void DataFrameManager::from_view(const std::string& _name,
 
   df.set_join_keys_encoding(params_.join_keys_encoding_.ptr());
 
-  if (!_append || data_frames().find(_name) == data_frames().end()) {
-    data_frames()[_name] = df;
+  if (!append || data_frames().find(name) == data_frames().end()) {
+    data_frames()[name] = df;
   } else {
-    data_frames()[_name].append(df);
+    data_frames()[name].append(df);
   }
 
-  data_frames()[_name].create_indices();
+  data_frames()[name].create_indices();
 
   communication::Sender::send_string("Success!", _socket);
 }

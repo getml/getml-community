@@ -15,6 +15,7 @@
 #include <memory>
 #include <string>
 
+#include "commands/DataFrameCommand.hpp"
 #include "debug/debug.hpp"
 #include "engine/communication/communication.hpp"
 #include "engine/config/config.hpp"
@@ -32,6 +33,8 @@ class DataFrameManager {
       containers::Column<bool>::FLOAT_COLUMN;
   static constexpr const char* STRING_COLUMN =
       containers::Column<bool>::STRING_COLUMN;
+
+  using Command = commands::DataFrameCommand;
 
  public:
   explicit DataFrameManager(const DataFrameManagerParams& _params)
@@ -92,32 +95,32 @@ class DataFrameManager {
   void freeze(const std::string& _name, Poco::Net::StreamSocket* _socket);
 
   /// Creates a new data frame from an Arrow DataFrame.
-  void from_arrow(const std::string& _name, const Poco::JSON::Object& _cmd,
-                  const bool _append, Poco::Net::StreamSocket* _socket);
+  void from_arrow(const typename Command::AddDfFromArrowOp& _cmd,
+                  Poco::Net::StreamSocket* _socket);
 
   /// Creates a new data frame from a set of CSV files.
-  void from_csv(const std::string& _name, const Poco::JSON::Object& _cmd,
-                const bool _append, Poco::Net::StreamSocket* _socket);
+  void from_csv(const typename Command::AddDfFromCSVOp& _cmd,
+                Poco::Net::StreamSocket* _socket);
 
   /// Creates a new data frame from a table in the database.
-  void from_db(const std::string& _name, const Poco::JSON::Object& _cmd,
-               const bool _append, Poco::Net::StreamSocket* _socket);
+  void from_db(const typename Command::AddDfFromDBOp& _cmd,
+               Poco::Net::StreamSocket* _socket);
 
   /// Creates a new data frame from a JSON string.
-  void from_json(const std::string& _name, const Poco::JSON::Object& _cmd,
-                 const bool _append, Poco::Net::StreamSocket* _socket);
+  void from_json(const typename Command::AddDfFromJSONOp& _cmd,
+                 Poco::Net::StreamSocket* _socket);
 
   /// Creates a new DataFrame from a parquet file.
-  void from_parquet(const std::string& _name, const Poco::JSON::Object& _cmd,
-                    const bool _append, Poco::Net::StreamSocket* _socket);
+  void from_parquet(const typename Command::AddDfFromParquetOp& _cmd,
+                    Poco::Net::StreamSocket* _socket);
 
   /// Creates a new data frame from a database query.
-  void from_query(const std::string& _name, const Poco::JSON::Object& _cmd,
-                  const bool _append, Poco::Net::StreamSocket* _socket);
+  void from_query(const typename Command::AddDfFromQueryOp& _cmd,
+                  Poco::Net::StreamSocket* _socket);
 
   /// Creates a new data frame from a view.
-  void from_view(const std::string& _name, const Poco::JSON::Object& _cmd,
-                 const bool _append, Poco::Net::StreamSocket* _socket);
+  void from_view(const typename Command::AddDfFromViewOp& _cmd,
+                 Poco::Net::StreamSocket* _socket);
 
   /// Sends a boolean columm to the client
   void get_boolean_column(const std::string& _name,
