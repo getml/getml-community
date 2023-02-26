@@ -38,6 +38,10 @@ class DataFrameManager {
 
   using Command = commands::DataFrameCommand;
 
+  using CloseDataFrameOp =
+      fct::NamedTuple<fct::Field<"name_", std::string>,
+                      fct::Field<"type_", fct::Literal<"DataFrame.close">>>;
+
   using RecvAndAddOp = fct::NamedTuple<fct::Field<"name_", std::string>,
                                        fct::Field<"role_", std::string>>;
 
@@ -171,7 +175,8 @@ class DataFrameManager {
                          Poco::Net::StreamSocket* _socket);
 
   /// Sends a data frame back to the client, column-by-column.
-  void get_data_frame(Poco::Net::StreamSocket* _socket);
+  void get_data_frame(const typename Command::GetDataFrameOp& _cmd,
+                      Poco::Net::StreamSocket* _socket);
 
   /// Expresses the data frame in HTML format, for a Jupyter notebook.
   void get_data_frame_html(const typename Command::GetDataFrameHTMLOp& _cmd,
