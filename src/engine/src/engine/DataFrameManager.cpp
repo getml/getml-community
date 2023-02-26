@@ -60,20 +60,20 @@ void DataFrameManager::add_data_frame(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::add_float_column(const std::string& _name,
-                                        const Poco::JSON::Object& _cmd,
-                                        Poco::Net::StreamSocket* _socket) {
+void DataFrameManager::add_float_column(
+    const typename Command::AddFloatColumnOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
-  const auto role = JSON::get_value<std::string>(_cmd, "role_");
+  const auto& role = _cmd.get<"role_">();
 
-  const auto name = JSON::get_value<std::string>(_cmd, "name_");
+  const auto& name = _cmd.get<"name_">();
 
-  const auto unit = JSON::get_value<std::string>(_cmd, "unit_");
+  const auto& unit = _cmd.get<"unit_">();
 
-  const auto json_col = *JSON::get_object(_cmd, "col_");
+  const auto& json_col = _cmd.get<"col_">();
 
-  const auto df_name = JSON::get_value<std::string>(_cmd, "df_name_");
+  const auto& df_name = _cmd.get<"df_name_">();
 
   const auto parser = FloatOpParser(
       params_.categories_, params_.join_keys_encoding_, params_.data_frames_);
@@ -114,7 +114,6 @@ void DataFrameManager::add_float_column(const std::string& _name,
 
     const auto pool = params_.options_.make_pool();
 
-    // TODO
     auto new_df =
         containers::DataFrame(df_name, params_.categories_.ptr(),
                               params_.join_keys_encoding_.ptr(), pool);
@@ -131,9 +130,10 @@ void DataFrameManager::add_float_column(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::add_float_column(const Poco::JSON::Object& _cmd,
-                                        Poco::Net::StreamSocket* _socket) {
-  const auto df_name = JSON::get_value<std::string>(_cmd, "df_name_");
+void DataFrameManager::add_float_column(
+    const typename Command::FloatColumnOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
+  const auto& df_name = _cmd.get<"df_name_">();
 
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
@@ -145,7 +145,6 @@ void DataFrameManager::add_float_column(const Poco::JSON::Object& _cmd,
   } else {
     const auto pool = params_.options_.make_pool();
 
-    // TODO
     auto new_df =
         containers::DataFrame(df_name, params_.categories_.ptr(),
                               params_.join_keys_encoding_.ptr(), pool);
@@ -246,9 +245,10 @@ void DataFrameManager::add_int_column_to_df(
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::add_string_column(const Poco::JSON::Object& _cmd,
-                                         Poco::Net::StreamSocket* _socket) {
-  const auto df_name = JSON::get_value<std::string>(_cmd, "df_name_");
+void DataFrameManager::add_string_column(
+    const typename Command::StringColumnOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
+  const auto& df_name = _cmd.get<"df_name_">();
 
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
@@ -276,20 +276,20 @@ void DataFrameManager::add_string_column(const Poco::JSON::Object& _cmd,
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::add_string_column(const std::string& _name,
-                                         const Poco::JSON::Object& _cmd,
-                                         Poco::Net::StreamSocket* _socket) {
+void DataFrameManager::add_string_column(
+    const typename Command::AddStringColumnOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
-  const auto role = JSON::get_value<std::string>(_cmd, "role_");
+  const auto& role = _cmd.get<"role_">();
 
-  const auto name = JSON::get_value<std::string>(_cmd, "name_");
+  const auto& name = _cmd.get<"name_">();
 
-  const auto unit = JSON::get_value<std::string>(_cmd, "unit_");
+  const auto& unit = _cmd.get<"unit_">();
 
-  const auto json_col = *JSON::get_object(_cmd, "col_");
+  const auto& json_col = _cmd.get<"col_">();
 
-  const auto df_name = JSON::get_value<std::string>(_cmd, "df_name_");
+  const auto& df_name = _cmd.get<"df_name_">();
 
   const auto parser = StringOpParser(
       params_.categories_, params_.join_keys_encoding_, params_.data_frames_);
@@ -358,10 +358,9 @@ void DataFrameManager::add_string_column_to_df(
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::aggregate(const std::string& _name,
-                                 const Poco::JSON::Object& _cmd,
+void DataFrameManager::aggregate(const typename Command::AggregationOp& _cmd,
                                  Poco::Net::StreamSocket* _socket) {
-  const auto aggregation = *JSON::get_object(_cmd, "aggregation_");
+  const auto& aggregation = _cmd.get<"aggregation_">();
 
   auto response = containers::Column<Float>(nullptr, 1);
 
@@ -380,8 +379,11 @@ void DataFrameManager::aggregate(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::append_to_data_frame(const std::string& _name,
-                                            Poco::Net::StreamSocket* _socket) {
+void DataFrameManager::append_to_data_frame(
+    const typename Command::AppendToDataFrameOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
+  const auto& name = _cmd.get<"name_">();
+
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
   const auto pool = params_.options_.make_pool();
@@ -393,22 +395,22 @@ void DataFrameManager::append_to_data_frame(const std::string& _name,
       pool, params_.join_keys_encoding_.ptr());  // TODO
 
   // TODO
-  auto df = containers::DataFrame(_name, local_categories.ptr(),
+  auto df = containers::DataFrame(name, local_categories.ptr(),
                                   local_join_keys_encoding.ptr(), pool);
 
   receive_data(local_categories, local_join_keys_encoding, &df, _socket);
 
   weak_write_lock.upgrade();
 
-  auto [old_df, exists] = utils::Getter::get_if_exists(_name, &data_frames());
+  auto [old_df, exists] = utils::Getter::get_if_exists(name, &data_frames());
 
   if (exists) {
     old_df->append(df);
   } else {
-    data_frames()[_name] = df;
+    data_frames()[name] = df;
   }
 
-  data_frames()[_name].create_indices();
+  data_frames()[name].create_indices();
 
   params_.categories_->append(*local_categories);
 
@@ -418,17 +420,19 @@ void DataFrameManager::append_to_data_frame(const std::string& _name,
 // ------------------------------------------------------------------------
 
 void DataFrameManager::calc_categorical_column_plots(
-    const std::string& _name, const Poco::JSON::Object& _cmd,
+    const typename Command::CalcCategoricalColumnPlotOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto df_name = JSON::get_value<std::string>(_cmd, "df_name_");
+  const auto& name = _cmd.get<"name_">();
 
-  const auto role = JSON::get_value<std::string>(_cmd, "role_");
+  const auto& df_name = _cmd.get<"df_name_">();
 
-  const auto num_bins = JSON::get_value<size_t>(_cmd, "num_bins_");
+  const auto& role = _cmd.get<"role_">();
 
-  const auto target_name = JSON::get_value<std::string>(_cmd, "target_name_");
+  const auto num_bins = _cmd.get<"num_bins_">();
 
-  const auto target_role = JSON::get_value<std::string>(_cmd, "target_role_");
+  const auto& target_name = _cmd.get<"target_name_">();
+
+  const auto& target_role = _cmd.get<"target_role_">();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -437,7 +441,7 @@ void DataFrameManager::calc_categorical_column_plots(
   auto vec = std::vector<strings::String>();
 
   if (role == containers::DataFrame::ROLE_CATEGORICAL) {
-    const auto col = df.int_column(_name, role);
+    const auto col = df.int_column(name, role);
 
     vec.resize(col.nrows());
 
@@ -445,7 +449,7 @@ void DataFrameManager::calc_categorical_column_plots(
       vec[i] = categories()[col[i]];
     }
   } else if (role == containers::DataFrame::ROLE_JOIN_KEY) {
-    const auto col = df.int_column(_name, role);
+    const auto col = df.int_column(name, role);
 
     vec.resize(col.nrows());
 
@@ -453,7 +457,7 @@ void DataFrameManager::calc_categorical_column_plots(
       vec[i] = join_keys_encoding()[col[i]];
     }
   } else if (role == containers::DataFrame::ROLE_TEXT) {
-    const auto col = df.text(_name);
+    const auto col = df.text(name);
 
     vec.resize(col.nrows());
 
@@ -462,7 +466,7 @@ void DataFrameManager::calc_categorical_column_plots(
     }
   } else if (role == containers::DataFrame::ROLE_UNUSED ||
              role == containers::DataFrame::ROLE_UNUSED_STRING) {
-    const auto col = df.unused_string(_name);
+    const auto col = df.unused_string(name);
 
     vec.resize(col.nrows());
 
@@ -500,24 +504,26 @@ void DataFrameManager::calc_categorical_column_plots(
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::calc_column_plots(const std::string& _name,
-                                         const Poco::JSON::Object& _cmd,
-                                         Poco::Net::StreamSocket* _socket) {
-  const auto df_name = JSON::get_value<std::string>(_cmd, "df_name_");
+void DataFrameManager::calc_column_plots(
+    const typename Command::CalcColumnPlotOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
+  const auto& name = _cmd.get<"name_">();
 
-  const auto num_bins = JSON::get_value<size_t>(_cmd, "num_bins_");
+  const auto& df_name = _cmd.get<"df_name_">();
 
-  const auto role = JSON::get_value<std::string>(_cmd, "role_");
+  const auto& role = _cmd.get<"role_">();
 
-  const auto target_name = JSON::get_value<std::string>(_cmd, "target_name_");
+  const auto num_bins = _cmd.get<"num_bins_">();
 
-  const auto target_role = JSON::get_value<std::string>(_cmd, "target_role_");
+  const auto& target_name = _cmd.get<"target_name_">();
+
+  const auto& target_role = _cmd.get<"target_role_">();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto& df = utils::Getter::get(df_name, data_frames());
 
-  const auto col = df.float_column(_name, role);
+  const auto col = df.float_column(name, role);
 
   std::vector<const Float*> targets;
 
@@ -610,11 +616,11 @@ std::pair<size_t, bool> DataFrameManager::check_nrows(
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::concat(const std::string& _name,
-                              const Poco::JSON::Object& _cmd,
+void DataFrameManager::concat(const typename Command::ConcatDataFramesOp& _cmd,
                               Poco::Net::StreamSocket* _socket) {
-  const auto data_frame_objs =
-      JSON::array_to_obj_vector(JSON::get_array(_cmd, "data_frames_"));
+  const auto& name = _cmd.get<"name_">();
+
+  const auto data_frame_objs = _cmd.get<"data_frames_">();
 
   if (data_frame_objs.size() == 0) {
     throw std::runtime_error(
@@ -636,15 +642,13 @@ void DataFrameManager::concat(const std::string& _name,
                                 params_.data_frames_, params_.options_);
 
   const auto extract_df =
-      [&view_parser](
-          const Poco::JSON::Object::Ptr _ptr) -> containers::DataFrame {
-    assert_true(_ptr);
-    return view_parser.parse(*_ptr);
+      [&view_parser](const auto& _cmd) -> containers::DataFrame {
+    return view_parser.parse(_cmd);
   };
 
   auto range = data_frame_objs | VIEWS::transform(extract_df);
 
-  auto df = range[0].clone(_name);
+  auto df = range[0].clone(name);
 
   for (size_t i = 1; i < RANGES::size(range); ++i) {
     df.append(range[i]);
@@ -660,7 +664,7 @@ void DataFrameManager::concat(const std::string& _name,
 
   params_.join_keys_encoding_->append(*local_join_keys_encoding);
 
-  data_frames()[_name] = df;
+  data_frames()[name] = df;
 
   weak_write_lock.unlock();
 
@@ -730,11 +734,13 @@ void DataFrameManager::df_to_db(
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::freeze(const std::string& _name,
+void DataFrameManager::freeze(const typename Command::FreezeDataFrameOp& _cmd,
                               Poco::Net::StreamSocket* _socket) {
+  const auto& name = _cmd.get<"name_">();
+
   multithreading::WriteLock write_lock(params_.read_write_lock_);
 
-  auto& df = utils::Getter::get(_name, &data_frames());
+  auto& df = utils::Getter::get(name, &data_frames());
 
   df.freeze();
 
@@ -1114,10 +1120,10 @@ void DataFrameManager::from_view(const typename Command::AddDfFromViewOp& _cmd,
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::get_boolean_column(const std::string& _name,
-                                          const Poco::JSON::Object& _cmd,
-                                          Poco::Net::StreamSocket* _socket) {
-  const auto json_col = *JSON::get_object(_cmd, "col_");
+void DataFrameManager::get_boolean_column(
+    const typename Command::GetBooleanColumnOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
+  const auto json_col = _cmd.get<"col_">();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -1147,15 +1153,15 @@ void DataFrameManager::get_boolean_column(const std::string& _name,
 // ------------------------------------------------------------------------
 
 void DataFrameManager::get_boolean_column_content(
-    const std::string& _name, const Poco::JSON::Object& _cmd,
+    const typename Command::GetBooleanColumnContentOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto draw = JSON::get_value<Int>(_cmd, "draw_");
+  const auto draw = _cmd.get<"draw_">();
 
-  const auto length = JSON::get_value<size_t>(_cmd, "length_");
+  const auto length = _cmd.get<"length_">();
 
-  const auto start = JSON::get_value<size_t>(_cmd, "start_");
+  const auto start = _cmd.get<"start_">();
 
-  const auto json_col = *JSON::get_object(_cmd, "col_");
+  const auto& json_col = _cmd.get<"col_">();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -1181,9 +1187,9 @@ void DataFrameManager::get_boolean_column_content(
 // ------------------------------------------------------------------------
 
 void DataFrameManager::get_boolean_column_nrows(
-    const std::string& _name, const Poco::JSON::Object& _cmd,
+    const typename Command::GetBooleanColumnNRowsOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto json_col = *JSON::get_object(_cmd, "col_");
+  const auto& json_col = _cmd.get<"col_">();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -1201,9 +1207,9 @@ void DataFrameManager::get_boolean_column_nrows(
 // ------------------------------------------------------------------------
 
 void DataFrameManager::get_categorical_column(
-    const std::string& _name, const Poco::JSON::Object& _cmd,
+    const typename Command::GetStringColumnOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto json_col = *JSON::get_object(_cmd, "col_");
+  const auto& json_col = _cmd.get<"col_">();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -1233,15 +1239,15 @@ void DataFrameManager::get_categorical_column(
 // ------------------------------------------------------------------------
 
 void DataFrameManager::get_categorical_column_content(
-    const std::string& _name, const Poco::JSON::Object& _cmd,
+    const typename Command::GetStringColumnContentOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto draw = JSON::get_value<Int>(_cmd, "draw_");
+  const auto draw = _cmd.get<"draw_">();
 
-  const auto length = JSON::get_value<size_t>(_cmd, "length_");
+  const auto length = _cmd.get<"length_">();
 
-  const auto start = JSON::get_value<size_t>(_cmd, "start_");
+  const auto start = _cmd.get<"start_">();
 
-  const auto json_col = *JSON::get_object(_cmd, "col_");
+  const auto& json_col = _cmd.get<"col_">();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -1267,9 +1273,9 @@ void DataFrameManager::get_categorical_column_content(
 // ------------------------------------------------------------------------
 
 void DataFrameManager::get_categorical_column_nrows(
-    const std::string& _name, const Poco::JSON::Object& _cmd,
+    const typename Command::GetStringColumnNRowsOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto json_col = *JSON::get_object(_cmd, "col_");
+  const auto& json_col = _cmd.get<"col_">();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -1288,9 +1294,9 @@ void DataFrameManager::get_categorical_column_nrows(
 // ------------------------------------------------------------------------
 
 void DataFrameManager::get_categorical_column_unique(
-    const std::string& _name, const Poco::JSON::Object& _cmd,
+    const typename Command::GetStringColumnUniqueOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto json_col = *JSON::get_object(_cmd, "col_");
+  const auto json_col = _cmd.get<"col_">();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -1312,10 +1318,10 @@ void DataFrameManager::get_categorical_column_unique(
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::get_column(const std::string& _name,
-                                  const Poco::JSON::Object& _cmd,
-                                  Poco::Net::StreamSocket* _socket) {
-  const auto json_col = *JSON::get_object(_cmd, "col_");
+void DataFrameManager::get_column(
+    const typename Command::GetFloatColumnOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
+  const auto& json_col = _cmd.get<"col_">();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -1349,10 +1355,10 @@ void DataFrameManager::get_column(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::get_column_unique(const std::string& _name,
-                                         const Poco::JSON::Object& _cmd,
-                                         Poco::Net::StreamSocket* _socket) {
-  const auto json_col = *JSON::get_object(_cmd, "col_");
+void DataFrameManager::get_column_unique(
+    const typename Command::GetFloatColumnUniqueOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
+  const auto& json_col = _cmd.get<"col_">();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -1380,17 +1386,19 @@ void DataFrameManager::get_column_unique(const std::string& _name,
 // ------------------------------------------------------------------------
 
 void DataFrameManager::get_data_frame_content(
-    const std::string& _name, const Poco::JSON::Object& _cmd,
+    const typename Command::GetDataFrameContentOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto draw = JSON::get_value<Int>(_cmd, "draw_");
+  const auto& name = _cmd.get<"name_">();
 
-  const auto length = JSON::get_value<Int>(_cmd, "length_");
+  const auto draw = _cmd.get<"draw_">();
 
-  const auto start = JSON::get_value<Int>(_cmd, "start_");
+  const auto length = _cmd.get<"length_">();
+
+  const auto start = _cmd.get<"start_">();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
-  const auto& df = utils::Getter::get(_name, &data_frames());
+  const auto& df = utils::Getter::get(name, &data_frames());
 
   const auto content = df.get_content(draw, start, length);
 
@@ -1401,10 +1409,10 @@ void DataFrameManager::get_data_frame_content(
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::get_column_nrows(const std::string& _name,
-                                        const Poco::JSON::Object& _cmd,
-                                        Poco::Net::StreamSocket* _socket) {
-  const auto json_col = *JSON::get_object(_cmd, "col_");
+void DataFrameManager::get_column_nrows(
+    const typename Command::GetFloatColumnNRowsOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
+  const auto& json_col = _cmd.get<"col_">();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -1422,16 +1430,18 @@ void DataFrameManager::get_column_nrows(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::get_data_frame_html(const std::string& _name,
-                                           const Poco::JSON::Object& _cmd,
-                                           Poco::Net::StreamSocket* _socket) {
-  const auto max_rows = JSON::get_value<std::int32_t>(_cmd, "max_rows_");
+void DataFrameManager::get_data_frame_html(
+    const typename Command::GetDataFrameHTMLOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
+  const auto& name = _cmd.get<"name_">();
 
-  const auto border = JSON::get_value<std::int32_t>(_cmd, "border_");
+  const auto max_rows = _cmd.get<"max_rows_">();
+
+  const auto border = _cmd.get<"border_">();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
-  const auto& df = utils::Getter::get(_name, &data_frames());
+  const auto& df = utils::Getter::get(name, &data_frames());
 
   const auto str = df.get_html(max_rows, border);
 
@@ -1444,11 +1454,14 @@ void DataFrameManager::get_data_frame_html(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::get_data_frame_string(const std::string& _name,
-                                             Poco::Net::StreamSocket* _socket) {
+void DataFrameManager::get_data_frame_string(
+    const typename Command::GetDataFrameStringOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
+  const auto& name = _cmd.get<"name_">();
+
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
-  const auto& df = utils::Getter::get(_name, &data_frames());
+  const auto& df = utils::Getter::get(name, &data_frames());
 
   const auto str = df.get_string(20);
 
@@ -1461,40 +1474,40 @@ void DataFrameManager::get_data_frame_string(const std::string& _name,
 
 void DataFrameManager::get_data_frame(Poco::Net::StreamSocket* _socket) {
   multithreading::ReadLock read_lock(params_.read_write_lock_);
+  // TODO
+  /*  while (true) {
+      Poco::JSON::Object cmd =
+          communication::Receiver::recv_cmd(params_.logger_, _socket);
 
-  while (true) {
-    Poco::JSON::Object cmd =
-        communication::Receiver::recv_cmd(params_.logger_, _socket);
+      const auto name = JSON::get_value<std::string>(cmd, "name_");
 
-    const auto name = JSON::get_value<std::string>(cmd, "name_");
+      const auto type = JSON::get_value<std::string>(cmd, "type_");
 
-    const auto type = JSON::get_value<std::string>(cmd, "type_");
-
-    if (type == "StringColumn.get") {
-      get_categorical_column(name, cmd, _socket);
-    } else if (type == "FloatColumn.get") {
-      get_column(name, cmd, _socket);
-    } else if (type == "DataFrame.close") {
-      communication::Sender::send_string("Success!", _socket);
-      break;
-    } else {
-      break;
-    }
-  }
+      if (type == "StringColumn.get") {
+        get_categorical_column(name, cmd, _socket);
+      } else if (type == "FloatColumn.get") {
+        get_column(name, cmd, _socket);
+      } else if (type == "DataFrame.close") {
+        communication::Sender::send_string("Success!", _socket);
+        break;
+      } else {
+        break;
+      }
+    }*/
 }
 
 // ------------------------------------------------------------------------
 
 void DataFrameManager::get_float_column_content(
-    const std::string& _name, const Poco::JSON::Object& _cmd,
+    const typename Command::GetFloatColumnContentOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto draw = JSON::get_value<Int>(_cmd, "draw_");
+  const auto draw = _cmd.get<"draw_">();
 
-  const auto length = JSON::get_value<size_t>(_cmd, "length_");
+  const auto length = _cmd.get<"length_">();
 
-  const auto start = JSON::get_value<size_t>(_cmd, "start_");
+  const auto start = _cmd.get<"start_">();
 
-  const auto json_col = *JSON::get_object(_cmd, "col_");
+  const auto& json_col = _cmd.get<"col_">();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -1517,11 +1530,14 @@ void DataFrameManager::get_float_column_content(
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::get_nbytes(const std::string& _name,
-                                  Poco::Net::StreamSocket* _socket) {
+void DataFrameManager::get_nbytes(
+    const typename Command::GetDataFrameNBytesOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
+  const auto& name = _cmd.get<"name_">();
+
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
-  auto& df = utils::Getter::get(_name, &data_frames());
+  auto& df = utils::Getter::get(name, &data_frames());
 
   communication::Sender::send_string("Found!", _socket);
 
@@ -1530,11 +1546,14 @@ void DataFrameManager::get_nbytes(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::get_nrows(const std::string& _name,
-                                 Poco::Net::StreamSocket* _socket) {
+void DataFrameManager::get_nrows(
+    const typename Command::GetDataFrameNRowsOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
+  const auto& name = _cmd.get<"name_">();
+
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
-  auto& df = utils::Getter::get(_name, &data_frames());
+  auto& df = utils::Getter::get(name, &data_frames());
 
   communication::Sender::send_string("Found!", _socket);
 
@@ -1543,10 +1562,10 @@ void DataFrameManager::get_nrows(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::get_subroles(const std::string& _name,
-                                    const Poco::JSON::Object& _cmd,
-                                    Poco::Net::StreamSocket* _socket) {
-  const auto json_col = *JSON::get_object(_cmd, "col_");
+void DataFrameManager::get_subroles(
+    const typename Command::GetFloatColumnSubrolesOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
+  const auto& json_col = _cmd.get<"col_">();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -1566,9 +1585,9 @@ void DataFrameManager::get_subroles(const std::string& _name,
 // ------------------------------------------------------------------------
 
 void DataFrameManager::get_subroles_categorical(
-    const std::string& _name, const Poco::JSON::Object& _cmd,
+    const typename Command::GetStringColumnSubrolesOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto json_col = *JSON::get_object(_cmd, "col_");
+  const auto& json_col = _cmd.get<"col_">();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -1587,10 +1606,10 @@ void DataFrameManager::get_subroles_categorical(
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::get_unit(const std::string& _name,
-                                const Poco::JSON::Object& _cmd,
-                                Poco::Net::StreamSocket* _socket) {
-  const auto json_col = *JSON::get_object(_cmd, "col_");
+void DataFrameManager::get_unit(
+    const typename Command::GetFloatColumnUnitOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
+  const auto& json_col = _cmd.get<"col_">();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -1608,10 +1627,10 @@ void DataFrameManager::get_unit(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::get_unit_categorical(const std::string& _name,
-                                            const Poco::JSON::Object& _cmd,
-                                            Poco::Net::StreamSocket* _socket) {
-  const auto json_col = *JSON::get_object(_cmd, "col_");
+void DataFrameManager::get_unit_categorical(
+    const typename Command::AddStringColumnOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
+  const auto& json_col = _cmd.get<"col_">();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -1629,16 +1648,16 @@ void DataFrameManager::get_unit_categorical(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::get_view_content(const std::string& _name,
-                                        const Poco::JSON::Object& _cmd,
-                                        Poco::Net::StreamSocket* _socket) {
-  const auto draw = JSON::get_value<size_t>(_cmd, "draw_");
+void DataFrameManager::get_view_content(
+    const typename Command::GetViewContentOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
+  const auto draw = _cmd.get<"draw_">();
 
-  const auto start = JSON::get_value<size_t>(_cmd, "start_");
+  const auto length = _cmd.get<"length_">();
 
-  const auto length = JSON::get_value<size_t>(_cmd, "length_");
+  const auto start = _cmd.get<"start_">();
 
-  const auto cols = jsonutils::JSON::get_object_array(_cmd, "cols_");
+  const auto& cols = _cmd.get<"cols_">();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -1654,12 +1673,12 @@ void DataFrameManager::get_view_content(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::get_view_nrows(const std::string& _name,
-                                      const Poco::JSON::Object& _cmd,
-                                      Poco::Net::StreamSocket* _socket) {
-  const auto cols = jsonutils::JSON::get_object_array(_cmd, "cols_");
+void DataFrameManager::get_view_nrows(
+    const typename Command::GetViewNRowsOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
+  const auto cols = _cmd.get<"cols_">();
 
-  const auto force = JSON::get_value<bool>(_cmd, "force_");
+  const auto force = _cmd.get<"force_">();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -1675,11 +1694,13 @@ void DataFrameManager::get_view_nrows(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::last_change(const std::string& _name,
+void DataFrameManager::last_change(const typename Command::LastChangeOp& _cmd,
                                    Poco::Net::StreamSocket* _socket) {
+  const auto& name = _cmd.get<"name_">();
+
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
-  const auto df = utils::Getter::get(_name, data_frames());
+  const auto df = utils::Getter::get(name, data_frames());
 
   communication::Sender::send_string("Success!", _socket);
 
@@ -1692,42 +1713,43 @@ void DataFrameManager::receive_data(
     const fct::Ref<containers::Encoding>& _local_categories,
     const fct::Ref<containers::Encoding>& _local_join_keys_encoding,
     containers::DataFrame* _df, Poco::Net::StreamSocket* _socket) const {
-  while (true) {
-    Poco::JSON::Object cmd =
-        communication::Receiver::recv_cmd(params_.logger_, _socket);
+  // TODO
+  /*while (true) {
+  Poco::JSON::Object cmd =
+      communication::Receiver::recv_cmd(params_.logger_, _socket);
 
-    const auto type = JSON::get_value<std::string>(cmd, "type_");
+  const auto type = JSON::get_value<std::string>(cmd, "type_");
 
-    const auto name = JSON::get_value<std::string>(cmd, "name_");
+  const auto name = JSON::get_value<std::string>(cmd, "name_");
 
-    if (type == FLOAT_COLUMN) {
-      recv_and_add_float_column(cmd, _df, nullptr, _socket);
+  if (type == FLOAT_COLUMN) {
+    recv_and_add_float_column(cmd, _df, nullptr, _socket);
 
-      communication::Sender::send_string("Success!", _socket);
-    } else if (type == STRING_COLUMN) {
-      recv_and_add_string_column(cmd, _local_categories,
-                                 _local_join_keys_encoding, _df, _socket);
+    communication::Sender::send_string("Success!", _socket);
+  } else if (type == STRING_COLUMN) {
+    recv_and_add_string_column(cmd, _local_categories,
+                               _local_join_keys_encoding, _df, _socket);
 
-      communication::Sender::send_string("Success!", _socket);
-    } else if (type == "DataFrame.close") {
-      communication::Sender::send_string("Success!", _socket);
+    communication::Sender::send_string("Success!", _socket);
+  } else if (type == "DataFrame.close") {
+    communication::Sender::send_string("Success!", _socket);
 
-      break;
-    } else {
-      break;
-    }
+    break;
+  } else {
+    break;
   }
+}*/
 }
 
 // ------------------------------------------------------------------------
 
 void DataFrameManager::recv_and_add_float_column(
-    const Poco::JSON::Object& _cmd, containers::DataFrame* _df,
+    const RecvAndAddOp& _cmd, containers::DataFrame* _df,
     multithreading::WeakWriteLock* _weak_write_lock,
     Poco::Net::StreamSocket* _socket) const {
-  const auto role = JSON::get_value<std::string>(_cmd, "role_");
+  const auto role = _cmd.get<"role_">();
 
-  const auto name = JSON::get_value<std::string>(_cmd, "name_");
+  const auto name = _cmd.get<"name_">();
 
   auto col = ArrowHandler(params_.categories_, params_.join_keys_encoding_,
                           params_.options_)
@@ -1739,14 +1761,14 @@ void DataFrameManager::recv_and_add_float_column(
 // ------------------------------------------------------------------------
 
 void DataFrameManager::recv_and_add_string_column(
-    const Poco::JSON::Object& _cmd, containers::DataFrame* _df,
+    const RecvAndAddOp& _cmd, containers::DataFrame* _df,
     multithreading::WeakWriteLock* _weak_write_lock,
     Poco::Net::StreamSocket* _socket) {
   assert_true(_weak_write_lock);
 
-  const auto role = JSON::get_value<std::string>(_cmd, "role_");
+  const auto role = _cmd.get<"role_">();
 
-  const auto name = JSON::get_value<std::string>(_cmd, "name_");
+  const auto name = _cmd.get<"name_">();
 
   const auto str_col =
       ArrowHandler(params_.categories_, params_.join_keys_encoding_,
@@ -1766,13 +1788,13 @@ void DataFrameManager::recv_and_add_string_column(
 // ------------------------------------------------------------------------
 
 void DataFrameManager::recv_and_add_string_column(
-    const Poco::JSON::Object& _cmd,
+    const RecvAndAddOp& _cmd,
     const fct::Ref<containers::Encoding>& _local_categories,
     const fct::Ref<containers::Encoding>& _local_join_keys_encoding,
     containers::DataFrame* _df, Poco::Net::StreamSocket* _socket) const {
-  const auto role = JSON::get_value<std::string>(_cmd, "role_");
+  const auto role = _cmd.get<"role_">();
 
-  const auto name = JSON::get_value<std::string>(_cmd, "name_");
+  const auto name = _cmd.get<"name_">();
 
   const auto str_col =
       ArrowHandler(_local_categories, _local_join_keys_encoding,
@@ -1791,11 +1813,13 @@ void DataFrameManager::recv_and_add_string_column(
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::refresh(const std::string& _name,
+void DataFrameManager::refresh(const typename Command::RefreshDataFrameOp& _cmd,
                                Poco::Net::StreamSocket* _socket) {
+  const auto& name = _cmd.get<"name_">();
+
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
-  const auto df = utils::Getter::get(_name, data_frames());
+  const auto df = utils::Getter::get(name, data_frames());
 
   const auto roles = containers::Roles::from_schema(df.to_schema(false));
 
@@ -1806,12 +1830,12 @@ void DataFrameManager::refresh(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::remove_column(const std::string& _name,
-                                     const Poco::JSON::Object& _cmd,
-                                     Poco::Net::StreamSocket* _socket) {
-  const auto df_name = JSON::get_value<std::string>(_cmd, "df_name_");
+void DataFrameManager::remove_column(
+    const typename Command::RemoveColumnOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
+  const auto df_name = _cmd.get<"df_name_">();
 
-  const auto name = JSON::get_value<std::string>(_cmd, "name_");
+  const auto name = _cmd.get<"name_">();
 
   multithreading::WriteLock write_lock(params_.read_write_lock_);
 
@@ -1820,7 +1844,7 @@ void DataFrameManager::remove_column(const std::string& _name,
   const bool success = df.remove_column(name);
 
   if (!success) {
-    throw std::runtime_error("Could not remove column. Column named '" + _name +
+    throw std::runtime_error("Could not remove column. Column named '" + name +
                              "' not found.");
   }
 
@@ -1829,21 +1853,22 @@ void DataFrameManager::remove_column(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::set_subroles(const std::string& _name,
-                                    const Poco::JSON::Object& _cmd,
-                                    Poco::Net::StreamSocket* _socket) {
-  const auto role = JSON::get_value<std::string>(_cmd, "role_");
+void DataFrameManager::set_subroles(
+    const typename Command::SetFloatColumnSubrolesOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
+  const auto& name = _cmd.get<"name_">();
 
-  const auto df_name = JSON::get_value<std::string>(_cmd, "df_name_");
+  const auto& role = _cmd.get<"role_">();
 
-  const auto subroles =
-      JSON::array_to_vector<std::string>(JSON::get_array(_cmd, "subroles_"));
+  const auto& df_name = _cmd.get<"df_name_">();
+
+  const auto& subroles = _cmd.get<"subroles_">();
 
   multithreading::WriteLock write_lock(params_.read_write_lock_);
 
   auto& df = utils::Getter::get(df_name, &data_frames());
 
-  auto column = df.float_column(_name, role);
+  auto column = df.float_column(name, role);
 
   column.set_subroles(subroles);
 
@@ -1857,14 +1882,15 @@ void DataFrameManager::set_subroles(const std::string& _name,
 // ------------------------------------------------------------------------
 
 void DataFrameManager::set_subroles_categorical(
-    const std::string& _name, const Poco::JSON::Object& _cmd,
+    const typename Command::SetStringColumnSubrolesOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto role = JSON::get_value<std::string>(_cmd, "role_");
+  const auto& name = _cmd.get<"name_">();
 
-  const auto df_name = JSON::get_value<std::string>(_cmd, "df_name_");
+  const auto& role = _cmd.get<"role_">();
 
-  const auto subroles =
-      JSON::array_to_vector<std::string>(JSON::get_array(_cmd, "subroles_"));
+  const auto& df_name = _cmd.get<"df_name_">();
+
+  const auto& subroles = _cmd.get<"subroles_">();
 
   multithreading::WriteLock write_lock(params_.read_write_lock_);
 
@@ -1872,15 +1898,15 @@ void DataFrameManager::set_subroles_categorical(
 
   if (role == containers::DataFrame::ROLE_UNUSED ||
       role == containers::DataFrame::ROLE_UNUSED_STRING) {
-    auto column = df.unused_string(_name);
+    auto column = df.unused_string(name);
     column.set_subroles(subroles);
     df.add_string_column(column, role);
   } else if (role == containers::DataFrame::ROLE_TEXT) {
-    auto column = df.text(_name);
+    auto column = df.text(name);
     column.set_subroles(subroles);
     df.add_string_column(column, role);
   } else {
-    auto column = df.int_column(_name, role);
+    auto column = df.int_column(name, role);
     column.set_subroles(subroles);
     df.add_int_column(column, role);
   }
@@ -1892,20 +1918,22 @@ void DataFrameManager::set_subroles_categorical(
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::set_unit(const std::string& _name,
-                                const Poco::JSON::Object& _cmd,
-                                Poco::Net::StreamSocket* _socket) {
-  const auto role = JSON::get_value<std::string>(_cmd, "role_");
+void DataFrameManager::set_unit(
+    const typename Command::SetFloatColumnUnitOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
+  const auto& name = _cmd.get<"name_">();
 
-  const auto df_name = JSON::get_value<std::string>(_cmd, "df_name_");
+  const auto& role = _cmd.get<"role_">();
 
-  const auto unit = JSON::get_value<std::string>(_cmd, "unit_");
+  const auto& df_name = _cmd.get<"df_name_">();
+
+  const auto& unit = _cmd.get<"unit_">();
 
   multithreading::WriteLock write_lock(params_.read_write_lock_);
 
   auto& df = utils::Getter::get(df_name, &data_frames());
 
-  auto column = df.float_column(_name, role);
+  auto column = df.float_column(name, role);
 
   column.set_unit(unit);
 
@@ -1918,14 +1946,16 @@ void DataFrameManager::set_unit(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::set_unit_categorical(const std::string& _name,
-                                            const Poco::JSON::Object& _cmd,
-                                            Poco::Net::StreamSocket* _socket) {
-  const auto role = JSON::get_value<std::string>(_cmd, "role_");
+void DataFrameManager::set_unit_categorical(
+    const typename Command::SetStringColumnUnitOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
+  const auto& name = _cmd.get<"name_">();
 
-  const auto df_name = JSON::get_value<std::string>(_cmd, "df_name_");
+  const auto& role = _cmd.get<"role_">();
 
-  const auto unit = JSON::get_value<std::string>(_cmd, "unit_");
+  const auto& df_name = _cmd.get<"df_name_">();
+
+  const auto& unit = _cmd.get<"unit_">();
 
   multithreading::WriteLock write_lock(params_.read_write_lock_);
 
@@ -1933,15 +1963,15 @@ void DataFrameManager::set_unit_categorical(const std::string& _name,
 
   if (role == containers::DataFrame::ROLE_UNUSED ||
       role == containers::DataFrame::ROLE_UNUSED_STRING) {
-    auto column = df.unused_string(_name);
+    auto column = df.unused_string(name);
     column.set_unit(unit);
     df.add_string_column(column, role);
   } else if (role == containers::DataFrame::ROLE_TEXT) {
-    auto column = df.text(_name);
+    auto column = df.text(name);
     column.set_unit(unit);
     df.add_string_column(column, role);
   } else {
-    auto column = df.int_column(_name, role);
+    auto column = df.int_column(name, role);
     column.set_unit(unit);
     df.add_int_column(column, role);
   }
@@ -1953,11 +1983,14 @@ void DataFrameManager::set_unit_categorical(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::summarize(const std::string& _name,
-                                 Poco::Net::StreamSocket* _socket) {
+void DataFrameManager::summarize(
+    const typename Command::SummarizeDataFrameOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
+  const auto& name = _cmd.get<"name_">();
+
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
-  const auto& df = utils::Getter::get(_name, &data_frames());
+  const auto& df = utils::Getter::get(name, &data_frames());
 
   const auto summary = df.to_monitor();
 
@@ -1968,11 +2001,13 @@ void DataFrameManager::summarize(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::to_arrow(const std::string& _name,
+void DataFrameManager::to_arrow(const typename Command::ToArrowOp& _cmd,
                                 Poco::Net::StreamSocket* _socket) {
+  const auto& name = _cmd.get<"name_">();
+
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
-  const auto& df = utils::Getter::get(_name, data_frames());
+  const auto& df = utils::Getter::get(name, data_frames());
 
   const auto arrow_handler = handlers::ArrowHandler(
       params_.categories_, params_.join_keys_encoding_, params_.options_);
@@ -1986,20 +2021,21 @@ void DataFrameManager::to_arrow(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::to_csv(const std::string& _name,
-                              const Poco::JSON::Object& _cmd,
+void DataFrameManager::to_csv(const typename Command::ToCSVOp& _cmd,
                               Poco::Net::StreamSocket* _socket) {
-  const auto fname = JSON::get_value<std::string>(_cmd, "fname_");
+  const auto& name = _cmd.get<"name_">();
 
-  const auto batch_size = JSON::get_value<size_t>(_cmd, "batch_size_");
+  const auto& fname = _cmd.get<"fname_">();
 
-  const auto quotechar = JSON::get_value<std::string>(_cmd, "quotechar_");
+  const auto batch_size = _cmd.get<"batch_size_">();
 
-  const auto sep = JSON::get_value<std::string>(_cmd, "sep_");
+  const auto quotechar = _cmd.get<"quotechar_">();
+
+  const auto sep = _cmd.get<"sep_">();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
-  const auto& df = utils::Getter::get(_name, data_frames());
+  const auto& df = utils::Getter::get(name, data_frames());
 
   df_to_csv(fname, batch_size, quotechar, sep, df, params_.categories_,
             params_.join_keys_encoding_);
@@ -2011,16 +2047,17 @@ void DataFrameManager::to_csv(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::to_db(const std::string& _name,
-                             const Poco::JSON::Object& _cmd,
+void DataFrameManager::to_db(const typename Command::ToDBOp& _cmd,
                              Poco::Net::StreamSocket* _socket) {
-  const auto conn_id = JSON::get_value<std::string>(_cmd, "conn_id_");
+  const auto& name = _cmd.get<"name_">();
 
-  const auto table_name = JSON::get_value<std::string>(_cmd, "table_name_");
+  const auto conn_id = _cmd.get<"conn_id_">();
+
+  const auto table_name = _cmd.get<"table_name_">();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
-  const auto& df = utils::Getter::get(_name, data_frames());
+  const auto& df = utils::Getter::get(name, data_frames());
 
   df_to_db(conn_id, table_name, df, params_.categories_,
            params_.join_keys_encoding_);
@@ -2032,16 +2069,17 @@ void DataFrameManager::to_db(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::to_parquet(const std::string& _name,
-                                  const Poco::JSON::Object& _cmd,
+void DataFrameManager::to_parquet(const typename Command::ToParquetOp& _cmd,
                                   Poco::Net::StreamSocket* _socket) {
-  const auto fname = JSON::get_value<std::string>(_cmd, "fname_");
+  const auto& name = _cmd.get<"name_">();
 
-  const auto compression = JSON::get_value<std::string>(_cmd, "compression_");
+  const auto& fname = _cmd.get<"fname_">();
+
+  const auto& compression = _cmd.get<"compression_">();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
-  const auto& df = utils::Getter::get(_name, data_frames());
+  const auto& df = utils::Getter::get(name, data_frames());
 
   const auto arrow_handler = handlers::ArrowHandler(
       params_.categories_, params_.join_keys_encoding_, params_.options_);
@@ -2057,10 +2095,10 @@ void DataFrameManager::to_parquet(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::view_to_arrow(const std::string& _name,
-                                     const Poco::JSON::Object& _cmd,
-                                     Poco::Net::StreamSocket* _socket) {
-  const auto view = JSON::get_object(_cmd, "view_");
+void DataFrameManager::view_to_arrow(
+    const typename Command::ViewToArrowOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
+  const auto& view = _cmd.get<"view_">();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -2072,11 +2110,9 @@ void DataFrameManager::view_to_arrow(const std::string& _name,
   const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
       pool, params_.join_keys_encoding_.ptr());
 
-  assert_true(view);
-
   const auto table = ViewParser(local_categories, local_join_keys_encoding,
                                 params_.data_frames_, params_.options_)
-                         .to_table(*view);
+                         .to_table(view);
 
   read_lock.unlock();
 
@@ -2087,18 +2123,17 @@ void DataFrameManager::view_to_arrow(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::view_to_csv(const std::string& _name,
-                                   const Poco::JSON::Object& _cmd,
+void DataFrameManager::view_to_csv(const typename Command::ViewToCSVOp& _cmd,
                                    Poco::Net::StreamSocket* _socket) {
-  const auto fname = JSON::get_value<std::string>(_cmd, "fname_");
+  const auto& fname = _cmd.get<"fname_">();
 
-  const auto batch_size = JSON::get_value<size_t>(_cmd, "batch_size_");
+  const auto batch_size = _cmd.get<"batch_size_">();
 
-  const auto quotechar = JSON::get_value<std::string>(_cmd, "quotechar_");
+  const auto quotechar = _cmd.get<"quotechar_">();
 
-  const auto sep = JSON::get_value<std::string>(_cmd, "sep_");
+  const auto sep = _cmd.get<"sep_">();
 
-  const auto view = JSON::get_object(_cmd, "view_");
+  const auto& view = _cmd.get<"view_">();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -2110,11 +2145,9 @@ void DataFrameManager::view_to_csv(const std::string& _name,
   const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
       pool, params_.join_keys_encoding_.ptr());
 
-  assert_true(view);
-
   const auto df = ViewParser(local_categories, local_join_keys_encoding,
                              params_.data_frames_, params_.options_)
-                      .parse(*view);
+                      .parse(view);
 
   df_to_csv(fname, batch_size, quotechar, sep, df, params_.categories_,
             params_.join_keys_encoding_);
@@ -2126,14 +2159,13 @@ void DataFrameManager::view_to_csv(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::view_to_db(const std::string& _name,
-                                  const Poco::JSON::Object& _cmd,
+void DataFrameManager::view_to_db(const typename Command::ViewToDBOp& _cmd,
                                   Poco::Net::StreamSocket* _socket) {
-  const auto conn_id = JSON::get_value<std::string>(_cmd, "conn_id_");
+  const auto& conn_id = _cmd.get<"conn_id_">();
 
-  const auto table_name = JSON::get_value<std::string>(_cmd, "table_name_");
+  const auto& table_name = _cmd.get<"table_name_">();
 
-  const auto view = JSON::get_object(_cmd, "view_");
+  const auto& view = _cmd.get<"view_">();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -2145,11 +2177,9 @@ void DataFrameManager::view_to_db(const std::string& _name,
   const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
       pool, params_.join_keys_encoding_.ptr());
 
-  assert_true(view);
-
   const auto df = ViewParser(local_categories, local_join_keys_encoding,
                              params_.data_frames_, params_.options_)
-                      .parse(*view);
+                      .parse(view);
 
   df_to_db(conn_id, table_name, df, local_categories, local_join_keys_encoding);
 
@@ -2160,14 +2190,14 @@ void DataFrameManager::view_to_db(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::view_to_parquet(const std::string& _name,
-                                       const Poco::JSON::Object& _cmd,
-                                       Poco::Net::StreamSocket* _socket) {
-  const auto fname = JSON::get_value<std::string>(_cmd, "fname_");
+void DataFrameManager::view_to_parquet(
+    const typename Command::ViewToParquetOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
+  const auto& fname = _cmd.get<"fname_">();
 
-  const auto compression = JSON::get_value<std::string>(_cmd, "compression_");
+  const auto& compression = _cmd.get<"compression_">();
 
-  const auto view = JSON::get_object(_cmd, "view_");
+  const auto& view = _cmd.get<"view_">();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -2179,11 +2209,9 @@ void DataFrameManager::view_to_parquet(const std::string& _name,
   const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
       pool, params_.join_keys_encoding_.ptr());
 
-  assert_true(view);
-
   const auto table = ViewParser(local_categories, local_join_keys_encoding,
                                 params_.data_frames_, params_.options_)
-                         .to_table(*view);
+                         .to_table(view);
 
   read_lock.unlock();
 

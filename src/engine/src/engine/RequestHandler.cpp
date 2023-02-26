@@ -31,75 +31,7 @@ void RequestHandler::run() {
 
     const auto& name = basic_command.get<"name_">();
 
-    if (type == "BooleanColumn.get") {
-      data_frame_manager().get_boolean_column(name, cmd, &socket());
-    } else if (type == "BooleanColumn.get_content") {
-      data_frame_manager().get_boolean_column_content(name, cmd, &socket());
-    } else if (type == "BooleanColumn.get_nrows") {
-      data_frame_manager().get_boolean_column_nrows(name, cmd, &socket());
-    } else if (type == "DataFrame.add_categorical_column") {
-      data_frame_manager().add_string_column(name, cmd, &socket());
-    } else if (type == "DataFrame.add_column") {
-      data_frame_manager().add_float_column(name, cmd, &socket());
-    } else if (type == "DataFrame.append") {
-      data_frame_manager().append_to_data_frame(name, &socket());
-    } else if (type == "DataFrame.calc_categorical_column_plots") {
-      data_frame_manager().calc_categorical_column_plots(name, cmd, &socket());
-    } else if (type == "DataFrame.calc_column_plots") {
-      data_frame_manager().calc_column_plots(name, cmd, &socket());
-    } else if (type == "DataFrame.concat") {
-      data_frame_manager().concat(name, cmd, &socket());
-    } else if (type == "DataFrame.freeze") {
-      data_frame_manager().freeze(name, &socket());
-    } else if (type == "DataFrame.last_change") {
-      data_frame_manager().last_change(name, &socket());
-    } else if (type == "DataFrame.get") {
-      data_frame_manager().get_data_frame(&socket());
-    } else if (type == "DataFrame.get_content") {
-      data_frame_manager().get_data_frame_content(name, cmd, &socket());
-    } else if (type == "DataFrame.get_html") {
-      data_frame_manager().get_data_frame_html(name, cmd, &socket());
-    } else if (type == "DataFrame.get_string") {
-      data_frame_manager().get_data_frame_string(name, &socket());
-    } else if (type == "DataFrame.nbytes") {
-      data_frame_manager().get_nbytes(name, &socket());
-    } else if (type == "DataFrame.nrows") {
-      data_frame_manager().get_nrows(name, &socket());
-    } else if (type == "DataFrame.refresh") {
-      data_frame_manager().refresh(name, &socket());
-    } else if (type == "DataFrame.remove_column") {
-      data_frame_manager().remove_column(name, cmd, &socket());
-    } else if (type == "DataFrame.summarize") {
-      data_frame_manager().summarize(name, &socket());
-    } else if (type == "DataFrame.to_arrow") {
-      data_frame_manager().to_arrow(name, &socket());
-    } else if (type == "DataFrame.to_csv") {
-      data_frame_manager().to_csv(name, cmd, &socket());
-    } else if (type == "DataFrame.to_db") {
-      data_frame_manager().to_db(name, cmd, &socket());
-    } else if (type == "DataFrame.to_parquet") {
-      data_frame_manager().to_parquet(name, cmd, &socket());
-    } else if (type == FLOAT_COLUMN) {
-      data_frame_manager().add_float_column(cmd, &socket());
-    } else if (type == "FloatColumn.aggregate") {
-      data_frame_manager().aggregate(name, cmd, &socket());
-    } else if (type == "FloatColumn.get") {
-      data_frame_manager().get_column(name, cmd, &socket());
-    } else if (type == "FloatColumn.get_content") {
-      data_frame_manager().get_float_column_content(name, cmd, &socket());
-    } else if (type == "FloatColumn.get_nrows") {
-      data_frame_manager().get_column_nrows(name, cmd, &socket());
-    } else if (type == "FloatColumn.get_subroles") {
-      data_frame_manager().get_subroles(name, cmd, &socket());
-    } else if (type == "FloatColumn.get_unit") {
-      data_frame_manager().get_unit(name, cmd, &socket());
-    } else if (type == "FloatColumn.set_subroles") {
-      data_frame_manager().set_subroles(name, cmd, &socket());
-    } else if (type == "FloatColumn.set_unit") {
-      data_frame_manager().set_unit(name, cmd, &socket());
-    } else if (type == "FloatColumn.unique") {
-      data_frame_manager().get_column_unique(name, cmd, &socket());
-    } else if (type == "is_alive") {
+    if (type == "is_alive") {
       return;
     } else if (type == "monitor_url") {
       // The community edition does not have a monitor.
@@ -133,36 +65,6 @@ void RequestHandler::run() {
       pipeline_manager().transform(name, cmd, &socket());
     } else if (type == "shutdown") {
       *shutdown_ = true;
-    } else if (type == STRING_COLUMN) {
-      data_frame_manager().add_string_column(cmd, &socket());
-    } else if (type == "StringColumn.get") {
-      data_frame_manager().get_categorical_column(name, cmd, &socket());
-    } else if (type == "StringColumn.get_content") {
-      data_frame_manager().get_categorical_column_content(name, cmd, &socket());
-    } else if (type == "StringColumn.get_nrows") {
-      data_frame_manager().get_categorical_column_nrows(name, cmd, &socket());
-    } else if (type == "StringColumn.get_subroles") {
-      data_frame_manager().get_subroles_categorical(name, cmd, &socket());
-    } else if (type == "StringColumn.get_unit") {
-      data_frame_manager().get_unit_categorical(name, cmd, &socket());
-    } else if (type == "StringColumn.set_subroles") {
-      data_frame_manager().set_subroles_categorical(name, cmd, &socket());
-    } else if (type == "StringColumn.set_unit") {
-      data_frame_manager().set_unit_categorical(name, cmd, &socket());
-    } else if (type == "StringColumn.unique") {
-      data_frame_manager().get_categorical_column_unique(name, cmd, &socket());
-    } else if (type == "View.get_content") {
-      data_frame_manager().get_view_content(name, cmd, &socket());
-    } else if (type == "View.get_nrows") {
-      data_frame_manager().get_view_nrows(name, cmd, &socket());
-    } else if (type == "View.to_arrow") {
-      data_frame_manager().view_to_arrow(name, cmd, &socket());
-    } else if (type == "View.to_csv") {
-      data_frame_manager().view_to_csv(name, cmd, &socket());
-    } else if (type == "View.to_db") {
-      data_frame_manager().view_to_db(name, cmd, &socket());
-    } else if (type == "View.to_parquet") {
-      data_frame_manager().view_to_parquet(name, cmd, &socket());
     } else {
       const auto obj = json::Parser<commands::DatabaseCommand>::from_json(cmd);
       database_manager().execute_command(obj, &socket());

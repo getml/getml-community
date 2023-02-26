@@ -145,18 +145,28 @@ void ViewParser::drop_columns(const ViewOp& _cmd,
 // ----------------------------------------------------------------------------
 
 typename ViewParser::ColumnViewVariant ViewParser::make_column_view(
-    Poco::JSON::Object::Ptr _ptr) const {
-  assert_true(_ptr);
+    const ViewCol& _view_col) const {
+  const auto handle = [this](const auto& _col) -> ColumnViewVariant {
+    using Type = std::decay_t<decltype(_col)>;
 
-  const auto type = JSON::get_value<std::string>(*_ptr, "type_");
+    if constexpr (std::is_same<
+                      Type, typename commands::StringColumnOrStringColumnView::
+                                NamedTupleType>()) {
+      const auto col = commands::StringColumnOrStringColumnView(_col);
+      return StringOpParser(categories_, join_keys_encoding_, data_frames_)
+          .parse(col);
+    }
 
-  if (type == STRING_COLUMN || type == STRING_COLUMN_VIEW) {
-    return StringOpParser(categories_, join_keys_encoding_, data_frames_)
-        .parse(*_ptr);
-  }
+    if constexpr (std::is_same<Type,
+                               typename commands::FloatColumnOrFloatColumnView::
+                                   NamedTupleType>()) {
+      const auto col = commands::FloatColumnOrFloatColumnView(_col);
+      return FloatOpParser(categories_, join_keys_encoding_, data_frames_)
+          .parse(col);
+    }
+  };
 
-  return FloatOpParser(categories_, join_keys_encoding_, data_frames_)
-      .parse(*_ptr);
+  return fct::visit(handle, _view_col);
 }
 
 // ----------------------------------------------------------------------------
@@ -296,14 +306,9 @@ std::vector<std::string> ViewParser::make_string_vector(
 
 containers::ViewContent ViewParser::get_content(
     const size_t _draw, const size_t _start, const size_t _length,
-    const bool _force_nrows, const Poco::JSON::Array::Ptr& _cols) const {
-  const auto get_object = [_cols](const size_t _i) {
-    return _cols->getObject(_i);
-  };
-
-  const auto to_column_view =
-      [this](Poco::JSON::Object::Ptr _ptr) -> ColumnViewVariant {
-    return make_column_view(_ptr);
+    const bool _force_nrows, const std::vector<ViewCol>& _cols) const {
+  const auto to_column_view = [this](const auto& _col) -> ColumnViewVariant {
+    return make_column_view(_col);
   };
 
   const auto to_string_vector =
@@ -312,12 +317,8 @@ containers::ViewContent ViewParser::get_content(
     return make_string_vector(_start, _length, _column_view);
   };
 
-  const auto make_column_view = fct::compose(get_object, to_column_view);
-
-  const auto iota = fct::iota<size_t>(0, _cols->size());
-
   const auto column_views = fct::collect::vector<ColumnViewVariant>(
-      iota | VIEWS::transform(make_column_view));
+      _cols | VIEWS::transform(to_column_view));
 
   const auto data = fct::collect::vector<std::vector<std::string>>(
       column_views | VIEWS::transform(to_string_vector));
