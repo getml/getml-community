@@ -15,6 +15,7 @@
 #include <memory>
 #include <string>
 
+#include "commands/DataFrameCommand.hpp"
 #include "commands/DataFrameOrView.hpp"
 #include "commands/DataFramesOrViews.hpp"
 #include "debug/debug.hpp"
@@ -46,6 +47,7 @@ class ViewParser {
                        containers::ColumnView<Float>>
       ColumnViewVariant;
   typedef typename commands::DataFrameOrView::DataFrameOp DataFrameOp;
+  typedef typename commands::DataFrameCommand::ViewCol ViewCol;
   typedef typename commands::DataFrameOrView::ViewOp ViewOp;
 
  public:
@@ -63,9 +65,10 @@ class ViewParser {
 
  public:
   /// Returns the content of a view.
-  containers::ViewContent get_content(
-      const size_t _draw, const size_t _start, const size_t _length,
-      const bool _force_nrows, const Poco::JSON::Array::Ptr& _cols) const;
+  containers::ViewContent get_content(const size_t _draw, const size_t _start,
+                                      const size_t _length,
+                                      const bool _force_nrows,
+                                      const std::vector<ViewCol>& _cols) const;
 
   /// Parses a view and turns it into a DataFrame.
   containers::DataFrame parse(const commands::DataFrameOrView& _cmd) const;
@@ -88,9 +91,10 @@ class ViewParser {
   }
 
   /// Expresses the View as a arrow::Table.
-  std::shared_ptr<arrow::Table> to_table(const Poco::JSON::Object& _obj) {
+  std::shared_ptr<arrow::Table> to_table(
+      const commands::DataFrameOrView& _cmd) {
     return ArrowHandler(categories_, join_keys_encoding_, options_)
-        .df_to_table(parse(_obj));
+        .df_to_table(parse(_cmd));
   }
 
  private:
@@ -115,9 +119,9 @@ class ViewParser {
   /// Drop a set of columns.
   void drop_columns(const ViewOp& _cmd, containers::DataFrame* _df) const;
 
-  /// Generates a column view from a JSON::Object::Ptr - used by
+  /// Generates a column view from a ViewCol - used by
   /// get_content(...).
-  ColumnViewVariant make_column_view(Poco::JSON::Object::Ptr _ptr) const;
+  ColumnViewVariant make_column_view(const ViewCol& _col) const;
 
   /// Generates the data for get_content(...).
   Poco::JSON::Array::Ptr make_data(
