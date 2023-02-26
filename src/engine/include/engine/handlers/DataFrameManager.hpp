@@ -51,6 +51,10 @@ class DataFrameManager {
   ~DataFrameManager() = default;
 
  public:
+  /// Executes a DataFrameCommand.
+  void execute_command(const Command& _cmd, Poco::Net::StreamSocket* _socket);
+
+ public:
   /// Creates a new data frame and adds it to the map of data frames.
   void add_data_frame(const std::string& _name,
                       Poco::Net::StreamSocket* _socket);
@@ -218,7 +222,7 @@ class DataFrameManager {
                 Poco::Net::StreamSocket* _socket);
 
   /// Get the unit for a string column.
-  void get_unit_categorical(const typename Command::AddStringColumnOp& _cmd,
+  void get_unit_categorical(const typename Command::GetStringColumnUnitOp& _cmd,
                             Poco::Net::StreamSocket* _socket);
 
   /// Sends a JSON representing the view to the client.
