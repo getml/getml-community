@@ -8,8 +8,11 @@
 #ifndef COMMANDS_PROJECTCOMMAND_HPP_
 #define COMMANDS_PROJECTCOMMAND_HPP_
 
+#include <optional>
 #include <string>
+#include <vector>
 
+#include "commands/DataFrameOrView.hpp"
 #include "commands/Int.hpp"
 #include "commands/Pipeline.hpp"
 #include "fct/Field.hpp"
@@ -17,51 +20,59 @@
 #include "fct/NamedTuple.hpp"
 #include "fct/Ref.hpp"
 #include "fct/TaggedUnion.hpp"
+#include "fct/define_named_tuple.hpp"
+#include "helpers/Schema.hpp"
 
 namespace commands {
 
 /// Any command to be handled by the ProjectManager.
 struct ProjectCommand {
   /// The command to add a data frame from arrow.
-  using AddDfFromArrowOp =
-      fct::NamedTuple<fct::Field<"type_", fct::Literal<"DataFrame.from_arrow">>,
-                      fct::Field<"append_", bool>,
-                      fct::Field<"name_", std::string>>;
+  using AddDfFromArrowOp = fct::define_named_tuple_t<
+      fct::Field<"type_", fct::Literal<"DataFrame.from_arrow">>,
+      typename helpers::Schema::NamedTupleType, fct::Field<"append_", bool>>;
 
   /// The command to add a data frame from CSV.
-  using AddDfFromCSVOp =
-      fct::NamedTuple<fct::Field<"type_", fct::Literal<"DataFrame.read_csv">>,
-                      fct::Field<"append_", bool>,
-                      fct::Field<"name_", std::string>>;
+  using AddDfFromCSVOp = fct::define_named_tuple_t<
+      fct::Field<"type_", fct::Literal<"DataFrame.read_csv">>,
+      typename helpers::Schema::NamedTupleType, fct::Field<"append_", bool>,
+      fct::Field<"colnames_", std::optional<std::vector<std::string>>>,
+      fct::Field<"fnames_", std::vector<std::string>>,
+      fct::Field<"num_lines_read_", size_t>,
+      fct::Field<"quotechar_", std::string>, fct::Field<"sep_", std::string>,
+      fct::Field<"skip_", size_t>,
+      fct::Field<"time_formats_", std::vector<std::string>>>;
 
   /// The command to add a data frame from a database.
-  using AddDfFromDBOp =
-      fct::NamedTuple<fct::Field<"type_", fct::Literal<"DataFrame.from_db">>,
-                      fct::Field<"append_", bool>,
-                      fct::Field<"name_", std::string>>;
+  using AddDfFromDBOp = fct::define_named_tuple_t<
+      fct::Field<"type_", fct::Literal<"DataFrame.from_db">>,
+      typename helpers::Schema::NamedTupleType, fct::Field<"append_", bool>,
+      fct::Field<"conn_id_", std::string>,
+      fct::Field<"table_name_", std::string>>;
 
   /// The command to add a data frame from JSON.
-  using AddDfFromJSONOp =
-      fct::NamedTuple<fct::Field<"type_", fct::Literal<"DataFrame.from_json">>,
-                      fct::Field<"append_", bool>,
-                      fct::Field<"name_", std::string>>;
+  using AddDfFromJSONOp = fct::define_named_tuple_t<
+      fct::Field<"type_", fct::Literal<"DataFrame.from_json">>,
+      typename helpers::Schema::NamedTupleType, fct::Field<"append_", bool>,
+      fct::Field<"time_formats_", std::vector<std::string>>>;
 
   /// The command to add a data frame from parquet.
-  using AddDfFromParquetOp = fct::NamedTuple<
+  using AddDfFromParquetOp = fct::define_named_tuple_t<
       fct::Field<"type_", fct::Literal<"DataFrame.read_parquet">>,
-      fct::Field<"append_", bool>, fct::Field<"name_", std::string>>;
+      typename helpers::Schema::NamedTupleType, fct::Field<"append_", bool>,
+      fct::Field<"fname_", std::string>>;
 
   /// The command to add a data frame from JSON.
-  using AddDfFromQueryOp =
-      fct::NamedTuple<fct::Field<"type_", fct::Literal<"DataFrame.from_query">>,
-                      fct::Field<"append_", bool>,
-                      fct::Field<"name_", std::string>>;
+  using AddDfFromQueryOp = fct::define_named_tuple_t<
+      fct::Field<"type_", fct::Literal<"DataFrame.from_query">>,
+      typename helpers::Schema::NamedTupleType, fct::Field<"append_", bool>,
+      fct::Field<"conn_id_", std::string>, fct::Field<"query_", std::string>>;
 
   /// The command to add a data frame from a View.
-  using AddDfFromViewOp =
-      fct::NamedTuple<fct::Field<"type_", fct::Literal<"DataFrame.from_view">>,
-                      fct::Field<"append_", bool>,
-                      fct::Field<"name_", std::string>>;
+  using AddDfFromViewOp = fct::define_named_tuple_t<
+      fct::Field<"type_", fct::Literal<"DataFrame.from_view">>,
+      fct::Field<"append_", bool>, fct::Field<"name_", std::string>,
+      fct::Field<"view_", DataFrameOrView>>;
 
   /// The command to add a data frame from a View.
   using CopyPipelineOp =

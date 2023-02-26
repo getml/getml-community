@@ -520,7 +520,8 @@ Poco::JSON::Object PipelineManager::receive_data(
 
     const auto type = JSON::get_value<std::string>(cmd, "type_");
 
-    if (type == "DataFrame") {
+    // TODO
+    /*if (type == "DataFrame") {
       local_data_frame_manager.add_data_frame(name, _socket);
     } else if (type == "DataFrame.from_query") {
       local_data_frame_manager.from_query(name, cmd, false, _socket);
@@ -532,7 +533,7 @@ Poco::JSON::Object PipelineManager::receive_data(
       local_data_frame_manager.set_unit_categorical(name, cmd, _socket);
     } else {
       break;
-    }
+    }*/
 
     cmd = communication::Receiver::recv_cmd(params_.logger_, _socket);
   }

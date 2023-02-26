@@ -21,12 +21,7 @@ namespace handlers {
 void ProjectManager::add_data_frame_from_arrow(
     const typename Command::AddDfFromArrowOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto append = _cmd.get<"append_">();
-
-  const auto& name = _cmd.get<"name_">();
-
-  // TODO
-  // data_frame_manager().from_arrow(name, _cmd, append, _socket);
+  data_frame_manager().from_arrow(_cmd, _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -34,12 +29,7 @@ void ProjectManager::add_data_frame_from_arrow(
 void ProjectManager::add_data_frame_from_csv(
     const typename Command::AddDfFromCSVOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto append = _cmd.get<"append_">();
-
-  const auto& name = _cmd.get<"name_">();
-
-  // TODO
-  //  data_frame_manager().from_csv(name, _cmd, append, _socket);
+  data_frame_manager().from_csv(_cmd, _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -47,12 +37,7 @@ void ProjectManager::add_data_frame_from_csv(
 void ProjectManager::add_data_frame_from_db(
     const typename Command::AddDfFromDBOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto append = _cmd.get<"append_">();
-
-  const auto& name = _cmd.get<"name_">();
-
-  // TODO
-  // params_.data_frame_manager_->from_db(name, _cmd, append, _socket);
+  params_.data_frame_manager_->from_db(_cmd, _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -60,12 +45,7 @@ void ProjectManager::add_data_frame_from_db(
 void ProjectManager::add_data_frame_from_json(
     const typename Command::AddDfFromJSONOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto append = _cmd.get<"append_">();
-
-  const auto& name = _cmd.get<"name_">();
-
-  // TODO
-  // params_.data_frame_manager_->from_json(name, _cmd, append, _socket);
+  params_.data_frame_manager_->from_json(_cmd, _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -73,12 +53,7 @@ void ProjectManager::add_data_frame_from_json(
 void ProjectManager::add_data_frame_from_parquet(
     const typename Command::AddDfFromParquetOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto append = _cmd.get<"append_">();
-
-  const auto& name = _cmd.get<"name_">();
-
-  // TODO
-  //  data_frame_manager().from_parquet(name, _cmd, append, _socket);
+  data_frame_manager().from_parquet(_cmd, _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -86,12 +61,7 @@ void ProjectManager::add_data_frame_from_parquet(
 void ProjectManager::add_data_frame_from_query(
     const typename Command::AddDfFromQueryOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto append = _cmd.get<"append_">();
-
-  const auto& name = _cmd.get<"name_">();
-
-  // TODO
-  //  params_.data_frame_manager_->from_query(name, _cmd, append, _socket);
+  params_.data_frame_manager_->from_query(_cmd, _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -99,11 +69,7 @@ void ProjectManager::add_data_frame_from_query(
 void ProjectManager::add_data_frame_from_view(
     const typename Command::AddDfFromViewOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto append = _cmd.get<"append_">();
-
-  const auto& name = _cmd.get<"name_">();
-
-  //  data_frame_manager().from_view(name, _cmd, append, _socket);
+  data_frame_manager().from_view(_cmd, _socket);
 }
 
 // ------------------------------------------------------------------------
