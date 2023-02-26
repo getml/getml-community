@@ -1472,28 +1472,43 @@ void DataFrameManager::get_data_frame_string(
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::get_data_frame(Poco::Net::StreamSocket* _socket) {
+void DataFrameManager::get_data_frame(
+    const typename Command::GetDataFrameOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
   multithreading::ReadLock read_lock(params_.read_write_lock_);
-  // TODO
-  /*  while (true) {
-      Poco::JSON::Object cmd =
-          communication::Receiver::recv_cmd(params_.logger_, _socket);
 
-      const auto name = JSON::get_value<std::string>(cmd, "name_");
+  using CmdType = fct::TaggedUnion<
+      "type_", typename commands::DataFrameCommand::GetFloatColumnOp,
+      typename commands::DataFrameCommand::GetStringColumnOp, CloseDataFrameOp>;
 
-      const auto type = JSON::get_value<std::string>(cmd, "type_");
+  while (true) {
+    const auto json_str = communication::Receiver::recv_string(_socket);
 
-      if (type == "StringColumn.get") {
-        get_categorical_column(name, cmd, _socket);
-      } else if (type == "FloatColumn.get") {
-        get_column(name, cmd, _socket);
-      } else if (type == "DataFrame.close") {
+    const auto cmd = json::from_json<CmdType>(json_str);
+
+    const auto handle = [this, _socket](const auto& _cmd) -> bool {
+      using Type = std::decay_t<decltype(_cmd)>;
+      if constexpr (std::is_same<Type, typename commands::DataFrameCommand::
+                                           GetStringColumnOp>()) {
+        get_categorical_column(_cmd, _socket);
+        return false;
+      } else if constexpr (std::is_same<Type,
+                                        typename commands::DataFrameCommand::
+                                            GetFloatColumnOp>()) {
+        get_column(_cmd, _socket);
+        return false;
+      } else if constexpr (std::is_same<Type, CloseDataFrameOp>()) {
         communication::Sender::send_string("Success!", _socket);
-        break;
-      } else {
-        break;
+        return true;
       }
-    }*/
+    };
+
+    const bool finished = fct::visit(handle, cmd);
+
+    if (finished) {
+      break;
+    }
+  }
 }
 
 // ------------------------------------------------------------------------
@@ -1713,32 +1728,43 @@ void DataFrameManager::receive_data(
     const fct::Ref<containers::Encoding>& _local_categories,
     const fct::Ref<containers::Encoding>& _local_join_keys_encoding,
     containers::DataFrame* _df, Poco::Net::StreamSocket* _socket) const {
-  // TODO
-  /*while (true) {
-  Poco::JSON::Object cmd =
-      communication::Receiver::recv_cmd(params_.logger_, _socket);
+  using CmdType = fct::TaggedUnion<
+      "type_", typename commands::DataFrameCommand::FloatColumnOp,
+      typename commands::DataFrameCommand::StringColumnOp, CloseDataFrameOp>;
 
-  const auto type = JSON::get_value<std::string>(cmd, "type_");
+  while (true) {
+    const auto json_str = communication::Receiver::recv_string(_socket);
 
-  const auto name = JSON::get_value<std::string>(cmd, "name_");
+    const auto cmd = json::from_json<CmdType>(json_str);
 
-  if (type == FLOAT_COLUMN) {
-    recv_and_add_float_column(cmd, _df, nullptr, _socket);
+    const auto handle = [this, &_local_categories, &_local_join_keys_encoding,
+                         _df, _socket](const auto& _cmd) -> bool {
+      using Type = std::decay_t<decltype(_cmd)>;
+      if constexpr (std::is_same<
+                        Type,
+                        typename commands::DataFrameCommand::FloatColumnOp>()) {
+        recv_and_add_float_column(_cmd, _df, nullptr, _socket);
+        communication::Sender::send_string("Success!", _socket);
+        return false;
+      } else if constexpr (std::is_same<Type,
+                                        typename commands::DataFrameCommand::
+                                            StringColumnOp>()) {
+        recv_and_add_string_column(_cmd, _local_categories,
+                                   _local_join_keys_encoding, _df, _socket);
+        communication::Sender::send_string("Success!", _socket);
+        return false;
+      } else if constexpr (std::is_same<Type, CloseDataFrameOp>()) {
+        communication::Sender::send_string("Success!", _socket);
+        return true;
+      }
+    };
 
-    communication::Sender::send_string("Success!", _socket);
-  } else if (type == STRING_COLUMN) {
-    recv_and_add_string_column(cmd, _local_categories,
-                               _local_join_keys_encoding, _df, _socket);
+    const bool finished = fct::visit(handle, cmd);
 
-    communication::Sender::send_string("Success!", _socket);
-  } else if (type == "DataFrame.close") {
-    communication::Sender::send_string("Success!", _socket);
-
-    break;
-  } else {
-    break;
+    if (finished) {
+      break;
+    }
   }
-}*/
 }
 
 // ------------------------------------------------------------------------
