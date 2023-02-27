@@ -15,7 +15,7 @@
 #include <memory>
 #include <string>
 
-#include "commands/CheckPipeline.hpp"
+#include "commands/PipelineCommand.hpp"
 #include "debug/debug.hpp"
 #include "engine/communication/communication.hpp"
 #include "engine/config/config.hpp"
@@ -32,6 +32,8 @@ class PipelineManager {
  public:
   typedef std::map<std::string, pipelines::Pipeline> PipelineMapType;
 
+  using Command = commands::PipelineCommand;
+
  public:
   PipelineManager(const PipelineManagerParams& _params) : params_(_params) {}
 
@@ -39,31 +41,28 @@ class PipelineManager {
 
  public:
   /// Checks the validity of the data model.
-  void check(const std::string& _name, const commands::CheckPipeline& _cmd,
+  void check(const typename Command::CheckOp& _cmd,
              Poco::Net::StreamSocket* _socket);
 
   /// Returns the column importances of a pipeline.
-  void column_importances(const std::string& _name,
-                          const Poco::JSON::Object& _cmd,
+  void column_importances(const typename Command::ColumnImportancesOp& _cmd,
                           Poco::Net::StreamSocket* _socket);
 
   /// Determines whether the pipeline should
   /// allow HTTP requests.
-  void deploy(const std::string& _name, const Poco::JSON::Object& _cmd,
+  void deploy(const typename Command::DeployOp& _cmd,
               Poco::Net::StreamSocket* _socket);
 
   /// Returns the feature correlations of a pipeline.
-  void feature_correlations(const std::string& _name,
-                            const Poco::JSON::Object& _cmd,
+  void feature_correlations(const typename Command::FeatureCorrelationsOp& _cmd,
                             Poco::Net::StreamSocket* _socket);
 
   /// Returns the feature importances of a pipeline.
-  void feature_importances(const std::string& _name,
-                           const Poco::JSON::Object& _cmd,
+  void feature_importances(const typename Command::FeatureImportancesOp& _cmd,
                            Poco::Net::StreamSocket* _socket);
 
   /// Fits a pipeline
-  void fit(const std::string& _name, const Poco::JSON::Object& _cmd,
+  void fit(const typename Command::FitOp& _cmd,
            Poco::Net::StreamSocket* _socket);
 
   /// Sends a command to the monitor to launch a hyperparameter optimization.
@@ -71,23 +70,25 @@ class PipelineManager {
                        Poco::Net::StreamSocket* _socket);
 
   /// Writes a JSON representation of the lift curve into the socket.
-  void lift_curve(const std::string& _name, const Poco::JSON::Object& _cmd,
+  void lift_curve(const typename Command::LiftCurveOp& _cmd,
                   Poco::Net::StreamSocket* _socket);
 
   /// Writes a JSON representation of the precision-recall curve into the
   /// socket.
-  void precision_recall_curve(const std::string& _name,
-                              const Poco::JSON::Object& _cmd,
-                              Poco::Net::StreamSocket* _socket);
+  void precision_recall_curve(
+      const typename Command::PrecisionRecallCurveOp& _cmd,
+      Poco::Net::StreamSocket* _socket);
 
   /// Refreshes a pipeline in the target language
-  void refresh(const std::string& _name, Poco::Net::StreamSocket* _socket);
+  void refresh(const typename Command::RefreshOp& _cmd,
+               Poco::Net::StreamSocket* _socket);
 
   /// Refreshes all pipeline in the target language
-  void refresh_all(Poco::Net::StreamSocket* _socket);
+  void refresh_all(const typename Command::RefreshAllOp& _cmd,
+                   Poco::Net::StreamSocket* _socket);
 
   /// Writes a JSON representation of the ROC curve into the socket.
-  void roc_curve(const std::string& _name, const Poco::JSON::Object& _cmd,
+  void roc_curve(const typename Command::ROCCurveOp& _cmd,
                  Poco::Net::StreamSocket* _socket);
 
   /// Transform a pipeline to a JSON string
@@ -98,7 +99,7 @@ class PipelineManager {
               Poco::Net::StreamSocket* _socket);
 
   /// Generate features
-  void transform(const std::string& _name, const Poco::JSON::Object& _cmd,
+  void transform(const typename Command::TransformOp& _cmd,
                  Poco::Net::StreamSocket* _socket);
 
   // ------------------------------------------------------------------------
@@ -132,9 +133,9 @@ class PipelineManager {
                       containers::DataFrame* _df);
 
   /// Makes sure that the user is allowed to transform this pipeline.
-  void check_user_privileges(const pipelines::Pipeline& _pipeline,
-                             const std::string& _name,
-                             const Poco::JSON::Object& _cmd) const;
+  void check_user_privileges(
+      const pipelines::Pipeline& _pipeline, const std::string& _name,
+      const fct::NamedTuple<fct::Field<"http_request_", bool>>& _cmd) const;
 
   /// Retrieves an Poco::JSON::Array::Ptr from a scores object.
   Poco::JSON::Array::Ptr get_array(const Poco::JSON::Object& _scores,
