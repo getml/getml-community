@@ -168,10 +168,11 @@ void PipelineManager::add_to_tracker(
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::check(const std::string& _name,
-                            const commands::CheckPipeline& _cmd,
+void PipelineManager::check(const typename Command::CheckOp& _cmd,
                             Poco::Net::StreamSocket* _socket) {
-  const auto pipeline = get_pipeline(_name);
+  const auto& name = _cmd.get<"name_">();
+
+  const auto pipeline = get_pipeline(name);
 
   communication::Sender::send_string("Found!", _socket);
 
@@ -215,8 +216,8 @@ void PipelineManager::check(const std::string& _name,
 
 void PipelineManager::check_user_privileges(
     const pipelines::Pipeline& _pipeline, const std::string& _name,
-    const Poco::JSON::Object& _cmd) const {
-  if (JSON::get_value<bool>(_cmd, "http_request_")) {
+    const fct::NamedTuple<fct::Field<"http_request_", bool>>& _cmd) const {
+  if (_cmd.get<"http_request_">()) {
     if (!_pipeline.allow_http()) {
       throw std::runtime_error(
           "Pipeline '" + _name +
@@ -229,12 +230,14 @@ void PipelineManager::check_user_privileges(
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::column_importances(const std::string& _name,
-                                         const Poco::JSON::Object& _cmd,
-                                         Poco::Net::StreamSocket* _socket) {
-  const auto target_num = JSON::get_value<Int>(_cmd, "target_num_");
+void PipelineManager::column_importances(
+    const typename Command::ColumnImportancesOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
+  const auto& name = _cmd.get<"name_">();
 
-  const auto pipeline = get_pipeline(_name);
+  const auto target_num = _cmd.get<"target_num_">();
+
+  const auto pipeline = get_pipeline(name);
 
   const auto scores = pipeline.scores();
 
@@ -272,26 +275,29 @@ void PipelineManager::column_importances(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::deploy(const std::string& _name,
-                             const Poco::JSON::Object& _cmd,
+void PipelineManager::deploy(const typename Command::DeployOp& _cmd,
                              Poco::Net::StreamSocket* _socket) {
-  const bool deploy = JSON::get_value<bool>(_cmd, "deploy_");
+  const auto& name = _cmd.get<"name_">();
 
-  const auto pipeline = get_pipeline(_name).with_allow_http(deploy);
+  const bool deploy = _cmd.get<"deploy_">();
 
-  set_pipeline(_name, pipeline);
+  const auto pipeline = get_pipeline(name).with_allow_http(deploy);
+
+  set_pipeline(name, pipeline);
 
   communication::Sender::send_string("Success!", _socket);
 }
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::feature_correlations(const std::string& _name,
-                                           const Poco::JSON::Object& _cmd,
-                                           Poco::Net::StreamSocket* _socket) {
-  const auto target_num = JSON::get_value<unsigned int>(_cmd, "target_num_");
+void PipelineManager::feature_correlations(
+    const typename Command::FeatureCorrelationsOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
+  const auto& name = _cmd.get<"name_">();
 
-  const auto pipeline = get_pipeline(_name);
+  const auto target_num = _cmd.get<"target_num_">();
+
+  const auto pipeline = get_pipeline(name);
 
   const auto scores = pipeline.scores();
 
@@ -318,12 +324,14 @@ void PipelineManager::feature_correlations(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::feature_importances(const std::string& _name,
-                                          const Poco::JSON::Object& _cmd,
-                                          Poco::Net::StreamSocket* _socket) {
-  const auto target_num = JSON::get_value<unsigned int>(_cmd, "target_num_");
+void PipelineManager::feature_importances(
+    const typename Command::FeatureImportancesOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
+  const auto& name = _cmd.get<"name_">();
 
-  const auto pipeline = get_pipeline(_name);
+  const auto target_num = _cmd.get<"target_num_">();
+
+  const auto pipeline = get_pipeline(name);
 
   const auto scores = pipeline.scores();
 
@@ -350,10 +358,11 @@ void PipelineManager::feature_importances(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::fit(const std::string& _name,
-                          const Poco::JSON::Object& _cmd,
+void PipelineManager::fit(const typename Command::FitOp& _cmd,
                           Poco::Net::StreamSocket* _socket) {
-  auto pipeline = get_pipeline(_name);
+  const auto& name = _cmd.get<"name_">();
+
+  auto pipeline = get_pipeline(name);
 
   communication::Sender::send_string("Found!", _socket);
 
@@ -374,7 +383,7 @@ void PipelineManager::fit(const std::string& _name,
 
   const auto params = pipelines::FitParams{
       .categories_ = local_categories,
-      .cmd_ = json::from_json<commands::DataFramesOrViews>(_cmd),
+      .cmd_ = _cmd,
       .data_frames_ = data_frames(),
       .data_frame_tracker_ = data_frame_tracker(),
       .fe_tracker_ = params_.fe_tracker_,
@@ -390,10 +399,10 @@ void PipelineManager::fit(const std::string& _name,
 
   pipeline = pipeline.with_fitted(fitted).with_scores(scores);
 
-  const auto it = pipelines().find(_name);
+  const auto it = pipelines().find(name);
 
   if (it == pipelines().end()) {
-    throw std::runtime_error("Pipeline '" + _name + "' does not exist!");
+    throw std::runtime_error("Pipeline '" + name + "' does not exist!");
   }
 
   weak_write_lock.upgrade();
@@ -446,12 +455,13 @@ Poco::JSON::Object PipelineManager::get_scores(
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::lift_curve(const std::string& _name,
-                                 const Poco::JSON::Object& _cmd,
+void PipelineManager::lift_curve(const typename Command::LiftCurveOp& _cmd,
                                  Poco::Net::StreamSocket* _socket) {
-  const auto target_num = JSON::get_value<unsigned int>(_cmd, "target_num_");
+  const auto& name = _cmd.get<"name_">();
 
-  const auto pipeline = get_pipeline(_name);
+  const auto target_num = _cmd.get<"target_num_">();
+
+  const auto pipeline = get_pipeline(name);
 
   const auto& scores = pipeline.scores();
 
@@ -466,12 +476,14 @@ void PipelineManager::lift_curve(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::precision_recall_curve(const std::string& _name,
-                                             const Poco::JSON::Object& _cmd,
-                                             Poco::Net::StreamSocket* _socket) {
-  const auto target_num = JSON::get_value<unsigned int>(_cmd, "target_num_");
+void PipelineManager::precision_recall_curve(
+    const typename Command::PrecisionRecallCurveOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
+  const auto& name = _cmd.get<"name_">();
 
-  const auto pipeline = get_pipeline(_name);
+  const auto target_num = _cmd.get<"target_num_">();
+
+  const auto pipeline = get_pipeline(name);
 
   const auto& scores = pipeline.scores();
 
@@ -543,9 +555,11 @@ Poco::JSON::Object PipelineManager::receive_data(
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::refresh(const std::string& _name,
+void PipelineManager::refresh(const typename Command::RefreshOp& _cmd,
                               Poco::Net::StreamSocket* _socket) {
-  const auto pipeline = get_pipeline(_name);
+  const auto& name = _cmd.get<"name_">();
+
+  const auto pipeline = get_pipeline(name);
 
   const auto obj = refresh_pipeline(pipeline);
 
@@ -554,7 +568,8 @@ void PipelineManager::refresh(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::refresh_all(Poco::Net::StreamSocket* _socket) {
+void PipelineManager::refresh_all(const typename Command::RefreshAllOp& _cmd,
+                                  Poco::Net::StreamSocket* _socket) {
   Poco::JSON::Object obj;
 
   Poco::JSON::Array pipelines_arr;
@@ -608,12 +623,13 @@ Poco::JSON::Object PipelineManager::refresh_pipeline(
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::roc_curve(const std::string& _name,
-                                const Poco::JSON::Object& _cmd,
+void PipelineManager::roc_curve(const typename Command::ROCCurveOp& _cmd,
                                 Poco::Net::StreamSocket* _socket) {
-  const auto target_num = JSON::get_value<unsigned int>(_cmd, "target_num_");
+  const auto& name = _cmd.get<"name_">();
 
-  const auto pipeline = get_pipeline(_name);
+  const auto target_num = _cmd.get<"target_num_">();
+
+  const auto pipeline = get_pipeline(name);
 
   const auto& scores = pipeline.scores();
 
@@ -803,12 +819,13 @@ void PipelineManager::to_sql(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::transform(const std::string& _name,
-                                const Poco::JSON::Object& _cmd,
+void PipelineManager::transform(const typename Command::TransformOp& _cmd,
                                 Poco::Net::StreamSocket* _socket) {
-  auto pipeline = get_pipeline(_name);
+  const auto& name = _cmd.get<"name_">();
 
-  check_user_privileges(pipeline, _name, _cmd);
+  auto pipeline = get_pipeline(name);
+
+  check_user_privileges(pipeline, name, _cmd);
 
   communication::Sender::send_string("Found!", _socket);
 
@@ -861,11 +878,11 @@ void PipelineManager::transform(const std::string& _name,
     pipeline = pipeline.with_scores(fct::Ref<const metrics::Scores>(scores));
   }
 
-  const auto table_name = JSON::get_value<std::string>(cmd, "table_name_");
+  const auto& table_name = _cmd.get<"table_name_">();
 
-  const auto df_name = JSON::get_value<std::string>(cmd, "df_name_");
+  const auto& df_name = _cmd.get<"df_name_">();
 
-  const auto score = JSON::get_value<bool>(cmd, "score_");
+  const auto& score = _cmd.get<"score_">();
 
   if (table_name == "" && df_name == "" && !score) {
     communication::Sender::send_string("Success!", _socket);
@@ -892,7 +909,7 @@ void PipelineManager::transform(const std::string& _name,
   weak_write_lock.unlock();
 
   if (score) {
-    this->score(cmd, _name, population_df, numerical_features, pipeline,
+    this->score(cmd, name, population_df, numerical_features, pipeline,
                 _socket);
   }
 }

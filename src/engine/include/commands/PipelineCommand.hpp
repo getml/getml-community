@@ -11,12 +11,13 @@
 #include <string>
 
 #include "commands/DataFramesOrViews.hpp"
+#include "commands/Int.hpp"
 #include "fct/Field.hpp"
 #include "fct/Literal.hpp"
 #include "fct/NamedTuple.hpp"
 #include "fct/Ref.hpp"
 #include "fct/TaggedUnion.hpp"
-#include "fct/define_named_tuple_t.hpp"
+#include "fct/define_named_tuple.hpp"
 
 namespace commands {
 
@@ -60,9 +61,8 @@ struct PipelineCommand {
       fct::NamedTuple<fct::Field<"type_", fct::Literal<"Pipeline.refresh">>,
                       fct::Field<"name_", std::string>>;
 
-  using RefreshAllOp =
-      fct::NamedTuple<fct::Field<"type_", fct::Literal<"Pipeline.refresh_all">>,
-                      fct::Field<"name_", std::string>>;
+  using RefreshAllOp = fct::NamedTuple<
+      fct::Field<"type_", fct::Literal<"Pipeline.refresh_all">>>;
 
   using ROCCurveOp =
       fct::NamedTuple<fct::Field<"type_", fct::Literal<"Pipeline.roc_curve">>,
@@ -71,7 +71,9 @@ struct PipelineCommand {
 
   using TransformOp = fct::define_named_tuple_t<
       fct::Field<"type_", fct::Literal<"Pipeline.transform">>,
-      fct::Field<"name_", std::string>, DataFramesOrViews>;
+      fct::Field<"name_", std::string>, fct::Field<"table_name_", std::string>,
+      fct::Field<"df_name_", std::string>, fct::Field<"score_", bool>,
+      fct::Field<"http_request_", bool>, DataFramesOrViews>;
 
   using NamedTupleType =
       fct::TaggedUnion<"type_", CheckOp, ColumnImportancesOp, DeployOp,

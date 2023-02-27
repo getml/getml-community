@@ -36,33 +36,8 @@ void RequestHandler::run() {
     } else if (type == "monitor_url") {
       // The community edition does not have a monitor.
       communication::Sender::send_string("", &socket());
-    } else if (type == "Pipeline.check") {
-      const auto c = json::from_json<commands::CheckPipeline>(cmd);
-      pipeline_manager().check(name, c, &socket());
-    } else if (type == "Pipeline.column_importances") {
-      pipeline_manager().column_importances(name, cmd, &socket());
-    } else if (type == "Pipeline.deploy") {
-      pipeline_manager().deploy(name, cmd, &socket());
-    } else if (type == "Pipeline.feature_correlations") {
-      pipeline_manager().feature_correlations(name, cmd, &socket());
-    } else if (type == "Pipeline.feature_importances") {
-      pipeline_manager().feature_importances(name, cmd, &socket());
-    } else if (type == "Pipeline.fit") {
-      pipeline_manager().fit(name, cmd, &socket());
-    } else if (type == "Pipeline.lift_curve") {
-      pipeline_manager().lift_curve(name, cmd, &socket());
-    } else if (type == "Pipeline.precision_recall_curve") {
-      pipeline_manager().precision_recall_curve(name, cmd, &socket());
-    } else if (type == "Pipeline.refresh") {
-      pipeline_manager().refresh(name, &socket());
-    } else if (type == "Pipeline.refresh_all") {
-      pipeline_manager().refresh_all(&socket());
-    } else if (type == "Pipeline.roc_curve") {
-      pipeline_manager().roc_curve(name, cmd, &socket());
     } else if (type == "Pipeline.to_sql") {
       pipeline_manager().to_sql(name, cmd, &socket());
-    } else if (type == "Pipeline.transform") {
-      pipeline_manager().transform(name, cmd, &socket());
     } else if (type == "shutdown") {
       *shutdown_ = true;
     } else {
