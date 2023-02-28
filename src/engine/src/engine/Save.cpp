@@ -10,6 +10,8 @@
 #include "engine/pipelines/PipelineJSON.hpp"
 #include "engine/pipelines/ToSQL.hpp"
 #include "engine/pipelines/ToSQLParams.hpp"
+#include "fct/Field.hpp"
+#include "fct/NamedTuple.hpp"
 #include "helpers/Saver.hpp"
 
 namespace engine {
@@ -57,12 +59,13 @@ void Save::save(const SaveParams& _params) {
 
   save_predictors(_params.fitted_.predictors_.predictors_, "predictor", tfile);
 
-  const auto transpilation_params = transpilation::TranspilationParams{
-      .dialect_ = transpilation::SQLDialectParser::HUMAN_READABLE_SQL,
-      .nchar_categorical_ = 128,
-      .nchar_join_key_ = 128,
-      .nchar_text_ = 4096,
-      .schema_ = ""};
+  const auto transpilation_params = transpilation::TranspilationParams(
+      fct::make_field<"dialect_">(
+          transpilation::SQLDialectParser::HUMAN_READABLE_SQL) *
+      fct::Field<"nchar_categorical_", size_t>(128) *
+      fct::Field<"nchar_join_key_", size_t>(128) *
+      fct::Field<"nchar_text_", size_t>(4096) *
+      fct::Field<"schema_", std::string>(""));
 
   const auto to_sql_params =
       ToSQLParams{.categories_ = _params.categories_,

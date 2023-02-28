@@ -18,6 +18,7 @@
 #include "fct/Ref.hpp"
 #include "fct/TaggedUnion.hpp"
 #include "fct/define_named_tuple.hpp"
+#include "transpilation/TranspilationParams.hpp"
 
 namespace commands {
 
@@ -69,6 +70,13 @@ struct PipelineCommand {
                       fct::Field<"name_", std::string>,
                       fct::Field<"target_num_", Int>>;
 
+  using ToSQLOp = fct::define_named_tuple_t<
+      fct::Field<"type_", fct::Literal<"Pipeline.to_sql">>,
+      fct::Field<"name_", std::string>, fct::Field<"targets_", bool>,
+      fct::Field<"subfeatures_", bool>,
+      fct::Field<"size_threshold_", std::optional<size_t>>,
+      typename transpilation::TranspilationParams::NamedTupleType>;
+
   using TransformOp = fct::define_named_tuple_t<
       fct::Field<"type_", fct::Literal<"Pipeline.transform">>,
       fct::Field<"name_", std::string>, fct::Field<"table_name_", std::string>,
@@ -79,7 +87,7 @@ struct PipelineCommand {
       fct::TaggedUnion<"type_", CheckOp, ColumnImportancesOp, DeployOp,
                        FeatureCorrelationsOp, FeatureImportancesOp, FitOp,
                        LiftCurveOp, PrecisionRecallCurveOp, RefreshOp,
-                       RefreshAllOp, ROCCurveOp, TransformOp>;
+                       RefreshAllOp, ROCCurveOp, ToSQLOp, TransformOp>;
 
   /// The underlying value
   NamedTupleType val_;

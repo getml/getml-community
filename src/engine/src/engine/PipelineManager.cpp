@@ -772,24 +772,21 @@ containers::DataFrame PipelineManager::to_df(
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::to_sql(const std::string& _name,
-                             const Poco::JSON::Object& _cmd,
+void PipelineManager::to_sql(typename Command::ToSQLOp& _cmd,
                              Poco::Net::StreamSocket* _socket) {
-  const auto targets = JSON::get_value<bool>(_cmd, "targets_");
+  const auto name = _cmd.get<"name_">();
 
-  const auto subfeatures = JSON::get_value<bool>(_cmd, "subfeatures_");
+  const auto targets = _cmd.get<"targets_">();
 
-  const auto size_threshold =
-      _cmd.has("size_threshold_")
-          ? JSON::get_value<size_t>(_cmd, "size_threshold_")
-          : std::optional<size_t>();
+  const auto subfeatures = _cmd.get<"subfeatures_">();
 
-  const auto transpilation_params =
-      transpilation::TranspilationParams::from_json(_cmd);
+  const auto size_threshold = _cmd.get<"size_threshold_">();
+
+  const auto transpilation_params = transpilation::TranspilationParams(_cmd);
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
-  const auto pipeline = get_pipeline(_name);
+  const auto pipeline = get_pipeline(name);
 
   const auto fitted = pipeline.fitted();
 

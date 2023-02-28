@@ -12,23 +12,27 @@
 #include <string>
 
 #include "fct/Field.hpp"
+#include "fct/Literal.hpp"
 #include "fct/NamedTuple.hpp"
 #include "jsonutils/jsonutils.hpp"
 
 namespace transpilation {
 
 struct TranspilationParams {
+  using NamedTupleType =
+      fct::NamedTuple<fct::Field<"dialect_", std::string>,
+                      fct::Field<"nchar_categorical_", size_t>,
+                      fct::Field<"nchar_join_key_", size_t>,
+                      fct::Field<"nchar_text_", size_t>,
+                      fct::Field<"schema_", std::string> >;
+
   /// Generates a new set of transpilation params from a JSON.
-  static TranspilationParams from_json(const Poco::JSON::Object& _cmd) {
-    return TranspilationParams{
-        .dialect_ = jsonutils::JSON::get_value<std::string>(_cmd, "dialect_"),
-        .nchar_categorical_ =
-            jsonutils::JSON::get_value<size_t>(_cmd, "nchar_categorical_"),
-        .nchar_join_key_ =
-            jsonutils::JSON::get_value<size_t>(_cmd, "nchar_join_key_"),
-        .nchar_text_ = jsonutils::JSON::get_value<size_t>(_cmd, "nchar_text_"),
-        .schema_ = jsonutils::JSON::get_value<std::string>(_cmd, "schema_")};
-  }
+  TranspilationParams(const NamedTupleType& _cmd)
+      : dialect_(_cmd.get<"dialect_">()),
+        nchar_categorical_(_cmd.get<"nchar_categorical_">()),
+        nchar_join_key_(_cmd.get<"nchar_join_key_">()),
+        nchar_text_(_cmd.get<"nchar_text_">()),
+        schema_(_cmd.get<"schema_">()){};
 
   ~TranspilationParams() = default;
 
@@ -48,7 +52,6 @@ struct TranspilationParams {
   const std::string schema_;
 };
 
-// -------------------------------------------------------------------------
 }  // namespace transpilation
 
 #endif  // TRANSPILATION_TRANSPILATIONPARAMS_HPP_
