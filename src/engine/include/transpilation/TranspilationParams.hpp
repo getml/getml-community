@@ -19,8 +19,10 @@
 namespace transpilation {
 
 struct TranspilationParams {
+  using DialectType = fct::Literal<"human-readable sql", "sqlite3">;
+
   using NamedTupleType =
-      fct::NamedTuple<fct::Field<"dialect_", std::string>,
+      fct::NamedTuple<fct::Field<"dialect_", DialectType>,
                       fct::Field<"nchar_categorical_", size_t>,
                       fct::Field<"nchar_join_key_", size_t>,
                       fct::Field<"nchar_text_", size_t>,
@@ -37,7 +39,7 @@ struct TranspilationParams {
   ~TranspilationParams() = default;
 
   /// The dialect used
-  const std::string dialect_;
+  const DialectType dialect_;
 
   /// Number of characters in categorical columns.
   const size_t nchar_categorical_;
