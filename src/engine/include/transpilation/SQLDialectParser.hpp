@@ -1,32 +1,20 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef SQL_SQLDIALECTPARSER_HPP_
 #define SQL_SQLDIALECTPARSER_HPP_
 
-// -------------------------------------------------------------------------
-
 #include <cstddef>
-
-// -------------------------------------------------------------------------
-
 #include <memory>
 #include <string>
 
-// -------------------------------------------------------------------------
-
 #include "fct/Ref.hpp"
-
-// -------------------------------------------------------------------------
-
 #include "transpilation/SQLDialectGenerator.hpp"
 #include "transpilation/TranspilationParams.hpp"
-
-// -------------------------------------------------------------------------
 
 namespace transpilation {
 
@@ -44,7 +32,6 @@ struct SQLDialectParser {
       const TranspilationParams& _params);
 };
 
-// -------------------------------------------------------------------------
 }  // namespace transpilation
 
 #endif  // SQL_SQLDIALECTPARSER_HPP_

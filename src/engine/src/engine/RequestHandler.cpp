@@ -36,8 +36,6 @@ void RequestHandler::run() {
     } else if (type == "monitor_url") {
       // The community edition does not have a monitor.
       communication::Sender::send_string("", &socket());
-    } else if (type == "Pipeline.to_sql") {
-      pipeline_manager().to_sql(name, cmd, &socket());
     } else if (type == "shutdown") {
       *shutdown_ = true;
     } else {
