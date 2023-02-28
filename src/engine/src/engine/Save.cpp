@@ -59,9 +59,10 @@ void Save::save(const SaveParams& _params) {
 
   save_predictors(_params.fitted_.predictors_.predictors_, "predictor", tfile);
 
+  using DialectType = typename transpilation::TranspilationParams::DialectType;
+
   const auto transpilation_params = transpilation::TranspilationParams(
-      fct::make_field<"dialect_">(
-          transpilation::SQLDialectParser::HUMAN_READABLE_SQL) *
+      fct::make_field<"dialect_">(DialectType::make<"human-readable sql">()) *
       fct::Field<"nchar_categorical_", size_t>(128) *
       fct::Field<"nchar_join_key_", size_t>(128) *
       fct::Field<"nchar_text_", size_t>(4096) *
