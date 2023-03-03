@@ -10,6 +10,7 @@
 
 #include <tuple>
 
+#include "fct/NamedTuple.hpp"
 #include "fct/StringLiteral.hpp"
 #include "fct/find_index.hpp"
 

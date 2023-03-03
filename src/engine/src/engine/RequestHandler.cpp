@@ -8,6 +8,8 @@
 #include "engine/srv/RequestHandler.hpp"
 
 #include "commands/commands.hpp"
+#include "fct/define_tagged_union.hpp"
+#include "fct/get.hpp"
 #include "json/json.hpp"
 
 namespace engine {
@@ -22,26 +24,25 @@ void RequestHandler::run() {
                                "(127.0.0.1) are allowed!");
     }
 
+    using Command = fct::define_tagged_union_t<
+        "type_", typename commands::DatabaseCommand::NamedTupleType,
+        typename commands::DataFrameCommand::NamedTupleType>;
+    // typename commands::PipelineCommand::NamedTupleType,
+    // typename commands::ProjectCommand::NamedTupleType>;
+
     const Poco::JSON::Object cmd =
         communication::Receiver::recv_cmd(logger_, &socket());
 
-    const auto basic_command = json::from_json<commands::BasicCommand>(cmd);
+    const auto command = json::from_json<Command>(cmd);
 
-    const auto& type = basic_command.get<"type_">();
-
-    const auto& name = basic_command.get<"name_">();
-
-    if (type == "is_alive") {
+    /*if (type == "is_alive") {
       return;
     } else if (type == "monitor_url") {
       // The community edition does not have a monitor.
       communication::Sender::send_string("", &socket());
     } else if (type == "shutdown") {
       *shutdown_ = true;
-    } else {
-      const auto obj = json::Parser<commands::DatabaseCommand>::from_json(cmd);
-      database_manager().execute_command(obj, &socket());
-    }
+    }*/
   } catch (std::exception& e) {
     logger_->log(std::string("Error: ") + e.what());
 

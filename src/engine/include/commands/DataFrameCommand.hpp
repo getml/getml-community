@@ -9,6 +9,7 @@
 #define COMMANDS_DATAFRAMECOMMAND_HPP_
 
 #include <string>
+#include <variant>
 
 #include "commands/Aggregation.hpp"
 #include "commands/BooleanColumnView.hpp"
@@ -29,9 +30,8 @@ namespace commands {
 struct DataFrameCommand {
   /// Used as a helper for various commands related to views.
   using ViewCol =
-      fct::TaggedUnion<"type_",
-                       typename FloatColumnOrFloatColumnView::NamedTupleType,
-                       typename StringColumnOrStringColumnView::NamedTupleType>;
+      std::variant<typename FloatColumnOrFloatColumnView::NamedTupleType,
+                   typename StringColumnOrStringColumnView::NamedTupleType>;
 
   /// The command to add a data frame from arrow.
   using AddDfFromArrowOp = typename ProjectCommand::AddDfFromArrowOp;
