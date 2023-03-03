@@ -68,6 +68,12 @@ class Literal {
     return find_value_of<_name, fields_...>() != -1;
   }
 
+  /// Determines whether the literal has duplicate strings at compile time.
+  /// These is useful for checking collections of strings in other contexts.
+  inline static constexpr bool has_duplicates() {
+    return duplicate_strings<fields_...>();
+  }
+
   /// Constructs a new Literal.
   template <StringLiteral _name>
   static Literal<fields_...> make() {

@@ -8,6 +8,9 @@
 #ifndef COMMANDS_PREPROCESSORFINGERPRINT_HPP_
 #define COMMANDS_PREPROCESSORFINGERPRINT_HPP_
 
+#include <variant>
+#include <vector>
+
 #include "commands/DataFrameFingerprint.hpp"
 #include "commands/Preprocessor.hpp"
 #include "fct/Field.hpp"

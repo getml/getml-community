@@ -11,6 +11,7 @@
 #include <tuple>
 #include <type_traits>
 
+#include "fct/Field.hpp"
 #include "fct/StringLiteral.hpp"
 
 namespace fct {

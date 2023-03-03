@@ -166,7 +166,7 @@ typename ViewParser::ColumnViewVariant ViewParser::make_column_view(
     }
   };
 
-  return fct::visit(handle, _view_col);
+  return std::visit(handle, _view_col);
 }
 
 // ----------------------------------------------------------------------------

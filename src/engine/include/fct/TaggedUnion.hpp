@@ -10,8 +10,8 @@
 
 #include <variant>
 
-#include "fct/Literal.hpp"
 #include "fct/StringLiteral.hpp"
+#include "fct/field_type.hpp"
 
 namespace fct {
 
@@ -19,6 +19,7 @@ template <StringLiteral _discriminator, class... NamedTupleTypes>
 struct TaggedUnion {
   static constexpr StringLiteral discrimininator_ = _discriminator;
 
+  /// The type of the underlying variant.
   using VariantType = std::variant<NamedTupleTypes...>;
 
   /// The underlying variant - a TaggedUnion is a thin wrapper

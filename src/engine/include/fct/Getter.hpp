@@ -127,7 +127,7 @@ struct Getter<std::variant<NamedTupleTypes...>> {
   template <int _index>
   static inline const auto& get_const(
       const std::variant<NamedTupleTypes...>& _tup) {
-    const auto apply = [](const auto& _tup) -> auto& {
+    const auto apply = [](const auto& _tup) -> const auto& {
       using NamedTupleType = std::decay_t<decltype(_tup)>;
       return Getter<NamedTupleType>::template get_const<_index>(_tup);
     };
@@ -138,7 +138,7 @@ struct Getter<std::variant<NamedTupleTypes...>> {
   template <StringLiteral _field_name>
   static inline const auto& get_const(
       const std::variant<NamedTupleTypes...>& _tup) {
-    const auto apply = [](const auto& _t) -> auto& {
+    const auto apply = [](const auto& _t) -> const auto& {
       using NamedTupleType = std::decay_t<decltype(_t)>;
       return Getter<NamedTupleType>::template get_const<_field_name>(_t);
     };
@@ -149,7 +149,7 @@ struct Getter<std::variant<NamedTupleTypes...>> {
   template <class Field>
   static inline const auto& get_const(
       const std::variant<NamedTupleTypes...>& _tup) {
-    const auto apply = [](const auto& _t) -> auto& {
+    const auto apply = [](const auto& _t) -> const auto& {
       using NamedTupleType = std::decay_t<decltype(_t)>;
       return Getter<NamedTupleType>::template get_const<Field>(_t);
     };
