@@ -26,9 +26,9 @@ void RequestHandler::run() {
 
     using Command = fct::define_tagged_union_t<
         "type_", typename commands::DatabaseCommand::NamedTupleType,
-        typename commands::DataFrameCommand::NamedTupleType>;
-    // typename commands::PipelineCommand::NamedTupleType,
-    // typename commands::ProjectCommand::NamedTupleType>;
+        typename commands::DataFrameCommand::NamedTupleType,
+        typename commands::PipelineCommand::NamedTupleType,
+        typename commands::ProjectCommand::NamedTupleType>;
 
     const Poco::JSON::Object cmd =
         communication::Receiver::recv_cmd(logger_, &socket());
