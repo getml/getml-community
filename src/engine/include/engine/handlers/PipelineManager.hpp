@@ -154,8 +154,8 @@ class PipelineManager {
   /// Receives data from the client. This data will not be stored permanently,
   /// but locally. Once the training/transformation process is complete, it
   /// will be deleted.
-  Poco::JSON::Object receive_data(
-      const Poco::JSON::Object& _cmd,
+  typename Command::TransformOp receive_data(
+      const typename Command::TransformOp& _cmd,
       const fct::Ref<containers::Encoding>& _categories,
       const fct::Ref<containers::Encoding>& _join_keys_encoding,
       const fct::Ref<std::map<std::string, containers::DataFrame>>&
@@ -174,7 +174,8 @@ class PipelineManager {
                  Poco::Net::StreamSocket* _socket);
 
   /// Scores a pipeline
-  void score(const Poco::JSON::Object& _cmd, const std::string& _name,
+  void score(const typename Command::TransformOp& _cmd,
+             const std::string& _name,
              const containers::DataFrame& _population_df,
              const containers::NumericalFeatures& _yhat,
              const pipelines::Pipeline& _pipeline,
@@ -182,7 +183,7 @@ class PipelineManager {
 
   /// Stores the newly created data frame.
   void store_df(const pipelines::FittedPipeline& _fitted,
-                const Poco::JSON::Object& _cmd,
+                const typename Command::TransformOp& _cmd,
                 const containers::DataFrame& _population_df,
                 const std::vector<containers::DataFrame>& _peripheral_dfs,
                 const fct::Ref<containers::Encoding>& _local_categories,
@@ -192,7 +193,7 @@ class PipelineManager {
 
   /// Writes a set of features to the data base.
   void to_db(const pipelines::FittedPipeline& _fitted,
-             const Poco::JSON::Object& _cmd,
+             const typename Command::TransformOp& _cmd,
              const containers::DataFrame& _population_table,
              const containers::NumericalFeatures& _numerical_features,
              const containers::CategoricalFeatures& _categorical_features,
@@ -201,7 +202,8 @@ class PipelineManager {
 
   /// Writes a set of features to a DataFrame.
   containers::DataFrame to_df(
-      const pipelines::FittedPipeline& _fitted, const Poco::JSON::Object& _cmd,
+      const pipelines::FittedPipeline& _fitted,
+      const typename Command::TransformOp& _cmd,
       const containers::DataFrame& _population_table,
       const containers::NumericalFeatures& _numerical_features,
       const containers::CategoricalFeatures& _categorical_features,

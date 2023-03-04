@@ -37,7 +37,7 @@ struct Receiver {
   static std::string recv_string(Poco::Net::StreamSocket *_socket);
 
   /// Receives a command from the client
-  static Poco::JSON::Object recv_cmd(
+  static std::string recv_cmd(
       const fct::Ref<const communication::Logger> &_logger,
       Poco::Net::StreamSocket *_socket);
 };

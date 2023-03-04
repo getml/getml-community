@@ -84,8 +84,8 @@ class ViewParser {
              std::optional<containers::DataFrame>>
   parse_all(const commands::DataFramesOrViews& _cmd) const;
 
-  /// TODO: Remove this temporary solution.
-  auto parse_all(const Poco::JSON::Object& _cmd) const {
+  /// Returns the population and peripheral data frames.
+  auto parse_all(const std::string& _cmd) const {
     const auto cmd = json::from_json<commands::DataFramesOrViews>(_cmd);
     return parse_all(cmd);
   }

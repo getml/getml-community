@@ -26,11 +26,11 @@ include(${TSINDEX_SOURCE_DIRECTORY}/obj.txt)
 
 add_executable(
  	${GETML_VERSION}-engine
+ 	${ENGINE_OBJ}
     ${FASTPROP_OBJ}
     ${HELPERS_OBJ}
     ${IO_OBJ}
  	${DATABASE_OBJ}
- 	${ENGINE_OBJ}
  	${METRICS_OBJ}
  	${MEMMAP_OBJ}
 	${PREDICTORS_OBJ}

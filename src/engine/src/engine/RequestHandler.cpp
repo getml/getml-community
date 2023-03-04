@@ -8,6 +8,7 @@
 #include "engine/srv/RequestHandler.hpp"
 
 #include "commands/commands.hpp"
+#include "engine/srv/CommandParser.hpp"
 #include "fct/extract_discriminators.hpp"
 #include "fct/get.hpp"
 #include "json/json.hpp"
@@ -24,7 +25,9 @@ void RequestHandler::run() {
                                "(127.0.0.1) are allowed!");
     }
 
-    const auto command = recv_cmd();
+    const auto cmd_str = communication::Receiver::recv_cmd(logger_, &socket());
+
+    const auto command = CommandParser::parse_cmd(cmd_str);
 
     const auto handle = [this](const auto& _cmd) {
       // Note that all of these four commands are actually tagged unions

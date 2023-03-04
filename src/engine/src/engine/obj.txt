@@ -5,6 +5,7 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/BoolOpParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/CategoryTrimmer.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Check.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/CommandParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DatabaseManager.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DataFrame.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DataFrameManager.cpp
@@ -36,7 +37,6 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/ProjectManager.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Receiver.cpp
     ${ENGINE_SOURCE_DIRECTORY}/RequestHandler.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/RequestHandler_recv_cmd.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Save.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Seasonal.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Sender.cpp
