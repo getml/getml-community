@@ -8,6 +8,8 @@
 #ifndef COMMANDS_DATAFRAMECOMMAND_HPP_
 #define COMMANDS_DATAFRAMECOMMAND_HPP_
 
+#include <Poco/JSON/Object.h>
+
 #include <string>
 #include <variant>
 
@@ -363,6 +365,8 @@ struct DataFrameCommand {
       SetStringColumnSubrolesOp, SetStringColumnUnitOp, SummarizeDataFrameOp,
       StringColumnOp, ToArrowOp, ToCSVOp, ToDBOp, ToParquetOp, ViewToArrowOp,
       ViewToCSVOp, ViewToDBOp, ViewToParquetOp>;
+
+  static DataFrameCommand from_json(const Poco::JSON::Object& _obj);
 
   /// The underlying value
   NamedTupleType val_;

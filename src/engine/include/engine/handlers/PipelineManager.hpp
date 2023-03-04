@@ -41,8 +41,7 @@ class PipelineManager {
 
  public:
   /// Executes a PipelineCommand.
-  template <class CommandType>
-  void execute_command(const CommandType& _cmd,
+  void execute_command(const Command& _command,
                        Poco::Net::StreamSocket* _socket);
 
  private:
@@ -277,48 +276,6 @@ class PipelineManager {
   /// The underlying parameters.
   const PipelineManagerParams params_;
 };
-
-// ------------------------------------------------------------------------
-// ------------------------------------------------------------------------
-
-template <class CommandType>
-void PipelineManager::execute_command(const CommandType& _cmd,
-                                      Poco::Net::StreamSocket* _socket) {
-  using Type = std::decay_t<CommandType>;
-
-  if constexpr (std::is_same<Type, Command::CheckOp>()) {
-    check(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::ColumnImportancesOp>()) {
-    column_importances(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::DeployOp>()) {
-    deploy(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::FeatureCorrelationsOp>()) {
-    feature_correlations(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::FeatureImportancesOp>()) {
-    feature_importances(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::FitOp>()) {
-    fit(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::LiftCurveOp>()) {
-    lift_curve(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::PrecisionRecallCurveOp>()) {
-    precision_recall_curve(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::RefreshOp>()) {
-    refresh(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::RefreshAllOp>()) {
-    refresh_all(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::ROCCurveOp>()) {
-    roc_curve(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::ToSQLOp>()) {
-    to_sql(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::TransformOp>()) {
-    transform(_cmd, _socket);
-  } else {
-    []<bool _flag = false>() {
-      static_assert(_flag, "Not all cases were covered.");
-    }
-    ();
-  }
-}
 
 }  // namespace handlers
 }  // namespace engine
