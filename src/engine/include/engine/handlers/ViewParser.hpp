@@ -8,7 +8,6 @@
 #ifndef ENGINE_HANDLERS_VIEWPARSER_HPP_
 #define ENGINE_HANDLERS_VIEWPARSER_HPP_
 
-#include <Poco/JSON/Object.h>
 #include <Poco/Net/StreamSocket.h>
 
 #include <map>
@@ -72,12 +71,6 @@ class ViewParser {
 
   /// Parses a view and turns it into a DataFrame.
   containers::DataFrame parse(const commands::DataFrameOrView& _cmd) const;
-
-  /// TODO: Remove this temporary solution.
-  containers::DataFrame parse(const Poco::JSON::Object& _cmd) const {
-    const auto cmd = json::from_json<commands::DataFrameOrView>(_cmd);
-    return parse(cmd);
-  }
 
   /// Returns the population and peripheral data frames.
   std::tuple<containers::DataFrame, std::vector<containers::DataFrame>,

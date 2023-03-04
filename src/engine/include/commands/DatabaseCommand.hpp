@@ -16,6 +16,7 @@
 #include "fct/NamedTuple.hpp"
 #include "fct/Ref.hpp"
 #include "fct/TaggedUnion.hpp"
+#include "json/json.hpp"
 
 namespace commands {
 

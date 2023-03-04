@@ -82,12 +82,6 @@ class BoolOpParser {
   containers::ColumnView<bool> parse(
       const commands::BooleanColumnView& _cmd) const;
 
-  /// TODO: Remove this temporary solution.
-  containers::ColumnView<bool> parse(const Poco::JSON::Object& _cmd) const {
-    const auto cmd = json::from_json<commands::BooleanColumnView>(_cmd);
-    return parse(cmd);
-  }
-
  private:
   /// Parses the operator and undertakes a binary operation.
   containers::ColumnView<bool> binary_operation(
