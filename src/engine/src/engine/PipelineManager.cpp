@@ -448,7 +448,6 @@ Poco::JSON::Object PipelineManager::get_scores(
                            fct::make_field<"set_used_">(scores) *
                            fct::make_field<"history_">(scores.history());
 
-  // TODO: This is a temporary workaround.
   return *json::Parser<std::decay_t<decltype(named_tuple)>>::to_json(
       named_tuple);
 }
@@ -772,7 +771,7 @@ containers::DataFrame PipelineManager::to_df(
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::to_sql(typename Command::ToSQLOp& _cmd,
+void PipelineManager::to_sql(const typename Command::ToSQLOp& _cmd,
                              Poco::Net::StreamSocket* _socket) {
   const auto name = _cmd.get<"name_">();
 

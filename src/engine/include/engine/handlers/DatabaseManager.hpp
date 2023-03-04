@@ -41,7 +41,9 @@ class DatabaseManager {
 
  public:
   /// Executes a command related to a database operation.
-  void execute_command(const Command& _cmd, Poco::Net::StreamSocket* _socket);
+  template <typename CommandType>
+  void execute_command(const CommandType& _cmd,
+                       Poco::Net::StreamSocket* _socket);
 
   /// Sends the name of all tables currently held in the database to the
   /// monitor.
@@ -149,6 +151,54 @@ class DatabaseManager {
   /// implement its own locking strategy!
   const fct::Ref<multithreading::ReadWriteLock> read_write_lock_;
 };
+
+// ------------------------------------------------------------------------
+// ------------------------------------------------------------------------
+
+template <class CommandType>
+void DatabaseManager::execute_command(const CommandType& _cmd,
+                                      Poco::Net::StreamSocket* _socket) {
+  using Type = std::decay_t<CommandType>;
+
+  if constexpr (std::is_same<Type, typename Command::CopyTableOp>()) {
+    copy_table(_cmd, _socket);
+  } else if constexpr (std::is_same<Type,
+                                    typename Command::DescribeConnectionOp>()) {
+    describe_connection(_cmd, _socket);
+  } else if constexpr (std::is_same<Type, typename Command::DropTableOp>()) {
+    drop_table(_cmd, _socket);
+  } else if constexpr (std::is_same<Type, typename Command::ExecuteOp>()) {
+    execute(_cmd, _socket);
+  } else if constexpr (std::is_same<Type, typename Command::GetOp>()) {
+    get(_cmd, _socket);
+  } else if constexpr (std::is_same<Type, typename Command::GetColnamesOp>()) {
+    get_colnames(_cmd, _socket);
+  } else if constexpr (std::is_same<Type, typename Command::GetContentOp>()) {
+    get_content(_cmd, _socket);
+  } else if constexpr (std::is_same<Type, typename Command::GetNRowsOp>()) {
+    get_nrows(_cmd, _socket);
+  } else if constexpr (std::is_same<Type,
+                                    typename Command::ListConnectionsOp>()) {
+    list_connections(_cmd, _socket);
+  } else if constexpr (std::is_same<Type, typename Command::ListTablesOp>()) {
+    list_tables(_cmd, _socket);
+  } else if constexpr (std::is_same<Type, typename Command::NewDBOp>()) {
+    new_db(_cmd, _socket);
+  } else if constexpr (std::is_same<Type, typename Command::ReadCSVOp>()) {
+    read_csv(_cmd, _socket);
+  } else if constexpr (std::is_same<Type, typename Command::RefreshOp>()) {
+    refresh(_cmd, _socket);
+  } else if constexpr (std::is_same<Type, typename Command::SniffCSVOp>()) {
+    sniff_csv(_cmd, _socket);
+  } else if constexpr (std::is_same<Type, typename Command::SniffTableOp>()) {
+    sniff_table(_cmd, _socket);
+  } else {
+    []<bool _flag = false>() {
+      static_assert(_flag, "Unknown command. Not all cases were covered.");
+    }
+    ();
+  }
+}
 
 }  // namespace handlers
 }  // namespace engine

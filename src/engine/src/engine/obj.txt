@@ -36,6 +36,7 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/ProjectManager.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Receiver.cpp
     ${ENGINE_SOURCE_DIRECTORY}/RequestHandler.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/RequestHandler_recv_cmd.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Save.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Seasonal.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Sender.cpp

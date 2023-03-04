@@ -11,7 +11,7 @@
 #include <type_traits>
 
 #include "fct/TaggedUnion.hpp"
-#include "fct/define_literal_t.hpp"
+#include "fct/define_literal.hpp"
 #include "fct/field_type.hpp"
 
 namespace fct {

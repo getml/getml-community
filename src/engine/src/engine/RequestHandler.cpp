@@ -8,7 +8,7 @@
 #include "engine/srv/RequestHandler.hpp"
 
 #include "commands/commands.hpp"
-#include "fct/define_tagged_union.hpp"
+#include "fct/extract_discriminators.hpp"
 #include "fct/get.hpp"
 #include "json/json.hpp"
 
@@ -24,16 +24,43 @@ void RequestHandler::run() {
                                "(127.0.0.1) are allowed!");
     }
 
-    using Command = fct::define_tagged_union_t<
-        "type_", typename commands::DatabaseCommand::NamedTupleType,
-        typename commands::DataFrameCommand::NamedTupleType,
-        typename commands::PipelineCommand::NamedTupleType,
-        typename commands::ProjectCommand::NamedTupleType>;
+    const auto command = recv_cmd();
 
-    const Poco::JSON::Object cmd =
-        communication::Receiver::recv_cmd(logger_, &socket());
+    const auto handle = [this](const auto& _cmd) {
+      // Note that all of these four commands are actually tagged unions
+      // themselves.
 
-    const auto command = json::from_json<Command>(cmd);
+      using DatabaseLiteral = fct::extract_discriminators_t<
+          typename commands::DatabaseCommand::NamedTupleType>;
+
+      using DataFrameLiteral = fct::extract_discriminators_t<
+          typename commands::DataFrameCommand::NamedTupleType>;
+
+      using PipelineLiteral = fct::extract_discriminators_t<
+          typename commands::PipelineCommand::NamedTupleType>;
+
+      using ProjectLiteral = fct::extract_discriminators_t<
+          typename commands::ProjectCommand::NamedTupleType>;
+
+      using CmdType = std::decay_t<decltype(fct::get<"type_">(_cmd))>;
+
+      if constexpr (CmdType::template contains_any<DatabaseLiteral>()) {
+        database_manager().execute_command(_cmd, &socket());
+      } else if constexpr (CmdType::template contains_any<DataFrameLiteral>()) {
+        data_frame_manager().execute_command(_cmd, &socket());
+      } else if constexpr (CmdType::template contains_any<PipelineLiteral>()) {
+        pipeline_manager().execute_command(_cmd, &socket());
+      } else if constexpr (CmdType::template contains_any<ProjectLiteral>()) {
+        project_manager().execute_command(_cmd, &socket());
+      } else {
+        []<bool _flag = false>() {
+          static_assert(_flag, "Not all cases were covered.");
+        }
+        ();
+      }
+    };
+
+    fct::visit(handle, command);
 
     /*if (type == "is_alive") {
       return;
