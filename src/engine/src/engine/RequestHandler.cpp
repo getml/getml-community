@@ -40,8 +40,6 @@ void RequestHandler::run() {
 
     const auto type = obj->get("type_").toString();
 
-    std::cout << type << std::endl;
-
     using DatabaseLiteral = fct::extract_discriminators_t<
         typename commands::DatabaseCommand::NamedTupleType>;
 
@@ -91,6 +89,5 @@ void RequestHandler::run() {
   }
 }
 
-// ------------------------------------------------------------------------
 }  // namespace srv
 }  // namespace engine
