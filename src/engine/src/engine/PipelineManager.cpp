@@ -497,8 +497,8 @@ void PipelineManager::precision_recall_curve(
 
 // ------------------------------------------------------------------------
 
-Poco::JSON::Object PipelineManager::receive_data(
-    const Poco::JSON::Object& _cmd,
+typename PipelineManager::Command::TransformOp PipelineManager::receive_data(
+    const typename Command::TransformOp& _cmd,
     const fct::Ref<containers::Encoding>& _categories,
     const fct::Ref<containers::Encoding>& _join_keys_encoding,
     const fct::Ref<std::map<std::string, containers::DataFrame>>& _data_frames,
@@ -527,9 +527,10 @@ Poco::JSON::Object PipelineManager::receive_data(
   auto cmd = _cmd;
 
   while (true) {
-    const auto name = JSON::get_value<std::string>(cmd, "name_");
+    // TODO
+    // const auto name = JSON::get_value<std::string>(cmd, "name_");
 
-    const auto type = JSON::get_value<std::string>(cmd, "type_");
+    // const auto type = JSON::get_value<std::string>(cmd, "type_");
 
     // TODO
     /*if (type == "DataFrame") {
@@ -546,7 +547,12 @@ Poco::JSON::Object PipelineManager::receive_data(
       break;
     }*/
 
-    cmd = communication::Receiver::recv_cmd(params_.logger_, _socket);
+    const auto cmd_str =
+        communication::Receiver::recv_cmd(params_.logger_, _socket);
+
+    // TODO: This needs to be turned into a tagged union containing all the
+    // commands above.
+    cmd = json::from_json<typename Command::TransformOp>(cmd_str);
   }
 
   return cmd;
@@ -642,15 +648,15 @@ void PipelineManager::roc_curve(const typename Command::ROCCurveOp& _cmd,
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::score(const Poco::JSON::Object& _cmd,
+void PipelineManager::score(const typename Command::TransformOp& _cmd,
                             const std::string& _name,
                             const containers::DataFrame& _population_df,
                             const containers::NumericalFeatures& _yhat,
                             const pipelines::Pipeline& _pipeline,
                             Poco::Net::StreamSocket* _socket) {
-  const auto population_json = *JSON::get_object(_cmd, "population_df_");
+  const auto population_json = _cmd.get<"population_df_">();
 
-  const auto name = JSON::get_value<std::string>(population_json, "name_");
+  const auto name = fct::get<"name_">(population_json.val_);
 
   const auto fitted = _pipeline.fitted();
 
@@ -674,7 +680,8 @@ void PipelineManager::score(const Poco::JSON::Object& _cmd,
 // ------------------------------------------------------------------------
 
 void PipelineManager::store_df(
-    const pipelines::FittedPipeline& _fitted, const Poco::JSON::Object& _cmd,
+    const pipelines::FittedPipeline& _fitted,
+    const typename Command::TransformOp& _cmd,
     const containers::DataFrame& _population_df,
     const std::vector<containers::DataFrame>& _peripheral_dfs,
     const fct::Ref<containers::Encoding>& _local_categories,
@@ -691,7 +698,7 @@ void PipelineManager::store_df(
 
   _df->set_join_keys_encoding(params_.join_keys_encoding_.ptr());  // TODO
 
-  const auto predict = JSON::get_value<bool>(_cmd, "predict_");
+  const auto predict = _cmd.get<"predict_">();
 
   if (!predict) {
     add_to_tracker(_fitted, _population_df, _peripheral_dfs, _df);
@@ -703,7 +710,8 @@ void PipelineManager::store_df(
 // ------------------------------------------------------------------------
 
 void PipelineManager::to_db(
-    const pipelines::FittedPipeline& _fitted, const Poco::JSON::Object& _cmd,
+    const pipelines::FittedPipeline& _fitted,
+    const typename Command::TransformOp& _cmd,
     const containers::DataFrame& _population_table,
     const containers::NumericalFeatures& _numerical_features,
     const containers::CategoricalFeatures& _categorical_features,
@@ -713,7 +721,7 @@ void PipelineManager::to_db(
       to_df(_fitted, _cmd, _population_table, _numerical_features,
             _categorical_features, _categories, _join_keys_encoding);
 
-  const auto table_name = JSON::get_value<std::string>(_cmd, "table_name_");
+  const auto table_name = _cmd.get<"table_name_">();
 
   // We are using the bell character (\a) as the quotechar. It is least likely
   // to appear in any field.
@@ -737,20 +745,21 @@ void PipelineManager::to_db(
 // ------------------------------------------------------------------------
 
 containers::DataFrame PipelineManager::to_df(
-    const pipelines::FittedPipeline& _fitted, const Poco::JSON::Object& _cmd,
+    const pipelines::FittedPipeline& _fitted,
+    const typename Command::TransformOp& _cmd,
     const containers::DataFrame& _population_table,
     const containers::NumericalFeatures& _numerical_features,
     const containers::CategoricalFeatures& _categorical_features,
     const fct::Ref<containers::Encoding>& _categories,
     const fct::Ref<containers::Encoding>& _join_keys_encoding) {
-  const auto df_name = JSON::get_value<std::string>(_cmd, "df_name_");
+  const auto df_name = _cmd.get<"df_name_">();
 
   const auto pool = params_.options_.make_pool();
 
   auto df = containers::DataFrame(df_name, _categories.ptr(),
                                   _join_keys_encoding.ptr(), pool);  // TODO
 
-  if (!_cmd.has("predict_") || !JSON::get_value<bool>(_cmd, "predict_")) {
+  if (!_cmd.get<"predict_">()) {
     add_features_to_df(_fitted, _numerical_features, _categorical_features,
                        &df);
   } else {
@@ -839,7 +848,10 @@ void PipelineManager::transform(const typename Command::TransformOp& _cmd,
       fct::Ref<std::map<std::string, containers::DataFrame>>::make(
           data_frames());
 
-  auto cmd = communication::Receiver::recv_cmd(params_.logger_, _socket);
+  const auto cmd_str =
+      communication::Receiver::recv_cmd(params_.logger_, _socket);
+
+  auto cmd = json::from_json<typename Command::TransformOp>(cmd_str);
 
   cmd = receive_data(cmd, local_categories, local_join_keys_encoding,
                      local_data_frames, _socket);
@@ -851,15 +863,15 @@ void PipelineManager::transform(const typename Command::TransformOp& _cmd,
 
   // IMPORTANT: Use categories_, not local_categories, otherwise
   // .vector() might not work.
-  const auto params = pipelines::TransformParams{
-      .categories_ = params_.categories_,
-      .cmd_ = json::from_json<commands::DataFramesOrViews>(cmd),
-      .data_frames_ = *local_data_frames,
-      .data_frame_tracker_ = data_frame_tracker(),
-      .logger_ = params_.logger_.ptr(),
-      .original_peripheral_dfs_ = peripheral_dfs,
-      .original_population_df_ = population_df,
-      .socket_ = _socket};
+  const auto params =
+      pipelines::TransformParams{.categories_ = params_.categories_,
+                                 .cmd_ = cmd,
+                                 .data_frames_ = *local_data_frames,
+                                 .data_frame_tracker_ = data_frame_tracker(),
+                                 .logger_ = params_.logger_.ptr(),
+                                 .original_peripheral_dfs_ = peripheral_dfs,
+                                 .original_population_df_ = population_df,
+                                 .socket_ = _socket};
 
   const auto fitted = pipeline.fitted();
 
@@ -874,6 +886,7 @@ void PipelineManager::transform(const typename Command::TransformOp& _cmd,
     pipeline = pipeline.with_scores(fct::Ref<const metrics::Scores>(scores));
   }
 
+  // TODO: Is this _cmd or cmd?
   const auto& table_name = _cmd.get<"table_name_">();
 
   const auto& df_name = _cmd.get<"df_name_">();

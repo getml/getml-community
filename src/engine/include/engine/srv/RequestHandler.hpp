@@ -64,12 +64,6 @@ class RequestHandler : public Poco::Net::TCPServerConnection {
   void run();
 
  private:
-  /// Receives the command and parses it.
-  /// Note that this function is so expensive in terms of compilation, that we
-  /// outsource it into a separate file.
-  Command recv_cmd();
-
- private:
   /// Trivial accessor
   handlers::DatabaseManager& database_manager() { return *database_manager_; }
 

@@ -80,8 +80,9 @@ struct PipelineCommand {
   using TransformOp = fct::define_named_tuple_t<
       fct::Field<"type_", fct::Literal<"Pipeline.transform">>,
       fct::Field<"name_", std::string>, fct::Field<"table_name_", std::string>,
-      fct::Field<"df_name_", std::string>, fct::Field<"score_", bool>,
-      fct::Field<"http_request_", bool>, DataFramesOrViews>;
+      fct::Field<"df_name_", std::string>, fct::Field<"predict_", bool>,
+      fct::Field<"score_", bool>, fct::Field<"http_request_", bool>,
+      DataFramesOrViews>;
 
   using NamedTupleType =
       fct::TaggedUnion<"type_", CheckOp, ColumnImportancesOp, DeployOp,

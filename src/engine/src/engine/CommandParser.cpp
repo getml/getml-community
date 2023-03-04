@@ -5,7 +5,8 @@
 // for details.
 //
 
-#include "engine/srv/RequestHandler.hpp"
+#include "engine/srv/CommandParser.hpp"
+
 #include "json/json.hpp"
 
 namespace engine {
@@ -13,9 +14,9 @@ namespace srv {
 
 /// This function is so expensive in terms of compilation, that we outsource it
 /// into a separate file.
-typename RequestHandler::Command RequestHandler::recv_cmd() {
-  const auto cmd = communication::Receiver::recv_cmd(logger_, &socket());
-  return json::from_json<Command>(cmd);
+typename CommandParser::Command CommandParser::parse_cmd(
+    const std::string& _cmd) {
+  return json::from_json<Command>(_cmd);
 }
 
 }  // namespace srv

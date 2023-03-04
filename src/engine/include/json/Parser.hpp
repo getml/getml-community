@@ -355,18 +355,9 @@ struct Parser<fct::TaggedUnion<_discriminator, NamedTupleTypes...>> {
           "Could not parse tagged union, could not match " +
           _discriminator.str() + " '" + _disc_value + "'.");
     } else {
-      using NamedTupleType = std::decay_t<
-          std::variant_alternative_t<_i, std::variant<NamedTupleTypes...>>>;
-
-      if (contains_disc_value<NamedTupleType>(_disc_value)) {
-        try {
-          return fct::TaggedUnion<_discriminator, NamedTupleTypes...>(
-              Parser<NamedTupleType>::from_json(_obj));
-        } catch (std::exception& _e) {
-          throw std::runtime_error(
-              "Could not parse tagged union with discrimininator " +
-              _discriminator.str() + " '" + _disc_value + "': " + _e.what());
-        }
+      const auto optional = try_option<_i>(_obj, _disc_value);
+      if (optional) {
+        return *optional;
       } else {
         return find_matching_named_tuple<_i + 1>(_obj, _disc_value);
       }
@@ -396,6 +387,27 @@ struct Parser<fct::TaggedUnion<_discriminator, NamedTupleTypes...>> {
       using LiteralType =
           fct::field_type_t<_discriminator, typename T::NamedTupleType>;
       return LiteralType::contains(_disc_value);
+    }
+  }
+
+  /// Tries to parse one particular option.
+  template <int _i>
+  static std::optional<fct::TaggedUnion<_discriminator, NamedTupleTypes...>>
+  try_option(const Poco::JSON::Object& _obj, const std::string& _disc_value) {
+    using NamedTupleType = std::decay_t<
+        std::variant_alternative_t<_i, std::variant<NamedTupleTypes...>>>;
+
+    if (contains_disc_value<NamedTupleType>(_disc_value)) {
+      try {
+        return fct::TaggedUnion<_discriminator, NamedTupleTypes...>(
+            Parser<NamedTupleType>::from_json(_obj));
+      } catch (std::exception& _e) {
+        throw std::runtime_error(
+            "Could not parse tagged union with discrimininator " +
+            _discriminator.str() + " '" + _disc_value + "': " + _e.what());
+      }
+    } else {
+      return std::nullopt;
     }
   }
 };
