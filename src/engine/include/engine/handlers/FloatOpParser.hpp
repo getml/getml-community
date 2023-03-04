@@ -102,13 +102,6 @@ class FloatOpParser {
   containers::ColumnView<Float> parse(
       const commands::FloatColumnOrFloatColumnView& _cmd) const;
 
-  /// TODO: Remove this temporary solution.
-  containers::ColumnView<Float> parse(const Poco::JSON::Object& _cmd) const {
-    const auto cmd =
-        json::from_json<commands::FloatColumnOrFloatColumnView>(_cmd);
-    return parse(cmd);
-  }
-
  private:
   /// Implements numpy's arange in a lazy fashion.
   containers::ColumnView<Float> arange(const FloatArangeOp& _col) const;

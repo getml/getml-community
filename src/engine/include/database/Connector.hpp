@@ -24,7 +24,7 @@ class Connector {
   virtual ~Connector() = default;
 
  public:
-  /// Returns a Poco::JSON::Object describing the connection.
+  /// Returns a std::string describing the connection.
   virtual std::string describe() const = 0;
 
   /// Describes the dialect used by the connector.

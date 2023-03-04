@@ -8,8 +8,6 @@
 #ifndef ENGINE_HANDLERS_AGGOPPARSER_HPP_
 #define ENGINE_HANDLERS_AGGOPPARSER_HPP_
 
-#include <Poco/JSON/Object.h>
-
 #include <map>
 #include <memory>
 #include <string>
@@ -44,12 +42,6 @@ class AggOpParser {
  public:
   /// Executes an aggregation.
   Float aggregate(const commands::Aggregation& _aggregation) const;
-
-  /// TODO: Remove this temporary solution.
-  Float aggregate(const Poco::JSON::Object& _cmd) const {
-    const auto cmd = json::from_json<commands::Aggregation>(_cmd);
-    return aggregate(cmd);
-  }
 
  private:
   /// Aggregations over a float column.

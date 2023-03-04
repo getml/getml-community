@@ -95,14 +95,6 @@ class StringOpParser {
   containers::ColumnView<strings::String> parse(
       const commands::StringColumnOrStringColumnView& _cmd) const;
 
-  /// TODO: Remove this temporary solution.
-  containers::ColumnView<strings::String> parse(
-      const Poco::JSON::Object& _cmd) const {
-    const auto cmd =
-        json::from_json<commands::StringColumnOrStringColumnView>(_cmd);
-    return parse(cmd);
-  }
-
  private:
   /// Parses the operator and undertakes a binary operation.
   containers::ColumnView<strings::String> binary_operation(
