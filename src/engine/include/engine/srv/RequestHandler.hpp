@@ -1,47 +1,26 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_SRV_REQUESTHANDLER_HPP_
 #define ENGINE_SRV_REQUESTHANDLER_HPP_
 
-// -----------------------------------------------------------------
-
-#if (defined(_WIN32) || defined(_WIN64))
-#define _WINSOCKAPI_  // stops windows.h including winsock.h
-#include <windows.h>
-#include <winsock2.h>
-
-// ----------------------------------------------------
-#include <openssl/ossl_typ.h>
-#endif
-
-// -----------------------------------------------------------------
-
 #include <Poco/Net/StreamSocket.h>
 #include <Poco/Net/TCPServerConnection.h>
-
-// -----------------------------------------------------------------
 
 #include <atomic>
 #include <memory>
 
-// -----------------------------------------------------------------
-
 #include "debug/debug.hpp"
-#include "fct/Ref.hpp"
-
-// -----------------------------------------------------------------
-
 #include "engine/communication/communication.hpp"
 #include "engine/config/config.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/handlers/handlers.hpp"
-
-// -----------------------------------------------------------------
+#include "fct/Ref.hpp"
+#include "fct/define_tagged_union.hpp"
 
 namespace engine {
 namespace srv {
@@ -54,7 +33,11 @@ class RequestHandler : public Poco::Net::TCPServerConnection {
   static constexpr const char* STRING_COLUMN =
       containers::Column<bool>::STRING_COLUMN;
 
-  // -------------------------------------------------------------
+  using Command = fct::define_tagged_union_t<
+      "type_", typename commands::DatabaseCommand::NamedTupleType,
+      typename commands::DataFrameCommand::NamedTupleType,
+      typename commands::PipelineCommand::NamedTupleType,
+      typename commands::ProjectCommand::NamedTupleType>;
 
  public:
   RequestHandler(
@@ -80,7 +63,11 @@ class RequestHandler : public Poco::Net::TCPServerConnection {
   /// Required by Poco::Net::TCPServerConnection. Does the actual handling.
   void run();
 
-  // -------------------------------------------------------------
+ private:
+  /// Receives the command and parses it.
+  /// Note that this function is so expensive in terms of compilation, that we
+  /// outsource it into a separate file.
+  Command recv_cmd();
 
  private:
   /// Trivial accessor
