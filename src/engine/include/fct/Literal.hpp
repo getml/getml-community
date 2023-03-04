@@ -59,13 +59,50 @@ class Literal {
 
   /// Determines whether the literal contains the string.
   inline static bool contains(const std::string& _str) {
+    static_assert(!has_duplicates(), "Duplicate strings are not allowed!");
     return has_value<fields_...>(_str);
   }
 
   /// Determines whether the literal contains the string at compile time.
   template <StringLiteral _name>
   inline static constexpr bool contains() {
+    static_assert(!has_duplicates(), "Duplicate strings are not allowed!");
     return find_value_of<_name, fields_...>() != -1;
+  }
+
+  /// Determines whether the literal contains any of the strings in the other
+  /// literal at compile time.
+  template <class OtherLiteralType, int _i = 0>
+  inline static constexpr bool contains_any() {
+    static_assert(!has_duplicates(), "Duplicate strings are not allowed!");
+    static_assert(!OtherLiteralType::has_duplicates(),
+                  "Duplicate strings are not allowed!");
+    if constexpr (_i == num_fields_) {
+      return false;
+    } else {
+      constexpr auto name = find_name_within_own_fields<_i>();
+      return OtherLiteralType::template contains<name>() ||
+             contains_any<OtherLiteralType, _i + 1>();
+    }
+  }
+
+  /// Determines whether the literal contains all of the strings in the other
+  /// literal at compile time.
+  template <class OtherLiteralType, int _i = 0, int _n_found = 0>
+  inline static constexpr bool contains_all() {
+    static_assert(!has_duplicates(), "Duplicate strings are not allowed!");
+    static_assert(!OtherLiteralType::has_duplicates(),
+                  "Duplicate strings are not allowed!");
+    if constexpr (_i == num_fields_) {
+      return _n_found == OtherLiteralType::num_fields_;
+    } else {
+      constexpr auto name = find_name_within_own_fields<_i>();
+      if constexpr (OtherLiteralType::template contains<name>()) {
+        return contains_all<OtherLiteralType, _i + 1, _n_found + 1>();
+      } else {
+        return contains_all<OtherLiteralType, _i + 1, _n_found>();
+      }
+    }
   }
 
   /// Determines whether the literal has duplicate strings at compile time.
@@ -77,8 +114,7 @@ class Literal {
   /// Constructs a new Literal.
   template <StringLiteral _name>
   static Literal<fields_...> make() {
-    static_assert(!duplicate_strings<fields_...>(),
-                  "Duplicate strings are not allowed in a Literal.");
+    static_assert(!has_duplicates(), "Duplicate strings are not allowed!");
     return Literal(Literal<fields_...>::template value_of<_name>());
   }
 
@@ -88,9 +124,9 @@ class Literal {
   /// Helper function to retrieve a name at compile time.
   template <int _value>
   inline constexpr static auto name_of() {
+    static_assert(!has_duplicates(), "Duplicate strings are not allowed!");
     static_assert(_value < sizeof...(fields_), "value out of bounds");
-    constexpr auto name =
-        find_name_of<_value, sizeof...(fields_), fields_...>();
+    constexpr auto name = find_name_within_own_fields<_value>();
     return Literal<name>();
   }
 
@@ -145,6 +181,7 @@ class Literal {
   /// Returns the value of the string literal in the template.
   template <StringLiteral _name>
   static constexpr ValueType value_of() {
+    static_assert(!has_duplicates(), "Duplicate strings are not allowed!");
     constexpr auto value = find_value_of<_name, fields_...>();
     static_assert(value >= 0, "String not supported.");
     return value;
@@ -193,6 +230,13 @@ class Literal {
     } else {
       return find_name<_i + 1, _tail...>();
     }
+  }
+
+  /// Finds the correct index associated with
+  /// the string at compile time within the Literal's own fields.
+  template <int _i>
+  inline constexpr static auto find_name_within_own_fields() {
+    return find_name_of<_i, sizeof...(fields_), fields_...>();
   }
 
   /// Finds the correct index associated with
