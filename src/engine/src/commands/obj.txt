@@ -1,0 +1,7 @@
+set(
+    COMMANDS_OBJ
+    ${COMMANDS_SOURCE_DIRECTORY}/DatabaseCommand.cpp
+    ${COMMANDS_SOURCE_DIRECTORY}/DataFrameCommand.cpp
+    ${COMMANDS_SOURCE_DIRECTORY}/PipelineCommand.cpp
+    ${COMMANDS_SOURCE_DIRECTORY}/ProjectCommand.cpp
+)

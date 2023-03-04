@@ -8,6 +8,8 @@
 #ifndef COMMANDS_PIPELINECOMMAND_HPP_
 #define COMMANDS_PIPELINECOMMAND_HPP_
 
+#include <Poco/JSON/Object.h>
+
 #include <string>
 
 #include "commands/DataFramesOrViews.hpp"
@@ -89,6 +91,8 @@ struct PipelineCommand {
                        FeatureCorrelationsOp, FeatureImportancesOp, FitOp,
                        LiftCurveOp, PrecisionRecallCurveOp, RefreshOp,
                        RefreshAllOp, ROCCurveOp, ToSQLOp, TransformOp>;
+
+  static PipelineCommand from_json(const Poco::JSON::Object& _obj);
 
   /// The underlying value
   NamedTupleType val_;

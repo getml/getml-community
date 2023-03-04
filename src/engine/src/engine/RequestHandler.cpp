@@ -7,8 +7,12 @@
 
 #include "engine/srv/RequestHandler.hpp"
 
+#include <Poco/JSON/Object.h>
+#include <Poco/JSON/Parser.h>
+
+#include <stdexcept>
+
 #include "commands/commands.hpp"
-#include "engine/srv/CommandParser.hpp"
 #include "fct/extract_discriminators.hpp"
 #include "fct/get.hpp"
 #include "json/json.hpp"
@@ -27,52 +31,59 @@ void RequestHandler::run() {
 
     const auto cmd_str = communication::Receiver::recv_cmd(logger_, &socket());
 
-    const auto command = CommandParser::parse_cmd(cmd_str);
+    const auto obj =
+        Poco::JSON::Parser().parse(cmd_str).extract<Poco::JSON::Object::Ptr>();
 
-    const auto handle = [this](const auto& _cmd) {
-      // Note that all of these four commands are actually tagged unions
-      // themselves.
+    if (!obj) {
+      throw std::runtime_error("Could not parse JSON!");
+    }
 
-      using DatabaseLiteral = fct::extract_discriminators_t<
-          typename commands::DatabaseCommand::NamedTupleType>;
+    const auto type = obj->get("type_").toString();
 
-      using DataFrameLiteral = fct::extract_discriminators_t<
-          typename commands::DataFrameCommand::NamedTupleType>;
+    std::cout << type << std::endl;
 
-      using PipelineLiteral = fct::extract_discriminators_t<
-          typename commands::PipelineCommand::NamedTupleType>;
+    using DatabaseLiteral = fct::extract_discriminators_t<
+        typename commands::DatabaseCommand::NamedTupleType>;
 
-      using ProjectLiteral = fct::extract_discriminators_t<
-          typename commands::ProjectCommand::NamedTupleType>;
+    using DataFrameLiteral = fct::extract_discriminators_t<
+        typename commands::DataFrameCommand::NamedTupleType>;
 
-      using CmdType = std::decay_t<decltype(fct::get<"type_">(_cmd))>;
+    using PipelineLiteral = fct::extract_discriminators_t<
+        typename commands::PipelineCommand::NamedTupleType>;
 
-      if constexpr (CmdType::template contains_any<DatabaseLiteral>()) {
-        database_manager().execute_command(_cmd, &socket());
-      } else if constexpr (CmdType::template contains_any<DataFrameLiteral>()) {
-        data_frame_manager().execute_command(_cmd, &socket());
-      } else if constexpr (CmdType::template contains_any<PipelineLiteral>()) {
-        pipeline_manager().execute_command(_cmd, &socket());
-      } else if constexpr (CmdType::template contains_any<ProjectLiteral>()) {
-        project_manager().execute_command(_cmd, &socket());
-      } else {
-        []<bool _flag = false>() {
-          static_assert(_flag, "Not all cases were covered.");
-        }
-        ();
-      }
-    };
+    using ProjectLiteral = fct::extract_discriminators_t<
+        typename commands::ProjectCommand::NamedTupleType>;
 
-    fct::visit(handle, command);
+    if (DatabaseLiteral::contains(type)) {
+      const auto cmd = commands::DatabaseCommand::from_json(*obj);
+      database_manager().execute_command(cmd, &socket());
 
-    /*if (type == "is_alive") {
+    } else if (DataFrameLiteral::contains(type)) {
+      const auto cmd = commands::DataFrameCommand::from_json(*obj);
+      data_frame_manager().execute_command(cmd, &socket());
+
+    } else if (PipelineLiteral::contains(type)) {
+      const auto cmd = commands::PipelineCommand::from_json(*obj);
+      pipeline_manager().execute_command(cmd, &socket());
+
+    } else if (ProjectLiteral::contains(type)) {
+      const auto cmd = commands::ProjectCommand::from_json(*obj);
+      project_manager().execute_command(cmd, &socket());
+
+    } else if (type == "is_alive") {
       return;
+
     } else if (type == "monitor_url") {
       // The community edition does not have a monitor.
       communication::Sender::send_string("", &socket());
+
     } else if (type == "shutdown") {
       *shutdown_ = true;
-    }*/
+
+    } else {
+      throw std::runtime_error("Unknown type: '" + type + "'!");
+    }
+
   } catch (std::exception& e) {
     logger_->log(std::string("Error: ") + e.what());
 

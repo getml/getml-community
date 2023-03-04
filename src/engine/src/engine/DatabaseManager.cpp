@@ -13,6 +13,7 @@
 #include "fct/Ref.hpp"
 #include "helpers/StringSplitter.hpp"
 #include "io/Parser.hpp"
+#include "json/json.hpp"
 
 namespace engine {
 namespace handlers {
@@ -136,6 +137,57 @@ void DatabaseManager::execute(const typename Command::ExecuteOp& _cmd,
   post_tables();
 
   communication::Sender::send_string("Success!", _socket);
+}
+
+// ------------------------------------------------------------------------
+
+void DatabaseManager::execute_command(const Command& _command,
+                                      Poco::Net::StreamSocket* _socket) {
+  const auto handle = [this, _socket](const auto& _cmd) {
+    using Type = std::decay_t<decltype(_cmd)>;
+
+    if constexpr (std::is_same<Type, typename Command::CopyTableOp>()) {
+      copy_table(_cmd, _socket);
+    } else if constexpr (std::is_same<
+                             Type, typename Command::DescribeConnectionOp>()) {
+      describe_connection(_cmd, _socket);
+    } else if constexpr (std::is_same<Type, typename Command::DropTableOp>()) {
+      drop_table(_cmd, _socket);
+    } else if constexpr (std::is_same<Type, typename Command::ExecuteOp>()) {
+      execute(_cmd, _socket);
+    } else if constexpr (std::is_same<Type, typename Command::GetOp>()) {
+      get(_cmd, _socket);
+    } else if constexpr (std::is_same<Type,
+                                      typename Command::GetColnamesOp>()) {
+      get_colnames(_cmd, _socket);
+    } else if constexpr (std::is_same<Type, typename Command::GetContentOp>()) {
+      get_content(_cmd, _socket);
+    } else if constexpr (std::is_same<Type, typename Command::GetNRowsOp>()) {
+      get_nrows(_cmd, _socket);
+    } else if constexpr (std::is_same<Type,
+                                      typename Command::ListConnectionsOp>()) {
+      list_connections(_cmd, _socket);
+    } else if constexpr (std::is_same<Type, typename Command::ListTablesOp>()) {
+      list_tables(_cmd, _socket);
+    } else if constexpr (std::is_same<Type, typename Command::NewDBOp>()) {
+      new_db(_cmd, _socket);
+    } else if constexpr (std::is_same<Type, typename Command::ReadCSVOp>()) {
+      read_csv(_cmd, _socket);
+    } else if constexpr (std::is_same<Type, typename Command::RefreshOp>()) {
+      refresh(_cmd, _socket);
+    } else if constexpr (std::is_same<Type, typename Command::SniffCSVOp>()) {
+      sniff_csv(_cmd, _socket);
+    } else if constexpr (std::is_same<Type, typename Command::SniffTableOp>()) {
+      sniff_table(_cmd, _socket);
+    } else {
+      []<bool _flag = false>() {
+        static_assert(_flag, "Unknown command. Not all cases were covered.");
+      }
+      ();
+    }
+  };
+
+  fct::visit(handle, _command.val_);
 }
 
 // ------------------------------------------------------------------------

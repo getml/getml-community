@@ -52,8 +52,7 @@ class DataFrameManager {
 
  public:
   /// Executes a DataFrameCommand.
-  template <class CommandType>
-  void execute_command(const CommandType& _cmd,
+  void execute_command(const Command& _command,
                        Poco::Net::StreamSocket* _socket);
 
  public:
@@ -413,126 +412,6 @@ class DataFrameManager {
 };
 
 // ------------------------------------------------------------------------
-// ------------------------------------------------------------------------
-
-template <class CommandType>
-void DataFrameManager::execute_command(const CommandType& _cmd,
-                                       Poco::Net::StreamSocket* _socket) {
-  using Type = std::decay_t<CommandType>;
-
-  if constexpr (std::is_same<Type, Command::AddFloatColumnOp>()) {
-    add_float_column(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::FloatColumnOp>()) {
-    add_float_column(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::AddStringColumnOp>()) {
-    add_string_column(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::StringColumnOp>()) {
-    add_string_column(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::AggregationOp>()) {
-    aggregate(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::AppendToDataFrameOp>()) {
-    append_to_data_frame(_cmd, _socket);
-  } else if constexpr (std::is_same<Type,
-                                    Command::CalcCategoricalColumnPlotOp>()) {
-    calc_categorical_column_plots(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::CalcColumnPlotOp>()) {
-    calc_column_plots(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::ConcatDataFramesOp>()) {
-    concat(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::FreezeDataFrameOp>()) {
-    freeze(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::GetBooleanColumnOp>()) {
-    get_boolean_column(_cmd, _socket);
-  } else if constexpr (std::is_same<Type,
-                                    Command::GetBooleanColumnContentOp>()) {
-    get_boolean_column_content(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::GetBooleanColumnNRowsOp>()) {
-    get_boolean_column_nrows(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::GetStringColumnOp>()) {
-    get_categorical_column(_cmd, _socket);
-  } else if constexpr (std::is_same<Type,
-                                    Command::GetStringColumnContentOp>()) {
-    get_categorical_column_content(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::GetStringColumnNRowsOp>()) {
-    get_categorical_column_nrows(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::GetStringColumnUniqueOp>()) {
-    get_categorical_column_unique(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::GetFloatColumnOp>()) {
-    get_column(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::GetFloatColumnNRowsOp>()) {
-    get_column_nrows(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::GetFloatColumnUniqueOp>()) {
-    get_column_unique(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::GetDataFrameOp>()) {
-    get_data_frame(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::GetDataFrameHTMLOp>()) {
-    get_data_frame_html(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::GetDataFrameStringOp>()) {
-    get_data_frame_string(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::GetDataFrameContentOp>()) {
-    get_data_frame_content(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::GetFloatColumnContentOp>()) {
-    get_float_column_content(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::GetDataFrameNBytesOp>()) {
-    get_nbytes(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::GetDataFrameNRowsOp>()) {
-    get_nrows(_cmd, _socket);
-  } else if constexpr (std::is_same<Type,
-                                    Command::GetFloatColumnSubrolesOp>()) {
-    get_subroles(_cmd, _socket);
-  } else if constexpr (std::is_same<Type,
-                                    Command::GetStringColumnSubrolesOp>()) {
-    get_subroles_categorical(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::GetFloatColumnUnitOp>()) {
-    get_unit(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::GetStringColumnUnitOp>()) {
-    get_unit_categorical(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::GetViewContentOp>()) {
-    get_view_content(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::GetViewNRowsOp>()) {
-    get_view_nrows(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::LastChangeOp>()) {
-    last_change(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::RefreshDataFrameOp>()) {
-    refresh(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::RemoveColumnOp>()) {
-    remove_column(_cmd, _socket);
-  } else if constexpr (std::is_same<Type,
-                                    Command::SetFloatColumnSubrolesOp>()) {
-    set_subroles(_cmd, _socket);
-  } else if constexpr (std::is_same<Type,
-                                    Command::SetStringColumnSubrolesOp>()) {
-    set_subroles_categorical(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::SetFloatColumnUnitOp>()) {
-    set_unit(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::SetStringColumnUnitOp>()) {
-    set_unit_categorical(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::SummarizeDataFrameOp>()) {
-    summarize(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::ToArrowOp>()) {
-    to_arrow(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::ToCSVOp>()) {
-    to_csv(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::ToDBOp>()) {
-    to_db(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::ToParquetOp>()) {
-    to_parquet(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::ViewToArrowOp>()) {
-    view_to_arrow(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::ViewToCSVOp>()) {
-    view_to_csv(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::ViewToDBOp>()) {
-    view_to_db(_cmd, _socket);
-  } else if constexpr (std::is_same<Type, Command::ViewToParquetOp>()) {
-    view_to_parquet(_cmd, _socket);
-  } else {
-    []<bool _flag = false>() {
-      static_assert(_flag, "Not all cases were covered.");
-    }
-    ();
-  }
-}
-
 // ------------------------------------------------------------------------
 
 template <typename T, typename IterType>
