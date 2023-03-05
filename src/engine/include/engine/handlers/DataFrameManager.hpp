@@ -55,6 +55,25 @@ class DataFrameManager {
   void execute_command(const Command& _command,
                        Poco::Net::StreamSocket* _socket);
 
+  /// Receives a FloatColumn and adds it to the DataFrame.
+  void recv_and_add_float_column(
+      const RecvAndAddOp& _cmd, containers::DataFrame* _df,
+      multithreading::WeakWriteLock* _weak_write_lock,
+      Poco::Net::StreamSocket* _socket) const;
+
+  /// Adds a string column to a data frame.
+  void recv_and_add_string_column(
+      const RecvAndAddOp& _cmd, containers::DataFrame* _df,
+      multithreading::WeakWriteLock* _weak_write_lock,
+      Poco::Net::StreamSocket* _socket);
+
+  /// Adds a string column to a data frame.
+  void recv_and_add_string_column(
+      const RecvAndAddOp& _cmd,
+      const fct::Ref<containers::Encoding>& _local_categories,
+      const fct::Ref<containers::Encoding>& _local_join_keys_encoding,
+      containers::DataFrame* _df, Poco::Net::StreamSocket* _socket) const;
+
  public:
   /// Creates a new data frame and adds it to the map of data frames.
   void add_data_frame(const std::string& _name,
@@ -79,10 +98,6 @@ class DataFrameManager {
   /// for instance as a numpy array).
   void add_string_column(const typename Command::StringColumnOp& _cmd,
                          Poco::Net::StreamSocket* _socket);
-
-  /// Undertakes an aggregation on an entire column.
-  void aggregate(const typename Command::AggregationOp& _cmd,
-                 Poco::Net::StreamSocket* _socket);
 
   /// Appends data to an existing data frame.
   void append_to_data_frame(const typename Command::AppendToDataFrameOp& _cmd,
@@ -148,51 +163,6 @@ class DataFrameManager {
   void from_view(const typename Command::AddDfFromViewOp& _cmd,
                  Poco::Net::StreamSocket* _socket);
 
-  /// Sends a boolean columm to the client
-  void get_boolean_column(const typename Command::GetBooleanColumnOp& _cmd,
-                          Poco::Net::StreamSocket* _socket);
-
-  /// Sends a JSON representing the column to the client.
-  void get_boolean_column_content(
-      const typename Command::GetBooleanColumnContentOp& _cmd,
-      Poco::Net::StreamSocket* _socket);
-
-  /// Returns the number of rows in boolean column.
-  void get_boolean_column_nrows(
-      const typename Command::GetBooleanColumnNRowsOp& _cmd,
-      Poco::Net::StreamSocket* _socket);
-
-  /// Sends a categorical columm to the client
-  void get_categorical_column(const typename Command::GetStringColumnOp& _cmd,
-                              Poco::Net::StreamSocket* _socket);
-
-  /// Sends a JSON representing the column to the client.
-  void get_categorical_column_content(
-      const typename Command::GetStringColumnContentOp& _cmd,
-      Poco::Net::StreamSocket* _socket);
-
-  /// Sends a string describing the number of rows in a categorical column.
-  void get_categorical_column_nrows(
-      const typename Command::GetStringColumnNRowsOp& _cmd,
-      Poco::Net::StreamSocket* _socket);
-
-  /// Returns the unique values from a categorical column.
-  void get_categorical_column_unique(
-      const typename Command::GetStringColumnUniqueOp& _cmd,
-      Poco::Net::StreamSocket* _socket);
-
-  /// Sends a column to the client
-  void get_column(const typename Command::GetFloatColumnOp& _cmd,
-                  Poco::Net::StreamSocket* _socket);
-
-  /// Gets the number of rows in a float column.
-  void get_column_nrows(const typename Command::GetFloatColumnNRowsOp& _cmd,
-                        Poco::Net::StreamSocket* _socket);
-
-  /// Returns the unique values from a float column.
-  void get_column_unique(const typename Command::GetFloatColumnUniqueOp& _cmd,
-                         Poco::Net::StreamSocket* _socket);
-
   /// Sends a data frame back to the client, column-by-column.
   void get_data_frame(const typename Command::GetDataFrameOp& _cmd,
                       Poco::Net::StreamSocket* _socket);
@@ -211,11 +181,6 @@ class DataFrameManager {
       const typename Command::GetDataFrameContentOp& _cmd,
       Poco::Net::StreamSocket* _socket);
 
-  /// Sends a JSON representing the column to the client.
-  void get_float_column_content(
-      const typename Command::GetFloatColumnContentOp& _cmd,
-      Poco::Net::StreamSocket* _socket);
-
   /// Get the size of a data frame
   void get_nbytes(const typename Command::GetDataFrameNBytesOp& _cmd,
                   Poco::Net::StreamSocket* _socket);
@@ -224,26 +189,13 @@ class DataFrameManager {
   void get_nrows(const typename Command::GetDataFrameNRowsOp& _cmd,
                  Poco::Net::StreamSocket* _socket);
 
-  /// Get the subroles for a float column.
-  void get_subroles(const typename Command::GetFloatColumnSubrolesOp& _cmd,
-                    Poco::Net::StreamSocket* _socket);
-
-  /// Get the subroles for a string column.
-  void get_subroles_categorical(
-      const typename Command::GetStringColumnSubrolesOp& _cmd,
-      Poco::Net::StreamSocket* _socket);
-
-  /// Get the unit for a float column.
-  void get_unit(const typename Command::GetFloatColumnUnitOp& _cmd,
-                Poco::Net::StreamSocket* _socket);
-
-  /// Get the unit for a string column.
-  void get_unit_categorical(const typename Command::GetStringColumnUnitOp& _cmd,
-                            Poco::Net::StreamSocket* _socket);
-
   /// Returns a string describing the last time a data frame has been changed.
   void last_change(const typename Command::LastChangeOp& _cmd,
                    Poco::Net::StreamSocket* _socket);
+
+  template <typename T, typename IterType>
+  std::string make_column_string(const Int _draw, const size_t _nrows,
+                                 IterType _begin, IterType _end) const;
 
   /// Refreshes a data frame.
   void refresh(const typename Command::RefreshDataFrameOp& _cmd,
@@ -252,23 +204,6 @@ class DataFrameManager {
   /// Removes a column from a DataFrame.
   void remove_column(const typename Command::RemoveColumnOp& _cmd,
                      Poco::Net::StreamSocket* _socket);
-
-  /// Changes the subroles of the column.
-  void set_subroles(const typename Command::SetFloatColumnSubrolesOp& _cmd,
-                    Poco::Net::StreamSocket* _socket);
-
-  /// Changes the subroles of the column.
-  void set_subroles_categorical(
-      const typename Command::SetStringColumnSubrolesOp& _cmd,
-      Poco::Net::StreamSocket* _socket);
-
-  /// Changes the unit of the column.
-  void set_unit(const typename Command::SetFloatColumnUnitOp& _cmd,
-                Poco::Net::StreamSocket* _socket);
-
-  /// Changes the unit of the column.
-  void set_unit_categorical(const typename Command::SetStringColumnUnitOp& _cmd,
-                            Poco::Net::StreamSocket* _socket);
 
   /// Sends summary statistics back to the client.
   void summarize(const typename Command::SummarizeDataFrameOp& _cmd,
@@ -320,31 +255,8 @@ class DataFrameManager {
       containers::DataFrame* _df,
       multithreading::WeakWriteLock* _weak_write_lock) const;
 
-  template <typename T, typename IterType>
-  std::string make_column_string(const Int _draw, const size_t _nrows,
-                                 IterType _begin, IterType _end) const;
-
   /// Receives the actual data contained in a DataFrame
   void receive_data(
-      const fct::Ref<containers::Encoding>& _local_categories,
-      const fct::Ref<containers::Encoding>& _local_join_keys_encoding,
-      containers::DataFrame* _df, Poco::Net::StreamSocket* _socket) const;
-
-  /// Receives a FloatColumn and adds it to the DataFrame.
-  void recv_and_add_float_column(
-      const RecvAndAddOp& _cmd, containers::DataFrame* _df,
-      multithreading::WeakWriteLock* _weak_write_lock,
-      Poco::Net::StreamSocket* _socket) const;
-
-  /// Adds a string column to a data frame.
-  void recv_and_add_string_column(
-      const RecvAndAddOp& _cmd, containers::DataFrame* _df,
-      multithreading::WeakWriteLock* _weak_write_lock,
-      Poco::Net::StreamSocket* _socket);
-
-  /// Adds a string column to a data frame.
-  void recv_and_add_string_column(
-      const RecvAndAddOp& _cmd,
       const fct::Ref<containers::Encoding>& _local_categories,
       const fct::Ref<containers::Encoding>& _local_join_keys_encoding,
       containers::DataFrame* _df, Poco::Net::StreamSocket* _socket) const;

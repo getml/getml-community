@@ -5,6 +5,7 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/BoolOpParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/CategoryTrimmer.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Check.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/ColumnManager.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DatabaseManager.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DataFrame.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DataFrameManager.cpp
