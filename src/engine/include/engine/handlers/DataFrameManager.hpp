@@ -101,6 +101,21 @@ class DataFrameManager {
   void concat(const typename Command::ConcatDataFramesOp& _cmd,
               Poco::Net::StreamSocket* _socket);
 
+  /// Writes the data frame to CSV.
+  void df_to_csv(
+      const std::string& _fname, const size_t _batch_size,
+      const std::string& _quotechar, const std::string& _sep,
+      const containers::DataFrame& _df,
+      const fct::Ref<containers::Encoding>& _categories,
+      const fct::Ref<containers::Encoding>& _join_keys_encoding) const;
+
+  /// Writes a data frame to a database.
+  void df_to_db(
+      const std::string& _conn_id, const std::string& _table_name,
+      const containers::DataFrame& _df,
+      const fct::Ref<containers::Encoding>& _categories,
+      const fct::Ref<containers::Encoding>& _join_keys_encoding) const;
+
   /// Freezes the data frame (making it immutable).
   void freeze(const typename Command::FreezeDataFrameOp& _cmd,
               Poco::Net::StreamSocket* _socket);
@@ -226,14 +241,6 @@ class DataFrameManager {
   void get_unit_categorical(const typename Command::GetStringColumnUnitOp& _cmd,
                             Poco::Net::StreamSocket* _socket);
 
-  /// Sends a JSON representing the view to the client.
-  void get_view_content(const typename Command::GetViewContentOp& _cmd,
-                        Poco::Net::StreamSocket* _socket);
-
-  /// Sends a JSON representing the number of rows in the view, if known.
-  void get_view_nrows(const typename Command::GetViewNRowsOp& _cmd,
-                      Poco::Net::StreamSocket* _socket);
-
   /// Returns a string describing the last time a data frame has been changed.
   void last_change(const typename Command::LastChangeOp& _cmd,
                    Poco::Net::StreamSocket* _socket);
@@ -283,22 +290,6 @@ class DataFrameManager {
   void to_parquet(const typename Command::ToParquetOp& _cmd,
                   Poco::Net::StreamSocket* _socket);
 
-  /// Writes a view to an arrow.Table.
-  void view_to_arrow(const typename Command::ViewToArrowOp& _cmd,
-                     Poco::Net::StreamSocket* _socket);
-
-  /// Writes a view to CSV.
-  void view_to_csv(const typename Command::ViewToCSVOp& _cmd,
-                   Poco::Net::StreamSocket* _socket);
-
-  /// Writes a view into a database.
-  void view_to_db(const typename Command::ViewToDBOp& _cmd,
-                  Poco::Net::StreamSocket* _socket);
-
-  /// Writes a view to a parquet file.
-  void view_to_parquet(const typename Command::ViewToParquetOp& _cmd,
-                       Poco::Net::StreamSocket* _socket);
-
  private:
   /// Takes care of the process of actually adding the column.
   void add_float_column_to_df(
@@ -328,19 +319,6 @@ class DataFrameManager {
       const std::string& _unit, const containers::Column<strings::String>& _col,
       containers::DataFrame* _df,
       multithreading::WeakWriteLock* _weak_write_lock) const;
-
-  /// Writes the data frame to CSV.
-  void df_to_csv(const std::string& _fname, const size_t _batch_size,
-                 const std::string& _quotechar, const std::string& _sep,
-                 const containers::DataFrame& _df,
-                 const fct::Ref<containers::Encoding>& _categories,
-                 const fct::Ref<containers::Encoding>& _join_keys_encoding);
-
-  /// Writes a data frame to a database.
-  void df_to_db(const std::string& _conn_id, const std::string& _table_name,
-                const containers::DataFrame& _df,
-                const fct::Ref<containers::Encoding>& _categories,
-                const fct::Ref<containers::Encoding>& _join_keys_encoding);
 
   template <typename T, typename IterType>
   std::string make_column_string(const Int _draw, const size_t _nrows,
@@ -376,7 +354,7 @@ class DataFrameManager {
   containers::Encoding& categories() { return *params_.categories_; }
 
   /// Trivial accessor
-  fct::Ref<database::Connector> connector(const std::string& _name) {
+  fct::Ref<database::Connector> connector(const std::string& _name) const {
     return params_.database_manager_->connector(_name);
   }
 
@@ -402,7 +380,7 @@ class DataFrameManager {
   }
 
   /// Trivial accessor
-  const communication::Logger& logger() { return *params_.logger_; }
+  const communication::Logger& logger() const { return *params_.logger_; }
 
   // ------------------------------------------------------------------------
 

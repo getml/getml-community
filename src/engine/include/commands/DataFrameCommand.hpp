@@ -229,20 +229,6 @@ struct DataFrameCommand {
       fct::Field<"type_", fct::Literal<"StringColumn.get_unit">>,
       fct::Field<"col_", StringColumnOrStringColumnView>>;
 
-  /// The command used to retrieve the content of a view.
-  using GetViewContentOp =
-      fct::NamedTuple<fct::Field<"type_", fct::Literal<"View.get_content">>,
-                      fct::Field<"cols_", std::vector<ViewCol>>,
-                      fct::Field<"draw_", Int>, fct::Field<"length_", Int>,
-                      fct::Field<"name_", std::string>,
-                      fct::Field<"start_", Int>>;
-
-  /// The command used to retrieve the number of rows of a view.
-  using GetViewNRowsOp =
-      fct::NamedTuple<fct::Field<"type_", fct::Literal<"View.get_nrows">>,
-                      fct::Field<"cols_", std::vector<ViewCol>>,
-                      fct::Field<"force_", bool>>;
-
   /// The command used to retrieve the datetime of the last change on a data
   /// frame.
   using LastChangeOp = fct::NamedTuple<
@@ -323,32 +309,6 @@ struct DataFrameCommand {
                       fct::Field<"fname_", std::string>,
                       fct::Field<"compression_", std::string>>;
 
-  /// The command used to transform a view to Arrow.
-  using ViewToArrowOp =
-      fct::NamedTuple<fct::Field<"type_", fct::Literal<"View.to_arrow">>,
-                      fct::Field<"view_", DataFrameOrView>>;
-
-  /// The command used to transform a view to CSV.
-  using ViewToCSVOp = fct::NamedTuple<
-      fct::Field<"type_", fct::Literal<"View.to_csv">>,
-      fct::Field<"view_", DataFrameOrView>, fct::Field<"fname_", std::string>,
-      fct::Field<"batch_size_", size_t>, fct::Field<"quotechar_", std::string>,
-      fct::Field<"sep_", std::string>>;
-
-  /// The command used to write a view into the database.
-  using ViewToDBOp =
-      fct::NamedTuple<fct::Field<"type_", fct::Literal<"View.to_db">>,
-                      fct::Field<"view_", DataFrameOrView>,
-                      fct::Field<"conn_id_", std::string>,
-                      fct::Field<"table_name_", std::string>>;
-
-  /// The command used to transform a view to parquet.
-  using ViewToParquetOp =
-      fct::NamedTuple<fct::Field<"type_", fct::Literal<"View.to_parquet">>,
-                      fct::Field<"view_", DataFrameOrView>,
-                      fct::Field<"fname_", std::string>,
-                      fct::Field<"compression_", std::string>>;
-
   using NamedTupleType = fct::TaggedUnion<
       "type_", AddFloatColumnOp, AddStringColumnOp, AppendToDataFrameOp,
       AggregationOp, CalcCategoricalColumnPlotOp, CalcColumnPlotOp,
@@ -360,11 +320,10 @@ struct DataFrameCommand {
       GetFloatColumnUniqueOp, GetFloatColumnUnitOp, GetStringColumnOp,
       GetStringColumnContentOp, GetStringColumnNRowsOp,
       GetStringColumnSubrolesOp, GetStringColumnUniqueOp, GetStringColumnUnitOp,
-      GetViewContentOp, GetViewNRowsOp, LastChangeOp, RefreshDataFrameOp,
-      RemoveColumnOp, SetFloatColumnSubrolesOp, SetFloatColumnUnitOp,
-      SetStringColumnSubrolesOp, SetStringColumnUnitOp, SummarizeDataFrameOp,
-      StringColumnOp, ToArrowOp, ToCSVOp, ToDBOp, ToParquetOp, ViewToArrowOp,
-      ViewToCSVOp, ViewToDBOp, ViewToParquetOp>;
+      LastChangeOp, RefreshDataFrameOp, RemoveColumnOp,
+      SetFloatColumnSubrolesOp, SetFloatColumnUnitOp, SetStringColumnSubrolesOp,
+      SetStringColumnUnitOp, SummarizeDataFrameOp, StringColumnOp, ToArrowOp,
+      ToCSVOp, ToDBOp, ToParquetOp>;
 
   static DataFrameCommand from_json(const Poco::JSON::Object& _obj);
 
