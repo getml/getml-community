@@ -18,7 +18,12 @@
 #include "engine/communication/communication.hpp"
 #include "engine/config/config.hpp"
 #include "engine/containers/containers.hpp"
-#include "engine/handlers/handlers.hpp"
+#include "engine/handlers/ColumnManager.hpp"
+#include "engine/handlers/DataFrameManager.hpp"
+#include "engine/handlers/DatabaseManager.hpp"
+#include "engine/handlers/PipelineManager.hpp"
+#include "engine/handlers/ProjectManager.hpp"
+#include "engine/handlers/ViewManager.hpp"
 #include "fct/Ref.hpp"
 #include "fct/define_tagged_union.hpp"
 
@@ -33,25 +38,18 @@ class RequestHandler : public Poco::Net::TCPServerConnection {
   static constexpr const char* STRING_COLUMN =
       containers::Column<bool>::STRING_COLUMN;
 
-  using Command = fct::define_tagged_union_t<
-      "type_", typename commands::DatabaseCommand::NamedTupleType,
-      typename commands::DataFrameCommand::NamedTupleType,
-      typename commands::PipelineCommand::NamedTupleType,
-      typename commands::ProjectCommand::NamedTupleType>;
-
  public:
-  RequestHandler(
-      const Poco::Net::StreamSocket& _socket,
-      const fct::Ref<handlers::DatabaseManager>& _database_manager,
-      const fct::Ref<handlers::DataFrameManager>& _data_frame_manager,
-      const fct::Ref<const communication::Logger>& _logger,
-      const fct::Ref<handlers::PipelineManager>& _pipeline_manager,
-      const config::Options& _options,
-      const fct::Ref<handlers::ProjectManager>& _project_manager,
-      const fct::Ref<std::atomic<bool>>& _shutdown)
+  RequestHandler(const Poco::Net::StreamSocket& _socket,
+                 const fct::Ref<handlers::DatabaseManager>& _database_manager,
+                 const fct::Ref<handlers::DataFrameManagerParams>& _data_params,
+                 const fct::Ref<const communication::Logger>& _logger,
+                 const fct::Ref<handlers::PipelineManager>& _pipeline_manager,
+                 const config::Options& _options,
+                 const fct::Ref<handlers::ProjectManager>& _project_manager,
+                 const fct::Ref<std::atomic<bool>>& _shutdown)
       : Poco::Net::TCPServerConnection(_socket),
         database_manager_(_database_manager),
-        data_frame_manager_(_data_frame_manager),
+        data_params_(_data_params),
         logger_(_logger),
         pipeline_manager_(_pipeline_manager),
         options_(_options),
@@ -68,8 +66,13 @@ class RequestHandler : public Poco::Net::TCPServerConnection {
   handlers::DatabaseManager& database_manager() { return *database_manager_; }
 
   /// Trivial accessor
-  handlers::DataFrameManager& data_frame_manager() {
-    return *data_frame_manager_;
+  handlers::ColumnManager column_manager() {
+    return handlers::ColumnManager(*data_params_);
+  }
+
+  /// Trivial accessor
+  handlers::DataFrameManager data_frame_manager() {
+    return handlers::DataFrameManager(*data_params_);
   }
 
   /// Trivial accessor
@@ -81,14 +84,17 @@ class RequestHandler : public Poco::Net::TCPServerConnection {
   /// Trivial accessor
   handlers::ProjectManager& project_manager() { return *project_manager_; }
 
-  // -------------------------------------------------------------
+  /// Trivial accessor
+  handlers::ViewManager view_manager() {
+    return handlers::ViewManager(*data_params_);
+  }
 
  private:
   /// Handles requests related to the database.
   const fct::Ref<handlers::DatabaseManager> database_manager_;
 
-  /// Handles requests related to the data frames.
-  const fct::Ref<handlers::DataFrameManager> data_frame_manager_;
+  /// The parameters needed for all of the handlers related to data frames.
+  const fct::Ref<handlers::DataFrameManagerParams> data_params_;
 
   /// Logs commands.
   const fct::Ref<const communication::Logger> logger_;
