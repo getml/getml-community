@@ -47,5 +47,6 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/ToSQL.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Transform.cpp
     ${ENGINE_SOURCE_DIRECTORY}/TextFieldSplitter.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/ViewManager.cpp
     ${ENGINE_SOURCE_DIRECTORY}/ViewParser.cpp
 )
