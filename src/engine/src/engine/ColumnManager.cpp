@@ -5,8 +5,6 @@
 // for details.
 //
 
-#include "engine/handlers/DataFrameManager.hpp"
-
 #include <Poco/TemporaryFile.h>
 
 #include "commands/DataFrameFromJSON.hpp"
@@ -14,6 +12,7 @@
 #include "engine/handlers/AggOpParser.hpp"
 #include "engine/handlers/ArrowHandler.hpp"
 #include "engine/handlers/BoolOpParser.hpp"
+#include "engine/handlers/DataFrameManager.hpp"
 #include "engine/handlers/FloatOpParser.hpp"
 #include "engine/handlers/StringOpParser.hpp"
 #include "engine/handlers/ViewParser.hpp"
@@ -22,341 +21,6 @@
 
 namespace engine {
 namespace handlers {
-
-void DataFrameManager::add_data_frame(const std::string& _name,
-                                      Poco::Net::StreamSocket* _socket) {
-  multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
-
-  const auto pool = params_.options_.make_pool();
-
-  const auto local_categories = fct::Ref<containers::Encoding>::make(
-      pool, params_.categories_.ptr());  // TODO
-
-  const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
-      pool, params_.join_keys_encoding_.ptr());  // TODO
-
-  // TODO
-  auto df = containers::DataFrame(_name, local_categories.ptr(),
-                                  local_join_keys_encoding.ptr(), pool);
-
-  communication::Sender::send_string("Success!", _socket);
-
-  receive_data(local_categories, local_join_keys_encoding, &df, _socket);
-
-  weak_write_lock.upgrade();
-
-  params_.categories_->append(*local_categories);
-
-  params_.join_keys_encoding_->append(*local_join_keys_encoding);
-
-  df.set_categories(params_.categories_.ptr());
-
-  df.set_join_keys_encoding(params_.join_keys_encoding_.ptr());
-
-  data_frames()[_name] = df;
-
-  data_frames()[_name].create_indices();
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::add_float_column(
-    const typename Command::AddFloatColumnOp& _cmd,
-    Poco::Net::StreamSocket* _socket) {
-  multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
-
-  const auto& role = _cmd.get<"role_">();
-
-  const auto& name = _cmd.get<"name_">();
-
-  const auto& unit = _cmd.get<"unit_">();
-
-  const auto& json_col = _cmd.get<"col_">();
-
-  const auto& df_name = _cmd.get<"df_name_">();
-
-  const auto parser = FloatOpParser(
-      params_.categories_, params_.join_keys_encoding_, params_.data_frames_);
-
-  const auto column_view = parser.parse(json_col);
-
-  const auto make_col = [this, column_view, parser, name, unit,
-                         _socket](const std::optional<size_t> _nrows) {
-    auto col = column_view.to_column(0, _nrows, false);
-
-    col.set_name(name);
-
-    col.set_unit(unit);
-
-    parser.check(col, params_.logger_, _socket);
-
-    return col;
-  };
-
-  auto [df, exists] = utils::Getter::get_if_exists(df_name, &data_frames());
-
-  if (exists) {
-    const auto col = make_col(df->nrows());
-
-    add_float_column_to_df(role, col, df, &weak_write_lock);
-
-  } else {
-    if (column_view.is_infinite()) {
-      throw std::runtime_error(
-          "Column length could not be inferred! This is because "
-          "you have "
-          "tried to add an infinite length ColumnView to a data "
-          "frame "
-          "that does not contain any columns yet.");
-    }
-
-    const auto col = make_col(std::nullopt);
-
-    const auto pool = params_.options_.make_pool();
-
-    auto new_df =
-        containers::DataFrame(df_name, params_.categories_.ptr(),
-                              params_.join_keys_encoding_.ptr(), pool);
-
-    add_float_column_to_df(role, col, &new_df, &weak_write_lock);
-
-    data_frames()[df_name] = new_df;
-
-    data_frames()[df_name].create_indices();
-  }
-
-  communication::Sender::send_string("Success!", _socket);
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::add_float_column(
-    const typename Command::FloatColumnOp& _cmd,
-    Poco::Net::StreamSocket* _socket) {
-  const auto& df_name = _cmd.get<"df_name_">();
-
-  multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
-
-  auto [df, exists] = utils::Getter::get_if_exists(df_name, &data_frames());
-
-  if (exists) {
-    recv_and_add_float_column(_cmd, df, &weak_write_lock, _socket);
-
-  } else {
-    const auto pool = params_.options_.make_pool();
-
-    auto new_df =
-        containers::DataFrame(df_name, params_.categories_.ptr(),
-                              params_.join_keys_encoding_.ptr(), pool);
-
-    recv_and_add_float_column(_cmd, &new_df, &weak_write_lock, _socket);
-
-    data_frames()[df_name] = new_df;
-
-    data_frames()[df_name].create_indices();
-  }
-
-  communication::Sender::send_string("Success!", _socket);
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::add_float_column_to_df(
-    const std::string& _role, const containers::Column<Float>& _col,
-    containers::DataFrame* _df,
-    multithreading::WeakWriteLock* _weak_write_lock) const {
-  if (_weak_write_lock) _weak_write_lock->upgrade();
-
-  _df->add_float_column(_col, _role);
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::add_int_column_to_df(
-    const std::string& _name, const std::string& _role,
-    const std::string& _unit, const containers::Column<strings::String>& _col,
-    containers::DataFrame* _df, multithreading::WeakWriteLock* _weak_write_lock,
-    Poco::Net::StreamSocket* _socket) {
-  const auto pool = params_.options_.make_pool();
-
-  const auto local_categories =
-      std::make_shared<containers::Encoding>(pool, params_.categories_.ptr());
-
-  const auto local_join_keys_encoding = std::make_shared<containers::Encoding>(
-      pool, params_.join_keys_encoding_.ptr());
-
-  auto col = containers::Column<Int>(_df->pool(), _col.nrows());
-
-  auto encoding = local_join_keys_encoding;
-
-  if (_role == containers::DataFrame::ROLE_CATEGORICAL) {
-    encoding = local_categories;
-  }
-
-  for (size_t i = 0; i < _col.nrows(); ++i) {
-    col[i] = (*encoding)[_col[i]];
-  }
-
-  col.set_name(_name);
-
-  col.set_unit(_unit);
-
-  assert_true(_weak_write_lock);
-
-  _weak_write_lock->upgrade();
-
-  _df->add_int_column(col, _role);
-
-  if (_role == containers::DataFrame::ROLE_CATEGORICAL) {
-    params_.categories_->append(*local_categories);
-  } else if (_role == containers::DataFrame::ROLE_JOIN_KEY) {
-    params_.join_keys_encoding_->append(*local_join_keys_encoding);
-  } else {
-    assert_true(false);
-  }
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::add_int_column_to_df(
-    const std::string& _name, const std::string& _role,
-    const std::string& _unit, const containers::Column<strings::String>& _col,
-    const fct::Ref<containers::Encoding>& _local_categories,
-    const fct::Ref<containers::Encoding>& _local_join_keys_encoding,
-    containers::DataFrame* _df) const {
-  auto col = containers::Column<Int>(_df->pool(), _col.nrows());
-
-  auto encoding = _local_join_keys_encoding;
-
-  if (_role == containers::DataFrame::ROLE_CATEGORICAL) {
-    encoding = _local_categories;
-  }
-
-  for (size_t i = 0; i < _col.nrows(); ++i) {
-    col[i] = (*encoding)[_col[i]];
-  }
-
-  col.set_name(_name);
-
-  col.set_unit(_unit);
-
-  _df->add_int_column(col, _role);
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::add_string_column(
-    const typename Command::StringColumnOp& _cmd,
-    Poco::Net::StreamSocket* _socket) {
-  const auto& df_name = _cmd.get<"df_name_">();
-
-  multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
-
-  auto [df, exists] = utils::Getter::get_if_exists(df_name, &data_frames());
-
-  if (exists) {
-    recv_and_add_string_column(_cmd, df, &weak_write_lock, _socket);
-
-  } else {
-    const auto pool = params_.options_.make_pool();
-
-    auto new_df =
-        containers::DataFrame(df_name, params_.categories_.ptr(),
-                              params_.join_keys_encoding_.ptr(), pool);
-
-    recv_and_add_string_column(_cmd, &new_df, &weak_write_lock, _socket);
-
-    data_frames()[df_name] = new_df;
-
-    data_frames()[df_name].create_indices();
-  }
-
-  communication::Sender::send_string("Success!", _socket);
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::add_string_column(
-    const typename Command::AddStringColumnOp& _cmd,
-    Poco::Net::StreamSocket* _socket) {
-  multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
-
-  const auto& role = _cmd.get<"role_">();
-
-  const auto& name = _cmd.get<"name_">();
-
-  const auto& unit = _cmd.get<"unit_">();
-
-  const auto& json_col = _cmd.get<"col_">();
-
-  const auto& df_name = _cmd.get<"df_name_">();
-
-  const auto parser = StringOpParser(
-      params_.categories_, params_.join_keys_encoding_, params_.data_frames_);
-
-  const auto pool = params_.options_.make_pool();
-
-  auto new_df = containers::DataFrame(df_name, params_.categories_.ptr(),
-                                      params_.join_keys_encoding_.ptr(), pool);
-
-  auto [df, exists] = utils::Getter::get_if_exists(df_name, &data_frames());
-
-  if (!exists) {
-    df = &new_df;
-  }
-
-  const auto column_view = parser.parse(json_col);
-
-  if (!exists && column_view.is_infinite()) {
-    throw std::runtime_error(
-        "Column length could not be inferred! This is because you have "
-        "tried to add an infinite length ColumnView to a data frame "
-        "that does not contain any columns yet.");
-  }
-
-  const auto col = exists ? column_view.to_column(0, df->nrows(), false)
-                          : column_view.to_column(0, std::nullopt, false);
-
-  parser.check(col, name, params_.logger_, _socket);
-
-  if (role == containers::DataFrame::ROLE_UNUSED ||
-      role == containers::DataFrame::ROLE_UNUSED_STRING ||
-      role == containers::DataFrame::ROLE_TEXT) {
-    add_string_column_to_df(name, role, unit, col, df, &weak_write_lock);
-  } else {
-    add_int_column_to_df(name, role, unit, col, df, &weak_write_lock, _socket);
-  }
-
-  if (!exists) {
-    data_frames()[df_name] = new_df;
-
-    data_frames()[df_name].create_indices();
-  }
-
-  communication::Sender::send_string("Success!", _socket);
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::add_string_column_to_df(
-    const std::string& _name, const std::string& _role,
-    const std::string& _unit, const containers::Column<strings::String>& _col,
-    containers::DataFrame* _df,
-    multithreading::WeakWriteLock* _weak_write_lock) const {
-  auto col = _col;
-
-  col.set_name(_name);
-
-  col.set_unit(_unit);
-
-  if (_weak_write_lock) {
-    _weak_write_lock->upgrade();
-  }
-
-  _df->add_string_column(col, _role);
-}
-
-// ------------------------------------------------------------------------
 
 void DataFrameManager::aggregate(const typename Command::AggregationOp& _cmd,
                                  Poco::Net::StreamSocket* _socket) {
@@ -379,343 +43,66 @@ void DataFrameManager::aggregate(const typename Command::AggregationOp& _cmd,
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::append_to_data_frame(
-    const typename Command::AppendToDataFrameOp& _cmd,
-    Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
-
-  multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
-
-  const auto pool = params_.options_.make_pool();
-
-  const auto local_categories = fct::Ref<containers::Encoding>::make(
-      pool, params_.categories_.ptr());  // TODO
-
-  const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
-      pool, params_.join_keys_encoding_.ptr());  // TODO
-
-  // TODO
-  auto df = containers::DataFrame(name, local_categories.ptr(),
-                                  local_join_keys_encoding.ptr(), pool);
-
-  receive_data(local_categories, local_join_keys_encoding, &df, _socket);
-
-  weak_write_lock.upgrade();
-
-  auto [old_df, exists] = utils::Getter::get_if_exists(name, &data_frames());
-
-  if (exists) {
-    old_df->append(df);
-  } else {
-    data_frames()[name] = df;
-  }
-
-  data_frames()[name].create_indices();
-
-  params_.categories_->append(*local_categories);
-
-  params_.join_keys_encoding_->append(*local_join_keys_encoding);
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::calc_categorical_column_plots(
-    const typename Command::CalcCategoricalColumnPlotOp& _cmd,
-    Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
-
-  const auto& df_name = _cmd.get<"df_name_">();
-
-  const auto& role = _cmd.get<"role_">();
-
-  const auto num_bins = _cmd.get<"num_bins_">();
-
-  const auto& target_name = _cmd.get<"target_name_">();
-
-  const auto& target_role = _cmd.get<"target_role_">();
-
-  multithreading::ReadLock read_lock(params_.read_write_lock_);
-
-  const auto& df = utils::Getter::get(df_name, data_frames());
-
-  auto vec = std::vector<strings::String>();
-
-  if (role == containers::DataFrame::ROLE_CATEGORICAL) {
-    const auto col = df.int_column(name, role);
-
-    vec.resize(col.nrows());
-
-    for (size_t i = 0; i < col.nrows(); ++i) {
-      vec[i] = categories()[col[i]];
-    }
-  } else if (role == containers::DataFrame::ROLE_JOIN_KEY) {
-    const auto col = df.int_column(name, role);
-
-    vec.resize(col.nrows());
-
-    for (size_t i = 0; i < col.nrows(); ++i) {
-      vec[i] = join_keys_encoding()[col[i]];
-    }
-  } else if (role == containers::DataFrame::ROLE_TEXT) {
-    const auto col = df.text(name);
-
-    vec.resize(col.nrows());
-
-    for (size_t i = 0; i < col.nrows(); ++i) {
-      vec[i] = col[i];
-    }
-  } else if (role == containers::DataFrame::ROLE_UNUSED ||
-             role == containers::DataFrame::ROLE_UNUSED_STRING) {
-    const auto col = df.unused_string(name);
-
-    vec.resize(col.nrows());
-
-    for (size_t i = 0; i < col.nrows(); ++i) {
-      vec[i] = col[i];
-    }
-  } else {
-    throw std::runtime_error("Role '" + role + "' not known!");
-  }
-
-  std::vector<Float> targets;
-
-  if (target_name != "") {
-    const auto target_col = df.float_column(target_name, target_role);
-
-    targets = std::vector<Float>(target_col.begin(), target_col.end());
-  }
-
-  read_lock.unlock();
-
-  std::string json_str;
-
-  if (targets.size() == vec.size()) {
-    json_str = json::to_json(metrics::Summarizer::calc_categorical_column_plot(
-        num_bins, vec, targets));
-  } else {
-    json_str = json::to_json(
-        metrics::Summarizer::calc_categorical_column_plot(num_bins, vec));
-  }
-
-  communication::Sender::send_string("Success!", _socket);
-
-  communication::Sender::send_string(json_str, _socket);
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::calc_column_plots(
-    const typename Command::CalcColumnPlotOp& _cmd,
-    Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
-
-  const auto& df_name = _cmd.get<"df_name_">();
-
-  const auto& role = _cmd.get<"role_">();
-
-  const auto num_bins = _cmd.get<"num_bins_">();
-
-  const auto& target_name = _cmd.get<"target_name_">();
-
-  const auto& target_role = _cmd.get<"target_role_">();
-
-  multithreading::ReadLock read_lock(params_.read_write_lock_);
-
-  const auto& df = utils::Getter::get(df_name, data_frames());
-
-  const auto col = df.float_column(name, role);
-
-  std::vector<const Float*> targets;
-
-  auto target_col = containers::Column<Float>(df.pool());
-
-  if (target_name != "") {
-    target_col = df.float_column(target_name, target_role);
-
-    targets.push_back(target_col.data());
-  }
-
-  const containers::NumericalFeatures features = {
-      helpers::Feature<Float>(col.to_vector_ptr())};
-
-  const auto obj = metrics::Summarizer::calculate_feature_plots(
-      features, col.nrows(), 1, num_bins, targets);
-
-  communication::Sender::send_string("Success!", _socket);
-
-  communication::Sender::send_string(json::to_json(obj), _socket);
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::concat(const typename Command::ConcatDataFramesOp& _cmd,
-                              Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
-
-  const auto data_frame_objs = _cmd.get<"data_frames_">();
-
-  if (data_frame_objs.size() == 0) {
-    throw std::runtime_error(
-        "You should provide at least one data frame or view to "
-        "concatenate!");
-  }
-
-  multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
-
-  const auto pool = params_.options_.make_pool();
-
-  const auto local_categories = fct::Ref<containers::Encoding>::make(
-      pool, params_.categories_.ptr());  // TODO
-
-  const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
-      pool, params_.join_keys_encoding_.ptr());  // TODO
-
-  auto view_parser = ViewParser(local_categories, local_join_keys_encoding,
-                                params_.data_frames_, params_.options_);
-
-  const auto extract_df =
-      [&view_parser](const auto& _cmd) -> containers::DataFrame {
-    return view_parser.parse(_cmd);
-  };
-
-  auto range = data_frame_objs | VIEWS::transform(extract_df);
-
-  auto df = range[0].clone(name);
-
-  for (size_t i = 1; i < RANGES::size(range); ++i) {
-    df.append(range[i]);
-  }
-
-  df.create_indices();
-
-  df.check_plausibility();
-
-  weak_write_lock.upgrade();
-
-  params_.categories_->append(*local_categories);
-
-  params_.join_keys_encoding_->append(*local_join_keys_encoding);
-
-  data_frames()[name] = df;
-
-  weak_write_lock.unlock();
-
-  communication::Sender::send_string("Success!", _socket);
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::df_to_csv(
-    const std::string& _fname, const size_t _batch_size,
-    const std::string& _quotechar, const std::string& _sep,
-    const containers::DataFrame& _df,
-    const fct::Ref<containers::Encoding>& _categories,
-    const fct::Ref<containers::Encoding>& _join_keys_encoding) const {
-  // We are using the bell character (\a) as the quotechar. It is least
-  // likely to appear in any field.
-  auto reader = containers::DataFrameReader(
-      _df, _categories.ptr(), _join_keys_encoding.ptr(), '\a', '|');
-
-  const auto colnames = reader.colnames();
-
-  size_t fnum = 0;
-
-  while (!reader.eof()) {
-    auto fnum_str = std::to_string(++fnum);
-
-    if (fnum_str.size() < 5) {
-      fnum_str = std::string(5 - fnum_str.size(), '0') + fnum_str;
-    }
-
-    const auto current_fname =
-        _batch_size == 0 ? _fname + ".csv" : _fname + "-" + fnum_str + ".csv";
-
-    auto writer =
-        io::CSVWriter(current_fname, _batch_size, colnames, _quotechar, _sep);
-
-    writer.write(&reader);
-  }
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::df_to_db(
-    const std::string& _conn_id, const std::string& _table_name,
-    const containers::DataFrame& _df,
-    const fct::Ref<containers::Encoding>& _categories,
-    const fct::Ref<containers::Encoding>& _join_keys_encoding) const {
-  // We are using the bell character (\a) as the quotechar. It is least
-  // likely to appear in any field.
-  auto reader = containers::DataFrameReader(
-      _df, _categories.ptr(), _join_keys_encoding.ptr(), '\a', '|');
-
-  const auto conn = connector(_conn_id);
-
-  const auto statement = io::StatementMaker::make_statement(
-      _table_name, conn->dialect(), reader.colnames(), reader.coltypes());
-
-  logger().log(statement);
-
-  conn->execute(statement);
-
-  conn->read(_table_name, 0, &reader);
-
-  params_.database_manager_->post_tables();
-}
-
-// ------------------------------------------------------------------------
-
 void DataFrameManager::execute_command(const Command& _command,
                                        Poco::Net::StreamSocket* _socket) {
   const auto handle = [this, _socket](const auto& _cmd) {
     using Type = std::decay_t<decltype(_cmd)>;
 
-    if constexpr (std::is_same<Type, Command::AddFloatColumnOp>()) {
+    if constexpr (std::is_same<Type, Command::FloatColumnOp>()) {
       add_float_column(_cmd, _socket);
-    } else if constexpr (std::is_same<Type, Command::AddStringColumnOp>()) {
+    } else if constexpr (std::is_same<Type, Command::StringColumnOp>()) {
       add_string_column(_cmd, _socket);
-    } else if constexpr (std::is_same<Type, Command::AppendToDataFrameOp>()) {
-      append_to_data_frame(_cmd, _socket);
+    } else if constexpr (std::is_same<Type, Command::AggregationOp>()) {
+      aggregate(_cmd, _socket);
+    } else if constexpr (std::is_same<Type, Command::GetBooleanColumnOp>()) {
+      get_boolean_column(_cmd, _socket);
     } else if constexpr (std::is_same<Type,
-                                      Command::CalcCategoricalColumnPlotOp>()) {
-      calc_categorical_column_plots(_cmd, _socket);
-    } else if constexpr (std::is_same<Type, Command::CalcColumnPlotOp>()) {
-      calc_column_plots(_cmd, _socket);
-    } else if constexpr (std::is_same<Type, Command::ConcatDataFramesOp>()) {
-      concat(_cmd, _socket);
-    } else if constexpr (std::is_same<Type, Command::FreezeDataFrameOp>()) {
-      freeze(_cmd, _socket);
-    } else if constexpr (std::is_same<Type, Command::GetDataFrameOp>()) {
-      get_data_frame(_cmd, _socket);
-    } else if constexpr (std::is_same<Type, Command::GetDataFrameHTMLOp>()) {
-      get_data_frame_html(_cmd, _socket);
-    } else if constexpr (std::is_same<Type, Command::GetDataFrameStringOp>()) {
-      get_data_frame_string(_cmd, _socket);
-    } else if constexpr (std::is_same<Type, Command::GetDataFrameContentOp>()) {
-      get_data_frame_content(_cmd, _socket);
+                                      Command::GetBooleanColumnContentOp>()) {
+      get_boolean_column_content(_cmd, _socket);
+    } else if constexpr (std::is_same<Type,
+                                      Command::GetBooleanColumnNRowsOp>()) {
+      get_boolean_column_nrows(_cmd, _socket);
+    } else if constexpr (std::is_same<Type, Command::GetStringColumnOp>()) {
+      get_categorical_column(_cmd, _socket);
+    } else if constexpr (std::is_same<Type,
+                                      Command::GetStringColumnContentOp>()) {
+      get_categorical_column_content(_cmd, _socket);
+    } else if constexpr (std::is_same<Type,
+                                      Command::GetStringColumnNRowsOp>()) {
+      get_categorical_column_nrows(_cmd, _socket);
+    } else if constexpr (std::is_same<Type,
+                                      Command::GetStringColumnUniqueOp>()) {
+      get_categorical_column_unique(_cmd, _socket);
+    } else if constexpr (std::is_same<Type, Command::GetFloatColumnOp>()) {
+      get_column(_cmd, _socket);
+    } else if constexpr (std::is_same<Type, Command::GetFloatColumnNRowsOp>()) {
+      get_column_nrows(_cmd, _socket);
+    } else if constexpr (std::is_same<Type,
+                                      Command::GetFloatColumnUniqueOp>()) {
+      get_column_unique(_cmd, _socket);
     } else if constexpr (std::is_same<Type,
                                       Command::GetFloatColumnContentOp>()) {
       get_float_column_content(_cmd, _socket);
-    } else if constexpr (std::is_same<Type, Command::GetDataFrameNBytesOp>()) {
-      get_nbytes(_cmd, _socket);
-    } else if constexpr (std::is_same<Type, Command::GetDataFrameNRowsOp>()) {
-      get_nrows(_cmd, _socket);
-    } else if constexpr (std::is_same<Type, Command::LastChangeOp>()) {
-      last_change(_cmd, _socket);
-    } else if constexpr (std::is_same<Type, Command::RefreshDataFrameOp>()) {
-      refresh(_cmd, _socket);
-    } else if constexpr (std::is_same<Type, Command::RemoveColumnOp>()) {
-      remove_column(_cmd, _socket);
-    } else if constexpr (std::is_same<Type, Command::SummarizeDataFrameOp>()) {
-      summarize(_cmd, _socket);
-    } else if constexpr (std::is_same<Type, Command::ToArrowOp>()) {
-      to_arrow(_cmd, _socket);
-    } else if constexpr (std::is_same<Type, Command::ToCSVOp>()) {
-      to_csv(_cmd, _socket);
-    } else if constexpr (std::is_same<Type, Command::ToDBOp>()) {
-      to_db(_cmd, _socket);
-    } else if constexpr (std::is_same<Type, Command::ToParquetOp>()) {
-      to_parquet(_cmd, _socket);
+    } else if constexpr (std::is_same<Type,
+                                      Command::GetFloatColumnSubrolesOp>()) {
+      get_subroles(_cmd, _socket);
+    } else if constexpr (std::is_same<Type,
+                                      Command::GetStringColumnSubrolesOp>()) {
+      get_subroles_categorical(_cmd, _socket);
+    } else if constexpr (std::is_same<Type, Command::GetFloatColumnUnitOp>()) {
+      get_unit(_cmd, _socket);
+    } else if constexpr (std::is_same<Type, Command::GetStringColumnUnitOp>()) {
+      get_unit_categorical(_cmd, _socket);
+    } else if constexpr (std::is_same<Type,
+                                      Command::SetFloatColumnSubrolesOp>()) {
+      set_subroles(_cmd, _socket);
+    } else if constexpr (std::is_same<Type,
+                                      Command::SetStringColumnSubrolesOp>()) {
+      set_subroles_categorical(_cmd, _socket);
+    } else if constexpr (std::is_same<Type, Command::SetFloatColumnUnitOp>()) {
+      set_unit(_cmd, _socket);
+    } else if constexpr (std::is_same<Type, Command::SetStringColumnUnitOp>()) {
+      set_unit_categorical(_cmd, _socket);
     } else {
       []<bool _flag = false>() {
         static_assert(_flag, "Not all cases were covered.");

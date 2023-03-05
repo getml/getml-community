@@ -311,19 +311,11 @@ struct DataFrameCommand {
 
   using NamedTupleType = fct::TaggedUnion<
       "type_", AddFloatColumnOp, AddStringColumnOp, AppendToDataFrameOp,
-      AggregationOp, CalcCategoricalColumnPlotOp, CalcColumnPlotOp,
-      ConcatDataFramesOp, FloatColumnOp, FreezeDataFrameOp, GetBooleanColumnOp,
-      GetBooleanColumnContentOp, GetBooleanColumnNRowsOp, GetDataFrameOp,
-      GetDataFrameContentOp, GetDataFrameHTMLOp, GetDataFrameStringOp,
-      GetDataFrameNBytesOp, GetDataFrameNRowsOp, GetFloatColumnOp,
-      GetFloatColumnContentOp, GetFloatColumnNRowsOp, GetFloatColumnSubrolesOp,
-      GetFloatColumnUniqueOp, GetFloatColumnUnitOp, GetStringColumnOp,
-      GetStringColumnContentOp, GetStringColumnNRowsOp,
-      GetStringColumnSubrolesOp, GetStringColumnUniqueOp, GetStringColumnUnitOp,
-      LastChangeOp, RefreshDataFrameOp, RemoveColumnOp,
-      SetFloatColumnSubrolesOp, SetFloatColumnUnitOp, SetStringColumnSubrolesOp,
-      SetStringColumnUnitOp, SummarizeDataFrameOp, StringColumnOp, ToArrowOp,
-      ToCSVOp, ToDBOp, ToParquetOp>;
+      CalcCategoricalColumnPlotOp, CalcColumnPlotOp, ConcatDataFramesOp,
+      FreezeDataFrameOp, GetDataFrameOp, GetDataFrameContentOp,
+      GetDataFrameHTMLOp, GetDataFrameStringOp, GetDataFrameNBytesOp,
+      GetDataFrameNRowsOp, LastChangeOp, RefreshDataFrameOp, RemoveColumnOp,
+      SummarizeDataFrameOp, ToArrowOp, ToCSVOp, ToDBOp, ToParquetOp>;
 
   static DataFrameCommand from_json(const Poco::JSON::Object& _obj);
 

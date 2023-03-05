@@ -25,7 +25,7 @@
 
 namespace commands {
 
-/// Any command to be handled by the DataFrameManager.
+/// Any command to be handled by the ViewManager.
 struct ViewCommand {
   /// Used as a helper for various commands related to views.
   using ViewCol =
