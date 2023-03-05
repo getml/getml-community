@@ -94,20 +94,20 @@ int main(int argc, char* argv[]) {
       fct::Ref<engine::handlers::DatabaseManager>::make(logger, monitor,
                                                         options);
 
-  const auto data_frame_manager_params =
-      engine::handlers::DataFrameManagerParams{
-          .categories_ = categories,
-          .database_manager_ = database_manager,
-          .data_frames_ = data_frames,
-          .join_keys_encoding_ = join_keys_encoding,
-          .logger_ = logger,
-          .monitor_ = monitor,
-          .options_ = options,
-          .read_write_lock_ = read_write_lock};
+  const auto data_params =
+      fct::Ref<engine::handlers::DataFrameManagerParams>::make(
+          engine::handlers::DataFrameManagerParams{
+              .categories_ = categories,
+              .database_manager_ = database_manager,
+              .data_frames_ = data_frames,
+              .join_keys_encoding_ = join_keys_encoding,
+              .logger_ = logger,
+              .monitor_ = monitor,
+              .options_ = options,
+              .read_write_lock_ = read_write_lock});
 
   const auto data_frame_manager =
-      fct::Ref<engine::handlers::DataFrameManager>::make(
-          data_frame_manager_params);
+      fct::Ref<engine::handlers::DataFrameManager>::make(*data_params);
 
   const auto pipeline_manager_params = engine::handlers::PipelineManagerParams{
       .categories_ = categories,
@@ -159,8 +159,8 @@ int main(int argc, char* argv[]) {
 
   Poco::Net::TCPServer srv(
       new engine::srv::ServerConnectionFactoryImpl(
-          database_manager, data_frame_manager, logger, options,
-          pipeline_manager, project_manager, shutdown_flag),
+          database_manager, data_params, logger, options, pipeline_manager,
+          project_manager, shutdown_flag),
       server_socket);
 
   srv.start();

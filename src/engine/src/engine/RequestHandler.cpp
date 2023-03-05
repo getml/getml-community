@@ -12,7 +12,12 @@
 
 #include <stdexcept>
 
-#include "commands/commands.hpp"
+#include "commands/ColumnCommand.hpp"
+#include "commands/DataFrameCommand.hpp"
+#include "commands/DatabaseCommand.hpp"
+#include "commands/PipelineCommand.hpp"
+#include "commands/ProjectCommand.hpp"
+#include "commands/ViewCommand.hpp"
 #include "fct/extract_discriminators.hpp"
 #include "fct/get.hpp"
 #include "json/json.hpp"
@@ -40,6 +45,9 @@ void RequestHandler::run() {
 
     const auto type = obj->get("type_").toString();
 
+    using ColumnLiteral = fct::extract_discriminators_t<
+        typename commands::ColumnCommand::NamedTupleType>;
+
     using DatabaseLiteral = fct::extract_discriminators_t<
         typename commands::DatabaseCommand::NamedTupleType>;
 
@@ -52,7 +60,14 @@ void RequestHandler::run() {
     using ProjectLiteral = fct::extract_discriminators_t<
         typename commands::ProjectCommand::NamedTupleType>;
 
-    if (DatabaseLiteral::contains(type)) {
+    using ViewLiteral = fct::extract_discriminators_t<
+        typename commands::ViewCommand::NamedTupleType>;
+
+    if (ColumnLiteral::contains(type)) {
+      const auto cmd = commands::ColumnCommand::from_json(*obj);
+      column_manager().execute_command(cmd, &socket());
+
+    } else if (DatabaseLiteral::contains(type)) {
       const auto cmd = commands::DatabaseCommand::from_json(*obj);
       database_manager().execute_command(cmd, &socket());
 
@@ -68,6 +83,10 @@ void RequestHandler::run() {
       const auto cmd = commands::ProjectCommand::from_json(*obj);
       project_manager().execute_command(cmd, &socket());
 
+    } else if (ViewLiteral::contains(type)) {
+      const auto cmd = commands::ViewCommand::from_json(*obj);
+      view_manager().execute_command(cmd, &socket());
+
     } else if (type == "is_alive") {
       return;
 
@@ -81,7 +100,6 @@ void RequestHandler::run() {
     } else {
       throw std::runtime_error("Unknown type: '" + type + "'!");
     }
-
   } catch (std::exception& e) {
     logger_->log(std::string("Error: ") + e.what());
 
