@@ -14,6 +14,7 @@
 #include "engine/handlers/AggOpParser.hpp"
 #include "engine/handlers/ArrowHandler.hpp"
 #include "engine/handlers/BoolOpParser.hpp"
+#include "engine/handlers/ColumnManager.hpp"
 #include "engine/handlers/FloatOpParser.hpp"
 #include "engine/handlers/StringOpParser.hpp"
 #include "engine/handlers/ViewParser.hpp"
@@ -130,37 +131,6 @@ void DataFrameManager::add_float_column(
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::add_float_column(
-    const typename Command::FloatColumnOp& _cmd,
-    Poco::Net::StreamSocket* _socket) {
-  const auto& df_name = _cmd.get<"df_name_">();
-
-  multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
-
-  auto [df, exists] = utils::Getter::get_if_exists(df_name, &data_frames());
-
-  if (exists) {
-    recv_and_add_float_column(_cmd, df, &weak_write_lock, _socket);
-
-  } else {
-    const auto pool = params_.options_.make_pool();
-
-    auto new_df =
-        containers::DataFrame(df_name, params_.categories_.ptr(),
-                              params_.join_keys_encoding_.ptr(), pool);
-
-    recv_and_add_float_column(_cmd, &new_df, &weak_write_lock, _socket);
-
-    data_frames()[df_name] = new_df;
-
-    data_frames()[df_name].create_indices();
-  }
-
-  communication::Sender::send_string("Success!", _socket);
-}
-
-// ------------------------------------------------------------------------
-
 void DataFrameManager::add_float_column_to_df(
     const std::string& _role, const containers::Column<Float>& _col,
     containers::DataFrame* _df,
@@ -246,37 +216,6 @@ void DataFrameManager::add_int_column_to_df(
 // ------------------------------------------------------------------------
 
 void DataFrameManager::add_string_column(
-    const typename Command::StringColumnOp& _cmd,
-    Poco::Net::StreamSocket* _socket) {
-  const auto& df_name = _cmd.get<"df_name_">();
-
-  multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
-
-  auto [df, exists] = utils::Getter::get_if_exists(df_name, &data_frames());
-
-  if (exists) {
-    recv_and_add_string_column(_cmd, df, &weak_write_lock, _socket);
-
-  } else {
-    const auto pool = params_.options_.make_pool();
-
-    auto new_df =
-        containers::DataFrame(df_name, params_.categories_.ptr(),
-                              params_.join_keys_encoding_.ptr(), pool);
-
-    recv_and_add_string_column(_cmd, &new_df, &weak_write_lock, _socket);
-
-    data_frames()[df_name] = new_df;
-
-    data_frames()[df_name].create_indices();
-  }
-
-  communication::Sender::send_string("Success!", _socket);
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::add_string_column(
     const typename Command::AddStringColumnOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
@@ -354,27 +293,6 @@ void DataFrameManager::add_string_column_to_df(
   }
 
   _df->add_string_column(col, _role);
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::aggregate(const typename Command::AggregationOp& _cmd,
-                                 Poco::Net::StreamSocket* _socket) {
-  const auto& aggregation = _cmd.get<"aggregation_">();
-
-  auto response = containers::Column<Float>(nullptr, 1);
-
-  multithreading::ReadLock read_lock(params_.read_write_lock_);
-
-  response[0] = AggOpParser(params_.categories_, params_.join_keys_encoding_,
-                            params_.data_frames_)
-                    .aggregate(aggregation);
-
-  read_lock.unlock();
-
-  communication::Sender::send_string("Success!", _socket);
-
-  communication::Sender::send_column(response, _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -1115,271 +1033,6 @@ void DataFrameManager::from_view(const typename Command::AddDfFromViewOp& _cmd,
 
 // ------------------------------------------------------------------------
 
-void DataFrameManager::get_boolean_column(
-    const typename Command::GetBooleanColumnOp& _cmd,
-    Poco::Net::StreamSocket* _socket) {
-  const auto json_col = _cmd.get<"col_">();
-
-  multithreading::ReadLock read_lock(params_.read_write_lock_);
-
-  const auto column_view =
-      BoolOpParser(params_.categories_, params_.join_keys_encoding_,
-                   params_.data_frames_)
-          .parse(json_col);
-
-  if (column_view.is_infinite()) {
-    throw std::runtime_error(
-        "The length of the column view is infinite! You can look at "
-        "the column view, "
-        "but you cannot retrieve it.");
-  }
-
-  const auto array = column_view.to_array(0, std::nullopt, false);
-
-  read_lock.unlock();
-
-  const auto field = arrow::field("column", arrow::boolean());
-
-  handlers::ArrowHandler(params_.categories_, params_.join_keys_encoding_,
-                         params_.options_)
-      .send_array(array, field, _socket);
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::get_boolean_column_content(
-    const typename Command::GetBooleanColumnContentOp& _cmd,
-    Poco::Net::StreamSocket* _socket) {
-  const auto draw = _cmd.get<"draw_">();
-
-  const auto length = _cmd.get<"length_">();
-
-  const auto start = _cmd.get<"start_">();
-
-  const auto& json_col = _cmd.get<"col_">();
-
-  multithreading::ReadLock read_lock(params_.read_write_lock_);
-
-  const auto column_view =
-      BoolOpParser(params_.categories_, params_.join_keys_encoding_,
-                   params_.data_frames_)
-          .parse(json_col);
-
-  const auto data_ptr = column_view.to_vector(start, length, false);
-
-  assert_true(data_ptr);
-
-  const auto nrows = std::holds_alternative<size_t>(column_view.nrows())
-                         ? std::get<size_t>(column_view.nrows())
-                         : length;
-
-  const auto col_str =
-      make_column_string<bool>(draw, nrows, data_ptr->begin(), data_ptr->end());
-
-  communication::Sender::send_string(col_str, _socket);
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::get_boolean_column_nrows(
-    const typename Command::GetBooleanColumnNRowsOp& _cmd,
-    Poco::Net::StreamSocket* _socket) {
-  const auto& json_col = _cmd.get<"col_">();
-
-  multithreading::ReadLock read_lock(params_.read_write_lock_);
-
-  const auto column_view =
-      BoolOpParser(params_.categories_, params_.join_keys_encoding_,
-                   params_.data_frames_)
-          .parse(json_col);
-
-  read_lock.unlock();
-
-  communication::Sender::send_string("Found!", _socket);
-
-  communication::Sender::send_string(column_view.nrows_to_str(), _socket);
-}
-// ------------------------------------------------------------------------
-
-void DataFrameManager::get_categorical_column(
-    const typename Command::GetStringColumnOp& _cmd,
-    Poco::Net::StreamSocket* _socket) {
-  const auto& json_col = _cmd.get<"col_">();
-
-  multithreading::ReadLock read_lock(params_.read_write_lock_);
-
-  const auto column_view =
-      StringOpParser(params_.categories_, params_.join_keys_encoding_,
-                     params_.data_frames_)
-          .parse(json_col);
-
-  if (column_view.is_infinite()) {
-    throw std::runtime_error(
-        "The length of the column view is infinite! You can look at "
-        "the column view, "
-        "but you cannot retrieve it.");
-  }
-
-  const auto array = column_view.to_array(0, std::nullopt, false);
-
-  read_lock.unlock();
-
-  const auto field = arrow::field("column", arrow::utf8());
-
-  handlers::ArrowHandler(params_.categories_, params_.join_keys_encoding_,
-                         params_.options_)
-      .send_array(array, field, _socket);
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::get_categorical_column_content(
-    const typename Command::GetStringColumnContentOp& _cmd,
-    Poco::Net::StreamSocket* _socket) {
-  const auto draw = _cmd.get<"draw_">();
-
-  const auto length = _cmd.get<"length_">();
-
-  const auto start = _cmd.get<"start_">();
-
-  const auto& json_col = _cmd.get<"col_">();
-
-  multithreading::ReadLock read_lock(params_.read_write_lock_);
-
-  const auto column_view =
-      StringOpParser(params_.categories_, params_.join_keys_encoding_,
-                     params_.data_frames_)
-          .parse(json_col);
-
-  const auto data_ptr = column_view.to_vector(start, length, false);
-
-  assert_true(data_ptr);
-
-  const auto nrows = std::holds_alternative<size_t>(column_view.nrows())
-                         ? std::get<size_t>(column_view.nrows())
-                         : length;
-
-  const auto col_str = make_column_string<strings::String>(
-      draw, nrows, data_ptr->begin(), data_ptr->end());
-
-  communication::Sender::send_string(col_str, _socket);
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::get_categorical_column_nrows(
-    const typename Command::GetStringColumnNRowsOp& _cmd,
-    Poco::Net::StreamSocket* _socket) {
-  const auto& json_col = _cmd.get<"col_">();
-
-  multithreading::ReadLock read_lock(params_.read_write_lock_);
-
-  const auto column_view =
-      StringOpParser(params_.categories_, params_.join_keys_encoding_,
-                     params_.data_frames_)
-          .parse(json_col);
-
-  read_lock.unlock();
-
-  communication::Sender::send_string("Found!", _socket);
-
-  communication::Sender::send_string(column_view.nrows_to_str(), _socket);
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::get_categorical_column_unique(
-    const typename Command::GetStringColumnUniqueOp& _cmd,
-    Poco::Net::StreamSocket* _socket) {
-  const auto json_col = _cmd.get<"col_">();
-
-  multithreading::ReadLock read_lock(params_.read_write_lock_);
-
-  const auto column_view =
-      StringOpParser(params_.categories_, params_.join_keys_encoding_,
-                     params_.data_frames_)
-          .parse(json_col);
-
-  const auto array = column_view.unique();
-
-  read_lock.unlock();
-
-  const auto field = arrow::field("column", arrow::utf8());
-
-  handlers::ArrowHandler(params_.categories_, params_.join_keys_encoding_,
-                         params_.options_)
-      .send_array(array, field, _socket);
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::get_column(
-    const typename Command::GetFloatColumnOp& _cmd,
-    Poco::Net::StreamSocket* _socket) {
-  const auto& json_col = _cmd.get<"col_">();
-
-  multithreading::ReadLock read_lock(params_.read_write_lock_);
-
-  const auto column_view =
-      FloatOpParser(params_.categories_, params_.join_keys_encoding_,
-                    params_.data_frames_)
-          .parse(json_col);
-
-  if (column_view.is_infinite()) {
-    throw std::runtime_error(
-        "The length of the column view is infinite! You can look at "
-        "the column view, "
-        "but you cannot retrieve it.");
-  }
-
-  const auto array = column_view.to_array(0, std::nullopt, false);
-
-  read_lock.unlock();
-
-  const auto field =
-      column_view.unit().find("time stamp") != std::string::npos
-          ? arrow::field("column", arrow::timestamp(arrow::TimeUnit::NANO))
-          : arrow::field("column", arrow::float64());
-
-  handlers::ArrowHandler(params_.categories_, params_.join_keys_encoding_,
-                         params_.options_)
-      .send_array(array, field, _socket);
-
-  communication::Sender::send_string("Success!", _socket);
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::get_column_unique(
-    const typename Command::GetFloatColumnUniqueOp& _cmd,
-    Poco::Net::StreamSocket* _socket) {
-  const auto& json_col = _cmd.get<"col_">();
-
-  multithreading::ReadLock read_lock(params_.read_write_lock_);
-
-  const auto column_view =
-      FloatOpParser(params_.categories_, params_.join_keys_encoding_,
-                    params_.data_frames_)
-          .parse(json_col);
-
-  const auto array = column_view.unique();
-
-  read_lock.unlock();
-
-  const auto field =
-      column_view.unit().find("time stamp") != std::string::npos
-          ? arrow::field("column", arrow::timestamp(arrow::TimeUnit::NANO))
-          : arrow::field("column", arrow::float64());
-
-  handlers::ArrowHandler(params_.categories_, params_.join_keys_encoding_,
-                         params_.options_)
-      .send_array(array, field, _socket);
-
-  communication::Sender::send_string("Success!", _socket);
-}
-
-// ------------------------------------------------------------------------
-
 void DataFrameManager::get_data_frame_content(
     const typename Command::GetDataFrameContentOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
@@ -1400,27 +1053,6 @@ void DataFrameManager::get_data_frame_content(
   read_lock.unlock();
 
   communication::Sender::send_string(json::to_json(content), _socket);
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::get_column_nrows(
-    const typename Command::GetFloatColumnNRowsOp& _cmd,
-    Poco::Net::StreamSocket* _socket) {
-  const auto& json_col = _cmd.get<"col_">();
-
-  multithreading::ReadLock read_lock(params_.read_write_lock_);
-
-  const auto column_view =
-      FloatOpParser(params_.categories_, params_.join_keys_encoding_,
-                    params_.data_frames_)
-          .parse(json_col);
-
-  read_lock.unlock();
-
-  communication::Sender::send_string("Found!", _socket);
-
-  communication::Sender::send_string(column_view.nrows_to_str(), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -1485,12 +1117,12 @@ void DataFrameManager::get_data_frame(
       using Type = std::decay_t<decltype(_cmd)>;
       if constexpr (std::is_same<Type, typename commands::DataFrameCommand::
                                            GetStringColumnOp>()) {
-        get_categorical_column(_cmd, _socket);
+        ColumnManager(params_).get_categorical_column(_cmd, _socket);
         return false;
       } else if constexpr (std::is_same<Type,
                                         typename commands::DataFrameCommand::
                                             GetFloatColumnOp>()) {
-        get_column(_cmd, _socket);
+        ColumnManager(params_).get_column(_cmd, _socket);
         return false;
       } else if constexpr (std::is_same<Type, CloseDataFrameOp>()) {
         communication::Sender::send_string("Success!", _socket);
@@ -1504,38 +1136,6 @@ void DataFrameManager::get_data_frame(
       break;
     }
   }
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::get_float_column_content(
-    const typename Command::GetFloatColumnContentOp& _cmd,
-    Poco::Net::StreamSocket* _socket) {
-  const auto draw = _cmd.get<"draw_">();
-
-  const auto length = _cmd.get<"length_">();
-
-  const auto start = _cmd.get<"start_">();
-
-  const auto& json_col = _cmd.get<"col_">();
-
-  multithreading::ReadLock read_lock(params_.read_write_lock_);
-
-  const auto column_view =
-      FloatOpParser(params_.categories_, params_.join_keys_encoding_,
-                    params_.data_frames_)
-          .parse(json_col);
-
-  const auto col = column_view.to_column(start, length, false);
-
-  const auto nrows = std::holds_alternative<size_t>(column_view.nrows())
-                         ? std::get<size_t>(column_view.nrows())
-                         : length;
-
-  const auto col_str =
-      make_column_string<Float>(draw, nrows, col.begin(), col.end());
-
-  communication::Sender::send_string(col_str, _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -1568,92 +1168,6 @@ void DataFrameManager::get_nrows(
   communication::Sender::send_string("Found!", _socket);
 
   communication::Sender::send_string(std::to_string(df.nrows()), _socket);
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::get_subroles(
-    const typename Command::GetFloatColumnSubrolesOp& _cmd,
-    Poco::Net::StreamSocket* _socket) {
-  const auto& json_col = _cmd.get<"col_">();
-
-  multithreading::ReadLock read_lock(params_.read_write_lock_);
-
-  const auto column_view =
-      FloatOpParser(params_.categories_, params_.join_keys_encoding_,
-                    params_.data_frames_)
-          .parse(json_col);
-
-  read_lock.unlock();
-
-  communication::Sender::send_string("Success!", _socket);
-
-  communication::Sender::send_categorical_column(column_view.subroles(),
-                                                 _socket);
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::get_subroles_categorical(
-    const typename Command::GetStringColumnSubrolesOp& _cmd,
-    Poco::Net::StreamSocket* _socket) {
-  const auto& json_col = _cmd.get<"col_">();
-
-  multithreading::ReadLock read_lock(params_.read_write_lock_);
-
-  const auto column_view =
-      StringOpParser(params_.categories_, params_.join_keys_encoding_,
-                     params_.data_frames_)
-          .parse(json_col);
-
-  read_lock.unlock();
-
-  communication::Sender::send_string("Success!", _socket);
-
-  communication::Sender::send_categorical_column(column_view.subroles(),
-                                                 _socket);
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::get_unit(
-    const typename Command::GetFloatColumnUnitOp& _cmd,
-    Poco::Net::StreamSocket* _socket) {
-  const auto& json_col = _cmd.get<"col_">();
-
-  multithreading::ReadLock read_lock(params_.read_write_lock_);
-
-  const auto column_view =
-      FloatOpParser(params_.categories_, params_.join_keys_encoding_,
-                    params_.data_frames_)
-          .parse(json_col);
-
-  read_lock.unlock();
-
-  communication::Sender::send_string("Success!", _socket);
-
-  communication::Sender::send_string(column_view.unit(), _socket);
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::get_unit_categorical(
-    const typename Command::GetStringColumnUnitOp& _cmd,
-    Poco::Net::StreamSocket* _socket) {
-  const auto& json_col = _cmd.get<"col_">();
-
-  multithreading::ReadLock read_lock(params_.read_write_lock_);
-
-  const auto column_view =
-      StringOpParser(params_.categories_, params_.join_keys_encoding_,
-                     params_.data_frames_)
-          .parse(json_col);
-
-  read_lock.unlock();
-
-  communication::Sender::send_string("Success!", _socket);
-
-  communication::Sender::send_string(column_view.unit(), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -1822,136 +1336,6 @@ void DataFrameManager::remove_column(
     throw std::runtime_error("Could not remove column. Column named '" + name +
                              "' not found.");
   }
-
-  communication::Sender::send_string("Success!", _socket);
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::set_subroles(
-    const typename Command::SetFloatColumnSubrolesOp& _cmd,
-    Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
-
-  const auto& role = _cmd.get<"role_">();
-
-  const auto& df_name = _cmd.get<"df_name_">();
-
-  const auto& subroles = _cmd.get<"subroles_">();
-
-  multithreading::WriteLock write_lock(params_.read_write_lock_);
-
-  auto& df = utils::Getter::get(df_name, &data_frames());
-
-  auto column = df.float_column(name, role);
-
-  column.set_subroles(subroles);
-
-  df.add_float_column(column, role);
-
-  write_lock.unlock();
-
-  communication::Sender::send_string("Success!", _socket);
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::set_subroles_categorical(
-    const typename Command::SetStringColumnSubrolesOp& _cmd,
-    Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
-
-  const auto& role = _cmd.get<"role_">();
-
-  const auto& df_name = _cmd.get<"df_name_">();
-
-  const auto& subroles = _cmd.get<"subroles_">();
-
-  multithreading::WriteLock write_lock(params_.read_write_lock_);
-
-  auto& df = utils::Getter::get(df_name, &data_frames());
-
-  if (role == containers::DataFrame::ROLE_UNUSED ||
-      role == containers::DataFrame::ROLE_UNUSED_STRING) {
-    auto column = df.unused_string(name);
-    column.set_subroles(subroles);
-    df.add_string_column(column, role);
-  } else if (role == containers::DataFrame::ROLE_TEXT) {
-    auto column = df.text(name);
-    column.set_subroles(subroles);
-    df.add_string_column(column, role);
-  } else {
-    auto column = df.int_column(name, role);
-    column.set_subroles(subroles);
-    df.add_int_column(column, role);
-  }
-
-  write_lock.unlock();
-
-  communication::Sender::send_string("Success!", _socket);
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::set_unit(
-    const typename Command::SetFloatColumnUnitOp& _cmd,
-    Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
-
-  const auto& role = _cmd.get<"role_">();
-
-  const auto& df_name = _cmd.get<"df_name_">();
-
-  const auto& unit = _cmd.get<"unit_">();
-
-  multithreading::WriteLock write_lock(params_.read_write_lock_);
-
-  auto& df = utils::Getter::get(df_name, &data_frames());
-
-  auto column = df.float_column(name, role);
-
-  column.set_unit(unit);
-
-  df.add_float_column(column, role);
-
-  write_lock.unlock();
-
-  communication::Sender::send_string("Success!", _socket);
-}
-
-// ------------------------------------------------------------------------
-
-void DataFrameManager::set_unit_categorical(
-    const typename Command::SetStringColumnUnitOp& _cmd,
-    Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
-
-  const auto& role = _cmd.get<"role_">();
-
-  const auto& df_name = _cmd.get<"df_name_">();
-
-  const auto& unit = _cmd.get<"unit_">();
-
-  multithreading::WriteLock write_lock(params_.read_write_lock_);
-
-  auto& df = utils::Getter::get(df_name, &data_frames());
-
-  if (role == containers::DataFrame::ROLE_UNUSED ||
-      role == containers::DataFrame::ROLE_UNUSED_STRING) {
-    auto column = df.unused_string(name);
-    column.set_unit(unit);
-    df.add_string_column(column, role);
-  } else if (role == containers::DataFrame::ROLE_TEXT) {
-    auto column = df.text(name);
-    column.set_unit(unit);
-    df.add_string_column(column, role);
-  } else {
-    auto column = df.int_column(name, role);
-    column.set_unit(unit);
-    df.add_int_column(column, role);
-  }
-
-  write_lock.unlock();
 
   communication::Sender::send_string("Success!", _socket);
 }
