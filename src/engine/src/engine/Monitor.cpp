@@ -1,22 +1,17 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/communication/Monitor.hpp"
-
-// ------------------------------------------------------------------------
 
 #include "engine/communication/Receiver.hpp"
 #include "engine/communication/Sender.hpp"
 
-// ------------------------------------------------------------------------
-
 namespace engine {
 namespace communication {
-// ------------------------------------------------------------------------
 
 std::shared_ptr<Poco::Net::StreamSocket> Monitor::connect(
     const bool _timeout) const {
@@ -48,23 +43,14 @@ void Monitor::log(const std::string& _msg) const {
 
 // ------------------------------------------------------------------------
 
-std::string Monitor::make_cmd(const std::string& _type,
-                              const Poco::JSON::Object& _body) const {
-  auto cmd = Poco::JSON::Object();
-
-  cmd.set("body_", _body);
-
-  cmd.set("project_", options_.engine().project_);
-
-  cmd.set("type_", _type);
-
-  return JSON::stringify(cmd);
+std::string Monitor::make_cmd(const std::string& _type) const {
+  return make_cmd(_type, fct::NamedTuple<>());
 }
 
 // ------------------------------------------------------------------------
 
 std::string Monitor::send_tcp(const std::string& _type,
-                              const Poco::JSON::Object& _body,
+                              const std::string& _body,
                               const bool _timeout) const {
   try {
     const auto socket = connect(_timeout);
@@ -77,6 +63,13 @@ std::string Monitor::send_tcp(const std::string& _type,
   } catch (std::exception& e) {
     return std::string("Connection with the getML monitor failed: ") + e.what();
   }
+}
+
+// ------------------------------------------------------------------------
+
+std::string Monitor::send_tcp(const std::string& _type,
+                              const bool _timeout) const {
+  return send_tcp(_type, make_cmd(_type), _timeout);
 }
 
 // ------------------------------------------------------------------------
@@ -104,6 +97,5 @@ void Monitor::shutdown_when_monitor_dies(const Monitor _monitor) {
   }
 }
 
-// ------------------------------------------------------------------------
 }  // namespace communication
 }  // namespace engine
