@@ -8,7 +8,6 @@
 #ifndef ENGINE_HANDLERS_DATAFRAMEMANAGERPARAMS_HPP_
 #define ENGINE_HANDLERS_DATAFRAMEMANAGERPARAMS_HPP_
 
-#include <Poco/JSON/Object.h>
 #include <Poco/Net/StreamSocket.h>
 
 #include <map>

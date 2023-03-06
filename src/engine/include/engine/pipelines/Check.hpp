@@ -8,8 +8,6 @@
 #ifndef ENGINE_PIPELINES_CHECK_HPP_
 #define ENGINE_PIPELINES_CHECK_HPP_
 
-#include <Poco/JSON/Object.h>
-
 #include "commands/FeatureLearnerFingerprint.hpp"
 #include "commands/PredictorFingerprint.hpp"
 #include "commands/WarningFingerprint.hpp"

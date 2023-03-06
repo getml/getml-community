@@ -8,8 +8,6 @@
 #ifndef ENGINE_HANDLERS_STRINGOPPARSER_HPP_
 #define ENGINE_HANDLERS_STRINGOPPARSER_HPP_
 
-#include <Poco/JSON/Object.h>
-
 #include <map>
 #include <memory>
 #include <string>

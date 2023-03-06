@@ -8,20 +8,13 @@
 #ifndef IO_STATEMENTMAKER_HPP_
 #define IO_STATEMENTMAKER_HPP_
 
-#include <Poco/JSON/Object.h>
-
 #include <string>
 #include <vector>
 
 #include "debug/debug.hpp"
 #include "fct/fct.hpp"
 #include "helpers/StringSplitter.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "io/Datatype.hpp"
-
-// ----------------------------------------------------------------------------
 
 namespace io {
 

@@ -142,11 +142,6 @@ class PipelineManager {
       const pipelines::Pipeline& _pipeline, const std::string& _name,
       const fct::NamedTuple<fct::Field<"http_request_", bool>>& _cmd) const;
 
-  /// Retrieves an Poco::JSON::Array::Ptr from a scores object.
-  Poco::JSON::Array::Ptr get_array(const Poco::JSON::Object& _scores,
-                                   const std::string& _name,
-                                   const unsigned int _target_num) const;
-
   /// Retrieves the scores from the pipeline, adding set_used if available.
   Poco::JSON::Object get_scores(const pipelines::Pipeline& _pipeline) const;
 

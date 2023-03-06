@@ -8,8 +8,6 @@
 #ifndef ENGINE_FEATURELEARNERS_FITPARAMS_HPP_
 #define ENGINE_FEATURELEARNERS_FITPARAMS_HPP_
 
-#include <Poco/JSON/Object.h>
-
 #include <memory>
 #include <optional>
 #include <string>
