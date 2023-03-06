@@ -1,36 +1,28 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_HANDLERS_FILEHANDLER_HPP_
 #define ENGINE_HANDLERS_FILEHANDLER_HPP_
 
-// ------------------------------------------------------------------------
-
 #include <Poco/File.h>
 #include <Poco/JSON/Object.h>
-
-// ------------------------------------------------------------------------
+#include <Poco/Path.h>
 
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
 
-// ------------------------------------------------------------------------
-
 #include "engine/config/config.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/pipelines/pipelines.hpp"
 
-// ------------------------------------------------------------------------
-
 namespace engine {
 namespace handlers {
-// ------------------------------------------------------------------------
 
 struct FileHandler {
   /// Creates a project directory, including the subfolders

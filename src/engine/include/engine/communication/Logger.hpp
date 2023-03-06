@@ -18,8 +18,6 @@
 namespace engine {
 namespace communication {
 
-// ------------------------------------------------------------------------
-
 class Logger : public logging::AbstractLogger {
  public:
   Logger(const std::shared_ptr<const Monitor>& _monitor) : monitor_(_monitor) {
@@ -28,21 +26,14 @@ class Logger : public logging::AbstractLogger {
 
   ~Logger() = default;
 
-  // --------------------------------------------------------
-
   /// Logs current events.
   void log(const std::string& _msg) const final;
-
-  // ----------------------------------------------------
 
  private:
   /// The Monitor is supposed to monitor all of the logs as well.
   const std::shared_ptr<const Monitor> monitor_;
-
-  // ----------------------------------------------------
 };
 
-// ------------------------------------------------------------------------
 }  // namespace communication
 }  // namespace engine
 
