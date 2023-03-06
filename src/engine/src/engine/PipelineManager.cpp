@@ -463,28 +463,6 @@ void PipelineManager::fit(const typename Command::FitOp& _cmd,
 
 // ------------------------------------------------------------------------
 
-Poco::JSON::Array::Ptr PipelineManager::get_array(
-    const Poco::JSON::Object& _scores, const std::string& _name,
-    const unsigned int _target_num) const {
-  const auto arr = JSON::get_array(_scores, _name);
-
-  if (static_cast<size_t>(_target_num) >= arr->size()) {
-    std::string msg = "target_num_ out of bounds! Got " +
-                      std::to_string(_target_num) + ", but '" + _name +
-                      "' has " + std::to_string(arr->size()) + " entries.";
-
-    if (arr->size() == 0) {
-      msg += " Did you maybe for get to call .score(...)?";
-    }
-
-    throw std::runtime_error(msg);
-  }
-
-  return arr->getArray(_target_num);
-}
-
-// ------------------------------------------------------------------------
-
 Poco::JSON::Object PipelineManager::get_scores(
     const pipelines::Pipeline& _pipeline) const {
   const auto scores = _pipeline.scores();

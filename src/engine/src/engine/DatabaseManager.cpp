@@ -265,11 +265,12 @@ void DatabaseManager::get_content(const typename Command::GetContentOp& _cmd,
 
   const auto& name = _cmd.get<"name_">();
 
-  auto obj = connector(conn_id)->get_content(name, draw, start, length);
+  const auto table_content =
+      connector(conn_id)->get_content(name, draw, start, length);
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(JSON::stringify(obj), _socket);
+  communication::Sender::send_string(json::to_json(table_content), _socket);
 }
 
 // ------------------------------------------------------------------------

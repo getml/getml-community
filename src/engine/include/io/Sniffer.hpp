@@ -8,8 +8,6 @@
 #ifndef IO_SNIFFER_HPP_
 #define IO_SNIFFER_HPP_
 
-#include <Poco/JSON/Object.h>
-
 #include <memory>
 #include <optional>
 #include <string>

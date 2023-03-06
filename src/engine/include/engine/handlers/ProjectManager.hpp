@@ -8,7 +8,6 @@
 #ifndef ENGINE_HANDLERS_PROJECTMANAGER_HPP_
 #define ENGINE_HANDLERS_PROJECTMANAGER_HPP_
 
-#include <Poco/JSON/Object.h>
 #include <Poco/Net/StreamSocket.h>
 
 #include <map>
@@ -152,9 +151,6 @@ class ProjectManager {
   /// Deletes all pipelines and data frames (from memory only) and clears all
   /// encodings.
   void clear();
-
-  /// Loads a JSON object from a file.
-  Poco::JSON::Object load_json_obj(const std::string& _fname) const;
 
  private:
   /// Trivial accessor
