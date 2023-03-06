@@ -8,6 +8,7 @@
 #include "database/MySQL.hpp"
 
 #include "database/CSVBuffer.hpp"
+#include "database/ContentGetter.hpp"
 #include "json/json.hpp"
 #include "jsonutils/jsonutils.hpp"
 
@@ -134,36 +135,11 @@ std::vector<io::Datatype> MySQL::get_coltypes(
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object MySQL::get_content(const std::string& _tname,
-                                      const std::int32_t _draw,
-                                      const std::int32_t _start,
-                                      const std::int32_t _length) {
-  // ----------------------------------------
-
-  const auto nrows = get_nrows(_tname);
-
-  const auto colnames = get_colnames(_tname);
-
-  const auto ncols = colnames.size();
-
-  // ----------------------------------------
-
-  Poco::JSON::Object obj;
-
-  // ----------------------------------------
-
-  obj.set("draw", _draw);
-
-  obj.set("recordsTotal", nrows);
-
-  obj.set("recordsFiltered", nrows);
-
-  if (nrows == 0) {
-    obj.set("data", Poco::JSON::Array());
-    return obj;
-  }
-
-  // ----------------------------------------
+TableContent MySQL::get_content(const std::string& _tname,
+                                const std::int32_t _draw,
+                                const std::int32_t _start,
+                                const std::int32_t _length) {
+  const auto nrows = static_cast<std::int32_t>(get_nrows(_tname));
 
   if (_length < 0) {
     throw std::runtime_error("length must be positive!");
@@ -177,42 +153,18 @@ Poco::JSON::Object MySQL::get_content(const std::string& _tname,
     throw std::runtime_error("start must be smaller than number of rows!");
   }
 
-  // ----------------------------------------
+  const auto colnames = get_colnames(_tname);
 
-  const auto begin = _start;
+  const auto ncols = colnames.size();
 
   const auto end = (_start + _length > nrows) ? nrows : _start + _length;
 
-  const auto query = make_get_content_query(_tname, colnames, begin, end);
+  const auto query = make_get_content_query(_tname, colnames, _start, end);
 
-  // ----------------------------------------
+  const auto iter =
+      fct::Ref<MySQLIterator>::make(make_connection(), query, time_formats_);
 
-  auto iterator =
-      std::make_shared<MySQLIterator>(make_connection(), query, time_formats_);
-
-  // ----------------------------------------
-
-  Poco::JSON::Array data;
-
-  for (auto i = begin; i < end; ++i) {
-    Poco::JSON::Array row;
-
-    for (size_t j = 0; j < ncols; ++j) {
-      row.add(iterator->get_string());
-    }
-
-    data.add(row);
-  }
-
-  // ----------------------------------------
-
-  obj.set("data", data);
-
-  // ----------------------------------------
-
-  return obj;
-
-  // ----------------------------------------
+  return ContentGetter::get_content(iter, _draw, end - _start, nrows, ncols);
 }
 
 // ----------------------------------------------------------------------------

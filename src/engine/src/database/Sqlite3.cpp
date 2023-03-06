@@ -7,6 +7,7 @@
 
 #include "database/Sqlite3.hpp"
 
+#include "database/ContentGetter.hpp"
 #include "json/json.hpp"
 
 namespace database {
@@ -156,28 +157,11 @@ std::vector<io::Datatype> Sqlite3::get_coltypes(
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object Sqlite3::get_content(const std::string& _tname,
-                                        const std::int32_t _draw,
-                                        const std::int32_t _start,
-                                        const std::int32_t _length) {
-  const auto nrows = get_nrows(_tname);
-
-  const auto colnames = get_colnames(_tname);
-
-  const auto ncols = colnames.size();
-
-  Poco::JSON::Object obj;
-
-  obj.set("draw", _draw);
-
-  obj.set("recordsTotal", nrows);
-
-  obj.set("recordsFiltered", nrows);
-
-  if (nrows == 0) {
-    obj.set("data", Poco::JSON::Array());
-    return obj;
-  }
+TableContent Sqlite3::get_content(const std::string& _tname,
+                                  const std::int32_t _draw,
+                                  const std::int32_t _start,
+                                  const std::int32_t _length) {
+  const auto nrows = static_cast<std::int32_t>(get_nrows(_tname));
 
   if (_length < 0) {
     throw std::runtime_error("length must be positive!");
@@ -191,30 +175,18 @@ Poco::JSON::Object Sqlite3::get_content(const std::string& _tname,
     throw std::runtime_error("start must be smaller than number of rows!");
   }
 
-  const auto begin = _start;
+  const auto colnames = get_colnames(_tname);
+
+  const auto ncols = colnames.size();
 
   const auto end = (_start + _length > nrows) ? nrows : _start + _length;
 
-  const auto where = std::string("rowid > ") + std::to_string(begin) +
+  const auto where = std::string("rowid > ") + std::to_string(_start) +
                      std::string(" AND rowid <= ") + std::to_string(end);
 
-  auto iterator = select(colnames, _tname, where);
+  const auto iter = select(colnames, _tname, where);
 
-  Poco::JSON::Array data;
-
-  while (!iterator->end()) {
-    Poco::JSON::Array row;
-
-    for (size_t i = 0; i < ncols; ++i) {
-      row.add(iterator->get_string());
-    }
-
-    data.add(row);
-  }
-
-  obj.set("data", data);
-
-  return obj;
+  return ContentGetter::get_content(iter, _draw, end - _start, nrows, ncols);
 }
 
 // ----------------------------------------------------------------------------

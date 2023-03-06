@@ -18,6 +18,7 @@
 #include "database/Connector.hpp"
 #include "database/DatabaseParser.hpp"
 #include "database/MySQLIterator.hpp"
+#include "database/TableContent.hpp"
 #include "io/io.hpp"
 #include "jsonutils/jsonutils.hpp"
 
@@ -62,10 +63,9 @@ class MySQL : public Connector {
 
   /// Returns the content of a table in a format that is compatible
   /// with the DataTables.js server-side processing API.
-  Poco::JSON::Object get_content(const std::string& _tname,
-                                 const std::int32_t _draw,
-                                 const std::int32_t _start,
-                                 const std::int32_t _length) final;
+  TableContent get_content(const std::string& _tname, const std::int32_t _draw,
+                           const std::int32_t _start,
+                           const std::int32_t _length) final;
 
   /// Lists the name of the tables held in the database.
   std::vector<std::string> list_tables() final;
@@ -95,17 +95,17 @@ class MySQL : public Connector {
   }
 
   /// Returns a shared_ptr containing a MySQLIterator.
-  std::shared_ptr<Iterator> select(const std::vector<std::string>& _colnames,
-                                   const std::string& _tname,
-                                   const std::string& _where) final {
-    return std::make_shared<MySQLIterator>(make_connection(), _colnames,
-                                           time_formats_, _tname, _where);
+  fct::Ref<Iterator> select(const std::vector<std::string>& _colnames,
+                            const std::string& _tname,
+                            const std::string& _where) final {
+    return fct::Ref<MySQLIterator>::make(make_connection(), _colnames,
+                                         time_formats_, _tname, _where);
   }
 
   /// Returns a shared_ptr containing a MySQLIterator.
-  std::shared_ptr<Iterator> select(const std::string& _sql) final {
-    return std::make_shared<MySQLIterator>(make_connection(), _sql,
-                                           time_formats_);
+  fct::Ref<Iterator> select(const std::string& _sql) final {
+    return fct::Ref<MySQLIterator>::make(make_connection(), _sql,
+                                         time_formats_);
   }
 
   /// Returns the time formats used.

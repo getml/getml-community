@@ -22,6 +22,7 @@ extern "C" {
 #include "database/Float.hpp"
 #include "database/Int.hpp"
 #include "database/Sqlite3Iterator.hpp"
+#include "database/TableContent.hpp"
 #include "fct/Ref.hpp"
 #include "io/io.hpp"
 #include "multithreading/multithreading.hpp"
@@ -47,10 +48,9 @@ class Sqlite3 : public Connector {
 
   /// Returns the content of a table in a format that is compatible
   /// with the DataTables.js server-side processing API.
-  Poco::JSON::Object get_content(const std::string& _tname,
-                                 const std::int32_t _draw,
-                                 const std::int32_t _start,
-                                 const std::int32_t _length) final;
+  TableContent get_content(const std::string& _tname, const std::int32_t _draw,
+                           const std::int32_t _start,
+                           const std::int32_t _length) final;
 
   /// Reads a CSV file or another data source into a table.
   void read(const std::string& _table, const size_t _skip,
@@ -84,17 +84,17 @@ class Sqlite3 : public Connector {
   }
 
   /// Returns a shared_ptr containing a Sqlite3Iterator.
-  std::shared_ptr<Iterator> select(const std::vector<std::string>& _colnames,
-                                   const std::string& _tname,
-                                   const std::string& _where) final {
-    return std::make_shared<Sqlite3Iterator>(db_, _colnames, read_write_lock_,
-                                             time_formats_, _tname, _where);
+  fct::Ref<Iterator> select(const std::vector<std::string>& _colnames,
+                            const std::string& _tname,
+                            const std::string& _where) final {
+    return fct::Ref<Sqlite3Iterator>::make(db_, _colnames, read_write_lock_,
+                                           time_formats_, _tname, _where);
   }
 
   /// Returns a shared_ptr containing a Sqlite3Iterator.
-  std::shared_ptr<Iterator> select(const std::string& _sql) final {
-    return std::make_shared<Sqlite3Iterator>(db_, _sql, read_write_lock_,
-                                             time_formats_);
+  fct::Ref<Iterator> select(const std::string& _sql) final {
+    return fct::Ref<Sqlite3Iterator>::make(db_, _sql, read_write_lock_,
+                                           time_formats_);
   }
 
   /// Returns the time formats used.
