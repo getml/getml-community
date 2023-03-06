@@ -8,26 +8,24 @@
 #ifndef ENGINE_CONFIG_ENGINEOPTIONS_
 #define ENGINE_CONFIG_ENGINEOPTIONS_
 
-#include <Poco/JSON/Object.h>
-
 #include <string>
 
-#include "engine/JSON.hpp"
+#include "fct/Field.hpp"
+#include "fct/NamedTuple.hpp"
 
 namespace engine {
 namespace config {
 
-// ----------------------------------------------------------------------------
-// Configuration information for the engine
-
+/// Configuration information for the engine
 struct EngineOptions {
   static constexpr bool IN_MEMORY = true;
   static constexpr bool MEMORY_MAPPING = false;
 
+  using NamedTupleType = fct::NamedTuple<fct::Field<"port", size_t>>;
+
  public:
-  EngineOptions(const Poco::JSON::Object& _json_obj)
-      : in_memory_(IN_MEMORY),
-        port_(JSON::get_value<size_t>(_json_obj, "port")) {}
+  EngineOptions(const NamedTupleType& _obj)
+      : in_memory_(IN_MEMORY), port_(_obj.get<"port">()) {}
 
   EngineOptions() : port_(1708) {}
 

@@ -202,23 +202,23 @@ void DatabaseManager::get(const typename Command::GetOp& _cmd,
 
   const auto colnames = db_iterator->colnames();
 
-  std::vector<Poco::JSON::Array> columns(colnames.size());
+  std::vector<std::vector<std::string>> columns(colnames.size());
 
   while (!db_iterator->end()) {
     for (auto& col : columns) {
-      col.add(db_iterator->get_string());
+      col.push_back(db_iterator->get_string());
     }
   }
 
-  Poco::JSON::Object obj;
+  std::map<std::string, std::vector<std::string>> result;
 
   for (size_t i = 0; i < columns.size(); ++i) {
-    obj.set(colnames[i], columns[i]);
+    result[colnames[i]] = std::move(columns[i]);
   }
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(JSON::stringify(obj), _socket);
+  communication::Sender::send_string(json::to_json(result), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -370,14 +370,15 @@ void DatabaseManager::new_db(const typename Command::NewDBOp& _cmd,
 // ----------------------------------------------------------------------------
 
 void DatabaseManager::post_tables() {
-  Poco::JSON::Object obj;
+  // TODO
+  /*Poco::JSON::Object obj;
 
-  multithreading::ReadLock read_lock(read_write_lock_);
+multithreading::ReadLock read_lock(read_write_lock_);
 
-  for (const auto& [name, conn] : connector_map_) {
-    const auto tables = conn->list_tables();
-    obj.set(name, jsonutils::JSON::vector_to_array_ptr(tables));
-  }
+for (const auto& [name, conn] : connector_map_) {
+  const auto tables = conn->list_tables();
+  obj.set(name, jsonutils::JSON::vector_to_array_ptr(tables));
+}*/
 }
 
 // ----------------------------------------------------------------------------
