@@ -7,6 +7,7 @@
 
 #include "engine/dependency/DataFrameTracker.hpp"
 
+#include "engine/JSON.hpp"
 #include "json/json.hpp"
 
 namespace engine {
