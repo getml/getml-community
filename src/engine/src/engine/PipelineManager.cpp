@@ -463,20 +463,6 @@ void PipelineManager::fit(const typename Command::FitOp& _cmd,
 
 // ------------------------------------------------------------------------
 
-Poco::JSON::Object PipelineManager::get_scores(
-    const pipelines::Pipeline& _pipeline) const {
-  const auto scores = _pipeline.scores();
-
-  const auto named_tuple = scores.metrics() *
-                           fct::make_field<"set_used_">(scores) *
-                           fct::make_field<"history_">(scores.history());
-
-  return *json::Parser<std::decay_t<decltype(named_tuple)>>::to_json(
-      named_tuple);
-}
-
-// ------------------------------------------------------------------------
-
 void PipelineManager::lift_curve(const typename Command::LiftCurveOp& _cmd,
                                  Poco::Net::StreamSocket* _socket) {
   const auto& name = _cmd.get<"name_">();
@@ -591,62 +577,61 @@ void PipelineManager::refresh(const typename Command::RefreshOp& _cmd,
 
   const auto obj = refresh_pipeline(pipeline);
 
-  communication::Sender::send_string(JSON::stringify(obj), _socket);
+  communication::Sender::send_string(json::to_json(obj), _socket);
 }
 
 // ------------------------------------------------------------------------
 
 void PipelineManager::refresh_all(const typename Command::RefreshAllOp& _cmd,
                                   Poco::Net::StreamSocket* _socket) {
-  Poco::JSON::Object obj;
-
-  Poco::JSON::Array pipelines_arr;
-
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
-  for (const auto& [_, pipe] : pipelines()) {
-    pipelines_arr.add(refresh_pipeline(pipe));
-  }
+  auto vec = std::vector<RefreshPipelineType>();
 
-  obj.set("pipelines", pipelines_arr);
+  for (const auto& [_, pipe] : pipelines()) {
+    vec.push_back(refresh_pipeline(pipe));
+  }
 
   engine::communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(JSON::stringify(obj), _socket);
+  communication::Sender::send_string(json::to_json(vec), _socket);
 }
 
 // ------------------------------------------------------------------------
 
-Poco::JSON::Object PipelineManager::refresh_pipeline(
+typename PipelineManager::RefreshPipelineType PipelineManager::refresh_pipeline(
     const pipelines::Pipeline& _pipeline) const {
-  const auto extract_roles =
-      [](const helpers::Schema& _schema) -> Poco::JSON::Object::Ptr {
-    auto ptr = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-    ptr->set("name", _schema.name());
-    ptr->set("roles", containers::Roles::from_schema(_schema).to_json_obj());
-    return ptr;
+  const auto extract_roles = [](const helpers::Schema& _schema) -> RolesType {
+    return fct::make_field<"name">(_schema.name()) *
+           fct::make_field<"roles">(containers::Roles::from_schema(_schema));
   };
 
-  Poco::JSON::Object obj;
+  const ScoresType scores =
+      _pipeline.scores().metrics() *
+      fct::make_field<"set_used_">(_pipeline.scores().set_used()) *
+      fct::make_field<"history_">(_pipeline.scores().history());
 
-  obj.set("obj", _pipeline.obj());
+  const RefreshUnfittedPipelineType base =
+      fct::make_field<"obj">(_pipeline.obj()) *
+      fct::make_field<"scores">(scores);
 
-  obj.set("scores", get_scores(_pipeline));
-
-  if (_pipeline.fitted()) {
-    obj.set(
-        "peripheral_metadata",
-        JSON::vector_to_array_ptr(fct::collect::vector<Poco::JSON::Object::Ptr>(
-            *_pipeline.fitted()->peripheral_schema_ |
-            VIEWS::transform(extract_roles))));
-
-    obj.set("population_metadata",
-            extract_roles(*_pipeline.fitted()->population_schema_));
-
-    obj.set("targets", JSON::vector_to_array(_pipeline.fitted()->targets()));
+  if (!_pipeline.fitted()) {
+    return base;
   }
 
-  return obj;
+  const auto peripheral_metadata =
+      fct::collect::vector<RolesType>(*_pipeline.fitted()->peripheral_schema_ |
+                                      VIEWS::transform(extract_roles));
+
+  const auto population_metadata =
+      extract_roles(*_pipeline.fitted()->population_schema_);
+
+  const auto& targets = _pipeline.fitted()->targets();
+
+  return RefreshFittedPipelineType(
+      base * fct::make_field<"peripheral_metadata">(peripheral_metadata) *
+      fct::make_field<"population_metadata">(population_metadata) *
+      fct::make_field<"targets">(targets));
 }
 
 // ------------------------------------------------------------------------

@@ -11,7 +11,6 @@
 #include "fct/NamedTuple.hpp"
 #include "fct/join.hpp"
 #include "helpers/Schema.hpp"
-#include "json/json.hpp"
 
 #ifndef ENGINE_CONTAINERS_ROLES_HPP_
 #define ENGINE_CONTAINERS_ROLES_HPP_
@@ -58,11 +57,6 @@ struct Roles {
                          f_time_stamp(_schema.time_stamps()) *
                          f_unused_float(_schema.unused_floats()) *
                          f_unused_string(_schema.unused_strings())};
-  }
-
-  /// Transpiles the roles to a JSON object.
-  Poco::JSON::Object::Ptr to_json_obj() const {
-    return json::Parser<Roles>::to_json(*this);
   }
 
   /// Normally used for recursion, but here it is used
