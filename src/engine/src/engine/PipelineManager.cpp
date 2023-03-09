@@ -261,16 +261,13 @@ void PipelineManager::column_importances(
     importances.push_back(vec.at(target_num));
   }
 
-  Poco::JSON::Object response;
-
-  response.set("column_descriptions_",
-               JSON::vector_to_array(scores.column_descriptions()));
-
-  response.set("column_importances_", JSON::vector_to_array(importances));
+  const auto response =
+      fct::make_field<"column_descriptions_">(scores.column_descriptions()) *
+      fct::make_field<"column_importances_">(importances);
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(JSON::stringify(response), _socket);
+  communication::Sender::send_string(json::to_json(response), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -352,19 +349,16 @@ void PipelineManager::feature_correlations(
     if (static_cast<size_t>(target_num) >= vec.size()) {
       throw std::runtime_error("target_num out of range!");
     }
-
     correlations.push_back(vec.at(target_num));
   }
 
-  Poco::JSON::Object response;
-
-  response.set("feature_names_", JSON::vector_to_array(scores.feature_names()));
-
-  response.set("feature_correlations_", JSON::vector_to_array(correlations));
+  const auto response =
+      fct::make_field<"feature_names_">(scores.feature_names()) *
+      fct::make_field<"feature_correlations_">(correlations);
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(JSON::stringify(response), _socket);
+  communication::Sender::send_string(json::to_json(response), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -390,15 +384,13 @@ void PipelineManager::feature_importances(
     importances.push_back(vec.at(target_num));
   }
 
-  Poco::JSON::Object response;
-
-  response.set("feature_names_", JSON::vector_to_array(scores.feature_names()));
-
-  response.set("feature_importances_", JSON::vector_to_array(importances));
+  const auto response =
+      fct::make_field<"feature_names_">(scores.feature_names()) *
+      fct::make_field<"feature_importances_">(importances);
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(JSON::stringify(response), _socket);
+  communication::Sender::send_string(json::to_json(response), _socket);
 }
 
 // ------------------------------------------------------------------------
