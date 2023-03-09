@@ -116,10 +116,6 @@ class ViewParser {
   /// get_content(...).
   ColumnViewVariant make_column_view(const ViewCol& _col) const;
 
-  /// Generates the data for get_content(...).
-  Poco::JSON::Array::Ptr make_data(
-      const std::vector<std::vector<std::string>>& _string_vectors) const;
-
   /// Generates nrows for get_content(...).
   std::optional<size_t> make_nrows(
       const std::vector<ColumnViewVariant>& _column_views,

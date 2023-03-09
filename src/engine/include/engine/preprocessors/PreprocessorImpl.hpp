@@ -30,10 +30,6 @@ struct PreprocessorImpl {
       const std::string& _marker, const size_t _table,
       const std::vector<std::shared_ptr<helpers::ColumnDescription>>& _desc);
 
-  /// Transforms a vector of columns descriptions to an array.
-  static Poco::JSON::Array::Ptr to_array(
-      const std::vector<std::shared_ptr<helpers::ColumnDescription>>& _desc);
-
   /// Adds a new column description.
   static void add(
       const std::string& _marker, const size_t _table, const std::string& _name,
