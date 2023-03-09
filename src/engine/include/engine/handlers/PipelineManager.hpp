@@ -8,7 +8,6 @@
 #ifndef ENGINE_HANDLERS_PIPELINEMANAGER_HPP_
 #define ENGINE_HANDLERS_PIPELINEMANAGER_HPP_
 
-#include <Poco/JSON/Object.h>
 #include <Poco/Net/StreamSocket.h>
 
 #include <map>
@@ -170,9 +169,6 @@ class PipelineManager {
   void check_user_privileges(
       const pipelines::Pipeline& _pipeline, const std::string& _name,
       const fct::NamedTuple<fct::Field<"http_request_", bool>>& _cmd) const;
-
-  /// Retrieves the scores from the pipeline, adding set_used if available.
-  Poco::JSON::Object get_scores(const pipelines::Pipeline& _pipeline) const;
 
   /// Receives data from the client. This data will not be stored permanently,
   /// but locally. Once the training/transformation process is complete, it
