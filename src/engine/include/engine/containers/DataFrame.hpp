@@ -119,7 +119,7 @@ class DataFrame {
   void from_db(const fct::Ref<database::Connector> _connector,
                const std::string &_tname, const Schema &_schema);
 
-  /// Builds a dataframe from a JSON Object.
+  /// Builds a dataframe from a JSON object.
   void from_json(const commands::DataFrameFromJSON &_obj,
                  const std::vector<std::string> _time_formats,
                  const Schema &_schema);

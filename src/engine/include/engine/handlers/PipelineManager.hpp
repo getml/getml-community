@@ -14,16 +14,22 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <variant>
 
+#include "commands/Pipeline.hpp"
 #include "commands/PipelineCommand.hpp"
 #include "debug/debug.hpp"
 #include "engine/communication/communication.hpp"
 #include "engine/config/config.hpp"
+#include "engine/containers/Roles.hpp"
 #include "engine/handlers/DatabaseManager.hpp"
 #include "engine/handlers/PipelineManagerParams.hpp"
 #include "engine/handlers/ViewParser.hpp"
 #include "engine/pipelines/FittedPipeline.hpp"
 #include "engine/pipelines/pipelines.hpp"
+#include "fct/NamedTuple.hpp"
+#include "fct/define_named_tuple.hpp"
+#include "metrics/Scores.hpp"
 
 namespace engine {
 namespace handlers {
@@ -33,6 +39,29 @@ class PipelineManager {
   typedef std::map<std::string, pipelines::Pipeline> PipelineMapType;
 
   using Command = commands::PipelineCommand;
+
+ private:
+  using RolesType = fct::NamedTuple<fct::Field<"name", std::string>,
+                                    fct::Field<"roles", containers::Roles>>;
+
+  using ScoresType = fct::define_named_tuple_t<
+      typename metrics::Scores::AllMetricsType,
+      fct::Field<"set_used_", std::string>,
+      fct::Field<"history_",
+                 std::vector<typename metrics::Scores::HistoryType>>>;
+
+  using RefreshUnfittedPipelineType =
+      fct::NamedTuple<fct::Field<"obj", commands::Pipeline>,
+                      fct::Field<"scores", ScoresType>>;
+
+  using RefreshFittedPipelineType = fct::define_named_tuple_t<
+      RefreshUnfittedPipelineType,
+      fct::Field<"peripheral_metadata", std::vector<RolesType>>,
+      fct::Field<"population_metadata", RolesType>,
+      fct::Field<"targets", std::vector<std::string>>>;
+
+  using RefreshPipelineType =
+      std::variant<RefreshFittedPipelineType, RefreshUnfittedPipelineType>;
 
  public:
   PipelineManager(const PipelineManagerParams& _params) : params_(_params) {}
@@ -157,7 +186,7 @@ class PipelineManager {
       Poco::Net::StreamSocket* _socket);
 
   /// Returns the data needed for refreshing a single pipeline.
-  Poco::JSON::Object refresh_pipeline(
+  RefreshPipelineType refresh_pipeline(
       const pipelines::Pipeline& _pipeline) const;
 
   /// Under some circumstances, we might want to send data to the client, such
