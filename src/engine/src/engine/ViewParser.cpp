@@ -171,36 +171,6 @@ typename ViewParser::ColumnViewVariant ViewParser::make_column_view(
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Array::Ptr ViewParser::make_data(
-    const std::vector<std::vector<std::string>>& _string_vectors) const {
-  auto data = Poco::JSON::Array::Ptr(new Poco::JSON::Array());
-
-  if (_string_vectors.size() == 0) {
-    return data;
-  }
-
-  for (size_t i = 0; i < _string_vectors.at(0).size(); ++i) {
-    auto row = Poco::JSON::Array::Ptr(new Poco::JSON::Array());
-
-    for (size_t j = 0; j < _string_vectors.size(); ++j) {
-      if (i == 0 &&
-          _string_vectors.at(j).size() != _string_vectors.at(0).size()) {
-        throw std::runtime_error(
-            "ViewParser: Resulting columns do not all have "
-            "the same length!");
-      }
-
-      row->add(_string_vectors.at(j).at(i));
-    }
-
-    data->add(row);
-  }
-
-  return data;
-}
-
-// ----------------------------------------------------------------------------
-
 std::optional<size_t> ViewParser::make_nrows(
     const std::vector<ColumnViewVariant>& _column_views,
     const size_t _force) const {
