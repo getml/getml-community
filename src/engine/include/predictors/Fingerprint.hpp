@@ -5,15 +5,15 @@
 // for details.
 //
 
-#ifndef PREDICTORS_PREDICTORFINGERPRINT_HPP_
-#define PREDICTORS_PREDICTORFINGERPRINT_HPP_
+#ifndef PREDICTORS_FINGERPRINT_HPP_
+#define PREDICTORS_FINGERPRINT_HPP_
 
-#include "commands/PredictorFingerprint.hpp"
+#include "commands/Fingerprint.hpp"
 
 namespace predictors {
 
-using PredictorFingerprint = commands::PredictorFingerprint;
+using Fingerprint = commands::Fingerprint;
 
 }  // namespace predictors
 
-#endif  // PREDICTORS_PREDICTORFINGERPRINT_HPP_
+#endif  // PREDICTORS_FINGERPRINT_HPP_

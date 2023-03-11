@@ -91,8 +91,7 @@ Poco::JSON::Object::Ptr DataFrameTracker::make_build_history(
 
   // TODO: Remove this temporary fix.
   const auto get_fingerprint = [](const containers::DataFrame& _df) {
-    return json::Parser<commands::DataFrameFingerprint>::to_json(
-        _df.fingerprint());
+    return json::Parser<commands::Fingerprint>::to_json(_df.fingerprint());
   };
 
   const auto df_fingerprints =

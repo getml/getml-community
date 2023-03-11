@@ -13,7 +13,7 @@
 #include <utility>
 #include <vector>
 
-#include "commands/PreprocessorFingerprint.hpp"
+#include "commands/Fingerprint.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/preprocessors/FitParams.hpp"
 #include "engine/preprocessors/TransformParams.hpp"
@@ -33,9 +33,6 @@ class Preprocessor {
   static constexpr const char* SUBSTRING = "Substring";
   static constexpr const char* TEXT_FIELD_SPLITTER = "TextFieldSplitter";
 
-  using DependencyType =
-      typename commands::PreprocessorFingerprint::DependencyType;
-
  public:
   Preprocessor(){};
 
@@ -44,12 +41,12 @@ class Preprocessor {
  public:
   /// Returns a deep copy.
   virtual fct::Ref<Preprocessor> clone(
-      const std::optional<std::vector<DependencyType>>& _dependencies =
+      const std::optional<std::vector<commands::Fingerprint>>& _dependencies =
           std::nullopt) const = 0;
 
   /// Returns the fingerprint of the feature learner (necessary to build
   /// the dependency graphs).
-  virtual commands::PreprocessorFingerprint fingerprint() const = 0;
+  virtual commands::Fingerprint fingerprint() const = 0;
 
   /// Fits the preprocessor. Returns the transformed data frames.
   virtual std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
@@ -75,7 +72,6 @@ class Preprocessor {
   virtual std::string type() const = 0;
 };
 
-// ----------------------------------------------------
 }  // namespace preprocessors
 }  // namespace engine
 

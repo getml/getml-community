@@ -12,6 +12,7 @@
 #include <utility>
 #include <vector>
 
+#include "commands/Fingerprint.hpp"
 #include "commands/Preprocessor.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/preprocessors/FitParams.hpp"
@@ -60,7 +61,7 @@ class Seasonal : public Preprocessor {
 
  public:
   Seasonal(const SeasonalOp& _op,
-           const std::vector<DependencyType>& _dependencies)
+           const std::vector<commands::Fingerprint>& _dependencies)
       : dependencies_(_dependencies) {}
 
   ~Seasonal() = default;
@@ -83,8 +84,9 @@ class Seasonal : public Preprocessor {
 
  public:
   /// Creates a deep copy.
-  fct::Ref<Preprocessor> clone(const std::optional<std::vector<DependencyType>>&
-                                   _dependencies = std::nullopt) const final {
+  fct::Ref<Preprocessor> clone(
+      const std::optional<std::vector<commands::Fingerprint>>& _dependencies =
+          std::nullopt) const final {
     const auto c = fct::Ref<Seasonal>::make(*this);
     if (_dependencies) {
       c->dependencies_ = *_dependencies;
@@ -94,10 +96,10 @@ class Seasonal : public Preprocessor {
 
   /// Returns the fingerprint of the preprocessor (necessary to build
   /// the dependency graphs).
-  commands::PreprocessorFingerprint fingerprint() const final {
+  commands::Fingerprint fingerprint() const final {
     using FingerprintType =
-        typename commands::PreprocessorFingerprint::SeasonalFingerprint;
-    return commands::PreprocessorFingerprint(
+        typename commands::Fingerprint::SeasonalFingerprint;
+    return commands::Fingerprint(
         FingerprintType(fct::make_field<"dependencies_">(dependencies_),
                         fct::make_field<"type_">(fct::Literal<"Seasonal">())));
   }
@@ -231,7 +233,7 @@ class Seasonal : public Preprocessor {
 
  private:
   /// The dependencies inserted into the the preprocessor.
-  std::vector<DependencyType> dependencies_;
+  std::vector<commands::Fingerprint> dependencies_;
 
   /// List of all columns to which the hour transformation applies.
   std::vector<std::shared_ptr<helpers::ColumnDescription>> hour_;

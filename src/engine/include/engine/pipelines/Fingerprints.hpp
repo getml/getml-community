@@ -10,9 +10,7 @@
 
 #include <vector>
 
-#include "commands/DataFrameFingerprint.hpp"
-#include "commands/FeatureLearnerFingerprint.hpp"
-#include "commands/PredictorFingerprint.hpp"
+#include "commands/Fingerprint.hpp"
 #include "fct/Field.hpp"
 #include "fct/NamedTuple.hpp"
 #include "fct/Ref.hpp"
@@ -23,23 +21,19 @@ namespace pipelines {
 using Fingerprints = fct::NamedTuple<
     /// The fingerprints of the data frames used for fitting.
     fct::Field<"df_fingerprints_",
-               fct::Ref<const std::vector<commands::DataFrameFingerprint>>>,
+               fct::Ref<const std::vector<commands::Fingerprint>>>,
 
     /// The fingerprints of the preprocessors used for fitting.
-    fct::Field<
-        "preprocessor_fingerprints_",
-        fct::Ref<const std::vector<
-            typename commands::FeatureLearnerFingerprint::DependencyType>>>,
+    fct::Field<"preprocessor_fingerprints_",
+               fct::Ref<const std::vector<commands::Fingerprint>>>,
 
     /// The fingerprints of the feature learners used for fitting.
     fct::Field<"fl_fingerprints_",
-               fct::Ref<const std::vector<
-                   typename commands::PredictorFingerprint::DependencyType>>>,
+               fct::Ref<const std::vector<commands::Fingerprint>>>,
 
     /// The fingerprints of the feature selectors used for fitting.
     fct::Field<"fs_fingerprints_",
-               fct::Ref<const std::vector<
-                   typename commands::PredictorFingerprint::DependencyType>>>>;
+               fct::Ref<const std::vector<commands::Fingerprint>>>>;
 
 }  // namespace pipelines
 }  // namespace engine

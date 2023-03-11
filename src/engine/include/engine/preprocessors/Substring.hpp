@@ -12,6 +12,7 @@
 #include <utility>
 #include <vector>
 
+#include "commands/Fingerprint.hpp"
 #include "commands/Preprocessor.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/preprocessors/FitParams.hpp"
@@ -40,7 +41,7 @@ class Substring : public Preprocessor {
 
  public:
   Substring(const SubstringOp& _op,
-            const std::vector<DependencyType>& _dependencies)
+            const std::vector<commands::Fingerprint>& _dependencies)
       : begin_(_op.get<"begin_">()),
         dependencies_(_dependencies),
         length_(_op.get<"length_">()),
@@ -66,7 +67,7 @@ class Substring : public Preprocessor {
 
  public:
   /// Creates a deep copy.
-  fct::Ref<Preprocessor> clone(const std::optional<std::vector<DependencyType>>&
+  fct::Ref<Preprocessor> clone(const std::optional<std::vector<commands::Fingerprint>>&
                                    _dependencies = std::nullopt) const final {
     const auto c = fct::Ref<Substring>::make(*this);
     if (_dependencies) {
@@ -77,10 +78,10 @@ class Substring : public Preprocessor {
 
   /// Returns the fingerprint of the preprocessor (necessary to build
   /// the dependency graphs).
-  commands::PreprocessorFingerprint fingerprint() const final {
+  commands::Fingerprint fingerprint() const final {
     using FingerprintType =
-        typename commands::PreprocessorFingerprint::SubstringFingerprint;
-    return commands::PreprocessorFingerprint(FingerprintType(
+        typename commands::Fingerprint::SubstringFingerprint;
+    return commands::Fingerprint(FingerprintType(
         fct::make_field<"dependencies_">(dependencies_),
         fct::make_field<"type_">(fct::Literal<"Substring">()),
         fct::make_field<"begin_">(begin_), fct::make_field<"length_">(length_),
@@ -206,7 +207,7 @@ class Substring : public Preprocessor {
   std::vector<std::shared_ptr<helpers::ColumnDescription>> cols_;
 
   /// The dependencies inserted into the the preprocessor.
-  std::vector<DependencyType> dependencies_;
+  std::vector<commands::Fingerprint> dependencies_;
 
   /// The length of the substring to extract.
   size_t length_;

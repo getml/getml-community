@@ -15,11 +15,11 @@
 #include "debug/debug.hpp"
 #include "fct/NamedTuple.hpp"
 #include "fct/Ref.hpp"
+#include "predictors/Fingerprint.hpp"
 #include "predictors/FloatFeature.hpp"
 #include "predictors/IntFeature.hpp"
 #include "predictors/LogisticRegressionHyperparams.hpp"
 #include "predictors/Predictor.hpp"
-#include "predictors/PredictorFingerprint.hpp"
 #include "predictors/PredictorImpl.hpp"
 #include "predictors/StandardScaler.hpp"
 
@@ -28,8 +28,6 @@ namespace predictors {
 /// LogisticRegression predictor.
 class LogisticRegression : public Predictor {
  public:
-  using DependencyType = typename PredictorFingerprint::DependencyType;
-
   using f_scaler = fct::Field<"scaler_", StandardScaler>;
   using f_weights = fct::Field<"weights_", std::vector<Float>>;
 
@@ -40,7 +38,7 @@ class LogisticRegression : public Predictor {
  public:
   LogisticRegression(const LogisticRegressionHyperparams& _hyperparams,
                      const fct::Ref<const PredictorImpl>& _impl,
-                     const std::vector<DependencyType>& _dependencies)
+                     const std::vector<Fingerprint>& _dependencies)
       : dependencies_(_dependencies),
         hyperparams_(
             fct::Ref<LogisticRegressionHyperparams>::make(_hyperparams)),
@@ -97,10 +95,10 @@ class LogisticRegression : public Predictor {
 
   /// Returns the fingerprint of the predictor (necessary to build
   /// the dependency graphs).
-  PredictorFingerprint fingerprint() const final {
+  Fingerprint fingerprint() const final {
     using LogisticRegressionFingerprint =
         typename PredictorFingerprint::LogisticRegressionFingerprint;
-    return PredictorFingerprint(LogisticRegressionFingerprint(
+    return Fingerprint(LogisticRegressionFingerprint(
         hyperparams().val_ * fct::make_field<"dependencies_">(dependencies_) *
         impl().named_tuple()));
   }
@@ -220,7 +218,7 @@ class LogisticRegression : public Predictor {
 
  private:
   /// The dependencies used to build the fingerprint.
-  const std::vector<DependencyType> dependencies_;
+  const std::vector<Fingerprint> dependencies_;
 
   /// The hyperparameters used for the LogisticRegression.
   fct::Ref<const LogisticRegressionHyperparams> hyperparams_;

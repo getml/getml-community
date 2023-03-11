@@ -16,7 +16,7 @@
 #include <vector>
 
 #include "commands/DataFramesOrViews.hpp"
-#include "commands/PredictorFingerprint.hpp"
+#include "commands/Fingerprint.hpp"
 #include "engine/communication/communication.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/dependency/dependency.hpp"
@@ -42,9 +42,7 @@ struct FitParams {
   const fct::Ref<dependency::FETracker> fe_tracker_;
 
   /// The fingerprints of the feature selectors used for fitting.
-  const fct::Ref<const std::vector<
-      typename commands::PredictorFingerprint::DependencyType>>
-      fs_fingerprints_;
+  const fct::Ref<const std::vector<commands::Fingerprint>> fs_fingerprints_;
 
   /// Logs the progress.
   const std::shared_ptr<const communication::Logger> logger_;
