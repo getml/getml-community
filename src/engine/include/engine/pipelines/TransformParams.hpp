@@ -8,7 +8,6 @@
 #ifndef ENGINE_PIPELINES_TRANSFORMPARAMS_HPP_
 #define ENGINE_PIPELINES_TRANSFORMPARAMS_HPP_
 
-#include <Poco/JSON/Object.h>
 #include <Poco/Net/StreamSocket.h>
 
 #include <map>

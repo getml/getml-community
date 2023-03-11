@@ -253,18 +253,17 @@ Fit::fit(const Pipeline& _pipeline, const FitParams& _params) {
 
   const auto predictor_impl = make_predictor_impl(_pipeline, feature_selectors,
                                                   preprocessed.population_df_);
+  using DependencyType =
+      typename commands::PredictorFingerprint::DependencyType;
 
-  // TODO: This is a temporary fix.
   const auto validation_fingerprint =
-      /*_params.validation_df_ ? std::vector<Poco::JSON::Object::Ptr>(
-                                   {_params.validation_df_->fingerprint()})
-                             :*/
-      std::vector<Poco::JSON::Object::Ptr>();
+      _params.validation_df_
+          ? std::vector<DependencyType>({_params.validation_df_->fingerprint()})
+          : std::vector<DependencyType>();
 
-  // TODO: This is a temporary fix
-  const auto dependencies = std::vector<Poco::JSON::Object::Ptr>();
-  /*fct::join::vector<Poco::JSON::Object::Ptr>(
-  {fs_fingerprints, validation_fingerprint});*/
+  const auto dependencies = fct::join::vector<DependencyType>(
+      {fct::collect::vector<DependencyType>(*fs_fingerprints),
+       validation_fingerprint});
 
   const auto fit_predictors_params =
       FitPredictorsParams{.autofeatures_ = &autofeatures,

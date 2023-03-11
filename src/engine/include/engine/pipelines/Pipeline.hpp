@@ -128,7 +128,7 @@ class Pipeline {
   /// Whether we want to include categorical features
   bool include_categorical_;
 
-  /// The JSON Object used to construct the pipeline.
+  /// The JSON object used to construct the pipeline.
   fct::Ref<const commands::Pipeline> obj_;
 
   /// The scores used to evaluate this pipeline

@@ -8,7 +8,6 @@
 #ifndef ENGINE_PIPELINES_FITPARAMS_HPP_
 #define ENGINE_PIPELINES_FITPARAMS_HPP_
 
-#include <Poco/JSON/Object.h>
 #include <Poco/Net/StreamSocket.h>
 
 #include <memory>
@@ -17,6 +16,7 @@
 #include <vector>
 
 #include "commands/DataFramesOrViews.hpp"
+#include "commands/PredictorFingerprint.hpp"
 #include "engine/communication/communication.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/dependency/dependency.hpp"
@@ -42,7 +42,8 @@ struct FitParams {
   const fct::Ref<dependency::FETracker> fe_tracker_;
 
   /// The fingerprints of the feature selectors used for fitting.
-  const std::vector<Poco::JSON::Object::Ptr> fs_fingerprints_;
+  const std::vector<typename commands::PredictorFingerprint::DependencyType>
+      fs_fingerprints_;
 
   /// Logs the progress.
   const std::shared_ptr<const communication::Logger> logger_;

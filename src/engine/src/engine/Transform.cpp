@@ -239,14 +239,16 @@ Transform::make_features(
     const std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>&
         _feature_learners,
     const predictors::PredictorImpl& _predictor_impl,
-    const std::vector<Poco::JSON::Object::Ptr>& _fs_fingerprints) {
-  const auto df = _params.data_frame_tracker_.retrieve(
-      _fs_fingerprints, _params.original_population_df_,
-      _params.original_peripheral_dfs_);
+    const std::vector<typename commands::PredictorFingerprint::DependencyType>&
+        _fs_fingerprints) {
+  // TODO
+  /*const auto df = _params.data_frame_tracker_.retrieve(
+    _fs_fingerprints, _params.original_population_df_,
+    _params.original_peripheral_dfs_);
 
-  if (df) {
-    return retrieve_features_from_cache(*df);
-  }
+if (df) {
+  return retrieve_features_from_cache(*df);
+}*/
 
   const auto autofeatures =
       make_autofeatures(_params, _feature_learners, _predictor_impl);
