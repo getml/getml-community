@@ -49,7 +49,7 @@ class Imputation : public Preprocessor {
 
  public:
   Imputation(const ImputationOp& _op,
-             const std::vector<commands::Fingerprint>& _dependencies)
+             const std::vector<DependencyType>& _dependencies)
       : add_dummies_(_op.get<"add_dummies_">()), dependencies_(_dependencies) {}
 
   ~Imputation() = default;
@@ -75,7 +75,7 @@ class Imputation : public Preprocessor {
 
  public:
   /// Creates a deep copy.
-  fct::Ref<Preprocessor> clone(const std::optional<std::vector<commands::Fingerprint>>&
+  fct::Ref<Preprocessor> clone(const std::optional<std::vector<DependencyType>>&
                                    _dependencies = std::nullopt) const final {
     const auto c = fct::Ref<Imputation>::make(*this);
     if (_dependencies) {
@@ -216,7 +216,7 @@ class Imputation : public Preprocessor {
   std::shared_ptr<ImputationMapType> cols_;
 
   /// The dependencies inserted into the the preprocessor.
-  std::vector<commands::Fingerprint> dependencies_;
+  std::vector<DependencyType> dependencies_;
 };
 
 // ----------------------------------------------------

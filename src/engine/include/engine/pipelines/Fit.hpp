@@ -18,11 +18,8 @@
 #include <variant>
 #include <vector>
 
-#include "commands/DataFrameFingerprint.hpp"
-#include "commands/FeatureLearnerFingerprint.hpp"
+#include "commands/Fingerprint.hpp"
 #include "commands/Predictor.hpp"
-#include "commands/PredictorFingerprint.hpp"
-#include "commands/PreprocessorFingerprint.hpp"
 #include "engine/communication/communication.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/dependency/dependency.hpp"
@@ -39,32 +36,25 @@ namespace engine {
 namespace pipelines {
 
 class Fit {
-  using FeatureLearnerDependencyType =
-      typename commands::FeatureLearnerFingerprint::DependencyType;
-  using PredictorDependencyType =
-      typename commands::PredictorFingerprint::DependencyType;
-
  public:
   /// Extracts the fingerprints of the data frames.
-  static fct::Ref<const std::vector<commands::DataFrameFingerprint>>
+  static fct::Ref<const std::vector<commands::Fingerprint>>
   extract_df_fingerprints(
       const Pipeline& _pipeline, const containers::DataFrame& _population_df,
       const std::vector<containers::DataFrame>& _peripheral_dfs);
 
   /// Extracts the fingerprints from the feature learners.
-  static fct::Ref<const std::vector<PredictorDependencyType>>
+  static fct::Ref<const std::vector<commands::Fingerprint>>
   extract_fl_fingerprints(
       const std::vector<fct::Ref<featurelearners::AbstractFeatureLearner>>&
           _feature_learners,
-      const fct::Ref<const std::vector<FeatureLearnerDependencyType>>&
-          _dependencies);
+      const fct::Ref<const std::vector<commands::Fingerprint>>& _dependencies);
 
   /// Extracts the fingerprints from the preprocessors.
-  static fct::Ref<const std::vector<FeatureLearnerDependencyType>>
+  static fct::Ref<const std::vector<commands::Fingerprint>>
   extract_preprocessor_fingerprints(
       const std::vector<fct::Ref<preprocessors::Preprocessor>>& _preprocessors,
-      const fct::Ref<const std::vector<commands::DataFrameFingerprint>>&
-          _dependencies);
+      const fct::Ref<const std::vector<commands::Fingerprint>>& _dependencies);
 
   /// Extracts schemata from the data frames
   static std::pair<fct::Ref<const helpers::Schema>,
@@ -94,14 +84,13 @@ class Fit {
   init_predictors(
       const Pipeline& _pipeline, const std::string& _elem,
       const fct::Ref<const predictors::PredictorImpl>& _predictor_impl,
-      const std::vector<PredictorDependencyType>& _dependencies,
+      const std::vector<commands::Fingerprint>& _dependencies,
       const size_t _num_targets);
 
   /// Initializes the preprocessors.
   static std::vector<fct::Ref<preprocessors::Preprocessor>> init_preprocessors(
       const Pipeline& _pipeline,
-      const fct::Ref<const std::vector<commands::DataFrameFingerprint>>&
-          _dependencies);
+      const fct::Ref<const std::vector<commands::Fingerprint>>& _dependencies);
 
  public:
   /// Transforms to a vector of const references.
@@ -156,18 +145,17 @@ class Fit {
       const Predictors& _feature_selectors);
 
   /// Extracts the fingerprints from the predictors.
-  static fct::Ref<const std::vector<PredictorDependencyType>>
+  static fct::Ref<const std::vector<commands::Fingerprint>>
   extract_predictor_fingerprints(
       const std::vector<std::vector<fct::Ref<predictors::Predictor>>>&
           _predictors,
-      const fct::Ref<const std::vector<PredictorDependencyType>>&
-          _dependencies);
+      const fct::Ref<const std::vector<commands::Fingerprint>>& _dependencies);
 
   /// Fits the feature learners. Returns the fitted feature learners and their
   /// fingerprints.
   static std::pair<
       std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>,
-      fct::Ref<const std::vector<PredictorDependencyType>>>
+      fct::Ref<const std::vector<commands::Fingerprint>>>
   fit_feature_learners(
       const Pipeline& _pipeline, const FitParams& _params,
       const containers::DataFrame& _population_df,
@@ -177,16 +165,15 @@ class Fit {
   /// Fits the predictors. Returns the fitted predictors and their
   /// fingerprints.
   static std::pair<Predictors,
-                   fct::Ref<const std::vector<PredictorDependencyType>>>
+                   fct::Ref<const std::vector<commands::Fingerprint>>>
   fit_predictors(const FitPredictorsParams& _params);
 
   /// Fits the preprocessors and applies them to the training set.
   static std::pair<std::vector<fct::Ref<const preprocessors::Preprocessor>>,
-                   fct::Ref<const std::vector<FeatureLearnerDependencyType>>>
+                   fct::Ref<const std::vector<commands::Fingerprint>>>
   fit_transform_preprocessors(
       const Pipeline& _pipeline, const FitPreprocessorsParams& _params,
-      const fct::Ref<const std::vector<commands::DataFrameFingerprint>>&
-          _dependencies,
+      const fct::Ref<const std::vector<commands::Fingerprint>>& _dependencies,
       containers::DataFrame* _population_df,
       std::vector<containers::DataFrame>* _peripheral_dfs);
 

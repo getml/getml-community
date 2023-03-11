@@ -16,7 +16,7 @@
 #include <type_traits>
 #include <vector>
 
-#include "commands/FeatureLearnerFingerprint.hpp"
+#include "commands/Fingerprint.hpp"
 #include "debug/debug.hpp"
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
@@ -61,14 +61,7 @@ class FeatureLearner : public AbstractFeatureLearner {
 
  private:
   typedef typename FeatureLearnerType::DataFrameType DataFrameType;
-  typedef typename commands::FeatureLearnerFingerprint::DependencyType
-      DependencyType;
   typedef typename FeatureLearnerType::HypType HypType;
-  typedef fct::define_named_tuple_t<
-      typename HypType::NamedTupleType,
-      typename commands::FeatureLearnerFingerprint::Dependencies,
-      typename commands::FeatureLearnerFingerprint::OtherRequirements>
-      FingerprintType;
 
   typedef typename std::conditional<
       has_propositionalization_,
@@ -94,7 +87,7 @@ class FeatureLearner : public AbstractFeatureLearner {
 
   /// Returns the fingerprint of the feature learner (necessary to build
   /// the dependency graphs).
-  commands::FeatureLearnerFingerprint fingerprint() const final;
+  commands::Fingerprint fingerprint() const final;
 
   /// Fits the model.
   void fit(const FitParams& _params) final;
@@ -320,7 +313,7 @@ class FeatureLearner : public AbstractFeatureLearner {
 
  private:
   /// The dependencies used to build the fingerprint.
-  fct::Ref<const std::vector<DependencyType>> dependencies_;
+  fct::Ref<const std::vector<commands::Fingerprint>> dependencies_;
 
   /// The containers for the propositionalization.
   std::shared_ptr<const fastprop::subfeatures::FastPropContainer>
@@ -505,13 +498,12 @@ FeatureLearner<FeatureLearnerType>::extract_tables_by_colnames(
 // ----------------------------------------------------------------------------
 
 template <typename FeatureLearnerType>
-commands::FeatureLearnerFingerprint
-FeatureLearner<FeatureLearnerType>::fingerprint() const {
-  return commands::FeatureLearnerFingerprint(FingerprintType(
-      hyperparameters_.val_ * fct::make_field<"dependencies_">(dependencies_) *
-      fct::make_field<"peripheral_">(peripheral_) *
-      fct::make_field<"placeholder_">(placeholder_) *
-      fct::make_field<"target_num_">(target_num_)));
+commands::Fingerprint FeatureLearner<FeatureLearnerType>::fingerprint() const {
+  return commands::Fingerprint(hyperparameters_.val_ *
+                               fct::make_field<"dependencies_">(dependencies_) *
+                               fct::make_field<"peripheral_">(peripheral_) *
+                               fct::make_field<"placeholder_">(placeholder_) *
+                               fct::make_field<"target_num_">(target_num_));
 }
 
 // ----------------------------------------------------------------------------

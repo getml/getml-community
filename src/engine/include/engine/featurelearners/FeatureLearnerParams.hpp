@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-#include "commands/FeatureLearnerFingerprint.hpp"
+#include "commands/Fingerprint.hpp"
 #include "engine/Int.hpp"
 #include "fct/Field.hpp"
 #include "fct/NamedTuple.hpp"
@@ -25,10 +25,8 @@ namespace engine {
 namespace featurelearners {
 
 using FeatureLearnerParams = fct::NamedTuple<
-    fct::Field<
-        "dependencies_",
-        fct::Ref<const std::vector<
-            typename commands::FeatureLearnerFingerprint::DependencyType>>>,
+    fct::Field<"dependencies_",
+               fct::Ref<const std::vector<commands::Fingerprint>>>,
     fct::Field<"peripheral_", fct::Ref<const std::vector<std::string>>>,
     fct::Field<"peripheral_schema_",
                fct::Ref<const std::vector<helpers::Schema>>>,

@@ -12,6 +12,8 @@
 #include <utility>
 #include <vector>
 
+
+#include "commands/Fingerprint.hpp"
 #include "commands/Preprocessor.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/preprocessors/FitParams.hpp"
@@ -40,7 +42,7 @@ class TextFieldSplitter : public Preprocessor {
 
  public:
   TextFieldSplitter(const TextFieldSplitterOp& _op,
-                    const std::vector<DependencyType>& _dependencies)
+                    const std::vector<commands::Fingerprint>& _dependencies)
       : dependencies_(_dependencies) {}
 
   ~TextFieldSplitter() = default;
@@ -69,7 +71,7 @@ class TextFieldSplitter : public Preprocessor {
 
  public:
   /// Creates a deep copy.
-  fct::Ref<Preprocessor> clone(const std::optional<std::vector<DependencyType>>&
+  fct::Ref<Preprocessor> clone(const std::optional<std::vector<commands::Fingerprint>>&
                                    _dependencies = std::nullopt) const final {
     const auto c = fct::Ref<TextFieldSplitter>::make(*this);
     if (_dependencies) {
@@ -80,10 +82,10 @@ class TextFieldSplitter : public Preprocessor {
 
   /// Returns the fingerprint of the preprocessor (necessary to build
   /// the dependency graphs).
-  commands::PreprocessorFingerprint fingerprint() const final {
-    using FingerprintType = typename commands::PreprocessorFingerprint::
+  commands::Fingerprint fingerprint() const final {
+    using FingerprintType = typename commands::Fingerprint::
         TextFieldSplitterFingerprint;
-    return commands::PreprocessorFingerprint(FingerprintType(
+    return commands::Fingerprint(FingerprintType(
         fct::make_field<"dependencies_">(dependencies_),
         fct::make_field<"type_">(fct::Literal<"TextFieldSplitter">())));
   }
@@ -127,7 +129,7 @@ class TextFieldSplitter : public Preprocessor {
   std::vector<std::shared_ptr<helpers::ColumnDescription>> cols_;
 
   /// The dependencies inserted into the the preprocessor.
-  std::vector<DependencyType> dependencies_;
+  std::vector<commands::Fingerprint> dependencies_;
 };
 
 }  // namespace preprocessors

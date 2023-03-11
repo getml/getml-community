@@ -292,13 +292,13 @@ void DataFrame::append(const DataFrame &_other) {
 
 // ----------------------------------------------------------------------------
 
-commands::DataFrameFingerprint DataFrame::fingerprint() const {
-  if (build_history_) {
-    return commands::DataFrameFingerprint(*build_history_);
-  }
-  return commands::DataFrameFingerprint(
-      fct::make_field<"name_">(name_) *
-      fct::make_field<"last_change_">(last_change_));
+commands::Fingerprint DataFrame::fingerprint() const {
+  // TODO
+  /*if (build_history_) {
+  return commands::Fingerprint(*build_history_);
+}*/
+  return commands::Fingerprint(fct::make_field<"name_">(name_) *
+                               fct::make_field<"last_change_">(last_change_));
 }
 
 // ----------------------------------------------------------------------------

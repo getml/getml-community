@@ -10,8 +10,7 @@
 
 #include <vector>
 
-#include "commands/DataFrameFingerprint.hpp"
-#include "commands/FeatureLearnerFingerprint.hpp"
+#include "commands/Fingerprint.hpp"
 #include "engine/containers/DataFrame.hpp"
 #include "engine/preprocessors/preprocessors.hpp"
 #include "fct/Ref.hpp"
@@ -21,8 +20,7 @@ namespace pipelines {
 
 struct Preprocessed {
   /// The fingerprints of the data frames used for fitting.
-  const fct::Ref<const std::vector<commands::DataFrameFingerprint>>
-      df_fingerprints_;
+  const fct::Ref<const std::vector<commands::Fingerprint>> df_fingerprints_;
 
   /// The modified peripheral data frames (after applying the preprocessors)
   const std::vector<containers::DataFrame> peripheral_dfs_;
@@ -34,8 +32,7 @@ struct Preprocessed {
   const std::vector<fct::Ref<const preprocessors::Preprocessor>> preprocessors_;
 
   /// The fingerprints of the preprocessor used for fitting.
-  const fct::Ref<const std::vector<
-      typename commands::FeatureLearnerFingerprint::DependencyType>>
+  const fct::Ref<const std::vector<commands::Fingerprint>>
       preprocessor_fingerprints_;
 };
 

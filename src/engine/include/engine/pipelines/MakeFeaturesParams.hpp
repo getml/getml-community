@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "commands/DataFramesOrViews.hpp"
+#include "commands/Fingerprint.hpp"
 #include "commands/Predictor.hpp"
 #include "engine/communication/communication.hpp"
 #include "engine/containers/containers.hpp"
@@ -42,9 +43,7 @@ struct MakeFeaturesParams {
   const dependency::DataFrameTracker data_frame_tracker_;
 
   /// The depedencies of the predictors.
-  const fct::Ref<const std::vector<
-      typename commands::PredictorFingerprint::DependencyType>>
-      dependencies_;
+  const fct::Ref<const std::vector<commands::Fingerprint>> dependencies_;
 
   /// Logs the progress.
   const std::shared_ptr<const communication::Logger> logger_;

@@ -13,8 +13,7 @@
 #include <string>
 #include <vector>
 
-#include "commands/FeatureLearnerFingerprint.hpp"
-#include "commands/PredictorFingerprint.hpp"
+#include "commands/Fingerprint.hpp"
 #include "engine/pipelines/FitParams.hpp"
 #include "engine/pipelines/Pipeline.hpp"
 #include "fct/Ref.hpp"
@@ -30,9 +29,7 @@ struct FitPredictorsParams {
 
   /// The dependencies for the predictors (either fl_fingerprints or
   /// fs_fingerprints)
-  const fct::Ref<const std::vector<
-      typename commands::PredictorFingerprint::DependencyType>>
-      dependencies_;
+  const fct::Ref<const std::vector<commands::Fingerprint>> dependencies_;
 
   /// The feature learners used in this pipeline.
   const std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>
@@ -57,9 +54,7 @@ struct FitPredictorsParams {
   const std::vector<fct::Ref<const preprocessors::Preprocessor>> preprocessors_;
 
   /// The fingerprints of the preprocessors used for fitting.
-  const std::vector<
-      typename commands::FeatureLearnerFingerprint::DependencyType>
-      preprocessor_fingerprints_;
+  const std::vector<commands::Fingerprint> preprocessor_fingerprints_;
 
   /// The purpose (feature_selector_ or predictor_)
   const std::string purpose_;

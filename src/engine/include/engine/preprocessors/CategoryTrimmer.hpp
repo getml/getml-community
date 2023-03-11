@@ -15,8 +15,8 @@
 #include <utility>
 #include <vector>
 
+#include "commands/Fingerprint.hpp"
 #include "commands/Preprocessor.hpp"
-#include "commands/PreprocessorFingerprint.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/preprocessors/FitParams.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
@@ -50,7 +50,7 @@ class CategoryTrimmer : public Preprocessor {
 
  public:
   CategoryTrimmer(const CategoryTrimmerOp& _op,
-                  const std::vector<DependencyType>& _dependencies)
+                  const std::vector<commands::Fingerprint>& _dependencies)
       : dependencies_(_dependencies),
         max_num_categories_(_op.get<"max_num_categories_">()),
         min_freq_(_op.get<"min_freq_">()) {}
@@ -81,8 +81,9 @@ class CategoryTrimmer : public Preprocessor {
 
  public:
   /// Creates a deep copy.
-  fct::Ref<Preprocessor> clone(const std::optional<std::vector<DependencyType>>&
-                                   _dependencies = std::nullopt) const final {
+  fct::Ref<Preprocessor> clone(
+      const std::optional<std::vector<commands::Fingerprint>>& _dependencies =
+          std::nullopt) const final {
     const auto c = fct::Ref<CategoryTrimmer>::make(*this);
     if (_dependencies) {
       c->dependencies_ = *_dependencies;
@@ -92,14 +93,14 @@ class CategoryTrimmer : public Preprocessor {
 
   /// Returns the fingerprint of the preprocessor (necessary to build
   /// the dependency graphs).
-  commands::PreprocessorFingerprint fingerprint() const final {
+  commands::Fingerprint fingerprint() const final {
     using CategoryTrimmerFingerprint =
-        typename commands::PreprocessorFingerprint::CategoryTrimmerFingerprint;
-    return commands::PreprocessorFingerprint(CategoryTrimmerFingerprint(
+        typename commands::Fingerprint::CategoryTrimmerFingerprint;
+    return CategoryTrimmerFingerprint(
         fct::make_field<"dependencies_">(dependencies_),
         fct::make_field<"type_">(fct::Literal<"CategoryTrimmer">()),
         fct::make_field<"max_num_categories_">(max_num_categories_),
-        fct::make_field<"min_freq_">(min_freq_)));
+        fct::make_field<"min_freq_">(min_freq_));
   }
 
   /// Returns the type of the preprocessor.
@@ -149,7 +150,7 @@ class CategoryTrimmer : public Preprocessor {
 
  private:
   /// The dependencies inserted into the the preprocessor.
-  std::vector<DependencyType> dependencies_;
+  std::vector<commands::Fingerprint> dependencies_;
 
   /// The maximum number of categories.
   size_t max_num_categories_;

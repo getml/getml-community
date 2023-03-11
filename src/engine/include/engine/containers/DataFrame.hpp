@@ -15,9 +15,9 @@
 #include <string>
 #include <vector>
 
-#include "commands/DataFrameFingerprint.hpp"
 #include "commands/DataFrameFromJSON.hpp"
 #include "commands/DataFrameOrView.hpp"
+#include "commands/Fingerprint.hpp"
 #include "database/database.hpp"
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
@@ -97,7 +97,7 @@ class DataFrame {
 
   /// Returns the fingerprint of the data frame (necessary to build the
   /// dependency graphs).
-  commands::DataFrameFingerprint fingerprint() const;
+  commands::Fingerprint fingerprint() const;
 
   /// Getter for a float_column.
   const Column<Float> &float_column(const std::string &_role,

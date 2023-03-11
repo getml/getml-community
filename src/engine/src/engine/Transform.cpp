@@ -239,7 +239,7 @@ Transform::make_features(
     const std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>&
         _feature_learners,
     const predictors::PredictorImpl& _predictor_impl,
-    const std::vector<typename commands::PredictorFingerprint::DependencyType>&
+    const std::vector<commands::Fingerprint>&
         _fs_fingerprints) {
   // TODO
   /*const auto df = _params.data_frame_tracker_.retrieve(

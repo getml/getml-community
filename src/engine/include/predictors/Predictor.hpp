@@ -13,9 +13,9 @@
 #include <vector>
 
 #include "debug/debug.hpp"
+#include "predictors/Fingerprint.hpp"
 #include "predictors/FloatFeature.hpp"
 #include "predictors/IntFeature.hpp"
-#include "predictors/PredictorFingerprint.hpp"
 
 namespace predictors {
 
@@ -38,7 +38,7 @@ class Predictor {
 
   /// Returns the fingerprint of the predictor (necessary to build
   /// the dependency graphs).
-  virtual PredictorFingerprint fingerprint() const = 0;
+  virtual Fingerprint fingerprint() const = 0;
 
   /// Implements the fit(...) method in scikit-learn style
   virtual std::string fit(

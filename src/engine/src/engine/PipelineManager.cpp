@@ -425,7 +425,7 @@ void PipelineManager::fit(const typename Command::FitOp& _cmd,
       .data_frame_tracker_ = data_frame_tracker(),
       .fe_tracker_ = params_.fe_tracker_,
       .fs_fingerprints_ = fct::Ref<const std::vector<
-          typename commands::PredictorFingerprint::DependencyType>>::make(),
+          commands::Fingerprint>>::make(),
       .logger_ = params_.logger_.ptr(),
       .peripheral_dfs_ = peripheral_dfs,
       .population_df_ = population_df,

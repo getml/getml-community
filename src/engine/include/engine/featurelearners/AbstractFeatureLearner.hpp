@@ -12,7 +12,7 @@
 #include <memory>
 #include <vector>
 
-#include "commands/FeatureLearnerFingerprint.hpp"
+#include "commands/Fingerprint.hpp"
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
 #include "engine/featurelearners/FitParams.hpp"
@@ -46,7 +46,7 @@ class AbstractFeatureLearner {
 
   /// Returns the fingerprint of the feature learner (necessary to build
   /// the dependency graphs).
-  virtual commands::FeatureLearnerFingerprint fingerprint() const = 0;
+  virtual commands::Fingerprint fingerprint() const = 0;
 
   /// Fits the model.
   virtual void fit(const FitParams& _params) = 0;

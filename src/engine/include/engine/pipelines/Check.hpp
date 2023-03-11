@@ -8,8 +8,7 @@
 #ifndef ENGINE_PIPELINES_CHECK_HPP_
 #define ENGINE_PIPELINES_CHECK_HPP_
 
-#include "commands/FeatureLearnerFingerprint.hpp"
-#include "commands/PredictorFingerprint.hpp"
+#include "commands/Fingerprint.hpp"
 #include "commands/WarningFingerprint.hpp"
 #include "engine/pipelines/CheckParams.hpp"
 #include "engine/pipelines/Pipeline.hpp"
@@ -19,12 +18,6 @@ namespace pipelines {
 
 class Check {
  public:
-  using FeatureLearnerDependencyType =
-      typename commands::FeatureLearnerFingerprint::DependencyType;
-  using PredictorDependencyType =
-      typename commands::PredictorFingerprint::DependencyType;
-
- public:
   /// Checks the data model for any inconsistencies.
   static void check(const Pipeline& _pipeline, const CheckParams& _params);
 
@@ -33,7 +26,7 @@ class Check {
   /// warning.
   static std::pair<
       std::vector<fct::Ref<featurelearners::AbstractFeatureLearner>>,
-      fct::Ref<const std::vector<PredictorDependencyType>>>
+      fct::Ref<const std::vector<commands::Fingerprint>>>
   init_feature_learners(
       const Pipeline& _pipeline,
       const featurelearners::FeatureLearnerParams& _feature_learner_params,
