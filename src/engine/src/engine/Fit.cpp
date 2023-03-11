@@ -215,11 +215,7 @@ Fit::fit(const Pipeline& _pipeline, const FitParams& _params) {
 
   const featurelearners::FeatureLearnerParams feature_learner_params =
       fct::make_field<"dependencies_">(
-          json::Parser<fct::Ref<const std::vector<
-              typename commands::FeatureLearnerFingerprint::DependencyType>>>::
-              from_json(
-                  preprocessed.preprocessor_fingerprints_)) *  // TODO: Remove
-                                                               // from_json
+          preprocessed.preprocessor_fingerprints_) *
       fct::make_field<"peripheral_">(peripheral) *
       fct::make_field<"peripheral_schema_">(modified_peripheral_schema) *
       fct::make_field<"placeholder_">(placeholder) *
@@ -238,7 +234,7 @@ Fit::fit(const Pipeline& _pipeline, const FitParams& _params) {
 
   const auto fit_feature_selectors_params =
       FitPredictorsParams{.autofeatures_ = &autofeatures,
-                          .dependencies_ = {},  // TODO: fl_dependencies
+                          .dependencies_ = fl_fingerprints,
                           .feature_learners_ = feature_learners,
                           .fit_params_ = _params,
                           .impl_ = feature_selector_impl,
@@ -261,9 +257,10 @@ Fit::fit(const Pipeline& _pipeline, const FitParams& _params) {
           ? std::vector<DependencyType>({_params.validation_df_->fingerprint()})
           : std::vector<DependencyType>();
 
-  const auto dependencies = fct::join::vector<DependencyType>(
-      {fct::collect::vector<DependencyType>(*fs_fingerprints),
-       validation_fingerprint});
+  const auto dependencies = fct::Ref<std::vector<DependencyType>>::make(
+      fct::join::vector<DependencyType>(
+          {fct::collect::vector<DependencyType>(*fs_fingerprints),
+           validation_fingerprint}));
 
   const auto fit_predictors_params =
       FitPredictorsParams{.autofeatures_ = &autofeatures,
@@ -286,7 +283,7 @@ Fit::fit(const Pipeline& _pipeline, const FitParams& _params) {
                   .categories_ = _params.categories_,
                   .cmd_ = _params.cmd_,
                   .data_frame_tracker_ = _params.data_frame_tracker_,
-                  .dependencies_ = {},  // TODO fs_fingerprints,
+                  .dependencies_ = fs_fingerprints,
                   .logger_ = _params.logger_,
                   .original_peripheral_dfs_ = _params.peripheral_dfs_,
                   .original_population_df_ = _params.population_df_,
@@ -391,19 +388,16 @@ Fit::fit_feature_learners(
 std::pair<Predictors,
           fct::Ref<const std::vector<typename Fit::PredictorDependencyType>>>
 Fit::fit_predictors(const FitPredictorsParams& _params) {
-  auto predictors =
-      init_predictors(_params.pipeline_, _params.purpose_, _params.impl_,
-                      {},  // TODO _params.dependencies_,
-                      _params.population_df_.num_targets());
+  auto predictors = init_predictors(_params.pipeline_, _params.purpose_,
+                                    _params.impl_, *_params.dependencies_,
+                                    _params.population_df_.num_targets());
 
   const auto [retrieved_predictors, all_retrieved] =
       retrieve_predictors(_params.fit_params_.pred_tracker_, predictors);
 
   if (all_retrieved) {
     const auto fingerprints = extract_predictor_fingerprints(
-        to_ref(retrieved_predictors),
-        fct::Ref<const std::vector<PredictorDependencyType>>::
-            make());  // TODO _params.dependencies_);
+        to_ref(retrieved_predictors), _params.dependencies_);
     const auto predictors_struct =
         Predictors{.impl_ = _params.impl_,
                    .predictors_ = to_const(to_ref(retrieved_predictors))};
@@ -425,7 +419,7 @@ Fit::fit_predictors(const FitPredictorsParams& _params) {
   auto [numerical_features, categorical_features, autofeatures] =
       Transform::make_features(make_features_params, _params.pipeline_,
                                _params.feature_learners_, *_params.impl_,
-                               _params.fit_params_.fs_fingerprints_);
+                               *_params.fit_params_.fs_fingerprints_);
 
   *_params.autofeatures_ = autofeatures;
 
@@ -486,9 +480,8 @@ Fit::fit_predictors(const FitPredictorsParams& _params) {
     }
   }
 
-  const auto fingerprints = extract_predictor_fingerprints(
-      predictors, fct::Ref<const std::vector<PredictorDependencyType>>::
-                      make());  // TODO _params.dependencies_);
+  const auto fingerprints =
+      extract_predictor_fingerprints(predictors, _params.dependencies_);
 
   const auto predictors_struct =
       Predictors{.impl_ = _params.impl_, .predictors_ = to_const(predictors)};
@@ -838,13 +831,14 @@ Fit::make_features_validation(const FitPredictorsParams& _params) {
                                                 // validation_df here
       .socket_ = _params.fit_params_.socket_};
 
-  const auto features_only_params =
-      FeaturesOnlyParams{.dependencies_ = _params.dependencies_,
-                         .feature_learners_ = _params.feature_learners_,
-                         .pipeline_ = _params.pipeline_,
-                         .preprocessors_ = _params.preprocessors_,
-                         .predictor_impl_ = _params.impl_,
-                         .transform_params_ = transform_params};
+  const auto features_only_params = FeaturesOnlyParams{
+      .dependencies_ = _params.dependencies_,
+      .feature_learners_ = _params.feature_learners_,
+      .fs_fingerprints_ = _params.fit_params_.fs_fingerprints_,
+      .pipeline_ = _params.pipeline_,
+      .preprocessors_ = _params.preprocessors_,
+      .predictor_impl_ = _params.impl_,
+      .transform_params_ = transform_params};
 
   const auto [numerical_features, categorical_features, _] =
       Transform::transform_features_only(features_only_params);
@@ -961,7 +955,7 @@ fct::Ref<const metrics::Scores> Fit::score_after_fitting(
     const FittedPipeline& _fitted) {
   auto [numerical_features, categorical_features, _] = Transform::make_features(
       _params, _pipeline, _fitted.feature_learners_, *_fitted.predictors_.impl_,
-      {});  // TODO _fitted.fingerprints_.get<"fs_fingerprints_">());
+      *_fitted.fingerprints_.get<"fs_fingerprints_">());
 
   categorical_features =
       _fitted.predictors_.impl_->transform_encodings(categorical_features);

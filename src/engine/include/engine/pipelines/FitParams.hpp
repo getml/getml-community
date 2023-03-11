@@ -42,7 +42,8 @@ struct FitParams {
   const fct::Ref<dependency::FETracker> fe_tracker_;
 
   /// The fingerprints of the feature selectors used for fitting.
-  const std::vector<typename commands::PredictorFingerprint::DependencyType>
+  const fct::Ref<const std::vector<
+      typename commands::PredictorFingerprint::DependencyType>>
       fs_fingerprints_;
 
   /// Logs the progress.
