@@ -8,6 +8,7 @@
 #ifndef ENGINE_CONTAINERS_COLUMN_HPP_
 #define ENGINE_CONTAINERS_COLUMN_HPP_
 
+#include <fstream>
 #include <stdexcept>
 #include <string>
 #include <type_traits>

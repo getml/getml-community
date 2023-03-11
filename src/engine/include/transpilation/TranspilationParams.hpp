@@ -14,7 +14,6 @@
 #include "fct/Field.hpp"
 #include "fct/Literal.hpp"
 #include "fct/NamedTuple.hpp"
-#include "jsonutils/jsonutils.hpp"
 
 namespace transpilation {
 
