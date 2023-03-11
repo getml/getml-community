@@ -17,6 +17,7 @@
 #include "commands/PredictorFingerprint.hpp"
 #include "engine/pipelines/FitParams.hpp"
 #include "engine/pipelines/Pipeline.hpp"
+#include "fct/Ref.hpp"
 #include "predictors/PredictorImpl.hpp"
 
 namespace engine {
@@ -29,7 +30,8 @@ struct FitPredictorsParams {
 
   /// The dependencies for the predictors (either fl_fingerprints or
   /// fs_fingerprints)
-  const std::vector<typename commands::PredictorFingerprint::DependencyType>
+  const fct::Ref<const std::vector<
+      typename commands::PredictorFingerprint::DependencyType>>
       dependencies_;
 
   /// The feature learners used in this pipeline.

@@ -17,13 +17,15 @@
 #include "commands/PredictorFingerprint.hpp"
 #include "engine/pipelines/Pipeline.hpp"
 #include "engine/pipelines/TransformParams.hpp"
+#include "fct/Ref.hpp"
 
 namespace engine {
 namespace pipelines {
 
 struct FeaturesOnlyParams {
   /// The depedencies of the predictors.
-  const std::vector<typename commands::PredictorFingerprint::DependencyType>
+  const fct::Ref<const std::vector<
+      typename commands::PredictorFingerprint::DependencyType>>
       dependencies_;
 
   /// The feature learners used in this pipeline.
@@ -31,7 +33,8 @@ struct FeaturesOnlyParams {
       feature_learners_;
 
   /// The fingerprints of the feature selectors used for fitting.
-  const std::vector<typename commands::PredictorFingerprint::DependencyType>
+  const fct::Ref<const std::vector<
+      typename commands::PredictorFingerprint::DependencyType>>
       fs_fingerprints_;
 
   /// The underlying pipeline

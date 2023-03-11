@@ -342,8 +342,9 @@ Transform::transform(const TransformParams& _params, const Pipeline& _pipeline,
   }
 
   const auto features_only_params = FeaturesOnlyParams{
-      .dependencies_ = {},  // TODO _fitted.fingerprints_.fs_fingerprints_,
+      .dependencies_ = _fitted.fingerprints_.get<"fs_fingerprints_">(),
       .feature_learners_ = _fitted.feature_learners_,
+      .fs_fingerprints_ = _fitted.fingerprints_.get<"fs_fingerprints_">(),
       .pipeline_ = _pipeline,
       .preprocessors_ = _fitted.preprocessors_,
       .predictor_impl_ = _fitted.predictors_.impl_,
@@ -445,7 +446,7 @@ Transform::transform_features_only(const FeaturesOnlyParams& _params) {
 
   const auto [numerical_features, categorical_features, _] = make_features(
       make_features_params, _params.pipeline_, _params.feature_learners_,
-      *_params.predictor_impl_, _params.fs_fingerprints_);
+      *_params.predictor_impl_, *_params.fs_fingerprints_);
 
   return std::make_tuple(numerical_features, categorical_features,
                          population_df);

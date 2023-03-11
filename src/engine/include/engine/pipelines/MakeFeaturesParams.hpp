@@ -42,7 +42,8 @@ struct MakeFeaturesParams {
   const dependency::DataFrameTracker data_frame_tracker_;
 
   /// The depedencies of the predictors.
-  const std::vector<typename commands::PredictorFingerprint::DependencyType>
+  const fct::Ref<const std::vector<
+      typename commands::PredictorFingerprint::DependencyType>>
       dependencies_;
 
   /// Logs the progress.

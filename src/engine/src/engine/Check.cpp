@@ -40,11 +40,7 @@ void Check::check(const Pipeline& _pipeline, const CheckParams& _params) {
 
   const featurelearners::FeatureLearnerParams feature_learner_params =
       fct::make_field<"dependencies_">(
-          json::Parser<fct::Ref<const std::vector<
-              typename commands::FeatureLearnerFingerprint::DependencyType>>>::
-              from_json(
-                  preprocessed
-                      .preprocessor_fingerprints_)) *  // TODO: Remove from_json
+          preprocessed.preprocessor_fingerprints_) *
       fct::make_field<"peripheral_">(peripheral_names) *
       fct::make_field<"peripheral_schema_">(modified_peripheral_schema) *
       fct::make_field<"placeholder_">(placeholder) *
