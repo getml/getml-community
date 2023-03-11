@@ -85,11 +85,13 @@ struct ProjectCommand {
   /// The command to delete a data frame.
   using DeleteDataFrameOp =
       fct::NamedTuple<fct::Field<"type_", fct::Literal<"DataFrame.delete">>,
+                      fct::Field<"mem_only_", bool>,
                       fct::Field<"name_", std::string>>;
 
   /// The command to delete a pipeline.
   using DeletePipelineOp =
       fct::NamedTuple<fct::Field<"type_", fct::Literal<"Pipeline.delete">>,
+                      fct::Field<"mem_only_", bool>,
                       fct::Field<"name_", std::string>>;
 
   /// The command to delete a project.

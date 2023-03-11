@@ -126,8 +126,8 @@ void ProjectManager::delete_data_frame(
 
   multithreading::WriteLock write_lock(params_.read_write_lock_);
 
-  // TODO
-  //  FileHandler::remove(name, project_directory(), _cmd, &data_frames());
+  FileHandler::remove(name, project_directory(), _cmd.get<"mem_only_">(),
+                      &data_frames());
 
   engine::communication::Sender::send_string("Success!", _socket);
 }
@@ -141,8 +141,8 @@ void ProjectManager::delete_pipeline(
 
   multithreading::WriteLock write_lock(params_.read_write_lock_);
 
-  // TODO
-  // FileHandler::remove(name, project_directory(), _cmd, &pipelines());
+  FileHandler::remove(name, project_directory(), _cmd.get<"mem_only_">(),
+                      &pipelines());
 
   communication::Sender::send_string("Success!", _socket);
 }
