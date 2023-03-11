@@ -7,7 +7,6 @@
 
 #include "engine/dependency/DataFrameTracker.hpp"
 
-#include "engine/JSON.hpp"
 #include "json/json.hpp"
 
 namespace engine {
@@ -114,7 +113,8 @@ std::optional<containers::DataFrame> DataFrameTracker::retrieve(
     const Poco::JSON::Object::Ptr _build_history) const {
   assert_true(_build_history);
 
-  const auto b_str = JSON::stringify(*_build_history);
+  // TODO
+  const auto b_str = std::string();  // JSON::stringify(*_build_history);
 
   const auto b_hash = std::hash<std::string>()(b_str);
 
