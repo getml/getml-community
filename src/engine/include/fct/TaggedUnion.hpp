@@ -11,7 +11,6 @@
 #include <variant>
 
 #include "fct/StringLiteral.hpp"
-#include "fct/field_type.hpp"
 
 namespace fct {
 
