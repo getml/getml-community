@@ -14,8 +14,9 @@
 
 namespace database {
 
-fct::Ref<Connector> DatabaseParser::parse(const Command& _cmd,
-                                          const std::string& _password) {
+fct::Ref<Connector> DatabaseParser::parse(
+    const typename Command::NamedTupleType& _cmd,
+    const std::string& _password) {
   const auto handle = [&_password](const auto& _obj) -> fct::Ref<Connector> {
     using Type = std::decay_t<decltype(_obj)>;
 
@@ -32,7 +33,7 @@ fct::Ref<Connector> DatabaseParser::parse(const Command& _cmd,
     }
   };
 
-  return fct::visit(handle, _cmd.val_);
+  return fct::visit(handle, _cmd);
 }
 
 }  // namespace database

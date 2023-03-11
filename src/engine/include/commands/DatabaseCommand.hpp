@@ -13,6 +13,7 @@
 #include <string>
 
 #include "commands/Int.hpp"
+#include "database/Command.hpp"
 #include "fct/Field.hpp"
 #include "fct/Literal.hpp"
 #include "fct/NamedTuple.hpp"
@@ -83,9 +84,7 @@ struct DatabaseCommand {
                       fct::Field<"name_", std::string>>;
 
   /// The operation needed to create a new connection.
-  using NewDBOp =
-      fct::NamedTuple<fct::Field<"type_", fct::Literal<"Database.new">>,
-                      fct::Field<"conn_id_", std::string>>;
+  using NewDBOp = typename database::Command::NamedTupleType;
 
   /// The operation needed to read data from a CSV file.
   using ReadCSVOp = fct::NamedTuple<

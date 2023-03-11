@@ -27,7 +27,8 @@ DatabaseManager::DatabaseManager(
       options_(_options),
       read_write_lock_(fct::Ref<multithreading::ReadWriteLock>::make()) {
   const auto obj =
-      fct::Field<"db_", fct::Literal<"sqlite3">>(fct::Literal<"sqlite3">()) *
+      fct::make_field<"type_">(fct::Literal<"Database.new">()) *
+      fct::make_field<"db_">(fct::Literal<"sqlite3">()) *
       fct::Field<"conn_id_", std::string>("default") *
       fct::Field<"name_", std::string>(options_.project_directory() +
                                        "database.db") *
@@ -318,34 +319,18 @@ void DatabaseManager::list_tables(const typename Command::ListTablesOp& _cmd,
                                   Poco::Net::StreamSocket* _socket) {
   const auto& name = _cmd.get<"name_">();
 
-  std::string str = "[";
-
-  const auto tables = connector(name)->list_tables();
-
-  for (const auto& table : tables) {
-    str += "\"" + table + "\",";
-  }
-
-  if (tables.size() == 0) {
-    str += "]";
-  } else {
-    str.back() = ']';
-  }
+  const auto tables_str = json::to_json(connector(name)->list_tables());
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(str, _socket);
+  communication::Sender::send_string(tables_str, _socket);
 }
 
 // ----------------------------------------------------------------------------
 
 void DatabaseManager::new_db(const typename Command::NewDBOp& _cmd,
                              Poco::Net::StreamSocket* _socket) {
-  assert_msg(false, "TODO: define_tagged_union_t");
-
-  /*const auto cmd = json::Parser<database::Command>::from_json(_cmd);
-
-  const auto conn_id = fct::get<"conn_id_">(cmd.val_);
+  const auto conn_id = fct::get<"conn_id_">(_cmd);
 
   const auto password = communication::Receiver::recv_string(_socket);
 
@@ -358,27 +343,29 @@ void DatabaseManager::new_db(const typename Command::NewDBOp& _cmd,
   }
 
   connector_map_.emplace(conn_id,
-                         database::DatabaseParser::parse(cmd, password));
+                         database::DatabaseParser::parse(_cmd, password));
 
   write_lock.unlock();
 
   post_tables();
 
-  communication::Sender::send_string("Success!", _socket);*/
+  communication::Sender::send_string("Success!", _socket);
 }
 
 // ----------------------------------------------------------------------------
 
 void DatabaseManager::post_tables() {
-  // TODO
-  /*Poco::JSON::Object obj;
+  multithreading::ReadLock read_lock(read_write_lock_);
 
-multithreading::ReadLock read_lock(read_write_lock_);
+  std::map<std::string, std::vector<std::string>> table_map;
 
-for (const auto& [name, conn] : connector_map_) {
-  const auto tables = conn->list_tables();
-  obj.set(name, jsonutils::JSON::vector_to_array_ptr(tables));
-}*/
+  for (const auto& [name, conn] : connector_map_) {
+    const auto tables = conn->list_tables();
+    table_map[name] = tables;
+  }
+
+  monitor_->send_tcp("postdatabasetables", json::to_json(table_map),
+                     communication::Monitor::TIMEOUT_ON);
 }
 
 // ----------------------------------------------------------------------------
