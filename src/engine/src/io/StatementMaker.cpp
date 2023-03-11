@@ -7,10 +7,11 @@
 
 #include "io/StatementMaker.hpp"
 
-#include "jsonutils/jsonutils.hpp"
+#include "fct/Field.hpp"
+#include "fct/NamedTuple.hpp"
+#include "json/json.hpp"
 
 namespace io {
-// ----------------------------------------------------------------------------
 
 size_t StatementMaker::find_max_size(
     const std::vector<std::string>& _colnames) {
@@ -125,28 +126,26 @@ std::string StatementMaker::make_statement_python(
     const std::vector<Datatype>& _datatypes) {
   assert_true(_colnames.size() == _datatypes.size());
 
-  Poco::JSON::Array unused_floats;
-  Poco::JSON::Array unused_strings;
+  std::vector<std::string> unused_floats;
+  std::vector<std::string> unused_strings;
 
   for (size_t i = 0; i < _colnames.size(); ++i) {
     switch (_datatypes[i]) {
       case Datatype::double_precision:
       case Datatype::integer:
-        unused_floats.add(_colnames[i]);
+        unused_floats.push_back(_colnames[i]);
         break;
 
       default:
-        unused_strings.add(_colnames[i]);
+        unused_strings.push_back(_colnames[i]);
         break;
     }
   }
 
-  Poco::JSON::Object obj;
+  const auto obj = fct::make_field<"unused_float">(unused_floats) *
+                   fct::make_field<"unused_string">(unused_strings);
 
-  obj.set("unused_float", unused_floats);
-  obj.set("unused_string", unused_strings);
-
-  return jsonutils::JSON::stringify(obj);
+  return json::to_json(obj);
 }
 
 // ----------------------------------------------------------------------------
