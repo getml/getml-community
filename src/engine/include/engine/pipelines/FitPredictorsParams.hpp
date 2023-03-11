@@ -1,30 +1,23 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_PIPELINES_FITPREDICTORSPARAMS_HPP_
 #define ENGINE_PIPELINES_FITPREDICTORSPARAMS_HPP_
 
-// ----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
 #include <Poco/Net/StreamSocket.h>
-
-// ----------------------------------------------------------------------------
 
 #include <string>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
+#include "commands/FeatureLearnerFingerprint.hpp"
+#include "commands/PredictorFingerprint.hpp"
 #include "engine/pipelines/FitParams.hpp"
 #include "engine/pipelines/Pipeline.hpp"
 #include "predictors/PredictorImpl.hpp"
-
-// ----------------------------------------------------------------------------
 
 namespace engine {
 namespace pipelines {
@@ -36,7 +29,8 @@ struct FitPredictorsParams {
 
   /// The dependencies for the predictors (either fl_fingerprints or
   /// fs_fingerprints)
-  const std::vector<Poco::JSON::Object::Ptr> dependencies_;
+  const std::vector<typename commands::PredictorFingerprint::DependencyType>
+      dependencies_;
 
   /// The feature learners used in this pipeline.
   const std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>
@@ -60,8 +54,10 @@ struct FitPredictorsParams {
   /// The preprocessors used in this pipeline.
   const std::vector<fct::Ref<const preprocessors::Preprocessor>> preprocessors_;
 
-  /// The fingerprints of the preprocessor used for fitting.
-  const std::vector<Poco::JSON::Object::Ptr> preprocessor_fingerprints_;
+  /// The fingerprints of the preprocessors used for fitting.
+  const std::vector<
+      typename commands::FeatureLearnerFingerprint::DependencyType>
+      preprocessor_fingerprints_;
 
   /// The purpose (feature_selector_ or predictor_)
   const std::string purpose_;

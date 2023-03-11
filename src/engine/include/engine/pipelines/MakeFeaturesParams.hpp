@@ -8,7 +8,6 @@
 #ifndef ENGINE_PIPELINES_MAKEFEATURESPARAMS_HPP_
 #define ENGINE_PIPELINES_MAKEFEATURESPARAMS_HPP_
 
-#include <Poco/JSON/Object.h>
 #include <Poco/Net/StreamSocket.h>
 
 #include <map>
@@ -18,6 +17,7 @@
 #include <vector>
 
 #include "commands/DataFramesOrViews.hpp"
+#include "commands/Predictor.hpp"
 #include "engine/communication/communication.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/dependency/dependency.hpp"
@@ -42,7 +42,8 @@ struct MakeFeaturesParams {
   const dependency::DataFrameTracker data_frame_tracker_;
 
   /// The depedencies of the predictors.
-  const std::vector<Poco::JSON::Object::Ptr> dependencies_;
+  const std::vector<typename commands::PredictorFingerprint::DependencyType>
+      dependencies_;
 
   /// Logs the progress.
   const std::shared_ptr<const communication::Logger> logger_;

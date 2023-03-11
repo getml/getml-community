@@ -8,7 +8,6 @@
 #ifndef ENGINE_PIPELINES_TRANSFORM_HPP_
 #define ENGINE_PIPELINES_TRANSFORM_HPP_
 
-#include <Poco/JSON/Object.h>
 #include <Poco/Net/StreamSocket.h>
 
 #include <algorithm>
@@ -17,6 +16,7 @@
 #include <utility>
 #include <vector>
 
+#include "commands/PredictorFingerprint.hpp"
 #include "engine/communication/communication.hpp"
 #include "engine/containers/DataFrame.hpp"
 #include "engine/containers/containers.hpp"
@@ -52,7 +52,9 @@ class Transform {
                     fct::Ref<const featurelearners::AbstractFeatureLearner>>&
                     _feature_learners,
                 const predictors::PredictorImpl& _predictor_impl,
-                const std::vector<Poco::JSON::Object::Ptr>& _fs_fingerprints);
+                const std::vector<
+                    typename commands::PredictorFingerprint::DependencyType>&
+                    _fs_fingerprints);
 
   /// Applies the staging step.
   static std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
