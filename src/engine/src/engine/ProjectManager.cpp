@@ -14,6 +14,7 @@
 #include "engine/handlers/FileHandler.hpp"
 #include "engine/handlers/PipelineManager.hpp"
 #include "engine/pipelines/SaveParams.hpp"
+#include "fct/make_named_tuple.hpp"
 
 namespace engine {
 namespace handlers {
@@ -260,36 +261,33 @@ void ProjectManager::execute_command(const Command& _command,
 
 void ProjectManager::list_data_frames(const typename Command::ListDfsOp& _cmd,
                                       Poco::Net::StreamSocket* _socket) const {
-  Poco::JSON::Object obj;
-
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
-  Poco::JSON::Array in_memory;
+  std::vector<std::string> in_memory;
 
   for (const auto& [key, value] : data_frames()) {
-    in_memory.add(key);
+    in_memory.push_back(key);
   }
 
-  Poco::JSON::Array on_disk;
+  std::vector<std::string> on_disk;
 
   Poco::DirectoryIterator end;
 
   for (Poco::DirectoryIterator it(project_directory() + "data/"); it != end;
        ++it) {
     if (it->isDirectory()) {
-      on_disk.add(it.name());
+      on_disk.push_back(it.name());
     }
   }
 
   read_lock.unlock();
 
-  obj.set("in_memory", in_memory);
-
-  obj.set("on_disk", on_disk);
+  const auto obj = fct::make_field<"in_memory">(in_memory) *
+                   fct::make_field<"on_disk">(on_disk);
 
   engine::communication::Sender::send_string("Success!", _socket);
 
-  engine::communication::Sender::send_string(JSON::stringify(obj), _socket);
+  engine::communication::Sender::send_string(json::to_json(obj), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -297,32 +295,28 @@ void ProjectManager::list_data_frames(const typename Command::ListDfsOp& _cmd,
 void ProjectManager::list_pipelines(
     const typename Command::ListPipelinesOp& _cmd,
     Poco::Net::StreamSocket* _socket) const {
-  Poco::JSON::Object obj;
-
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
-  Poco::JSON::Array names;
+  std::vector<std::string> names;
 
   for (const auto& [key, value] : pipelines()) {
-    names.add(key);
+    names.push_back(key);
   }
 
   read_lock.unlock();
 
-  obj.set("names", names);
+  const auto obj = fct::make_named_tuple(fct::make_field<"names">(names));
 
   engine::communication::Sender::send_string("Success!", _socket);
 
-  engine::communication::Sender::send_string(JSON::stringify(obj), _socket);
+  engine::communication::Sender::send_string(json::to_json(obj), _socket);
 }
 
 // ------------------------------------------------------------------------
 
 void ProjectManager::list_projects(const typename Command::ListProjectsOp& _cmd,
                                    Poco::Net::StreamSocket* _socket) const {
-  Poco::JSON::Object obj;
-
-  Poco::JSON::Array project_names;
+  std::vector<std::string> project_names;
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -331,17 +325,18 @@ void ProjectManager::list_projects(const typename Command::ListProjectsOp& _cmd,
   for (Poco::DirectoryIterator it(params_.options_.all_projects_directory());
        it != end; ++it) {
     if (it->isDirectory()) {
-      project_names.add(it.name());
+      project_names.push_back(it.name());
     }
   }
 
   read_lock.unlock();
 
-  obj.set("projects", project_names);
+  const auto obj =
+      fct::make_named_tuple(fct::make_field<"projects">(project_names));
 
   engine::communication::Sender::send_string("Success!", _socket);
 
-  engine::communication::Sender::send_string(JSON::stringify(obj), _socket);
+  engine::communication::Sender::send_string(json::to_json(obj), _socket);
 }
 
 // ------------------------------------------------------------------------
