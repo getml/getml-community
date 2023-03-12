@@ -392,7 +392,7 @@ void ProjectManager::load_data_frame(const typename Command::LoadDfOp& _cmd,
   data_frames()[name] = df;
 
   if (df.build_history()) {
-    data_frame_tracker().add(df);
+    data_frame_tracker().add(df, *df.build_history());
   }
 
   engine::communication::Sender::send_string("Success!", _socket);

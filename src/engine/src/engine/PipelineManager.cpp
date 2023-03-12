@@ -157,13 +157,12 @@ void PipelineManager::add_to_tracker(
     containers::DataFrame* _df) {
   const auto dependencies = _fitted.fingerprints_.get<"fs_fingerprints_">();
 
-  // TODO
-  /*const auto build_history = data_frame_tracker().make_build_history(
+  const auto build_history = data_frame_tracker().make_build_history(
       *dependencies, _population_df, _peripheral_dfs);
 
-  _df->set_build_history(build_history);*/
+  _df->set_build_history(build_history);
 
-  data_frame_tracker().add(*_df);
+  data_frame_tracker().add(*_df, build_history);
 }
 
 // ------------------------------------------------------------------------
@@ -424,8 +423,8 @@ void PipelineManager::fit(const typename Command::FitOp& _cmd,
       .data_frames_ = data_frames(),
       .data_frame_tracker_ = data_frame_tracker(),
       .fe_tracker_ = params_.fe_tracker_,
-      .fs_fingerprints_ = fct::Ref<const std::vector<
-          commands::Fingerprint>>::make(),
+      .fs_fingerprints_ =
+          fct::Ref<const std::vector<commands::Fingerprint>>::make(),
       .logger_ = params_.logger_.ptr(),
       .peripheral_dfs_ = peripheral_dfs,
       .population_df_ = population_df,

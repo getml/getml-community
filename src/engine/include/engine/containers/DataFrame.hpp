@@ -202,7 +202,9 @@ class DataFrame {
   void where(const std::vector<bool> &_condition);
 
   /// Trivial accessor
-  std::optional<ViewOp> build_history() const { return build_history_; }
+  std::optional<commands::Fingerprint> build_history() const {
+    return build_history_;
+  }
 
   /// Trivial accessor
   template <typename T,
@@ -497,7 +499,7 @@ class DataFrame {
   const std::shared_ptr<memmap::Pool> &pool() const { return pool_; }
 
   /// Trivial setter
-  void set_build_history(const ViewOp &_build_history) {
+  void set_build_history(const commands::Fingerprint &_build_history) {
     build_history_ = _build_history;
   }
 
@@ -792,7 +794,7 @@ class DataFrame {
  private:
   /// The build history is relevant for when the data frame contains generated
   /// features. It enables us to retrieve features we have already build.
-  std::optional<ViewOp> build_history_;
+  std::optional<commands::Fingerprint> build_history_;
 
   /// Categorical data
   std::vector<Column<Int>> categoricals_;

@@ -1318,7 +1318,7 @@ void DataFrame::load(const std::string &_path) {
   const auto build_history = load_textfile(_path, "build_history.json");
 
   if (build_history) {
-    build_history_ = json::from_json<ViewOp>(*build_history);
+    build_history_ = json::from_json<commands::Fingerprint>(*build_history);
   }
 
   categoricals_ = load_columns<Int>(_path, "categorical_");

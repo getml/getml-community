@@ -74,7 +74,7 @@ int main(int argc, char* argv[]) {
       fct::Ref<engine::handlers::PipelineManager::PipelineMapType>::make();
 
   const auto data_frame_tracker =
-      fct::Ref<engine::dependency::DataFrameTracker>::make(data_frames.ptr());
+      fct::Ref<engine::dependency::DataFrameTracker>::make(data_frames);
 
   const auto preprocessor_tracker =
       fct::Ref<engine::dependency::PreprocessorTracker>::make();
