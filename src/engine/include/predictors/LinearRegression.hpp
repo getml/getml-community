@@ -83,7 +83,7 @@ class LinearRegression : public Predictor {
   /// the dependency graphs).
   Fingerprint fingerprint() const final {
     using LinearRegressionFingerprint =
-        typename PredictorFingerprint::LinearRegressionFingerprint;
+        typename Fingerprint::LinearRegressionFingerprint;
     return Fingerprint(LinearRegressionFingerprint(
         hyperparams().val_ * fct::make_field<"dependencies_">(dependencies_) *
         impl().named_tuple()));

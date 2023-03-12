@@ -17,10 +17,10 @@
 
 #include "commands/Fingerprint.hpp"
 #include "debug/debug.hpp"
+#include "predictors/Fingerprint.hpp"
 #include "predictors/FloatFeature.hpp"
 #include "predictors/IntFeature.hpp"
 #include "predictors/Predictor.hpp"
-#include "predictors/PredictorFingerprint.hpp"
 #include "predictors/PredictorImpl.hpp"
 #include "predictors/StandardScaler.hpp"
 #include "predictors/XGBoostHyperparams.hpp"
@@ -96,10 +96,9 @@ class XGBoostPredictor : public Predictor {
 
   /// Returns the fingerprint of the predictor (necessary to build
   /// the dependency graphs).
-  PredictorFingerprint fingerprint() const final {
-    using XGBoostFingerprint =
-        typename PredictorFingerprint::XGBoostFingerprint;
-    return PredictorFingerprint(XGBoostFingerprint(
+  Fingerprint fingerprint() const final {
+    using XGBoostFingerprint = typename Fingerprint::XGBoostFingerprint;
+    return Fingerprint(XGBoostFingerprint(
         hyperparams_->val_ * fct::make_field<"dependencies_">(dependencies_) *
         impl().named_tuple()));
   }

@@ -24,6 +24,7 @@
 #include "fct/TaggedUnion.hpp"
 #include "fct/define_named_tuple.hpp"
 #include "fct/define_tagged_union.hpp"
+#include "fct/define_variant.hpp"
 
 namespace commands {
 
@@ -136,8 +137,8 @@ struct Fingerprint {
   // -----------------------------
 
   using NamedTupleType =
-      std::variant<DataFrameFingerprint, PreprocessorFingerprint,
-                   FeatureLearnerFingerprint, PredictorFingerprint>;
+      fct::define_variant_t<DataFrameFingerprint, PreprocessorFingerprint,
+                            FeatureLearnerFingerprint, PredictorFingerprint>;
 
   // -----------------------------
 
