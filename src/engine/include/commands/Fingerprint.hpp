@@ -44,9 +44,15 @@ struct Fingerprint {
       fct::NamedTuple<fct::Field<"name_", std::string>,
                       fct::Field<"last_change_", std::string>>;
 
+  /// For retrieving data frames that are the results of entire pipelines (and
+  /// thus contain features).
+  using PipelineBuildHistory = fct::define_named_tuple_t<
+      Dependencies,
+      fct::Field<"df_fingerprints_", std::vector<commands::Fingerprint>>>;
+
   using DataFrameFingerprint =
       std::variant<typename DataFrameOrView::ViewOp, OrdinaryDataFrame,
-                   fct::Ref<const DataModel>>;
+                   fct::Ref<const DataModel>, PipelineBuildHistory>;
 
   // -----------------------------
   // Preprocessors

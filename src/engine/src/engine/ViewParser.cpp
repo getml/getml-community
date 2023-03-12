@@ -7,6 +7,7 @@
 
 #include "engine/handlers/ViewParser.hpp"
 
+#include "commands/Fingerprint.hpp"
 #include "engine/containers/DataFrameContent.hpp"
 #include "engine/handlers/BoolOpParser.hpp"
 #include "engine/handlers/FloatOpParser.hpp"
@@ -328,7 +329,7 @@ containers::DataFrame ViewParser::parse(
 
       subselection(_cmd, &df);
 
-      df.set_build_history(_cmd);
+      df.set_build_history(commands::Fingerprint(_cmd));
 
       return df;
     }
