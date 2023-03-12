@@ -84,13 +84,6 @@ class Transform {
       const containers::DataFrame& _population_df,
       const std::vector<containers::DataFrame>& _peripheral_dfs);
 
-  /// Calculates statistics about the features to be displayed
-  /// in the frontend.
-  static std::optional<metrics::Scores> calculate_feature_stats(
-      const Pipeline& _pipeline, const containers::NumericalFeatures _features,
-      const size_t _ncols, const Poco::JSON::Object& _cmd,
-      const containers::DataFrame& _population_df);
-
   /// Gets the numerical columns from _population_df and
   /// returns a combination of the autofeatures and the
   /// numerical columns.
