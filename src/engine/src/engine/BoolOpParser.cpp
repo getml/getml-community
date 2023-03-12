@@ -129,9 +129,13 @@ containers::ColumnView<bool> BoolOpParser::parse(
     if constexpr (std::is_same<Type, BooleanSubselectionOp>()) {
       return subselection(_cmd);
     }
+
+    if constexpr (std::is_same<Type, BooleanUpdateOp>()) {
+      return update(_cmd);
+    }
   };
 
-  return fct::visit(handle, _cmd.val_);
+  return std::visit(handle, _cmd.val_);
 }
 
 // ----------------------------------------------------------------------------
@@ -192,6 +196,25 @@ containers::ColumnView<bool> BoolOpParser::string_comparison(
   };
 
   return fct::visit(handle, _cmd.get<"operator_">(), _cmd);
+}
+
+// ----------------------------------------------------------------------------
+
+containers::ColumnView<bool> BoolOpParser::update(
+    const BooleanUpdateOp& _cmd) const {
+  const auto operand1 = parse(*_cmd.get<"operand1_">());
+
+  const auto operand2 = parse(*_cmd.get<"operand2_">());
+
+  const auto condition = parse(*_cmd.get<"condition_">());
+
+  const auto op = [](const auto& _val1, const auto& _val2,
+                     const bool _cond) -> bool {
+    return _cond ? _val2 : _val1;
+  };
+
+  return containers::ColumnView<bool>::from_tern_op(operand1, operand2,
+                                                    condition, op);
 }
 
 // ----------------------------------------------------------------------------

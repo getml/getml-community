@@ -60,9 +60,10 @@ struct ColumnCommand {
       fct::Field<"start_", Int>, fct::Field<"col_", BooleanColumnView>>;
 
   /// The command used to retrieve the number of rows of a boolean column.
-  using GetBooleanColumnNRowsOp =
-      fct::NamedTuple<fct::Field<"type_", fct::Literal<"BooleanColumn.nrows">>,
-                      fct::Field<"col_", BooleanColumnView>>;
+  using GetBooleanColumnNRowsOp = fct::NamedTuple<
+      fct::Field<"type_", fct::Literal<"BooleanColumn.nrows",
+                                       "BooleanColumn.get_nrows">>,
+      fct::Field<"col_", BooleanColumnView>>;
 
   /// The command used to get a float column
   using GetFloatColumnOp =
@@ -77,9 +78,10 @@ struct ColumnCommand {
       fct::Field<"col_", FloatColumnOrFloatColumnView>>;
 
   /// The command used to retrieve the number of rows of a float column.
-  using GetFloatColumnNRowsOp =
-      fct::NamedTuple<fct::Field<"type_", fct::Literal<"FloatColumn.nrows">>,
-                      fct::Field<"col_", FloatColumnOrFloatColumnView>>;
+  using GetFloatColumnNRowsOp = fct::NamedTuple<
+      fct::Field<"type_",
+                 fct::Literal<"FloatColumn.nrows", "FloatColumn.get_nrows">>,
+      fct::Field<"col_", FloatColumnOrFloatColumnView>>;
 
   /// The command used to retrieve the subroles of a float column.
   using GetFloatColumnSubrolesOp = fct::NamedTuple<
@@ -109,9 +111,10 @@ struct ColumnCommand {
       fct::Field<"col_", StringColumnOrStringColumnView>>;
 
   /// The command used to retrieve the number of rows of a float column.
-  using GetStringColumnNRowsOp =
-      fct::NamedTuple<fct::Field<"type_", fct::Literal<"StringColumn.nrows">>,
-                      fct::Field<"col_", StringColumnOrStringColumnView>>;
+  using GetStringColumnNRowsOp = fct::NamedTuple<
+      fct::Field<"type_",
+                 fct::Literal<"StringColumn.nrows", "StringColumn.get_nrows">>,
+      fct::Field<"col_", StringColumnOrStringColumnView>>;
 
   /// The command used to retrieve the subroles of a float column.
   using GetStringColumnSubrolesOp = fct::NamedTuple<

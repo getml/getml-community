@@ -35,6 +35,7 @@
 #include "fct/join.hpp"
 #include "json/ArrayGetter.hpp"
 #include "json/ObjectGetter.hpp"
+#include "json/is_required.hpp"
 #include "strings/strings.hpp"
 
 namespace json {
@@ -159,7 +160,13 @@ struct Parser<fct::NamedTuple<FieldTypes...>> {
       const auto key = FieldType::name_.str();
 
       if (!_obj.has(key)) {
-        throw std::runtime_error("Field named '" + key + "' not found!");
+        using ValueType = std::decay_t<typename FieldType::Type>;
+        if constexpr (is_required<ValueType>()) {
+          throw std::runtime_error("Field named '" + key + "' not found!");
+        } else {
+          return build_named_tuple_recursively(_obj, _args...,
+                                               FieldType(ValueType()));
+        }
       }
 
       const auto value = get_value<FieldType>(_obj);
@@ -181,7 +188,13 @@ struct Parser<fct::NamedTuple<FieldTypes...>> {
       using ValueType = std::decay_t<typename FieldType::Type>;
       const auto value = Parser<ValueType>::to_json(fct::get<_i>(_tup));
       const auto name = FieldType::name_.str();
-      _ptr->set(name, value);
+      if constexpr (!is_required<ValueType>()) {
+        if (!value.isEmpty()) {
+          _ptr->set(name, value);
+        }
+      } else {
+        _ptr->set(name, value);
+      }
       return build_object_recursively<_i + 1>(_tup, _ptr);
     }
   }
@@ -496,7 +509,8 @@ struct Parser<std::variant<FieldTypes...>> {
         return Parser<VarType>::from_json(_var);
       } catch (std::exception& e) {
         const auto errors = fct::join::vector<std::string>(
-            {_errors, std::vector<std::string>({e.what()})});
+            {_errors,
+             std::vector<std::string>({std::string("\n -") + e.what()})});
         return from_json<_i + 1>(_var, errors);
       }
     }

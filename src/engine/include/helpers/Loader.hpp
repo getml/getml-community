@@ -22,7 +22,11 @@ class Loader {
   /// JSON.
   template <class T>
   static T load_from_json(const std::string& _fname) {
-    const auto json_str = read_str(_fname + ".json");
+    const auto fname =
+        _fname.size() > 5 && _fname.substr(_fname.size() - 5) == ".json"
+            ? _fname
+            : _fname + ".json";
+    const auto json_str = read_str(fname);
     return json::from_json<T>(json_str);
   }
 

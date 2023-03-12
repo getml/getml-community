@@ -42,6 +42,7 @@ class BoolOpParser {
       BooleanStrComparisonOp;
   typedef typename commands::BooleanColumnView::BooleanSubselectionOp
       BooleanSubselectionOp;
+  typedef typename commands::BooleanColumnView::BooleanUpdateOp BooleanUpdateOp;
 
   static constexpr UnknownSize NOT_KNOWABLE =
       containers::ColumnView<bool>::NOT_KNOWABLE;
@@ -99,6 +100,9 @@ class BoolOpParser {
   /// Returns a subselection on the column.
   containers::ColumnView<bool> subselection(
       const BooleanSubselectionOp& _cmd) const;
+
+  /// Returns an updated version of the column.
+  containers::ColumnView<bool> update(const BooleanUpdateOp& _cmd) const;
 
   /// Undertakes a binary operation based on template class
   /// Operator.

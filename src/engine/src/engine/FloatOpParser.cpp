@@ -294,7 +294,7 @@ containers::ColumnView<Float> FloatOpParser::parse(
     }
   };
 
-  return fct::visit(handle, _cmd.val_);
+  return std::visit(handle, _cmd.val_);
 }
 
 // ----------------------------------------------------------------------------
