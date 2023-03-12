@@ -11,6 +11,7 @@
 
 #include "commands/DataFramesOrViews.hpp"
 #include "engine/containers/Roles.hpp"
+#include "engine/handlers/ColumnManager.hpp"
 #include "engine/handlers/DataFrameManager.hpp"
 #include "engine/pipelines/ToSQL.hpp"
 #include "engine/pipelines/ToSQLParams.hpp"
@@ -526,35 +527,62 @@ typename PipelineManager::Command::TransformOp PipelineManager::receive_data(
 
   auto local_data_frame_manager = DataFrameManager(data_frame_manager_params);
 
+  auto local_column_manager = ColumnManager(data_frame_manager_params);
+
+  using DataFrameCmd =
+      fct::NamedTuple<fct::Field<"type_", fct::Literal<"DataFrame">>,
+                      fct::Field<"name_", std::string>>;
+
+  using CmdType =
+      fct::TaggedUnion<"type_", DataFrameCmd,
+                       typename commands::ProjectCommand::AddDfFromJSONOp,
+                       typename commands::ProjectCommand::AddDfFromQueryOp,
+                       typename commands::ColumnCommand::SetFloatColumnUnitOp,
+                       typename commands::ColumnCommand::SetStringColumnUnitOp,
+                       typename Command::TransformOp>;
+
   auto cmd = _cmd;
 
   while (true) {
-    // TODO
-    // const auto name = JSON::get_value<std::string>(cmd, "name_");
+    const auto json_str = communication::Receiver::recv_string(_socket);
 
-    // const auto type = JSON::get_value<std::string>(cmd, "type_");
+    const auto op = json::from_json<CmdType>(json_str);
 
-    // TODO
-    /*if (type == "DataFrame") {
-      local_data_frame_manager.add_data_frame(name, _socket);
-    } else if (type == "DataFrame.from_query") {
-      local_data_frame_manager.from_query(name, cmd, false, _socket);
-    } else if (type == "DataFrame.from_json") {
-      local_data_frame_manager.from_json(name, cmd, false, _socket);
-    } else if (type == "FloatColumn.set_unit") {
-      local_data_frame_manager.set_unit(name, cmd, _socket);
-    } else if (type == "StringColumn.set_unit") {
-      local_data_frame_manager.set_unit_categorical(name, cmd, _socket);
-    } else {
+    const auto handle = [&local_data_frame_manager, &local_column_manager, &cmd,
+                         _socket](const auto& _op) -> bool {
+      using Type = std::decay_t<decltype(_op)>;
+      if constexpr (std::is_same<Type, DataFrameCmd>()) {
+        local_data_frame_manager.add_data_frame(fct::get<"name_">(_op),
+                                                _socket);
+        return false;
+      } else if constexpr (std::is_same<Type,
+                                        typename commands::ProjectCommand::
+                                            AddDfFromJSONOp>()) {
+        local_data_frame_manager.from_json(_op, _socket);
+        return false;
+      } else if constexpr (std::is_same<Type,
+                                        typename commands::ProjectCommand::
+                                            AddDfFromQueryOp>()) {
+        local_data_frame_manager.from_query(_op, _socket);
+        return false;
+      } else if constexpr (std::is_same<Type, typename commands::ColumnCommand::
+                                                  SetFloatColumnUnitOp>()) {
+        local_column_manager.set_unit(_op, _socket);
+        return false;
+      } else if constexpr (std::is_same<Type, typename commands::ColumnCommand::
+                                                  SetStringColumnUnitOp>()) {
+        local_column_manager.set_unit_categorical(_op, _socket);
+        return false;
+      } else if constexpr (std::is_same<Type,
+                                        typename Command::TransformOp>()) {
+        cmd = _op;
+        return true;
+      }
+    };
+    const bool break_now = fct::visit(handle, op);
+    if (break_now) {
       break;
-    }*/
-
-    const auto cmd_str =
-        communication::Receiver::recv_cmd(params_.logger_, _socket);
-
-    // TODO: This needs to be turned into a tagged union containing all the
-    // commands above.
-    cmd = json::from_json<typename Command::TransformOp>(cmd_str);
+    }
   }
 
   return cmd;
