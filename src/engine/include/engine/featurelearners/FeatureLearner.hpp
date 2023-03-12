@@ -62,6 +62,11 @@ class FeatureLearner : public AbstractFeatureLearner {
  private:
   typedef typename FeatureLearnerType::DataFrameType DataFrameType;
   typedef typename FeatureLearnerType::HypType HypType;
+  typedef fct::define_named_tuple_t<
+      typename HypType::NamedTupleType,
+      typename commands::Fingerprint::Dependencies,
+      typename commands::Fingerprint::OtherFLRequirements>
+      FingerprintType;
 
   typedef typename std::conditional<
       has_propositionalization_,
@@ -499,11 +504,11 @@ FeatureLearner<FeatureLearnerType>::extract_tables_by_colnames(
 
 template <typename FeatureLearnerType>
 commands::Fingerprint FeatureLearner<FeatureLearnerType>::fingerprint() const {
-  return commands::Fingerprint(hyperparameters_.val_ *
-                               fct::make_field<"dependencies_">(dependencies_) *
-                               fct::make_field<"peripheral_">(peripheral_) *
-                               fct::make_field<"placeholder_">(placeholder_) *
-                               fct::make_field<"target_num_">(target_num_));
+  return commands::Fingerprint(FingerprintType(
+      hyperparameters_.val_ * fct::make_field<"dependencies_">(*dependencies_) *
+      fct::make_field<"peripheral_">(peripheral_) *
+      fct::make_field<"placeholder_">(placeholder_) *
+      fct::make_field<"target_num_">(target_num_)));
 }
 
 // ----------------------------------------------------------------------------

@@ -96,11 +96,11 @@ class CategoryTrimmer : public Preprocessor {
   commands::Fingerprint fingerprint() const final {
     using CategoryTrimmerFingerprint =
         typename commands::Fingerprint::CategoryTrimmerFingerprint;
-    return CategoryTrimmerFingerprint(
+    return commands::Fingerprint(CategoryTrimmerFingerprint(
         fct::make_field<"dependencies_">(dependencies_),
         fct::make_field<"type_">(fct::Literal<"CategoryTrimmer">()),
         fct::make_field<"max_num_categories_">(max_num_categories_),
-        fct::make_field<"min_freq_">(min_freq_));
+        fct::make_field<"min_freq_">(min_freq_)));
   }
 
   /// Returns the type of the preprocessor.

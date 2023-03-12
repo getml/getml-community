@@ -97,7 +97,7 @@ class LogisticRegression : public Predictor {
   /// the dependency graphs).
   Fingerprint fingerprint() const final {
     using LogisticRegressionFingerprint =
-        typename PredictorFingerprint::LogisticRegressionFingerprint;
+        typename Fingerprint::LogisticRegressionFingerprint;
     return Fingerprint(LogisticRegressionFingerprint(
         hyperparams().val_ * fct::make_field<"dependencies_">(dependencies_) *
         impl().named_tuple()));
