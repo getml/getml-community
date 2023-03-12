@@ -63,6 +63,14 @@ class ColumnManager {
   void get_categorical_column(const typename Command::GetStringColumnOp& _cmd,
                               Poco::Net::StreamSocket* _socket);
 
+  /// Changes the unit of the column.
+  void set_unit(const typename Command::SetFloatColumnUnitOp& _cmd,
+                Poco::Net::StreamSocket* _socket);
+
+  /// Changes the unit of the column.
+  void set_unit_categorical(const typename Command::SetStringColumnUnitOp& _cmd,
+                            Poco::Net::StreamSocket* _socket);
+
  private:
   /// Adds a new float column to an existing data frame (sent by the user, for
   /// instance as a numpy array).
@@ -145,14 +153,6 @@ class ColumnManager {
   void set_subroles_categorical(
       const typename Command::SetStringColumnSubrolesOp& _cmd,
       Poco::Net::StreamSocket* _socket);
-
-  /// Changes the unit of the column.
-  void set_unit(const typename Command::SetFloatColumnUnitOp& _cmd,
-                Poco::Net::StreamSocket* _socket);
-
-  /// Changes the unit of the column.
-  void set_unit_categorical(const typename Command::SetStringColumnUnitOp& _cmd,
-                            Poco::Net::StreamSocket* _socket);
 
  private:
   /// Trivial accessor
