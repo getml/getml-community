@@ -18,7 +18,6 @@
 #include "fct/Literal.hpp"
 #include "fct/NamedTuple.hpp"
 #include "fct/Ref.hpp"
-#include "fct/TaggedUnion.hpp"
 
 namespace commands {
 
@@ -94,9 +93,9 @@ class StringColumnOrStringColumnView {
                       fct::Field<"type_", fct::Literal<"StringColumn">>>;
 
   using NamedTupleType =
-      fct::TaggedUnion<"type_", StringColumnOp, StringBinaryOp, StringConstOp,
-                       StringSubselectionOp, StringSubstringOp, StringUnaryOp,
-                       StringUpdateOp, StringWithSubrolesOp, StringWithUnitOp>;
+      std::variant<StringColumnOp, StringBinaryOp, StringConstOp,
+                   StringSubselectionOp, StringSubstringOp, StringUnaryOp,
+                   StringUpdateOp, StringWithSubrolesOp, StringWithUnitOp>;
 
   /// Used to break the recursive definition.
   NamedTupleType val_;

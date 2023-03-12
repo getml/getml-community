@@ -43,7 +43,7 @@ struct DataModel {
   /// Needed for the JSON parsing to work.
   using NamedTupleType = fct::define_named_tuple_t<
       fct::remove_fields_t<typename helpers::Placeholder::NamedTupleType,
-                           "joined_tables_">,
+                           "joined_tables_", "propositionalization_">,
       f_horizon, f_joined_tables, f_memory, f_relationship>;
 
   /// The DataModel requires additional checks after parsing,

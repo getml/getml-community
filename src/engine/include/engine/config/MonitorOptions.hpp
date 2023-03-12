@@ -18,26 +18,22 @@ namespace config {
 
 /// Configuration information for the monitor
 struct MonitorOptions {
-  using NamedTupleType = fct::NamedTuple<
-      fct::Field<"httpPort", size_t>, fct::Field<"httpsPort", size_t>,
-      fct::Field<"proxyUrl", std::string>, fct::Field<"tcpPort", size_t> >;
+  using NamedTupleType = fct::NamedTuple<fct::Field<"httpPort", size_t>,
+                                         fct::Field<"proxyUrl", std::string>,
+                                         fct::Field<"tcpPort", size_t> >;
 
  public:
   MonitorOptions(const NamedTupleType& _obj)
       : http_port_(_obj.get<"httpPort">()),
-        https_port_(_obj.get<"httpsPort">()),
         proxy_url_(_obj.get<"proxyUrl">()),
         tcp_port_(_obj.get<"tcpPort">()) {}
 
-  MonitorOptions() : http_port_(1709), https_port_(1710), tcp_port_(1711) {}
+  MonitorOptions() : http_port_(1709), tcp_port_(1711) {}
 
   ~MonitorOptions() = default;
 
   /// Trivial accessor
   const size_t http_port() const { return http_port_; }
-
-  /// Trivial accessor
-  const size_t https_port() const { return https_port_; }
 
   /// Trivial accessor.
   const std::string proxy_url() const { return proxy_url_; }
@@ -60,11 +56,6 @@ struct MonitorOptions {
 
   /// The HTTP port of the monitor, used for local connections.
   size_t http_port_;
-
-  /// The port of the monitor that also accepts
-  /// remote connections. (The engine will never communicate
-  /// with this port. It is only needed to print out the initial message).
-  size_t https_port_;
 
   /// Any proxy server the getML monitor might be hidden behind.
   std::string proxy_url_;

@@ -76,9 +76,6 @@ void Options::parse_flags(int _argc, char* argv[]) {
 
     success = success || parse_size_t(arg, "http-port", &(monitor_.http_port_));
 
-    success =
-        success || parse_size_t(arg, "https-port", &(monitor_.https_port_));
-
     success = success || parse_size_t(arg, "tcp-port", &(monitor_.tcp_port_));
 
     success = success ||

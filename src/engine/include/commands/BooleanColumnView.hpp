@@ -98,11 +98,20 @@ class BooleanColumnView {
                               fct::Ref<StringColumnOrStringColumnView>>>,
       fct::Field<"type_", fct::Literal<"BooleanColumnView">>>;
 
+  /// The command used to update a boolean column.
+  using BooleanUpdateOp =
+      fct::NamedTuple<fct::Field<"operator_", fct::Literal<"update">>,
+                      fct::Field<"operand1_", fct::Ref<BooleanColumnView>>,
+                      fct::Field<"operand2_", fct::Ref<BooleanColumnView>>,
+                      fct::Field<"condition_", fct::Ref<BooleanColumnView>>,
+                      fct::Field<"type_", fct::Literal<"BooleanColumnView">>>;
+
   /// Defines a boolean column view.
   using NamedTupleType =
-      fct::TaggedUnion<"type_", BooleanBinaryOp, BooleanConstOp, BooleanIsInfOp,
-                       BooleanIsNullOp, BooleanNotOp, BooleanNumComparisonOp,
-                       BooleanStrComparisonOp, BooleanSubselectionOp>;
+      std::variant<BooleanBinaryOp, BooleanConstOp, BooleanIsInfOp,
+                   BooleanIsNullOp, BooleanNotOp, BooleanNumComparisonOp,
+                   BooleanStrComparisonOp, BooleanSubselectionOp,
+                   BooleanUpdateOp>;
 
   /// Used to break the recursive definition.
   NamedTupleType val_;
