@@ -19,7 +19,7 @@ namespace fastprop {
 
 /// Describes the aggregations that may be used
 using f_aggregations =
-    fct::Field<"aggregations_", std::vector<enums::Aggregation>>;
+    fct::Field<"aggregation_", std::vector<enums::Aggregation>>;
 
 /// Size of the moving time windows.
 using f_delta_t = fct::Field<"delta_t_", Float>;

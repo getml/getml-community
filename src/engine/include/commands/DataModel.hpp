@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "commands/Float.hpp"
+#include "commands/Roles.hpp"
 #include "fct/Field.hpp"
 #include "fct/Literal.hpp"
 #include "fct/define_named_tuple.hpp"
@@ -40,11 +41,14 @@ struct DataModel {
   using f_relationship =
       fct::Field<"relationship_", std::vector<RelationshipLiteral>>;
 
+  /// The fields used to determine the roles.
+  using f_roles = fct::Field<"roles_", Roles>;
+
   /// Needed for the JSON parsing to work.
   using NamedTupleType = fct::define_named_tuple_t<
-      fct::remove_fields_t<typename helpers::Placeholder::NamedTupleType,
+      fct::remove_fields_t<typename helpers::Placeholder::NeededForTraining,
                            "joined_tables_", "propositionalization_">,
-      f_horizon, f_joined_tables, f_memory, f_relationship>;
+      f_horizon, f_joined_tables, f_memory, f_relationship, f_roles>;
 
   /// The DataModel requires additional checks after parsing,
   /// which is why we have a default constructor.
