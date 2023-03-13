@@ -23,7 +23,7 @@ namespace commands {
 /// Hyperparameters for XGBoost.
 struct XGBoostHyperparams {
   /// L1 regularization term on weights
-  using f_alpha = fct::Field<"alpha_", Float>;
+  using f_alpha = fct::Field<"reg_alpha_", Float>;
 
   /// Specify which booster to use: gbtree, gblinear or dart.
   using f_booster =
@@ -39,7 +39,7 @@ struct XGBoostHyperparams {
   using f_early_stopping_rounds = fct::Field<"early_stopping_rounds_", size_t>;
 
   /// Boosting learning rate
-  using f_eta = fct::Field<"eta_", Float>;
+  using f_eta = fct::Field<"learning_rate_", Float>;
 
   /// Whether you want to use external_memory_ (only as an affect when
   /// memory mapping is used).
@@ -50,7 +50,7 @@ struct XGBoostHyperparams {
   using f_gamma = fct::Field<"gamma_", Float>;
 
   /// L2 regularization term on weights
-  using f_lambda = fct::Field<"lambda_", Float>;
+  using f_lambda = fct::Field<"reg_lambda_", Float>;
 
   /// Maximum delta step we allow each tree’s weight estimation to be.
   using f_max_delta_step = fct::Field<"max_delta_step_", Float>;
@@ -62,7 +62,7 @@ struct XGBoostHyperparams {
   using f_min_child_weights = fct::Field<"min_child_weights_", Float>;
 
   /// Number of iterations (number of trees in boosted ensemble)
-  using f_n_iter = fct::Field<"n_iter_", size_t>;
+  using f_n_iter = fct::Field<"n_estimators_", size_t>;
 
   /// For dart only. Which normalization to use.
   using f_normalize_type =
