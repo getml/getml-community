@@ -187,11 +187,11 @@ containers::ColumnView<bool> BoolOpParser::string_comparison(
     }
 
     if constexpr (std::is_same<Type, fct::Literal<"equal_to">>()) {
-      return cat_bin_op(_cmd, std::equal_to<Float>());
+      return cat_bin_op(_cmd, std::equal_to<strings::String>());
     }
 
     if constexpr (std::is_same<Type, fct::Literal<"not_equal_to">>()) {
-      return cat_bin_op(_cmd, std::not_equal_to<Float>());
+      return cat_bin_op(_cmd, std::not_equal_to<strings::String>());
     }
   };
 
