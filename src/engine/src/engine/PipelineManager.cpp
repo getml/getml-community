@@ -500,7 +500,7 @@ void PipelineManager::precision_recall_curve(
 
 // ------------------------------------------------------------------------
 
-typename PipelineManager::Command::TransformOp PipelineManager::receive_data(
+typename PipelineManager::FullTransformOp PipelineManager::receive_data(
     const typename Command::TransformOp& _cmd,
     const fct::Ref<containers::Encoding>& _categories,
     const fct::Ref<containers::Encoding>& _join_keys_encoding,
@@ -533,59 +533,52 @@ typename PipelineManager::Command::TransformOp PipelineManager::receive_data(
       fct::NamedTuple<fct::Field<"type_", fct::Literal<"DataFrame">>,
                       fct::Field<"name_", std::string>>;
 
-  using CmdType =
-      fct::TaggedUnion<"type_", DataFrameCmd,
-                       typename commands::ProjectCommand::AddDfFromJSONOp,
-                       typename commands::ProjectCommand::AddDfFromQueryOp,
-                       typename commands::ColumnCommand::SetFloatColumnUnitOp,
-                       typename commands::ColumnCommand::SetStringColumnUnitOp,
-                       typename Command::TransformOp>;
-
-  auto cmd = _cmd;
+  using CmdType = fct::TaggedUnion<
+      "type_", DataFrameCmd, typename commands::ProjectCommand::AddDfFromJSONOp,
+      typename commands::ProjectCommand::AddDfFromQueryOp,
+      typename commands::ColumnCommand::SetFloatColumnUnitOp,
+      typename commands::ColumnCommand::SetStringColumnUnitOp, FullTransformOp>;
 
   while (true) {
     const auto json_str = communication::Receiver::recv_string(_socket);
 
     const auto op = json::from_json<CmdType>(json_str);
 
-    const auto handle = [&local_data_frame_manager, &local_column_manager, &cmd,
-                         _socket](const auto& _op) -> bool {
+    const auto handle =
+        [&local_data_frame_manager, &local_column_manager,
+         _socket](const auto& _op) -> std::optional<FullTransformOp> {
       using Type = std::decay_t<decltype(_op)>;
       if constexpr (std::is_same<Type, DataFrameCmd>()) {
         local_data_frame_manager.add_data_frame(fct::get<"name_">(_op),
                                                 _socket);
-        return false;
+        return std::nullopt;
       } else if constexpr (std::is_same<Type,
                                         typename commands::ProjectCommand::
                                             AddDfFromJSONOp>()) {
         local_data_frame_manager.from_json(_op, _socket);
-        return false;
+        return std::nullopt;
       } else if constexpr (std::is_same<Type,
                                         typename commands::ProjectCommand::
                                             AddDfFromQueryOp>()) {
         local_data_frame_manager.from_query(_op, _socket);
-        return false;
+        return std::nullopt;
       } else if constexpr (std::is_same<Type, typename commands::ColumnCommand::
                                                   SetFloatColumnUnitOp>()) {
         local_column_manager.set_unit(_op, _socket);
-        return false;
+        return std::nullopt;
       } else if constexpr (std::is_same<Type, typename commands::ColumnCommand::
                                                   SetStringColumnUnitOp>()) {
         local_column_manager.set_unit_categorical(_op, _socket);
-        return false;
-      } else if constexpr (std::is_same<Type,
-                                        typename Command::TransformOp>()) {
-        cmd = _op;
-        return true;
+        return std::nullopt;
+      } else if constexpr (std::is_same<Type, FullTransformOp>()) {
+        return _op;
       }
     };
-    const bool break_now = fct::visit(handle, op);
-    if (break_now) {
-      break;
+    const auto cmd = fct::visit(handle, op);
+    if (cmd) {
+      return *cmd;
     }
   }
-
-  return cmd;
 }
 
 // ------------------------------------------------------------------------
@@ -677,7 +670,7 @@ void PipelineManager::roc_curve(const typename Command::ROCCurveOp& _cmd,
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::score(const typename Command::TransformOp& _cmd,
+void PipelineManager::score(const FullTransformOp& _cmd,
                             const std::string& _name,
                             const containers::DataFrame& _population_df,
                             const containers::NumericalFeatures& _yhat,
@@ -709,8 +702,7 @@ void PipelineManager::score(const typename Command::TransformOp& _cmd,
 // ------------------------------------------------------------------------
 
 void PipelineManager::store_df(
-    const pipelines::FittedPipeline& _fitted,
-    const typename Command::TransformOp& _cmd,
+    const pipelines::FittedPipeline& _fitted, const FullTransformOp& _cmd,
     const containers::DataFrame& _population_df,
     const std::vector<containers::DataFrame>& _peripheral_dfs,
     const fct::Ref<containers::Encoding>& _local_categories,
@@ -739,8 +731,7 @@ void PipelineManager::store_df(
 // ------------------------------------------------------------------------
 
 void PipelineManager::to_db(
-    const pipelines::FittedPipeline& _fitted,
-    const typename Command::TransformOp& _cmd,
+    const pipelines::FittedPipeline& _fitted, const FullTransformOp& _cmd,
     const containers::DataFrame& _population_table,
     const containers::NumericalFeatures& _numerical_features,
     const containers::CategoricalFeatures& _categorical_features,
@@ -774,8 +765,7 @@ void PipelineManager::to_db(
 // ------------------------------------------------------------------------
 
 containers::DataFrame PipelineManager::to_df(
-    const pipelines::FittedPipeline& _fitted,
-    const typename Command::TransformOp& _cmd,
+    const pipelines::FittedPipeline& _fitted, const FullTransformOp& _cmd,
     const containers::DataFrame& _population_table,
     const containers::NumericalFeatures& _numerical_features,
     const containers::CategoricalFeatures& _categorical_features,
@@ -877,13 +867,9 @@ void PipelineManager::transform(const typename Command::TransformOp& _cmd,
       fct::Ref<std::map<std::string, containers::DataFrame>>::make(
           data_frames());
 
-  const auto cmd_str =
-      communication::Receiver::recv_cmd(params_.logger_, _socket);
-
-  auto cmd = json::from_json<typename Command::TransformOp>(cmd_str);
-
-  cmd = receive_data(cmd, local_categories, local_join_keys_encoding,
-                     local_data_frames, _socket);
+  const auto cmd =
+      receive_data(_cmd, local_categories, local_join_keys_encoding,
+                   local_data_frames, _socket);
 
   const auto [population_df, peripheral_dfs, _] =
       ViewParser(local_categories, local_join_keys_encoding, local_data_frames,
@@ -915,14 +901,13 @@ void PipelineManager::transform(const typename Command::TransformOp& _cmd,
     pipeline = pipeline.with_scores(fct::Ref<const metrics::Scores>(scores));
   }
 
-  // TODO: Is this _cmd or cmd?
-  const auto& table_name = _cmd.get<"table_name_">();
+  const auto& table_name = cmd.get<"table_name_">();
 
-  const auto& df_name = _cmd.get<"df_name_">();
+  const auto& df_name = cmd.get<"df_name_">();
 
-  const auto& score = _cmd.get<"score_">();
+  const bool scoring_required = cmd.get<"score_">();
 
-  if (table_name == "" && df_name == "" && !score) {
+  if (table_name == "" && df_name == "" && !scoring_required) {
     communication::Sender::send_string("Success!", _socket);
     communication::Sender::send_features(numerical_features, _socket);
     return;
@@ -946,9 +931,8 @@ void PipelineManager::transform(const typename Command::TransformOp& _cmd,
 
   weak_write_lock.unlock();
 
-  if (score) {
-    this->score(cmd, name, population_df, numerical_features, pipeline,
-                _socket);
+  if (scoring_required) {
+    score(cmd, name, population_df, numerical_features, pipeline, _socket);
   }
 }
 

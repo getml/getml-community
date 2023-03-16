@@ -26,6 +26,11 @@ Pipeline::Pipeline(const fct::Ref<const commands::Pipeline>& _obj)
 
 // ----------------------------------------------------------------------------
 
+Pipeline::Pipeline(const commands::Pipeline& _obj)
+    : Pipeline(fct::Ref<const commands::Pipeline>::make(_obj)) {}
+
+// ----------------------------------------------------------------------------
+
 Pipeline::~Pipeline() = default;
 
 // ------------------------------------------------------------------------
@@ -66,9 +71,9 @@ std::shared_ptr<std::string> Pipeline::parse_population() const {
 MonitorSummary Pipeline::to_monitor(const helpers::StringIterator& _categories,
                                     const std::string& _name) const {
   const auto summary_not_fitted =
-      obj() * fct::make_field<"name_">(_name) *
-      fct::make_field<"allow_http_">(allow_http()) *
-      fct::make_field<"creation_time_">(creation_time());
+      (obj() * fct::make_field<"allow_http_">(allow_http()) *
+       fct::make_field<"creation_time_">(creation_time()))
+          .replace(fct::make_field<"name_">(_name));
 
   if (!fitted()) {
     return summary_not_fitted;

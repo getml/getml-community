@@ -26,7 +26,7 @@ using Pipeline = fct::NamedTuple<
     fct::Field<"data_model_", fct::Ref<const DataModel>>,
     fct::Field<"feature_learners_", std::vector<FeatureLearner>>,
     fct::Field<"feature_selectors_", std::vector<Predictor>>,
-    fct::Field<"include_categorical_", bool>,
+    fct::Field<"include_categorical_", bool>, fct::Field<"name_", std::string>,
     fct::Field<"peripheral_", fct::Ref<const std::vector<DataModel>>>,
     fct::Field<"predictors_", std::vector<Predictor>>,
     fct::Field<"preprocessors_", std::vector<Preprocessor>>,
