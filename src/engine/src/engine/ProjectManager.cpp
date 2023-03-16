@@ -77,10 +77,9 @@ void ProjectManager::add_data_frame_from_view(
 
 void ProjectManager::add_pipeline(const typename Command::PipelineOp& _cmd,
                                   Poco::Net::StreamSocket* _socket) {
-  // TODO
-  /*const auto pipeline = pipelines::Pipeline(_cmd);
+  const auto pipeline = pipelines::Pipeline(_cmd);
 
-set_pipeline(name, pipeline);*/
+  set_pipeline(_cmd.get<"name_">(), pipeline);
 
   engine::communication::Sender::send_string("Success!", _socket);
 }

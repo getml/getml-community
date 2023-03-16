@@ -15,6 +15,7 @@
 #include <string>
 #include <variant>
 
+#include "commands/DataFramesOrViews.hpp"
 #include "commands/Pipeline.hpp"
 #include "commands/PipelineCommand.hpp"
 #include "debug/debug.hpp"
@@ -26,6 +27,7 @@
 #include "engine/handlers/ViewParser.hpp"
 #include "engine/pipelines/FittedPipeline.hpp"
 #include "engine/pipelines/pipelines.hpp"
+#include "fct/Literal.hpp"
 #include "fct/NamedTuple.hpp"
 #include "fct/define_named_tuple.hpp"
 #include "metrics/Scores.hpp"
@@ -40,6 +42,12 @@ class PipelineManager {
   using Command = commands::PipelineCommand;
 
  private:
+  using FullTransformOp = fct::define_named_tuple_t<
+      fct::Field<"type_", fct::Literal<"Pipeline.transform">>,
+      fct::Field<"name_", std::string>, fct::Field<"table_name_", std::string>,
+      fct::Field<"df_name_", std::string>, fct::Field<"predict_", bool>,
+      fct::Field<"score_", bool>, commands::DataFramesOrViews>;
+
   using RolesType = fct::NamedTuple<fct::Field<"name", std::string>,
                                     fct::Field<"roles", containers::Roles>>;
 
@@ -173,7 +181,7 @@ class PipelineManager {
   /// Receives data from the client. This data will not be stored permanently,
   /// but locally. Once the training/transformation process is complete, it
   /// will be deleted.
-  typename Command::TransformOp receive_data(
+  FullTransformOp receive_data(
       const typename Command::TransformOp& _cmd,
       const fct::Ref<containers::Encoding>& _categories,
       const fct::Ref<containers::Encoding>& _join_keys_encoding,
@@ -193,8 +201,7 @@ class PipelineManager {
                  Poco::Net::StreamSocket* _socket);
 
   /// Scores a pipeline
-  void score(const typename Command::TransformOp& _cmd,
-             const std::string& _name,
+  void score(const FullTransformOp& _cmd, const std::string& _name,
              const containers::DataFrame& _population_df,
              const containers::NumericalFeatures& _yhat,
              const pipelines::Pipeline& _pipeline,
@@ -202,7 +209,7 @@ class PipelineManager {
 
   /// Stores the newly created data frame.
   void store_df(const pipelines::FittedPipeline& _fitted,
-                const typename Command::TransformOp& _cmd,
+                const FullTransformOp& _cmd,
                 const containers::DataFrame& _population_df,
                 const std::vector<containers::DataFrame>& _peripheral_dfs,
                 const fct::Ref<containers::Encoding>& _local_categories,
@@ -212,7 +219,7 @@ class PipelineManager {
 
   /// Writes a set of features to the data base.
   void to_db(const pipelines::FittedPipeline& _fitted,
-             const typename Command::TransformOp& _cmd,
+             const FullTransformOp& _cmd,
              const containers::DataFrame& _population_table,
              const containers::NumericalFeatures& _numerical_features,
              const containers::CategoricalFeatures& _categorical_features,
@@ -221,8 +228,7 @@ class PipelineManager {
 
   /// Writes a set of features to a DataFrame.
   containers::DataFrame to_df(
-      const pipelines::FittedPipeline& _fitted,
-      const typename Command::TransformOp& _cmd,
+      const pipelines::FittedPipeline& _fitted, const FullTransformOp& _cmd,
       const containers::DataFrame& _population_table,
       const containers::NumericalFeatures& _numerical_features,
       const containers::CategoricalFeatures& _categorical_features,

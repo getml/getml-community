@@ -72,7 +72,7 @@ struct XGBoostHyperparams {
   using f_num_parallel_tree = fct::Field<"num_parallel_tree_", size_t>;
 
   /// Number of parallel threads used to run xgboost
-  using f_nthread = fct::Field<"nthread_", Int>;
+  using f_nthread = fct::Field<"n_jobs_", Int>;
 
   /// The objective for the learning function.
   using f_objective =

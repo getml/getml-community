@@ -325,11 +325,11 @@ std::string XGBoostPredictor::fit(
 
   if (hyperparams_->val_.get<"booster_">() == "gblinear") {
     msg << std::endl
-        << "XGBoost: Trained " << hyperparams_->val_.get<"n_iter_">()
+        << "XGBoost: Trained " << hyperparams_->val_.get<"n_estimators_">()
         << " linear models.";
   } else {
     msg << std::endl
-        << "XGBoost: Trained " << hyperparams_->val_.get<"n_iter_">()
+        << "XGBoost: Trained " << hyperparams_->val_.get<"n_estimators_">()
         << " trees.";
   }
 
@@ -387,7 +387,8 @@ void XGBoostPredictor::fit_handle(
     return true;
   };
 
-  const auto n_iter = static_cast<int>(hyperparams_->val_.get<"n_iter_">());
+  const auto n_iter =
+      static_cast<int>(hyperparams_->val_.get<"n_estimators_">());
 
   for (int i = 0; i < n_iter; ++i) {
     if (XGBoosterUpdateOneIter(*_handle, i, *_train_set.get())) {

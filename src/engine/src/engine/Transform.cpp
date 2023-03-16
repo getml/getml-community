@@ -239,8 +239,7 @@ Transform::make_features(
     const std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>&
         _feature_learners,
     const predictors::PredictorImpl& _predictor_impl,
-    const std::vector<commands::Fingerprint>&
-        _fs_fingerprints) {
+    const std::vector<commands::Fingerprint>& _fs_fingerprints) {
   // TODO
   /*const auto df = _params.data_frame_tracker_.retrieve(
     _fs_fingerprints, _params.original_population_df_,
@@ -328,12 +327,9 @@ std::tuple<containers::NumericalFeatures, containers::CategoricalFeatures,
            std::shared_ptr<const metrics::Scores>>
 Transform::transform(const TransformParams& _params, const Pipeline& _pipeline,
                      const FittedPipeline& _fitted) {
-  // TODO
-  const bool score = false; /*_params.cmd_.has("score_") &&
-                   JSON::get_value<bool>(_params.cmd_, "score_");*/
+  const bool score = _params.cmd_.get<"score_">();
 
-  const bool predict = false; /* _params.cmd_.has("predict_") &&
-                         JSON::get_value<bool>(_params.cmd_, "predict_");*/
+  const bool predict = _params.cmd_.get<"predict_">();
 
   if ((score || predict) && _fitted.num_predictors_per_set() == 0) {
     throw std::runtime_error(
@@ -353,25 +349,22 @@ Transform::transform(const TransformParams& _params, const Pipeline& _pipeline,
   const auto [numerical_features, categorical_features, population_df] =
       transform_features_only(features_only_params);
 
-  // TODO
+  if (!score && !predict) {
+    return std::make_tuple(numerical_features, categorical_features, nullptr);
+  }
+  const auto scores =
+      score ? Score::calculate_feature_stats(_pipeline, _fitted,
+                                             numerical_features, population_df)
+            : nullptr;
 
-  // if (!score && !predict) {
-  return std::make_tuple(numerical_features, categorical_features, nullptr);
-  //}
-  /*
-    const auto scores = score ? Score::calculate_feature_stats(
-                                    _pipeline, _fitted, numerical_features,
-                                    _params.cmd_, population_df)
-                              : nullptr;
+  const auto transformed_categorical_features =
+      _fitted.predictors_.impl_->transform_encodings(categorical_features);
 
-    const auto transformed_categorical_features =
-        _fitted.predictors_.impl_->transform_encodings(categorical_features);
+  const auto predictions = generate_predictions(
+      _fitted, transformed_categorical_features, numerical_features);
 
-    const auto predictions = generate_predictions(
-        _fitted, transformed_categorical_features, numerical_features);
-
-    return std::make_tuple(predictions, containers::CategoricalFeatures(),
-                           scores);*/
+  return std::make_tuple(predictions, containers::CategoricalFeatures(),
+                         scores);
 }
 
 // ----------------------------------------------------------------------------

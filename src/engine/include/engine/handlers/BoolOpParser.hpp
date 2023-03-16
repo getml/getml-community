@@ -150,7 +150,7 @@ class BoolOpParser {
             .parse(*_cmd.get<"operand1_">());
     const auto operand2 =
         FloatOpParser(categories_, join_keys_encoding_, data_frames_)
-            .parse(*_cmd.get<"operand1_">());
+            .parse(*_cmd.get<"operand2_">());
     return containers::ColumnView<bool>::from_bin_op(operand1, operand2, _op);
   }
 

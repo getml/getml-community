@@ -22,9 +22,10 @@
 namespace engine {
 namespace pipelines {
 
-using MonitorSummaryNotFitted = fct::define_named_tuple_t<
-    commands::Pipeline, fct::Field<"name_", std::string>,
-    fct::Field<"allow_http_", bool>, fct::Field<"creation_time_", std::string>>;
+using MonitorSummaryNotFitted =
+    fct::define_named_tuple_t<commands::Pipeline,
+                              fct::Field<"allow_http_", bool>,
+                              fct::Field<"creation_time_", std::string>>;
 
 // TODO: Insert Scores object
 using MonitorSummaryFitted = fct::define_named_tuple_t<

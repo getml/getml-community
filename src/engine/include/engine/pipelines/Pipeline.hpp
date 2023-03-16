@@ -40,6 +40,8 @@ class Pipeline {
  public:
   Pipeline(const fct::Ref<const commands::Pipeline>& _obj);
 
+  Pipeline(const commands::Pipeline& _obj);
+
   ~Pipeline();
 
  public:

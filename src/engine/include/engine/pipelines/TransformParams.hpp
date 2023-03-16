@@ -20,11 +20,18 @@
 #include "engine/communication/communication.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/dependency/dependency.hpp"
+#include "fct/Field.hpp"
+#include "fct/Literal.hpp"
+#include "fct/define_named_tuple.hpp"
 
 namespace engine {
 namespace pipelines {
 
 struct TransformParams {
+  using CmdType = fct::define_named_tuple_t<commands::DataFramesOrViews,
+                                            fct::Field<"predict_", bool>,
+                                            fct::Field<"score_", bool> >;
+
   static constexpr const char* FEATURE_SELECTOR = "feature selector";
   static constexpr const char* PREDICTOR = "predictor";
 
@@ -32,7 +39,7 @@ struct TransformParams {
   const fct::Ref<containers::Encoding> categories_;
 
   /// The command used.
-  const commands::DataFramesOrViews cmd_;
+  const CmdType cmd_;
 
   /// Contains all of the data frames - we need this, because it might be
   /// possible that the features are retrieved.

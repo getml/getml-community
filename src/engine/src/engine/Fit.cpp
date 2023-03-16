@@ -811,7 +811,8 @@ Fit::make_features_validation(const FitPredictorsParams& _params) {
 
   const auto transform_params = TransformParams{
       .categories_ = _params.fit_params_.categories_,
-      .cmd_ = _params.fit_params_.cmd_,
+      .cmd_ = _params.fit_params_.cmd_ * fct::make_field<"predict_">(false) *
+              fct::make_field<"score_">(false),
       .data_frames_ = _params.fit_params_.data_frames_,
       .data_frame_tracker_ = _params.fit_params_.data_frame_tracker_,
       .logger_ = _params.fit_params_.logger_,
