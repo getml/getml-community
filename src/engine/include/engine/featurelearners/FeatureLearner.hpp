@@ -138,8 +138,7 @@ class FeatureLearner : public AbstractFeatureLearner {
 
   /// Whether the feature learner is used for classification.
   bool is_classification() const final {
-    const auto loss_function =
-        fct::get<"loss_function_">(hyperparameters_.val_);
+    const auto loss_function = hyperparameters_.loss_function();
     return (loss_function != "SquareLoss");
   }
 
@@ -161,7 +160,7 @@ class FeatureLearner : public AbstractFeatureLearner {
 
   /// Whether the feature learner is to be silent.
   bool silent() const final {
-    return fct::get<"silent_">(make_feature_learner().hyperparameters().val_);
+    return make_feature_learner().hyperparameters().silent();
   }
 
   /// Whether the feature learner supports multiple targets.
@@ -276,9 +275,7 @@ class FeatureLearner : public AbstractFeatureLearner {
   }
 
   /// The minimum document frequency used for the vocabulary.
-  size_t min_df(const HypType& _hyp) const {
-    return fct::get<"min_df_">(_hyp.val_);
-  }
+  size_t min_df(const HypType& _hyp) const { return _hyp.min_df(); }
 
   /// Trivial accessor.
   const std::vector<std::string>& peripheral() const { return *peripheral_; }
@@ -298,7 +295,7 @@ class FeatureLearner : public AbstractFeatureLearner {
   /// exist.
   PropType propositionalization(const HypType& _hyp) const {
     if constexpr (has_propositionalization_) {
-      return fct::get<"propositionalization_">(_hyp.val_);
+      return _hyp.propositionalization();
     }
 
     if constexpr (!has_propositionalization_) {
@@ -312,9 +309,7 @@ class FeatureLearner : public AbstractFeatureLearner {
   }
 
   /// The size of the vocabulary.
-  size_t vocab_size(const HypType& _hyp) const {
-    return fct::get<"vocab_size_">(_hyp.val_);
-  }
+  size_t vocab_size(const HypType& _hyp) const { return _hyp.vocab_size(); }
 
  private:
   /// The dependencies used to build the fingerprint.

@@ -71,8 +71,17 @@ struct Hyperparameters {
 
   ~Hyperparameters() = default;
 
-  /// Transforms the hyperparameters into a JSON string
-  std::string to_json() const { return json::to_json(*this); }
+  /// Trivial accessor
+  auto loss_function() const { return val_.get<"loss_function_">(); }
+
+  /// Trivial accessor
+  auto min_df() const { return val_.get<"min_df_">(); }
+
+  /// Trivial accessor
+  bool silent() const { return val_.get<"silent_">(); }
+
+  /// Trivial accessor
+  auto vocab_size() const { return val_.get<"vocab_size_">(); }
 
   /// Usually used to break a recursive definition, but in
   /// this case it is used for backwards compabatability.
