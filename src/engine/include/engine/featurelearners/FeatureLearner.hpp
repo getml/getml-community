@@ -499,11 +499,12 @@ FeatureLearner<FeatureLearnerType>::extract_tables_by_colnames(
 
 template <typename FeatureLearnerType>
 commands::Fingerprint FeatureLearner<FeatureLearnerType>::fingerprint() const {
-  return commands::Fingerprint(FingerprintType(
-      hyperparameters_.val_ * fct::make_field<"dependencies_">(*dependencies_) *
-      fct::make_field<"peripheral_">(peripheral_) *
-      fct::make_field<"placeholder_">(placeholder_) *
-      fct::make_field<"target_num_">(target_num_)));
+  return commands::Fingerprint(
+      FingerprintType(hyperparameters_.named_tuple() *
+                      fct::make_field<"dependencies_">(*dependencies_) *
+                      fct::make_field<"peripheral_">(peripheral_) *
+                      fct::make_field<"placeholder_">(placeholder_) *
+                      fct::make_field<"target_num_">(target_num_)));
 }
 
 // ----------------------------------------------------------------------------
