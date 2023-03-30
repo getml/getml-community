@@ -77,6 +77,9 @@ struct Hyperparameters {
   /// Trivial accessor
   auto min_df() const { return val_.get<"min_df_">(); }
 
+  /// Trivial accessor.
+  auto named_tuple() const { return val_; }
+
   /// Trivial accessor
   bool silent() const { return val_.get<"silent_">(); }
 
