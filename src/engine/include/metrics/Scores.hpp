@@ -57,12 +57,23 @@ class Scores {
   using AllMetricsType = fct::define_named_tuple_t<ClassificationMetricsType,
                                                    RegressionMetricsType>;
 
+  /// These fields are required by both the classification history and
+  /// regression history.
+  using HistoryBaseType = fct::NamedTuple<fct::Field<"date_time_", std::string>,
+                                          fct::Field<"set_used_", std::string>>;
+
+  /// History of classification metrics.
+  using ClassificationHistoryType =
+      fct::define_named_tuple_t<ClassificationMetricsType, HistoryBaseType>;
+
+  /// History of regression metrics.
+  using RegressionHistoryType =
+      fct::define_named_tuple_t<RegressionMetricsType, HistoryBaseType>;
+
   /// Sometimes we want to preserve the history - at the moment, we only
   /// preserve the metrics, but that might change in the future.
   using HistoryType =
-      fct::define_named_tuple_t<fct::Field<"date_time_", std::string>,
-                                fct::Field<"set_used_", std::string>,
-                                AllMetricsType>;
+      std::variant<ClassificationHistoryType, RegressionHistoryType>;
 
   /// The accuracy curves feeding the accuracy scores.
   using f_accuracy_curves =
