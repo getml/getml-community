@@ -1,366 +1,259 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef METRICS_SCORES_HPP_
 #define METRICS_SCORES_HPP_
 
-// ----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------------
-
+#include <stdexcept>
 #include <string>
 #include <utility>
+#include <variant>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
+#include "fct/Field.hpp"
+#include "fct/NamedTuple.hpp"
+#include "fct/define_named_tuple.hpp"
+#include "helpers/ColumnDescription.hpp"
 #include "metrics/Features.hpp"
 #include "metrics/Float.hpp"
 #include "metrics/Int.hpp"
 
-// ----------------------------------------------------------------------------
-
 namespace metrics {
-// ----------------------------------------------------------------------------
 
 /// Scores are measure by which the predictive performance of the model is
 /// evaluated.
 class Scores {
-  // ------------------------------------------------------
  public:
-  Scores() {}
+  /// Measures the overall accuracy.
+  using f_accuracy = fct::Field<"accuracy_", std::vector<Float>>;
 
-  explicit Scores(const Poco::JSON::Object& _json_obj) : Scores() {
-    from_json_obj(_json_obj);
-  }
+  /// Measures the area under the (ROC) curve, AUC.
+  using f_auc = fct::Field<"auc_", std::vector<Float>>;
 
-  ~Scores() = default;
+  /// Measures the cross entropy loss or log loss.
+  using f_cross_entropy = fct::Field<"cross_entropy_", std::vector<Float>>;
 
-  // ------------------------------------------------------
+  /// Measures the mean absolute error.
+  using f_mae = fct::Field<"mae_", std::vector<Float>>;
+
+  /// Measures the root mean squared error.
+  using f_rmse = fct::Field<"rmse_", std::vector<Float>>;
+
+  /// Measures the (predictive) R-squared between predictions and targets.
+  using f_rsquared = fct::Field<"rsquared_", std::vector<Float>>;
+
+  /// These metrics are used for classification problems.
+  using ClassificationMetricsType =
+      fct::NamedTuple<f_accuracy, f_auc, f_cross_entropy>;
+
+  /// These metrics are used for regression problems.
+  using RegressionMetricsType = fct::NamedTuple<f_mae, f_rmse, f_rsquared>;
+
+  /// Combination of all metrics.
+  using AllMetricsType = fct::define_named_tuple_t<ClassificationMetricsType,
+                                                   RegressionMetricsType>;
+
+  /// These fields are required by both the classification history and
+  /// regression history.
+  using HistoryBaseType = fct::NamedTuple<fct::Field<"date_time_", std::string>,
+                                          fct::Field<"set_used_", std::string>>;
+
+  /// History of classification metrics.
+  using ClassificationHistoryType =
+      fct::define_named_tuple_t<ClassificationMetricsType, HistoryBaseType>;
+
+  /// History of regression metrics.
+  using RegressionHistoryType =
+      fct::define_named_tuple_t<RegressionMetricsType, HistoryBaseType>;
+
+  /// Sometimes we want to preserve the history - at the moment, we only
+  /// preserve the metrics, but that might change in the future.
+  using HistoryType =
+      std::variant<ClassificationHistoryType, RegressionHistoryType>;
+
+  /// The accuracy curves feeding the accuracy scores.
+  using f_accuracy_curves =
+      fct::Field<"accuracy_curves_", std::vector<std::vector<Float>>>;
+
+  /// Average of targets w.r.t. different bins of the feature.
+  using f_average_targets =
+      fct::Field<"average_targets_",
+                 std::vector<std::vector<std::vector<Float>>>>;
+
+  /// The column descriptions, correspond to the column importances.
+  using f_column_descriptions =
+      fct::Field<"column_descriptions_",
+                 std::vector<helpers::ColumnDescription>>;
+
+  /// Importances of individual column w.r.t. targets.
+  using f_column_importances =
+      fct::Field<"column_importances_", std::vector<std::vector<Float>>>;
+
+  /// Correlations coefficients of features with targets.
+  using f_feature_correlations =
+      fct::Field<"feature_correlations_", std::vector<std::vector<Float>>>;
+
+  /// Densities of the features.
+  using f_feature_densities =
+      fct::Field<"feature_densities_", std::vector<std::vector<Int>>>;
+
+  /// Importances of individual features w.r.t. targets.
+  using f_feature_importances =
+      fct::Field<"feature_importances_", std::vector<std::vector<Float>>>;
+
+  /// The names of the features.
+  using f_feature_names =
+      fct::Field<"feature_names_", std::vector<std::string>>;
+
+  /// False positive rate.
+  using f_fpr = fct::Field<"fpr_", std::vector<std::vector<Float>>>;
+
+  /// The history of the scores.
+  using f_history = fct::Field<"history_", std::vector<HistoryType>>;
+
+  /// Min, max and step_size for feature_densities and average targets.
+  using f_labels = fct::Field<"labels_", std::vector<std::vector<Float>>>;
+
+  /// The lift (for classification problems)
+  using f_lift = fct::Field<"lift_", std::vector<std::vector<Float>>>;
+
+  /// The precision (for classification problems)
+  using f_precision = fct::Field<"precision_", std::vector<std::vector<Float>>>;
+
+  /// Minimum prediction - needed for plotting the accuracy.
+  using f_prediction_min = fct::Field<"prediction_min_", std::vector<Float>>;
+
+  /// Stepsize - needed for plotting the accuracy.
+  using f_prediction_step_size =
+      fct::Field<"prediction_step_size_", std::vector<Float>>;
+
+  /// Proportion of samples called (for the lift curve)
+  using f_proportion =
+      fct::Field<"proportion_", std::vector<std::vector<Float>>>;
+
+  /// Marks the training/testing/validation set (or any other set defined by the
+  /// user).
+  using f_set_used = fct::Field<"set_used_", std::string>;
+
+  /// True positive rate.
+  using f_tpr = fct::Field<"tpr_", std::vector<std::vector<Float>>>;
+
+  /// This type needs to be defined for the reflection to work.
+  using NamedTupleType = fct::define_named_tuple_t<
+      AllMetricsType, f_accuracy_curves, f_average_targets,
+      f_column_descriptions, f_column_importances, f_feature_correlations,
+      f_feature_densities, f_feature_importances, f_feature_names, f_fpr,
+      f_history, f_labels, f_lift, f_precision, f_prediction_min,
+      f_prediction_step_size, f_proportion, f_set_used, f_tpr>;
 
  public:
-  /// Parses a JSON object.
-  void from_json_obj(const Poco::JSON::Object& _json_obj);
+  Scores();
 
+  explicit Scores(const NamedTupleType& _val);
+
+  ~Scores();
+
+ public:
   /// Saves the scores to a JSON file.
   void save(const std::string& _fname) const;
-
-  /// Transforms the Scores into a JSON object.
-  Poco::JSON::Object to_json_obj() const;
 
   /// Stores the current state of the metrics in the history
   void to_history();
 
-  // ------------------------------------------------------
-
  public:
   /// Trivial accessor
   const std::vector<std::vector<Float>>& column_importances() const {
-    return column_importances_;
+    return val_.get<f_column_importances>();
   }
 
   /// Trivial accessor
-  const std::vector<Poco::JSON::Object::Ptr>& column_descriptions() const {
-    return column_descriptions_;
+  const std::vector<helpers::ColumnDescription>& column_descriptions() const {
+    return val_.get<f_column_descriptions>();
   }
 
   /// Trivial accessor
   const std::vector<std::vector<Float>>& feature_correlations() const {
-    return feature_correlations_;
+    return val_.get<f_feature_correlations>();
   }
 
   /// Trivial accessor
   const std::vector<std::vector<Float>>& feature_importances() const {
-    return feature_importances_;
+    return val_.get<f_feature_importances>();
   }
 
   /// Trivial accessor
   const std::vector<std::string>& feature_names() const {
-    return feature_names_;
-  }
-
-  /// Trivial accessor
-  const std::vector<Poco::JSON::Object::Ptr>& history() const {
-    return history_;
+    return val_.get<f_feature_names>();
   }
 
   /// Trivial (const) accessor.
-  const std::string& set_used() const { return set_used_; }
+  const auto& fpr(const size_t _target_num) const {
+    return get_by_target_num<f_fpr>(_target_num);
+  }
 
-  // ------------------------------------------------------
+  /// Trivial accessor
+  const std::vector<HistoryType>& history() const {
+    return val_.get<f_history>();
+  }
+
+  /// Trivial (const) accessor.
+  const auto& lift(const size_t _target_num) const {
+    return get_by_target_num<f_lift>(_target_num);
+  }
+
+  /// Retrieves the metrics.
+  const AllMetricsType metrics() const { return AllMetricsType(val_); }
+
+  /// Necessary for the reflection to work.
+  const auto& named_tuple() const { return val_; }
+
+  /// Trivial (const) accessor.
+  const auto& precision(const size_t _target_num) const {
+    return get_by_target_num<f_precision>(_target_num);
+  }
+
+  /// Trivial (const) accessor.
+  const auto& proportion(const size_t _target_num) const {
+    return get_by_target_num<f_proportion>(_target_num);
+  }
+
+  /// Trivial (const) accessor.
+  const std::string& set_used() const { return val_.get<f_set_used>(); }
+
+  /// Trivial (const) accessor.
+  const auto& tpr(const size_t _target_num) const {
+    return get_by_target_num<f_tpr>(_target_num);
+  }
+
+  /// Updates the scores object with new fields.
+  template <class... FieldType>
+  void update(const FieldType&... _fields) {
+    val_ = val_.replace(_fields...);
+  }
 
  private:
-  /// Trivial accessor
-  std::vector<std::vector<Float>>& accuracy_curves() {
-    return accuracy_curves_;
-  }
-
-  /// Trivial accessor
-  const std::vector<std::vector<Float>>& accuracy_curves() const {
-    return accuracy_curves_;
-  }
-
-  /// Trivial accessor
-  std::vector<std::vector<std::vector<Float>>>& average_targets() {
-    return average_targets_;
-  }
-
-  /// Trivial accessor
-  const std::vector<std::vector<std::vector<Float>>>& average_targets() const {
-    return average_targets_;
-  }
-
-  /// Trivial accessor
-  std::vector<std::vector<Float>>& column_importances() {
-    return column_importances_;
-  }
-
-  /// Trivial accessor
-  std::vector<Poco::JSON::Object::Ptr>& column_descriptions() {
-    return column_descriptions_;
-  }
-
-  /// Trivial accessor
-  std::vector<std::vector<Float>>& feature_correlations() {
-    return feature_correlations_;
-  }
-
-  /// Trivial accessor
-  std::vector<std::vector<Int>>& feature_densities() {
-    return feature_densities_;
-  }
-
-  /// Trivial accessor
-  const std::vector<std::vector<Int>>& feature_densities() const {
-    return feature_densities_;
-  }
-
-  /// Trivial accessor
-  std::vector<std::vector<Float>>& feature_importances() {
-    return feature_importances_;
-  }
-
-  /// Trivial accessor
-  std::vector<std::string>& feature_names() { return feature_names_; }
-
-  /// Trivial accessor
-  std::vector<std::vector<Float>>& fpr() { return fpr_; }
-
-  /// Trivial accessor
-  const std::vector<std::vector<Float>>& fpr() const { return fpr_; }
-
-  /// Trivial accessor
-  std::vector<std::vector<Float>>& labels() { return labels_; }
-
-  /// Trivial accessor
-  const std::vector<std::vector<Float>>& labels() const { return labels_; }
-
-  /// Trivial accessor
-  std::vector<std::vector<Float>>& lift() { return lift_; }
-
-  /// Trivial accessor
-  const std::vector<std::vector<Float>>& lift() const { return lift_; }
-
-  /// Trivial accessor
-  std::vector<std::vector<Float>>& precision() { return precision_; }
-
-  /// Trivial accessor
-  const std::vector<std::vector<Float>>& precision() const {
-    return precision_;
-  }
-
-  /// Trivial accessor
-  std::vector<std::vector<Float>>& proportion() { return proportion_; }
-
-  /// Trivial accessor
-  const std::vector<std::vector<Float>>& proportion() const {
-    return proportion_;
-  }
-
-  /// Trivial accessor
-  std::vector<std::vector<Float>>& tpr() { return tpr_; }
-
-  /// Trivial accessor
-  const std::vector<std::vector<Float>>& tpr() const { return tpr_; }
-
-  /// If the 1-dimensional array exists, this updated the corresponding
-  /// vector.
-  template <class T>
-  void update_1d_vector(const Poco::JSON::Object& _json_obj,
-                        const std::string& _name, std::vector<T>* _vec) const {
-    if (_json_obj.has(_name)) {
-      *_vec = jsonutils::JSON::array_to_vector<T>(
-          jsonutils::JSON::get_array(_json_obj, _name));
+  /// Helper function to retrieve a vector by the target_num.
+  template <class FieldType>
+  const std::vector<Float>& get_by_target_num(const size_t _target_num) const {
+    const auto& vec = fct::get<FieldType>(val_);
+    if (_target_num >= vec.size()) {
+      throw std::runtime_error("target_num out of bounds for field '" +
+                               FieldType::name_.str() +
+                               "', got: " + std::to_string(_target_num) +
+                               ", size: " + std::to_string(vec.size()) + ".");
     }
+    return vec.at(_target_num);
   }
-
-  /// If the 1-dimensional array exists, this updated the corresponding
-  /// vector.
-  void update_1d_vector(const Poco::JSON::Object& _json_obj,
-                        const std::string& _name,
-                        std::vector<Poco::JSON::Object::Ptr>* _vec) const {
-    if (_json_obj.has(_name)) {
-      const auto arr = jsonutils::JSON::get_array(_json_obj, _name);
-
-      for (size_t i = 0; i < arr->size(); ++i) {
-        _vec->push_back(arr->getObject(i));
-      }
-    }
-  }
-
-  /// If the 2-dimensional array exists, this updated the corresponding
-  /// vector.
-  template <class T>
-  void update_2d_vector(const Poco::JSON::Object& _json_obj,
-                        const std::string& _name,
-                        std::vector<std::vector<T>>* _vec) const {
-    if (!_json_obj.getArray(_name).isNull()) {
-      _vec->clear();
-
-      auto arr = jsonutils::JSON::get_array(_json_obj, _name);
-
-      for (size_t i = 0; i < arr->size(); ++i) {
-        _vec->push_back(jsonutils::JSON::array_to_vector<T>(
-            arr->getArray(static_cast<unsigned int>(i))));
-      }
-    }
-  }
-
-  /// If the 3-dimensional array exists, this updated the corresponding
-  /// vector.
-  template <class T>
-  void update_3d_vector(const Poco::JSON::Object& _json_obj,
-                        const std::string& _name,
-                        std::vector<std::vector<std::vector<T>>>* _vec) const {
-    if (!_json_obj.getArray(_name).isNull()) {
-      _vec->clear();
-
-      auto arr = jsonutils::JSON::get_array(_json_obj, _name);
-
-      for (size_t i = 0; i < arr->size(); ++i) {
-        auto vec = std::vector<std::vector<T>>(0);
-
-        auto arr2 = arr->getArray(static_cast<unsigned int>(i));
-
-        for (size_t j = 0; j < arr2->size(); ++j) {
-          vec.push_back(jsonutils::JSON::array_to_vector<T>(
-              arr2->getArray(static_cast<unsigned int>(j))));
-        }
-
-        _vec->emplace_back(std::move(vec));
-      }
-    }
-  }
-
-  /// Transforms a 2-dimensional vector to a 2-dimensional array
-  template <class T>
-  Poco::JSON::Array::Ptr to_2d_array(
-      const std::vector<std::vector<T>>& _2d_vec) const {
-    auto arr = Poco::JSON::Array::Ptr(new Poco::JSON::Array());
-
-    for (auto& vec : _2d_vec) {
-      arr->add(jsonutils::JSON::vector_to_array_ptr(vec));
-    }
-
-    return arr;
-  }
-
-  /// Transforms a 3-dimensional vector to a 3-dimensional array
-  template <class T>
-  Poco::JSON::Array::Ptr to_3d_array(
-      const std::vector<std::vector<std::vector<T>>>& _3d_vec) const {
-    auto arr = Poco::JSON::Array::Ptr(new Poco::JSON::Array());
-
-    for (auto& vec : _3d_vec) {
-      arr->add(to_2d_array(vec));
-    }
-
-    return arr;
-  }
-
-  // ------------------------------------------------------
 
  private:
-  /// Accuracy
-  std::vector<Float> accuracy_;
-
-  /// The accuracy curves feeding the accuracy scores.
-  std::vector<std::vector<Float>> accuracy_curves_;
-
-  /// Area under curve
-  std::vector<Float> auc_;
-
-  /// Average of targets w.r.t. different bins of the feature.
-  std::vector<std::vector<std::vector<Float>>> average_targets_;
-
-  /// The column descriptions, correspond to the column importances.
-  std::vector<Poco::JSON::Object::Ptr> column_descriptions_;
-
-  /// Importances of individual column w.r.t. targets.
-  std::vector<std::vector<Float>> column_importances_;
-
-  /// Logarithm of likelihood of predictions
-  std::vector<Float> cross_entropy_;
-
-  /// Correlations coefficients of features with targets.
-  std::vector<std::vector<Float>> feature_correlations_;
-
-  /// Densities of the features.
-  std::vector<std::vector<Int>> feature_densities_;
-
-  /// Importances of individual features w.r.t. targets.
-  std::vector<std::vector<Float>> feature_importances_;
-
-  /// The names of the features.
-  std::vector<std::string> feature_names_;
-
-  /// False positive rate.
-  std::vector<std::vector<Float>> fpr_;
-
-  /// The history of the scores.
-  std::vector<Poco::JSON::Object::Ptr> history_;
-
-  /// Min, max and step_size for feature_densities and average targets.
-  std::vector<std::vector<Float>> labels_;
-
-  /// The lift (for classification problems)
-  std::vector<std::vector<Float>> lift_;
-
-  /// Mean absolute error
-  std::vector<Float> mae_;
-
-  /// Precision
-  std::vector<std::vector<Float>> precision_;
-
-  /// Minimum prediction - needed for plotting the accuracy.
-  std::vector<Float> prediction_min_;
-
-  /// Stepsize - needed for plotting the accuracy.
-  std::vector<Float> prediction_step_size_;
-
-  /// Proportion of samples called (for the lift curve)
-  std::vector<std::vector<Float>> proportion_;
-
-  /// Root mean squared error
-  std::vector<Float> rmse_;
-
-  /// Predictive rsquared
-  std::vector<Float> rsquared_;
-
-  /// Marks the training/testing/validation set
-  std::string set_used_;
-
-  /// True positive rate.
-  std::vector<std::vector<Float>> tpr_;
+  /// The underlying NamedTuple
+  NamedTupleType val_;
 };
 
-// ----------------------------------------------------------------------------
 }  // namespace metrics
 
 #endif  // METRICS_SCORES_HPP_

@@ -1,21 +1,15 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "database/Postgres.hpp"
 
-// ----------------------------------------------------------------------------
-
-#include "jsonutils/jsonutils.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "database/CSVBuffer.hpp"
-
-// ----------------------------------------------------------------------------
+#include "database/ContentGetter.hpp"
+#include "json/json.hpp"
 
 namespace database {
 
@@ -40,14 +34,11 @@ void Postgres::check_colnames(const std::vector<std::string>& _colnames,
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object Postgres::describe() const {
-  Poco::JSON::Object obj;
-
-  obj.set("connection_string", connection_string_);
-
-  obj.set("dialect", dialect());
-
-  return obj;
+std::string Postgres::describe() const {
+  const auto description =
+      fct::make_field<"connection_string">(connection_string_) *
+      fct::make_field<"dialect">(dialect());
+  return json::to_json(description);
 }
 
 // ----------------------------------------------------------------------------
@@ -101,28 +92,11 @@ std::vector<io::Datatype> Postgres::get_coltypes(
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object Postgres::get_content(const std::string& _tname,
-                                         const std::int32_t _draw,
-                                         const std::int32_t _start,
-                                         const std::int32_t _length) {
-  const auto nrows = get_nrows(_tname);
-
-  const auto colnames = get_colnames(_tname);
-
-  const auto ncols = colnames.size();
-
-  Poco::JSON::Object obj;
-
-  obj.set("draw", _draw);
-
-  obj.set("recordsTotal", nrows);
-
-  obj.set("recordsFiltered", nrows);
-
-  if (nrows == 0) {
-    obj.set("data", Poco::JSON::Array());
-    return obj;
-  }
+TableContent Postgres::get_content(const std::string& _tname,
+                                   const std::int32_t _draw,
+                                   const std::int32_t _start,
+                                   const std::int32_t _length) {
+  const auto nrows = static_cast<std::int32_t>(get_nrows(_tname));
 
   if (_length < 0) {
     throw std::runtime_error("length must be positive!");
@@ -136,28 +110,16 @@ Poco::JSON::Object Postgres::get_content(const std::string& _tname,
     throw std::runtime_error("start must be smaller than number of rows!");
   }
 
-  const auto begin = _start;
+  const auto colnames = get_colnames(_tname);
+
+  const auto ncols = colnames.size();
 
   const auto end = (_start + _length > nrows) ? nrows : _start + _length;
 
-  auto iterator = std::make_shared<PostgresIterator>(
-      make_connection(), colnames, time_formats_, _tname, "", begin, end);
+  const auto iter = fct::Ref<PostgresIterator>::make(
+      make_connection(), colnames, time_formats_, _tname, "", _start, end);
 
-  Poco::JSON::Array data;
-
-  for (auto i = begin; i < end; ++i) {
-    Poco::JSON::Array row;
-
-    for (size_t j = 0; j < ncols; ++j) {
-      row.add(iterator->get_string());
-    }
-
-    data.add(row);
-  }
-
-  obj.set("data", data);
-
-  return obj;
+  return ContentGetter::get_content(iter, _draw, end - _start, nrows, ncols);
 }
 
 // ----------------------------------------------------------------------------
@@ -210,31 +172,26 @@ std::vector<std::string> Postgres::list_tables() {
 
 // ----------------------------------------------------------------------------
 
-std::string Postgres::make_connection_string(const Poco::JSON::Object& _obj,
-                                             const std::string& _passwd) {
-  const auto host = _obj.has("host_")
-                        ? jsonutils::JSON::get_value<std::string>(_obj, "host_")
-                        : std::string("");
+std::string Postgres::make_connection_string(
+    const typename Command::PostgresOp& _obj, const std::string& _passwd) {
+  const auto& host = _obj.get<"host_">();
 
-  const auto hostaddr =
-      _obj.has("hostaddr_")
-          ? jsonutils::JSON::get_value<std::string>(_obj, "hostaddr_")
-          : std::string("");
+  const auto& hostaddr = _obj.get<"hostaddr_">();
 
-  const auto port = jsonutils::JSON::get_value<size_t>(_obj, "port_");
+  const auto port = _obj.get<"port_">();
 
-  const auto dbname = jsonutils::JSON::get_value<std::string>(_obj, "dbname_");
+  const auto& dbname = _obj.get<"dbname_">();
 
-  const auto user = jsonutils::JSON::get_value<std::string>(_obj, "user_");
+  const auto& user = _obj.get<"user_">();
 
   std::string connection_string;
 
-  if (host.size() > 0) {
-    connection_string += std::string("host=") + host + " ";
+  if (host) {
+    connection_string += std::string("host=") + *host + " ";
   }
 
-  if (hostaddr.size() > 0) {
-    connection_string += std::string("hostaddr=") + hostaddr + " ";
+  if (hostaddr) {
+    connection_string += std::string("hostaddr=") + *hostaddr + " ";
   }
 
   connection_string += std::string("port=") + std::to_string(port) + " ";

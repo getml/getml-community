@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "predictors/StandardScaler.hpp"
 
@@ -11,9 +11,9 @@ namespace predictors {
 // -----------------------------------------------------------------------------
 
 void StandardScaler::fit(const std::vector<FloatFeature>& _X_numerical) {
-  mean_.resize(_X_numerical.size());
+  mean().resize(_X_numerical.size());
 
-  std_.resize(_X_numerical.size());
+  std().resize(_X_numerical.size());
 
   for (size_t j = 0; j < _X_numerical.size(); ++j) {
     const auto n = static_cast<Float>(_X_numerical[j].size());
@@ -26,13 +26,13 @@ void StandardScaler::fit(const std::vector<FloatFeature>& _X_numerical) {
       return (val1 - mean) * (val2 - mean) / n;
     };
 
-    std_[j] = std::inner_product(_X_numerical[j].begin(), _X_numerical[j].end(),
-                                 _X_numerical[j].begin(), 0.0,
-                                 std::plus<Float>(), mult);
+    std()[j] = std::inner_product(
+        _X_numerical[j].begin(), _X_numerical[j].end(), _X_numerical[j].begin(),
+        0.0, std::plus<Float>(), mult);
 
-    mean_[j] = mean;
+    this->mean()[j] = mean;
 
-    std_[j] = std::sqrt(std_[j]);
+    std()[j] = std::sqrt(std()[j]);
   }
 }
 
@@ -62,9 +62,9 @@ void StandardScaler::fit(
   }
 
   // -------------------------------------------------------------------------
-  // Calculate std_
+  // Calculate std()
 
-  std_.resize(_X_sparse.ncols());
+  std().resize(_X_sparse.ncols());
 
   for (size_t i = 0; i < _X_sparse.nrows(); ++i) {
     for (size_t j = _X_sparse.indptr()[i]; j < _X_sparse.indptr()[i + 1]; ++j) {
@@ -72,11 +72,11 @@ void StandardScaler::fit(
 
       auto diff = (_X_sparse.data()[j] - means[_X_sparse.indices()[j]]);
 
-      std_[_X_sparse.indices()[j]] += diff * diff;
+      std()[_X_sparse.indices()[j]] += diff * diff;
     }
   }
 
-  for (auto& s : std_) {
+  for (auto& s : std()) {
     s /= n;
     s = std::sqrt(s);
   }
@@ -90,13 +90,13 @@ std::vector<FloatFeature> StandardScaler::transform(
     const std::vector<FloatFeature>& _X_numerical) const {
   assert_true(_X_numerical.size() > 0);
 
-  if (_X_numerical.size() != std_.size()) {
+  if (_X_numerical.size() != std().size()) {
     throw std::runtime_error(
         "Size of standard deviation in standard scaler does not "
         "match!");
   }
 
-  if (_X_numerical.size() != mean_.size()) {
+  if (_X_numerical.size() != mean().size()) {
     throw std::runtime_error(
         "Standard scaler seems to have been trained using sparse data, "
         "but is not expected to transform dense data.");
@@ -108,9 +108,9 @@ std::vector<FloatFeature> StandardScaler::transform(
     output.push_back(FloatFeature(
         std::make_shared<std::vector<Float>>(_X_numerical[j].size())));
 
-    if (std_[j] != 0.0) {
+    if (std()[j] != 0.0) {
       for (size_t i = 0; i < _X_numerical[j].size(); ++i) {
-        output.back()[i] = (_X_numerical[j][i] - mean_[j]) / std_[j];
+        output.back()[i] = (_X_numerical[j][i] - mean()[j]) / std()[j];
       }
     }
   }
@@ -128,7 +128,7 @@ const CSRMatrix<Float, unsigned int, size_t> StandardScaler::transform(
     for (size_t j = output.indptr()[i]; j < output.indptr()[i + 1]; ++j) {
       assert_true(output.indices()[j] < output.ncols());
 
-      const auto std = std_[_X_sparse.indices()[j]];
+      const auto std = this->std()[_X_sparse.indices()[j]];
 
       if (std != 0.0) {
         output.data()[j] /= std;

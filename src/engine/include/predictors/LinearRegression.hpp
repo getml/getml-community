@@ -1,66 +1,54 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef PREDICTORS_LINEARREGRESSION_HPP_
 #define PREDICTORS_LINEARREGRESSION_HPP_
-
-// -----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
-
-// -----------------------------------------------------------------------------
 
 #include <memory>
 #include <optional>
 #include <vector>
 
-// -----------------------------------------------------------------------------
-
 #include "debug/debug.hpp"
-
-// -----------------------------------------------------------------------------
-
+#include "fct/NamedTuple.hpp"
+#include "fct/Ref.hpp"
+#include "predictors/Fingerprint.hpp"
 #include "predictors/FloatFeature.hpp"
 #include "predictors/IntFeature.hpp"
-#include "predictors/LinearHyperparams.hpp"
+#include "predictors/LinearRegressionHyperparams.hpp"
 #include "predictors/Predictor.hpp"
 #include "predictors/PredictorImpl.hpp"
 #include "predictors/StandardScaler.hpp"
 
-// -----------------------------------------------------------------------------
-
 namespace predictors {
-// -----------------------------------------------------------------------------
 
 /// Linear regression predictor.
 class LinearRegression : public Predictor {
-  // -------------------------------------------------------------------------
+ public:
+  using f_scaler = fct::Field<"scaler_", StandardScaler>;
+  using f_weights = fct::Field<"weights_", std::vector<Float>>;
+
+  using NamedTupleType =
+      fct::NamedTuple<fct::Field<"learning_rate_", Float>,
+                      fct::Field<"reg_lambda_", Float>, f_scaler, f_weights>;
 
  public:
-  LinearRegression(const Poco::JSON::Object& _cmd,
-                   const std::shared_ptr<const PredictorImpl>& _impl,
-                   const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
-      : cmd_(_cmd),
-        dependencies_(_dependencies),
-        hyperparams_(std::make_shared<LinearHyperparams>(_cmd)),
+  LinearRegression(const LinearRegressionHyperparams& _hyperparams,
+                   const fct::Ref<const PredictorImpl>& _impl,
+                   const std::vector<Fingerprint>& _dependencies)
+      : dependencies_(_dependencies),
+        hyperparams_(fct::Ref<LinearRegressionHyperparams>::make(_hyperparams)),
         impl_(_impl){};
 
   ~LinearRegression() = default;
-
-  // -------------------------------------------------------------------------
 
  public:
   /// Returns an importance measure for the individual features.
   std::vector<Float> feature_importances(
       const size_t _num_features) const final;
-
-  /// Returns the fingerprint of the predictor (necessary to build
-  /// the dependency graphs).
-  Poco::JSON::Object::Ptr fingerprint() const final;
 
   /// Implements the fit(...) method in scikit-learn style
   std::string fit(
@@ -82,8 +70,6 @@ class LinearRegression : public Predictor {
   /// Stores the predictor
   void save(const std::string& _fname) const final;
 
-  // -------------------------------------------------------------------------
-
  public:
   /// Whether the predictor accepts null values.
   bool accepts_null() const final { return false; }
@@ -93,32 +79,44 @@ class LinearRegression : public Predictor {
     return std::make_shared<LinearRegression>(*this);
   }
 
+  /// Returns the fingerprint of the predictor (necessary to build
+  /// the dependency graphs).
+  Fingerprint fingerprint() const final {
+    using LinearRegressionFingerprint =
+        typename Fingerprint::LinearRegressionFingerprint;
+    return Fingerprint(LinearRegressionFingerprint(
+        hyperparams().val_ * fct::make_field<"dependencies_">(dependencies_) *
+        impl().named_tuple()));
+  }
+
   /// Whether the predictor is used for classification;
   bool is_classification() const final { return false; }
 
   /// Whether the predictor has been fitted.
   bool is_fitted() const final { return weights_.size() > 0; }
 
+  /// Necessary for the automated parsing to work.
+  NamedTupleType named_tuple() const {
+    return fct::make_field<"learning_rate_">(hyperparams().learning_rate()) *
+           fct::make_field<"reg_lambda_">(hyperparams().reg_lambda()) *
+           f_scaler(scaler_) * f_weights(weights_);
+  }
+
   /// Whether we want the predictor to be silent.
   bool silent() const final { return true; }
 
   /// The type of the predictor.
-  std::string type() const final { return "LinearRegression"; }
-
-  // -------------------------------------------------------------------------
+  std::string type() const final {
+    return hyperparams().val_.get<"type_">().name();
+  }
 
  private:
   /// Trivial (private const) accessor.
-  const LinearHyperparams& hyperparams() const {
-    assert_true(hyperparams_);
+  const LinearRegressionHyperparams& hyperparams() const {
     return *hyperparams_;
   }
 
-  // -------------------------------------------------------------------------
-
  private:
-  Poco::JSON::Object load_json_obj(const std::string& _fname) const;
-
   /// Generates predictions when no categorical columns have been passed.
   FloatFeature predict_dense(
       const std::vector<FloatFeature>& _X_numerical) const;
@@ -139,8 +137,6 @@ class LinearRegression : public Predictor {
                          const std::vector<FloatFeature>& _X_numerical,
                          const FloatFeature& _y);
 
-  // -------------------------------------------------------------------------
-
  private:
   /// Calculates the gradients needed for the updates.
   const void calculate_gradients(const size_t _begin, const size_t _end,
@@ -159,10 +155,10 @@ class LinearRegression : public Predictor {
   /// Applies the L2 regularization term for numerical optimization.
   const void calculate_regularization(const Float _bsize_float,
                                       std::vector<Float>* _gradients) {
-    if (hyperparams().reg_lambda_ > 0.0) {
+    if (hyperparams().reg_lambda() > 0.0) {
       for (size_t i = 0; i < weights_.size(); ++i) {
         (*_gradients)[i] +=
-            hyperparams().reg_lambda_ * weights_[i] * _bsize_float;
+            hyperparams().reg_lambda() * weights_[i] * _bsize_float;
       }
     }
   }
@@ -185,20 +181,15 @@ class LinearRegression : public Predictor {
     return yhat;
   }
 
-  // -------------------------------------------------------------------------
-
  private:
-  /// The JSON command used to construct this predictor.
-  const Poco::JSON::Object cmd_;
-
   /// The dependencies used to build the fingerprint.
-  std::vector<Poco::JSON::Object::Ptr> dependencies_;
+  std::vector<Fingerprint> dependencies_;
 
   /// The hyperparameters used for the LinearRegression.
-  std::shared_ptr<const LinearHyperparams> hyperparams_;
+  fct::Ref<const LinearRegressionHyperparams> hyperparams_;
 
   /// Implementation class for member functions common to most predictors.
-  std::shared_ptr<const PredictorImpl> impl_;
+  fct::Ref<const PredictorImpl> impl_;
 
   /// For rescaling the input data such that the standard deviation of each
   /// column is 1.0
@@ -206,8 +197,6 @@ class LinearRegression : public Predictor {
 
   /// The slopes of the linear regression.
   std::vector<Float> weights_;
-
-  // -------------------------------------------------------------------------
 };
 
 // -----------------------------------------------------------------------------

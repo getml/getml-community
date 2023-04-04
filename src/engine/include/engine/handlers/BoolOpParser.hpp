@@ -1,40 +1,26 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_HANDLERS_BOOLOPPARSER_HPP_
 #define ENGINE_HANDLERS_BOOLOPPARSER_HPP_
-
-// ----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------------
 
 #include <map>
 #include <memory>
 #include <string>
 
-// ----------------------------------------------------------------------------
-
+#include "commands/BooleanColumnView.hpp"
 #include "debug/debug.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
 #include "engine/communication/communication.hpp"
 #include "engine/containers/containers.hpp"
-
-// ----------------------------------------------------------------------------
-
-#include "engine/handlers/CatOpParser.hpp"
-#include "engine/handlers/NumOpParser.hpp"
-
-// ----------------------------------------------------------------------------
+#include "engine/handlers/FloatOpParser.hpp"
+#include "engine/handlers/StringOpParser.hpp"
+#include "json/json.hpp"
 
 namespace engine {
 namespace handlers {
@@ -44,6 +30,19 @@ class BoolOpParser {
   typedef containers::ColumnView<bool>::UnknownSize UnknownSize;
   typedef containers::ColumnView<bool>::NRowsType NRowsType;
   typedef containers::ColumnView<bool>::ValueFunc ValueFunc;
+
+  typedef typename commands::BooleanColumnView::BooleanConstOp BooleanConstOp;
+  typedef typename commands::BooleanColumnView::BooleanBinaryOp BooleanBinaryOp;
+  typedef typename commands::BooleanColumnView::BooleanIsInfOp BooleanIsInfOp;
+  typedef typename commands::BooleanColumnView::BooleanIsNullOp BooleanIsNullOp;
+  typedef typename commands::BooleanColumnView::BooleanNotOp BooleanNotOp;
+  typedef typename commands::BooleanColumnView::BooleanNumComparisonOp
+      BooleanNumComparisonOp;
+  typedef typename commands::BooleanColumnView::BooleanStrComparisonOp
+      BooleanStrComparisonOp;
+  typedef typename commands::BooleanColumnView::BooleanSubselectionOp
+      BooleanSubselectionOp;
+  typedef typename commands::BooleanColumnView::BooleanUpdateOp BooleanUpdateOp;
 
   static constexpr UnknownSize NOT_KNOWABLE =
       containers::ColumnView<bool>::NOT_KNOWABLE;
@@ -65,8 +64,6 @@ class BoolOpParser {
   static constexpr const char* BOOLEAN_COLUMN_VIEW =
       containers::Column<bool>::BOOLEAN_COLUMN_VIEW;
 
-  // ------------------------------------------------------------------------
-
  public:
   BoolOpParser(
       const fct::Ref<const containers::Encoding>& _categories,
@@ -79,108 +76,95 @@ class BoolOpParser {
 
   ~BoolOpParser() = default;
 
-  // ------------------------------------------------------------------------
-
  public:
   /// Parses a numerical column.
-  containers::ColumnView<bool> parse(const Poco::JSON::Object& _col) const;
-
-  // ------------------------------------------------------------------------
+  containers::ColumnView<bool> parse(
+      const commands::BooleanColumnView& _cmd) const;
 
  private:
   /// Parses the operator and undertakes a binary operation.
   containers::ColumnView<bool> binary_operation(
-      const Poco::JSON::Object& _col) const;
+      const BooleanBinaryOp& _cmd) const;
 
   /// Parses the operator and undertakes a unary operation.
-  containers::ColumnView<bool> unary_operation(
-      const Poco::JSON::Object& _col) const;
+  containers::ColumnView<bool> is_null(const BooleanIsNullOp& _cmd) const;
+
+  /// Handles any kind of comparison between two numerical columns.
+  containers::ColumnView<bool> numerical_comparison(
+      const BooleanNumComparisonOp& _cmd) const;
+
+  /// Handles any kind of comparison between two string columns.
+  containers::ColumnView<bool> string_comparison(
+      const BooleanStrComparisonOp& _cmd) const;
 
   /// Returns a subselection on the column.
   containers::ColumnView<bool> subselection(
-      const Poco::JSON::Object& _col) const;
+      const BooleanSubselectionOp& _cmd) const;
 
-  // ------------------------------------------------------------------------
+  /// Returns an updated version of the column.
+  containers::ColumnView<bool> update(const BooleanUpdateOp& _cmd) const;
 
   /// Undertakes a binary operation based on template class
   /// Operator.
   template <class Operator>
-  containers::ColumnView<bool> bin_op(const Poco::JSON::Object& _col,
+  containers::ColumnView<bool> bin_op(const BooleanBinaryOp& _col,
                                       const Operator& _op) const {
-    const auto operand1 = parse(*JSON::get_object(_col, "operand1_"));
-
-    const auto operand2 = parse(*JSON::get_object(_col, "operand2_"));
-
+    const auto operand1 = parse(*_col.get<"operand1_">());
+    const auto operand2 = parse(*_col.get<"operand2_">());
     return containers::ColumnView<bool>::from_bin_op(operand1, operand2, _op);
   }
 
   /// Undertakes a unary operation based on template class
   /// Operator for categorical columns.
   template <class Operator>
-  containers::ColumnView<bool> cat_un_op(const Poco::JSON::Object& _col,
-                                         const Operator& _op) const {
+  containers::ColumnView<bool> cat_un_op(
+      const commands::StringColumnOrStringColumnView& _col,
+      const Operator& _op) const {
     const auto operand1 =
-        CatOpParser(categories_, join_keys_encoding_, data_frames_)
-            .parse(*JSON::get_object(_col, "operand1_"));
-
+        StringOpParser(categories_, join_keys_encoding_, data_frames_)
+            .parse(_col);
     return containers::ColumnView<bool>::from_un_op(operand1, _op);
   }
 
   /// Undertakes a binary operation based on template class
   /// Operator for categorical columns.
   template <class Operator>
-  containers::ColumnView<bool> cat_bin_op(const Poco::JSON::Object& _col,
+  containers::ColumnView<bool> cat_bin_op(const BooleanStrComparisonOp& _cmd,
                                           const Operator& _op) const {
     const auto operand1 =
-        CatOpParser(categories_, join_keys_encoding_, data_frames_)
-            .parse(*JSON::get_object(_col, "operand1_"));
-
+        StringOpParser(categories_, join_keys_encoding_, data_frames_)
+            .parse(*_cmd.get<"operand1_">());
     const auto operand2 =
-        CatOpParser(categories_, join_keys_encoding_, data_frames_)
-            .parse(*JSON::get_object(_col, "operand2_"));
-
+        StringOpParser(categories_, join_keys_encoding_, data_frames_)
+            .parse(*_cmd.get<"operand2_">());
     return containers::ColumnView<bool>::from_bin_op(operand1, operand2, _op);
   }
 
   /// Undertakes a binary operation based on template class
   /// Operator for numerical columns.
   template <class Operator>
-  containers::ColumnView<bool> num_bin_op(const Poco::JSON::Object& _col,
+  containers::ColumnView<bool> num_bin_op(const BooleanNumComparisonOp& _cmd,
                                           const Operator& _op) const {
     const auto operand1 =
-        NumOpParser(categories_, join_keys_encoding_, data_frames_)
-            .parse(*JSON::get_object(_col, "operand1_"));
-
+        FloatOpParser(categories_, join_keys_encoding_, data_frames_)
+            .parse(*_cmd.get<"operand1_">());
     const auto operand2 =
-        NumOpParser(categories_, join_keys_encoding_, data_frames_)
-            .parse(*JSON::get_object(_col, "operand2_"));
-
+        FloatOpParser(categories_, join_keys_encoding_, data_frames_)
+            .parse(*_cmd.get<"operand2_">());
     return containers::ColumnView<bool>::from_bin_op(operand1, operand2, _op);
   }
 
   /// Undertakes a unary operation based on template class
   /// Operator for numerical columns.
   template <class Operator>
-  containers::ColumnView<bool> num_un_op(const Poco::JSON::Object& _col,
-                                         const Operator& _op) const {
+  containers::ColumnView<bool> num_un_op(
+      const commands::FloatColumnOrFloatColumnView& _col,
+      const Operator& _op) const {
     const auto operand1 =
-        NumOpParser(categories_, join_keys_encoding_, data_frames_)
-            .parse(*JSON::get_object(_col, "operand1_"));
-
+        FloatOpParser(categories_, join_keys_encoding_, data_frames_)
+            .parse(_col);
     return containers::ColumnView<bool>::from_un_op(operand1, _op);
   }
-
-  /// Undertakes a unary operation based on template class
-  /// Operator.
-  template <class Operator>
-  containers::ColumnView<bool> un_op(const Poco::JSON::Object& _col,
-                                     const Operator& _op) const {
-    const auto operand1 = parse(*JSON::get_object(_col, "operand1_"));
-
-    return containers::ColumnView<bool>::from_un_op(operand1, _op);
-  }
-
-  // ------------------------------------------------------------------------
 
  private:
   /// Encodes the categories used.
@@ -192,11 +176,8 @@ class BoolOpParser {
 
   /// Encodes the join keys used.
   const fct::Ref<const containers::Encoding> join_keys_encoding_;
-
-  // ------------------------------------------------------------------------
 };
 
-// ----------------------------------------------------------------------------
 }  // namespace handlers
 }  // namespace engine
 

@@ -1,30 +1,23 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef HELPERS_IMPORTANCEMAKER_HPP_
 #define HELPERS_IMPORTANCEMAKER_HPP_
-
-// ----------------------------------------------------------------------------
 
 #include <cstddef>
 #include <map>
 #include <string>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/Float.hpp"
 #include "helpers/Schema.hpp"
 
-// ----------------------------------------------------------------------------
-
 namespace helpers {
-// ------------------------------------------------------------------------
 
 class ImportanceMaker {
  public:
@@ -79,7 +72,7 @@ class ImportanceMaker {
   std::vector<std::string> colnames() const {
     auto names = std::vector<std::string>();
     for (const auto& [desc, _] : importances_) {
-      names.push_back(desc.name());
+      names.push_back(desc.full_name());
     }
     return names;
   }

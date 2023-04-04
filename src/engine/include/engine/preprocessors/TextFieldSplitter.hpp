@@ -1,67 +1,62 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_PREPROCESSORS_TEXTFIELDSPLITTER_HPP_
 #define ENGINE_PREPROCESSORS_TEXTFIELDSPLITTER_HPP_
-
-// ----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------------
 
 #include <memory>
 #include <utility>
 #include <vector>
 
-// ----------------------------------------------------------------------------
 
-#include "helpers/helpers.hpp"
-#include "strings/strings.hpp"
-
-// ----------------------------------------------------------------------------
-
+#include "commands/Fingerprint.hpp"
+#include "commands/Preprocessor.hpp"
 #include "engine/containers/containers.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "engine/preprocessors/FitParams.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
 #include "engine/preprocessors/TransformParams.hpp"
-
-// ----------------------------------------------------------------------------
+#include "fct/Field.hpp"
+#include "fct/Literal.hpp"
+#include "fct/NamedTuple.hpp"
+#include "fct/Ref.hpp"
+#include "helpers/helpers.hpp"
+#include "strings/strings.hpp"
 
 namespace engine {
 namespace preprocessors {
-// ----------------------------------------------------
 
 class TextFieldSplitter : public Preprocessor {
  public:
-  TextFieldSplitter() {}
+  using TextFieldSplitterOp =
+      typename commands::Preprocessor::TextFieldSplitterOp;
 
-  TextFieldSplitter(const Poco::JSON::Object& _obj,
-                    const std::vector<Poco::JSON::Object::Ptr>& _dependencies) {
-    *this = from_json_obj(_obj);
-    dependencies_ = _dependencies;
-  }
+  using f_cols =
+      fct::Field<"cols_",
+                 std::vector<std::shared_ptr<helpers::ColumnDescription>>>;
+
+  using NamedTupleType = fct::NamedTuple<f_cols>;
+
+ public:
+  TextFieldSplitter(const TextFieldSplitterOp& _op,
+                    const std::vector<commands::Fingerprint>& _dependencies)
+      : dependencies_(_dependencies) {}
 
   ~TextFieldSplitter() = default;
 
  public:
-  /// Returns the fingerprint of the preprocessor (necessary to build
-  /// the dependency graphs).
-  Poco::JSON::Object::Ptr fingerprint() const final;
-
   /// Identifies which features should be extracted from which time stamps.
   std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
   fit_transform(const FitParams& _params) final;
 
-  /// Expresses the Seasonal preprocessor as a JSON object.
-  Poco::JSON::Object::Ptr to_json_obj() const final;
+  /// Loads the predictor
+  void load(const std::string& _fname) final;
+
+  /// Stores the preprocessor.
+  void save(const std::string& _fname) const final;
 
   /// Generates SQL code for the text field splitting.
   std::vector<std::string> to_sql(
@@ -76,15 +71,27 @@ class TextFieldSplitter : public Preprocessor {
 
  public:
   /// Creates a deep copy.
-  std::shared_ptr<Preprocessor> clone(
-      const std::optional<std::vector<Poco::JSON::Object::Ptr>>& _dependencies =
-          std::nullopt) const final {
-    const auto c = std::make_shared<TextFieldSplitter>(*this);
+  fct::Ref<Preprocessor> clone(const std::optional<std::vector<commands::Fingerprint>>&
+                                   _dependencies = std::nullopt) const final {
+    const auto c = fct::Ref<TextFieldSplitter>::make(*this);
     if (_dependencies) {
       c->dependencies_ = *_dependencies;
     }
     return c;
   }
+
+  /// Returns the fingerprint of the preprocessor (necessary to build
+  /// the dependency graphs).
+  commands::Fingerprint fingerprint() const final {
+    using FingerprintType = typename commands::Fingerprint::
+        TextFieldSplitterFingerprint;
+    return commands::Fingerprint(FingerprintType(
+        fct::make_field<"dependencies_">(dependencies_),
+        fct::make_field<"type_">(fct::Literal<"TextFieldSplitter">())));
+  }
+
+  /// Necessary for the automated parsing to work.
+  NamedTupleType named_tuple() const { return NamedTupleType(f_cols(cols_)); }
 
   /// Returns the type of the preprocessor.
   std::string type() const final { return Preprocessor::TEXT_FIELD_SPLITTER; }
@@ -96,9 +103,6 @@ class TextFieldSplitter : public Preprocessor {
   /// Fits and transforms an individual data frame.
   std::vector<std::shared_ptr<helpers::ColumnDescription>> fit_df(
       const containers::DataFrame& _df, const std::string& _marker) const;
-
-  /// Parses a JSON object.
-  TextFieldSplitter from_json_obj(const Poco::JSON::Object& _obj) const;
 
   /// Generates a new data frame.
   containers::DataFrame make_new_df(
@@ -120,15 +124,14 @@ class TextFieldSplitter : public Preprocessor {
                     std::vector<containers::DataFrame>* _peripheral_dfs) const;
 
  private:
-  /// List of all columns to which the email domain transformation
+  /// List of all columns to which the text field splitter transformation
   /// applies.
   std::vector<std::shared_ptr<helpers::ColumnDescription>> cols_;
 
   /// The dependencies inserted into the the preprocessor.
-  std::vector<Poco::JSON::Object::Ptr> dependencies_;
+  std::vector<commands::Fingerprint> dependencies_;
 };
 
-// ----------------------------------------------------
 }  // namespace preprocessors
 }  // namespace engine
 

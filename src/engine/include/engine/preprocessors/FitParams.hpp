@@ -1,42 +1,30 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_PREPROCESSORS_FITPARAMS_HPP_
 #define ENGINE_PREPROCESSORS_FITPARAMS_HPP_
-
-// ----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------------
 
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
+#include "commands/DataFramesOrViews.hpp"
+#include "engine/containers/containers.hpp"
 #include "fct/Ref.hpp"
 #include "helpers/helpers.hpp"
 #include "logging/logging.hpp"
-
-// ----------------------------------------------------------------------------
-
-#include "engine/containers/containers.hpp"
-
-// ----------------------------------------------------------------------------
 
 namespace engine {
 namespace preprocessors {
 
 struct FitParams {
   /// The command used to create the preprocessor.
-  const Poco::JSON::Object cmd_;
+  const commands::DataFramesOrViews cmd_;
 
   /// Encoding for categorical variables.
   const fct::Ref<containers::Encoding> categories_;

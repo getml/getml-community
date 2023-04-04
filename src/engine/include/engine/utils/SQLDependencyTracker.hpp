@@ -1,24 +1,19 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_UTILS_SQLDEPENDENCYTRACKER_HPP_
 #define ENGINE_UTILS_SQLDEPENDENCYTRACKER_HPP_
-
-// ------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
-
-// ------------------------------------------------------------------------
 
 #include <string>
 #include <tuple>
 #include <vector>
 
-// ------------------------------------------------------------------------
+#include "fct/Field.hpp"
+#include "fct/NamedTuple.hpp"
 
 namespace engine {
 namespace utils {
@@ -26,6 +21,11 @@ namespace utils {
 class SQLDependencyTracker {
  private:
   typedef std::vector<std::tuple<std::string, std::string, std::string>> Tuples;
+
+  using SQLDependency =
+      fct::NamedTuple<fct::Field<"table_name_", std::string>,
+                      fct::Field<"file_name_", std::string>,
+                      fct::Field<"dependencies_", std::vector<size_t>>>;
 
  public:
   SQLDependencyTracker(const std::string& _folder) : folder_(_folder) {}
@@ -41,8 +41,7 @@ class SQLDependencyTracker {
 
  private:
   /// Finds the dependencies of _tuple _i.
-  Poco::JSON::Object::Ptr find_dependencies(const Tuples& _tuples,
-                                            const size_t _i) const;
+  SQLDependency find_dependencies(const Tuples& _tuples, const size_t _i) const;
 
   /// Infers the table name from the SQL code.
   std::string infer_table_name(const std::string& _sql) const;

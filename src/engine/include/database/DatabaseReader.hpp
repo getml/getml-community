@@ -1,36 +1,27 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef DATABASE_DATABASEREADER_HPP_
 #define DATABASE_DATABASEREADER_HPP_
 
-// ----------------------------------------------------------------------------
-
 #include <memory>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
+#include "database/Iterator.hpp"
+#include "fct/Ref.hpp"
 #include "io/io.hpp"
 
-// ----------------------------------------------------------------------------
-
-#include "database/Iterator.hpp"
-
-// ----------------------------------------------------------------------------
-
 namespace database {
-// ----------------------------------------------------------------------------
 
 /// DatabaseReader implements the io::Reader interface to a table from a
 /// database.
 class DatabaseReader : public io::Reader {
  public:
-  explicit DatabaseReader(const std::shared_ptr<Iterator>& _iterator)
+  explicit DatabaseReader(const fct::Ref<Iterator>& _iterator)
       : iterator_(_iterator), ncols_(iterator()->colnames().size()) {}
 
   ~DatabaseReader() {}
@@ -59,20 +50,16 @@ class DatabaseReader : public io::Reader {
 
  private:
   /// Trivial accessor.
-  const std::shared_ptr<Iterator>& iterator() const {
-    assert_true(iterator_);
-    return iterator_;
-  }
+  const fct::Ref<Iterator>& iterator() const { return iterator_; }
 
  private:
   /// The underlying database iterator.
-  const std::shared_ptr<Iterator> iterator_;
+  const fct::Ref<Iterator> iterator_;
 
   /// The number of columns.
   const size_t ncols_;
 };
 
-// ----------------------------------------------------------------------------
 }  // namespace database
 
 #endif  // DATABASE_DATABASEREADER_HPP_

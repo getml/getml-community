@@ -1,19 +1,14 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_PIPELINES_TRANSFORM_HPP_
 #define ENGINE_PIPELINES_TRANSFORM_HPP_
 
-// ----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
 #include <Poco/Net/StreamSocket.h>
-
-// ----------------------------------------------------------------------------
 
 #include <algorithm>
 #include <memory>
@@ -21,22 +16,16 @@
 #include <utility>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
+#include "commands/Fingerprint.hpp"
 #include "engine/communication/communication.hpp"
 #include "engine/containers/DataFrame.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/dependency/dependency.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "engine/pipelines/FeaturesOnlyParams.hpp"
 #include "engine/pipelines/FittedPipeline.hpp"
 #include "engine/pipelines/MakeFeaturesParams.hpp"
 #include "engine/pipelines/Pipeline.hpp"
 #include "engine/pipelines/TransformParams.hpp"
-
-// ----------------------------------------------------------------------------
 
 namespace engine {
 namespace pipelines {
@@ -63,7 +52,7 @@ class Transform {
                     fct::Ref<const featurelearners::AbstractFeatureLearner>>&
                     _feature_learners,
                 const predictors::PredictorImpl& _predictor_impl,
-                const std::vector<Poco::JSON::Object::Ptr>& _fs_fingerprints);
+                const std::vector<commands::Fingerprint>& _fs_fingerprints);
 
   /// Applies the staging step.
   static std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
@@ -94,13 +83,6 @@ class Transform {
       const FeaturesOnlyParams& _params,
       const containers::DataFrame& _population_df,
       const std::vector<containers::DataFrame>& _peripheral_dfs);
-
-  /// Calculates statistics about the features to be displayed
-  /// in the frontend.
-  static std::optional<metrics::Scores> calculate_feature_stats(
-      const Pipeline& _pipeline, const containers::NumericalFeatures _features,
-      const size_t _ncols, const Poco::JSON::Object& _cmd,
-      const containers::DataFrame& _population_df);
 
   /// Gets the numerical columns from _population_df and
   /// returns a combination of the autofeatures and the

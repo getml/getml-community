@@ -1,18 +1,18 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/pipelines/Save.hpp"
 
-// ----------------------------------------------------------------------------
-
+#include "engine/pipelines/PipelineJSON.hpp"
 #include "engine/pipelines/ToSQL.hpp"
 #include "engine/pipelines/ToSQLParams.hpp"
-
-// ----------------------------------------------------------------------------
+#include "fct/Field.hpp"
+#include "fct/NamedTuple.hpp"
+#include "helpers/Saver.hpp"
 
 namespace engine {
 namespace pipelines {
@@ -43,7 +43,8 @@ void Save::save(const SaveParams& _params) {
 
   save_pipeline_json(_params, tfile);
 
-  save_json_obj(_params.pipeline_.obj(), tfile.path() + "/obj.json");
+  helpers::Saver::save_as_json(tfile.path() + "/obj.json",
+                               _params.pipeline_.obj());
 
   _params.pipeline_.scores().save(tfile.path() + "/scores.json");
 
@@ -58,12 +59,14 @@ void Save::save(const SaveParams& _params) {
 
   save_predictors(_params.fitted_.predictors_.predictors_, "predictor", tfile);
 
-  const auto transpilation_params = transpilation::TranspilationParams{
-      .dialect_ = transpilation::SQLDialectParser::HUMAN_READABLE_SQL,
-      .nchar_categorical_ = 128,
-      .nchar_join_key_ = 128,
-      .nchar_text_ = 4096,
-      .schema_ = ""};
+  using DialectType = typename transpilation::TranspilationParams::DialectType;
+
+  const auto transpilation_params = transpilation::TranspilationParams(
+      fct::make_field<"dialect_">(DialectType::make<"human-readable sql">()) *
+      fct::Field<"nchar_categorical_", size_t>(128) *
+      fct::Field<"nchar_join_key_", size_t>(128) *
+      fct::Field<"nchar_text_", size_t>(4096) *
+      fct::Field<"schema_", std::string>(""));
 
   const auto to_sql_params =
       ToSQLParams{.categories_ = _params.categories_,
@@ -86,8 +89,8 @@ void Save::save(const SaveParams& _params) {
 void Save::save_feature_learners(const SaveParams& _params,
                                  const Poco::TemporaryFile& _tfile) {
   for (size_t i = 0; i < _params.fitted_.feature_learners_.size(); ++i) {
-    const auto& fe = _params.fitted_.feature_learners_.at(i);
-    fe->save(_tfile.path() + "/feature-learner-" + std::to_string(i) + ".json");
+    const auto& fl = _params.fitted_.feature_learners_.at(i);
+    fl->save(_tfile.path() + "/feature-learner-" + std::to_string(i) + ".json");
   }
 }
 
@@ -95,48 +98,24 @@ void Save::save_feature_learners(const SaveParams& _params,
 
 void Save::save_pipeline_json(const SaveParams& _params,
                               const Poco::TemporaryFile& _tfile) {
-  const auto to_obj = [](const helpers::Schema& s) { return s.to_json_obj(); };
-
   const auto& p = _params.pipeline_;
 
   const auto& f = _params.fitted_;
 
-  Poco::JSON::Object pipeline_json;
+  const PipelineJSON pipeline_json =
+      f.fingerprints_ * fct::make_field<"allow_http_">(p.allow_http()) *
+      fct::make_field<"creation_time_">(p.creation_time()) *
+      fct::make_field<"modified_peripheral_schema_">(
+          f.modified_peripheral_schema_) *
+      fct::make_field<"modified_population_schema_">(
+          f.modified_population_schema_) *
+      fct::make_field<"peripheral_schema_">(f.peripheral_schema_) *
+      fct::make_field<"population_schema_">(f.population_schema_) *
+      fct::make_field<"targets_">(f.targets());
 
-  pipeline_json.set("allow_http_", p.allow_http());
-
-  pipeline_json.set("creation_time_", p.creation_time());
-
-  pipeline_json.set("df_fingerprints_",
-                    JSON::vector_to_array(f.fingerprints_.df_fingerprints_));
-
-  pipeline_json.set("fl_fingerprints_",
-                    JSON::vector_to_array(f.fingerprints_.fl_fingerprints_));
-
-  pipeline_json.set("fs_fingerprints_",
-                    JSON::vector_to_array(f.fingerprints_.fs_fingerprints_));
-
-  pipeline_json.set("modified_peripheral_schema_",
-                    fct::collect::array(*f.modified_peripheral_schema_ |
-                                        VIEWS::transform(to_obj)));
-
-  pipeline_json.set("modified_population_schema_",
-                    f.modified_population_schema_->to_json_obj());
-
-  pipeline_json.set(
-      "preprocessor_fingerprints_",
-      JSON::vector_to_array(f.fingerprints_.preprocessor_fingerprints_));
-
-  pipeline_json.set("targets_", JSON::vector_to_array(f.targets()));
-
-  pipeline_json.set(
-      "peripheral_schema_",
-      fct::collect::array(*f.peripheral_schema_ | VIEWS::transform(to_obj)));
-
-  pipeline_json.set("population_schema_", f.population_schema_->to_json_obj());
-
-  save_json_obj(pipeline_json, _tfile.path() + "/pipeline.json");
+  helpers::Saver::save_as_json(_tfile.path() + "/pipeline.json", pipeline_json);
 }
+
 // ----------------------------------------------------------------------------
 
 void Save::save_predictors(
@@ -158,13 +137,7 @@ void Save::save_preprocessors(const SaveParams& _params,
                               const Poco::TemporaryFile& _tfile) {
   for (size_t i = 0; i < _params.fitted_.preprocessors_.size(); ++i) {
     const auto& p = _params.fitted_.preprocessors_.at(i);
-
-    const auto ptr = p->to_json_obj();
-
-    assert_true(ptr);
-
-    save_json_obj(
-        *ptr, _tfile.path() + "/preprocessor-" + std::to_string(i) + ".json");
+    p->save(_tfile.path() + "/preprocessor-" + std::to_string(i) + ".json");
   }
 }
 

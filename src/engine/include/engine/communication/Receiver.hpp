@@ -1,18 +1,14 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_COMMUNICATION_RECEIVER_HPP_
 #define ENGINE_COMMUNICATION_RECEIVER_HPP_
 
-// ------------------------------------------------------------------------
-
 #include <Poco/Net/StreamSocket.h>
-
-// ------------------------------------------------------------------------
 
 #include <algorithm>
 #include <memory>
@@ -21,20 +17,10 @@
 #include <type_traits>
 #include <vector>
 
-// ------------------------------------------------------------------------
-
-#include "fct/Ref.hpp"
-
-// ------------------------------------------------------------------------
-
 #include "engine/ULong.hpp"
-#include "engine/utils/utils.hpp"
-
-// ------------------------------------------------------------------------
-
 #include "engine/communication/Logger.hpp"
-
-// ------------------------------------------------------------------------
+#include "engine/utils/utils.hpp"
+#include "fct/Ref.hpp"
 
 namespace engine {
 namespace communication {
@@ -51,7 +37,7 @@ struct Receiver {
   static std::string recv_string(Poco::Net::StreamSocket *_socket);
 
   /// Receives a command from the client
-  static Poco::JSON::Object recv_cmd(
+  static std::string recv_cmd(
       const fct::Ref<const communication::Logger> &_logger,
       Poco::Net::StreamSocket *_socket);
 };

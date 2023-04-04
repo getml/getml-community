@@ -1,41 +1,26 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_HANDLERS_PROJECTMANAGERPARAMS_HPP_
 #define ENGINE_HANDLERS_PROJECTMANAGERPARAMS_HPP_
 
-// ------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
 #include <Poco/Net/StreamSocket.h>
-
-// ------------------------------------------------------------------------
 
 #include <map>
 #include <memory>
 #include <string>
 
-// ------------------------------------------------------------------------
-
 #include "debug/debug.hpp"
-
-// ------------------------------------------------------------------------
-
 #include "engine/communication/communication.hpp"
 #include "engine/config/config.hpp"
 #include "engine/containers/containers.hpp"
-#include "engine/pipelines/pipelines.hpp"
-
-// ------------------------------------------------------------------------
-
 #include "engine/handlers/DataFrameManager.hpp"
 #include "engine/handlers/PipelineManagerParams.hpp"
-
-// ------------------------------------------------------------------------
+#include "engine/pipelines/pipelines.hpp"
 
 namespace engine {
 namespace handlers {
@@ -93,7 +78,6 @@ struct ProjectManagerParams {
   const fct::Ref<multithreading::ReadWriteLock> read_write_lock_;
 };
 
-// ------------------------------------------------------------------------
 }  // namespace handlers
 }  // namespace engine
 

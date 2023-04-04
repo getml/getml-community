@@ -1,18 +1,12 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_FEATURELEARNERS_FEATURELEARNER_HPP_
 #define ENGINE_FEATURELEARNERS_FEATURELEARNER_HPP_
-
-// ----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------------
 
 #include <map>
 #include <memory>
@@ -22,34 +16,39 @@
 #include <type_traits>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
+#include "commands/Fingerprint.hpp"
 #include "debug/debug.hpp"
-#include "fastprop/algorithm/algorithm.hpp"
-#include "fastprop/subfeatures/subfeatures.hpp"
-#include "helpers/helpers.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
 #include "engine/containers/containers.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "engine/featurelearners/AbstractFeatureLearner.hpp"
 #include "engine/featurelearners/FeatureLearnerParams.hpp"
 #include "engine/featurelearners/FitParams.hpp"
 #include "engine/featurelearners/TransformParams.hpp"
-
-// ----------------------------------------------------------------------------
+#include "fastprop/algorithm/algorithm.hpp"
+#include "fastprop/subfeatures/subfeatures.hpp"
+#include "fct/Field.hpp"
+#include "fct/define_named_tuple.hpp"
+#include "fct/get.hpp"
+#include "helpers/Loader.hpp"
+#include "helpers/Saver.hpp"
+#include "helpers/helpers.hpp"
 
 namespace engine {
 namespace featurelearners {
-// ----------------------------------------------------------------------------
 
 template <class FeatureLearnerType>
 class FeatureLearner : public AbstractFeatureLearner {
+ public:
+  using NamedTupleType = fct::define_named_tuple_t<
+      typename FeatureLearnerType::NamedTupleType,
+      fct::Field<
+          "fast_prop_container_",
+          std::shared_ptr<const fastprop::subfeatures::FastPropContainer>>,
+      fct::Field<"target_num_", Int>,
+      fct::Field<"vocabulary_",
+                 std::shared_ptr<const helpers::VocabularyContainer>>>;
+
  private:
   /// Whether this is a FastProp algorithm
   static constexpr bool is_fastprop_ =
@@ -60,34 +59,31 @@ class FeatureLearner : public AbstractFeatureLearner {
   /// subfeature.
   static constexpr bool has_propositionalization_ = !is_fastprop_;
 
-  // --------------------------------------------------------
-
  private:
   typedef typename FeatureLearnerType::DataFrameType DataFrameType;
   typedef typename FeatureLearnerType::HypType HypType;
+  typedef fct::define_named_tuple_t<
+      typename HypType::NamedTupleType,
+      typename commands::Fingerprint::Dependencies,
+      typename commands::Fingerprint::OtherFLRequirements>
+      FingerprintType;
 
   typedef typename std::conditional<
       has_propositionalization_,
       std::shared_ptr<const fastprop::Hyperparameters>, int>::type PropType;
 
-  // --------------------------------------------------------
-
  public:
-  FeatureLearner(const FeatureLearnerParams& _params)
-      : cmd_(_params.cmd_),
-        dependencies_(_params.dependencies_),
-        peripheral_(_params.peripheral_),
-        peripheral_schema_(_params.peripheral_schema_),
-        placeholder_(_params.placeholder_),
-        population_schema_(_params.population_schema_),
-        target_num_(_params.target_num_) {
-    assert_true(placeholder_);
-    assert_true(peripheral_);
-  }
+  FeatureLearner(const FeatureLearnerParams& _params,
+                 const HypType& _hyperparameters)
+      : dependencies_(_params.get<"dependencies_">()),
+        hyperparameters_(_hyperparameters),
+        peripheral_(_params.get<"peripheral_">()),
+        peripheral_schema_(_params.get<"peripheral_schema_">()),
+        placeholder_(_params.get<"placeholder_">()),
+        population_schema_(_params.get<"population_schema_">()),
+        target_num_(_params.get<"target_num_">()) {}
 
   ~FeatureLearner() = default;
-
-  // --------------------------------------------------------
 
  public:
   /// Calculates the column importances for this ensemble.
@@ -96,7 +92,7 @@ class FeatureLearner : public AbstractFeatureLearner {
 
   /// Returns the fingerprint of the feature learner (necessary to build
   /// the dependency graphs).
-  Poco::JSON::Object::Ptr fingerprint() const final;
+  commands::Fingerprint fingerprint() const final;
 
   /// Fits the model.
   void fit(const FitParams& _params) final;
@@ -107,8 +103,17 @@ class FeatureLearner : public AbstractFeatureLearner {
   /// Saves the feature learner in JSON format, if applicable
   void save(const std::string& _fname) const final;
 
-  /// Return model as a JSON Object.
-  Poco::JSON::Object to_json_obj(const bool _schema_only) const final;
+  /// Necessary for the automatic parsing to work.
+  NamedTupleType named_tuple() const {
+    if (!feature_learner_) {
+      throw std::runtime_error(
+          "Feature learner has not been fitted, cannot save.");
+    }
+    return feature_learner_->named_tuple() *
+           fct::make_field<"fast_prop_container_">(fast_prop_container_) *
+           fct::make_field<"target_num_">(target_num_) *
+           fct::make_field<"vocabulary_">(vocabulary_);
+  }
 
   /// Return feature learner as SQL code.
   std::vector<std::string> to_sql(
@@ -125,8 +130,6 @@ class FeatureLearner : public AbstractFeatureLearner {
   /// Returns a string describing the type of the feature learner.
   std::string type() const final;
 
-  // --------------------------------------------------------
-
  public:
   /// Creates a deep copy.
   std::shared_ptr<AbstractFeatureLearner> clone() const final {
@@ -135,15 +138,14 @@ class FeatureLearner : public AbstractFeatureLearner {
 
   /// Whether the feature learner is used for classification.
   bool is_classification() const final {
-    const auto loss_function =
-        JSON::get_value<std::string>(cmd_, "loss_function_");
+    const auto loss_function = hyperparameters_.loss_function();
     return (loss_function != "SquareLoss");
   }
 
   /// Returns the placeholder not as passed by the user, but as seen by the
   /// feature learner (the difference matters for time series).
   helpers::Placeholder make_placeholder() const final {
-    return make_feature_learner()->placeholder();
+    return make_feature_learner().placeholder();
   }
 
   /// Returns the number of features in the feature learner.
@@ -158,15 +160,13 @@ class FeatureLearner : public AbstractFeatureLearner {
 
   /// Whether the feature learner is to be silent.
   bool silent() const final {
-    return make_feature_learner()->hyperparameters().silent_;
+    return make_feature_learner().hyperparameters().silent();
   }
 
   /// Whether the feature learner supports multiple targets.
   bool supports_multiple_targets() const final {
     return FeatureLearnerType::supports_multiple_targets_;
   }
-
-  // --------------------------------------------------------
 
  private:
   /// Extract a data frame of type FeatureLearnerType::DataFrameType from
@@ -209,7 +209,7 @@ class FeatureLearner : public AbstractFeatureLearner {
       const std::shared_ptr<const logging::AbstractLogger> _logger) const;
 
   /// Initializes the feature learner.
-  std::optional<FeatureLearnerType> make_feature_learner() const;
+  FeatureLearnerType make_feature_learner() const;
 
   /// Interprets the subroles and indicates whether the column they belong to
   /// should be included.
@@ -233,17 +233,12 @@ class FeatureLearner : public AbstractFeatureLearner {
   /// column importances.
   std::string remove_time_diff(const std::string& _from_colname) const;
 
-  /// Helper function for loading a json object.
-  Poco::JSON::Object load_json_obj(const std::string& _fname) const;
-
   /// Transforms the proppsitionalization.
   std::optional<const helpers::FeatureContainer> transform_propositionalization(
       const DataFrameType& _population,
       const std::vector<DataFrameType>& _peripheral,
       const helpers::WordIndexContainer& _word_indices,
       const TransformParams& _params) const;
-
-  // --------------------------------------------------------
 
  private:
   /// Trivial accessor.
@@ -280,39 +275,27 @@ class FeatureLearner : public AbstractFeatureLearner {
   }
 
   /// The minimum document frequency used for the vocabulary.
-  size_t min_df(const HypType& _hyp) const { return _hyp.min_df_; }
+  size_t min_df(const HypType& _hyp) const { return _hyp.min_df(); }
 
   /// Trivial accessor.
-  const std::vector<std::string>& peripheral() const {
-    assert_true(peripheral_);
-    return *peripheral_;
-  }
+  const std::vector<std::string>& peripheral() const { return *peripheral_; }
 
   /// Trivial accessor.
   std::vector<helpers::Schema> peripheral_schema() const {
-    assert_true(peripheral_schema_);
-
     return *peripheral_schema_;
   }
 
   /// Trivial accessor.
-  const helpers::Placeholder& placeholder() const {
-    assert_true(placeholder_);
-    return *placeholder_;
-  }
+  const helpers::Placeholder& placeholder() const { return *placeholder_; }
 
   /// Trivial accessor.
-  helpers::Schema population_schema() const {
-    assert_true(population_schema_);
-
-    return *population_schema_;
-  }
+  helpers::Schema population_schema() const { return *population_schema_; }
 
   /// Extracts the propositionalization from the hyperparameters, if they
   /// exist.
   PropType propositionalization(const HypType& _hyp) const {
     if constexpr (has_propositionalization_) {
-      return _hyp.propositionalization_;
+      return _hyp.propositionalization();
     }
 
     if constexpr (!has_propositionalization_) {
@@ -326,16 +309,11 @@ class FeatureLearner : public AbstractFeatureLearner {
   }
 
   /// The size of the vocabulary.
-  size_t vocab_size(const HypType& _hyp) const { return _hyp.vocab_size_; }
-
-  // --------------------------------------------------------
+  size_t vocab_size(const HypType& _hyp) const { return _hyp.vocab_size(); }
 
  private:
-  /// The command used to create the feature learner.
-  Poco::JSON::Object cmd_;
-
   /// The dependencies used to build the fingerprint.
-  std::vector<Poco::JSON::Object::Ptr> dependencies_;
+  fct::Ref<const std::vector<commands::Fingerprint>> dependencies_;
 
   /// The containers for the propositionalization.
   std::shared_ptr<const fastprop::subfeatures::FastPropContainer>
@@ -344,28 +322,28 @@ class FeatureLearner : public AbstractFeatureLearner {
   /// The underlying feature learning algorithm.
   std::optional<FeatureLearnerType> feature_learner_;
 
+  /// The underlying hyperparameters.
+  HypType hyperparameters_;
+
   /// The names of the peripheral tables
-  std::shared_ptr<const std::vector<std::string>> peripheral_;
+  fct::Ref<const std::vector<std::string>> peripheral_;
 
   /// The schema of the peripheral tables.
-  std::shared_ptr<const std::vector<helpers::Schema>> peripheral_schema_;
+  fct::Ref<const std::vector<helpers::Schema>> peripheral_schema_;
 
   /// The placeholder describing the data schema.
-  std::shared_ptr<const helpers::Placeholder> placeholder_;
+  fct::Ref<const helpers::Placeholder> placeholder_;
 
   /// The schema of the population table.
-  std::shared_ptr<const helpers::Schema> population_schema_;
+  fct::Ref<const helpers::Schema> population_schema_;
 
   /// Indicates which target to use
   Int target_num_;
 
   /// The vocabulary used for the text fields.
   std::shared_ptr<const helpers::VocabularyContainer> vocabulary_;
-
-  // --------------------------------------------------------
 };
 
-// ----------------------------------------------------------------------------
 }  // namespace featurelearners
 }  // namespace engine
 
@@ -374,7 +352,6 @@ class FeatureLearner : public AbstractFeatureLearner {
 
 namespace engine {
 namespace featurelearners {
-// ----------------------------------------------------------------------------
 
 template <typename FeatureLearnerType>
 std::map<helpers::ColumnDescription, Float>
@@ -416,7 +393,7 @@ FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
       return false;
     }
 
-    if (_target_num >= 0 && _name != _schema.targets_.at(_target_num)) {
+    if (_target_num >= 0 && _name != _schema.targets().at(_target_num)) {
       return false;
     }
 
@@ -436,7 +413,7 @@ FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
   };
 
   const auto targets = fct::collect::vector<std::string>(
-      _schema.targets_ | VIEWS::filter(include_target));
+      _schema.targets() | VIEWS::filter(include_target));
 
   const auto include = [this, &_df](const std::string& _colname) -> bool {
     return parse_subroles(_df.subroles(_colname));
@@ -444,34 +421,29 @@ FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
 
   const auto categoricals =
       _apply_subroles ? fct::collect::vector<std::string>(
-                            _schema.categoricals_ | VIEWS::filter(include))
-                      : _schema.categoricals_;
+                            _schema.categoricals() | VIEWS::filter(include))
+                      : _schema.categoricals();
 
   const auto discretes = _apply_subroles
                              ? fct::collect::vector<std::string>(
-                                   _schema.discretes_ | VIEWS::filter(include))
-                             : _schema.discretes_;
+                                   _schema.discretes() | VIEWS::filter(include))
+                             : _schema.discretes();
 
   const auto numericals =
       _apply_subroles ? fct::collect::vector<std::string>(
-                            _schema.numericals_ | VIEWS::filter(include))
-                      : _schema.numericals_;
+                            _schema.numericals() | VIEWS::filter(include))
+                      : _schema.numericals();
 
   const auto text = _apply_subroles
                         ? fct::collect::vector<std::string>(
-                              _schema.text_ | VIEWS::filter(include))
-                        : _schema.text_;
+                              _schema.text() | VIEWS::filter(include))
+                        : _schema.text();
 
-  const auto schema =
-      containers::Schema{.categoricals_ = categoricals,
-                         .discretes_ = discretes,
-                         .join_keys_ = _schema.join_keys_,
-                         .numericals_ = numericals,
-                         .targets_ = targets,
-                         .text_ = text,
-                         .time_stamps_ = _schema.time_stamps_,
-                         .unused_floats_ = _schema.unused_floats_,
-                         .unused_strings_ = _schema.unused_strings_};
+  const auto schema = helpers::Schema(_schema.val_.replace(
+      fct::make_field<"categoricals_">(categoricals),
+      fct::make_field<"discretes_">(discretes),
+      fct::make_field<"numericals_">(numericals),
+      fct::make_field<"targets_">(targets), fct::make_field<"text_">(text)));
 
   return _df.to_immutable<typename FeatureLearnerType::DataFrameType>(schema);
 }
@@ -526,21 +498,13 @@ FeatureLearner<FeatureLearnerType>::extract_tables_by_colnames(
 // ----------------------------------------------------------------------------
 
 template <typename FeatureLearnerType>
-Poco::JSON::Object::Ptr FeatureLearner<FeatureLearnerType>::fingerprint()
-    const {
-  auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-
-  obj->set("cmd_", cmd_);
-
-  obj->set("dependencies_", JSON::vector_to_array_ptr(dependencies_));
-
-  obj->set("peripheral_", JSON::vector_to_array_ptr(peripheral()));
-
-  obj->set("placeholder_", placeholder().to_json_obj());
-
-  obj->set("target_num_", target_num_);
-
-  return obj;
+commands::Fingerprint FeatureLearner<FeatureLearnerType>::fingerprint() const {
+  return commands::Fingerprint(
+      FingerprintType(hyperparameters_.named_tuple() *
+                      fct::make_field<"dependencies_">(*dependencies_) *
+                      fct::make_field<"peripheral_">(peripheral_) *
+                      fct::make_field<"placeholder_">(placeholder_) *
+                      fct::make_field<"target_num_">(target_num_)));
 }
 
 // ----------------------------------------------------------------------------
@@ -659,9 +623,6 @@ FeatureLearner<FeatureLearnerType>::handle_text_fields(
     const std::shared_ptr<const logging::AbstractLogger> _logger) const {
   assert_true(_logger);
 
-  const auto hyperparameters =
-      std::make_shared<typename FeatureLearnerType::HypType>(cmd_);
-
   const auto has_text_fields = [](const helpers::DataFrame& _df) -> bool {
     return _df.num_text() > 0;
   };
@@ -673,7 +634,7 @@ FeatureLearner<FeatureLearnerType>::handle_text_fields(
   if (any_text_fields) _logger->log("Indexing text fields...");
 
   const auto vocabulary = std::make_shared<const helpers::VocabularyContainer>(
-      min_df(*hyperparameters), vocab_size(*hyperparameters), _population,
+      min_df(hyperparameters_), vocab_size(hyperparameters_), _population,
       _peripheral);
 
 #ifndef NDEBUG
@@ -706,65 +667,22 @@ FeatureLearner<FeatureLearnerType>::handle_text_fields(
 
 template <typename FeatureLearnerType>
 void FeatureLearner<FeatureLearnerType>::load(const std::string& _fname) {
-  const auto obj = load_json_obj(_fname);
-
-  feature_learner_ = std::make_optional<FeatureLearnerType>(obj);
-
-  if (obj.has("fast_prop_container_")) {
-    fast_prop_container_ =
-        std::make_shared<const fastprop::subfeatures::FastPropContainer>(
-            *JSON::get_object(obj, "fast_prop_container_"));
-  }
-
-  if (obj.has("vocabulary_")) {
-    vocabulary_ = std::make_shared<const helpers::VocabularyContainer>(
-        *JSON::get_object(obj, "vocabulary_"));
-  }
-
-  target_num_ = JSON::get_value<Int>(obj, "target_num_");
+  using FLNamedTupleType = typename FeatureLearnerType::NamedTupleType;
+  const auto val = helpers::Loader::load_from_json<NamedTupleType>(_fname);
+  fast_prop_container_ = fct::get<"fast_prop_container_">(val);
+  feature_learner_ = FeatureLearnerType(FLNamedTupleType(val));
+  target_num_ = fct::get<"target_num_">(val);
+  vocabulary_ = fct::get<"vocabulary_">(val);
 }
 
 // ------------------------------------------------------------------------
 
 template <typename FeatureLearnerType>
-Poco::JSON::Object FeatureLearner<FeatureLearnerType>::load_json_obj(
-    const std::string& _fname) const {
-  std::ifstream input(_fname);
-
-  std::stringstream json;
-
-  std::string line;
-
-  if (input.is_open()) {
-    while (std::getline(input, line)) {
-      json << line;
-    }
-
-    input.close();
-  } else {
-    throw std::runtime_error("File '" + _fname + "' not found!");
-  }
-
-  const auto ptr =
-      Poco::JSON::Parser().parse(json.str()).extract<Poco::JSON::Object::Ptr>();
-
-  if (!ptr) {
-    throw std::runtime_error("JSON file did not contain an object!");
-  }
-
-  return *ptr;
-}
-
-// ----------------------------------------------------------------------------
-
-template <typename FeatureLearnerType>
-std::optional<FeatureLearnerType>
-FeatureLearner<FeatureLearnerType>::make_feature_learner() const {
-  const auto hyperparameters =
-      std::make_shared<typename FeatureLearnerType::HypType>(cmd_);
-
-  return std::make_optional<FeatureLearnerType>(hyperparameters, peripheral_,
-                                                placeholder_);
+FeatureLearnerType FeatureLearner<FeatureLearnerType>::make_feature_learner()
+    const {
+  // TODO: Remove the shared_ptr
+  return FeatureLearnerType(std::make_shared<const HypType>(hyperparameters_),
+                            peripheral_.ptr(), placeholder_.ptr());
 }
 
 // ----------------------------------------------------------------------------
@@ -866,33 +784,7 @@ std::string FeatureLearner<FeatureLearnerType>::remove_time_diff(
 
 template <typename FeatureLearnerType>
 void FeatureLearner<FeatureLearnerType>::save(const std::string& _fname) const {
-  std::ofstream fs(_fname, std::ofstream::out);
-  Poco::JSON::Stringifier::stringify(to_json_obj(false), fs);
-  fs.close();
-}
-
-// ----------------------------------------------------------------------------
-
-template <typename FeatureLearnerType>
-Poco::JSON::Object FeatureLearner<FeatureLearnerType>::to_json_obj(
-    const bool _schema_only) const {
-  auto obj = feature_learner().to_json_obj(_schema_only);
-
-  if (_schema_only) {
-    return obj;
-  }
-
-  if (fast_prop_container_) {
-    obj.set("fast_prop_container_", fast_prop_container_->to_json_obj());
-  }
-
-  if (vocabulary_) {
-    obj.set("vocabulary_", vocabulary_->to_json_obj());
-  }
-
-  obj.set("target_num_", target_num_);
-
-  return obj;
+  helpers::Saver::save_as_json(_fname, *this);
 }
 
 // ----------------------------------------------------------------------------
@@ -904,8 +796,6 @@ std::vector<std::string> FeatureLearner<FeatureLearnerType>::to_sql(
     const std::shared_ptr<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator,
     const std::string& _prefix) const {
-  throw_unless(peripheral_schema_, "Pipeline has not been fitted.");
-
   std::vector<std::string> sql;
 
   throw_unless(vocabulary_, "Pipeline has not been fitted.");

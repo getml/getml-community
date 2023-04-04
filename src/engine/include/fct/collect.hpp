@@ -1,18 +1,12 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef FCT_COLLECT_HPP_
 #define FCT_COLLECT_HPP_
-
-// -------------------------------------------------------------------------
-
-#include <Poco/JSON/Array.h>
-
-// -------------------------------------------------------------------------
 
 #include <map>
 #include <set>
@@ -21,27 +15,11 @@
 #include <utility>
 #include <vector>
 
-// -------------------------------------------------------------------------
-
 #include "fct/ranges.hpp"
-
-// -------------------------------------------------------------------------
 
 namespace fct {
 
 struct collect {
-  /// Generates Poco::JSON::Array::Ptr from a range
-  template <class RangeType>
-  static Poco::JSON::Array::Ptr array(RangeType range) {
-    auto arr = Poco::JSON::Array::Ptr(new Poco::JSON::Array());
-
-    for (const auto& val : range) {
-      arr->add(val);
-    }
-
-    return arr;
-  }
-
   /// Generates a map from a range
   template <class KeyType, class ValueType, class RangeType>
   static std::map<KeyType, ValueType> map(RangeType range) {
@@ -68,7 +46,8 @@ struct collect {
 #else
     constexpr bool use_push_back = !std::is_default_constructible<T>() ||
                                    !std::is_move_assignable<T>() ||
-                                   !RANGES::sized_range<RangeType>;
+                                   !RANGES::sized_range<RangeType> ||
+                                   !RANGES::random_access_range<RangeType>;
 #endif
 
     if constexpr (use_push_back) {

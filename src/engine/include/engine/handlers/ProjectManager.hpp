@@ -1,41 +1,27 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_HANDLERS_PROJECTMANAGER_HPP_
 #define ENGINE_HANDLERS_PROJECTMANAGER_HPP_
 
-// ------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
 #include <Poco/Net/StreamSocket.h>
-
-// ------------------------------------------------------------------------
 
 #include <map>
 #include <memory>
 #include <string>
 
-// ------------------------------------------------------------------------
-
+#include "commands/ProjectCommand.hpp"
 #include "debug/debug.hpp"
-
-// ------------------------------------------------------------------------
-
 #include "engine/communication/communication.hpp"
 #include "engine/config/config.hpp"
 #include "engine/containers/containers.hpp"
-#include "engine/pipelines/pipelines.hpp"
-
-// ------------------------------------------------------------------------
-
 #include "engine/handlers/DataFrameManager.hpp"
 #include "engine/handlers/ProjectManagerParams.hpp"
-
-// ------------------------------------------------------------------------
+#include "engine/pipelines/pipelines.hpp"
 
 namespace engine {
 namespace handlers {
@@ -43,8 +29,7 @@ namespace handlers {
 class ProjectManager {
  public:
   typedef ProjectManagerParams::PipelineMapType PipelineMapType;
-
-  // ------------------------------------------------------------------------
+  typedef commands::ProjectCommand Command;
 
  public:
   ProjectManager(const ProjectManagerParams& _params) : params_(_params) {
@@ -53,110 +38,108 @@ class ProjectManager {
 
   ~ProjectManager() = default;
 
-  // ------------------------------------------------------------------------
-
  public:
+  /// Executes a command related to a database operation.
+  void execute_command(const Command& _command,
+                       Poco::Net::StreamSocket* _socket);
+
+ private:
   /// Adds a new data frame read from an arrow table.
-  void add_data_frame_from_arrow(const std::string& _name,
-                                 const Poco::JSON::Object& _cmd,
+  void add_data_frame_from_arrow(const typename Command::AddDfFromArrowOp& _cmd,
                                  Poco::Net::StreamSocket* _socket);
 
   /// Creates a new data frame from one or several CSV files.
-  void add_data_frame_from_csv(const std::string& _name,
-                               const Poco::JSON::Object& _cmd,
+  void add_data_frame_from_csv(const typename Command::AddDfFromCSVOp& _cmd,
                                Poco::Net::StreamSocket* _socket);
 
   /// Adds a new data frame taken from the database.
-  void add_data_frame_from_db(const std::string& _name,
-                              const Poco::JSON::Object& _cmd,
+  void add_data_frame_from_db(const typename Command::AddDfFromDBOp& _cmd,
                               Poco::Net::StreamSocket* _socket);
 
   /// Adds a new data frame taken parsed from a JSON.
-  void add_data_frame_from_json(const std::string& _name,
-                                const Poco::JSON::Object& _cmd,
+  void add_data_frame_from_json(const typename Command::AddDfFromJSONOp& _cmd,
                                 Poco::Net::StreamSocket* _socket);
 
   /// Adds a new data frame read from a parquet file.
-  void add_data_frame_from_parquet(const std::string& _name,
-                                   const Poco::JSON::Object& _cmd,
-                                   Poco::Net::StreamSocket* _socket);
+  void add_data_frame_from_parquet(
+      const typename Command::AddDfFromParquetOp& _cmd,
+      Poco::Net::StreamSocket* _socket);
 
   /// Adds a new data frame generated from a query.
-  void add_data_frame_from_query(const std::string& _name,
-                                 const Poco::JSON::Object& _cmd,
+  void add_data_frame_from_query(const typename Command::AddDfFromQueryOp& _cmd,
                                  Poco::Net::StreamSocket* _socket);
 
   /// Adds a new data frame generated from a view.
-  void add_data_frame_from_view(const std::string& _name,
-                                const Poco::JSON::Object& _cmd,
+  void add_data_frame_from_view(const typename Command::AddDfFromViewOp& _cmd,
                                 Poco::Net::StreamSocket* _socket);
 
   /// Adds a new Pipeline to the project.
-  void add_pipeline(const std::string& _name, const Poco::JSON::Object& _cmd,
+  void add_pipeline(const typename Command::PipelineOp& _cmd,
                     Poco::Net::StreamSocket* _socket);
 
   /// Duplicates a pipeline.
-  void copy_pipeline(const std::string& _name, const Poco::JSON::Object& _cmd,
+  void copy_pipeline(const typename Command::CopyPipelineOp& _cmd,
                      Poco::Net::StreamSocket* _socket);
 
   /// Deletes a data frame
-  void delete_data_frame(const std::string& _name,
-                         const Poco::JSON::Object& _cmd,
+  void delete_data_frame(const typename Command::DeleteDataFrameOp& _cmd,
                          Poco::Net::StreamSocket* _socket);
 
   /// Deletes a pipeline
-  void delete_pipeline(const std::string& _name, const Poco::JSON::Object& _cmd,
+  void delete_pipeline(const typename Command::DeletePipelineOp& _cmd,
                        Poco::Net::StreamSocket* _socket);
 
   /// Deletes a project
-  void delete_project(const std::string& _name,
+  void delete_project(const typename Command::DeleteProjectOp& _cmd,
                       Poco::Net::StreamSocket* _socket);
 
   /// Returns a list of all data_frames currently held in memory and held
   /// in the project directory.
-  void list_data_frames(Poco::Net::StreamSocket* _socket) const;
+  void list_data_frames(const typename Command::ListDfsOp& _cmd,
+                        Poco::Net::StreamSocket* _socket) const;
 
   /// Returns a list of all pipelines currently held in memory.
-  void list_pipelines(Poco::Net::StreamSocket* _socket) const;
+  void list_pipelines(const typename Command::ListPipelinesOp& _cmd,
+                      Poco::Net::StreamSocket* _socket) const;
 
   /// Returns a list of all projects.
-  void list_projects(Poco::Net::StreamSocket* _socket) const;
+  void list_projects(const typename Command::ListProjectsOp& _cmd,
+                     Poco::Net::StreamSocket* _socket) const;
 
   /// Loads a data container.
-  void load_data_container(const std::string& _name,
+  void load_data_container(const typename Command::LoadDataContainerOp& _cmd,
                            Poco::Net::StreamSocket* _socket);
 
   /// Loads a data frame
-  void load_data_frame(const std::string& _name,
+  void load_data_frame(const typename Command::LoadDfOp& _cmd,
                        Poco::Net::StreamSocket* _socket);
 
   /// Loads a pipeline
-  void load_pipeline(const std::string& _name,
+  void load_pipeline(const typename Command::LoadPipelineOp& _cmd,
                      Poco::Net::StreamSocket* _socket);
 
   /// Get the name of the current project.
-  void project_name(Poco::Net::StreamSocket* _socket) const;
+  void project_name(const typename Command::ProjectNameOp& _cmd,
+                    Poco::Net::StreamSocket* _socket) const;
 
   /// Saves a data container to disk.
-  void save_data_container(const std::string& _name,
-                           const Poco::JSON::Object& _cmd,
+  void save_data_container(const typename Command::SaveDataContainerOp& _cmd,
                            Poco::Net::StreamSocket* _socket);
 
   /// Saves a data frame
-  void save_data_frame(const std::string& _name,
+  void save_data_frame(const typename Command::SaveDfOp& _cmd,
                        Poco::Net::StreamSocket* _socket);
 
   /// Saves a pipeline to disc.
-  void save_pipeline(const std::string& _name,
+  void save_pipeline(const typename Command::SavePipelineOp& _cmd,
                      Poco::Net::StreamSocket* _socket);
 
   /// Sets the current project
   void set_project(const std::string& _name);
 
   /// Get the path of the directory for tempfiles.
-  void temp_dir(Poco::Net::StreamSocket* _socket) const;
-
-  // ------------------------------------------------------------------------
+  void temp_dir(const typename Command::TempDirOp& _cmd,
+                Poco::Net::StreamSocket* _socket) const;
 
  public:
   /// Trivial accessor
@@ -164,17 +147,10 @@ class ProjectManager {
     return params_.options_.project_directory();
   }
 
-  // ------------------------------------------------------------------------
-
  private:
   /// Deletes all pipelines and data frames (from memory only) and clears all
   /// encodings.
   void clear();
-
-  /// Loads a JSON object from a file.
-  Poco::JSON::Object load_json_obj(const std::string& _fname) const;
-
-  // ------------------------------------------------------------------------
 
  private:
   /// Trivial accessor
@@ -252,14 +228,11 @@ class ProjectManager {
     pipelines().insert_or_assign(_name, _pipeline);
   }
 
-  // ------------------------------------------------------------------------
-
  private:
   /// The underlying parameters.
   const ProjectManagerParams params_;
 };
 
-// ------------------------------------------------------------------------
 }  // namespace handlers
 }  // namespace engine
 

@@ -1,32 +1,21 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef DATABASE_CONNECTOR_HPP_
 #define DATABASE_CONNECTOR_HPP_
-
-// ----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------------
 
 #include <memory>
 #include <string>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
-#include "io/io.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "database/Iterator.hpp"
-
-// ----------------------------------------------------------------------------
+#include "database/TableContent.hpp"
+#include "fct/Ref.hpp"
+#include "io/io.hpp"
 
 namespace database {
 
@@ -37,8 +26,8 @@ class Connector {
   virtual ~Connector() = default;
 
  public:
-  /// Returns a Poco::JSON::Object describing the connection.
-  virtual Poco::JSON::Object describe() const = 0;
+  /// Returns a std::string describing the connection.
+  virtual std::string describe() const = 0;
 
   /// Describes the dialect used by the connector.
   virtual std::string dialect() const = 0;
@@ -51,10 +40,10 @@ class Connector {
 
   /// Returns the content of a table in a format that is compatible
   /// with the DataTables.js server-side processing API.
-  virtual Poco::JSON::Object get_content(const std::string& _tname,
-                                         const std::int32_t _draw,
-                                         const std::int32_t _start,
-                                         const std::int32_t _length) = 0;
+  virtual TableContent get_content(const std::string& _tname,
+                                   const std::int32_t _draw,
+                                   const std::int32_t _start,
+                                   const std::int32_t _length) = 0;
 
   /// Returns the names of the table columns.
   virtual std::vector<std::string> get_colnames(
@@ -76,18 +65,16 @@ class Connector {
                     io::Reader* _reader) = 0;
 
   /// Returns a shared_ptr containing the corresponding iterator.
-  virtual std::shared_ptr<Iterator> select(
-      const std::vector<std::string>& _colnames, const std::string& _tname,
-      const std::string& _where) = 0;
+  virtual fct::Ref<Iterator> select(const std::vector<std::string>& _colnames,
+                                    const std::string& _tname,
+                                    const std::string& _where) = 0;
 
   /// Returns a shared_ptr containing an iterator for the SQL query.
-  virtual std::shared_ptr<Iterator> select(const std::string& _sql) = 0;
+  virtual fct::Ref<Iterator> select(const std::string& _sql) = 0;
 
   /// Returns the time formats used.
   virtual const std::vector<std::string>& time_formats() const = 0;
 };
-
-// ----------------------------------------------------------------------------
 
 }  // namespace database
 

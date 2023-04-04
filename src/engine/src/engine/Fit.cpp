@@ -1,24 +1,25 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/pipelines/Fit.hpp"
 
-// ----------------------------------------------------------------------------
-
+#include "commands/FeatureLearner.hpp"
+#include "commands/Fingerprint.hpp"
 #include "engine/featurelearners/AbstractFeatureLearner.hpp"
 #include "engine/pipelines/Score.hpp"
 #include "engine/pipelines/Transform.hpp"
 #include "engine/pipelines/TransformParams.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
+#include "fct/Field.hpp"
 #include "fct/collect.hpp"
+#include "fct/make_named_tuple.hpp"
 #include "helpers/StringReplacer.hpp"
+#include "json/json.hpp"
 #include "predictors/Predictor.hpp"
-
-// ----------------------------------------------------------------------------
 
 namespace engine {
 namespace pipelines {
@@ -78,76 +79,87 @@ std::vector<Float> Fit::calculate_sum_importances(
 
 // ----------------------------------------------------------------------
 
-std::vector<Poco::JSON::Object::Ptr> Fit::extract_df_fingerprints(
+fct::Ref<const std::vector<commands::Fingerprint>> Fit::extract_df_fingerprints(
     const Pipeline& _pipeline, const containers::DataFrame& _population_df,
     const std::vector<containers::DataFrame>& _peripheral_dfs) {
-  const auto placeholder = JSON::get_object(_pipeline.obj(), "data_model_");
+  const auto get_fingerprint = [](const auto& _df) {
+    return _df.fingerprint();
+  };
 
-  std::vector<Poco::JSON::Object::Ptr> df_fingerprints = {
-      placeholder, _population_df.fingerprint()};
+  const auto placeholder = std::vector<commands::Fingerprint>(
+      {commands::Fingerprint(_pipeline.obj().get<"data_model_">())});
 
-  for (const auto& df : _peripheral_dfs) {
-    df_fingerprints.push_back(df.fingerprint());
-  }
+  const auto population =
+      std::vector<commands::Fingerprint>({_population_df.fingerprint()});
 
-  return df_fingerprints;
+  const auto peripheral = fct::collect::vector<commands::Fingerprint>(
+      _peripheral_dfs | VIEWS::transform(get_fingerprint));
+
+  return fct::Ref<const std::vector<commands::Fingerprint>>::make(
+      fct::join::vector<commands::Fingerprint>(
+          {placeholder, population, peripheral}));
 }
 
 // ----------------------------------------------------------------------
 
-std::vector<Poco::JSON::Object::Ptr> Fit::extract_fl_fingerprints(
+fct::Ref<const std::vector<commands::Fingerprint>> Fit::extract_fl_fingerprints(
     const std::vector<fct::Ref<featurelearners::AbstractFeatureLearner>>&
         _feature_learners,
-    const std::vector<Poco::JSON::Object::Ptr>& _dependencies) {
+    const fct::Ref<const std::vector<commands::Fingerprint>>& _dependencies) {
   if (_feature_learners.size() == 0) {
-    return _dependencies;
+    return fct::Ref<const std::vector<commands::Fingerprint>>::make(
+        fct::collect::vector<commands::Fingerprint>(*_dependencies));
   }
 
-  const auto get_fingerprint = [](const auto& _fl) -> Poco::JSON::Object::Ptr {
+  const auto get_fingerprint = [](const auto& _fl) {
     return _fl->fingerprint();
   };
 
-  return fct::collect::vector<Poco::JSON::Object::Ptr>(
-      _feature_learners | VIEWS::transform(get_fingerprint));
+  return fct::Ref<const std::vector<commands::Fingerprint>>::make(
+      fct::collect::vector<commands::Fingerprint>(
+          _feature_learners | VIEWS::transform(get_fingerprint)));
 }
 
 // ----------------------------------------------------------------------
 
-std::vector<Poco::JSON::Object::Ptr> Fit::extract_predictor_fingerprints(
+fct::Ref<const std::vector<commands::Fingerprint>>
+Fit::extract_predictor_fingerprints(
     const std::vector<std::vector<fct::Ref<predictors::Predictor>>>&
         _predictors,
-    const std::vector<Poco::JSON::Object::Ptr>& _dependencies) {
+    const fct::Ref<const std::vector<commands::Fingerprint>>& _dependencies) {
   if (_predictors.size() == 0 || _predictors.at(0).size() == 0) {
     return _dependencies;
   }
 
-  const auto get_fingerprint = [](const auto& _p) -> Poco::JSON::Object::Ptr {
-    return _p->fingerprint();
-  };
+  const auto get_fingerprint = [](const auto& _p) { return _p->fingerprint(); };
 
   const auto get_fingerprints = [get_fingerprint](const auto& _ps) {
     return _ps | VIEWS::transform(get_fingerprint);
   };
 
-  return fct::join::vector<Poco::JSON::Object::Ptr>(
-      _predictors | VIEWS::transform(get_fingerprints));
+  return fct::Ref<const std::vector<commands::Fingerprint>>::make(
+      fct::join::vector<commands::Fingerprint>(
+          _predictors | VIEWS::transform(get_fingerprints)));
 }
 
 // ----------------------------------------------------------------------
 
-std::vector<Poco::JSON::Object::Ptr> Fit::extract_preprocessor_fingerprints(
+fct::Ref<const std::vector<commands::Fingerprint>>
+Fit::extract_preprocessor_fingerprints(
     const std::vector<fct::Ref<preprocessors::Preprocessor>>& _preprocessors,
-    const std::vector<Poco::JSON::Object::Ptr>& _dependencies) {
+    const fct::Ref<const std::vector<commands::Fingerprint>>& _dependencies) {
   if (_preprocessors.size() == 0) {
-    return _dependencies;
+    return fct::Ref<const std::vector<commands::Fingerprint>>::make(
+        fct::collect::vector<commands::Fingerprint>(*_dependencies));
   }
 
-  const auto get_fingerprint = [](const auto& _fl) -> Poco::JSON::Object::Ptr {
+  const auto get_fingerprint = [](const auto& _fl) {
     return _fl->fingerprint();
   };
 
-  return fct::collect::vector<Poco::JSON::Object::Ptr>(
-      _preprocessors | VIEWS::transform(get_fingerprint));
+  return fct::Ref<const std::vector<commands::Fingerprint>>::make(
+      fct::collect::vector<commands::Fingerprint>(
+          _preprocessors | VIEWS::transform(get_fingerprint)));
 }
 
 // ----------------------------------------------------------------------
@@ -199,21 +211,22 @@ Fit::fit(const Pipeline& _pipeline, const FitParams& _params) {
 
   const auto [placeholder, peripheral] = _pipeline.make_placeholder();
 
-  const auto feature_learner_params = featurelearners::FeatureLearnerParams{
-      .cmd_ = Poco::JSON::Object(),
-      .dependencies_ = preprocessed.preprocessor_fingerprints_,
-      .peripheral_ = peripheral.ptr(),  // TODO
-      .peripheral_schema_ = modified_peripheral_schema.ptr(),
-      .placeholder_ = placeholder.ptr(),  // TODO
-      .population_schema_ = modified_population_schema.ptr(),
-      .target_num_ = featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS};
+  const featurelearners::FeatureLearnerParams feature_learner_params =
+      fct::make_field<"dependencies_">(
+          preprocessed.preprocessor_fingerprints_) *
+      fct::make_field<"peripheral_">(peripheral) *
+      fct::make_field<"peripheral_schema_">(modified_peripheral_schema) *
+      fct::make_field<"placeholder_">(placeholder) *
+      fct::make_field<"population_schema_">(modified_population_schema) *
+      fct::make_field<"target_num_">(
+          featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS);
 
   const auto [feature_learners, fl_fingerprints] = fit_feature_learners(
       _pipeline, _params, preprocessed.population_df_,
       preprocessed.peripheral_dfs_, feature_learner_params);
 
   const auto feature_selector_impl = make_feature_selector_impl(
-      _pipeline, _params.cmd_, feature_learners, preprocessed.population_df_);
+      _pipeline, feature_learners, preprocessed.population_df_);
 
   containers::NumericalFeatures autofeatures;
 
@@ -232,16 +245,18 @@ Fit::fit(const Pipeline& _pipeline, const FitParams& _params) {
   const auto [feature_selectors, fs_fingerprints] =
       fit_predictors(fit_feature_selectors_params);
 
-  const auto predictor_impl = make_predictor_impl(
-      _pipeline, _params.cmd_, feature_selectors, preprocessed.population_df_);
+  const auto predictor_impl = make_predictor_impl(_pipeline, feature_selectors,
+                                                  preprocessed.population_df_);
 
   const auto validation_fingerprint =
-      _params.validation_df_ ? std::vector<Poco::JSON::Object::Ptr>(
+      _params.validation_df_ ? std::vector<commands::Fingerprint>(
                                    {_params.validation_df_->fingerprint()})
-                             : std::vector<Poco::JSON::Object::Ptr>();
+                             : std::vector<commands::Fingerprint>();
 
-  const auto dependencies = fct::join::vector<Poco::JSON::Object::Ptr>(
-      {fs_fingerprints, validation_fingerprint});
+  const auto dependencies = fct::Ref<std::vector<commands::Fingerprint>>::make(
+      fct::join::vector<commands::Fingerprint>(
+          {fct::collect::vector<commands::Fingerprint>(*fs_fingerprints),
+           validation_fingerprint}));
 
   const auto fit_predictors_params =
       FitPredictorsParams{.autofeatures_ = &autofeatures,
@@ -275,12 +290,12 @@ Fit::fit(const Pipeline& _pipeline, const FitParams& _params) {
                   .socket_ = _params.socket_})
             : std::nullopt;
 
-  const auto fingerprints =
-      Fingerprints{.df_fingerprints_ = std::move(preprocessed.df_fingerprints_),
-                   .fl_fingerprints_ = std::move(fl_fingerprints),
-                   .fs_fingerprints_ = std::move(fs_fingerprints),
-                   .preprocessor_fingerprints_ =
-                       std::move(preprocessed.preprocessor_fingerprints_)};
+  const Fingerprints fingerprints =
+      fct::make_field<"df_fingerprints_">(preprocessed.df_fingerprints_) *
+      fct::make_field<"fl_fingerprints_">(fl_fingerprints) *
+      fct::make_field<"fs_fingerprints_">(fs_fingerprints) *
+      fct::make_field<"preprocessor_fingerprints_">(
+          preprocessed.preprocessor_fingerprints_);
 
   const auto fitted_pipeline =
       fct::Ref<const FittedPipeline>::make(FittedPipeline{
@@ -302,7 +317,7 @@ Fit::fit(const Pipeline& _pipeline, const FitParams& _params) {
 // ----------------------------------------------------------------------------
 
 std::pair<std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>,
-          std::vector<Poco::JSON::Object::Ptr>>
+          fct::Ref<const std::vector<commands::Fingerprint>>>
 Fit::fit_feature_learners(
     const Pipeline& _pipeline, const FitParams& _params,
     const containers::DataFrame& _population_df,
@@ -312,8 +327,11 @@ Fit::fit_feature_learners(
       _pipeline, _feature_learner_params, _population_df.num_targets());
 
   if (feature_learners.size() == 0) {
-    return std::make_pair(to_const(feature_learners),
-                          _feature_learner_params.dependencies_);
+    return std::make_pair(
+        to_const(feature_learners),
+        fct::Ref<const std::vector<commands::Fingerprint>>::make(
+            fct::collect::vector<commands::Fingerprint>(
+                *_feature_learner_params.get<"dependencies_">())));
   }
 
   const auto [modified_population_schema, modified_peripheral_schema] =
@@ -355,18 +373,18 @@ Fit::fit_feature_learners(
     _params.fe_tracker_->add(fe);
   }
 
-  auto fl_fingerprints = extract_fl_fingerprints(
-      feature_learners, _feature_learner_params.dependencies_);
+  const auto fl_fingerprints = extract_fl_fingerprints(
+      feature_learners, _feature_learner_params.get<"dependencies_">());
 
-  return std::make_pair(to_const(feature_learners), std::move(fl_fingerprints));
+  return std::make_pair(to_const(feature_learners), fl_fingerprints);
 }
 
 // ----------------------------------------------------------------------------
 
-std::pair<Predictors, std::vector<Poco::JSON::Object::Ptr>> Fit::fit_predictors(
-    const FitPredictorsParams& _params) {
+std::pair<Predictors, fct::Ref<const std::vector<commands::Fingerprint>>>
+Fit::fit_predictors(const FitPredictorsParams& _params) {
   auto predictors = init_predictors(_params.pipeline_, _params.purpose_,
-                                    _params.impl_, _params.dependencies_,
+                                    _params.impl_, *_params.dependencies_,
                                     _params.population_df_.num_targets());
 
   const auto [retrieved_predictors, all_retrieved] =
@@ -396,7 +414,7 @@ std::pair<Predictors, std::vector<Poco::JSON::Object::Ptr>> Fit::fit_predictors(
   auto [numerical_features, categorical_features, autofeatures] =
       Transform::make_features(make_features_params, _params.pipeline_,
                                _params.feature_learners_, *_params.impl_,
-                               _params.fit_params_.fs_fingerprints_);
+                               *_params.fit_params_.fs_fingerprints_);
 
   *_params.autofeatures_ = autofeatures;
 
@@ -457,13 +475,13 @@ std::pair<Predictors, std::vector<Poco::JSON::Object::Ptr>> Fit::fit_predictors(
     }
   }
 
-  auto fingerprints =
+  const auto fingerprints =
       extract_predictor_fingerprints(predictors, _params.dependencies_);
 
   const auto predictors_struct =
       Predictors{.impl_ = _params.impl_, .predictors_ = to_const(predictors)};
 
-  return std::make_pair(std::move(predictors_struct), std::move(fingerprints));
+  return std::make_pair(std::move(predictors_struct), fingerprints);
 }
 
 // ----------------------------------------------------------------------
@@ -493,16 +511,19 @@ Preprocessed Fit::fit_preprocessors_only(
 // ----------------------------------------------------------------------------
 
 std::pair<std::vector<fct::Ref<const preprocessors::Preprocessor>>,
-          std::vector<Poco::JSON::Object::Ptr>>
+          fct::Ref<const std::vector<commands::Fingerprint>>>
 Fit::fit_transform_preprocessors(
     const Pipeline& _pipeline, const FitPreprocessorsParams& _params,
-    const std::vector<Poco::JSON::Object::Ptr>& _dependencies,
+    const fct::Ref<const std::vector<commands::Fingerprint>>& _dependencies,
     containers::DataFrame* _population_df,
     std::vector<containers::DataFrame>* _peripheral_dfs) {
   auto preprocessors = init_preprocessors(_pipeline, _dependencies);
 
   if (preprocessors.size() == 0) {
-    return std::make_pair(to_const(preprocessors), _dependencies);
+    return std::make_pair(
+        to_const(preprocessors),
+        fct::Ref<const std::vector<commands::Fingerprint>>::make(
+            fct::collect::vector<commands::Fingerprint>(*_dependencies)));
   }
 
   const auto [placeholder, peripheral_names] = _pipeline.make_placeholder();
@@ -599,25 +620,22 @@ Fit::init_feature_learners(
 
   const auto make_fl_for_one_target =
       [](const featurelearners::FeatureLearnerParams& _params,
+         const commands::FeatureLearner& _hyperparameters,
          const Int _target_num)
       -> fct::Ref<featurelearners::AbstractFeatureLearner> {
-    const auto new_params = featurelearners::FeatureLearnerParams{
-        .cmd_ = _params.cmd_,
-        .dependencies_ = _params.dependencies_,
-        .peripheral_ = _params.peripheral_,
-        .peripheral_schema_ = _params.peripheral_schema_,
-        .placeholder_ = _params.placeholder_,
-        .population_schema_ = _params.population_schema_,
-        .target_num_ = _target_num};
+    const auto new_params =
+        _params.replace(fct::make_field<"target_num_">(_target_num));
 
-    return featurelearners::FeatureLearnerParser::parse(new_params);
+    return featurelearners::FeatureLearnerParser::parse(new_params,
+                                                        _hyperparameters);
   };
 
   const auto make_fl_for_all_targets =
       [_num_targets, make_fl_for_one_target](
-          const featurelearners::FeatureLearnerParams& _params) {
-        const auto make =
-            std::bind(make_fl_for_one_target, _params, std::placeholders::_1);
+          const featurelearners::FeatureLearnerParams& _params,
+          const commands::FeatureLearner& _hyperparameters) {
+        const auto make = std::bind(make_fl_for_one_target, _params,
+                                    _hyperparameters, std::placeholders::_1);
 
         const auto iota = fct::iota<Int>(0, _num_targets);
 
@@ -626,33 +644,25 @@ Fit::init_feature_learners(
             iota | VIEWS::transform(make));
       };
 
-  const auto to_fl = [&_feature_learner_params,
-                      make_fl_for_all_targets](Poco::JSON::Object::Ptr _cmd)
+  const auto to_fl = [&_feature_learner_params, make_fl_for_all_targets](
+                         const commands::FeatureLearner& _hyperparameters)
       -> std::vector<fct::Ref<featurelearners::AbstractFeatureLearner>> {
-    assert_true(_cmd);
-
-    const auto params = featurelearners::FeatureLearnerParams{
-        .cmd_ = *_cmd,
-        .dependencies_ = _feature_learner_params.dependencies_,
-        .peripheral_ = _feature_learner_params.peripheral_,
-        .peripheral_schema_ = _feature_learner_params.peripheral_schema_,
-        .placeholder_ = _feature_learner_params.placeholder_,
-        .population_schema_ = _feature_learner_params.population_schema_,
-        .target_num_ =
-            featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS};
+    const auto new_params =
+        _feature_learner_params.replace(fct::make_field<"target_num_">(
+            featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS));
 
     const auto new_feature_learner =
-        featurelearners::FeatureLearnerParser::parse(params);
+        featurelearners::FeatureLearnerParser::parse(new_params,
+                                                     _hyperparameters);
 
     if (new_feature_learner->supports_multiple_targets()) {
       return {new_feature_learner};
     }
 
-    return make_fl_for_all_targets(params);
+    return make_fl_for_all_targets(new_params, _hyperparameters);
   };
 
-  const auto obj_vector = JSON::array_to_obj_vector(
-      JSON::get_array(_pipeline.obj(), "feature_learners_"));
+  const auto obj_vector = _pipeline.obj().get<"feature_learners_">();
 
   return fct::join::vector<fct::Ref<featurelearners::AbstractFeatureLearner>>(
       obj_vector | VIEWS::transform(to_fl));
@@ -663,36 +673,26 @@ Fit::init_feature_learners(
 std::vector<std::vector<fct::Ref<predictors::Predictor>>> Fit::init_predictors(
     const Pipeline& _pipeline, const std::string& _elem,
     const fct::Ref<const predictors::PredictorImpl>& _predictor_impl,
-    const std::vector<Poco::JSON::Object::Ptr>& _dependencies,
+    const std::vector<commands::Fingerprint>& _dependencies,
     const size_t _num_targets) {
-  const auto arr = JSON::get_array(_pipeline.obj(), _elem);
+  const auto commands = _pipeline.obj().get<"predictors_">();
 
   std::vector<std::vector<fct::Ref<predictors::Predictor>>> predictors;
 
   for (size_t t = 0; t < _num_targets; ++t) {
     std::vector<fct::Ref<predictors::Predictor>> predictors_for_target;
 
-    auto target_num = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
+    using TargetNumber = typename commands::Fingerprint::TargetNumber;
 
-    target_num->set("target_num_", t);
+    const auto target_num = TargetNumber(fct::make_field<"target_num_">(t));
 
     auto dependencies = _dependencies;
 
-    dependencies.push_back(target_num);
+    dependencies.push_back(commands::Fingerprint(target_num));
 
-    for (size_t i = 0; i < arr->size(); ++i) {
-      const auto ptr = arr->getObject(i);
-
-      if (!ptr) {
-        throw std::runtime_error("Element " + std::to_string(i) + " in " +
-                                 _elem +
-                                 " is not a proper JSON "
-                                 "object.");
-      }
-
+    for (const auto& cmd : commands) {
       auto new_predictor = predictors::PredictorParser::parse(
-          *ptr, _predictor_impl.ptr(), dependencies);
-
+          cmd, _predictor_impl, dependencies);
       predictors_for_target.emplace_back(std::move(new_predictor));
     }
 
@@ -706,36 +706,27 @@ std::vector<std::vector<fct::Ref<predictors::Predictor>>> Fit::init_predictors(
 
 std::vector<fct::Ref<preprocessors::Preprocessor>> Fit::init_preprocessors(
     const Pipeline& _pipeline,
-    const std::vector<Poco::JSON::Object::Ptr>& _dependencies) {
-  if (!_pipeline.obj().has("preprocessors_")) {
-    return std::vector<fct::Ref<preprocessors::Preprocessor>>();
-  }
+    const fct::Ref<const std::vector<commands::Fingerprint>>& _dependencies) {
+  auto dependencies =
+      fct::collect::vector<commands::Fingerprint>(*_dependencies);
 
-  const auto arr =
-      jsonutils::JSON::get_object_array(_pipeline.obj(), "preprocessors_");
-
-  const auto parse = [&arr, &_dependencies](const size_t _i) {
-    const auto ptr = arr->getObject(_i);
-    assert_true(ptr);
-    return preprocessors::PreprocessorParser::parse(*ptr, _dependencies);
+  const auto parse = [&dependencies](const auto& _cmd) {
+    return preprocessors::PreprocessorParser::parse(_cmd.val_, dependencies);
   };
 
-  const auto iota = fct::iota<size_t>(0, arr->size());
+  const auto commands = _pipeline.obj().get<"preprocessors_">();
 
   auto vec = fct::collect::vector<fct::Ref<preprocessors::Preprocessor>>(
-      iota | VIEWS::transform(parse));
+      commands | VIEWS::transform(parse));
 
-  const auto mapping_to_end =
-      [](const fct::Ref<preprocessors::Preprocessor>& _ptr) -> bool {
-    return _ptr->type() != preprocessors::Preprocessor::MAPPING;
+  const auto mapping_to_end = [](const auto& _p) -> bool {
+    return _p->type() != preprocessors::Preprocessor::MAPPING;
   };
 
   std::stable_partition(vec.begin(), vec.end(), mapping_to_end);
 
   // We need to take into consideration that preprocessors can also depend on
   // each other.
-  auto dependencies = _dependencies;
-
   for (auto& p : vec) {
     const auto copy = p->clone(dependencies);
     dependencies.push_back(p->fingerprint());
@@ -748,7 +739,7 @@ std::vector<fct::Ref<preprocessors::Preprocessor>> Fit::init_preprocessors(
 // ------------------------------------------------------------------------
 
 fct::Ref<const predictors::PredictorImpl> Fit::make_feature_selector_impl(
-    const Pipeline& _pipeline, const Poco::JSON::Object& _cmd,
+    const Pipeline& _pipeline,
     const std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>&
         _feature_learners,
     const containers::DataFrame& _population_df) {
@@ -820,23 +811,25 @@ Fit::make_features_validation(const FitPredictorsParams& _params) {
 
   const auto transform_params = TransformParams{
       .categories_ = _params.fit_params_.categories_,
-      .cmd_ = _params.fit_params_.cmd_,
+      .cmd_ = _params.fit_params_.cmd_ * fct::make_field<"predict_">(false) *
+              fct::make_field<"score_">(false),
       .data_frames_ = _params.fit_params_.data_frames_,
       .data_frame_tracker_ = _params.fit_params_.data_frame_tracker_,
       .logger_ = _params.fit_params_.logger_,
       .original_peripheral_dfs_ = _params.fit_params_.peripheral_dfs_,
       .original_population_df_ =
-          *_params.fit_params_
-               .validation_df_,  // NOTE: We want to take the validation_df here
+          *_params.fit_params_.validation_df_,  // NOTE: We want to take the
+                                                // validation_df here
       .socket_ = _params.fit_params_.socket_};
 
-  const auto features_only_params =
-      FeaturesOnlyParams{.dependencies_ = _params.dependencies_,
-                         .feature_learners_ = _params.feature_learners_,
-                         .pipeline_ = _params.pipeline_,
-                         .preprocessors_ = _params.preprocessors_,
-                         .predictor_impl_ = _params.impl_,
-                         .transform_params_ = transform_params};
+  const auto features_only_params = FeaturesOnlyParams{
+      .dependencies_ = _params.dependencies_,
+      .feature_learners_ = _params.feature_learners_,
+      .fs_fingerprints_ = _params.fit_params_.fs_fingerprints_,
+      .pipeline_ = _params.pipeline_,
+      .preprocessors_ = _params.preprocessors_,
+      .predictor_impl_ = _params.impl_,
+      .transform_params_ = transform_params};
 
   const auto [numerical_features, categorical_features, _] =
       Transform::transform_features_only(features_only_params);
@@ -850,8 +843,7 @@ Fit::make_features_validation(const FitPredictorsParams& _params) {
 // ------------------------------------------------------------------------
 
 fct::Ref<const predictors::PredictorImpl> Fit::make_predictor_impl(
-    const Pipeline& _pipeline, const Poco::JSON::Object& _cmd,
-    const Predictors& _feature_selectors,
+    const Pipeline& _pipeline, const Predictors& _feature_selectors,
     const containers::DataFrame& _population_df) {
   const auto predictor_impl =
       fct::Ref<predictors::PredictorImpl>::make(*_feature_selectors.impl_);
@@ -861,7 +853,7 @@ fct::Ref<const predictors::PredictorImpl> Fit::make_predictor_impl(
   }
 
   const auto share_selected_features =
-      JSON::get_value<Float>(_pipeline.obj(), "share_selected_features_");
+      _pipeline.obj().get<"share_selected_features_">();
 
   if (share_selected_features <= 0.0) {
     return predictor_impl;
@@ -890,11 +882,22 @@ fct::Ref<const metrics::Scores> Fit::make_scores(
     const Pipeline& _pipeline, const FittedPipeline& _fitted) {
   auto scores = fct::Ref<metrics::Scores>::make(_pipeline.scores());
 
-  scores->from_json_obj(Score::column_importances_as_obj(_pipeline, _fitted));
+  const auto [c_desc, c_importances] =
+      Score::column_importances(_pipeline, _fitted);
 
-  scores->from_json_obj(Score::feature_importances_as_obj(_fitted));
+  const auto feature_importances =
+      Score::feature_importances(_fitted.predictors_);
 
-  scores->from_json_obj(Score::feature_names_as_obj(_fitted));
+  const auto [n1, n2, n3] = _fitted.feature_names();
+
+  const auto feature_names = fct::join::vector<std::string>({n1, n2, n3});
+
+  scores->update(
+      fct::make_field<"column_descriptions_">(c_desc),
+      fct::make_field<"column_importances_">(Score::transpose(c_importances)),
+      fct::make_field<"feature_importances_">(
+          Score::transpose(feature_importances)),
+      fct::make_field<"feature_names_">(feature_names));
 
   if (!_score_params) {
     return scores;
@@ -943,7 +946,7 @@ fct::Ref<const metrics::Scores> Fit::score_after_fitting(
     const FittedPipeline& _fitted) {
   auto [numerical_features, categorical_features, _] = Transform::make_features(
       _params, _pipeline, _fitted.feature_learners_, *_fitted.predictors_.impl_,
-      _fitted.fingerprints_.fs_fingerprints_);
+      *_fitted.fingerprints_.get<"fs_fingerprints_">());
 
   categorical_features =
       _fitted.predictors_.impl_->transform_encodings(categorical_features);
@@ -951,13 +954,10 @@ fct::Ref<const metrics::Scores> Fit::score_after_fitting(
   const auto yhat = Transform::generate_predictions(
       _fitted, categorical_features, numerical_features);
 
-  const auto population_json =
-      *JSON::get_object(_params.cmd_, "population_df_");
+  const auto& name =
+      fct::get<"name_">(_params.cmd_.get<"population_df_">().val_);
 
-  const auto name = JSON::get_value<std::string>(population_json, "name_");
-
-  return std::get<0>(
-      Score::score(_pipeline, _fitted, _params.population_df_, name, yhat));
+  return Score::score(_pipeline, _fitted, _params.population_df_, name, yhat);
 }
 
 // ----------------------------------------------------------------------------

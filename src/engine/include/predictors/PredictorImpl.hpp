@@ -1,48 +1,52 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef PREDICTORS_PREDICTORIMPL_HPP_
 #define PREDICTORS_PREDICTORIMPL_HPP_
-
-// -----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
-
-// -----------------------------------------------------------------------------
 
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
 
-// -----------------------------------------------------------------------------
-
 #include "debug/debug.hpp"
+#include "fct/Field.hpp"
+#include "fct/NamedTuple.hpp"
 #include "memmap/memmap.hpp"
-
-// -----------------------------------------------------------------------------
-
 #include "predictors/CSRMatrix.hpp"
 #include "predictors/Encoding.hpp"
 #include "predictors/FloatFeature.hpp"
 #include "predictors/IntFeature.hpp"
-
-// -----------------------------------------------------------------------------
 
 namespace predictors {
 
 /// Impl class for a predictor.
 class PredictorImpl {
  public:
+  using f_autofeatures =
+      fct::Field<"autofeatures_", std::vector<std::vector<size_t>>>;
+
+  using f_categorical =
+      fct::Field<"categorical_colnames_", std::vector<std::string>>;
+
+  using f_encoding = fct::Field<"encodings_", std::vector<Encoding>>;
+
+  using f_numerical =
+      fct::Field<"numerical_colnames_", std::vector<std::string>>;
+
+  using NamedTupleType =
+      fct::NamedTuple<f_autofeatures, f_categorical, f_encoding, f_numerical>;
+
+ public:
   PredictorImpl(const std::vector<size_t>& _num_autofeatures,
                 const std::vector<std::string>& _categorical_colnames,
                 const std::vector<std::string>& _numerical_colnames);
 
-  explicit PredictorImpl(const Poco::JSON::Object& _obj);
+  explicit PredictorImpl(const NamedTupleType& _nt);
 
   ~PredictorImpl();
 
@@ -87,14 +91,9 @@ class PredictorImpl {
   /// Saves the predictor impl as a JSON.
   void save(const std::string& _fname) const;
 
-  /// Transform impl to JSON object.
-  Poco::JSON::Object to_json_obj() const;
-
   /// Transforms the columns using the encodings.
   std::vector<IntFeature> transform_encodings(
       const std::vector<IntFeature>& _X_categorical) const;
-
-  // -----------------------------------------
 
  public:
   /// Trivial (const) getter.
@@ -110,6 +109,13 @@ class PredictorImpl {
   /// Trivial (const) getter.
   const std::vector<std::string>& numerical_colnames() const {
     return numerical_colnames_;
+  }
+
+  /// Necessary for the automated parsing to work.
+  NamedTupleType named_tuple() const {
+    return f_autofeatures(autofeatures_) *
+           f_categorical(categorical_colnames_) * f_encoding(encodings_) *
+           f_numerical(numerical_colnames_);
   }
 
   /// Number of encodings available.
@@ -146,8 +152,6 @@ class PredictorImpl {
     return categorical_colnames_.size() + numerical_colnames_.size();
   }
 
-  // -----------------------------------------
-
  private:
   /// Select columns that have made the cut during the feature selection.
   template <class T>
@@ -155,11 +159,6 @@ class PredictorImpl {
                              const std::vector<size_t>& _index,
                              const size_t _ix_begin,
                              const std::vector<T>& _colnames) const;
-
-  /// Extracts the impl as a JSON.
-  std::string to_json() const { return JSON::stringify(to_json_obj()); }
-
-  // -----------------------------------------
 
  private:
   /// The index of the autofeatures used.
@@ -175,18 +174,14 @@ class PredictorImpl {
   /// Names of the numerical columns taken from the population table as
   /// features.
   std::vector<std::string> numerical_colnames_;
-
-  // -----------------------------------------
 };
 
-// ----------------------------------------------------------------------------
 }  // namespace predictors
 
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
 
 namespace predictors {
-// ----------------------------------------------------------------------------
 
 template <typename DataType, typename IndicesType, typename IndptrType>
 CSRMatrix<DataType, IndicesType, IndptrType> PredictorImpl::make_csr(

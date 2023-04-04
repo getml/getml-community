@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "fastprop/containers/AbstractFeature.hpp"
 
@@ -56,18 +56,14 @@ AbstractFeature::AbstractFeature(const enums::Aggregation _aggregation,
 
 // ----------------------------------------------------------------------------
 
-AbstractFeature::AbstractFeature(const Poco::JSON::Object &_obj)
-    : aggregation_(enums::Parser<enums::Aggregation>::parse(
-          jsonutils::JSON::get_value<std::string>(_obj, "aggregation_"))),
-      categorical_value_(
-          jsonutils::JSON::get_value<Int>(_obj, "categorical_value_")),
-      conditions_(
-          jsonutils::JSON::get_type_vector<Condition>(_obj, "conditions_")),
-      data_used_(enums::Parser<enums::DataUsed>::parse(
-          jsonutils::JSON::get_value<std::string>(_obj, "data_used_"))),
-      input_col_(jsonutils::JSON::get_value<size_t>(_obj, "input_col_")),
-      output_col_(jsonutils::JSON::get_value<size_t>(_obj, "output_col_")),
-      peripheral_(jsonutils::JSON::get_value<size_t>(_obj, "peripheral_")) {}
+AbstractFeature::AbstractFeature(const NamedTupleType &_obj)
+    : aggregation_(_obj.get<"aggregation_">()),
+      categorical_value_(_obj.get<"categorical_value_">()),
+      conditions_(_obj.get<"conditions_">()),
+      data_used_(_obj.get<"data_used_">()),
+      input_col_(_obj.get<"input_col_">()),
+      output_col_(_obj.get<"output_col_">()),
+      peripheral_(_obj.get<"peripheral_">()) {}
 
 // ----------------------------------------------------------------------------
 
@@ -75,26 +71,14 @@ AbstractFeature::~AbstractFeature() = default;
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object::Ptr AbstractFeature::to_json_obj() const {
-  auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-
-  obj->set("aggregation_",
-           enums::Parser<enums::Aggregation>::to_str(aggregation_));
-
-  obj->set("categorical_value_", categorical_value_);
-
-  obj->set("conditions_",
-           jsonutils::JSON::vector_to_object_array_ptr(conditions_));
-
-  obj->set("data_used_", enums::Parser<enums::DataUsed>::to_str(data_used_));
-
-  obj->set("input_col_", input_col_);
-
-  obj->set("output_col_", output_col_);
-
-  obj->set("peripheral_", peripheral_);
-
-  return obj;
+typename AbstractFeature::NamedTupleType AbstractFeature::named_tuple() const {
+  return fct::make_field<"aggregation_">(aggregation_) *
+         fct::make_field<"categorical_value_">(categorical_value_) *
+         fct::make_field<"conditions_">(conditions_) *
+         fct::make_field<"data_used_">(data_used_) *
+         fct::make_field<"input_col_">(input_col_) *
+         fct::make_field<"output_col_">(output_col_) *
+         fct::make_field<"peripheral_">(peripheral_);
 }
 
 // ----------------------------------------------------------------------------
@@ -135,11 +119,11 @@ std::string AbstractFeature::to_sql(
 
   assert_true(_input.join_keys_.size() == 1);
 
-  sql << _sql_dialect_generator->make_joins(_output.name_, _input.name_,
+  sql << _sql_dialect_generator->make_joins(_output.name(), _input.name(),
                                             _output.join_keys_name(),
                                             _input.join_keys_name());
 
-  if (data_used_ == enums::DataUsed::subfeatures) {
+  if (data_used_.value() == enums::DataUsed::value_of<"subfeatures">()) {
     const auto number = _feature_prefix + std::to_string(peripheral_ + 1) +
                         "_" + std::to_string(input_col_ + 1);
 

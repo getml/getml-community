@@ -1,18 +1,12 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_PIPELINES_LOAD_HPP_
 #define ENGINE_PIPELINES_LOAD_HPP_
-
-// ----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------------
 
 #include <memory>
 #include <string>
@@ -20,22 +14,12 @@
 #include <utility>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
-#include "metrics/metrics.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "engine/dependency/dependency.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "engine/pipelines/Fingerprints.hpp"
 #include "engine/pipelines/Pipeline.hpp"
 #include "engine/pipelines/PipelineJSON.hpp"
 #include "engine/pipelines/Predictors.hpp"
-
-// ----------------------------------------------------------------------------
+#include "metrics/metrics.hpp"
 
 namespace engine {
 namespace pipelines {
@@ -65,17 +49,10 @@ class Load {
       const fct::Ref<const predictors::PredictorImpl>& _feature_selector_impl,
       const PipelineJSON& _pipeline_json, const Pipeline& _pipeline);
 
-  /// Loads fingerprints for all components of the pipeline.
-  static Fingerprints load_fingerprints(
-      const Poco::JSON::Object& _pipeline_json);
-
   /// Loads the impls for the feature selectors and predictors.
   static std::pair<fct::Ref<const predictors::PredictorImpl>,
                    fct::Ref<const predictors::PredictorImpl>>
   load_impls(const std::string& _path);
-
-  /// Loads a generic JSON object.
-  static Poco::JSON::Object load_json_obj(const std::string& _fname);
 
   /// Loads the pipeline json (which records the original command passed by the
   /// user)
@@ -93,11 +70,10 @@ class Load {
   load_preprocessors(const std::string& _path,
                      const std::shared_ptr<dependency::PreprocessorTracker>
                          _preprocessor_tracker,
-                     const Poco::JSON::Object& _obj,
-                     const Fingerprints& _fingerprints);
+                     const PipelineJSON& _pipeline_json,
+                     const Pipeline& _pipeline);
 };
 
-// ----------------------------------------------------------------------------
 }  // namespace pipelines
 }  // namespace engine
 

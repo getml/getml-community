@@ -1,34 +1,25 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_PREPROCESSORS_DATAMODELCHECKER_HPP_
 #define ENGINE_PREPROCESSORS_DATAMODELCHECKER_HPP_
 
-// ----------------------------------------------------------------------------
-
 #include <memory>
 #include <string>
 #include <vector>
-
-// ----------------------------------------------------------------------------
-
-#include "helpers/helpers.hpp"
-#include "transpilation/HumanReadableSQLGenerator.hpp"
-#include "transpilation/transpilation.hpp"
-
-// ----------------------------------------------------------------------------
 
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
 #include "engine/communication/communication.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/featurelearners/AbstractFeatureLearner.hpp"
-
-// ----------------------------------------------------------------------------
+#include "helpers/helpers.hpp"
+#include "transpilation/HumanReadableSQLGenerator.hpp"
+#include "transpilation/transpilation.hpp"
 
 namespace engine {
 namespace preprocessors {
@@ -136,12 +127,6 @@ class DataModelChecker {
                    const std::string& _upper_time_stamp_used,
                    const containers::DataFrame& _population_df,
                    const containers::DataFrame& _peripheral_df);
-
-  /// Extracts the time stamps from the population placeholder.
-  static std::tuple<std::vector<std::string>, std::vector<std::string>,
-                    std::vector<std::string>>
-  get_time_stamps_used(const Poco::JSON::Object& _population_placeholder,
-                       const size_t _expected_size);
 
   /// Checks whether all non-NULL elements in _col are equal to each other
   static bool is_all_equal(const containers::Column<Float>& _col);
