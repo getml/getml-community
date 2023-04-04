@@ -1,23 +1,19 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "metrics/RSquared.hpp"
 
 namespace metrics {
-// ----------------------------------------------------------------------------
 
-Poco::JSON::Object RSquared::score(const Features _yhat, const Features _y) {
-  // -----------------------------------------------------
-
+typename RSquared::ResultType RSquared::score(const Features _yhat,
+                                              const Features _y) {
   impl_.set_data(_yhat, _y);
 
   sufficient_statistics_ = std::vector<Float>(6 * ncols());
-
-  // -----------------------------------------------------
 
   for (size_t i = 0; i < nrows(); ++i)
     for (size_t j = 0; j < ncols(); ++j)
@@ -40,13 +36,9 @@ Poco::JSON::Object RSquared::score(const Features _yhat, const Features _y) {
 
   sufficient_statistics(5, 0) = static_cast<Float>(nrows());
 
-  // -----------------------------------------------------
-
   if (impl_.has_comm()) {
     impl_.reduce(std::plus<Float>(), &sufficient_statistics_);
   }
-
-  // -----------------------------------------------------
 
   std::vector<Float> rsquared(ncols());
 
@@ -73,30 +65,15 @@ Poco::JSON::Object RSquared::score(const Features _yhat, const Features _y) {
     rsquared[j] = (cov_y_yhat * cov_y_yhat) / (var_yhat * var_y);
   }
 
-  // -----------------------------------------------------
-
   for (size_t j = 0; j < ncols(); ++j) {
     if (std::isinf(rsquared[j]) || std::isnan(rsquared[j])) {
       rsquared[j] = -1.0;
     }
   }
 
-  // -----------------------------------------------------
-
-  Poco::JSON::Object obj;
-
-  obj.set("rsquared_", jsonutils::JSON::vector_to_array_ptr(rsquared));
-
-  // -----------------------------------------------------
-
   sufficient_statistics_.clear();
 
-  // -----------------------------------------------------
-
-  return obj;
-
-  // -----------------------------------------------------
+  return fct::make_field<"rsquared_">(rsquared);
 }
 
-// ----------------------------------------------------------------------------
 }  // namespace metrics

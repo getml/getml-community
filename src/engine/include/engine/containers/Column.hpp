@@ -1,38 +1,27 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_CONTAINERS_COLUMN_HPP_
 #define ENGINE_CONTAINERS_COLUMN_HPP_
 
-// -------------------------------------------------------------------------
-
+#include <fstream>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <variant>
 #include <vector>
 
-// -------------------------------------------------------------------------
-
 #include "debug/debug.hpp"
-#include "helpers/helpers.hpp"
-#include "strings/strings.hpp"
-
-// -------------------------------------------------------------------------
-
 #include "engine/ULong.hpp"
 #include "engine/config/config.hpp"
-#include "engine/utils/utils.hpp"
-
-// -------------------------------------------------------------------------
-
 #include "engine/containers/ColumnViewIterator.hpp"
-
-// -------------------------------------------------------------------------
+#include "engine/utils/utils.hpp"
+#include "helpers/helpers.hpp"
+#include "strings/strings.hpp"
 
 namespace engine {
 namespace containers {
@@ -100,8 +89,6 @@ class Column {
 
   ~Column() = default;
 
-  // -------------------------------
-
   /// Appends another Column through rowbinding
   void append(const Column<T> &_other);
 
@@ -126,8 +113,6 @@ class Column {
 
   /// Returns a Column containing all rows for which _key is true.
   Column<T> where(const std::vector<bool> &_condition) const;
-
-  // -------------------------------
 
   /// Boundary-checked accessor to data
   template <class T2, typename IteratorType = iterator,

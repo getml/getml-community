@@ -1,22 +1,19 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/config/Options.hpp"
-
-// ----------------------------------------------------------------------------
 
 #include <chrono>
 #include <fstream>
 
-// ----------------------------------------------------------------------------
+#include "helpers/Loader.hpp"
 
 namespace engine {
 namespace config {
-// ----------------------------------------------------------------------------
 
 Options Options::make_options(int _argc, char* _argv[]) {
   auto options = parse_from_file();
@@ -79,9 +76,6 @@ void Options::parse_flags(int _argc, char* argv[]) {
 
     success = success || parse_size_t(arg, "http-port", &(monitor_.http_port_));
 
-    success =
-        success || parse_size_t(arg, "https-port", &(monitor_.https_port_));
-
     success = success || parse_size_t(arg, "tcp-port", &(monitor_.tcp_port_));
 
     success = success ||
@@ -116,45 +110,7 @@ void Options::parse_flags(int _argc, char* argv[]) {
 // ----------------------------------------------------------------------------
 
 Options Options::parse_from_file() {
-  const std::string fname = "../config.json";
-
-  std::ifstream input(fname);
-
-  std::stringstream json;
-
-  std::string line;
-
-  if (input.is_open()) {
-    while (std::getline(input, line)) {
-      json << line;
-    }
-
-    input.close();
-  } else {
-    print_warning("File 'config.json' not found!");
-
-    return Options();
-  }
-
-  try {
-    const auto ptr = Poco::JSON::Parser()
-                         .parse(json.str())
-                         .extract<Poco::JSON::Object::Ptr>();
-
-    if (!ptr) {
-      print_warning(
-          "'config.json' does not contain a proper JSON "
-          "object!");
-
-      return Options();
-    }
-
-    return Options(*ptr);
-  } catch (std::exception& e) {
-    print_warning(e.what());
-
-    return Options();
-  }
+  return helpers::Loader::load_from_json<Options>("../config.json");
 }
 
 // ----------------------------------------------------------------------------

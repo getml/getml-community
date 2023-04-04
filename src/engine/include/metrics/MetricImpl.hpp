@@ -1,37 +1,23 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef METRICS_METRICIMPL_HPP_
 #define METRICS_METRICIMPL_HPP_
 
-// ----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------------
-
 #include <utility>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
 #include "debug/debug.hpp"
-#include "multithreading/multithreading.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "metrics/Features.hpp"
 #include "metrics/Float.hpp"
 #include "metrics/Int.hpp"
-
-// ----------------------------------------------------------------------------
+#include "multithreading/multithreading.hpp"
 
 namespace metrics {
-// ----------------------------------------------------------------------------
 
 class MetricImpl {
  public:
@@ -40,8 +26,6 @@ class MetricImpl {
   explicit MetricImpl(multithreading::Communicator* _comm) : comm_(_comm) {}
 
   ~MetricImpl() = default;
-
-  // -----------------------------------------
 
  public:
   /// Trivial getter
@@ -120,8 +104,6 @@ class MetricImpl {
     return yhat_[_j][_i];
   }
 
-  // -----------------------------------------
-
  private:
   /// Communicator object - for parallel versions only.
   multithreading::Communicator* comm_;
@@ -131,11 +113,8 @@ class MetricImpl {
 
   /// Predictions.
   Features yhat_;
-
-  // -----------------------------------------
 };
 
-// ----------------------------------------------------------------------------
 }  // namespace metrics
 
 #endif  // METRICS_METRICIMPL_HPP_

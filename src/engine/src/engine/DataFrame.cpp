@@ -1,22 +1,20 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/containers/DataFrame.hpp"
-
-// ----------------------------------------------------------------------------
 
 #include <Poco/Path.h>
 #include <Poco/TemporaryFile.h>
 
-// ----------------------------------------------------------------------------
+#include <stdexcept>
 
 #include "engine/containers/DataFramePrinter.hpp"
-
-// ----------------------------------------------------------------------------
+#include "fct/Field.hpp"
+#include "json/json.hpp"
 
 namespace engine {
 namespace containers {
@@ -294,17 +292,12 @@ void DataFrame::append(const DataFrame &_other) {
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object::Ptr DataFrame::fingerprint() const {
+commands::Fingerprint DataFrame::fingerprint() const {
   if (build_history_) {
-    return build_history_;
+    return commands::Fingerprint(*build_history_);
   }
-
-  auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-
-  obj->set("name_", name_);
-  obj->set("last_change_", last_change_);
-
-  return obj;
+  return commands::Fingerprint(fct::make_field<"name_">(name_) *
+                               fct::make_field<"last_change_">(last_change_));
 }
 
 // ----------------------------------------------------------------------------
@@ -443,29 +436,29 @@ std::vector<std::string> DataFrame::concat_colnames(
     const Schema &_schema) const {
   auto all_colnames = std::vector<std::string>(0);
 
-  all_colnames.insert(all_colnames.end(), _schema.categoricals_.begin(),
-                      _schema.categoricals_.end());
+  all_colnames.insert(all_colnames.end(), _schema.categoricals().begin(),
+                      _schema.categoricals().end());
 
-  all_colnames.insert(all_colnames.end(), _schema.join_keys_.begin(),
-                      _schema.join_keys_.end());
+  all_colnames.insert(all_colnames.end(), _schema.join_keys().begin(),
+                      _schema.join_keys().end());
 
-  all_colnames.insert(all_colnames.end(), _schema.numericals_.begin(),
-                      _schema.numericals_.end());
+  all_colnames.insert(all_colnames.end(), _schema.numericals().begin(),
+                      _schema.numericals().end());
 
-  all_colnames.insert(all_colnames.end(), _schema.targets_.begin(),
-                      _schema.targets_.end());
+  all_colnames.insert(all_colnames.end(), _schema.targets().begin(),
+                      _schema.targets().end());
 
-  all_colnames.insert(all_colnames.end(), _schema.text_.begin(),
-                      _schema.text_.end());
+  all_colnames.insert(all_colnames.end(), _schema.text().begin(),
+                      _schema.text().end());
 
-  all_colnames.insert(all_colnames.end(), _schema.time_stamps_.begin(),
-                      _schema.time_stamps_.end());
+  all_colnames.insert(all_colnames.end(), _schema.time_stamps().begin(),
+                      _schema.time_stamps().end());
 
-  all_colnames.insert(all_colnames.end(), _schema.unused_floats_.begin(),
-                      _schema.unused_floats_.end());
+  all_colnames.insert(all_colnames.end(), _schema.unused_floats().begin(),
+                      _schema.unused_floats().end());
 
-  all_colnames.insert(all_colnames.end(), _schema.unused_strings_.begin(),
-                      _schema.unused_strings_.end());
+  all_colnames.insert(all_colnames.end(), _schema.unused_strings().begin(),
+                      _schema.unused_strings().end());
 
   return all_colnames;
 }
@@ -567,22 +560,22 @@ void DataFrame::from_csv(
 
 void DataFrame::from_db(fct::Ref<database::Connector> _connector,
                         const std::string &_tname, const Schema &_schema) {
-  auto categoricals = make_vectors<Int>(_schema.categoricals_.size());
+  auto categoricals = make_vectors<Int>(_schema.categoricals().size());
 
-  auto join_keys = make_vectors<Int>(_schema.join_keys_.size());
+  auto join_keys = make_vectors<Int>(_schema.join_keys().size());
 
-  auto numericals = make_vectors<Float>(_schema.numericals_.size());
+  auto numericals = make_vectors<Float>(_schema.numericals().size());
 
-  auto targets = make_vectors<Float>(_schema.targets_.size());
+  auto targets = make_vectors<Float>(_schema.targets().size());
 
-  auto text = make_vectors<strings::String>(_schema.text_.size());
+  auto text = make_vectors<strings::String>(_schema.text().size());
 
-  auto time_stamps = make_vectors<Float>(_schema.time_stamps_.size());
+  auto time_stamps = make_vectors<Float>(_schema.time_stamps().size());
 
-  auto unused_floats = make_vectors<Float>(_schema.unused_floats_.size());
+  auto unused_floats = make_vectors<Float>(_schema.unused_floats().size());
 
   auto unused_strings =
-      make_vectors<strings::String>(_schema.unused_strings_.size());
+      make_vectors<strings::String>(_schema.unused_strings().size());
 
   const auto all_colnames = concat_colnames(_schema);
 
@@ -612,22 +605,22 @@ void DataFrame::from_db(fct::Ref<database::Connector> _connector,
 
   auto df = DataFrame(name(), categories_, join_keys_encoding_, make_pool());
 
-  df.add_int_vectors(_schema.categoricals_, categoricals, ROLE_CATEGORICAL);
+  df.add_int_vectors(_schema.categoricals(), categoricals, ROLE_CATEGORICAL);
 
-  df.add_int_vectors(_schema.join_keys_, join_keys, ROLE_JOIN_KEY);
+  df.add_int_vectors(_schema.join_keys(), join_keys, ROLE_JOIN_KEY);
 
-  df.add_float_vectors(_schema.numericals_, numericals, ROLE_NUMERICAL);
+  df.add_float_vectors(_schema.numericals(), numericals, ROLE_NUMERICAL);
 
-  df.add_float_vectors(_schema.targets_, targets, ROLE_TARGET);
+  df.add_float_vectors(_schema.targets(), targets, ROLE_TARGET);
 
-  df.add_string_vectors(_schema.text_, text, ROLE_TEXT);
+  df.add_string_vectors(_schema.text(), text, ROLE_TEXT);
 
-  df.add_float_vectors(_schema.time_stamps_, time_stamps, ROLE_TIME_STAMP);
+  df.add_float_vectors(_schema.time_stamps(), time_stamps, ROLE_TIME_STAMP);
 
-  df.add_float_vectors(_schema.unused_floats_, unused_floats,
+  df.add_float_vectors(_schema.unused_floats(), unused_floats,
                        ROLE_UNUSED_FLOAT);
 
-  df.add_string_vectors(_schema.unused_strings_, unused_strings,
+  df.add_string_vectors(_schema.unused_strings(), unused_strings,
                         ROLE_UNUSED_STRING);
 
   df.check_plausibility();
@@ -637,28 +630,28 @@ void DataFrame::from_db(fct::Ref<database::Connector> _connector,
 
 // ----------------------------------------------------------------------------
 
-void DataFrame::from_json(const Poco::JSON::Object &_obj,
+void DataFrame::from_json(const commands::DataFrameFromJSON &_obj,
                           const std::vector<std::string> _time_formats,
                           const Schema &_schema) {
   auto df = DataFrame(name(), categories_, join_keys_encoding_, make_pool());
 
-  df.from_json(_obj, _schema.categoricals_, ROLE_CATEGORICAL,
+  df.from_json(_obj, _schema.categoricals(), ROLE_CATEGORICAL,
                categories_.get());
 
-  df.from_json(_obj, _schema.join_keys_, ROLE_JOIN_KEY,
+  df.from_json(_obj, _schema.join_keys(), ROLE_JOIN_KEY,
                join_keys_encoding_.get());
 
-  df.from_json(_obj, _schema.numericals_, ROLE_NUMERICAL);
+  df.from_json(_obj, _schema.numericals(), ROLE_NUMERICAL);
 
-  df.from_json(_obj, _schema.targets_, ROLE_TARGET);
+  df.from_json(_obj, _schema.targets(), ROLE_TARGET);
 
-  df.from_json(_obj, _schema.text_, ROLE_TEXT);
+  df.from_json(_obj, _schema.text(), ROLE_TEXT);
 
-  df.from_json(_obj, _schema.time_stamps_, _time_formats);
+  df.from_json(_obj, _schema.time_stamps(), _time_formats);
 
-  df.from_json(_obj, _schema.unused_floats_, ROLE_UNUSED_FLOAT);
+  df.from_json(_obj, _schema.unused_floats(), ROLE_UNUSED_FLOAT);
 
-  df.from_json(_obj, _schema.unused_strings_, ROLE_UNUSED_STRING);
+  df.from_json(_obj, _schema.unused_strings(), ROLE_UNUSED_STRING);
 
   df.check_plausibility();
 
@@ -667,21 +660,31 @@ void DataFrame::from_json(const Poco::JSON::Object &_obj,
 
 // ----------------------------------------------------------------------------
 
-void DataFrame::from_json(const Poco::JSON::Object &_obj,
+void DataFrame::from_json(const commands::DataFrameFromJSON &_obj,
                           const std::vector<std::string> &_names,
                           const std::string &_role, Encoding *_encoding) {
   for (size_t i = 0; i < _names.size(); ++i) {
     const auto &name = _names[i];
 
-    const auto arr = JSON::get_array(_obj, name);
+    const auto it = _obj.find(name);
+
+    if (it == _obj.end()) {
+      throw std::runtime_error("Column named '" + name +
+                               "' not found in the provided JSON.");
+    }
+
+    const auto vec = std::get_if<std::vector<std::string>>(&(it->second));
+
+    if (!vec) {
+      throw std::runtime_error("Column named '" + name +
+                               "' must be a string column.");
+    }
 
     if (_encoding) {
-      auto column = Column<Int>(pool_, arr->size());
+      auto column = Column<Int>(pool_, vec->size());
 
-      for (size_t j = 0; j < arr->size(); ++j) {
-        const auto str =
-            arr->getElement<std::string>(static_cast<unsigned int>(j));
-
+      for (size_t j = 0; j < vec->size(); ++j) {
+        const auto str = vec->at(j);
         column[j] = (*_encoding)[str];
       }
 
@@ -691,9 +694,9 @@ void DataFrame::from_json(const Poco::JSON::Object &_obj,
     } else {
       auto column = Column<strings::String>(pool_);
 
-      for (size_t j = 0; j < arr->size(); ++j)
-        column.push_back(
-            arr->getElement<std::string>(static_cast<unsigned int>(j)));
+      for (size_t j = 0; j < vec->size(); ++j) {
+        column.push_back(vec->at(j));
+      }
 
       column.set_name(_names[i]);
 
@@ -704,35 +707,53 @@ void DataFrame::from_json(const Poco::JSON::Object &_obj,
 
 // ----------------------------------------------------------------------------
 
-void DataFrame::from_json(const Poco::JSON::Object &_obj,
+void DataFrame::from_json(const commands::DataFrameFromJSON &_obj,
                           const std::vector<std::string> &_names,
                           const std::string &_role) {
   for (size_t i = 0; i < _names.size(); ++i) {
     const auto &name = _names[i];
 
-    if (_role == ROLE_TARGET && !_obj.has(name)) {
+    const auto it = _obj.find(name);
+
+    if (_role == ROLE_TARGET && it == _obj.end()) {
       continue;
     }
 
-    const auto arr = JSON::get_array(_obj, name);
+    if (it == _obj.end()) {
+      throw std::runtime_error("Column named '" + name +
+                               "' not found in the provided JSON.");
+    }
 
     if (_role == ROLE_UNUSED || _role == ROLE_UNUSED_STRING ||
         _role == ROLE_TEXT) {
+      const auto vec = std::get_if<std::vector<std::string>>(&(it->second));
+
+      if (!vec) {
+        throw std::runtime_error("Column named '" + name +
+                                 "' must be a string column.");
+      }
+
       auto column = Column<strings::String>(pool_);
 
-      for (size_t j = 0; j < arr->size(); ++j) {
-        column.push_back(
-            arr->getElement<std::string>(static_cast<unsigned int>(j)));
+      for (size_t j = 0; j < vec->size(); ++j) {
+        column.push_back(vec->at(j));
       }
 
       column.set_name(_names[i]);
 
       add_string_column(column, _role);
     } else {
-      auto column = Column<Float>(pool_, arr->size());
+      const auto vec = std::get_if<std::vector<Float>>(&(it->second));
 
-      for (size_t j = 0; j < arr->size(); ++j) {
-        column[j] = arr->getElement<Float>(static_cast<unsigned int>(j));
+      if (!vec) {
+        throw std::runtime_error("Column named '" + name +
+                                 "' must be a numerical column.");
+      }
+
+      auto column = Column<Float>(pool_, vec->size());
+
+      for (size_t j = 0; j < vec->size(); ++j) {
+        column[j] = vec->at(j);
       }
 
       column.set_name(_names[i]);
@@ -744,27 +765,40 @@ void DataFrame::from_json(const Poco::JSON::Object &_obj,
 
 // ----------------------------------------------------------------------------
 
-void DataFrame::from_json(const Poco::JSON::Object &_obj,
+void DataFrame::from_json(const commands::DataFrameFromJSON &_obj,
                           const std::vector<std::string> &_names,
                           const std::vector<std::string> &_time_formats) {
+  const auto make_column = [this,
+                            &_time_formats](const auto &_vec) -> Column<Float> {
+    using Type = std::decay_t<decltype(_vec)>;
+
+    auto column = Column<Float>(pool_);
+
+    if constexpr (std::is_same<Type, std::vector<std::string>>()) {
+      for (size_t j = 0; j < _vec.size(); ++j) {
+        const auto [val, _] = io::Parser::to_time_stamp(_vec[j], _time_formats);
+        column.push_back(val);
+      }
+    } else {
+      for (size_t j = 0; j < _vec.size(); ++j) {
+        column.push_back(_vec[j]);
+      }
+    }
+
+    return column;
+  };
+
   for (size_t i = 0; i < _names.size(); ++i) {
     const auto &name = _names[i];
 
-    const auto arr = JSON::get_array(_obj, name);
+    const auto it = _obj.find(name);
 
-    auto column = Column<Float>(pool_, arr->size());
-
-    for (size_t j = 0; j < arr->size(); ++j) {
-      bool success = true;
-
-      std::tie(column[j], success) = io::Parser::to_time_stamp(
-          arr->getElement<std::string>(static_cast<unsigned int>(j)),
-          _time_formats);
-
-      if (!success) {
-        column[j] = arr->getElement<Float>(static_cast<unsigned int>(j));
-      }
+    if (it == _obj.end()) {
+      throw std::runtime_error("Column named '" + name +
+                               "' not found in the provided JSON.");
     }
+
+    auto column = std::visit(make_column, it->second);
 
     column.set_name(_names[i]);
 
@@ -776,22 +810,22 @@ void DataFrame::from_json(const Poco::JSON::Object &_obj,
 
 void DataFrame::from_query(const fct::Ref<database::Connector> _connector,
                            const std::string &_query, const Schema &_schema) {
-  auto categoricals = make_vectors<Int>(_schema.categoricals_.size());
+  auto categoricals = make_vectors<Int>(_schema.categoricals().size());
 
-  auto join_keys = make_vectors<Int>(_schema.join_keys_.size());
+  auto join_keys = make_vectors<Int>(_schema.join_keys().size());
 
-  auto numericals = make_vectors<Float>(_schema.numericals_.size());
+  auto numericals = make_vectors<Float>(_schema.numericals().size());
 
-  auto targets = make_vectors<Float>(_schema.targets_.size());
+  auto targets = make_vectors<Float>(_schema.targets().size());
 
-  auto text = make_vectors<strings::String>(_schema.text_.size());
+  auto text = make_vectors<strings::String>(_schema.text().size());
 
-  auto time_stamps = make_vectors<Float>(_schema.time_stamps_.size());
+  auto time_stamps = make_vectors<Float>(_schema.time_stamps().size());
 
-  auto unused_floats = make_vectors<Float>(_schema.unused_floats_.size());
+  auto unused_floats = make_vectors<Float>(_schema.unused_floats().size());
 
   auto unused_strings =
-      make_vectors<strings::String>(_schema.unused_strings_.size());
+      make_vectors<strings::String>(_schema.unused_strings().size());
 
   auto iterator = _connector->select(_query);
 
@@ -816,21 +850,21 @@ void DataFrame::from_query(const fct::Ref<database::Connector> _connector,
     return indices;
   };
 
-  const auto categorical_ix = make_column_indices(_schema.categoricals_);
+  const auto categorical_ix = make_column_indices(_schema.categoricals());
 
-  const auto join_key_ix = make_column_indices(_schema.join_keys_);
+  const auto join_key_ix = make_column_indices(_schema.join_keys());
 
-  const auto numerical_ix = make_column_indices(_schema.numericals_);
+  const auto numerical_ix = make_column_indices(_schema.numericals());
 
-  const auto target_ix = make_column_indices(_schema.targets_);
+  const auto target_ix = make_column_indices(_schema.targets());
 
-  const auto text_ix = make_column_indices(_schema.text_);
+  const auto text_ix = make_column_indices(_schema.text());
 
-  const auto time_stamp_ix = make_column_indices(_schema.time_stamps_);
+  const auto time_stamp_ix = make_column_indices(_schema.time_stamps());
 
-  const auto unused_float_ix = make_column_indices(_schema.unused_floats_);
+  const auto unused_float_ix = make_column_indices(_schema.unused_floats());
 
-  const auto unused_string_ix = make_column_indices(_schema.unused_strings_);
+  const auto unused_string_ix = make_column_indices(_schema.unused_strings());
 
   const auto time_formats = _connector->time_formats();
 
@@ -885,22 +919,22 @@ void DataFrame::from_query(const fct::Ref<database::Connector> _connector,
 
   auto df = DataFrame(name(), categories_, join_keys_encoding_, make_pool());
 
-  df.add_int_vectors(_schema.categoricals_, categoricals, ROLE_CATEGORICAL);
+  df.add_int_vectors(_schema.categoricals(), categoricals, ROLE_CATEGORICAL);
 
-  df.add_int_vectors(_schema.join_keys_, join_keys, ROLE_JOIN_KEY);
+  df.add_int_vectors(_schema.join_keys(), join_keys, ROLE_JOIN_KEY);
 
-  df.add_float_vectors(_schema.numericals_, numericals, ROLE_NUMERICAL);
+  df.add_float_vectors(_schema.numericals(), numericals, ROLE_NUMERICAL);
 
-  df.add_float_vectors(_schema.targets_, targets, ROLE_TARGET);
+  df.add_float_vectors(_schema.targets(), targets, ROLE_TARGET);
 
-  df.add_string_vectors(_schema.text_, text, ROLE_TEXT);
+  df.add_string_vectors(_schema.text(), text, ROLE_TEXT);
 
-  df.add_float_vectors(_schema.time_stamps_, time_stamps, ROLE_TIME_STAMP);
+  df.add_float_vectors(_schema.time_stamps(), time_stamps, ROLE_TIME_STAMP);
 
-  df.add_float_vectors(_schema.unused_floats_, unused_floats,
+  df.add_float_vectors(_schema.unused_floats(), unused_floats,
                        ROLE_UNUSED_FLOAT);
 
-  df.add_string_vectors(_schema.unused_strings_, unused_strings,
+  df.add_string_vectors(_schema.unused_strings(), unused_strings,
                         ROLE_UNUSED_STRING);
 
   df.check_plausibility();
@@ -918,22 +952,22 @@ void DataFrame::from_reader(const std::shared_ptr<io::Reader> &_reader,
 
   const auto csv_colnames = _reader->colnames();
 
-  auto categoricals = make_vectors<Int>(_schema.categoricals_.size());
+  auto categoricals = make_vectors<Int>(_schema.categoricals().size());
 
-  auto join_keys = make_vectors<Int>(_schema.join_keys_.size());
+  auto join_keys = make_vectors<Int>(_schema.join_keys().size());
 
-  auto numericals = make_vectors<Float>(_schema.numericals_.size());
+  auto numericals = make_vectors<Float>(_schema.numericals().size());
 
-  auto targets = make_vectors<Float>(_schema.targets_.size());
+  auto targets = make_vectors<Float>(_schema.targets().size());
 
-  auto text = make_vectors<strings::String>(_schema.text_.size());
+  auto text = make_vectors<strings::String>(_schema.text().size());
 
-  auto time_stamps = make_vectors<Float>(_schema.time_stamps_.size());
+  auto time_stamps = make_vectors<Float>(_schema.time_stamps().size());
 
-  auto unused_floats = make_vectors<Float>(_schema.unused_floats_.size());
+  auto unused_floats = make_vectors<Float>(_schema.unused_floats().size());
 
   auto unused_strings =
-      make_vectors<strings::String>(_schema.unused_strings_.size());
+      make_vectors<strings::String>(_schema.unused_strings().size());
 
   const auto df_colnames = concat_colnames(_schema);
 
@@ -1009,22 +1043,22 @@ void DataFrame::from_reader(const std::shared_ptr<io::Reader> &_reader,
 
   auto df = DataFrame(name(), categories_, join_keys_encoding_, make_pool());
 
-  df.add_int_vectors(_schema.categoricals_, categoricals, ROLE_CATEGORICAL);
+  df.add_int_vectors(_schema.categoricals(), categoricals, ROLE_CATEGORICAL);
 
-  df.add_int_vectors(_schema.join_keys_, join_keys, ROLE_JOIN_KEY);
+  df.add_int_vectors(_schema.join_keys(), join_keys, ROLE_JOIN_KEY);
 
-  df.add_float_vectors(_schema.numericals_, numericals, ROLE_NUMERICAL);
+  df.add_float_vectors(_schema.numericals(), numericals, ROLE_NUMERICAL);
 
-  df.add_float_vectors(_schema.targets_, targets, ROLE_TARGET);
+  df.add_float_vectors(_schema.targets(), targets, ROLE_TARGET);
 
-  df.add_string_vectors(_schema.text_, text, ROLE_TEXT);
+  df.add_string_vectors(_schema.text(), text, ROLE_TEXT);
 
-  df.add_float_vectors(_schema.time_stamps_, time_stamps, ROLE_TIME_STAMP);
+  df.add_float_vectors(_schema.time_stamps(), time_stamps, ROLE_TIME_STAMP);
 
-  df.add_float_vectors(_schema.unused_floats_, unused_floats,
+  df.add_float_vectors(_schema.unused_floats(), unused_floats,
                        ROLE_UNUSED_FLOAT);
 
-  df.add_string_vectors(_schema.unused_strings_, unused_strings,
+  df.add_string_vectors(_schema.unused_strings(), unused_strings,
                         ROLE_UNUSED_STRING);
 
   df.check_plausibility();
@@ -1034,22 +1068,18 @@ void DataFrame::from_reader(const std::shared_ptr<io::Reader> &_reader,
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object DataFrame::get_content(const std::int32_t _draw,
-                                          const std::int32_t _start,
-                                          const std::int32_t _length) const {
+DataFrameContent DataFrame::get_content(const std::int32_t _draw,
+                                        const std::int32_t _start,
+                                        const std::int32_t _length) const {
   check_plausibility();
 
-  Poco::JSON::Object obj;
-
-  obj.set("draw", _draw);
-
-  obj.set("recordsTotal", nrows());
-
-  obj.set("recordsFiltered", nrows());
+  const auto basis = fct::make_field<"draw">(_draw) *
+                     fct::make_field<"recordsTotal", std::int32_t>(nrows()) *
+                     fct::make_field<"recordsFiltered", std::int32_t>(nrows());
 
   if (nrows() == 0) {
-    obj.set("data", Poco::JSON::Array());
-    return obj;
+    return basis *
+           fct::make_field<"data">(std::vector<std::vector<std::string>>());
   }
 
   if (_length < 0) {
@@ -1064,7 +1094,7 @@ Poco::JSON::Object DataFrame::get_content(const std::int32_t _draw,
     throw std::runtime_error("start must be smaller than number of rows!");
   }
 
-  auto data = Poco::JSON::Array::Ptr(new Poco::JSON::Array());
+  auto data = std::vector<std::vector<std::string>>();
 
   const auto begin = static_cast<unsigned int>(_start);
 
@@ -1073,54 +1103,52 @@ Poco::JSON::Object DataFrame::get_content(const std::int32_t _draw,
                        : static_cast<unsigned int>(_start + _length);
 
   for (auto i = begin; i < end; ++i) {
-    auto row = Poco::JSON::Array::Ptr(new Poco::JSON::Array());
+    auto row = std::vector<std::string>();
 
     for (size_t j = 0; j < num_time_stamps(); ++j) {
-      row->add(io::Parser::ts_to_string(time_stamp(j)[i]));
+      row.push_back(io::Parser::ts_to_string(time_stamp(j)[i]));
     }
 
     for (size_t j = 0; j < num_join_keys(); ++j) {
-      row->add(join_keys_encoding()[join_key(j)[i]].str());
+      row.push_back(join_keys_encoding()[join_key(j)[i]].str());
     }
 
     for (size_t j = 0; j < num_targets(); ++j) {
-      row->add(io::Parser::to_string(target(j)[i]));
+      row.push_back(io::Parser::to_string(target(j)[i]));
     }
 
     for (size_t j = 0; j < num_categoricals(); ++j) {
-      row->add(categories()[categorical(j)[i]].str());
+      row.push_back(categories()[categorical(j)[i]].str());
     }
 
     for (size_t j = 0; j < num_numericals(); ++j) {
       if (numerical(j).unit().find("time stamp") != std::string::npos) {
-        row->add(io::Parser::ts_to_string(numerical(j)[i]));
+        row.push_back(io::Parser::ts_to_string(numerical(j)[i]));
       } else {
-        row->add(io::Parser::to_string(numerical(j)[i]));
+        row.push_back(io::Parser::to_string(numerical(j)[i]));
       }
     }
 
     for (size_t j = 0; j < num_text(); ++j) {
-      row->add(text(j)[i].str());
+      row.push_back(text(j)[i].str());
     }
 
     for (size_t j = 0; j < num_unused_floats(); ++j) {
       if (unused_float(j).unit().find("time stamp") != std::string::npos) {
-        row->add(io::Parser::ts_to_string(unused_float(j)[i]));
+        row.push_back(io::Parser::ts_to_string(unused_float(j)[i]));
       } else {
-        row->add(io::Parser::to_string(unused_float(j)[i]));
+        row.push_back(io::Parser::to_string(unused_float(j)[i]));
       }
     }
 
     for (size_t j = 0; j < num_unused_strings(); ++j) {
-      row->add(unused_string(j)[i].str());
+      row.push_back(unused_string(j)[i].str());
     }
 
-    data->add(row);
+    data.push_back(row);
   }
 
-  obj.set("data", data);
-
-  return obj;
+  return basis * fct::make_field<"data">(data);
 }
 
 // ----------------------------------------------------------------------------
@@ -1201,38 +1229,16 @@ std::string DataFrame::get_html(const std::int32_t _max_rows,
 
 std::vector<std::vector<std::string>> DataFrame::get_rows(
     const std::int32_t _max_rows) const {
-  std::vector<std::vector<std::string>> rows;
-
   if (nrows() == 0 || _max_rows <= 0) {
-    return rows;
+    return std::vector<std::vector<std::string>>();
   }
 
-  const auto obj = get_content(1, 0, _max_rows);
-
-  const auto data = JSON::get_array(obj, "data");
-
-  assert_true(data);
-
-  for (size_t i = 0; i < data->size(); ++i) {
-    const auto json_row = data->getArray(static_cast<unsigned int>(i));
-
-    assert_true(json_row);
-
-    assert_true(json_row->size() == ncols());
-
-    auto row = std::vector<std::string>(json_row->size());
-
-    for (size_t j = 0; j < row.size(); ++j) {
-      row[j] = json_row->getElement<std::string>(j);
-    }
-
-    rows.emplace_back(row);
-  }
+  auto rows = get_content(1, 0, _max_rows).get<"data">();
 
   if (_max_rows < nrows()) {
     assert_true(rows.size() > 0);
 
-    auto row = std::vector<std::string>(rows.at(0));
+    auto row = std::vector<std::string>(rows.at(0).size());
 
     for (auto &r : row) {
       r = "...";
@@ -1311,9 +1317,7 @@ void DataFrame::load(const std::string &_path) {
   const auto build_history = load_textfile(_path, "build_history.json");
 
   if (build_history) {
-    Poco::JSON::Parser parser;
-    build_history_ =
-        parser.parse(*build_history).extract<Poco::JSON::Object::Ptr>();
+    build_history_ = json::from_json<commands::Fingerprint>(*build_history);
   }
 
   categoricals_ = load_columns<Int>(_path, "categorical_");
@@ -1416,30 +1420,6 @@ const size_t DataFrame::nrows() const {
   }
 
   return 0;
-}
-
-// ----------------------------------------------------------------------------
-
-Poco::JSON::Object DataFrame::refresh() const {
-  Poco::JSON::Object obj;
-
-  obj.set(ROLE_CATEGORICAL, get_colnames(categoricals_));
-
-  obj.set(ROLE_JOIN_KEY, get_colnames(join_keys_));
-
-  obj.set(ROLE_NUMERICAL, get_colnames(numericals_));
-
-  obj.set(ROLE_TARGET, get_colnames(targets_));
-
-  obj.set(ROLE_TEXT, get_colnames(text_));
-
-  obj.set(ROLE_TIME_STAMP, get_colnames(time_stamps_));
-
-  obj.set(ROLE_UNUSED_FLOAT, get_colnames(unused_floats_));
-
-  obj.set(ROLE_UNUSED_STRING, get_colnames(unused_strings_));
-
-  return obj;
 }
 
 // ----------------------------------------------------------------------------
@@ -1586,7 +1566,7 @@ void DataFrame::save(const std::string &_temp_dir, const std::string &_path,
   save_text(tpath, "last_change.txt", last_change_);
 
   if (build_history_) {
-    save_text(tpath, "build_history.json", JSON::stringify(*build_history_));
+    save_text(tpath, "build_history.json", json::to_json(*build_history_));
   }
 
   auto file = Poco::File(_path + _name);
@@ -1730,65 +1710,50 @@ std::vector<std::string> DataFrame::subroles(const std::string &_name) const {
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object DataFrame::to_monitor() const {
-  Poco::JSON::Object obj;
+containers::MonitorSummary DataFrame::to_monitor() const {
+  const auto get_colname = [](const auto &_col) { return _col.unit(); };
 
-  obj.set("categorical_", get_colnames(categoricals_));
+  const auto get_unit = [](const auto &_col) { return _col.unit(); };
 
-  obj.set("categorical_units_", get_units(categoricals_));
+  const auto get_colnames = [get_colname](const auto &_cols) {
+    return fct::collect::vector<std::string>(_cols |
+                                             VIEWS::transform(get_colname));
+  };
 
-  obj.set("join_keys_", get_colnames(join_keys_));
+  const auto get_units = [get_unit](const auto &_cols) {
+    return fct::collect::vector<std::string>(_cols |
+                                             VIEWS::transform(get_unit));
+  };
 
-  obj.set("name_", name_);
-
-  obj.set("num_categorical_", num_categoricals());
-
-  obj.set("num_join_keys_", num_join_keys());
-
-  obj.set("num_numerical_", num_numericals());
-
-  obj.set("num_rows_", nrows());
-
-  obj.set("num_targets_", num_targets());
-
-  obj.set("num_text_", num_text());
-
-  obj.set("num_time_stamps_", num_time_stamps());
-
-  obj.set("num_unused_floats_", num_unused_floats());
-
-  obj.set("num_unused_strings_", num_unused_strings());
-
-  obj.set("numerical_", get_colnames(numericals_));
-
-  obj.set("numerical_units_", get_units(numericals_));
-
-  obj.set("size_", static_cast<Float>(nbytes()) / 1000000.0);
-
-  obj.set("targets_", get_colnames(targets_));
-
-  obj.set("text_", get_colnames(text_));
-
-  obj.set("text_units_", get_units(text_));
-
-  obj.set("time_stamps_", get_colnames(time_stamps_));
-
-  obj.set("time_stamp_units_", get_units(time_stamps_));
-
-  obj.set("unused_floats_", get_colnames(unused_floats_));
-
-  obj.set("unused_float_units_", get_units(unused_floats_));
-
-  obj.set("unused_strings_", get_colnames(unused_strings_));
-
-  obj.set("unused_string_units_", get_units(unused_strings_));
-
-  return obj;
+  return fct::make_field<"categorical_">(get_colnames(categoricals_)) *
+         fct::make_field<"categorical_units_">(get_units(categoricals_)) *
+         fct::make_field<"join_keys_">(get_colnames(join_keys_)) *
+         fct::make_field<"name_">(name_) *
+         fct::make_field<"num_categorical_">(num_categoricals()) *
+         fct::make_field<"num_join_keys_">(num_join_keys()) *
+         fct::make_field<"num_numerical_">(num_numericals()) *
+         fct::make_field<"num_rows_">(nrows()) *
+         fct::make_field<"num_targets_">(num_targets()) *
+         fct::make_field<"num_text_">(num_text()) *
+         fct::make_field<"num_time_stamps_">(num_time_stamps()) *
+         fct::make_field<"num_unused_floats_">(num_unused_floats()) *
+         fct::make_field<"num_unused_strings_">(num_unused_strings()) *
+         fct::make_field<"numerical_">(get_colnames(numericals_)) *
+         fct::make_field<"numerical_units_">(get_units(numericals_)) *
+         fct::make_field<"size_">(static_cast<Float>(nbytes()) / 1000000.0) *
+         fct::make_field<"targets_">(get_colnames(targets_)) *
+         fct::make_field<"text_">(get_colnames(text_)) *
+         fct::make_field<"text_units_">(get_units(text_)) *
+         fct::make_field<"time_stamps_">(get_colnames(time_stamps_)) *
+         fct::make_field<"time_stamp_units_">(get_units(time_stamps_)) *
+         fct::make_field<"unused_floats_">(get_colnames(unused_floats_)) *
+         fct::make_field<"unused_float_units_">(get_units(unused_floats_)) *
+         fct::make_field<"unused_strings_">(get_colnames(unused_strings_)) *
+         fct::make_field<"unused_string_units_">(get_units(unused_strings_));
 }
 
 // ----------------------------------------------------------------------------
 
-/// Expresses the schema of the DataFrame as a JSON object.
 Schema DataFrame::to_schema(const bool _separate_discrete) const {
   const auto is_full = [](const Float _val) -> bool {
     return helpers::NullChecker::is_null(_val) || (std::floor(_val) == _val);
@@ -1836,16 +1801,16 @@ Schema DataFrame::to_schema(const bool _separate_discrete) const {
   const auto unused_strings = fct::collect::vector<std::string>(
       unused_strings_ | VIEWS::transform(get_name));
 
-  return Schema{.categoricals_ = categoricals,
-                .discretes_ = discretes,
-                .join_keys_ = join_keys,
-                .name_ = name_,
-                .numericals_ = numericals,
-                .targets_ = targets,
-                .text_ = text,
-                .time_stamps_ = time_stamps,
-                .unused_floats_ = unused_floats,
-                .unused_strings_ = unused_strings};
+  return Schema(fct::make_field<"categoricals_">(categoricals) *
+                fct::make_field<"discretes_">(discretes) *
+                fct::make_field<"join_keys_">(join_keys) *
+                fct::make_field<"name_">(name_) *
+                fct::make_field<"numericals_">(numericals) *
+                fct::make_field<"targets_">(targets) *
+                fct::make_field<"text_">(text) *
+                fct::make_field<"time_stamps_">(time_stamps) *
+                fct::make_field<"unused_floats_">(unused_floats) *
+                fct::make_field<"unused_strings_">(unused_strings));
 }
 
 // ----------------------------------------------------------------------------

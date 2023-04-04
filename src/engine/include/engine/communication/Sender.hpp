@@ -1,18 +1,12 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_COMMUNICATION_SENDER_HPP_
 #define ENGINE_COMMUNICATION_SENDER_HPP_
-
-// ------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
-
-// ------------------------------------------------------------------------
 
 #include <algorithm>
 #include <memory>
@@ -21,23 +15,14 @@
 #include <type_traits>
 #include <vector>
 
-// ------------------------------------------------------------------------
-
 #include "engine/ULong.hpp"
+#include "engine/communication/Logger.hpp"
+#include "engine/communication/Receiver.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/utils/utils.hpp"
 
-// ------------------------------------------------------------------------
-
-#include "engine/communication/Logger.hpp"
-#include "engine/communication/Receiver.hpp"
-
-// ------------------------------------------------------------------------
-
 namespace engine {
 namespace communication {
-
-// ------------------------------------------------------------------------
 
 struct Sender {
   static constexpr const char* GETML_SEP = Receiver::GETML_SEP;

@@ -1,29 +1,21 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef PREDICTORS_XGBOOSTMATRIX_HPP_
 #define PREDICTORS_XGBOOSTMATRIX_HPP_
 
-// ----------------------------------------------------------------------
-
 #include <xgboost/c_api.h>
-
-// ----------------------------------------------------------------------
 
 #include <functional>
 #include <memory>
 #include <variant>
 
-// -----------------------------------------------------------------------------
-
 #include "predictors/XGBoostIteratorDense.hpp"
 #include "predictors/XGBoostIteratorSparse.hpp"
-
-// ----------------------------------------------------------------------
 
 namespace predictors {
 
@@ -43,7 +35,6 @@ struct XGBoostMatrix {
   DMatrixHandle* get() const { return d_matrix_.get(); }
 };
 
-// ------------------------------------------------------------------------
 }  // namespace predictors
 
 #endif  // PREDICTORS_XGBOOSTMATRIX_HPP_

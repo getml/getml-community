@@ -1,35 +1,24 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef IO_SNIFFER_HPP_
 #define IO_SNIFFER_HPP_
-
-// ----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------------
 
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
 #include "io/CSVReader.hpp"
 #include "io/Datatype.hpp"
 #include "io/Parser.hpp"
 #include "io/StatementMaker.hpp"
 
-// ----------------------------------------------------------------------------
-
 namespace io {
-// ----------------------------------------------------------------------------
 
 template <class ReaderType>
 class Sniffer {
@@ -39,14 +28,12 @@ class Sniffer {
   /// Constructer for CSVSniffer
   template <typename R = ReaderType>
   Sniffer(const std::optional<std::vector<std::string>>& _colnames,
-          const Poco::JSON::Object& _conn_description,
           const std::string& _dialect, const std::vector<std::string>& _files,
           const size_t _num_lines_sniffed, const char _quotechar,
           const char _sep, const size_t _skip, const std::string& _table_name,
           typename std::enable_if<std::is_same<R, CSVReader>::value>::type* = 0)
       : bucket_(""),
         colnames_(_colnames),
-        conn_description_(_conn_description),
         dialect_(_dialect),
         files_(_files),
         num_lines_sniffed_(_num_lines_sniffed),
@@ -111,9 +98,6 @@ class Sniffer {
 
   /// The colnames are passed on to the reader.
   const std::optional<std::vector<std::string>> colnames_;
-
-  /// Describes the connection for which we produce the statement.
-  const Poco::JSON::Object conn_description_;
 
   /// The SQL dialect in which the CREATE TABLE statement is to be
   /// returned.
@@ -188,13 +172,9 @@ Datatype Sniffer<ReaderType>::infer_datatype(const Datatype _type,
 
 template <class ReaderType>
 std::string Sniffer<ReaderType>::sniff() const {
-  // ------------------------------------------------------------------------
-
   auto colnames = std::vector<std::string>(0);
 
   auto datatypes = std::vector<Datatype>(0);
-
-  // ------------------------------------------------------------------------
 
   for (auto fname : files_) {
     size_t line_count = 0;
@@ -210,17 +190,11 @@ std::string Sniffer<ReaderType>::sniff() const {
     }
 
     while (!reader.eof()) {
-      // --------------------------------------------------------
-      // Read the next line.
-
       std::vector<std::string> line = reader.next_line();
 
       if (line.size() == 0) {
         continue;
       }
-
-      // --------------------------------------------------------
-      // Check the line size.
 
       ++line_count;
 
@@ -234,9 +208,6 @@ std::string Sniffer<ReaderType>::sniff() const {
         continue;
       }
 
-      // --------------------------------------------------------
-      // Do the actual parsing.
-
       assert_true(datatypes.size() == line.size());
 
       assert_true(datatypes.size() == colnames.size());
@@ -244,20 +215,13 @@ std::string Sniffer<ReaderType>::sniff() const {
       for (size_t i = 0; i < datatypes.size(); ++i) {
         datatypes[i] = infer_datatype(datatypes[i], line[i]);
       }
-
-      // --------------------------------------------------------
     }
   }
 
-  // ------------------------------------------------------------------------
-
-  return StatementMaker::make_statement(table_name_, dialect_,
-                                        conn_description_, colnames, datatypes);
-
-  // ------------------------------------------------------------------------
+  return StatementMaker::make_statement(table_name_, dialect_, colnames,
+                                        datatypes);
 }
 
-// ----------------------------------------------------------------------------
 }  // namespace io
 
 #endif  // IO_SNIFFER_HPP_

@@ -1,31 +1,21 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef DATABASE_GETTER_HPP_
 #define DATABASE_GETTER_HPP_
 
-// ----------------------------------------------------------------------------
-
 #include <string>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
-#include "io/io.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "database/Float.hpp"
 #include "database/Int.hpp"
-
-// ----------------------------------------------------------------------------
+#include "io/io.hpp"
 
 namespace database {
-// ----------------------------------------------------------------------------
 
 struct Getter {
   /// Returns a double .
@@ -71,11 +61,7 @@ struct Getter {
 
     return val;
   }
-
-  // -------------------------------
 };
-
-// ----------------------------------------------------------------------------
 
 }  // namespace database
 

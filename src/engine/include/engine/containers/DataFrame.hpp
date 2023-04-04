@@ -1,45 +1,35 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_CONTAINERS_DATAFRAME_HPP_
 #define ENGINE_CONTAINERS_DATAFRAME_HPP_
 
-// -------------------------------------------------------------------------
-
 #include <Poco/File.h>
-#include <Poco/JSON/Object.h>
-
-// -------------------------------------------------------------------------
 
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
 
-// -------------------------------------------------------------------------
-
+#include "commands/DataFrameFromJSON.hpp"
+#include "commands/DataFrameOrView.hpp"
+#include "commands/Fingerprint.hpp"
 #include "database/database.hpp"
+#include "engine/Float.hpp"
+#include "engine/Int.hpp"
+#include "engine/containers/Column.hpp"
+#include "engine/containers/DataFrameContent.hpp"
+#include "engine/containers/DataFrameIndex.hpp"
+#include "engine/containers/Encoding.hpp"
+#include "engine/containers/MonitorSummary.hpp"
+#include "engine/containers/Schema.hpp"
 #include "strings/strings.hpp"
 #include "transpilation/HumanReadableSQLGenerator.hpp"
 #include "transpilation/transpilation.hpp"
-
-// -------------------------------------------------------------------------
-
-#include "engine/Float.hpp"
-#include "engine/Int.hpp"
-
-// -------------------------------------------------------------------------
-
-#include "engine/containers/Column.hpp"
-#include "engine/containers/DataFrameIndex.hpp"
-#include "engine/containers/Encoding.hpp"
-#include "engine/containers/Schema.hpp"
-
-// -------------------------------------------------------------------------
 
 namespace engine {
 namespace containers {
@@ -55,6 +45,8 @@ class DataFrame {
   static constexpr const char *ROLE_UNUSED = "unused";
   static constexpr const char *ROLE_UNUSED_FLOAT = "unused_float";
   static constexpr const char *ROLE_UNUSED_STRING = "unused_string";
+
+  using ViewOp = typename commands::DataFrameOrView::ViewOp;
 
  public:
   DataFrame(const std::shared_ptr<memmap::Pool> &_pool = nullptr)
@@ -78,8 +70,6 @@ class DataFrame {
   }
 
   ~DataFrame() = default;
-
-  // -------------------------------
 
   /// Setter for a float_column
   void add_float_column(const Column<Float> &_col, const std::string &_role);
@@ -107,7 +97,7 @@ class DataFrame {
 
   /// Returns the fingerprint of the data frame (necessary to build the
   /// dependency graphs).
-  Poco::JSON::Object::Ptr fingerprint() const;
+  commands::Fingerprint fingerprint() const;
 
   /// Getter for a float_column.
   const Column<Float> &float_column(const std::string &_role,
@@ -129,8 +119,8 @@ class DataFrame {
   void from_db(const fct::Ref<database::Connector> _connector,
                const std::string &_tname, const Schema &_schema);
 
-  /// Builds a dataframe from a JSON Object.
-  void from_json(const Poco::JSON::Object &_obj,
+  /// Builds a dataframe from a JSON object.
+  void from_json(const commands::DataFrameFromJSON &_obj,
                  const std::vector<std::string> _time_formats,
                  const Schema &_schema);
 
@@ -140,9 +130,9 @@ class DataFrame {
 
   /// Returns the content of the data frame in a format that is compatible
   /// with the DataTables.js server-side processing API.
-  Poco::JSON::Object get_content(const std::int32_t _draw,
-                                 const std::int32_t _start,
-                                 const std::int32_t _length) const;
+  DataFrameContent get_content(const std::int32_t _draw,
+                               const std::int32_t _start,
+                               const std::int32_t _length) const;
 
   /// Returns the first _n rows as a html that is compatible with Jupyter
   /// notebooks.
@@ -169,9 +159,6 @@ class DataFrame {
   /// Get the number of rows or return 0, if the DataFrame contains no
   /// columns.
   const size_t nrows() const;
-
-  /// Returns the colnames expressed as their respective roles
-  Poco::JSON::Object refresh() const;
 
   /// Returns the role of the column signified by _name.
   std::string role(const std::string &_name) const;
@@ -203,25 +190,20 @@ class DataFrame {
       const std::optional<Schema> &_schema = std::nullopt,
       const bool _targets = true) const;
 
-  /// Extracts the data frame as a Poco::JSON::Object the monitor process can
+  /// Extracts the data frame in a format the monitor can
   /// understand
-  Poco::JSON::Object to_monitor() const;
+  containers::MonitorSummary to_monitor() const;
 
-  /// Expresses the schema of the DataFrame as a JSON object.
+  /// Expresses the schema of the DataFrame.
   Schema to_schema(const bool _separate_discrete) const;
 
   /// Selects all rows for which the corresponding entry in _condition is
   /// true.
   void where(const std::vector<bool> &_condition);
 
-  // -------------------------------
-
   /// Trivial accessor
-  Poco::JSON::Object::Ptr build_history() const {
-    if (!build_history_) {
-      return nullptr;
-    }
-    return Poco::JSON::Object::Ptr(new Poco::JSON::Object(*build_history_));
+  std::optional<commands::Fingerprint> build_history() const {
+    return build_history_;
   }
 
   /// Trivial accessor
@@ -517,7 +499,7 @@ class DataFrame {
   const std::shared_ptr<memmap::Pool> &pool() const { return pool_; }
 
   /// Trivial setter
-  void set_build_history(Poco::JSON::Object::Ptr _build_history) {
+  void set_build_history(const commands::Fingerprint &_build_history) {
     build_history_ = _build_history;
   }
 
@@ -712,17 +694,17 @@ class DataFrame {
   std::vector<std::string> concat_colnames(const Schema &_schema) const;
 
   /// Parses int columns.
-  void from_json(const Poco::JSON::Object &_obj,
+  void from_json(const commands::DataFrameFromJSON &_obj,
                  const std::vector<std::string> &_names,
                  const std::string &_role, Encoding *_encoding);
 
   /// Parses float columns.
-  void from_json(const Poco::JSON::Object &_obj,
+  void from_json(const commands::DataFrameFromJSON &_obj,
                  const std::vector<std::string> &_names,
                  const std::string &_role);
 
   /// Parses time stamp columns.
-  void from_json(const Poco::JSON::Object &_obj,
+  void from_json(const commands::DataFrameFromJSON &_obj,
                  const std::vector<std::string> &_names,
                  const std::vector<std::string> &_time_formats);
 
@@ -732,11 +714,6 @@ class DataFrame {
                    const std::vector<std::string> &_time_formats,
                    const Schema &_schema);
 
-  /// Returns the colnames of a vector of columns
-  template <class T>
-  Poco::JSON::Array::Ptr get_colnames(
-      const std::vector<Column<T>> &_columns) const;
-
   /// Returns the colnames, roles and units of columns.
   std::tuple<std::vector<std::string>, std::vector<std::string>,
              std::vector<std::string>>
@@ -745,10 +722,6 @@ class DataFrame {
   /// Represents the first _max rows as a set of rows.
   std::vector<std::vector<std::string>> get_rows(
       const std::int32_t _max_rows) const;
-
-  /// Returns the units of a vector of columns
-  template <class T>
-  Poco::JSON::Array get_units(const std::vector<Column<T>> &_columns) const;
 
   /// Loads columns.
   template <class T>
@@ -810,7 +783,7 @@ class DataFrame {
 
   /// Records the current time as the last time something was changed.
   void update_last_change() {
-    build_history_ = nullptr;
+    build_history_ = std::nullopt;
     const auto now = Poco::Timestamp();
     last_change_ = Poco::DateTimeFormatter::format(
         now, Poco::DateTimeFormat::ISO8601_FRAC_FORMAT);
@@ -821,7 +794,7 @@ class DataFrame {
  private:
   /// The build history is relevant for when the data frame contains generated
   /// features. It enables us to retrieve features we have already build.
-  Poco::JSON::Object::Ptr build_history_;
+  std::optional<commands::Fingerprint> build_history_;
 
   /// Categorical data
   std::vector<Column<Int>> categoricals_;
@@ -898,34 +871,6 @@ ULong DataFrame::calc_nbytes(const std::vector<Column<T>> &_columns) const {
                          [](const ULong init, const Column<T> &col) {
                            return init + col.nbytes();
                          });
-}
-
-// -------------------------------------------------------------------------
-
-template <class T>
-Poco::JSON::Array::Ptr DataFrame::get_colnames(
-    const std::vector<Column<T>> &_columns) const {
-  std::vector<std::string> colnames;
-
-  std::for_each(
-      _columns.begin(), _columns.end(),
-      [&colnames](const Column<T> &col) { colnames.push_back(col.name()); });
-
-  return JSON::vector_to_array_ptr(colnames);
-}
-
-// -------------------------------------------------------------------------
-
-template <class T>
-Poco::JSON::Array DataFrame::get_units(
-    const std::vector<Column<T>> &_columns) const {
-  std::vector<std::string> units;
-
-  std::for_each(
-      _columns.begin(), _columns.end(),
-      [&units](const Column<T> &col) { units.push_back(col.unit()); });
-
-  return JSON::vector_to_array(units);
 }
 
 // ----------------------------------------------------------------------------
@@ -1028,7 +973,7 @@ DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
   };
 
   const auto categoricals = fct::collect::vector<IntColumnType>(
-      schema.categoricals_ | VIEWS::transform(get_categorical));
+      schema.val_.get<"categoricals_">() | VIEWS::transform(get_categorical));
 
   const auto get_join_key = [this, parse](const std::string &_name) {
     const auto &col = join_key(_name);
@@ -1037,14 +982,14 @@ DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
   };
 
   const auto join_keys = fct::collect::vector<IntColumnType>(
-      schema.join_keys_ | VIEWS::transform(get_join_key));
+      schema.val_.get<"join_keys_">() | VIEWS::transform(get_join_key));
 
   const auto get_index = [this](const std::string &_name) {
     return index(_name).map();
   };
 
   const auto indices = fct::collect::vector<std::shared_ptr<MapType>>(
-      schema.join_keys_ | VIEWS::transform(get_index));
+      schema.val_.get<"join_keys_">() | VIEWS::transform(get_index));
 
   const auto get_numerical = [this, parse](const std::string &_name) {
     const auto &col = numerical(_name);
@@ -1053,10 +998,10 @@ DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
   };
 
   const auto discretes = fct::collect::vector<FloatColumnType>(
-      schema.discretes_ | VIEWS::transform(get_numerical));
+      schema.val_.get<"discretes_">() | VIEWS::transform(get_numerical));
 
   const auto numericals = fct::collect::vector<FloatColumnType>(
-      schema.numericals_ | VIEWS::transform(get_numerical));
+      schema.val_.get<"numericals_">() | VIEWS::transform(get_numerical));
 
   const auto get_target = [this, parse](const std::string &_name) {
     const auto &col = target(_name);
@@ -1064,10 +1009,11 @@ DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
                            col.unit());
   };
 
-  const auto targets = _targets
-                           ? fct::collect::vector<FloatColumnType>(
-                                 schema.targets_ | VIEWS::transform(get_target))
-                           : std::vector<FloatColumnType>();
+  const auto targets =
+      _targets
+          ? fct::collect::vector<FloatColumnType>(
+                schema.val_.get<"targets_">() | VIEWS::transform(get_target))
+          : std::vector<FloatColumnType>();
 
   const auto get_text = [this, parse](const std::string &_name) {
     const auto &col = text(_name);
@@ -1076,7 +1022,7 @@ DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
   };
 
   const auto text = fct::collect::vector<StringColumnType>(
-      schema.text_ | VIEWS::transform(get_text));
+      schema.val_.get<"text_">() | VIEWS::transform(get_text));
 
   const auto get_time_stamp = [this, parse](const std::string &_name) {
     const auto &col = time_stamp(_name);
@@ -1085,7 +1031,7 @@ DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
   };
 
   const auto time_stamps = fct::collect::vector<FloatColumnType>(
-      schema.time_stamps_ | VIEWS::transform(get_time_stamp));
+      schema.val_.get<"time_stamps_">() | VIEWS::transform(get_time_stamp));
 
   const auto params = helpers::DataFrameParams{.categoricals_ = categoricals,
                                                .discretes_ = discretes,
@@ -1100,10 +1046,7 @@ DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
   return DataFrameType(params);
 }
 
-// -------------------------------------------------------------------------
 }  // namespace containers
 }  // namespace engine
-
-// -------------------------------------------------------------------------
 
 #endif  // ENGINE_CONTAINERS_DATAFRAME_HPP_

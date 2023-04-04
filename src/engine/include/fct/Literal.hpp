@@ -16,56 +16,134 @@
 
 #include "debug/debug.hpp"
 #include "fct/StringLiteral.hpp"
+#include "fct/VisitTree.hpp"
+#include "fct/join.hpp"
 
 namespace fct {
-
-/// Helper class to retrieve the value at compile time.
-template <StringLiteral name_, StringLiteral... fields_>
-struct GetValueOf {
- public:
-  /// Retrieves the value.
-  static constexpr auto get() { return find_value_of<fields_...>(); }
-
- private:
-  /// Finds the value of a string literal at compile time.
-  template <StringLiteral _head, StringLiteral... _tail>
-  static constexpr auto find_value_of() {
-    if constexpr (name_ == _head) {
-      return sizeof...(fields_) - sizeof...(_tail) - 1;
-    } else {
-      static_assert(sizeof...(_tail) > 0, "Field name not supported.");
-      return find_value_of<_tail...>();
-    }
-  }
-};
 
 template <StringLiteral... fields_>
 class Literal {
  public:
   using ValueType =
-      typename std::conditional<sizeof...(fields_) <=
-                                    std::numeric_limits<std::uint8_t>::max(),
-                                std::uint8_t, std::uint16_t>::type;
+      std::conditional_t<sizeof...(fields_) <=
+                             std::numeric_limits<std::uint8_t>::max(),
+                         std::uint8_t, std::uint16_t>;
+
+  /// The number of different fields or different options that the literal
+  /// can assume.
+  static constexpr ValueType num_fields_ = sizeof...(fields_);
 
   /// Constructs a Literal from a string.
   Literal(const std::string& _str) : value_(find_value<fields_...>(_str)) {
+    static_assert(sizeof...(fields_) > 0,
+                  "There must be at least one field in a Literal.");
     static_assert(sizeof...(fields_) <= std::numeric_limits<ValueType>::max(),
                   "Too many fields.");
+    static_assert(!duplicate_strings<fields_...>(),
+                  "Duplicate strings are not allowed in a Literal.");
   }
 
+  /// Constructs a Literal from another literal.
+  Literal(const Literal<fields_...>& _other) : value_(_other.value_) {}
+
+  /// Constructs a Literal from another literal.
+  Literal(Literal<fields_...>&& _other) noexcept : value_(_other.value_) {}
+
+  /// A single-field literal is special because it
+  /// can also have a default constructor.
+  template <ValueType num_fields = num_fields_,
+            typename = std::enable_if_t<num_fields == 1>>
+  Literal() : value_(0) {}
+
   ~Literal() = default;
+
+  /// Determines whether the literal contains the string.
+  inline static bool contains(const std::string& _str) {
+    static_assert(!has_duplicates(), "Duplicate strings are not allowed!");
+    return has_value<fields_...>(_str);
+  }
+
+  /// Determines whether the literal contains the string at compile time.
+  template <StringLiteral _name>
+  inline static constexpr bool contains() {
+    static_assert(!has_duplicates(), "Duplicate strings are not allowed!");
+    return find_value_of<_name, fields_...>() != -1;
+  }
+
+  /// Determines whether the literal contains any of the strings in the other
+  /// literal at compile time.
+  template <class OtherLiteralType, int _i = 0>
+  inline static constexpr bool contains_any() {
+    static_assert(!has_duplicates(), "Duplicate strings are not allowed!");
+    static_assert(!OtherLiteralType::has_duplicates(),
+                  "Duplicate strings are not allowed!");
+    if constexpr (_i == num_fields_) {
+      return false;
+    } else {
+      constexpr auto name = find_name_within_own_fields<_i>();
+      return OtherLiteralType::template contains<name>() ||
+             contains_any<OtherLiteralType, _i + 1>();
+    }
+  }
+
+  /// Determines whether the literal contains all of the strings in the other
+  /// literal at compile time.
+  template <class OtherLiteralType, int _i = 0, int _n_found = 0>
+  inline static constexpr bool contains_all() {
+    static_assert(!has_duplicates(), "Duplicate strings are not allowed!");
+    static_assert(!OtherLiteralType::has_duplicates(),
+                  "Duplicate strings are not allowed!");
+    if constexpr (_i == num_fields_) {
+      return _n_found == OtherLiteralType::num_fields_;
+    } else {
+      constexpr auto name = find_name_within_own_fields<_i>();
+      if constexpr (OtherLiteralType::template contains<name>()) {
+        return contains_all<OtherLiteralType, _i + 1, _n_found + 1>();
+      } else {
+        return contains_all<OtherLiteralType, _i + 1, _n_found>();
+      }
+    }
+  }
+
+  /// Determines whether the literal has duplicate strings at compile time.
+  /// These is useful for checking collections of strings in other contexts.
+  inline static constexpr bool has_duplicates() {
+    return duplicate_strings<fields_...>();
+  }
 
   /// Constructs a new Literal.
   template <StringLiteral _name>
   static Literal<fields_...> make() {
-    return Literal(GetValueOf<_name, fields_...>::get());
+    static_assert(!has_duplicates(), "Duplicate strings are not allowed!");
+    return Literal(Literal<fields_...>::template value_of<_name>());
   }
 
   /// The name defined by the Literal.
   std::string name() const { return find_name<0, fields_...>(); }
 
+  /// Helper function to retrieve a name at compile time.
+  template <int _value>
+  inline constexpr static auto name_of() {
+    static_assert(!has_duplicates(), "Duplicate strings are not allowed!");
+    static_assert(_value < sizeof...(fields_), "value out of bounds");
+    constexpr auto name = find_name_within_own_fields<_value>();
+    return Literal<name>();
+  }
+
+  /// Assigns from another literal.
+  Literal<fields_...> operator=(const Literal<fields_...>& _other) {
+    value_ = _other.value_;
+    return *this;
+  }
+
+  /// Assigns from another literal.
+  Literal<fields_...> operator=(Literal<fields_...>&& _other) noexcept {
+    value_ = _other.value_;
+    return *this;
+  }
+
   /// Assigns the literal from a string
-  Literal operator=(const std::string& _str) {
+  Literal<fields_...> operator=(const std::string& _str) {
     value_ = find_value<fields_...>(_str);
     return *this;
   }
@@ -75,9 +153,16 @@ class Literal {
     return value() == _other.value();
   }
 
+  /// Equality operator other Literals with different fields.
+  template <StringLiteral... other_fields>
+  inline bool operator==(const Literal<other_fields...>& _other) const {
+    return name() == _other.name();
+  }
+
   /// Inequality operator for other Literals.
-  inline bool operator!=(const Literal<fields_...>& _other) const {
-    return value() != _other.value();
+  template <StringLiteral... other_fields>
+  inline bool operator!=(const Literal<other_fields...>& _other) const {
+    return !(*this == _other);
   }
 
   /// Equality operator for strings.
@@ -96,7 +181,10 @@ class Literal {
   /// Returns the value of the string literal in the template.
   template <StringLiteral _name>
   static constexpr ValueType value_of() {
-    return GetValueOf<_name, fields_...>::get();
+    static_assert(!has_duplicates(), "Duplicate strings are not allowed!");
+    constexpr auto value = find_value_of<_name, fields_...>();
+    static_assert(value >= 0, "String not supported.");
+    return value;
   }
 
  private:
@@ -106,8 +194,31 @@ class Literal {
                   "Too many fields.");
   }
 
+  /// Returns all of the allowed fields.
+  template <StringLiteral _head, StringLiteral... _tail>
+  inline static std::string allowed_strings(const std::string& _values = "") {
+    const auto head = "'" + _head.str() + "'";
+    const auto values = _values.size() == 0 ? head : _values + ", " + head;
+    if constexpr (sizeof...(_tail) > 0) {
+      return allowed_strings<_tail...>(values);
+    } else {
+      return values;
+    }
+  }
+
+  /// Whether the Literal contains duplicate strings.
+  template <StringLiteral _head, StringLiteral... _tail>
+  inline constexpr static bool duplicate_strings() {
+    if constexpr (sizeof...(_tail) == 0) {
+      return false;
+    } else {
+      return Literal<_tail...>::template contains<_head>() ||
+             duplicate_strings<_tail...>();
+    }
+  }
+
   /// Finds the correct index associated with
-  /// the string.
+  /// the string at run time.
   template <ValueType _i, StringLiteral _head, StringLiteral... _tail>
   std::string find_name() const {
     if (_i == value_) {
@@ -121,18 +232,63 @@ class Literal {
     }
   }
 
+  /// Finds the correct index associated with
+  /// the string at compile time within the Literal's own fields.
+  template <int _i>
+  inline constexpr static auto find_name_within_own_fields() {
+    return find_name_of<_i, sizeof...(fields_), fields_...>();
+  }
+
+  /// Finds the correct index associated with
+  /// the string at compile time.
+  template <int _i, int total, StringLiteral _head, StringLiteral... _tail>
+  inline constexpr static auto find_name_of() {
+    constexpr int n = total - sizeof...(_tail) - 1;
+    if constexpr (n == _i) {
+      return _head;
+    } else if (n + 1 < total) {
+      return find_name_of<_i, total, _tail...>();
+    }
+  }
+
   /// Finds the correct value associated with
   /// the string at run time.
   template <StringLiteral _head, StringLiteral... _tail>
-  static int find_value(const std::string& _str) {
+  inline static int find_value(const std::string& _str) {
     if (_head.str() == _str) {
       return sizeof...(fields_) - sizeof...(_tail) - 1;
     }
     if constexpr (sizeof...(_tail) == 0) {
       throw std::runtime_error("Literal does not support string '" + _str +
-                               "'.");
+                               "'. The following strings are supported: " +
+                               allowed_strings<_head, _tail...>() + ".");
     } else {
       return find_value<_tail...>(_str);
+    }
+  }
+
+  /// Finds the value of a string literal at compile time.
+  template <StringLiteral _name, StringLiteral _head, StringLiteral... _tail>
+  static constexpr int find_value_of() {
+    if constexpr (_name == _head) {
+      return sizeof...(fields_) - sizeof...(_tail) - 1;
+    } else if constexpr (sizeof...(_tail) > 0) {
+      return find_value_of<_name, _tail...>();
+    } else {
+      return -1;
+    }
+  }
+
+  /// Whether the literal contains this string.
+  template <StringLiteral _head, StringLiteral... _tail>
+  inline static bool has_value(const std::string& _str) {
+    if (_head.str() == _str) {
+      return true;
+    }
+    if constexpr (sizeof...(_tail) == 0) {
+      return false;
+    } else {
+      return has_value<_tail...>(_str);
     }
   }
 
@@ -141,21 +297,18 @@ class Literal {
   ValueType value_;
 };
 
-/// Helper class to retrieve a value from a literal.
-template <class LiteralType, StringLiteral name_>
-struct GetValueOfLiteral;
-
-/// Helper class to retrieve a value from a literal.
-template <StringLiteral... fields_, StringLiteral name_>
-struct GetValueOfLiteral<Literal<fields_...>, name_> {
-  static constexpr auto get() { return GetValueOf<name_, fields_...>::get(); }
-};
+/// Helper function to retrieve a name at compile time.
+template <class LiteralType, int _value>
+inline constexpr auto name_of() {
+  return LiteralType::template name_of<_value>();
+}
 
 /// Helper function to retrieve a value at compile time.
 template <class LiteralType, StringLiteral _name>
 inline constexpr auto value_of() {
-  return GetValueOfLiteral<LiteralType, _name>::get();
+  return LiteralType::template value_of<_name>();
 }
 
 }  // namespace fct
-#endif  // FCT_LITERAL`_HPP_
+
+#endif  // FCT_LITERAL_HPP_

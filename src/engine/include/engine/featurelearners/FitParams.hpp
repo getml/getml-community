@@ -1,43 +1,30 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_FEATURELEARNERS_FITPARAMS_HPP_
 #define ENGINE_FEATURELEARNERS_FITPARAMS_HPP_
-
-// ----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------------
 
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
-#include "helpers/helpers.hpp"
-
-// ----------------------------------------------------------------------------
-
+#include "commands/DataFramesOrViews.hpp"
 #include "engine/Int.hpp"
 #include "engine/communication/communication.hpp"
 #include "engine/containers/containers.hpp"
-
-// ----------------------------------------------------------------------------
+#include "helpers/helpers.hpp"
 
 namespace engine {
 namespace featurelearners {
-// ----------------------------------------------------------------------------
 
 struct FitParams {
   /// The command used.
-  const Poco::JSON::Object cmd_;
+  const commands::DataFramesOrViews cmd_;
 
   /// Logs the progress.
   const std::shared_ptr<const communication::SocketLogger> logger_;
@@ -55,7 +42,6 @@ struct FitParams {
   const std::optional<std::string> temp_dir_;
 };
 
-// ----------------------------------------------------------------------------
 }  // namespace featurelearners
 }  // namespace engine
 

@@ -1,3 +1,4 @@
+
 // Copyright 2022 The SQLNet Company GmbH
 //
 // This file is licensed under the Elastic License 2.0 (ELv2).
@@ -8,9 +9,6 @@
 #ifndef ENGINE_PIPELINES_PIPELINE_HPP_
 #define ENGINE_PIPELINES_PIPELINE_HPP_
 
-// ----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
 #include <Poco/Net/StreamSocket.h>
 #include <Poco/TemporaryFile.h>
 
@@ -22,12 +20,14 @@
 #include <utility>
 #include <vector>
 
+#include "commands/Pipeline.hpp"
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/pipelines/CheckParams.hpp"
 #include "engine/pipelines/FitParams.hpp"
 #include "engine/pipelines/FittedPipeline.hpp"
+#include "engine/pipelines/MonitorSummary.hpp"
 #include "engine/pipelines/TransformParams.hpp"
 #include "helpers/helpers.hpp"
 #include "metrics/Scores.hpp"
@@ -38,14 +38,16 @@ namespace pipelines {
 
 class Pipeline {
  public:
-  Pipeline(const Poco::JSON::Object& _obj);
+  Pipeline(const fct::Ref<const commands::Pipeline>& _obj);
+
+  Pipeline(const commands::Pipeline& _obj);
 
   ~Pipeline();
 
  public:
   /// Expresses the Pipeline in a form the monitor can understand.
-  Poco::JSON::Object to_monitor(const helpers::StringIterator& _categories,
-                                const std::string& _name) const;
+  MonitorSummary to_monitor(const helpers::StringIterator& _categories,
+                            const std::string& _name) const;
 
  private:
   // Helper function for the creation time.
@@ -69,7 +71,7 @@ class Pipeline {
   bool include_categorical() const { return include_categorical_; }
 
   /// Trivial (const) accessor
-  const auto& obj() const { return obj_; }
+  const commands::Pipeline& obj() const { return *obj_; }
 
   /// Trivial (const) accessor
   const auto& scores() const { return *scores_; }
@@ -128,8 +130,8 @@ class Pipeline {
   /// Whether we want to include categorical features
   bool include_categorical_;
 
-  /// The JSON Object used to construct the pipeline.
-  Poco::JSON::Object obj_;
+  /// The JSON object used to construct the pipeline.
+  fct::Ref<const commands::Pipeline> obj_;
 
   /// The scores used to evaluate this pipeline
   fct::Ref<const metrics::Scores> scores_;
@@ -138,5 +140,4 @@ class Pipeline {
 }  // namespace pipelines
 }  // namespace engine
 
-// ----------------------------------------------------------------------------
 #endif  // ENGINE_PIPELINES_PIPELINE_HPP_

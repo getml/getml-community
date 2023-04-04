@@ -1,40 +1,38 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef METRICS_AUC_HPP_
 #define METRICS_AUC_HPP_
-
-// ----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------------
 
 #include <cstdint>
 #include <utility>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
-#include "multithreading/multithreading.hpp"
-
-// ----------------------------------------------------------------------------
-
+#include "fct/NamedTuple.hpp"
 #include "metrics/Features.hpp"
 #include "metrics/Float.hpp"
-#include "metrics/Metric.hpp"
 #include "metrics/MetricImpl.hpp"
-
-// ----------------------------------------------------------------------------
+#include "metrics/Scores.hpp"
+#include "multithreading/multithreading.hpp"
 
 namespace metrics {
-// ----------------------------------------------------------------------------
 
-class AUC : public Metric {
+class AUC {
+ public:
+  using f_auc = typename Scores::f_auc;
+  using f_fpr = typename Scores::f_fpr;
+  using f_tpr = typename Scores::f_tpr;
+  using f_lift = typename Scores::f_lift;
+  using f_precision = typename Scores::f_precision;
+  using f_proportion = typename Scores::f_proportion;
+
+  using ResultType =
+      fct::NamedTuple<f_auc, f_fpr, f_tpr, f_lift, f_precision, f_proportion>;
+
  public:
   AUC() {}
 
@@ -42,14 +40,10 @@ class AUC : public Metric {
 
   ~AUC() = default;
 
-  // ------------------------------------------------------------------------
-
  public:
   /// This calculates the loss based on the predictions _yhat
   /// and the targets _y.
-  Poco::JSON::Object score(const Features _yhat, const Features _y) final;
-
-  // ------------------------------------------------------------------------
+  ResultType score(const Features _yhat, const Features _y);
 
  private:
   /// Calculates the area under the ROC curve.
@@ -97,26 +91,15 @@ class AUC : public Metric {
   std::pair<Float, Float> find_min_max(const size_t _j) const;
 
   /// Generates the default values when there is no meaningful prediction.
-  void make_default_values(Poco::JSON::Array::Ptr _true_positive_arr,
-                           Poco::JSON::Array::Ptr _false_positive_arr,
-                           Poco::JSON::Array::Ptr _lift_arr,
-                           Poco::JSON::Array::Ptr _precision_arr,
-                           Poco::JSON::Array::Ptr _proportion_arr,
+  void make_default_values(std::vector<std::vector<Float>>* _true_positive_arr,
+                           std::vector<std::vector<Float>>* _false_positive_arr,
+                           std::vector<std::vector<Float>>* _lift_arr,
+                           std::vector<std::vector<Float>>* _precision_arr,
+                           std::vector<std::vector<Float>>* _proportion_arr,
                            Float* _auc) const;
-
-  /// Generates the object to be returned.
-  Poco::JSON::Object make_object(
-      const Poco::JSON::Array::Ptr _true_positive_arr,
-      const Poco::JSON::Array::Ptr _false_positive_arr,
-      const Poco::JSON::Array::Ptr _lift_arr,
-      const Poco::JSON::Array::Ptr _precision_arr,
-      const Poco::JSON::Array::Ptr _proportion_arr,
-      const std::vector<Float>& _auc) const;
 
   /// Generates a vector of prediction-target-pairs.
   std::vector<std::pair<Float, Float>> make_pairs(const size_t _j) const;
-
-  // ------------------------------------------------------------------------
 
  private:
   /// Trivial getter
@@ -134,16 +117,11 @@ class AUC : public Metric {
   /// Trivial getter
   Float y(size_t _i, size_t _j) const { return impl_.y(_i, _j); }
 
-  // ------------------------------------------------------------------------
-
  private:
   /// Contains all the relevant data.
   MetricImpl impl_;
-
-  // ------------------------------------------------------------------------
 };
 
-// ----------------------------------------------------------------------------
 }  // namespace metrics
 
 #endif  // METRICS_AUC_HPP_

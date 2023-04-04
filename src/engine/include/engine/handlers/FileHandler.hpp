@@ -1,36 +1,27 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_HANDLERS_FILEHANDLER_HPP_
 #define ENGINE_HANDLERS_FILEHANDLER_HPP_
 
-// ------------------------------------------------------------------------
-
 #include <Poco/File.h>
-#include <Poco/JSON/Object.h>
-
-// ------------------------------------------------------------------------
+#include <Poco/Path.h>
 
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
 
-// ------------------------------------------------------------------------
-
 #include "engine/config/config.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/pipelines/pipelines.hpp"
 
-// ------------------------------------------------------------------------
-
 namespace engine {
 namespace handlers {
-// ------------------------------------------------------------------------
 
 struct FileHandler {
   /// Creates a project directory, including the subfolders
@@ -70,8 +61,7 @@ struct FileHandler {
   template <class Type>
   static void remove(const std::string& _name,
                      const std::string& _project_directory,
-                     const Poco::JSON::Object& _cmd,
-                     std::map<std::string, Type>* _map);
+                     const bool _mem_only, std::map<std::string, Type>* _map);
 
   /// Saves matrix to disc
   template <class ColumnType>
@@ -165,17 +155,11 @@ ColumnType FileHandler::load(const std::string& _name,
 template <class Type>
 void FileHandler::remove(const std::string& _name,
                          const std::string& _project_directory,
-                         const Poco::JSON::Object& _cmd,
+                         const bool _mem_only,
                          std::map<std::string, Type>* _map) {
-  bool mem_only = false;
-
-  if (_cmd.has("mem_only_")) {
-    mem_only = JSON::get_value<bool>(_cmd, "mem_only_");
-  }
-
   _map->erase(_name);
 
-  if (!mem_only && _project_directory != "") {
+  if (!_mem_only && _project_directory != "") {
     const auto fname = make_fname<Type>(_project_directory, _name);
 
     auto file = Poco::File(fname);

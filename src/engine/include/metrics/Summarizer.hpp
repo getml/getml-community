@@ -1,68 +1,74 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef METRICS_SUMMARIZER_HPP_
 #define METRICS_SUMMARIZER_HPP_
 
-// ----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------------
-
 #include <cstdint>
+#include <string>
 #include <utility>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
 #include "debug/debug.hpp"
-#include "strings/strings.hpp"
-
-// ----------------------------------------------------------------------------
-
+#include "fct/Field.hpp"
+#include "fct/NamedTuple.hpp"
 #include "metrics/Features.hpp"
 #include "metrics/Float.hpp"
 #include "metrics/Int.hpp"
-
-// ----------------------------------------------------------------------------
+#include "metrics/Scores.hpp"
+#include "strings/strings.hpp"
 
 namespace metrics {
-// -------------------------------------------------------------------------
 
 class Summarizer {
-  // ---------------------------------------------------------------------
+ public:
+  using f_average_targets = typename Scores::f_average_targets;
+  using f_feature_correlations = typename Scores::f_feature_correlations;
+  using f_feature_densities = typename Scores::f_feature_densities;
+  using f_labels = typename Scores::f_labels;
+
+  /// The data needed to display the feature plots.
+  using FeaturePlots =
+      fct::NamedTuple<f_average_targets, f_feature_densities, f_labels>;
+
+  /// The data returned by the different functions must have a common format.
+  using PlotWithLabels =
+      fct::NamedTuple<fct::Field<"labels_", std::vector<std::string>>,
+                      fct::Field<"data_", std::vector<Float>>>;
+
+  /// The data returned by the different functions must have a common format.
+  using PlotWithFrequencies = fct::NamedTuple<
+      fct::Field<"accumulated_frequencies_", std::vector<Float>>,
+      fct::Field<"data_", std::vector<Float>>>;
 
  public:
   /// Calculates the plots needed to analyze a categorical column.
-  static Poco::JSON::Object calc_categorical_column_plot(
+  static PlotWithLabels calc_categorical_column_plot(
       const size_t _num_bins, const std::vector<strings::String>& _vec);
 
   /// Calculates the plots needed to analyze a categorical column.
-  static Poco::JSON::Object calc_categorical_column_plot(
+  static PlotWithFrequencies calc_categorical_column_plot(
       const size_t _num_bins, const std::vector<strings::String>& _vec,
       const std::vector<Float>& _target);
 
   /// Calculates the pearson r between features and
   /// a set of targets.
-  static Poco::JSON::Object calculate_feature_correlations(
+  static f_feature_correlations calculate_feature_correlations(
       const Features& _features, const size_t _nrows, const size_t _ncols,
       const std::vector<const Float*>& _targets);
 
   /// Calculates the plots needed to analyze the feature.
-  static Poco::JSON::Object calculate_feature_plots(
+  static FeaturePlots calculate_feature_plots(
       const Features& _features, const size_t _nrows, const size_t _ncols,
       const size_t _num_bins, const std::vector<const Float*>& _targets);
 
-  // ---------------------------------------------------------------------
-
  private:
   /// Calculates the average targets, which are displayed in the feature view.
-  static Poco::JSON::Array::Ptr calculate_average_targets(
+  static std::vector<std::vector<std::vector<Float>>> calculate_average_targets(
       const std::vector<Float>& _minima, const std::vector<Float>& _step_sizes,
       const std::vector<size_t>& _actual_num_bins,
       const std::vector<std::vector<Int>>& _feature_densities,
@@ -71,7 +77,7 @@ class Summarizer {
 
   /// Helper function for calculating labels, which
   /// are needed for column densities and average targets.
-  static Poco::JSON::Array::Ptr calculate_labels(
+  static std::vector<std::vector<Float>> calculate_labels(
       const std::vector<Float>& _minima, const std::vector<Float>& _step_sizes,
       const std::vector<size_t>& _actual_num_bins,
       const std::vector<std::vector<Int>>& _feature_densities,
@@ -96,16 +102,14 @@ class Summarizer {
                              const Float _val, const Float _min);
 
   /// Applies the binning strategy for the categorical frequency counts.
-  static Poco::JSON::Object make_object(
+  static PlotWithLabels make_object(
       const size_t _num_bins,
       const std::vector<std::pair<strings::String, Int>>& _counts);
 
   /// Applies the binning strategy for the categorical correlation plots.
-  static Poco::JSON::Object make_object(
+  static PlotWithFrequencies make_object(
       const size_t _num_bins,
       const std::vector<std::pair<Float, Float>>& _pairs);
-
-  // ---------------------------------------------------------------------
 
  private:
   /// Helper function
@@ -133,11 +137,8 @@ class Summarizer {
     assert_true(_i < _features[_j].size());
     return _features[_j][_i];
   }
-
-  // ---------------------------------------------------------------------
 };
 
-// -------------------------------------------------------------------------
 }  // namespace metrics
 
 #endif  // METRICS_SUMMARIZER_HPP_

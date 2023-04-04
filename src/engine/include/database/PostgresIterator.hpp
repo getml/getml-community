@@ -1,36 +1,24 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef DATABASE_POSTGRESITERATOR_HPP_
 #define DATABASE_POSTGRESITERATOR_HPP_
 
-// ----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
 #include <libpq-fe.h>
-
-// ----------------------------------------------------------------------------
 
 #include <memory>
 #include <string>
 #include <vector>
 
-// -----------------------------------------------------------------------------
-
-#include "debug/debug.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "database/Float.hpp"
 #include "database/Getter.hpp"
 #include "database/Int.hpp"
 #include "database/Iterator.hpp"
-
-// ----------------------------------------------------------------------------
+#include "debug/debug.hpp"
 
 namespace database {
 

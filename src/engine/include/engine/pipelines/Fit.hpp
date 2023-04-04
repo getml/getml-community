@@ -1,39 +1,28 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_PIPELINES_FIT_HPP_
 #define ENGINE_PIPELINES_FIT_HPP_
 
-// ----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
 #include <Poco/Net/StreamSocket.h>
-
-// ----------------------------------------------------------------------------
 
 #include <algorithm>
 #include <memory>
 #include <optional>
 #include <string>
 #include <utility>
+#include <variant>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
-#include "metrics/metrics.hpp"
-
-// ----------------------------------------------------------------------------
-
+#include "commands/Fingerprint.hpp"
+#include "commands/Predictor.hpp"
 #include "engine/communication/communication.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/dependency/dependency.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "engine/pipelines/FitParams.hpp"
 #include "engine/pipelines/FitPredictorsParams.hpp"
 #include "engine/pipelines/FitPreprocessorsParams.hpp"
@@ -41,8 +30,7 @@
 #include "engine/pipelines/MakeFeaturesParams.hpp"
 #include "engine/pipelines/Pipeline.hpp"
 #include "engine/pipelines/Preprocessed.hpp"
-
-// ----------------------------------------------------------------------------
+#include "metrics/metrics.hpp"
 
 namespace engine {
 namespace pipelines {
@@ -50,20 +38,23 @@ namespace pipelines {
 class Fit {
  public:
   /// Extracts the fingerprints of the data frames.
-  static std::vector<Poco::JSON::Object::Ptr> extract_df_fingerprints(
+  static fct::Ref<const std::vector<commands::Fingerprint>>
+  extract_df_fingerprints(
       const Pipeline& _pipeline, const containers::DataFrame& _population_df,
       const std::vector<containers::DataFrame>& _peripheral_dfs);
 
   /// Extracts the fingerprints from the feature learners.
-  static std::vector<Poco::JSON::Object::Ptr> extract_fl_fingerprints(
+  static fct::Ref<const std::vector<commands::Fingerprint>>
+  extract_fl_fingerprints(
       const std::vector<fct::Ref<featurelearners::AbstractFeatureLearner>>&
           _feature_learners,
-      const std::vector<Poco::JSON::Object::Ptr>& _dependencies);
+      const fct::Ref<const std::vector<commands::Fingerprint>>& _dependencies);
 
   /// Extracts the fingerprints from the preprocessors.
-  static std::vector<Poco::JSON::Object::Ptr> extract_preprocessor_fingerprints(
+  static fct::Ref<const std::vector<commands::Fingerprint>>
+  extract_preprocessor_fingerprints(
       const std::vector<fct::Ref<preprocessors::Preprocessor>>& _preprocessors,
-      const std::vector<Poco::JSON::Object::Ptr>& _dependencies);
+      const fct::Ref<const std::vector<commands::Fingerprint>>& _dependencies);
 
   /// Extracts schemata from the data frames
   static std::pair<fct::Ref<const helpers::Schema>,
@@ -93,13 +84,13 @@ class Fit {
   init_predictors(
       const Pipeline& _pipeline, const std::string& _elem,
       const fct::Ref<const predictors::PredictorImpl>& _predictor_impl,
-      const std::vector<Poco::JSON::Object::Ptr>& _dependencies,
+      const std::vector<commands::Fingerprint>& _dependencies,
       const size_t _num_targets);
 
   /// Initializes the preprocessors.
   static std::vector<fct::Ref<preprocessors::Preprocessor>> init_preprocessors(
       const Pipeline& _pipeline,
-      const std::vector<Poco::JSON::Object::Ptr>& _dependencies);
+      const fct::Ref<const std::vector<commands::Fingerprint>>& _dependencies);
 
  public:
   /// Transforms to a vector of const references.
@@ -154,16 +145,17 @@ class Fit {
       const Predictors& _feature_selectors);
 
   /// Extracts the fingerprints from the predictors.
-  static std::vector<Poco::JSON::Object::Ptr> extract_predictor_fingerprints(
+  static fct::Ref<const std::vector<commands::Fingerprint>>
+  extract_predictor_fingerprints(
       const std::vector<std::vector<fct::Ref<predictors::Predictor>>>&
           _predictors,
-      const std::vector<Poco::JSON::Object::Ptr>& _dependencies);
+      const fct::Ref<const std::vector<commands::Fingerprint>>& _dependencies);
 
   /// Fits the feature learners. Returns the fitted feature learners and their
   /// fingerprints.
   static std::pair<
       std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>,
-      std::vector<Poco::JSON::Object::Ptr>>
+      fct::Ref<const std::vector<commands::Fingerprint>>>
   fit_feature_learners(
       const Pipeline& _pipeline, const FitParams& _params,
       const containers::DataFrame& _population_df,
@@ -172,15 +164,16 @@ class Fit {
 
   /// Fits the predictors. Returns the fitted predictors and their
   /// fingerprints.
-  static std::pair<Predictors, std::vector<Poco::JSON::Object::Ptr>>
+  static std::pair<Predictors,
+                   fct::Ref<const std::vector<commands::Fingerprint>>>
   fit_predictors(const FitPredictorsParams& _params);
 
   /// Fits the preprocessors and applies them to the training set.
   static std::pair<std::vector<fct::Ref<const preprocessors::Preprocessor>>,
-                   std::vector<Poco::JSON::Object::Ptr>>
+                   fct::Ref<const std::vector<commands::Fingerprint>>>
   fit_transform_preprocessors(
       const Pipeline& _pipeline, const FitPreprocessorsParams& _params,
-      const std::vector<Poco::JSON::Object::Ptr>& _dependencies,
+      const fct::Ref<const std::vector<commands::Fingerprint>>& _dependencies,
       containers::DataFrame* _population_df,
       std::vector<containers::DataFrame>* _peripheral_dfs);
 
@@ -190,7 +183,7 @@ class Fit {
 
   /// Generates the impl for the feature selectors.
   static fct::Ref<const predictors::PredictorImpl> make_feature_selector_impl(
-      const Pipeline& _pipeline, const Poco::JSON::Object& _cmd,
+      const Pipeline& _pipeline,
       const std::vector<
           fct::Ref<const featurelearners::AbstractFeatureLearner>>&
           _feature_learners,
@@ -203,8 +196,7 @@ class Fit {
 
   /// Generates the impl for the predictors.
   static fct::Ref<const predictors::PredictorImpl> make_predictor_impl(
-      const Pipeline& _pipeline, const Poco::JSON::Object& _cmd,
-      const Predictors& _feature_selectors,
+      const Pipeline& _pipeline, const Predictors& _feature_selectors,
       const containers::DataFrame& _population_df);
 
   /// Generates the metrics::Scores object which is also returned by fit.

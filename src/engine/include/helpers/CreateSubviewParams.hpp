@@ -1,28 +1,23 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef HELPERS_CREATESUBVIEWPARAMS_HPP_
 #define HELPERS_CREATESUBVIEWPARAMS_HPP_
-
-// -------------------------------------------------------------------------
 
 #include <functional>
 #include <optional>
 #include <string>
 #include <vector>
 
-// -------------------------------------------------------------------------
-
 #include "helpers/ColumnView.hpp"
 #include "helpers/DataFrameParams.hpp"
 
-// -------------------------------------------------------------------------
-
 namespace helpers {
+
 struct CreateSubviewParams {
  public:
   typedef DataFrameParams::AdditionalColumns AdditionalColumns;
@@ -30,8 +25,6 @@ struct CreateSubviewParams {
   typedef DataFrameParams::RowIndices RowIndices;
 
   typedef DataFrameParams::WordIndices WordIndices;
-
-  // ---------------------------------------------------------------------
 
   /// Additional columns to be added to the DataFrame.
   const AdditionalColumns additional_ = {};

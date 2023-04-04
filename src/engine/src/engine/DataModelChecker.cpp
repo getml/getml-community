@@ -1,31 +1,25 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/preprocessors/DataModelChecker.hpp"
 
-// ----------------------------------------------------------------------------
-
 #include <algorithm>
 
-// ----------------------------------------------------------------------------
-
 #include "fct/fct.hpp"
-
-// ----------------------------------------------------------------------------
 
 namespace engine {
 namespace preprocessors {
 
 size_t DataModelChecker::calc_num_joins(
     const helpers::Placeholder& _placeholder) {
-  auto range = _placeholder.joined_tables_ |
+  auto range = _placeholder.joined_tables() |
                VIEWS::transform(DataModelChecker::calc_num_joins);
 
-  return _placeholder.joined_tables_.size() +
+  return _placeholder.joined_tables().size() +
          std::accumulate(range.begin(), range.end(), 0);
 }
 
@@ -285,19 +279,19 @@ void DataModelChecker::check_join(
 
   assert_true(_peripheral_names->size() == _peripheral.size());
 
-  const auto& joined_tables = _placeholder.joined_tables_;
+  const auto& joined_tables = _placeholder.joined_tables();
 
-  const auto& join_keys_used = _placeholder.join_keys_used_;
+  const auto& join_keys_used = _placeholder.join_keys_used();
 
-  const auto& other_join_keys_used = _placeholder.other_join_keys_used_;
+  const auto& other_join_keys_used = _placeholder.other_join_keys_used();
 
-  const auto& propositionalization = _placeholder.propositionalization_;
+  const auto& propositionalization = _placeholder.propositionalization();
 
-  const auto& time_stamps_used = _placeholder.time_stamps_used_;
+  const auto& time_stamps_used = _placeholder.time_stamps_used();
 
-  const auto& other_time_stamps_used = _placeholder.other_time_stamps_used_;
+  const auto& other_time_stamps_used = _placeholder.other_time_stamps_used();
 
-  const auto& upper_time_stamps_used = _placeholder.upper_time_stamps_used_;
+  const auto& upper_time_stamps_used = _placeholder.upper_time_stamps_used();
 
   const auto size = joined_tables.size();
 
@@ -314,7 +308,7 @@ void DataModelChecker::check_join(
   assert_true(upper_time_stamps_used.size() == size);
 
   for (size_t i = 0; i < size; ++i) {
-    const auto& name = joined_tables.at(i).name_;
+    const auto& name = joined_tables.at(i).name();
 
     const auto it =
         std::find(_peripheral_names->begin(), _peripheral_names->end(), name);
@@ -525,70 +519,6 @@ DataModelChecker::find_time_stamps(
   }
 
   return std::make_tuple(ts1, ts2, upper);
-}
-
-// ----------------------------------------------------------------------------
-
-std::tuple<std::vector<std::string>, std::vector<std::string>,
-           std::vector<std::string>>
-DataModelChecker::get_time_stamps_used(
-    const Poco::JSON::Object& _population_placeholder,
-    const size_t _expected_size) {
-  const auto time_stamps_used_arr =
-      _population_placeholder.getArray("time_stamps_used_");
-
-  if (!time_stamps_used_arr) {
-    throw std::runtime_error(
-        "The placeholder has no array named 'time_stamps_used_'!");
-  }
-
-  const auto other_time_stamps_used_arr =
-      _population_placeholder.getArray("other_time_stamps_used_");
-
-  if (!other_time_stamps_used_arr) {
-    throw std::runtime_error(
-        "The placeholder has no array named "
-        "'other_time_stamps_used_'!");
-  }
-
-  const auto upper_time_stamps_used_arr =
-      _population_placeholder.getArray("upper_time_stamps_used_");
-
-  if (!upper_time_stamps_used_arr) {
-    throw std::runtime_error(
-        "The placeholder has no array named "
-        "'upper_time_stamps_used_'!");
-  }
-
-  const auto time_stamps_used =
-      JSON::array_to_vector<std::string>(time_stamps_used_arr);
-
-  const auto other_time_stamps_used =
-      JSON::array_to_vector<std::string>(other_time_stamps_used_arr);
-
-  const auto upper_time_stamps_used =
-      JSON::array_to_vector<std::string>(upper_time_stamps_used_arr);
-
-  if (_expected_size != time_stamps_used.size()) {
-    throw std::runtime_error(
-        "Length of 'joined_tables_' must match length of "
-        "'time_stamps_used_'.");
-  }
-
-  if (_expected_size != other_time_stamps_used.size()) {
-    throw std::runtime_error(
-        "Length of 'joined_tables_' must match length of "
-        "'other_time_stamps_used_'.");
-  }
-
-  if (_expected_size != upper_time_stamps_used.size()) {
-    throw std::runtime_error(
-        "Length of 'joined_tables_' must match length of "
-        "'upper_time_stamps_used_'.");
-  }
-
-  return std::make_tuple(time_stamps_used, other_time_stamps_used,
-                         upper_time_stamps_used);
 }
 
 // ----------------------------------------------------------------------------

@@ -1,16 +1,16 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/communication/Receiver.hpp"
 
 namespace engine {
 namespace communication {
 
-Poco::JSON::Object Receiver::recv_cmd(
+std::string Receiver::recv_cmd(
     const fct::Ref<const communication::Logger> &_logger,
     Poco::Net::StreamSocket *_socket) {
   const auto str = Receiver::recv_string(_socket);
@@ -21,9 +21,7 @@ Poco::JSON::Object Receiver::recv_cmd(
           << str;
   _logger->log(cmd_log.str());
 
-  Poco::JSON::Parser parser;
-  const auto obj = parser.parse(str).extract<Poco::JSON::Object::Ptr>();
-  return *obj;
+  return str;
 }
 
 // -----------------------------------------------------------------------------

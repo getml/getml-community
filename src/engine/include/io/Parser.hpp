@@ -1,40 +1,33 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef IO_PARSER_HPP_
 #define IO_PARSER_HPP_
 
-// ----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------------
+#include <Poco/DateTimeFormat.h>
+#include <Poco/DateTimeFormatter.h>
+#include <Poco/DateTimeParser.h>
+#include <Poco/Timestamp.h>
 
 #include <cmath>
 #include <iomanip>
+#include <iostream>
 #include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
 #include "io/Float.hpp"
 #include "io/Int.hpp"
 
-// ----------------------------------------------------------------------------
-
 namespace io {
-// ----------------------------------------------------------------------------
 
 class Parser {
  public:
-  // -------------------------------
-
   /// Removes the quotechars.
   static std::string remove_quotechars(const std::string& _str,
                                        const char _quotechar) {

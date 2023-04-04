@@ -1,19 +1,12 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_PIPELINES_PLACEHOLDERMAKER_HPP_
 #define ENGINE_PIPELINES_PLACEHOLDERMAKER_HPP_
-
-// ----------------------------------------------------------------------------
-
-#include <Poco/JSON/Array.h>
-#include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------------
 
 #include <memory>
 #include <optional>
@@ -22,36 +15,26 @@
 #include <string>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
+#include "commands/DataModel.hpp"
 #include "debug/debug.hpp"
-#include "helpers/helpers.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
 #include "engine/containers/containers.hpp"
-
-// ----------------------------------------------------------------------------
+#include "fct/Ref.hpp"
+#include "helpers/helpers.hpp"
 
 namespace engine {
 namespace pipelines {
 
 class PlaceholderMaker {
  private:
-  static constexpr const char* RELATIONSHIP_MANY_TO_MANY = "many-to-many";
-  static constexpr const char* RELATIONSHIP_MANY_TO_ONE = "many-to-one";
-  static constexpr const char* RELATIONSHIP_PROPOSITIONALIZATION =
-      helpers::Placeholder::RELATIONSHIP_PROPOSITIONALIZATION;
-  static constexpr const char* RELATIONSHIP_ONE_TO_MANY = "one-to-many";
-  static constexpr const char* RELATIONSHIP_ONE_TO_ONE = "one-to-one";
+  using RelationshipLiteral = typename commands::DataModel::RelationshipLiteral;
 
  public:
   /// Creates the placeholder, including transforming memory into upper time
   /// stamps.
-  static helpers::Placeholder make_placeholder(
-      const Poco::JSON::Object& _obj, const std::string& _alias,
+  static fct::Ref<const helpers::Placeholder> make_placeholder(
+      const commands::DataModel& _data_model, const std::string& _alias,
       const std::shared_ptr<size_t> _num_alias = nullptr,
       const bool _is_population = true);
 
@@ -71,26 +54,21 @@ class PlaceholderMaker {
   static void extract_joined_tables(const helpers::Placeholder& _placeholder,
                                     std::set<std::string>* _names);
 
-  template <typename T>
-  static std::vector<T> extract_vector(
-      const Poco::JSON::Object& _population_placeholder,
-      const std::string& _name, const size_t _expected_size);
-
   static std::vector<std::string> handle_horizon(
-      const helpers::Placeholder& _placeholder,
+      const commands::DataModel& _data_model,
       const std::vector<Float>& _horizon);
 
-  static helpers::Placeholder handle_joined_tables(
-      const helpers::Placeholder& _placeholder, const std::string& _alias,
+  static fct::Ref<const helpers::Placeholder> handle_joined_tables(
+      const commands::DataModel& _data_model, const std::string& _alias,
       const std::shared_ptr<size_t> _num_alias,
-      const Poco::JSON::Array& _joined_tables_arr,
-      const std::vector<std::string>& _relationship,
+      const std::vector<commands::DataModel>& _joined_tables,
+      const std::vector<RelationshipLiteral>& _relationship,
       const std::vector<std::string>& _other_time_stamps_used,
       const std::vector<std::string>& _upper_time_stamps_used,
       const bool _is_population);
 
   static std::vector<std::string> handle_memory(
-      const helpers::Placeholder& _placeholder,
+      const commands::DataModel& _data_model,
       const std::vector<Float>& _horizon, const std::vector<Float>& _memory);
 
   static std::vector<std::string> make_colnames(
@@ -98,10 +76,13 @@ class PlaceholderMaker {
       const std::vector<std::string>& _old_colnames);
 
  private:
-  static bool is_to_many(const std::string& _relationship) {
-    return (_relationship == RELATIONSHIP_MANY_TO_MANY ||
-            _relationship == RELATIONSHIP_PROPOSITIONALIZATION ||
-            _relationship == RELATIONSHIP_ONE_TO_MANY);
+  static bool is_to_many(const RelationshipLiteral& _relationship) {
+    return (_relationship.value() ==
+                RelationshipLiteral::value_of<"many-to-many">() ||
+            _relationship.value() ==
+                RelationshipLiteral::value_of<"propositionalization">() ||
+            _relationship.value() ==
+                RelationshipLiteral::value_of<"one-to-many">());
   }
 
   static std::string make_alias(const std::shared_ptr<size_t> _num_alias) {
@@ -122,38 +103,6 @@ void PlaceholderMaker::append(const std::vector<T>& _vec2,
   }
 }
 
-// ------------------------------------------------------------------------
-
-template <typename T>
-std::vector<T> PlaceholderMaker::extract_vector(
-    const Poco::JSON::Object& _population_placeholder, const std::string& _name,
-    const size_t _expected_size) {
-  // ------------------------------------------------------------------------
-
-  if (!_population_placeholder.getArray(_name)) {
-    throw std::runtime_error("The placeholder has no array named '" + _name +
-                             "'!");
-  }
-
-  const auto vec =
-      JSON::array_to_vector<T>(_population_placeholder.getArray(_name));
-
-  // ------------------------------------------------------------------------
-
-  if (vec.size() != _expected_size) {
-    throw std::runtime_error("Size of '" + _name + "' unexpected. Expected " +
-                             std::to_string(_expected_size) + ", got " +
-                             std::to_string(vec.size()) + ".");
-  }
-
-  // ------------------------------------------------------------------------
-
-  return vec;
-
-  // ------------------------------------------------------------------------
-}
-
-// ----------------------------------------------------------------------------
 }  // namespace pipelines
 }  // namespace engine
 

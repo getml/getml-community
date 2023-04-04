@@ -1,38 +1,24 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_PREPROCESSORS_PREPROCESSOR_HPP_
 #define ENGINE_PREPROCESSORS_PREPROCESSOR_HPP_
-
-// ----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------------
 
 #include <memory>
 #include <optional>
 #include <utility>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
-#include "helpers/helpers.hpp"
-
-// ----------------------------------------------------------------------------
-
+#include "commands/Fingerprint.hpp"
 #include "engine/containers/containers.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "engine/preprocessors/FitParams.hpp"
 #include "engine/preprocessors/TransformParams.hpp"
-
-// ----------------------------------------------------------------------------
+#include "fct/Ref.hpp"
+#include "helpers/helpers.hpp"
 
 namespace engine {
 namespace preprocessors {
@@ -54,24 +40,27 @@ class Preprocessor {
 
  public:
   /// Returns a deep copy.
-  virtual std::shared_ptr<Preprocessor> clone(
-      const std::optional<std::vector<Poco::JSON::Object::Ptr>>& _dependencies =
+  virtual fct::Ref<Preprocessor> clone(
+      const std::optional<std::vector<commands::Fingerprint>>& _dependencies =
           std::nullopt) const = 0;
 
   /// Returns the fingerprint of the feature learner (necessary to build
   /// the dependency graphs).
-  virtual Poco::JSON::Object::Ptr fingerprint() const = 0;
+  virtual commands::Fingerprint fingerprint() const = 0;
 
   /// Fits the preprocessor. Returns the transformed data frames.
   virtual std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
   fit_transform(const FitParams& _params) = 0;
 
+  /// Loads the preprocessor.
+  virtual void load(const std::string& _fname) = 0;
+
+  /// Stores the preprocessor.
+  virtual void save(const std::string& _fname) const = 0;
+
   /// Generates the new column.
   virtual std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
   transform(const TransformParams& _params) const = 0;
-
-  /// Expresses the preprocessor as a JSON object.
-  virtual Poco::JSON::Object::Ptr to_json_obj() const = 0;
 
   /// Expresses the preprocessor as SQL, if applicable.
   virtual std::vector<std::string> to_sql(
@@ -83,7 +72,6 @@ class Preprocessor {
   virtual std::string type() const = 0;
 };
 
-// ----------------------------------------------------
 }  // namespace preprocessors
 }  // namespace engine
 

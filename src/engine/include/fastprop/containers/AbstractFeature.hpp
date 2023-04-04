@@ -1,40 +1,38 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef FASTPROP_CONTAINERS_ABSTRACTFEATURE_HPP_
 #define FASTPROP_CONTAINERS_ABSTRACTFEATURE_HPP_
 
-// ----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------------
-
 #include <memory>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
 #include "fastprop/Float.hpp"
 #include "fastprop/Int.hpp"
+#include "fastprop/containers/Condition.hpp"
 #include "fastprop/enums/enums.hpp"
+#include "fct/Field.hpp"
+#include "fct/NamedTuple.hpp"
 #include "strings/strings.hpp"
 #include "transpilation/transpilation.hpp"
-
-// ----------------------------------------------------------------------------
-
-#include "fastprop/containers/Condition.hpp"
-
-// ----------------------------------------------------------------------------
 
 namespace fastprop {
 namespace containers {
 
 struct AbstractFeature {
+  using NamedTupleType =
+      fct::NamedTuple<fct::Field<"aggregation_", enums::Aggregation>,
+                      fct::Field<"categorical_value_", Int>,
+                      fct::Field<"conditions_", std::vector<Condition>>,
+                      fct::Field<"data_used_", enums::DataUsed>,
+                      fct::Field<"input_col_", size_t>,
+                      fct::Field<"output_col_", size_t>,
+                      fct::Field<"peripheral_", size_t>>;
+
   static constexpr Int NO_CATEGORICAL_VALUE = -1;
 
   typedef std::vector<std::shared_ptr<const std::vector<strings::String>>>
@@ -58,12 +56,12 @@ struct AbstractFeature {
                   const enums::DataUsed _data_used,
                   const Int _categorical_value);
 
-  AbstractFeature(const Poco::JSON::Object &_obj);
+  AbstractFeature(const NamedTupleType &_obj);
 
   ~AbstractFeature();
 
-  /// Expresses the abstract feature as a JSON object.
-  Poco::JSON::Object::Ptr to_json_obj() const;
+  /// Necessary for the deserialization to work.
+  NamedTupleType named_tuple() const;
 
   /// Expresses the abstract feature as SQL code.
   std::string to_sql(
@@ -96,7 +94,6 @@ struct AbstractFeature {
   const size_t peripheral_;
 };
 
-// -------------------------------------------------------------------------
 }  // namespace containers
 }  // namespace fastprop
 

@@ -1,23 +1,17 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_PIPELINES_SAVE_HPP_
 #define ENGINE_PIPELINES_SAVE_HPP_
 
-// ----------------------------------------------------------------------------
-
-#include "engine/pipelines/SaveParams.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include <string>
 #include <vector>
 
-// ----------------------------------------------------------------------------
+#include "engine/pipelines/SaveParams.hpp"
 
 namespace engine {
 namespace pipelines {
@@ -50,17 +44,8 @@ class Save {
   /// Moves the files from their temporary location to their final destination.
   static void move_tfile(const std::string& _path, const std::string& _name,
                          Poco::TemporaryFile* _tfile);
-
-  /// Writes a JSON object to disc.
-  static void save_json_obj(const Poco::JSON::Object& _obj,
-                            const std::string& _path) {
-    std::ofstream fs(_path, std::ofstream::out);
-    Poco::JSON::Stringifier::stringify(_obj, fs);
-    fs.close();
-  }
 };
 
-// ----------------------------------------------------------------------------
 }  // namespace pipelines
 }  // namespace engine
 

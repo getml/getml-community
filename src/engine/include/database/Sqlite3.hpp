@@ -1,71 +1,56 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef DATABASE_SQLITE3_HPP_
 #define DATABASE_SQLITE3_HPP_
-
-// ----------------------------------------------------------------------------
 
 extern "C" {
 #include <sqlite3/sqlite3.h>
 }
 
-// ----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------------
-
 #include <memory>
 #include <string>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
-#include "fct/Ref.hpp"
-#include "io/io.hpp"
-#include "multithreading/multithreading.hpp"
-
-// ----------------------------------------------------------------------------
-
+#include "database/Command.hpp"
 #include "database/Connector.hpp"
 #include "database/DatabaseParser.hpp"
 #include "database/Float.hpp"
 #include "database/Int.hpp"
 #include "database/Sqlite3Iterator.hpp"
+#include "database/TableContent.hpp"
+#include "fct/Ref.hpp"
+#include "io/io.hpp"
+#include "multithreading/multithreading.hpp"
 
 namespace database {
 
 class Sqlite3 : public Connector {
  public:
-  Sqlite3(const std::string& _name,
-          const std::vector<std::string>& _time_formats)
-      : db_(make_db(_name)),
-        name_(_name),
+  Sqlite3(const typename Command::SQLite3Op& _obj)
+      : db_(make_db(_obj.get<"name_">())),
+        name_(_obj.get<"name_">()),
         read_write_lock_(fct::Ref<multithreading::ReadWriteLock>::make()),
-        time_formats_(_time_formats) {}
+        time_formats_(_obj.get<"time_formats_">()) {}
 
   ~Sqlite3() = default;
 
-  // -------------------------------
-
  public:
-  /// Returns a Poco::JSON::Object describing the connection.
-  Poco::JSON::Object describe() const final;
+  /// Returns a std::string describing the connection.
+  std::string describe() const final;
 
   /// Executes an SQL query.
   void execute(const std::string& _sql) final;
 
   /// Returns the content of a table in a format that is compatible
   /// with the DataTables.js server-side processing API.
-  Poco::JSON::Object get_content(const std::string& _tname,
-                                 const std::int32_t _draw,
-                                 const std::int32_t _start,
-                                 const std::int32_t _length) final;
+  TableContent get_content(const std::string& _tname, const std::int32_t _draw,
+                           const std::int32_t _start,
+                           const std::int32_t _length) final;
 
   /// Reads a CSV file or another data source into a table.
   void read(const std::string& _table, const size_t _skip,
@@ -86,7 +71,7 @@ class Sqlite3 : public Connector {
 
  public:
   /// Returns the dialect of the connector.
-  std::string dialect() const final { return DatabaseParser::SQLITE3; }
+  std::string dialect() const final { return "sqlite3"; }
 
   /// Drops a table and cleans up, if necessary.
   void drop_table(const std::string& _tname) final {
@@ -99,17 +84,17 @@ class Sqlite3 : public Connector {
   }
 
   /// Returns a shared_ptr containing a Sqlite3Iterator.
-  std::shared_ptr<Iterator> select(const std::vector<std::string>& _colnames,
-                                   const std::string& _tname,
-                                   const std::string& _where) final {
-    return std::make_shared<Sqlite3Iterator>(db_, _colnames, read_write_lock_,
-                                             time_formats_, _tname, _where);
+  fct::Ref<Iterator> select(const std::vector<std::string>& _colnames,
+                            const std::string& _tname,
+                            const std::string& _where) final {
+    return fct::Ref<Sqlite3Iterator>::make(db_, _colnames, read_write_lock_,
+                                           time_formats_, _tname, _where);
   }
 
   /// Returns a shared_ptr containing a Sqlite3Iterator.
-  std::shared_ptr<Iterator> select(const std::string& _sql) final {
-    return std::make_shared<Sqlite3Iterator>(db_, _sql, read_write_lock_,
-                                             time_formats_);
+  fct::Ref<Iterator> select(const std::string& _sql) final {
+    return fct::Ref<Sqlite3Iterator>::make(db_, _sql, read_write_lock_,
+                                           time_formats_);
   }
 
   /// Returns the time formats used.

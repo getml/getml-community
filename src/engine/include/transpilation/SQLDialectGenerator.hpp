@@ -1,36 +1,24 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef SQL_SQLDIALECTGENERATOR_HPP_
 #define SQL_SQLDIALECTGENERATOR_HPP_
 
-// -------------------------------------------------------------------------
-
 #include <cstddef>
-
-// -------------------------------------------------------------------------
-
 #include <memory>
 #include <optional>
 #include <string>
 #include <utility>
 #include <vector>
 
-// -------------------------------------------------------------------------
-
 #include "helpers/enums/Aggregation.hpp"
 #include "helpers/enums/enums.hpp"
 #include "helpers/helpers.hpp"
-
-// -------------------------------------------------------------------------
-
 #include "transpilation/TrimmingGenerator.hpp"
-
-// -------------------------------------------------------------------------
 
 namespace transpilation {
 
@@ -158,7 +146,6 @@ class SQLDialectGenerator {
   virtual fct::Ref<TrimmingGenerator> trimming() const = 0;
 };
 
-// -------------------------------------------------------------------------
 }  // namespace transpilation
 
 #endif  // SQL_SQLDIALECTGENERATOR_HPP_

@@ -1,50 +1,35 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_CONFIG_OPTIONS_
 #define ENGINE_CONFIG_OPTIONS_
 
-// ----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------------
-
 #include <string>
-
-// ----------------------------------------------------------------------------
-
-#include "memmap/memmap.hpp"
-
-// ----------------------------------------------------------------------------
-
-#include "engine/JSON.hpp"
-
-// ----------------------------------------------------------------------------
 
 #include "engine/config/EngineOptions.hpp"
 #include "engine/config/MonitorOptions.hpp"
-
-// ----------------------------------------------------------------------------
+#include "memmap/memmap.hpp"
 
 namespace engine {
 namespace config {
-// ----------------------------------------------------------------------------
-// Configuration information for the engine
 
+/// Configuration information for the engine
 class Options {
-  // ------------------------------------------------------
+ public:
+  using NamedTupleType =
+      fct::NamedTuple<fct::Field<"projectDirectory", std::string>,
+                      fct::Field<"engine", EngineOptions>,
+                      fct::Field<"monitor", MonitorOptions>>;
 
  public:
-  explicit Options(const Poco::JSON::Object& _json_obj)
-      : all_projects_directory_(
-            JSON::get_value<std::string>(_json_obj, "projectDirectory")),
-        engine_(EngineOptions(*JSON::get_object(_json_obj, "engine"))),
-        monitor_(MonitorOptions(*JSON::get_object(_json_obj, "monitor"))) {}
+  explicit Options(const NamedTupleType& _obj)
+      : all_projects_directory_(_obj.get<"projectDirectory">()),
+        engine_(_obj.get<"engine">()),
+        monitor_(_obj.get<"monitor">()) {}
 
   Options()
       : all_projects_directory_("../projects/"),
@@ -53,13 +38,9 @@ class Options {
 
   ~Options() = default;
 
-  // ------------------------------------------------------
-
  public:
   /// Generates a new Options struct
   static Options make_options(int _argc, char* _argv[]);
-
-  // ------------------------------------------------------
 
  private:
   /// Parses the command line flags
@@ -111,8 +92,6 @@ class Options {
   /// Generates the path for the project directory.
   std::string temp_dir() const { return project_directory() + "tmp/"; }
 
-  // ------------------------------------------------------
-
  private:
   /// The directory in which all projects are stored (not identical with the
   /// current project directory).
@@ -123,11 +102,8 @@ class Options {
 
   /// Configurations for the monitor.
   MonitorOptions monitor_;
-
-  // ------------------------------------------------------
 };
 
-// ----------------------------------------------------------------------------
 }  // namespace config
 }  // namespace engine
 

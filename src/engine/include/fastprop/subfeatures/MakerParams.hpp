@@ -1,14 +1,12 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef FASTPROP_SUBFEATURES_MAKERPARAMS_HPP_
 #define FASTPROP_SUBFEATURES_MAKERPARAMS_HPP_
-
-// ----------------------------------------------------------------------------
 
 #include <memory>
 #include <optional>
@@ -16,19 +14,11 @@
 #include <utility>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
 #include "fastprop/Hyperparameters.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "fastprop/subfeatures/FastPropContainer.hpp"
-
-// ----------------------------------------------------------------------------
 
 namespace fastprop {
 namespace subfeatures {
-// ------------------------------------------------------------------------
 
 struct MakerParams {
   /// The container for the fast prop algorithm - needed for transformation
@@ -68,7 +58,6 @@ struct MakerParams {
   const helpers::WordIndexContainer word_index_container_;
 };
 
-// ------------------------------------------------------------------------
 }  // namespace subfeatures
 }  // namespace fastprop
 

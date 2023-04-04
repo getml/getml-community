@@ -1,17 +1,16 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "predictors/PredictorImpl.hpp"
 
-// -----------------------------------------------------------------------------
-
 #include <thread>
 
-// -----------------------------------------------------------------------------
+#include "helpers/Saver.hpp"
+#include "json/json.hpp"
 
 namespace predictors {
 
@@ -32,42 +31,11 @@ PredictorImpl::PredictorImpl(
 
 // -----------------------------------------------------------------------------
 
-PredictorImpl::PredictorImpl(const Poco::JSON::Object& _obj)
-    : categorical_colnames_(JSON::array_to_vector<std::string>(
-          JSON::get_array(_obj, "categorical_colnames_"))),
-      numerical_colnames_(JSON::array_to_vector<std::string>(
-          JSON::get_array(_obj, "numerical_colnames_"))) {
-  auto arr = JSON::get_array(_obj, "encodings_");
-
-  for (size_t i = 0; i < arr->size(); ++i) {
-    auto ptr = arr->getObject(static_cast<unsigned int>(i));
-
-    if (!ptr) {
-      throw std::runtime_error("Element " + std::to_string(i + 1) +
-                               " of 'encodings_' is not a proper JSON object.");
-    }
-
-    encodings_.push_back(Encoding(*ptr));
-  }
-
-  // -----------------------------------------------
-
-  arr = JSON::get_array(_obj, "autofeatures_");
-
-  for (size_t i = 0; i < arr->size(); ++i) {
-    auto ptr = arr->getArray(static_cast<unsigned int>(i));
-
-    if (!ptr) {
-      throw std::runtime_error("Element " + std::to_string(i + 1) +
-                               " of 'autofeatures_' is not a proper JSON "
-                               "array.");
-    }
-
-    autofeatures_.push_back(JSON::array_to_vector<size_t>(ptr));
-  }
-
-  // -----------------------------------------------
-};
+PredictorImpl::PredictorImpl(const NamedTupleType& _nt)
+    : autofeatures_(_nt.get<f_autofeatures>()),
+      categorical_colnames_(_nt.get<f_categorical>()),
+      encodings_(_nt.get<f_encoding>()),
+      numerical_colnames_(_nt.get<f_numerical>()) {}
 
 // -----------------------------------------------------------------------------
 
@@ -183,11 +151,7 @@ Int PredictorImpl::get_num_threads(const Int _num_threads) const {
 // -------------------------------------------------------------------------
 
 void PredictorImpl::save(const std::string& _fname) const {
-  std::ofstream output(_fname);
-
-  output << to_json();
-
-  output.close();
+  helpers::Saver::save_as_json(_fname, *this);
 }
 
 // ----------------------------------------------------------------------------
@@ -221,47 +185,6 @@ void PredictorImpl::select_features(const size_t _n_selected,
 
     vec = select_cols(_n_selected, _index, num_preceding, vec);
   }
-}
-
-// ----------------------------------------------------------------------------
-
-Poco::JSON::Object PredictorImpl::to_json_obj() const {
-  // -------------------------------------------------------------------------
-
-  Poco::JSON::Object obj;
-
-  // -------------------------------------------------------------------------
-
-  obj.set("categorical_colnames_",
-          JSON::vector_to_array(categorical_colnames_));
-
-  obj.set("numerical_colnames_", JSON::vector_to_array(numerical_colnames_));
-
-  // -------------------------------------------------------------------------
-
-  auto enc_arr = Poco::JSON::Array::Ptr(new Poco::JSON::Array());
-
-  for (auto& enc : encodings_) {
-    enc_arr->add(enc.to_json_obj());
-  }
-
-  obj.set("encodings_", enc_arr);
-
-  // -------------------------------------------------------------------------
-
-  auto auto_arr = Poco::JSON::Array::Ptr(new Poco::JSON::Array());
-
-  for (auto& auto_f : autofeatures()) {
-    auto_arr->add(JSON::vector_to_array(auto_f));
-  }
-
-  obj.set("autofeatures_", auto_arr);
-
-  // -------------------------------------------------------------------------
-
-  return obj;
-
-  // -------------------------------------------------------------------------
 }
 
 // -----------------------------------------------------------------------------

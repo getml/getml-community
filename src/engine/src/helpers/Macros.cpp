@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "helpers/Macros.hpp"
 
@@ -121,7 +121,7 @@ helpers::ImportanceMaker Macros::modify_column_importances(
 
   for (const auto& [from_desc, _] : _importance_maker.importances()) {
     auto [to_table, to_colname] =
-        parse_table_colname(from_desc.table_, from_desc.name_);
+        parse_table_colname(from_desc.table(), from_desc.name());
 
     to_table = remove_population(to_table);
 
@@ -141,9 +141,9 @@ helpers::ImportanceMaker Macros::modify_column_importances(
 
     to_colname = _make_staging_table_column(to_colname, "");
 
-    if (from_desc.table_ != to_table || from_desc.name_ != to_colname) {
+    if (from_desc.table() != to_table || from_desc.name() != to_colname) {
       const auto to_desc =
-          helpers::ColumnDescription(from_desc.marker_, to_table, to_colname);
+          helpers::ColumnDescription(from_desc.marker(), to_table, to_colname);
 
       importance_maker.transfer(from_desc, to_desc);
     }

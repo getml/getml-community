@@ -1,27 +1,20 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef HELPERS_INTSET_HPP_
 #define HELPERS_INTSET_HPP_
-
-// -------------------------------------------------------------------------
 
 #include <cstddef>
 #include <utility>
 #include <vector>
 
-// -------------------------------------------------------------------------
-
 #include "debug/debug.hpp"
 
-// -------------------------------------------------------------------------
-
 namespace helpers {
-// -------------------------------------------------------------------------
 
 /// We have a core advantage in that we can know the maximum possible value of
 /// in advance. This enables us to implement this set, which enables a drastic
@@ -34,11 +27,7 @@ class IntSet {
 
   ~IntSet() = default;
 
-  // -------------------------------
-
   typedef std::vector<size_t>::const_iterator Iterator;
-
-  // -------------------------------
 
   /// Returns beginning of unique integers
   std::vector<size_t>::const_iterator begin() const {
@@ -82,8 +71,6 @@ class IntSet {
     return unique_integers_;
   }
 
-  // -------------------------------
-
  private:
   /// Denotes whether the integer is already included
   std::vector<bool> already_included_;
@@ -95,7 +82,6 @@ class IntSet {
   std::vector<size_t> unique_integers_;
 };
 
-// -------------------------------------------------------------------------
 }  // namespace helpers
 
 #endif  // HELPERS_INTSET_HPP_

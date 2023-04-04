@@ -1,19 +1,14 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_PIPELINES_MAKEFEATURESPARAMS_HPP_
 #define ENGINE_PIPELINES_MAKEFEATURESPARAMS_HPP_
 
-// ----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
 #include <Poco/Net/StreamSocket.h>
-
-// ----------------------------------------------------------------------------
 
 #include <map>
 #include <memory>
@@ -21,21 +16,14 @@
 #include <string>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
-#include "fct/Ref.hpp"
-
-// ----------------------------------------------------------------------------
-
+#include "commands/DataFramesOrViews.hpp"
+#include "commands/Fingerprint.hpp"
+#include "commands/Predictor.hpp"
 #include "engine/communication/communication.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/dependency/dependency.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "engine/pipelines/TransformParams.hpp"
-
-// ----------------------------------------------------------------------------
+#include "fct/Ref.hpp"
 
 namespace engine {
 namespace pipelines {
@@ -49,13 +37,13 @@ struct MakeFeaturesParams {
   const fct::Ref<containers::Encoding> categories_;
 
   /// The command used.
-  const Poco::JSON::Object cmd_;
+  const commands::DataFramesOrViews cmd_;
 
   /// Keeps track of the data frames and their fingerprints.
   const dependency::DataFrameTracker data_frame_tracker_;
 
   /// The depedencies of the predictors.
-  const std::vector<Poco::JSON::Object::Ptr> dependencies_;
+  const fct::Ref<const std::vector<commands::Fingerprint>> dependencies_;
 
   /// Logs the progress.
   const std::shared_ptr<const communication::Logger> logger_;

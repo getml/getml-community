@@ -1,21 +1,18 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/preprocessors/Substring.hpp"
 
-// ----------------------------------------------------
-
 #include "engine/preprocessors/PreprocessorImpl.hpp"
-
-// ----------------------------------------------------
+#include "helpers/Loader.hpp"
+#include "helpers/Saver.hpp"
 
 namespace engine {
 namespace preprocessors {
-// ----------------------------------------------------
 
 std::optional<containers::Column<Int>> Substring::extract_substring(
     const containers::Column<strings::String>& _col,
@@ -78,24 +75,6 @@ containers::Column<strings::String> Substring::extract_substring_string(
 
 // ----------------------------------------------------
 
-Poco::JSON::Object::Ptr Substring::fingerprint() const {
-  auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-
-  obj->set("type_", type());
-
-  obj->set("begin_", begin_);
-
-  obj->set("length_", length_);
-
-  obj->set("unit_", unit_);
-
-  obj->set("dependencies_", JSON::vector_to_array_ptr(dependencies_));
-
-  return obj;
-}
-
-// ----------------------------------------------------
-
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
 Substring::fit_transform(const FitParams& _params) {
   const auto population_df = fit_transform_df(
@@ -139,23 +118,12 @@ containers::DataFrame Substring::fit_transform_df(
   return df;
 }
 
-// ----------------------------------------------------
+// -----------------------------------------------------------------------------
 
-Substring Substring::from_json_obj(const Poco::JSON::Object& _obj) const {
-  Substring that;
-
-  that.begin_ = jsonutils::JSON::get_value<size_t>(_obj, "begin_");
-
-  that.length_ = jsonutils::JSON::get_value<size_t>(_obj, "length_");
-
-  that.unit_ = jsonutils::JSON::get_value<std::string>(_obj, "unit_");
-
-  if (_obj.has("cols_")) {
-    that.cols_ = PreprocessorImpl::from_array(
-        jsonutils::JSON::get_object_array(_obj, "cols_"));
-  }
-
-  return that;
+void Substring::load(const std::string& _fname) {
+  const auto named_tuple =
+      helpers::Loader::load_from_json<NamedTupleType>(_fname);
+  cols_ = named_tuple.get<f_cols>();
 }
 
 // ----------------------------------------------------
@@ -177,20 +145,8 @@ containers::Column<strings::String> Substring::make_str_col(
 
 // ----------------------------------------------------
 
-Poco::JSON::Object::Ptr Substring::to_json_obj() const {
-  auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-
-  obj->set("type_", type());
-
-  obj->set("cols_", PreprocessorImpl::to_array(cols_));
-
-  obj->set("begin_", begin_);
-
-  obj->set("length_", length_);
-
-  obj->set("unit_", unit_);
-
-  return obj;
+void Substring::save(const std::string& _fname) const {
+  helpers::Saver::save_as_json(_fname, *this);
 }
 
 // ----------------------------------------------------

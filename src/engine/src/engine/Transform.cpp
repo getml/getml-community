@@ -1,28 +1,22 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/pipelines/Transform.hpp"
 
 #include <stdexcept>
-
-// ----------------------------------------------------------------------------
-
-#include "metrics/Scores.hpp"
-#include "transpilation/SQLDialectParser.hpp"
-
-// ----------------------------------------------------------------------------
 
 #include "engine/pipelines/DataFrameModifier.hpp"
 #include "engine/pipelines/FittedPipeline.hpp"
 #include "engine/pipelines/PlaceholderMaker.hpp"
 #include "engine/pipelines/Score.hpp"
 #include "engine/pipelines/Staging.hpp"
-
-// ----------------------------------------------------------------------------
+#include "json/json.hpp"
+#include "metrics/Scores.hpp"
+#include "transpilation/SQLDialectParser.hpp"
 
 namespace engine {
 namespace pipelines {
@@ -245,14 +239,15 @@ Transform::make_features(
     const std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>&
         _feature_learners,
     const predictors::PredictorImpl& _predictor_impl,
-    const std::vector<Poco::JSON::Object::Ptr>& _fs_fingerprints) {
-  const auto df = _params.data_frame_tracker_.retrieve(
-      _fs_fingerprints, _params.original_population_df_,
-      _params.original_peripheral_dfs_);
+    const std::vector<commands::Fingerprint>& _fs_fingerprints) {
+  // TODO
+  /*const auto df = _params.data_frame_tracker_.retrieve(
+    _fs_fingerprints, _params.original_population_df_,
+    _params.original_peripheral_dfs_);
 
-  if (df) {
-    return retrieve_features_from_cache(*df);
-  }
+if (df) {
+  return retrieve_features_from_cache(*df);
+}*/
 
   const auto autofeatures =
       make_autofeatures(_params, _feature_learners, _predictor_impl);
@@ -332,11 +327,9 @@ std::tuple<containers::NumericalFeatures, containers::CategoricalFeatures,
            std::shared_ptr<const metrics::Scores>>
 Transform::transform(const TransformParams& _params, const Pipeline& _pipeline,
                      const FittedPipeline& _fitted) {
-  const bool score = _params.cmd_.has("score_") &&
-                     JSON::get_value<bool>(_params.cmd_, "score_");
+  const bool score = _params.cmd_.get<"score_">();
 
-  const bool predict = _params.cmd_.has("predict_") &&
-                       JSON::get_value<bool>(_params.cmd_, "predict_");
+  const bool predict = _params.cmd_.get<"predict_">();
 
   if ((score || predict) && _fitted.num_predictors_per_set() == 0) {
     throw std::runtime_error(
@@ -345,8 +338,9 @@ Transform::transform(const TransformParams& _params, const Pipeline& _pipeline,
   }
 
   const auto features_only_params = FeaturesOnlyParams{
-      .dependencies_ = _fitted.fingerprints_.fs_fingerprints_,
+      .dependencies_ = _fitted.fingerprints_.get<"fs_fingerprints_">(),
       .feature_learners_ = _fitted.feature_learners_,
+      .fs_fingerprints_ = _fitted.fingerprints_.get<"fs_fingerprints_">(),
       .pipeline_ = _pipeline,
       .preprocessors_ = _fitted.preprocessors_,
       .predictor_impl_ = _fitted.predictors_.impl_,
@@ -358,11 +352,10 @@ Transform::transform(const TransformParams& _params, const Pipeline& _pipeline,
   if (!score && !predict) {
     return std::make_tuple(numerical_features, categorical_features, nullptr);
   }
-
-  const auto scores = score ? Score::calculate_feature_stats(
-                                  _pipeline, _fitted, numerical_features,
-                                  _params.cmd_, population_df)
-                            : nullptr;
+  const auto scores =
+      score ? Score::calculate_feature_stats(_pipeline, _fitted,
+                                             numerical_features, population_df)
+            : nullptr;
 
   const auto transformed_categorical_features =
       _fitted.predictors_.impl_->transform_encodings(categorical_features);
@@ -388,7 +381,7 @@ Transform::stage_data_frames(
 
   socket_logger->log("Staging...");
 
-  const auto population = *JSON::get_object(_pipeline.obj(), "data_model_");
+  const auto data_model = _pipeline.obj().get<"data_model_">();
 
   const auto peripheral_names = _pipeline.parse_peripheral();
 
@@ -396,18 +389,19 @@ Transform::stage_data_frames(
 
   auto peripheral_dfs = _peripheral_dfs;
 
-  DataFrameModifier::add_time_stamps(population, *peripheral_names,
+  DataFrameModifier::add_time_stamps(*data_model, *peripheral_names,
                                      &population_df, &peripheral_dfs);
 
-  DataFrameModifier::add_join_keys(population, *peripheral_names, _temp_dir,
+  DataFrameModifier::add_join_keys(*data_model, *peripheral_names, _temp_dir,
                                    &population_df, &peripheral_dfs);
 
-  const auto placeholder = PlaceholderMaker::make_placeholder(population, "t1");
+  const auto placeholder =
+      PlaceholderMaker::make_placeholder(*data_model, "t1");
 
   const auto joined_peripheral_names =
-      PlaceholderMaker::make_peripheral(placeholder);
+      PlaceholderMaker::make_peripheral(*placeholder);
 
-  Staging::join_tables(*peripheral_names, placeholder.name_,
+  Staging::join_tables(*peripheral_names, placeholder->name(),
                        joined_peripheral_names, &population_df,
                        &peripheral_dfs);
 
@@ -445,7 +439,7 @@ Transform::transform_features_only(const FeaturesOnlyParams& _params) {
 
   const auto [numerical_features, categorical_features, _] = make_features(
       make_features_params, _params.pipeline_, _params.feature_learners_,
-      *_params.predictor_impl_, _params.fs_fingerprints_);
+      *_params.predictor_impl_, *_params.fs_fingerprints_);
 
   return std::make_tuple(numerical_features, categorical_features,
                          population_df);

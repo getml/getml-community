@@ -1,71 +1,81 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_PREPROCESSORS_SEASONAL_HPP_
 #define ENGINE_PREPROCESSORS_SEASONAL_HPP_
-
-// ----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------------
 
 #include <memory>
 #include <utility>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
-#include "helpers/helpers.hpp"
-#include "strings/strings.hpp"
-
-// ----------------------------------------------------------------------------
-
+#include "commands/Fingerprint.hpp"
+#include "commands/Preprocessor.hpp"
 #include "engine/containers/containers.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "engine/preprocessors/FitParams.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
 #include "engine/preprocessors/TransformParams.hpp"
-
-// ----------------------------------------------------------------------------
+#include "fct/Field.hpp"
+#include "fct/Literal.hpp"
+#include "fct/NamedTuple.hpp"
+#include "fct/Ref.hpp"
+#include "helpers/helpers.hpp"
+#include "strings/strings.hpp"
 
 namespace engine {
 namespace preprocessors {
-// ----------------------------------------------------
 
 class Seasonal : public Preprocessor {
+ public:
+  using SeasonalOp = typename commands::Preprocessor::SeasonalOp;
+
+  using f_hour =
+      fct::Field<"hour_",
+                 std::vector<std::shared_ptr<helpers::ColumnDescription>>>;
+
+  using f_minute =
+      fct::Field<"minute_",
+                 std::vector<std::shared_ptr<helpers::ColumnDescription>>>;
+
+  using f_month =
+      fct::Field<"month_",
+                 std::vector<std::shared_ptr<helpers::ColumnDescription>>>;
+
+  using f_weekday =
+      fct::Field<"weekday_",
+                 std::vector<std::shared_ptr<helpers::ColumnDescription>>>;
+
+  using f_year =
+      fct::Field<"year_",
+                 std::vector<std::shared_ptr<helpers::ColumnDescription>>>;
+
+  using NamedTupleType =
+      fct::NamedTuple<f_hour, f_minute, f_month, f_weekday, f_year>;
+
  private:
   static constexpr bool ADD_ZERO = true;
   static constexpr bool DONT_ADD_ZERO = false;
 
  public:
-  Seasonal() {}
-
-  Seasonal(const Poco::JSON::Object& _obj,
-           const std::vector<Poco::JSON::Object::Ptr>& _dependencies) {
-    *this = from_json_obj(_obj);
-    dependencies_ = _dependencies;
-  }
+  Seasonal(const SeasonalOp& _op,
+           const std::vector<commands::Fingerprint>& _dependencies)
+      : dependencies_(_dependencies) {}
 
   ~Seasonal() = default;
 
  public:
-  /// Returns the fingerprint of the preprocessor (necessary to build
-  /// the dependency graphs).
-  Poco::JSON::Object::Ptr fingerprint() const final;
-
   /// Identifies which features should be extracted from which time stamps.
   std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
   fit_transform(const FitParams& _params) final;
 
-  /// Expresses the Seasonal preprocessor as a JSON object.
-  Poco::JSON::Object::Ptr to_json_obj() const final;
+  /// Loads the predictor
+  void load(const std::string& _fname) final;
+
+  /// Stores the preprocessor.
+  void save(const std::string& _fname) const final;
 
   /// Transforms the data frames by adding the desired time series
   /// transformations.
@@ -74,14 +84,30 @@ class Seasonal : public Preprocessor {
 
  public:
   /// Creates a deep copy.
-  std::shared_ptr<Preprocessor> clone(
-      const std::optional<std::vector<Poco::JSON::Object::Ptr>>& _dependencies =
+  fct::Ref<Preprocessor> clone(
+      const std::optional<std::vector<commands::Fingerprint>>& _dependencies =
           std::nullopt) const final {
-    const auto c = std::make_shared<Seasonal>(*this);
+    const auto c = fct::Ref<Seasonal>::make(*this);
     if (_dependencies) {
       c->dependencies_ = *_dependencies;
     }
     return c;
+  }
+
+  /// Returns the fingerprint of the preprocessor (necessary to build
+  /// the dependency graphs).
+  commands::Fingerprint fingerprint() const final {
+    using FingerprintType =
+        typename commands::Fingerprint::SeasonalFingerprint;
+    return commands::Fingerprint(
+        FingerprintType(fct::make_field<"dependencies_">(dependencies_),
+                        fct::make_field<"type_">(fct::Literal<"Seasonal">())));
+  }
+
+  /// Necessary for the automated parsing to work.
+  NamedTupleType named_tuple() const {
+    return f_hour(hour_) * f_minute(minute_) * f_month(month_) *
+           f_weekday(weekday_) * f_year(year_);
   }
 
   /// The preprocessor does not generate any SQL scripts.
@@ -155,9 +181,6 @@ class Seasonal : public Preprocessor {
                                          const size_t _table,
                                          containers::Encoding* _categories);
 
-  /// Parses a JSON object.
-  Seasonal from_json_obj(const Poco::JSON::Object& _obj) const;
-
   // Transforms a float column to a categorical column.
   containers::Column<Int> to_int(const containers::Column<Float>& _col,
                                  const bool _add_zero,
@@ -210,7 +233,7 @@ class Seasonal : public Preprocessor {
 
  private:
   /// The dependencies inserted into the the preprocessor.
-  std::vector<Poco::JSON::Object::Ptr> dependencies_;
+  std::vector<commands::Fingerprint> dependencies_;
 
   /// List of all columns to which the hour transformation applies.
   std::vector<std::shared_ptr<helpers::ColumnDescription>> hour_;

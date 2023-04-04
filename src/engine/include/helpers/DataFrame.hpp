@@ -1,14 +1,12 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef HELPERS_DATAFRAME_HPP_
 #define HELPERS_DATAFRAME_HPP_
-
-// -------------------------------------------------------------------------
 
 #include <map>
 #include <memory>
@@ -17,13 +15,7 @@
 #include <utility>
 #include <vector>
 
-// -------------------------------------------------------------------------
-
 #include "debug/debug.hpp"
-#include "textmining/textmining.hpp"
-
-// -------------------------------------------------------------------------
-
 #include "helpers/Column.hpp"
 #include "helpers/CreateSubviewParams.hpp"
 #include "helpers/DataFrameParams.hpp"
@@ -31,8 +23,7 @@
 #include "helpers/Index.hpp"
 #include "helpers/Int.hpp"
 #include "helpers/Schema.hpp"
-
-// -------------------------------------------------------------------------
+#include "textmining/textmining.hpp"
 
 namespace helpers {
 
@@ -264,16 +255,14 @@ struct DataFrame {
 
   /// Returns the schema.
   Schema to_schema() const {
-    return Schema{.categoricals_ = get_colnames(categoricals_),
-                  .discretes_ = get_colnames(discretes_),
-                  .join_keys_ = get_colnames(join_keys_),
-                  .name_ = name_,
-                  .numericals_ = get_colnames(numericals_),
-                  .targets_ = get_colnames(targets_),
-                  .text_ = get_colnames(text_),
-                  .time_stamps_ = get_colnames(time_stamps_),
-                  .unused_floats_ = {},
-                  .unused_strings_ = {}};
+    return Schema(f_categoricals(get_colnames(categoricals_)) *
+                  f_discretes(get_colnames(discretes_)) *
+                  f_join_keys(get_colnames(join_keys_)) * f_name(name_) *
+                  f_numericals(get_colnames(numericals_)) *
+                  f_targets(get_colnames(targets_)) *
+                  f_text(get_colnames(text_)) *
+                  f_time_stamps(get_colnames(time_stamps_)) *
+                  f_unused_floats({}) * f_unused_strings({}));
   }
 
   /// Trivial getter

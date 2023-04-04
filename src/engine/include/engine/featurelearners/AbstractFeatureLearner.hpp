@@ -1,42 +1,27 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_FEATURELEARNERS_ABSTRACTFEATURELEARNER_HPP_
 #define ENGINE_FEATURELEARNERS_ABSTRACTFEATURELEARNER_HPP_
-
-// ----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------------
 
 #include <map>
 #include <memory>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
+#include "commands/Fingerprint.hpp"
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "engine/featurelearners/FitParams.hpp"
 #include "engine/featurelearners/TransformParams.hpp"
 
-// ----------------------------------------------------------------------------
-
 namespace engine {
 namespace featurelearners {
-// ----------------------------------------------------------------------------
 
 class AbstractFeatureLearner {
-  // --------------------------------------------------------
-
  public:
   static constexpr Int USE_ALL_TARGETS = -1;
   static constexpr Int IGNORE_TARGETS = -2;
@@ -46,14 +31,10 @@ class AbstractFeatureLearner {
   static constexpr const char* RELBOOST = "Relboost";
   static constexpr const char* RELMT = "RelMT";
 
-  // --------------------------------------------------------
-
  public:
   AbstractFeatureLearner() {}
 
   virtual ~AbstractFeatureLearner() = default;
-
-  // --------------------------------------------------------
 
  public:
   /// Calculates the column importances for this ensemble.
@@ -65,7 +46,7 @@ class AbstractFeatureLearner {
 
   /// Returns the fingerprint of the feature learner (necessary to build
   /// the dependency graphs).
-  virtual Poco::JSON::Object::Ptr fingerprint() const = 0;
+  virtual commands::Fingerprint fingerprint() const = 0;
 
   /// Fits the model.
   virtual void fit(const FitParams& _params) = 0;
@@ -99,9 +80,6 @@ class AbstractFeatureLearner {
   /// Whether the feature learner supports multiple targets.
   virtual bool supports_multiple_targets() const = 0;
 
-  /// Return model as a JSON Object.
-  virtual Poco::JSON::Object to_json_obj(const bool _schema_only) const = 0;
-
   /// Return features as SQL code.
   virtual std::vector<std::string> to_sql(
       const helpers::StringIterator& _categories, const bool _targets,
@@ -116,16 +94,10 @@ class AbstractFeatureLearner {
 
   /// Returns a string describing the type of the feature learner.
   virtual std::string type() const = 0;
-
-  // --------------------------------------------------------
 };
-
-// ----------------------------------------------------------------------------
 
 }  // namespace featurelearners
 }  // namespace engine
-
-// ----------------------------------------------------------------------------
 
 #endif  // ENGINE_FEATURELEARNERS_ABSTRACTFEATURELEARNER_HPP_
 

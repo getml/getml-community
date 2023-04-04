@@ -15,6 +15,7 @@
 
 #include <cstddef>
 #include <exception>
+#include <map>
 #include <memory>
 #include <stdexcept>
 #include <tuple>
@@ -26,9 +27,16 @@
 #include "fct/NamedTuple.hpp"
 #include "fct/Ref.hpp"
 #include "fct/StringLiteral.hpp"
+#include "fct/TaggedUnion.hpp"
 #include "fct/collect.hpp"
+#include "fct/field_type.hpp"
+#include "fct/find_index.hpp"
 #include "fct/iota.hpp"
 #include "fct/join.hpp"
+#include "json/ArrayGetter.hpp"
+#include "json/ObjectGetter.hpp"
+#include "json/is_required.hpp"
+#include "strings/strings.hpp"
 
 namespace json {
 
@@ -42,17 +50,11 @@ struct Parser;
 /// Default case - anything that cannot be explicitly matched.
 template <class T>
 struct Parser {
-  /// NamedTuples cannot be declared recursively. The structs designed as a
-  /// workaround need to be parsed automatically as well.
-  static constexpr bool is_recursive_ =
-      std::is_class_v<std::decay_t<T>> &&
-      !std::is_same<std::string, std::decay_t<T>>();
-
   /// Expresses the variables as type T.
   static auto from_json(const Poco::Dynamic::Var& _var) {
-    if constexpr (is_recursive_) {
-      using RecursiveType = std::decay_t<typename T::RecursiveType>;
-      return T{Parser<RecursiveType>::from_json(_var)};
+    if constexpr (fct::has_named_tuple_type_v<T>) {
+      using NamedTupleType = std::decay_t<typename T::NamedTupleType>;
+      return T(Parser<NamedTupleType>::from_json(_var));
     } else {
       return _var.convert<std::decay_t<T>>();
     }
@@ -60,10 +62,14 @@ struct Parser {
 
   /// Converts the variable to a JSON type.
   static auto to_json(const T& _var) {
-    if constexpr (is_recursive_) {
-      using RecursiveType = std::decay_t<typename T::RecursiveType>;
-      const auto& [r] = _var;
-      return Parser<RecursiveType>::to_json(r);
+    if constexpr (fct::has_named_tuple_type_v<T>) {
+      using NamedTupleType = std::decay_t<typename T::NamedTupleType>;
+      if constexpr (fct::has_named_tuple_method_v<T>) {
+        return Parser<NamedTupleType>::to_json(_var.named_tuple());
+      } else {
+        const auto& [r] = _var;
+        return Parser<NamedTupleType>::to_json(r);
+      }
     } else {
       return _var;
     }
@@ -92,13 +98,42 @@ struct Parser<fct::Literal<_fields...>> {
 
 // ----------------------------------------------------------------------------
 
+template <class ValueType>
+struct Parser<std::map<std::string, ValueType>> {
+  /// Expresses the variables as a std::map.
+  static std::map<std::string, ValueType> from_json(
+      const Poco::Dynamic::Var& _var) {
+    const auto obj = ObjectGetter::get_object(_var);
+    const auto names = obj.getNames();
+    const auto get_value =
+        [&obj](const auto& _name) -> std::pair<std::string, ValueType> {
+      return std::make_pair(
+          _name, Parser<std::decay_t<ValueType>>::from_json(obj.get(_name)));
+    };
+    return fct::collect::map<std::string, ValueType>(
+        names | VIEWS::transform(get_value));
+  }
+
+  /// Transform a std::vector into a Poco::JSON::Object
+  static Poco::JSON::Object::Ptr to_json(
+      const std::map<std::string, ValueType>& _m) {
+    auto ptr = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
+    for (const auto& [k, v] : _m) {
+      ptr->set(k, Parser<std::decay_t<ValueType>>::to_json(v));
+    }
+    return ptr;
+  }
+};
+
+// ----------------------------------------------------------------------------
+
 template <class... FieldTypes>
 struct Parser<fct::NamedTuple<FieldTypes...>> {
  public:
   /// Generates a NamedTuple from a JSON Object.
   static fct::NamedTuple<FieldTypes...> from_json(
       const Poco::Dynamic::Var& _var) {
-    const auto obj = get_object(_var);
+    const auto obj = ObjectGetter::get_object(_var);
     return build_named_tuple_recursively(obj);
   }
 
@@ -125,7 +160,13 @@ struct Parser<fct::NamedTuple<FieldTypes...>> {
       const auto key = FieldType::name_.str();
 
       if (!_obj.has(key)) {
-        throw std::runtime_error("Field named '" + key + "' not found!");
+        using ValueType = std::decay_t<typename FieldType::Type>;
+        if constexpr (is_required<ValueType>()) {
+          throw std::runtime_error("Field named '" + key + "' not found!");
+        } else {
+          return build_named_tuple_recursively(_obj, _args...,
+                                               FieldType(ValueType()));
+        }
       }
 
       const auto value = get_value<FieldType>(_obj);
@@ -147,30 +188,14 @@ struct Parser<fct::NamedTuple<FieldTypes...>> {
       using ValueType = std::decay_t<typename FieldType::Type>;
       const auto value = Parser<ValueType>::to_json(fct::get<_i>(_tup));
       const auto name = FieldType::name_.str();
-      _ptr->set(name, value);
-      return build_object_recursively<_i + 1>(_tup, _ptr);
-    }
-  }
-
-  /// Retrieves the object from the dynamic var.
-  static Poco::JSON::Object get_object(const Poco::Dynamic::Var& _var) {
-    try {
-      return _var.extract<Poco::JSON::Object>();
-
-    } catch (std::exception& _exp) {
-    }
-
-    try {
-      const auto ptr = _var.extract<Poco::JSON::Object::Ptr>();
-
-      if (!ptr) {
-        throw std::runtime_error("Poco::JSON::Object::Ptr is NULL.");
+      if constexpr (!is_required<ValueType>()) {
+        if (!value.isEmpty()) {
+          _ptr->set(name, value);
+        }
+      } else {
+        _ptr->set(name, value);
       }
-
-      return *ptr;
-    } catch (std::exception& _exp) {
-      throw std::runtime_error(
-          "Expected a Poco::JSON::Object or a Poco::JSON::Object::Ptr.");
+      return build_object_recursively<_i + 1>(_tup, _ptr);
     }
   }
 
@@ -267,12 +292,147 @@ struct Parser<std::pair<FirstType, SecondType>> {
 
 // ----------------------------------------------------------------------------
 
+template <class T>
+struct Parser<std::set<T>> {
+ public:
+  /// Expresses the variables as type T.
+  static std::set<T> from_json(const Poco::Dynamic::Var& _var) {
+    const auto arr = ArrayGetter::get_array(_var);
+    const auto iota = fct::iota<size_t>(0, arr.size());
+    const auto get_value = [&arr](const size_t _i) {
+      try {
+        return Parser<std::decay_t<T>>::from_json(arr.get(_i));
+      } catch (std::exception& _exp) {
+        throw std::runtime_error("Error parsing element " + std::to_string(_i) +
+                                 ": " + _exp.what());
+      }
+    };
+    return fct::collect::set<T>(iota | VIEWS::transform(get_value));
+  }
+
+  /// Transform a std::vector into a Poco::JSON::Array
+  static Poco::JSON::Array::Ptr to_json(const std::set<T>& _s) {
+    auto ptr = Poco::JSON::Array::Ptr(new Poco::JSON::Array());
+    for (const auto& val : _s) {
+      ptr->add(Parser<std::decay_t<T>>::to_json(val));
+    }
+    return ptr;
+  }
+};
+
+// ----------------------------------------------------------------------------
+
+template <>
+struct Parser<strings::String> {
+  /// Expresses the variables as type T.
+  static strings::String from_json(const Poco::Dynamic::Var& _var) {
+    return strings::String(Parser<std::string>::from_json(_var));
+  }
+
+  /// Transform a std::vector into a Poco::JSON::Array
+  static Poco::Dynamic::Var to_json(const strings::String& _s) {
+    return Parser<std::string>::to_json(_s.str());
+  }
+};
+
+// ----------------------------------------------------------------------------
+
+template <fct::StringLiteral _discriminator, class... NamedTupleTypes>
+struct Parser<fct::TaggedUnion<_discriminator, NamedTupleTypes...>> {
+ public:
+  /// Expresses the variables as type T.
+  static fct::TaggedUnion<_discriminator, NamedTupleTypes...> from_json(
+      const Poco::Dynamic::Var& _var) {
+    const auto obj = ObjectGetter::get_object(_var);
+    const auto disc_value = get_discriminator(obj, _discriminator.str());
+    return find_matching_named_tuple(obj, disc_value);
+  }
+
+  /// Expresses the variables as a JSON type.
+  static Poco::Dynamic::Var to_json(
+      const fct::TaggedUnion<_discriminator, NamedTupleTypes...>&
+          _tagged_union) {
+    using VariantType =
+        typename fct::TaggedUnion<_discriminator,
+                                  NamedTupleTypes...>::VariantType;
+    return Parser<VariantType>::to_json(_tagged_union.variant_);
+  }
+
+ private:
+  template <int _i = 0>
+  static fct::TaggedUnion<_discriminator, NamedTupleTypes...>
+  find_matching_named_tuple(const Poco::JSON::Object& _obj,
+                            const std::string& _disc_value) {
+    if constexpr (_i == sizeof...(NamedTupleTypes)) {
+      throw std::runtime_error(
+          "Could not parse tagged union, could not match " +
+          _discriminator.str() + " '" + _disc_value + "'.");
+    } else {
+      const auto optional = try_option<_i>(_obj, _disc_value);
+      if (optional) {
+        return *optional;
+      } else {
+        return find_matching_named_tuple<_i + 1>(_obj, _disc_value);
+      }
+    }
+  }
+
+  /// Retrieves the discriminator.
+  static std::string get_discriminator(const Poco::JSON::Object& _obj,
+                                       const std::string& _field_name) {
+    try {
+      return _obj.get(_field_name).extract<std::string>();
+    } catch (std::exception& _e) {
+      throw std::runtime_error(
+          "Could not parse tagged union: Could not find field " + _field_name +
+          " or type of field was not a string.");
+    }
+  }
+
+  /// Determines whether the discriminating literal contains the value
+  /// retrieved from the object.
+  template <class T>
+  static inline bool contains_disc_value(const std::string& _disc_value) {
+    if constexpr (!fct::has_named_tuple_type_v<T>) {
+      using LiteralType = fct::field_type_t<_discriminator, T>;
+      return LiteralType::contains(_disc_value);
+    } else {
+      using LiteralType =
+          fct::field_type_t<_discriminator, typename T::NamedTupleType>;
+      return LiteralType::contains(_disc_value);
+    }
+  }
+
+  /// Tries to parse one particular option.
+  template <int _i>
+  static std::optional<fct::TaggedUnion<_discriminator, NamedTupleTypes...>>
+  try_option(const Poco::JSON::Object& _obj, const std::string& _disc_value) {
+    using NamedTupleType = std::decay_t<
+        std::variant_alternative_t<_i, std::variant<NamedTupleTypes...>>>;
+
+    if (contains_disc_value<NamedTupleType>(_disc_value)) {
+      try {
+        return fct::TaggedUnion<_discriminator, NamedTupleTypes...>(
+            Parser<NamedTupleType>::from_json(_obj));
+      } catch (std::exception& _e) {
+        throw std::runtime_error(
+            "Could not parse tagged union with discrimininator " +
+            _discriminator.str() + " '" + _disc_value + "': " + _e.what());
+      }
+    } else {
+      return std::nullopt;
+    }
+  }
+};
+
+// ----------------------------------------------------------------------------
+
 template <class... Ts>
 struct Parser<std::tuple<Ts...>> {
  public:
   /// Expresses the variables as type T.
   static std::tuple<Ts...> from_json(const Poco::Dynamic::Var& _var) {
-    const auto arr = get_array(_var);
+    const auto arr = ArrayGetter::get_array(_var);
     if (arr.size() != sizeof...(Ts)) {
       throw std::runtime_error("Expected " + std::to_string(sizeof...(Ts)) +
                                " fields, got " + std::to_string(arr.size()) +
@@ -316,28 +476,6 @@ struct Parser<std::tuple<Ts...>> {
     }
   }
 
-  /// Retrieves the array from the dynamic var.
-  static Poco::JSON::Array get_array(const Poco::Dynamic::Var& _var) {
-    try {
-      return _var.extract<Poco::JSON::Array>();
-
-    } catch (std::exception& _exp) {
-    }
-
-    try {
-      const auto ptr = _var.extract<Poco::JSON::Array::Ptr>();
-
-      if (!ptr) {
-        throw std::runtime_error("Poco::JSON::Array::Ptr is NULL.");
-      }
-
-      return *ptr;
-    } catch (std::exception& _exp) {
-      throw std::runtime_error(
-          "Expected a Poco::JSON::Array or a Poco::JSON::Array::Ptr.");
-    }
-  }
-
   /// Transforms a tuple to an array.
   template <int _i>
   static void to_array(const std::tuple<Ts...>& _tup,
@@ -371,7 +509,8 @@ struct Parser<std::variant<FieldTypes...>> {
         return Parser<VarType>::from_json(_var);
       } catch (std::exception& e) {
         const auto errors = fct::join::vector<std::string>(
-            {_errors, std::vector<std::string>({e.what()})});
+            {_errors,
+             std::vector<std::string>({std::string("\n -") + e.what()})});
         return from_json<_i + 1>(_var, errors);
       }
     }
@@ -403,7 +542,7 @@ struct Parser<std::vector<T>> {
  public:
   /// Expresses the variables as type T.
   static std::vector<T> from_json(const Poco::Dynamic::Var& _var) {
-    const auto arr = get_array(_var);
+    const auto arr = ArrayGetter::get_array(_var);
     const auto iota = fct::iota<size_t>(0, arr.size());
     const auto get_value = [&arr](const size_t _i) {
       try {
@@ -423,29 +562,6 @@ struct Parser<std::vector<T>> {
       ptr->add(Parser<std::decay_t<T>>::to_json(_vec[i]));
     }
     return ptr;
-  }
-
- private:
-  /// Retrieves the array from the dynamic var.
-  static Poco::JSON::Array get_array(const Poco::Dynamic::Var& _var) {
-    try {
-      return _var.extract<Poco::JSON::Array>();
-
-    } catch (std::exception& _exp) {
-    }
-
-    try {
-      const auto ptr = _var.extract<Poco::JSON::Array::Ptr>();
-
-      if (!ptr) {
-        throw std::runtime_error("Poco::JSON::Array::Ptr is NULL.");
-      }
-
-      return *ptr;
-    } catch (std::exception& _exp) {
-      throw std::runtime_error(
-          "Expected a Poco::JSON::Array or a Poco::JSON::Array::Ptr.");
-    }
   }
 };
 

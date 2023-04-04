@@ -1,17 +1,15 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/preprocessors/TextFieldSplitter.hpp"
 
-// ----------------------------------------------------
-
 #include "engine/preprocessors/PreprocessorImpl.hpp"
-
-// ----------------------------------------------------
+#include "helpers/Loader.hpp"
+#include "helpers/Saver.hpp"
 
 namespace engine {
 namespace preprocessors {
@@ -54,18 +52,6 @@ containers::DataFrame TextFieldSplitter::remove_text_fields(
   }
 
   return df;
-}
-
-// ----------------------------------------------------
-
-Poco::JSON::Object::Ptr TextFieldSplitter::fingerprint() const {
-  auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-
-  obj->set("type_", type());
-
-  obj->set("dependencies_", JSON::vector_to_array_ptr(dependencies_));
-
-  return obj;
 }
 
 // ----------------------------------------------------
@@ -115,16 +101,10 @@ TextFieldSplitter::fit_df(const containers::DataFrame& _df,
 
 // ----------------------------------------------------
 
-TextFieldSplitter TextFieldSplitter::from_json_obj(
-    const Poco::JSON::Object& _obj) const {
-  TextFieldSplitter that;
-
-  if (_obj.has("cols_")) {
-    that.cols_ = PreprocessorImpl::from_array(
-        jsonutils::JSON::get_object_array(_obj, "cols_"));
-  }
-
-  return that;
+void TextFieldSplitter::load(const std::string& _fname) {
+  const auto named_tuple =
+      helpers::Loader::load_from_json<NamedTupleType>(_fname);
+  cols_ = named_tuple.get<f_cols>();
 }
 
 // ----------------------------------------------------
@@ -143,6 +123,12 @@ containers::DataFrame TextFieldSplitter::make_new_df(
   df.add_string_column(words, containers::DataFrame::ROLE_TEXT);
 
   return df;
+}
+
+// ----------------------------------------------------
+
+void TextFieldSplitter::save(const std::string& _fname) const {
+  helpers::Saver::save_as_json(_fname, *this);
 }
 
 // ----------------------------------------------------
@@ -169,18 +155,6 @@ TextFieldSplitter::split_text_fields_on_col(
       containers::Column<strings::String>(words_ptr, _col.name());
 
   return std::make_pair(rownums, words);
-}
-
-// ----------------------------------------------------
-
-Poco::JSON::Object::Ptr TextFieldSplitter::to_json_obj() const {
-  auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-
-  obj->set("type_", type());
-
-  obj->set("cols_", PreprocessorImpl::to_array(cols_));
-
-  return obj;
 }
 
 // ----------------------------------------------------
@@ -232,13 +206,11 @@ TextFieldSplitter::transform(const TransformParams& _params) const {
 void TextFieldSplitter::transform_df(
     const std::string& _marker, const containers::DataFrame& _df,
     std::vector<containers::DataFrame>* _peripheral_dfs) const {
-  // ----------------------------------------------------
-
   const auto matching_description =
       [&_marker,
        &_df](const std::shared_ptr<helpers::ColumnDescription>& _desc) -> bool {
     assert_true(_desc);
-    return _desc->marker_ == _marker && _desc->table_ == _df.name();
+    return _desc->marker() == _marker && _desc->table() == _df.name();
   };
 
   // ----------------------------------------------------
@@ -247,7 +219,7 @@ void TextFieldSplitter::transform_df(
       [&_df](const std::shared_ptr<helpers::ColumnDescription>& _desc)
       -> containers::Column<strings::String> {
     assert_true(_desc);
-    return _df.text(_desc->name_);
+    return _df.text(_desc->name());
   };
 
   // ----------------------------------------------------

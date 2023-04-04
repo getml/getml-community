@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/pipelines/ToSQL.hpp"
 
@@ -102,24 +102,18 @@ ToSQL::make_staging_schemata(const FittedPipeline& _fitted) {
       [has_text_field_marker, remove_text_field_marker](
           const containers::Schema& _schema) -> containers::Schema {
     const auto text_fields = fct::collect::vector<std::string>(
-        _schema.unused_strings_ | VIEWS::filter(has_text_field_marker) |
+        _schema.unused_strings() | VIEWS::filter(has_text_field_marker) |
         VIEWS::transform(remove_text_field_marker));
 
-    return containers::Schema{
-        .categoricals_ = _schema.categoricals_,
-        .discretes_ = _schema.discretes_,
-        .join_keys_ = _schema.join_keys_,
-        .name_ = _schema.name_,
-        .numericals_ = _schema.numericals_,
-        .targets_ = _schema.targets_,
-        .text_ = fct::join::vector<std::string>({_schema.text_, text_fields}),
-        .time_stamps_ = _schema.time_stamps_,
-        .unused_floats_ = _schema.unused_floats_,
-        .unused_strings_ = _schema.unused_strings_};
+    const auto text =
+        fct::join::vector<std::string>({_schema.text(), text_fields});
+
+    return containers::Schema(
+        _schema.val_.replace(fct::make_field<"text_">(text)));
   };
 
   const auto is_not_text_field = [](const containers::Schema& _schema) -> bool {
-    return _schema.name_.find(helpers::Macros::text_field()) ==
+    return _schema.name().find(helpers::Macros::text_field()) ==
            std::string::npos;
   };
 
@@ -291,7 +285,7 @@ std::string ToSQL::to_sql(const ToSQLParams& _params) {
       _params.targets_ ? _params.fitted_.targets() : std::vector<std::string>();
 
   return sql_dialect_generator->make_sql(
-      _params.fitted_.modified_population_schema_->name_, feature_names, sql,
+      _params.fitted_.modified_population_schema_->name(), feature_names, sql,
       target_names, _params.fitted_.predictors_.impl_->categorical_colnames(),
       _params.fitted_.predictors_.impl_->numerical_colnames());
 }
