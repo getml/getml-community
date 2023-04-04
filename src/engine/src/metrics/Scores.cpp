@@ -44,9 +44,15 @@ void Scores::to_history() {
   const auto now = Poco::DateTimeFormatter::format(
       Poco::LocalDateTime(), Poco::DateTimeFormat::SORTABLE_FORMAT);
 
-  val_.get<f_history>().push_back(AllMetricsType(val_) *
-                                  fct::make_field<"date_time_">(now) *
-                                  f_set_used(val_.get<f_set_used>()));
+  if (val_.get<"auc_">().size() > 0) {
+    val_.get<f_history>().push_back(ClassificationMetricsType(val_) *
+                                    fct::make_field<"date_time_">(now) *
+                                    f_set_used(val_.get<f_set_used>()));
+  } else {
+    val_.get<f_history>().push_back(RegressionMetricsType(val_) *
+                                    fct::make_field<"date_time_">(now) *
+                                    f_set_used(val_.get<f_set_used>()));
+  }
 }
 
 // ----------------------------------------------------------------------------
