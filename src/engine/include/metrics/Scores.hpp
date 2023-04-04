@@ -129,7 +129,7 @@ class Scores {
 
   /// Stepsize - needed for plotting the accuracy.
   using f_prediction_step_size =
-      fct::Field<"prediction_size_", std::vector<Float>>;
+      fct::Field<"prediction_step_size_", std::vector<Float>>;
 
   /// Proportion of samples called (for the lift curve)
   using f_proportion =
