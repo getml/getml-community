@@ -19,6 +19,7 @@
 #include "commands/PipelineCommand.hpp"
 #include "commands/ProjectCommand.hpp"
 #include "commands/ViewCommand.hpp"
+#include "fct/always_false.hpp"
 #include "fct/extract_discriminators.hpp"
 #include "fct/get.hpp"
 #include "json/json.hpp"
@@ -66,10 +67,7 @@ void RequestHandler::run() {
                                typename commands::Command::ShutdownOp>()) {
         *shutdown_ = true;
       } else {
-        []<bool _flag = false>() {
-          static_assert(_flag, "Not all cases were covered.");
-        }
-        ();
+        static_assert(fct::always_false_v<Type>, "Not all cases were covered.");
       }
     };
 

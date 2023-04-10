@@ -17,6 +17,7 @@
 #include "engine/pipelines/ToSQL.hpp"
 #include "engine/pipelines/ToSQLParams.hpp"
 #include "engine/pipelines/pipelines.hpp"
+#include "fct/always_false.hpp"
 #include "transpilation/TranspilationParams.hpp"
 #include "transpilation/transpilation.hpp"
 
@@ -321,10 +322,7 @@ void PipelineManager::execute_command(const Command& _command,
     } else if constexpr (std::is_same<Type, Command::TransformOp>()) {
       transform(_cmd, _socket);
     } else {
-      []<bool _flag = false>() {
-        static_assert(_flag, "Not all cases were covered.");
-      }
-      ();
+      static_assert(fct::always_false_v<Type>, "Not all cases were covered.");
     }
   };
 

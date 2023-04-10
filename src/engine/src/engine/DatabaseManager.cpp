@@ -11,6 +11,7 @@
 #include "database/QuerySplitter.hpp"
 #include "fct/Field.hpp"
 #include "fct/Ref.hpp"
+#include "fct/always_false.hpp"
 #include "helpers/StringSplitter.hpp"
 #include "io/Parser.hpp"
 #include "json/json.hpp"
@@ -181,10 +182,7 @@ void DatabaseManager::execute_command(const Command& _command,
     } else if constexpr (std::is_same<Type, typename Command::SniffTableOp>()) {
       sniff_table(_cmd, _socket);
     } else {
-      []<bool _flag = false>() {
-        static_assert(_flag, "Unknown command. Not all cases were covered.");
-      }
-      ();
+      static_assert(fct::always_false_v<Type>, "Not all cases were covered.");
     }
   };
 

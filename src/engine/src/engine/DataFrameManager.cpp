@@ -18,6 +18,7 @@
 #include "engine/handlers/FloatOpParser.hpp"
 #include "engine/handlers/StringOpParser.hpp"
 #include "engine/handlers/ViewParser.hpp"
+#include "fct/always_false.hpp"
 #include "json/json.hpp"
 #include "metrics/metrics.hpp"
 
@@ -635,10 +636,7 @@ void DataFrameManager::execute_command(const Command& _command,
     } else if constexpr (std::is_same<Type, Command::ToParquetOp>()) {
       to_parquet(_cmd, _socket);
     } else {
-      []<bool _flag = false>() {
-        static_assert(_flag, "Not all cases were covered.");
-      }
-      ();
+      static_assert(fct::always_false_v<Type>, "Not all cases were covered.");
     }
   };
 
