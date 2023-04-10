@@ -20,7 +20,7 @@ namespace engine {
 namespace handlers {
 
 void ProjectManager::add_data_frame_from_arrow(
-    const typename AddDfCommand::AddDfFromArrowOp& _cmd,
+    const typename Command::AddDfFromArrowOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
   data_frame_manager().from_arrow(_cmd, _socket);
 }
@@ -28,7 +28,7 @@ void ProjectManager::add_data_frame_from_arrow(
 // ------------------------------------------------------------------------
 
 void ProjectManager::add_data_frame_from_csv(
-    const typename AddDfCommand::AddDfFromCSVOp& _cmd,
+    const typename Command::AddDfFromCSVOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
   data_frame_manager().from_csv(_cmd, _socket);
 }
@@ -36,7 +36,7 @@ void ProjectManager::add_data_frame_from_csv(
 // ------------------------------------------------------------------------
 
 void ProjectManager::add_data_frame_from_db(
-    const typename AddDfCommand::AddDfFromDBOp& _cmd,
+    const typename Command::AddDfFromDBOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
   params_.data_frame_manager_->from_db(_cmd, _socket);
 }
@@ -44,7 +44,7 @@ void ProjectManager::add_data_frame_from_db(
 // ------------------------------------------------------------------------
 
 void ProjectManager::add_data_frame_from_json(
-    const typename AddDfCommand::AddDfFromJSONOp& _cmd,
+    const typename Command::AddDfFromJSONOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
   params_.data_frame_manager_->from_json(_cmd, _socket);
 }
@@ -52,7 +52,7 @@ void ProjectManager::add_data_frame_from_json(
 // ------------------------------------------------------------------------
 
 void ProjectManager::add_data_frame_from_parquet(
-    const typename AddDfCommand::AddDfFromParquetOp& _cmd,
+    const typename Command::AddDfFromParquetOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
   data_frame_manager().from_parquet(_cmd, _socket);
 }
@@ -60,7 +60,7 @@ void ProjectManager::add_data_frame_from_parquet(
 // ------------------------------------------------------------------------
 
 void ProjectManager::add_data_frame_from_query(
-    const typename AddDfCommand::AddDfFromQueryOp& _cmd,
+    const typename Command::AddDfFromQueryOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
   params_.data_frame_manager_->from_query(_cmd, _socket);
 }
@@ -68,7 +68,7 @@ void ProjectManager::add_data_frame_from_query(
 // ------------------------------------------------------------------------
 
 void ProjectManager::add_data_frame_from_view(
-    const typename AddDfCommand::AddDfFromViewOp& _cmd,
+    const typename Command::AddDfFromViewOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
   data_frame_manager().from_view(_cmd, _socket);
 }
@@ -182,7 +182,27 @@ void ProjectManager::execute_command(const Command& _command,
   const auto handle = [this, _socket](const auto& _cmd) {
     using Type = std::decay_t<decltype(_cmd)>;
 
-    if constexpr (std::is_same<Type, typename Command::PipelineOp>()) {
+    if constexpr (std::is_same<Type, typename Command::AddDfFromArrowOp>()) {
+      add_data_frame_from_arrow(_cmd, _socket);
+    } else if constexpr (std::is_same<Type,
+                                      typename Command::AddDfFromCSVOp>()) {
+      add_data_frame_from_csv(_cmd, _socket);
+    } else if constexpr (std::is_same<Type,
+                                      typename Command::AddDfFromDBOp>()) {
+      add_data_frame_from_db(_cmd, _socket);
+    } else if constexpr (std::is_same<Type,
+                                      typename Command::AddDfFromJSONOp>()) {
+      add_data_frame_from_json(_cmd, _socket);
+    } else if constexpr (std::is_same<Type,
+                                      typename Command::AddDfFromParquetOp>()) {
+      add_data_frame_from_parquet(_cmd, _socket);
+    } else if constexpr (std::is_same<Type,
+                                      typename Command::AddDfFromQueryOp>()) {
+      add_data_frame_from_query(_cmd, _socket);
+    } else if constexpr (std::is_same<Type,
+                                      typename Command::AddDfFromViewOp>()) {
+      add_data_frame_from_view(_cmd, _socket);
+    } else if constexpr (std::is_same<Type, typename Command::PipelineOp>()) {
       add_pipeline(_cmd, _socket);
     } else if constexpr (std::is_same<Type,
                                       typename Command::CopyPipelineOp>()) {
@@ -225,46 +245,6 @@ void ProjectManager::execute_command(const Command& _command,
       save_pipeline(_cmd, _socket);
     } else if constexpr (std::is_same<Type, typename Command::TempDirOp>()) {
       temp_dir(_cmd, _socket);
-    } else {
-      []<bool _flag = false>() {
-        static_assert(_flag, "Not all cases were covered.");
-      }
-      ();
-    }
-  };
-
-  fct::visit(handle, _command.val_);
-}
-
-// ------------------------------------------------------------------------
-
-void ProjectManager::execute_add_df_command(const AddDfCommand& _command,
-                                            Poco::Net::StreamSocket* _socket) {
-  const auto handle = [this, _socket](const auto& _cmd) {
-    using Type = std::decay_t<decltype(_cmd)>;
-
-    if constexpr (std::is_same<Type,
-                               typename AddDfCommand::AddDfFromArrowOp>()) {
-      add_data_frame_from_arrow(_cmd, _socket);
-    } else if constexpr (std::is_same<
-                             Type, typename AddDfCommand::AddDfFromCSVOp>()) {
-      add_data_frame_from_csv(_cmd, _socket);
-    } else if constexpr (std::is_same<Type,
-                                      typename AddDfCommand::AddDfFromDBOp>()) {
-      add_data_frame_from_db(_cmd, _socket);
-    } else if constexpr (std::is_same<
-                             Type, typename AddDfCommand::AddDfFromJSONOp>()) {
-      add_data_frame_from_json(_cmd, _socket);
-    } else if constexpr (std::is_same<
-                             Type,
-                             typename AddDfCommand::AddDfFromParquetOp>()) {
-      add_data_frame_from_parquet(_cmd, _socket);
-    } else if constexpr (std::is_same<
-                             Type, typename AddDfCommand::AddDfFromQueryOp>()) {
-      add_data_frame_from_query(_cmd, _socket);
-    } else if constexpr (std::is_same<
-                             Type, typename AddDfCommand::AddDfFromViewOp>()) {
-      add_data_frame_from_view(_cmd, _socket);
     } else {
       []<bool _flag = false>() {
         static_assert(_flag, "Not all cases were covered.");

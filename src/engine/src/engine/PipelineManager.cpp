@@ -9,8 +9,8 @@
 
 #include <stdexcept>
 
-#include "commands/AddDfCommand.hpp"
 #include "commands/DataFramesOrViews.hpp"
+#include "commands/ProjectCommand.hpp"
 #include "engine/containers/Roles.hpp"
 #include "engine/handlers/ColumnManager.hpp"
 #include "engine/handlers/DataFrameManager.hpp"
@@ -535,8 +535,8 @@ typename PipelineManager::FullTransformOp PipelineManager::receive_data(
                       fct::Field<"name_", std::string>>;
 
   using CmdType = fct::TaggedUnion<
-      "type_", DataFrameCmd, typename commands::AddDfCommand::AddDfFromJSONOp,
-      typename commands::AddDfCommand::AddDfFromQueryOp,
+      "type_", DataFrameCmd, typename commands::ProjectCommand::AddDfFromJSONOp,
+      typename commands::ProjectCommand::AddDfFromQueryOp,
       typename commands::ColumnCommand::SetFloatColumnUnitOp,
       typename commands::ColumnCommand::SetStringColumnUnitOp, FullTransformOp>;
 
@@ -553,12 +553,14 @@ typename PipelineManager::FullTransformOp PipelineManager::receive_data(
         local_data_frame_manager.add_data_frame(fct::get<"name_">(_op),
                                                 _socket);
         return std::nullopt;
-      } else if constexpr (std::is_same<Type, typename commands::AddDfCommand::
-                                                  AddDfFromJSONOp>()) {
+      } else if constexpr (std::is_same<Type,
+                                        typename commands::ProjectCommand::
+                                            AddDfFromJSONOp>()) {
         local_data_frame_manager.from_json(_op, _socket);
         return std::nullopt;
-      } else if constexpr (std::is_same<Type, typename commands::AddDfCommand::
-                                                  AddDfFromQueryOp>()) {
+      } else if constexpr (std::is_same<Type,
+                                        typename commands::ProjectCommand::
+                                            AddDfFromQueryOp>()) {
         local_data_frame_manager.from_query(_op, _socket);
         return std::nullopt;
       } else if constexpr (std::is_same<Type, typename commands::ColumnCommand::

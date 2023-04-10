@@ -13,12 +13,12 @@
 #include <string>
 #include <variant>
 
-#include "commands/AddDfCommand.hpp"
 #include "commands/Aggregation.hpp"
 #include "commands/BooleanColumnView.hpp"
 #include "commands/FloatColumnOrFloatColumnView.hpp"
 #include "commands/Int.hpp"
 #include "commands/Pipeline.hpp"
+#include "commands/ProjectCommand.hpp"
 #include "commands/StringColumnOrStringColumnView.hpp"
 #include "fct/Field.hpp"
 #include "fct/Literal.hpp"
@@ -36,25 +36,25 @@ struct DataFrameCommand {
                    typename StringColumnOrStringColumnView::NamedTupleType>;
 
   /// The command to add a data frame from arrow.
-  using AddDfFromArrowOp = typename AddDfCommand::AddDfFromArrowOp;
+  using AddDfFromArrowOp = typename ProjectCommand::AddDfFromArrowOp;
 
   /// The command to add a data frame from CSV.
-  using AddDfFromCSVOp = typename AddDfCommand::AddDfFromCSVOp;
+  using AddDfFromCSVOp = typename ProjectCommand::AddDfFromCSVOp;
 
   /// The command to add a data frame from a database.
-  using AddDfFromDBOp = typename AddDfCommand::AddDfFromDBOp;
+  using AddDfFromDBOp = typename ProjectCommand::AddDfFromDBOp;
 
   /// The command to add a data frame from JSON.
-  using AddDfFromJSONOp = typename AddDfCommand::AddDfFromJSONOp;
+  using AddDfFromJSONOp = typename ProjectCommand::AddDfFromJSONOp;
 
   /// The command to add a data frame from parquet.
-  using AddDfFromParquetOp = typename AddDfCommand::AddDfFromParquetOp;
+  using AddDfFromParquetOp = typename ProjectCommand::AddDfFromParquetOp;
 
   /// The command to add a data frame from JSON.
-  using AddDfFromQueryOp = typename AddDfCommand::AddDfFromQueryOp;
+  using AddDfFromQueryOp = typename ProjectCommand::AddDfFromQueryOp;
 
   /// The command to add a data frame from a View.
-  using AddDfFromViewOp = typename AddDfCommand::AddDfFromViewOp;
+  using AddDfFromViewOp = typename ProjectCommand::AddDfFromViewOp;
 
   /// The command used to add a float column
   using AddFloatColumnOp = fct::NamedTuple<
