@@ -8,6 +8,7 @@
 #include "engine/handlers/ViewManager.hpp"
 
 #include "engine/handlers/ViewParser.hpp"
+#include "fct/always_false.hpp"
 
 namespace engine {
 namespace handlers {
@@ -30,10 +31,7 @@ void ViewManager::execute_command(const Command& _command,
     } else if constexpr (std::is_same<Type, Command::ViewToParquetOp>()) {
       view_to_parquet(_cmd, _socket);
     } else {
-      []<bool _flag = false>() {
-        static_assert(_flag, "Not all cases were covered.");
-      }
-      ();
+      static_assert(fct::always_false_v<Type>, "Not all cases were covered.");
     }
   };
 

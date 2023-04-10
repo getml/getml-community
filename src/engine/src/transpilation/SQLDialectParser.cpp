@@ -7,6 +7,7 @@
 
 #include "transpilation/SQLDialectParser.hpp"
 
+#include "fct/always_false.hpp"
 #include "fct/visit.hpp"
 #include "transpilation/HumanReadableSQLGenerator.hpp"
 #include "transpilation/TranspilationParams.hpp"
@@ -22,10 +23,7 @@ fct::Ref<const SQLDialectGenerator> SQLDialectParser::parse(
                   std::is_same<Type, fct::Literal<"sqlite3">>()) {
       return fct::Ref<const HumanReadableSQLGenerator>::make();
     } else {
-      []<bool _flag = false>() {
-        static_assert(_flag, "Not all cases were covered.");
-      }
-      ();
+      static_assert(fct::always_false_v<Type>, "Not all cases were covered.");
     }
   };
 

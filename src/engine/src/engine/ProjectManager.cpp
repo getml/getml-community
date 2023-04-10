@@ -14,6 +14,7 @@
 #include "engine/handlers/FileHandler.hpp"
 #include "engine/handlers/PipelineManager.hpp"
 #include "engine/pipelines/SaveParams.hpp"
+#include "fct/always_false.hpp"
 #include "fct/make_named_tuple.hpp"
 
 namespace engine {
@@ -246,10 +247,7 @@ void ProjectManager::execute_command(const Command& _command,
     } else if constexpr (std::is_same<Type, typename Command::TempDirOp>()) {
       temp_dir(_cmd, _socket);
     } else {
-      []<bool _flag = false>() {
-        static_assert(_flag, "Not all cases were covered.");
-      }
-      ();
+      static_assert(fct::always_false_v<Type>, "Not all cases were covered.");
     }
   };
 
