@@ -5,14 +5,14 @@
 // for details.
 //
 
-#include "commands/ColumnCommand.hpp"
+#include "commands/Command.hpp"
 
 #include "json/json.hpp"
 
 namespace commands {
 
-ColumnCommand ColumnCommand::from_json_obj(const Poco::Dynamic::Var& _obj) {
-  return ColumnCommand(json::from_json<NamedTupleType>(_obj));
+Command Command::from_json_obj(const Poco::Dynamic::Var& _obj) {
+  return Command(json::from_json<NamedTupleType>(_obj));
 }
 
 }  // namespace commands

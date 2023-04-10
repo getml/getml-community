@@ -13,6 +13,7 @@
 #include <stdexcept>
 
 #include "commands/ColumnCommand.hpp"
+#include "commands/Command.hpp"
 #include "commands/DataFrameCommand.hpp"
 #include "commands/DatabaseCommand.hpp"
 #include "commands/PipelineCommand.hpp"
@@ -36,61 +37,44 @@ void RequestHandler::run() {
 
     const auto cmd_str = communication::Receiver::recv_cmd(logger_, &socket());
 
-    const auto obj =
-        Poco::JSON::Parser().parse(cmd_str).extract<Poco::JSON::Object::Ptr>();
+    const auto cmd = json::from_json<commands::Command>(cmd_str);
 
-    if (!obj) {
-      throw std::runtime_error("Could not parse JSON!");
-    }
+    const auto handle = [this](const auto& _cmd) {
+      using Type = std::decay_t<decltype(_cmd)>;
+      if constexpr (std::is_same<Type, commands::ColumnCommand>()) {
+        return column_manager().execute_command(_cmd, &socket());
+      } else if constexpr (std::is_same<Type, commands::DatabaseCommand>()) {
+        return database_manager().execute_command(_cmd, &socket());
+      } else if constexpr (std::is_same<Type, commands::DataFrameCommand>()) {
+        return data_frame_manager().execute_command(_cmd, &socket());
+      } else if constexpr (std::is_same<Type, commands::PipelineCommand>()) {
+        return pipeline_manager().execute_command(_cmd, &socket());
+      } else if constexpr (std::is_same<Type, commands::ProjectCommand>()) {
+        return project_manager().execute_command(_cmd, &socket());
+      } else if constexpr (std::is_same<Type, commands::ViewCommand>()) {
+        return view_manager().execute_command(_cmd, &socket());
+      } else if constexpr (std::is_same<
+                               Type, typename commands::Command::IsAliveOp>()) {
+        return;
+      } else if constexpr (std::is_same<
+                               Type,
+                               typename commands::Command::MonitorURLOp>()) {
+        // the community edition does not have a monitor.
+        communication::Sender::send_string("", &socket());
+      } else if constexpr (std::is_same<
+                               Type,
+                               typename commands::Command::ShutdownOp>()) {
+        *shutdown_ = true;
+      } else {
+        []<bool _flag = false>() {
+          static_assert(_flag, "Not all cases were covered.");
+        }
+        ();
+      }
+    };
 
-    const auto type = obj->get("type_").toString();
+    std::visit(handle, cmd.val_);
 
-    using ColumnLiteral = fct::extract_discriminators_t<
-        typename commands::ColumnCommand::NamedTupleType>;
-
-    using DatabaseLiteral = fct::extract_discriminators_t<
-        typename commands::DatabaseCommand::NamedTupleType>;
-
-    using DataFrameLiteral = fct::extract_discriminators_t<
-        typename commands::DataFrameCommand::NamedTupleType>;
-
-    using PipelineLiteral = fct::extract_discriminators_t<
-        typename commands::PipelineCommand::NamedTupleType>;
-
-    using ProjectLiteral = fct::extract_discriminators_t<
-        typename commands::ProjectCommand::NamedTupleType>;
-
-    using ViewLiteral = fct::extract_discriminators_t<
-        typename commands::ViewCommand::NamedTupleType>;
-
-    if (ColumnLiteral::contains(type)) {
-      const auto cmd = commands::ColumnCommand::from_json(*obj);
-      column_manager().execute_command(cmd, &socket());
-    } else if (DatabaseLiteral::contains(type)) {
-      const auto cmd = commands::DatabaseCommand::from_json(*obj);
-      database_manager().execute_command(cmd, &socket());
-    } else if (DataFrameLiteral::contains(type)) {
-      const auto cmd = commands::DataFrameCommand::from_json(*obj);
-      data_frame_manager().execute_command(cmd, &socket());
-    } else if (PipelineLiteral::contains(type)) {
-      const auto cmd = commands::PipelineCommand::from_json(*obj);
-      pipeline_manager().execute_command(cmd, &socket());
-    } else if (ProjectLiteral::contains(type)) {
-      const auto cmd = commands::ProjectCommand::from_json(*obj);
-      project_manager().execute_command(cmd, &socket());
-    } else if (ViewLiteral::contains(type)) {
-      const auto cmd = commands::ViewCommand::from_json(*obj);
-      view_manager().execute_command(cmd, &socket());
-    } else if (type == "is_alive") {
-      return;
-    } else if (type == "monitor_url") {
-      // The community edition does not have a monitor.
-      communication::Sender::send_string("", &socket());
-    } else if (type == "shutdown") {
-      *shutdown_ = true;
-    } else {
-      throw std::runtime_error("Unknown type: '" + type + "'!");
-    }
   } catch (std::exception& e) {
     logger_->log(std::string("Error: ") + e.what());
 

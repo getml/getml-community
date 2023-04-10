@@ -8,7 +8,7 @@
 #ifndef COMMANDS_PIPELINECOMMAND_HPP_
 #define COMMANDS_PIPELINECOMMAND_HPP_
 
-#include <Poco/JSON/Object.h>
+#include <Poco/Dynamic/Var.h>
 
 #include <string>
 
@@ -90,7 +90,7 @@ struct PipelineCommand {
                        LiftCurveOp, PrecisionRecallCurveOp, RefreshOp,
                        RefreshAllOp, ROCCurveOp, ToSQLOp, TransformOp>;
 
-  static PipelineCommand from_json(const Poco::JSON::Object& _obj);
+  static PipelineCommand from_json_obj(const Poco::Dynamic::Var& _obj);
 
   /// The underlying value
   NamedTupleType val_;

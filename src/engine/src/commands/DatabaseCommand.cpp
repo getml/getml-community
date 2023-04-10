@@ -11,8 +11,8 @@
 
 namespace commands {
 
-DatabaseCommand DatabaseCommand::from_json(const Poco::JSON::Object& _obj) {
-  return json::from_json<DatabaseCommand>(_obj);
+DatabaseCommand DatabaseCommand::from_json_obj(const Poco::Dynamic::Var& _obj) {
+  return DatabaseCommand(json::from_json<NamedTupleType>(_obj));
 }
 
 }  // namespace commands

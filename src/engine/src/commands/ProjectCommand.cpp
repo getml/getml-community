@@ -11,8 +11,8 @@
 
 namespace commands {
 
-ProjectCommand ProjectCommand::from_json(const Poco::JSON::Object& _obj) {
-  return json::from_json<ProjectCommand>(_obj);
+ProjectCommand ProjectCommand::from_json_obj(const Poco::Dynamic::Var& _obj) {
+  return ProjectCommand(json::from_json<NamedTupleType>(_obj));
 }
 
 }  // namespace commands

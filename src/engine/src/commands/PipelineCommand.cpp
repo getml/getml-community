@@ -11,8 +11,8 @@
 
 namespace commands {
 
-PipelineCommand PipelineCommand::from_json(const Poco::JSON::Object& _obj) {
-  return json::from_json<PipelineCommand>(_obj);
+PipelineCommand PipelineCommand::from_json_obj(const Poco::Dynamic::Var& _obj) {
+  return PipelineCommand(json::from_json<NamedTupleType>(_obj));
 }
 
 }  // namespace commands

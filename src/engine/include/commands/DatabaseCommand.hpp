@@ -8,7 +8,7 @@
 #ifndef COMMANDS_DATABASECOMMAND_HPP_
 #define COMMANDS_DATABASECOMMAND_HPP_
 
-#include <Poco/JSON/Object.h>
+#include <Poco/Dynamic/Var.h>
 
 #include <string>
 
@@ -124,7 +124,7 @@ struct DatabaseCommand {
                        GetNRowsOp, ListConnectionsOp, ListTablesOp, NewDBOp,
                        ReadCSVOp, RefreshOp, SniffCSVOp, SniffTableOp>;
 
-  static DatabaseCommand from_json(const Poco::JSON::Object& _obj);
+  static DatabaseCommand from_json_obj(const Poco::Dynamic::Var& _obj);
 
   /// The underlying value
   NamedTupleType val_;

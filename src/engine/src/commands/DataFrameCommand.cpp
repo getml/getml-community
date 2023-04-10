@@ -11,8 +11,9 @@
 
 namespace commands {
 
-DataFrameCommand DataFrameCommand::from_json(const Poco::JSON::Object& _obj) {
-  return json::from_json<DataFrameCommand>(_obj);
+DataFrameCommand DataFrameCommand::from_json_obj(
+    const Poco::Dynamic::Var& _obj) {
+  return DataFrameCommand(json::from_json<NamedTupleType>(_obj));
 }
 
 }  // namespace commands
