@@ -8,7 +8,7 @@
 #ifndef COMMANDS_DATAFRAMECOMMAND_HPP_
 #define COMMANDS_DATAFRAMECOMMAND_HPP_
 
-#include <Poco/JSON/Object.h>
+#include <Poco/Dynamic/Var.h>
 
 #include <string>
 #include <variant>
@@ -317,7 +317,7 @@ struct DataFrameCommand {
       GetDataFrameNRowsOp, LastChangeOp, RefreshDataFrameOp, RemoveColumnOp,
       SummarizeDataFrameOp, ToArrowOp, ToCSVOp, ToDBOp, ToParquetOp>;
 
-  static DataFrameCommand from_json(const Poco::JSON::Object& _obj);
+  static DataFrameCommand from_json_obj(const Poco::Dynamic::Var& _obj);
 
   /// The underlying value
   NamedTupleType val_;

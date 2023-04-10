@@ -8,7 +8,7 @@
 #ifndef COMMANDS_COLUMNCOMMAND_HPP_
 #define COMMANDS_COLUMNCOMMAND_HPP_
 
-#include <Poco/JSON/Object.h>
+#include <Poco/Dynamic/Var.h>
 
 #include <string>
 #include <variant>
@@ -174,7 +174,7 @@ struct ColumnCommand {
       SetFloatColumnSubrolesOp, SetFloatColumnUnitOp, SetStringColumnSubrolesOp,
       SetStringColumnUnitOp, StringColumnOp>;
 
-  static ColumnCommand from_json(const Poco::JSON::Object& _obj);
+  static ColumnCommand from_json_obj(const Poco::Dynamic::Var& _obj);
 
   /// The underlying value
   NamedTupleType val_;
