@@ -8,6 +8,8 @@
 #ifndef COMMANDS_DATAMODEL_HPP_
 #define COMMANDS_DATAMODEL_HPP_
 
+#include <Poco/Dynamic/Var.h>
+
 #include <optional>
 #include <vector>
 
@@ -63,6 +65,8 @@ struct DataModel {
     check_length<"memory_">();
     check_length<"relationship_">();
   }
+
+  static DataModel from_json_obj(const Poco::Dynamic::Var& _json_obj);
 
   ~DataModel() = default;
 

@@ -12,6 +12,7 @@
 
 #include <stdexcept>
 
+#include "commands/AddDfCommand.hpp"
 #include "commands/ColumnCommand.hpp"
 #include "commands/DataFrameCommand.hpp"
 #include "commands/DatabaseCommand.hpp"
@@ -45,6 +46,9 @@ void RequestHandler::run() {
 
     const auto type = obj->get("type_").toString();
 
+    using AddDfLiteral = fct::extract_discriminators_t<
+        typename commands::AddDfCommand::NamedTupleType>;
+
     using ColumnLiteral = fct::extract_discriminators_t<
         typename commands::ColumnCommand::NamedTupleType>;
 
@@ -63,40 +67,34 @@ void RequestHandler::run() {
     using ViewLiteral = fct::extract_discriminators_t<
         typename commands::ViewCommand::NamedTupleType>;
 
-    if (ColumnLiteral::contains(type)) {
+    if (AddDfLiteral::contains(type)) {
+      const auto cmd = commands::AddDfCommand::from_json(*obj);
+      project_manager().execute_add_df_command(cmd, &socket());
+    } else if (ColumnLiteral::contains(type)) {
       const auto cmd = commands::ColumnCommand::from_json(*obj);
       column_manager().execute_command(cmd, &socket());
-
     } else if (DatabaseLiteral::contains(type)) {
       const auto cmd = commands::DatabaseCommand::from_json(*obj);
       database_manager().execute_command(cmd, &socket());
-
     } else if (DataFrameLiteral::contains(type)) {
       const auto cmd = commands::DataFrameCommand::from_json(*obj);
       data_frame_manager().execute_command(cmd, &socket());
-
     } else if (PipelineLiteral::contains(type)) {
       const auto cmd = commands::PipelineCommand::from_json(*obj);
       pipeline_manager().execute_command(cmd, &socket());
-
     } else if (ProjectLiteral::contains(type)) {
       const auto cmd = commands::ProjectCommand::from_json(*obj);
       project_manager().execute_command(cmd, &socket());
-
     } else if (ViewLiteral::contains(type)) {
       const auto cmd = commands::ViewCommand::from_json(*obj);
       view_manager().execute_command(cmd, &socket());
-
     } else if (type == "is_alive") {
       return;
-
     } else if (type == "monitor_url") {
       // The community edition does not have a monitor.
       communication::Sender::send_string("", &socket());
-
     } else if (type == "shutdown") {
       *shutdown_ = true;
-
     } else {
       throw std::runtime_error("Unknown type: '" + type + "'!");
     }

@@ -35,6 +35,7 @@
 #include "fct/join.hpp"
 #include "json/ArrayGetter.hpp"
 #include "json/ObjectGetter.hpp"
+#include "json/has_from_json_obj.hpp"
 #include "json/is_required.hpp"
 #include "strings/strings.hpp"
 
@@ -52,7 +53,9 @@ template <class T>
 struct Parser {
   /// Expresses the variables as type T.
   static auto from_json(const Poco::Dynamic::Var& _var) {
-    if constexpr (fct::has_named_tuple_type_v<T>) {
+    if constexpr (has_from_json_obj_v<T>) {
+      return T::from_json_obj(_var);
+    } else if constexpr (fct::has_named_tuple_type_v<T>) {
       using NamedTupleType = std::decay_t<typename T::NamedTupleType>;
       return T(Parser<NamedTupleType>::from_json(_var));
     } else {

@@ -8,6 +8,8 @@
 #ifndef COMMANDS_FINGERPRINT_HPP_
 #define COMMANDS_FINGERPRINT_HPP_
 
+#include <Poco/Dynamic/Var.h>
+
 #include <variant>
 #include <vector>
 
@@ -149,6 +151,12 @@ struct Fingerprint {
   // -----------------------------
 
   Fingerprint(const NamedTupleType& _val) : val_(_val) {}
+
+  static Fingerprint from_json(const std::string& _json_str);
+
+  static Fingerprint from_json_obj(const Poco::Dynamic::Var& _json_obj);
+
+  std::string to_json() const;
 
   ~Fingerprint() = default;
 

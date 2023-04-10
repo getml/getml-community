@@ -1317,7 +1317,7 @@ void DataFrame::load(const std::string &_path) {
   const auto build_history = load_textfile(_path, "build_history.json");
 
   if (build_history) {
-    build_history_ = json::from_json<commands::Fingerprint>(*build_history);
+    build_history_ = commands::Fingerprint::from_json(*build_history);
   }
 
   categoricals_ = load_columns<Int>(_path, "categorical_");
@@ -1566,7 +1566,7 @@ void DataFrame::save(const std::string &_temp_dir, const std::string &_path,
   save_text(tpath, "last_change.txt", last_change_);
 
   if (build_history_) {
-    save_text(tpath, "build_history.json", json::to_json(*build_history_));
+    save_text(tpath, "build_history.json", build_history_->to_json());
   }
 
   auto file = Poco::File(_path + _name);

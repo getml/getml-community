@@ -8,7 +8,7 @@
 #ifndef FCT_HASNAMEDTUPLEMETHODV_HPP_
 #define FCT_HASNAMEDTUPLEMETHODV_HPP_
 
-#include <utility>
+#include <type_traits>
 
 namespace fct {
 
@@ -28,6 +28,17 @@ struct has_nt_m<Wrapper, std::void_t<named_tuple_method_t<Wrapper>>>
 /// called "named_tuple".
 template <typename Wrapper>
 constexpr bool has_named_tuple_method_v = has_nt_m<Wrapper>::value;
+
+template <class LIB, class = void>
+struct is_available : std::false_type {};
+
+template <class LIB>
+struct is_available<LIB, std::enable_if_t<std::is_invocable_r<
+                             bool, decltype(LIB::is_available)>::value>>
+    : std::integral_constant<bool, LIB::is_available()> {};
+
+template <class LIB>
+constexpr bool is_available_v = is_available<LIB>::value;
 
 }  // namespace fct
 
