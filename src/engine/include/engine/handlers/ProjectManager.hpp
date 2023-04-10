@@ -14,7 +14,6 @@
 #include <memory>
 #include <string>
 
-#include "commands/AddDfCommand.hpp"
 #include "commands/ProjectCommand.hpp"
 #include "debug/debug.hpp"
 #include "engine/communication/communication.hpp"
@@ -30,7 +29,6 @@ namespace handlers {
 class ProjectManager {
  public:
   typedef ProjectManagerParams::PipelineMapType PipelineMapType;
-  typedef commands::AddDfCommand AddDfCommand;
   typedef commands::ProjectCommand Command;
 
  public:
@@ -45,44 +43,35 @@ class ProjectManager {
   void execute_command(const Command& _command,
                        Poco::Net::StreamSocket* _socket);
 
-  /// Executes a command related to adding a new command.
-  void execute_add_df_command(const AddDfCommand& _command,
-                              Poco::Net::StreamSocket* _socket);
-
  private:
   /// Adds a new data frame read from an arrow table.
-  void add_data_frame_from_arrow(
-      const typename AddDfCommand::AddDfFromArrowOp& _cmd,
-      Poco::Net::StreamSocket* _socket);
+  void add_data_frame_from_arrow(const typename Command::AddDfFromArrowOp& _cmd,
+                                 Poco::Net::StreamSocket* _socket);
 
   /// Creates a new data frame from one or several CSV files.
-  void add_data_frame_from_csv(
-      const typename AddDfCommand::AddDfFromCSVOp& _cmd,
-      Poco::Net::StreamSocket* _socket);
+  void add_data_frame_from_csv(const typename Command::AddDfFromCSVOp& _cmd,
+                               Poco::Net::StreamSocket* _socket);
 
   /// Adds a new data frame taken from the database.
-  void add_data_frame_from_db(const typename AddDfCommand::AddDfFromDBOp& _cmd,
+  void add_data_frame_from_db(const typename Command::AddDfFromDBOp& _cmd,
                               Poco::Net::StreamSocket* _socket);
 
   /// Adds a new data frame taken parsed from a JSON.
-  void add_data_frame_from_json(
-      const typename AddDfCommand::AddDfFromJSONOp& _cmd,
-      Poco::Net::StreamSocket* _socket);
+  void add_data_frame_from_json(const typename Command::AddDfFromJSONOp& _cmd,
+                                Poco::Net::StreamSocket* _socket);
 
   /// Adds a new data frame read from a parquet file.
   void add_data_frame_from_parquet(
-      const typename AddDfCommand::AddDfFromParquetOp& _cmd,
+      const typename Command::AddDfFromParquetOp& _cmd,
       Poco::Net::StreamSocket* _socket);
 
   /// Adds a new data frame generated from a query.
-  void add_data_frame_from_query(
-      const typename AddDfCommand::AddDfFromQueryOp& _cmd,
-      Poco::Net::StreamSocket* _socket);
+  void add_data_frame_from_query(const typename Command::AddDfFromQueryOp& _cmd,
+                                 Poco::Net::StreamSocket* _socket);
 
   /// Adds a new data frame generated from a view.
-  void add_data_frame_from_view(
-      const typename AddDfCommand::AddDfFromViewOp& _cmd,
-      Poco::Net::StreamSocket* _socket);
+  void add_data_frame_from_view(const typename Command::AddDfFromViewOp& _cmd,
+                                Poco::Net::StreamSocket* _socket);
 
   /// Adds a new Pipeline to the project.
   void add_pipeline(const typename Command::PipelineOp& _cmd,

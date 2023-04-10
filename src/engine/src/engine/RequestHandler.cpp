@@ -12,7 +12,6 @@
 
 #include <stdexcept>
 
-#include "commands/AddDfCommand.hpp"
 #include "commands/ColumnCommand.hpp"
 #include "commands/DataFrameCommand.hpp"
 #include "commands/DatabaseCommand.hpp"
@@ -46,9 +45,6 @@ void RequestHandler::run() {
 
     const auto type = obj->get("type_").toString();
 
-    using AddDfLiteral = fct::extract_discriminators_t<
-        typename commands::AddDfCommand::NamedTupleType>;
-
     using ColumnLiteral = fct::extract_discriminators_t<
         typename commands::ColumnCommand::NamedTupleType>;
 
@@ -67,10 +63,7 @@ void RequestHandler::run() {
     using ViewLiteral = fct::extract_discriminators_t<
         typename commands::ViewCommand::NamedTupleType>;
 
-    if (AddDfLiteral::contains(type)) {
-      const auto cmd = commands::AddDfCommand::from_json(*obj);
-      project_manager().execute_add_df_command(cmd, &socket());
-    } else if (ColumnLiteral::contains(type)) {
+    if (ColumnLiteral::contains(type)) {
       const auto cmd = commands::ColumnCommand::from_json(*obj);
       column_manager().execute_command(cmd, &socket());
     } else if (DatabaseLiteral::contains(type)) {
