@@ -29,53 +29,6 @@ namespace commands {
 
 /// Any command to be handled by the ProjectManager.
 struct ProjectCommand {
-  /// The command to add a data frame from arrow.
-  using AddDfFromArrowOp = fct::define_named_tuple_t<
-      fct::Field<"type_", fct::Literal<"DataFrame.from_arrow">>,
-      typename helpers::Schema::NamedTupleType, fct::Field<"append_", bool>>;
-
-  /// The command to add a data frame from CSV.
-  using AddDfFromCSVOp = fct::define_named_tuple_t<
-      fct::Field<"type_", fct::Literal<"DataFrame.read_csv">>,
-      typename helpers::Schema::NamedTupleType, fct::Field<"append_", bool>,
-      fct::Field<"colnames_", std::optional<std::vector<std::string>>>,
-      fct::Field<"fnames_", std::vector<std::string>>,
-      fct::Field<"num_lines_read_", size_t>,
-      fct::Field<"quotechar_", std::string>, fct::Field<"sep_", std::string>,
-      fct::Field<"skip_", size_t>,
-      fct::Field<"time_formats_", std::vector<std::string>>>;
-
-  /// The command to add a data frame from a database.
-  using AddDfFromDBOp = fct::define_named_tuple_t<
-      fct::Field<"type_", fct::Literal<"DataFrame.from_db">>,
-      typename helpers::Schema::NamedTupleType, fct::Field<"append_", bool>,
-      fct::Field<"conn_id_", std::string>,
-      fct::Field<"table_name_", std::string>>;
-
-  /// The command to add a data frame from JSON.
-  using AddDfFromJSONOp = fct::define_named_tuple_t<
-      fct::Field<"type_", fct::Literal<"DataFrame.from_json">>,
-      typename helpers::Schema::NamedTupleType, fct::Field<"append_", bool>,
-      fct::Field<"time_formats_", std::vector<std::string>>>;
-
-  /// The command to add a data frame from parquet.
-  using AddDfFromParquetOp = fct::define_named_tuple_t<
-      fct::Field<"type_", fct::Literal<"DataFrame.read_parquet">>,
-      typename helpers::Schema::NamedTupleType, fct::Field<"append_", bool>,
-      fct::Field<"fname_", std::string>>;
-
-  /// The command to add a data frame from JSON.
-  using AddDfFromQueryOp = fct::define_named_tuple_t<
-      fct::Field<"type_", fct::Literal<"DataFrame.from_query">>,
-      typename helpers::Schema::NamedTupleType, fct::Field<"append_", bool>,
-      fct::Field<"conn_id_", std::string>, fct::Field<"query_", std::string>>;
-
-  /// The command to add a data frame from a View.
-  using AddDfFromViewOp = fct::define_named_tuple_t<
-      fct::Field<"type_", fct::Literal<"DataFrame.from_view">>,
-      fct::Field<"append_", bool>, fct::Field<"name_", std::string>,
-      fct::Field<"view_", DataFrameOrView>>;
-
   /// The command to add a data frame from a View.
   using CopyPipelineOp =
       fct::NamedTuple<fct::Field<"type_", fct::Literal<"Pipeline.copy">>,
@@ -153,12 +106,10 @@ struct ProjectCommand {
       fct::NamedTuple<fct::Field<"type_", fct::Literal<"temp_dir">>>;
 
   using NamedTupleType = fct::TaggedUnion<
-      "type_", AddDfFromArrowOp, AddDfFromCSVOp, AddDfFromDBOp, AddDfFromJSONOp,
-      AddDfFromParquetOp, AddDfFromQueryOp, AddDfFromViewOp, CopyPipelineOp,
-      DeleteDataFrameOp, DeletePipelineOp, DeleteProjectOp, ListDfsOp,
-      ListPipelinesOp, ListProjectsOp, LoadDataContainerOp, LoadDfOp,
-      LoadPipelineOp, PipelineOp, ProjectNameOp, SaveDataContainerOp, SaveDfOp,
-      SavePipelineOp, TempDirOp>;
+      "type_", CopyPipelineOp, DeleteDataFrameOp, DeletePipelineOp,
+      DeleteProjectOp, ListDfsOp, ListPipelinesOp, ListProjectsOp,
+      LoadDataContainerOp, LoadDfOp, LoadPipelineOp, PipelineOp, ProjectNameOp,
+      SaveDataContainerOp, SaveDfOp, SavePipelineOp, TempDirOp>;
 
   static ProjectCommand from_json(const Poco::JSON::Object& _obj);
 

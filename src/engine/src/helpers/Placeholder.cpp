@@ -9,6 +9,10 @@
 
 namespace helpers {
 
+Placeholder Placeholder::from_json_obj(const Poco::Dynamic::Var& _json_obj) {
+  return Placeholder(json::from_json<NamedTupleType>(_json_obj));
+}
+
 void Placeholder::check_data_model(
     const std::vector<std::string>& _peripheral_names,
     const bool _is_population) const {
