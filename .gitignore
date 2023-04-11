@@ -181,9 +181,11 @@ venv.bak/
 
 # jetbrains environment
 .idea/
+.vscode/*
+**/.vscode
 
-# VS code files
-settings.json
+# Vim project config directory
+**/.vim/
 
 proxy_url.sh
 getml-infra-service-key.json
