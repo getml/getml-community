@@ -22,13 +22,20 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/FloatOpParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Imputation.cpp
     ${ENGINE_SOURCE_DIRECTORY}/InMemoryEncoding.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/Load.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/Load_load.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/Load_load_feature_learners.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/Load_load_feature_selectors.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/Load_load_impls.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/Load_load_predictors.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/Load_load_preprocessors.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Logger.cpp
     ${ENGINE_SOURCE_DIRECTORY}/MemoryMappedEncoding.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Monitor.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Options.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Pipeline.cpp
     ${ENGINE_SOURCE_DIRECTORY}/PipelineManager.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/PipelineManager_execute_command.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/PipelineManager_receive_data.cpp
     ${ENGINE_SOURCE_DIRECTORY}/PlaceholderMaker.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Predictors.cpp
     ${ENGINE_SOURCE_DIRECTORY}/PreprocessorImpl.cpp
