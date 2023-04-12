@@ -289,48 +289,6 @@ void PipelineManager::deploy(const typename Command::DeployOp& _cmd,
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::execute_command(const Command& _command,
-                                      Poco::Net::StreamSocket* _socket) {
-  const auto handle = [this, _socket](const auto& _cmd) {
-    using Type = std::decay_t<decltype(_cmd)>;
-
-    if constexpr (std::is_same<Type, Command::CheckOp>()) {
-      check(_cmd, _socket);
-    } else if constexpr (std::is_same<Type, Command::ColumnImportancesOp>()) {
-      column_importances(_cmd, _socket);
-    } else if constexpr (std::is_same<Type, Command::DeployOp>()) {
-      deploy(_cmd, _socket);
-    } else if constexpr (std::is_same<Type, Command::FeatureCorrelationsOp>()) {
-      feature_correlations(_cmd, _socket);
-    } else if constexpr (std::is_same<Type, Command::FeatureImportancesOp>()) {
-      feature_importances(_cmd, _socket);
-    } else if constexpr (std::is_same<Type, Command::FitOp>()) {
-      fit(_cmd, _socket);
-    } else if constexpr (std::is_same<Type, Command::LiftCurveOp>()) {
-      lift_curve(_cmd, _socket);
-    } else if constexpr (std::is_same<Type,
-                                      Command::PrecisionRecallCurveOp>()) {
-      precision_recall_curve(_cmd, _socket);
-    } else if constexpr (std::is_same<Type, Command::RefreshOp>()) {
-      refresh(_cmd, _socket);
-    } else if constexpr (std::is_same<Type, Command::RefreshAllOp>()) {
-      refresh_all(_cmd, _socket);
-    } else if constexpr (std::is_same<Type, Command::ROCCurveOp>()) {
-      roc_curve(_cmd, _socket);
-    } else if constexpr (std::is_same<Type, Command::ToSQLOp>()) {
-      to_sql(_cmd, _socket);
-    } else if constexpr (std::is_same<Type, Command::TransformOp>()) {
-      transform(_cmd, _socket);
-    } else {
-      static_assert(fct::always_false_v<Type>, "Not all cases were covered.");
-    }
-  };
-
-  fct::visit(handle, _command.val_);
-}
-
-// ------------------------------------------------------------------------
-
 void PipelineManager::feature_correlations(
     const typename Command::FeatureCorrelationsOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
@@ -495,89 +453,6 @@ void PipelineManager::precision_recall_curve(
   communication::Sender::send_string("Success!", _socket);
 
   communication::Sender::send_string(json::to_json(result), _socket);
-}
-
-// ------------------------------------------------------------------------
-
-typename PipelineManager::FullTransformOp PipelineManager::receive_data(
-    const typename Command::TransformOp& _cmd,
-    const fct::Ref<containers::Encoding>& _categories,
-    const fct::Ref<containers::Encoding>& _join_keys_encoding,
-    const fct::Ref<std::map<std::string, containers::DataFrame>>& _data_frames,
-    Poco::Net::StreamSocket* _socket) {
-  // Declare local variables. The idea of the local variables
-  // is to prevent the global variables from being affected
-  // by local data frames.
-
-  multithreading::ReadLock read_lock(params_.read_write_lock_);
-
-  const auto local_read_write_lock =
-      fct::Ref<multithreading::ReadWriteLock>::make();
-
-  const auto data_frame_manager_params =
-      DataFrameManagerParams{.categories_ = _categories,
-                             .database_manager_ = params_.database_manager_,
-                             .data_frames_ = _data_frames,
-                             .join_keys_encoding_ = _join_keys_encoding,
-                             .logger_ = params_.logger_,
-                             .monitor_ = params_.monitor_,
-                             .options_ = params_.options_,
-                             .read_write_lock_ = local_read_write_lock};
-
-  auto local_data_frame_manager = DataFrameManager(data_frame_manager_params);
-
-  auto local_column_manager = ColumnManager(data_frame_manager_params);
-
-  using DataFrameCmd =
-      fct::NamedTuple<fct::Field<"type_", fct::Literal<"DataFrame">>,
-                      fct::Field<"name_", std::string>>;
-
-  using CmdType = fct::TaggedUnion<
-      "type_", DataFrameCmd, typename commands::ProjectCommand::AddDfFromJSONOp,
-      typename commands::ProjectCommand::AddDfFromQueryOp,
-      typename commands::ColumnCommand::SetFloatColumnUnitOp,
-      typename commands::ColumnCommand::SetStringColumnUnitOp, FullTransformOp>;
-
-  while (true) {
-    const auto json_str = communication::Receiver::recv_string(_socket);
-
-    const auto op = json::from_json<CmdType>(json_str);
-
-    const auto handle =
-        [&local_data_frame_manager, &local_column_manager,
-         _socket](const auto& _op) -> std::optional<FullTransformOp> {
-      using Type = std::decay_t<decltype(_op)>;
-      if constexpr (std::is_same<Type, DataFrameCmd>()) {
-        local_data_frame_manager.add_data_frame(fct::get<"name_">(_op),
-                                                _socket);
-        return std::nullopt;
-      } else if constexpr (std::is_same<Type,
-                                        typename commands::ProjectCommand::
-                                            AddDfFromJSONOp>()) {
-        local_data_frame_manager.from_json(_op, _socket);
-        return std::nullopt;
-      } else if constexpr (std::is_same<Type,
-                                        typename commands::ProjectCommand::
-                                            AddDfFromQueryOp>()) {
-        local_data_frame_manager.from_query(_op, _socket);
-        return std::nullopt;
-      } else if constexpr (std::is_same<Type, typename commands::ColumnCommand::
-                                                  SetFloatColumnUnitOp>()) {
-        local_column_manager.set_unit(_op, _socket);
-        return std::nullopt;
-      } else if constexpr (std::is_same<Type, typename commands::ColumnCommand::
-                                                  SetStringColumnUnitOp>()) {
-        local_column_manager.set_unit_categorical(_op, _socket);
-        return std::nullopt;
-      } else if constexpr (std::is_same<Type, FullTransformOp>()) {
-        return _op;
-      }
-    };
-    const auto cmd = fct::visit(handle, op);
-    if (cmd) {
-      return *cmd;
-    }
-  }
 }
 
 // ------------------------------------------------------------------------
