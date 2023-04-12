@@ -6,9 +6,14 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/CategoryTrimmer.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Check.cpp
     ${ENGINE_SOURCE_DIRECTORY}/ColumnManager.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/ColumnManager_execute_command.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DatabaseManager.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DataFrame.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DataFrameManager.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/DataFrameManager_execute_command.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/DataFrameManager_from_json.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/DataFrameManager_get_data_frame.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/DataFrameManager_receive_data.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DataFrameModifier.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DataFramePrinter.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DataFrameReader.cpp
@@ -41,6 +46,7 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/PreprocessorImpl.cpp
     ${ENGINE_SOURCE_DIRECTORY}/PreprocessorParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/ProjectManager.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/ProjectManager_execute_command.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Receiver.cpp
     ${ENGINE_SOURCE_DIRECTORY}/RequestHandler.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Save.cpp
