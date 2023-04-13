@@ -17,6 +17,7 @@
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
 #include "engine/containers/containers.hpp"
+#include "fct/collect.hpp"
 #include "json/json.hpp"
 
 namespace engine {

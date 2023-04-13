@@ -17,7 +17,8 @@
 #include "engine/communication/communication.hpp"
 #include "engine/containers/containers.hpp"
 #include "engine/featurelearners/AbstractFeatureLearner.hpp"
-#include "helpers/helpers.hpp"
+#include "helpers/Macros.hpp"
+#include "helpers/Placeholder.hpp"
 #include "transpilation/HumanReadableSQLGenerator.hpp"
 #include "transpilation/transpilation.hpp"
 

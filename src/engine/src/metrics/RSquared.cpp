@@ -7,6 +7,8 @@
 
 #include "metrics/RSquared.hpp"
 
+#include <cmath>
+
 namespace metrics {
 
 typename RSquared::ResultType RSquared::score(const Features _yhat,

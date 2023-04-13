@@ -15,9 +15,9 @@
 #include <utility>
 #include <vector>
 
+#include "helpers/ColumnDescription.hpp"
+#include "helpers/Schema.hpp"
 #include "helpers/enums/Aggregation.hpp"
-#include "helpers/enums/enums.hpp"
-#include "helpers/helpers.hpp"
 #include "transpilation/TrimmingGenerator.hpp"
 
 namespace transpilation {

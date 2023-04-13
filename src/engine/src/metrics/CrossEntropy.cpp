@@ -7,6 +7,8 @@
 
 #include "metrics/CrossEntropy.hpp"
 
+#include <cmath>
+
 namespace metrics {
 
 typename CrossEntropy::ResultType CrossEntropy::score(const Features _yhat,

@@ -16,8 +16,9 @@
 #include <utility>
 #include <vector>
 
-#include "helpers/enums/enums.hpp"
-#include "helpers/helpers.hpp"
+#include "helpers/ColumnDescription.hpp"
+#include "helpers/Schema.hpp"
+#include "helpers/enums/Aggregation.hpp"
 #include "transpilation/HumanReadableTrimming.hpp"
 #include "transpilation/SQLDialectGenerator.hpp"
 

@@ -18,6 +18,7 @@
 #include "fastprop/algorithm/Memoization.hpp"
 #include "fastprop/containers/containers.hpp"
 #include "fct/Ref.hpp"
+#include "helpers/Aggregations.hpp"
 
 namespace fastprop {
 namespace algorithm {

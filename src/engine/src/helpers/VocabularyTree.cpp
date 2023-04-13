@@ -7,18 +7,10 @@
 
 #include "helpers/VocabularyTree.hpp"
 
-// ----------------------------------------------------------------------------
-
 #include "fct/fct.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "helpers/Macros.hpp"
 
-// ----------------------------------------------------------------------------
-
 namespace helpers {
-// ----------------------------------------------------------------------------
 
 VocabularyTree::VocabularyTree(
     const VocabForDf& _population, const std::vector<VocabForDf>& _peripheral,

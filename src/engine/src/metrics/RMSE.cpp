@@ -7,6 +7,8 @@
 
 #include "metrics/RMSE.hpp"
 
+#include <cmath>
+
 namespace metrics {
 
 typename RMSE::ResultType RMSE::score(const Features _yhat, const Features _y) {

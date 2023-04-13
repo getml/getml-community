@@ -11,7 +11,7 @@
 #include <fstream>
 
 #include "fct/make_named_tuple.hpp"
-#include "helpers/helpers.hpp"
+#include "helpers/StringSplitter.hpp"
 #include "transpilation/transpilation.hpp"
 
 namespace engine {

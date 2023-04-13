@@ -22,7 +22,8 @@
 #include "fct/Literal.hpp"
 #include "fct/NamedTuple.hpp"
 #include "fct/Ref.hpp"
-#include "helpers/helpers.hpp"
+#include "helpers/ColumnDescription.hpp"
+#include "helpers/StringIterator.hpp"
 #include "strings/strings.hpp"
 
 namespace engine {
@@ -97,8 +98,7 @@ class Seasonal : public Preprocessor {
   /// Returns the fingerprint of the preprocessor (necessary to build
   /// the dependency graphs).
   commands::Fingerprint fingerprint() const final {
-    using FingerprintType =
-        typename commands::Fingerprint::SeasonalFingerprint;
+    using FingerprintType = typename commands::Fingerprint::SeasonalFingerprint;
     return commands::Fingerprint(
         FingerprintType(fct::make_field<"dependencies_">(dependencies_),
                         fct::make_field<"type_">(fct::Literal<"Seasonal">())));

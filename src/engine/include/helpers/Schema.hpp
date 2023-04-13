@@ -55,9 +55,6 @@ struct Schema {
                       f_numericals, f_targets, f_text, f_time_stamps,
                       f_unused_floats, f_unused_strings>;
 
-  /// Constructs a new schema from a named tuple.
-  Schema(const NamedTupleType& _val) : val_(_val) {}
-
   /// Trivial getter
   const std::vector<std::string>& categoricals() const {
     return val_.get<f_categoricals>();

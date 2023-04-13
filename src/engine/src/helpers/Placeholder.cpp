@@ -9,9 +9,35 @@
 
 namespace helpers {
 
+// ----------------------------------------------------------------------------
+
+Placeholder::Placeholder(const NeededForTraining& _params)
+    : val_(_params * f_categoricals({}) * f_discretes({}) * f_join_keys({}) *
+           f_numericals({}) * f_targets({}) * f_text({}) * f_time_stamps({})) {
+  check_vector_length();
+}
+
+// ----------------------------------------------------------------------------
+
+Placeholder::Placeholder(const NeededForPythonAPI& _params)
+    : val_(_params * f_allow_lagged_targets({}) * f_joined_tables({}) *
+           f_join_keys_used({}) * f_other_join_keys_used({}) *
+           f_other_time_stamps_used({}) * f_propositionalization({}) *
+           f_time_stamps_used({}) * f_upper_time_stamps_used({})) {}
+
+// ----------------------------------------------------------------------------
+
+Placeholder::Placeholder(const NamedTupleType& _val) : val_(_val) {}
+
+// ----------------------------------------------------------------------------
+
+// ----------------------------------------------------------------------------
+
 Placeholder Placeholder::from_json_obj(const Poco::Dynamic::Var& _json_obj) {
   return Placeholder(json::from_json<NamedTupleType>(_json_obj));
 }
+
+// ----------------------------------------------------------------------------
 
 void Placeholder::check_data_model(
     const std::vector<std::string>& _peripheral_names,

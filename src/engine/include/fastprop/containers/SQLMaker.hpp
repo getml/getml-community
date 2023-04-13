@@ -14,7 +14,8 @@
 
 #include "fastprop/containers/AbstractFeature.hpp"
 #include "fastprop/enums/enums.hpp"
-#include "helpers/helpers.hpp"
+#include "helpers/Schema.hpp"
+#include "helpers/StringIterator.hpp"
 #include "transpilation/transpilation.hpp"
 
 namespace fastprop {

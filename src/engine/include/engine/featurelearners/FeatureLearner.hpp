@@ -30,9 +30,14 @@
 #include "fct/Field.hpp"
 #include "fct/define_named_tuple.hpp"
 #include "fct/get.hpp"
+#include "helpers/ColumnDescription.hpp"
+#include "helpers/FeatureContainer.hpp"
 #include "helpers/Loader.hpp"
+#include "helpers/RowIndexContainer.hpp"
 #include "helpers/Saver.hpp"
-#include "helpers/helpers.hpp"
+#include "helpers/StringIterator.hpp"
+#include "helpers/VocabularyContainer.hpp"
+#include "helpers/WordIndexContainer.hpp"
 
 namespace engine {
 namespace featurelearners {
