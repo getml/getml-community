@@ -12,7 +12,6 @@
 #include <utility>
 #include <vector>
 
-
 #include "commands/Fingerprint.hpp"
 #include "commands/Preprocessor.hpp"
 #include "engine/containers/containers.hpp"
@@ -23,7 +22,8 @@
 #include "fct/Literal.hpp"
 #include "fct/NamedTuple.hpp"
 #include "fct/Ref.hpp"
-#include "helpers/helpers.hpp"
+#include "helpers/ColumnDescription.hpp"
+#include "helpers/StringIterator.hpp"
 #include "strings/strings.hpp"
 
 namespace engine {
@@ -71,8 +71,9 @@ class TextFieldSplitter : public Preprocessor {
 
  public:
   /// Creates a deep copy.
-  fct::Ref<Preprocessor> clone(const std::optional<std::vector<commands::Fingerprint>>&
-                                   _dependencies = std::nullopt) const final {
+  fct::Ref<Preprocessor> clone(
+      const std::optional<std::vector<commands::Fingerprint>>& _dependencies =
+          std::nullopt) const final {
     const auto c = fct::Ref<TextFieldSplitter>::make(*this);
     if (_dependencies) {
       c->dependencies_ = *_dependencies;
@@ -83,8 +84,8 @@ class TextFieldSplitter : public Preprocessor {
   /// Returns the fingerprint of the preprocessor (necessary to build
   /// the dependency graphs).
   commands::Fingerprint fingerprint() const final {
-    using FingerprintType = typename commands::Fingerprint::
-        TextFieldSplitterFingerprint;
+    using FingerprintType =
+        typename commands::Fingerprint::TextFieldSplitterFingerprint;
     return commands::Fingerprint(FingerprintType(
         fct::make_field<"dependencies_">(dependencies_),
         fct::make_field<"type_">(fct::Literal<"TextFieldSplitter">())));

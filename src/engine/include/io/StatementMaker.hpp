@@ -86,7 +86,6 @@ class StatementMaker {
   }
 };
 
-// ----------------------------------------------------------------------------
 }  // namespace io
 
 #endif  // IO_STATEMENTMAKER_HPP_

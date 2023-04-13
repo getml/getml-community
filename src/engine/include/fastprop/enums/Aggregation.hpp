@@ -8,7 +8,7 @@
 #ifndef FASTPROP_ENUMS_AGGREGATION_HPP_
 #define FASTPROP_ENUMS_AGGREGATION_HPP_
 
-#include "helpers/helpers.hpp"
+#include "helpers/enums/Aggregation.hpp"
 
 namespace fastprop {
 namespace enums {

@@ -9,7 +9,7 @@
 #define ENGINE_CONTAINERS_CATEGORICALFEATURES_HPP_
 
 #include "engine/Int.hpp"
-#include "helpers/helpers.hpp"
+#include "helpers/Feature.hpp"
 
 namespace engine {
 namespace containers {

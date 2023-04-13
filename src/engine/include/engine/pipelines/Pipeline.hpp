@@ -29,7 +29,8 @@
 #include "engine/pipelines/FittedPipeline.hpp"
 #include "engine/pipelines/MonitorSummary.hpp"
 #include "engine/pipelines/TransformParams.hpp"
-#include "helpers/helpers.hpp"
+#include "helpers/Placeholder.hpp"
+#include "helpers/StringIterator.hpp"
 #include "metrics/Scores.hpp"
 #include "transpilation/transpilation.hpp"
 

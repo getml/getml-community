@@ -1,17 +1,14 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef HELPERS_SUBROLE_HPP_
 #define HELPERS_SUBROLE_HPP_
 
-// ----------------------------------------------------------------------------
-
 namespace helpers {
-// ----------------------------------------------------------------------------
 
 enum class Subrole {
   comparison_only,
@@ -33,10 +30,6 @@ enum class Subrole {
   substring_only
 };
 
-// ----------------------------------------------------------------------------
-
 }  // namespace helpers
-
-// ----------------------------------------------------------------------------
 
 #endif  // HELPERS_SUBROLE_HPP_

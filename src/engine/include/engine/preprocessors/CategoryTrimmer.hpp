@@ -25,7 +25,7 @@
 #include "fct/Literal.hpp"
 #include "fct/NamedTuple.hpp"
 #include "helpers/ColumnDescription.hpp"
-#include "helpers/helpers.hpp"
+#include "helpers/StringIterator.hpp"
 #include "strings/strings.hpp"
 
 namespace engine {

@@ -16,6 +16,7 @@
 
 #include "commands/WarningFingerprint.hpp"
 #include "debug/debug.hpp"
+#include "engine/communication/Sender.hpp"
 #include "fct/Ref.hpp"
 #include "json/json.hpp"
 

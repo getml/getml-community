@@ -18,7 +18,7 @@
 #include "engine/preprocessors/FitParams.hpp"
 #include "engine/preprocessors/TransformParams.hpp"
 #include "fct/Ref.hpp"
-#include "helpers/helpers.hpp"
+#include "helpers/StringIterator.hpp"
 
 namespace engine {
 namespace preprocessors {

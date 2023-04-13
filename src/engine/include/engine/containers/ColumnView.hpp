@@ -21,7 +21,8 @@
 #include "engine/config/config.hpp"
 #include "engine/containers/ArrayMaker.hpp"
 #include "engine/containers/ColumnViewIterator.hpp"
-#include "helpers/helpers.hpp"
+#include "helpers/NullChecker.hpp"
+#include "helpers/SubroleParser.hpp"
 #include "strings/strings.hpp"
 
 namespace engine {

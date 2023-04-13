@@ -17,7 +17,8 @@
 
 #include "debug/debug.hpp"
 #include "engine/Float.hpp"
-#include "helpers/helpers.hpp"
+#include "fct/collect.hpp"
+#include "helpers/NullChecker.hpp"
 
 namespace engine {
 namespace containers {

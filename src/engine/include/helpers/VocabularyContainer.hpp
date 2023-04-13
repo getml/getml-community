@@ -36,15 +36,12 @@ class VocabularyContainer {
  public:
   VocabularyContainer(size_t _min_df, size_t _max_size,
                       const DataFrame& _population,
-                      const std::vector<DataFrame>& _peripheral)
-      : VocabularyContainer(
-            make_container(_min_df, _max_size, _population, _peripheral)) {}
+                      const std::vector<DataFrame>& _peripheral);
 
   VocabularyContainer(const VocabForDf& _population,
-                      const std::vector<VocabForDf>& _peripheral)
-      : val_(f_peripheral(_peripheral) * f_population(_population)) {}
+                      const std::vector<VocabForDf>& _peripheral);
 
-  explicit VocabularyContainer(const NamedTupleType& _val) : val_(_val) {}
+  explicit VocabularyContainer(const NamedTupleType& _val);
 
   ~VocabularyContainer() = default;
 

@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "debug/debug.hpp"
+#include "logging/AbstractLogger.hpp"
 #include "predictors/Fingerprint.hpp"
 #include "predictors/FloatFeature.hpp"
 #include "predictors/IntFeature.hpp"

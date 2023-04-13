@@ -27,6 +27,8 @@
 #include "engine/containers/Encoding.hpp"
 #include "engine/containers/MonitorSummary.hpp"
 #include "engine/containers/Schema.hpp"
+#include "helpers/DataFrameParams.hpp"
+#include "helpers/Macros.hpp"
 #include "strings/strings.hpp"
 #include "transpilation/HumanReadableSQLGenerator.hpp"
 #include "transpilation/transpilation.hpp"

@@ -23,7 +23,10 @@
 #include "fct/Literal.hpp"
 #include "fct/NamedTuple.hpp"
 #include "fct/Ref.hpp"
-#include "helpers/helpers.hpp"
+#include "helpers/ColumnDescription.hpp"
+#include "helpers/Macros.hpp"
+#include "helpers/StringIterator.hpp"
+#include "helpers/Subrole.hpp"
 #include "strings/strings.hpp"
 
 namespace engine {
@@ -67,8 +70,9 @@ class Substring : public Preprocessor {
 
  public:
   /// Creates a deep copy.
-  fct::Ref<Preprocessor> clone(const std::optional<std::vector<commands::Fingerprint>>&
-                                   _dependencies = std::nullopt) const final {
+  fct::Ref<Preprocessor> clone(
+      const std::optional<std::vector<commands::Fingerprint>>& _dependencies =
+          std::nullopt) const final {
     const auto c = fct::Ref<Substring>::make(*this);
     if (_dependencies) {
       c->dependencies_ = *_dependencies;

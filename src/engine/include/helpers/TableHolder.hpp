@@ -35,8 +35,6 @@ class TableHolder {
 
   ~TableHolder();
 
-  // ------------------------------
-
  private:
   /// Adds the text fields to the peripheral tables.
   static std::vector<DataFrame> add_text_fields_to_peripheral_tables(

@@ -112,20 +112,11 @@ struct Placeholder {
   using NamedTupleType = fct::define_named_tuple_t<
       fct::remove_fields_t<NeededForTraining, "name_">, NeededForPythonAPI>;
 
-  explicit Placeholder(const NeededForTraining& _params)
-      : val_(_params * f_categoricals({}) * f_discretes({}) * f_join_keys({}) *
-             f_numericals({}) * f_targets({}) * f_text({}) *
-             f_time_stamps({})) {
-    check_vector_length();
-  }
+  explicit Placeholder(const NeededForTraining& _params);
 
-  explicit Placeholder(const NeededForPythonAPI& _params)
-      : val_(_params * f_allow_lagged_targets({}) * f_joined_tables({}) *
-             f_join_keys_used({}) * f_other_join_keys_used({}) *
-             f_other_time_stamps_used({}) * f_propositionalization({}) *
-             f_time_stamps_used({}) * f_upper_time_stamps_used({})) {}
+  explicit Placeholder(const NeededForPythonAPI& _params);
 
-  explicit Placeholder(const NamedTupleType& _val) : val_(_val) {}
+  explicit Placeholder(const NamedTupleType& _val);
 
   ~Placeholder() = default;
 

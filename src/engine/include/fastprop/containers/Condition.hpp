@@ -17,7 +17,8 @@
 #include "fastprop/enums/enums.hpp"
 #include "fct/Field.hpp"
 #include "fct/NamedTuple.hpp"
-#include "helpers/helpers.hpp"
+#include "helpers/Schema.hpp"
+#include "helpers/StringIterator.hpp"
 #include "transpilation/transpilation.hpp"
 
 namespace fastprop {

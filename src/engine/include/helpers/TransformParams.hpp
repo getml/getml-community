@@ -1,34 +1,24 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef HELPERS_TRANSFORMPARAMS_HPP_
 #define HELPERS_TRANSFORMPARAMS_HPP_
-
-// ----------------------------------------------------------------------------
 
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
-#include "logging/logging.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "helpers/DataFrame.hpp"
 #include "helpers/FeatureContainer.hpp"
 #include "helpers/WordIndexContainer.hpp"
-
-// ----------------------------------------------------------------------------
+#include "logging/logging.hpp"
 
 namespace helpers {
-// ----------------------------------------------------------------------------
 
 struct TransformParams {
   /// Contains the features trained by the propositionalization.
@@ -54,9 +44,7 @@ struct TransformParams {
   const WordIndexContainer word_indices_;
 };
 
-// ----------------------------------------------------------------------------
 }  // namespace helpers
 
-// ----------------------------------------------------------------------------
 #endif  // HELPERS_TRANSFORMPARAMS_HPP_
 

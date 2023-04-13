@@ -8,6 +8,8 @@
 #include "transpilation/HumanReadableSQLGenerator.hpp"
 
 #include "fct/fct.hpp"
+#include "helpers/Macros.hpp"
+#include "helpers/StringReplacer.hpp"
 #include "helpers/enums/Aggregation.hpp"
 #include "transpilation/SQLGenerator.hpp"
 

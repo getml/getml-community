@@ -7,6 +7,8 @@
 
 #include "metrics/Summarizer.hpp"
 
+#include <cmath>
+
 namespace metrics {
 
 typename Summarizer::PlotWithLabels Summarizer::calc_categorical_column_plot(
