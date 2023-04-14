@@ -5,20 +5,19 @@
 // for details.
 //
 
-#ifndef ENGINE_FEATURELEARNERS_ABSTRACTFEATURELEARNER_HPP_
-#define ENGINE_FEATURELEARNERS_ABSTRACTFEATURELEARNER_HPP_
+#ifndef FEATURELEARNERS_ABSTRACTFEATURELEARNER_HPP_
+#define FEATURELEARNERS_ABSTRACTFEATURELEARNER_HPP_
 
 #include <map>
 #include <memory>
 #include <vector>
 
 #include "commands/Fingerprint.hpp"
-#include "engine/Float.hpp"
-#include "engine/Int.hpp"
-#include "engine/featurelearners/FitParams.hpp"
-#include "engine/featurelearners/TransformParams.hpp"
+#include "featurelearners/FitParams.hpp"
+#include "featurelearners/Float.hpp"
+#include "featurelearners/Int.hpp"
+#include "featurelearners/TransformParams.hpp"
 
-namespace engine {
 namespace featurelearners {
 
 class AbstractFeatureLearner {
@@ -97,7 +96,6 @@ class AbstractFeatureLearner {
 };
 
 }  // namespace featurelearners
-}  // namespace engine
 
-#endif  // ENGINE_FEATURELEARNERS_ABSTRACTFEATURELEARNER_HPP_
+#endif  // FEATURELEARNERS_ABSTRACTFEATURELEARNER_HPP_
 

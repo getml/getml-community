@@ -5,8 +5,8 @@
 // for details.
 //
 
-#ifndef ENGINE_FEATURELEARNERS_FEATURELEARNER_HPP_
-#define ENGINE_FEATURELEARNERS_FEATURELEARNER_HPP_
+#ifndef FEATURELEARNERS_FEATURELEARNER_HPP_
+#define FEATURELEARNERS_FEATURELEARNER_HPP_
 
 #include <map>
 #include <memory>
@@ -19,17 +19,17 @@
 #include "commands/Fingerprint.hpp"
 #include "containers/containers.hpp"
 #include "debug/debug.hpp"
-#include "engine/Float.hpp"
-#include "engine/Int.hpp"
-#include "engine/featurelearners/AbstractFeatureLearner.hpp"
-#include "engine/featurelearners/FeatureLearnerParams.hpp"
-#include "engine/featurelearners/FitParams.hpp"
-#include "engine/featurelearners/TransformParams.hpp"
 #include "fastprop/algorithm/algorithm.hpp"
 #include "fastprop/subfeatures/subfeatures.hpp"
 #include "fct/Field.hpp"
 #include "fct/define_named_tuple.hpp"
 #include "fct/get.hpp"
+#include "featurelearners/AbstractFeatureLearner.hpp"
+#include "featurelearners/FeatureLearnerParams.hpp"
+#include "featurelearners/FitParams.hpp"
+#include "featurelearners/Float.hpp"
+#include "featurelearners/Int.hpp"
+#include "featurelearners/TransformParams.hpp"
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/FeatureContainer.hpp"
 #include "helpers/Loader.hpp"
@@ -39,7 +39,6 @@
 #include "helpers/VocabularyContainer.hpp"
 #include "helpers/WordIndexContainer.hpp"
 
-namespace engine {
 namespace featurelearners {
 
 template <class FeatureLearnerType>
@@ -349,14 +348,8 @@ class FeatureLearner : public AbstractFeatureLearner {
   std::shared_ptr<const helpers::VocabularyContainer> vocabulary_;
 };
 
-}  // namespace featurelearners
-}  // namespace engine
-
 // ----------------------------------------------------------------------------
 // ----------------------------------------------------------------------------
-
-namespace engine {
-namespace featurelearners {
 
 template <typename FeatureLearnerType>
 std::map<helpers::ColumnDescription, Float>
@@ -914,9 +907,6 @@ std::string FeatureLearner<FeatureLearnerType>::type() const {
 
 // ----------------------------------------------------------------------------
 }  // namespace featurelearners
-}  // namespace engine
 
-// ----------------------------------------------------------------------------
-
-#endif  // ENGINE_FEATURELEARNERS_FEATURELEARNER_HPP_
+#endif  // FEATURELEARNERS_FEATURELEARNER_HPP_
 

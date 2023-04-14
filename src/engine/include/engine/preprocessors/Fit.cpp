@@ -9,13 +9,13 @@
 
 #include "commands/FeatureLearner.hpp"
 #include "commands/Fingerprint.hpp"
-#include "engine/featurelearners/AbstractFeatureLearner.hpp"
 #include "engine/pipelines/Score.hpp"
 #include "engine/pipelines/Transform.hpp"
 #include "engine/pipelines/TransformParams.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
 #include "fct/Field.hpp"
 #include "fct/collect.hpp"
+#include "featurelearners/AbstractFeatureLearner.hpp"
 #include "helpers/StringReplacer.hpp"
 #include "json/json.hpp"
 #include "predictors/Predictor.hpp"
@@ -128,7 +128,8 @@ fct::Ref<const std::vector<typename Fit::Predictorcommands::Fingerprint>>
 Fit::extract_predictor_fingerprints(
     const std::vector<std::vector<fct::Ref<predictors::Predictor>>>&
         _predictors,
-    const fct::Ref<const std::vector<Predictorcommands::Fingerprint>>& _dependencies) {
+    const fct::Ref<const std::vector<Predictorcommands::Fingerprint>>&
+        _dependencies) {
   if (_predictors.size() == 0 || _predictors.at(0).size() == 0) {
     return _dependencies;
   }
@@ -152,8 +153,9 @@ Fit::extract_preprocessor_fingerprints(
     const fct::Ref<const std::vector<commands::DataFrameFingerprint>>&
         _dependencies) {
   if (_preprocessors.size() == 0) {
-    return fct::Ref<const std::vector<FeatureLearnercommands::Fingerprint>>::make(
-        fct::collect::vector<FeatureLearnercommands::Fingerprint>(*_dependencies));
+    return fct::Ref<const std::vector<FeatureLearnercommands::Fingerprint>>::
+        make(fct::collect::vector<FeatureLearnercommands::Fingerprint>(
+            *_dependencies));
   }
 
   const auto get_fingerprint = [](const auto& _fl) {
@@ -250,13 +252,12 @@ Fit::fit(const Pipeline& _pipeline, const FitParams& _params) {
 
   const auto predictor_impl = make_predictor_impl(_pipeline, feature_selectors,
                                                   preprocessed.population_df_);
-  using commands::Fingerprint =
-      commands::Fingerprint;
+  using commands::Fingerprint = commands::Fingerprint;
 
   const auto validation_fingerprint =
-      _params.validation_df_
-          ? std::vector<commands::Fingerprint>({_params.validation_df_->fingerprint()})
-          : std::vector<commands::Fingerprint>();
+      _params.validation_df_ ? std::vector<commands::Fingerprint>(
+                                   {_params.validation_df_->fingerprint()})
+                             : std::vector<commands::Fingerprint>();
 
   const auto dependencies = fct::Ref<std::vector<commands::Fingerprint>>::make(
       fct::join::vector<commands::Fingerprint>(
@@ -321,8 +322,9 @@ Fit::fit(const Pipeline& _pipeline, const FitParams& _params) {
 
 // ----------------------------------------------------------------------------
 
-std::pair<std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>,
-          fct::Ref<const std::vector<typename Fit::Predictorcommands::Fingerprint>>>
+std::pair<
+    std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>,
+    fct::Ref<const std::vector<typename Fit::Predictorcommands::Fingerprint>>>
 Fit::fit_feature_learners(
     const Pipeline& _pipeline, const FitParams& _params,
     const containers::DataFrame& _population_df,
@@ -386,8 +388,9 @@ Fit::fit_feature_learners(
 
 // ----------------------------------------------------------------------------
 
-std::pair<Predictors,
-          fct::Ref<const std::vector<typename Fit::Predictorcommands::Fingerprint>>>
+std::pair<
+    Predictors,
+    fct::Ref<const std::vector<typename Fit::Predictorcommands::Fingerprint>>>
 Fit::fit_predictors(const FitPredictorsParams& _params) {
   auto predictors = init_predictors(_params.pipeline_, _params.purpose_,
                                     _params.impl_, *_params.dependencies_,
@@ -516,9 +519,9 @@ Preprocessed Fit::fit_preprocessors_only(
 
 // ----------------------------------------------------------------------------
 
-std::pair<
-    std::vector<fct::Ref<const preprocessors::Preprocessor>>,
-    fct::Ref<const std::vector<typename Fit::FeatureLearnercommands::Fingerprint>>>
+std::pair<std::vector<fct::Ref<const preprocessors::Preprocessor>>,
+          fct::Ref<const std::vector<
+              typename Fit::FeatureLearnercommands::Fingerprint>>>
 Fit::fit_transform_preprocessors(
     const Pipeline& _pipeline, const FitPreprocessorsParams& _params,
     const fct::Ref<const std::vector<commands::DataFrameFingerprint>>&

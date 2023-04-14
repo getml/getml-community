@@ -10,11 +10,11 @@
 
 #include <vector>
 
-#include "engine/featurelearners/featurelearners.hpp"
 #include "engine/pipelines/Fingerprints.hpp"
 #include "engine/pipelines/Predictors.hpp"
 #include "engine/preprocessors/preprocessors.hpp"
 #include "fct/fct.hpp"
+#include "featurelearners/featurelearners.hpp"
 #include "predictors/predictors.hpp"
 
 namespace engine {
