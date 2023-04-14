@@ -12,6 +12,8 @@
 #include "engine/handlers/BoolOpParser.hpp"
 #include "engine/handlers/FloatOpParser.hpp"
 #include "engine/handlers/StringOpParser.hpp"
+#include "engine/utils/Getter.hpp"
+#include "helpers/Aggregations.hpp"
 
 namespace engine {
 namespace handlers {

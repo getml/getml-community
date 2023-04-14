@@ -14,9 +14,9 @@
 #include <memory>
 #include <string>
 
+#include "communication/communication.hpp"
 #include "containers/containers.hpp"
 #include "debug/debug.hpp"
-#include "engine/communication/communication.hpp"
 #include "engine/config/config.hpp"
 #include "engine/handlers/DataFrameManager.hpp"
 #include "engine/handlers/PipelineManagerParams.hpp"

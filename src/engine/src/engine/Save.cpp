@@ -10,6 +10,7 @@
 #include "engine/pipelines/PipelineJSON.hpp"
 #include "engine/pipelines/ToSQL.hpp"
 #include "engine/pipelines/ToSQLParams.hpp"
+#include "engine/utils/SQLDependencyTracker.hpp"
 #include "fct/Field.hpp"
 #include "fct/NamedTuple.hpp"
 #include "helpers/Saver.hpp"

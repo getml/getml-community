@@ -54,11 +54,10 @@ int main(int argc, char* argv[]) {
 
   engine::handlers::FileHandler::delete_temp_dir(options.temp_dir());
 
-  const auto monitor =
-      fct::Ref<const engine::communication::Monitor>::make(options);
+  const auto monitor = fct::Ref<const communication::Monitor>::make(options);
 
   const auto logger =
-      fct::Ref<const engine::communication::Logger>::make(monitor.ptr());
+      fct::Ref<const communication::Logger>::make(monitor.ptr());
 
   const auto pool = options.make_pool();
 

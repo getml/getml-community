@@ -29,8 +29,6 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/Load_load_impls.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Load_load_predictors.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Load_load_preprocessors.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/Logger.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/Monitor.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Options.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Pipeline.cpp
     ${ENGINE_SOURCE_DIRECTORY}/PipelineManager.cpp
@@ -42,11 +40,9 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/PreprocessorParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/ProjectManager.cpp
     ${ENGINE_SOURCE_DIRECTORY}/ProjectManager_execute_command.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/Receiver.cpp
     ${ENGINE_SOURCE_DIRECTORY}/RequestHandler.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Save.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Seasonal.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/Sender.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Score.cpp
     ${ENGINE_SOURCE_DIRECTORY}/SQLDependencyTracker.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Staging.cpp

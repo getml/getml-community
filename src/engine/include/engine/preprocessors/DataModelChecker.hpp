@@ -12,10 +12,10 @@
 #include <string>
 #include <vector>
 
+#include "communication/communication.hpp"
 #include "containers/containers.hpp"
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
-#include "engine/communication/communication.hpp"
 #include "featurelearners/AbstractFeatureLearner.hpp"
 #include "helpers/Macros.hpp"
 #include "helpers/Placeholder.hpp"

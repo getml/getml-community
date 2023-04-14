@@ -8,8 +8,8 @@
 #ifndef ENGINE_ENGINE_HPP_
 #define ENGINE_ENGINE_HPP_
 
+#include "communication/communication.hpp"
 #include "containers/containers.hpp"
-#include "engine/communication/communication.hpp"
 #include "engine/handlers/handlers.hpp"
 #include "engine/srv/srv.hpp"
 #include "featurelearners/featurelearners.hpp"

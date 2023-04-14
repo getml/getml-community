@@ -82,7 +82,7 @@ void ProjectManager::add_pipeline(const typename Command::PipelineOp& _cmd,
 
   set_pipeline(_cmd.get<"name_">(), pipeline);
 
-  engine::communication::Sender::send_string("Success!", _socket);
+  communication::Sender::send_string("Success!", _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -130,7 +130,7 @@ void ProjectManager::delete_data_frame(
   FileHandler::remove(name, project_directory(), _cmd.get<"mem_only_">(),
                       &data_frames());
 
-  engine::communication::Sender::send_string("Success!", _socket);
+  communication::Sender::send_string("Success!", _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -168,7 +168,7 @@ void ProjectManager::delete_project(
   Poco::File(params_.options_.all_projects_directory() + name + "/")
       .remove(true);
 
-  engine::communication::Sender::send_string("Success!", _socket);
+  communication::Sender::send_string("Success!", _socket);
 
   if (project_directory() ==
       params_.options_.all_projects_directory() + name + "/") {
@@ -204,9 +204,9 @@ void ProjectManager::list_data_frames(const typename Command::ListDfsOp& _cmd,
   const auto obj = fct::make_field<"in_memory">(in_memory) *
                    fct::make_field<"on_disk">(on_disk);
 
-  engine::communication::Sender::send_string("Success!", _socket);
+  communication::Sender::send_string("Success!", _socket);
 
-  engine::communication::Sender::send_string(json::to_json(obj), _socket);
+  communication::Sender::send_string(json::to_json(obj), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -226,9 +226,9 @@ void ProjectManager::list_pipelines(
 
   const auto obj = fct::make_named_tuple(fct::make_field<"names">(names));
 
-  engine::communication::Sender::send_string("Success!", _socket);
+  communication::Sender::send_string("Success!", _socket);
 
-  engine::communication::Sender::send_string(json::to_json(obj), _socket);
+  communication::Sender::send_string(json::to_json(obj), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -253,9 +253,9 @@ void ProjectManager::list_projects(const typename Command::ListProjectsOp& _cmd,
   const auto obj =
       fct::make_named_tuple(fct::make_field<"projects">(project_names));
 
-  engine::communication::Sender::send_string("Success!", _socket);
+  communication::Sender::send_string("Success!", _socket);
 
-  engine::communication::Sender::send_string(json::to_json(obj), _socket);
+  communication::Sender::send_string(json::to_json(obj), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -314,7 +314,7 @@ void ProjectManager::load_data_frame(const typename Command::LoadDfOp& _cmd,
     data_frame_tracker().add(df, *df.build_history());
   }
 
-  engine::communication::Sender::send_string("Success!", _socket);
+  communication::Sender::send_string("Success!", _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -331,7 +331,7 @@ void ProjectManager::load_pipeline(const typename Command::LoadPipelineOp& _cmd,
 
   set_pipeline(name, pipeline);
 
-  engine::communication::Sender::send_string("Success!", _socket);
+  communication::Sender::send_string("Success!", _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -414,7 +414,7 @@ void ProjectManager::save_pipeline(const typename Command::SavePipelineOp& _cmd,
   FileHandler::save_encodings(project_directory(), params_.categories_.ptr(),
                               nullptr);
 
-  engine::communication::Sender::send_string("Success!", _socket);
+  communication::Sender::send_string("Success!", _socket);
 }
 
 // ------------------------------------------------------------------------

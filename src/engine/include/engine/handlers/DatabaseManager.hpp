@@ -16,9 +16,9 @@
 #include <vector>
 
 #include "commands/DatabaseCommand.hpp"
+#include "communication/communication.hpp"
 #include "database/database.hpp"
 #include "debug/debug.hpp"
-#include "engine/communication/communication.hpp"
 #include "engine/config/config.hpp"
 #include "engine/utils/utils.hpp"
 #include "fct/Ref.hpp"

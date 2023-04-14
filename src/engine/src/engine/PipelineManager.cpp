@@ -480,7 +480,7 @@ void PipelineManager::refresh_all(const typename Command::RefreshAllOp& _cmd,
     vec.push_back(refresh_pipeline(pipe));
   }
 
-  engine::communication::Sender::send_string("Success!", _socket);
+  communication::Sender::send_string("Success!", _socket);
 
   communication::Sender::send_string(json::to_json(vec), _socket);
 }

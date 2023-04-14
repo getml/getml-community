@@ -15,9 +15,9 @@
 #include <string>
 
 #include "commands/ColumnCommand.hpp"
+#include "communication/communication.hpp"
 #include "containers/containers.hpp"
 #include "debug/debug.hpp"
-#include "engine/communication/communication.hpp"
 #include "engine/config/config.hpp"
 #include "engine/handlers/DataFrameManagerParams.hpp"
 #include "engine/handlers/DatabaseManager.hpp"

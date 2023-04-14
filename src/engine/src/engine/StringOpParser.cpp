@@ -9,6 +9,7 @@
 
 #include "engine/handlers/BoolOpParser.hpp"
 #include "engine/handlers/FloatOpParser.hpp"
+#include "engine/utils/Aggregations.hpp"
 #include "fct/visit.hpp"
 
 namespace engine {

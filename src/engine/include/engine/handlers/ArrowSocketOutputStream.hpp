@@ -15,7 +15,7 @@
 #include <cstdint>
 #include <stdexcept>
 
-#include "engine/communication/communication.hpp"
+#include "communication/communication.hpp"
 
 namespace engine {
 namespace handlers {

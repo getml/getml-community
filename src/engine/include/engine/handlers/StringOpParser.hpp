@@ -13,11 +13,11 @@
 #include <string>
 
 #include "commands/StringColumnOrStringColumnView.hpp"
+#include "communication/communication.hpp"
 #include "containers/containers.hpp"
 #include "debug/debug.hpp"
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
-#include "engine/communication/communication.hpp"
 #include "json/json.hpp"
 
 namespace engine {
