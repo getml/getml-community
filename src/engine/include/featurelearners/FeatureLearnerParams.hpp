@@ -5,23 +5,22 @@
 // for details.
 //
 
-#ifndef ENGINE_FEATURELEARNERS_FEATURELEARNERPARAMS_HPP_
-#define ENGINE_FEATURELEARNERS_FEATURELEARNERPARAMS_HPP_
+#ifndef FEATURELEARNERS_FEATURELEARNERPARAMS_HPP_
+#define FEATURELEARNERS_FEATURELEARNERPARAMS_HPP_
 
 #include <memory>
 #include <string>
 #include <vector>
 
 #include "commands/Fingerprint.hpp"
-#include "engine/Int.hpp"
 #include "fct/Field.hpp"
 #include "fct/NamedTuple.hpp"
 #include "fct/Ref.hpp"
 #include "fct/TaggedUnion.hpp"
+#include "featurelearners/Int.hpp"
 #include "helpers/Placeholder.hpp"
 #include "helpers/Schema.hpp"
 
-namespace engine {
 namespace featurelearners {
 
 using FeatureLearnerParams = fct::NamedTuple<
@@ -35,7 +34,6 @@ using FeatureLearnerParams = fct::NamedTuple<
     fct::Field<"target_num_", Int>>;
 
 }  // namespace featurelearners
-}  // namespace engine
 
-#endif  // ENGINE_FEATURELEARNERS_FEATURELEARNERPARAMS_HPP_
+#endif  // FEATURELEARNERS_FEATURELEARNERPARAMS_HPP_
 

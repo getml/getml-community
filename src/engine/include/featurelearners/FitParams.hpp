@@ -5,25 +5,27 @@
 // for details.
 //
 
-#ifndef ENGINE_FEATURELEARNERS_TRANSFORMPARAMS_HPP_
-#define ENGINE_FEATURELEARNERS_TRANSFORMPARAMS_HPP_
+#ifndef FEATURELEARNERS_FITPARAMS_HPP_
+#define FEATURELEARNERS_FITPARAMS_HPP_
+
+#include <memory>
+#include <optional>
+#include <string>
+#include <vector>
 
 #include "commands/DataFramesOrViews.hpp"
+#include "containers/containers.hpp"
+#include "engine/communication/communication.hpp"
+#include "featurelearners/Int.hpp"
 
-// ----------------------------------------------------------------------------
-
-namespace engine {
 namespace featurelearners {
 
-struct TransformParams {
+struct FitParams {
   /// The command used.
   const commands::DataFramesOrViews cmd_;
 
-  /// Indicates which features we want to generate.
-  const std::vector<size_t> index_;
-
   /// Logs the progress.
-  const std::shared_ptr<const communication::SocketLogger> logger_;
+  const std::shared_ptr<const engine::communication::SocketLogger> logger_;
 
   /// The peripheral data frames.
   const std::vector<containers::DataFrame> peripheral_dfs_;
@@ -38,9 +40,7 @@ struct TransformParams {
   const std::optional<std::string> temp_dir_;
 };
 
-// ----------------------------------------------------------------------------
 }  // namespace featurelearners
-}  // namespace engine
 
-#endif  // ENGINE_FEATURELEARNERS_TRANSFORMPARAMS_HPP_
+#endif  // FEATURELEARNERS_FITPARAMS_HPP_
 

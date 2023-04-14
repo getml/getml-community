@@ -10,8 +10,8 @@
 
 #include "containers/containers.hpp"
 #include "engine/communication/communication.hpp"
-#include "engine/featurelearners/featurelearners.hpp"
 #include "engine/handlers/handlers.hpp"
 #include "engine/srv/srv.hpp"
+#include "featurelearners/featurelearners.hpp"
 
 #endif  // ENGINE_ENGINE_HPP_

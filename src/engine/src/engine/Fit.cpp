@@ -9,7 +9,7 @@
 
 #include "commands/FeatureLearner.hpp"
 #include "commands/Fingerprint.hpp"
-#include "engine/featurelearners/AbstractFeatureLearner.hpp"
+#include "engine/pipelines/FeatureLearnerParser.hpp"
 #include "engine/pipelines/Score.hpp"
 #include "engine/pipelines/Transform.hpp"
 #include "engine/pipelines/TransformParams.hpp"
@@ -17,6 +17,7 @@
 #include "fct/Field.hpp"
 #include "fct/collect.hpp"
 #include "fct/make_named_tuple.hpp"
+#include "featurelearners/AbstractFeatureLearner.hpp"
 #include "helpers/StringReplacer.hpp"
 #include "json/json.hpp"
 #include "predictors/Predictor.hpp"
@@ -626,8 +627,7 @@ Fit::init_feature_learners(
     const auto new_params =
         _params.replace(fct::make_field<"target_num_">(_target_num));
 
-    return featurelearners::FeatureLearnerParser::parse(new_params,
-                                                        _hyperparameters);
+    return FeatureLearnerParser::parse(new_params, _hyperparameters);
   };
 
   const auto make_fl_for_all_targets =
@@ -652,8 +652,7 @@ Fit::init_feature_learners(
             featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS));
 
     const auto new_feature_learner =
-        featurelearners::FeatureLearnerParser::parse(new_params,
-                                                     _hyperparameters);
+        FeatureLearnerParser::parse(new_params, _hyperparameters);
 
     if (new_feature_learner->supports_multiple_targets()) {
       return {new_feature_learner};

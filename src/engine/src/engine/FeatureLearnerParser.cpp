@@ -5,29 +5,28 @@
 // for details.
 //
 
-#include "engine/featurelearners/FeatureLearnerParser.hpp"
+#include "engine/pipelines/FeatureLearnerParser.hpp"
 
 #include <type_traits>
 
-#include "engine/featurelearners/FeatureLearner.hpp"
 #include "fastprop/Hyperparameters.hpp"
 #include "fastprop/algorithm/algorithm.hpp"
 #include "fct/visit.hpp"
+#include "featurelearners/FeatureLearner.hpp"
 
 namespace engine {
-namespace featurelearners {
+namespace pipelines {
 
-fct::Ref<AbstractFeatureLearner> FeatureLearnerParser::parse(
-    const FeatureLearnerParams& _params,
+fct::Ref<featurelearners::AbstractFeatureLearner> FeatureLearnerParser::parse(
+    const featurelearners::FeatureLearnerParams& _params,
     const commands::FeatureLearner& _hyperparameters) {
-  const auto handle =
-      [&_params](
-          const auto& _hyperparameters) -> fct::Ref<AbstractFeatureLearner> {
+  const auto handle = [&_params](const auto& _hyperparameters)
+      -> fct::Ref<featurelearners::AbstractFeatureLearner> {
     using Type = std::decay_t<decltype(_hyperparameters)>;
 
     if constexpr (std::is_same<Type, fastprop::Hyperparameters>()) {
-      return fct::Ref<FeatureLearner<fastprop::algorithm::FastProp>>::make(
-          _params, _hyperparameters);
+      return fct::Ref<featurelearners::FeatureLearner<
+          fastprop::algorithm::FastProp>>::make(_params, _hyperparameters);
     }
   };
 
@@ -35,5 +34,5 @@ fct::Ref<AbstractFeatureLearner> FeatureLearnerParser::parse(
 }
 
 // ----------------------------------------------------------------------
-}  // namespace featurelearners
+}  // namespace pipelines
 }  // namespace engine
