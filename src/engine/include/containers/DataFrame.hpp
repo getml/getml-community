@@ -5,8 +5,8 @@
 // for details.
 //
 
-#ifndef ENGINE_CONTAINERS_DATAFRAME_HPP_
-#define ENGINE_CONTAINERS_DATAFRAME_HPP_
+#ifndef CONTAINERS_DATAFRAME_HPP_
+#define CONTAINERS_DATAFRAME_HPP_
 
 #include <Poco/File.h>
 
@@ -18,22 +18,21 @@
 #include "commands/DataFrameFromJSON.hpp"
 #include "commands/DataFrameOrView.hpp"
 #include "commands/Fingerprint.hpp"
+#include "containers/Column.hpp"
+#include "containers/DataFrameContent.hpp"
+#include "containers/DataFrameIndex.hpp"
+#include "containers/Encoding.hpp"
+#include "containers/Float.hpp"
+#include "containers/Int.hpp"
+#include "containers/MonitorSummary.hpp"
+#include "containers/Schema.hpp"
 #include "database/database.hpp"
-#include "engine/Float.hpp"
-#include "engine/Int.hpp"
-#include "engine/containers/Column.hpp"
-#include "engine/containers/DataFrameContent.hpp"
-#include "engine/containers/DataFrameIndex.hpp"
-#include "engine/containers/Encoding.hpp"
-#include "engine/containers/MonitorSummary.hpp"
-#include "engine/containers/Schema.hpp"
 #include "helpers/DataFrameParams.hpp"
 #include "helpers/Macros.hpp"
 #include "strings/strings.hpp"
 #include "transpilation/HumanReadableSQLGenerator.hpp"
 #include "transpilation/transpilation.hpp"
 
-namespace engine {
 namespace containers {
 
 class DataFrame {
@@ -1049,6 +1048,5 @@ DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
 }
 
 }  // namespace containers
-}  // namespace engine
 
-#endif  // ENGINE_CONTAINERS_DATAFRAME_HPP_
+#endif  // CONTAINERS_DATAFRAME_HPP_

@@ -5,18 +5,17 @@
 // for details.
 //
 
-#ifndef ENGINE_CONTAINERS_MONITORSUMMARY_HPP_
-#define ENGINE_CONTAINERS_MONITORSUMMARY_HPP_
+#ifndef CONTAINERS_MONITORSUMMARY_HPP_
+#define CONTAINERS_MONITORSUMMARY_HPP_
 
 #include <cstddef>
 #include <string>
 #include <vector>
 
-#include "engine/Float.hpp"
+#include "containers/Float.hpp"
 #include "fct/Field.hpp"
 #include "fct/NamedTuple.hpp"
 
-namespace engine {
 namespace containers {
 
 /// The summary for the monitor.
@@ -44,6 +43,5 @@ using MonitorSummary = fct::NamedTuple<
     fct::Field<"unused_string_units_", std::vector<std::string>>>;
 
 }  // namespace containers
-}  // namespace engine
 
-#endif  // ENGINE_CONTAINERS_MONITORSUMMARY_HPP_
+#endif  // CONTAINERS_MONITORSUMMARY_HPP_

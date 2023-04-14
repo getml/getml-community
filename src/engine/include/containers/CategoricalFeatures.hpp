@@ -5,18 +5,16 @@
 // for details.
 //
 
-#ifndef ENGINE_CONTAINERS_CATEGORICALFEATURES_HPP_
-#define ENGINE_CONTAINERS_CATEGORICALFEATURES_HPP_
+#ifndef CONTAINERS_CATEGORICALFEATURES_HPP_
+#define CONTAINERS_CATEGORICALFEATURES_HPP_
 
-#include "engine/Int.hpp"
+#include "containers/Int.hpp"
 #include "helpers/Feature.hpp"
 
-namespace engine {
 namespace containers {
 
 typedef std::vector<helpers::Feature<Int>> CategoricalFeatures;
 
 }  // namespace containers
-}  // namespace engine
 
-#endif  // ENGINE_CONTAINERS_CATEGORICALFEATURES_HPP_
+#endif  // CONTAINERS_CATEGORICALFEATURES_HPP_

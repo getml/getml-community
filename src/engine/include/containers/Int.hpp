@@ -5,10 +5,13 @@
 // for details.
 //
 
-#ifndef CONTAINERS_TSINDEX_TSINDEX_HPP_
-#define CONTAINERS_TSINDEX_TSINDEX_HPP_
+#ifndef CONTAINERS_INT_HPP_
+#define CONTAINERS_INT_HPP_
 
-#include "tsindex/Index.hpp"
-#include "tsindex/IndexParams.hpp"
+#include <cstdint>
 
-#endif  // CONTAINERS_TSINDEX_TSINDEX_HPP_
+namespace containers {
+typedef std::int32_t Int;
+}
+
+#endif  // CONTAINERS_INT_HPP_

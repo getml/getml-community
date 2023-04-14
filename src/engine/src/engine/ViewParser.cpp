@@ -8,7 +8,7 @@
 #include "engine/handlers/ViewParser.hpp"
 
 #include "commands/Fingerprint.hpp"
-#include "engine/containers/DataFrameContent.hpp"
+#include "containers/DataFrameContent.hpp"
 #include "engine/handlers/BoolOpParser.hpp"
 #include "engine/handlers/FloatOpParser.hpp"
 #include "engine/handlers/StringOpParser.hpp"

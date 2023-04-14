@@ -1,43 +1,30 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
-#ifndef ENGINE_CONTAINER_DATAFRAMEREADER_HPP_
-#define ENGINE_CONTAINER_DATAFRAMEREADER_HPP_
-
-// ----------------------------------------------------------------------------
+#ifndef CONTAINERS_DATAFRAMEREADER_HPP_
+#define CONTAINERS_DATAFRAMEREADER_HPP_
 
 #include <memory>
 #include <string>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
+#include "containers/DataFrame.hpp"
+#include "containers/Encoding.hpp"
 #include "debug/debug.hpp"
 #include "io/io.hpp"
 
-// ----------------------------------------------------------------------------
-
-#include "engine/containers/DataFrame.hpp"
-#include "engine/containers/Encoding.hpp"
-
-// ----------------------------------------------------------------------------
-
-namespace engine {
 namespace containers {
-// ----------------------------------------------------------------------------
 
 class DataFrameReader : public io::Reader {
-  // -------------------------------
-
  public:
   DataFrameReader(
       const DataFrame& _df,
-      const std::shared_ptr<engine::containers::Encoding>& _categories,
-      const std::shared_ptr<engine::containers::Encoding>& _join_keys_encoding,
+      const std::shared_ptr<containers::Encoding>& _categories,
+      const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
       const char _quotechar, const char _sep)
       : categories_(_categories),
         colnames_(make_colnames(_df, _quotechar)),
@@ -79,8 +66,6 @@ class DataFrameReader : public io::Reader {
   /// Trivial getter.
   char sep() const final { return sep_; }
 
-  // -------------------------------
-
  private:
   /// Generates the column names.
   static std::vector<std::string> make_colnames(const DataFrame& _df,
@@ -93,26 +78,22 @@ class DataFrameReader : public io::Reader {
   static void update_counts(const std::string& _colname,
                             std::map<std::string, Int>* _counts);
 
-  // -------------------------------
-
  private:
   /// Trivial (private const) accessor.
-  const engine::containers::Encoding& categories() const {
+  const containers::Encoding& categories() const {
     assert_true(categories_);
     return *categories_;
   }
 
   /// Trivial (private const) accessor.
-  const engine::containers::Encoding& join_keys_encoding() const {
+  const containers::Encoding& join_keys_encoding() const {
     assert_true(join_keys_encoding_);
     return *join_keys_encoding_;
   }
 
-  // -------------------------------
-
  private:
   /// The encoding used for the categorical data.
-  const std::shared_ptr<const engine::containers::Encoding> categories_;
+  const std::shared_ptr<const containers::Encoding> categories_;
 
   /// The colnames of table to be generated.
   const std::vector<std::string> colnames_;
@@ -124,7 +105,7 @@ class DataFrameReader : public io::Reader {
   const DataFrame df_;
 
   /// The encoding used for the join keys.
-  const std::shared_ptr<const engine::containers::Encoding> join_keys_encoding_;
+  const std::shared_ptr<const containers::Encoding> join_keys_encoding_;
 
   /// The row we are currently in.
   size_t rownum_;
@@ -134,12 +115,8 @@ class DataFrameReader : public io::Reader {
 
   /// The character used for separating fields.
   const char sep_;
-
-  // -------------------------------
 };
 
-// ----------------------------------------------------------------------------
 }  // namespace containers
-}  // namespace engine
 
-#endif  // ENGINE_CONTAINER_DATAFRAMEREADER_HPP_
+#endif  // CONTAINERS_DATAFRAMEREADER_HPP_

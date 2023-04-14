@@ -62,13 +62,12 @@ int main(int argc, char* argv[]) {
 
   const auto pool = options.make_pool();
 
-  const auto categories = fct::Ref<engine::containers::Encoding>::make(pool);
+  const auto categories = fct::Ref<containers::Encoding>::make(pool);
 
-  const auto join_keys_encoding =
-      fct::Ref<engine::containers::Encoding>::make(pool);
+  const auto join_keys_encoding = fct::Ref<containers::Encoding>::make(pool);
 
   const auto data_frames =
-      fct::Ref<std::map<std::string, engine::containers::DataFrame>>::make();
+      fct::Ref<std::map<std::string, containers::DataFrame>>::make();
 
   const auto pipelines =
       fct::Ref<engine::handlers::PipelineManager::PipelineMapType>::make();

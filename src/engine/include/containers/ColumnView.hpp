@@ -5,8 +5,8 @@
 // for details.
 //
 
-#ifndef ENGINE_CONTAINERS_COLUMNVIEW_HPP_
-#define ENGINE_CONTAINERS_COLUMNVIEW_HPP_
+#ifndef CONTAINERS_COLUMNVIEW_HPP_
+#define CONTAINERS_COLUMNVIEW_HPP_
 
 #include <arrow/api.h>
 
@@ -16,16 +16,14 @@
 #include <variant>
 #include <vector>
 
+#include "containers/ArrayMaker.hpp"
+#include "containers/ColumnViewIterator.hpp"
+#include "containers/ULong.hpp"
 #include "debug/debug.hpp"
-#include "engine/ULong.hpp"
-#include "engine/config/config.hpp"
-#include "engine/containers/ArrayMaker.hpp"
-#include "engine/containers/ColumnViewIterator.hpp"
 #include "helpers/NullChecker.hpp"
 #include "helpers/SubroleParser.hpp"
 #include "strings/strings.hpp"
 
-namespace engine {
 namespace containers {
 
 template <class T>
@@ -865,6 +863,5 @@ ColumnView<T> ColumnView<T>::with_unit(const std::string& _unit) const {
 
 // -------------------------------------------------------------------------
 }  // namespace containers
-}  // namespace engine
 
-#endif  // ENGINE_CONTAINERS_COLUMN_HPP_
+#endif  // CONTAINERS_COLUMN_HPP_

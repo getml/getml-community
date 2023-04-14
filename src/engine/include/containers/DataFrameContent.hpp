@@ -5,18 +5,16 @@
 // for details.
 //
 
-#ifndef ENGINE_CONTAINERS_DATAFRAMECONTENT_HPP_
-#define ENGINE_CONTAINERS_DATAFRAMECONTENT_HPP_
+#ifndef CONTAINERS_DATAFRAMECONTENT_HPP_
+#define CONTAINERS_DATAFRAMECONTENT_HPP_
 
 #include "database/TableContent.hpp"
 
-namespace engine {
 namespace containers {
 
 /// A format that is compatible with the data.tables API.
 using DataFrameContent = database::TableContent;
 
 }  // namespace containers
-}  // namespace engine
 
-#endif  // ENGINE_CONTAINERS_DATAFRAMECONTENT_HPP_
+#endif  // CONTAINERS_DATAFRAMECONTENT_HPP_

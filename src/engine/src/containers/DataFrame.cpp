@@ -5,18 +5,17 @@
 // for details.
 //
 
-#include "engine/containers/DataFrame.hpp"
+#include "containers/DataFrame.hpp"
 
 #include <Poco/Path.h>
 #include <Poco/TemporaryFile.h>
 
 #include <stdexcept>
 
-#include "engine/containers/DataFramePrinter.hpp"
+#include "containers/DataFramePrinter.hpp"
 #include "fct/Field.hpp"
 #include "json/json.hpp"
 
-namespace engine {
 namespace containers {
 
 void DataFrame::add_float_column(const Column<Float> &_col,
@@ -1858,4 +1857,3 @@ void DataFrame::where(const std::vector<bool> &_condition) {
 
 // ----------------------------------------------------------------------------
 }  // namespace containers
-}  // namespace engine

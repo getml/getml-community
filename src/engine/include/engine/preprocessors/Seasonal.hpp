@@ -14,7 +14,9 @@
 
 #include "commands/Fingerprint.hpp"
 #include "commands/Preprocessor.hpp"
-#include "engine/containers/containers.hpp"
+#include "containers/containers.hpp"
+#include "engine/Float.hpp"
+#include "engine/Int.hpp"
 #include "engine/preprocessors/FitParams.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
 #include "engine/preprocessors/TransformParams.hpp"

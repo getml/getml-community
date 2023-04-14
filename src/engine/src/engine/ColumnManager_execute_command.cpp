@@ -8,7 +8,7 @@
 #include <Poco/TemporaryFile.h>
 
 #include "commands/DataFrameFromJSON.hpp"
-#include "engine/containers/Roles.hpp"
+#include "containers/Roles.hpp"
 #include "engine/handlers/AggOpParser.hpp"
 #include "engine/handlers/ArrowHandler.hpp"
 #include "engine/handlers/BoolOpParser.hpp"

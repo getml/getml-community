@@ -5,10 +5,11 @@
 // for details.
 //
 
-#ifndef CONTAINERS_TSINDEX_TSINDEX_HPP_
-#define CONTAINERS_TSINDEX_TSINDEX_HPP_
+#ifndef CONTAINERS_ULONG_HPP_
+#define CONTAINERS_ULONG_HPP_
 
-#include "tsindex/Index.hpp"
-#include "tsindex/IndexParams.hpp"
+namespace containers {
+typedef std::uint64_t ULong;
+}
 
-#endif  // CONTAINERS_TSINDEX_TSINDEX_HPP_
+#endif  // CONTAINERS_ULONG_HPP_

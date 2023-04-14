@@ -8,6 +8,7 @@
 #ifndef ENGINE_PREPROCESSORS_CATEGORYTRIMMER_HPP_
 #define ENGINE_PREPROCESSORS_CATEGORYTRIMMER_HPP_
 
+#include <cstddef>
 #include <map>
 #include <memory>
 #include <set>
@@ -17,7 +18,8 @@
 
 #include "commands/Fingerprint.hpp"
 #include "commands/Preprocessor.hpp"
-#include "engine/containers/containers.hpp"
+#include "containers/containers.hpp"
+#include "engine/Int.hpp"
 #include "engine/preprocessors/FitParams.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
 #include "engine/preprocessors/TransformParams.hpp"

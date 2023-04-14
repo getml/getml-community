@@ -5,8 +5,8 @@
 // for details.
 //
 
-#ifndef ENGINE_CONTAINERS_COLUMN_HPP_
-#define ENGINE_CONTAINERS_COLUMN_HPP_
+#ifndef CONTAINERS_COLUMN_HPP_
+#define CONTAINERS_COLUMN_HPP_
 
 #include <fstream>
 #include <stdexcept>
@@ -15,17 +15,15 @@
 #include <variant>
 #include <vector>
 
+#include "containers/ColumnViewIterator.hpp"
+#include "containers/ULong.hpp"
 #include "debug/debug.hpp"
-#include "engine/ULong.hpp"
-#include "engine/config/config.hpp"
-#include "engine/containers/ColumnViewIterator.hpp"
-#include "engine/utils/utils.hpp"
 #include "helpers/Column.hpp"
+#include "helpers/Endianness.hpp"
 #include "helpers/NullChecker.hpp"
 #include "helpers/SubroleParser.hpp"
 #include "strings/strings.hpp"
 
-namespace engine {
 namespace containers {
 
 template <class T>
@@ -53,8 +51,8 @@ class Column {
 
   typedef T value_type;
 
-  static constexpr bool IN_MEMORY = config::EngineOptions::IN_MEMORY;
-  static constexpr bool MEMORY_MAPPING = config::EngineOptions::MEMORY_MAPPING;
+  static constexpr bool IN_MEMORY = true;
+  static constexpr bool MEMORY_MAPPING = false;
 
   static constexpr const char *FLOAT_COLUMN = "FloatColumn";
   static constexpr const char *STRING_COLUMN = "StringColumn";
@@ -384,7 +382,7 @@ class Column {
 
     _input->read(reinterpret_cast<char *>(&str_size), sizeof(size_t));
 
-    utils::Endianness::reverse_byte_order(&str_size);
+    helpers::Endianness::reverse_byte_order(&str_size);
 
     std::string str;
 
@@ -414,7 +412,7 @@ class Column {
                                   std::ofstream *_output) const {
     size_t str_size = _str.size();
 
-    utils::Endianness::reverse_byte_order(&str_size);
+    helpers::Endianness::reverse_byte_order(&str_size);
 
     _output->write(reinterpret_cast<const char *>(&str_size), sizeof(size_t));
 
@@ -484,7 +482,7 @@ Column<T> Column<T>::clone(const std::shared_ptr<memmap::Pool> &_pool) const {
 
 template <class T>
 void Column<T>::load(const std::string &_fname) {
-  if (!std::is_same<T, char>() && utils::Endianness::is_little_endian()) {
+  if (!std::is_same<T, char>() && helpers::Endianness::is_little_endian()) {
     *this = load_little_endian(_fname);
   } else {
     *this = load_big_endian(_fname);
@@ -531,7 +529,7 @@ Column<T> Column<T>::load_little_endian(const std::string &_fname) const {
 
   input.read(reinterpret_cast<char *>(&nrows), sizeof(size_t));
 
-  utils::Endianness::reverse_byte_order(&nrows);
+  helpers::Endianness::reverse_byte_order(&nrows);
 
   auto col = Column<T>(pool());
 
@@ -548,7 +546,7 @@ Column<T> Column<T>::load_little_endian(const std::string &_fname) const {
 
   if constexpr (!std::is_same<T, strings::String>()) {
     for (size_t i = 0; i < nrows; ++i) {
-      utils::Endianness::reverse_byte_order(&col[i]);
+      helpers::Endianness::reverse_byte_order(&col[i]);
     }
   }
 
@@ -564,7 +562,7 @@ Column<T> Column<T>::load_little_endian(const std::string &_fname) const {
 template <class T>
 void Column<T>::save(const std::string &_fname) const {
   if (std::is_same<T, char>::value == false &&
-      utils::Endianness::is_little_endian()) {
+      helpers::Endianness::is_little_endian()) {
     save_little_endian(_fname);
   } else {
     save_big_endian(_fname);
@@ -602,7 +600,7 @@ void Column<T>::save_little_endian(const std::string &_fname) const {
 
   auto num_rows = nrows();
 
-  utils::Endianness::reverse_byte_order(&num_rows);
+  helpers::Endianness::reverse_byte_order(&num_rows);
 
   output.write(reinterpret_cast<const char *>(&num_rows), sizeof(size_t));
 
@@ -614,7 +612,7 @@ void Column<T>::save_little_endian(const std::string &_fname) const {
     auto write_reversed_data = [&output](const T _val) {
       T val_reversed = _val;
 
-      utils::Endianness::reverse_byte_order(&val_reversed);
+      helpers::Endianness::reverse_byte_order(&val_reversed);
 
       output.write(reinterpret_cast<const char *>(&val_reversed), sizeof(T));
     };
@@ -699,8 +697,6 @@ Column<T> Column<T>::where(const std::vector<bool> &_condition) const {
   return trimmed;
 }
 
-// -------------------------------------------------------------------------
 }  // namespace containers
-}  // namespace engine
 
-#endif  // ENGINE_CONTAINERS_COLUMN_HPP_
+#endif  // CONTAINERS_COLUMN_HPP_
