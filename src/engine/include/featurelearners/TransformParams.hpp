@@ -9,7 +9,7 @@
 #define FEATURELEARNERS_TRANSFORMPARAMS_HPP_
 
 #include "commands/DataFramesOrViews.hpp"
-#include "engine/communication/communication.hpp"
+#include "communication/communication.hpp"
 namespace featurelearners {
 
 struct TransformParams {
@@ -20,7 +20,7 @@ struct TransformParams {
   const std::vector<size_t> index_;
 
   /// Logs the progress.
-  const std::shared_ptr<const engine::communication::SocketLogger> logger_;
+  const std::shared_ptr<const communication::SocketLogger> logger_;
 
   /// The peripheral data frames.
   const std::vector<containers::DataFrame> peripheral_dfs_;

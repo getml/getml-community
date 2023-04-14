@@ -5,8 +5,8 @@
 // for details.
 //
 
-#ifndef ENGINE_COMMUNICATION_RECEIVER_HPP_
-#define ENGINE_COMMUNICATION_RECEIVER_HPP_
+#ifndef COMMUNICATION_RECEIVER_HPP_
+#define COMMUNICATION_RECEIVER_HPP_
 
 #include <Poco/Net/StreamSocket.h>
 
@@ -17,12 +17,11 @@
 #include <type_traits>
 #include <vector>
 
-#include "engine/ULong.hpp"
-#include "engine/communication/Logger.hpp"
-#include "engine/utils/utils.hpp"
+#include "communication/Logger.hpp"
+#include "communication/ULong.hpp"
 #include "fct/Ref.hpp"
+#include "helpers/Endianness.hpp"
 
-namespace engine {
 namespace communication {
 
 struct Receiver {
@@ -105,10 +104,11 @@ void Receiver::recv(const ULong _size, Poco::Net::StreamSocket *_socket,
   static_assert(std::is_arithmetic<T>::value,
                 "Only arithmetic types allowed for recv<T>(...)!");
 
-  if (!std::is_same<T, char>::value && utils::Endianness::is_little_endian()) {
+  if (!std::is_same<T, char>::value &&
+      helpers::Endianness::is_little_endian()) {
     std::for_each(
         _data, _data + static_cast<size_t>(_size) / sizeof(T),
-        [](T &_val) { utils::Endianness::reverse_byte_order(&_val); });
+        [](T &_val) { helpers::Endianness::reverse_byte_order(&_val); });
   }
 
   // -------------------------------------------------------------------
@@ -116,6 +116,5 @@ void Receiver::recv(const ULong _size, Poco::Net::StreamSocket *_socket,
 
 // ------------------------------------------------------------------------
 }  // namespace communication
-}  // namespace engine
 
-#endif  // ENGINE_COMMUNICATION_RECEIVER_HPP_
+#endif  // COMMUNICATION_RECEIVER_HPP_

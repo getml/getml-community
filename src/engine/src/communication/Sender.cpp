@@ -1,13 +1,12 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
-#include "engine/communication/Sender.hpp"
+#include "communication/Sender.hpp"
 
-namespace engine {
 namespace communication {
 // ------------------------------------------------------------------------
 
@@ -37,10 +36,10 @@ void Sender::send_categorical_column(const std::vector<std::string>& _col,
 
   for (size_t j = 0; j < _col.size(); ++j) {
     if (j != 0) [[likely]] {
-      std::copy(GETML_SEP, GETML_SEP + SEP_SIZE, data.data() + i);
+        std::copy(GETML_SEP, GETML_SEP + SEP_SIZE, data.data() + i);
 
-      i += SEP_SIZE;
-    }
+        i += SEP_SIZE;
+      }
 
     const auto& str = _col[j];
 
@@ -164,4 +163,3 @@ void Sender::send_string(const std::string& _string,
 
 // ------------------------------------------------------------------------
 }  // namespace communication
-}  // namespace engine

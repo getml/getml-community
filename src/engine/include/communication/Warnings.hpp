@@ -5,8 +5,8 @@
 // for details.
 //
 
-#ifndef ENGINE_COMMUNICATION_WARNINGS_HPP_
-#define ENGINE_COMMUNICATION_WARNINGS_HPP_
+#ifndef COMMUNICATION_WARNINGS_HPP_
+#define COMMUNICATION_WARNINGS_HPP_
 
 #include <Poco/Net/StreamSocket.h>
 
@@ -15,12 +15,11 @@
 #include <vector>
 
 #include "commands/WarningFingerprint.hpp"
+#include "communication/Sender.hpp"
 #include "debug/debug.hpp"
-#include "engine/communication/Sender.hpp"
 #include "fct/Ref.hpp"
 #include "json/json.hpp"
 
-namespace engine {
 namespace communication {
 
 class Warnings {
@@ -57,6 +56,5 @@ class Warnings {
 };
 
 }  // namespace communication
-}  // namespace engine
 
-#endif  // ENGINE_COMMUNICATION_WARNER_HPP_
+#endif  // COMMUNICATION_WARNER_HPP_

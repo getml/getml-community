@@ -14,8 +14,8 @@
 #include <vector>
 
 #include "commands/DataFramesOrViews.hpp"
+#include "communication/communication.hpp"
 #include "containers/containers.hpp"
-#include "engine/communication/communication.hpp"
 #include "featurelearners/Int.hpp"
 
 namespace featurelearners {
@@ -25,7 +25,7 @@ struct FitParams {
   const commands::DataFramesOrViews cmd_;
 
   /// Logs the progress.
-  const std::shared_ptr<const engine::communication::SocketLogger> logger_;
+  const std::shared_ptr<const communication::SocketLogger> logger_;
 
   /// The peripheral data frames.
   const std::vector<containers::DataFrame> peripheral_dfs_;

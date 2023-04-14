@@ -14,9 +14,9 @@
 #include <atomic>
 #include <memory>
 
+#include "communication/communication.hpp"
 #include "containers/containers.hpp"
 #include "debug/debug.hpp"
-#include "engine/communication/communication.hpp"
 #include "engine/config/config.hpp"
 #include "engine/handlers/handlers.hpp"
 #include "engine/srv/RequestHandler.hpp"

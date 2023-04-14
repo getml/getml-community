@@ -15,7 +15,8 @@
 #include <cstdint>
 #include <stdexcept>
 
-#include "engine/communication/communication.hpp"
+#include "communication/communication.hpp"
+#include "engine/ULong.hpp"
 
 namespace engine {
 namespace handlers {

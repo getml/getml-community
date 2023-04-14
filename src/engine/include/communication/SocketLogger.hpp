@@ -1,36 +1,23 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
-#ifndef ENGINE_COMMUNICATION_SOCKETLOGGER_HPP_
-#define ENGINE_COMMUNICATION_SOCKETLOGGER_HPP_
-
-// ----------------------------------------------------------------------------
+#ifndef COMMUNICATION_SOCKETLOGGER_HPP_
+#define COMMUNICATION_SOCKETLOGGER_HPP_
 
 #include <Poco/Net/StreamSocket.h>
-
-// ----------------------------------------------------------------------------
 
 #include <memory>
 #include <string>
 
-// ----------------------------------------------------------------------------
-
+#include "communication/Sender.hpp"
 #include "debug/debug.hpp"
 #include "logging/logging.hpp"
 
-// ----------------------------------------------------------------------------
-
-#include "engine/communication/Sender.hpp"
-
-// ----------------------------------------------------------------------------
-
-namespace engine {
 namespace communication {
-// ------------------------------------------------------------------------
 
 class SocketLogger : public logging::AbstractLogger {
  public:
@@ -59,8 +46,8 @@ class SocketLogger : public logging::AbstractLogger {
   /// The Monitor is supposed to monitor all of the logs as well.
   const std::shared_ptr<const communication::Logger> logger_;
 
-  /// Whether we want the progress to appear in the engine and the monitor
-  /// log.
+  /// Whether we want the progress to appear in the communication and the
+  /// monitor log.
   const bool silent_;
 
   /// The socket to which we want to send the logs.
@@ -69,8 +56,6 @@ class SocketLogger : public logging::AbstractLogger {
   // ----------------------------------------------------
 };
 
-// ------------------------------------------------------------------------
 }  // namespace communication
-}  // namespace engine
 
-#endif  // ENGINE_COMMUNICATION_SOCKETLOGGER_HPP_
+#endif  // COMMUNICATION_SOCKETLOGGER_HPP_

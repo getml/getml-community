@@ -19,6 +19,7 @@
 #include "containers/containers.hpp"
 #include "engine/config/config.hpp"
 #include "engine/pipelines/pipelines.hpp"
+#include "engine/utils/Getter.hpp"
 
 namespace engine {
 namespace handlers {

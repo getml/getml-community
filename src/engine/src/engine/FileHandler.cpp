@@ -1,11 +1,13 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/handlers/FileHandler.hpp"
+
+#include "helpers/Endianness.hpp"
 
 namespace engine {
 namespace handlers {
@@ -58,7 +60,7 @@ containers::DataFrame FileHandler::load(
 void FileHandler::load_encodings(const std::string& _path,
                                  containers::Encoding* _categories,
                                  containers::Encoding* _join_keys_encodings) {
-  if (utils::Endianness::is_little_endian()) {
+  if (helpers::Endianness::is_little_endian()) {
     if (Poco::File(_path + "categories").exists()) {
       *_categories =
           FileHandler::read_strings_little_endian(_path + "categories");
@@ -124,7 +126,7 @@ std::vector<std::string> FileHandler::read_strings_little_endian(
 
     _input.read(reinterpret_cast<char*>(&str_size), sizeof(size_t));
 
-    utils::Endianness::reverse_byte_order(&str_size);
+    helpers::Endianness::reverse_byte_order(&str_size);
 
     str.resize(str_size);
 
@@ -154,7 +156,7 @@ void FileHandler::save_encodings(
     const std::string& _path,
     const std::shared_ptr<const containers::Encoding> _categories,
     const std::shared_ptr<const containers::Encoding> _join_keys_encodings) {
-  if (utils::Endianness::is_little_endian()) {
+  if (helpers::Endianness::is_little_endian()) {
     if (_categories && _categories->size() > 0) {
       FileHandler::write_string_little_endian(_path + "categories",
                                               *_categories);
@@ -204,7 +206,7 @@ void FileHandler::write_string_little_endian(
   auto write_string = [&output](const strings::String& _str) {
     size_t str_size = _str.size();
 
-    utils::Endianness::reverse_byte_order(&str_size);
+    helpers::Endianness::reverse_byte_order(&str_size);
 
     output.write(reinterpret_cast<const char*>(&str_size), sizeof(size_t));
 

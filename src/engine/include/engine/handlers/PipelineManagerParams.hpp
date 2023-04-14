@@ -14,8 +14,8 @@
 #include <memory>
 #include <string>
 
+#include "communication/communication.hpp"
 #include "debug/debug.hpp"
-#include "engine/communication/communication.hpp"
 #include "engine/config/config.hpp"
 #include "engine/handlers/DatabaseManager.hpp"
 #include "engine/handlers/ViewParser.hpp"

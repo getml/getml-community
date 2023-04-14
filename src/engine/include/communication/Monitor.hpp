@@ -5,8 +5,8 @@
 // for details.
 //
 
-#ifndef ENGINE_COMMUNICATION_MONITOR_HPP_
-#define ENGINE_COMMUNICATION_MONITOR_HPP_
+#ifndef COMMUNICATION_MONITOR_HPP_
+#define COMMUNICATION_MONITOR_HPP_
 
 #include <Poco/Net/StreamSocket.h>
 
@@ -19,7 +19,6 @@
 #include "fct/NamedTuple.hpp"
 #include "json/json.hpp"
 
-namespace engine {
 namespace communication {
 
 class Monitor {
@@ -82,6 +81,5 @@ std::string Monitor::make_cmd(const std::string& _type,
 
 // ------------------------------------------------------------------------
 }  // namespace communication
-}  // namespace engine
 
-#endif  // ENGINE_COMMUNICATION_MONITOR_HPP_
+#endif  // COMMUNICATION_MONITOR_HPP_

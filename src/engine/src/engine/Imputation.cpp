@@ -8,6 +8,7 @@
 #include "engine/preprocessors/Imputation.hpp"
 
 #include "engine/preprocessors/PreprocessorImpl.hpp"
+#include "engine/utils/Aggregations.hpp"
 #include "helpers/Loader.hpp"
 #include "helpers/Saver.hpp"
 

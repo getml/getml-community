@@ -17,8 +17,8 @@
 #include <vector>
 
 #include "commands/DataFramesOrViews.hpp"
+#include "communication/communication.hpp"
 #include "containers/containers.hpp"
-#include "engine/communication/communication.hpp"
 #include "engine/dependency/dependency.hpp"
 #include "fct/Field.hpp"
 #include "fct/Literal.hpp"

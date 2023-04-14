@@ -24,6 +24,7 @@
 #include "containers/containers.hpp"
 #include "debug/debug.hpp"
 #include "engine/Float.hpp"
+#include "engine/Int.hpp"
 #include "engine/config/config.hpp"
 #include "fct/collect.hpp"
 #include "strings/strings.hpp"

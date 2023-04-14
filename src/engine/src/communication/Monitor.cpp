@@ -5,12 +5,11 @@
 // for details.
 //
 
-#include "engine/communication/Monitor.hpp"
+#include "communication/Monitor.hpp"
 
-#include "engine/communication/Receiver.hpp"
-#include "engine/communication/Sender.hpp"
+#include "communication/Receiver.hpp"
+#include "communication/Sender.hpp"
 
-namespace engine {
 namespace communication {
 
 std::shared_ptr<Poco::Net::StreamSocket> Monitor::connect(
@@ -98,4 +97,3 @@ void Monitor::shutdown_when_monitor_dies(const Monitor _monitor) {
 }
 
 }  // namespace communication
-}  // namespace engine

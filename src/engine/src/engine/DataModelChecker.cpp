@@ -9,6 +9,7 @@
 
 #include <algorithm>
 
+#include "engine/utils/Aggregations.hpp"
 #include "fct/fct.hpp"
 
 namespace engine {

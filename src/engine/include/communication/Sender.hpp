@@ -5,8 +5,8 @@
 // for details.
 //
 
-#ifndef ENGINE_COMMUNICATION_SENDER_HPP_
-#define ENGINE_COMMUNICATION_SENDER_HPP_
+#ifndef COMMUNICATION_SENDER_HPP_
+#define COMMUNICATION_SENDER_HPP_
 
 #include <algorithm>
 #include <memory>
@@ -15,13 +15,15 @@
 #include <type_traits>
 #include <vector>
 
-#include "containers/containers.hpp"
-#include "engine/ULong.hpp"
-#include "engine/communication/Logger.hpp"
-#include "engine/communication/Receiver.hpp"
-#include "engine/utils/utils.hpp"
+#include "communication/Float.hpp"
+#include "communication/Int.hpp"
+#include "communication/Logger.hpp"
+#include "communication/Receiver.hpp"
+#include "communication/ULong.hpp"
+#include "containers/Column.hpp"
+#include "containers/NumericalFeatures.hpp"
+#include "helpers/Endianness.hpp"
 
-namespace engine {
 namespace communication {
 
 struct Sender {
@@ -58,7 +60,7 @@ void Sender::send(const ULong _size, const T* _data,
                   Poco::Net::StreamSocket* _socket) {
   const ULong len = 4096;
 
-  const bool is_little_endian = utils::Endianness::is_little_endian();
+  const bool is_little_endian = helpers::Endianness::is_little_endian();
 
   ULong j = 0;
 
@@ -102,7 +104,7 @@ void Sender::send(const ULong _size, const T* _data,
       T* buf_end = buf_begin + buf.size() / sizeof(T);
 
       std::for_each(buf_begin, buf_end, [](T& _val) {
-        utils::Endianness::reverse_byte_order(&_val);
+        helpers::Endianness::reverse_byte_order(&_val);
       });
     }
 
@@ -129,6 +131,5 @@ void Sender::send(const ULong _size, const T* _data,
 
 // ------------------------------------------------------------------------
 }  // namespace communication
-}  // namespace engine
 
-#endif  // ENGINE_COMMUNICATION_SENDER_HPP_
+#endif  // COMMUNICATION_SENDER_HPP_

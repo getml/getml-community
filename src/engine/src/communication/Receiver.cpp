@@ -5,9 +5,10 @@
 // for details.
 //
 
-#include "engine/communication/Receiver.hpp"
+#include "communication/Receiver.hpp"
 
-namespace engine {
+#include "communication/Int.hpp"
+
 namespace communication {
 
 std::string Receiver::recv_cmd(
@@ -43,4 +44,3 @@ std::string Receiver::recv_string(Poco::Net::StreamSocket *_socket) {
 
 // -----------------------------------------------------------------------------
 }  // namespace communication
-}  // namespace engine

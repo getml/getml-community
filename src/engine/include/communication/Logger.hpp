@@ -5,17 +5,16 @@
 // for details.
 //
 
-#ifndef ENGINE_COMMUNICATION_LOGGER_HPP_
-#define ENGINE_COMMUNICATION_LOGGER_HPP_
+#ifndef COMMUNICATION_LOGGER_HPP_
+#define COMMUNICATION_LOGGER_HPP_
 
 #include <memory>
 #include <string>
 
+#include "communication/Monitor.hpp"
 #include "debug/debug.hpp"
-#include "engine/communication/Monitor.hpp"
 #include "logging/logging.hpp"
 
-namespace engine {
 namespace communication {
 
 class Logger : public logging::AbstractLogger {
@@ -35,6 +34,5 @@ class Logger : public logging::AbstractLogger {
 };
 
 }  // namespace communication
-}  // namespace engine
 
-#endif  // ENGINE_COMMUNICATION_LOGGER_HPP_
+#endif  // COMMUNICATION_LOGGER_HPP_

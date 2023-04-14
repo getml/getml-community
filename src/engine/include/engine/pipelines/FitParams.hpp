@@ -17,8 +17,8 @@
 
 #include "commands/DataFramesOrViews.hpp"
 #include "commands/Fingerprint.hpp"
+#include "communication/communication.hpp"
 #include "containers/containers.hpp"
-#include "engine/communication/communication.hpp"
 #include "engine/dependency/dependency.hpp"
 
 namespace engine {
