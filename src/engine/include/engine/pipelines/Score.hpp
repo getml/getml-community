@@ -18,7 +18,7 @@
 #include <utility>
 #include <vector>
 
-#include "engine/containers/containers.hpp"
+#include "containers/containers.hpp"
 #include "engine/pipelines/FittedPipeline.hpp"
 #include "engine/pipelines/Pipeline.hpp"
 #include "engine/pipelines/Predictors.hpp"

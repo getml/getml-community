@@ -5,8 +5,8 @@
 // for details.
 //
 
-#ifndef ENGINE_CONTAINERS_COLUMNVIEWITERATOR_HPP_
-#define ENGINE_CONTAINERS_COLUMNVIEWITERATOR_HPP_
+#ifndef CONTAINERS_COLUMNVIEWITERATOR_HPP_
+#define CONTAINERS_COLUMNVIEWITERATOR_HPP_
 
 #include <functional>
 #include <iterator>
@@ -16,7 +16,6 @@
 
 #include "debug/debug.hpp"
 
-namespace engine {
 namespace containers {
 
 template <class T>
@@ -116,9 +115,7 @@ class ColumnViewIterator {
   std::optional<ValueFunc> value_func_;
 };
 
-// -------------------------------------------------------------------------
 }  // namespace containers
-}  // namespace engine
 
-#endif  // ENGINE_CONTAINERS_COLUMNVIEWITERATOR_HPP_
+#endif  // CONTAINERS_COLUMNVIEWITERATOR_HPP_
 

@@ -8,15 +8,12 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/ColumnManager.cpp
     ${ENGINE_SOURCE_DIRECTORY}/ColumnManager_execute_command.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DatabaseManager.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/DataFrame.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DataFrameManager.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DataFrameManager_execute_command.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DataFrameManager_from_json.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DataFrameManager_get_data_frame.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DataFrameManager_receive_data.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DataFrameModifier.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/DataFramePrinter.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/DataFrameReader.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DataFrameTracker.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DataModelChecker.cpp
     ${ENGINE_SOURCE_DIRECTORY}/EMailDomain.cpp
@@ -26,7 +23,6 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/FittedPipeline.cpp
     ${ENGINE_SOURCE_DIRECTORY}/FloatOpParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Imputation.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/InMemoryEncoding.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Load_load.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Load_load_feature_learners.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Load_load_feature_selectors.cpp
@@ -34,7 +30,6 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/Load_load_predictors.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Load_load_preprocessors.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Logger.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/MemoryMappedEncoding.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Monitor.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Options.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Pipeline.cpp

@@ -5,20 +5,18 @@
 // for details.
 //
 
-#ifndef ENGINE_CONTAINERS_NUMERICALFEATURES_HPP_
-#define ENGINE_CONTAINERS_NUMERICALFEATURES_HPP_
+#ifndef CONTAINERS_NUMERICALFEATURES_HPP_
+#define CONTAINERS_NUMERICALFEATURES_HPP_
 
 #include <vector>
 
-#include "engine/Float.hpp"
+#include "containers/Float.hpp"
 #include "helpers/Feature.hpp"
 
-namespace engine {
 namespace containers {
 
 typedef std::vector<helpers::Feature<Float>> NumericalFeatures;
 
 }  // namespace containers
-}  // namespace engine
 
-#endif  // ENGINE_CONTAINERS_NUMERICALFEATURES_HPP_
+#endif  // CONTAINERS_NUMERICALFEATURES_HPP_

@@ -9,7 +9,7 @@
 
 #include "commands/DataFramesOrViews.hpp"
 #include "commands/ProjectCommand.hpp"
-#include "engine/containers/Roles.hpp"
+#include "containers/Roles.hpp"
 #include "engine/handlers/ColumnManager.hpp"
 #include "engine/handlers/DataFrameManager.hpp"
 #include "engine/handlers/PipelineManager.hpp"

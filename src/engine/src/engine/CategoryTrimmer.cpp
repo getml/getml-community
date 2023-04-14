@@ -7,8 +7,8 @@
 
 #include "engine/preprocessors/CategoryTrimmer.hpp"
 
-#include "engine/containers/Column.hpp"
-#include "engine/containers/DataFrame.hpp"
+#include "containers/Column.hpp"
+#include "containers/DataFrame.hpp"
 #include "engine/preprocessors/PreprocessorImpl.hpp"
 #include "fct/IotaRange.hpp"
 #include "fct/collect.hpp"

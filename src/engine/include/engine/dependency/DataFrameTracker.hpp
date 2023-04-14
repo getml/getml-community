@@ -16,7 +16,7 @@
 #include <vector>
 
 #include "commands/Fingerprint.hpp"
-#include "engine/containers/containers.hpp"
+#include "containers/containers.hpp"
 #include "fct/Ref.hpp"
 
 namespace engine {
@@ -24,9 +24,8 @@ namespace dependency {
 
 class DataFrameTracker {
  public:
-  DataFrameTracker(
-      const fct::Ref<std::map<std::string, engine::containers::DataFrame>>&
-          _data_frames)
+  DataFrameTracker(const fct::Ref<std::map<std::string, containers::DataFrame>>&
+                       _data_frames)
       : data_frames_(_data_frames) {}
 
   ~DataFrameTracker() = default;
@@ -72,8 +71,7 @@ class DataFrameTracker {
 
  private:
   /// The underlying data frames.
-  const fct::Ref<std::map<std::string, engine::containers::DataFrame>>
-      data_frames_;
+  const fct::Ref<std::map<std::string, containers::DataFrame>> data_frames_;
 
   /// A map keeping track of the names of the data frame and when they were
   /// last changed.

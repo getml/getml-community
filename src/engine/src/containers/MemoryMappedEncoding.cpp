@@ -1,21 +1,15 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
-#include "engine/containers/MemoryMappedEncoding.hpp"
+#include "containers/MemoryMappedEncoding.hpp"
 
-// ----------------------------------------------------------------------------
+#include "helpers/NullChecker.hpp"
 
-#include "engine/utils/utils.hpp"
-
-// ----------------------------------------------------------------------------
-
-namespace engine {
 namespace containers {
-// ----------------------------------------------------------------------------
 
 void MemoryMappedEncoding::allocate() {
   btree_ = std::make_shared<BTreeType>(pool_);
@@ -61,12 +55,13 @@ Int MemoryMappedEncoding::insert(const strings::String& _str,
   const auto hash = _str.hash();
 
   if (!_opt) [[likely]] {
-    auto p = std::make_pair(ix, memmap::VectorImpl<Int>());
-    rownums().push_back(p);
-    btree().insert(hash, rownums().size() - 1);
-    assert_true(btree()[hash]);
-    assert_true(*btree()[hash] == rownums().size() - 1);
-  } else if (rownums()[*_opt].first != HASH_COLLISION) {
+      auto p = std::make_pair(ix, memmap::VectorImpl<Int>());
+      rownums().push_back(p);
+      btree().insert(hash, rownums().size() - 1);
+      assert_true(btree()[hash]);
+      assert_true(*btree()[hash] == rownums().size() - 1);
+    }
+  else if (rownums()[*_opt].first != HASH_COLLISION) {
     // First hash collision
     assert_true(string_vector()[rownums()[*_opt].first - subsize_] != _str);
     auto p =
@@ -125,7 +120,7 @@ MemoryMappedEncoding& MemoryMappedEncoding::operator=(
 // ----------------------------------------------------------------------------
 
 Int MemoryMappedEncoding::string_to_int(const strings::String& _val) {
-  if (utils::NullChecker::is_null(_val)) {
+  if (helpers::NullChecker::is_null(_val)) {
     return NOT_FOUND;
   }
 
@@ -179,7 +174,7 @@ Int MemoryMappedEncoding::string_to_int(const strings::String& _val) {
 // ----------------------------------------------------------------------------
 
 Int MemoryMappedEncoding::string_to_int(const strings::String& _val) const {
-  if (utils::NullChecker::is_null(_val)) {
+  if (helpers::NullChecker::is_null(_val)) {
     return NOT_FOUND;
   }
 
@@ -230,4 +225,3 @@ Int MemoryMappedEncoding::string_to_int(const strings::String& _val) const {
 
 // ----------------------------------------------------------------------------
 }  // namespace containers
-}  // namespace engine

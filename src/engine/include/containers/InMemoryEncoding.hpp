@@ -1,14 +1,12 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
-#ifndef ENGINE_CONTAINERS_INMEMORYENCODING_HPP_
-#define ENGINE_CONTAINERS_INMEMORYENCODING_HPP_
-
-// -------------------------------------------------------------------------
+#ifndef CONTAINERS_INMEMORYENCODING_HPP_
+#define CONTAINERS_INMEMORYENCODING_HPP_
 
 #include <memory>
 #include <string>
@@ -16,20 +14,10 @@
 #include <unordered_map>
 #include <vector>
 
-// -------------------------------------------------------------------------
-
+#include "containers/Int.hpp"
 #include "strings/strings.hpp"
 
-// -------------------------------------------------------------------------
-
-#include "engine/Int.hpp"
-#include "engine/utils/utils.hpp"
-
-// -------------------------------------------------------------------------
-
-namespace engine {
 namespace containers {
-// -------------------------------------------------------------------------
 
 class InMemoryEncoding {
  public:
@@ -140,8 +128,6 @@ class InMemoryEncoding {
   const std::shared_ptr<std::vector<strings::String>> vector_;
 };
 
-// -------------------------------------------------------------------------
 }  // namespace containers
-}  // namespace engine
 
-#endif  // ENGINE_CONTAINERS_INMEMORYENCODING_HPP_
+#endif  // CONTAINERS_INMEMORYENCODING_HPP_

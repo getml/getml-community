@@ -5,20 +5,19 @@
 // for details.
 //
 
-#ifndef ENGINE_CONTAINERS_ENCODING_HPP_
-#define ENGINE_CONTAINERS_ENCODING_HPP_
+#ifndef CONTAINERS_ENCODING_HPP_
+#define CONTAINERS_ENCODING_HPP_
 
 #include <memory>
 #include <optional>
 #include <string>
 #include <variant>
 
+#include "containers/InMemoryEncoding.hpp"
+#include "containers/MemoryMappedEncoding.hpp"
 #include "debug/debug.hpp"
-#include "engine/containers/InMemoryEncoding.hpp"
-#include "engine/containers/MemoryMappedEncoding.hpp"
 #include "helpers/StringIterator.hpp"
 
-namespace engine {
 namespace containers {
 
 class Encoding {
@@ -170,8 +169,6 @@ class Encoding {
   std::variant<InMemoryType, MemoryMappedType> pimpl_;
 };
 
-// -------------------------------------------------------------------------
 }  // namespace containers
-}  // namespace engine
 
-#endif  // ENGINE_CONTAINERS_ENCODING_HPP_
+#endif  // CONTAINERS_ENCODING_HPP_

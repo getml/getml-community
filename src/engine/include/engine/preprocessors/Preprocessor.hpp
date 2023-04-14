@@ -14,7 +14,7 @@
 #include <vector>
 
 #include "commands/Fingerprint.hpp"
-#include "engine/containers/containers.hpp"
+#include "containers/containers.hpp"
 #include "engine/preprocessors/FitParams.hpp"
 #include "engine/preprocessors/TransformParams.hpp"
 #include "fct/Ref.hpp"

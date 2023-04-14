@@ -17,10 +17,10 @@
 #include <vector>
 
 #include "commands/Fingerprint.hpp"
+#include "containers/containers.hpp"
 #include "debug/debug.hpp"
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
-#include "engine/containers/containers.hpp"
 #include "engine/featurelearners/AbstractFeatureLearner.hpp"
 #include "engine/featurelearners/FeatureLearnerParams.hpp"
 #include "engine/featurelearners/FitParams.hpp"
@@ -175,7 +175,7 @@ class FeatureLearner : public AbstractFeatureLearner {
 
  private:
   /// Extract a data frame of type FeatureLearnerType::DataFrameType from
-  /// an engine::containers::DataFrame using the pre-stored schema.
+  /// an containers::DataFrame using the pre-stored schema.
   template <typename SchemaType>
   DataFrameType extract_table_by_colnames(const SchemaType& _schema,
                                           const containers::DataFrame& _df,
@@ -183,7 +183,7 @@ class FeatureLearner : public AbstractFeatureLearner {
                                           const bool _apply_subroles) const;
 
   /// Extract a vector of FeatureLearnerType::DataFrameType from
-  /// an engine::containers::DataFrame using the pre-stored schema.
+  /// an containers::DataFrame using the pre-stored schema.
   std::pair<DataFrameType, std::vector<DataFrameType>>
   extract_tables_by_colnames(
       const containers::DataFrame& _population_df,

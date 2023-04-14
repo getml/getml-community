@@ -1,15 +1,15 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
-#include "engine/containers/InMemoryEncoding.hpp"
+#include "containers/InMemoryEncoding.hpp"
 
-namespace engine {
+#include "helpers/NullChecker.hpp"
+
 namespace containers {
-// ----------------------------------------------------------------------------
 
 void InMemoryEncoding::append(const InMemoryEncoding& _other,
                               bool _include_subencoding) {
@@ -79,7 +79,7 @@ Int InMemoryEncoding::string_to_int(const strings::String& _val) {
   // -----------------------------------
   // If this is a NULL value, return -1.
 
-  if (utils::NullChecker::is_null(_val)) {
+  if (helpers::NullChecker::is_null(_val)) {
     return -1;
   }
 
@@ -114,7 +114,7 @@ Int InMemoryEncoding::string_to_int(const strings::String& _val) const {
   // -----------------------------------
   // If this is a NULL value, return -1.
 
-  if (utils::NullChecker::is_null(_val)) {
+  if (helpers::NullChecker::is_null(_val)) {
     return -1;
   }
 
@@ -147,5 +147,3 @@ Int InMemoryEncoding::string_to_int(const strings::String& _val) const {
 
 // ----------------------------------------------------------------------------
 }  // namespace containers
-}  // namespace engine
-

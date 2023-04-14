@@ -1,4 +1,5 @@
 set(COMMANDS_SOURCE_DIRECTORY "${CODE_DIR}/src/commands")
+set(CONTAINERS_SOURCE_DIRECTORY "${CODE_DIR}/src/containers")
 set(DATABASE_SOURCE_DIRECTORY "${CODE_DIR}/src/database")
 set(FASTPROP_SOURCE_DIRECTORY "${CODE_DIR}/src/fastprop")
 set(ENGINE_SOURCE_DIRECTORY "${CODE_DIR}/src/engine")
@@ -13,6 +14,7 @@ set(TRANSPILATION_SOURCE_DIRECTORY "${CODE_DIR}/src/transpilation")
 set(TSINDEX_SOURCE_DIRECTORY "${CODE_DIR}/src/tsindex")
 
 include(${COMMANDS_SOURCE_DIRECTORY}/obj.txt)
+include(${CONTAINERS_SOURCE_DIRECTORY}/obj.txt)
 include(${DATABASE_SOURCE_DIRECTORY}/obj.txt)
 include(${FASTPROP_SOURCE_DIRECTORY}/obj.txt)
 include(${ENGINE_SOURCE_DIRECTORY}/obj.txt)
@@ -29,6 +31,7 @@ include(${TSINDEX_SOURCE_DIRECTORY}/obj.txt)
 add_executable(
  	${GETML_VERSION}-engine
  	${COMMANDS_OBJ}
+ 	${CONTAINERS_OBJ}
  	${DATABASE_OBJ}
  	${ENGINE_OBJ}
     ${FASTPROP_OBJ}

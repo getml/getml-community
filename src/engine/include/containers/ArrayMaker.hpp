@@ -5,8 +5,8 @@
 // for details.
 //
 
-#ifndef ENGINE_CONTAINERS_ARRAYMAKER_HPP_
-#define ENGINE_CONTAINERS_ARRAYMAKER_HPP_
+#ifndef CONTAINERS_ARRAYMAKER_HPP_
+#define CONTAINERS_ARRAYMAKER_HPP_
 
 #include <arrow/api.h>
 
@@ -15,12 +15,11 @@
 #include <utility>
 #include <vector>
 
+#include "containers/Float.hpp"
 #include "debug/debug.hpp"
-#include "engine/Float.hpp"
 #include "fct/collect.hpp"
 #include "helpers/NullChecker.hpp"
 
-namespace engine {
 namespace containers {
 
 class ArrayMaker {
@@ -215,6 +214,5 @@ std::shared_ptr<arrow::ChunkedArray> ArrayMaker::make_time_stamp_array(
 
 // ----------------------------------------------------------------------------
 }  // namespace containers
-}  // namespace engine
 
-#endif  // ENGINE_CONTAINERS_CATEGORICALFEATURES_HPP_
+#endif  // CONTAINERS_CATEGORICALFEATURES_HPP_

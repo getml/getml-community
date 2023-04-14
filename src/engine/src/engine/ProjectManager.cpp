@@ -103,7 +103,7 @@ void ProjectManager::copy_pipeline(const typename Command::CopyPipelineOp& _cmd,
 // ------------------------------------------------------------------------
 
 void ProjectManager::clear() {
-  data_frames() = std::map<std::string, engine::containers::DataFrame>();
+  data_frames() = std::map<std::string, containers::DataFrame>();
 
   pipelines() = engine::handlers::PipelineManager::PipelineMapType();
 

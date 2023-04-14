@@ -1,16 +1,25 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
-#ifndef ENGINE_CONTAINERS_INDEX_HPP_
-#define ENGINE_CONTAINERS_INDEX_HPP_
+#ifndef CONTAINERS_INDEX_HPP_
+#define CONTAINERS_INDEX_HPP_
 
-namespace engine {
+#include <cmath>
+#include <memory>
+#include <unordered_map>
+#include <variant>
+
+#include "containers/Column.hpp"
+#include "containers/Float.hpp"
+#include "containers/Int.hpp"
+#include "helpers/NullChecker.hpp"
+#include "memmap/Index.hpp"
+
 namespace containers {
-// -------------------------------------------------------------------------
 
 template <class T, class Hash = std::hash<T>>
 class Index {
@@ -182,7 +191,7 @@ bool Index<T, Hash>::is_null(const T& _val) const {
   }
 
   if constexpr (std::is_same<T, strings::String>()) {
-    return utils::NullChecker::is_null(_val);
+    return helpers::NullChecker::is_null(_val);
   }
 
   return false;
@@ -191,6 +200,5 @@ bool Index<T, Hash>::is_null(const T& _val) const {
 // -------------------------------------------------------------------------
 
 }  // namespace containers
-}  // namespace engine
 
-#endif  // ENGINE_CONTAINERS_INDEX_HPP_
+#endif  // CONTAINERS_INDEX_HPP_

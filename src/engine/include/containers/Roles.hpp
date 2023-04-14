@@ -7,15 +7,13 @@
 
 #include "commands/Roles.hpp"
 
-#ifndef ENGINE_CONTAINERS_ROLES_HPP_
-#define ENGINE_CONTAINERS_ROLES_HPP_
+#ifndef CONTAINERS_ROLES_HPP_
+#define CONTAINERS_ROLES_HPP_
 
-namespace engine {
 namespace containers {
 
 using Roles = commands::Roles;
 
 }  // namespace containers
-}  // namespace engine
 
-#endif  // ENGINE_CONTAINERS_ROLES_HPP_
+#endif  // CONTAINERS_ROLES_HPP_

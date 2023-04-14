@@ -5,19 +5,18 @@
 // for details.
 //
 
-#ifndef ENGINE_CONTAINERS_VIEWCONTENT_HPP_
-#define ENGINE_CONTAINERS_VIEWCONTENT_HPP_
+#ifndef CONTAINERS_VIEWCONTENT_HPP_
+#define CONTAINERS_VIEWCONTENT_HPP_
 
 #include <cstdint>
 #include <string>
 #include <variant>
 #include <vector>
 
-#include "engine/containers/DataFrameContent.hpp"
+#include "containers/DataFrameContent.hpp"
 #include "fct/Field.hpp"
 #include "fct/NamedTuple.hpp"
 
-namespace engine {
 namespace containers {
 
 /// A format that is compatible with the data.tables API.
@@ -27,6 +26,5 @@ using ViewContent = std::variant<
                     fct::Field<"data", std::vector<std::vector<std::string>>>>>;
 
 }  // namespace containers
-}  // namespace engine
 
-#endif  // ENGINE_CONTAINERS_VIEWCONTENT_HPP_
+#endif  // CONTAINERS_VIEWCONTENT_HPP_

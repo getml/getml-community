@@ -20,8 +20,8 @@
 
 #include "commands/Fingerprint.hpp"
 #include "commands/Predictor.hpp"
+#include "containers/containers.hpp"
 #include "engine/communication/communication.hpp"
-#include "engine/containers/containers.hpp"
 #include "engine/dependency/dependency.hpp"
 #include "engine/pipelines/FitParams.hpp"
 #include "engine/pipelines/FitPredictorsParams.hpp"

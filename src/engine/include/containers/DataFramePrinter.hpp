@@ -1,36 +1,26 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
-#ifndef ENGINE_CONTAINER_DATAFRAMEPRINTER_HPP_
-#define ENGINE_CONTAINER_DATAFRAMEPRINTER_HPP_
-
-// ----------------------------------------------------------------------------
+#ifndef CONTAINERS_DATAFRAMEPRINTER_HPP_
+#define CONTAINERS_DATAFRAMEPRINTER_HPP_
 
 #include <memory>
 #include <string>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
 #include "debug/debug.hpp"
 
-// ----------------------------------------------------------------------------
-namespace engine {
 namespace containers {
 
 class DataFramePrinter {
-  // -------------------------------
-
  public:
   DataFramePrinter(const size_t _ncols) : ncols_(_ncols) {}
 
   ~DataFramePrinter() = default;
-
-  // -------------------------------
 
  public:
   ///  Returns the data in HTML format, optimized for a Jupyter notebook.
@@ -73,17 +63,11 @@ class DataFramePrinter {
   std::vector<std::string> truncate_row(
       const std::vector<std::string> &_row) const;
 
-  // -------------------------------
-
  private:
   /// The number of columns of the data frame to be printed.
   const size_t ncols_;
-
-  // -------------------------------
 };
 
-// ----------------------------------------------------------------------------
 }  // namespace containers
-}  // namespace engine
 
-#endif  // ENGINE_CONTAINER_DATAFRAMEPRINTER_HPP_
+#endif  // CONTAINERS_DATAFRAMEPRINTER_HPP_

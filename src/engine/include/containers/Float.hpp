@@ -5,10 +5,11 @@
 // for details.
 //
 
-#ifndef CONTAINERS_TSINDEX_TSINDEX_HPP_
-#define CONTAINERS_TSINDEX_TSINDEX_HPP_
+#ifndef CONTAINERS_FLOAT_HPP_
+#define CONTAINERS_FLOAT_HPP_
 
-#include "tsindex/Index.hpp"
-#include "tsindex/IndexParams.hpp"
+namespace containers {
+typedef double Float;
+}
 
-#endif  // CONTAINERS_TSINDEX_TSINDEX_HPP_
+#endif  // CONTAINERS_FLOAT_HPP_
