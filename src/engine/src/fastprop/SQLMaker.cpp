@@ -58,7 +58,7 @@ std::string SQLMaker::condition(const Condition& _condition) const {
 
     default:
       assert_msg(false,
-                 "Unknown DataUsed: '" + _condition.data_used_.value() + "'");
+                 "Unknown DataUsed: '" + _condition.data_used_.name() + "'");
       return "";
   }
 }
@@ -340,7 +340,7 @@ std::string SQLMaker::value_to_be_aggregated(
 
     default:
       assert_msg(false, "Unknown data_used_: '" +
-                            _abstract_feature.data_used_.value() + "'");
+                            _abstract_feature.data_used_.name() + "'");
       return "";
   }
 }

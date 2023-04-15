@@ -117,10 +117,7 @@ class XGBoostPredictor : public Predictor {
   }
 
   /// Trivial (private) accessor.
-  const PredictorImpl& impl() const {
-    assert_true(impl_);
-    return *impl_;
-  }
+  const PredictorImpl& impl() const { return *impl_; }
 
   /// Returns size of the underlying model
   const bst_ulong len() const { return static_cast<bst_ulong>(model_.size()); }

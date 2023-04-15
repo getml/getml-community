@@ -31,9 +31,9 @@ void DataFrameModifier::add_join_keys(
   const auto& other_join_keys_used =
       _data_model.val_.get<"other_join_keys_used_">();
 
-  assert_true(joined_tables.size() == join_key_used.size());
+  assert_true(joined_tables.size() == join_keys_used.size());
 
-  assert_true(joined_tables.size() == other_join_key_used.size());
+  assert_true(joined_tables.size() == other_join_keys_used.size());
 
   for (size_t i = 0; i < join_keys_used.size(); ++i) {
     if (join_keys_used.at(i) == helpers::Macros::no_join_key()) {

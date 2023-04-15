@@ -383,7 +383,7 @@ FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
     const SchemaType& _schema, const containers::DataFrame& _df,
     const Int _target_num, const bool _apply_subroles) const {
   assert_true(_target_num < 0 ||
-              static_cast<size_t>(_target_num) < _schema.targets_.size());
+              static_cast<size_t>(_target_num) < _schema.targets().size());
 
   const auto include_target = [&_df, _target_num,
                                &_schema](const std::string& _name) -> bool {
