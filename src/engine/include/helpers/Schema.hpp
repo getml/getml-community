@@ -145,7 +145,7 @@ struct Schema {
 
   /// Getter for a text name.
   const std::string& text_name(size_t _j) const {
-    assert_true(_j < val_.get<text>().size());
+    assert_true(_j < val_.get<f_text>().size());
     return val_.get<f_text>().at(_j);
   }
 

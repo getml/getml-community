@@ -188,7 +188,7 @@ void FastProp::build_rows(const TransformParams &_params,
 std::vector<containers::Features> FastProp::build_subfeatures(
     const TransformParams &_params,
     const std::shared_ptr<std::vector<size_t>> &_rownums) const {
-  assert_true(placeholder().joined_tables_.size() <= subfeatures().size());
+  assert_true(placeholder().joined_tables().size() <= subfeatures().size());
 
   std::vector<containers::Features> features;
 
@@ -198,7 +198,7 @@ std::vector<containers::Features> FastProp::build_subfeatures(
       continue;
     }
 
-    assert_true(i < placeholder().joined_tables_.size());
+    assert_true(i < placeholder().joined_tables().size());
 
     const auto joined_table = placeholder().joined_tables().at(i);
 
@@ -527,7 +527,7 @@ void FastProp::fit(const FitParams &_params, const bool _as_subfeatures) {
               table_holder.peripheral_tables().size());
 
   assert_true(table_holder.main_tables().size() >=
-              placeholder().joined_tables_.size());
+              placeholder().joined_tables().size());
 
   const auto abstract_features =
       std::make_shared<std::vector<containers::AbstractFeature>>();
@@ -932,7 +932,7 @@ void FastProp::fit_on_peripheral(
 std::shared_ptr<const std::vector<std::optional<FastProp>>>
 FastProp::fit_subfeatures(const FitParams &_params,
                           const TableHolder &_table_holder) const {
-  assert_true(placeholder().joined_tables_.size() <=
+  assert_true(placeholder().joined_tables().size() <=
               _table_holder.subtables().size());
 
   const auto subfeatures =
@@ -1359,7 +1359,7 @@ std::shared_ptr<std::vector<size_t>> FastProp::make_subfeature_rownums(
     return nullptr;
   }
 
-  assert_true(_ix < placeholder().join_keys_used_.size());
+  assert_true(_ix < placeholder().join_keys_used().size());
 
   const auto make_staging_table_colname =
       [](const std::string &_colname) -> std::string {

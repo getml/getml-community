@@ -186,10 +186,7 @@ class LogisticRegression : public Predictor {
   }
 
   /// Trivial (private) accessor.
-  const PredictorImpl& impl() const {
-    assert_true(impl_);
-    return *impl_;
-  }
+  const PredictorImpl& impl() const { return *impl_; }
 
   /// Returns a dense prediction.
   const Float predict_dense(const std::vector<FloatFeature>& _X,

@@ -115,9 +115,9 @@ std::string AbstractFeature::to_sql(
   sql << "       t1." << _sql_dialect_generator->rowid() << " AS "
       << _sql_dialect_generator->rownum() << std::endl;
 
-  assert_true(_output.join_keys_.size() == 1);
+  assert_true(_output.join_keys().size() == 1);
 
-  assert_true(_input.join_keys_.size() == 1);
+  assert_true(_input.join_keys().size() == 1);
 
   sql << _sql_dialect_generator->make_joins(_output.name(), _input.name(),
                                             _output.join_keys_name(),

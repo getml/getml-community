@@ -53,16 +53,6 @@ VocabularyContainer VocabularyContainer::make_container(
 
   const auto val = f_peripheral(peripheral_dfs) * f_population(population_dfs);
 
-#ifndef NDEBUG
-  assert_true(_population.num_text() == population().size());
-
-  assert_true(_peripheral.size() == peripheral().size());
-
-  for (size_t i = 0; i < _peripheral.size(); ++i) {
-    assert_true(_peripheral.at(i).num_text() == peripheral().at(i).size());
-  }
-#endif
-
   return VocabularyContainer(val);
 }
 

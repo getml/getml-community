@@ -66,8 +66,8 @@ Float Aggregator::apply_aggregation(
                         _abstract_feature, _memoization);
 
     default:
-      assert_msg(false,
-                 "Unknown data_used: '" + _abstract_feature.data_used_ + "'.");
+      assert_msg(false, "Unknown data_used: '" +
+                            _abstract_feature.data_used_.name() + "'.");
       return 0.0;
   }
 }
@@ -156,9 +156,10 @@ Float Aggregator::apply_not_applicable(
     const std::function<bool(const containers::Match &)> &_condition_function,
     const containers::AbstractFeature &_abstract_feature,
     const fct::Ref<Memoization> &_memoization) {
-  assert_true(_abstract_feature.aggregation_ == enums::Aggregation::count ||
-              _abstract_feature.aggregation_ ==
-                  enums::Aggregation::avg_time_between);
+  assert_true(_abstract_feature.aggregation_.value() ==
+                  enums::Aggregation::value_of<"COUNT">() ||
+              _abstract_feature.aggregation_.value() ==
+                  enums::Aggregation::value_of<"AVG TIME BETWEEN">());
 
   if (_abstract_feature.aggregation_.value() ==
       enums::Aggregation::value_of<"COUNT">()) {

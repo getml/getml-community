@@ -21,7 +21,8 @@ Condition::Condition(const enums::DataUsed _data_used, const size_t _input_col,
       input_col_(_input_col),
       output_col_(_output_col),
       peripheral_(_peripheral) {
-  assert_true(_data_used == enums::DataUsed::same_units_categorical);
+  assert_true(_data_used.value() ==
+              enums::DataUsed::value_of<"same_units_categorical">());
 }
 
 // ----------------------------------------------------------------------------
@@ -35,7 +36,7 @@ Condition::Condition(const Float _bound_lower, const Float _bound_upper,
       input_col_(0),
       output_col_(0),
       peripheral_(_peripheral) {
-  assert_true(_data_used == enums::DataUsed::lag);
+  assert_true(_data_used.value() == enums::DataUsed::value_of<"lag">());
 }
 // ----------------------------------------------------------------------------
 
@@ -48,7 +49,7 @@ Condition::Condition(const Int _category_used, const enums::DataUsed _data_used,
       input_col_(_input_col),
       output_col_(0),
       peripheral_(_peripheral) {
-  assert_true(_data_used == enums::DataUsed::categorical);
+  assert_true(_data_used.value() == enums::DataUsed::value_of<"categorical">());
 }
 
 // ----------------------------------------------------------------------------

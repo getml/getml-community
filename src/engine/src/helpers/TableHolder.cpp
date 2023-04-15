@@ -9,15 +9,8 @@
 
 #include <stdexcept>
 
-// ----------------------------------------------------------------------------
-
 #include "fct/fct.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "helpers/Macros.hpp"
-
-// ----------------------------------------------------------------------------
 
 namespace helpers {
 
@@ -141,7 +134,7 @@ std::vector<DataFrameView> TableHolder::parse_main_tables(
               _params.placeholder_.join_keys_used().size());
 
   assert_true(_params.placeholder_.joined_tables().size() ==
-              _params.placeholder_.time_stamps_used_.size());
+              _params.placeholder_.time_stamps_used().size());
 
   const auto row_indices = _params.row_index_container_
                                ? _params.row_index_container_->population()
