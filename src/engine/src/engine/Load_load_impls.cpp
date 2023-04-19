@@ -5,8 +5,8 @@
 // for details.
 //
 
-#include "engine/pipelines/Fit.hpp"
 #include "engine/pipelines/Load.hpp"
+#include "engine/pipelines/fit.hpp"
 #include "helpers/Loader.hpp"
 
 namespace engine {

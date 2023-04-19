@@ -5,11 +5,15 @@
 // for details.
 //
 
-#include "engine/pipelines/Fit.hpp"
+#include "engine/pipelines/fit.hpp"
 
 #include "commands/FeatureLearner.hpp"
 #include "commands/Fingerprint.hpp"
+#include "communication/communication.hpp"
+#include "engine/dependency/dependency.hpp"
 #include "engine/pipelines/FeatureLearnerParser.hpp"
+#include "engine/pipelines/FitPredictorsParams.hpp"
+#include "engine/pipelines/MakeFeaturesParams.hpp"
 #include "engine/pipelines/Score.hpp"
 #include "engine/pipelines/Transform.hpp"
 #include "engine/pipelines/TransformParams.hpp"
@@ -24,10 +28,92 @@
 
 namespace engine {
 namespace pipelines {
+namespace fit {
+
+/// Prints the purpose in a more readable format.
+std::string beautify_purpose(const std::string& _purpose);
+
+/// Calculates an index ranking the features by importance.
+std::vector<size_t> calculate_importance_index(
+    const Predictors& _feature_selectors);
+
+/// Calculates the sum of importances over all indices.
+std::vector<Float> calculate_sum_importances(
+    const Predictors& _feature_selectors);
+
+/// Extracts the fingerprints from the predictors.
+fct::Ref<const std::vector<commands::Fingerprint>>
+extract_predictor_fingerprints(
+    const std::vector<std::vector<fct::Ref<predictors::Predictor>>>&
+        _predictors,
+    const fct::Ref<const std::vector<commands::Fingerprint>>& _dependencies);
+
+/// Fits the feature learners. Returns the fitted feature learners and their
+/// fingerprints.
+std::pair<std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>,
+          fct::Ref<const std::vector<commands::Fingerprint>>>
+fit_feature_learners(
+    const Pipeline& _pipeline, const FitParams& _params,
+    const containers::DataFrame& _population_df,
+    const std::vector<containers::DataFrame>& _peripheral_dfs,
+    const featurelearners::FeatureLearnerParams& _feature_learner_params);
+
+/// Fits the predictors. Returns the fitted predictors and their
+/// fingerprints.
+std::pair<Predictors, fct::Ref<const std::vector<commands::Fingerprint>>>
+fit_predictors(const FitPredictorsParams& _params);
+
+/// Fits the preprocessors and applies them to the training set.
+std::pair<std::vector<fct::Ref<const preprocessors::Preprocessor>>,
+          fct::Ref<const std::vector<commands::Fingerprint>>>
+fit_transform_preprocessors(
+    const Pipeline& _pipeline, const FitPreprocessorsParams& _params,
+    const fct::Ref<const std::vector<commands::Fingerprint>>& _dependencies,
+    containers::DataFrame* _population_df,
+    std::vector<containers::DataFrame>* _peripheral_dfs);
+
+/// Retrieves the targets from the population dataframe.
+std::vector<std::string> get_targets(
+    const containers::DataFrame& _population_df);
+
+/// Generates the impl for the feature selectors.
+fct::Ref<const predictors::PredictorImpl> make_feature_selector_impl(
+    const Pipeline& _pipeline,
+    const std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>&
+        _feature_learners,
+    const containers::DataFrame& _population_df);
+
+/// Generates the features for the validation.
+std::pair<std::optional<containers::NumericalFeatures>,
+          std::optional<containers::CategoricalFeatures>>
+make_features_validation(const FitPredictorsParams& _params);
+
+/// Generates the impl for the predictors.
+fct::Ref<const predictors::PredictorImpl> make_predictor_impl(
+    const Pipeline& _pipeline, const Predictors& _feature_selectors,
+    const containers::DataFrame& _population_df);
+
+/// Generates the metrics::Scores object which is also returned by fit.
+fct::Ref<const metrics::Scores> make_scores(
+    const std::optional<MakeFeaturesParams>& _score_params,
+    const Pipeline& _pipeline, const FittedPipeline& _fitted);
+
+/// Retrieves the predictors from the tracker.
+std::pair<std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>,
+          bool>
+retrieve_predictors(
+    const fct::Ref<dependency::PredTracker>& _pred_tracker,
+    const std::vector<std::vector<fct::Ref<predictors::Predictor>>>&
+        _predictors);
+
+/// Scores the pipeline in-sample after it has been successfully fitted.
+fct::Ref<const metrics::Scores> score_after_fitting(
+    const MakeFeaturesParams& _params, const Pipeline& _pipeline,
+    const FittedPipeline& _fitted);
 
 // ------------------------------------------------------------------------
 
-std::string Fit::beautify_purpose(const std::string& _purpose) {
+std::string beautify_purpose(const std::string& _purpose) {
   const auto purpose = helpers::StringReplacer::replace_all(_purpose, "_", " ");
   const auto len = purpose.find_last_not_of("s ") + 1;
   return purpose.substr(0, len);
@@ -35,7 +121,7 @@ std::string Fit::beautify_purpose(const std::string& _purpose) {
 
 // ------------------------------------------------------------------------
 
-std::vector<size_t> Fit::calculate_importance_index(
+std::vector<size_t> calculate_importance_index(
     const Predictors& _feature_selectors) {
   const auto sum_importances = calculate_sum_importances(_feature_selectors);
 
@@ -59,7 +145,7 @@ std::vector<size_t> Fit::calculate_importance_index(
 
 // ------------------------------------------------------------------------
 
-std::vector<Float> Fit::calculate_sum_importances(
+std::vector<Float> calculate_sum_importances(
     const Predictors& _feature_selectors) {
   const auto importances = Score::feature_importances(_feature_selectors);
 
@@ -80,7 +166,7 @@ std::vector<Float> Fit::calculate_sum_importances(
 
 // ----------------------------------------------------------------------
 
-fct::Ref<const std::vector<commands::Fingerprint>> Fit::extract_df_fingerprints(
+fct::Ref<const std::vector<commands::Fingerprint>> extract_df_fingerprints(
     const Pipeline& _pipeline, const containers::DataFrame& _population_df,
     const std::vector<containers::DataFrame>& _peripheral_dfs) {
   const auto get_fingerprint = [](const auto& _df) {
@@ -103,7 +189,7 @@ fct::Ref<const std::vector<commands::Fingerprint>> Fit::extract_df_fingerprints(
 
 // ----------------------------------------------------------------------
 
-fct::Ref<const std::vector<commands::Fingerprint>> Fit::extract_fl_fingerprints(
+fct::Ref<const std::vector<commands::Fingerprint>> extract_fl_fingerprints(
     const std::vector<fct::Ref<featurelearners::AbstractFeatureLearner>>&
         _feature_learners,
     const fct::Ref<const std::vector<commands::Fingerprint>>& _dependencies) {
@@ -124,7 +210,7 @@ fct::Ref<const std::vector<commands::Fingerprint>> Fit::extract_fl_fingerprints(
 // ----------------------------------------------------------------------
 
 fct::Ref<const std::vector<commands::Fingerprint>>
-Fit::extract_predictor_fingerprints(
+extract_predictor_fingerprints(
     const std::vector<std::vector<fct::Ref<predictors::Predictor>>>&
         _predictors,
     const fct::Ref<const std::vector<commands::Fingerprint>>& _dependencies) {
@@ -146,7 +232,7 @@ Fit::extract_predictor_fingerprints(
 // ----------------------------------------------------------------------
 
 fct::Ref<const std::vector<commands::Fingerprint>>
-Fit::extract_preprocessor_fingerprints(
+extract_preprocessor_fingerprints(
     const std::vector<fct::Ref<preprocessors::Preprocessor>>& _preprocessors,
     const fct::Ref<const std::vector<commands::Fingerprint>>& _dependencies) {
   if (_preprocessors.size() == 0) {
@@ -167,9 +253,9 @@ Fit::extract_preprocessor_fingerprints(
 
 std::pair<fct::Ref<const helpers::Schema>,
           fct::Ref<const std::vector<helpers::Schema>>>
-Fit::extract_schemata(const containers::DataFrame& _population_df,
-                      const std::vector<containers::DataFrame>& _peripheral_dfs,
-                      const bool _separate_discrete) {
+extract_schemata(const containers::DataFrame& _population_df,
+                 const std::vector<containers::DataFrame>& _peripheral_dfs,
+                 const bool _separate_discrete) {
   const auto extract_schema =
       [_separate_discrete](
           const containers::DataFrame& _df) -> helpers::Schema {
@@ -189,8 +275,8 @@ Fit::extract_schemata(const containers::DataFrame& _population_df,
 
 // ----------------------------------------------------------------------
 
-std::pair<fct::Ref<const FittedPipeline>, fct::Ref<const metrics::Scores>>
-Fit::fit(const Pipeline& _pipeline, const FitParams& _params) {
+std::pair<fct::Ref<const FittedPipeline>, fct::Ref<const metrics::Scores>> fit(
+    const Pipeline& _pipeline, const FitParams& _params) {
   const auto fit_preprocessors_params = FitPreprocessorsParams{
       .categories_ = _params.categories_,
       .cmd_ = _params.cmd_,
@@ -319,7 +405,7 @@ Fit::fit(const Pipeline& _pipeline, const FitParams& _params) {
 
 std::pair<std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>,
           fct::Ref<const std::vector<commands::Fingerprint>>>
-Fit::fit_feature_learners(
+fit_feature_learners(
     const Pipeline& _pipeline, const FitParams& _params,
     const containers::DataFrame& _population_df,
     const std::vector<containers::DataFrame>& _peripheral_dfs,
@@ -383,7 +469,7 @@ Fit::fit_feature_learners(
 // ----------------------------------------------------------------------------
 
 std::pair<Predictors, fct::Ref<const std::vector<commands::Fingerprint>>>
-Fit::fit_predictors(const FitPredictorsParams& _params) {
+fit_predictors(const FitPredictorsParams& _params) {
   auto predictors = init_predictors(_params.pipeline_, _params.purpose_,
                                     _params.impl_, *_params.dependencies_,
                                     _params.population_df_.num_targets());
@@ -487,8 +573,8 @@ Fit::fit_predictors(const FitPredictorsParams& _params) {
 
 // ----------------------------------------------------------------------
 
-Preprocessed Fit::fit_preprocessors_only(
-    const Pipeline& _pipeline, const FitPreprocessorsParams& _params) {
+Preprocessed fit_preprocessors_only(const Pipeline& _pipeline,
+                                    const FitPreprocessorsParams& _params) {
   const auto targets = get_targets(_params.population_df_);
 
   const auto df_fingerprints = extract_df_fingerprints(
@@ -513,7 +599,7 @@ Preprocessed Fit::fit_preprocessors_only(
 
 std::pair<std::vector<fct::Ref<const preprocessors::Preprocessor>>,
           fct::Ref<const std::vector<commands::Fingerprint>>>
-Fit::fit_transform_preprocessors(
+fit_transform_preprocessors(
     const Pipeline& _pipeline, const FitPreprocessorsParams& _params,
     const fct::Ref<const std::vector<commands::Fingerprint>>& _dependencies,
     containers::DataFrame* _population_df,
@@ -599,7 +685,7 @@ Fit::fit_transform_preprocessors(
 
 // ----------------------------------------------------------------------
 
-std::vector<std::string> Fit::get_targets(
+std::vector<std::string> get_targets(
     const containers::DataFrame& _population_df) {
   const auto get_target = [](const auto& _col) -> std::string {
     return _col.name();
@@ -611,7 +697,7 @@ std::vector<std::string> Fit::get_targets(
 // ------------------------------------------------------------------------
 
 std::vector<fct::Ref<featurelearners::AbstractFeatureLearner>>
-Fit::init_feature_learners(
+init_feature_learners(
     const Pipeline& _pipeline,
     const featurelearners::FeatureLearnerParams& _feature_learner_params,
     const size_t _num_targets) {
@@ -669,7 +755,7 @@ Fit::init_feature_learners(
 
 // ----------------------------------------------------------------------
 
-std::vector<std::vector<fct::Ref<predictors::Predictor>>> Fit::init_predictors(
+std::vector<std::vector<fct::Ref<predictors::Predictor>>> init_predictors(
     const Pipeline& _pipeline, const std::string& _elem,
     const fct::Ref<const predictors::PredictorImpl>& _predictor_impl,
     const std::vector<commands::Fingerprint>& _dependencies,
@@ -703,7 +789,7 @@ std::vector<std::vector<fct::Ref<predictors::Predictor>>> Fit::init_predictors(
 
 // ----------------------------------------------------------------------
 
-std::vector<fct::Ref<preprocessors::Preprocessor>> Fit::init_preprocessors(
+std::vector<fct::Ref<preprocessors::Preprocessor>> init_preprocessors(
     const Pipeline& _pipeline,
     const fct::Ref<const std::vector<commands::Fingerprint>>& _dependencies) {
   auto dependencies =
@@ -737,7 +823,7 @@ std::vector<fct::Ref<preprocessors::Preprocessor>> Fit::init_preprocessors(
 
 // ------------------------------------------------------------------------
 
-fct::Ref<const predictors::PredictorImpl> Fit::make_feature_selector_impl(
+fct::Ref<const predictors::PredictorImpl> make_feature_selector_impl(
     const Pipeline& _pipeline,
     const std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>&
         _feature_learners,
@@ -801,7 +887,7 @@ fct::Ref<const predictors::PredictorImpl> Fit::make_feature_selector_impl(
 
 std::pair<std::optional<containers::NumericalFeatures>,
           std::optional<containers::CategoricalFeatures>>
-Fit::make_features_validation(const FitPredictorsParams& _params) {
+make_features_validation(const FitPredictorsParams& _params) {
   if (!_params.fit_params_.validation_df_ ||
       _params.purpose_ != TransformParams::PREDICTOR) {
     return std::make_pair(std::optional<containers::NumericalFeatures>(),
@@ -841,7 +927,7 @@ Fit::make_features_validation(const FitPredictorsParams& _params) {
 
 // ------------------------------------------------------------------------
 
-fct::Ref<const predictors::PredictorImpl> Fit::make_predictor_impl(
+fct::Ref<const predictors::PredictorImpl> make_predictor_impl(
     const Pipeline& _pipeline, const Predictors& _feature_selectors,
     const containers::DataFrame& _population_df) {
   const auto predictor_impl =
@@ -876,7 +962,7 @@ fct::Ref<const predictors::PredictorImpl> Fit::make_predictor_impl(
 
 // ----------------------------------------------------------------------------
 
-fct::Ref<const metrics::Scores> Fit::make_scores(
+fct::Ref<const metrics::Scores> make_scores(
     const std::optional<MakeFeaturesParams>& _score_params,
     const Pipeline& _pipeline, const FittedPipeline& _fitted) {
   auto scores = fct::Ref<metrics::Scores>::make(_pipeline.scores());
@@ -910,7 +996,7 @@ fct::Ref<const metrics::Scores> Fit::make_scores(
 
 std::pair<std::vector<std::vector<std::shared_ptr<predictors::Predictor>>>,
           bool>
-Fit::retrieve_predictors(
+retrieve_predictors(
     const fct::Ref<dependency::PredTracker>& _pred_tracker,
     const std::vector<std::vector<fct::Ref<predictors::Predictor>>>&
         _predictors) {
@@ -940,7 +1026,7 @@ Fit::retrieve_predictors(
 
 // ----------------------------------------------------------------------------
 
-fct::Ref<const metrics::Scores> Fit::score_after_fitting(
+fct::Ref<const metrics::Scores> score_after_fitting(
     const MakeFeaturesParams& _params, const Pipeline& _pipeline,
     const FittedPipeline& _fitted) {
   auto [numerical_features, categorical_features, _] = Transform::make_features(
@@ -959,7 +1045,6 @@ fct::Ref<const metrics::Scores> Fit::score_after_fitting(
   return Score::score(_pipeline, _fitted, _params.population_df_, name, yhat);
 }
 
-// ----------------------------------------------------------------------------
-
+}  // namespace fit
 }  // namespace pipelines
 }  // namespace engine
