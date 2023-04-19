@@ -205,7 +205,7 @@ void PipelineManager::check(const typename Command::CheckOp& _cmd,
       .warning_tracker_ = params_.warning_tracker_,
       .socket_ = _socket};
 
-  pipelines::Check::check(pipeline, params);
+  pipelines::check::check(pipeline, params);
 
   weak_write_lock.upgrade();
 

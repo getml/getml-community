@@ -5,8 +5,10 @@
 // for details.
 //
 
-#include "engine/pipelines/Check.hpp"
+#include "engine/pipelines/check.hpp"
 
+#include "commands/Fingerprint.hpp"
+#include "commands/WarningFingerprint.hpp"
 #include "engine/pipelines/FitPreprocessorsParams.hpp"
 #include "engine/pipelines/fit.hpp"
 #include "fct/Field.hpp"
@@ -15,8 +17,20 @@
 
 namespace engine {
 namespace pipelines {
+namespace check {
 
-void Check::check(const Pipeline& _pipeline, const CheckParams& _params) {
+/// Generates the fingerprints for the feature learners, needed for the
+/// warning.
+static std::pair<std::vector<fct::Ref<featurelearners::AbstractFeatureLearner>>,
+                 fct::Ref<const std::vector<commands::Fingerprint>>>
+init_feature_learners(
+    const Pipeline& _pipeline,
+    const featurelearners::FeatureLearnerParams& _feature_learner_params,
+    const CheckParams& _params);
+
+// ----------------------------------------------------------------------------
+
+void check(const Pipeline& _pipeline, const CheckParams& _params) {
   // TODO: We are forced to generate the modified tables, even when we can
   // retrieve the check, but we really only need the modified schemata at this
   // point. Fix this.
@@ -92,7 +106,7 @@ void Check::check(const Pipeline& _pipeline, const CheckParams& _params) {
 
 std::pair<std::vector<fct::Ref<featurelearners::AbstractFeatureLearner>>,
           fct::Ref<const std::vector<commands::Fingerprint>>>
-Check::init_feature_learners(
+init_feature_learners(
     const Pipeline& _pipeline,
     const featurelearners::FeatureLearnerParams& _feature_learner_params,
     const CheckParams& _params) {
@@ -113,7 +127,6 @@ Check::init_feature_learners(
                             feature_learners, preprocessor_fingerprints));
 }
 
-// ----------------------------------------------------------------------------
-
+}  // namespace check
 }  // namespace pipelines
 }  // namespace engine
