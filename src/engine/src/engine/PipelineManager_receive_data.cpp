@@ -13,8 +13,6 @@
 #include "engine/handlers/ColumnManager.hpp"
 #include "engine/handlers/DataFrameManager.hpp"
 #include "engine/handlers/PipelineManager.hpp"
-#include "engine/pipelines/ToSQL.hpp"
-#include "engine/pipelines/ToSQLParams.hpp"
 #include "engine/pipelines/pipelines.hpp"
 #include "fct/always_false.hpp"
 #include "transpilation/TranspilationParams.hpp"

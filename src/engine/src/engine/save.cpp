@@ -11,8 +11,8 @@
 #include <vector>
 
 #include "engine/pipelines/PipelineJSON.hpp"
-#include "engine/pipelines/ToSQL.hpp"
 #include "engine/pipelines/ToSQLParams.hpp"
+#include "engine/pipelines/to_sql.hpp"
 #include "engine/utils/SQLDependencyTracker.hpp"
 #include "fct/Field.hpp"
 #include "fct/NamedTuple.hpp"
@@ -105,7 +105,7 @@ void save(const SaveParams& _params) {
                   .targets_ = true,
                   .transpilation_params_ = transpilation_params};
 
-  const auto sql_code = ToSQL::to_sql(to_sql_params);
+  const auto sql_code = to_sql::to_sql(to_sql_params);
 
   utils::SQLDependencyTracker(tfile.path() + "/SQL/")
       .save_dependencies(sql_code);

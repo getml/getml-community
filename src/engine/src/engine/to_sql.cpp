@@ -5,17 +5,66 @@
 // for details.
 //
 
-#include "engine/pipelines/ToSQL.hpp"
+#include "engine/pipelines/to_sql.hpp"
 
 #include <algorithm>
+#include <utility>
+#include <vector>
 
+#include "containers/containers.hpp"
+#include "engine/pipelines/FittedPipeline.hpp"
+#include "engine/pipelines/Pipeline.hpp"
 #include "fct/collect.hpp"
 #include "transpilation/SQLGenerator.hpp"
 
 namespace engine {
 namespace pipelines {
+namespace to_sql {
 
-std::vector<std::string> ToSQL::feature_learners_to_sql(
+/// Expresses the feature learners as SQL code.
+std::vector<std::string> feature_learners_to_sql(
+    const ToSQLParams& _params,
+    const fct::Ref<const transpilation::SQLDialectGenerator>&
+        _sql_dialect_generator);
+
+/// Generates the names of the autofeatures to be included in the transpiled
+/// SQL code.
+std::vector<std::string> make_autofeature_names(const FittedPipeline& _fitted);
+
+/// Generates the schemata needed for the SQL generation of the staging
+/// tables.
+std::pair<containers::Schema, std::vector<containers::Schema>>
+make_staging_schemata(const FittedPipeline& _fitted);
+
+/// Sometimes features can get excessively long, which makes it hard to
+/// display them in the iPython notebook. This takes care of this problem.
+std::vector<std::string> overwrite_oversized_features(
+    const fct::Ref<const transpilation::SQLDialectGenerator>&
+        _sql_dialect_generator,
+    const std::vector<std::string>& _autofeatures,
+    const std::optional<size_t> _size_threshold);
+
+/// Parses the feature name from the code.
+std::string parse_feature_name(
+    const fct::Ref<const transpilation::SQLDialectGenerator>&
+        _sql_dialect_generator,
+    const std::string& _code);
+
+/// Expresses the preprocessing part as SQL code.
+std::vector<std::string> preprocessors_to_sql(
+    const ToSQLParams& _params,
+    const fct::Ref<const transpilation::SQLDialectGenerator>&
+        _sql_dialect_generator);
+
+/// Expresses the staging part as SQL code.
+std::vector<std::string> staging_to_sql(
+    const ToSQLParams& _params,
+    const fct::Ref<const transpilation::SQLDialectGenerator>&
+        _sql_dialect_generator);
+
+// ----------------------------------------------------------------------------
+
+std::vector<std::string> feature_learners_to_sql(
     const ToSQLParams& _params,
     const fct::Ref<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator) {
@@ -60,8 +109,7 @@ std::vector<std::string> ToSQL::feature_learners_to_sql(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::string> ToSQL::make_autofeature_names(
-    const FittedPipeline& _fitted) {
+std::vector<std::string> make_autofeature_names(const FittedPipeline& _fitted) {
   const auto to_names =
       [&_fitted](const size_t _i) -> std::vector<std::string> {
     const auto make_name = [_i](const size_t _ix) -> std::string {
@@ -85,7 +133,7 @@ std::vector<std::string> ToSQL::make_autofeature_names(
 // ----------------------------------------------------------------------------
 
 std::pair<containers::Schema, std::vector<containers::Schema>>
-ToSQL::make_staging_schemata(const FittedPipeline& _fitted) {
+make_staging_schemata(const FittedPipeline& _fitted) {
   const auto has_text_field_marker = [](const std::string& _colname) -> bool {
     const auto pos = _colname.find(helpers::Macros::text_field());
     return pos != std::string::npos;
@@ -130,7 +178,7 @@ ToSQL::make_staging_schemata(const FittedPipeline& _fitted) {
 
 // ----------------------------------------------------------------------------
 
-std::string ToSQL::parse_feature_name(
+std::string parse_feature_name(
     const fct::Ref<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator,
     const std::string& _code) {
@@ -163,7 +211,7 @@ std::string ToSQL::parse_feature_name(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::string> ToSQL::overwrite_oversized_features(
+std::vector<std::string> overwrite_oversized_features(
     const fct::Ref<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator,
     const std::vector<std::string>& _features,
@@ -183,7 +231,7 @@ std::vector<std::string> ToSQL::overwrite_oversized_features(
     std::stringstream sql;
 
     const auto feature_name =
-        ToSQL::parse_feature_name(_sql_dialect_generator, feature);
+        parse_feature_name(_sql_dialect_generator, feature);
 
     sql << "-- The size of the SQL code for " << feature_name << " is "
         << feature.size()
@@ -210,7 +258,7 @@ std::vector<std::string> ToSQL::overwrite_oversized_features(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::string> ToSQL::preprocessors_to_sql(
+std::vector<std::string> preprocessors_to_sql(
     const ToSQLParams& _params,
     const fct::Ref<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator) {
@@ -225,7 +273,7 @@ std::vector<std::string> ToSQL::preprocessors_to_sql(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::string> ToSQL::staging_to_sql(
+std::vector<std::string> staging_to_sql(
     const ToSQLParams& _params,
     const fct::Ref<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator) {
@@ -255,7 +303,7 @@ std::vector<std::string> ToSQL::staging_to_sql(
 
 // ----------------------------------------------------------------------------
 
-std::string ToSQL::to_sql(const ToSQLParams& _params) {
+std::string to_sql(const ToSQLParams& _params) {
   assert_true(_params.fitted_.feature_learners_.size() ==
               _params.fitted_.predictors_.impl_->autofeatures().size());
 
@@ -291,6 +339,6 @@ std::string ToSQL::to_sql(const ToSQLParams& _params) {
 }
 
 // ----------------------------------------------------------------------------
-
+}  // namespace to_sql
 }  // namespace pipelines
 }  // namespace engine

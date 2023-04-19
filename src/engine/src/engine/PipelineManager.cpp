@@ -14,9 +14,9 @@
 #include "containers/Roles.hpp"
 #include "engine/handlers/ColumnManager.hpp"
 #include "engine/handlers/DataFrameManager.hpp"
-#include "engine/pipelines/ToSQL.hpp"
 #include "engine/pipelines/ToSQLParams.hpp"
 #include "engine/pipelines/pipelines.hpp"
+#include "engine/pipelines/to_sql.hpp"
 #include "fct/always_false.hpp"
 #include "transpilation/TranspilationParams.hpp"
 #include "transpilation/transpilation.hpp"
@@ -706,7 +706,7 @@ void PipelineManager::to_sql(const typename Command::ToSQLOp& _cmd,
                              .targets_ = targets,
                              .transpilation_params_ = transpilation_params};
 
-  const auto sql = pipelines::ToSQL::to_sql(params);
+  const auto sql = pipelines::to_sql::to_sql(params);
 
   read_lock.unlock();
 
