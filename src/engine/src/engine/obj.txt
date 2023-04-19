@@ -4,7 +4,7 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/ArrowHandler.cpp
     ${ENGINE_SOURCE_DIRECTORY}/BoolOpParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/CategoryTrimmer.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/Check.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/check.cpp
     ${ENGINE_SOURCE_DIRECTORY}/ColumnManager.cpp
     ${ENGINE_SOURCE_DIRECTORY}/ColumnManager_execute_command.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DatabaseManager.cpp
