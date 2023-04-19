@@ -12,7 +12,6 @@
 #include "engine/pipelines/FitParams.hpp"
 #include "engine/pipelines/Load.hpp"
 #include "engine/pipelines/Pipeline.hpp"
-#include "engine/pipelines/Save.hpp"
 #include "engine/pipelines/SaveParams.hpp"
 #include "engine/pipelines/Score.hpp"
 #include "engine/pipelines/ToSQL.hpp"
@@ -20,6 +19,7 @@
 #include "engine/pipelines/TransformParams.hpp"
 #include "engine/pipelines/check.hpp"
 #include "engine/pipelines/fit.hpp"
+#include "engine/pipelines/save.hpp"
 #include "engine/pipelines/transform.hpp"
 
 #endif  // ENGINE_PIPELINES_PIPELINES_HPP_

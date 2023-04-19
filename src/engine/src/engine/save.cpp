@@ -5,7 +5,10 @@
 // for details.
 //
 
-#include "engine/pipelines/Save.hpp"
+#include "engine/pipelines/save.hpp"
+
+#include <string>
+#include <vector>
 
 #include "engine/pipelines/PipelineJSON.hpp"
 #include "engine/pipelines/ToSQL.hpp"
@@ -17,9 +20,34 @@
 
 namespace engine {
 namespace pipelines {
+namespace save {
 
-void Save::move_tfile(const std::string& _path, const std::string& _name,
-                      Poco::TemporaryFile* _tfile) {
+/// Saves the feature learners.
+void save_feature_learners(const SaveParams& _params,
+                           const Poco::TemporaryFile& _tfile);
+
+/// Saves the pipeline itself to a JSON file.
+void save_pipeline_json(const SaveParams& _params,
+                        const Poco::TemporaryFile& _tfile);
+
+/// Saves the feature selectors or predictors.
+void save_predictors(
+    const std::vector<std::vector<fct::Ref<const predictors::Predictor>>>&
+        _predictors,
+    const std::string& _purpose, const Poco::TemporaryFile& _tfile);
+
+/// Saves the preprocessors.
+void save_preprocessors(const SaveParams& _params,
+                        const Poco::TemporaryFile& _tfile);
+
+/// Moves the files from their temporary location to their final destination.
+void move_tfile(const std::string& _path, const std::string& _name,
+                Poco::TemporaryFile* _tfile);
+
+// ----------------------------------------------------------------------------
+
+void move_tfile(const std::string& _path, const std::string& _name,
+                Poco::TemporaryFile* _tfile) {
   auto file = Poco::File(_path + _name);
 
   file.createDirectories();
@@ -33,7 +61,7 @@ void Save::move_tfile(const std::string& _path, const std::string& _name,
 
 // ----------------------------------------------------------------------------
 
-void Save::save(const SaveParams& _params) {
+void save(const SaveParams& _params) {
   auto tfile = Poco::TemporaryFile(_params.temp_dir_);
 
   tfile.createDirectories();
@@ -87,8 +115,8 @@ void Save::save(const SaveParams& _params) {
 
 // ----------------------------------------------------------------------------
 
-void Save::save_feature_learners(const SaveParams& _params,
-                                 const Poco::TemporaryFile& _tfile) {
+void save_feature_learners(const SaveParams& _params,
+                           const Poco::TemporaryFile& _tfile) {
   for (size_t i = 0; i < _params.fitted_.feature_learners_.size(); ++i) {
     const auto& fl = _params.fitted_.feature_learners_.at(i);
     fl->save(_tfile.path() + "/feature-learner-" + std::to_string(i) + ".json");
@@ -97,8 +125,8 @@ void Save::save_feature_learners(const SaveParams& _params,
 
 // ----------------------------------------------------------------------------
 
-void Save::save_pipeline_json(const SaveParams& _params,
-                              const Poco::TemporaryFile& _tfile) {
+void save_pipeline_json(const SaveParams& _params,
+                        const Poco::TemporaryFile& _tfile) {
   const auto& p = _params.pipeline_;
 
   const auto& f = _params.fitted_;
@@ -119,7 +147,7 @@ void Save::save_pipeline_json(const SaveParams& _params,
 
 // ----------------------------------------------------------------------------
 
-void Save::save_predictors(
+void save_predictors(
     const std::vector<std::vector<fct::Ref<const predictors::Predictor>>>&
         _predictors,
     const std::string& _purpose, const Poco::TemporaryFile& _tfile) {
@@ -134,8 +162,8 @@ void Save::save_predictors(
 
 // ----------------------------------------------------------------------------
 
-void Save::save_preprocessors(const SaveParams& _params,
-                              const Poco::TemporaryFile& _tfile) {
+void save_preprocessors(const SaveParams& _params,
+                        const Poco::TemporaryFile& _tfile) {
   for (size_t i = 0; i < _params.fitted_.preprocessors_.size(); ++i) {
     const auto& p = _params.fitted_.preprocessors_.at(i);
     p->save(_tfile.path() + "/preprocessor-" + std::to_string(i) + ".json");
@@ -143,6 +171,6 @@ void Save::save_preprocessors(const SaveParams& _params,
 }
 
 // ----------------------------------------------------------------------------
-
+}  // namespace save
 }  // namespace pipelines
 }  // namespace engine
