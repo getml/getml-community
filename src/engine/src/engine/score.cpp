@@ -5,16 +5,57 @@
 // for details.
 //
 
-#include "engine/pipelines/Score.hpp"
+#include "engine/pipelines/score.hpp"
+
+#include <algorithm>
+#include <map>
 
 #include "engine/pipelines/FittedPipeline.hpp"
 #include "fct/Field.hpp"
+#include "metrics/Scorer.hpp"
 #include "metrics/Scores.hpp"
+#include "metrics/Summarizer.hpp"
 
 namespace engine {
 namespace pipelines {
+namespace score {
 
-std::shared_ptr<const metrics::Scores> Score::calculate_feature_stats(
+/// Calculates the column importances for the autofeatures.
+void column_importances_auto(
+    const FittedPipeline& _fitted,
+    const std::vector<std::vector<Float>>& _f_importances,
+    std::vector<helpers::ImportanceMaker>* _importance_makers);
+
+/// Calculates the columns importances for the manual features.
+void column_importances_manual(
+    const Pipeline& _pipeline, const FittedPipeline& _fitted,
+    const std::vector<std::vector<Float>>& _f_importances,
+    std::vector<helpers::ImportanceMaker>* _importance_makers);
+
+/// Extracts the columns descriptions
+void extract_coldesc(
+    const std::map<helpers::ColumnDescription, Float>& _column_importances,
+    std::vector<helpers::ColumnDescription>* _coldesc);
+
+/// Extracts the importance values.
+void extract_importance_values(
+    const std::map<helpers::ColumnDescription, Float>& _column_importances,
+    std::vector<std::vector<Float>>* _all_column_importances);
+
+/// Fills the columns descriptions that have not been assigned with importance
+/// value 0.0.
+void fill_zeros(std::vector<helpers::ImportanceMaker>* _f_importances);
+
+/// The importances factors are needed for backpropagating the feature
+/// importances to the column importances.
+std::vector<Float> make_importance_factors(
+    const size_t _num_features, const std::vector<size_t>& _autofeatures,
+    const std::vector<Float>::const_iterator _begin,
+    const std::vector<Float>::const_iterator _end);
+
+// ----------------------------------------------------------------------------
+
+std::shared_ptr<const metrics::Scores> calculate_feature_stats(
     const Pipeline& _pipeline, const FittedPipeline& _fitted,
     const containers::NumericalFeatures _features,
     const containers::DataFrame& _population_df) {
@@ -58,8 +99,7 @@ std::shared_ptr<const metrics::Scores> Score::calculate_feature_stats(
 
 std::pair<std::vector<helpers::ColumnDescription>,
           std::vector<std::vector<Float>>>
-Score::column_importances(const Pipeline& _pipeline,
-                          const FittedPipeline& _fitted) {
+column_importances(const Pipeline& _pipeline, const FittedPipeline& _fitted) {
   auto c_desc = std::vector<helpers::ColumnDescription>();
 
   auto c_importances = std::vector<std::vector<Float>>();
@@ -102,7 +142,7 @@ Score::column_importances(const Pipeline& _pipeline,
 
 // ----------------------------------------------------------------------------
 
-void Score::column_importances_auto(
+void column_importances_auto(
     const FittedPipeline& _fitted,
     const std::vector<std::vector<Float>>& _f_importances,
     std::vector<helpers::ImportanceMaker>* _importance_makers) {
@@ -138,7 +178,7 @@ void Score::column_importances_auto(
 
 // ----------------------------------------------------------------------------
 
-void Score::column_importances_manual(
+void column_importances_manual(
     const Pipeline& _pipeline, const FittedPipeline& _fitted,
     const std::vector<std::vector<Float>>& _f_importances,
     std::vector<helpers::ImportanceMaker>* _importance_makers) {
@@ -180,7 +220,7 @@ void Score::column_importances_manual(
 
 // ----------------------------------------------------------------------------
 
-void Score::extract_coldesc(
+void extract_coldesc(
     const std::map<helpers::ColumnDescription, Float>& _column_importances,
     std::vector<helpers::ColumnDescription>* _coldesc) {
   if (_coldesc->size() == 0) {
@@ -192,7 +232,7 @@ void Score::extract_coldesc(
 
 // ----------------------------------------------------------------------------
 
-void Score::extract_importance_values(
+void extract_importance_values(
     const std::map<helpers::ColumnDescription, Float>& _column_importances,
     std::vector<std::vector<Float>>* _all_column_importances) {
   auto importance_values = std::vector<Float>();
@@ -206,7 +246,7 @@ void Score::extract_importance_values(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::vector<Float>> Score::feature_importances(
+std::vector<std::vector<Float>> feature_importances(
     const Predictors& _predictors) {
   const auto n_features = _predictors.num_features();
 
@@ -244,7 +284,7 @@ std::vector<std::vector<Float>> Score::feature_importances(
 
 // ----------------------------------------------------------------------------
 
-void Score::fill_zeros(std::vector<helpers::ImportanceMaker>* _f_importances) {
+void fill_zeros(std::vector<helpers::ImportanceMaker>* _f_importances) {
   if (_f_importances->size() == 0) {
     return;
   }
@@ -267,7 +307,7 @@ void Score::fill_zeros(std::vector<helpers::ImportanceMaker>* _f_importances) {
 
 // ----------------------------------------------------------------------------
 
-std::vector<Float> Score::make_importance_factors(
+std::vector<Float> make_importance_factors(
     const size_t _num_features, const std::vector<size_t>& _autofeatures,
     const std::vector<Float>::const_iterator _begin,
     const std::vector<Float>::const_iterator _end) {
@@ -291,7 +331,7 @@ std::vector<Float> Score::make_importance_factors(
 
 // ----------------------------------------------------------------------------
 
-fct::Ref<const metrics::Scores> Score::score(
+fct::Ref<const metrics::Scores> score(
     const Pipeline& _pipeline, const FittedPipeline& _fitted,
     const containers::DataFrame& _population_df,
     const std::string& _population_name,
@@ -342,7 +382,7 @@ fct::Ref<const metrics::Scores> Score::score(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::vector<Float>> Score::transpose(
+std::vector<std::vector<Float>> transpose(
     const std::vector<std::vector<Float>>& _original) {
   if (_original.size() == 0) {
     return _original;
@@ -368,6 +408,6 @@ std::vector<std::vector<Float>> Score::transpose(
   return transposed;
 }
 
-// ----------------------------------------------------------------------------
+}  // namespace score
 }  // namespace pipelines
 }  // namespace engine

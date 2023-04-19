@@ -562,7 +562,7 @@ void PipelineManager::score(const FullTransformOp& _cmd,
   }
 
   const auto scores =
-      pipelines::Score::score(_pipeline, *fitted, _population_df, name, _yhat);
+      pipelines::score::score(_pipeline, *fitted, _population_df, name, _yhat);
 
   const auto pipeline = _pipeline.with_scores(scores);
 

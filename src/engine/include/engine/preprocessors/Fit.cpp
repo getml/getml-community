@@ -9,8 +9,8 @@
 
 #include "commands/FeatureLearner.hpp"
 #include "commands/Fingerprint.hpp"
-#include "engine/pipelines/Score.hpp"
 #include "engine/pipelines/TransformParams.hpp"
+#include "engine/pipelines/score.hpp"
 #include "engine/pipelines/transform.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
 #include "fct/Field.hpp"
@@ -59,7 +59,7 @@ std::vector<size_t> fit::calculate_importance_index(
 
 std::vector<Float> fit::calculate_sum_importances(
     const Predictors& _feature_selectors) {
-  const auto importances = Score::feature_importances(_feature_selectors);
+  const auto importances = score::feature_importances(_feature_selectors);
 
   assert_true(importances.size() == _feature_selectors.size());
 
@@ -896,10 +896,10 @@ fct::Ref<const metrics::Scores> fit::make_scores(
   auto scores = fct::Ref<metrics::Scores>::make(_pipeline.scores());
 
   const auto [c_desc, c_importances] =
-      Score::column_importances(_pipeline, _fitted);
+      score::column_importances(_pipeline, _fitted);
 
   const auto feature_importances =
-      Score::feature_importances(_fitted.predictors_);
+      score::feature_importances(_fitted.predictors_);
 
   const auto [n1, n2, n3] = _fitted.feature_names();
 
@@ -907,9 +907,9 @@ fct::Ref<const metrics::Scores> fit::make_scores(
 
   scores->update(
       fct::make_field<"column_descriptions_">(c_desc),
-      fct::make_field<"column_importances_">(Score::transpose(c_importances)),
+      fct::make_field<"column_importances_">(score::transpose(c_importances)),
       fct::make_field<"feature_importances_">(
-          Score::transpose(feature_importances)),
+          score::transpose(feature_importances)),
       fct::make_field<"feature_names_">(feature_names));
 
   if (!_score_params) {
@@ -970,7 +970,7 @@ fct::Ref<const metrics::Scores> fit::score_after_fitting(
   const auto& name =
       fct::get<"name_">(_params.cmd_.get<"population_df_">().val_);
 
-  return Score::score(_pipeline, _fitted, _params.population_df_, name, yhat);
+  return score::score(_pipeline, _fitted, _params.population_df_, name, yhat);
 }
 
 // ----------------------------------------------------------------------------
