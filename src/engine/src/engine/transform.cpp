@@ -12,8 +12,8 @@
 #include "engine/pipelines/DataFrameModifier.hpp"
 #include "engine/pipelines/FittedPipeline.hpp"
 #include "engine/pipelines/PlaceholderMaker.hpp"
-#include "engine/pipelines/Score.hpp"
 #include "engine/pipelines/Staging.hpp"
+#include "engine/pipelines/score.hpp"
 #include "json/json.hpp"
 #include "metrics/Scores.hpp"
 #include "transpilation/SQLDialectParser.hpp"
@@ -392,7 +392,7 @@ transform(const TransformParams& _params, const Pipeline& _pipeline,
     return std::make_tuple(numerical_features, categorical_features, nullptr);
   }
   const auto scores =
-      score ? Score::calculate_feature_stats(_pipeline, _fitted,
+      score ? score::calculate_feature_stats(_pipeline, _fitted,
                                              numerical_features, population_df)
             : nullptr;
 
