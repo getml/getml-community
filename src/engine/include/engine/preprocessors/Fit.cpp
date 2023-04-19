@@ -10,8 +10,8 @@
 #include "commands/FeatureLearner.hpp"
 #include "commands/Fingerprint.hpp"
 #include "engine/pipelines/Score.hpp"
-#include "engine/pipelines/Transform.hpp"
 #include "engine/pipelines/TransformParams.hpp"
+#include "engine/pipelines/transform.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
 #include "fct/Field.hpp"
 #include "fct/collect.hpp"
@@ -421,7 +421,7 @@ fit::fit_predictors(const FitPredictorsParams& _params) {
       .socket_ = _params.fit_params_.socket_};
 
   auto [numerical_features, categorical_features, autofeatures] =
-      Transform::make_features(make_features_params, _params.pipeline_,
+      transform::make_features(make_features_params, _params.pipeline_,
                                _params.feature_learners_, *_params.impl_,
                                *_params.fit_params_.fs_fingerprints_);
 
@@ -502,7 +502,7 @@ Preprocessed fit::fit_preprocessors_only(
   const auto df_fingerprints = extract_df_fingerprints(
       _pipeline, _params.population_df_, _params.peripheral_dfs_);
 
-  auto [population_df, peripheral_dfs] = Transform::stage_data_frames(
+  auto [population_df, peripheral_dfs] = transform::stage_data_frames(
       _pipeline, _params.population_df_, _params.peripheral_dfs_,
       _params.logger_, _params.categories_->temp_dir(), _params.socket_);
 
@@ -805,7 +805,7 @@ fct::Ref<const predictors::PredictorImpl> fit::make_feature_selector_impl(
       num_autofeatures, categorical_colnames, numerical_colnames);
 
   const auto categorical_features =
-      Transform::get_categorical_features(_pipeline, _population_df, *fs_impl);
+      transform::get_categorical_features(_pipeline, _population_df, *fs_impl);
 
   fs_impl->fit_encodings(categorical_features);
 
@@ -845,7 +845,7 @@ fit::make_features_validation(const FitPredictorsParams& _params) {
       .transform_params_ = transform_params};
 
   const auto [numerical_features, categorical_features, _] =
-      Transform::transform_features_only(features_only_params);
+      transform::transform_features_only(features_only_params);
 
   return std::make_pair(
       std::make_optional<containers::NumericalFeatures>(numerical_features),
@@ -880,7 +880,7 @@ fct::Ref<const predictors::PredictorImpl> fit::make_predictor_impl(
 
   predictor_impl->select_features(n_selected, index);
 
-  auto categorical_features = Transform::get_categorical_features(
+  auto categorical_features = transform::get_categorical_features(
       _pipeline, _population_df, *predictor_impl);
 
   predictor_impl->fit_encodings(categorical_features);
@@ -957,14 +957,14 @@ fit::retrieve_predictors(
 fct::Ref<const metrics::Scores> fit::score_after_fitting(
     const MakeFeaturesParams& _params, const Pipeline& _pipeline,
     const FittedPipeline& _fitted) {
-  auto [numerical_features, categorical_features, _] = Transform::make_features(
+  auto [numerical_features, categorical_features, _] = transform::make_features(
       _params, _pipeline, _fitted.feature_learners_, *_fitted.predictors_.impl_,
       *_fitted.fingerprints_.get<"fs_fingerprints_">());
 
   categorical_features =
       _fitted.predictors_.impl_->transform_encodings(categorical_features);
 
-  const auto yhat = Transform::generate_predictions(
+  const auto yhat = transform::generate_predictions(
       _fitted, categorical_features, numerical_features);
 
   const auto& name =

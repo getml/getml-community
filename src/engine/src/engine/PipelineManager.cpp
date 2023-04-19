@@ -769,7 +769,7 @@ void PipelineManager::transform(const typename Command::TransformOp& _cmd,
   }
 
   const auto [numerical_features, categorical_features, scores] =
-      pipelines::Transform::transform(params, pipeline, *fitted);
+      pipelines::transform::transform(params, pipeline, *fitted);
 
   if (scores) {
     pipeline = pipeline.with_scores(fct::Ref<const metrics::Scores>(scores));
