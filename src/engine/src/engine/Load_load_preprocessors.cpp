@@ -5,8 +5,8 @@
 // for details.
 //
 
-#include "engine/pipelines/Fit.hpp"
 #include "engine/pipelines/Load.hpp"
+#include "engine/pipelines/fit.hpp"
 
 namespace engine {
 namespace pipelines {
@@ -19,7 +19,7 @@ Load::load_preprocessors(const std::string& _path,
                          const Pipeline& _pipeline) {
   assert_true(_preprocessor_tracker);
 
-  auto preprocessors = Fit::init_preprocessors(
+  auto preprocessors = fit::init_preprocessors(
       _pipeline, _pipeline_json.get<"df_fingerprints_">());
 
   for (size_t i = 0; i < preprocessors.size(); ++i) {
@@ -28,7 +28,7 @@ Load::load_preprocessors(const std::string& _path,
     _preprocessor_tracker->add(p);
   }
 
-  return Fit::to_const(preprocessors);
+  return fit::to_const(preprocessors);
 }
 
 }  // namespace pipelines

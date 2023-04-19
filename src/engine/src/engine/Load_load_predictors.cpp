@@ -5,8 +5,8 @@
 // for details.
 //
 
-#include "engine/pipelines/Fit.hpp"
 #include "engine/pipelines/Load.hpp"
+#include "engine/pipelines/fit.hpp"
 
 namespace engine {
 namespace pipelines {
@@ -17,7 +17,7 @@ Predictors Load::load_predictors(
     const fct::Ref<const predictors::PredictorImpl>& _predictor_impl,
     const PipelineJSON& _pipeline_json, const Pipeline& _pipeline) {
   const auto predictors =
-      Fit::init_predictors(_pipeline, "predictors_", _predictor_impl,
+      fit::init_predictors(_pipeline, "predictors_", _predictor_impl,
                            *_pipeline_json.get<"fs_fingerprints_">(),
                            _pipeline_json.get<"targets_">().size());
 
@@ -31,7 +31,7 @@ Predictors Load::load_predictors(
   }
 
   return Predictors{.impl_ = _predictor_impl,
-                    .predictors_ = Fit::to_const(predictors)};
+                    .predictors_ = fit::to_const(predictors)};
 }
 
 }  // namespace pipelines

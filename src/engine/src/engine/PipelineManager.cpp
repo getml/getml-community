@@ -391,7 +391,7 @@ void PipelineManager::fit(const typename Command::FitOp& _cmd,
       .validation_df_ = validation_df,
       .socket_ = _socket};
 
-  const auto [fitted, scores] = pipelines::Fit::fit(pipeline, params);
+  const auto [fitted, scores] = pipelines::fit::fit(pipeline, params);
 
   pipeline = pipeline.with_fitted(fitted).with_scores(scores);
 

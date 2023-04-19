@@ -5,8 +5,8 @@
 // for details.
 //
 
-#include "engine/pipelines/Fit.hpp"
 #include "engine/pipelines/Load.hpp"
+#include "engine/pipelines/fit.hpp"
 
 namespace engine {
 namespace pipelines {
@@ -33,7 +33,7 @@ Load::load_feature_learners(
           featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS);
 
   const auto feature_learners =
-      Fit::init_feature_learners(_pipeline, feature_learner_params,
+      fit::init_feature_learners(_pipeline, feature_learner_params,
                                  _pipeline_json.get<"targets_">().size());
 
   for (size_t i = 0; i < feature_learners.size(); ++i) {
@@ -42,7 +42,7 @@ Load::load_feature_learners(
     _fe_tracker->add(fe);
   }
 
-  return Fit::to_const(feature_learners);
+  return fit::to_const(feature_learners);
 }
 
 }  // namespace pipelines

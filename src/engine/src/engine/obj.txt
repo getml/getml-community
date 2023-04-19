@@ -19,7 +19,7 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/EMailDomain.cpp
     ${ENGINE_SOURCE_DIRECTORY}/FeatureLearnerParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/FileHandler.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/Fit.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/fit.cpp
     ${ENGINE_SOURCE_DIRECTORY}/FittedPipeline.cpp
     ${ENGINE_SOURCE_DIRECTORY}/FloatOpParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Imputation.cpp

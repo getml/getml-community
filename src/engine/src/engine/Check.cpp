@@ -7,8 +7,8 @@
 
 #include "engine/pipelines/Check.hpp"
 
-#include "engine/pipelines/Fit.hpp"
 #include "engine/pipelines/FitPreprocessorsParams.hpp"
+#include "engine/pipelines/fit.hpp"
 #include "fct/Field.hpp"
 #include "fct/collect.hpp"
 #include "json/json.hpp"
@@ -30,10 +30,10 @@ void Check::check(const Pipeline& _pipeline, const CheckParams& _params) {
       .socket_ = _params.socket_};
 
   const auto preprocessed =
-      Fit::fit_preprocessors_only(_pipeline, fit_preprocessors_params);
+      fit::fit_preprocessors_only(_pipeline, fit_preprocessors_params);
 
   const auto [modified_population_schema, modified_peripheral_schema] =
-      Fit::extract_schemata(preprocessed.population_df_,
+      fit::extract_schemata(preprocessed.population_df_,
                             preprocessed.peripheral_dfs_, true);
 
   const auto [placeholder, peripheral_names] = _pipeline.make_placeholder();
@@ -96,20 +96,20 @@ Check::init_feature_learners(
     const Pipeline& _pipeline,
     const featurelearners::FeatureLearnerParams& _feature_learner_params,
     const CheckParams& _params) {
-  const auto df_fingerprints = Fit::extract_df_fingerprints(
+  const auto df_fingerprints = fit::extract_df_fingerprints(
       _pipeline, _params.population_df_, _params.peripheral_dfs_);
 
   const auto preprocessors =
-      Fit::init_preprocessors(_pipeline, df_fingerprints);
+      fit::init_preprocessors(_pipeline, df_fingerprints);
 
   const auto preprocessor_fingerprints =
-      Fit::extract_preprocessor_fingerprints(preprocessors, df_fingerprints);
+      fit::extract_preprocessor_fingerprints(preprocessors, df_fingerprints);
 
-  const auto feature_learners = Fit::init_feature_learners(
+  const auto feature_learners = fit::init_feature_learners(
       _pipeline, _feature_learner_params, _params.population_df_.num_targets());
 
   return std::make_pair(feature_learners,
-                        Fit::extract_fl_fingerprints(
+                        fit::extract_fl_fingerprints(
                             feature_learners, preprocessor_fingerprints));
 }
 

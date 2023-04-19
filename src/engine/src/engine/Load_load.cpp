@@ -8,8 +8,8 @@
 #include "engine/pipelines/Load.hpp"
 
 #include "commands/Pipeline.hpp"
-#include "engine/pipelines/Fit.hpp"
 #include "engine/pipelines/FittedPipeline.hpp"
+#include "engine/pipelines/fit.hpp"
 #include "helpers/Loader.hpp"
 #include "json/json.hpp"
 
