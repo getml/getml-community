@@ -41,7 +41,7 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/ProjectManager.cpp
     ${ENGINE_SOURCE_DIRECTORY}/ProjectManager_execute_command.cpp
     ${ENGINE_SOURCE_DIRECTORY}/RequestHandler.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/Save.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/save.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Seasonal.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Score.cpp
     ${ENGINE_SOURCE_DIRECTORY}/SQLDependencyTracker.cpp

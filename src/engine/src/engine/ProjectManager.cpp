@@ -409,7 +409,7 @@ void ProjectManager::save_pipeline(const typename Command::SavePipelineOp& _cmd,
                             .pipeline_ = pipeline,
                             .temp_dir_ = params_.options_.temp_dir()};
 
-  pipelines::Save::save(params);
+  pipelines::save::save(params);
 
   FileHandler::save_encodings(project_directory(), params_.categories_.ptr(),
                               nullptr);
