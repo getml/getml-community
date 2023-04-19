@@ -5,7 +5,7 @@
 // for details.
 //
 
-#include "engine/pipelines/Transform.hpp"
+#include "engine/pipelines/transform.hpp"
 
 #include <stdexcept>
 
@@ -20,14 +20,53 @@
 
 namespace engine {
 namespace pipelines {
+namespace transform {
 
+/// Applies the preprocessors.
+std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
+apply_preprocessors(const FeaturesOnlyParams& _params,
+                    const containers::DataFrame& _population_df,
+                    const std::vector<containers::DataFrame>& _peripheral_dfs);
+
+/// Gets the numerical columns from _population_df and
+/// returns a combination of the autofeatures and the
+/// numerical columns.
+containers::NumericalFeatures get_numerical_features(
+    const containers::NumericalFeatures& _autofeatures,
+    const containers::DataFrame& _population_df,
+    const predictors::PredictorImpl& _predictor_impl);
+
+/// Generates the autofeatures.
+containers::NumericalFeatures generate_autofeatures(
+    const MakeFeaturesParams& _params,
+    const std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>&
+        _feature_learners,
+    const predictors::PredictorImpl& _predictor_impl);
+
+/// Makes or retrieves the autofeatures as part of make_features(...).
+containers::NumericalFeatures make_autofeatures(
+    const MakeFeaturesParams& _params,
+    const std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>&
+        _feature_learners,
+    const predictors::PredictorImpl& _predictor_impl);
+
+/// Retrieves the features from a cached data frame.
+std::tuple<containers::NumericalFeatures, containers::CategoricalFeatures,
+           containers::NumericalFeatures>
+retrieve_features_from_cache(const containers::DataFrame& _df);
+
+/// Selects the autofeatures based on the feature selectors.
+containers::NumericalFeatures select_autofeatures(
+    const containers::NumericalFeatures& _autofeatures,
+    const std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>&
+        _feature_learners,
+    const predictors::PredictorImpl& _predictor_impl);
 // ----------------------------------------------------------------------------
 
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-Transform::apply_preprocessors(
-    const FeaturesOnlyParams& _params,
-    const containers::DataFrame& _population_df,
-    const std::vector<containers::DataFrame>& _peripheral_dfs) {
+apply_preprocessors(const FeaturesOnlyParams& _params,
+                    const containers::DataFrame& _population_df,
+                    const std::vector<containers::DataFrame>& _peripheral_dfs) {
   auto population_df = _population_df;
 
   auto peripheral_dfs = _peripheral_dfs;
@@ -71,7 +110,7 @@ Transform::apply_preprocessors(
 
 // ----------------------------------------------------------------------------
 
-containers::NumericalFeatures Transform::generate_autofeatures(
+containers::NumericalFeatures generate_autofeatures(
     const MakeFeaturesParams& _params,
     const std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>&
         _feature_learners,
@@ -107,7 +146,7 @@ containers::NumericalFeatures Transform::generate_autofeatures(
 
 // ----------------------------------------------------------------------------
 
-containers::NumericalFeatures Transform::generate_predictions(
+containers::NumericalFeatures generate_predictions(
     const FittedPipeline& _fitted,
     const containers::CategoricalFeatures& _categorical_features,
     const containers::NumericalFeatures& _numerical_features) {
@@ -165,7 +204,7 @@ containers::NumericalFeatures Transform::generate_predictions(
 
 // ----------------------------------------------------------------------------
 
-containers::CategoricalFeatures Transform::get_categorical_features(
+containers::CategoricalFeatures get_categorical_features(
     const Pipeline& _pipeline, const containers::DataFrame& _population_df,
     const predictors::PredictorImpl& _predictor_impl) {
   auto categorical_features = containers::CategoricalFeatures();
@@ -184,7 +223,7 @@ containers::CategoricalFeatures Transform::get_categorical_features(
 
 // ----------------------------------------------------------------------------
 
-containers::NumericalFeatures Transform::get_numerical_features(
+containers::NumericalFeatures get_numerical_features(
     const containers::NumericalFeatures& _autofeatures,
     const containers::DataFrame& _population_df,
     const predictors::PredictorImpl& _predictor_impl) {
@@ -211,7 +250,7 @@ containers::NumericalFeatures Transform::get_numerical_features(
 
 // ----------------------------------------------------------------------------
 
-containers::NumericalFeatures Transform::make_autofeatures(
+containers::NumericalFeatures make_autofeatures(
     const MakeFeaturesParams& _params,
     const std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>&
         _feature_learners,
@@ -234,7 +273,7 @@ containers::NumericalFeatures Transform::make_autofeatures(
 
 std::tuple<containers::NumericalFeatures, containers::CategoricalFeatures,
            containers::NumericalFeatures>
-Transform::make_features(
+make_features(
     const MakeFeaturesParams& _params, const Pipeline& _pipeline,
     const std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>&
         _feature_learners,
@@ -266,7 +305,7 @@ if (df) {
 
 std::tuple<containers::NumericalFeatures, containers::CategoricalFeatures,
            containers::NumericalFeatures>
-Transform::retrieve_features_from_cache(const containers::DataFrame& _df) {
+retrieve_features_from_cache(const containers::DataFrame& _df) {
   containers::NumericalFeatures autofeatures;
 
   containers::NumericalFeatures numerical_features;
@@ -294,7 +333,7 @@ Transform::retrieve_features_from_cache(const containers::DataFrame& _df) {
 
 // ----------------------------------------------------------------------------
 
-containers::NumericalFeatures Transform::select_autofeatures(
+containers::NumericalFeatures select_autofeatures(
     const containers::NumericalFeatures& _autofeatures,
     const std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>&
         _feature_learners,
@@ -325,8 +364,8 @@ containers::NumericalFeatures Transform::select_autofeatures(
 
 std::tuple<containers::NumericalFeatures, containers::CategoricalFeatures,
            std::shared_ptr<const metrics::Scores>>
-Transform::transform(const TransformParams& _params, const Pipeline& _pipeline,
-                     const FittedPipeline& _fitted) {
+transform(const TransformParams& _params, const Pipeline& _pipeline,
+          const FittedPipeline& _fitted) {
   const bool score = _params.cmd_.get<"score_">();
 
   const bool predict = _params.cmd_.get<"predict_">();
@@ -370,12 +409,12 @@ Transform::transform(const TransformParams& _params, const Pipeline& _pipeline,
 // ----------------------------------------------------------------------------
 
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-Transform::stage_data_frames(
-    const Pipeline& _pipeline, const containers::DataFrame& _population_df,
-    const std::vector<containers::DataFrame>& _peripheral_dfs,
-    const std::shared_ptr<const communication::Logger>& _logger,
-    const std::optional<std::string>& _temp_dir,
-    Poco::Net::StreamSocket* _socket) {
+stage_data_frames(const Pipeline& _pipeline,
+                  const containers::DataFrame& _population_df,
+                  const std::vector<containers::DataFrame>& _peripheral_dfs,
+                  const std::shared_ptr<const communication::Logger>& _logger,
+                  const std::optional<std::string>& _temp_dir,
+                  Poco::Net::StreamSocket* _socket) {
   const auto socket_logger =
       std::make_shared<communication::SocketLogger>(_logger, true, _socket);
 
@@ -414,7 +453,7 @@ Transform::stage_data_frames(
 
 std::tuple<containers::NumericalFeatures, containers::CategoricalFeatures,
            containers::DataFrame>
-Transform::transform_features_only(const FeaturesOnlyParams& _params) {
+transform_features_only(const FeaturesOnlyParams& _params) {
   auto [population_df, peripheral_dfs] = stage_data_frames(
       _params.pipeline_, _params.transform_params_.original_population_df_,
       _params.transform_params_.original_peripheral_dfs_,
@@ -445,7 +484,6 @@ Transform::transform_features_only(const FeaturesOnlyParams& _params) {
                          population_df);
 }
 
-// ----------------------------------------------------------------------------
-
+}  // namespace transform
 }  // namespace pipelines
 }  // namespace engine
