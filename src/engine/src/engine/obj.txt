@@ -23,12 +23,7 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/FittedPipeline.cpp
     ${ENGINE_SOURCE_DIRECTORY}/FloatOpParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Imputation.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/Load_load.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/Load_load_feature_learners.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/Load_load_feature_selectors.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/Load_load_impls.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/Load_load_predictors.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/Load_load_preprocessors.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/load.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Options.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Pipeline.cpp
     ${ENGINE_SOURCE_DIRECTORY}/PipelineManager.cpp
