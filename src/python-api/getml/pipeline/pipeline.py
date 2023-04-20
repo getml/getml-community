@@ -19,7 +19,7 @@ import numbers
 import socket
 import time
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Sequence, Union
+from typing import Any, Dict, List, Optional, Sequence, Union, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -55,6 +55,7 @@ from getml.preprocessors.text_field_splitter import TextFieldSplitter
 from getml.utilities.formatting import _SignatureFormatter
 
 from .columns import Columns
+from .tables import Tables
 from .features import Features
 from .helpers import (
     _check_df_types,
@@ -483,7 +484,6 @@ class Pipeline:
         include_categorical: bool = False,
         share_selected_features: float = 0.5,
     ) -> None:
-
         data_model = data_model or DataModel("population")
 
         if not isinstance(data_model, DataModel):
@@ -559,7 +559,6 @@ class Pipeline:
     # ----------------------------------------------------------------
 
     def __eq__(self, other: object) -> bool:
-
         if not isinstance(other, Pipeline):
             raise TypeError("A Pipeline can only be compared to another Pipeline")
 
@@ -567,7 +566,6 @@ class Pipeline:
             return False
 
         for kkey in self.__dict__:
-
             if kkey not in other.__dict__:
                 return False
 
@@ -762,7 +760,6 @@ class Pipeline:
     # ----------------------------------------------------------------
 
     def _make_score_history(self) -> List[Union[ClassificationScore, RegressionScore]]:
-
         scores: List[Dict[str, Any]] = self._scores["history"]
         scores = [_replace_with_nan_maybe(score) for score in scores]
 
@@ -809,7 +806,6 @@ class Pipeline:
     # ----------------------------------------------------------------
 
     def _parse_cmd(self, json_obj: Dict[str, Any]) -> Pipeline:
-
         ptype = json_obj["type_"]
 
         del json_obj["type_"]
@@ -868,7 +864,6 @@ class Pipeline:
     # ----------------------------------------------------------------
 
     def _parse_json_obj(self, all_json_objs: Dict[str, Any]) -> Pipeline:
-
         obj = all_json_objs["obj"]
 
         scores = all_json_objs["scores"]
@@ -912,7 +907,6 @@ class Pipeline:
     # ------------------------------------------------------------
 
     def _send(self, additional_tags: Optional[List[str]] = None) -> Pipeline:
-
         self._validate()
 
         self._id = _make_id()
@@ -938,7 +932,6 @@ class Pipeline:
         df_name: str = "",
         table_name: str = "",
     ) -> Union[NDArray[np.float_], None]:
-
         _check_df_types(population_data_frame, peripheral_data_frames)
 
         if not isinstance(sock, socket.socket):
@@ -1630,6 +1623,18 @@ class Pipeline:
     # ----------------------------------------------------------------
 
     @property
+    def tables(self) -> Tables:
+        """
+        :class:`~getml.pipeline.Tables` object that
+        can be used to handle information about the original
+        tables utilized by the feature learners.
+        """
+        self._check_whether_fitted()
+        return Tables(self.targets, self.columns)
+
+    # ----------------------------------------------------------------
+
+    @property
     def targets(self) -> List[str]:
         """
         Contains the names of the targets used for this pipeline.
@@ -1750,7 +1755,6 @@ class Pipeline:
     # ----------------------------------------------------------------
 
     def _validate(self) -> None:
-
         if not isinstance(self.id, str):
             raise TypeError("'name' must be of type str")
 

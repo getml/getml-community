@@ -272,6 +272,7 @@ Examples:
 from . import metrics
 from . import dialect
 from .columns import Columns
+from .tables import Tables
 from .features import Features
 from .helpers2 import delete, exists, list_pipelines, load
 from .pipeline import Pipeline
@@ -287,6 +288,7 @@ __all__ = (
     "load",
     "metrics",
     "Columns",
+    "Tables",
     "Features",
     "Plots",
     "Pipeline",

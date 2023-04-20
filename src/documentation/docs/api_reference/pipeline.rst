@@ -15,6 +15,7 @@ Classes
    :template: autosummary_theme/class.rst    
 
    ~pipeline.Columns
+   ~pipeline.Tables
    ~pipeline.Features
    ~pipeline.Plots
    ~pipeline.Pipeline
