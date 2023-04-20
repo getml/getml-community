@@ -5,25 +5,20 @@
 # for details.
 #
 
-
 """
-Class representing metadata on a column used by the features of a pipeline.
+Contains class representing data for a table of a pipeline.
 """
 
 from dataclasses import dataclass
 
-import numpy as np
-
 
 @dataclass
-class Column:
+class Table:
     """
-    Dataclass that holds data about a single column.
+    A dataclass that holds data about a single table.
     """
 
-    index: int
     name: str
-    marker: str
-    table: str
+    importance: float
     target: str
-    importance: float = np.nan
+    marker: str

@@ -16,7 +16,7 @@ import json
 import numbers
 import re
 from copy import deepcopy
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union, Iterator
 
 import numpy as np
 import pandas as pd  # type: ignore
@@ -34,12 +34,19 @@ from .helpers import PERIPHERAL, POPULATION, _drop
 
 class Columns:
     """
-    Container which holds a pipeline's columns. Columns can be accessed
-    by name, index or with a numpy array. The container supports slicing and
-    is sort- and filterable.
+    Container which holds a pipeline's columns. These include the columns for
+    which importance can be calculated, such as the ones with
+    :mod:`~getml.data.roles` as :const:`~getml.data.roles.categorical`,
+    :const:`~getml.data.roles.numerical` and :const:`~getml.data.roles.text`.
+    The rest of the columns with roles :const:`~getml.data.roles.time_stamp`,
+    :const:`~getml.data.roles.join_key`, :const:`~getml.data.roles.target`,
+    :const:`~getml.data.roles.unused_float` and
+    :const:`~getml.data.roles.unused_string` can not have importance of course.
 
-    Further, the container holds global methods to request columns' importances
-    and apply a column selection to data frames provided to the pipeline.
+    Columns can be accessed by name, index or with a NumPy array. The container
+    supports slicing and is sort- and filterable. Further, the container holds
+    global methods to request columns' importances and apply a column selection
+    to data frames provided to the pipeline.
 
     Note:
         The container is an iterable. So, in addition to
@@ -55,15 +62,14 @@ class Columns:
 
             all_but_last_10_columns = my_pipeline.columns[:-10]
 
-            important_columns = [column for column in my_pipeline.columns if column.importance > 0.1]
+            important_columns = [column for column in my_pipeline.columns if
+            column.importance > 0.1]
 
             names, importances = my_pipeline.columns.importances()
 
-            # Drops all categorical and numerical columns that are not
-            # in the top 20%.
-            new_container = my_pipeline.columns.select(
-                container,
-                share_selected_columns=0.2,
+            # Drops all categorical and numerical columns that are not # in the
+            top 20%. new_container = my_pipeline.columns.select(
+                container, share_selected_columns=0.2,
             )
     """
 
@@ -76,7 +82,6 @@ class Columns:
         peripheral: Sequence[Placeholder],
         data: Optional[Sequence[Column]] = None,
     ) -> None:
-
         if not isinstance(pipeline, str):
             raise ValueError("'pipeline' must be a str.")
 
@@ -98,10 +103,19 @@ class Columns:
 
     # ----------------------------------------------------------------
 
-    def __getitem__(
-        self, key: Union[str, int, slice, Union[NDArray[np.int_], NDArray[np.str_]]]
-    ) -> Union[Column, Columns, List[Column]]:
+    def __len__(self) -> int:
+        return len(self.data)
 
+    # ----------------------------------------------------------------
+
+    def __iter__(self) -> Iterator[Column]:
+        yield from self.data
+
+    # ----------------------------------------------------------------
+
+    def __getitem__(
+        self, key: Union[str, int, slice, Union[NDArray[np.int_], NDArray[np.bool_]]]
+    ) -> Union[Column, Columns, List[Column]]:
         if not self.data:
             raise AttributeError("Columns container not fully initialised.")
 
@@ -137,7 +151,6 @@ class Columns:
     def _get_column_importances(
         self, target_num: int, sort: bool
     ) -> Tuple[NDArray[np.str_], NDArray[np.float_]]:
-
         cmd: Dict[str, Any] = {}
 
         cmd["type_"] = "Pipeline.column_importances"
@@ -287,6 +300,14 @@ class Columns:
         its contribution to the predictive performance. All
         columns importances add up to 1.
 
+        The importances can be calculated for columns with
+        :mod:`~getml.data.roles` such as :const:`~getml.data.roles.categorical`,
+        :const:`~getml.data.roles.numerical` and :const:`~getml.data.roles.text`.
+        The rest of the columns with roles :const:`~getml.data.roles.time_stamp`,
+        :const:`~getml.data.roles.join_key`, :const:`~getml.data.roles.target`,
+        :const:`~getml.data.roles.unused_float` and
+        :const:`~getml.data.roles.unused_string` can not have importance of course.
+
         Args:
             target_num (int):
                 Indicates for which target you want to view the
@@ -414,7 +435,7 @@ class Columns:
         self,
         by: Optional[str] = None,
         key: Optional[Callable[[Column], Any]] = None,
-        descending: bool = False,
+        descending: Optional[bool] = None,
     ) -> Columns:
         """
         Sorts the Columns container. If no arguments are provided the
@@ -442,7 +463,7 @@ class Columns:
 
         """
 
-        reverse = descending or False
+        reverse = False if descending is None else descending
 
         if (by is not None) and (key is not None):
             raise ValueError("Only one of `by` and `key` can be provided.")
@@ -458,21 +479,21 @@ class Columns:
             columns_sorted.sort(key=lambda column: column.target)
             return self._make_columns(columns_sorted)
 
-        if re.match(by, "names?"):
+        if re.match(pattern="names?$", string=by):
             columns_sorted = sorted(
                 self.data, key=lambda column: column.name, reverse=reverse
             )
             return self._make_columns(columns_sorted)
 
-        if re.match(by, "tables?"):
+        if re.match(pattern="tables?$", string=by):
             columns_sorted = sorted(
                 self.data,
                 key=lambda column: column.table,
             )
             return self._make_columns(columns_sorted)
 
-        if re.match(by, "importances?"):
-            reverse = descending or True
+        if re.match(pattern="importances?$", string=by):
+            reverse = True if descending is None else descending
             columns_sorted = sorted(
                 self.data, key=lambda column: column.importance, reverse=reverse
             )
