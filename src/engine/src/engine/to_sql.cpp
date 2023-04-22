@@ -157,7 +157,7 @@ make_staging_schemata(const FittedPipeline& _fitted) {
         fct::join::vector<std::string>({_schema.text(), text_fields});
 
     return containers::Schema(
-        _schema.val_.replace(fct::make_field<"text_">(text)));
+        _schema.named_tuple().replace(fct::make_field<"text_">(text)));
   };
 
   const auto is_not_text_field = [](const containers::Schema& _schema) -> bool {

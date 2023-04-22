@@ -45,15 +45,15 @@ void ImportanceMaker::fill_zeros(const Schema& _pl, const std::string& _tname,
                                  const bool _is_population) {
   const auto marker = _is_population ? population() : peripheral();
 
-  fill_zeros_from_columns(marker, _tname, _pl.val_.get<f_categoricals>());
+  fill_zeros_from_columns(marker, _tname, _pl.categoricals());
 
-  fill_zeros_from_columns(marker, _tname, _pl.val_.get<f_discretes>());
+  fill_zeros_from_columns(marker, _tname, _pl.discretes());
 
-  fill_zeros_from_columns(marker, _tname, _pl.val_.get<f_numericals>());
+  fill_zeros_from_columns(marker, _tname, _pl.numericals());
 
-  fill_zeros_from_columns(marker, _tname, _pl.val_.get<f_text>());
+  fill_zeros_from_columns(marker, _tname, _pl.text());
 
-  fill_zeros_from_columns(marker, _tname, _pl.val_.get<f_time_stamps>());
+  fill_zeros_from_columns(marker, _tname, _pl.time_stamps());
 }
 
 // ----------------------------------------------------------------------------

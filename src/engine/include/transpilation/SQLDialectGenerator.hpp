@@ -15,6 +15,7 @@
 #include <utility>
 #include <vector>
 
+#include "fct/Ref.hpp"
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/Schema.hpp"
 #include "helpers/enums/Aggregation.hpp"

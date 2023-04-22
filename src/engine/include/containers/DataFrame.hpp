@@ -974,7 +974,7 @@ DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
   };
 
   const auto categoricals = fct::collect::vector<IntColumnType>(
-      schema.val_.get<"categoricals_">() | VIEWS::transform(get_categorical));
+      schema.categoricals() | VIEWS::transform(get_categorical));
 
   const auto get_join_key = [this, parse](const std::string &_name) {
     const auto &col = join_key(_name);
@@ -983,14 +983,14 @@ DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
   };
 
   const auto join_keys = fct::collect::vector<IntColumnType>(
-      schema.val_.get<"join_keys_">() | VIEWS::transform(get_join_key));
+      schema.join_keys() | VIEWS::transform(get_join_key));
 
   const auto get_index = [this](const std::string &_name) {
     return index(_name).map();
   };
 
   const auto indices = fct::collect::vector<std::shared_ptr<MapType>>(
-      schema.val_.get<"join_keys_">() | VIEWS::transform(get_index));
+      schema.join_keys() | VIEWS::transform(get_index));
 
   const auto get_numerical = [this, parse](const std::string &_name) {
     const auto &col = numerical(_name);
@@ -999,10 +999,10 @@ DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
   };
 
   const auto discretes = fct::collect::vector<FloatColumnType>(
-      schema.val_.get<"discretes_">() | VIEWS::transform(get_numerical));
+      schema.discretes() | VIEWS::transform(get_numerical));
 
   const auto numericals = fct::collect::vector<FloatColumnType>(
-      schema.val_.get<"numericals_">() | VIEWS::transform(get_numerical));
+      schema.numericals() | VIEWS::transform(get_numerical));
 
   const auto get_target = [this, parse](const std::string &_name) {
     const auto &col = target(_name);
@@ -1011,10 +1011,9 @@ DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
   };
 
   const auto targets =
-      _targets
-          ? fct::collect::vector<FloatColumnType>(
-                schema.val_.get<"targets_">() | VIEWS::transform(get_target))
-          : std::vector<FloatColumnType>();
+      _targets ? fct::collect::vector<FloatColumnType>(
+                     schema.targets() | VIEWS::transform(get_target))
+               : std::vector<FloatColumnType>();
 
   const auto get_text = [this, parse](const std::string &_name) {
     const auto &col = text(_name);
@@ -1023,7 +1022,7 @@ DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
   };
 
   const auto text = fct::collect::vector<StringColumnType>(
-      schema.val_.get<"text_">() | VIEWS::transform(get_text));
+      schema.text() | VIEWS::transform(get_text));
 
   const auto get_time_stamp = [this, parse](const std::string &_name) {
     const auto &col = time_stamp(_name);
@@ -1032,7 +1031,7 @@ DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
   };
 
   const auto time_stamps = fct::collect::vector<FloatColumnType>(
-      schema.val_.get<"time_stamps_">() | VIEWS::transform(get_time_stamp));
+      schema.time_stamps() | VIEWS::transform(get_time_stamp));
 
   const auto params = helpers::DataFrameParams{.categoricals_ = categoricals,
                                                .discretes_ = discretes,

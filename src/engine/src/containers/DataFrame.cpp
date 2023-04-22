@@ -1800,11 +1800,11 @@ Schema DataFrame::to_schema(const bool _separate_discrete) const {
   const auto unused_strings = fct::collect::vector<std::string>(
       unused_strings_ | VIEWS::transform(get_name));
 
-  return Schema(fct::make_field<"categoricals_">(categoricals) *
-                fct::make_field<"discretes_">(discretes) *
+  return Schema(fct::make_field<"categorical_">(categoricals) *
+                fct::make_field<"discrete_">(discretes) *
                 fct::make_field<"join_keys_">(join_keys) *
                 fct::make_field<"name_">(name_) *
-                fct::make_field<"numericals_">(numericals) *
+                fct::make_field<"numerical_">(numericals) *
                 fct::make_field<"targets_">(targets) *
                 fct::make_field<"text_">(text) *
                 fct::make_field<"time_stamps_">(time_stamps) *
