@@ -281,7 +281,7 @@ class Literal {
     if constexpr (_i + 1 == num_fields_) {
       return false;
     } else {
-      return find_value<_i + 1>(_str);
+      return has_value<_i + 1>(_str);
     }
   }
 
