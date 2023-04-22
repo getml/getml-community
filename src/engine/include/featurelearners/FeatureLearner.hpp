@@ -437,10 +437,10 @@ FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
                               _schema.text() | VIEWS::filter(include))
                         : _schema.text();
 
-  const auto schema = helpers::Schema(_schema.val_.replace(
-      fct::make_field<"categoricals_">(categoricals),
-      fct::make_field<"discretes_">(discretes),
-      fct::make_field<"numericals_">(numericals),
+  const auto schema = helpers::Schema(_schema.named_tuple().replace(
+      fct::make_field<"categorical_">(categoricals),
+      fct::make_field<"discrete_">(std::make_optional(discretes)),
+      fct::make_field<"numerical_">(numericals),
       fct::make_field<"targets_">(targets), fct::make_field<"text_">(text)));
 
   return _df.to_immutable<typename FeatureLearnerType::DataFrameType>(schema);

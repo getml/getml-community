@@ -5,6 +5,7 @@ set(
     ${HELPERS_SOURCE_DIRECTORY}/Macros.cpp
     ${HELPERS_SOURCE_DIRECTORY}/Placeholder.cpp
     ${HELPERS_SOURCE_DIRECTORY}/RowIndexContainer.cpp
+    ${HELPERS_SOURCE_DIRECTORY}/Schema.cpp
     ${HELPERS_SOURCE_DIRECTORY}/StringReplacer.cpp
     ${HELPERS_SOURCE_DIRECTORY}/StringSplitter.cpp
     ${HELPERS_SOURCE_DIRECTORY}/SubroleParser.cpp

@@ -10,8 +10,11 @@
 #include <filesystem>
 #include <fstream>
 
+#include "fct/collect.hpp"
+#include "fct/iota.hpp"
 #include "fct/make_named_tuple.hpp"
 #include "helpers/StringSplitter.hpp"
+#include "json/json.hpp"
 #include "transpilation/transpilation.hpp"
 
 namespace engine {
