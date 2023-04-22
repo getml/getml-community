@@ -15,10 +15,8 @@
 #include <vector>
 
 #include "commands/WarningFingerprint.hpp"
-#include "communication/Sender.hpp"
 #include "communication/Warnings.hpp"
 #include "fct/Ref.hpp"
-#include "json/json.hpp"
 
 namespace communication {
 
@@ -33,13 +31,7 @@ class Warner {
   void add(const std::string& _warning) { warnings_->push_back(_warning); }
 
   /// Sends all warnings to the socket.
-  void send(Poco::Net::StreamSocket* _socket) const {
-    using NamedTupleType = fct::NamedTuple<
-        fct::Field<"warnings_", fct::Ref<std::vector<std::string>>>>;
-    const auto named_tuple =
-        NamedTupleType(fct::make_field<"warnings_">(warnings_));
-    Sender::send_string(json::to_json(named_tuple), _socket);
-  }
+  void send(Poco::Net::StreamSocket* _socket) const;
 
   /// Trivial (const) getter
   const std::vector<std::string>& warnings() const { return *warnings_; }

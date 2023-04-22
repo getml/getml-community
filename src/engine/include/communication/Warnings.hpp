@@ -15,10 +15,8 @@
 #include <vector>
 
 #include "commands/WarningFingerprint.hpp"
-#include "communication/Sender.hpp"
 #include "debug/debug.hpp"
 #include "fct/Ref.hpp"
-#include "json/json.hpp"
 
 namespace communication {
 
@@ -39,13 +37,7 @@ class Warnings {
   commands::WarningFingerprint fingerprint() const { return fingerprint_; }
 
   /// Sends all warnings to the socket.
-  void send(Poco::Net::StreamSocket* _socket) const {
-    using NamedTupleType = fct::NamedTuple<
-        fct::Field<"warnings_", fct::Ref<const std::vector<std::string>>>>;
-    const auto named_tuple =
-        NamedTupleType(fct::make_field<"warnings_">(warnings_));
-    Sender::send_string(json::to_json(named_tuple), _socket);
-  }
+  void send(Poco::Net::StreamSocket* _socket) const;
 
  private:
   /// The fingerprint to use for the warnings.
