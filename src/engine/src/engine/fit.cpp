@@ -317,6 +317,8 @@ std::pair<fct::Ref<const FittedPipeline>, fct::Ref<const metrics::Scores>> fit(
 
   containers::NumericalFeatures autofeatures;
 
+  using Purpose = typename pipelines::FitPredictorsParams::Purpose;
+
   const auto fit_feature_selectors_params =
       FitPredictorsParams{.autofeatures_ = &autofeatures,
                           .dependencies_ = fl_fingerprints,
@@ -327,7 +329,7 @@ std::pair<fct::Ref<const FittedPipeline>, fct::Ref<const metrics::Scores>> fit(
                           .pipeline_ = _pipeline,
                           .population_df_ = preprocessed.population_df_,
                           .preprocessors_ = preprocessed.preprocessors_,
-                          .purpose_ = "feature_selectors_"};
+                          .purpose_ = Purpose::make<"feature_selectors_">()};
 
   const auto [feature_selectors, fs_fingerprints] =
       fit_predictors(fit_feature_selectors_params);
@@ -355,7 +357,7 @@ std::pair<fct::Ref<const FittedPipeline>, fct::Ref<const metrics::Scores>> fit(
                           .pipeline_ = _pipeline,
                           .population_df_ = preprocessed.population_df_,
                           .preprocessors_ = preprocessed.preprocessors_,
-                          .purpose_ = "predictors_"};
+                          .purpose_ = Purpose::make<"predictors_">()};
 
   const auto [predictors, _] = fit_predictors(fit_predictors_params);
 
@@ -552,7 +554,7 @@ fit_predictors(const FitPredictorsParams& _params) {
       }
 
       socket_logger->log(p->type() + ": Training as " +
-                         beautify_purpose(_params.purpose_) + "...");
+                         beautify_purpose(_params.purpose_.name()) + "...");
 
       p->fit(socket_logger, categorical_features, numerical_features,
              target_col, categorical_features_valid, numerical_features_valid,
@@ -756,11 +758,13 @@ init_feature_learners(
 // ----------------------------------------------------------------------
 
 std::vector<std::vector<fct::Ref<predictors::Predictor>>> init_predictors(
-    const Pipeline& _pipeline, const std::string& _elem,
+    const Pipeline& _pipeline, const Purpose _purpose,
     const fct::Ref<const predictors::PredictorImpl>& _predictor_impl,
     const std::vector<commands::Fingerprint>& _dependencies,
     const size_t _num_targets) {
-  const auto commands = _pipeline.obj().get<"predictors_">();
+  const auto commands = _purpose.value() == Purpose::value_of<"predictors_">()
+                            ? _pipeline.obj().get<"predictors_">()
+                            : _pipeline.obj().get<"feature_selectors_">();
 
   std::vector<std::vector<fct::Ref<predictors::Predictor>>> predictors;
 
