@@ -22,6 +22,7 @@
 #include "commands/Predictor.hpp"
 #include "containers/DataFrame.hpp"
 #include "engine/pipelines/FitParams.hpp"
+#include "engine/pipelines/FitPredictorsParams.hpp"
 #include "engine/pipelines/FitPreprocessorsParams.hpp"
 #include "engine/pipelines/FittedPipeline.hpp"
 #include "engine/pipelines/Pipeline.hpp"
@@ -31,6 +32,8 @@
 namespace engine {
 namespace pipelines {
 namespace fit {
+
+using Purpose = typename FitPredictorsParams::Purpose;
 
 /// Extracts the fingerprints of the data frames.
 fct::Ref<const std::vector<commands::Fingerprint>> extract_df_fingerprints(
@@ -73,7 +76,7 @@ init_feature_learners(
 
 /// Initializes the predictors or feature selectors.
 std::vector<std::vector<fct::Ref<predictors::Predictor>>> init_predictors(
-    const Pipeline& _pipeline, const std::string& _elem,
+    const Pipeline& _pipeline, const Purpose _purpose,
     const fct::Ref<const predictors::PredictorImpl>& _predictor_impl,
     const std::vector<commands::Fingerprint>& _dependencies,
     const size_t _num_targets);

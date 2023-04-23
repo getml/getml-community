@@ -14,6 +14,7 @@
 
 #include "commands/Pipeline.hpp"
 #include "engine/pipelines/Fingerprints.hpp"
+#include "engine/pipelines/FitPredictorsParams.hpp"
 #include "engine/pipelines/FittedPipeline.hpp"
 #include "engine/pipelines/PipelineJSON.hpp"
 #include "engine/pipelines/Predictors.hpp"
@@ -25,6 +26,8 @@
 namespace engine {
 namespace pipelines {
 namespace load {
+
+using Purpose = typename FitPredictorsParams::Purpose;
 
 /// Loads the feature learners.
 std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>
@@ -164,7 +167,7 @@ Predictors load_feature_selectors(
     const fct::Ref<const predictors::PredictorImpl>& _feature_selector_impl,
     const PipelineJSON& _pipeline_json, const Pipeline& _pipeline) {
   const auto feature_selectors = fit::init_predictors(
-      _pipeline, "feature_selectors_", _feature_selector_impl,
+      _pipeline, Purpose::make<"feature_selectors_">(), _feature_selector_impl,
       *_pipeline_json.get<"fl_fingerprints_">(),
       _pipeline_json.get<"targets_">().size());
 
@@ -203,10 +206,10 @@ Predictors load_predictors(
     const std::shared_ptr<dependency::PredTracker> _pred_tracker,
     const fct::Ref<const predictors::PredictorImpl>& _predictor_impl,
     const PipelineJSON& _pipeline_json, const Pipeline& _pipeline) {
-  const auto predictors =
-      fit::init_predictors(_pipeline, "predictors_", _predictor_impl,
-                           *_pipeline_json.get<"fs_fingerprints_">(),
-                           _pipeline_json.get<"targets_">().size());
+  const auto predictors = fit::init_predictors(
+      _pipeline, Purpose::make<"predictors_">(), _predictor_impl,
+      *_pipeline_json.get<"fs_fingerprints_">(),
+      _pipeline_json.get<"targets_">().size());
 
   for (size_t i = 0; i < predictors.size(); ++i) {
     for (size_t j = 0; j < predictors.at(i).size(); ++j) {

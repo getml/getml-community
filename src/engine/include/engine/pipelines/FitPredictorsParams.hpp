@@ -16,6 +16,7 @@
 #include "commands/Fingerprint.hpp"
 #include "engine/pipelines/FitParams.hpp"
 #include "engine/pipelines/Pipeline.hpp"
+#include "fct/Literal.hpp"
 #include "fct/Ref.hpp"
 #include "predictors/PredictorImpl.hpp"
 
@@ -23,6 +24,8 @@ namespace engine {
 namespace pipelines {
 
 struct FitPredictorsParams {
+  using Purpose = fct::Literal<"feature_selectors_", "predictors_">;
+
   /// A pointer to the autofeatures. This is modifiable on purpose, because we
   /// want to be able to cache generated features.
   containers::NumericalFeatures* const autofeatures_;
@@ -57,7 +60,7 @@ struct FitPredictorsParams {
   const std::vector<commands::Fingerprint> preprocessor_fingerprints_;
 
   /// The purpose (feature_selector_ or predictor_)
-  const std::string purpose_;
+  const Purpose purpose_;
 };
 
 }  // namespace pipelines
