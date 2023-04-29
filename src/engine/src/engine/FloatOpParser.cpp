@@ -127,13 +127,18 @@ void FloatOpParser::check(const containers::Column<Float>& _col,
   const auto share_null = 1.0 - num_non_null / length;
 
   if (share_null > 0.9) {
-    warner.add(std::to_string(share_null * 100.0) +
-               "% of all entries of column '" + _col.name() +
-               "' are NULL values.");
+    const auto message = std::to_string(share_null * 100.0) +
+                         "% of all entries of column '" + _col.name() +
+                         "' are NULL values.";
+
+    warner.add(communication::Warning(
+        fct::make_field<"message_">(message),
+        fct::make_field<"label_", std::string>("MANY NULL VALUES"),
+        fct::make_field<"warning_type_", std::string>("INFO")));
   }
 
   for (const auto& warning : warner.warnings()) {
-    _logger->log("WARNING: " + warning);
+    _logger->log("WARNING: " + warning.get<"message_">());
   }
 
   warner.send(_socket);

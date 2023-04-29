@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "commands/WarningFingerprint.hpp"
+#include "communication/Warning.hpp"
 #include "communication/Warnings.hpp"
 #include "fct/Ref.hpp"
 
@@ -22,19 +23,19 @@ namespace communication {
 
 class Warner {
  public:
-  Warner() : warnings_(fct::Ref<std::vector<std::string>>::make()) {}
+  Warner() : warnings_(fct::Ref<std::vector<Warning>>::make()) {}
 
   ~Warner() = default;
 
  public:
   /// Adds a new warning to the list of warnings.
-  void add(const std::string& _warning) { warnings_->push_back(_warning); }
+  void add(const Warning& _warning) { warnings_->push_back(_warning); }
 
   /// Sends all warnings to the socket.
   void send(Poco::Net::StreamSocket* _socket) const;
 
   /// Trivial (const) getter
-  const std::vector<std::string>& warnings() const { return *warnings_; }
+  const std::vector<Warning>& warnings() const { return *warnings_; }
 
   /// Generates a warnings object that can be used for dependency tracking.
   const fct::Ref<Warnings> to_warnings_obj(
@@ -44,7 +45,7 @@ class Warner {
 
  private:
   /// The list of warnings to send.
-  const fct::Ref<std::vector<std::string>> warnings_;
+  const fct::Ref<std::vector<Warning>> warnings_;
 };
 
 }  // namespace communication

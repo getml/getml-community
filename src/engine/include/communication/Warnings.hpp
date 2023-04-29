@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "commands/WarningFingerprint.hpp"
+#include "communication/Warning.hpp"
 #include "debug/debug.hpp"
 #include "fct/Ref.hpp"
 
@@ -23,7 +24,7 @@ namespace communication {
 class Warnings {
  public:
   Warnings(const commands::WarningFingerprint& _fingerprint,
-           const fct::Ref<const std::vector<std::string>>& _warnings)
+           const fct::Ref<const std::vector<Warning>>& _warnings)
       : fingerprint_(_fingerprint), warnings_(_warnings) {}
 
   ~Warnings() = default;
@@ -44,7 +45,7 @@ class Warnings {
   const commands::WarningFingerprint fingerprint_;
 
   /// The list of warnings to send.
-  const fct::Ref<const std::vector<std::string>> warnings_;
+  const fct::Ref<const std::vector<Warning>> warnings_;
 };
 
 }  // namespace communication
