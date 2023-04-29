@@ -290,11 +290,27 @@ containers::ViewContent ViewParser::get_content(
     return make_string_vector(_start, _length, _column_view);
   };
 
+  const auto transpose = [](const auto& _data) {
+    if (_data.size() == 0) {
+      return _data;
+    }
+    std::vector<std::vector<std::string>> result;
+    for (size_t i = 0; i < _data.at(0).size(); ++i) {
+      std::vector<std::string> row;
+      for (const auto& _col : _data) {
+        assert_true(_col.size() == _data.at(0).size());
+        row.push_back(_col.at(i));
+      }
+      result.push_back(row);
+    }
+    return result;
+  };
+
   const auto column_views = fct::collect::vector<ColumnViewVariant>(
       _cols | VIEWS::transform(to_column_view));
 
-  const auto data = fct::collect::vector<std::vector<std::string>>(
-      column_views | VIEWS::transform(to_string_vector));
+  const auto data = transpose(fct::collect::vector<std::vector<std::string>>(
+      column_views | VIEWS::transform(to_string_vector)));
 
   const auto nrows = make_nrows(column_views, _force_nrows);
 
