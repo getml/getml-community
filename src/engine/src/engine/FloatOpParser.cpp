@@ -275,6 +275,10 @@ containers::ColumnView<Float> FloatOpParser::parse(
       return random(_cmd);
     }
 
+    if constexpr (std::is_same<Type, FloatRowidOp>()) {
+      return rowid();
+    }
+
     if constexpr (std::is_same<Type, FloatUnaryOp>()) {
       return unary_operation(_cmd);
     }
@@ -415,10 +419,6 @@ containers::ColumnView<Float> FloatOpParser::unary_operation(
     if constexpr (std::is_same<Type, fct::Literal<"round">>()) {
       const auto round = [](const Float val) { return std::round(val); };
       return un_op(_cmd, round);
-    }
-
-    if constexpr (std::is_same<Type, fct::Literal<"rowid">>()) {
-      return rowid();
     }
 
     if constexpr (std::is_same<Type, fct::Literal<"second">>()) {

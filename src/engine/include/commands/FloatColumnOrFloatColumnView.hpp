@@ -52,10 +52,10 @@ class FloatColumnOrFloatColumnView {
 
   /// The command used for retrieving float columns from a data frame.
   using FloatColumnOp =
-      fct::NamedTuple<fct::Field<"df_name_", std::string>,
+      fct::NamedTuple<fct::Field<"type_", fct::Literal<"FloatColumn">>,
+                      fct::Field<"df_name_", std::string>,
                       fct::Field<"name_", std::string>,
-                      fct::Field<"role_", std::string>,
-                      fct::Field<"type_", fct::Literal<"FloatColumn">>>;
+                      fct::Field<"role_", std::string>>;
 
   /// The command used for float const operations.
   using FloatConstOp =
@@ -81,6 +81,11 @@ class FloatColumnOrFloatColumnView {
                       fct::Field<"seed_", unsigned int>,
                       fct::Field<"type_", fct::Literal<"FloatColumnView">>>;
 
+  /// The command used for rowid operations.
+  using FloatRowidOp =
+      fct::NamedTuple<fct::Field<"operator_", fct::Literal<"rowid">>,
+                      fct::Field<"type_", fct::Literal<"FloatColumnView">>>;
+
   /// The command used for float subselection operations.
   using FloatSubselectionOp = fct::NamedTuple<
       fct::Field<"operator_", fct::Literal<"subselection">>,
@@ -94,8 +99,8 @@ class FloatColumnOrFloatColumnView {
   using FloatUnaryOpLiteral =
       fct::Literal<"abs", "acos", "asin", "atan", "cbrt", "ceil", "cos", "day",
                    "erf", "exp", "floor", "hour", "lgamma", "log", "minute",
-                   "month", "round", "rowid", "second", "sin", "sqrt", "tan",
-                   "tgamma", "weekday", "year", "yearday">;
+                   "month", "round", "second", "sin", "sqrt", "tan", "tgamma",
+                   "weekday", "year", "yearday">;
 
   /// The command used for float unary operations.
   using FloatUnaryOp = fct::NamedTuple<
@@ -124,10 +129,11 @@ class FloatColumnOrFloatColumnView {
       fct::Field<"type_", fct::Literal<"FloatColumnView">>>;
 
   using NamedTupleType =
-      std::variant<FloatColumnOp, FloatArangeOp, FloatAsTSOp, FloatBinaryOp,
-                   FloatConstOp, FloatFromBooleanOp, FloatFromStringOp,
-                   FloatRandomOp, FloatSubselectionOp, FloatUnaryOp,
-                   FloatUpdateOp, FloatWithSubrolesOp, FloatWithUnitOp>;
+      std::variant<FloatArangeOp, FloatAsTSOp, FloatBinaryOp, FloatConstOp,
+                   FloatFromBooleanOp, FloatFromStringOp, FloatRandomOp,
+                   FloatRowidOp, FloatSubselectionOp, FloatUnaryOp,
+                   FloatUpdateOp, FloatColumnOp, FloatWithSubrolesOp,
+                   FloatWithUnitOp>;
 
   /// Used to break the recursive definition.
   NamedTupleType val_;

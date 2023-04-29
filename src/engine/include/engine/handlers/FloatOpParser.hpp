@@ -46,6 +46,8 @@ class FloatOpParser {
       FloatFromStringOp;
   typedef typename commands::FloatColumnOrFloatColumnView::FloatRandomOp
       FloatRandomOp;
+  typedef typename commands::FloatColumnOrFloatColumnView::FloatRowidOp
+      FloatRowidOp;
   typedef typename commands::FloatColumnOrFloatColumnView::FloatSubselectionOp
       FloatSubselectionOp;
   typedef typename commands::FloatColumnOrFloatColumnView::FloatUnaryOp
