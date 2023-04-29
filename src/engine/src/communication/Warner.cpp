@@ -8,15 +8,14 @@
 #include "communication/Warner.hpp"
 
 #include "communication/Sender.hpp"
+#include "fct/make_named_tuple.hpp"
 #include "json/json.hpp"
 
 namespace communication {
 
 void Warner::send(Poco::Net::StreamSocket* _socket) const {
-  using NamedTupleType = fct::NamedTuple<
-      fct::Field<"warnings_", fct::Ref<std::vector<std::string>>>>;
   const auto named_tuple =
-      NamedTupleType(fct::make_field<"warnings_">(warnings_));
+      fct::make_named_tuple(fct::make_field<"warnings_">(warnings_));
   Sender::send_string(json::to_json(named_tuple), _socket);
 }
 

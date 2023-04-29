@@ -15,9 +15,9 @@
 
 #include "communication/Warnings.hpp"
 #include "containers/containers.hpp"
-#include "engine/preprocessors/DataModelChecker.hpp"
 #include "engine/preprocessors/FitParams.hpp"
 #include "engine/preprocessors/TransformParams.hpp"
+#include "engine/preprocessors/data_model_checking.hpp"
 #include "helpers/ColumnDescription.hpp"
 
 namespace engine {
@@ -41,14 +41,14 @@ struct PreprocessorImpl {
   /// Determines whether a categorical column generates warning.
   static bool has_warnings(const containers::Column<Int>& _col) {
     auto warner = communication::Warner();
-    DataModelChecker::check_categorical_column(_col, "DUMMY", &warner);
+    data_model_checking::check_categorical_column(_col, "DUMMY", &warner);
     return (warner.warnings().size() != 0);
   }
 
   /// Determines whether a categorical column generates warning.
   static bool has_warnings(const containers::Column<Float>& _col) {
     auto warner = communication::Warner();
-    DataModelChecker::check_float_column(_col, "DUMMY", &warner);
+    data_model_checking::check_float_column(_col, "DUMMY", &warner);
     return (warner.warnings().size() != 0);
   }
 };

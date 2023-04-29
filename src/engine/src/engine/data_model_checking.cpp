@@ -5,20 +5,255 @@
 // for details.
 //
 
-#include "engine/preprocessors/DataModelChecker.hpp"
+#include "engine/preprocessors/data_model_checking.hpp"
 
 #include <algorithm>
 
 #include "engine/utils/Aggregations.hpp"
 #include "fct/fct.hpp"
+#include "helpers/Macros.hpp"
+#include "transpilation/HumanReadableSQLGenerator.hpp"
+#include "transpilation/transpilation.hpp"
 
 namespace engine {
 namespace preprocessors {
+namespace data_model_checking {
 
-size_t DataModelChecker::calc_num_joins(
-    const helpers::Placeholder& _placeholder) {
-  auto range = _placeholder.joined_tables() |
-               VIEWS::transform(DataModelChecker::calc_num_joins);
+/// Calculates the number of joins in the placeholder.
+size_t calc_num_joins(const helpers::Placeholder& _placeholder);
+
+/// Checks whether all data frames are propositionalization frames.
+void check_all_propositionalization(
+    const std::shared_ptr<const helpers::Placeholder> _placeholder,
+    const std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>
+        _feature_learners);
+
+/// Checks the validity of the data frames.
+void check_data_frames(
+    const containers::DataFrame& _population,
+    const std::vector<containers::DataFrame>& _peripheral,
+    const std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>
+        _feature_learners,
+    logging::ProgressLogger* _logger, communication::Warner* _warner);
+
+/// Checks all of the columns in the data frame make sense.
+void check_df(const containers::DataFrame& _df, const bool _check_num_columns,
+              communication::Warner* _warner);
+
+/// Recursively checks the plausibility of the joins.
+void check_join(
+    const helpers::Placeholder& _placeholder,
+    const std::shared_ptr<const std::vector<std::string>> _peripheral_names,
+    const containers::DataFrame& _population,
+    const std::vector<containers::DataFrame>& _peripheral,
+    const std::vector<Float>& _prob_pick,
+    const std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>&
+        _feature_learners,
+    logging::ProgressLogger* _logger, communication::Warner* _warner);
+
+/// Raises a warning if there is something wrong with the matches.
+std::tuple<bool, size_t, Float, size_t, std::vector<Float>> check_matches(
+    const std::string& _join_key_used, const std::string& _other_join_key_used,
+    const std::string& _time_stamp_used,
+    const std::string& _other_time_stamp_used,
+    const std::string& _upper_time_stamp_used,
+    const containers::DataFrame& _population_df,
+    const containers::DataFrame& _peripheral_df,
+    const std::vector<Float>& _prob_pick);
+
+/// Checks whether there are too many columns for relmt.
+void check_num_columns_relmt(const containers::DataFrame& _population,
+                             const containers::DataFrame& _peripheral,
+                             communication::Warner* _warner);
+
+/// Makes sure that the peripheral tables are in the right size.
+void check_peripheral_size(
+    const std::shared_ptr<const std::vector<std::string>> _peripheral_names,
+    const std::vector<containers::DataFrame>& _peripheral);
+
+/// Makes sure that the data model is actually relational.
+void check_relational(
+    const std::vector<containers::DataFrame>& _peripheral,
+    const std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>
+        _feature_learners);
+
+communication::Warning data_model_can_be_improved(const std::string& _message);
+
+/// Checks whether there is a particular type of feature learner.
+bool find_feature_learner(
+    const std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>&
+        _feature_learners,
+    const std::string& _model);
+
+/// Finds the time stamps, if necessary.
+std::tuple<std::optional<containers::Column<Float>>,
+           std::optional<containers::Column<Float>>,
+           std::optional<containers::Column<Float>>>
+find_time_stamps(const std::string& _time_stamp_used,
+                 const std::string& _other_time_stamp_used,
+                 const std::string& _upper_time_stamp_used,
+                 const containers::DataFrame& _population_df,
+                 const containers::DataFrame& _peripheral_df);
+
+/// Checks whether all non-NULL elements in _col are equal to each other
+bool is_all_equal(const containers::Column<Float>& _col);
+
+/// Accounts for the fact that data frames might be joined.
+std::string modify_df_name(const std::string& _df_name);
+
+/// Accounts for the fact that we might have joined over several join keys.
+std::string modify_join_key_name(const std::string& _jk_name);
+
+/// Adds warning messages related to the joins.
+void raise_join_warnings(const bool _propositionalization,
+                         const bool _is_propositionalization_with_relmt,
+                         const bool _is_many_to_one, const size_t _num_matches,
+                         const Float _num_expected,
+                         const size_t _num_jk_not_found,
+                         const std::string& _join_key_used,
+                         const std::string& _other_join_key_used,
+                         const containers::DataFrame& _population_df,
+                         const containers::DataFrame& _peripheral_df,
+                         communication::Warner* _warner);
+
+/// Adds a warning that all values are equal.
+void warn_all_equal(const bool _is_float, const std::string& _colname,
+                    const std::string& _df_name,
+                    communication::Warner* _warner);
+
+/// Adds a warning that a data frame is empty.
+void warn_is_empty(const std::string& _df_name, communication::Warner* _warner);
+
+/// Adds a warning message related to many-to-one or one-to-one
+/// relationships.
+void warn_many_to_one(const std::string& _join_key_used,
+                      const std::string& _other_join_key_used,
+                      const containers::DataFrame& _population_df,
+                      const containers::DataFrame& _peripheral_df,
+                      communication::Warner* _warner);
+
+/// Generates a no-matches warning.
+void warn_no_matches(const std::string& _join_key_used,
+                     const std::string& _other_join_key_used,
+                     const containers::DataFrame& _population_df,
+                     const containers::DataFrame& _peripheral_df,
+                     communication::Warner* _warner);
+
+/// Generates a not-found warning
+void warn_not_found(const Float _not_found_ratio,
+                    const std::string& _join_key_used,
+                    const std::string& _other_join_key_used,
+                    const containers::DataFrame& _population_df,
+                    const containers::DataFrame& _peripheral_df,
+                    communication::Warner* _warner);
+
+/// Generates a warning when somebody tries to combine the
+/// propositionalization tag with relmt.
+void warn_propositionalization_with_relmt(
+    const std::string& _join_key_used, const std::string& _other_join_key_used,
+    const containers::DataFrame& _population_df,
+    const containers::DataFrame& _peripheral_df,
+    communication::Warner* _warner);
+
+/// Generates a warning that there are to many columns for Multirel.
+void warn_too_many_columns_multirel(const size_t _num_columns,
+                                    const std::string& _df_name,
+                                    communication::Warner* _warner);
+
+/// Generates a warning that there are too many columns for RelMT.
+void warn_too_many_columns_relmt(const size_t _num_columns,
+                                 const std::string& _population_name,
+                                 const std::string& _peripheral_name,
+                                 communication::Warner* _warner);
+
+/// Generates a too-many-matches warning.
+void warn_too_many_matches(const size_t _num_matches,
+                           const std::string& _join_key_used,
+                           const std::string& _other_join_key_used,
+                           const containers::DataFrame& _population_df,
+                           const containers::DataFrame& _peripheral_df,
+                           communication::Warner* _warner);
+
+/// Generates a warning for when there are too many nulls.
+void warn_too_many_nulls(const bool _is_float, const Float _share_null,
+                         const std::string& _colname,
+                         const std::string& _df_name,
+                         communication::Warner* _warner);
+
+/// Generates a warning that there too many unique values.
+void warn_too_many_unique(const Float _num_distinct,
+                          const std::string& _colname,
+                          const std::string& _df_name,
+                          communication::Warner* _warner);
+
+/// Generates a warning that the share of unique columns is too high.
+void warn_unique_share_too_high(const Float _unique_share,
+                                const std::string& _colname,
+                                const std::string& _df_name,
+                                communication::Warner* _warner);
+
+// ----------------------------------------------------------------------------
+
+/// Standard header for an info message.
+std::string info() { return "INFO"; }
+
+/// Standard header for a warning message.
+std::string warning() { return "WARNING"; }
+
+/// Standard header for a column that should be unused.
+communication::Warning column_should_be_unused(const std::string& _message) {
+  return communication::Warning(
+      fct::make_field<"message_">(_message),
+      fct::make_field<"label_", std::string>("COLUMN SHOULD BE UNUSED"),
+      fct::make_field<"warning_type_">(warning()));
+}
+
+/// Standard header for any improvements to the data model.
+communication::Warning data_model_can_be_improved(const std::string& _message) {
+  return communication::Warning(
+      fct::make_field<"message_">(_message),
+      fct::make_field<"label_", std::string>("DATA MODEL CAN BE IMPROVED"),
+      fct::make_field<"warning_type_">(warning()));
+}
+
+/// Checks whether ts1 lies between ts2 and upper.
+bool is_in_range(const Float ts1, const Float ts2, const Float upper) {
+  return ts2 <= ts1 && (std::isnan(upper) || ts1 < upper);
+}
+
+/// Standard header for when some join keys where not found.
+communication::Warning join_keys_not_found(const std::string& _message) {
+  return communication::Warning(
+      fct::make_field<"message_">(_message),
+      fct::make_field<"label_", std::string>("FOREIGN KEYS NOT FOUND"),
+      fct::make_field<"warning_type_">(info()));
+}
+
+/// Standard header for something that might take long.
+communication::Warning might_take_long(const std::string& _message) {
+  return communication::Warning(
+      fct::make_field<"message_">(_message),
+      fct::make_field<"label_", std::string>("MIGHT TAKE LONG"),
+      fct::make_field<"warning_type_">(info()));
+}
+
+/// Removes any macros from a colname.
+std::string modify_colname(const std::string& _colname) {
+  const auto make_staging_table_colname =
+      [](const std::string& _colname) -> std::string {
+    return transpilation::HumanReadableSQLGenerator()
+        .make_staging_table_colname(_colname);
+  };
+  const auto colnames =
+      helpers::Macros::modify_colnames({_colname}, make_staging_table_colname);
+  assert_true(colnames.size() == 1);
+  return colnames.at(0);
+}
+
+// ----------------------------------------------------------------------------
+
+size_t calc_num_joins(const helpers::Placeholder& _placeholder) {
+  auto range = _placeholder.joined_tables() | VIEWS::transform(calc_num_joins);
 
   return _placeholder.joined_tables().size() +
          std::accumulate(range.begin(), range.end(), 0);
@@ -26,7 +261,7 @@ size_t DataModelChecker::calc_num_joins(
 
 // ----------------------------------------------------------------------------
 
-communication::Warner DataModelChecker::check(
+communication::Warner check(
     const std::shared_ptr<const helpers::Placeholder> _placeholder,
     const std::shared_ptr<const std::vector<std::string>> _peripheral_names,
     const containers::DataFrame& _population,
@@ -83,7 +318,7 @@ communication::Warner DataModelChecker::check(
 
 // ----------------------------------------------------------------------------
 
-void DataModelChecker::check_all_propositionalization(
+void check_all_propositionalization(
     const std::shared_ptr<const helpers::Placeholder> _placeholder,
     const std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>
         _feature_learners) {
@@ -115,9 +350,9 @@ void DataModelChecker::check_all_propositionalization(
 
 // ----------------------------------------------------------------------------
 
-void DataModelChecker::check_categorical_column(
-    const containers::Column<Int>& _col, const std::string& _df_name,
-    communication::Warner* _warner) {
+void check_categorical_column(const containers::Column<Int>& _col,
+                              const std::string& _df_name,
+                              communication::Warner* _warner) {
   const auto length = static_cast<Float>(_col.size());
 
   assert_true(_col.size() > 0);
@@ -158,7 +393,7 @@ void DataModelChecker::check_categorical_column(
 
 // ----------------------------------------------------------------------------
 
-void DataModelChecker::check_data_frames(
+void check_data_frames(
     const containers::DataFrame& _population,
     const std::vector<containers::DataFrame>& _peripheral,
     const std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>
@@ -188,9 +423,8 @@ void DataModelChecker::check_data_frames(
 
 // ----------------------------------------------------------------------------
 
-void DataModelChecker::check_df(const containers::DataFrame& _df,
-                                const bool _check_num_columns,
-                                communication::Warner* _warner) {
+void check_df(const containers::DataFrame& _df, const bool _check_num_columns,
+              communication::Warner* _warner) {
   if (_df.nrows() == 0) {
     warn_is_empty(_df.name(), _warner);
     return;
@@ -219,9 +453,9 @@ void DataModelChecker::check_df(const containers::DataFrame& _df,
 
 // ----------------------------------------------------------------------------
 
-void DataModelChecker::check_float_column(const containers::Column<Float>& _col,
-                                          const std::string& _df_name,
-                                          communication::Warner* _warner) {
+void check_float_column(const containers::Column<Float>& _col,
+                        const std::string& _df_name,
+                        communication::Warner* _warner) {
   const auto length = static_cast<Float>(_col.size());
 
   assert_true(_col.size() > 0);
@@ -247,7 +481,7 @@ void DataModelChecker::check_float_column(const containers::Column<Float>& _col,
 
 // ----------------------------------------------------------------------------
 
-void DataModelChecker::check_join(
+void check_join(
     const helpers::Placeholder& _placeholder,
     const std::shared_ptr<const std::vector<std::string>> _peripheral_names,
     const containers::DataFrame& _population,
@@ -343,15 +577,14 @@ void DataModelChecker::check_join(
 
 // ----------------------------------------------------------------------------
 
-std::tuple<bool, size_t, Float, size_t, std::vector<Float>>
-DataModelChecker::check_matches(const std::string& _join_key_used,
-                                const std::string& _other_join_key_used,
-                                const std::string& _time_stamp_used,
-                                const std::string& _other_time_stamp_used,
-                                const std::string& _upper_time_stamp_used,
-                                const containers::DataFrame& _population_df,
-                                const containers::DataFrame& _peripheral_df,
-                                const std::vector<Float>& _prob_pick) {
+std::tuple<bool, size_t, Float, size_t, std::vector<Float>> check_matches(
+    const std::string& _join_key_used, const std::string& _other_join_key_used,
+    const std::string& _time_stamp_used,
+    const std::string& _other_time_stamp_used,
+    const std::string& _upper_time_stamp_used,
+    const containers::DataFrame& _population_df,
+    const containers::DataFrame& _peripheral_df,
+    const std::vector<Float>& _prob_pick) {
   assert_true(_population_df.nrows() == _prob_pick.size());
 
   const auto jk1 = _population_df.join_key(_join_key_used);
@@ -413,7 +646,7 @@ DataModelChecker::check_matches(const std::string& _join_key_used,
 
 // ----------------------------------------------------------------------------
 
-void DataModelChecker::check_peripheral_size(
+void check_peripheral_size(
     const std::shared_ptr<const std::vector<std::string>> _peripheral_names,
     const std::vector<containers::DataFrame>& _peripheral) {
   assert_true(_peripheral_names);
@@ -431,9 +664,9 @@ void DataModelChecker::check_peripheral_size(
 
 // ----------------------------------------------------------------------------
 
-void DataModelChecker::check_num_columns_relmt(
-    const containers::DataFrame& _population,
-    const containers::DataFrame& _peripheral, communication::Warner* _warner) {
+void check_num_columns_relmt(const containers::DataFrame& _population,
+                             const containers::DataFrame& _peripheral,
+                             communication::Warner* _warner) {
   const auto num_columns =
       _population.num_numericals() + _population.num_time_stamps() +
       _peripheral.num_numericals() + _peripheral.num_time_stamps();
@@ -446,7 +679,7 @@ void DataModelChecker::check_num_columns_relmt(
 
 // ----------------------------------------------------------------------------
 
-void DataModelChecker::check_relational(
+void check_relational(
     const std::vector<containers::DataFrame>& _peripheral,
     const std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>
         _feature_learners) {
@@ -460,7 +693,9 @@ void DataModelChecker::check_relational(
 
 // ----------------------------------------------------------------------------
 
-bool DataModelChecker::find_feature_learner(
+// ----------------------------------------------------------------------------
+
+bool find_feature_learner(
     const std::vector<std::shared_ptr<featurelearners::AbstractFeatureLearner>>&
         _feature_learners,
     const std::string& _model) {
@@ -483,12 +718,11 @@ bool DataModelChecker::find_feature_learner(
 std::tuple<std::optional<containers::Column<Float>>,
            std::optional<containers::Column<Float>>,
            std::optional<containers::Column<Float>>>
-DataModelChecker::find_time_stamps(
-    const std::string& _time_stamp_used,
-    const std::string& _other_time_stamp_used,
-    const std::string& _upper_time_stamp_used,
-    const containers::DataFrame& _population_df,
-    const containers::DataFrame& _peripheral_df) {
+find_time_stamps(const std::string& _time_stamp_used,
+                 const std::string& _other_time_stamp_used,
+                 const std::string& _upper_time_stamp_used,
+                 const containers::DataFrame& _population_df,
+                 const containers::DataFrame& _peripheral_df) {
   if ((_time_stamp_used == "") != (_other_time_stamp_used == "")) {
     throw std::runtime_error(
         "You have to pass both time_stamp_used and "
@@ -524,7 +758,7 @@ DataModelChecker::find_time_stamps(
 
 // ----------------------------------------------------------------------------
 
-bool DataModelChecker::is_all_equal(const containers::Column<Float>& _col) {
+bool is_all_equal(const containers::Column<Float>& _col) {
   auto it = std::find_if(_col.begin(), _col.end(),
                          [](Float val) { return !std::isnan(val); });
 
@@ -549,14 +783,13 @@ bool DataModelChecker::is_all_equal(const containers::Column<Float>& _col) {
 
 // ------------------------------------------------------------------------
 
-std::string DataModelChecker::modify_df_name(const std::string& _df_name) {
+std::string modify_df_name(const std::string& _df_name) {
   return transpilation::SQLGenerator::make_staging_table_name(_df_name);
 }
 
 // ------------------------------------------------------------------------
 
-std::string DataModelChecker::modify_join_key_name(
-    const std::string& _jk_name) {
+std::string modify_join_key_name(const std::string& _jk_name) {
   const auto names = helpers::Macros::parse_join_key_name(_jk_name);
 
   std::string modified;
@@ -581,15 +814,16 @@ std::string DataModelChecker::modify_join_key_name(
 
 // ------------------------------------------------------------------------
 
-void DataModelChecker::raise_join_warnings(
-    const bool _is_propositionalization,
-    const bool _is_propositionalization_with_relmt, const bool _is_many_to_one,
-    const size_t _num_matches, const Float _num_expected,
-    const size_t _num_jk_not_found, const std::string& _join_key_used,
-    const std::string& _other_join_key_used,
-    const containers::DataFrame& _population_df,
-    const containers::DataFrame& _peripheral_df,
-    communication::Warner* _warner) {
+void raise_join_warnings(const bool _is_propositionalization,
+                         const bool _is_propositionalization_with_relmt,
+                         const bool _is_many_to_one, const size_t _num_matches,
+                         const Float _num_expected,
+                         const size_t _num_jk_not_found,
+                         const std::string& _join_key_used,
+                         const std::string& _other_join_key_used,
+                         const containers::DataFrame& _population_df,
+                         const containers::DataFrame& _peripheral_df,
+                         communication::Warner* _warner) {
   if (_num_matches == 0) {
     warn_no_matches(_join_key_used, _other_join_key_used, _population_df,
                     _peripheral_df, _warner);
@@ -624,10 +858,9 @@ void DataModelChecker::raise_join_warnings(
 
 // ------------------------------------------------------------------------
 
-void DataModelChecker::warn_all_equal(const bool _is_float,
-                                      const std::string& _colname,
-                                      const std::string& _df_name,
-                                      communication::Warner* _warner) {
+void warn_all_equal(const bool _is_float, const std::string& _colname,
+                    const std::string& _df_name,
+                    communication::Warner* _warner) {
   const std::string role = _is_float
                                ? containers::DataFrame::ROLE_UNUSED_FLOAT
                                : containers::DataFrame::ROLE_UNUSED_STRING;
@@ -636,19 +869,21 @@ void DataModelChecker::warn_all_equal(const bool _is_float,
 
   const auto df_name = modify_df_name(_df_name);
 
-  _warner->add(column_should_be_unused() + "All non-NULL entries in column '" +
-               colname + "' in " + df_name +
-               " are equal to each other. You should "
-               "consider setting its role to " +
-               role +
-               " or using it for "
-               "comparison only (you can do the latter by setting a unit "
-               "that contains 'comparison only').");
+  const auto message =
+      "All non-NULL entries in column '" + colname + "' in " + df_name +
+      " are equal to each other. You should "
+      "consider setting its role to " +
+      role +
+      " or using it for "
+      "comparison only (you can do the latter by setting a unit "
+      "that contains 'comparison only').";
+
+  _warner->add(column_should_be_unused(message));
 }
 
 // ------------------------------------------------------------------------
 
-void DataModelChecker::warn_propositionalization_with_relmt(
+void warn_propositionalization_with_relmt(
     const std::string& _join_key_used, const std::string& _other_join_key_used,
     const containers::DataFrame& _population_df,
     const containers::DataFrame& _peripheral_df,
@@ -661,8 +896,7 @@ void DataModelChecker::warn_propositionalization_with_relmt(
 
   const auto peripheral_name = modify_df_name(_peripheral_df.name());
 
-  const std::string warning =
-      might_take_long() +
+  const auto message =
       "You have set the 'propositionalization' marker when joining " +
       population_name + " and " + peripheral_name + " over " + join_key_used +
       " and " + other_join_key_used +
@@ -671,27 +905,28 @@ void DataModelChecker::warn_propositionalization_with_relmt(
       "with many columns, as the propositionalization is likely to produce. "
       "This pipeline might take a very "
       "long time to fit. "
-      "You could replace RelMT or with Relboost. Relboost "
-      "has been designed to scale well to situations like this.";
+      "You could replace RelMT with Relboost or Fastboost. Both algorithms "
+      "have been designed to scale well to situations like this.";
 
-  _warner->add(warning);
+  _warner->add(might_take_long(message));
 }
 
 // ------------------------------------------------------------------------
 
-void DataModelChecker::warn_is_empty(const std::string& _df_name,
-                                     communication::Warner* _warner) {
+void warn_is_empty(const std::string& _df_name,
+                   communication::Warner* _warner) {
   const auto df_name = modify_df_name(_df_name);
-  _warner->add("It appears that " + df_name + " is empty.");
+  _warner->add(
+      data_model_can_be_improved("It appears that " + df_name + " is empty."));
 }
 
 // ------------------------------------------------------------------------
 
-void DataModelChecker::warn_many_to_one(
-    const std::string& _join_key_used, const std::string& _other_join_key_used,
-    const containers::DataFrame& _population_df,
-    const containers::DataFrame& _peripheral_df,
-    communication::Warner* _warner) {
+void warn_many_to_one(const std::string& _join_key_used,
+                      const std::string& _other_join_key_used,
+                      const containers::DataFrame& _population_df,
+                      const containers::DataFrame& _peripheral_df,
+                      communication::Warner* _warner) {
   const auto join_key_used = modify_join_key_name(_join_key_used);
 
   const auto other_join_key_used = modify_join_key_name(_other_join_key_used);
@@ -700,9 +935,8 @@ void DataModelChecker::warn_many_to_one(
 
   const auto peripheral_name = modify_df_name(_peripheral_df.name());
 
-  _warner->add(
-      data_model_can_be_improved() + "It appears that " + population_name +
-      " and " + peripheral_name +
+  const auto message =
+      "It appears that " + population_name + " and " + peripheral_name +
       " are in a many-to-one or one-to-one relationship when "
       "joined over " +
       join_key_used + " and " + other_join_key_used +
@@ -710,16 +944,18 @@ void DataModelChecker::warn_many_to_one(
       "should "
       "mark the relationship as such in the .join(...) method of the "
       "placeholder. If this is just an idiosyncracy of the training set, you "
-      "should consider using a different training set.");
+      "should consider using a different training set.";
+
+  _warner->add(data_model_can_be_improved(message));
 }
 
 // ------------------------------------------------------------------------
 
-void DataModelChecker::warn_no_matches(
-    const std::string& _join_key_used, const std::string& _other_join_key_used,
-    const containers::DataFrame& _population_df,
-    const containers::DataFrame& _peripheral_df,
-    communication::Warner* _warner) {
+void warn_no_matches(const std::string& _join_key_used,
+                     const std::string& _other_join_key_used,
+                     const containers::DataFrame& _population_df,
+                     const containers::DataFrame& _peripheral_df,
+                     communication::Warner* _warner) {
   const auto join_key_used = modify_join_key_name(_join_key_used);
 
   const auto other_join_key_used = modify_join_key_name(_other_join_key_used);
@@ -728,21 +964,24 @@ void DataModelChecker::warn_no_matches(
 
   const auto peripheral_name = modify_df_name(_peripheral_df.name());
 
-  _warner->add(data_model_can_be_improved() + "There are no matches between " +
-               join_key_used + " in " + population_name + " and " +
-               other_join_key_used + " in " + peripheral_name +
-               ". You should consider removing this join from your data "
-               "model or re-examine your join keys.");
+  const auto message =
+      "There are no matches between " + join_key_used + " in " +
+      population_name + " and " + other_join_key_used + " in " +
+      peripheral_name +
+      ". You should consider removing this join from your data "
+      "model or re-examine your join keys.";
+
+  _warner->add(data_model_can_be_improved(message));
 }
 
 // ------------------------------------------------------------------------
 
-void DataModelChecker::warn_not_found(
-    const Float _not_found_ratio, const std::string& _join_key_used,
-    const std::string& _other_join_key_used,
-    const containers::DataFrame& _population_df,
-    const containers::DataFrame& _peripheral_df,
-    communication::Warner* _warner) {
+void warn_not_found(const Float _not_found_ratio,
+                    const std::string& _join_key_used,
+                    const std::string& _other_join_key_used,
+                    const containers::DataFrame& _population_df,
+                    const containers::DataFrame& _peripheral_df,
+                    communication::Warner* _warner) {
   const auto join_key_used = modify_join_key_name(_join_key_used);
 
   const auto other_join_key_used = modify_join_key_name(_other_join_key_used);
@@ -751,57 +990,62 @@ void DataModelChecker::warn_not_found(
 
   const auto peripheral_name = modify_df_name(_peripheral_df.name());
 
-  _warner->add(join_keys_not_found() + "When joining " + population_name +
-               " and " + peripheral_name + " over " + join_key_used + " and " +
-               other_join_key_used +
-               ", there are no corresponding entries for " +
-               std::to_string(_not_found_ratio * 100.0) + "% of entries in " +
-               join_key_used + " in '" + population_name +
-               "'. You might want to double-check your join keys.");
+  const auto message =
+      "When joining " + population_name + " and " + peripheral_name + " over " +
+      join_key_used + " and " + other_join_key_used +
+      ", there are no corresponding entries for " +
+      std::to_string(_not_found_ratio * 100.0) + "% of entries in " +
+      join_key_used + " in '" + population_name +
+      "'. You might want to double-check your join keys.";
+
+  _warner->add(join_keys_not_found(message));
 }
 
 // ------------------------------------------------------------------------
 
-void DataModelChecker::warn_too_many_columns_multirel(
-    const size_t _num_columns, const std::string& _df_name,
-    communication::Warner* _warner) {
+void warn_too_many_columns_multirel(const size_t _num_columns,
+                                    const std::string& _df_name,
+                                    communication::Warner* _warner) {
   const auto df_name = modify_df_name(_df_name);
 
-  _warner->add(might_take_long() + df_name + " contains " +
-               std::to_string(_num_columns) +
-               " categorical and numerical columns. "
-               "Please note that columns created by the preprocessors "
-               "are also part of this count. The multirel "
-               "algorithm does not scale very well to data frames "
-               "with many columns. This pipeline might take a very "
-               "long time to fit. You should consider removing some "
-               "columns or preprocessors. You could use a column selection "
-               "to pick the right columns. "
-               "You could also replace "
-               "Multirel  with Relboost. Relboost "
-               "has been designed to scale well to data "
-               "frames with many columns.");
+  const auto message =
+      df_name + " contains " + std::to_string(_num_columns) +
+      " categorical and numerical columns. "
+      "Please note that columns created by the preprocessors "
+      "are also part of this count. The multirel "
+      "algorithm does not scale very well to data frames "
+      "with many columns. This pipeline might take a very "
+      "long time to fit. You should consider removing some "
+      "columns or preprocessors. You could use a column selection "
+      "to pick the right columns. "
+      "You could also replace "
+      "Multirel with Relboost or Fastboost. Both algorithms "
+      "have been designed to scale well to data "
+      "frames with many columns.";
+
+  _warner->add(might_take_long(message));
 }
 
 // ------------------------------------------------------------------------
 
-void DataModelChecker::warn_too_many_columns_relmt(
-    const size_t _num_columns, const std::string& _population_name,
-    const std::string& _peripheral_name, communication::Warner* _warner) {
+void warn_too_many_columns_relmt(const size_t _num_columns,
+                                 const std::string& _population_name,
+                                 const std::string& _peripheral_name,
+                                 communication::Warner* _warner) {
   const auto population_name = modify_df_name(_population_name);
 
   const auto peripheral_name = modify_df_name(_peripheral_name);
 
-  std::string warning = might_take_long() + population_name;
+  std::string message = population_name;
 
   if (population_name != peripheral_name) {
-    warning +=
+    message +=
         " and " + peripheral_name + " contain " + std::to_string(_num_columns);
   } else {
-    warning += " contains " + std::to_string(_num_columns / 2);
+    message += " contains " + std::to_string(_num_columns / 2);
   }
 
-  warning +=
+  message +=
       " numerical columns and time stamps. "
       "Please note that columns created by the preprocessors "
       "are also part of this count. The relmt "
@@ -811,21 +1055,21 @@ void DataModelChecker::warn_too_many_columns_relmt(
       "columns or preprocessors. You can use a column selection "
       "to pick the right columns. "
       "You could also replace "
-      "RelMT with Relboost. Relboost "
-      "has been designed to scale well to data "
+      "RelMT with Relboost or Fastboost. Both algorithms "
+      "have been designed to scale well to data "
       "frames with many columns.";
 
-  _warner->add(warning);
+  _warner->add(might_take_long(message));
 }
 
 // ------------------------------------------------------------------------
 
-void DataModelChecker::warn_too_many_matches(
-    const size_t _num_matches, const std::string& _join_key_used,
-    const std::string& _other_join_key_used,
-    const containers::DataFrame& _population_df,
-    const containers::DataFrame& _peripheral_df,
-    communication::Warner* _warner) {
+void warn_too_many_matches(const size_t _num_matches,
+                           const std::string& _join_key_used,
+                           const std::string& _other_join_key_used,
+                           const containers::DataFrame& _population_df,
+                           const containers::DataFrame& _peripheral_df,
+                           communication::Warner* _warner) {
   const auto join_key_used = modify_join_key_name(_join_key_used);
 
   const auto other_join_key_used = modify_join_key_name(_other_join_key_used);
@@ -834,10 +1078,10 @@ void DataModelChecker::warn_too_many_matches(
 
   const auto peripheral_name = modify_df_name(_peripheral_df.name());
 
-  _warner->add(
-      might_take_long() + "There are " + std::to_string(_num_matches) +
-      " matches between " + population_name + " and " + peripheral_name +
-      " when joined over " + join_key_used + " and " + other_join_key_used +
+  const auto message =
+      "There are " + std::to_string(_num_matches) + " matches between " +
+      population_name + " and " + peripheral_name + " when joined over " +
+      join_key_used + " and " + other_join_key_used +
       ". This pipeline might take a very long time to fit. There are "
       "multiple ways to fix this: \n"
       "1) You could impose a narrower limit on the scope of "
@@ -853,17 +1097,18 @@ void DataModelChecker::warn_too_many_matches(
       "propositionalization, which would force the pipeline to use the "
       "FastProp algorithm for this particular join. You can also do that in "
       "the .join(...)-method of the Placeholder.\n"
-      "3) You could also use FastProp for the "
-      "entire pipeline.");
+      "3) You could also use FastProp or Fastboost for the "
+      "entire pipeline.";
+
+  _warner->add(might_take_long(message));
 }
 
 // ------------------------------------------------------------------------
 
-void DataModelChecker::warn_too_many_nulls(const bool _is_float,
-                                           const Float _share_null,
-                                           const std::string& _colname,
-                                           const std::string& _df_name,
-                                           communication::Warner* _warner) {
+void warn_too_many_nulls(const bool _is_float, const Float _share_null,
+                         const std::string& _colname,
+                         const std::string& _df_name,
+                         communication::Warner* _warner) {
   const std::string role = _is_float
                                ? containers::DataFrame::ROLE_UNUSED_FLOAT
                                : containers::DataFrame::ROLE_UNUSED_STRING;
@@ -872,58 +1117,66 @@ void DataModelChecker::warn_too_many_nulls(const bool _is_float,
 
   const auto df_name = modify_df_name(_df_name);
 
-  _warner->add(column_should_be_unused() + std::to_string(_share_null * 100.0) +
-               "% of all entries in column '" + colname + "' in " + df_name +
-               " are NULL values. You should "
-               "consider setting its role to " +
-               role + ".");
+  const auto message = std::to_string(_share_null * 100.0) +
+                       "% of all entries in column '" + colname + "' in " +
+                       df_name +
+                       " are NULL values. You should "
+                       "consider setting its role to " +
+                       role + ".";
+
+  _warner->add(column_should_be_unused(message));
 }
 
 // ------------------------------------------------------------------------
 
-void DataModelChecker::warn_too_many_unique(const Float _num_distinct,
-                                            const std::string& _colname,
-                                            const std::string& _df_name,
-                                            communication::Warner* _warner) {
+void warn_too_many_unique(const Float _num_distinct,
+                          const std::string& _colname,
+                          const std::string& _df_name,
+                          communication::Warner* _warner) {
   const auto colname = modify_colname(_colname);
 
   const auto df_name = modify_df_name(_df_name);
 
-  _warner->add(might_take_long() +
-               "The number of unique entries in column "
-               "'" +
-               colname + "' in " + df_name + " is " +
-               std::to_string(static_cast<int>(_num_distinct)) +
-               ". This might take a long time to fit. You should "
-               "consider setting its role to unused_string or using it "
-               "for "
-               "comparison only (you can do the latter by setting a unit "
-               "that "
-               "contains 'comparison only').");
+  const auto message =
+      "The number of unique entries in column "
+      "'" +
+      colname + "' in " + df_name + " is " +
+      std::to_string(static_cast<int>(_num_distinct)) +
+      ". This might take a long time to fit. You should "
+      "consider setting its role to unused_string or using it "
+      "for "
+      "comparison only (you can do the latter by setting a unit "
+      "that "
+      "contains 'comparison only').";
+
+  _warner->add(might_take_long(message));
 }
 
 // ------------------------------------------------------------------------
 
-void DataModelChecker::warn_unique_share_too_high(
-    const Float _unique_share, const std::string& _colname,
-    const std::string& _df_name, communication::Warner* _warner) {
+void warn_unique_share_too_high(const Float _unique_share,
+                                const std::string& _colname,
+                                const std::string& _df_name,
+                                communication::Warner* _warner) {
   const auto colname = modify_colname(_colname);
 
   const auto df_name = modify_df_name(_df_name);
 
-  _warner->add(column_should_be_unused() +
-               "The ratio of unique entries to non-NULL entries in column "
-               "'" +
-               colname + "' in data frame " + df_name + " is " +
-               std::to_string(_unique_share * 100.0) +
-               "%. You should "
-               "consider setting its role to unused_string or using it "
-               "for "
-               "comparison only (you can do the latter by setting a unit "
-               "that "
-               "contains 'comparison only').");
+  const auto message =
+      "The ratio of unique entries to non-NULL entries in column "
+      "'" +
+      colname + "' in data frame " + df_name + " is " +
+      std::to_string(_unique_share * 100.0) +
+      "%. You should "
+      "consider setting its role to unused_string or using it "
+      "for "
+      "comparison only (you can do the latter by setting a unit "
+      "that "
+      "contains 'comparison only').";
+
+  _warner->add(column_should_be_unused(message));
 }
 
-// ----------------------------------------------------------------------------
+}  // namespace data_model_checking
 }  // namespace preprocessors
 }  // namespace engine
