@@ -84,7 +84,6 @@ void ViewManager::get_view_nrows(const typename Command::GetViewNRowsOp& _cmd,
 }
 
 // ------------------------------------------------------------------------
-// ------------------------------------------------------------------------
 
 void ViewManager::view_to_arrow(const typename Command::ViewToArrowOp& _cmd,
                                 Poco::Net::StreamSocket* _socket) {
