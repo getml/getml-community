@@ -70,6 +70,7 @@ from .helpers import (
     _replace_with_nan_maybe,
     _transform_peripheral,
 )
+from .issues import Issues
 from .metadata import AllMetadata
 from .metrics import (
     _all_metrics,
@@ -85,7 +86,6 @@ from .plots import Plots
 from .score import ClassificationScore, RegressionScore
 from .scores_container import Scores
 from .tags import Tags
-
 
 NOT_FITTED = "NOT FITTED"
 
@@ -1015,7 +1015,7 @@ class Pipeline:
                 Sequence[Union[DataFrame, View]],
             ]
         ] = None,
-    ) -> None:
+    ) -> Optional[Issues]:
         """
         Checks the validity of the data model.
 
@@ -1070,11 +1070,19 @@ class Pipeline:
             if msg != "Success!":
                 comm.engine_exception_handler(msg)
             print()
-            no_warnings = comm.recv_warnings(sock)
-            if no_warnings:
+            issues = Issues(comm.recv_issues(sock))
+            if len(issues) == 0:
                 print("OK.")
+            else:
+                print(
+                    f"The pipeline check generated {len(issues.info)} "
+                    + f"issues labeled INFO and {len(issues.warnings)} "
+                    + "issues labeled WARNING."
+                )
 
         temp.delete()
+
+        return None if len(issues) == 0 else issues
 
     # ------------------------------------------------------------
 
@@ -1239,7 +1247,10 @@ class Pipeline:
         _check_df_types(population_table, peripheral_tables)
 
         if check:
-            self.check(population_table, peripheral_tables)
+            warnings = self.check(population_table, peripheral_tables)
+            if warnings:
+                print("To see the issues in full, run .check() on the pipeline.")
+                print()
 
         self._send(additional_tags)
 

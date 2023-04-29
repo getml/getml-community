@@ -15,8 +15,7 @@ import numbers
 import pathlib
 import socket
 import sys
-import time
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, NamedTuple, Union
 
 import numpy as np
 
@@ -319,7 +318,21 @@ def recv_string_column(sock: socket.socket):
 # --------------------------------------------------------------------
 
 
-def recv_warnings(sock: socket.socket):
+class _Issue(NamedTuple):
+    """
+    Describes a single warning generated
+    by the check method of the pipeline.
+    """
+
+    message: str
+    label: str
+    warning_type: str
+
+
+# --------------------------------------------------------------------
+
+
+def recv_issues(sock: socket.socket) -> List[_Issue]:
     """
     Receives a set of warnings to raise from the getml engine.
     """
@@ -336,10 +349,12 @@ def recv_warnings(sock: socket.socket):
 
     all_warnings = json_obj["warnings_"]
 
-    for warning in all_warnings:
-        print(warning)
-
-    return len(all_warnings) == 0
+    return [
+        _Issue(
+            message=w["message_"], label=w["label_"], warning_type=w["warning_type_"]
+        )
+        for w in all_warnings
+    ]
 
 
 # --------------------------------------------------------------------
