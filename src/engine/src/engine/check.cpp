@@ -34,14 +34,7 @@ void check(const Pipeline& _pipeline, const CheckParams& _params) {
   // TODO: We are forced to generate the modified tables, even when we can
   // retrieve the check, but we really only need the modified schemata at this
   // point. Fix this.
-  const auto fit_preprocessors_params = FitPreprocessorsParams{
-      .categories_ = _params.get<"categories_">(),
-      .cmd_ = _params.get<"cmd_">(),
-      .logger_ = _params.get<"logger_">(),
-      .peripheral_dfs_ = _params.get<"peripheral_dfs_">(),
-      .population_df_ = _params.get<"population_df_">(),
-      .preprocessor_tracker_ = _params.get<"preprocessor_tracker_">(),
-      .socket_ = _params.get<"socket_">()};
+  const auto fit_preprocessors_params = FitPreprocessorsParams(_params);
 
   const auto preprocessed =
       fit::fit_preprocessors_only(_pipeline, fit_preprocessors_params);

@@ -57,26 +57,21 @@ containers::DataFrame TextFieldSplitter::remove_text_fields(
 // ----------------------------------------------------
 
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-TextFieldSplitter::fit_transform(const FitParams& _params) {
-  cols_ =
-      fit_df(_params.population_df_, helpers::ColumnDescription::POPULATION);
+TextFieldSplitter::fit_transform(const Params& _params) {
+  cols_ = fit_df(_params.get<"population_df_">(),
+                 helpers::ColumnDescription::POPULATION);
 
-  for (const auto& df : _params.peripheral_dfs_) {
+  for (const auto& df : _params.get<"peripheral_dfs_">()) {
     const auto new_cols = fit_df(df, helpers::ColumnDescription::PERIPHERAL);
 
     cols_.insert(cols_.end(), new_cols.begin(), new_cols.end());
   }
 
-  const auto params = TransformParams{
-      .cmd_ = _params.cmd_,
-      .categories_ = _params.categories_,
-      .logger_ = _params.logger_,
-      .logging_begin_ = (_params.logging_begin_ + _params.logging_end_) / 2,
-      .logging_end_ = _params.logging_end_,
-      .peripheral_dfs_ = _params.peripheral_dfs_,
-      .peripheral_names_ = _params.peripheral_names_,
-      .placeholder_ = _params.placeholder_,
-      .population_df_ = _params.population_df_};
+  const auto logging_begin =
+      (_params.get<"logging_begin_">() + _params.get<"logging_end_">()) / 2;
+
+  const auto params =
+      _params.replace(fct::make_field<"logging_begin_">(logging_begin));
 
   return transform(params);
 }
@@ -178,23 +173,24 @@ std::vector<std::string> TextFieldSplitter::to_sql(
 // ----------------------------------------------------
 
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-TextFieldSplitter::transform(const TransformParams& _params) const {
+TextFieldSplitter::transform(const Params& _params) const {
   const auto modify_if_applicable =
       [this](const containers::DataFrame& _df) -> containers::DataFrame {
     return _df.num_text() == 0 ? _df : remove_text_fields(add_rowid(_df));
   };
 
-  const auto population_df = modify_if_applicable(_params.population_df_);
+  const auto population_df =
+      modify_if_applicable(_params.get<"population_df_">());
 
   const auto range =
-      _params.peripheral_dfs_ | VIEWS::transform(modify_if_applicable);
+      _params.get<"peripheral_dfs_">() | VIEWS::transform(modify_if_applicable);
 
   auto peripheral_dfs = fct::collect::vector<containers::DataFrame>(range);
 
-  transform_df(helpers::ColumnDescription::POPULATION, _params.population_df_,
-               &peripheral_dfs);
+  transform_df(helpers::ColumnDescription::POPULATION,
+               _params.get<"population_df_">(), &peripheral_dfs);
 
-  for (const auto& df : _params.peripheral_dfs_) {
+  for (const auto& df : _params.get<"peripheral_dfs_">()) {
     transform_df(helpers::ColumnDescription::PERIPHERAL, df, &peripheral_dfs);
   }
 

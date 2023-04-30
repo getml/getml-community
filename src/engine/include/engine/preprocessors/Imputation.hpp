@@ -16,9 +16,8 @@
 #include "commands/Preprocessor.hpp"
 #include "containers/containers.hpp"
 #include "engine/Float.hpp"
-#include "engine/preprocessors/FitParams.hpp"
+#include "engine/preprocessors/Params.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
-#include "engine/preprocessors/TransformParams.hpp"
 #include "fct/Field.hpp"
 #include "fct/Literal.hpp"
 #include "fct/NamedTuple.hpp"
@@ -63,7 +62,7 @@ class Imputation : public Preprocessor {
  public:
   /// Identifies which features should be extracted from which time stamps.
   std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-  fit_transform(const FitParams& _params) final;
+  fit_transform(const Params& _params) final;
 
   /// Loads the predictor
   void load(const std::string& _fname) final;
@@ -74,7 +73,7 @@ class Imputation : public Preprocessor {
   /// Transforms the data frames by adding the desired time series
   /// transformations.
   std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-  transform(const TransformParams& _params) const final;
+  transform(const Params& _params) const final;
 
  public:
   /// Creates a deep copy.

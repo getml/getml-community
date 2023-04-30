@@ -76,19 +76,19 @@ containers::Column<strings::String> Substring::extract_substring_string(
 // ----------------------------------------------------
 
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-Substring::fit_transform(const FitParams& _params) {
+Substring::fit_transform(const Params& _params) {
   const auto population_df = fit_transform_df(
-      _params.population_df_, helpers::ColumnDescription::POPULATION, 0,
-      _params.categories_.get());
+      _params.get<"population_df_">(), helpers::ColumnDescription::POPULATION,
+      0, _params.get<"categories_">().get());
 
   auto peripheral_dfs = std::vector<containers::DataFrame>();
 
-  for (size_t i = 0; i < _params.peripheral_dfs_.size(); ++i) {
-    const auto& df = _params.peripheral_dfs_.at(i);
+  for (size_t i = 0; i < _params.get<"peripheral_dfs_">().size(); ++i) {
+    const auto& df = _params.get<"peripheral_dfs_">().at(i);
 
     const auto new_df =
         fit_transform_df(df, helpers::ColumnDescription::PERIPHERAL, i,
-                         _params.categories_.get());
+                         _params.get<"categories_">().get());
 
     peripheral_dfs.push_back(new_df);
   }
@@ -152,17 +152,17 @@ void Substring::save(const std::string& _fname) const {
 // ----------------------------------------------------
 
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-Substring::transform(const TransformParams& _params) const {
-  const auto population_df =
-      transform_df(*_params.categories_, _params.population_df_,
-                   helpers::ColumnDescription::POPULATION, 0);
+Substring::transform(const Params& _params) const {
+  const auto population_df = transform_df(
+      *_params.get<"categories_">(), _params.get<"population_df_">(),
+      helpers::ColumnDescription::POPULATION, 0);
 
   auto peripheral_dfs = std::vector<containers::DataFrame>();
 
-  for (size_t i = 0; i < _params.peripheral_dfs_.size(); ++i) {
-    const auto& df = _params.peripheral_dfs_.at(i);
+  for (size_t i = 0; i < _params.get<"peripheral_dfs_">().size(); ++i) {
+    const auto& df = _params.get<"peripheral_dfs_">().at(i);
 
-    const auto new_df = transform_df(*_params.categories_, df,
+    const auto new_df = transform_df(*_params.get<"categories_">(), df,
                                      helpers::ColumnDescription::PERIPHERAL, i);
 
     peripheral_dfs.push_back(new_df);

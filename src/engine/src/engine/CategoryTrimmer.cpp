@@ -79,29 +79,24 @@ std::string CategoryTrimmer::column_to_sql(
 // ----------------------------------------------------
 
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-CategoryTrimmer::fit_transform(const FitParams& _params) {
+CategoryTrimmer::fit_transform(const Params& _params) {
   const auto fit_peripheral = [this](const auto& _df) {
     return fit_df(_df, helpers::ColumnDescription::PERIPHERAL);
   };
 
-  population_sets_ =
-      fit_df(_params.population_df_, helpers::ColumnDescription::POPULATION);
+  population_sets_ = fit_df(_params.get<"population_df_">(),
+                            helpers::ColumnDescription::POPULATION);
 
   peripheral_sets_ = fct::collect::vector<std::vector<CategoryPair>>(
-      _params.peripheral_dfs_ | VIEWS::transform(fit_peripheral));
+      _params.get<"peripheral_dfs_">() | VIEWS::transform(fit_peripheral));
 
-  (*_params.categories_)[strings::String(TRIMMED)];
+  (*_params.get<"categories_">())[strings::String(TRIMMED)];
 
-  const auto params = TransformParams{
-      .cmd_ = _params.cmd_,
-      .categories_ = _params.categories_,
-      .logger_ = _params.logger_,
-      .logging_begin_ = (_params.logging_begin_ + _params.logging_end_) / 2,
-      .logging_end_ = _params.logging_end_,
-      .peripheral_dfs_ = _params.peripheral_dfs_,
-      .peripheral_names_ = _params.peripheral_names_,
-      .placeholder_ = _params.placeholder_,
-      .population_df_ = _params.population_df_};
+  const auto logging_begin =
+      (_params.get<"logging_begin_">() + _params.get<"logging_end_">()) / 2;
+
+  const auto params =
+      _params.replace(fct::make_field<"logging_begin_">(logging_begin));
 
   return transform(params);
 }
@@ -243,21 +238,25 @@ std::vector<std::string> CategoryTrimmer::to_sql(
 // ----------------------------------------------------
 
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-CategoryTrimmer::transform(const TransformParams& _params) const {
-  assert_true(peripheral_sets_.size() == _params.peripheral_dfs_.size());
+CategoryTrimmer::transform(const Params& _params) const {
+  assert_true(peripheral_sets_.size() ==
+              _params.get<"peripheral_dfs_">().size());
 
-  const auto pool = _params.population_df_.pool()
-                        ? std::make_shared<memmap::Pool>(
-                              _params.population_df_.pool()->temp_dir())
-                        : std::shared_ptr<memmap::Pool>();
+  const auto pool =
+      _params.get<"population_df_">().pool()
+          ? std::make_shared<memmap::Pool>(
+                _params.get<"population_df_">().pool()->temp_dir())
+          : std::shared_ptr<memmap::Pool>();
 
-  const auto population_df = transform_df(
-      population_sets_, pool, _params.categories_, _params.population_df_);
+  const auto population_df =
+      transform_df(population_sets_, pool, _params.get<"categories_">(),
+                   _params.get<"population_df_">());
 
   const auto make_peripheral_df =
       [this, &_params, pool](const size_t _i) -> containers::DataFrame {
-    return transform_df(peripheral_sets_.at(_i), pool, _params.categories_,
-                        _params.peripheral_dfs_.at(_i));
+    return transform_df(peripheral_sets_.at(_i), pool,
+                        _params.get<"categories_">(),
+                        _params.get<"peripheral_dfs_">().at(_i));
   };
 
   const auto iota = fct::IotaRange<size_t>(0, peripheral_sets_.size());
