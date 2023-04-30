@@ -27,41 +27,38 @@
 namespace engine {
 namespace pipelines {
 
-struct TransformParams {
-  using CmdType = fct::define_named_tuple_t<commands::DataFramesOrViews,
-                                            fct::Field<"predict_", bool>,
-                                            fct::Field<"score_", bool> >;
+using TransformCmdType = fct::define_named_tuple_t<commands::DataFramesOrViews,
+                                                   fct::Field<"predict_", bool>,
+                                                   fct::Field<"score_", bool>>;
 
-  static constexpr const char* FEATURE_SELECTOR = "feature selector";
-  static constexpr const char* PREDICTOR = "predictor";
+using TransformParams = fct::NamedTuple<
 
-  /// The categorical encoding.
-  const fct::Ref<containers::Encoding> categories_;
+    /// The Encoding used for the categories.
+    fct::Field<"categories_", fct::Ref<containers::Encoding>>,
 
-  /// The command used.
-  const CmdType cmd_;
+    /// Contains all of the names of all data frames or views needed for fitting
+    /// the pipeline.
+    fct::Field<"cmd_", TransformCmdType>,
 
-  /// Contains all of the data frames - we need this, because it might be
-  /// possible that the features are retrieved.
-  const std::map<std::string, containers::DataFrame> data_frames_;
+    /// Contains all of the data frames - we need this, because it might be
+    /// possible that the features are retrieved.
+    fct::Field<"data_frames_", std::map<std::string, containers::DataFrame>>,
 
-  /// Keeps track of the data frames and their fingerprints.
-  const dependency::DataFrameTracker data_frame_tracker_;
+    /// Keeps track of the data frames and their fingerprints.
+    fct::Field<"data_frame_tracker_", dependency::DataFrameTracker>,
 
-  /// Logs the progress.
-  const std::shared_ptr<const communication::Logger> logger_;
+    /// Logs the progress.
+    fct::Field<"logger_", std::shared_ptr<const communication::Logger>>,
 
-  /// The peripheral tables, without staging, as they were passed.
-  const std::vector<containers::DataFrame> original_peripheral_dfs_;
+    /// The peripheral tables.
+    fct::Field<"original_peripheral_dfs_", std::vector<containers::DataFrame>>,
 
-  /// The population table, without staging, as it was passed.
-  const containers::DataFrame original_population_df_;
+    /// The population table.
+    fct::Field<"original_population_df_", containers::DataFrame>,
 
-  /// Output: The socket with which we communicate.
-  Poco::Net::StreamSocket* const socket_;
-};
+    /// Output: The socket with which we communicate.
+    fct::Field<"socket_", Poco::Net::StreamSocket*>>;
 
-// ----------------------------------------------------------------------------
 }  // namespace pipelines
 }  // namespace engine
 

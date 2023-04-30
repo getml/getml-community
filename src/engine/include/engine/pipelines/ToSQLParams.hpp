@@ -18,35 +18,37 @@
 #include "engine/dependency/dependency.hpp"
 #include "engine/pipelines/FittedPipeline.hpp"
 #include "engine/pipelines/Pipeline.hpp"
+#include "fct/Field.hpp"
+#include "fct/NamedTuple.hpp"
+#include "fct/Ref.hpp"
 
 namespace engine {
 namespace pipelines {
 
-struct ToSQLParams {
-  /// Encodes the categories.
-  const helpers::StringIterator categories_;
+using ToSQLParams = fct::NamedTuple<
+    /// Encodes the categories.
+    fct::Field<"categories_", const helpers::StringIterator>,
 
-  /// The fitted pipeline.
-  const FittedPipeline fitted_;
+    /// The fitted pipeline.
+    fct::Field<"fitted_", FittedPipeline>,
 
-  /// Whether we want to transpile the full pipeline or just the features.
-  const bool full_pipeline_;
+    /// Whether we want to transpile the full pipeline or just the features.
+    fct::Field<"full_pipeline_", bool>,
 
-  /// The underlying pipeline,
-  const Pipeline pipeline_;
+    /// The underlying pipeline,
+    fct::Field<"pipeline_", Pipeline>,
 
-  /// If the feature is longer than the threshold, it will not be sent. This is
-  /// to prevent the iPython notebook from overflowing and/or unexpectedly high
-  /// memory usage in Python.
-  const std::optional<size_t> size_threshold_;
+    /// If the feature is longer than the threshold, it will not be sent. This
+    /// is to prevent the iPython notebook from overflowing and/or unexpectedly
+    /// high memory usage in Python.
+    fct::Field<"size_threshold_", std::optional<size_t>>,
 
-  /// Whether we want to include the targets in the transpiled code (needed to
-  /// generate a training set)
-  const bool targets_;
+    /// Whether we want to include the targets in the transpiled code (needed to
+    /// generate a training set)
+    fct::Field<"targets_", bool>,
 
-  /// The parameters required by the transpilation package.
-  const transpilation::TranspilationParams transpilation_params_;
-};
+    /// The parameters required by the transpilation package.
+    fct::Field<"transpilation_params_", transpilation::TranspilationParams>>;
 
 }  // namespace pipelines
 }  // namespace engine

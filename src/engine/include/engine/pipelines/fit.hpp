@@ -33,8 +33,6 @@ namespace engine {
 namespace pipelines {
 namespace fit {
 
-using Purpose = typename FitPredictorsParams::Purpose;
-
 /// Extracts the fingerprints of the data frames.
 fct::Ref<const std::vector<commands::Fingerprint>> extract_df_fingerprints(
     const Pipeline& _pipeline, const containers::DataFrame& _population_df,

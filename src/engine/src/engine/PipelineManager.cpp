@@ -195,15 +195,15 @@ void PipelineManager::check(const typename Command::CheckOp& _cmd,
                  params_.data_frames_, params_.options_)
           .parse_all(cmd);
 
-  const auto params = pipelines::CheckParams{
-      .categories_ = local_categories,
-      .cmd_ = _cmd,
-      .logger_ = params_.logger_.ptr(),
-      .peripheral_dfs_ = peripheral_dfs,
-      .population_df_ = population_df,
-      .preprocessor_tracker_ = params_.preprocessor_tracker_,
-      .warning_tracker_ = params_.warning_tracker_,
-      .socket_ = _socket};
+  const auto params = pipelines::CheckParams(
+      fct::make_field<"categories_">(local_categories),
+      fct::make_field<"cmd_", commands::DataFramesOrViews>(_cmd),
+      fct::make_field<"logger_">(params_.logger_.ptr()),
+      fct::make_field<"peripheral_dfs_">(peripheral_dfs),
+      fct::make_field<"population_df_">(population_df),
+      fct::make_field<"preprocessor_tracker_">(params_.preprocessor_tracker_),
+      fct::make_field<"warning_tracker_">(params_.warning_tracker_),
+      fct::make_field<"socket_">(_socket));
 
   pipelines::check::check(pipeline, params);
 
@@ -375,21 +375,21 @@ void PipelineManager::fit(const typename Command::FitOp& _cmd,
                  params_.data_frames_, params_.options_)
           .parse_all(_cmd);
 
-  const auto params = pipelines::FitParams{
-      .categories_ = local_categories,
-      .cmd_ = _cmd,
-      .data_frames_ = data_frames(),
-      .data_frame_tracker_ = data_frame_tracker(),
-      .fe_tracker_ = params_.fe_tracker_,
-      .fs_fingerprints_ =
-          fct::Ref<const std::vector<commands::Fingerprint>>::make(),
-      .logger_ = params_.logger_.ptr(),
-      .peripheral_dfs_ = peripheral_dfs,
-      .population_df_ = population_df,
-      .pred_tracker_ = params_.pred_tracker_,
-      .preprocessor_tracker_ = params_.preprocessor_tracker_,
-      .validation_df_ = validation_df,
-      .socket_ = _socket};
+  const auto params = pipelines::FitParams(
+      fct::make_field<"categories_">(local_categories),
+      fct::make_field<"cmd_", commands::DataFramesOrViews>(_cmd),
+      fct::make_field<"data_frames_">(data_frames()),
+      fct::make_field<"data_frame_tracker_">(data_frame_tracker()),
+      fct::make_field<"fe_tracker_">(params_.fe_tracker_),
+      fct::make_field<"fs_fingerprints_">(
+          fct::Ref<const std::vector<commands::Fingerprint>>::make()),
+      fct::make_field<"logger_">(params_.logger_.ptr()),
+      fct::make_field<"peripheral_dfs_">(peripheral_dfs),
+      fct::make_field<"population_df_">(population_df),
+      fct::make_field<"pred_tracker_">(params_.pred_tracker_),
+      fct::make_field<"preprocessor_tracker_">(params_.preprocessor_tracker_),
+      fct::make_field<"validation_df_">(validation_df),
+      fct::make_field<"socket_">(_socket));
 
   const auto [fitted, scores] = pipelines::fit::fit(pipeline, params);
 
@@ -752,15 +752,15 @@ void PipelineManager::transform(const typename Command::TransformOp& _cmd,
 
   // IMPORTANT: Use categories_, not local_categories, otherwise
   // .vector() might not work.
-  const auto params =
-      pipelines::TransformParams{.categories_ = params_.categories_,
-                                 .cmd_ = cmd,
-                                 .data_frames_ = *local_data_frames,
-                                 .data_frame_tracker_ = data_frame_tracker(),
-                                 .logger_ = params_.logger_.ptr(),
-                                 .original_peripheral_dfs_ = peripheral_dfs,
-                                 .original_population_df_ = population_df,
-                                 .socket_ = _socket};
+  const auto params = pipelines::TransformParams(
+      fct::make_field<"categories_">(params_.categories_),
+      fct::make_field<"cmd_", pipelines::TransformCmdType>(cmd),
+      fct::make_field<"data_frames_">(*local_data_frames),
+      fct::make_field<"data_frame_tracker_">(data_frame_tracker()),
+      fct::make_field<"logger_">(params_.logger_.ptr()),
+      fct::make_field<"original_peripheral_dfs_">(peripheral_dfs),
+      fct::make_field<"original_population_df_">(population_df),
+      fct::make_field<"socket_">(_socket));
 
   const auto fitted = pipeline.fitted();
 

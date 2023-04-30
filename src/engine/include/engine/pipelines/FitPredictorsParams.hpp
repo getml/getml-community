@@ -16,52 +16,57 @@
 #include "commands/Fingerprint.hpp"
 #include "engine/pipelines/FitParams.hpp"
 #include "engine/pipelines/Pipeline.hpp"
+#include "engine/pipelines/Purpose.hpp"
+#include "fct/Field.hpp"
 #include "fct/Literal.hpp"
+#include "fct/NamedTuple.hpp"
 #include "fct/Ref.hpp"
 #include "predictors/PredictorImpl.hpp"
 
 namespace engine {
 namespace pipelines {
 
-struct FitPredictorsParams {
-  using Purpose = fct::Literal<"feature_selectors_", "predictors_">;
+using FitPredictorsParams = fct::NamedTuple<
 
-  /// A pointer to the autofeatures. This is modifiable on purpose, because we
-  /// want to be able to cache generated features.
-  containers::NumericalFeatures* const autofeatures_;
+    /// A pointer to the autofeatures. This is modifiable on purpose, because we
+    /// want to be able to cache generated features.
+    fct::Field<"autofeatures_", containers::NumericalFeatures*>,
 
-  /// The dependencies for the predictors (either fl_fingerprints or
-  /// fs_fingerprints)
-  const fct::Ref<const std::vector<commands::Fingerprint>> dependencies_;
+    /// The dependencies for the predictors (either fl_fingerprints or
+    /// fs_fingerprints)
+    fct::Field<"dependencies_",
+               fct::Ref<const std::vector<commands::Fingerprint>>>,
 
-  /// The feature learners used in this pipeline.
-  const std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>
-      feature_learners_;
+    /// The feature learners used in this pipeline.
+    fct::Field<
+        "feature_learners_",
+        std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>>,
 
-  /// The parameters passed to fit(...)
-  const FitParams fit_params_;
+    /// The parameters passed to fit(...)
+    fct::Field<"fit_params_", FitParams>,
 
-  /// The underlying impl_
-  const fct::Ref<const predictors::PredictorImpl> impl_;
+    /// The underlying impl_
+    fct::Field<"impl_", fct::Ref<const predictors::PredictorImpl>>,
 
-  /// The peripheral tables, after applying the staging and preprocessing.
-  const std::vector<containers::DataFrame> peripheral_dfs_;
+    /// The peripheral tables, after applying the staging and preprocessing.
+    fct::Field<"peripheral_dfs_", std::vector<containers::DataFrame>>,
 
-  /// The underlying pipeline
-  const Pipeline pipeline_;
+    /// The underlying pipeline
+    fct::Field<"pipeline_", Pipeline>,
 
-  /// The population table, after applying the staging and preprocessing.
-  const containers::DataFrame population_df_;
+    /// The population table, after applying the staging and preprocessing.
+    fct::Field<"population_df_", containers::DataFrame>,
 
-  /// The preprocessors used in this pipeline.
-  const std::vector<fct::Ref<const preprocessors::Preprocessor>> preprocessors_;
+    /// The preprocessors used in this pipeline.
+    fct::Field<"preprocessors_",
+               std::vector<fct::Ref<const preprocessors::Preprocessor>>>,
 
-  /// The fingerprints of the preprocessors used for fitting.
-  const std::vector<commands::Fingerprint> preprocessor_fingerprints_;
+    /// The fingerprints of the preprocessors used for fitting.
+    fct::Field<"preprocessor_fingerprints_",
+               fct::Ref<const std::vector<commands::Fingerprint>>>,
 
-  /// The purpose (feature_selector_ or predictor_)
-  const Purpose purpose_;
-};
+    /// The purpose (feature_selector_ or predictor_)
+    fct::Field<"purpose_", Purpose>>;
 
 }  // namespace pipelines
 }  // namespace engine

@@ -70,12 +70,13 @@ std::vector<std::string> feature_learners_to_sql(
         _sql_dialect_generator) {
   const auto to_sql = [&_params, &_sql_dialect_generator](
                           const size_t _i) -> std::vector<std::string> {
-    const auto& fl = _params.fitted_.feature_learners_.at(_i);
+    const auto& fl = _params.get<"fitted_">().feature_learners_.at(_i);
 
     // TODO: This needs to accept fct::Ref
-    const auto all = fl->to_sql(
-        _params.categories_, _params.targets_, _params.full_pipeline_,
-        _sql_dialect_generator.ptr(), std::to_string(_i + 1) + "_");
+    const auto all =
+        fl->to_sql(_params.get<"categories_">(), _params.get<"targets_">(),
+                   _params.get<"full_pipeline_">(),
+                   _sql_dialect_generator.ptr(), std::to_string(_i + 1) + "_");
 
     assert_true(all.size() >= fl->num_features());
 
@@ -90,10 +91,11 @@ std::vector<std::string> feature_learners_to_sql(
       return all.at(num_subfeatures + _ix);
     };
 
-    assert_true(_i < _params.fitted_.predictors_.impl_->autofeatures().size());
+    assert_true(
+        _i < _params.get<"fitted_">().predictors_.impl_->autofeatures().size());
 
     const auto& autofeatures =
-        _params.fitted_.predictors_.impl_->autofeatures().at(_i);
+        _params.get<"fitted_">().predictors_.impl_->autofeatures().at(_i);
 
     const auto features = fct::collect::vector<std::string>(
         autofeatures | VIEWS::transform(get_feature));
@@ -102,7 +104,7 @@ std::vector<std::string> feature_learners_to_sql(
   };
 
   const auto iota =
-      fct::iota<size_t>(0, _params.fitted_.feature_learners_.size());
+      fct::iota<size_t>(0, _params.get<"fitted_">().feature_learners_.size());
 
   return fct::join::vector<std::string>(iota | VIEWS::transform(to_sql));
 }
@@ -265,10 +267,11 @@ std::vector<std::string> preprocessors_to_sql(
   const auto to_sql = [&_params, _sql_dialect_generator](
                           const auto& _p) -> std::vector<std::string> {
     // TODO: This needs to accept fct::Ref
-    return _p->to_sql(_params.categories_, _sql_dialect_generator.ptr());
+    return _p->to_sql(_params.get<"categories_">(),
+                      _sql_dialect_generator.ptr());
   };
-  return fct::join::vector<std::string>(_params.fitted_.preprocessors_ |
-                                        VIEWS::transform(to_sql));
+  return fct::join::vector<std::string>(
+      _params.get<"fitted_">().preprocessors_ | VIEWS::transform(to_sql));
 }
 
 // ----------------------------------------------------------------------------
@@ -282,19 +285,20 @@ std::vector<std::string> staging_to_sql(
   };
 
   const auto population_needs_targets =
-      _params.targets_ | std::any_of(_params.fitted_.feature_learners_.begin(),
-                                     _params.fitted_.feature_learners_.end(),
-                                     needs_targets);
+      _params.get<"targets_">() |
+      std::any_of(_params.get<"fitted_">().feature_learners_.begin(),
+                  _params.get<"fitted_">().feature_learners_.end(),
+                  needs_targets);
 
   /// TODO: This needs to return fct::Ref.
   const auto [placeholder, peripheral_names] =
-      _params.pipeline_.make_placeholder();
+      _params.get<"pipeline_">().make_placeholder();
 
   const auto peripheral_needs_targets =
       placeholder->infer_needs_targets(*peripheral_names);
 
   const auto [staging_schema_population, staging_schema_peripheral] =
-      make_staging_schemata(_params.fitted_);
+      make_staging_schemata(_params.get<"fitted_">());
 
   return _sql_dialect_generator->make_staging_tables(
       population_needs_targets, peripheral_needs_targets,
@@ -304,38 +308,41 @@ std::vector<std::string> staging_to_sql(
 // ----------------------------------------------------------------------------
 
 std::string to_sql(const ToSQLParams& _params) {
-  assert_true(_params.fitted_.feature_learners_.size() ==
-              _params.fitted_.predictors_.impl_->autofeatures().size());
+  assert_true(
+      _params.get<"fitted_">().feature_learners_.size() ==
+      _params.get<"fitted_">().predictors_.impl_->autofeatures().size());
 
-  const auto sql_dialect_generator =
-      transpilation::SQLDialectParser::parse(_params.transpilation_params_);
+  const auto sql_dialect_generator = transpilation::SQLDialectParser::parse(
+      _params.get<"transpilation_params_">());
 
-  const auto staging = _params.full_pipeline_
+  const auto staging = _params.get<"full_pipeline_">()
                            ? staging_to_sql(_params, sql_dialect_generator)
                            : std::vector<std::string>();
 
   const auto preprocessing =
-      _params.full_pipeline_
+      _params.get<"full_pipeline_">()
           ? preprocessors_to_sql(_params, sql_dialect_generator)
           : std::vector<std::string>();
 
-  const auto feature_names = make_autofeature_names(_params.fitted_);
+  const auto feature_names = make_autofeature_names(_params.get<"fitted_">());
 
   const auto features = overwrite_oversized_features(
       sql_dialect_generator,
       feature_learners_to_sql(_params, sql_dialect_generator),
-      _params.size_threshold_);
+      _params.get<"size_threshold_">());
 
   const auto sql =
       fct::join::vector<std::string>({staging, preprocessing, features});
 
-  const auto target_names =
-      _params.targets_ ? _params.fitted_.targets() : std::vector<std::string>();
+  const auto target_names = _params.get<"targets_">()
+                                ? _params.get<"fitted_">().targets()
+                                : std::vector<std::string>();
 
   return sql_dialect_generator->make_sql(
-      _params.fitted_.modified_population_schema_->name(), feature_names, sql,
-      target_names, _params.fitted_.predictors_.impl_->categorical_colnames(),
-      _params.fitted_.predictors_.impl_->numerical_colnames());
+      _params.get<"fitted_">().modified_population_schema_->name(),
+      feature_names, sql, target_names,
+      _params.get<"fitted_">().predictors_.impl_->categorical_colnames(),
+      _params.get<"fitted_">().predictors_.impl_->numerical_colnames());
 }
 
 // ----------------------------------------------------------------------------

@@ -278,19 +278,19 @@ extract_schemata(const containers::DataFrame& _population_df,
 std::pair<fct::Ref<const FittedPipeline>, fct::Ref<const metrics::Scores>> fit(
     const Pipeline& _pipeline, const FitParams& _params) {
   const auto fit_preprocessors_params = FitPreprocessorsParams{
-      .categories_ = _params.categories_,
-      .cmd_ = _params.cmd_,
-      .logger_ = _params.logger_,
-      .peripheral_dfs_ = _params.peripheral_dfs_,
-      .population_df_ = _params.population_df_,
-      .preprocessor_tracker_ = _params.preprocessor_tracker_,
-      .socket_ = _params.socket_};
+      .categories_ = _params.get<"categories_">(),
+      .cmd_ = _params.get<"cmd_">(),
+      .logger_ = _params.get<"logger_">(),
+      .peripheral_dfs_ = _params.get<"peripheral_dfs_">(),
+      .population_df_ = _params.get<"population_df_">(),
+      .preprocessor_tracker_ = _params.get<"preprocessor_tracker_">(),
+      .socket_ = _params.get<"socket_">()};
 
   const auto preprocessed =
       fit_preprocessors_only(_pipeline, fit_preprocessors_params);
 
-  const auto [population_schema, peripheral_schema] =
-      extract_schemata(_params.population_df_, _params.peripheral_dfs_, false);
+  const auto [population_schema, peripheral_schema] = extract_schemata(
+      _params.get<"population_df_">(), _params.get<"peripheral_dfs_">(), false);
 
   const auto [modified_population_schema, modified_peripheral_schema] =
       extract_schemata(preprocessed.population_df_,
@@ -298,15 +298,14 @@ std::pair<fct::Ref<const FittedPipeline>, fct::Ref<const metrics::Scores>> fit(
 
   const auto [placeholder, peripheral] = _pipeline.make_placeholder();
 
-  const featurelearners::FeatureLearnerParams feature_learner_params =
-      fct::make_field<"dependencies_">(
-          preprocessed.preprocessor_fingerprints_) *
-      fct::make_field<"peripheral_">(peripheral) *
-      fct::make_field<"peripheral_schema_">(modified_peripheral_schema) *
-      fct::make_field<"placeholder_">(placeholder) *
-      fct::make_field<"population_schema_">(modified_population_schema) *
+  const auto feature_learner_params = featurelearners::FeatureLearnerParams(
+      fct::make_field<"dependencies_">(preprocessed.preprocessor_fingerprints_),
+      fct::make_field<"peripheral_">(peripheral),
+      fct::make_field<"peripheral_schema_">(modified_peripheral_schema),
+      fct::make_field<"placeholder_">(placeholder),
+      fct::make_field<"population_schema_">(modified_population_schema),
       fct::make_field<"target_num_">(
-          featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS);
+          featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS));
 
   const auto [feature_learners, fl_fingerprints] = fit_feature_learners(
       _pipeline, _params, preprocessed.population_df_,
@@ -317,19 +316,20 @@ std::pair<fct::Ref<const FittedPipeline>, fct::Ref<const metrics::Scores>> fit(
 
   containers::NumericalFeatures autofeatures;
 
-  using Purpose = typename pipelines::FitPredictorsParams::Purpose;
-
-  const auto fit_feature_selectors_params =
-      FitPredictorsParams{.autofeatures_ = &autofeatures,
-                          .dependencies_ = fl_fingerprints,
-                          .feature_learners_ = feature_learners,
-                          .fit_params_ = _params,
-                          .impl_ = feature_selector_impl,
-                          .peripheral_dfs_ = preprocessed.peripheral_dfs_,
-                          .pipeline_ = _pipeline,
-                          .population_df_ = preprocessed.population_df_,
-                          .preprocessors_ = preprocessed.preprocessors_,
-                          .purpose_ = Purpose::make<"feature_selectors_">()};
+  const auto fit_feature_selectors_params = FitPredictorsParams(
+      fct::make_field<"autofeatures_", containers::NumericalFeatures*>(
+          &autofeatures),
+      fct::make_field<"dependencies_">(fl_fingerprints),
+      fct::make_field<"feature_learners_">(feature_learners),
+      fct::make_field<"fit_params_">(_params),
+      fct::make_field<"impl_">(feature_selector_impl),
+      fct::make_field<"peripheral_dfs_">(preprocessed.peripheral_dfs_),
+      fct::make_field<"pipeline_">(_pipeline),
+      fct::make_field<"population_df_">(preprocessed.population_df_),
+      fct::make_field<"preprocessors_">(preprocessed.preprocessors_),
+      fct::make_field<"preprocessor_fingerprints_">(
+          preprocessed.preprocessor_fingerprints_),
+      fct::make_field<"purpose_">(Purpose::make<"feature_selectors_">()));
 
   const auto [feature_selectors, fs_fingerprints] =
       fit_predictors(fit_feature_selectors_params);
@@ -338,53 +338,49 @@ std::pair<fct::Ref<const FittedPipeline>, fct::Ref<const metrics::Scores>> fit(
                                                   preprocessed.population_df_);
 
   const auto validation_fingerprint =
-      _params.validation_df_ ? std::vector<commands::Fingerprint>(
-                                   {_params.validation_df_->fingerprint()})
-                             : std::vector<commands::Fingerprint>();
+      _params.get<"validation_df_">()
+          ? std::vector<commands::Fingerprint>(
+                {_params.get<"validation_df_">()->fingerprint()})
+          : std::vector<commands::Fingerprint>();
 
-  const auto dependencies = fct::Ref<std::vector<commands::Fingerprint>>::make(
-      fct::join::vector<commands::Fingerprint>(
-          {fct::collect::vector<commands::Fingerprint>(*fs_fingerprints),
-           validation_fingerprint}));
+  const auto dependencies =
+      fct::Ref<const std::vector<commands::Fingerprint>>::make(
+          fct::join::vector<commands::Fingerprint>(
+              {fct::collect::vector<commands::Fingerprint>(*fs_fingerprints),
+               validation_fingerprint}));
 
-  const auto fit_predictors_params =
-      FitPredictorsParams{.autofeatures_ = &autofeatures,
-                          .dependencies_ = dependencies,
-                          .feature_learners_ = feature_learners,
-                          .fit_params_ = _params,
-                          .impl_ = predictor_impl,
-                          .peripheral_dfs_ = preprocessed.peripheral_dfs_,
-                          .pipeline_ = _pipeline,
-                          .population_df_ = preprocessed.population_df_,
-                          .preprocessors_ = preprocessed.preprocessors_,
-                          .purpose_ = Purpose::make<"predictors_">()};
+  const auto fit_predictors_params = fit_feature_selectors_params.replace(
+      fct::make_field<"dependencies_">(dependencies),
+      fct::make_field<"impl_">(predictor_impl),
+      fct::make_field<"purpose_">(Purpose::make<"predictors_">()));
 
   const auto [predictors, _] = fit_predictors(fit_predictors_params);
 
   const bool score = predictors.size() > 0 && predictors.at(0).size() > 0;
 
   const auto score_params =
-      score ? std::make_optional<MakeFeaturesParams>(MakeFeaturesParams{
-                  .categories_ = _params.categories_,
-                  .cmd_ = _params.cmd_,
-                  .data_frame_tracker_ = _params.data_frame_tracker_,
-                  .dependencies_ = fs_fingerprints,
-                  .logger_ = _params.logger_,
-                  .original_peripheral_dfs_ = _params.peripheral_dfs_,
-                  .original_population_df_ = _params.population_df_,
-                  .peripheral_dfs_ = preprocessed.peripheral_dfs_,
-                  .population_df_ = preprocessed.population_df_,
-                  .predictor_impl_ = predictor_impl,
-                  .autofeatures_ = &autofeatures,
-                  .socket_ = _params.socket_})
-            : std::nullopt;
+      score
+          ? std::make_optional<MakeFeaturesParams>(MakeFeaturesParams(
+                _params.replace(fct::make_field<"peripheral_dfs_">(
+                                    preprocessed.peripheral_dfs_),
+                                fct::make_field<"population_df_">(
+                                    preprocessed.population_df_)) *
+                fct::make_field<"dependencies_">(fs_fingerprints) *
+                fct::make_field<"original_peripheral_dfs_">(
+                    _params.get<"peripheral_dfs_">()) *
+                fct::make_field<"original_population_df_">(
+                    _params.get<"population_df_">()) *
+                fct::make_field<"predictor_impl_">(predictor_impl) *
+                fct::make_field<"autofeatures_",
+                                containers::NumericalFeatures*>(&autofeatures)))
+          : std::nullopt;
 
-  const Fingerprints fingerprints =
-      fct::make_field<"df_fingerprints_">(preprocessed.df_fingerprints_) *
-      fct::make_field<"fl_fingerprints_">(fl_fingerprints) *
-      fct::make_field<"fs_fingerprints_">(fs_fingerprints) *
+  const auto fingerprints = Fingerprints(
+      fct::make_field<"df_fingerprints_">(preprocessed.df_fingerprints_),
       fct::make_field<"preprocessor_fingerprints_">(
-          preprocessed.preprocessor_fingerprints_);
+          preprocessed.preprocessor_fingerprints_),
+      fct::make_field<"fl_fingerprints_">(fl_fingerprints),
+      fct::make_field<"fs_fingerprints_">(fs_fingerprints));
 
   const auto fitted_pipeline =
       fct::Ref<const FittedPipeline>::make(FittedPipeline{
@@ -431,11 +427,12 @@ fit_feature_learners(
 
     const auto socket_logger =
         std::make_shared<const communication::SocketLogger>(
-            _params.logger_, fe->silent(), _params.socket_);
+            _params.get<"logger_">(), fe->silent(), _params.get<"socket_">());
 
     const auto fingerprint = fe->fingerprint();
 
-    const auto retrieved_fe = _params.fe_tracker_->retrieve(fingerprint);
+    const auto retrieved_fe =
+        _params.get<"fe_tracker_">()->retrieve(fingerprint);
 
     if (retrieved_fe) {
       socket_logger->log(
@@ -450,16 +447,16 @@ fit_feature_learners(
     }
 
     const auto params = featurelearners::FitParams{
-        .cmd_ = _params.cmd_,
+        .cmd_ = _params.get<"cmd_">(),
         .logger_ = socket_logger,
         .peripheral_dfs_ = _peripheral_dfs,
         .population_df_ = _population_df,
         .prefix_ = std::to_string(i + 1) + "_",
-        .temp_dir_ = _params.categories_->temp_dir()};
+        .temp_dir_ = _params.get<"categories_">()->temp_dir()};
 
     fe->fit(params);
 
-    _params.fe_tracker_->add(fe);
+    _params.get<"fe_tracker_">()->add(fe);
   }
 
   const auto fl_fingerprints = extract_fl_fingerprints(
@@ -472,69 +469,81 @@ fit_feature_learners(
 
 std::pair<Predictors, fct::Ref<const std::vector<commands::Fingerprint>>>
 fit_predictors(const FitPredictorsParams& _params) {
-  auto predictors = init_predictors(_params.pipeline_, _params.purpose_,
-                                    _params.impl_, *_params.dependencies_,
-                                    _params.population_df_.num_targets());
+  auto predictors =
+      init_predictors(_params.get<"pipeline_">(), _params.get<"purpose_">(),
+                      _params.get<"impl_">(), *_params.get<"dependencies_">(),
+                      _params.get<"population_df_">().num_targets());
 
-  const auto [retrieved_predictors, all_retrieved] =
-      retrieve_predictors(_params.fit_params_.pred_tracker_, predictors);
+  const auto [retrieved_predictors, all_retrieved] = retrieve_predictors(
+      _params.get<"fit_params_">().get<"pred_tracker_">(), predictors);
 
   if (all_retrieved) {
     const auto fingerprints = extract_predictor_fingerprints(
-        to_ref(retrieved_predictors), _params.dependencies_);
+        to_ref(retrieved_predictors), _params.get<"dependencies_">());
     const auto predictors_struct =
-        Predictors{.impl_ = _params.impl_,
+        Predictors{.impl_ = _params.get<"impl_">(),
                    .predictors_ = to_const(to_ref(retrieved_predictors))};
     return std::make_pair(predictors_struct, fingerprints);
   }
 
-  const auto make_features_params = MakeFeaturesParams{
-      .categories_ = _params.fit_params_.categories_,
-      .cmd_ = _params.fit_params_.cmd_,
-      .data_frame_tracker_ = _params.fit_params_.data_frame_tracker_,
-      .dependencies_ = _params.dependencies_,
-      .logger_ = _params.fit_params_.logger_,
-      .peripheral_dfs_ = _params.peripheral_dfs_,
-      .population_df_ = _params.population_df_,
-      .predictor_impl_ = _params.impl_,
-      .autofeatures_ = _params.autofeatures_,
-      .socket_ = _params.fit_params_.socket_};
+  const auto make_features_params = MakeFeaturesParams(
+      _params *
+      fct::make_field<"categories_">(
+          _params.get<"fit_params_">().get<"categories_">()) *
+      fct::make_field<"cmd_">(_params.get<"fit_params_">().get<"cmd_">()) *
+      fct::make_field<"data_frame_tracker_">(
+          _params.get<"fit_params_">().get<"data_frame_tracker_">()) *
+      fct::make_field<"logger_">(
+          _params.get<"fit_params_">().get<"logger_">()) *
+      fct::make_field<"original_peripheral_dfs_">(
+          _params.get<"fit_params_">().get<"peripheral_dfs_">()) *
+      fct::make_field<"original_population_df_">(
+          _params.get<"fit_params_">().get<"population_df_">()) *
+      fct::make_field<"predictor_impl_">(_params.get<"impl_">()) *
+      fct::make_field<"socket_">(
+          _params.get<"fit_params_">().get<"socket_">()));
 
   auto [numerical_features, categorical_features, autofeatures] =
-      transform::make_features(make_features_params, _params.pipeline_,
-                               _params.feature_learners_, *_params.impl_,
-                               *_params.fit_params_.fs_fingerprints_);
+      transform::make_features(
+          make_features_params, _params.get<"pipeline_">(),
+          _params.get<"feature_learners_">(), *_params.get<"impl_">(),
+          *_params.get<"fit_params_">().get<"fs_fingerprints_">());
 
-  *_params.autofeatures_ = autofeatures;
+  *_params.get<"autofeatures_">() = autofeatures;
 
   categorical_features =
-      _params.impl_->transform_encodings(categorical_features);
+      _params.get<"impl_">()->transform_encodings(categorical_features);
 
   auto [numerical_features_valid, categorical_features_valid] =
       make_features_validation(_params);
 
   if (categorical_features_valid) {
-    *categorical_features_valid =
-        _params.impl_->transform_encodings(*categorical_features_valid);
+    *categorical_features_valid = _params.get<"impl_">()->transform_encodings(
+        *categorical_features_valid);
   }
 
-  assert_true(_params.fit_params_.population_df_.num_targets() ==
-              predictors.size());
+  assert_true(
+      _params.get<"fit_params_">().get<"population_df_">().num_targets() ==
+      predictors.size());
 
   assert_true(predictors.size() == retrieved_predictors.size());
 
-  for (size_t t = 0; t < _params.fit_params_.population_df_.num_targets();
+  for (size_t t = 0;
+       t < _params.get<"fit_params_">().get<"population_df_">().num_targets();
        ++t) {
-    const auto target_col = helpers::Feature<Float>(
-        _params.fit_params_.population_df_.target(t).data_ptr());
+    const auto target_col = helpers::Feature<Float>(_params.get<"fit_params_">()
+                                                        .get<"population_df_">()
+                                                        .target(t)
+                                                        .data_ptr());
 
     const auto target_col_valid =
-        numerical_features_valid
-            ? std::make_optional<decltype(target_col)>(
-                  _params.fit_params_.validation_df_.value()
-                      .target(t)
-                      .to_vector_ptr())
-            : std::optional<decltype(target_col)>();
+        numerical_features_valid ? std::make_optional<decltype(target_col)>(
+                                       _params.get<"fit_params_">()
+                                           .get<"validation_df_">()
+                                           .value()
+                                           .target(t)
+                                           .to_vector_ptr())
+                                 : std::optional<decltype(target_col)>();
 
     assert_true(predictors.at(t).size() == retrieved_predictors.at(t).size());
 
@@ -543,8 +552,8 @@ fit_predictors(const FitPredictorsParams& _params) {
 
       const auto socket_logger =
           std::make_shared<const communication::SocketLogger>(
-              _params.fit_params_.logger_, p->silent(),
-              _params.fit_params_.socket_);
+              _params.get<"fit_params_">().get<"logger_">(), p->silent(),
+              _params.get<"fit_params_">().get<"socket_">());
 
       if (retrieved_predictors.at(t).at(i)) {
         socket_logger->log("Retrieving predictor...");
@@ -554,21 +563,22 @@ fit_predictors(const FitPredictorsParams& _params) {
       }
 
       socket_logger->log(p->type() + ": Training as " +
-                         beautify_purpose(_params.purpose_.name()) + "...");
+                         beautify_purpose(_params.get<"purpose_">().name()) +
+                         "...");
 
       p->fit(socket_logger, categorical_features, numerical_features,
              target_col, categorical_features_valid, numerical_features_valid,
              target_col_valid);
 
-      _params.fit_params_.pred_tracker_->add(p);
+      _params.get<"fit_params_">().get<"pred_tracker_">()->add(p);
     }
   }
 
-  const auto fingerprints =
-      extract_predictor_fingerprints(predictors, _params.dependencies_);
+  const auto fingerprints = extract_predictor_fingerprints(
+      predictors, _params.get<"dependencies_">());
 
-  const auto predictors_struct =
-      Predictors{.impl_ = _params.impl_, .predictors_ = to_const(predictors)};
+  const auto predictors_struct = Predictors{
+      .impl_ = _params.get<"impl_">(), .predictors_ = to_const(predictors)};
 
   return std::make_pair(std::move(predictors_struct), fingerprints);
 }
@@ -577,14 +587,16 @@ fit_predictors(const FitPredictorsParams& _params) {
 
 Preprocessed fit_preprocessors_only(const Pipeline& _pipeline,
                                     const FitPreprocessorsParams& _params) {
-  const auto targets = get_targets(_params.population_df_);
+  const auto targets = get_targets(_params.get<"population_df_">());
 
-  const auto df_fingerprints = extract_df_fingerprints(
-      _pipeline, _params.population_df_, _params.peripheral_dfs_);
+  const auto df_fingerprints =
+      extract_df_fingerprints(_pipeline, _params.get<"population_df_">(),
+                              _params.get<"peripheral_dfs_">());
 
   auto [population_df, peripheral_dfs] = transform::stage_data_frames(
-      _pipeline, _params.population_df_, _params.peripheral_dfs_,
-      _params.logger_, _params.categories_->temp_dir(), _params.socket_);
+      _pipeline, _params.get<"population_df_">(),
+      _params.get<"peripheral_dfs_">(), _params.get<"logger_">(),
+      _params.get<"categories_">()->temp_dir(), _params.get<"socket_">());
 
   const auto [preprocessors, preprocessor_fingerprints] =
       fit_transform_preprocessors(_pipeline, _params, df_fingerprints,
@@ -618,9 +630,10 @@ fit_transform_preprocessors(
   const auto [placeholder, peripheral_names] = _pipeline.make_placeholder();
 
   const auto socket_logger =
-      _params.logger_ ? std::make_shared<const communication::SocketLogger>(
-                            _params.logger_, true, _params.socket_)
-                      : std::shared_ptr<const communication::SocketLogger>();
+      _params.get<"logger_">()
+          ? std::make_shared<const communication::SocketLogger>(
+                _params.get<"logger_">(), true, _params.get<"socket_">())
+          : std::shared_ptr<const communication::SocketLogger>();
 
   if (socket_logger) {
     socket_logger->log("Preprocessing...");
@@ -637,12 +650,12 @@ fit_transform_preprocessors(
     const auto fingerprint = p->fingerprint();
 
     const auto retrieved_preprocessor =
-        _params.preprocessor_tracker_->retrieve(fingerprint);
+        _params.get<"preprocessor_tracker_">()->retrieve(fingerprint);
 
     if (retrieved_preprocessor) {
       const auto params = preprocessors::TransformParams{
-          .cmd_ = _params.cmd_,
-          .categories_ = _params.categories_,
+          .cmd_ = _params.get<"cmd_">(),
+          .categories_ = _params.get<"categories_">(),
           .logger_ = socket_logger,
           .logging_begin_ = (i * 100) / preprocessors.size(),
           .logging_end_ = ((i + 1) * 100) / preprocessors.size(),
@@ -659,8 +672,8 @@ fit_transform_preprocessors(
     }
 
     const auto params = preprocessors::FitParams{
-        .cmd_ = _params.cmd_,
-        .categories_ = _params.categories_,
+        .cmd_ = _params.get<"cmd_">(),
+        .categories_ = _params.get<"categories_">(),
         .logger_ = socket_logger,
         .logging_begin_ = (i * 100) / preprocessors.size(),
         .logging_end_ = ((i + 1) * 100) / preprocessors.size(),
@@ -671,7 +684,7 @@ fit_transform_preprocessors(
 
     std::tie(*_population_df, *_peripheral_dfs) = p->fit_transform(params);
 
-    _params.preprocessor_tracker_->add(p);
+    _params.get<"preprocessor_tracker_">()->add(p);
   }
 
   if (socket_logger) {
@@ -892,33 +905,36 @@ fct::Ref<const predictors::PredictorImpl> make_feature_selector_impl(
 std::pair<std::optional<containers::NumericalFeatures>,
           std::optional<containers::CategoricalFeatures>>
 make_features_validation(const FitPredictorsParams& _params) {
-  if (!_params.fit_params_.validation_df_ ||
-      _params.purpose_ != TransformParams::PREDICTOR) {
+  if (!_params.get<"fit_params_">().get<"validation_df_">() ||
+      _params.get<"purpose_">().value() ==
+          Purpose::value_of<"feature_selectors_">()) {
     return std::make_pair(std::optional<containers::NumericalFeatures>(),
                           std::optional<containers::CategoricalFeatures>());
   }
 
   const auto transform_params = TransformParams{
-      .categories_ = _params.fit_params_.categories_,
-      .cmd_ = _params.fit_params_.cmd_ * fct::make_field<"predict_">(false) *
+      .categories_ = _params.get<"fit_params_">().get<"categories_">(),
+      .cmd_ = _params.get<"fit_params_">().get<"cmd_">() *
+              fct::make_field<"predict_">(false) *
               fct::make_field<"score_">(false),
-      .data_frames_ = _params.fit_params_.data_frames_,
-      .data_frame_tracker_ = _params.fit_params_.data_frame_tracker_,
-      .logger_ = _params.fit_params_.logger_,
-      .original_peripheral_dfs_ = _params.fit_params_.peripheral_dfs_,
+      .data_frames_ = _params.get<"fit_params_">().get<"data_frames_">(),
+      .data_frame_tracker_ =
+          _params.get<"fit_params_">().get<"data_frame_tracker_">(),
+      .logger_ = _params.get<"fit_params_">().get<"logger_">(),
+      .original_peripheral_dfs_ =
+          _params.get<"fit_params_">().get<"peripheral_dfs_">(),
       .original_population_df_ =
-          *_params.fit_params_.validation_df_,  // NOTE: We want to take the
-                                                // validation_df here
-      .socket_ = _params.fit_params_.socket_};
+          *_params.get<"fit_params_">()
+               .get<"validation_df_">(),  // NOTE: We want to take the
+                                          // validation_df here
+      .socket_ = _params.get<"fit_params_">().get<"socket_">()};
 
-  const auto features_only_params = FeaturesOnlyParams{
-      .dependencies_ = _params.dependencies_,
-      .feature_learners_ = _params.feature_learners_,
-      .fs_fingerprints_ = _params.fit_params_.fs_fingerprints_,
-      .pipeline_ = _params.pipeline_,
-      .preprocessors_ = _params.preprocessors_,
-      .predictor_impl_ = _params.impl_,
-      .transform_params_ = transform_params};
+  const auto features_only_params = FeaturesOnlyParams(
+      _params *
+      fct::make_field<"fs_fingerprints_">(
+          _params.get<"fit_params_">().get<"fs_fingerprints_">()) *
+      fct::make_field<"predictor_impl_">(_params.get<"impl_">()) *
+      fct::make_field<"transform_params_">(transform_params));
 
   const auto [numerical_features, categorical_features, _] =
       transform::transform_features_only(features_only_params);
@@ -1044,9 +1060,10 @@ fct::Ref<const metrics::Scores> score_after_fitting(
       _fitted, categorical_features, numerical_features);
 
   const auto& name =
-      fct::get<"name_">(_params.cmd_.get<"population_df_">().val_);
+      fct::get<"name_">(_params.get<"cmd_">().get<"population_df_">().val_);
 
-  return score::score(_pipeline, _fitted, _params.population_df_, name, yhat);
+  return score::score(_pipeline, _fitted, _params.get<"population_df_">(), name,
+                      yhat);
 }
 
 }  // namespace fit

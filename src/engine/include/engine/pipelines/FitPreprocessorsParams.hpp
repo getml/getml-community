@@ -18,32 +18,37 @@
 #include "communication/communication.hpp"
 #include "containers/containers.hpp"
 #include "engine/dependency/dependency.hpp"
+#include "fct/Field.hpp"
+#include "fct/NamedTuple.hpp"
+#include "fct/Ref.hpp"
 
 namespace engine {
 namespace pipelines {
 
-struct FitPreprocessorsParams {
-  /// The categorical encoding.
-  const fct::Ref<containers::Encoding> categories_;
+using FitPreprocessorsParams = fct::NamedTuple<
 
-  /// The command used to retrieve the data franes.
-  const commands::DataFramesOrViews cmd_;
+    /// The Encoding used for the categories.
+    fct::Field<"categories_", fct::Ref<containers::Encoding>>,
 
-  /// Logs the progress.
-  const std::shared_ptr<const communication::Logger> logger_;
+    /// Contains all of the names of all data frames or views needed for fitting
+    /// the pipeline.
+    fct::Field<"cmd_", commands::DataFramesOrViews>,
 
-  /// The peripheral tables.
-  const std::vector<containers::DataFrame> peripheral_dfs_;
+    /// Logs the progress.
+    fct::Field<"logger_", std::shared_ptr<const communication::Logger>>,
 
-  /// The population table.
-  const containers::DataFrame population_df_;
+    /// The peripheral tables.
+    fct::Field<"peripheral_dfs_", std::vector<containers::DataFrame>>,
 
-  /// The dependency tracker for the preprocessors.
-  const fct::Ref<dependency::PreprocessorTracker> preprocessor_tracker_;
+    /// The population table.
+    fct::Field<"population_df_", containers::DataFrame>,
 
-  /// Output: The socket with which we communicate.
-  Poco::Net::StreamSocket* const socket_;
-};
+    /// The dependency tracker for the preprocessors.
+    fct::Field<"preprocessor_tracker_",
+               fct::Ref<dependency::PreprocessorTracker>>,
+
+    /// Output: The socket with which we communicate.
+    fct::Field<"socket_", Poco::Net::StreamSocket*>>;
 
 }  // namespace pipelines
 }  // namespace engine

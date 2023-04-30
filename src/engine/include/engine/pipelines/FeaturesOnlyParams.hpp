@@ -17,34 +17,40 @@
 #include "commands/Fingerprint.hpp"
 #include "engine/pipelines/Pipeline.hpp"
 #include "engine/pipelines/TransformParams.hpp"
+#include "fct/Field.hpp"
+#include "fct/NamedTuple.hpp"
 #include "fct/Ref.hpp"
 
 namespace engine {
 namespace pipelines {
 
-struct FeaturesOnlyParams {
-  /// The depedencies of the predictors.
-  const fct::Ref<const std::vector<commands::Fingerprint>> dependencies_;
+using FeaturesOnlyParams = fct::NamedTuple<
 
-  /// The feature learners used in this pipeline.
-  const std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>
-      feature_learners_;
+    /// The depedencies of the predictors.
+    fct::Field<"dependencies_",
+               fct::Ref<const std::vector<commands::Fingerprint>>>,
 
-  /// The fingerprints of the feature selectors used for fitting.
-  const fct::Ref<const std::vector<commands::Fingerprint>> fs_fingerprints_;
+    /// The feature learners used in this pipeline.
+    fct::Field<
+        "feature_learners_",
+        std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>>,
 
-  /// The underlying pipeline
-  const Pipeline pipeline_;
+    /// The fingerprints of the feature selectors used for fitting.
+    fct::Field<"fs_fingerprints_",
+               fct::Ref<const std::vector<commands::Fingerprint>>>,
 
-  /// The preprocessors used in this pipeline.
-  const std::vector<fct::Ref<const preprocessors::Preprocessor>> preprocessors_;
+    /// The underlying pipeline
+    fct::Field<"pipeline_", Pipeline>,
 
-  /// Pimpl for the predictors.
-  const fct::Ref<const predictors::PredictorImpl> predictor_impl_;
+    /// The preprocessors used in this pipeline.
+    fct::Field<"preprocessors_",
+               std::vector<fct::Ref<const preprocessors::Preprocessor>>>,
 
-  /// The parameters needed for transform(...).
-  const TransformParams transform_params_;
-};
+    /// Pimpl for the predictors.
+    fct::Field<"predictor_impl_", fct::Ref<const predictors::PredictorImpl>>,
+
+    /// The parameters needed for transform(...).
+    fct::Field<"transform_params_", TransformParams>>;
 
 }  // namespace pipelines
 }  // namespace engine
