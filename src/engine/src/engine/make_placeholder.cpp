@@ -5,13 +5,71 @@
 // for details.
 //
 
-#include "engine/pipelines/PlaceholderMaker.hpp"
+#include "engine/pipelines/make_placeholder.hpp"
+
+#include "debug/debug.hpp"
+#include "helpers/Macros.hpp"
+#include "transpilation/SQLGenerator.hpp"
 
 namespace engine {
 namespace pipelines {
+namespace make_placeholder {
 
-void PlaceholderMaker::extract_joined_tables(
-    const helpers::Placeholder& _placeholder, std::set<std::string>* _names) {
+using RelationshipLiteral = typename commands::DataModel::RelationshipLiteral;
+
+void extract_joined_tables(const helpers::Placeholder& _placeholder,
+                           std::set<std::string>* _names);
+
+std::vector<std::string> handle_horizon(const commands::DataModel& _data_model,
+                                        const std::vector<Float>& _horizon);
+
+fct::Ref<const helpers::Placeholder> handle_joined_tables(
+    const commands::DataModel& _data_model, const std::string& _alias,
+    const std::shared_ptr<size_t> _num_alias,
+    const std::vector<commands::DataModel>& _joined_tables,
+    const std::vector<RelationshipLiteral>& _relationship,
+    const std::vector<std::string>& _other_time_stamps_used,
+    const std::vector<std::string>& _upper_time_stamps_used,
+    const bool _is_population);
+
+std::vector<std::string> handle_memory(const commands::DataModel& _data_model,
+                                       const std::vector<Float>& _horizon,
+                                       const std::vector<Float>& _memory);
+
+std::vector<std::string> make_colnames(
+    const std::string& _tname, const std::string& _alias,
+    const std::vector<std::string>& _old_colnames);
+
+// ----------------------------------------------------------------------------
+
+bool is_to_many(const RelationshipLiteral& _relationship) {
+  return (_relationship.value() ==
+              RelationshipLiteral::value_of<"many-to-many">() ||
+          _relationship.value() ==
+              RelationshipLiteral::value_of<"propositionalization">() ||
+          _relationship.value() ==
+              RelationshipLiteral::value_of<"one-to-many">());
+}
+
+std::string make_alias(const std::shared_ptr<size_t> _num_alias) {
+  assert_true(_num_alias);
+  auto& num_alias = *_num_alias;
+  return "t" + std::to_string(++num_alias);
+}
+
+// ----------------------------------------------------------------------------
+
+template <typename T>
+void append(const std::vector<T>& _vec2, std::vector<T>* _vec1) {
+  for (const auto& elem : _vec2) {
+    _vec1->push_back(elem);
+  }
+}
+
+// ----------------------------------------------------------------------------
+
+void extract_joined_tables(const helpers::Placeholder& _placeholder,
+                           std::set<std::string>* _names) {
   for (const auto& p : _placeholder.joined_tables()) {
     extract_joined_tables(p, _names);
     _names->insert(p.name());
@@ -20,9 +78,8 @@ void PlaceholderMaker::extract_joined_tables(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::string> PlaceholderMaker::handle_horizon(
-    const commands::DataModel& _data_model,
-    const std::vector<Float>& _horizon) {
+std::vector<std::string> handle_horizon(const commands::DataModel& _data_model,
+                                        const std::vector<Float>& _horizon) {
   auto other_time_stamps_used =
       _data_model.val_.get<"other_time_stamps_used_">();
 
@@ -43,7 +100,7 @@ std::vector<std::string> PlaceholderMaker::handle_horizon(
 
 // ----------------------------------------------------------------------------
 
-fct::Ref<const helpers::Placeholder> PlaceholderMaker::handle_joined_tables(
+fct::Ref<const helpers::Placeholder> handle_joined_tables(
     const commands::DataModel& _data_model, const std::string& _alias,
     const std::shared_ptr<size_t> _num_alias,
     const std::vector<commands::DataModel>& _joined_tables,
@@ -161,9 +218,9 @@ fct::Ref<const helpers::Placeholder> PlaceholderMaker::handle_joined_tables(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::string> PlaceholderMaker::handle_memory(
-    const commands::DataModel& _data_model, const std::vector<Float>& _horizon,
-    const std::vector<Float>& _memory) {
+std::vector<std::string> handle_memory(const commands::DataModel& _data_model,
+                                       const std::vector<Float>& _horizon,
+                                       const std::vector<Float>& _memory) {
   auto upper_time_stamps_used =
       _data_model.val_.get<"upper_time_stamps_used_">();
 
@@ -194,7 +251,7 @@ std::vector<std::string> PlaceholderMaker::handle_memory(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::string> PlaceholderMaker::make_colnames(
+std::vector<std::string> make_colnames(
     const std::string& _tname, const std::string& _alias,
     const std::vector<std::string>& _old_colnames) {
   std::vector<std::string> names;
@@ -212,7 +269,7 @@ std::vector<std::string> PlaceholderMaker::make_colnames(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::string> PlaceholderMaker::make_peripheral(
+std::vector<std::string> make_peripheral(
     const helpers::Placeholder& _placeholder) {
   std::set<std::string> names;
 
@@ -223,7 +280,7 @@ std::vector<std::string> PlaceholderMaker::make_peripheral(
 
 // ----------------------------------------------------------------------------
 
-fct::Ref<const helpers::Placeholder> PlaceholderMaker::make_placeholder(
+fct::Ref<const helpers::Placeholder> make_placeholder(
     const commands::DataModel& _data_model, const std::string& _alias,
     const std::shared_ptr<size_t> _num_alias, const bool _is_population) {
   const auto num_alias = _num_alias ? _num_alias : std::make_shared<size_t>(2);
@@ -248,8 +305,7 @@ fct::Ref<const helpers::Placeholder> PlaceholderMaker::make_placeholder(
 
 // ----------------------------------------------------------------------------
 
-std::string PlaceholderMaker::make_ts_name(const std::string& _ts_used,
-                                           const Float _diff) {
+std::string make_ts_name(const std::string& _ts_used, const Float _diff) {
   const bool is_rowid =
       (_ts_used.find(helpers::Macros::rowid()) != std::string::npos);
 
@@ -264,6 +320,6 @@ std::string PlaceholderMaker::make_ts_name(const std::string& _ts_used,
   return helpers::Macros::generated_ts() + _ts_used + diffstr;
 }
 
-// ----------------------------------------------------------------------------
+}  // namespace make_placeholder
 }  // namespace pipelines
 }  // namespace engine

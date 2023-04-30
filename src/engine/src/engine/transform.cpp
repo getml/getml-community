@@ -9,11 +9,11 @@
 
 #include <stdexcept>
 
-#include "engine/pipelines/DataFrameModifier.hpp"
 #include "engine/pipelines/FittedPipeline.hpp"
-#include "engine/pipelines/PlaceholderMaker.hpp"
-#include "engine/pipelines/Staging.hpp"
+#include "engine/pipelines/make_placeholder.hpp"
+#include "engine/pipelines/modify_data_frames.hpp"
 #include "engine/pipelines/score.hpp"
+#include "engine/pipelines/staging.hpp"
 #include "json/json.hpp"
 #include "metrics/Scores.hpp"
 #include "transpilation/SQLDialectParser.hpp"
@@ -430,7 +430,7 @@ stage_data_frames(const Pipeline& _pipeline,
   const auto socket_logger =
       std::make_shared<communication::SocketLogger>(_logger, true, _socket);
 
-  socket_logger->log("Staging...");
+  socket_logger->log("staging...");
 
   const auto data_model = _pipeline.obj().get<"data_model_">();
 
@@ -440,19 +440,19 @@ stage_data_frames(const Pipeline& _pipeline,
 
   auto peripheral_dfs = _peripheral_dfs;
 
-  DataFrameModifier::add_time_stamps(*data_model, *peripheral_names,
-                                     &population_df, &peripheral_dfs);
+  modify_data_frames::add_time_stamps(*data_model, *peripheral_names,
+                                      &population_df, &peripheral_dfs);
 
-  DataFrameModifier::add_join_keys(*data_model, *peripheral_names, _temp_dir,
-                                   &population_df, &peripheral_dfs);
+  modify_data_frames::add_join_keys(*data_model, *peripheral_names, _temp_dir,
+                                    &population_df, &peripheral_dfs);
 
   const auto placeholder =
-      PlaceholderMaker::make_placeholder(*data_model, "t1");
+      make_placeholder::make_placeholder(*data_model, "t1");
 
   const auto joined_peripheral_names =
-      PlaceholderMaker::make_peripheral(*placeholder);
+      make_placeholder::make_peripheral(*placeholder);
 
-  Staging::join_tables(*peripheral_names, placeholder->name(),
+  staging::join_tables(*peripheral_names, placeholder->name(),
                        joined_peripheral_names, &population_df,
                        &peripheral_dfs);
 
