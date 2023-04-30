@@ -15,8 +15,7 @@
 
 #include "commands/Fingerprint.hpp"
 #include "containers/containers.hpp"
-#include "engine/preprocessors/FitParams.hpp"
-#include "engine/preprocessors/TransformParams.hpp"
+#include "engine/preprocessors/Params.hpp"
 #include "fct/Ref.hpp"
 #include "helpers/StringIterator.hpp"
 
@@ -50,7 +49,7 @@ class Preprocessor {
 
   /// Fits the preprocessor. Returns the transformed data frames.
   virtual std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-  fit_transform(const FitParams& _params) = 0;
+  fit_transform(const Params& _params) = 0;
 
   /// Loads the preprocessor.
   virtual void load(const std::string& _fname) = 0;
@@ -60,7 +59,7 @@ class Preprocessor {
 
   /// Generates the new column.
   virtual std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-  transform(const TransformParams& _params) const = 0;
+  transform(const Params& _params) const = 0;
 
   /// Expresses the preprocessor as SQL, if applicable.
   virtual std::vector<std::string> to_sql(

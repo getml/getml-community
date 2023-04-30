@@ -79,9 +79,9 @@ apply_preprocessors(const FeaturesOnlyParams& _params,
   const auto& socket = _params.get<"transform_params_">().get<"socket_">();
 
   const auto socket_logger =
-      logger
-          ? std::make_shared<communication::SocketLogger>(logger, true, socket)
-          : std::shared_ptr<communication::SocketLogger>();
+      logger ? std::make_shared<const communication::SocketLogger>(logger, true,
+                                                                   socket)
+             : std::shared_ptr<const communication::SocketLogger>();
 
   if (socket_logger) {
     socket_logger->log("Preprocessing...");
@@ -96,17 +96,20 @@ apply_preprocessors(const FeaturesOnlyParams& _params,
 
     auto& p = _params.get<"preprocessors_">().at(i);
 
-    const auto params = preprocessors::TransformParams{
-        .cmd_ = _params.get<"transform_params_">().get<"cmd_">(),
-        .categories_ = _params.get<"transform_params_">().get<"categories_">(),
-        .logger_ = socket_logger,
-        .logging_begin_ = (i * 100) / _params.get<"preprocessors_">().size(),
-        .logging_end_ =
-            ((i + 1) * 100) / _params.get<"preprocessors_">().size(),
-        .peripheral_dfs_ = peripheral_dfs,
-        .peripheral_names_ = *peripheral_names,
-        .placeholder_ = *placeholder,
-        .population_df_ = population_df};
+    const auto params = preprocessors::Params(
+        fct::make_field<"categories_">(
+            _params.get<"transform_params_">().get<"categories_">()),
+        fct::make_field<"cmd_", commands::DataFramesOrViews>(
+            _params.get<"transform_params_">().get<"cmd_">()),
+        fct::make_field<"logger_">(socket_logger),
+        fct::make_field<"logging_begin_">(
+            (i * 100) / _params.get<"preprocessors_">().size()),
+        fct::make_field<"logging_end_">(((i + 1) * 100) /
+                                        _params.get<"preprocessors_">().size()),
+        fct::make_field<"peripheral_dfs_">(peripheral_dfs),
+        fct::make_field<"peripheral_names_">(*peripheral_names),
+        fct::make_field<"placeholder_">(*placeholder),
+        fct::make_field<"population_df_">(population_df));
 
     std::tie(population_df, peripheral_dfs) = p->transform(params);
   }

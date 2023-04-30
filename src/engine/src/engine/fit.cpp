@@ -652,35 +652,22 @@ fit_transform_preprocessors(
     const auto retrieved_preprocessor =
         _params.get<"preprocessor_tracker_">()->retrieve(fingerprint);
 
+    const auto params = preprocessors::Params(
+        fct::make_field<"categories_">(_params.get<"categories_">()),
+        fct::make_field<"cmd_">(_params.get<"cmd_">()),
+        fct::make_field<"logger_">(socket_logger),
+        fct::make_field<"logging_begin_">((i * 100) / preprocessors.size()),
+        fct::make_field<"logging_end_">(((i + 1) * 100) / preprocessors.size()),
+        fct::make_field<"peripheral_dfs_">(*_peripheral_dfs),
+        fct::make_field<"peripheral_names_">(*peripheral_names),
+        fct::make_field<"placeholder_">(*placeholder),
+        fct::make_field<"population_df_">(*_population_df));
+
     if (retrieved_preprocessor) {
-      const auto params = preprocessors::TransformParams{
-          .cmd_ = _params.get<"cmd_">(),
-          .categories_ = _params.get<"categories_">(),
-          .logger_ = socket_logger,
-          .logging_begin_ = (i * 100) / preprocessors.size(),
-          .logging_end_ = ((i + 1) * 100) / preprocessors.size(),
-          .peripheral_dfs_ = *_peripheral_dfs,
-          .peripheral_names_ = *peripheral_names,
-          .placeholder_ = *placeholder,
-          .population_df_ = *_population_df};
-
       p = fct::Ref<preprocessors::Preprocessor>(retrieved_preprocessor);
-
       std::tie(*_population_df, *_peripheral_dfs) = p->transform(params);
-
       continue;
     }
-
-    const auto params = preprocessors::FitParams{
-        .cmd_ = _params.get<"cmd_">(),
-        .categories_ = _params.get<"categories_">(),
-        .logger_ = socket_logger,
-        .logging_begin_ = (i * 100) / preprocessors.size(),
-        .logging_end_ = ((i + 1) * 100) / preprocessors.size(),
-        .peripheral_dfs_ = *_peripheral_dfs,
-        .peripheral_names_ = *peripheral_names,
-        .placeholder_ = *placeholder,
-        .population_df_ = *_population_df};
 
     std::tie(*_population_df, *_peripheral_dfs) = p->fit_transform(params);
 
