@@ -1,19 +1,78 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
-#include "engine/pipelines/Staging.hpp"
+#include "engine/pipelines/staging.hpp"
 
 namespace engine {
 namespace pipelines {
+namespace staging {
+
+containers::Column<Int> extract_join_key(const containers::DataFrame& _df,
+                                         const std::string& _tname,
+                                         const std::string& _alias,
+                                         const std::string& _colname);
+
+containers::DataFrameIndex extract_index(const containers::DataFrame& _df,
+                                         const std::string& _tname,
+                                         const std::string& _alias,
+                                         const std::string& _colname);
+
+std::optional<containers::Column<Float>> extract_time_stamp(
+    const containers::DataFrame& _df, const std::string& _tname,
+    const std::string& _alias, const std::string& _colname);
+
+containers::DataFrame find_peripheral(
+    const std::string& _name, const std::vector<std::string>& _peripheral_names,
+    const std::vector<containers::DataFrame>& _peripheral_dfs);
+
+containers::DataFrame join_all(
+    const size_t _number, const bool _is_population,
+    const std::string& _joined_name,
+    const std::vector<std::string>& _origin_peripheral_names,
+    const containers::DataFrame& _population_df,
+    const std::vector<containers::DataFrame>& _peripheral_dfs);
+
+containers::DataFrame join_one(
+    const std::string& _splitted, const containers::DataFrame& _population,
+    const std::vector<containers::DataFrame>& _peripheral_dfs,
+    const std::vector<std::string>& _peripheral_names);
+
+std::vector<size_t> make_index(
+    const std::string& _name, const std::string& _alias,
+    const std::string& _join_key, const std::string& _other_join_key,
+    const std::string& _time_stamp, const std::string& _other_time_stamp,
+    const std::string& _upper_time_stamp, const std::string& _joined_to_name,
+    const std::string& _joined_to_alias, const bool _one_to_one,
+    const containers::DataFrame& _population,
+    const containers::DataFrame& _peripheral);
+
+std::pair<size_t, bool> retrieve_index(
+    const size_t _nrows, const Int _jk, const Float _ts,
+    const containers::DataFrameIndex& _peripheral_index,
+    const std::optional<containers::Column<Float>>& _other_time_stamp,
+    const std::optional<containers::Column<Float>>& _upper_time_stamp);
+
 // ----------------------------------------------------------------------------
 
-containers::Column<Int> Staging::extract_join_key(
-    const containers::DataFrame& _df, const std::string& _tname,
-    const std::string& _alias, const std::string& _colname) {
+std::optional<containers::Column<Float>> extract_time_stamp(
+    const containers::DataFrame& _df, const std::string& _name) {
+  if (_name == "") {
+    return std::nullopt;
+  }
+
+  return _df.time_stamp(_name);
+}
+
+// ----------------------------------------------------------------------------
+
+containers::Column<Int> extract_join_key(const containers::DataFrame& _df,
+                                         const std::string& _tname,
+                                         const std::string& _alias,
+                                         const std::string& _colname) {
   const auto name = helpers::Macros::make_colname(_tname, _alias, _colname);
 
   if (_df.has_join_key(name)) {
@@ -25,9 +84,10 @@ containers::Column<Int> Staging::extract_join_key(
 
 // ----------------------------------------------------------------------------
 
-containers::DataFrameIndex Staging::extract_index(
-    const containers::DataFrame& _df, const std::string& _tname,
-    const std::string& _alias, const std::string& _colname) {
+containers::DataFrameIndex extract_index(const containers::DataFrame& _df,
+                                         const std::string& _tname,
+                                         const std::string& _alias,
+                                         const std::string& _colname) {
   const auto name = helpers::Macros::make_colname(_tname, _alias, _colname);
 
   if (_df.has_join_key(name)) {
@@ -39,7 +99,7 @@ containers::DataFrameIndex Staging::extract_index(
 
 // ----------------------------------------------------------------------------
 
-std::optional<containers::Column<Float>> Staging::extract_time_stamp(
+std::optional<containers::Column<Float>> extract_time_stamp(
     const containers::DataFrame& _df, const std::string& _tname,
     const std::string& _alias, const std::string& _colname) {
   if (_colname == "") {
@@ -57,7 +117,7 @@ std::optional<containers::Column<Float>> Staging::extract_time_stamp(
 
 // ----------------------------------------------------------------------------
 
-containers::DataFrame Staging::find_peripheral(
+containers::DataFrame find_peripheral(
     const std::string& _name, const std::vector<std::string>& _peripheral_names,
     const std::vector<containers::DataFrame>& _peripheral_dfs) {
   if (_peripheral_dfs.size() != _peripheral_names.size()) {
@@ -81,7 +141,7 @@ containers::DataFrame Staging::find_peripheral(
 
 // ----------------------------------------------------------------------------
 
-containers::DataFrame Staging::join_all(
+containers::DataFrame join_all(
     const size_t _number, const bool _is_population,
     const std::string& _joined_name,
     const std::vector<std::string>& _origin_peripheral_names,
@@ -112,7 +172,7 @@ containers::DataFrame Staging::join_all(
 
 // ----------------------------------------------------------------------------
 
-containers::DataFrame Staging::join_one(
+containers::DataFrame join_one(
     const std::string& _splitted, const containers::DataFrame& _population,
     const std::vector<containers::DataFrame>& _peripheral_dfs,
     const std::vector<std::string>& _peripheral_names) {
@@ -175,12 +235,11 @@ containers::DataFrame Staging::join_one(
 
 // ----------------------------------------------------------------------------
 
-void Staging::join_tables(
-    const std::vector<std::string>& _origin_peripheral_names,
-    const std::string& _joined_population_name,
-    const std::vector<std::string>& _joined_peripheral_names,
-    containers::DataFrame* _population_df,
-    std::vector<containers::DataFrame>* _peripheral_dfs) {
+void join_tables(const std::vector<std::string>& _origin_peripheral_names,
+                 const std::string& _joined_population_name,
+                 const std::vector<std::string>& _joined_peripheral_names,
+                 containers::DataFrame* _population_df,
+                 std::vector<containers::DataFrame>* _peripheral_dfs) {
   const auto population_df =
       join_all(1, true, _joined_population_name, _origin_peripheral_names,
                *_population_df, *_peripheral_dfs);
@@ -201,7 +260,7 @@ void Staging::join_tables(
 
 // ----------------------------------------------------------------------------
 
-std::vector<size_t> Staging::make_index(
+std::vector<size_t> make_index(
     const std::string& _name, const std::string& _alias,
     const std::string& _join_key, const std::string& _other_join_key,
     const std::string& _time_stamp, const std::string& _other_time_stamp,
@@ -209,8 +268,6 @@ std::vector<size_t> Staging::make_index(
     const std::string& _joined_to_alias, const bool _one_to_one,
     const containers::DataFrame& _population,
     const containers::DataFrame& _peripheral) {
-  // -------------------------------------------------------
-
   const auto join_key = extract_join_key(_population, _joined_to_name,
                                          _joined_to_alias, _join_key);
 
@@ -226,15 +283,11 @@ std::vector<size_t> Staging::make_index(
   const auto upper_time_stamp =
       extract_time_stamp(_peripheral, _name, _alias, _upper_time_stamp);
 
-  // -------------------------------------------------------
-
   if ((time_stamp && true) != (other_time_stamp && true)) {
     throw std::runtime_error(
         "If you pass a time stamp, there must also be another time "
         "stamp and vice versa!");
   }
-
-  // -------------------------------------------------------
 
   std::vector<size_t> index(_population.nrows());
 
@@ -271,16 +324,12 @@ std::vector<size_t> Staging::make_index(
     index[i] = ix;
   }
 
-  // -------------------------------------------------------
-
   return index;
-
-  // -------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
 
-std::pair<size_t, bool> Staging::retrieve_index(
+std::pair<size_t, bool> retrieve_index(
     const size_t _nrows, const Int _jk, const Float _ts,
     const containers::DataFrameIndex& _peripheral_index,
     const std::optional<containers::Column<Float>>& _other_time_stamp,
@@ -321,6 +370,6 @@ std::pair<size_t, bool> Staging::retrieve_index(
   return std::make_pair(*local_index, true);
 }
 
-// ----------------------------------------------------------------------------
+}  // namespace staging
 }  // namespace pipelines
 }  // namespace engine

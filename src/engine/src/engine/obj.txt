@@ -13,7 +13,6 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/DataFrameManager_from_json.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DataFrameManager_get_data_frame.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DataFrameManager_receive_data.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/DataFrameModifier.cpp
     ${ENGINE_SOURCE_DIRECTORY}/DataFrameTracker.cpp
     ${ENGINE_SOURCE_DIRECTORY}/data_model_checking.cpp
     ${ENGINE_SOURCE_DIRECTORY}/EMailDomain.cpp
@@ -24,12 +23,13 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/FloatOpParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Imputation.cpp
     ${ENGINE_SOURCE_DIRECTORY}/load.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/make_placeholder.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/modify_data_frames.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Options.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Pipeline.cpp
     ${ENGINE_SOURCE_DIRECTORY}/PipelineManager.cpp
     ${ENGINE_SOURCE_DIRECTORY}/PipelineManager_execute_command.cpp
     ${ENGINE_SOURCE_DIRECTORY}/PipelineManager_receive_data.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/PlaceholderMaker.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Predictors.cpp
     ${ENGINE_SOURCE_DIRECTORY}/PreprocessorImpl.cpp
     ${ENGINE_SOURCE_DIRECTORY}/PreprocessorParser.cpp
@@ -40,7 +40,7 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/Seasonal.cpp
     ${ENGINE_SOURCE_DIRECTORY}/score.cpp
     ${ENGINE_SOURCE_DIRECTORY}/SQLDependencyTracker.cpp
-    ${ENGINE_SOURCE_DIRECTORY}/Staging.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/staging.cpp
     ${ENGINE_SOURCE_DIRECTORY}/StringOpParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Substring.cpp
     ${ENGINE_SOURCE_DIRECTORY}/to_sql.cpp

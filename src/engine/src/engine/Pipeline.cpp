@@ -7,9 +7,8 @@
 
 #include "engine/pipelines/Pipeline.hpp"
 
-#include "engine/pipelines/DataFrameModifier.hpp"
-#include "engine/pipelines/PlaceholderMaker.hpp"
-#include "engine/pipelines/Staging.hpp"
+#include "engine/pipelines/make_placeholder.hpp"
+#include "engine/pipelines/staging.hpp"
 #include "fct/Field.hpp"
 #include "fct/collect.hpp"
 #include "transpilation/SQLDialectParser.hpp"
@@ -40,10 +39,10 @@ std::pair<fct::Ref<const helpers::Placeholder>,
 Pipeline::make_placeholder() const {
   const auto& data_model = *obj().get<"data_model_">();
 
-  const auto placeholder = PlaceholderMaker::make_placeholder(data_model, "t1");
+  const auto placeholder = make_placeholder::make_placeholder(data_model, "t1");
 
   const auto peripheral_names = fct::Ref<const std::vector<std::string>>::make(
-      PlaceholderMaker::make_peripheral(*placeholder));
+      make_placeholder::make_peripheral(*placeholder));
 
   return std::make_pair(placeholder, peripheral_names);
 }

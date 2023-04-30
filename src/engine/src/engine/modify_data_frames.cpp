@@ -5,18 +5,72 @@
 // for details.
 //
 
-#include "engine/pipelines/DataFrameModifier.hpp"
+#include "engine/pipelines/modify_data_frames.hpp"
+
+#include "engine/pipelines/make_placeholder.hpp"
 
 namespace engine {
 namespace pipelines {
+namespace modify_data_frames {
 
-void DataFrameModifier::add_join_keys(
-    const commands::DataModel& _data_model,
+/// Adds a constant join key. This is needed for when the user has not
+/// explicitly passed a join key.
+void add_jk(containers::DataFrame* _df);
+
+/// Adds a new rowid to the data frame, if applicable.
+void add_rowid(containers::DataFrame* _df);
+
+/// Adds lower and upper time stamps to the data frame.
+void add_ts(const commands::DataModel& _joined_table,
+            const std::string& _ts_used, const std::string& _upper_ts_used,
+            const Float _horizon, const Float _memory,
+            const std::vector<std::string>& _peripheral_names,
+            std::vector<containers::DataFrame>* _peripheral_dfs);
+
+/// Concatenates a set of join keys to replicate an ON ... AND ... AND
+/// logic.
+void concat_join_keys(const std::string& _name,
+                      const std::shared_ptr<containers::Encoding> _encoding,
+                      containers::DataFrame* _df);
+
+/// Extracts a vector named _name of size _expected_size from the
+/// _population_placeholder
+template <typename T>
+std::vector<T> extract_vector(const commands::DataModel& _data_model,
+                              const std::string& _name,
+                              const size_t _expected_size);
+
+/// Returns a pointer to the peripheral data frame referenced by
+/// _joined_table.
+containers::DataFrame* find_data_frame(
+    const commands::DataModel& _joined_table,
     const std::vector<std::string>& _peripheral_names,
-    const std::optional<std::string>& _temp_dir,
-    containers::DataFrame* _population_df,
-    std::vector<containers::DataFrame>* _peripheral_dfs,
-    std::shared_ptr<containers::Encoding> _encoding) {
+    std::vector<containers::DataFrame>* _peripheral_dfs);
+
+/// Retrieves the vector of join keys to be concatnated.
+std::vector<containers::Column<Int>> get_old_join_keys(
+    const std::string& _name, const containers::DataFrame& _df);
+
+/// Generates the time stamps.
+std::vector<containers::Column<Float>> make_time_stamps(
+    const std::string& _ts_name, const Float _horizon, const Float _memory,
+    const containers::DataFrame& _df);
+// ----------------------------------------------------------------------------
+
+/// Generates the name for the upper time stamp that is produced using
+/// memory.
+std::string make_ts_name(const std::string& _ts_used, const Float _diff) {
+  return make_placeholder::make_ts_name(_ts_used, _diff);
+}
+
+// ----------------------------------------------------------------------------
+
+void add_join_keys(const commands::DataModel& _data_model,
+                   const std::vector<std::string>& _peripheral_names,
+                   const std::optional<std::string>& _temp_dir,
+                   containers::DataFrame* _population_df,
+                   std::vector<containers::DataFrame>* _peripheral_dfs,
+                   std::shared_ptr<containers::Encoding> _encoding) {
   const auto pool = _encoding || !_temp_dir
                         ? std::shared_ptr<memmap::Pool>()
                         : std::make_shared<memmap::Pool>(*_temp_dir);
@@ -64,7 +118,7 @@ void DataFrameModifier::add_join_keys(
 
 // ----------------------------------------------------------------------------
 
-void DataFrameModifier::add_jk(containers::DataFrame* _df) {
+void add_jk(containers::DataFrame* _df) {
   if (_df->has_join_key(helpers::Macros::no_join_key())) {
     return;
   }
@@ -78,7 +132,7 @@ void DataFrameModifier::add_jk(containers::DataFrame* _df) {
 
 // ----------------------------------------------------------------------------
 
-void DataFrameModifier::add_rowid(containers::DataFrame* _df) {
+void add_rowid(containers::DataFrame* _df) {
   if (_df->has_time_stamp(helpers::Macros::rowid())) {
     return;
   }
@@ -96,11 +150,10 @@ void DataFrameModifier::add_rowid(containers::DataFrame* _df) {
 
 // ----------------------------------------------------------------------------
 
-void DataFrameModifier::add_time_stamps(
-    const commands::DataModel& _data_model,
-    const std::vector<std::string>& _peripheral_names,
-    containers::DataFrame* _population_df,
-    std::vector<containers::DataFrame>* _peripheral_dfs) {
+void add_time_stamps(const commands::DataModel& _data_model,
+                     const std::vector<std::string>& _peripheral_names,
+                     containers::DataFrame* _population_df,
+                     std::vector<containers::DataFrame>* _peripheral_dfs) {
   if (_peripheral_names.size() != _peripheral_dfs->size()) {
     throw std::runtime_error(
         "There must be one peripheral table for every peripheral "
@@ -152,11 +205,11 @@ void DataFrameModifier::add_time_stamps(
 
 // ----------------------------------------------------------------------------
 
-void DataFrameModifier::add_ts(
-    const commands::DataModel& _joined_table, const std::string& _ts_used,
-    const std::string& _upper_ts_used, const Float _horizon,
-    const Float _memory, const std::vector<std::string>& _peripheral_names,
-    std::vector<containers::DataFrame>* _peripheral_dfs) {
+void add_ts(const commands::DataModel& _joined_table,
+            const std::string& _ts_used, const std::string& _upper_ts_used,
+            const Float _horizon, const Float _memory,
+            const std::vector<std::string>& _peripheral_names,
+            std::vector<containers::DataFrame>* _peripheral_dfs) {
   if (_memory > 0.0 && _upper_ts_used != "") {
     throw std::runtime_error(
         "You can either set an upper time stamp or memory, but not "
@@ -204,10 +257,9 @@ void DataFrameModifier::add_ts(
 
 // ----------------------------------------------------------------------------
 
-void DataFrameModifier::concat_join_keys(
-    const std::string& _name,
-    const std::shared_ptr<containers::Encoding> _encoding,
-    containers::DataFrame* _df) {
+void concat_join_keys(const std::string& _name,
+                      const std::shared_ptr<containers::Encoding> _encoding,
+                      containers::DataFrame* _df) {
   assert_true(_encoding);
 
   if (_df->has_join_key(_name)) {
@@ -244,7 +296,7 @@ void DataFrameModifier::concat_join_keys(
 
 // ----------------------------------------------------------------------------
 
-containers::DataFrame* DataFrameModifier::find_data_frame(
+containers::DataFrame* find_data_frame(
     const commands::DataModel& _joined_table,
     const std::vector<std::string>& _peripheral_names,
     std::vector<containers::DataFrame>* _peripheral_dfs) {
@@ -266,7 +318,7 @@ containers::DataFrame* DataFrameModifier::find_data_frame(
 
 // ----------------------------------------------------------------------------
 
-std::vector<containers::Column<Int>> DataFrameModifier::get_old_join_keys(
+std::vector<containers::Column<Int>> get_old_join_keys(
     const std::string& _name, const containers::DataFrame& _df) {
   const auto jk_names = helpers::Macros::parse_join_key_name(_name);
 
@@ -281,7 +333,7 @@ std::vector<containers::Column<Int>> DataFrameModifier::get_old_join_keys(
 
 // ----------------------------------------------------------------------------
 
-std::vector<containers::Column<Float>> DataFrameModifier::make_time_stamps(
+std::vector<containers::Column<Float>> make_time_stamps(
     const std::string& _ts_name, const Float _horizon, const Float _memory,
     const containers::DataFrame& _df) {
   if (_ts_name == "") {
@@ -324,6 +376,6 @@ std::vector<containers::Column<Float>> DataFrameModifier::make_time_stamps(
   return cols;
 }
 
-// ----------------------------------------------------------------------------
+}  // namespace modify_data_frames
 }  // namespace pipelines
 }  // namespace engine
