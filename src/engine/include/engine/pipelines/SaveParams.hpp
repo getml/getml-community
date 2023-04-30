@@ -16,29 +16,32 @@
 #include "engine/dependency/dependency.hpp"
 #include "engine/pipelines/FittedPipeline.hpp"
 #include "engine/pipelines/Pipeline.hpp"
+#include "fct/Field.hpp"
+#include "fct/NamedTuple.hpp"
+#include "fct/Ref.hpp"
 
 namespace engine {
 namespace pipelines {
 
-struct SaveParams {
-  /// Encodes the categories.
-  const helpers::StringIterator categories_;
+using SaveParams = fct::NamedTuple<
 
-  /// The fitted pipeline.
-  const FittedPipeline fitted_;
+    /// Encodes the categories.
+    fct::Field<"categories_", const helpers::StringIterator>,
 
-  /// The name of the pipeline to be save.
-  const std::string name_;
+    /// The fitted pipeline.
+    fct::Field<"fitted_", FittedPipeline>,
 
-  /// The path in which to save the final result.
-  const std::string path_;
+    /// The name of the pipeline to be save.
+    fct::Field<"name_", std::string>,
 
-  /// The underlying pipeline,
-  const Pipeline pipeline_;
+    /// The path in which to save the final result.
+    fct::Field<"path_", std::string>,
 
-  /// A path to a temporary directory.
-  const std::string temp_dir_;
-};
+    /// The underlying pipeline,
+    fct::Field<"pipeline_", Pipeline>,
+
+    /// A path to a temporary directory.
+    fct::Field<"temp_dir_", std::string> >;
 
 }  // namespace pipelines
 }  // namespace engine

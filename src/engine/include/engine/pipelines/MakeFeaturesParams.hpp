@@ -28,49 +28,46 @@
 namespace engine {
 namespace pipelines {
 
-struct MakeFeaturesParams {
-  static constexpr const char* FEATURE_SELECTOR =
-      TransformParams::FEATURE_SELECTOR;
-  static constexpr const char* PREDICTOR = TransformParams::PREDICTOR;
+using MakeFeaturesParams = fct::NamedTuple<
 
-  /// The categorical encoding.
-  const fct::Ref<containers::Encoding> categories_;
+    /// The Encoding used for the categories.
+    fct::Field<"categories_", fct::Ref<containers::Encoding>>,
 
-  /// The command used.
-  const commands::DataFramesOrViews cmd_;
+    /// Contains all of the names of all data frames or views needed for fitting
+    /// the pipeline.
+    fct::Field<"cmd_", commands::DataFramesOrViews>,
 
-  /// Keeps track of the data frames and their fingerprints.
-  const dependency::DataFrameTracker data_frame_tracker_;
+    /// Keeps track of the data frames and their fingerprints.
+    fct::Field<"data_frame_tracker_", dependency::DataFrameTracker>,
 
-  /// The depedencies of the predictors.
-  const fct::Ref<const std::vector<commands::Fingerprint>> dependencies_;
+    /// The depedencies of the predictors.
+    fct::Field<"dependencies_",
+               fct::Ref<const std::vector<commands::Fingerprint>>>,
 
-  /// Logs the progress.
-  const std::shared_ptr<const communication::Logger> logger_;
+    /// Logs the progress.
+    fct::Field<"logger_", std::shared_ptr<const communication::Logger>>,
 
-  /// The peripheral tables, without staging, as they were passed.
-  const std::vector<containers::DataFrame> original_peripheral_dfs_;
+    /// The peripheral tables, without staging, as they were passed.
+    fct::Field<"original_peripheral_dfs_", std::vector<containers::DataFrame>>,
 
-  /// The population table, without staging, as it was passed.
-  const containers::DataFrame original_population_df_;
+    /// The population table, without staging, as it was passed.
+    fct::Field<"original_population_df_", containers::DataFrame>,
 
-  /// The peripheral tables.
-  const std::vector<containers::DataFrame> peripheral_dfs_;
+    /// The peripheral tables.
+    fct::Field<"peripheral_dfs_", std::vector<containers::DataFrame>>,
 
-  /// The population table.
-  const containers::DataFrame population_df_;
+    /// The population table.
+    fct::Field<"population_df_", containers::DataFrame>,
 
-  /// Impl for the predictors.
-  const fct::Ref<const predictors::PredictorImpl> predictor_impl_;
+    /// Pimpl for the predictors.
+    fct::Field<"predictor_impl_", fct::Ref<const predictors::PredictorImpl>>,
 
-  /// Output: The autofeatures to be generated.
-  containers::NumericalFeatures* const autofeatures_ = nullptr;
+    /// Output: The autofeatures to be generated.
+    fct::Field<"autofeatures_", containers::NumericalFeatures*>,
 
-  /// Output: The socket with which we communicate.
-  Poco::Net::StreamSocket* const socket_;
-};
+    /// Output: The socket with which we communicate.
+    fct::Field<"socket_", Poco::Net::StreamSocket*>>;
 
-// ----------------------------------------------------------------------------
 }  // namespace pipelines
 }  // namespace engine
 

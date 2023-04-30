@@ -27,8 +27,6 @@ namespace engine {
 namespace pipelines {
 namespace load {
 
-using Purpose = typename FitPredictorsParams::Purpose;
-
 /// Loads the feature learners.
 std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>
 load_feature_learners(const std::string& _path,
