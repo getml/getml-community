@@ -8,32 +8,23 @@
 #ifndef FEATURELEARNERS_TRANSFORMPARAMS_HPP_
 #define FEATURELEARNERS_TRANSFORMPARAMS_HPP_
 
+#include <cstddef>
+#include <vector>
+
 #include "commands/DataFramesOrViews.hpp"
 #include "communication/communication.hpp"
+#include "fct/Field.hpp"
+#include "fct/NamedTuple.hpp"
+#include "fct/define_named_tuple.hpp"
+#include "featurelearners/FitParams.hpp"
+
 namespace featurelearners {
 
-struct TransformParams {
-  /// The command used.
-  const commands::DataFramesOrViews cmd_;
+using TransformParams =
+    fct::define_named_tuple_t<FitParams,
 
-  /// Indicates which features we want to generate.
-  const std::vector<size_t> index_;
-
-  /// Logs the progress.
-  const std::shared_ptr<const communication::SocketLogger> logger_;
-
-  /// The peripheral data frames.
-  const std::vector<containers::DataFrame> peripheral_dfs_;
-
-  /// The main data frame, defining the population.
-  const containers::DataFrame population_df_;
-
-  /// The prefix, used to identify the feature learner.
-  const std::string prefix_;
-
-  /// The temporary directory, used for the memory mappings
-  const std::optional<std::string> temp_dir_;
-};
+                              /// Indicates which features we want to generate.
+                              fct::Field<"index_", std::vector<size_t>>>;
 
 }  // namespace featurelearners
 

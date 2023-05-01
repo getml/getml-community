@@ -139,14 +139,13 @@ containers::NumericalFeatures generate_autofeatures(
 
     const auto& index = _params.get<"predictor_impl_">()->autofeatures().at(i);
 
-    const auto params = featurelearners::TransformParams{
-        .cmd_ = _params.get<"cmd_">(),
-        .index_ = index,
-        .logger_ = socket_logger,
-        .peripheral_dfs_ = _params.get<"peripheral_dfs_">(),
-        .population_df_ = _params.get<"population_df_">(),
-        .prefix_ = std::to_string(i + 1) + "_",
-        .temp_dir_ = _params.get<"categories_">()->temp_dir()};
+    const auto params = featurelearners::TransformParams(
+        _params.get_field<"cmd_">(), _params.get_field<"peripheral_dfs_">(),
+        _params.get_field<"population_df_">(),
+        fct::make_field<"prefix_">(std::to_string(i + 1) + "_"),
+        fct::make_field<"socket_logger_">(socket_logger),
+        fct::make_field<"temp_dir_">(_params.get<"categories_">()->temp_dir()),
+        fct::make_field<"index_">(index));
 
     auto new_features = fe->transform(params);
 

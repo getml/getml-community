@@ -512,11 +512,12 @@ void FeatureLearner<FeatureLearnerType>::fit(const FitParams& _params) {
   feature_learner_ = make_feature_learner();
 
   const auto [population_table, peripheral_tables] = extract_tables_by_colnames(
-      _params.population_df_, _params.peripheral_dfs_, population_schema(),
-      peripheral_schema(), true, true);
+      _params.get<"population_df_">(), _params.get<"peripheral_dfs_">(),
+      population_schema(), peripheral_schema(), true, true);
 
   const auto [population, peripheral, vocabulary, row_indices, word_indices] =
-      handle_text_fields(population_table, peripheral_tables, _params.logger_);
+      handle_text_fields(population_table, peripheral_tables,
+                         _params.get<"socket_logger_">());
 
   const auto prop_pair = fit_propositionalization(
       population, peripheral, row_indices, word_indices, _params);
@@ -525,11 +526,11 @@ void FeatureLearner<FeatureLearnerType>::fit(const FitParams& _params) {
       .feature_container_ =
           prop_pair ? prop_pair->second
                     : std::optional<const helpers::FeatureContainer>(),
-      .logger_ = _params.logger_,
+      .logger_ = _params.get<"socket_logger_">(),
       .peripheral_ = peripheral,
       .population_ = population,
       .row_indices_ = row_indices,
-      .temp_dir_ = _params.temp_dir_,
+      .temp_dir_ = _params.get<"temp_dir_">(),
       .word_indices_ = word_indices};
 
   feature_learner_->fit(params);
@@ -592,14 +593,14 @@ FeatureLearner<FeatureLearnerType>::fit_propositionalization(
 
     const auto params =
         MakerParams{.hyperparameters_ = hyp,
-                    .logger_ = _params.logger_,
+                    .logger_ = _params.get<"socket_logger_">(),
                     .peripheral_ = _peripheral,
                     .peripheral_names_ = peripheral_names,
                     .placeholder_ = feature_learner_.value().placeholder(),
                     .population_ = _population,
-                    .prefix_ = _params.prefix_,
+                    .prefix_ = _params.get<"prefix_">(),
                     .row_index_container_ = _row_indices,
-                    .temp_dir_ = _params.temp_dir_,
+                    .temp_dir_ = _params.get<"temp_dir_">(),
                     .word_index_container_ = _word_indices};
 
     return fastprop::subfeatures::Maker::fit(params);
@@ -822,7 +823,7 @@ template <typename FeatureLearnerType>
 containers::NumericalFeatures FeatureLearner<FeatureLearnerType>::transform(
     const TransformParams& _params) const {
   const auto [population, peripheral] = extract_tables_by_colnames(
-      _params.population_df_, _params.peripheral_dfs_,
+      _params.get<"population_df_">(), _params.get<"peripheral_dfs_">(),
       feature_learner().population_schema(),
       feature_learner().peripheral_schema(), false, population_needs_targets());
 
@@ -836,13 +837,14 @@ containers::NumericalFeatures FeatureLearner<FeatureLearnerType>::transform(
 
   using FLTransformParams = typename FeatureLearnerType::TransformParamsType;
 
-  const auto params = FLTransformParams{.feature_container_ = feature_container,
-                                        .index_ = _params.index_,
-                                        .logger_ = _params.logger_,
-                                        .peripheral_ = peripheral,
-                                        .population_ = population,
-                                        .temp_dir_ = _params.temp_dir_,
-                                        .word_indices_ = word_indices};
+  const auto params =
+      FLTransformParams{.feature_container_ = feature_container,
+                        .index_ = _params.get<"index_">(),
+                        .logger_ = _params.get<"socket_logger_">(),
+                        .peripheral_ = peripheral,
+                        .population_ = population,
+                        .temp_dir_ = _params.get<"temp_dir_">(),
+                        .word_indices_ = word_indices};
 
   return feature_learner().transform(params).to_safe_features();
 }
@@ -874,13 +876,13 @@ FeatureLearner<FeatureLearnerType>::transform_propositionalization(
     const auto params =
         MakerParams{.fast_prop_container_ = fast_prop_container_,
                     .hyperparameters_ = propositionalization(),
-                    .logger_ = _params.logger_,
+                    .logger_ = _params.get<"socket_logger_">(),
                     .peripheral_ = _peripheral,
                     .peripheral_names_ = peripheral_names,
                     .placeholder_ = feature_learner().placeholder(),
                     .population_ = _population,
-                    .prefix_ = _params.prefix_,
-                    .temp_dir_ = _params.temp_dir_,
+                    .prefix_ = _params.get<"prefix_">(),
+                    .temp_dir_ = _params.get<"temp_dir_">(),
                     .word_index_container_ = _word_indices};
 
     const auto feature_container =
