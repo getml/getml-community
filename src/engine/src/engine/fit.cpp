@@ -446,13 +446,13 @@ fit_feature_learners(
       continue;
     }
 
-    const auto params = featurelearners::FitParams{
-        .cmd_ = _params.get<"cmd_">(),
-        .logger_ = socket_logger,
-        .peripheral_dfs_ = _peripheral_dfs,
-        .population_df_ = _population_df,
-        .prefix_ = std::to_string(i + 1) + "_",
-        .temp_dir_ = _params.get<"categories_">()->temp_dir()};
+    const auto params = featurelearners::FitParams(
+        _params.get_field<"cmd_">(),
+        fct::make_field<"peripheral_dfs_">(_peripheral_dfs),
+        fct::make_field<"population_df_">(_population_df),
+        fct::make_field<"prefix_">(std::to_string(i + 1) + "_"),
+        fct::make_field<"socket_logger_">(socket_logger),
+        fct::make_field<"temp_dir_">(_params.get<"categories_">()->temp_dir()));
 
     fe->fit(params);
 
@@ -486,22 +486,19 @@ fit_predictors(const FitPredictorsParams& _params) {
     return std::make_pair(predictors_struct, fingerprints);
   }
 
+  const auto& fit_params = _params.get<"fit_params_">();
+
   const auto make_features_params = MakeFeaturesParams(
-      _params *
-      fct::make_field<"categories_">(
-          _params.get<"fit_params_">().get<"categories_">()) *
-      fct::make_field<"cmd_">(_params.get<"fit_params_">().get<"cmd_">()) *
-      fct::make_field<"data_frame_tracker_">(
-          _params.get<"fit_params_">().get<"data_frame_tracker_">()) *
-      fct::make_field<"logger_">(
-          _params.get<"fit_params_">().get<"logger_">()) *
+      _params * fit_params.get_field<"categories_">() *
+      fit_params.get_field<"cmd_">() *
+      fit_params.get_field<"data_frame_tracker_">() *
+      fit_params.get_field<"logger_">() *
       fct::make_field<"original_peripheral_dfs_">(
-          _params.get<"fit_params_">().get<"peripheral_dfs_">()) *
+          fit_params.get<"peripheral_dfs_">()) *
       fct::make_field<"original_population_df_">(
-          _params.get<"fit_params_">().get<"population_df_">()) *
+          fit_params.get<"population_df_">()) *
       fct::make_field<"predictor_impl_">(_params.get<"impl_">()) *
-      fct::make_field<"socket_">(
-          _params.get<"fit_params_">().get<"socket_">()));
+      _params.get<"fit_params_">().get_field<"socket_">());
 
   auto [numerical_features, categorical_features, autofeatures] =
       transform::make_features(

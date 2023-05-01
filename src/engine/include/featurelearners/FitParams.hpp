@@ -16,29 +16,33 @@
 #include "commands/DataFramesOrViews.hpp"
 #include "communication/communication.hpp"
 #include "containers/containers.hpp"
+#include "fct/Field.hpp"
+#include "fct/NamedTuple.hpp"
 #include "featurelearners/Int.hpp"
 
 namespace featurelearners {
 
-struct FitParams {
-  /// The command used.
-  const commands::DataFramesOrViews cmd_;
+using FitParams = fct::NamedTuple<
 
-  /// Logs the progress.
-  const std::shared_ptr<const communication::SocketLogger> logger_;
+    /// Contains all of the names of all data frames or views needed for fitting
+    /// the pipeline.
+    fct::Field<"cmd_", commands::DataFramesOrViews>,
 
-  /// The peripheral data frames.
-  const std::vector<containers::DataFrame> peripheral_dfs_;
+    /// The peripheral tables.
+    fct::Field<"peripheral_dfs_", std::vector<containers::DataFrame>>,
 
-  /// The main data frame, defining the population.
-  const containers::DataFrame population_df_;
+    /// The population table.
+    fct::Field<"population_df_", containers::DataFrame>,
 
-  /// The prefix, used to identify the feature learner.
-  const std::string prefix_;
+    /// The prefix, used to identify the feature learner.
+    fct::Field<"prefix_", std::string>,
 
-  /// The temporary directory, used for the memory mappings
-  const std::optional<std::string> temp_dir_;
-};
+    /// Logs the progress.
+    fct::Field<"socket_logger_",
+               std::shared_ptr<const communication::SocketLogger>>,
+
+    /// The prefix, used to identify the feature learner.
+    fct::Field<"temp_dir_", std::optional<std::string>>>;
 
 }  // namespace featurelearners
 
