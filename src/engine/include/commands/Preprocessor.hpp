@@ -8,6 +8,10 @@
 #ifndef COMMANDS_PREPROCESSOR_HPP_
 #define COMMANDS_PREPROCESSOR_HPP_
 
+#include <cstddef>
+#include <optional>
+#include <string>
+
 #include "fct/Field.hpp"
 #include "fct/Literal.hpp"
 #include "fct/NamedTuple.hpp"
@@ -34,7 +38,12 @@ class Preprocessor {
 
   /// The command needed to produce a Seasonal preprocessor.
   using SeasonalOp =
-      fct::NamedTuple<fct::Field<"type_", fct::Literal<"Seasonal">>>;
+      fct::NamedTuple<fct::Field<"type_", fct::Literal<"Seasonal">>,
+                      fct::Field<"disable_hour_", std::optional<bool>>,
+                      fct::Field<"disable_minute_", std::optional<bool>>,
+                      fct::Field<"disable_month_", std::optional<bool>>,
+                      fct::Field<"disable_weekday_", std::optional<bool>>,
+                      fct::Field<"disable_year_", std::optional<bool>>>;
 
   /// The command needed to produce a Substring preprocessor.
   using SubstringOp =
