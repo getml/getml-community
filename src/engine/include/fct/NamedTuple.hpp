@@ -173,6 +173,12 @@ class NamedTuple {
     return fct::get<Field>(*this);
   }
 
+  /// Returns the results wrapped in a field.
+  template <StringLiteral _field_name>
+  inline auto get_field() const {
+    return fct::make_field<_field_name>(fct::get<_field_name>(*this));
+  }
+
   /// Copy assignment operator.
   NamedTuple<FieldTypes...>& operator=(
       const NamedTuple<FieldTypes...>& _other) {
