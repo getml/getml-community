@@ -64,17 +64,24 @@ class Seasonal : public Preprocessor {
  public:
   Seasonal(const SeasonalOp& _op,
            const std::vector<commands::Fingerprint>& _dependencies)
-      : dependencies_(_dependencies) {}
+      : dependencies_(_dependencies), op_(_op) {}
 
   ~Seasonal() = default;
 
  public:
+  /// Returns the fingerprint of the preprocessor (necessary to build
+  /// the dependency graphs).
+  commands::Fingerprint fingerprint() const final;
+
   /// Identifies which features should be extracted from which time stamps.
   std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
   fit_transform(const Params& _params) final;
 
   /// Loads the predictor
   void load(const std::string& _fname) final;
+
+  /// Necessary for the automated parsing to work.
+  NamedTupleType named_tuple() const;
 
   /// Stores the preprocessor.
   void save(const std::string& _fname) const final;
@@ -94,21 +101,6 @@ class Seasonal : public Preprocessor {
       c->dependencies_ = *_dependencies;
     }
     return c;
-  }
-
-  /// Returns the fingerprint of the preprocessor (necessary to build
-  /// the dependency graphs).
-  commands::Fingerprint fingerprint() const final {
-    using FingerprintType = typename commands::Fingerprint::SeasonalFingerprint;
-    return commands::Fingerprint(
-        FingerprintType(fct::make_field<"dependencies_">(dependencies_),
-                        fct::make_field<"type_">(fct::Literal<"Seasonal">())));
-  }
-
-  /// Necessary for the automated parsing to work.
-  NamedTupleType named_tuple() const {
-    return f_hour(hour_) * f_minute(minute_) * f_month(month_) *
-           f_weekday(weekday_) * f_year(year_);
   }
 
   /// The preprocessor does not generate any SQL scripts.
@@ -199,6 +191,12 @@ class Seasonal : public Preprocessor {
                                      const size_t _table) const;
 
  private:
+  /// Whether a particular feature is enabled.
+  template <fct::StringLiteral _field_name>
+  bool is_disabled() const {
+    return op_.get<_field_name>() && *op_.get<_field_name>();
+  }
+
   /// Undertakes a transformation based on the template class
   /// Operator.
   template <class Operator>
@@ -244,6 +242,9 @@ class Seasonal : public Preprocessor {
 
   /// List of all columns to which the month transformation applies.
   std::vector<std::shared_ptr<helpers::ColumnDescription>> month_;
+
+  /// The underlying hyperparameters.
+  SeasonalOp op_;
 
   /// List of all columns to which the weekday transformation applies.
   std::vector<std::shared_ptr<helpers::ColumnDescription>> weekday_;

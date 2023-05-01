@@ -18,6 +18,10 @@ namespace preprocessors {
 std::optional<containers::Column<Int>> Seasonal::extract_hour(
     const containers::Column<Float>& _col,
     containers::Encoding* _categories) const {
+  if (is_disabled<"disable_hour_">()) {
+    return std::nullopt;
+  }
+
   auto result = to_categorical(_col, ADD_ZERO, utils::Time::hour, _categories);
 
   result.set_name(helpers::Macros::hour_begin() + _col.name() +
@@ -50,6 +54,10 @@ containers::Column<Int> Seasonal::extract_hour(
 std::optional<containers::Column<Int>> Seasonal::extract_minute(
     const containers::Column<Float>& _col,
     containers::Encoding* _categories) const {
+  if (is_disabled<"disable_minute_">()) {
+    return std::nullopt;
+  }
+
   auto result =
       to_categorical(_col, ADD_ZERO, utils::Time::minute, _categories);
 
@@ -84,6 +92,10 @@ containers::Column<Int> Seasonal::extract_minute(
 std::optional<containers::Column<Int>> Seasonal::extract_month(
     const containers::Column<Float>& _col,
     containers::Encoding* _categories) const {
+  if (is_disabled<"disable_month_">()) {
+    return std::nullopt;
+  }
+
   auto result = to_categorical(_col, ADD_ZERO, utils::Time::month, _categories);
 
   result.set_name(helpers::Macros::month_begin() + _col.name() +
@@ -116,6 +128,10 @@ containers::Column<Int> Seasonal::extract_month(
 std::optional<containers::Column<Int>> Seasonal::extract_weekday(
     const containers::Column<Float>& _col,
     containers::Encoding* _categories) const {
+  if (is_disabled<"disable_weekday_">()) {
+    return std::nullopt;
+  }
+
   auto result =
       to_categorical(_col, DONT_ADD_ZERO, utils::Time::weekday, _categories);
 
@@ -149,6 +165,10 @@ containers::Column<Int> Seasonal::extract_weekday(
 
 std::optional<containers::Column<Float>> Seasonal::extract_year(
     const containers::Column<Float>& _col) {
+  if (is_disabled<"disable_year_">()) {
+    return std::nullopt;
+  }
+
   auto result = to_numerical(_col, utils::Time::year);
 
   result.set_name(helpers::Macros::year_begin() + _col.name() +
@@ -173,6 +193,14 @@ containers::Column<Float> Seasonal::extract_year(
   result.set_unit("year, comparison only");
 
   return result;
+}
+
+// ----------------------------------------------------
+
+commands::Fingerprint Seasonal::fingerprint() const {
+  using FingerprintType = typename commands::Fingerprint::SeasonalFingerprint;
+  return commands::Fingerprint(
+      FingerprintType(fct::make_field<"dependencies_">(dependencies_) * op_));
 }
 
 // ----------------------------------------------------
@@ -269,6 +297,13 @@ void Seasonal::load(const std::string& _fname) {
   month_ = named_tuple.get<f_month>();
   weekday_ = named_tuple.get<f_weekday>();
   year_ = named_tuple.get<f_year>();
+}
+
+// ----------------------------------------------------
+
+typename Seasonal::NamedTupleType Seasonal::named_tuple() const {
+  return f_hour(hour_) * f_minute(minute_) * f_month(month_) *
+         f_weekday(weekday_) * f_year(year_);
 }
 
 // ----------------------------------------------------
