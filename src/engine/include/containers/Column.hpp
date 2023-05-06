@@ -684,7 +684,7 @@ Column<T> Column<T>::where(const std::vector<bool> &_condition) const {
   const auto data_ptr = pool() ? Variant(std::make_shared<MemmapVector>(
                                      pool(), range.begin(), range.end()))
                                : Variant(std::make_shared<std::vector<T>>(
-                                     fct::collect::vector<T>(range)));
+                                     fct::collect::vector(range)));
 
   Column<T> trimmed(data_ptr);
 

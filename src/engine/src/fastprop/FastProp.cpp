@@ -278,8 +278,7 @@ std::vector<Float> FastProp::calc_r_squared(
        begin += batch_size) {
     const auto end = std::min(abstract_features().size(), begin + batch_size);
 
-    const auto index =
-        fct::collect::vector<size_t>(fct::iota<size_t>(begin, end));
+    const auto index = fct::collect::vector(fct::iota<size_t>(begin, end));
 
     const auto params = TransformParams{.feature_container_ = std::nullopt,
                                         .index_ = index,
@@ -453,7 +452,7 @@ std::vector<Int> FastProp::find_most_frequent_categories(
       pairs | VIEWS::transform(get_first) | VIEWS::filter(is_not_null) |
       VIEWS::take(hyperparameters().val_.get<f_n_most_frequent>());
 
-  return fct::collect::vector<Int>(range);
+  return fct::collect::vector(range);
 }
 
 // ----------------------------------------------------------------------------
@@ -1344,7 +1343,7 @@ std::vector<size_t> FastProp::make_subfeature_index(
                      VIEWS::filter(is_relevant_feature) |
                      VIEWS::transform(get_input_col);
 
-  const auto s = fct::collect::set<size_t>(range);
+  const auto s = fct::collect::set(range);
 
   return std::vector<size_t>(s.begin(), s.end());
 }
@@ -1482,10 +1481,8 @@ std::shared_ptr<std::vector<size_t>> FastProp::sample_from_population(
 
   auto iota = fct::iota<size_t>(0, _nrows);
 
-  auto range = iota | VIEWS::filter(include);
-
   return std::make_shared<std::vector<size_t>>(
-      fct::collect::vector<size_t>(range));
+      fct::collect::vector(iota | VIEWS::filter(include)));
 }
 
 // ----------------------------------------------------------------------------
@@ -1523,7 +1520,7 @@ FastProp::select_features(
       iota | VIEWS::filter(r_greater_threshold) | VIEWS::transform(get_feature);
 
   return std::make_shared<std::vector<containers::AbstractFeature>>(
-      fct::collect::vector<containers::AbstractFeature>(range));
+      fct::collect::vector(range));
 }
 
 // ----------------------------------------------------------------------------

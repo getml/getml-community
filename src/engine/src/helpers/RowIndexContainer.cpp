@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "helpers/RowIndexContainer.hpp"
 
@@ -41,10 +41,7 @@ typename RowIndexContainer::RowIndices RowIndexContainer::make_row_indices(
         return std::make_shared<const textmining::RowIndex>(*word_index);
       };
 
-  auto range = _word_indices | VIEWS::transform(make_row_index);
-
-  return fct::collect::vector<std::shared_ptr<const textmining::RowIndex>>(
-      range);
+  return fct::collect::vector(_word_indices | VIEWS::transform(make_row_index));
 }
 
 // ----------------------------------------------------------------------------

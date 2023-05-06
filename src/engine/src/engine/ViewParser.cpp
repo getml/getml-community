@@ -254,8 +254,8 @@ std::vector<std::string> ViewParser::make_string_vector(
       return _str.str();
     };
 
-    return fct::collect::vector<std::string>(
-        *str_col.to_vector(_start, _length, false) | VIEWS::transform(to_str));
+    return fct::collect::vector(*str_col.to_vector(_start, _length, false) |
+                                VIEWS::transform(to_str));
   }
 
   const auto float_col = std::get<containers::ColumnView<Float>>(_column_view);
@@ -263,16 +263,15 @@ std::vector<std::string> ViewParser::make_string_vector(
   const auto float_vec = *float_col.to_vector(_start, _length, false);
 
   if (float_col.unit().find("time stamp") != std::string::npos) {
-    return fct::collect::vector<std::string>(
-        float_vec | VIEWS::transform(io::Parser::ts_to_string));
+    return fct::collect::vector(float_vec |
+                                VIEWS::transform(io::Parser::ts_to_string));
   }
 
   const auto to_string = [](const Float _val) {
     return io::Parser::to_string(_val);
   };
 
-  return fct::collect::vector<std::string>(float_vec |
-                                           VIEWS::transform(to_string));
+  return fct::collect::vector(float_vec | VIEWS::transform(to_string));
 }
 
 // ----------------------------------------------------------------------------
@@ -306,11 +305,11 @@ containers::ViewContent ViewParser::get_content(
     return result;
   };
 
-  const auto column_views = fct::collect::vector<ColumnViewVariant>(
-      _cols | VIEWS::transform(to_column_view));
+  const auto column_views =
+      fct::collect::vector(_cols | VIEWS::transform(to_column_view));
 
-  const auto data = transpose(fct::collect::vector<std::vector<std::string>>(
-      column_views | VIEWS::transform(to_string_vector)));
+  const auto data = transpose(
+      fct::collect::vector(column_views | VIEWS::transform(to_string_vector)));
 
   const auto nrows = make_nrows(column_views, _force_nrows);
 
@@ -373,8 +372,8 @@ ViewParser::parse_all(const commands::DataFramesOrViews& _cmd) const {
 
   const auto population = to_df(population_obj);
 
-  const auto peripheral = fct::collect::vector<containers::DataFrame>(
-      peripheral_objs | VIEWS::transform(to_df));
+  const auto peripheral =
+      fct::collect::vector(peripheral_objs | VIEWS::transform(to_df));
 
   const auto validation =
       validation_obj

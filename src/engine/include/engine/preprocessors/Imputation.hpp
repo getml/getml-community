@@ -164,8 +164,7 @@ class Imputation : public Preprocessor {
       throw std::runtime_error(
           "The Imputation preprocessor has not been fitted.");
     }
-    return fct::collect::vector<helpers::ColumnDescription>(*cols_ |
-                                                            VIEWS::keys);
+    return fct::collect::vector(*cols_ | VIEWS::keys);
   }
 
   /// Retrieve the column description of all columns in cols_.
@@ -198,7 +197,7 @@ class Imputation : public Preprocessor {
       throw std::runtime_error(
           "The Imputation preprocessor has not been fitted.");
     }
-    return fct::collect::vector<Float>(*cols_ | VIEWS::values | VIEWS::keys);
+    return fct::collect::vector(*cols_ | VIEWS::values | VIEWS::keys);
   }
 
   /// Retrieves the means from the map.
@@ -207,7 +206,7 @@ class Imputation : public Preprocessor {
       throw std::runtime_error(
           "The Imputation preprocessor has not been fitted.");
     }
-    return fct::collect::vector<bool>(*cols_ | VIEWS::values | VIEWS::values);
+    return fct::collect::vector(*cols_ | VIEWS::values | VIEWS::values);
   }
 
  private:

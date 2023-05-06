@@ -90,8 +90,8 @@ commands::Fingerprint DataFrameTracker::make_build_history(
     return _df.fingerprint();
   };
 
-  const auto df_fingerprints = fct::collect::vector<commands::Fingerprint>(
-      data_frames | VIEWS::transform(get_fingerprint));
+  const auto df_fingerprints =
+      fct::collect::vector(data_frames | VIEWS::transform(get_fingerprint));
 
   using PipelineBuildHistory =
       typename commands::Fingerprint::PipelineBuildHistory;

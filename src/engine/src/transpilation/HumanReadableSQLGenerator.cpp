@@ -344,17 +344,17 @@ std::vector<std::string> HumanReadableSQLGenerator::make_staging_columns(
       -> std::vector<std::string> {
     const auto cast = std::bind(cast_column, std::placeholders::_1, "REAL");
 
-    return fct::collect::vector<std::string>(
-        _colnames | VIEWS::filter(SQLGenerator::include_column) |
-        VIEWS::transform(cast));
+    return fct::collect::vector(_colnames |
+                                VIEWS::filter(SQLGenerator::include_column) |
+                                VIEWS::transform(cast));
   };
 
   const auto cast_as_time_stamp =
       [to_ts](const std::vector<std::string>& _colnames)
       -> std::vector<std::string> {
-    return fct::collect::vector<std::string>(
-        _colnames | VIEWS::filter(SQLGenerator::include_column) |
-        VIEWS::transform(to_ts));
+    return fct::collect::vector(_colnames |
+                                VIEWS::filter(SQLGenerator::include_column) |
+                                VIEWS::transform(to_ts));
   };
 
   const auto cast_as_text =
@@ -362,9 +362,9 @@ std::vector<std::string> HumanReadableSQLGenerator::make_staging_columns(
       -> std::vector<std::string> {
     const auto cast = std::bind(cast_column, std::placeholders::_1, "TEXT");
 
-    return fct::collect::vector<std::string>(
-        _colnames | VIEWS::filter(SQLGenerator::include_column) |
-        VIEWS::transform(cast));
+    return fct::collect::vector(_colnames |
+                                VIEWS::filter(SQLGenerator::include_column) |
+                                VIEWS::transform(cast));
   };
 
   const auto categoricals = cast_as_text(_schema.categoricals());

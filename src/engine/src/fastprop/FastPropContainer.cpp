@@ -46,8 +46,8 @@ void FastPropContainer::to_sql(
 
       const auto iota = fct::iota<size_t>(0, fast_prop().num_features());
 
-      const auto autofeatures = fct::collect::vector<std::string>(
-          iota | VIEWS::transform(to_feature_name));
+      const auto autofeatures =
+          fct::collect::vector(iota | VIEWS::transform(to_feature_name));
 
       const auto main_table =
           transpilation::SQLGenerator::make_staging_table_name(

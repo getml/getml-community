@@ -56,8 +56,7 @@ class VocabularyContainer {
 
   /// Represents the peripheral vocabulary as a vector of iterators.
   const std::vector<std::vector<StringIterator>> peripheral_iterators() const {
-    const auto range = peripheral() | VIEWS::transform(to_iterators);
-    return fct::collect::vector<std::vector<StringIterator>>(range);
+    return fct::collect::vector(peripheral() | VIEWS::transform(to_iterators));
   }
 
   /// Trivial (const) accessor
@@ -86,8 +85,7 @@ class VocabularyContainer {
       return StringIterator(std::bind(get_value, _vec, std::placeholders::_1),
                             _vec->size());
     };
-    const auto range = _vocab | VIEWS::transform(make_iterator);
-    return fct::collect::vector<StringIterator>(range);
+    return fct::collect::vector(_vocab | VIEWS::transform(make_iterator));
   }
 
  private:

@@ -310,7 +310,7 @@ struct Parser<std::set<T>> {
                                  ": " + _exp.what());
       }
     };
-    return fct::collect::set<T>(iota | VIEWS::transform(get_value));
+    return fct::collect::set(iota | VIEWS::transform(get_value));
   }
 
   /// Transform a std::vector into a Poco::JSON::Array
@@ -555,7 +555,7 @@ struct Parser<std::vector<T>> {
                                  ": " + _exp.what());
       }
     };
-    return fct::collect::vector<T>(iota | VIEWS::transform(get_value));
+    return fct::collect::vector(iota | VIEWS::transform(get_value));
   }
 
   /// Transform a std::vector into a Poco::JSON::Array

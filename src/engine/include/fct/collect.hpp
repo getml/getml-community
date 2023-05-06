@@ -18,67 +18,66 @@
 #include "fct/ranges.hpp"
 
 namespace fct {
+namespace collect {
 
-struct collect {
-  /// Generates a map from a range
-  template <class KeyType, class ValueType, class RangeType>
-  static std::map<KeyType, ValueType> map(RangeType range) {
-    return std::map<KeyType, ValueType>(range.begin(), range.end());
+/// Generates a map from a range
+template <class KeyType, class ValueType, class RangeType>
+std::map<KeyType, ValueType> map(RangeType range) {
+  return std::map<KeyType, ValueType>(range.begin(), range.end());
+}
+
+/// Generates a string from a range
+template <class RangeType>
+std::string string(RangeType range) {
+  std::stringstream stream;
+
+  for (const auto& val : range) {
+    stream << val;
   }
 
-  /// Generates a string from a range
-  template <class RangeType>
-  static std::string string(RangeType range) {
-    std::stringstream stream;
+  return stream.str();
+}
 
-    for (const auto& val : range) {
-      stream << val;
-    }
-
-    return stream.str();
-  }
-
-  /// Generates a vector from a range
-  template <class T, class RangeType>
-  static std::vector<T> vector(RangeType range) {
+/// Generates a vector from a range
+template <class RangeType>
+auto vector(RangeType range) {
+  using T = RANGES::range_value_t<RangeType>;
 #ifdef __APPLE__
-    constexpr bool use_push_back = true;
+  constexpr bool use_push_back = true;
 #else
-    constexpr bool use_push_back = !std::is_default_constructible<T>() ||
-                                   !std::is_move_assignable<T>() ||
-                                   !RANGES::sized_range<RangeType> ||
-                                   !RANGES::random_access_range<RangeType>;
+  constexpr bool use_push_back = !std::is_default_constructible<T>() ||
+                                 !std::is_move_assignable<T>() ||
+                                 !RANGES::sized_range<RangeType> ||
+                                 !RANGES::random_access_range<RangeType>;
 #endif
 
-    if constexpr (use_push_back) {
-      auto vec = std::vector<T>();
-      for (const auto val : range) {
-        vec.emplace_back(val);
-      }
-      return vec;
-    } else {
-      auto vec = std::vector<T>(RANGES::size(range));
-      for (size_t i = 0; i < vec.size(); ++i) {
-        vec[i] = std::move(range[i]);
-      }
-      return vec;
+  if constexpr (use_push_back) {
+    auto vec = std::vector<T>();
+    for (const auto val : range) {
+      vec.emplace_back(val);
     }
-  }
-
-  /// Generates a set from a range
-  template <class T, class RangeType>
-  static std::set<T> set(RangeType range) {
-    auto s = std::set<T>();
-
-    for (const T& val : range) {
-      s.insert(val);
+    return vec;
+  } else {
+    auto vec = std::vector<T>(RANGES::size(range));
+    for (size_t i = 0; i < vec.size(); ++i) {
+      vec[i] = std::move(range[i]);
     }
-
-    return s;
+    return vec;
   }
-};
+}
 
-// -------------------------------------------------------------------------
+/// Generates a set from a range
+template <class RangeType>
+auto set(RangeType range) {
+  using T = RANGES::range_value_t<RangeType>;
+  auto s = std::set<T>();
+  for (const T& val : range) {
+    s.insert(val);
+  }
+  return s;
+}
+
+}  // namespace collect
 }  // namespace fct
 
 #endif  // FCT_COLLECT_HPP_

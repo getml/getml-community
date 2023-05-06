@@ -1715,13 +1715,11 @@ containers::MonitorSummary DataFrame::to_monitor() const {
   const auto get_unit = [](const auto &_col) { return _col.unit(); };
 
   const auto get_colnames = [get_colname](const auto &_cols) {
-    return fct::collect::vector<std::string>(_cols |
-                                             VIEWS::transform(get_colname));
+    return fct::collect::vector(_cols | VIEWS::transform(get_colname));
   };
 
   const auto get_units = [get_unit](const auto &_cols) {
-    return fct::collect::vector<std::string>(_cols |
-                                             VIEWS::transform(get_unit));
+    return fct::collect::vector(_cols | VIEWS::transform(get_unit));
   };
 
   return fct::make_field<"categorical_">(get_colnames(categoricals_)) *
@@ -1772,33 +1770,32 @@ Schema DataFrame::to_schema(const bool _separate_discrete) const {
     return _col.name();
   };
 
-  const auto categoricals = fct::collect::vector<std::string>(
-      categoricals_ | VIEWS::transform(get_name));
+  const auto categoricals =
+      fct::collect::vector(categoricals_ | VIEWS::transform(get_name));
 
-  const auto discretes = fct::collect::vector<std::string>(
+  const auto discretes = fct::collect::vector(
       numericals_ | VIEWS::filter(is_discrete) | VIEWS::transform(get_name));
 
-  const auto join_keys = fct::collect::vector<std::string>(
-      join_keys_ | VIEWS::transform(get_name));
+  const auto join_keys =
+      fct::collect::vector(join_keys_ | VIEWS::transform(get_name));
 
-  const auto numericals = fct::collect::vector<std::string>(
-      numericals_ | VIEWS::filter(is_not_discrete) |
-      VIEWS::transform(get_name));
+  const auto numericals =
+      fct::collect::vector(numericals_ | VIEWS::filter(is_not_discrete) |
+                           VIEWS::transform(get_name));
 
   const auto targets =
-      fct::collect::vector<std::string>(targets_ | VIEWS::transform(get_name));
+      fct::collect::vector(targets_ | VIEWS::transform(get_name));
 
-  const auto text =
-      fct::collect::vector<std::string>(text_ | VIEWS::transform(get_name));
+  const auto text = fct::collect::vector(text_ | VIEWS::transform(get_name));
 
-  const auto time_stamps = fct::collect::vector<std::string>(
-      time_stamps_ | VIEWS::transform(get_name));
+  const auto time_stamps =
+      fct::collect::vector(time_stamps_ | VIEWS::transform(get_name));
 
-  const auto unused_floats = fct::collect::vector<std::string>(
-      unused_floats_ | VIEWS::transform(get_name));
+  const auto unused_floats =
+      fct::collect::vector(unused_floats_ | VIEWS::transform(get_name));
 
-  const auto unused_strings = fct::collect::vector<std::string>(
-      unused_strings_ | VIEWS::transform(get_name));
+  const auto unused_strings =
+      fct::collect::vector(unused_strings_ | VIEWS::transform(get_name));
 
   return Schema(fct::make_field<"categorical_">(categoricals) *
                 fct::make_field<"discrete_">(discretes) *

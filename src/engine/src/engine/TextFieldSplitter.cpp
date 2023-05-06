@@ -19,7 +19,7 @@ containers::DataFrame TextFieldSplitter::add_rowid(
   const auto range = fct::iota<Int>(0, _df.nrows());
 
   const auto ptr =
-      std::make_shared<std::vector<Int>>(fct::collect::vector<Int>(range));
+      std::make_shared<std::vector<Int>>(fct::collect::vector(range));
 
   const auto rowid = containers::Column<Int>(ptr, helpers::Macros::rowid());
 
@@ -88,10 +88,7 @@ TextFieldSplitter::fit_df(const containers::DataFrame& _df,
 
   const auto iota = fct::iota<size_t>(0, _df.num_text());
 
-  const auto range = iota | VIEWS::transform(to_column_description);
-
-  return fct::collect::vector<std::shared_ptr<helpers::ColumnDescription>>(
-      range);
+  return fct::collect::vector(iota | VIEWS::transform(to_column_description));
 }
 
 // ----------------------------------------------------
@@ -167,7 +164,7 @@ std::vector<std::string> TextFieldSplitter::to_sql(
     return _sql_dialect_generator->split_text_fields(_desc);
   };
 
-  return fct::collect::vector<std::string>(cols_ | VIEWS::transform(split));
+  return fct::collect::vector(cols_ | VIEWS::transform(split));
 }
 
 // ----------------------------------------------------
@@ -185,7 +182,7 @@ TextFieldSplitter::transform(const Params& _params) const {
   const auto range =
       _params.get<"peripheral_dfs_">() | VIEWS::transform(modify_if_applicable);
 
-  auto peripheral_dfs = fct::collect::vector<containers::DataFrame>(range);
+  auto peripheral_dfs = fct::collect::vector(range);
 
   transform_df(helpers::ColumnDescription::POPULATION,
                _params.get<"population_df_">(), &peripheral_dfs);

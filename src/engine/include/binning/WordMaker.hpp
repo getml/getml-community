@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef BINNING_WORDMAKER_HPP_
 #define BINNING_WORDMAKER_HPP_
@@ -77,8 +77,6 @@ WordMaker<MatchType, GetRangeType>::make_words(
   multithreading::Reducer::reduce(multithreading::maximum<std::int8_t>(),
                                   &included, _comm);
 
-  // ------------------------------------------------------------------------
-
   const auto is_included = [included](Int i) -> bool {
     return included[i] == 1;
   };
@@ -87,12 +85,7 @@ WordMaker<MatchType, GetRangeType>::make_words(
 
   auto range = iota | VIEWS::filter(is_included);
 
-  // ------------------------------------------------------------------------
-
-  return std::make_shared<const std::vector<Int>>(
-      fct::collect::vector<Int>(range));
-
-  // ------------------------------------------------------------------------
+  return std::make_shared<const std::vector<Int>>(fct::collect::vector(range));
 }
 
 // ----------------------------------------------------------------------------

@@ -92,11 +92,11 @@ XGBoostIteratorSparse::make_proxy_csr() const {
     return fct::Range(_col.data() + begin, _col.data() + end);
   };
 
-  const auto ranges_categorical = fct::collect::vector<fct::Range<const Int *>>(
-      X_categorical_ | VIEWS::transform(get_subrange));
+  const auto ranges_categorical =
+      fct::collect::vector(X_categorical_ | VIEWS::transform(get_subrange));
 
-  const auto ranges_numerical = fct::collect::vector<fct::Range<const Float *>>(
-      X_numerical_ | VIEWS::transform(get_subrange));
+  const auto ranges_numerical =
+      fct::collect::vector(X_numerical_ | VIEWS::transform(get_subrange));
 
   using DataType = CSRMatrixType::DataType;
   using IndicesType = CSRMatrixType::IndicesType;

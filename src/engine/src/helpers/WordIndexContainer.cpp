@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "helpers/WordIndexContainer.hpp"
 
@@ -45,18 +45,15 @@ VocabularyContainer WordIndexContainer::vocabulary() const {
         return _word_index->vocabulary_ptr();
       };
 
-  const auto extract_vocab_for_df =
-      [get_vocab](const WordIndices& _word_indices) {
-        auto range = _word_indices | VIEWS::transform(get_vocab);
-        return fct::collect::vector<
-            std::shared_ptr<const std::vector<strings::String>>>(range);
-      };
+  const auto extract_vocab_for_df = [get_vocab](
+                                        const WordIndices& _word_indices) {
+    return fct::collect::vector(_word_indices | VIEWS::transform(get_vocab));
+  };
 
   const auto population = extract_vocab_for_df(population_);
 
-  auto range = peripheral_ | VIEWS::transform(extract_vocab_for_df);
-
-  const auto peripheral = fct::collect::vector<VocabForDf>(range);
+  const auto peripheral = fct::collect::vector(
+      peripheral_ | VIEWS::transform(extract_vocab_for_df));
 
   return VocabularyContainer(population, peripheral);
 }
@@ -77,10 +74,7 @@ typename WordIndexContainer::WordIndices WordIndexContainer::make_word_indices(
 
   const auto iota = fct::iota<size_t>(0, _df.text_.size());
 
-  auto range = iota | VIEWS::transform(make_index);
-
-  return fct::collect::vector<std::shared_ptr<const textmining::WordIndex>>(
-      range);
+  return fct::collect::vector(iota | VIEWS::transform(make_index));
 }
 
 // ----------------------------------------------------------------------------

@@ -33,7 +33,7 @@ SQLDependencyTracker::find_dependencies(const Tuples& _tuples,
   const auto iota = fct::iota<size_t>(0, _i);
 
   const auto dependencies =
-      fct::collect::vector<size_t>(iota | VIEWS::filter(is_dependency));
+      fct::collect::vector(iota | VIEWS::filter(is_dependency));
 
   return fct::make_field<"table_name_">(std::get<0>(_tuples.at(_i))) *
          fct::make_field<"file_name_">(std::get<1>(_tuples.at(_i))) *
@@ -76,7 +76,7 @@ void SQLDependencyTracker::save_dependencies(const std::string& _sql) const {
   const auto iota = fct::iota<size_t>(0, tuples.size());
 
   const auto dependencies =
-      fct::collect::vector<SQLDependency>(iota | VIEWS::transform(to_obj));
+      fct::collect::vector(iota | VIEWS::transform(to_obj));
 
   const auto obj =
       fct::make_named_tuple(fct::make_field<"dependencies_">(dependencies));
@@ -97,7 +97,7 @@ typename SQLDependencyTracker::Tuples SQLDependencyTracker::save_sql(
   };
 
   const auto table_names =
-      fct::collect::vector<std::string>(sql | VIEWS::transform(get_table_name));
+      fct::collect::vector(sql | VIEWS::transform(get_table_name));
 
   const auto to_file_name = [](const size_t _i) -> std::string {
     return std::to_string(_i) + ".sql";
@@ -106,7 +106,7 @@ typename SQLDependencyTracker::Tuples SQLDependencyTracker::save_sql(
   const auto iota = fct::iota<size_t>(0, table_names.size());
 
   const auto file_names =
-      fct::collect::vector<std::string>(iota | VIEWS::transform(to_file_name));
+      fct::collect::vector(iota | VIEWS::transform(to_file_name));
 
   for (size_t i = 0; i < file_names.size(); ++i) {
     write_to_file(file_names.at(i), sql.at(i));
@@ -117,8 +117,7 @@ typename SQLDependencyTracker::Tuples SQLDependencyTracker::save_sql(
                            transpilation::SQLGenerator::to_lower(sql.at(_i)));
   };
 
-  return fct::collect::vector<Tuples::value_type>(iota |
-                                                  VIEWS::transform(make_tuple));
+  return fct::collect::vector(iota | VIEWS::transform(make_tuple));
 }
 
 // ------------------------------------------------------------------------

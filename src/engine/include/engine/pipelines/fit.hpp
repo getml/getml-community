@@ -91,8 +91,7 @@ inline std::vector<fct::Ref<const T>> to_const(
   const auto as_const_ref = [](const auto& _o) {
     return fct::Ref<const T>(_o);
   };
-  return fct::collect::vector<fct::Ref<const T>>(
-      _orig | VIEWS::transform(as_const_ref));
+  return fct::collect::vector(_orig | VIEWS::transform(as_const_ref));
 }
 
 /// Transforms to a vector of const references.
@@ -100,8 +99,7 @@ template <class T>
 inline std::vector<std::vector<fct::Ref<const T>>> to_const(
     const std::vector<std::vector<fct::Ref<T>>>& _orig) {
   const auto as_const_ref = [](const auto& _o) { return fit::to_const(_o); };
-  return fct::collect::vector<std::vector<fct::Ref<const T>>>(
-      _orig | VIEWS::transform(as_const_ref));
+  return fct::collect::vector(_orig | VIEWS::transform(as_const_ref));
 }
 
 /// Transforms to a vector of shared_ptrs to a vector of
@@ -110,8 +108,7 @@ template <class T>
 inline std::vector<fct::Ref<T>> to_ref(
     const std::vector<std::shared_ptr<T>>& _orig) {
   const auto as_const_ref = [](const auto& _o) { return fct::Ref<T>(_o); };
-  return fct::collect::vector<fct::Ref<T>>(_orig |
-                                           VIEWS::transform(as_const_ref));
+  return fct::collect::vector(_orig | VIEWS::transform(as_const_ref));
 }
 
 /// Transforms to a vector of references.
@@ -119,8 +116,7 @@ template <class T>
 inline std::vector<std::vector<fct::Ref<T>>> to_ref(
     const std::vector<std::vector<std::shared_ptr<T>>>& _orig) {
   const auto as_const_ref = [](const auto& _o) { return fit::to_ref(_o); };
-  return fct::collect::vector<std::vector<fct::Ref<T>>>(
-      _orig | VIEWS::transform(as_const_ref));
+  return fct::collect::vector(_orig | VIEWS::transform(as_const_ref));
 }
 
 }  // namespace fit
