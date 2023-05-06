@@ -45,9 +45,8 @@ VocabularyContainer VocabularyContainer::make_container(
     return VocabForDf(range.begin(), range.end());
   };
 
-  auto range = _peripheral | VIEWS::transform(extract_from_df);
-
-  const auto peripheral_dfs = fct::collect::vector<VocabForDf>(range);
+  const auto peripheral_dfs =
+      fct::collect::vector(_peripheral | VIEWS::transform(extract_from_df));
 
   const auto population_dfs = extract_from_df(_population);
 

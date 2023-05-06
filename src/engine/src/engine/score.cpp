@@ -340,8 +340,8 @@ fct::Ref<const metrics::Scores> score(
     return helpers::Feature<Float>(_col.data_ptr());
   };
 
-  const auto y = fct::collect::vector<helpers::Feature<Float>>(
-      _population_df.targets() | VIEWS::transform(get_feature));
+  const auto y = fct::collect::vector(_population_df.targets() |
+                                      VIEWS::transform(get_feature));
 
   if (_yhat.size() != y.size()) {
     throw std::runtime_error(

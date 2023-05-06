@@ -508,8 +508,8 @@ typename PipelineManager::RefreshPipelineType PipelineManager::refresh_pipeline(
   }
 
   const auto peripheral_metadata =
-      fct::collect::vector<RolesType>(*_pipeline.fitted()->peripheral_schema_ |
-                                      VIEWS::transform(extract_roles));
+      fct::collect::vector(*_pipeline.fitted()->peripheral_schema_ |
+                           VIEWS::transform(extract_roles));
 
   const auto population_metadata =
       extract_roles(*_pipeline.fitted()->population_schema_);

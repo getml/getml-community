@@ -64,33 +64,32 @@ std::vector<std::shared_ptr<arrow::ChunkedArray>> ArrowHandler::extract_arrays(
                                                      range.end());
   };
 
-  const auto categoricals = fct::collect::vector<Array>(
+  const auto categoricals = fct::collect::vector(
       _df.categoricals() | VIEWS::transform(categoricals_to_string_array));
 
-  const auto join_keys = fct::collect::vector<Array>(
+  const auto join_keys = fct::collect::vector(
       _df.join_keys() | VIEWS::transform(join_keys_to_string_array));
 
-  const auto numericals = fct::collect::vector<Array>(
+  const auto numericals = fct::collect::vector(
       _df.numericals() | VIEWS::transform(to_float_or_ts_array));
 
-  const auto targets = fct::collect::vector<Array>(
+  const auto targets = fct::collect::vector(
       _df.targets() | VIEWS::transform(to_float_or_ts_array));
 
-  const auto text = fct::collect::vector<Array>(
-      _df.text() | VIEWS::transform(to_string_array));
+  const auto text =
+      fct::collect::vector(_df.text() | VIEWS::transform(to_string_array));
 
-  const auto time_stamps = fct::collect::vector<Array>(
+  const auto time_stamps = fct::collect::vector(
       _df.time_stamps() | VIEWS::transform(to_float_or_ts_array));
 
-  const auto unused_floats = fct::collect::vector<Array>(
+  const auto unused_floats = fct::collect::vector(
       _df.unused_floats() | VIEWS::transform(to_float_or_ts_array));
 
-  const auto unused_strings = fct::collect::vector<Array>(
+  const auto unused_strings = fct::collect::vector(
       _df.unused_strings() | VIEWS::transform(to_string_array));
 
-  return fct::join::vector<Array>({categoricals, join_keys, numericals, targets,
-                                   text, time_stamps, unused_floats,
-                                   unused_strings});
+  return fct::join::vector({categoricals, join_keys, numericals, targets, text,
+                            time_stamps, unused_floats, unused_strings});
 }
 
 // ----------------------------------------------------------------------------
@@ -111,35 +110,35 @@ std::shared_ptr<arrow::Schema> ArrowHandler::df_to_schema(
     return arrow::field(_col.name(), arrow::utf8());
   };
 
-  const auto categoricals = fct::collect::vector<Field>(
+  const auto categoricals = fct::collect::vector(
       _df.categoricals() | VIEWS::transform(to_string_field));
 
-  const auto join_keys = fct::collect::vector<Field>(
-      _df.join_keys() | VIEWS::transform(to_string_field));
+  const auto join_keys =
+      fct::collect::vector(_df.join_keys() | VIEWS::transform(to_string_field));
 
-  const auto numericals = fct::collect::vector<Field>(
+  const auto numericals = fct::collect::vector(
       _df.numericals() | VIEWS::transform(to_float_or_ts_field));
 
-  const auto targets = fct::collect::vector<Field>(
+  const auto targets = fct::collect::vector(
       _df.targets() | VIEWS::transform(to_float_or_ts_field));
 
-  const auto text = fct::collect::vector<Field>(
-      _df.text() | VIEWS::transform(to_string_field));
+  const auto text =
+      fct::collect::vector(_df.text() | VIEWS::transform(to_string_field));
 
-  const auto time_stamps = fct::collect::vector<Field>(
+  const auto time_stamps = fct::collect::vector(
       _df.time_stamps() | VIEWS::transform(to_float_or_ts_field));
 
-  const auto unused_floats = fct::collect::vector<Field>(
+  const auto unused_floats = fct::collect::vector(
       _df.unused_floats() | VIEWS::transform(to_float_or_ts_field));
 
-  const auto unused_strings = fct::collect::vector<Field>(
+  const auto unused_strings = fct::collect::vector(
       _df.unused_strings() | VIEWS::transform(to_string_field));
 
-  const auto all_fields = fct::join::vector<Field>(
-      {categoricals, join_keys, numericals, targets, text, time_stamps,
-       unused_floats, unused_strings});
+  const auto all_fields =
+      std::vector({categoricals, join_keys, numericals, targets, text,
+                   time_stamps, unused_floats, unused_strings});
 
-  return arrow::schema(all_fields);
+  return arrow::schema(fct::collect::vector(all_fields | VIEWS::join));
 }
 
 // ----------------------------------------------------------------------------

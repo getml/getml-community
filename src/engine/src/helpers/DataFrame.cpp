@@ -258,8 +258,8 @@ std::vector<Column<Float>> DataFrame::make_numericals_and_time_stamps(
     return _upper_time_stamp == "" || _ts.name_ != _upper_time_stamp;
   };
 
-  const auto time_stamps = fct::collect::vector<Column<Float>>(
-      time_stamps_ | VIEWS::filter(is_not_upper));
+  const auto time_stamps =
+      fct::collect::vector(time_stamps_ | VIEWS::filter(is_not_upper));
 
   return fct::join::vector<Column<Float>>(
       {numericals_, _additional, targets, time_stamps});
@@ -303,7 +303,7 @@ std::shared_ptr<tsindex::Index> DataFrame::make_ts_index(
   const auto memory = upper_ts[0] - lower_ts.begin()[0];
 
   const auto unique_join_keys =
-      fct::collect::set<Int>(*_params.population_join_keys_);
+      fct::collect::set(*_params.population_join_keys_);
 
   const auto find_rownums =
       [this, _ix_join_key](const Int jk) -> fct::Range<const size_t*> {

@@ -53,9 +53,8 @@ fct::Ref<std::vector<std::string>> Pipeline::parse_peripheral() const {
   const auto get_name = [](const auto& _p) -> std::string {
     return fct::get<"name_">(_p.val_);
   };
-  return fct::Ref<std::vector<std::string>>::make(
-      fct::collect::vector<std::string>(*obj().get<"peripheral_">() |
-                                        VIEWS::transform(get_name)));
+  return fct::Ref<std::vector<std::string>>::make(fct::collect::vector(
+      *obj().get<"peripheral_">() | VIEWS::transform(get_name)));
 }
 
 // ----------------------------------------------------------------------

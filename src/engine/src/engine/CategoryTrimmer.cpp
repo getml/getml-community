@@ -87,8 +87,8 @@ CategoryTrimmer::fit_transform(const Params& _params) {
   population_sets_ = fit_df(_params.get<"population_df_">(),
                             helpers::ColumnDescription::POPULATION);
 
-  peripheral_sets_ = fct::collect::vector<std::vector<CategoryPair>>(
-      _params.get<"peripheral_dfs_">() | VIEWS::transform(fit_peripheral));
+  peripheral_sets_ = fct::collect::vector(_params.get<"peripheral_dfs_">() |
+                                          VIEWS::transform(fit_peripheral));
 
   (*_params.get<"categories_">())[strings::String(TRIMMED)];
 
@@ -126,10 +126,8 @@ std::vector<typename CategoryTrimmer::CategoryPair> CategoryTrimmer::fit_df(
     return std::make_pair(to_column_description(_col), to_set(_col));
   };
 
-  const auto range =
-      _df.categoricals() | VIEWS::filter(include) | VIEWS::transform(to_pair);
-
-  return fct::collect::vector<CategoryPair>(range);
+  return fct::collect::vector(_df.categoricals() | VIEWS::filter(include) |
+                              VIEWS::transform(to_pair));
 }
 
 // ----------------------------------------------------
@@ -159,7 +157,7 @@ fct::Ref<const std::set<Int>> CategoryTrimmer::make_category_set(
                      VIEWS::transform(get_first) |
                      VIEWS::take(max_num_categories_);
 
-  return fct::Ref<const std::set<Int>>::make(fct::collect::set<Int>(range));
+  return fct::Ref<const std::set<Int>>::make(fct::collect::set(range));
 }
 
 // ----------------------------------------------------
@@ -261,8 +259,8 @@ CategoryTrimmer::transform(const Params& _params) const {
 
   const auto iota = fct::IotaRange<size_t>(0, peripheral_sets_.size());
 
-  const auto peripheral_dfs = fct::collect::vector<containers::DataFrame>(
-      iota | VIEWS::transform(make_peripheral_df));
+  const auto peripheral_dfs =
+      fct::collect::vector(iota | VIEWS::transform(make_peripheral_df));
 
   return std::make_pair(population_df, peripheral_dfs);
 }

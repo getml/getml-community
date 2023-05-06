@@ -83,7 +83,7 @@ std::vector<std::string> feature_learners_to_sql(
     const auto num_subfeatures = all.size() - fl->num_features();
 
     const auto subfeatures =
-        fct::collect::vector<std::string>(all | VIEWS::take(num_subfeatures));
+        fct::collect::vector(all | VIEWS::take(num_subfeatures));
 
     const auto get_feature = [num_subfeatures,
                               all](const size_t _ix) -> std::string {
@@ -97,8 +97,8 @@ std::vector<std::string> feature_learners_to_sql(
     const auto& autofeatures =
         _params.get<"fitted_">().predictors_.impl_->autofeatures().at(_i);
 
-    const auto features = fct::collect::vector<std::string>(
-        autofeatures | VIEWS::transform(get_feature));
+    const auto features =
+        fct::collect::vector(autofeatures | VIEWS::transform(get_feature));
 
     return fct::join::vector<std::string>({subfeatures, features});
   };
@@ -123,8 +123,7 @@ std::vector<std::string> make_autofeature_names(const FittedPipeline& _fitted) {
 
     const auto& autofeatures = _fitted.predictors_.impl_->autofeatures().at(_i);
 
-    return fct::collect::vector<std::string>(autofeatures |
-                                             VIEWS::transform(make_name));
+    return fct::collect::vector(autofeatures | VIEWS::transform(make_name));
   };
 
   const auto iota = fct::iota<size_t>(0, _fitted.feature_learners_.size());
@@ -151,7 +150,7 @@ make_staging_schemata(const FittedPipeline& _fitted) {
   const auto add_text_fields =
       [has_text_field_marker, remove_text_field_marker](
           const containers::Schema& _schema) -> containers::Schema {
-    const auto text_fields = fct::collect::vector<std::string>(
+    const auto text_fields = fct::collect::vector(
         _schema.unused_strings() | VIEWS::filter(has_text_field_marker) |
         VIEWS::transform(remove_text_field_marker));
 
@@ -170,10 +169,9 @@ make_staging_schemata(const FittedPipeline& _fitted) {
   const auto staging_schema_population =
       add_text_fields(*_fitted.modified_population_schema_);
 
-  const auto staging_schema_peripheral =
-      fct::collect::vector<containers::Schema>(
-          *_fitted.modified_peripheral_schema_ |
-          VIEWS::filter(is_not_text_field) | VIEWS::transform(add_text_fields));
+  const auto staging_schema_peripheral = fct::collect::vector(
+      *_fitted.modified_peripheral_schema_ | VIEWS::filter(is_not_text_field) |
+      VIEWS::transform(add_text_fields));
 
   return std::make_pair(staging_schema_population, staging_schema_peripheral);
 }
@@ -254,8 +252,7 @@ std::vector<std::string> overwrite_oversized_features(
 
   const auto iota = fct::iota<size_t>(0, _features.size());
 
-  return fct::collect::vector<std::string>(iota |
-                                           VIEWS::transform(make_feature));
+  return fct::collect::vector(iota | VIEWS::transform(make_feature));
 }
 
 // ----------------------------------------------------------------------------

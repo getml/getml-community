@@ -275,8 +275,8 @@ communication::Warner check(
     return _df.name().find(helpers::Macros::text_field()) == std::string::npos;
   };
 
-  const auto peripheral = fct::collect::vector<containers::DataFrame>(
-      _peripheral | VIEWS::filter(is_not_text_field));
+  const auto peripheral =
+      fct::collect::vector(_peripheral | VIEWS::filter(is_not_text_field));
 
   check_peripheral_size(_peripheral_names, peripheral);
 

@@ -432,9 +432,8 @@ WordIndexContainer TableHolder::word_indices() const {
 
   const auto population = extract_word_indices(main_tables_.at(0).df());
 
-  auto range = peripheral_tables_ | VIEWS::transform(extract_word_indices);
-
-  const auto peripheral = fct::collect::vector<WordIndices>(range);
+  const auto peripheral = fct::collect::vector(
+      peripheral_tables_ | VIEWS::transform(extract_word_indices));
 
   return WordIndexContainer(population, peripheral);
 }

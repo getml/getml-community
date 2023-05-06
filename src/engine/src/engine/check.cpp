@@ -78,9 +78,8 @@ void check(const Pipeline& _pipeline, const CheckParams& _params) {
   // TODO: Use fct::Ref
   const auto to_ptr = [](const auto& _fl) { return _fl.ptr(); };
 
-  const auto fl_shared_ptr = fct::collect::vector<
-      std::shared_ptr<featurelearners::AbstractFeatureLearner>>(
-      feature_learners | VIEWS::transform(to_ptr));
+  const auto fl_shared_ptr =
+      fct::collect::vector(feature_learners | VIEWS::transform(to_ptr));
 
   const auto warner = preprocessors::data_model_checking::check(
       placeholder.ptr(), peripheral_names.ptr(), preprocessed.population_df_,

@@ -410,32 +410,32 @@ FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
     return false;
   };
 
-  const auto targets = fct::collect::vector<std::string>(
-      _schema.targets() | VIEWS::filter(include_target));
+  const auto targets =
+      fct::collect::vector(_schema.targets() | VIEWS::filter(include_target));
 
   const auto include = [this, &_df](const std::string& _colname) -> bool {
     return parse_subroles(_df.subroles(_colname));
   };
 
-  const auto categoricals =
-      _apply_subroles ? fct::collect::vector<std::string>(
-                            _schema.categoricals() | VIEWS::filter(include))
-                      : _schema.categoricals();
+  const auto categoricals = _apply_subroles
+                                ? fct::collect::vector(_schema.categoricals() |
+                                                       VIEWS::filter(include))
+                                : _schema.categoricals();
 
-  const auto discretes = _apply_subroles
-                             ? fct::collect::vector<std::string>(
-                                   _schema.discretes() | VIEWS::filter(include))
-                             : _schema.discretes();
+  const auto discretes =
+      _apply_subroles
+          ? fct::collect::vector(_schema.discretes() | VIEWS::filter(include))
+          : _schema.discretes();
 
   const auto numericals =
-      _apply_subroles ? fct::collect::vector<std::string>(
-                            _schema.numericals() | VIEWS::filter(include))
-                      : _schema.numericals();
+      _apply_subroles
+          ? fct::collect::vector(_schema.numericals() | VIEWS::filter(include))
+          : _schema.numericals();
 
-  const auto text = _apply_subroles
-                        ? fct::collect::vector<std::string>(
-                              _schema.text() | VIEWS::filter(include))
-                        : _schema.text();
+  const auto text =
+      _apply_subroles
+          ? fct::collect::vector(_schema.text() | VIEWS::filter(include))
+          : _schema.text();
 
   const auto schema = helpers::Schema(_schema.named_tuple().replace(
       fct::make_field<"categorical_">(categoricals),
@@ -487,8 +487,8 @@ FeatureLearner<FeatureLearnerType>::extract_tables_by_colnames(
 
   const auto iota = fct::iota<size_t>(0, _peripheral_schema.size());
 
-  const auto peripheral_tables = fct::collect::vector<DataFrameType>(
-      iota | VIEWS::transform(to_peripheral));
+  const auto peripheral_tables =
+      fct::collect::vector(iota | VIEWS::transform(to_peripheral));
 
   return std::make_pair(population_table, peripheral_tables);
 }

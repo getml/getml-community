@@ -132,15 +132,14 @@ std::vector<size_t> calculate_importance_index(
 
   const auto iota = fct::iota<size_t>(0, sum_importances.size());
 
-  auto pairs = fct::collect::vector<std::pair<size_t, Float>>(
-      iota | VIEWS::transform(make_pair));
+  auto pairs = fct::collect::vector(iota | VIEWS::transform(make_pair));
 
   std::sort(
       pairs.begin(), pairs.end(),
       [](const std::pair<size_t, Float>& p1,
          const std::pair<size_t, Float>& p2) { return p1.second > p2.second; });
 
-  return fct::collect::vector<size_t>(pairs | VIEWS::keys);
+  return fct::collect::vector(pairs | VIEWS::keys);
 }
 
 // ------------------------------------------------------------------------
@@ -179,8 +178,8 @@ fct::Ref<const std::vector<commands::Fingerprint>> extract_df_fingerprints(
   const auto population =
       std::vector<commands::Fingerprint>({_population_df.fingerprint()});
 
-  const auto peripheral = fct::collect::vector<commands::Fingerprint>(
-      _peripheral_dfs | VIEWS::transform(get_fingerprint));
+  const auto peripheral =
+      fct::collect::vector(_peripheral_dfs | VIEWS::transform(get_fingerprint));
 
   return fct::Ref<const std::vector<commands::Fingerprint>>::make(
       fct::join::vector<commands::Fingerprint>(
@@ -195,7 +194,7 @@ fct::Ref<const std::vector<commands::Fingerprint>> extract_fl_fingerprints(
     const fct::Ref<const std::vector<commands::Fingerprint>>& _dependencies) {
   if (_feature_learners.size() == 0) {
     return fct::Ref<const std::vector<commands::Fingerprint>>::make(
-        fct::collect::vector<commands::Fingerprint>(*_dependencies));
+        fct::collect::vector(*_dependencies));
   }
 
   const auto get_fingerprint = [](const auto& _fl) {
@@ -203,8 +202,8 @@ fct::Ref<const std::vector<commands::Fingerprint>> extract_fl_fingerprints(
   };
 
   return fct::Ref<const std::vector<commands::Fingerprint>>::make(
-      fct::collect::vector<commands::Fingerprint>(
-          _feature_learners | VIEWS::transform(get_fingerprint)));
+      fct::collect::vector(_feature_learners |
+                           VIEWS::transform(get_fingerprint)));
 }
 
 // ----------------------------------------------------------------------
@@ -237,7 +236,7 @@ extract_preprocessor_fingerprints(
     const fct::Ref<const std::vector<commands::Fingerprint>>& _dependencies) {
   if (_preprocessors.size() == 0) {
     return fct::Ref<const std::vector<commands::Fingerprint>>::make(
-        fct::collect::vector<commands::Fingerprint>(*_dependencies));
+        fct::collect::vector(*_dependencies));
   }
 
   const auto get_fingerprint = [](const auto& _fl) {
@@ -245,8 +244,7 @@ extract_preprocessor_fingerprints(
   };
 
   return fct::Ref<const std::vector<commands::Fingerprint>>::make(
-      fct::collect::vector<commands::Fingerprint>(
-          _preprocessors | VIEWS::transform(get_fingerprint)));
+      fct::collect::vector(_preprocessors | VIEWS::transform(get_fingerprint)));
 }
 
 // ----------------------------------------------------------------------
@@ -266,9 +264,8 @@ extract_schemata(const containers::DataFrame& _population_df,
       fct::Ref<const helpers::Schema>::make(extract_schema(_population_df));
 
   const auto peripheral_schema =
-      fct::Ref<const std::vector<helpers::Schema>>::make(
-          fct::collect::vector<helpers::Schema>(
-              _peripheral_dfs | VIEWS::transform(extract_schema)));
+      fct::Ref<const std::vector<helpers::Schema>>::make(fct::collect::vector(
+          _peripheral_dfs | VIEWS::transform(extract_schema)));
 
   return std::make_pair(population_schema, peripheral_schema);
 }
@@ -346,7 +343,7 @@ std::pair<fct::Ref<const FittedPipeline>, fct::Ref<const metrics::Scores>> fit(
   const auto dependencies =
       fct::Ref<const std::vector<commands::Fingerprint>>::make(
           fct::join::vector<commands::Fingerprint>(
-              {fct::collect::vector<commands::Fingerprint>(*fs_fingerprints),
+              {fct::collect::vector(*fs_fingerprints),
                validation_fingerprint}));
 
   const auto fit_predictors_params = fit_feature_selectors_params.replace(
@@ -415,7 +412,7 @@ fit_feature_learners(
     return std::make_pair(
         to_const(feature_learners),
         fct::Ref<const std::vector<commands::Fingerprint>>::make(
-            fct::collect::vector<commands::Fingerprint>(
+            fct::collect::vector(
                 *_feature_learner_params.get<"dependencies_">())));
   }
 
@@ -621,7 +618,7 @@ fit_transform_preprocessors(
     return std::make_pair(
         to_const(preprocessors),
         fct::Ref<const std::vector<commands::Fingerprint>>::make(
-            fct::collect::vector<commands::Fingerprint>(*_dependencies)));
+            fct::collect::vector(*_dependencies)));
   }
 
   const auto [placeholder, peripheral_names] = _pipeline.make_placeholder();
@@ -689,8 +686,8 @@ std::vector<std::string> get_targets(
   const auto get_target = [](const auto& _col) -> std::string {
     return _col.name();
   };
-  return fct::collect::vector<std::string>(_population_df.targets() |
-                                           VIEWS::transform(get_target));
+  return fct::collect::vector(_population_df.targets() |
+                              VIEWS::transform(get_target));
 }
 
 // ------------------------------------------------------------------------
@@ -724,9 +721,7 @@ init_feature_learners(
 
         const auto iota = fct::iota<Int>(0, _num_targets);
 
-        return fct::collect::vector<
-            fct::Ref<featurelearners::AbstractFeatureLearner>>(
-            iota | VIEWS::transform(make));
+        return fct::collect::vector(iota | VIEWS::transform(make));
       };
 
   const auto to_fl = [&_feature_learner_params, make_fl_for_all_targets](
@@ -793,8 +788,7 @@ std::vector<std::vector<fct::Ref<predictors::Predictor>>> init_predictors(
 std::vector<fct::Ref<preprocessors::Preprocessor>> init_preprocessors(
     const Pipeline& _pipeline,
     const fct::Ref<const std::vector<commands::Fingerprint>>& _dependencies) {
-  auto dependencies =
-      fct::collect::vector<commands::Fingerprint>(*_dependencies);
+  auto dependencies = fct::collect::vector(*_dependencies);
 
   const auto parse = [&dependencies](const auto& _cmd) {
     return preprocessors::PreprocessorParser::parse(_cmd.val_, dependencies);
@@ -802,8 +796,7 @@ std::vector<fct::Ref<preprocessors::Preprocessor>> init_preprocessors(
 
   const auto commands = _pipeline.obj().get<"preprocessors_">();
 
-  auto vec = fct::collect::vector<fct::Ref<preprocessors::Preprocessor>>(
-      commands | VIEWS::transform(parse));
+  auto vec = fct::collect::vector(commands | VIEWS::transform(parse));
 
   const auto mapping_to_end = [](const auto& _p) -> bool {
     return _p->type() != preprocessors::Preprocessor::MAPPING;
@@ -855,13 +848,13 @@ fct::Ref<const predictors::PredictorImpl> make_feature_selector_impl(
 
   const auto categorical_colnames =
       _pipeline.include_categorical()
-          ? fct::collect::vector<std::string>(
-                _population_df.categoricals() |
-                VIEWS::filter(is_not_comparison_only) |
-                VIEWS::filter(is_not_on_blacklist) | VIEWS::transform(get_name))
+          ? fct::collect::vector(_population_df.categoricals() |
+                                 VIEWS::filter(is_not_comparison_only) |
+                                 VIEWS::filter(is_not_on_blacklist) |
+                                 VIEWS::transform(get_name))
           : std::vector<std::string>();
 
-  const auto numerical_colnames = fct::collect::vector<std::string>(
+  const auto numerical_colnames = fct::collect::vector(
       _population_df.numericals() | VIEWS::filter(is_not_comparison_only) |
       VIEWS::filter(is_not_on_blacklist) |
       VIEWS::filter(does_not_contain_null) | VIEWS::transform(get_name));
@@ -870,7 +863,7 @@ fct::Ref<const predictors::PredictorImpl> make_feature_selector_impl(
     return _fl->num_features();
   };
 
-  const auto num_autofeatures = fct::collect::vector<size_t>(
+  const auto num_autofeatures = fct::collect::vector(
       _feature_learners | VIEWS::transform(get_num_features));
 
   const auto fs_impl = fct::Ref<predictors::PredictorImpl>::make(
