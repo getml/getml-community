@@ -6,14 +6,14 @@
 // for details.
 //
 
-#ifndef JSON_IS_REQUIRED_HPP_
-#define JSON_IS_REQUIRED_HPP_
+#ifndef PARSING_IS_REQUIRED_HPP_
+#define PARSING_IS_REQUIRED_HPP_
 
 #include <memory>
 #include <optional>
 #include <type_traits>
 
-namespace json {
+namespace parsing {
 
 /// Determines whether a field in a named tuple is required.
 /// General case - most fields are required.
@@ -29,6 +29,6 @@ class is_required<std::optional<T>> : public std::false_type {};
 template <class T>
 class is_required<std::shared_ptr<T>> : public std::false_type {};
 
-}  // namespace json
+}  // namespace parsing
 
 #endif  // JSON_IS_REQUIRED_HPP_
