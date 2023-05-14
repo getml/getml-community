@@ -12,9 +12,11 @@
 #include <Poco/Dynamic/Var.h>
 #include <Poco/JSON/Array.h>
 #include <Poco/JSON/Object.h>
+#include <simdjson.h>
 
 #include <exception>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <vector>
 
@@ -101,6 +103,86 @@ struct PocoJSONParser {
     }
     return obj;
   }
+};
+
+struct SimdJSONParser {
+  using ArrayType = simdjson::ondemand::array;
+  using ObjectType = simdjson::ondemand::object;
+  using VarType = simdjson::ondemand::value;
+
+  // TODO
+  /*  static void add(const VarType _var, ArrayType* _arr) {
+      assert_true(_arr);
+      assert_true(*_arr);
+      (*_arr)->add(_var);
+    }*/
+
+  // TODO
+  // static VarType empty_var() { return Poco::Dynamic::Var(); }
+
+  static VarType get(const size_t _i, simdjson::ondemand::array* _arr) {
+    size_t i = 0;
+    for (auto val : *_arr) {
+      if (i == _i) {
+        return val.value();
+      }
+      ++i;
+    }
+    throw std::runtime_error("Index " + std::to_string(_i) +
+                             " out of range. Length was " + std::to_string(i) +
+                             ".");
+  }
+
+  static size_t get_array_size(ArrayType* _arr) {
+    return _arr->count_elements();
+  }
+
+  static VarType get_field(const std::string& _name, ObjectType* _obj) {
+    return (*_obj)[_name];
+  }
+
+  static std::vector<std::string> get_names(ObjectType* _obj) {
+    std::vector<std::string> names;
+    for (auto field : *_obj) {
+      names.push_back(std::string(std::string_view(field.unescaped_key())));
+    }
+    return names;
+  }
+
+  static bool has_key(const std::string& _key, ObjectType* _obj) {
+    for (auto field : *_obj) {
+      if (_key == std::string_view(field.unescaped_key())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  static ArrayType new_array() { return simdjson::ondemand::array(); }
+
+  static ObjectType new_object() { return simdjson::ondemand::object(); }
+
+  //  static bool is_empty(const VarType& _var) { return _var.isEmpty(); }
+
+  /* static void set_field(const std::string& _name, const VarType& _var,
+                         ObjectType* _obj) {
+     assert_true(_obj);
+     assert_true(*_obj);
+     (*_obj)->set(_name, _var);
+   }*/
+
+  template <class T>
+  static T to_basic_type(const VarType& _var) {
+    try {
+      return _var;
+    } catch (std::exception& e) {
+      throw std::runtime_error("Could not cast to expected type.");
+    }
+  }
+
+  static ArrayType to_array(VarType* _var) { return _var->get_array(); }
+
+  static ObjectType to_object(VarType* _var) { return _var->get_object(); }
 };
 
 using JSONParser = PocoJSONParser;
