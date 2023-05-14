@@ -16,6 +16,7 @@ source ../build_scripts/checkout_postgres.sh || exit 1
 source ../build_scripts/checkout_mariadb.sh || exit 1
 source ../build_scripts/checkout_poco.sh || exit 1
 source ../build_scripts/checkout_rangev3.sh || exit 1
+source ../build_scripts/checkout_simdjson.sh || exit 1
 source ../build_scripts/checkout_xgboost.sh || exit 1
 source ../build_scripts/compile_arrow.sh || exit 1
 source ../build_scripts/compile_engine.sh || exit 1
