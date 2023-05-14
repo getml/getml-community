@@ -871,7 +871,7 @@ FeatureLearner<FeatureLearnerType>::transform_propositionalization(
 
     using MakerParams = fastprop::subfeatures::MakerParams;
 
-    assert_true(_params.prefix_ != "");
+    assert_true(_params.get<"prefix_">() != "");
 
     const auto params =
         MakerParams{.fast_prop_container_ = fast_prop_container_,

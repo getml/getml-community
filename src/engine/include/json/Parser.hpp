@@ -13,7 +13,9 @@
 #include <Poco/JSON/Array.h>
 #include <Poco/JSON/Object.h>
 
+#include <exception>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include "json/has_from_json_obj.hpp"
@@ -75,7 +77,13 @@ struct PocoJSONParser {
 
   template <class T>
   static T to_basic_type(const VarType& _var) {
-    return _var.extract<T>();
+    try {
+      return _var.convert<std::decay_t<T>>();
+    } catch (std::exception& e) {
+      throw std::runtime_error(
+          "Could not cast to expected type. Contained value was: " +
+          _var.toString());
+    }
   }
 
   static ArrayType to_array(const VarType& _var) {
@@ -95,8 +103,10 @@ struct PocoJSONParser {
   }
 };
 
+using JSONParser = PocoJSONParser;
+
 template <class T>
-using Parser = parsing::Parser<PocoJSONParser, T>;
+using Parser = parsing::Parser<JSONParser, T>;
 };  // namespace json
 
 #endif  // JSON_PARSER_HPP_

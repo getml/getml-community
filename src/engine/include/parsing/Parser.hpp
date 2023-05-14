@@ -216,7 +216,7 @@ struct Parser<ParserType, fct::NamedTuple<FieldTypes...>> {
       return Parser<ParserType, ValueType>::from_json(
           ParserType::get_field(_obj, FieldType::name_.str()));
     } catch (std::exception& _exp) {
-      throw std::runtime_error("Failed to parse JSON field '" +
+      throw std::runtime_error("Failed to parse field '" +
                                FieldType::name_.str() + "': " + _exp.what());
     }
   }
