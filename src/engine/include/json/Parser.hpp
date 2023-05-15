@@ -20,6 +20,7 @@
 #include <type_traits>
 #include <vector>
 
+#include "fct/Result.hpp"
 #include "json/has_from_json_obj.hpp"
 #include "parsing/Parser.hpp"
 
@@ -120,7 +121,8 @@ struct SimdJSONParser {
   // TODO
   // static VarType empty_var() { return Poco::Dynamic::Var(); }
 
-  static VarType get(const size_t _i, simdjson::ondemand::array* _arr) {
+  static fct::Result<VarType> get(const size_t _i,
+                                  simdjson::ondemand::array* _arr) {
     size_t i = 0;
     for (auto val : *_arr) {
       if (i == _i) {
@@ -128,17 +130,23 @@ struct SimdJSONParser {
       }
       ++i;
     }
-    throw std::runtime_error("Index " + std::to_string(_i) +
-                             " out of range. Length was " + std::to_string(i) +
-                             ".");
+    return fct::Error("Index " + std::to_string(_i) +
+                      " out of range. Length was " + std::to_string(i) + ".");
   }
 
   static size_t get_array_size(ArrayType* _arr) {
     return _arr->count_elements();
   }
 
-  static VarType get_field(const std::string& _name, ObjectType* _obj) {
-    return (*_obj)[_name];
+  static fct::Result<VarType> get_field(const std::string& _name,
+                                        ObjectType* _obj) {
+    auto res = (*_obj)[_name];
+    VarType v;
+    const auto error = res.get(v);
+    if (error) {
+      return fct::Error("Object contains no field named '" + _name + "'.");
+    }
+    return v;
   }
 
   static std::vector<std::string> get_names(ObjectType* _obj) {
@@ -172,11 +180,12 @@ struct SimdJSONParser {
    }*/
 
   template <class T>
-  static T to_basic_type(const VarType& _var) {
+  static fct::Result<T> to_basic_type(const VarType& _var) {
     try {
-      return _var;
+      T var = _var;
+      return var;
     } catch (std::exception& e) {
-      throw std::runtime_error("Could not cast to expected type.");
+      return fct::Error("Could not cast to expected type.");
     }
   }
 
