@@ -16,6 +16,7 @@ namespace fct {
 
 /// To be returned
 class Error {
+ public:
   Error(const std::string& _what) : what_(_what) {}
 
   ~Error() = default;
@@ -52,11 +53,15 @@ class Result {
   static_assert(!std::is_same<T, Error>(), "The result type cannot be Error.");
 
  public:
+  Result(const T& _val) : t_or_err_(_val) {}
+
   Result(T&& _val) : t_or_err_(_val) {}
+
+  Result(const Error& _err) : t_or_err_(_err) {}
 
   Result(Error&& _err) : t_or_err_(_err) {}
 
-  ~Result = default;
+  ~Result() = default;
 
   /// Monadic operation - F must be a function of type T -> Result<U>.
   template <class F>
@@ -101,26 +106,26 @@ class Result {
         }
       };
       return std::visit(get_ptr, t_or_err_);
-    }*
-
-    /// Results types can be iterated over, which even make it possible to use
-    /// them within a std::range.
-    // TODO: Fix nullptr
-    /*const T* end() const {
-      const auto get_ptr = [this]<class TOrError>(
-          const TOrError& _t_or_err) -> const auto* {
-        if constexpr (!std::is_same<TOrError, Error>()) {
-          if constexpr (is_helper_tuple<T>()) {
-            return &_t_or_err.tuple_ + 1;
-          } else {
-            return &_t_or_err + 1;
-          }
-        } else {
-          return nullptr;
-        }
-      };
-      return std::visit(get_ptr, t_or_err_);
     }*/
+
+  /// Results types can be iterated over, which even make it possible to use
+  /// them within a std::range.
+  // TODO: Fix nullptr
+  /*const T* end() const {
+    const auto get_ptr = [this]<class TOrError>(
+        const TOrError& _t_or_err) -> const auto* {
+      if constexpr (!std::is_same<TOrError, Error>()) {
+        if constexpr (is_helper_tuple<T>()) {
+          return &_t_or_err.tuple_ + 1;
+        } else {
+          return &_t_or_err + 1;
+        }
+      } else {
+        return nullptr;
+      }
+    };
+    return std::visit(get_ptr, t_or_err_);
+  }*/
 
   /// Functor operation - F must be a function of type T -> U.
   template <class F>
