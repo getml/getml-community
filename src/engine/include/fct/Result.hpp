@@ -98,21 +98,6 @@ class Result {
     return std::visit(handle_variant, t_or_err_);
   }
 
-  /// Expects a function that takes of type Error -> Result<T> and returns
-  /// Result<T>.
-  template <class F>
-  Result<T> or_else(const F& _f) const {
-    const auto handle_variant =
-        [&_f]<class TOrError>(const TOrError& _t_or_err) -> Result<T> {
-      if constexpr (std::is_same<TOrError, Error>()) {
-        return _f(_t_or_err);
-      } else {
-        return _t_or_err;
-      }
-    };
-    return std::visit(handle_variant, t_or_err_);
-  }
-
   /// Results types can be iterated over, which even make it possible to use
   /// them within a std::range.
   // TODO: Fix nullptr
@@ -150,6 +135,26 @@ class Result {
     };
     return std::visit(get_ptr, t_or_err_);
   }*/
+
+  /// Returns true if the result contains a value, false otherwise.
+  operator bool() const noexcept {
+    return !std::holds_alternative<Error>(t_or_err_);
+  }
+
+  /// Expects a function that takes of type Error -> Result<T> and returns
+  /// Result<T>.
+  template <class F>
+  Result<T> or_else(const F& _f) const {
+    const auto handle_variant =
+        [&_f]<class TOrError>(const TOrError& _t_or_err) -> Result<T> {
+      if constexpr (std::is_same<TOrError, Error>()) {
+        return _f(_t_or_err);
+      } else {
+        return _t_or_err;
+      }
+    };
+    return std::visit(handle_variant, t_or_err_);
+  }
 
   /// Returns the value contained if successful or the provided result r if not.
   Result<T> or_other(const Result<T>& _r) const noexcept {
