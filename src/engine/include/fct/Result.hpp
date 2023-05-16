@@ -195,6 +195,57 @@ class Result {
 /// operator* allows to combine result types as a product type.
 
 template <class T, class U>
+inline auto operator*(const Result<T>& _rt, const Result<U>& _ru) {
+  const auto f1 = [&_ru](const T& _t) {
+    const auto f2 = [&_t](const U& _u) {
+      return HelperTuple<T, U>(std::make_tuple(_t, _u));
+    };
+    return _ru.transform(f2);
+  };
+  return _rt.and_then(f1);
+}
+
+template <class... T, class... U>
+inline auto operator*(const Result<HelperTuple<T...>>& _rt,
+                      const Result<HelperTuple<U...>>& _ru) {
+  const auto f1 = [&_ru](const T&... _t) {
+    const auto f2 = [&](const U&... _u) {
+      return HelperTuple<T..., U...>(std::make_tuple(_t..., _u...));
+    };
+    return _ru.transform(f2);
+  };
+  return _rt.and_then(f1);
+}
+
+template <class... T, class U>
+inline auto operator*(const Result<const HelperTuple<T...>>& _rt,
+                      const Result<U>& _ru) {
+  const auto f = [](const U& _u) {
+    return HelperTuple<U>(std::make_tuple(_u));
+  };
+  return _rt * _ru.transform(f);
+}
+
+template <class T, class... U>
+inline auto operator*(const Result<T>& _rt,
+                      const Result<HelperTuple<U...>>& _ru) {
+  const auto f = [](const T& _t) {
+    return HelperTuple<T>(std::make_tuple(_t));
+  };
+  return _rt.transform(f) * _ru;
+}
+
+template <class T, class U>
+inline auto operator*(const Result<T>& _rt, const U& _u) {
+  return _rt * Result<U>(_u);
+}
+
+template <class T, class U>
+inline auto operator*(const T& _t, const Result<U>& _ru) {
+  return Result<T>(_t) * _ru;
+}
+
+template <class T, class U>
 inline auto operator*(Result<T>&& _rt, Result<U>&& _ru) {
   const auto f1 = [&_ru](T&& _t) {
     const auto f2 = [&_t](U&& _u) {
