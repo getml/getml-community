@@ -141,6 +141,14 @@ class Result {
     return !std::holds_alternative<Error>(t_or_err_);
   }
 
+  /// Allows access to the underlying value. Careful: Will result in undefined
+  /// behavior, if the result contains an error.
+  T& operator*() { return std::get_if<T>(&t_or_err_); }
+
+  /// Allows read access to the underlying value. Careful: Will result in
+  /// undefined behavior, if the result contains an error.
+  const T& operator*() const { return std::get_if<T>(&t_or_err_); }
+
   /// Expects a function that takes of type Error -> Result<T> and returns
   /// Result<T>.
   template <class F>
