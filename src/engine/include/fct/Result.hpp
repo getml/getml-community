@@ -8,6 +8,7 @@
 #ifndef FCT_RESULT_HPP_
 #define FCT_RESULT_HPP_
 
+#include <stdexcept>
 #include <tuple>
 #include <type_traits>
 #include <variant>
@@ -63,6 +64,14 @@ class Result {
 
   ~Result() = default;
 
+  /// Returns Result<U>, if successful and error otherwise.
+  /// Inspired by .and(...) in the Rust std::result type.
+  template <class U>
+  Result<U> and_other(const Result<U>& _r) const noexcept {
+    const auto f = [&](const auto& _) { return _r; };
+    return and_then(f);
+  }
+
   /// Monadic operation - F must be a function of type T -> Result<U>.
   template <class F>
   auto and_then(const F& _f) const {
@@ -86,6 +95,21 @@ class Result {
       }
     };
 
+    return std::visit(handle_variant, t_or_err_);
+  }
+
+  /// Expects a function that takes of type Error -> Result<T> and returns
+  /// Result<T>.
+  template <class F>
+  Result<T> or_else(const F& _f) const {
+    const auto handle_variant =
+        [&_f]<class TOrError>(const TOrError& _t_or_err) -> Result<T> {
+      if constexpr (std::is_same<TOrError, Error>()) {
+        return _f(_t_or_err);
+      } else {
+        return _t_or_err;
+      }
+    };
     return std::visit(handle_variant, t_or_err_);
   }
 
@@ -127,16 +151,31 @@ class Result {
     return std::visit(get_ptr, t_or_err_);
   }*/
 
+  /// Returns the value contained if successful or the provided result r if not.
+  Result<T> or_other(const Result<T>& _r) const noexcept {
+    const auto f = [&](const auto& _) { return _r; };
+    return or_else(f);
+  }
+
   /// Functor operation - F must be a function of type T -> U.
   template <class F>
   auto transform(const F& _f) const {
     // Makes use of the theoretical insight that every monad is also a functor.
-    const auto f = [&_f](const auto& _t) { return Result(_f(_t)); };
+    const auto f = [&_f](const T& _t) { return Result(_f(_t)); };
     return and_then(f);
   }
 
+  /// Returns the value if the result does not contain an error, throws an
+  /// exceptions if not. Similar to .unwrap() in Rust.
+  T value() const {
+    const auto throw_err = [](const Error& _err) -> Result<T> {
+      throw std::runtime_error(_err.what());
+    };
+    return or_else(throw_err);
+  }
+
   /// Returns the value or a default.
-  T value_or(const T& _default) const {
+  T value_or(const T& _default) const noexcept {
     const auto handle_variant =
         [&]<class TOrError>(const TOrError& _t_or_err) -> T {
       if constexpr (!std::is_same<TOrError, Error>()) {
