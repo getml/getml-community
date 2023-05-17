@@ -27,78 +27,92 @@
 namespace json {
 
 struct PocoJSONParser {
-  using ArrayType = Poco::JSON::Array::Ptr;
-  using ObjectType = Poco::JSON::Object::Ptr;
-  using VarType = Poco::Dynamic::Var;
+  using InputArrayType = Poco::JSON::Array::Ptr;
+  using InputObjectType = Poco::JSON::Object::Ptr;
+  using InputVarType = Poco::Dynamic::Var;
 
-  static void add(const VarType _var, ArrayType* _arr) {
+  using OutputArrayType = Poco::JSON::Array::Ptr;
+  using OutputObjectType = Poco::JSON::Object::Ptr;
+  using OutputVarType = Poco::Dynamic::Var;
+
+  static void add(const OutputVarType _var, OutputArrayType* _arr) {
     assert_true(_arr);
     assert_true(*_arr);
     (*_arr)->add(_var);
   }
 
-  static VarType empty_var() { return Poco::Dynamic::Var(); }
+  static OutputVarType empty_var() { return Poco::Dynamic::Var(); }
 
-  static VarType get(const ArrayType& _arr, const size_t _i) {
+  static InputVarType get(const size_t _i, const InputArrayType* _arr) {
     assert_true(_arr);
-    return _arr->get(_i);
+    assert_true(*_arr);
+    return (*_arr)->get(_i);
   }
 
-  static size_t get_array_size(const ArrayType& _arr) {
+  static size_t get_array_size(InputArrayType* _arr) {
     assert_true(_arr);
-    return _arr->size();
+    assert_true(*_arr);
+    return (*_arr)->size();
   }
 
-  static VarType get_field(const ObjectType& _obj, const std::string& _name) {
+  static InputVarType get_field(const std::string& _name,
+                                InputObjectType* _obj) {
     assert_true(_obj);
-    return _obj->get(_name);
+    assert_true(*_obj);
+    return (*_obj)->get(_name);
   }
 
-  static auto get_names(const ObjectType& _obj) { return _obj->getNames(); }
+  static auto get_names(InputObjectType* _obj) { return (*_obj)->getNames(); }
 
-  static bool has_key(const ObjectType& _obj, const std::string& _key) {
+  static bool has_key(const std::string& _key, InputObjectType* _obj) {
     assert_true(_obj);
-    return _obj->has(_key);
+    assert_true(*_obj);
+    return (*_obj)->has(_key);
   }
 
-  static ArrayType new_array() {
+  static OutputArrayType new_array() {
     return Poco::JSON::Array::Ptr(new Poco::JSON::Array());
   }
 
-  static ObjectType new_object() {
+  static OutputObjectType new_object() {
     return Poco::JSON::Object::Ptr(new Poco::JSON::Object());
   }
 
-  static bool is_empty(const VarType& _var) { return _var.isEmpty(); }
+  static bool is_empty(InputVarType* _var) {
+    assert_true(_var);
+    return _var->isEmpty();
+  }
 
-  static void set_field(const std::string& _name, const VarType& _var,
-                        ObjectType* _obj) {
+  static void set_field(const std::string& _name, const OutputVarType& _var,
+                        OutputObjectType* _obj) {
     assert_true(_obj);
     assert_true(*_obj);
     (*_obj)->set(_name, _var);
   }
 
   template <class T>
-  static T to_basic_type(const VarType& _var) {
+  static T to_basic_type(InputVarType* _var) {
     try {
-      return _var.convert<std::decay_t<T>>();
+      assert_true(_var);
+      assert_true(*_var);
+      return _var->convert<std::decay_t<T>>();
     } catch (std::exception& e) {
       throw std::runtime_error(
           "Could not cast to expected type. Contained value was: " +
-          _var.toString());
+          _var->toString());
     }
   }
 
-  static ArrayType to_array(const VarType& _var) {
-    auto arr = _var.extract<ArrayType>();
+  static InputArrayType to_array(InputVarType* _var) {
+    auto arr = _var->extract<InputArrayType>();
     if (!arr) {
       throw std::runtime_error("Could not retrieve array!");
     }
     return arr;
   }
 
-  static ObjectType to_object(const VarType& _var) {
-    auto obj = _var.extract<ObjectType>();
+  static InputObjectType to_object(InputVarType* _var) {
+    auto obj = _var->extract<InputObjectType>();
     if (!obj) {
       throw std::runtime_error("Could not retrieve object!");
     }
