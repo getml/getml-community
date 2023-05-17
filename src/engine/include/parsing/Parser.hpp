@@ -44,10 +44,11 @@ struct Parser;
 /// Default case - anything that cannot be explicitly matched.
 template <class ParserType, class T>
 struct Parser {
-  using VarType = typename ParserType::VarType;
+  using InputVarType = typename ParserType::InputVarType;
+  using OutputVarType = typename ParserType::OutputVarType;
 
   /// Expresses the variables as type T.
-  static T from_json(const VarType& _var) {
+  static T from_json(InputVarType* _var) {
     if constexpr (json::has_from_json_obj_v<T>) {
       return T::from_json_obj(_var);
     } else {
@@ -81,10 +82,11 @@ struct Parser {
 
 template <class ParserType, fct::StringLiteral... _fields>
 struct Parser<ParserType, fct::Literal<_fields...>> {
-  using VarType = typename ParserType::VarType;
+  using InputVarType = typename ParserType::InputVarType;
+  using OutputVarType = typename ParserType::OutputVarType;
 
   /// Expresses the variables as type T.
-  static fct::Literal<_fields...> from_json(const VarType& _var) {
+  static fct::Literal<_fields...> from_json(InputVarType* _var) {
     try {
       return fct::Literal<_fields...>(
           ParserType::template to_basic_type<std::string>(_var));
@@ -104,25 +106,28 @@ struct Parser<ParserType, fct::Literal<_fields...>> {
 
 template <class ParserType, class ValueType>
 struct Parser<ParserType, std::map<std::string, ValueType>> {
-  using ObjectType = typename ParserType::ObjectType;
-  using VarType = typename ParserType::VarType;
+  using InputObjectType = typename ParserType::InputObjectType;
+  using InputVarType = typename ParserType::InputVarType;
+
+  using OutputObjectType = typename ParserType::OutputObjectType;
+  using OutputVarType = typename ParserType::OutputVarType;
 
   /// Expresses the variables as a std::map.
-  static std::map<std::string, ValueType> from_json(const VarType& _var) {
-    const auto obj = ParserType::to_object(_var);
-    const auto names = ParserType::get_names(obj);
+  static std::map<std::string, ValueType> from_json(InputVarType* _var) {
+    auto obj = ParserType::to_object(_var);
+    const auto names = ParserType::get_names(&obj);
     const auto get_value =
         [&obj](const auto& _name) -> std::pair<std::string, ValueType> {
+      auto var = ParserType::get_field(_name, &obj);
       return std::make_pair(
-          _name, Parser<ParserType, std::decay_t<ValueType>>::from_json(
-                     ParserType::get_field(obj, _name)));
+          _name, Parser<ParserType, std::decay_t<ValueType>>::from_json(&var));
     };
     return fct::collect::map<std::string, ValueType>(
         names | VIEWS::transform(get_value));
   }
 
   /// Transform a std::vector into an object
-  static ObjectType to_json(const std::map<std::string, ValueType>& _m) {
+  static OutputVarType to_json(const std::map<std::string, ValueType>& _m) {
     auto obj = ParserType::new_object();
     for (const auto& [k, v] : _m) {
       ParserType::set_field(
@@ -136,18 +141,21 @@ struct Parser<ParserType, std::map<std::string, ValueType>> {
 
 template <class ParserType, class... FieldTypes>
 struct Parser<ParserType, fct::NamedTuple<FieldTypes...>> {
-  using ObjectType = typename ParserType::ObjectType;
-  using VarType = typename ParserType::VarType;
+  using InputObjectType = typename ParserType::InputObjectType;
+  using InputVarType = typename ParserType::InputVarType;
+
+  using OutputObjectType = typename ParserType::OutputObjectType;
+  using OutputVarType = typename ParserType::OutputVarType;
 
  public:
   /// Generates a NamedTuple from a JSON Object.
-  static fct::NamedTuple<FieldTypes...> from_json(const VarType& _var) {
-    const auto obj = ParserType::to_object(_var);
-    return build_named_tuple_recursively(obj);
+  static fct::NamedTuple<FieldTypes...> from_json(InputVarType* _var) {
+    auto obj = ParserType::to_object(_var);
+    return build_named_tuple_recursively(&obj);
   }
 
   /// Transforms a NamedTuple into a JSON object.
-  static VarType to_json(const fct::NamedTuple<FieldTypes...>& _tup) {
+  static OutputVarType to_json(const fct::NamedTuple<FieldTypes...>& _tup) {
     auto obj = ParserType::new_object();
     return build_object_recursively(_tup, &obj);
   }
@@ -155,7 +163,7 @@ struct Parser<ParserType, fct::NamedTuple<FieldTypes...>> {
  private:
   /// Builds the named tuple field by field.
   template <class... Args>
-  static auto build_named_tuple_recursively(const ObjectType& _obj,
+  static auto build_named_tuple_recursively(InputObjectType* _obj,
                                             const Args&... _args) {
     const auto size = sizeof...(Args);
 
@@ -167,7 +175,7 @@ struct Parser<ParserType, fct::NamedTuple<FieldTypes...>> {
 
       const auto key = FieldType::name_.str();
 
-      if (!ParserType::has_key(_obj, key)) {
+      if (!ParserType::has_key(key, _obj)) {
         using ValueType = std::decay_t<typename FieldType::Type>;
         if constexpr (is_required<ValueType>()) {
           throw std::runtime_error("Field named '" + key + "' not found!");
@@ -185,19 +193,18 @@ struct Parser<ParserType, fct::NamedTuple<FieldTypes...>> {
 
   /// Builds the object field by field.
   template <int _i = 0>
-  static ObjectType build_object_recursively(
-      const fct::NamedTuple<FieldTypes...>& _tup, ObjectType* _ptr) {
+  static OutputObjectType build_object_recursively(
+      const fct::NamedTuple<FieldTypes...>& _tup, OutputObjectType* _ptr) {
     if constexpr (_i >= sizeof...(FieldTypes)) {
       return *_ptr;
     } else {
       using FieldType =
           typename std::tuple_element<_i, std::tuple<FieldTypes...>>::type;
       using ValueType = std::decay_t<typename FieldType::Type>;
-      const auto value =
-          Parser<ParserType, ValueType>::to_json(fct::get<_i>(_tup));
+      auto value = Parser<ParserType, ValueType>::to_json(fct::get<_i>(_tup));
       const auto name = FieldType::name_.str();
       if constexpr (!is_required<ValueType>()) {
-        if (!ParserType::is_empty(value)) {
+        if (!ParserType::is_empty(&value)) {
           ParserType::set_field(name, value, _ptr);
         }
       } else {
@@ -210,11 +217,11 @@ struct Parser<ParserType, fct::NamedTuple<FieldTypes...>> {
   /// Retrieves the value from the object. This is mainly needed to generate a
   /// better error message.
   template <class FieldType>
-  static auto get_value(const ObjectType& _obj) {
+  static auto get_value(InputObjectType* _obj) {
     try {
       using ValueType = std::decay_t<typename FieldType::Type>;
-      return Parser<ParserType, ValueType>::from_json(
-          ParserType::get_field(_obj, FieldType::name_.str()));
+      auto var = ParserType::get_field(FieldType::name_.str(), _obj);
+      return Parser<ParserType, ValueType>::from_json(&var);
     } catch (std::exception& _exp) {
       throw std::runtime_error("Failed to parse field '" +
                                FieldType::name_.str() + "': " + _exp.what());
@@ -226,10 +233,11 @@ struct Parser<ParserType, fct::NamedTuple<FieldTypes...>> {
 
 template <class ParserType, class T>
 struct Parser<ParserType, std::optional<T>> {
-  using VarType = typename ParserType::VarType;
+  using InputVarType = typename ParserType::InputVarType;
+  using OutputVarType = typename ParserType::OutputVarType;
 
   /// Expresses the variables as type T.
-  static std::optional<T> from_json(const VarType& _var) {
+  static std::optional<T> from_json(InputVarType* _var) {
     if (ParserType::is_empty(_var)) {
       return std::nullopt;
     }
@@ -238,7 +246,7 @@ struct Parser<ParserType, std::optional<T>> {
   }
 
   /// Expresses the variable a a JSON.
-  static VarType to_json(const std::optional<T>& _o) {
+  static OutputVarType to_json(const std::optional<T>& _o) {
     if (!_o) {
       return ParserType::empty_var();
     }
@@ -250,16 +258,17 @@ struct Parser<ParserType, std::optional<T>> {
 
 template <class ParserType, class T>
 struct Parser<ParserType, fct::Ref<T>> {
-  using VarType = typename ParserType::VarType;
+  using InputVarType = typename ParserType::InputVarType;
+  using OutputVarType = typename ParserType::OutputVarType;
 
   /// Expresses the variables as type T.
-  static fct::Ref<T> from_json(const VarType& _var) {
+  static fct::Ref<T> from_json(InputVarType* _var) {
     return fct::Ref<T>::make(
         Parser<ParserType, std::decay_t<T>>::from_json(_var));
   }
 
   /// Expresses the variable a a JSON.
-  static auto to_json(const fct::Ref<T>& _ref) {
+  static OutputVarType to_json(const fct::Ref<T>& _ref) {
     return Parser<ParserType, std::decay_t<T>>::to_json(*_ref);
   }
 };
@@ -268,10 +277,11 @@ struct Parser<ParserType, fct::Ref<T>> {
 
 template <class ParserType, class T>
 struct Parser<ParserType, std::shared_ptr<T>> {
-  using VarType = typename ParserType::VarType;
+  using InputVarType = typename ParserType::InputVarType;
+  using OutputVarType = typename ParserType::OutputVarType;
 
   /// Expresses the variables as type T.
-  static std::shared_ptr<T> from_json(const VarType& _var) {
+  static std::shared_ptr<T> from_json(InputVarType* _var) {
     if (ParserType::is_empty(_var)) {
       return nullptr;
     }
@@ -280,7 +290,7 @@ struct Parser<ParserType, std::shared_ptr<T>> {
   }
 
   /// Expresses the variable a a JSON.
-  static VarType to_json(const std::shared_ptr<T>& _s) {
+  static OutputVarType to_json(const std::shared_ptr<T>& _s) {
     if (!_s) {
       return ParserType::empty_var();
     }
@@ -292,10 +302,11 @@ struct Parser<ParserType, std::shared_ptr<T>> {
 
 template <class ParserType, class FirstType, class SecondType>
 struct Parser<ParserType, std::pair<FirstType, SecondType>> {
-  using VarType = typename ParserType::VarType;
+  using InputVarType = typename ParserType::InputVarType;
+  using OutputVarType = typename ParserType::OutputVarType;
 
   /// Expresses the variables as type T.
-  static std::pair<FirstType, SecondType> from_json(const VarType& _var) {
+  static std::pair<FirstType, SecondType> from_json(InputVarType* _var) {
     auto tuple =
         Parser<ParserType, std::tuple<FirstType, SecondType>>::from_json(_var);
     return std::make_pair(std::move(std::get<0>(tuple)),
@@ -303,7 +314,7 @@ struct Parser<ParserType, std::pair<FirstType, SecondType>> {
   }
 
   /// Transform a std::vector into an array
-  static VarType to_json(const std::pair<FirstType, SecondType>& _p) {
+  static OutputVarType to_json(const std::pair<FirstType, SecondType>& _p) {
     return Parser<ParserType, std::tuple<FirstType, SecondType>>::to_json(
         std::make_tuple(_p.first, _p.second));
   }
@@ -313,18 +324,21 @@ struct Parser<ParserType, std::pair<FirstType, SecondType>> {
 
 template <class ParserType, class T>
 struct Parser<ParserType, std::set<T>> {
-  using ArrayType = typename ParserType::ArrayType;
-  using VarType = typename ParserType::VarType;
+  using InputArrayType = typename ParserType::InputArrayType;
+  using InputVarType = typename ParserType::InputVarType;
+
+  using OutputArrayType = typename ParserType::OutputArrayType;
+  using OutputVarType = typename ParserType::OutputVarType;
 
  public:
   /// Expresses the variables as type T.
-  static std::set<T> from_json(const VarType& _var) {
-    const auto arr = ParserType::to_array(_var);
-    const auto iota = fct::iota<size_t>(0, ParserType::get_array_size(arr));
+  static std::set<T> from_json(InputVarType* _var) {
+    auto arr = ParserType::to_array(_var);
+    const auto iota = fct::iota<size_t>(0, ParserType::get_array_size(&arr));
     const auto get_value = [&arr](const size_t _i) {
       try {
-        return Parser<ParserType, std::decay_t<T>>::from_json(
-            ParserType::get(arr, _i));
+        auto var = ParserType::get(_i, &arr);
+        return Parser<ParserType, std::decay_t<T>>::from_json(&var);
       } catch (std::exception& _exp) {
         throw std::runtime_error("Error parsing element " + std::to_string(_i) +
                                  ": " + _exp.what());
@@ -334,7 +348,7 @@ struct Parser<ParserType, std::set<T>> {
   }
 
   /// Transform a std::vector into an array
-  static ArrayType to_json(const std::set<T>& _s) {
+  static OutputVarType to_json(const std::set<T>& _s) {
     auto arr = ParserType::new_array();
     for (const auto& val : _s) {
       ParserType::add(Parser<ParserType, std::decay_t<T>>::to_json(val), &arr);
@@ -347,15 +361,14 @@ struct Parser<ParserType, std::set<T>> {
 
 template <class ParserType>
 struct Parser<ParserType, strings::String> {
-  using VarType = typename ParserType::VarType;
+  using InputVarType = typename ParserType::InputVarType;
+  using OutputVarType = typename ParserType::OutputVarType;
 
-  /// Expresses the variables as type T.
-  static strings::String from_json(const VarType& _var) {
+  static strings::String from_json(InputVarType* _var) {
     return strings::String(Parser<ParserType, std::string>::from_json(_var));
   }
 
-  /// Transform a std::vector into an array
-  static VarType to_json(const strings::String& _s) {
+  static OutputVarType to_json(const strings::String& _s) {
     return Parser<ParserType, std::string>::to_json(_s.str());
   }
 };
@@ -367,19 +380,22 @@ template <class ParserType, fct::StringLiteral _discriminator,
 struct Parser<ParserType,
               fct::TaggedUnion<_discriminator, NamedTupleTypes...>> {
  public:
-  using ObjectType = typename ParserType::ObjectType;
-  using VarType = typename ParserType::VarType;
+  using InputObjectType = typename ParserType::InputObjectType;
+  using InputVarType = typename ParserType::InputVarType;
+
+  using OutputObjectType = typename ParserType::OutputObjectType;
+  using OutputVarType = typename ParserType::OutputVarType;
 
   /// Expresses the variables as type T.
   static fct::TaggedUnion<_discriminator, NamedTupleTypes...> from_json(
-      const VarType& _var) {
-    const auto obj = ParserType::to_object(_var);
-    const auto disc_value = get_discriminator(obj, _discriminator.str());
-    return find_matching_named_tuple(obj, disc_value);
+      InputVarType* _var) {
+    auto obj = ParserType::to_object(_var);
+    const auto disc_value = get_discriminator(_discriminator.str(), &obj);
+    return find_matching_named_tuple(disc_value, _var);
   }
 
   /// Expresses the variables as a JSON type.
-  static VarType to_json(
+  static OutputVarType to_json(
       const fct::TaggedUnion<_discriminator, NamedTupleTypes...>&
           _tagged_union) {
     using VariantType =
@@ -391,28 +407,28 @@ struct Parser<ParserType,
  private:
   template <int _i = 0>
   static fct::TaggedUnion<_discriminator, NamedTupleTypes...>
-  find_matching_named_tuple(const ObjectType& _obj,
-                            const std::string& _disc_value) {
+  find_matching_named_tuple(const std::string& _disc_value,
+                            InputVarType* _var) {
     if constexpr (_i == sizeof...(NamedTupleTypes)) {
       throw std::runtime_error(
           "Could not parse tagged union, could not match " +
           _discriminator.str() + " '" + _disc_value + "'.");
     } else {
-      const auto optional = try_option<_i>(_obj, _disc_value);
+      const auto optional = try_option<_i>(_disc_value, _var);
       if (optional) {
         return *optional;
       } else {
-        return find_matching_named_tuple<_i + 1>(_obj, _disc_value);
+        return find_matching_named_tuple<_i + 1>(_disc_value, _var);
       }
     }
   }
 
   /// Retrieves the discriminator.
-  static std::string get_discriminator(const ObjectType& _obj,
-                                       const std::string& _field_name) {
+  static std::string get_discriminator(const std::string& _field_name,
+                                       InputObjectType* _obj) {
     try {
-      return ParserType::template to_basic_type<std::string>(
-          ParserType::get_field(_obj, _field_name));
+      auto var = ParserType::get_field(_field_name, _obj);
+      return ParserType::template to_basic_type<std::string>(&var);
     } catch (std::exception& _e) {
       throw std::runtime_error(
           "Could not parse tagged union: Could not find field " + _field_name +
@@ -437,13 +453,13 @@ struct Parser<ParserType,
   /// Tries to parse one particular option.
   template <int _i>
   static std::optional<fct::TaggedUnion<_discriminator, NamedTupleTypes...>>
-  try_option(const ObjectType& _obj, const std::string& _disc_value) {
+  try_option(const std::string& _disc_value, InputVarType* _var) {
     using NamedTupleType = std::decay_t<
         std::variant_alternative_t<_i, std::variant<NamedTupleTypes...>>>;
 
     if (contains_disc_value<NamedTupleType>(_disc_value)) {
       try {
-        auto val = Parser<ParserType, NamedTupleType>::from_json(_obj);
+        auto val = Parser<ParserType, NamedTupleType>::from_json(_var);
         return fct::TaggedUnion<_discriminator, NamedTupleTypes...>(val);
       } catch (std::exception& _e) {
         throw std::runtime_error(
@@ -461,22 +477,25 @@ struct Parser<ParserType,
 template <class ParserType, class... Ts>
 struct Parser<ParserType, std::tuple<Ts...>> {
  public:
-  using ArrayType = typename ParserType::ArrayType;
-  using VarType = typename ParserType::VarType;
+  using InputArrayType = typename ParserType::InputArrayType;
+  using InputVarType = typename ParserType::InputVarType;
+
+  using OutputArrayType = typename ParserType::OutputArrayType;
+  using OutputVarType = typename ParserType::OutputVarType;
 
   /// Expresses the variables as type T.
-  static std::tuple<Ts...> from_json(const VarType& _var) {
-    const auto arr = ParserType::to_array(_var);
-    if (ParserType::get_array_size(arr) != sizeof...(Ts)) {
+  static std::tuple<Ts...> from_json(InputVarType* _var) {
+    auto arr = ParserType::to_array(_var);
+    if (ParserType::get_array_size(&arr) != sizeof...(Ts)) {
       throw std::runtime_error(
           "Expected " + std::to_string(sizeof...(Ts)) + " fields, got " +
-          std::to_string(ParserType::get_array_size(arr)) + ".");
+          std::to_string(ParserType::get_array_size(&arr)) + ".");
     }
-    return extract_field_by_field(arr);
+    return extract_field_by_field(&arr);
   }
 
   /// Transform a std::vector into a array
-  static VarType to_json(const std::tuple<Ts...>& _tup) {
+  static OutputVarType to_json(const std::tuple<Ts...>& _tup) {
     auto arr = ParserType::new_array();
     to_array<0>(_tup, &arr);
     return arr;
@@ -486,7 +505,7 @@ struct Parser<ParserType, std::tuple<Ts...>> {
   /// Extracts values from the array, field by field.
   template <class... AlreadyExtracted>
   static std::tuple<Ts...> extract_field_by_field(
-      const ArrayType& _arr, const AlreadyExtracted&... _already_extracted) {
+      InputArrayType* _arr, const AlreadyExtracted&... _already_extracted) {
     constexpr size_t i = sizeof...(AlreadyExtracted);
     if constexpr (i == sizeof...(Ts)) {
       return std::make_tuple(_already_extracted...);
@@ -498,12 +517,12 @@ struct Parser<ParserType, std::tuple<Ts...>> {
 
   /// Extracts a single field from a JSON.
   template <int _i>
-  static auto extract_single_field(const ArrayType& _arr) {
+  static auto extract_single_field(InputArrayType* _arr) {
     using NewFieldType =
         std::decay_t<typename std::tuple_element<_i, std::tuple<Ts...>>::type>;
     try {
-      return Parser<ParserType, NewFieldType>::from_json(
-          ParserType::get(_arr, _i));
+      auto var = ParserType::get(_i, _arr);
+      return Parser<ParserType, NewFieldType>::from_json(&var);
     } catch (std::exception& _exp) {
       throw std::runtime_error("Error parsing element " + std::to_string(_i) +
                                ": " + _exp.what());
@@ -512,7 +531,7 @@ struct Parser<ParserType, std::tuple<Ts...>> {
 
   /// Transforms a tuple to an array.
   template <int _i>
-  static void to_array(const std::tuple<Ts...>& _tup, ArrayType* _ptr) {
+  static void to_array(const std::tuple<Ts...>& _tup, OutputArrayType* _ptr) {
     if constexpr (_i < sizeof...(Ts)) {
       assert_true(_ptr);
       using NewFieldType = std::decay_t<
@@ -528,12 +547,13 @@ struct Parser<ParserType, std::tuple<Ts...>> {
 
 template <class ParserType, class... FieldTypes>
 struct Parser<ParserType, std::variant<FieldTypes...>> {
-  using VarType = typename ParserType::VarType;
+  using InputVarType = typename ParserType::InputVarType;
+  using OutputVarType = typename ParserType::OutputVarType;
 
   /// Expresses the variables as type T.
   template <int _i = 0>
   static std::variant<FieldTypes...> from_json(
-      const VarType& _var, const std::vector<std::string> _errors = {}) {
+      InputVarType* _var, const std::vector<std::string> _errors = {}) {
     if constexpr (_i == sizeof...(FieldTypes)) {
       throw std::runtime_error("Could not parse variant: " +
                                fct::collect::string(_errors));
@@ -553,15 +573,15 @@ struct Parser<ParserType, std::variant<FieldTypes...>> {
 
   /// Expresses the variables as a JSON type.
   template <int _i = 0>
-  static VarType to_json(const std::variant<FieldTypes...>& _variant) {
-    using VarType = std::variant_alternative_t<_i, std::variant<FieldTypes...>>;
+  static OutputVarType to_json(const std::variant<FieldTypes...>& _variant) {
+    using AltType = std::variant_alternative_t<_i, std::variant<FieldTypes...>>;
     if constexpr (_i + 1 == sizeof...(FieldTypes)) {
-      return Parser<ParserType, std::decay_t<VarType>>::to_json(
-          std::get<VarType>(_variant));
+      return Parser<ParserType, std::decay_t<AltType>>::to_json(
+          std::get<AltType>(_variant));
     } else {
-      if (std::holds_alternative<VarType>(_variant)) {
-        return Parser<ParserType, std::decay_t<VarType>>::to_json(
-            std::get<VarType>(_variant));
+      if (std::holds_alternative<AltType>(_variant)) {
+        return Parser<ParserType, std::decay_t<AltType>>::to_json(
+            std::get<AltType>(_variant));
       } else {
         return to_json<_i + 1>(_variant);
       }
@@ -574,17 +594,20 @@ struct Parser<ParserType, std::variant<FieldTypes...>> {
 template <class ParserType, class T>
 struct Parser<ParserType, std::vector<T>> {
  public:
-  using ArrayType = typename ParserType::ArrayType;
-  using VarType = typename ParserType::VarType;
+  using InputArrayType = typename ParserType::InputArrayType;
+  using InputVarType = typename ParserType::InputVarType;
+
+  using OutputArrayType = typename ParserType::OutputArrayType;
+  using OutputVarType = typename ParserType::OutputVarType;
 
   /// Expresses the variables as type T.
-  static std::vector<T> from_json(const VarType& _var) {
-    const auto arr = ParserType::to_array(_var);
-    const auto iota = fct::iota<size_t>(0, ParserType::get_array_size(arr));
+  static std::vector<T> from_json(InputVarType* _var) {
+    auto arr = ParserType::to_array(_var);
+    const auto iota = fct::iota<size_t>(0, ParserType::get_array_size(&arr));
     const auto get_value = [&arr](const size_t _i) {
       try {
-        return Parser<ParserType, std::decay_t<T>>::from_json(
-            ParserType::get(arr, _i));
+        auto var = ParserType::get(_i, &arr);
+        return Parser<ParserType, std::decay_t<T>>::from_json(&var);
       } catch (std::exception& _exp) {
         throw std::runtime_error("Error parsing element " + std::to_string(_i) +
                                  ": " + _exp.what());
@@ -594,7 +617,7 @@ struct Parser<ParserType, std::vector<T>> {
   }
 
   /// Transform a std::vector into an array
-  static ArrayType to_json(const std::vector<T>& _vec) {
+  static OutputVarType to_json(const std::vector<T>& _vec) {
     auto arr = ParserType::new_array();
     for (size_t i = 0; i < _vec.size(); ++i) {
       ParserType::add(Parser<ParserType, std::decay_t<T>>::to_json(_vec[i]),

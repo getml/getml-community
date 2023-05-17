@@ -21,20 +21,22 @@ namespace json {
 template <class T>
 T from_json(const std::string& _json_str) {
   Poco::JSON::Parser parser;
-  const auto json_obj = parser.parse(_json_str);
-  return Parser<T>::from_json(json_obj);
+  auto json_obj = parser.parse(_json_str);
+  return Parser<T>::from_json(&json_obj);
 }
 
 /// Parses an object from JSON using reflection.
 template <class T>
 T from_json(const Poco::JSON::Object& _json_obj) {
-  return Parser<T>::from_json(_json_obj);
+  auto json_obj = _json_obj;
+  return Parser<T>::from_json(&json_obj);
 }
 
 /// Parses an object from JSON using reflection.
 template <class T>
 T from_json(const Poco::Dynamic::Var& _json_obj) {
-  return Parser<T>::from_json(_json_obj);
+  auto json_obj = _json_obj;
+  return Parser<T>::from_json(&json_obj);
 }
 
 }  // namespace json
