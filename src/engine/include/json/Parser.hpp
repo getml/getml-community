@@ -15,6 +15,7 @@
 #include <simdjson.h>
 
 #include <exception>
+#include <map>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -23,6 +24,8 @@
 #include <vector>
 
 #include "fct/Result.hpp"
+#include "fct/collect.hpp"
+#include "fct/ranges.hpp"
 #include "json/has_from_json_obj.hpp"
 #include "parsing/Parser.hpp"
 
@@ -37,111 +40,76 @@ struct PocoJSONParser {
   using OutputObjectType = Poco::JSON::Object::Ptr;
   using OutputVarType = Poco::Dynamic::Var;
 
-  static void add(const OutputVarType _var, OutputArrayType* _arr) {
-    assert_true(_arr);
-    assert_true(*_arr);
+  static void add(const OutputVarType _var, OutputArrayType* _arr) noexcept {
     (*_arr)->add(_var);
   }
 
   static OutputVarType empty_var() { return Poco::Dynamic::Var(); }
 
-  static InputVarType get(const size_t _i, const InputArrayType* _arr) {
+  static fct::Result<InputVarType> get(const size_t _i,
+                                       const InputArrayType* _arr) noexcept {
     try {
       assert_true(_arr);
       assert_true(*_arr);
       return (*_arr)->get(_i);
     } catch (std::exception& e) {
-      throw std::runtime_error("Could not get element from array: " +
-                               std::string(e.what()));
+      return fct::Error("Could not get element from array: " +
+                        std::string(e.what()));
     }
   }
 
-  static size_t get_array_size(InputArrayType* _arr) {
-    try {
-      assert_true(_arr);
-      assert_true(*_arr);
-      return (*_arr)->size();
-    } catch (std::exception& e) {
-      throw std::runtime_error("Could not get array size: " +
-                               std::string(e.what()));
-    }
+  static fct::Result<size_t> get_array_size(InputArrayType* _arr) noexcept {
+    return (*_arr)->size();
   }
 
-  static InputVarType get_field(const std::string& _name,
-                                InputObjectType* _obj) {
+  static fct::Result<InputVarType> get_field(const std::string& _name,
+                                             InputObjectType* _obj) noexcept {
     try {
       assert_true(_obj);
       assert_true(*_obj);
       return (*_obj)->get(_name);
     } catch (std::exception& e) {
-      throw std::runtime_error("Could not get field from object: " +
-                               std::string(e.what()));
+      return fct::Error("Could not get field from object: " +
+                        std::string(e.what()));
     }
   }
 
-  static auto get_names(InputObjectType* _obj) {
-    try {
-      return (*_obj)->getNames();
-    } catch (std::exception& e) {
-      throw std::runtime_error("Could not get names of a field: " +
-                               std::string(e.what()));
-    }
+  static bool has_key(const std::string& _key, InputObjectType* _obj) noexcept {
+    return (*_obj)->has(_key);
   }
 
-  static bool has_key(const std::string& _key, InputObjectType* _obj) {
-    try {
-      assert_true(_obj);
-      assert_true(*_obj);
-      return (*_obj)->has(_key);
-    } catch (std::exception& e) {
-      throw std::runtime_error(
-          "Could not determine whether an object has a key: " +
-          std::string(e.what()));
-    }
-  }
-
-  static OutputArrayType new_array() {
+  static OutputArrayType new_array() noexcept {
     return Poco::JSON::Array::Ptr(new Poco::JSON::Array());
   }
 
-  static OutputObjectType new_object() {
+  static OutputObjectType new_object() noexcept {
     return Poco::JSON::Object::Ptr(new Poco::JSON::Object());
   }
 
-  static bool is_empty(InputVarType* _var) {
-    try {
-      assert_true(_var);
-      return _var->isEmpty();
-    } catch (std::exception& e) {
-      throw std::runtime_error("Could not determine whether var is empty: " +
-                               std::string(e.what()));
-    }
-  }
+  static bool is_empty(InputVarType* _var) noexcept { return _var->isEmpty(); }
 
   static void set_field(const std::string& _name, const OutputVarType& _var,
-                        OutputObjectType* _obj) {
-    assert_true(_obj);
-    assert_true(*_obj);
+                        OutputObjectType* _obj) noexcept {
     (*_obj)->set(_name, _var);
   }
 
   template <class T>
-  static T to_basic_type(InputVarType* _var) {
+  static fct::Result<T> to_basic_type(InputVarType* _var) noexcept {
     try {
       assert_true(_var);
       return _var->convert<std::decay_t<T>>();
     } catch (std::exception& e) {
-      throw std::runtime_error("Could not cast to expected type: " +
-                               std::string(e.what()));
+      return fct::Error("Could not cast to expected type: " +
+                        std::string(e.what()));
     }
   }
 
-  static InputArrayType to_array(InputVarType* _var) {
+  static fct::Result<InputArrayType> to_array(InputVarType* _var) noexcept {
     try {
       assert_true(_var);
       auto arr = _var->extract<InputArrayType>();
       if (!arr) {
-        throw std::runtime_error("Pointer was empty!");
+        return fct::Error("Pointer was empty!");
       }
       return arr;
     } catch (std::exception& _exp) {
@@ -152,16 +120,27 @@ struct PocoJSONParser {
       const auto arr = _var->extract<Poco::JSON::Array>();
       return Poco::JSON::Array::Ptr(new Poco::JSON::Array(arr));
     } catch (std::exception& e) {
-      throw std::runtime_error("Could not cast to array.");
+      return fct::Error("Could not cast to array.");
     }
   }
 
-  static InputObjectType to_object(InputVarType* _var) {
+  static std::map<std::string, InputVarType> to_map(
+      InputObjectType* _obj) noexcept {
+    const auto names = (*_obj)->getNames();
+    const auto to_pair =
+        [_obj](const auto& _name) -> std::pair<std::string, InputVarType> {
+      return std::make_pair(_name, (*_obj)->get(_name));
+    };
+    return fct::collect::map<std::string, InputVarType>(
+        names | VIEWS::transform(to_pair));
+  }
+
+  static fct::Result<InputObjectType> to_object(InputVarType* _var) noexcept {
     try {
       assert_true(_var);
       auto obj = _var->extract<InputObjectType>();
       if (!obj) {
-        throw std::runtime_error("Pointer was empty!");
+        return fct::Error("Pointer was empty!");
       }
       return obj;
     } catch (std::exception& _exp) {
@@ -172,8 +151,14 @@ struct PocoJSONParser {
       const auto obj = _var->extract<Poco::JSON::Object>();
       return Poco::JSON::Object::Ptr(new Poco::JSON::Object(obj));
     } catch (std::exception& e) {
-      throw std::runtime_error("Could not cast to object.");
+      return fct::Error("Could not cast to object.");
     }
+  }
+
+  static std::vector<InputVarType> to_vec(InputArrayType* _arr) noexcept {
+    const auto iota = fct::iota<size_t>(0, (*_arr)->size());
+    const auto get = [_arr](const size_t _i) { return (*_arr)->get(_i); };
+    return fct::collect::vector(iota | VIEWS::transform(get));
   }
 };
 
