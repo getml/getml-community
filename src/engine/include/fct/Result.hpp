@@ -16,9 +16,6 @@
 #include <variant>
 #include <vector>
 
-#include "fct/collect.hpp"
-#include "fct/ranges.hpp"
-
 namespace fct {
 
 /// To be returned
@@ -82,26 +79,6 @@ class Result {
   Result(Error&& _err) : t_or_err_(_err) {}
 
   ~Result() = default;
-
-  /// Takes a range containing Result<T> and turns it into a
-  /// Result<std::vector<T>>. Returns and error if any of the elements in the
-  /// range is an error.
-  template <class RangeType>
-  static auto from_range(const RangeType& _range) {
-    using RType = RANGES::range_value_t<RangeType>;
-    const auto get_err = [](const auto& _err) -> std::vector<Error> {
-      if (_err) {
-        return std::vector<Error>({*_err});
-      }
-      return std::vector<Error>();
-    };
-    auto errors = _range | VIEWS::transform(get_err) | VIEWS::join;
-    for (auto err : errors) {
-      return Result<std::vector<RType>>(err);
-    }
-    return Result<std::vector<RType>>(
-        fct::collect::vector(_range | VIEWS::join));
-  }
 
   /// Returns Result<U>, if successful and error otherwise.
   /// Inspired by .and(...) in the Rust std::result type.
@@ -231,11 +208,11 @@ class Result {
 
   /// Allows access to the underlying value. Careful: Will result in undefined
   /// behavior, if the result contains an error.
-  T& operator*() { return std::get_if<T>(&t_or_err_); }
+  T& operator*() { return *std::get_if<T>(&t_or_err_); }
 
   /// Allows read access to the underlying value. Careful: Will result in
   /// undefined behavior, if the result contains an error.
-  const T& operator*() const { return std::get_if<T>(&t_or_err_); }
+  const T& operator*() const { return *std::get_if<T>(&t_or_err_); }
 
   /// Expects a function that takes of type Error -> Result<T> and returns
   /// Result<T>.
@@ -261,16 +238,34 @@ class Result {
   /// Functor operation - F must be a function of type T -> U.
   template <class F>
   auto transform(const F& _f) const {
-    // Makes use of the theoretical insight that every monad is also a functor.
-    const auto f = [&_f](const T& _t) { return Result(_f(_t)); };
-    return and_then(f);
+    const auto apply = [&_f](const auto& _t) {
+      if constexpr (is_helper_tuple<T>()) {
+        return std::apply(_f, _t.tuple_);
+      } else {
+        return _f(_t);
+      }
+    };
+
+    /// Result_U is expected to be of type Result<U>.
+    using U = typename std::invoke_result<decltype(apply), T>::type;
+
+    const auto handle_variant =
+        [apply]<class TOrError>(const TOrError& _t_or_err) -> fct::Result<U> {
+      if constexpr (!std::is_same<TOrError, Error>()) {
+        return apply(_t_or_err);
+      } else {
+        return _t_or_err;
+      }
+    };
+
+    return std::visit(handle_variant, t_or_err_);
   }
 
   /// Returns the value if the result does not contain an error, throws an
   /// exceptions if not. Similar to .unwrap() in Rust.
   ValueType& value() {
     const auto handle_variant =
-        [&]<class TOrError>(const TOrError& _t_or_err) -> ValueType& {
+        [&]<class TOrError>(TOrError& _t_or_err) -> ValueType& {
       if constexpr (!std::is_same<TOrError, Error>()) {
         if constexpr (is_helper_tuple<T>()) {
           return _t_or_err.tuple_;
