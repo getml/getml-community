@@ -9,7 +9,6 @@
 #ifndef JSON_FROM_JSON_HPP_
 #define JSON_FROM_JSON_HPP_
 
-#include <sstream>
 #include <string>
 
 #include "Poco/JSON/Parser.h"
@@ -27,16 +26,16 @@ T from_json(const std::string& _json_str) {
 
 /// Parses an object from JSON using reflection.
 template <class T>
-T from_json(const Poco::JSON::Object& _json_obj) {
-  auto json_obj = _json_obj;
+T from_json(const Poco::JSON::Object::Ptr& _json_obj) {
+  Poco::Dynamic::Var json_obj = _json_obj;
   return Parser<T>::from_json(&json_obj);
 }
 
 /// Parses an object from JSON using reflection.
 template <class T>
-T from_json(const Poco::Dynamic::Var& _json_obj) {
-  auto json_obj = _json_obj;
-  return Parser<T>::from_json(&json_obj);
+T from_json(const Poco::Dynamic::Var& _var) {
+  Poco::Dynamic::Var var = _var;
+  return Parser<T>::from_json(&var);
 }
 
 }  // namespace json
