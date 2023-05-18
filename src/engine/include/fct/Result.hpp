@@ -8,10 +8,16 @@
 #ifndef FCT_RESULT_HPP_
 #define FCT_RESULT_HPP_
 
+#include <optional>
+#include <ranges>
 #include <stdexcept>
 #include <tuple>
 #include <type_traits>
 #include <variant>
+#include <vector>
+
+#include "fct/collect.hpp"
+#include "fct/ranges.hpp"
 
 namespace fct {
 
@@ -39,7 +45,8 @@ struct Nothing {};
 /// normal std::tuple.
 template <class... Args>
 struct HelperTuple {
-  std::tuple<Args...> tuple_;
+  using TupleType = std::tuple<Args...>;
+  TupleType tuple_;
 };
 
 template <class>
@@ -48,12 +55,24 @@ struct is_helper_tuple : std::false_type {};
 template <class... Args>
 struct is_helper_tuple<HelperTuple<Args...>> : std::true_type {};
 
+template <class T>
+struct value_type {
+  using Type = T;
+};
+
+template <class... Args>
+struct value_type<HelperTuple<Args...>> {
+  using Type = HelperTuple<Args...>::TupleType;
+};
+
 /// The Result class is used for monadic error handling.
 template <class T>
 class Result {
   static_assert(!std::is_same<T, Error>(), "The result type cannot be Error.");
 
  public:
+  using ValueType = typename value_type<T>::Type;
+
   Result(const T& _val) : t_or_err_(_val) {}
 
   Result(T&& _val) : t_or_err_(_val) {}
@@ -63,6 +82,26 @@ class Result {
   Result(Error&& _err) : t_or_err_(_err) {}
 
   ~Result() = default;
+
+  /// Takes a range containing Result<T> and turns it into a
+  /// Result<std::vector<T>>. Returns and error if any of the elements in the
+  /// range is an error.
+  template <class RangeType>
+  static auto from_range(const RangeType& _range) {
+    using RType = RANGES::range_value_t<RangeType>;
+    const auto get_err = [](const auto& _err) -> std::vector<Error> {
+      if (_err) {
+        return std::vector<Error>({*_err});
+      }
+      return std::vector<Error>();
+    };
+    auto errors = _range | VIEWS::transform(get_err) | VIEWS::join;
+    for (auto err : errors) {
+      return Result<std::vector<RType>>(err);
+    }
+    return Result<std::vector<RType>>(
+        std::collect::vector(_range | VIEWS::join));
+  }
 
   /// Returns Result<U>, if successful and error otherwise.
   /// Inspired by .and(...) in the Rust std::result type.
@@ -100,29 +139,45 @@ class Result {
 
   /// Results types can be iterated over, which even make it possible to use
   /// them within a std::range.
-  // TODO: Fix nullptr
-  /*  const T* begin() const {
-      const auto get_ptr = [this]<class TOrError>(
-          const TOrError& _t_or_err) -> const auto* {
-        if constexpr (!std::is_same<TOrError, Error>()) {
-          if constexpr (is_helper_tuple<T>()) {
-            return &_t_or_err.tuple_;
-          } else {
-            return &_t_or_err;
-          }
+  ValueType* begin() noexcept {
+    const auto get_ptr =
+        [this]<class TOrError>(const TOrError& _t_or_err) -> ValueType* {
+      if constexpr (!std::is_same<TOrError, Error>()) {
+        if constexpr (is_helper_tuple<T>()) {
+          return &_t_or_err.tuple_;
         } else {
-          return nullptr;
+          return &_t_or_err;
         }
-      };
-      return std::visit(get_ptr, t_or_err_);
-    }*/
+      } else {
+        return nullptr;
+      }
+    };
+    return std::visit(get_ptr, t_or_err_);
+  }
 
   /// Results types can be iterated over, which even make it possible to use
   /// them within a std::range.
-  // TODO: Fix nullptr
-  /*const T* end() const {
-    const auto get_ptr = [this]<class TOrError>(
-        const TOrError& _t_or_err) -> const auto* {
+  const ValueType* begin() const noexcept {
+    const auto get_ptr =
+        [this]<class TOrError>(const TOrError& _t_or_err) -> const ValueType* {
+      if constexpr (!std::is_same<TOrError, Error>()) {
+        if constexpr (is_helper_tuple<T>()) {
+          return &_t_or_err.tuple_;
+        } else {
+          return &_t_or_err;
+        }
+      } else {
+        return nullptr;
+      }
+    };
+    return std::visit(get_ptr, t_or_err_);
+  }
+
+  /// Results types can be iterated over, which even make it possible to use
+  /// them within a std::range.
+  ValueType* end() noexcept {
+    const auto get_ptr =
+        [this]<class TOrError>(const TOrError& _t_or_err) -> ValueType* {
       if constexpr (!std::is_same<TOrError, Error>()) {
         if constexpr (is_helper_tuple<T>()) {
           return &_t_or_err.tuple_ + 1;
@@ -134,7 +189,40 @@ class Result {
       }
     };
     return std::visit(get_ptr, t_or_err_);
-  }*/
+  }
+
+  /// Results types can be iterated over, which even make it possible to use
+  /// them within a std::range.
+  const ValueType* end() const noexcept {
+    const auto get_ptr =
+        [this]<class TOrError>(const TOrError& _t_or_err) -> const ValueType* {
+      if constexpr (!std::is_same<TOrError, Error>()) {
+        if constexpr (is_helper_tuple<T>()) {
+          return &_t_or_err.tuple_ + 1;
+        } else {
+          return &_t_or_err + 1;
+        }
+      } else {
+        return nullptr;
+      }
+    };
+    return std::visit(get_ptr, t_or_err_);
+  }
+
+  /// Returns an std::optional<error> if this does in fact contain an error
+  /// or std::nullopt otherwise.
+  std::optional<Error> error() const noexcept {
+    const auto get_err =
+        [this]<class TOrError>(
+            const TOrError& _t_or_err) -> std::optional<Error> {
+      if constexpr (!std::is_same<TOrError, Error>()) {
+        return std::nullopt;
+      } else {
+        return _t_or_err;
+      }
+    };
+    return std::visit(get_err, t_or_err_);
+  }
 
   /// Returns true if the result contains a value, false otherwise.
   operator bool() const noexcept {
@@ -180,11 +268,38 @@ class Result {
 
   /// Returns the value if the result does not contain an error, throws an
   /// exceptions if not. Similar to .unwrap() in Rust.
-  T value() const {
-    const auto throw_err = [](const Error& _err) -> Result<T> {
-      throw std::runtime_error(_err.what());
+  ValueType& value() {
+    const auto handle_variant =
+        [&]<class TOrError>(const TOrError& _t_or_err) -> ValueType& {
+      if constexpr (!std::is_same<TOrError, Error>()) {
+        if constexpr (is_helper_tuple<T>()) {
+          return _t_or_err.tuple_;
+        } else {
+          return _t_or_err;
+        }
+      } else {
+        throw std::runtime_error(_t_or_err.what());
+      }
     };
-    return or_else(throw_err);
+    return std::visit(handle_variant, t_or_err_);
+  }
+
+  /// Returns the value if the result does not contain an error, throws an
+  /// exceptions if not. Similar to .unwrap() in Rust.
+  const ValueType& value() const {
+    const auto handle_variant =
+        [&]<class TOrError>(const TOrError& _t_or_err) -> const ValueType& {
+      if constexpr (!std::is_same<TOrError, Error>()) {
+        if constexpr (is_helper_tuple<T>()) {
+          return _t_or_err.tuple_;
+        } else {
+          return _t_or_err;
+        }
+      } else {
+        throw std::runtime_error(_t_or_err.what());
+      }
+    };
+    return std::visit(handle_variant, t_or_err_);
   }
 
   /// Returns the value or a default.
