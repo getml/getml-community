@@ -50,7 +50,7 @@ struct Parser {
   /// Expresses the variables as type T.
   static T from_json(InputVarType* _var) {
     if constexpr (json::has_from_json_obj_v<T>) {
-      return T::from_json_obj(_var);
+      return T::from_json_obj(*_var);
     } else {
       if constexpr (fct::has_named_tuple_type_v<T>) {
         using NamedTupleType = std::decay_t<typename T::NamedTupleType>;
@@ -150,8 +150,13 @@ struct Parser<ParserType, fct::NamedTuple<FieldTypes...>> {
  public:
   /// Generates a NamedTuple from a JSON Object.
   static fct::NamedTuple<FieldTypes...> from_json(InputVarType* _var) {
-    auto obj = ParserType::to_object(_var);
-    return build_named_tuple_recursively(&obj);
+    try {
+      auto obj = ParserType::to_object(_var);
+      return build_named_tuple_recursively(&obj);
+    } catch (std::exception& e) {
+      throw std::runtime_error("Could not parse named tuple: " +
+                               std::string(e.what()));
+    }
   }
 
   /// Transforms a NamedTuple into a JSON object.
@@ -164,7 +169,7 @@ struct Parser<ParserType, fct::NamedTuple<FieldTypes...>> {
   /// Builds the named tuple field by field.
   template <class... Args>
   static auto build_named_tuple_recursively(InputObjectType* _obj,
-                                            const Args&... _args) {
+                                            Args&&... _args) {
     const auto size = sizeof...(Args);
 
     if constexpr (size == sizeof...(FieldTypes)) {

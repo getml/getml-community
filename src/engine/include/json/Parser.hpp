@@ -15,6 +15,8 @@
 #include <simdjson.h>
 
 #include <exception>
+#include <sstream>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -44,30 +46,58 @@ struct PocoJSONParser {
   static OutputVarType empty_var() { return Poco::Dynamic::Var(); }
 
   static InputVarType get(const size_t _i, const InputArrayType* _arr) {
-    assert_true(_arr);
-    assert_true(*_arr);
-    return (*_arr)->get(_i);
+    try {
+      assert_true(_arr);
+      assert_true(*_arr);
+      return (*_arr)->get(_i);
+    } catch (std::exception& e) {
+      throw std::runtime_error("Could not get element from array: " +
+                               std::string(e.what()));
+    }
   }
 
   static size_t get_array_size(InputArrayType* _arr) {
-    assert_true(_arr);
-    assert_true(*_arr);
-    return (*_arr)->size();
+    try {
+      assert_true(_arr);
+      assert_true(*_arr);
+      return (*_arr)->size();
+    } catch (std::exception& e) {
+      throw std::runtime_error("Could not get array size: " +
+                               std::string(e.what()));
+    }
   }
 
   static InputVarType get_field(const std::string& _name,
                                 InputObjectType* _obj) {
-    assert_true(_obj);
-    assert_true(*_obj);
-    return (*_obj)->get(_name);
+    try {
+      assert_true(_obj);
+      assert_true(*_obj);
+      return (*_obj)->get(_name);
+    } catch (std::exception& e) {
+      throw std::runtime_error("Could not get field from object: " +
+                               std::string(e.what()));
+    }
   }
 
-  static auto get_names(InputObjectType* _obj) { return (*_obj)->getNames(); }
+  static auto get_names(InputObjectType* _obj) {
+    try {
+      return (*_obj)->getNames();
+    } catch (std::exception& e) {
+      throw std::runtime_error("Could not get names of a field: " +
+                               std::string(e.what()));
+    }
+  }
 
   static bool has_key(const std::string& _key, InputObjectType* _obj) {
-    assert_true(_obj);
-    assert_true(*_obj);
-    return (*_obj)->has(_key);
+    try {
+      assert_true(_obj);
+      assert_true(*_obj);
+      return (*_obj)->has(_key);
+    } catch (std::exception& e) {
+      throw std::runtime_error(
+          "Could not determine whether an object has a key: " +
+          std::string(e.what()));
+    }
   }
 
   static OutputArrayType new_array() {
@@ -79,8 +109,13 @@ struct PocoJSONParser {
   }
 
   static bool is_empty(InputVarType* _var) {
-    assert_true(_var);
-    return _var->isEmpty();
+    try {
+      assert_true(_var);
+      return _var->isEmpty();
+    } catch (std::exception& e) {
+      throw std::runtime_error("Could not determine whether var is empty: " +
+                               std::string(e.what()));
+    }
   }
 
   static void set_field(const std::string& _name, const OutputVarType& _var,
@@ -94,29 +129,51 @@ struct PocoJSONParser {
   static T to_basic_type(InputVarType* _var) {
     try {
       assert_true(_var);
-      assert_true(*_var);
       return _var->convert<std::decay_t<T>>();
     } catch (std::exception& e) {
-      throw std::runtime_error(
-          "Could not cast to expected type. Contained value was: " +
-          _var->toString());
+      throw std::runtime_error("Could not cast to expected type: " +
+                               std::string(e.what()));
     }
   }
 
   static InputArrayType to_array(InputVarType* _var) {
-    auto arr = _var->extract<InputArrayType>();
-    if (!arr) {
-      throw std::runtime_error("Could not retrieve array!");
+    try {
+      assert_true(_var);
+      auto arr = _var->extract<InputArrayType>();
+      if (!arr) {
+        throw std::runtime_error("Pointer was empty!");
+      }
+      return arr;
+    } catch (std::exception& _exp) {
     }
-    return arr;
+
+    try {
+      assert_true(_var);
+      const auto arr = _var->extract<Poco::JSON::Array>();
+      return Poco::JSON::Array::Ptr(new Poco::JSON::Array(arr));
+    } catch (std::exception& e) {
+      throw std::runtime_error("Could not cast to array.");
+    }
   }
 
   static InputObjectType to_object(InputVarType* _var) {
-    auto obj = _var->extract<InputObjectType>();
-    if (!obj) {
-      throw std::runtime_error("Could not retrieve object!");
+    try {
+      assert_true(_var);
+      auto obj = _var->extract<InputObjectType>();
+      if (!obj) {
+        throw std::runtime_error("Pointer was empty!");
+      }
+      return obj;
+    } catch (std::exception& _exp) {
     }
-    return obj;
+
+    try {
+      assert_true(_var);
+      const auto obj = _var->extract<Poco::JSON::Object>();
+      return Poco::JSON::Object::Ptr(new Poco::JSON::Object(obj));
+    } catch (std::exception& e) {
+      throw std::runtime_error("Could not cast to object.");
+    }
   }
 };
 
