@@ -100,7 +100,7 @@ class Result {
       return Result<std::vector<RType>>(err);
     }
     return Result<std::vector<RType>>(
-        std::collect::vector(_range | VIEWS::join));
+        fct::collect::vector(_range | VIEWS::join));
   }
 
   /// Returns Result<U>, if successful and error otherwise.
