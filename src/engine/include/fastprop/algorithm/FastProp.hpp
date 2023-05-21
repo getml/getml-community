@@ -40,6 +40,8 @@ class FastProp {
   typedef typename helpers::VocabularyContainer::VocabForDf VocabForDf;
   typedef typename std::vector<VocabForDf> Vocabulary;
 
+  using MarkerType = typename helpers::ColumnDescription::MarkerType;
+
   using NamedTupleType = fct::NamedTuple<
       fct::Field<"allow_http_", bool>,
       fct::Field<"features_", std::shared_ptr<const std::vector<

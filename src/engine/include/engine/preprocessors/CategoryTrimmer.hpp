@@ -33,6 +33,8 @@ namespace engine {
 namespace preprocessors {
 
 class CategoryTrimmer : public Preprocessor {
+  using MarkerType = typename helpers::ColumnDescription::MarkerType;
+
  public:
   using CategoryPair =
       std::pair<helpers::ColumnDescription, fct::Ref<const std::set<Int>>>;
@@ -129,7 +131,7 @@ class CategoryTrimmer : public Preprocessor {
 
   /// Fits on a single data frame.
   std::vector<CategoryPair> fit_df(const containers::DataFrame& _df,
-                                   const std::string& _marker) const;
+                                   const MarkerType _marker) const;
 
   /// Generates a cateogory set for a column.
   fct::Ref<const std::set<Int>> make_category_set(
