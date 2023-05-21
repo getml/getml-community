@@ -8,8 +8,6 @@
 #ifndef COMMANDS_DATAMODEL_HPP_
 #define COMMANDS_DATAMODEL_HPP_
 
-#include <Poco/Dynamic/Var.h>
-
 #include <optional>
 #include <vector>
 
@@ -19,6 +17,7 @@
 #include "fct/Literal.hpp"
 #include "fct/define_named_tuple.hpp"
 #include "helpers/Placeholder.hpp"
+#include "json/json.hpp"
 
 namespace commands {
 
@@ -66,7 +65,9 @@ struct DataModel {
     check_length<"relationship_">();
   }
 
-  static DataModel from_json_obj(const Poco::Dynamic::Var& _json_obj);
+  using InputVarType = typename json::JSONParser::InputVarType;
+
+  static DataModel from_json_obj(const InputVarType& _json_obj);
 
   ~DataModel() = default;
 

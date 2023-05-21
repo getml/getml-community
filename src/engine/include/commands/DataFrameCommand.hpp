@@ -8,8 +8,6 @@
 #ifndef COMMANDS_DATAFRAMECOMMAND_HPP_
 #define COMMANDS_DATAFRAMECOMMAND_HPP_
 
-#include <Poco/Dynamic/Var.h>
-
 #include <string>
 #include <variant>
 
@@ -25,6 +23,7 @@
 #include "fct/NamedTuple.hpp"
 #include "fct/Ref.hpp"
 #include "fct/TaggedUnion.hpp"
+#include "json/json.hpp"
 
 namespace commands {
 
@@ -317,7 +316,9 @@ struct DataFrameCommand {
       GetDataFrameNRowsOp, LastChangeOp, RefreshDataFrameOp, RemoveColumnOp,
       SummarizeDataFrameOp, ToArrowOp, ToCSVOp, ToDBOp, ToParquetOp>;
 
-  static DataFrameCommand from_json_obj(const Poco::Dynamic::Var& _obj);
+  using InputVarType = typename json::JSONParser::InputVarType;
+
+  static DataFrameCommand from_json_obj(const InputVarType& _obj);
 
   /// The underlying value
   NamedTupleType val_;

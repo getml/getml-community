@@ -9,8 +9,6 @@
 
 #include <Poco/JSON/Parser.h>
 
-#include "json/json.hpp"
-
 namespace commands {
 
 Fingerprint Fingerprint::from_json(const std::string& _json_str) {
@@ -19,7 +17,7 @@ Fingerprint Fingerprint::from_json(const std::string& _json_str) {
   return from_json_obj(json_obj);
 }
 
-Fingerprint Fingerprint::from_json_obj(const Poco::Dynamic::Var& _json_obj) {
+Fingerprint Fingerprint::from_json_obj(const InputVarType& _json_obj) {
   static_assert(json::has_from_json_obj_v<DataModel>, "This should work");
   return Fingerprint(json::from_json<NamedTupleType>(_json_obj));
 }
