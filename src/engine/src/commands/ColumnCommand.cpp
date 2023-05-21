@@ -11,7 +11,7 @@
 
 namespace commands {
 
-ColumnCommand ColumnCommand::from_json_obj(const Poco::Dynamic::Var& _obj) {
+ColumnCommand ColumnCommand::from_json_obj(const InputVarType& _obj) {
   return ColumnCommand(json::from_json<NamedTupleType>(_obj));
 }
 

@@ -8,8 +8,6 @@
 #ifndef COMMANDS_PIPELINECOMMAND_HPP_
 #define COMMANDS_PIPELINECOMMAND_HPP_
 
-#include <Poco/Dynamic/Var.h>
-
 #include <string>
 
 #include "commands/DataFramesOrViews.hpp"
@@ -20,6 +18,7 @@
 #include "fct/Ref.hpp"
 #include "fct/TaggedUnion.hpp"
 #include "fct/define_named_tuple.hpp"
+#include "json/json.hpp"
 #include "transpilation/TranspilationParams.hpp"
 
 namespace commands {
@@ -90,7 +89,9 @@ struct PipelineCommand {
                        LiftCurveOp, PrecisionRecallCurveOp, RefreshOp,
                        RefreshAllOp, ROCCurveOp, ToSQLOp, TransformOp>;
 
-  static PipelineCommand from_json_obj(const Poco::Dynamic::Var& _obj);
+  using InputVarType = typename json::JSONParser::InputVarType;
+
+  static PipelineCommand from_json_obj(const InputVarType& _obj);
 
   /// The underlying value
   NamedTupleType val_;

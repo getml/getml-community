@@ -8,8 +8,6 @@
 #ifndef COMMANDS_VIEWCOMMAND_HPP_
 #define COMMANDS_VIEWCOMMAND_HPP_
 
-#include <Poco/Dynamic/Var.h>
-
 #include <string>
 #include <variant>
 
@@ -22,6 +20,7 @@
 #include "fct/NamedTuple.hpp"
 #include "fct/Ref.hpp"
 #include "fct/TaggedUnion.hpp"
+#include "json/json.hpp"
 
 namespace commands {
 
@@ -76,7 +75,9 @@ struct ViewCommand {
       fct::TaggedUnion<"type_", GetViewContentOp, GetViewNRowsOp, ViewToArrowOp,
                        ViewToCSVOp, ViewToDBOp, ViewToParquetOp>;
 
-  static ViewCommand from_json_obj(const Poco::Dynamic::Var& _obj);
+  using InputVarType = typename json::JSONParser::InputVarType;
+
+  static ViewCommand from_json_obj(const InputVarType& _obj);
 
   /// The underlying value
   NamedTupleType val_;

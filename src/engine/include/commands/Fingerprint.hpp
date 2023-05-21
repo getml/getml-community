@@ -8,8 +8,6 @@
 #ifndef COMMANDS_FINGERPRINT_HPP_
 #define COMMANDS_FINGERPRINT_HPP_
 
-#include <Poco/Dynamic/Var.h>
-
 #include <variant>
 #include <vector>
 
@@ -27,6 +25,7 @@
 #include "fct/define_named_tuple.hpp"
 #include "fct/define_tagged_union.hpp"
 #include "fct/define_variant.hpp"
+#include "json/json.hpp"
 
 namespace commands {
 
@@ -154,7 +153,9 @@ struct Fingerprint {
 
   static Fingerprint from_json(const std::string& _json_str);
 
-  static Fingerprint from_json_obj(const Poco::Dynamic::Var& _json_obj);
+  using InputVarType = typename json::JSONParser::InputVarType;
+
+  static Fingerprint from_json_obj(const InputVarType& _json_obj);
 
   std::string to_json() const;
 

@@ -31,9 +31,7 @@ Placeholder::Placeholder(const NamedTupleType& _val) : val_(_val) {}
 
 // ----------------------------------------------------------------------------
 
-// ----------------------------------------------------------------------------
-
-Placeholder Placeholder::from_json_obj(const Poco::Dynamic::Var& _json_obj) {
+Placeholder Placeholder::from_json_obj(const InputVarType& _json_obj) {
   return Placeholder(json::from_json<NamedTupleType>(_json_obj));
 }
 

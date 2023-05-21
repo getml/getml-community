@@ -8,8 +8,6 @@
 #ifndef COMMANDS_COMMAND_HPP_
 #define COMMANDS_COMMAND_HPP_
 
-#include <Poco/Dynamic/Var.h>
-
 #include <variant>
 
 #include "commands/ColumnCommand.hpp"
@@ -21,6 +19,7 @@
 #include "fct/Field.hpp"
 #include "fct/Literal.hpp"
 #include "fct/NamedTuple.hpp"
+#include "json/json.hpp"
 
 namespace commands {
 
@@ -39,7 +38,9 @@ struct Command {
                    PipelineCommand, ProjectCommand, ViewCommand, IsAliveOp,
                    MonitorURLOp, ShutdownOp>;
 
-  static Command from_json_obj(const Poco::Dynamic::Var& _obj);
+  using InputVarType = typename json::JSONParser::InputVarType;
+
+  static Command from_json_obj(const InputVarType& _obj);
 
   NamedTupleType val_;
 };

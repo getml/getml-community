@@ -7,14 +7,9 @@
 
 #include "commands/DataModel.hpp"
 
-#include <Poco/JSON/Parser.h>
-
-#include "json/json.hpp"
-
 namespace commands {
 
-DataModel DataModel::from_json_obj(const Poco::Dynamic::Var& _json_obj) {
-  static_assert(json::has_from_json_obj_v<DataModel>, "This should work");
+DataModel DataModel::from_json_obj(const InputVarType& _json_obj) {
   return DataModel(json::from_json<NamedTupleType>(_json_obj));
 }
 

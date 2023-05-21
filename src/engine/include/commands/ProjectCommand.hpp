@@ -8,8 +8,6 @@
 #ifndef COMMANDS_PROJECTCOMMAND_HPP_
 #define COMMANDS_PROJECTCOMMAND_HPP_
 
-#include <Poco/Dynamic/Var.h>
-
 #include <optional>
 #include <string>
 #include <vector>
@@ -160,7 +158,9 @@ struct ProjectCommand {
       LoadPipelineOp, PipelineOp, ProjectNameOp, SaveDataContainerOp, SaveDfOp,
       SavePipelineOp, TempDirOp>;
 
-  static ProjectCommand from_json_obj(const Poco::Dynamic::Var& _obj);
+  using InputVarType = typename json::JSONParser::InputVarType;
+
+  static ProjectCommand from_json_obj(const InputVarType& _obj);
 
   /// The underlying value
   NamedTupleType val_;

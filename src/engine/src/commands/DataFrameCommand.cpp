@@ -7,12 +7,9 @@
 
 #include "commands/DataFrameCommand.hpp"
 
-#include "json/json.hpp"
-
 namespace commands {
 
-DataFrameCommand DataFrameCommand::from_json_obj(
-    const Poco::Dynamic::Var& _obj) {
+DataFrameCommand DataFrameCommand::from_json_obj(const InputVarType& _obj) {
   return DataFrameCommand(json::from_json<NamedTupleType>(_obj));
 }
 

@@ -7,11 +7,9 @@
 
 #include "commands/PipelineCommand.hpp"
 
-#include "json/json.hpp"
-
 namespace commands {
 
-PipelineCommand PipelineCommand::from_json_obj(const Poco::Dynamic::Var& _obj) {
+PipelineCommand PipelineCommand::from_json_obj(const InputVarType& _obj) {
   return PipelineCommand(json::from_json<NamedTupleType>(_obj));
 }
 
