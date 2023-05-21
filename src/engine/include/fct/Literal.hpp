@@ -16,6 +16,7 @@
 #include <type_traits>
 
 #include "debug/debug.hpp"
+#include "fct/Result.hpp"
 #include "fct/StringLiteral.hpp"
 #include "fct/VisitTree.hpp"
 #include "fct/join.hpp"
@@ -40,9 +41,6 @@ class Literal {
   /// The number of different fields or different options that the literal
   /// can assume.
   static constexpr ValueType num_fields_ = sizeof...(fields_);
-
-  /// Constructs a Literal from a string.
-  Literal(const std::string& _str) : value_(find_value(_str)) {}
 
   /// Constructs a Literal from another literal.
   Literal(const Literal<fields_...>& _other) : value_(_other.value_) {}
@@ -103,6 +101,15 @@ class Literal {
   inline static constexpr bool has_duplicates() {
     return has_duplicate_strings();
   }
+
+  /// Constructs a Literal from a string. Returns an error if the string cannot
+  /// be found.
+  static Result<Literal> from_string(const std::string& _str) {
+    const auto to_literal = [](const auto& _v) {
+      return Literal<fields_...>(_v);
+    };
+    return find_value(_str).transform(to_literal);
+  };
 
   /// Constructs a new Literal.
   template <StringLiteral _name>
@@ -244,13 +251,13 @@ class Literal {
   /// Finds the correct value associated with
   /// the string at run time.
   template <int _i = 0>
-  inline static int find_value(const std::string& _str) {
+  inline static Result<int> find_value(const std::string& _str) {
     using FieldType = typename std::tuple_element<_i, FieldsType>::type;
     if (FieldType::field_.str() == _str) {
       return _i;
     }
     if constexpr (_i + 1 == num_fields_) {
-      throw std::runtime_error(
+      return Error(
           "Literal does not support string '" + _str +
           "'. The following strings are supported: " + allowed_strings() + ".");
     } else {

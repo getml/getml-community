@@ -35,6 +35,8 @@ class Imputation : public Preprocessor {
   typedef std::map<helpers::ColumnDescription, std::pair<Float, bool>>
       ImputationMapType;
 
+  using MarkerType = typename helpers::ColumnDescription::MarkerType;
+
  public:
   using ImputationOp = typename commands::Preprocessor::ImputationOp;
 
@@ -122,13 +124,13 @@ class Imputation : public Preprocessor {
                  containers::DataFrame* _df) const;
 
   /// Extracts an imputed column and adds it to the data frame.
-  void extract_and_add(const std::string& _marker, const size_t _table,
+  void extract_and_add(const MarkerType _marker, const size_t _table,
                        const containers::Column<Float>& _original_col,
                        containers::DataFrame* _df);
 
   /// Fits and transforms an individual data frame.
   containers::DataFrame fit_transform_df(const containers::DataFrame& _df,
-                                         const std::string& _marker,
+                                         const MarkerType _marker,
                                          const size_t _table);
 
   /// Replaces the original column with an imputed one. Returns a boolean
@@ -137,12 +139,12 @@ class Imputation : public Preprocessor {
               const Float _imputation_value, containers::DataFrame* _df) const;
 
   /// Retrieves all pairs in cols_ matching _marker and _table.
-  std::vector<std::pair<Float, bool>> retrieve_pairs(const std::string& _marker,
+  std::vector<std::pair<Float, bool>> retrieve_pairs(const MarkerType _marker,
                                                      const size_t _table) const;
 
   /// Transforms a single data frame.
   containers::DataFrame transform_df(const containers::DataFrame& _df,
-                                     const std::string& _marker,
+                                     const MarkerType _marker,
                                      const size_t _table) const;
 
  private:

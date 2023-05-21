@@ -81,11 +81,11 @@ std::string CategoryTrimmer::column_to_sql(
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
 CategoryTrimmer::fit_transform(const Params& _params) {
   const auto fit_peripheral = [this](const auto& _df) {
-    return fit_df(_df, helpers::ColumnDescription::PERIPHERAL);
+    return fit_df(_df, MarkerType::make<"[PERIPHERAL]">());
   };
 
   population_sets_ = fit_df(_params.get<"population_df_">(),
-                            helpers::ColumnDescription::POPULATION);
+                            MarkerType::make<"[POPULATION]">());
 
   peripheral_sets_ = fct::collect::vector(_params.get<"peripheral_dfs_">() |
                                           VIEWS::transform(fit_peripheral));
@@ -104,7 +104,7 @@ CategoryTrimmer::fit_transform(const Params& _params) {
 // ----------------------------------------------------
 
 std::vector<typename CategoryTrimmer::CategoryPair> CategoryTrimmer::fit_df(
-    const containers::DataFrame& _df, const std::string& _marker) const {
+    const containers::DataFrame& _df, const MarkerType _marker) const {
   const auto include = [](const auto& _col) -> bool {
     const auto blacklist = std::vector<helpers::Subrole>(
         {helpers::Subrole::exclude_preprocessors, helpers::Subrole::email_only,

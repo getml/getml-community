@@ -22,15 +22,17 @@ namespace engine {
 namespace preprocessors {
 
 struct PreprocessorImpl {
+  using MarkerType = typename helpers::ColumnDescription::MarkerType;
+
   /// Retrieves the column names of all column descriptions that match the
   /// marker and table.
   static std::vector<std::string> retrieve_names(
-      const std::string& _marker, const size_t _table,
+      const MarkerType _marker, const size_t _table,
       const std::vector<std::shared_ptr<helpers::ColumnDescription>>& _desc);
 
   /// Adds a new column description.
   static void add(
-      const std::string& _marker, const size_t _table, const std::string& _name,
+      const MarkerType _marker, const size_t _table, const std::string& _name,
       std::vector<std::shared_ptr<helpers::ColumnDescription>>* _desc) {
     _desc->push_back(std::make_shared<helpers::ColumnDescription>(
         _marker, std::to_string(_table), _name));
@@ -51,7 +53,6 @@ struct PreprocessorImpl {
   }
 };
 
-// ----------------------------------------------------
 }  // namespace preprocessors
 }  // namespace engine
 

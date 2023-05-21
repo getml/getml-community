@@ -1018,7 +1018,7 @@ FastProp::infer_importance(
   switch (abstract_feature.data_used_.value()) {
     case enums::DataUsed::value_of<"categorical">(): {
       const auto col_desc = helpers::ColumnDescription(
-          helpers::ColumnDescription::PERIPHERAL, peripheral.name(),
+          MarkerType::make<"[PERIPHERAL]">(), peripheral.name(),
           peripheral.categorical_name(abstract_feature.input_col_));
 
       return {std::make_pair(col_desc, _importance_factor)};
@@ -1026,7 +1026,7 @@ FastProp::infer_importance(
 
     case enums::DataUsed::value_of<"discrete">(): {
       const auto col_desc = helpers::ColumnDescription(
-          helpers::ColumnDescription::PERIPHERAL, peripheral.name(),
+          MarkerType::make<"[PERIPHERAL]">(), peripheral.name(),
           peripheral.discrete_name(abstract_feature.input_col_));
 
       return {std::make_pair(col_desc, _importance_factor)};
@@ -1037,7 +1037,7 @@ FastProp::infer_importance(
 
     case enums::DataUsed::value_of<"numerical">(): {
       const auto col_desc = helpers::ColumnDescription(
-          helpers::ColumnDescription::PERIPHERAL, peripheral.name(),
+          MarkerType::make<"[PERIPHERAL]">(), peripheral.name(),
           peripheral.numerical_name(abstract_feature.input_col_));
 
       return {std::make_pair(col_desc, _importance_factor)};
@@ -1045,11 +1045,11 @@ FastProp::infer_importance(
 
     case enums::DataUsed::value_of<"same_units_categorical">(): {
       const auto col_desc1 = helpers::ColumnDescription(
-          helpers::ColumnDescription::PERIPHERAL, peripheral.name(),
+          MarkerType::make<"[PERIPHERAL]">(), peripheral.name(),
           peripheral.categorical_name(abstract_feature.input_col_));
 
       const auto col_desc2 = helpers::ColumnDescription(
-          helpers::ColumnDescription::POPULATION, population.name(),
+          MarkerType::make<"[POPULATION]">(), population.name(),
           population.categorical_name(abstract_feature.output_col_));
 
       return {std::make_pair(col_desc1, _importance_factor * 0.5),
@@ -1059,11 +1059,11 @@ FastProp::infer_importance(
     case enums::DataUsed::value_of<"same_units_discrete">():
     case enums::DataUsed::value_of<"same_units_discrete_ts">(): {
       const auto col_desc1 = helpers::ColumnDescription(
-          helpers::ColumnDescription::PERIPHERAL, peripheral.name(),
+          MarkerType::make<"[PERIPHERAL]">(), peripheral.name(),
           peripheral.discrete_name(abstract_feature.input_col_));
 
       const auto col_desc2 = helpers::ColumnDescription(
-          helpers::ColumnDescription::POPULATION, population.name(),
+          MarkerType::make<"[POPULATION]">(), population.name(),
           population.discrete_name(abstract_feature.output_col_));
 
       return {std::make_pair(col_desc1, _importance_factor * 0.5),
@@ -1073,11 +1073,11 @@ FastProp::infer_importance(
     case enums::DataUsed::value_of<"same_units_numerical">():
     case enums::DataUsed::value_of<"same_units_numerical_ts">(): {
       const auto col_desc1 = helpers::ColumnDescription(
-          helpers::ColumnDescription::PERIPHERAL, peripheral.name(),
+          MarkerType::make<"[PERIPHERAL]">(), peripheral.name(),
           peripheral.numerical_name(abstract_feature.input_col_));
 
       const auto col_desc2 = helpers::ColumnDescription(
-          helpers::ColumnDescription::POPULATION, population.name(),
+          MarkerType::make<"[POPULATION]">(), population.name(),
           population.numerical_name(abstract_feature.output_col_));
 
       return {std::make_pair(col_desc1, _importance_factor * 0.5),
@@ -1097,7 +1097,7 @@ FastProp::infer_importance(
 
     case enums::DataUsed::value_of<"text">(): {
       const auto col_desc = helpers::ColumnDescription(
-          helpers::ColumnDescription::PERIPHERAL, peripheral.name(),
+          MarkerType::make<"[PERIPHERAL]">(), peripheral.name(),
           peripheral.text_name(abstract_feature.input_col_));
 
       return {std::make_pair(col_desc, _importance_factor)};
@@ -1107,7 +1107,8 @@ FastProp::infer_importance(
       assert_msg(false, "Unknown data used: '" +
                             abstract_feature.data_used_.name() + "'");
 
-      const auto col_desc = helpers::ColumnDescription("", "", "");
+      const auto col_desc = helpers::ColumnDescription(
+          MarkerType::make<"[PERIPHERAL]">(), "", "");
 
       return {std::make_pair(col_desc, 0.0)};
   }

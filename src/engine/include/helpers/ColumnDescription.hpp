@@ -17,9 +17,6 @@
 namespace helpers {
 
 struct ColumnDescription {
-  static constexpr const char* PERIPHERAL = "[PERIPHERAL]";
-  static constexpr const char* POPULATION = "[POPULATION]";
-
   using MarkerType = fct::Literal<"[PERIPHERAL]", "[POPULATION]">;
 
   /// Which table are we referring to?
@@ -34,10 +31,6 @@ struct ColumnDescription {
   using NamedTupleType = fct::NamedTuple<f_marker, f_name, f_table>;
 
   ColumnDescription(const MarkerType& _marker, const std::string& _table,
-                    const std::string& _name)
-      : val_(f_marker(_marker) * f_name(_name) * f_table(_table)) {}
-
-  ColumnDescription(const std::string& _marker, const std::string& _table,
                     const std::string& _name)
       : val_(f_marker(_marker) * f_name(_name) * f_table(_table)) {}
 

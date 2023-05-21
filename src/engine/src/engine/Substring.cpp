@@ -78,17 +78,16 @@ containers::Column<strings::String> Substring::extract_substring_string(
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
 Substring::fit_transform(const Params& _params) {
   const auto population_df = fit_transform_df(
-      _params.get<"population_df_">(), helpers::ColumnDescription::POPULATION,
-      0, _params.get<"categories_">().get());
+      _params.get<"population_df_">(), MarkerType::make<"[POPULATION]">(), 0,
+      _params.get<"categories_">().get());
 
   auto peripheral_dfs = std::vector<containers::DataFrame>();
 
   for (size_t i = 0; i < _params.get<"peripheral_dfs_">().size(); ++i) {
     const auto& df = _params.get<"peripheral_dfs_">().at(i);
 
-    const auto new_df =
-        fit_transform_df(df, helpers::ColumnDescription::PERIPHERAL, i,
-                         _params.get<"categories_">().get());
+    const auto new_df = fit_transform_df(df, MarkerType::make<"[PERIPHERAL]">(),
+                                         i, _params.get<"categories_">().get());
 
     peripheral_dfs.push_back(new_df);
   }
@@ -99,7 +98,7 @@ Substring::fit_transform(const Params& _params) {
 // ----------------------------------------------------
 
 containers::DataFrame Substring::fit_transform_df(
-    const containers::DataFrame& _df, const std::string& _marker,
+    const containers::DataFrame& _df, const MarkerType _marker,
     const size_t _table, containers::Encoding* _categories) {
   auto df = _df;
 
@@ -155,7 +154,7 @@ std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
 Substring::transform(const Params& _params) const {
   const auto population_df = transform_df(
       *_params.get<"categories_">(), _params.get<"population_df_">(),
-      helpers::ColumnDescription::POPULATION, 0);
+      MarkerType::make<"[POPULATION]">(), 0);
 
   auto peripheral_dfs = std::vector<containers::DataFrame>();
 
@@ -163,7 +162,7 @@ Substring::transform(const Params& _params) const {
     const auto& df = _params.get<"peripheral_dfs_">().at(i);
 
     const auto new_df = transform_df(*_params.get<"categories_">(), df,
-                                     helpers::ColumnDescription::PERIPHERAL, i);
+                                     MarkerType::make<"[PERIPHERAL]">(), i);
 
     peripheral_dfs.push_back(new_df);
   }
@@ -175,12 +174,8 @@ Substring::transform(const Params& _params) const {
 
 containers::DataFrame Substring::transform_df(
     const containers::Encoding& _categories, const containers::DataFrame& _df,
-    const std::string& _marker, const size_t _table) const {
-  // ----------------------------------------------------
-
+    const MarkerType _marker, const size_t _table) const {
   auto df = _df;
-
-  // ----------------------------------------------------
 
   auto names = PreprocessorImpl::retrieve_names(_marker, _table, cols_);
 

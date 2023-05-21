@@ -59,10 +59,10 @@ containers::DataFrame TextFieldSplitter::remove_text_fields(
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
 TextFieldSplitter::fit_transform(const Params& _params) {
   cols_ = fit_df(_params.get<"population_df_">(),
-                 helpers::ColumnDescription::POPULATION);
+                 MarkerType::make<"[POPULATION]">());
 
   for (const auto& df : _params.get<"peripheral_dfs_">()) {
-    const auto new_cols = fit_df(df, helpers::ColumnDescription::PERIPHERAL);
+    const auto new_cols = fit_df(df, MarkerType::make<"[PERIPHERAL]">());
 
     cols_.insert(cols_.end(), new_cols.begin(), new_cols.end());
   }
@@ -80,7 +80,7 @@ TextFieldSplitter::fit_transform(const Params& _params) {
 
 std::vector<std::shared_ptr<helpers::ColumnDescription>>
 TextFieldSplitter::fit_df(const containers::DataFrame& _df,
-                          const std::string& _marker) const {
+                          const MarkerType _marker) const {
   const auto to_column_description = [&_df, &_marker](const size_t _i) {
     return std::make_shared<helpers::ColumnDescription>(_marker, _df.name(),
                                                         _df.text(_i).name());
@@ -184,11 +184,11 @@ TextFieldSplitter::transform(const Params& _params) const {
 
   auto peripheral_dfs = fct::collect::vector(range);
 
-  transform_df(helpers::ColumnDescription::POPULATION,
+  transform_df(MarkerType::make<"[POPULATION]">(),
                _params.get<"population_df_">(), &peripheral_dfs);
 
   for (const auto& df : _params.get<"peripheral_dfs_">()) {
-    transform_df(helpers::ColumnDescription::PERIPHERAL, df, &peripheral_dfs);
+    transform_df(MarkerType::make<"[PERIPHERAL]">(), df, &peripheral_dfs);
   }
 
   return std::make_pair(population_df, peripheral_dfs);
@@ -197,7 +197,7 @@ TextFieldSplitter::transform(const Params& _params) const {
 // ----------------------------------------------------
 
 void TextFieldSplitter::transform_df(
-    const std::string& _marker, const containers::DataFrame& _df,
+    const MarkerType _marker, const containers::DataFrame& _df,
     std::vector<containers::DataFrame>* _peripheral_dfs) const {
   const auto matching_description =
       [&_marker,

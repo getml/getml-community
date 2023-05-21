@@ -96,8 +96,8 @@ struct Parser<ParserType, fct::Literal<_fields...>> {
   /// Expresses the variables as type T.
   static fct::Result<fct::Literal<_fields...>> from_json(
       InputVarType* _var) noexcept {
-    const auto to_type = [](const auto& _val) {
-      return fct::Literal<_fields...>(_val);
+    const auto to_type = [](const auto& _str) {
+      return fct::Literal<_fields...>::from_string(_str);
     };
 
     const auto embellish_error = [](const fct::Error& _e) {
@@ -105,7 +105,7 @@ struct Parser<ParserType, fct::Literal<_fields...>> {
     };
 
     return ParserType::template to_basic_type<std::string>(_var)
-        .transform(to_type)
+        .and_then(to_type)
         .or_else(embellish_error);
   }
 
