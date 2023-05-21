@@ -46,22 +46,6 @@ struct PocoJSONParser {
 
   static OutputVarType empty_var() { return Poco::Dynamic::Var(); }
 
-  static fct::Result<InputVarType> get(const size_t _i,
-                                       const InputArrayType* _arr) noexcept {
-    try {
-      assert_true(_arr);
-      assert_true(*_arr);
-      return (*_arr)->get(_i);
-    } catch (std::exception& e) {
-      return fct::Error("Could not get element from array: " +
-                        std::string(e.what()));
-    }
-  }
-
-  static fct::Result<size_t> get_array_size(InputArrayType* _arr) noexcept {
-    return (*_arr)->size();
-  }
-
   static fct::Result<InputVarType> get_field(const std::string& _name,
                                              InputObjectType* _obj) noexcept {
     try {
@@ -72,10 +56,6 @@ struct PocoJSONParser {
       return fct::Error("Could not get field from object: " +
                         std::string(e.what()));
     }
-  }
-
-  static bool has_key(const std::string& _key, InputObjectType* _obj) noexcept {
-    return (*_obj)->has(_key);
   }
 
   static OutputArrayType new_array() noexcept {
@@ -163,41 +143,24 @@ struct PocoJSONParser {
 };
 
 struct SimdJSONParser {
-  using ArrayType = simdjson::ondemand::array;
-  using ObjectType = simdjson::ondemand::object;
-  using VarType = simdjson::ondemand::value;
+  using InputArrayType = simdjson::ondemand::array;
+  using InputObjectType = simdjson::ondemand::object;
+  using InputVarType = simdjson::ondemand::value;
 
-  // TODO
-  /*  static void add(const VarType _var, ArrayType* _arr) {
-      assert_true(_arr);
-      assert_true(*_arr);
-      (*_arr)->add(_var);
-    }*/
+  using OutputArrayType = Poco::JSON::Array::Ptr;
+  using OutputObjectType = Poco::JSON::Object::Ptr;
+  using OutputVarType = Poco::Dynamic::Var;
 
-  // TODO
-  // static VarType empty_var() { return Poco::Dynamic::Var(); }
-
-  static fct::Result<VarType> get(const size_t _i,
-                                  simdjson::ondemand::array* _arr) {
-    size_t i = 0;
-    for (auto val : *_arr) {
-      if (i == _i) {
-        return val.value();
-      }
-      ++i;
-    }
-    return fct::Error("Index " + std::to_string(_i) +
-                      " out of range. Length was " + std::to_string(i) + ".");
+  static void add(const OutputVarType _var, OutputArrayType* _arr) noexcept {
+    (*_arr)->add(_var);
   }
 
-  static size_t get_array_size(ArrayType* _arr) {
-    return _arr->count_elements();
-  }
+  static OutputVarType empty_var() noexcept { return Poco::Dynamic::Var(); }
 
-  static fct::Result<VarType> get_field(const std::string& _name,
-                                        ObjectType* _obj) {
+  static fct::Result<InputVarType> get_field(const std::string& _name,
+                                             InputObjectType* _obj) noexcept {
     auto res = (*_obj)[_name];
-    VarType v;
+    InputVarType v;
     const auto error = res.get(v);
     if (error) {
       return fct::Error("Object contains no field named '" + _name + "'.");
@@ -205,38 +168,24 @@ struct SimdJSONParser {
     return v;
   }
 
-  static std::vector<std::string> get_names(ObjectType* _obj) {
-    std::vector<std::string> names;
-    for (auto field : *_obj) {
-      names.push_back(std::string(std::string_view(field.unescaped_key())));
-    }
-    return names;
+  static OutputArrayType new_array() noexcept {
+    return Poco::JSON::Array::Ptr(new Poco::JSON::Array());
   }
 
-  static bool has_key(const std::string& _key, ObjectType* _obj) {
-    for (auto field : *_obj) {
-      if (_key == std::string_view(field.unescaped_key())) {
-        return true;
-      }
-    }
-    return false;
+  static OutputObjectType new_object() noexcept {
+    return Poco::JSON::Object::Ptr(new Poco::JSON::Object());
   }
 
-  static ArrayType new_array() { return simdjson::ondemand::array(); }
+  // static bool is_empty(InputVarType* _var) noexcept { return _var->isEmpty();
+  // }
 
-  static ObjectType new_object() { return simdjson::ondemand::object(); }
-
-  //  static bool is_empty(const VarType& _var) { return _var.isEmpty(); }
-
-  /* static void set_field(const std::string& _name, const VarType& _var,
-                         ObjectType* _obj) {
-     assert_true(_obj);
-     assert_true(*_obj);
-     (*_obj)->set(_name, _var);
-   }*/
+  static void set_field(const std::string& _name, const OutputVarType& _var,
+                        OutputObjectType* _obj) noexcept {
+    (*_obj)->set(_name, _var);
+  }
 
   template <class T>
-  static fct::Result<T> to_basic_type(const VarType& _var) {
+  static fct::Result<T> to_basic_type(const InputVarType& _var) noexcept {
     try {
       T var = _var;
       return var;
@@ -245,9 +194,13 @@ struct SimdJSONParser {
     }
   }
 
-  static ArrayType to_array(VarType* _var) { return _var->get_array(); }
+  static InputArrayType to_array(InputVarType* _var) noexcept {
+    return _var->get_array();
+  }
 
-  static ObjectType to_object(VarType* _var) { return _var->get_object(); }
+  static InputObjectType to_object(InputVarType* _var) noexcept {
+    return _var->get_object();
+  }
 };
 
 using JSONParser = PocoJSONParser;
