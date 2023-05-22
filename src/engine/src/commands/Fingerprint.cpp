@@ -7,13 +7,12 @@
 
 #include "commands/Fingerprint.hpp"
 
-#include <Poco/JSON/Parser.h>
+#include "json/json.hpp"
 
 namespace commands {
 
 Fingerprint Fingerprint::from_json(const std::string& _json_str) {
-  Poco::JSON::Parser parser;
-  const auto json_obj = parser.parse(_json_str);
+  const auto json_obj = json::JSONParser::from_string(_json_str);
   return from_json_obj(json_obj);
 }
 
