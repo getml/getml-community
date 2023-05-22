@@ -12,6 +12,7 @@
 #include <Poco/Dynamic/Var.h>
 #include <Poco/JSON/Array.h>
 #include <Poco/JSON/Object.h>
+#include <Poco/JSON/Parser.h>
 #include <simdjson.h>
 
 #include <exception>
@@ -42,6 +43,11 @@ struct PocoJSONParser {
 
   static void add(const OutputVarType _var, OutputArrayType* _arr) noexcept {
     (*_arr)->add(_var);
+  }
+
+  static InputVarType from_string(const std::string& _str) {
+    Poco::JSON::Parser parser;
+    return parser.parse(_str);
   }
 
   static OutputVarType empty_var() { return Poco::Dynamic::Var(); }
@@ -157,6 +163,12 @@ struct SimdJSONParser {
 
   static OutputVarType empty_var() noexcept { return Poco::Dynamic::Var(); }
 
+  static InputVarType from_string(const std::string& _str) {
+    simdjson::padded_string padded_str(_str);
+    simdjson::ondemand::parser parser;
+    return parser.iterate(padded_str);
+  }
+
   static fct::Result<InputVarType> get_field(const std::string& _name,
                                              InputObjectType* _obj) noexcept {
     auto res = (*_obj)[_name];
@@ -176,8 +188,9 @@ struct SimdJSONParser {
     return Poco::JSON::Object::Ptr(new Poco::JSON::Object());
   }
 
-  // static bool is_empty(InputVarType* _var) noexcept { return _var->isEmpty();
-  // }
+  static bool is_empty(InputVarType* _var) noexcept { return _var->is_null(); }
+
+  static bool is_empty(OutputVarType* _var) noexcept { return _var->isEmpty(); }
 
   static void set_field(const std::string& _name, const OutputVarType& _var,
                         OutputObjectType* _obj) noexcept {
@@ -185,25 +198,72 @@ struct SimdJSONParser {
   }
 
   template <class T>
-  static fct::Result<T> to_basic_type(const InputVarType& _var) noexcept {
-    try {
-      T var = _var;
-      return var;
-    } catch (std::exception& e) {
-      return fct::Error("Could not cast to expected type.");
+  static fct::Result<T> to_basic_type(InputVarType* _var) noexcept {
+    if constexpr (std::is_same<std::decay_t<T>, std::string>()) {
+      auto r = _var->get_string();
+      if (r.error()) {
+        return fct::Error("Could not cast to string.");
+      }
+      return std::string(r.value());
+    } else if constexpr (std::is_same<std::decay_t<T>, bool>()) {
+      auto r = _var->get_bool();
+      if (r.error()) {
+        return fct::Error("Could not cast to boolean.");
+      }
+      return r.value();
+    } else if constexpr (std::is_floating_point<std::decay_t<T>>()) {
+      auto r = _var->get_double();
+      if (r.error()) {
+        return fct::Error("Could not cast to double.");
+      }
+      return static_cast<T>(r.value());
+    } else {
+      auto r = _var->get_int64();
+      if (r.error()) {
+        return fct::Error("Could not cast to integer.");
+      }
+      return static_cast<T>(r.value());
     }
   }
 
-  static InputArrayType to_array(InputVarType* _var) noexcept {
-    return _var->get_array();
+  static fct::Result<InputArrayType> to_array(InputVarType* _var) noexcept {
+    auto r = _var->get_array();
+    if (r.error()) {
+      return fct::Error("Could not cast to array!");
+    }
+    return r.value();
   }
 
-  static InputObjectType to_object(InputVarType* _var) noexcept {
-    return _var->get_object();
+  static std::map<std::string, InputVarType> to_map(
+      InputObjectType* _obj) noexcept {
+    std::map<std::string, InputVarType> m;
+    for (auto field : *_obj) {
+      std::string_view name = field.unescaped_key();
+      m[std::string(name)] = field.value();
+    }
+    return m;
+  }
+
+  static fct::Result<InputObjectType> to_object(InputVarType* _var) noexcept {
+    auto r = _var->get_object();
+    if (r.error()) {
+      return fct::Error("Could not cast to object!");
+    }
+    return r.value();
+  }
+
+  static std::vector<InputVarType> to_vec(InputArrayType* _arr) noexcept {
+    std::vector<InputVarType> vec;
+    for (auto elem : *_arr) {
+      if (!elem.error()) {
+        vec.push_back(elem.value());
+      }
+    }
+    return vec;
   }
 };
 
-using JSONParser = PocoJSONParser;
+using JSONParser = SimdJSONParser;
 
 template <class T>
 using Parser = parsing::Parser<JSONParser, T>;

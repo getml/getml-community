@@ -11,30 +11,31 @@
 
 #include <string>
 
-#include "Poco/JSON/Parser.h"
 #include "json/Parser.hpp"
 
 namespace json {
 
+using InputObjectType = typename JSONParser::InputObjectType;
+using InputVarType = typename JSONParser::InputVarType;
+
 /// Parses an object from JSON using reflection.
 template <class T>
 T from_json(const std::string& _json_str) {
-  Poco::JSON::Parser parser;
-  auto json_obj = parser.parse(_json_str);
+  InputVarType json_obj = json::JSONParser::from_string(_json_str);
   return Parser<T>::from_json(&json_obj).value();
 }
 
 /// Parses an object from JSON using reflection.
 template <class T>
-T from_json(const Poco::JSON::Object::Ptr& _json_obj) {
-  Poco::Dynamic::Var json_obj = _json_obj;
+T from_json(const InputObjectType& _json_obj) {
+  InputVarType json_obj = _json_obj;
   return Parser<T>::from_json(&json_obj).value();
 }
 
 /// Parses an object from JSON using reflection.
 template <class T>
-T from_json(const Poco::Dynamic::Var& _var) {
-  Poco::Dynamic::Var var = _var;
+T from_json(const InputVarType& _var) {
+  InputVarType var = _var;
   return Parser<T>::from_json(&var).value();
 }
 
