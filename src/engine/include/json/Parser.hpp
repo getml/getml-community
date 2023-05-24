@@ -9,10 +9,6 @@
 #ifndef JSON_PARSER_HPP_
 #define JSON_PARSER_HPP_
 
-#include <Poco/Dynamic/Var.h>
-#include <Poco/JSON/Array.h>
-#include <Poco/JSON/Object.h>
-#include <Poco/JSON/Parser.h>
 #include <yyjson.h>
 
 #include <exception>
@@ -32,144 +28,61 @@
 
 namespace json {
 
-struct PocoJSONParser {
-  using InputArrayType = Poco::JSON::Array::Ptr;
-  using InputObjectType = Poco::JSON::Object::Ptr;
-  using InputVarType = Poco::Dynamic::Var;
+struct YYJSONInputArray {
+  yyjson_val* val_;
+};
 
-  using OutputArrayType = Poco::JSON::Array::Ptr;
-  using OutputObjectType = Poco::JSON::Object::Ptr;
-  using OutputVarType = Poco::Dynamic::Var;
+struct YYJSONInputObject {
+  yyjson_val* val_;
+};
 
-  static void add(const OutputVarType _var, OutputArrayType* _arr) noexcept {
-    (*_arr)->add(_var);
-  }
+struct YYJSONInputVar {
+  yyjson_val* val_;
+};
 
-  static InputVarType from_string(const std::string& _str) {
-    Poco::JSON::Parser parser;
-    return parser.parse(_str);
-  }
+struct YYJSONOutputArray {
+  yyjson_mut_doc* doc_;
+  yyjson_mut_val* val_;
+};
 
-  static OutputVarType empty_var() { return Poco::Dynamic::Var(); }
+struct YYJSONOutputObject {
+  yyjson_mut_doc* doc_;
+  yyjson_mut_val* val_;
+};
 
-  static fct::Result<InputVarType> get_field(const std::string& _name,
-                                             InputObjectType* _obj) noexcept {
-    try {
-      assert_true(_obj);
-      assert_true(*_obj);
-      return (*_obj)->get(_name);
-    } catch (std::exception& e) {
-      return fct::Error("Could not get field from object: " +
-                        std::string(e.what()));
-    }
-  }
+struct YYJSONOutputVar {
+  yyjson_mut_doc* doc_;
+  yyjson_mut_val* val_;
+};
 
-  static OutputArrayType new_array() noexcept {
-    return Poco::JSON::Array::Ptr(new Poco::JSON::Array());
-  }
-
-  static OutputObjectType new_object() noexcept {
-    return Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-  }
-
-  static bool is_empty(InputVarType* _var) noexcept { return _var->isEmpty(); }
-
-  static void set_field(const std::string& _name, const OutputVarType& _var,
-                        OutputObjectType* _obj) noexcept {
-    (*_obj)->set(_name, _var);
-  }
-
-  template <class T>
-  static fct::Result<T> to_basic_type(InputVarType* _var) noexcept {
-    try {
-      assert_true(_var);
-      return _var->convert<std::decay_t<T>>();
-    } catch (std::exception& e) {
-      return fct::Error("Could not cast to expected type: " +
-                        std::string(e.what()));
-    }
-  }
-
-  static fct::Result<InputArrayType> to_array(InputVarType* _var) noexcept {
-    try {
-      assert_true(_var);
-      auto arr = _var->extract<InputArrayType>();
-      if (!arr) {
-        return fct::Error("Pointer was empty!");
-      }
-      return arr;
-    } catch (std::exception& _exp) {
-    }
-
-    try {
-      assert_true(_var);
-      const auto arr = _var->extract<Poco::JSON::Array>();
-      return Poco::JSON::Array::Ptr(new Poco::JSON::Array(arr));
-    } catch (std::exception& e) {
-      return fct::Error("Could not cast to array.");
-    }
-  }
-
-  static std::map<std::string, InputVarType> to_map(
-      InputObjectType* _obj) noexcept {
-    const auto names = (*_obj)->getNames();
-    const auto to_pair =
-        [_obj](const auto& _name) -> std::pair<std::string, InputVarType> {
-      return std::make_pair(_name, (*_obj)->get(_name));
-    };
-    return fct::collect::map<std::string, InputVarType>(
-        names | VIEWS::transform(to_pair));
-  }
-
-  static fct::Result<InputObjectType> to_object(InputVarType* _var) noexcept {
-    try {
-      assert_true(_var);
-      auto obj = _var->extract<InputObjectType>();
-      if (!obj) {
-        return fct::Error("Pointer was empty!");
-      }
-      return obj;
-    } catch (std::exception& _exp) {
-    }
-
-    try {
-      assert_true(_var);
-      const auto obj = _var->extract<Poco::JSON::Object>();
-      return Poco::JSON::Object::Ptr(new Poco::JSON::Object(obj));
-    } catch (std::exception& e) {
-      return fct::Error("Could not cast to object.");
-    }
-  }
-
-  static std::vector<InputVarType> to_vec(InputArrayType* _arr) noexcept {
-    const auto iota = fct::iota<size_t>(0, (*_arr)->size());
-    const auto get = [_arr](const size_t _i) { return (*_arr)->get(_i); };
-    return fct::collect::vector(iota | VIEWS::transform(get));
-  }
+struct YYJSONOutputContext {
+  yyjson_mut_doc* doc_;
 };
 
 struct YYJSONParser {
-  using InputArrayType = yyjson_val*;
-  using InputObjectType = yyjson_val*;
-  using InputVarType = yyjson_val*;
+  using InputArrayType = YYJSONInputArray;
+  using InputObjectType = YYJSONInputObject;
+  using InputVarType = YYJSONInputVar;
 
-  using OutputArrayType = Poco::JSON::Array::Ptr;
-  using OutputObjectType = Poco::JSON::Object::Ptr;
-  using OutputVarType = Poco::Dynamic::Var;
+  using OutputArrayType = YYJSONOutputArray;
+  using OutputObjectType = YYJSONOutputObject;
+  using OutputVarType = YYJSONOutputVar;
+
+  using OutputContextType = YYJSONOutputContext;
 
   static void add(const OutputVarType _var, OutputArrayType* _arr) noexcept {
-    (*_arr)->add(_var);
+    yyjson_mut_arr_add_val(_arr->val_, _var.val_);
   }
 
   static OutputVarType empty_var() noexcept { return Poco::Dynamic::Var(); }
 
   static fct::Result<InputVarType> get_field(const std::string& _name,
                                              InputObjectType* _obj) noexcept {
-    const InputVarType ptr = yyjson_obj_get(*_obj, _name.c_str());
-    if (!ptr) {
+    const auto var = InputVarType(yyjson_obj_get(_obj->val_, _name.c_str()));
+    if (!val.val_) {
       return fct::Error("Object contains no field named '" + _name + "'.");
     }
-    return ptr;
+    return var;
   }
 
   static OutputArrayType new_array() noexcept {
@@ -181,54 +94,56 @@ struct YYJSONParser {
   }
 
   static bool is_empty(InputVarType* _var) noexcept {
-    return !*_var || yyjson_is_null(*_var);
+    return !_var->val_ || yyjson_is_null(_var->val_);
   }
 
-  static bool is_empty(OutputVarType* _var) noexcept { return _var->isEmpty(); }
+  static bool is_empty(OutputVarType* _var) noexcept {
+    return yyjson_mut_is_null(_val->val_);
+  }
 
   static void set_field(const std::string& _name, const OutputVarType& _var,
                         OutputObjectType* _obj) noexcept {
-    (*_obj)->set(_name, _var);
+    yyjson_mut_obj_add_val(_obj->doc_, _obj->val_, _name.c_str(), _var.val_);
   }
 
   template <class T>
   static fct::Result<T> to_basic_type(InputVarType* _var) noexcept {
     if constexpr (std::is_same<std::decay_t<T>, std::string>()) {
-      const auto r = yyjson_get_str(*_var);
+      const auto r = yyjson_get_str(_var->val_);
       if (r == NULL) {
         return fct::Error("Could not cast to string.");
       }
       return std::string(r);
     } else if constexpr (std::is_same<std::decay_t<T>, bool>()) {
-      if (!yyjson_is_bool(*_var)) {
+      if (!yyjson_is_bool(_var->val_)) {
         return fct::Error("Could not cast to boolean.");
       }
-      return yyjson_get_bool(*_var);
+      return yyjson_get_bool(_var->val_);
     } else if constexpr (std::is_floating_point<std::decay_t<T>>()) {
-      if (!yyjson_is_num(*_var)) {
+      if (!yyjson_is_num(_var->val_)) {
         return fct::Error("Could not cast to double.");
       }
-      return static_cast<T>(yyjson_get_real(*_var));
+      return static_cast<T>(yyjson_get_real(_var->val_));
     } else {
-      if (!yyjson_is_int(*_var)) {
+      if (!yyjson_is_int(_var->val_)) {
         return fct::Error("Could not cast to int.");
       }
-      return static_cast<T>(yyjson_get_int(*_var));
+      return static_cast<T>(yyjson_get_int(_var->val_));
     }
   }
 
   static fct::Result<InputArrayType> to_array(InputVarType* _var) noexcept {
-    if (!yyjson_is_arr(*_var)) {
+    if (!yyjson_is_arr(_var->val_)) {
       return fct::Error("Could not cast to array!");
     }
-    return *_var;
+    return InputArrayType(_var->val_);
   }
 
   static std::map<std::string, InputVarType> to_map(
       InputObjectType* _obj) noexcept {
     std::map<std::string, InputVarType> m;
     yyjson_obj_iter iter;
-    yyjson_obj_iter_init(*_obj, &iter);
+    yyjson_obj_iter_init(_obj->val_, &iter);
     yyjson_val* key;
     while ((key = yyjson_obj_iter_next(&iter))) {
       m[yyjson_get_str(key)] = yyjson_obj_iter_get_val(key);
@@ -237,17 +152,17 @@ struct YYJSONParser {
   }
 
   static fct::Result<InputObjectType> to_object(InputVarType* _var) noexcept {
-    if (!yyjson_is_obj(*_var)) {
+    if (!yyjson_is_obj(_var->val_)) {
       return fct::Error("Could not cast to object!");
     }
-    return *_var;
+    return InputObjectType(_var->val_);
   }
 
   static std::vector<InputVarType> to_vec(InputArrayType* _arr) noexcept {
     std::vector<InputVarType> vec;
     yyjson_val* val;
     yyjson_arr_iter iter;
-    yyjson_arr_iter_init(*_arr, &iter);
+    yyjson_arr_iter_init(_arr->val_, &iter);
     while ((val = yyjson_arr_iter_next(&iter))) {
       vec.push_back(val);
     }
