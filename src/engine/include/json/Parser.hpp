@@ -14,6 +14,7 @@
 #include <Poco/JSON/Object.h>
 #include <Poco/JSON/Parser.h>
 #include <simdjson.h>
+#include <yyjson.h>
 
 #include <exception>
 #include <map>
@@ -263,7 +264,114 @@ struct SimdJSONParser {
   }
 };
 
-using JSONParser = SimdJSONParser;
+struct YYJSONParser {
+  using InputArrayType = yyjson_val*;
+  using InputObjectType = yyjson_val*;
+  using InputVarType = yyjson_val*;
+
+  using OutputArrayType = Poco::JSON::Array::Ptr;
+  using OutputObjectType = Poco::JSON::Object::Ptr;
+  using OutputVarType = Poco::Dynamic::Var;
+
+  static void add(const OutputVarType _var, OutputArrayType* _arr) noexcept {
+    (*_arr)->add(_var);
+  }
+
+  static OutputVarType empty_var() noexcept { return Poco::Dynamic::Var(); }
+
+  static fct::Result<InputVarType> get_field(const std::string& _name,
+                                             InputObjectType* _obj) noexcept {
+    const InputVarType ptr = yyjson_obj_get(*_obj, _name.c_str());
+    if (!ptr) {
+      return fct::Error("Object contains no field named '" + _name + "'.");
+    }
+    return ptr;
+  }
+
+  static OutputArrayType new_array() noexcept {
+    return Poco::JSON::Array::Ptr(new Poco::JSON::Array());
+  }
+
+  static OutputObjectType new_object() noexcept {
+    return Poco::JSON::Object::Ptr(new Poco::JSON::Object());
+  }
+
+  static bool is_empty(InputVarType* _var) noexcept {
+    return !*_var || yyjson_is_null(*_var);
+  }
+
+  static bool is_empty(OutputVarType* _var) noexcept { return _var->isEmpty(); }
+
+  static void set_field(const std::string& _name, const OutputVarType& _var,
+                        OutputObjectType* _obj) noexcept {
+    (*_obj)->set(_name, _var);
+  }
+
+  template <class T>
+  static fct::Result<T> to_basic_type(InputVarType* _var) noexcept {
+    if constexpr (std::is_same<std::decay_t<T>, std::string>()) {
+      const auto r = yyjson_get_str(*_var);
+      if (r == NULL) {
+        return fct::Error("Could not cast to string.");
+      }
+      return std::string(r);
+    } else if constexpr (std::is_same<std::decay_t<T>, bool>()) {
+      if (!yyjson_is_bool(*_var)) {
+        return fct::Error("Could not cast to boolean.");
+      }
+      return yyjson_get_bool(*_var);
+    } else if constexpr (std::is_floating_point<std::decay_t<T>>()) {
+      if (!yyjson_is_num(*_var)) {
+        return fct::Error("Could not cast to double.");
+      }
+      return static_cast<T>(yyjson_get_real(*_var));
+    } else {
+      if (!yyjson_is_int(*_var)) {
+        return fct::Error("Could not cast to int.");
+      }
+      return static_cast<T>(yyjson_get_int(*_var));
+    }
+  }
+
+  static fct::Result<InputArrayType> to_array(InputVarType* _var) noexcept {
+    if (!yyjson_is_arr(*_var)) {
+      return fct::Error("Could not cast to array!");
+    }
+    return *_var;
+  }
+
+  static std::map<std::string, InputVarType> to_map(
+      InputObjectType* _obj) noexcept {
+    std::map<std::string, InputVarType> m;
+    yyjson_obj_iter iter;
+    yyjson_obj_iter_init(*_obj, &iter);
+    yyjson_val* key;
+    while ((key = yyjson_obj_iter_next(&iter))) {
+      m[yyjson_get_str(key)] = yyjson_obj_iter_get_val(key);
+    }
+    return m;
+  }
+
+  static fct::Result<InputObjectType> to_object(InputVarType* _var) noexcept {
+    if (!yyjson_is_obj(*_var)) {
+      return fct::Error("Could not cast to object!");
+    }
+    return *_var;
+  }
+
+  static std::vector<InputVarType> to_vec(InputArrayType* _arr) noexcept {
+    std::vector<InputVarType> vec;
+    yyjson_val* val;
+    yyjson_arr_iter iter;
+    yyjson_arr_iter_init(*_arr, &iter);
+    while ((val = yyjson_arr_iter_next(&iter))) {
+      vec.push_back(val);
+    }
+    return vec;
+  }
+};
+
+using JSONParser = YYJSONParser;
 
 template <class T>
 using Parser = parsing::Parser<JSONParser, T>;

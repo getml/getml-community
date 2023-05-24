@@ -12,8 +12,7 @@
 namespace commands {
 
 Fingerprint Fingerprint::from_json(const std::string& _json_str) {
-  const auto json_obj = json::JSONParser::from_string(_json_str);
-  return from_json_obj(json_obj);
+  return Fingerprint(json::from_json<NamedTupleType>(_json_str));
 }
 
 Fingerprint Fingerprint::from_json_obj(const InputVarType& _json_obj) {
