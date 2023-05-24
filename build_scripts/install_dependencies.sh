@@ -24,6 +24,8 @@ function install_dependencies_linux() {
 
     checkout_xgboost
     compile_xgboost
+
+    checkout_yyjson
 }
 
 # -------------------------------------------------------------------------------

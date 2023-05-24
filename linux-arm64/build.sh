@@ -51,6 +51,7 @@ export POSTGRES_DIR="$DEPENDENCY_DIR/postgres"
 export SIMDJSON_DIR="$DEPENDENCY_DIR/simdjson/singleheader"
 export UNIX_ODBC_DIR="$DEPENDENCY_DIR/unixODBC-2.3.9"
 export XGBOOST_DIR="$DEPENDENCY_DIR/xgboost"
+export YYJSON_DIR="$DEPENDENCY_DIR/yyjson/src"
 
 export GOUTILS_DIR=$GETML_GOUTILS_FOLDER
 
