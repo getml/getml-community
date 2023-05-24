@@ -21,15 +21,11 @@ using InputVarType = typename JSONParser::InputVarType;
 /// Parses an object from JSON using reflection.
 template <class T>
 T from_json(const std::string& _json_str) {
-  InputVarType json_obj = json::JSONParser::from_string(_json_str);
-  return Parser<T>::from_json(&json_obj).value();
-}
-
-/// Parses an object from JSON using reflection.
-template <class T>
-T from_json(const InputObjectType& _json_obj) {
-  InputVarType json_obj = _json_obj;
-  return Parser<T>::from_json(&json_obj).value();
+  yyjson_doc* doc = yyjson_read(_json_str.c_str(), _json_str.size(), 0);
+  yyjson_val* root = yyjson_doc_get_root(doc);
+  const auto result = Parser<T>::from_json(&root);
+  yyjson_doc_free(doc);
+  return result.value();
 }
 
 /// Parses an object from JSON using reflection.
