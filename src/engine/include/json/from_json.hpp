@@ -9,21 +9,24 @@
 #ifndef JSON_FROM_JSON_HPP_
 #define JSON_FROM_JSON_HPP_
 
+#include <yyjson.h>
+
 #include <string>
 
 #include "json/Parser.hpp"
 
 namespace json {
 
-using InputObjectType = typename JSONParser::InputObjectType;
-using InputVarType = typename JSONParser::InputVarType;
+using InputObjectType = typename JSONReader::InputObjectType;
+using InputVarType = typename JSONReader::InputVarType;
 
 /// Parses an object from JSON using reflection.
 template <class T>
 T from_json(const std::string& _json_str) {
   yyjson_doc* doc = yyjson_read(_json_str.c_str(), _json_str.size(), 0);
-  yyjson_val* root = yyjson_doc_get_root(doc);
-  const auto result = Parser<T>::from_json(&root);
+  InputVarType root = InputVarType(yyjson_doc_get_root(doc));
+  const auto r = JSONReader();
+  const auto result = Parser<T>::from_json(r, &root);
   yyjson_doc_free(doc);
   return result.value();
 }
@@ -32,7 +35,14 @@ T from_json(const std::string& _json_str) {
 template <class T>
 T from_json(const InputVarType& _var) {
   InputVarType var = _var;
-  return Parser<T>::from_json(&var).value();
+  const auto r = JSONReader();
+  return Parser<T>::from_json(r, &var).value();
+}
+
+/// Parses an object from JSON using reflection.
+template <class T>
+T from_json(const InputObjectType& _obj) {
+  return from_json<T>(InputVarType(_obj.val_));
 }
 
 }  // namespace json

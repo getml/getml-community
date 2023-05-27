@@ -7,6 +7,9 @@
 
 #include "communication/Monitor.hpp"
 
+#include <ctime>
+#include <iostream>
+
 #include "communication/Receiver.hpp"
 #include "communication/Sender.hpp"
 
