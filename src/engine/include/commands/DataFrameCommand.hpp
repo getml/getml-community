@@ -316,7 +316,7 @@ struct DataFrameCommand {
       GetDataFrameNRowsOp, LastChangeOp, RefreshDataFrameOp, RemoveColumnOp,
       SummarizeDataFrameOp, ToArrowOp, ToCSVOp, ToDBOp, ToParquetOp>;
 
-  using InputVarType = typename json::JSONParser::InputVarType;
+  using InputVarType = typename json::JSONReader::InputVarType;
 
   static DataFrameCommand from_json_obj(const InputVarType& _obj);
 

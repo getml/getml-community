@@ -158,7 +158,7 @@ struct ProjectCommand {
       LoadPipelineOp, PipelineOp, ProjectNameOp, SaveDataContainerOp, SaveDfOp,
       SavePipelineOp, TempDirOp>;
 
-  using InputVarType = typename json::JSONParser::InputVarType;
+  using InputVarType = typename json::JSONReader::InputVarType;
 
   static ProjectCommand from_json_obj(const InputVarType& _obj);
 

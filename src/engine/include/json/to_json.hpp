@@ -9,10 +9,11 @@
 #ifndef JSON_TO_JSON_HPP_
 #define JSON_TO_JSON_HPP_
 
+#include <yyjson.h>
+
 #include <sstream>
 #include <string>
 
-#include "Poco/JSON/Stringifier.h"
 #include "json/Parser.hpp"
 
 namespace json {
@@ -20,10 +21,14 @@ namespace json {
 /// Parses an object to JSON.
 template <class T>
 std::string to_json(const T& _obj) {
-  const auto json_obj = Parser<T>::to_json(_obj);
-  std::stringstream stream;
-  Poco::JSON::Stringifier::stringify(json_obj, stream);
-  return stream.str();
+  auto w = JSONWriter(yyjson_mut_doc_new(NULL));
+  const auto json_obj = Parser<T>::to_json(w, _obj);
+  yyjson_mut_doc_set_root(w.doc_, json_obj.val_);
+  const char* json_c_str = yyjson_mut_write(w.doc_, 0, NULL);
+  const auto json_str = std::string(json_c_str);
+  free((void*)json_c_str);
+  yyjson_mut_doc_free(w.doc_);
+  return json_str;
 }
 
 }  // namespace json
