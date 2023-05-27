@@ -18,10 +18,6 @@
  # Set the path containing poco.
  # Should contain the folder "Net", among others.
  set(POCO_DIR $ENV{POCO_DIR})
-
- # Set the path containing simdjson
- # Should point directly to "singleheader" 
- set(SIMDJSON_DIR $ENV{SIMDJSON_DIR})
  
  # Set the path containing xgboost
  # Should include folders "include", "lib" and "rabit"
@@ -55,7 +51,6 @@
      "${POCO_DIR}/NetSSL_OpenSSL/include"
      "${POCO_DIR}/Foundation/include"
      "${POSTGRES_DIR}/build/include"
-     "${SIMDJSON_DIR}"
      "${XGBOOST_DIR}/include"
      "${XGBOOST_DIR}/rabit/include"
      "${YYJSON_DIR}"
