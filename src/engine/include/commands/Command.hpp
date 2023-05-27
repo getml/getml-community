@@ -38,7 +38,7 @@ struct Command {
                    PipelineCommand, ProjectCommand, ViewCommand, IsAliveOp,
                    MonitorURLOp, ShutdownOp>;
 
-  using InputVarType = typename json::JSONReader::InputVarType;
+  using InputVarType = typename json::Reader::InputVarType;
 
   static Command from_json_obj(const InputVarType& _obj);
 

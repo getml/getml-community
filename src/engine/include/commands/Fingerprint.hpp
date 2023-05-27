@@ -153,7 +153,7 @@ struct Fingerprint {
 
   static Fingerprint from_json(const std::string& _json_str);
 
-  using InputVarType = typename json::JSONReader::InputVarType;
+  using InputVarType = typename json::Reader::InputVarType;
 
   static Fingerprint from_json_obj(const InputVarType& _json_obj);
 

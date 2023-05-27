@@ -122,7 +122,7 @@ struct DatabaseCommand {
                        GetNRowsOp, ListConnectionsOp, ListTablesOp, NewDBOp,
                        ReadCSVOp, RefreshOp, SniffCSVOp, SniffTableOp>;
 
-  using InputVarType = typename json::JSONReader::InputVarType;
+  using InputVarType = typename json::Reader::InputVarType;
 
   static DatabaseCommand from_json_obj(const InputVarType& _obj);
 

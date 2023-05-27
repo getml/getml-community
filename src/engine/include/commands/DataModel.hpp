@@ -65,7 +65,7 @@ struct DataModel {
     check_length<"relationship_">();
   }
 
-  using InputVarType = typename json::JSONReader::InputVarType;
+  using InputVarType = typename json::Reader::InputVarType;
 
   static DataModel from_json_obj(const InputVarType& _json_obj);
 

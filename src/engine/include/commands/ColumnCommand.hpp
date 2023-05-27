@@ -173,7 +173,7 @@ struct ColumnCommand {
       SetFloatColumnSubrolesOp, SetFloatColumnUnitOp, SetStringColumnSubrolesOp,
       SetStringColumnUnitOp, StringColumnOp>;
 
-  using InputVarType = typename json::JSONReader::InputVarType;
+  using InputVarType = typename json::Reader::InputVarType;
 
   static ColumnCommand from_json_obj(const InputVarType& _obj);
 
