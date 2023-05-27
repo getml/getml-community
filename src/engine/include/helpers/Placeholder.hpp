@@ -290,7 +290,7 @@ struct Placeholder {
     return val_.get<f_upper_time_stamps_used>();
   }
 
-  using InputVarType = typename json::JSONReader::InputVarType;
+  using InputVarType = typename json::Reader::InputVarType;
 
   static Placeholder from_json_obj(const InputVarType& _json_obj);
 

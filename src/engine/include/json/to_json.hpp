@@ -21,7 +21,7 @@ namespace json {
 /// Parses an object to JSON.
 template <class T>
 std::string to_json(const T& _obj) {
-  auto w = JSONWriter(yyjson_mut_doc_new(NULL));
+  auto w = Writer(yyjson_mut_doc_new(NULL));
   const auto json_obj = Parser<T>::to_json(w, _obj);
   yyjson_mut_doc_set_root(w.doc_, json_obj.val_);
   const char* json_c_str = yyjson_mut_write(w.doc_, 0, NULL);

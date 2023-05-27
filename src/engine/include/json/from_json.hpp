@@ -17,15 +17,15 @@
 
 namespace json {
 
-using InputObjectType = typename JSONReader::InputObjectType;
-using InputVarType = typename JSONReader::InputVarType;
+using InputObjectType = typename Reader::InputObjectType;
+using InputVarType = typename Reader::InputVarType;
 
 /// Parses an object from JSON using reflection.
 template <class T>
 T from_json(const std::string& _json_str) {
   yyjson_doc* doc = yyjson_read(_json_str.c_str(), _json_str.size(), 0);
   InputVarType root = InputVarType(yyjson_doc_get_root(doc));
-  const auto r = JSONReader();
+  const auto r = Reader();
   const auto result = Parser<T>::from_json(r, &root);
   yyjson_doc_free(doc);
   return result.value();
@@ -35,7 +35,7 @@ T from_json(const std::string& _json_str) {
 template <class T>
 T from_json(const InputVarType& _var) {
   InputVarType var = _var;
-  const auto r = JSONReader();
+  const auto r = Reader();
   return Parser<T>::from_json(r, &var).value();
 }
 
