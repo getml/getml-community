@@ -8,15 +8,8 @@
 #ifndef ENGINE_DEPENDENCY_FETRACKER_HPP_
 #define ENGINE_DEPENDENCY_FETRACKER_HPP_
 
-// -------------------------------------------------------------------------
-
-#include "featurelearners/featurelearners.hpp"
-
-// -------------------------------------------------------------------------
-
 #include "engine/dependency/Tracker.hpp"
-
-// -------------------------------------------------------------------------
+#include "featurelearners/featurelearners.hpp"
 
 namespace engine {
 namespace dependency {
