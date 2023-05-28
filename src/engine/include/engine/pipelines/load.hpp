@@ -8,11 +8,6 @@
 #ifndef ENGINE_PIPELINES_LOAD_HPP_
 #define ENGINE_PIPELINES_LOAD_HPP_
 
-#include <memory>
-
-#include "engine/dependency/FETracker.hpp"
-#include "engine/dependency/PredTracker.hpp"
-#include "engine/dependency/PreprocessorTracker.hpp"
 #include "engine/pipelines/Pipeline.hpp"
 
 namespace engine {
@@ -20,11 +15,7 @@ namespace pipelines {
 namespace load {
 
 /// Loads the pipeline from the hard disk.
-Pipeline load(const std::string& _path,
-              const std::shared_ptr<dependency::FETracker> _fe_tracker,
-              const std::shared_ptr<dependency::PredTracker> _pred_tracker,
-              const std::shared_ptr<dependency::PreprocessorTracker>
-                  _preprocessor_tracker);
+Pipeline load(const std::string& _path);
 
 }  // namespace load
 }  // namespace pipelines

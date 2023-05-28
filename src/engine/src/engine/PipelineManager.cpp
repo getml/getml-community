@@ -15,6 +15,7 @@
 #include "engine/handlers/ColumnManager.hpp"
 #include "engine/handlers/DataFrameManager.hpp"
 #include "engine/pipelines/ToSQLParams.hpp"
+#include "engine/pipelines/load_fitted.hpp"
 #include "engine/pipelines/pipelines.hpp"
 #include "engine/pipelines/to_sql.hpp"
 #include "fct/always_false.hpp"
@@ -174,7 +175,7 @@ void PipelineManager::check(const typename Command::CheckOp& _cmd,
                             Poco::Net::StreamSocket* _socket) {
   const auto& name = _cmd.get<"name_">();
 
-  const auto pipeline = get_pipeline(name);
+  const auto [pipeline, was_loaded] = load_if_necessary(name);
 
   communication::Sender::send_string("Found!", _socket);
 
@@ -212,6 +213,10 @@ void PipelineManager::check(const typename Command::CheckOp& _cmd,
   params_.categories_->append(*local_categories);
 
   weak_write_lock.unlock();
+
+  if (was_loaded) {
+    set_pipeline(name, pipeline);
+  }
 }
 
 // ------------------------------------------------------------------------
@@ -435,6 +440,33 @@ void PipelineManager::lift_curve(const typename Command::LiftCurveOp& _cmd,
 
 // ------------------------------------------------------------------------
 
+std::pair<pipelines::Pipeline, bool> PipelineManager::load_if_necessary(
+    const std::string& _name) {
+  multithreading::ReadLock read_lock(params_.read_write_lock_);
+
+  const auto& p = utils::Getter::get(_name, &pipelines());
+
+  if (p.fitted()) {
+    return std::make_pair(p, false);
+  }
+
+  const auto path =
+      params_.options_.project_directory() + "pipelines/" + _name + "/";
+
+  const auto pipeline_trackers = dependency::PipelineTrackers(
+      fct::make_field<"data_frame_tracker_">(params_.data_frame_tracker_),
+      fct::make_field<"fe_tracker_">(params_.fe_tracker_),
+      fct::make_field<"pred_tracker_">(params_.pred_tracker_),
+      fct::make_field<"preprocessor_tracker_">(params_.preprocessor_tracker_));
+
+  const auto pipeline_with_fitted =
+      pipelines::load_fitted::load_fitted(path, p, pipeline_trackers);
+
+  return std::make_pair(std::move(pipeline_with_fitted), true);
+}
+
+// ------------------------------------------------------------------------
+
 void PipelineManager::precision_recall_curve(
     const typename Command::PrecisionRecallCurveOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
@@ -461,11 +493,15 @@ void PipelineManager::refresh(const typename Command::RefreshOp& _cmd,
                               Poco::Net::StreamSocket* _socket) {
   const auto& name = _cmd.get<"name_">();
 
-  const auto pipeline = get_pipeline(name);
+  const auto [pipeline, was_loaded] = load_if_necessary(name);
 
   const auto obj = refresh_pipeline(pipeline);
 
   communication::Sender::send_string(json::to_json(obj), _socket);
+
+  if (was_loaded) {
+    set_pipeline(name, pipeline);
+  }
 }
 
 // ------------------------------------------------------------------------
@@ -476,6 +512,7 @@ void PipelineManager::refresh_all(const typename Command::RefreshAllOp& _cmd,
 
   auto vec = std::vector<RefreshPipelineType>();
 
+  // TODO: Load pipelines if necessary
   for (const auto& [_, pipe] : pipelines()) {
     vec.push_back(refresh_pipeline(pipe));
   }
@@ -687,7 +724,7 @@ void PipelineManager::to_sql(const typename Command::ToSQLOp& _cmd,
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
-  const auto pipeline = get_pipeline(name);
+  const auto [pipeline, was_loaded] = load_if_necessary(name);
 
   const auto fitted = pipeline.fitted();
 
@@ -710,6 +747,10 @@ void PipelineManager::to_sql(const typename Command::ToSQLOp& _cmd,
 
   read_lock.unlock();
 
+  if (was_loaded) {
+    set_pipeline(name, pipeline);
+  }
+
   communication::Sender::send_string("Found!", _socket);
 
   communication::Sender::send_string(sql, _socket);
@@ -721,7 +762,7 @@ void PipelineManager::transform(const typename Command::TransformOp& _cmd,
                                 Poco::Net::StreamSocket* _socket) {
   const auto& name = _cmd.get<"name_">();
 
-  auto pipeline = get_pipeline(name);
+  auto [pipeline, was_loaded] = load_if_necessary(name);
 
   check_user_privileges(pipeline, name, _cmd);
 
@@ -807,6 +848,8 @@ void PipelineManager::transform(const typename Command::TransformOp& _cmd,
 
   if (scoring_required) {
     score(cmd, name, population_df, numerical_features, pipeline, _socket);
+  } else if (was_loaded) {
+    set_pipeline(name, pipeline);
   }
 }
 

@@ -23,6 +23,7 @@ set(
     ${ENGINE_SOURCE_DIRECTORY}/FloatOpParser.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Imputation.cpp
     ${ENGINE_SOURCE_DIRECTORY}/load.cpp
+    ${ENGINE_SOURCE_DIRECTORY}/load_fitted.cpp
     ${ENGINE_SOURCE_DIRECTORY}/make_placeholder.cpp
     ${ENGINE_SOURCE_DIRECTORY}/modify_data_frames.cpp
     ${ENGINE_SOURCE_DIRECTORY}/Options.cpp

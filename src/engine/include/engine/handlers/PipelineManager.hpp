@@ -178,6 +178,10 @@ class PipelineManager {
       const pipelines::Pipeline& _pipeline, const std::string& _name,
       const fct::NamedTuple<fct::Field<"http_request_", bool>>& _cmd) const;
 
+  /// Loads the fitted pipeline, if necessary.
+  std::pair<pipelines::Pipeline, bool> load_if_necessary(
+      const std::string& _name);
+
   /// Receives data from the client. This data will not be stored permanently,
   /// but locally. Once the training/transformation process is complete, it
   /// will be deleted.
