@@ -9,32 +9,40 @@
 #ifndef JSON_FROM_JSON_HPP_
 #define JSON_FROM_JSON_HPP_
 
-#include <sstream>
+#include <yyjson.h>
+
 #include <string>
 
-#include "Poco/JSON/Parser.h"
 #include "json/Parser.hpp"
 
 namespace json {
 
+using InputObjectType = typename Reader::InputObjectType;
+using InputVarType = typename Reader::InputVarType;
+
 /// Parses an object from JSON using reflection.
 template <class T>
 T from_json(const std::string& _json_str) {
-  Poco::JSON::Parser parser;
-  const auto json_obj = parser.parse(_json_str);
-  return Parser<T>::from_json(json_obj);
+  yyjson_doc* doc = yyjson_read(_json_str.c_str(), _json_str.size(), 0);
+  InputVarType root = InputVarType(yyjson_doc_get_root(doc));
+  const auto r = Reader();
+  const auto result = Parser<T>::from_json(r, &root);
+  yyjson_doc_free(doc);
+  return result.value();
 }
 
 /// Parses an object from JSON using reflection.
 template <class T>
-T from_json(const Poco::JSON::Object& _json_obj) {
-  return Parser<T>::from_json(_json_obj);
+T from_json(const InputVarType& _var) {
+  InputVarType var = _var;
+  const auto r = Reader();
+  return Parser<T>::from_json(r, &var).value();
 }
 
 /// Parses an object from JSON using reflection.
 template <class T>
-T from_json(const Poco::Dynamic::Var& _json_obj) {
-  return Parser<T>::from_json(_json_obj);
+T from_json(const InputObjectType& _obj) {
+  return from_json<T>(InputVarType(_obj.val_));
 }
 
 }  // namespace json

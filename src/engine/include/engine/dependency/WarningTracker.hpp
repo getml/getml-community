@@ -8,15 +8,8 @@
 #ifndef ENGINE_DEPENDENCY_WARNINGTRACKER_HPP_
 #define ENGINE_DEPENDENCY_WARNINGTRACKER_HPP_
 
-// -------------------------------------------------------------------------
-
 #include "communication/communication.hpp"
-
-// -------------------------------------------------------------------------
-
 #include "engine/dependency/Tracker.hpp"
-
-// -------------------------------------------------------------------------
 
 namespace engine {
 namespace dependency {

@@ -8,8 +8,6 @@
 #ifndef HELPERS_PLACEHOLDER_HPP_
 #define HELPERS_PLACEHOLDER_HPP_
 
-#include <Poco/Dynamic/Var.h>
-
 #include <string>
 #include <vector>
 
@@ -292,7 +290,9 @@ struct Placeholder {
     return val_.get<f_upper_time_stamps_used>();
   }
 
-  static Placeholder from_json_obj(const Poco::Dynamic::Var& _json_obj);
+  using InputVarType = typename json::Reader::InputVarType;
+
+  static Placeholder from_json_obj(const InputVarType& _json_obj);
 
   /// Used to break the recursive definition.
   const NamedTupleType val_;

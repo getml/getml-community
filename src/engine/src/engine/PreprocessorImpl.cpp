@@ -10,10 +10,8 @@
 namespace engine {
 namespace preprocessors {
 
-// ----------------------------------------------------
-
 std::vector<std::string> PreprocessorImpl::retrieve_names(
-    const std::string& _marker, const size_t _table,
+    const MarkerType _marker, const size_t _table,
     const std::vector<std::shared_ptr<helpers::ColumnDescription>>& _desc) {
   const auto table = std::to_string(_table);
 

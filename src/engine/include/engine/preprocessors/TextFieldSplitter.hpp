@@ -31,6 +31,8 @@ namespace preprocessors {
 
 class TextFieldSplitter : public Preprocessor {
  public:
+  using MarkerType = typename helpers::ColumnDescription::MarkerType;
+
   using TextFieldSplitterOp =
       typename commands::Preprocessor::TextFieldSplitterOp;
 
@@ -103,7 +105,7 @@ class TextFieldSplitter : public Preprocessor {
 
   /// Fits and transforms an individual data frame.
   std::vector<std::shared_ptr<helpers::ColumnDescription>> fit_df(
-      const containers::DataFrame& _df, const std::string& _marker) const;
+      const containers::DataFrame& _df, const MarkerType _marker) const;
 
   /// Generates a new data frame.
   containers::DataFrame make_new_df(
@@ -120,8 +122,7 @@ class TextFieldSplitter : public Preprocessor {
       const containers::Column<strings::String>& _col) const;
 
   /// Transforms a single data frame.
-  void transform_df(const std::string& _marker,
-                    const containers::DataFrame& _df,
+  void transform_df(const MarkerType _marker, const containers::DataFrame& _df,
                     std::vector<containers::DataFrame>* _peripheral_dfs) const;
 
  private:

@@ -7,11 +7,9 @@
 
 #include "commands/DatabaseCommand.hpp"
 
-#include "json/json.hpp"
-
 namespace commands {
 
-DatabaseCommand DatabaseCommand::from_json_obj(const Poco::Dynamic::Var& _obj) {
+DatabaseCommand DatabaseCommand::from_json_obj(const InputVarType& _obj) {
   return DatabaseCommand(json::from_json<NamedTupleType>(_obj));
 }
 

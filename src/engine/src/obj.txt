@@ -48,4 +48,5 @@ add_executable(
  	${TRANSPILATION_OBJ}
     ${TSINDEX_OBJ}
  	${ENGINE_SOURCE_DIRECTORY}/main.cpp
+    ${YYJSON_DIR}/yyjson.c
 )
