@@ -23,6 +23,10 @@ set(POCO_DIR $ENV{POCO_DIR})
 # Should include folders "include", "lib" and "rabit"
 set(XGBOOST_DIR $ENV{XGBOOST_DIR})
 
+# Set the path containing simdjson
+# Should point directly to "src" 
+set(YYJSON_DIR $ENV{YYJSON_DIR})
+
 # Whether you want to activate the assertions
 set(DEBUG_MODE $ENV{DEBUG_MODE})
 
@@ -50,6 +54,7 @@ include_directories(
     "${POSTGRES_DIR}/build/include"
     "${XGBOOST_DIR}/include"
     "${XGBOOST_DIR}/rabit/include"
+    "${YYJSON_DIR}"
 )
 
 link_directories(
