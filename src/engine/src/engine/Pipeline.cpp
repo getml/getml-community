@@ -82,25 +82,6 @@ MonitorSummary Pipeline::to_monitor(const helpers::StringIterator& _categories,
          fct::make_field<"peripheral_schema_">(fitted()->peripheral_schema_) *
          fct::make_field<"population_schema_">(fitted()->population_schema_) *
          fct::make_field<"targets_">(fitted()->targets());
-
-  // TODO
-  /*
-    auto scores_obj = scores().to_json_obj();
-
-    const auto make_staging_table_colname =
-        [](const std::string& _colname) -> std::string {
-      return transpilation::HumanReadableSQLGenerator()
-          .make_staging_table_colname(_colname);
-    };
-
-    const auto modified_names = helpers::Macros::modify_colnames(
-        scores().feature_names(), make_staging_table_colname);
-
-    const auto feature_names = JSON::vector_to_array(modified_names);
-
-    scores_obj.set("feature_names_", feature_names);
-
-    json_obj.set("scores_", scores_obj);*/
 }
 
 // ----------------------------------------------------------------------------
