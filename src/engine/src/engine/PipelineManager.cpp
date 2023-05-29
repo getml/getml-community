@@ -7,6 +7,8 @@
 
 #include "engine/handlers/PipelineManager.hpp"
 
+#include <filesystem>
+#include <ranges>
 #include <stdexcept>
 
 #include "commands/DataFramesOrViews.hpp"
@@ -453,6 +455,10 @@ std::pair<pipelines::Pipeline, bool> PipelineManager::load_if_necessary(
   const auto path =
       params_.options_.project_directory() + "pipelines/" + _name + "/";
 
+  if (!std::filesystem::exists(path)) {
+    return std::make_pair(p, false);
+  }
+
   const auto pipeline_trackers = dependency::PipelineTrackers(
       fct::make_field<"data_frame_tracker_">(params_.data_frame_tracker_),
       fct::make_field<"fe_tracker_">(params_.fe_tracker_),
@@ -508,18 +514,33 @@ void PipelineManager::refresh(const typename Command::RefreshOp& _cmd,
 
 void PipelineManager::refresh_all(const typename Command::RefreshAllOp& _cmd,
                                   Poco::Net::StreamSocket* _socket) {
+  using namespace std::ranges::views;
+
+  std::map<std::string, pipelines::Pipeline> updated_pipelines;
+
   multithreading::ReadLock read_lock(params_.read_write_lock_);
+
+  const auto names = pipelines() | keys;
 
   auto vec = std::vector<RefreshPipelineType>();
 
-  // TODO: Load pipelines if necessary
-  for (const auto& [_, pipe] : pipelines()) {
+  for (const auto name : names) {
+    const auto [pipe, was_loaded] = load_if_necessary(name);
     vec.push_back(refresh_pipeline(pipe));
+    if (was_loaded) {
+      updated_pipelines.insert(std::make_pair(name, pipe));
+    }
   }
 
   communication::Sender::send_string("Success!", _socket);
 
   communication::Sender::send_string(json::to_json(vec), _socket);
+
+  read_lock.unlock();
+
+  for (const auto& [name, pipe] : updated_pipelines) {
+    set_pipeline(name, pipe);
+  }
 }
 
 // ------------------------------------------------------------------------
