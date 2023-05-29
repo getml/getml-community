@@ -59,7 +59,7 @@ void ImportanceMaker::fill_zeros(const Schema& _pl, const std::string& _tname,
 // ----------------------------------------------------------------------------
 
 void ImportanceMaker::fill_zeros_from_columns(
-    const std::string& _marker, const std::string& _pname,
+    const MarkerType _marker, const std::string& _pname,
     const std::vector<std::string>& _colnames) {
   for (const auto& colname : _colnames) {
     const auto desc = ColumnDescription(_marker, _pname, colname);
@@ -143,7 +143,7 @@ void ImportanceMaker::transfer_population() {
   auto importance_maker = ImportanceMaker();
 
   for (const auto& [key, value] : importances()) {
-    const auto desc = ColumnDescription(ColumnDescription::PERIPHERAL,
+    const auto desc = ColumnDescription(MarkerType::make<"[PERIPHERAL]">(),
                                         key.table(), key.name());
 
     importance_maker.add_to_importances(desc, value);

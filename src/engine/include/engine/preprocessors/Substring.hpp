@@ -33,6 +33,8 @@ namespace preprocessors {
 
 class Substring : public Preprocessor {
  public:
+  using MarkerType = typename helpers::ColumnDescription::MarkerType;
+
   using SubstringOp = typename commands::Preprocessor::SubstringOp;
 
   using f_cols =
@@ -122,7 +124,7 @@ class Substring : public Preprocessor {
 
   /// Fits and transforms an individual data frame.
   containers::DataFrame fit_transform_df(const containers::DataFrame& _df,
-                                         const std::string& _marker,
+                                         const MarkerType _marker,
                                          const size_t _table,
                                          containers::Encoding* _categories);
 
@@ -134,13 +136,13 @@ class Substring : public Preprocessor {
   /// Transforms a single data frame.
   containers::DataFrame transform_df(const containers::Encoding& _categories,
                                      const containers::DataFrame& _df,
-                                     const std::string& _marker,
+                                     const MarkerType _marker,
                                      const size_t _table) const;
 
  private:
   /// Extracts the columns and adds it to the data frame
   template <class T>
-  void extract_and_add(const std::string& _marker, const size_t _table,
+  void extract_and_add(const MarkerType _marker, const size_t _table,
                        const containers::Column<T>& _original_col,
                        containers::Encoding* _categories,
                        containers::DataFrame* _df) {

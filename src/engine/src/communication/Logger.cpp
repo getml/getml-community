@@ -7,6 +7,9 @@
 
 #include "communication/Logger.hpp"
 
+#include <ctime>
+#include <iostream>
+
 #include "communication/Sender.hpp"
 
 namespace communication {

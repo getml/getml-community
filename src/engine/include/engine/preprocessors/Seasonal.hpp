@@ -31,6 +31,8 @@ namespace engine {
 namespace preprocessors {
 
 class Seasonal : public Preprocessor {
+  using MarkerType = typename helpers::ColumnDescription::MarkerType;
+
  public:
   using SeasonalOp = typename commands::Preprocessor::SeasonalOp;
 
@@ -170,7 +172,7 @@ class Seasonal : public Preprocessor {
 
   /// Fits and transforms an individual data frame.
   containers::DataFrame fit_transform_df(const containers::DataFrame& _df,
-                                         const std::string& _marker,
+                                         const MarkerType _marker,
                                          const size_t _table,
                                          containers::Encoding* _categories);
 
@@ -187,7 +189,7 @@ class Seasonal : public Preprocessor {
   /// Transforms a single data frame.
   containers::DataFrame transform_df(const containers::Encoding& _categories,
                                      const containers::DataFrame& _df,
-                                     const std::string& _marker,
+                                     const MarkerType _marker,
                                      const size_t _table) const;
 
  private:

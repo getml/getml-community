@@ -20,6 +20,8 @@
 namespace helpers {
 
 class ImportanceMaker {
+  using MarkerType = typename helpers::ColumnDescription::MarkerType;
+
  public:
   explicit ImportanceMaker(const size_t _num_subfeatures = 0)
       : importance_factors_avg_(std::vector<Float>(_num_subfeatures)),
@@ -93,17 +95,17 @@ class ImportanceMaker {
   }
 
   /// Marks a table as peripheral.
-  std::string peripheral() const { return ColumnDescription::PERIPHERAL; }
+  MarkerType peripheral() const { return MarkerType::make<"[PERIPHERAL]">(); }
 
   /// Marks a table as population.
-  std::string population() const { return ColumnDescription::POPULATION; }
+  MarkerType population() const { return MarkerType::make<"[POPULATION]">(); }
 
  private:
   /// Adds the _value to fast_prop importance factors.
   void add_to_fast_prop(const ColumnDescription& _desc, const Float _value);
 
   /// Adds all of the elements from this column.
-  void fill_zeros_from_columns(const std::string& _marker,
+  void fill_zeros_from_columns(const MarkerType _marker,
                                const std::string& _tname,
                                const std::vector<std::string>& _colnames);
 

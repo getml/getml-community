@@ -35,8 +35,7 @@ void Imputation::add_dummy(const containers::Column<Float>& _original_col,
 
 // ----------------------------------------------------
 
-void Imputation::extract_and_add(const std::string& _marker,
-                                 const size_t _table,
+void Imputation::extract_and_add(const MarkerType _marker, const size_t _table,
                                  const containers::Column<Float>& _original_col,
                                  containers::DataFrame* _df) {
   const bool all_nan = std::all_of(_original_col.begin(), _original_col.end(),
@@ -80,9 +79,8 @@ void Imputation::extract_and_add(const std::string& _marker,
 
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
 Imputation::fit_transform(const Params& _params) {
-  const auto population_df =
-      fit_transform_df(_params.get<"population_df_">(),
-                       helpers::ColumnDescription::POPULATION, 0);
+  const auto population_df = fit_transform_df(
+      _params.get<"population_df_">(), MarkerType::make<"[POPULATION]">(), 0);
 
   auto peripheral_dfs = std::vector<containers::DataFrame>();
 
@@ -90,7 +88,7 @@ Imputation::fit_transform(const Params& _params) {
     const auto& df = _params.get<"peripheral_dfs_">().at(i);
 
     const auto new_df =
-        fit_transform_df(df, helpers::ColumnDescription::PERIPHERAL, i);
+        fit_transform_df(df, MarkerType::make<"[PERIPHERAL]">(), i);
 
     peripheral_dfs.push_back(new_df);
   }
@@ -101,7 +99,7 @@ Imputation::fit_transform(const Params& _params) {
 // ----------------------------------------------------
 
 containers::DataFrame Imputation::fit_transform_df(
-    const containers::DataFrame& _df, const std::string& _marker,
+    const containers::DataFrame& _df, const MarkerType _marker,
     const size_t _table) {
   const auto blacklist = std::vector<helpers::Subrole>(
       {helpers::Subrole::exclude_preprocessors, helpers::Subrole::email_only,
@@ -189,7 +187,7 @@ bool Imputation::impute(const containers::Column<Float>& _original_col,
 // ----------------------------------------------------
 
 std::vector<std::pair<Float, bool>> Imputation::retrieve_pairs(
-    const std::string& _marker, const size_t _table) const {
+    const MarkerType _marker, const size_t _table) const {
   const auto table = std::to_string(_table);
 
   std::vector<std::pair<Float, bool>> pairs;
@@ -213,17 +211,15 @@ void Imputation::save(const std::string& _fname) const {
 
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
 Imputation::transform(const Params& _params) const {
-  const auto population_df =
-      transform_df(_params.get<"population_df_">(),
-                   helpers::ColumnDescription::POPULATION, 0);
+  const auto population_df = transform_df(
+      _params.get<"population_df_">(), MarkerType::make<"[POPULATION]">(), 0);
 
   auto peripheral_dfs = std::vector<containers::DataFrame>();
 
   for (size_t i = 0; i < _params.get<"peripheral_dfs_">().size(); ++i) {
     const auto& df = _params.get<"peripheral_dfs_">().at(i);
 
-    const auto new_df =
-        transform_df(df, helpers::ColumnDescription::PERIPHERAL, i);
+    const auto new_df = transform_df(df, MarkerType::make<"[PERIPHERAL]">(), i);
 
     peripheral_dfs.push_back(new_df);
   }
@@ -234,7 +230,7 @@ Imputation::transform(const Params& _params) const {
 // ----------------------------------------------------
 
 containers::DataFrame Imputation::transform_df(const containers::DataFrame& _df,
-                                               const std::string& _marker,
+                                               const MarkerType _marker,
                                                const size_t _table) const {
   auto df = _df;
 

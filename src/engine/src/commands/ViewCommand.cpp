@@ -11,7 +11,7 @@
 
 namespace commands {
 
-ViewCommand ViewCommand::from_json_obj(const Poco::Dynamic::Var& _obj) {
+ViewCommand ViewCommand::from_json_obj(const InputVarType& _obj) {
   return ViewCommand(json::from_json<NamedTupleType>(_obj));
 }
 

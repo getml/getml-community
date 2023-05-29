@@ -31,6 +31,8 @@ namespace engine {
 namespace preprocessors {
 
 class EMailDomain : public Preprocessor {
+  using MarkerType = typename helpers::ColumnDescription::MarkerType;
+
  public:
   using EMailDomainOp = typename commands::Preprocessor::EMailDomainOp;
 
@@ -116,14 +118,14 @@ class EMailDomain : public Preprocessor {
 
   /// Fits and transforms an individual data frame.
   containers::DataFrame fit_transform_df(const containers::DataFrame& _df,
-                                         const std::string& _marker,
+                                         const MarkerType _marker,
                                          const size_t _table,
                                          containers::Encoding* _categories);
 
   /// Transforms a single data frame.
   containers::DataFrame transform_df(const containers::Encoding& _categories,
                                      const containers::DataFrame& _df,
-                                     const std::string& _marker,
+                                     const MarkerType _marker,
                                      const size_t _table) const;
 
  private:
