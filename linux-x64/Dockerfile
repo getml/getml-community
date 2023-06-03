@@ -35,6 +35,17 @@ RUN wget https://go.dev/dl/go1.18.3.linux-amd64.tar.gz
 RUN tar -C /usr/local -xzf go1.18.3.linux-amd64.tar.gz
 ENV PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
 
+# Install ccache
+RUN wget https://github.com/ccache/ccache/releases/download/v4.8.1/ccache-4.8.1.tar.xz
+RUN tar -xJvf ccache-4.8.1.tar.xz
+WORKDIR ccache-4.8.1
+RUN cmake . 
+RUN make install -j4
+ENV CCACHE_DIR=/home/getml/storage/.ccache 
+ENV CCACHE_TEMPDIR=/home/getml/storage/.ccache
+
+WORKDIR /home/getml
+
 # Build and setup Python 3.7
 WORKDIR /home/getml
 RUN wget https://www.python.org/ftp/python/3.7.9/Python-3.7.9.tgz

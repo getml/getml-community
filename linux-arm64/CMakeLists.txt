@@ -1,6 +1,6 @@
 #set(GETML_VERSION $ENV{GETML_VERSION})
 
- cmake_minimum_required(VERSION 3.0)
+ cmake_minimum_required(VERSION 3.4)
 
  # Set the path containing the Code
  set(CODE_DIR $ENV{CODE_DIR})
