@@ -8,12 +8,16 @@
 #ifndef COMMANDS_FEATURELEARNER_HPP_
 #define COMMANDS_FEATURELEARNER_HPP_
 
+#include "commands/NotSupportedInCommunity.hpp"
 #include "fastprop/Hyperparameters.hpp"
 #include "fct/TaggedUnion.hpp"
 
 namespace commands {
 
-using FeatureLearner = fct::TaggedUnion<"type_", fastprop::Hyperparameters>;
+using FeatureLearner = fct::TaggedUnion<
+    "type_", fastprop::Hyperparameters, NotSupportedInCommunity<"Fastboost">,
+    NotSupportedInCommunity<"Multirel">, NotSupportedInCommunity<"Relboost">,
+    NotSupportedInCommunity<"RelMT">>;
 
 }  // namespace commands
 

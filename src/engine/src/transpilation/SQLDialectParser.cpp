@@ -7,6 +7,8 @@
 
 #include "transpilation/SQLDialectParser.hpp"
 
+#include <stdexcept>
+
 #include "fct/always_false.hpp"
 #include "fct/visit.hpp"
 #include "transpilation/HumanReadableSQLGenerator.hpp"
@@ -17,13 +19,18 @@ namespace transpilation {
 fct::Ref<const SQLDialectGenerator> SQLDialectParser::parse(
     const TranspilationParams& _params) {
   const auto handle =
-      [&_params](const auto& _dialect) -> fct::Ref<const SQLDialectGenerator> {
+      [](const auto& _dialect) -> fct::Ref<const SQLDialectGenerator> {
     using Type = std::decay_t<decltype(_dialect)>;
     if constexpr (std::is_same<Type, fct::Literal<"human-readable sql">>() ||
                   std::is_same<Type, fct::Literal<"sqlite3">>()) {
       return fct::Ref<const HumanReadableSQLGenerator>::make();
     } else {
-      static_assert(fct::always_false_v<Type>, "Not all cases were covered.");
+      throw std::runtime_error(
+          "The " + _dialect.name() +
+          " dialect is not supported in the community edition. Please "
+          "upgrade to getML enterprise to use this. An overview of what is "
+          "supported in the community edition can be found in the official "
+          "getML documentation.");
     }
   };
 
