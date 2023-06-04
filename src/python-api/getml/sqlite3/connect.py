@@ -27,6 +27,16 @@ from .ewma import (
     _EWMA90D,
     _EWMA365D,
 )
+from .ewma_trend import (
+    _EWMATrend1S,
+    _EWMATrend1M,
+    _EWMATrend1H,
+    _EWMATrend1D,
+    _EWMATrend7D,
+    _EWMATrend30D,
+    _EWMATrend90D,
+    _EWMATrend365D,
+)
 from .first import _First
 from .get_word import _get_word
 from .kurtosis import _Kurtosis
@@ -101,6 +111,14 @@ def connect(database):
     conn.create_aggregate("EWMA_30D", 2, _EWMA30D)
     conn.create_aggregate("EWMA_90D", 2, _EWMA90D)
     conn.create_aggregate("EWMA_365D", 2, _EWMA365D)
+    conn.create_aggregate("EWMA_TREND_1S", 2, _EWMATrend1S)
+    conn.create_aggregate("EWMA_TREND_1M", 2, _EWMATrend1M)
+    conn.create_aggregate("EWMA_TREND_1H", 2, _EWMATrend1H)
+    conn.create_aggregate("EWMA_TREND_1D", 2, _EWMATrend1D)
+    conn.create_aggregate("EWMA_TREND_7D", 2, _EWMATrend7D)
+    conn.create_aggregate("EWMA_TREND_30D", 2, _EWMATrend30D)
+    conn.create_aggregate("EWMA_TREND_90D", 2, _EWMATrend90D)
+    conn.create_aggregate("EWMA_TREND_365D", 2, _EWMATrend365D)
     conn.create_aggregate("FIRST", 2, _First)
     conn.create_aggregate("KURTOSIS", 1, _Kurtosis)
     conn.create_aggregate("LAST", 2, _Last)
