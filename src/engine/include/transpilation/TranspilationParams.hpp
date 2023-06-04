@@ -18,7 +18,8 @@
 namespace transpilation {
 
 struct TranspilationParams {
-  using DialectType = fct::Literal<"human-readable sql", "sqlite3">;
+  using DialectType = fct::Literal<"bigquery", "human-readable sql", "mysql",
+                                   "postgres", "spark sql", "sqlite3", "tsql">;
 
   using NamedTupleType =
       fct::NamedTuple<fct::Field<"dialect_", DialectType>,

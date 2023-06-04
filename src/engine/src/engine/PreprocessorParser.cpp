@@ -5,6 +5,8 @@
 // for details.
 //
 
+#include <stdexcept>
+
 #include "engine/preprocessors/CategoryTrimmer.hpp"
 #include "engine/preprocessors/EMailDomain.hpp"
 #include "engine/preprocessors/Imputation.hpp"
@@ -38,24 +40,33 @@ fct::Ref<Preprocessor> PreprocessorParser::parse(
       return fct::Ref<CategoryTrimmer>::make(_hyperparams, _dependencies);
     }
 
-    if constexpr (std::is_same<Type, EMailDomainOp>()) {
+    else if constexpr (std::is_same<Type, EMailDomainOp>()) {
       return fct::Ref<EMailDomain>::make(_hyperparams, _dependencies);
     }
 
-    if constexpr (std::is_same<Type, ImputationOp>()) {
+    else if constexpr (std::is_same<Type, ImputationOp>()) {
       return fct::Ref<Imputation>::make(_hyperparams, _dependencies);
     }
 
-    if constexpr (std::is_same<Type, SeasonalOp>()) {
+    else if constexpr (std::is_same<Type, SeasonalOp>()) {
       return fct::Ref<Seasonal>::make(_hyperparams, _dependencies);
     }
 
-    if constexpr (std::is_same<Type, SubstringOp>()) {
+    else if constexpr (std::is_same<Type, SubstringOp>()) {
       return fct::Ref<Substring>::make(_hyperparams, _dependencies);
     }
 
-    if constexpr (std::is_same<Type, TextFieldSplitterOp>()) {
+    else if constexpr (std::is_same<Type, TextFieldSplitterOp>()) {
       return fct::Ref<TextFieldSplitter>::make(_hyperparams, _dependencies);
+    }
+
+    else {
+      throw std::runtime_error(
+          "The " + fct::get<"type_">(_hyperparams).name() +
+          " preprocessor is not supported in the community edition. Please "
+          "upgrade to getML enterprise to use this. An overview of what is "
+          "supported in the community edition can be found in the official "
+          "getML documentation.");
     }
   };
 

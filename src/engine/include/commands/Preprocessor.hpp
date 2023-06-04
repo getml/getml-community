@@ -12,6 +12,7 @@
 #include <optional>
 #include <string>
 
+#include "commands/NotSupportedInCommunity.hpp"
 #include "fct/Field.hpp"
 #include "fct/Literal.hpp"
 #include "fct/NamedTuple.hpp"
@@ -36,6 +37,10 @@ class Preprocessor {
       fct::NamedTuple<fct::Field<"type_", fct::Literal<"Imputation">>,
                       fct::Field<"add_dummies_", bool>>;
 
+  /// The command needed to produce the mapping preprocessor, which is not
+  /// supported.
+  using MappingOp = NotSupportedInCommunity<"Mapping">;
+
   /// The command needed to produce a Seasonal preprocessor.
   using SeasonalOp =
       fct::NamedTuple<fct::Field<"type_", fct::Literal<"Seasonal">>,
@@ -58,7 +63,7 @@ class Preprocessor {
 
   using NamedTupleType =
       fct::TaggedUnion<"type_", CategoryTrimmerOp, EMailDomainOp, ImputationOp,
-                       SeasonalOp, SubstringOp, TextFieldSplitterOp>;
+                       MappingOp, SeasonalOp, SubstringOp, TextFieldSplitterOp>;
 
   NamedTupleType val_;
 };
