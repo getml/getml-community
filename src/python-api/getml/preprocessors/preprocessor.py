@@ -27,10 +27,10 @@ class _Preprocessor(ABC):
     Base class - not meant for the end user.
     """
 
-    def __post_init__(self):
+    def __post_init__(self: "_Preprocessor"):
         self.validate()
 
-        for param in self._supported_params:  # pylint: disable=E1101
+        for param in self._supported_params:
             setattr(type(self), param, Validator(param))
 
     # ------------------------------------------------------------------------

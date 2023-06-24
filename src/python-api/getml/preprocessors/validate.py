@@ -12,7 +12,6 @@ Reduces boilerplate code for the validation.
 
 
 def _validate(self, params):
-
     if params is None:
         params = self.__dict__
     else:
@@ -22,7 +21,7 @@ def _validate(self, params):
         raise ValueError("params must be None or a dictionary!")
 
     for kkey in params:
-        if kkey not in type(self)._supported_params:
+        if kkey not in self._supported_params:
             raise KeyError(
                 f"Instance variable '{kkey}' is not supported in {self.type}."
             )

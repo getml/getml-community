@@ -758,7 +758,7 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
-    def copy(self, name: str) -> DataFrame:
+    def copy(self, name: str) -> "DataFrame":
         """
         Creates a deep copy of the data frame under a new name.
 
@@ -925,7 +925,7 @@ class DataFrame:
         ignore=False,
         dry=False,
         verbose=True,
-    ) -> DataFrame:
+    ) -> "DataFrame":
         """Create a DataFrame from CSV files.
 
         The getML engine will construct a data
@@ -1619,7 +1619,7 @@ class DataFrame:
         roles=None,
         ignore=False,
         dry=False,
-    ) -> DataFrame:
+    ) -> "DataFrame":
         """Create a DataFrame from CSV files located in an S3 bucket.
 
         This classmethod will construct a data
@@ -1865,7 +1865,7 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
-    def load(self) -> DataFrame:
+    def load(self) -> "DataFrame":
         """Loads saved data from disk.
 
         The data frame object holding the same name as the current
@@ -2115,7 +2115,7 @@ class DataFrame:
         colnames=None,
         time_formats=None,
         verbose=True,
-    ) -> DataFrame:
+    ) -> "DataFrame":
         """Read CSV files.
 
         It is assumed that the first line of each CSV file contains a
@@ -2378,7 +2378,7 @@ class DataFrame:
         fname: str,
         append: bool = False,
         verbose: bool = True,
-    ) -> DataFrame:
+    ) -> "DataFrame":
         """Read a parquet file.
 
         Args:
@@ -2597,7 +2597,7 @@ class DataFrame:
         self,
         view: View,
         append: bool = False,
-    ) -> DataFrame:
+    ) -> "DataFrame":
         """Read the data from a :class:`~getml.data.View`.
 
         Args:
@@ -2639,7 +2639,7 @@ class DataFrame:
 
     # --------------------------------------------------------------------------
 
-    def read_db(self, table_name: str, append: bool = False, conn=None) -> DataFrame:
+    def read_db(self, table_name: str, append: bool = False, conn=None) -> "DataFrame":
         """
         Fill from Database.
 
@@ -2705,7 +2705,7 @@ class DataFrame:
 
     # --------------------------------------------------------------------------
 
-    def read_pandas(self, pandas_df: pd.DataFrame, append: bool = False) -> DataFrame:
+    def read_pandas(self, pandas_df: pd.DataFrame, append: bool = False) -> "DataFrame":
         """Uploads a :class:`pandas.DataFrame`.
 
         Replaces the actual content of the underlying data frame in
@@ -2748,7 +2748,7 @@ class DataFrame:
 
     # --------------------------------------------------------------------------
 
-    def read_pyspark(self, spark_df, append: bool = False) -> DataFrame:
+    def read_pyspark(self, spark_df, append: bool = False) -> "DataFrame":
         """Uploads a :py:class:`pyspark.sql.DataFrame`.
 
         Replaces the actual content of the underlying data frame in
@@ -2788,7 +2788,7 @@ class DataFrame:
 
     # --------------------------------------------------------------------------
 
-    def read_query(self, query: str, append: bool = False, conn=None) -> DataFrame:
+    def read_query(self, query: str, append: bool = False, conn=None) -> "DataFrame":
         """Fill from query
 
         Fills the data frame with data from a table in the database.
@@ -2853,7 +2853,7 @@ class DataFrame:
 
     # --------------------------------------------------------------------------
 
-    def refresh(self) -> DataFrame:
+    def refresh(self) -> "DataFrame":
         """Aligns meta-information of the current instance with the
         corresponding data frame in the getML engine.
 
@@ -2949,7 +2949,7 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
-    def save(self) -> DataFrame:
+    def save(self) -> "DataFrame":
         """Writes the underlying data in the getML engine to disk.
 
         Returns:

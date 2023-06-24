@@ -863,7 +863,7 @@ class View:
 
     # ------------------------------------------------------------
 
-    def where(self, index) -> View:
+    def where(self, index) -> "View":
         """Extract a subset of rows.
 
         Creates a new :class:`~getml.data.View` as a

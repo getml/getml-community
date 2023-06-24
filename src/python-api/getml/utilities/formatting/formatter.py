@@ -504,7 +504,7 @@ class _FormatColumn:
 
     # ------------------------------------------------------------
 
-    def _clip(self, ellipses="...") -> _FormatColumn:
+    def _clip(self, ellipses="...") -> "_FormatColumn":
         column_clipped = deepcopy(self)
         if self.n_cells > self.max_cells:
             head = self.data[: self.max_cells // 2]

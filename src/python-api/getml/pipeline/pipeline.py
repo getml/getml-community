@@ -808,7 +808,7 @@ class Pipeline:
 
     # ----------------------------------------------------------------
 
-    def _parse_cmd(self, json_obj: Dict[str, Any]) -> Pipeline:
+    def _parse_cmd(self, json_obj: Dict[str, Any]) -> "Pipeline":
         ptype = json_obj["type_"]
 
         del json_obj["type_"]
@@ -866,7 +866,7 @@ class Pipeline:
 
     # ----------------------------------------------------------------
 
-    def _parse_json_obj(self, all_json_objs: Dict[str, Any]) -> Pipeline:
+    def _parse_json_obj(self, all_json_objs: Dict[str, Any]) -> "Pipeline":
         obj = all_json_objs["obj"]
 
         scores = all_json_objs["scores"]
@@ -909,7 +909,7 @@ class Pipeline:
 
     # ------------------------------------------------------------
 
-    def _send(self, additional_tags: Optional[List[str]] = None) -> Pipeline:
+    def _send(self, additional_tags: Optional[List[str]] = None) -> "Pipeline":
         self._validate()
 
         self._id = _make_id()
@@ -1183,7 +1183,7 @@ class Pipeline:
         ] = None,
         validation_table: Optional[Union[DataFrame, View, data.Subset]] = None,
         check: bool = True,
-    ) -> Pipeline:
+    ) -> "Pipeline":
         """Trains the feature learning algorithms, feature selectors
         and predictors.
 
@@ -1469,7 +1469,7 @@ class Pipeline:
 
     # ------------------------------------------------------------
 
-    def refresh(self) -> Pipeline:
+    def refresh(self) -> "Pipeline":
         """Reloads the pipeline from the engine.
 
         This discards all local changes you have made since the
