@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 
+#include "commands/DataContainer.hpp"
 #include "commands/DataFrameOrView.hpp"
 #include "commands/Int.hpp"
 #include "commands/Pipeline.hpp"
@@ -134,7 +135,8 @@ struct ProjectCommand {
   /// The command to load a data contaner.
   using SaveDataContainerOp =
       fct::NamedTuple<fct::Field<"type_", fct::Literal<"DataContainer.save">>,
-                      fct::Field<"name_", std::string>>;
+                      fct::Field<"name_", std::string>,
+                      fct::Field<"container_", DataContainer>>;
 
   /// The command to save a data frame.
   using SaveDfOp =

@@ -11,11 +11,15 @@
 
 #include <stdexcept>
 
+#include "commands/DataContainer.hpp"
 #include "engine/handlers/FileHandler.hpp"
 #include "engine/handlers/PipelineManager.hpp"
 #include "engine/pipelines/SaveParams.hpp"
 #include "fct/always_false.hpp"
 #include "fct/make_named_tuple.hpp"
+#include "helpers/Loader.hpp"
+#include "helpers/Saver.hpp"
+#include "json/to_json.hpp"
 
 namespace engine {
 namespace handlers {
@@ -269,27 +273,14 @@ void ProjectManager::load_data_container(
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
-  std::ifstream input(path);
-
-  if (!input.is_open()) {
-    throw std::runtime_error("File '" + path + "' not found!");
-  }
-
-  std::stringstream json;
-
-  std::string line;
-
-  while (std::getline(input, line)) {
-    json << line;
-  }
-
-  input.close();
+  const auto data_container =
+      helpers::Loader::load_from_json<commands::DataContainer>(path);
 
   read_lock.unlock();
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(json.str(), _socket);
+  communication::Sender::send_string(json::to_json(data_container), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -348,16 +339,11 @@ void ProjectManager::save_data_container(
 
   const auto path = project_directory() + "data_containers/" + name + ".json";
 
+  const auto& container = _cmd.get<"container_">();
+
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
-  // TODO: Define data container
-  /*const auto obj = jsonutils::JSON::get_object(_cmd, "container_");
-
-  assert_true(obj);
-
-  std::ofstream fs(path, std::ofstream::out);
-  Poco::JSON::Stringifier::stringify(*obj, fs);
-  fs.close();*/
+  helpers::Saver::save_as_json(path, container);
 
   communication::Sender::send_string("Success!", _socket);
 }

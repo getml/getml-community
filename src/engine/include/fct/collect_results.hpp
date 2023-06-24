@@ -36,8 +36,8 @@ auto map(RangeType range) {
     if (!r) {
       return Result<std::map<KeyType, ValueType>>(*r.error());
     }
-    const auto& [k, v] = *r;
-    m[k] = v;
+    const auto& [key, value] = *r;
+    m.try_emplace(std::move(key), std::move(value));
   }
 
   return Result<std::map<KeyType, ValueType>>(m);

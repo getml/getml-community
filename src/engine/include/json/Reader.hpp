@@ -112,7 +112,9 @@ struct Reader {
     yyjson_obj_iter_init(_obj->val_, &iter);
     yyjson_val* key;
     while ((key = yyjson_obj_iter_next(&iter))) {
-      m[yyjson_get_str(key)] = InputVarType(yyjson_obj_iter_get_val(key));
+      const auto p = std::make_pair(yyjson_get_str(key),
+                                    InputVarType(yyjson_obj_iter_get_val(key)));
+      m.emplace(std::move(p));
     }
     return m;
   }
