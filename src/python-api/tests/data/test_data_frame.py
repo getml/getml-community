@@ -7,6 +7,7 @@
 
 import json
 import tempfile
+from typing import Any, Dict
 
 import numpy as np
 import pandas as pd  # type: ignore
@@ -176,7 +177,6 @@ def test_init():
 
 
 def test_from_pandas(engine, pandas_df):
-
     df = getml.DataFrame.from_pandas(name="databert", pandas_df=pandas_df)
 
     assert getml.data.list_data_frames()["in_memory"] == ["databert"]
@@ -187,7 +187,6 @@ def test_from_pandas(engine, pandas_df):
 
 
 def test_from_pandas_with_roles(engine, pandas_df):
-
     roles = {
         "join_key": ["join_key"],
         "time_stamp": ["time_stamp"],
@@ -205,7 +204,6 @@ def test_from_pandas_with_roles(engine, pandas_df):
 
 
 def test_to_pandas(engine, pandas_df):
-
     df = getml.DataFrame.from_pandas(name="databert", pandas_df=pandas_df)
 
     pandas_df_reload = df.to_pandas()
@@ -218,7 +216,6 @@ def test_to_pandas(engine, pandas_df):
 
 
 def test_read_pandas(engine, pandas_df):
-
     df = getml.DataFrame(name="testbert")
 
     with pytest.raises(Exception):
@@ -256,8 +253,7 @@ def test_from_json(engine, json_str):
 
 
 def test_from_dict(engine):
-
-    data = dict(
+    data: Dict[str, Any] = dict(
         animals=["dog", "cat", "mouse"], weight=[12.2, 125.2, 12], number=[1, 2, 3]
     )
 
@@ -335,7 +331,6 @@ def test_set_roles(engine):
 
 
 def test_compare(engine):
-
     databert_pop_1, databert_peri_1 = getml.datasets.make_numerical(
         random_state=829034, n_rows_population=10, n_rows_peripheral=20
     )

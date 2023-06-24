@@ -17,6 +17,7 @@ import math
 from collections import namedtuple
 from copy import deepcopy
 from numbers import Number
+from typing import Optional
 
 import numpy as np
 
@@ -149,7 +150,6 @@ def _truncate_line(line, margin, max_width, template="{}"):
     cum_widths = it.accumulate(widths)
 
     for cell, cum_width in zip(line, cum_widths):
-
         if cum_width < max_width:
             yield cell
 
@@ -174,7 +174,6 @@ class _Formatter:
     # ------------------------------------------------------------
 
     def __init__(self, headers, rows):
-
         self.data = []
 
         depths = [max(_get_depth(cell) for cell in row) for row in rows]
@@ -182,7 +181,7 @@ class _Formatter:
         columns = zip(*rows)
         headers = zip(*headers)
 
-        for header, cells in it.zip_longest(headers, columns, fillvalue=[]):
+        for header, cells in it.zip_longest(headers, columns, fillvalue=[]):  # type: ignore
             self.data.append(
                 _FormatColumn(
                     list(header),
@@ -192,7 +191,7 @@ class _Formatter:
                 )
             )
 
-        self.n_rows = self.data[0].n_cells
+        self.n_rows: Optional[int] = self.data[0].n_cells
 
         self._add_index()
 
@@ -208,7 +207,7 @@ class _Formatter:
             return fmt
         if isinstance(key, str):
             try:
-                return [column for column in self.data if column._name == key][0]
+                return [column for column in self.data if column._name == key][0]  # type: ignore
             except IndexError as exc:
                 raise KeyError(f"No FormatColumn with name: {key}") from exc
         raise TypeError(
@@ -315,7 +314,6 @@ class _Formatter:
     # ------------------------------------------------------------
 
     def _render_html(self):
-
         headers = self._render_head()
         rows = self._render_body(as_html=True)
 
@@ -430,7 +428,7 @@ class _FormatColumn:
 
         else:
             cells_formatted = [
-                fmt.format(self.cell_template, cell, cell=cell, **fmt_params)
+                fmt.format(self.cell_template, cell, cell=cell, **fmt_params)  # type: ignore
                 for cell in self.data
             ]
 
@@ -506,7 +504,7 @@ class _FormatColumn:
 
     # ------------------------------------------------------------
 
-    def _clip(self, ellipses="..."):
+    def _clip(self, ellipses="...") -> _FormatColumn:
         column_clipped = deepcopy(self)
         if self.n_cells > self.max_cells:
             head = self.data[: self.max_cells // 2]

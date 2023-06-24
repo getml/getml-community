@@ -10,6 +10,8 @@
 Creates a new data frame by concatenating a list of existing ones.
 """
 
+from typing import Any, Dict, List, Union
+
 import getml.communication as comm
 
 from .data_frame import DataFrame
@@ -19,7 +21,7 @@ from .view import View
 # --------------------------------------------------------------------
 
 
-def concat(name, data_frames):
+def concat(name, data_frames: List[Union[DataFrame, View]]):
     """
     Creates a new data frame by concatenating a list of existing ones.
 
@@ -47,7 +49,8 @@ def concat(name, data_frames):
             + "or getml.DataFrames."
         )
 
-    cmd = dict()
+    cmd: Dict[str, Any] = {}
+
     cmd["type_"] = "DataFrame.concat"
     cmd["name_"] = name
 

@@ -16,7 +16,7 @@ from typing import Sequence, Optional, Iterator, Union, Tuple, Callable, Any
 
 import numpy as np
 from numpy.typing import NDArray
-import pandas as pd
+import pandas as pd  # type: ignore
 
 from getml.utilities.formatting import _Formatter
 

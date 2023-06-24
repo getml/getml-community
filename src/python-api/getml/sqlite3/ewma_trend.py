@@ -11,6 +11,8 @@ Contains the exponentially weighted moving average aggregations.
 """
 
 import numpy as np
+from typing import Optional
+
 
 from .helpers import _not_null
 
@@ -40,7 +42,7 @@ class _EWMATrend:
         if _not_null(value) and _not_null(time_stamp):
             self.values.append((time_stamp, value))
 
-    def finalize(self):
+    def finalize(self) -> Optional[float]:
         """
         Executed after all values are inserted.
         """
@@ -50,9 +52,9 @@ class _EWMATrend:
         sum_weights = np.sum(weights)
         if sum_weights == 0.0:
             return None
-        mean_x = np.sum((v[0] * w for v, w in zip(self.values, weights))) / sum_weights
-        mean_y = np.sum((v[1] * w for v, w in zip(self.values, weights))) / sum_weights
-        sum_xx = np.sum(
+        mean_x = sum((v[0] * w for v, w in zip(self.values, weights))) / sum_weights
+        mean_y = sum((v[1] * w for v, w in zip(self.values, weights))) / sum_weights
+        sum_xx = sum(
             (
                 (v[0] - mean_x) * (v[0] - mean_x) * w
                 for v, w in zip(self.values, weights)
@@ -60,7 +62,7 @@ class _EWMATrend:
         )
         if sum_xx == 0.0:
             return mean_y
-        sum_xy = np.sum(
+        sum_xy = sum(
             (
                 (v[0] - mean_x) * (v[1] - mean_y) * w
                 for v, w in zip(self.values, weights)

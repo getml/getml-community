@@ -1,9 +1,9 @@
 # Copyright 2022 The SQLNet Company GmbH
-# 
-# This file is licensed under the Elastic License 2.0 (ELv2). 
-# Refer to the LICENSE.txt file in the root of the repository 
+#
+# This file is licensed under the Elastic License 2.0 (ELv2).
+# Refer to the LICENSE.txt file in the root of the repository
 # for details.
-# 
+#
 
 """
 This is an integration test based on
@@ -50,7 +50,7 @@ def test_loans():
 
     scores = pipe.score(star_schema.test)
 
-    assert scores.auc > 0.94, "Expected an AUC greater 0.94, got " + str(scores.auc)
+    assert scores.auc > 0.94, "Expected an AUC greater 0.94, got " + str(scores.auc)  # type: ignore
 
 
 def _make_star_schema() -> getml.data.StarSchema:

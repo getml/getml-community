@@ -41,7 +41,7 @@ def test_load_loans(engine):
         "meta",
     ]
 
-    assert isinstance(dfs[0], getml.DataFrame)
+    assert isinstance(dfs[0], getml.DataFrame)  # type: ignore
 
     assert getml.project.data_frames.in_memory == [
         "meta",
@@ -51,7 +51,7 @@ def test_load_loans(engine):
         "trans",
     ]
 
-    assert dfs[0]["default"].role == getml.data.roles.target
+    assert dfs[0]["default"].role == getml.data.roles.target  # type: ignore
 
 
 # --------------------------------------------------------------------
@@ -67,7 +67,7 @@ def test_load_occupancy(engine):
         "population_validation",
     ]
 
-    assert dfs[0]["Occupancy"].role == getml.data.roles.target
+    assert dfs[0]["Occupancy"].role == getml.data.roles.target  # type: ignore
 
 
 # --------------------------------------------------------------------

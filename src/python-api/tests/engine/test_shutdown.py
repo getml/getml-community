@@ -15,3 +15,7 @@ def test_shutdown():
         getml.engine.launch(in_memory=True)
         getml.engine.set_project("test_engine")
         getml.engine.shutdown()
+
+
+if __name__ == "__main__":
+    test_shutdown()

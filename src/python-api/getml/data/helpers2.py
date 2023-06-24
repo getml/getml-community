@@ -9,6 +9,7 @@
 """Helper functions that depend on the DataFrame class."""
 
 import numbers
+from typing import Any, Dict
 
 from getml.constants import MULTIPLE_JOIN_KEYS_BEGIN, NO_JOIN_KEY
 from getml.data.columns import (
@@ -31,7 +32,7 @@ from .view import View
 # --------------------------------------------------------------------
 
 
-def _decode_data_model(cmd):
+def _decode_data_model(cmd: Dict[str, Any]):
     def decode(elem):
         return (
             [_decode_placeholder(e) for e in elem]
@@ -40,13 +41,13 @@ def _decode_data_model(cmd):
         )
 
     population = _decode_placeholder(cmd)
-    peripherals = (
+    peripheral = (
         {k: decode(v) for (k, v) in cmd["peripherals_"].items()}
         if "peripherals_" in cmd
         else {}
     )
     data_model = DataModel(population)
-    data_model.peripherals = peripherals
+    data_model.peripheral = peripheral
     return data_model
 
 

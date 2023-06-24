@@ -15,6 +15,7 @@ import re
 from collections import namedtuple
 from copy import deepcopy
 from inspect import cleandoc
+from typing import Any, Dict, List, Union
 
 import numpy as np
 
@@ -92,7 +93,7 @@ def _parse_subrole(subrole):
 
 
 def _structure_subroles(df):
-    subroles = {"exclude": [], "include": [], "only": []}
+    subroles: Dict[str, List[str]] = {"exclude": [], "include": [], "only": []}
     df_subroles = [_get_subroles(df[col]) for col in df.colnames]
 
     for col_subroles in df_subroles:
@@ -288,7 +289,6 @@ class _DataFrameFormatter(_Formatter):
     # ------------------------------------------------------------
 
     def _render_string(self, footer=None):
-
         lines = super()._render_string()
 
         footer_lines = self._render_footer_lines(footer) if footer else ""
@@ -349,7 +349,7 @@ class _DataFrameFormatColumn(_FormatColumn):
     # ------------------------------------------------------------
 
     def _clip(self):
-        ellipses = "..." + getattr(self, "precision", 0) * " "
+        ellipses: Union[str, List[Any]] = "..." + getattr(self, "precision", 0) * " "
         column_clipped = deepcopy(self)
 
         if self.role is None:
@@ -399,7 +399,6 @@ class _DataFrameFormatColumn(_FormatColumn):
 
     @property
     def default_cell_template(self):
-
         if getattr(self, "role", None) in [
             join_key,
             numerical,
@@ -417,7 +416,6 @@ class _DataFrameFormatColumn(_FormatColumn):
 
     @property
     def default_header_template(self):
-
         if getattr(self, "role", None) in [
             join_key,
             numerical,

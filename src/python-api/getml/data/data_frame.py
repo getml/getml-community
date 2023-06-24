@@ -13,7 +13,7 @@ import numbers
 import os
 import shutil
 from collections import namedtuple
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd  # type: ignore
@@ -174,7 +174,6 @@ class DataFrame:
     _possible_keys = _categorical_roles + _numerical_roles
 
     def __init__(self, name, roles=None):
-
         # ------------------------------------------------------------
 
         if not isinstance(name, str):
@@ -275,7 +274,7 @@ class DataFrame:
 
     # ----------------------------------------------------------------
 
-    def _delete(self, mem_only=False):
+    def _delete(self, mem_only: bool = False):
         """Deletes the data frame from the getML engine.
 
         If called with the `mem_only` option set to True, the data
@@ -292,9 +291,7 @@ class DataFrame:
         if not isinstance(mem_only, bool):
             raise TypeError("'mem_only' must be of type bool")
 
-        # ------------------------------------------------------------
-
-        cmd = dict()
+        cmd: Dict[str, Any] = {}
         cmd["type_"] = "DataFrame.delete"
         cmd["name_"] = self.name
         cmd["mem_only_"] = mem_only
@@ -303,13 +300,12 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
-    def __delitem__(self, colname):
+    def __delitem__(self, colname: str):
         self._drop(colname)
 
     # ----------------------------------------------------------------
 
     def __eq__(self, other):
-
         if not isinstance(other, DataFrame):
             raise TypeError(
                 "A DataFrame can only be compared to another getml.DataFrame"
@@ -318,7 +314,6 @@ class DataFrame:
         # ------------------------------------------------------------
 
         for kkey in self.__dict__:
-
             if kkey not in other.__dict__:
                 return False
 
@@ -345,7 +340,6 @@ class DataFrame:
     # ------------------------------------------------------------
 
     def __getitem__(self, name):
-
         if isinstance(
             name,
             (numbers.Integral, slice, BooleanColumnView, FloatColumn, FloatColumnView),
@@ -368,9 +362,8 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
-    def _getml_deserialize(self):
-
-        cmd = dict()
+    def _getml_deserialize(self) -> Dict[str, Any]:
+        cmd: Dict[str, Any] = {}
 
         cmd["type_"] = "DataFrame"
         cmd["name_"] = self.name
@@ -415,7 +408,6 @@ class DataFrame:
     # ------------------------------------------------------------
 
     def _add_categorical_column(self, col, name, role, subroles, unit):
-
         cmd: Dict[str, Any] = {}
         cmd["type_"] = "DataFrame.add_categorical_column"
         cmd["name_"] = name
@@ -427,7 +419,7 @@ class DataFrame:
         cmd["unit_"] = unit
 
         with comm.send_and_get_socket(cmd) as sock:
-            comm.recv_warnings(sock)
+            comm.recv_issues(sock)
             msg = comm.recv_string(sock)
             if msg != "Success!":
                 comm.engine_exception_handler(msg)
@@ -437,7 +429,6 @@ class DataFrame:
     # ------------------------------------------------------------
 
     def _add_column(self, col, name, role, subroles, unit):
-
         cmd: Dict[str, Any] = {}
 
         cmd["type_"] = "DataFrame.add_column"
@@ -450,7 +441,7 @@ class DataFrame:
         cmd["unit_"] = unit
 
         with comm.send_and_get_socket(cmd) as sock:
-            comm.recv_warnings(sock)
+            comm.recv_issues(sock)
             msg = comm.recv_string(sock)
             if msg != "Success!":
                 comm.engine_exception_handler(msg)
@@ -460,7 +451,6 @@ class DataFrame:
     # ------------------------------------------------------------
 
     def _add_numpy_array(self, numpy_array, name, role, subroles, unit):
-
         if len(numpy_array.shape) != 1:
             raise TypeError(
                 """numpy.ndarray needs to be one-dimensional!
@@ -493,9 +483,8 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
-    def _check_duplicates(self):
-
-        all_colnames = []
+    def _check_duplicates(self) -> None:
+        all_colnames: List[str] = []
 
         all_colnames = _check_if_exists(self._categorical_names, all_colnames)
 
@@ -514,7 +503,6 @@ class DataFrame:
     # ------------------------------------------------------------
 
     def _check_plausibility(self, data_frame):
-
         self._check_duplicates()
 
         for col in self._categorical_names:
@@ -564,8 +552,7 @@ class DataFrame:
     # ------------------------------------------------------------
 
     def _close(self, sock):
-
-        cmd = dict()
+        cmd: Dict[str, Any] = {}
         cmd["type_"] = "DataFrame.close"
         cmd["name_"] = self.name
 
@@ -578,12 +565,11 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
-    def _drop(self, colname):
-
+    def _drop(self, colname: str):
         if not isinstance(colname, str):
-            raise TypeError("'colname' must be either a string or a list of strings.")
+            raise TypeError("'colname' must be either a string.")
 
-        cmd = dict()
+        cmd: Dict[str, Any] = {}
 
         cmd["type_"] = "DataFrame.remove_column"
         cmd["name_"] = colname
@@ -603,7 +589,6 @@ class DataFrame:
     # ------------------------------------------------------------
 
     def _set_role(self, name, role, time_formats):
-
         if not isinstance(name, str):
             raise TypeError("Parameter 'name' must be a string!")
 
@@ -624,14 +609,13 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
-    def _set_subroles(self, name, subroles, append):
-
+    def _set_subroles(self, name: str, subroles: List[str], append: bool):
         if not isinstance(name, str):
             raise TypeError("Parameter 'name' must be a string!")
 
         col = self[name]
 
-        cmd = dict()
+        cmd: Dict[str, Any] = {}
 
         cmd.update(col.cmd)
 
@@ -643,14 +627,13 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
-    def _set_unit(self, name, unit):
-
+    def _set_unit(self, name: str, unit: str):
         if not isinstance(name, str):
             raise TypeError("Parameter 'name' must be a string!")
 
         col = self[name]
 
-        cmd = dict()
+        cmd: Dict[str, Any] = {}
 
         cmd.update(col.cmd)
 
@@ -775,7 +758,7 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
-    def copy(self, name):
+    def copy(self, name: str) -> DataFrame:
         """
         Creates a deep copy of the data frame under a new name.
 
@@ -791,7 +774,8 @@ class DataFrame:
         if not isinstance(name, str):
             raise TypeError("'name' must be a string.")
 
-        cmd = dict()
+        cmd: Dict[str, Any] = {}
+
         cmd["type_"] = "DataFrame.concat"
         cmd["name_"] = name
 
@@ -840,7 +824,7 @@ class DataFrame:
         :meth:`~getml.DataFrame.set_role` are not longer possible,
         but operations like :meth:`~getml.DataFrame.with_role` are.
         """
-        cmd = dict()
+        cmd: Dict[str, Any] = {}
         cmd["type_"] = "DataFrame.freeze"
         cmd["name_"] = self.name
         comm.send(cmd)
@@ -941,7 +925,7 @@ class DataFrame:
         ignore=False,
         dry=False,
         verbose=True,
-    ):
+    ) -> DataFrame:
         """Create a DataFrame from CSV files.
 
         The getML engine will construct a data
@@ -1056,12 +1040,8 @@ class DataFrame:
 
         """
 
-        # ------------------------------------------------------------
-
         if not isinstance(fnames, list):
             fnames = [fnames]
-
-        # ------------------------------------------------------------
 
         if not _is_non_empty_typed_list(fnames, str):
             raise TypeError("'fnames' must be either a str or a list of str.")
@@ -1098,21 +1078,17 @@ class DataFrame:
                 "'colnames' must be either be None or a non-empty list of str."
             )
 
-        # ------------------------------------------------------------
-
         fnames = _retrieve_urls(fnames, verbose=verbose)
-
-        # ------------------------------------------------------------
 
         roles = roles.to_dict() if isinstance(roles, Roles) else roles
 
         if roles is None or not ignore:
             sniffed_roles = _sniff_csv(
                 fnames=fnames,
-                num_lines_sniffed=num_lines_sniffed,
+                num_lines_sniffed=int(num_lines_sniffed),
                 quotechar=quotechar,
                 sep=sep,
-                skip=skip,
+                skip=int(skip),
                 colnames=colnames,
             )
 
@@ -1631,10 +1607,10 @@ class DataFrame:
     @classmethod
     def from_s3(
         cls,
-        bucket,
-        keys,
-        region,
-        name,
+        bucket: str,
+        keys: List[str],
+        region: str,
+        name: str,
         num_lines_sniffed=1000,
         num_lines_read=0,
         sep=",",
@@ -1643,7 +1619,7 @@ class DataFrame:
         roles=None,
         ignore=False,
         dry=False,
-    ):
+    ) -> DataFrame:
         """Create a DataFrame from CSV files located in an S3 bucket.
 
         This classmethod will construct a data
@@ -1741,12 +1717,8 @@ class DataFrame:
             Not supported in the getML community edition.
         """
 
-        # ------------------------------------------------------------
-
         if isinstance(keys, str):
             keys = [keys]
-
-        # ------------------------------------------------------------
 
         if not isinstance(bucket, str):
             raise TypeError("'bucket' must be str.")
@@ -1786,8 +1758,6 @@ class DataFrame:
                 "'colnames' must be either be None or a non-empty list of str."
             )
 
-        # ------------------------------------------------------------
-
         roles = roles.to_dict() if isinstance(roles, Roles) else roles
 
         if roles is None or not ignore:
@@ -1795,9 +1765,9 @@ class DataFrame:
                 bucket=bucket,
                 keys=keys,
                 region=region,
-                num_lines_sniffed=num_lines_sniffed,
+                num_lines_sniffed=int(num_lines_sniffed),
                 sep=sep,
-                skip=skip,
+                skip=int(skip),
                 colnames=colnames,
             )
 
@@ -1817,8 +1787,8 @@ class DataFrame:
             region=region,
             append=False,
             sep=sep,
-            num_lines_read=num_lines_read,
-            skip=skip,
+            num_lines_read=int(num_lines_read),
+            skip=int(skip),
             colnames=colnames,
         )
 
@@ -1887,7 +1857,7 @@ class DataFrame:
     # ------------------------------------------------------------
 
     @property
-    def last_change(self):
+    def last_change(self) -> str:
         """
         A string describing the last time this data frame has been changed.
         """
@@ -1895,7 +1865,7 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
-    def load(self):
+    def load(self) -> DataFrame:
         """Loads saved data from disk.
 
         The data frame object holding the same name as the current
@@ -1964,16 +1934,10 @@ class DataFrame:
 
         """
 
-        # ------------------------------------------------------------
-
-        cmd = dict()
+        cmd: Dict[str, Any] = {}
         cmd["type_"] = "DataFrame.load"
         cmd["name_"] = self.name
-
         comm.send(cmd)
-
-        # ------------------------------------------------------------
-
         return self.refresh()
 
     # ------------------------------------------------------------
@@ -2151,7 +2115,7 @@ class DataFrame:
         colnames=None,
         time_formats=None,
         verbose=True,
-    ):
+    ) -> DataFrame:
         """Read CSV files.
 
         It is assumed that the first line of each CSV file contains a
@@ -2226,16 +2190,11 @@ class DataFrame:
                 Handler of the underlying data.
 
         """
-        # ------------------------------------------------------------
 
         time_formats = time_formats or constants.TIME_FORMATS
 
-        # ------------------------------------------------------------
-
         if not isinstance(fnames, list):
             fnames = [fnames]
-
-        # ------------------------------------------------------------
 
         if not _is_non_empty_typed_list(fnames, str):
             raise TypeError("'fnames' must be either a string or a list of str")
@@ -2263,8 +2222,6 @@ class DataFrame:
                 "'colnames' must be either be None or a non-empty list of str."
             )
 
-        # ------------------------------------------------------------
-
         if self.ncols() == 0:
             raise Exception(
                 """Reading data is only possible in a DataFrame with more than zero
@@ -2273,21 +2230,16 @@ class DataFrame:
                 from_csv(...)."""
             )
 
-        # ------------------------------------------------------------
-
         if not _is_non_empty_typed_list(fnames, str):
             raise TypeError(
                 """'fnames' must be a list containing at
                 least one path to a CSV file"""
             )
 
-        # ------------------------------------------------------------
-
         fnames_ = _retrieve_urls(fnames, verbose)
 
-        # ------------------------------------------------------------
+        cmd: Dict[str, Any] = {}
 
-        cmd = dict()
         cmd["type_"] = "DataFrame.read_csv"
         cmd["name_"] = self.name
 
@@ -2313,8 +2265,6 @@ class DataFrame:
         cmd["unused_strings_"] = self._unused_string_names
 
         comm.send(cmd)
-
-        # ------------------------------------------------------------
 
         return self
 
@@ -2425,10 +2375,10 @@ class DataFrame:
 
     def read_parquet(
         self,
-        fname,
-        append=False,
-        verbose=True,
-    ):
+        fname: str,
+        append: bool = False,
+        verbose: bool = True,
+    ) -> DataFrame:
         """Read a parquet file.
 
         Args:
@@ -2442,15 +2392,11 @@ class DataFrame:
                 existing data?
         """
 
-        # ------------------------------------------------------------
-
         if not isinstance(fname, str):
             raise TypeError("'fname' must be str.")
 
         if not isinstance(append, bool):
             raise TypeError("'append' must be bool.")
-
-        # ------------------------------------------------------------
 
         if self.ncols() == 0:
             raise Exception(
@@ -2460,13 +2406,10 @@ class DataFrame:
                 from_parquet(...)."""
             )
 
-        # ------------------------------------------------------------
-
         fname_ = _retrieve_urls([fname], verbose)[0]
 
-        # ------------------------------------------------------------
+        cmd: Dict[str, Any] = {}
 
-        cmd = dict()
         cmd["type_"] = "DataFrame.read_parquet"
         cmd["name_"] = self.name
 
@@ -2484,23 +2427,21 @@ class DataFrame:
 
         comm.send(cmd)
 
-        # ------------------------------------------------------------
-
         return self
 
     # --------------------------------------------------------------------------
 
     def read_s3(
         self,
-        bucket,
-        keys,
-        region,
-        append=False,
-        sep=",",
-        num_lines_read=0,
-        skip=0,
-        colnames=None,
-        time_formats=None,
+        bucket: str,
+        keys: List[str],
+        region: str,
+        append: bool = False,
+        sep: str = ",",
+        num_lines_read: int = 0,
+        skip: int = 0,
+        colnames: Optional[List[str]] = None,
+        time_formats: Optional[List[str]] = None,
     ):
         """Read CSV files from an S3 bucket.
 
@@ -2578,16 +2519,10 @@ class DataFrame:
             Not supported in the getML community edition.
         """
 
-        # ------------------------------------------------------------
-
         time_formats = time_formats or constants.TIME_FORMATS
-
-        # ------------------------------------------------------------
 
         if not isinstance(keys, list):
             keys = [keys]
-
-        # ------------------------------------------------------------
 
         if not isinstance(bucket, str):
             raise TypeError("'bucket' must be str.")
@@ -2618,8 +2553,6 @@ class DataFrame:
                 "'colnames' must be either be None or a non-empty list of str."
             )
 
-        # ------------------------------------------------------------
-
         if self.ncols() == 0:
             raise Exception(
                 """Reading data is only possible in a DataFrame with more than zero
@@ -2628,9 +2561,8 @@ class DataFrame:
                 from_s3(...)."""
             )
 
-        # ------------------------------------------------------------
+        cmd: Dict[str, Any] = {}
 
-        cmd = dict()
         cmd["type_"] = "DataFrame.read_s3"
         cmd["name_"] = self.name
 
@@ -2657,17 +2589,15 @@ class DataFrame:
 
         comm.send(cmd)
 
-        # ------------------------------------------------------------
-
         return self
 
     # ------------------------------------------------------------
 
     def read_view(
         self,
-        view,
-        append=False,
-    ):
+        view: View,
+        append: bool = False,
+    ) -> DataFrame:
         """Read the data from a :class:`~getml.data.View`.
 
         Args:
@@ -2685,7 +2615,6 @@ class DataFrame:
                 Handler of the underlying data.
 
         """
-        # ------------------------------------------------------------
 
         if not isinstance(view, View):
             raise TypeError("'view' must be getml.data.View.")
@@ -2693,13 +2622,10 @@ class DataFrame:
         if not isinstance(append, bool):
             raise TypeError("'append' must be bool.")
 
-        # ------------------------------------------------------------
-
         view.check()
 
-        # ------------------------------------------------------------
+        cmd: Dict[str, Any] = {}
 
-        cmd = dict()
         cmd["type_"] = "DataFrame.from_view"
         cmd["name_"] = self.name
 
@@ -2709,13 +2635,11 @@ class DataFrame:
 
         comm.send(cmd)
 
-        # ------------------------------------------------------------
-
         return self.refresh()
 
     # --------------------------------------------------------------------------
 
-    def read_db(self, table_name, append=False, conn=None):
+    def read_db(self, table_name: str, append: bool = False, conn=None) -> DataFrame:
         """
         Fill from Database.
 
@@ -2746,8 +2670,6 @@ class DataFrame:
         if not isinstance(append, bool):
             raise TypeError("'append' must be bool.")
 
-        # ------------------------------------------------------------
-
         if self.ncols() == 0:
             raise Exception(
                 """Reading data is only possible in a DataFrame with more than zero
@@ -2756,13 +2678,10 @@ class DataFrame:
                 from_db(...)."""
             )
 
-        # -------------------------------------------
-
         conn = conn or database.Connection()
 
-        # ------------------------------------------------------------
+        cmd: Dict[str, Any] = {}
 
-        cmd = dict()
         cmd["type_"] = "DataFrame.from_db"
         cmd["name_"] = self.name
         cmd["table_name_"] = table_name
@@ -2782,13 +2701,11 @@ class DataFrame:
 
         comm.send(cmd)
 
-        # ------------------------------------------------------------
-
         return self
 
     # --------------------------------------------------------------------------
 
-    def read_pandas(self, pandas_df, append=False):
+    def read_pandas(self, pandas_df: pd.DataFrame, append: bool = False) -> DataFrame:
         """Uploads a :class:`pandas.DataFrame`.
 
         Replaces the actual content of the underlying data frame in
@@ -2811,15 +2728,11 @@ class DataFrame:
             the way the underlying information is stored.
         """
 
-        # ------------------------------------------------------------
-
         if not isinstance(pandas_df, pd.DataFrame):
             raise TypeError("'pandas_df' must be of type pandas.DataFrame.")
 
         if not isinstance(append, bool):
             raise TypeError("'append' must be bool.")
-
-        # ------------------------------------------------------------
 
         if self.ncols() == 0:
             raise Exception(
@@ -2835,7 +2748,7 @@ class DataFrame:
 
     # --------------------------------------------------------------------------
 
-    def read_pyspark(self, spark_df, append=False):
+    def read_pyspark(self, spark_df, append: bool = False) -> DataFrame:
         """Uploads a :py:class:`pyspark.sql.DataFrame`.
 
         Replaces the actual content of the underlying data frame in
@@ -2852,19 +2765,13 @@ class DataFrame:
                 `query` be appended or replace the existing data?
         """
 
-        # ------------------------------------------------------------
-
         if not isinstance(append, bool):
             raise TypeError("'append' must be bool.")
-
-        # ------------------------------------------------------------
 
         temp_dir = _retrieve_temp_dir()
         os.makedirs(temp_dir, exist_ok=True)
         path = os.path.join(temp_dir, self.name)
         spark_df.write.mode("overwrite").parquet(path)
-
-        # ------------------------------------------------------------
 
         filepaths = [
             os.path.join(path, filepath)
@@ -2875,17 +2782,13 @@ class DataFrame:
         for i, filepath in enumerate(filepaths):
             self.read_parquet(filepath, append or i > 0)
 
-        # ------------------------------------------------------------
-
         shutil.rmtree(path)
-
-        # ------------------------------------------------------------
 
         return self
 
     # --------------------------------------------------------------------------
 
-    def read_query(self, query, append=False, conn=None):
+    def read_query(self, query: str, append: bool = False, conn=None) -> DataFrame:
         """Fill from query
 
         Fills the data frame with data from a table in the database.
@@ -2909,8 +2812,6 @@ class DataFrame:
                 Handler of the underlying data.
         """
 
-        # ------------------------------------------------------------
-
         if self.ncols() == 0:
             raise Exception(
                 """Reading data is only possible in a DataFrame with more than zero
@@ -2919,21 +2820,16 @@ class DataFrame:
                 from_db(...)."""
             )
 
-        # ------------------------------------------------------------
-
         if not isinstance(query, str):
             raise TypeError("'query' must be of type str")
 
         if not isinstance(append, bool):
             raise TypeError("'append' must be of type bool")
 
-        # -------------------------------------------
-
         conn = conn or database.Connection()
 
-        # ------------------------------------------------------------
-
         cmd: Dict[str, Any] = {}
+
         cmd["type_"] = "DataFrame.from_query"
         cmd["name_"] = self.name
         cmd["query_"] = query
@@ -2953,13 +2849,11 @@ class DataFrame:
 
         comm.send(cmd)
 
-        # ------------------------------------------------------------
-
         return self
 
     # --------------------------------------------------------------------------
 
-    def refresh(self):
+    def refresh(self) -> DataFrame:
         """Aligns meta-information of the current instance with the
         corresponding data frame in the getML engine.
 
@@ -2987,7 +2881,7 @@ class DataFrame:
 
         roles = json.loads(msg)
 
-        self.__init__(name=self.name, roles=roles)
+        self.__init__(name=self.name, roles=roles)  # type: ignore
 
         return self
 
@@ -3055,7 +2949,7 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
-    def save(self):
+    def save(self) -> DataFrame:
         """Writes the underlying data in the getML engine to disk.
 
         Returns:
@@ -3064,7 +2958,8 @@ class DataFrame:
 
         """
 
-        cmd = dict()
+        cmd: Dict[str, Any] = {}
+
         cmd["type_"] = "DataFrame.save"
         cmd["name_"] = self.name
 
@@ -3270,7 +3165,9 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
-    def to_csv(self, fname, quotechar='"', sep=",", batch_size=0):
+    def to_csv(
+        self, fname: str, quotechar: str = '"', sep: str = ",", batch_size: int = 0
+    ):
         """
         Writes the underlying data into a newly created CSV file.
 
@@ -3290,11 +3187,8 @@ class DataFrame:
                 Maximum number of lines per file. Set to 0 to read
                 the entire data frame into a single file.
         """
-        # ------------------------------------------------------------
 
         self.refresh()
-
-        # ------------------------------------------------------------
 
         if not isinstance(fname, str):
             raise TypeError("'fname' must be of type str")
@@ -3308,13 +3202,9 @@ class DataFrame:
         if not isinstance(batch_size, numbers.Real):
             raise TypeError("'batch_size' must be a real number")
 
-        # ------------------------------------------------------------
-
         fname_ = os.path.abspath(fname)
 
-        # ------------------------------------------------------------
-
-        cmd = {}
+        cmd: Dict[str, Any] = {}
 
         cmd["type_"] = "DataFrame.to_csv"
         cmd["name_"] = self.name
@@ -3481,7 +3371,7 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
-    def to_s3(self, bucket, key, region, sep=",", batch_size=50000):
+    def to_s3(self, bucket: str, key: str, region: str, sep=",", batch_size=50000):
         """
         Writes the underlying data into a newly created CSV file
         located in an S3 bucket.
@@ -3520,11 +3410,7 @@ class DataFrame:
                     ... )
         """
 
-        # ------------------------------------------------------------
-
         self.refresh()
-
-        # ------------------------------------------------------------
 
         if not isinstance(bucket, str):
             raise TypeError("'bucket' must be of type str")
@@ -3541,9 +3427,7 @@ class DataFrame:
         if not isinstance(batch_size, numbers.Real):
             raise TypeError("'batch_size' must be a real number")
 
-        # ------------------------------------------------------------
-
-        cmd = dict()
+        cmd: Dict[str, Any] = {}
 
         cmd["type_"] = "DataFrame.to_s3"
         cmd["name_"] = self.name
@@ -3587,15 +3471,20 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
-    def where(self, index):
+    def where(
+        self,
+        index: Union[
+            numbers.Integral, slice, BooleanColumnView, FloatColumnView, FloatColumn
+        ],
+    ) -> View:
         """Extract a subset of rows.
 
         Creates a new :class:`~getml.data.View` as a
         subselection of the current instance.
 
         Args:
-            index (:class:`~getml.data.columns.BooleanColumnView` or :class:`~getml.data.columns.FloatColumnView` or :class:`~getml.data.columns.FloatColumn`):
-                Boolean column indicating the rows you want to select.
+            index (int, slice, :class:`~getml.data.columns.BooleanColumnView` or :class:`~getml.data.columns.FloatColumnView` or :class:`~getml.data.columns.FloatColumn`):
+                Indicates the rows you want to select.
 
         Example:
 
@@ -3643,12 +3532,12 @@ class DataFrame:
                 | 2        | cherry      | 1.4       |
         """
         if isinstance(index, numbers.Integral):
-            index = index if index > 0 else len(self) + index
-            selector = arange(index, index + 1)
+            index = index if int(index) > 0 else len(self) + index
+            selector = arange(int(index), int(index) + 1)
             return View(base=self, subselection=selector)
 
         if isinstance(index, slice):
-            start, stop, step = _make_default_slice(index, len(self))
+            start, stop, _ = _make_default_slice(index, len(self))
             selector = arange(start, stop, index.step)
             return View(base=self, subselection=selector)
 

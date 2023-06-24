@@ -45,6 +45,7 @@ from getml.predictors.linear_regression import LinearRegression
 from getml.predictors.logistic_regression import LogisticRegression
 from getml.predictors.xgboost_classifier import XGBoostClassifier
 from getml.predictors.xgboost_regressor import XGBoostRegressor
+from getml.preprocessors.category_trimmer import CategoryTrimmer
 from getml.preprocessors.email_domain import EmailDomain
 from getml.preprocessors.imputation import Imputation
 from getml.preprocessors.mapping import Mapping
@@ -421,6 +422,7 @@ class Pipeline:
         peripheral: Optional[List[Placeholder]] = None,
         preprocessors: Optional[
             Union[
+                CategoryTrimmer,
                 EmailDomain,
                 Imputation,
                 Mapping,
@@ -429,6 +431,7 @@ class Pipeline:
                 TextFieldSplitter,
                 List[
                     Union[
+                        CategoryTrimmer,
                         EmailDomain,
                         Imputation,
                         Mapping,
@@ -1759,7 +1762,7 @@ class Pipeline:
             )
 
         if df_name != "":
-            y_hat = data.DataFrame(name=df_name).refresh()
+            return data.DataFrame(name=df_name).refresh()
 
         return y_hat
 

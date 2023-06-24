@@ -46,8 +46,9 @@ def execute(spark, fname):
 
     _log("Executing " + fname + "...")
 
-    queries = open(fname, "rt").read()
-    queries = queries.split(";")
+    with open(fname, "rt", encoding="utf-8") as sql_files:
+        queries = sql_files.read().split(";")
+
     for query in queries:
         if query.strip():
             spark.sql(query)

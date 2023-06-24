@@ -10,6 +10,8 @@
 COUNT_DISTINCT_OVER_COUNT aggregation.
 """
 
+from typing import List, Optional
+
 import numpy as np
 
 from .helpers import _not_null
@@ -18,21 +20,21 @@ from .helpers import _not_null
 class _CountDistinctOverCount:
     def __init__(self):
         self.count = 0.0
-        self.values = []
+        self.values: List[float] = []
 
-    def step(self, value):
+    def step(self, value: Optional[float]):
         """
         Executed every time the function is called.
         """
         self.count += 1.0
-        if _not_null(value):
+        if _not_null(value) and value is not None:
             self.values.append(value)
 
-    def finalize(self):
+    def finalize(self) -> Optional[float]:
         """
         Executed after all values are inserted.
         """
         if self.count == 0:
             return None
-        count_distinct = np.float(len(np.unique(self.values)))
+        count_distinct = float(len(np.unique(self.values)))
         return count_distinct / self.count

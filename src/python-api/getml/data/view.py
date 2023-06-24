@@ -13,7 +13,7 @@ import numbers
 import os
 from collections import namedtuple
 from copy import deepcopy
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd  # type: ignore
@@ -137,14 +137,23 @@ class View:
 
     # ------------------------------------------------------------
 
-    def __init__(self, base, name=None, subselection=None, added=None, dropped=None):
+    def __init__(
+        self,
+        base,
+        name: Optional[str] = None,
+        subselection: Union[
+            BooleanColumnView, FloatColumn, FloatColumnView, None
+        ] = None,
+        added=None,
+        dropped: Optional[List[str]] = None,
+    ):
         self._added = added
         self._base = deepcopy(base)
         self._dropped = dropped or []
         self._name = name
         self._subselection = subselection
 
-        self._initial_timestamp = (
+        self._initial_timestamp: str = (
             self._base._initial_timestamp
             if isinstance(self._base, View)
             else self._base.last_change
@@ -188,7 +197,6 @@ class View:
     # ------------------------------------------------------------
 
     def __getitem__(self, name):
-
         if isinstance(
             name,
             (numbers.Integral, slice, BooleanColumnView, FloatColumn, FloatColumnView),
@@ -226,9 +234,8 @@ class View:
 
     # ------------------------------------------------------------
 
-    def _getml_deserialize(self):
-
-        cmd = dict()
+    def _getml_deserialize(self) -> Dict[str, Any]:
+        cmd: Dict[str, Any] = {}
 
         cmd["type_"] = "View"
 
@@ -395,7 +402,7 @@ class View:
     # ------------------------------------------------------------
 
     @property
-    def last_change(self):
+    def last_change(self) -> str:
         """
         A string describing the last time this data frame has been changed.
         """
@@ -582,7 +589,9 @@ class View:
 
     # ------------------------------------------------------------
 
-    def to_csv(self, fname, quotechar='"', sep=",", batch_size=0):
+    def to_csv(
+        self, fname: str, quotechar: str = '"', sep: str = ",", batch_size: int = 0
+    ):
         """
         Writes the underlying data into a newly created CSV file.
 
@@ -603,11 +612,7 @@ class View:
                 the entire data frame into a single file.
         """
 
-        # ------------------------------------------------------------
-
         self.refresh()
-
-        # ------------------------------------------------------------
 
         if not isinstance(fname, str):
             raise TypeError("'fname' must be of type str")
@@ -621,13 +626,9 @@ class View:
         if not isinstance(batch_size, numbers.Real):
             raise TypeError("'batch_size' must be a real number")
 
-        # ------------------------------------------------------------
-
         fname_ = os.path.abspath(fname)
 
-        # ------------------------------------------------------------
-
-        cmd = dict()
+        cmd: Dict[str, Any] = {}
 
         cmd["type_"] = "View.to_csv"
         cmd["name_"] = self.name
@@ -642,7 +643,7 @@ class View:
 
     # ------------------------------------------------------------
 
-    def to_db(self, table_name, conn=None):
+    def to_db(self, table_name: str, conn: Optional[Connection] = None):
         """Writes the underlying data into a newly created table in the
         database.
 
@@ -659,11 +660,7 @@ class View:
                 the engine will use the default connection.
         """
 
-        # -------------------------------------------
-
         conn = conn or Connection()
-
-        # -------------------------------------------
 
         self.refresh()
 
@@ -673,9 +670,8 @@ class View:
         if not isinstance(conn, Connection):
             raise TypeError("'conn' must be a getml.database.Connection object or None")
 
-        # ------------------------------------------------------------
+        cmd: Dict[str, Any] = {}
 
-        cmd = dict()
         cmd["type_"] = "View.to_db"
         cmd["name_"] = ""
 
@@ -770,7 +766,14 @@ class View:
 
     # ------------------------------------------------------------
 
-    def to_s3(self, bucket, key, region, sep=",", batch_size=50000):
+    def to_s3(
+        self,
+        bucket: str,
+        key: str,
+        region: str,
+        sep: str = ",",
+        batch_size: int = 50000,
+    ):
         """
         Writes the underlying data into a newly created CSV file
         located in an S3 bucket.
@@ -809,11 +812,7 @@ class View:
                     ... )
         """
 
-        # ------------------------------------------------------------
-
         self.refresh()
-
-        # ------------------------------------------------------------
 
         if not isinstance(bucket, str):
             raise TypeError("'bucket' must be of type str")
@@ -830,9 +829,7 @@ class View:
         if not isinstance(batch_size, numbers.Real):
             raise TypeError("'batch_size' must be a real number")
 
-        # ------------------------------------------------------------
-
-        cmd = dict()
+        cmd: Dict[str, Any] = {}
 
         cmd["type_"] = "View.to_s3"
         cmd["name_"] = self.name
@@ -866,7 +863,7 @@ class View:
 
     # ------------------------------------------------------------
 
-    def where(self, index):
+    def where(self, index) -> View:
         """Extract a subset of rows.
 
         Creates a new :class:`~getml.data.View` as a
@@ -922,7 +919,7 @@ class View:
                 | 2        | cherry      | 1.4       |
         """
         if isinstance(index, numbers.Integral):
-            index = index if index > 0 else len(self) + index
+            index = index if int(index) > 0 else len(self) + index
             selector = arange(index, index + 1)
             return View(base=self, subselection=selector)
 

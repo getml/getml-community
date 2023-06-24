@@ -1,9 +1,9 @@
 # Copyright 2022 The SQLNet Company GmbH
-# 
-# This file is licensed under the Elastic License 2.0 (ELv2). 
-# Refer to the LICENSE.txt file in the root of the repository 
+#
+# This file is licensed under the Elastic License 2.0 (ELv2).
+# Refer to the LICENSE.txt file in the root of the repository
 # for details.
-# 
+#
 
 """
 This is an integration test based on
@@ -65,7 +65,7 @@ def test_save_load():
     predictions2 = pipe2.predict(star_schema.test)
     sql_code2 = pipe2.features.to_sql()
 
-    assert np.allclose(predictions1, predictions2), "Must be the same"
+    assert np.allclose(predictions1, predictions2), "Must be the same"  # type: ignore
     assert sql_code1.to_str() == sql_code2.to_str(), "Must be the same"
 
     getml.engine.delete_project("test_save_load")

@@ -12,6 +12,7 @@ Contains simple helper functions for the sqlite3 module
 
 import logging
 from inspect import cleandoc
+from typing import Optional
 
 import numpy as np
 
@@ -38,7 +39,6 @@ def _create_table(conn, table_name, schema, if_exists="append"):
 
 
 def _generate_schema(name, sql_types):
-
     cols = []
 
     max_width = max(
@@ -109,7 +109,7 @@ def _log(msg):
 # ----------------------------------------------------------------------------
 
 
-def _not_null(value):
+def _not_null(value: Optional[float]):
     return value is not None and not np.isnan(value) and not np.isinf(value)
 
 

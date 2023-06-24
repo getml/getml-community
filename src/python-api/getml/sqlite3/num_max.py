@@ -10,6 +10,9 @@
 NUM_MAX aggregation.
 """
 
+from typing import Optional
+
+
 import numpy as np
 
 from .helpers import _not_null
@@ -19,14 +22,14 @@ class _NumMax:
     def __init__(self):
         self.values = []
 
-    def step(self, value):
+    def step(self, value: Optional[float]):
         """
         Executed every time the function is called.
         """
-        if _not_null(value):
+        if _not_null(value) and value is not None:
             self.values.append(value)
 
-    def finalize(self):
+    def finalize(self) -> Optional[float]:
         """
         Executed after all values are inserted.
         """
@@ -34,4 +37,4 @@ class _NumMax:
             return None
         maximum = np.max(self.values)
         filtered = [0.0 for v in self.values if v == maximum]
-        return np.float(len(filtered))
+        return float(len(filtered))

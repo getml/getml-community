@@ -10,6 +10,8 @@
 Contains utility functions for siffing sqlite data types from pandas DataFrames.
 """
 
+from typing import Dict, List
+
 import pandas as pd  # type: ignore
 
 from getml.data.helpers import _is_numerical_type
@@ -19,7 +21,7 @@ from .helpers import _generate_schema, _is_int_type
 # ----------------------------------------------------------------------------
 
 
-def sniff_pandas(table_name, data_frame):
+def sniff_pandas(table_name: str, data_frame: str) -> str:
     """
     Sniffs a pandas data frame.
 
@@ -47,7 +49,7 @@ def sniff_pandas(table_name, data_frame):
     colnames = data_frame.columns
     coltypes = data_frame.dtypes
 
-    sql_types = dict(INTEGER=[], REAL=[], TEXT=[])
+    sql_types: Dict[str, List[str]] = {"INTEGER": [], "REAL": [], "TEXT": []}
 
     for cname, ctype in zip(colnames, coltypes):
         if _is_int_type(ctype):

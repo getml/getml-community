@@ -12,6 +12,7 @@ Displays a View.
 
 from copy import deepcopy
 from inspect import cleandoc
+from typing import Any, List, Optional, Union
 
 from ..templates import environment
 from .data_frame_formatter import (
@@ -19,13 +20,13 @@ from .data_frame_formatter import (
     _DataFrameFormatter,
     _structure_subroles,
 )
+from .formatter import _FormatColumn
 from .helpers import _get_view_content
 
 # -----------------------------------------------------------------------------
 
 
 class _ViewFormatter(_DataFrameFormatter):
-
     max_rows = _DataFrameFormatter.max_rows // 2
 
     template = environment.get_template("column.jinja2")
@@ -33,12 +34,11 @@ class _ViewFormatter(_DataFrameFormatter):
     # ------------------------------------------------------------
 
     def __init__(self, view, num_head=max_rows):
-
         self.colnames = view.colnames
 
         nrows_is_known = not isinstance(view.nrows(), str)
 
-        self.n_rows = int(view.nrows()) if nrows_is_known else None
+        self.n_rows: Optional[int] = int(view.nrows()) if nrows_is_known else None
 
         if self.n_rows:
             num_head = min(num_head, self.n_rows)
@@ -126,8 +126,8 @@ class _ViewFormatter(_DataFrameFormatter):
 class _ViewFormatColumn(_DataFrameFormatColumn):
     """"""
 
-    def _clip(self):
-        ellipses = "..." + getattr(self, "precision", 0) * " "
+    def _clip(self, placeholder="...") -> _FormatColumn:
+        ellipses: Union[str, List[Any]] = "..." + getattr(self, "precision", 0) * " "
         column_clipped = deepcopy(self)
         if not self.n_cells or self.n_cells > self.max_cells:
             ellipses = [self.header_template.format(ellipses)]

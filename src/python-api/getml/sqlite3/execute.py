@@ -12,21 +12,20 @@ Executes SQL scripts on SQLite3
 
 import os
 import sqlite3
+from typing import List
 
-import numpy as np
 
 from .helpers import _log
 
 # ----------------------------------------------------------------------------
 
 
-def _retrieve_scripts(folder, file_type):
+def _retrieve_scripts(folder: str, file_type: str) -> List[str]:
     if folder[-1] != "/":
         folder = folder + "/"
     scripts = os.listdir(folder)
     scripts = [script for script in scripts if script[-len(file_type) :] == file_type]
     scripts = [folder + script for script in scripts]
-    scripts = np.asarray(scripts)
     scripts.sort()
     return scripts
 
@@ -34,7 +33,7 @@ def _retrieve_scripts(folder, file_type):
 # ----------------------------------------------------------------------------
 
 
-def execute(conn, fname):
+def execute(conn: sqlite3.Connection, fname: str):
     """
     Executes an SQL script or several SQL scripts on SQLite3.
 
@@ -67,8 +66,9 @@ def execute(conn, fname):
 
     _log("Executing " + fname + "...")
 
-    queries = open(fname, "rt").read()
-    queries = queries.split(";")
+    with open(fname, "rt", encoding="utf-8") as sqlfile:
+        queries = sqlfile.read().split(";")
+
     for query in queries:
         conn.execute(query + ";")
 

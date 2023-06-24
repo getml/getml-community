@@ -10,6 +10,8 @@
 COUNT_ABOVE_MEAN aggregation.
 """
 
+from typing import List, Optional
+
 import numpy as np
 
 from .helpers import _not_null
@@ -17,16 +19,16 @@ from .helpers import _not_null
 
 class _CountAboveMean:
     def __init__(self):
-        self.values = []
+        self.values: List[float] = []
 
-    def step(self, value):
+    def step(self, value: Optional[float]):
         """
         Executed every time the function is called.
         """
-        if _not_null(value):
+        if _not_null(value) and value is not None:
             self.values.append(value)
 
-    def finalize(self):
+    def finalize(self) -> float:
         """
         Executed after all values are inserted.
         """
@@ -40,4 +42,4 @@ class _CountAboveMean:
 
         mean = np.mean(self.values)
         filtered = [0.0 for v in self.values if v > mean]
-        return np.float(len(filtered))
+        return float(len(filtered))

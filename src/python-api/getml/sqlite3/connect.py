@@ -67,7 +67,7 @@ from .var import _Var
 from .variation_coefficient import _VariationCoefficient
 
 
-def connect(database):
+def connect(database: str):
     """
     Generates a new sqlite3 connection.
 
@@ -100,47 +100,47 @@ def connect(database):
     conn.create_function("get_word", 2, _get_word)
     conn.create_function("num_words", 1, _num_words)
 
-    conn.create_aggregate("COUNT_ABOVE_MEAN", 1, _CountAboveMean)
-    conn.create_aggregate("COUNT_BELOW_MEAN", 1, _CountBelowMean)
-    conn.create_aggregate("COUNT_DISTINCT_OVER_COUNT", 1, _CountDistinctOverCount)
-    conn.create_aggregate("EWMA_1S", 2, _EWMA1S)
-    conn.create_aggregate("EWMA_1M", 2, _EWMA1M)
-    conn.create_aggregate("EWMA_1H", 2, _EWMA1H)
-    conn.create_aggregate("EWMA_1D", 2, _EWMA1D)
-    conn.create_aggregate("EWMA_7D", 2, _EWMA7D)
-    conn.create_aggregate("EWMA_30D", 2, _EWMA30D)
-    conn.create_aggregate("EWMA_90D", 2, _EWMA90D)
-    conn.create_aggregate("EWMA_365D", 2, _EWMA365D)
-    conn.create_aggregate("EWMA_TREND_1S", 2, _EWMATrend1S)
-    conn.create_aggregate("EWMA_TREND_1M", 2, _EWMATrend1M)
-    conn.create_aggregate("EWMA_TREND_1H", 2, _EWMATrend1H)
-    conn.create_aggregate("EWMA_TREND_1D", 2, _EWMATrend1D)
-    conn.create_aggregate("EWMA_TREND_7D", 2, _EWMATrend7D)
-    conn.create_aggregate("EWMA_TREND_30D", 2, _EWMATrend30D)
-    conn.create_aggregate("EWMA_TREND_90D", 2, _EWMATrend90D)
-    conn.create_aggregate("EWMA_TREND_365D", 2, _EWMATrend365D)
-    conn.create_aggregate("FIRST", 2, _First)
+    conn.create_aggregate("COUNT_ABOVE_MEAN", 1, _CountAboveMean)  # type: ignore
+    conn.create_aggregate("COUNT_BELOW_MEAN", 1, _CountBelowMean)  # type: ignore
+    conn.create_aggregate("COUNT_DISTINCT_OVER_COUNT", 1, _CountDistinctOverCount)  # type: ignore
+    conn.create_aggregate("EWMA_1S", 2, _EWMA1S)  # type: ignore
+    conn.create_aggregate("EWMA_1M", 2, _EWMA1M)  # type: ignore
+    conn.create_aggregate("EWMA_1H", 2, _EWMA1H)  # type: ignore
+    conn.create_aggregate("EWMA_1D", 2, _EWMA1D)  # type: ignore
+    conn.create_aggregate("EWMA_7D", 2, _EWMA7D)  # type: ignore
+    conn.create_aggregate("EWMA_30D", 2, _EWMA30D)  # type: ignore
+    conn.create_aggregate("EWMA_90D", 2, _EWMA90D)  # type: ignore
+    conn.create_aggregate("EWMA_365D", 2, _EWMA365D)  # type: ignore
+    conn.create_aggregate("EWMA_TREND_1S", 2, _EWMATrend1S)  # type: ignore
+    conn.create_aggregate("EWMA_TREND_1M", 2, _EWMATrend1M)  # type: ignore
+    conn.create_aggregate("EWMA_TREND_1H", 2, _EWMATrend1H)  # type: ignore
+    conn.create_aggregate("EWMA_TREND_1D", 2, _EWMATrend1D)  # type: ignore
+    conn.create_aggregate("EWMA_TREND_7D", 2, _EWMATrend7D)  # type: ignore
+    conn.create_aggregate("EWMA_TREND_30D", 2, _EWMATrend30D)  # type: ignore
+    conn.create_aggregate("EWMA_TREND_90D", 2, _EWMATrend90D)  # type: ignore
+    conn.create_aggregate("EWMA_TREND_365D", 2, _EWMATrend365D)  # type: ignore
+    conn.create_aggregate("FIRST", 2, _First)  # type: ignore
     conn.create_aggregate("KURTOSIS", 1, _Kurtosis)
-    conn.create_aggregate("LAST", 2, _Last)
+    conn.create_aggregate("LAST", 2, _Last)  # type: ignore
     conn.create_aggregate("MEDIAN", 1, _Median)
     conn.create_aggregate("MODE", 1, _Mode)
-    conn.create_aggregate("NUM_MAX", 1, _NumMax)
-    conn.create_aggregate("NUM_MIN", 1, _NumMin)
-    conn.create_aggregate("Q1", 1, _Q1)
-    conn.create_aggregate("Q5", 1, _Q5)
-    conn.create_aggregate("Q10", 1, _Q10)
-    conn.create_aggregate("Q25", 1, _Q25)
-    conn.create_aggregate("Q75", 1, _Q75)
-    conn.create_aggregate("Q90", 1, _Q90)
-    conn.create_aggregate("Q95", 1, _Q95)
-    conn.create_aggregate("Q99", 1, _Q99)
+    conn.create_aggregate("NUM_MAX", 1, _NumMax)  # type: ignore
+    conn.create_aggregate("NUM_MIN", 1, _NumMin)  # type: ignore
+    conn.create_aggregate("Q1", 1, _Q1)  # type: ignore
+    conn.create_aggregate("Q5", 1, _Q5)  # type: ignore
+    conn.create_aggregate("Q10", 1, _Q10)  # type: ignore
+    conn.create_aggregate("Q25", 1, _Q25)  # type: ignore
+    conn.create_aggregate("Q75", 1, _Q75)  # type: ignore
+    conn.create_aggregate("Q90", 1, _Q90)  # type: ignore
+    conn.create_aggregate("Q95", 1, _Q95)  # type: ignore
+    conn.create_aggregate("Q99", 1, _Q99)  # type: ignore
     conn.create_aggregate("SKEW", 1, _Skew)
     conn.create_aggregate("STDDEV", 1, _Stddev)
-    conn.create_aggregate("TIME_SINCE_FIRST_MAXIMUM", 2, _TimeSinceFirstMaximum)
-    conn.create_aggregate("TIME_SINCE_FIRST_MINIMUM", 2, _TimeSinceFirstMinimum)
-    conn.create_aggregate("TIME_SINCE_LAST_MAXIMUM", 2, _TimeSinceLastMaximum)
-    conn.create_aggregate("TIME_SINCE_LAST_MINIMUM", 2, _TimeSinceLastMinimum)
-    conn.create_aggregate("TREND", 2, _Trend)
+    conn.create_aggregate("TIME_SINCE_FIRST_MAXIMUM", 2, _TimeSinceFirstMaximum)  # type: ignore
+    conn.create_aggregate("TIME_SINCE_FIRST_MINIMUM", 2, _TimeSinceFirstMinimum)  # type: ignore
+    conn.create_aggregate("TIME_SINCE_LAST_MAXIMUM", 2, _TimeSinceLastMaximum)  # type: ignore
+    conn.create_aggregate("TIME_SINCE_LAST_MINIMUM", 2, _TimeSinceLastMinimum)  # type: ignore
+    conn.create_aggregate("TREND", 2, _Trend)  # type: ignore
     conn.create_aggregate("VAR", 1, _Var)
     conn.create_aggregate("VARIATION_COEFFICIENT", 1, _VariationCoefficient)
 
