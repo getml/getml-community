@@ -54,12 +54,14 @@ class Imputation : public Preprocessor {
  public:
   Imputation(const ImputationOp& _op,
              const std::vector<commands::Fingerprint>& _dependencies)
-      : add_dummies_(_op.get<"add_dummies_">()), dependencies_(_dependencies) {}
+      : add_dummies_(_op.get<"add_dummies_">()),
+        cols_(fct::Ref<ImputationMapType>::make()),
+        dependencies_(_dependencies) {}
 
   ~Imputation() = default;
 
  private:
-  Imputation() {}
+  Imputation() : cols_(fct::Ref<ImputationMapType>::make()) {}
 
  public:
   /// Identifies which features should be extracted from which time stamps.
@@ -149,32 +151,21 @@ class Imputation : public Preprocessor {
 
  private:
   /// Trivial accessor
-  ImputationMapType& cols() {
-    assert_true(cols_);
-    return *cols_;
-  }
+  ImputationMapType& cols() { return *cols_; }
 
   /// Trivial accessor
-  const ImputationMapType& cols() const {
-    assert_true(cols_);
-    return *cols_;
-  }
+  const ImputationMapType& cols() const { return *cols_; }
 
   /// Retrieves the column description from the map.
   std::vector<helpers::ColumnDescription> column_descriptions() const {
-    if (!cols_) {
-      throw std::runtime_error(
-          "The Imputation preprocessor has not been fitted.");
-    }
     return fct::collect::vector(*cols_ | VIEWS::keys);
   }
 
   /// Retrieve the column description of all columns in cols_.
-  std::vector<std::shared_ptr<helpers::ColumnDescription>> get_all_cols()
-      const {
-    std::vector<std::shared_ptr<helpers::ColumnDescription>> all_cols;
+  std::vector<fct::Ref<helpers::ColumnDescription>> get_all_cols() const {
+    std::vector<fct::Ref<helpers::ColumnDescription>> all_cols;
     for (const auto& [key, _] : cols()) {
-      all_cols.push_back(std::make_shared<helpers::ColumnDescription>(key));
+      all_cols.push_back(fct::Ref<helpers::ColumnDescription>::make(key));
     }
     return all_cols;
   }
@@ -195,19 +186,11 @@ class Imputation : public Preprocessor {
 
   /// Retrieves the means from the map.
   std::vector<Float> means() const {
-    if (!cols_) {
-      throw std::runtime_error(
-          "The Imputation preprocessor has not been fitted.");
-    }
     return fct::collect::vector(*cols_ | VIEWS::values | VIEWS::keys);
   }
 
   /// Retrieves the means from the map.
   std::vector<bool> needs_dummies() const {
-    if (!cols_) {
-      throw std::runtime_error(
-          "The Imputation preprocessor has not been fitted.");
-    }
     return fct::collect::vector(*cols_ | VIEWS::values | VIEWS::values);
   }
 
@@ -217,13 +200,12 @@ class Imputation : public Preprocessor {
 
   /// Map of all columns to which the imputation transformation applies.
   /// Maps to the mean value and whether we need to build a dummy column.
-  std::shared_ptr<ImputationMapType> cols_;
+  fct::Ref<ImputationMapType> cols_;
 
   /// The dependencies inserted into the the preprocessor.
   std::vector<commands::Fingerprint> dependencies_;
 };
 
-// ----------------------------------------------------
 }  // namespace preprocessors
 }  // namespace engine
 

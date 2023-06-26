@@ -78,12 +78,11 @@ TextFieldSplitter::fit_transform(const Params& _params) {
 
 // ----------------------------------------------------
 
-std::vector<std::shared_ptr<helpers::ColumnDescription>>
-TextFieldSplitter::fit_df(const containers::DataFrame& _df,
-                          const MarkerType _marker) const {
+std::vector<fct::Ref<helpers::ColumnDescription>> TextFieldSplitter::fit_df(
+    const containers::DataFrame& _df, const MarkerType _marker) const {
   const auto to_column_description = [&_df, &_marker](const size_t _i) {
-    return std::make_shared<helpers::ColumnDescription>(_marker, _df.name(),
-                                                        _df.text(_i).name());
+    return fct::Ref<helpers::ColumnDescription>::make(_marker, _df.name(),
+                                                      _df.text(_i).name());
   };
 
   const auto iota = fct::iota<size_t>(0, _df.num_text());
@@ -158,10 +157,8 @@ std::vector<std::string> TextFieldSplitter::to_sql(
   assert_true(_sql_dialect_generator);
 
   const auto split =
-      [_sql_dialect_generator](
-          const std::shared_ptr<helpers::ColumnDescription>& _desc)
-      -> std::string {
-    return _sql_dialect_generator->split_text_fields(_desc);
+      [_sql_dialect_generator](const auto& _desc) -> std::string {
+    return _sql_dialect_generator->split_text_fields(_desc.ptr());
   };
 
   return fct::collect::vector(cols_ | VIEWS::transform(split));
@@ -199,36 +196,25 @@ TextFieldSplitter::transform(const Params& _params) const {
 void TextFieldSplitter::transform_df(
     const MarkerType _marker, const containers::DataFrame& _df,
     std::vector<containers::DataFrame>* _peripheral_dfs) const {
-  const auto matching_description =
-      [&_marker,
-       &_df](const std::shared_ptr<helpers::ColumnDescription>& _desc) -> bool {
-    assert_true(_desc);
+  const auto matching_description = [&_marker,
+                                     &_df](const auto& _desc) -> bool {
     return _desc->marker() == _marker && _desc->table() == _df.name();
   };
 
-  // ----------------------------------------------------
-
   const auto get_col =
-      [&_df](const std::shared_ptr<helpers::ColumnDescription>& _desc)
-      -> containers::Column<strings::String> {
-    assert_true(_desc);
+      [&_df](const auto& _desc) -> containers::Column<strings::String> {
     return _df.text(_desc->name());
   };
-
-  // ----------------------------------------------------
 
   const auto pool = _df.pool()
                         ? std::make_shared<memmap::Pool>(_df.pool()->temp_dir())
                         : std::shared_ptr<memmap::Pool>();
 
   const auto make_df = [this, pool,
-                        &_df](const containers::Column<strings::String>& _col)
-      -> containers::DataFrame {
+                        &_df](const auto& _col) -> containers::DataFrame {
     const auto df = make_new_df(pool, _df.name(), _col);
     return df;
   };
-
-  // ----------------------------------------------------
 
   auto data_frames = cols_ | VIEWS::filter(matching_description) |
                      VIEWS::transform(get_col) | VIEWS::transform(make_df);
@@ -236,10 +222,7 @@ void TextFieldSplitter::transform_df(
   for (const auto df : data_frames) {
     _peripheral_dfs->push_back(df);
   }
-
-  // ----------------------------------------------------
 }
 
-// ----------------------------------------------------
 }  // namespace preprocessors
 }  // namespace engine

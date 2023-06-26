@@ -37,24 +37,19 @@ class Seasonal : public Preprocessor {
   using SeasonalOp = typename commands::Preprocessor::SeasonalOp;
 
   using f_hour =
-      fct::Field<"hour_",
-                 std::vector<std::shared_ptr<helpers::ColumnDescription>>>;
+      fct::Field<"hour_", std::vector<fct::Ref<helpers::ColumnDescription>>>;
 
   using f_minute =
-      fct::Field<"minute_",
-                 std::vector<std::shared_ptr<helpers::ColumnDescription>>>;
+      fct::Field<"minute_", std::vector<fct::Ref<helpers::ColumnDescription>>>;
 
   using f_month =
-      fct::Field<"month_",
-                 std::vector<std::shared_ptr<helpers::ColumnDescription>>>;
+      fct::Field<"month_", std::vector<fct::Ref<helpers::ColumnDescription>>>;
 
   using f_weekday =
-      fct::Field<"weekday_",
-                 std::vector<std::shared_ptr<helpers::ColumnDescription>>>;
+      fct::Field<"weekday_", std::vector<fct::Ref<helpers::ColumnDescription>>>;
 
   using f_year =
-      fct::Field<"year_",
-                 std::vector<std::shared_ptr<helpers::ColumnDescription>>>;
+      fct::Field<"year_", std::vector<fct::Ref<helpers::ColumnDescription>>>;
 
   using NamedTupleType =
       fct::NamedTuple<f_hour, f_minute, f_month, f_weekday, f_year>;
@@ -237,25 +232,24 @@ class Seasonal : public Preprocessor {
   std::vector<commands::Fingerprint> dependencies_;
 
   /// List of all columns to which the hour transformation applies.
-  std::vector<std::shared_ptr<helpers::ColumnDescription>> hour_;
+  std::vector<fct::Ref<helpers::ColumnDescription>> hour_;
 
   /// List of all columns to which the minute transformation applies.
-  std::vector<std::shared_ptr<helpers::ColumnDescription>> minute_;
+  std::vector<fct::Ref<helpers::ColumnDescription>> minute_;
 
   /// List of all columns to which the month transformation applies.
-  std::vector<std::shared_ptr<helpers::ColumnDescription>> month_;
+  std::vector<fct::Ref<helpers::ColumnDescription>> month_;
 
   /// The underlying hyperparameters.
   SeasonalOp op_;
 
   /// List of all columns to which the weekday transformation applies.
-  std::vector<std::shared_ptr<helpers::ColumnDescription>> weekday_;
+  std::vector<fct::Ref<helpers::ColumnDescription>> weekday_;
 
   /// List of all columns to which the year transformation applies.
-  std::vector<std::shared_ptr<helpers::ColumnDescription>> year_;
+  std::vector<fct::Ref<helpers::ColumnDescription>> year_;
 };
 
-// ----------------------------------------------------
 }  // namespace preprocessors
 }  // namespace engine
 

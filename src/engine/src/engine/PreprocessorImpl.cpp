@@ -12,14 +12,12 @@ namespace preprocessors {
 
 std::vector<std::string> PreprocessorImpl::retrieve_names(
     const MarkerType _marker, const size_t _table,
-    const std::vector<std::shared_ptr<helpers::ColumnDescription>>& _desc) {
+    const std::vector<fct::Ref<helpers::ColumnDescription>>& _desc) {
   const auto table = std::to_string(_table);
 
   auto names = std::vector<std::string>();
 
   for (const auto& ptr : _desc) {
-    assert_true(ptr);
-
     if (ptr->marker() == _marker && ptr->table() == table) {
       names.push_back(ptr->name());
     }
@@ -28,6 +26,5 @@ std::vector<std::string> PreprocessorImpl::retrieve_names(
   return names;
 }
 
-// ----------------------------------------------------
 }  // namespace preprocessors
 }  // namespace engine

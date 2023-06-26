@@ -37,8 +37,7 @@ class TextFieldSplitter : public Preprocessor {
       typename commands::Preprocessor::TextFieldSplitterOp;
 
   using f_cols =
-      fct::Field<"cols_",
-                 std::vector<std::shared_ptr<helpers::ColumnDescription>>>;
+      fct::Field<"cols_", std::vector<fct::Ref<helpers::ColumnDescription>>>;
 
   using NamedTupleType = fct::NamedTuple<f_cols>;
 
@@ -104,7 +103,7 @@ class TextFieldSplitter : public Preprocessor {
   containers::DataFrame add_rowid(const containers::DataFrame& _df) const;
 
   /// Fits and transforms an individual data frame.
-  std::vector<std::shared_ptr<helpers::ColumnDescription>> fit_df(
+  std::vector<fct::Ref<helpers::ColumnDescription>> fit_df(
       const containers::DataFrame& _df, const MarkerType _marker) const;
 
   /// Generates a new data frame.
@@ -128,7 +127,7 @@ class TextFieldSplitter : public Preprocessor {
  private:
   /// List of all columns to which the text field splitter transformation
   /// applies.
-  std::vector<std::shared_ptr<helpers::ColumnDescription>> cols_;
+  std::vector<fct::Ref<helpers::ColumnDescription>> cols_;
 
   /// The dependencies inserted into the the preprocessor.
   std::vector<commands::Fingerprint> dependencies_;
