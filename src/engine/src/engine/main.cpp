@@ -52,7 +52,10 @@ int main(int argc, char* argv[]) {
         "you have provided in your config.json.");
   }
 
-  engine::handlers::FileHandler::delete_temp_dir(options.temp_dir());
+  try {
+    engine::handlers::FileHandler::delete_temp_dir(options.temp_dir());
+  } catch (std::exception& e) {
+  }
 
   const auto monitor = fct::Ref<const communication::Monitor>::make(options);
 
