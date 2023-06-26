@@ -37,8 +37,7 @@ class EMailDomain : public Preprocessor {
   using EMailDomainOp = typename commands::Preprocessor::EMailDomainOp;
 
   using f_cols =
-      fct::Field<"cols_",
-                 std::vector<std::shared_ptr<helpers::ColumnDescription>>>;
+      fct::Field<"cols_", std::vector<fct::Ref<helpers::ColumnDescription>>>;
 
   using NamedTupleType = fct::NamedTuple<f_cols>;
 
@@ -137,13 +136,12 @@ class EMailDomain : public Preprocessor {
 
  private:
   /// List of all columns to which the email domain transformation applies.
-  std::vector<std::shared_ptr<helpers::ColumnDescription>> cols_;
+  std::vector<fct::Ref<helpers::ColumnDescription>> cols_;
 
   /// The dependencies inserted into the the preprocessor.
   std::vector<commands::Fingerprint> dependencies_;
 };
 
-// ----------------------------------------------------
 }  // namespace preprocessors
 }  // namespace engine
 

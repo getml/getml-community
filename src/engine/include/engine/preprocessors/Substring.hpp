@@ -38,8 +38,7 @@ class Substring : public Preprocessor {
   using SubstringOp = typename commands::Preprocessor::SubstringOp;
 
   using f_cols =
-      fct::Field<"cols_",
-                 std::vector<std::shared_ptr<helpers::ColumnDescription>>>;
+      fct::Field<"cols_", std::vector<fct::Ref<helpers::ColumnDescription>>>;
 
   using NamedTupleType = fct::NamedTuple<f_cols>;
 
@@ -209,7 +208,7 @@ class Substring : public Preprocessor {
   size_t begin_;
 
   /// List of all columns to which the email domain transformation applies.
-  std::vector<std::shared_ptr<helpers::ColumnDescription>> cols_;
+  std::vector<fct::Ref<helpers::ColumnDescription>> cols_;
 
   /// The dependencies inserted into the the preprocessor.
   std::vector<commands::Fingerprint> dependencies_;
@@ -221,7 +220,6 @@ class Substring : public Preprocessor {
   std::string unit_;
 };
 
-// ----------------------------------------------------
 }  // namespace preprocessors
 }  // namespace engine
 

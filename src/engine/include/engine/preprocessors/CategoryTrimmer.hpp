@@ -168,7 +168,6 @@ class CategoryTrimmer : public Preprocessor {
   std::vector<CategoryPair> population_sets_;
 };
 
-// ----------------------------------------------------
 }  // namespace preprocessors
 }  // namespace engine
 
