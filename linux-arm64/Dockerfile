@@ -21,7 +21,7 @@ RUN yum install -y bzip2-devel libffi-devel
 
 # Required for profiling, but not an 
 # actual dependency.
-RUN yum install -y https://extras.getpagespeed.com/release-latest.rpm
+RUN yum install -y gperftools
 
 WORKDIR /home/getml
 

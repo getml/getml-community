@@ -69,6 +69,7 @@
 
  if((${PROFILING_MODE} STREQUAL "ON"))
  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -DGETML_PROFILING")
+ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -g")
  message("WARNING: We are compiling in PROFILING_MODE. Do not release this!")
  message("")
  endif()
@@ -80,7 +81,11 @@
  message("")
  endif()
 
- set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s -O2 -fopenmp '-Wl,-rpath,$ORIGIN/../lib'")
+ if(NOT (${PROFILING_MODE} STREQUAL "ON"))
+ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s")
+ endif()
+     
+ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fopenmp '-Wl,-rpath,$ORIGIN/../lib'")
 
  add_definitions(-DGETML_VERSION="${GETML_VERSION}")
 

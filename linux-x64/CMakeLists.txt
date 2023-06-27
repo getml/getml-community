@@ -82,7 +82,11 @@ message("WARNING: We are compiling in DEBUG_MODE. Do not release this!")
 message("")
 endif()
 
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s -O2 -fopenmp '-Wl,-rpath,$ORIGIN/../lib'")
+if(NOT (${PROFILING_MODE} STREQUAL "ON"))
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s")
+endif()
+
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -O2 -fopenmp '-Wl,-rpath,$ORIGIN/../lib'")
 
 add_definitions(-DGETML_VERSION="${GETML_VERSION}")
 
