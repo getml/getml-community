@@ -10,7 +10,7 @@
 #include <type_traits>
 
 #include "fastprop/Hyperparameters.hpp"
-#include "fastprop/algorithm/algorithm.hpp"
+#include "fastprop/algorithm/FastProp.hpp"
 #include "fct/visit.hpp"
 #include "featurelearners/FeatureLearner.hpp"
 
