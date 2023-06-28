@@ -69,3 +69,9 @@ def test_interstate94():
     assert scores.rsquared > 0.981, "Expected an r-squared greater 0.981, got " + str(  # type: ignore
         scores.rsquared
     )
+
+    getml.project.suspend()
+
+
+if __name__ == "__main__":
+    test_interstate94()

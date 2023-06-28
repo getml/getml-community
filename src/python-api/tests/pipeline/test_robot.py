@@ -66,6 +66,8 @@ def test_robot():
         scores.rsquared
     )
 
+    getml.project.suspend()
+
 
 if __name__ == "__main__":
     test_robot()
