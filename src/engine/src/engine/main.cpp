@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
   // located in $HOME/.getml/getml-.../bin
   //
   // To analyze the profile, run the following:
-  // google-pprof --pdf getml-... getml_profile.log getml_profile.pdf
+  // google-pprof --pdf getml-... getml_profile.log >> getml_profile.pdf
   ProfilerStart("getml_profile.log");
 #endif
 
