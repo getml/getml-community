@@ -11,6 +11,7 @@
 
 #include "engine/utils/Aggregations.hpp"
 #include "fct/fct.hpp"
+#include "helpers/Column.hpp"
 #include "helpers/Macros.hpp"
 #include "transpilation/HumanReadableSQLGenerator.hpp"
 #include "transpilation/transpilation.hpp"
@@ -86,9 +87,9 @@ bool find_feature_learner(
     const std::string& _model);
 
 /// Finds the time stamps, if necessary.
-std::tuple<std::optional<containers::Column<Float>>,
-           std::optional<containers::Column<Float>>,
-           std::optional<containers::Column<Float>>>
+std::tuple<std::optional<helpers::Column<Float>>,
+           std::optional<helpers::Column<Float>>,
+           std::optional<helpers::Column<Float>>>
 find_time_stamps(const std::string& _time_stamp_used,
                  const std::string& _other_time_stamp_used,
                  const std::string& _upper_time_stamp_used,
@@ -248,6 +249,16 @@ std::string modify_colname(const std::string& _colname) {
       helpers::Macros::modify_colnames({_colname}, make_staging_table_colname);
   assert_true(colnames.size() == 1);
   return colnames.at(0);
+}
+
+/// Transforms the column into a helpers::Column.
+template <class T>
+std::optional<helpers::Column<T>> to_helper_col(
+    const std::optional<containers::Column<T>>& _col) {
+  if (!_col) {
+    return std::nullopt;
+  }
+  return helpers::Column<T>(_col->const_data_ptr(), _col->name(), {}, "");
 }
 
 // ----------------------------------------------------------------------------
@@ -617,8 +628,8 @@ std::tuple<bool, size_t, Float, size_t, std::vector<Float>> check_matches(
       const auto ix2 = *it;
 
       const bool in_range =
-          is_in_range(ts1 ? ts1->at(ix1) : 0.0, ts1 ? ts2->at(ix2) : 0.0,
-                      upper ? upper->at(ix2) : NAN);
+          is_in_range(ts1 ? (*ts1)[ix1] : 0.0, ts2 ? (*ts2)[ix2] : 0.0,
+                      upper ? (*upper)[ix2] : NAN);
 
       if (!in_range) {
         continue;
@@ -715,9 +726,9 @@ bool find_feature_learner(
 
 // ----------------------------------------------------------------------------
 
-std::tuple<std::optional<containers::Column<Float>>,
-           std::optional<containers::Column<Float>>,
-           std::optional<containers::Column<Float>>>
+std::tuple<std::optional<helpers::Column<Float>>,
+           std::optional<helpers::Column<Float>>,
+           std::optional<helpers::Column<Float>>>
 find_time_stamps(const std::string& _time_stamp_used,
                  const std::string& _other_time_stamp_used,
                  const std::string& _upper_time_stamp_used,
@@ -753,7 +764,8 @@ find_time_stamps(const std::string& _time_stamp_used,
     upper = _peripheral_df.time_stamp(_upper_time_stamp_used);
   }
 
-  return std::make_tuple(ts1, ts2, upper);
+  return std::make_tuple(to_helper_col(ts1), to_helper_col(ts2),
+                         to_helper_col(upper));
 }
 
 // ----------------------------------------------------------------------------
