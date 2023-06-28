@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "fct/Result.hpp"
+#include "fct/always_false.hpp"
 
 namespace json {
 
@@ -89,12 +90,14 @@ struct Reader {
       if (!yyjson_is_num(_var->val_)) {
         return fct::Error("Could not cast to double.");
       }
-      return static_cast<T>(yyjson_get_real(_var->val_));
-    } else {
+      return static_cast<T>(yyjson_get_num(_var->val_));
+    } else if constexpr (std::is_integral<std::decay_t<T>>()) {
       if (!yyjson_is_int(_var->val_)) {
         return fct::Error("Could not cast to int.");
       }
       return static_cast<T>(yyjson_get_int(_var->val_));
+    } else {
+      static_assert(fct::always_false_v<T>, "Unsupported type.");
     }
   }
 
