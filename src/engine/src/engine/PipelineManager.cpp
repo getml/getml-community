@@ -503,6 +503,11 @@ void PipelineManager::refresh(const typename Command::RefreshOp& _cmd,
 
   const auto [pipeline, was_loaded] = load_if_necessary(name);
 
+  if (!pipeline.fitted()) {
+    throw std::runtime_error("Pipeline '" + name +
+                             "' cannot be refreshed. It has not been fitted.");
+  }
+
   const auto obj = refresh_pipeline(pipeline);
 
   communication::Sender::send_string(json::to_json(obj), _socket);
@@ -528,6 +533,9 @@ void PipelineManager::refresh_all(const typename Command::RefreshAllOp& _cmd,
 
   for (const auto name : names) {
     const auto [pipe, was_loaded] = load_if_necessary(name);
+    if (!pipe.fitted()) {
+      continue;
+    }
     vec.push_back(refresh_pipeline(pipe));
     if (was_loaded) {
       updated_pipelines.insert(std::make_pair(name, pipe));
