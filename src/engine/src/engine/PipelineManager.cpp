@@ -20,7 +20,9 @@
 #include "engine/pipelines/load_fitted.hpp"
 #include "engine/pipelines/pipelines.hpp"
 #include "engine/pipelines/to_sql.hpp"
+#include "fct/Field.hpp"
 #include "fct/always_false.hpp"
+#include "fct/make_named_tuple.hpp"
 #include "transpilation/TranspilationParams.hpp"
 #include "transpilation/transpilation.hpp"
 
@@ -534,7 +536,9 @@ void PipelineManager::refresh_all(const typename Command::RefreshAllOp& _cmd,
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(json::to_json(vec), _socket);
+  const auto obj = fct::make_named_tuple(fct::make_field<"pipelines">(vec));
+
+  communication::Sender::send_string(json::to_json(obj), _socket);
 
   read_lock.unlock();
 
