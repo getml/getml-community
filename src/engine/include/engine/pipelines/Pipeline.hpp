@@ -32,7 +32,6 @@
 #include "helpers/Placeholder.hpp"
 #include "helpers/StringIterator.hpp"
 #include "metrics/Scores.hpp"
-#include "transpilation/transpilation.hpp"
 
 namespace engine {
 namespace pipelines {

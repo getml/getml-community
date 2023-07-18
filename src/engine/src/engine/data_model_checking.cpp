@@ -14,7 +14,7 @@
 #include "helpers/Column.hpp"
 #include "helpers/Macros.hpp"
 #include "transpilation/HumanReadableSQLGenerator.hpp"
-#include "transpilation/transpilation.hpp"
+#include "transpilation/SQLGenerator.hpp"
 
 namespace engine {
 namespace preprocessors {

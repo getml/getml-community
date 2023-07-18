@@ -55,10 +55,14 @@ void FastPropContainer::to_sql(
 
       assert_true(_sql_dialect_generator);
 
-      _sql->push_back(_sql_dialect_generator->make_feature_table(
-                          main_table, autofeatures, {}, {}, {},
-                          "_" + _prefix + "PROPOSITIONALIZATION") +
-                      "\n");
+      using namespace transpilation;
+
+      const auto feature_table = _sql_dialect_generator->make_feature_table(
+          f_main_table(main_table) * f_autofeatures(autofeatures) *
+          f_numerical({}) * f_categorical({}) * f_targets({}) *
+          f_prefix("_" + _prefix + "PROPOSITIONALIZATION"));
+
+      _sql->push_back(feature_table + "\n");
     }
   }
 

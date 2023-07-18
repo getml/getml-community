@@ -14,7 +14,7 @@
 #include "fastprop/algorithm/algorithm.hpp"
 #include "fct/Field.hpp"
 #include "fct/NamedTuple.hpp"
-#include "transpilation/transpilation.hpp"
+#include "transpilation/SQLDialectGenerator.hpp"
 
 namespace fastprop {
 namespace subfeatures {
