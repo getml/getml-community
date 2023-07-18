@@ -446,36 +446,17 @@ std::string HumanReadableSQLGenerator::make_select(
       manual, make_staging_table_colname_lambda);
 
   std::string sql =
-      manual.size() > 0 ? "SELECT " : "SELECT t1.rowid AS \"rownum\",\n";
+      manual.size() > 0 ? "SELECT t1.*,\n" : "SELECT t1.rowid AS \"rownum\",\n";
 
   for (size_t i = 0; i < _params.get<f_autofeatures>().size(); ++i) {
-    const std::string begin = (i == 0 && manual.size() > 0 ? "" : "       ");
+    const std::string begin = "       ";
 
-    const bool no_comma =
-        (i == _params.get<f_autofeatures>().size() - 1 && manual.size() == 0);
+    const bool no_comma = (i == _params.get<f_autofeatures>().size() - 1);
 
     const auto end = (no_comma ? "\n" : ",\n");
 
     sql += begin + "CAST( 0.0 AS REAL ) AS \"" +
            _params.get<f_autofeatures>().at(i) + "\"" + end;
-  }
-
-  for (size_t i = 0; i < manual.size(); ++i) {
-    const std::string begin = "       ";
-
-    const auto edited_colname = "t1.\"" + modified_colnames.at(i) + "\"";
-
-    const std::string data_type =
-        (i < _params.get<f_targets>().size() + _params.get<f_numerical>().size()
-             ? "REAL"
-             : "TEXT");
-
-    const bool no_comma = (i == manual.size() - 1);
-
-    const auto end = no_comma ? "\"\n" : "\",\n";
-
-    sql += begin + "CAST( " + edited_colname + " AS " + data_type + " ) AS \"" +
-           modified_colnames.at(i) + end;
   }
 
   return sql;
