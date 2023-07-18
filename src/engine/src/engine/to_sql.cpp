@@ -261,9 +261,7 @@ std::vector<std::string> preprocessors_to_sql(
     const ToSQLParams& _params,
     const fct::Ref<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator) {
-  const auto to_sql = [&_params, _sql_dialect_generator](
-                          const auto& _p) -> std::vector<std::string> {
-    // TODO: This needs to accept fct::Ref
+  const auto to_sql = [&](const auto& _p) -> std::vector<std::string> {
     return _p->to_sql(_params.get<"categories_">(),
                       _sql_dialect_generator.ptr());
   };
@@ -335,11 +333,16 @@ std::string to_sql(const ToSQLParams& _params) {
                                 ? _params.get<"fitted_">().targets()
                                 : std::vector<std::string>();
 
+  using namespace transpilation;
+
   return sql_dialect_generator->make_sql(
-      _params.get<"fitted_">().modified_population_schema_->name(),
-      feature_names, sql, target_names,
-      _params.get<"fitted_">().predictors_.impl_->categorical_colnames(),
-      _params.get<"fitted_">().predictors_.impl_->numerical_colnames());
+      f_main_table(
+          _params.get<"fitted_">().modified_population_schema_->name()) *
+      f_autofeatures(feature_names) * f_sql(sql) * f_targets(target_names) *
+      f_categorical(
+          _params.get<"fitted_">().predictors_.impl_->categorical_colnames()) *
+      f_numerical(
+          _params.get<"fitted_">().predictors_.impl_->numerical_colnames()));
 }
 
 // ----------------------------------------------------------------------------

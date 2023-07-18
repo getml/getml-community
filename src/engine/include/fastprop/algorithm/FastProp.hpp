@@ -30,7 +30,7 @@
 #include "helpers/VocabularyContainer.hpp"
 #include "helpers/VocabularyTree.hpp"
 #include "multithreading/multithreading.hpp"
-#include "transpilation/transpilation.hpp"
+#include "transpilation/SQLDialectParser.hpp"
 
 namespace fastprop {
 namespace algorithm {

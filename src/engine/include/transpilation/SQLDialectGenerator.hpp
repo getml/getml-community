@@ -19,6 +19,8 @@
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/Schema.hpp"
 #include "helpers/enums/Aggregation.hpp"
+#include "transpilation/FeatureTableParams.hpp"
+#include "transpilation/SQLParams.hpp"
 #include "transpilation/TrimmingGenerator.hpp"
 
 namespace transpilation {
@@ -59,12 +61,7 @@ class SQLDialectGenerator {
 
   /// Generates the table that contains all the features.
   virtual std::string make_feature_table(
-      const std::string& _main_table,
-      const std::vector<std::string>& _autofeatures,
-      const std::vector<std::string>& _targets,
-      const std::vector<std::string>& _categorical,
-      const std::vector<std::string>& _numerical,
-      const std::string& _prefix) const = 0;
+      const FeatureTableParams& _params) const = 0;
 
   /// Generates the joins to be included in every single .
   virtual std::string make_joins(
@@ -78,23 +75,12 @@ class SQLDialectGenerator {
       const std::vector<std::string>& _sql) const = 0;
 
   /// Generates the select statement for the feature table.
-  virtual std::string make_select(
-      const std::string& _main_table,
-      const std::vector<std::string>& _autofeatures,
-      const std::vector<std::string>& _targets,
-      const std::vector<std::string>& _categorical,
-      const std::vector<std::string>& _numerical) const = 0;
+  virtual std::string make_select(const FeatureTableParams& _params) const = 0;
 
-  /// Transpiles the features in SQLite3 code. This
+  /// Transpiles the features in SQL code. This
   /// is supposed to replicate the .transform(...) method
   /// of a pipeline.
-  virtual std::string make_sql(
-      const std::string& _main_table,
-      const std::vector<std::string>& _autofeatures,
-      const std::vector<std::string>& _sql,
-      const std::vector<std::string>& _targets,
-      const std::vector<std::string>& _categorical,
-      const std::vector<std::string>& _numerical) const = 0;
+  virtual std::string make_sql(const SQLParams& _params) const = 0;
 
   /// Generates the staging tables.
   virtual std::vector<std::string> make_staging_tables(
