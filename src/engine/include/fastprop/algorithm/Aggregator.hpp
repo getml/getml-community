@@ -287,12 +287,6 @@ class Aggregator {
       case enums::Aggregation::value_of<"COUNT">():
         return helpers::Aggregations::count(_begin, _end);
 
-      case enums::Aggregation::value_of<"COUNT ABOVE MEAN">():
-        return helpers::Aggregations::count_above_mean(_begin, _end);
-
-      case enums::Aggregation::value_of<"COUNT BELOW MEAN">():
-        return helpers::Aggregations::count_below_mean(_begin, _end);
-
       case enums::Aggregation::value_of<"COUNT DISTINCT">():
         return helpers::Aggregations::count_distinct(_begin, _end);
 
