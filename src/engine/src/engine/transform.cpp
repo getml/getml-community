@@ -432,7 +432,7 @@ stage_data_frames(const Pipeline& _pipeline,
   const auto socket_logger =
       std::make_shared<communication::SocketLogger>(_logger, true, _socket);
 
-  socket_logger->log("staging...");
+  socket_logger->log("Staging...");
 
   const auto data_model = _pipeline.obj().get<"data_model_">();
 
