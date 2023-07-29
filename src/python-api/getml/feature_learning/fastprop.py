@@ -18,8 +18,6 @@ from .aggregations import fastprop as fastprop_aggregations
 from .feature_learner import _FeatureLearner
 from .validation import _validate_dfs_model_parameters
 
-# --------------------------------------------------------------------
-
 
 @dataclass(repr=False)
 class FastProp(_FeatureLearner):
@@ -113,11 +111,7 @@ class FastProp(_FeatureLearner):
 
     """
 
-    # ----------------------------------------------------------------
-
     agg_sets: ClassVar[_Aggregations] = fastprop_aggregations
-
-    # ----------------------------------------------------------------
 
     aggregation: List[str] = field(
         default_factory=lambda: fastprop_aggregations.Default
@@ -132,8 +126,6 @@ class FastProp(_FeatureLearner):
     sampling_factor: float = 1.0
     silent: bool = True
     vocab_size: int = 500
-
-    # ----------------------------------------------------------------
 
     def validate(self, params: Optional[Dict[str, Any]] = None) -> None:
         """
@@ -151,7 +143,6 @@ class FastProp(_FeatureLearner):
                 instance dictionary will be validated.
 
         """
-        # ------------------------------------------------------------
 
         if params is None:
             params = self.__dict__
@@ -161,17 +152,10 @@ class FastProp(_FeatureLearner):
         if not isinstance(params, dict):
             raise ValueError("params must be None or a dictionary!")
 
-        # ------------------------------------------------------------
-
         for kkey in params:
             if kkey not in type(self)._supported_params:
                 raise KeyError(
                     f"Instance variable '{kkey}' is not supported in {self.type}."
                 )
 
-        # ------------------------------------------------------------
-
         _validate_dfs_model_parameters(**params)
-
-
-# --------------------------------------------------------------------

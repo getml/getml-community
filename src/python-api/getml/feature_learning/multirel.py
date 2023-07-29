@@ -208,7 +208,7 @@ class Multirel(_FeatureLearner):
     num_features: int = 100
     num_subfeatures: int = 5
     num_threads: int = 0
-    propositionalization: FastProp = FastProp()
+    propositionalization: FastProp = field(default_factory=FastProp)
     regularization: float = 0.01
     round_robin: bool = False
     sampling_factor: float = 1.0

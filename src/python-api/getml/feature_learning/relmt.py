@@ -10,7 +10,7 @@
 Feature learning based on Gradient Boosting.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Dict, Optional, Union
 
 from .fastprop import FastProp
@@ -161,7 +161,7 @@ class RelMT(_FeatureLearner):
     num_features: int = 30
     num_subfeatures: int = 30
     num_threads: int = 0
-    propositionalization: FastProp = FastProp()
+    propositionalization: FastProp = field(default_factory=FastProp)
     reg_lambda: float = 0.0
     sampling_factor: float = 1.0
     seed: int = 5543

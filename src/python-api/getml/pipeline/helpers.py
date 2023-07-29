@@ -21,18 +21,22 @@ import numpy as np
 
 from getml.data import DataFrame, Placeholder, Roles, View
 from getml.data.helpers import _is_typed_list, _remove_trailing_underscores
-from getml.feature_learning.fastprop import FastProp
+from getml.feature_learning import (
+    Fastboost,
+    FastProp,
+    Multirel,
+    Relboost,
+    RelMT,
+)
 from getml.feature_learning.loss_functions import _all_loss_functions
-from getml.feature_learning.multirel import Multirel
-from getml.feature_learning.relboost import Relboost
-from getml.feature_learning.relmt import RelMT
 from getml.predictors import (
     LinearRegression,
     LogisticRegression,
+    ScaleGBMClassifier,
+    ScaleGBMRegressor,
     XGBoostClassifier,
     XGBoostRegressor,
 )
-
 from getml.preprocessors import (
     CategoryTrimmer,
     EmailDomain,
@@ -46,8 +50,6 @@ from getml.preprocessors.preprocessor import _Preprocessor
 
 from .metadata import AllMetadata, Metadata
 
-# --------------------------------------------------------------------
-
 
 POPULATION = "[POPULATION]"
 """
@@ -60,8 +62,6 @@ PERIPHERAL = "[PERIPHERAL]"
 Peripheral marker - the names of the population and peripheral
 tables may overlap, so markers are necessary.
 """
-
-# --------------------------------------------------------------------
 
 
 def _attach_empty(my_list: List, max_length: int, empty_val: Any) -> List:
@@ -118,7 +118,6 @@ def _drop(
     table: Optional[str],
     marker: str,
 ) -> View:
-
     assert isinstance(base, (DataFrame, View)), "Wrong type"
     assert isinstance(table, str) or table is None, "Wrong type"
     assert marker in (POPULATION, PERIPHERAL), "Unknown marker"
@@ -267,7 +266,9 @@ def _make_id() -> str:
 # --------------------------------------------------------------------
 
 
-def _parse_fe(dict_: Dict[str, Any]) -> Union[FastProp, Multirel, Relboost, RelMT]:
+def _parse_fe(
+    dict_: Dict[str, Any]
+) -> Union[FastProp, Fastboost, Multirel, Relboost, RelMT]:
     kwargs = _remove_trailing_underscores(dict_)
 
     fe_type = kwargs["type"]
@@ -276,6 +277,9 @@ def _parse_fe(dict_: Dict[str, Any]) -> Union[FastProp, Multirel, Relboost, RelM
 
     if "propositionalization" in kwargs:
         kwargs["propositionalization"] = _parse_fe(kwargs["propositionalization"])
+
+    if fe_type == "Fastboost":
+        return Fastboost(**kwargs)
 
     if fe_type == "FastProp":
         return FastProp(**kwargs)
@@ -304,8 +308,14 @@ def _parse_metadata(dict_: Dict[str, Any]) -> Metadata:
 
 def _parse_pred(
     dict_: Dict[str, Any]
-) -> Union[LinearRegression, LogisticRegression, XGBoostClassifier, XGBoostRegressor]:
-
+) -> Union[
+    ScaleGBMClassifier,
+    ScaleGBMRegressor,
+    LinearRegression,
+    LogisticRegression,
+    XGBoostClassifier,
+    XGBoostRegressor,
+]:
     kwargs = _remove_trailing_underscores(dict_)
 
     pred_type = kwargs["type"]
@@ -317,6 +327,12 @@ def _parse_pred(
 
     if pred_type == "LogisticRegression":
         return LogisticRegression(**kwargs)
+
+    if pred_type == "ScaleGBMClassifier":
+        return ScaleGBMClassifier(**kwargs)
+
+    if pred_type == "ScaleGBMRegressor":
+        return ScaleGBMRegressor(**kwargs)
 
     if pred_type == "XGBoostClassifier":
         return XGBoostClassifier(**kwargs)
@@ -386,8 +402,6 @@ def _print_time_taken(begin: float, end: float, msg: str) -> None:
 
     """
 
-    # ----------------------------------------------------------------
-
     if not isinstance(begin, float):
         raise TypeError("'begin' must be a float as returned by time.time().")
 
@@ -396,8 +410,6 @@ def _print_time_taken(begin: float, end: float, msg: str) -> None:
 
     if not isinstance(msg, str):
         raise TypeError("'msg' must be a str.")
-
-    # ----------------------------------------------------------------
 
     seconds = end - begin
 

@@ -406,13 +406,15 @@ class Container:
 
         template = cleandoc(
             """
+            <div style='margin-top: 15px;'>
             <div style='float: left; margin-right: 50px;'>
-                <h4>population</h4>
+            <div style='margin-bottom: 10px; font-size: 1rem;'>population</div>
                 {pop}
             </div>
             <div style='float: left;'>
-                <h4>peripheral</h4>
+            <div style='margin-bottom: 10px; font-size: 1rem;'>peripheral</div>
                 {perph}
+            </div>
             </div>
             """
         )

@@ -42,7 +42,6 @@ def _make_final_pipeline(
     train,
     validation,
 ):
-
     print("Building final pipeline...")
     print()
 
@@ -151,56 +150,25 @@ def _tune_feature_learner(
     score,
     num_threads,
 ):
+    if feature_learner.type not in [
+        "Fastboost",
+        "FastProp",
+        "Multirel",
+        "Relboost",
+        "RelMT",
+    ]:
+        raise ValueError("Unknown feature learner: " + feature_learner.type + "!")
 
-    if feature_learner.type == "FastProp":
-        return _tune(
-            "FastProp",
-            pipeline,
-            container,
-            train,
-            validation,
-            n_iter,
-            score,
-            num_threads,
-        )
-
-    if feature_learner.type == "Multirel":
-        return _tune(
-            "Multirel",
-            pipeline,
-            container,
-            train,
-            validation,
-            n_iter,
-            score,
-            num_threads,
-        )
-
-    if feature_learner.type == "Relboost":
-        return _tune(
-            "Relboost",
-            pipeline,
-            container,
-            train,
-            validation,
-            n_iter,
-            score,
-            num_threads,
-        )
-
-    if feature_learner.type == "RelMT":
-        return _tune(
-            "RelMT",
-            pipeline,
-            container,
-            train,
-            validation,
-            n_iter,
-            score,
-            num_threads,
-        )
-
-    raise ValueError("Unknown feature learner: " + feature_learner.type + "!")
+    return _tune(
+        feature_learner.type,
+        pipeline,
+        container,
+        train,
+        validation,
+        n_iter,
+        score,
+        num_threads,
+    )
 
 
 # -----------------------------------------------------------------------------
@@ -216,6 +184,17 @@ def _tune_predictor(
     score,
     num_threads,
 ):
+    if "ScaleGBM" in predictor.type:
+        return _tune(
+            "ScaleGBM",
+            pipeline,
+            container,
+            train,
+            validation,
+            n_iter,
+            score,
+            num_threads,
+        )
 
     if "XGBoost" in predictor.type:
         return _tune(

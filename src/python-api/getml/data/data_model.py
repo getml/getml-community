@@ -256,11 +256,13 @@ class DataModel:
     def _repr_html_(self):
         output = cleandoc(
             f"""
-            <div style='margin-top: 15px;'><h4>diagram</h4><br>
+            <div style='margin-top: 15px; margin-bottom: 5px;'>
+            <div style='margin-bottom: 10px; font-size: 1rem;'>diagram</div>
             {self._make_diagram()}
             </div>
 
-            <div style='margin-top: 15px;'><h4>staging</h4>
+            <div style='margin-top: 15px;'>
+            <div style='margin-bottom: 10px; font-size: 1rem;'>staging</div>
             {self._make_staging()}
             </div>
             """

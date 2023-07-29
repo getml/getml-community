@@ -115,6 +115,10 @@ class _GetmlEncoder(json.JSONEncoder):
 
         if hasattr(obj, "_getml_deserialize"):
             return obj._getml_deserialize()
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
 
         return json.JSONEncoder.default(self, obj)
 

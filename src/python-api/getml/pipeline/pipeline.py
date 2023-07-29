@@ -41,6 +41,7 @@ from getml.feature_learning.multirel import Multirel
 from getml.feature_learning.relboost import Relboost
 from getml.feature_learning.relmt import RelMT
 from getml.predictors import _classification_types, _Predictor
+from getml.predictors.scale_gbm_classifier import ScaleGBMClassifier
 from getml.predictors.linear_regression import LinearRegression
 from getml.predictors.logistic_regression import LogisticRegression
 from getml.predictors.xgboost_classifier import XGBoostClassifier

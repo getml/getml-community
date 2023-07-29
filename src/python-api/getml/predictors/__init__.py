@@ -38,26 +38,28 @@ Note:
     All predictors need to be passed to :class:`~getml.Pipeline`.
 """
 
-# ------------------------------------------------------------------------------
 
+from .scale_gbm_classifier import ScaleGBMClassifier
+from .scale_gbm_regressor import ScaleGBMRegressor
 from .linear_regression import LinearRegression
 from .logistic_regression import LogisticRegression
 from .predictor import _Predictor
 from .xgboost_classifier import XGBoostClassifier
 from .xgboost_regressor import XGBoostRegressor
 
-# ------------------------------------------------------------------------------
-
 
 __all__ = (
+    "ScaleGBMClassifier",
+    "ScaleGBMRegressor",
     "LinearRegression",
     "LogisticRegression",
     "XGBoostClassifier",
     "XGBoostRegressor",
 )
 
-# ------------------------------------------------------------------------------
 
-_classification_types = [LogisticRegression().type, XGBoostClassifier().type]
-
-# ------------------------------------------------------------------------------
+_classification_types = [
+    LogisticRegression().type,
+    XGBoostClassifier().type,
+    ScaleGBMClassifier().type,
+]

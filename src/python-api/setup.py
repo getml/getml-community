@@ -11,9 +11,7 @@ from sys import argv
 
 from setuptools import setup
 
-
 if argv[1] == "bdist_wheel":
     argv.extend(["--plat-name", f"manylinux_2_17_{machine()}"])
-
 
 setup()

@@ -16,6 +16,7 @@ Note:
 
 """
 
+from .fastboost import Fastboost
 from .fastprop import FastProp
 from .feature_learner import _FeatureLearner
 from .multirel import Multirel
@@ -24,6 +25,7 @@ from .relmt import RelMT
 
 __all__ = (
     "_FeatureLearner",
+    "Fastboost",
     "FastProp",
     "Multirel",
     "Relboost",

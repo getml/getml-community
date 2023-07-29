@@ -32,22 +32,6 @@ Count = "COUNT"
 Number of rows in a given column.
 """
 
-CountAboveMean = "COUNT ABOVE MEAN"
-"""
-Counts the number of values strictly greater than the mean.
-Please note that this aggregation is
-not supported by
-:class:`~getml.feature_learning.Multirel`.
-"""
-
-CountBelowMean = "COUNT BELOW MEAN"
-"""
-Counts the number of values strictly smaller than the mean.
-Please note that this aggregation is
-not supported by
-:class:`~getml.feature_learning.Multirel`.
-"""
-
 CountDistinct = "COUNT DISTINCT"
 """
 Count function with distinct clause. This only counts unique elements."""
@@ -126,6 +110,66 @@ not supported by
 :class:`~getml.feature_learning.Multirel`.
 """
 
+EWMA_TREND_1s = "EWMA_TREND_1S"
+"""
+Exponentially weighted trend with a half-life of 1 second.
+"""
+
+EWMA_TREND_1m = "EWMA_TREND_1M"
+"""
+Exponentially weighted trend with a half-life of 1 minute.
+Please note that this aggregation is
+not supported by
+:class:`~getml.feature_learning.Multirel`.
+"""
+
+EWMA_TREND_1h = "EWMA_TREND_1H"
+"""
+Exponentially weighted trend with a half-life of 1 hour.
+Please note that this aggregation is
+not supported by
+:class:`~getml.feature_learning.Multirel`.
+"""
+
+EWMA_TREND_1d = "EWMA_TREND_1D"
+"""
+Exponentially weighted trend with a half-life of 1 day.
+Please note that this aggregation is
+not supported by
+:class:`~getml.feature_learning.Multirel`.
+"""
+
+EWMA_TREND_7d = "EWMA_TREND_7D"
+"""
+Exponentially weighted trend with a half-life of 7 days.
+Please note that this aggregation is
+not supported by
+:class:`~getml.feature_learning.Multirel`.
+"""
+
+EWMA_TREND_30d = "EWMA_TREND_30D"
+"""
+Exponentially weighted trend with a half-life of 30 days.
+Please note that this aggregation is
+not supported by
+:class:`~getml.feature_learning.Multirel`.
+"""
+
+EWMA_TREND_90d = "EWMA_TREND_90D"
+"""
+Exponentially weighted trend with a half-life of 90 days.
+Please note that this aggregation is
+not supported by
+:class:`~getml.feature_learning.Multirel`.
+"""
+
+EWMA_TREND_365d = "EWMA_TREND_365D"
+"""
+Exponentially weighted trend with a half-life of 365 days.
+Please note that this aggregation is
+not supported by
+:class:`~getml.feature_learning.Multirel`.
+"""
 
 First = "FIRST"
 """
@@ -356,8 +400,6 @@ _multirel_subset = [
 # ------------------------------------------------------------------------------
 
 _additional_aggregations_for_fast_prop = [
-    CountAboveMean,
-    CountBelowMean,
     CountDistinctOverCount,
     EWMA_1s,
     EWMA_1m,
@@ -367,6 +409,14 @@ _additional_aggregations_for_fast_prop = [
     EWMA_30d,
     EWMA_90d,
     EWMA_365d,
+    EWMA_TREND_1s,
+    EWMA_TREND_1m,
+    EWMA_TREND_1h,
+    EWMA_TREND_1d,
+    EWMA_TREND_7d,
+    EWMA_TREND_30d,
+    EWMA_TREND_90d,
+    EWMA_TREND_365d,
     Kurtosis,
     Mode,
     NumMax,
@@ -393,8 +443,6 @@ _additional_aggregations_for_fast_prop = [
 _mapping_subset = [
     Avg,
     Count,
-    CountAboveMean,
-    CountBelowMean,
     CountDistinct,
     CountDistinctOverCount,
     CountMinusCountDistinct,

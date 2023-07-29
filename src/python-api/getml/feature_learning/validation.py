@@ -42,9 +42,6 @@ class Validator:
 
 
 def _validate_dfs_model_parameters(**kwargs: Any) -> None:
-
-    # ----------------------------------------------------------------
-
     aggregation = kwargs["aggregation"]
     delta_t = kwargs["delta_t"]
     loss_function = kwargs["loss_function"]
@@ -56,8 +53,6 @@ def _validate_dfs_model_parameters(**kwargs: Any) -> None:
     sampling_factor = kwargs["sampling_factor"]
     silent = kwargs["silent"]
     vocab_size = kwargs["vocab_size"]
-
-    # ----------------------------------------------------------------
 
     if not _is_non_empty_typed_list(aggregation, str):
         raise TypeError(
@@ -97,8 +92,6 @@ def _validate_dfs_model_parameters(**kwargs: Any) -> None:
     if not isinstance(vocab_size, numbers.Real):
         raise TypeError("'vocab_size' must be a real number")
 
-    # ----------------------------------------------------------------
-
     if not all([aa in _all_aggregations for aa in aggregation]):
         raise ValueError(
             f"""
@@ -128,8 +121,6 @@ def _validate_dfs_model_parameters(**kwargs: Any) -> None:
 
     _check_parameter_bounds(vocab_size, "vocab_size", [0, np.finfo(np.float64).max])
 
-    # ----------------------------------------------------------------
-
     if (cast(float, delta_t) > 0.0) ^ (max_lag > 0):
         raise ValueError(
             """
@@ -139,14 +130,83 @@ def _validate_dfs_model_parameters(**kwargs: Any) -> None:
             """
         )
 
-    # ----------------------------------------------------------------
+
+# --------------------------------------------------------------------
+
+
+def _validate_fastboost_parameters(**kwargs: Any) -> None:
+    """
+    Checks both the types and values of the `parameters` belonging to
+    :class:`~getml.feature_learning.Fastboost` and raises an exception if
+    something is off.
+    """
+
+    gamma = kwargs["gamma"]
+    loss_function = kwargs["loss_function"]
+    max_depth = kwargs["max_depth"]
+    min_child_weights = kwargs["min_child_weights"]
+    num_features = kwargs["num_features"]
+    num_threads = kwargs["num_threads"]
+    reg_lambda = kwargs["reg_lambda"]
+    seed = kwargs["seed"]
+    shrinkage = kwargs["shrinkage"]
+    subsample = kwargs["subsample"]
+
+    if not isinstance(gamma, numbers.Real):
+        raise TypeError("'gamma' must be a real number")
+
+    if not isinstance(loss_function, str) or loss_function is None:
+        raise TypeError("'loss_function' must be a str")
+
+    if not isinstance(max_depth, numbers.Real):
+        raise TypeError("'max_depth' must be a real number")
+
+    if not isinstance(min_child_weights, numbers.Real):
+        raise TypeError("'min_child_weights' must be a real number")
+
+    if not isinstance(num_features, numbers.Real):
+        raise TypeError("'num_features' must be a real number")
+
+    if not isinstance(num_threads, numbers.Real):
+        raise TypeError("'num_threads' must be a real number")
+
+    if not isinstance(reg_lambda, numbers.Real):
+        raise TypeError("'reg_lambda' must be a real number")
+
+    if not isinstance(seed, numbers.Real):
+        raise TypeError("'seed' must be a real number or None")
+
+    if not isinstance(shrinkage, numbers.Real):
+        raise TypeError("'shrinkage' must be a real number")
+
+    if not isinstance(subsample, numbers.Real):
+        raise TypeError("'subsample' must be a real number")
+
+    _check_parameter_bounds(gamma, "gamma", [0.0, np.finfo(np.float64).max])
+
+    _check_parameter_bounds(max_depth, "max_depth", [0, np.iinfo(np.int32).max])
+
+    _check_parameter_bounds(
+        min_child_weights, "min_child_weights", [0.0, np.finfo(np.float64).max]
+    )
+
+    _check_parameter_bounds(num_features, "num_features", [1, np.iinfo(np.int32).max])
+
+    _check_parameter_bounds(num_threads, "num_threads", [0, np.iinfo(np.int32).max])
+
+    _check_parameter_bounds(reg_lambda, "reg_lambda", [0.0, np.finfo(np.float64).max])
+
+    _check_parameter_bounds(seed, "seed", [0.0, np.iinfo(np.uint64).max])
+
+    _check_parameter_bounds(shrinkage, "shrinkage", [0.0, 1.0])
+
+    _check_parameter_bounds(subsample, "subsample", [0.0, np.finfo(np.float64).max])
 
 
 # --------------------------------------------------------------------
 
 
 def _validate_multirel_parameters(**kwargs: Any) -> None:
-
     # ----------------------------------------------------------------
 
     aggregation = kwargs["aggregation"]
@@ -309,7 +369,7 @@ def _validate_multirel_parameters(**kwargs: Any) -> None:
 def _validate_relboost_parameters(**kwargs: Any) -> None:
     """
     Checks both the types and values of the `parameters` belonging to
-    :class:`~getml.feature_learning.Multirel` and raises an exception if
+    :class:`~getml.feature_learning.Relboost` and raises an exception if
     something is off.
     """
 

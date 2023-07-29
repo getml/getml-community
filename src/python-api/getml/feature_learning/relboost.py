@@ -10,7 +10,7 @@
 Feature learning based on Gradient Boosting.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Dict, Optional
 
 from .fastprop import FastProp
@@ -136,7 +136,7 @@ class Relboost(_FeatureLearner):
             weights and thus the impact of each new tree. This gives
             more room for future ones to improve the overall
             performance of the model in this greedy algorithm. It must
-            be between 0.0 and 1.0 with higher values leading to more
+            be between 0.0 and 1.0 with higher values leading to a higher
             danger of overfitting. Range: [0, 1]
 
         silent (bool, optional):
@@ -164,7 +164,7 @@ class Relboost(_FeatureLearner):
     num_features: int = 100
     num_subfeatures: int = 100
     num_threads: int = 0
-    propositionalization: FastProp = FastProp()
+    propositionalization: FastProp = field(default_factory=FastProp)
     reg_lambda: float = 0.0
     sampling_factor: float = 1.0
     seed: int = 5543
@@ -203,8 +203,8 @@ class Relboost(_FeatureLearner):
         for kkey in params:
             if kkey not in type(self)._supported_params:
                 raise KeyError(
-                    f"Instance variable '{kkey}' is not supported in {self.type}."
-                )
+                        f"Instance variable '{kkey}' is not supported in {self.type}."
+                        )
 
         # ------------------------------------------------------------
 

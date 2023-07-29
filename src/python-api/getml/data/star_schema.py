@@ -303,9 +303,9 @@ class StarSchema:
     def _repr_html_(self):
         template = cleandoc(
             """
-            <h2>data model</h2>
+            <span style='font-size: 1.2rem; font-weight: 500;'>data model</span>
             {data_model}
-            <h2>container</h2>
+            <span style='font-size: 1.2rem; font-weight: 500;'>container</span>
             {container}
             """
         )

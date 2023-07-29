@@ -12,6 +12,7 @@ A gradient boosting model for predicting classification problems.
 
 import numbers
 from dataclasses import dataclass
+from typing import Any, Dict
 
 import numpy as np
 
@@ -22,34 +23,7 @@ from .predictor import _Predictor
 # --------------------------------------------------------------------
 
 
-def _validate_xgboost_parameters(parameters):
-    """Checks both the types and values of the `parameters` and raises an
-    exception is something is off.
-
-    Examples:
-
-        .. code-block:: python
-
-            getml.helpers.validation.validate_XGBoost_parameters(
-                {'learning_rate': 0.1, 'gamma': 3.2})
-
-    Args:
-        parameters (dict): Dictionary containing some of all
-            parameters supported in
-            :class:`~getml.predictors.XGBoostRegressor` and
-            :class:`~getml.predictors.XGBoostClassifier`.
-
-    Note:
-
-        Both :class:`~getml.predictors.XGBoostRegressor` and
-        :class:`~getml.predictors.XGBoostClassifier` have an instance
-        variable called ``type``, which is not checked in this
-        function but in the corresponding
-        :meth:`~getml.predictors.XGBoostRegressor.validate` method. If
-        it is supplied to this function, it won't cause harm but will
-        be ignored instead of checked.
-    """
-
+def _validate_xgboost_parameters(parameters: Dict[str, Any]):
     allowed_parameters = {
         "booster",
         "colsample_bylevel",
@@ -80,7 +54,6 @@ def _validate_xgboost_parameters(parameters):
     # ----------------------------------------------------------------
 
     for kkey in parameters:
-
         if kkey not in allowed_parameters:
             raise KeyError("'unknown XGBoost parameter: " + kkey)
 
