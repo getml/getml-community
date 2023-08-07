@@ -60,6 +60,8 @@ void DataFrameManager::from_json(const typename Command::AddDfFromJSONOp& _cmd,
 
   data_frames()[name].create_indices();
 
+  weak_write_lock.unlock();
+
   communication::Sender::send_string("Success!", _socket);
 }
 

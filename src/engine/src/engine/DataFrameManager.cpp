@@ -126,6 +126,8 @@ void DataFrameManager::add_float_column(
     data_frames()[df_name].create_indices();
   }
 
+  weak_write_lock.unlock();
+
   communication::Sender::send_string("Success!", _socket);
 }
 
@@ -271,6 +273,8 @@ void DataFrameManager::add_string_column(
 
     data_frames()[df_name].create_indices();
   }
+
+  weak_write_lock.unlock();
 
   communication::Sender::send_string("Success!", _socket);
 }
@@ -458,6 +462,8 @@ void DataFrameManager::calc_column_plots(
 
   const auto obj = metrics::Summarizer::calculate_feature_plots(
       features, col.nrows(), 1, num_bins, targets);
+
+  read_lock.unlock();
 
   communication::Sender::send_string("Success!", _socket);
 
@@ -711,6 +717,8 @@ void DataFrameManager::from_csv(const typename Command::AddDfFromCSVOp& _cmd,
 
   data_frames()[name].create_indices();
 
+  weak_write_lock.unlock();
+
   communication::Sender::send_string("Success!", _socket);
 }
 
@@ -760,6 +768,8 @@ void DataFrameManager::from_db(const typename Command::AddDfFromDBOp& _cmd,
   }
 
   data_frames()[name].create_indices();
+
+  weak_write_lock.unlock();
 
   communication::Sender::send_string("Success!", _socket);
 }
@@ -866,6 +876,8 @@ void DataFrameManager::from_query(
 
   data_frames()[name].create_indices();
 
+  weak_write_lock.unlock();
+
   communication::Sender::send_string("Success!", _socket);
 }
 
@@ -911,6 +923,8 @@ void DataFrameManager::from_view(const typename Command::AddDfFromViewOp& _cmd,
   }
 
   data_frames()[name].create_indices();
+
+  weak_write_lock.unlock();
 
   communication::Sender::send_string("Success!", _socket);
 }
@@ -990,11 +1004,13 @@ void DataFrameManager::get_nbytes(
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
-  auto& df = utils::Getter::get(name, &data_frames());
+  const auto nbytes = utils::Getter::get(name, &data_frames()).nbytes();
+
+  read_lock.unlock();
 
   communication::Sender::send_string("Found!", _socket);
 
-  communication::Sender::send_string(std::to_string(df.nbytes()), _socket);
+  communication::Sender::send_string(std::to_string(nbytes), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -1006,11 +1022,13 @@ void DataFrameManager::get_nrows(
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
-  auto& df = utils::Getter::get(name, &data_frames());
+  const auto nrows = utils::Getter::get(name, &data_frames()).nrows();
+
+  read_lock.unlock();
 
   communication::Sender::send_string("Found!", _socket);
 
-  communication::Sender::send_string(std::to_string(df.nrows()), _socket);
+  communication::Sender::send_string(std::to_string(nrows), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -1021,11 +1039,14 @@ void DataFrameManager::last_change(const typename Command::LastChangeOp& _cmd,
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
-  const auto df = utils::Getter::get(name, data_frames());
+  const auto last_change =
+      utils::Getter::get(name, data_frames()).last_change();
+
+  read_lock.unlock();
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(df.last_change(), _socket);
+  communication::Sender::send_string(last_change, _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -1134,6 +1155,8 @@ void DataFrameManager::remove_column(
     throw std::runtime_error("Could not remove column. Column named '" + name +
                              "' not found.");
   }
+
+  write_lock.unlock();
 
   communication::Sender::send_string("Success!", _socket);
 }

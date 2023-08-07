@@ -542,13 +542,13 @@ void PipelineManager::refresh_all(const typename Command::RefreshAllOp& _cmd,
     }
   }
 
+  read_lock.unlock();
+
   communication::Sender::send_string("Success!", _socket);
 
   const auto obj = fct::make_named_tuple(fct::make_field<"pipelines">(vec));
 
   communication::Sender::send_string(json::to_json(obj), _socket);
-
-  read_lock.unlock();
 
   for (const auto& [name, pipe] : updated_pipelines) {
     set_pipeline(name, pipe);
@@ -875,9 +875,9 @@ void PipelineManager::transform(const typename Command::TransformOp& _cmd,
              local_join_keys_encoding, &df, &weak_write_lock);
   }
 
-  communication::Sender::send_string("Success!", _socket);
-
   weak_write_lock.unlock();
+
+  communication::Sender::send_string("Success!", _socket);
 
   if (scoring_required) {
     score(cmd, name, population_df, numerical_features, pipeline, _socket);

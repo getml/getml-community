@@ -51,6 +51,8 @@ void ColumnManager::add_float_column(
     data_frames()[df_name].create_indices();
   }
 
+  weak_write_lock.unlock();
+
   communication::Sender::send_string("Success!", _socket);
 }
 
@@ -83,6 +85,8 @@ void ColumnManager::add_string_column(
 
     data_frames()[df_name].create_indices();
   }
+
+  weak_write_lock.unlock();
 
   communication::Sender::send_string("Success!", _socket);
 }
@@ -171,6 +175,8 @@ void ColumnManager::get_boolean_column_content(
   const auto col_str = DataFrameManager(params_).make_column_string<bool>(
       draw, nrows, data_ptr->begin(), data_ptr->end());
 
+  read_lock.unlock();
+
   communication::Sender::send_string(col_str, _socket);
 }
 
@@ -257,6 +263,8 @@ void ColumnManager::get_categorical_column_content(
   const auto col_str =
       DataFrameManager(params_).make_column_string<strings::String>(
           draw, nrows, data_ptr->begin(), data_ptr->end());
+
+  read_lock.unlock();
 
   communication::Sender::send_string(col_str, _socket);
 }
@@ -422,6 +430,8 @@ void ColumnManager::get_float_column_content(
 
   const auto col_str = DataFrameManager(params_).make_column_string<Float>(
       draw, nrows, col.begin(), col.end());
+
+  read_lock.unlock();
 
   communication::Sender::send_string(col_str, _socket);
 }
