@@ -12,9 +12,11 @@
 #include "fct/Field.hpp"
 #include "fct/Ref.hpp"
 #include "fct/always_false.hpp"
+#include "fct/collect.hpp"
 #include "helpers/StringSplitter.hpp"
 #include "io/Parser.hpp"
 #include "json/json.hpp"
+#include "json/to_json.hpp"
 
 namespace engine {
 namespace handlers {
@@ -233,21 +235,9 @@ void DatabaseManager::get_colnames(const typename Command::GetColnamesOp& _cmd,
   const auto colnames = query ? connector(conn_id)->select(*query)->colnames()
                               : connector(conn_id)->get_colnames(name);
 
-  std::string array = "[";
-
-  for (auto& col : colnames) {
-    array += std::string("\"") + col + "\",";
-  }
-
-  if (array.size() > 1) {
-    array.back() = ']';
-  } else {
-    array += ']';
-  }
-
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(array, _socket);
+  communication::Sender::send_string(json::to_json(colnames), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -292,23 +282,15 @@ void DatabaseManager::get_nrows(const typename Command::GetNRowsOp& _cmd,
 void DatabaseManager::list_connections(
     const typename Command::ListConnectionsOp& _cmd,
     Poco::Net::StreamSocket* _socket) const {
-  std::string str = "[";
-
   multithreading::ReadLock read_lock(read_write_lock_);
 
-  for (auto& [key, value] : connector_map_) {
-    str += "\"" + key + "\",";
-  }
+  const auto connections = fct::collect::vector(connector_map_ | VIEWS::keys);
 
-  if (connector_map_.size() == 0) {
-    str += "]";
-  } else {
-    str.back() = ']';
-  }
+  read_lock.unlock();
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(str, _socket);
+  communication::Sender::send_string(json::to_json(connections), _socket);
 }
 
 // ------------------------------------------------------------------------

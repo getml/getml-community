@@ -172,6 +172,8 @@ void ProjectManager::delete_project(
   Poco::File(params_.options_.all_projects_directory() + name + "/")
       .remove(true);
 
+  write_lock.unlock();
+
   communication::Sender::send_string("Success!", _socket);
 
   if (project_directory() ==
@@ -305,6 +307,8 @@ void ProjectManager::load_data_frame(const typename Command::LoadDfOp& _cmd,
     data_frame_tracker().add(df, *df.build_history());
   }
 
+  weak_write_lock.unlock();
+
   communication::Sender::send_string("Success!", _socket);
 }
 
@@ -345,6 +349,8 @@ void ProjectManager::save_data_container(
 
   helpers::Saver::save_as_json(path, container);
 
+  weak_write_lock.unlock();
+
   communication::Sender::send_string("Success!", _socket);
 }
 
@@ -362,6 +368,8 @@ void ProjectManager::save_data_frame(const typename Command::SaveDfOp& _cmd,
 
   FileHandler::save_encodings(project_directory(), params_.categories_.ptr(),
                               params_.join_keys_encoding_.ptr());
+
+  weak_write_lock.unlock();
 
   communication::Sender::send_string("Success!", _socket);
 }
@@ -397,6 +405,8 @@ void ProjectManager::save_pipeline(const typename Command::SavePipelineOp& _cmd,
 
   FileHandler::save_encodings(project_directory(), params_.categories_.ptr(),
                               nullptr);
+
+  weak_write_lock.unlock();
 
   communication::Sender::send_string("Success!", _socket);
 }
