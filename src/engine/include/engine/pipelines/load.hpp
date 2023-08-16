@@ -8,6 +8,7 @@
 #ifndef ENGINE_PIPELINES_LOAD_HPP_
 #define ENGINE_PIPELINES_LOAD_HPP_
 
+#include "engine/dependency/PipelineTrackers.hpp"
 #include "engine/pipelines/Pipeline.hpp"
 
 namespace engine {
@@ -15,7 +16,8 @@ namespace pipelines {
 namespace load {
 
 /// Loads the pipeline from the hard disk.
-Pipeline load(const std::string& _path);
+Pipeline load(const std::string& _path,
+              const dependency::PipelineTrackers& _pipeline_trackers);
 
 }  // namespace load
 }  // namespace pipelines
