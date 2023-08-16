@@ -320,7 +320,13 @@ void ProjectManager::load_pipeline(const typename Command::LoadPipelineOp& _cmd,
 
   const auto path = project_directory() + "pipelines/" + name + "/";
 
-  const auto pipeline = pipelines::load::load(path);
+  const auto pipeline_trackers = dependency::PipelineTrackers(
+      fct::make_field<"data_frame_tracker_">(params_.data_frame_tracker_),
+      fct::make_field<"fe_tracker_">(params_.fe_tracker_),
+      fct::make_field<"pred_tracker_">(params_.pred_tracker_),
+      fct::make_field<"preprocessor_tracker_">(params_.preprocessor_tracker_));
+
+  const auto pipeline = pipelines::load::load(path, pipeline_trackers);
 
   set_pipeline(name, pipeline);
 
