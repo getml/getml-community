@@ -221,9 +221,9 @@ def _infer_peripheral(population: Placeholder) -> List[Placeholder]:
 
 
 def _handle_loss_function(
-    feature_learner: Union[FastProp, Multirel, Relboost, RelMT],  # type: ignore
+    feature_learner: Union[Fastboost, FastProp, Multirel, Relboost, RelMT],  # type: ignore
     loss_function: Optional[str],
-) -> Union[FastProp, Multirel, Relboost, RelMT]:  # type: ignore
+) -> Union[Fastboost, FastProp, Multirel, Relboost, RelMT]:  # type: ignore
     if not isinstance(loss_function, str) and loss_function is not None:
         raise TypeError("'loss_function' must be str or None.")
 

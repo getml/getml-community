@@ -34,26 +34,35 @@ from getml.data.helpers import (
     _remove_trailing_underscores,
 )
 from getml.data import Placeholder, Roles, View
-from getml.feature_learning import _FeatureLearner
-from getml.feature_learning.fastprop import FastProp
+from getml.feature_learning import (
+    _FeatureLearner,
+    FastProp,
+    Fastboost,
+    Multirel,
+    Relboost,
+    RelMT,
+)
 from getml.feature_learning.loss_functions import _classification_loss
-from getml.feature_learning.multirel import Multirel
-from getml.feature_learning.relboost import Relboost
-from getml.feature_learning.relmt import RelMT
-from getml.predictors import _classification_types, _Predictor
-from getml.predictors.scale_gbm_classifier import ScaleGBMClassifier
-from getml.predictors.linear_regression import LinearRegression
-from getml.predictors.logistic_regression import LogisticRegression
-from getml.predictors.xgboost_classifier import XGBoostClassifier
-from getml.predictors.xgboost_regressor import XGBoostRegressor
-from getml.preprocessors.category_trimmer import CategoryTrimmer
-from getml.preprocessors.email_domain import EmailDomain
-from getml.preprocessors.imputation import Imputation
-from getml.preprocessors.mapping import Mapping
+from getml.predictors import (
+    _classification_types,
+    _Predictor,
+    LinearRegression,
+    LogisticRegression,
+    XGBoostClassifier,
+    XGBoostRegressor,
+    ScaleGBMClassifier,
+    ScaleGBMRegressor,
+)
+from getml.preprocessors import (
+    CategoryTrimmer,
+    EmailDomain,
+    Imputation,
+    Mapping,
+    Seasonal,
+    Substring,
+    TextFieldSplitter,
+)
 from getml.preprocessors.preprocessor import _Preprocessor
-from getml.preprocessors.seasonal import Seasonal
-from getml.preprocessors.substring import Substring
-from getml.preprocessors.text_field_splitter import TextFieldSplitter
 from getml.utilities.formatting import _SignatureFormatter
 
 from .columns import Columns
@@ -445,8 +454,8 @@ class Pipeline:
         ] = None,
         feature_learners: Optional[
             Union[
-                Union[FastProp, Multirel, Relboost, RelMT],
-                List[Union[FastProp, Multirel, Relboost, RelMT]],
+                Union[Fastboost, FastProp, Multirel, Relboost, RelMT],
+                List[Union[Fastboost, FastProp, Multirel, Relboost, RelMT]],
             ]
         ] = None,
         feature_selectors: Optional[
@@ -456,6 +465,8 @@ class Pipeline:
                     LogisticRegression,
                     XGBoostClassifier,
                     XGBoostRegressor,
+                    ScaleGBMClassifier,
+                    ScaleGBMRegressor,
                 ],
                 List[
                     Union[
@@ -463,6 +474,8 @@ class Pipeline:
                         LogisticRegression,
                         XGBoostClassifier,
                         XGBoostRegressor,
+                        ScaleGBMClassifier,
+                        ScaleGBMRegressor,
                     ]
                 ],
             ],
@@ -473,12 +486,16 @@ class Pipeline:
                 LogisticRegression,
                 XGBoostClassifier,
                 XGBoostRegressor,
+                ScaleGBMClassifier,
+                ScaleGBMRegressor,
                 List[
                     Union[
                         LinearRegression,
                         LogisticRegression,
                         XGBoostClassifier,
                         XGBoostRegressor,
+                        ScaleGBMClassifier,
+                        ScaleGBMRegressor,
                     ]
                 ],
             ]

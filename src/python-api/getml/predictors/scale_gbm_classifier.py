@@ -316,16 +316,7 @@ class ScaleGBMClassifier(_Predictor):
                 the parameters to validate. If not is passed,
                 the own parameters will be validated.
 
-        Examples:
-
-            .. code-block:: python
-
-                x = getml.predictors.XGBoostClassifier()
-                x.gamma = 200
-                x.validate()
-
         Note:
-
             This method is called at end of the __init__ constructor
             and every time before the predictor - or a class holding
             it as an instance variable - is send to the getML engine.
