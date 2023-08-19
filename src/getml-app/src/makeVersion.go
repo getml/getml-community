@@ -14,7 +14,7 @@ import (
 
 func makeVersion() string {
 
-	version := "getml-1.4.0-" + getArch() + "-community-edition-linux"
+	version := "getml-1.5.0-" + getArch() + "-community-edition-linux"
 
 	if runtime.GOOS == "windows" {
 		version = strings.Replace(version, "linux", "windows", -1)
