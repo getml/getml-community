@@ -8,9 +8,9 @@
 #ifndef JSON_HASFROMJSONOBJ_HPP_
 #define JSON_HASFROMJSONOBJ_HPP_
 
-#include <Poco/Dynamic/Var.h>
-
 #include <type_traits>
+
+#include "json/Reader.hpp"
 
 namespace json {
 
@@ -19,8 +19,9 @@ struct has_from_json_obj : std::false_type {};
 
 template <class T>
 struct has_from_json_obj<
-    T, std::enable_if_t<std::is_invocable_r<T, decltype(T::from_json_obj),
-                                            Poco::Dynamic::Var>::value>>
+    T,
+    std::enable_if_t<std::is_invocable_r<T, decltype(T::from_json_obj),
+                                         typename Reader::InputVarType>::value>>
     : std::true_type {};
 
 /// Utility parameter for named tuple parsing, can be used by the

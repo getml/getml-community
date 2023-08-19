@@ -8,6 +8,7 @@
 #ifndef PREDICTORS_LOGISTICREGRESSION_HPP_
 #define PREDICTORS_LOGISTICREGRESSION_HPP_
 
+#include <cmath>
 #include <memory>
 #include <optional>
 #include <vector>
