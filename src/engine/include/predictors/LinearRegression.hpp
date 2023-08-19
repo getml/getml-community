@@ -8,6 +8,7 @@
 #ifndef PREDICTORS_LINEARREGRESSION_HPP_
 #define PREDICTORS_LINEARREGRESSION_HPP_
 
+#include <cmath>
 #include <memory>
 #include <optional>
 #include <vector>

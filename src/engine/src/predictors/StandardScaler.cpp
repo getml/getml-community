@@ -7,6 +7,8 @@
 
 #include "predictors/StandardScaler.hpp"
 
+#include <cmath>
+
 namespace predictors {
 // -----------------------------------------------------------------------------
 
