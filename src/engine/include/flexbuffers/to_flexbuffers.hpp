@@ -22,9 +22,9 @@ namespace flexbuffers {
 template <class T>
 std::vector<uint8_t> to_flexbuffers(const T& _obj) {
   auto w = Writer();
-  const auto flexbuffers_obj = Parser<T>::to_flexbuffers(w, _obj);
+  const auto flexbuffers_obj = Parser<T>::to_json(w, _obj);
   flexbuffers::Builder fbb;
-  flexbuffers->insert(std::nullopt, &fbb);
+  flexbuffers_obj->insert(std::nullopt, &fbb);
   fbb.Finish();
   return fbb.GetBuffer();
 }

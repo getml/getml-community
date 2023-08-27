@@ -40,7 +40,7 @@ struct Reader {
     return r;
   }
 
-  bool is_empty(InputVarType* _var) const noexcept { return r->IsNull(); }
+  bool is_empty(InputVarType* _var) const noexcept { return _var->IsNull(); }
 
   template <class T>
   fct::Result<T> to_basic_type(InputVarType* _var) const noexcept {
@@ -99,7 +99,7 @@ struct Reader {
   }
 
   std::vector<InputVarType> to_vec(InputArrayType* _arr) const noexcept {
-    const auto size = _arr->Size();
+    const auto size = _arr->size();
     std::vector<InputVarType> vec;
     for (size_t i = 0; i < size; ++i) {
       vec.push_back((*_arr)[i]);

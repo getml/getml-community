@@ -29,7 +29,7 @@ class OutputNull : public OutputVar {
   void insert(const std::optional<std::string>& _key,
               flexbuffers::Builder* _fbb) final {
     if (_key) {
-      _fbb->Null(_key->c_str())
+      _fbb->Null(_key->c_str());
     } else {
       _fbb->Null();
     }

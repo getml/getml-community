@@ -64,7 +64,7 @@ struct Writer {
   }
 
   bool is_empty(OutputVarType* _var) const noexcept {
-    return fct::Ref<OutputNull>::make();
+    return (*_var)->is_null();
   }
 
   void set_field(const std::string& _name, const OutputVarType& _var,
