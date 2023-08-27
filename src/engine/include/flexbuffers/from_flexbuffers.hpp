@@ -23,9 +23,9 @@ using InputVarType = typename Reader::InputVarType;
 /// Parses an object from FLEXBUFFERS using reflection.
 template <class T>
 T from_flexbuffers(const std::vector<uint8_t>& _bytes) {
-  InputVarType root = flexbuffers::GetRoot(_bytes->data(), _bytes.size());
+  InputVarType root = flexbuffers::GetRoot(_bytes.data(), _bytes.size());
   const auto r = Reader();
-  const auto result = Parser<T>::from_flexbuffers(r, &root);
+  const auto result = Parser<T>::from_json(r, &root);
   return result.value();
 }
 

@@ -56,7 +56,7 @@ class OutputValue : public OutputVar {
         _fbb->Int(val_);
       }
     } else {
-      static_assert(always_false_v<T>, "Unsupported type");
+      static_assert(fct::always_false_v<T>, "Unsupported type");
     }
   };
 

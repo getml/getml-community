@@ -30,7 +30,7 @@ class OutputObject : public OutputVar {
   void insert(const std::optional<std::string>& _key,
               flexbuffers::Builder* _fbb) final {
     const auto start = _key ? _fbb->StartMap(_key->c_str()) : _fbb->StartMap();
-    for (const auto& [name, elem] : vec_) {
+    for (const auto& [name, elem] : vars_) {
       elem->insert(name, _fbb);
     }
     _fbb->EndMap(start);
