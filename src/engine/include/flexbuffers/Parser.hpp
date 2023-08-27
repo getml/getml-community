@@ -6,18 +6,18 @@
 // for details.
 //
 
-#ifndef CAPNPROTO_PARSER_HPP_
-#define CAPNPROTO_PARSER_HPP_
+#ifndef FLEXBUFFERS_PARSER_HPP_
+#define FLEXBUFFERS_PARSER_HPP_
 
-#include "capnproto/Reader.hpp"
-#include "capnproto/Writer.hpp"
+#include "flexbuffers/Reader.hpp"
+#include "flexbuffers/Writer.hpp"
 #include "parsing/Parser.hpp"
 
-namespace capnproto {
+namespace flexbuffers {
 
 template <class T>
 using Parser = parsing::Parser<Reader, Writer, T>;
 
-};  // namespace capnproto
+};  // namespace flexbuffers
 
-#endif  // CAPNPROTO_PARSER_HPP_
+#endif  // FLEXBUFFERS_PARSER_HPP_
