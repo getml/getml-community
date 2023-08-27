@@ -7,7 +7,7 @@
 
 #include "commands/Fingerprint.hpp"
 
-#include "json/json.hpp"
+#include "json/Reader.hpp"
 
 namespace commands {
 
@@ -16,7 +16,8 @@ Fingerprint Fingerprint::from_json(const std::string& _json_str) {
 }
 
 Fingerprint Fingerprint::from_json_obj(const InputVarType& _json_obj) {
-  static_assert(json::has_from_json_obj_v<Fingerprint>, "This should work");
+  static_assert(json::Reader::has_custom_constructor<Fingerprint>,
+                "This should work");
   return Fingerprint(json::from_json<NamedTupleType>(_json_obj));
 }
 

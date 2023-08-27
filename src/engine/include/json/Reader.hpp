@@ -60,6 +60,22 @@ struct Reader {
   using InputObjectType = YYJSONInputObject;
   using InputVarType = YYJSONInputVar;
 
+  template <class T, class = void>
+  struct has_from_json_obj : std::false_type {};
+
+  template <class T>
+  struct has_from_json_obj<
+      T,
+      std::enable_if_t<std::is_invocable_r<
+          T, decltype(T::from_json_obj), typename Reader::InputVarType>::value>>
+      : std::true_type {};
+
+  /// Utility parameter for named tuple parsing, can be used by the
+  /// parsers to determine whether a class or struct defines a static method
+  /// called "has_json_obj".
+  template <class T>
+  static constexpr bool has_custom_constructor = has_from_json_obj<T>::value;
+
   fct::Result<InputVarType> get_field(const std::string& _name,
                                       InputObjectType* _obj) const noexcept {
     const auto var = InputVarType(yyjson_obj_get(_obj->val_, _name.c_str()));
@@ -138,6 +154,15 @@ struct Reader {
       vec.push_back(InputVarType(val));
     }
     return vec;
+  }
+
+  template <class T>
+  fct::Result<T> use_custom_constructor(InputVarType* _var) const noexcept {
+    try {
+      return T::from_json_obj(*_var);
+    } catch (std::exception& e) {
+      return fct::Error(e.what());
+    }
   }
 };
 

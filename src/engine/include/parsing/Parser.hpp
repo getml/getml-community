@@ -28,7 +28,6 @@
 #include "fct/collect_results.hpp"
 #include "fct/field_type.hpp"
 #include "fct/join.hpp"
-#include "json/has_from_json_obj.hpp"
 #include "parsing/is_required.hpp"
 #include "strings/strings.hpp"
 
@@ -50,12 +49,8 @@ struct Parser {
   /// Expresses the variables as type T.
   static fct::Result<T> from_json(const ReaderType& _r,
                                   InputVarType* _var) noexcept {
-    if constexpr (json::has_from_json_obj_v<T>) {
-      try {
-        return T::from_json_obj(*_var);
-      } catch (std::exception& e) {
-        return fct::Error(e.what());
-      }
+    if constexpr (ReaderType::template has_custom_constructor<T>) {
+      return _r.template use_custom_constructor<T>(_var);
     } else {
       if constexpr (fct::has_named_tuple_type_v<T>) {
         using NamedTupleType = std::decay_t<typename T::NamedTupleType>;
