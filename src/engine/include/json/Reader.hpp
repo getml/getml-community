@@ -70,9 +70,6 @@ struct Reader {
           T, decltype(T::from_json_obj), typename Reader::InputVarType>::value>>
       : std::true_type {};
 
-  /// Utility parameter for named tuple parsing, can be used by the
-  /// parsers to determine whether a class or struct defines a static method
-  /// called "has_json_obj".
   template <class T>
   static constexpr bool has_custom_constructor = has_from_json_obj<T>::value;
 
