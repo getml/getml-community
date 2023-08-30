@@ -22,7 +22,7 @@ namespace json {
 template <class T>
 std::string to_json(const T& _obj) {
   auto w = Writer(yyjson_mut_doc_new(NULL));
-  const auto json_obj = Parser<T>::to_json(w, _obj);
+  const auto json_obj = Parser<T>::write(w, _obj);
   yyjson_mut_doc_set_root(w.doc_, json_obj.val_);
   const char* json_c_str = yyjson_mut_write(w.doc_, 0, NULL);
   const auto json_str = std::string(json_c_str);
