@@ -18,11 +18,11 @@
 
 namespace flexbuffers {
 
-/// Parses an object to FLEXBUFFERS.
+/// Writes an object to flexbuffers.
 template <class T>
 std::vector<uint8_t> to_flexbuffers(const T& _obj) {
   auto w = Writer();
-  const auto flexbuffers_obj = Parser<T>::to_json(w, _obj);
+  const auto flexbuffers_obj = Parser<T>::write(w, _obj);
   flexbuffers::Builder fbb;
   flexbuffers_obj->insert(std::nullopt, &fbb);
   fbb.Finish();

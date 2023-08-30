@@ -26,7 +26,7 @@ T from_json(const std::string& _json_str) {
   yyjson_doc* doc = yyjson_read(_json_str.c_str(), _json_str.size(), 0);
   InputVarType root = InputVarType(yyjson_doc_get_root(doc));
   const auto r = Reader();
-  const auto result = Parser<T>::from_json(r, &root);
+  const auto result = Parser<T>::read(r, &root);
   yyjson_doc_free(doc);
   return result.value();
 }
@@ -36,7 +36,7 @@ template <class T>
 T from_json(const InputVarType& _var) {
   InputVarType var = _var;
   const auto r = Reader();
-  return Parser<T>::from_json(r, &var).value();
+  return Parser<T>::read(r, &var).value();
 }
 
 /// Parses an object from JSON using reflection.

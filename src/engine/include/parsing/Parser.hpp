@@ -47,8 +47,8 @@ struct Parser {
   using OutputVarType = typename WriterType::OutputVarType;
 
   /// Expresses the variables as type T.
-  static fct::Result<T> from_json(const ReaderType& _r,
-                                  InputVarType* _var) noexcept {
+  static fct::Result<T> read(const ReaderType& _r,
+                             InputVarType* _var) noexcept {
     if constexpr (ReaderType::template has_custom_constructor<T>) {
       return _r.template use_custom_constructor<T>(_var);
     } else {
@@ -57,8 +57,7 @@ struct Parser {
         const auto wrap_in_t = [](auto _named_tuple) {
           return T(_named_tuple);
         };
-        return Parser<ReaderType, WriterType, NamedTupleType>::from_json(_r,
-                                                                         _var)
+        return Parser<ReaderType, WriterType, NamedTupleType>::read(_r, _var)
             .transform(wrap_in_t);
       } else {
         return _r.template to_basic_type<std::decay_t<T>>(_var);
@@ -67,15 +66,15 @@ struct Parser {
   }
 
   /// Converts the variable to a JSON type.
-  static auto to_json(const WriterType& _w, const T& _var) noexcept {
+  static auto write(const WriterType& _w, const T& _var) noexcept {
     if constexpr (fct::has_named_tuple_type_v<T>) {
       using NamedTupleType = std::decay_t<typename T::NamedTupleType>;
       if constexpr (fct::has_named_tuple_method_v<T>) {
-        return Parser<ReaderType, WriterType, NamedTupleType>::to_json(
+        return Parser<ReaderType, WriterType, NamedTupleType>::write(
             _w, _var.named_tuple());
       } else {
         const auto& [r] = _var;
-        return Parser<ReaderType, WriterType, NamedTupleType>::to_json(_w, r);
+        return Parser<ReaderType, WriterType, NamedTupleType>::write(_w, r);
       }
     } else {
       return _w.from_basic_type(_var);
@@ -91,7 +90,7 @@ struct Parser<ReaderType, WriterType, fct::Literal<_fields...>> {
   using OutputVarType = typename WriterType::OutputVarType;
 
   /// Expresses the variables as type T.
-  static fct::Result<fct::Literal<_fields...>> from_json(
+  static fct::Result<fct::Literal<_fields...>> read(
       const ReaderType& _r, InputVarType* _var) noexcept {
     const auto to_type = [](const auto& _str) {
       return fct::Literal<_fields...>::from_string(_str);
@@ -107,7 +106,7 @@ struct Parser<ReaderType, WriterType, fct::Literal<_fields...>> {
   }
 
   /// Expresses the variable a a JSON.
-  static OutputVarType to_json(
+  static OutputVarType write(
       const WriterType& _w, const fct::Literal<_fields...>& _literal) noexcept {
     return _w.from_basic_type(_literal.name());
   }
@@ -125,13 +124,13 @@ struct Parser<ReaderType, WriterType, std::map<std::string, ValueType>> {
   using OutputVarType = typename WriterType::OutputVarType;
 
   /// Expresses the variables as a std::map.
-  static fct::Result<std::map<std::string, ValueType>> from_json(
+  static fct::Result<std::map<std::string, ValueType>> read(
       const ReaderType& _r, InputVarType* _var) noexcept {
     const auto get_pair = [&](auto _pair) {
       const auto to_pair = [&](const ValueType& _val) {
         return std::make_pair(_pair.first, _val);
       };
-      return Parser<ReaderType, WriterType, std::decay_t<ValueType>>::from_json(
+      return Parser<ReaderType, WriterType, std::decay_t<ValueType>>::read(
                  _r, &_pair.second)
           .transform(to_pair);
     };
@@ -145,15 +144,14 @@ struct Parser<ReaderType, WriterType, std::map<std::string, ValueType>> {
   }
 
   /// Transform a std::vector into an object
-  static OutputVarType to_json(
+  static OutputVarType write(
       const WriterType& _w,
       const std::map<std::string, ValueType>& _m) noexcept {
     auto obj = _w.new_object();
     for (const auto& [k, v] : _m) {
       _w.set_field(
           k,
-          Parser<ReaderType, WriterType, std::decay_t<ValueType>>::to_json(_w,
-                                                                           v),
+          Parser<ReaderType, WriterType, std::decay_t<ValueType>>::write(_w, v),
           &obj);
     }
     return obj;
@@ -172,7 +170,7 @@ struct Parser<ReaderType, WriterType, fct::NamedTuple<FieldTypes...>> {
 
  public:
   /// Generates a NamedTuple from a JSON Object.
-  static fct::Result<fct::NamedTuple<FieldTypes...>> from_json(
+  static fct::Result<fct::NamedTuple<FieldTypes...>> read(
       const ReaderType& _r, InputVarType* _var) noexcept {
     const auto to_map = [&](auto _obj) { return _r.to_map(&_obj); };
     const auto build = [&](const auto& _map) {
@@ -182,7 +180,7 @@ struct Parser<ReaderType, WriterType, fct::NamedTuple<FieldTypes...>> {
   }
 
   /// Transforms a NamedTuple into a JSON object.
-  static OutputVarType to_json(
+  static OutputVarType write(
       const WriterType& _w,
       const fct::NamedTuple<FieldTypes...>& _tup) noexcept {
     auto obj = _w.new_object();
@@ -240,7 +238,7 @@ struct Parser<ReaderType, WriterType, fct::NamedTuple<FieldTypes...>> {
       using FieldType =
           typename std::tuple_element<_i, std::tuple<FieldTypes...>>::type;
       using ValueType = std::decay_t<typename FieldType::Type>;
-      auto value = Parser<ReaderType, WriterType, ValueType>::to_json(
+      auto value = Parser<ReaderType, WriterType, ValueType>::write(
           _w, fct::get<_i>(_tup));
       const auto name = FieldType::name_.str();
       if constexpr (!is_required<ValueType>()) {
@@ -263,8 +261,7 @@ struct Parser<ReaderType, WriterType, fct::NamedTuple<FieldTypes...>> {
       return fct::Error("Failed to parse field '" + _pair.first +
                         "': " + _e.what());
     };
-    return Parser<ReaderType, WriterType, ValueType>::from_json(_r,
-                                                                &_pair.second)
+    return Parser<ReaderType, WriterType, ValueType>::read(_r, &_pair.second)
         .or_else(embellish_error);
   }
 };
@@ -277,23 +274,23 @@ struct Parser<ReaderType, WriterType, std::optional<T>> {
   using OutputVarType = typename WriterType::OutputVarType;
 
   /// Expresses the variables as type T.
-  static fct::Result<std::optional<T>> from_json(const ReaderType& _r,
-                                                 InputVarType* _var) noexcept {
+  static fct::Result<std::optional<T>> read(const ReaderType& _r,
+                                            InputVarType* _var) noexcept {
     if (_r.is_empty(_var)) {
       return std::optional<T>();
     }
     const auto to_opt = [&_r](auto&& _t) { return std::make_optional<T>(_t); };
-    return Parser<ReaderType, WriterType, std::decay_t<T>>::from_json(_r, _var)
+    return Parser<ReaderType, WriterType, std::decay_t<T>>::read(_r, _var)
         .transform(to_opt);
   }
 
   /// Expresses the variable a a JSON.
-  static OutputVarType to_json(const WriterType& _w,
-                               const std::optional<T>& _o) noexcept {
+  static OutputVarType write(const WriterType& _w,
+                             const std::optional<T>& _o) noexcept {
     if (!_o) {
       return _w.empty_var();
     }
-    return Parser<ReaderType, WriterType, std::decay_t<T>>::to_json(_w, *_o);
+    return Parser<ReaderType, WriterType, std::decay_t<T>>::write(_w, *_o);
   }
 };
 
@@ -305,17 +302,17 @@ struct Parser<ReaderType, WriterType, fct::Ref<T>> {
   using OutputVarType = typename WriterType::OutputVarType;
 
   /// Expresses the variables as type T.
-  static fct::Result<fct::Ref<T>> from_json(const ReaderType& _r,
-                                            InputVarType* _var) noexcept {
+  static fct::Result<fct::Ref<T>> read(const ReaderType& _r,
+                                       InputVarType* _var) noexcept {
     const auto to_ref = [&](auto&& _t) { return fct::Ref<T>::make(_t); };
-    return Parser<ReaderType, WriterType, std::decay_t<T>>::from_json(_r, _var)
+    return Parser<ReaderType, WriterType, std::decay_t<T>>::read(_r, _var)
         .transform(to_ref);
   }
 
   /// Expresses the variable a a JSON.
-  static OutputVarType to_json(const WriterType& _w,
-                               const fct::Ref<T>& _ref) noexcept {
-    return Parser<ReaderType, WriterType, std::decay_t<T>>::to_json(_w, *_ref);
+  static OutputVarType write(const WriterType& _w,
+                             const fct::Ref<T>& _ref) noexcept {
+    return Parser<ReaderType, WriterType, std::decay_t<T>>::write(_w, *_ref);
   }
 };
 
@@ -327,23 +324,23 @@ struct Parser<ReaderType, WriterType, std::shared_ptr<T>> {
   using OutputVarType = typename WriterType::OutputVarType;
 
   /// Expresses the variables as type T.
-  static fct::Result<std::shared_ptr<T>> from_json(
-      const ReaderType& _r, InputVarType* _var) noexcept {
+  static fct::Result<std::shared_ptr<T>> read(const ReaderType& _r,
+                                              InputVarType* _var) noexcept {
     if (_r.is_empty(_var)) {
       return std::shared_ptr<T>();
     }
     const auto to_ptr = [](auto&& _t) { return std::make_shared<T>(_t); };
-    return Parser<ReaderType, WriterType, std::decay_t<T>>::from_json(_r, _var)
+    return Parser<ReaderType, WriterType, std::decay_t<T>>::read(_r, _var)
         .transform(to_ptr);
   }
 
   /// Expresses the variable a a JSON.
-  static OutputVarType to_json(const WriterType& _w,
-                               const std::shared_ptr<T>& _s) noexcept {
+  static OutputVarType write(const WriterType& _w,
+                             const std::shared_ptr<T>& _s) noexcept {
     if (!_s) {
       return _w.empty_var();
     }
-    return Parser<ReaderType, WriterType, std::decay_t<T>>::to_json(_w, *_s);
+    return Parser<ReaderType, WriterType, std::decay_t<T>>::write(_w, *_s);
   }
 };
 
@@ -355,24 +352,24 @@ struct Parser<ReaderType, WriterType, std::pair<FirstType, SecondType>> {
   using OutputVarType = typename WriterType::OutputVarType;
 
   /// Expresses the variables as type T.
-  static fct::Result<std::pair<FirstType, SecondType>> from_json(
+  static fct::Result<std::pair<FirstType, SecondType>> read(
       const ReaderType& _r, InputVarType* _var) noexcept {
     const auto to_pair = [&](auto&& _t) {
       return std::make_pair(std::move(std::get<0>(_t)),
                             std::move(std::get<1>(_t)));
     };
     return Parser<ReaderType, WriterType,
-                  std::tuple<FirstType, SecondType>>::from_json(_r, _var)
+                  std::tuple<FirstType, SecondType>>::read(_r, _var)
         .transform(to_pair);
   }
 
   /// Transform a std::vector into an array
-  static OutputVarType to_json(
+  static OutputVarType write(
       const WriterType& _w,
       const std::pair<FirstType, SecondType>& _p) noexcept {
     const auto tup = std::make_tuple(_p.first, _p.second);
     return Parser<ReaderType, WriterType,
-                  std::tuple<FirstType, SecondType>>::to_json(_w, tup);
+                  std::tuple<FirstType, SecondType>>::write(_w, tup);
   }
 };
 
@@ -388,11 +385,10 @@ struct Parser<ReaderType, WriterType, std::set<T>> {
 
  public:
   /// Expresses the variables as type T.
-  static fct::Result<std::set<T>> from_json(const ReaderType& _r,
-                                            InputVarType* _var) noexcept {
+  static fct::Result<std::set<T>> read(const ReaderType& _r,
+                                       InputVarType* _var) noexcept {
     const auto get_value = [&_r](InputVarType& _var) {
-      return Parser<ReaderType, WriterType, std::decay_t<T>>::from_json(_r,
-                                                                        &_var);
+      return Parser<ReaderType, WriterType, std::decay_t<T>>::read(_r, &_var);
     };
 
     const auto to_set = [&_r, get_value](InputArrayType _arr) {
@@ -404,11 +400,11 @@ struct Parser<ReaderType, WriterType, std::set<T>> {
   }
 
   /// Transform a std::vector into an array
-  static OutputVarType to_json(const WriterType& _w,
-                               const std::set<T>& _s) noexcept {
+  static OutputVarType write(const WriterType& _w,
+                             const std::set<T>& _s) noexcept {
     auto arr = _w.new_array();
     for (const auto& val : _s) {
-      _w.add(Parser<ReaderType, WriterType, std::decay_t<T>>::to_json(_w, val),
+      _w.add(Parser<ReaderType, WriterType, std::decay_t<T>>::write(_w, val),
              &arr);
     }
     return arr;
@@ -422,16 +418,16 @@ struct Parser<ReaderType, WriterType, strings::String> {
   using InputVarType = typename ReaderType::InputVarType;
   using OutputVarType = typename WriterType::OutputVarType;
 
-  static fct::Result<strings::String> from_json(const ReaderType& _r,
-                                                InputVarType* _var) noexcept {
+  static fct::Result<strings::String> read(const ReaderType& _r,
+                                           InputVarType* _var) noexcept {
     const auto to_str = [](auto&& _str) { return strings::String(_str); };
-    return Parser<ReaderType, WriterType, std::string>::from_json(_r, _var)
+    return Parser<ReaderType, WriterType, std::string>::read(_r, _var)
         .transform(to_str);
   }
 
-  static OutputVarType to_json(const WriterType& _w,
-                               const strings::String& _s) noexcept {
-    return Parser<ReaderType, WriterType, std::string>::to_json(_w, _s.str());
+  static OutputVarType write(const WriterType& _w,
+                             const strings::String& _s) noexcept {
+    return Parser<ReaderType, WriterType, std::string>::write(_w, _s.str());
   }
 };
 
@@ -452,8 +448,7 @@ struct Parser<ReaderType, WriterType,
   using OutputVarType = typename WriterType::OutputVarType;
 
   /// Expresses the variables as type T.
-  static ResultType from_json(const ReaderType& _r,
-                              InputVarType* _var) noexcept {
+  static ResultType read(const ReaderType& _r, InputVarType* _var) noexcept {
     const auto get_disc = [&_r](auto _obj) {
       return get_discriminator(_r, &_obj);
     };
@@ -466,14 +461,14 @@ struct Parser<ReaderType, WriterType,
   }
 
   /// Expresses the variables as a JSON type.
-  static OutputVarType to_json(
+  static OutputVarType write(
       const WriterType& _w,
       const fct::TaggedUnion<_discriminator, NamedTupleTypes...>&
           _tagged_union) noexcept {
     using VariantType =
         typename fct::TaggedUnion<_discriminator,
                                   NamedTupleTypes...>::VariantType;
-    return Parser<ReaderType, WriterType, VariantType>::to_json(
+    return Parser<ReaderType, WriterType, VariantType>::write(
         _w, _tagged_union.variant_);
   }
 
@@ -547,7 +542,7 @@ struct Parser<ReaderType, WriterType,
                           "': " + _e.what());
       };
 
-      return Parser<ReaderType, WriterType, NamedTupleType>::from_json(_r, _var)
+      return Parser<ReaderType, WriterType, NamedTupleType>::read(_r, _var)
           .transform(to_tagged_union)
           .or_else(embellish_error);
 
@@ -569,8 +564,8 @@ struct Parser<ReaderType, WriterType, std::tuple<Ts...>> {
   using OutputVarType = typename WriterType::OutputVarType;
 
   /// Expresses the variables as type T.
-  static fct::Result<std::tuple<Ts...>> from_json(const ReaderType& _r,
-                                                  InputVarType* _var) noexcept {
+  static fct::Result<std::tuple<Ts...>> read(const ReaderType& _r,
+                                             InputVarType* _var) noexcept {
     const auto to_vec = [&](auto _arr) { return _r.to_vec(&_arr); };
 
     const auto check_size =
@@ -593,8 +588,8 @@ struct Parser<ReaderType, WriterType, std::tuple<Ts...>> {
   }
 
   /// Transform a std::vector into a array
-  static OutputVarType to_json(const WriterType& _w,
-                               const std::tuple<Ts...>& _tup) noexcept {
+  static OutputVarType write(const WriterType& _w,
+                             const std::tuple<Ts...>& _tup) noexcept {
     auto arr = _w.new_array();
     to_array<0>(_w, _tup, &arr);
     return arr;
@@ -624,8 +619,8 @@ struct Parser<ReaderType, WriterType, std::tuple<Ts...>> {
                                    std::vector<InputVarType>* _vec) noexcept {
     using NewFieldType =
         std::decay_t<typename std::tuple_element<_i, std::tuple<Ts...>>::type>;
-    return Parser<ReaderType, WriterType, NewFieldType>::from_json(
-        _r, &((*_vec)[_i]));
+    return Parser<ReaderType, WriterType, NewFieldType>::read(_r,
+                                                              &((*_vec)[_i]));
   }
 
   /// Transforms a tuple to an array.
@@ -636,7 +631,7 @@ struct Parser<ReaderType, WriterType, std::tuple<Ts...>> {
       using NewFieldType = std::decay_t<
           typename std::tuple_element<_i, std::tuple<Ts...>>::type>;
 
-      const auto val = Parser<ReaderType, WriterType, NewFieldType>::to_json(
+      const auto val = Parser<ReaderType, WriterType, NewFieldType>::write(
           _w, std::get<_i>(_tup));
       _w.add(val, _ptr);
       to_array<_i + 1>(_w, _tup, _ptr);
@@ -653,7 +648,7 @@ struct Parser<ReaderType, WriterType, std::variant<FieldTypes...>> {
 
   /// Expresses the variables as type T.
   template <int _i = 0>
-  static fct::Result<std::variant<FieldTypes...>> from_json(
+  static fct::Result<std::variant<FieldTypes...>> read(
       const ReaderType& _r, InputVarType* _var,
       const std::vector<std::string> _errors = {}) noexcept {
     if constexpr (_i == sizeof...(FieldTypes)) {
@@ -668,13 +663,13 @@ struct Parser<ReaderType, WriterType, std::variant<FieldTypes...>> {
         const auto errors = fct::join::vector<std::string>(
             {_errors,
              std::vector<std::string>({std::string("\n -") + _err.what()})});
-        return from_json<_i + 1>(_r, _var, errors);
+        return read<_i + 1>(_r, _var, errors);
       };
 
       using AltType = std::decay_t<
           std::variant_alternative_t<_i, std::variant<FieldTypes...>>>;
 
-      return Parser<ReaderType, WriterType, AltType>::from_json(_r, _var)
+      return Parser<ReaderType, WriterType, AltType>::read(_r, _var)
           .transform(to_variant)
           .or_else(try_next);
     }
@@ -682,19 +677,19 @@ struct Parser<ReaderType, WriterType, std::variant<FieldTypes...>> {
 
   /// Expresses the variables as a JSON type.
   template <int _i = 0>
-  static OutputVarType to_json(
+  static OutputVarType write(
       const WriterType& _w,
       const std::variant<FieldTypes...>& _variant) noexcept {
     using AltType = std::variant_alternative_t<_i, std::variant<FieldTypes...>>;
     if constexpr (_i + 1 == sizeof...(FieldTypes)) {
-      return Parser<ReaderType, WriterType, std::decay_t<AltType>>::to_json(
+      return Parser<ReaderType, WriterType, std::decay_t<AltType>>::write(
           _w, std::get<AltType>(_variant));
     } else {
       if (std::holds_alternative<AltType>(_variant)) {
-        return Parser<ReaderType, WriterType, std::decay_t<AltType>>::to_json(
+        return Parser<ReaderType, WriterType, std::decay_t<AltType>>::write(
             _w, std::get<AltType>(_variant));
       } else {
-        return to_json<_i + 1>(_w, _variant);
+        return write<_i + 1>(_w, _variant);
       }
     }
   }
@@ -712,11 +707,10 @@ struct Parser<ReaderType, WriterType, std::vector<T>> {
   using OutputVarType = typename WriterType::OutputVarType;
 
   /// Expresses the variables as type T.
-  static fct::Result<std::vector<T>> from_json(const ReaderType& _r,
-                                               InputVarType* _var) noexcept {
+  static fct::Result<std::vector<T>> read(const ReaderType& _r,
+                                          InputVarType* _var) noexcept {
     const auto get_value = [&_r](InputVarType& _var) {
-      return Parser<ReaderType, WriterType, std::decay_t<T>>::from_json(_r,
-                                                                        &_var);
+      return Parser<ReaderType, WriterType, std::decay_t<T>>::read(_r, &_var);
     };
 
     const auto to_vec = [&_r, get_value](InputArrayType _arr) {
@@ -728,12 +722,12 @@ struct Parser<ReaderType, WriterType, std::vector<T>> {
   }
 
   /// Transform a std::vector into an array
-  static OutputVarType to_json(const WriterType& _w,
-                               const std::vector<T>& _vec) noexcept {
+  static OutputVarType write(const WriterType& _w,
+                             const std::vector<T>& _vec) noexcept {
     auto arr = _w.new_array();
     for (size_t i = 0; i < _vec.size(); ++i) {
       _w.add(
-          Parser<ReaderType, WriterType, std::decay_t<T>>::to_json(_w, _vec[i]),
+          Parser<ReaderType, WriterType, std::decay_t<T>>::write(_w, _vec[i]),
           &arr);
     }
     return OutputVarType(arr);
