@@ -30,6 +30,18 @@ struct Reader {
   using InputObjectType = flexbuffers::Map;
   using InputVarType = flexbuffers::Reference;
 
+  template <class T, class = void>
+  struct has_from_flexbuffers : std::false_type {};
+
+  template <class T>
+  struct has_from_flexbuffers<
+      T, std::enable_if_t<std::is_invocable_r<T, decltype(T::from_flexbuffers),
+                                              InputVarType>::value>>
+      : std::true_type {};
+
+  template <class T>
+  static constexpr bool has_custom_constructor = has_from_flexbuffers<T>::value;
+
   fct::Result<InputVarType> get_field(const std::string& _name,
                                       InputObjectType* _obj) const noexcept {
     const auto r = (*_obj)[_name];
