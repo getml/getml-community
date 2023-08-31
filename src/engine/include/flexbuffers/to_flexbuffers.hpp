@@ -11,6 +11,7 @@
 
 #include <flatbuffers/flexbuffers.h>
 
+#include <cstddef>
 #include <sstream>
 #include <vector>
 
@@ -20,13 +21,15 @@ namespace flexbuffers {
 
 /// Writes an object to flexbuffers.
 template <class T>
-std::vector<uint8_t> to_flexbuffers(const T& _obj) {
+std::vector<std::byte> to_flexbuffers(const T& _obj) {
   auto w = Writer();
   const auto flexbuffers_obj = Parser<T>::write(w, _obj);
   flexbuffers::Builder fbb;
   flexbuffers_obj->insert(std::nullopt, &fbb);
   fbb.Finish();
-  return fbb.GetBuffer();
+  const auto vec = fbb.GetBuffer();
+  const auto data = reinterpret_cast<const std::byte*>(vec.data());
+  return std::vector<std::byte>(data, data + vec.size());
 }
 
 }  // namespace flexbuffers

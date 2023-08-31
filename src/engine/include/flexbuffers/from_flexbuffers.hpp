@@ -11,22 +11,29 @@
 
 #include <flatbuffers/flexbuffers.h>
 
+#include <cstddef>
 #include <vector>
 
 #include "flexbuffers/Parser.hpp"
 
 namespace flexbuffers {
 
-using InputObjectType = typename Reader::InputObjectType;
 using InputVarType = typename Reader::InputVarType;
 
-/// Parses an object from FLEXBUFFERS using reflection.
+/// Parses an object from flexbuffers using reflection.
 template <class T>
-T from_flexbuffers(const std::vector<uint8_t>& _bytes) {
-  InputVarType root = flexbuffers::GetRoot(_bytes.data(), _bytes.size());
+T from_flexbuffers(const std::byte* _bytes, const size_t _size) {
+  InputVarType root =
+      flexbuffers::GetRoot(reinterpret_cast<const uint8_t*>(_bytes), _size);
   const auto r = Reader();
   const auto result = Parser<T>::read(r, &root);
   return result.value();
+}
+
+/// Parses an object from flexbuffers using reflection.
+template <class T>
+T from_flexbuffers(const std::vector<std::byte>& _bytes) {
+  return from_flexbuffers<T>(_bytes.data(), _bytes.size());
 }
 
 }  // namespace flexbuffers
