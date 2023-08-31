@@ -18,6 +18,7 @@
 #include "fct/NamedTuple.hpp"
 #include "fct/define_named_tuple.hpp"
 #include "helpers/ColumnDescription.hpp"
+#include "helpers/Saver.hpp"
 #include "metrics/Features.hpp"
 #include "metrics/Float.hpp"
 #include "metrics/Int.hpp"
@@ -159,7 +160,8 @@ class Scores {
 
  public:
   /// Saves the scores to a JSON file.
-  void save(const std::string& _fname) const;
+  void save(const std::string& _fname,
+            const typename helpers::Saver::Format _format) const;
 
   /// Stores the current state of the metrics in the history
   void to_history();

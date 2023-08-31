@@ -16,6 +16,7 @@
 #include "debug/debug.hpp"
 #include "fct/Field.hpp"
 #include "fct/NamedTuple.hpp"
+#include "helpers/Saver.hpp"
 #include "memmap/memmap.hpp"
 #include "predictors/CSRMatrix.hpp"
 #include "predictors/Encoding.hpp"
@@ -89,7 +90,8 @@ class PredictorImpl {
                        const std::vector<size_t>& _index);
 
   /// Saves the predictor impl as a JSON.
-  void save(const std::string& _fname) const;
+  void save(const std::string& _fname,
+            const typename helpers::Saver::Format _format) const;
 
   /// Transforms the columns using the encodings.
   std::vector<IntFeature> transform_encodings(

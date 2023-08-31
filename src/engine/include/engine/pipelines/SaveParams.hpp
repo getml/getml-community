@@ -19,6 +19,7 @@
 #include "fct/Field.hpp"
 #include "fct/NamedTuple.hpp"
 #include "fct/Ref.hpp"
+#include "helpers/Saver.hpp"
 
 namespace engine {
 namespace pipelines {
@@ -30,6 +31,9 @@ using SaveParams = fct::NamedTuple<
 
     /// The fitted pipeline.
     fct::Field<"fitted_", FittedPipeline>,
+
+    /// The file format to use.
+    fct::Field<"format_", typename helpers::Saver::Format>,
 
     /// The name of the pipeline to be save.
     fct::Field<"name_", std::string>,

@@ -399,13 +399,12 @@ void ProjectManager::save_pipeline(const typename Command::SavePipelineOp& _cmd,
 
   const auto path = project_directory() + "pipelines/";
 
-  const auto params =
-      pipelines::SaveParams{.categories_ = categories().strings(),
-                            .fitted_ = *fitted,
-                            .name_ = name,
-                            .path_ = path,
-                            .pipeline_ = pipeline,
-                            .temp_dir_ = params_.options_.temp_dir()};
+  const auto params = pipelines::SaveParams(
+      fct::make_field<"categories_">(categories().strings()) *
+      fct::make_field<"fitted_">(*fitted) * _cmd.get_field<"format_">() *
+      fct::make_field<"name_">(name) * fct::make_field<"path_">(path) *
+      fct::make_field<"pipeline_">(pipeline) *
+      fct::make_field<"temp_dir_">(params_.options_.temp_dir()));
 
   pipelines::save::save(params);
 

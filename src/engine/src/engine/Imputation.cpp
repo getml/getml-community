@@ -203,8 +203,9 @@ std::vector<std::pair<Float, bool>> Imputation::retrieve_pairs(
 
 // ----------------------------------------------------
 
-void Imputation::save(const std::string& _fname) const {
-  helpers::Saver::save_as_json(_fname, *this);
+void Imputation::save(const std::string& _fname,
+                      const typename helpers::Saver::Format& _format) const {
+  helpers::Saver::save(_fname, *this, _format);
 }
 
 // ----------------------------------------------------

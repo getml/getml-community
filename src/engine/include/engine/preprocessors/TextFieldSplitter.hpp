@@ -57,7 +57,8 @@ class TextFieldSplitter : public Preprocessor {
   void load(const std::string& _fname) final;
 
   /// Stores the preprocessor.
-  void save(const std::string& _fname) const final;
+  void save(const std::string& _fname,
+            const typename helpers::Saver::Format& _format) const final;
 
   /// Generates SQL code for the text field splitting.
   std::vector<std::string> to_sql(

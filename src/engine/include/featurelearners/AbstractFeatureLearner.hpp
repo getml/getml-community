@@ -17,6 +17,7 @@
 #include "featurelearners/Float.hpp"
 #include "featurelearners/Int.hpp"
 #include "featurelearners/TransformParams.hpp"
+#include "helpers/Saver.hpp"
 
 namespace featurelearners {
 
@@ -70,8 +71,9 @@ class AbstractFeatureLearner {
   /// Whether the feature learner is for the premium version only.
   virtual bool premium_only() const = 0;
 
-  /// Saves the Model in JSON format, if applicable
-  virtual void save(const std::string& _fname) const = 0;
+  /// Saves the model.
+  virtual void save(const std::string& _fname,
+                    const typename helpers::Saver::Format _format) const = 0;
 
   /// Whether the feature learner is to be silent.
   virtual bool silent() const = 0;
