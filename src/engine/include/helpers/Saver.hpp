@@ -11,13 +11,24 @@
 #include <fstream>
 #include <string>
 
-#include "helpers/Loader.hpp"
-#include "helpers/Saver.hpp"
-#include "json/json.hpp"
+#include "flexbuffers/to_flexbuffers.hpp"
+#include "json/to_json.hpp"
 
 namespace helpers {
 
 struct Saver {
+  /// Saves any class that is supported by the flexbuffers library to
+  /// a flexbuffers file.
+  template <class T>
+  static void save_as_flexbuffers(const std::string& _fname, const T& _obj) {
+    const auto bytes = flexbuffers::to_flexbuffers(_obj);
+    std::ofstream output(_fname);
+    for (const auto b : bytes) {
+      output << b;
+    }
+    output.close();
+  }
+
   /// Saves any class that is supported by the json library to
   /// JSON.
   template <class T>
