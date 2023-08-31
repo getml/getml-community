@@ -204,8 +204,10 @@ std::map<Int, size_t> CategoryTrimmer::make_map(
 
 // ----------------------------------------------------
 
-void CategoryTrimmer::save(const std::string& _fname) const {
-  helpers::Saver::save_as_json(_fname, *this);
+void CategoryTrimmer::save(
+    const std::string& _fname,
+    const typename helpers::Saver::Format& _format) const {
+  helpers::Saver::save(_fname, *this, _format);
 }
 
 // ----------------------------------------------------

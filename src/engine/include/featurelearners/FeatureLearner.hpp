@@ -104,8 +104,9 @@ class FeatureLearner : public AbstractFeatureLearner {
   /// Loads the feature learner from a file designated by _fname.
   void load(const std::string& _fname) final;
 
-  /// Saves the feature learner in JSON format, if applicable
-  void save(const std::string& _fname) const final;
+  /// Saves the model.
+  void save(const std::string& _fname,
+            const typename helpers::Saver::Format _format) const final;
 
   /// Necessary for the automatic parsing to work.
   NamedTupleType named_tuple() const {
@@ -782,8 +783,10 @@ std::string FeatureLearner<FeatureLearnerType>::remove_time_diff(
 // ----------------------------------------------------------------------------
 
 template <typename FeatureLearnerType>
-void FeatureLearner<FeatureLearnerType>::save(const std::string& _fname) const {
-  helpers::Saver::save_as_json(_fname, *this);
+void FeatureLearner<FeatureLearnerType>::save(
+    const std::string& _fname,
+    const typename helpers::Saver::Format _format) const {
+  helpers::Saver::save(_fname, *this, _format);
 }
 
 // ----------------------------------------------------------------------------

@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "debug/debug.hpp"
+#include "helpers/Saver.hpp"
 #include "logging/AbstractLogger.hpp"
 #include "predictors/Fingerprint.hpp"
 #include "predictors/FloatFeature.hpp"
@@ -65,7 +66,8 @@ class Predictor {
       const std::vector<FloatFeature>& _X_numerical) const = 0;
 
   /// Stores the predictor
-  virtual void save(const std::string& _fname) const = 0;
+  virtual void save(const std::string& _fname,
+                    const typename helpers::Saver::Format& _format) const = 0;
 
   /// Whether we want the predictor to be silent.
   virtual bool silent() const = 0;

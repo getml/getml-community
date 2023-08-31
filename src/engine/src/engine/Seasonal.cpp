@@ -307,8 +307,9 @@ typename Seasonal::NamedTupleType Seasonal::named_tuple() const {
 
 // ----------------------------------------------------
 
-void Seasonal::save(const std::string& _fname) const {
-  helpers::Saver::save_as_json(_fname, *this);
+void Seasonal::save(const std::string& _fname,
+                    const typename helpers::Saver::Format& _format) const {
+  helpers::Saver::save(_fname, *this, _format);
 }
 
 // ----------------------------------------------------

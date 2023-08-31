@@ -17,6 +17,7 @@
 #include "containers/containers.hpp"
 #include "engine/preprocessors/Params.hpp"
 #include "fct/Ref.hpp"
+#include "helpers/Saver.hpp"
 #include "helpers/StringIterator.hpp"
 
 namespace engine {
@@ -55,7 +56,8 @@ class Preprocessor {
   virtual void load(const std::string& _fname) = 0;
 
   /// Stores the preprocessor.
-  virtual void save(const std::string& _fname) const = 0;
+  virtual void save(const std::string& _fname,
+                    const typename helpers::Saver::Format& _format) const = 0;
 
   /// Generates the new column.
   virtual std::pair<containers::DataFrame, std::vector<containers::DataFrame>>

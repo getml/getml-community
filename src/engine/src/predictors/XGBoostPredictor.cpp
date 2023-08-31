@@ -382,7 +382,9 @@ void XGBoostPredictor::fit_handle(
     ++n_no_improvement;
 
     if (n_no_improvement < hyperparams_->val_.get<"early_stopping_rounds_">())
-      [[likely]] { return false; }
+        [[likely]] {
+      return false;
+    }
 
     return true;
   };
@@ -398,9 +400,9 @@ void XGBoostPredictor::fit_handle(
     }
 
     if (evaluate(i)) [[unlikely]] {
-        log(i, i);
-        break;
-      }
+      log(i, i);
+      break;
+    }
 
     log(i, n_iter);
   }
@@ -561,7 +563,9 @@ FloatFeature XGBoostPredictor::predict(
 
 // -----------------------------------------------------------------------------
 
-void XGBoostPredictor::save(const std::string &_fname) const {
+void XGBoostPredictor::save(
+    const std::string &_fname,
+    const typename helpers::Saver::Format &_format) const {
   if (len() == 0) {
     throw std::runtime_error("XGBoostPredictor has not been fitted!");
   }

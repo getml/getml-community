@@ -290,8 +290,10 @@ FloatFeature LogisticRegression::predict_sparse(
 
 // -----------------------------------------------------------------------------
 
-void LogisticRegression::save(const std::string& _fname) const {
-  helpers::Saver::save_as_json(_fname, *this);
+void LogisticRegression::save(
+    const std::string& _fname,
+    const typename helpers::Saver::Format& _format) const {
+  helpers::Saver::save(_fname, *this, _format);
 }
 
 // -----------------------------------------------------------------------------

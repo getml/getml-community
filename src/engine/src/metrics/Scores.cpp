@@ -10,8 +10,6 @@
 #include <Poco/DateTimeFormat.h>
 #include <Poco/DateTimeFormatter.h>
 
-#include "helpers/Saver.hpp"
-
 namespace metrics {
 
 // ----------------------------------------------------------------------------
@@ -37,8 +35,9 @@ Scores::~Scores() = default;
 
 // ----------------------------------------------------------------------------
 
-void Scores::save(const std::string& _fname) const {
-  helpers::Saver::save_as_json(_fname, *this);
+void Scores::save(const std::string& _fname,
+                  const typename helpers::Saver::Format _format) const {
+  helpers::Saver::save(_fname, *this, _format);
 }
 
 // ----------------------------------------------------------------------------

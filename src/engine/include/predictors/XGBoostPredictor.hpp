@@ -72,7 +72,8 @@ class XGBoostPredictor : public Predictor {
       const std::vector<FloatFeature>& _X_numerical) const final;
 
   /// Saves the predictor
-  void save(const std::string& _fname) const final;
+  void save(const std::string& _fname,
+            const typename helpers::Saver::Format& _format) const final;
 
  public:
   /// Whether the predictor accepts null values.

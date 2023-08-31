@@ -16,6 +16,8 @@
 #include "engine/utils/SQLDependencyTracker.hpp"
 #include "fct/Field.hpp"
 #include "fct/NamedTuple.hpp"
+#include "flexbuffers/from_flexbuffers.hpp"
+#include "flexbuffers/to_flexbuffers.hpp"
 #include "helpers/Saver.hpp"
 
 namespace engine {
@@ -34,7 +36,8 @@ void save_pipeline_json(const SaveParams& _params,
 void save_predictors(
     const std::vector<std::vector<fct::Ref<const predictors::Predictor>>>&
         _predictors,
-    const std::string& _purpose, const Poco::TemporaryFile& _tfile);
+    const std::string& _purpose, const Poco::TemporaryFile& _tfile,
+    const typename helpers::Saver::Format& _format);
 
 /// Saves the preprocessors.
 void save_preprocessors(const SaveParams& _params,
@@ -72,22 +75,24 @@ void save(const SaveParams& _params) {
 
   save_pipeline_json(_params, tfile);
 
-  helpers::Saver::save_as_json(tfile.path() + "/obj.json",
-                               _params.get<"pipeline_">().obj());
+  const auto format = _params.get<"format_">();
 
-  _params.get<"pipeline_">().scores().save(tfile.path() + "/scores.json");
+  helpers::Saver::save(tfile.path() + "/obj", _params.get<"pipeline_">().obj(),
+                       format);
+
+  _params.get<"pipeline_">().scores().save(tfile.path() + "/scores", format);
 
   _params.get<"fitted_">().feature_selectors_.impl_->save(
-      tfile.path() + "/feature-selector-impl.json");
+      tfile.path() + "/feature-selector-impl", format);
 
-  _params.get<"fitted_">().predictors_.impl_->save(tfile.path() +
-                                                   "/predictor-impl.json");
+  _params.get<"fitted_">().predictors_.impl_->save(
+      tfile.path() + "/predictor-impl", format);
 
   save_predictors(_params.get<"fitted_">().feature_selectors_.predictors_,
-                  "feature-selector", tfile);
+                  "feature-selector", tfile, format);
 
   save_predictors(_params.get<"fitted_">().predictors_.predictors_, "predictor",
-                  tfile);
+                  tfile, format);
 
   using DialectType = typename transpilation::TranspilationParams::DialectType;
 
@@ -117,10 +122,11 @@ void save(const SaveParams& _params) {
 
 void save_feature_learners(const SaveParams& _params,
                            const Poco::TemporaryFile& _tfile) {
+  const auto format = _params.get<"format_">();
   for (size_t i = 0; i < _params.get<"fitted_">().feature_learners_.size();
        ++i) {
     const auto& fl = _params.get<"fitted_">().feature_learners_.at(i);
-    fl->save(_tfile.path() + "/feature-learner-" + std::to_string(i) + ".json");
+    fl->save(_tfile.path() + "/feature-learner-" + std::to_string(i), format);
   }
 }
 
@@ -143,7 +149,8 @@ void save_pipeline_json(const SaveParams& _params,
       fct::make_field<"population_schema_">(f.population_schema_) *
       fct::make_field<"targets_">(f.targets());
 
-  helpers::Saver::save_as_json(_tfile.path() + "/pipeline.json", pipeline_json);
+  helpers::Saver::save(_tfile.path() + "/pipeline", pipeline_json,
+                       _params.get<"format_">());
 }
 
 // ----------------------------------------------------------------------------
@@ -151,12 +158,14 @@ void save_pipeline_json(const SaveParams& _params,
 void save_predictors(
     const std::vector<std::vector<fct::Ref<const predictors::Predictor>>>&
         _predictors,
-    const std::string& _purpose, const Poco::TemporaryFile& _tfile) {
+    const std::string& _purpose, const Poco::TemporaryFile& _tfile,
+    const typename helpers::Saver::Format& _format) {
   for (size_t i = 0; i < _predictors.size(); ++i) {
     for (size_t j = 0; j < _predictors.at(i).size(); ++j) {
       const auto& p = _predictors.at(i).at(j);
       p->save(_tfile.path() + "/" + _purpose + "-" + std::to_string(i) + "-" +
-              std::to_string(j));
+                  std::to_string(j),
+              _format);
     }
   }
 }
@@ -165,9 +174,10 @@ void save_predictors(
 
 void save_preprocessors(const SaveParams& _params,
                         const Poco::TemporaryFile& _tfile) {
+  const auto format = _params.get<"format_">();
   for (size_t i = 0; i < _params.get<"fitted_">().preprocessors_.size(); ++i) {
     const auto& p = _params.get<"fitted_">().preprocessors_.at(i);
-    p->save(_tfile.path() + "/preprocessor-" + std::to_string(i) + ".json");
+    p->save(_tfile.path() + "/preprocessor-" + std::to_string(i), format);
   }
 }
 

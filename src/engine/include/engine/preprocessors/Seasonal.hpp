@@ -81,7 +81,8 @@ class Seasonal : public Preprocessor {
   NamedTupleType named_tuple() const;
 
   /// Stores the preprocessor.
-  void save(const std::string& _fname) const final;
+  void save(const std::string& _fname,
+            const typename helpers::Saver::Format& _format) const final;
 
   /// Transforms the data frames by adding the desired time series
   /// transformations.

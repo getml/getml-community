@@ -22,6 +22,7 @@
 #include "fct/Ref.hpp"
 #include "fct/TaggedUnion.hpp"
 #include "fct/define_named_tuple.hpp"
+#include "helpers/Saver.hpp"
 #include "helpers/Schema.hpp"
 
 namespace commands {
@@ -146,7 +147,8 @@ struct ProjectCommand {
   /// The command to save a pipeline.
   using SavePipelineOp =
       fct::NamedTuple<fct::Field<"type_", fct::Literal<"Pipeline.save">>,
-                      fct::Field<"name_", std::string>>;
+                      fct::Field<"name_", std::string>,
+                      fct::Field<"format_", typename helpers::Saver::Format>>;
 
   /// The command to get the temp_dir.
   using TempDirOp =
