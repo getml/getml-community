@@ -65,7 +65,7 @@ std::vector<fct::Ref<const preprocessors::Preprocessor>> load_preprocessors(
 Pipeline load_fitted(const std::string& _path, const Pipeline& _pipeline,
                      const dependency::PipelineTrackers& _pipeline_trackers) {
   const auto pipeline_json =
-      helpers::Loader::load_from_json<PipelineJSON>(_path + "pipeline.json");
+      helpers::Loader::load<PipelineJSON>(_path + "pipeline");
 
   const auto [feature_selector_impl, predictor_impl] = load_impls(_path);
 
@@ -128,7 +128,7 @@ load_feature_learners(const std::string& _path,
 
   for (size_t i = 0; i < feature_learners.size(); ++i) {
     auto& fe = feature_learners.at(i);
-    fe->load(_path + "feature-learner-" + std::to_string(i) + ".json");
+    fe->load(_path + "feature-learner-" + std::to_string(i));
     _fe_tracker->add(fe);
   }
 
@@ -165,12 +165,13 @@ Predictors load_feature_selectors(
 std::pair<fct::Ref<const predictors::PredictorImpl>,
           fct::Ref<const predictors::PredictorImpl>>
 load_impls(const std::string& _path) {
-  const auto feature_selector_impl = helpers::Loader::load_from_json<
-      fct::Ref<const predictors::PredictorImpl>>(_path +
-                                                 "feature-selector-impl.json");
+  const auto feature_selector_impl =
+      helpers::Loader::load<fct::Ref<const predictors::PredictorImpl>>(
+          _path + "feature-selector-impl");
 
-  const auto predictor_impl = helpers::Loader::load_from_json<
-      fct::Ref<const predictors::PredictorImpl>>(_path + "predictor-impl.json");
+  const auto predictor_impl =
+      helpers::Loader::load<fct::Ref<const predictors::PredictorImpl>>(
+          _path + "predictor-impl");
 
   return std::make_pair(feature_selector_impl, predictor_impl);
 }
@@ -211,7 +212,7 @@ std::vector<fct::Ref<const preprocessors::Preprocessor>> load_preprocessors(
 
   for (size_t i = 0; i < preprocessors.size(); ++i) {
     const auto& p = preprocessors.at(i);
-    p->load(_path + "preprocessor-" + std::to_string(i) + ".json");
+    p->load(_path + "preprocessor-" + std::to_string(i));
     _preprocessor_tracker->add(p);
   }
 

@@ -9,9 +9,12 @@
 #define HELPERS_LOADER_HPP_
 
 #include <cstddef>
+#include <filesystem>
 #include <fstream>
+#include <functional>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "flexbuffers/from_flexbuffers.hpp"
@@ -21,15 +24,35 @@ namespace helpers {
 
 class Loader {
  public:
+  /// Loads a file, automatically inferrint the ending.
+  template <class T>
+  static T load(const std::string& _fname) {
+    const auto endings = std::vector<
+        std::pair<std::string, std::function<T(const std::string&)>>>(
+        {std::make_pair(".fb", load_from_flexbuffers<T>),
+         std::make_pair(".json", load_from_json<T>)});
+
+    for (const auto& [e, f] : endings) {
+      if (_fname.size() > e.size() &&
+          _fname.substr(_fname.size() - e.size()) == e) {
+        return f(_fname);
+      }
+    }
+
+    for (const auto& [e, f] : endings) {
+      if (std::filesystem::exists(_fname + e)) {
+        return f(_fname + e);
+      }
+    }
+
+    throw std::runtime_error("File '" + _fname + "' not found!");
+  }
+
   /// Loads any class that is supported by the flexbuffers library from
   /// a binary file.
   template <class T>
   static T load_from_flexbuffers(const std::string& _fname) {
-    const auto fname =
-        _fname.size() > 3 && _fname.substr(_fname.size() - 3) == ".fb"
-            ? _fname
-            : _fname + ".fb";
-    const auto bytes = read_bytes(fname);
+    const auto bytes = read_bytes(_fname);
     return flexbuffers::from_flexbuffers<T>(bytes);
   }
 
@@ -37,11 +60,7 @@ class Loader {
   /// JSON.
   template <class T>
   static T load_from_json(const std::string& _fname) {
-    const auto fname =
-        _fname.size() > 5 && _fname.substr(_fname.size() - 5) == ".json"
-            ? _fname
-            : _fname + ".json";
-    const auto json_str = read_str(fname);
+    const auto json_str = read_str(_fname);
     return json::from_json<T>(json_str);
   }
 

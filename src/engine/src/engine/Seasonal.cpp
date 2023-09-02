@@ -289,8 +289,7 @@ containers::DataFrame Seasonal::fit_transform_df(
 // ----------------------------------------------------
 
 void Seasonal::load(const std::string& _fname) {
-  const auto named_tuple =
-      helpers::Loader::load_from_json<NamedTupleType>(_fname);
+  const auto named_tuple = helpers::Loader::load<NamedTupleType>(_fname);
   hour_ = named_tuple.get<f_hour>();
   minute_ = named_tuple.get<f_minute>();
   month_ = named_tuple.get<f_month>();

@@ -133,8 +133,7 @@ std::vector<typename CategoryTrimmer::CategoryPair> CategoryTrimmer::fit_df(
 // ----------------------------------------------------
 
 void CategoryTrimmer::load(const std::string& _fname) {
-  const auto named_tuple =
-      helpers::Loader::load_from_json<NamedTupleType>(_fname);
+  const auto named_tuple = helpers::Loader::load<NamedTupleType>(_fname);
   peripheral_sets_ = named_tuple.get<f_peripheral_sets>();
   population_sets_ = named_tuple.get<f_population_sets>();
 }
