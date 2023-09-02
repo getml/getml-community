@@ -668,7 +668,7 @@ FeatureLearner<FeatureLearnerType>::handle_text_fields(
 template <typename FeatureLearnerType>
 void FeatureLearner<FeatureLearnerType>::load(const std::string& _fname) {
   using FLNamedTupleType = typename FeatureLearnerType::NamedTupleType;
-  const auto val = helpers::Loader::load_from_json<NamedTupleType>(_fname);
+  const auto val = helpers::Loader::load<NamedTupleType>(_fname);
   fast_prop_container_ = fct::get<"fast_prop_container_">(val);
   feature_learner_ = FeatureLearnerType(FLNamedTupleType(val));
   target_num_ = fct::get<"target_num_">(val);

@@ -26,15 +26,13 @@ namespace load {
 Pipeline load(const std::string& _path,
               const dependency::PipelineTrackers& _pipeline_trackers) {
   const auto obj =
-      helpers::Loader::load_from_json<fct::Ref<const commands::Pipeline>>(
-          _path + "obj.json");
+      helpers::Loader::load<fct::Ref<const commands::Pipeline>>(_path + "obj");
 
   const auto scores =
-      helpers::Loader::load_from_json<fct::Ref<const metrics::Scores>>(
-          _path + "scores.json");
+      helpers::Loader::load<fct::Ref<const metrics::Scores>>(_path + "scores");
 
   const auto pipeline_json =
-      helpers::Loader::load_from_json<PipelineJSON>(_path + "pipeline.json");
+      helpers::Loader::load<PipelineJSON>(_path + "pipeline");
 
   const auto p = Pipeline(obj)
                      .with_scores(scores)

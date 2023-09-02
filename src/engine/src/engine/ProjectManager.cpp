@@ -276,7 +276,7 @@ void ProjectManager::load_data_container(
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto data_container =
-      helpers::Loader::load_from_json<commands::DataContainer>(path);
+      helpers::Loader::load<commands::DataContainer>(path);
 
   read_lock.unlock();
 

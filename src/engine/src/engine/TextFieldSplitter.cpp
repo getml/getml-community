@@ -93,8 +93,7 @@ std::vector<fct::Ref<helpers::ColumnDescription>> TextFieldSplitter::fit_df(
 // ----------------------------------------------------
 
 void TextFieldSplitter::load(const std::string& _fname) {
-  const auto named_tuple =
-      helpers::Loader::load_from_json<NamedTupleType>(_fname);
+  const auto named_tuple = helpers::Loader::load<NamedTupleType>(_fname);
   cols_ = named_tuple.get<f_cols>();
 }
 
