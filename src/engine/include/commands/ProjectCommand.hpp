@@ -145,10 +145,10 @@ struct ProjectCommand {
                       fct::Field<"name_", std::string>>;
 
   /// The command to save a pipeline.
-  using SavePipelineOp =
-      fct::NamedTuple<fct::Field<"type_", fct::Literal<"Pipeline.save">>,
-                      fct::Field<"name_", std::string>,
-                      fct::Field<"format_", typename helpers::Saver::Format>>;
+  using SavePipelineOp = fct::NamedTuple<
+      fct::Field<"type_", fct::Literal<"Pipeline.save">>,
+      fct::Field<"name_", std::string>,
+      fct::Field<"format_", std::optional<typename helpers::Saver::Format>>>;
 
   /// The command to get the temp_dir.
   using TempDirOp =
