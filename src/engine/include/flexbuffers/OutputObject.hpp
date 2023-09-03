@@ -29,10 +29,23 @@ class OutputObject : public OutputVar {
   /// Inserts all elements into the builder.
   void insert(const std::optional<std::string>& _key,
               flexbuffers::Builder* _fbb) final {
+    /// We have to catch the edge case of an empty map,
+    /// because flexbuffers ignores empty vectors/maps.
+    if (vars_.size() == 0) {
+      if (_key) {
+        _fbb->Null(_key->c_str());
+      } else {
+        _fbb->Null();
+      }
+      return;
+    }
+
     const auto start = _key ? _fbb->StartMap(_key->c_str()) : _fbb->StartMap();
+
     for (const auto& [name, elem] : vars_) {
       elem->insert(name, _fbb);
     }
+
     _fbb->EndMap(start);
   };
 

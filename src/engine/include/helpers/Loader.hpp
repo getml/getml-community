@@ -66,11 +66,11 @@ class Loader {
 
  private:
   /// Reads bytes from a file.
-  static std::vector<std::byte> read_bytes(const std::string& _fname) {
-    std::basic_ifstream<std::byte> input(_fname, std::ios::binary);
+  static std::vector<unsigned char> read_bytes(const std::string& _fname) {
+    std::ifstream input(_fname, std::ios::binary);
     if (input.is_open()) {
-      std::istreambuf_iterator<std::byte> begin(input), end;
-      const auto bytes = std::vector<std::byte>(begin, end);
+      std::istreambuf_iterator<char> begin(input), end;
+      const auto bytes = std::vector<unsigned char>(begin, end);
       input.close();
       return bytes;
     } else {

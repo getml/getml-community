@@ -11,7 +11,6 @@
 
 #include <flatbuffers/flexbuffers.h>
 
-#include <cstddef>
 #include <vector>
 
 #include "flexbuffers/Parser.hpp"
@@ -22,7 +21,7 @@ using InputVarType = typename Reader::InputVarType;
 
 /// Parses an object from flexbuffers using reflection.
 template <class T>
-T from_flexbuffers(const std::byte* _bytes, const size_t _size) {
+T from_flexbuffers(const unsigned char* _bytes, const size_t _size) {
   InputVarType root =
       flexbuffers::GetRoot(reinterpret_cast<const uint8_t*>(_bytes), _size);
   const auto r = Reader();
@@ -32,7 +31,7 @@ T from_flexbuffers(const std::byte* _bytes, const size_t _size) {
 
 /// Parses an object from flexbuffers using reflection.
 template <class T>
-T from_flexbuffers(const std::vector<std::byte>& _bytes) {
+T from_flexbuffers(const std::vector<unsigned char>& _bytes) {
   return from_flexbuffers<T>(_bytes.data(), _bytes.size());
 }
 

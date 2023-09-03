@@ -28,11 +28,24 @@ class OutputArray : public OutputVar {
   /// Inserts all elements into the builder.
   void insert(const std::optional<std::string>& _key,
               flexbuffers::Builder* _fbb) final {
+    /// We have to catch the edge case of an empty vector,
+    /// because flexbuffers ignores empty vectors/maps.
+    if (vars_.size() == 0) {
+      if (_key) {
+        _fbb->Null(_key->c_str());
+      } else {
+        _fbb->Null();
+      }
+      return;
+    }
+
     const auto start =
         _key ? _fbb->StartVector(_key->c_str()) : _fbb->StartVector();
+
     for (const auto& var : vars_) {
       var->insert(std::nullopt, _fbb);
     }
+
     _fbb->EndVector(start, false, false);
   };
 
