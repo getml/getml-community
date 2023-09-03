@@ -44,12 +44,14 @@ struct Reader {
 
   fct::Result<InputVarType> get_field(const std::string& _name,
                                       InputObjectType* _obj) const noexcept {
-    const auto r = (*_obj)[_name];
-    if (r.IsNull()) {
-      return fct::Error("Map does not contain any element called '" + _name +
-                        "'.");
+    const auto keys = _obj->Keys();
+    for (size_t i = 0; i < keys.size(); ++i) {
+      if (_name == keys[i].AsString().c_str()) {
+        return _obj->Values()[i];
+      }
     }
-    return r;
+    return fct::Error("Map does not contain any element called '" + _name +
+                      "'.");
   }
 
   bool is_empty(InputVarType* _var) const noexcept { return _var->IsNull(); }
@@ -82,6 +84,10 @@ struct Reader {
   }
 
   fct::Result<InputArrayType> to_array(InputVarType* _var) const noexcept {
+    // Necessary, because we write empty vectors as null.
+    if (_var->IsNull()) {
+      return flexbuffers::Vector::EmptyVector();
+    }
     if (!_var->IsVector()) {
       return fct::Error("Could not cast to Vector.");
     }
@@ -104,6 +110,10 @@ struct Reader {
   }
 
   fct::Result<InputObjectType> to_object(InputVarType* _var) const noexcept {
+    // Necessary, because we write empty maps as null.
+    if (_var->IsNull()) {
+      return flexbuffers::Map::EmptyMap();
+    }
     if (!_var->IsMap()) {
       return fct::Error("Could not cast to Map!");
     }

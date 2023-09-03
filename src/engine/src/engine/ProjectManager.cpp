@@ -401,6 +401,8 @@ void ProjectManager::save_pipeline(const typename Command::SavePipelineOp& _cmd,
 
   using Format = typename helpers::Saver::Format;
 
+  // Saving the pipeline happens automatically, so it is unlikely that the field
+  // will ever be set. Therefore, the format chosen is actually determined here.
   const auto format =
       _cmd.get<"format_">().value_or(Format::make<"flexbuffers">());
 
