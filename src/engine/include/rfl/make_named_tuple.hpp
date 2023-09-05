@@ -8,6 +8,8 @@
 #ifndef RFL_MAKENAMEDTUPLE_HPP_
 #define RFL_MAKENAMEDTUPLE_HPP_
 
+#include <type_traits>
+
 #include "rfl/NamedTuple.hpp"
 
 namespace rfl {
@@ -16,7 +18,8 @@ namespace rfl {
 /// to explitly defined the field types.
 template <class... FieldTypes>
 auto make_named_tuple(FieldTypes... _args) {
-  return NamedTuple<FieldTypes...>(std::forward<FieldTypes>(_args)...);
+  return NamedTuple<std::decay_t<FieldTypes>...>(
+      std::forward<FieldTypes>(_args)...);
 }
 
 }  // namespace rfl

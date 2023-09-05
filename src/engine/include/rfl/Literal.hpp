@@ -17,9 +17,8 @@
 
 #include "debug/debug.hpp"
 #include "rfl/Result.hpp"
-#include "rfl/VisitTree.hpp"
 #include "rfl/internal/StringLiteral.hpp"
-#include "rfl/join.hpp"
+#include "rfl/internal/VisitTree.hpp"
 
 namespace rfl {
 
