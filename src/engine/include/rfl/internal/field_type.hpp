@@ -31,7 +31,7 @@ struct FieldType;
 template <StringLiteral _field_name, class NamedTupleType>
 struct FieldType {
   static constexpr int field_ix_ =
-      rfl::find_index<_field_name, typename NamedTupleType::Fields>();
+      internal::find_index<_field_name, typename NamedTupleType::Fields>();
 
   using Type =
       typename std::tuple_element<field_ix_,

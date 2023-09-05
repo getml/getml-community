@@ -17,7 +17,7 @@ namespace rfl {
 namespace internal {
 
 /// Finds the index of the field signified by _field_name
-template <internalStringLiteral _field_name, class _Fields, int I = 0>
+template <StringLiteral _field_name, class _Fields, int I = 0>
 constexpr static int find_index() {
   using FieldType = std::decay_t<typename std::tuple_element<I, _Fields>::type>;
 

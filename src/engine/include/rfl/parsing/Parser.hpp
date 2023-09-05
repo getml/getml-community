@@ -22,17 +22,18 @@
 #include "fct/collect.hpp"
 #include "fct/collect_results.hpp"
 #include "fct/join.hpp"
-#include "parsing/is_required.hpp"
 #include "rfl/Literal.hpp"
 #include "rfl/NamedTuple.hpp"
 #include "rfl/Ref.hpp"
 #include "rfl/Result.hpp"
 #include "rfl/TaggedUnion.hpp"
 #include "rfl/field_type.hpp"
-#include "rfl/internal/HelperTuple.hpp"
 #include "rfl/internal/StringLiteral.hpp"
+#include "rfl/internal/from_named_tuple.hpp"
 #include "rfl/internal/has_named_tuple_type_v.hpp"
-#include "rfl/internal/is_field.hpp"
+#include "rfl/internal/named_tuple_t.hpp"
+#include "rfl/internal/to_named_tuple.hpp"
+#include "rfl/parsing/is_required.hpp"
 #include "strings/strings.hpp"
 
 namespace rfl {
@@ -63,6 +64,11 @@ struct Parser {
         };
         return Parser<ReaderType, WriterType, NamedTupleType>::read(_r, _var)
             .transform(wrap_in_t);
+      } else if constexpr (std::is_class_v<T> &&
+                           !std::is_same<T, std::string>()) {
+        using NamedTupleType = internal::named_tuple_t<T>;
+        return Parser<ReaderType, WriterType, NamedTupleType>::read(_r, _var)
+            .transform(internal::from_named_tuple<T, NamedTupleType>);
       } else {
         return _r.template to_basic_type<std::decay_t<T>>(_var);
       }
@@ -80,146 +86,15 @@ struct Parser {
         const auto& [r] = _var;
         return Parser<ReaderType, WriterType, NamedTupleType>::write(_w, r);
       }
+    } else if constexpr (std::is_class_v<T> &&
+                         !std::is_same<T, std::string>()) {
+      const auto named_tuple = internal::to_named_tuple(_var);
+      using NamedTupleType = std::decay_t<decltype(named_tuple)>;
+      return Parser<ReaderType, WriterType, NamedTupleType>::write(_w,
+                                                                   named_tuple);
     } else {
       return _w.from_basic_type(_var);
     }
-  }
-};
-
-// ----------------------------------------------------------------------------
-
-/// Parses helper tuples. This is really mainly used for structs.
-/// Structs are transformed from and to helper tuples and then run through this
-/// parser.
-template <class ReaderType, class WriterType, class... FieldTypes>
-struct Parser<ReaderType, WriterType,
-              internal::HelperTuple<std::tuple<FieldTypes...>>> {
-  using InputObjectType = typename ReaderType::InputObjectType;
-  using InputVarType = typename ReaderType::InputVarType;
-
-  using OutputObjectType = typename WriterType::OutputObjectType;
-  using OutputVarType = typename WriterType::OutputVarType;
-
-  using HelperTupleType = HelperTuple<std::tuple<std::decay_t<FieldTypes>...>>;
-
- public:
-  /// Generates a NamedTuple from a JSON Object.
-  static Result<HelperTupleType> read(const ReaderType& _r,
-                                      InputVarType* _var) noexcept {
-    const auto to_map = [&](auto _obj) { return _r.to_map(&_obj); };
-    const auto build = [&](const auto& _map) {
-      return build_helper_tuple_recursively(_r, _map);
-    };
-    return _r.to_object(_var).transform(to_map).and_then(build);
-  }
-
-  /// Transforms a NamedTuple into a JSON object.
-  static OutputVarType write(const WriterType& _w,
-                             const HelperTupleType& _tup) noexcept {
-    auto obj = _w.new_object();
-    build_object_recursively(_w, _tup, &obj);
-    return OutputVarType(obj);
-  }
-
- private:
-  /// Builds the named tuple field by field.
-  template <class... Args>
-  static Result<HelperTupleType> build_helper_tuple_recursively(
-      const ReaderType& _r, const std::map<std::string, InputVarType>& _map,
-      Args&&... _args) noexcept {
-    const auto size = sizeof...(Args);
-
-    if constexpr (size == sizeof...(FieldTypes)) {
-      return HelperTupleType(std::make_tuple(_args...));
-    } else {
-      using FieldType = std::decay_t<
-          typename std::tuple_element<_i, std::tuple<FieldTypes...>>::type>;
-
-      using ValueType = internal::is_field_t<FieldType>;
-
-      const auto name = get_or_make_name<FieldType, _i>();
-
-      const auto it = _map.find(key);
-
-      if (it == _map.end()) {
-        if constexpr (is_required<ValueType>()) {
-          return Error("Field named '" + key + "' not found!");
-        } else {
-          if constexpr (is_field_v<FieldType>) {
-            return build_helper_tuple_recursively(_r, _map, _args...,
-                                                  FieldType(ValueType()));
-          } else {
-            return build_helper_tuple_recursively(_r, _map, _args...,
-                                                  ValueType());
-          }
-        }
-      }
-
-      const auto build = [&](auto&& _value) {
-        if constexpr (is_field_v<FieldType>) {
-          return build_helper_tuple_recursively(_r, _map, _args...,
-                                                FieldType(_value));
-        } else {
-          return build_helper_tuple_recursively(_r, _map, _args..., _value);
-        }
-      };
-
-      return get_value<ValueType>(_r, *it).and_then(build);
-    }
-  }
-
-  /// Builds the object field by field.
-  template <int _i = 0>
-  static void build_object_recursively(const WriterType& _w,
-                                       const HelperTupleType& _tup,
-                                       OutputObjectType* _ptr) noexcept {
-    if constexpr (_i >= sizeof...(FieldTypes)) {
-      return;
-    } else {
-      using FieldType = std::decay_t<
-          typename std::tuple_element<_i, std::tuple<FieldTypes...>>::type>;
-
-      using ValueType = internal::is_field_t<FieldType>;
-
-      auto value = Parser<ReaderType, WriterType, ValueType>::write(
-          _w, std::get<_i>(_tup.tup_));
-
-      const auto name = get_or_make_name<FieldType, _i>();
-
-      if constexpr (!is_required<ValueType>()) {
-        if (!_w.is_empty(&value)) {
-          _w.set_field(name, value, _ptr);
-        }
-      } else {
-        _w.set_field(name, value, _ptr);
-      }
-
-      return build_object_recursively<_i + 1>(_w, _tup, _ptr);
-    }
-  }
-
-  /// Retrieves the name from the field or generates one.
-  template <class FieldType, int _i>
-  static std::string get_or_make_name() {
-    if constexpr (internal::is_field_v<FieldType>) {
-      return FieldType::name_.str();
-    } else if constexpr (_i < 9) {
-      return "field_0" + std::to_string(i + 1);
-    } else {
-      return "field_" + std::to_string(i + 1);
-    }
-  }
-
-  /// Retrieves the value from the object. This is mainly needed to generate a
-  /// better error message.
-  template <class ValueType>
-  static auto get_value(const ReaderType& _r,
-                        std::pair<std::string, InputVarType> _pair) noexcept {
-    const auto embellish_error = [&](const Error& _e) {
-      return Error("Failed to parse field '" + _pair.first + "': " + _e.what());
-    };
-    return Parser<ReaderType, WriterType, ValueType>::read(_r, &_pair.second)
-        .or_else(embellish_error);
   }
 };
 
@@ -844,13 +719,18 @@ struct Parser<ReaderType, WriterType, std::vector<T>> {
   /// Expresses the variables as type T.
   static Result<std::vector<T>> read(const ReaderType& _r,
                                      InputVarType* _var) noexcept {
-    const auto get_value = [&_r](InputVarType& _var) {
-      return Parser<ReaderType, WriterType, std::decay_t<T>>::read(_r, &_var);
-    };
-
-    const auto to_vec = [&_r, get_value](InputArrayType _arr) {
-      auto vec = _r.to_vec(&_arr);
-      return fct::collect_results::vector(vec | VIEWS::transform(get_value));
+    const auto to_vec = [&](InputArrayType _arr) {
+      auto input_vars = _r.to_vec(&_arr);
+      auto vec = std::vector<T>();
+      for (auto& v : input_vars) {
+        const auto r =
+            Parser<ReaderType, WriterType, std::decay_t<T>>::read(_r, &v);
+        if (!r) {
+          return Result<std::vector<T>>(*r.error());
+        }
+        vec.emplace_back(*r);
+      }
+      return Result<std::vector<T>>(vec);
     };
 
     return _r.to_array(_var).and_then(to_vec);

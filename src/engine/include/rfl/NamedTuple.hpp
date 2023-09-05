@@ -16,10 +16,10 @@
 
 #include "rfl/Field.hpp"
 #include "rfl/get.hpp"
-#include "rfl/has_named_tuple_method_v.hpp"
-#include "rfl/has_named_tuple_type_v.hpp"
 #include "rfl/internal/StringLiteral.hpp"
 #include "rfl/internal/find_index.hpp"
+#include "rfl/internal/has_named_tuple_method_v.hpp"
+#include "rfl/internal/has_named_tuple_type_v.hpp"
 
 namespace rfl {
 
