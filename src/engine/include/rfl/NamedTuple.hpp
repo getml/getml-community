@@ -34,29 +34,45 @@ class NamedTuple {
  public:
   /// Construct from the fields.
   NamedTuple(FieldTypes... _fields)
-      : values_(std::forward_as_tuple(_fields.value_...)) {}
+      : values_(std::forward_as_tuple(_fields.value_...)) {
+    static_assert(no_duplicate_field_names(),
+                  "Duplicate field names are not allowed");
+  }
 
   /// Construct from a tuple containing fields.
   NamedTuple(const std::tuple<FieldTypes...>& _tup)
-      : NamedTuple(std::make_from_tuple<NamedTuple<FieldTypes...>>(_tup)) {}
+      : NamedTuple(std::make_from_tuple<NamedTuple<FieldTypes...>>(_tup)) {
+    static_assert(no_duplicate_field_names(),
+                  "Duplicate field names are not allowed");
+  }
 
   /// Copy constructor.
   NamedTuple(const NamedTuple<FieldTypes...>& _other)
-      : values_(_other.values_) {}
+      : values_(_other.values_) {
+    // Duplicate field checks not required - has already been checked.
+  }
 
   /// Move constructor.
   NamedTuple(NamedTuple<FieldTypes...>&& _other)
-      : values_(std::move(_other.values_)) {}
+      : values_(std::move(_other.values_)) {
+    // Duplicate field checks not required - has already been checked.
+  }
 
   /// Copy constructor.
   template <class... OtherFieldTypes>
   NamedTuple(const NamedTuple<OtherFieldTypes...>& _other)
-      : NamedTuple(retrieve_fields(_other.fields())) {}
+      : NamedTuple(retrieve_fields(_other.fields())) {
+    static_assert(no_duplicate_field_names(),
+                  "Duplicate field names are not allowed");
+  }
 
   /// Move constructor.
   template <class... OtherFieldTypes>
   NamedTuple(NamedTuple<OtherFieldTypes...>&& _other)
-      : NamedTuple(retrieve_fields(_other.fields())) {}
+      : NamedTuple(retrieve_fields(_other.fields())) {
+    static_assert(no_duplicate_field_names(),
+                  "Duplicate field names are not allowed");
+  }
 
   ~NamedTuple() = default;
 
@@ -371,9 +387,6 @@ class NamedTuple {
           FieldType(std::get<index>(_other_fields).value_));
     }
   }
-
-  static_assert(no_duplicate_field_names(),
-                "Duplicate field names are not allowed");
 
  private:
   /// The values actually contained in the named tuple.
