@@ -11,7 +11,7 @@
 #include "engine/handlers/StringOpParser.hpp"
 #include "engine/utils/Aggregations.hpp"
 #include "engine/utils/Time.hpp"
-#include "fct/visit.hpp"
+#include "rfl/visit.hpp"
 
 namespace engine {
 namespace handlers {
@@ -110,7 +110,7 @@ containers::ColumnView<Float> FloatOpParser::as_ts(
 // ----------------------------------------------------------------------------
 
 void FloatOpParser::check(const containers::Column<Float>& _col,
-                          const fct::Ref<const communication::Logger>& _logger,
+                          const rfl::Ref<const communication::Logger>& _logger,
                           Poco::Net::StreamSocket* _socket) const {
   communication::Warner warner;
 
@@ -132,9 +132,9 @@ void FloatOpParser::check(const containers::Column<Float>& _col,
                          "' are NULL values.";
 
     warner.add(communication::Warning(
-        fct::make_field<"message_">(message),
-        fct::make_field<"label_", std::string>("MANY NULL VALUES"),
-        fct::make_field<"warning_type_", std::string>("INFO")));
+        rfl::make_field<"message_">(message),
+        rfl::make_field<"label_", std::string>("MANY NULL VALUES"),
+        rfl::make_field<"warning_type_", std::string>("INFO")));
   }
 
   for (const auto& warning : warner.warnings()) {
@@ -153,30 +153,30 @@ containers::ColumnView<Float> FloatOpParser::binary_operation(
              const FloatBinaryOp& _cmd) -> containers::ColumnView<Float> {
     using Type = std::decay_t<decltype(_literal)>;
 
-    if constexpr (std::is_same<Type, fct::Literal<"divides">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"divides">>()) {
       return bin_op(_cmd, std::divides<Float>());
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"fmod">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"fmod">>()) {
       const auto fmod = [](const Float val1, const Float val2) {
         return std::fmod(val1, val2);
       };
       return bin_op(_cmd, fmod);
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"minus">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"minus">>()) {
       return bin_op(_cmd, std::minus<Float>());
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"multiplies">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"multiplies">>()) {
       return bin_op(_cmd, std::multiplies<Float>());
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"plus">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"plus">>()) {
       return bin_op(_cmd, std::plus<Float>());
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"pow">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"pow">>()) {
       const auto pow = [](const Float val1, const Float val2) {
         return std::pow(val1, val2);
       };
@@ -184,7 +184,7 @@ containers::ColumnView<Float> FloatOpParser::binary_operation(
     }
   };
 
-  return fct::visit(handle, _cmd.get<"operator_">(), _cmd);
+  return rfl::visit(handle, _cmd.get<"operator_">(), _cmd);
 }
 
 // ----------------------------------------------------------------------------
@@ -268,7 +268,7 @@ containers::ColumnView<Float> FloatOpParser::parse(
     }
 
     if constexpr (std::is_same<Type, FloatConstOp>()) {
-      const auto val = fct::get<"value_">(_cmd);
+      const auto val = rfl::get<"value_">(_cmd);
       return containers::ColumnView<Float>::from_value(val);
     }
 
@@ -320,7 +320,7 @@ containers::ColumnView<Float> FloatOpParser::subselection(
 
     if constexpr (std::is_same<
                       Type,
-                      fct::Ref<commands::FloatColumnOrFloatColumnView>>()) {
+                      rfl::Ref<commands::FloatColumnOrFloatColumnView>>()) {
       const auto indices = parse(*_operand2);
       return containers::ColumnView<Float>::from_numerical_subselection(
           data, indices);
@@ -345,129 +345,129 @@ containers::ColumnView<Float> FloatOpParser::unary_operation(
              const FloatUnaryOp& _cmd) -> containers::ColumnView<Float> {
     using Type = std::decay_t<decltype(_literal)>;
 
-    if constexpr (std::is_same<Type, fct::Literal<"abs">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"abs">>()) {
       const auto abs = [](const Float val) { return std::abs(val); };
       return un_op(_cmd, abs);
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"acos">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"acos">>()) {
       const auto acos = [](const Float val) { return std::acos(val); };
       return un_op(_cmd, acos);
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"asin">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"asin">>()) {
       const auto asin = [](const Float val) { return std::asin(val); };
       return un_op(_cmd, asin);
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"atan">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"atan">>()) {
       const auto atan = [](const Float val) { return std::atan(val); };
       return un_op(_cmd, atan);
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"cbrt">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"cbrt">>()) {
       const auto cbrt = [](const Float val) { return std::cbrt(val); };
       return un_op(_cmd, cbrt);
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"ceil">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"ceil">>()) {
       const auto ceil = [](const Float val) { return std::ceil(val); };
       return un_op(_cmd, ceil);
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"cos">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"cos">>()) {
       const auto cos = [](const Float val) { return std::cos(val); };
       return un_op(_cmd, cos);
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"day">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"day">>()) {
       return un_op(_cmd, utils::Time::day);
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"erf">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"erf">>()) {
       const auto erf = [](const Float val) { return std::erf(val); };
       return un_op(_cmd, erf);
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"exp">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"exp">>()) {
       const auto exp = [](const Float val) { return std::exp(val); };
       return un_op(_cmd, exp);
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"floor">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"floor">>()) {
       const auto floor = [](const Float val) { return std::floor(val); };
       return un_op(_cmd, floor);
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"hour">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"hour">>()) {
       return un_op(_cmd, utils::Time::hour);
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"lgamma">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"lgamma">>()) {
       const auto lgamma = [](const Float val) { return std::lgamma(val); };
       return un_op(_cmd, lgamma);
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"log">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"log">>()) {
       const auto log = [](const Float val) { return std::log(val); };
       return un_op(_cmd, log);
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"minute">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"minute">>()) {
       return un_op(_cmd, utils::Time::minute);
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"month">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"month">>()) {
       return un_op(_cmd, utils::Time::month);
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"round">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"round">>()) {
       const auto round = [](const Float val) { return std::round(val); };
       return un_op(_cmd, round);
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"second">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"second">>()) {
       return un_op(_cmd, utils::Time::second);
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"sin">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"sin">>()) {
       const auto sin = [](const Float val) { return std::sin(val); };
       return un_op(_cmd, sin);
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"sqrt">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"sqrt">>()) {
       const auto sqrt = [](const Float val) { return std::sqrt(val); };
       return un_op(_cmd, sqrt);
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"tan">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"tan">>()) {
       const auto tan = [](const Float val) { return std::tan(val); };
       return un_op(_cmd, tan);
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"tgamma">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"tgamma">>()) {
       const auto tgamma = [](const Float val) { return std::tgamma(val); };
       return un_op(_cmd, tgamma);
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"sqrt">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"sqrt">>()) {
       return parse(*_cmd.get<"operand1_">());
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"weekday">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"weekday">>()) {
       return un_op(_cmd, utils::Time::weekday);
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"year">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"year">>()) {
       return un_op(_cmd, utils::Time::year);
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"yearday">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"yearday">>()) {
       return un_op(_cmd, utils::Time::yearday);
     }
   };
 
-  return fct::visit(handle, _cmd.get<"operator_">(), _cmd);
+  return rfl::visit(handle, _cmd.get<"operator_">(), _cmd);
 }
 
 // ----------------------------------------------------------------------------

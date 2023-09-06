@@ -49,7 +49,7 @@ typename CrossEntropy::ResultType CrossEntropy::score(const Features _yhat,
     }
   }
 
-  return fct::make_field<"cross_entropy_">(cross_entropy);
+  return rfl::make_field<"cross_entropy_">(cross_entropy);
 }
 
 }  // namespace metrics

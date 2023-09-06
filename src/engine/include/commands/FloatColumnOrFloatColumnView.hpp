@@ -13,10 +13,10 @@
 #include "commands/BooleanColumnView.hpp"
 #include "commands/Float.hpp"
 #include "commands/StringColumnOrStringColumnView.hpp"
-#include "fct/Field.hpp"
-#include "fct/Literal.hpp"
-#include "fct/NamedTuple.hpp"
-#include "fct/Ref.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/Literal.hpp"
+#include "rfl/NamedTuple.hpp"
+#include "rfl/Ref.hpp"
 
 namespace commands {
 
@@ -27,106 +27,106 @@ class FloatColumnOrFloatColumnView {
  public:
   /// The command used for arange operations.
   using FloatArangeOp =
-      fct::NamedTuple<fct::Field<"operator_", fct::Literal<"arange">>,
-                      fct::Field<"start_", Float>, fct::Field<"stop_", Float>,
-                      fct::Field<"step_", Float>,
-                      fct::Field<"type_", fct::Literal<"FloatColumnView">>>;
+      rfl::NamedTuple<rfl::Field<"operator_", rfl::Literal<"arange">>,
+                      rfl::Field<"start_", Float>, rfl::Field<"stop_", Float>,
+                      rfl::Field<"step_", Float>,
+                      rfl::Field<"type_", rfl::Literal<"FloatColumnView">>>;
 
   /// The command used for transforming string columns to float columns.
-  using FloatAsTSOp = fct::NamedTuple<
-      fct::Field<"operator_", fct::Literal<"as_ts">>,
-      fct::Field<"operand1_", fct::Ref<StringColumnOrStringColumnView>>,
-      fct::Field<"time_formats_", std::vector<std::string>>,
-      fct::Field<"type_", fct::Literal<"FloatColumnView">>>;
+  using FloatAsTSOp = rfl::NamedTuple<
+      rfl::Field<"operator_", rfl::Literal<"as_ts">>,
+      rfl::Field<"operand1_", rfl::Ref<StringColumnOrStringColumnView>>,
+      rfl::Field<"time_formats_", std::vector<std::string>>,
+      rfl::Field<"type_", rfl::Literal<"FloatColumnView">>>;
 
   /// The possible operators.
   using FloatBinaryOpLiteral =
-      fct::Literal<"divides", "fmod", "minus", "multiplies", "plus", "pow">;
+      rfl::Literal<"divides", "fmod", "minus", "multiplies", "plus", "pow">;
 
   /// The command used for float binary operations.
-  using FloatBinaryOp = fct::NamedTuple<
-      fct::Field<"operator_", FloatBinaryOpLiteral>,
-      fct::Field<"operand1_", fct::Ref<FloatColumnOrFloatColumnView>>,
-      fct::Field<"operand2_", fct::Ref<FloatColumnOrFloatColumnView>>,
-      fct::Field<"type_", fct::Literal<"FloatColumnView">>>;
+  using FloatBinaryOp = rfl::NamedTuple<
+      rfl::Field<"operator_", FloatBinaryOpLiteral>,
+      rfl::Field<"operand1_", rfl::Ref<FloatColumnOrFloatColumnView>>,
+      rfl::Field<"operand2_", rfl::Ref<FloatColumnOrFloatColumnView>>,
+      rfl::Field<"type_", rfl::Literal<"FloatColumnView">>>;
 
   /// The command used for retrieving float columns from a data frame.
   using FloatColumnOp =
-      fct::NamedTuple<fct::Field<"type_", fct::Literal<"FloatColumn">>,
-                      fct::Field<"df_name_", std::string>,
-                      fct::Field<"name_", std::string>,
-                      fct::Field<"role_", std::string>>;
+      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"FloatColumn">>,
+                      rfl::Field<"df_name_", std::string>,
+                      rfl::Field<"name_", std::string>,
+                      rfl::Field<"role_", std::string>>;
 
   /// The command used for float const operations.
   using FloatConstOp =
-      fct::NamedTuple<fct::Field<"operator_", fct::Literal<"const">>,
-                      fct::Field<"value_", Float>,
-                      fct::Field<"type_", fct::Literal<"FloatColumnView">>>;
+      rfl::NamedTuple<rfl::Field<"operator_", rfl::Literal<"const">>,
+                      rfl::Field<"value_", Float>,
+                      rfl::Field<"type_", rfl::Literal<"FloatColumnView">>>;
 
   /// The command used for transforming boolean column views to float columns.
   using FloatFromBooleanOp =
-      fct::NamedTuple<fct::Field<"operator_", fct::Literal<"boolean_as_num">>,
-                      fct::Field<"operand1_", fct::Ref<BooleanColumnView>>,
-                      fct::Field<"type_", fct::Literal<"FloatColumnView">>>;
+      rfl::NamedTuple<rfl::Field<"operator_", rfl::Literal<"boolean_as_num">>,
+                      rfl::Field<"operand1_", rfl::Ref<BooleanColumnView>>,
+                      rfl::Field<"type_", rfl::Literal<"FloatColumnView">>>;
 
   /// The command used for transforming string columns to float columns.
-  using FloatFromStringOp = fct::NamedTuple<
-      fct::Field<"operator_", fct::Literal<"as_num">>,
-      fct::Field<"operand1_", fct::Ref<StringColumnOrStringColumnView>>,
-      fct::Field<"type_", fct::Literal<"FloatColumnView">>>;
+  using FloatFromStringOp = rfl::NamedTuple<
+      rfl::Field<"operator_", rfl::Literal<"as_num">>,
+      rfl::Field<"operand1_", rfl::Ref<StringColumnOrStringColumnView>>,
+      rfl::Field<"type_", rfl::Literal<"FloatColumnView">>>;
 
   /// The command used for random operations.
   using FloatRandomOp =
-      fct::NamedTuple<fct::Field<"operator_", fct::Literal<"random">>,
-                      fct::Field<"seed_", unsigned int>,
-                      fct::Field<"type_", fct::Literal<"FloatColumnView">>>;
+      rfl::NamedTuple<rfl::Field<"operator_", rfl::Literal<"random">>,
+                      rfl::Field<"seed_", unsigned int>,
+                      rfl::Field<"type_", rfl::Literal<"FloatColumnView">>>;
 
   /// The command used for rowid operations.
   using FloatRowidOp =
-      fct::NamedTuple<fct::Field<"operator_", fct::Literal<"rowid">>,
-                      fct::Field<"type_", fct::Literal<"FloatColumnView">>>;
+      rfl::NamedTuple<rfl::Field<"operator_", rfl::Literal<"rowid">>,
+                      rfl::Field<"type_", rfl::Literal<"FloatColumnView">>>;
 
   /// The command used for float subselection operations.
-  using FloatSubselectionOp = fct::NamedTuple<
-      fct::Field<"operator_", fct::Literal<"subselection">>,
-      fct::Field<"operand1_", fct::Ref<FloatColumnOrFloatColumnView>>,
-      fct::Field<"operand2_",
-                 std::variant<fct::Ref<FloatColumnOrFloatColumnView>,
-                              fct::Ref<BooleanColumnView>>>,
-      fct::Field<"type_", fct::Literal<"FloatColumnView">>>;
+  using FloatSubselectionOp = rfl::NamedTuple<
+      rfl::Field<"operator_", rfl::Literal<"subselection">>,
+      rfl::Field<"operand1_", rfl::Ref<FloatColumnOrFloatColumnView>>,
+      rfl::Field<"operand2_",
+                 std::variant<rfl::Ref<FloatColumnOrFloatColumnView>,
+                              rfl::Ref<BooleanColumnView>>>,
+      rfl::Field<"type_", rfl::Literal<"FloatColumnView">>>;
 
   /// The possible operators.
   using FloatUnaryOpLiteral =
-      fct::Literal<"abs", "acos", "asin", "atan", "cbrt", "ceil", "cos", "day",
+      rfl::Literal<"abs", "acos", "asin", "atan", "cbrt", "ceil", "cos", "day",
                    "erf", "exp", "floor", "hour", "lgamma", "log", "minute",
                    "month", "round", "second", "sin", "sqrt", "tan", "tgamma",
                    "weekday", "year", "yearday">;
 
   /// The command used for float unary operations.
-  using FloatUnaryOp = fct::NamedTuple<
-      fct::Field<"operator_", FloatUnaryOpLiteral>,
-      fct::Field<"operand1_", fct::Ref<FloatColumnOrFloatColumnView>>,
-      fct::Field<"type_", fct::Literal<"FloatColumnView">>>;
+  using FloatUnaryOp = rfl::NamedTuple<
+      rfl::Field<"operator_", FloatUnaryOpLiteral>,
+      rfl::Field<"operand1_", rfl::Ref<FloatColumnOrFloatColumnView>>,
+      rfl::Field<"type_", rfl::Literal<"FloatColumnView">>>;
 
   /// The command used for float binary operations.
-  using FloatUpdateOp = fct::NamedTuple<
-      fct::Field<"operator_", fct::Literal<"update">>,
-      fct::Field<"operand1_", fct::Ref<FloatColumnOrFloatColumnView>>,
-      fct::Field<"operand2_", fct::Ref<FloatColumnOrFloatColumnView>>,
-      fct::Field<"condition_", fct::Ref<BooleanColumnView>>,
-      fct::Field<"type_", fct::Literal<"FloatColumnView">>>;
+  using FloatUpdateOp = rfl::NamedTuple<
+      rfl::Field<"operator_", rfl::Literal<"update">>,
+      rfl::Field<"operand1_", rfl::Ref<FloatColumnOrFloatColumnView>>,
+      rfl::Field<"operand2_", rfl::Ref<FloatColumnOrFloatColumnView>>,
+      rfl::Field<"condition_", rfl::Ref<BooleanColumnView>>,
+      rfl::Field<"type_", rfl::Literal<"FloatColumnView">>>;
 
   /// The command used for string with subtoles operations.
-  using FloatWithSubrolesOp = fct::NamedTuple<
-      fct::Field<"subroles_", std::vector<std::string>>,
-      fct::Field<"operand1_", fct::Ref<FloatColumnOrFloatColumnView>>,
-      fct::Field<"type_", fct::Literal<"FloatColumnView">>>;
+  using FloatWithSubrolesOp = rfl::NamedTuple<
+      rfl::Field<"subroles_", std::vector<std::string>>,
+      rfl::Field<"operand1_", rfl::Ref<FloatColumnOrFloatColumnView>>,
+      rfl::Field<"type_", rfl::Literal<"FloatColumnView">>>;
 
   /// The command used for float with unit operations.
-  using FloatWithUnitOp = fct::NamedTuple<
-      fct::Field<"unit_", std::string>,
-      fct::Field<"operand1_", fct::Ref<FloatColumnOrFloatColumnView>>,
-      fct::Field<"type_", fct::Literal<"FloatColumnView">>>;
+  using FloatWithUnitOp = rfl::NamedTuple<
+      rfl::Field<"unit_", std::string>,
+      rfl::Field<"operand1_", rfl::Ref<FloatColumnOrFloatColumnView>>,
+      rfl::Field<"type_", rfl::Literal<"FloatColumnView">>>;
 
   using NamedTupleType =
       std::variant<FloatArangeOp, FloatAsTSOp, FloatBinaryOp, FloatConstOp,

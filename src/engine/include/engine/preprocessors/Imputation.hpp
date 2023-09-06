@@ -18,13 +18,13 @@
 #include "engine/Float.hpp"
 #include "engine/preprocessors/Params.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
-#include "fct/Field.hpp"
-#include "fct/Literal.hpp"
-#include "fct/NamedTuple.hpp"
-#include "fct/Ref.hpp"
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/Macros.hpp"
 #include "helpers/StringIterator.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/Literal.hpp"
+#include "rfl/NamedTuple.hpp"
+#include "rfl/Ref.hpp"
 #include "strings/strings.hpp"
 
 namespace engine {
@@ -41,27 +41,27 @@ class Imputation : public Preprocessor {
   using ImputationOp = typename commands::Preprocessor::ImputationOp;
 
   using f_column_descriptions =
-      fct::Field<"column_descriptions_",
+      rfl::Field<"column_descriptions_",
                  std::vector<helpers::ColumnDescription>>;
 
-  using f_means = fct::Field<"means_", std::vector<Float>>;
+  using f_means = rfl::Field<"means_", std::vector<Float>>;
 
-  using f_needs_dummies = fct::Field<"needs_dummies_", std::vector<bool>>;
+  using f_needs_dummies = rfl::Field<"needs_dummies_", std::vector<bool>>;
 
   using NamedTupleType =
-      fct::NamedTuple<f_column_descriptions, f_means, f_needs_dummies>;
+      rfl::NamedTuple<f_column_descriptions, f_means, f_needs_dummies>;
 
  public:
   Imputation(const ImputationOp& _op,
              const std::vector<commands::Fingerprint>& _dependencies)
       : add_dummies_(_op.get<"add_dummies_">()),
-        cols_(fct::Ref<ImputationMapType>::make()),
+        cols_(rfl::Ref<ImputationMapType>::make()),
         dependencies_(_dependencies) {}
 
   ~Imputation() = default;
 
  private:
-  Imputation() : cols_(fct::Ref<ImputationMapType>::make()) {}
+  Imputation() : cols_(rfl::Ref<ImputationMapType>::make()) {}
 
  public:
   /// Identifies which features should be extracted from which time stamps.
@@ -82,10 +82,10 @@ class Imputation : public Preprocessor {
 
  public:
   /// Creates a deep copy.
-  fct::Ref<Preprocessor> clone(
+  rfl::Ref<Preprocessor> clone(
       const std::optional<std::vector<commands::Fingerprint>>& _dependencies =
           std::nullopt) const final {
-    const auto c = fct::Ref<Imputation>::make(*this);
+    const auto c = rfl::Ref<Imputation>::make(*this);
     if (_dependencies) {
       c->dependencies_ = *_dependencies;
     }
@@ -98,9 +98,9 @@ class Imputation : public Preprocessor {
     using FingerprintType =
         typename commands::Fingerprint::ImputationFingerprint;
     return commands::Fingerprint(
-        FingerprintType(fct::make_field<"dependencies_">(dependencies_),
-                        fct::make_field<"type_">(fct::Literal<"Imputation">()),
-                        fct::make_field<"add_dummies_">(add_dummies_)));
+        FingerprintType(rfl::make_field<"dependencies_">(dependencies_),
+                        rfl::make_field<"type_">(rfl::Literal<"Imputation">()),
+                        rfl::make_field<"add_dummies_">(add_dummies_)));
   }
 
   /// Necessary for the automated parsing to work.
@@ -163,10 +163,10 @@ class Imputation : public Preprocessor {
   }
 
   /// Retrieve the column description of all columns in cols_.
-  std::vector<fct::Ref<helpers::ColumnDescription>> get_all_cols() const {
-    std::vector<fct::Ref<helpers::ColumnDescription>> all_cols;
+  std::vector<rfl::Ref<helpers::ColumnDescription>> get_all_cols() const {
+    std::vector<rfl::Ref<helpers::ColumnDescription>> all_cols;
     for (const auto& [key, _] : cols()) {
-      all_cols.push_back(fct::Ref<helpers::ColumnDescription>::make(key));
+      all_cols.push_back(rfl::Ref<helpers::ColumnDescription>::make(key));
     }
     return all_cols;
   }
@@ -201,7 +201,7 @@ class Imputation : public Preprocessor {
 
   /// Map of all columns to which the imputation transformation applies.
   /// Maps to the mean value and whether we need to build a dummy column.
-  fct::Ref<ImputationMapType> cols_;
+  rfl::Ref<ImputationMapType> cols_;
 
   /// The dependencies inserted into the the preprocessor.
   std::vector<commands::Fingerprint> dependencies_;

@@ -29,53 +29,53 @@ struct ProjectManagerParams {
   typedef PipelineManagerParams::PipelineMapType PipelineMapType;
 
   /// Maps integers to category names
-  const fct::Ref<containers::Encoding> categories_;
+  const rfl::Ref<containers::Encoding> categories_;
 
   /// Connector to the underlying database.
-  const fct::Ref<DatabaseManager> database_manager_;
+  const rfl::Ref<DatabaseManager> database_manager_;
 
   /// Connector to the underlying database.
-  const fct::Ref<DataFrameManager> data_frame_manager_;
+  const rfl::Ref<DataFrameManager> data_frame_manager_;
 
   /// The data frames currently held in memory
-  const fct::Ref<std::map<std::string, containers::DataFrame>> data_frames_;
+  const rfl::Ref<std::map<std::string, containers::DataFrame>> data_frames_;
 
   /// Keeps track of all data frames, so we don't have to
   /// reconstruct the features all of the time.
-  const fct::Ref<dependency::DataFrameTracker> data_frame_tracker_;
+  const rfl::Ref<dependency::DataFrameTracker> data_frame_tracker_;
 
   /// Keeps track of all feature learners.
-  const fct::Ref<dependency::FETracker> fe_tracker_;
+  const rfl::Ref<dependency::FETracker> fe_tracker_;
 
   /// Maps integers to join key names
-  const fct::Ref<containers::Encoding> join_keys_encoding_;
+  const rfl::Ref<containers::Encoding> join_keys_encoding_;
 
   /// For logging
-  const fct::Ref<const communication::Logger> logger_;
+  const rfl::Ref<const communication::Logger> logger_;
 
   /// For communication with the monitor
-  const fct::Ref<const communication::Monitor> monitor_;
+  const rfl::Ref<const communication::Monitor> monitor_;
 
   /// Settings for the engine and the monitor
   const config::Options options_;
 
   /// The pipelines currently held in memory
-  const fct::Ref<PipelineMapType> pipelines_;
+  const rfl::Ref<PipelineMapType> pipelines_;
 
   /// Keeps track of all predictors.
-  const fct::Ref<dependency::PredTracker> pred_tracker_;
+  const rfl::Ref<dependency::PredTracker> pred_tracker_;
 
   /// Keeps track of all preprocessors.
-  const fct::Ref<dependency::PreprocessorTracker> preprocessor_tracker_;
+  const rfl::Ref<dependency::PreprocessorTracker> preprocessor_tracker_;
 
   /// The name of the current project
   const std::string project_;
 
   /// It is sometimes necessary to prevent us from changing the project.
-  const fct::Ref<multithreading::ReadWriteLock> project_lock_;
+  const rfl::Ref<multithreading::ReadWriteLock> project_lock_;
 
   /// For coordinating the read and write process of the data
-  const fct::Ref<multithreading::ReadWriteLock> read_write_lock_;
+  const rfl::Ref<multithreading::ReadWriteLock> read_write_lock_;
 };
 
 }  // namespace handlers

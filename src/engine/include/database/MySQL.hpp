@@ -94,16 +94,16 @@ class MySQL : public Connector {
   }
 
   /// Returns a shared_ptr containing a MySQLIterator.
-  fct::Ref<Iterator> select(const std::vector<std::string>& _colnames,
+  rfl::Ref<Iterator> select(const std::vector<std::string>& _colnames,
                             const std::string& _tname,
                             const std::string& _where) final {
-    return fct::Ref<MySQLIterator>::make(make_connection(), _colnames,
+    return rfl::Ref<MySQLIterator>::make(make_connection(), _colnames,
                                          time_formats_, _tname, _where);
   }
 
   /// Returns a shared_ptr containing a MySQLIterator.
-  fct::Ref<Iterator> select(const std::string& _sql) final {
-    return fct::Ref<MySQLIterator>::make(make_connection(), _sql,
+  rfl::Ref<Iterator> select(const std::string& _sql) final {
+    return rfl::Ref<MySQLIterator>::make(make_connection(), _sql,
                                          time_formats_);
   }
 

@@ -10,7 +10,6 @@
 
 #include <variant>
 
-#include "fct/define_named_tuple.hpp"
 #include "metrics/AUC.hpp"
 #include "metrics/Accuracy.hpp"
 #include "metrics/CrossEntropy.hpp"
@@ -19,17 +18,18 @@
 #include "metrics/RMSE.hpp"
 #include "metrics/RSquared.hpp"
 #include "metrics/Scores.hpp"
+#include "rfl/define_named_tuple.hpp"
 
 namespace metrics {
 
 struct Scorer {
   using ClassificationMetricsType =
-      fct::define_named_tuple_t<typename AUC::ResultType,
+      rfl::define_named_tuple_t<typename AUC::ResultType,
                                 typename Accuracy::ResultType,
                                 typename CrossEntropy::ResultType>;
 
   using RegressionMetricsType =
-      fct::define_named_tuple_t<typename MAE::ResultType,
+      rfl::define_named_tuple_t<typename MAE::ResultType,
                                 typename RMSE::ResultType,
                                 typename RSquared::ResultType>;
 

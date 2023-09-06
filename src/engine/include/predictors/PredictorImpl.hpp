@@ -14,14 +14,14 @@
 #include <vector>
 
 #include "debug/debug.hpp"
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
 #include "helpers/Saver.hpp"
 #include "memmap/memmap.hpp"
 #include "predictors/CSRMatrix.hpp"
 #include "predictors/Encoding.hpp"
 #include "predictors/FloatFeature.hpp"
 #include "predictors/IntFeature.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
 
 namespace predictors {
 
@@ -29,18 +29,18 @@ namespace predictors {
 class PredictorImpl {
  public:
   using f_autofeatures =
-      fct::Field<"autofeatures_", std::vector<std::vector<size_t>>>;
+      rfl::Field<"autofeatures_", std::vector<std::vector<size_t>>>;
 
   using f_categorical =
-      fct::Field<"categorical_colnames_", std::vector<std::string>>;
+      rfl::Field<"categorical_colnames_", std::vector<std::string>>;
 
-  using f_encoding = fct::Field<"encodings_", std::vector<Encoding>>;
+  using f_encoding = rfl::Field<"encodings_", std::vector<Encoding>>;
 
   using f_numerical =
-      fct::Field<"numerical_colnames_", std::vector<std::string>>;
+      rfl::Field<"numerical_colnames_", std::vector<std::string>>;
 
   using NamedTupleType =
-      fct::NamedTuple<f_autofeatures, f_categorical, f_encoding, f_numerical>;
+      rfl::NamedTuple<f_autofeatures, f_categorical, f_encoding, f_numerical>;
 
  public:
   PredictorImpl(const std::vector<size_t>& _num_autofeatures,

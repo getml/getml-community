@@ -11,16 +11,16 @@
 #include "commands/BasicCommand.hpp"
 #include "commands/BooleanColumnView.hpp"
 #include "commands/GetContent.hpp"
-#include "fct/Field.hpp"
-#include "fct/make_named_tuple.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/make_named_tuple.hpp"
 
 namespace commands {
 
 /// Defines the command necessary to retrieve the content of
 // a boolean column.
 using GetBooleanColumnContent =
-    fct::make_named_tuple<BasicCommand, GetContent,
-                          fct::Field<"col_", BooleanColumnView>>;
+    rfl::make_named_tuple<BasicCommand, GetContent,
+                          rfl::Field<"col_", BooleanColumnView>>;
 
 }  // namespace commands
 

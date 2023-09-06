@@ -1,14 +1,14 @@
 #ifndef COMMUNICATION_WARNING_HPP_
 #define COMMUNICATION_WARNING_HPP_
 
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
 
 namespace communication {
 
-using Warning = fct::NamedTuple<fct::Field<"message_", std::string>,
-                                fct::Field<"label_", std::string>,
-                                fct::Field<"warning_type_", std::string>>;
+using Warning = rfl::NamedTuple<rfl::Field<"message_", std::string>,
+                                rfl::Field<"label_", std::string>,
+                                rfl::Field<"warning_type_", std::string>>;
 
 }
 

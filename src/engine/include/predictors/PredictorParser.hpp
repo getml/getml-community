@@ -12,19 +12,19 @@
 #include <vector>
 
 #include "commands/Fingerprint.hpp"
-#include "fct/Ref.hpp"
 #include "json/json.hpp"
 #include "predictors/Predictor.hpp"
 #include "predictors/PredictorHyperparams.hpp"
 #include "predictors/PredictorImpl.hpp"
+#include "rfl/Ref.hpp"
 
 namespace predictors {
 
 struct PredictorParser {
   /// Parses the predictor.
-  static fct::Ref<Predictor> parse(
+  static rfl::Ref<Predictor> parse(
       const PredictorHyperparams& _cmd,
-      const fct::Ref<const PredictorImpl>& _impl,
+      const rfl::Ref<const PredictorImpl>& _impl,
       const std::vector<commands::Fingerprint>& _dependencies);
 };
 

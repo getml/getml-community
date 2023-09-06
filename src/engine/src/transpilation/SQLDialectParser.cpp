@@ -9,21 +9,21 @@
 
 #include <stdexcept>
 
-#include "fct/always_false.hpp"
-#include "fct/visit.hpp"
+#include "rfl/always_false.hpp"
+#include "rfl/visit.hpp"
 #include "transpilation/HumanReadableSQLGenerator.hpp"
 #include "transpilation/TranspilationParams.hpp"
 
 namespace transpilation {
 
-fct::Ref<const SQLDialectGenerator> SQLDialectParser::parse(
+rfl::Ref<const SQLDialectGenerator> SQLDialectParser::parse(
     const TranspilationParams& _params) {
   const auto handle =
-      [](const auto& _dialect) -> fct::Ref<const SQLDialectGenerator> {
+      [](const auto& _dialect) -> rfl::Ref<const SQLDialectGenerator> {
     using Type = std::decay_t<decltype(_dialect)>;
-    if constexpr (std::is_same<Type, fct::Literal<"human-readable sql">>() ||
-                  std::is_same<Type, fct::Literal<"sqlite3">>()) {
-      return fct::Ref<const HumanReadableSQLGenerator>::make();
+    if constexpr (std::is_same<Type, rfl::Literal<"human-readable sql">>() ||
+                  std::is_same<Type, rfl::Literal<"sqlite3">>()) {
+      return rfl::Ref<const HumanReadableSQLGenerator>::make();
     } else {
       throw std::runtime_error(
           "The " + _dialect.name() +
@@ -34,7 +34,7 @@ fct::Ref<const SQLDialectGenerator> SQLDialectParser::parse(
     }
   };
 
-  return fct::visit(handle, _params.dialect_);
+  return rfl::visit(handle, _params.dialect_);
 }
 
 }  // namespace transpilation

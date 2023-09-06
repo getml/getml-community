@@ -14,17 +14,17 @@
 #include "engine/preprocessors/Substring.hpp"
 #include "engine/preprocessors/TextFieldSplitter.hpp"
 #include "engine/preprocessors/preprocessors.hpp"
-#include "fct/visit.hpp"
 #include "json/json.hpp"
+#include "rfl/visit.hpp"
 
 namespace engine {
 namespace preprocessors {
 
-fct::Ref<Preprocessor> PreprocessorParser::parse(
+rfl::Ref<Preprocessor> PreprocessorParser::parse(
     const PreprocessorHyperparams& _cmd,
     const std::vector<commands::Fingerprint>& _dependencies) {
   const auto handle =
-      [&_dependencies](const auto& _hyperparams) -> fct::Ref<Preprocessor> {
+      [&_dependencies](const auto& _hyperparams) -> rfl::Ref<Preprocessor> {
     using CategoryTrimmerOp =
         typename commands::Preprocessor::CategoryTrimmerOp;
     using EMailDomainOp = typename commands::Preprocessor::EMailDomainOp;
@@ -37,32 +37,32 @@ fct::Ref<Preprocessor> PreprocessorParser::parse(
     using Type = std::decay_t<decltype(_hyperparams)>;
 
     if constexpr (std::is_same<Type, CategoryTrimmerOp>()) {
-      return fct::Ref<CategoryTrimmer>::make(_hyperparams, _dependencies);
+      return rfl::Ref<CategoryTrimmer>::make(_hyperparams, _dependencies);
     }
 
     else if constexpr (std::is_same<Type, EMailDomainOp>()) {
-      return fct::Ref<EMailDomain>::make(_hyperparams, _dependencies);
+      return rfl::Ref<EMailDomain>::make(_hyperparams, _dependencies);
     }
 
     else if constexpr (std::is_same<Type, ImputationOp>()) {
-      return fct::Ref<Imputation>::make(_hyperparams, _dependencies);
+      return rfl::Ref<Imputation>::make(_hyperparams, _dependencies);
     }
 
     else if constexpr (std::is_same<Type, SeasonalOp>()) {
-      return fct::Ref<Seasonal>::make(_hyperparams, _dependencies);
+      return rfl::Ref<Seasonal>::make(_hyperparams, _dependencies);
     }
 
     else if constexpr (std::is_same<Type, SubstringOp>()) {
-      return fct::Ref<Substring>::make(_hyperparams, _dependencies);
+      return rfl::Ref<Substring>::make(_hyperparams, _dependencies);
     }
 
     else if constexpr (std::is_same<Type, TextFieldSplitterOp>()) {
-      return fct::Ref<TextFieldSplitter>::make(_hyperparams, _dependencies);
+      return rfl::Ref<TextFieldSplitter>::make(_hyperparams, _dependencies);
     }
 
     else {
       throw std::runtime_error(
-          "The " + fct::get<"type_">(_hyperparams).name() +
+          "The " + rfl::get<"type_">(_hyperparams).name() +
           " preprocessor is not supported in the community edition. Please "
           "upgrade to getML enterprise to use this. An overview of what is "
           "supported in the community edition can be found in the official "
@@ -70,7 +70,7 @@ fct::Ref<Preprocessor> PreprocessorParser::parse(
     }
   };
 
-  return fct::visit(handle, _cmd);
+  return rfl::visit(handle, _cmd);
 }
 
 // ----------------------------------------------------

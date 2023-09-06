@@ -35,7 +35,7 @@ void Sqlite3::check_colnames(const std::vector<std::string>& _colnames,
 
 std::string Sqlite3::describe() const {
   const auto description =
-      fct::make_field<"dialect">(dialect()) * fct::make_field<"name">(name_);
+      rfl::make_field<"dialect">(dialect()) * rfl::make_field<"name">(name_);
   return json::to_json(description);
 }
 

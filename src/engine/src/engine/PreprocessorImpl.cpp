@@ -12,7 +12,7 @@ namespace preprocessors {
 
 std::vector<std::string> PreprocessorImpl::retrieve_names(
     const MarkerType _marker, const size_t _table,
-    const std::vector<fct::Ref<helpers::ColumnDescription>>& _desc) {
+    const std::vector<rfl::Ref<helpers::ColumnDescription>>& _desc) {
   const auto table = std::to_string(_table);
 
   auto names = std::vector<std::string>();

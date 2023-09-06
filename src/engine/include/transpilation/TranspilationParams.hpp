@@ -11,22 +11,22 @@
 #include <cstddef>
 #include <string>
 
-#include "fct/Field.hpp"
-#include "fct/Literal.hpp"
-#include "fct/NamedTuple.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/Literal.hpp"
+#include "rfl/NamedTuple.hpp"
 
 namespace transpilation {
 
 struct TranspilationParams {
-  using DialectType = fct::Literal<"bigquery", "human-readable sql", "mysql",
+  using DialectType = rfl::Literal<"bigquery", "human-readable sql", "mysql",
                                    "postgres", "spark sql", "sqlite3", "tsql">;
 
   using NamedTupleType =
-      fct::NamedTuple<fct::Field<"dialect_", DialectType>,
-                      fct::Field<"nchar_categorical_", size_t>,
-                      fct::Field<"nchar_join_key_", size_t>,
-                      fct::Field<"nchar_text_", size_t>,
-                      fct::Field<"schema_", std::string> >;
+      rfl::NamedTuple<rfl::Field<"dialect_", DialectType>,
+                      rfl::Field<"nchar_categorical_", size_t>,
+                      rfl::Field<"nchar_join_key_", size_t>,
+                      rfl::Field<"nchar_text_", size_t>,
+                      rfl::Field<"schema_", std::string> >;
 
   /// Generates a new set of transpilation params from a JSON.
   TranspilationParams(const NamedTupleType& _cmd)

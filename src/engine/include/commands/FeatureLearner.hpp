@@ -10,11 +10,11 @@
 
 #include "commands/NotSupportedInCommunity.hpp"
 #include "fastprop/Hyperparameters.hpp"
-#include "fct/TaggedUnion.hpp"
+#include "rfl/TaggedUnion.hpp"
 
 namespace commands {
 
-using FeatureLearner = fct::TaggedUnion<
+using FeatureLearner = rfl::TaggedUnion<
     "type_", fastprop::Hyperparameters, NotSupportedInCommunity<"Fastboost">,
     NotSupportedInCommunity<"Multirel">, NotSupportedInCommunity<"Relboost">,
     NotSupportedInCommunity<"RelMT">>;

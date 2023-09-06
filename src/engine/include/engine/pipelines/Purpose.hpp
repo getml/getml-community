@@ -8,12 +8,12 @@
 #ifndef ENGINE_PIPELINES_PURPOSE_HPP_
 #define ENGINE_PIPELINES_PURPOSE_HPP_
 
-#include "fct/Literal.hpp"
+#include "rfl/Literal.hpp"
 
 namespace engine {
 namespace pipelines {
 
-using Purpose = fct::Literal<"feature_selectors_", "predictors_">;
+using Purpose = rfl::Literal<"feature_selectors_", "predictors_">;
 
 }
 }  // namespace engine

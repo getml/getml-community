@@ -16,33 +16,33 @@
 #include "commands/DataFramesOrViews.hpp"
 #include "communication/communication.hpp"
 #include "containers/containers.hpp"
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
 #include "featurelearners/Int.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
 
 namespace featurelearners {
 
-using FitParams = fct::NamedTuple<
+using FitParams = rfl::NamedTuple<
 
     /// Contains all of the names of all data frames or views needed for fitting
     /// the pipeline.
-    fct::Field<"cmd_", commands::DataFramesOrViews>,
+    rfl::Field<"cmd_", commands::DataFramesOrViews>,
 
     /// The peripheral tables.
-    fct::Field<"peripheral_dfs_", std::vector<containers::DataFrame>>,
+    rfl::Field<"peripheral_dfs_", std::vector<containers::DataFrame>>,
 
     /// The population table.
-    fct::Field<"population_df_", containers::DataFrame>,
+    rfl::Field<"population_df_", containers::DataFrame>,
 
     /// The prefix, used to identify the feature learner.
-    fct::Field<"prefix_", std::string>,
+    rfl::Field<"prefix_", std::string>,
 
     /// Logs the progress.
-    fct::Field<"socket_logger_",
+    rfl::Field<"socket_logger_",
                std::shared_ptr<const communication::SocketLogger>>,
 
     /// The prefix, used to identify the feature learner.
-    fct::Field<"temp_dir_", std::optional<std::string>>>;
+    rfl::Field<"temp_dir_", std::optional<std::string>>>;
 
 }  // namespace featurelearners
 

@@ -12,8 +12,8 @@
 #include <tuple>
 #include <vector>
 
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
 
 namespace engine {
 namespace utils {
@@ -23,9 +23,9 @@ class SQLDependencyTracker {
   typedef std::vector<std::tuple<std::string, std::string, std::string>> Tuples;
 
   using SQLDependency =
-      fct::NamedTuple<fct::Field<"table_name_", std::string>,
-                      fct::Field<"file_name_", std::string>,
-                      fct::Field<"dependencies_", std::vector<size_t>>>;
+      rfl::NamedTuple<rfl::Field<"table_name_", std::string>,
+                      rfl::Field<"file_name_", std::string>,
+                      rfl::Field<"dependencies_", std::vector<size_t>>>;
 
  public:
   SQLDependencyTracker(const std::string& _folder) : folder_(_folder) {}

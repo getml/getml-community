@@ -21,13 +21,13 @@
 #include <tuple>
 #include <vector>
 
-#include "fct/Ref.hpp"
 #include "memmap/memmap.hpp"
 #include "predictors/CSRMatrix.hpp"
 #include "predictors/FloatFeature.hpp"
 #include "predictors/IntFeature.hpp"
 #include "predictors/PredictorImpl.hpp"
 #include "predictors/XGBoostIteratorDense.hpp"
+#include "rfl/Ref.hpp"
 
 namespace predictors {
 
@@ -51,7 +51,7 @@ class XGBoostIteratorSparse {
   XGBoostIteratorSparse(const std::vector<IntFeature> &_X_categorical,
                         const std::vector<FloatFeature> &_X_numerical,
                         const std::optional<FloatFeature> &_y,
-                        const fct::Ref<const PredictorImpl> &_impl);
+                        const rfl::Ref<const PredictorImpl> &_impl);
 
   ~XGBoostIteratorSparse();
 
@@ -139,7 +139,7 @@ class XGBoostIteratorSparse {
   size_t cur_it_;
 
   /// We need the impl to create the CSRMatrix on-the-fly.
-  const fct::Ref<const PredictorImpl> impl_;
+  const rfl::Ref<const PredictorImpl> impl_;
 
   /// The number of rows.
   const size_t nrows_;

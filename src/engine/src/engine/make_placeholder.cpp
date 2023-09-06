@@ -23,7 +23,7 @@ void extract_joined_tables(const helpers::Placeholder& _placeholder,
 std::vector<std::string> handle_horizon(const commands::DataModel& _data_model,
                                         const std::vector<Float>& _horizon);
 
-fct::Ref<const helpers::Placeholder> handle_joined_tables(
+rfl::Ref<const helpers::Placeholder> handle_joined_tables(
     const commands::DataModel& _data_model, const std::string& _alias,
     const std::shared_ptr<size_t> _num_alias,
     const std::vector<commands::DataModel>& _joined_tables,
@@ -100,7 +100,7 @@ std::vector<std::string> handle_horizon(const commands::DataModel& _data_model,
 
 // ----------------------------------------------------------------------------
 
-fct::Ref<const helpers::Placeholder> handle_joined_tables(
+rfl::Ref<const helpers::Placeholder> handle_joined_tables(
     const commands::DataModel& _data_model, const std::string& _alias,
     const std::shared_ptr<size_t> _num_alias,
     const std::vector<commands::DataModel>& _joined_tables,
@@ -204,16 +204,16 @@ fct::Ref<const helpers::Placeholder> handle_joined_tables(
         one_to_one);
   }
 
-  return fct::Ref<const helpers::Placeholder>::make(
-      fct::make_field<"allow_lagged_targets_">(allow_lagged_targets) *
-      fct::make_field<"joined_tables_">(joined_tables) *
-      fct::make_field<"join_keys_used_">(join_keys_used) *
-      fct::make_field<"name_">(name) *
-      fct::make_field<"other_join_keys_used_">(other_join_keys_used) *
-      fct::make_field<"other_time_stamps_used_">(other_time_stamps_used) *
-      fct::make_field<"propositionalization_">(propositionalization) *
-      fct::make_field<"time_stamps_used_">(time_stamps_used) *
-      fct::make_field<"upper_time_stamps_used_">(upper_time_stamps_used));
+  return rfl::Ref<const helpers::Placeholder>::make(
+      rfl::make_field<"allow_lagged_targets_">(allow_lagged_targets) *
+      rfl::make_field<"joined_tables_">(joined_tables) *
+      rfl::make_field<"join_keys_used_">(join_keys_used) *
+      rfl::make_field<"name_">(name) *
+      rfl::make_field<"other_join_keys_used_">(other_join_keys_used) *
+      rfl::make_field<"other_time_stamps_used_">(other_time_stamps_used) *
+      rfl::make_field<"propositionalization_">(propositionalization) *
+      rfl::make_field<"time_stamps_used_">(time_stamps_used) *
+      rfl::make_field<"upper_time_stamps_used_">(upper_time_stamps_used));
 }
 
 // ----------------------------------------------------------------------------
@@ -280,7 +280,7 @@ std::vector<std::string> make_peripheral(
 
 // ----------------------------------------------------------------------------
 
-fct::Ref<const helpers::Placeholder> make_placeholder(
+rfl::Ref<const helpers::Placeholder> make_placeholder(
     const commands::DataModel& _data_model, const std::string& _alias,
     const std::shared_ptr<size_t> _num_alias, const bool _is_population) {
   const auto num_alias = _num_alias ? _num_alias : std::make_shared<size_t>(2);

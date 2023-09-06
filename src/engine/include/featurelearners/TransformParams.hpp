@@ -13,18 +13,18 @@
 
 #include "commands/DataFramesOrViews.hpp"
 #include "communication/communication.hpp"
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
-#include "fct/define_named_tuple.hpp"
 #include "featurelearners/FitParams.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
+#include "rfl/define_named_tuple.hpp"
 
 namespace featurelearners {
 
 using TransformParams =
-    fct::define_named_tuple_t<FitParams,
+    rfl::define_named_tuple_t<FitParams,
 
                               /// Indicates which features we want to generate.
-                              fct::Field<"index_", std::vector<size_t>>>;
+                              rfl::Field<"index_", std::vector<size_t>>>;
 
 }  // namespace featurelearners
 

@@ -12,7 +12,7 @@
 #include <memory>
 #include <string>
 
-#include "fct/Ref.hpp"
+#include "rfl/Ref.hpp"
 #include "transpilation/SQLDialectGenerator.hpp"
 #include "transpilation/TranspilationParams.hpp"
 
@@ -28,7 +28,7 @@ struct SQLDialectParser {
   static constexpr const char* TSQL = "tsql";
 
   /// Parse returns the SQLDialect generator for the dialect.
-  static fct::Ref<const SQLDialectGenerator> parse(
+  static rfl::Ref<const SQLDialectGenerator> parse(
       const TranspilationParams& _params);
 };
 

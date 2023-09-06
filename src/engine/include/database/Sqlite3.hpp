@@ -23,9 +23,9 @@ extern "C" {
 #include "database/Int.hpp"
 #include "database/Sqlite3Iterator.hpp"
 #include "database/TableContent.hpp"
-#include "fct/Ref.hpp"
 #include "io/io.hpp"
 #include "multithreading/multithreading.hpp"
+#include "rfl/Ref.hpp"
 
 namespace database {
 
@@ -34,7 +34,7 @@ class Sqlite3 : public Connector {
   Sqlite3(const typename Command::SQLite3Op& _obj)
       : db_(make_db(_obj.get<"name_">())),
         name_(_obj.get<"name_">()),
-        read_write_lock_(fct::Ref<multithreading::ReadWriteLock>::make()),
+        read_write_lock_(rfl::Ref<multithreading::ReadWriteLock>::make()),
         time_formats_(_obj.get<"time_formats_">()) {}
 
   ~Sqlite3() = default;
@@ -84,16 +84,16 @@ class Sqlite3 : public Connector {
   }
 
   /// Returns a shared_ptr containing a Sqlite3Iterator.
-  fct::Ref<Iterator> select(const std::vector<std::string>& _colnames,
+  rfl::Ref<Iterator> select(const std::vector<std::string>& _colnames,
                             const std::string& _tname,
                             const std::string& _where) final {
-    return fct::Ref<Sqlite3Iterator>::make(db_, _colnames, read_write_lock_,
+    return rfl::Ref<Sqlite3Iterator>::make(db_, _colnames, read_write_lock_,
                                            time_formats_, _tname, _where);
   }
 
   /// Returns a shared_ptr containing a Sqlite3Iterator.
-  fct::Ref<Iterator> select(const std::string& _sql) final {
-    return fct::Ref<Sqlite3Iterator>::make(db_, _sql, read_write_lock_,
+  rfl::Ref<Iterator> select(const std::string& _sql) final {
+    return rfl::Ref<Sqlite3Iterator>::make(db_, _sql, read_write_lock_,
                                            time_formats_);
   }
 
@@ -164,7 +164,7 @@ class Sqlite3 : public Connector {
   const std::string name_;
 
   /// For coordination.
-  const fct::Ref<multithreading::ReadWriteLock> read_write_lock_;
+  const rfl::Ref<multithreading::ReadWriteLock> read_write_lock_;
 
   /// Vector containing the time formats.
   const std::vector<std::string> time_formats_;

@@ -17,21 +17,21 @@
 #include "commands/WarningFingerprint.hpp"
 #include "communication/Warning.hpp"
 #include "debug/debug.hpp"
-#include "fct/Ref.hpp"
+#include "rfl/Ref.hpp"
 
 namespace communication {
 
 class Warnings {
  public:
   Warnings(const commands::WarningFingerprint& _fingerprint,
-           const fct::Ref<const std::vector<Warning>>& _warnings)
+           const rfl::Ref<const std::vector<Warning>>& _warnings)
       : fingerprint_(_fingerprint), warnings_(_warnings) {}
 
   ~Warnings() = default;
 
  public:
   /// Creates a copy.
-  fct::Ref<Warnings> clone() const { return fct::Ref<Warnings>::make(*this); }
+  rfl::Ref<Warnings> clone() const { return rfl::Ref<Warnings>::make(*this); }
 
   /// Returns the fingerprint of the warnings (necessary to build
   /// the dependency graphs).
@@ -45,7 +45,7 @@ class Warnings {
   const commands::WarningFingerprint fingerprint_;
 
   /// The list of warnings to send.
-  const fct::Ref<const std::vector<Warning>> warnings_;
+  const rfl::Ref<const std::vector<Warning>> warnings_;
 };
 
 }  // namespace communication

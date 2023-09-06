@@ -21,9 +21,9 @@ namespace config {
 class Options {
  public:
   using NamedTupleType =
-      fct::NamedTuple<fct::Field<"projectDirectory", std::string>,
-                      fct::Field<"engine", EngineOptions>,
-                      fct::Field<"monitor", MonitorOptions>>;
+      rfl::NamedTuple<rfl::Field<"projectDirectory", std::string>,
+                      rfl::Field<"engine", EngineOptions>,
+                      rfl::Field<"monitor", MonitorOptions>>;
 
  public:
   explicit Options(const NamedTupleType& _obj)

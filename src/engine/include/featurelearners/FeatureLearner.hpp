@@ -21,9 +21,6 @@
 #include "debug/debug.hpp"
 #include "fastprop/algorithm/algorithm.hpp"
 #include "fastprop/subfeatures/subfeatures.hpp"
-#include "fct/Field.hpp"
-#include "fct/define_named_tuple.hpp"
-#include "fct/get.hpp"
 #include "featurelearners/AbstractFeatureLearner.hpp"
 #include "featurelearners/FeatureLearnerParams.hpp"
 #include "featurelearners/FitParams.hpp"
@@ -38,19 +35,22 @@
 #include "helpers/StringIterator.hpp"
 #include "helpers/VocabularyContainer.hpp"
 #include "helpers/WordIndexContainer.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/define_named_tuple.hpp"
+#include "rfl/get.hpp"
 
 namespace featurelearners {
 
 template <class FeatureLearnerType>
 class FeatureLearner : public AbstractFeatureLearner {
  public:
-  using NamedTupleType = fct::define_named_tuple_t<
+  using NamedTupleType = rfl::define_named_tuple_t<
       typename FeatureLearnerType::NamedTupleType,
-      fct::Field<
+      rfl::Field<
           "fast_prop_container_",
           std::shared_ptr<const fastprop::subfeatures::FastPropContainer>>,
-      fct::Field<"target_num_", Int>,
-      fct::Field<"vocabulary_",
+      rfl::Field<"target_num_", Int>,
+      rfl::Field<"vocabulary_",
                  std::shared_ptr<const helpers::VocabularyContainer>>>;
 
  private:
@@ -66,7 +66,7 @@ class FeatureLearner : public AbstractFeatureLearner {
  private:
   typedef typename FeatureLearnerType::DataFrameType DataFrameType;
   typedef typename FeatureLearnerType::HypType HypType;
-  typedef fct::define_named_tuple_t<
+  typedef rfl::define_named_tuple_t<
       typename HypType::NamedTupleType,
       typename commands::Fingerprint::Dependencies,
       typename commands::Fingerprint::OtherFLRequirements>
@@ -115,9 +115,9 @@ class FeatureLearner : public AbstractFeatureLearner {
           "Feature learner has not been fitted, cannot save.");
     }
     return feature_learner_->named_tuple() *
-           fct::make_field<"fast_prop_container_">(fast_prop_container_) *
-           fct::make_field<"target_num_">(target_num_) *
-           fct::make_field<"vocabulary_">(vocabulary_);
+           rfl::make_field<"fast_prop_container_">(fast_prop_container_) *
+           rfl::make_field<"target_num_">(target_num_) *
+           rfl::make_field<"vocabulary_">(vocabulary_);
   }
 
   /// Return feature learner as SQL code.
@@ -318,7 +318,7 @@ class FeatureLearner : public AbstractFeatureLearner {
 
  private:
   /// The dependencies used to build the fingerprint.
-  fct::Ref<const std::vector<commands::Fingerprint>> dependencies_;
+  rfl::Ref<const std::vector<commands::Fingerprint>> dependencies_;
 
   /// The containers for the propositionalization.
   std::shared_ptr<const fastprop::subfeatures::FastPropContainer>
@@ -331,16 +331,16 @@ class FeatureLearner : public AbstractFeatureLearner {
   HypType hyperparameters_;
 
   /// The names of the peripheral tables
-  fct::Ref<const std::vector<std::string>> peripheral_;
+  rfl::Ref<const std::vector<std::string>> peripheral_;
 
   /// The schema of the peripheral tables.
-  fct::Ref<const std::vector<helpers::Schema>> peripheral_schema_;
+  rfl::Ref<const std::vector<helpers::Schema>> peripheral_schema_;
 
   /// The placeholder describing the data schema.
-  fct::Ref<const helpers::Placeholder> placeholder_;
+  rfl::Ref<const helpers::Placeholder> placeholder_;
 
   /// The schema of the population table.
-  fct::Ref<const helpers::Schema> population_schema_;
+  rfl::Ref<const helpers::Schema> population_schema_;
 
   /// Indicates which target to use
   Int target_num_;
@@ -439,10 +439,10 @@ FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
           : _schema.text();
 
   const auto schema = helpers::Schema(_schema.named_tuple().replace(
-      fct::make_field<"categorical_">(categoricals),
-      fct::make_field<"discrete_">(std::make_optional(discretes)),
-      fct::make_field<"numerical_">(numericals),
-      fct::make_field<"targets_">(targets), fct::make_field<"text_">(text)));
+      rfl::make_field<"categorical_">(categoricals),
+      rfl::make_field<"discrete_">(std::make_optional(discretes)),
+      rfl::make_field<"numerical_">(numericals),
+      rfl::make_field<"targets_">(targets), rfl::make_field<"text_">(text)));
 
   return _df.to_immutable<typename FeatureLearnerType::DataFrameType>(schema);
 }
@@ -500,10 +500,10 @@ template <typename FeatureLearnerType>
 commands::Fingerprint FeatureLearner<FeatureLearnerType>::fingerprint() const {
   return commands::Fingerprint(
       FingerprintType(hyperparameters_.named_tuple() *
-                      fct::make_field<"dependencies_">(*dependencies_) *
-                      fct::make_field<"peripheral_">(peripheral_) *
-                      fct::make_field<"placeholder_">(placeholder_) *
-                      fct::make_field<"target_num_">(target_num_)));
+                      rfl::make_field<"dependencies_">(*dependencies_) *
+                      rfl::make_field<"peripheral_">(peripheral_) *
+                      rfl::make_field<"placeholder_">(placeholder_) *
+                      rfl::make_field<"target_num_">(target_num_)));
 }
 
 // ----------------------------------------------------------------------------
@@ -669,10 +669,10 @@ template <typename FeatureLearnerType>
 void FeatureLearner<FeatureLearnerType>::load(const std::string& _fname) {
   using FLNamedTupleType = typename FeatureLearnerType::NamedTupleType;
   const auto val = helpers::Loader::load<NamedTupleType>(_fname);
-  fast_prop_container_ = fct::get<"fast_prop_container_">(val);
+  fast_prop_container_ = rfl::get<"fast_prop_container_">(val);
   feature_learner_ = FeatureLearnerType(FLNamedTupleType(val));
-  target_num_ = fct::get<"target_num_">(val);
-  vocabulary_ = fct::get<"vocabulary_">(val);
+  target_num_ = rfl::get<"target_num_">(val);
+  vocabulary_ = rfl::get<"vocabulary_">(val);
 }
 
 // ------------------------------------------------------------------------

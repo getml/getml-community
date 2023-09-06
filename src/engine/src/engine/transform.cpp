@@ -39,14 +39,14 @@ containers::NumericalFeatures get_numerical_features(
 /// Generates the autofeatures.
 containers::NumericalFeatures generate_autofeatures(
     const MakeFeaturesParams& _params,
-    const std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>&
+    const std::vector<rfl::Ref<const featurelearners::AbstractFeatureLearner>>&
         _feature_learners,
     const predictors::PredictorImpl& _predictor_impl);
 
 /// Makes or retrieves the autofeatures as part of make_features(...).
 containers::NumericalFeatures make_autofeatures(
     const MakeFeaturesParams& _params,
-    const std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>&
+    const std::vector<rfl::Ref<const featurelearners::AbstractFeatureLearner>>&
         _feature_learners,
     const predictors::PredictorImpl& _predictor_impl);
 
@@ -58,7 +58,7 @@ retrieve_features_from_cache(const containers::DataFrame& _df);
 /// Selects the autofeatures based on the feature selectors.
 containers::NumericalFeatures select_autofeatures(
     const containers::NumericalFeatures& _autofeatures,
-    const std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>&
+    const std::vector<rfl::Ref<const featurelearners::AbstractFeatureLearner>>&
         _feature_learners,
     const predictors::PredictorImpl& _predictor_impl);
 // ----------------------------------------------------------------------------
@@ -97,19 +97,19 @@ apply_preprocessors(const FeaturesOnlyParams& _params,
     auto& p = _params.get<"preprocessors_">().at(i);
 
     const auto params = preprocessors::Params(
-        fct::make_field<"categories_">(
+        rfl::make_field<"categories_">(
             _params.get<"transform_params_">().get<"categories_">()),
-        fct::make_field<"cmd_", commands::DataFramesOrViews>(
+        rfl::make_field<"cmd_", commands::DataFramesOrViews>(
             _params.get<"transform_params_">().get<"cmd_">()),
-        fct::make_field<"logger_">(socket_logger),
-        fct::make_field<"logging_begin_">(
+        rfl::make_field<"logger_">(socket_logger),
+        rfl::make_field<"logging_begin_">(
             (i * 100) / _params.get<"preprocessors_">().size()),
-        fct::make_field<"logging_end_">(((i + 1) * 100) /
+        rfl::make_field<"logging_end_">(((i + 1) * 100) /
                                         _params.get<"preprocessors_">().size()),
-        fct::make_field<"peripheral_dfs_">(peripheral_dfs),
-        fct::make_field<"peripheral_names_">(*peripheral_names),
-        fct::make_field<"placeholder_">(*placeholder),
-        fct::make_field<"population_df_">(population_df));
+        rfl::make_field<"peripheral_dfs_">(peripheral_dfs),
+        rfl::make_field<"peripheral_names_">(*peripheral_names),
+        rfl::make_field<"placeholder_">(*placeholder),
+        rfl::make_field<"population_df_">(population_df));
 
     std::tie(population_df, peripheral_dfs) = p->transform(params);
   }
@@ -125,7 +125,7 @@ apply_preprocessors(const FeaturesOnlyParams& _params,
 
 containers::NumericalFeatures generate_autofeatures(
     const MakeFeaturesParams& _params,
-    const std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>&
+    const std::vector<rfl::Ref<const featurelearners::AbstractFeatureLearner>>&
         _feature_learners,
     const predictors::PredictorImpl& _predictor_impl) {
   auto autofeatures = containers::NumericalFeatures();
@@ -142,10 +142,10 @@ containers::NumericalFeatures generate_autofeatures(
     const auto params = featurelearners::TransformParams(
         _params.get_field<"cmd_">(), _params.get_field<"peripheral_dfs_">(),
         _params.get_field<"population_df_">(),
-        fct::make_field<"prefix_">(std::to_string(i + 1) + "_"),
-        fct::make_field<"socket_logger_">(socket_logger),
-        fct::make_field<"temp_dir_">(_params.get<"categories_">()->temp_dir()),
-        fct::make_field<"index_">(index));
+        rfl::make_field<"prefix_">(std::to_string(i + 1) + "_"),
+        rfl::make_field<"socket_logger_">(socket_logger),
+        rfl::make_field<"temp_dir_">(_params.get<"categories_">()->temp_dir()),
+        rfl::make_field<"index_">(index));
 
     auto new_features = fe->transform(params);
 
@@ -164,7 +164,7 @@ containers::NumericalFeatures generate_predictions(
     const containers::NumericalFeatures& _numerical_features) {
   const auto predictor =
       [&_fitted](const size_t _i,
-                 const size_t _j) -> fct::Ref<const predictors::Predictor> {
+                 const size_t _j) -> rfl::Ref<const predictors::Predictor> {
     assert_true(_i < _fitted.predictors_.predictors_.size());
     assert_true(_j < _fitted.predictors_[_i].size());
     return _fitted.predictors_.predictors_.at(_i).at(_j);
@@ -264,7 +264,7 @@ containers::NumericalFeatures get_numerical_features(
 
 containers::NumericalFeatures make_autofeatures(
     const MakeFeaturesParams& _params,
-    const std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>&
+    const std::vector<rfl::Ref<const featurelearners::AbstractFeatureLearner>>&
         _feature_learners,
     const predictors::PredictorImpl& _predictor_impl) {
   if (_params.get<"autofeatures_">() &&
@@ -288,7 +288,7 @@ std::tuple<containers::NumericalFeatures, containers::CategoricalFeatures,
            containers::NumericalFeatures>
 make_features(
     const MakeFeaturesParams& _params, const Pipeline& _pipeline,
-    const std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>&
+    const std::vector<rfl::Ref<const featurelearners::AbstractFeatureLearner>>&
         _feature_learners,
     const predictors::PredictorImpl& _predictor_impl,
     const std::vector<commands::Fingerprint>& _fs_fingerprints) {
@@ -349,7 +349,7 @@ retrieve_features_from_cache(const containers::DataFrame& _df) {
 
 containers::NumericalFeatures select_autofeatures(
     const containers::NumericalFeatures& _autofeatures,
-    const std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>&
+    const std::vector<rfl::Ref<const featurelearners::AbstractFeatureLearner>>&
         _feature_learners,
     const predictors::PredictorImpl& _predictor_impl) {
   assert_true(_feature_learners.size() ==
@@ -481,11 +481,11 @@ transform_features_only(const FeaturesOnlyParams& _params) {
 
   const auto make_features_params = MakeFeaturesParams(
       _params.get<"transform_params_">() *
-      fct::make_field<"dependencies_">(_params.get<"dependencies_">()) *
-      fct::make_field<"peripheral_dfs_">(peripheral_dfs) *
-      fct::make_field<"population_df_">(population_df) *
-      fct::make_field<"predictor_impl_">(_params.get<"predictor_impl_">()) *
-      fct::make_field<"autofeatures_", containers::NumericalFeatures*>(
+      rfl::make_field<"dependencies_">(_params.get<"dependencies_">()) *
+      rfl::make_field<"peripheral_dfs_">(peripheral_dfs) *
+      rfl::make_field<"population_df_">(population_df) *
+      rfl::make_field<"predictor_impl_">(_params.get<"predictor_impl_">()) *
+      rfl::make_field<"autofeatures_", containers::NumericalFeatures*>(
           nullptr));
 
   const auto [numerical_features, categorical_features, _] = make_features(

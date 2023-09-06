@@ -37,8 +37,8 @@ class ArrowHandler {
   using StringFunction = std::function<strings::String(const std::int64_t)>;
 
  public:
-  ArrowHandler(const fct::Ref<containers::Encoding>& _categories,
-               const fct::Ref<containers::Encoding>& _join_keys_encoding,
+  ArrowHandler(const rfl::Ref<containers::Encoding>& _categories,
+               const rfl::Ref<containers::Encoding>& _join_keys_encoding,
                const config::Options& _options)
       : categories_(_categories),
         join_keys_encoding_(_join_keys_encoding),
@@ -178,10 +178,10 @@ class ArrowHandler {
 
  private:
   /// Encodes the categories used.
-  const fct::Ref<containers::Encoding> categories_;
+  const rfl::Ref<containers::Encoding> categories_;
 
   /// Encodes the join keys used.
-  const fct::Ref<containers::Encoding> join_keys_encoding_;
+  const rfl::Ref<containers::Encoding> join_keys_encoding_;
 
   /// Settings for the engine and the monitor
   const config::Options options_;

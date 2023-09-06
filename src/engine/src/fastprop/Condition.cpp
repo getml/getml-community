@@ -70,13 +70,13 @@ Condition::~Condition() = default;
 // ----------------------------------------------------------------------------
 
 typename Condition::NamedTupleType Condition::named_tuple() const {
-  return fct::make_field<"bound_lower_">(bound_lower_) *
-         fct::make_field<"bound_upper_">(bound_upper_) *
-         fct::make_field<"category_used_">(category_used_) *
-         fct::make_field<"data_used_">(data_used_) *
-         fct::make_field<"input_col_">(input_col_) *
-         fct::make_field<"output_col_">(output_col_) *
-         fct::make_field<"peripheral_">(peripheral_);
+  return rfl::make_field<"bound_lower_">(bound_lower_) *
+         rfl::make_field<"bound_upper_">(bound_upper_) *
+         rfl::make_field<"category_used_">(category_used_) *
+         rfl::make_field<"data_used_">(data_used_) *
+         rfl::make_field<"input_col_">(input_col_) *
+         rfl::make_field<"output_col_">(output_col_) *
+         rfl::make_field<"peripheral_">(peripheral_);
 }
 
 // ----------------------------------------------------------------------------

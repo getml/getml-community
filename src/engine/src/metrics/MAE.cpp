@@ -32,7 +32,7 @@ typename MAE::ResultType MAE::score(const Features _yhat, const Features _y) {
     mae[j] /= nrows_float;
   }
 
-  return fct::make_field<"mae_">(mae);
+  return rfl::make_field<"mae_">(mae);
 }
 
 }  // namespace metrics

@@ -12,17 +12,17 @@
 #include <vector>
 
 #include "commands/DataFrameOrView.hpp"
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
 
 namespace commands {
 
 /// The commands to retrieve data frames or view,
 /// used by many commands related to the pipelines.
-using DataFramesOrViews = fct::NamedTuple<
-    fct::Field<"population_df_", DataFrameOrView>,
-    fct::Field<"peripheral_dfs_", std::vector<DataFrameOrView>>,
-    fct::Field<"validation_df_", std::optional<DataFrameOrView>>>;
+using DataFramesOrViews = rfl::NamedTuple<
+    rfl::Field<"population_df_", DataFrameOrView>,
+    rfl::Field<"peripheral_dfs_", std::vector<DataFrameOrView>>,
+    rfl::Field<"validation_df_", std::optional<DataFrameOrView>>>;
 
 }  // namespace commands
 

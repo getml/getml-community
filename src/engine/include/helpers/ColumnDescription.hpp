@@ -10,25 +10,25 @@
 
 #include <string>
 
-#include "fct/Field.hpp"
-#include "fct/Literal.hpp"
-#include "fct/NamedTuple.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/Literal.hpp"
+#include "rfl/NamedTuple.hpp"
 
 namespace helpers {
 
 struct ColumnDescription {
-  using MarkerType = fct::Literal<"[PERIPHERAL]", "[POPULATION]">;
+  using MarkerType = rfl::Literal<"[PERIPHERAL]", "[POPULATION]">;
 
   /// Which table are we referring to?
-  using f_marker = fct::Field<"marker_", MarkerType>;
+  using f_marker = rfl::Field<"marker_", MarkerType>;
 
   /// The name of the column.
-  using f_name = fct::Field<"name_", std::string>;
+  using f_name = rfl::Field<"name_", std::string>;
 
   /// The name of the table.
-  using f_table = fct::Field<"table_", std::string>;
+  using f_table = rfl::Field<"table_", std::string>;
 
-  using NamedTupleType = fct::NamedTuple<f_marker, f_name, f_table>;
+  using NamedTupleType = rfl::NamedTuple<f_marker, f_name, f_table>;
 
   ColumnDescription(const MarkerType& _marker, const std::string& _table,
                     const std::string& _name)

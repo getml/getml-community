@@ -11,12 +11,12 @@
 
 #include "json/Reader.hpp"
 #include "json/Writer.hpp"
-#include "parsing/Parser.hpp"
+#include "rfl/parsing/Parser.hpp"
 
 namespace json {
 
 template <class T>
-using Parser = parsing::Parser<Reader, Writer, T>;
+using Parser = rfl::parsing::Parser<Reader, Writer, T>;
 
 };  // namespace json
 

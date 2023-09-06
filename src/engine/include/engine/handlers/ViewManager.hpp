@@ -21,9 +21,9 @@
 #include "engine/config/config.hpp"
 #include "engine/handlers/DataFrameManager.hpp"
 #include "engine/handlers/DataFrameManagerParams.hpp"
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
-#include "fct/Ref.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
+#include "rfl/Ref.hpp"
 
 namespace engine {
 namespace handlers {
@@ -78,7 +78,7 @@ class ViewManager {
   containers::Encoding& categories() { return *params_.categories_; }
 
   /// Trivial accessor
-  fct::Ref<database::Connector> connector(const std::string& _name) {
+  rfl::Ref<database::Connector> connector(const std::string& _name) {
     return params_.database_manager_->connector(_name);
   }
 

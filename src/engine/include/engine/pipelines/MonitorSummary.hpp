@@ -14,26 +14,26 @@
 #include <vector>
 
 #include "commands/Pipeline.hpp"
-#include "fct/Field.hpp"
-#include "fct/Ref.hpp"
-#include "fct/define_named_tuple.hpp"
 #include "helpers/Schema.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/Ref.hpp"
+#include "rfl/define_named_tuple.hpp"
 
 namespace engine {
 namespace pipelines {
 
 using MonitorSummaryNotFitted =
-    fct::define_named_tuple_t<commands::Pipeline,
-                              fct::Field<"allow_http_", bool>,
-                              fct::Field<"creation_time_", std::string>>;
+    rfl::define_named_tuple_t<commands::Pipeline,
+                              rfl::Field<"allow_http_", bool>,
+                              rfl::Field<"creation_time_", std::string>>;
 
 // TODO: Insert Scores object
-using MonitorSummaryFitted = fct::define_named_tuple_t<
-    MonitorSummaryNotFitted, fct::Field<"num_features_", size_t>,
-    fct::Field<"peripheral_schema_",
-               fct::Ref<const std::vector<helpers::Schema>>>,
-    fct::Field<"population_schema_", fct::Ref<const helpers::Schema>>,
-    fct::Field<"targets_", std::vector<std::string>>>;
+using MonitorSummaryFitted = rfl::define_named_tuple_t<
+    MonitorSummaryNotFitted, rfl::Field<"num_features_", size_t>,
+    rfl::Field<"peripheral_schema_",
+               rfl::Ref<const std::vector<helpers::Schema>>>,
+    rfl::Field<"population_schema_", rfl::Ref<const helpers::Schema>>,
+    rfl::Field<"targets_", std::vector<std::string>>>;
 
 using MonitorSummary =
     std::variant<MonitorSummaryFitted, MonitorSummaryNotFitted>;

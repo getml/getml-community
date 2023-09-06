@@ -14,8 +14,6 @@
 #include <vector>
 
 #include "debug/debug.hpp"
-#include "fct/NamedTuple.hpp"
-#include "fct/Ref.hpp"
 #include "predictors/Fingerprint.hpp"
 #include "predictors/FloatFeature.hpp"
 #include "predictors/IntFeature.hpp"
@@ -23,26 +21,28 @@
 #include "predictors/Predictor.hpp"
 #include "predictors/PredictorImpl.hpp"
 #include "predictors/StandardScaler.hpp"
+#include "rfl/NamedTuple.hpp"
+#include "rfl/Ref.hpp"
 
 namespace predictors {
 
 /// LogisticRegression predictor.
 class LogisticRegression : public Predictor {
  public:
-  using f_scaler = fct::Field<"scaler_", StandardScaler>;
-  using f_weights = fct::Field<"weights_", std::vector<Float>>;
+  using f_scaler = rfl::Field<"scaler_", StandardScaler>;
+  using f_weights = rfl::Field<"weights_", std::vector<Float>>;
 
   using NamedTupleType =
-      fct::NamedTuple<fct::Field<"learning_rate_", Float>,
-                      fct::Field<"reg_lambda_", Float>, f_scaler, f_weights>;
+      rfl::NamedTuple<rfl::Field<"learning_rate_", Float>,
+                      rfl::Field<"reg_lambda_", Float>, f_scaler, f_weights>;
 
  public:
   LogisticRegression(const LogisticRegressionHyperparams& _hyperparams,
-                     const fct::Ref<const PredictorImpl>& _impl,
+                     const rfl::Ref<const PredictorImpl>& _impl,
                      const std::vector<Fingerprint>& _dependencies)
       : dependencies_(_dependencies),
         hyperparams_(
-            fct::Ref<LogisticRegressionHyperparams>::make(_hyperparams)),
+            rfl::Ref<LogisticRegressionHyperparams>::make(_hyperparams)),
         impl_(_impl){};
 
   ~LogisticRegression() = default;
@@ -90,8 +90,8 @@ class LogisticRegression : public Predictor {
 
   /// Necessary for the automated parsing to work.
   NamedTupleType named_tuple() const {
-    return fct::make_field<"learning_rate_">(hyperparams().learning_rate()) *
-           fct::make_field<"reg_lambda_">(hyperparams().reg_lambda()) *
+    return rfl::make_field<"learning_rate_">(hyperparams().learning_rate()) *
+           rfl::make_field<"reg_lambda_">(hyperparams().reg_lambda()) *
            f_scaler(scaler_) * f_weights(weights_);
   }
 
@@ -101,7 +101,7 @@ class LogisticRegression : public Predictor {
     using LogisticRegressionFingerprint =
         typename Fingerprint::LogisticRegressionFingerprint;
     return Fingerprint(LogisticRegressionFingerprint(
-        hyperparams().val_ * fct::make_field<"dependencies_">(dependencies_) *
+        hyperparams().val_ * rfl::make_field<"dependencies_">(dependencies_) *
         impl().named_tuple()));
   }
 
@@ -220,10 +220,10 @@ class LogisticRegression : public Predictor {
   const std::vector<Fingerprint> dependencies_;
 
   /// The hyperparameters used for the LogisticRegression.
-  fct::Ref<const LogisticRegressionHyperparams> hyperparams_;
+  rfl::Ref<const LogisticRegressionHyperparams> hyperparams_;
 
   /// Implementation class for member functions common to most predictors.
-  fct::Ref<const PredictorImpl> impl_;
+  rfl::Ref<const PredictorImpl> impl_;
 
   /// For rescaling the input data such that the standard deviation of each
   /// column is 1.0

@@ -36,8 +36,8 @@ void Postgres::check_colnames(const std::vector<std::string>& _colnames,
 
 std::string Postgres::describe() const {
   const auto description =
-      fct::make_field<"connection_string">(connection_string_) *
-      fct::make_field<"dialect">(dialect());
+      rfl::make_field<"connection_string">(connection_string_) *
+      rfl::make_field<"dialect">(dialect());
   return json::to_json(description);
 }
 
@@ -116,7 +116,7 @@ TableContent Postgres::get_content(const std::string& _tname,
 
   const auto end = (_start + _length > nrows) ? nrows : _start + _length;
 
-  const auto iter = fct::Ref<PostgresIterator>::make(
+  const auto iter = rfl::Ref<PostgresIterator>::make(
       make_connection(), colnames, time_formats_, _tname, "", _start, end);
 
   return ContentGetter::get_content(iter, _draw, end - _start, nrows, ncols);

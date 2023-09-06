@@ -313,16 +313,16 @@ containers::ViewContent ViewParser::get_content(
 
   const auto nrows = make_nrows(column_views, _force_nrows);
 
-  const auto basis = fct::make_field<"draw", std::int32_t>(_draw) *
-                     fct::make_field<"data">(data);
+  const auto basis = rfl::make_field<"draw", std::int32_t>(_draw) *
+                     rfl::make_field<"data">(data);
 
   if (!nrows) {
     return basis;
   }
 
   return containers::DataFrameContent(
-      basis * fct::make_field<"recordsTotal">(*nrows) *
-      fct::make_field<"recordsFiltered">(*nrows));
+      basis * rfl::make_field<"recordsTotal">(*nrows) *
+      rfl::make_field<"recordsFiltered">(*nrows));
 }
 
 // ----------------------------------------------------------------------------
@@ -333,10 +333,10 @@ containers::DataFrame ViewParser::parse(
     using Type = std::decay_t<decltype(_cmd)>;
 
     if constexpr (std::is_same<Type, DataFrameOp>()) {
-      const auto name = fct::get<"name_">(_cmd);
+      const auto name = rfl::get<"name_">(_cmd);
       return utils::Getter::get(name, *data_frames_);
     } else {
-      const auto& base = *fct::get<"base_">(_cmd);
+      const auto& base = *rfl::get<"base_">(_cmd);
 
       auto df = parse(base);
 
@@ -352,7 +352,7 @@ containers::DataFrame ViewParser::parse(
     }
   };
 
-  return fct::visit(handle, _cmd.val_);
+  return rfl::visit(handle, _cmd.val_);
 }
 
 // ----------------------------------------------------------------------------

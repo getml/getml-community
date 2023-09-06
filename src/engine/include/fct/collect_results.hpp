@@ -15,9 +15,9 @@
 #include <utility>
 #include <vector>
 
-#include "fct/Result.hpp"
 #include "fct/ranges.hpp"
 #include "multithreading/multithreading.hpp"
+#include "rfl/Result.hpp"
 
 namespace fct {
 namespace collect_results {
@@ -34,13 +34,13 @@ auto map(RangeType range) {
 
   for (auto r : range) {
     if (!r) {
-      return Result<std::map<KeyType, ValueType>>(*r.error());
+      return rfl::Result<std::map<KeyType, ValueType>>(*r.error());
     }
     const auto& [key, value] = *r;
     m.try_emplace(std::move(key), std::move(value));
   }
 
-  return Result<std::map<KeyType, ValueType>>(m);
+  return rfl::Result<std::map<KeyType, ValueType>>(m);
 }
 
 /// Expects a range containing Result<T>. Returns a vector<T> if
@@ -53,12 +53,12 @@ auto set(RangeType range) {
 
   for (auto val : range) {
     if (!val) {
-      return Result<std::set<T>>(*val.error());
+      return rfl::Result<std::set<T>>(*val.error());
     }
     s.insert(*val);
   }
 
-  return Result<std::set<T>>(s);
+  return rfl::Result<std::set<T>>(s);
 }
 
 /// Expects a range containing Result<T>. Returns a vector<T> if
@@ -71,12 +71,12 @@ auto vector(RangeType range) {
 
   for (auto val : range) {
     if (!val) {
-      return Result<std::vector<T>>(*val.error());
+      return rfl::Result<std::vector<T>>(*val.error());
     }
     vec.emplace_back(*val);
   }
 
-  return Result<std::vector<T>>(vec);
+  return rfl::Result<std::vector<T>>(vec);
 }
 
 }  // namespace collect_results

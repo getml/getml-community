@@ -18,40 +18,40 @@
 #include "communication/communication.hpp"
 #include "containers/containers.hpp"
 #include "engine/dependency/dependency.hpp"
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
-#include "fct/Ref.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
+#include "rfl/Ref.hpp"
 
 namespace engine {
 namespace pipelines {
 
-using CheckParams = fct::NamedTuple<
+using CheckParams = rfl::NamedTuple<
 
     /// The Encoding used for the categories.
-    fct::Field<"categories_", fct::Ref<containers::Encoding>>,
+    rfl::Field<"categories_", rfl::Ref<containers::Encoding>>,
 
     /// Contains all of the names of all data frames or views needed for the
     /// check.
-    fct::Field<"cmd_", commands::DataFramesOrViews>,
+    rfl::Field<"cmd_", commands::DataFramesOrViews>,
 
     /// Logs the progress.
-    fct::Field<"logger_", std::shared_ptr<const communication::Logger>>,
+    rfl::Field<"logger_", std::shared_ptr<const communication::Logger>>,
 
     /// The peripheral tables.
-    fct::Field<"peripheral_dfs_", std::vector<containers::DataFrame>>,
+    rfl::Field<"peripheral_dfs_", std::vector<containers::DataFrame>>,
 
     /// The population table.
-    fct::Field<"population_df_", containers::DataFrame>,
+    rfl::Field<"population_df_", containers::DataFrame>,
 
     /// The dependency tracker for the preprocessors.
-    fct::Field<"preprocessor_tracker_",
-               fct::Ref<dependency::PreprocessorTracker>>,
+    rfl::Field<"preprocessor_tracker_",
+               rfl::Ref<dependency::PreprocessorTracker>>,
 
     /// Tracks the warnings to be shown in the Python API.
-    fct::Field<"warning_tracker_", fct::Ref<dependency::WarningTracker>>,
+    rfl::Field<"warning_tracker_", rfl::Ref<dependency::WarningTracker>>,
 
     /// Output: The socket with which we communicate.
-    fct::Field<"socket_", Poco::Net::StreamSocket*>>;
+    rfl::Field<"socket_", Poco::Net::StreamSocket*>>;
 
 }  // namespace pipelines
 }  // namespace engine

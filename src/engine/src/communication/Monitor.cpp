@@ -46,7 +46,7 @@ void Monitor::log(const std::string& _msg) const {
 // ------------------------------------------------------------------------
 
 std::string Monitor::make_cmd(const std::string& _type) const {
-  return make_cmd(_type, fct::NamedTuple<>());
+  return make_cmd(_type, rfl::NamedTuple<>());
 }
 
 // ------------------------------------------------------------------------

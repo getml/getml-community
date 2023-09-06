@@ -18,13 +18,13 @@
 #include "engine/Int.hpp"
 #include "engine/preprocessors/Params.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
-#include "fct/Field.hpp"
-#include "fct/Literal.hpp"
-#include "fct/NamedTuple.hpp"
-#include "fct/Ref.hpp"
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/Macros.hpp"
 #include "helpers/StringIterator.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/Literal.hpp"
+#include "rfl/NamedTuple.hpp"
+#include "rfl/Ref.hpp"
 #include "strings/strings.hpp"
 
 namespace engine {
@@ -37,9 +37,9 @@ class EMailDomain : public Preprocessor {
   using EMailDomainOp = typename commands::Preprocessor::EMailDomainOp;
 
   using f_cols =
-      fct::Field<"cols_", std::vector<fct::Ref<helpers::ColumnDescription>>>;
+      rfl::Field<"cols_", std::vector<rfl::Ref<helpers::ColumnDescription>>>;
 
-  using NamedTupleType = fct::NamedTuple<f_cols>;
+  using NamedTupleType = rfl::NamedTuple<f_cols>;
 
  public:
   EMailDomain(const EMailDomainOp& _op,
@@ -67,10 +67,10 @@ class EMailDomain : public Preprocessor {
 
  public:
   /// Creates a deep copy.
-  fct::Ref<Preprocessor> clone(
+  rfl::Ref<Preprocessor> clone(
       const std::optional<std::vector<commands::Fingerprint>>& _dependencies =
           std::nullopt) const final {
-    const auto c = fct::Ref<EMailDomain>::make(*this);
+    const auto c = rfl::Ref<EMailDomain>::make(*this);
     if (_dependencies) {
       c->dependencies_ = *_dependencies;
     }
@@ -83,8 +83,8 @@ class EMailDomain : public Preprocessor {
     using FingerprintType =
         typename commands::Fingerprint::EMailDomainFingerprint;
     return commands::Fingerprint(FingerprintType(
-        fct::make_field<"dependencies_">(dependencies_),
-        fct::make_field<"type_">(fct::Literal<"EMailDomain">())));
+        rfl::make_field<"dependencies_">(dependencies_),
+        rfl::make_field<"type_">(rfl::Literal<"EMailDomain">())));
   }
 
   /// Necessary for the automated parsing to work.
@@ -137,7 +137,7 @@ class EMailDomain : public Preprocessor {
 
  private:
   /// List of all columns to which the email domain transformation applies.
-  std::vector<fct::Ref<helpers::ColumnDescription>> cols_;
+  std::vector<rfl::Ref<helpers::ColumnDescription>> cols_;
 
   /// The dependencies inserted into the the preprocessor.
   std::vector<commands::Fingerprint> dependencies_;

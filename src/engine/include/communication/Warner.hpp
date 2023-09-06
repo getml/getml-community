@@ -17,13 +17,13 @@
 #include "commands/WarningFingerprint.hpp"
 #include "communication/Warning.hpp"
 #include "communication/Warnings.hpp"
-#include "fct/Ref.hpp"
+#include "rfl/Ref.hpp"
 
 namespace communication {
 
 class Warner {
  public:
-  Warner() : warnings_(fct::Ref<std::vector<Warning>>::make()) {}
+  Warner() : warnings_(rfl::Ref<std::vector<Warning>>::make()) {}
 
   ~Warner() = default;
 
@@ -38,14 +38,14 @@ class Warner {
   const std::vector<Warning>& warnings() const { return *warnings_; }
 
   /// Generates a warnings object that can be used for dependency tracking.
-  const fct::Ref<Warnings> to_warnings_obj(
+  const rfl::Ref<Warnings> to_warnings_obj(
       const commands::WarningFingerprint& _fingerprint) const {
-    return fct::Ref<Warnings>::make(_fingerprint, warnings_);
+    return rfl::Ref<Warnings>::make(_fingerprint, warnings_);
   }
 
  private:
   /// The list of warnings to send.
-  const fct::Ref<std::vector<Warning>> warnings_;
+  const rfl::Ref<std::vector<Warning>> warnings_;
 };
 
 }  // namespace communication

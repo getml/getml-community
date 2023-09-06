@@ -4,21 +4,21 @@
 #include <string>
 #include <vector>
 
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
-#include "fct/Ref.hpp"
-#include "fct/define_named_tuple.hpp"
-#include "fct/remove_fields.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
+#include "rfl/Ref.hpp"
+#include "rfl/define_named_tuple.hpp"
+#include "rfl/remove_fields.hpp"
 #include "transpilation/FeatureTableParams.hpp"
 
 namespace transpilation {
 
 /// The features expressed as SQL code.
-using f_sql = fct::Field<"sql_", std::vector<std::string>>;
+using f_sql = rfl::Field<"sql_", std::vector<std::string>>;
 
 /// Contains the parameters needed to create a feature table.
-using SQLParams = fct::define_named_tuple_t<
-    fct::remove_fields_t<FeatureTableParams, "prefix_">, f_sql>;
+using SQLParams = rfl::define_named_tuple_t<
+    rfl::remove_fields_t<FeatureTableParams, "prefix_">, f_sql>;
 
 }  // namespace transpilation
 

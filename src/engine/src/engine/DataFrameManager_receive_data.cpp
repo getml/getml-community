@@ -12,10 +12,10 @@ namespace engine {
 namespace handlers {
 
 void DataFrameManager::receive_data(
-    const fct::Ref<containers::Encoding>& _local_categories,
-    const fct::Ref<containers::Encoding>& _local_join_keys_encoding,
+    const rfl::Ref<containers::Encoding>& _local_categories,
+    const rfl::Ref<containers::Encoding>& _local_join_keys_encoding,
     containers::DataFrame* _df, Poco::Net::StreamSocket* _socket) const {
-  using CmdType = fct::TaggedUnion<
+  using CmdType = rfl::TaggedUnion<
       "type_", typename commands::DataFrameCommand::FloatColumnOp,
       typename commands::DataFrameCommand::StringColumnOp, CloseDataFrameOp>;
 
@@ -46,7 +46,7 @@ void DataFrameManager::receive_data(
       }
     };
 
-    const bool finished = fct::visit(handle, cmd);
+    const bool finished = rfl::visit(handle, cmd);
 
     if (finished) {
       break;

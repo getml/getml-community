@@ -21,9 +21,9 @@
 #include "engine/config/config.hpp"
 #include "engine/handlers/DataFrameManagerParams.hpp"
 #include "engine/handlers/DatabaseManager.hpp"
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
-#include "fct/Ref.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
+#include "rfl/Ref.hpp"
 
 namespace engine {
 namespace handlers {
@@ -38,11 +38,11 @@ class DataFrameManager {
   using Command = commands::DataFrameCommand;
 
   using CloseDataFrameOp =
-      fct::NamedTuple<fct::Field<"name_", std::string>,
-                      fct::Field<"type_", fct::Literal<"DataFrame.close">>>;
+      rfl::NamedTuple<rfl::Field<"name_", std::string>,
+                      rfl::Field<"type_", rfl::Literal<"DataFrame.close">>>;
 
-  using RecvAndAddOp = fct::NamedTuple<fct::Field<"name_", std::string>,
-                                       fct::Field<"role_", std::string>>;
+  using RecvAndAddOp = rfl::NamedTuple<rfl::Field<"name_", std::string>,
+                                       rfl::Field<"role_", std::string>>;
 
  public:
   explicit DataFrameManager(const DataFrameManagerParams& _params)
@@ -70,8 +70,8 @@ class DataFrameManager {
   /// Adds a string column to a data frame.
   void recv_and_add_string_column(
       const RecvAndAddOp& _cmd,
-      const fct::Ref<containers::Encoding>& _local_categories,
-      const fct::Ref<containers::Encoding>& _local_join_keys_encoding,
+      const rfl::Ref<containers::Encoding>& _local_categories,
+      const rfl::Ref<containers::Encoding>& _local_join_keys_encoding,
       containers::DataFrame* _df, Poco::Net::StreamSocket* _socket) const;
 
  public:
@@ -121,15 +121,15 @@ class DataFrameManager {
       const std::string& _fname, const size_t _batch_size,
       const std::string& _quotechar, const std::string& _sep,
       const containers::DataFrame& _df,
-      const fct::Ref<containers::Encoding>& _categories,
-      const fct::Ref<containers::Encoding>& _join_keys_encoding) const;
+      const rfl::Ref<containers::Encoding>& _categories,
+      const rfl::Ref<containers::Encoding>& _join_keys_encoding) const;
 
   /// Writes a data frame to a database.
   void df_to_db(
       const std::string& _conn_id, const std::string& _table_name,
       const containers::DataFrame& _df,
-      const fct::Ref<containers::Encoding>& _categories,
-      const fct::Ref<containers::Encoding>& _join_keys_encoding) const;
+      const rfl::Ref<containers::Encoding>& _categories,
+      const rfl::Ref<containers::Encoding>& _join_keys_encoding) const;
 
   /// Freezes the data frame (making it immutable).
   void freeze(const typename Command::FreezeDataFrameOp& _cmd,
@@ -244,8 +244,8 @@ class DataFrameManager {
   void add_int_column_to_df(
       const std::string& _name, const std::string& _role,
       const std::string& _unit, const containers::Column<strings::String>& _col,
-      const fct::Ref<containers::Encoding>& _local_categories,
-      const fct::Ref<containers::Encoding>& _local_join_keys_encoding,
+      const rfl::Ref<containers::Encoding>& _local_categories,
+      const rfl::Ref<containers::Encoding>& _local_join_keys_encoding,
       containers::DataFrame* _df) const;
 
   /// Adds a string column to the data frame.
@@ -257,8 +257,8 @@ class DataFrameManager {
 
   /// Receives the actual data contained in a DataFrame
   void receive_data(
-      const fct::Ref<containers::Encoding>& _local_categories,
-      const fct::Ref<containers::Encoding>& _local_join_keys_encoding,
+      const rfl::Ref<containers::Encoding>& _local_categories,
+      const rfl::Ref<containers::Encoding>& _local_join_keys_encoding,
       containers::DataFrame* _df, Poco::Net::StreamSocket* _socket) const;
 
  private:
@@ -266,7 +266,7 @@ class DataFrameManager {
   containers::Encoding& categories() { return *params_.categories_; }
 
   /// Trivial accessor
-  fct::Ref<database::Connector> connector(const std::string& _name) const {
+  rfl::Ref<database::Connector> connector(const std::string& _name) const {
     return params_.database_manager_->connector(_name);
   }
 
@@ -309,14 +309,14 @@ std::string DataFrameManager::make_column_string(const Int _draw,
                                                  const size_t _nrows,
                                                  IterType _begin,
                                                  IterType _end) const {
-  const auto base = fct::make_field<"draw">(_draw) *
-                    fct::make_field<"recordsTotal">(_nrows) *
-                    fct::make_field<"recordsFiltered">(_nrows);
+  const auto base = rfl::make_field<"draw">(_draw) *
+                    rfl::make_field<"recordsTotal">(_nrows) *
+                    rfl::make_field<"recordsFiltered">(_nrows);
 
   auto data = std::vector<std::vector<std::string>>();
 
   if (_nrows == 0) {
-    return json::to_json(base * fct::make_field<"data">(data));
+    return json::to_json(base * rfl::make_field<"data">(data));
   }
 
   for (auto it = _begin; it != _end; ++it) {
@@ -333,7 +333,7 @@ std::string DataFrameManager::make_column_string(const Int _draw,
     data.push_back(row);
   }
 
-  return json::to_json(base * fct::make_field<"data">(data));
+  return json::to_json(base * rfl::make_field<"data">(data));
 }
 
 // ------------------------------------------------------------------------

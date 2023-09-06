@@ -11,10 +11,10 @@
 #include <map>
 
 #include "engine/pipelines/FittedPipeline.hpp"
-#include "fct/Field.hpp"
 #include "metrics/Scorer.hpp"
 #include "metrics/Scores.hpp"
 #include "metrics/Summarizer.hpp"
+#include "rfl/Field.hpp"
 
 namespace engine {
 namespace pipelines {
@@ -89,7 +89,7 @@ std::shared_ptr<const metrics::Scores> calculate_feature_stats(
 
   const auto [n1, n2, n3] = _fitted.feature_names();
 
-  scores->update(fct::make_field<"feature_names_">(
+  scores->update(rfl::make_field<"feature_names_">(
       fct::join::vector<std::string>({n1, n2, n3})));
 
   return scores;
@@ -331,7 +331,7 @@ std::vector<Float> make_importance_factors(
 
 // ----------------------------------------------------------------------------
 
-fct::Ref<const metrics::Scores> score(
+rfl::Ref<const metrics::Scores> score(
     const Pipeline& _pipeline, const FittedPipeline& _fitted,
     const containers::DataFrame& _population_df,
     const std::string& _population_name,
@@ -363,10 +363,10 @@ fct::Ref<const metrics::Scores> score(
     }
   }
 
-  auto scores = fct::Ref<metrics::Scores>::make(_pipeline.scores());
+  auto scores = rfl::Ref<metrics::Scores>::make(_pipeline.scores());
 
   const auto update = [&scores, &_population_name](const auto& _res) {
-    scores->update(_res, fct::make_field<"set_used_">(_population_name));
+    scores->update(_res, rfl::make_field<"set_used_">(_population_name));
     return scores;
   };
 

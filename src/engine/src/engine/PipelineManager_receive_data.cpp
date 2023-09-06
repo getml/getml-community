@@ -14,7 +14,7 @@
 #include "engine/handlers/DataFrameManager.hpp"
 #include "engine/handlers/PipelineManager.hpp"
 #include "engine/pipelines/pipelines.hpp"
-#include "fct/always_false.hpp"
+#include "rfl/always_false.hpp"
 #include "transpilation/TranspilationParams.hpp"
 #include "transpilation/transpilation.hpp"
 
@@ -23,9 +23,9 @@ namespace handlers {
 
 typename PipelineManager::FullTransformOp PipelineManager::receive_data(
     const typename Command::TransformOp& _cmd,
-    const fct::Ref<containers::Encoding>& _categories,
-    const fct::Ref<containers::Encoding>& _join_keys_encoding,
-    const fct::Ref<std::map<std::string, containers::DataFrame>>& _data_frames,
+    const rfl::Ref<containers::Encoding>& _categories,
+    const rfl::Ref<containers::Encoding>& _join_keys_encoding,
+    const rfl::Ref<std::map<std::string, containers::DataFrame>>& _data_frames,
     Poco::Net::StreamSocket* _socket) {
   // Declare local variables. The idea of the local variables
   // is to prevent the global variables from being affected
@@ -34,7 +34,7 @@ typename PipelineManager::FullTransformOp PipelineManager::receive_data(
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   const auto local_read_write_lock =
-      fct::Ref<multithreading::ReadWriteLock>::make();
+      rfl::Ref<multithreading::ReadWriteLock>::make();
 
   const auto data_frame_manager_params =
       DataFrameManagerParams{.categories_ = _categories,
@@ -51,10 +51,10 @@ typename PipelineManager::FullTransformOp PipelineManager::receive_data(
   auto local_column_manager = ColumnManager(data_frame_manager_params);
 
   using DataFrameCmd =
-      fct::NamedTuple<fct::Field<"type_", fct::Literal<"DataFrame">>,
-                      fct::Field<"name_", std::string>>;
+      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"DataFrame">>,
+                      rfl::Field<"name_", std::string>>;
 
-  using CmdType = fct::TaggedUnion<
+  using CmdType = rfl::TaggedUnion<
       "type_", DataFrameCmd, typename commands::ProjectCommand::AddDfFromJSONOp,
       typename commands::ProjectCommand::AddDfFromQueryOp,
       typename commands::ColumnCommand::SetFloatColumnUnitOp,
@@ -70,7 +70,7 @@ typename PipelineManager::FullTransformOp PipelineManager::receive_data(
          _socket](const auto& _op) -> std::optional<FullTransformOp> {
       using Type = std::decay_t<decltype(_op)>;
       if constexpr (std::is_same<Type, DataFrameCmd>()) {
-        local_data_frame_manager.add_data_frame(fct::get<"name_">(_op),
+        local_data_frame_manager.add_data_frame(rfl::get<"name_">(_op),
                                                 _socket);
         return std::nullopt;
       } else if constexpr (std::is_same<Type,
@@ -95,7 +95,7 @@ typename PipelineManager::FullTransformOp PipelineManager::receive_data(
         return _op;
       }
     };
-    const auto cmd = fct::visit(handle, op);
+    const auto cmd = rfl::visit(handle, op);
     if (cmd) {
       return *cmd;
     }

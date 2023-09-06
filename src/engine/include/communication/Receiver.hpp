@@ -19,8 +19,8 @@
 
 #include "communication/Logger.hpp"
 #include "communication/ULong.hpp"
-#include "fct/Ref.hpp"
 #include "helpers/Endianness.hpp"
+#include "rfl/Ref.hpp"
 
 namespace communication {
 
@@ -37,7 +37,7 @@ struct Receiver {
 
   /// Receives a command from the client
   static std::string recv_cmd(
-      const fct::Ref<const communication::Logger> &_logger,
+      const rfl::Ref<const communication::Logger> &_logger,
       Poco::Net::StreamSocket *_socket);
 };
 

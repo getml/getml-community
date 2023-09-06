@@ -30,10 +30,10 @@ void DataFrameManager::add_data_frame(const std::string& _name,
 
   const auto pool = params_.options_.make_pool();
 
-  const auto local_categories = fct::Ref<containers::Encoding>::make(
+  const auto local_categories = rfl::Ref<containers::Encoding>::make(
       pool, params_.categories_.ptr());  // TODO
 
-  const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
+  const auto local_join_keys_encoding = rfl::Ref<containers::Encoding>::make(
       pool, params_.join_keys_encoding_.ptr());  // TODO
 
   // TODO
@@ -193,8 +193,8 @@ void DataFrameManager::add_int_column_to_df(
 void DataFrameManager::add_int_column_to_df(
     const std::string& _name, const std::string& _role,
     const std::string& _unit, const containers::Column<strings::String>& _col,
-    const fct::Ref<containers::Encoding>& _local_categories,
-    const fct::Ref<containers::Encoding>& _local_join_keys_encoding,
+    const rfl::Ref<containers::Encoding>& _local_categories,
+    const rfl::Ref<containers::Encoding>& _local_join_keys_encoding,
     containers::DataFrame* _df) const {
   auto col = containers::Column<Int>(_df->pool(), _col.nrows());
 
@@ -310,10 +310,10 @@ void DataFrameManager::append_to_data_frame(
 
   const auto pool = params_.options_.make_pool();
 
-  const auto local_categories = fct::Ref<containers::Encoding>::make(
+  const auto local_categories = rfl::Ref<containers::Encoding>::make(
       pool, params_.categories_.ptr());  // TODO
 
-  const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
+  const auto local_join_keys_encoding = rfl::Ref<containers::Encoding>::make(
       pool, params_.join_keys_encoding_.ptr());  // TODO
 
   // TODO
@@ -488,10 +488,10 @@ void DataFrameManager::concat(const typename Command::ConcatDataFramesOp& _cmd,
 
   const auto pool = params_.options_.make_pool();
 
-  const auto local_categories = fct::Ref<containers::Encoding>::make(
+  const auto local_categories = rfl::Ref<containers::Encoding>::make(
       pool, params_.categories_.ptr());  // TODO
 
-  const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
+  const auto local_join_keys_encoding = rfl::Ref<containers::Encoding>::make(
       pool, params_.join_keys_encoding_.ptr());  // TODO
 
   auto view_parser = ViewParser(local_categories, local_join_keys_encoding,
@@ -533,8 +533,8 @@ void DataFrameManager::df_to_csv(
     const std::string& _fname, const size_t _batch_size,
     const std::string& _quotechar, const std::string& _sep,
     const containers::DataFrame& _df,
-    const fct::Ref<containers::Encoding>& _categories,
-    const fct::Ref<containers::Encoding>& _join_keys_encoding) const {
+    const rfl::Ref<containers::Encoding>& _categories,
+    const rfl::Ref<containers::Encoding>& _join_keys_encoding) const {
   // We are using the bell character (\a) as the quotechar. It is least
   // likely to appear in any field.
   auto reader = containers::DataFrameReader(
@@ -566,8 +566,8 @@ void DataFrameManager::df_to_csv(
 void DataFrameManager::df_to_db(
     const std::string& _conn_id, const std::string& _table_name,
     const containers::DataFrame& _df,
-    const fct::Ref<containers::Encoding>& _categories,
-    const fct::Ref<containers::Encoding>& _join_keys_encoding) const {
+    const rfl::Ref<containers::Encoding>& _categories,
+    const rfl::Ref<containers::Encoding>& _join_keys_encoding) const {
   // We are using the bell character (\a) as the quotechar. It is least
   // likely to appear in any field.
   auto reader = containers::DataFrameReader(
@@ -619,10 +619,10 @@ void DataFrameManager::from_arrow(
 
   const auto pool = params_.options_.make_pool();
 
-  const auto local_categories = fct::Ref<containers::Encoding>::make(
+  const auto local_categories = rfl::Ref<containers::Encoding>::make(
       pool, params_.categories_.ptr());  // TODO
 
-  const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
+  const auto local_join_keys_encoding = rfl::Ref<containers::Encoding>::make(
       pool, params_.join_keys_encoding_.ptr());  // TODO
 
   const auto arrow_handler = handlers::ArrowHandler(
@@ -792,9 +792,9 @@ void DataFrameManager::from_parquet(
   const auto pool = params_.options_.make_pool();
 
   const auto local_categories =
-      fct::Ref<containers::Encoding>::make(pool, params_.categories_.ptr());
+      rfl::Ref<containers::Encoding>::make(pool, params_.categories_.ptr());
 
-  const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
+  const auto local_join_keys_encoding = rfl::Ref<containers::Encoding>::make(
       pool, params_.join_keys_encoding_.ptr());
 
   const auto arrow_handler = handlers::ArrowHandler(
@@ -896,9 +896,9 @@ void DataFrameManager::from_view(const typename Command::AddDfFromViewOp& _cmd,
   const auto pool = params_.options_.make_pool();
 
   auto local_categories =
-      fct::Ref<containers::Encoding>::make(pool, params_.categories_.ptr());
+      rfl::Ref<containers::Encoding>::make(pool, params_.categories_.ptr());
 
-  auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
+  auto local_join_keys_encoding = rfl::Ref<containers::Encoding>::make(
       pool, params_.join_keys_encoding_.ptr());
 
   auto df = ViewParser(local_categories, local_join_keys_encoding,
@@ -1097,8 +1097,8 @@ void DataFrameManager::recv_and_add_string_column(
 
 void DataFrameManager::recv_and_add_string_column(
     const RecvAndAddOp& _cmd,
-    const fct::Ref<containers::Encoding>& _local_categories,
-    const fct::Ref<containers::Encoding>& _local_join_keys_encoding,
+    const rfl::Ref<containers::Encoding>& _local_categories,
+    const rfl::Ref<containers::Encoding>& _local_join_keys_encoding,
     containers::DataFrame* _df, Poco::Net::StreamSocket* _socket) const {
   const auto role = _cmd.get<"role_">();
 

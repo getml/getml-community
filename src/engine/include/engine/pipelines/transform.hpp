@@ -45,7 +45,7 @@ std::tuple<containers::NumericalFeatures, containers::CategoricalFeatures,
            containers::NumericalFeatures>
 make_features(
     const MakeFeaturesParams& _params, const Pipeline& _pipeline,
-    const std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>&
+    const std::vector<rfl::Ref<const featurelearners::AbstractFeatureLearner>>&
         _feature_learners,
     const predictors::PredictorImpl& _predictor_impl,
     const std::vector<commands::Fingerprint>& _fs_fingerprints);

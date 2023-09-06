@@ -10,7 +10,6 @@
 
 #include "rfl/Literal.hpp"
 #include "rfl/TaggedUnion.hpp"
-#include "rfl/VisitTree.hpp"
 #include "rfl/internal/StringLiteral.hpp"
 
 namespace rfl {

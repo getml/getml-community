@@ -20,7 +20,7 @@ namespace database {
 struct DatabaseParser {
   /// Given a command, the DatabaseParser returns the correct
   /// database connector.
-  static fct::Ref<Connector> parse(const typename Command::NamedTupleType& _cmd,
+  static rfl::Ref<Connector> parse(const typename Command::NamedTupleType& _cmd,
                                    const std::string& _password);
 };
 

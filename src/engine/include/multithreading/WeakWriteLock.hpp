@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef MULTITHREADING_WEAKWRITELOCK_HPP_
 #define MULTITHREADING_WEAKWRITELOCK_HPP_
@@ -14,7 +14,7 @@
 
 // ----------------------------------------------------------------------------
 
-#include "fct/Ref.hpp"
+#include "rfl/Ref.hpp"
 
 // ----------------------------------------------------------------------------
 
@@ -27,12 +27,12 @@ namespace multithreading {
 class WeakWriteLock {
  public:
   /// WeakWriteLock without a timeout.
-  explicit WeakWriteLock(const fct::Ref<ReadWriteLock>& _lock)
+  explicit WeakWriteLock(const rfl::Ref<ReadWriteLock>& _lock)
       : lock_(_lock), released_(true), weak_released_(false) {
     lock_->weak_write_lock();
   }
   /// WeakWriteLock with timeout.
-  WeakWriteLock(const fct::Ref<ReadWriteLock>& _lock,
+  WeakWriteLock(const rfl::Ref<ReadWriteLock>& _lock,
                 const std::chrono::milliseconds _duration)
       : lock_(_lock), released_(true), weak_released_(false) {
     lock_->weak_write_lock(_duration);
@@ -75,7 +75,7 @@ class WeakWriteLock {
 
  private:
   /// Lock to the WeakWriteLock.
-  const fct::Ref<ReadWriteLock> lock_;
+  const rfl::Ref<ReadWriteLock> lock_;
 
   /// Whether the acquirer has been released.
   bool released_;

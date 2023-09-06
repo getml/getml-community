@@ -15,8 +15,8 @@
 #include <string>
 #include <utility>
 
-#include "fct/Ref.hpp"
 #include "flexbuffers/OutputVar.hpp"
+#include "rfl/Ref.hpp"
 
 namespace flexbuffers {
 
@@ -53,13 +53,13 @@ class OutputObject : public OutputVar {
   bool is_null() const final { return false; }
 
   /// Adds a new element to the vector.
-  void push_back(const std::string& _name, const fct::Ref<OutputVar>& _var) {
+  void push_back(const std::string& _name, const rfl::Ref<OutputVar>& _var) {
     vars_.push_back(std::make_pair(_name, _var));
   }
 
  private:
   /// The underlying variables.
-  std::vector<std::pair<std::string, fct::Ref<OutputVar>>> vars_;
+  std::vector<std::pair<std::string, rfl::Ref<OutputVar>>> vars_;
 };
 
 }  // namespace flexbuffers

@@ -11,12 +11,12 @@
 #include "commands/LinearRegressionHyperparams.hpp"
 #include "commands/LogisticRegressionHyperparams.hpp"
 #include "commands/XGBoostHyperparams.hpp"
-#include "fct/TaggedUnion.hpp"
+#include "rfl/TaggedUnion.hpp"
 
 namespace commands {
 
 using Predictor =
-    fct::TaggedUnion<"type_", LinearRegressionHyperparams,
+    rfl::TaggedUnion<"type_", LinearRegressionHyperparams,
                      LogisticRegressionHyperparams, XGBoostHyperparams>;
 
 }  // namespace commands

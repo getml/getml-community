@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "database/Sqlite3Iterator.hpp"
 
@@ -12,7 +12,7 @@ namespace database {
 
 Sqlite3Iterator::Sqlite3Iterator(
     const std::shared_ptr<sqlite3>& _db, const std::string& _sql,
-    const fct::Ref<multithreading::ReadWriteLock>& _read_write_lock,
+    const rfl::Ref<multithreading::ReadWriteLock>& _read_write_lock,
     const std::vector<std::string>& _time_formats)
     : colnum_(0),
       db_(_db),
@@ -53,7 +53,7 @@ Sqlite3Iterator::Sqlite3Iterator(
 Sqlite3Iterator::Sqlite3Iterator(
     const std::shared_ptr<sqlite3>& _db,
     const std::vector<std::string>& _colnames,
-    const fct::Ref<multithreading::ReadWriteLock>& _read_write_lock,
+    const rfl::Ref<multithreading::ReadWriteLock>& _read_write_lock,
     const std::vector<std::string>& _time_formats, const std::string& _tname,
     const std::string& _where)
     : Sqlite3Iterator(_db, make_sql(_colnames, _tname, _where),

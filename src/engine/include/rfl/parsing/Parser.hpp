@@ -254,7 +254,7 @@ struct Parser<ReaderType, WriterType, NamedTuple<FieldTypes...>> {
           typename std::tuple_element<_i, std::tuple<FieldTypes...>>::type;
       using ValueType = std::decay_t<typename FieldType::Type>;
       auto value = Parser<ReaderType, WriterType, ValueType>::write(
-          _w, fct::get<_i>(_tup));
+          _w, rfl::get<_i>(_tup));
       const auto name = FieldType::name_.str();
       if constexpr (!is_required<ValueType>()) {
         if (!_w.is_empty(&value)) {

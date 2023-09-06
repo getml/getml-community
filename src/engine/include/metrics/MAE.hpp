@@ -10,17 +10,17 @@
 
 #include <cstdint>
 
-#include "fct/Field.hpp"
 #include "metrics/Features.hpp"
 #include "metrics/Float.hpp"
 #include "metrics/MetricImpl.hpp"
 #include "multithreading/multithreading.hpp"
+#include "rfl/Field.hpp"
 
 namespace metrics {
 
 class MAE {
  public:
-  using ResultType = fct::Field<"mae_", std::vector<Float>>;
+  using ResultType = rfl::Field<"mae_", std::vector<Float>>;
 
  public:
   MAE() {}

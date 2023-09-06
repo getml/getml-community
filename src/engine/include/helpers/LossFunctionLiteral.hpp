@@ -1,11 +1,11 @@
 #ifndef HELPERS_LOSSFUNCTIONLITERAL_HPP_
 #define HELPERS_LOSSFUNCTIONLITERAL_HPP_
 
-#include "fct/Literal.hpp"
+#include "rfl/Literal.hpp"
 
 namespace helpers {
 
-using LossFunctionLiteral = fct::Literal<"CrossEntropyLoss", "SquareLoss">;
+using LossFunctionLiteral = rfl::Literal<"CrossEntropyLoss", "SquareLoss">;
 
 }  // namespace helpers
 

@@ -12,15 +12,15 @@
 #include <vector>
 
 #include "commands/DataFramesOrViews.hpp"
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
-#include "fct/define_named_tuple.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
+#include "rfl/define_named_tuple.hpp"
 
 namespace commands {
 
-using CheckPipeline = typename fct::define_named_tuple<
-    fct::Field<"type_", fct::Literal<"Pipeline.check">>,
-    fct::Field<"name_", std::string>, DataFramesOrViews>::type;
+using CheckPipeline = typename rfl::define_named_tuple<
+    rfl::Field<"type_", rfl::Literal<"Pipeline.check">>,
+    rfl::Field<"name_", std::string>, DataFramesOrViews>::type;
 
 }  // namespace commands
 

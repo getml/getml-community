@@ -15,10 +15,10 @@
 #include "fastprop/Float.hpp"
 #include "fastprop/Int.hpp"
 #include "fastprop/enums/enums.hpp"
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
 #include "helpers/Schema.hpp"
 #include "helpers/StringIterator.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
 #include "transpilation/transpilation.hpp"
 
 namespace fastprop {
@@ -26,13 +26,13 @@ namespace containers {
 
 struct Condition {
   using NamedTupleType =
-      fct::NamedTuple<fct::Field<"bound_lower_", std::optional<Float>>,
-                      fct::Field<"bound_upper_", std::optional<Float>>,
-                      fct::Field<"category_used_", Int>,
-                      fct::Field<"data_used_", enums::DataUsed>,
-                      fct::Field<"input_col_", size_t>,
-                      fct::Field<"output_col_", size_t>,
-                      fct::Field<"peripheral_", size_t>>;
+      rfl::NamedTuple<rfl::Field<"bound_lower_", std::optional<Float>>,
+                      rfl::Field<"bound_upper_", std::optional<Float>>,
+                      rfl::Field<"category_used_", Int>,
+                      rfl::Field<"data_used_", enums::DataUsed>,
+                      rfl::Field<"input_col_", size_t>,
+                      rfl::Field<"output_col_", size_t>,
+                      rfl::Field<"peripheral_", size_t>>;
 
   Condition(const enums::DataUsed _data_used, const size_t _input_col,
             const size_t _output_col, const size_t _peripheral);

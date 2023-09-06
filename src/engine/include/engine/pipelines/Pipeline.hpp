@@ -38,7 +38,7 @@ namespace pipelines {
 
 class Pipeline {
  public:
-  Pipeline(const fct::Ref<const commands::Pipeline>& _obj);
+  Pipeline(const rfl::Ref<const commands::Pipeline>& _obj);
 
   Pipeline(const commands::Pipeline& _obj);
 
@@ -91,14 +91,14 @@ class Pipeline {
   }
 
   /// Returns a new pipeline with a new value for fitted_.
-  Pipeline with_fitted(const fct::Ref<const FittedPipeline>& _fitted) const {
+  Pipeline with_fitted(const rfl::Ref<const FittedPipeline>& _fitted) const {
     auto new_pipeline = *this;
     new_pipeline.fitted_ = _fitted.ptr();
     return new_pipeline;
   }
 
   /// Returns a new pipeline with new value for scores_.
-  Pipeline with_scores(const fct::Ref<const metrics::Scores>& _scores) const {
+  Pipeline with_scores(const rfl::Ref<const metrics::Scores>& _scores) const {
     auto new_pipeline = *this;
     new_pipeline.scores_ = _scores;
     return new_pipeline;
@@ -107,12 +107,12 @@ class Pipeline {
  public:
   /// Generates the placeholder and the peripheral names, integrating the
   /// many-to-one joins and all other modifications.
-  std::pair<fct::Ref<const helpers::Placeholder>,
-            fct::Ref<const std::vector<std::string>>>
+  std::pair<rfl::Ref<const helpers::Placeholder>,
+            rfl::Ref<const std::vector<std::string>>>
   make_placeholder() const;
 
   /// Returns the names of the peripheral tables.
-  fct::Ref<std::vector<std::string>> parse_peripheral() const;
+  rfl::Ref<std::vector<std::string>> parse_peripheral() const;
 
   /// Parses the population name.
   std::shared_ptr<std::string> parse_population() const;
@@ -131,10 +131,10 @@ class Pipeline {
   bool include_categorical_;
 
   /// The JSON object used to construct the pipeline.
-  fct::Ref<const commands::Pipeline> obj_;
+  rfl::Ref<const commands::Pipeline> obj_;
 
   /// The scores used to evaluate this pipeline
-  fct::Ref<const metrics::Scores> scores_;
+  rfl::Ref<const metrics::Scores> scores_;
 };
 
 }  // namespace pipelines

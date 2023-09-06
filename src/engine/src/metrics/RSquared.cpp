@@ -75,7 +75,7 @@ typename RSquared::ResultType RSquared::score(const Features _yhat,
 
   sufficient_statistics_.clear();
 
-  return fct::make_field<"rsquared_">(rsquared);
+  return rfl::make_field<"rsquared_">(rsquared);
 }
 
 }  // namespace metrics

@@ -17,40 +17,40 @@
 #include "commands/Fingerprint.hpp"
 #include "engine/pipelines/Pipeline.hpp"
 #include "engine/pipelines/TransformParams.hpp"
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
-#include "fct/Ref.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
+#include "rfl/Ref.hpp"
 
 namespace engine {
 namespace pipelines {
 
-using FeaturesOnlyParams = fct::NamedTuple<
+using FeaturesOnlyParams = rfl::NamedTuple<
 
     /// The depedencies of the predictors.
-    fct::Field<"dependencies_",
-               fct::Ref<const std::vector<commands::Fingerprint>>>,
+    rfl::Field<"dependencies_",
+               rfl::Ref<const std::vector<commands::Fingerprint>>>,
 
     /// The feature learners used in this pipeline.
-    fct::Field<
+    rfl::Field<
         "feature_learners_",
-        std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>>,
+        std::vector<rfl::Ref<const featurelearners::AbstractFeatureLearner>>>,
 
     /// The fingerprints of the feature selectors used for fitting.
-    fct::Field<"fs_fingerprints_",
-               fct::Ref<const std::vector<commands::Fingerprint>>>,
+    rfl::Field<"fs_fingerprints_",
+               rfl::Ref<const std::vector<commands::Fingerprint>>>,
 
     /// The underlying pipeline
-    fct::Field<"pipeline_", Pipeline>,
+    rfl::Field<"pipeline_", Pipeline>,
 
     /// The preprocessors used in this pipeline.
-    fct::Field<"preprocessors_",
-               std::vector<fct::Ref<const preprocessors::Preprocessor>>>,
+    rfl::Field<"preprocessors_",
+               std::vector<rfl::Ref<const preprocessors::Preprocessor>>>,
 
     /// Pimpl for the predictors.
-    fct::Field<"predictor_impl_", fct::Ref<const predictors::PredictorImpl>>,
+    rfl::Field<"predictor_impl_", rfl::Ref<const predictors::PredictorImpl>>,
 
     /// The parameters needed for transform(...).
-    fct::Field<"transform_params_", TransformParams>>;
+    rfl::Field<"transform_params_", TransformParams>>;
 
 }  // namespace pipelines
 }  // namespace engine

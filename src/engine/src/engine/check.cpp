@@ -11,9 +11,9 @@
 #include "commands/WarningFingerprint.hpp"
 #include "engine/pipelines/FitPreprocessorsParams.hpp"
 #include "engine/pipelines/fit.hpp"
-#include "fct/Field.hpp"
 #include "fct/collect.hpp"
 #include "json/json.hpp"
+#include "rfl/Field.hpp"
 
 namespace engine {
 namespace pipelines {
@@ -21,8 +21,8 @@ namespace check {
 
 /// Generates the fingerprints for the feature learners, needed for the
 /// warning.
-static std::pair<std::vector<fct::Ref<featurelearners::AbstractFeatureLearner>>,
-                 fct::Ref<const std::vector<commands::Fingerprint>>>
+static std::pair<std::vector<rfl::Ref<featurelearners::AbstractFeatureLearner>>,
+                 rfl::Ref<const std::vector<commands::Fingerprint>>>
 init_feature_learners(
     const Pipeline& _pipeline,
     const featurelearners::FeatureLearnerParams& _feature_learner_params,
@@ -46,19 +46,19 @@ void check(const Pipeline& _pipeline, const CheckParams& _params) {
   const auto [placeholder, peripheral_names] = _pipeline.make_placeholder();
 
   const auto feature_learner_params = featurelearners::FeatureLearnerParams(
-      fct::make_field<"dependencies_">(preprocessed.preprocessor_fingerprints_),
-      fct::make_field<"peripheral_">(peripheral_names),
-      fct::make_field<"peripheral_schema_">(modified_peripheral_schema),
-      fct::make_field<"placeholder_">(placeholder),
-      fct::make_field<"population_schema_">(modified_population_schema),
-      fct::make_field<"target_num_">(
+      rfl::make_field<"dependencies_">(preprocessed.preprocessor_fingerprints_),
+      rfl::make_field<"peripheral_">(peripheral_names),
+      rfl::make_field<"peripheral_schema_">(modified_peripheral_schema),
+      rfl::make_field<"placeholder_">(placeholder),
+      rfl::make_field<"population_schema_">(modified_population_schema),
+      rfl::make_field<"target_num_">(
           featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS));
 
   const auto [feature_learners, fl_fingerprints] =
       init_feature_learners(_pipeline, feature_learner_params, _params);
 
   const auto warning_fingerprint = commands::WarningFingerprint(
-      fct::make_field<"fl_fingerprints_">(fl_fingerprints));
+      rfl::make_field<"fl_fingerprints_">(fl_fingerprints));
 
   const auto retrieved =
       _params.get<"warning_tracker_">()->retrieve(warning_fingerprint);
@@ -75,7 +75,7 @@ void check(const Pipeline& _pipeline, const CheckParams& _params) {
                 _params.get<"logger_">(), true, _params.get<"socket_">())
           : std::shared_ptr<const communication::SocketLogger>();
 
-  // TODO: Use fct::Ref
+  // TODO: Use rfl::Ref
   const auto to_ptr = [](const auto& _fl) { return _fl.ptr(); };
 
   const auto fl_shared_ptr =
@@ -96,8 +96,8 @@ void check(const Pipeline& _pipeline, const CheckParams& _params) {
 
 // ----------------------------------------------------------------------------
 
-std::pair<std::vector<fct::Ref<featurelearners::AbstractFeatureLearner>>,
-          fct::Ref<const std::vector<commands::Fingerprint>>>
+std::pair<std::vector<rfl::Ref<featurelearners::AbstractFeatureLearner>>,
+          rfl::Ref<const std::vector<commands::Fingerprint>>>
 init_feature_learners(
     const Pipeline& _pipeline,
     const featurelearners::FeatureLearnerParams& _feature_learner_params,

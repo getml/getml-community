@@ -24,8 +24,8 @@
 #include "engine/handlers/PipelineManager.hpp"
 #include "engine/handlers/ProjectManager.hpp"
 #include "engine/handlers/ViewManager.hpp"
-#include "fct/Ref.hpp"
-#include "fct/define_tagged_union.hpp"
+#include "rfl/Ref.hpp"
+#include "rfl/define_tagged_union.hpp"
 
 namespace engine {
 namespace srv {
@@ -40,13 +40,13 @@ class RequestHandler : public Poco::Net::TCPServerConnection {
 
  public:
   RequestHandler(const Poco::Net::StreamSocket& _socket,
-                 const fct::Ref<handlers::DatabaseManager>& _database_manager,
-                 const fct::Ref<handlers::DataFrameManagerParams>& _data_params,
-                 const fct::Ref<const communication::Logger>& _logger,
-                 const fct::Ref<handlers::PipelineManager>& _pipeline_manager,
+                 const rfl::Ref<handlers::DatabaseManager>& _database_manager,
+                 const rfl::Ref<handlers::DataFrameManagerParams>& _data_params,
+                 const rfl::Ref<const communication::Logger>& _logger,
+                 const rfl::Ref<handlers::PipelineManager>& _pipeline_manager,
                  const config::Options& _options,
-                 const fct::Ref<handlers::ProjectManager>& _project_manager,
-                 const fct::Ref<std::atomic<bool>>& _shutdown)
+                 const rfl::Ref<handlers::ProjectManager>& _project_manager,
+                 const rfl::Ref<std::atomic<bool>>& _shutdown)
       : Poco::Net::TCPServerConnection(_socket),
         database_manager_(_database_manager),
         data_params_(_data_params),
@@ -91,26 +91,26 @@ class RequestHandler : public Poco::Net::TCPServerConnection {
 
  private:
   /// Handles requests related to the database.
-  const fct::Ref<handlers::DatabaseManager> database_manager_;
+  const rfl::Ref<handlers::DatabaseManager> database_manager_;
 
   /// The parameters needed for all of the handlers related to data frames.
-  const fct::Ref<handlers::DataFrameManagerParams> data_params_;
+  const rfl::Ref<handlers::DataFrameManagerParams> data_params_;
 
   /// Logs commands.
-  const fct::Ref<const communication::Logger> logger_;
+  const rfl::Ref<const communication::Logger> logger_;
 
   /// Handles requests related to a pipeline
-  const fct::Ref<handlers::PipelineManager> pipeline_manager_;
+  const rfl::Ref<handlers::PipelineManager> pipeline_manager_;
 
   /// Contains information on the port of the monitor process
   const config::Options options_;
 
   /// Handles requests related to the project as a whole, such as save or
   /// load.
-  const fct::Ref<handlers::ProjectManager> project_manager_;
+  const rfl::Ref<handlers::ProjectManager> project_manager_;
 
   /// Signals to the main process that we want to shut down.
-  const fct::Ref<std::atomic<bool>>& shutdown_;
+  const rfl::Ref<std::atomic<bool>>& shutdown_;
 };
 
 // -----------------------------------------------------------------

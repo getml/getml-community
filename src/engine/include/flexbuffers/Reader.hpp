@@ -20,8 +20,8 @@
 #include <type_traits>
 #include <vector>
 
-#include "fct/Result.hpp"
-#include "fct/always_false.hpp"
+#include "rfl/Result.hpp"
+#include "rfl/always_false.hpp"
 
 namespace flexbuffers {
 
@@ -42,7 +42,7 @@ struct Reader {
   template <class T>
   static constexpr bool has_custom_constructor = has_from_flexbuffers<T>::value;
 
-  fct::Result<InputVarType> get_field(const std::string& _name,
+  rfl::Result<InputVarType> get_field(const std::string& _name,
                                       InputObjectType* _obj) const noexcept {
     const auto keys = _obj->Keys();
     for (size_t i = 0; i < keys.size(); ++i) {
@@ -50,46 +50,46 @@ struct Reader {
         return _obj->Values()[i];
       }
     }
-    return fct::Error("Map does not contain any element called '" + _name +
+    return rfl::Error("Map does not contain any element called '" + _name +
                       "'.");
   }
 
   bool is_empty(InputVarType* _var) const noexcept { return _var->IsNull(); }
 
   template <class T>
-  fct::Result<T> to_basic_type(InputVarType* _var) const noexcept {
+  rfl::Result<T> to_basic_type(InputVarType* _var) const noexcept {
     if constexpr (std::is_same<std::decay_t<T>, std::string>()) {
       if (!_var->IsString()) {
-        return fct::Error("Could not cast to string.");
+        return rfl::Error("Could not cast to string.");
       }
       return std::string(_var->AsString().c_str());
     } else if constexpr (std::is_same<std::decay_t<T>, bool>()) {
       if (!_var->IsBool()) {
-        return fct::Error("Could not cast to boolean.");
+        return rfl::Error("Could not cast to boolean.");
       }
       return _var->AsBool();
     } else if constexpr (std::is_floating_point<std::decay_t<T>>()) {
       if (!_var->IsNumeric()) {
-        return fct::Error("Could not cast to double.");
+        return rfl::Error("Could not cast to double.");
       }
       return static_cast<T>(_var->AsDouble());
     } else if constexpr (std::is_integral<std::decay_t<T>>()) {
       if (!_var->IsNumeric()) {
-        return fct::Error("Could not cast to int.");
+        return rfl::Error("Could not cast to int.");
       }
       return static_cast<T>(_var->AsInt64());
     } else {
-      static_assert(fct::always_false_v<T>, "Unsupported type.");
+      static_assert(rfl::always_false_v<T>, "Unsupported type.");
     }
   }
 
-  fct::Result<InputArrayType> to_array(InputVarType* _var) const noexcept {
+  rfl::Result<InputArrayType> to_array(InputVarType* _var) const noexcept {
     // Necessary, because we write empty vectors as null.
     if (_var->IsNull()) {
       return flexbuffers::Vector::EmptyVector();
     }
     if (!_var->IsVector()) {
-      return fct::Error("Could not cast to Vector.");
+      return rfl::Error("Could not cast to Vector.");
     }
     return _var->AsVector();
   }
@@ -109,13 +109,13 @@ struct Reader {
     return m;
   }
 
-  fct::Result<InputObjectType> to_object(InputVarType* _var) const noexcept {
+  rfl::Result<InputObjectType> to_object(InputVarType* _var) const noexcept {
     // Necessary, because we write empty maps as null.
     if (_var->IsNull()) {
       return flexbuffers::Map::EmptyMap();
     }
     if (!_var->IsMap()) {
-      return fct::Error("Could not cast to Map!");
+      return rfl::Error("Could not cast to Map!");
     }
     return _var->AsMap();
   }

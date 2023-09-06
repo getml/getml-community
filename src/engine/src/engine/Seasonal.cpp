@@ -200,7 +200,7 @@ containers::Column<Float> Seasonal::extract_year(
 commands::Fingerprint Seasonal::fingerprint() const {
   using FingerprintType = typename commands::Fingerprint::SeasonalFingerprint;
   return commands::Fingerprint(
-      FingerprintType(fct::make_field<"dependencies_">(dependencies_) * op_));
+      FingerprintType(rfl::make_field<"dependencies_">(dependencies_) * op_));
 }
 
 // ----------------------------------------------------

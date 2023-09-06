@@ -71,17 +71,17 @@ TextFieldSplitter::fit_transform(const Params& _params) {
       (_params.get<"logging_begin_">() + _params.get<"logging_end_">()) / 2;
 
   const auto params =
-      _params.replace(fct::make_field<"logging_begin_">(logging_begin));
+      _params.replace(rfl::make_field<"logging_begin_">(logging_begin));
 
   return transform(params);
 }
 
 // ----------------------------------------------------
 
-std::vector<fct::Ref<helpers::ColumnDescription>> TextFieldSplitter::fit_df(
+std::vector<rfl::Ref<helpers::ColumnDescription>> TextFieldSplitter::fit_df(
     const containers::DataFrame& _df, const MarkerType _marker) const {
   const auto to_column_description = [&_df, &_marker](const size_t _i) {
-    return fct::Ref<helpers::ColumnDescription>::make(_marker, _df.name(),
+    return rfl::Ref<helpers::ColumnDescription>::make(_marker, _df.name(),
                                                       _df.text(_i).name());
   };
 

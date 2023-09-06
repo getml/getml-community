@@ -19,45 +19,45 @@
 #include "engine/pipelines/PipelineJSON.hpp"
 #include "engine/pipelines/Predictors.hpp"
 #include "engine/pipelines/fit.hpp"
-#include "fct/Ref.hpp"
 #include "helpers/Loader.hpp"
 #include "json/json.hpp"
 #include "metrics/metrics.hpp"
+#include "rfl/Ref.hpp"
 
 namespace engine {
 namespace pipelines {
 namespace load_fitted {
 
 /// Loads the feature learners.
-std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>
+std::vector<rfl::Ref<const featurelearners::AbstractFeatureLearner>>
 load_feature_learners(const std::string& _path,
-                      const fct::Ref<dependency::FETracker> _fe_tracker,
+                      const rfl::Ref<dependency::FETracker> _fe_tracker,
                       const PipelineJSON& _pipeline_json,
                       const Pipeline& _pipeline);
 
 /// Loads the feature selectors.
 Predictors load_feature_selectors(
     const std::string& _path,
-    const fct::Ref<dependency::PredTracker> _pred_tracker,
-    const fct::Ref<const predictors::PredictorImpl>& _feature_selector_impl,
+    const rfl::Ref<dependency::PredTracker> _pred_tracker,
+    const rfl::Ref<const predictors::PredictorImpl>& _feature_selector_impl,
     const PipelineJSON& _pipeline_json, const Pipeline& _pipeline);
 
 /// Loads the impls for the feature selectors and predictors.
-std::pair<fct::Ref<const predictors::PredictorImpl>,
-          fct::Ref<const predictors::PredictorImpl>>
+std::pair<rfl::Ref<const predictors::PredictorImpl>,
+          rfl::Ref<const predictors::PredictorImpl>>
 load_impls(const std::string& _path);
 
 /// Loads the predictors.
 Predictors load_predictors(
     const std::string& _path,
-    const fct::Ref<dependency::PredTracker> _pred_tracker,
-    const fct::Ref<const predictors::PredictorImpl>& _predictor_impl,
+    const rfl::Ref<dependency::PredTracker> _pred_tracker,
+    const rfl::Ref<const predictors::PredictorImpl>& _predictor_impl,
     const PipelineJSON& _pipeline_json, const Pipeline& _pipeline);
 
 /// Loads the preprocessors.
-std::vector<fct::Ref<const preprocessors::Preprocessor>> load_preprocessors(
+std::vector<rfl::Ref<const preprocessors::Preprocessor>> load_preprocessors(
     const std::string& _path,
-    const fct::Ref<dependency::PreprocessorTracker> _preprocessor_tracker,
+    const rfl::Ref<dependency::PreprocessorTracker> _preprocessor_tracker,
     const PipelineJSON& _pipeline_json, const Pipeline& _pipeline);
 
 // -----------------------------------------------------------------------------
@@ -85,7 +85,7 @@ Pipeline load_fitted(const std::string& _path, const Pipeline& _pipeline,
                       predictor_impl, pipeline_json, _pipeline);
 
   const auto fitted =
-      fct::Ref<const pipelines::FittedPipeline>::make(pipelines::FittedPipeline{
+      rfl::Ref<const pipelines::FittedPipeline>::make(pipelines::FittedPipeline{
           .feature_learners_ = feature_learners,
           .feature_selectors_ = feature_selectors,
           .fingerprints_ = pipeline_json,
@@ -103,23 +103,23 @@ Pipeline load_fitted(const std::string& _path, const Pipeline& _pipeline,
 
 // -----------------------------------------------------------------------------
 
-std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>
+std::vector<rfl::Ref<const featurelearners::AbstractFeatureLearner>>
 load_feature_learners(const std::string& _path,
-                      const fct::Ref<dependency::FETracker> _fe_tracker,
+                      const rfl::Ref<dependency::FETracker> _fe_tracker,
                       const PipelineJSON& _pipeline_json,
                       const Pipeline& _pipeline) {
   const auto [placeholder, peripheral] = _pipeline.make_placeholder();
 
   const featurelearners::FeatureLearnerParams feature_learner_params =
-      fct::make_field<"dependencies_">(
+      rfl::make_field<"dependencies_">(
           _pipeline_json.get<"preprocessor_fingerprints_">()) *
-      fct::make_field<"peripheral_">(peripheral) *
-      fct::make_field<"peripheral_schema_">(
+      rfl::make_field<"peripheral_">(peripheral) *
+      rfl::make_field<"peripheral_schema_">(
           _pipeline_json.get<"modified_peripheral_schema_">()) *
-      fct::make_field<"placeholder_">(placeholder) *
-      fct::make_field<"population_schema_">(
+      rfl::make_field<"placeholder_">(placeholder) *
+      rfl::make_field<"population_schema_">(
           _pipeline_json.get<"modified_population_schema_">()) *
-      fct::make_field<"target_num_">(
+      rfl::make_field<"target_num_">(
           featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS);
 
   const auto feature_learners =
@@ -139,8 +139,8 @@ load_feature_learners(const std::string& _path,
 
 Predictors load_feature_selectors(
     const std::string& _path,
-    const fct::Ref<dependency::PredTracker> _pred_tracker,
-    const fct::Ref<const predictors::PredictorImpl>& _feature_selector_impl,
+    const rfl::Ref<dependency::PredTracker> _pred_tracker,
+    const rfl::Ref<const predictors::PredictorImpl>& _feature_selector_impl,
     const PipelineJSON& _pipeline_json, const Pipeline& _pipeline) {
   const auto feature_selectors = fit::init_predictors(
       _pipeline, Purpose::make<"feature_selectors_">(), _feature_selector_impl,
@@ -162,15 +162,15 @@ Predictors load_feature_selectors(
 
 // -----------------------------------------------------------------------------
 
-std::pair<fct::Ref<const predictors::PredictorImpl>,
-          fct::Ref<const predictors::PredictorImpl>>
+std::pair<rfl::Ref<const predictors::PredictorImpl>,
+          rfl::Ref<const predictors::PredictorImpl>>
 load_impls(const std::string& _path) {
   const auto feature_selector_impl =
-      helpers::Loader::load<fct::Ref<const predictors::PredictorImpl>>(
+      helpers::Loader::load<rfl::Ref<const predictors::PredictorImpl>>(
           _path + "feature-selector-impl");
 
   const auto predictor_impl =
-      helpers::Loader::load<fct::Ref<const predictors::PredictorImpl>>(
+      helpers::Loader::load<rfl::Ref<const predictors::PredictorImpl>>(
           _path + "predictor-impl");
 
   return std::make_pair(feature_selector_impl, predictor_impl);
@@ -180,8 +180,8 @@ load_impls(const std::string& _path) {
 
 Predictors load_predictors(
     const std::string& _path,
-    const fct::Ref<dependency::PredTracker> _pred_tracker,
-    const fct::Ref<const predictors::PredictorImpl>& _predictor_impl,
+    const rfl::Ref<dependency::PredTracker> _pred_tracker,
+    const rfl::Ref<const predictors::PredictorImpl>& _predictor_impl,
     const PipelineJSON& _pipeline_json, const Pipeline& _pipeline) {
   const auto predictors = fit::init_predictors(
       _pipeline, Purpose::make<"predictors_">(), _predictor_impl,
@@ -203,9 +203,9 @@ Predictors load_predictors(
 
 // -----------------------------------------------------------------------------
 
-std::vector<fct::Ref<const preprocessors::Preprocessor>> load_preprocessors(
+std::vector<rfl::Ref<const preprocessors::Preprocessor>> load_preprocessors(
     const std::string& _path,
-    const fct::Ref<dependency::PreprocessorTracker> _preprocessor_tracker,
+    const rfl::Ref<dependency::PreprocessorTracker> _preprocessor_tracker,
     const PipelineJSON& _pipeline_json, const Pipeline& _pipeline) {
   auto preprocessors = fit::init_preprocessors(
       _pipeline, _pipeline_json.get<"df_fingerprints_">());

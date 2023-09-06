@@ -16,8 +16,8 @@
 #include "communication/Warnings.hpp"
 #include "containers/containers.hpp"
 #include "engine/preprocessors/data_model_checking.hpp"
-#include "fct/Ref.hpp"
 #include "helpers/ColumnDescription.hpp"
+#include "rfl/Ref.hpp"
 
 namespace engine {
 namespace preprocessors {
@@ -29,13 +29,13 @@ struct PreprocessorImpl {
   /// marker and table.
   static std::vector<std::string> retrieve_names(
       const MarkerType _marker, const size_t _table,
-      const std::vector<fct::Ref<helpers::ColumnDescription>>& _desc);
+      const std::vector<rfl::Ref<helpers::ColumnDescription>>& _desc);
 
   /// Adds a new column description.
   static void add(const MarkerType _marker, const size_t _table,
                   const std::string& _name,
-                  std::vector<fct::Ref<helpers::ColumnDescription>>* _desc) {
-    _desc->push_back(fct::Ref<helpers::ColumnDescription>::make(
+                  std::vector<rfl::Ref<helpers::ColumnDescription>>* _desc) {
+    _desc->push_back(rfl::Ref<helpers::ColumnDescription>::make(
         _marker, std::to_string(_table), _name));
   }
 

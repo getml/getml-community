@@ -8,16 +8,16 @@
 #ifndef COMMANDS_NOTSUPPORTEDINCOMMUNITY_HPP_
 #define COMMANDS_NOTSUPPORTEDINCOMMUNITY_HPP_
 
-#include "fct/Field.hpp"
-#include "fct/Literal.hpp"
-#include "fct/NamedTuple.hpp"
-#include "fct/StringLiteral.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/Literal.hpp"
+#include "rfl/NamedTuple.hpp"
+#include "rfl/internal/StringLiteral.hpp"
 
 namespace commands {
 
-template <fct::StringLiteral type_>
+template <rfl::internal::StringLiteral type_>
 using NotSupportedInCommunity =
-    fct::NamedTuple<fct::Field<"type_", fct::Literal<type_>>>;
+    rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<type_>>>;
 
 }  // namespace commands
 

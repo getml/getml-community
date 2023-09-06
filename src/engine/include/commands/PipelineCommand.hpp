@@ -12,79 +12,79 @@
 
 #include "commands/DataFramesOrViews.hpp"
 #include "commands/Int.hpp"
-#include "fct/Field.hpp"
-#include "fct/Literal.hpp"
-#include "fct/NamedTuple.hpp"
-#include "fct/Ref.hpp"
-#include "fct/TaggedUnion.hpp"
-#include "fct/define_named_tuple.hpp"
 #include "json/json.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/Literal.hpp"
+#include "rfl/NamedTuple.hpp"
+#include "rfl/Ref.hpp"
+#include "rfl/TaggedUnion.hpp"
+#include "rfl/define_named_tuple.hpp"
 #include "transpilation/TranspilationParams.hpp"
 
 namespace commands {
 
 /// Any command to be handled by the PipelineManager.
 struct PipelineCommand {
-  using CheckOp = fct::define_named_tuple_t<
-      fct::Field<"type_", fct::Literal<"Pipeline.check">>,
-      fct::Field<"name_", std::string>, DataFramesOrViews>;
+  using CheckOp = rfl::define_named_tuple_t<
+      rfl::Field<"type_", rfl::Literal<"Pipeline.check">>,
+      rfl::Field<"name_", std::string>, DataFramesOrViews>;
 
-  using ColumnImportancesOp = fct::NamedTuple<
-      fct::Field<"type_", fct::Literal<"Pipeline.column_importances">>,
-      fct::Field<"name_", std::string>, fct::Field<"target_num_", Int>>;
+  using ColumnImportancesOp = rfl::NamedTuple<
+      rfl::Field<"type_", rfl::Literal<"Pipeline.column_importances">>,
+      rfl::Field<"name_", std::string>, rfl::Field<"target_num_", Int>>;
 
   using DeployOp =
-      fct::NamedTuple<fct::Field<"type_", fct::Literal<"Pipeline.deploy">>,
-                      fct::Field<"name_", std::string>,
-                      fct::Field<"deploy_", bool>>;
+      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"Pipeline.deploy">>,
+                      rfl::Field<"name_", std::string>,
+                      rfl::Field<"deploy_", bool>>;
 
-  using FeatureCorrelationsOp = fct::NamedTuple<
-      fct::Field<"type_", fct::Literal<"Pipeline.feature_correlations">>,
-      fct::Field<"name_", std::string>, fct::Field<"target_num_", Int>>;
+  using FeatureCorrelationsOp = rfl::NamedTuple<
+      rfl::Field<"type_", rfl::Literal<"Pipeline.feature_correlations">>,
+      rfl::Field<"name_", std::string>, rfl::Field<"target_num_", Int>>;
 
-  using FeatureImportancesOp = fct::NamedTuple<
-      fct::Field<"type_", fct::Literal<"Pipeline.feature_importances">>,
-      fct::Field<"name_", std::string>, fct::Field<"target_num_", Int>>;
+  using FeatureImportancesOp = rfl::NamedTuple<
+      rfl::Field<"type_", rfl::Literal<"Pipeline.feature_importances">>,
+      rfl::Field<"name_", std::string>, rfl::Field<"target_num_", Int>>;
 
-  using FitOp = fct::define_named_tuple_t<
-      fct::Field<"type_", fct::Literal<"Pipeline.fit">>,
-      fct::Field<"name_", std::string>, DataFramesOrViews>;
+  using FitOp = rfl::define_named_tuple_t<
+      rfl::Field<"type_", rfl::Literal<"Pipeline.fit">>,
+      rfl::Field<"name_", std::string>, DataFramesOrViews>;
 
   using LiftCurveOp =
-      fct::NamedTuple<fct::Field<"type_", fct::Literal<"Pipeline.lift_curve">>,
-                      fct::Field<"name_", std::string>,
-                      fct::Field<"target_num_", Int>>;
+      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"Pipeline.lift_curve">>,
+                      rfl::Field<"name_", std::string>,
+                      rfl::Field<"target_num_", Int>>;
 
-  using PrecisionRecallCurveOp = fct::NamedTuple<
-      fct::Field<"type_", fct::Literal<"Pipeline.precision_recall_curve">>,
-      fct::Field<"name_", std::string>, fct::Field<"target_num_", Int>>;
+  using PrecisionRecallCurveOp = rfl::NamedTuple<
+      rfl::Field<"type_", rfl::Literal<"Pipeline.precision_recall_curve">>,
+      rfl::Field<"name_", std::string>, rfl::Field<"target_num_", Int>>;
 
   using RefreshOp =
-      fct::NamedTuple<fct::Field<"type_", fct::Literal<"Pipeline.refresh">>,
-                      fct::Field<"name_", std::string>>;
+      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"Pipeline.refresh">>,
+                      rfl::Field<"name_", std::string>>;
 
-  using RefreshAllOp = fct::NamedTuple<
-      fct::Field<"type_", fct::Literal<"Pipeline.refresh_all">>>;
+  using RefreshAllOp = rfl::NamedTuple<
+      rfl::Field<"type_", rfl::Literal<"Pipeline.refresh_all">>>;
 
   using ROCCurveOp =
-      fct::NamedTuple<fct::Field<"type_", fct::Literal<"Pipeline.roc_curve">>,
-                      fct::Field<"name_", std::string>,
-                      fct::Field<"target_num_", Int>>;
+      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"Pipeline.roc_curve">>,
+                      rfl::Field<"name_", std::string>,
+                      rfl::Field<"target_num_", Int>>;
 
-  using ToSQLOp = fct::define_named_tuple_t<
-      fct::Field<"type_", fct::Literal<"Pipeline.to_sql">>,
-      fct::Field<"name_", std::string>, fct::Field<"targets_", bool>,
-      fct::Field<"subfeatures_", bool>,
-      fct::Field<"size_threshold_", std::optional<size_t>>,
+  using ToSQLOp = rfl::define_named_tuple_t<
+      rfl::Field<"type_", rfl::Literal<"Pipeline.to_sql">>,
+      rfl::Field<"name_", std::string>, rfl::Field<"targets_", bool>,
+      rfl::Field<"subfeatures_", bool>,
+      rfl::Field<"size_threshold_", std::optional<size_t>>,
       typename transpilation::TranspilationParams::NamedTupleType>;
 
   using TransformOp =
-      fct::NamedTuple<fct::Field<"type_", fct::Literal<"Pipeline.transform">>,
-                      fct::Field<"name_", std::string>,
-                      fct::Field<"http_request_", bool>>;
+      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"Pipeline.transform">>,
+                      rfl::Field<"name_", std::string>,
+                      rfl::Field<"http_request_", bool>>;
 
   using NamedTupleType =
-      fct::TaggedUnion<"type_", CheckOp, ColumnImportancesOp, DeployOp,
+      rfl::TaggedUnion<"type_", CheckOp, ColumnImportancesOp, DeployOp,
                        FeatureCorrelationsOp, FeatureImportancesOp, FitOp,
                        LiftCurveOp, PrecisionRecallCurveOp, RefreshOp,
                        RefreshAllOp, ROCCurveOp, ToSQLOp, TransformOp>;

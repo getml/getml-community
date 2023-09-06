@@ -11,25 +11,25 @@
 
 #include "fastprop/Hyperparameters.hpp"
 #include "fastprop/algorithm/FastProp.hpp"
-#include "fct/visit.hpp"
 #include "featurelearners/FeatureLearner.hpp"
+#include "rfl/visit.hpp"
 
 namespace engine {
 namespace pipelines {
 
-fct::Ref<featurelearners::AbstractFeatureLearner> FeatureLearnerParser::parse(
+rfl::Ref<featurelearners::AbstractFeatureLearner> FeatureLearnerParser::parse(
     const featurelearners::FeatureLearnerParams& _params,
     const commands::FeatureLearner& _hyperparameters) {
   const auto handle = [&_params](const auto& _hyperparameters)
-      -> fct::Ref<featurelearners::AbstractFeatureLearner> {
+      -> rfl::Ref<featurelearners::AbstractFeatureLearner> {
     using Type = std::decay_t<decltype(_hyperparameters)>;
 
     if constexpr (std::is_same<Type, fastprop::Hyperparameters>()) {
-      return fct::Ref<featurelearners::FeatureLearner<
+      return rfl::Ref<featurelearners::FeatureLearner<
           fastprop::algorithm::FastProp>>::make(_params, _hyperparameters);
     } else {
       throw std::runtime_error(
-          "The " + fct::get<"type_">(_hyperparameters).name() +
+          "The " + rfl::get<"type_">(_hyperparameters).name() +
           " feature learner is not supported in the community edition. Please "
           "upgrade to getML enterprise to use this. An overview of what is "
           "supported in the community edition can be found in the official "
@@ -37,7 +37,7 @@ fct::Ref<featurelearners::AbstractFeatureLearner> FeatureLearnerParser::parse(
     }
   };
 
-  return fct::visit(handle, _hyperparameters);
+  return rfl::visit(handle, _hyperparameters);
 }
 
 // ----------------------------------------------------------------------

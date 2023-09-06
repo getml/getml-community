@@ -49,7 +49,7 @@ struct FittedPipeline {
   bool is_classification() const;
 
   /// The feature learners used in this pipeline.
-  const std::vector<fct::Ref<const featurelearners::AbstractFeatureLearner>>
+  const std::vector<rfl::Ref<const featurelearners::AbstractFeatureLearner>>
       feature_learners_;
 
   /// The feature selectors used in this pipeline.
@@ -60,24 +60,24 @@ struct FittedPipeline {
 
   /// The schema of the peripheral tables as they are inserted into the
   /// feature learners.
-  const fct::Ref<const std::vector<helpers::Schema>>
+  const rfl::Ref<const std::vector<helpers::Schema>>
       modified_peripheral_schema_;
 
   /// The schema of the population as it is inserted into the feature
   /// learners.
-  const fct::Ref<const helpers::Schema> modified_population_schema_;
+  const rfl::Ref<const helpers::Schema> modified_population_schema_;
 
   /// The schema of the peripheral tables as they are originally passed.
-  const fct::Ref<const std::vector<helpers::Schema>> peripheral_schema_;
+  const rfl::Ref<const std::vector<helpers::Schema>> peripheral_schema_;
 
   /// The schema of the population as originally passed.
-  const fct::Ref<const helpers::Schema> population_schema_;
+  const rfl::Ref<const helpers::Schema> population_schema_;
 
   /// The predictors used in this pipeline.
   const Predictors predictors_;
 
   /// The preprocessors used in this pipeline.
-  const std::vector<fct::Ref<const preprocessors::Preprocessor>> preprocessors_;
+  const std::vector<rfl::Ref<const preprocessors::Preprocessor>> preprocessors_;
 };
 
 }  // namespace pipelines

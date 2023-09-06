@@ -36,7 +36,7 @@ typename RMSE::ResultType RMSE::score(const Features _yhat, const Features _y) {
     rmse[j] = std::sqrt(rmse[j]);
   }
 
-  return fct::make_field<"rmse_">(rmse);
+  return rfl::make_field<"rmse_">(rmse);
 }
 
 }  // namespace metrics

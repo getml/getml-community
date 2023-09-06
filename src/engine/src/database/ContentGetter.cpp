@@ -12,18 +12,18 @@
 
 namespace database {
 
-TableContent ContentGetter::get_content(const fct::Ref<Iterator>& _iter,
+TableContent ContentGetter::get_content(const rfl::Ref<Iterator>& _iter,
                                         const std::int32_t _draw,
                                         const std::int32_t _records_filtered,
                                         const std::int32_t _records_total,
                                         const std::int32_t _ncols) {
-  const auto basis = fct::make_field<"draw">(_draw) *
-                     fct::make_field<"recordsTotal">(_records_total) *
-                     fct::make_field<"recordsFiltered">(_records_filtered);
+  const auto basis = rfl::make_field<"draw">(_draw) *
+                     rfl::make_field<"recordsTotal">(_records_total) *
+                     rfl::make_field<"recordsFiltered">(_records_filtered);
 
   if (_records_total == 0) {
     return basis *
-           fct::make_field<"data">(std::vector<std::vector<std::string>>());
+           rfl::make_field<"data">(std::vector<std::vector<std::string>>());
   }
 
   auto data = std::vector<std::vector<std::string>>(_records_filtered);
@@ -38,7 +38,7 @@ TableContent ContentGetter::get_content(const fct::Ref<Iterator>& _iter,
     data.at(i) = row;
   }
 
-  return basis * fct::make_field<"data">(data);
+  return basis * rfl::make_field<"data">(data);
 }
 
 }  // namespace database

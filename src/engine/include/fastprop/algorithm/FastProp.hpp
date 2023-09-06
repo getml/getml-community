@@ -19,9 +19,6 @@
 #include "fastprop/algorithm/TableHolder.hpp"
 #include "fastprop/algorithm/TransformParams.hpp"
 #include "fastprop/containers/containers.hpp"
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
-#include "fct/Ref.hpp"
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/ImportanceMaker.hpp"
 #include "helpers/Macros.hpp"
@@ -30,6 +27,9 @@
 #include "helpers/VocabularyContainer.hpp"
 #include "helpers/VocabularyTree.hpp"
 #include "multithreading/multithreading.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
+#include "rfl/Ref.hpp"
 #include "transpilation/SQLDialectParser.hpp"
 
 namespace fastprop {
@@ -42,23 +42,23 @@ class FastProp {
 
   using MarkerType = typename helpers::ColumnDescription::MarkerType;
 
-  using NamedTupleType = fct::NamedTuple<
-      fct::Field<"allow_http_", bool>,
-      fct::Field<"features_", std::shared_ptr<const std::vector<
+  using NamedTupleType = rfl::NamedTuple<
+      rfl::Field<"allow_http_", bool>,
+      rfl::Field<"features_", std::shared_ptr<const std::vector<
                                   containers::AbstractFeature>>>,
-      fct::Field<"hyperparameters_", std::shared_ptr<const Hyperparameters>>,
-      fct::Field<"main_table_schemas_",
+      rfl::Field<"hyperparameters_", std::shared_ptr<const Hyperparameters>>,
+      rfl::Field<"main_table_schemas_",
                  std::shared_ptr<const std::vector<helpers::Schema>>>,
-      fct::Field<"peripheral_schema_",
+      rfl::Field<"peripheral_schema_",
                  std::shared_ptr<const std::vector<helpers::Schema>>>,
-      fct::Field<"peripheral_table_schemas_",
+      rfl::Field<"peripheral_table_schemas_",
                  std::shared_ptr<const std::vector<helpers::Schema>>>,
-      fct::Field<"peripheral_",
+      rfl::Field<"peripheral_",
                  std::shared_ptr<const std::vector<std::string>>>,
-      fct::Field<"placeholder_",
+      rfl::Field<"placeholder_",
                  std::shared_ptr<const containers::Placeholder>>,
-      fct::Field<"population_schema_", std::shared_ptr<const helpers::Schema>>,
-      fct::Field<"subfeatures_",
+      rfl::Field<"population_schema_", std::shared_ptr<const helpers::Schema>>,
+      rfl::Field<"subfeatures_",
                  std::shared_ptr<const std::vector<std::optional<FastProp>>>>>;
 
  public:
@@ -130,7 +130,7 @@ class FastProp {
       const std::vector<size_t>& _index,
       const std::vector<std::function<bool(const containers::Match&)>>&
           _condition_functions,
-      const size_t _rownum, const fct::Ref<Memoization>& _memoization,
+      const size_t _rownum, const rfl::Ref<Memoization>& _memoization,
       Float* _row) const;
 
   /// Builds all rows for the thread associated with _thread_num

@@ -11,7 +11,7 @@
 
 #include "engine/handlers/FloatOpParser.hpp"
 #include "engine/handlers/StringOpParser.hpp"
-#include "fct/visit.hpp"
+#include "rfl/visit.hpp"
 
 namespace engine {
 namespace handlers {
@@ -23,29 +23,29 @@ containers::ColumnView<bool> BoolOpParser::binary_operation(
              const BooleanBinaryOp& _cmd) -> containers::ColumnView<bool> {
     using Type = std::decay_t<decltype(_literal)>;
 
-    if constexpr (std::is_same<Type, fct::Literal<"and">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"and">>()) {
       return bin_op(_cmd, std::logical_and<bool>());
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"equal_to">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"equal_to">>()) {
       return bin_op(_cmd, std::equal_to<bool>());
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"not_equal_to">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"not_equal_to">>()) {
       return bin_op(_cmd, std::not_equal_to<bool>());
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"or">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"or">>()) {
       return bin_op(_cmd, std::logical_or<bool>());
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"xor">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"xor">>()) {
       // logical_xor for boolean is the same thing as not_equal_to.
       return bin_op(_cmd, std::not_equal_to<bool>());
     }
   };
 
-  return fct::visit(handle, _cmd.get<"operator_">(), _cmd);
+  return rfl::visit(handle, _cmd.get<"operator_">(), _cmd);
 }
 
 // ----------------------------------------------------------------------------
@@ -58,32 +58,32 @@ containers::ColumnView<bool> BoolOpParser::numerical_comparison(
           const BooleanNumComparisonOp& _cmd) -> containers::ColumnView<bool> {
     using Type = std::decay_t<decltype(_literal)>;
 
-    if constexpr (std::is_same<Type, fct::Literal<"equal_to">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"equal_to">>()) {
       return num_bin_op(_cmd, std::equal_to<Float>());
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"greater">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"greater">>()) {
       return num_bin_op(_cmd, std::greater<Float>());
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"greater_equal">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"greater_equal">>()) {
       return num_bin_op(_cmd, std::greater_equal<Float>());
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"less">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"less">>()) {
       return num_bin_op(_cmd, std::less<Float>());
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"less_equal">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"less_equal">>()) {
       return num_bin_op(_cmd, std::less_equal<Float>());
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"not_equal_to">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"not_equal_to">>()) {
       return num_bin_op(_cmd, std::not_equal_to<Float>());
     }
   };
 
-  return fct::visit(handle, _cmd.get<"operator_">(), _cmd);
+  return rfl::visit(handle, _cmd.get<"operator_">(), _cmd);
 }
 
 // ----------------------------------------------------------------------------
@@ -98,12 +98,12 @@ containers::ColumnView<bool> BoolOpParser::parse(
     }
 
     if constexpr (std::is_same<Type, BooleanConstOp>()) {
-      const auto value = fct::get<"value_">(_cmd);
+      const auto value = rfl::get<"value_">(_cmd);
       return containers::ColumnView<bool>::from_value(value);
     }
 
     if constexpr (std::is_same<Type, BooleanIsInfOp>()) {
-      const auto& col = *fct::get<"operand1_">(_cmd);
+      const auto& col = *rfl::get<"operand1_">(_cmd);
       const auto is_inf = [](const Float val) { return std::isinf(val); };
       return num_un_op(col, is_inf);
     }
@@ -113,7 +113,7 @@ containers::ColumnView<bool> BoolOpParser::parse(
     }
 
     if constexpr (std::is_same<Type, BooleanNotOp>()) {
-      const auto col = parse(*fct::get<"operand1_">(_cmd));
+      const auto col = parse(*rfl::get<"operand1_">(_cmd));
       return containers::ColumnView<bool>::from_un_op(col,
                                                       std::logical_not<bool>());
     }
@@ -150,7 +150,7 @@ containers::ColumnView<bool> BoolOpParser::subselection(
 
     if constexpr (std::is_same<
                       Type,
-                      fct::Ref<commands::FloatColumnOrFloatColumnView>>()) {
+                      rfl::Ref<commands::FloatColumnOrFloatColumnView>>()) {
       const auto indices =
           FloatOpParser(categories_, join_keys_encoding_, data_frames_)
               .parse(*_operand2);
@@ -176,7 +176,7 @@ containers::ColumnView<bool> BoolOpParser::string_comparison(
           const BooleanStrComparisonOp& _cmd) -> containers::ColumnView<bool> {
     using Type = std::decay_t<decltype(_literal)>;
 
-    if constexpr (std::is_same<Type, fct::Literal<"contains">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"contains">>()) {
       const auto contains = [](const auto& _str1, const auto& _str2) {
         if (!_str1 || !_str2) {
           return false;
@@ -186,16 +186,16 @@ containers::ColumnView<bool> BoolOpParser::string_comparison(
       return cat_bin_op(_cmd, contains);
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"equal_to">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"equal_to">>()) {
       return cat_bin_op(_cmd, std::equal_to<strings::String>());
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"not_equal_to">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"not_equal_to">>()) {
       return cat_bin_op(_cmd, std::not_equal_to<strings::String>());
     }
   };
 
-  return fct::visit(handle, _cmd.get<"operator_">(), _cmd);
+  return rfl::visit(handle, _cmd.get<"operator_">(), _cmd);
 }
 
 // ----------------------------------------------------------------------------
@@ -226,14 +226,14 @@ containers::ColumnView<bool> BoolOpParser::is_null(
 
     if constexpr (std::is_same<
                       Type,
-                      fct::Ref<commands::FloatColumnOrFloatColumnView>>()) {
+                      rfl::Ref<commands::FloatColumnOrFloatColumnView>>()) {
       const auto is_nan = [](const Float val) { return std::isnan(val); };
       return num_un_op(*_col, is_nan);
     }
 
     if constexpr (std::is_same<
                       Type,
-                      fct::Ref<commands::StringColumnOrStringColumnView>>()) {
+                      rfl::Ref<commands::StringColumnOrStringColumnView>>()) {
       const auto is_null = [](const strings::String& _val) { return !_val; };
       return cat_un_op(*_col, is_null);
     }

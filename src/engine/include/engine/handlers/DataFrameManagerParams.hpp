@@ -25,28 +25,28 @@ namespace handlers {
 
 struct DataFrameManagerParams {
   /// Maps integeres to category names
-  const fct::Ref<containers::Encoding> categories_;
+  const rfl::Ref<containers::Encoding> categories_;
 
   /// Connector to the underlying database.
-  const fct::Ref<DatabaseManager> database_manager_;
+  const rfl::Ref<DatabaseManager> database_manager_;
 
   /// The data frames currently held in memory
-  const fct::Ref<std::map<std::string, containers::DataFrame>> data_frames_;
+  const rfl::Ref<std::map<std::string, containers::DataFrame>> data_frames_;
 
   /// Maps integers to join key names
-  const fct::Ref<containers::Encoding> join_keys_encoding_;
+  const rfl::Ref<containers::Encoding> join_keys_encoding_;
 
   /// For logging
-  const fct::Ref<const communication::Logger> logger_;
+  const rfl::Ref<const communication::Logger> logger_;
 
   /// For communication with the monitor
-  const fct::Ref<const communication::Monitor> monitor_;
+  const rfl::Ref<const communication::Monitor> monitor_;
 
   /// Settings for the engine and the monitor
   const config::Options options_;
 
   /// For coordinating the read and write process of the data
-  const fct::Ref<multithreading::ReadWriteLock> read_write_lock_;
+  const rfl::Ref<multithreading::ReadWriteLock> read_write_lock_;
 };
 
 }  // namespace handlers

@@ -9,17 +9,17 @@
 #define COMMANDS_LOGISTICREGRESSIONHYPERPARMAS_HPP_
 
 #include "commands/LinearHyperparams.hpp"
-#include "fct/Field.hpp"
-#include "fct/Literal.hpp"
-#include "fct/define_named_tuple.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/Literal.hpp"
+#include "rfl/define_named_tuple.hpp"
 
 namespace commands {
 
 using f_logistic_regression =
-    fct::Field<"type_", fct::Literal<"LogisticRegression">>;
+    rfl::Field<"type_", rfl::Literal<"LogisticRegression">>;
 
 using LogisticRegressionHyperparams = LinearHyperparams<
-    fct::define_named_tuple_t<LinearNamedTupleBase, f_logistic_regression>>;
+    rfl::define_named_tuple_t<LinearNamedTupleBase, f_logistic_regression>>;
 
 }  // namespace commands
 
