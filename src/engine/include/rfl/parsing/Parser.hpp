@@ -28,12 +28,12 @@
 #include "rfl/Result.hpp"
 #include "rfl/TaggedUnion.hpp"
 #include "rfl/field_type.hpp"
+#include "rfl/from_named_tuple.hpp"
 #include "rfl/internal/StringLiteral.hpp"
-#include "rfl/internal/from_named_tuple.hpp"
 #include "rfl/internal/has_named_tuple_type_v.hpp"
-#include "rfl/internal/named_tuple_t.hpp"
-#include "rfl/internal/to_named_tuple.hpp"
+#include "rfl/named_tuple_t.hpp"
 #include "rfl/parsing/is_required.hpp"
+#include "rfl/to_named_tuple.hpp"
 #include "strings/strings.hpp"
 
 namespace rfl {
@@ -66,9 +66,9 @@ struct Parser {
             .transform(wrap_in_t);
       } else if constexpr (std::is_class_v<T> &&
                            !std::is_same<T, std::string>()) {
-        using NamedTupleType = internal::named_tuple_t<T>;
+        using NamedTupleType = named_tuple_t<T>;
         return Parser<ReaderType, WriterType, NamedTupleType>::read(_r, _var)
-            .transform(internal::from_named_tuple<T, NamedTupleType>);
+            .transform(from_named_tuple<T, NamedTupleType>);
       } else {
         return _r.template to_basic_type<std::decay_t<T>>(_var);
       }
@@ -88,7 +88,7 @@ struct Parser {
       }
     } else if constexpr (std::is_class_v<T> &&
                          !std::is_same<T, std::string>()) {
-      const auto named_tuple = internal::to_named_tuple(_var);
+      const auto named_tuple = to_named_tuple(_var);
       using NamedTupleType = std::decay_t<decltype(named_tuple)>;
       return Parser<ReaderType, WriterType, NamedTupleType>::write(_w,
                                                                    named_tuple);
@@ -448,10 +448,10 @@ struct Parser<ReaderType, WriterType, strings::String> {
 // ----------------------------------------------------------------------------
 
 template <class ReaderType, class WriterType,
-          internal::StringLiteral _discriminator, class... NamedTupleTypes>
+          internal::StringLiteral _discriminator, class... AlternativeTypes>
 struct Parser<ReaderType, WriterType,
-              TaggedUnion<_discriminator, NamedTupleTypes...>> {
-  using ResultType = Result<TaggedUnion<_discriminator, NamedTupleTypes...>>;
+              TaggedUnion<_discriminator, AlternativeTypes...>> {
+  using ResultType = Result<TaggedUnion<_discriminator, AlternativeTypes...>>;
 
  public:
   using InputObjectType = typename ReaderType::InputObjectType;
@@ -467,7 +467,7 @@ struct Parser<ReaderType, WriterType,
     };
 
     const auto to_result = [&_r, _var](std::string _disc_value) {
-      return find_matching_named_tuple(_r, _disc_value, _var);
+      return find_matching_alternative(_r, _disc_value, _var);
     };
 
     return _r.to_object(_var).and_then(get_disc).and_then(to_result);
@@ -476,20 +476,20 @@ struct Parser<ReaderType, WriterType,
   /// Expresses the variables as a JSON type.
   static OutputVarType write(
       const WriterType& _w,
-      const TaggedUnion<_discriminator, NamedTupleTypes...>&
+      const TaggedUnion<_discriminator, AlternativeTypes...>&
           _tagged_union) noexcept {
     using VariantType =
-        typename TaggedUnion<_discriminator, NamedTupleTypes...>::VariantType;
+        typename TaggedUnion<_discriminator, AlternativeTypes...>::VariantType;
     return Parser<ReaderType, WriterType, VariantType>::write(
         _w, _tagged_union.variant_);
   }
 
  private:
   template <int _i = 0>
-  static ResultType find_matching_named_tuple(const ReaderType& _r,
+  static ResultType find_matching_alternative(const ReaderType& _r,
                                               const std::string& _disc_value,
                                               InputVarType* _var) noexcept {
-    if constexpr (_i == sizeof...(NamedTupleTypes)) {
+    if constexpr (_i == sizeof...(AlternativeTypes)) {
       return Error("Could not parse tagged union, could not match " +
                    _discriminator.str() + " '" + _disc_value + "'.");
     } else {
@@ -497,7 +497,7 @@ struct Parser<ReaderType, WriterType,
       if (optional) {
         return *optional;
       } else {
-        return find_matching_named_tuple<_i + 1>(_r, _disc_value, _var);
+        return find_matching_alternative<_i + 1>(_r, _disc_value, _var);
       }
     }
   }
@@ -540,12 +540,12 @@ struct Parser<ReaderType, WriterType,
   static std::optional<ResultType> try_option(const ReaderType& _r,
                                               const std::string& _disc_value,
                                               InputVarType* _var) noexcept {
-    using NamedTupleType = std::decay_t<
-        std::variant_alternative_t<_i, std::variant<NamedTupleTypes...>>>;
+    using AlternativeType = std::decay_t<
+        std::variant_alternative_t<_i, std::variant<AlternativeTypes...>>>;
 
-    if (contains_disc_value<NamedTupleType>(_disc_value)) {
+    if (contains_disc_value<AlternativeType>(_disc_value)) {
       const auto to_tagged_union = [](const auto& _val) {
-        return TaggedUnion<_discriminator, NamedTupleTypes...>(_val);
+        return TaggedUnion<_discriminator, AlternativeTypes...>(_val);
       };
 
       const auto embellish_error = [&](const Error& _e) {
@@ -554,7 +554,7 @@ struct Parser<ReaderType, WriterType,
                      "': " + _e.what());
       };
 
-      return Parser<ReaderType, WriterType, NamedTupleType>::read(_r, _var)
+      return Parser<ReaderType, WriterType, AlternativeType>::read(_r, _var)
           .transform(to_tagged_union)
           .or_else(embellish_error);
 
