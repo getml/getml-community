@@ -16,6 +16,7 @@
 #include "rfl/TaggedUnion.hpp"
 #include "rfl/internal/StringLiteral.hpp"
 #include "rfl/internal/find_index.hpp"
+#include "rfl/named_tuple_t.hpp"
 
 namespace rfl {
 namespace internal {
@@ -24,12 +25,14 @@ template <class T, class... Ts>
 struct are_same : std::conjunction<std::is_same<T, Ts>...> {};
 
 /// Finds the type of the field signified by _field_name
-template <StringLiteral _field_name, class NamedTupleType>
+template <StringLiteral _field_name, class T>
 struct FieldType;
 
 /// Default option - for named tuples.
-template <StringLiteral _field_name, class NamedTupleType>
+template <StringLiteral _field_name, class T>
 struct FieldType {
+  using NamedTupleType = named_tuple_t<T>;
+
   static constexpr int field_ix_ =
       internal::find_index<_field_name, typename NamedTupleType::Fields>();
 
