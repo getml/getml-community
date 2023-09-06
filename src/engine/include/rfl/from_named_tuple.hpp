@@ -5,21 +5,21 @@
 // for details.
 //
 
-#ifndef RFL_INTERNAL_FROM_NAMED_TUPLE_HPP_
-#define RFL_INTERNAL_FROM_NAMED_TUPLE_HPP_
+#ifndef RFL_FROM_NAMED_TUPLE_HPP_
+#define RFL_FROM_NAMED_TUPLE_HPP_
 
 #include <functional>
 
 namespace rfl {
-namespace internal {
 
+/// Creates a struct of type T from a named tuple.
+/// All fields of the struct must be an rfl::Field;
 template <class T, class NamedTupleType>
 auto from_named_tuple(const NamedTupleType& _n) {
   const auto make = [](const auto&... _fields) { return T{_fields...}; };
   return std::apply(make, _n.fields());
 }
 
-}  // namespace internal
 }  // namespace rfl
 
 #endif
