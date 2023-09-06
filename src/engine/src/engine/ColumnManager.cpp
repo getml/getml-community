@@ -19,6 +19,7 @@
 #include "engine/handlers/StringOpParser.hpp"
 #include "engine/handlers/ViewParser.hpp"
 #include "metrics/metrics.hpp"
+#include "rfl/to_named_tuple.hpp"
 
 namespace engine {
 namespace handlers {
@@ -26,7 +27,7 @@ namespace handlers {
 void ColumnManager::add_float_column(
     const typename Command::FloatColumnOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto& df_name = _cmd.get<"df_name_">();
+  const auto& df_name = _cmd.df_name();
 
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
@@ -34,7 +35,7 @@ void ColumnManager::add_float_column(
 
   if (exists) {
     DataFrameManager(params_).recv_and_add_float_column(
-        _cmd, df, &weak_write_lock, _socket);
+        rfl::to_named_tuple(_cmd), df, &weak_write_lock, _socket);
 
   } else {
     const auto pool = params_.options_.make_pool();
@@ -44,7 +45,7 @@ void ColumnManager::add_float_column(
                               params_.join_keys_encoding_.ptr(), pool);
 
     DataFrameManager(params_).recv_and_add_float_column(
-        _cmd, &new_df, &weak_write_lock, _socket);
+        rfl::to_named_tuple(_cmd), &new_df, &weak_write_lock, _socket);
 
     data_frames()[df_name] = new_df;
 
@@ -61,7 +62,7 @@ void ColumnManager::add_float_column(
 void ColumnManager::add_string_column(
     const typename Command::StringColumnOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto& df_name = _cmd.get<"df_name_">();
+  const auto& df_name = _cmd.df_name();
 
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
@@ -69,7 +70,7 @@ void ColumnManager::add_string_column(
 
   if (exists) {
     DataFrameManager(params_).recv_and_add_string_column(
-        _cmd, df, &weak_write_lock, _socket);
+        rfl::to_named_tuple(_cmd), df, &weak_write_lock, _socket);
 
   } else {
     const auto pool = params_.options_.make_pool();
@@ -79,7 +80,7 @@ void ColumnManager::add_string_column(
                               params_.join_keys_encoding_.ptr(), pool);
 
     DataFrameManager(params_).recv_and_add_string_column(
-        _cmd, &new_df, &weak_write_lock, _socket);
+        rfl::to_named_tuple(_cmd), &new_df, &weak_write_lock, _socket);
 
     data_frames()[df_name] = new_df;
 
@@ -95,7 +96,7 @@ void ColumnManager::add_string_column(
 
 void ColumnManager::aggregate(const typename Command::AggregationOp& _cmd,
                               Poco::Net::StreamSocket* _socket) {
-  const auto& aggregation = _cmd.get<"aggregation_">();
+  const auto& aggregation = _cmd.aggregation();
 
   auto response = containers::Column<Float>(nullptr, 1);
 
@@ -117,7 +118,7 @@ void ColumnManager::aggregate(const typename Command::AggregationOp& _cmd,
 void ColumnManager::get_boolean_column(
     const typename Command::GetBooleanColumnOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto json_col = _cmd.get<"col_">();
+  const auto json_col = _cmd.col();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -149,13 +150,13 @@ void ColumnManager::get_boolean_column(
 void ColumnManager::get_boolean_column_content(
     const typename Command::GetBooleanColumnContentOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto draw = _cmd.get<"draw_">();
+  const auto draw = _cmd.draw();
 
-  const auto length = _cmd.get<"length_">();
+  const auto length = _cmd.length();
 
-  const auto start = _cmd.get<"start_">();
+  const auto start = _cmd.start();
 
-  const auto& json_col = _cmd.get<"col_">();
+  const auto& json_col = _cmd.col();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -185,7 +186,7 @@ void ColumnManager::get_boolean_column_content(
 void ColumnManager::get_boolean_column_nrows(
     const typename Command::GetBooleanColumnNRowsOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto& json_col = _cmd.get<"col_">();
+  const auto& json_col = _cmd.col();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -205,7 +206,7 @@ void ColumnManager::get_boolean_column_nrows(
 void ColumnManager::get_categorical_column(
     const typename Command::GetStringColumnOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto& json_col = _cmd.get<"col_">();
+  const auto& json_col = _cmd.col();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -237,13 +238,13 @@ void ColumnManager::get_categorical_column(
 void ColumnManager::get_categorical_column_content(
     const typename Command::GetStringColumnContentOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto draw = _cmd.get<"draw_">();
+  const auto draw = _cmd.draw();
 
-  const auto length = _cmd.get<"length_">();
+  const auto length = _cmd.length();
 
-  const auto start = _cmd.get<"start_">();
+  const auto start = _cmd.start();
 
-  const auto& json_col = _cmd.get<"col_">();
+  const auto& json_col = _cmd.col();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -274,7 +275,7 @@ void ColumnManager::get_categorical_column_content(
 void ColumnManager::get_categorical_column_nrows(
     const typename Command::GetStringColumnNRowsOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto& json_col = _cmd.get<"col_">();
+  const auto& json_col = _cmd.col();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -295,7 +296,7 @@ void ColumnManager::get_categorical_column_nrows(
 void ColumnManager::get_categorical_column_unique(
     const typename Command::GetStringColumnUniqueOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto json_col = _cmd.get<"col_">();
+  const auto json_col = _cmd.col();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -319,7 +320,7 @@ void ColumnManager::get_categorical_column_unique(
 
 void ColumnManager::get_column(const typename Command::GetFloatColumnOp& _cmd,
                                Poco::Net::StreamSocket* _socket) {
-  const auto& json_col = _cmd.get<"col_">();
+  const auto& json_col = _cmd.col();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -356,7 +357,7 @@ void ColumnManager::get_column(const typename Command::GetFloatColumnOp& _cmd,
 void ColumnManager::get_column_nrows(
     const typename Command::GetFloatColumnNRowsOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto& json_col = _cmd.get<"col_">();
+  const auto& json_col = _cmd.col();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -377,7 +378,7 @@ void ColumnManager::get_column_nrows(
 void ColumnManager::get_column_unique(
     const typename Command::GetFloatColumnUniqueOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto& json_col = _cmd.get<"col_">();
+  const auto& json_col = _cmd.col();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -407,13 +408,13 @@ void ColumnManager::get_column_unique(
 void ColumnManager::get_float_column_content(
     const typename Command::GetFloatColumnContentOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto draw = _cmd.get<"draw_">();
+  const auto draw = _cmd.draw();
 
-  const auto length = _cmd.get<"length_">();
+  const auto length = _cmd.length();
 
-  const auto start = _cmd.get<"start_">();
+  const auto start = _cmd.start();
 
-  const auto& json_col = _cmd.get<"col_">();
+  const auto& json_col = _cmd.col();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -441,7 +442,7 @@ void ColumnManager::get_float_column_content(
 void ColumnManager::get_subroles(
     const typename Command::GetFloatColumnSubrolesOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto& json_col = _cmd.get<"col_">();
+  const auto& json_col = _cmd.col();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -463,7 +464,7 @@ void ColumnManager::get_subroles(
 void ColumnManager::get_subroles_categorical(
     const typename Command::GetStringColumnSubrolesOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto& json_col = _cmd.get<"col_">();
+  const auto& json_col = _cmd.col();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -484,7 +485,7 @@ void ColumnManager::get_subroles_categorical(
 
 void ColumnManager::get_unit(const typename Command::GetFloatColumnUnitOp& _cmd,
                              Poco::Net::StreamSocket* _socket) {
-  const auto& json_col = _cmd.get<"col_">();
+  const auto& json_col = _cmd.col();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -505,7 +506,7 @@ void ColumnManager::get_unit(const typename Command::GetFloatColumnUnitOp& _cmd,
 void ColumnManager::get_unit_categorical(
     const typename Command::GetStringColumnUnitOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto& json_col = _cmd.get<"col_">();
+  const auto& json_col = _cmd.col();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -526,13 +527,13 @@ void ColumnManager::get_unit_categorical(
 void ColumnManager::set_subroles(
     const typename Command::SetFloatColumnSubrolesOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
-  const auto& role = _cmd.get<"role_">();
+  const auto& role = _cmd.role();
 
-  const auto& df_name = _cmd.get<"df_name_">();
+  const auto& df_name = _cmd.df_name();
 
-  const auto& subroles = _cmd.get<"subroles_">();
+  const auto& subroles = _cmd.subroles();
 
   multithreading::WriteLock write_lock(params_.read_write_lock_);
 
@@ -554,13 +555,13 @@ void ColumnManager::set_subroles(
 void ColumnManager::set_subroles_categorical(
     const typename Command::SetStringColumnSubrolesOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
-  const auto& role = _cmd.get<"role_">();
+  const auto& role = _cmd.role();
 
-  const auto& df_name = _cmd.get<"df_name_">();
+  const auto& df_name = _cmd.df_name();
 
-  const auto& subroles = _cmd.get<"subroles_">();
+  const auto& subroles = _cmd.subroles();
 
   multithreading::WriteLock write_lock(params_.read_write_lock_);
 
@@ -590,13 +591,13 @@ void ColumnManager::set_subroles_categorical(
 
 void ColumnManager::set_unit(const typename Command::SetFloatColumnUnitOp& _cmd,
                              Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
-  const auto& role = _cmd.get<"role_">();
+  const auto& role = _cmd.role();
 
-  const auto& df_name = _cmd.get<"df_name_">();
+  const auto& df_name = _cmd.df_name();
 
-  const auto& unit = _cmd.get<"unit_">();
+  const auto& unit = _cmd.unit();
 
   multithreading::WriteLock write_lock(params_.read_write_lock_);
 
@@ -618,13 +619,13 @@ void ColumnManager::set_unit(const typename Command::SetFloatColumnUnitOp& _cmd,
 void ColumnManager::set_unit_categorical(
     const typename Command::SetStringColumnUnitOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
-  const auto& role = _cmd.get<"role_">();
+  const auto& role = _cmd.role();
 
-  const auto& df_name = _cmd.get<"df_name_">();
+  const auto& df_name = _cmd.df_name();
 
-  const auto& unit = _cmd.get<"unit_">();
+  const auto& unit = _cmd.unit();
 
   multithreading::WriteLock write_lock(params_.read_write_lock_);
 
