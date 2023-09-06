@@ -19,7 +19,7 @@
 
 #include "engine/engine.hpp"
 
-const auto shutdown_flag = fct::Ref<std::atomic<bool>>::make(false);
+const auto shutdown_flag = rfl::Ref<std::atomic<bool>>::make(false);
 
 void handle_signal(int signum) {
 #ifdef GETML_PROFILING
@@ -57,46 +57,46 @@ int main(int argc, char* argv[]) {
   } catch (std::exception& e) {
   }
 
-  const auto monitor = fct::Ref<const communication::Monitor>::make(options);
+  const auto monitor = rfl::Ref<const communication::Monitor>::make(options);
 
   const auto logger =
-      fct::Ref<const communication::Logger>::make(monitor.ptr());
+      rfl::Ref<const communication::Logger>::make(monitor.ptr());
 
   const auto pool = options.make_pool();
 
-  const auto categories = fct::Ref<containers::Encoding>::make(pool);
+  const auto categories = rfl::Ref<containers::Encoding>::make(pool);
 
-  const auto join_keys_encoding = fct::Ref<containers::Encoding>::make(pool);
+  const auto join_keys_encoding = rfl::Ref<containers::Encoding>::make(pool);
 
   const auto data_frames =
-      fct::Ref<std::map<std::string, containers::DataFrame>>::make();
+      rfl::Ref<std::map<std::string, containers::DataFrame>>::make();
 
   const auto pipelines =
-      fct::Ref<engine::handlers::PipelineManager::PipelineMapType>::make();
+      rfl::Ref<engine::handlers::PipelineManager::PipelineMapType>::make();
 
   const auto data_frame_tracker =
-      fct::Ref<engine::dependency::DataFrameTracker>::make(data_frames);
+      rfl::Ref<engine::dependency::DataFrameTracker>::make(data_frames);
 
   const auto preprocessor_tracker =
-      fct::Ref<engine::dependency::PreprocessorTracker>::make();
+      rfl::Ref<engine::dependency::PreprocessorTracker>::make();
 
-  const auto fe_tracker = fct::Ref<engine::dependency::FETracker>::make();
+  const auto fe_tracker = rfl::Ref<engine::dependency::FETracker>::make();
 
-  const auto pred_tracker = fct::Ref<engine::dependency::PredTracker>::make();
+  const auto pred_tracker = rfl::Ref<engine::dependency::PredTracker>::make();
 
   const auto warning_tracker =
-      fct::Ref<engine::dependency::WarningTracker>::make();
+      rfl::Ref<engine::dependency::WarningTracker>::make();
 
-  const auto project_lock = fct::Ref<multithreading::ReadWriteLock>::make();
+  const auto project_lock = rfl::Ref<multithreading::ReadWriteLock>::make();
 
-  const auto read_write_lock = fct::Ref<multithreading::ReadWriteLock>::make();
+  const auto read_write_lock = rfl::Ref<multithreading::ReadWriteLock>::make();
 
   const auto database_manager =
-      fct::Ref<engine::handlers::DatabaseManager>::make(logger, monitor,
+      rfl::Ref<engine::handlers::DatabaseManager>::make(logger, monitor,
                                                         options);
 
   const auto data_params =
-      fct::Ref<engine::handlers::DataFrameManagerParams>::make(
+      rfl::Ref<engine::handlers::DataFrameManagerParams>::make(
           engine::handlers::DataFrameManagerParams{
               .categories_ = categories,
               .database_manager_ = database_manager,
@@ -108,7 +108,7 @@ int main(int argc, char* argv[]) {
               .read_write_lock_ = read_write_lock});
 
   const auto data_frame_manager =
-      fct::Ref<engine::handlers::DataFrameManager>::make(*data_params);
+      rfl::Ref<engine::handlers::DataFrameManager>::make(*data_params);
 
   const auto pipeline_manager_params = engine::handlers::PipelineManagerParams{
       .categories_ = categories,
@@ -127,7 +127,7 @@ int main(int argc, char* argv[]) {
       .warning_tracker_ = warning_tracker};
 
   const auto pipeline_manager =
-      fct::Ref<engine::handlers::PipelineManager>::make(
+      rfl::Ref<engine::handlers::PipelineManager>::make(
           pipeline_manager_params);
 
   const auto project_manager_params = engine::handlers::ProjectManagerParams{
@@ -149,7 +149,7 @@ int main(int argc, char* argv[]) {
       .read_write_lock_ = read_write_lock};
 
   const auto project_manager =
-      fct::Ref<engine::handlers::ProjectManager>::make(project_manager_params);
+      rfl::Ref<engine::handlers::ProjectManager>::make(project_manager_params);
 
   Poco::Net::ServerSocket server_socket(
       static_cast<Poco::UInt16>(options.engine().port()), 64);
