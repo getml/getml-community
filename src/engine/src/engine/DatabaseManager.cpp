@@ -53,13 +53,13 @@ DatabaseManager::~DatabaseManager() = default;
 
 void DatabaseManager::copy_table(const typename Command::CopyTableOp& _cmd,
                                  Poco::Net::StreamSocket* _socket) {
-  const auto& source_conn_id = _cmd.get<"source_conn_id_">();
+  const auto& source_conn_id = _cmd.source_conn_id();
 
-  const auto& source_table_name = _cmd.get<"source_table_">();
+  const auto& source_table_name = _cmd.source_table();
 
-  const auto& target_conn_id = _cmd.get<"target_conn_id_">();
+  const auto& target_conn_id = _cmd.target_conn_id();
 
-  const auto& target_table_name = _cmd.get<"target_table_">();
+  const auto& target_table_name = _cmd.target_table();
 
   if (source_conn_id == target_conn_id) {
     throw std::runtime_error(
@@ -95,9 +95,9 @@ void DatabaseManager::copy_table(const typename Command::CopyTableOp& _cmd,
 
 void DatabaseManager::drop_table(const typename Command::DropTableOp& _cmd,
                                  Poco::Net::StreamSocket* _socket) {
-  const auto& conn_id = _cmd.get<"conn_id_">();
+  const auto& conn_id = _cmd.conn_id();
 
-  connector(conn_id)->drop_table(_cmd.get<"name_">());
+  connector(conn_id)->drop_table(_cmd.name());
 
   post_tables();
 
@@ -109,7 +109,7 @@ void DatabaseManager::drop_table(const typename Command::DropTableOp& _cmd,
 void DatabaseManager::describe_connection(
     const typename Command::DescribeConnectionOp& _cmd,
     Poco::Net::StreamSocket* _socket) const {
-  const auto description = connector(_cmd.get<"name_">())->describe();
+  const auto description = connector(_cmd.name())->describe();
 
   communication::Sender::send_string("Success!", _socket);
 
@@ -120,7 +120,7 @@ void DatabaseManager::describe_connection(
 
 void DatabaseManager::execute(const typename Command::ExecuteOp& _cmd,
                               Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
   // TODO: Remove this, splitting should be done by the database connectors
   // themselves.
@@ -196,7 +196,7 @@ void DatabaseManager::execute_command(const Command& _command,
 
 void DatabaseManager::get(const typename Command::GetOp& _cmd,
                           Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
   const auto query = communication::Receiver::recv_string(_socket);
 
@@ -227,11 +227,11 @@ void DatabaseManager::get(const typename Command::GetOp& _cmd,
 
 void DatabaseManager::get_colnames(const typename Command::GetColnamesOp& _cmd,
                                    Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
-  const auto& conn_id = _cmd.get<"conn_id_">();
+  const auto& conn_id = _cmd.conn_id();
 
-  const auto query = (name == "") ? _cmd.get<"query_">() : std::nullopt;
+  const auto query = (name == "") ? _cmd.query() : std::nullopt;
 
   const auto colnames = query ? connector(conn_id)->select(*query)->colnames()
                               : connector(conn_id)->get_colnames(name);
@@ -245,15 +245,15 @@ void DatabaseManager::get_colnames(const typename Command::GetColnamesOp& _cmd,
 
 void DatabaseManager::get_content(const typename Command::GetContentOp& _cmd,
                                   Poco::Net::StreamSocket* _socket) {
-  const auto& draw = _cmd.get<"draw_">();
+  const auto& draw = _cmd.draw();
 
-  const auto& length = _cmd.get<"length_">();
+  const auto& length = _cmd.length();
 
-  const auto& start = _cmd.get<"start_">();
+  const auto& start = _cmd.start();
 
-  const auto& conn_id = _cmd.get<"conn_id_">();
+  const auto& conn_id = _cmd.conn_id();
 
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
   const auto table_content =
       connector(conn_id)->get_content(name, draw, start, length);
@@ -267,9 +267,9 @@ void DatabaseManager::get_content(const typename Command::GetContentOp& _cmd,
 
 void DatabaseManager::get_nrows(const typename Command::GetNRowsOp& _cmd,
                                 Poco::Net::StreamSocket* _socket) {
-  const auto& conn_id = _cmd.get<"conn_id_">();
+  const auto& conn_id = _cmd.conn_id();
 
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
   const std::int32_t nrows = connector(conn_id)->get_nrows(name);
 
@@ -298,7 +298,7 @@ void DatabaseManager::list_connections(
 
 void DatabaseManager::list_tables(const typename Command::ListTablesOp& _cmd,
                                   Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
   const auto tables_str = json::to_json(connector(name)->list_tables());
 
@@ -353,21 +353,21 @@ void DatabaseManager::post_tables() {
 
 void DatabaseManager::read_csv(const typename Command::ReadCSVOp& _cmd,
                                Poco::Net::StreamSocket* _socket) {
-  const auto& colnames = _cmd.get<"colnames_">();
+  const auto& colnames = _cmd.colnames();
 
-  const auto& conn_id = _cmd.get<"conn_id_">();
+  const auto& conn_id = _cmd.conn_id();
 
-  const auto& fnames = _cmd.get<"fnames_">();
+  const auto& fnames = _cmd.fnames();
 
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
-  const auto num_lines_read = _cmd.get<"num_lines_read_">();
+  const auto num_lines_read = _cmd.num_lines_read();
 
-  const auto quotechar = _cmd.get<"quotechar_">();
+  const auto quotechar = _cmd.quotechar();
 
-  const auto sep = _cmd.get<"sep_">();
+  const auto sep = _cmd.sep();
 
-  const auto skip = _cmd.get<"skip_">();
+  const auto skip = _cmd.skip();
 
   if (quotechar.size() != 1) {
     throw std::runtime_error(
@@ -408,24 +408,24 @@ void DatabaseManager::refresh(const typename Command::RefreshOp& _cmd,
 
 void DatabaseManager::sniff_csv(const typename Command::SniffCSVOp& _cmd,
                                 Poco::Net::StreamSocket* _socket) const {
-  const auto& colnames = _cmd.get<"colnames_">();
+  const auto& colnames = _cmd.colnames();
 
-  const auto& conn_id = _cmd.get<"conn_id_">();
+  const auto& conn_id = _cmd.conn_id();
 
-  const auto& fnames = _cmd.get<"fnames_">();
+  const auto& fnames = _cmd.fnames();
 
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
-  const auto quotechar = _cmd.get<"quotechar_">();
+  const auto quotechar = _cmd.quotechar();
 
-  const auto sep = _cmd.get<"sep_">();
+  const auto sep = _cmd.sep();
 
-  const auto skip = _cmd.get<"skip_">();
+  const auto skip = _cmd.skip();
 
-  const auto num_lines_sniffed = _cmd.get<"num_lines_sniffed_">();
+  const auto num_lines_sniffed = _cmd.num_lines_sniffed();
 
-  const auto dialect = _cmd.get<"dialect_">() ? _cmd.get<"dialect_">()->name()
-                                              : connector(conn_id)->dialect();
+  const auto dialect =
+      _cmd.dialect() ? _cmd.dialect()->name() : connector(conn_id)->dialect();
 
   if (quotechar.size() != 1) {
     throw std::runtime_error(
@@ -451,9 +451,9 @@ void DatabaseManager::sniff_csv(const typename Command::SniffCSVOp& _cmd,
 
 void DatabaseManager::sniff_table(const typename Command::SniffTableOp& _cmd,
                                   Poco::Net::StreamSocket* _socket) const {
-  const auto& conn_id = _cmd.get<"conn_id_">();
+  const auto& conn_id = _cmd.conn_id();
 
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
   const auto roles = database::DatabaseSniffer::sniff(connector(conn_id),
                                                       "python", name, name);
