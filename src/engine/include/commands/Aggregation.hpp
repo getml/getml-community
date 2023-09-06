@@ -10,35 +10,35 @@
 
 #include "commands/FloatColumnOrFloatColumnView.hpp"
 #include "commands/StringColumnOrStringColumnView.hpp"
-#include "fct/Field.hpp"
-#include "fct/Literal.hpp"
-#include "fct/NamedTuple.hpp"
-#include "fct/TaggedUnion.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/Literal.hpp"
+#include "rfl/NamedTuple.hpp"
+#include "rfl/TaggedUnion.hpp"
 
 namespace commands {
 
 class Aggregation {
  public:
   /// All possible float aggregations.
-  using FloatAggregationLiteral = fct::Literal<"avg", "count", "max", "median",
+  using FloatAggregationLiteral = rfl::Literal<"avg", "count", "max", "median",
                                                "min", "stddev", "sum", "var">;
 
   /// An aggregation over a float column.
   using FloatAggregationOp =
-      fct::NamedTuple<fct::Field<"type_", FloatAggregationLiteral>,
-                      fct::Field<"col_", FloatColumnOrFloatColumnView> >;
+      rfl::NamedTuple<rfl::Field<"type_", FloatAggregationLiteral>,
+                      rfl::Field<"col_", FloatColumnOrFloatColumnView> >;
 
   /// All possible string aggregations.
   using StringAggregationLiteral =
-      fct::Literal<"count_categorical", "count_distinct">;
+      rfl::Literal<"count_categorical", "count_distinct">;
 
   /// An aggregation over a string column.
   using StringAggregationOp =
-      fct::NamedTuple<fct::Field<"type_", StringAggregationLiteral>,
-                      fct::Field<"col_", StringColumnOrStringColumnView> >;
+      rfl::NamedTuple<rfl::Field<"type_", StringAggregationLiteral>,
+                      rfl::Field<"col_", StringColumnOrStringColumnView> >;
 
   using NamedTupleType =
-      fct::TaggedUnion<"type_", FloatAggregationOp, StringAggregationOp>;
+      rfl::TaggedUnion<"type_", FloatAggregationOp, StringAggregationOp>;
 
   /// Used to break the recursive definition.
   NamedTupleType val_;

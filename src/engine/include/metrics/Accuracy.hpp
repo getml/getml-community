@@ -10,12 +10,12 @@
 
 #include <cstdint>
 
-#include "fct/NamedTuple.hpp"
 #include "metrics/Features.hpp"
 #include "metrics/Float.hpp"
 #include "metrics/MetricImpl.hpp"
 #include "metrics/Scores.hpp"
 #include "multithreading/multithreading.hpp"
+#include "rfl/NamedTuple.hpp"
 
 namespace metrics {
 
@@ -26,7 +26,7 @@ class Accuracy {
   using f_prediction_min = typename Scores::f_prediction_min;
   using f_prediction_step_size = typename Scores::f_prediction_step_size;
 
-  using ResultType = fct::NamedTuple<f_accuracy, f_accuracy_curves,
+  using ResultType = rfl::NamedTuple<f_accuracy, f_accuracy_curves,
                                      f_prediction_min, f_prediction_step_size>;
 
  public:

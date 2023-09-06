@@ -10,15 +10,15 @@
 
 #include <cstddef>
 
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
 
 namespace commands {
 
 /// Defines the three fields necessary to the content of a column.
 using GetContent =
-    fct::NamedTuple<fct::Field<"draw_", Int>, fct::Field<"length_", size_t>,
-                    fct::Field<"start_", size_t>>;
+    rfl::NamedTuple<rfl::Field<"draw_", Int>, rfl::Field<"length_", size_t>,
+                    rfl::Field<"start_", size_t>>;
 
 }  // namespace commands
 

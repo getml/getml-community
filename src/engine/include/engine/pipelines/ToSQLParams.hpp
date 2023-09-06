@@ -18,37 +18,37 @@
 #include "engine/dependency/dependency.hpp"
 #include "engine/pipelines/FittedPipeline.hpp"
 #include "engine/pipelines/Pipeline.hpp"
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
-#include "fct/Ref.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
+#include "rfl/Ref.hpp"
 
 namespace engine {
 namespace pipelines {
 
-using ToSQLParams = fct::NamedTuple<
+using ToSQLParams = rfl::NamedTuple<
     /// Encodes the categories.
-    fct::Field<"categories_", const helpers::StringIterator>,
+    rfl::Field<"categories_", const helpers::StringIterator>,
 
     /// The fitted pipeline.
-    fct::Field<"fitted_", FittedPipeline>,
+    rfl::Field<"fitted_", FittedPipeline>,
 
     /// Whether we want to transpile the full pipeline or just the features.
-    fct::Field<"full_pipeline_", bool>,
+    rfl::Field<"full_pipeline_", bool>,
 
     /// The underlying pipeline,
-    fct::Field<"pipeline_", Pipeline>,
+    rfl::Field<"pipeline_", Pipeline>,
 
     /// If the feature is longer than the threshold, it will not be sent. This
     /// is to prevent the iPython notebook from overflowing and/or unexpectedly
     /// high memory usage in Python.
-    fct::Field<"size_threshold_", std::optional<size_t>>,
+    rfl::Field<"size_threshold_", std::optional<size_t>>,
 
     /// Whether we want to include the targets in the transpiled code (needed to
     /// generate a training set)
-    fct::Field<"targets_", bool>,
+    rfl::Field<"targets_", bool>,
 
     /// The parameters required by the transpilation package.
-    fct::Field<"transpilation_params_", transpilation::TranspilationParams>>;
+    rfl::Field<"transpilation_params_", transpilation::TranspilationParams>>;
 
 }  // namespace pipelines
 }  // namespace engine

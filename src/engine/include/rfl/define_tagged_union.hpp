@@ -16,7 +16,8 @@ namespace rfl {
 
 template <internal::StringLiteral _discriminator, class... TaggedUnionTypes>
 using define_tagged_union_t =
-    typename define_tagged_union<_discriminator, TaggedUnionTypes...>::type;
+    typename internal::define_tagged_union<_discriminator,
+                                           TaggedUnionTypes...>::type;
 
 }  // namespace rfl
 

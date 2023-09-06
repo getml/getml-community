@@ -22,21 +22,20 @@
 #include <type_traits>
 #include <vector>
 
-#include "fct/Ref.hpp"
-#include "fct/Result.hpp"
 #include "flexbuffers/OutputArray.hpp"
 #include "flexbuffers/OutputNull.hpp"
 #include "flexbuffers/OutputObject.hpp"
 #include "flexbuffers/OutputValue.hpp"
 #include "flexbuffers/OutputVar.hpp"
-#include "parsing/Parser.hpp"
+#include "rfl/Ref.hpp"
+#include "rfl/Result.hpp"
 
 namespace flexbuffers {
 
 struct Writer {
-  using OutputArrayType = fct::Ref<OutputArray>;
-  using OutputObjectType = fct::Ref<OutputObject>;
-  using OutputVarType = fct::Ref<OutputVar>;
+  using OutputArrayType = rfl::Ref<OutputArray>;
+  using OutputObjectType = rfl::Ref<OutputObject>;
+  using OutputVarType = rfl::Ref<OutputVar>;
 
   Writer() {}
 
@@ -47,20 +46,20 @@ struct Writer {
   }
 
   OutputVarType empty_var() const noexcept {
-    return fct::Ref<OutputNull>::make();
+    return rfl::Ref<OutputNull>::make();
   }
 
   template <class T>
   OutputVarType from_basic_type(const T _var) const noexcept {
-    return fct::Ref<OutputValue<T>>::make(_var);
+    return rfl::Ref<OutputValue<T>>::make(_var);
   }
 
   OutputArrayType new_array() const noexcept {
-    return fct::Ref<OutputArray>::make();
+    return rfl::Ref<OutputArray>::make();
   }
 
   OutputObjectType new_object() const noexcept {
-    return fct::Ref<OutputObject>::make();
+    return rfl::Ref<OutputObject>::make();
   }
 
   bool is_empty(OutputVarType* _var) const noexcept {

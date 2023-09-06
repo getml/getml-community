@@ -9,37 +9,38 @@
 
 #include "database/Command.hpp"
 #include "database/QuerySplitter.hpp"
-#include "fct/Field.hpp"
-#include "fct/Ref.hpp"
-#include "fct/always_false.hpp"
 #include "fct/collect.hpp"
 #include "helpers/StringSplitter.hpp"
 #include "io/Parser.hpp"
 #include "json/json.hpp"
 #include "json/to_json.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/Ref.hpp"
+#include "rfl/always_false.hpp"
+#include "rfl/visit.hpp"
 
 namespace engine {
 namespace handlers {
 
 DatabaseManager::DatabaseManager(
-    const fct::Ref<const communication::Logger>& _logger,
-    const fct::Ref<const communication::Monitor>& _monitor,
+    const rfl::Ref<const communication::Logger>& _logger,
+    const rfl::Ref<const communication::Monitor>& _monitor,
     const config::Options& _options)
     : logger_(_logger),
       monitor_(_monitor),
       options_(_options),
-      read_write_lock_(fct::Ref<multithreading::ReadWriteLock>::make()) {
+      read_write_lock_(rfl::Ref<multithreading::ReadWriteLock>::make()) {
   const auto obj =
-      fct::make_field<"type_">(fct::Literal<"Database.new">()) *
-      fct::make_field<"db_">(fct::Literal<"sqlite3">()) *
-      fct::Field<"conn_id_", std::string>("default") *
-      fct::Field<"name_", std::string>(options_.project_directory() +
+      rfl::make_field<"type_">(rfl::Literal<"Database.new">()) *
+      rfl::make_field<"db_">(rfl::Literal<"sqlite3">()) *
+      rfl::Field<"conn_id_", std::string>("default") *
+      rfl::Field<"name_", std::string>(options_.project_directory() +
                                        "database.db") *
-      fct::Field<"time_formats_", std::vector<std::string>>(
+      rfl::Field<"time_formats_", std::vector<std::string>>(
           {"%Y-%m-%dT%H:%M:%s%z", "%Y/%m/%d %H:%M:%S", "%Y-%m-%d %H:%M:%S"});
 
   connector_map_.emplace(std::make_pair(
-      "default", fct::Ref<database::Sqlite3>::make(database::Sqlite3(obj))));
+      "default", rfl::Ref<database::Sqlite3>::make(database::Sqlite3(obj))));
 
   post_tables();
 }
@@ -184,11 +185,11 @@ void DatabaseManager::execute_command(const Command& _command,
     } else if constexpr (std::is_same<Type, typename Command::SniffTableOp>()) {
       sniff_table(_cmd, _socket);
     } else {
-      static_assert(fct::always_false_v<Type>, "Not all cases were covered.");
+      static_assert(rfl::always_false_v<Type>, "Not all cases were covered.");
     }
   };
 
-  fct::visit(handle, _command.val_);
+  rfl::visit(handle, _command.val_);
 }
 
 // ------------------------------------------------------------------------
@@ -310,7 +311,7 @@ void DatabaseManager::list_tables(const typename Command::ListTablesOp& _cmd,
 
 void DatabaseManager::new_db(const typename Command::NewDBOp& _cmd,
                              Poco::Net::StreamSocket* _socket) {
-  const auto conn_id = fct::get<"conn_id_">(_cmd);
+  const auto conn_id = rfl::get<"conn_id_">(_cmd);
 
   const auto password = communication::Receiver::recv_string(_socket);
 

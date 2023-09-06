@@ -13,25 +13,25 @@
 #include <vector>
 
 #include "commands/Fingerprint.hpp"
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
-#include "fct/Ref.hpp"
-#include "fct/TaggedUnion.hpp"
 #include "featurelearners/Int.hpp"
 #include "helpers/Placeholder.hpp"
 #include "helpers/Schema.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
+#include "rfl/Ref.hpp"
+#include "rfl/TaggedUnion.hpp"
 
 namespace featurelearners {
 
-using FeatureLearnerParams = fct::NamedTuple<
-    fct::Field<"dependencies_",
-               fct::Ref<const std::vector<commands::Fingerprint>>>,
-    fct::Field<"peripheral_", fct::Ref<const std::vector<std::string>>>,
-    fct::Field<"peripheral_schema_",
-               fct::Ref<const std::vector<helpers::Schema>>>,
-    fct::Field<"placeholder_", fct::Ref<const helpers::Placeholder>>,
-    fct::Field<"population_schema_", fct::Ref<const helpers::Schema>>,
-    fct::Field<"target_num_", Int>>;
+using FeatureLearnerParams = rfl::NamedTuple<
+    rfl::Field<"dependencies_",
+               rfl::Ref<const std::vector<commands::Fingerprint>>>,
+    rfl::Field<"peripheral_", rfl::Ref<const std::vector<std::string>>>,
+    rfl::Field<"peripheral_schema_",
+               rfl::Ref<const std::vector<helpers::Schema>>>,
+    rfl::Field<"placeholder_", rfl::Ref<const helpers::Placeholder>>,
+    rfl::Field<"population_schema_", rfl::Ref<const helpers::Schema>>,
+    rfl::Field<"target_num_", Int>>;
 
 }  // namespace featurelearners
 

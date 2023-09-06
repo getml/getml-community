@@ -50,9 +50,9 @@ class ViewParser {
   typedef typename commands::DataFrameOrView::ViewOp ViewOp;
 
  public:
-  ViewParser(const fct::Ref<containers::Encoding>& _categories,
-             const fct::Ref<containers::Encoding>& _join_keys_encoding,
-             const fct::Ref<const std::map<std::string, containers::DataFrame>>&
+  ViewParser(const rfl::Ref<containers::Encoding>& _categories,
+             const rfl::Ref<containers::Encoding>& _join_keys_encoding,
+             const rfl::Ref<const std::map<std::string, containers::DataFrame>>&
                  _data_frames,
              const config::Options& _options)
       : categories_(_categories),
@@ -131,14 +131,14 @@ class ViewParser {
 
  private:
   /// Encodes the categories used.
-  const fct::Ref<containers::Encoding> categories_;
+  const rfl::Ref<containers::Encoding> categories_;
 
   /// The DataFrames this is based on.
-  const fct::Ref<const std::map<std::string, containers::DataFrame>>
+  const rfl::Ref<const std::map<std::string, containers::DataFrame>>
       data_frames_;
 
   /// Encodes the join keys used.
-  const fct::Ref<containers::Encoding> join_keys_encoding_;
+  const rfl::Ref<containers::Encoding> join_keys_encoding_;
 
   /// Settings for the engine and the monitor
   const config::Options options_;

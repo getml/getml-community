@@ -11,16 +11,11 @@
 #include "fct/AccessIterator.hpp"
 #include "fct/IotaIterator.hpp"
 #include "fct/IotaRange.hpp"
-#include "fct/Literal.hpp"
-#include "fct/NamedTuple.hpp"
 #include "fct/Range.hpp"
-#include "fct/Ref.hpp"
-#include "fct/TaggedUnion.hpp"
 #include "fct/collect.hpp"
 #include "fct/compose.hpp"
 #include "fct/iota.hpp"
 #include "fct/join.hpp"
-#include "fct/visit.hpp"
 
 #ifndef __APPLE__
 #include "fct/collect_parallel.hpp"

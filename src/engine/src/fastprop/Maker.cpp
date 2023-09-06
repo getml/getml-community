@@ -207,14 +207,14 @@ std::shared_ptr<const helpers::Placeholder> Maker::make_placeholder(
   }
 
   return std::make_shared<const helpers::Placeholder>(placeholder.val_.replace(
-      fct::make_field<"allow_lagged_targets_">(allow_lagged_targets),
-      fct::make_field<"joined_tables_">(joined_tables),
-      fct::make_field<"join_keys_used_">(join_keys_used),
-      fct::make_field<"other_join_keys_used_">(other_join_keys_used),
-      fct::make_field<"other_time_stamps_used_">(other_time_stamps_used),
-      fct::make_field<"propositionalization_">(propositionalization),
-      fct::make_field<"time_stamps_used_">(time_stamps_used),
-      fct::make_field<"upper_time_stamps_used_">(upper_time_stamps_used)));
+      rfl::make_field<"allow_lagged_targets_">(allow_lagged_targets),
+      rfl::make_field<"joined_tables_">(joined_tables),
+      rfl::make_field<"join_keys_used_">(join_keys_used),
+      rfl::make_field<"other_join_keys_used_">(other_join_keys_used),
+      rfl::make_field<"other_time_stamps_used_">(other_time_stamps_used),
+      rfl::make_field<"propositionalization_">(propositionalization),
+      rfl::make_field<"time_stamps_used_">(time_stamps_used),
+      rfl::make_field<"upper_time_stamps_used_">(upper_time_stamps_used)));
 }
 
 // ----------------------------------------------------------------------------

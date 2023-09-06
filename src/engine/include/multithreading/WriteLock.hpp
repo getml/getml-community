@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef MULTITHREADING_WRITELOCK_HPP_
 #define MULTITHREADING_WRITELOCK_HPP_
@@ -14,7 +14,7 @@
 
 // ----------------------------------------------------------------------------
 
-#include "fct/Ref.hpp"
+#include "rfl/Ref.hpp"
 
 // ----------------------------------------------------------------------------
 
@@ -27,13 +27,13 @@ namespace multithreading {
 class WriteLock {
  public:
   /// WriteLock without a timeout.
-  explicit WriteLock(const fct::Ref<ReadWriteLock>& _lock)
+  explicit WriteLock(const rfl::Ref<ReadWriteLock>& _lock)
       : lock_(_lock), released_(false) {
     lock_->write_lock();
   }
 
   /// WriteLock with timeout.
-  WriteLock(const fct::Ref<ReadWriteLock>& _lock,
+  WriteLock(const rfl::Ref<ReadWriteLock>& _lock,
             const std::chrono::milliseconds _duration)
       : lock_(_lock), released_(false) {
     lock_->write_lock(_duration);
@@ -63,7 +63,7 @@ class WriteLock {
 
  private:
   /// Lock to the WriteLock.
-  const fct::Ref<ReadWriteLock> lock_;
+  const rfl::Ref<ReadWriteLock> lock_;
 
   /// Whether the Acquirer has been released.
   bool released_;

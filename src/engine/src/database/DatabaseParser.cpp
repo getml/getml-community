@@ -10,30 +10,30 @@
 #include "database/MySQL.hpp"
 #include "database/Postgres.hpp"
 #include "database/Sqlite3.hpp"
-#include "fct/visit.hpp"
+#include "rfl/visit.hpp"
 
 namespace database {
 
-fct::Ref<Connector> DatabaseParser::parse(
+rfl::Ref<Connector> DatabaseParser::parse(
     const typename Command::NamedTupleType& _cmd,
     const std::string& _password) {
-  const auto handle = [&_password](const auto& _obj) -> fct::Ref<Connector> {
+  const auto handle = [&_password](const auto& _obj) -> rfl::Ref<Connector> {
     using Type = std::decay_t<decltype(_obj)>;
 
     if constexpr (std::is_same<Type, typename Command::MySQLOp>()) {
-      return fct::Ref<MySQL>::make(_obj, _password);
+      return rfl::Ref<MySQL>::make(_obj, _password);
     }
 
     if constexpr (std::is_same<Type, typename Command::PostgresOp>()) {
-      return fct::Ref<Postgres>::make(_obj, _password);
+      return rfl::Ref<Postgres>::make(_obj, _password);
     }
 
     if constexpr (std::is_same<Type, typename Command::SQLite3Op>()) {
-      return fct::Ref<Sqlite3>::make(_obj);
+      return rfl::Ref<Sqlite3>::make(_obj);
     }
   };
 
-  return fct::visit(handle, _cmd);
+  return rfl::visit(handle, _cmd);
 }
 
 }  // namespace database

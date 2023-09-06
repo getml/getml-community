@@ -18,14 +18,14 @@
 #include "engine/preprocessors/Params.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
 #include "engine/preprocessors/PreprocessorImpl.hpp"
-#include "fct/Field.hpp"
-#include "fct/Literal.hpp"
-#include "fct/NamedTuple.hpp"
-#include "fct/Ref.hpp"
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/Macros.hpp"
 #include "helpers/StringIterator.hpp"
 #include "helpers/Subrole.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/Literal.hpp"
+#include "rfl/NamedTuple.hpp"
+#include "rfl/Ref.hpp"
 #include "strings/strings.hpp"
 
 namespace engine {
@@ -38,9 +38,9 @@ class Substring : public Preprocessor {
   using SubstringOp = typename commands::Preprocessor::SubstringOp;
 
   using f_cols =
-      fct::Field<"cols_", std::vector<fct::Ref<helpers::ColumnDescription>>>;
+      rfl::Field<"cols_", std::vector<rfl::Ref<helpers::ColumnDescription>>>;
 
-  using NamedTupleType = fct::NamedTuple<f_cols>;
+  using NamedTupleType = rfl::NamedTuple<f_cols>;
 
  public:
   Substring(const SubstringOp& _op,
@@ -71,10 +71,10 @@ class Substring : public Preprocessor {
 
  public:
   /// Creates a deep copy.
-  fct::Ref<Preprocessor> clone(
+  rfl::Ref<Preprocessor> clone(
       const std::optional<std::vector<commands::Fingerprint>>& _dependencies =
           std::nullopt) const final {
-    const auto c = fct::Ref<Substring>::make(*this);
+    const auto c = rfl::Ref<Substring>::make(*this);
     if (_dependencies) {
       c->dependencies_ = *_dependencies;
     }
@@ -87,10 +87,10 @@ class Substring : public Preprocessor {
     using FingerprintType =
         typename commands::Fingerprint::SubstringFingerprint;
     return commands::Fingerprint(FingerprintType(
-        fct::make_field<"dependencies_">(dependencies_),
-        fct::make_field<"type_">(fct::Literal<"Substring">()),
-        fct::make_field<"begin_">(begin_), fct::make_field<"length_">(length_),
-        fct::make_field<"unit_">(unit_)));
+        rfl::make_field<"dependencies_">(dependencies_),
+        rfl::make_field<"type_">(rfl::Literal<"Substring">()),
+        rfl::make_field<"begin_">(begin_), rfl::make_field<"length_">(length_),
+        rfl::make_field<"unit_">(unit_)));
   }
 
   /// Necessary for the automated parsing to work.
@@ -209,7 +209,7 @@ class Substring : public Preprocessor {
   size_t begin_;
 
   /// List of all columns to which the email domain transformation applies.
-  std::vector<fct::Ref<helpers::ColumnDescription>> cols_;
+  std::vector<rfl::Ref<helpers::ColumnDescription>> cols_;
 
   /// The dependencies inserted into the the preprocessor.
   std::vector<commands::Fingerprint> dependencies_;

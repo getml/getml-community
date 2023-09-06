@@ -17,7 +17,7 @@ void DataFrameManager::get_data_frame(
     Poco::Net::StreamSocket* _socket) {
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
-  using CmdType = fct::TaggedUnion<
+  using CmdType = rfl::TaggedUnion<
       "type_", typename commands::DataFrameCommand::GetFloatColumnOp,
       typename commands::DataFrameCommand::GetStringColumnOp, CloseDataFrameOp>;
 
@@ -43,7 +43,7 @@ void DataFrameManager::get_data_frame(
       }
     };
 
-    const bool finished = fct::visit(handle, cmd);
+    const bool finished = rfl::visit(handle, cmd);
 
     if (finished) {
       break;

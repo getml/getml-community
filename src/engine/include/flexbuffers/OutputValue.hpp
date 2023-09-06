@@ -15,9 +15,9 @@
 #include <string>
 #include <utility>
 
-#include "fct/Ref.hpp"
-#include "fct/always_false.hpp"
 #include "flexbuffers/OutputVar.hpp"
+#include "rfl/Ref.hpp"
+#include "rfl/always_false.hpp"
 
 namespace flexbuffers {
 
@@ -56,7 +56,7 @@ class OutputValue : public OutputVar {
         _fbb->Int(val_);
       }
     } else {
-      static_assert(fct::always_false_v<T>, "Unsupported type");
+      static_assert(rfl::always_false_v<T>, "Unsupported type");
     }
   };
 

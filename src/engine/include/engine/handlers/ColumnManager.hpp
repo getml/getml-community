@@ -21,9 +21,9 @@
 #include "engine/config/config.hpp"
 #include "engine/handlers/DataFrameManagerParams.hpp"
 #include "engine/handlers/DatabaseManager.hpp"
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
-#include "fct/Ref.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
+#include "rfl/Ref.hpp"
 
 namespace engine {
 namespace handlers {
@@ -38,11 +38,11 @@ class ColumnManager {
   using Command = commands::ColumnCommand;
 
   using CloseDataFrameOp =
-      fct::NamedTuple<fct::Field<"name_", std::string>,
-                      fct::Field<"type_", fct::Literal<"DataFrame.close">>>;
+      rfl::NamedTuple<rfl::Field<"name_", std::string>,
+                      rfl::Field<"type_", rfl::Literal<"DataFrame.close">>>;
 
-  using RecvAndAddOp = fct::NamedTuple<fct::Field<"name_", std::string>,
-                                       fct::Field<"role_", std::string>>;
+  using RecvAndAddOp = rfl::NamedTuple<rfl::Field<"name_", std::string>,
+                                       rfl::Field<"role_", std::string>>;
 
  public:
   explicit ColumnManager(const DataFrameManagerParams& _params)
@@ -159,7 +159,7 @@ class ColumnManager {
   containers::Encoding& categories() { return *params_.categories_; }
 
   /// Trivial accessor
-  fct::Ref<database::Connector> connector(const std::string& _name) const {
+  rfl::Ref<database::Connector> connector(const std::string& _name) const {
     return params_.database_manager_->connector(_name);
   }
 

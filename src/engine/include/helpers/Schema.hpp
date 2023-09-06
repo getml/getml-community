@@ -14,47 +14,47 @@
 #include <vector>
 
 #include "debug/debug.hpp"
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
 
 namespace helpers {
 
 /// The names of the categorical columns
-using f_categoricals = fct::Field<"categorical_", std::vector<std::string>>;
+using f_categoricals = rfl::Field<"categorical_", std::vector<std::string>>;
 
 /// The names of the discrete columns
 using f_discretes =
-    fct::Field<"discrete_", std::optional<std::vector<std::string>>>;
+    rfl::Field<"discrete_", std::optional<std::vector<std::string>>>;
 
 /// The names of the join keys
-using f_join_keys = fct::Field<"join_keys_", std::vector<std::string>>;
+using f_join_keys = rfl::Field<"join_keys_", std::vector<std::string>>;
 
 /// The table name
-using f_name = fct::Field<"name_", std::string>;
+using f_name = rfl::Field<"name_", std::string>;
 
 /// The names of the numerical columns
-using f_numericals = fct::Field<"numerical_", std::vector<std::string>>;
+using f_numericals = rfl::Field<"numerical_", std::vector<std::string>>;
 
 /// The names of the target columns
-using f_targets = fct::Field<"targets_", std::vector<std::string>>;
+using f_targets = rfl::Field<"targets_", std::vector<std::string>>;
 
 /// The names of the text columns
-using f_text = fct::Field<"text_", std::vector<std::string>>;
+using f_text = rfl::Field<"text_", std::vector<std::string>>;
 
 /// The names of the time stamp columns
-using f_time_stamps = fct::Field<"time_stamps_", std::vector<std::string>>;
+using f_time_stamps = rfl::Field<"time_stamps_", std::vector<std::string>>;
 
 /// The names of the unused float columns
-using f_unused_floats = fct::Field<"unused_floats_", std::vector<std::string>>;
+using f_unused_floats = rfl::Field<"unused_floats_", std::vector<std::string>>;
 
 /// The names of the unused string columns
 using f_unused_strings =
-    fct::Field<"unused_strings_", std::vector<std::string>>;
+    rfl::Field<"unused_strings_", std::vector<std::string>>;
 
 class Schema {
  public:
   using NamedTupleType =
-      fct::NamedTuple<f_categoricals, f_discretes, f_join_keys, f_name,
+      rfl::NamedTuple<f_categoricals, f_discretes, f_join_keys, f_name,
                       f_numericals, f_targets, f_text, f_time_stamps,
                       f_unused_floats, f_unused_strings>;
 

@@ -14,14 +14,14 @@
 #include <variant>
 #include <vector>
 
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
-#include "fct/define_named_tuple.hpp"
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/Saver.hpp"
 #include "metrics/Features.hpp"
 #include "metrics/Float.hpp"
 #include "metrics/Int.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
+#include "rfl/define_named_tuple.hpp"
 
 namespace metrics {
 
@@ -30,46 +30,46 @@ namespace metrics {
 class Scores {
  public:
   /// Measures the overall accuracy.
-  using f_accuracy = fct::Field<"accuracy_", std::vector<Float>>;
+  using f_accuracy = rfl::Field<"accuracy_", std::vector<Float>>;
 
   /// Measures the area under the (ROC) curve, AUC.
-  using f_auc = fct::Field<"auc_", std::vector<Float>>;
+  using f_auc = rfl::Field<"auc_", std::vector<Float>>;
 
   /// Measures the cross entropy loss or log loss.
-  using f_cross_entropy = fct::Field<"cross_entropy_", std::vector<Float>>;
+  using f_cross_entropy = rfl::Field<"cross_entropy_", std::vector<Float>>;
 
   /// Measures the mean absolute error.
-  using f_mae = fct::Field<"mae_", std::vector<Float>>;
+  using f_mae = rfl::Field<"mae_", std::vector<Float>>;
 
   /// Measures the root mean squared error.
-  using f_rmse = fct::Field<"rmse_", std::vector<Float>>;
+  using f_rmse = rfl::Field<"rmse_", std::vector<Float>>;
 
   /// Measures the (predictive) R-squared between predictions and targets.
-  using f_rsquared = fct::Field<"rsquared_", std::vector<Float>>;
+  using f_rsquared = rfl::Field<"rsquared_", std::vector<Float>>;
 
   /// These metrics are used for classification problems.
   using ClassificationMetricsType =
-      fct::NamedTuple<f_accuracy, f_auc, f_cross_entropy>;
+      rfl::NamedTuple<f_accuracy, f_auc, f_cross_entropy>;
 
   /// These metrics are used for regression problems.
-  using RegressionMetricsType = fct::NamedTuple<f_mae, f_rmse, f_rsquared>;
+  using RegressionMetricsType = rfl::NamedTuple<f_mae, f_rmse, f_rsquared>;
 
   /// Combination of all metrics.
-  using AllMetricsType = fct::define_named_tuple_t<ClassificationMetricsType,
+  using AllMetricsType = rfl::define_named_tuple_t<ClassificationMetricsType,
                                                    RegressionMetricsType>;
 
   /// These fields are required by both the classification history and
   /// regression history.
-  using HistoryBaseType = fct::NamedTuple<fct::Field<"date_time_", std::string>,
-                                          fct::Field<"set_used_", std::string>>;
+  using HistoryBaseType = rfl::NamedTuple<rfl::Field<"date_time_", std::string>,
+                                          rfl::Field<"set_used_", std::string>>;
 
   /// History of classification metrics.
   using ClassificationHistoryType =
-      fct::define_named_tuple_t<ClassificationMetricsType, HistoryBaseType>;
+      rfl::define_named_tuple_t<ClassificationMetricsType, HistoryBaseType>;
 
   /// History of regression metrics.
   using RegressionHistoryType =
-      fct::define_named_tuple_t<RegressionMetricsType, HistoryBaseType>;
+      rfl::define_named_tuple_t<RegressionMetricsType, HistoryBaseType>;
 
   /// Sometimes we want to preserve the history - at the moment, we only
   /// preserve the metrics, but that might change in the future.
@@ -78,73 +78,73 @@ class Scores {
 
   /// The accuracy curves feeding the accuracy scores.
   using f_accuracy_curves =
-      fct::Field<"accuracy_curves_", std::vector<std::vector<Float>>>;
+      rfl::Field<"accuracy_curves_", std::vector<std::vector<Float>>>;
 
   /// Average of targets w.r.t. different bins of the feature.
   using f_average_targets =
-      fct::Field<"average_targets_",
+      rfl::Field<"average_targets_",
                  std::vector<std::vector<std::vector<Float>>>>;
 
   /// The column descriptions, correspond to the column importances.
   using f_column_descriptions =
-      fct::Field<"column_descriptions_",
+      rfl::Field<"column_descriptions_",
                  std::vector<helpers::ColumnDescription>>;
 
   /// Importances of individual column w.r.t. targets.
   using f_column_importances =
-      fct::Field<"column_importances_", std::vector<std::vector<Float>>>;
+      rfl::Field<"column_importances_", std::vector<std::vector<Float>>>;
 
   /// Correlations coefficients of features with targets.
   using f_feature_correlations =
-      fct::Field<"feature_correlations_", std::vector<std::vector<Float>>>;
+      rfl::Field<"feature_correlations_", std::vector<std::vector<Float>>>;
 
   /// Densities of the features.
   using f_feature_densities =
-      fct::Field<"feature_densities_", std::vector<std::vector<Int>>>;
+      rfl::Field<"feature_densities_", std::vector<std::vector<Int>>>;
 
   /// Importances of individual features w.r.t. targets.
   using f_feature_importances =
-      fct::Field<"feature_importances_", std::vector<std::vector<Float>>>;
+      rfl::Field<"feature_importances_", std::vector<std::vector<Float>>>;
 
   /// The names of the features.
   using f_feature_names =
-      fct::Field<"feature_names_", std::vector<std::string>>;
+      rfl::Field<"feature_names_", std::vector<std::string>>;
 
   /// False positive rate.
-  using f_fpr = fct::Field<"fpr_", std::vector<std::vector<Float>>>;
+  using f_fpr = rfl::Field<"fpr_", std::vector<std::vector<Float>>>;
 
   /// The history of the scores.
-  using f_history = fct::Field<"history_", std::vector<HistoryType>>;
+  using f_history = rfl::Field<"history_", std::vector<HistoryType>>;
 
   /// Min, max and step_size for feature_densities and average targets.
-  using f_labels = fct::Field<"labels_", std::vector<std::vector<Float>>>;
+  using f_labels = rfl::Field<"labels_", std::vector<std::vector<Float>>>;
 
   /// The lift (for classification problems)
-  using f_lift = fct::Field<"lift_", std::vector<std::vector<Float>>>;
+  using f_lift = rfl::Field<"lift_", std::vector<std::vector<Float>>>;
 
   /// The precision (for classification problems)
-  using f_precision = fct::Field<"precision_", std::vector<std::vector<Float>>>;
+  using f_precision = rfl::Field<"precision_", std::vector<std::vector<Float>>>;
 
   /// Minimum prediction - needed for plotting the accuracy.
-  using f_prediction_min = fct::Field<"prediction_min_", std::vector<Float>>;
+  using f_prediction_min = rfl::Field<"prediction_min_", std::vector<Float>>;
 
   /// Stepsize - needed for plotting the accuracy.
   using f_prediction_step_size =
-      fct::Field<"prediction_step_size_", std::vector<Float>>;
+      rfl::Field<"prediction_step_size_", std::vector<Float>>;
 
   /// Proportion of samples called (for the lift curve)
   using f_proportion =
-      fct::Field<"proportion_", std::vector<std::vector<Float>>>;
+      rfl::Field<"proportion_", std::vector<std::vector<Float>>>;
 
   /// Marks the training/testing/validation set (or any other set defined by the
   /// user).
-  using f_set_used = fct::Field<"set_used_", std::string>;
+  using f_set_used = rfl::Field<"set_used_", std::string>;
 
   /// True positive rate.
-  using f_tpr = fct::Field<"tpr_", std::vector<std::vector<Float>>>;
+  using f_tpr = rfl::Field<"tpr_", std::vector<std::vector<Float>>>;
 
   /// This type needs to be defined for the reflection to work.
-  using NamedTupleType = fct::define_named_tuple_t<
+  using NamedTupleType = rfl::define_named_tuple_t<
       AllMetricsType, f_accuracy_curves, f_average_targets,
       f_column_descriptions, f_column_importances, f_feature_correlations,
       f_feature_densities, f_feature_importances, f_feature_names, f_fpr,
@@ -241,7 +241,7 @@ class Scores {
   /// Helper function to retrieve a vector by the target_num.
   template <class FieldType>
   const std::vector<Float>& get_by_target_num(const size_t _target_num) const {
-    const auto& vec = fct::get<FieldType>(val_);
+    const auto& vec = rfl::get<FieldType>(val_);
     if (_target_num >= vec.size()) {
       throw std::runtime_error("target_num out of bounds for field '" +
                                FieldType::name_.str() +

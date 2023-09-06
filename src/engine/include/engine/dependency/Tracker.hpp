@@ -14,8 +14,8 @@
 #include <type_traits>
 
 #include "debug/debug.hpp"
-#include "fct/Ref.hpp"
 #include "json/json.hpp"
+#include "rfl/Ref.hpp"
 
 namespace engine {
 namespace dependency {
@@ -29,7 +29,7 @@ class Tracker {
 
  public:
   /// Adds a new element to be tracked.
-  void add(const fct::Ref<const T>& _elem);
+  void add(const rfl::Ref<const T>& _elem);
 
   /// Removes all elements.
   void clear();
@@ -41,14 +41,14 @@ class Tracker {
 
  private:
   /// A map keeping track of the elements.
-  std::map<size_t, fct::Ref<const T>> elements_;
+  std::map<size_t, rfl::Ref<const T>> elements_;
 };
 
 // -------------------------------------------------------------------------
 // -------------------------------------------------------------------------
 
 template <class T>
-void Tracker<T>::add(const fct::Ref<const T>& _elem) {
+void Tracker<T>::add(const rfl::Ref<const T>& _elem) {
   const auto fingerprint = _elem->fingerprint();
 
   const auto f_str = json::to_json(fingerprint);
@@ -96,7 +96,7 @@ std::shared_ptr<T> Tracker<T>::retrieve(
 
   using Type = std::decay_t<decltype(clone)>;
 
-  if constexpr (std::is_same<Type, fct::Ref<T>>()) {
+  if constexpr (std::is_same<Type, rfl::Ref<T>>()) {
     return clone.ptr();
   } else {
     return clone;

@@ -17,8 +17,8 @@
 #include "fastprop/Int.hpp"
 #include "fastprop/algorithm/Memoization.hpp"
 #include "fastprop/containers/containers.hpp"
-#include "fct/Ref.hpp"
 #include "helpers/Aggregations.hpp"
+#include "rfl/Ref.hpp"
 
 namespace fastprop {
 namespace algorithm {
@@ -37,7 +37,7 @@ class Aggregator {
       const std::vector<containers::Match> &_matches,
       const std::function<bool(const containers::Match &)> &_condition_function,
       const containers::AbstractFeature &_abstract_feature,
-      const fct::Ref<Memoization> &_memoization);
+      const rfl::Ref<Memoization> &_memoization);
 
  public:
   /// Whether the aggregation is an aggregation that relies on the
@@ -54,7 +54,7 @@ class Aggregator {
       const std::vector<containers::Match> &_matches,
       const std::function<bool(const containers::Match &)> &_condition_function,
       const containers::AbstractFeature &_abstract_feature,
-      const fct::Ref<Memoization> &_memoization);
+      const rfl::Ref<Memoization> &_memoization);
 
   /// Determines whether a condition is true w.r.t. a match.
   static bool apply_condition(const containers::Condition &_condition,
@@ -67,7 +67,7 @@ class Aggregator {
       const std::vector<containers::Match> &_matches,
       const std::function<bool(const containers::Match &)> &_condition_function,
       const containers::AbstractFeature &_abstract_feature,
-      const fct::Ref<Memoization> &_memoization);
+      const rfl::Ref<Memoization> &_memoization);
 
   /// Applies a COUNT aggregation
   static Float apply_not_applicable(
@@ -75,7 +75,7 @@ class Aggregator {
       const std::vector<containers::Match> &_matches,
       const std::function<bool(const containers::Match &)> &_condition_function,
       const containers::AbstractFeature &_abstract_feature,
-      const fct::Ref<Memoization> &_memoization);
+      const rfl::Ref<Memoization> &_memoization);
 
   /// Applies the aggregation to a numerical column.
   static Float apply_numerical(
@@ -84,7 +84,7 @@ class Aggregator {
       const std::vector<containers::Match> &_matches,
       const std::function<bool(const containers::Match &)> &_condition_function,
       const containers::AbstractFeature &_abstract_feature,
-      const fct::Ref<Memoization> &_memoization);
+      const rfl::Ref<Memoization> &_memoization);
 
   /// Applies the aggregation to categorical columns with the same unit.
   static Float apply_same_units_categorical(
@@ -93,7 +93,7 @@ class Aggregator {
       const std::vector<containers::Match> &_matches,
       const std::function<bool(const containers::Match &)> &_condition_function,
       const containers::AbstractFeature &_abstract_feature,
-      const fct::Ref<Memoization> &_memoization);
+      const rfl::Ref<Memoization> &_memoization);
 
   /// Applies the aggregation to discrete columns with the same unit.
   static Float apply_same_units_discrete(
@@ -102,7 +102,7 @@ class Aggregator {
       const std::vector<containers::Match> &_matches,
       const std::function<bool(const containers::Match &)> &_condition_function,
       const containers::AbstractFeature &_abstract_feature,
-      const fct::Ref<Memoization> &_memoization);
+      const rfl::Ref<Memoization> &_memoization);
 
   /// Applies the aggregation to numerical columns with the same unit.
   static Float apply_same_units_numerical(
@@ -111,7 +111,7 @@ class Aggregator {
       const std::vector<containers::Match> &_matches,
       const std::function<bool(const containers::Match &)> &_condition_function,
       const containers::AbstractFeature &_abstract_feature,
-      const fct::Ref<Memoization> &_memoization);
+      const rfl::Ref<Memoization> &_memoization);
 
   /// Applies the aggregation to a subfeature.
   static Float apply_subfeatures(
@@ -121,7 +121,7 @@ class Aggregator {
       const std::vector<containers::Match> &_matches,
       const std::function<bool(const containers::Match &)> &_condition_function,
       const containers::AbstractFeature &_abstract_feature,
-      const fct::Ref<Memoization> &_memoization);
+      const rfl::Ref<Memoization> &_memoization);
 
   /// Applies the aggregation to text fields.
   static Float apply_text(
@@ -130,7 +130,7 @@ class Aggregator {
       const std::vector<containers::Match> &_matches,
       const std::function<bool(const containers::Match &)> &_condition_function,
       const containers::AbstractFeature &_abstract_feature,
-      const fct::Ref<Memoization> &_memoization);
+      const rfl::Ref<Memoization> &_memoization);
 
  private:
   /// Aggregates the range from _begin to _end, applying the _aggregation.
@@ -373,7 +373,7 @@ class Aggregator {
       const ExtractValueType &_extract_value,
       const std::function<bool(const containers::Match &)> &_condition_function,
       const containers::AbstractFeature &_abstract_feature,
-      const fct::Ref<Memoization> &_memoization) {
+      const rfl::Ref<Memoization> &_memoization) {
     assert_true(is_first_last(_abstract_feature.aggregation_));
 
     assert_true(_peripheral.num_time_stamps() > 0);
@@ -458,7 +458,7 @@ class Aggregator {
       const ExtractValueType &_extract_value,
       const std::function<bool(const containers::Match &)> &_condition_function,
       const containers::AbstractFeature &_abstract_feature,
-      const fct::Ref<Memoization> &_memoization) {
+      const rfl::Ref<Memoization> &_memoization) {
     if (_abstract_feature.conditions_.size() == 0) {
       const auto range = _matches | VIEWS::transform(_extract_value) |
                          VIEWS::filter(is_not_nan_or_inf);
@@ -477,7 +477,7 @@ class Aggregator {
       const ExtractValueType &_extract_value,
       const std::function<bool(const containers::Match &)> &_condition_function,
       const containers::AbstractFeature &_abstract_feature,
-      const fct::Ref<Memoization> &_memoization) {
+      const rfl::Ref<Memoization> &_memoization) {
     assert_true(is_first_last(_abstract_feature.aggregation_));
     if (_abstract_feature.conditions_.size() == 0) {
       const auto range = _matches | VIEWS::transform(_extract_value) |

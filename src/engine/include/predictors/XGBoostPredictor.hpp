@@ -40,10 +40,10 @@ class XGBoostPredictor : public Predictor {
 
  public:
   XGBoostPredictor(const XGBoostHyperparams& _hyperparams,
-                   const fct::Ref<const PredictorImpl>& _impl,
+                   const rfl::Ref<const PredictorImpl>& _impl,
                    const std::vector<commands::Fingerprint>& _dependencies)
       : dependencies_(_dependencies),
-        hyperparams_(fct::Ref<XGBoostHyperparams>::make(_hyperparams)),
+        hyperparams_(rfl::Ref<XGBoostHyperparams>::make(_hyperparams)),
         impl_(_impl) {}
 
   ~XGBoostPredictor() = default;
@@ -101,7 +101,7 @@ class XGBoostPredictor : public Predictor {
   Fingerprint fingerprint() const final {
     using XGBoostFingerprint = typename Fingerprint::XGBoostFingerprint;
     return Fingerprint(XGBoostFingerprint(
-        hyperparams_->val_ * fct::make_field<"dependencies_">(dependencies_) *
+        hyperparams_->val_ * rfl::make_field<"dependencies_">(dependencies_) *
         impl().named_tuple()));
   }
 
@@ -197,10 +197,10 @@ class XGBoostPredictor : public Predictor {
   std::vector<commands::Fingerprint> dependencies_;
 
   /// Hyperparameters for XGBoostPredictor
-  const fct::Ref<const XGBoostHyperparams> hyperparams_;
+  const rfl::Ref<const XGBoostHyperparams> hyperparams_;
 
   /// Implementation class for member functions common to most predictors.
-  const fct::Ref<const PredictorImpl> impl_;
+  const rfl::Ref<const PredictorImpl> impl_;
 
   /// The underlying XGBoost model, expressed in bytes
   std::vector<char> model_;

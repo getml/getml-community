@@ -8,9 +8,9 @@
 #include <string>
 #include <vector>
 
-#include "fct/NamedTuple.hpp"
 #include "fct/join.hpp"
 #include "helpers/Schema.hpp"
+#include "rfl/NamedTuple.hpp"
 
 #ifndef COMMANDS_ROLES_HPP_
 #define COMMANDS_ROLES_HPP_
@@ -19,31 +19,31 @@ namespace commands {
 
 struct Roles {
   /// The names of the categorical columns
-  using f_categorical = fct::Field<"categorical", std::vector<std::string>>;
+  using f_categorical = rfl::Field<"categorical", std::vector<std::string>>;
 
   /// The names of the join keys
-  using f_join_key = fct::Field<"join_key", std::vector<std::string>>;
+  using f_join_key = rfl::Field<"join_key", std::vector<std::string>>;
 
   /// The names of the numerical columns
-  using f_numerical = fct::Field<"numerical", std::vector<std::string>>;
+  using f_numerical = rfl::Field<"numerical", std::vector<std::string>>;
 
   /// The names of the target columns
-  using f_target = fct::Field<"target", std::vector<std::string>>;
+  using f_target = rfl::Field<"target", std::vector<std::string>>;
 
   /// The names of the text columns
-  using f_text = fct::Field<"text", std::vector<std::string>>;
+  using f_text = rfl::Field<"text", std::vector<std::string>>;
 
   /// The names of the time stamp columns
-  using f_time_stamp = fct::Field<"time_stamp", std::vector<std::string>>;
+  using f_time_stamp = rfl::Field<"time_stamp", std::vector<std::string>>;
 
   /// The names of the unused float columns
-  using f_unused_float = fct::Field<"unused_float", std::vector<std::string>>;
+  using f_unused_float = rfl::Field<"unused_float", std::vector<std::string>>;
 
   /// The names of the unused string columns
-  using f_unused_string = fct::Field<"unused_string", std::vector<std::string>>;
+  using f_unused_string = rfl::Field<"unused_string", std::vector<std::string>>;
 
   using NamedTupleType =
-      fct::NamedTuple<f_categorical, f_join_key, f_numerical, f_target, f_text,
+      rfl::NamedTuple<f_categorical, f_join_key, f_numerical, f_target, f_text,
                       f_time_stamp, f_unused_float, f_unused_string>;
 
   /// Retrieves the roles from the schema.

@@ -15,8 +15,8 @@
 #include "fastprop/Int.hpp"
 #include "fastprop/containers/Condition.hpp"
 #include "fastprop/enums/enums.hpp"
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
 #include "strings/strings.hpp"
 #include "transpilation/transpilation.hpp"
 
@@ -25,13 +25,13 @@ namespace containers {
 
 struct AbstractFeature {
   using NamedTupleType =
-      fct::NamedTuple<fct::Field<"aggregation_", enums::Aggregation>,
-                      fct::Field<"categorical_value_", Int>,
-                      fct::Field<"conditions_", std::vector<Condition>>,
-                      fct::Field<"data_used_", enums::DataUsed>,
-                      fct::Field<"input_col_", size_t>,
-                      fct::Field<"output_col_", size_t>,
-                      fct::Field<"peripheral_", size_t>>;
+      rfl::NamedTuple<rfl::Field<"aggregation_", enums::Aggregation>,
+                      rfl::Field<"categorical_value_", Int>,
+                      rfl::Field<"conditions_", std::vector<Condition>>,
+                      rfl::Field<"data_used_", enums::DataUsed>,
+                      rfl::Field<"input_col_", size_t>,
+                      rfl::Field<"output_col_", size_t>,
+                      rfl::Field<"peripheral_", size_t>>;
 
   static constexpr Int NO_CATEGORICAL_VALUE = -1;
 

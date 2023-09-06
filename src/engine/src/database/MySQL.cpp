@@ -35,10 +35,10 @@ void MySQL::check_colnames(const std::vector<std::string>& _colnames,
 // ----------------------------------------------------------------------------
 
 std::string MySQL::describe() const {
-  const auto description = fct::make_field<"dbname">(dbname_) *
-                           fct::make_field<"dialect">(dialect()) *
-                           fct::make_field<"host">(host_) *
-                           fct::make_field<"port">(port_);
+  const auto description = rfl::make_field<"dbname">(dbname_) *
+                           rfl::make_field<"dialect">(dialect()) *
+                           rfl::make_field<"host">(host_) *
+                           rfl::make_field<"port">(port_);
   return json::to_json(description);
 }
 
@@ -161,7 +161,7 @@ TableContent MySQL::get_content(const std::string& _tname,
   const auto query = make_get_content_query(_tname, colnames, _start, end);
 
   const auto iter =
-      fct::Ref<MySQLIterator>::make(make_connection(), query, time_formats_);
+      rfl::Ref<MySQLIterator>::make(make_connection(), query, time_formats_);
 
   return ContentGetter::get_content(iter, _draw, end - _start, nrows, ncols);
 }

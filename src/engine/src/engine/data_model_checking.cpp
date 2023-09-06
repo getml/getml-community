@@ -204,17 +204,17 @@ std::string warning() { return "WARNING"; }
 /// Standard header for a column that should be unused.
 communication::Warning column_should_be_unused(const std::string& _message) {
   return communication::Warning(
-      fct::make_field<"message_">(_message),
-      fct::make_field<"label_", std::string>("COLUMN SHOULD BE UNUSED"),
-      fct::make_field<"warning_type_">(warning()));
+      rfl::make_field<"message_">(_message),
+      rfl::make_field<"label_", std::string>("COLUMN SHOULD BE UNUSED"),
+      rfl::make_field<"warning_type_">(warning()));
 }
 
 /// Standard header for any improvements to the data model.
 communication::Warning data_model_can_be_improved(const std::string& _message) {
   return communication::Warning(
-      fct::make_field<"message_">(_message),
-      fct::make_field<"label_", std::string>("DATA MODEL CAN BE IMPROVED"),
-      fct::make_field<"warning_type_">(warning()));
+      rfl::make_field<"message_">(_message),
+      rfl::make_field<"label_", std::string>("DATA MODEL CAN BE IMPROVED"),
+      rfl::make_field<"warning_type_">(warning()));
 }
 
 /// Checks whether ts1 lies between ts2 and upper.
@@ -225,17 +225,17 @@ bool is_in_range(const Float ts1, const Float ts2, const Float upper) {
 /// Standard header for when some join keys where not found.
 communication::Warning join_keys_not_found(const std::string& _message) {
   return communication::Warning(
-      fct::make_field<"message_">(_message),
-      fct::make_field<"label_", std::string>("FOREIGN KEYS NOT FOUND"),
-      fct::make_field<"warning_type_">(info()));
+      rfl::make_field<"message_">(_message),
+      rfl::make_field<"label_", std::string>("FOREIGN KEYS NOT FOUND"),
+      rfl::make_field<"warning_type_">(info()));
 }
 
 /// Standard header for something that might take long.
 communication::Warning might_take_long(const std::string& _message) {
   return communication::Warning(
-      fct::make_field<"message_">(_message),
-      fct::make_field<"label_", std::string>("MIGHT TAKE LONG"),
-      fct::make_field<"warning_type_">(info()));
+      rfl::make_field<"message_">(_message),
+      rfl::make_field<"label_", std::string>("MIGHT TAKE LONG"),
+      rfl::make_field<"warning_type_">(info()));
 }
 
 /// Removes any macros from a colname.

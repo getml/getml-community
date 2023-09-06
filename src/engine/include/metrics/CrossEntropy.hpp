@@ -10,17 +10,17 @@
 
 #include <cstdint>
 
-#include "fct/Field.hpp"
 #include "metrics/Features.hpp"
 #include "metrics/Float.hpp"
 #include "metrics/MetricImpl.hpp"
 #include "multithreading/multithreading.hpp"
+#include "rfl/Field.hpp"
 
 namespace metrics {
 
 class CrossEntropy {
  public:
-  using ResultType = fct::Field<"cross_entropy_", std::vector<Float>>;
+  using ResultType = rfl::Field<"cross_entropy_", std::vector<Float>>;
 
  public:
   CrossEntropy() {}

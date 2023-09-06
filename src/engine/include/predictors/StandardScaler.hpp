@@ -11,8 +11,6 @@
 #include <memory>
 #include <vector>
 
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
 #include "json/json.hpp"
 #include "predictors/CSRMatrix.hpp"
 #include "predictors/Float.hpp"
@@ -20,6 +18,8 @@
 #include "predictors/Int.hpp"
 #include "predictors/IntFeature.hpp"
 #include "predictors/PredictorImpl.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
 
 namespace predictors {
 
@@ -27,12 +27,12 @@ namespace predictors {
 class StandardScaler {
  public:
   /// Means of the individual columns.
-  using f_mean = fct::Field<"mean_", std::vector<Float>>;
+  using f_mean = rfl::Field<"mean_", std::vector<Float>>;
 
   /// Standard deviations of the individual columns.
-  using f_std = fct::Field<"std_", std::vector<Float>>;
+  using f_std = rfl::Field<"std_", std::vector<Float>>;
 
-  using NamedTupleType = fct::NamedTuple<f_mean, f_std>;
+  using NamedTupleType = rfl::NamedTuple<f_mean, f_std>;
 
  public:
   StandardScaler() : val_(f_mean({}) * f_std({})){};

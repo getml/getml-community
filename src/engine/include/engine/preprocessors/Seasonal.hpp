@@ -19,12 +19,12 @@
 #include "engine/Int.hpp"
 #include "engine/preprocessors/Params.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
-#include "fct/Field.hpp"
-#include "fct/Literal.hpp"
-#include "fct/NamedTuple.hpp"
-#include "fct/Ref.hpp"
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/StringIterator.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/Literal.hpp"
+#include "rfl/NamedTuple.hpp"
+#include "rfl/Ref.hpp"
 #include "strings/strings.hpp"
 
 namespace engine {
@@ -37,22 +37,22 @@ class Seasonal : public Preprocessor {
   using SeasonalOp = typename commands::Preprocessor::SeasonalOp;
 
   using f_hour =
-      fct::Field<"hour_", std::vector<fct::Ref<helpers::ColumnDescription>>>;
+      rfl::Field<"hour_", std::vector<rfl::Ref<helpers::ColumnDescription>>>;
 
   using f_minute =
-      fct::Field<"minute_", std::vector<fct::Ref<helpers::ColumnDescription>>>;
+      rfl::Field<"minute_", std::vector<rfl::Ref<helpers::ColumnDescription>>>;
 
   using f_month =
-      fct::Field<"month_", std::vector<fct::Ref<helpers::ColumnDescription>>>;
+      rfl::Field<"month_", std::vector<rfl::Ref<helpers::ColumnDescription>>>;
 
   using f_weekday =
-      fct::Field<"weekday_", std::vector<fct::Ref<helpers::ColumnDescription>>>;
+      rfl::Field<"weekday_", std::vector<rfl::Ref<helpers::ColumnDescription>>>;
 
   using f_year =
-      fct::Field<"year_", std::vector<fct::Ref<helpers::ColumnDescription>>>;
+      rfl::Field<"year_", std::vector<rfl::Ref<helpers::ColumnDescription>>>;
 
   using NamedTupleType =
-      fct::NamedTuple<f_hour, f_minute, f_month, f_weekday, f_year>;
+      rfl::NamedTuple<f_hour, f_minute, f_month, f_weekday, f_year>;
 
  private:
   static constexpr bool ADD_ZERO = true;
@@ -91,10 +91,10 @@ class Seasonal : public Preprocessor {
 
  public:
   /// Creates a deep copy.
-  fct::Ref<Preprocessor> clone(
+  rfl::Ref<Preprocessor> clone(
       const std::optional<std::vector<commands::Fingerprint>>& _dependencies =
           std::nullopt) const final {
-    const auto c = fct::Ref<Seasonal>::make(*this);
+    const auto c = rfl::Ref<Seasonal>::make(*this);
     if (_dependencies) {
       c->dependencies_ = *_dependencies;
     }
@@ -190,7 +190,7 @@ class Seasonal : public Preprocessor {
 
  private:
   /// Whether a particular feature is enabled.
-  template <fct::StringLiteral _field_name>
+  template <rfl::internal::StringLiteral _field_name>
   bool is_disabled() const {
     return op_.get<_field_name>() && *op_.get<_field_name>();
   }
@@ -233,22 +233,22 @@ class Seasonal : public Preprocessor {
   std::vector<commands::Fingerprint> dependencies_;
 
   /// List of all columns to which the hour transformation applies.
-  std::vector<fct::Ref<helpers::ColumnDescription>> hour_;
+  std::vector<rfl::Ref<helpers::ColumnDescription>> hour_;
 
   /// List of all columns to which the minute transformation applies.
-  std::vector<fct::Ref<helpers::ColumnDescription>> minute_;
+  std::vector<rfl::Ref<helpers::ColumnDescription>> minute_;
 
   /// List of all columns to which the month transformation applies.
-  std::vector<fct::Ref<helpers::ColumnDescription>> month_;
+  std::vector<rfl::Ref<helpers::ColumnDescription>> month_;
 
   /// The underlying hyperparameters.
   SeasonalOp op_;
 
   /// List of all columns to which the weekday transformation applies.
-  std::vector<fct::Ref<helpers::ColumnDescription>> weekday_;
+  std::vector<rfl::Ref<helpers::ColumnDescription>> weekday_;
 
   /// List of all columns to which the year transformation applies.
-  std::vector<fct::Ref<helpers::ColumnDescription>> year_;
+  std::vector<rfl::Ref<helpers::ColumnDescription>> year_;
 };
 
 }  // namespace preprocessors

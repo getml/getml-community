@@ -7,38 +7,38 @@
 
 #include "predictors/PredictorParser.hpp"
 
-#include "fct/visit.hpp"
 #include "predictors/LinearRegression.hpp"
 #include "predictors/LogisticRegression.hpp"
 #include "predictors/XGBoostPredictor.hpp"
+#include "rfl/visit.hpp"
 
 namespace predictors {
 
-fct::Ref<Predictor> PredictorParser::parse(
+rfl::Ref<Predictor> PredictorParser::parse(
     const PredictorHyperparams& _hyperparams,
-    const fct::Ref<const PredictorImpl>& _impl,
+    const rfl::Ref<const PredictorImpl>& _impl,
     const std::vector<commands::Fingerprint>& _dependencies) {
   const auto handle = [&_impl, &_dependencies](
-                          const auto& _hyperparams) -> fct::Ref<Predictor> {
+                          const auto& _hyperparams) -> rfl::Ref<Predictor> {
     using Type = std::decay_t<decltype(_hyperparams)>;
 
     if constexpr (std::is_same<Type, LinearRegressionHyperparams>()) {
-      return fct::Ref<LinearRegression>::make(_hyperparams, _impl,
+      return rfl::Ref<LinearRegression>::make(_hyperparams, _impl,
                                               _dependencies);
     }
 
     if constexpr (std::is_same<Type, LogisticRegressionHyperparams>()) {
-      return fct::Ref<LogisticRegression>::make(_hyperparams, _impl,
+      return rfl::Ref<LogisticRegression>::make(_hyperparams, _impl,
                                                 _dependencies);
     }
 
     if constexpr (std::is_same<Type, XGBoostHyperparams>()) {
-      return fct::Ref<XGBoostPredictor>::make(_hyperparams, _impl,
+      return rfl::Ref<XGBoostPredictor>::make(_hyperparams, _impl,
                                               _dependencies);
     }
   };
 
-  return fct::visit(handle, _hyperparams);
+  return rfl::visit(handle, _hyperparams);
 }
 
 }  // namespace predictors

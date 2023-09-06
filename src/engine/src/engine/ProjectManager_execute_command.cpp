@@ -6,7 +6,7 @@
 //
 
 #include "engine/handlers/ProjectManager.hpp"
-#include "fct/always_false.hpp"
+#include "rfl/always_false.hpp"
 
 namespace engine {
 namespace handlers {
@@ -80,11 +80,11 @@ void ProjectManager::execute_command(const Command& _command,
     } else if constexpr (std::is_same<Type, typename Command::TempDirOp>()) {
       temp_dir(_cmd, _socket);
     } else {
-      static_assert(fct::always_false_v<Type>, "Not all cases were covered.");
+      static_assert(rfl::always_false_v<Type>, "Not all cases were covered.");
     }
   };
 
-  fct::visit(handle, _command.val_);
+  rfl::visit(handle, _command.val_);
 }
 
 }  // namespace handlers

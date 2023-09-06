@@ -14,12 +14,12 @@
 #include <vector>
 
 #include "debug/debug.hpp"
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
 #include "metrics/Features.hpp"
 #include "metrics/Float.hpp"
 #include "metrics/Int.hpp"
 #include "metrics/Scores.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
 #include "strings/strings.hpp"
 
 namespace metrics {
@@ -33,17 +33,17 @@ class Summarizer {
 
   /// The data needed to display the feature plots.
   using FeaturePlots =
-      fct::NamedTuple<f_average_targets, f_feature_densities, f_labels>;
+      rfl::NamedTuple<f_average_targets, f_feature_densities, f_labels>;
 
   /// The data returned by the different functions must have a common format.
   using PlotWithLabels =
-      fct::NamedTuple<fct::Field<"labels_", std::vector<std::string>>,
-                      fct::Field<"data_", std::vector<Float>>>;
+      rfl::NamedTuple<rfl::Field<"labels_", std::vector<std::string>>,
+                      rfl::Field<"data_", std::vector<Float>>>;
 
   /// The data returned by the different functions must have a common format.
-  using PlotWithFrequencies = fct::NamedTuple<
-      fct::Field<"accumulated_frequencies_", std::vector<Float>>,
-      fct::Field<"data_", std::vector<Float>>>;
+  using PlotWithFrequencies = rfl::NamedTuple<
+      rfl::Field<"accumulated_frequencies_", std::vector<Float>>,
+      rfl::Field<"data_", std::vector<Float>>>;
 
  public:
   /// Calculates the plots needed to analyze a categorical column.

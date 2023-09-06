@@ -477,7 +477,7 @@ typename Summarizer::PlotWithLabels Summarizer::make_object(
     }
   }
 
-  return fct::make_field<"labels_">(labels) * fct::make_field<"data_">(data);
+  return rfl::make_field<"labels_">(labels) * rfl::make_field<"data_">(data);
 }
 
 // ----------------------------------------------------------------------------
@@ -555,8 +555,8 @@ typename Summarizer::PlotWithFrequencies Summarizer::make_object(
     }
   }
 
-  return fct::make_field<"accumulated_frequencies_">(labels) *
-         fct::make_field<"data_">(data);
+  return rfl::make_field<"accumulated_frequencies_">(labels) *
+         rfl::make_field<"data_">(data);
 }
 
 // ----------------------------------------------------------------------------

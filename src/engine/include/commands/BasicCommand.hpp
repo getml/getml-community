@@ -8,19 +8,19 @@
 #ifndef COMMANDS_BASICCOMMAND_HPP_
 #define COMMANDS_BASICCOMMAND_HPP_
 
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
 
 namespace commands {
 
 /// Infers the type of the command.
-using f_name = fct::Field<"name_", std::string>;
+using f_name = rfl::Field<"name_", std::string>;
 
 /// The type of the command - so we can correctly identify this.
-using f_type = fct::Field<"type_", std::string>;
+using f_type = rfl::Field<"type_", std::string>;
 
 /// The basis for all other commands.
-using BasicCommand = fct::NamedTuple<f_name, f_type>;
+using BasicCommand = rfl::NamedTuple<f_name, f_type>;
 
 }  // namespace commands
 

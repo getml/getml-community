@@ -15,42 +15,42 @@
 #include "commands/BooleanColumnView.hpp"
 #include "commands/FloatColumnOrFloatColumnView.hpp"
 #include "commands/StringColumnOrStringColumnView.hpp"
-#include "fct/Field.hpp"
-#include "fct/Literal.hpp"
-#include "fct/NamedTuple.hpp"
-#include "fct/Ref.hpp"
-#include "fct/TaggedUnion.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/Literal.hpp"
+#include "rfl/NamedTuple.hpp"
+#include "rfl/Ref.hpp"
+#include "rfl/TaggedUnion.hpp"
 
 namespace commands {
 
 class DataFrameOrView {
  public:
   /// Operation to add a new column.
-  using AddedOp = fct::NamedTuple<
-      fct::Field<"col_", std::variant<FloatColumnOrFloatColumnView,
+  using AddedOp = rfl::NamedTuple<
+      rfl::Field<"col_", std::variant<FloatColumnOrFloatColumnView,
                                       StringColumnOrStringColumnView>>,
-      fct::Field<"name_", std::string>, fct::Field<"role_", std::string>,
-      fct::Field<"subroles_", std::vector<std::string>>,
-      fct::Field<"unit_", std::string>>;
+      rfl::Field<"name_", std::string>, rfl::Field<"role_", std::string>,
+      rfl::Field<"subroles_", std::vector<std::string>>,
+      rfl::Field<"unit_", std::string>>;
 
   /// Operation to retrieve a base data frame.
   using DataFrameOp =
-      fct::NamedTuple<fct::Field<"type_", fct::Literal<"DataFrame">>,
-                      fct::Field<"name_", std::string>>;
+      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"DataFrame">>,
+                      rfl::Field<"name_", std::string>>;
 
   /// Operation to parse a view
-  using ViewOp = fct::NamedTuple<
-      fct::Field<"type_", fct::Literal<"View">>,
-      fct::Field<"name_", std::string>,
-      fct::Field<"base_", fct::Ref<DataFrameOrView>>,
-      fct::Field<"added_", std::optional<AddedOp>>,
-      fct::Field<"dropped_", std::optional<std::vector<std::string>>>,
-      fct::Field<"last_change_", std::string>,
-      fct::Field<"subselection_",
+  using ViewOp = rfl::NamedTuple<
+      rfl::Field<"type_", rfl::Literal<"View">>,
+      rfl::Field<"name_", std::string>,
+      rfl::Field<"base_", rfl::Ref<DataFrameOrView>>,
+      rfl::Field<"added_", std::optional<AddedOp>>,
+      rfl::Field<"dropped_", std::optional<std::vector<std::string>>>,
+      rfl::Field<"last_change_", std::string>,
+      rfl::Field<"subselection_",
                  std::optional<std::variant<BooleanColumnView,
                                             FloatColumnOrFloatColumnView>>>>;
 
-  using NamedTupleType = fct::TaggedUnion<"type_", DataFrameOp, ViewOp>;
+  using NamedTupleType = rfl::TaggedUnion<"type_", DataFrameOp, ViewOp>;
 
   /// Used to break the recursive definition.
   NamedTupleType val_;

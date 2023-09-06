@@ -14,8 +14,8 @@
 
 #include "database/Iterator.hpp"
 #include "database/TableContent.hpp"
-#include "fct/Ref.hpp"
 #include "io/io.hpp"
+#include "rfl/Ref.hpp"
 
 namespace database {
 
@@ -65,12 +65,12 @@ class Connector {
                     io::Reader* _reader) = 0;
 
   /// Returns a shared_ptr containing the corresponding iterator.
-  virtual fct::Ref<Iterator> select(const std::vector<std::string>& _colnames,
+  virtual rfl::Ref<Iterator> select(const std::vector<std::string>& _colnames,
                                     const std::string& _tname,
                                     const std::string& _where) = 0;
 
   /// Returns a shared_ptr containing an iterator for the SQL query.
-  virtual fct::Ref<Iterator> select(const std::string& _sql) = 0;
+  virtual rfl::Ref<Iterator> select(const std::string& _sql) = 0;
 
   /// Returns the time formats used.
   virtual const std::vector<std::string>& time_formats() const = 0;

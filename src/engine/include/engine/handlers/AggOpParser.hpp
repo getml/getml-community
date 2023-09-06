@@ -30,9 +30,9 @@ class AggOpParser {
 
  public:
   AggOpParser(
-      const fct::Ref<const containers::Encoding>& _categories,
-      const fct::Ref<const containers::Encoding>& _join_keys_encoding,
-      const fct::Ref<const std::map<std::string, containers::DataFrame>>&
+      const rfl::Ref<const containers::Encoding>& _categories,
+      const rfl::Ref<const containers::Encoding>& _join_keys_encoding,
+      const rfl::Ref<const std::map<std::string, containers::DataFrame>>&
           _data_frames)
       : categories_(_categories),
         data_frames_(_data_frames),
@@ -53,14 +53,14 @@ class AggOpParser {
 
  private:
   /// Encodes the categories used.
-  const fct::Ref<const containers::Encoding> categories_;
+  const rfl::Ref<const containers::Encoding> categories_;
 
   /// The DataFrames this is based on.
-  const fct::Ref<const std::map<std::string, containers::DataFrame>>
+  const rfl::Ref<const std::map<std::string, containers::DataFrame>>
       data_frames_;
 
   /// Encodes the join keys used.
-  const fct::Ref<const containers::Encoding> join_keys_encoding_;
+  const rfl::Ref<const containers::Encoding> join_keys_encoding_;
 };
 
 }  // namespace handlers

@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef MULTIREL_MULTITHREADING_READLOCK_HPP_
 #define MULTIREL_MULTITHREADING_READLOCK_HPP_
@@ -16,7 +16,7 @@
 // ----------------------------------------------------------------------------
 
 #include "debug/debug.hpp"
-#include "fct/Ref.hpp"
+#include "rfl/Ref.hpp"
 
 // ----------------------------------------------------------------------------
 
@@ -29,13 +29,13 @@ namespace multithreading {
 class ReadLock {
  public:
   /// ReadLock without a timeout.
-  explicit ReadLock(const fct::Ref<ReadWriteLock>& _lock)
+  explicit ReadLock(const rfl::Ref<ReadWriteLock>& _lock)
       : lock_(_lock), released_(false) {
     lock_->read_lock();
   }
 
   /// Read lock with timeout.
-  ReadLock(const fct::Ref<ReadWriteLock>& _lock,
+  ReadLock(const rfl::Ref<ReadWriteLock>& _lock,
            const std::chrono::milliseconds _duration)
       : lock_(_lock), released_(false) {
     lock_->read_lock(_duration);
@@ -65,7 +65,7 @@ class ReadLock {
 
  private:
   /// Lock to the ReadLock.
-  const fct::Ref<ReadWriteLock> lock_;
+  const rfl::Ref<ReadWriteLock> lock_;
 
   /// Whether the Acquirer has been released.
   bool released_;

@@ -17,7 +17,7 @@ namespace database {
 
 struct DatabaseSniffer {
   /// Returns the datatype associate
-  static std::string sniff(const fct::Ref<const Connector>& _conn,
+  static std::string sniff(const rfl::Ref<const Connector>& _conn,
                            const std::string& _dialect,
                            const std::string& _source_table_name,
                            const std::string& _target_table_name);

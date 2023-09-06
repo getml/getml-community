@@ -16,10 +16,10 @@
 #include <utility>
 #include <vector>
 
-#include "fct/Ref.hpp"
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/Schema.hpp"
 #include "helpers/enums/Aggregation.hpp"
+#include "rfl/Ref.hpp"
 #include "transpilation/FeatureTableParams.hpp"
 #include "transpilation/HumanReadableTrimming.hpp"
 #include "transpilation/SQLDialectGenerator.hpp"
@@ -59,8 +59,8 @@ class HumanReadableSQLGenerator : public SQLDialectGenerator {
   std::string schema() const final { return ""; }
 
   /// Only needed for the CategoryTrimmer preprocesser.
-  fct::Ref<TrimmingGenerator> trimming() const final {
-    return fct::Ref<HumanReadableTrimming>::make(this);
+  rfl::Ref<TrimmingGenerator> trimming() const final {
+    return rfl::Ref<HumanReadableTrimming>::make(this);
   };
 
  public:

@@ -16,22 +16,22 @@
 #include "commands/PipelineCommand.hpp"
 #include "commands/ProjectCommand.hpp"
 #include "commands/ViewCommand.hpp"
-#include "fct/Field.hpp"
-#include "fct/Literal.hpp"
-#include "fct/NamedTuple.hpp"
 #include "json/json.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/Literal.hpp"
+#include "rfl/NamedTuple.hpp"
 
 namespace commands {
 
 struct Command {
   using IsAliveOp =
-      fct::NamedTuple<fct::Field<"type_", fct::Literal<"is_alive">>>;
+      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"is_alive">>>;
 
   using MonitorURLOp =
-      fct::NamedTuple<fct::Field<"type_", fct::Literal<"monitor_url">>>;
+      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"monitor_url">>>;
 
   using ShutdownOp =
-      fct::NamedTuple<fct::Field<"type_", fct::Literal<"shutdown">>>;
+      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"shutdown">>>;
 
   using NamedTupleType =
       std::variant<ColumnCommand, DatabaseCommand, DataFrameCommand,

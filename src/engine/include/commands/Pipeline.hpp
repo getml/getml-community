@@ -16,23 +16,23 @@
 #include "commands/Float.hpp"
 #include "commands/Predictor.hpp"
 #include "commands/Preprocessor.hpp"
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
-#include "fct/Ref.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
+#include "rfl/Ref.hpp"
 
 namespace commands {
 
-using Pipeline = fct::NamedTuple<
-    fct::Field<"data_model_", fct::Ref<const DataModel>>,
-    fct::Field<"feature_learners_", std::vector<FeatureLearner>>,
-    fct::Field<"feature_selectors_", std::vector<Predictor>>,
-    fct::Field<"include_categorical_", bool>, fct::Field<"name_", std::string>,
-    fct::Field<"peripheral_", fct::Ref<const std::vector<DataModel>>>,
-    fct::Field<"predictors_", std::vector<Predictor>>,
-    fct::Field<"preprocessors_", std::vector<Preprocessor>>,
-    fct::Field<"share_selected_features_", Float>,
-    fct::Field<"tags_", std::vector<std::string>>,
-    fct::Field<"type_", fct::Literal<"Pipeline">>>;
+using Pipeline = rfl::NamedTuple<
+    rfl::Field<"data_model_", rfl::Ref<const DataModel>>,
+    rfl::Field<"feature_learners_", std::vector<FeatureLearner>>,
+    rfl::Field<"feature_selectors_", std::vector<Predictor>>,
+    rfl::Field<"include_categorical_", bool>, rfl::Field<"name_", std::string>,
+    rfl::Field<"peripheral_", rfl::Ref<const std::vector<DataModel>>>,
+    rfl::Field<"predictors_", std::vector<Predictor>>,
+    rfl::Field<"preprocessors_", std::vector<Preprocessor>>,
+    rfl::Field<"share_selected_features_", Float>,
+    rfl::Field<"tags_", std::vector<std::string>>,
+    rfl::Field<"type_", rfl::Literal<"Pipeline">>>;
 
 }  // namespace commands
 

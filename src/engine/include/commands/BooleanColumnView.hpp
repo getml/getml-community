@@ -13,11 +13,11 @@
 #include "commands/Float.hpp"
 #include "commands/FloatColumnOrFloatColumnView.hpp"
 #include "commands/StringColumnOrStringColumnView.hpp"
-#include "fct/Field.hpp"
-#include "fct/Literal.hpp"
-#include "fct/NamedTuple.hpp"
-#include "fct/Ref.hpp"
-#include "fct/TaggedUnion.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/Literal.hpp"
+#include "rfl/NamedTuple.hpp"
+#include "rfl/Ref.hpp"
+#include "rfl/TaggedUnion.hpp"
 
 namespace commands {
 
@@ -28,83 +28,83 @@ class BooleanColumnView {
  public:
   /// The possible operators.
   using BooleanBinaryOpLiteral =
-      fct::Literal<"and", "equal_to", "not_equal_to", "or", "xor">;
+      rfl::Literal<"and", "equal_to", "not_equal_to", "or", "xor">;
 
   /// The command used for boolean binary operations.
   using BooleanBinaryOp =
-      fct::NamedTuple<fct::Field<"operator_", BooleanBinaryOpLiteral>,
-                      fct::Field<"operand1_", fct::Ref<BooleanColumnView>>,
-                      fct::Field<"operand2_", fct::Ref<BooleanColumnView>>,
-                      fct::Field<"type_", fct::Literal<"BooleanColumnView">>>;
+      rfl::NamedTuple<rfl::Field<"operator_", BooleanBinaryOpLiteral>,
+                      rfl::Field<"operand1_", rfl::Ref<BooleanColumnView>>,
+                      rfl::Field<"operand2_", rfl::Ref<BooleanColumnView>>,
+                      rfl::Field<"type_", rfl::Literal<"BooleanColumnView">>>;
 
   /// The possible operators.
-  using BooleanConstLiteral = fct::Literal<"const">;
+  using BooleanConstLiteral = rfl::Literal<"const">;
 
   /// The command used for boolean binary operations.
   using BooleanConstOp =
-      fct::NamedTuple<fct::Field<"operator_", BooleanConstLiteral>,
-                      fct::Field<"value_", bool>,
-                      fct::Field<"type_", fct::Literal<"BooleanColumnView">>>;
+      rfl::NamedTuple<rfl::Field<"operator_", BooleanConstLiteral>,
+                      rfl::Field<"value_", bool>,
+                      rfl::Field<"type_", rfl::Literal<"BooleanColumnView">>>;
 
   /// The command used for boolean binary operations.
   using BooleanNotOp =
-      fct::NamedTuple<fct::Field<"operator_", fct::Literal<"not">>,
-                      fct::Field<"operand1_", fct::Ref<BooleanColumnView>>,
-                      fct::Field<"type_", fct::Literal<"BooleanColumnView">>>;
+      rfl::NamedTuple<rfl::Field<"operator_", rfl::Literal<"not">>,
+                      rfl::Field<"operand1_", rfl::Ref<BooleanColumnView>>,
+                      rfl::Field<"type_", rfl::Literal<"BooleanColumnView">>>;
 
   /// Contains comparisons between two numerical columns .
   using BooleanNumComparisonOpLiteral =
-      fct::Literal<"equal_to", "greater", "greater_equal", "less", "less_equal",
+      rfl::Literal<"equal_to", "greater", "greater_equal", "less", "less_equal",
                    "not_equal_to">;
 
   /// Contains comparisons between two numerical columns .
-  using BooleanNumComparisonOp = fct::NamedTuple<
-      fct::Field<"operator_", BooleanNumComparisonOpLiteral>,
-      fct::Field<"operand1_", fct::Ref<FloatColumnOrFloatColumnView>>,
-      fct::Field<"operand2_", fct::Ref<FloatColumnOrFloatColumnView>>,
-      fct::Field<"type_", fct::Literal<"BooleanColumnView">>>;
+  using BooleanNumComparisonOp = rfl::NamedTuple<
+      rfl::Field<"operator_", BooleanNumComparisonOpLiteral>,
+      rfl::Field<"operand1_", rfl::Ref<FloatColumnOrFloatColumnView>>,
+      rfl::Field<"operand2_", rfl::Ref<FloatColumnOrFloatColumnView>>,
+      rfl::Field<"type_", rfl::Literal<"BooleanColumnView">>>;
 
   /// Contains comparisons between two string columns .
   using BooleanStrComparisonOpLiteral =
-      fct::Literal<"contains", "equal_to", "not_equal_to">;
+      rfl::Literal<"contains", "equal_to", "not_equal_to">;
 
   /// Contains comparisons between two numerical columns .
-  using BooleanStrComparisonOp = fct::NamedTuple<
-      fct::Field<"operator_", BooleanStrComparisonOpLiteral>,
-      fct::Field<"operand1_", fct::Ref<StringColumnOrStringColumnView>>,
-      fct::Field<"operand2_", fct::Ref<StringColumnOrStringColumnView>>,
-      fct::Field<"type_", fct::Literal<"BooleanColumnView">>>;
+  using BooleanStrComparisonOp = rfl::NamedTuple<
+      rfl::Field<"operator_", BooleanStrComparisonOpLiteral>,
+      rfl::Field<"operand1_", rfl::Ref<StringColumnOrStringColumnView>>,
+      rfl::Field<"operand2_", rfl::Ref<StringColumnOrStringColumnView>>,
+      rfl::Field<"type_", rfl::Literal<"BooleanColumnView">>>;
 
   /// The command used for boolean subselection operations.
-  using BooleanSubselectionOp = fct::NamedTuple<
-      fct::Field<"operator_", fct::Literal<"subselection">>,
-      fct::Field<"operand1_", fct::Ref<BooleanColumnView>>,
-      fct::Field<"operand2_",
-                 std::variant<fct::Ref<BooleanColumnView>,
-                              fct::Ref<FloatColumnOrFloatColumnView>>>,
-      fct::Field<"type_", fct::Literal<"BooleanColumnView">>>;
+  using BooleanSubselectionOp = rfl::NamedTuple<
+      rfl::Field<"operator_", rfl::Literal<"subselection">>,
+      rfl::Field<"operand1_", rfl::Ref<BooleanColumnView>>,
+      rfl::Field<"operand2_",
+                 std::variant<rfl::Ref<BooleanColumnView>,
+                              rfl::Ref<FloatColumnOrFloatColumnView>>>,
+      rfl::Field<"type_", rfl::Literal<"BooleanColumnView">>>;
 
   /// The command used to check whether a column is infinite.
-  using BooleanIsInfOp = fct::NamedTuple<
-      fct::Field<"operator_", fct::Literal<"is_inf">>,
-      fct::Field<"operand1_", fct::Ref<FloatColumnOrFloatColumnView>>,
-      fct::Field<"type_", fct::Literal<"BooleanColumnView">>>;
+  using BooleanIsInfOp = rfl::NamedTuple<
+      rfl::Field<"operator_", rfl::Literal<"is_inf">>,
+      rfl::Field<"operand1_", rfl::Ref<FloatColumnOrFloatColumnView>>,
+      rfl::Field<"type_", rfl::Literal<"BooleanColumnView">>>;
 
   /// The command used to check whether a column is NaN or NULL.
-  using BooleanIsNullOp = fct::NamedTuple<
-      fct::Field<"operator_", fct::Literal<"is_nan", "is_null">>,
-      fct::Field<"operand1_",
-                 std::variant<fct::Ref<FloatColumnOrFloatColumnView>,
-                              fct::Ref<StringColumnOrStringColumnView>>>,
-      fct::Field<"type_", fct::Literal<"BooleanColumnView">>>;
+  using BooleanIsNullOp = rfl::NamedTuple<
+      rfl::Field<"operator_", rfl::Literal<"is_nan", "is_null">>,
+      rfl::Field<"operand1_",
+                 std::variant<rfl::Ref<FloatColumnOrFloatColumnView>,
+                              rfl::Ref<StringColumnOrStringColumnView>>>,
+      rfl::Field<"type_", rfl::Literal<"BooleanColumnView">>>;
 
   /// The command used to update a boolean column.
   using BooleanUpdateOp =
-      fct::NamedTuple<fct::Field<"operator_", fct::Literal<"update">>,
-                      fct::Field<"operand1_", fct::Ref<BooleanColumnView>>,
-                      fct::Field<"operand2_", fct::Ref<BooleanColumnView>>,
-                      fct::Field<"condition_", fct::Ref<BooleanColumnView>>,
-                      fct::Field<"type_", fct::Literal<"BooleanColumnView">>>;
+      rfl::NamedTuple<rfl::Field<"operator_", rfl::Literal<"update">>,
+                      rfl::Field<"operand1_", rfl::Ref<BooleanColumnView>>,
+                      rfl::Field<"operand2_", rfl::Ref<BooleanColumnView>>,
+                      rfl::Field<"condition_", rfl::Ref<BooleanColumnView>>,
+                      rfl::Field<"type_", rfl::Literal<"BooleanColumnView">>>;
 
   /// Defines a boolean column view.
   using NamedTupleType =

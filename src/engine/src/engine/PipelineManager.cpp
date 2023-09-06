@@ -20,9 +20,9 @@
 #include "engine/pipelines/load_fitted.hpp"
 #include "engine/pipelines/pipelines.hpp"
 #include "engine/pipelines/to_sql.hpp"
-#include "fct/Field.hpp"
-#include "fct/always_false.hpp"
-#include "fct/make_named_tuple.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/always_false.hpp"
+#include "rfl/make_named_tuple.hpp"
 #include "transpilation/TranspilationParams.hpp"
 #include "transpilation/transpilation.hpp"
 
@@ -188,9 +188,9 @@ void PipelineManager::check(const typename Command::CheckOp& _cmd,
   const auto pool = params_.options_.make_pool();
 
   const auto local_categories =
-      fct::Ref<containers::Encoding>::make(pool, params_.categories_.ptr());
+      rfl::Ref<containers::Encoding>::make(pool, params_.categories_.ptr());
 
-  const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
+  const auto local_join_keys_encoding = rfl::Ref<containers::Encoding>::make(
       pool, params_.join_keys_encoding_.ptr());
 
   const commands::DataFramesOrViews cmd = _cmd;
@@ -201,14 +201,14 @@ void PipelineManager::check(const typename Command::CheckOp& _cmd,
           .parse_all(cmd);
 
   const auto params = pipelines::CheckParams(
-      fct::make_field<"categories_">(local_categories),
-      fct::make_field<"cmd_", commands::DataFramesOrViews>(_cmd),
-      fct::make_field<"logger_">(params_.logger_.ptr()),
-      fct::make_field<"peripheral_dfs_">(peripheral_dfs),
-      fct::make_field<"population_df_">(population_df),
-      fct::make_field<"preprocessor_tracker_">(params_.preprocessor_tracker_),
-      fct::make_field<"warning_tracker_">(params_.warning_tracker_),
-      fct::make_field<"socket_">(_socket));
+      rfl::make_field<"categories_">(local_categories),
+      rfl::make_field<"cmd_", commands::DataFramesOrViews>(_cmd),
+      rfl::make_field<"logger_">(params_.logger_.ptr()),
+      rfl::make_field<"peripheral_dfs_">(peripheral_dfs),
+      rfl::make_field<"population_df_">(population_df),
+      rfl::make_field<"preprocessor_tracker_">(params_.preprocessor_tracker_),
+      rfl::make_field<"warning_tracker_">(params_.warning_tracker_),
+      rfl::make_field<"socket_">(_socket));
 
   pipelines::check::check(pipeline, params);
 
@@ -223,7 +223,7 @@ void PipelineManager::check(const typename Command::CheckOp& _cmd,
 
 void PipelineManager::check_user_privileges(
     const pipelines::Pipeline& _pipeline, const std::string& _name,
-    const fct::NamedTuple<fct::Field<"http_request_", bool>>& _cmd) const {
+    const rfl::NamedTuple<rfl::Field<"http_request_", bool>>& _cmd) const {
   if (_cmd.get<"http_request_">()) {
     if (!_pipeline.allow_http()) {
       throw std::runtime_error(
@@ -269,8 +269,8 @@ void PipelineManager::column_importances(
   }
 
   const auto response =
-      fct::make_field<"column_descriptions_">(scores.column_descriptions()) *
-      fct::make_field<"column_importances_">(importances);
+      rfl::make_field<"column_descriptions_">(scores.column_descriptions()) *
+      rfl::make_field<"column_importances_">(importances);
 
   communication::Sender::send_string("Success!", _socket);
 
@@ -315,8 +315,8 @@ void PipelineManager::feature_correlations(
   }
 
   const auto response =
-      fct::make_field<"feature_names_">(scores.feature_names()) *
-      fct::make_field<"feature_correlations_">(correlations);
+      rfl::make_field<"feature_names_">(scores.feature_names()) *
+      rfl::make_field<"feature_correlations_">(correlations);
 
   communication::Sender::send_string("Success!", _socket);
 
@@ -347,8 +347,8 @@ void PipelineManager::feature_importances(
   }
 
   const auto response =
-      fct::make_field<"feature_names_">(scores.feature_names()) *
-      fct::make_field<"feature_importances_">(importances);
+      rfl::make_field<"feature_names_">(scores.feature_names()) *
+      rfl::make_field<"feature_importances_">(importances);
 
   communication::Sender::send_string("Success!", _socket);
 
@@ -370,9 +370,9 @@ void PipelineManager::fit(const typename Command::FitOp& _cmd,
   const auto pool = params_.options_.make_pool();
 
   const auto local_categories =
-      fct::Ref<containers::Encoding>::make(pool, params_.categories_.ptr());
+      rfl::Ref<containers::Encoding>::make(pool, params_.categories_.ptr());
 
-  const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
+  const auto local_join_keys_encoding = rfl::Ref<containers::Encoding>::make(
       pool, params_.join_keys_encoding_.ptr());
 
   const auto [population_df, peripheral_dfs, validation_df] =
@@ -381,20 +381,20 @@ void PipelineManager::fit(const typename Command::FitOp& _cmd,
           .parse_all(_cmd);
 
   const auto params = pipelines::FitParams(
-      fct::make_field<"categories_">(local_categories),
-      fct::make_field<"cmd_", commands::DataFramesOrViews>(_cmd),
-      fct::make_field<"data_frames_">(data_frames()),
-      fct::make_field<"data_frame_tracker_">(data_frame_tracker()),
-      fct::make_field<"fe_tracker_">(params_.fe_tracker_),
-      fct::make_field<"fs_fingerprints_">(
-          fct::Ref<const std::vector<commands::Fingerprint>>::make()),
-      fct::make_field<"logger_">(params_.logger_.ptr()),
-      fct::make_field<"peripheral_dfs_">(peripheral_dfs),
-      fct::make_field<"population_df_">(population_df),
-      fct::make_field<"pred_tracker_">(params_.pred_tracker_),
-      fct::make_field<"preprocessor_tracker_">(params_.preprocessor_tracker_),
-      fct::make_field<"validation_df_">(validation_df),
-      fct::make_field<"socket_">(_socket));
+      rfl::make_field<"categories_">(local_categories),
+      rfl::make_field<"cmd_", commands::DataFramesOrViews>(_cmd),
+      rfl::make_field<"data_frames_">(data_frames()),
+      rfl::make_field<"data_frame_tracker_">(data_frame_tracker()),
+      rfl::make_field<"fe_tracker_">(params_.fe_tracker_),
+      rfl::make_field<"fs_fingerprints_">(
+          rfl::Ref<const std::vector<commands::Fingerprint>>::make()),
+      rfl::make_field<"logger_">(params_.logger_.ptr()),
+      rfl::make_field<"peripheral_dfs_">(peripheral_dfs),
+      rfl::make_field<"population_df_">(population_df),
+      rfl::make_field<"pred_tracker_">(params_.pred_tracker_),
+      rfl::make_field<"preprocessor_tracker_">(params_.preprocessor_tracker_),
+      rfl::make_field<"validation_df_">(validation_df),
+      rfl::make_field<"socket_">(_socket));
 
   const auto [fitted, scores] = pipelines::fit::fit(pipeline, params);
 
@@ -430,8 +430,8 @@ void PipelineManager::lift_curve(const typename Command::LiftCurveOp& _cmd,
   const auto& scores = pipeline.scores();
 
   const auto result =
-      fct::make_field<"proportion_">(scores.proportion(target_num)) *
-      fct::make_field<"lift_">(scores.lift(target_num));
+      rfl::make_field<"proportion_">(scores.proportion(target_num)) *
+      rfl::make_field<"lift_">(scores.lift(target_num));
 
   communication::Sender::send_string("Success!", _socket);
 
@@ -452,8 +452,8 @@ void PipelineManager::precision_recall_curve(
   const auto& scores = pipeline.scores();
 
   const auto result =
-      fct::make_field<"precision_">(scores.precision(target_num)) *
-      fct::make_field<"tpr_">(scores.tpr(target_num));
+      rfl::make_field<"precision_">(scores.precision(target_num)) *
+      rfl::make_field<"tpr_">(scores.tpr(target_num));
 
   communication::Sender::send_string("Success!", _socket);
 
@@ -504,7 +504,7 @@ void PipelineManager::refresh_all(const typename Command::RefreshAllOp& _cmd,
 
   communication::Sender::send_string("Success!", _socket);
 
-  const auto obj = fct::make_named_tuple(fct::make_field<"pipelines">(vec));
+  const auto obj = rfl::make_named_tuple(rfl::make_field<"pipelines">(vec));
 
   communication::Sender::send_string(json::to_json(obj), _socket);
 
@@ -518,18 +518,18 @@ void PipelineManager::refresh_all(const typename Command::RefreshAllOp& _cmd,
 typename PipelineManager::RefreshPipelineType PipelineManager::refresh_pipeline(
     const pipelines::Pipeline& _pipeline) const {
   const auto extract_roles = [](const helpers::Schema& _schema) -> RolesType {
-    return fct::make_field<"name">(_schema.name()) *
-           fct::make_field<"roles">(containers::Roles::from_schema(_schema));
+    return rfl::make_field<"name">(_schema.name()) *
+           rfl::make_field<"roles">(containers::Roles::from_schema(_schema));
   };
 
   const ScoresType scores =
       _pipeline.scores().metrics() *
-      fct::make_field<"set_used_">(_pipeline.scores().set_used()) *
-      fct::make_field<"history_">(_pipeline.scores().history());
+      rfl::make_field<"set_used_">(_pipeline.scores().set_used()) *
+      rfl::make_field<"history_">(_pipeline.scores().history());
 
   const RefreshUnfittedPipelineType base =
-      fct::make_field<"obj">(_pipeline.obj()) *
-      fct::make_field<"scores">(scores);
+      rfl::make_field<"obj">(_pipeline.obj()) *
+      rfl::make_field<"scores">(scores);
 
   if (!_pipeline.fitted()) {
     return base;
@@ -545,9 +545,9 @@ typename PipelineManager::RefreshPipelineType PipelineManager::refresh_pipeline(
   const auto& targets = _pipeline.fitted()->targets();
 
   return RefreshFittedPipelineType(
-      base * fct::make_field<"peripheral_metadata">(peripheral_metadata) *
-      fct::make_field<"population_metadata">(population_metadata) *
-      fct::make_field<"targets">(targets));
+      base * rfl::make_field<"peripheral_metadata">(peripheral_metadata) *
+      rfl::make_field<"population_metadata">(population_metadata) *
+      rfl::make_field<"targets">(targets));
 }
 
 // ------------------------------------------------------------------------
@@ -562,8 +562,8 @@ void PipelineManager::roc_curve(const typename Command::ROCCurveOp& _cmd,
 
   const auto& scores = pipeline.scores();
 
-  const auto result = fct::make_field<"fpr_">(scores.fpr(target_num)) *
-                      fct::make_field<"tpr_">(scores.tpr(target_num));
+  const auto result = rfl::make_field<"fpr_">(scores.fpr(target_num)) *
+                      rfl::make_field<"tpr_">(scores.tpr(target_num));
 
   communication::Sender::send_string("Success!", _socket);
 
@@ -580,7 +580,7 @@ void PipelineManager::score(const FullTransformOp& _cmd,
                             Poco::Net::StreamSocket* _socket) {
   const auto population_json = _cmd.get<"population_df_">();
 
-  const auto name = fct::get<"name_">(population_json.val_);
+  const auto name = rfl::get<"name_">(population_json.val_);
 
   const auto fitted = _pipeline.fitted();
 
@@ -607,8 +607,8 @@ void PipelineManager::store_df(
     const pipelines::FittedPipeline& _fitted, const FullTransformOp& _cmd,
     const containers::DataFrame& _population_df,
     const std::vector<containers::DataFrame>& _peripheral_dfs,
-    const fct::Ref<containers::Encoding>& _local_categories,
-    const fct::Ref<containers::Encoding>& _local_join_keys_encoding,
+    const rfl::Ref<containers::Encoding>& _local_categories,
+    const rfl::Ref<containers::Encoding>& _local_join_keys_encoding,
     containers::DataFrame* _df,
     multithreading::WeakWriteLock* _weak_write_lock) {
   _weak_write_lock->upgrade();
@@ -637,8 +637,8 @@ void PipelineManager::to_db(
     const containers::DataFrame& _population_table,
     const containers::NumericalFeatures& _numerical_features,
     const containers::CategoricalFeatures& _categorical_features,
-    const fct::Ref<containers::Encoding>& _categories,
-    const fct::Ref<containers::Encoding>& _join_keys_encoding) {
+    const rfl::Ref<containers::Encoding>& _categories,
+    const rfl::Ref<containers::Encoding>& _join_keys_encoding) {
   const auto df =
       to_df(_fitted, _cmd, _population_table, _numerical_features,
             _categorical_features, _categories, _join_keys_encoding);
@@ -671,8 +671,8 @@ containers::DataFrame PipelineManager::to_df(
     const containers::DataFrame& _population_table,
     const containers::NumericalFeatures& _numerical_features,
     const containers::CategoricalFeatures& _categorical_features,
-    const fct::Ref<containers::Encoding>& _categories,
-    const fct::Ref<containers::Encoding>& _join_keys_encoding) {
+    const rfl::Ref<containers::Encoding>& _categories,
+    const rfl::Ref<containers::Encoding>& _join_keys_encoding) {
   const auto df_name = _cmd.get<"df_name_">();
 
   const auto pool = params_.options_.make_pool();
@@ -760,13 +760,13 @@ void PipelineManager::transform(const typename Command::TransformOp& _cmd,
   const auto pool = params_.options_.make_pool();
 
   const auto local_categories =
-      fct::Ref<containers::Encoding>::make(pool, params_.categories_.ptr());
+      rfl::Ref<containers::Encoding>::make(pool, params_.categories_.ptr());
 
-  const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
+  const auto local_join_keys_encoding = rfl::Ref<containers::Encoding>::make(
       pool, params_.join_keys_encoding_.ptr());
 
   auto local_data_frames =
-      fct::Ref<std::map<std::string, containers::DataFrame>>::make(
+      rfl::Ref<std::map<std::string, containers::DataFrame>>::make(
           data_frames());
 
   const auto cmd =
@@ -781,14 +781,14 @@ void PipelineManager::transform(const typename Command::TransformOp& _cmd,
   // IMPORTANT: Use categories_, not local_categories, otherwise
   // .vector() might not work.
   const auto params = pipelines::TransformParams(
-      fct::make_field<"categories_">(params_.categories_),
-      fct::make_field<"cmd_", pipelines::TransformCmdType>(cmd),
-      fct::make_field<"data_frames_">(*local_data_frames),
-      fct::make_field<"data_frame_tracker_">(data_frame_tracker()),
-      fct::make_field<"logger_">(params_.logger_.ptr()),
-      fct::make_field<"original_peripheral_dfs_">(peripheral_dfs),
-      fct::make_field<"original_population_df_">(population_df),
-      fct::make_field<"socket_">(_socket));
+      rfl::make_field<"categories_">(params_.categories_),
+      rfl::make_field<"cmd_", pipelines::TransformCmdType>(cmd),
+      rfl::make_field<"data_frames_">(*local_data_frames),
+      rfl::make_field<"data_frame_tracker_">(data_frame_tracker()),
+      rfl::make_field<"logger_">(params_.logger_.ptr()),
+      rfl::make_field<"original_peripheral_dfs_">(peripheral_dfs),
+      rfl::make_field<"original_population_df_">(population_df),
+      rfl::make_field<"socket_">(_socket));
 
   const auto fitted = pipeline.fitted();
 
@@ -800,7 +800,7 @@ void PipelineManager::transform(const typename Command::TransformOp& _cmd,
       pipelines::transform::transform(params, pipeline, *fitted);
 
   if (scores) {
-    pipeline = pipeline.with_scores(fct::Ref<const metrics::Scores>(scores));
+    pipeline = pipeline.with_scores(rfl::Ref<const metrics::Scores>(scores));
   }
 
   const auto& table_name = cmd.get<"table_name_">();

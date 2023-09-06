@@ -14,10 +14,10 @@
 #include "commands/BooleanColumnView.hpp"
 #include "commands/Float.hpp"
 #include "commands/FloatColumnOrFloatColumnView.hpp"
-#include "fct/Field.hpp"
-#include "fct/Literal.hpp"
-#include "fct/NamedTuple.hpp"
-#include "fct/Ref.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/Literal.hpp"
+#include "rfl/NamedTuple.hpp"
+#include "rfl/Ref.hpp"
 
 namespace commands {
 
@@ -27,70 +27,70 @@ class FloatColumnOrFloatColumnView;
 class StringColumnOrStringColumnView {
  public:
   /// The possible operators for a binary operations.
-  using StringBinaryOpLiteral = fct::Literal<"concat">;
+  using StringBinaryOpLiteral = rfl::Literal<"concat">;
 
   /// The command used for boolean binary operations.
-  using StringBinaryOp = fct::NamedTuple<
-      fct::Field<"operator_", StringBinaryOpLiteral>,
-      fct::Field<"operand1_", fct::Ref<StringColumnOrStringColumnView>>,
-      fct::Field<"operand2_", fct::Ref<StringColumnOrStringColumnView>>,
-      fct::Field<"type_", fct::Literal<"StringColumnView">>>;
+  using StringBinaryOp = rfl::NamedTuple<
+      rfl::Field<"operator_", StringBinaryOpLiteral>,
+      rfl::Field<"operand1_", rfl::Ref<StringColumnOrStringColumnView>>,
+      rfl::Field<"operand2_", rfl::Ref<StringColumnOrStringColumnView>>,
+      rfl::Field<"type_", rfl::Literal<"StringColumnView">>>;
 
   /// The command used for string const operations.
   using StringConstOp =
-      fct::NamedTuple<fct::Field<"operator_", fct::Literal<"const">>,
-                      fct::Field<"value_", std::string>,
-                      fct::Field<"type_", fct::Literal<"StringColumnView">>>;
+      rfl::NamedTuple<rfl::Field<"operator_", rfl::Literal<"const">>,
+                      rfl::Field<"value_", std::string>,
+                      rfl::Field<"type_", rfl::Literal<"StringColumnView">>>;
 
   /// The command used to retrieve a substring.
-  using StringSubstringOp = fct::NamedTuple<
-      fct::Field<"operator_", fct::Literal<"substr">>,
-      fct::Field<"begin_", size_t>, fct::Field<"len_", size_t>,
-      fct::Field<"operand1_", fct::Ref<StringColumnOrStringColumnView>>,
-      fct::Field<"type_", fct::Literal<"StringColumnView">>>;
+  using StringSubstringOp = rfl::NamedTuple<
+      rfl::Field<"operator_", rfl::Literal<"substr">>,
+      rfl::Field<"begin_", size_t>, rfl::Field<"len_", size_t>,
+      rfl::Field<"operand1_", rfl::Ref<StringColumnOrStringColumnView>>,
+      rfl::Field<"type_", rfl::Literal<"StringColumnView">>>;
 
   /// The command used for string unary operations.
-  using StringUnaryOp = fct::NamedTuple<
-      fct::Field<"operator_", fct::Literal<"as_str">>,
-      fct::Field<"operand1_",
-                 std::variant<fct::Ref<FloatColumnOrFloatColumnView>,
-                              fct::Ref<BooleanColumnView>>>,
-      fct::Field<"type_", fct::Literal<"StringColumnView">>>;
+  using StringUnaryOp = rfl::NamedTuple<
+      rfl::Field<"operator_", rfl::Literal<"as_str">>,
+      rfl::Field<"operand1_",
+                 std::variant<rfl::Ref<FloatColumnOrFloatColumnView>,
+                              rfl::Ref<BooleanColumnView>>>,
+      rfl::Field<"type_", rfl::Literal<"StringColumnView">>>;
 
   /// The command used for string with subtoles operations.
-  using StringWithSubrolesOp = fct::NamedTuple<
-      fct::Field<"subroles_", std::vector<std::string>>,
-      fct::Field<"operand1_", fct::Ref<StringColumnOrStringColumnView>>,
-      fct::Field<"type_", fct::Literal<"StringColumnView">>>;
+  using StringWithSubrolesOp = rfl::NamedTuple<
+      rfl::Field<"subroles_", std::vector<std::string>>,
+      rfl::Field<"operand1_", rfl::Ref<StringColumnOrStringColumnView>>,
+      rfl::Field<"type_", rfl::Literal<"StringColumnView">>>;
 
   /// The command used for string with unit operations.
-  using StringWithUnitOp = fct::NamedTuple<
-      fct::Field<"unit_", std::string>,
-      fct::Field<"operand1_", fct::Ref<StringColumnOrStringColumnView>>,
-      fct::Field<"type_", fct::Literal<"StringColumnView">>>;
+  using StringWithUnitOp = rfl::NamedTuple<
+      rfl::Field<"unit_", std::string>,
+      rfl::Field<"operand1_", rfl::Ref<StringColumnOrStringColumnView>>,
+      rfl::Field<"type_", rfl::Literal<"StringColumnView">>>;
 
   /// The command used for boolean subselection operations.
-  using StringSubselectionOp = fct::NamedTuple<
-      fct::Field<"operator_", fct::Literal<"subselection">>,
-      fct::Field<"operand1_", fct::Ref<StringColumnOrStringColumnView>>,
-      fct::Field<"operand2_",
-                 std::variant<fct::Ref<BooleanColumnView>,
-                              fct::Ref<FloatColumnOrFloatColumnView>>>,
-      fct::Field<"type_", fct::Literal<"StringColumnView">>>;
+  using StringSubselectionOp = rfl::NamedTuple<
+      rfl::Field<"operator_", rfl::Literal<"subselection">>,
+      rfl::Field<"operand1_", rfl::Ref<StringColumnOrStringColumnView>>,
+      rfl::Field<"operand2_",
+                 std::variant<rfl::Ref<BooleanColumnView>,
+                              rfl::Ref<FloatColumnOrFloatColumnView>>>,
+      rfl::Field<"type_", rfl::Literal<"StringColumnView">>>;
 
   /// The command used to update a string column.
-  using StringUpdateOp = fct::NamedTuple<
-      fct::Field<"operator_", fct::Literal<"update">>,
-      fct::Field<"operand1_", fct::Ref<StringColumnOrStringColumnView>>,
-      fct::Field<"operand2_", fct::Ref<StringColumnOrStringColumnView>>,
-      fct::Field<"condition_", fct::Ref<BooleanColumnView>>,
-      fct::Field<"type_", fct::Literal<"StringColumnView">>>;
+  using StringUpdateOp = rfl::NamedTuple<
+      rfl::Field<"operator_", rfl::Literal<"update">>,
+      rfl::Field<"operand1_", rfl::Ref<StringColumnOrStringColumnView>>,
+      rfl::Field<"operand2_", rfl::Ref<StringColumnOrStringColumnView>>,
+      rfl::Field<"condition_", rfl::Ref<BooleanColumnView>>,
+      rfl::Field<"type_", rfl::Literal<"StringColumnView">>>;
 
   /// The command used for retrieving string columns from a data frame.
   using StringColumnOp =
-      fct::NamedTuple<fct::Field<"df_name_", std::string>,
-                      fct::Field<"name_", std::string>,
-                      fct::Field<"type_", fct::Literal<"StringColumn">>>;
+      rfl::NamedTuple<rfl::Field<"df_name_", std::string>,
+                      rfl::Field<"name_", std::string>,
+                      rfl::Field<"type_", rfl::Literal<"StringColumn">>>;
 
   using NamedTupleType =
       std::variant<StringColumnOp, StringBinaryOp, StringConstOp,

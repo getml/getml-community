@@ -72,9 +72,9 @@ class StringOpParser {
 
  public:
   StringOpParser(
-      const fct::Ref<const containers::Encoding>& _categories,
-      const fct::Ref<const containers::Encoding>& _join_keys_encoding,
-      const fct::Ref<const std::map<std::string, containers::DataFrame>>&
+      const rfl::Ref<const containers::Encoding>& _categories,
+      const rfl::Ref<const containers::Encoding>& _join_keys_encoding,
+      const rfl::Ref<const std::map<std::string, containers::DataFrame>>&
           _data_frames)
       : categories_(_categories),
         data_frames_(_data_frames),
@@ -86,7 +86,7 @@ class StringOpParser {
   /// Checks the string column for any obvious problems.
   void check(const containers::Column<strings::String>& _col,
              const std::string& _name,
-             const fct::Ref<const communication::Logger>& _logger,
+             const rfl::Ref<const communication::Logger>& _logger,
              Poco::Net::StreamSocket* _socket) const;
 
   /// Parses a string column.
@@ -121,7 +121,7 @@ class StringOpParser {
   /// Transforms an int column to a column view.
   containers::ColumnView<strings::String> to_view(
       const containers::Column<Int>& _col,
-      const fct::Ref<const containers::Encoding>& _encoding) const;
+      const rfl::Ref<const containers::Encoding>& _encoding) const;
 
   /// Transforms a string column to a column view.
   containers::ColumnView<strings::String> to_view(
@@ -156,14 +156,14 @@ class StringOpParser {
 
  private:
   /// Encodes the categories used.
-  const fct::Ref<const containers::Encoding> categories_;
+  const rfl::Ref<const containers::Encoding> categories_;
 
   /// The DataFrames this is based on.
-  const fct::Ref<const std::map<std::string, containers::DataFrame>>
+  const rfl::Ref<const std::map<std::string, containers::DataFrame>>
       data_frames_;
 
   /// Encodes the join keys used.
-  const fct::Ref<const containers::Encoding> join_keys_encoding_;
+  const rfl::Ref<const containers::Encoding> join_keys_encoding_;
 };
 
 }  // namespace handlers

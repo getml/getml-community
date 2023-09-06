@@ -12,8 +12,8 @@
 #include <vector>
 
 #include "database/Iterator.hpp"
-#include "fct/Ref.hpp"
 #include "io/io.hpp"
+#include "rfl/Ref.hpp"
 
 namespace database {
 
@@ -21,7 +21,7 @@ namespace database {
 /// database.
 class DatabaseReader : public io::Reader {
  public:
-  explicit DatabaseReader(const fct::Ref<Iterator>& _iterator)
+  explicit DatabaseReader(const rfl::Ref<Iterator>& _iterator)
       : iterator_(_iterator), ncols_(iterator()->colnames().size()) {}
 
   ~DatabaseReader() {}
@@ -50,11 +50,11 @@ class DatabaseReader : public io::Reader {
 
  private:
   /// Trivial accessor.
-  const fct::Ref<Iterator>& iterator() const { return iterator_; }
+  const rfl::Ref<Iterator>& iterator() const { return iterator_; }
 
  private:
   /// The underlying database iterator.
-  const fct::Ref<Iterator> iterator_;
+  const rfl::Ref<Iterator> iterator_;
 
   /// The number of columns.
   const size_t ncols_;

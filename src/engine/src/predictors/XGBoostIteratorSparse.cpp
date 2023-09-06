@@ -18,7 +18,7 @@ XGBoostIteratorSparse::XGBoostIteratorSparse(
     const std::vector<IntFeature> &_X_categorical,
     const std::vector<FloatFeature> &_X_numerical,
     const std::optional<FloatFeature> &_y,
-    const fct::Ref<const PredictorImpl> &_impl)
+    const rfl::Ref<const PredictorImpl> &_impl)
     : batch_size_(calc_batch_size()),
       cur_it_(0),
       impl_(_impl),

@@ -16,9 +16,9 @@
 #include "commands/Fingerprint.hpp"
 #include "containers/containers.hpp"
 #include "engine/preprocessors/Params.hpp"
-#include "fct/Ref.hpp"
 #include "helpers/Saver.hpp"
 #include "helpers/StringIterator.hpp"
+#include "rfl/Ref.hpp"
 
 namespace engine {
 namespace preprocessors {
@@ -40,7 +40,7 @@ class Preprocessor {
 
  public:
   /// Returns a deep copy.
-  virtual fct::Ref<Preprocessor> clone(
+  virtual rfl::Ref<Preprocessor> clone(
       const std::optional<std::vector<commands::Fingerprint>>& _dependencies =
           std::nullopt) const = 0;
 

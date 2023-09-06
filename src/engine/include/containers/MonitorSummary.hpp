@@ -13,34 +13,34 @@
 #include <vector>
 
 #include "containers/Float.hpp"
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
 
 namespace containers {
 
 /// The summary for the monitor.
-using MonitorSummary = fct::NamedTuple<
-    fct::Field<"categorical_", std::vector<std::string>>,
-    fct::Field<"categorical_units_", std::vector<std::string>>,
-    fct::Field<"join_keys_", std::vector<std::string>>,
-    fct::Field<"name_", std::string>, fct::Field<"num_categorical_", size_t>,
-    fct::Field<"num_join_keys_", size_t>, fct::Field<"num_numerical_", size_t>,
-    fct::Field<"num_rows_", size_t>, fct::Field<"num_targets_", size_t>,
-    fct::Field<"num_text_", size_t>, fct::Field<"num_time_stamps_", size_t>,
-    fct::Field<"num_unused_floats_", size_t>,
-    fct::Field<"num_unused_strings_", size_t>,
-    fct::Field<"numerical_", std::vector<std::string>>,
-    fct::Field<"numerical_units_", std::vector<std::string>>,
-    fct::Field<"size_", Float>,
-    fct::Field<"targets_", std::vector<std::string>>,
-    fct::Field<"text_", std::vector<std::string>>,
-    fct::Field<"text_units_", std::vector<std::string>>,
-    fct::Field<"time_stamps_", std::vector<std::string>>,
-    fct::Field<"time_stamp_units_", std::vector<std::string>>,
-    fct::Field<"unused_floats_", std::vector<std::string>>,
-    fct::Field<"unused_float_units_", std::vector<std::string>>,
-    fct::Field<"unused_strings_", std::vector<std::string>>,
-    fct::Field<"unused_string_units_", std::vector<std::string>>>;
+using MonitorSummary = rfl::NamedTuple<
+    rfl::Field<"categorical_", std::vector<std::string>>,
+    rfl::Field<"categorical_units_", std::vector<std::string>>,
+    rfl::Field<"join_keys_", std::vector<std::string>>,
+    rfl::Field<"name_", std::string>, rfl::Field<"num_categorical_", size_t>,
+    rfl::Field<"num_join_keys_", size_t>, rfl::Field<"num_numerical_", size_t>,
+    rfl::Field<"num_rows_", size_t>, rfl::Field<"num_targets_", size_t>,
+    rfl::Field<"num_text_", size_t>, rfl::Field<"num_time_stamps_", size_t>,
+    rfl::Field<"num_unused_floats_", size_t>,
+    rfl::Field<"num_unused_strings_", size_t>,
+    rfl::Field<"numerical_", std::vector<std::string>>,
+    rfl::Field<"numerical_units_", std::vector<std::string>>,
+    rfl::Field<"size_", Float>,
+    rfl::Field<"targets_", std::vector<std::string>>,
+    rfl::Field<"text_", std::vector<std::string>>,
+    rfl::Field<"text_units_", std::vector<std::string>>,
+    rfl::Field<"time_stamps_", std::vector<std::string>>,
+    rfl::Field<"time_stamp_units_", std::vector<std::string>>,
+    rfl::Field<"unused_floats_", std::vector<std::string>>,
+    rfl::Field<"unused_float_units_", std::vector<std::string>>,
+    rfl::Field<"unused_strings_", std::vector<std::string>>,
+    rfl::Field<"unused_string_units_", std::vector<std::string>>>;
 
 }  // namespace containers
 

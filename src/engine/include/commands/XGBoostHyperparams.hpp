@@ -14,98 +14,98 @@
 
 #include "commands/Float.hpp"
 #include "commands/Int.hpp"
-#include "fct/Field.hpp"
-#include "fct/Literal.hpp"
-#include "fct/NamedTuple.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/Literal.hpp"
+#include "rfl/NamedTuple.hpp"
 
 namespace commands {
 
 /// Hyperparameters for XGBoost.
 struct XGBoostHyperparams {
   /// L1 regularization term on weights
-  using f_alpha = fct::Field<"reg_alpha_", Float>;
+  using f_alpha = rfl::Field<"reg_alpha_", Float>;
 
   /// Specify which booster to use: gbtree, gblinear or dart.
   using f_booster =
-      fct::Field<"booster_", fct::Literal<"gbtree", "gblinear", "dart">>;
+      rfl::Field<"booster_", rfl::Literal<"gbtree", "gblinear", "dart">>;
 
   /// Subsample ratio of columns for each split, in each level.
-  using f_colsample_bylevel = fct::Field<"colsample_bylevel_", Float>;
+  using f_colsample_bylevel = rfl::Field<"colsample_bylevel_", Float>;
 
   /// Subsample ratio of columns when constructing each tree.
-  using f_colsample_bytree = fct::Field<"colsample_bytree_", Float>;
+  using f_colsample_bytree = rfl::Field<"colsample_bytree_", Float>;
 
   /// Maximum number of no improvements to trigger early stopping.
-  using f_early_stopping_rounds = fct::Field<"early_stopping_rounds_", size_t>;
+  using f_early_stopping_rounds = rfl::Field<"early_stopping_rounds_", size_t>;
 
   /// Boosting learning rate
-  using f_eta = fct::Field<"learning_rate_", Float>;
+  using f_eta = rfl::Field<"learning_rate_", Float>;
 
   /// Whether you want to use external_memory_ (only as an affect when
   /// memory mapping is used).
-  using f_external_memory = fct::Field<"external_memory_", bool>;
+  using f_external_memory = rfl::Field<"external_memory_", bool>;
 
   /// Minimum loss reduction required to make a further partition on a leaf
   /// node of the tree.
-  using f_gamma = fct::Field<"gamma_", Float>;
+  using f_gamma = rfl::Field<"gamma_", Float>;
 
   /// L2 regularization term on weights
-  using f_lambda = fct::Field<"reg_lambda_", Float>;
+  using f_lambda = rfl::Field<"reg_lambda_", Float>;
 
   /// Maximum delta step we allow each tree’s weight estimation to be.
-  using f_max_delta_step = fct::Field<"max_delta_step_", Float>;
+  using f_max_delta_step = rfl::Field<"max_delta_step_", Float>;
 
   /// Maximum tree depth for base learners
-  using f_max_depth = fct::Field<"max_depth_", size_t>;
+  using f_max_depth = rfl::Field<"max_depth_", size_t>;
 
   /// Minimum sum of instance weight needed in a child
-  using f_min_child_weights = fct::Field<"min_child_weights_", Float>;
+  using f_min_child_weights = rfl::Field<"min_child_weights_", Float>;
 
   /// Number of iterations (number of trees in boosted ensemble)
-  using f_n_iter = fct::Field<"n_estimators_", size_t>;
+  using f_n_iter = rfl::Field<"n_estimators_", size_t>;
 
   /// For dart only. Which normalization to use.
   using f_normalize_type =
-      fct::Field<"normalize_type_", fct::Literal<"tree", "forest">>;
+      rfl::Field<"normalize_type_", rfl::Literal<"tree", "forest">>;
 
   /// ...
-  using f_num_parallel_tree = fct::Field<"num_parallel_tree_", size_t>;
+  using f_num_parallel_tree = rfl::Field<"num_parallel_tree_", size_t>;
 
   /// Number of parallel threads used to run xgboost
-  using f_nthread = fct::Field<"n_jobs_", Int>;
+  using f_nthread = rfl::Field<"n_jobs_", Int>;
 
   /// The objective for the learning function.
   using f_objective =
-      fct::Field<"objective_", fct::Literal<"reg:linear", "reg:squarederror",
+      rfl::Field<"objective_", rfl::Literal<"reg:linear", "reg:squarederror",
                                             "reg:logistic", "binary:logistic",
                                             "binary:logitraw", "reg:tweedie">>;
 
   /// For dart only. If true, at least one tree will be dropped out.
-  using f_one_drop = fct::Field<"one_drop_", bool>;
+  using f_one_drop = rfl::Field<"one_drop_", bool>;
 
   /// For dart only. Dropout rate.
-  using f_rate_drop = fct::Field<"rate_drop_", Float>;
+  using f_rate_drop = rfl::Field<"rate_drop_", Float>;
 
   /// For dart only. Whether you want to use "uniform" or "weighted"
   /// sampling
   using f_sample_type =
-      fct::Field<"sample_type_", fct::Literal<"uniform", "weighted">>;
+      rfl::Field<"sample_type_", rfl::Literal<"uniform", "weighted">>;
 
   /// Whether to print messages while running boosting
-  using f_silent = fct::Field<"silent_", bool>;
+  using f_silent = rfl::Field<"silent_", bool>;
 
   /// For dart only. Probability of skipping dropout.
-  using f_skip_drop = fct::Field<"skip_drop_", Float>;
+  using f_skip_drop = rfl::Field<"skip_drop_", Float>;
 
   /// Subsample ratio of the training instance.
-  using f_subsample = fct::Field<"subsample_", Float>;
+  using f_subsample = rfl::Field<"subsample_", Float>;
 
   /// Signifies this as XGBoost hyperparameters.
   using f_type =
-      fct::Field<"type_", fct::Literal<"XGBoostPredictor", "XGBoostClassifier",
+      rfl::Field<"type_", rfl::Literal<"XGBoostPredictor", "XGBoostClassifier",
                                        "XGBoostRegressor">>;
 
-  using NamedTupleType = fct::NamedTuple<
+  using NamedTupleType = rfl::NamedTuple<
       f_type, f_alpha, f_booster, f_colsample_bylevel, f_colsample_bytree,
       f_early_stopping_rounds, f_eta, f_external_memory, f_gamma, f_lambda,
       f_max_delta_step, f_max_depth, f_min_child_weights, f_n_iter,

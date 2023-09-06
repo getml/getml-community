@@ -20,58 +20,58 @@
 #include "communication/communication.hpp"
 #include "containers/containers.hpp"
 #include "engine/dependency/dependency.hpp"
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
-#include "fct/Ref.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
+#include "rfl/Ref.hpp"
 
 namespace engine {
 namespace pipelines {
 
-using FitParams = fct::NamedTuple<
+using FitParams = rfl::NamedTuple<
 
     /// The Encoding used for the categories.
-    fct::Field<"categories_", fct::Ref<containers::Encoding>>,
+    rfl::Field<"categories_", rfl::Ref<containers::Encoding>>,
 
     /// Contains all of the names of all data frames or views needed for fitting
     /// the pipeline.
-    fct::Field<"cmd_", commands::DataFramesOrViews>,
+    rfl::Field<"cmd_", commands::DataFramesOrViews>,
 
     /// Contains all of the data frames - we need this, because it might be
     /// possible that the features are retrieved.
-    fct::Field<"data_frames_", std::map<std::string, containers::DataFrame>>,
+    rfl::Field<"data_frames_", std::map<std::string, containers::DataFrame>>,
 
     /// Keeps track of the data frames and their fingerprints.
-    fct::Field<"data_frame_tracker_", dependency::DataFrameTracker>,
+    rfl::Field<"data_frame_tracker_", dependency::DataFrameTracker>,
 
     /// The dependency tracker for the feature learners.
-    fct::Field<"fe_tracker_", fct::Ref<dependency::FETracker>>,
+    rfl::Field<"fe_tracker_", rfl::Ref<dependency::FETracker>>,
 
     /// The fingerprints of the feature selectors used for fitting.
-    fct::Field<"fs_fingerprints_",
-               fct::Ref<const std::vector<commands::Fingerprint>>>,
+    rfl::Field<"fs_fingerprints_",
+               rfl::Ref<const std::vector<commands::Fingerprint>>>,
 
     /// Logs the progress.
-    fct::Field<"logger_", std::shared_ptr<const communication::Logger>>,
+    rfl::Field<"logger_", std::shared_ptr<const communication::Logger>>,
 
     /// The peripheral tables.
-    fct::Field<"peripheral_dfs_", std::vector<containers::DataFrame>>,
+    rfl::Field<"peripheral_dfs_", std::vector<containers::DataFrame>>,
 
     /// The population table.
-    fct::Field<"population_df_", containers::DataFrame>,
+    rfl::Field<"population_df_", containers::DataFrame>,
 
     /// The dependency tracker for the predictors.
-    fct::Field<"pred_tracker_", fct::Ref<dependency::PredTracker>>,
+    rfl::Field<"pred_tracker_", rfl::Ref<dependency::PredTracker>>,
 
     /// The dependency tracker for the preprocessors.
-    fct::Field<"preprocessor_tracker_",
-               fct::Ref<dependency::PreprocessorTracker>>,
+    rfl::Field<"preprocessor_tracker_",
+               rfl::Ref<dependency::PreprocessorTracker>>,
 
     /// The population table used for validation (only relevant for
     /// early stopping).
-    fct::Field<"validation_df_", std::optional<containers::DataFrame>>,
+    rfl::Field<"validation_df_", std::optional<containers::DataFrame>>,
 
     /// Output: The socket with which we communicate.
-    fct::Field<"socket_", Poco::Net::StreamSocket*>>;
+    rfl::Field<"socket_", Poco::Net::StreamSocket*>>;
 
 }  // namespace pipelines
 }  // namespace engine

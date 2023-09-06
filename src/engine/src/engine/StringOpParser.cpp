@@ -10,7 +10,7 @@
 #include "engine/handlers/BoolOpParser.hpp"
 #include "engine/handlers/FloatOpParser.hpp"
 #include "engine/utils/Aggregations.hpp"
-#include "fct/visit.hpp"
+#include "rfl/visit.hpp"
 
 namespace engine {
 namespace handlers {
@@ -49,7 +49,7 @@ containers::ColumnView<strings::String> StringOpParser::boolean_as_string(
 
 void StringOpParser::check(const containers::Column<strings::String>& _col,
                            const std::string& _name,
-                           const fct::Ref<const communication::Logger>& _logger,
+                           const rfl::Ref<const communication::Logger>& _logger,
                            Poco::Net::StreamSocket* _socket) const {
   communication::Warner warner;
 
@@ -71,9 +71,9 @@ void StringOpParser::check(const containers::Column<strings::String>& _col,
                          "' are NULL values.";
 
     warner.add(communication::Warning(
-        fct::make_field<"message_">(message),
-        fct::make_field<"label_", std::string>("MANY NULL VALUES"),
-        fct::make_field<"warning_type_", std::string>("INFO")));
+        rfl::make_field<"message_">(message),
+        rfl::make_field<"label_", std::string>("MANY NULL VALUES"),
+        rfl::make_field<"warning_type_", std::string>("INFO")));
   }
 
   for (const auto& warning : warner.warnings()) {
@@ -132,7 +132,7 @@ containers::ColumnView<strings::String> StringOpParser::numerical_as_string(
     using FloatColumnOp =
         typename commands::FloatColumnOrFloatColumnView::FloatColumnOp;
     if (const auto val = std::get_if<FloatColumnOp>(&_col.val_)) {
-      return fct::get<"role_">(*val);
+      return rfl::get<"role_">(*val);
     }
     return "";
   };
@@ -185,7 +185,7 @@ containers::ColumnView<strings::String> StringOpParser::parse(
     }
 
     if constexpr (std::is_same<Type, StringConstOp>()) {
-      const auto val = fct::get<"value_">(_cmd);
+      const auto val = rfl::get<"value_">(_cmd);
       return containers::ColumnView<strings::String>::from_value(val);
     }
 
@@ -230,7 +230,7 @@ containers::ColumnView<strings::String> StringOpParser::subselection(
 
     if constexpr (std::is_same<
                       Type,
-                      fct::Ref<commands::FloatColumnOrFloatColumnView>>()) {
+                      rfl::Ref<commands::FloatColumnOrFloatColumnView>>()) {
       const auto indices =
           FloatOpParser(categories_, join_keys_encoding_, data_frames_)
               .parse(*_operand2);
@@ -270,13 +270,13 @@ containers::ColumnView<strings::String> StringOpParser::unary_operation(
       [this](const auto& _col) -> containers::ColumnView<strings::String> {
     using Type = std::decay_t<decltype(_col)>;
 
-    if constexpr (std::is_same<Type, fct::Ref<commands::BooleanColumnView>>()) {
+    if constexpr (std::is_same<Type, rfl::Ref<commands::BooleanColumnView>>()) {
       return boolean_as_string(*_col);
     }
 
     if constexpr (std::is_same<
                       Type,
-                      fct::Ref<commands::FloatColumnOrFloatColumnView>>()) {
+                      rfl::Ref<commands::FloatColumnOrFloatColumnView>>()) {
       return numerical_as_string(*_col);
     }
   };
@@ -288,7 +288,7 @@ containers::ColumnView<strings::String> StringOpParser::unary_operation(
 
 containers::ColumnView<strings::String> StringOpParser::to_view(
     const containers::Column<Int>& _col,
-    const fct::Ref<const containers::Encoding>& _encoding) const {
+    const rfl::Ref<const containers::Encoding>& _encoding) const {
   const auto to_str = [_encoding,
                        _col](size_t _i) -> std::optional<strings::String> {
     if (_i >= _col.nrows()) {

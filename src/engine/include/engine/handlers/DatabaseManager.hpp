@@ -21,19 +21,19 @@
 #include "debug/debug.hpp"
 #include "engine/config/config.hpp"
 #include "engine/utils/utils.hpp"
-#include "fct/Ref.hpp"
+#include "rfl/Ref.hpp"
 
 namespace engine {
 namespace handlers {
 
 class DatabaseManager {
  private:
-  typedef std::map<std::string, fct::Ref<database::Connector>> ConnectorMap;
+  typedef std::map<std::string, rfl::Ref<database::Connector>> ConnectorMap;
   typedef commands::DatabaseCommand Command;
 
  public:
-  DatabaseManager(const fct::Ref<const communication::Logger>& _logger,
-                  const fct::Ref<const communication::Monitor>& _monitor,
+  DatabaseManager(const rfl::Ref<const communication::Logger>& _logger,
+                  const rfl::Ref<const communication::Monitor>& _monitor,
                   const config::Options& _options);
 
   ~DatabaseManager();
@@ -49,14 +49,14 @@ class DatabaseManager {
 
  public:
   /// Trivial accessor
-  const fct::Ref<database::Connector> connector(const std::string& _name) {
+  const rfl::Ref<database::Connector> connector(const std::string& _name) {
     multithreading::ReadLock read_lock(read_write_lock_);
     const auto conn = utils::Getter::get(_name, connector_map_);
     return conn;
   }
 
   /// Trivial accessor
-  const fct::Ref<const database::Connector> connector(
+  const rfl::Ref<const database::Connector> connector(
       const std::string& _name) const {
     multithreading::ReadLock read_lock(read_write_lock_);
     const auto conn = utils::Getter::get(_name, connector_map_);
@@ -137,17 +137,17 @@ class DatabaseManager {
   ConnectorMap connector_map_;
 
   /// For logging
-  const fct::Ref<const communication::Logger> logger_;
+  const rfl::Ref<const communication::Logger> logger_;
 
   /// For communication with the monitor
-  const fct::Ref<const communication::Monitor> monitor_;
+  const rfl::Ref<const communication::Monitor> monitor_;
 
   /// Settings for the engine and the monitor
   const config::Options options_;
 
   /// Protects the shared_ptr of the connector - the connector might have to
   /// implement its own locking strategy!
-  const fct::Ref<multithreading::ReadWriteLock> read_write_lock_;
+  const rfl::Ref<multithreading::ReadWriteLock> read_write_lock_;
 };
 
 }  // namespace handlers

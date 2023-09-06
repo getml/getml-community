@@ -10,17 +10,17 @@
 
 #include <string>
 
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
 
 namespace engine {
 namespace config {
 
 /// Configuration information for the monitor
 struct MonitorOptions {
-  using NamedTupleType = fct::NamedTuple<fct::Field<"httpPort", size_t>,
-                                         fct::Field<"proxyUrl", std::string>,
-                                         fct::Field<"tcpPort", size_t> >;
+  using NamedTupleType = rfl::NamedTuple<rfl::Field<"httpPort", size_t>,
+                                         rfl::Field<"proxyUrl", std::string>,
+                                         rfl::Field<"tcpPort", size_t> >;
 
  public:
   MonitorOptions(const NamedTupleType& _obj)

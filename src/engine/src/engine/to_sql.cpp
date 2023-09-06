@@ -24,7 +24,7 @@ namespace to_sql {
 /// Expresses the feature learners as SQL code.
 std::vector<std::string> feature_learners_to_sql(
     const ToSQLParams& _params,
-    const fct::Ref<const transpilation::SQLDialectGenerator>&
+    const rfl::Ref<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator);
 
 /// Generates the names of the autofeatures to be included in the transpiled
@@ -39,40 +39,40 @@ make_staging_schemata(const FittedPipeline& _fitted);
 /// Sometimes features can get excessively long, which makes it hard to
 /// display them in the iPython notebook. This takes care of this problem.
 std::vector<std::string> overwrite_oversized_features(
-    const fct::Ref<const transpilation::SQLDialectGenerator>&
+    const rfl::Ref<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator,
     const std::vector<std::string>& _autofeatures,
     const std::optional<size_t> _size_threshold);
 
 /// Parses the feature name from the code.
 std::string parse_feature_name(
-    const fct::Ref<const transpilation::SQLDialectGenerator>&
+    const rfl::Ref<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator,
     const std::string& _code);
 
 /// Expresses the preprocessing part as SQL code.
 std::vector<std::string> preprocessors_to_sql(
     const ToSQLParams& _params,
-    const fct::Ref<const transpilation::SQLDialectGenerator>&
+    const rfl::Ref<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator);
 
 /// Expresses the staging part as SQL code.
 std::vector<std::string> staging_to_sql(
     const ToSQLParams& _params,
-    const fct::Ref<const transpilation::SQLDialectGenerator>&
+    const rfl::Ref<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator);
 
 // ----------------------------------------------------------------------------
 
 std::vector<std::string> feature_learners_to_sql(
     const ToSQLParams& _params,
-    const fct::Ref<const transpilation::SQLDialectGenerator>&
+    const rfl::Ref<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator) {
   const auto to_sql = [&_params, &_sql_dialect_generator](
                           const size_t _i) -> std::vector<std::string> {
     const auto& fl = _params.get<"fitted_">().feature_learners_.at(_i);
 
-    // TODO: This needs to accept fct::Ref
+    // TODO: This needs to accept rfl::Ref
     const auto all =
         fl->to_sql(_params.get<"categories_">(), _params.get<"targets_">(),
                    _params.get<"full_pipeline_">(),
@@ -158,7 +158,7 @@ make_staging_schemata(const FittedPipeline& _fitted) {
         fct::join::vector<std::string>({_schema.text(), text_fields});
 
     return containers::Schema(
-        _schema.named_tuple().replace(fct::make_field<"text_">(text)));
+        _schema.named_tuple().replace(rfl::make_field<"text_">(text)));
   };
 
   const auto is_not_text_field = [](const containers::Schema& _schema) -> bool {
@@ -179,7 +179,7 @@ make_staging_schemata(const FittedPipeline& _fitted) {
 // ----------------------------------------------------------------------------
 
 std::string parse_feature_name(
-    const fct::Ref<const transpilation::SQLDialectGenerator>&
+    const rfl::Ref<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator,
     const std::string& _code) {
   constexpr const char* FEATURE_NAME = "$FEATURE_NAME_PLACEHOLDER";
@@ -212,7 +212,7 @@ std::string parse_feature_name(
 // ----------------------------------------------------------------------------
 
 std::vector<std::string> overwrite_oversized_features(
-    const fct::Ref<const transpilation::SQLDialectGenerator>&
+    const rfl::Ref<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator,
     const std::vector<std::string>& _features,
     const std::optional<size_t> _size_threshold) {
@@ -259,7 +259,7 @@ std::vector<std::string> overwrite_oversized_features(
 
 std::vector<std::string> preprocessors_to_sql(
     const ToSQLParams& _params,
-    const fct::Ref<const transpilation::SQLDialectGenerator>&
+    const rfl::Ref<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator) {
   const auto to_sql = [&](const auto& _p) -> std::vector<std::string> {
     return _p->to_sql(_params.get<"categories_">(),
@@ -273,7 +273,7 @@ std::vector<std::string> preprocessors_to_sql(
 
 std::vector<std::string> staging_to_sql(
     const ToSQLParams& _params,
-    const fct::Ref<const transpilation::SQLDialectGenerator>&
+    const rfl::Ref<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator) {
   const auto needs_targets = [](const auto& _f) -> bool {
     return _f->population_needs_targets();
@@ -285,7 +285,7 @@ std::vector<std::string> staging_to_sql(
                   _params.get<"fitted_">().feature_learners_.end(),
                   needs_targets);
 
-  /// TODO: This needs to return fct::Ref.
+  /// TODO: This needs to return rfl::Ref.
   const auto [placeholder, peripheral_names] =
       _params.get<"pipeline_">().make_placeholder();
 

@@ -8,7 +8,7 @@
 #include "engine/handlers/ViewManager.hpp"
 
 #include "engine/handlers/ViewParser.hpp"
-#include "fct/always_false.hpp"
+#include "rfl/always_false.hpp"
 
 namespace engine {
 namespace handlers {
@@ -31,11 +31,11 @@ void ViewManager::execute_command(const Command& _command,
     } else if constexpr (std::is_same<Type, Command::ViewToParquetOp>()) {
       view_to_parquet(_cmd, _socket);
     } else {
-      static_assert(fct::always_false_v<Type>, "Not all cases were covered.");
+      static_assert(rfl::always_false_v<Type>, "Not all cases were covered.");
     }
   };
 
-  fct::visit(handle, _command.val_);
+  rfl::visit(handle, _command.val_);
 }
 
 // ------------------------------------------------------------------------
@@ -94,9 +94,9 @@ void ViewManager::view_to_arrow(const typename Command::ViewToArrowOp& _cmd,
   const auto pool = params_.options_.make_pool();
 
   const auto local_categories =
-      fct::Ref<containers::Encoding>::make(pool, params_.categories_.ptr());
+      rfl::Ref<containers::Encoding>::make(pool, params_.categories_.ptr());
 
-  const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
+  const auto local_join_keys_encoding = rfl::Ref<containers::Encoding>::make(
       pool, params_.join_keys_encoding_.ptr());
 
   const auto table = ViewParser(local_categories, local_join_keys_encoding,
@@ -129,9 +129,9 @@ void ViewManager::view_to_csv(const typename Command::ViewToCSVOp& _cmd,
   const auto pool = params_.options_.make_pool();
 
   const auto local_categories =
-      fct::Ref<containers::Encoding>::make(pool, params_.categories_.ptr());
+      rfl::Ref<containers::Encoding>::make(pool, params_.categories_.ptr());
 
-  const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
+  const auto local_join_keys_encoding = rfl::Ref<containers::Encoding>::make(
       pool, params_.join_keys_encoding_.ptr());
 
   const auto df = ViewParser(local_categories, local_join_keys_encoding,
@@ -162,9 +162,9 @@ void ViewManager::view_to_db(const typename Command::ViewToDBOp& _cmd,
   const auto pool = params_.options_.make_pool();
 
   const auto local_categories =
-      fct::Ref<containers::Encoding>::make(pool, params_.categories_.ptr());
+      rfl::Ref<containers::Encoding>::make(pool, params_.categories_.ptr());
 
-  const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
+  const auto local_join_keys_encoding = rfl::Ref<containers::Encoding>::make(
       pool, params_.join_keys_encoding_.ptr());
 
   const auto df = ViewParser(local_categories, local_join_keys_encoding,
@@ -194,9 +194,9 @@ void ViewManager::view_to_parquet(const typename Command::ViewToParquetOp& _cmd,
   const auto pool = params_.options_.make_pool();
 
   const auto local_categories =
-      fct::Ref<containers::Encoding>::make(pool, params_.categories_.ptr());
+      rfl::Ref<containers::Encoding>::make(pool, params_.categories_.ptr());
 
-  const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
+  const auto local_join_keys_encoding = rfl::Ref<containers::Encoding>::make(
       pool, params_.join_keys_encoding_.ptr());
 
   const auto table = ViewParser(local_categories, local_join_keys_encoding,

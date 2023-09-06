@@ -11,11 +11,11 @@
 #include <memory>
 #include <vector>
 
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
 #include "fct/collect.hpp"
 #include "helpers/DataFrame.hpp"
 #include "helpers/StringIterator.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
 #include "strings/strings.hpp"
 
 namespace helpers {
@@ -26,12 +26,12 @@ class VocabularyContainer {
       VocabForDf;
 
   /// The vocabulary for the peripheral tables.
-  using f_peripheral = fct::Field<"peripheral_", std::vector<VocabForDf>>;
+  using f_peripheral = rfl::Field<"peripheral_", std::vector<VocabForDf>>;
 
   /// The vocabulary for the population table.
-  using f_population = fct::Field<"population_", VocabForDf>;
+  using f_population = rfl::Field<"population_", VocabForDf>;
 
-  using NamedTupleType = fct::NamedTuple<f_peripheral, f_population>;
+  using NamedTupleType = rfl::NamedTuple<f_peripheral, f_population>;
 
  public:
   VocabularyContainer(size_t _min_df, size_t _max_size,

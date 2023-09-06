@@ -54,7 +54,7 @@ void FastProp::build_row(
     const std::vector<size_t> &_index,
     const std::vector<std::function<bool(const containers::Match &)>>
         &_condition_functions,
-    const size_t _rownum, const fct::Ref<Memoization> &_memoization,
+    const size_t _rownum, const rfl::Ref<Memoization> &_memoization,
     Float *_row) const {
   assert_true(_condition_functions.size() == _index.size());
 
@@ -135,7 +135,7 @@ void FastProp::build_rows(const TransformParams &_params,
 
   const auto table_holder = TableHolder(params);
 
-  const auto memoization = fct::Ref<Memoization>::make();
+  const auto memoization = rfl::Ref<Memoization>::make();
 
   constexpr size_t log_iter = 5000;
 
@@ -1455,17 +1455,17 @@ std::shared_ptr<std::vector<size_t>> FastProp::make_rownums(
 // ---------------------------------------------------------------------------
 
 typename FastProp::NamedTupleType FastProp::named_tuple() const {
-  return fct::make_field<"features_">(abstract_features_) *
-         fct::make_field<"allow_http_">(allow_http_) *
-         fct::make_field<"hyperparameters_">(hyperparameters_) *
-         fct::make_field<"main_table_schemas_">(main_table_schemas_) *
-         fct::make_field<"peripheral_">(peripheral_) *
-         fct::make_field<"peripheral_schema_">(peripheral_schema_) *
-         fct::make_field<"peripheral_table_schemas_">(
+  return rfl::make_field<"features_">(abstract_features_) *
+         rfl::make_field<"allow_http_">(allow_http_) *
+         rfl::make_field<"hyperparameters_">(hyperparameters_) *
+         rfl::make_field<"main_table_schemas_">(main_table_schemas_) *
+         rfl::make_field<"peripheral_">(peripheral_) *
+         rfl::make_field<"peripheral_schema_">(peripheral_schema_) *
+         rfl::make_field<"peripheral_table_schemas_">(
              peripheral_table_schemas_) *
-         fct::make_field<"placeholder_">(placeholder_) *
-         fct::make_field<"population_schema_">(population_schema_) *
-         fct::make_field<"subfeatures_">(subfeatures_);
+         rfl::make_field<"placeholder_">(placeholder_) *
+         rfl::make_field<"population_schema_">(population_schema_) *
+         rfl::make_field<"subfeatures_">(subfeatures_);
 }
 
 // ----------------------------------------------------------------------------

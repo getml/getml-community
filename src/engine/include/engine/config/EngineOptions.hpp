@@ -10,8 +10,8 @@
 
 #include <string>
 
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
 
 namespace engine {
 namespace config {
@@ -21,7 +21,7 @@ struct EngineOptions {
   static constexpr bool IN_MEMORY = true;
   static constexpr bool MEMORY_MAPPING = false;
 
-  using NamedTupleType = fct::NamedTuple<fct::Field<"port", size_t>>;
+  using NamedTupleType = rfl::NamedTuple<rfl::Field<"port", size_t>>;
 
  public:
   EngineOptions(const NamedTupleType& _obj)

@@ -14,11 +14,11 @@
 #include "engine/pipelines/ToSQLParams.hpp"
 #include "engine/pipelines/to_sql.hpp"
 #include "engine/utils/SQLDependencyTracker.hpp"
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
 #include "flexbuffers/from_flexbuffers.hpp"
 #include "flexbuffers/to_flexbuffers.hpp"
 #include "helpers/Saver.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
 
 namespace engine {
 namespace pipelines {
@@ -34,7 +34,7 @@ void save_pipeline_json(const SaveParams& _params,
 
 /// Saves the feature selectors or predictors.
 void save_predictors(
-    const std::vector<std::vector<fct::Ref<const predictors::Predictor>>>&
+    const std::vector<std::vector<rfl::Ref<const predictors::Predictor>>>&
         _predictors,
     const std::string& _purpose, const Poco::TemporaryFile& _tfile,
     const typename helpers::Saver::Format& _format);
@@ -97,18 +97,18 @@ void save(const SaveParams& _params) {
   using DialectType = typename transpilation::TranspilationParams::DialectType;
 
   const auto transpilation_params = transpilation::TranspilationParams(
-      fct::make_field<"dialect_">(DialectType::make<"human-readable sql">()) *
-      fct::Field<"nchar_categorical_", size_t>(128) *
-      fct::Field<"nchar_join_key_", size_t>(128) *
-      fct::Field<"nchar_text_", size_t>(4096) *
-      fct::Field<"schema_", std::string>(""));
+      rfl::make_field<"dialect_">(DialectType::make<"human-readable sql">()) *
+      rfl::Field<"nchar_categorical_", size_t>(128) *
+      rfl::Field<"nchar_join_key_", size_t>(128) *
+      rfl::Field<"nchar_text_", size_t>(4096) *
+      rfl::Field<"schema_", std::string>(""));
 
   const auto to_sql_params = ToSQLParams(
       _params *
-      fct::make_field<"size_threshold_", std::optional<size_t>>(std::nullopt) *
-      fct::make_field<"full_pipeline_">(true) *
-      fct::make_field<"targets_">(true) *
-      fct::make_field<"transpilation_params_">(transpilation_params));
+      rfl::make_field<"size_threshold_", std::optional<size_t>>(std::nullopt) *
+      rfl::make_field<"full_pipeline_">(true) *
+      rfl::make_field<"targets_">(true) *
+      rfl::make_field<"transpilation_params_">(transpilation_params));
 
   const auto sql_code = to_sql::to_sql(to_sql_params);
 
@@ -139,15 +139,15 @@ void save_pipeline_json(const SaveParams& _params,
   const auto& f = _params.get<"fitted_">();
 
   const PipelineJSON pipeline_json =
-      f.fingerprints_ * fct::make_field<"allow_http_">(p.allow_http()) *
-      fct::make_field<"creation_time_">(p.creation_time()) *
-      fct::make_field<"modified_peripheral_schema_">(
+      f.fingerprints_ * rfl::make_field<"allow_http_">(p.allow_http()) *
+      rfl::make_field<"creation_time_">(p.creation_time()) *
+      rfl::make_field<"modified_peripheral_schema_">(
           f.modified_peripheral_schema_) *
-      fct::make_field<"modified_population_schema_">(
+      rfl::make_field<"modified_population_schema_">(
           f.modified_population_schema_) *
-      fct::make_field<"peripheral_schema_">(f.peripheral_schema_) *
-      fct::make_field<"population_schema_">(f.population_schema_) *
-      fct::make_field<"targets_">(f.targets());
+      rfl::make_field<"peripheral_schema_">(f.peripheral_schema_) *
+      rfl::make_field<"population_schema_">(f.population_schema_) *
+      rfl::make_field<"targets_">(f.targets());
 
   helpers::Saver::save(_tfile.path() + "/pipeline", pipeline_json,
                        _params.get<"format_">());
@@ -156,7 +156,7 @@ void save_pipeline_json(const SaveParams& _params,
 // ----------------------------------------------------------------------------
 
 void save_predictors(
-    const std::vector<std::vector<fct::Ref<const predictors::Predictor>>>&
+    const std::vector<std::vector<rfl::Ref<const predictors::Predictor>>>&
         _predictors,
     const std::string& _purpose, const Poco::TemporaryFile& _tfile,
     const typename helpers::Saver::Format& _format) {

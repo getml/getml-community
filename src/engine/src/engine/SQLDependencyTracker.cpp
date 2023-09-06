@@ -12,9 +12,9 @@
 
 #include "fct/collect.hpp"
 #include "fct/iota.hpp"
-#include "fct/make_named_tuple.hpp"
 #include "helpers/StringSplitter.hpp"
 #include "json/json.hpp"
+#include "rfl/make_named_tuple.hpp"
 #include "transpilation/transpilation.hpp"
 
 namespace engine {
@@ -35,9 +35,9 @@ SQLDependencyTracker::find_dependencies(const Tuples& _tuples,
   const auto dependencies =
       fct::collect::vector(iota | VIEWS::filter(is_dependency));
 
-  return fct::make_field<"table_name_">(std::get<0>(_tuples.at(_i))) *
-         fct::make_field<"file_name_">(std::get<1>(_tuples.at(_i))) *
-         fct::make_field<"dependencies_">(dependencies);
+  return rfl::make_field<"table_name_">(std::get<0>(_tuples.at(_i))) *
+         rfl::make_field<"file_name_">(std::get<1>(_tuples.at(_i))) *
+         rfl::make_field<"dependencies_">(dependencies);
 }
 
 // ------------------------------------------------------------------------
@@ -79,7 +79,7 @@ void SQLDependencyTracker::save_dependencies(const std::string& _sql) const {
       fct::collect::vector(iota | VIEWS::transform(to_obj));
 
   const auto obj =
-      fct::make_named_tuple(fct::make_field<"dependencies_">(dependencies));
+      rfl::make_named_tuple(rfl::make_field<"dependencies_">(dependencies));
 
   const auto json_str = json::to_json(obj);
 

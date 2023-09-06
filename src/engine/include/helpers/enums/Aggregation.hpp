@@ -8,12 +8,12 @@
 #ifndef HELPERS_ENUMS_AGGREGATION_HPP_
 #define HELPERS_ENUMS_AGGREGATION_HPP_
 
-#include "fct/Literal.hpp"
+#include "rfl/Literal.hpp"
 
 namespace helpers {
 namespace enums {
 
-using Aggregation = fct::Literal<
+using Aggregation = rfl::Literal<
     "AVG", "AVG TIME BETWEEN", "COUNT", "COUNT DISTINCT",
     "COUNT DISTINCT OVER COUNT", "COUNT MINUS COUNT DISTINCT", "EWMA_1S",
     "EWMA_1M", "EWMA_1H", "EWMA_1D", "EWMA_7D", "EWMA_30D", "EWMA_90D",

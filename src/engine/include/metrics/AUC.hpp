@@ -12,12 +12,12 @@
 #include <utility>
 #include <vector>
 
-#include "fct/NamedTuple.hpp"
 #include "metrics/Features.hpp"
 #include "metrics/Float.hpp"
 #include "metrics/MetricImpl.hpp"
 #include "metrics/Scores.hpp"
 #include "multithreading/multithreading.hpp"
+#include "rfl/NamedTuple.hpp"
 
 namespace metrics {
 
@@ -31,7 +31,7 @@ class AUC {
   using f_proportion = typename Scores::f_proportion;
 
   using ResultType =
-      fct::NamedTuple<f_auc, f_fpr, f_tpr, f_lift, f_precision, f_proportion>;
+      rfl::NamedTuple<f_auc, f_fpr, f_tpr, f_lift, f_precision, f_proportion>;
 
  public:
   AUC() {}

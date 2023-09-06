@@ -17,8 +17,8 @@
 
 #include "commands/DataModel.hpp"
 #include "engine/Float.hpp"
-#include "fct/Ref.hpp"
 #include "helpers/Placeholder.hpp"
+#include "rfl/Ref.hpp"
 
 namespace engine {
 namespace pipelines {
@@ -26,7 +26,7 @@ namespace make_placeholder {
 
 /// Creates the placeholder, including transforming memory into upper time
 /// stamps.
-fct::Ref<const helpers::Placeholder> make_placeholder(
+rfl::Ref<const helpers::Placeholder> make_placeholder(
     const commands::DataModel& _data_model, const std::string& _alias,
     const std::shared_ptr<size_t> _num_alias = nullptr,
     const bool _is_population = true);

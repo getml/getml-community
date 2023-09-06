@@ -13,7 +13,7 @@
 #include "engine/handlers/FloatOpParser.hpp"
 #include "engine/handlers/StringOpParser.hpp"
 #include "engine/utils/Aggregations.hpp"
-#include "fct/visit.hpp"
+#include "rfl/visit.hpp"
 
 namespace engine {
 namespace handlers {
@@ -31,7 +31,7 @@ Float AggOpParser::aggregate(const commands::Aggregation& _aggregation) const {
     }
   };
 
-  return fct::visit(handle, _aggregation.val_);
+  return rfl::visit(handle, _aggregation.val_);
 }
 
 // ----------------------------------------------------------------------------
@@ -43,44 +43,44 @@ Float AggOpParser::float_aggregation(const FloatAggregationOp& _cmd) const {
   const auto handle = [this, &col](const auto& _literal) -> Float {
     using Type = std::decay_t<decltype(_literal)>;
 
-    if constexpr (std::is_same<Type, fct::Literal<"assert_equal">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"assert_equal">>()) {
       return utils::Aggregations::assert_equal(col.begin(), col.end());
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"avg">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"avg">>()) {
       return utils::Aggregations::avg(col.begin(), col.end());
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"count">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"count">>()) {
       return utils::Aggregations::count(col.begin(), col.end());
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"max">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"max">>()) {
       return utils::Aggregations::maximum(col.begin(), col.end());
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"median">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"median">>()) {
       return utils::Aggregations::median(col.begin(), col.end());
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"min">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"min">>()) {
       return utils::Aggregations::minimum(col.begin(), col.end());
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"stddev">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"stddev">>()) {
       return utils::Aggregations::stddev(col.begin(), col.end());
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"sum">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"sum">>()) {
       return utils::Aggregations::sum(col.begin(), col.end());
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"var">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"var">>()) {
       return utils::Aggregations::var(col.begin(), col.end());
     }
   };
 
-  return fct::visit(handle, _cmd.get<"type_">());
+  return rfl::visit(handle, _cmd.get<"type_">());
 }
 
 // ----------------------------------------------------------------------------
@@ -99,16 +99,16 @@ Float AggOpParser::string_aggregation(const StringAggregationOp& _cmd) const {
   const auto handle = [this, &range](const auto& _literal) -> Float {
     using Type = std::decay_t<decltype(_literal)>;
 
-    if constexpr (std::is_same<Type, fct::Literal<"count_categorical">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"count_categorical">>()) {
       return utils::Aggregations::count_categorical(range.begin(), range.end());
     }
 
-    if constexpr (std::is_same<Type, fct::Literal<"count_distinct">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"count_distinct">>()) {
       return utils::Aggregations::count_distinct(range.begin(), range.end());
     }
   };
 
-  return fct::visit(handle, _cmd.get<"type_">());
+  return rfl::visit(handle, _cmd.get<"type_">());
 }
 
 // ----------------------------------------------------------------------------

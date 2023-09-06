@@ -12,7 +12,7 @@
 namespace communication {
 
 std::string Receiver::recv_cmd(
-    const fct::Ref<const communication::Logger> &_logger,
+    const rfl::Ref<const communication::Logger> &_logger,
     Poco::Net::StreamSocket *_socket) {
   const auto str = Receiver::recv_string(_socket);
 

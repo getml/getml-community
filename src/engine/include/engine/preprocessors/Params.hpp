@@ -16,44 +16,44 @@
 #include "commands/DataFramesOrViews.hpp"
 #include "communication/SocketLogger.hpp"
 #include "containers/containers.hpp"
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
-#include "fct/Ref.hpp"
 #include "helpers/Placeholder.hpp"
 #include "logging/logging.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
+#include "rfl/Ref.hpp"
 
 namespace engine {
 namespace preprocessors {
 
-using Params = fct::NamedTuple<
+using Params = rfl::NamedTuple<
 
     /// The Encoding used for the categories.
-    fct::Field<"categories_", fct::Ref<containers::Encoding>>,
+    rfl::Field<"categories_", rfl::Ref<containers::Encoding>>,
 
     /// Contains all of the names of all data frames or views needed for fitting
     /// the pipeline.
-    fct::Field<"cmd_", commands::DataFramesOrViews>,
+    rfl::Field<"cmd_", commands::DataFramesOrViews>,
 
     /// Logs the progress.
-    fct::Field<"logger_", std::shared_ptr<const communication::SocketLogger>>,
+    rfl::Field<"logger_", std::shared_ptr<const communication::SocketLogger>>,
 
     /// The percentage at which we want the logging to begin.
-    fct::Field<"logging_begin_", size_t>,
+    rfl::Field<"logging_begin_", size_t>,
 
     /// The percentage at which we want the logging to end.
-    fct::Field<"logging_end_", size_t>,
+    rfl::Field<"logging_end_", size_t>,
 
     /// The peripheral tables.
-    fct::Field<"peripheral_dfs_", std::vector<containers::DataFrame>>,
+    rfl::Field<"peripheral_dfs_", std::vector<containers::DataFrame>>,
 
     /// The peripheral tables.
-    fct::Field<"peripheral_names_", std::vector<std::string>>,
+    rfl::Field<"peripheral_names_", std::vector<std::string>>,
 
     /// The peripheral tables.
-    fct::Field<"placeholder_", helpers::Placeholder>,
+    rfl::Field<"placeholder_", helpers::Placeholder>,
 
     /// The population table.
-    fct::Field<"population_df_", containers::DataFrame>>;
+    rfl::Field<"population_df_", containers::DataFrame>>;
 
 }  // namespace preprocessors
 }  // namespace engine

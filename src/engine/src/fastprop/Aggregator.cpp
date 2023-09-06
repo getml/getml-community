@@ -17,7 +17,7 @@ Float Aggregator::apply_aggregation(
     const std::vector<containers::Match> &_matches,
     const std::function<bool(const containers::Match &)> &_condition_function,
     const containers::AbstractFeature &_abstract_feature,
-    const fct::Ref<Memoization> &_memoization) {
+    const rfl::Ref<Memoization> &_memoization) {
   switch (_abstract_feature.data_used_.value()) {
     case enums::DataUsed::value_of<"categorical">():
       return apply_categorical(_population, _peripheral, _matches,
@@ -80,7 +80,7 @@ Float Aggregator::apply_categorical(
     const std::vector<containers::Match> &_matches,
     const std::function<bool(const containers::Match &)> &_condition_function,
     const containers::AbstractFeature &_abstract_feature,
-    const fct::Ref<Memoization> &_memoization) {
+    const rfl::Ref<Memoization> &_memoization) {
   assert_true(_abstract_feature.input_col_ < _peripheral.num_categoricals());
 
   const auto &col = _peripheral.categorical_col(_abstract_feature.input_col_);
@@ -125,7 +125,7 @@ Float Aggregator::apply_discrete(
     const std::vector<containers::Match> &_matches,
     const std::function<bool(const containers::Match &)> &_condition_function,
     const containers::AbstractFeature &_abstract_feature,
-    const fct::Ref<Memoization> &_memoization) {
+    const rfl::Ref<Memoization> &_memoization) {
   assert_true(_abstract_feature.input_col_ < _peripheral.num_discretes());
 
   const auto &col = _peripheral.discrete_col(_abstract_feature.input_col_);
@@ -155,7 +155,7 @@ Float Aggregator::apply_not_applicable(
     const std::vector<containers::Match> &_matches,
     const std::function<bool(const containers::Match &)> &_condition_function,
     const containers::AbstractFeature &_abstract_feature,
-    const fct::Ref<Memoization> &_memoization) {
+    const rfl::Ref<Memoization> &_memoization) {
   assert_true(_abstract_feature.aggregation_.value() ==
                   enums::Aggregation::value_of<"COUNT">() ||
               _abstract_feature.aggregation_.value() ==
@@ -199,7 +199,7 @@ Float Aggregator::apply_numerical(
     const std::vector<containers::Match> &_matches,
     const std::function<bool(const containers::Match &)> &_condition_function,
     const containers::AbstractFeature &_abstract_feature,
-    const fct::Ref<Memoization> &_memoization) {
+    const rfl::Ref<Memoization> &_memoization) {
   assert_true(_abstract_feature.input_col_ < _peripheral.num_numericals());
 
   const auto &col = _peripheral.numerical_col(_abstract_feature.input_col_);
@@ -230,7 +230,7 @@ Float Aggregator::apply_same_units_categorical(
     const std::vector<containers::Match> &_matches,
     const std::function<bool(const containers::Match &)> &_condition_function,
     const containers::AbstractFeature &_abstract_feature,
-    const fct::Ref<Memoization> &_memoization) {
+    const rfl::Ref<Memoization> &_memoization) {
   assert_true(_abstract_feature.input_col_ < _peripheral.num_categoricals());
 
   assert_true(_abstract_feature.output_col_ < _population.num_categoricals());
@@ -270,7 +270,7 @@ Float Aggregator::apply_same_units_discrete(
     const std::vector<containers::Match> &_matches,
     const std::function<bool(const containers::Match &)> &_condition_function,
     const containers::AbstractFeature &_abstract_feature,
-    const fct::Ref<Memoization> &_memoization) {
+    const rfl::Ref<Memoization> &_memoization) {
   assert_true(_abstract_feature.input_col_ < _peripheral.num_discretes());
 
   assert_true(_abstract_feature.output_col_ < _population.num_discretes());
@@ -306,7 +306,7 @@ Float Aggregator::apply_same_units_numerical(
     const std::vector<containers::Match> &_matches,
     const std::function<bool(const containers::Match &)> &_condition_function,
     const containers::AbstractFeature &_abstract_feature,
-    const fct::Ref<Memoization> &_memoization) {
+    const rfl::Ref<Memoization> &_memoization) {
   assert_true(_abstract_feature.input_col_ < _peripheral.num_numericals());
 
   assert_true(_abstract_feature.output_col_ < _population.num_numericals());
@@ -343,7 +343,7 @@ Float Aggregator::apply_subfeatures(
     const std::vector<containers::Match> &_matches,
     const std::function<bool(const containers::Match &)> &_condition_function,
     const containers::AbstractFeature &_abstract_feature,
-    const fct::Ref<Memoization> &_memoization) {
+    const rfl::Ref<Memoization> &_memoization) {
   assert_true(_abstract_feature.input_col_ < _subfeatures.size());
 
   const auto &col = _subfeatures.at(_abstract_feature.input_col_);
@@ -374,7 +374,7 @@ Float Aggregator::apply_text(
     const std::vector<containers::Match> &_matches,
     const std::function<bool(const containers::Match &)> &_condition_function,
     const containers::AbstractFeature &_abstract_feature,
-    const fct::Ref<Memoization> &_memoization) {
+    const rfl::Ref<Memoization> &_memoization) {
   assert_true(_peripheral.text_.size() == _peripheral.word_indices_.size());
 
   assert_true(_abstract_feature.input_col_ < _peripheral.word_indices_.size());

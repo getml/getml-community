@@ -10,24 +10,24 @@
 
 #include <memory>
 
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
 #include "json/json.hpp"
 #include "memmap/memmap.hpp"
 #include "predictors/Float.hpp"
 #include "predictors/FloatFeature.hpp"
 #include "predictors/Int.hpp"
 #include "predictors/IntFeature.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
 
 namespace predictors {
 
 class Encoding {
  public:
-  using f_max = fct::Field<"max_", Int>;
+  using f_max = rfl::Field<"max_", Int>;
 
-  using f_min = fct::Field<"min_", Int>;
+  using f_min = rfl::Field<"min_", Int>;
 
-  using NamedTupleType = fct::NamedTuple<f_max, f_min>;
+  using NamedTupleType = rfl::NamedTuple<f_max, f_min>;
 
  public:
   Encoding() : max_(1), min_(0) {}

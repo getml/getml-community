@@ -11,12 +11,12 @@
 
 #include "flexbuffers/Reader.hpp"
 #include "flexbuffers/Writer.hpp"
-#include "parsing/Parser.hpp"
+#include "rfl/parsing/Parser.hpp"
 
 namespace flexbuffers {
 
 template <class T>
-using Parser = parsing::Parser<Reader, Writer, T>;
+using Parser = rfl::parsing::Parser<Reader, Writer, T>;
 
 };  // namespace flexbuffers
 

@@ -11,11 +11,11 @@
 #include <string>
 #include <vector>
 
-#include "fct/NamedTuple.hpp"
-#include "fct/Ref.hpp"
-#include "fct/define_named_tuple.hpp"
-#include "fct/remove_fields.hpp"
 #include "json/json.hpp"
+#include "rfl/NamedTuple.hpp"
+#include "rfl/Ref.hpp"
+#include "rfl/define_named_tuple.hpp"
+#include "rfl/remove_fields.hpp"
 
 namespace helpers {
 
@@ -25,76 +25,76 @@ struct Placeholder {
 
   /// Whether you want to allow the targets to be used as numerical values.
   using f_allow_lagged_targets =
-      fct::Field<"allow_lagged_targets_", std::vector<bool>>;
+      rfl::Field<"allow_lagged_targets_", std::vector<bool>>;
 
   /// The name of the categorical columns
   /// (this is only required for the Python API).
-  using f_categoricals = fct::Field<"categoricals_", std::vector<std::string>>;
+  using f_categoricals = rfl::Field<"categoricals_", std::vector<std::string>>;
 
   /// The name of the discrete columns
   /// (this is only required for the Python API).
-  using f_discretes = fct::Field<"discretes_", std::vector<std::string>>;
+  using f_discretes = rfl::Field<"discretes_", std::vector<std::string>>;
 
   /// Placeholders that are LEFT JOINED
   /// to this placeholder
   using f_joined_tables =
-      fct::Field<"joined_tables_", std::vector<Placeholder>>;
+      rfl::Field<"joined_tables_", std::vector<Placeholder>>;
 
   /// The name of the join keys
   /// (this is only required for the Python API).
-  using f_join_keys = fct::Field<"join_keys_", std::vector<std::string>>;
+  using f_join_keys = rfl::Field<"join_keys_", std::vector<std::string>>;
 
   /// Names of the join keys used (LEFT) - should have
   /// same length as joined_tables_
   using f_join_keys_used =
-      fct::Field<"join_keys_used_", std::vector<std::string>>;
+      rfl::Field<"join_keys_used_", std::vector<std::string>>;
 
   /// Name of the Placeholder object
-  using f_name = fct::Field<"name_", std::string>;
+  using f_name = rfl::Field<"name_", std::string>;
 
   /// The name of the numerical columns
   /// (this is only required for the Python API).
-  using f_numericals = fct::Field<"numericals_", std::vector<std::string>>;
+  using f_numericals = rfl::Field<"numericals_", std::vector<std::string>>;
 
   /// Names of the join keys used (RIGHT) - should have
   /// same length as joined_tables_
   using f_other_join_keys_used =
-      fct::Field<"other_join_keys_used_", std::vector<std::string>>;
+      rfl::Field<"other_join_keys_used_", std::vector<std::string>>;
 
   /// Names of the time stamps used (RIGHT) - should have
   /// same length as joined_tables_
   using f_other_time_stamps_used =
-      fct::Field<"other_time_stamps_used_", std::vector<std::string>>;
+      rfl::Field<"other_time_stamps_used_", std::vector<std::string>>;
 
   /// Whether we want to use propositionalization for the relationship.
   using f_propositionalization =
-      fct::Field<"propositionalization_", std::vector<bool>>;
+      rfl::Field<"propositionalization_", std::vector<bool>>;
 
   /// The name of the target columns
   /// (this is only required for the Python API).
-  using f_targets = fct::Field<"targets_", std::vector<std::string>>;
+  using f_targets = rfl::Field<"targets_", std::vector<std::string>>;
 
   /// The name of the text columns
   /// (this is only required for the Python API).
-  using f_text = fct::Field<"text_", std::vector<std::string>>;
+  using f_text = rfl::Field<"text_", std::vector<std::string>>;
 
   /// The name of the time stamp columns
   /// (this is only required for the Python API).
-  using f_time_stamps = fct::Field<"time_stamps_", std::vector<std::string>>;
+  using f_time_stamps = rfl::Field<"time_stamps_", std::vector<std::string>>;
 
   /// Names of the time stamps used (LEFT) - should have
   /// same length as joined_tables_
   using f_time_stamps_used =
-      fct::Field<"time_stamps_used_", std::vector<std::string>>;
+      rfl::Field<"time_stamps_used_", std::vector<std::string>>;
 
   /// Names of the time stamps used (LEFT) for the upper bound - should have
   /// same length as joined_tables_
   using f_upper_time_stamps_used =
-      fct::Field<"upper_time_stamps_used_", std::vector<std::string>>;
+      rfl::Field<"upper_time_stamps_used_", std::vector<std::string>>;
 
   /// Subset of the fields that are actually needed for training.
   using NeededForTraining =
-      fct::NamedTuple<f_allow_lagged_targets, f_joined_tables, f_join_keys_used,
+      rfl::NamedTuple<f_allow_lagged_targets, f_joined_tables, f_join_keys_used,
                       f_name, f_other_join_keys_used, f_other_time_stamps_used,
                       f_propositionalization, f_time_stamps_used,
                       f_upper_time_stamps_used>;
@@ -102,13 +102,13 @@ struct Placeholder {
   /// Subset of the fields that simply required for the refresh command in the
   /// Python API.
   using NeededForPythonAPI =
-      fct::NamedTuple<f_categoricals, f_discretes, f_join_keys, f_name,
+      rfl::NamedTuple<f_categoricals, f_discretes, f_join_keys, f_name,
                       f_numericals, f_targets, f_text, f_time_stamps>;
 
   /// The main JSON representation of a Placeholder. Combines NeededForTraiing
   /// and NeededForPythonAPI.
-  using NamedTupleType = fct::define_named_tuple_t<
-      fct::remove_fields_t<NeededForTraining, "name_">, NeededForPythonAPI>;
+  using NamedTupleType = rfl::define_named_tuple_t<
+      rfl::remove_fields_t<NeededForTraining, "name_">, NeededForPythonAPI>;
 
   explicit Placeholder(const NeededForTraining& _params);
 

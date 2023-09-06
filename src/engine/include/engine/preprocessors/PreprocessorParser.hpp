@@ -13,7 +13,7 @@
 #include "commands/Fingerprint.hpp"
 #include "commands/Preprocessor.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
-#include "fct/Ref.hpp"
+#include "rfl/Ref.hpp"
 
 namespace engine {
 namespace preprocessors {
@@ -23,7 +23,7 @@ struct PreprocessorParser {
       typename commands::Preprocessor::NamedTupleType;
 
   /// Returns the correct preprocessor to use based on the JSON object.
-  static fct::Ref<Preprocessor> parse(
+  static rfl::Ref<Preprocessor> parse(
       const PreprocessorHyperparams& _cmd,
       const std::vector<commands::Fingerprint>& _dependencies);
 };

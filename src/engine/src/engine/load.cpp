@@ -15,9 +15,9 @@
 #include "commands/Pipeline.hpp"
 #include "engine/pipelines/PipelineJSON.hpp"
 #include "engine/pipelines/load_fitted.hpp"
-#include "fct/Field.hpp"
 #include "helpers/Loader.hpp"
 #include "metrics/metrics.hpp"
+#include "rfl/Field.hpp"
 
 namespace engine {
 namespace pipelines {
@@ -26,10 +26,10 @@ namespace load {
 Pipeline load(const std::string& _path,
               const dependency::PipelineTrackers& _pipeline_trackers) {
   const auto obj =
-      helpers::Loader::load<fct::Ref<const commands::Pipeline>>(_path + "obj");
+      helpers::Loader::load<rfl::Ref<const commands::Pipeline>>(_path + "obj");
 
   const auto scores =
-      helpers::Loader::load<fct::Ref<const metrics::Scores>>(_path + "scores");
+      helpers::Loader::load<rfl::Ref<const metrics::Scores>>(_path + "scores");
 
   const auto pipeline_json =
       helpers::Loader::load<PipelineJSON>(_path + "pipeline");

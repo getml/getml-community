@@ -27,10 +27,10 @@
 #include "engine/handlers/ViewParser.hpp"
 #include "engine/pipelines/FittedPipeline.hpp"
 #include "engine/pipelines/pipelines.hpp"
-#include "fct/Literal.hpp"
-#include "fct/NamedTuple.hpp"
-#include "fct/define_named_tuple.hpp"
 #include "metrics/Scores.hpp"
+#include "rfl/Literal.hpp"
+#include "rfl/NamedTuple.hpp"
+#include "rfl/define_named_tuple.hpp"
 
 namespace engine {
 namespace handlers {
@@ -42,30 +42,30 @@ class PipelineManager {
   using Command = commands::PipelineCommand;
 
  private:
-  using FullTransformOp = fct::define_named_tuple_t<
-      fct::Field<"type_", fct::Literal<"Pipeline.transform">>,
-      fct::Field<"name_", std::string>, fct::Field<"table_name_", std::string>,
-      fct::Field<"df_name_", std::string>, fct::Field<"predict_", bool>,
-      fct::Field<"score_", bool>, commands::DataFramesOrViews>;
+  using FullTransformOp = rfl::define_named_tuple_t<
+      rfl::Field<"type_", rfl::Literal<"Pipeline.transform">>,
+      rfl::Field<"name_", std::string>, rfl::Field<"table_name_", std::string>,
+      rfl::Field<"df_name_", std::string>, rfl::Field<"predict_", bool>,
+      rfl::Field<"score_", bool>, commands::DataFramesOrViews>;
 
-  using RolesType = fct::NamedTuple<fct::Field<"name", std::string>,
-                                    fct::Field<"roles", containers::Roles>>;
+  using RolesType = rfl::NamedTuple<rfl::Field<"name", std::string>,
+                                    rfl::Field<"roles", containers::Roles>>;
 
-  using ScoresType = fct::define_named_tuple_t<
+  using ScoresType = rfl::define_named_tuple_t<
       typename metrics::Scores::AllMetricsType,
-      fct::Field<"set_used_", std::string>,
-      fct::Field<"history_",
+      rfl::Field<"set_used_", std::string>,
+      rfl::Field<"history_",
                  std::vector<typename metrics::Scores::HistoryType>>>;
 
   using RefreshUnfittedPipelineType =
-      fct::NamedTuple<fct::Field<"obj", commands::Pipeline>,
-                      fct::Field<"scores", ScoresType>>;
+      rfl::NamedTuple<rfl::Field<"obj", commands::Pipeline>,
+                      rfl::Field<"scores", ScoresType>>;
 
-  using RefreshFittedPipelineType = fct::define_named_tuple_t<
+  using RefreshFittedPipelineType = rfl::define_named_tuple_t<
       RefreshUnfittedPipelineType,
-      fct::Field<"peripheral_metadata", std::vector<RolesType>>,
-      fct::Field<"population_metadata", RolesType>,
-      fct::Field<"targets", std::vector<std::string>>>;
+      rfl::Field<"peripheral_metadata", std::vector<RolesType>>,
+      rfl::Field<"population_metadata", RolesType>,
+      rfl::Field<"targets", std::vector<std::string>>>;
 
   using RefreshPipelineType =
       std::variant<RefreshFittedPipelineType, RefreshUnfittedPipelineType>;
@@ -176,16 +176,16 @@ class PipelineManager {
   /// Makes sure that the user is allowed to transform this pipeline.
   void check_user_privileges(
       const pipelines::Pipeline& _pipeline, const std::string& _name,
-      const fct::NamedTuple<fct::Field<"http_request_", bool>>& _cmd) const;
+      const rfl::NamedTuple<rfl::Field<"http_request_", bool>>& _cmd) const;
 
   /// Receives data from the client. This data will not be stored permanently,
   /// but locally. Once the training/transformation process is complete, it
   /// will be deleted.
   FullTransformOp receive_data(
       const typename Command::TransformOp& _cmd,
-      const fct::Ref<containers::Encoding>& _categories,
-      const fct::Ref<containers::Encoding>& _join_keys_encoding,
-      const fct::Ref<std::map<std::string, containers::DataFrame>>&
+      const rfl::Ref<containers::Encoding>& _categories,
+      const rfl::Ref<containers::Encoding>& _join_keys_encoding,
+      const rfl::Ref<std::map<std::string, containers::DataFrame>>&
           _data_frames,
       Poco::Net::StreamSocket* _socket);
 
@@ -195,8 +195,8 @@ class PipelineManager {
 
   /// Under some circumstances, we might want to send data to the client, such
   /// as targets from the population or the results of a transform call.
-  void send_data(const fct::Ref<containers::Encoding>& _categories,
-                 const fct::Ref<std::map<std::string, containers::DataFrame>>&
+  void send_data(const rfl::Ref<containers::Encoding>& _categories,
+                 const rfl::Ref<std::map<std::string, containers::DataFrame>>&
                      _local_data_frames,
                  Poco::Net::StreamSocket* _socket);
 
@@ -212,8 +212,8 @@ class PipelineManager {
                 const FullTransformOp& _cmd,
                 const containers::DataFrame& _population_df,
                 const std::vector<containers::DataFrame>& _peripheral_dfs,
-                const fct::Ref<containers::Encoding>& _local_categories,
-                const fct::Ref<containers::Encoding>& _local_join_keys_encoding,
+                const rfl::Ref<containers::Encoding>& _local_categories,
+                const rfl::Ref<containers::Encoding>& _local_join_keys_encoding,
                 containers::DataFrame* _df,
                 multithreading::WeakWriteLock* _weak_write_lock);
 
@@ -223,8 +223,8 @@ class PipelineManager {
              const containers::DataFrame& _population_table,
              const containers::NumericalFeatures& _numerical_features,
              const containers::CategoricalFeatures& _categorical_features,
-             const fct::Ref<containers::Encoding>& _categories,
-             const fct::Ref<containers::Encoding>& _join_keys_encoding);
+             const rfl::Ref<containers::Encoding>& _categories,
+             const rfl::Ref<containers::Encoding>& _join_keys_encoding);
 
   /// Writes a set of features to a DataFrame.
   containers::DataFrame to_df(
@@ -232,8 +232,8 @@ class PipelineManager {
       const containers::DataFrame& _population_table,
       const containers::NumericalFeatures& _numerical_features,
       const containers::CategoricalFeatures& _categorical_features,
-      const fct::Ref<containers::Encoding>& _categories,
-      const fct::Ref<containers::Encoding>& _join_keys_encoding);
+      const rfl::Ref<containers::Encoding>& _categories,
+      const rfl::Ref<containers::Encoding>& _join_keys_encoding);
 
   // ------------------------------------------------------------------------
 
@@ -244,7 +244,7 @@ class PipelineManager {
   }
 
   /// Trivial accessor
-  fct::Ref<database::Connector> connector(const std::string& _name) {
+  rfl::Ref<database::Connector> connector(const std::string& _name) {
     return params_.database_manager_->connector(_name);
   }
 

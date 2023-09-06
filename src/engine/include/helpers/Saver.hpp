@@ -11,31 +11,31 @@
 #include <fstream>
 #include <string>
 
-#include "fct/Literal.hpp"
-#include "fct/always_false.hpp"
-#include "fct/visit.hpp"
 #include "flexbuffers/to_flexbuffers.hpp"
 #include "json/to_json.hpp"
+#include "rfl/Literal.hpp"
+#include "rfl/always_false.hpp"
+#include "rfl/visit.hpp"
 
 namespace helpers {
 
 struct Saver {
-  using Format = fct::Literal<"flexbuffers", "json">;
+  using Format = rfl::Literal<"flexbuffers", "json">;
 
   /// Saves the object in one of the supported formats.
   template <class T>
   static void save(const std::string& _fname, const T& _obj,
                    const Format& _format) {
     const auto handle_variant = [&]<typename U>(const U& _format) {
-      if constexpr (std::is_same<U, fct::Literal<"flexbuffers">>()) {
+      if constexpr (std::is_same<U, rfl::Literal<"flexbuffers">>()) {
         save_as_flexbuffers(_fname, _obj);
-      } else if constexpr (std::is_same<U, fct::Literal<"json">>()) {
+      } else if constexpr (std::is_same<U, rfl::Literal<"json">>()) {
         save_as_json(_fname, _obj);
       } else {
-        static_assert(fct::always_false_v<U>, "Not all cases were supported");
+        static_assert(rfl::always_false_v<U>, "Not all cases were supported");
       }
     };
-    fct::visit(handle_variant, _format);
+    rfl::visit(handle_variant, _format);
   }
 
   /// Saves any class that is supported by the flexbuffers library to

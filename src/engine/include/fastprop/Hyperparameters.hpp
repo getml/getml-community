@@ -11,58 +11,58 @@
 #include "fastprop/Float.hpp"
 #include "fastprop/Int.hpp"
 #include "fastprop/enums/Aggregation.hpp"
-#include "fct/Literal.hpp"
-#include "fct/NamedTuple.hpp"
 #include "json/json.hpp"
+#include "rfl/Literal.hpp"
+#include "rfl/NamedTuple.hpp"
 
 namespace fastprop {
 
 /// Describes the aggregations that may be used
 using f_aggregations =
-    fct::Field<"aggregation_", std::vector<enums::Aggregation>>;
+    rfl::Field<"aggregation_", std::vector<enums::Aggregation>>;
 
 /// Size of the moving time windows.
-using f_delta_t = fct::Field<"delta_t_", Float>;
+using f_delta_t = rfl::Field<"delta_t_", Float>;
 
 /// The loss function (FastProp is completely unsupervised, so we simply
 /// have this for consistency).
-using f_loss_function = fct::Field<"loss_function_", std::string>;
+using f_loss_function = rfl::Field<"loss_function_", std::string>;
 
 /// The maximum lag.
-using f_max_lag = fct::Field<"max_lag_", size_t>;
+using f_max_lag = rfl::Field<"max_lag_", size_t>;
 
 /// The minimum document frequency required for a string to become part of
 /// the vocabulary.
-using f_min_df = fct::Field<"min_df_", size_t>;
+using f_min_df = rfl::Field<"min_df_", size_t>;
 
 /// The number of categories from which we would like to extract numerical
 /// features.
-using f_n_most_frequent = fct::Field<"n_most_frequent_", size_t>;
+using f_n_most_frequent = rfl::Field<"n_most_frequent_", size_t>;
 
 /// The maximum number of features generated.
-using f_num_features = fct::Field<"num_features_", size_t>;
+using f_num_features = rfl::Field<"num_features_", size_t>;
 
 /// The number of threads we want to use
-using f_num_threads = fct::Field<"num_threads_", Int>;
+using f_num_threads = rfl::Field<"num_threads_", Int>;
 
 /// The sampling factor to use. Set to 1 for no sampling.
-using f_sampling_factor = fct::Field<"sampling_factor_", Float>;
+using f_sampling_factor = rfl::Field<"sampling_factor_", Float>;
 
 /// Whether we want logging.
-using f_silent = fct::Field<"silent_", bool>;
+using f_silent = rfl::Field<"silent_", bool>;
 
 /// Defines the type
-using f_type = fct::Field<"type_", fct::Literal<"FastProp">>;
+using f_type = rfl::Field<"type_", rfl::Literal<"FastProp">>;
 
 /// The maximum size of the vocabulary.
-using f_vocab_size = fct::Field<"vocab_size_", size_t>;
+using f_vocab_size = rfl::Field<"vocab_size_", size_t>;
 
 struct Hyperparameters {
   static constexpr const char* CROSS_ENTROPY_LOSS = "CrossEntropyLoss";
   static constexpr const char* SQUARE_LOSS = "SquareLoss";
 
   using NamedTupleType =
-      fct::NamedTuple<f_aggregations, f_delta_t, f_loss_function, f_max_lag,
+      rfl::NamedTuple<f_aggregations, f_delta_t, f_loss_function, f_max_lag,
                       f_min_df, f_n_most_frequent, f_num_features,
                       f_num_threads, f_sampling_factor, f_silent, f_type,
                       f_vocab_size>;

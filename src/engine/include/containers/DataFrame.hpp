@@ -117,7 +117,7 @@ class DataFrame {
                 const Schema &_schema);
 
   /// Builds a dataframe from a table in the data base.
-  void from_db(const fct::Ref<database::Connector> _connector,
+  void from_db(const rfl::Ref<database::Connector> _connector,
                const std::string &_tname, const Schema &_schema);
 
   /// Builds a dataframe from a JSON object.
@@ -126,7 +126,7 @@ class DataFrame {
                  const Schema &_schema);
 
   /// Builds a dataframe from a query.
-  void from_query(const fct::Ref<database::Connector> _connector,
+  void from_query(const rfl::Ref<database::Connector> _connector,
                   const std::string &_query, const Schema &_schema);
 
   /// Returns the content of the data frame in a format that is compatible

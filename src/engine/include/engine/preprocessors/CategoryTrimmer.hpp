@@ -22,11 +22,11 @@
 #include "engine/Int.hpp"
 #include "engine/preprocessors/Params.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
-#include "fct/Field.hpp"
-#include "fct/Literal.hpp"
-#include "fct/NamedTuple.hpp"
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/StringIterator.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/Literal.hpp"
+#include "rfl/NamedTuple.hpp"
 #include "strings/strings.hpp"
 
 namespace engine {
@@ -37,17 +37,17 @@ class CategoryTrimmer : public Preprocessor {
 
  public:
   using CategoryPair =
-      std::pair<helpers::ColumnDescription, fct::Ref<const std::set<Int>>>;
+      std::pair<helpers::ColumnDescription, rfl::Ref<const std::set<Int>>>;
 
   using CategoryTrimmerOp = typename commands::Preprocessor::CategoryTrimmerOp;
 
   using f_peripheral_sets =
-      fct::Field<"peripheral_sets_", std::vector<std::vector<CategoryPair>>>;
+      rfl::Field<"peripheral_sets_", std::vector<std::vector<CategoryPair>>>;
 
   using f_population_sets =
-      fct::Field<"population_sets_", std::vector<CategoryPair>>;
+      rfl::Field<"population_sets_", std::vector<CategoryPair>>;
 
-  using NamedTupleType = fct::NamedTuple<f_peripheral_sets, f_population_sets>;
+  using NamedTupleType = rfl::NamedTuple<f_peripheral_sets, f_population_sets>;
 
   static constexpr const char* TRIMMED = "(trimmed)";
 
@@ -85,10 +85,10 @@ class CategoryTrimmer : public Preprocessor {
 
  public:
   /// Creates a deep copy.
-  fct::Ref<Preprocessor> clone(
+  rfl::Ref<Preprocessor> clone(
       const std::optional<std::vector<commands::Fingerprint>>& _dependencies =
           std::nullopt) const final {
-    const auto c = fct::Ref<CategoryTrimmer>::make(*this);
+    const auto c = rfl::Ref<CategoryTrimmer>::make(*this);
     if (_dependencies) {
       c->dependencies_ = *_dependencies;
     }
@@ -101,10 +101,10 @@ class CategoryTrimmer : public Preprocessor {
     using CategoryTrimmerFingerprint =
         typename commands::Fingerprint::CategoryTrimmerFingerprint;
     return commands::Fingerprint(CategoryTrimmerFingerprint(
-        fct::make_field<"dependencies_">(dependencies_),
-        fct::make_field<"type_">(fct::Literal<"CategoryTrimmer">()),
-        fct::make_field<"max_num_categories_">(max_num_categories_),
-        fct::make_field<"min_freq_">(min_freq_)));
+        rfl::make_field<"dependencies_">(dependencies_),
+        rfl::make_field<"type_">(rfl::Literal<"CategoryTrimmer">()),
+        rfl::make_field<"max_num_categories_">(max_num_categories_),
+        rfl::make_field<"min_freq_">(min_freq_)));
   }
 
   /// Returns the type of the preprocessor.
@@ -135,7 +135,7 @@ class CategoryTrimmer : public Preprocessor {
                                    const MarkerType _marker) const;
 
   /// Generates a cateogory set for a column.
-  fct::Ref<const std::set<Int>> make_category_set(
+  rfl::Ref<const std::set<Int>> make_category_set(
       const containers::Column<Int>& _col) const;
 
   /// Generates the counts for each category, sorted in descending order.
@@ -149,7 +149,7 @@ class CategoryTrimmer : public Preprocessor {
   containers::DataFrame transform_df(
       const std::vector<CategoryPair>& _sets,
       const std::shared_ptr<memmap::Pool>& _pool,
-      const fct::Ref<const containers::Encoding>& _categories,
+      const rfl::Ref<const containers::Encoding>& _categories,
       const containers::DataFrame& _df) const;
 
  private:

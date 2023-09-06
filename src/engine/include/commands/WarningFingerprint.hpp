@@ -13,16 +13,16 @@
 #include <vector>
 
 #include "commands/Fingerprint.hpp"
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
-#include "fct/Ref.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
+#include "rfl/Ref.hpp"
 
 namespace commands {
 
 /// To avoid duplicate checks, we also include the warnings into the fingerprint
 /// system.
-using WarningFingerprint = fct::NamedTuple<fct::Field<
-    "fl_fingerprints_", fct::Ref<const std::vector<commands::Fingerprint>>>>;
+using WarningFingerprint = rfl::NamedTuple<rfl::Field<
+    "fl_fingerprints_", rfl::Ref<const std::vector<commands::Fingerprint>>>>;
 
 }  // namespace commands
 

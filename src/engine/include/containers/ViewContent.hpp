@@ -14,16 +14,16 @@
 #include <vector>
 
 #include "containers/DataFrameContent.hpp"
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
 
 namespace containers {
 
 /// A format that is compatible with the data.tables API.
 using ViewContent = std::variant<
     DataFrameContent,
-    fct::NamedTuple<fct::Field<"draw", std::int32_t>,
-                    fct::Field<"data", std::vector<std::vector<std::string>>>>>;
+    rfl::NamedTuple<rfl::Field<"draw", std::int32_t>,
+                    rfl::Field<"data", std::vector<std::vector<std::string>>>>>;
 
 }  // namespace containers
 

@@ -43,7 +43,7 @@ std::vector<std::vector<Float>> feature_importances(
     const Predictors& _predictors);
 
 /// Scores the pipeline.
-fct::Ref<const metrics::Scores> score(
+rfl::Ref<const metrics::Scores> score(
     const Pipeline& _pipeline, const FittedPipeline& _fitted,
     const containers::DataFrame& _population_df,
     const std::string& _population_name,

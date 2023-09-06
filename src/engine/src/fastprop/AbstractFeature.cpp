@@ -72,13 +72,13 @@ AbstractFeature::~AbstractFeature() = default;
 // ----------------------------------------------------------------------------
 
 typename AbstractFeature::NamedTupleType AbstractFeature::named_tuple() const {
-  return fct::make_field<"aggregation_">(aggregation_) *
-         fct::make_field<"categorical_value_">(categorical_value_) *
-         fct::make_field<"conditions_">(conditions_) *
-         fct::make_field<"data_used_">(data_used_) *
-         fct::make_field<"input_col_">(input_col_) *
-         fct::make_field<"output_col_">(output_col_) *
-         fct::make_field<"peripheral_">(peripheral_);
+  return rfl::make_field<"aggregation_">(aggregation_) *
+         rfl::make_field<"categorical_value_">(categorical_value_) *
+         rfl::make_field<"conditions_">(conditions_) *
+         rfl::make_field<"data_used_">(data_used_) *
+         rfl::make_field<"input_col_">(input_col_) *
+         rfl::make_field<"output_col_">(output_col_) *
+         rfl::make_field<"peripheral_">(peripheral_);
 }
 
 // ----------------------------------------------------------------------------

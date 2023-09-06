@@ -12,8 +12,8 @@
 #include <vector>
 
 #include "fastprop/algorithm/algorithm.hpp"
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
 #include "transpilation/SQLDialectGenerator.hpp"
 
 namespace fastprop {
@@ -23,9 +23,9 @@ class FastPropContainer {
  public:
   using Subcontainers = std::vector<std::shared_ptr<const FastPropContainer>>;
 
-  using NamedTupleType = fct::NamedTuple<
-      fct::Field<"fast_prop_", std::shared_ptr<const algorithm::FastProp>>,
-      fct::Field<"subcontainers_", std::shared_ptr<const Subcontainers>>>;
+  using NamedTupleType = rfl::NamedTuple<
+      rfl::Field<"fast_prop_", std::shared_ptr<const algorithm::FastProp>>,
+      rfl::Field<"subcontainers_", std::shared_ptr<const Subcontainers>>>;
 
  public:
   FastPropContainer(
@@ -50,8 +50,8 @@ class FastPropContainer {
 
   /// Necessary for the automated parsing to work.
   NamedTupleType named_tuple() const {
-    return fct::make_field<"fast_prop_">(fast_prop_) *
-           fct::make_field<"subcontainers_">(subcontainers_);
+    return rfl::make_field<"fast_prop_">(fast_prop_) *
+           rfl::make_field<"subcontainers_">(subcontainers_);
   }
 
   /// Returns the number of peripheral tables

@@ -15,9 +15,9 @@
 #include <thread>
 
 #include "engine/config/config.hpp"
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
 #include "json/json.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
 
 namespace communication {
 
@@ -72,9 +72,9 @@ class Monitor {
 template <class BodyType>
 std::string Monitor::make_cmd(const std::string& _type,
                               const BodyType& _body) const {
-  const auto cmd = fct::make_field<"body_">(_body) *
-                   fct::make_field<"project_">(options_.engine().project_) *
-                   fct::make_field<"type_">(_type);
+  const auto cmd = rfl::make_field<"body_">(_body) *
+                   rfl::make_field<"project_">(options_.engine().project_) *
+                   rfl::make_field<"type_">(_type);
 
   return json::to_json(cmd);
 }

@@ -18,12 +18,12 @@
 #include "engine/Int.hpp"
 #include "engine/preprocessors/Params.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
-#include "fct/Field.hpp"
-#include "fct/Literal.hpp"
-#include "fct/NamedTuple.hpp"
-#include "fct/Ref.hpp"
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/StringIterator.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/Literal.hpp"
+#include "rfl/NamedTuple.hpp"
+#include "rfl/Ref.hpp"
 #include "strings/strings.hpp"
 
 namespace engine {
@@ -37,9 +37,9 @@ class TextFieldSplitter : public Preprocessor {
       typename commands::Preprocessor::TextFieldSplitterOp;
 
   using f_cols =
-      fct::Field<"cols_", std::vector<fct::Ref<helpers::ColumnDescription>>>;
+      rfl::Field<"cols_", std::vector<rfl::Ref<helpers::ColumnDescription>>>;
 
-  using NamedTupleType = fct::NamedTuple<f_cols>;
+  using NamedTupleType = rfl::NamedTuple<f_cols>;
 
  public:
   TextFieldSplitter(const TextFieldSplitterOp& _op,
@@ -73,10 +73,10 @@ class TextFieldSplitter : public Preprocessor {
 
  public:
   /// Creates a deep copy.
-  fct::Ref<Preprocessor> clone(
+  rfl::Ref<Preprocessor> clone(
       const std::optional<std::vector<commands::Fingerprint>>& _dependencies =
           std::nullopt) const final {
-    const auto c = fct::Ref<TextFieldSplitter>::make(*this);
+    const auto c = rfl::Ref<TextFieldSplitter>::make(*this);
     if (_dependencies) {
       c->dependencies_ = *_dependencies;
     }
@@ -89,8 +89,8 @@ class TextFieldSplitter : public Preprocessor {
     using FingerprintType =
         typename commands::Fingerprint::TextFieldSplitterFingerprint;
     return commands::Fingerprint(FingerprintType(
-        fct::make_field<"dependencies_">(dependencies_),
-        fct::make_field<"type_">(fct::Literal<"TextFieldSplitter">())));
+        rfl::make_field<"dependencies_">(dependencies_),
+        rfl::make_field<"type_">(rfl::Literal<"TextFieldSplitter">())));
   }
 
   /// Necessary for the automated parsing to work.
@@ -104,7 +104,7 @@ class TextFieldSplitter : public Preprocessor {
   containers::DataFrame add_rowid(const containers::DataFrame& _df) const;
 
   /// Fits and transforms an individual data frame.
-  std::vector<fct::Ref<helpers::ColumnDescription>> fit_df(
+  std::vector<rfl::Ref<helpers::ColumnDescription>> fit_df(
       const containers::DataFrame& _df, const MarkerType _marker) const;
 
   /// Generates a new data frame.
@@ -128,7 +128,7 @@ class TextFieldSplitter : public Preprocessor {
  private:
   /// List of all columns to which the text field splitter transformation
   /// applies.
-  std::vector<fct::Ref<helpers::ColumnDescription>> cols_;
+  std::vector<rfl::Ref<helpers::ColumnDescription>> cols_;
 
   /// The dependencies inserted into the the preprocessor.
   std::vector<commands::Fingerprint> dependencies_;

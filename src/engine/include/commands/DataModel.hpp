@@ -13,11 +13,11 @@
 
 #include "commands/Float.hpp"
 #include "commands/Roles.hpp"
-#include "fct/Field.hpp"
-#include "fct/Literal.hpp"
-#include "fct/define_named_tuple.hpp"
 #include "helpers/Placeholder.hpp"
 #include "json/json.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/Literal.hpp"
+#include "rfl/define_named_tuple.hpp"
 
 namespace commands {
 
@@ -26,28 +26,28 @@ namespace commands {
 /// yet, which is these additional fields are contained.
 struct DataModel {
   using RelationshipLiteral =
-      fct::Literal<"many-to-many", "many-to-one", "one-to-many", "one-to-one",
+      rfl::Literal<"many-to-many", "many-to-one", "one-to-many", "one-to-one",
                    "propositionalization">;
 
   /// The horizon of the join.
-  using f_horizon = fct::Field<"horizon_", std::vector<Float>>;
+  using f_horizon = rfl::Field<"horizon_", std::vector<Float>>;
 
   /// The tables joined to this data model. Note the recursive definition.
-  using f_joined_tables = fct::Field<"joined_tables_", std::vector<DataModel>>;
+  using f_joined_tables = rfl::Field<"joined_tables_", std::vector<DataModel>>;
 
   /// The memory of the join.
-  using f_memory = fct::Field<"memory_", std::vector<Float>>;
+  using f_memory = rfl::Field<"memory_", std::vector<Float>>;
 
   /// The relationship used for the join.
   using f_relationship =
-      fct::Field<"relationship_", std::vector<RelationshipLiteral>>;
+      rfl::Field<"relationship_", std::vector<RelationshipLiteral>>;
 
   /// The fields used to determine the roles.
-  using f_roles = fct::Field<"roles_", Roles>;
+  using f_roles = rfl::Field<"roles_", Roles>;
 
   /// Needed for the JSON parsing to work.
-  using NamedTupleType = fct::define_named_tuple_t<
-      fct::remove_fields_t<typename helpers::Placeholder::NeededForTraining,
+  using NamedTupleType = rfl::define_named_tuple_t<
+      rfl::remove_fields_t<typename helpers::Placeholder::NeededForTraining,
                            "joined_tables_", "propositionalization_">,
       f_horizon, f_joined_tables, f_memory, f_relationship, f_roles>;
 
@@ -72,7 +72,7 @@ struct DataModel {
   ~DataModel() = default;
 
   /// Helper function to check the length of the inputs.
-  template <fct::StringLiteral _name>
+  template <rfl::internal::StringLiteral _name>
   void check_length() const {
     const size_t expected = val_.get<"joined_tables_">().size();
     const size_t actual = val_.get<_name>().size();

@@ -12,17 +12,17 @@
 #include <string>
 #include <vector>
 
-#include "fct/Field.hpp"
-#include "fct/NamedTuple.hpp"
+#include "rfl/Field.hpp"
+#include "rfl/NamedTuple.hpp"
 
 namespace database {
 
 /// A format that is compatible with the data.tables API.
 using TableContent =
-    fct::NamedTuple<fct::Field<"draw", std::int32_t>,
-                    fct::Field<"recordsTotal", std::int32_t>,
-                    fct::Field<"recordsFiltered", std::int32_t>,
-                    fct::Field<"data", std::vector<std::vector<std::string>>>>;
+    rfl::NamedTuple<rfl::Field<"draw", std::int32_t>,
+                    rfl::Field<"recordsTotal", std::int32_t>,
+                    rfl::Field<"recordsFiltered", std::int32_t>,
+                    rfl::Field<"data", std::vector<std::vector<std::string>>>>;
 
 }  // namespace database
 

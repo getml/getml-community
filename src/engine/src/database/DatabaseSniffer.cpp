@@ -9,7 +9,7 @@
 
 namespace database {
 
-std::string DatabaseSniffer::sniff(const fct::Ref<const Connector>& _conn,
+std::string DatabaseSniffer::sniff(const rfl::Ref<const Connector>& _conn,
                                    const std::string& _dialect,
                                    const std::string& _source_table_name,
                                    const std::string& _target_table_name) {

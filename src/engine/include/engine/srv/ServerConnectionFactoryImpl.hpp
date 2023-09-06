@@ -20,7 +20,7 @@
 #include "engine/config/config.hpp"
 #include "engine/handlers/handlers.hpp"
 #include "engine/srv/RequestHandler.hpp"
-#include "fct/Ref.hpp"
+#include "rfl/Ref.hpp"
 
 namespace engine {
 namespace srv {
@@ -29,13 +29,13 @@ class ServerConnectionFactoryImpl
     : public Poco::Net::TCPServerConnectionFactory {
  public:
   ServerConnectionFactoryImpl(
-      const fct::Ref<handlers::DatabaseManager>& _database_manager,
-      const fct::Ref<handlers::DataFrameManagerParams>& _data_params,
-      const fct::Ref<const communication::Logger>& _logger,
+      const rfl::Ref<handlers::DatabaseManager>& _database_manager,
+      const rfl::Ref<handlers::DataFrameManagerParams>& _data_params,
+      const rfl::Ref<const communication::Logger>& _logger,
       const config::Options& _options,
-      const fct::Ref<handlers::PipelineManager>& _pipeline_manager,
-      const fct::Ref<handlers::ProjectManager>& _project_manager,
-      const fct::Ref<std::atomic<bool>>& _shutdown)
+      const rfl::Ref<handlers::PipelineManager>& _pipeline_manager,
+      const rfl::Ref<handlers::ProjectManager>& _project_manager,
+      const rfl::Ref<std::atomic<bool>>& _shutdown)
       : database_manager_(_database_manager),
         data_params_(_data_params),
         logger_(_logger),
@@ -55,26 +55,26 @@ class ServerConnectionFactoryImpl
 
  private:
   /// Handles requests related to the database.
-  const fct::Ref<handlers::DatabaseManager> database_manager_;
+  const rfl::Ref<handlers::DatabaseManager> database_manager_;
 
   /// Handles requests related to the data frames.
-  const fct::Ref<handlers::DataFrameManagerParams> data_params_;
+  const rfl::Ref<handlers::DataFrameManagerParams> data_params_;
 
   /// Logs commands.
-  const fct::Ref<const communication::Logger> logger_;
+  const rfl::Ref<const communication::Logger> logger_;
 
   /// Contains information on the port of the monitor process
   const config::Options options_;
 
   /// Handles requests related to pipelines.
-  const fct::Ref<handlers::PipelineManager> pipeline_manager_;
+  const rfl::Ref<handlers::PipelineManager> pipeline_manager_;
 
   /// Handles requests related to the project as a whole, such as save or
   /// load.
-  const fct::Ref<handlers::ProjectManager> project_manager_;
+  const rfl::Ref<handlers::ProjectManager> project_manager_;
 
   /// Signals to the main process that we want to shut down.
-  const fct::Ref<std::atomic<bool>>& shutdown_;
+  const rfl::Ref<std::atomic<bool>>& shutdown_;
 };
 
 }  // namespace srv

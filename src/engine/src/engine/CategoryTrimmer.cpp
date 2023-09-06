@@ -96,7 +96,7 @@ CategoryTrimmer::fit_transform(const Params& _params) {
       (_params.get<"logging_begin_">() + _params.get<"logging_end_">()) / 2;
 
   const auto params =
-      _params.replace(fct::make_field<"logging_begin_">(logging_begin));
+      _params.replace(rfl::make_field<"logging_begin_">(logging_begin));
 
   return transform(params);
 }
@@ -140,7 +140,7 @@ void CategoryTrimmer::load(const std::string& _fname) {
 
 // ----------------------------------------------------
 
-fct::Ref<const std::set<Int>> CategoryTrimmer::make_category_set(
+rfl::Ref<const std::set<Int>> CategoryTrimmer::make_category_set(
     const containers::Column<Int>& _col) const {
   using Pair = std::pair<Int, size_t>;
 
@@ -156,7 +156,7 @@ fct::Ref<const std::set<Int>> CategoryTrimmer::make_category_set(
                      VIEWS::transform(get_first) |
                      VIEWS::take(max_num_categories_);
 
-  return fct::Ref<const std::set<Int>>::make(fct::collect::set(range));
+  return rfl::Ref<const std::set<Int>>::make(fct::collect::set(range));
 }
 
 // ----------------------------------------------------
@@ -271,7 +271,7 @@ CategoryTrimmer::transform(const Params& _params) const {
 containers::DataFrame CategoryTrimmer::transform_df(
     const std::vector<CategoryPair>& _sets,
     const std::shared_ptr<memmap::Pool>& _pool,
-    const fct::Ref<const containers::Encoding>& _categories,
+    const rfl::Ref<const containers::Encoding>& _categories,
     const containers::DataFrame& _df) const {
   using Set = CategoryPair::second_type;
 
