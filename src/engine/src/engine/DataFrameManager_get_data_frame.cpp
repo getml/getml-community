@@ -5,9 +5,11 @@
 // for details.
 //
 
+#include "commands/ColumnCommand.hpp"
 #include "engine/handlers/ColumnManager.hpp"
 #include "engine/handlers/DataFrameManager.hpp"
 #include "json/json.hpp"
+#include "rfl/from_named_tuple.hpp"
 
 namespace engine {
 namespace handlers {
@@ -30,12 +32,18 @@ void DataFrameManager::get_data_frame(
       using Type = std::decay_t<decltype(_cmd)>;
       if constexpr (std::is_same<Type, typename commands::DataFrameCommand::
                                            GetStringColumnOp>()) {
-        ColumnManager(params_).get_categorical_column(_cmd, _socket);
+        const auto cmd =
+            rfl::from_named_tuple<commands::ColumnCommand::GetStringColumnOp>(
+                _cmd);
+        ColumnManager(params_).get_categorical_column(cmd, _socket);
         return false;
       } else if constexpr (std::is_same<Type,
                                         typename commands::DataFrameCommand::
                                             GetFloatColumnOp>()) {
-        ColumnManager(params_).get_column(_cmd, _socket);
+        const auto cmd =
+            rfl::from_named_tuple<commands::ColumnCommand::GetFloatColumnOp>(
+                _cmd);
+        ColumnManager(params_).get_column(cmd, _socket);
         return false;
       } else if constexpr (std::is_same<Type, CloseDataFrameOp>()) {
         communication::Sender::send_string("Success!", _socket);

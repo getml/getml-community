@@ -35,133 +35,169 @@ struct ColumnCommand {
                    typename StringColumnOrStringColumnView::NamedTupleType>;
 
   /// The command used to aggregate a column
-  using AggregationOp = rfl::NamedTuple<
-      rfl::Field<"type_", rfl::Literal<"FloatColumn.aggregate",
-                                       "StringColumn.aggregate">>,
-      rfl::Field<"aggregation_", Aggregation>>;
+  struct AggregationOp {
+    rfl::Field<"type_",
+               rfl::Literal<"FloatColumn.aggregate", "StringColumn.aggregate">>
+        type;
+    rfl::Field<"aggregation_", Aggregation> aggregation;
+  };
 
   /// The command used to add a float column sent by the client
-  using FloatColumnOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"FloatColumn">>,
-                      rfl::Field<"df_name_", std::string>,
-                      rfl::Field<"name_", std::string>,
-                      rfl::Field<"role_", std::string>>;
+  struct FloatColumnOp {
+    rfl::Field<"type_", rfl::Literal<"FloatColumn">> type;
+    rfl::Field<"df_name_", std::string> df_name;
+    rfl::Field<"name_", std::string> name;
+    rfl::Field<"role_", std::string> role;
+  };
 
   /// The command used to retrieve a boolean column.
-  using GetBooleanColumnOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"BooleanColumn.get">>,
-                      rfl::Field<"col_", BooleanColumnView>>;
+  struct GetBooleanColumnOp {
+    rfl::Field<"type_", rfl::Literal<"BooleanColumn.get">> type;
+    rfl::Field<"col_", BooleanColumnView> col;
+  };
 
   /// The command used to retrieve the content of a boolean column.
-  using GetBooleanColumnContentOp = rfl::NamedTuple<
-      rfl::Field<"type_", rfl::Literal<"BooleanColumn.get_content">>,
-      rfl::Field<"draw_", Int>, rfl::Field<"length_", Int>,
-      rfl::Field<"start_", Int>, rfl::Field<"col_", BooleanColumnView>>;
+  struct GetBooleanColumnContentOp {
+    rfl::Field<"type_", rfl::Literal<"BooleanColumn.get_content">> type;
+    rfl::Field<"draw_", Int> draw;
+    rfl::Field<"length_", Int> length;
+    rfl::Field<"start_", Int> start;
+    rfl::Field<"col_", BooleanColumnView> col;
+  };
 
   /// The command used to retrieve the number of rows of a boolean column.
-  using GetBooleanColumnNRowsOp = rfl::NamedTuple<
-      rfl::Field<"type_", rfl::Literal<"BooleanColumn.nrows",
-                                       "BooleanColumn.get_nrows">>,
-      rfl::Field<"col_", BooleanColumnView>>;
+  struct GetBooleanColumnNRowsOp {
+    rfl::Field<"type_",
+               rfl::Literal<"BooleanColumn.nrows", "BooleanColumn.get_nrows">>
+        type;
+    rfl::Field<"col_", BooleanColumnView> col;
+  };
 
   /// The command used to get a float column
-  using GetFloatColumnOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"FloatColumn.get">>,
-                      rfl::Field<"col_", FloatColumnOrFloatColumnView>>;
+  struct GetFloatColumnOp {
+    rfl::Field<"type_", rfl::Literal<"FloatColumn.get">> type;
+    rfl::Field<"col_", FloatColumnOrFloatColumnView> col;
+  };
 
   /// The command used to retrieve the content of a float column.
-  using GetFloatColumnContentOp = rfl::NamedTuple<
-      rfl::Field<"type_", rfl::Literal<"FloatColumn.get_content">>,
-      rfl::Field<"draw_", Int>, rfl::Field<"length_", Int>,
-      rfl::Field<"start_", Int>,
-      rfl::Field<"col_", FloatColumnOrFloatColumnView>>;
+  struct GetFloatColumnContentOp {
+    rfl::Field<"type_", rfl::Literal<"FloatColumn.get_content">> type;
+    rfl::Field<"draw_", Int> draw;
+    rfl::Field<"length_", Int> length;
+    rfl::Field<"start_", Int> start;
+    rfl::Field<"col_", FloatColumnOrFloatColumnView> col;
+  };
 
   /// The command used to retrieve the number of rows of a float column.
-  using GetFloatColumnNRowsOp = rfl::NamedTuple<
-      rfl::Field<"type_",
-                 rfl::Literal<"FloatColumn.nrows", "FloatColumn.get_nrows">>,
-      rfl::Field<"col_", FloatColumnOrFloatColumnView>>;
+  struct GetFloatColumnNRowsOp {
+    rfl::Field<"type_",
+               rfl::Literal<"FloatColumn.nrows", "FloatColumn.get_nrows">>
+        type;
+    rfl::Field<"col_", FloatColumnOrFloatColumnView> col;
+  };
 
   /// The command used to retrieve the subroles of a float column.
-  using GetFloatColumnSubrolesOp = rfl::NamedTuple<
-      rfl::Field<"type_", rfl::Literal<"FloatColumn.get_subroles">>,
-      rfl::Field<"col_", FloatColumnOrFloatColumnView>>;
+  struct GetFloatColumnSubrolesOp {
+    rfl::Field<"type_", rfl::Literal<"FloatColumn.get_subroles">> type;
+    rfl::Field<"col_", FloatColumnOrFloatColumnView> col;
+  };
 
   /// The command used to retrieve the unique entries of a float column.
-  using GetFloatColumnUniqueOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"FloatColumn.unique">>,
-                      rfl::Field<"col_", FloatColumnOrFloatColumnView>>;
+  struct GetFloatColumnUniqueOp {
+    rfl::Field<"type_", rfl::Literal<"FloatColumn.unique">> type;
+    rfl::Field<"col_", FloatColumnOrFloatColumnView> col;
+  };
 
   /// The command used to retrieve the unit of a float column.
-  using GetFloatColumnUnitOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"FloatColumn.get_unit">>,
-                      rfl::Field<"col_", FloatColumnOrFloatColumnView>>;
+  struct GetFloatColumnUnitOp {
+    rfl::Field<"type_", rfl::Literal<"FloatColumn.get_unit">> type;
+    rfl::Field<"col_", FloatColumnOrFloatColumnView> col;
+  };
 
   /// The command used to get a string column
-  using GetStringColumnOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"StringColumn.get">>,
-                      rfl::Field<"col_", StringColumnOrStringColumnView>>;
+  struct GetStringColumnOp {
+    rfl::Field<"type_", rfl::Literal<"StringColumn.get">> type;
+    rfl::Field<"col_", StringColumnOrStringColumnView> col;
+  };
 
   /// The command used to retrieve the content of a float column.
-  using GetStringColumnContentOp = rfl::NamedTuple<
-      rfl::Field<"type_", rfl::Literal<"StringColumn.get_content">>,
-      rfl::Field<"draw_", Int>, rfl::Field<"length_", Int>,
-      rfl::Field<"start_", Int>,
-      rfl::Field<"col_", StringColumnOrStringColumnView>>;
+  struct GetStringColumnContentOp {
+    rfl::Field<"type_", rfl::Literal<"StringColumn.get_content">> type;
+    rfl::Field<"draw_", Int> draw;
+    rfl::Field<"length_", Int> length;
+    rfl::Field<"start_", Int> start;
+    rfl::Field<"col_", StringColumnOrStringColumnView> col;
+  };
 
   /// The command used to retrieve the number of rows of a float column.
-  using GetStringColumnNRowsOp = rfl::NamedTuple<
-      rfl::Field<"type_",
-                 rfl::Literal<"StringColumn.nrows", "StringColumn.get_nrows">>,
-      rfl::Field<"col_", StringColumnOrStringColumnView>>;
+  struct GetStringColumnNRowsOp {
+    rfl::Field<"type_",
+               rfl::Literal<"StringColumn.nrows", "StringColumn.get_nrows">>
+        type;
+    rfl::Field<"col_", StringColumnOrStringColumnView> col;
+  };
 
   /// The command used to retrieve the subroles of a float column.
-  using GetStringColumnSubrolesOp = rfl::NamedTuple<
-      rfl::Field<"type_", rfl::Literal<"StringColumn.get_subroles">>,
-      rfl::Field<"col_", StringColumnOrStringColumnView>>;
+  struct GetStringColumnSubrolesOp {
+    rfl::Field<"type_", rfl::Literal<"StringColumn.get_subroles">> type;
+    rfl::Field<"col_", StringColumnOrStringColumnView> col;
+  };
 
   /// The command used to retrieve the unique entries of a float column.
-  using GetStringColumnUniqueOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"StringColumn.unique">>,
-                      rfl::Field<"col_", StringColumnOrStringColumnView>>;
+  struct GetStringColumnUniqueOp {
+    rfl::Field<"type_", rfl::Literal<"StringColumn.unique">> type;
+    rfl::Field<"col_", StringColumnOrStringColumnView> col;
+  };
 
   /// The command used to retrieve the unit of a float column.
-  using GetStringColumnUnitOp = rfl::NamedTuple<
-      rfl::Field<"type_", rfl::Literal<"StringColumn.get_unit">>,
-      rfl::Field<"col_", StringColumnOrStringColumnView>>;
+  struct GetStringColumnUnitOp {
+    rfl::Field<"type_", rfl::Literal<"StringColumn.get_unit">> type;
+    rfl::Field<"col_", StringColumnOrStringColumnView> col;
+  };
 
   /// The command used to set the subroles of a float column.
-  using SetFloatColumnSubrolesOp = rfl::NamedTuple<
-      rfl::Field<"type_", rfl::Literal<"FloatColumn.set_subroles">>,
-      rfl::Field<"df_name_", std::string>, rfl::Field<"name_", std::string>,
-      rfl::Field<"role_", std::string>,
-      rfl::Field<"subroles_", std::vector<std::string>>>;
+  struct SetFloatColumnSubrolesOp {
+    rfl::Field<"type_", rfl::Literal<"FloatColumn.set_subroles">> type;
+    rfl::Field<"df_name_", std::string> df_name;
+    rfl::Field<"name_", std::string> name;
+    rfl::Field<"role_", std::string> role;
+    rfl::Field<"subroles_", std::vector<std::string>> subroles;
+  };
 
   /// The command used to set the unit of a float column.
-  using SetFloatColumnUnitOp = rfl::NamedTuple<
-      rfl::Field<"type_", rfl::Literal<"FloatColumn.set_unit">>,
-      rfl::Field<"df_name_", std::string>, rfl::Field<"name_", std::string>,
-      rfl::Field<"role_", std::string>, rfl::Field<"unit_", std::string>>;
+  struct SetFloatColumnUnitOp {
+    rfl::Field<"type_", rfl::Literal<"FloatColumn.set_unit">> type;
+    rfl::Field<"df_name_", std::string> df_name;
+    rfl::Field<"name_", std::string> name;
+    rfl::Field<"role_", std::string> role;
+    rfl::Field<"unit_", std::string> unit;
+  };
 
   /// The command used to set the subroles of a string column.
-  using SetStringColumnSubrolesOp = rfl::NamedTuple<
-      rfl::Field<"type_", rfl::Literal<"StringColumn.set_subroles">>,
-      rfl::Field<"df_name_", std::string>, rfl::Field<"name_", std::string>,
-      rfl::Field<"role_", std::string>,
-      rfl::Field<"subroles_", std::vector<std::string>>>;
+  struct SetStringColumnSubrolesOp {
+    rfl::Field<"type_", rfl::Literal<"StringColumn.set_subroles">> type;
+    rfl::Field<"df_name_", std::string> df_name;
+    rfl::Field<"name_", std::string> name;
+    rfl::Field<"role_", std::string> role;
+    rfl::Field<"subroles_", std::vector<std::string>> subroles;
+  };
 
   /// The command used to set the unit of a string column.
-  using SetStringColumnUnitOp = rfl::NamedTuple<
-      rfl::Field<"type_", rfl::Literal<"StringColumn.set_unit">>,
-      rfl::Field<"df_name_", std::string>, rfl::Field<"name_", std::string>,
-      rfl::Field<"role_", std::string>, rfl::Field<"unit_", std::string>>;
+  struct SetStringColumnUnitOp {
+    rfl::Field<"type_", rfl::Literal<"StringColumn.set_unit">> type;
+    rfl::Field<"df_name_", std::string> df_name;
+    rfl::Field<"name_", std::string> name;
+    rfl::Field<"role_", std::string> role;
+    rfl::Field<"unit_", std::string> unit;
+  };
 
   /// The command used to add a string column sent by the client
-  using StringColumnOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"StringColumn">>,
-                      rfl::Field<"df_name_", std::string>,
-                      rfl::Field<"name_", std::string>,
-                      rfl::Field<"role_", std::string>>;
+  struct StringColumnOp {
+    rfl::Field<"type_", rfl::Literal<"StringColumn">> type;
+    rfl::Field<"df_name_", std::string> df_name;
+    rfl::Field<"name_", std::string> name;
+    rfl::Field<"role_", std::string> role;
+  };
 
   using NamedTupleType = rfl::TaggedUnion<
       "type_", AggregationOp, FloatColumnOp, GetBooleanColumnOp,
