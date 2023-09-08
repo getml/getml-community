@@ -26,13 +26,13 @@ namespace database {
 class MySQL : public Connector {
  public:
   MySQL(const typename Command::MySQLOp& _obj, const std::string& _passwd)
-      : dbname_(_obj.get<"dbname_">()),
-        host_(_obj.get<"host_">()),
+      : dbname_(_obj.dbname()),
+        host_(_obj.host()),
         passwd_(_passwd),
-        port_(_obj.get<"port_">()),
-        time_formats_(_obj.get<"time_formats_">()),
-        unix_socket_(_obj.get<"unix_socket_">()),
-        user_(_obj.get<"user_">()) {}
+        port_(_obj.port()),
+        time_formats_(_obj.time_formats()),
+        unix_socket_(_obj.unix_socket()),
+        user_(_obj.user()) {}
 
   MySQL(const std::string& _dbname, const std::string& _host,
         const std::string& _passwd, const unsigned int _port,

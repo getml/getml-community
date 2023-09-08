@@ -174,15 +174,15 @@ std::vector<std::string> Postgres::list_tables() {
 
 std::string Postgres::make_connection_string(
     const typename Command::PostgresOp& _obj, const std::string& _passwd) {
-  const auto& host = _obj.get<"host_">();
+  const auto& host = _obj.host();
 
-  const auto& hostaddr = _obj.get<"hostaddr_">();
+  const auto& hostaddr = _obj.hostaddr();
 
-  const auto port = _obj.get<"port_">();
+  const auto port = _obj.port();
 
-  const auto& dbname = _obj.get<"dbname_">();
+  const auto& dbname = _obj.dbname();
 
-  const auto& user = _obj.get<"user_">();
+  const auto& user = _obj.user();
 
   std::string connection_string;
 

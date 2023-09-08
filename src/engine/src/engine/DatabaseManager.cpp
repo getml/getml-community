@@ -15,6 +15,7 @@
 #include "json/json.hpp"
 #include "json/to_json.hpp"
 #include "rfl/Field.hpp"
+#include "rfl/Literal.hpp"
 #include "rfl/Ref.hpp"
 #include "rfl/always_false.hpp"
 #include "rfl/visit.hpp"
@@ -30,14 +31,13 @@ DatabaseManager::DatabaseManager(
       monitor_(_monitor),
       options_(_options),
       read_write_lock_(rfl::Ref<multithreading::ReadWriteLock>::make()) {
-  const auto obj =
-      rfl::make_field<"type_">(rfl::Literal<"Database.new">()) *
-      rfl::make_field<"db_">(rfl::Literal<"sqlite3">()) *
-      rfl::Field<"conn_id_", std::string>("default") *
-      rfl::Field<"name_", std::string>(options_.project_directory() +
-                                       "database.db") *
-      rfl::Field<"time_formats_", std::vector<std::string>>(
-          {"%Y-%m-%dT%H:%M:%s%z", "%Y/%m/%d %H:%M:%S", "%Y-%m-%d %H:%M:%S"});
+  const auto obj = database::Command::SQLite3Op{
+      .type = rfl::Literal<"Database.new">(),
+      .conn_id = "default",
+      .db = rfl::Literal<"sqlite3">(),
+      .name = options_.project_directory() + "database.db",
+      .time_formats = std::vector<std::string>(
+          {"%Y-%m-%dT%H:%M:%s%z", "%Y/%m/%d %H:%M:%S", "%Y-%m-%d %H:%M:%S"})};
 
   connector_map_.emplace(std::make_pair(
       "default", rfl::Ref<database::Sqlite3>::make(database::Sqlite3(obj))));
@@ -311,7 +311,9 @@ void DatabaseManager::list_tables(const typename Command::ListTablesOp& _cmd,
 
 void DatabaseManager::new_db(const typename Command::NewDBOp& _cmd,
                              Poco::Net::StreamSocket* _socket) {
-  const auto conn_id = rfl::get<"conn_id_">(_cmd);
+  const auto get_conn_id = [](const auto& _c) { return _c.conn_id(); };
+
+  const auto conn_id = rfl::visit(get_conn_id, _cmd);
 
   const auto password = communication::Receiver::recv_string(_socket);
 

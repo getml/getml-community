@@ -20,35 +20,40 @@
 namespace database {
 
 struct Command {
-  /// Needed by every command to create a new database.
-  using NewDBBasicOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"Database.new">>,
-                      rfl::Field<"conn_id_", std::string>>;
-
   /// The operation needed to create a MySQL connection.
-  using MySQLOp = rfl::define_named_tuple_t<
-      NewDBBasicOp, rfl::Field<"db_", rfl::Literal<"mysql", "mariadb">>,
-      rfl::Field<"dbname_", std::string>, rfl::Field<"host_", std::string>,
-      rfl::Field<"port_", unsigned int>,
-      rfl::Field<"time_formats_", std::vector<std::string>>,
-      rfl::Field<"unix_socket_", std::string>,
-      rfl::Field<"user_", std::string>>;
+  struct MySQLOp {
+    rfl::Field<"type_", rfl::Literal<"Database.new">> type;
+    rfl::Field<"conn_id_", std::string> conn_id;
+    rfl::Field<"db_", rfl::Literal<"mysql", "mariadb">> db;
+    rfl::Field<"dbname_", std::string> dbname;
+    rfl::Field<"host_", std::string> host;
+    rfl::Field<"port_", unsigned int> port;
+    rfl::Field<"time_formats_", std::vector<std::string>> time_formats;
+    rfl::Field<"unix_socket_", std::string> unix_socket;
+    rfl::Field<"user_", std::string> user;
+  };
 
   /// The operation needed to create a Postgres connection.
-  using PostgresOp = rfl::define_named_tuple_t<
-      NewDBBasicOp, rfl::Field<"db_", rfl::Literal<"postgres">>,
-      rfl::Field<"dbname_", std::string>,
-      rfl::Field<"host_", std::optional<std::string>>,
-      rfl::Field<"hostaddr_", std::optional<std::string>>,
-      rfl::Field<"port_", size_t>,
-      rfl::Field<"time_formats_", std::vector<std::string>>,
-      rfl::Field<"user_", std::string>>;
+  struct PostgresOp {
+    rfl::Field<"type_", rfl::Literal<"Database.new">> type;
+    rfl::Field<"conn_id_", std::string> conn_id;
+    rfl::Field<"db_", rfl::Literal<"postgres">> db;
+    rfl::Field<"dbname_", std::string> dbname;
+    rfl::Field<"host_", std::optional<std::string>> host;
+    rfl::Field<"hostaddr_", std::optional<std::string>> hostaddr;
+    rfl::Field<"port_", size_t> port;
+    rfl::Field<"time_formats_", std::vector<std::string>> time_formats;
+    rfl::Field<"user_", std::string> user;
+  };
 
   /// The operation needed to create an SQLITE3 connection.
-  using SQLite3Op = rfl::define_named_tuple_t<
-      NewDBBasicOp, rfl::Field<"db_", rfl::Literal<"sqlite3">>,
-      rfl::Field<"name_", std::string>,
-      rfl::Field<"time_formats_", std::vector<std::string>>>;
+  struct SQLite3Op {
+    rfl::Field<"type_", rfl::Literal<"Database.new">> type;
+    rfl::Field<"conn_id_", std::string> conn_id;
+    rfl::Field<"db_", rfl::Literal<"sqlite3">> db;
+    rfl::Field<"name_", std::string> name;
+    rfl::Field<"time_formats_", std::vector<std::string>> time_formats;
+  };
 
   using NamedTupleType =
       rfl::TaggedUnion<"db_", MySQLOp, PostgresOp, SQLite3Op>;
