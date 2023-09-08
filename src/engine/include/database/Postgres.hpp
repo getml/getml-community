@@ -27,7 +27,7 @@ class Postgres : public Connector {
  public:
   Postgres(const typename Command::PostgresOp& _obj, const std::string& _passwd)
       : connection_string_(make_connection_string(_obj, _passwd)),
-        time_formats_(_obj.get<"time_formats_">()) {}
+        time_formats_(_obj.time_formats()) {}
 
   explicit Postgres(const std::vector<std::string>& _time_formats)
       : time_formats_(_time_formats) {}
