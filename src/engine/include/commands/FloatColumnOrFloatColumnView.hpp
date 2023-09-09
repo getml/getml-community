@@ -23,110 +23,122 @@ namespace commands {
 class BooleanColumnView;
 class StringColumnOrStringColumnView;
 
-class FloatColumnOrFloatColumnView {
- public:
+struct FloatColumnOrFloatColumnView {
   /// The command used for arange operations.
-  using FloatArangeOp =
-      rfl::NamedTuple<rfl::Field<"operator_", rfl::Literal<"arange">>,
-                      rfl::Field<"start_", Float>, rfl::Field<"stop_", Float>,
-                      rfl::Field<"step_", Float>,
-                      rfl::Field<"type_", rfl::Literal<"FloatColumnView">>>;
+  struct FloatArangeOp {
+    rfl::Field<"operator_", rfl::Literal<"arange">> op;
+    rfl::Field<"start_", Float> start;
+    rfl::Field<"stop_", Float> stop;
+    rfl::Field<"step_", Float> step;
+    rfl::Field<"type_", rfl::Literal<"FloatColumnView">> type;
+  };
 
   /// The command used for transforming string columns to float columns.
-  using FloatAsTSOp = rfl::NamedTuple<
-      rfl::Field<"operator_", rfl::Literal<"as_ts">>,
-      rfl::Field<"operand1_", rfl::Ref<StringColumnOrStringColumnView>>,
-      rfl::Field<"time_formats_", std::vector<std::string>>,
-      rfl::Field<"type_", rfl::Literal<"FloatColumnView">>>;
-
-  /// The possible operators.
-  using FloatBinaryOpLiteral =
-      rfl::Literal<"divides", "fmod", "minus", "multiplies", "plus", "pow">;
+  struct FloatAsTSOp {
+    rfl::Field<"operator_", rfl::Literal<"as_ts">> op;
+    rfl::Field<"operand1_", rfl::Ref<StringColumnOrStringColumnView>> operand1;
+    rfl::Field<"time_formats_", std::vector<std::string>> time_formats;
+    rfl::Field<"type_", rfl::Literal<"FloatColumnView">> type;
+  };
 
   /// The command used for float binary operations.
-  using FloatBinaryOp = rfl::NamedTuple<
-      rfl::Field<"operator_", FloatBinaryOpLiteral>,
-      rfl::Field<"operand1_", rfl::Ref<FloatColumnOrFloatColumnView>>,
-      rfl::Field<"operand2_", rfl::Ref<FloatColumnOrFloatColumnView>>,
-      rfl::Field<"type_", rfl::Literal<"FloatColumnView">>>;
+  struct FloatBinaryOp {
+    using FloatBinaryOpLiteral =
+        rfl::Literal<"divides", "fmod", "minus", "multiplies", "plus", "pow">;
+
+    rfl::Field<"operator_", FloatBinaryOpLiteral> op;
+    rfl::Field<"operand1_", rfl::Ref<FloatColumnOrFloatColumnView>> operand1;
+    rfl::Field<"operand2_", rfl::Ref<FloatColumnOrFloatColumnView>> operand2;
+    rfl::Field<"type_", rfl::Literal<"FloatColumnView">> type;
+  };
 
   /// The command used for retrieving float columns from a data frame.
-  using FloatColumnOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"FloatColumn">>,
-                      rfl::Field<"df_name_", std::string>,
-                      rfl::Field<"name_", std::string>,
-                      rfl::Field<"role_", std::string>>;
+  struct FloatColumnOp {
+    rfl::Field<"type_", rfl::Literal<"FloatColumn">> type;
+    rfl::Field<"df_name_", std::string> df_name;
+    rfl::Field<"name_", std::string> name;
+    rfl::Field<"role_", std::string> role;
+  };
 
   /// The command used for float const operations.
-  using FloatConstOp =
-      rfl::NamedTuple<rfl::Field<"operator_", rfl::Literal<"const">>,
-                      rfl::Field<"value_", Float>,
-                      rfl::Field<"type_", rfl::Literal<"FloatColumnView">>>;
+  struct FloatConstOp {
+    rfl::Field<"operator_", rfl::Literal<"const">> op;
+    rfl::Field<"value_", Float> value;
+    rfl::Field<"type_", rfl::Literal<"FloatColumnView">> type;
+  };
 
   /// The command used for transforming boolean column views to float columns.
-  using FloatFromBooleanOp =
-      rfl::NamedTuple<rfl::Field<"operator_", rfl::Literal<"boolean_as_num">>,
-                      rfl::Field<"operand1_", rfl::Ref<BooleanColumnView>>,
-                      rfl::Field<"type_", rfl::Literal<"FloatColumnView">>>;
+  struct FloatFromBooleanOp {
+    rfl::Field<"operator_", rfl::Literal<"boolean_as_num">> op;
+    rfl::Field<"operand1_", rfl::Ref<BooleanColumnView>> operand1;
+    rfl::Field<"type_", rfl::Literal<"FloatColumnView">> type;
+  };
 
   /// The command used for transforming string columns to float columns.
-  using FloatFromStringOp = rfl::NamedTuple<
-      rfl::Field<"operator_", rfl::Literal<"as_num">>,
-      rfl::Field<"operand1_", rfl::Ref<StringColumnOrStringColumnView>>,
-      rfl::Field<"type_", rfl::Literal<"FloatColumnView">>>;
+  struct FloatFromStringOp {
+    rfl::Field<"operator_", rfl::Literal<"as_num">> op;
+    rfl::Field<"operand1_", rfl::Ref<StringColumnOrStringColumnView>> operand1;
+    rfl::Field<"type_", rfl::Literal<"FloatColumnView">> type;
+  };
 
   /// The command used for random operations.
-  using FloatRandomOp =
-      rfl::NamedTuple<rfl::Field<"operator_", rfl::Literal<"random">>,
-                      rfl::Field<"seed_", unsigned int>,
-                      rfl::Field<"type_", rfl::Literal<"FloatColumnView">>>;
+  struct FloatRandomOp {
+    rfl::Field<"operator_", rfl::Literal<"random">> op;
+    rfl::Field<"seed_", unsigned int> seed;
+    rfl::Field<"type_", rfl::Literal<"FloatColumnView">> type;
+  };
 
   /// The command used for rowid operations.
-  using FloatRowidOp =
-      rfl::NamedTuple<rfl::Field<"operator_", rfl::Literal<"rowid">>,
-                      rfl::Field<"type_", rfl::Literal<"FloatColumnView">>>;
+  struct FloatRowidOp {
+    rfl::Field<"operator_", rfl::Literal<"rowid">> rowid;
+    rfl::Field<"type_", rfl::Literal<"FloatColumnView">> type;
+  };
 
   /// The command used for float subselection operations.
-  using FloatSubselectionOp = rfl::NamedTuple<
-      rfl::Field<"operator_", rfl::Literal<"subselection">>,
-      rfl::Field<"operand1_", rfl::Ref<FloatColumnOrFloatColumnView>>,
-      rfl::Field<"operand2_",
-                 std::variant<rfl::Ref<FloatColumnOrFloatColumnView>,
-                              rfl::Ref<BooleanColumnView>>>,
-      rfl::Field<"type_", rfl::Literal<"FloatColumnView">>>;
-
-  /// The possible operators.
-  using FloatUnaryOpLiteral =
-      rfl::Literal<"abs", "acos", "asin", "atan", "cbrt", "ceil", "cos", "day",
-                   "erf", "exp", "floor", "hour", "lgamma", "log", "minute",
-                   "month", "round", "second", "sin", "sqrt", "tan", "tgamma",
-                   "weekday", "year", "yearday">;
+  struct FloatSubselectionOp {
+    rfl::Field<"operator_", rfl::Literal<"subselection">> op;
+    rfl::Field<"operand1_", rfl::Ref<FloatColumnOrFloatColumnView>> operand1;
+    rfl::Field<"operand2_", std::variant<rfl::Ref<FloatColumnOrFloatColumnView>,
+                                         rfl::Ref<BooleanColumnView>>>
+        operand2;
+    rfl::Field<"type_", rfl::Literal<"FloatColumnView">> type;
+  };
 
   /// The command used for float unary operations.
-  using FloatUnaryOp = rfl::NamedTuple<
-      rfl::Field<"operator_", FloatUnaryOpLiteral>,
-      rfl::Field<"operand1_", rfl::Ref<FloatColumnOrFloatColumnView>>,
-      rfl::Field<"type_", rfl::Literal<"FloatColumnView">>>;
+  struct FloatUnaryOp {
+    using FloatUnaryOpLiteral =
+        rfl::Literal<"abs", "acos", "asin", "atan", "cbrt", "ceil", "cos",
+                     "day", "erf", "exp", "floor", "hour", "lgamma", "log",
+                     "minute", "month", "round", "second", "sin", "sqrt", "tan",
+                     "tgamma", "weekday", "year", "yearday">;
+
+    rfl::Field<"operator_", FloatUnaryOpLiteral> op;
+    rfl::Field<"operand1_", rfl::Ref<FloatColumnOrFloatColumnView>> operand1;
+    rfl::Field<"type_", rfl::Literal<"FloatColumnView">> type;
+  };
 
   /// The command used for float binary operations.
-  using FloatUpdateOp = rfl::NamedTuple<
-      rfl::Field<"operator_", rfl::Literal<"update">>,
-      rfl::Field<"operand1_", rfl::Ref<FloatColumnOrFloatColumnView>>,
-      rfl::Field<"operand2_", rfl::Ref<FloatColumnOrFloatColumnView>>,
-      rfl::Field<"condition_", rfl::Ref<BooleanColumnView>>,
-      rfl::Field<"type_", rfl::Literal<"FloatColumnView">>>;
+  struct FloatUpdateOp {
+    rfl::Field<"operator_", rfl::Literal<"update">> op;
+    rfl::Field<"operand1_", rfl::Ref<FloatColumnOrFloatColumnView>> operand1;
+    rfl::Field<"operand2_", rfl::Ref<FloatColumnOrFloatColumnView>> operand2;
+    rfl::Field<"condition_", rfl::Ref<BooleanColumnView>> condition;
+    rfl::Field<"type_", rfl::Literal<"FloatColumnView">> type;
+  };
 
   /// The command used for string with subtoles operations.
-  using FloatWithSubrolesOp = rfl::NamedTuple<
-      rfl::Field<"subroles_", std::vector<std::string>>,
-      rfl::Field<"operand1_", rfl::Ref<FloatColumnOrFloatColumnView>>,
-      rfl::Field<"type_", rfl::Literal<"FloatColumnView">>>;
+  struct FloatWithSubrolesOp {
+    rfl::Field<"subroles_", std::vector<std::string>> subroles;
+    rfl::Field<"operand1_", rfl::Ref<FloatColumnOrFloatColumnView>> operand1;
+    rfl::Field<"type_", rfl::Literal<"FloatColumnView">> type;
+  };
 
   /// The command used for float with unit operations.
-  using FloatWithUnitOp = rfl::NamedTuple<
-      rfl::Field<"unit_", std::string>,
-      rfl::Field<"operand1_", rfl::Ref<FloatColumnOrFloatColumnView>>,
-      rfl::Field<"type_", rfl::Literal<"FloatColumnView">>>;
+  struct FloatWithUnitOp {
+    rfl::Field<"unit_", std::string> unit;
+    rfl::Field<"operand1_", rfl::Ref<FloatColumnOrFloatColumnView>> operand1;
+    rfl::Field<"type_", rfl::Literal<"FloatColumnView">> type;
+  };
 
   using NamedTupleType =
       std::variant<FloatArangeOp, FloatAsTSOp, FloatBinaryOp, FloatConstOp,

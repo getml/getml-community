@@ -32,44 +32,53 @@ struct ViewCommand {
                    typename StringColumnOrStringColumnView::NamedTupleType>;
 
   /// The command used to retrieve the content of a view.
-  using GetViewContentOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"View.get_content">>,
-                      rfl::Field<"cols_", std::vector<ViewCol>>,
-                      rfl::Field<"draw_", Int>, rfl::Field<"length_", Int>,
-                      rfl::Field<"name_", std::string>,
-                      rfl::Field<"start_", Int>>;
+  struct GetViewContentOp {
+    rfl::Field<"type_", rfl::Literal<"View.get_content">> type;
+    rfl::Field<"cols_", std::vector<ViewCol>> cols;
+    rfl::Field<"draw_", Int> draw;
+    rfl::Field<"length_", Int> length;
+    rfl::Field<"name_", std::string> name;
+    rfl::Field<"start_", Int> start;
+  };
 
   /// The command used to retrieve the number of rows of a view.
-  using GetViewNRowsOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"View.get_nrows">>,
-                      rfl::Field<"cols_", std::vector<ViewCol>>,
-                      rfl::Field<"force_", bool>>;
+  struct GetViewNRowsOp {
+    rfl::Field<"type_", rfl::Literal<"View.get_nrows">> type;
+    rfl::Field<"cols_", std::vector<ViewCol>> cols;
+    rfl::Field<"force_", bool> force;
+  };
 
   /// The command used to transform a view to Arrow.
-  using ViewToArrowOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"View.to_arrow">>,
-                      rfl::Field<"view_", DataFrameOrView>>;
+  struct ViewToArrowOp {
+    rfl::Field<"type_", rfl::Literal<"View.to_arrow">> type;
+    rfl::Field<"view_", DataFrameOrView> view;
+  };
 
   /// The command used to transform a view to CSV.
-  using ViewToCSVOp = rfl::NamedTuple<
-      rfl::Field<"type_", rfl::Literal<"View.to_csv">>,
-      rfl::Field<"view_", DataFrameOrView>, rfl::Field<"fname_", std::string>,
-      rfl::Field<"batch_size_", size_t>, rfl::Field<"quotechar_", std::string>,
-      rfl::Field<"sep_", std::string>>;
+  struct ViewToCSVOp {
+    rfl::Field<"type_", rfl::Literal<"View.to_csv">> type;
+    rfl::Field<"view_", DataFrameOrView> view;
+    rfl::Field<"fname_", std::string> fname;
+    rfl::Field<"batch_size_", size_t> batch_size;
+    rfl::Field<"quotechar_", std::string> quotechar;
+    rfl::Field<"sep_", std::string> sep;
+  };
 
   /// The command used to write a view into the database.
-  using ViewToDBOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"View.to_db">>,
-                      rfl::Field<"view_", DataFrameOrView>,
-                      rfl::Field<"conn_id_", std::string>,
-                      rfl::Field<"table_name_", std::string>>;
+  struct ViewToDBOp {
+    rfl::Field<"type_", rfl::Literal<"View.to_db">> type;
+    rfl::Field<"view_", DataFrameOrView> view;
+    rfl::Field<"conn_id_", std::string> conn_id;
+    rfl::Field<"table_name_", std::string> table_name;
+  };
 
   /// The command used to transform a view to parquet.
-  using ViewToParquetOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"View.to_parquet">>,
-                      rfl::Field<"view_", DataFrameOrView>,
-                      rfl::Field<"fname_", std::string>,
-                      rfl::Field<"compression_", std::string>>;
+  struct ViewToParquetOp {
+    rfl::Field<"type_", rfl::Literal<"View.to_parquet">> type;
+    rfl::Field<"view_", DataFrameOrView> view;
+    rfl::Field<"fname_", std::string> fname;
+    rfl::Field<"compression_", std::string> compression;
+  };
 
   using NamedTupleType =
       rfl::TaggedUnion<"type_", GetViewContentOp, GetViewNRowsOp, ViewToArrowOp,

@@ -578,9 +578,11 @@ void PipelineManager::score(const FullTransformOp& _cmd,
                             const containers::NumericalFeatures& _yhat,
                             const pipelines::Pipeline& _pipeline,
                             Poco::Net::StreamSocket* _socket) {
-  const auto population_json = _cmd.get<"population_df_">();
+  const auto population_df = _cmd.get<"population_df_">();
 
-  const auto name = rfl::get<"name_">(population_json.val_);
+  const auto get_name = [](const auto& _c) { return _c.name(); };
+
+  const auto name = rfl::visit(get_name, population_df.val_);
 
   const auto fitted = _pipeline.fitted();
 
