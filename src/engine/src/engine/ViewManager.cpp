@@ -43,13 +43,13 @@ void ViewManager::execute_command(const Command& _command,
 void ViewManager::get_view_content(
     const typename Command::GetViewContentOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto draw = _cmd.get<"draw_">();
+  const auto draw = _cmd.draw();
 
-  const auto length = _cmd.get<"length_">();
+  const auto length = _cmd.length();
 
-  const auto start = _cmd.get<"start_">();
+  const auto start = _cmd.start();
 
-  const auto& cols = _cmd.get<"cols_">();
+  const auto& cols = _cmd.cols();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -67,9 +67,9 @@ void ViewManager::get_view_content(
 
 void ViewManager::get_view_nrows(const typename Command::GetViewNRowsOp& _cmd,
                                  Poco::Net::StreamSocket* _socket) {
-  const auto cols = _cmd.get<"cols_">();
+  const auto cols = _cmd.cols();
 
-  const auto force = _cmd.get<"force_">();
+  const auto force = _cmd.force();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -87,7 +87,7 @@ void ViewManager::get_view_nrows(const typename Command::GetViewNRowsOp& _cmd,
 
 void ViewManager::view_to_arrow(const typename Command::ViewToArrowOp& _cmd,
                                 Poco::Net::StreamSocket* _socket) {
-  const auto& view = _cmd.get<"view_">();
+  const auto& view = _cmd.view();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -114,15 +114,15 @@ void ViewManager::view_to_arrow(const typename Command::ViewToArrowOp& _cmd,
 
 void ViewManager::view_to_csv(const typename Command::ViewToCSVOp& _cmd,
                               Poco::Net::StreamSocket* _socket) {
-  const auto& fname = _cmd.get<"fname_">();
+  const auto& fname = _cmd.fname();
 
-  const auto batch_size = _cmd.get<"batch_size_">();
+  const auto batch_size = _cmd.batch_size();
 
-  const auto quotechar = _cmd.get<"quotechar_">();
+  const auto quotechar = _cmd.quotechar();
 
-  const auto sep = _cmd.get<"sep_">();
+  const auto sep = _cmd.sep();
 
-  const auto& view = _cmd.get<"view_">();
+  const auto& view = _cmd.view();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -151,11 +151,11 @@ void ViewManager::view_to_csv(const typename Command::ViewToCSVOp& _cmd,
 
 void ViewManager::view_to_db(const typename Command::ViewToDBOp& _cmd,
                              Poco::Net::StreamSocket* _socket) {
-  const auto& conn_id = _cmd.get<"conn_id_">();
+  const auto& conn_id = _cmd.conn_id();
 
-  const auto& table_name = _cmd.get<"table_name_">();
+  const auto& table_name = _cmd.table_name();
 
-  const auto& view = _cmd.get<"view_">();
+  const auto& view = _cmd.view();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -183,11 +183,11 @@ void ViewManager::view_to_db(const typename Command::ViewToDBOp& _cmd,
 
 void ViewManager::view_to_parquet(const typename Command::ViewToParquetOp& _cmd,
                                   Poco::Net::StreamSocket* _socket) {
-  const auto& fname = _cmd.get<"fname_">();
+  const auto& fname = _cmd.fname();
 
-  const auto& compression = _cmd.get<"compression_">();
+  const auto& compression = _cmd.compression();
 
-  const auto& view = _cmd.get<"view_">();
+  const auto& view = _cmd.view();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 

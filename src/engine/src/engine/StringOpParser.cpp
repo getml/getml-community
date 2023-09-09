@@ -87,9 +87,9 @@ void StringOpParser::check(const containers::Column<strings::String>& _col,
 
 containers::ColumnView<strings::String> StringOpParser::get_column(
     const StringColumnOp& _cmd) const {
-  const auto name = _cmd.get<"name_">();
+  const auto name = _cmd.name();
 
-  const auto df_name = _cmd.get<"df_name_">();
+  const auto df_name = _cmd.df_name();
 
   const auto it = data_frames_->find(df_name);
 
@@ -132,7 +132,7 @@ containers::ColumnView<strings::String> StringOpParser::numerical_as_string(
     using FloatColumnOp =
         typename commands::FloatColumnOrFloatColumnView::FloatColumnOp;
     if (const auto val = std::get_if<FloatColumnOp>(&_col.val_)) {
-      return rfl::get<"role_">(*val);
+      return val->role();
     }
     return "";
   };
@@ -185,7 +185,7 @@ containers::ColumnView<strings::String> StringOpParser::parse(
     }
 
     if constexpr (std::is_same<Type, StringConstOp>()) {
-      const auto val = rfl::get<"value_">(_cmd);
+      const auto val = _cmd.value();
       return containers::ColumnView<strings::String>::from_value(val);
     }
 
@@ -226,7 +226,7 @@ containers::ColumnView<strings::String> StringOpParser::subselection(
           const auto& _operand2) -> containers::ColumnView<strings::String> {
     using Type = std::decay_t<decltype(_operand2)>;
 
-    const auto data = parse(*_cmd.get<"operand1_">());
+    const auto data = parse(*_cmd.operand1());
 
     if constexpr (std::is_same<
                       Type,
@@ -245,16 +245,16 @@ containers::ColumnView<strings::String> StringOpParser::subselection(
     }
   };
 
-  return std::visit(handle, _cmd.get<"operand2_">());
+  return std::visit(handle, _cmd.operand2());
 }
 
 // ----------------------------------------------------------------------------
 
 containers::ColumnView<strings::String> StringOpParser::substring(
     const StringSubstringOp& _cmd) const {
-  const auto begin = _cmd.get<"begin_">();
-  const auto len = _cmd.get<"len_">();
-  const auto operand1 = parse(*_cmd.get<"operand1_">());
+  const auto begin = _cmd.begin();
+  const auto len = _cmd.len();
+  const auto operand1 = parse(*_cmd.operand1());
   const auto substr = [begin,
                        len](const strings::String& _val) -> strings::String {
     return _val ? strings::String(_val.str().substr(begin, len)) : _val;
@@ -281,7 +281,7 @@ containers::ColumnView<strings::String> StringOpParser::unary_operation(
     }
   };
 
-  return std::visit(handle, _cmd.get<"operand1_">());
+  return std::visit(handle, _cmd.operand1());
 }
 
 // ----------------------------------------------------------------------------
@@ -322,13 +322,13 @@ containers::ColumnView<strings::String> StringOpParser::to_view(
 
 containers::ColumnView<strings::String> StringOpParser::update(
     const StringUpdateOp& _cmd) const {
-  const auto operand1 = parse(*_cmd.get<"operand1_">());
+  const auto operand1 = parse(*_cmd.operand1());
 
-  const auto operand2 = parse(*_cmd.get<"operand2_">());
+  const auto operand2 = parse(*_cmd.operand2());
 
   const auto condition =
       BoolOpParser(categories_, join_keys_encoding_, data_frames_)
-          .parse(*_cmd.get<"condition_">());
+          .parse(*_cmd.condition());
 
   const auto op = [](const auto& _val1, const auto& _val2,
                      const bool _cond) -> strings::String {
@@ -343,8 +343,8 @@ containers::ColumnView<strings::String> StringOpParser::update(
 
 containers::ColumnView<strings::String> StringOpParser::with_subroles(
     const StringWithSubrolesOp& _cmd) const {
-  const auto col = parse(*_cmd.get<"operand1_">());
-  const auto subroles = _cmd.get<"subroles_">();
+  const auto col = parse(*_cmd.operand1());
+  const auto subroles = _cmd.subroles();
   return col.with_subroles(subroles);
 }
 
@@ -352,8 +352,8 @@ containers::ColumnView<strings::String> StringOpParser::with_subroles(
 
 containers::ColumnView<strings::String> StringOpParser::with_unit(
     const StringWithUnitOp& _cmd) const {
-  const auto col = parse(*_cmd.get<"operand1_">());
-  const auto unit = _cmd.get<"unit_">();
+  const auto col = parse(*_cmd.operand1());
+  const auto unit = _cmd.unit();
   return col.with_unit(unit);
 }
 

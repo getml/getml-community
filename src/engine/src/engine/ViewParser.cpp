@@ -20,22 +20,22 @@ namespace handlers {
 
 void ViewParser::add_column(const ViewOp& _cmd,
                             containers::DataFrame* _df) const {
-  if (!_cmd.get<"added_">()) {
+  if (!_cmd.added()) {
     return;
   }
 
   const auto handle = [this, &_cmd, _df](const auto& _json_col) {
     using Type = std::decay_t<decltype(_json_col)>;
 
-    const auto& added = *_cmd.get<"added_">();
+    const auto& added = *_cmd.added();
 
-    const auto& name = added.get<"name_">();
+    const auto& name = added.name();
 
-    const auto& role = added.get<"role_">();
+    const auto& role = added.role();
 
-    const auto& subroles = added.get<"subroles_">();
+    const auto& subroles = added.subroles();
 
-    const auto& unit = added.get<"unit_">();
+    const auto& unit = added.unit();
 
     if constexpr (std::is_same<Type,
                                commands::FloatColumnOrFloatColumnView>()) {
@@ -74,7 +74,7 @@ void ViewParser::add_column(const ViewOp& _cmd,
     }
   };
 
-  std::visit(handle, _cmd.get<"added_">()->get<"col_">());
+  std::visit(handle, _cmd.added()->col());
 }
 
 // ------------------------------------------------------------------------
@@ -134,11 +134,11 @@ void ViewParser::add_string_column_to_df(
 
 void ViewParser::drop_columns(const ViewOp& _cmd,
                               containers::DataFrame* _df) const {
-  if (!_cmd.get<"dropped_">()) {
+  if (!_cmd.dropped()) {
     return;
   }
 
-  const auto& dropped = *_cmd.get<"dropped_">();
+  const auto& dropped = *_cmd.dropped();
 
   for (const auto& name : dropped) {
     _df->remove_column(name);
@@ -333,10 +333,10 @@ containers::DataFrame ViewParser::parse(
     using Type = std::decay_t<decltype(_cmd)>;
 
     if constexpr (std::is_same<Type, DataFrameOp>()) {
-      const auto name = rfl::get<"name_">(_cmd);
+      const auto name = _cmd.name();
       return utils::Getter::get(name, *data_frames_);
     } else {
-      const auto& base = *rfl::get<"base_">(_cmd);
+      const auto& base = *_cmd.base();
 
       auto df = parse(base);
 
@@ -387,7 +387,7 @@ ViewParser::parse_all(const commands::DataFramesOrViews& _cmd) const {
 
 void ViewParser::subselection(const ViewOp& _cmd,
                               containers::DataFrame* _df) const {
-  if (!_cmd.get<"subselection_">()) {
+  if (!_cmd.subselection()) {
     return;
   }
 
@@ -440,7 +440,7 @@ void ViewParser::subselection(const ViewOp& _cmd,
     }
   };
 
-  return std::visit(handle, *_cmd.get<"subselection_">());
+  return std::visit(handle, *_cmd.subselection());
 }
 
 // ----------------------------------------------------------------------------

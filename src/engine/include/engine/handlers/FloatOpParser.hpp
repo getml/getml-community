@@ -149,14 +149,14 @@ class FloatOpParser {
   template <class Operator>
   containers::ColumnView<Float> bin_op(const FloatBinaryOp& _cmd,
                                        const Operator& _op) const {
-    const auto operand1 = parse(*_cmd.get<"operand1_">());
-    const auto operand2 = parse(*_cmd.get<"operand2_">());
+    const auto operand1 = parse(*_cmd.operand1());
+    const auto operand2 = parse(*_cmd.operand2());
     return containers::ColumnView<Float>::from_bin_op(operand1, operand2, _op);
   }
 
   /// Returns a columns containing random values.
   containers::ColumnView<Float> random(const FloatRandomOp& _cmd) const {
-    const auto seed = _cmd.get<"seed_">();
+    const auto seed = _cmd.seed();
 
     auto rng = std::mt19937(seed);
 
@@ -197,7 +197,7 @@ class FloatOpParser {
   template <class Operator>
   containers::ColumnView<Float> un_op(const FloatUnaryOp& _cmd,
                                       const Operator& _op) const {
-    const auto operand1 = parse(*_cmd.get<"operand1_">());
+    const auto operand1 = parse(*_cmd.operand1());
     return containers::ColumnView<Float>::from_un_op(operand1, _op);
   }
 

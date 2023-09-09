@@ -148,8 +148,8 @@ class StringOpParser {
   template <class Operator>
   containers::ColumnView<strings::String> bin_op(const StringBinaryOp& _cmd,
                                                  const Operator& _op) const {
-    const auto operand1 = parse(*_cmd.get<"operand1_">());
-    const auto operand2 = parse(*_cmd.get<"operand2_">());
+    const auto operand1 = parse(*_cmd.operand1());
+    const auto operand2 = parse(*_cmd.operand2());
     return containers::ColumnView<strings::String>::from_bin_op(operand1,
                                                                 operand2, _op);
   }

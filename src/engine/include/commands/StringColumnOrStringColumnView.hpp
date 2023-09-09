@@ -26,71 +26,81 @@ class FloatColumnOrFloatColumnView;
 
 class StringColumnOrStringColumnView {
  public:
-  /// The possible operators for a binary operations.
-  using StringBinaryOpLiteral = rfl::Literal<"concat">;
-
   /// The command used for boolean binary operations.
-  using StringBinaryOp = rfl::NamedTuple<
-      rfl::Field<"operator_", StringBinaryOpLiteral>,
-      rfl::Field<"operand1_", rfl::Ref<StringColumnOrStringColumnView>>,
-      rfl::Field<"operand2_", rfl::Ref<StringColumnOrStringColumnView>>,
-      rfl::Field<"type_", rfl::Literal<"StringColumnView">>>;
+  struct StringBinaryOp {
+    using StringBinaryOpLiteral = rfl::Literal<"concat">;
+
+    rfl::Field<"operator_", StringBinaryOpLiteral> op;
+    rfl::Field<"operand1_", rfl::Ref<StringColumnOrStringColumnView>> operand1;
+    rfl::Field<"operand2_", rfl::Ref<StringColumnOrStringColumnView>> operand2;
+    rfl::Field<"type_", rfl::Literal<"StringColumnView">> type;
+  };
 
   /// The command used for string const operations.
-  using StringConstOp =
-      rfl::NamedTuple<rfl::Field<"operator_", rfl::Literal<"const">>,
-                      rfl::Field<"value_", std::string>,
-                      rfl::Field<"type_", rfl::Literal<"StringColumnView">>>;
+  struct StringConstOp {
+    rfl::Field<"operator_", rfl::Literal<"const">> op;
+    rfl::Field<"value_", std::string> value;
+    rfl::Field<"type_", rfl::Literal<"StringColumnView">> type;
+  };
 
   /// The command used to retrieve a substring.
-  using StringSubstringOp = rfl::NamedTuple<
-      rfl::Field<"operator_", rfl::Literal<"substr">>,
-      rfl::Field<"begin_", size_t>, rfl::Field<"len_", size_t>,
-      rfl::Field<"operand1_", rfl::Ref<StringColumnOrStringColumnView>>,
-      rfl::Field<"type_", rfl::Literal<"StringColumnView">>>;
+  struct StringSubstringOp {
+    rfl::Field<"operator_", rfl::Literal<"substr">> op;
+    rfl::Field<"begin_", size_t> begin;
+    rfl::Field<"len_", size_t> len;
+    rfl::Field<"operand1_", rfl::Ref<StringColumnOrStringColumnView>> operand1;
+    rfl::Field<"type_", rfl::Literal<"StringColumnView">> type;
+  };
 
   /// The command used for string unary operations.
-  using StringUnaryOp = rfl::NamedTuple<
-      rfl::Field<"operator_", rfl::Literal<"as_str">>,
-      rfl::Field<"operand1_",
-                 std::variant<rfl::Ref<FloatColumnOrFloatColumnView>,
-                              rfl::Ref<BooleanColumnView>>>,
-      rfl::Field<"type_", rfl::Literal<"StringColumnView">>>;
+  struct StringUnaryOp {
+    rfl::Field<"operator_", rfl::Literal<"as_str">> op;
+    rfl::Field<"operand1_", std::variant<rfl::Ref<FloatColumnOrFloatColumnView>,
+                                         rfl::Ref<BooleanColumnView>>>
+        operand1;
+    rfl::Field<"type_", rfl::Literal<"StringColumnView">> type;
+  };
 
   /// The command used for string with subtoles operations.
-  using StringWithSubrolesOp = rfl::NamedTuple<
-      rfl::Field<"subroles_", std::vector<std::string>>,
-      rfl::Field<"operand1_", rfl::Ref<StringColumnOrStringColumnView>>,
-      rfl::Field<"type_", rfl::Literal<"StringColumnView">>>;
+  struct StringWithSubrolesOp {
+    rfl::Field<"subroles_", std::vector<std::string>> subroles;
+    rfl::Field<"operand1_", rfl::Ref<StringColumnOrStringColumnView>> operand1;
+    rfl::Field<"type_", rfl::Literal<"StringColumnView">> type;
+  };
 
   /// The command used for string with unit operations.
-  using StringWithUnitOp = rfl::NamedTuple<
-      rfl::Field<"unit_", std::string>,
-      rfl::Field<"operand1_", rfl::Ref<StringColumnOrStringColumnView>>,
-      rfl::Field<"type_", rfl::Literal<"StringColumnView">>>;
+  struct StringWithUnitOp {
+    rfl::Field<"unit_", std::string> unit;
+    rfl::Field<"operand1_", rfl::Ref<StringColumnOrStringColumnView>> operand1;
+    rfl::Field<"type_", rfl::Literal<"StringColumnView">> type;
+  };
 
   /// The command used for boolean subselection operations.
-  using StringSubselectionOp = rfl::NamedTuple<
-      rfl::Field<"operator_", rfl::Literal<"subselection">>,
-      rfl::Field<"operand1_", rfl::Ref<StringColumnOrStringColumnView>>,
-      rfl::Field<"operand2_",
-                 std::variant<rfl::Ref<BooleanColumnView>,
-                              rfl::Ref<FloatColumnOrFloatColumnView>>>,
-      rfl::Field<"type_", rfl::Literal<"StringColumnView">>>;
+  struct StringSubselectionOp {
+    rfl::Field<"operator_", rfl::Literal<"subselection">> op;
+    rfl::Field<"operand1_", rfl::Ref<StringColumnOrStringColumnView>> operand1;
+    rfl::Field<"operand2_",
+               std::variant<rfl::Ref<BooleanColumnView>,
+                            rfl::Ref<FloatColumnOrFloatColumnView>>>
+        operand2;
+    rfl::Field<"type_", rfl::Literal<"StringColumnView">> type;
+  };
 
   /// The command used to update a string column.
-  using StringUpdateOp = rfl::NamedTuple<
-      rfl::Field<"operator_", rfl::Literal<"update">>,
-      rfl::Field<"operand1_", rfl::Ref<StringColumnOrStringColumnView>>,
-      rfl::Field<"operand2_", rfl::Ref<StringColumnOrStringColumnView>>,
-      rfl::Field<"condition_", rfl::Ref<BooleanColumnView>>,
-      rfl::Field<"type_", rfl::Literal<"StringColumnView">>>;
+  struct StringUpdateOp {
+    rfl::Field<"operator_", rfl::Literal<"update">> op;
+    rfl::Field<"operand1_", rfl::Ref<StringColumnOrStringColumnView>> operand1;
+    rfl::Field<"operand2_", rfl::Ref<StringColumnOrStringColumnView>> operand2;
+    rfl::Field<"condition_", rfl::Ref<BooleanColumnView>> condition;
+    rfl::Field<"type_", rfl::Literal<"StringColumnView">> type;
+  };
 
   /// The command used for retrieving string columns from a data frame.
-  using StringColumnOp =
-      rfl::NamedTuple<rfl::Field<"df_name_", std::string>,
-                      rfl::Field<"name_", std::string>,
-                      rfl::Field<"type_", rfl::Literal<"StringColumn">>>;
+  struct StringColumnOp {
+    rfl::Field<"df_name_", std::string> df_name;
+    rfl::Field<"name_", std::string> name;
+    rfl::Field<"type_", rfl::Literal<"StringColumn">> type;
+  };
 
   using NamedTupleType =
       std::variant<StringColumnOp, StringBinaryOp, StringConstOp,

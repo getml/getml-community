@@ -26,29 +26,35 @@ namespace commands {
 class DataFrameOrView {
  public:
   /// Operation to add a new column.
-  using AddedOp = rfl::NamedTuple<
-      rfl::Field<"col_", std::variant<FloatColumnOrFloatColumnView,
-                                      StringColumnOrStringColumnView>>,
-      rfl::Field<"name_", std::string>, rfl::Field<"role_", std::string>,
-      rfl::Field<"subroles_", std::vector<std::string>>,
-      rfl::Field<"unit_", std::string>>;
+  struct AddedOp {
+    rfl::Field<"col_", std::variant<FloatColumnOrFloatColumnView,
+                                    StringColumnOrStringColumnView>>
+        col;
+    rfl::Field<"name_", std::string> name;
+    rfl::Field<"role_", std::string> role;
+    rfl::Field<"subroles_", std::vector<std::string>> subroles;
+    rfl::Field<"unit_", std::string> unit;
+  };
 
   /// Operation to retrieve a base data frame.
-  using DataFrameOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"DataFrame">>,
-                      rfl::Field<"name_", std::string>>;
+  struct DataFrameOp {
+    rfl::Field<"type_", rfl::Literal<"DataFrame">> type;
+    rfl::Field<"name_", std::string> name;
+  };
 
   /// Operation to parse a view
-  using ViewOp = rfl::NamedTuple<
-      rfl::Field<"type_", rfl::Literal<"View">>,
-      rfl::Field<"name_", std::string>,
-      rfl::Field<"base_", rfl::Ref<DataFrameOrView>>,
-      rfl::Field<"added_", std::optional<AddedOp>>,
-      rfl::Field<"dropped_", std::optional<std::vector<std::string>>>,
-      rfl::Field<"last_change_", std::string>,
-      rfl::Field<"subselection_",
-                 std::optional<std::variant<BooleanColumnView,
-                                            FloatColumnOrFloatColumnView>>>>;
+  struct ViewOp {
+    rfl::Field<"type_", rfl::Literal<"View">> type;
+    rfl::Field<"name_", std::string> name;
+    rfl::Field<"base_", rfl::Ref<DataFrameOrView>> base;
+    rfl::Field<"added_", std::optional<AddedOp>> added;
+    rfl::Field<"dropped_", std::optional<std::vector<std::string>>> dropped;
+    rfl::Field<"last_change_", std::string> last_change;
+    rfl::Field<"subselection_",
+               std::optional<std::variant<BooleanColumnView,
+                                          FloatColumnOrFloatColumnView>>>
+        subselection;
+  };
 
   using NamedTupleType = rfl::TaggedUnion<"type_", DataFrameOp, ViewOp>;
 

@@ -19,23 +19,24 @@ namespace commands {
 
 class Aggregation {
  public:
-  /// All possible float aggregations.
-  using FloatAggregationLiteral = rfl::Literal<"avg", "count", "max", "median",
-                                               "min", "stddev", "sum", "var">;
-
   /// An aggregation over a float column.
-  using FloatAggregationOp =
-      rfl::NamedTuple<rfl::Field<"type_", FloatAggregationLiteral>,
-                      rfl::Field<"col_", FloatColumnOrFloatColumnView> >;
+  struct FloatAggregationOp {
+    using FloatAggregationLiteral =
+        rfl::Literal<"avg", "count", "max", "median", "min", "stddev", "sum",
+                     "var">;
 
-  /// All possible string aggregations.
-  using StringAggregationLiteral =
-      rfl::Literal<"count_categorical", "count_distinct">;
+    rfl::Field<"type_", FloatAggregationLiteral> type;
+    rfl::Field<"col_", FloatColumnOrFloatColumnView> col;
+  };
 
   /// An aggregation over a string column.
-  using StringAggregationOp =
-      rfl::NamedTuple<rfl::Field<"type_", StringAggregationLiteral>,
-                      rfl::Field<"col_", StringColumnOrStringColumnView> >;
+  struct StringAggregationOp {
+    using StringAggregationLiteral =
+        rfl::Literal<"count_categorical", "count_distinct">;
+
+    rfl::Field<"type_", StringAggregationLiteral> type;
+    rfl::Field<"col_", StringColumnOrStringColumnView> col;
+  };
 
   using NamedTupleType =
       rfl::TaggedUnion<"type_", FloatAggregationOp, StringAggregationOp>;

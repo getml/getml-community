@@ -1036,8 +1036,10 @@ rfl::Ref<const metrics::Scores> score_after_fitting(
   const auto yhat = transform::generate_predictions(
       _fitted, categorical_features, numerical_features);
 
+  const auto get_name = [](const auto& _c) -> const auto& { return _c.name(); };
+
   const auto& name =
-      rfl::get<"name_">(_params.get<"cmd_">().get<"population_df_">().val_);
+      rfl::visit(get_name, _params.get<"cmd_">().get<"population_df_">().val_);
 
   return score::score(_pipeline, _fitted, _params.get<"population_df_">(), name,
                       yhat);

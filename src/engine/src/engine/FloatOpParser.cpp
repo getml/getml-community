@@ -18,11 +18,11 @@ namespace handlers {
 
 containers::ColumnView<Float> FloatOpParser::arange(
     const FloatArangeOp& _col) const {
-  const auto start = _col.get<"start_">();
+  const auto start = _col.start();
 
-  const auto stop = _col.get<"stop_">();
+  const auto stop = _col.stop();
 
-  const auto step = _col.get<"step_">();
+  const auto step = _col.step();
 
   const auto value_func = [start, stop,
                            step](const size_t _i) -> std::optional<Float> {
@@ -64,7 +64,7 @@ containers::ColumnView<Float> FloatOpParser::as_num(
     const FloatFromStringOp& _cmd) const {
   const auto operand1 =
       StringOpParser(categories_, join_keys_encoding_, data_frames_)
-          .parse(*_cmd.get<"operand1_">());
+          .parse(*_cmd.operand1());
 
   const auto to_double = [](const strings::String& _str) {
     const auto [val, success] = io::Parser::to_double(_str.str());
@@ -82,11 +82,11 @@ containers::ColumnView<Float> FloatOpParser::as_num(
 
 containers::ColumnView<Float> FloatOpParser::as_ts(
     const FloatAsTSOp& _cmd) const {
-  const auto time_formats = _cmd.get<"time_formats_">();
+  const auto time_formats = _cmd.time_formats();
 
   const auto operand1 =
       StringOpParser(categories_, join_keys_encoding_, data_frames_)
-          .parse(*_cmd.get<"operand1_">());
+          .parse(*_cmd.operand1());
 
   const auto to_time_stamp = [time_formats](const strings::String& _str) {
     auto [val, success] = io::Parser::to_time_stamp(_str.str(), time_formats);
@@ -184,7 +184,7 @@ containers::ColumnView<Float> FloatOpParser::binary_operation(
     }
   };
 
-  return rfl::visit(handle, _cmd.get<"operator_">(), _cmd);
+  return rfl::visit(handle, _cmd.op(), _cmd);
 }
 
 // ----------------------------------------------------------------------------
@@ -193,7 +193,7 @@ containers::ColumnView<Float> FloatOpParser::boolean_as_num(
     const FloatFromBooleanOp& _cmd) const {
   const auto operand1 =
       BoolOpParser(categories_, join_keys_encoding_, data_frames_)
-          .parse(*_cmd.get<"operand1_">());
+          .parse(*_cmd.operand1());
 
   const auto as_num = [](const bool val) {
     if (val) {
@@ -210,9 +210,9 @@ containers::ColumnView<Float> FloatOpParser::boolean_as_num(
 
 containers::ColumnView<Float> FloatOpParser::get_column(
     const FloatColumnOp& _cmd) const {
-  const auto name = _cmd.get<"name_">();
+  const auto name = _cmd.name();
 
-  const auto df_name = _cmd.get<"df_name_">();
+  const auto df_name = _cmd.df_name();
 
   const auto it = data_frames_->find(df_name);
 
@@ -268,7 +268,7 @@ containers::ColumnView<Float> FloatOpParser::parse(
     }
 
     if constexpr (std::is_same<Type, FloatConstOp>()) {
-      const auto val = rfl::get<"value_">(_cmd);
+      const auto val = _cmd.value();
       return containers::ColumnView<Float>::from_value(val);
     }
 
@@ -316,7 +316,7 @@ containers::ColumnView<Float> FloatOpParser::subselection(
       [this, &_cmd](const auto& _operand2) -> containers::ColumnView<Float> {
     using Type = std::decay_t<decltype(_operand2)>;
 
-    const auto data = parse(*_cmd.get<"operand1_">());
+    const auto data = parse(*_cmd.operand1());
 
     if constexpr (std::is_same<
                       Type,
@@ -333,7 +333,7 @@ containers::ColumnView<Float> FloatOpParser::subselection(
     }
   };
 
-  return std::visit(handle, _cmd.get<"operand2_">());
+  return std::visit(handle, _cmd.operand2());
 }
 
 // ----------------------------------------------------------------------------
@@ -451,7 +451,7 @@ containers::ColumnView<Float> FloatOpParser::unary_operation(
     }
 
     if constexpr (std::is_same<Type, rfl::Literal<"sqrt">>()) {
-      return parse(*_cmd.get<"operand1_">());
+      return parse(*_cmd.operand1());
     }
 
     if constexpr (std::is_same<Type, rfl::Literal<"weekday">>()) {
@@ -467,20 +467,20 @@ containers::ColumnView<Float> FloatOpParser::unary_operation(
     }
   };
 
-  return rfl::visit(handle, _cmd.get<"operator_">(), _cmd);
+  return rfl::visit(handle, _cmd.op(), _cmd);
 }
 
 // ----------------------------------------------------------------------------
 
 containers::ColumnView<Float> FloatOpParser::update(
     const FloatUpdateOp& _cmd) const {
-  const auto operand1 = parse(*_cmd.get<"operand1_">());
+  const auto operand1 = parse(*_cmd.operand1());
 
-  const auto operand2 = parse(*_cmd.get<"operand2_">());
+  const auto operand2 = parse(*_cmd.operand2());
 
   const auto condition =
       BoolOpParser(categories_, join_keys_encoding_, data_frames_)
-          .parse(*_cmd.get<"condition_">());
+          .parse(*_cmd.condition());
 
   const auto op = [](const auto& _val1, const auto& _val2,
                      const bool _cond) -> Float {
@@ -495,8 +495,8 @@ containers::ColumnView<Float> FloatOpParser::update(
 
 containers::ColumnView<Float> FloatOpParser::with_subroles(
     const FloatWithSubrolesOp& _cmd) const {
-  const auto col = parse(*_cmd.get<"operand1_">());
-  const auto subroles = _cmd.get<"subroles_">();
+  const auto col = parse(*_cmd.operand1());
+  const auto subroles = _cmd.subroles();
   return col.with_subroles(subroles);
 }
 
@@ -504,8 +504,8 @@ containers::ColumnView<Float> FloatOpParser::with_subroles(
 
 containers::ColumnView<Float> FloatOpParser::with_unit(
     const FloatWithUnitOp& _cmd) const {
-  const auto col = parse(*_cmd.get<"operand1_">());
-  const auto unit = _cmd.get<"unit_">();
+  const auto col = parse(*_cmd.operand1());
+  const auto unit = _cmd.unit();
   return col.with_unit(unit);
 }
 

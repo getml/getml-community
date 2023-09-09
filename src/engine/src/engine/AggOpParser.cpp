@@ -38,7 +38,7 @@ Float AggOpParser::aggregate(const commands::Aggregation& _aggregation) const {
 
 Float AggOpParser::float_aggregation(const FloatAggregationOp& _cmd) const {
   const auto col = FloatOpParser(categories_, join_keys_encoding_, data_frames_)
-                       .parse(_cmd.get<"col_">());
+                       .parse(_cmd.col());
 
   const auto handle = [this, &col](const auto& _literal) -> Float {
     using Type = std::decay_t<decltype(_literal)>;
@@ -80,7 +80,7 @@ Float AggOpParser::float_aggregation(const FloatAggregationOp& _cmd) const {
     }
   };
 
-  return rfl::visit(handle, _cmd.get<"type_">());
+  return rfl::visit(handle, _cmd.type());
 }
 
 // ----------------------------------------------------------------------------
@@ -88,7 +88,7 @@ Float AggOpParser::float_aggregation(const FloatAggregationOp& _cmd) const {
 Float AggOpParser::string_aggregation(const StringAggregationOp& _cmd) const {
   const auto col =
       StringOpParser(categories_, join_keys_encoding_, data_frames_)
-          .parse(_cmd.get<"col_">());
+          .parse(_cmd.col());
 
   const auto to_str = [](const strings::String& _str) -> std::string {
     return _str.str();
@@ -108,7 +108,7 @@ Float AggOpParser::string_aggregation(const StringAggregationOp& _cmd) const {
     }
   };
 
-  return rfl::visit(handle, _cmd.get<"type_">());
+  return rfl::visit(handle, _cmd.type());
 }
 
 // ----------------------------------------------------------------------------
