@@ -24,7 +24,7 @@ T from_named_tuple(const NamedTupleType& _n) {
     const auto make = [](const auto&... _fields) { return T{_fields...}; };
     return std::apply(make, _n.fields());
   } else {
-    return from_named_tuple<T>(RequiredType(_n));
+    return from_named_tuple<T, RequiredType>(RequiredType(_n));
   }
 }
 

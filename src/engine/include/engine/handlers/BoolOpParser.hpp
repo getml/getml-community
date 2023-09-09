@@ -109,8 +109,8 @@ class BoolOpParser {
   template <class Operator>
   containers::ColumnView<bool> bin_op(const BooleanBinaryOp& _col,
                                       const Operator& _op) const {
-    const auto operand1 = parse(*_col.get<"operand1_">());
-    const auto operand2 = parse(*_col.get<"operand2_">());
+    const auto operand1 = parse(*_col.operand1());
+    const auto operand2 = parse(*_col.operand2());
     return containers::ColumnView<bool>::from_bin_op(operand1, operand2, _op);
   }
 
@@ -133,10 +133,10 @@ class BoolOpParser {
                                           const Operator& _op) const {
     const auto operand1 =
         StringOpParser(categories_, join_keys_encoding_, data_frames_)
-            .parse(*_cmd.get<"operand1_">());
+            .parse(*_cmd.operand1());
     const auto operand2 =
         StringOpParser(categories_, join_keys_encoding_, data_frames_)
-            .parse(*_cmd.get<"operand2_">());
+            .parse(*_cmd.operand2());
     return containers::ColumnView<bool>::from_bin_op(operand1, operand2, _op);
   }
 
@@ -147,10 +147,10 @@ class BoolOpParser {
                                           const Operator& _op) const {
     const auto operand1 =
         FloatOpParser(categories_, join_keys_encoding_, data_frames_)
-            .parse(*_cmd.get<"operand1_">());
+            .parse(*_cmd.operand1());
     const auto operand2 =
         FloatOpParser(categories_, join_keys_encoding_, data_frames_)
-            .parse(*_cmd.get<"operand2_">());
+            .parse(*_cmd.operand2());
     return containers::ColumnView<bool>::from_bin_op(operand1, operand2, _op);
   }
 

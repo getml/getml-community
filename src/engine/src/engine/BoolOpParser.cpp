@@ -45,7 +45,7 @@ containers::ColumnView<bool> BoolOpParser::binary_operation(
     }
   };
 
-  return rfl::visit(handle, _cmd.get<"operator_">(), _cmd);
+  return rfl::visit(handle, _cmd.op(), _cmd);
 }
 
 // ----------------------------------------------------------------------------
@@ -83,7 +83,7 @@ containers::ColumnView<bool> BoolOpParser::numerical_comparison(
     }
   };
 
-  return rfl::visit(handle, _cmd.get<"operator_">(), _cmd);
+  return rfl::visit(handle, _cmd.op(), _cmd);
 }
 
 // ----------------------------------------------------------------------------
@@ -98,12 +98,12 @@ containers::ColumnView<bool> BoolOpParser::parse(
     }
 
     if constexpr (std::is_same<Type, BooleanConstOp>()) {
-      const auto value = rfl::get<"value_">(_cmd);
+      const auto value = _cmd.value();
       return containers::ColumnView<bool>::from_value(value);
     }
 
     if constexpr (std::is_same<Type, BooleanIsInfOp>()) {
-      const auto& col = *rfl::get<"operand1_">(_cmd);
+      const auto& col = *_cmd.operand1();
       const auto is_inf = [](const Float val) { return std::isinf(val); };
       return num_un_op(col, is_inf);
     }
@@ -113,7 +113,7 @@ containers::ColumnView<bool> BoolOpParser::parse(
     }
 
     if constexpr (std::is_same<Type, BooleanNotOp>()) {
-      const auto col = parse(*rfl::get<"operand1_">(_cmd));
+      const auto col = parse(*_cmd.operand1());
       return containers::ColumnView<bool>::from_un_op(col,
                                                       std::logical_not<bool>());
     }
@@ -146,7 +146,7 @@ containers::ColumnView<bool> BoolOpParser::subselection(
       [this, &_cmd](const auto& _operand2) -> containers::ColumnView<bool> {
     using Type = std::decay_t<decltype(_operand2)>;
 
-    const auto data = parse(*_cmd.get<"operand1_">());
+    const auto data = parse(*_cmd.operand1());
 
     if constexpr (std::is_same<
                       Type,
@@ -163,7 +163,7 @@ containers::ColumnView<bool> BoolOpParser::subselection(
     }
   };
 
-  return std::visit(handle, _cmd.get<"operand2_">());
+  return std::visit(handle, _cmd.operand2());
 }
 
 // ----------------------------------------------------------------------------
@@ -195,18 +195,18 @@ containers::ColumnView<bool> BoolOpParser::string_comparison(
     }
   };
 
-  return rfl::visit(handle, _cmd.get<"operator_">(), _cmd);
+  return rfl::visit(handle, _cmd.op(), _cmd);
 }
 
 // ----------------------------------------------------------------------------
 
 containers::ColumnView<bool> BoolOpParser::update(
     const BooleanUpdateOp& _cmd) const {
-  const auto operand1 = parse(*_cmd.get<"operand1_">());
+  const auto operand1 = parse(*_cmd.operand1());
 
-  const auto operand2 = parse(*_cmd.get<"operand2_">());
+  const auto operand2 = parse(*_cmd.operand2());
 
-  const auto condition = parse(*_cmd.get<"condition_">());
+  const auto condition = parse(*_cmd.condition());
 
   const auto op = [](const auto& _val1, const auto& _val2,
                      const bool _cond) -> bool {
@@ -239,7 +239,7 @@ containers::ColumnView<bool> BoolOpParser::is_null(
     }
   };
 
-  return std::visit(handle, _cmd.get<"operand1_">());
+  return std::visit(handle, _cmd.operand1());
 }
 
 // ----------------------------------------------------------------------------
