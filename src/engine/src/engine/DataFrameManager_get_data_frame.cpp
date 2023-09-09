@@ -34,7 +34,7 @@ void DataFrameManager::get_data_frame(
                                            GetStringColumnOp>()) {
         const auto cmd =
             rfl::from_named_tuple<commands::ColumnCommand::GetStringColumnOp>(
-                _cmd);
+                rfl::to_named_tuple(_cmd));
         ColumnManager(params_).get_categorical_column(cmd, _socket);
         return false;
       } else if constexpr (std::is_same<Type,
@@ -42,7 +42,7 @@ void DataFrameManager::get_data_frame(
                                             GetFloatColumnOp>()) {
         const auto cmd =
             rfl::from_named_tuple<commands::ColumnCommand::GetFloatColumnOp>(
-                _cmd);
+                rfl::to_named_tuple(_cmd));
         ColumnManager(params_).get_column(cmd, _socket);
         return false;
       } else if constexpr (std::is_same<Type, CloseDataFrameOp>()) {

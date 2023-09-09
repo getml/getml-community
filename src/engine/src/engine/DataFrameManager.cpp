@@ -66,15 +66,15 @@ void DataFrameManager::add_float_column(
     Poco::Net::StreamSocket* _socket) {
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
-  const auto& role = _cmd.get<"role_">();
+  const auto& role = _cmd.role();
 
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
-  const auto& unit = _cmd.get<"unit_">();
+  const auto& unit = _cmd.unit();
 
-  const auto& json_col = _cmd.get<"col_">();
+  const auto& json_col = _cmd.col();
 
-  const auto& df_name = _cmd.get<"df_name_">();
+  const auto& df_name = _cmd.df_name();
 
   const auto parser = FloatOpParser(
       params_.categories_, params_.join_keys_encoding_, params_.data_frames_);
@@ -222,15 +222,15 @@ void DataFrameManager::add_string_column(
     Poco::Net::StreamSocket* _socket) {
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
-  const auto& role = _cmd.get<"role_">();
+  const auto& role = _cmd.role();
 
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
-  const auto& unit = _cmd.get<"unit_">();
+  const auto& unit = _cmd.unit();
 
-  const auto& json_col = _cmd.get<"col_">();
+  const auto& json_col = _cmd.col();
 
-  const auto& df_name = _cmd.get<"df_name_">();
+  const auto& df_name = _cmd.df_name();
 
   const auto parser = StringOpParser(
       params_.categories_, params_.join_keys_encoding_, params_.data_frames_);
@@ -304,7 +304,7 @@ void DataFrameManager::add_string_column_to_df(
 void DataFrameManager::append_to_data_frame(
     const typename Command::AppendToDataFrameOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
@@ -344,17 +344,17 @@ void DataFrameManager::append_to_data_frame(
 void DataFrameManager::calc_categorical_column_plots(
     const typename Command::CalcCategoricalColumnPlotOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
-  const auto& df_name = _cmd.get<"df_name_">();
+  const auto& df_name = _cmd.df_name();
 
-  const auto& role = _cmd.get<"role_">();
+  const auto& role = _cmd.role();
 
-  const auto num_bins = _cmd.get<"num_bins_">();
+  const auto num_bins = _cmd.num_bins();
 
-  const auto& target_name = _cmd.get<"target_name_">();
+  const auto& target_name = _cmd.target_name();
 
-  const auto& target_role = _cmd.get<"target_role_">();
+  const auto& target_role = _cmd.target_role();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -429,17 +429,17 @@ void DataFrameManager::calc_categorical_column_plots(
 void DataFrameManager::calc_column_plots(
     const typename Command::CalcColumnPlotOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
-  const auto& df_name = _cmd.get<"df_name_">();
+  const auto& df_name = _cmd.df_name();
 
-  const auto& role = _cmd.get<"role_">();
+  const auto& role = _cmd.role();
 
-  const auto num_bins = _cmd.get<"num_bins_">();
+  const auto num_bins = _cmd.num_bins();
 
-  const auto& target_name = _cmd.get<"target_name_">();
+  const auto& target_name = _cmd.target_name();
 
-  const auto& target_role = _cmd.get<"target_role_">();
+  const auto& target_role = _cmd.target_role();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -474,9 +474,9 @@ void DataFrameManager::calc_column_plots(
 
 void DataFrameManager::concat(const typename Command::ConcatDataFramesOp& _cmd,
                               Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
-  const auto data_frame_objs = _cmd.get<"data_frames_">();
+  const auto data_frame_objs = _cmd.data_frames();
 
   if (data_frame_objs.size() == 0) {
     throw std::runtime_error(
@@ -591,7 +591,7 @@ void DataFrameManager::df_to_db(
 
 void DataFrameManager::freeze(const typename Command::FreezeDataFrameOp& _cmd,
                               Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
   multithreading::WriteLock write_lock(params_.read_write_lock_);
 
@@ -934,13 +934,13 @@ void DataFrameManager::from_view(const typename Command::AddDfFromViewOp& _cmd,
 void DataFrameManager::get_data_frame_content(
     const typename Command::GetDataFrameContentOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
-  const auto draw = _cmd.get<"draw_">();
+  const auto draw = _cmd.draw();
 
-  const auto length = _cmd.get<"length_">();
+  const auto length = _cmd.length();
 
-  const auto start = _cmd.get<"start_">();
+  const auto start = _cmd.start();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -958,11 +958,11 @@ void DataFrameManager::get_data_frame_content(
 void DataFrameManager::get_data_frame_html(
     const typename Command::GetDataFrameHTMLOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
-  const auto max_rows = _cmd.get<"max_rows_">();
+  const auto max_rows = _cmd.max_rows();
 
-  const auto border = _cmd.get<"border_">();
+  const auto border = _cmd.border();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -982,7 +982,7 @@ void DataFrameManager::get_data_frame_html(
 void DataFrameManager::get_data_frame_string(
     const typename Command::GetDataFrameStringOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -1000,7 +1000,7 @@ void DataFrameManager::get_data_frame_string(
 void DataFrameManager::get_nbytes(
     const typename Command::GetDataFrameNBytesOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -1018,7 +1018,7 @@ void DataFrameManager::get_nbytes(
 void DataFrameManager::get_nrows(
     const typename Command::GetDataFrameNRowsOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -1035,7 +1035,7 @@ void DataFrameManager::get_nrows(
 
 void DataFrameManager::last_change(const typename Command::LastChangeOp& _cmd,
                                    Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -1123,7 +1123,7 @@ void DataFrameManager::recv_and_add_string_column(
 
 void DataFrameManager::refresh(const typename Command::RefreshDataFrameOp& _cmd,
                                Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -1141,9 +1141,9 @@ void DataFrameManager::refresh(const typename Command::RefreshDataFrameOp& _cmd,
 void DataFrameManager::remove_column(
     const typename Command::RemoveColumnOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto df_name = _cmd.get<"df_name_">();
+  const auto df_name = _cmd.df_name();
 
-  const auto name = _cmd.get<"name_">();
+  const auto name = _cmd.name();
 
   multithreading::WriteLock write_lock(params_.read_write_lock_);
 
@@ -1166,7 +1166,7 @@ void DataFrameManager::remove_column(
 void DataFrameManager::summarize(
     const typename Command::SummarizeDataFrameOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -1183,7 +1183,7 @@ void DataFrameManager::summarize(
 
 void DataFrameManager::to_arrow(const typename Command::ToArrowOp& _cmd,
                                 Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -1203,15 +1203,15 @@ void DataFrameManager::to_arrow(const typename Command::ToArrowOp& _cmd,
 
 void DataFrameManager::to_csv(const typename Command::ToCSVOp& _cmd,
                               Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
-  const auto& fname = _cmd.get<"fname_">();
+  const auto& fname = _cmd.fname();
 
-  const auto batch_size = _cmd.get<"batch_size_">();
+  const auto batch_size = _cmd.batch_size();
 
-  const auto quotechar = _cmd.get<"quotechar_">();
+  const auto quotechar = _cmd.quotechar();
 
-  const auto sep = _cmd.get<"sep_">();
+  const auto sep = _cmd.sep();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -1229,11 +1229,11 @@ void DataFrameManager::to_csv(const typename Command::ToCSVOp& _cmd,
 
 void DataFrameManager::to_db(const typename Command::ToDBOp& _cmd,
                              Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
-  const auto conn_id = _cmd.get<"conn_id_">();
+  const auto conn_id = _cmd.conn_id();
 
-  const auto table_name = _cmd.get<"table_name_">();
+  const auto table_name = _cmd.table_name();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -1251,11 +1251,11 @@ void DataFrameManager::to_db(const typename Command::ToDBOp& _cmd,
 
 void DataFrameManager::to_parquet(const typename Command::ToParquetOp& _cmd,
                                   Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
-  const auto& fname = _cmd.get<"fname_">();
+  const auto& fname = _cmd.fname();
 
-  const auto& compression = _cmd.get<"compression_">();
+  const auto& compression = _cmd.compression();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
