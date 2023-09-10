@@ -67,8 +67,12 @@ struct Parser {
       } else if constexpr (std::is_class_v<T> &&
                            !std::is_same<T, std::string>()) {
         using NamedTupleType = named_tuple_t<T>;
+        const auto to_struct = [](NamedTupleType&& _n) {
+          return from_named_tuple<T, NamedTupleType>(
+              std::forward<NamedTupleType>(_n));
+        };
         return Parser<ReaderType, WriterType, NamedTupleType>::read(_r, _var)
-            .transform(from_named_tuple<T, NamedTupleType>);
+            .transform(to_struct);
       } else {
         return _r.template to_basic_type<std::decay_t<T>>(_var);
       }
