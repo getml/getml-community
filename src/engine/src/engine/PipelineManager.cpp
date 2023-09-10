@@ -177,7 +177,7 @@ void PipelineManager::add_to_tracker(
 
 void PipelineManager::check(const typename Command::CheckOp& _cmd,
                             Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
   const auto pipeline = utils::Getter::get(name, pipelines());
 
@@ -193,7 +193,7 @@ void PipelineManager::check(const typename Command::CheckOp& _cmd,
   const auto local_join_keys_encoding = rfl::Ref<containers::Encoding>::make(
       pool, params_.join_keys_encoding_.ptr());
 
-  const commands::DataFramesOrViews cmd = _cmd;
+  const commands::DataFramesOrViews cmd = rfl::to_named_tuple(_cmd);
 
   const auto [population_df, peripheral_dfs, _] =
       ViewParser(local_categories, local_join_keys_encoding,
@@ -202,7 +202,7 @@ void PipelineManager::check(const typename Command::CheckOp& _cmd,
 
   const auto params = pipelines::CheckParams(
       rfl::make_field<"categories_">(local_categories),
-      rfl::make_field<"cmd_", commands::DataFramesOrViews>(_cmd),
+      rfl::make_field<"cmd_">(cmd),
       rfl::make_field<"logger_">(params_.logger_.ptr()),
       rfl::make_field<"peripheral_dfs_">(peripheral_dfs),
       rfl::make_field<"population_df_">(population_df),
@@ -240,9 +240,9 @@ void PipelineManager::check_user_privileges(
 void PipelineManager::column_importances(
     const typename Command::ColumnImportancesOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
-  const auto target_num = _cmd.get<"target_num_">();
+  const auto target_num = _cmd.target_num();
 
   const auto pipeline = get_pipeline(name);
 
@@ -281,9 +281,9 @@ void PipelineManager::column_importances(
 
 void PipelineManager::deploy(const typename Command::DeployOp& _cmd,
                              Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
-  const bool deploy = _cmd.get<"deploy_">();
+  const bool deploy = _cmd.deploy();
 
   const auto pipeline = get_pipeline(name).with_allow_http(deploy);
 
@@ -297,9 +297,9 @@ void PipelineManager::deploy(const typename Command::DeployOp& _cmd,
 void PipelineManager::feature_correlations(
     const typename Command::FeatureCorrelationsOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
-  const auto target_num = _cmd.get<"target_num_">();
+  const auto target_num = _cmd.target_num();
 
   const auto pipeline = get_pipeline(name);
 
@@ -328,9 +328,9 @@ void PipelineManager::feature_correlations(
 void PipelineManager::feature_importances(
     const typename Command::FeatureImportancesOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
-  const auto target_num = _cmd.get<"target_num_">();
+  const auto target_num = _cmd.target_num();
 
   const auto pipeline = get_pipeline(name);
 
@@ -359,7 +359,7 @@ void PipelineManager::feature_importances(
 
 void PipelineManager::fit(const typename Command::FitOp& _cmd,
                           Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
   auto pipeline = get_pipeline(name);
 
@@ -375,14 +375,16 @@ void PipelineManager::fit(const typename Command::FitOp& _cmd,
   const auto local_join_keys_encoding = rfl::Ref<containers::Encoding>::make(
       pool, params_.join_keys_encoding_.ptr());
 
+  const commands::DataFramesOrViews cmd = rfl::to_named_tuple(_cmd);
+
   const auto [population_df, peripheral_dfs, validation_df] =
       ViewParser(local_categories, local_join_keys_encoding,
                  params_.data_frames_, params_.options_)
-          .parse_all(_cmd);
+          .parse_all(cmd);
 
   const auto params = pipelines::FitParams(
       rfl::make_field<"categories_">(local_categories),
-      rfl::make_field<"cmd_", commands::DataFramesOrViews>(_cmd),
+      rfl::make_field<"cmd_">(cmd),
       rfl::make_field<"data_frames_">(data_frames()),
       rfl::make_field<"data_frame_tracker_">(data_frame_tracker()),
       rfl::make_field<"fe_tracker_">(params_.fe_tracker_),
@@ -421,9 +423,9 @@ void PipelineManager::fit(const typename Command::FitOp& _cmd,
 
 void PipelineManager::lift_curve(const typename Command::LiftCurveOp& _cmd,
                                  Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
-  const auto target_num = _cmd.get<"target_num_">();
+  const auto target_num = _cmd.target_num();
 
   const auto pipeline = get_pipeline(name);
 
@@ -443,9 +445,9 @@ void PipelineManager::lift_curve(const typename Command::LiftCurveOp& _cmd,
 void PipelineManager::precision_recall_curve(
     const typename Command::PrecisionRecallCurveOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
-  const auto target_num = _cmd.get<"target_num_">();
+  const auto target_num = _cmd.target_num();
 
   const auto pipeline = get_pipeline(name);
 
@@ -464,7 +466,7 @@ void PipelineManager::precision_recall_curve(
 
 void PipelineManager::refresh(const typename Command::RefreshOp& _cmd,
                               Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
   const auto pipeline = utils::Getter::get(name, pipelines());
 
@@ -554,9 +556,9 @@ typename PipelineManager::RefreshPipelineType PipelineManager::refresh_pipeline(
 
 void PipelineManager::roc_curve(const typename Command::ROCCurveOp& _cmd,
                                 Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
-  const auto target_num = _cmd.get<"target_num_">();
+  const auto target_num = _cmd.target_num();
 
   const auto pipeline = get_pipeline(name);
 
@@ -578,7 +580,7 @@ void PipelineManager::score(const FullTransformOp& _cmd,
                             const containers::NumericalFeatures& _yhat,
                             const pipelines::Pipeline& _pipeline,
                             Poco::Net::StreamSocket* _socket) {
-  const auto population_df = _cmd.get<"population_df_">();
+  const auto population_df = _cmd.population_df();
 
   const auto get_name = [](const auto& _c) { return _c.name(); };
 
@@ -623,7 +625,7 @@ void PipelineManager::store_df(
 
   _df->set_join_keys_encoding(params_.join_keys_encoding_.ptr());  // TODO
 
-  const auto predict = _cmd.get<"predict_">();
+  const auto predict = _cmd.predict();
 
   if (!predict) {
     add_to_tracker(_fitted, _population_df, _peripheral_dfs, _df);
@@ -645,7 +647,7 @@ void PipelineManager::to_db(
       to_df(_fitted, _cmd, _population_table, _numerical_features,
             _categorical_features, _categories, _join_keys_encoding);
 
-  const auto table_name = _cmd.get<"table_name_">();
+  const auto table_name = _cmd.table_name();
 
   // We are using the bell character (\a) as the quotechar. It is least likely
   // to appear in any field.
@@ -675,14 +677,14 @@ containers::DataFrame PipelineManager::to_df(
     const containers::CategoricalFeatures& _categorical_features,
     const rfl::Ref<containers::Encoding>& _categories,
     const rfl::Ref<containers::Encoding>& _join_keys_encoding) {
-  const auto df_name = _cmd.get<"df_name_">();
+  const auto df_name = _cmd.df_name();
 
   const auto pool = params_.options_.make_pool();
 
   auto df = containers::DataFrame(df_name, _categories.ptr(),
                                   _join_keys_encoding.ptr(), pool);  // TODO
 
-  if (!_cmd.get<"predict_">()) {
+  if (!_cmd.predict()) {
     add_features_to_df(_fitted, _numerical_features, _categorical_features,
                        &df);
   } else {
@@ -749,11 +751,11 @@ void PipelineManager::to_sql(const typename Command::ToSQLOp& _cmd,
 
 void PipelineManager::transform(const typename Command::TransformOp& _cmd,
                                 Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
   auto pipeline = utils::Getter::get(name, pipelines());
 
-  check_user_privileges(pipeline, name, _cmd);
+  check_user_privileges(pipeline, name, rfl::to_named_tuple(_cmd));
 
   communication::Sender::send_string("Found!", _socket);
 
@@ -778,13 +780,14 @@ void PipelineManager::transform(const typename Command::TransformOp& _cmd,
   const auto [population_df, peripheral_dfs, _] =
       ViewParser(local_categories, local_join_keys_encoding, local_data_frames,
                  params_.options_)
-          .parse_all(cmd);
+          .parse_all(rfl::to_named_tuple(cmd));
 
   // IMPORTANT: Use categories_, not local_categories, otherwise
   // .vector() might not work.
   const auto params = pipelines::TransformParams(
       rfl::make_field<"categories_">(params_.categories_),
-      rfl::make_field<"cmd_", pipelines::TransformCmdType>(cmd),
+      rfl::make_field<"cmd_", pipelines::TransformCmdType>(
+          rfl::to_named_tuple(cmd)),
       rfl::make_field<"data_frames_">(*local_data_frames),
       rfl::make_field<"data_frame_tracker_">(data_frame_tracker()),
       rfl::make_field<"logger_">(params_.logger_.ptr()),
@@ -805,11 +808,11 @@ void PipelineManager::transform(const typename Command::TransformOp& _cmd,
     pipeline = pipeline.with_scores(rfl::Ref<const metrics::Scores>(scores));
   }
 
-  const auto& table_name = cmd.get<"table_name_">();
+  const auto& table_name = cmd.table_name();
 
-  const auto& df_name = cmd.get<"df_name_">();
+  const auto& df_name = cmd.df_name();
 
-  const bool scoring_required = cmd.get<"score_">();
+  const bool scoring_required = cmd.score();
 
   if (table_name == "" && df_name == "" && !scoring_required) {
     communication::Sender::send_string("Success!", _socket);
@@ -840,6 +843,5 @@ void PipelineManager::transform(const typename Command::TransformOp& _cmd,
   }
 }
 
-// ------------------------------------------------------------------------
 }  // namespace handlers
 }  // namespace engine
