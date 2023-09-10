@@ -18,6 +18,22 @@ namespace rfl {
 /// Creates a struct of type T from a named tuple.
 /// All fields of the struct must be an rfl::Field.
 template <class T, class NamedTupleType>
+T from_named_tuple(NamedTupleType&& _n) {
+  using RequiredType = std::decay_t<named_tuple_t<T>>;
+  if constexpr (std::is_same<std::decay_t<NamedTupleType>, RequiredType>()) {
+    const auto make = []<class... FieldTypes>(FieldTypes&&... _fields) {
+      return T{std::forward<FieldTypes>(_fields)...};
+    };
+    return std::apply(make, _n.fields());
+  } else {
+    return from_named_tuple<T, RequiredType>(
+        RequiredType(std::forward<NamedTupleType>(_n)));
+  }
+}
+
+/// Creates a struct of type T from a named tuple.
+/// All fields of the struct must be an rfl::Field.
+template <class T, class NamedTupleType>
 T from_named_tuple(const NamedTupleType& _n) {
   using RequiredType = std::decay_t<named_tuple_t<T>>;
   if constexpr (std::is_same<std::decay_t<NamedTupleType>, RequiredType>()) {

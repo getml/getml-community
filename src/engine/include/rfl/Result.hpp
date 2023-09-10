@@ -90,6 +90,33 @@ class Result {
 
   /// Monadic operation - F must be a function of type T -> Result<U>.
   template <class F>
+  auto and_then(const F& _f) {
+    const auto apply = [&_f](auto&& _t) {
+      if constexpr (is_helper_tuple<T>()) {
+        using TupleType = std::decay_t<decltype(_t.tuple)>;
+        return std::apply(_f, std::forward<TupleType>(_t.tuple_));
+      } else {
+        return _f(_t);
+      }
+    };
+
+    /// Result_U is expected to be of type Result<U>.
+    using Result_U = typename std::invoke_result<decltype(apply), T>::type;
+
+    const auto handle_variant =
+        [apply]<class TOrError>(TOrError&& _t_or_err) -> Result_U {
+      if constexpr (!std::is_same<std::decay_t<TOrError>, Error>()) {
+        return apply(std::forward<TOrError>(_t_or_err));
+      } else {
+        return _t_or_err;
+      }
+    };
+
+    return std::visit(handle_variant, t_or_err_);
+  }
+
+  /// Monadic operation - F must be a function of type T -> Result<U>.
+  template <class F>
   auto and_then(const F& _f) const {
     const auto apply = [&_f](const auto& _t) {
       if constexpr (is_helper_tuple<T>()) {
@@ -233,6 +260,33 @@ class Result {
   Result<T> or_other(const Result<T>& _r) const noexcept {
     const auto f = [&](const auto& _) { return _r; };
     return or_else(f);
+  }
+
+  /// Functor operation - F must be a function of type T -> U.
+  template <class F>
+  auto transform(const F& _f) {
+    const auto apply = [&_f](auto&& _t) {
+      if constexpr (is_helper_tuple<T>()) {
+        using TupleType = std::decay_t<decltype(_t.tuple)>;
+        return std::apply(_f, std::forward<TupleType>(_t.tuple_));
+      } else {
+        return _f(std::forward<T>(_t));
+      }
+    };
+
+    /// Result_U is expected to be of type Result<U>.
+    using U = typename std::invoke_result<decltype(apply), T>::type;
+
+    const auto handle_variant =
+        [apply]<class TOrError>(TOrError&& _t_or_err) -> rfl::Result<U> {
+      if constexpr (!std::is_same<std::decay_t<TOrError>, Error>()) {
+        return apply(std::forward<TOrError>(_t_or_err));
+      } else {
+        return _t_or_err;
+      }
+    };
+
+    return std::visit(handle_variant, t_or_err_);
   }
 
   /// Functor operation - F must be a function of type T -> U.
