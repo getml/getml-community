@@ -29,12 +29,14 @@ namespace predictors {
 /// Linear regression predictor.
 class LinearRegression : public Predictor {
  public:
-  using f_scaler = rfl::Field<"scaler_", StandardScaler>;
-  using f_weights = rfl::Field<"weights_", std::vector<Float>>;
+  struct SaveLoad {
+    rfl::Field<"learning_rate_", Float> learning_rate;
+    rfl::Field<"reg_lambda_", Float> reg_lambda;
+    rfl::Field<"scaler_", StandardScaler> scaler;
+    rfl::Field<"weights_", std::vector<Float>> weights;
+  };
 
-  using NamedTupleType =
-      rfl::NamedTuple<rfl::Field<"learning_rate_", Float>,
-                      rfl::Field<"reg_lambda_", Float>, f_scaler, f_weights>;
+  using NamedTupleType = SaveLoad;
 
  public:
   LinearRegression(const LinearRegressionHyperparams& _hyperparams,
@@ -99,9 +101,10 @@ class LinearRegression : public Predictor {
 
   /// Necessary for the automated parsing to work.
   NamedTupleType named_tuple() const {
-    return rfl::make_field<"learning_rate_">(hyperparams().learning_rate()) *
-           rfl::make_field<"reg_lambda_">(hyperparams().reg_lambda()) *
-           f_scaler(scaler_) * f_weights(weights_);
+    return NamedTupleType{.learning_rate = hyperparams().learning_rate(),
+                          .reg_lambda = hyperparams().reg_lambda(),
+                          .scaler = scaler_,
+                          .weights = weights_};
   }
 
   /// Whether we want the predictor to be silent.

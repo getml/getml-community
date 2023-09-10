@@ -26,16 +26,17 @@ namespace predictors {
 /// For rescaling the input data to a standard deviation of one.
 class StandardScaler {
  public:
-  /// Means of the individual columns.
-  using f_mean = rfl::Field<"mean_", std::vector<Float>>;
+  struct SaveLoad {
+    rfl::Field<"mean_", std::vector<Float>> mean;
+    rfl::Field<"std_", std::vector<Float>> std;
+  };
 
-  /// Standard deviations of the individual columns.
-  using f_std = rfl::Field<"std_", std::vector<Float>>;
-
-  using NamedTupleType = rfl::NamedTuple<f_mean, f_std>;
+  using NamedTupleType = SaveLoad;
 
  public:
-  StandardScaler() : val_(f_mean({}) * f_std({})){};
+  StandardScaler()
+      : val_(NamedTupleType{.mean = std::vector<Float>(),
+                            .std = std::vector<Float>()}){};
 
   StandardScaler(const NamedTupleType& _val) : val_(_val) {}
 
@@ -61,16 +62,16 @@ class StandardScaler {
 
  private:
   /// Trivial accessor
-  inline std::vector<Float>& mean() { return val_.get<f_mean>(); }
+  inline std::vector<Float>& mean() { return val_.mean(); }
 
   /// Trivial accessor
-  inline const std::vector<Float>& mean() const { return val_.get<f_mean>(); }
+  inline const std::vector<Float>& mean() const { return val_.mean(); }
 
   /// Trivial accessor
-  inline std::vector<Float>& std() { return val_.get<f_std>(); }
+  inline std::vector<Float>& std() { return val_.std(); }
 
   /// Trivial accessor
-  inline const std::vector<Float>& std() const { return val_.get<f_std>(); }
+  inline const std::vector<Float>& std() const { return val_.std(); }
 
  private:
   /// The underlying named tuple.
