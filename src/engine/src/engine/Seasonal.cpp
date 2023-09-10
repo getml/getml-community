@@ -200,7 +200,8 @@ containers::Column<Float> Seasonal::extract_year(
 commands::Fingerprint Seasonal::fingerprint() const {
   using FingerprintType = typename commands::Fingerprint::SeasonalFingerprint;
   return commands::Fingerprint(
-      FingerprintType(rfl::make_field<"dependencies_">(dependencies_) * op_));
+      FingerprintType(rfl::make_field<"dependencies_">(dependencies_) *
+                      rfl::to_named_tuple(op_)));
 }
 
 // ----------------------------------------------------
@@ -290,18 +291,21 @@ containers::DataFrame Seasonal::fit_transform_df(
 
 void Seasonal::load(const std::string& _fname) {
   const auto named_tuple = helpers::Loader::load<NamedTupleType>(_fname);
-  hour_ = named_tuple.get<f_hour>();
-  minute_ = named_tuple.get<f_minute>();
-  month_ = named_tuple.get<f_month>();
-  weekday_ = named_tuple.get<f_weekday>();
-  year_ = named_tuple.get<f_year>();
+  hour_ = named_tuple.hour();
+  minute_ = named_tuple.minute();
+  month_ = named_tuple.month();
+  weekday_ = named_tuple.weekday();
+  year_ = named_tuple.year();
 }
 
 // ----------------------------------------------------
 
 typename Seasonal::NamedTupleType Seasonal::named_tuple() const {
-  return f_hour(hour_) * f_minute(minute_) * f_month(month_) *
-         f_weekday(weekday_) * f_year(year_);
+  return NamedTupleType{.hour = hour_,
+                        .minute = minute_,
+                        .month = month_,
+                        .weekday = weekday_,
+                        .year = year_};
 }
 
 // ----------------------------------------------------

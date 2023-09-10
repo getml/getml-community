@@ -25,6 +25,7 @@
 #include "rfl/Literal.hpp"
 #include "rfl/NamedTuple.hpp"
 #include "rfl/Ref.hpp"
+#include "rfl/to_named_tuple.hpp"
 #include "strings/strings.hpp"
 
 namespace engine {
@@ -36,23 +37,18 @@ class Seasonal : public Preprocessor {
  public:
   using SeasonalOp = typename commands::Preprocessor::SeasonalOp;
 
-  using f_hour =
-      rfl::Field<"hour_", std::vector<rfl::Ref<helpers::ColumnDescription>>>;
+  struct SaveLoad {
+    rfl::Field<"hour_", std::vector<rfl::Ref<helpers::ColumnDescription>>> hour;
+    rfl::Field<"minute_", std::vector<rfl::Ref<helpers::ColumnDescription>>>
+        minute;
+    rfl::Field<"month_", std::vector<rfl::Ref<helpers::ColumnDescription>>>
+        month;
+    rfl::Field<"weekday_", std::vector<rfl::Ref<helpers::ColumnDescription>>>
+        weekday;
+    rfl::Field<"year_", std::vector<rfl::Ref<helpers::ColumnDescription>>> year;
+  };
 
-  using f_minute =
-      rfl::Field<"minute_", std::vector<rfl::Ref<helpers::ColumnDescription>>>;
-
-  using f_month =
-      rfl::Field<"month_", std::vector<rfl::Ref<helpers::ColumnDescription>>>;
-
-  using f_weekday =
-      rfl::Field<"weekday_", std::vector<rfl::Ref<helpers::ColumnDescription>>>;
-
-  using f_year =
-      rfl::Field<"year_", std::vector<rfl::Ref<helpers::ColumnDescription>>>;
-
-  using NamedTupleType =
-      rfl::NamedTuple<f_hour, f_minute, f_month, f_weekday, f_year>;
+  using NamedTupleType = SaveLoad;
 
  private:
   static constexpr bool ADD_ZERO = true;
@@ -192,7 +188,8 @@ class Seasonal : public Preprocessor {
   /// Whether a particular feature is enabled.
   template <rfl::internal::StringLiteral _field_name>
   bool is_disabled() const {
-    return op_.get<_field_name>() && *op_.get<_field_name>();
+    const auto nt = rfl::to_named_tuple(op_);
+    return nt.get<_field_name>() && *nt.get<_field_name>();
   }
 
   /// Undertakes a transformation based on the template class

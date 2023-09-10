@@ -37,18 +37,19 @@ class Substring : public Preprocessor {
 
   using SubstringOp = typename commands::Preprocessor::SubstringOp;
 
-  using f_cols =
-      rfl::Field<"cols_", std::vector<rfl::Ref<helpers::ColumnDescription>>>;
+  struct SaveLoad {
+    rfl::Field<"cols_", std::vector<rfl::Ref<helpers::ColumnDescription>>> cols;
+  };
 
-  using NamedTupleType = rfl::NamedTuple<f_cols>;
+  using NamedTupleType = SaveLoad;
 
  public:
   Substring(const SubstringOp& _op,
             const std::vector<commands::Fingerprint>& _dependencies)
-      : begin_(_op.get<"begin_">()),
+      : begin_(_op.begin()),
         dependencies_(_dependencies),
-        length_(_op.get<"length_">()),
-        unit_(_op.get<"unit_">()) {}
+        length_(_op.length()),
+        unit_(_op.unit()) {}
 
   ~Substring() = default;
 
@@ -94,7 +95,7 @@ class Substring : public Preprocessor {
   }
 
   /// Necessary for the automated parsing to work.
-  NamedTupleType named_tuple() const { return NamedTupleType(f_cols(cols_)); }
+  NamedTupleType named_tuple() const { return NamedTupleType{cols_}; }
 
   /// The preprocessor does not generate any SQL scripts.
   std::vector<std::string> to_sql(

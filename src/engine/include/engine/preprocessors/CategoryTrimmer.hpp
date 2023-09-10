@@ -41,13 +41,13 @@ class CategoryTrimmer : public Preprocessor {
 
   using CategoryTrimmerOp = typename commands::Preprocessor::CategoryTrimmerOp;
 
-  using f_peripheral_sets =
-      rfl::Field<"peripheral_sets_", std::vector<std::vector<CategoryPair>>>;
+  struct SaveLoad {
+    rfl::Field<"peripheral_sets_", std::vector<std::vector<CategoryPair>>>
+        peripheral_sets;
+    rfl::Field<"population_sets_", std::vector<CategoryPair>> population_sets;
+  };
 
-  using f_population_sets =
-      rfl::Field<"population_sets_", std::vector<CategoryPair>>;
-
-  using NamedTupleType = rfl::NamedTuple<f_peripheral_sets, f_population_sets>;
+  using NamedTupleType = SaveLoad;
 
   static constexpr const char* TRIMMED = "(trimmed)";
 
@@ -55,8 +55,8 @@ class CategoryTrimmer : public Preprocessor {
   CategoryTrimmer(const CategoryTrimmerOp& _op,
                   const std::vector<commands::Fingerprint>& _dependencies)
       : dependencies_(_dependencies),
-        max_num_categories_(_op.get<"max_num_categories_">()),
-        min_freq_(_op.get<"min_freq_">()) {}
+        max_num_categories_(_op.max_num_categories()),
+        min_freq_(_op.min_freq()) {}
 
   ~CategoryTrimmer() = default;
 
@@ -118,8 +118,7 @@ class CategoryTrimmer : public Preprocessor {
 
   /// Necessary for the automated parsing to work.
   NamedTupleType named_tuple() const {
-    return f_peripheral_sets(peripheral_sets_) *
-           f_population_sets(population_sets_);
+    return NamedTupleType{peripheral_sets_, population_sets_};
   }
 
  private:
