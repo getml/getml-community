@@ -132,11 +132,11 @@ void Imputation::load(const std::string& _fname) {
 
   that.dependencies_ = dependencies_;
 
-  const auto column_descriptions = named_tuple.get<f_column_descriptions>();
+  const auto column_descriptions = named_tuple.column_descriptions();
 
-  const auto means = named_tuple.get<f_means>();
+  const auto means = named_tuple.means();
 
-  const auto needs_dummies = named_tuple.get<f_needs_dummies>();
+  const auto needs_dummies = named_tuple.needs_dummies();
 
   if (column_descriptions.size() != means.size() ||
       needs_dummies.size() != means.size()) {

@@ -36,10 +36,11 @@ class EMailDomain : public Preprocessor {
  public:
   using EMailDomainOp = typename commands::Preprocessor::EMailDomainOp;
 
-  using f_cols =
-      rfl::Field<"cols_", std::vector<rfl::Ref<helpers::ColumnDescription>>>;
+  struct SaveLoad {
+    rfl::Field<"cols_", std::vector<rfl::Ref<helpers::ColumnDescription>>> cols;
+  };
 
-  using NamedTupleType = rfl::NamedTuple<f_cols>;
+  using NamedTupleType = SaveLoad;
 
  public:
   EMailDomain(const EMailDomainOp& _op,
@@ -88,7 +89,7 @@ class EMailDomain : public Preprocessor {
   }
 
   /// Necessary for the automated parsing to work.
-  NamedTupleType named_tuple() const { return NamedTupleType(f_cols(cols_)); }
+  NamedTupleType named_tuple() const { return NamedTupleType{.cols = cols_}; }
 
   /// The preprocessor does not generate any SQL scripts.
   std::vector<std::string> to_sql(

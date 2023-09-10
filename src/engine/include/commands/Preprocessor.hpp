@@ -20,46 +20,52 @@
 
 namespace commands {
 
-class Preprocessor {
- public:
+struct Preprocessor {
   /// The command needed to produce a CategoryTrimmer.
-  using CategoryTrimmerOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"CategoryTrimmer">>,
-                      rfl::Field<"max_num_categories_", size_t>,
-                      rfl::Field<"min_freq_", size_t>>;
+  struct CategoryTrimmerOp {
+    rfl::Field<"type_", rfl::Literal<"CategoryTrimmer">> type;
+    rfl::Field<"max_num_categories_", size_t> max_num_categories;
+    rfl::Field<"min_freq_", size_t> min_freq;
+  };
 
   /// The command needed to produce an EmailDomain preprocessor.
-  using EMailDomainOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"EMailDomain">>>;
+  struct EMailDomainOp {
+    rfl::Field<"type_", rfl::Literal<"EMailDomain">> type;
+  };
 
   /// The command needed to produce an Imputation preprocessor.
-  using ImputationOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"Imputation">>,
-                      rfl::Field<"add_dummies_", bool>>;
+  struct ImputationOp {
+    rfl::Field<"type_", rfl::Literal<"Imputation">> type;
+    rfl::Field<"add_dummies_", bool> add_dummies;
+  };
 
   /// The command needed to produce the mapping preprocessor, which is not
   /// supported.
   using MappingOp = NotSupportedInCommunity<"Mapping">;
 
   /// The command needed to produce a Seasonal preprocessor.
-  using SeasonalOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"Seasonal">>,
-                      rfl::Field<"disable_hour_", std::optional<bool>>,
-                      rfl::Field<"disable_minute_", std::optional<bool>>,
-                      rfl::Field<"disable_month_", std::optional<bool>>,
-                      rfl::Field<"disable_weekday_", std::optional<bool>>,
-                      rfl::Field<"disable_year_", std::optional<bool>>>;
+  struct SeasonalOp {
+    rfl::Field<"type_", rfl::Literal<"Seasonal">> type;
+    rfl::Field<"disable_hour_", std::optional<bool>> disable_hour;
+    rfl::Field<"disable_minute_", std::optional<bool>> disable_minute;
+    rfl::Field<"disable_month_", std::optional<bool>> disable_month;
+    rfl::Field<"disable_weekday_", std::optional<bool>> disable_weekday;
+    rfl::Field<"disable_year_", std::optional<bool>> disable_year;
+  };
 
   /// The command needed to produce a Substring preprocessor.
-  using SubstringOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"Substring">>,
-                      rfl::Field<"begin_", size_t>,
-                      rfl::Field<"length_", size_t>,
-                      rfl::Field<"unit_", std::string>>;
+  struct SubstringOp {
+    rfl::Field<"type_", rfl::Literal<"Substring">> type;
+    rfl::Field<"begin_", size_t> begin;
+    rfl::Field<"length_", size_t> length;
+    rfl::Field<"unit_", std::string> unit;
+  };
 
   /// The command needed to produce a TextFieldSplitter preprocessor.
-  using TextFieldSplitterOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"TextFieldSplitter">>>;
+  struct TextFieldSplitterOp {
+    rfl::Field<"type_", rfl::Literal<"TextFieldSplitter">> type;
+    ;
+  };
 
   using NamedTupleType =
       rfl::TaggedUnion<"type_", CategoryTrimmerOp, EMailDomainOp, ImputationOp,

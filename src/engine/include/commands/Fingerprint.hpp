@@ -26,6 +26,7 @@
 #include "rfl/define_named_tuple.hpp"
 #include "rfl/define_tagged_union.hpp"
 #include "rfl/define_variant.hpp"
+#include "rfl/named_tuple_t.hpp"
 
 namespace commands {
 
@@ -59,34 +60,30 @@ struct Fingerprint {
   // Preprocessors
 
   /// The fingerprint for a CategoryTrimmer.
-  using CategoryTrimmerFingerprint =
-      rfl::define_named_tuple_t<Dependencies,
-                                typename Preprocessor::CategoryTrimmerOp>;
+  using CategoryTrimmerFingerprint = rfl::define_named_tuple_t<
+      Dependencies,
+      rfl::named_tuple_t<typename Preprocessor::CategoryTrimmerOp>>;
 
   /// The fingerprint for an EmailDomain preprocessor.
-  using EMailDomainFingerprint =
-      rfl::define_named_tuple_t<Dependencies,
-                                typename Preprocessor::EMailDomainOp>;
+  using EMailDomainFingerprint = rfl::define_named_tuple_t<
+      Dependencies, rfl::named_tuple_t<typename Preprocessor::EMailDomainOp>>;
 
   /// The fingerprint for an Imputation preprocessor.
-  using ImputationFingerprint =
-      rfl::define_named_tuple_t<Dependencies,
-                                typename Preprocessor::ImputationOp>;
+  using ImputationFingerprint = rfl::define_named_tuple_t<
+      Dependencies, rfl::named_tuple_t<typename Preprocessor::ImputationOp>>;
 
   /// The fingerprint for a Seasonal preprocessor.
-  using SeasonalFingerprint =
-      rfl::define_named_tuple_t<Dependencies,
-                                typename Preprocessor::SeasonalOp>;
+  using SeasonalFingerprint = rfl::define_named_tuple_t<
+      Dependencies, rfl::named_tuple_t<typename Preprocessor::SeasonalOp>>;
 
   /// The fingerprint for a Substring preprocessor.
-  using SubstringFingerprint =
-      rfl::define_named_tuple_t<Dependencies,
-                                typename Preprocessor::SubstringOp>;
+  using SubstringFingerprint = rfl::define_named_tuple_t<
+      Dependencies, rfl::named_tuple_t<typename Preprocessor::SubstringOp>>;
 
   /// The fingerprint for a TextFieldSplitter preprocessor.
-  using TextFieldSplitterFingerprint =
-      rfl::define_named_tuple_t<Dependencies,
-                                typename Preprocessor::TextFieldSplitterOp>;
+  using TextFieldSplitterFingerprint = rfl::define_named_tuple_t<
+      Dependencies,
+      rfl::named_tuple_t<typename Preprocessor::TextFieldSplitterOp>>;
 
   using PreprocessorFingerprint =
       std::variant<CategoryTrimmerFingerprint, EMailDomainFingerprint,

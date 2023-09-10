@@ -40,21 +40,19 @@ class Imputation : public Preprocessor {
  public:
   using ImputationOp = typename commands::Preprocessor::ImputationOp;
 
-  using f_column_descriptions =
-      rfl::Field<"column_descriptions_",
-                 std::vector<helpers::ColumnDescription>>;
+  struct SaveLoad {
+    rfl::Field<"column_descriptions_", std::vector<helpers::ColumnDescription>>
+        column_descriptions;
+    rfl::Field<"means_", std::vector<Float>> means;
+    rfl::Field<"needs_dummies_", std::vector<bool>> needs_dummies;
+  };
 
-  using f_means = rfl::Field<"means_", std::vector<Float>>;
-
-  using f_needs_dummies = rfl::Field<"needs_dummies_", std::vector<bool>>;
-
-  using NamedTupleType =
-      rfl::NamedTuple<f_column_descriptions, f_means, f_needs_dummies>;
+  using NamedTupleType = SaveLoad;
 
  public:
   Imputation(const ImputationOp& _op,
              const std::vector<commands::Fingerprint>& _dependencies)
-      : add_dummies_(_op.get<"add_dummies_">()),
+      : add_dummies_(_op.add_dummies()),
         cols_(rfl::Ref<ImputationMapType>::make()),
         dependencies_(_dependencies) {}
 
@@ -105,8 +103,9 @@ class Imputation : public Preprocessor {
 
   /// Necessary for the automated parsing to work.
   NamedTupleType named_tuple() const {
-    return f_column_descriptions(column_descriptions()) * f_means(means()) *
-           f_needs_dummies(needs_dummies());
+    return NamedTupleType{.column_descriptions = column_descriptions(),
+                          .means = means(),
+                          .needs_dummies = needs_dummies()};
   }
 
   /// The preprocessor does not generate any SQL scripts.
