@@ -83,8 +83,8 @@ std::string LinearRegression::fit(
 
 void LinearRegression::load(const std::string& _fname) {
   const auto named_tuple = helpers::Loader::load<NamedTupleType>(_fname);
-  scaler_ = named_tuple.get<f_scaler>();
-  weights_ = named_tuple.get<f_weights>();
+  scaler_ = named_tuple.scaler();
+  weights_ = named_tuple.weights();
 }
 
 // -----------------------------------------------------------------------------
