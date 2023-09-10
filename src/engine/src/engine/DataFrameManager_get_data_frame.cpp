@@ -9,7 +9,7 @@
 #include "engine/handlers/ColumnManager.hpp"
 #include "engine/handlers/DataFrameManager.hpp"
 #include "json/json.hpp"
-#include "rfl/from_named_tuple.hpp"
+#include "rfl/as.hpp"
 
 namespace engine {
 namespace handlers {
@@ -33,16 +33,14 @@ void DataFrameManager::get_data_frame(
       if constexpr (std::is_same<Type, typename commands::DataFrameCommand::
                                            GetStringColumnOp>()) {
         const auto cmd =
-            rfl::from_named_tuple<commands::ColumnCommand::GetStringColumnOp>(
-                rfl::to_named_tuple(_cmd));
+            rfl::as<commands::ColumnCommand::GetStringColumnOp>(_cmd);
         ColumnManager(params_).get_categorical_column(cmd, _socket);
         return false;
       } else if constexpr (std::is_same<Type,
                                         typename commands::DataFrameCommand::
                                             GetFloatColumnOp>()) {
         const auto cmd =
-            rfl::from_named_tuple<commands::ColumnCommand::GetFloatColumnOp>(
-                rfl::to_named_tuple(_cmd));
+            rfl::as<commands::ColumnCommand::GetFloatColumnOp>(_cmd);
         ColumnManager(params_).get_column(cmd, _socket);
         return false;
       } else if constexpr (std::is_same<Type, CloseDataFrameOp>()) {
