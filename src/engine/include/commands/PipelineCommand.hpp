@@ -25,51 +25,72 @@ namespace commands {
 
 /// Any command to be handled by the PipelineManager.
 struct PipelineCommand {
-  using CheckOp = rfl::define_named_tuple_t<
-      rfl::Field<"type_", rfl::Literal<"Pipeline.check">>,
-      rfl::Field<"name_", std::string>, DataFramesOrViews>;
+  struct CheckOp {
+    rfl::Field<"type_", rfl::Literal<"Pipeline.check">> type;
+    rfl::Field<"name_", std::string> name;
+    rfl::Field<"population_df_", DataFrameOrView> population_df;
+    rfl::Field<"peripheral_dfs_", std::vector<DataFrameOrView>> peripheral_dfs;
+    rfl::Field<"validation_df_", std::optional<DataFrameOrView>> validation_df;
+  };
 
-  using ColumnImportancesOp = rfl::NamedTuple<
-      rfl::Field<"type_", rfl::Literal<"Pipeline.column_importances">>,
-      rfl::Field<"name_", std::string>, rfl::Field<"target_num_", Int>>;
+  struct ColumnImportancesOp {
+    rfl::Field<"type_", rfl::Literal<"Pipeline.column_importances">> type;
+    rfl::Field<"name_", std::string> name;
+    rfl::Field<"target_num_", Int> target_num;
+  };
 
-  using DeployOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"Pipeline.deploy">>,
-                      rfl::Field<"name_", std::string>,
-                      rfl::Field<"deploy_", bool>>;
+  struct DeployOp {
+    rfl::Field<"type_", rfl::Literal<"Pipeline.deploy">> type;
+    rfl::Field<"name_", std::string> name;
+    rfl::Field<"deploy_", bool> deploy;
+  };
 
-  using FeatureCorrelationsOp = rfl::NamedTuple<
-      rfl::Field<"type_", rfl::Literal<"Pipeline.feature_correlations">>,
-      rfl::Field<"name_", std::string>, rfl::Field<"target_num_", Int>>;
+  struct FeatureCorrelationsOp {
+    rfl::Field<"type_", rfl::Literal<"Pipeline.feature_correlations">> type;
+    rfl::Field<"name_", std::string> name;
+    rfl::Field<"target_num_", Int> target_num;
+  };
 
-  using FeatureImportancesOp = rfl::NamedTuple<
-      rfl::Field<"type_", rfl::Literal<"Pipeline.feature_importances">>,
-      rfl::Field<"name_", std::string>, rfl::Field<"target_num_", Int>>;
+  struct FeatureImportancesOp {
+    rfl::Field<"type_", rfl::Literal<"Pipeline.feature_importances">> type;
+    rfl::Field<"name_", std::string> name;
+    rfl::Field<"target_num_", Int> target_num;
+  };
 
-  using FitOp = rfl::define_named_tuple_t<
-      rfl::Field<"type_", rfl::Literal<"Pipeline.fit">>,
-      rfl::Field<"name_", std::string>, DataFramesOrViews>;
+  struct FitOp {
+    rfl::Field<"type_", rfl::Literal<"Pipeline.fit">> type;
+    rfl::Field<"name_", std::string> name;
+    rfl::Field<"population_df_", DataFrameOrView> population_df;
+    rfl::Field<"peripheral_dfs_", std::vector<DataFrameOrView>> peripheral_dfs;
+    rfl::Field<"validation_df_", std::optional<DataFrameOrView>> validation_df;
+  };
 
-  using LiftCurveOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"Pipeline.lift_curve">>,
-                      rfl::Field<"name_", std::string>,
-                      rfl::Field<"target_num_", Int>>;
+  struct LiftCurveOp {
+    rfl::Field<"type_", rfl::Literal<"Pipeline.lift_curve">> type;
+    rfl::Field<"name_", std::string> name;
+    rfl::Field<"target_num_", Int> target_num;
+  };
 
-  using PrecisionRecallCurveOp = rfl::NamedTuple<
-      rfl::Field<"type_", rfl::Literal<"Pipeline.precision_recall_curve">>,
-      rfl::Field<"name_", std::string>, rfl::Field<"target_num_", Int>>;
+  struct PrecisionRecallCurveOp {
+    rfl::Field<"type_", rfl::Literal<"Pipeline.precision_recall_curve">> type;
+    rfl::Field<"name_", std::string> name;
+    rfl::Field<"target_num_", Int> target_num;
+  };
 
-  using RefreshOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"Pipeline.refresh">>,
-                      rfl::Field<"name_", std::string>>;
+  struct RefreshOp {
+    rfl::Field<"type_", rfl::Literal<"Pipeline.refresh">> type;
+    rfl::Field<"name_", std::string> name;
+  };
 
-  using RefreshAllOp = rfl::NamedTuple<
-      rfl::Field<"type_", rfl::Literal<"Pipeline.refresh_all">>>;
+  struct RefreshAllOp {
+    rfl::Field<"type_", rfl::Literal<"Pipeline.refresh_all">> type;
+  };
 
-  using ROCCurveOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"Pipeline.roc_curve">>,
-                      rfl::Field<"name_", std::string>,
-                      rfl::Field<"target_num_", Int>>;
+  struct ROCCurveOp {
+    rfl::Field<"type_", rfl::Literal<"Pipeline.roc_curve">> type;
+    rfl::Field<"name_", std::string> name;
+    rfl::Field<"target_num_", Int> target_num;
+  };
 
   using ToSQLOp = rfl::define_named_tuple_t<
       rfl::Field<"type_", rfl::Literal<"Pipeline.to_sql">>,
@@ -78,10 +99,11 @@ struct PipelineCommand {
       rfl::Field<"size_threshold_", std::optional<size_t>>,
       typename transpilation::TranspilationParams::NamedTupleType>;
 
-  using TransformOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"Pipeline.transform">>,
-                      rfl::Field<"name_", std::string>,
-                      rfl::Field<"http_request_", bool>>;
+  struct TransformOp {
+    rfl::Field<"type_", rfl::Literal<"Pipeline.transform">> type;
+    rfl::Field<"name_", std::string> name;
+    rfl::Field<"http_request_", bool> http_request;
+  };
 
   using NamedTupleType =
       rfl::TaggedUnion<"type_", CheckOp, ColumnImportancesOp, DeployOp,

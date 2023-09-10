@@ -42,11 +42,19 @@ class PipelineManager {
   using Command = commands::PipelineCommand;
 
  private:
-  using FullTransformOp = rfl::define_named_tuple_t<
-      rfl::Field<"type_", rfl::Literal<"Pipeline.transform">>,
-      rfl::Field<"name_", std::string>, rfl::Field<"table_name_", std::string>,
-      rfl::Field<"df_name_", std::string>, rfl::Field<"predict_", bool>,
-      rfl::Field<"score_", bool>, commands::DataFramesOrViews>;
+  struct FullTransformOp {
+    rfl::Field<"type_", rfl::Literal<"Pipeline.transform">> type;
+    rfl::Field<"name_", std::string> name;
+    rfl::Field<"table_name_", std::string> table_name;
+    rfl::Field<"df_name_", std::string> df_name;
+    rfl::Field<"predict_", bool> predict;
+    rfl::Field<"score_", bool> score;
+    rfl::Field<"population_df_", commands::DataFrameOrView> population_df;
+    rfl::Field<"peripheral_dfs_", std::vector<commands::DataFrameOrView>>
+        peripheral_dfs;
+    rfl::Field<"validation_df_", std::optional<commands::DataFrameOrView>>
+        validation_df;
+  };
 
   using RolesType = rfl::NamedTuple<rfl::Field<"name", std::string>,
                                     rfl::Field<"roles", containers::Roles>>;
