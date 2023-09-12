@@ -5,8 +5,8 @@
 // for details.
 //
 
-#ifndef RFL_INTERNAL_HAS_FIELDS_HPP_
-#define RFL_INTERNAL_HAS_FIELDS_HPP_
+#ifndef RFL_INTERNAL_HAS_N_FIELDS_HPP_
+#define RFL_INTERNAL_HAS_N_FIELDS_HPP_
 
 #include <cstddef>
 #include <type_traits>
