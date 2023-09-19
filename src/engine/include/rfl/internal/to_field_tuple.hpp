@@ -36,11 +36,11 @@ def make_field_template(num: int) -> str:
 
 
 beginning = """
-  if constexpr (internal::has_0_fields<T>) {
-    return std::make_tuple();
+  if constexpr (internal::is_named_tuple_v<T>) {
+    return _t.fields();
 """
 
-main_part = "".join((make_field_template(i+1) for i in range(100)))
+main_part = "".join((make_field_template(i) for i in range(101)))
 
 end = """} else {
     static_assert(rfl::always_false_v<T>, "Only up to 100 fields are
@@ -56,7 +56,9 @@ with open("generated_code2.cpp", "w", encoding="utf-8") as codefile:
 
 template <class T>
 auto to_field_tuple(const T& _t) {
-  if constexpr (internal::has_0_fields<T>) {
+  if constexpr (internal::is_named_tuple_v<T>) {
+    return _t.fields();
+  } else if constexpr (internal::has_0_fields<T>) {
     return std::make_tuple();
   } else if constexpr (internal::has_1_fields<T>) {
     auto& [f1] = _t;
