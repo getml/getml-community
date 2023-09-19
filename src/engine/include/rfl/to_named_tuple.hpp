@@ -19,6 +19,24 @@
 
 namespace rfl {
 
+template <class FieldTuple, class... Args>
+auto flatten_field_tuple(FieldTuple&& _t, Args&&... _args) {
+  constexpr auto i = sizeof...(Args);
+  if constexpr (i == std::tuple_size_v<FieldTuple>) {
+    return std::tuple_cat(std::forward<Args>(_args)...);
+  } else {
+    using T = std::tuple_element_t<i, FieldTuple>;
+    if constexpr (internal::is_base_field<T>::value) {
+      return flatten_field_tuple(_t, std::forward<Args>(_args)...,
+                                 flatten_field_tuple(internal::to_field_tuple(
+                                     std::move(std::get<i>(_t).get()))));
+    } else {
+      return flatten_field_tuple(_t, std::forward<Args>(_args)...,
+                                 std::make_tuple(std::move(std::get<i>(_t))));
+    }
+  }
+}
+
 /// Generates the named tuple that is equivalent to the struct _t.
 /// If _t already is a named tuple, then _t will be returned.
 /// All fields of the struct must be an rfl::Field.
@@ -28,12 +46,18 @@ auto to_named_tuple(const T& _t) {
     return _t;
   } else {
     auto field_tuple = internal::to_field_tuple(_t);
-    using TupleType = std::decay_t<decltype(field_tuple)>;
-    if constexpr (!internal::has_base_fields<TupleType>()) {
-      const auto ft_to_nt = []<class... Fields>(Fields&&... _fields) {
-        return make_named_tuple(std::forward<Fields>(_fields)...);
-      };
+
+    using FieldTuple = std::decay_t<decltype(field_tuple)>;
+
+    const auto ft_to_nt = []<class... Fields>(Fields&&... _fields) {
+      return make_named_tuple(std::forward<Fields>(_fields)...);
+    };
+
+    if constexpr (!internal::has_base_fields<FieldTuple>()) {
       return std::apply(ft_to_nt, std::move(field_tuple));
+    } else {
+      auto flattened_tuple = flatten_field_tuple(std::move(field_tuple));
+      return std::apply(ft_to_nt, std::move(flattened_tuple));
     }
   }
 }
