@@ -93,9 +93,9 @@ void ProjectManager::add_pipeline(const typename Command::PipelineOp& _cmd,
 
 void ProjectManager::copy_pipeline(const typename Command::CopyPipelineOp& _cmd,
                                    Poco::Net::StreamSocket* _socket) {
-  const auto& other = _cmd.get<"other_">();
+  const auto& other = _cmd.other();
 
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
   const auto other_pipeline = get_pipeline(other);
 
@@ -127,11 +127,11 @@ void ProjectManager::clear() {
 void ProjectManager::delete_data_frame(
     const typename Command::DeleteDataFrameOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
   multithreading::WriteLock write_lock(params_.read_write_lock_);
 
-  FileHandler::remove(name, project_directory(), _cmd.get<"mem_only_">(),
+  FileHandler::remove(name, project_directory(), _cmd.mem_only(),
                       &data_frames());
 
   communication::Sender::send_string("Success!", _socket);
@@ -142,12 +142,11 @@ void ProjectManager::delete_data_frame(
 void ProjectManager::delete_pipeline(
     const typename Command::DeletePipelineOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
   multithreading::WriteLock write_lock(params_.read_write_lock_);
 
-  FileHandler::remove(name, project_directory(), _cmd.get<"mem_only_">(),
-                      &pipelines());
+  FileHandler::remove(name, project_directory(), _cmd.mem_only(), &pipelines());
 
   communication::Sender::send_string("Success!", _socket);
 }
@@ -157,7 +156,7 @@ void ProjectManager::delete_pipeline(
 void ProjectManager::delete_project(
     const typename Command::DeleteProjectOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
   multithreading::WriteLock project_guard(params_.project_lock_);
 
@@ -269,7 +268,7 @@ void ProjectManager::list_projects(const typename Command::ListProjectsOp& _cmd,
 void ProjectManager::load_data_container(
     const typename Command::LoadDataContainerOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
   const auto path = project_directory() + "data_containers/" + name + ".json";
 
@@ -289,7 +288,7 @@ void ProjectManager::load_data_container(
 
 void ProjectManager::load_data_frame(const typename Command::LoadDfOp& _cmd,
                                      Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
@@ -316,7 +315,7 @@ void ProjectManager::load_data_frame(const typename Command::LoadDfOp& _cmd,
 
 void ProjectManager::load_pipeline(const typename Command::LoadPipelineOp& _cmd,
                                    Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
   const auto path = project_directory() + "pipelines/" + name + "/";
 
@@ -345,11 +344,11 @@ void ProjectManager::project_name(const typename Command::ProjectNameOp& _cmd,
 void ProjectManager::save_data_container(
     const typename Command::SaveDataContainerOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
   const auto path = project_directory() + "data_containers/" + name + ".json";
 
-  const auto& container = _cmd.get<"container_">();
+  const auto& container = _cmd.container();
 
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
@@ -364,7 +363,7 @@ void ProjectManager::save_data_container(
 
 void ProjectManager::save_data_frame(const typename Command::SaveDfOp& _cmd,
                                      Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
@@ -384,7 +383,7 @@ void ProjectManager::save_data_frame(const typename Command::SaveDfOp& _cmd,
 
 void ProjectManager::save_pipeline(const typename Command::SavePipelineOp& _cmd,
                                    Poco::Net::StreamSocket* _socket) {
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
@@ -403,8 +402,7 @@ void ProjectManager::save_pipeline(const typename Command::SavePipelineOp& _cmd,
 
   // Saving the pipeline happens automatically, so it is unlikely that the field
   // will ever be set. Therefore, the format chosen is actually determined here.
-  const auto format =
-      _cmd.get<"format_">().value_or(Format::make<"flexbuffers">());
+  const auto format = _cmd.format().value_or(Format::make<"flexbuffers">());
 
   const auto params = pipelines::SaveParams(
       rfl::make_field<"categories_">(categories().strings()) *

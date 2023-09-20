@@ -18,6 +18,7 @@
 #include "commands/Pipeline.hpp"
 #include "helpers/Saver.hpp"
 #include "helpers/Schema.hpp"
+#include "rfl/Base.hpp"
 #include "rfl/Field.hpp"
 #include "rfl/Literal.hpp"
 #include "rfl/NamedTuple.hpp"
@@ -30,129 +31,161 @@ namespace commands {
 /// Any command to be handled by the ProjectManager.
 struct ProjectCommand {
   /// The command to add a data frame from arrow.
-  using AddDfFromArrowOp = rfl::define_named_tuple_t<
-      rfl::Field<"type_", rfl::Literal<"DataFrame.from_arrow">>,
-      typename helpers::Schema::NamedTupleType, rfl::Field<"append_", bool>>;
+  struct AddDfFromArrowOp {
+    rfl::Field<"type_", rfl::Literal<"DataFrame.from_arrow">> type;
+    rfl::Base<helpers::SchemaImpl> schema;
+    rfl::Field<"append_", bool> append;
+  };
 
   /// The command to add a data frame from CSV.
-  using AddDfFromCSVOp = rfl::define_named_tuple_t<
-      rfl::Field<"type_", rfl::Literal<"DataFrame.read_csv">>,
-      typename helpers::Schema::NamedTupleType, rfl::Field<"append_", bool>,
-      rfl::Field<"colnames_", std::optional<std::vector<std::string>>>,
-      rfl::Field<"fnames_", std::vector<std::string>>,
-      rfl::Field<"num_lines_read_", size_t>,
-      rfl::Field<"quotechar_", std::string>, rfl::Field<"sep_", std::string>,
-      rfl::Field<"skip_", size_t>,
-      rfl::Field<"time_formats_", std::vector<std::string>>>;
+  struct AddDfFromCSVOp {
+    rfl::Field<"type_", rfl::Literal<"DataFrame.read_csv">> type;
+    rfl::Base<helpers::SchemaImpl> schema;
+    rfl::Field<"append_", bool> append;
+    rfl::Field<"colnames_", std::optional<std::vector<std::string>>> colnames;
+    rfl::Field<"fnames_", std::vector<std::string>> fnames;
+    rfl::Field<"num_lines_read_", size_t> num_lines_read;
+    rfl::Field<"quotechar_", std::string> quotechar;
+    rfl::Field<"sep_", std::string> sep;
+    rfl::Field<"skip_", size_t> skip;
+    rfl::Field<"time_formats_", std::vector<std::string>> time_formats;
+  };
 
   /// The command to add a data frame from a database.
-  using AddDfFromDBOp = rfl::define_named_tuple_t<
-      rfl::Field<"type_", rfl::Literal<"DataFrame.from_db">>,
-      typename helpers::Schema::NamedTupleType, rfl::Field<"append_", bool>,
-      rfl::Field<"conn_id_", std::string>,
-      rfl::Field<"table_name_", std::string>>;
+  struct AddDfFromDBOp {
+    rfl::Field<"type_", rfl::Literal<"DataFrame.from_db">> type;
+    rfl::Base<helpers::SchemaImpl> schema;
+    rfl::Field<"append_", bool> append;
+    rfl::Field<"conn_id_", std::string> conn_id;
+    rfl::Field<"table_name_", std::string> table_name;
+  };
 
   /// The command to add a data frame from JSON.
-  using AddDfFromJSONOp = rfl::define_named_tuple_t<
-      rfl::Field<"type_", rfl::Literal<"DataFrame.from_json">>,
-      typename helpers::Schema::NamedTupleType, rfl::Field<"append_", bool>,
-      rfl::Field<"time_formats_", std::vector<std::string>>>;
+  struct AddDfFromJSONOp {
+    rfl::Field<"type_", rfl::Literal<"DataFrame.from_json">> type;
+    rfl::Base<helpers::SchemaImpl> schema;
+    rfl::Field<"append_", bool> append;
+    rfl::Field<"time_formats_", std::vector<std::string>> time_formats;
+  };
 
   /// The command to add a data frame from parquet.
-  using AddDfFromParquetOp = rfl::define_named_tuple_t<
-      rfl::Field<"type_", rfl::Literal<"DataFrame.read_parquet">>,
-      typename helpers::Schema::NamedTupleType, rfl::Field<"append_", bool>,
-      rfl::Field<"fname_", std::string>>;
+  struct AddDfFromParquetOp {
+    rfl::Field<"type_", rfl::Literal<"DataFrame.read_parquet">> type;
+    rfl::Base<helpers::SchemaImpl> schema;
+    rfl::Field<"append_", bool> append;
+    rfl::Field<"fname_", std::string> fname;
+  };
 
   /// The command to add a data frame from JSON.
-  using AddDfFromQueryOp = rfl::define_named_tuple_t<
-      rfl::Field<"type_", rfl::Literal<"DataFrame.from_query">>,
-      typename helpers::Schema::NamedTupleType, rfl::Field<"append_", bool>,
-      rfl::Field<"conn_id_", std::string>, rfl::Field<"query_", std::string>>;
+  struct AddDfFromQueryOp {
+    rfl::Field<"type_", rfl::Literal<"DataFrame.from_query">> type;
+    rfl::Base<helpers::SchemaImpl> schema;
+    rfl::Field<"append_", bool> append;
+    rfl::Field<"conn_id_", std::string> conn_id;
+    rfl::Field<"query_", std::string> query;
+  };
 
   /// The command to add a data frame from a View.
-  using AddDfFromViewOp = rfl::define_named_tuple_t<
-      rfl::Field<"type_", rfl::Literal<"DataFrame.from_view">>,
-      rfl::Field<"append_", bool>, rfl::Field<"name_", std::string>,
-      rfl::Field<"view_", DataFrameOrView>>;
+  struct AddDfFromViewOp {
+    rfl::Field<"type_", rfl::Literal<"DataFrame.from_view">> type;
+    rfl::Field<"append_", bool> append;
+    rfl::Field<"name_", std::string> name;
+    rfl::Field<"view_", DataFrameOrView> view;
+  };
 
   /// The command to add a data frame from a View.
-  using CopyPipelineOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"Pipeline.copy">>,
-                      rfl::Field<"name_", std::string>,
-                      rfl::Field<"other_", std::string>>;
+  struct CopyPipelineOp {
+    rfl::Field<"type_", rfl::Literal<"Pipeline.copy">> type;
+    rfl::Field<"name_", std::string> name;
+    rfl::Field<"other_", std::string> other;
+  };
 
   /// The command to delete a data frame.
-  using DeleteDataFrameOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"DataFrame.delete">>,
-                      rfl::Field<"mem_only_", bool>,
-                      rfl::Field<"name_", std::string>>;
+  struct DeleteDataFrameOp {
+    rfl::Field<"type_", rfl::Literal<"DataFrame.delete">> type;
+    rfl::Field<"mem_only_", bool> mem_only;
+    rfl::Field<"name_", std::string> name;
+  };
 
   /// The command to delete a pipeline.
-  using DeletePipelineOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"Pipeline.delete">>,
-                      rfl::Field<"mem_only_", bool>,
-                      rfl::Field<"name_", std::string>>;
+  struct DeletePipelineOp {
+    rfl::Field<"type_", rfl::Literal<"Pipeline.delete">> type;
+    rfl::Field<"mem_only_", bool> mem_only;
+    rfl::Field<"name_", std::string> name;
+  };
 
   /// The command to delete a project.
-  using DeleteProjectOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"delete_project">>,
-                      rfl::Field<"name_", std::string>>;
+  struct DeleteProjectOp {
+    rfl::Field<"type_", rfl::Literal<"delete_project">> type;
+    rfl::Field<"name_", std::string> name;
+  };
 
   /// The command to list all data frames.
-  using ListDfsOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"list_data_frames">>>;
+  struct ListDfsOp {
+    rfl::Field<"type_", rfl::Literal<"list_data_frames">> type;
+  };
 
   /// The command to list all pipelines.
-  using ListPipelinesOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"list_pipelines">>>;
+  struct ListPipelinesOp {
+    rfl::Field<"type_", rfl::Literal<"list_pipelines">> type;
+  };
 
   /// The command to list all pipelines.
-  using ListProjectsOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"list_projects">>>;
+  struct ListProjectsOp {
+    rfl::Field<"type_", rfl::Literal<"list_projects">> type;
+  };
 
   /// The command to load a data contaner.
-  using LoadDataContainerOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"DataContainer.load">>,
-                      rfl::Field<"name_", std::string>>;
+  struct LoadDataContainerOp {
+    rfl::Field<"type_", rfl::Literal<"DataContainer.load">> type;
+    rfl::Field<"name_", std::string> name;
+  };
 
   /// The command to load a data frame.
-  using LoadDfOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"DataFrame.load">>,
-                      rfl::Field<"name_", std::string>>;
+  struct LoadDfOp {
+    rfl::Field<"type_", rfl::Literal<"DataFrame.load">> type;
+    rfl::Field<"name_", std::string> name;
+  };
 
   /// The command to load a data frame.
-  using LoadPipelineOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"Pipeline.load">>,
-                      rfl::Field<"name_", std::string>>;
+  struct LoadPipelineOp {
+    rfl::Field<"type_", rfl::Literal<"Pipeline.load">> type;
+    rfl::Field<"name_", std::string> name;
+  };
 
   /// The command to create a new pipeline.
   using PipelineOp = Pipeline;
 
   /// The command to send the project name.
-  using ProjectNameOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"project_name">>>;
+  struct ProjectNameOp {
+    rfl::Field<"type_", rfl::Literal<"project_name">> type;
+  };
 
   /// The command to load a data contaner.
-  using SaveDataContainerOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"DataContainer.save">>,
-                      rfl::Field<"name_", std::string>,
-                      rfl::Field<"container_", DataContainer>>;
+  struct SaveDataContainerOp {
+    rfl::Field<"type_", rfl::Literal<"DataContainer.save">> type;
+    rfl::Field<"name_", std::string> name;
+    rfl::Field<"container_", DataContainer> container;
+  };
 
   /// The command to save a data frame.
-  using SaveDfOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"DataFrame.save">>,
-                      rfl::Field<"name_", std::string>>;
+  struct SaveDfOp {
+    rfl::Field<"type_", rfl::Literal<"DataFrame.save">> type;
+    rfl::Field<"name_", std::string> name;
+  };
 
   /// The command to save a pipeline.
-  using SavePipelineOp = rfl::NamedTuple<
-      rfl::Field<"type_", rfl::Literal<"Pipeline.save">>,
-      rfl::Field<"name_", std::string>,
-      rfl::Field<"format_", std::optional<typename helpers::Saver::Format>>>;
+  struct SavePipelineOp {
+    rfl::Field<"type_", rfl::Literal<"Pipeline.save">> type;
+    rfl::Field<"name_", std::string> name;
+    rfl::Field<"format_", std::optional<typename helpers::Saver::Format>>
+        format;
+  };
 
   /// The command to get the temp_dir.
-  using TempDirOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"temp_dir">>>;
+  struct TempDirOp {
+    rfl::Field<"type_", rfl::Literal<"temp_dir">> type;
+  };
 
   using NamedTupleType = rfl::TaggedUnion<
       "type_", AddDfFromArrowOp, AddDfFromCSVOp, AddDfFromDBOp, AddDfFromJSONOp,

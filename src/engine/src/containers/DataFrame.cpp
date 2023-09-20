@@ -1797,16 +1797,18 @@ Schema DataFrame::to_schema(const bool _separate_discrete) const {
   const auto unused_strings =
       fct::collect::vector(unused_strings_ | VIEWS::transform(get_name));
 
-  return Schema(rfl::make_field<"categorical_">(categoricals) *
-                rfl::make_field<"discrete_">(discretes) *
-                rfl::make_field<"join_keys_">(join_keys) *
-                rfl::make_field<"name_">(name_) *
-                rfl::make_field<"numerical_">(numericals) *
-                rfl::make_field<"targets_">(targets) *
-                rfl::make_field<"text_">(text) *
-                rfl::make_field<"time_stamps_">(time_stamps) *
-                rfl::make_field<"unused_floats_">(unused_floats) *
-                rfl::make_field<"unused_strings_">(unused_strings));
+  const auto impl = helpers::SchemaImpl{.categoricals = categoricals,
+                                        .discretes = discretes,
+                                        .join_keys = join_keys,
+                                        .name = name_,
+                                        .numericals = numericals,
+                                        .targets = targets,
+                                        .text = text,
+                                        .time_stamps = time_stamps,
+                                        .unused_floats = unused_floats,
+                                        .unused_strings = unused_strings};
+
+  return Schema(impl);
 }
 
 // ----------------------------------------------------------------------------

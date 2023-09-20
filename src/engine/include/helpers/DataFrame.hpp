@@ -255,14 +255,16 @@ struct DataFrame {
 
   /// Returns the schema.
   Schema to_schema() const {
-    return Schema(f_categoricals(get_colnames(categoricals_)) *
-                  f_discretes(get_colnames(discretes_)) *
-                  f_join_keys(get_colnames(join_keys_)) * f_name(name_) *
-                  f_numericals(get_colnames(numericals_)) *
-                  f_targets(get_colnames(targets_)) *
-                  f_text(get_colnames(text_)) *
-                  f_time_stamps(get_colnames(time_stamps_)) *
-                  f_unused_floats({}) * f_unused_strings({}));
+    return Schema(SchemaImpl{.categoricals = get_colnames(categoricals_),
+                             .discretes = get_colnames(discretes_),
+                             .join_keys = get_colnames(join_keys_),
+                             .name = name_,
+                             .numericals = get_colnames(numericals_),
+                             .targets = get_colnames(targets_),
+                             .text = get_colnames(text_),
+                             .time_stamps = get_colnames(time_stamps_),
+                             .unused_floats = std::vector<std::string>(),
+                             .unused_strings = std::vector<std::string>()});
   }
 
   /// Trivial getter

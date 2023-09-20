@@ -38,6 +38,7 @@
 #include "rfl/Field.hpp"
 #include "rfl/define_named_tuple.hpp"
 #include "rfl/get.hpp"
+#include "rfl/replace.hpp"
 
 namespace featurelearners {
 
@@ -438,13 +439,14 @@ FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
           ? fct::collect::vector(_schema.text() | VIEWS::filter(include))
           : _schema.text();
 
-  const auto schema = helpers::Schema(_schema.named_tuple().replace(
-      rfl::make_field<"categorical_">(categoricals),
+  const auto schema = rfl::replace(
+      _schema.named_tuple(), rfl::make_field<"categorical_">(categoricals),
       rfl::make_field<"discrete_">(std::make_optional(discretes)),
       rfl::make_field<"numerical_">(numericals),
-      rfl::make_field<"targets_">(targets), rfl::make_field<"text_">(text)));
+      rfl::make_field<"targets_">(targets), rfl::make_field<"text_">(text));
 
-  return _df.to_immutable<typename FeatureLearnerType::DataFrameType>(schema);
+  return _df.to_immutable<typename FeatureLearnerType::DataFrameType>(
+      helpers::Schema(schema));
 }
 
 // ------------------------------------------------------------------------
