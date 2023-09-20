@@ -23,10 +23,10 @@ FieldTupleType concat_named_tuple(const NamedTupleType& _n, Args&&... _args);
 
 /// Creates a struct of type T from a named tuple.
 /// All fields of the struct must be an rfl::Field.
-// TODO
-/*template <class T, class NamedTupleType>
+template <class T, class NamedTupleType>
 T from_named_tuple(NamedTupleType&& _n) {
   using RequiredType = std::decay_t<named_tuple_t<T>>;
+
   if constexpr (internal::is_named_tuple_v<std::decay_t<T>>) {
     return std::forward<NamedTupleType>(_n);
   } else if constexpr (std::is_same<std::decay_t<NamedTupleType>,
@@ -34,12 +34,21 @@ T from_named_tuple(NamedTupleType&& _n) {
     const auto make = []<class... FieldTypes>(FieldTypes&&... _fields) {
       return T{std::forward<FieldTypes>(_fields)...};
     };
-    return std::apply(make, _n.fields());
+
+    using FieldTupleType = internal::field_tuple_t<std::decay_t<T>>;
+
+    if constexpr (!internal::has_base_fields<FieldTupleType>()) {
+      return std::apply(make, _n.fields());
+    } else {
+      const auto fields = concat_named_tuple<FieldTupleType>(_n);
+      return std::apply(make, fields);
+    }
+
   } else {
     return from_named_tuple<T, RequiredType>(
         RequiredType(std::forward<NamedTupleType>(_n)));
   }
-}*/
+}
 
 /// Creates a struct of type T from a named tuple.
 /// All fields of the struct must be an rfl::Field.
