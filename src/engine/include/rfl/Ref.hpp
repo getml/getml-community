@@ -22,8 +22,7 @@ class Ref {
   /// Ref<T>::make(...).
   template <class... Args>
   static Ref<T> make(Args... _args) {
-    const auto ptr = new T(_args...);
-    return Ref<T>(ptr);
+    return Ref<T>(std::make_shared<T>(_args...));
   }
 
   /// Wrapper around a shared_ptr, leads to a runtime error,
@@ -64,7 +63,8 @@ class Ref {
 
  private:
   /// Only make is allowed to use this constructor.
-  explicit Ref(T* _ptr) : ptr_(std::shared_ptr<T>(_ptr)) {}
+  explicit Ref(std::shared_ptr<T>&& _ptr)
+      : ptr_(std::forward<std::shared_ptr<T>>(_ptr)) {}
 
  private:
   /// The underlying shared_ptr_
