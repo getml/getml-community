@@ -17,13 +17,13 @@ void DataFrameManager::from_json(const typename Command::AddDfFromJSONOp& _cmd,
                                  Poco::Net::StreamSocket* _socket) {
   const auto json_str = communication::Receiver::recv_string(_socket);
 
-  const auto append = _cmd.get<"append_">();
+  const auto append = _cmd.append();
 
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.schema().name();
 
-  const auto time_formats = _cmd.get<"time_formats_">();
+  const auto time_formats = _cmd.time_formats();
 
-  const auto schema = containers::Schema(_cmd);
+  const auto schema = containers::Schema(_cmd.schema());
 
   const auto obj = json::from_json<commands::DataFrameFromJSON>(json_str);
 

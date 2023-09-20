@@ -9,18 +9,18 @@
 
 namespace helpers {
 
-Schema::Schema(const NamedTupleType& _obj)
-    : categoricals_(_obj.get<f_categoricals>()),
-      discretes_(_obj.get<f_discretes>() ? *_obj.get<f_discretes>()
-                                         : std::vector<std::string>()),
-      join_keys_(_obj.get<f_join_keys>()),
-      name_(_obj.get<f_name>()),
-      numericals_(_obj.get<f_numericals>()),
-      targets_(_obj.get<f_targets>()),
-      text_(_obj.get<f_text>()),
-      time_stamps_(_obj.get<f_time_stamps>()),
-      unused_floats_(_obj.get<f_unused_floats>()),
-      unused_strings_(_obj.get<f_unused_strings>()) {}
+Schema::Schema(const SchemaImpl& _impl)
+    : categoricals_(_impl.categoricals()),
+      discretes_(_impl.discretes() ? *_impl.discretes()
+                                   : std::vector<std::string>()),
+      join_keys_(_impl.join_keys()),
+      name_(_impl.name()),
+      numericals_(_impl.numericals()),
+      targets_(_impl.targets()),
+      text_(_impl.text()),
+      time_stamps_(_impl.time_stamps()),
+      unused_floats_(_impl.unused_floats()),
+      unused_strings_(_impl.unused_strings()) {}
 
 // ----------------------------------------------------------------------------
 
@@ -29,11 +29,16 @@ Schema::~Schema() = default;
 // ----------------------------------------------------------------------------
 
 typename Schema::NamedTupleType Schema::named_tuple() const {
-  return NamedTupleType(
-      f_categoricals(categoricals_), f_discretes(discretes_),
-      f_join_keys(join_keys_), f_name(name_), f_numericals(numericals_),
-      f_targets(targets_), f_text(text_), f_time_stamps(time_stamps_),
-      f_unused_floats(unused_floats_), f_unused_strings(unused_strings_));
+  return SchemaImpl{.categoricals = categoricals_,
+                    .discretes = discretes_,
+                    .join_keys = join_keys_,
+                    .name = name_,
+                    .numericals = numericals_,
+                    .targets = targets_,
+                    .text = text_,
+                    .time_stamps = time_stamps_,
+                    .unused_floats = unused_floats_,
+                    .unused_strings = unused_strings_};
 }
 
 }  // namespace helpers

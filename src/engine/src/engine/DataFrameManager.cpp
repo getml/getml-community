@@ -609,11 +609,11 @@ void DataFrameManager::freeze(const typename Command::FreezeDataFrameOp& _cmd,
 void DataFrameManager::from_arrow(
     const typename Command::AddDfFromArrowOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto append = _cmd.get<"append_">();
+  const auto append = _cmd.append();
 
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.schema().name();
 
-  const auto schema = containers::Schema(_cmd);
+  const auto schema = containers::Schema(_cmd.schema());
 
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
@@ -660,25 +660,25 @@ void DataFrameManager::from_arrow(
 
 void DataFrameManager::from_csv(const typename Command::AddDfFromCSVOp& _cmd,
                                 Poco::Net::StreamSocket* _socket) {
-  const auto append = _cmd.get<"append_">();
+  const auto append = _cmd.append();
 
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.schema().name();
 
-  const auto& colnames = _cmd.get<"colnames_">();
+  const auto& colnames = _cmd.colnames();
 
-  const auto& fnames = _cmd.get<"fnames_">();
+  const auto& fnames = _cmd.fnames();
 
-  const auto num_lines_read = _cmd.get<"num_lines_read_">();
+  const auto num_lines_read = _cmd.num_lines_read();
 
-  const auto quotechar = _cmd.get<"quotechar_">();
+  const auto quotechar = _cmd.quotechar();
 
-  const auto sep = _cmd.get<"sep_">();
+  const auto sep = _cmd.sep();
 
-  const auto skip = _cmd.get<"skip_">();
+  const auto skip = _cmd.skip();
 
-  const auto& time_formats = _cmd.get<"time_formats_">();
+  const auto& time_formats = _cmd.time_formats();
 
-  const auto schema = containers::Schema(_cmd);
+  const auto schema = containers::Schema(_cmd.schema());
 
   // We need the weak write lock for the categories and join keys encoding.
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
@@ -726,15 +726,15 @@ void DataFrameManager::from_csv(const typename Command::AddDfFromCSVOp& _cmd,
 
 void DataFrameManager::from_db(const typename Command::AddDfFromDBOp& _cmd,
                                Poco::Net::StreamSocket* _socket) {
-  const auto append = _cmd.get<"append_">();
+  const auto append = _cmd.append();
 
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.schema().name();
 
-  const auto& conn_id = _cmd.get<"conn_id_">();
+  const auto& conn_id = _cmd.conn_id();
 
-  const auto& table_name = _cmd.get<"table_name_">();
+  const auto& table_name = _cmd.table_name();
 
-  const auto schema = containers::Schema(_cmd);
+  const auto schema = containers::Schema(_cmd.schema());
 
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
@@ -779,13 +779,13 @@ void DataFrameManager::from_db(const typename Command::AddDfFromDBOp& _cmd,
 void DataFrameManager::from_parquet(
     const typename Command::AddDfFromParquetOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto append = _cmd.get<"append_">();
+  const auto append = _cmd.append();
 
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.schema().name();
 
-  const auto& fname = _cmd.get<"fname_">();
+  const auto& fname = _cmd.fname();
 
-  const auto schema = containers::Schema(_cmd);
+  const auto schema = containers::Schema(_cmd.schema());
 
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
@@ -833,15 +833,15 @@ void DataFrameManager::from_parquet(
 void DataFrameManager::from_query(
     const typename Command::AddDfFromQueryOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  const auto append = _cmd.get<"append_">();
+  const auto append = _cmd.append();
 
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.schema().name();
 
-  const auto& conn_id = _cmd.get<"conn_id_">();
+  const auto& conn_id = _cmd.conn_id();
 
-  const auto& query = _cmd.get<"query_">();
+  const auto& query = _cmd.query();
 
-  const auto schema = containers::Schema(_cmd);
+  const auto schema = containers::Schema(_cmd.schema());
 
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 
@@ -885,11 +885,11 @@ void DataFrameManager::from_query(
 
 void DataFrameManager::from_view(const typename Command::AddDfFromViewOp& _cmd,
                                  Poco::Net::StreamSocket* _socket) {
-  const auto append = _cmd.get<"append_">();
+  const auto append = _cmd.append();
 
-  const auto& name = _cmd.get<"name_">();
+  const auto& name = _cmd.name();
 
-  const auto view = _cmd.get<"view_">();
+  const auto view = _cmd.view();
 
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 

@@ -22,17 +22,17 @@ namespace rfl {
 template <class FieldTuple, class... Args>
 auto flatten_field_tuple(FieldTuple&& _t, Args&&... _args) {
   constexpr auto i = sizeof...(Args);
-  if constexpr (i == std::tuple_size_v<FieldTuple>) {
+  if constexpr (i == std::tuple_size_v<std::decay_t<FieldTuple>>) {
     return std::tuple_cat(std::forward<Args>(_args)...);
   } else {
-    using T = std::tuple_element_t<i, FieldTuple>;
+    using T = std::tuple_element_t<i, std::decay_t<FieldTuple>>;
     if constexpr (internal::is_base_field<T>::value) {
       return flatten_field_tuple(_t, std::forward<Args>(_args)...,
                                  flatten_field_tuple(internal::to_field_tuple(
                                      std::move(std::get<i>(_t).get()))));
     } else {
       return flatten_field_tuple(_t, std::forward<Args>(_args)...,
-                                 std::make_tuple(std::move(std::get<i>(_t))));
+                                 std::make_tuple(std::get<i>(_t)));
     }
   }
 }
