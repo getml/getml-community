@@ -22,6 +22,7 @@
 #include "fct/collect.hpp"
 #include "fct/collect_results.hpp"
 #include "fct/join.hpp"
+#include "rfl/Box.hpp"
 #include "rfl/Literal.hpp"
 #include "rfl/NamedTuple.hpp"
 #include "rfl/Ref.hpp"
@@ -99,6 +100,28 @@ struct Parser {
     } else {
       return _w.from_basic_type(_var);
     }
+  }
+};
+
+// ----------------------------------------------------------------------------
+
+template <class ReaderType, class WriterType, class T>
+struct Parser<ReaderType, WriterType, Box<T>> {
+  using InputVarType = typename ReaderType::InputVarType;
+  using OutputVarType = typename WriterType::OutputVarType;
+
+  /// Expresses the variables as type T.
+  static Result<Box<T>> read(const ReaderType& _r,
+                             InputVarType* _var) noexcept {
+    const auto to_box = [&](auto&& _t) { return Box<T>::make(_t); };
+    return Parser<ReaderType, WriterType, std::decay_t<T>>::read(_r, _var)
+        .transform(to_box);
+  }
+
+  /// Expresses the variable a a JSON.
+  static OutputVarType write(const WriterType& _w,
+                             const Box<T>& _box) noexcept {
+    return Parser<ReaderType, WriterType, std::decay_t<T>>::write(_w, *_box);
   }
 };
 
