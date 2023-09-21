@@ -12,7 +12,7 @@
 #include <tuple>
 
 #include "rfl/always_false.hpp"
-#include "rfl/internal/has_base_fields.hpp"
+#include "rfl/internal/has_flatten_fields.hpp"
 #include "rfl/internal/is_named_tuple.hpp"
 #include "rfl/internal/to_field_tuple.hpp"
 #include "rfl/make_named_tuple.hpp"
@@ -26,7 +26,7 @@ auto flatten_field_tuple(FieldTuple&& _t, Args&&... _args) {
     return std::tuple_cat(std::forward<Args>(_args)...);
   } else {
     using T = std::tuple_element_t<i, std::decay_t<FieldTuple>>;
-    if constexpr (internal::is_base_field<T>::value) {
+    if constexpr (internal::is_flatten_field<T>::value) {
       return flatten_field_tuple(_t, std::forward<Args>(_args)...,
                                  flatten_field_tuple(internal::to_field_tuple(
                                      std::move(std::get<i>(_t).get()))));
@@ -53,7 +53,7 @@ auto to_named_tuple(const T& _t) {
       return make_named_tuple(std::forward<Fields>(_fields)...);
     };
 
-    if constexpr (!internal::has_base_fields<FieldTuple>()) {
+    if constexpr (!internal::has_flatten_fields<FieldTuple>()) {
       return std::apply(ft_to_nt, std::move(field_tuple));
     } else {
       auto flattened_tuple = flatten_field_tuple(std::move(field_tuple));
