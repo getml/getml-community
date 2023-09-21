@@ -22,17 +22,19 @@
 
 namespace commands {
 
-using Pipeline = rfl::NamedTuple<
-    rfl::Field<"data_model_", rfl::Ref<const DataModel>>,
-    rfl::Field<"feature_learners_", std::vector<FeatureLearner>>,
-    rfl::Field<"feature_selectors_", std::vector<Predictor>>,
-    rfl::Field<"include_categorical_", bool>, rfl::Field<"name_", std::string>,
-    rfl::Field<"peripheral_", rfl::Ref<const std::vector<DataModel>>>,
-    rfl::Field<"predictors_", std::vector<Predictor>>,
-    rfl::Field<"preprocessors_", std::vector<Preprocessor>>,
-    rfl::Field<"share_selected_features_", Float>,
-    rfl::Field<"tags_", std::vector<std::string>>,
-    rfl::Field<"type_", rfl::Literal<"Pipeline">>>;
+struct Pipeline {
+  rfl::Field<"data_model_", rfl::Ref<const DataModel>> data_model;
+  rfl::Field<"feature_learners_", std::vector<FeatureLearner>> feature_learners;
+  rfl::Field<"feature_selectors_", std::vector<Predictor>> feature_selectors;
+  rfl::Field<"include_categorical_", bool> include_categorical;
+  rfl::Field<"name_", std::string> name;
+  rfl::Field<"peripheral_", rfl::Ref<const std::vector<DataModel>>> peripheral;
+  rfl::Field<"predictors_", std::vector<Predictor>> predictors;
+  rfl::Field<"preprocessors_", std::vector<Preprocessor>> preprocessors;
+  rfl::Field<"share_selected_features_", Float> share_selected_features;
+  rfl::Field<"tags_", std::vector<std::string>> tags;
+  rfl::Field<"type_", rfl::Literal<"Pipeline">> type;
+};
 
 }  // namespace commands
 

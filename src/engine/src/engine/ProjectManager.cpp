@@ -84,7 +84,7 @@ void ProjectManager::add_pipeline(const typename Command::PipelineOp& _cmd,
                                   Poco::Net::StreamSocket* _socket) {
   const auto pipeline = pipelines::Pipeline(_cmd);
 
-  set_pipeline(_cmd.get<"name_">(), pipeline);
+  set_pipeline(_cmd.name(), pipeline);
 
   communication::Sender::send_string("Success!", _socket);
 }

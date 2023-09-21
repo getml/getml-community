@@ -434,7 +434,7 @@ stage_data_frames(const Pipeline& _pipeline,
 
   socket_logger->log("Staging...");
 
-  const auto data_model = _pipeline.obj().get<"data_model_">();
+  const auto data_model = _pipeline.obj().data_model();
 
   const auto peripheral_names = _pipeline.parse_peripheral();
 
