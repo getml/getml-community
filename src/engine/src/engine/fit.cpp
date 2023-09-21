@@ -173,7 +173,7 @@ rfl::Ref<const std::vector<commands::Fingerprint>> extract_df_fingerprints(
   };
 
   const auto placeholder = std::vector<commands::Fingerprint>(
-      {commands::Fingerprint(_pipeline.obj().get<"data_model_">())});
+      {commands::Fingerprint(_pipeline.obj().data_model())});
 
   const auto population =
       std::vector<commands::Fingerprint>({_population_df.fingerprint()});
@@ -741,7 +741,7 @@ init_feature_learners(
     return make_fl_for_all_targets(new_params, _hyperparameters);
   };
 
-  const auto obj_vector = _pipeline.obj().get<"feature_learners_">();
+  const auto obj_vector = _pipeline.obj().feature_learners();
 
   return fct::join::vector<rfl::Ref<featurelearners::AbstractFeatureLearner>>(
       obj_vector | VIEWS::transform(to_fl));
@@ -755,8 +755,8 @@ std::vector<std::vector<rfl::Ref<predictors::Predictor>>> init_predictors(
     const std::vector<commands::Fingerprint>& _dependencies,
     const size_t _num_targets) {
   const auto commands = _purpose.value() == Purpose::value_of<"predictors_">()
-                            ? _pipeline.obj().get<"predictors_">()
-                            : _pipeline.obj().get<"feature_selectors_">();
+                            ? _pipeline.obj().predictors()
+                            : _pipeline.obj().feature_selectors();
 
   std::vector<std::vector<rfl::Ref<predictors::Predictor>>> predictors;
 
@@ -794,7 +794,7 @@ std::vector<rfl::Ref<preprocessors::Preprocessor>> init_preprocessors(
     return preprocessors::PreprocessorParser::parse(_cmd.val_, dependencies);
   };
 
-  const auto commands = _pipeline.obj().get<"preprocessors_">();
+  const auto commands = _pipeline.obj().preprocessors();
 
   auto vec = fct::collect::vector(commands | VIEWS::transform(parse));
 
@@ -935,7 +935,7 @@ rfl::Ref<const predictors::PredictorImpl> make_predictor_impl(
   }
 
   const auto share_selected_features =
-      _pipeline.obj().get<"share_selected_features_">();
+      _pipeline.obj().share_selected_features();
 
   if (share_selected_features <= 0.0) {
     return predictor_impl;

@@ -11,6 +11,8 @@
 #include "engine/pipelines/staging.hpp"
 #include "fct/collect.hpp"
 #include "rfl/Field.hpp"
+#include "rfl/replace.hpp"
+#include "rfl/to_named_tuple.hpp"
 #include "transpilation/SQLDialectParser.hpp"
 
 namespace engine {
@@ -19,7 +21,7 @@ namespace pipelines {
 Pipeline::Pipeline(const rfl::Ref<const commands::Pipeline>& _obj)
     : allow_http_(false),
       creation_time_(make_creation_time()),
-      include_categorical_(_obj->get<"include_categorical_">()),
+      include_categorical_(_obj->include_categorical()),
       obj_(_obj),
       scores_(rfl::Ref<const metrics::Scores>::make()) {}
 
@@ -37,7 +39,7 @@ Pipeline::~Pipeline() = default;
 std::pair<rfl::Ref<const helpers::Placeholder>,
           rfl::Ref<const std::vector<std::string>>>
 Pipeline::make_placeholder() const {
-  const auto& data_model = *obj().get<"data_model_">();
+  const auto& data_model = *obj().data_model();
 
   const auto placeholder = make_placeholder::make_placeholder(data_model, "t1");
 
@@ -53,35 +55,34 @@ rfl::Ref<std::vector<std::string>> Pipeline::parse_peripheral() const {
   const auto get_name = [](const auto& _p) -> std::string {
     return rfl::get<"name_">(_p.val_);
   };
-  return rfl::Ref<std::vector<std::string>>::make(fct::collect::vector(
-      *obj().get<"peripheral_">() | VIEWS::transform(get_name)));
+  return rfl::Ref<std::vector<std::string>>::make(
+      fct::collect::vector(*obj().peripheral() | VIEWS::transform(get_name)));
 }
 
 // ----------------------------------------------------------------------
 
 std::shared_ptr<std::string> Pipeline::parse_population() const {
-  return std::make_shared<std::string>(
-      obj().get<"data_model_">()->val_.get<"name_">());
+  return std::make_shared<std::string>(obj().data_model()->val_.get<"name_">());
 }
 
 // ----------------------------------------------------------------------------
 
 MonitorSummary Pipeline::to_monitor(const helpers::StringIterator& _categories,
                                     const std::string& _name) const {
-  const auto summary_not_fitted =
-      (obj() * rfl::make_field<"allow_http_">(allow_http()) *
-       rfl::make_field<"creation_time_">(creation_time()))
-          .replace(rfl::make_field<"name_">(_name));
+  const auto not_fitted = MonitorSummaryNotFitted{
+      .pipeline = rfl::replace(obj(), rfl::make_field<"name_">(_name)),
+      .allow_http = allow_http(),
+      .creation_time = creation_time()};
 
   if (!fitted()) {
-    return summary_not_fitted;
+    return not_fitted;
   }
 
-  return summary_not_fitted *
-         rfl::make_field<"num_features_">(fitted()->num_features()) *
-         rfl::make_field<"peripheral_schema_">(fitted()->peripheral_schema_) *
-         rfl::make_field<"population_schema_">(fitted()->population_schema_) *
-         rfl::make_field<"targets_">(fitted()->targets());
+  return MonitorSummaryFitted{.not_fitted = not_fitted,
+                              .num_features = fitted()->num_features(),
+                              .peripheral_schema = fitted()->peripheral_schema_,
+                              .population_schema = fitted()->population_schema_,
+                              .targets = fitted()->targets()};
 }
 
 // ----------------------------------------------------------------------------
