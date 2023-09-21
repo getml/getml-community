@@ -12,7 +12,7 @@
 #include <type_traits>
 
 #include "rfl/internal/field_tuple_t.hpp"
-#include "rfl/internal/has_base_fields.hpp"
+#include "rfl/internal/has_flatten_fields.hpp"
 #include "rfl/internal/is_named_tuple.hpp"
 #include "rfl/named_tuple_t.hpp"
 
@@ -37,7 +37,7 @@ T from_named_tuple(NamedTupleType&& _n) {
 
     using FieldTupleType = internal::field_tuple_t<std::decay_t<T>>;
 
-    if constexpr (!internal::has_base_fields<FieldTupleType>()) {
+    if constexpr (!internal::has_flatten_fields<FieldTupleType>()) {
       return std::apply(make, _n.fields());
     } else {
       const auto fields = concat_named_tuple<FieldTupleType>(_n);
@@ -64,7 +64,7 @@ T from_named_tuple(const NamedTupleType& _n) {
 
     using FieldTupleType = internal::field_tuple_t<T>;
 
-    if constexpr (!internal::has_base_fields<FieldTupleType>()) {
+    if constexpr (!internal::has_flatten_fields<FieldTupleType>()) {
       return std::apply(make, _n.fields());
     } else {
       const auto fields = concat_named_tuple<FieldTupleType>(_n);
@@ -83,7 +83,7 @@ FieldTupleType concat_named_tuple(const NamedTupleType& _n, Args&&... _args) {
     return std::make_tuple(std::forward<Args>(_args)...);
   } else {
     using T = std::tuple_element_t<i, FieldTupleType>;
-    if constexpr (internal::is_base_field<T>::value) {
+    if constexpr (internal::is_flatten_field<T>::value) {
       return concat_named_tuple<FieldTupleType>(
           _n, std::forward<Args>(_args)...,
           from_named_tuple<typename T::Type>(_n));

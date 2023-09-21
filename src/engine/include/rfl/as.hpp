@@ -5,8 +5,8 @@
 // for details.
 //
 
-#ifndef RFL_MAKE_HPP_
-#define RFL_MAKE_HPP_
+#ifndef RFL_AS_HPP_
+#define RFL_AS_HPP_
 
 #include "rfl/from_named_tuple.hpp"
 #include "rfl/to_named_tuple.hpp"

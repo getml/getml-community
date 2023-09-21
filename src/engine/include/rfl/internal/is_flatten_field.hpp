@@ -5,26 +5,26 @@
 // for details.
 //
 
-#ifndef RFL_INTERNAL_ISBASEFIELD_HPP_
-#define RFL_INTERNAL_ISBASEFIELD_HPP_
+#ifndef RFL_INTERNAL_ISFLATTENFIELD_HPP_
+#define RFL_INTERNAL_ISFLATTENFIELD_HPP_
 
 #include <tuple>
 #include <type_traits>
 #include <utility>
 
-#include "rfl/Base.hpp"
+#include "rfl/Flatten.hpp"
 
 namespace rfl {
 namespace internal {
 
 template <class T>
-class is_base_field;
+class is_flatten_field;
 
 template <class T>
-class is_base_field : public std::false_type {};
+class is_flatten_field : public std::false_type {};
 
 template <class T>
-class is_base_field<Base<T>> : public std::true_type {};
+class is_flatten_field<Flatten<T>> : public std::true_type {};
 
 }  // namespace internal
 }  // namespace rfl

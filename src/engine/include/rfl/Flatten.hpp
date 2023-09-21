@@ -5,8 +5,8 @@
 // for details.
 //
 
-#ifndef RFL_BASE_HPP_
-#define RFL_BASE_HPP_
+#ifndef RFL_FLATTEN_HPP_
+#define RFL_FLATTEN_HPP_
 
 #include <algorithm>
 #include <string_view>
@@ -18,33 +18,33 @@ namespace rfl {
 
 /// Used to embed another struct into the generated output.
 template <class _Type>
-struct Base {
+struct Flatten {
   /// The underlying type.
   using Type = std::decay_t<_Type>;
 
-  Base(const Type& _value) : value_(_value) {}
+  Flatten(const Type& _value) : value_(_value) {}
 
-  Base(Type&& _value) : value_(std::forward<Type>(_value)) {}
+  Flatten(Type&& _value) : value_(std::forward<Type>(_value)) {}
 
-  Base(const Base<Type>& _base) : value_(_base.get()) {}
+  Flatten(const Flatten<Type>& _f) : value_(_f.get()) {}
 
-  Base(Base<Type>&& _base) : value_(std::forward<Type>(_base.value_)) {}
-
-  template <class T>
-  Base(const Base<T>& _base) : value_(_base.get()) {}
+  Flatten(Flatten<Type>&& _f) : value_(std::forward<Type>(_f.value_)) {}
 
   template <class T>
-  Base(Base<T>&& _base) : value_(_base.get()) {}
+  Flatten(const Flatten<T>& _f) : value_(_f.get()) {}
+
+  template <class T>
+  Flatten(Flatten<T>&& _f) : value_(_f.get()) {}
 
   template <class T, typename std::enable_if<std::is_convertible_v<T, Type>,
                                              bool>::type = true>
-  Base(const T& _value) : value_(_value) {}
+  Flatten(const T& _value) : value_(_value) {}
 
   template <class T, typename std::enable_if<std::is_convertible_v<T, Type>,
                                              bool>::type = true>
-  Base(T&& _value) : value_(_value) {}
+  Flatten(T&& _value) : value_(_value) {}
 
-  ~Base() = default;
+  ~Flatten() = default;
 
   /// Returns the underlying object.
   inline const Type& get() const { return value_; }
@@ -69,23 +69,21 @@ struct Base {
   }
 
   /// Assigns the underlying object.
-  inline void operator=(const Base<Type>& _base) { value_ = _base.get(); }
+  inline void operator=(const Flatten<Type>& _f) { value_ = _f.get(); }
 
   /// Assigns the underlying object.
-  inline void operator=(Base<Type>&& _base) {
-    value_ = std::forward<Type>(_base);
+  inline void operator=(Flatten<Type>&& _f) { value_ = std::forward<Type>(_f); }
+
+  /// Assigns the underlying object.
+  template <class T>
+  inline void operator=(const Flatten<T>& _f) {
+    value_ = _f.get();
   }
 
   /// Assigns the underlying object.
   template <class T>
-  inline void operator=(const Base<T>& _base) {
-    value_ = _base.get();
-  }
-
-  /// Assigns the underlying object.
-  template <class T>
-  inline void operator=(Base<T>&& _base) {
-    value_ = std::forward<T>(_base);
+  inline void operator=(Flatten<T>&& _f) {
+    value_ = std::forward<T>(_f);
   }
 
   /// Assigns the underlying object.
