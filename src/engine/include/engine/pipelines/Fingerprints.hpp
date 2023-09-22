@@ -12,28 +12,32 @@
 
 #include "commands/Fingerprint.hpp"
 #include "rfl/Field.hpp"
-#include "rfl/NamedTuple.hpp"
 #include "rfl/Ref.hpp"
 
 namespace engine {
 namespace pipelines {
 
-using Fingerprints = rfl::NamedTuple<
-    /// The fingerprints of the data frames used for fitting.
-    rfl::Field<"df_fingerprints_",
-               rfl::Ref<const std::vector<commands::Fingerprint>>>,
+struct Fingerprints {
+  /// The fingerprints of the data frames used for fitting.
+  rfl::Field<"df_fingerprints_",
+             rfl::Ref<const std::vector<commands::Fingerprint>>>
+      df_fingerprints;
 
-    /// The fingerprints of the preprocessors used for fitting.
-    rfl::Field<"preprocessor_fingerprints_",
-               rfl::Ref<const std::vector<commands::Fingerprint>>>,
+  /// The fingerprints of the preprocessors used for fitting.
+  rfl::Field<"preprocessor_fingerprints_",
+             rfl::Ref<const std::vector<commands::Fingerprint>>>
+      preprocessor_fingerprints;
 
-    /// The fingerprints of the feature learners used for fitting.
-    rfl::Field<"fl_fingerprints_",
-               rfl::Ref<const std::vector<commands::Fingerprint>>>,
+  /// The fingerprints of the feature learners used for fitting.
+  rfl::Field<"fl_fingerprints_",
+             rfl::Ref<const std::vector<commands::Fingerprint>>>
+      fl_fingerprints;
 
-    /// The fingerprints of the feature selectors used for fitting.
-    rfl::Field<"fs_fingerprints_",
-               rfl::Ref<const std::vector<commands::Fingerprint>>>>;
+  /// The fingerprints of the feature selectors used for fitting.
+  rfl::Field<"fs_fingerprints_",
+             rfl::Ref<const std::vector<commands::Fingerprint>>>
+      fs_fingerprints;
+};
 
 }  // namespace pipelines
 }  // namespace engine

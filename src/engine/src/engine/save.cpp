@@ -138,16 +138,15 @@ void save_pipeline_json(const SaveParams& _params,
 
   const auto& f = _params.get<"fitted_">();
 
-  const PipelineJSON pipeline_json =
-      f.fingerprints_ * rfl::make_field<"allow_http_">(p.allow_http()) *
-      rfl::make_field<"creation_time_">(p.creation_time()) *
-      rfl::make_field<"modified_peripheral_schema_">(
-          f.modified_peripheral_schema_) *
-      rfl::make_field<"modified_population_schema_">(
-          f.modified_population_schema_) *
-      rfl::make_field<"peripheral_schema_">(f.peripheral_schema_) *
-      rfl::make_field<"population_schema_">(f.population_schema_) *
-      rfl::make_field<"targets_">(f.targets());
+  const auto pipeline_json =
+      PipelineJSON{.fingerprints = f.fingerprints_,
+                   .allow_http = p.allow_http(),
+                   .creation_time = p.creation_time(),
+                   .modified_peripheral_schema = f.modified_peripheral_schema_,
+                   .modified_population_schema = f.modified_population_schema_,
+                   .peripheral_schema = f.peripheral_schema_,
+                   .population_schema = f.population_schema_,
+                   .targets = f.targets()};
 
   helpers::Saver::save(_tfile.path() + "/pipeline", pipeline_json,
                        _params.get<"format_">());

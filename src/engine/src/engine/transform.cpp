@@ -391,9 +391,9 @@ transform(const TransformParams& _params, const Pipeline& _pipeline,
   }
 
   const auto features_only_params = FeaturesOnlyParams{
-      .dependencies_ = _fitted.fingerprints_.get<"fs_fingerprints_">(),
+      .dependencies_ = _fitted.fingerprints_.fs_fingerprints(),
       .feature_learners_ = _fitted.feature_learners_,
-      .fs_fingerprints_ = _fitted.fingerprints_.get<"fs_fingerprints_">(),
+      .fs_fingerprints_ = _fitted.fingerprints_.fs_fingerprints(),
       .pipeline_ = _pipeline,
       .preprocessors_ = _fitted.preprocessors_,
       .predictor_impl_ = _fitted.predictors_.impl_,

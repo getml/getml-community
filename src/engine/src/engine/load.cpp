@@ -36,8 +36,8 @@ Pipeline load(const std::string& _path,
 
   const auto p = Pipeline(obj)
                      .with_scores(scores)
-                     .with_creation_time(pipeline_json.get<"creation_time_">())
-                     .with_allow_http(pipeline_json.get<"allow_http_">());
+                     .with_creation_time(pipeline_json.creation_time())
+                     .with_allow_http(pipeline_json.allow_http());
 
   return pipelines::load_fitted::load_fitted(_path, p, _pipeline_trackers);
 }

@@ -1028,7 +1028,7 @@ rfl::Ref<const metrics::Scores> score_after_fitting(
     const FittedPipeline& _fitted) {
   auto [numerical_features, categorical_features, _] = transform::make_features(
       _params, _pipeline, _fitted.feature_learners_, *_fitted.predictors_.impl_,
-      *_fitted.fingerprints_.get<"fs_fingerprints_">());
+      *_fitted.fingerprints_.fs_fingerprints());
 
   categorical_features =
       _fitted.predictors_.impl_->transform_encodings(categorical_features);
