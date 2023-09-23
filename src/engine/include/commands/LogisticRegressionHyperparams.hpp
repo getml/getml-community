@@ -9,17 +9,12 @@
 #define COMMANDS_LOGISTICREGRESSIONHYPERPARMAS_HPP_
 
 #include "commands/LinearHyperparams.hpp"
-#include "rfl/Field.hpp"
 #include "rfl/Literal.hpp"
-#include "rfl/define_named_tuple.hpp"
 
 namespace commands {
 
-using f_logistic_regression =
-    rfl::Field<"type_", rfl::Literal<"LogisticRegression">>;
-
-using LogisticRegressionHyperparams = LinearHyperparams<
-    rfl::define_named_tuple_t<LinearNamedTupleBase, f_logistic_regression>>;
+using LogisticRegressionHyperparams =
+    LinearHyperparams<rfl::Literal<"LogisticRegression">>;
 
 }  // namespace commands
 

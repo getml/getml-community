@@ -137,16 +137,14 @@ struct Fingerprint {
 
   /// The fingerprint for a LinearRegression.
   struct LinearRegressionFingerprint {
-    rfl::Flatten<typename LinearRegressionHyperparams::NamedTupleType>
-        hyperparams;
+    rfl::Flatten<LinearRegressionHyperparams> hyperparams;
     rfl::Field<"dependencies_", std::vector<Fingerprint>> dependencies;
     rfl::Flatten<OtherPredRequirements> other;
   };
 
   /// The fingerprint for a LinearRegression.
   struct LogisticRegressionFingerprint {
-    rfl::Flatten<typename LogisticRegressionHyperparams::NamedTupleType>
-        hyperparams;
+    rfl::Flatten<LogisticRegressionHyperparams> hyperparams;
     rfl::Field<"dependencies_", std::vector<Fingerprint>> dependencies;
     rfl::Flatten<OtherPredRequirements> other;
   };
