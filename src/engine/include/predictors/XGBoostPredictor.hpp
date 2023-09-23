@@ -100,9 +100,12 @@ class XGBoostPredictor : public Predictor {
   /// the dependency graphs).
   Fingerprint fingerprint() const final {
     using XGBoostFingerprint = typename Fingerprint::XGBoostFingerprint;
-    return Fingerprint(XGBoostFingerprint(
-        hyperparams_->val_ * rfl::make_field<"dependencies_">(dependencies_) *
-        impl().named_tuple()));
+    return Fingerprint(XGBoostFingerprint{
+        .hyperparams = hyperparams_->val_,
+        .dependencies = dependencies_,
+        .other =
+            rfl::from_named_tuple<commands::Fingerprint::OtherPredRequirements>(
+                impl().named_tuple())});
   }
 
   /// Whether we want the predictor to be silent.

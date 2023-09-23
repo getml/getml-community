@@ -295,8 +295,8 @@ commands::Fingerprint DataFrame::fingerprint() const {
   if (build_history_) {
     return commands::Fingerprint(*build_history_);
   }
-  return commands::Fingerprint(rfl::make_field<"name_">(name_) *
-                               rfl::make_field<"last_change_">(last_change_));
+  return commands::Fingerprint(commands::Fingerprint::OrdinaryDataFrame{
+      .name = name_, .last_change = last_change_});
 }
 
 // ----------------------------------------------------------------------------

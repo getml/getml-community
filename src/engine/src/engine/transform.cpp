@@ -61,6 +61,7 @@ containers::NumericalFeatures select_autofeatures(
     const std::vector<rfl::Ref<const featurelearners::AbstractFeatureLearner>>&
         _feature_learners,
     const predictors::PredictorImpl& _predictor_impl);
+
 // ----------------------------------------------------------------------------
 
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>

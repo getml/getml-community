@@ -383,7 +383,7 @@ class FastProp {
 
   /// Whether this is a classification problem
   const bool is_classification() const {
-    return hyperparameters().val_.get<f_loss_function>() ==
+    return hyperparameters().loss_function() ==
            Hyperparameters::CROSS_ENTROPY_LOSS;
   }
 
@@ -434,12 +434,11 @@ class FastProp {
   /// Whether there is a COUNT aggregation among the aggregations in the
   /// hyperparameter.
   bool has_count() const {
-    return std::any_of(hyperparameters().val_.get<f_aggregations>().begin(),
-                       hyperparameters().val_.get<f_aggregations>().end(),
-                       [](const auto& agg) -> bool {
-                         return agg.value() ==
-                                enums::Aggregation::value_of<"COUNT">();
-                       });
+    return std::any_of(
+        hyperparameters().aggregation().begin(),
+        hyperparameters().aggregation().end(), [](const auto& agg) -> bool {
+          return agg.value() == enums::Aggregation::value_of<"COUNT">();
+        });
   }
 
   /// Whether the column is a time stamp.
