@@ -14,6 +14,7 @@
 #include "fct/collect.hpp"
 #include "json/json.hpp"
 #include "rfl/Field.hpp"
+#include "rfl/to_named_tuple.hpp"
 
 namespace engine {
 namespace pipelines {
@@ -34,7 +35,8 @@ void check(const Pipeline& _pipeline, const CheckParams& _params) {
   // TODO: We are forced to generate the modified tables, even when we can
   // retrieve the check, but we really only need the modified schemata at this
   // point. Fix this.
-  const auto fit_preprocessors_params = FitPreprocessorsParams(_params);
+  const auto fit_preprocessors_params =
+      FitPreprocessorsParams(rfl::to_named_tuple(_params));
 
   const auto preprocessed =
       fit::fit_preprocessors_only(_pipeline, fit_preprocessors_params);
@@ -61,19 +63,18 @@ void check(const Pipeline& _pipeline, const CheckParams& _params) {
       rfl::make_field<"fl_fingerprints_">(fl_fingerprints));
 
   const auto retrieved =
-      _params.get<"warning_tracker_">()->retrieve(warning_fingerprint);
+      _params.warning_tracker()->retrieve(warning_fingerprint);
 
   if (retrieved) {
-    communication::Sender::send_string("Success!", _params.get<"socket_">());
-    retrieved->send(_params.get<"socket_">());
+    communication::Sender::send_string("Success!", _params.socket());
+    retrieved->send(_params.socket());
     return;
   }
 
   const auto socket_logger =
-      _params.get<"logger_">()
-          ? std::make_shared<const communication::SocketLogger>(
-                _params.get<"logger_">(), true, _params.get<"socket_">())
-          : std::shared_ptr<const communication::SocketLogger>();
+      _params.logger() ? std::make_shared<const communication::SocketLogger>(
+                             _params.logger(), true, _params.socket())
+                       : std::shared_ptr<const communication::SocketLogger>();
 
   // TODO: Use rfl::Ref
   const auto to_ptr = [](const auto& _fl) { return _fl.ptr(); };
@@ -85,13 +86,13 @@ void check(const Pipeline& _pipeline, const CheckParams& _params) {
       placeholder.ptr(), peripheral_names.ptr(), preprocessed.population_df_,
       preprocessed.peripheral_dfs_, fl_shared_ptr, socket_logger);
 
-  communication::Sender::send_string("Success!", _params.get<"socket_">());
+  communication::Sender::send_string("Success!", _params.socket());
 
   const auto warnings = warner.to_warnings_obj(warning_fingerprint);
 
-  warnings->send(_params.get<"socket_">());
+  warnings->send(_params.socket());
 
-  _params.get<"warning_tracker_">()->add(warnings);
+  _params.warning_tracker()->add(warnings);
 }
 
 // ----------------------------------------------------------------------------
@@ -102,9 +103,8 @@ init_feature_learners(
     const Pipeline& _pipeline,
     const featurelearners::FeatureLearnerParams& _feature_learner_params,
     const CheckParams& _params) {
-  const auto df_fingerprints =
-      fit::extract_df_fingerprints(_pipeline, _params.get<"population_df_">(),
-                                   _params.get<"peripheral_dfs_">());
+  const auto df_fingerprints = fit::extract_df_fingerprints(
+      _pipeline, _params.population_df(), _params.peripheral_dfs());
 
   const auto preprocessors =
       fit::init_preprocessors(_pipeline, df_fingerprints);
@@ -114,7 +114,7 @@ init_feature_learners(
 
   const auto feature_learners =
       fit::init_feature_learners(_pipeline, _feature_learner_params,
-                                 _params.get<"population_df_">().num_targets());
+                                 _params.population_df().num_targets());
 
   return std::make_pair(feature_learners,
                         fit::extract_fl_fingerprints(
