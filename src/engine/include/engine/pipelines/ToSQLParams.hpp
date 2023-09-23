@@ -25,30 +25,32 @@
 namespace engine {
 namespace pipelines {
 
-using ToSQLParams = rfl::NamedTuple<
-    /// Encodes the categories.
-    rfl::Field<"categories_", const helpers::StringIterator>,
+struct ToSQLParams {
+  /// Encodes the categories.
+  rfl::Field<"categories_", const helpers::StringIterator> categories;
 
-    /// The fitted pipeline.
-    rfl::Field<"fitted_", FittedPipeline>,
+  /// The fitted pipeline.
+  rfl::Field<"fitted_", FittedPipeline> fitted;
 
-    /// Whether we want to transpile the full pipeline or just the features.
-    rfl::Field<"full_pipeline_", bool>,
+  /// Whether we want to transpile the full pipeline or just the features.
+  rfl::Field<"full_pipeline_", bool> full_pipeline;
 
-    /// The underlying pipeline,
-    rfl::Field<"pipeline_", Pipeline>,
+  /// The underlying pipeline,
+  rfl::Field<"pipeline_", Pipeline> pipeline;
 
-    /// If the feature is longer than the threshold, it will not be sent. This
-    /// is to prevent the iPython notebook from overflowing and/or unexpectedly
-    /// high memory usage in Python.
-    rfl::Field<"size_threshold_", std::optional<size_t>>,
+  /// If the feature is longer than the threshold, it will not be sent. This
+  /// is to prevent the iPython notebook from overflowing and/or unexpectedly
+  /// high memory usage in Python.
+  rfl::Field<"size_threshold_", std::optional<size_t>> size_threshold;
 
-    /// Whether we want to include the targets in the transpiled code (needed to
-    /// generate a training set)
-    rfl::Field<"targets_", bool>,
+  /// Whether we want to include the targets in the transpiled code (needed to
+  /// generate a training set)
+  rfl::Field<"targets_", bool> targets;
 
-    /// The parameters required by the transpilation package.
-    rfl::Field<"transpilation_params_", transpilation::TranspilationParams>>;
+  /// The parameters required by the transpilation package.
+  rfl::Field<"transpilation_params_", transpilation::TranspilationParams>
+      transpilation_params;
+};
 
 }  // namespace pipelines
 }  // namespace engine

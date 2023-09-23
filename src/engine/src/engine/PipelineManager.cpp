@@ -731,13 +731,13 @@ void PipelineManager::to_sql(const typename Command::ToSQLOp& _cmd,
   }
 
   const auto params =
-      pipelines::ToSQLParams{.categories_ = categories().strings(),
-                             .fitted_ = *fitted,
-                             .full_pipeline_ = subfeatures,
-                             .pipeline_ = pipeline,
-                             .size_threshold_ = size_threshold,
-                             .targets_ = targets,
-                             .transpilation_params_ = transpilation_params};
+      pipelines::ToSQLParams{.categories = categories().strings(),
+                             .fitted = *fitted,
+                             .full_pipeline = subfeatures,
+                             .pipeline = pipeline,
+                             .size_threshold = size_threshold,
+                             .targets = targets,
+                             .transpilation_params = transpilation_params};
 
   const auto sql = pipelines::to_sql::to_sql(params);
 
