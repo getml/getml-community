@@ -83,9 +83,10 @@ class EMailDomain : public Preprocessor {
   commands::Fingerprint fingerprint() const final {
     using FingerprintType =
         typename commands::Fingerprint::EMailDomainFingerprint;
-    return commands::Fingerprint(FingerprintType(
-        rfl::make_field<"dependencies_">(dependencies_),
-        rfl::make_field<"type_">(rfl::Literal<"EMailDomain">())));
+    return commands::Fingerprint(
+        FingerprintType{.dependencies = dependencies_,
+                        .op = commands::Preprocessor::EMailDomainOp{
+                            .type = rfl::Literal<"EMailDomain">()}});
   }
 
   /// Necessary for the automated parsing to work.

@@ -36,9 +36,10 @@
 #include "helpers/VocabularyContainer.hpp"
 #include "helpers/WordIndexContainer.hpp"
 #include "rfl/Field.hpp"
-#include "rfl/define_named_tuple.hpp"
+#include "rfl/from_named_tuple.hpp"
 #include "rfl/get.hpp"
 #include "rfl/replace.hpp"
+#include "rfl/to_named_tuple.hpp"
 
 namespace featurelearners {
 
@@ -67,11 +68,6 @@ class FeatureLearner : public AbstractFeatureLearner {
  private:
   typedef typename FeatureLearnerType::DataFrameType DataFrameType;
   typedef typename FeatureLearnerType::HypType HypType;
-  typedef rfl::define_named_tuple_t<
-      typename HypType::NamedTupleType,
-      typename commands::Fingerprint::Dependencies,
-      typename commands::Fingerprint::OtherFLRequirements>
-      FingerprintType;
 
   typedef typename std::conditional<
       has_propositionalization_,
@@ -500,12 +496,15 @@ FeatureLearner<FeatureLearnerType>::extract_tables_by_colnames(
 
 template <typename FeatureLearnerType>
 commands::Fingerprint FeatureLearner<FeatureLearnerType>::fingerprint() const {
+  const auto named_tuple = rfl::to_named_tuple(hyperparameters_) *
+                           rfl::make_field<"dependencies_">(*dependencies_) *
+                           rfl::make_field<"peripheral_">(peripheral_) *
+                           rfl::make_field<"placeholder_">(placeholder_) *
+                           rfl::make_field<"target_num_">(target_num_);
+
   return commands::Fingerprint(
-      FingerprintType(hyperparameters_.named_tuple() *
-                      rfl::make_field<"dependencies_">(*dependencies_) *
-                      rfl::make_field<"peripheral_">(peripheral_) *
-                      rfl::make_field<"placeholder_">(placeholder_) *
-                      rfl::make_field<"target_num_">(target_num_)));
+      rfl::from_named_tuple<commands::Fingerprint::FastPropFingerprint>(
+          named_tuple));
 }
 
 // ----------------------------------------------------------------------------

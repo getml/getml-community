@@ -312,8 +312,8 @@ std::vector<Float> FastProp::calc_r_squared(
 Float FastProp::calc_threshold(const std::vector<Float> &_r_squared) const {
   auto r_squared = _r_squared;
   RANGES::sort(r_squared, RANGES::greater());
-  assert_true(r_squared.size() > hyperparameters().val_.get<f_num_features>());
-  return r_squared.at(hyperparameters().val_.get<f_num_features>());
+  assert_true(r_squared.size() > hyperparameters().num_features());
+  return r_squared.at(hyperparameters().num_features());
 }
 
 // ----------------------------------------------------------------------------
@@ -448,9 +448,9 @@ std::vector<Int> FastProp::find_most_frequent_categories(
 
   const auto is_not_null = [](const Int val) -> bool { return val >= 0; };
 
-  const auto range =
-      pairs | VIEWS::transform(get_first) | VIEWS::filter(is_not_null) |
-      VIEWS::take(hyperparameters().val_.get<f_n_most_frequent>());
+  const auto range = pairs | VIEWS::transform(get_first) |
+                     VIEWS::filter(is_not_null) |
+                     VIEWS::take(hyperparameters().n_most_frequent());
 
   return fct::collect::vector(range);
 }
@@ -581,7 +581,7 @@ void FastProp::fit_on_categoricals(
       continue;
     }
 
-    for (const auto &agg : hyperparameters().val_.get<f_aggregations>()) {
+    for (const auto &agg : hyperparameters().aggregation()) {
       if (!is_categorical(agg)) {
         continue;
       }
@@ -627,7 +627,7 @@ void FastProp::fit_on_categoricals_by_categories(
         find_most_frequent_categories(_peripheral.categorical_col(input_col));
 
     for (const auto categorical_value : most_frequent) {
-      for (const auto &agg : hyperparameters().val_.get<f_aggregations>()) {
+      for (const auto &agg : hyperparameters().aggregation()) {
         if (!is_numerical(agg)) {
           continue;
         }
@@ -656,7 +656,7 @@ void FastProp::fit_on_discretes(
 
   for (size_t input_col = 0; input_col < _peripheral.num_discretes();
        ++input_col) {
-    for (const auto &agg : hyperparameters().val_.get<f_aggregations>()) {
+    for (const auto &agg : hyperparameters().aggregation()) {
       if (!is_numerical(agg)) {
         continue;
       }
@@ -689,7 +689,7 @@ void FastProp::fit_on_numericals(
 
   for (size_t input_col = 0; input_col < _peripheral.num_numericals();
        ++input_col) {
-    for (const auto &agg : hyperparameters().val_.get<f_aggregations>()) {
+    for (const auto &agg : hyperparameters().aggregation()) {
       if (!is_numerical(agg)) {
         continue;
       }
@@ -732,7 +732,7 @@ void FastProp::fit_on_same_units_categorical(
         continue;
       }
 
-      for (const auto &agg : hyperparameters().val_.get<f_aggregations>()) {
+      for (const auto &agg : hyperparameters().aggregation()) {
         if (!is_numerical(agg)) {
           continue;
         }
@@ -763,7 +763,7 @@ void FastProp::fit_on_same_units_discrete(
        ++output_col) {
     for (size_t input_col = 0; input_col < _peripheral.num_discretes();
          ++input_col) {
-      for (const auto &agg : hyperparameters().val_.get<f_aggregations>()) {
+      for (const auto &agg : hyperparameters().aggregation()) {
         const bool same_unit = _population.discrete_unit(output_col) != "" &&
                                _population.discrete_unit(output_col) ==
                                    _peripheral.discrete_unit(input_col);
@@ -808,7 +808,7 @@ void FastProp::fit_on_same_units_numerical(
        ++output_col) {
     for (size_t input_col = 0; input_col < _peripheral.num_numericals();
          ++input_col) {
-      for (const auto &agg : hyperparameters().val_.get<f_aggregations>()) {
+      for (const auto &agg : hyperparameters().aggregation()) {
         const bool same_unit = _population.numerical_unit(output_col) != "" &&
                                _population.numerical_unit(output_col) ==
                                    _peripheral.numerical_unit(input_col);
@@ -860,7 +860,7 @@ void FastProp::fit_on_subfeatures(
   for (size_t input_col = 0;
        input_col < subfeatures().at(_peripheral_ix)->num_features();
        ++input_col) {
-    for (const auto &agg : hyperparameters().val_.get<f_aggregations>()) {
+    for (const auto &agg : hyperparameters().aggregation()) {
       if (!is_numerical(agg)) {
         continue;
       }
@@ -983,7 +983,7 @@ FastProp::fit_subfeatures(const FitParams &_params,
 // ----------------------------------------------------------------------------
 
 size_t FastProp::get_num_threads() const {
-  const auto num_threads = hyperparameters().val_.get<f_num_threads>();
+  const auto num_threads = hyperparameters().num_threads();
 
   if (num_threads <= 0) {
     return std::max(
@@ -1230,7 +1230,7 @@ std::vector<std::vector<containers::Condition>> FastProp::make_conditions(
 void FastProp::make_categorical_conditions(
     const containers::DataFrame &_peripheral, const size_t _peripheral_ix,
     std::vector<std::vector<containers::Condition>> *_conditions) const {
-  if (hyperparameters().val_.get<f_n_most_frequent>() == 0) {
+  if (hyperparameters().n_most_frequent() == 0) {
     return;
   }
 
@@ -1263,33 +1263,28 @@ void FastProp::make_lag_conditions(
     return;
   }
 
-  if (hyperparameters().val_.get<f_delta_t>() <= 0.0 &&
-      hyperparameters().val_.get<f_max_lag>() == 0) {
+  if (hyperparameters().delta_t() <= 0.0 && hyperparameters().max_lag() == 0) {
     return;
   }
 
-  if (hyperparameters().val_.get<f_delta_t>() <= 0.0 &&
-      hyperparameters().val_.get<f_max_lag>() > 0) {
+  if (hyperparameters().delta_t() <= 0.0 && hyperparameters().max_lag() > 0) {
     throw std::runtime_error(
         "FastProp: If you pass a max_lag, you must also pass a delta_t "
         "that is "
         "greater than 0.");
   }
 
-  if (hyperparameters().val_.get<f_delta_t>() > 0.0 &&
-      hyperparameters().val_.get<f_max_lag>() == 0) {
+  if (hyperparameters().delta_t() > 0.0 && hyperparameters().max_lag() == 0) {
     throw std::runtime_error(
         "FastProp: If you pass a delta_t, you must also pass a max_lag "
         "that is "
         "greater than 0.");
   }
 
-  for (size_t i = 0; i < hyperparameters().val_.get<f_max_lag>(); ++i) {
-    const auto lower =
-        hyperparameters().val_.get<f_delta_t>() * static_cast<Float>(i);
+  for (size_t i = 0; i < hyperparameters().max_lag(); ++i) {
+    const auto lower = hyperparameters().delta_t() * static_cast<Float>(i);
 
-    const auto upper =
-        hyperparameters().val_.get<f_delta_t>() * static_cast<Float>(i + 1);
+    const auto upper = hyperparameters().delta_t() * static_cast<Float>(i + 1);
 
     _conditions->push_back({containers::Condition(
         lower, upper, enums::DataUsed::make<"lag">(), _peripheral_ix)});
@@ -1477,7 +1472,7 @@ std::shared_ptr<std::vector<size_t>> FastProp::sample_from_population(
   std::uniform_real_distribution<Float> dist(0.0, 1.0);
 
   const auto include = [this, &rng, &dist](const size_t rownum) -> bool {
-    return dist(rng) < hyperparameters().val_.get<f_sampling_factor>();
+    return dist(rng) < hyperparameters().sampling_factor();
   };
 
   auto iota = fct::iota<size_t>(0, _nrows);
@@ -1492,8 +1487,7 @@ std::shared_ptr<const std::vector<containers::AbstractFeature>>
 FastProp::select_features(
     const FitParams &_params,
     const std::shared_ptr<std::vector<size_t>> &_rownums) const {
-  if (abstract_features().size() <=
-      hyperparameters().val_.get<f_num_features>()) {
+  if (abstract_features().size() <= hyperparameters().num_features()) {
     if (_params.logger_) {
       _params.logger_->log("Trained features. Progress: 100%.");
     }

@@ -23,6 +23,7 @@
 #include "predictors/StandardScaler.hpp"
 #include "rfl/NamedTuple.hpp"
 #include "rfl/Ref.hpp"
+#include "rfl/from_named_tuple.hpp"
 
 namespace predictors {
 
@@ -88,9 +89,12 @@ class LinearRegression : public Predictor {
   Fingerprint fingerprint() const final {
     using LinearRegressionFingerprint =
         typename Fingerprint::LinearRegressionFingerprint;
-    return Fingerprint(LinearRegressionFingerprint(
-        hyperparams().val_ * rfl::make_field<"dependencies_">(dependencies_) *
-        impl().named_tuple()));
+    return Fingerprint(LinearRegressionFingerprint{
+        .hyperparams = hyperparams().val_,
+        .dependencies = dependencies_,
+        .other =
+            rfl::from_named_tuple<commands::Fingerprint::OtherPredRequirements>(
+                impl().named_tuple())});
   }
 
   /// Whether the predictor is used for classification;

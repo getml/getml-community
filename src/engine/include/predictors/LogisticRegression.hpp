@@ -103,9 +103,12 @@ class LogisticRegression : public Predictor {
   Fingerprint fingerprint() const final {
     using LogisticRegressionFingerprint =
         typename Fingerprint::LogisticRegressionFingerprint;
-    return Fingerprint(LogisticRegressionFingerprint(
-        hyperparams().val_ * rfl::make_field<"dependencies_">(dependencies_) *
-        impl().named_tuple()));
+    return Fingerprint(LogisticRegressionFingerprint{
+        .hyperparams = hyperparams().val_,
+        .dependencies = dependencies_,
+        .other =
+            rfl::from_named_tuple<commands::Fingerprint::OtherPredRequirements>(
+                impl().named_tuple())});
   }
 
   /// Whether we want the predictor to be silent.

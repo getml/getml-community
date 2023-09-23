@@ -100,11 +100,12 @@ class CategoryTrimmer : public Preprocessor {
   commands::Fingerprint fingerprint() const final {
     using CategoryTrimmerFingerprint =
         typename commands::Fingerprint::CategoryTrimmerFingerprint;
-    return commands::Fingerprint(CategoryTrimmerFingerprint(
-        rfl::make_field<"dependencies_">(dependencies_),
-        rfl::make_field<"type_">(rfl::Literal<"CategoryTrimmer">()),
-        rfl::make_field<"max_num_categories_">(max_num_categories_),
-        rfl::make_field<"min_freq_">(min_freq_)));
+    return commands::Fingerprint(CategoryTrimmerFingerprint{
+        .dependencies = dependencies_,
+        .op = commands::Preprocessor::CategoryTrimmerOp{
+            .type = rfl::Literal<"CategoryTrimmer">(),
+            .max_num_categories = max_num_categories_,
+            .min_freq = min_freq_}});
   }
 
   /// Returns the type of the preprocessor.

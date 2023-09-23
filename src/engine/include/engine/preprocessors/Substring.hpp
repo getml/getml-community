@@ -87,11 +87,13 @@ class Substring : public Preprocessor {
   commands::Fingerprint fingerprint() const final {
     using FingerprintType =
         typename commands::Fingerprint::SubstringFingerprint;
-    return commands::Fingerprint(FingerprintType(
-        rfl::make_field<"dependencies_">(dependencies_),
-        rfl::make_field<"type_">(rfl::Literal<"Substring">()),
-        rfl::make_field<"begin_">(begin_), rfl::make_field<"length_">(length_),
-        rfl::make_field<"unit_">(unit_)));
+    return commands::Fingerprint(
+        FingerprintType{.dependencies = dependencies_,
+                        .op = commands::Preprocessor::SubstringOp{
+                            .type = rfl::Literal<"Substring">(),
+                            .begin = begin_,
+                            .length = length_,
+                            .unit = unit_}});
   }
 
   /// Necessary for the automated parsing to work.

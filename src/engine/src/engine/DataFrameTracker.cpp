@@ -96,9 +96,8 @@ commands::Fingerprint DataFrameTracker::make_build_history(
   using PipelineBuildHistory =
       typename commands::Fingerprint::PipelineBuildHistory;
 
-  const auto build_history = PipelineBuildHistory(
-      rfl::make_field<"dependencies_">(_dependencies) *
-      rfl::make_field<"df_fingerprints_">(df_fingerprints));
+  const auto build_history = PipelineBuildHistory{
+      .dependencies = _dependencies, .df_fingerprints = df_fingerprints};
 
   return commands::Fingerprint(build_history);
 }
