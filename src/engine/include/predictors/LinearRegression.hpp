@@ -90,7 +90,7 @@ class LinearRegression : public Predictor {
     using LinearRegressionFingerprint =
         typename Fingerprint::LinearRegressionFingerprint;
     return Fingerprint(LinearRegressionFingerprint{
-        .hyperparams = hyperparams().val_,
+        .hyperparams = hyperparams(),
         .dependencies = dependencies_,
         .other =
             rfl::from_named_tuple<commands::Fingerprint::OtherPredRequirements>(
@@ -115,9 +115,7 @@ class LinearRegression : public Predictor {
   bool silent() const final { return true; }
 
   /// The type of the predictor.
-  std::string type() const final {
-    return hyperparams().val_.get<"type_">().name();
-  }
+  std::string type() const final { return hyperparams().type().name(); }
 
  private:
   /// Trivial (private const) accessor.
