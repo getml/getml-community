@@ -153,7 +153,7 @@ struct Fingerprint {
 
   /// The fingerprint for an XGBoostPredictor.
   struct XGBoostFingerprint {
-    rfl::Flatten<typename XGBoostHyperparams::NamedTupleType> hyperparams;
+    rfl::Flatten<XGBoostHyperparams> hyperparams;
     rfl::Field<"dependencies_", std::vector<Fingerprint>> dependencies;
     rfl::Flatten<OtherPredRequirements> other;
   };

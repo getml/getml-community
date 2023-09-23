@@ -86,7 +86,7 @@ class XGBoostPredictor : public Predictor {
 
   /// Whether the predictor is used for classification;
   bool is_classification() const final {
-    const auto objective = hyperparams_->val_.get<"objective_">();
+    const auto objective = hyperparams_->objective();
     using Objective = std::decay_t<decltype(objective)>;
     return objective.value() == Objective::value_of<"reg:logistic">() ||
            objective.value() == Objective::value_of<"binary:logistic">() ||
@@ -101,7 +101,7 @@ class XGBoostPredictor : public Predictor {
   Fingerprint fingerprint() const final {
     using XGBoostFingerprint = typename Fingerprint::XGBoostFingerprint;
     return Fingerprint(XGBoostFingerprint{
-        .hyperparams = hyperparams_->val_,
+        .hyperparams = *hyperparams_,
         .dependencies = dependencies_,
         .other =
             rfl::from_named_tuple<commands::Fingerprint::OtherPredRequirements>(
@@ -109,7 +109,7 @@ class XGBoostPredictor : public Predictor {
   }
 
   /// Whether we want the predictor to be silent.
-  bool silent() const final { return hyperparams_->val_.get<"silent_">(); }
+  bool silent() const final { return hyperparams_->silent(); }
 
   /// The type of the predictor.
   std::string type() const final { return "XGBoost"; }
