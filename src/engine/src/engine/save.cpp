@@ -64,7 +64,7 @@ void move_tfile(const std::string& _path, const std::string& _name,
 // ----------------------------------------------------------------------------
 
 void save(const SaveParams& _params) {
-  auto tfile = Poco::TemporaryFile(_params.get<"temp_dir_">());
+  auto tfile = Poco::TemporaryFile(_params.temp_dir());
 
   tfile.createDirectories();
 
@@ -74,24 +74,23 @@ void save(const SaveParams& _params) {
 
   save_pipeline_json(_params, tfile);
 
-  const auto format = _params.get<"format_">();
+  const auto format = _params.format();
 
-  helpers::Saver::save(tfile.path() + "/obj", _params.get<"pipeline_">().obj(),
-                       format);
+  helpers::Saver::save(tfile.path() + "/obj", _params.pipeline().obj(), format);
 
-  _params.get<"pipeline_">().scores().save(tfile.path() + "/scores", format);
+  _params.pipeline().scores().save(tfile.path() + "/scores", format);
 
-  _params.get<"fitted_">().feature_selectors_.impl_->save(
+  _params.fitted().feature_selectors_.impl_->save(
       tfile.path() + "/feature-selector-impl", format);
 
-  _params.get<"fitted_">().predictors_.impl_->save(
-      tfile.path() + "/predictor-impl", format);
+  _params.fitted().predictors_.impl_->save(tfile.path() + "/predictor-impl",
+                                           format);
 
-  save_predictors(_params.get<"fitted_">().feature_selectors_.predictors_,
+  save_predictors(_params.fitted().feature_selectors_.predictors_,
                   "feature-selector", tfile, format);
 
-  save_predictors(_params.get<"fitted_">().predictors_.predictors_, "predictor",
-                  tfile, format);
+  save_predictors(_params.fitted().predictors_.predictors_, "predictor", tfile,
+                  format);
 
   using DialectType = typename transpilation::TranspilationParams::DialectType;
 
@@ -103,7 +102,7 @@ void save(const SaveParams& _params) {
       rfl::Field<"schema_", std::string>(""));
 
   const auto to_sql_params = rfl::from_named_tuple<ToSQLParams>(
-      _params *
+      rfl::to_named_tuple(_params) *
       rfl::make_field<"size_threshold_", std::optional<size_t>>(std::nullopt) *
       rfl::make_field<"full_pipeline_">(true) *
       rfl::make_field<"targets_">(true) *
@@ -114,17 +113,16 @@ void save(const SaveParams& _params) {
   utils::SQLDependencyTracker(tfile.path() + "/SQL/")
       .save_dependencies(sql_code);
 
-  move_tfile(_params.get<"path_">(), _params.get<"name_">(), &tfile);
+  move_tfile(_params.path(), _params.name(), &tfile);
 }
 
 // ----------------------------------------------------------------------------
 
 void save_feature_learners(const SaveParams& _params,
                            const Poco::TemporaryFile& _tfile) {
-  const auto format = _params.get<"format_">();
-  for (size_t i = 0; i < _params.get<"fitted_">().feature_learners_.size();
-       ++i) {
-    const auto& fl = _params.get<"fitted_">().feature_learners_.at(i);
+  const auto format = _params.format();
+  for (size_t i = 0; i < _params.fitted().feature_learners_.size(); ++i) {
+    const auto& fl = _params.fitted().feature_learners_.at(i);
     fl->save(_tfile.path() + "/feature-learner-" + std::to_string(i), format);
   }
 }
@@ -133,9 +131,9 @@ void save_feature_learners(const SaveParams& _params,
 
 void save_pipeline_json(const SaveParams& _params,
                         const Poco::TemporaryFile& _tfile) {
-  const auto& p = _params.get<"pipeline_">();
+  const auto& p = _params.pipeline();
 
-  const auto& f = _params.get<"fitted_">();
+  const auto& f = _params.fitted();
 
   const auto pipeline_json =
       PipelineJSON{.fingerprints = f.fingerprints_,
@@ -148,7 +146,7 @@ void save_pipeline_json(const SaveParams& _params,
                    .targets = f.targets()};
 
   helpers::Saver::save(_tfile.path() + "/pipeline", pipeline_json,
-                       _params.get<"format_">());
+                       _params.format());
 }
 
 // ----------------------------------------------------------------------------
@@ -172,9 +170,9 @@ void save_predictors(
 
 void save_preprocessors(const SaveParams& _params,
                         const Poco::TemporaryFile& _tfile) {
-  const auto format = _params.get<"format_">();
-  for (size_t i = 0; i < _params.get<"fitted_">().preprocessors_.size(); ++i) {
-    const auto& p = _params.get<"fitted_">().preprocessors_.at(i);
+  const auto format = _params.format();
+  for (size_t i = 0; i < _params.fitted().preprocessors_.size(); ++i) {
+    const auto& p = _params.fitted().preprocessors_.at(i);
     p->save(_tfile.path() + "/preprocessor-" + std::to_string(i), format);
   }
 }
