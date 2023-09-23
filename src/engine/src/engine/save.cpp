@@ -14,11 +14,10 @@
 #include "engine/pipelines/ToSQLParams.hpp"
 #include "engine/pipelines/to_sql.hpp"
 #include "engine/utils/SQLDependencyTracker.hpp"
-#include "flexbuffers/from_flexbuffers.hpp"
-#include "flexbuffers/to_flexbuffers.hpp"
 #include "helpers/Saver.hpp"
 #include "rfl/Field.hpp"
 #include "rfl/NamedTuple.hpp"
+#include "rfl/from_named_tuple.hpp"
 
 namespace engine {
 namespace pipelines {
@@ -103,7 +102,7 @@ void save(const SaveParams& _params) {
       rfl::Field<"nchar_text_", size_t>(4096) *
       rfl::Field<"schema_", std::string>(""));
 
-  const auto to_sql_params = ToSQLParams(
+  const auto to_sql_params = rfl::from_named_tuple<ToSQLParams>(
       _params *
       rfl::make_field<"size_threshold_", std::optional<size_t>>(std::nullopt) *
       rfl::make_field<"full_pipeline_">(true) *
