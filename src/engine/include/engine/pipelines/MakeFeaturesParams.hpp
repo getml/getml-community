@@ -35,7 +35,7 @@ using MakeFeaturesParams = rfl::NamedTuple<
 
     /// Contains all of the names of all data frames or views needed for fitting
     /// the pipeline.
-    rfl::Field<"cmd_", commands::DataFramesOrViews>,
+    rfl::Field<"cmd_", rfl::named_tuple_t<commands::DataFramesOrViews>>,
 
     /// Keeps track of the data frames and their fingerprints.
     rfl::Field<"data_frame_tracker_", dependency::DataFrameTracker>,

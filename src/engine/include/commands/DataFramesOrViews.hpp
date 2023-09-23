@@ -19,10 +19,11 @@ namespace commands {
 
 /// The commands to retrieve data frames or view,
 /// used by many commands related to the pipelines.
-using DataFramesOrViews = rfl::NamedTuple<
-    rfl::Field<"population_df_", DataFrameOrView>,
-    rfl::Field<"peripheral_dfs_", std::vector<DataFrameOrView>>,
-    rfl::Field<"validation_df_", std::optional<DataFrameOrView>>>;
+struct DataFramesOrViews {
+  rfl::Field<"population_df_", DataFrameOrView> population_df;
+  rfl::Field<"peripheral_dfs_", std::vector<DataFrameOrView>> peripheral_dfs;
+  rfl::Field<"validation_df_", std::optional<DataFrameOrView>> validation_df;
+};
 
 }  // namespace commands
 

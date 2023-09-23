@@ -22,6 +22,7 @@
 #include "engine/pipelines/to_sql.hpp"
 #include "rfl/Field.hpp"
 #include "rfl/always_false.hpp"
+#include "rfl/as.hpp"
 #include "rfl/make_named_tuple.hpp"
 #include "transpilation/TranspilationParams.hpp"
 #include "transpilation/transpilation.hpp"
@@ -193,7 +194,7 @@ void PipelineManager::check(const typename Command::CheckOp& _cmd,
   const auto local_join_keys_encoding = rfl::Ref<containers::Encoding>::make(
       pool, params_.join_keys_encoding_.ptr());
 
-  const commands::DataFramesOrViews cmd = rfl::to_named_tuple(_cmd);
+  const auto cmd = rfl::as<commands::DataFramesOrViews>(_cmd);
 
   const auto [population_df, peripheral_dfs, _] =
       ViewParser(local_categories, local_join_keys_encoding,
@@ -375,7 +376,7 @@ void PipelineManager::fit(const typename Command::FitOp& _cmd,
   const auto local_join_keys_encoding = rfl::Ref<containers::Encoding>::make(
       pool, params_.join_keys_encoding_.ptr());
 
-  const commands::DataFramesOrViews cmd = rfl::to_named_tuple(_cmd);
+  const auto cmd = rfl::as<commands::DataFramesOrViews>(_cmd);
 
   const auto [population_df, peripheral_dfs, validation_df] =
       ViewParser(local_categories, local_join_keys_encoding,
@@ -384,7 +385,7 @@ void PipelineManager::fit(const typename Command::FitOp& _cmd,
 
   const auto params = pipelines::FitParams(
       rfl::make_field<"categories_">(local_categories),
-      rfl::make_field<"cmd_">(cmd),
+      rfl::make_field<"cmd_">(rfl::to_named_tuple(cmd)),
       rfl::make_field<"data_frames_">(data_frames()),
       rfl::make_field<"data_frame_tracker_">(data_frame_tracker()),
       rfl::make_field<"fe_tracker_">(params_.fe_tracker_),
@@ -780,7 +781,7 @@ void PipelineManager::transform(const typename Command::TransformOp& _cmd,
   const auto [population_df, peripheral_dfs, _] =
       ViewParser(local_categories, local_join_keys_encoding, local_data_frames,
                  params_.options_)
-          .parse_all(rfl::to_named_tuple(cmd));
+          .parse_all(rfl::as<commands::DataFramesOrViews>(cmd));
 
   // IMPORTANT: Use categories_, not local_categories, otherwise
   // .vector() might not work.

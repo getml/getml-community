@@ -23,13 +23,15 @@
 #include "rfl/Field.hpp"
 #include "rfl/Literal.hpp"
 #include "rfl/define_named_tuple.hpp"
+#include "rfl/named_tuple_t.hpp"
 
 namespace engine {
 namespace pipelines {
 
-using TransformCmdType = rfl::define_named_tuple_t<commands::DataFramesOrViews,
-                                                   rfl::Field<"predict_", bool>,
-                                                   rfl::Field<"score_", bool>>;
+using TransformCmdType =
+    rfl::define_named_tuple_t<rfl::named_tuple_t<commands::DataFramesOrViews>,
+                              rfl::Field<"predict_", bool>,
+                              rfl::Field<"score_", bool>>;
 
 using TransformParams = rfl::NamedTuple<
 
