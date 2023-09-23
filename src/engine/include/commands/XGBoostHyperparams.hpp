@@ -16,109 +16,16 @@
 #include "commands/Int.hpp"
 #include "rfl/Field.hpp"
 #include "rfl/Literal.hpp"
-#include "rfl/NamedTuple.hpp"
+#include "rfl/named_tuple_t.hpp"
 
 namespace commands {
 
 /// Hyperparameters for XGBoost.
 struct XGBoostHyperparams {
-  /// L1 regularization term on weights
-  using f_alpha = rfl::Field<"reg_alpha_", Float>;
-
-  /// Specify which booster to use: gbtree, gblinear or dart.
-  using f_booster =
-      rfl::Field<"booster_", rfl::Literal<"gbtree", "gblinear", "dart">>;
-
-  /// Subsample ratio of columns for each split, in each level.
-  using f_colsample_bylevel = rfl::Field<"colsample_bylevel_", Float>;
-
-  /// Subsample ratio of columns when constructing each tree.
-  using f_colsample_bytree = rfl::Field<"colsample_bytree_", Float>;
-
-  /// Maximum number of no improvements to trigger early stopping.
-  using f_early_stopping_rounds = rfl::Field<"early_stopping_rounds_", size_t>;
-
-  /// Boosting learning rate
-  using f_eta = rfl::Field<"learning_rate_", Float>;
-
-  /// Whether you want to use external_memory_ (only as an affect when
-  /// memory mapping is used).
-  using f_external_memory = rfl::Field<"external_memory_", bool>;
-
-  /// Minimum loss reduction required to make a further partition on a leaf
-  /// node of the tree.
-  using f_gamma = rfl::Field<"gamma_", Float>;
-
-  /// L2 regularization term on weights
-  using f_lambda = rfl::Field<"reg_lambda_", Float>;
-
-  /// Maximum delta step we allow each tree’s weight estimation to be.
-  using f_max_delta_step = rfl::Field<"max_delta_step_", Float>;
-
-  /// Maximum tree depth for base learners
-  using f_max_depth = rfl::Field<"max_depth_", size_t>;
-
-  /// Minimum sum of instance weight needed in a child
-  using f_min_child_weights = rfl::Field<"min_child_weights_", Float>;
-
-  /// Number of iterations (number of trees in boosted ensemble)
-  using f_n_iter = rfl::Field<"n_estimators_", size_t>;
-
-  /// For dart only. Which normalization to use.
-  using f_normalize_type =
-      rfl::Field<"normalize_type_", rfl::Literal<"tree", "forest">>;
-
-  /// ...
-  using f_num_parallel_tree = rfl::Field<"num_parallel_tree_", size_t>;
-
-  /// Number of parallel threads used to run xgboost
-  using f_nthread = rfl::Field<"n_jobs_", Int>;
-
-  /// The objective for the learning function.
-  using f_objective =
-      rfl::Field<"objective_", rfl::Literal<"reg:linear", "reg:squarederror",
-                                            "reg:logistic", "binary:logistic",
-                                            "binary:logitraw", "reg:tweedie">>;
-
-  /// For dart only. If true, at least one tree will be dropped out.
-  using f_one_drop = rfl::Field<"one_drop_", bool>;
-
-  /// For dart only. Dropout rate.
-  using f_rate_drop = rfl::Field<"rate_drop_", Float>;
-
-  /// For dart only. Whether you want to use "uniform" or "weighted"
-  /// sampling
-  using f_sample_type =
-      rfl::Field<"sample_type_", rfl::Literal<"uniform", "weighted">>;
-
-  /// Whether to print messages while running boosting
-  using f_silent = rfl::Field<"silent_", bool>;
-
-  /// For dart only. Probability of skipping dropout.
-  using f_skip_drop = rfl::Field<"skip_drop_", Float>;
-
-  /// Subsample ratio of the training instance.
-  using f_subsample = rfl::Field<"subsample_", Float>;
-
-  /// Signifies this as XGBoost hyperparameters.
-  using f_type =
-      rfl::Field<"type_", rfl::Literal<"XGBoostPredictor", "XGBoostClassifier",
-                                       "XGBoostRegressor">>;
-
-  using NamedTupleType = rfl::NamedTuple<
-      f_type, f_alpha, f_booster, f_colsample_bylevel, f_colsample_bytree,
-      f_early_stopping_rounds, f_eta, f_external_memory, f_gamma, f_lambda,
-      f_max_delta_step, f_max_depth, f_min_child_weights, f_n_iter,
-      f_normalize_type, f_num_parallel_tree, f_nthread, f_objective, f_one_drop,
-      f_rate_drop, f_sample_type, f_silent, f_skip_drop, f_subsample>;
-
-  XGBoostHyperparams(const NamedTupleType &_val) : val_(_val) {}
-
-  ~XGBoostHyperparams() = default;
-
   /// Applies the hyperparameters to an XGBoost Handler
   template <int _i = 0>
   inline void apply(BoosterHandle _handle) const {
+    using NamedTupleType = rfl::named_tuple_t<XGBoostHyperparams>;
     using Fields = typename NamedTupleType::Fields;
 
     if constexpr (_i == std::tuple_size_v<Fields>) {
@@ -145,7 +52,7 @@ struct XGBoostHyperparams {
 
       constexpr bool is_bool = std::is_same<Type, bool>();
 
-      const auto value = val_.get<_i>();
+      const auto value = rfl::get<_i>(rfl::to_named_tuple(*this));
 
       if constexpr (is_numeric) {
         XGBoosterSetParam(_handle, name.c_str(), std::to_string(value).c_str());
@@ -159,8 +66,85 @@ struct XGBoostHyperparams {
     }
   }
 
-  /// The underlying named tuple.
-  NamedTupleType val_;
+  /// L1 regularization term on weights
+  rfl::Field<"reg_alpha_", Float> alpha;
+
+  /// Specify which booster to use: gbtree, gblinear or dart.
+  rfl::Field<"booster_", rfl::Literal<"gbtree", "gblinear", "dart">> booster;
+
+  /// Subsample ratio of columns for each split, in each level.
+  rfl::Field<"colsample_bylevel_", Float> colsample_bylevel;
+
+  /// Subsample ratio of columns when constructing each tree.
+  rfl::Field<"colsample_bytree_", Float> f_colsample_bytree;
+
+  /// Maximum number of no improvements to trigger early stopping.
+  rfl::Field<"early_stopping_rounds_", size_t> early_stopping_rounds;
+
+  /// Boosting learning rate
+  rfl::Field<"learning_rate_", Float> eta;
+
+  /// Whether you want to use external_memory_ (only as an affect when
+  /// memory mapping is used).
+  rfl::Field<"external_memory_", bool> external_memory;
+
+  /// Minimum loss reduction required to make a further partition on a leaf
+  /// node of the tree.
+  rfl::Field<"gamma_", Float> gamma;
+
+  /// L2 regularization term on weights
+  rfl::Field<"reg_lambda_", Float> lambda;
+
+  /// Maximum delta step we allow each tree’s weight estimation to be.
+  rfl::Field<"max_delta_step_", Float> max_delta_step;
+
+  /// Maximum tree depth for base learners
+  rfl::Field<"max_depth_", size_t> max_depth;
+
+  /// Minimum sum of instance weight needed in a child
+  rfl::Field<"min_child_weights_", Float> min_child_weights;
+
+  /// Number of iterations (number of trees in boosted ensemble)
+  rfl::Field<"n_estimators_", size_t> n_estimators;
+
+  /// For dart only. Which normalization to use.
+  rfl::Field<"normalize_type_", rfl::Literal<"tree", "forest">> normalize_type;
+
+  /// ...
+  rfl::Field<"num_parallel_tree_", size_t> num_parallel_tree;
+
+  /// Number of parallel threads used to run xgboost
+  rfl::Field<"n_jobs_", Int> nthread;
+
+  /// The objective for the learning function.
+  rfl::Field<"objective_",
+             rfl::Literal<"reg:linear", "reg:squarederror", "reg:logistic",
+                          "binary:logistic", "binary:logitraw", "reg:tweedie">>
+      objective;
+
+  /// For dart only. If true, at least one tree will be dropped out.
+  rfl::Field<"one_drop_", bool> one_drop;
+
+  /// For dart only. Dropout rate.
+  rfl::Field<"rate_drop_", Float> rate_drop;
+
+  /// For dart only. Whether you want to use "uniform" or "weighted"
+  /// sampling
+  rfl::Field<"sample_type_", rfl::Literal<"uniform", "weighted">> sample_type;
+
+  /// Whether to print messages while running boosting
+  rfl::Field<"silent_", bool> silent;
+
+  /// For dart only. Probability of skipping dropout.
+  rfl::Field<"skip_drop_", Float> skip_drop;
+
+  /// Subsample ratio of the training instance.
+  rfl::Field<"subsample_", Float> subsample;
+
+  /// Signifies this as XGBoost hyperparameters.
+  rfl::Field<"type_", rfl::Literal<"XGBoostPredictor", "XGBoostClassifier",
+                                   "XGBoostRegressor">>
+      type;
 };
 
 }  // namespace commands
