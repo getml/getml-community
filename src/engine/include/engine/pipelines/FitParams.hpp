@@ -23,6 +23,7 @@
 #include "rfl/Field.hpp"
 #include "rfl/NamedTuple.hpp"
 #include "rfl/Ref.hpp"
+#include "rfl/named_tuple_t.hpp"
 
 namespace engine {
 namespace pipelines {
@@ -34,7 +35,7 @@ using FitParams = rfl::NamedTuple<
 
     /// Contains all of the names of all data frames or views needed for fitting
     /// the pipeline.
-    rfl::Field<"cmd_", commands::DataFramesOrViews>,
+    rfl::Field<"cmd_", rfl::named_tuple_t<commands::DataFramesOrViews>>,
 
     /// Contains all of the data frames - we need this, because it might be
     /// possible that the features are retrieved.

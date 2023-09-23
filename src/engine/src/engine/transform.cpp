@@ -16,6 +16,7 @@
 #include "engine/pipelines/staging.hpp"
 #include "json/json.hpp"
 #include "metrics/Scores.hpp"
+#include "rfl/as.hpp"
 #include "transpilation/SQLDialectParser.hpp"
 
 namespace engine {
@@ -101,7 +102,8 @@ apply_preprocessors(const FeaturesOnlyParams& _params,
         rfl::make_field<"categories_">(
             _params.get<"transform_params_">().get<"categories_">()),
         rfl::make_field<"cmd_", commands::DataFramesOrViews>(
-            _params.get<"transform_params_">().get<"cmd_">()),
+            rfl::as<commands::DataFramesOrViews>(
+                _params.get<"transform_params_">().get<"cmd_">())),
         rfl::make_field<"logger_">(socket_logger),
         rfl::make_field<"logging_begin_">(
             (i * 100) / _params.get<"preprocessors_">().size()),
@@ -141,7 +143,10 @@ containers::NumericalFeatures generate_autofeatures(
     const auto& index = _params.get<"predictor_impl_">()->autofeatures().at(i);
 
     const auto params = featurelearners::TransformParams(
-        _params.get_field<"cmd_">(), _params.get_field<"peripheral_dfs_">(),
+        rfl::make_field<"cmd_">(
+            rfl::from_named_tuple<commands::DataFramesOrViews>(
+                _params.get<"cmd_">())),
+        _params.get_field<"peripheral_dfs_">(),
         _params.get_field<"population_df_">(),
         rfl::make_field<"prefix_">(std::to_string(i + 1) + "_"),
         rfl::make_field<"socket_logger_">(socket_logger),

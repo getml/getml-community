@@ -25,6 +25,7 @@
 #include "predictors/Predictor.hpp"
 #include "rfl/Field.hpp"
 #include "rfl/make_named_tuple.hpp"
+#include "rfl/to_named_tuple.hpp"
 
 namespace engine {
 namespace pipelines {
@@ -276,7 +277,8 @@ std::pair<rfl::Ref<const FittedPipeline>, rfl::Ref<const metrics::Scores>> fit(
     const Pipeline& _pipeline, const FitParams& _params) {
   const auto fit_preprocessors_params = FitPreprocessorsParams{
       .categories_ = _params.get<"categories_">(),
-      .cmd_ = _params.get<"cmd_">(),
+      .cmd_ = rfl::from_named_tuple<commands::DataFramesOrViews>(
+          _params.get<"cmd_">()),
       .logger_ = _params.get<"logger_">(),
       .peripheral_dfs_ = _params.get<"peripheral_dfs_">(),
       .population_df_ = _params.get<"population_df_">(),
@@ -444,7 +446,9 @@ fit_feature_learners(
     }
 
     const auto params = featurelearners::FitParams(
-        _params.get_field<"cmd_">(),
+        rfl::make_field<"cmd_">(
+            rfl::from_named_tuple<commands::DataFramesOrViews>(
+                _params.get<"cmd_">())),
         rfl::make_field<"peripheral_dfs_">(_peripheral_dfs),
         rfl::make_field<"population_df_">(_population_df),
         rfl::make_field<"prefix_">(std::to_string(i + 1) + "_"),
@@ -487,7 +491,7 @@ fit_predictors(const FitPredictorsParams& _params) {
 
   const auto make_features_params = MakeFeaturesParams(
       _params * fit_params.get_field<"categories_">() *
-      fit_params.get_field<"cmd_">() *
+      rfl::make_field<"cmd_">(rfl::to_named_tuple(fit_params.get<"cmd_">())) *
       fit_params.get_field<"data_frame_tracker_">() *
       fit_params.get_field<"logger_">() *
       rfl::make_field<"original_peripheral_dfs_">(
@@ -891,7 +895,7 @@ make_features_validation(const FitPredictorsParams& _params) {
 
   const auto transform_params = TransformParams{
       .categories_ = _params.get<"fit_params_">().get<"categories_">(),
-      .cmd_ = _params.get<"fit_params_">().get<"cmd_">() *
+      .cmd_ = rfl::to_named_tuple(_params.get<"fit_params_">().get<"cmd_">()) *
               rfl::make_field<"predict_">(false) *
               rfl::make_field<"score_">(false),
       .data_frames_ = _params.get<"fit_params_">().get<"data_frames_">(),

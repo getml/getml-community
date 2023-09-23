@@ -364,11 +364,11 @@ ViewParser::parse_all(const commands::DataFramesOrViews& _cmd) const {
     return parse(_obj);
   };
 
-  const auto population_obj = _cmd.get<"population_df_">();
+  const auto population_obj = _cmd.population_df();
 
-  const auto peripheral_objs = _cmd.get<"peripheral_dfs_">();
+  const auto peripheral_objs = _cmd.peripheral_dfs();
 
-  const auto validation_obj = _cmd.get<"validation_df_">();
+  const auto validation_obj = _cmd.validation_df();
 
   const auto population = to_df(population_obj);
 
