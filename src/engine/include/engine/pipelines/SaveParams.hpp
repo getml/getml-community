@@ -24,28 +24,28 @@
 namespace engine {
 namespace pipelines {
 
-using SaveParams = rfl::NamedTuple<
+struct SaveParams {
+  /// Encodes the categories.
+  rfl::Field<"categories_", const helpers::StringIterator> categories;
 
-    /// Encodes the categories.
-    rfl::Field<"categories_", const helpers::StringIterator>,
+  /// The fitted pipeline.
+  rfl::Field<"fitted_", FittedPipeline> fitted;
 
-    /// The fitted pipeline.
-    rfl::Field<"fitted_", FittedPipeline>,
+  /// The file format to use.
+  rfl::Field<"format_", typename helpers::Saver::Format> format;
 
-    /// The file format to use.
-    rfl::Field<"format_", typename helpers::Saver::Format>,
+  /// The name of the pipeline to be save.
+  rfl::Field<"name_", std::string> name;
 
-    /// The name of the pipeline to be save.
-    rfl::Field<"name_", std::string>,
+  /// The path in which to save the final result.
+  rfl::Field<"path_", std::string> path;
 
-    /// The path in which to save the final result.
-    rfl::Field<"path_", std::string>,
+  /// The underlying pipeline,
+  rfl::Field<"pipeline_", Pipeline> pipeline;
 
-    /// The underlying pipeline,
-    rfl::Field<"pipeline_", Pipeline>,
-
-    /// A path to a temporary directory.
-    rfl::Field<"temp_dir_", std::string> >;
+  /// A path to a temporary directory.
+  rfl::Field<"temp_dir_", std::string> temp_dir;
+};
 
 }  // namespace pipelines
 }  // namespace engine

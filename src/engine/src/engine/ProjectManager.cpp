@@ -404,12 +404,14 @@ void ProjectManager::save_pipeline(const typename Command::SavePipelineOp& _cmd,
   // will ever be set. Therefore, the format chosen is actually determined here.
   const auto format = _cmd.format().value_or(Format::make<"flexbuffers">());
 
-  const auto params = pipelines::SaveParams(
-      rfl::make_field<"categories_">(categories().strings()) *
-      rfl::make_field<"fitted_">(*fitted) * rfl::make_field<"format_">(format) *
-      rfl::make_field<"name_">(name) * rfl::make_field<"path_">(path) *
-      rfl::make_field<"pipeline_">(pipeline) *
-      rfl::make_field<"temp_dir_">(params_.options_.temp_dir()));
+  const auto params =
+      pipelines::SaveParams{.categories = categories().strings(),
+                            .fitted = *fitted,
+                            .format = format,
+                            .name = name,
+                            .path = path,
+                            .pipeline = pipeline,
+                            .temp_dir = params_.options_.temp_dir()};
 
   pipelines::save::save(params);
 
