@@ -358,21 +358,22 @@ std::pair<rfl::Ref<const FittedPipeline>, rfl::Ref<const metrics::Scores>> fit(
   const bool score = predictors.size() > 0 && predictors.at(0).size() > 0;
 
   const auto score_params =
-      score
-          ? std::make_optional<MakeFeaturesParams>(MakeFeaturesParams(
-                _params.replace(rfl::make_field<"peripheral_dfs_">(
-                                    preprocessed.peripheral_dfs_),
-                                rfl::make_field<"population_df_">(
-                                    preprocessed.population_df_)) *
-                rfl::make_field<"dependencies_">(fs_fingerprints) *
-                rfl::make_field<"original_peripheral_dfs_">(
-                    _params.get<"peripheral_dfs_">()) *
-                rfl::make_field<"original_population_df_">(
-                    _params.get<"population_df_">()) *
-                rfl::make_field<"predictor_impl_">(predictor_impl) *
-                rfl::make_field<"autofeatures_",
-                                containers::NumericalFeatures*>(&autofeatures)))
-          : std::nullopt;
+      score ? std::make_optional<MakeFeaturesParams>(
+                  rfl::from_named_tuple<MakeFeaturesParams>(
+                      _params.replace(rfl::make_field<"peripheral_dfs_">(
+                                          preprocessed.peripheral_dfs_),
+                                      rfl::make_field<"population_df_">(
+                                          preprocessed.population_df_)) *
+                      rfl::make_field<"dependencies_">(fs_fingerprints) *
+                      rfl::make_field<"original_peripheral_dfs_">(
+                          _params.get<"peripheral_dfs_">()) *
+                      rfl::make_field<"original_population_df_">(
+                          _params.get<"population_df_">()) *
+                      rfl::make_field<"predictor_impl_">(predictor_impl) *
+                      rfl::make_field<"autofeatures_",
+                                      containers::NumericalFeatures*>(
+                          &autofeatures)))
+            : std::nullopt;
 
   const auto fingerprints = Fingerprints(
       rfl::make_field<"df_fingerprints_">(preprocessed.df_fingerprints_),
@@ -489,7 +490,7 @@ fit_predictors(const FitPredictorsParams& _params) {
 
   const auto& fit_params = _params.get<"fit_params_">();
 
-  const auto make_features_params = MakeFeaturesParams(
+  const auto make_features_params = rfl::from_named_tuple<MakeFeaturesParams>(
       _params * fit_params.get_field<"categories_">() *
       rfl::make_field<"cmd_">(rfl::to_named_tuple(fit_params.get<"cmd_">())) *
       fit_params.get_field<"data_frame_tracker_">() *
@@ -1043,10 +1044,9 @@ rfl::Ref<const metrics::Scores> score_after_fitting(
   const auto get_name = [](const auto& _c) -> const auto& { return _c.name(); };
 
   const auto& name =
-      rfl::visit(get_name, _params.get<"cmd_">().get<"population_df_">().val_);
+      rfl::visit(get_name, _params.cmd().get<"population_df_">().val_);
 
-  return score::score(_pipeline, _fitted, _params.get<"population_df_">(), name,
-                      yhat);
+  return score::score(_pipeline, _fitted, _params.population_df(), name, yhat);
 }
 
 }  // namespace fit
