@@ -94,12 +94,12 @@ void save(const SaveParams& _params) {
 
   using DialectType = typename transpilation::TranspilationParams::DialectType;
 
-  const auto transpilation_params = transpilation::TranspilationParams(
-      rfl::make_field<"dialect_">(DialectType::make<"human-readable sql">()) *
-      rfl::Field<"nchar_categorical_", size_t>(128) *
-      rfl::Field<"nchar_join_key_", size_t>(128) *
-      rfl::Field<"nchar_text_", size_t>(4096) *
-      rfl::Field<"schema_", std::string>(""));
+  const auto transpilation_params = transpilation::TranspilationParams{
+      .dialect = DialectType::make<"human-readable sql">(),
+      .nchar_categorical = 128,
+      .nchar_join_key = 128,
+      .nchar_text = 4096,
+      .schema = ""};
 
   const auto to_sql_params = rfl::from_named_tuple<ToSQLParams>(
       rfl::to_named_tuple(_params) *

@@ -708,15 +708,15 @@ containers::DataFrame PipelineManager::to_df(
 
 void PipelineManager::to_sql(const typename Command::ToSQLOp& _cmd,
                              Poco::Net::StreamSocket* _socket) {
-  const auto name = _cmd.get<"name_">();
+  const auto name = _cmd.name();
 
-  const auto targets = _cmd.get<"targets_">();
+  const auto targets = _cmd.targets();
 
-  const auto subfeatures = _cmd.get<"subfeatures_">();
+  const auto subfeatures = _cmd.subfeatures();
 
-  const auto size_threshold = _cmd.get<"size_threshold_">();
+  const auto size_threshold = _cmd.size_threshold();
 
-  const auto transpilation_params = transpilation::TranspilationParams(_cmd);
+  const auto transpilation_params = _cmd.transpilation_params();
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 

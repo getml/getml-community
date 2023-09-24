@@ -21,37 +21,20 @@ struct TranspilationParams {
   using DialectType = rfl::Literal<"bigquery", "human-readable sql", "mysql",
                                    "postgres", "spark sql", "sqlite3", "tsql">;
 
-  using NamedTupleType =
-      rfl::NamedTuple<rfl::Field<"dialect_", DialectType>,
-                      rfl::Field<"nchar_categorical_", size_t>,
-                      rfl::Field<"nchar_join_key_", size_t>,
-                      rfl::Field<"nchar_text_", size_t>,
-                      rfl::Field<"schema_", std::string> >;
-
-  /// Generates a new set of transpilation params from a JSON.
-  TranspilationParams(const NamedTupleType& _cmd)
-      : dialect_(_cmd.get<"dialect_">()),
-        nchar_categorical_(_cmd.get<"nchar_categorical_">()),
-        nchar_join_key_(_cmd.get<"nchar_join_key_">()),
-        nchar_text_(_cmd.get<"nchar_text_">()),
-        schema_(_cmd.get<"schema_">()){};
-
-  ~TranspilationParams() = default;
-
   /// The dialect used
-  const DialectType dialect_;
+  rfl::Field<"dialect_", DialectType> dialect;
 
   /// Number of characters in categorical columns.
-  const size_t nchar_categorical_;
+  rfl::Field<"nchar_categorical_", size_t> nchar_categorical;
 
   /// Number of characters in join key columns.
-  const size_t nchar_join_key_;
+  rfl::Field<"nchar_join_key_", size_t> nchar_join_key;
 
   /// Number of characters in text columns.
-  const size_t nchar_text_;
+  rfl::Field<"nchar_text_", size_t> nchar_text;
 
   /// The schema used.
-  const std::string schema_;
+  rfl::Field<"schema_", std::string> schema;
 };
 
 }  // namespace transpilation
