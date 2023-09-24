@@ -911,7 +911,7 @@ make_features_validation(const FitPredictorsParams& _params) {
                                           // validation_df here
       .socket_ = _params.get<"fit_params_">().get<"socket_">()};
 
-  const auto features_only_params = FeaturesOnlyParams(
+  const auto features_only_params = rfl::from_named_tuple<FeaturesOnlyParams>(
       _params *
       rfl::make_field<"fs_fingerprints_">(
           _params.get<"fit_params_">().get<"fs_fingerprints_">()) *

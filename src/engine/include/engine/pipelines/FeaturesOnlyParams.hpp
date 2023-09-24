@@ -24,33 +24,38 @@
 namespace engine {
 namespace pipelines {
 
-using FeaturesOnlyParams = rfl::NamedTuple<
+struct FeaturesOnlyParams {
+  /// The depedencies of the predictors.
+  rfl::Field<"dependencies_",
+             rfl::Ref<const std::vector<commands::Fingerprint>>>
+      dependencies;
 
-    /// The depedencies of the predictors.
-    rfl::Field<"dependencies_",
-               rfl::Ref<const std::vector<commands::Fingerprint>>>,
+  /// The feature learners used in this pipeline.
+  rfl::Field<
+      "feature_learners_",
+      std::vector<rfl::Ref<const featurelearners::AbstractFeatureLearner>>>
+      feature_learners;
 
-    /// The feature learners used in this pipeline.
-    rfl::Field<
-        "feature_learners_",
-        std::vector<rfl::Ref<const featurelearners::AbstractFeatureLearner>>>,
+  /// The fingerprints of the feature selectors used for fitting.
+  rfl::Field<"fs_fingerprints_",
+             rfl::Ref<const std::vector<commands::Fingerprint>>>
+      fs_fingerprints;
 
-    /// The fingerprints of the feature selectors used for fitting.
-    rfl::Field<"fs_fingerprints_",
-               rfl::Ref<const std::vector<commands::Fingerprint>>>,
+  /// The underlying pipeline
+  rfl::Field<"pipeline_", Pipeline> pipeline;
 
-    /// The underlying pipeline
-    rfl::Field<"pipeline_", Pipeline>,
+  /// The preprocessors used in this pipeline.
+  rfl::Field<"preprocessors_",
+             std::vector<rfl::Ref<const preprocessors::Preprocessor>>>
+      preprocessors;
 
-    /// The preprocessors used in this pipeline.
-    rfl::Field<"preprocessors_",
-               std::vector<rfl::Ref<const preprocessors::Preprocessor>>>,
+  /// Pimpl for the predictors.
+  rfl::Field<"predictor_impl_", rfl::Ref<const predictors::PredictorImpl>>
+      predictor_impl;
 
-    /// Pimpl for the predictors.
-    rfl::Field<"predictor_impl_", rfl::Ref<const predictors::PredictorImpl>>,
-
-    /// The parameters needed for transform(...).
-    rfl::Field<"transform_params_", TransformParams>>;
+  /// The parameters needed for transform(...).
+  rfl::Field<"transform_params_", TransformParams> transform_params;
+};
 
 }  // namespace pipelines
 }  // namespace engine
