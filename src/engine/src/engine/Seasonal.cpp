@@ -208,16 +208,16 @@ commands::Fingerprint Seasonal::fingerprint() const {
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
 Seasonal::fit_transform(const Params& _params) {
   const auto population_df = fit_transform_df(
-      _params.get<"population_df_">(), MarkerType::make<"[POPULATION]">(), 0,
-      _params.get<"categories_">().get());
+      _params.population_df(), MarkerType::make<"[POPULATION]">(), 0,
+      _params.categories().get());
 
   auto peripheral_dfs = std::vector<containers::DataFrame>();
 
-  for (size_t i = 0; i < _params.get<"peripheral_dfs_">().size(); ++i) {
-    const auto& df = _params.get<"peripheral_dfs_">().at(i);
+  for (size_t i = 0; i < _params.peripheral_dfs().size(); ++i) {
+    const auto& df = _params.peripheral_dfs().at(i);
 
     const auto new_df = fit_transform_df(df, MarkerType::make<"[PERIPHERAL]">(),
-                                         i, _params.get<"categories_">().get());
+                                         i, _params.categories().get());
 
     peripheral_dfs.push_back(new_df);
   }
@@ -358,16 +358,16 @@ containers::Column<Int> Seasonal::to_int(
 
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
 Seasonal::transform(const Params& _params) const {
-  const auto population_df = transform_df(
-      *_params.get<"categories_">(), _params.get<"population_df_">(),
-      MarkerType::make<"[POPULATION]">(), 0);
+  const auto population_df =
+      transform_df(*_params.categories(), _params.population_df(),
+                   MarkerType::make<"[POPULATION]">(), 0);
 
   auto peripheral_dfs = std::vector<containers::DataFrame>();
 
-  for (size_t i = 0; i < _params.get<"peripheral_dfs_">().size(); ++i) {
-    const auto& df = _params.get<"peripheral_dfs_">().at(i);
+  for (size_t i = 0; i < _params.peripheral_dfs().size(); ++i) {
+    const auto& df = _params.peripheral_dfs().at(i);
 
-    const auto new_df = transform_df(*_params.get<"categories_">(), df,
+    const auto new_df = transform_df(*_params.categories(), df,
                                      MarkerType::make<"[PERIPHERAL]">(), i);
 
     peripheral_dfs.push_back(new_df);

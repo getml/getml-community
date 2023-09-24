@@ -25,35 +25,37 @@
 namespace engine {
 namespace preprocessors {
 
-using Params = rfl::NamedTuple<
+struct Params {
+  /// The Encoding used for the categories.
+  rfl::Field<"categories_", rfl::Ref<containers::Encoding>> categories;
 
-    /// The Encoding used for the categories.
-    rfl::Field<"categories_", rfl::Ref<containers::Encoding>>,
+  /// Contains all of the names of all data frames or views needed for fitting
+  /// the pipeline.
+  rfl::Field<"cmd_", commands::DataFramesOrViews> cmd;
 
-    /// Contains all of the names of all data frames or views needed for fitting
-    /// the pipeline.
-    rfl::Field<"cmd_", commands::DataFramesOrViews>,
+  /// Logs the progress.
+  rfl::Field<"logger_", std::shared_ptr<const communication::SocketLogger>>
+      logger;
 
-    /// Logs the progress.
-    rfl::Field<"logger_", std::shared_ptr<const communication::SocketLogger>>,
+  /// The percentage at which we want the logging to begin.
+  rfl::Field<"logging_begin_", size_t> logging_begin;
 
-    /// The percentage at which we want the logging to begin.
-    rfl::Field<"logging_begin_", size_t>,
+  /// The percentage at which we want the logging to end.
+  rfl::Field<"logging_end_", size_t> logging_end;
 
-    /// The percentage at which we want the logging to end.
-    rfl::Field<"logging_end_", size_t>,
+  /// The peripheral tables.
+  rfl::Field<"peripheral_dfs_", std::vector<containers::DataFrame>>
+      peripheral_dfs;
 
-    /// The peripheral tables.
-    rfl::Field<"peripheral_dfs_", std::vector<containers::DataFrame>>,
+  /// The peripheral tables.
+  rfl::Field<"peripheral_names_", std::vector<std::string>> peripheral_names;
 
-    /// The peripheral tables.
-    rfl::Field<"peripheral_names_", std::vector<std::string>>,
+  /// The peripheral tables.
+  rfl::Field<"placeholder_", helpers::Placeholder> placeholder;
 
-    /// The peripheral tables.
-    rfl::Field<"placeholder_", helpers::Placeholder>,
-
-    /// The population table.
-    rfl::Field<"population_df_", containers::DataFrame>>;
+  /// The population table.
+  rfl::Field<"population_df_", containers::DataFrame> population_df;
+};
 
 }  // namespace preprocessors
 }  // namespace engine
