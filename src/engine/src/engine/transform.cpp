@@ -74,11 +74,11 @@ apply_preprocessors(const FeaturesOnlyParams& _params,
   auto peripheral_dfs = _peripheral_dfs;
 
   const auto [placeholder, peripheral_names] =
-      _params.get<"pipeline_">().make_placeholder();
+      _params.pipeline().make_placeholder();
 
-  const auto& logger = _params.get<"transform_params_">().get<"logger_">();
+  const auto& logger = _params.transform_params().get<"logger_">();
 
-  const auto& socket = _params.get<"transform_params_">().get<"socket_">();
+  const auto& socket = _params.transform_params().get<"socket_">();
 
   const auto socket_logger =
       logger ? std::make_shared<const communication::SocketLogger>(logger, true,
@@ -89,26 +89,26 @@ apply_preprocessors(const FeaturesOnlyParams& _params,
     socket_logger->log("Preprocessing...");
   }
 
-  for (size_t i = 0; i < _params.get<"preprocessors_">().size(); ++i) {
-    const auto progress = (i * 100) / _params.get<"preprocessors_">().size();
+  for (size_t i = 0; i < _params.preprocessors().size(); ++i) {
+    const auto progress = (i * 100) / _params.preprocessors().size();
 
     if (socket_logger) {
       socket_logger->log("Progress: " + std::to_string(progress) + "%.");
     }
 
-    auto& p = _params.get<"preprocessors_">().at(i);
+    auto& p = _params.preprocessors().at(i);
 
     const auto params = preprocessors::Params(
         rfl::make_field<"categories_">(
-            _params.get<"transform_params_">().get<"categories_">()),
+            _params.transform_params().get<"categories_">()),
         rfl::make_field<"cmd_", commands::DataFramesOrViews>(
             rfl::as<commands::DataFramesOrViews>(
-                _params.get<"transform_params_">().get<"cmd_">())),
+                _params.transform_params().get<"cmd_">())),
         rfl::make_field<"logger_">(socket_logger),
-        rfl::make_field<"logging_begin_">(
-            (i * 100) / _params.get<"preprocessors_">().size()),
+        rfl::make_field<"logging_begin_">((i * 100) /
+                                          _params.preprocessors().size()),
         rfl::make_field<"logging_end_">(((i + 1) * 100) /
-                                        _params.get<"preprocessors_">().size()),
+                                        _params.preprocessors().size()),
         rfl::make_field<"peripheral_dfs_">(peripheral_dfs),
         rfl::make_field<"peripheral_names_">(*peripheral_names),
         rfl::make_field<"placeholder_">(*placeholder),
@@ -393,13 +393,13 @@ transform(const TransformParams& _params, const Pipeline& _pipeline,
   }
 
   const auto features_only_params = FeaturesOnlyParams{
-      .dependencies_ = _fitted.fingerprints_.fs_fingerprints(),
-      .feature_learners_ = _fitted.feature_learners_,
-      .fs_fingerprints_ = _fitted.fingerprints_.fs_fingerprints(),
-      .pipeline_ = _pipeline,
-      .preprocessors_ = _fitted.preprocessors_,
-      .predictor_impl_ = _fitted.predictors_.impl_,
-      .transform_params_ = _params};
+      .dependencies = _fitted.fingerprints_.fs_fingerprints(),
+      .feature_learners = _fitted.feature_learners_,
+      .fs_fingerprints = _fitted.fingerprints_.fs_fingerprints(),
+      .pipeline = _pipeline,
+      .preprocessors = _fitted.preprocessors_,
+      .predictor_impl = _fitted.predictors_.impl_,
+      .transform_params = _params};
 
   const auto [numerical_features, categorical_features, population_df] =
       transform_features_only(features_only_params);
@@ -471,29 +471,28 @@ std::tuple<containers::NumericalFeatures, containers::CategoricalFeatures,
            containers::DataFrame>
 transform_features_only(const FeaturesOnlyParams& _params) {
   auto [population_df, peripheral_dfs] = stage_data_frames(
-      _params.get<"pipeline_">(),
-      _params.get<"transform_params_">().get<"original_population_df_">(),
-      _params.get<"transform_params_">().get<"original_peripheral_dfs_">(),
-      _params.get<"transform_params_">().get<"logger_">(),
-      _params.get<"transform_params_">().get<"categories_">()->temp_dir(),
-      _params.get<"transform_params_">().get<"socket_">());
+      _params.pipeline(),
+      _params.transform_params().get<"original_population_df_">(),
+      _params.transform_params().get<"original_peripheral_dfs_">(),
+      _params.transform_params().get<"logger_">(),
+      _params.transform_params().get<"categories_">()->temp_dir(),
+      _params.transform_params().get<"socket_">());
 
   std::tie(population_df, peripheral_dfs) =
       apply_preprocessors(_params, population_df, peripheral_dfs);
 
   const auto make_features_params = rfl::from_named_tuple<MakeFeaturesParams>(
-      _params.get<"transform_params_">() *
-      rfl::make_field<"dependencies_">(_params.get<"dependencies_">()) *
+      _params.transform_params() *
+      rfl::make_field<"dependencies_">(_params.dependencies()) *
       rfl::make_field<"peripheral_dfs_">(peripheral_dfs) *
       rfl::make_field<"population_df_">(population_df) *
-      rfl::make_field<"predictor_impl_">(_params.get<"predictor_impl_">()) *
+      rfl::make_field<"predictor_impl_">(_params.predictor_impl()) *
       rfl::make_field<"autofeatures_", containers::NumericalFeatures*>(
           nullptr));
 
   const auto [numerical_features, categorical_features, _] = make_features(
-      make_features_params, _params.get<"pipeline_">(),
-      _params.get<"feature_learners_">(), *_params.get<"predictor_impl_">(),
-      *_params.get<"fs_fingerprints_">());
+      make_features_params, _params.pipeline(), _params.feature_learners(),
+      *_params.predictor_impl(), *_params.fs_fingerprints());
 
   return std::make_tuple(numerical_features, categorical_features,
                          population_df);
