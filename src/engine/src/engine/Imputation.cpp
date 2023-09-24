@@ -80,12 +80,12 @@ void Imputation::extract_and_add(const MarkerType _marker, const size_t _table,
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
 Imputation::fit_transform(const Params& _params) {
   const auto population_df = fit_transform_df(
-      _params.get<"population_df_">(), MarkerType::make<"[POPULATION]">(), 0);
+      _params.population_df(), MarkerType::make<"[POPULATION]">(), 0);
 
   auto peripheral_dfs = std::vector<containers::DataFrame>();
 
-  for (size_t i = 0; i < _params.get<"peripheral_dfs_">().size(); ++i) {
-    const auto& df = _params.get<"peripheral_dfs_">().at(i);
+  for (size_t i = 0; i < _params.peripheral_dfs().size(); ++i) {
+    const auto& df = _params.peripheral_dfs().at(i);
 
     const auto new_df =
         fit_transform_df(df, MarkerType::make<"[PERIPHERAL]">(), i);
@@ -212,12 +212,12 @@ void Imputation::save(const std::string& _fname,
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
 Imputation::transform(const Params& _params) const {
   const auto population_df = transform_df(
-      _params.get<"population_df_">(), MarkerType::make<"[POPULATION]">(), 0);
+      _params.population_df(), MarkerType::make<"[POPULATION]">(), 0);
 
   auto peripheral_dfs = std::vector<containers::DataFrame>();
 
-  for (size_t i = 0; i < _params.get<"peripheral_dfs_">().size(); ++i) {
-    const auto& df = _params.get<"peripheral_dfs_">().at(i);
+  for (size_t i = 0; i < _params.peripheral_dfs().size(); ++i) {
+    const auto& df = _params.peripheral_dfs().at(i);
 
     const auto new_df = transform_df(df, MarkerType::make<"[PERIPHERAL]">(), i);
 

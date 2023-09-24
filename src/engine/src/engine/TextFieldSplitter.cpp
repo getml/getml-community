@@ -10,6 +10,7 @@
 #include "engine/preprocessors/PreprocessorImpl.hpp"
 #include "helpers/Loader.hpp"
 #include "helpers/Saver.hpp"
+#include "rfl/replace.hpp"
 
 namespace engine {
 namespace preprocessors {
@@ -58,20 +59,19 @@ containers::DataFrame TextFieldSplitter::remove_text_fields(
 
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
 TextFieldSplitter::fit_transform(const Params& _params) {
-  cols_ = fit_df(_params.get<"population_df_">(),
-                 MarkerType::make<"[POPULATION]">());
+  cols_ = fit_df(_params.population_df(), MarkerType::make<"[POPULATION]">());
 
-  for (const auto& df : _params.get<"peripheral_dfs_">()) {
+  for (const auto& df : _params.peripheral_dfs()) {
     const auto new_cols = fit_df(df, MarkerType::make<"[PERIPHERAL]">());
 
     cols_.insert(cols_.end(), new_cols.begin(), new_cols.end());
   }
 
   const auto logging_begin =
-      (_params.get<"logging_begin_">() + _params.get<"logging_end_">()) / 2;
+      (_params.logging_begin() + _params.logging_end()) / 2;
 
   const auto params =
-      _params.replace(rfl::make_field<"logging_begin_">(logging_begin));
+      rfl::replace(_params, rfl::make_field<"logging_begin_">(logging_begin));
 
   return transform(params);
 }
@@ -174,18 +174,17 @@ TextFieldSplitter::transform(const Params& _params) const {
     return _df.num_text() == 0 ? _df : remove_text_fields(add_rowid(_df));
   };
 
-  const auto population_df =
-      modify_if_applicable(_params.get<"population_df_">());
+  const auto population_df = modify_if_applicable(_params.population_df());
 
   const auto range =
-      _params.get<"peripheral_dfs_">() | VIEWS::transform(modify_if_applicable);
+      _params.peripheral_dfs() | VIEWS::transform(modify_if_applicable);
 
   auto peripheral_dfs = fct::collect::vector(range);
 
-  transform_df(MarkerType::make<"[POPULATION]">(),
-               _params.get<"population_df_">(), &peripheral_dfs);
+  transform_df(MarkerType::make<"[POPULATION]">(), _params.population_df(),
+               &peripheral_dfs);
 
-  for (const auto& df : _params.get<"peripheral_dfs_">()) {
+  for (const auto& df : _params.peripheral_dfs()) {
     transform_df(MarkerType::make<"[PERIPHERAL]">(), df, &peripheral_dfs);
   }
 
