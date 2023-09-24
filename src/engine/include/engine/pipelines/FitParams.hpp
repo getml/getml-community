@@ -28,51 +28,56 @@
 namespace engine {
 namespace pipelines {
 
-using FitParams = rfl::NamedTuple<
+struct FitParams {
+  /// The Encoding used for the categories.
+  rfl::Field<"categories_", rfl::Ref<containers::Encoding>> categories;
 
-    /// The Encoding used for the categories.
-    rfl::Field<"categories_", rfl::Ref<containers::Encoding>>,
+  /// Contains all of the names of all data frames or views needed for fitting
+  /// the pipeline.
+  rfl::Field<"cmd_", commands::DataFramesOrViews> cmd;
 
-    /// Contains all of the names of all data frames or views needed for fitting
-    /// the pipeline.
-    rfl::Field<"cmd_", commands::DataFramesOrViews>,
+  /// Contains all of the data frames - we need this, because it might be
+  /// possible that the features are retrieved.
+  rfl::Field<"data_frames_", std::map<std::string, containers::DataFrame>>
+      data_frames;
 
-    /// Contains all of the data frames - we need this, because it might be
-    /// possible that the features are retrieved.
-    rfl::Field<"data_frames_", std::map<std::string, containers::DataFrame>>,
+  /// Keeps track of the data frames and their fingerprints.
+  rfl::Field<"data_frame_tracker_", dependency::DataFrameTracker>
+      data_frame_tracker;
 
-    /// Keeps track of the data frames and their fingerprints.
-    rfl::Field<"data_frame_tracker_", dependency::DataFrameTracker>,
+  /// The dependency tracker for the feature learners.
+  rfl::Field<"fe_tracker_", rfl::Ref<dependency::FETracker>> fe_tracker;
 
-    /// The dependency tracker for the feature learners.
-    rfl::Field<"fe_tracker_", rfl::Ref<dependency::FETracker>>,
+  /// The fingerprints of the feature selectors used for fitting.
+  rfl::Field<"fs_fingerprints_",
+             rfl::Ref<const std::vector<commands::Fingerprint>>>
+      fs_fingerprints;
 
-    /// The fingerprints of the feature selectors used for fitting.
-    rfl::Field<"fs_fingerprints_",
-               rfl::Ref<const std::vector<commands::Fingerprint>>>,
+  /// Logs the progress.
+  rfl::Field<"logger_", std::shared_ptr<const communication::Logger>> logger;
 
-    /// Logs the progress.
-    rfl::Field<"logger_", std::shared_ptr<const communication::Logger>>,
+  /// The peripheral tables.
+  rfl::Field<"peripheral_dfs_", std::vector<containers::DataFrame>>
+      peripheral_dfs;
 
-    /// The peripheral tables.
-    rfl::Field<"peripheral_dfs_", std::vector<containers::DataFrame>>,
+  /// The population table.
+  rfl::Field<"population_df_", containers::DataFrame> population_df;
 
-    /// The population table.
-    rfl::Field<"population_df_", containers::DataFrame>,
+  /// The dependency tracker for the predictors.
+  rfl::Field<"pred_tracker_", rfl::Ref<dependency::PredTracker>> pred_tracker;
 
-    /// The dependency tracker for the predictors.
-    rfl::Field<"pred_tracker_", rfl::Ref<dependency::PredTracker>>,
+  /// The dependency tracker for the preprocessors.
+  rfl::Field<"preprocessor_tracker_", rfl::Ref<dependency::PreprocessorTracker>>
+      preprocessor_tracker;
 
-    /// The dependency tracker for the preprocessors.
-    rfl::Field<"preprocessor_tracker_",
-               rfl::Ref<dependency::PreprocessorTracker>>,
+  /// The population table used for validation (only relevant for
+  /// early stopping).
+  rfl::Field<"validation_df_", std::optional<containers::DataFrame>>
+      validation_df;
 
-    /// The population table used for validation (only relevant for
-    /// early stopping).
-    rfl::Field<"validation_df_", std::optional<containers::DataFrame>>,
-
-    /// Output: The socket with which we communicate.
-    rfl::Field<"socket_", Poco::Net::StreamSocket*>>;
+  /// Output: The socket with which we communicate.
+  rfl::Field<"socket_", Poco::Net::StreamSocket*> socket;
+};
 
 }  // namespace pipelines
 }  // namespace engine
