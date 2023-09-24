@@ -353,23 +353,19 @@ std::pair<rfl::Ref<const FittedPipeline>, rfl::Ref<const metrics::Scores>> fit(
   const bool score = predictors.size() > 0 && predictors.at(0).size() > 0;
 
   const auto score_params =
-      score ? std::make_optional<MakeFeaturesParams>(
-                  rfl::from_named_tuple<MakeFeaturesParams>(
-                      rfl::to_named_tuple(
-                          rfl::replace(_params,
-                                       rfl::make_field<"peripheral_dfs_">(
-                                           preprocessed.peripheral_dfs_),
-                                       rfl::make_field<"population_df_">(
-                                           preprocessed.population_df_))) *
-                      rfl::make_field<"dependencies_">(fs_fingerprints) *
-                      rfl::make_field<"original_peripheral_dfs_">(
-                          _params.peripheral_dfs()) *
-                      rfl::make_field<"original_population_df_">(
-                          _params.population_df()) *
-                      rfl::make_field<"predictor_impl_">(predictor_impl) *
-                      rfl::make_field<"autofeatures_",
-                                      containers::NumericalFeatures*>(
-                          &autofeatures)))
+      score ? std::make_optional<MakeFeaturesParams>(MakeFeaturesParams{
+                  .categories = _params.categories(),
+                  .cmd = _params.cmd(),
+                  .data_frame_tracker = _params.data_frame_tracker(),
+                  .dependencies = fs_fingerprints,
+                  .logger = _params.logger(),
+                  .original_peripheral_dfs = _params.peripheral_dfs(),
+                  .original_population_df = _params.population_df(),
+                  .peripheral_dfs = preprocessed.peripheral_dfs_,
+                  .population_df = preprocessed.population_df_,
+                  .predictor_impl = predictor_impl,
+                  .autofeatures = &autofeatures,
+                  .socket = _params.socket()})
             : std::nullopt;
 
   const auto fingerprints = Fingerprints(
