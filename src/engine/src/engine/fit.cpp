@@ -310,20 +310,18 @@ std::pair<rfl::Ref<const FittedPipeline>, rfl::Ref<const metrics::Scores>> fit(
 
   containers::NumericalFeatures autofeatures;
 
-  const auto fit_feature_selectors_params = FitPredictorsParams(
-      rfl::make_field<"autofeatures_", containers::NumericalFeatures*>(
-          &autofeatures),
-      rfl::make_field<"dependencies_">(fl_fingerprints),
-      rfl::make_field<"feature_learners_">(feature_learners),
-      rfl::make_field<"fit_params_">(_params),
-      rfl::make_field<"impl_">(feature_selector_impl),
-      rfl::make_field<"peripheral_dfs_">(preprocessed.peripheral_dfs_),
-      rfl::make_field<"pipeline_">(_pipeline),
-      rfl::make_field<"population_df_">(preprocessed.population_df_),
-      rfl::make_field<"preprocessors_">(preprocessed.preprocessors_),
-      rfl::make_field<"preprocessor_fingerprints_">(
-          preprocessed.preprocessor_fingerprints_),
-      rfl::make_field<"purpose_">(Purpose::make<"feature_selectors_">()));
+  const auto fit_feature_selectors_params = FitPredictorsParams{
+      .autofeatures = &autofeatures,
+      .dependencies = fl_fingerprints,
+      .feature_learners = feature_learners,
+      .fit_params = _params,
+      .impl = feature_selector_impl,
+      .peripheral_dfs = preprocessed.peripheral_dfs_,
+      .pipeline = _pipeline,
+      .population_df = preprocessed.population_df_,
+      .preprocessors = preprocessed.preprocessors_,
+      .preprocessor_fingerprints = preprocessed.preprocessor_fingerprints_,
+      .purpose = Purpose::make<"feature_selectors_">()};
 
   const auto [feature_selectors, fs_fingerprints] =
       fit_predictors(fit_feature_selectors_params);
@@ -368,12 +366,11 @@ std::pair<rfl::Ref<const FittedPipeline>, rfl::Ref<const metrics::Scores>> fit(
                   .socket = _params.socket()})
             : std::nullopt;
 
-  const auto fingerprints = Fingerprints(
-      rfl::make_field<"df_fingerprints_">(preprocessed.df_fingerprints_),
-      rfl::make_field<"preprocessor_fingerprints_">(
-          preprocessed.preprocessor_fingerprints_),
-      rfl::make_field<"fl_fingerprints_">(fl_fingerprints),
-      rfl::make_field<"fs_fingerprints_">(fs_fingerprints));
+  const auto fingerprints = Fingerprints{
+      .df_fingerprints = preprocessed.df_fingerprints_,
+      .preprocessor_fingerprints = preprocessed.preprocessor_fingerprints_,
+      .fl_fingerprints = fl_fingerprints,
+      .fs_fingerprints = fs_fingerprints};
 
   const auto fitted_pipeline =
       rfl::Ref<const FittedPipeline>::make(FittedPipeline{
