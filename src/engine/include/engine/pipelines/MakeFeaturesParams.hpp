@@ -28,45 +28,51 @@
 namespace engine {
 namespace pipelines {
 
-using MakeFeaturesParams = rfl::NamedTuple<
+struct MakeFeaturesParams {
+  /// The Encoding used for the categories.
+  rfl::Field<"categories_", rfl::Ref<containers::Encoding>> categories;
 
-    /// The Encoding used for the categories.
-    rfl::Field<"categories_", rfl::Ref<containers::Encoding>>,
+  /// Contains all of the names of all data frames or views needed for fitting
+  /// the pipeline.
+  rfl::Field<"cmd_", rfl::named_tuple_t<commands::DataFramesOrViews>> cmd;
 
-    /// Contains all of the names of all data frames or views needed for fitting
-    /// the pipeline.
-    rfl::Field<"cmd_", rfl::named_tuple_t<commands::DataFramesOrViews>>,
+  /// Keeps track of the data frames and their fingerprints.
+  rfl::Field<"data_frame_tracker_", dependency::DataFrameTracker>
+      data_frame_tracker;
 
-    /// Keeps track of the data frames and their fingerprints.
-    rfl::Field<"data_frame_tracker_", dependency::DataFrameTracker>,
+  /// The depedencies of the predictors.
+  rfl::Field<"dependencies_",
+             rfl::Ref<const std::vector<commands::Fingerprint>>>
+      dependencies;
 
-    /// The depedencies of the predictors.
-    rfl::Field<"dependencies_",
-               rfl::Ref<const std::vector<commands::Fingerprint>>>,
+  /// Logs the progress.
+  rfl::Field<"logger_", std::shared_ptr<const communication::Logger>> logger;
 
-    /// Logs the progress.
-    rfl::Field<"logger_", std::shared_ptr<const communication::Logger>>,
+  /// The peripheral tables, without staging, as they were passed.
+  rfl::Field<"original_peripheral_dfs_", std::vector<containers::DataFrame>>
+      original_peripheral_dfs;
 
-    /// The peripheral tables, without staging, as they were passed.
-    rfl::Field<"original_peripheral_dfs_", std::vector<containers::DataFrame>>,
+  /// The population table, without staging, as it was passed.
+  rfl::Field<"original_population_df_", containers::DataFrame>
+      original_population_df;
 
-    /// The population table, without staging, as it was passed.
-    rfl::Field<"original_population_df_", containers::DataFrame>,
+  /// The peripheral tables.
+  rfl::Field<"peripheral_dfs_", std::vector<containers::DataFrame>>
+      peripheral_dfs;
 
-    /// The peripheral tables.
-    rfl::Field<"peripheral_dfs_", std::vector<containers::DataFrame>>,
+  /// The population table.
+  rfl::Field<"population_df_", containers::DataFrame> population_df;
 
-    /// The population table.
-    rfl::Field<"population_df_", containers::DataFrame>,
+  /// Pimpl for the predictors.
+  rfl::Field<"predictor_impl_", rfl::Ref<const predictors::PredictorImpl>>
+      predictor_impl;
 
-    /// Pimpl for the predictors.
-    rfl::Field<"predictor_impl_", rfl::Ref<const predictors::PredictorImpl>>,
+  /// Output: The autofeatures to be generated.
+  rfl::Field<"autofeatures_", containers::NumericalFeatures*> autofeatures;
 
-    /// Output: The autofeatures to be generated.
-    rfl::Field<"autofeatures_", containers::NumericalFeatures*>,
-
-    /// Output: The socket with which we communicate.
-    rfl::Field<"socket_", Poco::Net::StreamSocket*>>;
+  /// Output: The socket with which we communicate.
+  rfl::Field<"socket_", Poco::Net::StreamSocket*> socket;
+};
 
 }  // namespace pipelines
 }  // namespace engine

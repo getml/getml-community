@@ -138,19 +138,18 @@ containers::NumericalFeatures generate_autofeatures(
 
     const auto socket_logger =
         std::make_shared<const communication::SocketLogger>(
-            _params.get<"logger_">(), fe->silent(), _params.get<"socket_">());
+            _params.logger(), fe->silent(), _params.socket());
 
-    const auto& index = _params.get<"predictor_impl_">()->autofeatures().at(i);
+    const auto& index = _params.predictor_impl()->autofeatures().at(i);
 
     const auto params = featurelearners::TransformParams(
         rfl::make_field<"cmd_">(
-            rfl::from_named_tuple<commands::DataFramesOrViews>(
-                _params.get<"cmd_">())),
-        _params.get_field<"peripheral_dfs_">(),
-        _params.get_field<"population_df_">(),
+            rfl::from_named_tuple<commands::DataFramesOrViews>(_params.cmd())),
+        rfl::make_field<"peripheral_dfs_">(_params.peripheral_dfs()),
+        rfl::make_field<"population_df_">(_params.population_df()),
         rfl::make_field<"prefix_">(std::to_string(i + 1) + "_"),
         rfl::make_field<"socket_logger_">(socket_logger),
-        rfl::make_field<"temp_dir_">(_params.get<"categories_">()->temp_dir()),
+        rfl::make_field<"temp_dir_">(_params.categories()->temp_dir()),
         rfl::make_field<"index_">(index));
 
     auto new_features = fe->transform(params);
@@ -273,16 +272,15 @@ containers::NumericalFeatures make_autofeatures(
     const std::vector<rfl::Ref<const featurelearners::AbstractFeatureLearner>>&
         _feature_learners,
     const predictors::PredictorImpl& _predictor_impl) {
-  if (_params.get<"autofeatures_">() &&
-      _params.get<"autofeatures_">()->size() ==
-          _params.get<"predictor_impl_">()->num_autofeatures()) {
-    return *_params.get<"autofeatures_">();
+  if (_params.autofeatures() &&
+      _params.autofeatures()->size() ==
+          _params.predictor_impl()->num_autofeatures()) {
+    return *_params.autofeatures();
   }
 
-  if (_params.get<"autofeatures_">() &&
-      _params.get<"autofeatures_">()->size() != 0) {
-    return select_autofeatures(*_params.get<"autofeatures_">(),
-                               _feature_learners, _predictor_impl);
+  if (_params.autofeatures() && _params.autofeatures()->size() != 0) {
+    return select_autofeatures(*_params.autofeatures(), _feature_learners,
+                               _predictor_impl);
   }
 
   return generate_autofeatures(_params, _feature_learners, _predictor_impl);
@@ -298,9 +296,9 @@ make_features(
         _feature_learners,
     const predictors::PredictorImpl& _predictor_impl,
     const std::vector<commands::Fingerprint>& _fs_fingerprints) {
-  const auto df = _params.get<"data_frame_tracker_">().retrieve(
-      _fs_fingerprints, _params.get<"original_population_df_">(),
-      _params.get<"original_peripheral_dfs_">());
+  const auto df = _params.data_frame_tracker().retrieve(
+      _fs_fingerprints, _params.original_population_df(),
+      _params.original_peripheral_dfs());
 
   if (df) {
     return retrieve_features_from_cache(*df);
@@ -309,13 +307,11 @@ make_features(
   const auto autofeatures =
       make_autofeatures(_params, _feature_learners, _predictor_impl);
 
-  const auto numerical_features =
-      get_numerical_features(autofeatures, _params.get<"population_df_">(),
-                             *_params.get<"predictor_impl_">());
+  const auto numerical_features = get_numerical_features(
+      autofeatures, _params.population_df(), *_params.predictor_impl());
 
-  const auto categorical_features =
-      get_categorical_features(_pipeline, _params.get<"population_df_">(),
-                               *_params.get<"predictor_impl_">());
+  const auto categorical_features = get_categorical_features(
+      _pipeline, _params.population_df(), *_params.predictor_impl());
 
   return std::make_tuple(numerical_features, categorical_features,
                          autofeatures);
@@ -485,7 +481,7 @@ transform_features_only(const FeaturesOnlyParams& _params) {
   std::tie(population_df, peripheral_dfs) =
       apply_preprocessors(_params, population_df, peripheral_dfs);
 
-  const auto make_features_params = MakeFeaturesParams(
+  const auto make_features_params = rfl::from_named_tuple<MakeFeaturesParams>(
       _params.get<"transform_params_">() *
       rfl::make_field<"dependencies_">(_params.get<"dependencies_">()) *
       rfl::make_field<"peripheral_dfs_">(peripheral_dfs) *
