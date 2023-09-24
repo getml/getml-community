@@ -276,14 +276,8 @@ extract_schemata(const containers::DataFrame& _population_df,
 
 std::pair<rfl::Ref<const FittedPipeline>, rfl::Ref<const metrics::Scores>> fit(
     const Pipeline& _pipeline, const FitParams& _params) {
-  const auto fit_preprocessors_params = FitPreprocessorsParams{
-      .categories_ = _params.get<"categories_">(),
-      .cmd_ = _params.get<"cmd_">(),
-      .logger_ = _params.get<"logger_">(),
-      .peripheral_dfs_ = _params.get<"peripheral_dfs_">(),
-      .population_df_ = _params.get<"population_df_">(),
-      .preprocessor_tracker_ = _params.get<"preprocessor_tracker_">(),
-      .socket_ = _params.get<"socket_">()};
+  const auto fit_preprocessors_params =
+      rfl::as<FitPreprocessorsParams>(_params);
 
   const auto preprocessed =
       fit_preprocessors_only(_pipeline, fit_preprocessors_params);
@@ -584,16 +578,14 @@ fit_predictors(const FitPredictorsParams& _params) {
 
 Preprocessed fit_preprocessors_only(const Pipeline& _pipeline,
                                     const FitPreprocessorsParams& _params) {
-  const auto targets = get_targets(_params.get<"population_df_">());
+  const auto targets = get_targets(_params.population_df());
 
-  const auto df_fingerprints =
-      extract_df_fingerprints(_pipeline, _params.get<"population_df_">(),
-                              _params.get<"peripheral_dfs_">());
+  const auto df_fingerprints = extract_df_fingerprints(
+      _pipeline, _params.population_df(), _params.peripheral_dfs());
 
   auto [population_df, peripheral_dfs] = transform::stage_data_frames(
-      _pipeline, _params.get<"population_df_">(),
-      _params.get<"peripheral_dfs_">(), _params.get<"logger_">(),
-      _params.get<"categories_">()->temp_dir(), _params.get<"socket_">());
+      _pipeline, _params.population_df(), _params.peripheral_dfs(),
+      _params.logger(), _params.categories()->temp_dir(), _params.socket());
 
   const auto [preprocessors, preprocessor_fingerprints] =
       fit_transform_preprocessors(_pipeline, _params, df_fingerprints,
@@ -627,10 +619,9 @@ fit_transform_preprocessors(
   const auto [placeholder, peripheral_names] = _pipeline.make_placeholder();
 
   const auto socket_logger =
-      _params.get<"logger_">()
-          ? std::make_shared<const communication::SocketLogger>(
-                _params.get<"logger_">(), true, _params.get<"socket_">())
-          : std::shared_ptr<const communication::SocketLogger>();
+      _params.logger() ? std::make_shared<const communication::SocketLogger>(
+                             _params.logger(), true, _params.socket())
+                       : std::shared_ptr<const communication::SocketLogger>();
 
   if (socket_logger) {
     socket_logger->log("Preprocessing...");
@@ -647,18 +638,18 @@ fit_transform_preprocessors(
     const auto fingerprint = p->fingerprint();
 
     const auto retrieved_preprocessor =
-        _params.get<"preprocessor_tracker_">()->retrieve(fingerprint);
+        _params.preprocessor_tracker()->retrieve(fingerprint);
 
-    const auto params = preprocessors::Params(
-        rfl::make_field<"categories_">(_params.get<"categories_">()),
-        rfl::make_field<"cmd_">(_params.get<"cmd_">()),
-        rfl::make_field<"logger_">(socket_logger),
-        rfl::make_field<"logging_begin_">((i * 100) / preprocessors.size()),
-        rfl::make_field<"logging_end_">(((i + 1) * 100) / preprocessors.size()),
-        rfl::make_field<"peripheral_dfs_">(*_peripheral_dfs),
-        rfl::make_field<"peripheral_names_">(*peripheral_names),
-        rfl::make_field<"placeholder_">(*placeholder),
-        rfl::make_field<"population_df_">(*_population_df));
+    const auto params = preprocessors::Params{
+        .categories = _params.categories(),
+        .cmd = _params.cmd(),
+        .logger = socket_logger,
+        .logging_begin = (i * 100) / preprocessors.size(),
+        .logging_end = ((i + 1) * 100) / preprocessors.size(),
+        .peripheral_dfs = *_peripheral_dfs,
+        .peripheral_names = *peripheral_names,
+        .placeholder = *placeholder,
+        .population_df = *_population_df};
 
     if (retrieved_preprocessor) {
       p = rfl::Ref<preprocessors::Preprocessor>(retrieved_preprocessor);
@@ -668,7 +659,7 @@ fit_transform_preprocessors(
 
     std::tie(*_population_df, *_peripheral_dfs) = p->fit_transform(params);
 
-    _params.get<"preprocessor_tracker_">()->add(p);
+    _params.preprocessor_tracker()->add(p);
   }
 
   if (socket_logger) {
