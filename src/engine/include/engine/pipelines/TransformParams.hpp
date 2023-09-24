@@ -28,38 +28,43 @@
 namespace engine {
 namespace pipelines {
 
-using TransformCmdType =
-    rfl::define_named_tuple_t<rfl::named_tuple_t<commands::DataFramesOrViews>,
-                              rfl::Field<"predict_", bool>,
-                              rfl::Field<"score_", bool>>;
+struct TransformParams {
+  struct Cmd {
+    rfl::Flatten<commands::DataFramesOrViews> data_frames_or_views;
+    rfl::Field<"predict_", bool> predict;
+    rfl::Field<"score_", bool> score;
+  };
 
-using TransformParams = rfl::NamedTuple<
+  /// The Encoding used for the categories.
+  rfl::Field<"categories_", rfl::Ref<containers::Encoding>> categories;
 
-    /// The Encoding used for the categories.
-    rfl::Field<"categories_", rfl::Ref<containers::Encoding>>,
+  /// Contains all of the names of all data frames or views needed for
+  /// fitting the pipeline.
+  rfl::Field<"cmd_", Cmd> cmd;
 
-    /// Contains all of the names of all data frames or views needed for fitting
-    /// the pipeline.
-    rfl::Field<"cmd_", TransformCmdType>,
+  /// Contains all of the data frames - we need this, because it might be
+  /// possible that the features are retrieved.
+  rfl::Field<"data_frames_", std::map<std::string, containers::DataFrame>>
+      data_frames;
 
-    /// Contains all of the data frames - we need this, because it might be
-    /// possible that the features are retrieved.
-    rfl::Field<"data_frames_", std::map<std::string, containers::DataFrame>>,
+  /// Keeps track of the data frames and their fingerprints.
+  rfl::Field<"data_frame_tracker_", dependency::DataFrameTracker>
+      data_frame_tracker;
 
-    /// Keeps track of the data frames and their fingerprints.
-    rfl::Field<"data_frame_tracker_", dependency::DataFrameTracker>,
+  /// Logs the progress.
+  rfl::Field<"logger_", std::shared_ptr<const communication::Logger>> logger;
 
-    /// Logs the progress.
-    rfl::Field<"logger_", std::shared_ptr<const communication::Logger>>,
+  /// The peripheral tables.
+  rfl::Field<"original_peripheral_dfs_", std::vector<containers::DataFrame>>
+      original_peripheral_dfs;
 
-    /// The peripheral tables.
-    rfl::Field<"original_peripheral_dfs_", std::vector<containers::DataFrame>>,
+  /// The population table.
+  rfl::Field<"original_population_df_", containers::DataFrame>
+      original_population_df;
 
-    /// The population table.
-    rfl::Field<"original_population_df_", containers::DataFrame>,
-
-    /// Output: The socket with which we communicate.
-    rfl::Field<"socket_", Poco::Net::StreamSocket*>>;
+  /// Output: The socket with which we communicate.
+  rfl::Field<"socket_", Poco::Net::StreamSocket*> socket;
+};
 
 }  // namespace pipelines
 }  // namespace engine

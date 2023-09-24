@@ -385,7 +385,7 @@ void PipelineManager::fit(const typename Command::FitOp& _cmd,
 
   const auto params = pipelines::FitParams(
       rfl::make_field<"categories_">(local_categories),
-      rfl::make_field<"cmd_">(rfl::to_named_tuple(cmd)),
+      rfl::make_field<"cmd_">(cmd),
       rfl::make_field<"data_frames_">(data_frames()),
       rfl::make_field<"data_frame_tracker_">(data_frame_tracker()),
       rfl::make_field<"fe_tracker_">(params_.fe_tracker_),
@@ -785,16 +785,15 @@ void PipelineManager::transform(const typename Command::TransformOp& _cmd,
 
   // IMPORTANT: Use categories_, not local_categories, otherwise
   // .vector() might not work.
-  const auto params = pipelines::TransformParams(
-      rfl::make_field<"categories_">(params_.categories_),
-      rfl::make_field<"cmd_", pipelines::TransformCmdType>(
-          rfl::to_named_tuple(cmd)),
-      rfl::make_field<"data_frames_">(*local_data_frames),
-      rfl::make_field<"data_frame_tracker_">(data_frame_tracker()),
-      rfl::make_field<"logger_">(params_.logger_.ptr()),
-      rfl::make_field<"original_peripheral_dfs_">(peripheral_dfs),
-      rfl::make_field<"original_population_df_">(population_df),
-      rfl::make_field<"socket_">(_socket));
+  const auto params = pipelines::TransformParams{
+      .categories = params_.categories_,
+      .cmd = rfl::as<pipelines::TransformParams::Cmd>(cmd),
+      .data_frames = *local_data_frames,
+      .data_frame_tracker = data_frame_tracker(),
+      .logger = params_.logger_.ptr(),
+      .original_peripheral_dfs = peripheral_dfs,
+      .original_population_df = population_df,
+      .socket = _socket};
 
   const auto fitted = pipeline.fitted();
 

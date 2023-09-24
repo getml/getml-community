@@ -24,6 +24,7 @@
 #include "json/json.hpp"
 #include "predictors/Predictor.hpp"
 #include "rfl/Field.hpp"
+#include "rfl/as.hpp"
 #include "rfl/make_named_tuple.hpp"
 #include "rfl/to_named_tuple.hpp"
 
@@ -277,8 +278,7 @@ std::pair<rfl::Ref<const FittedPipeline>, rfl::Ref<const metrics::Scores>> fit(
     const Pipeline& _pipeline, const FitParams& _params) {
   const auto fit_preprocessors_params = FitPreprocessorsParams{
       .categories_ = _params.get<"categories_">(),
-      .cmd_ = rfl::from_named_tuple<commands::DataFramesOrViews>(
-          _params.get<"cmd_">()),
+      .cmd_ = _params.get<"cmd_">(),
       .logger_ = _params.get<"logger_">(),
       .peripheral_dfs_ = _params.get<"peripheral_dfs_">(),
       .population_df_ = _params.get<"population_df_">(),
@@ -447,9 +447,7 @@ fit_feature_learners(
     }
 
     const auto params = featurelearners::FitParams(
-        rfl::make_field<"cmd_">(
-            rfl::from_named_tuple<commands::DataFramesOrViews>(
-                _params.get<"cmd_">())),
+        rfl::make_field<"cmd_">(_params.get<"cmd_">()),
         rfl::make_field<"peripheral_dfs_">(_peripheral_dfs),
         rfl::make_field<"population_df_">(_population_df),
         rfl::make_field<"prefix_">(std::to_string(i + 1) + "_"),
@@ -492,7 +490,7 @@ fit_predictors(const FitPredictorsParams& _params) {
 
   const auto make_features_params = rfl::from_named_tuple<MakeFeaturesParams>(
       _params * fit_params.get_field<"categories_">() *
-      rfl::make_field<"cmd_">(rfl::to_named_tuple(fit_params.get<"cmd_">())) *
+      rfl::make_field<"cmd_">(fit_params.get<"cmd_">()) *
       fit_params.get_field<"data_frame_tracker_">() *
       fit_params.get_field<"logger_">() *
       rfl::make_field<"original_peripheral_dfs_">(
@@ -895,21 +893,23 @@ make_features_validation(const FitPredictorsParams& _params) {
   }
 
   const auto transform_params = TransformParams{
-      .categories_ = _params.get<"fit_params_">().get<"categories_">(),
-      .cmd_ = rfl::to_named_tuple(_params.get<"fit_params_">().get<"cmd_">()) *
-              rfl::make_field<"predict_">(false) *
-              rfl::make_field<"score_">(false),
-      .data_frames_ = _params.get<"fit_params_">().get<"data_frames_">(),
-      .data_frame_tracker_ =
+      .categories = _params.get<"fit_params_">().get<"categories_">(),
+      .cmd =
+          TransformParams::Cmd{.data_frames_or_views =
+                                   _params.get<"fit_params_">().get<"cmd_">(),
+                               .predict = false,
+                               .score = false},
+      .data_frames = _params.get<"fit_params_">().get<"data_frames_">(),
+      .data_frame_tracker =
           _params.get<"fit_params_">().get<"data_frame_tracker_">(),
-      .logger_ = _params.get<"fit_params_">().get<"logger_">(),
-      .original_peripheral_dfs_ =
+      .logger = _params.get<"fit_params_">().get<"logger_">(),
+      .original_peripheral_dfs =
           _params.get<"fit_params_">().get<"peripheral_dfs_">(),
-      .original_population_df_ =
+      .original_population_df =
           *_params.get<"fit_params_">()
                .get<"validation_df_">(),  // NOTE: We want to take the
                                           // validation_df here
-      .socket_ = _params.get<"fit_params_">().get<"socket_">()};
+      .socket = _params.get<"fit_params_">().get<"socket_">()};
 
   const auto features_only_params = rfl::from_named_tuple<FeaturesOnlyParams>(
       _params *
@@ -1043,8 +1043,7 @@ rfl::Ref<const metrics::Scores> score_after_fitting(
 
   const auto get_name = [](const auto& _c) -> const auto& { return _c.name(); };
 
-  const auto& name =
-      rfl::visit(get_name, _params.cmd().get<"population_df_">().val_);
+  const auto& name = rfl::visit(get_name, _params.cmd().population_df().val_);
 
   return score::score(_pipeline, _fitted, _params.population_df(), name, yhat);
 }
