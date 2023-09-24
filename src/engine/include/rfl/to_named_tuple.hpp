@@ -13,6 +13,7 @@
 
 #include "rfl/always_false.hpp"
 #include "rfl/internal/has_flatten_fields.hpp"
+#include "rfl/internal/is_field.hpp"
 #include "rfl/internal/is_named_tuple.hpp"
 #include "rfl/internal/to_field_tuple.hpp"
 #include "rfl/make_named_tuple.hpp"
@@ -44,6 +45,8 @@ template <class T>
 auto to_named_tuple(const T& _t) {
   if constexpr (internal::is_named_tuple_v<T>) {
     return _t;
+  } else if constexpr (internal::is_field_v<T>) {
+    return make_named_tuple(_t);
   } else {
     auto field_tuple = internal::to_field_tuple(_t);
 
