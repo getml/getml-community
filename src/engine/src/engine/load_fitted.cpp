@@ -110,17 +110,13 @@ load_feature_learners(const std::string& _path,
                       const Pipeline& _pipeline) {
   const auto [placeholder, peripheral] = _pipeline.make_placeholder();
 
-  const featurelearners::FeatureLearnerParams feature_learner_params =
-      rfl::make_field<"dependencies_">(
-          _pipeline_json.fingerprints().preprocessor_fingerprints()) *
-      rfl::make_field<"peripheral_">(peripheral) *
-      rfl::make_field<"peripheral_schema_">(
-          _pipeline_json.modified_peripheral_schema()) *
-      rfl::make_field<"placeholder_">(placeholder) *
-      rfl::make_field<"population_schema_">(
-          _pipeline_json.modified_population_schema()) *
-      rfl::make_field<"target_num_">(
-          featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS);
+  const auto feature_learner_params = featurelearners::FeatureLearnerParams{
+      .dependencies = _pipeline_json.fingerprints().preprocessor_fingerprints(),
+      .peripheral = peripheral,
+      .peripheral_schema = _pipeline_json.modified_peripheral_schema(),
+      .placeholder = placeholder,
+      .population_schema = _pipeline_json.modified_population_schema(),
+      .target_num = featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS};
 
   const auto feature_learners = fit::init_feature_learners(
       _pipeline, feature_learner_params, _pipeline_json.targets().size());
