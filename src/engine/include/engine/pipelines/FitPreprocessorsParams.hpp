@@ -25,30 +25,31 @@
 namespace engine {
 namespace pipelines {
 
-using FitPreprocessorsParams = rfl::NamedTuple<
+struct FitPreprocessorsParams {
+  /// The Encoding used for the categories.
+  rfl::Field<"categories_", rfl::Ref<containers::Encoding>> categories;
 
-    /// The Encoding used for the categories.
-    rfl::Field<"categories_", rfl::Ref<containers::Encoding>>,
+  /// Contains all of the names of all data frames or views needed for fitting
+  /// the pipeline.
+  rfl::Field<"cmd_", commands::DataFramesOrViews> cmd;
 
-    /// Contains all of the names of all data frames or views needed for fitting
-    /// the pipeline.
-    rfl::Field<"cmd_", commands::DataFramesOrViews>,
+  /// Logs the progress.
+  rfl::Field<"logger_", std::shared_ptr<const communication::Logger>> logger;
 
-    /// Logs the progress.
-    rfl::Field<"logger_", std::shared_ptr<const communication::Logger>>,
+  /// The peripheral tables.
+  rfl::Field<"peripheral_dfs_", std::vector<containers::DataFrame>>
+      peripheral_dfs;
 
-    /// The peripheral tables.
-    rfl::Field<"peripheral_dfs_", std::vector<containers::DataFrame>>,
+  /// The population table.
+  rfl::Field<"population_df_", containers::DataFrame> population_df;
 
-    /// The population table.
-    rfl::Field<"population_df_", containers::DataFrame>,
+  /// The dependency tracker for the preprocessors.
+  rfl::Field<"preprocessor_tracker_", rfl::Ref<dependency::PreprocessorTracker>>
+      preprocessor_tracker;
 
-    /// The dependency tracker for the preprocessors.
-    rfl::Field<"preprocessor_tracker_",
-               rfl::Ref<dependency::PreprocessorTracker>>,
-
-    /// Output: The socket with which we communicate.
-    rfl::Field<"socket_", Poco::Net::StreamSocket*>>;
+  /// Output: The socket with which we communicate.
+  rfl::Field<"socket_", Poco::Net::StreamSocket*> socket;
+};
 
 }  // namespace pipelines
 }  // namespace engine

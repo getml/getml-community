@@ -14,7 +14,7 @@
 #include "fct/collect.hpp"
 #include "json/json.hpp"
 #include "rfl/Field.hpp"
-#include "rfl/to_named_tuple.hpp"
+#include "rfl/as.hpp"
 
 namespace engine {
 namespace pipelines {
@@ -36,7 +36,7 @@ void check(const Pipeline& _pipeline, const CheckParams& _params) {
   // retrieve the check, but we really only need the modified schemata at this
   // point. Fix this.
   const auto fit_preprocessors_params =
-      FitPreprocessorsParams(rfl::to_named_tuple(_params));
+      rfl::as<FitPreprocessorsParams>(_params);
 
   const auto preprocessed =
       fit::fit_preprocessors_only(_pipeline, fit_preprocessors_params);
