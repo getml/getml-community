@@ -15,16 +15,37 @@
 #include "communication/communication.hpp"
 #include "featurelearners/FitParams.hpp"
 #include "rfl/Field.hpp"
+#include "rfl/Flatten.hpp"
 #include "rfl/NamedTuple.hpp"
-#include "rfl/define_named_tuple.hpp"
 
 namespace featurelearners {
 
-using TransformParams =
-    rfl::define_named_tuple_t<FitParams,
+struct TransformParams {
+  /// Contains all of the names of all data frames or views needed for fitting
+  /// the pipeline.
+  rfl::Field<"cmd_", commands::DataFramesOrViews> cmd;
 
-                              /// Indicates which features we want to generate.
-                              rfl::Field<"index_", std::vector<size_t>>>;
+  /// Indicates which features we want to generate.
+  rfl::Field<"index_", std::vector<size_t>> index;
+
+  /// The peripheral tables.
+  rfl::Field<"peripheral_dfs_", std::vector<containers::DataFrame>>
+      peripheral_dfs;
+
+  /// The population table.
+  rfl::Field<"population_df_", containers::DataFrame> population_df;
+
+  /// The prefix, used to identify the feature learner.
+  rfl::Field<"prefix_", std::string> prefix;
+
+  /// Logs the progress.
+  rfl::Field<"socket_logger_",
+             std::shared_ptr<const communication::SocketLogger>>
+      socket_logger;
+
+  /// The prefix, used to identify the feature learner.
+  rfl::Field<"temp_dir_", std::optional<std::string>> temp_dir;
+};
 
 }  // namespace featurelearners
 

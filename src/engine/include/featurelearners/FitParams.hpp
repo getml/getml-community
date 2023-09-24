@@ -22,27 +22,29 @@
 
 namespace featurelearners {
 
-using FitParams = rfl::NamedTuple<
+struct FitParams {
+  /// Contains all of the names of all data frames or views needed for fitting
+  /// the pipeline.
+  rfl::Field<"cmd_", commands::DataFramesOrViews> cmd;
 
-    /// Contains all of the names of all data frames or views needed for fitting
-    /// the pipeline.
-    rfl::Field<"cmd_", commands::DataFramesOrViews>,
+  /// The peripheral tables.
+  rfl::Field<"peripheral_dfs_", std::vector<containers::DataFrame>>
+      peripheral_dfs;
 
-    /// The peripheral tables.
-    rfl::Field<"peripheral_dfs_", std::vector<containers::DataFrame>>,
+  /// The population table.
+  rfl::Field<"population_df_", containers::DataFrame> population_df;
 
-    /// The population table.
-    rfl::Field<"population_df_", containers::DataFrame>,
+  /// The prefix, used to identify the feature learner.
+  rfl::Field<"prefix_", std::string> prefix;
 
-    /// The prefix, used to identify the feature learner.
-    rfl::Field<"prefix_", std::string>,
+  /// Logs the progress.
+  rfl::Field<"socket_logger_",
+             std::shared_ptr<const communication::SocketLogger>>
+      socket_logger;
 
-    /// Logs the progress.
-    rfl::Field<"socket_logger_",
-               std::shared_ptr<const communication::SocketLogger>>,
-
-    /// The prefix, used to identify the feature learner.
-    rfl::Field<"temp_dir_", std::optional<std::string>>>;
+  /// The prefix, used to identify the feature learner.
+  rfl::Field<"temp_dir_", std::optional<std::string>> temp_dir;
+};
 
 }  // namespace featurelearners
 

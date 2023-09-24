@@ -405,8 +405,7 @@ fit_feature_learners(
     return std::make_pair(
         to_const(feature_learners),
         rfl::Ref<const std::vector<commands::Fingerprint>>::make(
-            fct::collect::vector(
-                *_feature_learner_params.get<"dependencies_">())));
+            fct::collect::vector(*_feature_learner_params.dependencies())));
   }
 
   const auto [modified_population_schema, modified_peripheral_schema] =
@@ -449,7 +448,7 @@ fit_feature_learners(
   }
 
   const auto fl_fingerprints = extract_fl_fingerprints(
-      feature_learners, _feature_learner_params.get<"dependencies_">());
+      feature_learners, _feature_learner_params.dependencies());
 
   return std::make_pair(to_const(feature_learners), fl_fingerprints);
 }
@@ -691,7 +690,7 @@ init_feature_learners(
          const Int _target_num)
       -> rfl::Ref<featurelearners::AbstractFeatureLearner> {
     const auto new_params =
-        _params.replace(rfl::make_field<"target_num_">(_target_num));
+        rfl::replace(_params, rfl::make_field<"target_num_">(_target_num));
 
     return FeatureLearnerParser::parse(new_params, _hyperparameters);
   };
@@ -711,8 +710,9 @@ init_feature_learners(
   const auto to_fl = [&_feature_learner_params, make_fl_for_all_targets](
                          const commands::FeatureLearner& _hyperparameters)
       -> std::vector<rfl::Ref<featurelearners::AbstractFeatureLearner>> {
-    const auto new_params =
-        _feature_learner_params.replace(rfl::make_field<"target_num_">(
+    const auto new_params = rfl::replace(
+        _feature_learner_params,
+        rfl::make_field<"target_num_">(
             featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS));
 
     const auto new_feature_learner =

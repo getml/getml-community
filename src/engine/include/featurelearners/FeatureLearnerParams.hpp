@@ -23,15 +23,19 @@
 
 namespace featurelearners {
 
-using FeatureLearnerParams = rfl::NamedTuple<
-    rfl::Field<"dependencies_",
-               rfl::Ref<const std::vector<commands::Fingerprint>>>,
-    rfl::Field<"peripheral_", rfl::Ref<const std::vector<std::string>>>,
-    rfl::Field<"peripheral_schema_",
-               rfl::Ref<const std::vector<helpers::Schema>>>,
-    rfl::Field<"placeholder_", rfl::Ref<const helpers::Placeholder>>,
-    rfl::Field<"population_schema_", rfl::Ref<const helpers::Schema>>,
-    rfl::Field<"target_num_", Int>>;
+struct FeatureLearnerParams {
+  rfl::Field<"dependencies_",
+             rfl::Ref<const std::vector<commands::Fingerprint>>>
+      dependencies;
+  rfl::Field<"peripheral_", rfl::Ref<const std::vector<std::string>>>
+      peripheral;
+  rfl::Field<"peripheral_schema_", rfl::Ref<const std::vector<helpers::Schema>>>
+      peripheral_schema;
+  rfl::Field<"placeholder_", rfl::Ref<const helpers::Placeholder>> placeholder;
+  rfl::Field<"population_schema_", rfl::Ref<const helpers::Schema>>
+      population_schema;
+  rfl::Field<"target_num_", Int> target_num;
+};
 
 }  // namespace featurelearners
 
