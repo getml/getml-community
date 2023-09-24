@@ -14,11 +14,11 @@
 #include "commands/Int.hpp"
 #include "json/json.hpp"
 #include "rfl/Field.hpp"
+#include "rfl/Flatten.hpp"
 #include "rfl/Literal.hpp"
 #include "rfl/NamedTuple.hpp"
 #include "rfl/Ref.hpp"
 #include "rfl/TaggedUnion.hpp"
-#include "rfl/define_named_tuple.hpp"
 #include "transpilation/TranspilationParams.hpp"
 
 namespace commands {
@@ -92,12 +92,14 @@ struct PipelineCommand {
     rfl::Field<"target_num_", Int> target_num;
   };
 
-  using ToSQLOp = rfl::define_named_tuple_t<
-      rfl::Field<"type_", rfl::Literal<"Pipeline.to_sql">>,
-      rfl::Field<"name_", std::string>, rfl::Field<"targets_", bool>,
-      rfl::Field<"subfeatures_", bool>,
-      rfl::Field<"size_threshold_", std::optional<size_t>>,
-      typename transpilation::TranspilationParams::NamedTupleType>;
+  struct ToSQLOp {
+    rfl::Field<"type_", rfl::Literal<"Pipeline.to_sql">> type;
+    rfl::Field<"name_", std::string> name;
+    rfl::Field<"targets_", bool> targets;
+    rfl::Field<"subfeatures_", bool> subfeatures;
+    rfl::Field<"size_threshold_", std::optional<size_t>> size_threshold;
+    rfl::Flatten<transpilation::TranspilationParams> transpilation_params;
+  };
 
   struct TransformOp {
     rfl::Field<"type_", rfl::Literal<"Pipeline.transform">> type;

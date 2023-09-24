@@ -34,7 +34,7 @@ rfl::Ref<const SQLDialectGenerator> SQLDialectParser::parse(
     }
   };
 
-  return rfl::visit(handle, _params.dialect_);
+  return rfl::visit(handle, _params.dialect());
 }
 
 }  // namespace transpilation
