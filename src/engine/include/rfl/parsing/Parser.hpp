@@ -23,6 +23,7 @@
 #include "fct/collect_results.hpp"
 #include "fct/join.hpp"
 #include "rfl/Box.hpp"
+#include "rfl/Enum.hpp"
 #include "rfl/Literal.hpp"
 #include "rfl/NamedTuple.hpp"
 #include "rfl/Ref.hpp"
@@ -122,6 +123,100 @@ struct Parser<ReaderType, WriterType, Box<T>> {
   static OutputVarType write(const WriterType& _w,
                              const Box<T>& _box) noexcept {
     return Parser<ReaderType, WriterType, std::decay_t<T>>::write(_w, *_box);
+  }
+};
+
+// ----------------------------------------------------------------------------
+
+template <class ReaderType, class WriterType, class... FieldTypes>
+struct Parser<ReaderType, WriterType, Enum<FieldTypes...>> {
+  using ResultType = Result<Enum<FieldTypes...>>;
+
+ public:
+  using InputObjectType = typename ReaderType::InputObjectType;
+  using InputVarType = typename ReaderType::InputVarType;
+
+  using OutputObjectType = typename WriterType::OutputObjectType;
+  using OutputVarType = typename WriterType::OutputVarType;
+
+  /// Expresses the variables as type T.
+  static ResultType read(const ReaderType& _r, InputVarType* _var) noexcept {
+    const auto to_map = [&](auto _obj) { return _r.to_map(&_obj); };
+
+    const auto to_result = [&](auto _map) -> ResultType {
+      if (_map.size() != 1) {
+        return Error(
+            "Could not parse Enum: Expected the object to have exactly one "
+            "field, but found " +
+            std::to_string(_map.size()) + " fields.");
+      }
+      const auto it = _map.begin();
+      const auto& disc_value = it->first;
+      auto& var = it->second;
+      return find_matching_alternative(_r, disc_value, &var);
+    };
+
+    return _r.to_object(_var).transform(to_map).and_then(to_result);
+  }
+
+  /// Expresses the variables as a JSON type.
+  static OutputVarType write(const WriterType& _w,
+                             const Enum<FieldTypes...>& _enum) noexcept {
+    const auto handle = [&](const auto& _field) {
+      using NamedTupleType = NamedTuple<std::decay_t<decltype(_field)>>;
+      return Parser<ReaderType, WriterType, NamedTupleType>::write(
+          _w, NamedTupleType(_field));
+    };
+    return std::visit(handle, _enum.variant_);
+  }
+
+ private:
+  template <int _i = 0>
+  static ResultType find_matching_alternative(const ReaderType& _r,
+                                              const std::string& _disc_value,
+                                              InputVarType* _var) noexcept {
+    if constexpr (_i == sizeof...(FieldTypes)) {
+      return Error("Could not parse enum, could not match field named '" +
+                   _disc_value + "'.");
+    } else {
+      const auto optional = try_option<_i>(_r, _disc_value, _var);
+      if (optional) {
+        return *optional;
+      } else {
+        return find_matching_alternative<_i + 1>(_r, _disc_value, _var);
+      }
+    }
+  }
+
+  /// Tries to parse one particular option.
+  template <int _i>
+  static std::optional<ResultType> try_option(const ReaderType& _r,
+                                              const std::string& _disc_value,
+                                              InputVarType* _var) noexcept {
+    using FieldType = std::decay_t<
+        typename std::tuple_element<_i, std::tuple<FieldTypes...>>::type>;
+
+    using ValueType = std::decay_t<typename FieldType::Type>;
+
+    const auto key = FieldType::name_.str();
+
+    if (key == _disc_value) {
+      const auto to_enum = [](ValueType&& _val) {
+        return Enum<FieldTypes...>(FieldType(std::forward<ValueType>(_val)));
+      };
+
+      const auto embellish_error = [&](const Error& _e) {
+        return Error("Could not parse enum with field '" + _disc_value +
+                     "': " + _e.what());
+      };
+
+      return Parser<ReaderType, WriterType, ValueType>::read(_r, _var)
+          .transform(to_enum)
+          .or_else(embellish_error);
+
+    } else {
+      return std::optional<ResultType>();
+    }
   }
 };
 
