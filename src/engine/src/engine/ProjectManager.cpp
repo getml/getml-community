@@ -402,7 +402,7 @@ void ProjectManager::save_pipeline(const typename Command::SavePipelineOp& _cmd,
 
   // Saving the pipeline happens automatically, so it is unlikely that the field
   // will ever be set. Therefore, the format chosen is actually determined here.
-  const auto format = _cmd.format().value_or(Format::make<"flexbuffers">());
+  const auto format = _cmd.format().value_or(Format::make<"json">());
 
   const auto params =
       pipelines::SaveParams{.categories = categories().strings(),

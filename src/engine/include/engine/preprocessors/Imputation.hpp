@@ -95,11 +95,10 @@ class Imputation : public Preprocessor {
   commands::Fingerprint fingerprint() const final {
     using FingerprintType =
         typename commands::Fingerprint::ImputationFingerprint;
-    return commands::Fingerprint(
-        FingerprintType{.dependencies = dependencies_,
-                        .op = commands::Preprocessor::ImputationOp{
-                            .type = rfl::Literal<"Imputation">(),
-                            .add_dummies = add_dummies_}});
+    return commands::Fingerprint(FingerprintType{
+        .dependencies = dependencies_,
+        .op = commands::Preprocessor::ImputationOp{
+            .type = rfl::default_value, .add_dummies = add_dummies_}});
   }
 
   /// Necessary for the automated parsing to work.

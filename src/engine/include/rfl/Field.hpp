@@ -14,6 +14,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "rfl/default.hpp"
 #include "rfl/internal/StringLiteral.hpp"
 
 namespace rfl {
@@ -47,6 +48,12 @@ struct Field {
                                              bool>::type = true>
   Field(T&& _value) : value_(_value) {}
 
+  /// Assigns the underlying object to its default value.
+  template <class T = Type,
+            typename std::enable_if<std::is_default_constructible_v<T>,
+                                    bool>::type = true>
+  Field(const Default& _default) : value_(Type()) {}
+
   ~Field() = default;
 
   /// The name of the field.
@@ -72,6 +79,14 @@ struct Field {
                                              bool>::type = true>
   inline void operator=(const T& _value) {
     value_ = _value;
+  }
+
+  /// Assigns the underlying object to its default value.
+  template <class T = Type,
+            typename std::enable_if<std::is_default_constructible_v<T>,
+                                    bool>::type = true>
+  inline void operator=(const Default& _default) {
+    value_ = Type();
   }
 
   /// Assigns the underlying object.
