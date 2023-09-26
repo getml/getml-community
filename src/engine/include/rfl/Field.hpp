@@ -100,7 +100,7 @@ struct Field {
 
   /// Assigns the underlying object.
   inline void operator=(Field<_name, Type>&& _field) {
-    value_ = std::forward<Type>(_field.get());
+    value_ = _field.get();
   }
 
   /// Assigns the underlying object.
@@ -112,7 +112,7 @@ struct Field {
   /// Assigns the underlying object.
   template <class T>
   inline void operator=(Field<_name, T>&& _field) {
-    value_ = std::forward<T>(_field.get());
+    value_ = _field.get();
   }
 
   /// Assigns the underlying object.
