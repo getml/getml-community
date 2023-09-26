@@ -21,6 +21,12 @@ struct TaggedUnion {
   /// The type of the underlying variant.
   using VariantType = std::variant<NamedTupleTypes...>;
 
+  /// Returns the underlying variant.
+  inline VariantType& variant() { return variant_; }
+
+  /// Returns the underlying variant.
+  inline const VariantType& variant() const { return variant_; }
+
   /// The underlying variant - a TaggedUnion is a thin wrapper
   /// around a variant that is mainly used for parsing.
   VariantType variant_;
