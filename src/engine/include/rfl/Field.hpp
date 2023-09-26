@@ -14,6 +14,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "rfl/Literal.hpp"
 #include "rfl/default.hpp"
 #include "rfl/internal/StringLiteral.hpp"
 
@@ -24,6 +25,9 @@ template <internal::StringLiteral _name, class _Type>
 struct Field {
   /// The underlying type.
   using Type = std::decay_t<_Type>;
+
+  /// The name of the field.
+  using Name = rfl::Literal<_name>;
 
   Field(const Type& _value) : value_(_value) {}
 
@@ -56,7 +60,7 @@ struct Field {
 
   ~Field() = default;
 
-  /// The name of the field.
+  /// The name of the field, for internal use.
   constexpr static const internal::StringLiteral name_ = _name;
 
   /// Returns the underlying object.
@@ -116,6 +120,12 @@ struct Field {
 
   /// Assigns the underlying object.
   inline void set(Type&& _value) { value_ = std::forward<Type>(_value); }
+
+  /// Returns the underlying object.
+  inline Type& value() { return value_; }
+
+  /// Returns the underlying object.
+  inline const Type& value() const { return value_; }
 
   /// The underlying value.
   Type value_;

@@ -50,6 +50,12 @@ struct Enum {
     variant_ = std::forward<VariantType>(_variant);
   }
 
+  /// Returns the underlying variant.
+  inline VariantType& variant() { return variant_; }
+
+  /// Returns the underlying variant.
+  inline const VariantType& variant() const { return variant_; }
+
   /// The underlying variant - an Enum is a thin wrapper
   /// around a variant that is mainly used for parsing.
   VariantType variant_;
