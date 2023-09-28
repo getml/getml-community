@@ -1,29 +1,20 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef STRINGS_STRING_HPP_
 #define STRINGS_STRING_HPP_
 
-// ----------------------------------------------------------------------------
-
-#include <cstring>
-
-// ----------------------------------------------------------------------------
-
 #include <algorithm>
+#include <cstring>
 #include <memory>
 #include <string>
 #include <utility>
 
-// ----------------------------------------------------------------------------
-
 #include "debug/debug.hpp"
-
-// ----------------------------------------------------------------------------
 
 namespace strings {
 
@@ -31,6 +22,9 @@ namespace strings {
 // no memory overhead over a standard C-string.
 class String {
   static constexpr char nullstr = '\0';
+
+ public:
+  using NamedTupleType = std::string;
 
  public:
   /// Parses the string and interprets NULL values.
@@ -96,6 +90,9 @@ class String {
   size_t hash() const {
     return std::hash<std::string_view>()(std::string_view(c_str(), size()));
   }
+
+  /// Needed for parsing.
+  std::string named_tuple() const { return str(); }
 
   /// Whether the string is set.
   operator bool() const { return (chars_ && true); }
