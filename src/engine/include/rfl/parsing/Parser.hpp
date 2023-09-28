@@ -36,7 +36,6 @@
 #include "rfl/named_tuple_t.hpp"
 #include "rfl/parsing/is_required.hpp"
 #include "rfl/to_named_tuple.hpp"
-#include "strings/strings.hpp"
 
 namespace rfl {
 namespace parsing {
@@ -549,26 +548,6 @@ struct Parser<ReaderType, WriterType, std::set<T>> {
 
 // ----------------------------------------------------------------------------
 
-template <class ReaderType, class WriterType>
-struct Parser<ReaderType, WriterType, strings::String> {
-  using InputVarType = typename ReaderType::InputVarType;
-  using OutputVarType = typename WriterType::OutputVarType;
-
-  static Result<strings::String> read(const ReaderType& _r,
-                                      InputVarType* _var) noexcept {
-    const auto to_str = [](auto&& _str) { return strings::String(_str); };
-    return Parser<ReaderType, WriterType, std::string>::read(_r, _var)
-        .transform(to_str);
-  }
-
-  static OutputVarType write(const WriterType& _w,
-                             const strings::String& _s) noexcept {
-    return Parser<ReaderType, WriterType, std::string>::write(_w, _s.str());
-  }
-};
-
-// ----------------------------------------------------------------------------
-
 template <class ReaderType, class WriterType,
           internal::StringLiteral _discriminator, class... AlternativeTypes>
 struct Parser<ReaderType, WriterType,
@@ -841,18 +820,22 @@ struct Parser<ReaderType, WriterType, std::vector<T>> {
   /// Expresses the variables as type T.
   static Result<std::vector<T>> read(const ReaderType& _r,
                                      InputVarType* _var) noexcept {
-    const auto to_vec = [&](InputArrayType _arr) {
+    using namespace std::ranges::views;
+
+    const auto get_result = [&](auto& _v) {
+      return Parser<ReaderType, WriterType, std::decay_t<T>>::read(_r, &_v)
+          .value();
+    };
+
+    const auto to_vec = [&](InputArrayType _arr) -> Result<std::vector<T>> {
       auto input_vars = _r.to_vec(&_arr);
-      auto vec = std::vector<T>();
-      for (auto& v : input_vars) {
-        const auto r =
-            Parser<ReaderType, WriterType, std::decay_t<T>>::read(_r, &v);
-        if (!r) {
-          return Result<std::vector<T>>(*r.error());
-        }
-        vec.emplace_back(*r);
+      auto range = input_vars | transform(get_result);
+      try {
+        return Result<std::vector<T>>(
+            std::vector<T>(range.begin(), range.end()));
+      } catch (std::exception& e) {
+        return Error(e.what());
       }
-      return Result<std::vector<T>>(vec);
     };
 
     return _r.to_array(_var).and_then(to_vec);
