@@ -10,7 +10,10 @@
 #define RFL_PARSING_PARSER_HPP_
 
 #include <cstddef>
+#include <deque>
 #include <exception>
+#include <forward_list>
+#include <list>
 #include <map>
 #include <memory>
 #include <stdexcept>
@@ -808,14 +811,16 @@ struct Parser<ReaderType, WriterType, std::variant<FieldTypes...>> {
 
 // ----------------------------------------------------------------------------
 
-template <class ReaderType, class WriterType, class T>
-struct Parser<ReaderType, WriterType, std::vector<T>> {
+template <class ReaderType, class WriterType, class VecType>
+struct VectorParser {
  public:
   using InputArrayType = typename ReaderType::InputArrayType;
   using InputVarType = typename ReaderType::InputVarType;
 
   using OutputArrayType = typename WriterType::OutputArrayType;
   using OutputVarType = typename WriterType::OutputVarType;
+
+  using T = typename VecType::value_type;
 
   /// Expresses the variables as type T.
   static Result<std::vector<T>> read(const ReaderType& _r,
@@ -827,12 +832,11 @@ struct Parser<ReaderType, WriterType, std::vector<T>> {
           .value();
     };
 
-    const auto to_vec = [&](InputArrayType _arr) -> Result<std::vector<T>> {
+    const auto to_vec = [&](InputArrayType _arr) -> Result<VecType> {
       auto input_vars = _r.to_vec(&_arr);
       auto range = input_vars | transform(get_result);
       try {
-        return Result<std::vector<T>>(
-            std::vector<T>(range.begin(), range.end()));
+        return Result<VecType>(VecType(range.begin(), range.end()));
       } catch (std::exception& e) {
         return Error(e.what());
       }
@@ -843,16 +847,31 @@ struct Parser<ReaderType, WriterType, std::vector<T>> {
 
   /// Transform a std::vector into an array
   static OutputVarType write(const WriterType& _w,
-                             const std::vector<T>& _vec) noexcept {
+                             const VecType& _vec) noexcept {
     auto arr = _w.new_array();
-    for (size_t i = 0; i < _vec.size(); ++i) {
-      _w.add(
-          Parser<ReaderType, WriterType, std::decay_t<T>>::write(_w, _vec[i]),
-          &arr);
+    for (auto it = _vec.begin(); it != _vec.end(); ++it) {
+      _w.add(Parser<ReaderType, WriterType, std::decay_t<T>>::write(_w, *it),
+             &arr);
     }
     return OutputVarType(arr);
   }
 };
+
+template <class ReaderType, class WriterType, class T>
+struct Parser<ReaderType, WriterType, std::deque<T>>
+    : public VectorParser<ReaderType, WriterType, std::deque<T>> {};
+
+template <class ReaderType, class WriterType, class T>
+struct Parser<ReaderType, WriterType, std::forward_list<T>>
+    : public VectorParser<ReaderType, WriterType, std::forward_list<T>> {};
+
+template <class ReaderType, class WriterType, class T>
+struct Parser<ReaderType, WriterType, std::list<T>>
+    : public VectorParser<ReaderType, WriterType, std::list<T>> {};
+
+template <class ReaderType, class WriterType, class T>
+struct Parser<ReaderType, WriterType, std::vector<T>>
+    : public VectorParser<ReaderType, WriterType, std::vector<T>> {};
 
 }  // namespace parsing
 }  // namespace rfl
