@@ -16,9 +16,11 @@
 #include <list>
 #include <map>
 #include <memory>
+#include <set>
 #include <stdexcept>
 #include <tuple>
 #include <type_traits>
+#include <unordered_set>
 #include <variant>
 #include <vector>
 
@@ -284,7 +286,7 @@ struct Parser<ReaderType, WriterType, std::map<std::string, ValueType>> {
     return _r.to_object(_var).and_then(to_map);
   }
 
-  /// Transform a std::vector into an object
+  /// Transform a std::map into an object
   static OutputVarType write(
       const WriterType& _w,
       const std::map<std::string, ValueType>& _m) noexcept {
@@ -501,51 +503,13 @@ struct Parser<ReaderType, WriterType, std::pair<FirstType, SecondType>> {
         .transform(to_pair);
   }
 
-  /// Transform a std::vector into an array
+  /// Transform a std::pair into an array
   static OutputVarType write(
       const WriterType& _w,
       const std::pair<FirstType, SecondType>& _p) noexcept {
     const auto tup = std::make_tuple(_p.first, _p.second);
     return Parser<ReaderType, WriterType,
                   std::tuple<FirstType, SecondType>>::write(_w, tup);
-  }
-};
-
-// ----------------------------------------------------------------------------
-
-template <class ReaderType, class WriterType, class T>
-struct Parser<ReaderType, WriterType, std::set<T>> {
-  using InputArrayType = typename ReaderType::InputArrayType;
-  using InputVarType = typename ReaderType::InputVarType;
-
-  using OutputArrayType = typename WriterType::OutputArrayType;
-  using OutputVarType = typename WriterType::OutputVarType;
-
- public:
-  /// Expresses the variables as type T.
-  static Result<std::set<T>> read(const ReaderType& _r,
-                                  InputVarType* _var) noexcept {
-    const auto get_value = [&_r](InputVarType& _var) {
-      return Parser<ReaderType, WriterType, std::decay_t<T>>::read(_r, &_var);
-    };
-
-    const auto to_set = [&_r, get_value](InputArrayType _arr) {
-      auto vec = _r.to_vec(&_arr);
-      return fct::collect_results::set(vec | VIEWS::transform(get_value));
-    };
-
-    return _r.to_array(_var).and_then(to_set);
-  }
-
-  /// Transform a std::vector into an array
-  static OutputVarType write(const WriterType& _w,
-                             const std::set<T>& _s) noexcept {
-    auto arr = _w.new_array();
-    for (const auto& val : _s) {
-      _w.add(Parser<ReaderType, WriterType, std::decay_t<T>>::write(_w, val),
-             &arr);
-    }
-    return arr;
   }
 };
 
@@ -679,7 +643,6 @@ struct Parser<ReaderType, WriterType, std::tuple<Ts...>> {
   using OutputArrayType = typename WriterType::OutputArrayType;
   using OutputVarType = typename WriterType::OutputVarType;
 
-  /// Expresses the variables as type T.
   static Result<std::tuple<Ts...>> read(const ReaderType& _r,
                                         InputVarType* _var) noexcept {
     const auto to_vec = [&](auto _arr) { return _r.to_vec(&_arr); };
@@ -702,7 +665,6 @@ struct Parser<ReaderType, WriterType, std::tuple<Ts...>> {
         .and_then(extract);
   }
 
-  /// Transform a std::vector into a array
   static OutputVarType write(const WriterType& _w,
                              const std::tuple<Ts...>& _tup) noexcept {
     auto arr = _w.new_array();
@@ -811,6 +773,8 @@ struct Parser<ReaderType, WriterType, std::variant<FieldTypes...>> {
 
 // ----------------------------------------------------------------------------
 
+/// This can be used for data structures that would be expressed as array in
+/// serialized format (std::vector, std::set, std::deque, ...).
 template <class ReaderType, class WriterType, class VecType>
 struct VectorParser {
  public:
@@ -822,9 +786,8 @@ struct VectorParser {
 
   using T = typename VecType::value_type;
 
-  /// Expresses the variables as type T.
-  static Result<std::vector<T>> read(const ReaderType& _r,
-                                     InputVarType* _var) noexcept {
+  static Result<VecType> read(const ReaderType& _r,
+                              InputVarType* _var) noexcept {
     using namespace std::ranges::views;
 
     const auto get_result = [&](auto& _v) {
@@ -845,7 +808,6 @@ struct VectorParser {
     return _r.to_array(_var).and_then(to_vec);
   }
 
-  /// Transform a std::vector into an array
   static OutputVarType write(const WriterType& _w,
                              const VecType& _vec) noexcept {
     auto arr = _w.new_array();
@@ -868,6 +830,14 @@ struct Parser<ReaderType, WriterType, std::forward_list<T>>
 template <class ReaderType, class WriterType, class T>
 struct Parser<ReaderType, WriterType, std::list<T>>
     : public VectorParser<ReaderType, WriterType, std::list<T>> {};
+
+template <class ReaderType, class WriterType, class T>
+struct Parser<ReaderType, WriterType, std::set<T>>
+    : public VectorParser<ReaderType, WriterType, std::set<T>> {};
+
+template <class ReaderType, class WriterType, class T>
+struct Parser<ReaderType, WriterType, std::unordered_set<T>>
+    : public VectorParser<ReaderType, WriterType, std::unordered_set<T>> {};
 
 template <class ReaderType, class WriterType, class T>
 struct Parser<ReaderType, WriterType, std::vector<T>>
