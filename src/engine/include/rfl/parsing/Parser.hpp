@@ -20,6 +20,7 @@
 #include <stdexcept>
 #include <tuple>
 #include <type_traits>
+#include <unordered_map>
 #include <unordered_set>
 #include <variant>
 #include <vector>
@@ -831,9 +832,17 @@ template <class ReaderType, class WriterType, class T>
 struct Parser<ReaderType, WriterType, std::list<T>>
     : public VectorParser<ReaderType, WriterType, std::list<T>> {};
 
+template <class ReaderType, class WriterType, class K, class V>
+struct Parser<ReaderType, WriterType, std::map<K, V>>
+    : public VectorParser<ReaderType, WriterType, std::map<K, V>> {};
+
 template <class ReaderType, class WriterType, class T>
 struct Parser<ReaderType, WriterType, std::set<T>>
     : public VectorParser<ReaderType, WriterType, std::set<T>> {};
+
+template <class ReaderType, class WriterType, class K, class V>
+struct Parser<ReaderType, WriterType, std::unordered_map<K, V>>
+    : public VectorParser<ReaderType, WriterType, std::unordered_map<K, V>> {};
 
 template <class ReaderType, class WriterType, class T>
 struct Parser<ReaderType, WriterType, std::unordered_set<T>>
