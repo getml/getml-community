@@ -14,6 +14,7 @@
 
 namespace rfl {
 
+// https://serde.rs/enum-representations.html
 template <internal::StringLiteral _discriminator, class... NamedTupleTypes>
 struct TaggedUnion {
   static constexpr internal::StringLiteral discrimininator_ = _discriminator;

@@ -78,6 +78,12 @@ class Result {
 
   Result(Error&& _err) : t_or_err_(_err) {}
 
+  template <class U, typename std::enable_if<std::is_convertible_v<U, T>,
+                                             bool>::type = true>
+  Result(const Result<U>& _other)
+      : t_or_err_(
+            _other.transform([](const U& _u) { return T(_u); }).t_or_err_) {}
+
   ~Result() = default;
 
   /// Returns Result<U>, if successful and error otherwise.
@@ -240,6 +246,14 @@ class Result {
   /// Allows read access to the underlying value. Careful: Will result in
   /// undefined behavior, if the result contains an error.
   const T& operator*() const { return *std::get_if<T>(&t_or_err_); }
+
+  /// Assigns the underlying object.
+  template <class U, typename std::enable_if<std::is_convertible_v<U, T>,
+                                             bool>::type = true>
+  inline void operator=(const Result<U>& _other) {
+    const auto to_t = [](const U& _u) -> T { return _u; };
+    t_or_err_ = _other.transform(to_t).t_or_err_;
+  }
 
   /// Expects a function that takes of type Error -> Result<T> and returns
   /// Result<T>.
