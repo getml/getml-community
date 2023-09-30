@@ -25,8 +25,8 @@ struct XGBoostHyperparams {
   /// Applies the hyperparameters to an XGBoost Handler
   template <int _i = 0>
   inline void apply(BoosterHandle _handle) const {
-    using NamedTupleType = rfl::named_tuple_t<XGBoostHyperparams>;
-    using Fields = typename NamedTupleType::Fields;
+    using ReflectionType = rfl::named_tuple_t<XGBoostHyperparams>;
+    using Fields = typename ReflectionType::Fields;
 
     if constexpr (_i == std::tuple_size_v<Fields>) {
       return;

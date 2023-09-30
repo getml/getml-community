@@ -18,12 +18,12 @@ namespace config {
 
 /// Configuration information for the monitor
 struct MonitorOptions {
-  using NamedTupleType = rfl::NamedTuple<rfl::Field<"httpPort", size_t>,
+  using ReflectionType = rfl::NamedTuple<rfl::Field<"httpPort", size_t>,
                                          rfl::Field<"proxyUrl", std::string>,
                                          rfl::Field<"tcpPort", size_t> >;
 
  public:
-  MonitorOptions(const NamedTupleType& _obj)
+  MonitorOptions(const ReflectionType& _obj)
       : http_port_(_obj.get<"httpPort">()),
         proxy_url_(_obj.get<"proxyUrl">()),
         tcp_port_(_obj.get<"tcpPort">()) {}

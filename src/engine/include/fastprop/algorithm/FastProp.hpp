@@ -42,7 +42,7 @@ class FastProp {
 
   using MarkerType = typename helpers::ColumnDescription::MarkerType;
 
-  using NamedTupleType = rfl::NamedTuple<
+  using ReflectionType = rfl::NamedTuple<
       rfl::Field<"allow_http_", bool>,
       rfl::Field<"features_", std::shared_ptr<const std::vector<
                                   containers::AbstractFeature>>>,
@@ -84,7 +84,7 @@ class FastProp {
            const std::shared_ptr<const std::vector<std::string>>& _peripheral,
            const std::shared_ptr<const containers::Placeholder>& _placeholder);
 
-  explicit FastProp(const NamedTupleType& _val);
+  explicit FastProp(const ReflectionType& _val);
 
   ~FastProp() = default;
 
@@ -98,7 +98,7 @@ class FastProp {
   void fit(const FitParams& _params, const bool _as_subfeatures = false);
 
   /// Necessary for the automated serialization.
-  NamedTupleType named_tuple() const;
+  ReflectionType reflection() const;
 
   /// Returns the features underlying the model (the predictions of the
   /// individual trees as opposed to the entire prediction)

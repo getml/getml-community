@@ -144,7 +144,7 @@ class Scores {
   using f_tpr = rfl::Field<"tpr_", std::vector<std::vector<Float>>>;
 
   /// This type needs to be defined for the reflection to work.
-  using NamedTupleType = rfl::define_named_tuple_t<
+  using ReflectionType = rfl::define_named_tuple_t<
       AllMetricsType, f_accuracy_curves, f_average_targets,
       f_column_descriptions, f_column_importances, f_feature_correlations,
       f_feature_densities, f_feature_importances, f_feature_names, f_fpr,
@@ -154,7 +154,7 @@ class Scores {
  public:
   Scores();
 
-  explicit Scores(const NamedTupleType& _val);
+  explicit Scores(const ReflectionType& _val);
 
   ~Scores();
 
@@ -211,7 +211,7 @@ class Scores {
   const AllMetricsType metrics() const { return AllMetricsType(val_); }
 
   /// Necessary for the reflection to work.
-  const auto& named_tuple() const { return val_; }
+  const auto& reflection() const { return val_; }
 
   /// Trivial (const) accessor.
   const auto& precision(const size_t _target_num) const {
@@ -253,7 +253,7 @@ class Scores {
 
  private:
   /// The underlying NamedTuple
-  NamedTupleType val_;
+  ReflectionType val_;
 };
 
 }  // namespace metrics

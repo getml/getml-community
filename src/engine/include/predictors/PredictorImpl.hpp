@@ -39,7 +39,7 @@ class PredictorImpl {
   using f_numerical =
       rfl::Field<"numerical_colnames_", std::vector<std::string>>;
 
-  using NamedTupleType =
+  using ReflectionType =
       rfl::NamedTuple<f_autofeatures, f_categorical, f_encoding, f_numerical>;
 
  public:
@@ -47,7 +47,7 @@ class PredictorImpl {
                 const std::vector<std::string>& _categorical_colnames,
                 const std::vector<std::string>& _numerical_colnames);
 
-  explicit PredictorImpl(const NamedTupleType& _nt);
+  explicit PredictorImpl(const ReflectionType& _nt);
 
   ~PredictorImpl();
 
@@ -114,7 +114,7 @@ class PredictorImpl {
   }
 
   /// Necessary for the automated parsing to work.
-  NamedTupleType named_tuple() const {
+  ReflectionType reflection() const {
     return f_autofeatures(autofeatures_) *
            f_categorical(categorical_colnames_) * f_encoding(encodings_) *
            f_numerical(numerical_colnames_);

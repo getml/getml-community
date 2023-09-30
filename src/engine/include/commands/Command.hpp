@@ -33,7 +33,7 @@ struct Command {
   using ShutdownOp =
       rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"shutdown">>>;
 
-  using NamedTupleType =
+  using ReflectionType =
       std::variant<ColumnCommand, DatabaseCommand, DataFrameCommand,
                    PipelineCommand, ProjectCommand, ViewCommand, IsAliveOp,
                    MonitorURLOp, ShutdownOp>;
@@ -42,7 +42,7 @@ struct Command {
 
   static Command from_json_obj(const InputVarType& _obj);
 
-  NamedTupleType val_;
+  ReflectionType val_;
 };
 
 }  // namespace commands

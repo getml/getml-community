@@ -54,7 +54,7 @@ Condition::Condition(const Int _category_used, const enums::DataUsed _data_used,
 
 // ----------------------------------------------------------------------------
 
-Condition::Condition(const NamedTupleType &_obj)
+Condition::Condition(const ReflectionType &_obj)
     : bound_lower_(_obj.get<"bound_lower_">().value_or(0.0)),
       bound_upper_(_obj.get<"bound_upper_">().value_or(0.0)),
       category_used_(_obj.get<"category_used_">()),
@@ -69,7 +69,7 @@ Condition::~Condition() = default;
 
 // ----------------------------------------------------------------------------
 
-typename Condition::NamedTupleType Condition::named_tuple() const {
+typename Condition::ReflectionType Condition::reflection() const {
   return rfl::make_field<"bound_lower_">(bound_lower_) *
          rfl::make_field<"bound_upper_">(bound_upper_) *
          rfl::make_field<"category_used_">(category_used_) *

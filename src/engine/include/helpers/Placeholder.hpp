@@ -107,14 +107,14 @@ struct Placeholder {
 
   /// The main JSON representation of a Placeholder. Combines NeededForTraiing
   /// and NeededForPythonAPI.
-  using NamedTupleType = rfl::define_named_tuple_t<
+  using ReflectionType = rfl::define_named_tuple_t<
       rfl::remove_fields_t<NeededForTraining, "name_">, NeededForPythonAPI>;
 
   explicit Placeholder(const NeededForTraining& _params);
 
   explicit Placeholder(const NeededForPythonAPI& _params);
 
-  explicit Placeholder(const NamedTupleType& _val);
+  explicit Placeholder(const ReflectionType& _val);
 
   ~Placeholder() = default;
 
@@ -295,7 +295,7 @@ struct Placeholder {
   static Placeholder from_json_obj(const InputVarType& _json_obj);
 
   /// Used to break the recursive definition.
-  const NamedTupleType val_;
+  const ReflectionType val_;
 };
 
 }  // namespace helpers

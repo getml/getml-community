@@ -28,7 +28,7 @@ Schema::~Schema() = default;
 
 // ----------------------------------------------------------------------------
 
-typename Schema::NamedTupleType Schema::named_tuple() const {
+typename Schema::ReflectionType Schema::reflection() const {
   return SchemaImpl{.categoricals = categoricals_,
                     .discretes = discretes_,
                     .join_keys = join_keys_,

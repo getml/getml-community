@@ -47,7 +47,7 @@ class CategoryTrimmer : public Preprocessor {
     rfl::Field<"population_sets_", std::vector<CategoryPair>> population_sets;
   };
 
-  using NamedTupleType = SaveLoad;
+  using ReflectionType = SaveLoad;
 
   static constexpr const char* TRIMMED = "(trimmed)";
 
@@ -118,8 +118,8 @@ class CategoryTrimmer : public Preprocessor {
   size_t min_freq() const { return min_freq_; }
 
   /// Necessary for the automated parsing to work.
-  NamedTupleType named_tuple() const {
-    return NamedTupleType{peripheral_sets_, population_sets_};
+  ReflectionType reflection() const {
+    return ReflectionType{peripheral_sets_, population_sets_};
   }
 
  private:

@@ -154,7 +154,7 @@ typename ViewParser::ColumnViewVariant ViewParser::make_column_view(
 
     if constexpr (std::is_same<
                       Type, typename commands::StringColumnOrStringColumnView::
-                                NamedTupleType>()) {
+                                ReflectionType>()) {
       const auto col = commands::StringColumnOrStringColumnView(_col);
       return StringOpParser(categories_, join_keys_encoding_, data_frames_)
           .parse(col);
@@ -162,7 +162,7 @@ typename ViewParser::ColumnViewVariant ViewParser::make_column_view(
 
     if constexpr (std::is_same<Type,
                                typename commands::FloatColumnOrFloatColumnView::
-                                   NamedTupleType>()) {
+                                   ReflectionType>()) {
       const auto col = commands::FloatColumnOrFloatColumnView(_col);
       return FloatOpParser(categories_, join_keys_encoding_, data_frames_)
           .parse(col);

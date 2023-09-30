@@ -20,7 +20,7 @@ namespace preprocessors {
 
 struct PreprocessorParser {
   using PreprocessorHyperparams =
-      typename commands::Preprocessor::NamedTupleType;
+      typename commands::Preprocessor::ReflectionType;
 
   /// Returns the correct preprocessor to use based on the JSON object.
   static rfl::Ref<Preprocessor> parse(

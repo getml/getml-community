@@ -120,7 +120,7 @@ containers::DataFrame Substring::fit_transform_df(
 // -----------------------------------------------------------------------------
 
 void Substring::load(const std::string& _fname) {
-  const auto named_tuple = helpers::Loader::load<NamedTupleType>(_fname);
+  const auto named_tuple = helpers::Loader::load<ReflectionType>(_fname);
   cols_ = named_tuple.cols();
 }
 

@@ -187,7 +187,7 @@ struct ProjectCommand {
     rfl::Field<"type_", rfl::Literal<"temp_dir">> type;
   };
 
-  using NamedTupleType = rfl::TaggedUnion<
+  using ReflectionType = rfl::TaggedUnion<
       "type_", AddDfFromArrowOp, AddDfFromCSVOp, AddDfFromDBOp, AddDfFromJSONOp,
       AddDfFromParquetOp, AddDfFromQueryOp, AddDfFromViewOp, CopyPipelineOp,
       DeleteDataFrameOp, DeletePipelineOp, DeleteProjectOp, ListDfsOp,
@@ -200,7 +200,7 @@ struct ProjectCommand {
   static ProjectCommand from_json_obj(const InputVarType& _obj);
 
   /// The underlying value
-  NamedTupleType val_;
+  ReflectionType val_;
 };
 
 }  // namespace commands

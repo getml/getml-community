@@ -38,7 +38,8 @@
 #include "rfl/field_type.hpp"
 #include "rfl/from_named_tuple.hpp"
 #include "rfl/internal/StringLiteral.hpp"
-#include "rfl/internal/has_named_tuple_type_v.hpp"
+#include "rfl/internal/has_reflection_method_v.hpp"
+#include "rfl/internal/has_reflection_type_v.hpp"
 #include "rfl/named_tuple_t.hpp"
 #include "rfl/parsing/is_required.hpp"
 #include "rfl/to_named_tuple.hpp"
@@ -64,12 +65,12 @@ struct Parser {
     if constexpr (ReaderType::template has_custom_constructor<T>) {
       return _r.template use_custom_constructor<T>(_var);
     } else {
-      if constexpr (internal::has_named_tuple_type_v<T>) {
-        using NamedTupleType = std::decay_t<typename T::NamedTupleType>;
+      if constexpr (internal::has_reflection_type_v<T>) {
+        using ReflectionType = std::decay_t<typename T::ReflectionType>;
         const auto wrap_in_t = [](auto _named_tuple) {
           return T(_named_tuple);
         };
-        return Parser<ReaderType, WriterType, NamedTupleType>::read(_r, _var)
+        return Parser<ReaderType, WriterType, ReflectionType>::read(_r, _var)
             .transform(wrap_in_t);
       } else if constexpr (std::is_class_v<T> &&
                            !std::is_same<T, std::string>()) {
@@ -88,14 +89,14 @@ struct Parser {
 
   /// Converts the variable to a JSON type.
   static auto write(const WriterType& _w, const T& _var) noexcept {
-    if constexpr (internal::has_named_tuple_type_v<T>) {
-      using NamedTupleType = std::decay_t<typename T::NamedTupleType>;
-      if constexpr (internal::has_named_tuple_method_v<T>) {
-        return Parser<ReaderType, WriterType, NamedTupleType>::write(
-            _w, _var.named_tuple());
+    if constexpr (internal::has_reflection_type_v<T>) {
+      using ReflectionType = std::decay_t<typename T::ReflectionType>;
+      if constexpr (internal::has_reflection_method_v<T>) {
+        return Parser<ReaderType, WriterType, ReflectionType>::write(
+            _w, _var.reflection());
       } else {
         const auto& [r] = _var;
-        return Parser<ReaderType, WriterType, NamedTupleType>::write(_w, r);
+        return Parser<ReaderType, WriterType, ReflectionType>::write(_w, r);
       }
     } else if constexpr (std::is_class_v<T> &&
                          !std::is_same<T, std::string>()) {
@@ -594,12 +595,12 @@ struct Parser<ReaderType, WriterType,
   template <class T>
   static inline bool contains_disc_value(
       const std::string& _disc_value) noexcept {
-    if constexpr (!internal::has_named_tuple_type_v<T>) {
+    if constexpr (!internal::has_reflection_type_v<T>) {
       using LiteralType = field_type_t<_discriminator, T>;
       return LiteralType::contains(_disc_value);
     } else {
       using LiteralType =
-          field_type_t<_discriminator, typename T::NamedTupleType>;
+          field_type_t<_discriminator, typename T::ReflectionType>;
       return LiteralType::contains(_disc_value);
     }
   }

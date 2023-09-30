@@ -102,13 +102,13 @@ class StringColumnOrStringColumnView {
     rfl::Field<"type_", rfl::Literal<"StringColumn">> type;
   };
 
-  using NamedTupleType =
+  using ReflectionType =
       std::variant<StringColumnOp, StringBinaryOp, StringConstOp,
                    StringSubselectionOp, StringSubstringOp, StringUnaryOp,
                    StringUpdateOp, StringWithSubrolesOp, StringWithUnitOp>;
 
   /// Used to break the recursive definition.
-  NamedTupleType val_;
+  ReflectionType val_;
 };
 
 }  // namespace commands

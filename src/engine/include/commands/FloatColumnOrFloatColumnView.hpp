@@ -140,7 +140,7 @@ struct FloatColumnOrFloatColumnView {
     rfl::Field<"type_", rfl::Literal<"FloatColumnView">> type;
   };
 
-  using NamedTupleType =
+  using ReflectionType =
       std::variant<FloatArangeOp, FloatAsTSOp, FloatBinaryOp, FloatConstOp,
                    FloatFromBooleanOp, FloatFromStringOp, FloatRandomOp,
                    FloatRowidOp, FloatSubselectionOp, FloatUnaryOp,
@@ -148,7 +148,7 @@ struct FloatColumnOrFloatColumnView {
                    FloatWithUnitOp>;
 
   /// Used to break the recursive definition.
-  NamedTupleType val_;
+  ReflectionType val_;
 };
 
 }  // namespace commands

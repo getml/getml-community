@@ -48,7 +48,7 @@ class Seasonal : public Preprocessor {
     rfl::Field<"year_", std::vector<rfl::Ref<helpers::ColumnDescription>>> year;
   };
 
-  using NamedTupleType = SaveLoad;
+  using ReflectionType = SaveLoad;
 
  private:
   static constexpr bool ADD_ZERO = true;
@@ -74,7 +74,7 @@ class Seasonal : public Preprocessor {
   void load(const std::string& _fname) final;
 
   /// Necessary for the automated parsing to work.
-  NamedTupleType named_tuple() const;
+  ReflectionType reflection() const;
 
   /// Stores the preprocessor.
   void save(const std::string& _fname,

@@ -46,14 +46,14 @@ struct DataModel {
   using f_roles = rfl::Field<"roles_", Roles>;
 
   /// Needed for the JSON parsing to work.
-  using NamedTupleType = rfl::define_named_tuple_t<
+  using ReflectionType = rfl::define_named_tuple_t<
       rfl::remove_fields_t<typename helpers::Placeholder::NeededForTraining,
                            "joined_tables_", "propositionalization_">,
       f_horizon, f_joined_tables, f_memory, f_relationship, f_roles>;
 
   /// The DataModel requires additional checks after parsing,
   /// which is why we have a default constructor.
-  DataModel(const NamedTupleType& _val) : val_(_val) {
+  DataModel(const ReflectionType& _val) : val_(_val) {
     check_length<"allow_lagged_targets_">();
     check_length<"join_keys_used_">();
     check_length<"other_join_keys_used_">();
@@ -88,7 +88,7 @@ struct DataModel {
   }
 
   /// The underlying value.
-  const NamedTupleType val_;
+  const ReflectionType val_;
 };
 
 }  // namespace commands

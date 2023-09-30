@@ -124,7 +124,7 @@ containers::DataFrame Imputation::fit_transform_df(
 // ----------------------------------------------------
 
 void Imputation::load(const std::string& _fname) {
-  const auto named_tuple = helpers::Loader::load<NamedTupleType>(_fname);
+  const auto named_tuple = helpers::Loader::load<ReflectionType>(_fname);
 
   Imputation that;
 

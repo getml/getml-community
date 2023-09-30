@@ -20,13 +20,13 @@ namespace config {
 /// Configuration information for the engine
 class Options {
  public:
-  using NamedTupleType =
+  using ReflectionType =
       rfl::NamedTuple<rfl::Field<"projectDirectory", std::string>,
                       rfl::Field<"engine", EngineOptions>,
                       rfl::Field<"monitor", MonitorOptions>>;
 
  public:
-  explicit Options(const NamedTupleType& _obj)
+  explicit Options(const ReflectionType& _obj)
       : all_projects_directory_(_obj.get<"projectDirectory">()),
         engine_(_obj.get<"engine">()),
         monitor_(_obj.get<"monitor">()) {}

@@ -27,7 +27,7 @@ Scores::Scores()
 
 // ----------------------------------------------------------------------------
 
-Scores::Scores(const NamedTupleType& _val) : val_(_val) {}
+Scores::Scores(const ReflectionType& _val) : val_(_val) {}
 
 // ----------------------------------------------------------------------------
 

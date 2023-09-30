@@ -25,7 +25,7 @@ VocabularyContainer::VocabularyContainer(
 
 // ----------------------------------------------------------------------------
 
-VocabularyContainer::VocabularyContainer(const NamedTupleType& _val)
+VocabularyContainer::VocabularyContainer(const ReflectionType& _val)
     : val_(_val) {}
 
 // ----------------------------------------------------------------------------

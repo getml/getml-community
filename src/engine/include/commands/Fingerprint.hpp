@@ -162,13 +162,13 @@ struct Fingerprint {
 
   // -----------------------------
 
-  using NamedTupleType =
+  using ReflectionType =
       rfl::define_variant_t<DataFrameFingerprint, PreprocessorFingerprint,
                             FeatureLearnerFingerprint, PredictorFingerprint>;
 
   // -----------------------------
 
-  Fingerprint(const NamedTupleType& _val) : val_(_val) {}
+  Fingerprint(const ReflectionType& _val) : val_(_val) {}
 
   static Fingerprint from_json(const std::string& _json_str);
 
@@ -180,7 +180,7 @@ struct Fingerprint {
 
   ~Fingerprint() = default;
 
-  NamedTupleType val_;
+  ReflectionType val_;
 };
 
 }  // namespace commands

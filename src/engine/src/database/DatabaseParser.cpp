@@ -15,7 +15,7 @@
 namespace database {
 
 rfl::Ref<Connector> DatabaseParser::parse(
-    const typename Command::NamedTupleType& _cmd,
+    const typename Command::ReflectionType& _cmd,
     const std::string& _password) {
   const auto handle = [&_password](const auto& _obj) -> rfl::Ref<Connector> {
     using Type = std::decay_t<decltype(_obj)>;
