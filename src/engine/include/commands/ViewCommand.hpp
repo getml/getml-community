@@ -28,8 +28,8 @@ namespace commands {
 struct ViewCommand {
   /// Used as a helper for various commands related to views.
   using ViewCol =
-      std::variant<typename FloatColumnOrFloatColumnView::NamedTupleType,
-                   typename StringColumnOrStringColumnView::NamedTupleType>;
+      std::variant<typename FloatColumnOrFloatColumnView::ReflectionType,
+                   typename StringColumnOrStringColumnView::ReflectionType>;
 
   /// The command used to retrieve the content of a view.
   struct GetViewContentOp {
@@ -80,7 +80,7 @@ struct ViewCommand {
     rfl::Field<"compression_", std::string> compression;
   };
 
-  using NamedTupleType =
+  using ReflectionType =
       rfl::TaggedUnion<"type_", GetViewContentOp, GetViewNRowsOp, ViewToArrowOp,
                        ViewToCSVOp, ViewToDBOp, ViewToParquetOp>;
 
@@ -89,7 +89,7 @@ struct ViewCommand {
   static ViewCommand from_json_obj(const InputVarType& _obj);
 
   /// The underlying value
-  NamedTupleType val_;
+  ReflectionType val_;
 };
 
 }  // namespace commands

@@ -34,7 +34,7 @@ FastProp::FastProp(
 
 // ---------------------------------------------------------------------------
 
-FastProp::FastProp(const NamedTupleType &_val)
+FastProp::FastProp(const ReflectionType &_val)
     : abstract_features_(_val.get<"features_">()),
       allow_http_(_val.get<"allow_http_">()),
       hyperparameters_(_val.get<"hyperparameters_">()),
@@ -1449,7 +1449,7 @@ std::shared_ptr<std::vector<size_t>> FastProp::make_rownums(
 
 // ---------------------------------------------------------------------------
 
-typename FastProp::NamedTupleType FastProp::named_tuple() const {
+typename FastProp::ReflectionType FastProp::reflection() const {
   return rfl::make_field<"features_">(abstract_features_) *
          rfl::make_field<"allow_http_">(allow_http_) *
          rfl::make_field<"hyperparameters_">(hyperparameters_) *

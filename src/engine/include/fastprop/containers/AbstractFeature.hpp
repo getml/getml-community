@@ -24,7 +24,7 @@ namespace fastprop {
 namespace containers {
 
 struct AbstractFeature {
-  using NamedTupleType =
+  using ReflectionType =
       rfl::NamedTuple<rfl::Field<"aggregation_", enums::Aggregation>,
                       rfl::Field<"categorical_value_", Int>,
                       rfl::Field<"conditions_", std::vector<Condition>>,
@@ -56,12 +56,12 @@ struct AbstractFeature {
                   const enums::DataUsed _data_used,
                   const Int _categorical_value);
 
-  AbstractFeature(const NamedTupleType &_obj);
+  AbstractFeature(const ReflectionType &_obj);
 
   ~AbstractFeature();
 
   /// Necessary for the deserialization to work.
-  NamedTupleType named_tuple() const;
+  ReflectionType reflection() const;
 
   /// Expresses the abstract feature as SQL code.
   std::string to_sql(

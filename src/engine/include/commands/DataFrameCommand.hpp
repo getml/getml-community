@@ -31,8 +31,8 @@ namespace commands {
 struct DataFrameCommand {
   /// Used as a helper for various commands related to views.
   using ViewCol =
-      std::variant<typename FloatColumnOrFloatColumnView::NamedTupleType,
-                   typename StringColumnOrStringColumnView::NamedTupleType>;
+      std::variant<typename FloatColumnOrFloatColumnView::ReflectionType,
+                   typename StringColumnOrStringColumnView::ReflectionType>;
 
   /// The command to add a data frame from arrow.
   using AddDfFromArrowOp = typename ProjectCommand::AddDfFromArrowOp;
@@ -375,7 +375,7 @@ struct DataFrameCommand {
     rfl::Field<"compression_", std::string> compression;
   };
 
-  using NamedTupleType = rfl::TaggedUnion<
+  using ReflectionType = rfl::TaggedUnion<
       "type_", AddFloatColumnOp, AddStringColumnOp, AppendToDataFrameOp,
       CalcCategoricalColumnPlotOp, CalcColumnPlotOp, ConcatDataFramesOp,
       FreezeDataFrameOp, GetDataFrameOp, GetDataFrameContentOp,
@@ -388,7 +388,7 @@ struct DataFrameCommand {
   static DataFrameCommand from_json_obj(const InputVarType& _obj);
 
   /// The underlying value
-  NamedTupleType val_;
+  ReflectionType val_;
 };
 
 }  // namespace commands

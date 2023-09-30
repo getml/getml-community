@@ -112,14 +112,14 @@ struct BooleanColumnView {
   };
 
   /// Defines a boolean column view.
-  using NamedTupleType =
+  using ReflectionType =
       std::variant<BooleanBinaryOp, BooleanConstOp, BooleanIsInfOp,
                    BooleanIsNullOp, BooleanNotOp, BooleanNumComparisonOp,
                    BooleanStrComparisonOp, BooleanSubselectionOp,
                    BooleanUpdateOp>;
 
   /// Used to break the recursive definition.
-  NamedTupleType val_;
+  ReflectionType val_;
 };
 
 }  // namespace commands

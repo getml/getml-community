@@ -94,7 +94,7 @@ struct DatabaseCommand {
   };
 
   /// The operation needed to create a new connection.
-  using NewDBOp = typename database::Command::NamedTupleType;
+  using NewDBOp = typename database::Command::ReflectionType;
 
   /// The operation needed to read data from a CSV file.
   struct ReadCSVOp {
@@ -135,7 +135,7 @@ struct DatabaseCommand {
     rfl::Field<"name_", std::string> name;
   };
 
-  using NamedTupleType =
+  using ReflectionType =
       rfl::TaggedUnion<"type_", CopyTableOp, DescribeConnectionOp, DropTableOp,
                        ExecuteOp, GetOp, GetColnamesOp, GetContentOp,
                        GetNRowsOp, ListConnectionsOp, ListTablesOp, NewDBOp,
@@ -146,7 +146,7 @@ struct DatabaseCommand {
   static DatabaseCommand from_json_obj(const InputVarType& _obj);
 
   /// The underlying value
-  NamedTupleType val_;
+  ReflectionType val_;
 };
 
 }  // namespace commands

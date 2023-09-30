@@ -12,7 +12,7 @@
 namespace commands {
 
 ViewCommand ViewCommand::from_json_obj(const InputVarType& _obj) {
-  return ViewCommand(json::from_json<NamedTupleType>(_obj));
+  return ViewCommand(json::from_json<ReflectionType>(_obj));
 }
 
 }  // namespace commands

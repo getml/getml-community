@@ -38,11 +38,11 @@ class Aggregation {
     rfl::Field<"col_", StringColumnOrStringColumnView> col;
   };
 
-  using NamedTupleType =
+  using ReflectionType =
       rfl::TaggedUnion<"type_", FloatAggregationOp, StringAggregationOp>;
 
   /// Used to break the recursive definition.
-  NamedTupleType val_;
+  ReflectionType val_;
 };
 
 }  // namespace commands

@@ -28,13 +28,13 @@ struct ColumnDescription {
   /// The name of the table.
   using f_table = rfl::Field<"table_", std::string>;
 
-  using NamedTupleType = rfl::NamedTuple<f_marker, f_name, f_table>;
+  using ReflectionType = rfl::NamedTuple<f_marker, f_name, f_table>;
 
   ColumnDescription(const MarkerType& _marker, const std::string& _table,
                     const std::string& _name)
       : val_(f_marker(_marker) * f_name(_name) * f_table(_table)) {}
 
-  explicit ColumnDescription(const NamedTupleType& _val) : val_(_val) {}
+  explicit ColumnDescription(const ReflectionType& _val) : val_(_val) {}
 
   ~ColumnDescription() = default;
 
@@ -74,7 +74,7 @@ struct ColumnDescription {
   /// Trivial accessor
   const std::string& table() const { return val_.get<f_table>(); }
 
-  NamedTupleType val_;
+  ReflectionType val_;
 };
 
 }  // namespace helpers

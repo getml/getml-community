@@ -67,11 +67,11 @@ struct Preprocessor {
     ;
   };
 
-  using NamedTupleType =
+  using ReflectionType =
       rfl::TaggedUnion<"type_", CategoryTrimmerOp, EMailDomainOp, ImputationOp,
                        MappingOp, SeasonalOp, SubstringOp, TextFieldSplitterOp>;
 
-  NamedTupleType val_;
+  ReflectionType val_;
 };
 
 }  // namespace commands

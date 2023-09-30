@@ -47,7 +47,7 @@ class Imputation : public Preprocessor {
     rfl::Field<"needs_dummies_", std::vector<bool>> needs_dummies;
   };
 
-  using NamedTupleType = SaveLoad;
+  using ReflectionType = SaveLoad;
 
  public:
   Imputation(const ImputationOp& _op,
@@ -102,8 +102,8 @@ class Imputation : public Preprocessor {
   }
 
   /// Necessary for the automated parsing to work.
-  NamedTupleType named_tuple() const {
-    return NamedTupleType{.column_descriptions = column_descriptions(),
+  ReflectionType reflection() const {
+    return ReflectionType{.column_descriptions = column_descriptions(),
                           .means = means(),
                           .needs_dummies = needs_dummies()};
   }

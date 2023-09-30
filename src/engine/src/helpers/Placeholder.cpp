@@ -27,12 +27,12 @@ Placeholder::Placeholder(const NeededForPythonAPI& _params)
 
 // ----------------------------------------------------------------------------
 
-Placeholder::Placeholder(const NamedTupleType& _val) : val_(_val) {}
+Placeholder::Placeholder(const ReflectionType& _val) : val_(_val) {}
 
 // ----------------------------------------------------------------------------
 
 Placeholder Placeholder::from_json_obj(const InputVarType& _json_obj) {
-  return Placeholder(json::from_json<NamedTupleType>(_json_obj));
+  return Placeholder(json::from_json<ReflectionType>(_json_obj));
 }
 
 // ----------------------------------------------------------------------------

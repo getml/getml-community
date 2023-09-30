@@ -21,10 +21,10 @@ struct EngineOptions {
   static constexpr bool IN_MEMORY = true;
   static constexpr bool MEMORY_MAPPING = false;
 
-  using NamedTupleType = rfl::NamedTuple<rfl::Field<"port", size_t>>;
+  using ReflectionType = rfl::NamedTuple<rfl::Field<"port", size_t>>;
 
  public:
-  EngineOptions(const NamedTupleType& _obj)
+  EngineOptions(const ReflectionType& _obj)
       : in_memory_(IN_MEMORY), port_(_obj.get<"port">()) {}
 
   EngineOptions() : port_(1708) {}

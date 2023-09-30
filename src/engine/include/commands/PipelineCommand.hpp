@@ -107,7 +107,7 @@ struct PipelineCommand {
     rfl::Field<"http_request_", bool> http_request;
   };
 
-  using NamedTupleType =
+  using ReflectionType =
       rfl::TaggedUnion<"type_", CheckOp, ColumnImportancesOp, DeployOp,
                        FeatureCorrelationsOp, FeatureImportancesOp, FitOp,
                        LiftCurveOp, PrecisionRecallCurveOp, RefreshOp,
@@ -118,7 +118,7 @@ struct PipelineCommand {
   static PipelineCommand from_json_obj(const InputVarType& _obj);
 
   /// The underlying value
-  NamedTupleType val_;
+  ReflectionType val_;
 };
 
 }  // namespace commands

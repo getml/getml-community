@@ -25,7 +25,7 @@ namespace fastprop {
 namespace containers {
 
 struct Condition {
-  using NamedTupleType =
+  using ReflectionType =
       rfl::NamedTuple<rfl::Field<"bound_lower_", std::optional<Float>>,
                       rfl::Field<"bound_upper_", std::optional<Float>>,
                       rfl::Field<"category_used_", Int>,
@@ -43,12 +43,12 @@ struct Condition {
   Condition(const Float _bound_lower, const Float _bound_upper,
             const enums::DataUsed _data_used, const size_t _peripheral);
 
-  explicit Condition(const NamedTupleType &_obj);
+  explicit Condition(const ReflectionType &_obj);
 
   ~Condition();
 
   /// Necessary for the automated serialization.
-  NamedTupleType named_tuple() const;
+  ReflectionType reflection() const;
 
   /// Expresses the abstract feature as SQL code.
   std::string to_sql(

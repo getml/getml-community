@@ -23,7 +23,7 @@ class FastPropContainer {
  public:
   using Subcontainers = std::vector<std::shared_ptr<const FastPropContainer>>;
 
-  using NamedTupleType = rfl::NamedTuple<
+  using ReflectionType = rfl::NamedTuple<
       rfl::Field<"fast_prop_", std::shared_ptr<const algorithm::FastProp>>,
       rfl::Field<"subcontainers_", std::shared_ptr<const Subcontainers>>>;
 
@@ -32,7 +32,7 @@ class FastPropContainer {
       const std::shared_ptr<const algorithm::FastProp>& _fast_prop,
       const std::shared_ptr<const Subcontainers>& _subcontainers);
 
-  FastPropContainer(const NamedTupleType& _val)
+  FastPropContainer(const ReflectionType& _val)
       : fast_prop_(_val.get<"fast_prop_">()),
         subcontainers_(_val.get<"subcontainers_">()) {}
 
@@ -49,7 +49,7 @@ class FastPropContainer {
   bool has_fast_prop() const { return (fast_prop_ && true); }
 
   /// Necessary for the automated parsing to work.
-  NamedTupleType named_tuple() const {
+  ReflectionType reflection() const {
     return rfl::make_field<"fast_prop_">(fast_prop_) *
            rfl::make_field<"subcontainers_">(subcontainers_);
   }

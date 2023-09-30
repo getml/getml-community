@@ -105,7 +105,7 @@ class XGBoostPredictor : public Predictor {
         .dependencies = dependencies_,
         .other =
             rfl::from_named_tuple<commands::Fingerprint::OtherPredRequirements>(
-                impl().named_tuple())});
+                impl().reflection())});
   }
 
   /// Whether we want the predictor to be silent.

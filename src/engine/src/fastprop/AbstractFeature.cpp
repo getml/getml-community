@@ -56,7 +56,7 @@ AbstractFeature::AbstractFeature(const enums::Aggregation _aggregation,
 
 // ----------------------------------------------------------------------------
 
-AbstractFeature::AbstractFeature(const NamedTupleType &_obj)
+AbstractFeature::AbstractFeature(const ReflectionType &_obj)
     : aggregation_(_obj.get<"aggregation_">()),
       categorical_value_(_obj.get<"categorical_value_">()),
       conditions_(_obj.get<"conditions_">()),
@@ -71,7 +71,7 @@ AbstractFeature::~AbstractFeature() = default;
 
 // ----------------------------------------------------------------------------
 
-typename AbstractFeature::NamedTupleType AbstractFeature::named_tuple() const {
+typename AbstractFeature::ReflectionType AbstractFeature::reflection() const {
   return rfl::make_field<"aggregation_">(aggregation_) *
          rfl::make_field<"categorical_value_">(categorical_value_) *
          rfl::make_field<"conditions_">(conditions_) *

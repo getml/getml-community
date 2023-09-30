@@ -42,7 +42,7 @@ struct Roles {
   /// The names of the unused string columns
   using f_unused_string = rfl::Field<"unused_string", std::vector<std::string>>;
 
-  using NamedTupleType =
+  using ReflectionType =
       rfl::NamedTuple<f_categorical, f_join_key, f_numerical, f_target, f_text,
                       f_time_stamp, f_unused_float, f_unused_string>;
 
@@ -60,7 +60,7 @@ struct Roles {
 
   /// Normally used for recursion, but here it is used
   /// to support the static constructors.
-  const NamedTupleType val_;
+  const ReflectionType val_;
 };
 
 }  // namespace commands

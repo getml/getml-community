@@ -31,14 +31,14 @@ class StandardScaler {
     rfl::Field<"std_", std::vector<Float>> std;
   };
 
-  using NamedTupleType = SaveLoad;
+  using ReflectionType = SaveLoad;
 
  public:
   StandardScaler()
-      : val_(NamedTupleType{.mean = std::vector<Float>(),
+      : val_(ReflectionType{.mean = std::vector<Float>(),
                             .std = std::vector<Float>()}){};
 
-  StandardScaler(const NamedTupleType& _val) : val_(_val) {}
+  StandardScaler(const ReflectionType& _val) : val_(_val) {}
 
   ~StandardScaler() = default;
 
@@ -58,7 +58,7 @@ class StandardScaler {
 
  public:
   /// Necessary for the automated parsing to work.
-  const NamedTupleType& named_tuple() const { return val_; }
+  const ReflectionType& reflection() const { return val_; }
 
  private:
   /// Trivial accessor
@@ -75,7 +75,7 @@ class StandardScaler {
 
  private:
   /// The underlying named tuple.
-  NamedTupleType val_;
+  ReflectionType val_;
 };
 
 }  // namespace predictors

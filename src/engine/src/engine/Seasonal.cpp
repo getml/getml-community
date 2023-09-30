@@ -289,7 +289,7 @@ containers::DataFrame Seasonal::fit_transform_df(
 // ----------------------------------------------------
 
 void Seasonal::load(const std::string& _fname) {
-  const auto named_tuple = helpers::Loader::load<NamedTupleType>(_fname);
+  const auto named_tuple = helpers::Loader::load<ReflectionType>(_fname);
   hour_ = named_tuple.hour();
   minute_ = named_tuple.minute();
   month_ = named_tuple.month();
@@ -299,8 +299,8 @@ void Seasonal::load(const std::string& _fname) {
 
 // ----------------------------------------------------
 
-typename Seasonal::NamedTupleType Seasonal::named_tuple() const {
-  return NamedTupleType{.hour = hour_,
+typename Seasonal::ReflectionType Seasonal::reflection() const {
+  return ReflectionType{.hour = hour_,
                         .minute = minute_,
                         .month = month_,
                         .weekday = weekday_,

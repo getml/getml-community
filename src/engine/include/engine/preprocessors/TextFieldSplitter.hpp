@@ -40,7 +40,7 @@ class TextFieldSplitter : public Preprocessor {
     rfl::Field<"cols_", std::vector<rfl::Ref<helpers::ColumnDescription>>> cols;
   };
 
-  using NamedTupleType = SaveLoad;
+  using ReflectionType = SaveLoad;
 
  public:
   TextFieldSplitter(const TextFieldSplitterOp& _op,
@@ -96,7 +96,7 @@ class TextFieldSplitter : public Preprocessor {
   }
 
   /// Necessary for the automated parsing to work.
-  NamedTupleType named_tuple() const { return NamedTupleType{cols_}; }
+  ReflectionType reflection() const { return ReflectionType{cols_}; }
 
   /// Returns the type of the preprocessor.
   std::string type() const final { return Preprocessor::TEXT_FIELD_SPLITTER; }

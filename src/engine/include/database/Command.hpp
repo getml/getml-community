@@ -55,11 +55,11 @@ struct Command {
     rfl::Field<"time_formats_", std::vector<std::string>> time_formats;
   };
 
-  using NamedTupleType =
+  using ReflectionType =
       rfl::TaggedUnion<"db_", MySQLOp, PostgresOp, SQLite3Op>;
 
   /// The underlying value
-  const NamedTupleType val_;
+  const ReflectionType val_;
 };
 
 }  // namespace database

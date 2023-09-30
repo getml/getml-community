@@ -31,7 +31,7 @@ PredictorImpl::PredictorImpl(
 
 // -----------------------------------------------------------------------------
 
-PredictorImpl::PredictorImpl(const NamedTupleType& _nt)
+PredictorImpl::PredictorImpl(const ReflectionType& _nt)
     : autofeatures_(_nt.get<f_autofeatures>()),
       categorical_colnames_(_nt.get<f_categorical>()),
       encodings_(_nt.get<f_encoding>()),

@@ -24,7 +24,7 @@ class String {
   static constexpr char nullstr = '\0';
 
  public:
-  using NamedTupleType = std::string;
+  using ReflectionType = std::string;
 
  public:
   /// Parses the string and interprets NULL values.
@@ -92,7 +92,7 @@ class String {
   }
 
   /// Needed for parsing.
-  std::string named_tuple() const { return str(); }
+  std::string reflection() const { return str(); }
 
   /// Whether the string is set.
   operator bool() const { return (chars_ && true); }

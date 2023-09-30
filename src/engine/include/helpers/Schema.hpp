@@ -22,7 +22,7 @@ namespace helpers {
 
 class Schema {
  public:
-  using NamedTupleType = SchemaImpl;
+  using ReflectionType = SchemaImpl;
 
  public:
   Schema(const SchemaImpl& _impl);
@@ -30,7 +30,7 @@ class Schema {
   ~Schema();
 
   /// Expresses the schema as a named tuple.
-  SchemaImpl named_tuple() const;
+  SchemaImpl reflection() const;
 
  public:
   /// Trivial getter

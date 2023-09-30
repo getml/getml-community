@@ -41,7 +41,7 @@ class Substring : public Preprocessor {
     rfl::Field<"cols_", std::vector<rfl::Ref<helpers::ColumnDescription>>> cols;
   };
 
-  using NamedTupleType = SaveLoad;
+  using ReflectionType = SaveLoad;
 
  public:
   Substring(const SubstringOp& _op,
@@ -96,7 +96,7 @@ class Substring : public Preprocessor {
   }
 
   /// Necessary for the automated parsing to work.
-  NamedTupleType named_tuple() const { return NamedTupleType{cols_}; }
+  ReflectionType reflection() const { return ReflectionType{cols_}; }
 
   /// The preprocessor does not generate any SQL scripts.
   std::vector<std::string> to_sql(

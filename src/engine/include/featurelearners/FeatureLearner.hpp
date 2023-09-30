@@ -46,8 +46,8 @@ namespace featurelearners {
 template <class FeatureLearnerType>
 class FeatureLearner : public AbstractFeatureLearner {
  public:
-  using NamedTupleType = rfl::define_named_tuple_t<
-      typename FeatureLearnerType::NamedTupleType,
+  using ReflectionType = rfl::define_named_tuple_t<
+      typename FeatureLearnerType::ReflectionType,
       rfl::Field<
           "fast_prop_container_",
           std::shared_ptr<const fastprop::subfeatures::FastPropContainer>>,
@@ -106,12 +106,12 @@ class FeatureLearner : public AbstractFeatureLearner {
             const typename helpers::Saver::Format _format) const final;
 
   /// Necessary for the automatic parsing to work.
-  NamedTupleType named_tuple() const {
+  ReflectionType reflection() const {
     if (!feature_learner_) {
       throw std::runtime_error(
           "Feature learner has not been fitted, cannot save.");
     }
-    return feature_learner_->named_tuple() *
+    return feature_learner_->reflection() *
            rfl::make_field<"fast_prop_container_">(fast_prop_container_) *
            rfl::make_field<"target_num_">(target_num_) *
            rfl::make_field<"vocabulary_">(vocabulary_);
@@ -436,7 +436,7 @@ FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
           : _schema.text();
 
   const auto schema = rfl::replace(
-      _schema.named_tuple(), rfl::make_field<"categorical_">(categoricals),
+      _schema.reflection(), rfl::make_field<"categorical_">(categoricals),
       rfl::make_field<"discrete_">(std::make_optional(discretes)),
       rfl::make_field<"numerical_">(numericals),
       rfl::make_field<"targets_">(targets), rfl::make_field<"text_">(text));
@@ -668,10 +668,10 @@ FeatureLearner<FeatureLearnerType>::handle_text_fields(
 
 template <typename FeatureLearnerType>
 void FeatureLearner<FeatureLearnerType>::load(const std::string& _fname) {
-  using FLNamedTupleType = typename FeatureLearnerType::NamedTupleType;
-  const auto val = helpers::Loader::load<NamedTupleType>(_fname);
+  using FLReflectionType = typename FeatureLearnerType::ReflectionType;
+  const auto val = helpers::Loader::load<ReflectionType>(_fname);
   fast_prop_container_ = rfl::get<"fast_prop_container_">(val);
-  feature_learner_ = FeatureLearnerType(FLNamedTupleType(val));
+  feature_learner_ = FeatureLearnerType(FLReflectionType(val));
   target_num_ = rfl::get<"target_num_">(val);
   vocabulary_ = rfl::get<"vocabulary_">(val);
 }

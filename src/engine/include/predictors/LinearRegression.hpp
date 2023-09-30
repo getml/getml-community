@@ -37,7 +37,7 @@ class LinearRegression : public Predictor {
     rfl::Field<"weights_", std::vector<Float>> weights;
   };
 
-  using NamedTupleType = SaveLoad;
+  using ReflectionType = SaveLoad;
 
  public:
   LinearRegression(const LinearRegressionHyperparams& _hyperparams,
@@ -94,7 +94,7 @@ class LinearRegression : public Predictor {
         .dependencies = dependencies_,
         .other =
             rfl::from_named_tuple<commands::Fingerprint::OtherPredRequirements>(
-                impl().named_tuple())});
+                impl().reflection())});
   }
 
   /// Whether the predictor is used for classification;
@@ -104,8 +104,8 @@ class LinearRegression : public Predictor {
   bool is_fitted() const final { return weights_.size() > 0; }
 
   /// Necessary for the automated parsing to work.
-  NamedTupleType named_tuple() const {
-    return NamedTupleType{.learning_rate = hyperparams().learning_rate(),
+  ReflectionType reflection() const {
+    return ReflectionType{.learning_rate = hyperparams().learning_rate(),
                           .reg_lambda = hyperparams().reg_lambda(),
                           .scaler = scaler_,
                           .weights = weights_};

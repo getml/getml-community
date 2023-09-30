@@ -31,7 +31,7 @@ class VocabularyContainer {
   /// The vocabulary for the population table.
   using f_population = rfl::Field<"population_", VocabForDf>;
 
-  using NamedTupleType = rfl::NamedTuple<f_peripheral, f_population>;
+  using ReflectionType = rfl::NamedTuple<f_peripheral, f_population>;
 
  public:
   VocabularyContainer(size_t _min_df, size_t _max_size,
@@ -41,13 +41,13 @@ class VocabularyContainer {
   VocabularyContainer(const VocabForDf& _population,
                       const std::vector<VocabForDf>& _peripheral);
 
-  explicit VocabularyContainer(const NamedTupleType& _val);
+  explicit VocabularyContainer(const ReflectionType& _val);
 
   ~VocabularyContainer() = default;
 
  public:
   /// Trivial (const) accessor
-  const NamedTupleType& named_tuple() const { return val_; }
+  const ReflectionType& reflection() const { return val_; }
 
   /// Trivial (const) accessor
   const std::vector<VocabForDf>& peripheral() const {
@@ -90,7 +90,7 @@ class VocabularyContainer {
 
  private:
   /// The underlying data
-  NamedTupleType val_;
+  ReflectionType val_;
 };
 
 }  // namespace helpers

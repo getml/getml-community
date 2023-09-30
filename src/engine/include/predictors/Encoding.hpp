@@ -27,12 +27,12 @@ class Encoding {
 
   using f_min = rfl::Field<"min_", Int>;
 
-  using NamedTupleType = rfl::NamedTuple<f_max, f_min>;
+  using ReflectionType = rfl::NamedTuple<f_max, f_min>;
 
  public:
   Encoding() : max_(1), min_(0) {}
 
-  explicit Encoding(const NamedTupleType& _nt)
+  explicit Encoding(const ReflectionType& _nt)
       : max_(_nt.get<f_max>()), min_(_nt.get<f_min>()) {}
 
   ~Encoding() = default;
@@ -45,7 +45,7 @@ class Encoding {
                        const std::shared_ptr<memmap::Pool>& _pool) const;
 
   /// Necessary for the automated parsing to work.
-  NamedTupleType named_tuple() const { return f_max(max_) * f_min(min_); }
+  ReflectionType reflection() const { return f_max(max_) * f_min(min_); }
 
   /// Size means the number of elements in this column.
   Int n_unique() const {

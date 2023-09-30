@@ -93,7 +93,7 @@ std::vector<rfl::Ref<helpers::ColumnDescription>> TextFieldSplitter::fit_df(
 // ----------------------------------------------------
 
 void TextFieldSplitter::load(const std::string& _fname) {
-  const auto named_tuple = helpers::Loader::load<NamedTupleType>(_fname);
+  const auto named_tuple = helpers::Loader::load<ReflectionType>(_fname);
   cols_ = named_tuple.cols();
 }
 

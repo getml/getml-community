@@ -31,8 +31,8 @@ namespace commands {
 struct ColumnCommand {
   /// Used as a helper for various commands related to views.
   using ViewCol =
-      std::variant<typename FloatColumnOrFloatColumnView::NamedTupleType,
-                   typename StringColumnOrStringColumnView::NamedTupleType>;
+      std::variant<typename FloatColumnOrFloatColumnView::ReflectionType,
+                   typename StringColumnOrStringColumnView::ReflectionType>;
 
   /// The command used to aggregate a column
   struct AggregationOp {
@@ -199,7 +199,7 @@ struct ColumnCommand {
     rfl::Field<"role_", std::string> role;
   };
 
-  using NamedTupleType = rfl::TaggedUnion<
+  using ReflectionType = rfl::TaggedUnion<
       "type_", AggregationOp, FloatColumnOp, GetBooleanColumnOp,
       GetBooleanColumnContentOp, GetBooleanColumnNRowsOp, GetFloatColumnOp,
       GetFloatColumnContentOp, GetFloatColumnNRowsOp, GetFloatColumnSubrolesOp,
@@ -214,7 +214,7 @@ struct ColumnCommand {
   static ColumnCommand from_json_obj(const InputVarType& _obj);
 
   /// The underlying value
-  NamedTupleType val_;
+  ReflectionType val_;
 };
 
 }  // namespace commands

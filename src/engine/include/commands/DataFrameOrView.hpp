@@ -56,10 +56,10 @@ class DataFrameOrView {
         subselection;
   };
 
-  using NamedTupleType = rfl::TaggedUnion<"type_", DataFrameOp, ViewOp>;
+  using ReflectionType = rfl::TaggedUnion<"type_", DataFrameOp, ViewOp>;
 
   /// Used to break the recursive definition.
-  NamedTupleType val_;
+  ReflectionType val_;
 };
 
 }  // namespace commands
