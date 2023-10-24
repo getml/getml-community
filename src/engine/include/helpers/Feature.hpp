@@ -46,8 +46,15 @@ class Feature {
   }
 
   Feature(const std::shared_ptr<memmap::Pool>& _pool, const size_t _size)
-      : Feature(_pool ? std::make_shared<std::vector<T>>(_size)
-                      : std::make_shared<memmap::Vector<T>>(_pool, _size)) {}
+      : Feature(_pool
+                    ? Feature(std::make_shared<memmap::Vector<T>>(_pool, _size))
+                    : Feature(std::make_shared<std::vector<T>>(_size))) {}
+
+  Feature(const size_t _size,
+          const std::shared_ptr<memmap::Pool>& _pool = nullptr)
+      : Feature(_pool
+                    ? Feature(std::make_shared<memmap::Vector<T>>(_pool, _size))
+                    : Feature(std::make_shared<std::vector<T>>(_size))) {}
 
   ~Feature() = default;
 

@@ -7,7 +7,11 @@ function make_checksum() {
 
     # ----------------------------------------------------------------
 
-    YAML=sha256-package-community-edition-$OPERATING_SYSTEM.yaml
+    if [[ "$OPERATING_SYSTEM" == "docker" ]]; then
+        YAML=sha256-package-community-edition-$OPERATING_SYSTEM.yaml
+    else 
+        YAML=sha256-package-$ARCHITECTURE-community-edition-$OPERATING_SYSTEM.yaml
+    fi
 
     rm -f $YAML
 

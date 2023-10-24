@@ -1,23 +1,16 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "helpers/TableHolder.hpp"
 
 #include <stdexcept>
 
-// ----------------------------------------------------------------------------
-
 #include "fct/fct.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "helpers/Macros.hpp"
-
-// ----------------------------------------------------------------------------
 
 namespace helpers {
 
@@ -137,11 +130,11 @@ std::shared_ptr<const std::vector<size_t>> TableHolder::make_subrows(
 
 std::vector<DataFrameView> TableHolder::parse_main_tables(
     const TableHolderParams& _params) {
-  assert_true(_params.placeholder_.joined_tables_.size() ==
-              _params.placeholder_.join_keys_used_.size());
+  assert_true(_params.placeholder_.joined_tables().size() ==
+              _params.placeholder_.join_keys_used().size());
 
-  assert_true(_params.placeholder_.joined_tables_.size() ==
-              _params.placeholder_.time_stamps_used_.size());
+  assert_true(_params.placeholder_.joined_tables().size() ==
+              _params.placeholder_.time_stamps_used().size());
 
   const auto row_indices = _params.row_index_container_
                                ? _params.row_index_container_->population()
@@ -157,13 +150,13 @@ std::vector<DataFrameView> TableHolder::parse_main_tables(
 
   std::vector<DataFrameView> result;
 
-  for (size_t i = 0; i < _params.placeholder_.joined_tables_.size(); ++i) {
+  for (size_t i = 0; i < _params.placeholder_.joined_tables().size(); ++i) {
     const auto params = CreateSubviewParams{
         .additional_ = features,
-        .join_key_ = _params.placeholder_.join_keys_used_.at(i),
+        .join_key_ = _params.placeholder_.join_keys_used().at(i),
         .make_staging_table_colname_ = _params.make_staging_table_colname_,
         .row_indices_ = row_indices,
-        .time_stamp_ = _params.placeholder_.time_stamps_used_.at(i),
+        .time_stamp_ = _params.placeholder_.time_stamps_used().at(i),
         .word_indices_ = word_indices};
 
     result.push_back(_params.population_.create_subview(params));
@@ -202,11 +195,11 @@ std::vector<DataFrame> TableHolder::parse_peripheral_tables(
   const size_t num_text = count_text(_params.peripheral_);
 #endif  // NDEBUG
 
-  assert_true(_params.placeholder_.joined_tables_.size() ==
-              _params.placeholder_.other_join_keys_used_.size());
+  assert_true(_params.placeholder_.joined_tables().size() ==
+              _params.placeholder_.other_join_keys_used().size());
 
-  assert_true(_params.placeholder_.joined_tables_.size() ==
-              _params.placeholder_.other_time_stamps_used_.size());
+  assert_true(_params.placeholder_.joined_tables().size() ==
+              _params.placeholder_.other_time_stamps_used().size());
 
   assert_true(_params.peripheral_.size() > 0);
 
@@ -227,10 +220,10 @@ std::vector<DataFrame> TableHolder::parse_peripheral_tables(
 
   std::vector<DataFrame> result;
 
-  for (size_t i = 0; i < _params.placeholder_.joined_tables_.size(); ++i) {
+  for (size_t i = 0; i < _params.placeholder_.joined_tables().size(); ++i) {
     const auto j =
         find_peripheral_ix(_params.peripheral_names_,
-                           _params.placeholder_.joined_tables_.at(i).name_);
+                           _params.placeholder_.joined_tables().at(i).name());
 
     const auto row_indices =
         _params.row_index_container_
@@ -244,7 +237,7 @@ std::vector<DataFrame> TableHolder::parse_peripheral_tables(
 
     const auto additional = make_additional_columns(i);
 
-    const auto jk_population = _params.placeholder_.join_keys_used_.at(i);
+    const auto jk_population = _params.placeholder_.join_keys_used().at(i);
 
     const auto population_join_keys =
         _params.population_.join_key_col(jk_population);
@@ -252,13 +245,14 @@ std::vector<DataFrame> TableHolder::parse_peripheral_tables(
     const auto params = CreateSubviewParams{
         .additional_ = additional,
         .allow_lagged_targets_ =
-            _params.placeholder_.allow_lagged_targets_.at(i),
-        .join_key_ = _params.placeholder_.other_join_keys_used_.at(i),
+            _params.placeholder_.allow_lagged_targets().at(i),
+        .join_key_ = _params.placeholder_.other_join_keys_used().at(i),
         .make_staging_table_colname_ = _params.make_staging_table_colname_,
         .population_join_keys_ = population_join_keys,
         .row_indices_ = row_indices,
-        .time_stamp_ = _params.placeholder_.other_time_stamps_used_.at(i),
-        .upper_time_stamp_ = _params.placeholder_.upper_time_stamps_used_.at(i),
+        .time_stamp_ = _params.placeholder_.other_time_stamps_used().at(i),
+        .upper_time_stamp_ =
+            _params.placeholder_.upper_time_stamps_used().at(i),
         .word_indices_ = word_indices};
 
     result.push_back(_params.peripheral_.at(j).create_subview(params));
@@ -303,22 +297,23 @@ std::vector<Column<Float>> TableHolder::make_additional_columns(
 DataFrameView TableHolder::make_output(const TableHolderParams& _params,
                                        const size_t _i, const size_t _j) {
   const auto population_params = CreateSubviewParams{
-      .join_key_ = _params.placeholder_.join_keys_used_.at(_i),
+      .join_key_ = _params.placeholder_.join_keys_used().at(_i),
       .make_staging_table_colname_ = _params.make_staging_table_colname_,
-      .time_stamp_ = _params.placeholder_.time_stamps_used_.at(_i)};
+      .time_stamp_ = _params.placeholder_.time_stamps_used().at(_i)};
 
   const auto population_subview =
       _params.population_.create_subview(population_params);
 
   const auto peripheral_params = CreateSubviewParams{
       .allow_lagged_targets_ =
-          _params.placeholder_.allow_lagged_targets_.at(_i),
-      .join_key_ = _params.placeholder_.other_join_keys_used_.at(_i),
+          _params.placeholder_.allow_lagged_targets().at(_i),
+      .join_key_ = _params.placeholder_.other_join_keys_used().at(_i),
       .make_staging_table_colname_ = _params.make_staging_table_colname_,
       .population_join_keys_ =
           population_subview.join_key_col(population_params.join_key_),
-      .time_stamp_ = _params.placeholder_.other_time_stamps_used_.at(_i),
-      .upper_time_stamp_ = _params.placeholder_.upper_time_stamps_used_.at(_i)};
+      .time_stamp_ = _params.placeholder_.other_time_stamps_used().at(_i),
+      .upper_time_stamp_ =
+          _params.placeholder_.upper_time_stamps_used().at(_i)};
 
   const auto peripheral_subview =
       _params.peripheral_.at(_j).create_subview(peripheral_params);
@@ -378,15 +373,15 @@ std::vector<std::optional<TableHolder>> TableHolder::parse_subtables(
 
   std::vector<std::optional<TableHolder>> result;
 
-  for (size_t i = 0; i < _params.placeholder_.joined_tables_.size(); ++i) {
-    const auto& joined = _params.placeholder_.joined_tables_.at(i);
+  for (size_t i = 0; i < _params.placeholder_.joined_tables().size(); ++i) {
+    const auto& joined = _params.placeholder_.joined_tables().at(i);
 
-    if (joined.joined_tables_.size() == 0) {
+    if (joined.joined_tables().size() == 0) {
       result.push_back(std::nullopt);
       continue;
     }
 
-    const auto j = find_peripheral_ix(_params.peripheral_names_, joined.name_);
+    const auto j = find_peripheral_ix(_params.peripheral_names_, joined.name());
 
     const auto output = make_output(i, j);
 
@@ -437,9 +432,8 @@ WordIndexContainer TableHolder::word_indices() const {
 
   const auto population = extract_word_indices(main_tables_.at(0).df());
 
-  auto range = peripheral_tables_ | VIEWS::transform(extract_word_indices);
-
-  const auto peripheral = fct::collect::vector<WordIndices>(range);
+  const auto peripheral = fct::collect::vector(
+      peripheral_tables_ | VIEWS::transform(extract_word_indices));
 
   return WordIndexContainer(population, peripheral);
 }

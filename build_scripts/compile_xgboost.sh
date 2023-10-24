@@ -3,7 +3,8 @@ function compile_xgboost_linux() {
     mkdir -p build || exit 1
     cd build
     cmake .. || exit 1
-    make -j6 || exit 1
+    export NUM_THREADS=$(nproc --all)
+    make -j$NUM_THREADS || exit 1
 }
 
 

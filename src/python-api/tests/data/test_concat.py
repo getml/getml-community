@@ -1,9 +1,9 @@
 # Copyright 2022 The SQLNet Company GmbH
-# 
-# This file is licensed under the Elastic License 2.0 (ELv2). 
-# Refer to the LICENSE.txt file in the root of the repository 
+#
+# This file is licensed under the Elastic License 2.0 (ELv2).
+# Refer to the LICENSE.txt file in the root of the repository
 # for details.
-# 
+#
 
 import getml
 
@@ -58,6 +58,7 @@ def make_df2():
 
 def test_concat():
     project_name = "test_dataframe"
+    getml.engine.launch()
     getml.engine.set_project(project_name)
     df1 = make_df1()
     df2 = make_df2()
@@ -71,6 +72,7 @@ def test_concat():
 
 def test_concat_views():
     project_name = "test_dataframe"
+    getml.engine.launch()
     getml.engine.set_project(project_name)
     df1 = make_df1()
     df2 = make_df2()

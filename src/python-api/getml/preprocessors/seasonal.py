@@ -38,6 +38,27 @@ class Seasonal(_Preprocessor):
     Parameters that are unlikely to be useful are
     not included.
 
+    Args:
+        disable_year (bool, optional):
+            Prevents the Seasonal preprocessor from
+            extracting the year from time stamps.
+
+        disable_month (bool, optional):
+            Prevents the Seasonal preprocessor from
+            extracting the month from time stamps.
+
+        disable_weekday (bool, optional):
+            Prevents the Seasonal preprocessor from
+            extracting the weekday from time stamps.
+
+        disable_hour (bool, optional):
+            Prevents the Seasonal preprocessor from
+            extracting the hour from time stamps.
+
+        disable_minute (bool, optional):
+            Prevents the Seasonal preprocessor from
+            extracting the minute from time stamps.
+
     Example:
         .. code-block:: python
 
@@ -53,6 +74,12 @@ class Seasonal(_Preprocessor):
                 share_selected_features=0.5
             )
     """
+
+    disable_year: bool = False
+    disable_month: bool = False
+    disable_weekday: bool = False
+    disable_hour: bool = False
+    disable_minute: bool = False
 
     def validate(self, params=None):
         """Checks both the types and the values of all instance

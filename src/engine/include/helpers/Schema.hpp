@@ -1,44 +1,74 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef HELPERS_SCHEMA_HPP_
 #define HELPERS_SCHEMA_HPP_
 
-// ------------------------------------------------------------------------
-
-#include <Poco/JSON/Array.h>
-#include <Poco/JSON/Object.h>
-
-// ------------------------------------------------------------------------
-
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
-// ------------------------------------------------------------------------
-
 #include "debug/debug.hpp"
-#include "jsonutils/jsonutils.hpp"
-
-// ------------------------------------------------------------------------
+#include "fct/Field.hpp"
+#include "fct/NamedTuple.hpp"
 
 namespace helpers {
-// ------------------------------------------------------------------------
 
-struct Schema {
-  /// Constructs a new schema from a JSON object.
-  static Schema from_json(const Poco::JSON::Object& _json_obj);
+/// The names of the categorical columns
+using f_categoricals = fct::Field<"categorical_", std::vector<std::string>>;
 
-  /// Constructs a vector of schemata from a JSON array.
-  static std::shared_ptr<const std::vector<Schema>> from_json(
-      const Poco::JSON::Array& _json_arr);
+/// The names of the discrete columns
+using f_discretes =
+    fct::Field<"discrete_", std::optional<std::vector<std::string>>>;
 
-  /// Expresses the Schema as a JSON object.
-  Poco::JSON::Object::Ptr to_json_obj() const;
+/// The names of the join keys
+using f_join_keys = fct::Field<"join_keys_", std::vector<std::string>>;
+
+/// The table name
+using f_name = fct::Field<"name_", std::string>;
+
+/// The names of the numerical columns
+using f_numericals = fct::Field<"numerical_", std::vector<std::string>>;
+
+/// The names of the target columns
+using f_targets = fct::Field<"targets_", std::vector<std::string>>;
+
+/// The names of the text columns
+using f_text = fct::Field<"text_", std::vector<std::string>>;
+
+/// The names of the time stamp columns
+using f_time_stamps = fct::Field<"time_stamps_", std::vector<std::string>>;
+
+/// The names of the unused float columns
+using f_unused_floats = fct::Field<"unused_floats_", std::vector<std::string>>;
+
+/// The names of the unused string columns
+using f_unused_strings =
+    fct::Field<"unused_strings_", std::vector<std::string>>;
+
+class Schema {
+ public:
+  using NamedTupleType =
+      fct::NamedTuple<f_categoricals, f_discretes, f_join_keys, f_name,
+                      f_numericals, f_targets, f_text, f_time_stamps,
+                      f_unused_floats, f_unused_strings>;
+
+ public:
+  Schema(const NamedTupleType& _obj);
+
+  ~Schema();
+
+  /// Expresses the schema as a named tuple.
+  NamedTupleType named_tuple() const;
+
+ public:
+  /// Trivial getter
+  const std::vector<std::string>& categoricals() const { return categoricals_; }
 
   /// Getter for a categorical name.
   const std::string& categorical_name(size_t _j) const {
@@ -46,11 +76,17 @@ struct Schema {
     return categoricals_.at(_j);
   }
 
+  /// Trivial getter
+  const std::vector<std::string>& discretes() const { return discretes_; }
+
   /// Getter for a discrete name.
   const std::string& discrete_name(size_t _j) const {
     assert_true(_j < discretes_.size());
     return discretes_.at(_j);
   }
+
+  /// Trivial getter
+  const std::vector<std::string>& join_keys() const { return join_keys_; }
 
   /// Getter for a join keys name  name.
   const std::string& join_keys_name(size_t _j) const {
@@ -88,24 +124,17 @@ struct Schema {
   /// Trivial getter
   size_t num_time_stamps() const { return time_stamps_.size(); }
 
+  /// Trivial getter
+  const std::vector<std::string>& numericals() const { return numericals_; }
+
   /// Getter for a numerical name.
   const std::string& numerical_name(size_t _j) const {
     assert_true(_j < numericals_.size());
     return numericals_.at(_j);
   }
 
-  /// Checks whether an array exists,
-  /// and returns and empty array, if it doesn't.
-  template <typename T>
-  static std::vector<T> parse_columns(const Poco::JSON::Object& _json_obj,
-                                      const std::string& _name) {
-    if (_json_obj.has(_name)) {
-      return jsonutils::JSON::array_to_vector<T>(
-          jsonutils::JSON::get_array(_json_obj, _name));
-    } else {
-      return std::vector<T>();
-    }
-  }
+  /// Trivial getter
+  const std::vector<std::string>& targets() const { return targets_; }
 
   /// Getter for a target name.
   const std::string& target_name(size_t _j) const {
@@ -113,11 +142,17 @@ struct Schema {
     return targets_.at(_j);
   }
 
+  /// Trivial getter
+  const std::vector<std::string>& text() const { return text_; }
+
   /// Getter for a text name.
   const std::string& text_name(size_t _j) const {
     assert_true(_j < text_.size());
     return text_.at(_j);
   }
+
+  /// Trivial getter
+  const std::vector<std::string>& time_stamps() const { return time_stamps_; }
 
   /// Getter for a time stamp name.
   const std::string& time_stamps_name(size_t _j) const {
@@ -131,11 +166,14 @@ struct Schema {
     return time_stamps_.at(0);
   }
 
-  /// Transforms the placeholder into a JSON string
-  std::string to_json() const {
-    const auto ptr = to_json_obj();
-    assert_true(ptr);
-    return jsonutils::JSON::stringify(*ptr);
+  /// Trivial getter
+  const std::vector<std::string>& unused_floats() const {
+    return unused_floats_;
+  }
+
+  /// Trivial getter
+  const std::vector<std::string>& unused_strings() const {
+    return unused_strings_;
   }
 
   /// Getter for the time stamps name.
@@ -144,6 +182,7 @@ struct Schema {
     return time_stamps_.at(1);
   }
 
+ private:
   /// The names of the categorical columns
   const std::vector<std::string> categoricals_;
 
@@ -175,7 +214,6 @@ struct Schema {
   const std::vector<std::string> unused_strings_;
 };
 
-// ------------------------------------------------------------------------
 }  // namespace helpers
 
 #endif  // HELPERS_SCHEMA_HPP_

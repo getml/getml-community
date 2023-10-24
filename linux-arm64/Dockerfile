@@ -3,6 +3,7 @@ FROM quay.io/pypa/manylinux2014_aarch64
 RUN useradd getml
 
 RUN yum -y update
+
 RUN yum -y install git
 RUN yum -y install make
 RUN yum -y install cmake
@@ -20,7 +21,7 @@ RUN yum install -y bzip2-devel libffi-devel
 
 # Required for profiling, but not an 
 # actual dependency.
-RUN yum install -y https://extras.getpagespeed.com/release-latest.rpm
+RUN yum install -y gperftools
 
 WORKDIR /home/getml
 
@@ -34,18 +35,26 @@ RUN wget https://go.dev/dl/go1.18.3.linux-arm64.tar.gz
 RUN tar -C /usr/local -xzf go1.18.3.linux-arm64.tar.gz
 ENV PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
 
+# Install ccache
+RUN wget https://github.com/ccache/ccache/releases/download/v4.8.1/ccache-4.8.1.tar.xz
+RUN tar -xJvf ccache-4.8.1.tar.xz
+WORKDIR ccache-4.8.1
+RUN cmake . 
+RUN make install -j4
+ENV CCACHE_DIR=/home/getml/storage/.ccache 
+ENV CCACHE_TEMPDIR=/home/getml/storage/.ccache
 
 WORKDIR /home/getml
 
-# Build and setup Python 3.8
+# Build and setup Python 3.7
 WORKDIR /home/getml
-RUN wget https://www.python.org/ftp/python/3.8.12/Python-3.8.12.tgz
-RUN tar xvf Python-3.8.12.tgz
-WORKDIR /home/getml/Python-3.8.12
+RUN wget https://www.python.org/ftp/python/3.7.9/Python-3.7.9.tgz
+RUN tar xvf Python-3.7.9.tgz
+WORKDIR /home/getml/Python-3.7.9
 RUN ./configure --enable-optimizations
 RUN make altinstall
 
-RUN python3.8 -m pip install wheel auditwheel 
+RUN python3.7 -m pip install wheel auditwheel 
 
 WORKDIR /home/getml
 

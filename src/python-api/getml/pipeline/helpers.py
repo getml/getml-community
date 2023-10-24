@@ -15,24 +15,28 @@ from __future__ import annotations
 import random
 import string
 from copy import deepcopy
-from typing import Any, Dict, List, Literal, Optional, Sequence, Union, get_args
+from typing import Any, Dict, List, Optional, Sequence, Union
 
 import numpy as np
 
 from getml.data import DataFrame, Placeholder, Roles, View
 from getml.data.helpers import _is_typed_list, _remove_trailing_underscores
-from getml.feature_learning.fastprop import FastProp
+from getml.feature_learning import (
+    Fastboost,
+    FastProp,
+    Multirel,
+    Relboost,
+    RelMT,
+)
 from getml.feature_learning.loss_functions import _all_loss_functions
-from getml.feature_learning.multirel import Multirel
-from getml.feature_learning.relboost import Relboost
-from getml.feature_learning.relmt import RelMT
 from getml.predictors import (
     LinearRegression,
     LogisticRegression,
+    ScaleGBMClassifier,
+    ScaleGBMRegressor,
     XGBoostClassifier,
     XGBoostRegressor,
 )
-
 from getml.preprocessors import (
     CategoryTrimmer,
     EmailDomain,
@@ -46,24 +50,18 @@ from getml.preprocessors.preprocessor import _Preprocessor
 
 from .metadata import AllMetadata, Metadata
 
-# --------------------------------------------------------------------
 
-Population = Literal["[POPULATION]"]
-Peripheral = Literal["[PERIPHERAL]"]
-
-POPULATION: Population = get_args(Population)[0]
+POPULATION = "[POPULATION]"
 """
 Population marker - the names of the population and peripheral
 tables may overlap, so markers are necessary.
 """
 
-PERIPHERAL: Peripheral = get_args(Peripheral)[0]
+PERIPHERAL = "[PERIPHERAL]"
 """
 Peripheral marker - the names of the population and peripheral
 tables may overlap, so markers are necessary.
 """
-
-# --------------------------------------------------------------------
 
 
 def _attach_empty(my_list: List, max_length: int, empty_val: Any) -> List:
@@ -118,9 +116,8 @@ def _drop(
     base: Union[DataFrame, View],
     keep_columns: List[Dict[str, str]],
     table: Optional[str],
-    marker: Union[Population, Peripheral],
+    marker: str,
 ) -> View:
-
     assert isinstance(base, (DataFrame, View)), "Wrong type"
     assert isinstance(table, str) or table is None, "Wrong type"
     assert marker in (POPULATION, PERIPHERAL), "Unknown marker"
@@ -224,9 +221,9 @@ def _infer_peripheral(population: Placeholder) -> List[Placeholder]:
 
 
 def _handle_loss_function(
-    feature_learner: Union[FastProp, Multirel, Relboost, RelMT],  # type: ignore
-    loss_function: Optional[Literal["CrossEntropyLoss", "SquareLoss"]],
-) -> Union[FastProp, Multirel, Relboost, RelMT]:  # type: ignore
+    feature_learner: Union[Fastboost, FastProp, Multirel, Relboost, RelMT],  # type: ignore
+    loss_function: Optional[str],
+) -> Union[Fastboost, FastProp, Multirel, Relboost, RelMT]:  # type: ignore
     if not isinstance(loss_function, str) and loss_function is not None:
         raise TypeError("'loss_function' must be str or None.")
 
@@ -269,7 +266,9 @@ def _make_id() -> str:
 # --------------------------------------------------------------------
 
 
-def _parse_fe(dict_: Dict[str, Any]) -> Union[FastProp, Multirel, Relboost, RelMT]:
+def _parse_fe(
+    dict_: Dict[str, Any]
+) -> Union[FastProp, Fastboost, Multirel, Relboost, RelMT]:
     kwargs = _remove_trailing_underscores(dict_)
 
     fe_type = kwargs["type"]
@@ -278,6 +277,9 @@ def _parse_fe(dict_: Dict[str, Any]) -> Union[FastProp, Multirel, Relboost, RelM
 
     if "propositionalization" in kwargs:
         kwargs["propositionalization"] = _parse_fe(kwargs["propositionalization"])
+
+    if fe_type == "Fastboost":
+        return Fastboost(**kwargs)
 
     if fe_type == "FastProp":
         return FastProp(**kwargs)
@@ -306,8 +308,14 @@ def _parse_metadata(dict_: Dict[str, Any]) -> Metadata:
 
 def _parse_pred(
     dict_: Dict[str, Any]
-) -> Union[LinearRegression, LogisticRegression, XGBoostClassifier, XGBoostRegressor]:
-
+) -> Union[
+    ScaleGBMClassifier,
+    ScaleGBMRegressor,
+    LinearRegression,
+    LogisticRegression,
+    XGBoostClassifier,
+    XGBoostRegressor,
+]:
     kwargs = _remove_trailing_underscores(dict_)
 
     pred_type = kwargs["type"]
@@ -319,6 +327,12 @@ def _parse_pred(
 
     if pred_type == "LogisticRegression":
         return LogisticRegression(**kwargs)
+
+    if pred_type == "ScaleGBMClassifier":
+        return ScaleGBMClassifier(**kwargs)
+
+    if pred_type == "ScaleGBMRegressor":
+        return ScaleGBMRegressor(**kwargs)
 
     if pred_type == "XGBoostClassifier":
         return XGBoostClassifier(**kwargs)
@@ -388,8 +402,6 @@ def _print_time_taken(begin: float, end: float, msg: str) -> None:
 
     """
 
-    # ----------------------------------------------------------------
-
     if not isinstance(begin, float):
         raise TypeError("'begin' must be a float as returned by time.time().")
 
@@ -398,8 +410,6 @@ def _print_time_taken(begin: float, end: float, msg: str) -> None:
 
     if not isinstance(msg, str):
         raise TypeError("'msg' must be a str.")
-
-    # ----------------------------------------------------------------
 
     seconds = end - begin
 

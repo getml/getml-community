@@ -1,89 +1,111 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_PREPROCESSORS_IMPUTATION_HPP_
 #define ENGINE_PREPROCESSORS_IMPUTATION_HPP_
-
-// ----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------------
 
 #include <memory>
 #include <utility>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
-#include "helpers/helpers.hpp"
-#include "strings/strings.hpp"
-
-// ----------------------------------------------------------------------------
-
-#include "engine/containers/containers.hpp"
-
-// ----------------------------------------------------------------------------
-
-#include "engine/preprocessors/FitParams.hpp"
+#include "commands/Fingerprint.hpp"
+#include "commands/Preprocessor.hpp"
+#include "containers/containers.hpp"
+#include "engine/Float.hpp"
+#include "engine/preprocessors/Params.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
-#include "engine/preprocessors/TransformParams.hpp"
-
-// ----------------------------------------------------------------------------
+#include "fct/Field.hpp"
+#include "fct/Literal.hpp"
+#include "fct/NamedTuple.hpp"
+#include "fct/Ref.hpp"
+#include "helpers/ColumnDescription.hpp"
+#include "helpers/Macros.hpp"
+#include "helpers/StringIterator.hpp"
+#include "strings/strings.hpp"
 
 namespace engine {
 namespace preprocessors {
-// ----------------------------------------------------
 
 class Imputation : public Preprocessor {
  private:
   typedef std::map<helpers::ColumnDescription, std::pair<Float, bool>>
       ImputationMapType;
 
- public:
-  Imputation()
-      : add_dummies_(false), cols_(std::make_shared<ImputationMapType>()) {}
+  using MarkerType = typename helpers::ColumnDescription::MarkerType;
 
-  Imputation(const Poco::JSON::Object& _obj,
-             const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
-      : add_dummies_(false), cols_(std::make_shared<ImputationMapType>()) {
-    *this = from_json_obj(_obj);
-    dependencies_ = _dependencies;
-  }
+ public:
+  using ImputationOp = typename commands::Preprocessor::ImputationOp;
+
+  using f_column_descriptions =
+      fct::Field<"column_descriptions_",
+                 std::vector<helpers::ColumnDescription>>;
+
+  using f_means = fct::Field<"means_", std::vector<Float>>;
+
+  using f_needs_dummies = fct::Field<"needs_dummies_", std::vector<bool>>;
+
+  using NamedTupleType =
+      fct::NamedTuple<f_column_descriptions, f_means, f_needs_dummies>;
+
+ public:
+  Imputation(const ImputationOp& _op,
+             const std::vector<commands::Fingerprint>& _dependencies)
+      : add_dummies_(_op.get<"add_dummies_">()),
+        cols_(fct::Ref<ImputationMapType>::make()),
+        dependencies_(_dependencies) {}
 
   ~Imputation() = default;
 
- public:
-  /// Returns the fingerprint of the preprocessor (necessary to build
-  /// the dependency graphs).
-  Poco::JSON::Object::Ptr fingerprint() const final;
+ private:
+  Imputation() : cols_(fct::Ref<ImputationMapType>::make()) {}
 
+ public:
   /// Identifies which features should be extracted from which time stamps.
   std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-  fit_transform(const FitParams& _params) final;
+  fit_transform(const Params& _params) final;
 
-  /// Expresses the Seasonal preprocessor as a JSON object.
-  Poco::JSON::Object::Ptr to_json_obj() const final;
+  /// Loads the predictor
+  void load(const std::string& _fname) final;
+
+  /// Stores the preprocessor.
+  void save(const std::string& _fname) const final;
 
   /// Transforms the data frames by adding the desired time series
   /// transformations.
   std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-  transform(const TransformParams& _params) const final;
+  transform(const Params& _params) const final;
 
  public:
   /// Creates a deep copy.
-  std::shared_ptr<Preprocessor> clone(
-      const std::optional<std::vector<Poco::JSON::Object::Ptr>>& _dependencies =
+  fct::Ref<Preprocessor> clone(
+      const std::optional<std::vector<commands::Fingerprint>>& _dependencies =
           std::nullopt) const final {
-    const auto c = std::make_shared<Imputation>(*this);
+    const auto c = fct::Ref<Imputation>::make(*this);
     if (_dependencies) {
       c->dependencies_ = *_dependencies;
     }
     return c;
+  }
+
+  /// Returns the fingerprint of the preprocessor (necessary to build
+  /// the dependency graphs).
+  commands::Fingerprint fingerprint() const final {
+    using FingerprintType =
+        typename commands::Fingerprint::ImputationFingerprint;
+    return commands::Fingerprint(
+        FingerprintType(fct::make_field<"dependencies_">(dependencies_),
+                        fct::make_field<"type_">(fct::Literal<"Imputation">()),
+                        fct::make_field<"add_dummies_">(add_dummies_)));
+  }
+
+  /// Necessary for the automated parsing to work.
+  NamedTupleType named_tuple() const {
+    return f_column_descriptions(column_descriptions()) * f_means(means()) *
+           f_needs_dummies(needs_dummies());
   }
 
   /// The preprocessor does not generate any SQL scripts.
@@ -104,17 +126,14 @@ class Imputation : public Preprocessor {
                  containers::DataFrame* _df) const;
 
   /// Extracts an imputed column and adds it to the data frame.
-  void extract_and_add(const std::string& _marker, const size_t _table,
+  void extract_and_add(const MarkerType _marker, const size_t _table,
                        const containers::Column<Float>& _original_col,
                        containers::DataFrame* _df);
 
   /// Fits and transforms an individual data frame.
   containers::DataFrame fit_transform_df(const containers::DataFrame& _df,
-                                         const std::string& _marker,
+                                         const MarkerType _marker,
                                          const size_t _table);
-
-  /// Parses a JSON object.
-  Imputation from_json_obj(const Poco::JSON::Object& _obj) const;
 
   /// Replaces the original column with an imputed one. Returns a boolean
   /// indicating whether any value had to be imputed.
@@ -122,33 +141,31 @@ class Imputation : public Preprocessor {
               const Float _imputation_value, containers::DataFrame* _df) const;
 
   /// Retrieves all pairs in cols_ matching _marker and _table.
-  std::vector<std::pair<Float, bool>> retrieve_pairs(const std::string& _marker,
+  std::vector<std::pair<Float, bool>> retrieve_pairs(const MarkerType _marker,
                                                      const size_t _table) const;
 
   /// Transforms a single data frame.
   containers::DataFrame transform_df(const containers::DataFrame& _df,
-                                     const std::string& _marker,
+                                     const MarkerType _marker,
                                      const size_t _table) const;
 
  private:
   /// Trivial accessor
-  ImputationMapType& cols() {
-    assert_true(cols_);
-    return *cols_;
-  }
+  ImputationMapType& cols() { return *cols_; }
 
   /// Trivial accessor
-  const ImputationMapType& cols() const {
-    assert_true(cols_);
-    return *cols_;
+  const ImputationMapType& cols() const { return *cols_; }
+
+  /// Retrieves the column description from the map.
+  std::vector<helpers::ColumnDescription> column_descriptions() const {
+    return fct::collect::vector(*cols_ | VIEWS::keys);
   }
 
   /// Retrieve the column description of all columns in cols_.
-  std::vector<std::shared_ptr<helpers::ColumnDescription>> get_all_cols()
-      const {
-    std::vector<std::shared_ptr<helpers::ColumnDescription>> all_cols;
+  std::vector<fct::Ref<helpers::ColumnDescription>> get_all_cols() const {
+    std::vector<fct::Ref<helpers::ColumnDescription>> all_cols;
     for (const auto& [key, _] : cols()) {
-      all_cols.push_back(std::make_shared<helpers::ColumnDescription>(key));
+      all_cols.push_back(fct::Ref<helpers::ColumnDescription>::make(key));
     }
     return all_cols;
   }
@@ -167,19 +184,28 @@ class Imputation : public Preprocessor {
            std::to_string(_replacement) + helpers::Macros::imputation_end();
   }
 
+  /// Retrieves the means from the map.
+  std::vector<Float> means() const {
+    return fct::collect::vector(*cols_ | VIEWS::values | VIEWS::keys);
+  }
+
+  /// Retrieves the means from the map.
+  std::vector<bool> needs_dummies() const {
+    return fct::collect::vector(*cols_ | VIEWS::values | VIEWS::values);
+  }
+
  private:
   /// Whether to create dummy columns.
   bool add_dummies_;
 
   /// Map of all columns to which the imputation transformation applies.
   /// Maps to the mean value and whether we need to build a dummy column.
-  std::shared_ptr<ImputationMapType> cols_;
+  fct::Ref<ImputationMapType> cols_;
 
   /// The dependencies inserted into the the preprocessor.
-  std::vector<Poco::JSON::Object::Ptr> dependencies_;
+  std::vector<commands::Fingerprint> dependencies_;
 };
 
-// ----------------------------------------------------
 }  // namespace preprocessors
 }  // namespace engine
 

@@ -1,42 +1,36 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_HANDLERS_PIPELINEMANAGER_HPP_
 #define ENGINE_HANDLERS_PIPELINEMANAGER_HPP_
 
-// ------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
 #include <Poco/Net/StreamSocket.h>
-
-// ------------------------------------------------------------------------
 
 #include <map>
 #include <memory>
 #include <string>
+#include <variant>
 
-// ------------------------------------------------------------------------
-
+#include "commands/DataFramesOrViews.hpp"
+#include "commands/Pipeline.hpp"
+#include "commands/PipelineCommand.hpp"
+#include "communication/communication.hpp"
+#include "containers/Roles.hpp"
 #include "debug/debug.hpp"
-
-// ------------------------------------------------------------------------
-
-#include "engine/communication/communication.hpp"
 #include "engine/config/config.hpp"
-#include "engine/pipelines/FittedPipeline.hpp"
-#include "engine/pipelines/pipelines.hpp"
-
-// ------------------------------------------------------------------------
-
 #include "engine/handlers/DatabaseManager.hpp"
 #include "engine/handlers/PipelineManagerParams.hpp"
 #include "engine/handlers/ViewParser.hpp"
-
-// ------------------------------------------------------------------------
+#include "engine/pipelines/FittedPipeline.hpp"
+#include "engine/pipelines/pipelines.hpp"
+#include "fct/Literal.hpp"
+#include "fct/NamedTuple.hpp"
+#include "fct/define_named_tuple.hpp"
+#include "metrics/Scores.hpp"
 
 namespace engine {
 namespace handlers {
@@ -45,40 +39,71 @@ class PipelineManager {
  public:
   typedef std::map<std::string, pipelines::Pipeline> PipelineMapType;
 
+  using Command = commands::PipelineCommand;
+
+ private:
+  using FullTransformOp = fct::define_named_tuple_t<
+      fct::Field<"type_", fct::Literal<"Pipeline.transform">>,
+      fct::Field<"name_", std::string>, fct::Field<"table_name_", std::string>,
+      fct::Field<"df_name_", std::string>, fct::Field<"predict_", bool>,
+      fct::Field<"score_", bool>, commands::DataFramesOrViews>;
+
+  using RolesType = fct::NamedTuple<fct::Field<"name", std::string>,
+                                    fct::Field<"roles", containers::Roles>>;
+
+  using ScoresType = fct::define_named_tuple_t<
+      typename metrics::Scores::AllMetricsType,
+      fct::Field<"set_used_", std::string>,
+      fct::Field<"history_",
+                 std::vector<typename metrics::Scores::HistoryType>>>;
+
+  using RefreshUnfittedPipelineType =
+      fct::NamedTuple<fct::Field<"obj", commands::Pipeline>,
+                      fct::Field<"scores", ScoresType>>;
+
+  using RefreshFittedPipelineType = fct::define_named_tuple_t<
+      RefreshUnfittedPipelineType,
+      fct::Field<"peripheral_metadata", std::vector<RolesType>>,
+      fct::Field<"population_metadata", RolesType>,
+      fct::Field<"targets", std::vector<std::string>>>;
+
+  using RefreshPipelineType =
+      std::variant<RefreshFittedPipelineType, RefreshUnfittedPipelineType>;
+
  public:
   PipelineManager(const PipelineManagerParams& _params) : params_(_params) {}
 
   ~PipelineManager() = default;
 
-  // ------------------------------------------------------------------------
-
  public:
+  /// Executes a PipelineCommand.
+  void execute_command(const Command& _command,
+                       Poco::Net::StreamSocket* _socket);
+
+ private:
   /// Checks the validity of the data model.
-  void check(const std::string& _name, const Poco::JSON::Object& _cmd,
+  void check(const typename Command::CheckOp& _cmd,
              Poco::Net::StreamSocket* _socket);
 
   /// Returns the column importances of a pipeline.
-  void column_importances(const std::string& _name,
-                          const Poco::JSON::Object& _cmd,
+  void column_importances(const typename Command::ColumnImportancesOp& _cmd,
                           Poco::Net::StreamSocket* _socket);
 
   /// Determines whether the pipeline should
   /// allow HTTP requests.
-  void deploy(const std::string& _name, const Poco::JSON::Object& _cmd,
+  void deploy(const typename Command::DeployOp& _cmd,
               Poco::Net::StreamSocket* _socket);
 
   /// Returns the feature correlations of a pipeline.
-  void feature_correlations(const std::string& _name,
-                            const Poco::JSON::Object& _cmd,
+  void feature_correlations(const typename Command::FeatureCorrelationsOp& _cmd,
                             Poco::Net::StreamSocket* _socket);
 
   /// Returns the feature importances of a pipeline.
-  void feature_importances(const std::string& _name,
-                           const Poco::JSON::Object& _cmd,
+  void feature_importances(const typename Command::FeatureImportancesOp& _cmd,
                            Poco::Net::StreamSocket* _socket);
 
   /// Fits a pipeline
-  void fit(const std::string& _name, const Poco::JSON::Object& _cmd,
+  void fit(const typename Command::FitOp& _cmd,
            Poco::Net::StreamSocket* _socket);
 
   /// Sends a command to the monitor to launch a hyperparameter optimization.
@@ -86,34 +111,36 @@ class PipelineManager {
                        Poco::Net::StreamSocket* _socket);
 
   /// Writes a JSON representation of the lift curve into the socket.
-  void lift_curve(const std::string& _name, const Poco::JSON::Object& _cmd,
+  void lift_curve(const typename Command::LiftCurveOp& _cmd,
                   Poco::Net::StreamSocket* _socket);
 
   /// Writes a JSON representation of the precision-recall curve into the
   /// socket.
-  void precision_recall_curve(const std::string& _name,
-                              const Poco::JSON::Object& _cmd,
-                              Poco::Net::StreamSocket* _socket);
+  void precision_recall_curve(
+      const typename Command::PrecisionRecallCurveOp& _cmd,
+      Poco::Net::StreamSocket* _socket);
 
   /// Refreshes a pipeline in the target language
-  void refresh(const std::string& _name, Poco::Net::StreamSocket* _socket);
+  void refresh(const typename Command::RefreshOp& _cmd,
+               Poco::Net::StreamSocket* _socket);
 
   /// Refreshes all pipeline in the target language
-  void refresh_all(Poco::Net::StreamSocket* _socket);
+  void refresh_all(const typename Command::RefreshAllOp& _cmd,
+                   Poco::Net::StreamSocket* _socket);
 
   /// Writes a JSON representation of the ROC curve into the socket.
-  void roc_curve(const std::string& _name, const Poco::JSON::Object& _cmd,
+  void roc_curve(const typename Command::ROCCurveOp& _cmd,
                  Poco::Net::StreamSocket* _socket);
 
   /// Transform a pipeline to a JSON string
   void to_json(const std::string& _name, Poco::Net::StreamSocket* _socket);
 
   /// Extracts the SQL code
-  void to_sql(const std::string& _name, const Poco::JSON::Object& _cmd,
+  void to_sql(const typename Command::ToSQLOp& _cmd,
               Poco::Net::StreamSocket* _socket);
 
   /// Generate features
-  void transform(const std::string& _name, const Poco::JSON::Object& _cmd,
+  void transform(const typename Command::TransformOp& _cmd,
                  Poco::Net::StreamSocket* _socket);
 
   // ------------------------------------------------------------------------
@@ -147,23 +174,15 @@ class PipelineManager {
                       containers::DataFrame* _df);
 
   /// Makes sure that the user is allowed to transform this pipeline.
-  void check_user_privileges(const pipelines::Pipeline& _pipeline,
-                             const std::string& _name,
-                             const Poco::JSON::Object& _cmd) const;
-
-  /// Retrieves an Poco::JSON::Array::Ptr from a scores object.
-  Poco::JSON::Array::Ptr get_array(const Poco::JSON::Object& _scores,
-                                   const std::string& _name,
-                                   const unsigned int _target_num) const;
-
-  /// Retrieves the scores from the pipeline, adding set_used if available.
-  Poco::JSON::Object get_scores(const pipelines::Pipeline& _pipeline) const;
+  void check_user_privileges(
+      const pipelines::Pipeline& _pipeline, const std::string& _name,
+      const fct::NamedTuple<fct::Field<"http_request_", bool>>& _cmd) const;
 
   /// Receives data from the client. This data will not be stored permanently,
   /// but locally. Once the training/transformation process is complete, it
   /// will be deleted.
-  Poco::JSON::Object receive_data(
-      const Poco::JSON::Object& _cmd,
+  FullTransformOp receive_data(
+      const typename Command::TransformOp& _cmd,
       const fct::Ref<containers::Encoding>& _categories,
       const fct::Ref<containers::Encoding>& _join_keys_encoding,
       const fct::Ref<std::map<std::string, containers::DataFrame>>&
@@ -171,7 +190,7 @@ class PipelineManager {
       Poco::Net::StreamSocket* _socket);
 
   /// Returns the data needed for refreshing a single pipeline.
-  Poco::JSON::Object refresh_pipeline(
+  RefreshPipelineType refresh_pipeline(
       const pipelines::Pipeline& _pipeline) const;
 
   /// Under some circumstances, we might want to send data to the client, such
@@ -182,7 +201,7 @@ class PipelineManager {
                  Poco::Net::StreamSocket* _socket);
 
   /// Scores a pipeline
-  void score(const Poco::JSON::Object& _cmd, const std::string& _name,
+  void score(const FullTransformOp& _cmd, const std::string& _name,
              const containers::DataFrame& _population_df,
              const containers::NumericalFeatures& _yhat,
              const pipelines::Pipeline& _pipeline,
@@ -190,7 +209,7 @@ class PipelineManager {
 
   /// Stores the newly created data frame.
   void store_df(const pipelines::FittedPipeline& _fitted,
-                const Poco::JSON::Object& _cmd,
+                const FullTransformOp& _cmd,
                 const containers::DataFrame& _population_df,
                 const std::vector<containers::DataFrame>& _peripheral_dfs,
                 const fct::Ref<containers::Encoding>& _local_categories,
@@ -200,7 +219,7 @@ class PipelineManager {
 
   /// Writes a set of features to the data base.
   void to_db(const pipelines::FittedPipeline& _fitted,
-             const Poco::JSON::Object& _cmd,
+             const FullTransformOp& _cmd,
              const containers::DataFrame& _population_table,
              const containers::NumericalFeatures& _numerical_features,
              const containers::CategoricalFeatures& _categorical_features,
@@ -209,7 +228,7 @@ class PipelineManager {
 
   /// Writes a set of features to a DataFrame.
   containers::DataFrame to_df(
-      const pipelines::FittedPipeline& _fitted, const Poco::JSON::Object& _cmd,
+      const pipelines::FittedPipeline& _fitted, const FullTransformOp& _cmd,
       const containers::DataFrame& _population_table,
       const containers::NumericalFeatures& _numerical_features,
       const containers::CategoricalFeatures& _categorical_features,
@@ -284,7 +303,6 @@ class PipelineManager {
   const PipelineManagerParams params_;
 };
 
-// ------------------------------------------------------------------------
 }  // namespace handlers
 }  // namespace engine
 

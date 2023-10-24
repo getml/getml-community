@@ -1,10 +1,9 @@
 # Copyright 2022 The SQLNet Company GmbH
-# 
-# This file is licensed under the Elastic License 2.0 (ELv2). 
-# Refer to the LICENSE.txt file in the root of the repository 
+#
+# This file is licensed under the Elastic License 2.0 (ELv2).
+# Refer to the LICENSE.txt file in the root of the repository
 # for details.
-# 
-
+#
 
 
 import pathlib
@@ -17,8 +16,7 @@ import getml.engine as engine
 
 
 def test_column_operators():
-    # ----------------
-
+    engine.launch()
     engine.set_project("examples")
 
     # ----------------
@@ -115,13 +113,9 @@ def test_column_operators():
 
     my_df.add(col5, "column_05", roles.numerical)
 
-    # ----------------
-
     col6 = 2.0**col1
 
     my_df.add(col6, "column_06", roles.numerical)
-
-    # ----------------
 
     col7 = (col1 * 100000.0).sqrt()
 
@@ -129,13 +123,10 @@ def test_column_operators():
         col7, name="column_07", role=roles.numerical, unit="time stamp, comparison only"
     )
 
-    # ----------------
-
     col8 = col1 % 0.5
 
     my_df.add(col8, "column_08", roles.numerical)
 
-    # ----------------
     # Operations across different data frames are allowed, as
     # long as these data frames have the same number of rows.
 
@@ -143,71 +134,48 @@ def test_column_operators():
 
     my_df.add(col9, "column_09", roles.numerical)
 
-    # ----------------
-
     col10 = col1.ceil()
 
     my_df.add(col10, "column_10", roles.time_stamp)
-
-    # ----------------
 
     col11 = col7.year()
 
     my_df.add(col11, "year", roles.numerical, unit="year, comparison only")
 
-    # ----------------
-
     col12 = col7.month()
 
     my_df.add(col12, "month", roles.numerical)
-
-    # ----------------
 
     col13 = col7.day()
 
     my_df.add(col13, "day", roles.numerical)
 
-    # ----------------
-
     col14 = col7.hour()
 
     my_df.add(col14, "hour", roles.numerical)
-
-    # ----------------
 
     col15 = col7.minute()
 
     my_df.add(col15, "minute", roles.numerical)
 
-    # ----------------
-
     col16 = col7.second()
 
     my_df.add(col16, "second", roles.numerical)
-
-    # ----------------
 
     col17 = col7.weekday()
 
     my_df.add(col17, "weekday", roles.numerical)
 
-    # ----------------
-
     col18 = col7.yearday()
 
     my_df.add(col18, "yearday", roles.numerical)
 
-    # ----------------
-
     col19 = my_df["names"]
-
-    # ----------------
 
     col20 = col19.substr(4, 3)
 
     my_df.add(col20, "short_names", roles.categorical)
 
-    # ----------------
     # If you do not explicitly set a role,
     # the assigned role will either be
     # roles.unused_float or roles.unused_string.
@@ -216,13 +184,9 @@ def test_column_operators():
 
     my_df["new_names"] = col21
 
-    # ----------------
-
     col22 = col17.as_str()
 
     my_df.add(col22, "weekday", roles.categorical)
-
-    # ----------------
 
     col23 = my_df["time_stamp"].as_ts(
         time_formats=["%Y-%m-%dT%H:%M:%s%z", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d"]
@@ -233,13 +197,9 @@ def test_column_operators():
     # If you get things wrong, you will get a warning
     my_df.add(col21, "ts_null", roles.time_stamp)
 
-    # ----------------
-
     col24 = col19.contains("rick").as_str()
 
     my_df.add(col24, "contains 'rick'?", roles.categorical)
-
-    # ----------------
 
     col25 = col19.update(col19.contains("rick"), "Patrick U")
 
@@ -247,13 +207,10 @@ def test_column_operators():
 
     my_df.add(col25, "update names", roles.categorical)
 
-    # ----------------
-
     home_folder = str(pathlib.Path.home()) + "/"
 
     my_df.to_csv(home_folder + "MYDF.csv")
 
-    # ----------------
     # You can write data frames to the data base - but be
     # careful. Your data base might have stricter naming
     # conventions for your columns than the getml.DataFrames.
@@ -266,17 +223,11 @@ def test_column_operators():
 
     my_df.to_db("MYDF")
 
-    # ----------------
-
     my_view = my_df.where((col1 > 1.3) | (col19 == "alex") | ~(col1 <= 1.3))
 
-    my_other_view = my_df.where(data.random(seed=100) > 0.5)
-
-    # ----------------
+    my_other_view = my_df.where(data.random(seed=100) > 0.5)  # type: ignore
 
     deep_copy = my_df.copy("DEEPCOPY")
-
-    # ----------------
 
     engine.delete_project("examples")
 

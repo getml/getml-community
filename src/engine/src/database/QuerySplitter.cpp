@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "database/QuerySplitter.hpp"
 
@@ -69,9 +69,8 @@ std::vector<std::string> QuerySplitter::sanitize(
     return _str != "";
   };
 
-  return fct::collect::vector<std::string>(_splitted |
-                                           VIEWS::transform(io::Parser::trim) |
-                                           VIEWS::filter(is_not_empty));
+  return fct::collect::vector(_splitted | VIEWS::transform(io::Parser::trim) |
+                              VIEWS::filter(is_not_empty));
 }
 
 }  // namespace database

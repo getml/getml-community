@@ -33,7 +33,7 @@ class _Mode:
         """
         if not self.values:
             return None
-        result = stats.mode(self.values)[0][0]
+        result = stats.mode(self.values, keepdims=True)[0][0]
         try:
             return float(result)
         except ValueError:

@@ -19,7 +19,7 @@ import numbers
 import socket
 import time
 from datetime import datetime
-from typing import Any, Dict, List, Literal, Optional, Sequence, Union
+from typing import Any, Dict, List, Optional, Sequence, Union, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -34,27 +34,39 @@ from getml.data.helpers import (
     _remove_trailing_underscores,
 )
 from getml.data import Placeholder, Roles, View
-from getml.feature_learning import _FeatureLearner
-from getml.feature_learning.fastprop import FastProp
+from getml.feature_learning import (
+    _FeatureLearner,
+    FastProp,
+    Fastboost,
+    Multirel,
+    Relboost,
+    RelMT,
+)
 from getml.feature_learning.loss_functions import _classification_loss
-from getml.feature_learning.multirel import Multirel
-from getml.feature_learning.relboost import Relboost
-from getml.feature_learning.relmt import RelMT
-from getml.predictors import _classification_types, _Predictor
-from getml.predictors.linear_regression import LinearRegression
-from getml.predictors.logistic_regression import LogisticRegression
-from getml.predictors.xgboost_classifier import XGBoostClassifier
-from getml.predictors.xgboost_regressor import XGBoostRegressor
-from getml.preprocessors.email_domain import EmailDomain
-from getml.preprocessors.imputation import Imputation
-from getml.preprocessors.mapping import Mapping
+from getml.predictors import (
+    _classification_types,
+    _Predictor,
+    LinearRegression,
+    LogisticRegression,
+    XGBoostClassifier,
+    XGBoostRegressor,
+    ScaleGBMClassifier,
+    ScaleGBMRegressor,
+)
+from getml.preprocessors import (
+    CategoryTrimmer,
+    EmailDomain,
+    Imputation,
+    Mapping,
+    Seasonal,
+    Substring,
+    TextFieldSplitter,
+)
 from getml.preprocessors.preprocessor import _Preprocessor
-from getml.preprocessors.seasonal import Seasonal
-from getml.preprocessors.substring import Substring
-from getml.preprocessors.text_field_splitter import TextFieldSplitter
 from getml.utilities.formatting import _SignatureFormatter
 
 from .columns import Columns
+from .tables import Tables
 from .features import Features
 from .helpers import (
     _check_df_types,
@@ -69,6 +81,7 @@ from .helpers import (
     _replace_with_nan_maybe,
     _transform_peripheral,
 )
+from .issues import Issues
 from .metadata import AllMetadata
 from .metrics import (
     _all_metrics,
@@ -85,8 +98,7 @@ from .score import ClassificationScore, RegressionScore
 from .scores_container import Scores
 from .tags import Tags
 
-
-NOT_FITTED: Literal["NOT FITTED"] = "NOT FITTED"
+NOT_FITTED = "NOT FITTED"
 
 
 class Pipeline:
@@ -420,6 +432,7 @@ class Pipeline:
         peripheral: Optional[List[Placeholder]] = None,
         preprocessors: Optional[
             Union[
+                CategoryTrimmer,
                 EmailDomain,
                 Imputation,
                 Mapping,
@@ -428,6 +441,7 @@ class Pipeline:
                 TextFieldSplitter,
                 List[
                     Union[
+                        CategoryTrimmer,
                         EmailDomain,
                         Imputation,
                         Mapping,
@@ -440,8 +454,8 @@ class Pipeline:
         ] = None,
         feature_learners: Optional[
             Union[
-                Union[FastProp, Multirel, Relboost, RelMT],
-                List[Union[FastProp, Multirel, Relboost, RelMT]],
+                Union[Fastboost, FastProp, Multirel, Relboost, RelMT],
+                List[Union[Fastboost, FastProp, Multirel, Relboost, RelMT]],
             ]
         ] = None,
         feature_selectors: Optional[
@@ -451,6 +465,8 @@ class Pipeline:
                     LogisticRegression,
                     XGBoostClassifier,
                     XGBoostRegressor,
+                    ScaleGBMClassifier,
+                    ScaleGBMRegressor,
                 ],
                 List[
                     Union[
@@ -458,6 +474,8 @@ class Pipeline:
                         LogisticRegression,
                         XGBoostClassifier,
                         XGBoostRegressor,
+                        ScaleGBMClassifier,
+                        ScaleGBMRegressor,
                     ]
                 ],
             ],
@@ -468,22 +486,25 @@ class Pipeline:
                 LogisticRegression,
                 XGBoostClassifier,
                 XGBoostRegressor,
+                ScaleGBMClassifier,
+                ScaleGBMRegressor,
                 List[
                     Union[
                         LinearRegression,
                         LogisticRegression,
                         XGBoostClassifier,
                         XGBoostRegressor,
+                        ScaleGBMClassifier,
+                        ScaleGBMRegressor,
                     ]
                 ],
             ]
         ] = None,
-        loss_function: Optional[Literal["SquareLoss", "CrossEntropyLoss"]] = None,
+        loss_function: Optional[str] = None,
         tags: Optional[list[str]] = None,
         include_categorical: bool = False,
         share_selected_features: float = 0.5,
     ) -> None:
-
         data_model = data_model or DataModel("population")
 
         if not isinstance(data_model, DataModel):
@@ -559,7 +580,6 @@ class Pipeline:
     # ----------------------------------------------------------------
 
     def __eq__(self, other: object) -> bool:
-
         if not isinstance(other, Pipeline):
             raise TypeError("A Pipeline can only be compared to another Pipeline")
 
@@ -567,7 +587,6 @@ class Pipeline:
             return False
 
         for kkey in self.__dict__:
-
             if kkey not in other.__dict__:
                 return False
 
@@ -762,7 +781,6 @@ class Pipeline:
     # ----------------------------------------------------------------
 
     def _make_score_history(self) -> List[Union[ClassificationScore, RegressionScore]]:
-
         scores: List[Dict[str, Any]] = self._scores["history"]
         scores = [_replace_with_nan_maybe(score) for score in scores]
 
@@ -808,8 +826,7 @@ class Pipeline:
 
     # ----------------------------------------------------------------
 
-    def _parse_cmd(self, json_obj: Dict[str, Any]) -> Pipeline:
-
+    def _parse_cmd(self, json_obj: Dict[str, Any]) -> "Pipeline":
         ptype = json_obj["type_"]
 
         del json_obj["type_"]
@@ -867,8 +884,7 @@ class Pipeline:
 
     # ----------------------------------------------------------------
 
-    def _parse_json_obj(self, all_json_objs: Dict[str, Any]) -> Pipeline:
-
+    def _parse_json_obj(self, all_json_objs: Dict[str, Any]) -> "Pipeline":
         obj = all_json_objs["obj"]
 
         scores = all_json_objs["scores"]
@@ -911,8 +927,7 @@ class Pipeline:
 
     # ------------------------------------------------------------
 
-    def _send(self, additional_tags: Optional[List[str]] = None) -> Pipeline:
-
+    def _send(self, additional_tags: Optional[List[str]] = None) -> "Pipeline":
         self._validate()
 
         self._id = _make_id()
@@ -938,7 +953,6 @@ class Pipeline:
         df_name: str = "",
         table_name: str = "",
     ) -> Union[NDArray[np.float_], None]:
-
         _check_df_types(population_data_frame, peripheral_data_frames)
 
         if not isinstance(sock, socket.socket):
@@ -1022,7 +1036,7 @@ class Pipeline:
                 Sequence[Union[DataFrame, View]],
             ]
         ] = None,
-    ) -> None:
+    ) -> Optional[Issues]:
         """
         Checks the validity of the data model.
 
@@ -1077,11 +1091,19 @@ class Pipeline:
             if msg != "Success!":
                 comm.engine_exception_handler(msg)
             print()
-            no_warnings = comm.recv_warnings(sock)
-            if no_warnings:
+            issues = Issues(comm.recv_issues(sock))
+            if len(issues) == 0:
                 print("OK.")
+            else:
+                print(
+                    f"The pipeline check generated {len(issues.info)} "
+                    + f"issues labeled INFO and {len(issues.warnings)} "
+                    + "issues labeled WARNING."
+                )
 
         temp.delete()
+
+        return None if len(issues) == 0 else issues
 
     # ------------------------------------------------------------
 
@@ -1179,7 +1201,7 @@ class Pipeline:
         ] = None,
         validation_table: Optional[Union[DataFrame, View, data.Subset]] = None,
         check: bool = True,
-    ) -> Pipeline:
+    ) -> "Pipeline":
         """Trains the feature learning algorithms, feature selectors
         and predictors.
 
@@ -1246,7 +1268,10 @@ class Pipeline:
         _check_df_types(population_table, peripheral_tables)
 
         if check:
-            self.check(population_table, peripheral_tables)
+            warnings = self.check(population_table, peripheral_tables)
+            if warnings:
+                print("To see the issues in full, run .check() on the pipeline.")
+                print()
 
         self._send(additional_tags)
 
@@ -1462,7 +1487,7 @@ class Pipeline:
 
     # ------------------------------------------------------------
 
-    def refresh(self) -> Pipeline:
+    def refresh(self) -> "Pipeline":
         """Reloads the pipeline from the engine.
 
         This discards all local changes you have made since the
@@ -1630,6 +1655,18 @@ class Pipeline:
     # ----------------------------------------------------------------
 
     @property
+    def tables(self) -> Tables:
+        """
+        :class:`~getml.pipeline.Tables` object that
+        can be used to handle information about the original
+        tables utilized by the feature learners.
+        """
+        self._check_whether_fitted()
+        return Tables(self.targets, self.columns)
+
+    # ----------------------------------------------------------------
+
+    @property
     def targets(self) -> List[str]:
         """
         Contains the names of the targets used for this pipeline.
@@ -1743,14 +1780,13 @@ class Pipeline:
             )
 
         if df_name != "":
-            y_hat = data.DataFrame(name=df_name).refresh()
+            return data.DataFrame(name=df_name).refresh()
 
         return y_hat
 
     # ----------------------------------------------------------------
 
     def _validate(self) -> None:
-
         if not isinstance(self.id, str):
             raise TypeError("'name' must be of type str")
 

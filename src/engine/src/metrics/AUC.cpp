@@ -1,14 +1,13 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "metrics/AUC.hpp"
 
 namespace metrics {
-// ----------------------------------------------------------------------------
 
 Float AUC::calc_auc(const std::vector<Float>& _true_positive_rate,
                     const std::vector<Float>& _false_positive_rate) const {
@@ -103,8 +102,6 @@ std::vector<Float> AUC::calc_rate(const std::vector<Float>& _raw,
 
 std::pair<std::vector<Float>, Float> AUC::calc_true_positives_uncompressed(
     const std::vector<std::pair<Float, Float>>& _pairs) const {
-  // ---------------------------------------------
-
   auto true_positives_uncompressed = std::vector<Float>(nrows());
 
   for (size_t i = 0; i < nrows(); ++i) {
@@ -121,11 +118,7 @@ std::pair<std::vector<Float>, Float> AUC::calc_true_positives_uncompressed(
                 true_positives_uncompressed.end(),
                 [all_positives](Float& val) { val = all_positives - val; });
 
-  // ---------------------------------------------
-
   return std::make_pair(true_positives_uncompressed, all_positives);
-
-  // ---------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
@@ -204,68 +197,33 @@ std::pair<Float, Float> AUC::find_min_max(const size_t _j) const {
 
 // ----------------------------------------------------------------------------
 
-void AUC::make_default_values(Poco::JSON::Array::Ptr _true_positive_arr,
-                              Poco::JSON::Array::Ptr _false_positive_arr,
-                              Poco::JSON::Array::Ptr _lift_arr,
-                              Poco::JSON::Array::Ptr _precision_arr,
-                              Poco::JSON::Array::Ptr _proportion_arr,
-                              Float* _auc) const {
-  _true_positive_arr->add(
-      jsonutils::JSON::vector_to_array_ptr(std::vector<Float>({1.0, 0.0})));
+void AUC::make_default_values(
+    std::vector<std::vector<Float>>* _true_positive_arr,
+    std::vector<std::vector<Float>>* _false_positive_arr,
+    std::vector<std::vector<Float>>* _lift_arr,
+    std::vector<std::vector<Float>>* _precision_arr,
+    std::vector<std::vector<Float>>* _proportion_arr, Float* _auc) const {
+  _true_positive_arr->push_back({1.0, 0.0});
 
-  _false_positive_arr->add(
-      jsonutils::JSON::vector_to_array_ptr(std::vector<Float>({0.0, 1.0})));
+  _false_positive_arr->push_back({0.0, 1.0});
 
-  _lift_arr->add(
-      jsonutils::JSON::vector_to_array_ptr(std::vector<Float>({1.0, 1.0})));
+  _lift_arr->push_back({1.0, 1.0});
 
-  _precision_arr->add(
-      jsonutils::JSON::vector_to_array_ptr(std::vector<Float>({0.0, 0.0})));
+  _precision_arr->push_back({0.0, 0.0});
 
-  _proportion_arr->add(
-      jsonutils::JSON::vector_to_array_ptr(std::vector<Float>({0.0, 1.0})));
+  _proportion_arr->push_back({0.0, 1.0});
 
   *_auc = 0.5;
 }
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object AUC::make_object(
-    const Poco::JSON::Array::Ptr _true_positive_arr,
-    const Poco::JSON::Array::Ptr _false_positive_arr,
-    const Poco::JSON::Array::Ptr _lift_arr,
-    const Poco::JSON::Array::Ptr _precision_arr,
-    const Poco::JSON::Array::Ptr _proportion_arr,
-    const std::vector<Float>& _auc) const {
-  Poco::JSON::Object obj;
-
-  obj.set("auc_", jsonutils::JSON::vector_to_array_ptr(_auc));
-
-  obj.set("fpr_", _false_positive_arr);
-
-  obj.set("tpr_", _true_positive_arr);
-
-  obj.set("lift_", _lift_arr);
-
-  obj.set("precision_", _precision_arr);
-
-  obj.set("proportion_", _proportion_arr);
-
-  return obj;
-}
-
-// ----------------------------------------------------------------------------
-
 std::vector<std::pair<Float, Float>> AUC::make_pairs(const size_t _j) const {
-  // ---------------------------------------------
-
   std::vector<std::pair<Float, Float>> pairs(nrows());
 
   for (size_t i = 0; i < pairs.size(); ++i) {
     pairs.at(i) = std::make_pair(yhat(i, _j), y(i, _j));
   }
-
-  // ---------------------------------------------
 
   const auto sort_by_prediction = [](const std::pair<Float, Float>& p1,
                                      const std::pair<Float, Float>& p2) {
@@ -274,21 +232,13 @@ std::vector<std::pair<Float, Float>> AUC::make_pairs(const size_t _j) const {
 
   std::stable_sort(pairs.begin(), pairs.end(), sort_by_prediction);
 
-  // ---------------------------------------------
-
   return pairs;
-
-  // ---------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object AUC::score(const Features _yhat, const Features _y) {
-  // -----------------------------------------------------
-
+typename AUC::ResultType AUC::score(const Features _yhat, const Features _y) {
   impl_.set_data(_yhat, _y);
-
-  // -----------------------------------------------------
 
   if (nrows() < 1) {
     std::runtime_error(
@@ -296,37 +246,27 @@ Poco::JSON::Object AUC::score(const Features _yhat, const Features _y) {
         "work!");
   }
 
-  // -----------------------------------------------------
-
   std::vector<Float> auc(ncols());
 
-  auto true_positive_arr = Poco::JSON::Array::Ptr(new Poco::JSON::Array());
+  auto true_positive_arr = std::vector<std::vector<Float>>();
 
-  auto false_positive_arr = Poco::JSON::Array::Ptr(new Poco::JSON::Array());
+  auto false_positive_arr = std::vector<std::vector<Float>>();
 
-  auto lift_arr = Poco::JSON::Array::Ptr(new Poco::JSON::Array());
+  auto lift_arr = std::vector<std::vector<Float>>();
 
-  auto precision_arr = Poco::JSON::Array::Ptr(new Poco::JSON::Array());
+  auto precision_arr = std::vector<std::vector<Float>>();
 
-  auto proportion_arr = Poco::JSON::Array::Ptr(new Poco::JSON::Array());
-
-  // -----------------------------------------------------
+  auto proportion_arr = std::vector<std::vector<Float>>();
 
   for (size_t j = 0; j < ncols(); ++j) {
-    // ---------------------------------------------
-
     const auto [yhat_min, yhat_max] = find_min_max(j);
 
-    // ---------------------------------------------
-
     if (yhat_min == yhat_max) {
-      make_default_values(true_positive_arr, false_positive_arr, lift_arr,
-                          precision_arr, proportion_arr, &auc.at(j));
+      make_default_values(&true_positive_arr, &false_positive_arr, &lift_arr,
+                          &precision_arr, &proportion_arr, &auc.at(j));
 
       continue;
     }
-
-    // ---------------------------------------------
 
     const auto pairs = make_pairs(j);
 
@@ -339,28 +279,18 @@ Poco::JSON::Object AUC::score(const Features _yhat, const Features _y) {
     const auto false_positives =
         calc_false_positives(true_positives, predicted_negative);
 
-    // ---------------------------------------------
-
     const Float all_negatives = static_cast<Float>(nrows()) - all_positives;
 
     const auto true_positive_rate = calc_rate(true_positives, all_positives);
 
     const auto false_positive_rate = calc_rate(false_positives, all_negatives);
 
-    // ---------------------------------------------
-
     const auto precision = calc_precision(true_positives, predicted_negative);
-
-    // ---------------------------------------------
 
     const auto [lift, proportion] =
         calc_lift(precision, predicted_negative, all_negatives);
 
-    // ---------------------------------------------
-
     auc.at(j) = calc_auc(true_positive_rate, false_positive_rate);
-
-    // ---------------------------------------------
 
     const auto tpr_downsampled = downsample(true_positive_rate);
 
@@ -372,31 +302,20 @@ Poco::JSON::Object AUC::score(const Features _yhat, const Features _y) {
 
     const auto proportion_downsampled = downsample(proportion);
 
-    // -----------------------------------------------------
+    false_positive_arr.push_back(fpr_downsampled);
 
-    true_positive_arr->add(
-        jsonutils::JSON::vector_to_array_ptr(tpr_downsampled));
+    true_positive_arr.push_back(tpr_downsampled);
 
-    false_positive_arr->add(
-        jsonutils::JSON::vector_to_array_ptr(fpr_downsampled));
+    lift_arr.push_back(lift_downsampled);
 
-    lift_arr->add(jsonutils::JSON::vector_to_array_ptr(lift_downsampled));
+    precision_arr.push_back(precision_downsampled);
 
-    precision_arr->add(
-        jsonutils::JSON::vector_to_array_ptr(precision_downsampled));
-
-    proportion_arr->add(
-        jsonutils::JSON::vector_to_array_ptr(proportion_downsampled));
-
-    // ---------------------------------------------
+    proportion_arr.push_back(proportion_downsampled);
   }
 
-  // -----------------------------------------------------
-
-  return make_object(true_positive_arr, false_positive_arr, lift_arr,
-                     precision_arr, proportion_arr, auc);
-
-  // -----------------------------------------------------
+  return f_auc(auc) * f_fpr(false_positive_arr) * f_tpr(true_positive_arr) *
+         f_lift(lift_arr) * f_precision(precision_arr) *
+         f_proportion(proportion_arr);
 }
 
 // ----------------------------------------------------------------------------

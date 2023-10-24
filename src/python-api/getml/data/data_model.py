@@ -177,7 +177,6 @@ class DataModel:
     """
 
     def __init__(self, population):
-
         if isinstance(population, str):
             population = Placeholder(population)
 
@@ -193,7 +192,6 @@ class DataModel:
         self.peripheral = {}
 
     def _add(self, placeholder):
-
         if placeholder.name in self.peripheral:
             try:
                 self.peripheral[placeholder.name].append(placeholder)
@@ -258,11 +256,13 @@ class DataModel:
     def _repr_html_(self):
         output = cleandoc(
             f"""
-            <div style='margin-top: 15px;'><h4>diagram</h4><br>
+            <div style='margin-top: 15px; margin-bottom: 5px;'>
+            <div style='margin-bottom: 10px; font-size: 1rem;'>diagram</div>
             {self._make_diagram()}
             </div>
 
-            <div style='margin-top: 15px;'><h4>staging</h4>
+            <div style='margin-top: 15px;'>
+            <div style='margin-bottom: 10px; font-size: 1rem;'>staging</div>
             {self._make_staging()}
             </div>
             """
@@ -284,15 +284,17 @@ class DataModel:
 
         # We want to be 100% sure that all handles are unique,
         # so we need deepcopy.
-        placeholders = [deepcopy(ph) for elem in placeholders for ph in to_list(elem)]
+        placeholders_dc = [
+            deepcopy(ph) for elem in placeholders for ph in to_list(elem)
+        ]
 
-        if not _is_typed_list(placeholders, Placeholder):
+        if not _is_typed_list(placeholders_dc, Placeholder):
             raise TypeError(
                 "'placeholders' must consist of getml.data.Placeholders "
                 + "or lists thereof."
             )
 
-        for placeholder in placeholders:
+        for placeholder in placeholders_dc:
             self._add(placeholder)
 
     @property

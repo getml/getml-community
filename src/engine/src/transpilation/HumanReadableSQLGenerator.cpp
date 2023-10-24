@@ -8,31 +8,35 @@
 #include "transpilation/HumanReadableSQLGenerator.hpp"
 
 #include "fct/fct.hpp"
+#include "helpers/Macros.hpp"
+#include "helpers/StringReplacer.hpp"
 #include "helpers/enums/Aggregation.hpp"
 #include "transpilation/SQLGenerator.hpp"
 
 namespace transpilation {
 
+#include "transpilation/FeatureTableParams.hpp"
 std::string HumanReadableSQLGenerator::aggregation(
     const helpers::enums::Aggregation& _agg, const std::string& _colname1,
     const std::optional<std::string>& _colname2) const {
   const auto sep =
-      _agg == helpers::enums::Aggregation::trend ? ", " : " ORDER BY ";
+      _agg.value() == helpers::enums::Aggregation::value_of<"TREND">()
+          ? ", "
+          : " ORDER BY ";
 
   const auto value = _colname2 ? _colname1 + sep + *_colname2 : _colname1;
 
-  if (_agg == helpers::enums::Aggregation::count_distinct) {
+  if (_agg.value() ==
+      helpers::enums::Aggregation::value_of<"COUNT DISTINCT">()) {
     return "COUNT( DISTINCT " + value + " )";
   }
 
-  if (_agg == helpers::enums::Aggregation::count_minus_count_distinct) {
+  if (_agg.value() ==
+      helpers::enums::Aggregation::value_of<"COUNT MINUS COUNT DISTINCT">()) {
     return "COUNT( " + value + "  ) - COUNT( DISTINCT " + value + " )";
   }
 
-  const auto agg_type =
-      helpers::enums::Parser<helpers::enums::Aggregation>::to_str(_agg);
-
-  return helpers::StringReplacer::replace_all(agg_type, " ", "_") + "( " +
+  return helpers::StringReplacer::replace_all(_agg.name(), " ", "_") + "( " +
          value + " )";
 }
 
@@ -52,10 +56,10 @@ std::string HumanReadableSQLGenerator::create_indices(
            "\" (\"" + colname + "\");\n\n";
   };
 
-  return fct::collect::string(_schema.join_keys_ |
+  return fct::collect::string(_schema.join_keys() |
                               VIEWS::filter(SQLGenerator::include_column) |
                               VIEWS::transform(create_index)) +
-         fct::collect::string(_schema.time_stamps_ |
+         fct::collect::string(_schema.time_stamps() |
                               VIEWS::transform(create_index));
 }
 
@@ -341,17 +345,17 @@ std::vector<std::string> HumanReadableSQLGenerator::make_staging_columns(
       -> std::vector<std::string> {
     const auto cast = std::bind(cast_column, std::placeholders::_1, "REAL");
 
-    return fct::collect::vector<std::string>(
-        _colnames | VIEWS::filter(SQLGenerator::include_column) |
-        VIEWS::transform(cast));
+    return fct::collect::vector(_colnames |
+                                VIEWS::filter(SQLGenerator::include_column) |
+                                VIEWS::transform(cast));
   };
 
   const auto cast_as_time_stamp =
       [to_ts](const std::vector<std::string>& _colnames)
       -> std::vector<std::string> {
-    return fct::collect::vector<std::string>(
-        _colnames | VIEWS::filter(SQLGenerator::include_column) |
-        VIEWS::transform(to_ts));
+    return fct::collect::vector(_colnames |
+                                VIEWS::filter(SQLGenerator::include_column) |
+                                VIEWS::transform(to_ts));
   };
 
   const auto cast_as_text =
@@ -359,25 +363,25 @@ std::vector<std::string> HumanReadableSQLGenerator::make_staging_columns(
       -> std::vector<std::string> {
     const auto cast = std::bind(cast_column, std::placeholders::_1, "TEXT");
 
-    return fct::collect::vector<std::string>(
-        _colnames | VIEWS::filter(SQLGenerator::include_column) |
-        VIEWS::transform(cast));
+    return fct::collect::vector(_colnames |
+                                VIEWS::filter(SQLGenerator::include_column) |
+                                VIEWS::transform(cast));
   };
 
-  const auto categoricals = cast_as_text(_schema.categoricals_);
+  const auto categoricals = cast_as_text(_schema.categoricals());
 
-  const auto discretes = cast_as_real(_schema.discretes_);
+  const auto discretes = cast_as_real(_schema.discretes());
 
-  const auto join_keys = cast_as_text(_schema.join_keys_);
+  const auto join_keys = cast_as_text(_schema.join_keys());
 
-  const auto numericals = cast_as_real(_schema.numericals_);
+  const auto numericals = cast_as_real(_schema.numericals());
 
-  const auto targets = _include_targets ? cast_as_real(_schema.targets_)
+  const auto targets = _include_targets ? cast_as_real(_schema.targets())
                                         : std::vector<std::string>();
 
-  const auto text = cast_as_text(_schema.text_);
+  const auto text = cast_as_text(_schema.text());
 
-  const auto time_stamps = cast_as_time_stamp(_schema.time_stamps_);
+  const auto time_stamps = cast_as_time_stamp(_schema.time_stamps());
 
   return fct::join::vector<std::string>({targets, categoricals, discretes,
                                          join_keys, numericals, text,
@@ -387,26 +391,22 @@ std::vector<std::string> HumanReadableSQLGenerator::make_staging_columns(
 // ----------------------------------------------------------------------------
 
 std::string HumanReadableSQLGenerator::make_feature_table(
-    const std::string& _main_table,
-    const std::vector<std::string>& _autofeatures,
-    const std::vector<std::string>& _targets,
-    const std::vector<std::string>& _categorical,
-    const std::vector<std::string>& _numerical,
-    const std::string& _prefix) const {
-  std::string sql = "DROP TABLE IF EXISTS \"FEATURES" + _prefix + "\";\n\n";
+    const FeatureTableParams& _params) const {
+  std::string sql =
+      "DROP TABLE IF EXISTS \"FEATURES" + _params.get<f_prefix>() + "\";\n\n";
 
-  sql += "CREATE TABLE \"FEATURES" + _prefix + "\" AS\n";
+  sql += "CREATE TABLE \"FEATURES" + _params.get<f_prefix>() + "\" AS\n";
 
-  sql += make_select(_main_table, _autofeatures, _targets, _categorical,
-                     _numerical);
+  sql += make_select(_params);
 
-  const auto main_table = SQLGenerator::make_staging_table_name(_main_table);
+  const auto main_table =
+      SQLGenerator::make_staging_table_name(_params.get<f_main_table>());
 
   sql += "FROM \"" + main_table + "\" t1\n";
 
   sql += "ORDER BY t1.rowid;\n\n";
 
-  sql += make_updates(_autofeatures, _prefix);
+  sql += make_updates(_params.get<f_autofeatures>(), _params.get<f_prefix>());
 
   return sql;
 }
@@ -432,13 +432,10 @@ std::string HumanReadableSQLGenerator::make_postprocessing(
 // ----------------------------------------------------------------------------
 
 std::string HumanReadableSQLGenerator::make_select(
-    const std::string& _main_table,
-    const std::vector<std::string>& _autofeatures,
-    const std::vector<std::string>& _targets,
-    const std::vector<std::string>& _categorical,
-    const std::vector<std::string>& _numerical) const {
-  const auto manual =
-      fct::join::vector<std::string>({_targets, _numerical, _categorical});
+    const FeatureTableParams& _params) const {
+  const auto manual = fct::join::vector<std::string>(
+      {_params.get<f_targets>(), _params.get<f_numerical>(),
+       _params.get<f_categorical>()});
 
   const auto make_staging_table_colname_lambda =
       [this](const std::string& _colname) -> std::string {
@@ -449,33 +446,17 @@ std::string HumanReadableSQLGenerator::make_select(
       manual, make_staging_table_colname_lambda);
 
   std::string sql =
-      manual.size() > 0 ? "SELECT " : "SELECT t1.rowid AS \"rownum\",\n";
+      manual.size() > 0 ? "SELECT t1.*,\n" : "SELECT t1.rowid AS \"rownum\",\n";
 
-  for (size_t i = 0; i < _autofeatures.size(); ++i) {
-    const std::string begin = (i == 0 && manual.size() > 0 ? "" : "       ");
+  for (size_t i = 0; i < _params.get<f_autofeatures>().size(); ++i) {
+    const std::string begin = "       ";
 
-    const bool no_comma = (i == _autofeatures.size() - 1 && manual.size() == 0);
+    const bool no_comma = (i == _params.get<f_autofeatures>().size() - 1);
 
     const auto end = (no_comma ? "\n" : ",\n");
 
-    sql +=
-        begin + "CAST( 0.0 AS REAL ) AS \"" + _autofeatures.at(i) + "\"" + end;
-  }
-
-  for (size_t i = 0; i < manual.size(); ++i) {
-    const std::string begin = "       ";
-
-    const auto edited_colname = "t1.\"" + modified_colnames.at(i) + "\"";
-
-    const std::string data_type =
-        (i < _targets.size() + _numerical.size() ? "REAL" : "TEXT");
-
-    const bool no_comma = (i == manual.size() - 1);
-
-    const auto end = no_comma ? "\"\n" : "\",\n";
-
-    sql += begin + "CAST( " + edited_colname + " AS " + data_type + " ) AS \"" +
-           modified_colnames.at(i) + end;
+    sql += begin + "CAST( 0.0 AS REAL ) AS \"" +
+           _params.get<f_autofeatures>().at(i) + "\"" + end;
   }
 
   return sql;
@@ -484,18 +465,12 @@ std::string HumanReadableSQLGenerator::make_select(
 // ----------------------------------------------------------------------------
 
 std::string HumanReadableSQLGenerator::make_sql(
-    const std::string& _main_table,
-    const std::vector<std::string>& _autofeatures,
-    const std::vector<std::string>& _sql,
-    const std::vector<std::string>& _targets,
-    const std::vector<std::string>& _categorical,
-    const std::vector<std::string>& _numerical) const {
-  auto sql = _sql;
+    const SQLParams& _params) const {
+  auto sql = _params.get<f_sql>();
 
-  sql.push_back(make_feature_table(_main_table, _autofeatures, _targets,
-                                   _categorical, _numerical, ""));
+  sql.push_back(make_feature_table(_params * f_prefix("")));
 
-  sql.push_back(make_postprocessing(_sql));
+  sql.push_back(make_postprocessing(_params.get<f_sql>()));
 
   return fct::collect::string(sql);
 }
@@ -506,7 +481,7 @@ std::string HumanReadableSQLGenerator::make_staging_table(
     const bool& _include_targets, const helpers::Schema& _schema) const {
   const auto columns = make_staging_columns(_include_targets, _schema);
 
-  const auto name = SQLGenerator::make_staging_table_name(_schema.name_);
+  const auto name = SQLGenerator::make_staging_table_name(_schema.name());
 
   std::stringstream sql;
 
@@ -520,9 +495,9 @@ std::string HumanReadableSQLGenerator::make_staging_table(
     sql << begin << columns.at(i) << end;
   }
 
-  sql << "FROM \"" << SQLGenerator::get_table_name(_schema.name_) << "\" t1\n";
+  sql << "FROM \"" << SQLGenerator::get_table_name(_schema.name()) << "\" t1\n";
 
-  sql << SQLGenerator::handle_many_to_one_joins(_schema.name_, "t1", this);
+  sql << SQLGenerator::handle_many_to_one_joins(_schema.name(), "t1", this);
 
   sql << ";" << std::endl << std::endl;
 
@@ -644,10 +619,10 @@ std::string HumanReadableSQLGenerator::split_text_fields(
   assert_true(_desc);
 
   const auto staging_table = SQLGenerator::to_upper(
-      transpilation::SQLGenerator::make_staging_table_name(_desc->table_));
+      transpilation::SQLGenerator::make_staging_table_name(_desc->table()));
 
   const auto colname =
-      SQLGenerator::to_lower(make_staging_table_colname(_desc->name_));
+      SQLGenerator::to_lower(make_staging_table_colname(_desc->name()));
 
   const auto new_table = staging_table + "__" + SQLGenerator::to_upper(colname);
 

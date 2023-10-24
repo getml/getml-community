@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include <Poco/Net/TCPServer.h>
 
@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
   // located in $HOME/.getml/getml-.../bin
   //
   // To analyze the profile, run the following:
-  // google-pprof --pdf getml-... getml_profile.log getml_profile.pdf
+  // google-pprof --pdf getml-... getml_profile.log >> getml_profile.pdf
   ProfilerStart("getml_profile.log");
 #endif
 
@@ -52,29 +52,30 @@ int main(int argc, char* argv[]) {
         "you have provided in your config.json.");
   }
 
-  engine::handlers::FileHandler::delete_temp_dir(options.temp_dir());
+  try {
+    engine::handlers::FileHandler::delete_temp_dir(options.temp_dir());
+  } catch (std::exception& e) {
+  }
 
-  const auto monitor =
-      fct::Ref<const engine::communication::Monitor>::make(options);
+  const auto monitor = fct::Ref<const communication::Monitor>::make(options);
 
   const auto logger =
-      fct::Ref<const engine::communication::Logger>::make(monitor.ptr());
+      fct::Ref<const communication::Logger>::make(monitor.ptr());
 
   const auto pool = options.make_pool();
 
-  const auto categories = fct::Ref<engine::containers::Encoding>::make(pool);
+  const auto categories = fct::Ref<containers::Encoding>::make(pool);
 
-  const auto join_keys_encoding =
-      fct::Ref<engine::containers::Encoding>::make(pool);
+  const auto join_keys_encoding = fct::Ref<containers::Encoding>::make(pool);
 
   const auto data_frames =
-      fct::Ref<std::map<std::string, engine::containers::DataFrame>>::make();
+      fct::Ref<std::map<std::string, containers::DataFrame>>::make();
 
   const auto pipelines =
       fct::Ref<engine::handlers::PipelineManager::PipelineMapType>::make();
 
   const auto data_frame_tracker =
-      fct::Ref<engine::dependency::DataFrameTracker>::make(data_frames.ptr());
+      fct::Ref<engine::dependency::DataFrameTracker>::make(data_frames);
 
   const auto preprocessor_tracker =
       fct::Ref<engine::dependency::PreprocessorTracker>::make();
@@ -94,20 +95,20 @@ int main(int argc, char* argv[]) {
       fct::Ref<engine::handlers::DatabaseManager>::make(logger, monitor,
                                                         options);
 
-  const auto data_frame_manager_params =
-      engine::handlers::DataFrameManagerParams{
-          .categories_ = categories,
-          .database_manager_ = database_manager,
-          .data_frames_ = data_frames,
-          .join_keys_encoding_ = join_keys_encoding,
-          .logger_ = logger,
-          .monitor_ = monitor,
-          .options_ = options,
-          .read_write_lock_ = read_write_lock};
+  const auto data_params =
+      fct::Ref<engine::handlers::DataFrameManagerParams>::make(
+          engine::handlers::DataFrameManagerParams{
+              .categories_ = categories,
+              .database_manager_ = database_manager,
+              .data_frames_ = data_frames,
+              .join_keys_encoding_ = join_keys_encoding,
+              .logger_ = logger,
+              .monitor_ = monitor,
+              .options_ = options,
+              .read_write_lock_ = read_write_lock});
 
   const auto data_frame_manager =
-      fct::Ref<engine::handlers::DataFrameManager>::make(
-          data_frame_manager_params);
+      fct::Ref<engine::handlers::DataFrameManager>::make(*data_params);
 
   const auto pipeline_manager_params = engine::handlers::PipelineManagerParams{
       .categories_ = categories,
@@ -159,8 +160,8 @@ int main(int argc, char* argv[]) {
 
   Poco::Net::TCPServer srv(
       new engine::srv::ServerConnectionFactoryImpl(
-          database_manager, data_frame_manager, logger, options,
-          pipeline_manager, project_manager, shutdown_flag),
+          database_manager, data_params, logger, options, pipeline_manager,
+          project_manager, shutdown_flag),
       server_socket);
 
   srv.start();

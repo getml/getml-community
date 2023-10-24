@@ -1,19 +1,14 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_PIPELINES_TRANSFORMPARAMS_HPP_
 #define ENGINE_PIPELINES_TRANSFORMPARAMS_HPP_
 
-// ----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
 #include <Poco/Net/StreamSocket.h>
-
-// ----------------------------------------------------------------------------
 
 #include <map>
 #include <memory>
@@ -21,48 +16,49 @@
 #include <string>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
-#include "engine/communication/communication.hpp"
-#include "engine/containers/containers.hpp"
+#include "commands/DataFramesOrViews.hpp"
+#include "communication/communication.hpp"
+#include "containers/containers.hpp"
 #include "engine/dependency/dependency.hpp"
-
-// ----------------------------------------------------------------------------
+#include "fct/Field.hpp"
+#include "fct/Literal.hpp"
+#include "fct/define_named_tuple.hpp"
 
 namespace engine {
 namespace pipelines {
 
-struct TransformParams {
-  static constexpr const char* FEATURE_SELECTOR = "feature selector";
-  static constexpr const char* PREDICTOR = "predictor";
+using TransformCmdType = fct::define_named_tuple_t<commands::DataFramesOrViews,
+                                                   fct::Field<"predict_", bool>,
+                                                   fct::Field<"score_", bool>>;
 
-  /// The categorical encoding.
-  const fct::Ref<containers::Encoding> categories_;
+using TransformParams = fct::NamedTuple<
 
-  /// The command used.
-  const Poco::JSON::Object cmd_;
+    /// The Encoding used for the categories.
+    fct::Field<"categories_", fct::Ref<containers::Encoding>>,
 
-  /// Contains all of the data frames - we need this, because it might be
-  /// possible that the features are retrieved.
-  const std::map<std::string, containers::DataFrame> data_frames_;
+    /// Contains all of the names of all data frames or views needed for fitting
+    /// the pipeline.
+    fct::Field<"cmd_", TransformCmdType>,
 
-  /// Keeps track of the data frames and their fingerprints.
-  const dependency::DataFrameTracker data_frame_tracker_;
+    /// Contains all of the data frames - we need this, because it might be
+    /// possible that the features are retrieved.
+    fct::Field<"data_frames_", std::map<std::string, containers::DataFrame>>,
 
-  /// Logs the progress.
-  const std::shared_ptr<const communication::Logger> logger_;
+    /// Keeps track of the data frames and their fingerprints.
+    fct::Field<"data_frame_tracker_", dependency::DataFrameTracker>,
 
-  /// The peripheral tables, without staging, as they were passed.
-  const std::vector<containers::DataFrame> original_peripheral_dfs_;
+    /// Logs the progress.
+    fct::Field<"logger_", std::shared_ptr<const communication::Logger>>,
 
-  /// The population table, without staging, as it was passed.
-  const containers::DataFrame original_population_df_;
+    /// The peripheral tables.
+    fct::Field<"original_peripheral_dfs_", std::vector<containers::DataFrame>>,
 
-  /// Output: The socket with which we communicate.
-  Poco::Net::StreamSocket* const socket_;
-};
+    /// The population table.
+    fct::Field<"original_population_df_", containers::DataFrame>,
 
-// ----------------------------------------------------------------------------
+    /// Output: The socket with which we communicate.
+    fct::Field<"socket_", Poco::Net::StreamSocket*>>;
+
 }  // namespace pipelines
 }  // namespace engine
 

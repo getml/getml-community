@@ -12,7 +12,9 @@ Base class - not meant for the end user.
 
 import numbers
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field, fields
+from typing import List, Set
+
 import numpy as np
 
 from getml.utilities.formatting import _SignatureFormatter
@@ -25,15 +27,10 @@ class _Preprocessor(ABC):
     Base class - not meant for the end user.
     """
 
-    # ------------------------------------------------------------------------
-
-    def __post_init__(self):
-
-        type(self)._supported_params = set(vars(self).keys())
-
+    def __post_init__(self: "_Preprocessor"):
         self.validate()
 
-        for param in self._supported_params:  # pylint: disable=E1101
+        for param in self._supported_params:
             setattr(type(self), param, Validator(param))
 
     # ------------------------------------------------------------------------
@@ -46,7 +43,6 @@ class _Preprocessor(ABC):
             return False
 
         for kkey in self.__dict__:
-
             if kkey not in other.__dict__:
                 return False
 
@@ -92,6 +88,12 @@ class _Preprocessor(ABC):
     def __str__(self):
         sig = _SignatureFormatter(self)
         return sig._format()
+
+    # ------------------------------------------------------------------------
+
+    @property
+    def _supported_params(self) -> List[str]:
+        return [field.name for field in fields(self)]
 
     # ------------------------------------------------------------------------
 

@@ -1,10 +1,9 @@
 # Copyright 2022 The SQLNet Company GmbH
-# 
-# This file is licensed under the Elastic License 2.0 (ELv2). 
-# Refer to the LICENSE.txt file in the root of the repository 
+#
+# This file is licensed under the Elastic License 2.0 (ELv2).
+# Refer to the LICENSE.txt file in the root of the repository
 # for details.
-# 
-
+#
 
 
 import pandas as pd  # type: ignore
@@ -21,6 +20,7 @@ def engine():
     code after 'yield' is exectued at the end of the test.
     """
     project_name = "test_base"
+    getml.engine.launch()
     getml.engine.set_project(project_name)
     yield None
     getml.engine.delete_project(project_name)
@@ -41,7 +41,7 @@ def test_load_loans(engine):
         "meta",
     ]
 
-    assert isinstance(dfs[0], getml.DataFrame)
+    assert isinstance(dfs[0], getml.DataFrame)  # type: ignore
 
     assert getml.project.data_frames.in_memory == [
         "meta",
@@ -51,7 +51,7 @@ def test_load_loans(engine):
         "trans",
     ]
 
-    assert dfs[0]["default"].role == getml.data.roles.target
+    assert dfs[0]["default"].role == getml.data.roles.target  # type: ignore
 
 
 # --------------------------------------------------------------------
@@ -67,7 +67,7 @@ def test_load_occupancy(engine):
         "population_validation",
     ]
 
-    assert dfs[0]["Occupancy"].role == getml.data.roles.target
+    assert dfs[0]["Occupancy"].role == getml.data.roles.target  # type: ignore
 
 
 # --------------------------------------------------------------------

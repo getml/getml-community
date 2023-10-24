@@ -15,7 +15,7 @@ import numbers
 import pathlib
 import socket
 import sys
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, NamedTuple, Union
 
 import numpy as np
 
@@ -115,6 +115,10 @@ class _GetmlEncoder(json.JSONEncoder):
 
         if hasattr(obj, "_getml_deserialize"):
             return obj._getml_deserialize()
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
 
         return json.JSONEncoder.default(self, obj)
 
@@ -175,7 +179,6 @@ def recv_data(sock: socket.socket, size: Union[numbers.Real, int]):
     max_chunk_size = np.uint64(2048)
 
     while bytes_received < np.uint64(int(size)):
-
         current_chunk_size = int(min(size - bytes_received, max_chunk_size))
 
         chunk = sock.recv(current_chunk_size)
@@ -273,7 +276,6 @@ def recv_string(sock: socket.socket):
     # By default, numeric data sent over the socket is big endian,
     # also referred to as network-byte-order!
     if sys.byteorder == "little":
-
         size_str = recv_data(sock, np.nbytes[np.int32])
 
         size = np.frombuffer(size_str, dtype=np.int32).byteswap()[0]
@@ -320,7 +322,21 @@ def recv_string_column(sock: socket.socket):
 # --------------------------------------------------------------------
 
 
-def recv_warnings(sock: socket.socket):
+class _Issue(NamedTuple):
+    """
+    Describes a single warning generated
+    by the check method of the pipeline.
+    """
+
+    message: str
+    label: str
+    warning_type: str
+
+
+# --------------------------------------------------------------------
+
+
+def recv_issues(sock: socket.socket) -> List[_Issue]:
     """
     Receives a set of warnings to raise from the getml engine.
     """
@@ -337,10 +353,12 @@ def recv_warnings(sock: socket.socket):
 
     all_warnings = json_obj["warnings_"]
 
-    for warning in all_warnings:
-        print(warning)
-
-    return len(all_warnings) == 0
+    return [
+        _Issue(
+            message=w["message_"], label=w["label_"], warning_type=w["warning_type_"]
+        )
+        for w in all_warnings
+    ]
 
 
 # --------------------------------------------------------------------
@@ -518,7 +536,6 @@ def log(sock: socket.socket):
 
 
 def _delete_project(name: str):
-
     if not isinstance(name, str):
         raise TypeError("'name' must be of type str")
 
@@ -566,7 +583,6 @@ def _get_project_name():
 
 
 def _load_project(bundle: str, name=None):
-
     name = name or ""
 
     if not isinstance(bundle, str):
@@ -610,7 +626,6 @@ def _load_project(bundle: str, name=None):
 
 
 def _list_projects_impl(running_only: bool):
-
     cmd = dict()
     cmd["type_"] = "listallprojects"
     cmd["body_"] = ""
@@ -645,7 +660,6 @@ def _list_projects_impl(running_only: bool):
 
 
 def _monitor_url() -> Optional[str]:
-
     cmd: Dict[str, str] = {}
 
     cmd["type_"] = "monitor_url"
@@ -659,7 +673,6 @@ def _monitor_url() -> Optional[str]:
 
 
 def _check_version():
-
     cmd: Dict[str, Any] = {}
     cmd["type_"] = "getversion"
     cmd["body_"] = ""
@@ -695,7 +708,6 @@ def _save_project(
     target_path: Optional[str] = None,
     replace: bool = True,
 ):
-
     if not isinstance(name, str):
         raise TypeError("'name' must be of type str")
 
@@ -753,7 +765,6 @@ def _project_url() -> Optional[str]:
 
 
 def _set_project(name: str, restart: bool = False):
-
     if not isinstance(name, str):
         raise TypeError("'name' must be of type str")
 
@@ -797,7 +808,6 @@ def _set_project(name: str, restart: bool = False):
 
 
 def _shutdown():
-
     cmd: Dict[str, Any] = {}
     cmd["type_"] = "shutdownlocal"
     cmd["body_"] = ""
@@ -815,12 +825,18 @@ def _shutdown():
 
     sock.close()
 
+    while True:
+        try:
+            with socket.create_connection(("localhost", tcp_port), timeout=5.0):
+                pass
+        except:
+            return
+
 
 # --------------------------------------------------------------------
 
 
 def _suspend_project(name: str):
-
     if not isinstance(name, str):
         raise TypeError("'name' must be of type str")
 

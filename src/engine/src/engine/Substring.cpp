@@ -1,21 +1,18 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/preprocessors/Substring.hpp"
 
-// ----------------------------------------------------
-
 #include "engine/preprocessors/PreprocessorImpl.hpp"
-
-// ----------------------------------------------------
+#include "helpers/Loader.hpp"
+#include "helpers/Saver.hpp"
 
 namespace engine {
 namespace preprocessors {
-// ----------------------------------------------------
 
 std::optional<containers::Column<Int>> Substring::extract_substring(
     const containers::Column<strings::String>& _col,
@@ -78,38 +75,19 @@ containers::Column<strings::String> Substring::extract_substring_string(
 
 // ----------------------------------------------------
 
-Poco::JSON::Object::Ptr Substring::fingerprint() const {
-  auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-
-  obj->set("type_", type());
-
-  obj->set("begin_", begin_);
-
-  obj->set("length_", length_);
-
-  obj->set("unit_", unit_);
-
-  obj->set("dependencies_", JSON::vector_to_array_ptr(dependencies_));
-
-  return obj;
-}
-
-// ----------------------------------------------------
-
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-Substring::fit_transform(const FitParams& _params) {
+Substring::fit_transform(const Params& _params) {
   const auto population_df = fit_transform_df(
-      _params.population_df_, helpers::ColumnDescription::POPULATION, 0,
-      _params.categories_.get());
+      _params.get<"population_df_">(), MarkerType::make<"[POPULATION]">(), 0,
+      _params.get<"categories_">().get());
 
   auto peripheral_dfs = std::vector<containers::DataFrame>();
 
-  for (size_t i = 0; i < _params.peripheral_dfs_.size(); ++i) {
-    const auto& df = _params.peripheral_dfs_.at(i);
+  for (size_t i = 0; i < _params.get<"peripheral_dfs_">().size(); ++i) {
+    const auto& df = _params.get<"peripheral_dfs_">().at(i);
 
-    const auto new_df =
-        fit_transform_df(df, helpers::ColumnDescription::PERIPHERAL, i,
-                         _params.categories_.get());
+    const auto new_df = fit_transform_df(df, MarkerType::make<"[PERIPHERAL]">(),
+                                         i, _params.get<"categories_">().get());
 
     peripheral_dfs.push_back(new_df);
   }
@@ -120,7 +98,7 @@ Substring::fit_transform(const FitParams& _params) {
 // ----------------------------------------------------
 
 containers::DataFrame Substring::fit_transform_df(
-    const containers::DataFrame& _df, const std::string& _marker,
+    const containers::DataFrame& _df, const MarkerType _marker,
     const size_t _table, containers::Encoding* _categories) {
   auto df = _df;
 
@@ -139,23 +117,12 @@ containers::DataFrame Substring::fit_transform_df(
   return df;
 }
 
-// ----------------------------------------------------
+// -----------------------------------------------------------------------------
 
-Substring Substring::from_json_obj(const Poco::JSON::Object& _obj) const {
-  Substring that;
-
-  that.begin_ = jsonutils::JSON::get_value<size_t>(_obj, "begin_");
-
-  that.length_ = jsonutils::JSON::get_value<size_t>(_obj, "length_");
-
-  that.unit_ = jsonutils::JSON::get_value<std::string>(_obj, "unit_");
-
-  if (_obj.has("cols_")) {
-    that.cols_ = PreprocessorImpl::from_array(
-        jsonutils::JSON::get_object_array(_obj, "cols_"));
-  }
-
-  return that;
+void Substring::load(const std::string& _fname) {
+  const auto named_tuple =
+      helpers::Loader::load_from_json<NamedTupleType>(_fname);
+  cols_ = named_tuple.get<f_cols>();
 }
 
 // ----------------------------------------------------
@@ -177,37 +144,25 @@ containers::Column<strings::String> Substring::make_str_col(
 
 // ----------------------------------------------------
 
-Poco::JSON::Object::Ptr Substring::to_json_obj() const {
-  auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-
-  obj->set("type_", type());
-
-  obj->set("cols_", PreprocessorImpl::to_array(cols_));
-
-  obj->set("begin_", begin_);
-
-  obj->set("length_", length_);
-
-  obj->set("unit_", unit_);
-
-  return obj;
+void Substring::save(const std::string& _fname) const {
+  helpers::Saver::save_as_json(_fname, *this);
 }
 
 // ----------------------------------------------------
 
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-Substring::transform(const TransformParams& _params) const {
-  const auto population_df =
-      transform_df(*_params.categories_, _params.population_df_,
-                   helpers::ColumnDescription::POPULATION, 0);
+Substring::transform(const Params& _params) const {
+  const auto population_df = transform_df(
+      *_params.get<"categories_">(), _params.get<"population_df_">(),
+      MarkerType::make<"[POPULATION]">(), 0);
 
   auto peripheral_dfs = std::vector<containers::DataFrame>();
 
-  for (size_t i = 0; i < _params.peripheral_dfs_.size(); ++i) {
-    const auto& df = _params.peripheral_dfs_.at(i);
+  for (size_t i = 0; i < _params.get<"peripheral_dfs_">().size(); ++i) {
+    const auto& df = _params.get<"peripheral_dfs_">().at(i);
 
-    const auto new_df = transform_df(*_params.categories_, df,
-                                     helpers::ColumnDescription::PERIPHERAL, i);
+    const auto new_df = transform_df(*_params.get<"categories_">(), df,
+                                     MarkerType::make<"[PERIPHERAL]">(), i);
 
     peripheral_dfs.push_back(new_df);
   }
@@ -219,12 +174,8 @@ Substring::transform(const TransformParams& _params) const {
 
 containers::DataFrame Substring::transform_df(
     const containers::Encoding& _categories, const containers::DataFrame& _df,
-    const std::string& _marker, const size_t _table) const {
-  // ----------------------------------------------------
-
+    const MarkerType _marker, const size_t _table) const {
   auto df = _df;
-
-  // ----------------------------------------------------
 
   auto names = PreprocessorImpl::retrieve_names(_marker, _table, cols_);
 

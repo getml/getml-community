@@ -7,13 +7,22 @@
 
 #include "engine/handlers/PipelineManager.hpp"
 
+#include <filesystem>
+#include <ranges>
 #include <stdexcept>
 
-#include "engine/containers/Roles.hpp"
+#include "commands/DataFramesOrViews.hpp"
+#include "commands/ProjectCommand.hpp"
+#include "containers/Roles.hpp"
+#include "engine/handlers/ColumnManager.hpp"
 #include "engine/handlers/DataFrameManager.hpp"
-#include "engine/pipelines/ToSQL.hpp"
 #include "engine/pipelines/ToSQLParams.hpp"
+#include "engine/pipelines/load_fitted.hpp"
 #include "engine/pipelines/pipelines.hpp"
+#include "engine/pipelines/to_sql.hpp"
+#include "fct/Field.hpp"
+#include "fct/always_false.hpp"
+#include "fct/make_named_tuple.hpp"
 #include "transpilation/TranspilationParams.hpp"
 #include "transpilation/transpilation.hpp"
 
@@ -154,22 +163,23 @@ void PipelineManager::add_to_tracker(
     const containers::DataFrame& _population_df,
     const std::vector<containers::DataFrame>& _peripheral_dfs,
     containers::DataFrame* _df) {
-  const auto dependencies = _fitted.fingerprints_.fs_fingerprints_;
+  const auto dependencies = _fitted.fingerprints_.get<"fs_fingerprints_">();
 
   const auto build_history = data_frame_tracker().make_build_history(
-      dependencies, _population_df, _peripheral_dfs);
+      *dependencies, _population_df, _peripheral_dfs);
 
   _df->set_build_history(build_history);
 
-  data_frame_tracker().add(*_df);
+  data_frame_tracker().add(*_df, build_history);
 }
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::check(const std::string& _name,
-                            const Poco::JSON::Object& _cmd,
+void PipelineManager::check(const typename Command::CheckOp& _cmd,
                             Poco::Net::StreamSocket* _socket) {
-  const auto pipeline = get_pipeline(_name);
+  const auto& name = _cmd.get<"name_">();
+
+  const auto pipeline = utils::Getter::get(name, pipelines());
 
   communication::Sender::send_string("Found!", _socket);
 
@@ -183,22 +193,24 @@ void PipelineManager::check(const std::string& _name,
   const auto local_join_keys_encoding = fct::Ref<containers::Encoding>::make(
       pool, params_.join_keys_encoding_.ptr());
 
+  const commands::DataFramesOrViews cmd = _cmd;
+
   const auto [population_df, peripheral_dfs, _] =
       ViewParser(local_categories, local_join_keys_encoding,
                  params_.data_frames_, params_.options_)
-          .parse_all(_cmd);
+          .parse_all(cmd);
 
-  const auto params = pipelines::CheckParams{
-      .categories_ = local_categories,
-      .cmd_ = _cmd,
-      .logger_ = params_.logger_.ptr(),
-      .peripheral_dfs_ = peripheral_dfs,
-      .population_df_ = population_df,
-      .preprocessor_tracker_ = params_.preprocessor_tracker_,
-      .warning_tracker_ = params_.warning_tracker_,
-      .socket_ = _socket};
+  const auto params = pipelines::CheckParams(
+      fct::make_field<"categories_">(local_categories),
+      fct::make_field<"cmd_", commands::DataFramesOrViews>(_cmd),
+      fct::make_field<"logger_">(params_.logger_.ptr()),
+      fct::make_field<"peripheral_dfs_">(peripheral_dfs),
+      fct::make_field<"population_df_">(population_df),
+      fct::make_field<"preprocessor_tracker_">(params_.preprocessor_tracker_),
+      fct::make_field<"warning_tracker_">(params_.warning_tracker_),
+      fct::make_field<"socket_">(_socket));
 
-  pipelines::Check::check(pipeline, params);
+  pipelines::check::check(pipeline, params);
 
   weak_write_lock.upgrade();
 
@@ -211,8 +223,8 @@ void PipelineManager::check(const std::string& _name,
 
 void PipelineManager::check_user_privileges(
     const pipelines::Pipeline& _pipeline, const std::string& _name,
-    const Poco::JSON::Object& _cmd) const {
-  if (JSON::get_value<bool>(_cmd, "http_request_")) {
+    const fct::NamedTuple<fct::Field<"http_request_", bool>>& _cmd) const {
+  if (_cmd.get<"http_request_">()) {
     if (!_pipeline.allow_http()) {
       throw std::runtime_error(
           "Pipeline '" + _name +
@@ -225,12 +237,14 @@ void PipelineManager::check_user_privileges(
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::column_importances(const std::string& _name,
-                                         const Poco::JSON::Object& _cmd,
-                                         Poco::Net::StreamSocket* _socket) {
-  const auto target_num = JSON::get_value<Int>(_cmd, "target_num_");
+void PipelineManager::column_importances(
+    const typename Command::ColumnImportancesOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
+  const auto& name = _cmd.get<"name_">();
 
-  const auto pipeline = get_pipeline(_name);
+  const auto target_num = _cmd.get<"target_num_">();
+
+  const auto pipeline = get_pipeline(name);
 
   const auto scores = pipeline.scores();
 
@@ -254,40 +268,40 @@ void PipelineManager::column_importances(const std::string& _name,
     importances.push_back(vec.at(target_num));
   }
 
-  Poco::JSON::Object response;
-
-  response.set("column_descriptions_",
-               JSON::vector_to_array(scores.column_descriptions()));
-
-  response.set("column_importances_", JSON::vector_to_array(importances));
+  const auto response =
+      fct::make_field<"column_descriptions_">(scores.column_descriptions()) *
+      fct::make_field<"column_importances_">(importances);
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(JSON::stringify(response), _socket);
+  communication::Sender::send_string(json::to_json(response), _socket);
 }
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::deploy(const std::string& _name,
-                             const Poco::JSON::Object& _cmd,
+void PipelineManager::deploy(const typename Command::DeployOp& _cmd,
                              Poco::Net::StreamSocket* _socket) {
-  const bool deploy = JSON::get_value<bool>(_cmd, "deploy_");
+  const auto& name = _cmd.get<"name_">();
 
-  const auto pipeline = get_pipeline(_name).with_allow_http(deploy);
+  const bool deploy = _cmd.get<"deploy_">();
 
-  set_pipeline(_name, pipeline);
+  const auto pipeline = get_pipeline(name).with_allow_http(deploy);
+
+  set_pipeline(name, pipeline);
 
   communication::Sender::send_string("Success!", _socket);
 }
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::feature_correlations(const std::string& _name,
-                                           const Poco::JSON::Object& _cmd,
-                                           Poco::Net::StreamSocket* _socket) {
-  const auto target_num = JSON::get_value<unsigned int>(_cmd, "target_num_");
+void PipelineManager::feature_correlations(
+    const typename Command::FeatureCorrelationsOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
+  const auto& name = _cmd.get<"name_">();
 
-  const auto pipeline = get_pipeline(_name);
+  const auto target_num = _cmd.get<"target_num_">();
+
+  const auto pipeline = get_pipeline(name);
 
   const auto scores = pipeline.scores();
 
@@ -297,29 +311,28 @@ void PipelineManager::feature_correlations(const std::string& _name,
     if (static_cast<size_t>(target_num) >= vec.size()) {
       throw std::runtime_error("target_num out of range!");
     }
-
     correlations.push_back(vec.at(target_num));
   }
 
-  Poco::JSON::Object response;
-
-  response.set("feature_names_", JSON::vector_to_array(scores.feature_names()));
-
-  response.set("feature_correlations_", JSON::vector_to_array(correlations));
+  const auto response =
+      fct::make_field<"feature_names_">(scores.feature_names()) *
+      fct::make_field<"feature_correlations_">(correlations);
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(JSON::stringify(response), _socket);
+  communication::Sender::send_string(json::to_json(response), _socket);
 }
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::feature_importances(const std::string& _name,
-                                          const Poco::JSON::Object& _cmd,
-                                          Poco::Net::StreamSocket* _socket) {
-  const auto target_num = JSON::get_value<unsigned int>(_cmd, "target_num_");
+void PipelineManager::feature_importances(
+    const typename Command::FeatureImportancesOp& _cmd,
+    Poco::Net::StreamSocket* _socket) {
+  const auto& name = _cmd.get<"name_">();
 
-  const auto pipeline = get_pipeline(_name);
+  const auto target_num = _cmd.get<"target_num_">();
+
+  const auto pipeline = get_pipeline(name);
 
   const auto scores = pipeline.scores();
 
@@ -333,23 +346,22 @@ void PipelineManager::feature_importances(const std::string& _name,
     importances.push_back(vec.at(target_num));
   }
 
-  Poco::JSON::Object response;
-
-  response.set("feature_names_", JSON::vector_to_array(scores.feature_names()));
-
-  response.set("feature_importances_", JSON::vector_to_array(importances));
+  const auto response =
+      fct::make_field<"feature_names_">(scores.feature_names()) *
+      fct::make_field<"feature_importances_">(importances);
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(JSON::stringify(response), _socket);
+  communication::Sender::send_string(json::to_json(response), _socket);
 }
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::fit(const std::string& _name,
-                          const Poco::JSON::Object& _cmd,
+void PipelineManager::fit(const typename Command::FitOp& _cmd,
                           Poco::Net::StreamSocket* _socket) {
-  auto pipeline = get_pipeline(_name);
+  const auto& name = _cmd.get<"name_">();
+
+  auto pipeline = get_pipeline(name);
 
   communication::Sender::send_string("Found!", _socket);
 
@@ -368,28 +380,30 @@ void PipelineManager::fit(const std::string& _name,
                  params_.data_frames_, params_.options_)
           .parse_all(_cmd);
 
-  const auto params = pipelines::FitParams{
-      .categories_ = local_categories,
-      .cmd_ = _cmd,
-      .data_frames_ = data_frames(),
-      .data_frame_tracker_ = data_frame_tracker(),
-      .fe_tracker_ = params_.fe_tracker_,
-      .logger_ = params_.logger_.ptr(),
-      .peripheral_dfs_ = peripheral_dfs,
-      .population_df_ = population_df,
-      .pred_tracker_ = params_.pred_tracker_,
-      .preprocessor_tracker_ = params_.preprocessor_tracker_,
-      .validation_df_ = validation_df,
-      .socket_ = _socket};
+  const auto params = pipelines::FitParams(
+      fct::make_field<"categories_">(local_categories),
+      fct::make_field<"cmd_", commands::DataFramesOrViews>(_cmd),
+      fct::make_field<"data_frames_">(data_frames()),
+      fct::make_field<"data_frame_tracker_">(data_frame_tracker()),
+      fct::make_field<"fe_tracker_">(params_.fe_tracker_),
+      fct::make_field<"fs_fingerprints_">(
+          fct::Ref<const std::vector<commands::Fingerprint>>::make()),
+      fct::make_field<"logger_">(params_.logger_.ptr()),
+      fct::make_field<"peripheral_dfs_">(peripheral_dfs),
+      fct::make_field<"population_df_">(population_df),
+      fct::make_field<"pred_tracker_">(params_.pred_tracker_),
+      fct::make_field<"preprocessor_tracker_">(params_.preprocessor_tracker_),
+      fct::make_field<"validation_df_">(validation_df),
+      fct::make_field<"socket_">(_socket));
 
-  const auto [fitted, scores] = pipelines::Fit::fit(pipeline, params);
+  const auto [fitted, scores] = pipelines::fit::fit(pipeline, params);
 
   pipeline = pipeline.with_fitted(fitted).with_scores(scores);
 
-  const auto it = pipelines().find(_name);
+  const auto it = pipelines().find(name);
 
   if (it == pipelines().end()) {
-    throw std::runtime_error("Pipeline '" + _name + "' does not exist!");
+    throw std::runtime_error("Pipeline '" + name + "' does not exist!");
   }
 
   weak_write_lock.upgrade();
@@ -405,243 +419,168 @@ void PipelineManager::fit(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-Poco::JSON::Array::Ptr PipelineManager::get_array(
-    const Poco::JSON::Object& _scores, const std::string& _name,
-    const unsigned int _target_num) const {
-  const auto arr = JSON::get_array(_scores, _name);
-
-  if (static_cast<size_t>(_target_num) >= arr->size()) {
-    std::string msg = "target_num_ out of bounds! Got " +
-                      std::to_string(_target_num) + ", but '" + _name +
-                      "' has " + std::to_string(arr->size()) + " entries.";
-
-    if (arr->size() == 0) {
-      msg += " Did you maybe for get to call .score(...)?";
-    }
-
-    throw std::runtime_error(msg);
-  }
-
-  return arr->getArray(_target_num);
-}
-
-// ------------------------------------------------------------------------
-
-Poco::JSON::Object PipelineManager::get_scores(
-    const pipelines::Pipeline& _pipeline) const {
-  const auto scores = _pipeline.scores();
-
-  const auto obj = scores.to_json_obj();
-
-  auto response = metrics::Scorer::get_metrics(obj);
-
-  if (scores.set_used() != "") {
-    response.set("set_used_", scores.set_used());
-  }
-
-  response.set("history_", JSON::vector_to_array_ptr(scores.history()));
-
-  return response;
-}
-
-// ------------------------------------------------------------------------
-
-void PipelineManager::lift_curve(const std::string& _name,
-                                 const Poco::JSON::Object& _cmd,
+void PipelineManager::lift_curve(const typename Command::LiftCurveOp& _cmd,
                                  Poco::Net::StreamSocket* _socket) {
-  const auto target_num = JSON::get_value<unsigned int>(_cmd, "target_num_");
+  const auto& name = _cmd.get<"name_">();
 
-  const auto pipeline = get_pipeline(_name);
+  const auto target_num = _cmd.get<"target_num_">();
 
-  const auto scores = pipeline.scores().to_json_obj();
+  const auto pipeline = get_pipeline(name);
 
-  Poco::JSON::Object response;
+  const auto& scores = pipeline.scores();
 
-  response.set("proportion_", get_array(scores, "proportion_", target_num));
-
-  response.set("lift_", get_array(scores, "lift_", target_num));
+  const auto result =
+      fct::make_field<"proportion_">(scores.proportion(target_num)) *
+      fct::make_field<"lift_">(scores.lift(target_num));
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(JSON::stringify(response), _socket);
+  communication::Sender::send_string(json::to_json(result), _socket);
 }
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::precision_recall_curve(const std::string& _name,
-                                             const Poco::JSON::Object& _cmd,
-                                             Poco::Net::StreamSocket* _socket) {
-  const auto target_num = JSON::get_value<unsigned int>(_cmd, "target_num_");
-
-  const auto pipeline = get_pipeline(_name);
-
-  const auto scores = pipeline.scores().to_json_obj();
-
-  Poco::JSON::Object response;
-
-  response.set("precision_", get_array(scores, "precision_", target_num));
-
-  response.set("tpr_", get_array(scores, "tpr_", target_num));
-
-  communication::Sender::send_string("Success!", _socket);
-
-  communication::Sender::send_string(JSON::stringify(response), _socket);
-}
-
-// ------------------------------------------------------------------------
-
-Poco::JSON::Object PipelineManager::receive_data(
-    const Poco::JSON::Object& _cmd,
-    const fct::Ref<containers::Encoding>& _categories,
-    const fct::Ref<containers::Encoding>& _join_keys_encoding,
-    const fct::Ref<std::map<std::string, containers::DataFrame>>& _data_frames,
+void PipelineManager::precision_recall_curve(
+    const typename Command::PrecisionRecallCurveOp& _cmd,
     Poco::Net::StreamSocket* _socket) {
-  // Declare local variables. The idea of the local variables
-  // is to prevent the global variables from being affected
-  // by local data frames.
+  const auto& name = _cmd.get<"name_">();
 
-  multithreading::ReadLock read_lock(params_.read_write_lock_);
+  const auto target_num = _cmd.get<"target_num_">();
 
-  const auto local_read_write_lock =
-      fct::Ref<multithreading::ReadWriteLock>::make();
+  const auto pipeline = get_pipeline(name);
 
-  const auto data_frame_manager_params =
-      DataFrameManagerParams{.categories_ = _categories,
-                             .database_manager_ = params_.database_manager_,
-                             .data_frames_ = _data_frames,
-                             .join_keys_encoding_ = _join_keys_encoding,
-                             .logger_ = params_.logger_,
-                             .monitor_ = params_.monitor_,
-                             .options_ = params_.options_,
-                             .read_write_lock_ = local_read_write_lock};
+  const auto& scores = pipeline.scores();
 
-  auto local_data_frame_manager = DataFrameManager(data_frame_manager_params);
+  const auto result =
+      fct::make_field<"precision_">(scores.precision(target_num)) *
+      fct::make_field<"tpr_">(scores.tpr(target_num));
 
-  auto cmd = _cmd;
+  communication::Sender::send_string("Success!", _socket);
 
-  while (true) {
-    const auto name = JSON::get_value<std::string>(cmd, "name_");
-
-    const auto type = JSON::get_value<std::string>(cmd, "type_");
-
-    if (type == "DataFrame") {
-      local_data_frame_manager.add_data_frame(name, _socket);
-    } else if (type == "DataFrame.from_query") {
-      local_data_frame_manager.from_query(name, cmd, false, _socket);
-    } else if (type == "DataFrame.from_json") {
-      local_data_frame_manager.from_json(name, cmd, false, _socket);
-    } else if (type == "FloatColumn.set_unit") {
-      local_data_frame_manager.set_unit(name, cmd, _socket);
-    } else if (type == "StringColumn.set_unit") {
-      local_data_frame_manager.set_unit_categorical(name, cmd, _socket);
-    } else {
-      break;
-    }
-
-    cmd = communication::Receiver::recv_cmd(params_.logger_, _socket);
-  }
-
-  return cmd;
+  communication::Sender::send_string(json::to_json(result), _socket);
 }
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::refresh(const std::string& _name,
+void PipelineManager::refresh(const typename Command::RefreshOp& _cmd,
                               Poco::Net::StreamSocket* _socket) {
-  const auto pipeline = get_pipeline(_name);
+  const auto& name = _cmd.get<"name_">();
+
+  const auto pipeline = utils::Getter::get(name, pipelines());
+
+  if (!pipeline.fitted()) {
+    throw std::runtime_error("Pipeline '" + name +
+                             "' cannot be refreshed. It has not been fitted.");
+  }
 
   const auto obj = refresh_pipeline(pipeline);
 
-  communication::Sender::send_string(JSON::stringify(obj), _socket);
+  communication::Sender::send_string(json::to_json(obj), _socket);
 }
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::refresh_all(Poco::Net::StreamSocket* _socket) {
-  Poco::JSON::Object obj;
+void PipelineManager::refresh_all(const typename Command::RefreshAllOp& _cmd,
+                                  Poco::Net::StreamSocket* _socket) {
+  using namespace std::ranges::views;
 
-  Poco::JSON::Array pipelines_arr;
+  std::map<std::string, pipelines::Pipeline> updated_pipelines;
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
-  for (const auto& [_, pipe] : pipelines()) {
-    pipelines_arr.add(refresh_pipeline(pipe));
+  const auto names = pipelines() | keys;
+
+  auto vec = std::vector<RefreshPipelineType>();
+
+  for (const auto name : names) {
+    const auto pipe = utils::Getter::get(name, pipelines());
+    if (!pipe.fitted()) {
+      continue;
+    }
+    vec.push_back(refresh_pipeline(pipe));
   }
 
-  obj.set("pipelines", pipelines_arr);
-
-  engine::communication::Sender::send_string("Success!", _socket);
-
-  communication::Sender::send_string(JSON::stringify(obj), _socket);
-}
-
-// ------------------------------------------------------------------------
-
-Poco::JSON::Object PipelineManager::refresh_pipeline(
-    const pipelines::Pipeline& _pipeline) const {
-  const auto extract_roles =
-      [](const helpers::Schema& _schema) -> Poco::JSON::Object::Ptr {
-    auto ptr = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-    ptr->set("name", _schema.name_);
-    ptr->set("roles", containers::Roles::from_schema(_schema).to_json_obj());
-    return ptr;
-  };
-
-  Poco::JSON::Object obj;
-
-  obj.set("obj", _pipeline.obj());
-
-  obj.set("scores", get_scores(_pipeline));
-
-  if (_pipeline.fitted()) {
-    obj.set(
-        "peripheral_metadata",
-        JSON::vector_to_array_ptr(fct::collect::vector<Poco::JSON::Object::Ptr>(
-            *_pipeline.fitted()->peripheral_schema_ |
-            VIEWS::transform(extract_roles))));
-
-    obj.set("population_metadata",
-            extract_roles(*_pipeline.fitted()->population_schema_));
-
-    obj.set("targets", JSON::vector_to_array(_pipeline.fitted()->targets()));
-  }
-
-  return obj;
-}
-
-// ------------------------------------------------------------------------
-
-void PipelineManager::roc_curve(const std::string& _name,
-                                const Poco::JSON::Object& _cmd,
-                                Poco::Net::StreamSocket* _socket) {
-  const auto target_num = JSON::get_value<unsigned int>(_cmd, "target_num_");
-
-  const auto pipeline = get_pipeline(_name);
-
-  const auto scores = pipeline.scores().to_json_obj();
-
-  Poco::JSON::Object response;
-
-  response.set("fpr_", get_array(scores, "fpr_", target_num));
-
-  response.set("tpr_", get_array(scores, "tpr_", target_num));
+  read_lock.unlock();
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(JSON::stringify(response), _socket);
+  const auto obj = fct::make_named_tuple(fct::make_field<"pipelines">(vec));
+
+  communication::Sender::send_string(json::to_json(obj), _socket);
+
+  for (const auto& [name, pipe] : updated_pipelines) {
+    set_pipeline(name, pipe);
+  }
 }
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::score(const Poco::JSON::Object& _cmd,
+typename PipelineManager::RefreshPipelineType PipelineManager::refresh_pipeline(
+    const pipelines::Pipeline& _pipeline) const {
+  const auto extract_roles = [](const helpers::Schema& _schema) -> RolesType {
+    return fct::make_field<"name">(_schema.name()) *
+           fct::make_field<"roles">(containers::Roles::from_schema(_schema));
+  };
+
+  const ScoresType scores =
+      _pipeline.scores().metrics() *
+      fct::make_field<"set_used_">(_pipeline.scores().set_used()) *
+      fct::make_field<"history_">(_pipeline.scores().history());
+
+  const RefreshUnfittedPipelineType base =
+      fct::make_field<"obj">(_pipeline.obj()) *
+      fct::make_field<"scores">(scores);
+
+  if (!_pipeline.fitted()) {
+    return base;
+  }
+
+  const auto peripheral_metadata =
+      fct::collect::vector(*_pipeline.fitted()->peripheral_schema_ |
+                           VIEWS::transform(extract_roles));
+
+  const auto population_metadata =
+      extract_roles(*_pipeline.fitted()->population_schema_);
+
+  const auto& targets = _pipeline.fitted()->targets();
+
+  return RefreshFittedPipelineType(
+      base * fct::make_field<"peripheral_metadata">(peripheral_metadata) *
+      fct::make_field<"population_metadata">(population_metadata) *
+      fct::make_field<"targets">(targets));
+}
+
+// ------------------------------------------------------------------------
+
+void PipelineManager::roc_curve(const typename Command::ROCCurveOp& _cmd,
+                                Poco::Net::StreamSocket* _socket) {
+  const auto& name = _cmd.get<"name_">();
+
+  const auto target_num = _cmd.get<"target_num_">();
+
+  const auto pipeline = get_pipeline(name);
+
+  const auto& scores = pipeline.scores();
+
+  const auto result = fct::make_field<"fpr_">(scores.fpr(target_num)) *
+                      fct::make_field<"tpr_">(scores.tpr(target_num));
+
+  communication::Sender::send_string("Success!", _socket);
+
+  communication::Sender::send_string(json::to_json(result), _socket);
+}
+
+// ------------------------------------------------------------------------
+
+void PipelineManager::score(const FullTransformOp& _cmd,
                             const std::string& _name,
                             const containers::DataFrame& _population_df,
                             const containers::NumericalFeatures& _yhat,
                             const pipelines::Pipeline& _pipeline,
                             Poco::Net::StreamSocket* _socket) {
-  const auto population_json = *JSON::get_object(_cmd, "population_df_");
+  const auto population_json = _cmd.get<"population_df_">();
 
-  const auto name = JSON::get_value<std::string>(population_json, "name_");
+  const auto name = fct::get<"name_">(population_json.val_);
 
   const auto fitted = _pipeline.fitted();
 
@@ -650,8 +589,8 @@ void PipelineManager::score(const Poco::JSON::Object& _cmd,
         "Could not score the pipeline, because it has not been fitted.");
   }
 
-  const auto [scores, scores_obj] =
-      pipelines::Score::score(_pipeline, *fitted, _population_df, name, _yhat);
+  const auto scores =
+      pipelines::score::score(_pipeline, *fitted, _population_df, name, _yhat);
 
   const auto pipeline = _pipeline.with_scores(scores);
 
@@ -659,13 +598,13 @@ void PipelineManager::score(const Poco::JSON::Object& _cmd,
 
   set_pipeline(_name, pipeline);
 
-  communication::Sender::send_string(JSON::stringify(scores_obj), _socket);
+  communication::Sender::send_string(json::to_json(scores->metrics()), _socket);
 }
 
 // ------------------------------------------------------------------------
 
 void PipelineManager::store_df(
-    const pipelines::FittedPipeline& _fitted, const Poco::JSON::Object& _cmd,
+    const pipelines::FittedPipeline& _fitted, const FullTransformOp& _cmd,
     const containers::DataFrame& _population_df,
     const std::vector<containers::DataFrame>& _peripheral_dfs,
     const fct::Ref<containers::Encoding>& _local_categories,
@@ -682,7 +621,7 @@ void PipelineManager::store_df(
 
   _df->set_join_keys_encoding(params_.join_keys_encoding_.ptr());  // TODO
 
-  const auto predict = JSON::get_value<bool>(_cmd, "predict_");
+  const auto predict = _cmd.get<"predict_">();
 
   if (!predict) {
     add_to_tracker(_fitted, _population_df, _peripheral_dfs, _df);
@@ -694,7 +633,7 @@ void PipelineManager::store_df(
 // ------------------------------------------------------------------------
 
 void PipelineManager::to_db(
-    const pipelines::FittedPipeline& _fitted, const Poco::JSON::Object& _cmd,
+    const pipelines::FittedPipeline& _fitted, const FullTransformOp& _cmd,
     const containers::DataFrame& _population_table,
     const containers::NumericalFeatures& _numerical_features,
     const containers::CategoricalFeatures& _categorical_features,
@@ -704,7 +643,7 @@ void PipelineManager::to_db(
       to_df(_fitted, _cmd, _population_table, _numerical_features,
             _categorical_features, _categories, _join_keys_encoding);
 
-  const auto table_name = JSON::get_value<std::string>(_cmd, "table_name_");
+  const auto table_name = _cmd.get<"table_name_">();
 
   // We are using the bell character (\a) as the quotechar. It is least likely
   // to appear in any field.
@@ -714,8 +653,7 @@ void PipelineManager::to_db(
   const auto conn = connector("default");
 
   const auto statement = io::StatementMaker::make_statement(
-      table_name, conn->dialect(), conn->describe(), reader.colnames(),
-      reader.coltypes());
+      table_name, conn->dialect(), reader.colnames(), reader.coltypes());
 
   logger().log(statement);
 
@@ -729,20 +667,20 @@ void PipelineManager::to_db(
 // ------------------------------------------------------------------------
 
 containers::DataFrame PipelineManager::to_df(
-    const pipelines::FittedPipeline& _fitted, const Poco::JSON::Object& _cmd,
+    const pipelines::FittedPipeline& _fitted, const FullTransformOp& _cmd,
     const containers::DataFrame& _population_table,
     const containers::NumericalFeatures& _numerical_features,
     const containers::CategoricalFeatures& _categorical_features,
     const fct::Ref<containers::Encoding>& _categories,
     const fct::Ref<containers::Encoding>& _join_keys_encoding) {
-  const auto df_name = JSON::get_value<std::string>(_cmd, "df_name_");
+  const auto df_name = _cmd.get<"df_name_">();
 
   const auto pool = params_.options_.make_pool();
 
   auto df = containers::DataFrame(df_name, _categories.ptr(),
                                   _join_keys_encoding.ptr(), pool);  // TODO
 
-  if (!_cmd.has("predict_") || !JSON::get_value<bool>(_cmd, "predict_")) {
+  if (!_cmd.get<"predict_">()) {
     add_features_to_df(_fitted, _numerical_features, _categorical_features,
                        &df);
   } else {
@@ -763,24 +701,21 @@ containers::DataFrame PipelineManager::to_df(
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::to_sql(const std::string& _name,
-                             const Poco::JSON::Object& _cmd,
+void PipelineManager::to_sql(const typename Command::ToSQLOp& _cmd,
                              Poco::Net::StreamSocket* _socket) {
-  const auto targets = JSON::get_value<bool>(_cmd, "targets_");
+  const auto name = _cmd.get<"name_">();
 
-  const auto subfeatures = JSON::get_value<bool>(_cmd, "subfeatures_");
+  const auto targets = _cmd.get<"targets_">();
 
-  const auto size_threshold =
-      _cmd.has("size_threshold_")
-          ? JSON::get_value<size_t>(_cmd, "size_threshold_")
-          : std::optional<size_t>();
+  const auto subfeatures = _cmd.get<"subfeatures_">();
 
-  const auto transpilation_params =
-      transpilation::TranspilationParams::from_json(_cmd);
+  const auto size_threshold = _cmd.get<"size_threshold_">();
+
+  const auto transpilation_params = transpilation::TranspilationParams(_cmd);
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
-  const auto pipeline = get_pipeline(_name);
+  const auto pipeline = utils::Getter::get(name, pipelines());
 
   const auto fitted = pipeline.fitted();
 
@@ -799,7 +734,7 @@ void PipelineManager::to_sql(const std::string& _name,
                              .targets_ = targets,
                              .transpilation_params_ = transpilation_params};
 
-  const auto sql = pipelines::ToSQL::to_sql(params);
+  const auto sql = pipelines::to_sql::to_sql(params);
 
   read_lock.unlock();
 
@@ -810,12 +745,13 @@ void PipelineManager::to_sql(const std::string& _name,
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::transform(const std::string& _name,
-                                const Poco::JSON::Object& _cmd,
+void PipelineManager::transform(const typename Command::TransformOp& _cmd,
                                 Poco::Net::StreamSocket* _socket) {
-  auto pipeline = get_pipeline(_name);
+  const auto& name = _cmd.get<"name_">();
 
-  check_user_privileges(pipeline, _name, _cmd);
+  auto pipeline = utils::Getter::get(name, pipelines());
+
+  check_user_privileges(pipeline, name, _cmd);
 
   communication::Sender::send_string("Found!", _socket);
 
@@ -833,10 +769,9 @@ void PipelineManager::transform(const std::string& _name,
       fct::Ref<std::map<std::string, containers::DataFrame>>::make(
           data_frames());
 
-  auto cmd = communication::Receiver::recv_cmd(params_.logger_, _socket);
-
-  cmd = receive_data(cmd, local_categories, local_join_keys_encoding,
-                     local_data_frames, _socket);
+  const auto cmd =
+      receive_data(_cmd, local_categories, local_join_keys_encoding,
+                   local_data_frames, _socket);
 
   const auto [population_df, peripheral_dfs, _] =
       ViewParser(local_categories, local_join_keys_encoding, local_data_frames,
@@ -845,15 +780,15 @@ void PipelineManager::transform(const std::string& _name,
 
   // IMPORTANT: Use categories_, not local_categories, otherwise
   // .vector() might not work.
-  const auto params =
-      pipelines::TransformParams{.categories_ = params_.categories_,
-                                 .cmd_ = cmd,
-                                 .data_frames_ = *local_data_frames,
-                                 .data_frame_tracker_ = data_frame_tracker(),
-                                 .logger_ = params_.logger_.ptr(),
-                                 .original_peripheral_dfs_ = peripheral_dfs,
-                                 .original_population_df_ = population_df,
-                                 .socket_ = _socket};
+  const auto params = pipelines::TransformParams(
+      fct::make_field<"categories_">(params_.categories_),
+      fct::make_field<"cmd_", pipelines::TransformCmdType>(cmd),
+      fct::make_field<"data_frames_">(*local_data_frames),
+      fct::make_field<"data_frame_tracker_">(data_frame_tracker()),
+      fct::make_field<"logger_">(params_.logger_.ptr()),
+      fct::make_field<"original_peripheral_dfs_">(peripheral_dfs),
+      fct::make_field<"original_population_df_">(population_df),
+      fct::make_field<"socket_">(_socket));
 
   const auto fitted = pipeline.fitted();
 
@@ -862,19 +797,19 @@ void PipelineManager::transform(const std::string& _name,
   }
 
   const auto [numerical_features, categorical_features, scores] =
-      pipelines::Transform::transform(params, pipeline, *fitted);
+      pipelines::transform::transform(params, pipeline, *fitted);
 
   if (scores) {
     pipeline = pipeline.with_scores(fct::Ref<const metrics::Scores>(scores));
   }
 
-  const auto table_name = JSON::get_value<std::string>(cmd, "table_name_");
+  const auto& table_name = cmd.get<"table_name_">();
 
-  const auto df_name = JSON::get_value<std::string>(cmd, "df_name_");
+  const auto& df_name = cmd.get<"df_name_">();
 
-  const auto score = JSON::get_value<bool>(cmd, "score_");
+  const bool scoring_required = cmd.get<"score_">();
 
-  if (table_name == "" && df_name == "" && !score) {
+  if (table_name == "" && df_name == "" && !scoring_required) {
     communication::Sender::send_string("Success!", _socket);
     communication::Sender::send_features(numerical_features, _socket);
     return;
@@ -894,13 +829,12 @@ void PipelineManager::transform(const std::string& _name,
              local_join_keys_encoding, &df, &weak_write_lock);
   }
 
-  communication::Sender::send_string("Success!", _socket);
-
   weak_write_lock.unlock();
 
-  if (score) {
-    this->score(cmd, _name, population_df, numerical_features, pipeline,
-                _socket);
+  communication::Sender::send_string("Success!", _socket);
+
+  if (scoring_required) {
+    score(cmd, name, population_df, numerical_features, pipeline, _socket);
   }
 }
 

@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "fastprop/containers/Condition.hpp"
 
@@ -11,7 +11,6 @@
 
 namespace fastprop {
 namespace containers {
-// ----------------------------------------------------------------------------
 
 Condition::Condition(const enums::DataUsed _data_used, const size_t _input_col,
                      const size_t _output_col, const size_t _peripheral)
@@ -22,7 +21,8 @@ Condition::Condition(const enums::DataUsed _data_used, const size_t _input_col,
       input_col_(_input_col),
       output_col_(_output_col),
       peripheral_(_peripheral) {
-  assert_true(_data_used == enums::DataUsed::same_units_categorical);
+  assert_true(_data_used.value() ==
+              enums::DataUsed::value_of<"same_units_categorical">());
 }
 
 // ----------------------------------------------------------------------------
@@ -36,7 +36,7 @@ Condition::Condition(const Float _bound_lower, const Float _bound_upper,
       input_col_(0),
       output_col_(0),
       peripheral_(_peripheral) {
-  assert_true(_data_used == enums::DataUsed::lag);
+  assert_true(_data_used.value() == enums::DataUsed::value_of<"lag">());
 }
 // ----------------------------------------------------------------------------
 
@@ -49,24 +49,19 @@ Condition::Condition(const Int _category_used, const enums::DataUsed _data_used,
       input_col_(_input_col),
       output_col_(0),
       peripheral_(_peripheral) {
-  assert_true(_data_used == enums::DataUsed::categorical);
+  assert_true(_data_used.value() == enums::DataUsed::value_of<"categorical">());
 }
 
 // ----------------------------------------------------------------------------
 
-Condition::Condition(const Poco::JSON::Object &_obj)
-    : bound_lower_(_obj.has("bound_lower_")
-                       ? jsonutils::JSON::get_value<Float>(_obj, "bound_lower_")
-                       : static_cast<Float>(0.0)),
-      bound_upper_(_obj.has("bound_upper_")
-                       ? jsonutils::JSON::get_value<Float>(_obj, "bound_upper_")
-                       : static_cast<Float>(0.0)),
-      category_used_(jsonutils::JSON::get_value<Int>(_obj, "category_used_")),
-      data_used_(enums::Parser<enums::DataUsed>::parse(
-          jsonutils::JSON::get_value<std::string>(_obj, "data_used_"))),
-      input_col_(jsonutils::JSON::get_value<size_t>(_obj, "input_col_")),
-      output_col_(jsonutils::JSON::get_value<size_t>(_obj, "output_col_")),
-      peripheral_(jsonutils::JSON::get_value<size_t>(_obj, "peripheral_")) {}
+Condition::Condition(const NamedTupleType &_obj)
+    : bound_lower_(_obj.get<"bound_lower_">().value_or(0.0)),
+      bound_upper_(_obj.get<"bound_upper_">().value_or(0.0)),
+      category_used_(_obj.get<"category_used_">()),
+      data_used_(_obj.get<"data_used_">()),
+      input_col_(_obj.get<"input_col_">()),
+      output_col_(_obj.get<"output_col_">()),
+      peripheral_(_obj.get<"peripheral_">()) {}
 
 // ----------------------------------------------------------------------------
 
@@ -74,26 +69,14 @@ Condition::~Condition() = default;
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object::Ptr Condition::to_json_obj() const {
-  auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-
-  obj->set("bound_lower_", bound_lower_);
-
-  obj->set("bound_upper_", bound_upper_);
-
-  obj->set("category_used_", category_used_);
-
-  obj->set("category_used_", category_used_);
-
-  obj->set("data_used_", enums::Parser<enums::DataUsed>::to_str(data_used_));
-
-  obj->set("input_col_", input_col_);
-
-  obj->set("output_col_", output_col_);
-
-  obj->set("peripheral_", peripheral_);
-
-  return obj;
+typename Condition::NamedTupleType Condition::named_tuple() const {
+  return fct::make_field<"bound_lower_">(bound_lower_) *
+         fct::make_field<"bound_upper_">(bound_upper_) *
+         fct::make_field<"category_used_">(category_used_) *
+         fct::make_field<"data_used_">(data_used_) *
+         fct::make_field<"input_col_">(input_col_) *
+         fct::make_field<"output_col_">(output_col_) *
+         fct::make_field<"peripheral_">(peripheral_);
 }
 
 // ----------------------------------------------------------------------------

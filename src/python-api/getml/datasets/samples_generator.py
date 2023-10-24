@@ -23,7 +23,7 @@ from getml.feature_learning import aggregations
 
 
 def _aggregate(
-    table: pd.DataFrame, aggregation: aggregations.Aggregation, col: str, join_key: str
+    table: pd.DataFrame, aggregation: str, col: str, join_key: str
 ) -> pd.DataFrame:
     """
     Implements the aggregation."""
@@ -86,7 +86,7 @@ def make_categorical(
     random_state: Optional[int] = None,
     population_name: str = "",
     peripheral_name: str = "",
-    aggregation: aggregations.Aggregation = aggregations.Count,
+    aggregation: str = aggregations.Count,
 ) -> Tuple[DataFrame, DataFrame]:
     """
     Generate a random dataset with categorical variables
@@ -258,7 +258,7 @@ def make_discrete(
     random_state: Optional[int] = None,
     population_name: str = "",
     peripheral_name: str = "",
-    aggregation: aggregations.Aggregation = aggregations.Count,
+    aggregation: str = aggregations.Count,
 ) -> Tuple[DataFrame, DataFrame]:
     """
     Generate a random dataset with categorical variables
@@ -429,7 +429,7 @@ def make_numerical(
     random_state: Optional[int] = None,
     population_name: str = "",
     peripheral_name: str = "",
-    aggregation: aggregations.Aggregation = aggregations.Count,
+    aggregation: str = aggregations.Count,
 ) -> Tuple[DataFrame, DataFrame]:
     """
     Generate a random dataset with continous numerical variables
@@ -599,7 +599,7 @@ def make_same_units_categorical(
     random_state: Optional[int] = None,
     population_name: str = "",
     peripheral_name: str = "",
-    aggregation: aggregations.Aggregation = aggregations.Count,
+    aggregation: str = aggregations.Count,
 ) -> Tuple[DataFrame, DataFrame]:
     """
     Generate a random dataset with categorical variables
@@ -799,7 +799,7 @@ def make_same_units_numerical(
     random_state: Optional[int] = None,
     population_name: str = "",
     peripheral_name: str = "",
-    aggregation: aggregations.Aggregation = aggregations.Count,
+    aggregation: str = aggregations.Count,
 ) -> Tuple[DataFrame, DataFrame]:
     """
     Generate a random dataset with continous numerical variables
@@ -995,8 +995,8 @@ def make_snowflake(
     population_name: str = "",
     peripheral_name1: str = "",
     peripheral_name2: str = "",
-    aggregation1: aggregations.Aggregation = aggregations.Sum,
-    aggregation2: aggregations.Aggregation = aggregations.Count,
+    aggregation1: str = aggregations.Sum,
+    aggregation2: str = aggregations.Count,
 ) -> Tuple[DataFrame, DataFrame, DataFrame]:
     """
     Generate a random dataset with continous numerical variables

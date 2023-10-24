@@ -1,21 +1,17 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef HELPERS_TABLEHOLDER_HPP_
 #define HELPERS_TABLEHOLDER_HPP_
-
-// ----------------------------------------------------------------------------
 
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
-
-// ----------------------------------------------------------------------------
 
 #include "helpers/DataFrame.hpp"
 #include "helpers/DataFrameView.hpp"
@@ -24,8 +20,6 @@
 #include "helpers/RowIndexContainer.hpp"
 #include "helpers/TableHolderParams.hpp"
 #include "helpers/WordIndexContainer.hpp"
-
-// ----------------------------------------------------------------------------
 
 namespace helpers {
 
@@ -40,8 +34,6 @@ class TableHolder {
   explicit TableHolder(const TableHolderParams& _params);
 
   ~TableHolder();
-
-  // ------------------------------
 
  private:
   /// Adds the text fields to the peripheral tables.

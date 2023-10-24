@@ -252,7 +252,7 @@ class Placeholder:
 
         return cmd
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         template = cleandoc(
             """
             {name}:
@@ -269,7 +269,7 @@ class Placeholder:
                 """
             )
 
-        def format_on(on):
+        def format_on(on, join: Join):
             template = "({left.name}.{on[0]}, {join.right.name}.{on[1]})"
 
             if isinstance(on, list) and all(isinstance(key, tuple) for key in on):
@@ -290,7 +290,6 @@ class Placeholder:
         joins = []
 
         for join in self.joins:
-
             for param, value in vars(join).items():
                 if param == "right":
                     joins.append(f"- right: {join.right.name!r}")
@@ -298,7 +297,7 @@ class Placeholder:
 
                 if value is not None:
                     if param == "on":
-                        joins.append(f"  on: {format_on(value)}")
+                        joins.append(f"  on: {format_on(value, join)}")
                     elif param == "time_stamps":
                         joins.append(
                             f"  {param}: ({self.name}.{value[0]}, {join.right.name}.{value[1]})"
@@ -306,9 +305,9 @@ class Placeholder:
                     else:
                         joins.append(f"  {param}: {value!r}")
 
-        joins = indent("\n".join(joins), " " * 2)
+        joins = indent("\n".join(joins), " " * 2)  # type: ignore
 
-        cols = indent("\n".join(cols), " " * 2)
+        cols = indent("\n".join(cols), " " * 2)  # type: ignore
 
         return template.format(name=self.name, cols=cols, joins=joins)
 
@@ -520,7 +519,6 @@ class Join:
         return len(fields(self))
 
     def __repr__(self):
-
         sig = _SignatureFormatter(self)
         sig.data["right"] = self.right.name
 

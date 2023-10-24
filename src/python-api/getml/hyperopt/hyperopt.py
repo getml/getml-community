@@ -13,12 +13,12 @@ Contains hyperparameter optimization routines.
 import copy
 import json
 import time
-from typing import Any, Dict
+from typing import Any, Dict, List, Union
 
 import getml.communication as comm
 from getml.data import Container, StarSchema, TimeSeries
 from getml.data.helpers import _remove_trailing_underscores
-from getml.pipeline import delete, exists, load, metrics
+from getml.pipeline import delete, exists, load, metrics, Pipeline
 from getml.pipeline.helpers import _make_id, _print_time_taken, _transform_peripheral
 from getml.utilities.formatting import _SignatureFormatter
 
@@ -60,11 +60,11 @@ class _Hyperopt:
 
     def __init__(
         self,
-        param_space,
-        pipeline,
-        score,
-        n_iter,
-        seed,
+        param_space: Dict[str, Any],
+        pipeline: Pipeline,
+        score: str,
+        n_iter: int,
+        seed: int,
         ratio_iter=1.0,
         optimization_algorithm=nelder_mead,
         optimization_burn_in_algorithm=latin_hypercube,
@@ -77,14 +77,13 @@ class _Hyperopt:
         gaussian_nugget=50,
         early_stopping=True,
     ):
-
         self._id = "NOT SENT TO ENGINE"
         self._type = "_Hyperopt"
         self._score = score
 
         self._original_param_space = param_space
 
-        self.evaluations = []
+        self.evaluations: List[Any] = []
 
         self.pipeline = copy.deepcopy(pipeline)
         self.param_space = param_space
@@ -105,9 +104,7 @@ class _Hyperopt:
         self.gaussian_nugget = gaussian_nugget
         self.early_stopping = early_stopping
 
-        # ------------------------------------------------------------
-
-        _Hyperopt._supported_params = list(self.__dict__.keys())
+        _Hyperopt._supported_params = list(self.__dict__.keys())  # type: ignore
 
     # ----------------------------------------------------------------
 
@@ -119,7 +116,7 @@ class _Hyperopt:
     def _append_underscore(self, some_dict):
         """Helper functions that returns a trailing underscore to all keys in a dict"""
 
-        cmd = dict()
+        cmd: Dict[str, Any] = {}
 
         for kkey in some_dict:
             if kkey == "evaluations":
@@ -154,7 +151,7 @@ class _Hyperopt:
 
     # ------------------------------------------------------------
 
-    def _getml_deserialize(self):
+    def _getml_deserialize(self) -> Dict[str, Any]:
         """
         Expresses the hyperparameter optimization in a form the engine can understand.
         """
@@ -175,48 +172,33 @@ class _Hyperopt:
 
     # ----------------------------------------------------------------
 
-    def _parse_json_obj(self, json_obj):
-
-        # ------------------------------------------------------------
-
+    def _parse_json_obj(self, json_obj: Dict[str, Any]) -> "_Hyperopt":
         pipeline = self.pipeline._parse_cmd(json_obj["pipeline_"])
 
         del json_obj["pipeline_"]
 
-        # ------------------------------------------------------------
-
         kwargs = _remove_trailing_underscores(json_obj)
 
-        # ------------------------------------------------------------
-
-        evaluations = []
+        evaluations: List[Any] = []
 
         if "evaluations" in kwargs:
             evaluations = kwargs["evaluations"]
             del kwargs["evaluations"]
 
-        # ------------------------------------------------------------
-
         param_space = kwargs["param_space"]
 
         del kwargs["param_space"]
 
-        # ------------------------------------------------------------
-
         del kwargs["name"]
         del kwargs["type"]
 
-        # ------------------------------------------------------------
-
         id_ = self.id
 
-        self.__init__(param_space=param_space, pipeline=pipeline, **kwargs)
+        self.__init__(param_space=param_space, pipeline=pipeline, **kwargs)  # type: ignore
 
         self._id = id_
 
         self.evaluations = evaluations
-
-        # ------------------------------------------------------------
 
         return self
 
@@ -271,9 +253,9 @@ class _Hyperopt:
 
     def fit(
         self,
-        container,
-        train="train",
-        validation="validation",
+        container: Union[Container, StarSchema, TimeSeries],
+        train: str = "train",
+        validation: str = "validation",
     ):
         """Launches the hyperparameter optimization.
 
@@ -288,12 +270,8 @@ class _Hyperopt:
                 The name of the subset in 'container' used for validation.
         """
 
-        # -----------------------------------------------------------
-
         if isinstance(container, (StarSchema, TimeSeries)):
             container = container.container
-
-        # -----------------------------------------------------------
 
         if not isinstance(container, Container):
             raise TypeError(
@@ -307,11 +285,7 @@ class _Hyperopt:
         if not isinstance(validation, str):
             raise TypeError("""'validation' must be a string""")
 
-        # -----------------------------------------------------------
-
         self.pipeline.check(container[train])
-
-        # -----------------------------------------------------------
 
         population_table_training = container[train].population
 
@@ -321,11 +295,9 @@ class _Hyperopt:
             container[train].peripheral, self.pipeline.peripheral
         )
 
-        # -----------------------------------------------------------
-
         self._send()
 
-        cmd = dict()
+        cmd: Dict[str, Any] = {}
 
         cmd["name_"] = self.id
         cmd["type_"] = "Hyperopt.launch"
@@ -358,7 +330,7 @@ class _Hyperopt:
     # ------------------------------------------------------------
 
     @property
-    def id(self):
+    def id(self) -> str:
         """
         Name of the hyperparameter optimization.
         This is used to uniquely identify it on the engine.
@@ -368,7 +340,7 @@ class _Hyperopt:
     # ------------------------------------------------------------
 
     @property
-    def name(self):
+    def name(self) -> str:
         """
         Returns the ID of the hyperparameter optimization.
         The name property is kept for backward compatibility.
@@ -377,7 +349,7 @@ class _Hyperopt:
 
     # ------------------------------------------------------------
 
-    def refresh(self):
+    def refresh(self) -> "_Hyperopt":
         """Reloads the hyperparameter optimization from the engine.
 
         Returns:
@@ -741,8 +713,8 @@ class GaussianHyperparameterSearch(_Hyperopt):
 
     def __init__(
         self,
-        param_space,
-        pipeline,
+        param_space: Dict[str, Any],
+        pipeline: Pipeline,
         score=metrics.rmse,
         n_iter=100,
         seed=5483,
@@ -758,7 +730,6 @@ class GaussianHyperparameterSearch(_Hyperopt):
         gaussian_nugget=50,
         early_stopping=True,
     ):
-
         super().__init__(
             param_space=param_space,
             pipeline=pipeline,
@@ -800,7 +771,7 @@ class GaussianHyperparameterSearch(_Hyperopt):
         """
         Validate the parameters of the hyperparameter optimization.
         """
-        _validate_hyperopt(_Hyperopt._supported_params, **self.__dict__)
+        _validate_hyperopt(_Hyperopt._supported_params, **self.__dict__)  # type: ignore
 
 
 # -----------------------------------------------------------------------------
@@ -1003,16 +974,21 @@ class LatinHypercubeSearch(_Hyperopt):
     """
 
     def __init__(
-        self, param_space, pipeline, score=metrics.rmse, n_iter=100, seed=5483, **kwargs
+        self,
+        param_space: Dict[str, Any],
+        pipeline: Pipeline,
+        score=metrics.rmse,
+        n_iter=100,
+        seed=5483,
+        **kwargs,
     ):
-
         super().__init__(
             param_space=param_space,
             pipeline=pipeline,
             score=score,
             n_iter=n_iter,
             seed=seed,
-            **kwargs
+            **kwargs,
         )
 
         self._type = "LatinHypercubeSearch"
@@ -1038,7 +1014,7 @@ class LatinHypercubeSearch(_Hyperopt):
         """
         Validate the parameters of the hyperparameter optimization.
         """
-        _validate_hyperopt(_Hyperopt._supported_params, **self.__dict__)
+        _validate_hyperopt(_Hyperopt._supported_params, **self.__dict__)  # type: ignore
 
         if self.surrogate_burn_in_algorithm != latin_hypercube:
             raise ValueError(
@@ -1240,16 +1216,21 @@ class RandomSearch(_Hyperopt):
     """
 
     def __init__(
-        self, param_space, pipeline, score=metrics.rmse, n_iter=100, seed=5483, **kwargs
+        self,
+        param_space: Dict[str, Any],
+        pipeline: Pipeline,
+        score=metrics.rmse,
+        n_iter=100,
+        seed=5483,
+        **kwargs,
     ):
-
         super().__init__(
             param_space=param_space,
             pipeline=pipeline,
             score=score,
             n_iter=n_iter,
             seed=seed,
-            **kwargs
+            **kwargs,
         )
 
         self._type = "RandomSearch"
@@ -1261,7 +1242,7 @@ class RandomSearch(_Hyperopt):
     # ----------------------------------------------------------------
 
     def __str__(self):
-        obj_dict = dict()
+        obj_dict: Dict[str, Any] = {}
         obj_dict["type"] = self.type
         obj_dict["score"] = self.score
         obj_dict["n_iter"] = self.n_iter
@@ -1275,7 +1256,7 @@ class RandomSearch(_Hyperopt):
         """
         Validate the parameters of the hyperparameter optimization.
         """
-        _validate_hyperopt(_Hyperopt._supported_params, **self.__dict__)
+        _validate_hyperopt(_Hyperopt._supported_params, **self.__dict__)  # type: ignore
 
         if self.surrogate_burn_in_algorithm != random:
             raise ValueError("'surrogate_burn_in_algorithm' must be '" + random + "'.")

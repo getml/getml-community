@@ -1,6 +1,6 @@
 #set(GETML_VERSION $ENV{GETML_VERSION})
 
- cmake_minimum_required(VERSION 3.0)
+ cmake_minimum_required(VERSION 3.4)
 
  # Set the path containing the Code
  set(CODE_DIR $ENV{CODE_DIR})
@@ -18,11 +18,15 @@
  # Set the path containing poco.
  # Should contain the folder "Net", among others.
  set(POCO_DIR $ENV{POCO_DIR})
-
+ 
  # Set the path containing xgboost
  # Should include folders "include", "lib" and "rabit"
  set(XGBOOST_DIR $ENV{XGBOOST_DIR})
 
+ # Set the path containing simdjson
+ # Should point directly to "src" 
+ set(YYJSON_DIR $ENV{YYJSON_DIR})
+ 
  # Whether you want to activate the assertions
  set(DEBUG_MODE $ENV{DEBUG_MODE})
 
@@ -49,6 +53,7 @@
      "${POSTGRES_DIR}/build/include"
      "${XGBOOST_DIR}/include"
      "${XGBOOST_DIR}/rabit/include"
+     "${YYJSON_DIR}"
  )
 
  link_directories(
@@ -60,10 +65,11 @@
 
  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -O2")
 
- set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -Wall -Wno-sign-compare -Wno-missing-braces -Wno-psabi -pthread -fno-strict-aliasing -fwrapv -O2")
+ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -Wall -Wno-sign-compare -Wno-missing-braces -Wno-psabi -pthread -fno-strict-aliasing -fwrapv -O2 -DEIGEN_DONT_PARALLELIZE")
 
  if((${PROFILING_MODE} STREQUAL "ON"))
  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -DGETML_PROFILING")
+ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -g")
  message("WARNING: We are compiling in PROFILING_MODE. Do not release this!")
  message("")
  endif()
@@ -75,7 +81,11 @@
  message("")
  endif()
 
- set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s -O2 -fopenmp '-Wl,-rpath,$ORIGIN/../lib'")
+ if(NOT (${PROFILING_MODE} STREQUAL "ON"))
+ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s")
+ endif()
+     
+ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fopenmp '-Wl,-rpath,$ORIGIN/../lib'")
 
  add_definitions(-DGETML_VERSION="${GETML_VERSION}")
 

@@ -10,6 +10,8 @@
 Container which holds all of a project's pipelines.
 """
 
+from typing import Any, List
+
 from getml.pipeline.helpers2 import _refresh_all, list_pipelines
 from getml.pipeline.metrics import accuracy, auc, cross_entropy, mae, rmse, rsquared
 from getml.utilities.formatting import _Formatter
@@ -105,11 +107,8 @@ class Pipelines:
     # ----------------------------------------------------------------
 
     def _format(self):
-
-        scores = []
-        scores_headers = []
-
-        # ------------------------------------------------------------
+        scores: List[Any] = []
+        scores_headers: List[Any] = []
 
         if self._contains_classification_pipelines:
             scores.extend(
@@ -122,8 +121,6 @@ class Pipelines:
             )
 
             scores_headers.extend([accuracy, auc, cross_entropy])
-
-        # ------------------------------------------------------------
 
         if self._contains_regresion_pipelines:
             scores.extend(
@@ -147,8 +144,6 @@ class Pipelines:
                     scores[: len(self.data)], scores[len(self.data) :]
                 )
             ]
-
-        # ------------------------------------------------------------
 
         sets_used = [pipeline._scores.get("set_used", "") for pipeline in self.data]
 

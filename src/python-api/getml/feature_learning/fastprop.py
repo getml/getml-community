@@ -11,14 +11,12 @@ Feature learning based on propositionalization.
 """
 
 from dataclasses import dataclass, field
-from typing import Any, ClassVar, Dict, List, Literal, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional, Union
 
 from .aggregations import _Aggregations
 from .aggregations import fastprop as fastprop_aggregations
 from .feature_learner import _FeatureLearner
 from .validation import _validate_dfs_model_parameters
-
-# --------------------------------------------------------------------
 
 
 @dataclass(repr=False)
@@ -113,17 +111,13 @@ class FastProp(_FeatureLearner):
 
     """
 
-    # ----------------------------------------------------------------
-
     agg_sets: ClassVar[_Aggregations] = fastprop_aggregations
-
-    # ----------------------------------------------------------------
 
     aggregation: List[str] = field(
         default_factory=lambda: fastprop_aggregations.Default
     )
     delta_t: float = 0.0
-    loss_function: Optional[Literal["CrossEntropyLoss", "SquareLoss"]] = None
+    loss_function: Optional[str] = None
     max_lag: int = 0
     min_df: int = 30
     n_most_frequent: int = 0
@@ -132,8 +126,6 @@ class FastProp(_FeatureLearner):
     sampling_factor: float = 1.0
     silent: bool = True
     vocab_size: int = 500
-
-    # ----------------------------------------------------------------
 
     def validate(self, params: Optional[Dict[str, Any]] = None) -> None:
         """
@@ -151,7 +143,6 @@ class FastProp(_FeatureLearner):
                 instance dictionary will be validated.
 
         """
-        # ------------------------------------------------------------
 
         if params is None:
             params = self.__dict__
@@ -161,17 +152,10 @@ class FastProp(_FeatureLearner):
         if not isinstance(params, dict):
             raise ValueError("params must be None or a dictionary!")
 
-        # ------------------------------------------------------------
-
         for kkey in params:
             if kkey not in type(self)._supported_params:
                 raise KeyError(
                     f"Instance variable '{kkey}' is not supported in {self.type}."
                 )
 
-        # ------------------------------------------------------------
-
         _validate_dfs_model_parameters(**params)
-
-
-# --------------------------------------------------------------------

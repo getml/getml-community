@@ -1,41 +1,30 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef PREDICTORS_XGBOOSTPREDICTOR_HPP_
 #define PREDICTORS_XGBOOSTPREDICTOR_HPP_
 
-// -----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
 #include <xgboost/c_api.h>
-
-// -----------------------------------------------------------------------------
 
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
 
-// -----------------------------------------------------------------------------
-
+#include "commands/Fingerprint.hpp"
 #include "debug/debug.hpp"
-
-// -----------------------------------------------------------------------------
-
+#include "predictors/Fingerprint.hpp"
 #include "predictors/FloatFeature.hpp"
 #include "predictors/IntFeature.hpp"
-#include "predictors/LinearHyperparams.hpp"
 #include "predictors/Predictor.hpp"
 #include "predictors/PredictorImpl.hpp"
 #include "predictors/StandardScaler.hpp"
 #include "predictors/XGBoostHyperparams.hpp"
 #include "predictors/XGBoostMatrix.hpp"
-
-// -----------------------------------------------------------------------------
 
 namespace predictors {
 
@@ -48,20 +37,15 @@ class XGBoostPredictor : public Predictor {
   typedef std::unique_ptr<BoosterHandle, BoosterDestructor> BoosterPtr;
   typedef XGBoostMatrix::DMatrixPtr DMatrixPtr;
 
-  // -----------------------------------------
-
  public:
-  XGBoostPredictor(const Poco::JSON::Object& _cmd,
-                   const std::shared_ptr<const PredictorImpl>& _impl,
-                   const std::vector<Poco::JSON::Object::Ptr>& _dependencies)
-      : cmd_(_cmd),
-        dependencies_(_dependencies),
-        hyperparams_(XGBoostHyperparams(_cmd)),
+  XGBoostPredictor(const XGBoostHyperparams& _hyperparams,
+                   const fct::Ref<const PredictorImpl>& _impl,
+                   const std::vector<commands::Fingerprint>& _dependencies)
+      : dependencies_(_dependencies),
+        hyperparams_(fct::Ref<XGBoostHyperparams>::make(_hyperparams)),
         impl_(_impl) {}
 
   ~XGBoostPredictor() = default;
-
-  // -----------------------------------------
 
  public:
   /// Returns an importance measure for the individual features
@@ -81,10 +65,6 @@ class XGBoostPredictor : public Predictor {
   /// Loads the predictor
   void load(const std::string& _fname) final;
 
-  /// Returns the fingerprint of the predictor (necessary to build
-  /// the dependency graphs).
-  Poco::JSON::Object::Ptr fingerprint() const final;
-
   /// Implements the predict(...) method in scikit-learn style
   FloatFeature predict(
       const std::vector<IntFeature>& _X_categorical,
@@ -92,8 +72,6 @@ class XGBoostPredictor : public Predictor {
 
   /// Saves the predictor
   void save(const std::string& _fname) const final;
-
-  // -------------------------------------------------------------------------
 
  public:
   /// Whether the predictor accepts null values.
@@ -106,21 +84,30 @@ class XGBoostPredictor : public Predictor {
 
   /// Whether the predictor is used for classification;
   bool is_classification() const final {
-    return hyperparams_.objective_ == "reg:logistic" ||
-           hyperparams_.objective_ == "binary:logistic" ||
-           hyperparams_.objective_ == "binary:logitraw";
+    const auto objective = hyperparams_->val_.get<"objective_">();
+    using Objective = std::decay_t<decltype(objective)>;
+    return objective.value() == Objective::value_of<"reg:logistic">() ||
+           objective.value() == Objective::value_of<"binary:logistic">() ||
+           objective.value() == Objective::value_of<"binary:logitraw">();
   }
 
   /// Whether the predictor has been fitted.
   bool is_fitted() const final { return len() > 0; }
 
+  /// Returns the fingerprint of the predictor (necessary to build
+  /// the dependency graphs).
+  Fingerprint fingerprint() const final {
+    using XGBoostFingerprint = typename Fingerprint::XGBoostFingerprint;
+    return Fingerprint(XGBoostFingerprint(
+        hyperparams_->val_ * fct::make_field<"dependencies_">(dependencies_) *
+        impl().named_tuple()));
+  }
+
   /// Whether we want the predictor to be silent.
-  bool silent() const final { return hyperparams_.silent_; }
+  bool silent() const final { return hyperparams_->val_.get<"silent_">(); }
 
   /// The type of the predictor.
   std::string type() const final { return "XGBoost"; }
-
-  // -----------------------------------------
 
  private:
   /// Frees a Booster pointer
@@ -130,10 +117,7 @@ class XGBoostPredictor : public Predictor {
   }
 
   /// Trivial (private) accessor.
-  const PredictorImpl& impl() const {
-    assert_true(impl_);
-    return *impl_;
-  }
+  const PredictorImpl& impl() const { return *impl_; }
 
   /// Returns size of the underlying model
   const bst_ulong len() const { return static_cast<bst_ulong>(model_.size()); }
@@ -143,8 +127,6 @@ class XGBoostPredictor : public Predictor {
     assert_true(model_.size() > 0);
     return model_.data();
   }
-
-  // -----------------------------------------
 
  private:
   /// Adds a target to _d_matrix.
@@ -208,26 +190,20 @@ class XGBoostPredictor : public Predictor {
   void set_hyperparameters(const BoosterPtr& _handle,
                            const bool _is_memory_mapped) const;
 
-  // -----------------------------------------
-
  private:
-  /// The JSON command used to construct this predictor.
-  const Poco::JSON::Object cmd_;
-
   /// The dependencies used to build the fingerprint.
-  std::vector<Poco::JSON::Object::Ptr> dependencies_;
+  std::vector<commands::Fingerprint> dependencies_;
 
   /// Hyperparameters for XGBoostPredictor
-  const XGBoostHyperparams hyperparams_;
+  const fct::Ref<const XGBoostHyperparams> hyperparams_;
 
   /// Implementation class for member functions common to most predictors.
-  std::shared_ptr<const PredictorImpl> impl_;
+  const fct::Ref<const PredictorImpl> impl_;
 
   /// The underlying XGBoost model, expressed in bytes
   std::vector<char> model_;
 };
 
-// ------------------------------------------------------------------------
 }  // namespace predictors
 
 #endif  // PREDICTORS_XGBOOSTPREDICTOR_HPP_

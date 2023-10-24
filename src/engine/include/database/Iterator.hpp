@@ -1,37 +1,26 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef DATABASE_ITERATOR_HPP_
 #define DATABASE_ITERATOR_HPP_
 
-// ----------------------------------------------------------------------------
-
 #include <string>
 #include <vector>
-
-// ----------------------------------------------------------------------------
 
 #include "database/Float.hpp"
 #include "database/Int.hpp"
 
-// ----------------------------------------------------------------------------
-
 namespace database {
-// ----------------------------------------------------------------------------
 
 class Iterator {
-  // -------------------------------
-
  public:
   Iterator() {}
 
   virtual ~Iterator() = default;
-
-  // -------------------------------
 
  public:
   /// Returns the column names of the query.
@@ -52,11 +41,7 @@ class Iterator {
   /// Returns a time stamp transformed to the number of days since epoch and
   /// increments the iterator.
   virtual Float get_time_stamp() = 0;
-
-  // -------------------------------
 };
-
-// ----------------------------------------------------------------------------
 
 }  // namespace database
 

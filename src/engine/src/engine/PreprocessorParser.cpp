@@ -1,13 +1,11 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
-#include "engine/preprocessors/preprocessors.hpp"
-
-// ----------------------------------------------------
+#include <stdexcept>
 
 #include "engine/preprocessors/CategoryTrimmer.hpp"
 #include "engine/preprocessors/EMailDomain.hpp"
@@ -15,47 +13,64 @@
 #include "engine/preprocessors/Seasonal.hpp"
 #include "engine/preprocessors/Substring.hpp"
 #include "engine/preprocessors/TextFieldSplitter.hpp"
-
-// ----------------------------------------------------
+#include "engine/preprocessors/preprocessors.hpp"
+#include "fct/visit.hpp"
+#include "json/json.hpp"
 
 namespace engine {
 namespace preprocessors {
 
 fct::Ref<Preprocessor> PreprocessorParser::parse(
-    const Poco::JSON::Object& _obj,
-    const std::vector<Poco::JSON::Object::Ptr>& _dependencies) {
-  const auto type = jsonutils::JSON::get_value<std::string>(_obj, "type_");
+    const PreprocessorHyperparams& _cmd,
+    const std::vector<commands::Fingerprint>& _dependencies) {
+  const auto handle =
+      [&_dependencies](const auto& _hyperparams) -> fct::Ref<Preprocessor> {
+    using CategoryTrimmerOp =
+        typename commands::Preprocessor::CategoryTrimmerOp;
+    using EMailDomainOp = typename commands::Preprocessor::EMailDomainOp;
+    using ImputationOp = typename commands::Preprocessor::ImputationOp;
+    using SeasonalOp = typename commands::Preprocessor::SeasonalOp;
+    using SubstringOp = typename commands::Preprocessor::SubstringOp;
+    using TextFieldSplitterOp =
+        typename commands::Preprocessor::TextFieldSplitterOp;
 
-  if (type == Preprocessor::CATEGORY_TRIMMER) {
-    return fct::Ref<CategoryTrimmer>::make(_obj, _dependencies);
-  }
+    using Type = std::decay_t<decltype(_hyperparams)>;
 
-  if (type == Preprocessor::EMAILDOMAIN) {
-    return fct::Ref<EMailDomain>::make(_obj, _dependencies);
-  }
+    if constexpr (std::is_same<Type, CategoryTrimmerOp>()) {
+      return fct::Ref<CategoryTrimmer>::make(_hyperparams, _dependencies);
+    }
 
-  if (type == Preprocessor::IMPUTATION) {
-    return fct::Ref<Imputation>::make(_obj, _dependencies);
-  }
+    else if constexpr (std::is_same<Type, EMailDomainOp>()) {
+      return fct::Ref<EMailDomain>::make(_hyperparams, _dependencies);
+    }
 
-  if (type == Preprocessor::SEASONAL) {
-    return fct::Ref<Seasonal>::make(_obj, _dependencies);
-  }
+    else if constexpr (std::is_same<Type, ImputationOp>()) {
+      return fct::Ref<Imputation>::make(_hyperparams, _dependencies);
+    }
 
-  if (type == Preprocessor::SUBSTRING) {
-    return fct::Ref<Substring>::make(_obj, _dependencies);
-  }
+    else if constexpr (std::is_same<Type, SeasonalOp>()) {
+      return fct::Ref<Seasonal>::make(_hyperparams, _dependencies);
+    }
 
-  if (type == Preprocessor::TEXT_FIELD_SPLITTER) {
-    return fct::Ref<TextFieldSplitter>::make(_obj, _dependencies);
-  }
+    else if constexpr (std::is_same<Type, SubstringOp>()) {
+      return fct::Ref<Substring>::make(_hyperparams, _dependencies);
+    }
 
-  if (type == Preprocessor::MAPPING) {
-    throw std::runtime_error("Preprocessor of type '" + type +
-                             "' is not supported in the community edition!");
-  }
+    else if constexpr (std::is_same<Type, TextFieldSplitterOp>()) {
+      return fct::Ref<TextFieldSplitter>::make(_hyperparams, _dependencies);
+    }
 
-  throw std::runtime_error("Preprocessor of type '" + type + "' not known!");
+    else {
+      throw std::runtime_error(
+          "The " + fct::get<"type_">(_hyperparams).name() +
+          " preprocessor is not supported in the community edition. Please "
+          "upgrade to getML enterprise to use this. An overview of what is "
+          "supported in the community edition can be found in the official "
+          "getML documentation.");
+    }
+  };
+
+  return fct::visit(handle, _cmd);
 }
 
 // ----------------------------------------------------

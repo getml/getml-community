@@ -21,7 +21,7 @@ import numpy as np
 
 from getml.data.helpers import _is_typed_list
 
-from .dialect import AllDialects, _drop_table, _table_pattern, sqlite3
+from .dialect import _drop_table, _table_pattern, sqlite3
 from .helpers import _edit_table_name, _edit_windows_filename
 from .sql_string import SQLString
 
@@ -59,7 +59,7 @@ class SQLCode:
     def __init__(
         self,
         code: Sequence[Union[str, SQLString]],
-        dialect: AllDialects = sqlite3,
+        dialect: str = sqlite3,
     ) -> None:
 
         if not _is_typed_list(code, str):

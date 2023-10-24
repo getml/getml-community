@@ -1,21 +1,17 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "predictors/LogisticRegression.hpp"
 
-// -----------------------------------------------------------------------------
-
 #include <random>
 
-// -----------------------------------------------------------------------------
-
+#include "helpers/Loader.hpp"
+#include "helpers/Saver.hpp"
 #include "optimizers/optimizers.hpp"
-
-// -----------------------------------------------------------------------------
 
 namespace predictors {
 
@@ -59,18 +55,6 @@ std::vector<Float> LogisticRegression::feature_importances(
 
 // -----------------------------------------------------------------------------
 
-Poco::JSON::Object::Ptr LogisticRegression::fingerprint() const {
-  auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-
-  obj->set("cmd_", cmd_);
-  obj->set("dependencies_", JSON::vector_to_array_ptr(dependencies_));
-  obj->set("impl_", impl().to_json_obj());
-
-  return obj;
-}
-
-// -----------------------------------------------------------------------------
-
 std::string LogisticRegression::fit(
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     const std::vector<IntFeature>& _X_categorical,
@@ -78,11 +62,7 @@ std::string LogisticRegression::fit(
     const std::optional<std::vector<IntFeature>>& _X_categorical_valid,
     const std::optional<std::vector<FloatFeature>>& _X_numerical_valid,
     const std::optional<FloatFeature>& _y_valid) {
-  // -------------------------------------------------------------------------
-
   impl().check_plausibility(_X_categorical, _X_numerical, _y);
-
-  // -------------------------------------------------------------------------
 
   if (_X_categorical.size() == 0) {
     fit_dense(_logger, _X_numerical, _y);
@@ -90,17 +70,11 @@ std::string LogisticRegression::fit(
     fit_sparse(_logger, _X_categorical, _X_numerical, _y);
   }
 
-  // -------------------------------------------------------------------------
-
   if (_logger) {
     _logger->log("Progress: 100%.");
   }
 
-  // -------------------------------------------------------------------------
-
   return "";
-
-  // -------------------------------------------------------------------------
 }
 
 // -----------------------------------------------------------------------------
@@ -108,15 +82,9 @@ std::string LogisticRegression::fit(
 void LogisticRegression::fit_dense(
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     const std::vector<FloatFeature>& _X_numerical, const FloatFeature& _y) {
-  // -------------------------------------------------------------------------
-  // Rescale training set.
-
   scaler_.fit(_X_numerical);
 
   const auto X = scaler_.transform(_X_numerical);
-
-  // -------------------------------------------------------------------------
-  // Init weights.
 
   std::mt19937 rng;
 
@@ -128,13 +96,9 @@ void LogisticRegression::fit_dense(
     w = dis(rng);
   }
 
-  // -------------------------------------------------------------------------
-
   const auto nrows = X[0].size();
 
   const auto nrows_float = static_cast<Float>(nrows);
-
-  // -------------------------------------------------------------------------
 
   std::vector<Float> gradients(weights_.size());
 
@@ -177,8 +141,6 @@ void LogisticRegression::fit_dense(
       break;
     }
   }
-
-  // -------------------------------------------------------------------------
 }
 
 // -----------------------------------------------------------------------------
@@ -187,18 +149,12 @@ void LogisticRegression::fit_sparse(
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     const std::vector<IntFeature>& _X_categorical,
     const std::vector<FloatFeature>& _X_numerical, const FloatFeature& _y) {
-  // -------------------------------------------------------------------------
-
   auto csr_mat = impl().make_csr<Float, unsigned int, size_t>(_X_categorical,
                                                               _X_numerical);
-
-  // -------------------------------------------------------------------------
 
   scaler_.fit(csr_mat);
 
   csr_mat = scaler_.transform(csr_mat);
-
-  // -------------------------------------------------------------------------
 
   std::mt19937 rng;
 
@@ -210,17 +166,13 @@ void LogisticRegression::fit_sparse(
     w = dis(rng);
   }
 
-  // -------------------------------------------------------------------------
-
   const size_t batch_size = 200;
 
   const auto bsize_float = static_cast<Float>(batch_size);
 
-  // -------------------------------------------------------------------------
-
   std::vector<Float> gradients(weights_.size());
 
-  auto optimizer = optimizers::Adam(hyperparams().learning_rate_, 0.999, 10.0,
+  auto optimizer = optimizers::Adam(hyperparams().learning_rate(), 0.999, 10.0,
                                     1e-10, weights_.size());
 
   for (size_t epoch = 0; epoch < 1000; ++epoch) {
@@ -245,52 +197,15 @@ void LogisticRegression::fit_sparse(
       }
     }
   }
-
-  // -------------------------------------------------------------------------
 }
 
 // -----------------------------------------------------------------------------
 
 void LogisticRegression::load(const std::string& _fname) {
-  const auto obj = load_json_obj(_fname + ".json");
-
-  hyperparams_ = std::make_shared<LinearHyperparams>(
-      JSON::get_value<Float>(obj, "reg_lambda_"),
-      JSON::get_value<Float>(obj, "learning_rate_"));
-
-  scaler_ = StandardScaler(*JSON::get_object(obj, "scaler_"));
-
-  weights_ = JSON::array_to_vector<Float>(JSON::get_array(obj, "weights_"));
-}
-
-// -----------------------------------------------------------------------------
-
-Poco::JSON::Object LogisticRegression::load_json_obj(
-    const std::string& _fname) const {
-  std::ifstream input(_fname);
-
-  std::stringstream json;
-
-  std::string line;
-
-  if (input.is_open()) {
-    while (std::getline(input, line)) {
-      json << line;
-    }
-
-    input.close();
-  } else {
-    throw std::runtime_error("File '" + _fname + "' not found!");
-  }
-
-  const auto ptr =
-      Poco::JSON::Parser().parse(json.str()).extract<Poco::JSON::Object::Ptr>();
-
-  if (!ptr) {
-    throw std::runtime_error("JSON file did not contain an object!");
-  }
-
-  return *ptr;
+  const auto named_tuple =
+      helpers::Loader::load_from_json<NamedTupleType>(_fname);
+  scaler_ = named_tuple.get<f_scaler>();
+  weights_ = named_tuple.get<f_weights>();
 }
 
 // -----------------------------------------------------------------------------
@@ -315,19 +230,13 @@ FloatFeature LogisticRegression::predict(
 
 FloatFeature LogisticRegression::predict_dense(
     const std::vector<FloatFeature>& _X_numerical) const {
-  // -------------------------------------------------------------------------
-
   if (weights_.size() != _X_numerical.size() + 1) {
     throw std::runtime_error("Incorrect number of features! Expected " +
                              std::to_string(weights_.size() - 1) + ", got " +
                              std::to_string(_X_numerical.size()) + ".");
   }
 
-  // -------------------------------------------------------------------------
-
   const auto X = scaler_.transform(_X_numerical);
-
-  // -------------------------------------------------------------------------
 
   assert_true(X.size() > 0);
 
@@ -342,18 +251,12 @@ FloatFeature LogisticRegression::predict_dense(
     }
   }
 
-  // -------------------------------------------------------------------------
-
   for (auto& yhat : predictions) {
     yhat += weights_.back();
     yhat = logistic_function(yhat);
   }
 
-  // -------------------------------------------------------------------------
-
   return predictions;
-
-  // -------------------------------------------------------------------------
 }
 
 // -----------------------------------------------------------------------------
@@ -361,16 +264,10 @@ FloatFeature LogisticRegression::predict_dense(
 FloatFeature LogisticRegression::predict_sparse(
     const std::vector<IntFeature>& _X_categorical,
     const std::vector<FloatFeature>& _X_numerical) const {
-  // -------------------------------------------------------------------------
-
   auto csr_mat = impl().make_csr<Float, unsigned int, size_t>(_X_categorical,
                                                               _X_numerical);
 
-  // -------------------------------------------------------------------------
-
   csr_mat = scaler_.transform(csr_mat);
-
-  // -------------------------------------------------------------------------
 
   if (weights_.size() != csr_mat.ncols() + 1) {
     throw std::runtime_error(
@@ -379,12 +276,8 @@ FloatFeature LogisticRegression::predict_sparse(
         std::to_string(csr_mat.ncols()) + ".");
   }
 
-  // -------------------------------------------------------------------------
-
   auto predictions =
       FloatFeature(std::make_shared<std::vector<Float>>(csr_mat.nrows()));
-
-  // -------------------------------------------------------------------------
 
   for (size_t i = 0; i < csr_mat.nrows(); ++i) {
     predictions[i] =
@@ -392,29 +285,13 @@ FloatFeature LogisticRegression::predict_sparse(
                        csr_mat.indices(), csr_mat.data());
   }
 
-  // -------------------------------------------------------------------------
-
   return predictions;
-
-  // -------------------------------------------------------------------------
 }
 
 // -----------------------------------------------------------------------------
 
 void LogisticRegression::save(const std::string& _fname) const {
-  Poco::JSON::Object obj;
-
-  obj.set("learning_rate_", hyperparams().learning_rate_);
-
-  obj.set("reg_lambda_", hyperparams().reg_lambda_);
-
-  obj.set("scaler_", scaler_.to_json_obj());
-
-  obj.set("weights_", weights_);
-
-  auto output = std::ofstream(_fname + ".json");
-
-  Poco::JSON::Stringifier::stringify(obj, output);
+  helpers::Saver::save_as_json(_fname, *this);
 }
 
 // -----------------------------------------------------------------------------

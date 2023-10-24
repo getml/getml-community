@@ -7,7 +7,7 @@
 
 
 """
-Class represting metadata on a column used by the features of a pipeline.
+Class representing metadata on a column used by the features of a pipeline.
 """
 
 from dataclasses import dataclass

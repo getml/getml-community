@@ -1,29 +1,21 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef HELPERS_AUTOFEATURES_HPP_
 #define HELPERS_AUTOFEATURES_HPP_
 
-// -------------------------------------------------------------------------
-
 #include "debug/debug.hpp"
 #include "fct/fct.hpp"
-
-// -------------------------------------------------------------------------
-
 #include "helpers/Column.hpp"
 #include "helpers/Feature.hpp"
 #include "helpers/Float.hpp"
 #include "helpers/Int.hpp"
 
-// ----------------------------------------------------------------------------
-
 namespace helpers {
-// -------------------------------------------------------------------------
 
 class Features {
  public:
@@ -75,9 +67,8 @@ class Features {
 
   /// Returns a set of safe features.
   std::vector<Feature<Float>> to_safe_features() const {
-    return fct::collect::vector<Feature<Float>>(
-        vec_ | VIEWS::transform(get_ptr<false>) |
-        VIEWS::transform(to_feature<true>));
+    return fct::collect::vector(vec_ | VIEWS::transform(get_ptr<false>) |
+                                VIEWS::transform(to_feature<true>));
   }
 
   /// ---------------------------------------------------------------------
@@ -113,8 +104,7 @@ class Features {
     const auto pool = _temp_dir ? std::make_shared<memmap::Pool>(*_temp_dir)
                                 : std::shared_ptr<memmap::Pool>();
     const auto variants = make_variants(_nrows, _ncols, pool);
-    return fct::collect::vector<Feature<Float, false>>(
-        variants | VIEWS::transform(to_feature<false>));
+    return fct::collect::vector(variants | VIEWS::transform(to_feature<false>));
   }
 
   /// Transform a variant to a feature.

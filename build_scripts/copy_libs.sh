@@ -42,7 +42,9 @@ cp /lib64/libpcre.so.1 lib || exit 1
 
 if [[ $PROFILING_MODE == "ON" ]]; then 
     echo "WARNING: Copying dependencies for profiling. Do not release this!"
-    cp /lib64/libunwind.so.8 lib || exit 1
+    if [[ $ARCHITECTURE == "x64" ]]; then 
+        cp /lib64/libunwind.so.8 lib || exit 1
+    fi
     cp /lib64/libprofiler.so.0 lib || exit 1
 fi
 

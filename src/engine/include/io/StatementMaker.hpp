@@ -1,33 +1,20 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef IO_STATEMENTMAKER_HPP_
 #define IO_STATEMENTMAKER_HPP_
 
-// ----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------------
-
 #include <string>
 #include <vector>
-
-// ----------------------------------------------------------------------------
 
 #include "debug/debug.hpp"
 #include "fct/fct.hpp"
 #include "helpers/StringSplitter.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "io/Datatype.hpp"
-
-// ----------------------------------------------------------------------------
 
 namespace io {
 
@@ -54,7 +41,6 @@ class StatementMaker {
   /// Produces the CREATE TABLE statement.
   static std::string make_statement(const std::string& _table_name,
                                     const std::string& _dialect,
-                                    const Poco::JSON::Object& _description,
                                     const std::vector<std::string>& _colnames,
                                     const std::vector<Datatype>& _datatypes);
 
@@ -100,7 +86,6 @@ class StatementMaker {
   }
 };
 
-// ----------------------------------------------------------------------------
 }  // namespace io
 
 #endif  // IO_STATEMENTMAKER_HPP_

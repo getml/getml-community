@@ -1,46 +1,31 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef PREDICTORS_PREDICTOR_HPP_
 #define PREDICTORS_PREDICTOR_HPP_
-
-// -----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
-
-// -----------------------------------------------------------------------------
 
 #include <memory>
 #include <optional>
 #include <vector>
 
-// -----------------------------------------------------------------------------
-
 #include "debug/debug.hpp"
-
-// -----------------------------------------------------------------------------
-
+#include "logging/AbstractLogger.hpp"
+#include "predictors/Fingerprint.hpp"
 #include "predictors/FloatFeature.hpp"
 #include "predictors/IntFeature.hpp"
-
-// -----------------------------------------------------------------------------
 
 namespace predictors {
 
 /// Abstract base class for a predictor
 class Predictor {
-  // -----------------------------------------
-
  public:
   Predictor(){};
 
   virtual ~Predictor() = default;
-
-  // -----------------------------------------
 
   /// Whether the predictor accepts null values.
   virtual bool accepts_null() const = 0;
@@ -54,7 +39,7 @@ class Predictor {
 
   /// Returns the fingerprint of the predictor (necessary to build
   /// the dependency graphs).
-  virtual Poco::JSON::Object::Ptr fingerprint() const = 0;
+  virtual Fingerprint fingerprint() const = 0;
 
   /// Implements the fit(...) method in scikit-learn style
   virtual std::string fit(
@@ -87,11 +72,8 @@ class Predictor {
 
   /// The type of the predictor.
   virtual std::string type() const = 0;
-
-  // -----------------------------------------
 };
 
-// ------------------------------------------------------------------------
 }  // namespace predictors
 
 #endif  // ENGINE_PREDICTORS_PREDICTOR_HPP_

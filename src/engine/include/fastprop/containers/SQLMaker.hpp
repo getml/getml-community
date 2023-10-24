@@ -8,23 +8,15 @@
 #ifndef FASTPROP_CONTAINERS_SQLMAKER_HPP_
 #define FASTPROP_CONTAINERS_SQLMAKER_HPP_
 
-// ----------------------------------------------------------------------------
-
 #include <memory>
 #include <string>
 #include <utility>
 
-// ----------------------------------------------------------------------------
-
-#include "fastprop/enums/enums.hpp"
-#include "helpers/helpers.hpp"
-#include "transpilation/transpilation.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "fastprop/containers/AbstractFeature.hpp"
-
-// ----------------------------------------------------------------------------
+#include "fastprop/enums/enums.hpp"
+#include "helpers/Schema.hpp"
+#include "helpers/StringIterator.hpp"
+#include "transpilation/transpilation.hpp"
 
 namespace fastprop {
 namespace containers {
@@ -68,29 +60,33 @@ class SQLMaker {
   /// Whether the aggregation is an aggregation that relies on the
   /// first-last-logic.
   static bool is_first_last(const enums::Aggregation _agg) {
-    return (_agg == enums::Aggregation::first ||
-            _agg == enums::Aggregation::last ||
-            _agg == enums::Aggregation::ewma_1s ||
-            _agg == enums::Aggregation::ewma_1m ||
-            _agg == enums::Aggregation::ewma_1h ||
-            _agg == enums::Aggregation::ewma_1d ||
-            _agg == enums::Aggregation::ewma_7d ||
-            _agg == enums::Aggregation::ewma_30d ||
-            _agg == enums::Aggregation::ewma_90d ||
-            _agg == enums::Aggregation::ewma_365d ||
-            _agg == enums::Aggregation::ewma_trend_1s ||
-            _agg == enums::Aggregation::ewma_trend_1m ||
-            _agg == enums::Aggregation::ewma_trend_1h ||
-            _agg == enums::Aggregation::ewma_trend_1d ||
-            _agg == enums::Aggregation::ewma_trend_7d ||
-            _agg == enums::Aggregation::ewma_trend_30d ||
-            _agg == enums::Aggregation::ewma_trend_90d ||
-            _agg == enums::Aggregation::ewma_trend_365d ||
-            _agg == enums::Aggregation::time_since_first_maximum ||
-            _agg == enums::Aggregation::time_since_first_minimum ||
-            _agg == enums::Aggregation::time_since_last_maximum ||
-            _agg == enums::Aggregation::time_since_last_minimum ||
-            _agg == enums::Aggregation::trend);
+    return (_agg.value() == enums::Aggregation::value_of<"FIRST">() ||
+            _agg.value() == enums::Aggregation::value_of<"LAST">() ||
+            _agg.value() == enums::Aggregation::value_of<"EWMA_1S">() ||
+            _agg.value() == enums::Aggregation::value_of<"EWMA_1M">() ||
+            _agg.value() == enums::Aggregation::value_of<"EWMA_1H">() ||
+            _agg.value() == enums::Aggregation::value_of<"EWMA_1D">() ||
+            _agg.value() == enums::Aggregation::value_of<"EWMA_7D">() ||
+            _agg.value() == enums::Aggregation::value_of<"EWMA_30D">() ||
+            _agg.value() == enums::Aggregation::value_of<"EWMA_90D">() ||
+            _agg.value() == enums::Aggregation::value_of<"EWMA_365D">() ||
+            _agg.value() == enums::Aggregation::value_of<"EWMA_TREND_1S">() ||
+            _agg.value() == enums::Aggregation::value_of<"EWMA_TREND_1M">() ||
+            _agg.value() == enums::Aggregation::value_of<"EWMA_TREND_1H">() ||
+            _agg.value() == enums::Aggregation::value_of<"EWMA_TREND_1D">() ||
+            _agg.value() == enums::Aggregation::value_of<"EWMA_TREND_7D">() ||
+            _agg.value() == enums::Aggregation::value_of<"EWMA_TREND_30D">() ||
+            _agg.value() == enums::Aggregation::value_of<"EWMA_TREND_90D">() ||
+            _agg.value() == enums::Aggregation::value_of<"EWMA_TREND_365D">() ||
+            _agg.value() ==
+                enums::Aggregation::value_of<"TIME SINCE FIRST MAXIMUM">() ||
+            _agg.value() ==
+                enums::Aggregation::value_of<"TIME SINCE FIRST MINIMUM">() ||
+            _agg.value() ==
+                enums::Aggregation::value_of<"TIME SINCE LAST MAXIMUM">() ||
+            _agg.value() ==
+                enums::Aggregation::value_of<"TIME SINCE LAST MINIMUM">() ||
+            _agg.value() == enums::Aggregation::value_of<"TREND">());
   }
 
  private:
@@ -134,10 +130,7 @@ class SQLMaker {
       sql_dialect_generator_;
 };
 
-// ------------------------------------------------------------------------
 }  // namespace containers
 }  // namespace fastprop
-
-// ----------------------------------------------------------------------------
 
 #endif  // FASTPROP_CONTAINERS_SQLMAKER_HPP_

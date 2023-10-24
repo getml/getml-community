@@ -1,30 +1,28 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/utils/SQLDependencyTracker.hpp"
-
-// ------------------------------------------------------------------------
 
 #include <filesystem>
 #include <fstream>
 
-// ------------------------------------------------------------------------
-
-#include "fct/fct.hpp"
-#include "helpers/helpers.hpp"
+#include "fct/collect.hpp"
+#include "fct/iota.hpp"
+#include "fct/make_named_tuple.hpp"
+#include "helpers/StringSplitter.hpp"
+#include "json/json.hpp"
 #include "transpilation/transpilation.hpp"
-
-// ------------------------------------------------------------------------
 
 namespace engine {
 namespace utils {
 
-Poco::JSON::Object::Ptr SQLDependencyTracker::find_dependencies(
-    const Tuples& _tuples, const size_t _i) const {
+typename SQLDependencyTracker::SQLDependency
+SQLDependencyTracker::find_dependencies(const Tuples& _tuples,
+                                        const size_t _i) const {
   const auto& sql_code = std::get<2>(_tuples.at(_i));
 
   const auto is_dependency = [&sql_code, &_tuples](const size_t _j) -> bool {
@@ -35,17 +33,11 @@ Poco::JSON::Object::Ptr SQLDependencyTracker::find_dependencies(
   const auto iota = fct::iota<size_t>(0, _i);
 
   const auto dependencies =
-      fct::collect::array(iota | VIEWS::filter(is_dependency));
+      fct::collect::vector(iota | VIEWS::filter(is_dependency));
 
-  auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-
-  obj->set("table_name_", std::get<0>(_tuples.at(_i)));
-
-  obj->set("file_name_", std::get<1>(_tuples.at(_i)));
-
-  obj->set("dependencies_", dependencies);
-
-  return obj;
+  return fct::make_field<"table_name_">(std::get<0>(_tuples.at(_i))) *
+         fct::make_field<"file_name_">(std::get<1>(_tuples.at(_i))) *
+         fct::make_field<"dependencies_">(dependencies);
 }
 
 // ------------------------------------------------------------------------
@@ -77,21 +69,19 @@ std::string SQLDependencyTracker::infer_table_name(
 void SQLDependencyTracker::save_dependencies(const std::string& _sql) const {
   const auto tuples = save_sql(_sql);
 
-  const auto to_obj = [this,
-                       &tuples](const size_t _i) -> Poco::JSON::Object::Ptr {
+  const auto to_obj = [this, &tuples](const size_t _i) -> SQLDependency {
     return find_dependencies(tuples, _i);
   };
 
   const auto iota = fct::iota<size_t>(0, tuples.size());
 
   const auto dependencies =
-      fct::collect::array(iota | VIEWS::transform(to_obj));
+      fct::collect::vector(iota | VIEWS::transform(to_obj));
 
-  auto obj = Poco::JSON::Object();
+  const auto obj =
+      fct::make_named_tuple(fct::make_field<"dependencies_">(dependencies));
 
-  obj.set("dependencies_", dependencies);
-
-  const auto json_str = jsonutils::JSON::stringify(obj);
+  const auto json_str = json::to_json(obj);
 
   write_to_file("dependencies.json", json_str);
 }
@@ -107,7 +97,7 @@ typename SQLDependencyTracker::Tuples SQLDependencyTracker::save_sql(
   };
 
   const auto table_names =
-      fct::collect::vector<std::string>(sql | VIEWS::transform(get_table_name));
+      fct::collect::vector(sql | VIEWS::transform(get_table_name));
 
   const auto to_file_name = [](const size_t _i) -> std::string {
     return std::to_string(_i) + ".sql";
@@ -116,7 +106,7 @@ typename SQLDependencyTracker::Tuples SQLDependencyTracker::save_sql(
   const auto iota = fct::iota<size_t>(0, table_names.size());
 
   const auto file_names =
-      fct::collect::vector<std::string>(iota | VIEWS::transform(to_file_name));
+      fct::collect::vector(iota | VIEWS::transform(to_file_name));
 
   for (size_t i = 0; i < file_names.size(); ++i) {
     write_to_file(file_names.at(i), sql.at(i));
@@ -127,8 +117,7 @@ typename SQLDependencyTracker::Tuples SQLDependencyTracker::save_sql(
                            transpilation::SQLGenerator::to_lower(sql.at(_i)));
   };
 
-  return fct::collect::vector<Tuples::value_type>(iota |
-                                                  VIEWS::transform(make_tuple));
+  return fct::collect::vector(iota | VIEWS::transform(make_tuple));
 }
 
 // ------------------------------------------------------------------------

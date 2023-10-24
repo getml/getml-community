@@ -1,19 +1,14 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef SQL_HUMANREADABLESQLGENERATOR_HPP_
 #define SQL_HUMANREADABLESQLGENERATOR_HPP_
 
-// -------------------------------------------------------------------------
-
 #include <cstddef>
-
-// -------------------------------------------------------------------------
-
 #include <memory>
 #include <optional>
 #include <string>
@@ -21,17 +16,14 @@
 #include <utility>
 #include <vector>
 
-// -------------------------------------------------------------------------
-
-#include "helpers/enums/enums.hpp"
-#include "helpers/helpers.hpp"
-
-// -------------------------------------------------------------------------
-
+#include "fct/Ref.hpp"
+#include "helpers/ColumnDescription.hpp"
+#include "helpers/Schema.hpp"
+#include "helpers/enums/Aggregation.hpp"
+#include "transpilation/FeatureTableParams.hpp"
 #include "transpilation/HumanReadableTrimming.hpp"
 #include "transpilation/SQLDialectGenerator.hpp"
-
-// -------------------------------------------------------------------------
+#include "transpilation/SQLParams.hpp"
 
 namespace transpilation {
 
@@ -95,12 +87,7 @@ class HumanReadableSQLGenerator : public SQLDialectGenerator {
       const std::string& _colname) const final;
 
   /// Generates the table that contains all the features.
-  std::string make_feature_table(const std::string& _main_table,
-                                 const std::vector<std::string>& _autofeatures,
-                                 const std::vector<std::string>& _targets,
-                                 const std::vector<std::string>& _categorical,
-                                 const std::vector<std::string>& _numerical,
-                                 const std::string& _prefix) const final;
+  std::string make_feature_table(const FeatureTableParams& _params) const final;
 
   /// Generates the joins to be included in every single .
   std::string make_joins(const std::string& _output_name,
@@ -114,22 +101,12 @@ class HumanReadableSQLGenerator : public SQLDialectGenerator {
       const std::vector<std::string>& _sql) const final;
 
   /// Generates the select statement for the feature table.
-  std::string make_select(
-      const std::string& _main_table,
-      const std::vector<std::string>& _autofeatures,
-      const std::vector<std::string>& _targets,
-      const std::vector<std::string>& _categorical,
-      const std::vector<std::string>& _numerical) const final;
+  std::string make_select(const FeatureTableParams& _params) const final;
 
   /// Transpiles the features in SQLite3 code. This
   /// is supposed to replicate the .transform(...) method
   /// of a pipeline.
-  std::string make_sql(const std::string& _main_table,
-                       const std::vector<std::string>& _autofeatures,
-                       const std::vector<std::string>& _sql,
-                       const std::vector<std::string>& _targets,
-                       const std::vector<std::string>& _categorical,
-                       const std::vector<std::string>& _numerical) const final;
+  std::string make_sql(const SQLParams& _params) const final;
 
   /// Generates the staging tables.
   std::vector<std::string> make_staging_tables(

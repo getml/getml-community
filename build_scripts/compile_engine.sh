@@ -11,7 +11,7 @@ function compile_engine() {
 
     export NUM_THREADS=$(nproc --all)
     cd $GETML_BUILD_FOLDER || exit 1
-    make -j$NUM_THREADS || exit 1
+    make -j2 || exit 1
 
     echo $PWD
 

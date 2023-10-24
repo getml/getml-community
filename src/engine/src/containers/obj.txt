@@ -1,0 +1,8 @@
+set(
+    CONTAINERS_OBJ
+    ${CONTAINERS_SOURCE_DIRECTORY}/DataFrame.cpp
+    ${CONTAINERS_SOURCE_DIRECTORY}/DataFramePrinter.cpp
+    ${CONTAINERS_SOURCE_DIRECTORY}/DataFrameReader.cpp
+    ${CONTAINERS_SOURCE_DIRECTORY}/InMemoryEncoding.cpp
+    ${CONTAINERS_SOURCE_DIRECTORY}/MemoryMappedEncoding.cpp
+)

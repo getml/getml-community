@@ -1,9 +1,9 @@
 # Copyright 2022 The SQLNet Company GmbH
-# 
-# This file is licensed under the Elastic License 2.0 (ELv2). 
-# Refer to the LICENSE.txt file in the root of the repository 
+#
+# This file is licensed under the Elastic License 2.0 (ELv2).
+# Refer to the LICENSE.txt file in the root of the repository
 # for details.
-# 
+#
 
 """
 This is an integration test based on
@@ -66,6 +66,12 @@ def test_interstate94():
 
     scores = pipe.score(time_series.test)
 
-    assert scores.rsquared > 0.981, "Expected an r-squared greater 0.981, got " + str(
+    assert scores.rsquared > 0.981, "Expected an r-squared greater 0.981, got " + str(  # type: ignore
         scores.rsquared
     )
+
+    getml.project.suspend()
+
+
+if __name__ == "__main__":
+    test_interstate94()

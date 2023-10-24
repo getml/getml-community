@@ -1,18 +1,14 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/handlers/ArrowHandler.hpp"
 
-// ----------------------------------------------------------------------------
-
 #include "engine/handlers/ArrowSocketInputStream.hpp"
 #include "engine/handlers/ArrowSocketOutputStream.hpp"
-
-// ----------------------------------------------------------------------------
 
 namespace engine {
 namespace handlers {
@@ -68,33 +64,32 @@ std::vector<std::shared_ptr<arrow::ChunkedArray>> ArrowHandler::extract_arrays(
                                                      range.end());
   };
 
-  const auto categoricals = fct::collect::vector<Array>(
+  const auto categoricals = fct::collect::vector(
       _df.categoricals() | VIEWS::transform(categoricals_to_string_array));
 
-  const auto join_keys = fct::collect::vector<Array>(
+  const auto join_keys = fct::collect::vector(
       _df.join_keys() | VIEWS::transform(join_keys_to_string_array));
 
-  const auto numericals = fct::collect::vector<Array>(
+  const auto numericals = fct::collect::vector(
       _df.numericals() | VIEWS::transform(to_float_or_ts_array));
 
-  const auto targets = fct::collect::vector<Array>(
+  const auto targets = fct::collect::vector(
       _df.targets() | VIEWS::transform(to_float_or_ts_array));
 
-  const auto text = fct::collect::vector<Array>(
-      _df.text() | VIEWS::transform(to_string_array));
+  const auto text =
+      fct::collect::vector(_df.text() | VIEWS::transform(to_string_array));
 
-  const auto time_stamps = fct::collect::vector<Array>(
+  const auto time_stamps = fct::collect::vector(
       _df.time_stamps() | VIEWS::transform(to_float_or_ts_array));
 
-  const auto unused_floats = fct::collect::vector<Array>(
+  const auto unused_floats = fct::collect::vector(
       _df.unused_floats() | VIEWS::transform(to_float_or_ts_array));
 
-  const auto unused_strings = fct::collect::vector<Array>(
+  const auto unused_strings = fct::collect::vector(
       _df.unused_strings() | VIEWS::transform(to_string_array));
 
-  return fct::join::vector<Array>({categoricals, join_keys, numericals, targets,
-                                   text, time_stamps, unused_floats,
-                                   unused_strings});
+  return fct::join::vector({categoricals, join_keys, numericals, targets, text,
+                            time_stamps, unused_floats, unused_strings});
 }
 
 // ----------------------------------------------------------------------------
@@ -115,35 +110,35 @@ std::shared_ptr<arrow::Schema> ArrowHandler::df_to_schema(
     return arrow::field(_col.name(), arrow::utf8());
   };
 
-  const auto categoricals = fct::collect::vector<Field>(
+  const auto categoricals = fct::collect::vector(
       _df.categoricals() | VIEWS::transform(to_string_field));
 
-  const auto join_keys = fct::collect::vector<Field>(
-      _df.join_keys() | VIEWS::transform(to_string_field));
+  const auto join_keys =
+      fct::collect::vector(_df.join_keys() | VIEWS::transform(to_string_field));
 
-  const auto numericals = fct::collect::vector<Field>(
+  const auto numericals = fct::collect::vector(
       _df.numericals() | VIEWS::transform(to_float_or_ts_field));
 
-  const auto targets = fct::collect::vector<Field>(
+  const auto targets = fct::collect::vector(
       _df.targets() | VIEWS::transform(to_float_or_ts_field));
 
-  const auto text = fct::collect::vector<Field>(
-      _df.text() | VIEWS::transform(to_string_field));
+  const auto text =
+      fct::collect::vector(_df.text() | VIEWS::transform(to_string_field));
 
-  const auto time_stamps = fct::collect::vector<Field>(
+  const auto time_stamps = fct::collect::vector(
       _df.time_stamps() | VIEWS::transform(to_float_or_ts_field));
 
-  const auto unused_floats = fct::collect::vector<Field>(
+  const auto unused_floats = fct::collect::vector(
       _df.unused_floats() | VIEWS::transform(to_float_or_ts_field));
 
-  const auto unused_strings = fct::collect::vector<Field>(
+  const auto unused_strings = fct::collect::vector(
       _df.unused_strings() | VIEWS::transform(to_string_field));
 
-  const auto all_fields = fct::join::vector<Field>(
-      {categoricals, join_keys, numericals, targets, text, time_stamps,
-       unused_floats, unused_strings});
+  const auto all_fields =
+      std::vector({categoricals, join_keys, numericals, targets, text,
+                   time_stamps, unused_floats, unused_strings});
 
-  return arrow::schema(all_fields);
+  return arrow::schema(fct::collect::vector(all_fields | VIEWS::join));
 }
 
 // ----------------------------------------------------------------------------
@@ -263,7 +258,7 @@ containers::DataFrame ArrowHandler::table_to_df(
   auto df = containers::DataFrame(_name, categories_.ptr(),
                                   join_keys_encoding_.ptr(), pool);
 
-  for (const auto& colname : _schema.categoricals_) {
+  for (const auto& colname : _schema.categoricals()) {
     const auto arr = _table->GetColumnByName(colname);
     const auto col =
         to_int_column(to_column<strings::String>(pool, colname, arr),
@@ -271,7 +266,7 @@ containers::DataFrame ArrowHandler::table_to_df(
     df.add_int_column(col, containers::DataFrame::ROLE_CATEGORICAL);
   }
 
-  for (const auto& colname : _schema.join_keys_) {
+  for (const auto& colname : _schema.join_keys()) {
     const auto arr = _table->GetColumnByName(colname);
     const auto col =
         to_int_column(to_column<strings::String>(pool, colname, arr),
@@ -279,37 +274,37 @@ containers::DataFrame ArrowHandler::table_to_df(
     df.add_int_column(col, containers::DataFrame::ROLE_JOIN_KEY);
   }
 
-  for (const auto& colname : _schema.numericals_) {
+  for (const auto& colname : _schema.numericals()) {
     const auto arr = _table->GetColumnByName(colname);
     df.add_float_column(to_column<Float>(pool, colname, arr),
                         containers::DataFrame::ROLE_NUMERICAL);
   }
 
-  for (const auto& colname : _schema.targets_) {
+  for (const auto& colname : _schema.targets()) {
     const auto arr = _table->GetColumnByName(colname);
     df.add_float_column(to_column<Float>(pool, colname, arr),
                         containers::DataFrame::ROLE_TARGET);
   }
 
-  for (const auto& colname : _schema.text_) {
+  for (const auto& colname : _schema.text()) {
     const auto arr = _table->GetColumnByName(colname);
     df.add_string_column(to_column<strings::String>(pool, colname, arr),
                          containers::DataFrame::ROLE_TEXT);
   }
 
-  for (const auto& colname : _schema.time_stamps_) {
+  for (const auto& colname : _schema.time_stamps()) {
     const auto arr = _table->GetColumnByName(colname);
     df.add_float_column(to_column<Float>(pool, colname, arr),
                         containers::DataFrame::ROLE_TIME_STAMP);
   }
 
-  for (const auto& colname : _schema.unused_floats_) {
+  for (const auto& colname : _schema.unused_floats()) {
     const auto arr = _table->GetColumnByName(colname);
     df.add_float_column(to_column<Float>(pool, colname, arr),
                         containers::DataFrame::ROLE_UNUSED_FLOAT);
   }
 
-  for (const auto& colname : _schema.unused_strings_) {
+  for (const auto& colname : _schema.unused_strings()) {
     const auto arr = _table->GetColumnByName(colname);
     df.add_string_column(to_column<strings::String>(pool, colname, arr),
                          containers::DataFrame::ROLE_UNUSED_STRING);

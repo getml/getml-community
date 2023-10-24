@@ -1,62 +1,58 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_PIPELINES_CHECKPARAMS_HPP_
 #define ENGINE_PIPELINES_CHECKPARAMS_HPP_
 
-// ----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
 #include <Poco/Net/StreamSocket.h>
-
-// ----------------------------------------------------------------------------
 
 #include <memory>
 #include <optional>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
-#include "engine/communication/communication.hpp"
-#include "engine/containers/containers.hpp"
+#include "commands/DataFramesOrViews.hpp"
+#include "communication/communication.hpp"
+#include "containers/containers.hpp"
 #include "engine/dependency/dependency.hpp"
-
-// ----------------------------------------------------------------------------
+#include "fct/Field.hpp"
+#include "fct/NamedTuple.hpp"
+#include "fct/Ref.hpp"
 
 namespace engine {
 namespace pipelines {
 
-struct CheckParams {
-  /// The Encoding used for the categories.
-  const fct::Ref<containers::Encoding> categories_;
+using CheckParams = fct::NamedTuple<
 
-  /// The command used.
-  const Poco::JSON::Object cmd_;
+    /// The Encoding used for the categories.
+    fct::Field<"categories_", fct::Ref<containers::Encoding>>,
 
-  /// Logs the progress.
-  const std::shared_ptr<const communication::Logger> logger_;
+    /// Contains all of the names of all data frames or views needed for the
+    /// check.
+    fct::Field<"cmd_", commands::DataFramesOrViews>,
 
-  /// The peripheral tables.
-  const std::vector<containers::DataFrame> peripheral_dfs_;
+    /// Logs the progress.
+    fct::Field<"logger_", std::shared_ptr<const communication::Logger>>,
 
-  /// The population table.
-  const containers::DataFrame population_df_;
+    /// The peripheral tables.
+    fct::Field<"peripheral_dfs_", std::vector<containers::DataFrame>>,
 
-  /// The dependency tracker for the preprocessors.
-  const fct::Ref<dependency::PreprocessorTracker> preprocessor_tracker_;
+    /// The population table.
+    fct::Field<"population_df_", containers::DataFrame>,
 
-  /// Tracks the warnings to be shown in the Python API.
-  const fct::Ref<dependency::WarningTracker> warning_tracker_;
+    /// The dependency tracker for the preprocessors.
+    fct::Field<"preprocessor_tracker_",
+               fct::Ref<dependency::PreprocessorTracker>>,
 
-  /// Output: The socket with which we communicate.
-  Poco::Net::StreamSocket* const socket_;
-};
+    /// Tracks the warnings to be shown in the Python API.
+    fct::Field<"warning_tracker_", fct::Ref<dependency::WarningTracker>>,
 
-// ----------------------------------------------------------------------------
+    /// Output: The socket with which we communicate.
+    fct::Field<"socket_", Poco::Net::StreamSocket*>>;
+
 }  // namespace pipelines
 }  // namespace engine
 

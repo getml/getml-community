@@ -24,7 +24,6 @@ from typing import (
     Sequence,
     Tuple,
     Union,
-    get_args,
 )
 
 import numpy as np
@@ -35,7 +34,7 @@ import getml.communication as comm
 from getml.data.helpers import _is_typed_list
 from getml.utilities.formatting import _Formatter
 
-from .dialect import AllDialects, sqlite3
+from .dialect import sqlite3, _all_dialects
 from .feature import Feature
 from .helpers import _attach_empty
 from .sql_code import SQLCode
@@ -87,7 +86,6 @@ class Features:
         targets: Sequence[str],
         data: Optional[Sequence[Feature]] = None,
     ) -> None:
-
         if not isinstance(pipeline, str):
             raise ValueError("'pipeline' must be a str.")
 
@@ -221,7 +219,6 @@ class Features:
     # ----------------------------------------------------------------
 
     def _to_pandas(self) -> pd.DataFrame:
-
         names, correlations, importances, sql, target = (
             self._pivot(field)
             for field in ["name", "correlation", "importance", "sql", "target"]
@@ -479,7 +476,7 @@ class Features:
                 ],
             ]
         ] = None,
-        descending: bool = False,
+        descending: Optional[bool] = None,
     ) -> Features:
         """
         Sorts the Features container. If no arguments are provided the
@@ -509,42 +506,44 @@ class Features:
 
         """
 
+        reverse = False if descending is None else descending
+
         if (by is not None) and (key is not None):
             raise ValueError("Only one of `by` and `key` can be provided.")
 
         if key is not None:
-            features_sorted = sorted(self.data, key=key, reverse=descending)
+            features_sorted = sorted(self.data, key=key, reverse=reverse)
             return self._make_features(features_sorted)
 
         else:
             if by is None:
                 features_sorted = sorted(
-                    self.data, key=lambda feature: feature.index, reverse=descending
+                    self.data, key=lambda feature: feature.index, reverse=reverse
                 )
                 features_sorted.sort(key=lambda feature: feature.target)
                 return self._make_features(features_sorted)
 
-            if re.match(by, "names?"):
+            if re.match(pattern="names?$", string=by):
                 features_sorted = sorted(
-                    self.data, key=lambda feature: feature.name, reverse=descending
+                    self.data, key=lambda feature: feature.name, reverse=reverse
                 )
                 return self._make_features(features_sorted)
 
-            if re.match(by, "correlations?"):
-                descending = descending or True
+            if re.match(pattern="correlations?$", string=by):
+                reverse = True if descending is None else descending
                 features_sorted = sorted(
                     self.data,
                     key=lambda feature: abs(feature.correlation),
-                    reverse=descending,
+                    reverse=reverse,
                 )
                 return self._make_features(features_sorted)
 
-            if re.match(by, "importances?"):
-                descending = descending or True
+            if re.match(pattern="importances?$", string=by):
+                reverse = True if descending is None else descending
                 features_sorted = sorted(
                     self.data,
                     key=lambda feature: feature.importance,
-                    reverse=descending,
+                    reverse=reverse,
                 )
                 return self._make_features(features_sorted)
 
@@ -565,7 +564,7 @@ class Features:
         self,
         targets: bool = True,
         subfeatures: bool = True,
-        dialect: AllDialects = sqlite3,
+        dialect: str = sqlite3,
         schema: Optional[str] = None,
         nchar_categorical: int = 128,
         nchar_join_key: int = 128,
@@ -586,7 +585,9 @@ class Features:
 
                 dialect (string):
                     The SQL dialect to use. Must be from
-                    :mod:`~getml.pipeline.dialect`.
+                    :mod:`~getml.pipeline.dialect`. Please
+                    note that not all dialects are supported
+                    in the getML community edition.
 
                 schema (string, optional):
                     The schema in which to wrap all generated tables and
@@ -657,11 +658,11 @@ class Features:
         if not isinstance(nchar_text, int):
             raise TypeError("'nchar_text' must be an int!")
 
-        if dialect not in get_args(AllDialects):
+        if dialect not in _all_dialects:
             raise ValueError(
                 "'dialect' must from getml.pipeline.dialect, "
                 + "meaning that is must be one of the following: "
-                + str(get_args(AllDialects))
+                + str(_all_dialects)
                 + "."
             )
 

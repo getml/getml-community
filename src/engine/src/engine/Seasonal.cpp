@@ -1,26 +1,27 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/preprocessors/Seasonal.hpp"
 
-// ----------------------------------------------------
-
 #include "engine/preprocessors/PreprocessorImpl.hpp"
-
-// ----------------------------------------------------
+#include "engine/utils/Time.hpp"
+#include "helpers/Loader.hpp"
+#include "helpers/Saver.hpp"
 
 namespace engine {
 namespace preprocessors {
 
-// ----------------------------------------------------
-
 std::optional<containers::Column<Int>> Seasonal::extract_hour(
     const containers::Column<Float>& _col,
     containers::Encoding* _categories) const {
+  if (is_disabled<"disable_hour_">()) {
+    return std::nullopt;
+  }
+
   auto result = to_categorical(_col, ADD_ZERO, utils::Time::hour, _categories);
 
   result.set_name(helpers::Macros::hour_begin() + _col.name() +
@@ -53,6 +54,10 @@ containers::Column<Int> Seasonal::extract_hour(
 std::optional<containers::Column<Int>> Seasonal::extract_minute(
     const containers::Column<Float>& _col,
     containers::Encoding* _categories) const {
+  if (is_disabled<"disable_minute_">()) {
+    return std::nullopt;
+  }
+
   auto result =
       to_categorical(_col, ADD_ZERO, utils::Time::minute, _categories);
 
@@ -87,6 +92,10 @@ containers::Column<Int> Seasonal::extract_minute(
 std::optional<containers::Column<Int>> Seasonal::extract_month(
     const containers::Column<Float>& _col,
     containers::Encoding* _categories) const {
+  if (is_disabled<"disable_month_">()) {
+    return std::nullopt;
+  }
+
   auto result = to_categorical(_col, ADD_ZERO, utils::Time::month, _categories);
 
   result.set_name(helpers::Macros::month_begin() + _col.name() +
@@ -119,6 +128,10 @@ containers::Column<Int> Seasonal::extract_month(
 std::optional<containers::Column<Int>> Seasonal::extract_weekday(
     const containers::Column<Float>& _col,
     containers::Encoding* _categories) const {
+  if (is_disabled<"disable_weekday_">()) {
+    return std::nullopt;
+  }
+
   auto result =
       to_categorical(_col, DONT_ADD_ZERO, utils::Time::weekday, _categories);
 
@@ -152,6 +165,10 @@ containers::Column<Int> Seasonal::extract_weekday(
 
 std::optional<containers::Column<Float>> Seasonal::extract_year(
     const containers::Column<Float>& _col) {
+  if (is_disabled<"disable_year_">()) {
+    return std::nullopt;
+  }
+
   auto result = to_numerical(_col, utils::Time::year);
 
   result.set_name(helpers::Macros::year_begin() + _col.name() +
@@ -180,32 +197,27 @@ containers::Column<Float> Seasonal::extract_year(
 
 // ----------------------------------------------------
 
-Poco::JSON::Object::Ptr Seasonal::fingerprint() const {
-  auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-
-  obj->set("type_", type());
-
-  obj->set("dependencies_", JSON::vector_to_array_ptr(dependencies_));
-
-  return obj;
+commands::Fingerprint Seasonal::fingerprint() const {
+  using FingerprintType = typename commands::Fingerprint::SeasonalFingerprint;
+  return commands::Fingerprint(
+      FingerprintType(fct::make_field<"dependencies_">(dependencies_) * op_));
 }
 
 // ----------------------------------------------------
 
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-Seasonal::fit_transform(const FitParams& _params) {
+Seasonal::fit_transform(const Params& _params) {
   const auto population_df = fit_transform_df(
-      _params.population_df_, helpers::ColumnDescription::POPULATION, 0,
-      _params.categories_.get());
+      _params.get<"population_df_">(), MarkerType::make<"[POPULATION]">(), 0,
+      _params.get<"categories_">().get());
 
   auto peripheral_dfs = std::vector<containers::DataFrame>();
 
-  for (size_t i = 0; i < _params.peripheral_dfs_.size(); ++i) {
-    const auto& df = _params.peripheral_dfs_.at(i);
+  for (size_t i = 0; i < _params.get<"peripheral_dfs_">().size(); ++i) {
+    const auto& df = _params.get<"peripheral_dfs_">().at(i);
 
-    const auto new_df =
-        fit_transform_df(df, helpers::ColumnDescription::PERIPHERAL, i,
-                         _params.categories_.get());
+    const auto new_df = fit_transform_df(df, MarkerType::make<"[PERIPHERAL]">(),
+                                         i, _params.get<"categories_">().get());
 
     peripheral_dfs.push_back(new_df);
   }
@@ -216,7 +228,7 @@ Seasonal::fit_transform(const FitParams& _params) {
 // ----------------------------------------------------
 
 containers::DataFrame Seasonal::fit_transform_df(
-    const containers::DataFrame& _df, const std::string& _marker,
+    const containers::DataFrame& _df, const MarkerType _marker,
     const size_t _table, containers::Encoding* _categories) {
   const auto blacklist = std::vector<helpers::Subrole>(
       {helpers::Subrole::exclude_preprocessors, helpers::Subrole::email_only,
@@ -225,23 +237,15 @@ containers::DataFrame Seasonal::fit_transform_df(
   auto df = _df;
 
   for (size_t i = 0; i < _df.num_time_stamps(); ++i) {
-    // -----------------------------------
-
     const auto& ts = _df.time_stamp(i);
-
-    // -----------------------------------
 
     if (ts.name().find(helpers::Macros::generated_ts()) != std::string::npos) {
       continue;
     }
 
-    // -----------------------------------
-
     if (helpers::SubroleParser::contains_any(ts.subroles(), blacklist)) {
       continue;
     }
-
-    // -----------------------------------
 
     auto col = extract_hour(ts, _categories);
 
@@ -250,16 +254,12 @@ containers::DataFrame Seasonal::fit_transform_df(
       df.add_int_column(*col, containers::DataFrame::ROLE_CATEGORICAL);
     }
 
-    // -----------------------------------
-
     col = extract_minute(ts, _categories);
 
     if (col) {
       PreprocessorImpl::add(_marker, _table, ts.name(), &minute_);
       df.add_int_column(*col, containers::DataFrame::ROLE_CATEGORICAL);
     }
-
-    // -----------------------------------
 
     col = extract_month(ts, _categories);
 
@@ -268,8 +268,6 @@ containers::DataFrame Seasonal::fit_transform_df(
       df.add_int_column(*col, containers::DataFrame::ROLE_CATEGORICAL);
     }
 
-    // -----------------------------------
-
     col = extract_weekday(ts, _categories);
 
     if (col) {
@@ -277,16 +275,12 @@ containers::DataFrame Seasonal::fit_transform_df(
       df.add_int_column(*col, containers::DataFrame::ROLE_CATEGORICAL);
     }
 
-    // -----------------------------------
-
     const auto year = extract_year(ts);
 
     if (year) {
       PreprocessorImpl::add(_marker, _table, ts.name(), &year_);
       df.add_float_column(*year, containers::DataFrame::ROLE_NUMERICAL);
     }
-
-    // -----------------------------------
   }
 
   return df;
@@ -294,35 +288,27 @@ containers::DataFrame Seasonal::fit_transform_df(
 
 // ----------------------------------------------------
 
-Seasonal Seasonal::from_json_obj(const Poco::JSON::Object& _obj) const {
-  Seasonal that;
+void Seasonal::load(const std::string& _fname) {
+  const auto named_tuple =
+      helpers::Loader::load_from_json<NamedTupleType>(_fname);
+  hour_ = named_tuple.get<f_hour>();
+  minute_ = named_tuple.get<f_minute>();
+  month_ = named_tuple.get<f_month>();
+  weekday_ = named_tuple.get<f_weekday>();
+  year_ = named_tuple.get<f_year>();
+}
 
-  if (_obj.has("hour_")) {
-    that.hour_ = PreprocessorImpl::from_array(
-        jsonutils::JSON::get_object_array(_obj, "hour_"));
-  }
+// ----------------------------------------------------
 
-  if (_obj.has("minute_")) {
-    that.minute_ = PreprocessorImpl::from_array(
-        jsonutils::JSON::get_object_array(_obj, "minute_"));
-  }
+typename Seasonal::NamedTupleType Seasonal::named_tuple() const {
+  return f_hour(hour_) * f_minute(minute_) * f_month(month_) *
+         f_weekday(weekday_) * f_year(year_);
+}
 
-  if (_obj.has("month_")) {
-    that.month_ = PreprocessorImpl::from_array(
-        jsonutils::JSON::get_object_array(_obj, "month_"));
-  }
+// ----------------------------------------------------
 
-  if (_obj.has("weekday_")) {
-    that.weekday_ = PreprocessorImpl::from_array(
-        jsonutils::JSON::get_object_array(_obj, "weekday_"));
-  }
-
-  if (_obj.has("year_")) {
-    that.year_ = PreprocessorImpl::from_array(
-        jsonutils::JSON::get_object_array(_obj, "year_"));
-  }
-
-  return that;
+void Seasonal::save(const std::string& _fname) const {
+  helpers::Saver::save_as_json(_fname, *this);
 }
 
 // ----------------------------------------------------
@@ -367,39 +353,19 @@ containers::Column<Int> Seasonal::to_int(
 
 // ----------------------------------------------------
 
-Poco::JSON::Object::Ptr Seasonal::to_json_obj() const {
-  auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-
-  obj->set("type_", type());
-
-  obj->set("hour_", PreprocessorImpl::to_array(hour_));
-
-  obj->set("minute_", PreprocessorImpl::to_array(minute_));
-
-  obj->set("month_", PreprocessorImpl::to_array(month_));
-
-  obj->set("weekday_", PreprocessorImpl::to_array(weekday_));
-
-  obj->set("year_", PreprocessorImpl::to_array(year_));
-
-  return obj;
-}
-
-// ----------------------------------------------------
-
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-Seasonal::transform(const TransformParams& _params) const {
-  const auto population_df =
-      transform_df(*_params.categories_, _params.population_df_,
-                   helpers::ColumnDescription::POPULATION, 0);
+Seasonal::transform(const Params& _params) const {
+  const auto population_df = transform_df(
+      *_params.get<"categories_">(), _params.get<"population_df_">(),
+      MarkerType::make<"[POPULATION]">(), 0);
 
   auto peripheral_dfs = std::vector<containers::DataFrame>();
 
-  for (size_t i = 0; i < _params.peripheral_dfs_.size(); ++i) {
-    const auto& df = _params.peripheral_dfs_.at(i);
+  for (size_t i = 0; i < _params.get<"peripheral_dfs_">().size(); ++i) {
+    const auto& df = _params.get<"peripheral_dfs_">().at(i);
 
-    const auto new_df = transform_df(*_params.categories_, df,
-                                     helpers::ColumnDescription::PERIPHERAL, i);
+    const auto new_df = transform_df(*_params.get<"categories_">(), df,
+                                     MarkerType::make<"[PERIPHERAL]">(), i);
 
     peripheral_dfs.push_back(new_df);
   }
@@ -411,9 +377,7 @@ Seasonal::transform(const TransformParams& _params) const {
 
 containers::DataFrame Seasonal::transform_df(
     const containers::Encoding& _categories, const containers::DataFrame& _df,
-    const std::string& _marker, const size_t _table) const {
-  // ----------------------------------------------------
-
+    const MarkerType _marker, const size_t _table) const {
   auto df = _df;
 
   // ----------------------------------------------------

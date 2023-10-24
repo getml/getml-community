@@ -3,6 +3,7 @@ function compile_mariadb() {
     mkdir -p build || exit 1
     cd build || exit 1
     cmake .. -DCMAKE_BUILD_TYPE=Release 
-    make -j6
+    export NUM_THREADS=$(nproc --all)
+    make -j$NUM_THREADS || exit 1
 }
 

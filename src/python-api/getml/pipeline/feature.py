@@ -7,7 +7,7 @@
 
 
 """
-Custom represting a sole feature.
+Custom representing a sole feature.
 """
 
 from dataclasses import dataclass

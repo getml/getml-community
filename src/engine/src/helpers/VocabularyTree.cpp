@@ -1,24 +1,16 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "helpers/VocabularyTree.hpp"
 
-// ----------------------------------------------------------------------------
-
 #include "fct/fct.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "helpers/Macros.hpp"
 
-// ----------------------------------------------------------------------------
-
 namespace helpers {
-// ----------------------------------------------------------------------------
 
 VocabularyTree::VocabularyTree(
     const VocabForDf& _population, const std::vector<VocabForDf>& _peripheral,
@@ -43,10 +35,10 @@ typename VocabularyTree::VocabForDf VocabularyTree::find_peripheral(
     const std::vector<VocabForDf>& _peripheral, const Placeholder& _placeholder,
     const std::vector<std::string>& _peripheral_names) {
   const auto it = std::find(_peripheral_names.begin(), _peripheral_names.end(),
-                            _placeholder.name_);
+                            _placeholder.name());
 
   if (it == _peripheral_names.end()) {
-    throw std::runtime_error("Peripheral table named '" + _placeholder.name_ +
+    throw std::runtime_error("Peripheral table named '" + _placeholder.name() +
                              "' not found!");
   }
 
@@ -91,10 +83,8 @@ VocabularyTree::find_text_fields(
 
   const auto iota = fct::iota<size_t>(0, _peripheral_schema.size());
 
-  const auto range = iota | VIEWS::filter(is_relevant_text_field) |
-                     VIEWS::transform(get_vocab);
-
-  return fct::collect::vector<VocabForDf>(range);
+  return fct::collect::vector(iota | VIEWS::filter(is_relevant_text_field) |
+                              VIEWS::transform(get_vocab));
 }
 
 // ----------------------------------------------------------------------------
@@ -108,8 +98,8 @@ VocabularyTree::parse_peripheral(
   const auto extract_peripheral = std::bind(
       find_peripheral, _peripheral, std::placeholders::_1, _peripheral_names);
 
-  const auto peripheral = fct::collect::vector<VocabForDf>(
-      _placeholder.joined_tables_ | VIEWS::transform(extract_peripheral));
+  const auto peripheral = fct::collect::vector(
+      _placeholder.joined_tables() | VIEWS::transform(extract_peripheral));
 
   const auto text_fields =
       find_text_fields(_peripheral, _placeholder, _peripheral_schema);
@@ -131,13 +121,13 @@ std::vector<std::optional<VocabularyTree>> VocabularyTree::parse_subtrees(
       [&_peripheral, &_peripheral_names, extract_peripheral,
        &_peripheral_schema](
           const Placeholder& _p) -> std::optional<VocabularyTree> {
-    if (_p.joined_tables_.size() == 0) {
+    if (_p.joined_tables().size() == 0) {
       return std::nullopt;
     }
 
     const auto new_population = extract_peripheral(_p);
 
-    if (new_population.size() == 0 && _p.joined_tables_.size() == 0) {
+    if (new_population.size() == 0 && _p.joined_tables().size() == 0) {
       return std::nullopt;
     }
 
@@ -148,9 +138,8 @@ std::vector<std::optional<VocabularyTree>> VocabularyTree::parse_subtrees(
   const auto vocab_for_text_fields =
       find_text_fields(_peripheral, _placeholder, _peripheral_schema);
 
-  auto subtrees_for_placeholder =
-      fct::collect::vector<std::optional<VocabularyTree>>(
-          _placeholder.joined_tables_ | VIEWS::transform(make_subtree));
+  auto subtrees_for_placeholder = fct::collect::vector(
+      _placeholder.joined_tables() | VIEWS::transform(make_subtree));
 
   // Text fields never have subtrees.
   for (size_t i = 0; i < vocab_for_text_fields.size(); ++i) {

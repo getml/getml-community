@@ -1,59 +1,25 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/preprocessors/CategoryTrimmer.hpp"
 
-// ----------------------------------------------------
-
-#include "engine/containers/Column.hpp"
-#include "engine/containers/DataFrame.hpp"
+#include "containers/Column.hpp"
+#include "containers/DataFrame.hpp"
 #include "engine/preprocessors/PreprocessorImpl.hpp"
 #include "fct/IotaRange.hpp"
 #include "fct/collect.hpp"
 #include "helpers/ColumnDescription.hpp"
+#include "helpers/Loader.hpp"
 #include "helpers/NullChecker.hpp"
+#include "helpers/Saver.hpp"
 #include "transpilation/SQLGenerator.hpp"
-
-// ----------------------------------------------------
 
 namespace engine {
 namespace preprocessors {
-
-// ----------------------------------------------------
-
-typename CategoryTrimmer::CategoryPair CategoryTrimmer::category_pair_from_obj(
-    const Poco::JSON::Object::Ptr& _ptr) const {
-  assert_true(_ptr);
-
-  throw_unless(_ptr, "CategoryPair: Not an object.");
-
-  const auto first = helpers::ColumnDescription(
-      *JSON::get_object(*_ptr, "column_description_"));
-
-  const auto vec = JSON::array_to_vector<Int>(JSON::get_array(*_ptr, "set_"));
-
-  const auto second = fct::Ref<std::set<Int>>::make(vec.begin(), vec.end());
-
-  return std::make_pair(first, second);
-}
-
-// ----------------------------------------------------
-
-Poco::JSON::Object::Ptr CategoryTrimmer::category_pair_to_obj(
-    const CategoryPair& _pair) const {
-  auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-
-  obj->set("column_description_", _pair.first.to_json_obj());
-
-  obj->set("set_", JSON::vector_to_array_ptr(std::vector<Int>(
-                       _pair.second->begin(), _pair.second->end())));
-
-  return obj;
-}
 
 // ----------------------------------------------------
 
@@ -65,10 +31,10 @@ std::string CategoryTrimmer::column_to_sql(
   assert_true(_sql_dialect_generator);
 
   const auto staging_table =
-      transpilation::SQLGenerator::make_staging_table_name(_pair.first.table_);
+      transpilation::SQLGenerator::make_staging_table_name(_pair.first.table());
 
   const auto colname =
-      _sql_dialect_generator->make_staging_table_colname(_pair.first.name_);
+      _sql_dialect_generator->make_staging_table_colname(_pair.first.name());
 
   std::stringstream sql;
 
@@ -112,46 +78,25 @@ std::string CategoryTrimmer::column_to_sql(
 
 // ----------------------------------------------------
 
-Poco::JSON::Object::Ptr CategoryTrimmer::fingerprint() const {
-  auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-
-  obj->set("dependencies_", JSON::vector_to_array_ptr(dependencies_));
-
-  obj->set("max_num_categories_", max_num_categories_);
-
-  obj->set("min_freq_", min_freq_);
-
-  obj->set("type_", type());
-
-  return obj;
-}
-
-// ----------------------------------------------------
-
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-CategoryTrimmer::fit_transform(const FitParams& _params) {
+CategoryTrimmer::fit_transform(const Params& _params) {
   const auto fit_peripheral = [this](const auto& _df) {
-    return fit_df(_df, helpers::ColumnDescription::PERIPHERAL);
+    return fit_df(_df, MarkerType::make<"[PERIPHERAL]">());
   };
 
-  population_sets_ =
-      fit_df(_params.population_df_, helpers::ColumnDescription::POPULATION);
+  population_sets_ = fit_df(_params.get<"population_df_">(),
+                            MarkerType::make<"[POPULATION]">());
 
-  peripheral_sets_ = fct::collect::vector<std::vector<CategoryPair>>(
-      _params.peripheral_dfs_ | VIEWS::transform(fit_peripheral));
+  peripheral_sets_ = fct::collect::vector(_params.get<"peripheral_dfs_">() |
+                                          VIEWS::transform(fit_peripheral));
 
-  (*_params.categories_)[strings::String(TRIMMED)];
+  (*_params.get<"categories_">())[strings::String(TRIMMED)];
 
-  const auto params = TransformParams{
-      .cmd_ = _params.cmd_,
-      .categories_ = _params.categories_,
-      .logger_ = _params.logger_,
-      .logging_begin_ = (_params.logging_begin_ + _params.logging_end_) / 2,
-      .logging_end_ = _params.logging_end_,
-      .peripheral_dfs_ = _params.peripheral_dfs_,
-      .peripheral_names_ = _params.peripheral_names_,
-      .placeholder_ = _params.placeholder_,
-      .population_df_ = _params.population_df_};
+  const auto logging_begin =
+      (_params.get<"logging_begin_">() + _params.get<"logging_end_">()) / 2;
+
+  const auto params =
+      _params.replace(fct::make_field<"logging_begin_">(logging_begin));
 
   return transform(params);
 }
@@ -159,7 +104,7 @@ CategoryTrimmer::fit_transform(const FitParams& _params) {
 // ----------------------------------------------------
 
 std::vector<typename CategoryTrimmer::CategoryPair> CategoryTrimmer::fit_df(
-    const containers::DataFrame& _df, const std::string& _marker) const {
+    const containers::DataFrame& _df, const MarkerType _marker) const {
   const auto include = [](const auto& _col) -> bool {
     const auto blacklist = std::vector<helpers::Subrole>(
         {helpers::Subrole::exclude_preprocessors, helpers::Subrole::email_only,
@@ -181,10 +126,17 @@ std::vector<typename CategoryTrimmer::CategoryPair> CategoryTrimmer::fit_df(
     return std::make_pair(to_column_description(_col), to_set(_col));
   };
 
-  const auto range =
-      _df.categoricals() | VIEWS::filter(include) | VIEWS::transform(to_pair);
+  return fct::collect::vector(_df.categoricals() | VIEWS::filter(include) |
+                              VIEWS::transform(to_pair));
+}
 
-  return fct::collect::vector<CategoryPair>(range);
+// ----------------------------------------------------
+
+void CategoryTrimmer::load(const std::string& _fname) {
+  const auto named_tuple =
+      helpers::Loader::load_from_json<NamedTupleType>(_fname);
+  peripheral_sets_ = named_tuple.get<f_peripheral_sets>();
+  population_sets_ = named_tuple.get<f_population_sets>();
 }
 
 // ----------------------------------------------------
@@ -205,7 +157,7 @@ fct::Ref<const std::set<Int>> CategoryTrimmer::make_category_set(
                      VIEWS::transform(get_first) |
                      VIEWS::take(max_num_categories_);
 
-  return fct::Ref<const std::set<Int>>::make(fct::collect::set<Int>(range));
+  return fct::Ref<const std::set<Int>>::make(fct::collect::set(range));
 }
 
 // ----------------------------------------------------
@@ -252,72 +204,8 @@ std::map<Int, size_t> CategoryTrimmer::make_map(
 
 // ----------------------------------------------------
 
-CategoryTrimmer CategoryTrimmer::from_json_obj(
-    const Poco::JSON::Object& _obj) const {
-  CategoryTrimmer that;
-
-  that.max_num_categories_ =
-      JSON::get_value<size_t>(_obj, "max_num_categories_");
-
-  that.min_freq_ = JSON::get_value<size_t>(_obj, "min_freq_");
-
-  if (!_obj.has("population_sets_")) {
-    return that;
-  }
-
-  const auto population_sets_arr = JSON::get_array(_obj, "population_sets_");
-
-  for (size_t i = 0; i < population_sets_arr->size(); ++i) {
-    that.population_sets_.push_back(
-        category_pair_from_obj(population_sets_arr->getObject(i)));
-  }
-  const auto peripheral_sets_arr = JSON::get_array(_obj, "peripheral_sets_");
-
-  for (size_t i = 0; i < peripheral_sets_arr->size(); ++i) {
-    const auto& arr = peripheral_sets_arr->getArray(i);
-
-    throw_unless(arr, "CategoryTrimmer: Not an array!");
-
-    auto vec = std::vector<CategoryPair>();
-
-    for (size_t j = 0; j < arr->size(); ++j) {
-      vec.push_back(category_pair_from_obj(arr->getObject(j)));
-    }
-
-    that.peripheral_sets_.push_back(vec);
-  }
-
-  return that;
-}
-
-// ----------------------------------------------------
-
-Poco::JSON::Object::Ptr CategoryTrimmer::to_json_obj() const {
-  const auto to_obj = [this](const auto& _pair) -> Poco::JSON::Object::Ptr {
-    return category_pair_to_obj(_pair);
-  };
-
-  const auto to_arr = [to_obj](const auto& _vec) -> Poco::JSON::Array::Ptr {
-    return fct::collect::array(_vec | VIEWS::transform(to_obj));
-  };
-
-  auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-
-  obj->set("dependencies_", JSON::vector_to_array_ptr(dependencies_));
-
-  obj->set("max_num_categories_", max_num_categories_);
-
-  obj->set("min_freq_", min_freq_);
-
-  obj->set("peripheral_sets_",
-           fct::collect::array(peripheral_sets_ | VIEWS::transform(to_arr)));
-
-  obj->set("population_sets_",
-           fct::collect::array(population_sets_ | VIEWS::transform(to_obj)));
-
-  obj->set("type_", type());
-
-  return obj;
+void CategoryTrimmer::save(const std::string& _fname) const {
+  helpers::Saver::save_as_json(_fname, *this);
 }
 
 // ----------------------------------------------------
@@ -348,27 +236,31 @@ std::vector<std::string> CategoryTrimmer::to_sql(
 // ----------------------------------------------------
 
 std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-CategoryTrimmer::transform(const TransformParams& _params) const {
-  assert_true(peripheral_sets_.size() == _params.peripheral_dfs_.size());
+CategoryTrimmer::transform(const Params& _params) const {
+  assert_true(peripheral_sets_.size() ==
+              _params.get<"peripheral_dfs_">().size());
 
-  const auto pool = _params.population_df_.pool()
-                        ? std::make_shared<memmap::Pool>(
-                              _params.population_df_.pool()->temp_dir())
-                        : std::shared_ptr<memmap::Pool>();
+  const auto pool =
+      _params.get<"population_df_">().pool()
+          ? std::make_shared<memmap::Pool>(
+                _params.get<"population_df_">().pool()->temp_dir())
+          : std::shared_ptr<memmap::Pool>();
 
-  const auto population_df = transform_df(
-      population_sets_, pool, _params.categories_, _params.population_df_);
+  const auto population_df =
+      transform_df(population_sets_, pool, _params.get<"categories_">(),
+                   _params.get<"population_df_">());
 
   const auto make_peripheral_df =
       [this, &_params, pool](const size_t _i) -> containers::DataFrame {
-    return transform_df(peripheral_sets_.at(_i), pool, _params.categories_,
-                        _params.peripheral_dfs_.at(_i));
+    return transform_df(peripheral_sets_.at(_i), pool,
+                        _params.get<"categories_">(),
+                        _params.get<"peripheral_dfs_">().at(_i));
   };
 
   const auto iota = fct::IotaRange<size_t>(0, peripheral_sets_.size());
 
-  const auto peripheral_dfs = fct::collect::vector<containers::DataFrame>(
-      iota | VIEWS::transform(make_peripheral_df));
+  const auto peripheral_dfs =
+      fct::collect::vector(iota | VIEWS::transform(make_peripheral_df));
 
   return std::make_pair(population_df, peripheral_dfs);
 }
@@ -387,7 +279,7 @@ containers::DataFrame CategoryTrimmer::transform_df(
   const auto trimmed = (*_categories)[strings::String(TRIMMED)];
 
   const auto get_col = [&_df](const auto& _pair) -> ColumnAndSet {
-    return std::make_pair(_df.categorical(_pair.first.name_), _pair.second);
+    return std::make_pair(_df.categorical(_pair.first.name()), _pair.second);
   };
 
   const auto trim_value = [trimmed](const Int _value, const Set& _set) -> Int {

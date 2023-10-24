@@ -1,202 +1,245 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/handlers/BoolOpParser.hpp"
 
-// ----------------------------------------------------------------------------
+#include <algorithm>
 
-#include "engine/handlers/CatOpParser.hpp"
-#include "engine/handlers/NumOpParser.hpp"
-
-// ----------------------------------------------------------------------------
+#include "engine/handlers/FloatOpParser.hpp"
+#include "engine/handlers/StringOpParser.hpp"
+#include "fct/visit.hpp"
 
 namespace engine {
 namespace handlers {
 
 containers::ColumnView<bool> BoolOpParser::binary_operation(
-    const Poco::JSON::Object& _col) const {
-  const auto op = JSON::get_value<std::string>(_col, "operator_");
+    const BooleanBinaryOp& _cmd) const {
+  const auto handle =
+      [this](const auto& _literal,
+             const BooleanBinaryOp& _cmd) -> containers::ColumnView<bool> {
+    using Type = std::decay_t<decltype(_literal)>;
 
-  const auto operand_type = JSON::get_value<std::string>(
-      *JSON::get_object(_col, "operand1_"), "type_");
+    if constexpr (std::is_same<Type, fct::Literal<"and">>()) {
+      return bin_op(_cmd, std::logical_and<bool>());
+    }
 
-  const auto operand2_type = JSON::get_value<std::string>(
-      *JSON::get_object(_col, "operand2_"), "type_");
+    if constexpr (std::is_same<Type, fct::Literal<"equal_to">>()) {
+      return bin_op(_cmd, std::equal_to<bool>());
+    }
 
-  if (helpers::StringReplacer::replace_all(operand_type, "View", "") !=
-      helpers::StringReplacer::replace_all(operand2_type, "View", "")) {
-    throw std::runtime_error(
-        "You are trying to compare two different column types: " +
-        operand_type + " vs. " + operand2_type + ".");
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"not_equal_to">>()) {
+      return bin_op(_cmd, std::not_equal_to<bool>());
+    }
 
-  const auto is_boolean = (operand_type == BOOLEAN_COLUMN_VIEW);
+    if constexpr (std::is_same<Type, fct::Literal<"or">>()) {
+      return bin_op(_cmd, std::logical_or<bool>());
+    }
 
-  const auto is_categorical =
-      (operand_type == STRING_COLUMN) || (operand_type == STRING_COLUMN_VIEW);
+    if constexpr (std::is_same<Type, fct::Literal<"xor">>()) {
+      // logical_xor for boolean is the same thing as not_equal_to.
+      return bin_op(_cmd, std::not_equal_to<bool>());
+    }
+  };
 
-  const auto is_numerical =
-      (operand_type == FLOAT_COLUMN) || (operand_type == FLOAT_COLUMN_VIEW);
+  return fct::visit(handle, _cmd.get<"operator_">(), _cmd);
+}
 
-  if (op == "and") {
-    return bin_op(_col, std::logical_and<bool>());
-  }
+// ----------------------------------------------------------------------------
 
-  if (op == "contains") {
-    const auto contains = [](const strings::String& _str1,
-                             const strings::String& _str2) {
-      if (!_str1 || !_str2) {
-        return false;
-      }
-      return (_str1.str().find(_str2.c_str()) != std::string::npos);
-    };
+containers::ColumnView<bool> BoolOpParser::numerical_comparison(
+    const BooleanNumComparisonOp& _cmd) const {
+  const auto handle =
+      [this](
+          const auto& _literal,
+          const BooleanNumComparisonOp& _cmd) -> containers::ColumnView<bool> {
+    using Type = std::decay_t<decltype(_literal)>;
 
-    return cat_bin_op(_col, contains);
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"equal_to">>()) {
+      return num_bin_op(_cmd, std::equal_to<Float>());
+    }
 
-  if (is_boolean && op == "equal_to") {
-    return bin_op(_col, std::equal_to<bool>());
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"greater">>()) {
+      return num_bin_op(_cmd, std::greater<Float>());
+    }
 
-  if (is_categorical && op == "equal_to") {
-    return cat_bin_op(_col, std::equal_to<strings::String>());
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"greater_equal">>()) {
+      return num_bin_op(_cmd, std::greater_equal<Float>());
+    }
 
-  if (is_numerical && op == "equal_to") {
-    return num_bin_op(_col, std::equal_to<Float>());
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"less">>()) {
+      return num_bin_op(_cmd, std::less<Float>());
+    }
 
-  if (op == "greater") {
-    return num_bin_op(_col, std::greater<Float>());
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"less_equal">>()) {
+      return num_bin_op(_cmd, std::less_equal<Float>());
+    }
 
-  if (op == "greater_equal") {
-    return num_bin_op(_col, std::greater_equal<Float>());
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"not_equal_to">>()) {
+      return num_bin_op(_cmd, std::not_equal_to<Float>());
+    }
+  };
 
-  if (op == "less") {
-    return num_bin_op(_col, std::less<Float>());
-  }
-
-  if (op == "less_equal") {
-    return num_bin_op(_col, std::less_equal<Float>());
-  }
-
-  if (is_boolean && op == "not_equal_to") {
-    return bin_op(_col, std::not_equal_to<bool>());
-  }
-
-  if (is_categorical && op == "not_equal_to") {
-    return cat_bin_op(_col, std::not_equal_to<strings::String>());
-  }
-
-  if (is_numerical && op == "not_equal_to") {
-    return num_bin_op(_col, std::not_equal_to<Float>());
-  }
-
-  if (op == "or") {
-    return bin_op(_col, std::logical_or<bool>());
-  }
-
-  if (op == "xor") {
-    // logical_xor for boolean is the same thing as not_equal_to.
-    return bin_op(_col, std::not_equal_to<bool>());
-  }
-
-  throw std::runtime_error("Operator '" + op +
-                           "' not recognized for boolean columns.");
-
-  return bin_op(_col, std::logical_and<bool>());
+  return fct::visit(handle, _cmd.get<"operator_">(), _cmd);
 }
 
 // ----------------------------------------------------------------------------
 
 containers::ColumnView<bool> BoolOpParser::parse(
-    const Poco::JSON::Object& _col) const {
-  const auto type = JSON::get_value<std::string>(_col, "type_");
+    const commands::BooleanColumnView& _cmd) const {
+  const auto handle = [this](const auto& _cmd) -> containers::ColumnView<bool> {
+    using Type = std::decay_t<decltype(_cmd)>;
 
-  const auto op = JSON::get_value<std::string>(_col, "operator_");
-
-  if (op == "const") {
-    const auto value = JSON::get_value<bool>(_col, "value_");
-    return containers::ColumnView<bool>::from_value(value);
-  }
-
-  if (type == BOOLEAN_COLUMN_VIEW && op == "subselection") {
-    return subselection(_col);
-  }
-
-  if (type == BOOLEAN_COLUMN_VIEW) {
-    if (_col.has("operand2_")) {
-      return binary_operation(_col);
-    } else {
-      return unary_operation(_col);
+    if constexpr (std::is_same<Type, BooleanBinaryOp>()) {
+      return binary_operation(_cmd);
     }
-  }
 
-  throw std::runtime_error("Column of type '" + type +
-                           "' not recognized for boolean columns.");
+    if constexpr (std::is_same<Type, BooleanConstOp>()) {
+      const auto value = fct::get<"value_">(_cmd);
+      return containers::ColumnView<bool>::from_value(value);
+    }
 
-  return unary_operation(_col);
+    if constexpr (std::is_same<Type, BooleanIsInfOp>()) {
+      const auto& col = *fct::get<"operand1_">(_cmd);
+      const auto is_inf = [](const Float val) { return std::isinf(val); };
+      return num_un_op(col, is_inf);
+    }
+
+    if constexpr (std::is_same<Type, BooleanIsNullOp>()) {
+      return is_null(_cmd);
+    }
+
+    if constexpr (std::is_same<Type, BooleanNotOp>()) {
+      const auto col = parse(*fct::get<"operand1_">(_cmd));
+      return containers::ColumnView<bool>::from_un_op(col,
+                                                      std::logical_not<bool>());
+    }
+
+    if constexpr (std::is_same<Type, BooleanNumComparisonOp>()) {
+      return numerical_comparison(_cmd);
+    }
+
+    if constexpr (std::is_same<Type, BooleanStrComparisonOp>()) {
+      return string_comparison(_cmd);
+    }
+
+    if constexpr (std::is_same<Type, BooleanSubselectionOp>()) {
+      return subselection(_cmd);
+    }
+
+    if constexpr (std::is_same<Type, BooleanUpdateOp>()) {
+      return update(_cmd);
+    }
+  };
+
+  return std::visit(handle, _cmd.val_);
 }
 
 // ----------------------------------------------------------------------------
 
 containers::ColumnView<bool> BoolOpParser::subselection(
-    const Poco::JSON::Object& _col) const {
-  const auto data = parse(*JSON::get_object(_col, "operand1_"));
+    const BooleanSubselectionOp& _cmd) const {
+  const auto handle =
+      [this, &_cmd](const auto& _operand2) -> containers::ColumnView<bool> {
+    using Type = std::decay_t<decltype(_operand2)>;
 
-  const auto indices_json = *JSON::get_object(_col, "operand2_");
+    const auto data = parse(*_cmd.get<"operand1_">());
 
-  const auto type = JSON::get_value<std::string>(indices_json, "type_");
-
-  if (type == FLOAT_COLUMN || type == FLOAT_COLUMN_VIEW) {
-    const auto indices =
-        NumOpParser(categories_, join_keys_encoding_, data_frames_)
-            .parse(indices_json);
-
-    return containers::ColumnView<bool>::from_numerical_subselection(data,
+    if constexpr (std::is_same<
+                      Type,
+                      fct::Ref<commands::FloatColumnOrFloatColumnView>>()) {
+      const auto indices =
+          FloatOpParser(categories_, join_keys_encoding_, data_frames_)
+              .parse(*_operand2);
+      return containers::ColumnView<bool>::from_numerical_subselection(data,
+                                                                       indices);
+    } else {
+      const auto indices = parse(*_operand2);
+      return containers::ColumnView<bool>::from_boolean_subselection(data,
                                                                      indices);
-  }
+    }
+  };
 
-  const auto indices = parse(indices_json);
-
-  return containers::ColumnView<bool>::from_boolean_subselection(data, indices);
+  return std::visit(handle, _cmd.get<"operand2_">());
 }
 
 // ----------------------------------------------------------------------------
 
-containers::ColumnView<bool> BoolOpParser::unary_operation(
-    const Poco::JSON::Object& _col) const {
-  const auto op = JSON::get_value<std::string>(_col, "operator_");
+containers::ColumnView<bool> BoolOpParser::string_comparison(
+    const BooleanStrComparisonOp& _cmd) const {
+  const auto handle =
+      [this](
+          const auto& _literal,
+          const BooleanStrComparisonOp& _cmd) -> containers::ColumnView<bool> {
+    using Type = std::decay_t<decltype(_literal)>;
 
-  if (op == "is_inf") {
-    const auto is_inf = [](const Float val) { return std::isinf(val); };
-    return num_un_op(_col, is_inf);
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"contains">>()) {
+      const auto contains = [](const auto& _str1, const auto& _str2) {
+        if (!_str1 || !_str2) {
+          return false;
+        }
+        return (_str1.str().find(_str2.c_str()) != std::string::npos);
+      };
+      return cat_bin_op(_cmd, contains);
+    }
 
-  if (op == "is_nan") {
-    const auto is_nan = [](const Float val) { return std::isnan(val); };
-    return num_un_op(_col, is_nan);
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"equal_to">>()) {
+      return cat_bin_op(_cmd, std::equal_to<strings::String>());
+    }
 
-  if (op == "is_null") {
-    const auto is_null = [](const strings::String& _val) { return !_val; };
-    return cat_un_op(_col, is_null);
-  }
+    if constexpr (std::is_same<Type, fct::Literal<"not_equal_to">>()) {
+      return cat_bin_op(_cmd, std::not_equal_to<strings::String>());
+    }
+  };
 
-  if (op == "not") {
-    return un_op(_col, std::logical_not<bool>());
-  }
+  return fct::visit(handle, _cmd.get<"operator_">(), _cmd);
+}
 
-  throw std::runtime_error("Operator '" + op +
-                           "' not recognized for boolen columns.");
+// ----------------------------------------------------------------------------
 
-  return un_op(_col, std::logical_not<bool>());
+containers::ColumnView<bool> BoolOpParser::update(
+    const BooleanUpdateOp& _cmd) const {
+  const auto operand1 = parse(*_cmd.get<"operand1_">());
+
+  const auto operand2 = parse(*_cmd.get<"operand2_">());
+
+  const auto condition = parse(*_cmd.get<"condition_">());
+
+  const auto op = [](const auto& _val1, const auto& _val2,
+                     const bool _cond) -> bool {
+    return _cond ? _val2 : _val1;
+  };
+
+  return containers::ColumnView<bool>::from_tern_op(operand1, operand2,
+                                                    condition, op);
+}
+
+// ----------------------------------------------------------------------------
+
+containers::ColumnView<bool> BoolOpParser::is_null(
+    const BooleanIsNullOp& _cmd) const {
+  const auto handle = [this](const auto& _col) -> containers::ColumnView<bool> {
+    using Type = std::decay_t<decltype(_col)>;
+
+    if constexpr (std::is_same<
+                      Type,
+                      fct::Ref<commands::FloatColumnOrFloatColumnView>>()) {
+      const auto is_nan = [](const Float val) { return std::isnan(val); };
+      return num_un_op(*_col, is_nan);
+    }
+
+    if constexpr (std::is_same<
+                      Type,
+                      fct::Ref<commands::StringColumnOrStringColumnView>>()) {
+      const auto is_null = [](const strings::String& _val) { return !_val; };
+      return cat_un_op(*_col, is_null);
+    }
+  };
+
+  return std::visit(handle, _cmd.get<"operand1_">());
 }
 
 // ----------------------------------------------------------------------------

@@ -1,26 +1,19 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef HELPERS_SUBROLEPARSER_HPP_
 #define HELPERS_SUBROLEPARSER_HPP_
 
-// ----------------------------------------------------------------------------
-
 #include <string>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
 #include "helpers/Subrole.hpp"
 
-// ----------------------------------------------------------------------------
-
 namespace helpers {
-// ----------------------------------------------------------------------------
 
 struct SubroleParser {
   static constexpr const char* COMPARISON_ONLY = "only compare";
@@ -59,7 +52,6 @@ struct SubroleParser {
   static std::vector<Subrole> parse(const std::vector<std::string>& _vec);
 };
 
-// ----------------------------------------------------------------------------
 }  // namespace helpers
 
 #endif  // HELPERS_SUBROLEPARSER_HPP_

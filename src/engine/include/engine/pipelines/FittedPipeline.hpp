@@ -10,11 +10,11 @@
 
 #include <vector>
 
-#include "engine/featurelearners/featurelearners.hpp"
 #include "engine/pipelines/Fingerprints.hpp"
 #include "engine/pipelines/Predictors.hpp"
 #include "engine/preprocessors/preprocessors.hpp"
 #include "fct/fct.hpp"
+#include "featurelearners/featurelearners.hpp"
 #include "predictors/predictors.hpp"
 
 namespace engine {
@@ -43,7 +43,7 @@ struct FittedPipeline {
   }
 
   /// The names of the target columns
-  const auto& targets() const { return modified_population_schema_->targets_; }
+  const auto& targets() const { return modified_population_schema_->targets(); }
 
   /// Whether this is a classification pipeline.
   bool is_classification() const;

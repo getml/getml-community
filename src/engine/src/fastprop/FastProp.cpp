@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "fastprop/algorithm/FastProp.hpp"
 
@@ -32,75 +32,19 @@ FastProp::FastProp(
   }
 }
 
-// ----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
-FastProp::FastProp(const Poco::JSON::Object &_obj)
-    : hyperparameters_(std::make_shared<const Hyperparameters>(
-          *jsonutils::JSON::get_object(_obj, "hyperparameters_"))),
-      peripheral_(
-          _obj.has("peripheral_")
-              ? std::make_shared<const std::vector<std::string>>(
-                    jsonutils::JSON::array_to_vector<std::string>(
-                        jsonutils::JSON::get_array(_obj, "peripheral_")))
-              : nullptr),
-      placeholder_(_obj.has("placeholder_")
-                       ? std::make_shared<const containers::Placeholder>(
-                             *jsonutils::JSON::get_object(_obj, "placeholder_"))
-                       : nullptr) {
-  if (_obj.has("population_schema_")) {
-    population_schema_ =
-        std::make_shared<const helpers::Schema>(helpers::Schema::from_json(
-            *jsonutils::JSON::get_object(_obj, "population_schema_")));
-  }
-
-  if (_obj.has("peripheral_schema_")) {
-    peripheral_schema_ = helpers::Schema::from_json(
-        *jsonutils::JSON::get_object_array(_obj, "peripheral_schema_"));
-  }
-
-  if (_obj.has("main_table_schemas_")) {
-    main_table_schemas_ = helpers::Schema::from_json(
-        *jsonutils::JSON::get_object_array(_obj, "main_table_schemas_"));
-  }
-
-  if (_obj.has("peripheral_table_schemas_")) {
-    peripheral_table_schemas_ = helpers::Schema::from_json(
-        *jsonutils::JSON::get_object_array(_obj, "peripheral_table_schemas_"));
-  }
-
-  allow_http() = _obj.has("allow_http_")
-                     ? jsonutils::JSON::get_value<bool>(_obj, "allow_http_")
-                     : false;
-
-  if (_obj.has("features_")) {
-    auto vec = jsonutils::JSON::get_type_vector<containers::AbstractFeature>(
-        _obj, "features_");
-
-    abstract_features_ =
-        std::make_shared<std::vector<containers::AbstractFeature>>(vec);
-  }
-
-  if (_obj.has("subfeatures_")) {
-    auto subfeatures_arr = jsonutils::JSON::get_array(_obj, "subfeatures_");
-
-    auto subfeatures = std::make_shared<std::vector<std::optional<FastProp>>>(
-        subfeatures_arr->size());
-
-    for (size_t i = 0; i < subfeatures_arr->size(); ++i) {
-      auto obj = subfeatures_arr->getObject(static_cast<unsigned int>(i));
-
-      if (obj) {
-        subfeatures->at(i) = FastProp(*obj);
-      }
-    }
-
-    subfeatures_ = subfeatures;
-  }
-
-  if (placeholder_) {
-    placeholder().check_data_model(peripheral(), true);
-  }
-}
+FastProp::FastProp(const NamedTupleType &_val)
+    : abstract_features_(_val.get<"features_">()),
+      allow_http_(_val.get<"allow_http_">()),
+      hyperparameters_(_val.get<"hyperparameters_">()),
+      main_table_schemas_(_val.get<"main_table_schemas_">()),
+      peripheral_(_val.get<"peripheral_">()),
+      peripheral_schema_(_val.get<"peripheral_schema_">()),
+      peripheral_table_schemas_(_val.get<"peripheral_table_schemas_">()),
+      placeholder_(_val.get<"placeholder_">()),
+      population_schema_(_val.get<"population_schema_">()),
+      subfeatures_(_val.get<"subfeatures_">()) {}
 
 // ---------------------------------------------------------------------------
 
@@ -244,7 +188,7 @@ void FastProp::build_rows(const TransformParams &_params,
 std::vector<containers::Features> FastProp::build_subfeatures(
     const TransformParams &_params,
     const std::shared_ptr<std::vector<size_t>> &_rownums) const {
-  assert_true(placeholder().joined_tables_.size() <= subfeatures().size());
+  assert_true(placeholder().joined_tables().size() <= subfeatures().size());
 
   std::vector<containers::Features> features;
 
@@ -254,19 +198,19 @@ std::vector<containers::Features> FastProp::build_subfeatures(
       continue;
     }
 
-    assert_true(i < placeholder().joined_tables_.size());
+    assert_true(i < placeholder().joined_tables().size());
 
-    const auto joined_table = placeholder().joined_tables_.at(i);
+    const auto joined_table = placeholder().joined_tables().at(i);
 
     const auto new_population =
-        find_peripheral(_params.peripheral_, joined_table.name_);
+        find_peripheral(_params.peripheral_, joined_table.name());
 
     const auto subfeature_index = make_subfeature_index(i, _params.index_);
 
     const auto subfeature_rownums = make_subfeature_rownums(
         _rownums, _params.population_, new_population, i);
 
-    const auto ix = find_peripheral_ix(joined_table.name_);
+    const auto ix = find_peripheral_ix(joined_table.name());
 
     assert_true(ix < _params.word_indices_.peripheral().size());
 
@@ -334,8 +278,7 @@ std::vector<Float> FastProp::calc_r_squared(
        begin += batch_size) {
     const auto end = std::min(abstract_features().size(), begin + batch_size);
 
-    const auto index =
-        fct::collect::vector<size_t>(fct::iota<size_t>(begin, end));
+    const auto index = fct::collect::vector(fct::iota<size_t>(begin, end));
 
     const auto params = TransformParams{.feature_container_ = std::nullopt,
                                         .index_ = index,
@@ -368,12 +311,9 @@ std::vector<Float> FastProp::calc_r_squared(
 
 Float FastProp::calc_threshold(const std::vector<Float> &_r_squared) const {
   auto r_squared = _r_squared;
-
   RANGES::sort(r_squared, RANGES::greater());
-
-  assert_true(r_squared.size() > hyperparameters().num_features_);
-
-  return r_squared.at(hyperparameters().num_features_);
+  assert_true(r_squared.size() > hyperparameters().val_.get<f_num_features>());
+  return r_squared.at(hyperparameters().val_.get<f_num_features>());
 }
 
 // ----------------------------------------------------------------------------
@@ -508,11 +448,11 @@ std::vector<Int> FastProp::find_most_frequent_categories(
 
   const auto is_not_null = [](const Int val) -> bool { return val >= 0; };
 
-  const auto range = pairs | VIEWS::transform(get_first) |
-                     VIEWS::filter(is_not_null) |
-                     VIEWS::take(hyperparameters().n_most_frequent_);
+  const auto range =
+      pairs | VIEWS::transform(get_first) | VIEWS::filter(is_not_null) |
+      VIEWS::take(hyperparameters().val_.get<f_n_most_frequent>());
 
-  return fct::collect::vector<Int>(range);
+  return fct::collect::vector(range);
 }
 
 // ----------------------------------------------------------------------------
@@ -586,7 +526,7 @@ void FastProp::fit(const FitParams &_params, const bool _as_subfeatures) {
               table_holder.peripheral_tables().size());
 
   assert_true(table_holder.main_tables().size() >=
-              placeholder().joined_tables_.size());
+              placeholder().joined_tables().size());
 
   const auto abstract_features =
       std::make_shared<std::vector<containers::AbstractFeature>>();
@@ -630,7 +570,8 @@ void FastProp::fit_on_categoricals(
 
     const auto condition_is_categorical =
         [](const containers::Condition &_cond) {
-          return _cond.data_used_ == enums::DataUsed::categorical;
+          return _cond.data_used_.value() ==
+                 enums::DataUsed::value_of<"categorical">();
         };
 
     const auto any_condition_is_categorical = std::any_of(
@@ -640,14 +581,14 @@ void FastProp::fit_on_categoricals(
       continue;
     }
 
-    for (const auto &agg : hyperparameters().aggregations_) {
+    for (const auto &agg : hyperparameters().val_.get<f_aggregations>()) {
       if (!is_categorical(agg)) {
         continue;
       }
 
       _abstract_features->push_back(containers::AbstractFeature(
-          enums::Parser<enums::Aggregation>::parse(agg), _conditions,
-          enums::DataUsed::categorical, input_col, _peripheral_ix));
+          agg, _conditions, enums::DataUsed::make<"categorical">(), input_col,
+          _peripheral_ix));
     }
   }
 }
@@ -671,7 +612,8 @@ void FastProp::fit_on_categoricals_by_categories(
 
     const auto condition_is_categorical =
         [](const containers::Condition &_cond) {
-          return _cond.data_used_ == enums::DataUsed::categorical;
+          return _cond.data_used_.value() ==
+                 enums::DataUsed::value_of<"categorical">();
         };
 
     const auto any_condition_is_categorical = std::any_of(
@@ -685,7 +627,7 @@ void FastProp::fit_on_categoricals_by_categories(
         find_most_frequent_categories(_peripheral.categorical_col(input_col));
 
     for (const auto categorical_value : most_frequent) {
-      for (const auto &agg : hyperparameters().aggregations_) {
+      for (const auto &agg : hyperparameters().val_.get<f_aggregations>()) {
         if (!is_numerical(agg)) {
           continue;
         }
@@ -695,9 +637,8 @@ void FastProp::fit_on_categoricals_by_categories(
         }
 
         _abstract_features->push_back(containers::AbstractFeature(
-            enums::Parser<enums::Aggregation>::parse(agg), _conditions,
-            input_col, _peripheral_ix, enums::DataUsed::categorical,
-            categorical_value));
+            agg, _conditions, input_col, _peripheral_ix,
+            enums::DataUsed::make<"categorical">(), categorical_value));
       }
     }
   }
@@ -715,7 +656,7 @@ void FastProp::fit_on_discretes(
 
   for (size_t input_col = 0; input_col < _peripheral.num_discretes();
        ++input_col) {
-    for (const auto &agg : hyperparameters().aggregations_) {
+    for (const auto &agg : hyperparameters().val_.get<f_aggregations>()) {
       if (!is_numerical(agg)) {
         continue;
       }
@@ -730,8 +671,8 @@ void FastProp::fit_on_discretes(
       }
 
       _abstract_features->push_back(containers::AbstractFeature(
-          enums::Parser<enums::Aggregation>::parse(agg), _conditions,
-          enums::DataUsed::discrete, input_col, _peripheral_ix));
+          agg, _conditions, enums::DataUsed::make<"discrete">(), input_col,
+          _peripheral_ix));
     }
   }
 }
@@ -748,7 +689,7 @@ void FastProp::fit_on_numericals(
 
   for (size_t input_col = 0; input_col < _peripheral.num_numericals();
        ++input_col) {
-    for (const auto &agg : hyperparameters().aggregations_) {
+    for (const auto &agg : hyperparameters().val_.get<f_aggregations>()) {
       if (!is_numerical(agg)) {
         continue;
       }
@@ -763,8 +704,8 @@ void FastProp::fit_on_numericals(
       }
 
       _abstract_features->push_back(containers::AbstractFeature(
-          enums::Parser<enums::Aggregation>::parse(agg), _conditions,
-          enums::DataUsed::numerical, input_col, _peripheral_ix));
+          agg, _conditions, enums::DataUsed::make<"numerical">(), input_col,
+          _peripheral_ix));
     }
   }
 }
@@ -791,7 +732,7 @@ void FastProp::fit_on_same_units_categorical(
         continue;
       }
 
-      for (const auto &agg : hyperparameters().aggregations_) {
+      for (const auto &agg : hyperparameters().val_.get<f_aggregations>()) {
         if (!is_numerical(agg)) {
           continue;
         }
@@ -801,9 +742,8 @@ void FastProp::fit_on_same_units_categorical(
         }
 
         _abstract_features->push_back(containers::AbstractFeature(
-            enums::Parser<enums::Aggregation>::parse(agg), _conditions,
-            enums::DataUsed::same_units_categorical, input_col, output_col,
-            _peripheral_ix));
+            agg, _conditions, enums::DataUsed::make<"same_units_categorical">(),
+            input_col, output_col, _peripheral_ix));
       }
     }
   }
@@ -823,7 +763,7 @@ void FastProp::fit_on_same_units_discrete(
        ++output_col) {
     for (size_t input_col = 0; input_col < _peripheral.num_discretes();
          ++input_col) {
-      for (const auto &agg : hyperparameters().aggregations_) {
+      for (const auto &agg : hyperparameters().val_.get<f_aggregations>()) {
         const bool same_unit = _population.discrete_unit(output_col) != "" &&
                                _population.discrete_unit(output_col) ==
                                    _peripheral.discrete_unit(input_col);
@@ -840,14 +780,15 @@ void FastProp::fit_on_same_units_discrete(
           continue;
         }
 
-        const auto data_used = is_ts(_population.discrete_name(output_col),
-                                     _population.discrete_unit(output_col))
-                                   ? enums::DataUsed::same_units_discrete_ts
-                                   : enums::DataUsed::same_units_discrete;
+        const auto data_used =
+            is_ts(_population.discrete_name(output_col),
+                  _population.discrete_unit(output_col))
+                ? enums::DataUsed::make<"same_units_discrete_ts">()
+                : enums::DataUsed::make<"same_units_discrete">();
 
-        _abstract_features->push_back(containers::AbstractFeature(
-            enums::Parser<enums::Aggregation>::parse(agg), _conditions,
-            data_used, input_col, output_col, _peripheral_ix));
+        _abstract_features->push_back(
+            containers::AbstractFeature(agg, _conditions, data_used, input_col,
+                                        output_col, _peripheral_ix));
       }
     }
   }
@@ -867,7 +808,7 @@ void FastProp::fit_on_same_units_numerical(
        ++output_col) {
     for (size_t input_col = 0; input_col < _peripheral.num_numericals();
          ++input_col) {
-      for (const auto &agg : hyperparameters().aggregations_) {
+      for (const auto &agg : hyperparameters().val_.get<f_aggregations>()) {
         const bool same_unit = _population.numerical_unit(output_col) != "" &&
                                _population.numerical_unit(output_col) ==
                                    _peripheral.numerical_unit(input_col);
@@ -884,14 +825,15 @@ void FastProp::fit_on_same_units_numerical(
           continue;
         }
 
-        const auto data_used = is_ts(_population.numerical_name(output_col),
-                                     _population.numerical_unit(output_col))
-                                   ? enums::DataUsed::same_units_numerical_ts
-                                   : enums::DataUsed::same_units_numerical;
+        const auto data_used =
+            is_ts(_population.numerical_name(output_col),
+                  _population.numerical_unit(output_col))
+                ? enums::DataUsed::make<"same_units_numerical_ts">()
+                : enums::DataUsed::make<"same_units_numerical">();
 
-        _abstract_features->push_back(containers::AbstractFeature(
-            enums::Parser<enums::Aggregation>::parse(agg), _conditions,
-            data_used, input_col, output_col, _peripheral_ix));
+        _abstract_features->push_back(
+            containers::AbstractFeature(agg, _conditions, data_used, input_col,
+                                        output_col, _peripheral_ix));
       }
     }
   }
@@ -918,7 +860,7 @@ void FastProp::fit_on_subfeatures(
   for (size_t input_col = 0;
        input_col < subfeatures().at(_peripheral_ix)->num_features();
        ++input_col) {
-    for (const auto &agg : hyperparameters().aggregations_) {
+    for (const auto &agg : hyperparameters().val_.get<f_aggregations>()) {
       if (!is_numerical(agg)) {
         continue;
       }
@@ -928,8 +870,8 @@ void FastProp::fit_on_subfeatures(
       }
 
       _abstract_features->push_back(containers::AbstractFeature(
-          enums::Parser<enums::Aggregation>::parse(agg), _conditions,
-          enums::DataUsed::subfeatures, input_col, _peripheral_ix));
+          agg, _conditions, enums::DataUsed::make<"subfeatures">(), input_col,
+          _peripheral_ix));
     }
   }
 }
@@ -972,15 +914,15 @@ void FastProp::fit_on_peripheral(
 
     if (_peripheral.num_time_stamps() > 0) {
       _abstract_features->push_back(containers::AbstractFeature(
-          enums::Aggregation::avg_time_between, cond,
-          enums::DataUsed::not_applicable, 0, _peripheral_ix));
+          enums::Aggregation::make<"AVG TIME BETWEEN">(), cond,
+          enums::DataUsed::make<"na">(), 0, _peripheral_ix));
     }
   }
 
   if (has_count()) {
     _abstract_features->push_back(containers::AbstractFeature(
-        enums::Aggregation::count, {}, enums::DataUsed::not_applicable, 0,
-        _peripheral_ix));
+        enums::Aggregation::make<"COUNT">(), {}, enums::DataUsed::make<"na">(),
+        0, _peripheral_ix));
   }
 }
 
@@ -989,14 +931,14 @@ void FastProp::fit_on_peripheral(
 std::shared_ptr<const std::vector<std::optional<FastProp>>>
 FastProp::fit_subfeatures(const FitParams &_params,
                           const TableHolder &_table_holder) const {
-  assert_true(placeholder().joined_tables_.size() <=
+  assert_true(placeholder().joined_tables().size() <=
               _table_holder.subtables().size());
 
   const auto subfeatures =
       std::make_shared<std::vector<std::optional<FastProp>>>();
 
-  for (size_t i = 0; i < placeholder().joined_tables_.size(); ++i) {
-    const auto &joined_table = placeholder().joined_tables_.at(i);
+  for (size_t i = 0; i < placeholder().joined_tables().size(); ++i) {
+    const auto &joined_table = placeholder().joined_tables().at(i);
 
     if (!_table_holder.subtables().at(i)) {
       subfeatures->push_back(std::nullopt);
@@ -1008,9 +950,9 @@ FastProp::fit_subfeatures(const FitParams &_params,
         std::make_shared<const containers::Placeholder>(joined_table)));
 
     const auto new_population =
-        find_peripheral(_params.peripheral_, joined_table.name_);
+        find_peripheral(_params.peripheral_, joined_table.name());
 
-    const auto ix = find_peripheral_ix(joined_table.name_);
+    const auto ix = find_peripheral_ix(joined_table.name());
 
     assert_true(ix < _params.row_indices_.peripheral().size());
 
@@ -1041,7 +983,7 @@ FastProp::fit_subfeatures(const FitParams &_params,
 // ----------------------------------------------------------------------------
 
 size_t FastProp::get_num_threads() const {
-  const auto num_threads = hyperparameters().num_threads_;
+  const auto num_threads = hyperparameters().val_.get<f_num_threads>();
 
   if (num_threads <= 0) {
     return std::max(
@@ -1073,76 +1015,76 @@ FastProp::infer_importance(
   const auto &peripheral =
       peripheral_table_schemas().at(abstract_feature.peripheral_);
 
-  switch (abstract_feature.data_used_) {
-    case enums::DataUsed::categorical: {
+  switch (abstract_feature.data_used_.value()) {
+    case enums::DataUsed::value_of<"categorical">(): {
       const auto col_desc = helpers::ColumnDescription(
-          helpers::ColumnDescription::PERIPHERAL, peripheral.name(),
+          MarkerType::make<"[PERIPHERAL]">(), peripheral.name(),
           peripheral.categorical_name(abstract_feature.input_col_));
 
       return {std::make_pair(col_desc, _importance_factor)};
     }
 
-    case enums::DataUsed::discrete: {
+    case enums::DataUsed::value_of<"discrete">(): {
       const auto col_desc = helpers::ColumnDescription(
-          helpers::ColumnDescription::PERIPHERAL, peripheral.name(),
+          MarkerType::make<"[PERIPHERAL]">(), peripheral.name(),
           peripheral.discrete_name(abstract_feature.input_col_));
 
       return {std::make_pair(col_desc, _importance_factor)};
     }
 
-    case enums::DataUsed::not_applicable:
+    case enums::DataUsed::value_of<"na">():
       return std::vector<std::pair<helpers::ColumnDescription, Float>>();
 
-    case enums::DataUsed::numerical: {
+    case enums::DataUsed::value_of<"numerical">(): {
       const auto col_desc = helpers::ColumnDescription(
-          helpers::ColumnDescription::PERIPHERAL, peripheral.name(),
+          MarkerType::make<"[PERIPHERAL]">(), peripheral.name(),
           peripheral.numerical_name(abstract_feature.input_col_));
 
       return {std::make_pair(col_desc, _importance_factor)};
     }
 
-    case enums::DataUsed::same_units_categorical: {
+    case enums::DataUsed::value_of<"same_units_categorical">(): {
       const auto col_desc1 = helpers::ColumnDescription(
-          helpers::ColumnDescription::PERIPHERAL, peripheral.name(),
+          MarkerType::make<"[PERIPHERAL]">(), peripheral.name(),
           peripheral.categorical_name(abstract_feature.input_col_));
 
       const auto col_desc2 = helpers::ColumnDescription(
-          helpers::ColumnDescription::POPULATION, population.name(),
+          MarkerType::make<"[POPULATION]">(), population.name(),
           population.categorical_name(abstract_feature.output_col_));
 
       return {std::make_pair(col_desc1, _importance_factor * 0.5),
               std::make_pair(col_desc2, _importance_factor * 0.5)};
     }
 
-    case enums::DataUsed::same_units_discrete:
-    case enums::DataUsed::same_units_discrete_ts: {
+    case enums::DataUsed::value_of<"same_units_discrete">():
+    case enums::DataUsed::value_of<"same_units_discrete_ts">(): {
       const auto col_desc1 = helpers::ColumnDescription(
-          helpers::ColumnDescription::PERIPHERAL, peripheral.name(),
+          MarkerType::make<"[PERIPHERAL]">(), peripheral.name(),
           peripheral.discrete_name(abstract_feature.input_col_));
 
       const auto col_desc2 = helpers::ColumnDescription(
-          helpers::ColumnDescription::POPULATION, population.name(),
+          MarkerType::make<"[POPULATION]">(), population.name(),
           population.discrete_name(abstract_feature.output_col_));
 
       return {std::make_pair(col_desc1, _importance_factor * 0.5),
               std::make_pair(col_desc2, _importance_factor * 0.5)};
     }
 
-    case enums::DataUsed::same_units_numerical:
-    case enums::DataUsed::same_units_numerical_ts: {
+    case enums::DataUsed::value_of<"same_units_numerical">():
+    case enums::DataUsed::value_of<"same_units_numerical_ts">(): {
       const auto col_desc1 = helpers::ColumnDescription(
-          helpers::ColumnDescription::PERIPHERAL, peripheral.name(),
+          MarkerType::make<"[PERIPHERAL]">(), peripheral.name(),
           peripheral.numerical_name(abstract_feature.input_col_));
 
       const auto col_desc2 = helpers::ColumnDescription(
-          helpers::ColumnDescription::POPULATION, population.name(),
+          MarkerType::make<"[POPULATION]">(), population.name(),
           population.numerical_name(abstract_feature.output_col_));
 
       return {std::make_pair(col_desc1, _importance_factor * 0.5),
               std::make_pair(col_desc2, _importance_factor * 0.5)};
     }
 
-    case enums::DataUsed::subfeatures: {
+    case enums::DataUsed::value_of<"subfeatures">(): {
       assert_true(
           abstract_feature.input_col_ <
           _subimportance_factors->at(abstract_feature.peripheral_).size());
@@ -1153,18 +1095,20 @@ FastProp::infer_importance(
       return std::vector<std::pair<helpers::ColumnDescription, Float>>();
     }
 
-    case enums::DataUsed::text: {
+    case enums::DataUsed::value_of<"text">(): {
       const auto col_desc = helpers::ColumnDescription(
-          helpers::ColumnDescription::PERIPHERAL, peripheral.name(),
+          MarkerType::make<"[PERIPHERAL]">(), peripheral.name(),
           peripheral.text_name(abstract_feature.input_col_));
 
       return {std::make_pair(col_desc, _importance_factor)};
     }
 
     default:
-      assert_true(false && "Unknown data used");
+      assert_msg(false, "Unknown data used: '" +
+                            abstract_feature.data_used_.name() + "'");
 
-      const auto col_desc = helpers::ColumnDescription("", "", "");
+      const auto col_desc = helpers::ColumnDescription(
+          MarkerType::make<"[PERIPHERAL]">(), "", "");
 
       return {std::make_pair(col_desc, 0.0)};
   }
@@ -1188,12 +1132,10 @@ std::vector<std::vector<Float>> FastProp::init_subimportance_factors() const {
 
 // ----------------------------------------------------------------------------
 
-bool FastProp::is_categorical(const std::string &_agg) const {
-  const auto agg = enums::Parser<enums::Aggregation>::parse(_agg);
-
-  switch (agg) {
-    case enums::Aggregation::count_distinct:
-    case enums::Aggregation::count_minus_count_distinct:
+bool FastProp::is_categorical(const enums::Aggregation _agg) const {
+  switch (_agg.value()) {
+    case enums::Aggregation::value_of<"COUNT DISTINCT">():
+    case enums::Aggregation::value_of<"COUNT MINUS COUNT DISTINCT">():
       return true;
 
     default:
@@ -1203,9 +1145,8 @@ bool FastProp::is_categorical(const std::string &_agg) const {
 
 // ----------------------------------------------------------------------------
 
-bool FastProp::is_numerical(const std::string &_agg) const {
-  const auto agg = enums::Parser<enums::Aggregation>::parse(_agg);
-  return (agg != enums::Aggregation::count);
+bool FastProp::is_numerical(const enums::Aggregation _agg) const {
+  return _agg.value() != enums::Aggregation::value_of<"COUNT">();
 }
 
 // ----------------------------------------------------------------------------
@@ -1289,7 +1230,7 @@ std::vector<std::vector<containers::Condition>> FastProp::make_conditions(
 void FastProp::make_categorical_conditions(
     const containers::DataFrame &_peripheral, const size_t _peripheral_ix,
     std::vector<std::vector<containers::Condition>> *_conditions) const {
-  if (hyperparameters().n_most_frequent_ == 0) {
+  if (hyperparameters().val_.get<f_n_most_frequent>() == 0) {
     return;
   }
 
@@ -1304,9 +1245,9 @@ void FastProp::make_categorical_conditions(
         find_most_frequent_categories(_peripheral.categorical_col(input_col));
 
     for (const auto category_used : most_frequent) {
-      _conditions->push_back(
-          {containers::Condition(category_used, enums::DataUsed::categorical,
-                                 input_col, _peripheral_ix)});
+      _conditions->push_back({containers::Condition(
+          category_used, enums::DataUsed::make<"categorical">(), input_col,
+          _peripheral_ix)});
     }
   }
 }
@@ -1322,31 +1263,36 @@ void FastProp::make_lag_conditions(
     return;
   }
 
-  if (hyperparameters().delta_t_ <= 0.0 && hyperparameters().max_lag_ == 0) {
+  if (hyperparameters().val_.get<f_delta_t>() <= 0.0 &&
+      hyperparameters().val_.get<f_max_lag>() == 0) {
     return;
   }
 
-  if (hyperparameters().delta_t_ <= 0.0 && hyperparameters().max_lag_ > 0) {
+  if (hyperparameters().val_.get<f_delta_t>() <= 0.0 &&
+      hyperparameters().val_.get<f_max_lag>() > 0) {
     throw std::runtime_error(
         "FastProp: If you pass a max_lag, you must also pass a delta_t "
         "that is "
         "greater than 0.");
   }
 
-  if (hyperparameters().delta_t_ > 0.0 && hyperparameters().max_lag_ == 0) {
+  if (hyperparameters().val_.get<f_delta_t>() > 0.0 &&
+      hyperparameters().val_.get<f_max_lag>() == 0) {
     throw std::runtime_error(
         "FastProp: If you pass a delta_t, you must also pass a max_lag "
         "that is "
         "greater than 0.");
   }
 
-  for (size_t i = 0; i < hyperparameters().max_lag_; ++i) {
-    const auto lower = hyperparameters().delta_t_ * static_cast<Float>(i);
+  for (size_t i = 0; i < hyperparameters().val_.get<f_max_lag>(); ++i) {
+    const auto lower =
+        hyperparameters().val_.get<f_delta_t>() * static_cast<Float>(i);
 
-    const auto upper = hyperparameters().delta_t_ * static_cast<Float>(i + 1);
+    const auto upper =
+        hyperparameters().val_.get<f_delta_t>() * static_cast<Float>(i + 1);
 
     _conditions->push_back({containers::Condition(
-        lower, upper, enums::DataUsed::lag, _peripheral_ix)});
+        lower, upper, enums::DataUsed::make<"lag">(), _peripheral_ix)});
   }
 }
 
@@ -1368,9 +1314,9 @@ void FastProp::make_same_units_categorical_conditions(
         continue;
       }
 
-      _conditions->push_back(
-          {containers::Condition(enums::DataUsed::same_units_categorical,
-                                 input_col, output_col, _peripheral_ix)});
+      _conditions->push_back({containers::Condition(
+          enums::DataUsed::make<"same_units_categorical">(), input_col,
+          output_col, _peripheral_ix)});
     }
   }
 }
@@ -1384,11 +1330,11 @@ std::vector<size_t> FastProp::make_subfeature_index(
     return abstract_features().at(ix);
   };
 
-  const auto is_relevant_feature =
-      [_peripheral_ix](const containers::AbstractFeature &f) {
-        return f.data_used_ == enums::DataUsed::subfeatures &&
-               f.peripheral_ == _peripheral_ix;
-      };
+  const auto is_relevant_feature = [_peripheral_ix](
+                                       const containers::AbstractFeature &f) {
+    return f.data_used_.value() == enums::DataUsed::value_of<"subfeatures">() &&
+           f.peripheral_ == _peripheral_ix;
+  };
 
   const auto get_input_col = [](const containers::AbstractFeature &f) {
     return f.input_col_;
@@ -1398,7 +1344,7 @@ std::vector<size_t> FastProp::make_subfeature_index(
                      VIEWS::filter(is_relevant_feature) |
                      VIEWS::transform(get_input_col);
 
-  const auto s = fct::collect::set<size_t>(range);
+  const auto s = fct::collect::set(range);
 
   return std::vector<size_t>(s.begin(), s.end());
 }
@@ -1413,7 +1359,7 @@ std::shared_ptr<std::vector<size_t>> FastProp::make_subfeature_rownums(
     return nullptr;
   }
 
-  assert_true(_ix < placeholder().join_keys_used_.size());
+  assert_true(_ix < placeholder().join_keys_used().size());
 
   const auto make_staging_table_colname =
       [](const std::string &_colname) -> std::string {
@@ -1422,18 +1368,18 @@ std::shared_ptr<std::vector<size_t>> FastProp::make_subfeature_rownums(
   };
 
   const auto params_population = helpers::CreateSubviewParams{
-      .join_key_ = placeholder().join_keys_used_.at(_ix),
+      .join_key_ = placeholder().join_keys_used().at(_ix),
       .make_staging_table_colname_ = make_staging_table_colname,
-      .time_stamp_ = placeholder().time_stamps_used_.at(_ix)};
+      .time_stamp_ = placeholder().time_stamps_used().at(_ix)};
 
   const auto population = _population.create_subview(params_population);
 
   const auto params_peripheral = helpers::CreateSubviewParams{
-      .allow_lagged_targets_ = placeholder().allow_lagged_targets_.at(_ix),
-      .join_key_ = placeholder().other_join_keys_used_.at(_ix),
+      .allow_lagged_targets_ = placeholder().allow_lagged_targets().at(_ix),
+      .join_key_ = placeholder().other_join_keys_used().at(_ix),
       .make_staging_table_colname_ = make_staging_table_colname,
-      .time_stamp_ = placeholder().other_time_stamps_used_.at(_ix),
-      .upper_time_stamp_ = placeholder().upper_time_stamps_used_.at(_ix)};
+      .time_stamp_ = placeholder().other_time_stamps_used().at(_ix),
+      .upper_time_stamp_ = placeholder().upper_time_stamps_used().at(_ix)};
 
   const auto peripheral = _peripheral.create_subview(params_peripheral);
 
@@ -1506,6 +1452,22 @@ std::shared_ptr<std::vector<size_t>> FastProp::make_rownums(
   return rownums;
 }
 
+// ---------------------------------------------------------------------------
+
+typename FastProp::NamedTupleType FastProp::named_tuple() const {
+  return fct::make_field<"features_">(abstract_features_) *
+         fct::make_field<"allow_http_">(allow_http_) *
+         fct::make_field<"hyperparameters_">(hyperparameters_) *
+         fct::make_field<"main_table_schemas_">(main_table_schemas_) *
+         fct::make_field<"peripheral_">(peripheral_) *
+         fct::make_field<"peripheral_schema_">(peripheral_schema_) *
+         fct::make_field<"peripheral_table_schemas_">(
+             peripheral_table_schemas_) *
+         fct::make_field<"placeholder_">(placeholder_) *
+         fct::make_field<"population_schema_">(population_schema_) *
+         fct::make_field<"subfeatures_">(subfeatures_);
+}
+
 // ----------------------------------------------------------------------------
 
 std::shared_ptr<std::vector<size_t>> FastProp::sample_from_population(
@@ -1515,15 +1477,13 @@ std::shared_ptr<std::vector<size_t>> FastProp::sample_from_population(
   std::uniform_real_distribution<Float> dist(0.0, 1.0);
 
   const auto include = [this, &rng, &dist](const size_t rownum) -> bool {
-    return dist(rng) < hyperparameters().sampling_factor_;
+    return dist(rng) < hyperparameters().val_.get<f_sampling_factor>();
   };
 
   auto iota = fct::iota<size_t>(0, _nrows);
 
-  auto range = iota | VIEWS::filter(include);
-
   return std::make_shared<std::vector<size_t>>(
-      fct::collect::vector<size_t>(range));
+      fct::collect::vector(iota | VIEWS::filter(include)));
 }
 
 // ----------------------------------------------------------------------------
@@ -1532,7 +1492,8 @@ std::shared_ptr<const std::vector<containers::AbstractFeature>>
 FastProp::select_features(
     const FitParams &_params,
     const std::shared_ptr<std::vector<size_t>> &_rownums) const {
-  if (abstract_features().size() <= hyperparameters().num_features_) {
+  if (abstract_features().size() <=
+      hyperparameters().val_.get<f_num_features>()) {
     if (_params.logger_) {
       _params.logger_->log("Trained features. Progress: 100%.");
     }
@@ -1560,17 +1521,15 @@ FastProp::select_features(
       iota | VIEWS::filter(r_greater_threshold) | VIEWS::transform(get_feature);
 
   return std::make_shared<std::vector<containers::AbstractFeature>>(
-      fct::collect::vector<containers::AbstractFeature>(range));
+      fct::collect::vector(range));
 }
 
 // ----------------------------------------------------------------------------
 
-bool FastProp::skip_first_last(const std::string &_agg,
+bool FastProp::skip_first_last(const enums::Aggregation _agg,
                                const containers::DataFrame &_population,
                                const containers::DataFrame &_peripheral) const {
-  const auto agg = enums::Parser<enums::Aggregation>::parse(_agg);
-
-  if (!Aggregator::is_first_last(agg)) {
+  if (!Aggregator::is_first_last(_agg)) {
     return false;
   }
 
@@ -1671,82 +1630,6 @@ containers::Features FastProp::transform(
   spawn_threads(_params, subfeatures, _rownums, &features);
 
   return features;
-}
-
-// ----------------------------------------------------------------------------
-
-Poco::JSON::Object FastProp::to_json_obj(const bool _schema_only) const {
-  Poco::JSON::Object obj;
-
-  obj.set("type_", "FastProp");
-
-  obj.set("hyperparameters_", hyperparameters().to_json_obj());
-
-  if (peripheral_) {
-    obj.set("peripheral_", jsonutils::JSON::vector_to_array_ptr(peripheral()));
-  }
-
-  if (placeholder_) {
-    obj.set("placeholder_", placeholder().to_json_obj());
-  }
-
-  if (population_schema_) {
-    obj.set("population_schema_", population_schema().to_json_obj());
-  }
-
-  if (peripheral_schema_) {
-    auto arr = jsonutils::JSON::vector_to_object_array_ptr(peripheral_schema());
-
-    obj.set("peripheral_schema_", arr);
-  }
-
-  if (_schema_only) {
-    return obj;
-  }
-
-  if (main_table_schemas_) {
-    auto arr =
-        jsonutils::JSON::vector_to_object_array_ptr(main_table_schemas());
-
-    obj.set("main_table_schemas_", arr);
-  }
-
-  if (peripheral_table_schemas_) {
-    auto arr =
-        jsonutils::JSON::vector_to_object_array_ptr(peripheral_table_schemas());
-
-    obj.set("peripheral_table_schemas_", arr);
-  }
-
-  obj.set("allow_http_", allow_http());
-
-  if (abstract_features_) {
-    Poco::JSON::Array::Ptr features_arr(new Poco::JSON::Array());
-
-    for (const auto &feature : abstract_features()) {
-      features_arr->add(feature.to_json_obj());
-    }
-
-    obj.set("features_", features_arr);
-  }
-
-  if (subfeatures_) {
-    Poco::JSON::Array::Ptr subfeatures_arr(new Poco::JSON::Array());
-
-    for (const auto &sub : subfeatures()) {
-      if (sub) {
-        auto obj =
-            Poco::JSON::Object::Ptr(new Poco::JSON::Object(sub->to_json_obj()));
-        subfeatures_arr->add(obj);
-      } else {
-        subfeatures_arr->add(Poco::Dynamic::Var());
-      }
-    }
-
-    obj.set("subfeatures_", subfeatures_arr);
-  }
-
-  return obj;
 }
 
 // ----------------------------------------------------------------------------

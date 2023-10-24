@@ -18,6 +18,7 @@
 #include "fastprop/algorithm/Memoization.hpp"
 #include "fastprop/containers/containers.hpp"
 #include "fct/Ref.hpp"
+#include "helpers/Aggregations.hpp"
 
 namespace fastprop {
 namespace algorithm {
@@ -137,16 +138,17 @@ class Aggregator {
   static Float aggregate_categorical_range(
       const IteratorType _begin, const IteratorType _end,
       const enums::Aggregation _aggregation) {
-    switch (_aggregation) {
-      case enums::Aggregation::count_distinct:
+    switch (_aggregation.value()) {
+      case enums::Aggregation::value_of<"COUNT DISTINCT">():
         return helpers::Aggregations::count_distinct(_begin, _end);
 
-      case enums::Aggregation::count_minus_count_distinct:
+      case enums::Aggregation::value_of<"COUNT MINUS COUNT DISTINCT">():
         return helpers::Aggregations::count(_begin, _end) -
                helpers::Aggregations::count_distinct(_begin, _end);
 
       default:
-        assert_true(false && "Unknown aggregation for categorical column");
+        assert_msg(false, "Unknown aggregation for categorical column: '" +
+                              _aggregation.name() + "'");
         return 0.0;
     }
   }
@@ -169,78 +171,79 @@ class Aggregator {
     constexpr Float t90d = 90.0 * t1d;
     constexpr Float t365d = 365.0 * t1d;
 
-    switch (_aggregation) {
-      case enums::Aggregation::first:
+    switch (_aggregation.value()) {
+      case enums::Aggregation::value_of<"FIRST">():
         return helpers::Aggregations::first(_begin, _end);
 
-      case enums::Aggregation::last:
+      case enums::Aggregation::value_of<"LAST">():
         return helpers::Aggregations::last(_begin, _end);
 
-      case enums::Aggregation::ewma_1s:
+      case enums::Aggregation::value_of<"EWMA_1S">():
         return helpers::Aggregations::ewma(t1s, _begin, _end);
 
-      case enums::Aggregation::ewma_1m:
+      case enums::Aggregation::value_of<"EWMA_1M">():
         return helpers::Aggregations::ewma(t1m, _begin, _end);
 
-      case enums::Aggregation::ewma_1h:
+      case enums::Aggregation::value_of<"EWMA_1H">():
         return helpers::Aggregations::ewma(t1h, _begin, _end);
 
-      case enums::Aggregation::ewma_1d:
+      case enums::Aggregation::value_of<"EWMA_1D">():
         return helpers::Aggregations::ewma(t1d, _begin, _end);
 
-      case enums::Aggregation::ewma_7d:
+      case enums::Aggregation::value_of<"EWMA_7D">():
         return helpers::Aggregations::ewma(t7d, _begin, _end);
 
-      case enums::Aggregation::ewma_30d:
+      case enums::Aggregation::value_of<"EWMA_30D">():
         return helpers::Aggregations::ewma(t30d, _begin, _end);
 
-      case enums::Aggregation::ewma_90d:
+      case enums::Aggregation::value_of<"EWMA_90D">():
         return helpers::Aggregations::ewma(t90d, _begin, _end);
 
-      case enums::Aggregation::ewma_365d:
+      case enums::Aggregation::value_of<"EWMA_365D">():
         return helpers::Aggregations::ewma(t365d, _begin, _end);
 
-      case enums::Aggregation::ewma_trend_1s:
+      case enums::Aggregation::value_of<"EWMA_TREND_1S">():
         return helpers::Aggregations::ewma_trend(t1s, _begin, _end);
 
-      case enums::Aggregation::ewma_trend_1m:
+      case enums::Aggregation::value_of<"EWMA_TREND_1M">():
         return helpers::Aggregations::ewma_trend(t1m, _begin, _end);
 
-      case enums::Aggregation::ewma_trend_1h:
+      case enums::Aggregation::value_of<"EWMA_TREND_1H">():
         return helpers::Aggregations::ewma_trend(t1h, _begin, _end);
 
-      case enums::Aggregation::ewma_trend_1d:
+      case enums::Aggregation::value_of<"EWMA_TREND_1D">():
         return helpers::Aggregations::ewma_trend(t1d, _begin, _end);
 
-      case enums::Aggregation::ewma_trend_7d:
+      case enums::Aggregation::value_of<"EWMA_TREND_7D">():
         return helpers::Aggregations::ewma_trend(t7d, _begin, _end);
 
-      case enums::Aggregation::ewma_trend_30d:
+      case enums::Aggregation::value_of<"EWMA_TREND_30D">():
         return helpers::Aggregations::ewma_trend(t30d, _begin, _end);
 
-      case enums::Aggregation::ewma_trend_90d:
+      case enums::Aggregation::value_of<"EWMA_TREND_90D">():
         return helpers::Aggregations::ewma_trend(t90d, _begin, _end);
 
-      case enums::Aggregation::ewma_trend_365d:
+      case enums::Aggregation::value_of<"EWMA_TREND_365D">():
         return helpers::Aggregations::ewma_trend(t365d, _begin, _end);
 
-      case enums::Aggregation::time_since_first_maximum:
+      case enums::Aggregation::value_of<"TIME SINCE FIRST MAXIMUM">():
         return helpers::Aggregations::time_since_first_maximum(_begin, _end);
 
-      case enums::Aggregation::time_since_first_minimum:
+      case enums::Aggregation::value_of<"TIME SINCE FIRST MINIMUM">():
         return helpers::Aggregations::time_since_first_minimum(_begin, _end);
 
-      case enums::Aggregation::time_since_last_maximum:
+      case enums::Aggregation::value_of<"TIME SINCE LAST MAXIMUM">():
         return helpers::Aggregations::time_since_last_maximum(_begin, _end);
 
-      case enums::Aggregation::time_since_last_minimum:
+      case enums::Aggregation::value_of<"TIME SINCE LAST MINIMUM">():
         return helpers::Aggregations::time_since_last_minimum(_begin, _end);
 
-      case enums::Aggregation::trend:
+      case enums::Aggregation::value_of<"TREND">():
         return helpers::Aggregations::trend(_begin, _end);
 
       default:
-        assert_true(false && "Unknown aggregation for first/last column");
+        assert_msg(false, "Unknown aggregation for time-based column: '" +
+                              _aggregation.name() + "'");
         return 0.0;
     }
   }
@@ -274,94 +277,89 @@ class Aggregator {
   static Float aggregate_numerical_range(
       const IteratorType _begin, const IteratorType _end,
       const enums::Aggregation _aggregation) {
-    switch (_aggregation) {
-      case enums::Aggregation::avg:
+    switch (_aggregation.value()) {
+      case enums::Aggregation::value_of<"AVG">():
         return helpers::Aggregations::avg(_begin, _end);
 
-      case enums::Aggregation::avg_time_between:
+      case enums::Aggregation::value_of<"AVG TIME BETWEEN">():
         return calc_avg_time_between(_begin, _end);
 
-      case enums::Aggregation::count:
+      case enums::Aggregation::value_of<"COUNT">():
         return helpers::Aggregations::count(_begin, _end);
 
-      case enums::Aggregation::count_above_mean:
-        return helpers::Aggregations::count_above_mean(_begin, _end);
-
-      case enums::Aggregation::count_below_mean:
-        return helpers::Aggregations::count_below_mean(_begin, _end);
-
-      case enums::Aggregation::count_distinct:
+      case enums::Aggregation::value_of<"COUNT DISTINCT">():
         return helpers::Aggregations::count_distinct(_begin, _end);
 
-      case enums::Aggregation::count_distinct_over_count:
+      case enums::Aggregation::value_of<"COUNT DISTINCT OVER COUNT">():
         return helpers::Aggregations::count_distinct_over_count(_begin, _end);
 
-      case enums::Aggregation::count_minus_count_distinct:
+      case enums::Aggregation::value_of<"COUNT MINUS COUNT DISTINCT">():
         return helpers::Aggregations::count(_begin, _end) -
                helpers::Aggregations::count_distinct(_begin, _end);
 
-      case enums::Aggregation::kurtosis:
+      case enums::Aggregation::value_of<"KURTOSIS">():
         return helpers::Aggregations::kurtosis(_begin, _end);
 
-      case enums::Aggregation::max:
+      case enums::Aggregation::value_of<"MAX">():
         return helpers::Aggregations::maximum(_begin, _end);
 
-      case enums::Aggregation::median:
+      case enums::Aggregation::value_of<"MEDIAN">():
         return helpers::Aggregations::median(_begin, _end);
 
-      case enums::Aggregation::min:
+      case enums::Aggregation::value_of<"MIN">():
         return helpers::Aggregations::minimum(_begin, _end);
 
-      case enums::Aggregation::mode:
+      case enums::Aggregation::value_of<"MODE">():
         return helpers::Aggregations::mode<Float>(_begin, _end);
 
-      case enums::Aggregation::num_max:
+      case enums::Aggregation::value_of<"NUM MAX">():
         return helpers::Aggregations::num_max(_begin, _end);
 
-      case enums::Aggregation::num_min:
+      case enums::Aggregation::value_of<"NUM MIN">():
         return helpers::Aggregations::num_min(_begin, _end);
 
-      case enums::Aggregation::q1:
+      case enums::Aggregation::value_of<"Q1">():
         return helpers::Aggregations::quantile(0.01, _begin, _end);
 
-      case enums::Aggregation::q5:
+      case enums::Aggregation::value_of<"Q5">():
         return helpers::Aggregations::quantile(0.05, _begin, _end);
 
-      case enums::Aggregation::q10:
+      case enums::Aggregation::value_of<"Q10">():
         return helpers::Aggregations::quantile(0.1, _begin, _end);
 
-      case enums::Aggregation::q25:
+      case enums::Aggregation::value_of<"Q25">():
         return helpers::Aggregations::quantile(0.25, _begin, _end);
 
-      case enums::Aggregation::q75:
+      case enums::Aggregation::value_of<"Q75">():
         return helpers::Aggregations::quantile(0.75, _begin, _end);
 
-      case enums::Aggregation::q90:
+      case enums::Aggregation::value_of<"Q90">():
         return helpers::Aggregations::quantile(0.90, _begin, _end);
 
-      case enums::Aggregation::q95:
+      case enums::Aggregation::value_of<"Q95">():
         return helpers::Aggregations::quantile(0.95, _begin, _end);
 
-      case enums::Aggregation::q99:
+      case enums::Aggregation::value_of<"Q99">():
         return helpers::Aggregations::quantile(0.99, _begin, _end);
 
-      case enums::Aggregation::skew:
+      case enums::Aggregation::value_of<"SKEW">():
         return helpers::Aggregations::skew(_begin, _end);
 
-      case enums::Aggregation::stddev:
+      case enums::Aggregation::value_of<"STDDEV">():
         return helpers::Aggregations::stddev(_begin, _end);
 
-      case enums::Aggregation::sum:
+      case enums::Aggregation::value_of<"SUM">():
         return helpers::Aggregations::sum(_begin, _end);
 
-      case enums::Aggregation::var:
+      case enums::Aggregation::value_of<"VAR">():
         return helpers::Aggregations::var(_begin, _end);
 
-      case enums::Aggregation::variation_coefficient:
+      case enums::Aggregation::value_of<"VARIATION COEFFICIENT">():
         return helpers::Aggregations::variation_coefficient(_begin, _end);
 
       default:
-        assert_true(false && "Unknown aggregation for numerical column");
+        assert_msg(false, "Unknown aggregation for time-based column: '" +
+                              _aggregation.name() + "'");
         return 0.0;
     }
   }
@@ -394,8 +392,10 @@ class Aggregator {
     memorize_pairs_range(_matches, extract_pair, _condition_function,
                          _abstract_feature, _memoization);
 
-    if (_abstract_feature.aggregation_ == enums::Aggregation::first ||
-        _abstract_feature.aggregation_ == enums::Aggregation::last) {
+    if (_abstract_feature.aggregation_.value() ==
+            enums::Aggregation::value_of<"FIRST">() ||
+        _abstract_feature.aggregation_.value() ==
+            enums::Aggregation::value_of<"LAST">()) {
       return aggregate_first_last(_memoization->pairs_begin(),
                                   _memoization->pairs_end(),
                                   _abstract_feature.aggregation_);
@@ -432,11 +432,11 @@ class Aggregator {
       return 0.0;
     }
 
-    const auto max_value =
-        aggregate_numerical_range(_begin, _end, enums::Aggregation::max);
+    const auto max_value = aggregate_numerical_range(
+        _begin, _end, enums::Aggregation::make<"MAX">());
 
-    const auto min_value =
-        aggregate_numerical_range(_begin, _end, enums::Aggregation::min);
+    const auto min_value = aggregate_numerical_range(
+        _begin, _end, enums::Aggregation::make<"MIN">());
 
     return (max_value - min_value) / (count - 1.0);
   }

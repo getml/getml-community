@@ -1,24 +1,21 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "metrics/Summarizer.hpp"
 
+#include <cmath>
+
 namespace metrics {
-// ----------------------------------------------------------------------------
 
-Poco::JSON::Object Summarizer::calc_categorical_column_plot(
+typename Summarizer::PlotWithLabels Summarizer::calc_categorical_column_plot(
     const size_t _num_bins, const std::vector<strings::String>& _vec) {
-  // ------------------------------------------------------------------------
-
   if (_num_bins > 100000) {
     throw std::runtime_error("Number of bins cannot be greater than 100000!");
   }
-
-  // ------------------------------------------------------------------------
 
   auto str_map =
       std::unordered_map<strings::String, Int, strings::StringHasher>();
@@ -33,8 +30,6 @@ Poco::JSON::Object Summarizer::calc_categorical_column_plot(
     }
   }
 
-  // ------------------------------------------------------------------------
-
   auto counts = std::vector<std::pair<strings::String, Int>>(str_map.begin(),
                                                              str_map.end());
 
@@ -45,29 +40,20 @@ Poco::JSON::Object Summarizer::calc_categorical_column_plot(
 
   std::sort(counts.begin(), counts.end(), comp);
 
-  // ------------------------------------------------------------------------
-
   return make_object(_num_bins, counts);
-
-  // ------------------------------------------------------------------------
 }
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object Summarizer::calc_categorical_column_plot(
+typename Summarizer::PlotWithFrequencies
+Summarizer::calc_categorical_column_plot(
     const size_t _num_bins, const std::vector<strings::String>& _vec,
     const std::vector<Float>& _target) {
-  // ------------------------------------------------------------------------
-
   if (_num_bins > 100000) {
     throw std::runtime_error("Number of bins cannot be greater than 100000!");
   }
 
-  // ------------------------------------------------------------------------
-
   assert_true(_vec.size() == _target.size());
-
-  // ------------------------------------------------------------------------
 
   auto str_map = std::unordered_map<strings::String, std::pair<Float, Float>,
                                     strings::StringHasher>();
@@ -91,8 +77,6 @@ Poco::JSON::Object Summarizer::calc_categorical_column_plot(
     }
   }
 
-  // ------------------------------------------------------------------------
-
   auto pairs = std::vector<std::pair<Float, Float>>();
 
   for (const auto& p : str_map) {
@@ -107,28 +91,20 @@ Poco::JSON::Object Summarizer::calc_categorical_column_plot(
 
   std::sort(pairs.begin(), pairs.end(), comp);
 
-  // ------------------------------------------------------------------------
-
   return make_object(_num_bins, pairs);
-
-  // ------------------------------------------------------------------------
 }
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Array::Ptr Summarizer::calculate_average_targets(
+std::vector<std::vector<std::vector<Float>>>
+Summarizer::calculate_average_targets(
     const std::vector<Float>& _minima, const std::vector<Float>& _step_sizes,
     const std::vector<size_t>& _actual_num_bins,
     const std::vector<std::vector<Int>>& _feature_densities,
     const Features& _features, const size_t _nrows, const size_t _ncols,
     const std::vector<const Float*>& _targets) {
-  // ------------------------------------------------------------------------
-
   if (_targets.size() == 0) {
-    return Poco::JSON::Array::Ptr(new Poco::JSON::Array());
+    return {};
   }
-
-  // ------------------------------------------------------------------------
-  // Init average_targets.
 
   assert_true(_actual_num_bins.size() == _step_sizes.size());
 
@@ -150,9 +126,6 @@ Poco::JSON::Array::Ptr Summarizer::calculate_average_targets(
   }
 
   auto counts = average_targets;
-
-  // ------------------------------------------------------------------------
-  // Calculate sums.
 
   assert_true(_feature_densities.size() == _ncols);
 
@@ -189,9 +162,6 @@ Poco::JSON::Array::Ptr Summarizer::calculate_average_targets(
     }
   }
 
-  // ------------------------------------------------------------------------
-  // Divide targets by column densities .
-
   for (size_t j = 0; j < _ncols; ++j) {
     for (size_t k = 0; k < average_targets[j].size(); ++k) {
       for (size_t bin = 0; bin < average_targets[j][k].size(); ++bin) {
@@ -202,31 +172,12 @@ Poco::JSON::Array::Ptr Summarizer::calculate_average_targets(
     }
   }
 
-  // ------------------------------------------------------------------------
-  // Transform to JSON Array.
-
-  Poco::JSON::Array::Ptr arr(new Poco::JSON::Array());
-
-  for (const auto& vec : average_targets) {
-    Poco::JSON::Array::Ptr subarr(new Poco::JSON::Array());
-
-    for (const auto& v : vec) {
-      subarr->add(jsonutils::JSON::vector_to_array_ptr(v));
-    }
-
-    arr->add(subarr);
-  }
-
-  // ------------------------------------------------------------------------
-
-  return arr;
-
-  // ------------------------------------------------------------------------
+  return average_targets;
 }
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object Summarizer::calculate_feature_plots(
+typename Summarizer::FeaturePlots Summarizer::calculate_feature_plots(
     const Features& _features, const size_t _nrows, const size_t _ncols,
     const size_t _num_bins, const std::vector<const Float*>& _targets) {
   if (_num_bins > 100000) {
@@ -239,10 +190,7 @@ Poco::JSON::Object Summarizer::calculate_feature_plots(
 
   find_min_and_max(_features, _nrows, _ncols, &minima, &maxima);
 
-  // ------------------------------------------------------------------------
-  // Calculate step_sizes and actual_num_bins. Note that actual_num_bins
-  // can be smaller than num_bins.
-
+  // Note that actual_num_bins can be smaller than num_bins.
   auto step_sizes = std::vector<Float>(0);
 
   auto actual_num_bins = std::vector<size_t>(0);
@@ -254,17 +202,11 @@ Poco::JSON::Object Summarizer::calculate_feature_plots(
   assert_true(step_sizes.size() == _ncols);
   assert_true(actual_num_bins.size() == _ncols);
 
-  // ------------------------------------------------------------------------
-  // Init feature densities.
-
   auto feature_densities = std::vector<std::vector<Int>>(_ncols);
 
   for (size_t j = 0; j < _ncols; ++j) {
     feature_densities[j].resize(actual_num_bins[j]);
   }
-
-  // ------------------------------------------------------------------------
-  // Calculate feature densities.
 
   for (size_t i = 0; i < _nrows; ++i) {
     for (size_t j = 0; j < _ncols; ++j) {
@@ -281,56 +223,27 @@ Poco::JSON::Object Summarizer::calculate_feature_plots(
     }
   }
 
-  // ------------------------------------------------------------------------
-  // Transform to JSON Array.
-
-  Poco::JSON::Array::Ptr densities_arr(new Poco::JSON::Array());
-
-  for (const auto& c : feature_densities) {
-    densities_arr->add(jsonutils::JSON::vector_to_array_ptr(c));
-  }
-
-  // ------------------------------------------------------------------------
-
-  auto labels_arr =
+  const auto labels =
       calculate_labels(minima, step_sizes, actual_num_bins, feature_densities,
                        _features, _nrows, _ncols);
 
-  // ------------------------------------------------------------------------
-
-  auto average_targets_arr = calculate_average_targets(
+  const auto average_targets = calculate_average_targets(
       minima, step_sizes, actual_num_bins, feature_densities, _features, _nrows,
       _ncols, _targets);
 
-  // ------------------------------------------------------------------------
-  // Add to JSON object.
-
-  Poco::JSON::Object obj;
-
-  obj.set("average_targets_", average_targets_arr);
-
-  obj.set("feature_densities_", densities_arr);
-
-  obj.set("labels_", labels_arr);
-
-  return obj;
-
-  // ------------------------------------------------------------------------
+  return f_average_targets(average_targets) *
+         f_feature_densities(feature_densities) * f_labels(labels);
 }
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object Summarizer::calculate_feature_correlations(
+typename Summarizer::f_feature_correlations
+Summarizer::calculate_feature_correlations(
     const Features& _features, const size_t _nrows, const size_t _ncols,
     const std::vector<const Float*>& _targets) {
-  // -----------------------------------------------------------
-
   assert_true(_ncols == _features.size());
 
   const auto t_ncols = _targets.size();
-
-  // -----------------------------------------------------------
-  // Prepare datasets
 
   std::vector<Float> sum_yhat(_ncols);
 
@@ -342,36 +255,25 @@ Poco::JSON::Object Summarizer::calculate_feature_correlations(
 
   std::vector<Float> sum_yhat_y(_ncols * t_ncols);
 
-  // -----------------------------------------------------------
-  // Calculate sufficient statistics
-
-  // Calculate sum yhat
   for (size_t i = 0; i < _nrows; ++i)
     for (size_t j = 0; j < _ncols; ++j) sum_yhat[j] += get(i, j, _features);
 
-  // Calculate sum yhat_yhat
   for (size_t i = 0; i < _nrows; ++i)
     for (size_t j = 0; j < _ncols; ++j)
       sum_yhat_yhat[j] += get(i, j, _features) * get(i, j, _features);
 
-  // Calculate sum y
   for (size_t k = 0; k < t_ncols; ++k)
     for (size_t i = 0; i < _nrows; ++i) sum_y[k] += _targets[k][i];
 
-  // Calculate sum y_y
   for (size_t k = 0; k < t_ncols; ++k)
     for (size_t i = 0; i < _nrows; ++i)
       sum_y_y[k] += _targets[k][i] * _targets[k][i];
 
-  // Calculate sum_yhat_y
   for (size_t k = 0; k < t_ncols; ++k)
     for (size_t i = 0; i < _nrows; ++i)
       for (size_t j = 0; j < _ncols; ++j)
         get(j, k, t_ncols, &sum_yhat_y) +=
             get(i, j, _features) * _targets[k][i];
-
-  // -----------------------------------------------------------
-  // Calculate correlations from sufficient statistics
 
   const auto n = static_cast<Float>(_nrows);
 
@@ -396,45 +298,21 @@ Poco::JSON::Object Summarizer::calculate_feature_correlations(
       }
     }
 
-  // -----------------------------------------------------------
-  // Transform to JSON Array.
-
-  Poco::JSON::Array::Ptr arr(new Poco::JSON::Array());
-
-  for (const auto& f : feature_correlations) {
-    arr->add(jsonutils::JSON::vector_to_array_ptr(f));
-  }
-
-  // -----------------------------------------------------------
-  // Add to JSON object.
-
-  Poco::JSON::Object obj;
-
-  obj.set("feature_correlations_", arr);
-
-  return obj;
-
-  // -----------------------------------------------------------
+  return f_feature_correlations(feature_correlations);
 }
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Array::Ptr Summarizer::calculate_labels(
+std::vector<std::vector<Float>> Summarizer::calculate_labels(
     const std::vector<Float>& _minima, const std::vector<Float>& _step_sizes,
     const std::vector<size_t>& _actual_num_bins,
     const std::vector<std::vector<Int>>& _feature_densities,
     const Features& _features, const size_t _nrows, const size_t _ncols) {
-  // ------------------------------------------------------------------------
-  // Init labels.
-
   auto labels = std::vector<std::vector<Float>>(_ncols);
 
   for (size_t j = 0; j < _ncols; ++j) {
     labels[j].resize(_actual_num_bins[j]);
   }
-
-  // ------------------------------------------------------------------------
-  // Calculate feature densities.
 
   for (size_t i = 0; i < _nrows; ++i) {
     for (size_t j = 0; j < _ncols; ++j) {
@@ -451,9 +329,6 @@ Poco::JSON::Array::Ptr Summarizer::calculate_labels(
     }
   }
 
-  // ------------------------------------------------------------------------
-  // Divide labels by column densities or replace with appropriate value.
-
   for (size_t j = 0; j < _ncols; ++j) {
     assert_true(labels[j].size() == _feature_densities[j].size());
 
@@ -467,20 +342,7 @@ Poco::JSON::Array::Ptr Summarizer::calculate_labels(
     }
   }
 
-  // ------------------------------------------------------------------------
-  // Transform to JSON Array.
-
-  Poco::JSON::Array::Ptr arr(new Poco::JSON::Array());
-
-  for (const auto& l : labels) {
-    arr->add(jsonutils::JSON::vector_to_array_ptr(l));
-  }
-
-  // ------------------------------------------------------------------------
-
-  return arr;
-
-  // ------------------------------------------------------------------------
+  return labels;
 }
 
 // ----------------------------------------------------------------------------
@@ -560,27 +422,21 @@ size_t Summarizer::identify_bin(const size_t _num_bins, const Float _step_size,
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object Summarizer::make_object(
+typename Summarizer::PlotWithLabels Summarizer::make_object(
     const size_t _num_bins,
     const std::vector<std::pair<strings::String, Int>>& _counts) {
-  // ------------------------------------------------------------------------
-
   if (_num_bins == 0) {
     throw std::runtime_error("Number of bins cannot be 0!");
   }
 
-  // ------------------------------------------------------------------------
+  auto labels = std::vector<std::string>();
 
-  Poco::JSON::Array::Ptr labels(new Poco::JSON::Array());
-
-  Poco::JSON::Array::Ptr data(new Poco::JSON::Array());
-
-  // ------------------------------------------------------------------------
+  auto data = std::vector<Float>();
 
   if (_counts.size() < _num_bins) {
     for (const auto& p : _counts) {
-      labels->add(p.first.str());
-      data->add(p.second);
+      labels.push_back(p.first.str());
+      data.push_back(p.second);
     }
   } else {
     const auto entries_per_bin2 = _counts.size() / _num_bins;
@@ -604,9 +460,9 @@ Poco::JSON::Object Summarizer::make_object(
           std::accumulate(_counts.begin() + j,
                           _counts.begin() + j + entries_per_bin1, 0.0, add);
 
-      labels->add(std::string(""));
+      labels.push_back(std::string(""));
 
-      data->add(static_cast<Float>(sum) / entries_per_bin1_f);
+      data.push_back(static_cast<Float>(sum) / entries_per_bin1_f);
     }
 
     for (size_t j = remaining * entries_per_bin1; j < _counts.size();
@@ -615,53 +471,35 @@ Poco::JSON::Object Summarizer::make_object(
           std::accumulate(_counts.begin() + j,
                           _counts.begin() + j + entries_per_bin2, 0.0, add);
 
-      labels->add(std::string(""));
+      labels.push_back(std::string(""));
 
-      data->add(static_cast<Float>(sum) / entries_per_bin2_f);
+      data.push_back(static_cast<Float>(sum) / entries_per_bin2_f);
     }
   }
 
-  // ------------------------
-
-  Poco::JSON::Object obj;
-
-  obj.set("labels_", labels);
-
-  obj.set("data_", data);
-
-  // ------------------------------------------------------------------------
-
-  return obj;
-
-  // ------------------------------------------------------------------------
+  return fct::make_field<"labels_">(labels) * fct::make_field<"data_">(data);
 }
 
 // ----------------------------------------------------------------------------
 
-Poco::JSON::Object Summarizer::make_object(
+typename Summarizer::PlotWithFrequencies Summarizer::make_object(
     const size_t _num_bins,
     const std::vector<std::pair<Float, Float>>& _pairs) {
-  // ------------------------------------------------------------------------
-
   if (_num_bins == 0) {
     throw std::runtime_error("Number of bins cannot be 0!");
   }
 
-  // ------------------------------------------------------------------------
+  auto labels = std::vector<Float>();
 
-  Poco::JSON::Array::Ptr labels(new Poco::JSON::Array());
-
-  Poco::JSON::Array::Ptr data(new Poco::JSON::Array());
-
-  // ------------------------------------------------------------------------
+  auto data = std::vector<Float>();
 
   if (_pairs.size() < _num_bins) {
     Float cumul = 0.0;
 
     for (const auto& p : _pairs) {
       cumul += p.first;
-      labels->add(static_cast<Int>(cumul));
-      data->add(p.second);
+      labels.push_back(cumul);
+      data.push_back(p.second);
     }
   } else {
     const auto entries_per_bin2 = _pairs.size() / _num_bins;
@@ -694,9 +532,9 @@ Poco::JSON::Object Summarizer::make_object(
 
       cumul += sum_counts;
 
-      labels->add(cumul);
+      labels.push_back(cumul);
 
-      data->add(sum_targets / sum_counts);
+      data.push_back(sum_targets / sum_counts);
     }
 
     for (size_t j = remaining * entries_per_bin1; j < _pairs.size();
@@ -711,25 +549,14 @@ Poco::JSON::Object Summarizer::make_object(
 
       cumul += sum_counts;
 
-      labels->add(cumul);
+      labels.push_back(cumul);
 
-      data->add(sum_targets / sum_counts);
+      data.push_back(sum_targets / sum_counts);
     }
   }
 
-  // ------------------------------------------------------------------------
-
-  Poco::JSON::Object obj;
-
-  obj.set("accumulated_frequencies_", labels);
-
-  obj.set("data_", data);
-
-  // ------------------------------------------------------------------------
-
-  return obj;
-
-  // ------------------------------------------------------------------------
+  return fct::make_field<"accumulated_frequencies_">(labels) *
+         fct::make_field<"data_">(data);
 }
 
 // ----------------------------------------------------------------------------

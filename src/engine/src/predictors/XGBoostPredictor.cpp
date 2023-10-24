@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "predictors/XGBoostPredictor.hpp"
 
@@ -283,18 +283,6 @@ std::vector<Float> XGBoostPredictor::feature_importances(
 
 // -----------------------------------------------------------------------------
 
-Poco::JSON::Object::Ptr XGBoostPredictor::fingerprint() const {
-  auto obj = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
-
-  obj->set("cmd_", cmd_);
-  obj->set("dependencies_", JSON::vector_to_array_ptr(dependencies_));
-  obj->set("impl_", impl().to_json_obj());
-
-  return obj;
-}
-
-// -----------------------------------------------------------------------------
-
 std::string XGBoostPredictor::fit(
     const std::shared_ptr<const logging::AbstractLogger> _logger,
     const std::vector<IntFeature> &_X_categorical,
@@ -335,12 +323,14 @@ std::string XGBoostPredictor::fit(
 
   std::stringstream msg;
 
-  if (hyperparams_.booster_ == "gblinear") {
+  if (hyperparams_->val_.get<"booster_">() == "gblinear") {
     msg << std::endl
-        << "XGBoost: Trained " << hyperparams_.n_iter_ << " linear models.";
+        << "XGBoost: Trained " << hyperparams_->val_.get<"n_estimators_">()
+        << " linear models.";
   } else {
     msg << std::endl
-        << "XGBoost: Trained " << hyperparams_.n_iter_ << " trees.";
+        << "XGBoost: Trained " << hyperparams_->val_.get<"n_estimators_">()
+        << " trees.";
   }
 
   return msg.str();
@@ -362,7 +352,7 @@ void XGBoostPredictor::fit_handle(
 
     const auto progress_str = "Progress: " + std::to_string(progress) + "%.";
 
-    if (hyperparams_.booster_ == "gblinear") {
+    if (hyperparams_->val_.get<"booster_">() == "gblinear") {
       _logger->log("XGBoost: Trained linear model " + std::to_string(_i + 1) +
                    ". " + progress_str);
     } else {
@@ -391,14 +381,14 @@ void XGBoostPredictor::fit_handle(
 
     ++n_no_improvement;
 
-    if (n_no_improvement < hyperparams_.early_stopping_rounds_) [[likely]] {
-      return false;
-    }
+    if (n_no_improvement < hyperparams_->val_.get<"early_stopping_rounds_">())
+      [[likely]] { return false; }
 
     return true;
   };
 
-  const auto n_iter = static_cast<int>(hyperparams_.n_iter_);
+  const auto n_iter =
+      static_cast<int>(hyperparams_->val_.get<"n_estimators_">());
 
   for (int i = 0; i < n_iter; ++i) {
     if (XGBoosterUpdateOneIter(*_handle, i, *_train_set.get())) {
@@ -408,9 +398,9 @@ void XGBoostPredictor::fit_handle(
     }
 
     if (evaluate(i)) [[unlikely]] {
-      log(i, i);
-      break;
-    }
+        log(i, i);
+        break;
+      }
 
     log(i, n_iter);
   }
@@ -451,7 +441,7 @@ XGBoostMatrix XGBoostPredictor::make_matrix(
                                     ? _X_numerical.at(0).is_memory_mapped()
                                     : _X_categorical.at(0).is_memory_mapped();
 
-  if (is_memory_mapped && hyperparams_.external_memory_) {
+  if (is_memory_mapped && hyperparams_->val_.get<"external_memory_">()) {
     return convert_to_memory_mapped_dmatrix(_X_categorical, _X_numerical, _y);
   }
 
@@ -479,7 +469,7 @@ void XGBoostPredictor::parse_dump(
     }
   }
 
-  if (hyperparams_.booster_ == "gblinear") {
+  if (hyperparams_->val_.get<"booster_">() == "gblinear") {
     assert_true(lines.size() >= _all_feature_importances->size() + 3);
 
     for (size_t i = 0; i < _all_feature_importances->size(); ++i) {
@@ -541,8 +531,12 @@ FloatFeature XGBoostPredictor::predict(
                              XGBGetLastError());
   }
 
-  auto yhat = FloatFeature(
-      std::make_shared<std::vector<Float>>(_X_numerical[0].size()));
+  assert_true(_X_numerical.size() > 0 || _X_categorical.size() > 0);
+
+  const auto size = _X_numerical.size() > 0 ? _X_numerical.at(0).size()
+                                            : _X_categorical.at(0).size();
+
+  auto yhat = FloatFeature(std::make_shared<std::vector<Float>>(size));
 
   bst_ulong nrows = 0;
 
@@ -589,76 +583,10 @@ void XGBoostPredictor::save(const std::string &_fname) const {
 
 void XGBoostPredictor::set_hyperparameters(const BoosterPtr &_handle,
                                            const bool _is_memory_mapped) const {
-  XGBoosterSetParam(*_handle, "alpha",
-                    std::to_string(hyperparams_.alpha_).c_str());
-
-  XGBoosterSetParam(*_handle, "booster", hyperparams_.booster_.c_str());
-
-  XGBoosterSetParam(*_handle, "colsample_bytree",
-                    std::to_string(hyperparams_.colsample_bytree_).c_str());
-
-  XGBoosterSetParam(*_handle, "colsample_bylevel",
-                    std::to_string(hyperparams_.colsample_bylevel_).c_str());
-
-  XGBoosterSetParam(*_handle, "eta", std::to_string(hyperparams_.eta_).c_str());
-
-  XGBoosterSetParam(*_handle, "gamma",
-                    std::to_string(hyperparams_.gamma_).c_str());
-
-  XGBoosterSetParam(*_handle, "lambda",
-                    std::to_string(hyperparams_.lambda_).c_str());
-
-  XGBoosterSetParam(*_handle, "max_delta_step",
-                    std::to_string(hyperparams_.max_delta_step_).c_str());
-
-  XGBoosterSetParam(*_handle, "max_depth",
-                    std::to_string(hyperparams_.max_depth_).c_str());
-
-  XGBoosterSetParam(*_handle, "min_child_weight",
-                    std::to_string(hyperparams_.min_child_weights_).c_str());
-
-  XGBoosterSetParam(*_handle, "num_parallel_tree",
-                    std::to_string(hyperparams_.num_parallel_tree_).c_str());
-
-  XGBoosterSetParam(*_handle, "normalize_type",
-                    hyperparams_.normalize_type_.c_str());
-
-  const auto nthread = impl().get_num_threads(hyperparams_.nthread_);
-
-  XGBoosterSetParam(*_handle, "nthread", std::to_string(nthread).c_str());
-
-  // XGBoost has deprecated reg::linear, but we will continue to support it.
-  if (hyperparams_.objective_ == "reg:linear") {
-    XGBoosterSetParam(*_handle, "objective", "reg:squarederror");
-  } else {
-    XGBoosterSetParam(*_handle, "objective", hyperparams_.objective_.c_str());
-  }
-
-  if (hyperparams_.one_drop_) {
-    XGBoosterSetParam(*_handle, "one_drop", "1");
-  } else {
-    XGBoosterSetParam(*_handle, "one_drop", "0");
-  }
-
-  XGBoosterSetParam(*_handle, "rate_drop",
-                    std::to_string(hyperparams_.rate_drop_).c_str());
-
-  XGBoosterSetParam(*_handle, "sample_type", hyperparams_.sample_type_.c_str());
-
-  if (hyperparams_.silent_) {
-    XGBoosterSetParam(*_handle, "silent", "1");
-  } else {
-    XGBoosterSetParam(*_handle, "silent", "0");
-  }
-
-  XGBoosterSetParam(*_handle, "skip_drop",
-                    std::to_string(hyperparams_.skip_drop_).c_str());
-
-  XGBoosterSetParam(*_handle, "subsample",
-                    std::to_string(hyperparams_.subsample_).c_str());
+  hyperparams_->apply(*_handle);
 
   // This is recommended by the XGBoost documentation.
-  if (_is_memory_mapped && hyperparams_.external_memory_) {
+  if (_is_memory_mapped && hyperparams_->val_.get<"external_memory_">()) {
     XGBoosterSetParam(*_handle, "tree_method", "approx");
   }
 }

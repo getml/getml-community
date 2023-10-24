@@ -1,14 +1,12 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_DEPENDENCY_DATAFRAMETRACKER_HPP_
 #define ENGINE_DEPENDENCY_DATAFRAMETRACKER_HPP_
-
-// -------------------------------------------------------------------------
 
 #include <map>
 #include <memory>
@@ -17,47 +15,45 @@
 #include <utility>
 #include <vector>
 
-// -------------------------------------------------------------------------
-
-#include "engine/containers/containers.hpp"
-
-// -------------------------------------------------------------------------
+#include "commands/Fingerprint.hpp"
+#include "containers/containers.hpp"
+#include "fct/Ref.hpp"
 
 namespace engine {
 namespace dependency {
 
 class DataFrameTracker {
  public:
-  DataFrameTracker(
-      const std::shared_ptr<
-          std::map<std::string, engine::containers::DataFrame>>& _data_frames)
+  DataFrameTracker(const fct::Ref<std::map<std::string, containers::DataFrame>>&
+                       _data_frames)
       : data_frames_(_data_frames) {}
 
   ~DataFrameTracker() = default;
 
  public:
   /// Adds a new element to be tracked.
-  void add(const containers::DataFrame& _df);
+  void add(const containers::DataFrame& _df,
+           const commands::Fingerprint& _build_history);
 
   /// Removes all elements.
   void clear();
 
   /// Generates a build history from the dependencies returned by
   /// the pipeline and the df_fingerprints.
-  Poco::JSON::Object::Ptr make_build_history(
-      const std::vector<Poco::JSON::Object::Ptr>& _dependencies,
+  commands::Fingerprint make_build_history(
+      const std::vector<commands::Fingerprint>& _dependencies,
       const containers::DataFrame& _population_df,
       const std::vector<containers::DataFrame>& _peripheral_dfs) const;
 
   /// Retrieves a deep copy of an element from the tracker, if a data
   /// frame containing this build_history exists.
   std::optional<containers::DataFrame> retrieve(
-      const Poco::JSON::Object::Ptr _build_history) const;
+      const commands::Fingerprint& _build_history) const;
 
  public:
   /// Generates the build history and retrieves the data frame.
   std::optional<containers::DataFrame> retrieve(
-      const std::vector<Poco::JSON::Object::Ptr>& _dependencies,
+      const std::vector<commands::Fingerprint>& _dependencies,
       const containers::DataFrame& _population_df,
       const std::vector<containers::DataFrame>& _peripheral_dfs) const {
     const auto build_history =
@@ -75,15 +71,13 @@ class DataFrameTracker {
 
  private:
   /// The underlying data frames.
-  const std::shared_ptr<std::map<std::string, engine::containers::DataFrame>>
-      data_frames_;
+  const fct::Ref<std::map<std::string, containers::DataFrame>> data_frames_;
 
   /// A map keeping track of the names of the data frame and when they were
   /// last changed.
   std::map<size_t, std::pair<std::string, std::string>> pairs_;
 };
 
-// -------------------------------------------------------------------------
 }  // namespace dependency
 }  // namespace engine
 

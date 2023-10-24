@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "fastprop/algorithm/Aggregator.hpp"
 
@@ -18,55 +18,56 @@ Float Aggregator::apply_aggregation(
     const std::function<bool(const containers::Match &)> &_condition_function,
     const containers::AbstractFeature &_abstract_feature,
     const fct::Ref<Memoization> &_memoization) {
-  switch (_abstract_feature.data_used_) {
-    case enums::DataUsed::categorical:
+  switch (_abstract_feature.data_used_.value()) {
+    case enums::DataUsed::value_of<"categorical">():
       return apply_categorical(_population, _peripheral, _matches,
                                _condition_function, _abstract_feature,
                                _memoization);
 
-    case enums::DataUsed::discrete:
+    case enums::DataUsed::value_of<"discrete">():
       return apply_discrete(_population, _peripheral, _matches,
                             _condition_function, _abstract_feature,
                             _memoization);
 
-    case enums::DataUsed::not_applicable:
+    case enums::DataUsed::value_of<"na">():
       return apply_not_applicable(_peripheral, _matches, _condition_function,
                                   _abstract_feature, _memoization);
 
-    case enums::DataUsed::numerical:
+    case enums::DataUsed::value_of<"numerical">():
       return apply_numerical(_population, _peripheral, _matches,
                              _condition_function, _abstract_feature,
                              _memoization);
 
-    case enums::DataUsed::same_units_categorical:
+    case enums::DataUsed::value_of<"same_units_categorical">():
       return apply_same_units_categorical(_population, _peripheral, _matches,
                                           _condition_function,
                                           _abstract_feature, _memoization);
 
-    case enums::DataUsed::same_units_discrete:
-    case enums::DataUsed::same_units_discrete_ts:
+    case enums::DataUsed::value_of<"same_units_discrete">():
+    case enums::DataUsed::value_of<"same_units_discrete_ts">():
       return apply_same_units_discrete(_population, _peripheral, _matches,
                                        _condition_function, _abstract_feature,
                                        _memoization);
 
-    case enums::DataUsed::same_units_numerical:
-    case enums::DataUsed::same_units_numerical_ts:
+    case enums::DataUsed::value_of<"same_units_numerical">():
+    case enums::DataUsed::value_of<"same_units_numerical_ts">():
       return apply_same_units_numerical(_population, _peripheral, _matches,
                                         _condition_function, _abstract_feature,
                                         _memoization);
 
-    case enums::DataUsed::subfeatures:
+    case enums::DataUsed::value_of<"subfeatures">():
       assert_true(_subfeatures);
       return apply_subfeatures(_population, _peripheral, *_subfeatures,
                                _matches, _condition_function, _abstract_feature,
                                _memoization);
 
-    case enums::DataUsed::text:
+    case enums::DataUsed::value_of<"text">():
       return apply_text(_population, _peripheral, _matches, _condition_function,
                         _abstract_feature, _memoization);
 
     default:
-      assert_true(false && "Unknown data_used");
+      assert_msg(false, "Unknown data_used: '" +
+                            _abstract_feature.data_used_.name() + "'.");
       return 0.0;
   }
 }
@@ -155,11 +156,13 @@ Float Aggregator::apply_not_applicable(
     const std::function<bool(const containers::Match &)> &_condition_function,
     const containers::AbstractFeature &_abstract_feature,
     const fct::Ref<Memoization> &_memoization) {
-  assert_true(_abstract_feature.aggregation_ == enums::Aggregation::count ||
-              _abstract_feature.aggregation_ ==
-                  enums::Aggregation::avg_time_between);
+  assert_true(_abstract_feature.aggregation_.value() ==
+                  enums::Aggregation::value_of<"COUNT">() ||
+              _abstract_feature.aggregation_.value() ==
+                  enums::Aggregation::value_of<"AVG TIME BETWEEN">());
 
-  if (_abstract_feature.aggregation_ == enums::Aggregation::count) {
+  if (_abstract_feature.aggregation_.value() ==
+      enums::Aggregation::value_of<"COUNT">()) {
     const auto extract_value = [](const containers::Match &match) -> Float {
       return 0.0;
     };

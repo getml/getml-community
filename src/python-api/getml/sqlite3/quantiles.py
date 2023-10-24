@@ -11,6 +11,7 @@ Contains the quantile aggregations.
 """
 
 import numpy as np
+from typing import List, Optional
 
 from .helpers import _not_null
 
@@ -18,22 +19,24 @@ from .helpers import _not_null
 
 
 class _Quantile:
-    def __init__(self, quantile):
-        self.quantile = quantile
-        self.values = []
+    def __init__(self, quantile: float):
+        self.quantile: float = quantile
+        self.values: List[float] = []
 
-    def step(self, value):
+    def step(self, value: Optional[float]):
         """
         Executed every time the function is called.
         """
-        if _not_null(value):
+        if _not_null(value) and value is not None:
             self.values.append(value)
 
-    def finalize(self):
+    def finalize(self) -> float:
         """
         Executed after all values are inserted.
         """
-        return np.quantile(self.values, self.quantile, interpolation="linear")
+        return np.quantile(
+            self.values, self.quantile, interpolation="linear"
+        )  # type:ignore
 
 
 # ----------------------------------------------------------------------------

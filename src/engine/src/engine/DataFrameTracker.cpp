@@ -1,23 +1,23 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "engine/dependency/DataFrameTracker.hpp"
+
+#include "engine/utils/Getter.hpp"
+#include "json/json.hpp"
 
 namespace engine {
 namespace dependency {
 
-void DataFrameTracker::add(const containers::DataFrame& _df) {
+void DataFrameTracker::add(const containers::DataFrame& _df,
+                           const commands::Fingerprint& _build_history) {
   clean_up();
 
-  const auto build_history = _df.build_history();
-
-  assert_true(build_history);
-
-  const auto b_str = JSON::stringify(*build_history);
+  const auto b_str = json::to_json(_build_history);
 
   const auto b_hash = std::hash<std::string>()(b_str);
 
@@ -78,42 +78,37 @@ std::optional<containers::DataFrame> DataFrameTracker::get_df(
 
 // ----------------------------------------------------------------------
 
-Poco::JSON::Object::Ptr DataFrameTracker::make_build_history(
-    const std::vector<Poco::JSON::Object::Ptr>& _dependencies,
+commands::Fingerprint DataFrameTracker::make_build_history(
+    const std::vector<commands::Fingerprint>& _dependencies,
     const containers::DataFrame& _population_df,
     const std::vector<containers::DataFrame>& _peripheral_dfs) const {
-  const auto dependencies = fct::collect::array(_dependencies);
-
   const auto data_frames = fct::join::vector<containers::DataFrame>(
       {std::vector<containers::DataFrame>({_population_df}), _peripheral_dfs});
 
   const auto get_fingerprint =
-      [](const containers::DataFrame& _df) -> Poco::JSON::Object::Ptr {
+      [](const containers::DataFrame& _df) -> commands::Fingerprint {
     return _df.fingerprint();
   };
 
   const auto df_fingerprints =
-      fct::collect::array(data_frames | VIEWS::transform(get_fingerprint));
+      fct::collect::vector(data_frames | VIEWS::transform(get_fingerprint));
 
-  auto build_history = Poco::JSON::Object::Ptr(new Poco::JSON::Object());
+  using PipelineBuildHistory =
+      typename commands::Fingerprint::PipelineBuildHistory;
 
-  build_history->set("dependencies_", dependencies);
+  const auto build_history = PipelineBuildHistory(
+      fct::make_field<"dependencies_">(_dependencies) *
+      fct::make_field<"df_fingerprints_">(df_fingerprints));
 
-  build_history->set("df_fingerprints_", df_fingerprints);
-
-  return build_history;
+  return commands::Fingerprint(build_history);
 }
 
 // -------------------------------------------------------------------------
 
 std::optional<containers::DataFrame> DataFrameTracker::retrieve(
-    const Poco::JSON::Object::Ptr _build_history) const {
-  assert_true(_build_history);
-
-  const auto b_str = JSON::stringify(*_build_history);
-
+    const commands::Fingerprint& _build_history) const {
+  const auto b_str = json::to_json(_build_history);
   const auto b_hash = std::hash<std::string>()(b_str);
-
   return get_df(b_hash);
 }
 

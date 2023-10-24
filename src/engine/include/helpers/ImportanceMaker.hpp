@@ -1,32 +1,27 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef HELPERS_IMPORTANCEMAKER_HPP_
 #define HELPERS_IMPORTANCEMAKER_HPP_
-
-// ----------------------------------------------------------------------------
 
 #include <cstddef>
 #include <map>
 #include <string>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/Float.hpp"
 #include "helpers/Schema.hpp"
 
-// ----------------------------------------------------------------------------
-
 namespace helpers {
-// ------------------------------------------------------------------------
 
 class ImportanceMaker {
+  using MarkerType = typename helpers::ColumnDescription::MarkerType;
+
  public:
   explicit ImportanceMaker(const size_t _num_subfeatures = 0)
       : importance_factors_avg_(std::vector<Float>(_num_subfeatures)),
@@ -79,7 +74,7 @@ class ImportanceMaker {
   std::vector<std::string> colnames() const {
     auto names = std::vector<std::string>();
     for (const auto& [desc, _] : importances_) {
-      names.push_back(desc.name());
+      names.push_back(desc.full_name());
     }
     return names;
   }
@@ -100,17 +95,17 @@ class ImportanceMaker {
   }
 
   /// Marks a table as peripheral.
-  std::string peripheral() const { return ColumnDescription::PERIPHERAL; }
+  MarkerType peripheral() const { return MarkerType::make<"[PERIPHERAL]">(); }
 
   /// Marks a table as population.
-  std::string population() const { return ColumnDescription::POPULATION; }
+  MarkerType population() const { return MarkerType::make<"[POPULATION]">(); }
 
  private:
   /// Adds the _value to fast_prop importance factors.
   void add_to_fast_prop(const ColumnDescription& _desc, const Float _value);
 
   /// Adds all of the elements from this column.
-  void fill_zeros_from_columns(const std::string& _marker,
+  void fill_zeros_from_columns(const MarkerType _marker,
                                const std::string& _tname,
                                const std::vector<std::string>& _colnames);
 

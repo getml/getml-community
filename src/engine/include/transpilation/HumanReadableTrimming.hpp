@@ -1,19 +1,14 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef SQL_HUMANREADABLETRIMMING_HPP_
 #define SQL_HUMANREADABLETRIMMING_HPP_
 
-// -------------------------------------------------------------------------
-
 #include <cstddef>
-
-// -------------------------------------------------------------------------
-
 #include <memory>
 #include <optional>
 #include <string>
@@ -21,18 +16,9 @@
 #include <utility>
 #include <vector>
 
-// -------------------------------------------------------------------------
-
-#include "helpers/enums/enums.hpp"
-#include "helpers/helpers.hpp"
-
-// -------------------------------------------------------------------------
-
 #include "transpilation/SQLDialectGenerator.hpp"
 #include "transpilation/SQLGenerator.hpp"
 #include "transpilation/TrimmingGenerator.hpp"
-
-// -------------------------------------------------------------------------
 
 namespace transpilation {
 
@@ -71,7 +57,6 @@ class HumanReadableTrimming : public TrimmingGenerator {
   const SQLDialectGenerator* const sql_dialect_generator_;
 };
 
-// -------------------------------------------------------------------------
 }  // namespace transpilation
 
 #endif  // SQL_HUMANREADABLETRIMMING_HPP_

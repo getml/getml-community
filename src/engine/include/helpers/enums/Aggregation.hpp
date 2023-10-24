@@ -8,64 +8,22 @@
 #ifndef HELPERS_ENUMS_AGGREGATION_HPP_
 #define HELPERS_ENUMS_AGGREGATION_HPP_
 
-// ----------------------------------------------------------------------------
+#include "fct/Literal.hpp"
 
 namespace helpers {
 namespace enums {
 
-enum class Aggregation {
-  avg,
-  avg_time_between,
-  count,
-  count_above_mean,
-  count_below_mean,
-  count_distinct,
-  count_distinct_over_count,
-  count_minus_count_distinct,
-  ewma_1s,
-  ewma_1m,
-  ewma_1h,
-  ewma_1d,
-  ewma_7d,
-  ewma_30d,
-  ewma_90d,
-  ewma_365d,
-  ewma_trend_1s,
-  ewma_trend_1m,
-  ewma_trend_1h,
-  ewma_trend_1d,
-  ewma_trend_7d,
-  ewma_trend_30d,
-  ewma_trend_90d,
-  ewma_trend_365d,
-  first,
-  kurtosis,
-  last,
-  max,
-  median,
-  min,
-  mode,
-  num_max,
-  num_min,
-  q1,
-  q5,
-  q10,
-  q25,
-  q75,
-  q90,
-  q95,
-  q99,
-  skew,
-  stddev,
-  sum,
-  time_since_first_maximum,
-  time_since_first_minimum,
-  time_since_last_maximum,
-  time_since_last_minimum,
-  trend,
-  var,
-  variation_coefficient
-};
+using Aggregation = fct::Literal<
+    "AVG", "AVG TIME BETWEEN", "COUNT", "COUNT DISTINCT",
+    "COUNT DISTINCT OVER COUNT", "COUNT MINUS COUNT DISTINCT", "EWMA_1S",
+    "EWMA_1M", "EWMA_1H", "EWMA_1D", "EWMA_7D", "EWMA_30D", "EWMA_90D",
+    "EWMA_365D", "EWMA_TREND_1S", "EWMA_TREND_1M", "EWMA_TREND_1H",
+    "EWMA_TREND_1D", "EWMA_TREND_7D", "EWMA_TREND_30D", "EWMA_TREND_90D",
+    "EWMA_TREND_365D", "FIRST", "LAST", "KURTOSIS", "MAX", "MEDIAN", "MIN",
+    "MODE", "NUM MAX", "NUM MIN", "Q1", "Q5", "Q10", "Q25", "Q75", "Q90", "Q95",
+    "Q99", "SKEW", "SUM", "STDDEV", "TIME SINCE FIRST MAXIMUM",
+    "TIME SINCE FIRST MINIMUM", "TIME SINCE LAST MAXIMUM",
+    "TIME SINCE LAST MINIMUM", "TREND", "VAR", "VARIATION COEFFICIENT">;
 
 }  // namespace enums
 }  // namespace helpers

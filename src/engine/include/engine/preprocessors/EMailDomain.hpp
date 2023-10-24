@@ -1,84 +1,93 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_PREPROCESSORS_EMAILDOMAIN_HPP_
 #define ENGINE_PREPROCESSORS_EMAILDOMAIN_HPP_
-
-// ----------------------------------------------------------------------------
-
-#include <Poco/JSON/Object.h>
-
-// ----------------------------------------------------------------------------
 
 #include <memory>
 #include <utility>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
-#include "helpers/helpers.hpp"
-#include "strings/strings.hpp"
-
-// ----------------------------------------------------------------------------
-
-#include "engine/containers/containers.hpp"
-
-// ----------------------------------------------------------------------------
-
-#include "engine/preprocessors/FitParams.hpp"
+#include "commands/Fingerprint.hpp"
+#include "commands/Preprocessor.hpp"
+#include "containers/containers.hpp"
+#include "engine/Int.hpp"
+#include "engine/preprocessors/Params.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
-#include "engine/preprocessors/TransformParams.hpp"
-
-// ----------------------------------------------------------------------------
+#include "fct/Field.hpp"
+#include "fct/Literal.hpp"
+#include "fct/NamedTuple.hpp"
+#include "fct/Ref.hpp"
+#include "helpers/ColumnDescription.hpp"
+#include "helpers/Macros.hpp"
+#include "helpers/StringIterator.hpp"
+#include "strings/strings.hpp"
 
 namespace engine {
 namespace preprocessors {
-// ----------------------------------------------------
 
 class EMailDomain : public Preprocessor {
- public:
-  EMailDomain() {}
+  using MarkerType = typename helpers::ColumnDescription::MarkerType;
 
-  EMailDomain(const Poco::JSON::Object& _obj,
-              const std::vector<Poco::JSON::Object::Ptr>& _dependencies) {
-    *this = from_json_obj(_obj);
-    dependencies_ = _dependencies;
-  }
+ public:
+  using EMailDomainOp = typename commands::Preprocessor::EMailDomainOp;
+
+  using f_cols =
+      fct::Field<"cols_", std::vector<fct::Ref<helpers::ColumnDescription>>>;
+
+  using NamedTupleType = fct::NamedTuple<f_cols>;
+
+ public:
+  EMailDomain(const EMailDomainOp& _op,
+              const std::vector<commands::Fingerprint>& _dependencies)
+      : dependencies_(_dependencies) {}
 
   ~EMailDomain() = default;
 
  public:
-  /// Returns the fingerprint of the preprocessor (necessary to build
-  /// the dependency graphs).
-  Poco::JSON::Object::Ptr fingerprint() const final;
-
   /// Identifies which features should be extracted from which time stamps.
   std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-  fit_transform(const FitParams& _params) final;
+  fit_transform(const Params& _params) final;
 
-  /// Expresses the Seasonal preprocessor as a JSON object.
-  Poco::JSON::Object::Ptr to_json_obj() const final;
+  /// Loads the predictor
+  void load(const std::string& _fname) final;
+
+  /// Stores the preprocessor.
+  void save(const std::string& _fname) const final;
 
   /// Transforms the data frames by adding the desired time series
   /// transformations.
   std::pair<containers::DataFrame, std::vector<containers::DataFrame>>
-  transform(const TransformParams& _params) const final;
+  transform(const Params& _params) const final;
 
  public:
   /// Creates a deep copy.
-  std::shared_ptr<Preprocessor> clone(
-      const std::optional<std::vector<Poco::JSON::Object::Ptr>>& _dependencies =
+  fct::Ref<Preprocessor> clone(
+      const std::optional<std::vector<commands::Fingerprint>>& _dependencies =
           std::nullopt) const final {
-    auto c = std::make_shared<EMailDomain>(*this);
+    const auto c = fct::Ref<EMailDomain>::make(*this);
     if (_dependencies) {
       c->dependencies_ = *_dependencies;
     }
     return c;
   }
+
+  /// Returns the fingerprint of the preprocessor (necessary to build
+  /// the dependency graphs).
+  commands::Fingerprint fingerprint() const final {
+    using FingerprintType =
+        typename commands::Fingerprint::EMailDomainFingerprint;
+    return commands::Fingerprint(FingerprintType(
+        fct::make_field<"dependencies_">(dependencies_),
+        fct::make_field<"type_">(fct::Literal<"EMailDomain">())));
+  }
+
+  /// Necessary for the automated parsing to work.
+  NamedTupleType named_tuple() const { return NamedTupleType(f_cols(cols_)); }
 
   /// The preprocessor does not generate any SQL scripts.
   std::vector<std::string> to_sql(
@@ -108,17 +117,14 @@ class EMailDomain : public Preprocessor {
 
   /// Fits and transforms an individual data frame.
   containers::DataFrame fit_transform_df(const containers::DataFrame& _df,
-                                         const std::string& _marker,
+                                         const MarkerType _marker,
                                          const size_t _table,
                                          containers::Encoding* _categories);
-
-  /// Parses a JSON object.
-  EMailDomain from_json_obj(const Poco::JSON::Object& _obj) const;
 
   /// Transforms a single data frame.
   containers::DataFrame transform_df(const containers::Encoding& _categories,
                                      const containers::DataFrame& _df,
-                                     const std::string& _marker,
+                                     const MarkerType _marker,
                                      const size_t _table) const;
 
  private:
@@ -130,13 +136,12 @@ class EMailDomain : public Preprocessor {
 
  private:
   /// List of all columns to which the email domain transformation applies.
-  std::vector<std::shared_ptr<helpers::ColumnDescription>> cols_;
+  std::vector<fct::Ref<helpers::ColumnDescription>> cols_;
 
   /// The dependencies inserted into the the preprocessor.
-  std::vector<Poco::JSON::Object::Ptr> dependencies_;
+  std::vector<commands::Fingerprint> dependencies_;
 };
 
-// ----------------------------------------------------
 }  // namespace preprocessors
 }  // namespace engine
 
