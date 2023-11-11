@@ -175,13 +175,13 @@ replacing `ARCH` with either `x64` or `arm64`, depending on your architecture. I
 
 ```bash
 # Downloads the tar file of the engine
-wget https://static.getml.com/download/1.3.1/getml-1.3.1-ARCH-community-edition-linux.tar.gz
+wget https://static.getml.com/download/1.4.0/getml-1.4.0-ARCH-community-edition-linux.tar.gz
 
 # Extracts the tar file
-tar -xf getml-1.3.1-ARCH-community-edition-linux.tar.gz
+tar -xf getml-1.4.0-ARCH-community-edition-linux.tar.gz
 
 # Changes directory 
-cd getml-1.3.1-ARCH-community-edition-linux
+cd getml-1.4.0-ARCH-community-edition-linux
 
 # Installs the engine
 ./getML install
@@ -209,16 +209,16 @@ Before the installation, make sure your system meets the following requirements:
 
 Once the requirements are met, the following steps should be followed:
 
-1. Download the getml community edition for Docker from the following URL: https://static.getml.com/download/1.3.1/getml-1.3.1-community-edition-docker.zip
+1. Download the getml community edition for Docker from the following URL: https://static.getml.com/download/1.4.0/getml-1.4.0-community-edition-docker.zip
 
-2. Extract `getml-1.3.1-community-edition-docker.zip` in a folder.
+2. Extract `getml-1.4.0-community-edition-docker.zip` in a folder.
 
 3. Make sure that Docker (the Docker daemon) is running.
 
 4. Execute `setup.sh`. On Windows, open the folder in which the zip file was extracted and just click on `setup.sh`. On macOS and Linux, do the following:
 
     ``` bash
-    cd getml-1.3.1-community-edition-docker
+    cd getml-1.4.0-community-edition-docker
     bash setup.sh # or ./setup.sh
     ```
 
