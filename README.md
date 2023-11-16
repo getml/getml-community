@@ -24,24 +24,22 @@ Because of this customized database engine, it is very fast. In fact, it is
 between 60x to 1000x faster than other open-source tools for automated
 feature engineering.
 
+## What kind of features does getML generate?
 
-## Table of contents
+getML generates features for relational data and time series. These include, but are not limited to:
 
-- [Benchmarks](#benchmarks)
-- [Example](#example)
-- [Demo notebooks](#demo-notebooks)
-- [Installation](#installation)
-    - [Linux](#linux)
-    - [Docker (for macOS, Windows or Linux)](#docker-for-macos-windows-or-linux)
-- [Deinstallation](#deinstallation)
-    - [Linux](#linux-1)
-    - [Docker](#docker)
-- [Compiling from source](#compiling-from-source)
+- **Various aggregations**, i.e. average, sum, minimum, maximum, quantiles, exponentially weighted moving average, trend, exponentially weighted trends, ...
+- **Aggregations within a certain time frame**, i.e. maximum in the last 30 days, minimum in the last 7 days
+- **Seasonal factors from time stamps**, such as month, day of the week, hour, ...
+- **Seasonal aggregations**, i.e. maximum for the same weekday as the prediction point, minimum for the same hour as the prediction point, ...
 
+In other words, it generates the kind of features you would normally build manually. But it automatically generates thousands of features and then automatically picks the best, saving you a lot of manual work.
+
+More importantly, it can do so considerably faster than any other open-source framework for these purposes. As far as we know, it is the fastest open-source tool for feature engineering in the world!
 
 ## Benchmarks
 
-We evaluated the performance of getML's FastProp algorithm against five other open-source tools for automated feature engineering: _tsflex_, _featuretools_, _tsfel_, _tsfresh_ and _kats_. The datasets used include:
+We evaluated the performance of getML's FastProp algorithm against five other open-source tools for automated feature engineering on relational data and time series: _tsflex_, _featuretools_, _tsfel_, _tsfresh_ and _kats_. The datasets used include:
 
 1. Air Pollution | Hourly data on air pollution and weather in Beijing, China.
 2. Interstate94 | Hourly data on traffic volume on the Interstate 94 from Minneapolis to St. Paul.
