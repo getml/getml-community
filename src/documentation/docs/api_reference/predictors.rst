@@ -14,6 +14,8 @@ Classes
    :toctree: ../api/
    :template: autosummary_theme/class.rst    
 
+   ~predictors.ScaleGBMClassifier
+   ~predictors.ScaleGBMRegressor
    ~predictors.LinearRegression
    ~predictors.LogisticRegression
    ~predictors.XGBoostClassifier

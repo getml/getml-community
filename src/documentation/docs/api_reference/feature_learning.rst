@@ -18,6 +18,7 @@ Classes
    ~feature_learning.FastProp
    ~feature_learning.Multirel
    ~feature_learning.Relboost
+   ~feature_learning.Fastboost
    ~feature_learning.RelMT
 
 Submodules
