@@ -139,13 +139,9 @@ To experience getML in action, the following example notebooks are provided in t
 
 | Notebook                                                      | Prediction Type  | Population Size | Data Type   | Target  | Domain           | Difficulty | Comments                                        |
 | ------------------------------------------------------------- | ---------------- | --------------- | ----------- |-------- | ---------------- | ---------- | --------------------------- |
-| [adventure_works.ipynb](demo-notebooks/adventure_works.ipynb) | Classification   | 19,704          | Relational  | Churn   | Customer loyalty | Hard       | Good reference for a complex data model         |
-| [formula1.ipynb](demo-notebooks/formula1.ipynb)               | Classification   | 31,578          | Relational  | Win     | Sports           | Medium     |                                                 |
 | [loans.ipynb](demo-notebooks/loans.ipynb)                     | Classification   | 682             | Relational  | Default | Finance          | Easy       | Good notebook to get started on relational data |
 | [interstate94.ipynb](demo-notebooks/interstate94.ipynb)       | Regression       | 24,096          | Time Series | Traffic | Transportation   | Easy       | Good notebook to get started on time series     |
 | [robot.ipynb](demo-notebooks/robot.ipynb)                     | Regression       | 15,001          | Time Series | Force   | Robotics         | Medium     |                                                 |
-| [seznam.ipynb](demo-notebooks/seznam.ipynb)                   | Regression       | 1,462,078       | Relational  | Volume  | E-commerce       | Medium     |                                                 |
-
 
 ## Installation
 
