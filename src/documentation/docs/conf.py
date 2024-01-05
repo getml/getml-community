@@ -86,13 +86,15 @@ html_theme_options = {
 html_context = {}
 
 html_css_files = [
-    "https://cdn.jsdelivr.net/npm/docsearch.js@2/dist/cdn/docsearch.min.css",
+    # [#420] - temporarily disabled
+    # "https://cdn.jsdelivr.net/npm/docsearch.js@2/dist/cdn/docsearch.min.css",
     "css/theme.css",
     "css/custom.css",
 ]
 
 html_js_files = [
-    "https://cdn.jsdelivr.net/npm/docsearch.js@2/dist/cdn/docsearch.min.js",
+    # [#420] - temporarily disabled
+    # "https://cdn.jsdelivr.net/npm/docsearch.js@2/dist/cdn/docsearch.min.js",
     ("https://getml.com/assets/js/tags.js", {"defer": "defer"}),
     ("js/getml.js", {"defer": "defer"}),
 ]
