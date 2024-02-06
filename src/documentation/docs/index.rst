@@ -10,6 +10,13 @@ us <https://getml.com/contact/lets-talk>`_ for any questions or inquiries.
 
 ____
 
+.. note::
+   Some components of getML have been open sourced as part of **getML community edition**. 
+   You may have a look at 
+   :ref:`community vs enterprise edition table <home/getting_started/getting_started:Community vs enterprise edition>`
+   to see the highlights of both the editions. 
+
+
 getML in one minute 
 -------------------
 
@@ -46,6 +53,7 @@ simple steps.
 				
    import getml
    
+   getml.engine.launch()
    getml.engine.set_project('one_minute_to_getml')
 
 1. Load the data into the engine

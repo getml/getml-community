@@ -1,0 +1,11 @@
+,Community edition,Enterprise edition
+License,Elastic Licence v2,Proprietary
+Platform,Linux & Docker,Also macOS
+Preprocessors,"EmailDomain, Imputation, Seasonal, Substring, TextFieldSplitter",Also Mapping
+Feature learners,FastProp,"Also Multirel, Relboost, RelMT"
+Predictors,"LinearRegression, LogisticRegression, XGBoost",Same
+Productionization,Transpilation to human-readable SQL,"Also transpilation to SQLite, Spark SQL, SAP HANA, BigQuery, SnowflakeSQL, TSQL. Built-in HTTP Endpoints."
+Hyperparameter optimization,"RandomSearch, LatinHypercube, GaussianOptimization, Customized tuning routines",Same
+Database connectors,"SQLite, MySQL, MariaDB, PostgreSQL","Also Greenplum, ODBC, SAP HANA, BigQuery, Snowflake"
+Other data sources,"CSV, Parquet, Pandas, Arrow, Pyspark, JSON",Also S3
+Other functionalities,Memory mapping,Also web frontend
