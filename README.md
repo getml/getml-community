@@ -5,26 +5,63 @@
 </p>
 
 <p align="center" style="text-align: center;">
-        <a href="https://getml.com/contact/lets-talk/" target="_blank">
+        <a href="https://getml.com/contact" target="_blank">
         <img src="https://img.shields.io/badge/schedule-a_meeting-blueviolet.svg" /></a>
-        <a href="mailto:contact@getml.com" target="_blank">
+        <a href="mailto:hello@getml.com" target="_blank">
         <img src="https://img.shields.io/badge/contact-us_by_mail-orange.svg" /></a>
         <a href="LICENSE.txt" target="_blank">
         <img src="https://img.shields.io/badge/LICENSE-ELv2-green" /></a>
 </p>
 
-
 # getML - Automated Feature Engineering for Relational Data and Time Series
 
-getML is a tool for automating feature engineering on relational data
-and time series. Unlike similar tools, it includes a database engine 
-that has been customized for this very purpose.
+## Introduction
 
-Because of this customized database engine, it is very fast. In fact, it is
-between 60x to 1000x faster than other open-source tools for automated
-feature engineering.
+getML is a tool for automating feature engineering on relational data and time series. It includes a specifically customized database engine for this very purpose.
 
-## What kind of features does getML generate?
+This results in a speedup between _60_ to _1000_ times (see [Benchmarks](#benchmarks)) over other open-source tools like [featuretools](https://www.featuretools.com/) and [tsfresh](https://tsfresh.com/) for automated feature engineering. Also check out our [demonstrational notebooks](https://github.com/getml/getml-demo) to see more comparisons.
+
+## Table of Contents
+
+* [Introduction](#introduction)
+* [Table of Contents](#table-of-contents)
+* [Quick Start](#quick-start)
+* [Key benefits for using getML](#key-benefits-for-using-getml)
+  * [Features generate by getML](#features-generate-by-getml)
+  * [Documentation](#documentation)
+* [Benchmarks](#benchmarks)
+* [Demo notebooks](#demo-notebooks)
+* [Example](#example)
+
+## Quick Start
+
+As getML is available on [PyPI](https://pypi.org/project/getml/), you can install it simply via
+
+```bash
+$ pip install getml
+```
+
+Check out [the Example](#example) and the [demonstrational notebooks](https://github.com/getml/getml-demo) to get started with getML. A [detailed getting started guide](https://docs.getml.com/latest/home/getting_started/getting_started.html) and [the documentation](https://docs.getml.com/latest/) will also help you on your way with getML.
+
+To learn, how to build and contribute to getML, check out [CONTRIBUTING.md](CONTRIBUTING.md)
+
+## Key benefits for using getML
+
+One big key feature over other tools like [featuretools](https://www.featuretools.com/), [tsfresh](https://tsfresh.com/) and [prophet](https://facebook.github.io/prophet/) is the runtime performance. The own implementations of FastProp (short for fast propositionalization) of a propositionalization algorithm reaches improvements of about _60_ to _160_ times faster run times (see specifically [FastProp Benchmarks](https://github.com/getml/getml-demo/README.md#fastprop-benchmarks) within our notebooks). This leads to faster iterations for data scientists, giving them more time to tweak variables to achieve even better results.
+
+FastProp is not only faster, but can also provide an increased accuracy.
+
+For even better accuracy, getML provides advanced algorithms in its [professional and enterprise feature-sets](https://www.getml.com/pricing), namely [Multirel](https://docs.getml.com/latest/user_guide/feature_engineering/feature_engineering.html#multirel), [Relboost](https://docs.getml.com/latest/user_guide/feature_engineering/feature_engineering.html#relboost) and [RelMT](https://docs.getml.com/latest/user_guide/feature_engineering/feature_engineering.html#relmt). 
+
+The standard version includes [preprocessors](https://docs.getml.com/latest/user_guide/preprocessing/preprocessing.html) (like CategoryTrimmer, EmailDomain, Imputation, Mapping, Seasonal, Substring, TextFieldSplitter), [predictors](https://docs.getml.com/latest/user_guide/predicting/predicting.html#using-getml) (like LinearRegression, LogisticRegression, XGBoostClassifier, XGBoostRegressor) and [hyperparameter optimizer](https://docs.getml.com/latest/user_guide/hyperopt/hyperopt.html#hyperparameter-optimization) (like RandomSearch, LatinHypercubeSearch, GaussianHyperparameterSearch).
+
+It also gives access to [the getML Monitor](https://docs.getml.com/latest/user_guide/getml_suite/monitor.html), which provides valuable information about projects, pipelines, features, important columns, accuracies, performances, and more. Those information give insights and help understand and improve the results.
+
+getML can [import data from various sources](https://docs.getml.com/latest/user_guide/importing_data/importing_data.html) like CSV, Pandas, JSON, SQLite, MySQL, MariaDB, PostgreSQL, Greenplum, ODBC. 
+
+While the standard version is open source, can be run on your local machine, and gets basic support via EMail and via this repository, it can't be used for productive purposes. The [professional and enterprise versions](https://www.getml.com/pricing) in contrast allows productive uses, gets also support via phone and chat, offers training sessions, as well as on-premise and cloud hosting, and export and deployment features. Get in [contact via email](mailto:hello@getml.com) or directly [schedule a meeting](https://getml.com/contact).
+
+### Features generate by getML
 
 getML generates features for relational data and time series. These include, but are not limited to:
 
@@ -35,21 +72,28 @@ getML generates features for relational data and time series. These include, but
 
 In other words, it generates the kind of features you would normally build manually. But it automatically generates thousands of features and then automatically picks the best, saving you a lot of manual work.
 
-More importantly, it can do so considerably faster than any other open-source framework for these purposes. As far as we know, it is the fastest open-source tool for feature engineering in the world!
+### Documentation
+
+Check out the full documentation on https://docs.getml.com/latest/.
 
 ## Benchmarks
 
-We evaluated the performance of getML's FastProp algorithm against five other open-source tools for automated feature engineering on relational data and time series: _tsflex_, _featuretools_, _tsfel_, _tsfresh_ and _kats_. The datasets used include:
+We evaluated the performance of [getML's FastProp algorithm](https://docs.getml.com/latest/user_guide/feature_engineering/feature_engineering.html#fastprop) against five other open-source tools for automated feature engineering on relational data and time series: [_tsflex_](https://github.com/predict-idlab/tsflex), [_featuretools_](https://www.featuretools.com/), [_tsfel_](https://github.com/fraunhoferportugal/tsfel), [_tsfresh_](https://github.com/blue-yonder/tsfresh) and [_kats_](https://github.com/facebookresearch/Kats). The datasets used include:
 
-1. Air Pollution | Hourly data on air pollution and weather in Beijing, China.
-2. Interstate94 | Hourly data on traffic volume on the Interstate 94 from Minneapolis to St. Paul.
-3. Dodgers | Five-minute measurements of traffic near Los Angeles, affected by games hosted by the LA Dodgers (an American baseball team).
-4. Energy | Ten-minute measurements of the electricity consumption of a single household.
-5. Tetouan | Ten-minute electricity consumption of three different zones in Tetouan City, Mexico
+1. Air Pollution 
+    * Hourly data on air pollution and weather in Beijing, China.
+2. Interstate94 
+    * Hourly data on traffic volume on the Interstate 94 from Minneapolis to St. Paul.
+3. Dodgers
+    * Five-minute measurements of traffic near Los Angeles, affected by games hosted by the LA Dodgers.
+4. Energy
+    * Ten-minute measurements of the electricity consumption of a single household.
+5. Tetouan
+    * Ten-minute electricity consumption of three different zones in Tetouan City, Mexico
 
 The plots shown below contain the *runtime per feature* calculated relative to the runtime per feature of the fastest approach. The fastest approach turns out to be the getML's FastProp, so it gets a value 1.
 
-We observe that for all datasets, the features produced by the different tools are quite similar, but __getML is 60-1000 times faster than other open-source tools__. 
+We observe, that for all datasets, the features produced by the different tools are quite similar, but __getML is 60-1000 times faster__ than other open-source tools. 
 
 <p align="center">
     <img style="width: 80%" src="assets/benchmarks_plot_linear.png" />
@@ -61,7 +105,19 @@ In fact, the speed-up is so big that we need a logarithmic scale to even see the
     <img style="width: 80%" src="assets/benchmarks_plot_log.png" />
 </p>
 
-Please refer to the benchmark folder in this repository, if you want to reproduce the results.
+To reproduce those results, refer to the [benchmarks folder](benchmarks) in this repository.
+
+## Demo notebooks
+
+To experience getML in action, the following example notebooks are provided in the [demo-notebooks](demo-notebooks) directory:
+
+| Notebook                                                      | Prediction Type  | Population Size | Data Type   | Target  | Domain           | Difficulty | Comments                                        |
+| ------------------------------------------------------------- | ---------------- | --------------- | ----------- |-------- | ---------------- | ---------- | --------------------------- |
+| [interstate94.ipynb](demo-notebooks/interstate94.ipynb)       | Regression       | 24,096          | Time Series | Traffic | Transportation   | Easy       | Good notebook to get started on time series     |
+| [loans.ipynb](demo-notebooks/loans.ipynb)                     | Classification   | 682             | Relational  | Default | Finance          | Easy       | Good notebook to get started on relational data |
+| [robot.ipynb](demo-notebooks/robot.ipynb)                     | Regression       | 15,001          | Time Series | Force   | Robotics         | Medium     |                                                 |
+
+For an extensive list of demonstrational and benchmarking notebooks, have a look at the [their own repository](https://github.com/getml/getml-demo).
 
 ## Example 
 
@@ -128,177 +184,3 @@ predictions = pipe.predict(time_series.test)
 ```
 
 To see the full example, check out the Interstate94 notebook ([interstate94.ipynb](demo-notebooks/interstate94.ipynb)).
-
-## Documentation
-
-Check out the full documentation on https://docs.getml.com/latest/.
-
-## Demo notebooks
-
-To experience getML in action, the following example notebooks are provided in the [demo-notebooks](demo-notebooks) directory:
-
-| Notebook                                                      | Prediction Type  | Population Size | Data Type   | Target  | Domain           | Difficulty | Comments                                        |
-| ------------------------------------------------------------- | ---------------- | --------------- | ----------- |-------- | ---------------- | ---------- | --------------------------- |
-| [loans.ipynb](demo-notebooks/loans.ipynb)                     | Classification   | 682             | Relational  | Default | Finance          | Easy       | Good notebook to get started on relational data |
-| [interstate94.ipynb](demo-notebooks/interstate94.ipynb)       | Regression       | 24,096          | Time Series | Traffic | Transportation   | Easy       | Good notebook to get started on time series     |
-| [robot.ipynb](demo-notebooks/robot.ipynb)                     | Regression       | 15,001          | Time Series | Force   | Robotics         | Medium     |                                                 |
-
-## Installation
-
-### Linux
-
-Before the installation, make sure your Linux meets the following requirements:
-- GLIBC 2.17 or above (check by using `ldd --version`)
-- On Fedora 30, you need _libxcrypt-compat_. Install using: `yum install libxcrypt-compat`.
-- Python 3.8 or above, _numpy_ and _pandas_ (for the Python API).
-
-
-There are two components of the getML community edition: 
-1. The Python API | Helps you interact with the getML engine
-2. The getML engine | The C++ backend of getML
-
-The Python API can be installed from the Python Package Index by executing the following command in a terminal:
-
-```bash
-pip install getml
-```
-
-The getML engine comes with the Python API and is installed automatically. However, if you want to install it separately, please execute the following commands,
-replacing `ARCH` with either `x64` or `arm64`, depending on your architecture. If you are unsure, `x64` is probably the right choice. You can also use
-`uname -m` to figure out the architecture. If it says something like `aarch64` or `arm64`, you need to use `arm64`, otherwise go with `x64`.
-
-```bash
-# Downloads the tar file of the engine
-wget https://static.getml.com/download/1.4.0/getml-1.4.0-ARCH-community-edition-linux.tar.gz
-
-# Extracts the tar file
-tar -xf getml-1.4.0-ARCH-community-edition-linux.tar.gz
-
-# Changes directory 
-cd getml-1.4.0-ARCH-community-edition-linux
-
-# Installs the engine
-./getML install
-```
-
-Alternatively, you install the API from this repository. If you do this, you also have to install the engine as indicated above:
-
-```bash
-# Changes directory 
-cd src/python-api
-
-# Installs the python API
-pip3 install .
-```
-
-### Docker (for macOS, Windows or Linux)
-
-Before the installation, make sure your system meets the following requirements:
-
-- [Docker](https://www.docker.com/) | On Linux, make sure that you follow these post-installation steps to run docker without root rights/sudo: https://docs.docker.com/engine/install/linux-postinstall/
-
-- Bash | Pre-installed on Linux and macOS. For Windows, we recommend [Git Bash](https://gitforwindows.org/).
-
-- [OpenSSL](https://www.openssl.org/) | Pre-installed on most systems.
-
-Once the requirements are met, the following steps should be followed:
-
-1. Download the getml community edition for Docker from the following URL: https://static.getml.com/download/1.4.0/getml-1.4.0-community-edition-docker.zip
-
-2. Extract `getml-1.4.0-community-edition-docker.zip` in a folder.
-
-3. Make sure that Docker (the Docker daemon) is running.
-
-4. Execute `setup.sh`. On Windows, open the folder in which the zip file was extracted and just click on `setup.sh`. On macOS and Linux, do the following:
-
-    ``` bash
-    cd getml-1.4.0-community-edition-docker
-    bash setup.sh # or ./setup.sh
-    ```
-
-    This will run the Dockerfile and setup your Docker image. It will also create a Docker volume called 'getml'.
-
-5. Execute `run.sh`. On Windows, you can just click on `run.sh`. On macOS and Linux, do the following:
-
-    ```bash
-    bash run.sh # or ./run.sh
-    ```
-
-    This will run the Docker image. 
-
-## Deinstallation
-
-### Linux
-
-You will have to remove the folder `.getML` from your home directory. In a terminal, execute: 
-```
-rm -r $HOME/.getML
-```
-
-### Docker
-
-On Windows, you can just click on uninstall.sh.
-
-On macOS and Linux, execute the following in a terminal:
-
-```
-bash uninstall.sh # or ./uninstall.sh
-```
-
-
-## Compiling from source
-
-Because getML is a complicated software, we use Docker
-for our build environment. If you want to compile it from source,
-here is what you have to do:
-
-On a Linux machine, install Docker (if you don't have a Linux
-machine, we recommend https://multipass.run):
-
-https://docs.docker.com/engine/install/ubuntu/
-
-Also make sure that you follow the post-installation steps for Linux, so
-can launch Docker without root rights:
-
-https://docs.docker.com/engine/install/linux-postinstall/
-
-Then, do the following, again replacing `ARCH` with either `x64` or `arm64`:
-
-```bash
-# Go to the linux folder inside the repository
-cd linux-ARCH
-
-# Set up the Docker container (you only have to do this once)
-./build.sh init_docker
-
-# Download and compile the dependencies - this will
-# take a while (you only have to do this once)
-./build.sh init
-
-# Builds the package
-./build.sh p
-
-# Runs the newly built engine
-./build.sh x
-```
-
-From now on, whenever you want to build a new
-package, you can do that with one simple command:
-
-```bash
-./build.sh p
-```
-
-If you want to change the C++ code and then compile only the engine,
-you can do the following:
-
-```bash
-./build.sh c
-```
-
-Likewise, if you want to change the Go code and then compile only the entrypoint,
-you can do the following:
-
-```bash
-./build.sh app
-```
