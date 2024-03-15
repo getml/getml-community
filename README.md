@@ -89,7 +89,7 @@ We evaluated the performance of [getML's FastProp algorithm](https://docs.getml.
 4. Energy
     * Ten-minute measurements of the electricity consumption of a single household.
 5. Tetouan
-    * Ten-minute electricity consumption of three different zones in Tetouan City, Mexico
+    * Ten-minute electricity consumption of three different zones in Tetouan City, north Morocco
 
 The plots shown below contain the *runtime per feature* calculated relative to the runtime per feature of the fastest approach. The fastest approach turns out to be the getML's FastProp, so it gets a value 1.
 

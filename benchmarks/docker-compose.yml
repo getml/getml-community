@@ -1,0 +1,29 @@
+services:
+  benchmarks:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      platforms:
+        - "linux/amd64"
+      args:
+        - VERSION_NUMBER=$VERSION_NUMBER
+        - GETML_VERSION=$GETML_VERSION
+    command: ['/home/getml/benchmarks/run_benchmarks.sh']
+    networks:
+      - benchmarks_network
+    ports:
+      - "1709:1709"
+    userns_mode: keep-id
+    volumes:
+      - ./:/home/getml/benchmarks
+      - benchmarks_logs_volume:/home/getml/.getML/logs
+      - benchmarks_projects_volume:/home/getml/.getML/projects
+      - benchmarks_storage:/home/getml/storage
+
+networks:
+  benchmarks_network:
+
+volumes:
+  benchmarks_logs_volume:
+  benchmarks_projects_volume:
+  benchmarks_storage:

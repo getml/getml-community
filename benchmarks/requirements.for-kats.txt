@@ -1,0 +1,3 @@
+-r requirements.for-fbprophet.txt
+fbprophet==0.7.1
+packaging==21.3
