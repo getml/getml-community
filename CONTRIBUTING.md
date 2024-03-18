@@ -1,3 +1,14 @@
+# Contributing
+
+## Table of Contents
+
+* [Installation](#installation)
+  * [Linux](#linux)
+  * [Docker](#docker-for-macos-windows-or-linux)
+* [Deinstallation](#deinstallation)
+  * [Linux](#linux-1)
+  * [Docker](#docker)
+* [Compiling from source](#compiling-from-source)
 
 ## Installation
 
@@ -21,7 +32,7 @@ pip install getml
 
 The getML engine comes with the Python API and is installed automatically. However, if you want to install it separately, please execute the following commands,
 replacing `ARCH` with either `x64` or `arm64`, depending on your architecture. If you are unsure, `x64` is probably the right choice. You can also use
-`uname -m` to figure out the architecture. If it says something like `aarch64` or `arm64`, you need to use `arm64`, otherwise go with `x64`.
+`uname -m` to figure out the architecture. If it says something like `aarch64` or `arm64`, you need to use [`arm64`](https://static.getml.com/download/1.4.0/getml-1.4.0-arm64-community-edition-linux.tar.gz), otherwise go with [`x64`](https://static.getml.com/download/1.4.0/getml-1.4.0-x64-community-edition-linux.tar.gz).
 
 ```bash
 # Downloads the tar file of the engine

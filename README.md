@@ -47,7 +47,7 @@ To learn, how to build and contribute to getML, check out [CONTRIBUTING.md](CONT
 
 ## Key benefits for using getML
 
-One big key feature over other tools like [featuretools](https://www.featuretools.com/), [tsfresh](https://tsfresh.com/) and [prophet](https://facebook.github.io/prophet/) is the runtime performance. The own implementations of FastProp (short for fast propositionalization) of a propositionalization algorithm reaches improvements of about _60_ to _160_ times faster run times (see specifically [FastProp Benchmarks](https://github.com/getml/getml-demo/README.md#fastprop-benchmarks) within our notebooks). This leads to faster iterations for data scientists, giving them more time to tweak variables to achieve even better results.
+One big key feature over other tools like [featuretools](https://www.featuretools.com/), [tsfresh](https://tsfresh.com/) and [prophet](https://facebook.github.io/prophet/) is the runtime performance. The own implementation of FastProp (short for fast propositionalization), a propositionalization algorithm, reaches improvements of about _60_ to _1000_ times faster run times (see specifically [FastProp Benchmarks](https://github.com/getml/getml-demo/README.md#fastprop-benchmarks) within our notebooks). This leads to faster iterations for data scientists, giving them more time to tweak variables to achieve even better results.
 
 FastProp is not only faster, but can also provide an increased accuracy.
 
@@ -59,7 +59,7 @@ It also gives access to [the getML Monitor](https://docs.getml.com/latest/user_g
 
 getML can [import data from various sources](https://docs.getml.com/latest/user_guide/importing_data/importing_data.html) like CSV, Pandas, JSON, SQLite, MySQL, MariaDB, PostgreSQL, Greenplum, ODBC. 
 
-While the standard version is open source, can be run on your local machine, and gets basic support via EMail and via this repository, it can't be used for productive purposes. The [professional and enterprise versions](https://www.getml.com/pricing) in contrast allows productive uses, gets also support via phone and chat, offers training sessions, as well as on-premise and cloud hosting, and export and deployment features. Get in [contact via email](mailto:hello@getml.com) or directly [schedule a meeting](https://getml.com/contact).
+While the standard version is open source, can be run on your local machine, and gets basic support via EMail and via this repository, it must not be used for productive purposes. The [professional and enterprise versions](https://www.getml.com/pricing) in contrast allows productive uses, gets also support via phone and chat, offers training sessions, as well as on-premise and cloud hosting, and export and deployment features. Get in [contact via email](mailto:hello@getml.com) or directly [schedule a meeting](https://getml.com/contact).
 
 ### Features generate by getML
 
@@ -112,10 +112,13 @@ To reproduce those results, refer to the [benchmarks folder](benchmarks) in this
 To experience getML in action, the following example notebooks are provided in the [demo-notebooks](demo-notebooks) directory:
 
 | Notebook                                                      | Prediction Type  | Population Size | Data Type   | Target  | Domain           | Difficulty | Comments                                        |
-| ------------------------------------------------------------- | ---------------- | --------------- | ----------- |-------- | ---------------- | ---------- | --------------------------- |
+| ------------------------------------------------------------- | ---------------- | --------------- | ----------- |-------- | ---------------- | ---------- | ----------------------------------------------- |
+| [adventure_works.ipynb](demo-notebooks/adventure_works.ipynb) | Classification   | 19,704          | Relational  | Churn   | Customer loyalty | Hard       | Good reference for a complex data model         |
+| [formula1.ipynb](demo-notebooks/formula1.ipynb)               | Classification   | 31,578          | Relational  | Win     | Sports           | Medium     |                                                 |
 | [interstate94.ipynb](demo-notebooks/interstate94.ipynb)       | Regression       | 24,096          | Time Series | Traffic | Transportation   | Easy       | Good notebook to get started on time series     |
 | [loans.ipynb](demo-notebooks/loans.ipynb)                     | Classification   | 682             | Relational  | Default | Finance          | Easy       | Good notebook to get started on relational data |
 | [robot.ipynb](demo-notebooks/robot.ipynb)                     | Regression       | 15,001          | Time Series | Force   | Robotics         | Medium     |                                                 |
+| [seznam.ipynb](demo-notebooks/seznam.ipynb)                   | Regression       | 1,462,078       | Relational  | Volume  | E-commerce       | Medium     |                                                 |
 
 For an extensive list of demonstrational and benchmarking notebooks, have a look at the [their own repository](https://github.com/getml/getml-demo).
 
