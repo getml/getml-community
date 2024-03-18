@@ -1,0 +1,25 @@
+services:
+  notebooks:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      platforms:
+        - "linux/amd64"
+        - "linux/arm64"
+    networks:
+      - notebooks_network
+    ports:
+      - "1709:1709"
+      - "8888:8888"
+    userns_mode: keep-id
+    volumes:
+      - ./:/home/getml/demo
+      - notebooks_logs_volume:/home/getml/.getML/logs
+      - notebooks_projects_volume:/home/getml/.getML/projects
+
+networks:
+  notebooks_network:
+
+volumes:
+  notebooks_logs_volume:
+  notebooks_projects_volume:
