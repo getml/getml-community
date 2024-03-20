@@ -9,6 +9,7 @@
 #define CONTAINERS_ARRAYMAKER_HPP_
 
 #include <arrow/api.h>
+#include <arrow/util/utf8.h>
 
 #include <cctype>
 #include <memory>
@@ -158,27 +159,19 @@ std::shared_ptr<arrow::ChunkedArray> ArrayMaker::make_float_array(
 template <class IteratorType1, class IteratorType2>
 std::shared_ptr<arrow::ChunkedArray> ArrayMaker::make_string_array(
     const IteratorType1 _begin, const IteratorType2 _end) {
-  const auto loc = std::locale("en_US.UTF-8");
+  arrow::util::InitializeUTF8();
 
-  const auto is_printable = [loc](const char c) -> bool {
-    return std::isprint(c, loc);
+  const auto append_function = [](const std::string& _str,
+                                  arrow::StringBuilder* _builder) {
+    if (helpers::NullChecker::is_null(_str) ||
+        !arrow::util::ValidateUTF8(_str)) {
+      const auto status = _builder->AppendNull();
+      throw_unless(status.ok(), status.message());
+    } else {
+      const auto status = _builder->Append(_str);
+      throw_unless(status.ok(), status.message());
+    }
   };
-
-  const auto filter_non_printable =
-      [is_printable](const std::string& _str) -> std::string {
-    return fct::collect::string(_str | VIEWS::filter(is_printable));
-  };
-
-  const auto append_function =
-      [filter_non_printable](const auto& _val, arrow::StringBuilder* _builder) {
-        if (helpers::NullChecker::is_null(_val)) {
-          const auto status = _builder->AppendNull();
-          throw_unless(status.ok(), status.message());
-        } else {
-          const auto status = _builder->Append(filter_non_printable(_val));
-          throw_unless(status.ok(), status.message());
-        }
-      };
 
   arrow::StringBuilder builder;
 
