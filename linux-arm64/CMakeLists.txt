@@ -19,6 +19,9 @@
  # Should contain the folder "Net", among others.
  set(POCO_DIR $ENV{POCO_DIR})
  
+ # Set the path containing reflect-cpp 
+ set(REFLECTCPP_DIR $ENV{REFLECTCPP_DIR})
+ 
  # Set the path containing xgboost
  # Should include folders "include", "lib" and "rabit"
  set(XGBOOST_DIR $ENV{XGBOOST_DIR})
@@ -51,9 +54,10 @@
      "${POCO_DIR}/NetSSL_OpenSSL/include"
      "${POCO_DIR}/Foundation/include"
      "${POSTGRES_DIR}/build/include"
+     # TODO
+     # "${REFLECTCPP_DIR}/include"
      "${XGBOOST_DIR}/include"
      "${XGBOOST_DIR}/rabit/include"
-     "${YYJSON_DIR}"
  )
 
  link_directories(
