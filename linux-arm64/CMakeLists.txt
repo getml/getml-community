@@ -54,8 +54,7 @@
      "${POCO_DIR}/NetSSL_OpenSSL/include"
      "${POCO_DIR}/Foundation/include"
      "${POSTGRES_DIR}/build/include"
-     # TODO
-     # "${REFLECTCPP_DIR}/include"
+     "${REFLECTCPP_DIR}/include"
      "${XGBOOST_DIR}/include"
      "${XGBOOST_DIR}/rabit/include"
  )
