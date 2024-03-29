@@ -113,7 +113,7 @@ struct PipelineCommand {
                        LiftCurveOp, PrecisionRecallCurveOp, RefreshOp,
                        RefreshAllOp, ROCCurveOp, ToSQLOp, TransformOp>;
 
-  using InputVarType = typename json::Reader::InputVarType;
+  using InputVarType = typename rfl::json::Reader::InputVarType;
 
   static PipelineCommand from_json_obj(const InputVarType& _obj);
 

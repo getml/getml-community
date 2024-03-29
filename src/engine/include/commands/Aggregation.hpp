@@ -25,7 +25,7 @@ class Aggregation {
         rfl::Literal<"avg", "count", "max", "median", "min", "stddev", "sum",
                      "var">;
 
-    rfl::Field<"type_", FloatAggregationLiteral> type;
+    using Tag = FloatAggregationLiteral;
     rfl::Field<"col_", FloatColumnOrFloatColumnView> col;
   };
 
@@ -34,7 +34,7 @@ class Aggregation {
     using StringAggregationLiteral =
         rfl::Literal<"count_categorical", "count_distinct">;
 
-    rfl::Field<"type_", StringAggregationLiteral> type;
+    using Tag = StringAggregationLiteral;
     rfl::Field<"col_", StringColumnOrStringColumnView> col;
   };
 

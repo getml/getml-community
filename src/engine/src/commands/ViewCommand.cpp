@@ -12,7 +12,7 @@
 namespace commands {
 
 ViewCommand ViewCommand::from_json_obj(const InputVarType& _obj) {
-  return ViewCommand(rfl::json::read<ReflectionType>(_obj));
+  return ViewCommand(rfl::json::read<ReflectionType>(_obj).value());
 }
 
 }  // namespace commands
