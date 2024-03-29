@@ -79,7 +79,7 @@ class ViewParser {
 
   /// Returns the population and peripheral data frames.
   auto parse_all(const std::string& _cmd) const {
-    const auto cmd = rfl::json::read<commands::DataFramesOrViews>(_cmd);
+    const auto cmd = rfl::json::read<commands::DataFramesOrViews>(_cmd).value();
     return parse_all(cmd);
   }
 
