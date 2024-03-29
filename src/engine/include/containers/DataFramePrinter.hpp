@@ -8,6 +8,7 @@
 #ifndef CONTAINERS_DATAFRAMEPRINTER_HPP_
 #define CONTAINERS_DATAFRAMEPRINTER_HPP_
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>

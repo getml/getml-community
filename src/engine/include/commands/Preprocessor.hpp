@@ -23,19 +23,20 @@ namespace commands {
 struct Preprocessor {
   /// The command needed to produce a CategoryTrimmer.
   struct CategoryTrimmerOp {
-    rfl::Field<"type_", rfl::Literal<"CategoryTrimmer">> type;
+    using Tag = rfl::Literal<"CategoryTrimmer">;
     rfl::Field<"max_num_categories_", size_t> max_num_categories;
     rfl::Field<"min_freq_", size_t> min_freq;
   };
 
   /// The command needed to produce an EmailDomain preprocessor.
   struct EMailDomainOp {
-    rfl::Field<"type_", rfl::Literal<"EMailDomain">> type;
+    using Tag = rfl::Literal<"EMailDomain">;
+    rfl::Field<"dummy_", std::optional<int>> dummy;
   };
 
   /// The command needed to produce an Imputation preprocessor.
   struct ImputationOp {
-    rfl::Field<"type_", rfl::Literal<"Imputation">> type;
+    using Tag = rfl::Literal<"Imputation">;
     rfl::Field<"add_dummies_", bool> add_dummies;
   };
 
@@ -45,7 +46,7 @@ struct Preprocessor {
 
   /// The command needed to produce a Seasonal preprocessor.
   struct SeasonalOp {
-    rfl::Field<"type_", rfl::Literal<"Seasonal">> type;
+    using Tag = rfl::Literal<"Seasonal">;
     rfl::Field<"disable_hour_", std::optional<bool>> disable_hour;
     rfl::Field<"disable_minute_", std::optional<bool>> disable_minute;
     rfl::Field<"disable_month_", std::optional<bool>> disable_month;
@@ -55,7 +56,7 @@ struct Preprocessor {
 
   /// The command needed to produce a Substring preprocessor.
   struct SubstringOp {
-    rfl::Field<"type_", rfl::Literal<"Substring">> type;
+    using Tag = rfl::Literal<"Substring">;
     rfl::Field<"begin_", size_t> begin;
     rfl::Field<"length_", size_t> length;
     rfl::Field<"unit_", std::string> unit;
@@ -63,8 +64,8 @@ struct Preprocessor {
 
   /// The command needed to produce a TextFieldSplitter preprocessor.
   struct TextFieldSplitterOp {
-    rfl::Field<"type_", rfl::Literal<"TextFieldSplitter">> type;
-    ;
+    using Tag = rfl::Literal<"TextFieldSplitter">;
+    rfl::Field<"dummy_", std::optional<int>> dummy;
   };
 
   using ReflectionType =

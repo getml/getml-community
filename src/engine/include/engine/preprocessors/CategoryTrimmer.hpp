@@ -103,9 +103,7 @@ class CategoryTrimmer : public Preprocessor {
     return commands::Fingerprint(CategoryTrimmerFingerprint{
         .dependencies = dependencies_,
         .op = commands::Preprocessor::CategoryTrimmerOp{
-            .type = rfl::default_value,
-            .max_num_categories = max_num_categories_,
-            .min_freq = min_freq_}});
+            .max_num_categories = max_num_categories_, .min_freq = min_freq_}});
   }
 
   /// Returns the type of the preprocessor.

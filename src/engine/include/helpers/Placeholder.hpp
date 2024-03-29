@@ -295,7 +295,7 @@ struct Placeholder {
   static Placeholder from_json_obj(const InputVarType& _json_obj);
 
   /// Used to break the recursive definition.
-  const ReflectionType val_;
+  ReflectionType val_;
 };
 
 }  // namespace helpers

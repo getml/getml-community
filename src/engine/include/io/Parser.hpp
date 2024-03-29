@@ -13,6 +13,7 @@
 #include <Poco/DateTimeParser.h>
 #include <Poco/Timestamp.h>
 
+#include <algorithm>
 #include <cmath>
 #include <iomanip>
 #include <iostream>

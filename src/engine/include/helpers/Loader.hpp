@@ -17,8 +17,7 @@
 #include <utility>
 #include <vector>
 
-#include "flexbuffers/from_flexbuffers.hpp"
-#include "json/from_json.hpp"
+#include "rfl/json.hpp"
 
 namespace helpers {
 
@@ -29,8 +28,7 @@ class Loader {
   static T load(const std::string& _fname) {
     const auto endings = std::vector<
         std::pair<std::string, std::function<T(const std::string&)>>>(
-        {std::make_pair(".fb", load_from_flexbuffers<T>),
-         std::make_pair(".json", load_from_json<T>)});
+        {std::make_pair(".json", load_from_json<T>)});
 
     for (const auto& [e, f] : endings) {
       if (_fname.size() > e.size() &&
@@ -48,20 +46,12 @@ class Loader {
     throw std::runtime_error("File '" + _fname + "' not found!");
   }
 
-  /// Loads any class that is supported by the flexbuffers library from
-  /// a binary file.
-  template <class T>
-  static T load_from_flexbuffers(const std::string& _fname) {
-    const auto bytes = read_bytes(_fname);
-    return flexbuffers::from_flexbuffers<T>(bytes);
-  }
-
   /// Loads any class that is supported by the json library from
   /// JSON.
   template <class T>
   static T load_from_json(const std::string& _fname) {
     const auto json_str = read_str(_fname);
-    return rfl::json::read<T>(json_str);
+    return rfl::json::read<T>(json_str).value();
   }
 
  private:

@@ -18,7 +18,7 @@ namespace commands {
 template <class LiteralType>
 struct LinearHyperparams {
   /// The underlying type.
-  rfl::Field<"type_", LiteralType> type;
+  using Tag = LiteralType;
 
   /// The learning rate, for numerical optimization.
   rfl::Field<"learning_rate_", Float> learning_rate;

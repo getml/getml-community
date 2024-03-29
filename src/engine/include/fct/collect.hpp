@@ -53,8 +53,8 @@ auto vector(RangeType range) {
 
   if constexpr (use_push_back) {
     auto vec = std::vector<T>();
-    for (const auto val : range) {
-      vec.emplace_back(val);
+    for (auto val : range) {
+      vec.emplace_back(std::move(val));
     }
     return vec;
   } else {

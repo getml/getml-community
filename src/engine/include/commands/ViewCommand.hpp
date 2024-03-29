@@ -33,7 +33,7 @@ struct ViewCommand {
 
   /// The command used to retrieve the content of a view.
   struct GetViewContentOp {
-    rfl::Field<"type_", rfl::Literal<"View.get_content">> type;
+    using Tag = rfl::Literal<"View.get_content">;
     rfl::Field<"cols_", std::vector<ViewCol>> cols;
     rfl::Field<"draw_", Int> draw;
     rfl::Field<"length_", Int> length;
@@ -43,20 +43,20 @@ struct ViewCommand {
 
   /// The command used to retrieve the number of rows of a view.
   struct GetViewNRowsOp {
-    rfl::Field<"type_", rfl::Literal<"View.get_nrows">> type;
+    using Tag = rfl::Literal<"View.get_nrows">;
     rfl::Field<"cols_", std::vector<ViewCol>> cols;
     rfl::Field<"force_", bool> force;
   };
 
   /// The command used to transform a view to Arrow.
   struct ViewToArrowOp {
-    rfl::Field<"type_", rfl::Literal<"View.to_arrow">> type;
+    using Tag = rfl::Literal<"View.to_arrow">;
     rfl::Field<"view_", DataFrameOrView> view;
   };
 
   /// The command used to transform a view to CSV.
   struct ViewToCSVOp {
-    rfl::Field<"type_", rfl::Literal<"View.to_csv">> type;
+    using Tag = rfl::Literal<"View.to_csv">;
     rfl::Field<"view_", DataFrameOrView> view;
     rfl::Field<"fname_", std::string> fname;
     rfl::Field<"batch_size_", size_t> batch_size;
@@ -66,7 +66,7 @@ struct ViewCommand {
 
   /// The command used to write a view into the database.
   struct ViewToDBOp {
-    rfl::Field<"type_", rfl::Literal<"View.to_db">> type;
+    using Tag = rfl::Literal<"View.to_db">;
     rfl::Field<"view_", DataFrameOrView> view;
     rfl::Field<"conn_id_", std::string> conn_id;
     rfl::Field<"table_name_", std::string> table_name;
@@ -74,7 +74,7 @@ struct ViewCommand {
 
   /// The command used to transform a view to parquet.
   struct ViewToParquetOp {
-    rfl::Field<"type_", rfl::Literal<"View.to_parquet">> type;
+    using Tag = rfl::Literal<"View.to_parquet">;
     rfl::Field<"view_", DataFrameOrView> view;
     rfl::Field<"fname_", std::string> fname;
     rfl::Field<"compression_", std::string> compression;

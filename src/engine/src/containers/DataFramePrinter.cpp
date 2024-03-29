@@ -7,6 +7,7 @@
 
 #include "containers/DataFramePrinter.hpp"
 
+#include <algorithm>
 #include <numeric>
 
 namespace containers {

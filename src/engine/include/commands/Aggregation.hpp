@@ -25,7 +25,7 @@ class Aggregation {
         rfl::Literal<"avg", "count", "max", "median", "min", "stddev", "sum",
                      "var">;
 
-    using Tag = FloatAggregationLiteral;
+    rfl::Field<"type_", FloatAggregationLiteral> type;
     rfl::Field<"col_", FloatColumnOrFloatColumnView> col;
   };
 
@@ -34,12 +34,11 @@ class Aggregation {
     using StringAggregationLiteral =
         rfl::Literal<"count_categorical", "count_distinct">;
 
-    using Tag = StringAggregationLiteral;
+    rfl::Field<"type_", StringAggregationLiteral> type;
     rfl::Field<"col_", StringColumnOrStringColumnView> col;
   };
 
-  using ReflectionType =
-      rfl::TaggedUnion<"type_", FloatAggregationOp, StringAggregationOp>;
+  using ReflectionType = std::variant<FloatAggregationOp, StringAggregationOp>;
 
   /// Used to break the recursive definition.
   ReflectionType val_;
