@@ -209,7 +209,7 @@ struct ColumnCommand {
       SetFloatColumnSubrolesOp, SetFloatColumnUnitOp, SetStringColumnSubrolesOp,
       SetStringColumnUnitOp, StringColumnOp>;
 
-  using InputVarType = typename json::Reader::InputVarType;
+  using InputVarType = typename rfl::json::Reader::InputVarType;
 
   static ColumnCommand from_json_obj(const InputVarType& _obj);
 

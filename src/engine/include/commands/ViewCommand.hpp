@@ -84,7 +84,7 @@ struct ViewCommand {
       rfl::TaggedUnion<"type_", GetViewContentOp, GetViewNRowsOp, ViewToArrowOp,
                        ViewToCSVOp, ViewToDBOp, ViewToParquetOp>;
 
-  using InputVarType = typename json::Reader::InputVarType;
+  using InputVarType = typename rfl::json::Reader::InputVarType;
 
   static ViewCommand from_json_obj(const InputVarType& _obj);
 

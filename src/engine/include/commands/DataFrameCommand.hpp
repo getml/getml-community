@@ -383,7 +383,7 @@ struct DataFrameCommand {
       GetDataFrameNRowsOp, LastChangeOp, RefreshDataFrameOp, RemoveColumnOp,
       SummarizeDataFrameOp, ToArrowOp, ToCSVOp, ToDBOp, ToParquetOp>;
 
-  using InputVarType = typename json::Reader::InputVarType;
+  using InputVarType = typename rfl::json::Reader::InputVarType;
 
   static DataFrameCommand from_json_obj(const InputVarType& _obj);
 

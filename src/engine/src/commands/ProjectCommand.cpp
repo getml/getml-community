@@ -12,7 +12,7 @@
 namespace commands {
 
 ProjectCommand ProjectCommand::from_json_obj(const InputVarType& _obj) {
-  return ProjectCommand(rfl::json::read<ReflectionType>(_obj));
+  return ProjectCommand(rfl::json::read<ReflectionType>(_obj).value());
 }
 
 }  // namespace commands

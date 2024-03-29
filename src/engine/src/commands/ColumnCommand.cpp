@@ -12,7 +12,7 @@
 namespace commands {
 
 ColumnCommand ColumnCommand::from_json_obj(const InputVarType& _obj) {
-  return ColumnCommand(rfl::json::read<ReflectionType>(_obj));
+  return ColumnCommand(rfl::json::read<ReflectionType>(_obj).value());
 }
 
 }  // namespace commands

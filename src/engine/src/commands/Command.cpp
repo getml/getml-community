@@ -10,7 +10,7 @@
 namespace commands {
 
 Command Command::from_json_obj(const InputVarType& _obj) {
-  return Command(rfl::json::read<ReflectionType>(_obj));
+  return Command(rfl::json::read<ReflectionType>(_obj).value());
 }
 
 }  // namespace commands
