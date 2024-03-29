@@ -123,16 +123,19 @@ struct ProjectCommand {
   /// The command to list all data frames.
   struct ListDfsOp {
     using Tag = rfl::Literal<"list_data_frames">;
+    rfl::Field<"dummy_", std::optional<int>> dummy;
   };
 
   /// The command to list all pipelines.
   struct ListPipelinesOp {
     using Tag = rfl::Literal<"list_pipelines">;
+    rfl::Field<"dummy_", std::optional<int>> dummy;
   };
 
   /// The command to list all pipelines.
   struct ListProjectsOp {
     using Tag = rfl::Literal<"list_projects">;
+    rfl::Field<"dummy_", std::optional<int>> dummy;
   };
 
   /// The command to load a data contaner.
@@ -159,6 +162,7 @@ struct ProjectCommand {
   /// The command to send the project name.
   struct ProjectNameOp {
     using Tag = rfl::Literal<"project_name">;
+    rfl::Field<"dummy_", std::optional<int>> dummy;
   };
 
   /// The command to load a data contaner.
@@ -185,6 +189,7 @@ struct ProjectCommand {
   /// The command to get the temp_dir.
   struct TempDirOp {
     using Tag = rfl::Literal<"temp_dir">;
+    rfl::Field<"dummy_", std::optional<int>> dummy;
   };
 
   using ReflectionType = rfl::TaggedUnion<

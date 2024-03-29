@@ -1,38 +1,26 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef MEMMAP_BTREE_HPP_
 #define MEMMAP_BTREE_HPP_
 
-// ----------------------------------------------------------------------------
-
 #include <unistd.h>
-
-// ----------------------------------------------------------------------------
 
 #include <memory>
 #include <optional>
 #include <utility>
 
-// ----------------------------------------------------------------------------
-
 #include "debug/debug.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "memmap/BTreeNode.hpp"
 #include "memmap/Pool.hpp"
 #include "memmap/Vector.hpp"
 #include "memmap/VectorImpl.hpp"
 
-// ----------------------------------------------------------------------------
-
 namespace memmap {
-// ----------------------------------------------------------------------------
 
 template <class KeyType, class ValueType>
 class BTree {
@@ -364,7 +352,7 @@ void BTree<KeyType, ValueType>::insert_keys(
   }
 
   if (!_node.is_leaf()) {
-    for (const auto child : _node.child_nodes_) {
+    for (const auto &child : _node.child_nodes_) {
       insert_keys(child, _vec);
     }
   }
@@ -380,7 +368,7 @@ void BTree<KeyType, ValueType>::insert_values(
   }
 
   if (!_node.is_leaf()) {
-    for (const auto child : _node.child_nodes_) {
+    for (const auto &child : _node.child_nodes_) {
       insert_values(child, _vec);
     }
   }

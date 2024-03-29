@@ -26,7 +26,7 @@ namespace commands {
 /// Any command to be handled by the PipelineManager.
 struct PipelineCommand {
   struct CheckOp {
-    rfl::Field<"type_", rfl::Literal<"Pipeline.check">> type;
+    using Tag = rfl::Literal<"Pipeline.check">;
     rfl::Field<"name_", std::string> name;
     rfl::Field<"population_df_", DataFrameOrView> population_df;
     rfl::Field<"peripheral_dfs_", std::vector<DataFrameOrView>> peripheral_dfs;
@@ -34,31 +34,31 @@ struct PipelineCommand {
   };
 
   struct ColumnImportancesOp {
-    rfl::Field<"type_", rfl::Literal<"Pipeline.column_importances">> type;
+    using Tag = rfl::Literal<"Pipeline.column_importances">;
     rfl::Field<"name_", std::string> name;
     rfl::Field<"target_num_", Int> target_num;
   };
 
   struct DeployOp {
-    rfl::Field<"type_", rfl::Literal<"Pipeline.deploy">> type;
+    using Tag = rfl::Literal<"Pipeline.deploy">;
     rfl::Field<"name_", std::string> name;
     rfl::Field<"deploy_", bool> deploy;
   };
 
   struct FeatureCorrelationsOp {
-    rfl::Field<"type_", rfl::Literal<"Pipeline.feature_correlations">> type;
+    using Tag = rfl::Literal<"Pipeline.feature_correlations">;
     rfl::Field<"name_", std::string> name;
     rfl::Field<"target_num_", Int> target_num;
   };
 
   struct FeatureImportancesOp {
-    rfl::Field<"type_", rfl::Literal<"Pipeline.feature_importances">> type;
+    using Tag = rfl::Literal<"Pipeline.feature_importances">;
     rfl::Field<"name_", std::string> name;
     rfl::Field<"target_num_", Int> target_num;
   };
 
   struct FitOp {
-    rfl::Field<"type_", rfl::Literal<"Pipeline.fit">> type;
+    using Tag = rfl::Literal<"Pipeline.fit">;
     rfl::Field<"name_", std::string> name;
     rfl::Field<"population_df_", DataFrameOrView> population_df;
     rfl::Field<"peripheral_dfs_", std::vector<DataFrameOrView>> peripheral_dfs;
@@ -66,34 +66,35 @@ struct PipelineCommand {
   };
 
   struct LiftCurveOp {
-    rfl::Field<"type_", rfl::Literal<"Pipeline.lift_curve">> type;
+    using Tag = rfl::Literal<"Pipeline.lift_curve">;
     rfl::Field<"name_", std::string> name;
     rfl::Field<"target_num_", Int> target_num;
   };
 
   struct PrecisionRecallCurveOp {
-    rfl::Field<"type_", rfl::Literal<"Pipeline.precision_recall_curve">> type;
+    using Tag = rfl::Literal<"Pipeline.precision_recall_curve">;
     rfl::Field<"name_", std::string> name;
     rfl::Field<"target_num_", Int> target_num;
   };
 
   struct RefreshOp {
-    rfl::Field<"type_", rfl::Literal<"Pipeline.refresh">> type;
+    using Tag = rfl::Literal<"Pipeline.refresh">;
     rfl::Field<"name_", std::string> name;
   };
 
   struct RefreshAllOp {
-    rfl::Field<"type_", rfl::Literal<"Pipeline.refresh_all">> type;
+    using Tag = rfl::Literal<"Pipeline.refresh_all">;
+    rfl::Field<"dummy_", std::optional<int>> dummy;
   };
 
   struct ROCCurveOp {
-    rfl::Field<"type_", rfl::Literal<"Pipeline.roc_curve">> type;
+    using Tag = rfl::Literal<"Pipeline.roc_curve">;
     rfl::Field<"name_", std::string> name;
     rfl::Field<"target_num_", Int> target_num;
   };
 
   struct ToSQLOp {
-    rfl::Field<"type_", rfl::Literal<"Pipeline.to_sql">> type;
+    using Tag = rfl::Literal<"Pipeline.to_sql">;
     rfl::Field<"name_", std::string> name;
     rfl::Field<"targets_", bool> targets;
     rfl::Field<"subfeatures_", bool> subfeatures;
@@ -102,7 +103,7 @@ struct PipelineCommand {
   };
 
   struct TransformOp {
-    rfl::Field<"type_", rfl::Literal<"Pipeline.transform">> type;
+    using Tag = rfl::Literal<"Pipeline.transform">;
     rfl::Field<"name_", std::string> name;
     rfl::Field<"http_request_", bool> http_request;
   };

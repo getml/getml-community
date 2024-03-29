@@ -91,8 +91,7 @@ class TextFieldSplitter : public Preprocessor {
         typename commands::Fingerprint::TextFieldSplitterFingerprint;
     return commands::Fingerprint(
         FingerprintType{.dependencies = dependencies_,
-                        .op = commands::Preprocessor::TextFieldSplitterOp{
-                            .type = rfl::default_value}});
+                        .op = commands::Preprocessor::TextFieldSplitterOp{}});
   }
 
   /// Necessary for the automated parsing to work.

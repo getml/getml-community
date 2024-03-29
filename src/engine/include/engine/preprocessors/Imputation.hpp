@@ -97,8 +97,8 @@ class Imputation : public Preprocessor {
         typename commands::Fingerprint::ImputationFingerprint;
     return commands::Fingerprint(FingerprintType{
         .dependencies = dependencies_,
-        .op = commands::Preprocessor::ImputationOp{
-            .type = rfl::default_value, .add_dummies = add_dummies_}});
+        .op =
+            commands::Preprocessor::ImputationOp{.add_dummies = add_dummies_}});
   }
 
   /// Necessary for the automated parsing to work.

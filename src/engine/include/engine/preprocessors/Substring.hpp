@@ -89,10 +89,8 @@ class Substring : public Preprocessor {
         typename commands::Fingerprint::SubstringFingerprint;
     return commands::Fingerprint(FingerprintType{
         .dependencies = dependencies_,
-        .op = commands::Preprocessor::SubstringOp{.type = rfl::default_value,
-                                                  .begin = begin_,
-                                                  .length = length_,
-                                                  .unit = unit_}});
+        .op = commands::Preprocessor::SubstringOp{
+            .begin = begin_, .length = length_, .unit = unit_}});
   }
 
   /// Necessary for the automated parsing to work.

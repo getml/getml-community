@@ -31,7 +31,7 @@ Float AggOpParser::aggregate(const commands::Aggregation& _aggregation) const {
     }
   };
 
-  return rfl::visit(handle, _aggregation.val_);
+  return std::visit(handle, _aggregation.val_);
 }
 
 // ----------------------------------------------------------------------------

@@ -38,13 +38,13 @@ class DataFrameOrView {
 
   /// Operation to retrieve a base data frame.
   struct DataFrameOp {
-    rfl::Field<"type_", rfl::Literal<"DataFrame">> type;
+    using Tag = rfl::Literal<"DataFrame">;
     rfl::Field<"name_", std::string> name;
   };
 
   /// Operation to parse a view
   struct ViewOp {
-    rfl::Field<"type_", rfl::Literal<"View">> type;
+    using Tag = rfl::Literal<"View">;
     rfl::Field<"name_", std::string> name;
     rfl::Field<"base_", rfl::Ref<DataFrameOrView>> base;
     rfl::Field<"added_", std::optional<AddedOp>> added;
