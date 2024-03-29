@@ -9,7 +9,7 @@
 
 #include "database/CSVBuffer.hpp"
 #include "database/ContentGetter.hpp"
-#include "json/json.hpp"
+#include "rfl/json.hpp"
 
 namespace database {
 
@@ -39,7 +39,7 @@ std::string MySQL::describe() const {
                            rfl::make_field<"dialect">(dialect()) *
                            rfl::make_field<"host">(host_) *
                            rfl::make_field<"port">(port_);
-  return json::to_json(description);
+  return rfl::json::write(description);
 }
 
 // ----------------------------------------------------------------------------

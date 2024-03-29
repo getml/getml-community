@@ -15,9 +15,9 @@
 #include <thread>
 
 #include "engine/config/config.hpp"
-#include "json/json.hpp"
 #include "rfl/Field.hpp"
 #include "rfl/NamedTuple.hpp"
+#include "rfl/json.hpp"
 
 namespace communication {
 
@@ -76,7 +76,7 @@ std::string Monitor::make_cmd(const std::string& _type,
                    rfl::make_field<"project_">(options_.engine().project_) *
                    rfl::make_field<"type_">(_type);
 
-  return json::to_json(cmd);
+  return rfl::json::write(cmd);
 }
 
 // ------------------------------------------------------------------------

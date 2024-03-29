@@ -11,7 +11,6 @@
 #include <memory>
 #include <vector>
 
-#include "json/json.hpp"
 #include "predictors/CSRMatrix.hpp"
 #include "predictors/Float.hpp"
 #include "predictors/FloatFeature.hpp"
@@ -20,6 +19,7 @@
 #include "predictors/PredictorImpl.hpp"
 #include "rfl/Field.hpp"
 #include "rfl/NamedTuple.hpp"
+#include "rfl/json.hpp"
 
 namespace predictors {
 

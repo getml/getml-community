@@ -8,7 +8,7 @@
 #include "engine/dependency/DataFrameTracker.hpp"
 
 #include "engine/utils/Getter.hpp"
-#include "json/json.hpp"
+#include "rfl/json.hpp"
 
 namespace engine {
 namespace dependency {
@@ -17,7 +17,7 @@ void DataFrameTracker::add(const containers::DataFrame& _df,
                            const commands::Fingerprint& _build_history) {
   clean_up();
 
-  const auto b_str = json::to_json(_build_history);
+  const auto b_str = rfl::json::write(_build_history);
 
   const auto b_hash = std::hash<std::string>()(b_str);
 
@@ -106,7 +106,7 @@ commands::Fingerprint DataFrameTracker::make_build_history(
 
 std::optional<containers::DataFrame> DataFrameTracker::retrieve(
     const commands::Fingerprint& _build_history) const {
-  const auto b_str = json::to_json(_build_history);
+  const auto b_str = rfl::json::write(_build_history);
   const auto b_hash = std::hash<std::string>()(b_str);
   return get_df(b_hash);
 }

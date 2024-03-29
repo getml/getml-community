@@ -316,7 +316,7 @@ std::string DataFrameManager::make_column_string(const Int _draw,
   auto data = std::vector<std::vector<std::string>>();
 
   if (_nrows == 0) {
-    return json::to_json(base * rfl::make_field<"data">(data));
+    return rfl::json::write(base * rfl::make_field<"data">(data));
   }
 
   for (auto it = _begin; it != _end; ++it) {
@@ -333,7 +333,7 @@ std::string DataFrameManager::make_column_string(const Int _draw,
     data.push_back(row);
   }
 
-  return json::to_json(base * rfl::make_field<"data">(data));
+  return rfl::json::write(base * rfl::make_field<"data">(data));
 }
 
 // ------------------------------------------------------------------------

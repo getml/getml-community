@@ -17,8 +17,8 @@
 #include "engine/pipelines/SaveParams.hpp"
 #include "helpers/Loader.hpp"
 #include "helpers/Saver.hpp"
-#include "json/to_json.hpp"
 #include "rfl/always_false.hpp"
+#include "rfl/json.hpp"
 #include "rfl/make_named_tuple.hpp"
 
 namespace engine {
@@ -211,7 +211,7 @@ void ProjectManager::list_data_frames(const typename Command::ListDfsOp& _cmd,
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(json::to_json(obj), _socket);
+  communication::Sender::send_string(rfl::json::write(obj), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -233,7 +233,7 @@ void ProjectManager::list_pipelines(
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(json::to_json(obj), _socket);
+  communication::Sender::send_string(rfl::json::write(obj), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -260,7 +260,7 @@ void ProjectManager::list_projects(const typename Command::ListProjectsOp& _cmd,
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(json::to_json(obj), _socket);
+  communication::Sender::send_string(rfl::json::write(obj), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -281,7 +281,7 @@ void ProjectManager::load_data_container(
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(json::to_json(data_container), _socket);
+  communication::Sender::send_string(rfl::json::write(data_container), _socket);
 }
 
 // ------------------------------------------------------------------------

@@ -14,10 +14,10 @@
 #include "commands/Float.hpp"
 #include "commands/Roles.hpp"
 #include "helpers/Placeholder.hpp"
-#include "json/json.hpp"
 #include "rfl/Field.hpp"
 #include "rfl/Literal.hpp"
 #include "rfl/define_named_tuple.hpp"
+#include "rfl/json.hpp"
 
 namespace commands {
 
@@ -65,7 +65,7 @@ struct DataModel {
     check_length<"relationship_">();
   }
 
-  using InputVarType = typename json::Reader::InputVarType;
+  using InputVarType = typename rfl::json::Reader::InputVarType;
 
   static DataModel from_json_obj(const InputVarType& _json_obj);
 

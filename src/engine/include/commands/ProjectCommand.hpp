@@ -32,14 +32,14 @@ namespace commands {
 struct ProjectCommand {
   /// The command to add a data frame from arrow.
   struct AddDfFromArrowOp {
-    rfl::Field<"type_", rfl::Literal<"DataFrame.from_arrow">> type;
+    using Tag = rfl::Literal<"DataFrame.from_arrow">;
     rfl::Flatten<helpers::SchemaImpl> schema;
     rfl::Field<"append_", bool> append;
   };
 
   /// The command to add a data frame from CSV.
   struct AddDfFromCSVOp {
-    rfl::Field<"type_", rfl::Literal<"DataFrame.read_csv">> type;
+    using Tag = rfl::Literal<"DataFrame.read_csv">;
     rfl::Flatten<helpers::SchemaImpl> schema;
     rfl::Field<"append_", bool> append;
     rfl::Field<"colnames_", std::optional<std::vector<std::string>>> colnames;
@@ -53,7 +53,7 @@ struct ProjectCommand {
 
   /// The command to add a data frame from a database.
   struct AddDfFromDBOp {
-    rfl::Field<"type_", rfl::Literal<"DataFrame.from_db">> type;
+    using Tag = rfl::Literal<"DataFrame.from_db">;
     rfl::Flatten<helpers::SchemaImpl> schema;
     rfl::Field<"append_", bool> append;
     rfl::Field<"conn_id_", std::string> conn_id;
@@ -62,7 +62,7 @@ struct ProjectCommand {
 
   /// The command to add a data frame from JSON.
   struct AddDfFromJSONOp {
-    rfl::Field<"type_", rfl::Literal<"DataFrame.from_json">> type;
+    using Tag = rfl::Literal<"DataFrame.from_json">;
     rfl::Flatten<helpers::SchemaImpl> schema;
     rfl::Field<"append_", bool> append;
     rfl::Field<"time_formats_", std::vector<std::string>> time_formats;
@@ -70,7 +70,7 @@ struct ProjectCommand {
 
   /// The command to add a data frame from parquet.
   struct AddDfFromParquetOp {
-    rfl::Field<"type_", rfl::Literal<"DataFrame.read_parquet">> type;
+    using Tag = rfl::Literal<"DataFrame.read_parquet">;
     rfl::Flatten<helpers::SchemaImpl> schema;
     rfl::Field<"append_", bool> append;
     rfl::Field<"fname_", std::string> fname;
@@ -78,7 +78,7 @@ struct ProjectCommand {
 
   /// The command to add a data frame from JSON.
   struct AddDfFromQueryOp {
-    rfl::Field<"type_", rfl::Literal<"DataFrame.from_query">> type;
+    using Tag = rfl::Literal<"DataFrame.from_query">;
     rfl::Flatten<helpers::SchemaImpl> schema;
     rfl::Field<"append_", bool> append;
     rfl::Field<"conn_id_", std::string> conn_id;
@@ -87,7 +87,7 @@ struct ProjectCommand {
 
   /// The command to add a data frame from a View.
   struct AddDfFromViewOp {
-    rfl::Field<"type_", rfl::Literal<"DataFrame.from_view">> type;
+    using Tag = rfl::Literal<"DataFrame.from_view">;
     rfl::Field<"append_", bool> append;
     rfl::Field<"name_", std::string> name;
     rfl::Field<"view_", DataFrameOrView> view;
@@ -95,61 +95,61 @@ struct ProjectCommand {
 
   /// The command to add a data frame from a View.
   struct CopyPipelineOp {
-    rfl::Field<"type_", rfl::Literal<"Pipeline.copy">> type;
+    using Tag = rfl::Literal<"Pipeline.copy">;
     rfl::Field<"name_", std::string> name;
     rfl::Field<"other_", std::string> other;
   };
 
   /// The command to delete a data frame.
   struct DeleteDataFrameOp {
-    rfl::Field<"type_", rfl::Literal<"DataFrame.delete">> type;
+    using Tag = rfl::Literal<"DataFrame.delete">;
     rfl::Field<"mem_only_", bool> mem_only;
     rfl::Field<"name_", std::string> name;
   };
 
   /// The command to delete a pipeline.
   struct DeletePipelineOp {
-    rfl::Field<"type_", rfl::Literal<"Pipeline.delete">> type;
+    using Tag = rfl::Literal<"Pipeline.delete">;
     rfl::Field<"mem_only_", bool> mem_only;
     rfl::Field<"name_", std::string> name;
   };
 
   /// The command to delete a project.
   struct DeleteProjectOp {
-    rfl::Field<"type_", rfl::Literal<"delete_project">> type;
+    using Tag = rfl::Literal<"delete_project">;
     rfl::Field<"name_", std::string> name;
   };
 
   /// The command to list all data frames.
   struct ListDfsOp {
-    rfl::Field<"type_", rfl::Literal<"list_data_frames">> type;
+    using Tag = rfl::Literal<"list_data_frames">;
   };
 
   /// The command to list all pipelines.
   struct ListPipelinesOp {
-    rfl::Field<"type_", rfl::Literal<"list_pipelines">> type;
+    using Tag = rfl::Literal<"list_pipelines">;
   };
 
   /// The command to list all pipelines.
   struct ListProjectsOp {
-    rfl::Field<"type_", rfl::Literal<"list_projects">> type;
+    using Tag = rfl::Literal<"list_projects">;
   };
 
   /// The command to load a data contaner.
   struct LoadDataContainerOp {
-    rfl::Field<"type_", rfl::Literal<"DataContainer.load">> type;
+    using Tag = rfl::Literal<"DataContainer.load">;
     rfl::Field<"name_", std::string> name;
   };
 
   /// The command to load a data frame.
   struct LoadDfOp {
-    rfl::Field<"type_", rfl::Literal<"DataFrame.load">> type;
+    using Tag = rfl::Literal<"DataFrame.load">;
     rfl::Field<"name_", std::string> name;
   };
 
   /// The command to load a data frame.
   struct LoadPipelineOp {
-    rfl::Field<"type_", rfl::Literal<"Pipeline.load">> type;
+    using Tag = rfl::Literal<"Pipeline.load">;
     rfl::Field<"name_", std::string> name;
   };
 
@@ -158,25 +158,25 @@ struct ProjectCommand {
 
   /// The command to send the project name.
   struct ProjectNameOp {
-    rfl::Field<"type_", rfl::Literal<"project_name">> type;
+    using Tag = rfl::Literal<"project_name">;
   };
 
   /// The command to load a data contaner.
   struct SaveDataContainerOp {
-    rfl::Field<"type_", rfl::Literal<"DataContainer.save">> type;
+    using Tag = rfl::Literal<"DataContainer.save">;
     rfl::Field<"name_", std::string> name;
     rfl::Field<"container_", DataContainer> container;
   };
 
   /// The command to save a data frame.
   struct SaveDfOp {
-    rfl::Field<"type_", rfl::Literal<"DataFrame.save">> type;
+    using Tag = rfl::Literal<"DataFrame.save">;
     rfl::Field<"name_", std::string> name;
   };
 
   /// The command to save a pipeline.
   struct SavePipelineOp {
-    rfl::Field<"type_", rfl::Literal<"Pipeline.save">> type;
+    using Tag = rfl::Literal<"Pipeline.save">;
     rfl::Field<"name_", std::string> name;
     rfl::Field<"format_", std::optional<typename helpers::Saver::Format>>
         format;
@@ -184,7 +184,7 @@ struct ProjectCommand {
 
   /// The command to get the temp_dir.
   struct TempDirOp {
-    rfl::Field<"type_", rfl::Literal<"temp_dir">> type;
+    using Tag = rfl::Literal<"temp_dir">;
   };
 
   using ReflectionType = rfl::TaggedUnion<
@@ -195,7 +195,7 @@ struct ProjectCommand {
       LoadPipelineOp, PipelineOp, ProjectNameOp, SaveDataContainerOp, SaveDfOp,
       SavePipelineOp, TempDirOp>;
 
-  using InputVarType = typename json::Reader::InputVarType;
+  using InputVarType = typename rfl::json::Reader::InputVarType;
 
   static ProjectCommand from_json_obj(const InputVarType& _obj);
 

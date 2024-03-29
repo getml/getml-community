@@ -18,12 +18,12 @@
 #include "commands/Pipeline.hpp"
 #include "commands/ProjectCommand.hpp"
 #include "commands/StringColumnOrStringColumnView.hpp"
-#include "json/json.hpp"
 #include "rfl/Field.hpp"
 #include "rfl/Literal.hpp"
 #include "rfl/NamedTuple.hpp"
 #include "rfl/Ref.hpp"
 #include "rfl/TaggedUnion.hpp"
+#include "rfl/json.hpp"
 
 namespace commands {
 

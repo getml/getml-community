@@ -275,7 +275,7 @@ void PipelineManager::column_importances(
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(json::to_json(response), _socket);
+  communication::Sender::send_string(rfl::json::write(response), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -321,7 +321,7 @@ void PipelineManager::feature_correlations(
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(json::to_json(response), _socket);
+  communication::Sender::send_string(rfl::json::write(response), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -353,7 +353,7 @@ void PipelineManager::feature_importances(
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(json::to_json(response), _socket);
+  communication::Sender::send_string(rfl::json::write(response), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -438,7 +438,7 @@ void PipelineManager::lift_curve(const typename Command::LiftCurveOp& _cmd,
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(json::to_json(result), _socket);
+  communication::Sender::send_string(rfl::json::write(result), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -460,7 +460,7 @@ void PipelineManager::precision_recall_curve(
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(json::to_json(result), _socket);
+  communication::Sender::send_string(rfl::json::write(result), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -478,7 +478,7 @@ void PipelineManager::refresh(const typename Command::RefreshOp& _cmd,
 
   const auto obj = refresh_pipeline(pipeline);
 
-  communication::Sender::send_string(json::to_json(obj), _socket);
+  communication::Sender::send_string(rfl::json::write(obj), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -509,7 +509,7 @@ void PipelineManager::refresh_all(const typename Command::RefreshAllOp& _cmd,
 
   const auto obj = rfl::make_named_tuple(rfl::make_field<"pipelines">(vec));
 
-  communication::Sender::send_string(json::to_json(obj), _socket);
+  communication::Sender::send_string(rfl::json::write(obj), _socket);
 
   for (const auto& [name, pipe] : updated_pipelines) {
     set_pipeline(name, pipe);
@@ -570,7 +570,7 @@ void PipelineManager::roc_curve(const typename Command::ROCCurveOp& _cmd,
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(json::to_json(result), _socket);
+  communication::Sender::send_string(rfl::json::write(result), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -603,7 +603,8 @@ void PipelineManager::score(const FullTransformOp& _cmd,
 
   set_pipeline(_name, pipeline);
 
-  communication::Sender::send_string(json::to_json(scores->metrics()), _socket);
+  communication::Sender::send_string(rfl::json::write(scores->metrics()),
+                                     _socket);
 }
 
 // ------------------------------------------------------------------------

@@ -12,12 +12,11 @@
 #include "fct/collect.hpp"
 #include "helpers/StringSplitter.hpp"
 #include "io/Parser.hpp"
-#include "json/json.hpp"
-#include "json/to_json.hpp"
 #include "rfl/Field.hpp"
 #include "rfl/Literal.hpp"
 #include "rfl/Ref.hpp"
 #include "rfl/always_false.hpp"
+#include "rfl/json.hpp"
 #include "rfl/visit.hpp"
 
 namespace engine {
@@ -220,7 +219,7 @@ void DatabaseManager::get(const typename Command::GetOp& _cmd,
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(json::to_json(result), _socket);
+  communication::Sender::send_string(rfl::json::write(result), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -238,7 +237,7 @@ void DatabaseManager::get_colnames(const typename Command::GetColnamesOp& _cmd,
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(json::to_json(colnames), _socket);
+  communication::Sender::send_string(rfl::json::write(colnames), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -260,7 +259,7 @@ void DatabaseManager::get_content(const typename Command::GetContentOp& _cmd,
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(json::to_json(table_content), _socket);
+  communication::Sender::send_string(rfl::json::write(table_content), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -291,7 +290,7 @@ void DatabaseManager::list_connections(
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(json::to_json(connections), _socket);
+  communication::Sender::send_string(rfl::json::write(connections), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -300,7 +299,7 @@ void DatabaseManager::list_tables(const typename Command::ListTablesOp& _cmd,
                                   Poco::Net::StreamSocket* _socket) {
   const auto& name = _cmd.name();
 
-  const auto tables_str = json::to_json(connector(name)->list_tables());
+  const auto tables_str = rfl::json::write(connector(name)->list_tables());
 
   communication::Sender::send_string("Success!", _socket);
 
@@ -347,7 +346,7 @@ void DatabaseManager::post_tables() {
     table_map[name] = tables;
   }
 
-  monitor_->send_tcp("postdatabasetables", json::to_json(table_map),
+  monitor_->send_tcp("postdatabasetables", rfl::json::write(table_map),
                      communication::Monitor::TIMEOUT_ON);
 }
 

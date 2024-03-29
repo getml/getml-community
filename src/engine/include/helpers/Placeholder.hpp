@@ -11,10 +11,10 @@
 #include <string>
 #include <vector>
 
-#include "json/json.hpp"
 #include "rfl/NamedTuple.hpp"
 #include "rfl/Ref.hpp"
 #include "rfl/define_named_tuple.hpp"
+#include "rfl/json.hpp"
 #include "rfl/remove_fields.hpp"
 
 namespace helpers {
@@ -129,6 +129,9 @@ struct Placeholder {
   /// lagged targets.
   std::vector<bool> infer_needs_targets(
       const std::vector<std::string>& _peripheral_names) const;
+
+  /// Transforms the placeholder into a JSON string
+  std::string to_json() const;
 
   /// Trivial getter.
   const std::vector<bool>& allow_lagged_targets() const {
@@ -276,9 +279,6 @@ struct Placeholder {
     return val_.get<f_time_stamps_used>();
   }
 
-  /// Transforms the placeholder into a JSON string
-  std::string to_json() const { return json::to_json(*this); }
-
   /// Getter for the time stamps name.
   const std::string& upper_time_stamps_name() const {
     assert_true(time_stamps().size() == 2);
@@ -290,7 +290,7 @@ struct Placeholder {
     return val_.get<f_upper_time_stamps_used>();
   }
 
-  using InputVarType = typename json::Reader::InputVarType;
+  using InputVarType = typename rfl::json::Reader::InputVarType;
 
   static Placeholder from_json_obj(const InputVarType& _json_obj);
 

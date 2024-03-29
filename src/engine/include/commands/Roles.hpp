@@ -60,7 +60,7 @@ struct Roles {
 
   /// Normally used for recursion, but here it is used
   /// to support the static constructors.
-  const ReflectionType val_;
+  ReflectionType val_;
 };
 
 }  // namespace commands

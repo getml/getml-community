@@ -14,8 +14,8 @@
 #include <type_traits>
 
 #include "debug/debug.hpp"
-#include "json/json.hpp"
 #include "rfl/Ref.hpp"
+#include "rfl/json.hpp"
 
 namespace engine {
 namespace dependency {
@@ -51,7 +51,7 @@ template <class T>
 void Tracker<T>::add(const rfl::Ref<const T>& _elem) {
   const auto fingerprint = _elem->fingerprint();
 
-  const auto f_str = json::to_json(fingerprint);
+  const auto f_str = rfl::json::write(fingerprint);
 
   const auto f_hash = std::hash<std::string>()(f_str);
 
@@ -71,7 +71,7 @@ template <class T>
 template <class FingerprintType>
 std::shared_ptr<T> Tracker<T>::retrieve(
     const FingerprintType& _fingerprint) const {
-  const auto f_str = json::to_json(_fingerprint);
+  const auto f_str = rfl::json::write(_fingerprint);
 
   const auto f_hash = std::hash<std::string>()(f_str);
 
@@ -85,7 +85,7 @@ std::shared_ptr<T> Tracker<T>::retrieve(
 
   const auto fingerprint2 = ptr->fingerprint();
 
-  const auto f2_str = json::to_json(fingerprint2);
+  const auto f2_str = rfl::json::write(fingerprint2);
 
   /// On the off-chance that there was a collision, we double-check.
   if (f_str != f2_str) {

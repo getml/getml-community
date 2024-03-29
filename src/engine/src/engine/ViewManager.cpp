@@ -60,7 +60,7 @@ void ViewManager::get_view_content(
 
   read_lock.unlock();
 
-  communication::Sender::send_string(json::to_json(content), _socket);
+  communication::Sender::send_string(rfl::json::write(content), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -80,7 +80,7 @@ void ViewManager::get_view_nrows(const typename Command::GetViewNRowsOp& _cmd,
 
   read_lock.unlock();
 
-  communication::Sender::send_string(json::to_json(content), _socket);
+  communication::Sender::send_string(rfl::json::write(content), _socket);
 }
 
 // ------------------------------------------------------------------------

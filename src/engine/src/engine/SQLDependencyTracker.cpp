@@ -13,7 +13,7 @@
 #include "fct/collect.hpp"
 #include "fct/iota.hpp"
 #include "helpers/StringSplitter.hpp"
-#include "json/json.hpp"
+#include "rfl/json.hpp"
 #include "rfl/make_named_tuple.hpp"
 #include "transpilation/transpilation.hpp"
 
@@ -81,7 +81,7 @@ void SQLDependencyTracker::save_dependencies(const std::string& _sql) const {
   const auto obj =
       rfl::make_named_tuple(rfl::make_field<"dependencies_">(dependencies));
 
-  const auto json_str = json::to_json(obj);
+  const auto json_str = rfl::json::write(obj);
 
   write_to_file("dependencies.json", json_str);
 }

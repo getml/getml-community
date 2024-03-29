@@ -10,7 +10,7 @@
 namespace commands {
 
 DatabaseCommand DatabaseCommand::from_json_obj(const InputVarType& _obj) {
-  return DatabaseCommand(json::from_json<ReflectionType>(_obj));
+  return DatabaseCommand(rfl::json::read<ReflectionType>(_obj).value());
 }
 
 }  // namespace commands
