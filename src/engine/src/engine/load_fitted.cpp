@@ -20,9 +20,9 @@
 #include "engine/pipelines/Predictors.hpp"
 #include "engine/pipelines/fit.hpp"
 #include "helpers/Loader.hpp"
-#include "json/json.hpp"
 #include "metrics/metrics.hpp"
 #include "rfl/Ref.hpp"
+#include "rfl/json.hpp"
 
 namespace engine {
 namespace pipelines {

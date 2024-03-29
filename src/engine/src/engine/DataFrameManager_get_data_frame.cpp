@@ -8,8 +8,8 @@
 #include "commands/ColumnCommand.hpp"
 #include "engine/handlers/ColumnManager.hpp"
 #include "engine/handlers/DataFrameManager.hpp"
-#include "json/json.hpp"
 #include "rfl/as.hpp"
+#include "rfl/json.hpp"
 
 namespace engine {
 namespace handlers {
@@ -26,7 +26,7 @@ void DataFrameManager::get_data_frame(
   while (true) {
     const auto json_str = communication::Receiver::recv_string(_socket);
 
-    const auto cmd = json::from_json<CmdType>(json_str);
+    const auto cmd = rfl::json::read<CmdType>(json_str);
 
     const auto handle = [this, _socket](const auto& _cmd) -> bool {
       using Type = std::decay_t<decltype(_cmd)>;

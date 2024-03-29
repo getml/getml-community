@@ -23,7 +23,7 @@
 #include "debug/debug.hpp"
 #include "engine/config/config.hpp"
 #include "engine/handlers/ArrowHandler.hpp"
-#include "json/json.hpp"
+#include "rfl/json.hpp"
 
 namespace engine {
 namespace handlers {
@@ -79,7 +79,7 @@ class ViewParser {
 
   /// Returns the population and peripheral data frames.
   auto parse_all(const std::string& _cmd) const {
-    const auto cmd = json::from_json<commands::DataFramesOrViews>(_cmd);
+    const auto cmd = rfl::json::read<commands::DataFramesOrViews>(_cmd);
     return parse_all(cmd);
   }
 

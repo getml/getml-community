@@ -61,7 +61,7 @@ class Loader {
   template <class T>
   static T load_from_json(const std::string& _fname) {
     const auto json_str = read_str(_fname);
-    return json::from_json<T>(json_str);
+    return rfl::json::read<T>(json_str);
   }
 
  private:

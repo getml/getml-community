@@ -7,9 +7,9 @@
 
 #include "io/StatementMaker.hpp"
 
-#include "json/json.hpp"
 #include "rfl/Field.hpp"
 #include "rfl/NamedTuple.hpp"
+#include "rfl/json.hpp"
 
 namespace io {
 
@@ -145,7 +145,7 @@ std::string StatementMaker::make_statement_python(
   const auto obj = rfl::make_field<"unused_float">(unused_floats) *
                    rfl::make_field<"unused_string">(unused_strings);
 
-  return json::to_json(obj);
+  return rfl::json::write(obj);
 }
 
 // ----------------------------------------------------------------------------

@@ -6,7 +6,7 @@
 //
 
 #include "engine/handlers/DataFrameManager.hpp"
-#include "json/json.hpp"
+#include "rfl/json.hpp"
 
 namespace engine {
 namespace handlers {
@@ -22,7 +22,7 @@ void DataFrameManager::receive_data(
   while (true) {
     const auto json_str = communication::Receiver::recv_string(_socket);
 
-    const auto cmd = json::from_json<CmdType>(json_str);
+    const auto cmd = rfl::json::read<CmdType>(json_str);
 
     const auto handle = [this, &_local_categories, &_local_join_keys_encoding,
                          _df, _socket](const auto& _cmd) -> bool {

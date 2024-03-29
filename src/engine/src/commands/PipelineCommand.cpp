@@ -10,7 +10,7 @@
 namespace commands {
 
 PipelineCommand PipelineCommand::from_json_obj(const InputVarType& _obj) {
-  return PipelineCommand(json::from_json<ReflectionType>(_obj));
+  return PipelineCommand(rfl::json::read<ReflectionType>(_obj));
 }
 
 }  // namespace commands

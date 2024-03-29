@@ -18,8 +18,8 @@
 #include "engine/handlers/FloatOpParser.hpp"
 #include "engine/handlers/StringOpParser.hpp"
 #include "engine/handlers/ViewParser.hpp"
-#include "json/json.hpp"
 #include "metrics/metrics.hpp"
+#include "rfl/json.hpp"
 
 namespace engine {
 namespace handlers {
@@ -412,10 +412,11 @@ void DataFrameManager::calc_categorical_column_plots(
   std::string json_str;
 
   if (targets.size() == vec.size()) {
-    json_str = json::to_json(metrics::Summarizer::calc_categorical_column_plot(
-        num_bins, vec, targets));
+    json_str =
+        rfl::json::write(metrics::Summarizer::calc_categorical_column_plot(
+            num_bins, vec, targets));
   } else {
-    json_str = json::to_json(
+    json_str = rfl::json::write(
         metrics::Summarizer::calc_categorical_column_plot(num_bins, vec));
   }
 
@@ -467,7 +468,7 @@ void DataFrameManager::calc_column_plots(
 
   communication::Sender::send_string("Success!", _socket);
 
-  communication::Sender::send_string(json::to_json(obj), _socket);
+  communication::Sender::send_string(rfl::json::write(obj), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -950,7 +951,7 @@ void DataFrameManager::get_data_frame_content(
 
   read_lock.unlock();
 
-  communication::Sender::send_string(json::to_json(content), _socket);
+  communication::Sender::send_string(rfl::json::write(content), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -1133,7 +1134,7 @@ void DataFrameManager::refresh(const typename Command::RefreshDataFrameOp& _cmd,
 
   read_lock.unlock();
 
-  communication::Sender::send_string(json::to_json(roles), _socket);
+  communication::Sender::send_string(rfl::json::write(roles), _socket);
 }
 
 // ------------------------------------------------------------------------
@@ -1176,7 +1177,7 @@ void DataFrameManager::summarize(
 
   read_lock.unlock();
 
-  communication::Sender::send_string(json::to_json(summary), _socket);
+  communication::Sender::send_string(rfl::json::write(summary), _socket);
 }
 
 // ------------------------------------------------------------------------

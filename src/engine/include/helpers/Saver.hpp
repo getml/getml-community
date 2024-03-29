@@ -11,25 +11,22 @@
 #include <fstream>
 #include <string>
 
-#include "flexbuffers/to_flexbuffers.hpp"
-#include "json/to_json.hpp"
 #include "rfl/Literal.hpp"
 #include "rfl/always_false.hpp"
+#include "rfl/json.hpp"
 #include "rfl/visit.hpp"
 
 namespace helpers {
 
 struct Saver {
-  using Format = rfl::Literal<"flexbuffers", "json">;
+  using Format = rfl::Literal<"json">;
 
   /// Saves the object in one of the supported formats.
   template <class T>
   static void save(const std::string& _fname, const T& _obj,
                    const Format& _format) {
     const auto handle_variant = [&]<typename U>(const U& _format) {
-      if constexpr (std::is_same<U, rfl::Literal<"flexbuffers">>()) {
-        save_as_flexbuffers(_fname, _obj);
-      } else if constexpr (std::is_same<U, rfl::Literal<"json">>()) {
+      if constexpr (std::is_same<U, rfl::Literal<"json">>()) {
         save_as_json(_fname, _obj);
       } else {
         static_assert(rfl::always_false_v<U>, "Not all cases were supported");
@@ -38,25 +35,11 @@ struct Saver {
     rfl::visit(handle_variant, _format);
   }
 
-  /// Saves any class that is supported by the flexbuffers library to
-  /// a flexbuffers file.
-  template <class T>
-  static void save_as_flexbuffers(const std::string& _fname, const T& _obj) {
-    const auto bytes = flexbuffers::to_flexbuffers(_obj);
-    const auto fname =
-        _fname.size() > 3 && _fname.substr(_fname.size() - 3) == ".fb"
-            ? _fname
-            : _fname + ".fb";
-    std::ofstream output(fname, std::ios::out | std::ios::binary);
-    output.write(reinterpret_cast<const char*>(bytes.data()), bytes.size());
-    output.close();
-  }
-
   /// Saves any class that is supported by the json library to
   /// JSON.
   template <class T>
   static void save_as_json(const std::string& _fname, const T& _obj) {
-    const auto json_str = json::to_json(_obj);
+    const auto json_str = rfl::json::write(_obj);
     const auto fname =
         _fname.size() > 5 && _fname.substr(_fname.size() - 5) == ".json"
             ? _fname

@@ -10,7 +10,6 @@
 
 #include <memory>
 
-#include "json/json.hpp"
 #include "memmap/memmap.hpp"
 #include "predictors/Float.hpp"
 #include "predictors/FloatFeature.hpp"
@@ -18,6 +17,7 @@
 #include "predictors/IntFeature.hpp"
 #include "rfl/Field.hpp"
 #include "rfl/NamedTuple.hpp"
+#include "rfl/json.hpp"
 
 namespace predictors {
 

@@ -8,7 +8,7 @@
 #include "database/Sqlite3.hpp"
 
 #include "database/ContentGetter.hpp"
-#include "json/json.hpp"
+#include "rfl/json.hpp"
 
 namespace database {
 
@@ -36,7 +36,7 @@ void Sqlite3::check_colnames(const std::vector<std::string>& _colnames,
 std::string Sqlite3::describe() const {
   const auto description =
       rfl::make_field<"dialect">(dialect()) * rfl::make_field<"name">(name_);
-  return json::to_json(description);
+  return rfl::json::write(description);
 }
 
 // ----------------------------------------------------------------------------

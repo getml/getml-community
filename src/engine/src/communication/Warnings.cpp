@@ -8,7 +8,7 @@
 #include "communication/Warnings.hpp"
 
 #include "communication/Sender.hpp"
-#include "json/json.hpp"
+#include "rfl/json.hpp"
 #include "rfl/make_named_tuple.hpp"
 
 namespace communication {
@@ -16,7 +16,7 @@ namespace communication {
 void Warnings::send(Poco::Net::StreamSocket* _socket) const {
   const auto named_tuple =
       rfl::make_named_tuple(rfl::make_field<"warnings_">(warnings_));
-  Sender::send_string(json::to_json(named_tuple), _socket);
+  Sender::send_string(rfl::json::write(named_tuple), _socket);
 }
 
 }  // namespace communication

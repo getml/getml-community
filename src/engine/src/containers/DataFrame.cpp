@@ -13,8 +13,8 @@
 #include <stdexcept>
 
 #include "containers/DataFramePrinter.hpp"
-#include "json/json.hpp"
 #include "rfl/Field.hpp"
+#include "rfl/json.hpp"
 
 namespace containers {
 

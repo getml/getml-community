@@ -8,7 +8,7 @@
 #include "commands/DataFrameFromJSON.hpp"
 #include "containers/Roles.hpp"
 #include "engine/handlers/DataFrameManager.hpp"
-#include "json/json.hpp"
+#include "rfl/json.hpp"
 
 namespace engine {
 namespace handlers {
@@ -25,7 +25,7 @@ void DataFrameManager::from_json(const typename Command::AddDfFromJSONOp& _cmd,
 
   const auto schema = containers::Schema(_cmd.schema());
 
-  const auto obj = json::from_json<commands::DataFrameFromJSON>(json_str);
+  const auto obj = rfl::json::read<commands::DataFrameFromJSON>(json_str);
 
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 

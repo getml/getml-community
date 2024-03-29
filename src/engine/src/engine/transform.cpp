@@ -14,9 +14,9 @@
 #include "engine/pipelines/modify_data_frames.hpp"
 #include "engine/pipelines/score.hpp"
 #include "engine/pipelines/staging.hpp"
-#include "json/json.hpp"
 #include "metrics/Scores.hpp"
 #include "rfl/as.hpp"
+#include "rfl/json.hpp"
 #include "transpilation/SQLDialectParser.hpp"
 
 namespace engine {

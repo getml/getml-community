@@ -19,10 +19,10 @@
 #include "commands/PipelineCommand.hpp"
 #include "commands/ProjectCommand.hpp"
 #include "commands/ViewCommand.hpp"
-#include "json/json.hpp"
 #include "rfl/always_false.hpp"
 #include "rfl/extract_discriminators.hpp"
 #include "rfl/get.hpp"
+#include "rfl/json.hpp"
 
 namespace engine {
 namespace srv {
@@ -38,7 +38,7 @@ void RequestHandler::run() {
 
     const auto cmd_str = communication::Receiver::recv_cmd(logger_, &socket());
 
-    const auto cmd = json::from_json<commands::Command>(cmd_str);
+    const auto cmd = rfl::json::read<commands::Command>(cmd_str);
 
     const auto handle = [this](const auto& _cmd) {
       using Type = std::decay_t<decltype(_cmd)>;

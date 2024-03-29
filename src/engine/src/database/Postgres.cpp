@@ -9,7 +9,7 @@
 
 #include "database/CSVBuffer.hpp"
 #include "database/ContentGetter.hpp"
-#include "json/json.hpp"
+#include "rfl/json.hpp"
 
 namespace database {
 
@@ -38,7 +38,7 @@ std::string Postgres::describe() const {
   const auto description =
       rfl::make_field<"connection_string">(connection_string_) *
       rfl::make_field<"dialect">(dialect());
-  return json::to_json(description);
+  return rfl::json::write(description);
 }
 
 // ----------------------------------------------------------------------------

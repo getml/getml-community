@@ -12,11 +12,11 @@
 #include <vector>
 
 #include "commands/Fingerprint.hpp"
-#include "json/json.hpp"
 #include "predictors/Predictor.hpp"
 #include "predictors/PredictorHyperparams.hpp"
 #include "predictors/PredictorImpl.hpp"
 #include "rfl/Ref.hpp"
+#include "rfl/json.hpp"
 
 namespace predictors {
 
