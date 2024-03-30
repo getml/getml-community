@@ -42,16 +42,12 @@ std::string string(RangeType range) {
 template <class RangeType>
 auto vector(RangeType range) {
   using T = RANGES::range_value_t<RangeType>;
-#ifdef __APPLE__
-  constexpr bool use_push_back = true;
-#else
-  constexpr bool use_push_back = !std::is_default_constructible<T>() ||
-                                 !std::is_move_assignable<T>() ||
-                                 !RANGES::sized_range<RangeType> ||
-                                 !RANGES::random_access_range<RangeType>;
-#endif
+  constexpr bool use_emplace_back = !std::is_default_constructible<T>() ||
+                                    !std::is_move_assignable<T>() ||
+                                    !RANGES::sized_range<RangeType> ||
+                                    !RANGES::random_access_range<RangeType>;
 
-  if constexpr (use_push_back) {
+  if constexpr (use_emplace_back) {
     auto vec = std::vector<T>();
     for (auto val : range) {
       vec.emplace_back(std::move(val));
