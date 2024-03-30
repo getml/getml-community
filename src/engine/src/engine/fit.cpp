@@ -429,7 +429,9 @@ fit_feature_learners(
 
       socket_logger->log("Progress: 100%.");
 
-      fe = rfl::Ref<featurelearners::AbstractFeatureLearner>(retrieved_fe);
+      assert_true(retrieved_fe);
+
+      fe = rfl::Ref<featurelearners::AbstractFeatureLearner>(*retrieved_fe);
 
       continue;
     }
@@ -539,7 +541,8 @@ fit_predictors(const FitPredictorsParams& _params) {
       if (retrieved_predictors.at(t).at(i)) {
         socket_logger->log("Retrieving predictor...");
         socket_logger->log("Progress: 100%.");
-        p = rfl::Ref(retrieved_predictors.at(t).at(i));
+        p = rfl::make_ref<predictors::Predictor>(
+            retrieved_predictors.at(t).at(i));
         continue;
       }
 
@@ -641,7 +644,7 @@ fit_transform_preprocessors(
         .population_df = *_population_df};
 
     if (retrieved_preprocessor) {
-      p = rfl::Ref<preprocessors::Preprocessor>(retrieved_preprocessor);
+      p = rfl::Ref<preprocessors::Preprocessor>(*retrieved_preprocessor);
       std::tie(*_population_df, *_peripheral_dfs) = p->transform(params);
       continue;
     }

@@ -22,7 +22,7 @@ void DataFrameManager::receive_data(
   while (true) {
     const auto json_str = communication::Receiver::recv_string(_socket);
 
-    const auto cmd = rfl::json::read<CmdType>(json_str);
+    const auto cmd = rfl::json::read<CmdType>(json_str).value();
 
     const auto handle = [this, &_local_categories, &_local_join_keys_encoding,
                          _df, _socket](const auto& _cmd) -> bool {

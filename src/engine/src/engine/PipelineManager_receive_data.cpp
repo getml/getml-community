@@ -63,7 +63,7 @@ typename PipelineManager::FullTransformOp PipelineManager::receive_data(
   while (true) {
     const auto json_str = communication::Receiver::recv_string(_socket);
 
-    const auto op = rfl::json::read<CmdType>(json_str);
+    const auto op = rfl::json::read<CmdType>(json_str).value();
 
     const auto handle =
         [&local_data_frame_manager, &local_column_manager,

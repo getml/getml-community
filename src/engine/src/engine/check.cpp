@@ -67,7 +67,7 @@ void check(const Pipeline& _pipeline, const CheckParams& _params) {
 
   if (retrieved) {
     communication::Sender::send_string("Success!", _params.socket());
-    retrieved->send(_params.socket());
+    (*retrieved)->send(_params.socket());
     return;
   }
 

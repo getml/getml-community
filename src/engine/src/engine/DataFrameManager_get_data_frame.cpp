@@ -26,7 +26,7 @@ void DataFrameManager::get_data_frame(
   while (true) {
     const auto json_str = communication::Receiver::recv_string(_socket);
 
-    const auto cmd = rfl::json::read<CmdType>(json_str);
+    const auto cmd = rfl::json::read<CmdType>(json_str).value();
 
     const auto handle = [this, _socket](const auto& _cmd) -> bool {
       using Type = std::decay_t<decltype(_cmd)>;

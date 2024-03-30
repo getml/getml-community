@@ -10,6 +10,7 @@
 
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <type_traits>
 
@@ -37,7 +38,8 @@ class Tracker {
   /// Retrieves a deep copy of an element from the tracker, if an element
   /// containing this fingerprint exists.
   template <class FingerprintType>
-  std::shared_ptr<T> retrieve(const FingerprintType& _fingerprint) const;
+  std::optional<rfl::Ref<T>> retrieve(
+      const FingerprintType& _fingerprint) const;
 
  private:
   /// A map keeping track of the elements.
@@ -69,7 +71,7 @@ void Tracker<T>::clear() {
 
 template <class T>
 template <class FingerprintType>
-std::shared_ptr<T> Tracker<T>::retrieve(
+std::optional<rfl::Ref<T>> Tracker<T>::retrieve(
     const FingerprintType& _fingerprint) const {
   const auto f_str = rfl::json::write(_fingerprint);
 
@@ -78,7 +80,7 @@ std::shared_ptr<T> Tracker<T>::retrieve(
   const auto it = elements_.find(f_hash);
 
   if (it == elements_.end()) {
-    return nullptr;
+    return std::nullopt;
   }
 
   const auto ptr = it->second;
@@ -89,18 +91,10 @@ std::shared_ptr<T> Tracker<T>::retrieve(
 
   /// On the off-chance that there was a collision, we double-check.
   if (f_str != f2_str) {
-    return nullptr;
+    return std::nullopt;
   }
 
-  const auto clone = ptr->clone();
-
-  using Type = std::decay_t<decltype(clone)>;
-
-  if constexpr (std::is_same<Type, rfl::Ref<T>>()) {
-    return clone.ptr();
-  } else {
-    return clone;
-  }
+  return ptr->clone();
 }
 
 // -------------------------------------------------------------------------

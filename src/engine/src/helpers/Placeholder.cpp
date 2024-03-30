@@ -32,7 +32,7 @@ Placeholder::Placeholder(const ReflectionType& _val) : val_(_val) {}
 // ----------------------------------------------------------------------------
 
 Placeholder Placeholder::from_json_obj(const InputVarType& _json_obj) {
-  return Placeholder(rfl::json::read<ReflectionType>(_json_obj));
+  return Placeholder(rfl::json::read<ReflectionType>(_json_obj).value());
 }
 
 // ----------------------------------------------------------------------------
