@@ -83,9 +83,9 @@ class EMailDomain : public Preprocessor {
   commands::Fingerprint fingerprint() const final {
     using FingerprintType =
         typename commands::Fingerprint::EMailDomainFingerprint;
-    return commands::Fingerprint(
-        FingerprintType{.dependencies = dependencies_,
-                        .op = commands::Preprocessor::EMailDomainOp{}});
+    return commands::Fingerprint(FingerprintType{
+        .dependencies = dependencies_,
+        .op = commands::Preprocessor::EMailDomainOp{std::nullopt}});
   }
 
   /// Necessary for the automated parsing to work.

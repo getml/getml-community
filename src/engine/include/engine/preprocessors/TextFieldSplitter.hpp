@@ -89,9 +89,9 @@ class TextFieldSplitter : public Preprocessor {
   commands::Fingerprint fingerprint() const final {
     using FingerprintType =
         typename commands::Fingerprint::TextFieldSplitterFingerprint;
-    return commands::Fingerprint(
-        FingerprintType{.dependencies = dependencies_,
-                        .op = commands::Preprocessor::TextFieldSplitterOp{}});
+    return commands::Fingerprint(FingerprintType{
+        .dependencies = dependencies_,
+        .op = commands::Preprocessor::TextFieldSplitterOp{std::nullopt}});
   }
 
   /// Necessary for the automated parsing to work.

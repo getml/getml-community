@@ -25,7 +25,8 @@ void DataFrameManager::from_json(const typename Command::AddDfFromJSONOp& _cmd,
 
   const auto schema = containers::Schema(_cmd.schema());
 
-  const auto obj = rfl::json::read<commands::DataFrameFromJSON>(json_str);
+  const auto obj =
+      rfl::json::read<commands::DataFrameFromJSON>(json_str).value();
 
   multithreading::WeakWriteLock weak_write_lock(params_.read_write_lock_);
 

@@ -38,7 +38,7 @@ void RequestHandler::run() {
 
     const auto cmd_str = communication::Receiver::recv_cmd(logger_, &socket());
 
-    const auto cmd = rfl::json::read<commands::Command>(cmd_str);
+    const auto cmd = rfl::json::read<commands::Command>(cmd_str).value();
 
     const auto handle = [this](const auto& _cmd) {
       using Type = std::decay_t<decltype(_cmd)>;
