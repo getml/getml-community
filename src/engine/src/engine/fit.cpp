@@ -992,13 +992,13 @@ retrieve_predictors(
     std::vector<std::shared_ptr<predictors::Predictor>> r;
 
     for (auto& p : vec) {
-      const auto ptr = _pred_tracker->retrieve(p->fingerprint());
+      const auto optional = _pred_tracker->retrieve(p->fingerprint());
 
-      if (!ptr) {
+      if (!optional) {
         all_retrieved = false;
       }
 
-      r.push_back(ptr);
+      r.push_back(*optional);
     }
 
     retrieved_predictors.push_back(r);
