@@ -15,9 +15,12 @@
 
 namespace commands {
 
-template <rfl::internal::StringLiteral type_>
-using NotSupportedInCommunity =
-    rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<type_>>>;
+template <rfl::internal::StringLiteral name_>
+struct NotSupportedInCommunity {
+  using Tag = rfl::Literal<name_>;
+
+  std::string name() const { return Tag().str(); }
+};
 
 }  // namespace commands
 

@@ -1056,9 +1056,9 @@ void DataFrameManager::recv_and_add_float_column(
     const RecvAndAddOp& _cmd, containers::DataFrame* _df,
     multithreading::WeakWriteLock* _weak_write_lock,
     Poco::Net::StreamSocket* _socket) const {
-  const auto role = _cmd.get<"role_">();
+  const auto role = _cmd.role();
 
-  const auto name = _cmd.get<"name_">();
+  const auto name = _cmd.name();
 
   auto col = ArrowHandler(params_.categories_, params_.join_keys_encoding_,
                           params_.options_)
@@ -1075,9 +1075,9 @@ void DataFrameManager::recv_and_add_string_column(
     Poco::Net::StreamSocket* _socket) {
   assert_true(_weak_write_lock);
 
-  const auto role = _cmd.get<"role_">();
+  const auto role = _cmd.role();
 
-  const auto name = _cmd.get<"name_">();
+  const auto name = _cmd.name();
 
   const auto str_col =
       ArrowHandler(params_.categories_, params_.join_keys_encoding_,
@@ -1101,9 +1101,9 @@ void DataFrameManager::recv_and_add_string_column(
     const rfl::Ref<containers::Encoding>& _local_categories,
     const rfl::Ref<containers::Encoding>& _local_join_keys_encoding,
     containers::DataFrame* _df, Poco::Net::StreamSocket* _socket) const {
-  const auto role = _cmd.get<"role_">();
+  const auto role = _cmd.role();
 
-  const auto name = _cmd.get<"name_">();
+  const auto name = _cmd.name();
 
   const auto str_col =
       ArrowHandler(_local_categories, _local_join_keys_encoding,

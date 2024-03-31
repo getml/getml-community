@@ -806,7 +806,8 @@ void PipelineManager::transform(const typename Command::TransformOp& _cmd,
       pipelines::transform::transform(params, pipeline, *fitted);
 
   if (scores) {
-    pipeline = pipeline.with_scores(rfl::Ref<const metrics::Scores>(scores));
+    pipeline =
+        pipeline.with_scores(*rfl::Ref<const metrics::Scores>::make(scores));
   }
 
   const auto& table_name = cmd.table_name();

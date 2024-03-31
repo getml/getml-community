@@ -80,8 +80,8 @@ class LogisticRegression : public Predictor {
   bool accepts_null() const final { return false; }
 
   /// Returns a deep copy.
-  std::shared_ptr<Predictor> clone() const final {
-    return std::make_shared<LogisticRegression>(*this);
+  rfl::Ref<Predictor> clone() const final {
+    return rfl::make_ref<LogisticRegression>(*this);
   }
 
   /// Whether the predictor is used for classification;

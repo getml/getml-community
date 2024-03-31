@@ -52,10 +52,10 @@ class StringIterator {
 
  private:
   /// A function mapping an index to string.
-  const std::function<strings::String(size_t)> func_;
+  std::function<strings::String(size_t)> func_;
 
   /// The total number of strings available.
-  const size_t size_;
+  size_t size_;
 };
 
 }  // namespace helpers
