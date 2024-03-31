@@ -10,6 +10,7 @@
 
 #include <map>
 #include <memory>
+#include <rfl.hpp>
 #include <vector>
 
 #include "commands/Fingerprint.hpp"
@@ -42,7 +43,7 @@ class AbstractFeatureLearner {
       const std::vector<Float>& _importance_factors) const = 0;
 
   /// Creates a deep copy.
-  virtual std::shared_ptr<AbstractFeatureLearner> clone() const = 0;
+  virtual rfl::Ref<AbstractFeatureLearner> clone() const = 0;
 
   /// Returns the fingerprint of the feature learner (necessary to build
   /// the dependency graphs).

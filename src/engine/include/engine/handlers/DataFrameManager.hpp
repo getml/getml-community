@@ -37,12 +37,15 @@ class DataFrameManager {
 
   using Command = commands::DataFrameCommand;
 
-  using CloseDataFrameOp =
-      rfl::NamedTuple<rfl::Field<"name_", std::string>,
-                      rfl::Field<"type_", rfl::Literal<"DataFrame.close">>>;
+  struct CloseDataFrameOp {
+    using Tag = rfl::Literal<"DataFrame.close">;
+    rfl::Field<"name_", std::string> name;
+  };
 
-  using RecvAndAddOp = rfl::NamedTuple<rfl::Field<"name_", std::string>,
-                                       rfl::Field<"role_", std::string>>;
+  struct RecvAndAddOp {
+    rfl::Field<"name_", std::string> name;
+    rfl::Field<"role_", std::string> role;
+  };
 
  public:
   explicit DataFrameManager(const DataFrameManagerParams& _params)

@@ -11,6 +11,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <rfl.hpp>
 #include <string>
 #include <tuple>
 #include <type_traits>
@@ -35,11 +36,6 @@
 #include "helpers/StringIterator.hpp"
 #include "helpers/VocabularyContainer.hpp"
 #include "helpers/WordIndexContainer.hpp"
-#include "rfl/Field.hpp"
-#include "rfl/from_named_tuple.hpp"
-#include "rfl/get.hpp"
-#include "rfl/replace.hpp"
-#include "rfl/to_named_tuple.hpp"
 
 namespace featurelearners {
 
@@ -134,8 +130,8 @@ class FeatureLearner : public AbstractFeatureLearner {
 
  public:
   /// Creates a deep copy.
-  std::shared_ptr<AbstractFeatureLearner> clone() const final {
-    return std::make_shared<FeatureLearner<FeatureLearnerType>>(*this);
+  rfl::Ref<AbstractFeatureLearner> clone() const final {
+    return rfl::make_ref<FeatureLearner<FeatureLearnerType>>(*this);
   }
 
   /// Whether the feature learner is used for classification.

@@ -26,7 +26,7 @@ namespace pipelines {
 
 struct SaveParams {
   /// Encodes the categories.
-  rfl::Field<"categories_", const helpers::StringIterator> categories;
+  rfl::Field<"categories_", helpers::StringIterator> categories;
 
   /// The fitted pipeline.
   rfl::Field<"fitted_", FittedPipeline> fitted;

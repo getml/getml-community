@@ -42,11 +42,10 @@ struct Predictors {
   size_t num_predictors_per_set() const;
 
   /// Pimpl for the predictors.
-  const rfl::Ref<const predictors::PredictorImpl> impl_;
+  rfl::Ref<const predictors::PredictorImpl> impl_;
 
   /// The actual predictors used.
-  const std::vector<std::vector<rfl::Ref<const predictors::Predictor>>>
-      predictors_;
+  std::vector<std::vector<rfl::Ref<const predictors::Predictor>>> predictors_;
 };
 
 }  // namespace pipelines

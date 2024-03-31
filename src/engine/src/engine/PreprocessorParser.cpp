@@ -62,7 +62,7 @@ rfl::Ref<Preprocessor> PreprocessorParser::parse(
 
     else {
       throw std::runtime_error(
-          "The " + rfl::get<"type_">(_hyperparams).name() +
+          "The " + _hyperparams.name() +
           " preprocessor is not supported in the community edition. Please "
           "upgrade to getML enterprise to use this. An overview of what is "
           "supported in the community edition can be found in the official "

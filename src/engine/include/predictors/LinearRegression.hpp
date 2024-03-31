@@ -80,8 +80,8 @@ class LinearRegression : public Predictor {
   bool accepts_null() const final { return false; }
 
   /// Returns a deep copy.
-  std::shared_ptr<Predictor> clone() const final {
-    return std::make_shared<LinearRegression>(*this);
+  rfl::Ref<Predictor> clone() const final {
+    return rfl::make_ref<LinearRegression>(*this);
   }
 
   /// Returns the fingerprint of the predictor (necessary to build

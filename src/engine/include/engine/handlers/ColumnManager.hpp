@@ -37,13 +37,6 @@ class ColumnManager {
 
   using Command = commands::ColumnCommand;
 
-  using CloseDataFrameOp =
-      rfl::NamedTuple<rfl::Field<"name_", std::string>,
-                      rfl::Field<"type_", rfl::Literal<"DataFrame.close">>>;
-
-  using RecvAndAddOp = rfl::NamedTuple<rfl::Field<"name_", std::string>,
-                                       rfl::Field<"role_", std::string>>;
-
  public:
   explicit ColumnManager(const DataFrameManagerParams& _params)
       : params_(_params) {}

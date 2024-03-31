@@ -29,7 +29,7 @@ rfl::Ref<featurelearners::AbstractFeatureLearner> FeatureLearnerParser::parse(
           fastprop::algorithm::FastProp>>::make(_params, _hyperparameters);
     } else {
       throw std::runtime_error(
-          "The " + rfl::get<"type_">(_hyperparameters).name() +
+          "The " + _hyperparameters.name() +
           " feature learner is not supported in the community edition. Please "
           "upgrade to getML enterprise to use this. An overview of what is "
           "supported in the community edition can be found in the official "
@@ -40,6 +40,5 @@ rfl::Ref<featurelearners::AbstractFeatureLearner> FeatureLearnerParser::parse(
   return rfl::visit(handle, _hyperparameters);
 }
 
-// ----------------------------------------------------------------------
 }  // namespace pipelines
 }  // namespace engine

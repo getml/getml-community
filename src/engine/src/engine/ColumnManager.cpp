@@ -9,6 +9,8 @@
 
 #include <Poco/TemporaryFile.h>
 
+#include <rfl.hpp>
+
 #include "commands/DataFrameFromJSON.hpp"
 #include "containers/Roles.hpp"
 #include "engine/handlers/AggOpParser.hpp"
@@ -19,7 +21,6 @@
 #include "engine/handlers/StringOpParser.hpp"
 #include "engine/handlers/ViewParser.hpp"
 #include "metrics/metrics.hpp"
-#include "rfl/to_named_tuple.hpp"
 
 namespace engine {
 namespace handlers {
@@ -35,7 +36,8 @@ void ColumnManager::add_float_column(
 
   if (exists) {
     DataFrameManager(params_).recv_and_add_float_column(
-        rfl::to_named_tuple(_cmd), df, &weak_write_lock, _socket);
+        rfl::as<DataFrameManager::RecvAndAddOp>(_cmd), df, &weak_write_lock,
+        _socket);
 
   } else {
     const auto pool = params_.options_.make_pool();
@@ -45,7 +47,8 @@ void ColumnManager::add_float_column(
                               params_.join_keys_encoding_.ptr(), pool);
 
     DataFrameManager(params_).recv_and_add_float_column(
-        rfl::to_named_tuple(_cmd), &new_df, &weak_write_lock, _socket);
+        rfl::as<DataFrameManager::RecvAndAddOp>(_cmd), &new_df,
+        &weak_write_lock, _socket);
 
     data_frames()[df_name] = new_df;
 
@@ -70,7 +73,8 @@ void ColumnManager::add_string_column(
 
   if (exists) {
     DataFrameManager(params_).recv_and_add_string_column(
-        rfl::to_named_tuple(_cmd), df, &weak_write_lock, _socket);
+        rfl::as<DataFrameManager::RecvAndAddOp>(_cmd), df, &weak_write_lock,
+        _socket);
 
   } else {
     const auto pool = params_.options_.make_pool();
@@ -80,7 +84,8 @@ void ColumnManager::add_string_column(
                               params_.join_keys_encoding_.ptr(), pool);
 
     DataFrameManager(params_).recv_and_add_string_column(
-        rfl::to_named_tuple(_cmd), &new_df, &weak_write_lock, _socket);
+        rfl::as<DataFrameManager::RecvAndAddOp>(_cmd), &new_df,
+        &weak_write_lock, _socket);
 
     data_frames()[df_name] = new_df;
 

@@ -5,8 +5,10 @@
 // for details.
 //
 
+#include <rfl.hpp>
+#include <rfl/json.hpp>
+
 #include "engine/handlers/DataFrameManager.hpp"
-#include "rfl/json.hpp"
 
 namespace engine {
 namespace handlers {
@@ -30,15 +32,16 @@ void DataFrameManager::receive_data(
       if constexpr (std::is_same<
                         Type,
                         typename commands::DataFrameCommand::FloatColumnOp>()) {
-        recv_and_add_float_column(rfl::to_named_tuple(_cmd), _df, nullptr,
+        recv_and_add_float_column(rfl::as<RecvAndAddOp>(_cmd), _df, nullptr,
                                   _socket);
         communication::Sender::send_string("Success!", _socket);
         return false;
       } else if constexpr (std::is_same<Type,
                                         typename commands::DataFrameCommand::
                                             StringColumnOp>()) {
-        recv_and_add_string_column(rfl::to_named_tuple(_cmd), _local_categories,
-                                   _local_join_keys_encoding, _df, _socket);
+        recv_and_add_string_column(rfl::as<RecvAndAddOp>(_cmd),
+                                   _local_categories, _local_join_keys_encoding,
+                                   _df, _socket);
         communication::Sender::send_string("Success!", _socket);
         return false;
       } else if constexpr (std::is_same<Type, CloseDataFrameOp>()) {

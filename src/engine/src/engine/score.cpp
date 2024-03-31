@@ -365,15 +365,14 @@ rfl::Ref<const metrics::Scores> score(
 
   auto scores = rfl::Ref<metrics::Scores>::make(_pipeline.scores());
 
-  const auto update = [&scores, &_population_name](const auto& _res) {
+  const auto update = [&scores, &_population_name](auto&& _res) {
     scores->update(_res, rfl::make_field<"set_used_">(_population_name));
     return scores;
   };
 
-  const auto result =
-      metrics::Scorer::score(_fitted.is_classification(), _yhat, y);
+  auto result = metrics::Scorer::score(_fitted.is_classification(), _yhat, y);
 
-  scores = std::visit(update, result);
+  scores = std::visit(update, std::move(result));
 
   scores->to_history();
 

@@ -87,7 +87,15 @@ std::vector<rfl::Ref<helpers::ColumnDescription>> TextFieldSplitter::fit_df(
 
   const auto iota = fct::iota<size_t>(0, _df.num_text());
 
-  return fct::collect::vector(iota | VIEWS::transform(to_column_description));
+  auto range = iota | VIEWS::transform(to_column_description);
+
+  auto vec = std::vector<rfl::Ref<helpers::ColumnDescription>>();
+
+  for (auto val : range) {
+    vec.emplace_back(std::move(val));
+  }
+
+  return vec;
 }
 
 // ----------------------------------------------------

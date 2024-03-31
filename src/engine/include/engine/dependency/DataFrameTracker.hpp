@@ -71,7 +71,7 @@ class DataFrameTracker {
 
  private:
   /// The underlying data frames.
-  const rfl::Ref<std::map<std::string, containers::DataFrame>> data_frames_;
+  rfl::Ref<std::map<std::string, containers::DataFrame>> data_frames_;
 
   /// A map keeping track of the names of the data frame and when they were
   /// last changed.

@@ -104,12 +104,7 @@ template <class T>
 inline std::vector<std::vector<rfl::Ref<const T>>> to_const(
     const std::vector<std::vector<rfl::Ref<T>>>& _orig) {
   const auto as_const_ref = [](const auto& _o) { return fit::to_const(_o); };
-  auto range = _orig | VIEWS::transform(as_const_ref);
-  auto vec = std::vector<std::vector<rfl::Ref<const T>>>();
-  for (auto val : range) {
-    vec.emplace_back(std::move(val));
-  }
-  return vec;
+  return fct::collect::vector(_orig | VIEWS::transform(as_const_ref));
 }
 
 /// Transforms to a vector of shared_ptrs to a vector of
@@ -117,8 +112,15 @@ inline std::vector<std::vector<rfl::Ref<const T>>> to_const(
 template <class T>
 inline std::vector<rfl::Ref<T>> to_ref(
     const std::vector<std::shared_ptr<T>>& _orig) {
-  const auto as_const_ref = [](const auto& _o) { return rfl::Ref<T>(_o); };
-  return fct::collect::vector(_orig | VIEWS::transform(as_const_ref));
+  const auto as_ref = [](const auto& _o) {
+    return rfl::Ref<T>::make(_o).value();
+  };
+  auto range = _orig | VIEWS::transform(as_ref);
+  auto vec = std::vector<rfl::Ref<T>>();
+  for (auto val : range) {
+    vec.emplace_back(std::move(val));
+  }
+  return vec;
 }
 
 /// Transforms to a vector of references.

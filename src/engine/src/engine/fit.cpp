@@ -541,8 +541,7 @@ fit_predictors(const FitPredictorsParams& _params) {
       if (retrieved_predictors.at(t).at(i)) {
         socket_logger->log("Retrieving predictor...");
         socket_logger->log("Progress: 100%.");
-        p = rfl::make_ref<predictors::Predictor>(
-            retrieved_predictors.at(t).at(i));
+        *p = *retrieved_predictors.at(t).at(i);
         continue;
       }
 
@@ -704,10 +703,14 @@ init_feature_learners(
           const commands::FeatureLearner& _hyperparameters) {
         const auto make = std::bind(make_fl_for_one_target, _params,
                                     _hyperparameters, std::placeholders::_1);
-
         const auto iota = fct::iota<Int>(0, _num_targets);
-
-        return fct::collect::vector(iota | VIEWS::transform(make));
+        auto range = iota | VIEWS::transform(make);
+        auto vec =
+            std::vector<rfl::Ref<featurelearners::AbstractFeatureLearner>>();
+        for (auto val : range) {
+          vec.emplace_back(std::move(val));
+        }
+        return vec;
       };
 
   const auto to_fl = [&_feature_learner_params, make_fl_for_all_targets](
@@ -783,7 +786,13 @@ std::vector<rfl::Ref<preprocessors::Preprocessor>> init_preprocessors(
 
   const auto commands = _pipeline.obj().preprocessors();
 
-  auto vec = fct::collect::vector(commands | VIEWS::transform(parse));
+  auto range = commands | VIEWS::transform(parse);
+
+  auto vec = std::vector<rfl::Ref<preprocessors::Preprocessor>>();
+
+  for (auto val : range) {
+    vec.emplace_back(std::move(val));
+  }
 
   const auto mapping_to_end = [](const auto& _p) -> bool {
     return _p->type() != preprocessors::Preprocessor::MAPPING;
@@ -996,9 +1005,10 @@ retrieve_predictors(
 
       if (!optional) {
         all_retrieved = false;
+        r.push_back(nullptr);
+      } else {
+        r.push_back(optional->ptr());
       }
-
-      r.push_back(*optional);
     }
 
     retrieved_predictors.push_back(r);
