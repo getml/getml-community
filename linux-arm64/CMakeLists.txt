@@ -68,7 +68,7 @@
 
  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -O2")
 
- set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -Wall -Wno-sign-compare -Wno-missing-braces -Wno-psabi -pthread -fno-strict-aliasing -fwrapv -O2 -DEIGEN_DONT_PARALLELIZE")
+ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -Wall -Wno-sign-compare -Wno-missing-braces -Wno-psabi -pthread -fno-strict-aliasing -fwrapv -ftemplate-backtrace-limit=0 -O2 -DEIGEN_DONT_PARALLELIZE")
 
  if((${PROFILING_MODE} STREQUAL "ON"))
  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -DGETML_PROFILING")
@@ -104,10 +104,10 @@
     "${POSTGRES_DIR}/build/lib/libpq.a"
     "${POSTGRES_DIR}/build/lib/libpgport.a"
     "${POSTGRES_DIR}/build/lib/libpgcommon.a"
+    "${REFLECTCPP_DIR}/build/libreflectcpp.a"
     "${ARROW_DIR}/cpp/release/release/libparquet.a"
     "${ARROW_DIR}/cpp/release/release/libarrow.a"
     "${ARROW_DIR}/cpp/release/release/libarrow_bundled_dependencies.a"
-    bz2
     ssl
     crypto
     mariadb
