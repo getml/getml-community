@@ -19,6 +19,9 @@ set(POSTGRES_DIR $ENV{POSTGRES_DIR})
 # Should contain the folder "Net", among others.
 set(POCO_DIR $ENV{POCO_DIR})
 
+# Set the path containing reflect-cpp 
+set(REFLECTCPP_DIR $ENV{REFLECTCPP_DIR})
+
 # Set the path containing xgboost
 # Should include folders "include", "lib" and "rabit"
 set(XGBOOST_DIR $ENV{XGBOOST_DIR})
@@ -52,13 +55,12 @@ include_directories(
     "${POCO_DIR}/NetSSL_OpenSSL/include"
     "${POCO_DIR}/Foundation/include"
     "${POSTGRES_DIR}/build/include"
+    "${REFLECTCPP_DIR}/include"
     "${XGBOOST_DIR}/include"
     "${XGBOOST_DIR}/rabit/include"
-    "${YYJSON_DIR}"
 )
 
 link_directories(
-    "${GOUTILS_DIR}/lib"
     "${MARIADB_DIR}/build/libmariadb"
     "${XGBOOST_DIR}/lib"
 )
@@ -67,7 +69,7 @@ include(${CODE_DIR}/src/obj.txt)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -O2")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -Wall -Wno-sign-compare -Wno-missing-braces -pthread -fno-strict-aliasing -fwrapv -O2 -DEIGEN_DONT_PARALLELIZE")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -Wall -Wno-sign-compare -Wno-missing-braces -pthread -fno-strict-aliasing -fwrapv -ftemplate-backtrace-limit=0 -O2 -DEIGEN_DONT_PARALLELIZE")
 
 if((${PROFILING_MODE} STREQUAL "ON"))
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -DGETML_PROFILING")
@@ -102,10 +104,10 @@ target_link_libraries(
    "${POSTGRES_DIR}/build/lib/libpq.a"
    "${POSTGRES_DIR}/build/lib/libpgport.a"
    "${POSTGRES_DIR}/build/lib/libpgcommon.a"
+   "${REFLECTCPP_DIR}/build/libreflectcpp.a"
    "${ARROW_DIR}/cpp/release/release/libparquet.a"
    "${ARROW_DIR}/cpp/release/release/libarrow.a"
    "${ARROW_DIR}/cpp/release/release/libarrow_bundled_dependencies.a"
-   bz2
    ssl
    crypto
    mariadb

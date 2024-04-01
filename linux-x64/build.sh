@@ -41,9 +41,9 @@ export ARROW_DIR="$DEPENDENCY_DIR/arrow"
 export MARIADB_DIR="$DEPENDENCY_DIR/mariadb-connector-c"
 export POCO_DIR="$DEPENDENCY_DIR/poco"
 export POSTGRES_DIR="$DEPENDENCY_DIR/postgres"
+export REFLECTCPP_DIR="$DEPENDENCY_DIR/reflect-cpp"
 export UNIX_ODBC_DIR="$DEPENDENCY_DIR/unixODBC-2.3.9"
 export XGBOOST_DIR="$DEPENDENCY_DIR/xgboost"
-export YYJSON_DIR="$DEPENDENCY_DIR/yyjson/src"
 
 export GOUTILS_DIR=$GETML_GOUTILS_FOLDER
 
