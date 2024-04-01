@@ -495,7 +495,7 @@ void PipelineManager::refresh_all(const typename Command::RefreshAllOp& _cmd,
 
   auto vec = std::vector<RefreshPipelineType>();
 
-  for (const auto name : names) {
+  for (const auto& name : names) {
     const auto pipe = utils::Getter::get(name, pipelines());
     if (!pipe.fitted()) {
       continue;
