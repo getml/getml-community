@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 
+#include "debug/debug.hpp"
 #include "rfl/NamedTuple.hpp"
 #include "rfl/Ref.hpp"
 #include "rfl/define_named_tuple.hpp"
