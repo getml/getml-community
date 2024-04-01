@@ -115,7 +115,9 @@ class LinearRegression : public Predictor {
   bool silent() const final { return true; }
 
   /// The type of the predictor.
-  std::string type() const final { return hyperparams().type().name(); }
+  std::string type() const final {
+    return LinearRegressionHyperparams::Tag().str();
+  }
 
  private:
   /// Trivial (private const) accessor.

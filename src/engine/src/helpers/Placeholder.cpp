@@ -144,9 +144,7 @@ std::vector<bool> Placeholder::infer_needs_targets(
 
 // ----------------------------------------------------------------------------
 
-std::string Placeholder::to_json() const {
-  return rfl::rfl::json::write(*this);
-}
+std::string Placeholder::to_json() const { return rfl::json::write(*this); }
 
 // ----------------------------------------------------------------------------
 }  // namespace helpers
