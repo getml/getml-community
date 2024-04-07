@@ -188,7 +188,7 @@ void DatabaseManager::execute_command(const Command& _command,
     }
   };
 
-  rfl::visit(handle, _command.val_);
+  std::visit(handle, _command.val_);
 }
 
 // ------------------------------------------------------------------------
