@@ -24,14 +24,17 @@
 namespace commands {
 
 struct Command {
-  using IsAliveOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"is_alive">>>;
+  struct IsAliveOp {
+    rfl::Field<"type_", rfl::Literal<"is_alive">> type;
+  };
 
-  using MonitorURLOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"monitor_url">>>;
+  struct MonitorURLOp {
+    rfl::Field<"type_", rfl::Literal<"monitor_url">> type;
+  };
 
-  using ShutdownOp =
-      rfl::NamedTuple<rfl::Field<"type_", rfl::Literal<"shutdown">>>;
+  struct ShutdownOp {
+    rfl::Field<"type_", rfl::Literal<"shutdown">> type;
+  };
 
   using ReflectionType =
       std::variant<ColumnCommand, DatabaseCommand, DataFrameCommand,

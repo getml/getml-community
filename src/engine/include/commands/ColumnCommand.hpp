@@ -36,7 +36,9 @@ struct ColumnCommand {
 
   /// The command used to aggregate a column
   struct AggregationOp {
-    using Tag = rfl::Literal<"FloatColumn.aggregate", "StringColumn.aggregate">;
+    rfl::Field<"type_",
+               rfl::Literal<"FloatColumn.aggregate", "StringColumn.aggregate">>
+        type;
     rfl::Field<"aggregation_", Aggregation> aggregation;
   };
 
@@ -65,7 +67,9 @@ struct ColumnCommand {
 
   /// The command used to retrieve the number of rows of a boolean column.
   struct GetBooleanColumnNRowsOp {
-    using Tag = rfl::Literal<"BooleanColumn.nrows", "BooleanColumn.get_nrows">;
+    rfl::Field<"type_",
+               rfl::Literal<"BooleanColumn.nrows", "BooleanColumn.get_nrows">>
+        type;
     rfl::Field<"col_", BooleanColumnView> col;
   };
 
@@ -86,7 +90,9 @@ struct ColumnCommand {
 
   /// The command used to retrieve the number of rows of a float column.
   struct GetFloatColumnNRowsOp {
-    using Tag = rfl::Literal<"FloatColumn.nrows", "FloatColumn.get_nrows">;
+    rfl::Field<"type_",
+               rfl::Literal<"FloatColumn.nrows", "FloatColumn.get_nrows">>
+        type;
     rfl::Field<"col_", FloatColumnOrFloatColumnView> col;
   };
 
@@ -125,7 +131,9 @@ struct ColumnCommand {
 
   /// The command used to retrieve the number of rows of a float column.
   struct GetStringColumnNRowsOp {
-    using Tag = rfl::Literal<"StringColumn.nrows", "StringColumn.get_nrows">;
+    rfl::Field<"type_",
+               rfl::Literal<"StringColumn.nrows", "StringColumn.get_nrows">>
+        type;
     rfl::Field<"col_", StringColumnOrStringColumnView> col;
   };
 

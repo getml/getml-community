@@ -25,7 +25,7 @@ namespace commands {
 struct DatabaseCommand {
   /// The operation needed to copy a table.
   struct CopyTableOp {
-    using Tag = rfl::Literal<"Database.copy_table">;
+    rfl::Field<"type_", rfl::Literal<"Database.copy_table">> type;
     rfl::Field<"source_conn_id_", std::string> source_conn_id;
     rfl::Field<"source_table_", std::string> source_table;
     rfl::Field<"target_conn_id_", std::string> target_conn_id;
@@ -34,32 +34,32 @@ struct DatabaseCommand {
 
   /// The operation needed to describe a connection.
   struct DescribeConnectionOp {
-    using Tag = rfl::Literal<"Database.describe_connection">;
+    rfl::Field<"type_", rfl::Literal<"Database.describe_connection">> type;
     rfl::Field<"name_", std::string> name;
   };
 
   /// The operation needed to drop a table.
   struct DropTableOp {
-    using Tag = rfl::Literal<"Database.drop_table">;
+    rfl::Field<"type_", rfl::Literal<"Database.drop_table">> type;
     rfl::Field<"conn_id_", std::string> conn_id;
     rfl::Field<"name_", std::string> name;
   };
 
   /// The operation needed to execute a query.
   struct ExecuteOp {
-    using Tag = rfl::Literal<"Database.execute">;
+    rfl::Field<"type_", rfl::Literal<"Database.execute">> type;
     rfl::Field<"name_", std::string> name;
   };
 
   /// The operation needed to get a table.
   struct GetOp {
-    using Tag = rfl::Literal<"Database.get">;
+    rfl::Field<"type_", rfl::Literal<"Database.get">> type;
     rfl::Field<"name_", std::string> name;
   };
 
   /// The operation needed to get colnames.
   struct GetColnamesOp {
-    using Tag = rfl::Literal<"Database.get_colnames">;
+    rfl::Field<"type_", rfl::Literal<"Database.get_colnames">> type;
     rfl::Field<"conn_id_", std::string> conn_id;
     rfl::Field<"name_", std::string> name;
     rfl::Field<"query_", std::optional<std::string>> query;
@@ -67,7 +67,7 @@ struct DatabaseCommand {
 
   /// The operation needed to get the content of a table.
   struct GetContentOp {
-    using Tag = rfl::Literal<"Database.get_content">;
+    rfl::Field<"type_", rfl::Literal<"Database.get_content">> type;
     rfl::Field<"name_", std::string> name;
     rfl::Field<"conn_id_", std::string> conn_id;
     rfl::Field<"draw_", Int> draw;
@@ -77,20 +77,20 @@ struct DatabaseCommand {
 
   /// The operation needed to the number of rows.
   struct GetNRowsOp {
-    using Tag = rfl::Literal<"Database.get_nrows">;
+    rfl::Field<"type_", rfl::Literal<"Database.get_nrows">> type;
     rfl::Field<"conn_id_", std::string> conn_id;
     rfl::Field<"name_", std::string> name;
   };
 
   /// The operation needed to list the connections.
   struct ListConnectionsOp {
-    using Tag = rfl::Literal<"Database.list_connections">;
+    rfl::Field<"type_", rfl::Literal<"Database.list_connections">> type;
     rfl::Field<"dummy_", std::optional<int>> dummy;
   };
 
   /// The operation needed to list the tables.
   struct ListTablesOp {
-    using Tag = rfl::Literal<"Database.list_tables">;
+    rfl::Field<"type_", rfl::Literal<"Database.list_tables">> type;
     rfl::Field<"name_", std::string> name;
   };
 
@@ -99,7 +99,7 @@ struct DatabaseCommand {
 
   /// The operation needed to read data from a CSV file.
   struct ReadCSVOp {
-    using Tag = rfl::Literal<"Database.read_csv">;
+    rfl::Field<"type_", rfl::Literal<"Database.read_csv">> type;
     rfl::Field<"colnames_", std::optional<std::vector<std::string>>> colnames;
     rfl::Field<"conn_id_", std::string> conn_id;
     rfl::Field<"fnames_", std::vector<std::string>> fnames;
@@ -112,13 +112,13 @@ struct DatabaseCommand {
 
   /// The operation needed to refresh the contents of the database.
   struct RefreshOp {
-    using Tag = rfl::Literal<"Database.refresh">;
+    rfl::Field<"type_", rfl::Literal<"Database.refresh">> type;
     rfl::Field<"dummy_", std::optional<int>> dummy;
   };
 
   /// The operation needed to sniff the data in a CSV file.
   struct SniffCSVOp {
-    using Tag = rfl::Literal<"Database.sniff_csv">;
+    rfl::Field<"type_", rfl::Literal<"Database.sniff_csv">> type;
     rfl::Field<"colnames_", std::optional<std::vector<std::string>>> colnames;
     rfl::Field<"conn_id_", std::string> conn_id;
     rfl::Field<"dialect_", std::optional<rfl::Literal<"python">>> dialect;
@@ -132,16 +132,16 @@ struct DatabaseCommand {
 
   /// The operation needed to sniff a table in the database.
   struct SniffTableOp {
-    using Tag = rfl::Literal<"Database.sniff_table">;
+    rfl::Field<"type_", rfl::Literal<"Database.sniff_table">> type;
     rfl::Field<"conn_id_", std::string> conn_id;
     rfl::Field<"name_", std::string> name;
   };
 
   using ReflectionType =
-      rfl::TaggedUnion<"type_", CopyTableOp, DescribeConnectionOp, DropTableOp,
-                       ExecuteOp, GetOp, GetColnamesOp, GetContentOp,
-                       GetNRowsOp, ListConnectionsOp, ListTablesOp, NewDBOp,
-                       ReadCSVOp, RefreshOp, SniffCSVOp, SniffTableOp>;
+      std::variant<CopyTableOp, DescribeConnectionOp, DropTableOp, ExecuteOp,
+                   GetOp, GetColnamesOp, GetContentOp, GetNRowsOp,
+                   ListConnectionsOp, ListTablesOp, NewDBOp, ReadCSVOp,
+                   RefreshOp, SniffCSVOp, SniffTableOp>;
 
   using InputVarType = typename rfl::json::Reader::InputVarType;
 
