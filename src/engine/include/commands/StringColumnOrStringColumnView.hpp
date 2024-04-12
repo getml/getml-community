@@ -8,16 +8,14 @@
 #ifndef COMMANDS_STRINGCOLUMNORSTRINGCOLUMNVIEW_HPP_
 #define COMMANDS_STRINGCOLUMNORSTRINGCOLUMNVIEW_HPP_
 
+#include <rfl.hpp>
+#include <rfl/json.hpp>
 #include <string>
 #include <variant>
 
 #include "commands/BooleanColumnView.hpp"
 #include "commands/Float.hpp"
 #include "commands/FloatColumnOrFloatColumnView.hpp"
-#include "rfl/Field.hpp"
-#include "rfl/Literal.hpp"
-#include "rfl/NamedTuple.hpp"
-#include "rfl/Ref.hpp"
 
 namespace commands {
 
@@ -63,6 +61,7 @@ class StringColumnOrStringColumnView {
 
   /// The command used for string with subtoles operations.
   struct StringWithSubrolesOp {
+    rfl::Field<"operator_", rfl::Literal<"with_subroles">> op;  // ADDED
     rfl::Field<"subroles_", std::vector<std::string>> subroles;
     rfl::Field<"operand1_", rfl::Ref<StringColumnOrStringColumnView>> operand1;
     rfl::Field<"type_", rfl::Literal<"StringColumnView">> type;
@@ -70,6 +69,7 @@ class StringColumnOrStringColumnView {
 
   /// The command used for string with unit operations.
   struct StringWithUnitOp {
+    rfl::Field<"operator_", rfl::Literal<"with_unit">> op;  // ADDED
     rfl::Field<"unit_", std::string> unit;
     rfl::Field<"operand1_", rfl::Ref<StringColumnOrStringColumnView>> operand1;
     rfl::Field<"type_", rfl::Literal<"StringColumnView">> type;
@@ -97,15 +97,21 @@ class StringColumnOrStringColumnView {
 
   /// The command used for retrieving string columns from a data frame.
   struct StringColumnOp {
+    rfl::Field<"operator_", rfl::Literal<"StringColumn">> op;  // ADDED
     rfl::Field<"df_name_", std::string> df_name;
     rfl::Field<"name_", std::string> name;
     rfl::Field<"type_", rfl::Literal<"StringColumn">> type;
   };
 
   using ReflectionType =
-      std::variant<StringColumnOp, StringBinaryOp, StringConstOp,
-                   StringSubselectionOp, StringSubstringOp, StringUnaryOp,
-                   StringUpdateOp, StringWithSubrolesOp, StringWithUnitOp>;
+      rfl::TaggedUnion<"operator_", StringColumnOp, StringBinaryOp,
+                       StringConstOp, StringSubselectionOp, StringSubstringOp,
+                       StringUnaryOp, StringUpdateOp, StringWithSubrolesOp,
+                       StringWithUnitOp>;
+
+  using InputVarType = typename rfl::json::Reader::InputVarType;
+
+  static StringColumnOrStringColumnView from_json_obj(const InputVarType& _obj);
 
   /// Used to break the recursive definition.
   ReflectionType val_;

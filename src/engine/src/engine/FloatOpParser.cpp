@@ -305,7 +305,7 @@ containers::ColumnView<Float> FloatOpParser::parse(
     }
   };
 
-  return std::visit(handle, _cmd.val_);
+  return rfl::visit(handle, _cmd.val_);
 }
 
 // ----------------------------------------------------------------------------

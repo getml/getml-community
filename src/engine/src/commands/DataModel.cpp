@@ -10,7 +10,10 @@
 namespace commands {
 
 DataModel DataModel::from_json_obj(const InputVarType& _json_obj) {
-  return DataModel(rfl::json::read<ReflectionType>(_json_obj).value());
+  std::cout << "datamodel1" << std::endl;
+  auto cmd = DataModel(rfl::json::read<ReflectionType>(_json_obj).value());
+  std::cout << "datamodel2" << std::endl;
+  return cmd;
 }
 
 }  // namespace commands
