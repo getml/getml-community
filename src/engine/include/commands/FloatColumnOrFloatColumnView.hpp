@@ -8,15 +8,13 @@
 #ifndef COMMANDS_FLOATCOLUMNORFLOATCOLUMNVIEW_HPP_
 #define COMMANDS_FLOATCOLUMNORFLOATCOLUMNVIEW_HPP_
 
+#include <rfl.hpp>
+#include <rfl/json.hpp>
 #include <variant>
 
 #include "commands/BooleanColumnView.hpp"
 #include "commands/Float.hpp"
 #include "commands/StringColumnOrStringColumnView.hpp"
-#include "rfl/Field.hpp"
-#include "rfl/Literal.hpp"
-#include "rfl/NamedTuple.hpp"
-#include "rfl/Ref.hpp"
 
 namespace commands {
 
@@ -54,6 +52,7 @@ struct FloatColumnOrFloatColumnView {
 
   /// The command used for retrieving float columns from a data frame.
   struct FloatColumnOp {
+    rfl::Field<"operator_", rfl::Literal<"FloatColumn">> op;  // ADDED
     rfl::Field<"df_name_", std::string> df_name;
     rfl::Field<"name_", std::string> name;
     rfl::Field<"role_", std::string> role;
@@ -128,6 +127,7 @@ struct FloatColumnOrFloatColumnView {
 
   /// The command used for string with subtoles operations.
   struct FloatWithSubrolesOp {
+    rfl::Field<"operator_", rfl::Literal<"with_subroles">> op;  // ADDED
     rfl::Field<"subroles_", std::vector<std::string>> subroles;
     rfl::Field<"operand1_", rfl::Ref<FloatColumnOrFloatColumnView>> operand1;
     rfl::Field<"type_", rfl::Literal<"FloatColumnView">> type;
@@ -135,17 +135,22 @@ struct FloatColumnOrFloatColumnView {
 
   /// The command used for float with unit operations.
   struct FloatWithUnitOp {
+    rfl::Field<"operator_", rfl::Literal<"with_unit">> op;  // ADDED
     rfl::Field<"unit_", std::string> unit;
     rfl::Field<"operand1_", rfl::Ref<FloatColumnOrFloatColumnView>> operand1;
     rfl::Field<"type_", rfl::Literal<"FloatColumnView">> type;
   };
 
   using ReflectionType =
-      std::variant<FloatArangeOp, FloatAsTSOp, FloatBinaryOp, FloatConstOp,
-                   FloatFromBooleanOp, FloatFromStringOp, FloatRandomOp,
-                   FloatRowidOp, FloatSubselectionOp, FloatUnaryOp,
-                   FloatUpdateOp, FloatColumnOp, FloatWithSubrolesOp,
-                   FloatWithUnitOp>;
+      rfl::TaggedUnion<"operator_", FloatArangeOp, FloatAsTSOp, FloatBinaryOp,
+                       FloatConstOp, FloatFromBooleanOp, FloatFromStringOp,
+                       FloatRandomOp, FloatRowidOp, FloatSubselectionOp,
+                       FloatUnaryOp, FloatUpdateOp, FloatColumnOp,
+                       FloatWithSubrolesOp, FloatWithUnitOp>;
+
+  using InputVarType = typename rfl::json::Reader::InputVarType;
+
+  static FloatColumnOrFloatColumnView from_json_obj(const InputVarType& _obj);
 
   /// Used to break the recursive definition.
   ReflectionType val_;

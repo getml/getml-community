@@ -27,11 +27,11 @@ containers::ColumnView<bool> BoolOpParser::binary_operation(
       return bin_op(_cmd, std::logical_and<bool>());
     }
 
-    if constexpr (std::is_same<Type, rfl::Literal<"equal_to">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"bool_equal_to">>()) {
       return bin_op(_cmd, std::equal_to<bool>());
     }
 
-    if constexpr (std::is_same<Type, rfl::Literal<"not_equal_to">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"bool_not_equal_to">>()) {
       return bin_op(_cmd, std::not_equal_to<bool>());
     }
 
@@ -58,7 +58,7 @@ containers::ColumnView<bool> BoolOpParser::numerical_comparison(
           const BooleanNumComparisonOp& _cmd) -> containers::ColumnView<bool> {
     using Type = std::decay_t<decltype(_literal)>;
 
-    if constexpr (std::is_same<Type, rfl::Literal<"equal_to">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"num_equal_to">>()) {
       return num_bin_op(_cmd, std::equal_to<Float>());
     }
 
@@ -78,7 +78,7 @@ containers::ColumnView<bool> BoolOpParser::numerical_comparison(
       return num_bin_op(_cmd, std::less_equal<Float>());
     }
 
-    if constexpr (std::is_same<Type, rfl::Literal<"not_equal_to">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"num_not_equal_to">>()) {
       return num_bin_op(_cmd, std::not_equal_to<Float>());
     }
   };
@@ -135,7 +135,7 @@ containers::ColumnView<bool> BoolOpParser::parse(
     }
   };
 
-  return std::visit(handle, _cmd.val_);
+  return rfl::visit(handle, _cmd.val_);
 }
 
 // ----------------------------------------------------------------------------
@@ -186,11 +186,11 @@ containers::ColumnView<bool> BoolOpParser::string_comparison(
       return cat_bin_op(_cmd, contains);
     }
 
-    if constexpr (std::is_same<Type, rfl::Literal<"equal_to">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"str_equal_to">>()) {
       return cat_bin_op(_cmd, std::equal_to<strings::String>());
     }
 
-    if constexpr (std::is_same<Type, rfl::Literal<"not_equal_to">>()) {
+    if constexpr (std::is_same<Type, rfl::Literal<"str_not_equal_to">>()) {
       return cat_bin_op(_cmd, std::not_equal_to<strings::String>());
     }
   };

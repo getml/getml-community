@@ -131,7 +131,7 @@ containers::ColumnView<strings::String> StringOpParser::numerical_as_string(
   const auto role = [&_col]() -> std::string {
     using FloatColumnOp =
         typename commands::FloatColumnOrFloatColumnView::FloatColumnOp;
-    if (const auto val = std::get_if<FloatColumnOp>(&_col.val_)) {
+    if (const auto val = std::get_if<FloatColumnOp>(&_col.val_.variant())) {
       return val->role();
     }
     return "";
@@ -214,7 +214,7 @@ containers::ColumnView<strings::String> StringOpParser::parse(
     }
   };
 
-  return std::visit(handle, _cmd.val_);
+  return rfl::visit(handle, _cmd.val_);
 }
 
 // ----------------------------------------------------------------------------

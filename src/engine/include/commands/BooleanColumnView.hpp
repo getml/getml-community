@@ -8,15 +8,13 @@
 #ifndef COMMANDS_BOOLEANBINARYOP_HPP_
 #define COMMANDS_BOOLEANBINARYOP_HPP_
 
+#include <rfl.hpp>
+#include <rfl/json.hpp>
 #include <variant>
 
 #include "commands/Float.hpp"
 #include "commands/FloatColumnOrFloatColumnView.hpp"
 #include "commands/StringColumnOrStringColumnView.hpp"
-#include "rfl/Field.hpp"
-#include "rfl/Literal.hpp"
-#include "rfl/Ref.hpp"
-#include "rfl/TaggedUnion.hpp"
 
 namespace commands {
 
@@ -27,7 +25,8 @@ struct BooleanColumnView {
   /// The command used for boolean binary operations.
   struct BooleanBinaryOp {
     using BooleanBinaryOpLiteral =
-        rfl::Literal<"and", "equal_to", "not_equal_to", "or", "xor">;
+        rfl::Literal<"and", "bool_equal_to", "bool_not_equal_to", "or",
+                     "xor">;  // CHANGED: equal_to, not_equal_to
 
     rfl::Field<"operator_", BooleanBinaryOpLiteral> op;
     rfl::Field<"operand1_", rfl::Ref<BooleanColumnView>> operand1;
@@ -54,8 +53,9 @@ struct BooleanColumnView {
   /// Contains comparisons between two numerical columns .
   struct BooleanNumComparisonOp {
     using BooleanNumComparisonOpLiteral =
-        rfl::Literal<"equal_to", "greater", "greater_equal", "less",
-                     "less_equal", "not_equal_to">;
+        rfl::Literal<"num_equal_to", "greater", "greater_equal", "less",
+                     "less_equal",
+                     "num_not_equal_to">;  // CHANGED: equal_to, not_equal_to
 
     rfl::Field<"operator_", BooleanNumComparisonOpLiteral> op;
     rfl::Field<"operand1_", rfl::Ref<FloatColumnOrFloatColumnView>> operand1;
@@ -66,7 +66,8 @@ struct BooleanColumnView {
   /// Contains comparisons between two numerical columns .
   struct BooleanStrComparisonOp {
     using BooleanStrComparisonOpLiteral =
-        rfl::Literal<"contains", "equal_to", "not_equal_to">;
+        rfl::Literal<"contains", "str_equal_to",
+                     "str_not_equal_to">;  // CHANGED: equal_to, not_equal_to
 
     rfl::Field<"operator_", BooleanStrComparisonOpLiteral> op;
     rfl::Field<"operand1_", rfl::Ref<StringColumnOrStringColumnView>> operand1;
@@ -113,10 +114,14 @@ struct BooleanColumnView {
 
   /// Defines a boolean column view.
   using ReflectionType =
-      std::variant<BooleanBinaryOp, BooleanConstOp, BooleanIsInfOp,
-                   BooleanIsNullOp, BooleanNotOp, BooleanNumComparisonOp,
-                   BooleanStrComparisonOp, BooleanSubselectionOp,
-                   BooleanUpdateOp>;
+      rfl::TaggedUnion<"operator_", BooleanBinaryOp, BooleanConstOp,
+                       BooleanIsInfOp, BooleanIsNullOp, BooleanNotOp,
+                       BooleanNumComparisonOp, BooleanStrComparisonOp,
+                       BooleanSubselectionOp, BooleanUpdateOp>;
+
+  using InputVarType = typename rfl::json::Reader::InputVarType;
+
+  static BooleanColumnView from_json_obj(const InputVarType& _obj);
 
   /// Used to break the recursive definition.
   ReflectionType val_;
