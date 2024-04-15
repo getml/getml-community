@@ -12,10 +12,7 @@
 namespace commands {
 
 ViewCommand ViewCommand::from_json_obj(const InputVarType& _obj) {
-  std::cout << "ViewCommand1" << std::endl;
-  auto cmd = ViewCommand(rfl::json::read<ReflectionType>(_obj).value());
-  std::cout << "ViewCommand2" << std::endl;
-  return cmd;
+  return ViewCommand(rfl::json::read<ReflectionType>(_obj).value());
 }
 
 }  // namespace commands

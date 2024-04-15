@@ -52,7 +52,7 @@ struct FloatColumnOrFloatColumnView {
 
   /// The command used for retrieving float columns from a data frame.
   struct FloatColumnOp {
-    rfl::Field<"operator_", rfl::Literal<"FloatColumn">> op;  // ADDED
+    rfl::Field<"operator_", rfl::Literal<"FloatColumn">> op;
     rfl::Field<"df_name_", std::string> df_name;
     rfl::Field<"name_", std::string> name;
     rfl::Field<"role_", std::string> role;
@@ -95,7 +95,7 @@ struct FloatColumnOrFloatColumnView {
 
   /// The command used for float subselection operations.
   struct FloatSubselectionOp {
-    rfl::Field<"operator_", rfl::Literal<"subselection">> op;
+    rfl::Field<"operator_", rfl::Literal<"num_subselection">> op;
     rfl::Field<"operand1_", rfl::Ref<FloatColumnOrFloatColumnView>> operand1;
     rfl::Field<"operand2_", std::variant<rfl::Ref<FloatColumnOrFloatColumnView>,
                                          rfl::Ref<BooleanColumnView>>>
@@ -118,7 +118,7 @@ struct FloatColumnOrFloatColumnView {
 
   /// The command used for float binary operations.
   struct FloatUpdateOp {
-    rfl::Field<"operator_", rfl::Literal<"update">> op;
+    rfl::Field<"operator_", rfl::Literal<"num_update">> op;
     rfl::Field<"operand1_", rfl::Ref<FloatColumnOrFloatColumnView>> operand1;
     rfl::Field<"operand2_", rfl::Ref<FloatColumnOrFloatColumnView>> operand2;
     rfl::Field<"condition_", rfl::Ref<BooleanColumnView>> condition;
@@ -127,7 +127,7 @@ struct FloatColumnOrFloatColumnView {
 
   /// The command used for string with subtoles operations.
   struct FloatWithSubrolesOp {
-    rfl::Field<"operator_", rfl::Literal<"with_subroles">> op;  // ADDED
+    rfl::Field<"operator_", rfl::Literal<"num_with_subroles">> op;
     rfl::Field<"subroles_", std::vector<std::string>> subroles;
     rfl::Field<"operand1_", rfl::Ref<FloatColumnOrFloatColumnView>> operand1;
     rfl::Field<"type_", rfl::Literal<"FloatColumnView">> type;
@@ -135,7 +135,7 @@ struct FloatColumnOrFloatColumnView {
 
   /// The command used for float with unit operations.
   struct FloatWithUnitOp {
-    rfl::Field<"operator_", rfl::Literal<"with_unit">> op;  // ADDED
+    rfl::Field<"operator_", rfl::Literal<"num_with_unit">> op;
     rfl::Field<"unit_", std::string> unit;
     rfl::Field<"operand1_", rfl::Ref<FloatColumnOrFloatColumnView>> operand1;
     rfl::Field<"type_", rfl::Literal<"FloatColumnView">> type;

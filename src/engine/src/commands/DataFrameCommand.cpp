@@ -10,10 +10,7 @@
 namespace commands {
 
 DataFrameCommand DataFrameCommand::from_json_obj(const InputVarType& _obj) {
-  std::cout << "DataFrameCommand1" << std::endl;
-  auto cmd = DataFrameCommand(rfl::json::read<ReflectionType>(_obj).value());
-  std::cout << "DataFrameCommand1" << std::endl;
-  return cmd;
+  return DataFrameCommand(rfl::json::read<ReflectionType>(_obj).value());
 }
 
 }  // namespace commands

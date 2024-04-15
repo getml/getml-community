@@ -11,11 +11,8 @@ namespace commands {
 
 FloatColumnOrFloatColumnView FloatColumnOrFloatColumnView::from_json_obj(
     const InputVarType& _obj) {
-  std::cout << "FloatColumnOrFloatColumnView1" << std::endl;
-  auto cmd = FloatColumnOrFloatColumnView(
+  return FloatColumnOrFloatColumnView(
       rfl::json::read<ReflectionType>(_obj).value());
-  std::cout << "FloatColumnOrFloatColumnView2" << std::endl;
-  return cmd;
 }
 
 }  // namespace commands
