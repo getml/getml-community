@@ -42,6 +42,7 @@ from .unit import _unit
 
 # -----------------------------------------------------------------------------
 
+
 # For typing only
 class _View(ABC):
     cmd: Dict[str, Any]
@@ -143,7 +144,6 @@ def _make_slicing_operand(column, slc):
 
 
 def _value_to_cmd(val: OperandType):
-
     cmd: Dict[str, Any] = {}
 
     cmd["operator_"] = "const"
@@ -282,7 +282,7 @@ class BooleanColumnView(_View):
 
     def __eq__(self, other):
         return BooleanColumnView(
-            operator="equal_to",
+            operator="bool_equal_to",
             operand1=self,
             operand2=other,
         )
@@ -305,7 +305,7 @@ class BooleanColumnView(_View):
 
     def __ne__(self, other):
         return BooleanColumnView(
-            operator="not_equal_to",
+            operator="bool_not_equal_to",
             operand1=self,
             operand2=other,
         )
@@ -325,7 +325,6 @@ class BooleanColumnView(_View):
         self,
         operand: OperandType,
     ):
-
         if isinstance(operand, (bool, str, numbers.Number, float, int, np.datetime64)):
             return _value_to_cmd(operand)
 
@@ -436,7 +435,6 @@ class StringColumn(_Column):
     _num_columns = 0
 
     def __init__(self, name: str = "", role: str = "categorical", df_name: str = ""):
-
         super().__init__()
 
         StringColumn._num_columns += 1
@@ -445,6 +443,7 @@ class StringColumn(_Column):
 
         self.cmd: Dict[str, Any] = {}
 
+        self.cmd["operator_"] = STRING_COLUMN
         self.cmd["df_name_"] = df_name
         self.cmd["name_"] = name
         self.cmd["role_"] = role
@@ -542,7 +541,6 @@ class StringColumnView(_View):
     # -----------------------------------------------------------------------------
 
     def _parse_operand(self, operand: Union[str, _Column, _View]):
-
         if isinstance(operand, str):
             return _value_to_cmd(operand)
 
@@ -666,7 +664,6 @@ class FloatColumn(_Column):
     _num_columns = 0
 
     def __init__(self, name: str = "", role: str = "numerical", df_name: str = ""):
-
         super().__init__()
 
         FloatColumn._num_columns += 1
@@ -674,6 +671,8 @@ class FloatColumn(_Column):
             name = FLOAT_COLUMN + " " + str(FloatColumn._num_columns)
 
         self.cmd: Dict[str, Any] = {}
+
+        self.cmd["operator_"] = FLOAT_COLUMN
 
         self.cmd["df_name_"] = df_name
 
@@ -716,7 +715,6 @@ class FloatColumnView(_View):
     # -----------------------------------------------------------------------------
 
     def _parse_operand(self, operand: Union[float, int, np.datetime64, _Column, _View]):
-
         if isinstance(operand, (numbers.Number, int, float, np.datetime64)):
             return _value_to_cmd(operand)
 
@@ -791,7 +789,6 @@ FloatColumnView.acos = _acos  # type: ignore
 
 
 def _add(self, other: OperandType):
-
     if isinstance(other, (StringColumn, StringColumnView, str)):
         return self.as_str() + other
 
@@ -799,7 +796,6 @@ def _add(self, other: OperandType):
 
 
 def _radd(self, other: OperandType):
-
     if isinstance(other, (StringColumn, StringColumnView, str)):
         return other + self.as_str()
 
@@ -1035,19 +1031,27 @@ FloatColumnView.day = _day  # type: ignore
 # -----------------------------------------------------------------------------
 
 
-def _eq(self, other: Any):
+def _eq_num(self, other: Any):
     return BooleanColumnView(
-        operator="equal_to",
+        operator="num_equal_to",
         operand1=self,
         operand2=other,
     )
 
 
-FloatColumn.__eq__ = _eq  # type: ignore
-FloatColumnView.__eq__ = _eq  # type: ignore
+def _eq_str(self, other: Any):
+    return BooleanColumnView(
+        operator="str_equal_to",
+        operand1=self,
+        operand2=other,
+    )
 
-StringColumn.__eq__ = _eq  # type: ignore
-StringColumnView.__eq__ = _eq  # type: ignore
+
+FloatColumn.__eq__ = _eq_num  # type: ignore
+FloatColumnView.__eq__ = _eq_num  # type: ignore
+
+StringColumn.__eq__ = _eq_str  # type: ignore
+StringColumnView.__eq__ = _eq_str  # type: ignore
 
 # -----------------------------------------------------------------------------
 
@@ -1398,19 +1402,27 @@ FloatColumnView.__rmul__ = _mul  # type: ignore
 # -----------------------------------------------------------------------------
 
 
-def _ne(self, other):
+def _ne_num(self, other):
     return BooleanColumnView(
-        operator="not_equal_to",
+        operator="num_not_equal_to",
         operand1=self,
         operand2=other,
     )
 
 
-FloatColumn.__ne__ = _ne  # type: ignore
-FloatColumnView.__ne__ = _ne  # type: ignore
+def _ne_str(self, other):
+    return BooleanColumnView(
+        operator="str_not_equal_to",
+        operand1=self,
+        operand2=other,
+    )
 
-StringColumn.__ne__ = _ne  # type: ignore
-StringColumnView.__ne__ = _ne  # type: ignore
+
+FloatColumn.__ne__ = _ne_num  # type: ignore
+FloatColumnView.__ne__ = _ne_num  # type: ignore
+
+StringColumn.__ne__ = _ne_str  # type: ignore
+StringColumnView.__ne__ = _ne_str  # type: ignore
 
 # -----------------------------------------------------------------------------
 
