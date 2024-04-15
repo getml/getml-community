@@ -40,8 +40,6 @@ void RequestHandler::run() {
 
     const auto cmd = rfl::json::read<commands::Command>(cmd_str).value();
 
-    std::cout << "finished parsing command" << std::endl;
-
     const auto handle = [this](const auto& _cmd) {
       using Type = std::decay_t<decltype(_cmd)>;
       if constexpr (std::is_same<Type, commands::ColumnCommand>()) {
