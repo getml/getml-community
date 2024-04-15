@@ -566,7 +566,7 @@ class StringColumnView(_View):
                     + "FloatColumn or a BooleanColumn!"
                 )
 
-        elif oper == "subselection":
+        elif oper == "str_subselection":
             wrong_coltype = optype not in [
                 STRING_COLUMN,
                 STRING_COLUMN_VIEW,
@@ -724,7 +724,7 @@ class FloatColumnView(_View):
                    be a number or a column!"""
             )
 
-        special_ops = ["as_num", "as_ts", "boolean_as_num", "subselection"]
+        special_ops = ["as_num", "as_ts", "boolean_as_num", "num_subselection"]
         oper = self.cmd["operator_"]
         optype = operand.cmd["type_"]
 
@@ -733,7 +733,11 @@ class FloatColumnView(_View):
             if wrong_coltype:
                 raise TypeError("This operator can only be applied to a FloatColumn!")
 
-        if oper in special_ops and oper != "boolean_as_num" and oper != "subselection":
+        if (
+            oper in special_ops
+            and oper != "boolean_as_num"
+            and oper != "num_subselection"
+        ):
             wrong_coltype = optype not in [STRING_COLUMN, STRING_COLUMN_VIEW]
             if wrong_coltype:
                 raise TypeError("This operator can only be applied to a StringColumn!")
@@ -741,7 +745,7 @@ class FloatColumnView(_View):
         if oper == "boolean_as_num" and optype != BOOLEAN_COLUMN_VIEW:
             raise TypeError("This operator can only be applied to a BooleanColumn!")
 
-        if oper == "subselection":
+        if oper == "num_subselection":
             wrong_coltype = optype not in [
                 STRING_COLUMN,
                 STRING_COLUMN_VIEW,
@@ -1583,7 +1587,7 @@ def _subselection_bool(self, indices):
         indices = _make_slicing_operand(self, indices)
 
     return BooleanColumnView(
-        operator="subselection",
+        operator="bool_subselection",
         operand1=self,
         operand2=indices,
     )
@@ -1602,7 +1606,7 @@ def _subselection_float(self, indices):
         indices = _make_slicing_operand(self, indices)
 
     return FloatColumnView(
-        operator="subselection",
+        operator="num_subselection",
         operand1=self,
         operand2=indices,
     )
@@ -1622,7 +1626,7 @@ def _subselection_string(self, indices):
         indices = _make_slicing_operand(self, indices)
 
     return StringColumnView(
-        operator="subselection",
+        operator="str_subselection",
         operand1=self,
         operand2=indices,
     )
@@ -1783,7 +1787,7 @@ StringColumn.unit = _unit  # type: ignore
 # -----------------------------------------------------------------------------
 
 
-def _update(self, condition: BooleanColumnView, values: NumericOperandType):
+def _update_float(self, condition: BooleanColumnView, values: NumericOperandType):
     """
     Returns an updated version of this column.
 
@@ -1795,7 +1799,7 @@ def _update(self, condition: BooleanColumnView, values: NumericOperandType):
         values: Values to update with
     """
     col = FloatColumnView(
-        operator="update",
+        operator="num_update",
         operand1=self,
         operand2=values,
     )
@@ -1805,14 +1809,14 @@ def _update(self, condition: BooleanColumnView, values: NumericOperandType):
     return col
 
 
-FloatColumn.update = _update  # type: ignore
+FloatColumn.update = _update_float  # type: ignore
 
-FloatColumnView.update = _update  # type: ignore
+FloatColumnView.update = _update_float  # type: ignore
 
 # -----------------------------------------------------------------------------
 
 
-def _update_categorical(self, condition: BooleanColumnView, values: StringOperandType):
+def _update_str(self, condition: BooleanColumnView, values: StringOperandType):
     """
     Returns an updated version of this column.
 
@@ -1824,7 +1828,7 @@ def _update_categorical(self, condition: BooleanColumnView, values: StringOperan
         values: Values to update with
     """
     col = StringColumnView(
-        operator="update",
+        operator="str_update",
         operand1=self,
         operand2=values,
     )
@@ -1834,9 +1838,9 @@ def _update_categorical(self, condition: BooleanColumnView, values: StringOperan
     return col
 
 
-StringColumn.update = _update_categorical  # type: ignore
+StringColumn.update = _update_str  # type: ignore
 
-StringColumnView.update = _update_categorical  # type: ignore
+StringColumnView.update = _update_str  # type: ignore
 
 # -----------------------------------------------------------------------------
 
@@ -1897,7 +1901,7 @@ def _with_subroles_float(self, subroles: Union[str, List[str]], append=True):
         raise TypeError("'append' must be a bool.")
 
     col = FloatColumnView(
-        operator="with_subroles",
+        operator="num_with_subroles",
         operand1=self,
         operand2=None,
     )
@@ -1934,7 +1938,7 @@ def _with_subroles_string(self, subroles: Union[str, List[str]], append=True):
         raise TypeError("'append' must be a bool.")
 
     col = StringColumnView(
-        operator="with_subroles",
+        operator="str_with_subroles",
         operand1=self,
         operand2=None,
     )
@@ -1958,7 +1962,7 @@ def _with_unit_float(self, unit: str):
         unit (str): The new unit.
     """
     col = FloatColumnView(
-        operator="with_unit",
+        operator="num_with_unit",
         operand1=self,
         operand2=None,
     )
@@ -1981,7 +1985,7 @@ def _with_unit_string(self, unit: str):
         unit (str): The new unit.
     """
     col = StringColumnView(
-        operator="with_unit",
+        operator="str_with_unit",
         operand1=self,
         operand2=None,
     )
