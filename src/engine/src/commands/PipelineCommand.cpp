@@ -10,10 +10,7 @@
 namespace commands {
 
 PipelineCommand PipelineCommand::from_json_obj(const InputVarType& _obj) {
-  std::cout << "PipelineCommand1" << std::endl;
-  auto cmd = PipelineCommand(rfl::json::read<ReflectionType>(_obj).value());
-  std::cout << "PipelineCommand2" << std::endl;
-  return cmd;
+  return PipelineCommand(rfl::json::read<ReflectionType>(_obj).value());
 }
 
 }  // namespace commands

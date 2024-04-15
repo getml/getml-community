@@ -10,10 +10,7 @@
 namespace commands {
 
 DatabaseCommand DatabaseCommand::from_json_obj(const InputVarType& _obj) {
-  std::cout << "DatabaseCommand1" << std::endl;
-  auto cmd = DatabaseCommand(rfl::json::read<ReflectionType>(_obj).value());
-  std::cout << "DatabaseCommand2" << std::endl;
-  return cmd;
+  return DatabaseCommand(rfl::json::read<ReflectionType>(_obj).value());
 }
 
 }  // namespace commands

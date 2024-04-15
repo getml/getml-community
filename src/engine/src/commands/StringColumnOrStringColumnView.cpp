@@ -11,11 +11,8 @@ namespace commands {
 
 StringColumnOrStringColumnView StringColumnOrStringColumnView::from_json_obj(
     const InputVarType& _obj) {
-  std::cout << "StringColumnOrStringColumnView1" << std::endl;
-  auto cmd = StringColumnOrStringColumnView(
+  return StringColumnOrStringColumnView(
       rfl::json::read<ReflectionType>(_obj).value());
-  std::cout << "StringColumnOrStringColumnView2" << std::endl;
-  return cmd;
 }
 
 }  // namespace commands

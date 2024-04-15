@@ -24,7 +24,7 @@ class FloatColumnOrFloatColumnView;
 
 class StringColumnOrStringColumnView {
  public:
-  /// The command used for boolean binary operations.
+  /// The command used to concat two strings.
   struct StringBinaryOp {
     using StringBinaryOpLiteral = rfl::Literal<"concat">;
 
@@ -61,7 +61,7 @@ class StringColumnOrStringColumnView {
 
   /// The command used for string with subtoles operations.
   struct StringWithSubrolesOp {
-    rfl::Field<"operator_", rfl::Literal<"with_subroles">> op;  // ADDED
+    rfl::Field<"operator_", rfl::Literal<"str_with_subroles">> op;
     rfl::Field<"subroles_", std::vector<std::string>> subroles;
     rfl::Field<"operand1_", rfl::Ref<StringColumnOrStringColumnView>> operand1;
     rfl::Field<"type_", rfl::Literal<"StringColumnView">> type;
@@ -69,7 +69,7 @@ class StringColumnOrStringColumnView {
 
   /// The command used for string with unit operations.
   struct StringWithUnitOp {
-    rfl::Field<"operator_", rfl::Literal<"with_unit">> op;  // ADDED
+    rfl::Field<"operator_", rfl::Literal<"str_with_unit">> op;
     rfl::Field<"unit_", std::string> unit;
     rfl::Field<"operand1_", rfl::Ref<StringColumnOrStringColumnView>> operand1;
     rfl::Field<"type_", rfl::Literal<"StringColumnView">> type;
@@ -77,7 +77,7 @@ class StringColumnOrStringColumnView {
 
   /// The command used for boolean subselection operations.
   struct StringSubselectionOp {
-    rfl::Field<"operator_", rfl::Literal<"subselection">> op;
+    rfl::Field<"operator_", rfl::Literal<"str_subselection">> op;
     rfl::Field<"operand1_", rfl::Ref<StringColumnOrStringColumnView>> operand1;
     rfl::Field<"operand2_",
                std::variant<rfl::Ref<BooleanColumnView>,
@@ -88,7 +88,7 @@ class StringColumnOrStringColumnView {
 
   /// The command used to update a string column.
   struct StringUpdateOp {
-    rfl::Field<"operator_", rfl::Literal<"update">> op;
+    rfl::Field<"operator_", rfl::Literal<"str_update">> op;
     rfl::Field<"operand1_", rfl::Ref<StringColumnOrStringColumnView>> operand1;
     rfl::Field<"operand2_", rfl::Ref<StringColumnOrStringColumnView>> operand2;
     rfl::Field<"condition_", rfl::Ref<BooleanColumnView>> condition;

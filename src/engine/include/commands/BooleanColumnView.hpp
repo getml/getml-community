@@ -25,8 +25,7 @@ struct BooleanColumnView {
   /// The command used for boolean binary operations.
   struct BooleanBinaryOp {
     using BooleanBinaryOpLiteral =
-        rfl::Literal<"and", "bool_equal_to", "bool_not_equal_to", "or",
-                     "xor">;  // CHANGED: equal_to, not_equal_to
+        rfl::Literal<"and", "bool_equal_to", "bool_not_equal_to", "or", "xor">;
 
     rfl::Field<"operator_", BooleanBinaryOpLiteral> op;
     rfl::Field<"operand1_", rfl::Ref<BooleanColumnView>> operand1;
@@ -54,8 +53,7 @@ struct BooleanColumnView {
   struct BooleanNumComparisonOp {
     using BooleanNumComparisonOpLiteral =
         rfl::Literal<"num_equal_to", "greater", "greater_equal", "less",
-                     "less_equal",
-                     "num_not_equal_to">;  // CHANGED: equal_to, not_equal_to
+                     "less_equal", "num_not_equal_to">;
 
     rfl::Field<"operator_", BooleanNumComparisonOpLiteral> op;
     rfl::Field<"operand1_", rfl::Ref<FloatColumnOrFloatColumnView>> operand1;
@@ -66,8 +64,7 @@ struct BooleanColumnView {
   /// Contains comparisons between two numerical columns .
   struct BooleanStrComparisonOp {
     using BooleanStrComparisonOpLiteral =
-        rfl::Literal<"contains", "str_equal_to",
-                     "str_not_equal_to">;  // CHANGED: equal_to, not_equal_to
+        rfl::Literal<"contains", "str_equal_to", "str_not_equal_to">;
 
     rfl::Field<"operator_", BooleanStrComparisonOpLiteral> op;
     rfl::Field<"operand1_", rfl::Ref<StringColumnOrStringColumnView>> operand1;
@@ -77,7 +74,7 @@ struct BooleanColumnView {
 
   /// The command used for boolean subselection operations.
   struct BooleanSubselectionOp {
-    rfl::Field<"operator_", rfl::Literal<"subselection">> op;
+    rfl::Field<"operator_", rfl::Literal<"bool_subselection">> op;
     rfl::Field<"operand1_", rfl::Ref<BooleanColumnView>> operand1;
     rfl::Field<"operand2_",
                std::variant<rfl::Ref<BooleanColumnView>,
@@ -105,7 +102,7 @@ struct BooleanColumnView {
 
   /// The command used to update a boolean column.
   struct BooleanUpdateOp {
-    rfl::Field<"operator_", rfl::Literal<"update">> op;
+    rfl::Field<"operator_", rfl::Literal<"bool_update">> op;
     rfl::Field<"operand1_", rfl::Ref<BooleanColumnView>> operand1;
     rfl::Field<"operand2_", rfl::Ref<BooleanColumnView>> operand2;
     rfl::Field<"condition_", rfl::Ref<BooleanColumnView>> condition;

@@ -10,10 +10,7 @@
 namespace commands {
 
 BooleanColumnView BooleanColumnView::from_json_obj(const InputVarType& _obj) {
-  std::cout << "BooleanColumnView1" << std::endl;
-  auto cmd = BooleanColumnView(rfl::json::read<ReflectionType>(_obj).value());
-  std::cout << "BooleanColumnView2" << std::endl;
-  return cmd;
+  return BooleanColumnView(rfl::json::read<ReflectionType>(_obj).value());
 }
 
 }  // namespace commands
