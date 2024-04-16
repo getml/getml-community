@@ -35,16 +35,15 @@ struct BooleanColumnView {
 
   /// The command used for boolean binary operations.
   struct BooleanConstOp {
-    using BooleanConstLiteral = rfl::Literal<"const">;
+    using Tag = rfl::Literal<"const">;
 
-    rfl::Field<"operator_", BooleanConstLiteral> op;
     rfl::Field<"value_", bool> value;
     rfl::Field<"type_", rfl::Literal<"BooleanColumnView">> type;
   };
 
   /// The command used for boolean binary operations.
   struct BooleanNotOp {
-    rfl::Field<"operator_", rfl::Literal<"not">> op;
+    using Tag = rfl::Literal<"not">;
     rfl::Field<"operand1_", rfl::Ref<BooleanColumnView>> operand1;
     rfl::Field<"type_", rfl::Literal<"BooleanColumnView">> type;
   };
@@ -74,7 +73,7 @@ struct BooleanColumnView {
 
   /// The command used for boolean subselection operations.
   struct BooleanSubselectionOp {
-    rfl::Field<"operator_", rfl::Literal<"bool_subselection">> op;
+    using Tag = rfl::Literal<"bool_subselection">;
     rfl::Field<"operand1_", rfl::Ref<BooleanColumnView>> operand1;
     rfl::Field<"operand2_",
                std::variant<rfl::Ref<BooleanColumnView>,
@@ -85,7 +84,7 @@ struct BooleanColumnView {
 
   /// The command used to check whether a column is infinite.
   struct BooleanIsInfOp {
-    rfl::Field<"operator_", rfl::Literal<"is_inf">> op;
+    using Tag = rfl::Literal<"is_inf">;
     rfl::Field<"operand1_", rfl::Ref<FloatColumnOrFloatColumnView>> operand1;
     rfl::Field<"type_", rfl::Literal<"BooleanColumnView">> type;
   };
@@ -102,7 +101,7 @@ struct BooleanColumnView {
 
   /// The command used to update a boolean column.
   struct BooleanUpdateOp {
-    rfl::Field<"operator_", rfl::Literal<"bool_update">> op;
+    using Tag = rfl::Literal<"bool_update">;
     rfl::Field<"operand1_", rfl::Ref<BooleanColumnView>> operand1;
     rfl::Field<"operand2_", rfl::Ref<BooleanColumnView>> operand2;
     rfl::Field<"condition_", rfl::Ref<BooleanColumnView>> condition;
