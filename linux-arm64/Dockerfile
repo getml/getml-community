@@ -10,7 +10,7 @@ RUN dnf -y install ninja-build
 RUN dnf -y install wget
 RUN dnf -y install unzip
 RUN dnf -y install zip
-RUN dnf -y install gcc-toolset-12-gcc-c++
+RUN dnf -y install gcc-toolset-13-gcc-c++
 
 # Install node.js and npm
 RUN wget https://nodejs.org/dist/v16.16.0/node-v16.16.0-linux-arm64.tar.xz
