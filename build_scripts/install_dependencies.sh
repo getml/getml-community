@@ -20,8 +20,6 @@ function install_dependencies() {
     download_unixodbc
     compile_unixodbc
 
-    checkout_simdjson
-
     checkout_xgboost
     compile_xgboost
 }
