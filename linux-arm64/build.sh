@@ -76,6 +76,7 @@ export CXX=$GCC_TOOLSET_DIR/bin/g++
 # Settings specific for the compilations of the engine. (XGBoost and
 # Poco will be compiled by Docker in the `Dockerfile`).
 export CMAKE_OPTIONS_GETML="\
+    -G Ninja \ 
     -DCMAKE_C_COMPILER=$CC \
     -DCMAKE_CXX_COMPILER=$CXX \
     -DGETML_VERSION=$GETML_VERSION \

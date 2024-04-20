@@ -7,11 +7,10 @@ function compile_engine() {
     echo -e "\n * ${COLOR_GREEN}Compiling the getML engine...${COLOR_RESET}\n" 
 
     cd $HOMEDIR || exit 1
-    eval $CMAKE_COMMAND$GETML_BUILD_FOLDER $CMAKE_OPTIONS_GETML || exit 1
+    eval $CMAKE_COMMAND $GETML_BUILD_FOLDER $CMAKE_OPTIONS_GETML || exit 1
 
     export NUM_THREADS=$(nproc --all)
-    cd $GETML_BUILD_FOLDER || exit 1
-    make -j$NUM_THREADS || exit 1
+    cmake --build $GETML_BUILD_FOLDER -j$NUM_THREADS || exit 1
 
     echo $PWD
 
