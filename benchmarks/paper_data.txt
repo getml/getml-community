@@ -486,8 +486,8 @@ volume on the Interstate 94 from Minneapolis to StPaul. ˙
 The challenge is to predict the traffic volume for the next
 hour.
 5) Tetouan [34] The dataset contains the electricity con-
-sumption of three different zones in Tetouan City, Mex-
-ico measured in ten-minute intervals. The challenge is
+sumption of three different zones in Tetouan City, Mor-
+occo measured in ten-minute intervals. The challenge is
 to predict the electricity consumption in Zone 1 for the
 next ten-minute interval.
 With the exception of tsflex, the different implementations

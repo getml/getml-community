@@ -1,0 +1,13 @@
+services:
+  notebooks:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    networks:
+      - notebooks_network
+    ports:
+      - "1709:1709"
+      - "8888:8888"
+
+networks:
+  notebooks_network:

@@ -1,0 +1,6 @@
+jupyterlab==4.1.1
+getml==1.4.0
+seaborn==0.13.2
+ipywidgets==8.1.2
+plotly==5.18.0
+matplotlib==3.8.2
