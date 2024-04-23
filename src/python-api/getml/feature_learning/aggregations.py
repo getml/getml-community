@@ -8,13 +8,12 @@
 
 """
 This module contains all possible aggregations to be used with
-:class:`~getml.feature_learning.Multirel`,
-:class:`~getml.feature_learning.FastProp`,
-:class:`~getml.preprocessors.Mapping`.
+[`Multirel`][getml.feature_learning.Multirel],
+[`FastProp`][getml.feature_learning.FastProp],
+[`Mapping`][getml.preprocessors.Mapping].
 
 
-Refer to the :ref:`feature learning section in the user guide
-<feature_learning_design>` for details about how
+Refer to the [feature learning section][feature_learning] in the user guide for details about how
 these aggregations are used in the context of feature learning.
 """
 
@@ -41,7 +40,7 @@ CountDistinctOverCount = "COUNT DISTINCT OVER COUNT"
 COUNT DISTINCT divided by COUNT.
 Please note that this aggregation is
 not supported by
-:class:`~getml.feature_learning.Multirel`.
+[`Multirel`][getml.feature_learning.Multirel].
 """
 
 CountMinusCountDistinct = "COUNT MINUS COUNT DISTINCT"
@@ -59,7 +58,7 @@ EWMA_1m = "EWMA_1M"
 Exponentially weighted moving average with a half-life of 1 minute.
 Please note that this aggregation is
 not supported by
-:class:`~getml.feature_learning.Multirel`.
+[`Multirel`][getml.feature_learning.Multirel].
 """
 
 EWMA_1h = "EWMA_1H"
@@ -67,7 +66,7 @@ EWMA_1h = "EWMA_1H"
 Exponentially weighted moving average with a half-life of 1 hour.
 Please note that this aggregation is
 not supported by
-:class:`~getml.feature_learning.Multirel`.
+[`Multirel`][getml.feature_learning.Multirel].
 """
 
 EWMA_1d = "EWMA_1D"
@@ -75,7 +74,7 @@ EWMA_1d = "EWMA_1D"
 Exponentially weighted moving average with a half-life of 1 day.
 Please note that this aggregation is
 not supported by
-:class:`~getml.feature_learning.Multirel`.
+[`Multirel`][getml.feature_learning.Multirel].
 """
 
 EWMA_7d = "EWMA_7D"
@@ -83,7 +82,7 @@ EWMA_7d = "EWMA_7D"
 Exponentially weighted moving average with a half-life of 7 days.
 Please note that this aggregation is
 not supported by
-:class:`~getml.feature_learning.Multirel`.
+[`Multirel`][getml.feature_learning.Multirel].
 """
 
 EWMA_30d = "EWMA_30D"
@@ -91,7 +90,7 @@ EWMA_30d = "EWMA_30D"
 Exponentially weighted moving average with a half-life of 30 days.
 Please note that this aggregation is
 not supported by
-:class:`~getml.feature_learning.Multirel`.
+[`Multirel`][getml.feature_learning.Multirel].
 """
 
 EWMA_90d = "EWMA_90D"
@@ -99,7 +98,7 @@ EWMA_90d = "EWMA_90D"
 Exponentially weighted moving average with a half-life of 90 days.
 Please note that this aggregation is
 not supported by
-:class:`~getml.feature_learning.Multirel`.
+[`Multirel`][getml.feature_learning.Multirel].
 """
 
 EWMA_365d = "EWMA_365D"
@@ -107,7 +106,7 @@ EWMA_365d = "EWMA_365D"
 Exponentially weighted moving average with a half-life of 365 days.
 Please note that this aggregation is
 not supported by
-:class:`~getml.feature_learning.Multirel`.
+[`Multirel`][getml.feature_learning.Multirel].
 """
 
 EWMA_TREND_1s = "EWMA_TREND_1S"
@@ -120,7 +119,7 @@ EWMA_TREND_1m = "EWMA_TREND_1M"
 Exponentially weighted trend with a half-life of 1 minute.
 Please note that this aggregation is
 not supported by
-:class:`~getml.feature_learning.Multirel`.
+[`Multirel`][getml.feature_learning.Multirel].
 """
 
 EWMA_TREND_1h = "EWMA_TREND_1H"
@@ -128,7 +127,7 @@ EWMA_TREND_1h = "EWMA_TREND_1H"
 Exponentially weighted trend with a half-life of 1 hour.
 Please note that this aggregation is
 not supported by
-:class:`~getml.feature_learning.Multirel`.
+[`Multirel`][getml.feature_learning.Multirel].
 """
 
 EWMA_TREND_1d = "EWMA_TREND_1D"
@@ -136,7 +135,7 @@ EWMA_TREND_1d = "EWMA_TREND_1D"
 Exponentially weighted trend with a half-life of 1 day.
 Please note that this aggregation is
 not supported by
-:class:`~getml.feature_learning.Multirel`.
+[`Multirel`][getml.feature_learning.Multirel].
 """
 
 EWMA_TREND_7d = "EWMA_TREND_7D"
@@ -144,7 +143,7 @@ EWMA_TREND_7d = "EWMA_TREND_7D"
 Exponentially weighted trend with a half-life of 7 days.
 Please note that this aggregation is
 not supported by
-:class:`~getml.feature_learning.Multirel`.
+[`Multirel`][getml.feature_learning.Multirel].
 """
 
 EWMA_TREND_30d = "EWMA_TREND_30D"
@@ -152,7 +151,7 @@ EWMA_TREND_30d = "EWMA_TREND_30D"
 Exponentially weighted trend with a half-life of 30 days.
 Please note that this aggregation is
 not supported by
-:class:`~getml.feature_learning.Multirel`.
+[`Multirel`][getml.feature_learning.Multirel].
 """
 
 EWMA_TREND_90d = "EWMA_TREND_90D"
@@ -160,7 +159,7 @@ EWMA_TREND_90d = "EWMA_TREND_90D"
 Exponentially weighted trend with a half-life of 90 days.
 Please note that this aggregation is
 not supported by
-:class:`~getml.feature_learning.Multirel`.
+[`Multirel`][getml.feature_learning.Multirel].
 """
 
 EWMA_TREND_365d = "EWMA_TREND_365D"
@@ -168,7 +167,7 @@ EWMA_TREND_365d = "EWMA_TREND_365D"
 Exponentially weighted trend with a half-life of 365 days.
 Please note that this aggregation is
 not supported by
-:class:`~getml.feature_learning.Multirel`.
+[`Multirel`][getml.feature_learning.Multirel].
 """
 
 First = "FIRST"
@@ -181,7 +180,7 @@ Kurtosis = "KURTOSIS"
 The kurtosis of a given column.
 Please note that this aggregation is
 not supported by
-:class:`~getml.feature_learning.Multirel`.
+[`Multirel`][getml.feature_learning.Multirel].
 """
 
 Last = "LAST"
@@ -209,7 +208,7 @@ Mode = "MODE"
 Most frequent value of a given column.
 Please note that this aggregation is
 not supported by
-:class:`~getml.feature_learning.Multirel`.
+[`Multirel`][getml.feature_learning.Multirel].
 """
 
 NumMax = "NUM MAX"
@@ -217,7 +216,7 @@ NumMax = "NUM MAX"
 The number of times we observe the maximum value.
 Please note that this aggregation is
 not supported by
-:class:`~getml.feature_learning.Multirel`.
+[`Multirel`][getml.feature_learning.Multirel].
 """
 
 NumMin = "NUM MIN"
@@ -225,7 +224,7 @@ NumMin = "NUM MIN"
 The number of times we observe the minimum value.
 Please note that this aggregation is
 not supported by
-:class:`~getml.feature_learning.Multirel`.
+[`Multirel`][getml.feature_learning.Multirel].
 """
 
 Q1 = "Q1"
@@ -233,7 +232,7 @@ Q1 = "Q1"
 The 1%-quantile.
 Please note that this aggregation is
 not supported by
-:class:`~getml.feature_learning.Multirel`.
+[`Multirel`][getml.feature_learning.Multirel].
 """
 
 Q5 = "Q5"
@@ -241,7 +240,7 @@ Q5 = "Q5"
 The 5%-quantile.
 Please note that this aggregation is
 not supported by
-:class:`~getml.feature_learning.Multirel`.
+[`Multirel`][getml.feature_learning.Multirel].
 """
 
 Q10 = "Q10"
@@ -249,7 +248,7 @@ Q10 = "Q10"
 The 10%-quantile.
 Please note that this aggregation is
 not supported by
-:class:`~getml.feature_learning.Multirel`.
+[`Multirel`][getml.feature_learning.Multirel].
 """
 
 Q25 = "Q25"
@@ -257,7 +256,7 @@ Q25 = "Q25"
 The 25%-quantile.
 Please note that this aggregation is
 not supported by
-:class:`~getml.feature_learning.Multirel`.
+[`Multirel`][getml.feature_learning.Multirel].
 """
 
 Q75 = "Q75"
@@ -265,7 +264,7 @@ Q75 = "Q75"
 The 75%-quantile.
 Please note that this aggregation is
 not supported by
-:class:`~getml.feature_learning.Multirel`.
+[`Multirel`][getml.feature_learning.Multirel].
 """
 
 Q90 = "Q90"
@@ -273,7 +272,7 @@ Q90 = "Q90"
 The 90%-quantile.
 Please note that this aggregation is
 not supported by
-:class:`~getml.feature_learning.Multirel`.
+[`Multirel`][getml.feature_learning.Multirel].
 """
 
 Q95 = "Q95"
@@ -281,7 +280,7 @@ Q95 = "Q95"
 The 95%-quantile.
 Please note that this aggregation is
 not supported by
-:class:`~getml.feature_learning.Multirel`.
+[`Multirel`][getml.feature_learning.Multirel].
 """
 
 Q99 = "Q99"
@@ -289,7 +288,7 @@ Q99 = "Q99"
 The 99%-quantile.
 Please note that this aggregation is
 not supported by
-:class:`~getml.feature_learning.Multirel`.
+[`Multirel`][getml.feature_learning.Multirel].
 """
 
 Skew = "SKEW"
@@ -297,7 +296,7 @@ Skew = "SKEW"
 Skewness of a given column.
 Please note that this aggregation is
 not supported by
-:class:`~getml.feature_learning.Multirel`.
+[`Multirel`][getml.feature_learning.Multirel].
 """
 
 Stddev = "STDDEV"
@@ -318,7 +317,7 @@ table. If the maximum value is unique, then TIME SINCE
 FIRST MAXIMUM and TIME SINCE LAST MAXIMUM are identical.
 Please note that this aggregation is
 not supported by
-:class:`~getml.feature_learning.Multirel`.
+[`Multirel`][getml.feature_learning.Multirel].
 """
 
 TimeSinceFirstMinimum = "TIME SINCE FIRST MINIMUM"
@@ -329,7 +328,7 @@ table. If the minimum value is unique, then TIME SINCE
 FIRST MINIMUM and TIME SINCE LAST MINIMUM are identical.
 Please note that this aggregation is
 not supported by
-:class:`~getml.feature_learning.Multirel`.
+[`Multirel`][getml.feature_learning.Multirel].
 """
 
 TimeSinceLastMaximum = "TIME SINCE LAST MAXIMUM"
@@ -340,7 +339,7 @@ table. If the maximum value is unique, then TIME SINCE
 FIRST MAXIMUM and TIME SINCE LAST MAXIMUM are identical.
 Please note that this aggregation is
 not supported by
-:class:`~getml.feature_learning.Multirel`.
+[`Multirel`][getml.feature_learning.Multirel].
 """
 
 TimeSinceLastMinimum = "TIME SINCE LAST MINIMUM"
@@ -351,7 +350,7 @@ table. If the minimum value is unique, then TIME SINCE
 FIRST MINIMUM and TIME SINCE LAST MINIMUM are identical.
 Please note that this aggregation is
 not supported by
-:class:`~getml.feature_learning.Multirel`.
+[`Multirel`][getml.feature_learning.Multirel].
 """
 
 Trend = "TREND"
@@ -360,7 +359,7 @@ Extracts a linear trend from a variable over time and
 extrapolates this trend to the current time stamp.
 Please note that this aggregation is
 not supported by
-:class:`~getml.feature_learning.Multirel`.
+[`Multirel`][getml.feature_learning.Multirel].
 """
 
 Var = "VAR"
@@ -368,7 +367,7 @@ Var = "VAR"
 Statistical variance of a given numerical column.
 Please note that this aggregation is
 not supported by
-:class:`~getml.feature_learning.Multirel`.
+[`Multirel`][getml.feature_learning.Multirel].
 """
 
 VariationCoefficient = "VARIATION COEFFICIENT"
@@ -376,7 +375,7 @@ VariationCoefficient = "VARIATION COEFFICIENT"
 VAR divided by MEAN.
 Please note that this aggregation is
 not supported by
-:class:`~getml.feature_learning.Multirel`.
+[`Multirel`][getml.feature_learning.Multirel].
 """
 
 # ------------------------------------------------------------------------------
@@ -498,8 +497,8 @@ fastprop = _Aggregations(
     Minimal=[Avg, Count, Max, Min, Sum],
 )
 """
-Set of default aggregations for :class:`~getml.feature_learning.FastProp` and
-:class:`~getml.feature_learning.FastPropTimeseries`. `All` contains all aggregations
+Set of default aggregations for [`FastProp`][getml.feature_learning.FastProp] and
+[`FastPropTimeseries`][getml.feature_learning.FastPropTimeseries]. `All` contains all aggregations
 supported by FastProp, `Default` contains the subset of reasonable default aggregations,
 `Minimal` is minimal set.
 """
@@ -512,7 +511,7 @@ mapping = _Aggregations(
     Minimal=[Avg],
 )
 """
-Set of default aggregations for :class:`~getml.preprocessor.Mapping`. `All` contains all
+Set of default aggregations for [`Mapping`][getml.preprocessors.mapping]. `All` contains all
 aggregations supported by the mapping preprocessor. `Default` and `Minimal` are identical
 and include only the AVG aggregation, which is the recommended setting for classification
 problems.
@@ -532,7 +531,7 @@ multirel = _Aggregations(
     Minimal=[Avg, Count, Sum],
 )
 """
-Set of default aggregations for :class:`~getml.feature_learning.Multirel`.
+Set of default aggregations for [`Multirel`][getml.feature_learning.Multirel].
 `All` contains all aggregations
 supported by Multirel, `Default` contains the subset of reasonable default aggregations,
 `Minimal` is minimal set.

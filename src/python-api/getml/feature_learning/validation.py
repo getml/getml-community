@@ -137,7 +137,7 @@ def _validate_dfs_model_parameters(**kwargs: Any) -> None:
 def _validate_fastboost_parameters(**kwargs: Any) -> None:
     """
     Checks both the types and values of the `parameters` belonging to
-    :class:`~getml.feature_learning.Fastboost` and raises an exception if
+    [`Fastboost`][getml.feature_learning.Fastboost] and raises an exception if
     something is off.
     """
 
@@ -369,7 +369,7 @@ def _validate_multirel_parameters(**kwargs: Any) -> None:
 def _validate_relboost_parameters(**kwargs: Any) -> None:
     """
     Checks both the types and values of the `parameters` belonging to
-    :class:`~getml.feature_learning.Relboost` and raises an exception if
+    [`Relboost`][getml.feature_learning.Relboost] and raises an exception if
     something is off.
     """
 

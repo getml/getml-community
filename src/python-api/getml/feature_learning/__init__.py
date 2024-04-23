@@ -6,14 +6,12 @@
 #
 
 
-"""This module contains relational learning algorithms to learn features
+"""
+This module contains relational learning algorithms to learn features
 from relational data or time series.
 
 Note:
-
-    All feature learners need to be passed to :class:`~getml.Pipeline`.
-
-
+    All feature learners need to be passed to [`Pipeline`][getml.Pipeline].
 """
 
 from .fastboost import Fastboost
