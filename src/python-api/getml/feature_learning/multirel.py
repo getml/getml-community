@@ -14,7 +14,8 @@ from dataclasses import dataclass, field
 from typing import Any, ClassVar, Dict, List, Optional, Union
 
 from .aggregations import _Aggregations
-from .aggregations import multirel as multirel_aggregations
+from .aggregations import multirel
+from .aggregations import multirel_aggregations
 from .fastprop import FastProp
 from .feature_learner import _FeatureLearner
 from .validation import _validate_multirel_parameters
@@ -199,13 +200,12 @@ Note:
 
     # ----------------------------------------------------------------
 
-    aggregation: List[_Aggregations] = field(
-        default_factory=lambda: multirel_aggregations.Default
+    aggregation: List[Union[multirel_aggregations.all]] = field(
+        default_factory=lambda: multirel.Default
     )
     allow_sets: bool = True
     delta_t: float = 0.0
     grid_factor: float = 1.0
-    #Union[CrossEntropyloss, SquareLoss],
     loss_function: Optional[Union[CrossEntropyLoss, SquareLoss]] = None
     max_length: int = 4
     min_df: int = 30
