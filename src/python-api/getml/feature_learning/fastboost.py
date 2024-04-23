@@ -11,10 +11,11 @@ Feature learning based on fast gradient boosting.
 """
 
 from dataclasses import dataclass
-from typing import Any, Dict, Literal, Optional
+from typing import Any, Dict, Optional, Union
 
 from .feature_learner import _FeatureLearner
 from .validation import _validate_fastboost_parameters
+from .loss_functions import CrossEntropyLoss, SquareLoss
 
 
 @dataclass(repr=False)
@@ -108,7 +109,7 @@ class Fastboost(_FeatureLearner):
     """
 
     gamma: float = 0.0
-    loss_function: Optional[Literal["CrossEntropyLoss", "SquareLoss"]] = None
+    loss_function: Optional[Union[CrossEntropyLoss, SquareLoss]] = None
     max_depth: int = 5
     min_child_weights: float = 1.0
     num_features: int = 100

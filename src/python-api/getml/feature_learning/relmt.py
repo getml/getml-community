@@ -16,6 +16,7 @@ from typing import Any, Dict, Optional, Union
 from .fastprop import FastProp
 from .feature_learner import _FeatureLearner
 from .validation import _validate_relboost_parameters
+from .loss_functions import CrossEntropyLoss, SquareLoss
 
 # --------------------------------------------------------------------
 
@@ -155,7 +156,7 @@ class RelMT(_FeatureLearner):
     allow_avg: bool = True
     delta_t: float = 0.0
     gamma: float = 0.0
-    loss_function: Optional[str] = None
+    loss_function: Optional[Union[CrossEntropyLoss, SquareLoss]] = None
     max_depth: int = 2
     min_df: int = 30
     min_num_samples: int = 1
