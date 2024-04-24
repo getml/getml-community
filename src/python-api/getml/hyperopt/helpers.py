@@ -20,17 +20,18 @@ def list_hyperopts():
     """Lists all hyperparameter optimization objects present in the engine.
 
     Note that this function only lists hyperopts which are part of the
-    current project. See :func:`~getml.engine.set_project` for
+    current project. See [`set_project`][getml.engine.set_project] for
     changing projects.
 
     To subsequently load one of them, use
-    :func:`~getml.hyperopt.load_hyperopt`.
+    [`load_hyperopt`][getml.hyperopt.load_hyperopt].
 
     Returns:
         list containing the names of all hyperopts.
 
     Note:
         Not supported in the getML community edition.
+
     """
 
     cmd: Dict[str, Any] = {}
@@ -50,9 +51,9 @@ def list_hyperopts():
 
 
 def exists(name):
-    """Determines whether an hyperopt exists.
+    """Determines whether a hyperopt exists.
 
-    Args:
+    Attributes:
         name (str): The name of the hyperopt.
 
     Returns:
@@ -71,7 +72,7 @@ def delete(name):
     """
     If a hyperopt named 'name' exists, it is deleted.
 
-    Args:
+    Attributes:
         name (str): The name of the hyperopt.
     """
 

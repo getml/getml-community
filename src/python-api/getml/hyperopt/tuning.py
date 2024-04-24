@@ -237,23 +237,23 @@ def tune_feature_learners(
 ):
     """
     A high-level interface for optimizing the feature learners of a
-    :class:`~getml.pipelines.Pipeline`.
+    [`Pipeline`][getml.pipelines.Pipeline].
 
     Efficiently optimizes the hyperparameters for the set of feature learners
-    (from :mod:`~getml.feature_learning`) of a given pipeline by breaking each
-    feature learner's hyperparameter space down into :ref:`carefully curated
-    subspaces<hyperopt_tuning_subspaces>` and optimizing the hyperparameters for
+    (from [`feature_learning`][getml.feature_learning]) of a given pipeline by breaking each
+    feature learner's hyperparameter space down into carefully curated
+    subspaces: `hyperopt_tuning_subspaces` and optimizing the hyperparameters for
     each subspace in a sequential multi-step process.  For further details about
     the actual recipes behind the tuning routines refer
-    to :ref:`tuning routines<hyperopt_tuning>`.
+    to tuning routines: `hyperopt_tuning`.
 
     Args:
-        pipeline (:class:`~getml.Pipeline`):
+        pipeline ([`Pipeline`][getml.Pipeline]):
             Base pipeline used to derive all models fitted and scored
             during the hyperparameter optimization. It defines the data
             schema and any hyperparameters that are not optimized.
 
-        container (:class:`~getml.data.Container`):
+        container ([`Container`][getml.data.Container]):
             The data container used for the hyperparameter tuning.
 
         train (str, optional):
@@ -267,7 +267,7 @@ def tune_feature_learners(
 
         score (str, optional):
             The score to optimize. Must be from
-            :mod:`~getml.pipeline.metrics`.
+            [`metrics`][getml.pipeline.metrics].
 
         num_threads (int, optional):
             The number of parallel threads to use. If set to 0,
@@ -275,17 +275,17 @@ def tune_feature_learners(
 
     Example:
         We assume that you have already set up your
-        :class:`~getml.Pipeline` and
-        :class:`~getml.data.Container`.
+        [`Pipeline`][getml.Pipeline] and
+        [`Container`][getml.data.Container].
 
-        .. code-block:: python
+
 
             tuned_pipeline = getml.hyperopt.tune_predictors(
                 pipeline=base_pipeline,
                 container=container)
 
     Returns:
-        A :class:`~getml.Pipeline` containing tuned versions
+        A [`Pipeline`][getml.Pipeline] containing tuned versions
         of the feature learners.
 
     Note:
@@ -346,23 +346,23 @@ def tune_predictors(
 ):
     """
     A high-level interface for optimizing the predictors of a
-    :class:`getml.Pipeline`.
+    [`Pipeline`][getml.Pipeline].
 
     Efficiently optimizes the hyperparameters for the set of predictors (from
-    :mod:`getml.predictors`) of a given pipeline by breaking each predictor's
-    hyperparameter space down into :ref:`carefully curated
-    subspaces<hyperopt_tuning_subspaces>` and optimizing the hyperparameters for
+    `getml.predictors`) of a given pipeline by breaking each predictor's
+    hyperparameter space down into carefully curated
+    subspaces: `hyperopt_tuning_subspaces` and optimizing the hyperparameters for
     each subspace in a sequential multi-step process.  For further details about
     the actual recipes behind the tuning routines refer to
-    :ref:`tuning routines<hyperopt_tuning>`.
+    tuning routines: `hyperopt_tuning`.
 
     Args:
-        pipeline (:class:`~getml.Pipeline`):
+        pipeline ([`Pipeline`][getml.Pipeline]):
             Base pipeline used to derive all models fitted and scored
             during the hyperparameter optimization. It defines the data
             schema and any hyperparameters that are not optimized.
 
-        container (:class:`~getml.data.Container`):
+        container ([`Container`][getml.data.Container]):
             The data container used for the hyperparameter tuning.
 
         train (str, optional):
@@ -376,7 +376,7 @@ def tune_predictors(
 
         score (str, optional):
             The score to optimize. Must be from
-            :mod:`~getml.pipeline.metrics`.
+            [`metrics`][getml.pipeline.metrics].
 
         num_threads (int, optional):
             The number of parallel threads to use. If set to 0,
@@ -384,17 +384,17 @@ def tune_predictors(
 
     Example:
         We assume that you have already set up your
-        :class:`~getml.Pipeline` and
-        :class:`~getml.data.Container`.
+        [`Pipeline`][getml.Pipeline] and
+        [`Container`][getml.data.Container].
 
-        .. code-block:: python
+
 
             tuned_pipeline = getml.hyperopt.tune_predictors(
                 pipeline=base_pipeline,
                 container=container)
 
     Returns:
-        A :class:`~getml.Pipeline` containing tuned
+        A [`Pipeline`][getml.Pipeline] containing tuned
         predictors.
 
     Note:

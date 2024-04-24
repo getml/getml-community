@@ -30,9 +30,9 @@ def load_hyperopt(name):
             The name of the hyperopt to be loaded.
 
     Returns:
-        A :class:`~getml.hyperopt.GaussianHyperparameterSearch` that is a handler
+        A [`GaussianHyperparameterSearch`][getml.hyperopt.GaussianHyperparameterSearch] that is a handler
         for the pipeline signified by name.
-    
+
     Note:
         Not supported in the getML community edition.
     """
