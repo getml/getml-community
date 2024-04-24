@@ -41,7 +41,7 @@ class FastProp(_FeatureLearner):
             Mathematical operations used by the automated feature
             learning algorithm to create new features.
 
-            Must be from `~getml.feature_learning.aggregations`.
+            Must be from [`aggregations`][getml.feature_learning.aggregations].
 
         delta_t:
             Frequency with which lag variables will be explored in a

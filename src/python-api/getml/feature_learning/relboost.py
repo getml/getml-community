@@ -32,7 +32,7 @@ class Relboost(_FeatureLearner):
     the name.
 
     For more information on the underlying feature learning
-    algorithm, check out :ref:`feature_learning_algorithms_relboost`.
+    algorithm, check out the [User Guide][feature-learning-relboost].
 
     Attributes:
         allow_null_weights:
