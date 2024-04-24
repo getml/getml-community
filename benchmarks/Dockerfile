@@ -5,58 +5,39 @@
 # for details.
 #
 
-FROM ubuntu:20.04
+FROM python:3.8.18
 
-RUN useradd getml
-
-WORKDIR /home/getml
-
-RUN apt-get update
-RUN apt-get install -y git wget gcc g++ --fix-missing
-RUN apt-get install -y locales \
+RUN apt-get update \
+    && apt-get install -y \
+    locales \
     && echo "en_US.UTF-8 UTF-8" > /etc/locale.gen \
     && locale-gen
 
-RUN wget https://repo.anaconda.com/archive/Anaconda3-2022.05-Linux-x86_64.sh
-RUN bash Anaconda3-2022.05-Linux-x86_64.sh -b -p /home/getml/anaconda
-ENV PATH="/home/getml/anaconda/bin:$PATH"
+RUN useradd getml
+USER getml
+WORKDIR /home/getml
 
-RUN pip install "tsfresh==0.18"
-RUN pip install "featuretools==1.8.0" \
-    "tsflex==0.2.3.7.6" "cesium==0.9.12" "tsfel==0.1.4"
-RUN pip install "kats==0.1.0"
+ENV PATH="/home/getml/.local/bin:${PATH}"
 
+RUN pip install --user --upgrade pip
+
+COPY requirements.for-pystan.txt requirements.for-fbprophet.txt requirements.for-kats.txt requirements.txt ./
+RUN pip install --user -r requirements.for-pystan.txt \
+    && pip install --user -r requirements.for-fbprophet.txt \
+    && pip install --user -r requirements.for-kats.txt \
+    && pip install --user -r requirements.txt
+ 
 ARG VERSION_NUMBER
 ARG GETML_VERSION
-ARG FORCE_RELOAD
 
 WORKDIR /home/getml
+RUN mkdir /home/getml/.getML
 
-RUN wget https://static.getml.com/download/$VERSION_NUMBER/$GETML_VERSION.tar.gz
-RUN tar -xzvf $GETML_VERSION.tar.gz 
-
-RUN wget https://static.getml.com/download/$VERSION_NUMBER/python.tar.gz
-RUN tar -xzvf python.tar.gz 
-WORKDIR python
+RUN mkdir engine | curl https://static.getml.com/download/$VERSION_NUMBER/$GETML_VERSION.tar.gz | tar -xz --strip-components=1 -C engine -f - ${GETML_VERSION}
+RUN curl https://static.getml.com/download/$VERSION_NUMBER/python.tar.gz | tar -xzf -
+WORKDIR /home/getml/python
 RUN pip3 install .
 
-# We need to install these so the
-# benchmark libraries work properly
-RUN pip install numpy==1.21
-RUN pip install ax-platform==0.2.3
-
-WORKDIR /home/getml
-
-COPY run_benchmarks.py .
-COPY benchmarks ./benchmarks
-
-# Windows tends to mess up newline characters,
-# so we just create the launch_getml.sh in here.
-RUN echo "#!/bin/bash\n\
-LC_ALL='en_US.UTF-8'\n\
-cd $GETML_VERSION\n\
-nohup ./getML --install --home-directory=/home/getml/storage &\n\
-cd /home/getml\n\
-python3 run_benchmarks.py" >> run_benchmarks.sh
-
-WORKDIR /home/getml
+COPY --chown=getml:getml . /home/getml/benchmarks/
+WORKDIR /home/getml/benchmarks
+CMD [ "/home/getml/benchmarks/run_benchmarks.sh" ]

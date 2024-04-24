@@ -1,0 +1,17 @@
+services:
+  benchmarks:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      platforms:
+        - "linux/amd64"
+      args:
+        - VERSION_NUMBER=$VERSION_NUMBER
+        - GETML_VERSION=$GETML_VERSION
+    networks:
+      - benchmarks_network
+    ports:
+      - "1709:1709"
+
+networks:
+  benchmarks_network:
