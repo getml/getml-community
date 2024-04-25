@@ -32,19 +32,19 @@ class CategoryTrimmer(_Preprocessor):
             included.
 
     Example:
-        .. code-block:: python
+    ```python
+    category_trimmer = getml.preprocessors.CategoryTrimmer()
 
-            category_trimmer = getml.preprocessors.CategoryTrimmer()
-
-            pipe = getml.Pipeline(
-                population=population_placeholder,
-                peripheral=[order_placeholder, trans_placeholder],
-                preprocessors=[category_trimmer],
-                feature_learners=[feature_learner_1, feature_learner_2],
-                feature_selectors=feature_selector,
-                predictors=predictor,
-                share_selected_features=0.5
-            )
+    pipe = getml.Pipeline(
+        population=population_placeholder,
+        peripheral=[order_placeholder, trans_placeholder],
+        preprocessors=[category_trimmer],
+        feature_learners=[feature_learner_1, feature_learner_2],
+        feature_selectors=feature_selector,
+        predictors=predictor,
+        share_selected_features=0.5
+    )
+    ```
     """
 
     max_num_categories: int = 999

@@ -60,19 +60,18 @@ class Seasonal(_Preprocessor):
             extracting the minute from time stamps.
 
     Example:
-        .. code-block:: python
+    ```python
+    seasonal = getml.preprocessors.Seasonal()
 
-            seasonal = getml.preprocessors.Seasonal()
-
-            pipe = getml.Pipeline(
-                population=population_placeholder,
-                peripheral=[order_placeholder, trans_placeholder],
-                preprocessors=[seasonal],
-                feature_learners=[feature_learner_1, feature_learner_2],
-                feature_selectors=feature_selector,
-                predictors=predictor,
-                share_selected_features=0.5
-            )
+    pipe = getml.Pipeline(
+        population=population_placeholder,
+        peripheral=[order_placeholder, trans_placeholder],
+        preprocessors=[seasonal],
+        feature_learners=[feature_learner_1, feature_learner_2],
+        feature_selectors=feature_selector,
+        predictors=predictor,
+        share_selected_features=0.5
+    )
     """
 
     disable_year: bool = False

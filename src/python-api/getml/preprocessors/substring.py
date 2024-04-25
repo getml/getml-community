@@ -23,10 +23,10 @@ class Substring(_Preprocessor):
     categorical columns and unused string columns.
 
     The preprocessor will be applied to all
-    :const:`~getml.data.roles.categorical` and :const:`~getml.data.roles.text`
-    columns that were assigned one of the :mod:`~getml.data.subroles`
-    :const:`getml.data.subroles.include.substring` or
-    :const:`getml.data.subroles.only.substring`.
+    [`categorical`][getml.data.roles.categorical] and [`text`][getml.data.roles.text]
+    columns that were assigned one of the [`subroles`][getml.data.subroles]
+    [`substring`][getml.data.subroles.include.substring](_include_) or
+    [`substring`][getml.data.subroles.only.substring](_only_).
 
     To further limit the scope of a substring preprocessor,
     you can also assign a *unit*.
@@ -45,32 +45,32 @@ class Substring(_Preprocessor):
 
             If it is left empty, then the preprocessor
             will be applied to all columns with the subrole
-            :const:`getml.data.subroles.include.substring` or
-            :const:`getml.data.subroles.only.substring`.
+            [`substring`][getml.data.subroles.include.substring] or
+            [`substring`][getml.data.subroles.only.substring].
 
     Example:
-        .. code-block:: python
+    ```python
+    my_df.set_subroles("col1", getml.data.subroles.include.substring)
 
-            my_df.set_subroles("col1", getml.data.subroles.include.substring)
+    my_df.set_subroles("col2", getml.data.subroles.include.substring)
+    my_df.set_unit("col2", "substr14")
 
-            my_df.set_subroles("col2", getml.data.subroles.include.substring)
-            my_df.set_unit("col2", "substr14")
+    # Will be applied to col1 and col2
+    substr13 = getml.preprocessors.Substring(0, 3)
 
-            # Will be applied to col1 and col2
-            substr13 = getml.preprocessors.Substring(0, 3)
+    # Will only be applied to col2
+    substr14 = getml.preprocessors.Substring(0, 3, "substr14")
 
-            # Will only be applied to col2
-            substr14 = getml.preprocessors.Substring(0, 3, "substr14")
-
-            pipe = getml.Pipeline(
-                population=population_placeholder,
-                peripheral=[order_placeholder, trans_placeholder],
-                preprocessors=[substr13],
-                feature_learners=[feature_learner_1, feature_learner_2],
-                feature_selectors=feature_selector,
-                predictors=predictor,
-                share_selected_features=0.5
-            )
+    pipe = getml.Pipeline(
+        population=population_placeholder,
+        peripheral=[order_placeholder, trans_placeholder],
+        preprocessors=[substr13],
+        feature_learners=[feature_learner_1, feature_learner_2],
+        feature_selectors=feature_selector,
+        predictors=predictor,
+        share_selected_features=0.5
+    )
+    ```
     """
 
     begin: int

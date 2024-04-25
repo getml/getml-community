@@ -22,34 +22,33 @@ from .validate import _validate
 @dataclass(repr=False)
 class TextFieldSplitter(_Preprocessor):
     r"""
-    A TextFieldSplitter splits columns with role :const:`getml.data.roles.text`
+    A TextFieldSplitter splits columns with role [`text`][getml.data.roles.text]
     into relational bag-of-words representations to allow the
     feature learners to learn patterns based on
     the prescence of certain words within the text fields.
 
-    Text fields will be splitted on a whitespace or any of the
+    Text fields will be split on a whitespace or any of the
     following characters:
 
-    .. code:: python
-
-        ; , . ! ? - | " \t \v \f \r \n % ' ( ) [ ] { }
-
-    Refer to the :ref:`User guide <text_fields>` for more information.
+    ```python
+    ; , . ! ? - | " \t \v \f \r \n % ' ( ) [ ] { }
+    ```
+    Refer to the [text_fields][text_fields] for more information.
 
     Example:
-        .. code-block:: python
+    ```python
+    text_field_splitter = getml.preprocessors.TextFieldSplitter()
 
-            text_field_splitter = getml.preprocessors.TextFieldSplitter()
-
-            pipe = getml.Pipeline(
-                population=population_placeholder,
-                peripheral=[order_placeholder, trans_placeholder],
-                preprocessors=[text_field_splitter],
-                feature_learners=[feature_learner_1, feature_learner_2],
-                feature_selectors=feature_selector,
-                predictors=predictor,
-                share_selected_features=0.5
-            )
+    pipe = getml.Pipeline(
+        population=population_placeholder,
+        peripheral=[order_placeholder, trans_placeholder],
+        preprocessors=[text_field_splitter],
+        feature_learners=[feature_learner_1, feature_learner_2],
+        feature_selectors=feature_selector,
+        predictors=predictor,
+        share_selected_features=0.5
+    )
+    ```
     """
 
     def validate(self, params=None):
