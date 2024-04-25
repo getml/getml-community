@@ -7,13 +7,13 @@
 
 
 """
-A class with a nice repr for supressing parameter values.
+A class with a nice repr for suppressing parameter values.
 """
 
 
 class _Ellipsis(str):
     """
-    A class with a nice repr for supressing parameter values.
+    A class with a nice repr for suppressing parameter values.
     """
 
     def __repr__(self):
