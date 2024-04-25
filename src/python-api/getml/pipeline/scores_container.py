@@ -53,7 +53,7 @@ class Scores:
             return Scores(scores_subset, self._latest)
 
         if isinstance(key, str):
-            # allow to access latest scores via their name for backward compatiblilty
+            # allow to access latest scores via their name for backward compatibility
             if key in _all_metrics:
                 return self._latest[key]
 
@@ -136,18 +136,17 @@ class Scores:
                 A callable that evaluates to a boolean for a given item.
 
         Returns:
-            :class:`getml.pipeline.Scores`:
+            [`Scores`][getml.pipeline.Scores]:
                 A container of filtered scores.
 
         Example:
-            .. code-block:: python
+        ```python
+        from datetime import datetime, timedelta
 
-                from datetime import datetime, timedelta
+        one_week_ago = datetime.today() - timedelta(days=7)
 
-                one_week_ago = datetime.today() - timedelta(days=7)
-
-                scores_last_week = pipe.scores.filter(lambda score: score.date_time >= one_week_ago)
-
+        scores_last_week = pipe.scores.filter(lambda score: score.date_time >= one_week_ago)
+        ```
         """
         scores_filtered = [score for score in self.data if conditional(score)]
 
@@ -196,15 +195,15 @@ class Scores:
                 Whether to sort in descending order.
 
         Return:
-            :class:`getml.pipeline.Scores`:
+            [`Scores`][getml.pipeline.Scores]:
                 A container of sorted scores.
 
         Example:
-            .. code-block:: python
+        ```python
+        by_auc = pipe.scores.sort(key=lambda score: score.auc)
 
-                by_auc = pipe.scores.sort(key=lambda score: score.auc)
-
-                most_recent_first = pipe.scores.sort(key=lambda score: score.date_time, descending=True)
+        most_recent_first = pipe.scores.sort(key=lambda score: score.date_time, descending=True)
+        ```
         """
 
         scores_sorted = sorted(self.data, key=key, reverse=descending)

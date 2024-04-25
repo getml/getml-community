@@ -39,9 +39,9 @@ On the hand, we want a high *true positive rate*. The true positive
 rate, sometimes referred to as *recall*, measures the share of
 true positive predictions over all positives:
 
-.. math::
-
-    TPR = \\frac{number \\; of \\; true \\; positives}{number \\; of \\; all \\; positives}
+$$
+TPR = \\frac{number \; of \; true \; positives}{number \; of \; all \; positives}
+$$
 
 In other words, we want our classification algorithm to "catch" as
 many positives as possible.
@@ -50,9 +50,9 @@ On the other hand, we also want a low *false positive rate* (FPR). The
 false positive rate measures the share of false positives over all
 negatives.
 
-.. math::
-
-    FPR = \\frac{number \\; of \\; false \\; positives}{number \\; of \\; all \\; negatives}
+$$
+FPR = \\frac{number \; of \; false \; positives}{number \; of \; all \; negatives}
+$$
 
 In other words, we want as few "false alarms" as possible.
 
@@ -61,7 +61,7 @@ conflict with each other.
 
 The ROC curve maps the TPR against the FPR. We now measure the area
 under said curve (AUC). A higher AUC implies that the trade-off between
-TPR and FPR is more benefitial. A perfect model would have an AUC of
+TPR and FPR is more beneficial. A perfect model would have an AUC of
 1. An AUC of 0.5 implies that the model has no predictive value.
 
 """
@@ -72,9 +72,9 @@ samples in the testing set.
 
 Used for classification problems.
 
-.. math::
-
-    accuracy = \\frac{number \\; of \\; correct \\; predictions}{number \\; of \\; all \\; predictions}
+$$
+accuracy = \\frac{number \; of \; correct \; predictions}{number \; of \; all \; predictions}
+$$
 
 The number of correct predictions depends on the threshold used:
 For instance, we could interpret all predictions for which the probability
@@ -103,12 +103,12 @@ Used for classification problems.
 Mathematically speaking, cross-entropy for a binary classification problem
 is defined as follows:
 
-.. math::
+$$
+cross \; entropy = - \\frac{1}{N} \sum_{i}^{N} (y_i \log p_i + (1 - y_i) \log(1 - p_i),
+$$
 
-    cross \\; entropy = - \\frac{1}{N} \\sum_{i}^{N} (y_i \\log p_i + (1 - y_i) \\log(1 - p_i),
-
-where :math:`p_i` is the probability of a positive outcome as predicted
-by the classification algorithm and :math:`y_i` is the target value,
+where $p_i$ is the probability of a positive outcome as predicted
+by the classification algorithm and $y_i$ is the target value,
 which is 1 for a positive outcome and 0 otherwise.
 
 There are several ways to justify the use of cross entropy to evaluate
@@ -119,15 +119,16 @@ that we observe a particular state of the world given the probabilities.
 
 We can calculate this likelihood as follows:
 
-.. math::
+$$
+likelihood = \prod_{i}^{N} (p_i^{y_i} * (1 - p_i)^{1 - y_i}).
+$$
 
-    likelihood = \\prod_{i}^{N} (p_i^{y_i} * (1 - p_i)^{1 - y_i}).
-
-(Recall that :math:`y_i` can only be 0 or 1.)
+(Recall that $y_i$ can only be 0 or 1.)
 
 If we take the logarithm of the likelihood as defined above, divide by
-:math:`N` and then multiply by `-1` (because we want lower to mean
+$N$ and then multiply by `-1` (because we want lower to mean
 better and 0 to mean perfect), the outcome will be cross entropy.
+
 """
 
 # --------------------------------------------------------------------
@@ -139,14 +140,14 @@ numerical targets.
 
 Used for regression problems.
 
-.. math::
+$$
+MAE = \\frac{\sum_{i=1}^n | \mathbf{y}_i - \mathbf{\hat{y}}_i |}{n},
+$$
 
-    MAE = \\frac{\\sum_{i=1}^n | \\mathbf{y}_i - \\mathbf{\\hat{y}}_i |}{n},
-
-where :math:`\\mathbf{y}_i` and :math:`\\mathbf{\\hat{y}}_i` are the target
+where $\mathbf{y}_i$ and $\mathbf{\hat{y}}_i$ are the target
 values or prediction respectively for a particular data sample
-:math:`i` (both multidimensional in case of using multiple targets)
-while :math:`n` is the number of samples we consider during the
+$i$ (both multidimensional in case of using multiple targets)
+while $n$ is the number of samples we consider during the
 scoring.
 """
 
@@ -156,34 +157,34 @@ numerical targets.
 
 Used for regression problems.
 
-.. math::
+$$
+RMSE = \sqrt{\\frac{\sum_{i=1}^n ( \mathbf{y}_i - \mathbf{\hat{y}}_i )^2}{n}},
+$$
 
-    RMSE = \\sqrt{\\frac{\\sum_{i=1}^n ( \\mathbf{y}_i - \\mathbf{\\hat{y}}_i )^2}{n}},
-
-where :math:`\\mathbf{y}_i` and :math:`\\mathbf{\\hat{y}}_i` are the target
+where $\mathbf{y}_i$ and $\mathbf{\hat{y}}_i$ are the target
 values or prediction respectively for a particular data sample
-:math:`i` (both multidimensional in case of using multiple targets)
-while :math:`n` is the number of samples we consider during the
+$i$ (both multidimensional in case of using multiple targets)
+while $n$ is the number of samples we consider during the
 scoring.
 """
 
 
 rsquared = _all_metrics[5]
-""":math:`R^{2}` - squared correlation coeefficient between predictions and targets.
+"""$R^{2}$ - squared correlation coefficient between predictions and targets.
 
 Used for regression problems.
 
-:math:`R^{2}` is defined as follows:
+$R^{2}$ is defined as follows:
 
-.. math::
+$$
+R^{2} = \\frac{(\sum_{i=1}^n ( y_i - \\bar{y_i} ) *  ( \hat{y_i} - \\bar{\hat{y_i}} ))^2 }{\sum_{i=1}^n ( y_i - \\bar{y_i} )^2 \sum_{i=1}^n ( \hat{y_i} - \\bar{\hat{y_i}} )^2 },
+$$
 
-    R^{2} = \\frac{(\\sum_{i=1}^n ( y_i - \\bar{y_i} ) *  ( \\hat{y_i} - \\bar{\\hat{y_i}} ))^2 }{\\sum_{i=1}^n ( y_i - \\bar{y_i} )^2 \\sum_{i=1}^n ( \\hat{y_i} - \\bar{\\hat{y_i}} )^2 },
+where $y_i$ are the true values, $\hat{y_i}$ are
+the predictions and $\\bar{...}$ denotes the mean operator.
 
-where :math:`y_i` are the true values, :math:`\\hat{y_i}` are
-the predictions and :math:`\\bar{...}` denotes the mean operator.
-
-An :math:`R^{2}` of 1 implies perfect correlation between the predictions
-and the targets and an :math:`R^{2}` of 0 implies no correlation
+An $R^{2}$ of 1 implies perfect correlation between the predictions
+and the targets and an $R^{2}$ of 0 implies no correlation
 at all.
 """
 

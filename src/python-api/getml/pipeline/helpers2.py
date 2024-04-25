@@ -65,12 +65,12 @@ def list_pipelines() -> List[str]:
     """Lists all pipelines present in the engine.
 
     Note that this function only lists pipelines which are part of the
-    current project. See :func:`~getml.engine.set_project` for
-    changing projects and :mod:`~getml.pipelines` for more details about
+    current project. See [`set_project`][getml.engine.set_project] for
+    changing projects and [`pipelines`][getml.pipelines] for more details about
     the lifecycles of the pipelines.
 
     To subsequently load one of them, use
-    :func:`~getml.pipeline.load`.
+    [`load`][getml.pipeline.load].
 
     Returns:
         list containing the names of all pipelines.
@@ -100,7 +100,7 @@ def load(name: str) -> Pipeline:
         name: The name of the pipeline to be loaded.
 
     Returns:
-        A :meth:`~getml.Pipeline` that is a handler
+        A [`Pipeline`][getml.Pipeline] that is a handler
         for the pipeline signified by name.
     """
 

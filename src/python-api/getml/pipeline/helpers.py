@@ -394,9 +394,9 @@ def _print_time_taken(begin: float, end: float, msg: str) -> None:
     """Prints time required to fit a model.
 
     Args:
-        begin (float): :func:`time.time` output marking the beginning
+        begin (float): [`time`][time.time] output marking the beginning
             of the training.
-        end (float): :func:`time.time` output marking the end of the
+        end (float): [`time`][time.time] output marking the end of the
             training.
         msg (str): Message to display along the duration.
 

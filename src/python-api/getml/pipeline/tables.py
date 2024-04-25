@@ -36,12 +36,11 @@ class Tables:
 
     Note:
         The container is an iterable. So, in addition to
-        :meth:`~getml.pipeline.Tables.filter` you can also use python list
+        [`filter`][getml.pipeline.Tables.filter] you can also use python list
         comprehensions for filtering.
 
     Example:
-        .. code-block:: python
-
+    ```python
             all_my_tables = my_pipeline.tables
 
             first_table = my_pipeline.tables[0]
@@ -52,6 +51,7 @@ class Tables:
             table.importance > 0.1]
 
             names, importances = my_pipeline.tables.importances()
+    ```
     """
 
     def __init__(
@@ -186,8 +186,8 @@ class Tables:
 
     def _make_tables(self, data: Sequence[Table]) -> Tables:
         """
-        A factory to construct a :class:`getml.pipeline.Tables` container
-        from a list of :class:`getml.pipeline.Table`s.
+        A factory to construct a [`Tables`][getml.pipeline.Tables] container
+        from a list of [`Table`][getml.pipeline.Table]s.
         """
 
         return Tables(self._targets, self._columns, data=data)
@@ -203,12 +203,10 @@ class Tables:
                 A callable that evaluates to a boolean for a given item.
 
         Return:
-            :class:`getml.pipeline.Tables`:
+            [`Tables`][getml.pipeline.Tables]:
                 A container of filtered tables.
 
         Example:
-            .. code-block:: python
-
                 important_tables = my_pipeline.table.filter(
                     lambda table: table.importance > 0.1)
 
@@ -241,11 +239,11 @@ class Tables:
                 Whether you want the results to be sorted.
 
         Return:
-            (:class:`numpy.ndarray`, :class:`numpy.ndarray`):
-                - The first array contains the names of the tables.
+            ([`ndarray`][numpy.ndarray], [`ndarray`][numpy.ndarray]):
+            - The first array contains the names of the tables.
 
-                - The second array contains their importances. By definition,
-                  all importances add up to 1.
+            - The second array contains their importances. By definition,
+              all importances add up to 1.
         """
 
         target_name = self._targets[target_num]
@@ -270,10 +268,10 @@ class Tables:
     @property
     def names(self) -> list[str]:
         """
-        Holds the names of a :class:`~getml.Pipeline`\'s tables.
+        Holds the names of a [`Pipeline`][getml.Pipeline]'s tables.
 
         Returns:
-            :class:`list` containing the names.
+            `list` containing the names.
 
         Note:
             The order corresponds to the current sorting of the container.
@@ -303,14 +301,13 @@ class Tables:
                 Whether to sort in descending order.
 
         Return:
-            :class:`getml.pipeline.Tables`:
+            [`Tables`][getml.pipeline.Tables]:
                 A container of sorted tables.
 
         Example:
-            .. code-block:: python
-
-                by_importance = my_pipeline.tables.sort(key=lambda table: table.importance)
-
+        ```python
+        by_importance = my_pipeline.tables.sort(key=lambda table: table.importance)
+        ```
         """
 
         reverse = False if descending is None else descending
@@ -349,10 +346,10 @@ class Tables:
     @property
     def targets(self) -> list[str]:
         """
-        Holds the targets of a :class:`~getml.Pipeline`\'s tables.
+        Holds the targets of a [`Pipeline`][getml.Pipeline]'s tables.
 
         Returns:
-            :class:`list` containing the names.
+            `list` containing the names.
 
         Note:
             The order corresponds to the current sorting of the container.

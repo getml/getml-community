@@ -13,7 +13,7 @@ Custom str type that holds SQL Source code.
 
 class SQLString(str):
     """
-    A custom string type that handles the represenation of SQL code strings.
+    A custom string type that handles the representation of SQL code strings.
     """
 
     def _repr_markdown_(self) -> str:
