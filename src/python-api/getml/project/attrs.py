@@ -93,7 +93,7 @@ def load(bundle, name=None):
 def delete():
     """
     Deletes the currently connected project. All related pipelines,
-    data frames and hyperopts will be irretrivably deleted.
+    data frames and hyperopts will be irretrievably deleted.
     """
     comm._delete_project(_name())
 

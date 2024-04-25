@@ -93,14 +93,13 @@ class Hyperopts:
                 A callable that evaluates to a boolean for a given item.
 
         Returns:
-            :class:`getml.pipeline.Hyperopts`:
+            [`Hyperopts`][getml.pipeline.Hyperopts]:
                 A container of filtered hyperopts.
 
         Example:
-            .. code-block:: python
-
-                gaussian_hyperopts = getml.project.hyperopts.filter(lamda hyp: "Gaussian" in hyp.type)
-
+        ```python
+        gaussian_hyperopts = getml.project.hyperopts.filter(lamda hyp: "Gaussian" in hyp.type)
+        ```
         """
         hyperopts_filtered = [
             hyperopt for hyperopt in self.data if conditional(hyperopt)
@@ -120,14 +119,13 @@ class Hyperopts:
                 Whether to sort in descending order.
 
         Return:
-            :class:`getml.pipeline.Hyperopts`:
+            [`Hyperopts`][getml.pipeline.Hyperopts]:
                 A container of sorted hyperopts.
 
         Example:
-            .. code-block:: python
-
-                by_type = getml.project.hyperopt.sort(lambda hyp: hyp.type)
-
+        ```python
+        by_type = getml.project.hyperopt.sort(lambda hyp: hyp.type)
+        ```
         """
         hyperopts_sorted = sorted(self.data, key=key, reverse=descending)
         return Hyperopts(data=hyperopts_sorted)
