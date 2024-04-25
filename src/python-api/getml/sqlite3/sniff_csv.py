@@ -7,7 +7,7 @@
 
 
 """
-Contains utility functions for siffing sqlite data types from CSV files.
+Contains utility functions for sniffing sqlite data types from CSV files.
 """
 
 import pandas as pd  # type: ignore
@@ -47,16 +47,16 @@ def sniff_csv(
             Number of lines analyzed by the sniffer.
 
         quotechar (str, optional):
-            The character used to wrap strings. Default:`"`
+            The character used to wrap strings.
 
         sep (str, optional):
-            The separator used for separating fields. Default:`,`
+            The separator used for separating fields.
 
         skip (int, optional):
             Number of lines to skip at the beginning of each
-            file (Default: 0).
+            file.
 
-        colnames(List[str] or None, optional):
+        colnames (List[str], optional):
             The first line of a CSV file
             usually contains the column names. When this is not the case, you can
             explicitly pass them. If you pass colnames, it is assumed that the

@@ -21,7 +21,7 @@ def read_list(conn, table_name, data):
 
     Args:
         conn:
-            A sqlite3 connection created by :func:`~getml.sqlite3.connect`.
+            A sqlite3 connection created by [`connect`][getml.sqlite3.connect].
 
         table_name (str):
             The name of the table to write to.
