@@ -60,7 +60,7 @@ class _Column:
         """
         The role of this column.
 
-        Roles are needed by the feature learning algorithm so it knows how
+        Roles are needed by the feature learning algorithm, so it knows how
         to treat the columns.
         """
         return self.cmd["role_"]

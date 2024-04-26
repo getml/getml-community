@@ -19,7 +19,7 @@ def random(seed: int = 5849) -> FloatColumnView:
     """
     Create random column.
 
-    The numbers will uniformly distributed from 0.0 to 1.0. This can be
+    The numbers will be uniformly distributed from 0.0 to 1.0. This can be
     used to randomly split a population table into a training and a test
     set
 
@@ -28,19 +28,18 @@ def random(seed: int = 5849) -> FloatColumnView:
             Seed used for the random number generator.
 
     Returns:
-        :class:`~getml.data.columns.FloatColumnView`:
+        [`FloatColumnView`][getml.data.columns.FloatColumnView]:
             FloatColumn containing random numbers
 
     Example:
+        ```python
+        population = getml.DataFrame('population')
+        population.add(numpy.zeros(100), 'column_01')
 
-        .. code-block:: python
-
-            population = getml.DataFrame('population')
-            population.add(numpy.zeros(100), 'column_01')
-
-            idx = random(seed=42)
-            population_train = population[idx > 0.7]
-            population_test = population[idx <= 0.7]
+        idx = random(seed=42)
+        population_train = population[idx > 0.7]
+        population_test = population[idx <= 0.7]
+        ```
     """
 
     if not isinstance(seed, numbers.Real):

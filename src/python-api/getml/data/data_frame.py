@@ -76,95 +76,92 @@ from .view import View
 class DataFrame:
     """Handler for the data stored in the getML engine.
 
-    The :class:`~getml.DataFrame` class represents a data frame
+    The [`DataFrame`][getml.DataFrame] class represents a data frame
     object in the getML engine but does not contain any actual data
     itself. To create such a data frame object, fill it with data via
     the Python API, and to retrieve a handler for it, you can use one
-    of the :func:`~getml.DataFrame.from_csv`,
-    :func:`~getml.DataFrame.from_db`,
-    :func:`~getml.DataFrame.from_json`, or
-    :func:`~getml.DataFrame.from_pandas` class methods. The
-    :ref:`importing_data` section in the user guide explains the
+    of the [`from_csv`][getml.DataFrame.from_csv],
+    [`from_db`][getml.DataFrame.from_db],
+    [`from_json`][getml.DataFrame.from_json], or
+    [`from_pandas`][getml.DataFrame.from_pandas] class methods. The
+    [importing_data][importing_data] section in the user guide explains the
     particularities of each of those flavors of the unified
     import interface.
 
     If the data frame object is already present in the engine -
     either in memory as a temporary object or on disk when
-    :meth:`~getml.DataFrame.save` was called earlier -, the
-    :func:`~getml.data.load_data_frame` function will create a new
+    [`save`][getml.DataFrame.save] was called earlier -, the
+    [`load_data_frame`][getml.data.load_data_frame] function will create a new
     handler without altering the underlying data. For more information
     about the lifecycle of the data in the getML engine and its
     synchronization with the Python API please see the
-    :ref:`corresponding user guide<the_getml_python_api_lifecycles>`.
+    corresponding user guide: [the_getml_python_api_lifecycles][ref the_getml_python_api_lifecycles].
 
     Args:
         name (str):
             Unique identifier used to link the handler with
             the underlying data frame object in the engine.
 
-        roles (dict[str, List[str]] or :class:`~getml.data.Roles`, optional):
-            Maps the :mod:`~getml.data.roles` to the
-            column names (see :meth:`~getml.DataFrame.colnames`).
+        roles (dict[str, List[str]] or [`Roles`][getml.data.Roles], optional):
+            Maps the [`roles`][getml.data.roles] to the
+            column names (see [`colnames`][getml.DataFrame.colnames]).
 
             The `roles` dictionary is expected to have the following format
-
-            .. code-block:: python
-
-                roles = {getml.data.role.numeric: ["colname1", "colname2"],
-                         getml.data.role.target: ["colname3"]}
-
-            Otherwise, you can use the :class:`~getml.data.Roles` class.
+            ```python
+            roles = {getml.data.role.numeric: ["colname1", "colname2"],
+                     getml.data.role.target: ["colname3"]}
+            ```
+            Otherwise, you can use the [`Roles`][getml.data.Roles] class.
 
     Examples:
         Creating a new data frame object in the getML engine and importing
         data is done by one the class functions
-        :func:`~getml.DataFrame.from_csv`,
-        :func:`~getml.DataFrame.from_db`,
-        :func:`~getml.DataFrame.from_json`, or
-        :func:`~getml.DataFrame.from_pandas`.
+        [`from_csv`][getml.DataFrame.from_csv],
+        [`from_db`][getml.DataFrame.from_db],
+        [`from_json`][getml.DataFrame.from_json], or
+        [`from_pandas`][getml.DataFrame.from_pandas].
 
-        .. code-block:: python
+        ```python
+        random = numpy.random.RandomState(7263)
 
-            random = numpy.random.RandomState(7263)
+        table = pandas.DataFrame()
+        table['column_01'] = random.randint(0, 10, 1000).astype(numpy.str)
+        table['join_key'] = numpy.arange(1000)
+        table['time_stamp'] = random.rand(1000)
+        table['target'] = random.rand(1000)
 
-            table = pandas.DataFrame()
-            table['column_01'] = random.randint(0, 10, 1000).astype(numpy.str)
-            table['join_key'] = numpy.arange(1000)
-            table['time_stamp'] = random.rand(1000)
-            table['target'] = random.rand(1000)
-
-            df_table = getml.DataFrame.from_pandas(table, name = 'table')
-
+        df_table = getml.DataFrame.from_pandas(table, name = 'table')
+        ```
         In addition to creating a new data frame object in the getML
         engine and filling it with all the content of `table`, the
-        :func:`~getml.DataFrame.from_pandas` function also
-        returns a :class:`~getml.DataFrame` handler to the
+        [`from_pandas`][getml.DataFrame.from_pandas] function also
+        returns a [`DataFrame`][getml.DataFrame] handler to the
         underlying data.
 
         You don't have to create the data frame objects anew for each
-        session. You can use their :meth:`~getml.DataFrame.save`
+        session. You can use their [`save`][getml.DataFrame.save]
         method to write them to disk, the
-        :func:`~getml.data.list_data_frames` function to list all
+        [`list_data_frames`][getml.data.list_data_frames] function to list all
         available objects in the engine, and
-        :func:`~getml.data.load_data_frame` to create a
-        :class:`~getml.DataFrame` handler for a data set already
+        [`load_data_frame`][getml.data.load_data_frame] to create a
+        [`DataFrame`][getml.DataFrame] handler for a data set already
         present in the getML engine (see
-        :ref:`the_getml_python_api_lifecycles` for details).
+        [the_getml_python_api_lifecycles][:ref:`the_getml_python_api_lifecycles`] for details).
 
-        .. code-block:: python
+        ```python
+        df_table.save()
 
-            df_table.save()
+        getml.data.list_data_frames()
 
-            getml.data.list_data_frames()
-
-            df_table_reloaded = getml.data.load_data_frame('table')
+        df_table_reloaded = getml.data.load_data_frame('table')
+        ```
 
     Note:
         Although the Python API does not store the actual data itself,
-        you can use the :meth:`~getml.DataFrame.to_csv`,
-        :meth:`~getml.DataFrame.to_db`,
-        :meth:`~getml.DataFrame.to_json`, and
-        :meth:`~getml.DataFrame.to_pandas` methods to retrieve
+        you can use the [`to_csv`][getml.DataFrame.to_csv],
+        [`to_db`][getml.DataFrame.to_db],
+        [`to_json`][getml.DataFrame.to_json], and
+        [`to_pandas`][getml.DataFrame.to_pandas] methods to retrieve
         them.
 
     """
@@ -280,7 +277,7 @@ class DataFrame:
         If called with the `mem_only` option set to True, the data
         frame corresponding to the handler represented by the current
         instance can be reloaded using the
-        :meth:`~getml.DataFrame.load` method.
+        [`load`][getml.DataFrame.load] method.
 
         Args:
             mem_only (bool, optional):
@@ -646,20 +643,20 @@ class DataFrame:
     # ------------------------------------------------------------
 
     def add(self, col, name, role=None, subroles=None, unit="", time_formats=None):
-        """Adds a column to the current :class:`~getml.DataFrame`.
+        """Adds a column to the current [`DataFrame`][getml.DataFrame].
 
         Args:
-            col (:mod:`~getml.column` or :mod:`numpy.ndarray`):
+            col ([`column`][getml.column] or `numpy.ndarray`):
                 The column or numpy.ndarray to be added.
 
             name (str):
                 Name of the new column.
 
             role (str, optional):
-                Role of the new column. Must be from :mod:`getml.data.roles`.
+                Role of the new column. Must be from `getml.data.roles`.
 
             subroles (str, List[str] or None, optional):
-                Subroles of the new column. Must be from :mod:`getml.data.subroles`.
+                Subroles of the new column. Must be from [`subroles`][getml.data.subroles].
 
             unit (str, optional):
                 Unit of the column.
@@ -668,7 +665,7 @@ class DataFrame:
                 Formats to be used to parse the time stamps.
 
                 This is only necessary, if an implicit conversion from
-                a :class:`~getml.data.columns.StringColumn` to a time
+                a [`StringColumn`][getml.data.columns.StringColumn] to a time
                 stamp is taking place.
 
                 The formats are allowed to contain the following
@@ -748,7 +745,7 @@ class DataFrame:
     @property
     def columns(self):
         """
-        Alias for :meth:`~getml.DataFrame.colnames`.
+        Alias for [`colnames`][getml.DataFrame.colnames].
 
         Returns:
             List[str]:
@@ -767,7 +764,7 @@ class DataFrame:
                 The name of the new data frame.
 
         Returns:
-            :class:`~getml.DataFrame`:
+            [`DataFrame`][getml.DataFrame]:
                 A handle to the deep copy.
         """
 
@@ -789,8 +786,8 @@ class DataFrame:
 
     def delete(self):
         """
-        Permanently deletes the data frame. :meth:`delete` first unloads the data frame
-        from memory and than deletes it from disk.
+        Permanently deletes the data frame. `delete` first unloads the data frame
+        from memory and then deletes it from disk.
         """
         # ------------------------------------------------------------
 
@@ -799,10 +796,10 @@ class DataFrame:
     # ------------------------------------------------------------
 
     def drop(self, cols):
-        """Returns a new :class:`~getml.data.View` that has one or several columns removed.
+        """Returns a new [`View`][getml.data.View] that has one or several columns removed.
 
         Args:
-            cols (str, FloatColumn, StingColumn, or List[str, FloatColumn, StringColumn]):
+            cols (str, FloatColumn, StringColumn, or List[str, FloatColumn, StringColumn]):
                 The columns or the names thereof.
         """
 
@@ -821,8 +818,8 @@ class DataFrame:
         After you have frozen the data frame, the data frame is immutable
         and in-place operations are no longer possible. However, you can
         still create views. In other words, operations like
-        :meth:`~getml.DataFrame.set_role` are not longer possible,
-        but operations like :meth:`~getml.DataFrame.with_role` are.
+        [`set_role`][getml.DataFrame.set_role] are no longer possible,
+        but operations like [`with_role`][getml.DataFrame.with_role] are.
         """
         cmd: Dict[str, Any] = {}
         cmd["type_"] = "DataFrame.freeze"
@@ -839,24 +836,22 @@ class DataFrame:
         getML engine.
 
         Args:
-            table (:py:class:`pyarrow.Table`):
+            table (pyarrow.Table):
                 The table to be read.
 
             name (str):
                 Name of the data frame to be created.
 
-            roles (dict[str, List[str]] or :class:`~getml.data.Roles`, optional):
-                Maps the :mod:`~getml.data.roles` to the
-                column names (see :meth:`~getml.DataFrame.colnames`).
+            roles (dict[str, List[str]] or [`Roles`][getml.data.Roles], optional):
+                Maps the [`roles`][getml.data.roles] to the
+                column names (see [`colnames`][getml.DataFrame.colnames]).
 
                 The `roles` dictionary is expected to have the following format:
-
-                .. code-block:: python
-
-                    roles = {getml.data.role.numeric: ["colname1", "colname2"],
-                             getml.data.role.target: ["colname3"]}
-
-                Otherwise, you can use the :class:`~getml.data.Roles` class.
+                ```python
+                roles = {getml.data.role.numeric: ["colname1", "colname2"],
+                         getml.data.role.target: ["colname3"]}
+                ```
+                Otherwise, you can use the [`Roles`][getml.data.Roles] class.
 
             ignore (bool, optional):
                 Only relevant when roles is not None.
@@ -931,7 +926,7 @@ class DataFrame:
         The getML engine will construct a data
         frame object in the engine, fill it with the data read from
         the CSV file(s), and return a corresponding
-        :class:`~getml.DataFrame` handle.
+        [`DataFrame`][getml.DataFrame] handle.
 
         Args:
             fnames (List[str]):
@@ -956,22 +951,20 @@ class DataFrame:
             skip (int, optional):
                 Number of lines to skip at the beginning of each file.
 
-            colnames(List[str] or None, optional): The first line of a CSV file
+            colnames (List[str] or None, optional): The first line of a CSV file
                 usually contains the column names. When this is not the case,
                 you need to explicitly pass them.
 
-            roles(dict[str, List[str]] or :class:`~getml.data.Roles`, optional):
-                Maps the :mod:`~getml.data.roles` to the
-                column names (see :meth:`~getml.DataFrame.colnames`).
+            roles (dict[str, List[str]] or [`Roles`][getml.data.Roles], optional):
+                Maps the [`roles`][getml.data.roles] to the
+                column names (see [`colnames`][getml.DataFrame.colnames]).
 
                 The `roles` dictionary is expected to have the following format
-
-                .. code-block:: python
-
-                    roles = {getml.data.role.numeric: ["colname1", "colname2"],
-                             getml.data.role.target: ["colname3"]}
-
-                Otherwise, you can use the :class:`~getml.data.Roles` class.
+                ```python
+                roles = {getml.data.role.numeric: ["colname1", "colname2"],
+                         getml.data.role.target: ["colname3"]}
+                ```
+                Otherwise, you can use the [`Roles`][getml.data.Roles] class.
 
             ignore (bool, optional):
                 Only relevant when roles is not None.
@@ -990,7 +983,7 @@ class DataFrame:
                 printed to stdout during the download.
 
         Returns:
-            :class:`~getml.DataFrame`:
+            [`DataFrame`][getml.DataFrame]:
 
                 Handler of the underlying data.
 
@@ -1002,38 +995,39 @@ class DataFrame:
             Let's assume you have two CSV files - *file1.csv* and
             *file2.csv* - in the current working directory. You can
             import their data into the getML engine using.
+            ```python
+            df_expd = data.DataFrame.from_csv(
+                fnames=["file1.csv", "file2.csv"],
+                name="MY DATA FRAME",
+                sep=';',
+                quotechar='"'
+                )
 
-            >>> df_expd = data.DataFrame.from_csv(
-                    ...     fnames=["file1.csv", "file2.csv"],
-                    ...     name="MY DATA FRAME",
-                    ...     sep=';',
-                    ...     quotechar='"'
-                    ... )
+            # However, the CSV format lacks type safety. If you want to
+            # build a reliable pipeline, it is a good idea
+            # to hard-code the roles:
 
-            However, the CSV format lacks type safety. If you want to
-            build a reliable pipeline, it is a good idea
-            to hard-code the roles:
+            roles = {"categorical": ["col1", "col2"], "target": ["col3"]}
 
-                >>> roles = {"categorical": ["col1", "col2"], "target": ["col3"]}
-            >>>
-            >>> df_expd = data.DataFrame.from_csv(
-                    ...         fnames=["file1.csv", "file2.csv"],
-                    ...         name="MY DATA FRAME",
-                    ...         sep=';',
-                    ...         quotechar='"',
-                    ...         roles=roles
-                    ... )
+            df_expd = data.DataFrame.from_csv(
+                fnames=["file1.csv", "file2.csv"],
+                name="MY DATA FRAME",
+                sep=';',
+                quotechar='"',
+                roles=roles
+                )
 
-            If you think that typing out all of the roles by hand is too
-            cumbersome, you can use a dry run:
+            # If you think that typing out all the roles by hand is too
+            # cumbersome, you can use a dry run:
 
-                >>> roles = data.DataFrame.from_csv(
-                        ...         fnames=["file1.csv", "file2.csv"],
-                        ...         name="MY DATA FRAME",
-                        ...         sep=';',
-                        ...         quotechar='"',
-                        ...         dry=True
-                        ... )
+            roles = data.DataFrame.from_csv(
+                fnames=["file1.csv", "file2.csv"],
+                name="MY DATA FRAME",
+                sep=';',
+                quotechar='"',
+                dry=True
+            )
+            ```
 
             This will return the roles dictionary it would have used. You
             can now hard-code this.
@@ -1122,8 +1116,8 @@ class DataFrame:
 
         It will construct a data frame object in the engine, fill it
         with the data read from table `table_name` in the connected
-        database (see :mod:`~getml.database`), and return a
-        corresponding :class:`~getml.DataFrame` handle.
+        database (see [`database`][getml.database]), and return a
+        corresponding [`DataFrame`][getml.DataFrame] handle.
 
         Args:
             table_name (str):
@@ -1133,18 +1127,16 @@ class DataFrame:
                 Name of the data frame to be created. If not passed,
                 then the *table_name* will be used.
 
-            roles(dict[str, List[str]] or :class:`~getml.data.Roles`, optional):
-                Maps the :mod:`~getml.data.roles` to the
-                column names (see :meth:`~getml.DataFrame.colnames`).
+            roles (dict[str, List[str]] or [`Roles`][getml.data.Roles], optional):
+                Maps the [`roles`][getml.data.roles] to the
+                column names (see [`colnames`][getml.DataFrame.colnames]).
 
                 The `roles` dictionary is expected to have the following format:
-
-                .. code-block:: python
-
-                    roles = {getml.data.role.numeric: ["colname1", "colname2"],
-                             getml.data.role.target: ["colname3"]}
-
-                Otherwise, you can use the :class:`~getml.data.Roles` class.
+                ```python
+                roles = {getml.data.role.numeric: ["colname1", "colname2"],
+                         getml.data.role.target: ["colname3"]}
+                ```
+                Otherwise, you can use the [`Roles`][getml.data.Roles] class.
 
             ignore (bool, optional):
                 Only relevant when roles is not None.
@@ -1158,30 +1150,29 @@ class DataFrame:
                 return the roles it would have used. This can be used
                 to hard-code roles when setting up a pipeline.
 
-            conn (:class:`~getml.database.Connection`, optional):
+            conn ([`Connection`][getml.database.Connection], optional):
                 The database connection to be used.
                 If you don't explicitly pass a connection, the engine
                 will use the default connection.
 
         Returns:
-            :class:`~getml.DataFrame`:
+            [`DataFrame`][getml.DataFrame]:
 
                 Handler of the underlying data.
 
         Example:
-            .. code-block:: python
+            ```python
+            getml.database.connect_mysql(
+                host="db.relational-data.org",
+                port=3306,
+                dbname="financial",
+                user="guest",
+                password="relational"
+            )
 
-                getml.database.connect_mysql(
-                    host="relational.fit.cvut.cz",
-                    port=3306,
-                    dbname="financial",
-                    user="guest",
-                    password="relational"
-                )
-
-                loan = getml.DataFrame.from_db(
-                    table_name='loan', name='data_frame_loan')
-
+            loan = getml.DataFrame.from_db(
+                table_name='loan', name='data_frame_loan')
+            ```
         """
 
         # -------------------------------------------
@@ -1243,26 +1234,22 @@ class DataFrame:
             data (dict):
                 The dict containing the data.
                 The data should be in the following format:
-
-                .. code-block:: python
-
-                    data = {'col1': [1.0, 2.0, 1.0], 'col2': ['A', 'B', 'C']}
-
+                ```python
+                data = {'col1': [1.0, 2.0, 1.0], 'col2': ['A', 'B', 'C']}
+                ```
             name (str):
                 Name of the data frame to be created.
 
-            roles(dict[str, List[str]] or :class:`~getml.data.Roles`, optional):
-                Maps the :mod:`~getml.data.roles` to the
-                column names (see :meth:`~getml.DataFrame.colnames`).
+            roles (dict[str, List[str]] or [`Roles`][getml.data.Roles], optional):
+                Maps the [`roles`][getml.data.roles] to the
+                column names (see [`colnames`][getml.DataFrame.colnames]).
 
                 The `roles` dictionary is expected to have the following format:
-
-                .. code-block:: python
-
-                    roles = {getml.data.role.numeric: ["colname1", "colname2"],
-                             getml.data.role.target: ["colname3"]}
-
-                Otherwise, you can use the :class:`~getml.data.Roles` class.
+                ```python
+                roles = {getml.data.role.numeric: ["colname1", "colname2"],
+                         getml.data.role.target: ["colname3"]}
+                ```
+                Otherwise, you can use the [`Roles`][getml.data.Roles] class.
 
             ignore (bool, optional):
                 Only relevant when roles is not None.
@@ -1277,7 +1264,7 @@ class DataFrame:
                 to hard-code roles when setting up a pipeline.
 
         Returns:
-            :class:`~getml.DataFrame`:
+            [`DataFrame`][getml.DataFrame]:
 
                 Handler of the underlying data.
         """
@@ -1301,32 +1288,28 @@ class DataFrame:
 
         It will construct a data frame object in the engine, fill it
         with the data read from the JSON string, and return a
-        corresponding :class:`~getml.DataFrame` handle.
+        corresponding [`DataFrame`][getml.DataFrame] handle.
 
         Args:
             json_str (str):
                 The JSON string containing the data.
                 The json_str should be in the following format:
-
-                .. code-block:: python
-
-                    json_str = "{'col1': [1.0, 2.0, 1.0], 'col2': ['A', 'B', 'C']}"
-
+                ```python
+                json_str = "{'col1': [1.0, 2.0, 1.0], 'col2': ['A', 'B', 'C']}"
+                ```
             name (str):
                 Name of the data frame to be created.
 
-            roles(dict[str, List[str]] or :class:`~getml.data.Roles`, optional):
-                Maps the :mod:`~getml.data.roles` to the
-                column names (see :meth:`~getml.DataFrame.colnames`).
+            roles (dict[str, List[str]] or [`Roles`][getml.data.Roles], optional):
+                Maps the [`roles`][getml.data.roles] to the
+                column names (see [`colnames`][getml.DataFrame.colnames]).
 
                 The `roles` dictionary is expected to have the following format:
-
-                .. code-block:: python
-
-                    roles = {getml.data.role.numeric: ["colname1", "colname2"],
-                             getml.data.role.target: ["colname3"]}
-
-                Otherwise, you can use the :class:`~getml.data.Roles` class.
+                ```python
+                roles = {getml.data.role.numeric: ["colname1", "colname2"],
+                         getml.data.role.target: ["colname3"]}
+                ```
+                Otherwise, you can use the [`Roles`][getml.data.Roles] class.
 
             ignore (bool, optional):
                 Only relevant when roles is not None.
@@ -1341,10 +1324,11 @@ class DataFrame:
                 to hard-code roles when setting up a pipeline.
 
         Returns:
-            :class:`~getml.DataFrame`:
+            [`DataFrame`][getml.DataFrame]:
 
         Returns:
-            :class:`~getml.data.DataFrame`: Handler of the underlying data.
+            [`DataFrame`][getml.data.DataFrame]: Handler of the underlying data.
+
         """
 
         if not isinstance(json_str, str):
@@ -1362,31 +1346,29 @@ class DataFrame:
 
     @classmethod
     def from_pandas(cls, pandas_df, name, roles=None, ignore=False, dry=False):
-        """Create a DataFrame from a :py:class:`pandas.DataFrame`.
+        """Create a DataFrame from a :py[`DataFrame`][pandas.DataFrame].
 
         It will construct a data frame object in the engine, fill it
-        with the data read from the :py:class:`pandas.DataFrame`, and
-        return a corresponding :class:`~getml.DataFrame` handle.
+        with the data read from the :py[`DataFrame`][pandas.DataFrame], and
+        return a corresponding [`DataFrame`][getml.DataFrame] handle.
 
         Args:
-            pandas_df (:py:class:`pandas.DataFrame`):
+            pandas_df (pandas.DataFrame):
                 The table to be read.
 
             name (str):
                 Name of the data frame to be created.
 
-            roles (dict[str, List[str]] or :class:`~getml.data.Roles`, optional):
-                Maps the :mod:`~getml.data.roles` to the
-                column names (see :meth:`~getml.DataFrame.colnames`).
+            roles (dict[str, List[str]] or [`Roles`][getml.data.Roles], optional):
+                Maps the [`roles`][getml.data.roles] to the
+                column names (see [`colnames`][getml.DataFrame.colnames]).
 
                 The `roles` dictionary is expected to have the following format:
-
-                .. code-block:: python
-
-                    roles = {getml.data.role.numeric: ["colname1", "colname2"],
-                             getml.data.role.target: ["colname3"]}
-
-                Otherwise, you can use the :class:`~getml.data.Roles` class.
+                ```python
+                 roles = {getml.data.role.numeric: ["colname1", "colname2"],
+                          getml.data.role.target: ["colname3"]}
+                ```
+                Otherwise, you can use the [`Roles`][getml.data.Roles] class.
 
             ignore (bool, optional):
                 Only relevant when roles is not None.
@@ -1458,18 +1440,16 @@ class DataFrame:
             name (str):
                 Name of the data frame to be created.
 
-            roles (dict[str, List[str]] or :class:`~getml.data.Roles`, optional):
-                Maps the :mod:`~getml.data.roles` to the
-                column names (see :meth:`~getml.DataFrame.colnames`).
+            roles (dict[str, List[str]] or [`Roles`][getml.data.Roles], optional):
+                Maps the [`roles`][getml.data.roles] to the
+                column names (see [`colnames`][getml.DataFrame.colnames]).
 
                 The `roles` dictionary is expected to have the following format:
-
-                .. code-block:: python
-
-                    roles = {getml.data.role.numeric: ["colname1", "colname2"],
-                             getml.data.role.target: ["colname3"]}
-
-                Otherwise, you can use the :class:`~getml.data.Roles` class.
+                ```python
+                roles = {getml.data.role.numeric: ["colname1", "colname2"],
+                         getml.data.role.target: ["colname3"]}
+                ```
+                Otherwise, you can use the [`Roles`][getml.data.Roles] class.
 
             ignore (bool, optional):
                 Only relevant when roles is not None.
@@ -1522,31 +1502,30 @@ class DataFrame:
 
     @classmethod
     def from_pyspark(cls, spark_df, name, roles=None, ignore=False, dry=False):
-        """Create a DataFrame from a :py:class:`pyspark.sql.DataFrame`.
+        """Create a DataFrame from a `pyspark.sql.DataFrame`.
 
         It will construct a data frame object in the engine, fill it
-        with the data read from the :py:class:`pyspark.sql.DataFrame`, and
-        return a corresponding :class:`~getml.DataFrame` handle.
+        with the data read from the `pyspark.sql.DataFrame`, and
+        return a corresponding [`DataFrame`][getml.DataFrame] handle.
 
         Args:
-            spark_df (:py:class:`pyspark.sql.DataFrame`):
+            spark_df (pyspark.sql.DataFrame):
                 The table to be read.
 
             name (str):
                 Name of the data frame to be created.
 
-            roles (dict[str, List[str]] or :class:`~getml.data.Roles`, optional):
-                Maps the :mod:`~getml.data.roles` to the
-                column names (see :meth:`~getml.DataFrame.colnames`).
+            roles (dict[str, List[str]] or [`Roles`][getml.data.Roles], optional):
+                Maps the [`roles`][getml.data.roles] to the
+                column names (see [`colnames`][getml.DataFrame.colnames]).
 
                 The `roles` dictionary is expected to have the following format:
+                ```python
+                roles = {getml.data.role.numeric: ["colname1", "colname2"],
+                         getml.data.role.target: ["colname3"]}
+                ```
 
-                .. code-block:: python
-
-                    roles = {getml.data.role.numeric: ["colname1", "colname2"],
-                             getml.data.role.target: ["colname3"]}
-
-                Otherwise, you can use the :class:`~getml.data.Roles` class.
+                Otherwise, you can use the [`Roles`][getml.data.Roles] class.
 
             ignore (bool, optional):
                 Only relevant when roles is not None.
@@ -1561,7 +1540,7 @@ class DataFrame:
                 to hard-code roles when setting up a pipeline.
 
         Returns:
-            :class:`~getml.DataFrame`:
+            [`DataFrame`][getml.DataFrame]:
 
                 Handler of the underlying data.
         """
@@ -1625,7 +1604,7 @@ class DataFrame:
         This classmethod will construct a data
         frame object in the engine, fill it with the data read from
         the CSV file(s), and return a corresponding
-        :class:`~getml.DataFrame` handle.
+        [`DataFrame`][getml.DataFrame] handle.
 
         Args:
             bucket (str):
@@ -1653,23 +1632,21 @@ class DataFrame:
             skip (int, optional):
                 Number of lines to skip at the beginning of each file.
 
-            colnames(List[str] or None, optional):
+            colnames (List[str] or None, optional):
                 The first line of a CSV file
                 usually contains the column names. When this is not the case,
                 you need to explicitly pass them.
 
-            roles(dict[str, List[str]] or :class:`~getml.data.Roles`, optional):
-                Maps the :mod:`~getml.data.roles` to the
-                column names (see :meth:`~getml.DataFrame.colnames`).
+            roles (dict[str, List[str]] or [`Roles`][getml.data.Roles], optional):
+                Maps the [`roles`][getml.data.roles] to the
+                column names (see [`colnames`][getml.DataFrame.colnames]).
 
                 The `roles` dictionary is expected to have the following format:
-
-                .. code-block:: python
-
-                    roles = {getml.data.role.numeric: ["colname1", "colname2"],
-                             getml.data.role.target: ["colname3"]}
-
-                Otherwise, you can use the :class:`~getml.data.Roles` class.
+                ```python
+                roles = {getml.data.role.numeric: ["colname1", "colname2"],
+                         getml.data.role.target: ["colname3"]}
+                ```
+                Otherwise, you can use the [`Roles`][getml.data.Roles] class.
 
             ignore (bool, optional):
                 Only relevant when roles is not None.
@@ -1684,7 +1661,7 @@ class DataFrame:
                 to hard-code roles when setting up a pipeline.
 
         Returns:
-            :class:`~getml.DataFrame`:
+            [`DataFrame`][getml.DataFrame]:
 
                 Handler of the underlying data.
 
@@ -1693,23 +1670,23 @@ class DataFrame:
             *file2.csv* - in the bucket. You can
             import their data into the getML engine using the following
             commands:
+            ```python
+            getml.engine.set_s3_access_key_id("YOUR-ACCESS-KEY-ID")
+            getml.engine.set_s3_secret_access_key("YOUR-SECRET-ACCESS-KEY")
 
-            >>> getml.engine.set_s3_access_key_id("YOUR-ACCESS-KEY-ID")
-            >>>
-            >>> getml.engine.set_s3_secret_access_key("YOUR-SECRET-ACCESS-KEY")
-            >>>
-            >>> data_frame_expd = data.DataFrame.from_s3(
-                    ...         bucket="your-bucket-name",
-                    ...         keys=["file1.csv", "file2.csv"],
-                    ...         region="us-east-2",
-                    ...         name="MY DATA FRAME",
-                    ...         sep=';'
-                    ... )
+            data_frame_expd = data.DataFrame.from_s3(
+                bucket="your-bucket-name",
+                keys=["file1.csv", "file2.csv"],
+                region="us-east-2",
+                name="MY DATA FRAME",
+                sep=';'
+            )
+            ```
 
             You can also set the access credential as environment variables
             before you launch the getML engine.
 
-            Also refer to the documention on :meth:`~getml.DataFrame.from_csv`
+            Also refer to the documentation on [`from_csv`][getml.DataFrame.from_csv]
             for further information on overriding the CSV sniffer for greater
             type safety.
 
@@ -1801,15 +1778,15 @@ class DataFrame:
         name,
         dry=False,
     ):
-        """Create a DataFrame from a :class:`~getml.data.View`.
+        """Create a DataFrame from a [`View`][getml.data.View].
 
         This classmethod will construct a data
         frame object in the engine, fill it with the data read from
-        the :class:`~getml.data.View`, and return a corresponding
-        :class:`~getml.DataFrame` handle.
+        the [`View`][getml.data.View], and return a corresponding
+        [`DataFrame`][getml.DataFrame] handle.
 
         Args:
-            view (:class:`~getml.data.View`):
+            view ([`View`][getml.data.View]):
                 The view from which we want to read the data.
 
             name (str):
@@ -1822,8 +1799,9 @@ class DataFrame:
                 to hard-code roles when setting up a pipeline.
 
         Returns:
-            :class:`~getml.DataFrame`:
+            [`DataFrame`][getml.DataFrame]:
                 Handler of the underlying data.
+
 
         """
         # ------------------------------------------------------------
@@ -1869,67 +1847,63 @@ class DataFrame:
         """Loads saved data from disk.
 
         The data frame object holding the same name as the current
-        :class:`~getml.DataFrame` instance will be loaded from
+        [`DataFrame`][getml.DataFrame] instance will be loaded from
         disk into the getML engine and updates the current handler
-        using :meth:`~getml.DataFrame.refresh`.
+        using [`refresh`][getml.DataFrame.refresh].
 
         Examples:
-            First, we have to create and imporimport data sets.
+            First, we have to create and import data sets.
+            ```python
+            d, _ = getml.datasets.make_numerical(population_name = 'test')
+            getml.data.list_data_frames()
+            ```
 
-            .. code-block:: python
-
-                d, _ = getml.datasets.make_numerical(population_name = 'test')
-                getml.data.list_data_frames()
-
-            In the output of :func:`~getml.data.list_data_frames` we
+            In the output of [`list_data_frames`][getml.data.list_data_frames] we
             can find our underlying data frame object 'test' listed
             under the 'in_memory' key (it was created and imported by
-            :func:`~getml.datasets.make_numerical`). This means the
-            getML engine does only hold it in memory (RAM) yet and we
-            still have to :meth:`~getml.DataFrame.save` it to
-            disk in order to :meth:`~getml.DataFrame.load` it
+            [`make_numerical`][getml.datasets.make_numerical]). This means the
+            getML engine does only hold it in memory (RAM) yet, and we
+            still have to [`save`][getml.DataFrame.save] it to
+            disk in order to [`load`][getml.DataFrame.load] it
             again or to prevent any loss of information between
             different sessions.
-
-            .. code-block:: python
-
-                d.save()
-                getml.data.list_data_frames()
-                d2 = getml.DataFrame(name = 'test').load()
+            ```python
+            d.save()
+            getml.data.list_data_frames()
+            d2 = getml.DataFrame(name = 'test').load()
+            ```
 
         Returns:
-            :class:`~getml.DataFrame`:
+            [`DataFrame`][getml.DataFrame]:
                 Updated handle the underlying data frame in the getML
                 engine.
 
         Note:
-            When invoking :meth:`~getml.DataFrame.load` all
+            When invoking [`load`][getml.DataFrame.load] all
             changes of the underlying data frame object that took
             place after the last call to the
-            :meth:`~getml.DataFrame.save` method will be
+            [`save`][getml.DataFrame.save] method will be
             lost. Thus, this method  enables you to undo changes
-            applied to the :class:`~getml.DataFrame`.
+            applied to the [`DataFrame`][getml.DataFrame].
+            ```python
+            d, _ = getml.datasets.make_numerical()
+            d.save()
 
-            .. code-block:: python
+            # Accidental change we want to undo
+            d.rm('column_01')
 
-                d, _ = getml.datasets.make_numerical()
-                d.save()
-
-                # Accidental change we want to undo
-                d.rm('column_01')
-
-                d.load()
-
-            If :meth:`~getml.DataFrame.save` hasn't be called
-            on the current instance yet or it wasn't stored to disk in
-            a previous session, :meth:`~getml.DataFrame.load`
+            d.load()
+            ```
+            If [`save`][getml.DataFrame.save] hasn't been called
+            on the current instance yet, or it wasn't stored to disk in
+            a previous session, [`load`][getml.DataFrame.load]
             will throw an exception
 
                 File or directory '../projects/X/data/Y/' not found!
 
-            Alternatively, :func:`~getml.data.load_data_frame`
+            Alternatively, [`load_data_frame`][getml.data.load_data_frame]
             offers an easier way of creating
-            :class:`~getml.DataFrame` handlers to data in the
+            [`DataFrame`][getml.DataFrame] handlers to data in the
             getML engine.
 
         """
@@ -1945,7 +1919,7 @@ class DataFrame:
     @property
     def memory_usage(self):
         """
-        Convencience wrapper that returns the memory usage in MB.
+        Convenience wrapper that returns the memory usage in MB.
         """
         return self.nbytes() / 1e06
 
@@ -1970,7 +1944,7 @@ class DataFrame:
         engine.
 
         Returns:
-            :py:class:`numpy.uint64`:
+            numpy.uint64:
                 Size of the underlying object in bytes.
 
         """
@@ -2029,13 +2003,13 @@ class DataFrame:
     # --------------------------------------------------------------------------
 
     def read_arrow(self, table, append=False):
-        """Uploads a :class:`pyarrow.Table`.
+        """Uploads a `pyarrow.Table`.
 
         Replaces the actual content of the underlying data frame in
         the getML engine with `table`.
 
         Args:
-            table (:class:`pyarrow.Table`):
+            table (pyarrow.Table):
                 Data the underlying data frame object in the getML
                 engine should obtain.
 
@@ -2045,12 +2019,12 @@ class DataFrame:
                 `query` be appended or replace the existing data?
 
         Returns:
-            :class:`~getml.DataFrame`:
+            [`DataFrame`][getml.DataFrame]:
                 Current instance.
 
         Note:
-            For columns containing :class:`pandas.Timestamp` there can
-            be small inconsistencies in the order to microseconds
+            For columns containing `pandas.Timestamp` there can
+            be small inconsistencies in the order of microseconds
             when sending the data to the getML engine. This is due to
             the way the underlying information is stored.
         """
@@ -2127,7 +2101,7 @@ class DataFrame:
 
             append (bool, optional):
                 If a data frame object holding the same ``name`` is
-                already present in the getML, should the content of of
+                already present in the getML, should the content of
                 the CSV files in `fnames` be appended or replace the
                 existing data?
 
@@ -2144,7 +2118,7 @@ class DataFrame:
             skip (int, optional):
                 Number of lines to skip at the beginning of each file.
 
-            colnames(List[str] or None, optional):
+            colnames (List[str] or None, optional):
                 The first line of a CSV file
                 usually contains the column names.
                 When this is not the case, you need to explicitly pass them.
@@ -2182,11 +2156,11 @@ class DataFrame:
                 * %% - percent sign
 
             verbose (bool, optional):
-                If True, when fnames are urls, the filenames are printed to
+                If True, when `fnames` are urls, the filenames are printed to
                 stdout during the download.
 
         Returns:
-            :class:`~getml.DataFrame`:
+            [`DataFrame`][getml.DataFrame]:
                 Handler of the underlying data.
 
         """
@@ -2289,6 +2263,7 @@ class DataFrame:
                 The list of formats tried when parsing time stamps.
                 The formats are allowed to contain the following
                 special characters:
+
                 * %w - abbreviated weekday (Mon, Tue, ...)
                 * %W - full weekday (Monday, Tuesday, ...)
                 * %b - abbreviated month (Jan, Feb, ...)
@@ -2316,12 +2291,13 @@ class DataFrame:
                 * %% - percent sign
 
         Returns:
-            :class:`~getml.DataFrame`:
+            [`DataFrame`][getml.DataFrame]:
                 Handler of the underlying data.
 
         Note:
             This does not support NaN values. If you want support for NaN,
-            use :meth:`~getml.DataFrame.from_json` instead.
+            use [`from_json`][getml.DataFrame.from_json] instead.
+
         """
 
         time_formats = time_formats or constants.TIME_FORMATS
@@ -2387,7 +2363,7 @@ class DataFrame:
 
             append (bool, optional):
                 If a data frame object holding the same ``name`` is
-                already present in the getML, should the content of of
+                already present in the getML, should the content of
                 the CSV files in `fnames` be appended or replace the
                 existing data?
         """
@@ -2460,7 +2436,7 @@ class DataFrame:
 
             append (bool, optional):
                 If a data frame object holding the same ``name`` is
-                already present in the getML, should the content of of
+                already present in the getML, should the content of
                 the CSV files in `fnames` be appended or replace the
                 existing data?
 
@@ -2474,7 +2450,7 @@ class DataFrame:
             skip (int, optional):
                 Number of lines to skip at the beginning of each file.
 
-            colnames(List[str] or None, optional):
+            colnames (List[str] or None, optional):
                 The first line of a CSV file
                 usually contains the column names.
                 When this is not the case, you need to explicitly pass them.
@@ -2512,7 +2488,7 @@ class DataFrame:
                 * %% - percent sign
 
         Returns:
-            :class:`~getml.DataFrame`:
+            [`DataFrame`][getml.DataFrame]:
                 Handler of the underlying data.
 
         Note:
@@ -2598,20 +2574,20 @@ class DataFrame:
         view: View,
         append: bool = False,
     ) -> "DataFrame":
-        """Read the data from a :class:`~getml.data.View`.
+        """Read the data from a [`View`][getml.data.View].
 
         Args:
-            view (:class:`~getml.data.View`):
+            view ([`View`][getml.data.View]):
                 The view to read.
 
             append (bool, optional):
                 If a data frame object holding the same ``name`` is
-                already present in the getML, should the content of of
+                already present in the getML, should the content of
                 the CSV files in `fnames` be appended or replace the
                 existing data?
 
         Returns:
-            :class:`~getml.DataFrame`:
+            [`DataFrame`][getml.DataFrame]:
                 Handler of the underlying data.
 
         """
@@ -2646,21 +2622,21 @@ class DataFrame:
         The DataFrame will be filled from a table in the database.
 
         Args:
-            table_name(str):
+            table_name (str):
                 Table from which we want to retrieve the data.
 
-            append(bool, optional):
+            append (bool, optional):
                 If a data frame object holding the same ``name`` is
                 already present in the getML, should the content of
                 `table_name` be appended or replace the existing data?
 
-            conn (:class:`~getml.database.Connection`, optional):
+            conn ([`Connection`][getml.database.Connection], optional):
                 The database connection to be used.
                 If you don't explicitly pass a connection,
                 the engine will use the default connection.
 
         Returns:
-            :class:`~getml.DataFrame`:
+            [`DataFrame`][getml.DataFrame]:
                 Handler of the underlying data.
         """
 
@@ -2706,13 +2682,13 @@ class DataFrame:
     # --------------------------------------------------------------------------
 
     def read_pandas(self, pandas_df: pd.DataFrame, append: bool = False) -> "DataFrame":
-        """Uploads a :class:`pandas.DataFrame`.
+        """Uploads a `pandas.DataFrame`.
 
         Replaces the actual content of the underlying data frame in
         the getML engine with `pandas_df`.
 
         Args:
-            pandas_df (:class:`pandas.DataFrame`):
+            pandas_df (pandas.DataFrame):
                 Data the underlying data frame object in the getML
                 engine should obtain.
 
@@ -2722,8 +2698,8 @@ class DataFrame:
                 `query` be appended or replace the existing data?
 
         Note:
-            For columns containing :class:`pandas.Timestamp` there can
-            occur small inconsistencies in the order to microseconds
+            For columns containing `pandas.Timestamp` there can
+            occur small inconsistencies in the order of microseconds
             when sending the data to the getML engine. This is due to
             the way the underlying information is stored.
         """
@@ -2749,13 +2725,13 @@ class DataFrame:
     # --------------------------------------------------------------------------
 
     def read_pyspark(self, spark_df, append: bool = False) -> "DataFrame":
-        """Uploads a :py:class:`pyspark.sql.DataFrame`.
+        """Uploads a `pyspark.sql.DataFrame`.
 
         Replaces the actual content of the underlying data frame in
         the getML engine with `pandas_df`.
 
         Args:
-            spark_df (:py:class:`pyspark.sql.DataFrame`):
+            spark_df (pyspark.sql.DataFrame):
                 Data the underlying data frame object in the getML
                 engine should obtain.
 
@@ -2802,13 +2778,13 @@ class DataFrame:
                 already present in the getML engine, should the content in
                 `query` be appended or replace the existing data?
 
-            conn (:class:`~getml.database.Connection`, optional):
+            conn ([`Connection`][getml.database.Connection], optional):
                 The database connection to be used.
                 If you don't explicitly pass a connection,
                 the engine will use the default connection.
 
         Returns:
-            :class:`~getml.DataFrame`:
+            [`DataFrame`][getml.DataFrame]:
                 Handler of the underlying data.
         """
 
@@ -2858,11 +2834,11 @@ class DataFrame:
         corresponding data frame in the getML engine.
 
         This method can be used to avoid encoding conflicts. Note that
-        :meth:`~getml.DataFrame.load` as well as several other
-        methods automatically call :meth:`~getml.DataFrame.refresh`.
+        [`load`][getml.DataFrame.load] as well as several other
+        methods automatically call [`refresh`][getml.DataFrame.refresh].
 
         Returns:
-            :class:`~getml.DataFrame`:
+            [`DataFrame`][getml.DataFrame]:
 
                 Updated handle the underlying data frame in the getML
                 engine.
@@ -2907,7 +2883,7 @@ class DataFrame:
     # ------------------------------------------------------------
 
     def remove_subroles(self, cols):
-        """Removes all :mod:`~getml.data.subroles` from one or more columns.
+        """Removes all [`subroles`][getml.data.subroles] from one or more columns.
 
         Args:
             columns (str, FloatColumn, StringColumn, or List[str, FloatColumn, StringColumn]):
@@ -2953,7 +2929,7 @@ class DataFrame:
         """Writes the underlying data in the getML engine to disk.
 
         Returns:
-            :class:`~getml.DataFrame`:
+            [`DataFrame`][getml.DataFrame]:
                 The current instance.
 
         """
@@ -2974,12 +2950,12 @@ class DataFrame:
 
         When switching from a role based on type float to a role based on type
         string or vice verse, an implicit type conversion will be conducted.
-        The :code:`time_formats` argument is used to interpret :ref:`time
-        format string <annotating_roles_time_stamp>`. For more information on
-        roles, please refer to the :ref:`user guide <annotating>`.
+        The `time_formats` argument is used to interpret [annotating_roles_time_stamp][:ref:`time
+        format string <annotating_roles_time_stamp>`]. For more information on
+        roles, please refer to the :ref:`[user guide] <annotating>`.
 
         Args:
-            columns (str, FloatColumn, StringColumn, or List[str, FloatColumn, StringColumn]):
+            cols (str, FloatColumn, StringColumn, or List[str, FloatColumn, StringColumn]):
                 The columns or the names of the columns.
 
             role (str):
@@ -2991,28 +2967,27 @@ class DataFrame:
                 a time stamp is taking place.
 
         Example:
-            .. code-block:: python
+            ```python
+            data_df = dict(
+                animal=["hawk", "parrot", "goose"],
+                votes=[12341, 5127, 65311],
+                date=["04/06/2019", "01/03/2019", "24/12/2018"])
+            df = getml.DataFrame.from_dict(data_df, "animal_elections")
+            df.set_role(['animal'], getml.data.roles.categorical)
+            df.set_role(['votes'], getml.data.roles.numerical)
+            df.set_role(
+                ['date'], getml.data.roles.time_stamp, time_formats=['%d/%m/%Y'])
 
-                data_df = dict(
-                    animal=["hawk", "parrot", "goose"],
-                    votes=[12341, 5127, 65311],
-                    date=["04/06/2019", "01/03/2019", "24/12/2018"])
-                df = getml.DataFrame.from_dict(data_df, "animal_elections")
-                df.set_role(['animal'], getml.data.roles.categorical)
-                df.set_role(['votes'], getml.data.roles.numerical)
-                df.set_role(
-                    ['date'], getml.data.roles.time_stamp, time_formats=['%d/%m/%Y'])
-
-                df
-
-            .. code-block:: pycon
-
-                | date                        | animal      | votes     |
-                | time stamp                  | categorical | numerical |
-                ---------------------------------------------------------
-                | 2019-06-04T00:00:00.000000Z | hawk        | 12341     |
-                | 2019-03-01T00:00:00.000000Z | parrot      | 5127      |
-                | 2018-12-24T00:00:00.000000Z | goose       | 65311     |
+            df
+            ```
+            ```
+            | date                        | animal      | votes     |
+            | time stamp                  | categorical | numerical |
+            ---------------------------------------------------------
+            | 2019-06-04T00:00:00.000000Z | hawk        | 12341     |
+            | 2019-03-01T00:00:00.000000Z | parrot      | 5127      |
+            | 2018-12-24T00:00:00.000000Z | goose       | 65311     |
+            ```
         """
         # ------------------------------------------------------------
 
@@ -3053,15 +3028,15 @@ class DataFrame:
     # ------------------------------------------------------------
 
     def set_subroles(self, cols, subroles, append=True):
-        """Assigns one or several new :mod:`~getml.data.subroles` to one or more columns.
+        """Assigns one or several new [`subroles`][getml.data.subroles] to one or more columns.
 
         Args:
-            columns (str, FloatColumn, StringColumn, or List[str, FloatColumn, StringColumn]):
+            cols (str, FloatColumn, StringColumn, or List[str, FloatColumn, StringColumn]):
                 The columns or the names thereof.
 
             subroles (str or List[str]):
                 The subroles to be assigned.
-                Must be from :mod:`~getml.data.subroles`.
+                Must be from [`subroles`][getml.data.subroles].
 
             append (bool, optional):
                 Whether you want to append the
@@ -3090,7 +3065,7 @@ class DataFrame:
         """Assigns a new unit to one or more columns.
 
         Args:
-            columns (str, FloatColumn, StringColumn, or List[str, FloatColumn, StringColumn]):
+            cols (str, FloatColumn, StringColumn, or List[str, FloatColumn, StringColumn]):
                 The columns or the names thereof.
 
             unit (str):
@@ -3151,13 +3126,13 @@ class DataFrame:
     # ----------------------------------------------------------------
 
     def to_arrow(self):
-        """Creates a :py:class:`pyarrow.Table` from the current instance.
+        """Creates a `pyarrow.Table` from the current instance.
 
         Loads the underlying data from the getML engine and constructs
-        a :class:`pyarrow.Table`.
+        a `pyarrow.Table`.
 
         Returns:
-            :class:`pyarrow.Table`:
+            pyarrow.Table:
                 Pyarrow equivalent of the current instance including
                 its underlying data.
         """
@@ -3183,7 +3158,7 @@ class DataFrame:
             sep (str, optional):
                 The character used for separating fields.
 
-            batch_size(int, optional):
+            batch_size (int, optional):
                 Maximum number of lines per file. Set to 0 to read
                 the entire data frame into a single file.
         """
@@ -3229,7 +3204,7 @@ class DataFrame:
                 If a table of that name already exists, it will be
                 replaced.
 
-            conn (:class:`~getml.database.Connection`, optional):
+            conn ([`Connection`][getml.database.Connection], optional):
                 The database connection to be used.
                 If you don't explicitly pass a connection,
                 the engine will use the default connection.
@@ -3288,13 +3263,13 @@ class DataFrame:
     # ----------------------------------------------------------------
 
     def to_pandas(self):
-        """Creates a :py:class:`pandas.DataFrame` from the current instance.
+        """Creates a `pandas.DataFrame` from the current instance.
 
         Loads the underlying data from the getML engine and constructs
-        a :class:`pandas.DataFrame`.
+        `pandas.DataFrame`.
 
         Returns:
-            :class:`pandas.DataFrame`:
+            pandas.DataFrame:
                 Pandas equivalent of the current instance including
                 its underlying data.
 
@@ -3321,8 +3296,8 @@ class DataFrame:
     # ----------------------------------------------------------------
 
     def to_placeholder(self, name=None):
-        """Generates a :class:`~getml.data.Placeholder` from the
-        current :class:`~getml.DataFrame`.
+        """Generates a [`Placeholder`][getml.data.Placeholder] from the
+        current [`DataFrame`][getml.DataFrame].
 
         Args:
             name (str, optional):
@@ -3331,7 +3306,7 @@ class DataFrame:
                 be identical to the name of the current data frame.
 
         Returns:
-            :class:`~getml.data.Placeholder`:
+            [`Placeholder`][getml.data.Placeholder]:
                 A placeholder with the same name as this data frame.
 
 
@@ -3342,27 +3317,27 @@ class DataFrame:
     # ----------------------------------------------------------------
 
     def to_pyspark(self, spark, name=None):
-        """Creates a :py:class:`pyspark.sql.DataFrame` from the current instance.
+        """Creates a `pyspark.sql.DataFrame` from the current instance.
 
         Loads the underlying data from the getML engine and constructs
-        a :class:`pyspark.sql.DataFrame`.
+        a `pyspark.sql.DataFrame`.
 
         Args:
-            spark (:py:class:`pyspark.sql.SparkSession`):
+            spark (pyspark.sql.SparkSession):
                 The pyspark session in which you want to
                 create the data frame.
 
             name (str or None):
                 The name of the temporary view to be created on top
-                of the :py:class:`pyspark.sql.DataFrame`,
+                of the `pyspark.sql.DataFrame`,
                 with which it can be referred to
                 in Spark SQL (refer to
-                :py:meth:`pyspark.sql.DataFrame.createOrReplaceTempView`).
+                `pyspark.sql.DataFrame.createOrReplaceTempView`).
                 If none is passed, then the name of this
-                :class:`getml.DataFrame` will be used.
+                [`DataFrame`][getml.DataFrame] will be used.
 
         Returns:
-            :py:class:`pyspark.sql.DataFrame`:
+            pyspark.sql.DataFrame:
                 Pyspark equivalent of the current instance including
                 its underlying data.
 
@@ -3393,21 +3368,23 @@ class DataFrame:
             sep (str, optional):
                 The character used for separating fields.
 
-            batch_size(int, optional):
+            batch_size (int, optional):
                 Maximum number of lines per file. Set to 0 to read
                 the entire data frame into a single file.
 
         Example:
-            >>> getml.engine.set_s3_access_key_id("YOUR-ACCESS-KEY-ID")
-            >>>
-            >>> getml.engine.set_s3_secret_access_key("YOUR-SECRET-ACCESS-KEY")
-            >>>
-            >>> your_df.to_s3(
-                    ...     bucket="your-bucket-name",
-                    ...     key="filename-on-s3",
-                    ...     region="us-east-2",
-                    ...     sep=';'
-                    ... )
+            ```python
+            getml.engine.set_s3_access_key_id("YOUR-ACCESS-KEY-ID")
+            getml.engine.set_s3_secret_access_key("YOUR-SECRET-ACCESS-KEY")
+
+            your_df.to_s3(
+                bucket="your-bucket-name",
+                key="filename-on-s3",
+                region="us-east-2",
+                sep=';'
+            )
+            ```
+
         """
 
         self.refresh()
@@ -3479,57 +3456,54 @@ class DataFrame:
     ) -> View:
         """Extract a subset of rows.
 
-        Creates a new :class:`~getml.data.View` as a
+        Creates a new [`View`][getml.data.View] as a
         subselection of the current instance.
 
         Args:
-            index (int, slice, :class:`~getml.data.columns.BooleanColumnView` or :class:`~getml.data.columns.FloatColumnView` or :class:`~getml.data.columns.FloatColumn`):
+            index (int, slice, [`BooleanColumnView`][getml.data.columns.BooleanColumnView] or [`FloatColumnView`][getml.data.columns.FloatColumnView] or [`FloatColumn`][getml.data.columns.FloatColumn]):
                 Indicates the rows you want to select.
 
         Example:
 
             Generate example data:
+            ```python
+            data = dict(
+                fruit=["banana", "apple", "cherry", "cherry", "melon", "pineapple"],
+                price=[2.4, 3.0, 1.2, 1.4, 3.4, 3.4],
+                join_key=["0", "1", "2", "2", "3", "3"])
 
-            .. code-block:: python
+            fruits = getml.DataFrame.from_dict(data, name="fruits",
+            roles={"categorical": ["fruit"], "join_key": ["join_key"], "numerical": ["price"]})
 
-                data = dict(
-                    fruit=["banana", "apple", "cherry", "cherry", "melon", "pineapple"],
-                    price=[2.4, 3.0, 1.2, 1.4, 3.4, 3.4],
-                    join_key=["0", "1", "2", "2", "3", "3"])
-
-                fruits = getml.DataFrame.from_dict(data, name="fruits",
-                roles={"categorical": ["fruit"], "join_key": ["join_key"], "numerical": ["price"]})
-
-                fruits
-
-            .. code-block:: pycon
-
-                | join_key | fruit       | price     |
-                | join key | categorical | numerical |
-                --------------------------------------
-                | 0        | banana      | 2.4       |
-                | 1        | apple       | 3         |
-                | 2        | cherry      | 1.2       |
-                | 2        | cherry      | 1.4       |
-                | 3        | melon       | 3.4       |
-                | 3        | pineapple   | 3.4       |
-
+            fruits
+            ```
+            ```
+            | join_key | fruit       | price     |
+            | join key | categorical | numerical |
+            --------------------------------------
+            | 0        | banana      | 2.4       |
+            | 1        | apple       | 3         |
+            | 2        | cherry      | 1.2       |
+            | 2        | cherry      | 1.4       |
+            | 3        | melon       | 3.4       |
+            | 3        | pineapple   | 3.4       |
+            ```
             Apply where condition. This creates a new DataFrame called "cherries":
 
-            .. code-block:: python
+            ```python
+            cherries = fruits.where(
+                fruits["fruit"] == "cherry")
 
-                cherries = fruits.where(
-                    fruits["fruit"] == "cherry")
+            cherries
+            ```
+            ```
+            | join_key | fruit       | price     |
+            | join key | categorical | numerical |
+            --------------------------------------
+            | 2        | cherry      | 1.2       |
+            | 2        | cherry      | 1.4       |
+            ```
 
-                cherries
-
-            .. code-block:: pycon
-
-                | join_key | fruit       | price     |
-                | join key | categorical | numerical |
-                --------------------------------------
-                | 2        | cherry      | 1.2       |
-                | 2        | cherry      | 1.4       |
         """
         if isinstance(index, numbers.Integral):
             index = index if int(index) > 0 else len(self) + index
@@ -3551,20 +3525,20 @@ class DataFrame:
     def with_column(
         self, col, name, role=None, subroles=None, unit="", time_formats=None
     ):
-        """Returns a new :class:`~getml.data.View` that contains an additional column.
+        """Returns a new [`View`][getml.data.View] that contains an additional column.
 
         Args:
-            col (:mod:`~getml.columns`):
+            col ([`columns`][getml.columns]):
                 The column to be added.
 
             name (str):
                 Name of the new column.
 
             role (str, optional):
-                Role of the new column. Must be from :mod:`getml.data.roles`.
+                Role of the new column. Must be from `getml.data.roles`.
 
             subroles (str, List[str] or None, optional):
-                Subroles of the new column. Must be from :mod:`getml.data.subroles`.
+                Subroles of the new column. Must be from [`subroles`][getml.data.subroles].
 
             unit (str, optional):
                 Unit of the column.
@@ -3573,7 +3547,7 @@ class DataFrame:
                 Formats to be used to parse the time stamps.
 
                 This is only necessary, if an implicit conversion from
-                a :class:`~getml.data.columns.StringColumn` to a time
+                a [`StringColumn`][getml.data.columns.StringColumn] to a time
                 stamp is taking place.
 
                 The formats are allowed to contain the following
@@ -3604,6 +3578,7 @@ class DataFrame:
                 * %z - time zone differential in ISO 8601 format (Z or +NN.NN)
                 * %Z - time zone differential in RFC format (GMT or +NNNN)
                 * %% - percent sign
+
         """
         col, role, subroles = _with_column(
             col, name, role, subroles, unit, time_formats
@@ -3622,7 +3597,7 @@ class DataFrame:
     # ------------------------------------------------------------
 
     def with_name(self, name):
-        """Returns a new :class:`~getml.data.View` with a new name.
+        """Returns a new [`View`][getml.data.View] with a new name.
 
         Args:
             name (str):
@@ -3633,20 +3608,20 @@ class DataFrame:
     # ------------------------------------------------------------
 
     def with_role(self, cols, role, time_formats=None):
-        """Returns a new :class:`~getml.data.View` with modified roles.
+        """Returns a new [`View`][getml.data.View] with modified roles.
 
-        The difference between :meth:`~getml.DataFrame.with_role` and
-        :meth:`~getml.DataFrame.set_role` is that
-        :meth:`~getml.DataFrame.with_role` returns a view that is lazily
-        evaluated when needed whereas :meth:`~getml.DataFrame.set_role`
+        The difference between [`with_role`][getml.DataFrame.with_role] and
+        [`set_role`][getml.DataFrame.set_role] is that
+        [`with_role`][getml.DataFrame.with_role] returns a view that is lazily
+        evaluated when needed whereas [`set_role`][getml.DataFrame.set_role]
         is an in-place operation. From a memory perspective, in-place operations
-        like :meth:`~getml.DataFrame.set_role` are preferable.
+        like [`set_role`][getml.DataFrame.set_role] are preferable.
 
         When switching from a role based on type float to a role based on type
         string or vice verse, an implicit type conversion will be conducted.
-        The :code:`time_formats` argument is used to interpret :ref:`time
-        format string <annotating_roles_time_stamp>`. For more information on
-        roles, please refer to the :ref:`user guide <annotating>`.
+        The `time_formats` argument is used to interpret time
+        format string: `annotating_roles_time_stamp`. For more information on
+        roles, please refer to the user guide: [`annotating`][ref].
 
         Args:
             cols (str, FloatColumn, StingColumn, or List[str, FloatColumn, StringColumn]):
@@ -3668,12 +3643,12 @@ class DataFrame:
     def with_subroles(self, cols, subroles, append=True):
         """Returns a new view with one or several new subroles on one or more columns.
 
-        The difference between :meth:`~getml.DataFrame.with_subroles` and
-        :meth:`~getml.DataFrame.set_subroles` is that
-        :meth:`~getml.DataFrame.with_subroles` returns a view that is lazily
-        evaluated when needed whereas :meth:`~getml.DataFrame.set_subroles`
+        The difference between [`with_subroles`][getml.DataFrame.with_subroles] and
+        [`set_subroles`][getml.DataFrame.set_subroles] is that
+        [`with_subroles`][getml.DataFrame.with_subroles] returns a view that is lazily
+        evaluated when needed whereas [`set_subroles`][getml.DataFrame.set_subroles]
         is an in-place operation. From a memory perspective, in-place operations
-        like :meth:`~getml.DataFrame.set_subroles` are preferable.
+        like [`set_subroles`][getml.DataFrame.set_subroles] are preferable.
 
         Args:
             cols (str, FloatColumn, StingColumn, or List[str, FloatColumn, StringColumn]):
@@ -3693,12 +3668,12 @@ class DataFrame:
     def with_unit(self, cols, unit, comparison_only=False):
         """Returns a view that contains a new unit on one or more columns.
 
-        The difference between :meth:`~getml.DataFrame.with_unit` and
-        :meth:`~getml.DataFrame.set_unit` is that
-        :meth:`~getml.DataFrame.with_unit` returns a view that is lazily
-        evaluated when needed whereas :meth:`~getml.DataFrame.set_unit`
+        The difference between [`with_unit`][getml.DataFrame.with_unit] and
+        [`set_unit`][getml.DataFrame.set_unit] is that
+        [`with_unit`][getml.DataFrame.with_unit] returns a view that is lazily
+        evaluated when needed whereas [`set_unit`][getml.DataFrame.set_unit]
         is an in-place operation. From a memory perspective, in-place operations
-        like :meth:`~getml.DataFrame.set_unit` are preferable.
+        like [`set_unit`][getml.DataFrame.set_unit] are preferable.
 
         Args:
             cols (str, FloatColumn, StingColumn, or List[str, FloatColumn, StringColumn]):
@@ -3717,7 +3692,7 @@ class DataFrame:
                 we have seen that same bank account number in another table.
 
                 If True, this will also set the
-                :const:`~getml.data.subroles.only.compare` subrole.  The feature
+                [`compare`][getml.data.subroles.only.compare] subrole.  The feature
                 learning algorithms and the feature selectors will interpret this
                 accordingly.
         """

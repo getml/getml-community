@@ -25,7 +25,7 @@ def set_s3_access_key_id(value):
 
     In order to retrieve data from S3, you need to set the Access Key ID
     and the Secret Access Key. You can either set them as environment
-    variables before you start the getML engine or you can set them from
+    variables before you start the getML engine, or you can set them from
     this module.
 
     Args:
@@ -67,7 +67,7 @@ def set_s3_secret_access_key(value):
 
     In order to retrieve data from S3, you need to set the Access Key ID
     and the Secret Access Key. You can either set them as environment
-    variables before you start the getML engine or you can set them from
+    variables before you start the getML engine, or you can set them from
     this module.
 
     Args:

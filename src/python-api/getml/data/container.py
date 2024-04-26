@@ -35,189 +35,194 @@ from .view import View
 
 class Container:
     """
-    A container holds the actual data in the form of a :class:`~getml.DataFrame` or a :class:`~getml.data.View`.
+    A container holds the actual data in the form of a [`DataFrame`][getml.DataFrame] or a [`View`][getml.data.View].
 
     The purpose of a container is twofold:
 
-        - Assigning concrete data to an abstract :class:`~getml.data.DataModel`.
+    - Assigning concrete data to an abstract [`DataModel`][getml.data.DataModel].
 
-        - Storing data and allowing you to reproduce previous results.
+    - Storing data and allowing you to reproduce previous results.
 
     Args:
-        population (:class:`~getml.DataFrame` or :class:`~getml.data.View`, optional):
+        population ([`DataFrame`][getml.DataFrame] or [`View`][getml.data.View], optional):
             The population table defines the
-            `statistical population <https://en.wikipedia.org/wiki/Statistical_population>`_
+            [statistical population ](https://en.wikipedia.org/wiki/Statistical_population)
             of the machine learning problem and contains the target variables.
 
         peripheral (dict, optional):
             The peripheral tables are joined onto *population* or other
             peripheral tables. Note that you can also pass them using
-            :meth:`~getml.data.Container.add`.
+            [`add`][getml.data.Container.add].
 
-        split (:class:`~getml.data.columns.StringColumn` or :class:`~getml.data.columns.StringColumnView`, optional):
+        split ([`StringColumn`][getml.data.columns.StringColumn] or [`StringColumnView`][getml.data.columns.StringColumnView], optional):
             Contains information on how you want to split *population* into
-            different :class:`~getml.data.Subset` s.
-            Also refer to :mod:`~getml.data.split`.
+            different [`Subset`][getml.data.Subset]s.
+            Also refer to [`split`][getml.data.split].
 
         deep_copy (bool, optional):
             Whether you want to create deep copies or your tables.
 
-        train (:class:`~getml.DataFrame` or :class:`~getml.data.View`, optional):
+        train ([`DataFrame`][getml.DataFrame] or [`View`][getml.data.View], optional):
             The population table used in the *train*
-            :class:`~getml.data.Subset`.
+            [`Subset`][getml.data.Subset].
             You can either pass *population* and *split* or you can pass
             the subsets separately using *train*, *validation*, *test*
             and *kwargs*.
 
-        validation (:class:`~getml.DataFrame` or :class:`~getml.data.View`, optional):
+        validation ([`DataFrame`][getml.DataFrame] or [`View`][getml.data.View], optional):
             The population table used in the *validation*
-            :class:`~getml.data.Subset`.
+            [`Subset`][getml.data.Subset].
             You can either pass *population* and *split* or you can pass
             the subsets separately using *train*, *validation*, *test*
             and *kwargs*.
 
-        test (:class:`~getml.DataFrame` or :class:`~getml.data.View`, optional):
+        test ([`DataFrame`][getml.DataFrame] or [`View`][getml.data.View], optional):
             The population table used in the *test*
-            :class:`~getml.data.Subset`.
+            [`Subset`][getml.data.Subset].
             You can either pass *population* and *split* or you can pass
             the subsets separately using *train*, *validation*, *test*
             and *kwargs*.
 
-        kwargs (:class:`~getml.DataFrame` or :class:`~getml.data.View`, optional):
-            The population table used in :class:`~getml.data.Subset` s
+        kwargs ([`DataFrame`][getml.DataFrame] or [`View`][getml.data.View], optional):
+            The population table used in [`Subset`][getml.data.Subset]s
             other than the predefined *train*, *validation* and *test* subsets.
-            You can call these subsets anything you want to and can access them
+            You can call these subsets anything you want to, and you can access them
             just like *train*, *validation* and *test*.
             You can either pass *population* and *split* or you can pass
             the subsets separately using *train*, *validation*, *test*
             and *kwargs*.
 
             Example:
-                .. code-block:: python
+                ```python
+                # Pass the subset.
+                container = getml.data.Container(my_subset=my_data_frame)
 
-                    # Pass the subset.
-                    container = getml.data.Container(my_subset=my_data_frame)
-
-                    # You can access the subset just like train,
-                    # validation or test
-                    my_pipeline.fit(container.my_subset)
+                # You can access the subset just like train,
+                # validation or test
+                my_pipeline.fit(container.my_subset)
+                ```
 
     Examples:
-        A :class:`~getml.data.DataModel` only contains abstract data. When we
+
+        A [`DataModel`][getml.data.DataModel] only contains abstract data. When we
         fit a pipeline, we need to assign concrete data.
 
-        Note that this example is taken from the
-        `loans notebook <https://nbviewer.getml.com/github/getml/getml-demo/blob/master/loans.ipynb>`_.
+        This example is taken from the
+        [loans notebook ](https://nbviewer.getml.com/github/getml/getml-demo/blob/master/loans.ipynb).
+        Note that in the notebook the high level [`StarSchema`][getml.data.StarSchema] implementation is used. For
+        demonstration purposes we are proceeding now with the low level implementation.
 
-        .. code-block:: python
+        ```python
 
-            # The abstract data model is constructed
-            # using the DataModel class. A data model
-            # does not contain any actual data. It just
-            # defines the abstract relational structure.
-            dm = getml.data.DataModel(
-                population_train.to_placeholder("population")
-            )
+        # The abstract data model is constructed
+        # using the DataModel class. A data model
+        # does not contain any actual data. It just
+        # defines the abstract relational structure.
+        dm = getml.data.DataModel(
+            population_train.to_placeholder("population")
+        )
 
-            dm.add(getml.data.to_placeholder(
-                meta=meta,
-                order=order,
-                trans=trans)
-            )
+        dm.add(getml.data.to_placeholder(
+            meta=meta,
+            order=order,
+            trans=trans)
+        )
 
-            dm.population.join(
-                dm.trans,
-                on="account_id",
-                time_stamps=("date_loan", "date")
-            )
+        dm.population.join(
+            dm.trans,
+            on="account_id",
+            time_stamps=("date_loan", "date")
+        )
 
-            dm.population.join(
-                dm.order,
-                on="account_id",
-            )
+        dm.population.join(
+            dm.order,
+            on="account_id",
+        )
 
-            dm.population.join(
-                dm.meta,
-                on="account_id",
-            )
+        dm.population.join(
+            dm.meta,
+            on="account_id",
+        )
 
-            # We now have abstract placeholders on something
-            # called "population", "meta", "order" and "trans".
-            # But how do we assign concrete data? By using
-            # a container.
-            container = getml.data.Container(
-                train=population_train,
-                test=population_test
-            )
+        # We now have abstract placeholders on something
+        # called "population", "meta", "order" and "trans".
+        # But how do we assign concrete data? By using
+        # a container.
+        container = getml.data.Container(
+            train=population_train,
+            test=population_test
+        )
 
-            # meta, order and trans are either
-            # DataFrames or Views. Their aliases need
-            # to match the names of the placeholders in the
-            # data model.
-            container.add(
-                meta=meta,
-                order=order,
-                trans=trans
-            )
+        # meta, order and trans are either
+        # DataFrames or Views. Their aliases need
+        # to match the names of the placeholders in the
+        # data model.
+        container.add(
+            meta=meta,
+            order=order,
+            trans=trans
+        )
 
-            # Freezing makes the container immutable.
-            # This is not required, but often a good idea.
-            container.freeze()
+        # Freezing makes the container immutable.
+        # This is not required, but often a good idea.
+        container.freeze()
 
-            # When we call 'train', the container
-            # will return the train set and the
-            # peripheral tables.
-            my_pipeline.fit(container.train)
+        # When we call 'train', the container
+        # will return the train set and the
+        # peripheral tables.
+        my_pipeline.fit(container.train)
 
-            # Same for 'test'
-            my_pipeline.score(container.test)
-
+        # Same for 'test'
+        my_pipeline.score(container.test)
+        ```
         If you don't already have a train and test set,
         you can use a function from the
-        :mod:`~getml.data.split` module.
+        [`split`][getml.data.split] module.
 
-        .. code-block:: python
+        ```python
 
-            split = getml.data.split.random(
-                train=0.8, test=0.2)
+        split = getml.data.split.random(
+            train=0.8, test=0.2)
 
-            container = getml.data.Container(
-                population=population_all,
-                split=split,
-            )
+        container = getml.data.Container(
+            population=population_all,
+            split=split,
+        )
 
-            # The remaining code is the same as in
-            # the example above. In particular,
-            # container.train and container.test
-            # work just like above.
+        # The remaining code is the same as in
+        # the example above. In particular,
+        # container.train and container.test
+        # work just like above.
+        ```
 
         Containers can also be used for storage and reproducing your
         results.
         A recommended pattern is to assign 'baseline roles' to your data frames
-        and then using a :class:`~getml.data.View` to tweak them:
+        and then using a [`View`][getml.data.View] to tweak them:
 
-        .. code-block:: python
+        ```python
 
-            # Assign baseline roles
-            data_frame.set_role(["jk"], getml.data.roles.join_key)
-            data_frame.set_role(["col1", "col2"], getml.data.roles.categorical)
-            data_frame.set_role(["col3", "col4"], getml.data.roles.numerical)
-            data_frame.set_role(["col5"], getml.data.roles.target)
+        # Assign baseline roles
+        data_frame.set_role(["jk"], getml.data.roles.join_key)
+        data_frame.set_role(["col1", "col2"], getml.data.roles.categorical)
+        data_frame.set_role(["col3", "col4"], getml.data.roles.numerical)
+        data_frame.set_role(["col5"], getml.data.roles.target)
 
-            # Make the data frame immutable, so in-place operations are
-            # no longer possible.
-            data_frame.freeze()
+        # Make the data frame immutable, so in-place operations are
+        # no longer possible.
+        data_frame.freeze()
 
-            # Save the data frame.
-            data_frame.save()
+        # Save the data frame.
+        data_frame.save()
 
-            # I suspect that col1 leads to overfitting, so I will drop it.
-            view = data_frame.drop(["col1"])
+        # I suspect that col1 leads to overfitting, so I will drop it.
+        view = data_frame.drop(["col1"])
 
-            # Insert the view into a container.
-            container = getml.data.Container(...)
-            container.add(some_alias=view)
-            container.save()
+        # Insert the view into a container.
+        container = getml.data.Container(...)
+        container.add(some_alias=view)
+        container.save()
+        ```
 
         The advantage of using such a pattern is that it enables you to
         always completely retrace your entire pipeline without creating
@@ -525,8 +530,8 @@ class Container:
         """
         Freezes the container, so that changes are no longer possible.
 
-        This is required before you can extract data when deep_copy=True. The idea of
-        deep_copy is to ensure that you can always retrace and reproduce your results.
+        This is required before you can extract data when `deep_copy=True`. The idea of
+        `deep_copy` is to ensure that you can always retrace and reproduce your results.
         That is why the container needs to be immutable before it can be
         used.
         """
@@ -551,7 +556,7 @@ class Container:
         Synchronizes the last change with the data to avoid warnings that the data
         has been changed.
 
-        This is only a problem when deep_copy=False.
+        This is only a problem when `deep_copy=False`.
         """
         if self._frozen_time is not None:
             raise ValueError(f"{type(self).__name__} has already been frozen.")

@@ -36,28 +36,27 @@ def concat(name: str, **kwargs: DataFrame) -> Tuple[DataFrame, StringColumnView]
             in the split column.
 
     Example:
-        A common use case for this functionality are :class:`~getml.data.TimeSeries`:
+        A common use case for this functionality are [`TimeSeries`][getml.data.TimeSeries]:
+        ```python
+        data_train = getml.DataFrame.from_pandas(
+            datatraining_pandas, name='data_train')
 
-        .. code-block:: python
+        data_validate = getml.DataFrame.from_pandas(
+            datatest_pandas, name='data_validate')
 
-            data_train = getml.DataFrame.from_pandas(
-                datatraining_pandas, name='data_train')
+        data_test = getml.DataFrame.from_pandas(
+            datatest2_pandas, name='data_test')
 
-            data_validate = getml.DataFrame.from_pandas(
-                datatest_pandas, name='data_validate')
+        population, split = getml.data.split.concat(
+            "population", train=data_train, validate=data_validate, test=data_test)
 
-            data_test = getml.DataFrame.from_pandas(
-                datatest2_pandas, name='data_test')
+        ...
 
-            population, split = getml.data.split.concat(
-                "population", train=data_train, validate=data_validate, test=data_test)
+        time_series = getml.data.TimeSeries(
+            population=population, split=split)
 
-            ...
-
-            time_series = getml.data.TimeSeries(
-                population=population, split=split)
-
-            my_pipeline.fit(time_series.train)
+        my_pipeline.fit(time_series.train)
+        ```
     """
 
     if not _is_non_empty_typed_list(list(kwargs.values()), [DataFrame, View]):

@@ -7,7 +7,7 @@
 
 
 """
-Transform column to an numpy array.
+Transform column to a numpy array.
 """
 
 from typing import Any

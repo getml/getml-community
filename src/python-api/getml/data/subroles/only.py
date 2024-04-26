@@ -11,18 +11,19 @@ Columns marked with a subrole in this submodule will only be used
 for the specified purpose and nothing else.
 
 Example:
-    .. code-block:: python
+    ```python
+    # Only the EmailDomain preprocessor will be applied
+    # to "emails". All other preprocessors, feature learners,
+    # feature selectors and predictors will ignore this column.
+    my_data_frame.set_subroles("emails", getml.data.subroles.only.email)
+    ```
 
-        # Only the EmailDomain preprocessor will be applied
-        # to "emails". All other preprocessors, feature learners,
-        # feature selectors and predictors will ignore this column.
-        my_data_frame.set_subroles("emails", getml.data.subroles.only.email)
 """
 
 email = "only email"
 """
 A column with this subrole will only be
-used for the :class:`~getml.preprocessors.EmailDomain`
+used for the [`EmailDomain`][getml.preprocessors.EmailDomain]
 preprocessor and nothing else. It will be ignored by all other preprocessors,
 feature learners and predictors.
 """
@@ -30,7 +31,7 @@ feature learners and predictors.
 substring = "only substring"
 """
 A column with this subrole will only be
-used for the :class:`~getml.preprocessors.Substring`
+used for the [`Substring`][getml.preprocessors.Substring]
 preprocessor and nothing else. It will be ignored by all other preprocessors,
 feature learners and predictors.
 """

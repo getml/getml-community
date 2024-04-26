@@ -11,84 +11,83 @@ Columns marked with a subrole in this submodule will not be used
 for the specified purpose.
 
 Example:
-    .. code-block:: python
-
-        # The Relboost feature learning algorithm will
-        # ignore this column.
-        my_data_frame.set_subroles(
-            "my_column", getml.data.subroles.exclude.relboost)
+    ```python
+    # The Relboost feature learning algorithm will
+    # ignore this column.
+    my_data_frame.set_subroles(
+        "my_column", getml.data.subroles.exclude.relboost)
+    ```
 """
 
 
 category_trimmer = "exclude category trimmer"
 """
-The :class:`~getml.preprocessors.CategoryTrimmer` preprocessor
+The [`CategoryTrimmer`][getml.preprocessors.CategoryTrimmer] preprocessor
 will ignore this column.
 """
 
 fastprop = "exclude fastprop"
 """
-:class:`~getml.feature_learning.FastProp` will ignore
+[`FastProp`][getml.feature_learning.FastProp] will ignore
 this column.
 """
 
 
 feature_learners = "exclude feature learners"
 """
-All feature learners (:mod:`~getml.feature_learning`)
+All feature learners ([`feature_learning`][getml.feature_learning])
 will ignore this column.
 """
 
 imputation = "exclude imputation"
 """
-The :class:`~getml.preprocessors.Imputation` preprocessor
+The [`Imputation`][getml.preprocessors.Imputation] preprocessor
 will ignore this column.
 """
 
 mapping = "exclude mapping"
 """
-The :class:`~getml.preprocessors.Mapping` preprocessor
+The [`Mapping`][getml.preprocessors.Mapping] preprocessor
 will ignore this column.
 """
 
 multirel = "exclude multirel"
 """
-:class:`~getml.feature_learning.Multirel` will ignore
+[`Multirel`][getml.feature_learning.Multirel] will ignore
 this column.
 """
 
 predictors = "exclude predictors"
 """
-All :mod:`~getml.predictors` will ignore this column.
+All [`predictors`][getml.predictors] will ignore this column.
 """
 
 preprocessors = "exclude preprocessors"
 """
-All :mod:`~getml.preprocessors` will ignore this column.
+All [`preprocessors`][getml.preprocessors] will ignore this column.
 """
 
 relboost = "exclude relboost"
 """
-:class:`~getml.feature_learning.Relboost` will ignore
+[`Relboost`][getml.feature_learning.Relboost] will ignore
 this column.
 """
 
 relmt = "exclude relmt"
 """
-:class:`~getml.feature_learning.RelMT` will ignore
+[`RelMT`][getml.feature_learning.RelMT] will ignore
 this column.
 """
 
 seasonal = "exclude seasonal"
 """
-The :class:`~getml.preprocessors.Seasonal` preprocessor
+The [`Seasonal`][getml.preprocessors.Seasonal] preprocessor
 will ignore this column.
 """
 
 text_field_splitter = "exclude text field splitter"
 """
-The :class:`~getml.preprocessors.TextFieldSplitter`
-will ignore this column.
+The [`TextFieldSplitter`][getml.preprocessors.TextFieldSplitter] will ignore this column.
 """
 
 __all__ = (

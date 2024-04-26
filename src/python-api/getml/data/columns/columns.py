@@ -118,7 +118,7 @@ def rowid():
     Get the row numbers of the table.
 
     Returns:
-        :class:`~getml.data.columns.FloatColumnView`:
+        [`FloatColumnView`][getml.data.columns.FloatColumnView]:
             (numerical) column containing the row id, starting with 0
     """
     return FloatColumnView(operator="rowid", operand1=None, operand2=None)
@@ -183,72 +183,71 @@ class BooleanColumnView(_View):
     or to update other columns.
 
     Example:
-        .. code-block:: python
+        ```python
+        import numpy as np
 
-            import numpy as np
+        import getml.data as data
+        import getml.engine as engine
+        import getml.data.roles as roles
 
-            import getml.data as data
-            import getml.engine as engine
-            import getml.data.roles as roles
+        # ----------------
 
-            # ----------------
+        engine.set_project("examples")
 
-            engine.set_project("examples")
+        # ----------------
+        # Create a data frame from a JSON string
 
-            # ----------------
-            # Create a data frame from a JSON string
+        json_str = \"\"\"{
+            "names": ["patrick", "alex", "phil", "ulrike"],
+            "column_01": [2.4, 3.0, 1.2, 1.4],
+            "join_key": ["0", "1", "2", "3"],
+            "time_stamp": ["2019-01-01", "2019-01-02", "2019-01-03", "2019-01-04"]
+        }\"\"\"
 
-            json_str = \"\"\"{
-                "names": ["patrick", "alex", "phil", "ulrike"],
-                "column_01": [2.4, 3.0, 1.2, 1.4],
-                "join_key": ["0", "1", "2", "3"],
-                "time_stamp": ["2019-01-01", "2019-01-02", "2019-01-03", "2019-01-04"]
-            }\"\"\"
+        my_df = data.DataFrame(
+            "MY DF",
+            roles={
+                "unused_string": ["names", "join_key", "time_stamp"],
+                "unused_float": ["column_01"]}
+        ).read_json(
+            json_str
+        )
 
-            my_df = data.DataFrame(
-                "MY DF",
-                roles={
-                    "unused_string": ["names", "join_key", "time_stamp"],
-                    "unused_float": ["column_01"]}
-            ).read_json(
-                json_str
-            )
+        # ----------------
 
-            # ----------------
+        names = my_df["names"]
 
-            names = my_df["names"]
+        # This is a virtual boolean column.
+        a_or_p_in_names = names.contains("p") | names.contains("a")
 
-            # This is a virtual boolean column.
-            a_or_p_in_names = names.contains("p") | names.contains("a")
+        # Creates a view containing
+        # only those entries, where "names" contains a or p.
+        my_view = my_df[a_or_p_in_names]
 
-            # Creates a view containing
-            # only those entries, where "names" contains a or p.
-            my_view = my_df[a_or_p_in_names]
+        # ----------------
 
-            # ----------------
+        # Returns a new column, where all names
+        # containing "rick" are replaced by "Patrick".
+        # Again, columns are immutable - this returns an updated
+        # version, but leaves the original column unchanged.
+        new_names = names.update(names.contains("rick"), "Patrick")
 
-            # Returns a new column, where all names
-            # containing "rick" are replaced by "Patrick".
-            # Again, columns are immutable - this returns an updated
-            # version, but leaves the original column unchanged.
-            new_names = names.update(names.contains("rick"), "Patrick")
+        my_df["new_names"] = new_names
 
-            my_df["new_names"] = new_names
+        # ----------------
 
-            # ----------------
+        # Boolean columns can also be used to
+        # create binary target variables.
+        target = (names == "phil")
 
-            # Boolean columns can also be used to
-            # create binary target variables.
-            target = (names == "phil")
+        my_df["target"] = target
+        my_df.set_role(target, roles.target)
 
-            my_df["target"] = target
-            my_df.set_role(target, roles.target)
-
-            # By the way, instead of using the
-            # __setitem__ operator and .set_role(...)
-            # you can just use .add(...).
-            my_df.add(target, "target", roles.target)
-
+        # By the way, instead of using the
+        # __setitem__ operator and .set_role(...)
+        # you can just use .add(...).
+        my_df.add(target, "target", roles.target)
+        ```
     """
 
     def __init__(
@@ -378,59 +377,59 @@ class StringColumn(_Column):
 
         df_name (str, optional):
             ``name`` instance variable of the
-            :class:`~getml.DataFrame` containing this column.
+            [`DataFrame`][getml.DataFrame] containing this column.
 
     Examples:
-        .. code-block:: python
+    ```python
+    import numpy as np
 
-            import numpy as np
+    import getml.data as data
+    import getml.engine as engine
+    import getml.data.roles as roles
 
-            import getml.data as data
-            import getml.engine as engine
-            import getml.data.roles as roles
+    # ----------------
 
-            # ----------------
+    engine.set_project("examples")
 
-            engine.set_project("examples")
+    # ----------------
+    # Create a data frame from a JSON string
 
-            # ----------------
-            # Create a data frame from a JSON string
+    json_str = \"\"\"{
+        "names": ["patrick", "alex", "phil", "ulrike"],
+        "column_01": [2.4, 3.0, 1.2, 1.4],
+        "join_key": ["0", "1", "2", "3"],
+        "time_stamp": ["2019-01-01", "2019-01-02", "2019-01-03", "2019-01-04"]
+    }\"\"\"
 
-            json_str = \"\"\"{
-                "names": ["patrick", "alex", "phil", "ulrike"],
-                "column_01": [2.4, 3.0, 1.2, 1.4],
-                "join_key": ["0", "1", "2", "3"],
-                "time_stamp": ["2019-01-01", "2019-01-02", "2019-01-03", "2019-01-04"]
-            }\"\"\"
+    my_df = data.DataFrame(
+        "MY DF",
+        roles={
+            "unused_string": ["names", "join_key", "time_stamp"],
+            "unused_float": ["column_01"]}
+    ).read_json(
+        json_str
+    )
 
-            my_df = data.DataFrame(
-                "MY DF",
-                roles={
-                    "unused_string": ["names", "join_key", "time_stamp"],
-                    "unused_float": ["column_01"]}
-            ).read_json(
-                json_str
-            )
+    # ----------------
 
-            # ----------------
+    col1 = my_df["names"]
 
-            col1 = my_df["names"]
+    # ----------------
 
-            # ----------------
+    col2 = col1.substr(4, 3)
 
-            col2 = col1.substr(4, 3)
+    my_df.add(col2, "short_names", roles.categorical)
 
-            my_df.add(col2, "short_names", roles.categorical)
+    # ----------------
+    # If you do not explicitly set a role,
+    # the assigned role will either be
+    # roles.unused_string.
 
-            # ----------------
-            # If you do not explicitly set a role,
-            # the assigned role will either be
-            # roles.unused_string.
+    col3 = "user-" + col1 + "-" + col2
 
-            col3 = "user-" + col1 + "-" + col2
-
-            my_df["new_names"] = col3
-            my_df.set_role("new_names", roles.categorical)
+    my_df["new_names"] = col3
+    my_df.set_role("new_names", roles.categorical)
+    ```
     """
 
     _num_columns = 0
@@ -456,72 +455,72 @@ class StringColumn(_Column):
 
 class StringColumnView(_View):
     """
-    Lazily evaluated view on a :class:`~getml.data.columns.StringColumn`.
+    Lazily evaluated view on a [`StringColumn`][getml.data.columns.StringColumn].
 
     Columns views do not actually exist - they will be lazily
     evaluated when necessary.
 
     Examples:
-        .. code-block:: python
+    ```python
+    import numpy as np
 
-            import numpy as np
+    import getml.data as data
+    import getml.engine as engine
+    import getml.data.roles as roles
 
-            import getml.data as data
-            import getml.engine as engine
-            import getml.data.roles as roles
+    # ----------------
 
-            # ----------------
+    engine.set_project("examples")
 
-            engine.set_project("examples")
+    # ----------------
+    # Create a data frame from a JSON string
 
-            # ----------------
-            # Create a data frame from a JSON string
+    json_str = \"\"\"{
+        "names": ["patrick", "alex", "phil", "ulrike"],
+        "column_01": [2.4, 3.0, 1.2, 1.4],
+        "join_key": ["0", "1", "2", "3"],
+        "time_stamp": ["2019-01-01", "2019-01-02", "2019-01-03", "2019-01-04"]
+    }\"\"\"
 
-            json_str = \"\"\"{
-                "names": ["patrick", "alex", "phil", "ulrike"],
-                "column_01": [2.4, 3.0, 1.2, 1.4],
-                "join_key": ["0", "1", "2", "3"],
-                "time_stamp": ["2019-01-01", "2019-01-02", "2019-01-03", "2019-01-04"]
-            }\"\"\"
+    my_df = data.DataFrame(
+        "MY DF",
+        roles={
+            "unused_string": ["names", "join_key", "time_stamp"],
+            "unused_float": ["column_01"]}
+    ).read_json(
+        json_str
+    )
 
-            my_df = data.DataFrame(
-                "MY DF",
-                roles={
-                    "unused_string": ["names", "join_key", "time_stamp"],
-                    "unused_float": ["column_01"]}
-            ).read_json(
-                json_str
-            )
+    # ----------------
 
-            # ----------------
+    col1 = my_df["names"]
 
-            col1 = my_df["names"]
+    # ----------------
 
-            # ----------------
+    # col2 is a virtual column.
+    # The substring operation is not
+    # executed yet.
+    col2 = col1.substr(4, 3)
 
-            # col2 is a virtual column.
-            # The substring operation is not
-            # executed yet.
-            col2 = col1.substr(4, 3)
+    # This is where the engine executes
+    # the substring operation.
+    my_df.add(col2, "short_names", roles.categorical)
 
-            # This is where the engine executes
-            # the substring operation.
-            my_df.add(col2, "short_names", roles.categorical)
+    # ----------------
+    # If you do not explicitly set a role,
+    # the assigned role will either be
+    # roles.unused_string.
 
-            # ----------------
-            # If you do not explicitly set a role,
-            # the assigned role will either be
-            # roles.unused_string.
+    # col3 is a virtual column.
+    # The operation is not
+    # executed yet.
+    col3 = "user-" + col1 + "-" + col2
 
-            # col3 is a virtual column.
-            # The operation is not
-            # executed yet.
-            col3 = "user-" + col1 + "-" + col2
-
-            # This is where the operation is
-            # is executed.
-            my_df["new_names"] = col3
-            my_df.set_role("new_names", roles.categorical)
+    # This is where the operation is
+    # is executed.
+    my_df["new_names"] = col3
+    my_df.set_role("new_names", roles.categorical)
+    ```
     """
 
     def __init__(
@@ -608,59 +607,59 @@ class FloatColumn(_Column):
 
         df_name (str, optional):
             ``name`` instance variable of the
-            :class:`~getml.DataFrame` containing this column.
+            [`DataFrame`][getml.DataFrame]  containing this column.
 
     Examples:
-        .. code-block:: python
+    ```python
+    import numpy as np
 
-            import numpy as np
+    import getml.data as data
+    import getml.engine as engine
+    import getml.data.roles as roles
 
-            import getml.data as data
-            import getml.engine as engine
-            import getml.data.roles as roles
+    # ----------------
 
-            # ----------------
+    engine.set_project("examples")
 
-            engine.set_project("examples")
+    # ----------------
+    # Create a data frame from a JSON string
 
-            # ----------------
-            # Create a data frame from a JSON string
+    json_str = \"\"\"{
+        "names": ["patrick", "alex", "phil", "ulrike"],
+        "column_01": [2.4, 3.0, 1.2, 1.4],
+        "join_key": ["0", "1", "2", "3"],
+        "time_stamp": ["2019-01-01", "2019-01-02", "2019-01-03", "2019-01-04"]
+    }\"\"\"
 
-            json_str = \"\"\"{
-                "names": ["patrick", "alex", "phil", "ulrike"],
-                "column_01": [2.4, 3.0, 1.2, 1.4],
-                "join_key": ["0", "1", "2", "3"],
-                "time_stamp": ["2019-01-01", "2019-01-02", "2019-01-03", "2019-01-04"]
-            }\"\"\"
+    my_df = data.DataFrame(
+        "MY DF",
+        roles={
+            "unused_string": ["names", "join_key", "time_stamp"],
+            "unused_float": ["column_01"]}
+    ).read_json(
+        json_str
+    )
 
-            my_df = data.DataFrame(
-                "MY DF",
-                roles={
-                    "unused_string": ["names", "join_key", "time_stamp"],
-                    "unused_float": ["column_01"]}
-            ).read_json(
-                json_str
-            )
+    # ----------------
 
-            # ----------------
+    col1 = my_df["column_01"]
 
-            col1 = my_df["column_01"]
+    # ----------------
 
-            # ----------------
+    col2 = 2.0 - col1
 
-            col2 = 2.0 - col1
+    my_df.add(col2, "name", roles.numerical)
 
-            my_df.add(col2, "name", roles.numerical)
+    # ----------------
+    # If you do not explicitly set a role,
+    # the assigned role will either be
+    # roles.unused_float.
 
-            # ----------------
-            # If you do not explicitly set a role,
-            # the assigned role will either be
-            # roles.unused_float.
+    col3 = (col1 + 2.0*col2) / 3.0
 
-            col3 = (col1 + 2.0*col2) / 3.0
-
-            my_df["column_03"] = col3
-            my_df.set_role("column_03", roles.numerical)
+    my_df["column_03"] = col3
+    my_df.set_role("column_03", roles.numerical)
+    ```
     """
 
     _num_columns = 0
@@ -689,7 +688,7 @@ class FloatColumn(_Column):
 
 class FloatColumnView(_View):
     """
-    Lazily evaluated view on a :class:`~getml.data.columns.FloatColumn`.
+    Lazily evaluated view on a [`FloatColumn`][getml.data.columns.FloatColumn].
 
     Column views do not actually exist - they will be lazily
     evaluated when necessary.
