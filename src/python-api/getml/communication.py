@@ -27,7 +27,7 @@ from .version import __version__
 
 port = 1708
 """
-The port of the getML engine. The port is automaticallly set
+The port of the getML engine. The port is automatically set
 according to the process spawned when setting a project.
 The monitor automatically looks up a free port (starting from 1708).
 Setting the port here has no effect.
@@ -60,8 +60,8 @@ def is_monitor_alive() -> bool:
 
     Returns:
         bool:
-            True if the getML monitor is running and ready to accept
-            commands and False otherwise.
+            `True` if the getML monitor is running and ready to accept
+            commands and `False` otherwise.
     """
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
