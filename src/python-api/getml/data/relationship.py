@@ -7,7 +7,7 @@
 
 
 """
-Marks the relationship between joins in :class:`~getml.data.Placeholder`
+Marks the relationship between joins in [`Placeholder`][getml.data.Placeholder]
 """
 
 
