@@ -14,10 +14,9 @@ from dataclasses import dataclass, field
 from typing import Any, ClassVar, Dict, List, Optional, Union
 
 from .aggregations import _Aggregations
-from .aggregations import fastprop, fastprop_aggregations
+from .aggregations import fastprop as fastprop_aggregations
 from .feature_learner import _FeatureLearner
 from .validation import _validate_dfs_model_parameters
-from .loss_functions import CrossEntropyLoss, SquareLoss
 
 
 @dataclass(repr=False)
@@ -114,11 +113,11 @@ class FastProp(_FeatureLearner):
 
     agg_sets: ClassVar[_Aggregations] = fastprop_aggregations
 
-    aggregation: List[fastprop_aggregations.all] = field(
-        default_factory=lambda: fastprop.Default
+    aggregation: List[str] = field(
+        default_factory=lambda: fastprop_aggregations.Default
     )
     delta_t: float = 0.0
-    loss_function: Optional[Union[CrossEntropyLoss, SquareLoss]] = None
+    loss_function: Optional[str] = None
     max_lag: int = 0
     min_df: int = 30
     n_most_frequent: int = 0
