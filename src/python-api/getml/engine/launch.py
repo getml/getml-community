@@ -199,7 +199,7 @@ def launch(
       http_port (int, optional):
             The local port of the getML monitor.
             This port can only be accessed from your local computer,
-            unless you set allow_remote_ips=True.
+            unless you set `allow_remote_ips=True`.
 
       in_memory (bool):
             Whether you want the engine to process everything in memory.

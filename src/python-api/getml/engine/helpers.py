@@ -73,7 +73,7 @@ def is_engine_alive():
 
 # -----------------------------------------------------------------------------
 
-# define compatability alias
+# define compatibility alias
 is_alive = is_engine_alive
 
 
@@ -86,7 +86,7 @@ def list_projects():
 
     Returns:
         List[str]:
-            Lists the name all of the projects.
+            Lists the name all the projects.
     """
     return _list_projects_impl(running_only=False)
 
@@ -99,7 +99,7 @@ def list_running_projects():
     List all projects on the getML engine that are currently running.
 
     Returns:
-        List[str]: Lists the name all of the projects currently running.
+        List[str]: Lists the name all the projects currently running.
     """
     return _list_projects_impl(running_only=True)
 
@@ -127,8 +127,8 @@ def shutdown():
     """Shuts down the getML engine.
 
     Note:
-        All changes applied to the :class:`~getml.DataFrame`
-        after calling their :meth:`~getml.DataFrame.save`
+        All changes applied to the [`DataFrame`][getml.DataFrame]
+        after calling their [`save`][getml.DataFrame.save]
         method will be lost.
 
     """
