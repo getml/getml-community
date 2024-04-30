@@ -786,7 +786,7 @@ class LatinHypercubeSearch(_Hyperopt):
     Latin hypercube sampling of the hyperparameters.
 
     Uses a multidimensional, uniform cumulative distribution function
-    to drawn the random numbers from. For drawing `n_iter` samples,
+    to draw the random numbers from. For drawing `n_iter` samples,
     the distribution will be divided in `n_iter`*`n_iter` hypercubes
     of equal size (`n_iter` per dimension). `n_iter` of them will be
     selected in such a way only one per dimension is used and an
