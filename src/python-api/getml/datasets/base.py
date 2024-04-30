@@ -100,12 +100,12 @@ def _load_dataset(
     Returns:
         tuple:
             Tuple containing (sorted alphabetically by `df.name`s) the data as
-            :class:`~getml.DataFrame` s or :class:`pandas.DataFrame` s (if `as_pandas`
+            [`DataFrame`][getml.DataFrame] s or `pandas.DataFrame`s (if `as_pandas`
             is True) or
 
         dict:
             dict containing the with (`df.name`s as keys and `df`s as values) as
-            :class:`~getml.DataFrame` s or :class:`pandas.DataFrame` s (if `as_pandas`
+            [`DataFrame`][getml.DataFrame] s or `pandas.DataFrame` s (if `as_pandas`
             is True) if `as_dict` is `True`.
     """
     base = f"{BUCKET}/{VERSION}/{ds_name}/preprocessed"
@@ -160,10 +160,10 @@ def load_air_pollution(
     """
     Regression dataset on air pollution in Beijing, China
 
-    The dataset consits of a single table split into train and test sets
-    arround 2014-01-01.
+    The dataset consists of a single table split into train and test sets
+    around 2014-01-01.
 
-    The orgininal publication is:
+    The original publication is:
     Liang, X., Zou, T., Guo, B., Li, S., Zhang, H., Zhang, S., Huang, H. and
     Chen, S. X. (2015). Assessing Beijing's PM2.5 pollution: severity, weather
     impact, APEC and winter heating. Proceedings of the Royal Society A, 471,
@@ -171,7 +171,7 @@ def load_air_pollution(
 
     Args:
         as_pandas (bool):
-            Return data as `pandas.DataFrame` s
+            Return data as `pandas.DataFrame`s
 
         roles (bool):
             Return data with roles set
@@ -182,26 +182,28 @@ def load_air_pollution(
 
         The following DataFrames are returned:
 
-            * air_pollution
+        * air_pollution
 
     Examples:
-        >>> air_pollution = getml.datasets.load_air_pollution()
-        >>> type(air_pollution)
-        ... getml.data.data_frame.DataFrame
-
-        For an full analysis of the atherosclerosis dataset including all necessary
-        preprocessing steps please refer to `getml-examples
-        <https://github.com/getml/getml-examples/tree/master/atherosclerosis>`_.
+        ```python
+        air_pollution = getml.datasets.load_air_pollution()
+        type(air_pollution)
+        getml.data.data_frame.DataFrame
+        ```
+        For a full analysis of the atherosclerosis dataset including all necessary
+        preprocessing steps please refer to [getml-demo
+        ](https://github.com/getml/getml-demo/blob/master/air_pollution.ipynb).
 
 
     Note:
         Roles can be set ad-hoc by supplying the respective flag. If
         `roles` is `False`, all columns in the returned
-        :class:`~getml.DataFrames` s have roles
-        :const:`~getml.data.roles.unused_string` or
-        :const:`~getml.data.roles.unused_float`. This dataset contains no units.
+        [`DataFrame`][getml.data.DataFrame]s have roles
+        [`unused_string`][getml.data.roles.unused_string] or
+        [`unused_float`][getml.data.roles.unused_float]. This dataset contains no units.
         Before using them in an analysis, a data model needs to be constructed
-        using :class:`~getml.data.Placeholder` s.
+        using [`Placeholder`][getml.data.Placeholder]s.
+
     """
 
     ds_name = "air_pollution"
@@ -223,10 +225,10 @@ def load_atherosclerosis(
     """
     Binary classification dataset on the lethality of atherosclerosis
 
-    The atherosclerosis dataset is a medical dataset from the the `CTU Prague
-    Relational Learning Repository
-    <https://relational.fit.cvut.cz/dataset/Atherosclerosis>`_. It contains
-    information from an longitudal study on 1417 middle-aged men obeserved over
+    The atherosclerosis dataset is a medical dataset from the [Relational Dataset Repository (former CTU Prague
+    Relational Learning Repository)
+    ](https://relational-data.org/dataset/Atherosclerosis). It contains
+    information from a longitudinal study on 1417 middle-aged men observed over
     the course of 20 years. After preprocessing, it consists of 2 tables with 76
     and 66 columns:
 
@@ -251,37 +253,38 @@ def load_atherosclerosis(
     Returns:
         tuple:
             Tuple containing (sorted alphabetically by `df.name`s) the data as
-            :class:`~getml.DataFrame` s or :class:`pandas.DataFrame` s (if `as_pandas`
+            [`DataFrame`][getml.DataFrame] s or `pandas.DataFrame` s (if `as_pandas`
             is True) or
         dict:
             if `as_dict` is `True`: Dictionary containing the data as
-            :class:`~getml.DataFrame` s or :class:`pandas.DataFrame` s (if `as_pandas`
+            [`DataFrame`][getml.DataFrame] s or `pandas.DataFrame` s (if `as_pandas`
             is True). The keys correspond to the name of the DataFrame on the
-            :mod:`~getml.engine`.
+            [`engine`][getml.engine].
 
         The following DataFrames are returned:
 
-            * population
-            * contr
+        * `population`
+        * `contr`
 
     Examples:
-        >>> population, contr = getml.datasets.load_atherosclerosis()
-        >>> type(population)
-        ... getml.data.data_frame.DataFrame
-
-        For an full analysis of the atherosclerosis dataset including all necessary
-        preprocessing steps please refer to `getml-examples
-        <https://github.com/getml/getml-examples/tree/master/atherosclerosis>`_.
+        ```python
+        population, contr = getml.datasets.load_atherosclerosis()
+        type(population)
+        getml.data.data_frame.DataFrame
+        ```
+        For a full analysis of the atherosclerosis dataset including all necessary
+        preprocessing steps please refer to [getml-examples
+        ](https://github.com/getml/getml-demo/blob/master/atherosclerosis.ipynb).
 
 
     Note:
         Roles can be set ad-hoc by supplying the respective flag. If
         `roles` is `False`, all columns in the returned
-        :class:`~getml.DataFrames` s have roles
-        :const:`~getml.data.roles.unused_string` or
-        :const:`~getml.data.roles.unused_float`. This dataset contains no units.
+        [`DataFrame`][getml.data.DataFrame]s have roles
+        [`unused_string`][getml.data.roles.unused_string] or
+        [`unused_float`][getml.data.roles.unused_float]. This dataset contains no units.
         Before using them in an analysis, a data model needs to be constructed
-        using :class:`~getml.data.Placeholder` s.
+        using [`Placeholder`][getml.data.Placeholder]s.
     """
 
     ds_name = "atherosclerosis"
@@ -310,20 +313,20 @@ def load_biodegradability(
     values of 1055 chemicals were collected from the webpage of the National
     Institute of Technology and Evaluation of Japan (NITE).
 
-    The orgininal publication is:
+    The original publication is:
     Mansouri, K., Ringsted, T., Ballabio, D., Todeschini, R., Consonni, V.
     (2013). Quantitative Structure - Activity Relationship models for ready
     biodegradability of chemicals. Journal of Chemical Information and Modeling,
     53, 867-878
 
-    The dataset was collected through the `UCI Machine Learning Repository`
-    <https://archive.ics.uci.edu/ml/datasets/QSAR+biodegradation>
+    The dataset was collected through the [Relational Dataset Repository (former CTU Prague
+    Relational Learning Repository)](https://relational-data.org/dataset/Biodegradability)
 
     It contains information on 1309 molecules with 6166 bonds. It consists of 5
     tables.
 
     The population table is split into a training (50 %) and a testing (25%) and
-    validition (25%) sets.
+    validation (25%) sets.
 
     Args:
         as_pandas (bool):
@@ -339,38 +342,37 @@ def load_biodegradability(
     Returns:
         tuple:
             Tuple containing (sorted alphabetically by `df.name`s) the data as
-            :class:`~getml.DataFrame` s or :class:`pandas.DataFrame` s (if `as_pandas`
+            [`DataFrame`][getml.DataFrame] s or `pandas.DataFrame` s (if `as_pandas`
             is True) or
         dict:
             if `as_dict` is `True`: Dictionary containing the data as
-            :class:`~getml.DataFrame` s or :class:`pandas.DataFrame` s (if `as_pandas`
+            [`DataFrame`][getml.DataFrame] s or `pandas.DataFrame` s (if `as_pandas`
             is True). The keys correspond to the name of the DataFrame on the
-            :mod:`~getml.engine`.
+            [`engine`][getml.engine].
 
         The following DataFrames are returned:
 
-            * molecule
-            * atom
-            * bond
-            * gmember
-            * group
+        * `molecule`
+        * `atom`
+        * `bond`
+        * `gmember`
+        * `group`
 
     Examples:
-        >>> biodegradability = getml.datasets.load_biodegradability(as_dict=True)
-        >>> type(biodegradability["molecule_train"])
-        ... getml.data.data_frame.DataFrame
-
-        For an full analysis of the biodegradability dataset including all necessary
-        preprocessing steps please refer to getml-examples (forthcoming).
+        ```python
+        biodegradability = getml.datasets.load_biodegradability(as_dict=True)
+        type(biodegradability["molecule_train"])
+        getml.data.data_frame.DataFrame
+        ```
 
     Note:
         Roles can be set ad-hoc by supplying the respective flag. If
         `roles` is `False`, all columns in the returned
-        :class:`~getml.DataFrames` s have roles
-        :const:`~getml.data.roles.unused_string` or
-        :const:`~getml.data.roles.unused_float`. This dataset contains no units.
+        [`DataFrame`][getml.data.DataFrame]s have roles
+        [`unused_string`][getml.data.roles.unused_string] or
+        [`unused_float`][getml.data.roles.unused_float]. This dataset contains no units.
         Before using them in an analysis, a data model needs to be constructed
-        using :class:`~getml.data.Placeholder` s.
+        using [`Placeholder`][getml.data.Placeholder]s.
     """
 
     ds_name = "biodegradability"
@@ -393,11 +395,11 @@ def load_consumer_expenditures(
     Binary classification dataset on consumer expenditures
 
     The Consumer Expenditure Data Set is a public domain data set provided by
-    the American Bureau of Labor Statistics (https://www.bls.gov/cex/pumd.htm).
+    the [American Bureau of Labor Statistics](https://www.bls.gov/cex/pumd.htm).
     It includes the diary entries, where American consumers are asked to keep
-    diaries of the products they have purchased each month,
+    record of the products they have purchased each month.
 
-    We use this dataset to classify wether an item was pruchased as a gift.
+    We use this dataset to classify whether an item was purchased as a gift or not.
 
     Args:
         roles (bool):
@@ -416,38 +418,39 @@ def load_consumer_expenditures(
     Returns:
         tuple:
             Tuple containing (sorted alphabetically by `df.name`s) the data as
-            :class:`~getml.DataFrame` s or :class:`pandas.DataFrame` s (if `as_pandas`
+            [`DataFrame`][getml.DataFrame] s or `pandas.DataFrame` s (if `as_pandas`
             is True) or
         dict:
             if `as_dict` is `True`: Dictionary containing the data as
-            :class:`~getml.DataFrame` s or :class:`pandas.DataFrame` s (if `as_pandas`
+            [`DataFrame`][getml.DataFrame] s or `pandas.DataFrame` s (if `as_pandas`
             is True). The keys correspond to the name of the DataFrame on the
-            :mod:`~getml.engine`.
+            [`engine`][getml.engine].
 
         The following DataFrames are returned:
 
-            * population
-            * expd
-            * fmld
-            * memd
+        * `population`
+        * `expd`
+        * `fmld`
+        * `memd`
 
     Examples:
-        >>> ce = getml.datasets.load_consumer_expenditures(as_dict=True)
-        >>> type(ce["expd"])
-        ... getml.data.data_frame.DataFrame
-
-        For an full analysis of the occupancy dataset including all necessary
-        preprocessing steps please refer to `getml-examples
-        <https://github.com/getml/getml-examples/tree/master/consumer_expenditures>`_.
+        ```python
+        ce = getml.datasets.load_consumer_expenditures(as_dict=True)
+        type(ce["expd"])
+        getml.data.data_frame.DataFrame
+        ```
+        For a full analysis of the occupancy dataset including all necessary
+        preprocessing steps please refer to [getml-examples
+        ](https://github.com/getml/getml-demo/blob/master/consumer_expenditures.ipynb).
 
     Note:
         Roles and units can be set ad-hoc by supplying the respective flag. If
         `roles` is `False`, all columns in the returned
-        :class:`~getml.DataFrames` s have roles
-        :const:`~getml.data.roles.unused_string` or
-        :const:`~getml.data.roles.unused_float`.`
+        [`DataFrame`][getml.data.DataFrame]s have roles
+        [`unused_string`][getml.data.roles.unused_string] or
+        [`unused_float`][getml.data.roles.unused_float].
         Before using them in an analysis, a data model needs to be constructed
-        using :class:`~getml.data.Placeholder` s.
+        using [`Placeholder`][getml.data.Placeholder]s.
     """
 
     ds_name = "consumer_expenditures"
@@ -467,13 +470,13 @@ def load_interstate94(
     as_pandas: bool = False,
 ) -> Union[DataFrameT]:
     """
-    Regression dataset on traffic volume predicition
+    Regression dataset on traffic volume prediction
 
     The interstate94 dataset is a multivariate time series containing the
     hourly traffic volume on I-94 westbound from Minneapolis-St Paul. It is
-    based on data provided by the `MN Department of Transportation
-    <https://www.dot.state.mn.us/>`_. Some additional data preparation done by
-    `John Hogue <https://github.com/dreyco676/Anomaly_Detection_A_to_Z/>`_. The
+    based on data provided by the [MN Department of Transportation
+    ](https://www.dot.state.mn.us/). Some additional data preparation done by
+    [John Hogue](https://github.com/dreyco676/Anomaly_Detection_A_to_Z/). The
     dataset features some particular interesting characteristics common for
     time series, which classical models may struggle to appropriately deal
     with. Such characteristics are:
@@ -481,7 +484,7 @@ def load_interstate94(
     * High frequency (hourly)
     * Dependence on irregular events (holidays)
     * Strong and overlapping cycles (daily, weekly)
-    * Annomalies
+    * Anomalies
     * Multiple seasonalities
 
     Args:
@@ -500,25 +503,25 @@ def load_interstate94(
 
         The following DataFrames are returned:
 
-            * traffic
+        * `traffic`
 
     Examples:
-        >>> traffic = getml.datasets.load_interstate94()
-        >>> type(traffic)
-        ... getml.data.data_frame.DataFrame
-
-        For an full analysis of the interstate94 dataset including all necessary
-        preprocessing steps please refer to `getml-examples
-        <https://github.com/getml/getml-examples/tree/master/interstate94>`_.
+        ```python
+        traffic = getml.datasets.load_interstate94()
+        type(traffic)
+        getml.data.data_frame.DataFrame
+        ```
+        For a full analysis of the interstate94 dataset including all necessary
+        preprocessing steps please refer to [getml-examples](https://github.com/getml/getml-demo/blob/master/interstate94.ipynb).
 
     Note:
         Roles and units can be set ad-hoc by supplying the respective flags. If
         `roles` is `False`, all columns in the returned
-        :class:`~getml.DataFrames` s have roles
-        :const:`~getml.data.roles.unused_string` or
-        :const:`~getml.data.roles.unused_float`. Before using them in an
+        [`DataFrame`][getml.data.DataFrame]s have roles
+        [`unused_string`][getml.data.roles.unused_string] or
+        [`unused_float`][getml.data.roles.unused_float]. Before using them in an
         analysis, a data model needs to be constructed using
-        :class:`~getml.data.Placeholder` s.
+        [`Placeholder`][getml.data.Placeholder]s.
     """
 
     ds_name = "interstate94"
@@ -541,12 +544,11 @@ def load_loans(
     """
     Binary classification dataset on loan default
 
-    The loans dataset is based on financial dataset from the the `CTU Prague
-    Relational Learning Repository
-    <https://relational.fit.cvut.cz/dataset/Financial>`_.
+    The loans dataset is based on a financial dataset from the [Relational Dataset Repository (former CTU Prague
+    Relational Learning Repository)](https://relational-data.org/dataset/Financial).
 
     The original publication is:
-    Berka, Petr (1999). Workshop notes on Discovery Challange PKDD'99.
+    Berka, Petr (1999). Workshop notes on Discovery Challenge PKDD'99.
 
     The dataset contains information on 606 successful and 76 unsuccessful
     loans. After some preprocessing it contains 5 tables
@@ -571,7 +573,7 @@ def load_loans(
             Return data with units set
 
         as_pandas (bool):
-            Return data as `pandas.DataFrame` s
+            Return data as `pandas.DataFrame`s
 
         as_dict (bool):
             Return data as dict with `df.name` s as keys and
@@ -580,39 +582,40 @@ def load_loans(
     Returns:
         tuple:
             Tuple containing (sorted alphabetically by `df.name`s) the data as
-            :class:`~getml.DataFrame` s or :class:`pandas.DataFrame` s (if `as_pandas`
+            [`DataFrame`][getml.DataFrame] s or `pandas.DataFrame` s (if `as_pandas`
             is True) or
         dict:
             if `as_dict` is `True`: Dictionary containing the data as
-            :class:`~getml.DataFrame` s or :class:`pandas.DataFrame` s (if `as_pandas`
+            [`DataFrame`][getml.DataFrame] s or `pandas.DataFrame` s (if `as_pandas`
             is True). The keys correspond to the name of the DataFrame on the
-            :mod:`~getml.engine`.
+            [`engine`][getml.engine].
 
         The following DataFrames are returned:
 
-            * account
-            * loan
-            * meta
-            * order
-            * trans
+        * `account`
+        * `loan`
+        * `meta`
+        * `order`
+        * `trans`
 
     Examples:
-        >>> loans = getml.datasets.load_loans(as_dict=True)
-        >>> type(loans["population_train"])
-        ... getml.data.data_frame.DataFrame
-
-        For an full analysis of the loans dataset including all necessary
-        preprocessing steps please refer to `getml-examples
-        <https://github.com/getml/getml-examples/tree/master/loans>`_.
+        ```python
+        loans = getml.datasets.load_loans(as_dict=True)
+        type(loans["population_train"])
+        getml.data.data_frame.DataFrame
+        ```
+        For a full analysis of the loans dataset including all necessary
+        preprocessing steps please refer to [getml-examples
+        ](https://github.com/getml/getml-demo/blob/master/loans.ipynb).
 
     Note:
         Roles and units can be set ad-hoc by supplying the respective flags. If
         `roles` is `False`, all columns in the returned
-        :class:`~getml.DataFrames` s have roles
-        :const:`~getml.data.roles.unused_string` or
-        :const:`~getml.data.roles.unused_float`. Before using them in an
+        [`DataFrame`][getml.data.DataFrame]s have roles
+        [`unused_string`][getml.data.roles.unused_string] or
+        [`unused_float`][getml.data.roles.unused_float]. Before using them in an
         analysis, a data model needs to be constructed using
-        :class:`~getml.data.Placeholder` s.
+        [`Placeholder`][getml.data.Placeholder]s.
     """
 
     ds_name = "loans"
@@ -634,9 +637,9 @@ def load_occupancy(
     """
     Binary classification dataset on occupancy detection
 
-    The occupancy detection data set is a very simple multivariate time series
-    from the `UCI Machine Learning Repository
-    <https://archive.ics.uci.edu/ml/datasets/Occupancy+Detection+>`_. It is a
+    The occupancy detection dataset is a very simple multivariate time series
+    from the [UCI Machine Learning Repository
+    ](https://archive.ics.uci.edu/dataset/357/occupancy+detection). It is a
     binary classification problem. The task is to predict room occupancy
     from Temperature, Humidity, Light and CO2.
 
@@ -659,38 +662,39 @@ def load_occupancy(
     Returns:
         tuple:
             Tuple containing (sorted alphabetically by `df.name`s) the data as
-            :class:`~getml.DataFrame` s or :class:`pandas.DataFrame` s (if `as_pandas`
+            [`DataFrame`][getml.DataFrame]s or `pandas.DataFrame`s (if `as_pandas`
             is True) or
         dict:
             if `as_dict` is `True`: Dictionary containing the data as
-            :class:`~getml.DataFrame` s or :class:`pandas.DataFrame` s (if `as_pandas`
+            [`DataFrame`][getml.DataFrame] s or `pandas.DataFrame` s (if `as_pandas`
             is True). The keys correspond to the name of the DataFrame on the
-            :mod:`~getml.engine`.
+            [`engine`][getml.engine].
 
         The following DataFrames are returned:
 
-            * population_train
-            * population_test
-            * population_validation
+        * `population_train`
+        * `population_test`
+        * `population_validation`
 
     Examples:
-        >>> population_train, population_test, _ = getml.datasets.load_occupancy()
-        >>> type(occupancy_train)
-        ... getml.data.data_frame.DataFrame
-
-        For an full analysis of the occupancy dataset including all necessary
-        preprocessing steps please refer to `getml-examples
-        <https://github.com/getml/getml-examples/tree/master/occupancy>`_.
+        ```python
+        population_train, population_test, _ = getml.datasets.load_occupancy()
+        type(occupancy_train)
+        getml.data.data_frame.DataFrame
+        ```
+        For a full analysis of the occupancy dataset including all necessary
+        preprocessing steps please refer to [getml-examples
+        ](https://github.com/getml/getml-demo/blob/master/occupancy.ipynb).
 
 
     Note:
         Roles can be set ad-hoc by supplying the respective flag. If
         `roles` is `False`, all columns in the returned
-        :class:`~getml.DataFrames` s have roles
-        :const:`~getml.data.roles.unused_string` or
-        :const:`~getml.data.roles.unused_float`. This dataset contains no units.
+        [`DataFrame`][getml.data.DataFrame]s have roles
+        [`unused_string`][getml.data.roles.unused_string] or
+        [`unused_float`][getml.data.roles.unused_float]. This dataset contains no units.
         Before using them in an analysis, a data model needs to be constructed
-        using :class:`~getml.data.Placeholder` s.
+        using [`Placeholder`][getml.data.Placeholder]s.
     """
 
     ds_name = "occupancy"
