@@ -11,12 +11,11 @@ Feature learning based on Gradient Boosting.
 """
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional
 
 from .fastprop import FastProp
 from .feature_learner import _FeatureLearner
 from .validation import _validate_relboost_parameters
-from .loss_functions import CrossEntropyLoss, SquareLoss
 
 # --------------------------------------------------------------------
 
@@ -159,7 +158,7 @@ class Relboost(_FeatureLearner):
     allow_null_weights: bool = False
     delta_t: float = 0.0
     gamma: float = 0.0
-    loss_function: Optional[Union[CrossEntropyLoss, SquareLoss]] = None
+    loss_function: Optional[str] = None
     max_depth: int = 3
     min_df: int = 30
     min_num_samples: int = 1

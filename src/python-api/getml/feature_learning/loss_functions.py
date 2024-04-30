@@ -5,8 +5,6 @@
 # for details.
 #
 
-from typing import Literal, Final
-
 """
 Loss functions used by the feature learning algorithms.
 
@@ -21,10 +19,7 @@ learning algorithms and not by the [`predictors`][getml.predictors].
 
 """
 
-
-CrossEntropyLoss = Literal["CrossEntropyLoss"]
-CROSS_ENTROPY_LOSS: Final[CrossEntropyLoss] = "CrossEntropyLoss"
-
+CrossEntropyLoss = "CrossEntropyLoss"
 """
 The cross entropy between two probability distributions
 $p(x)$ and $q(x)$ is a combination of the information
@@ -60,9 +55,7 @@ Note:
 
 """
 
-SquareLoss = Literal["SquareLoss"]
-SQUARE_LOSS: Final[SquareLoss] = "SquareLoss"
-
+SquareLoss = "SquareLoss"
 """
 The Square loss (aka mean squared error (MSE)) measures the loss by calculating the average of all squared
 deviations of the predictions $\hat{y}$ from the observed
