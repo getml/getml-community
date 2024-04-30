@@ -36,19 +36,19 @@ def sniff_s3(
         *file2.csv* - in the bucket. You can
         import their data into the getML engine using the following
         commands:
+        ```python
+        getml.engine.set_s3_access_key_id("YOUR-ACCESS-KEY-ID")
 
-        >>> getml.engine.set_s3_access_key_id("YOUR-ACCESS-KEY-ID")
-        >>>
-        >>> getml.engine.set_s3_secret_access_key("YOUR-SECRET-ACCESS-KEY")
-        >>>
-        >>> stmt = data.database.sniff_s3(
-        ...         bucket="your-bucket-name",
-        ...         keys=["file1.csv", "file2.csv"],
-        ...         region="us-east-2",
-        ...         name="MY_TABLE",
-        ...         sep=';'
-        ... )
+        getml.engine.set_s3_secret_access_key("YOUR-SECRET-ACCESS-KEY")
 
+        stmt = data.database.sniff_s3(
+                bucket="your-bucket-name",
+                keys=["file1.csv", "file2.csv"],
+                region="us-east-2",
+                name="MY_TABLE",
+                sep=';'
+        )
+        ```
         You can also set the access credential as environment variables
         before you launch the getML engine.
 
@@ -74,12 +74,12 @@ def sniff_s3(
         skip (int, optional):
             Number of lines to skip at the beginning of each file.
 
-        colnames(List[str] or None, optional):
+        colnames (List[str] or None, optional):
             The first line of a CSV file
             usually contains the column names. When this is not the case, you need to
             explicitly pass them.
 
-        conn (:class:`~getml.database.Connection`, optional):
+        conn ([`Connection`][getml.database.Connection], optional):
             The database connection to be used.
             If you don't explicitly pass a connection,
             the engine will use the default connection.

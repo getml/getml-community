@@ -51,12 +51,12 @@ def sniff_csv(
             Number of lines to skip at the beginning of each
             file (Default: 0).
 
-        colnames(List[str] or None, optional):
+        colnames (List[str] or None, optional):
             The first line of a CSV file
             usually contains the column names. When this is not the case, you need to
             explicitly pass them.
 
-        conn (:class:`~getml.database.Connection`, optional):
+        conn ([`Connection`][getml.database.Connection], optional):
             The database connection to be used.
             If you don't explicitly pass a connection,
             the engine will use the default connection.

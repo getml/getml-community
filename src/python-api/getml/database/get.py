@@ -29,7 +29,7 @@ def get(query: str, conn: Optional[Connection] = None):
         query (str):
             The SQL query to be executed.
 
-        conn (:class:`~getml.database.Connection`, optional):
+        conn ([`Connection`][getml.database.Connection], optional):
             The database connection to be used.
             If you don't explicitly pass a connection,
             the engine will use the default connection.

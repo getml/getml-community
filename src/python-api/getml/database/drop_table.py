@@ -25,7 +25,7 @@ def drop_table(name: str, conn: Optional[Connection] = None):
         name (str):
             The table to be dropped.
 
-        conn (:class:`~getml.database.Connection`, optional):
+        conn ([`Connection`][getml.database.Connection], optional):
             The database connection to be used.
             If you don't explicitly pass a connection,
             the engine will use the default connection.

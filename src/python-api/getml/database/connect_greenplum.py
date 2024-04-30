@@ -30,15 +30,15 @@ def connect_greenplum(
 ):
     """Creates a new Greenplum database connection.
 
-    But first, make sure your database is running and you can reach it
-    from via your command line.
+    But first, make sure your database is running, and you can reach it
+    from your command line.
 
     Args:
         dbname (str):
             The name of the database to which you want to connect.
 
         user (str):
-            User name with which to log into the Greenplum database.
+            Username with which to log into the Greenplum database.
 
         password (str):
             Password with which to log into the Greenplum database.
@@ -57,10 +57,9 @@ def connect_greenplum(
             If you do not know, which port to use, type the following into your
             Greenplum client:
 
-            .. code-block:: sql
-
-                SELECT setting FROM pg_settings WHERE name = 'port';
-
+            ```sql
+            SELECT setting FROM pg_settings WHERE name = 'port';
+            ```
         time_formats (List[str], optional):
             The list of formats tried when parsing time stamps.
 
@@ -99,22 +98,24 @@ def connect_greenplum(
 
     Note:
         By selecting an existing table of your database in
-        :func:`~getml.DataFrame.from_db` function, you can create
-        a new :class:`~getml.DataFrame` containing all its data.
+        [`from_db`][getml.DataFrame.from_db] function, you can create
+        a new [`DataFrame`][getml.DataFrame] containing all its data.
         Alternatively you can use the
-        :meth:`~.getml.DataFrame.read_db` and
-        :meth:`~.getml.DataFrame.read_query` methods to replace
-        the content of the current :class:`~getml.DataFrame`
+        [`read_db`][getml.DataFrame.read_db] and
+        [`read_query`][getml.DataFrame.read_query] methods to replace
+        the content of the current [`DataFrame`][getml.DataFrame]
         instance or append further rows based on either a table or a
         specific query.
 
         You can also write your results back into the Greenplum
         database. By passing the name for the destination table to
-        :meth:`getml.Pipeline.transform`, the features
+        [`transform`][getml.Pipeline.transform], the features
         generated from your raw data will be written back. Passing
-        them into :meth:`getml.Pipeline.predict`, instead,
+        them into [`predict`][getml.Pipeline.predict], instead,
         makes predictions of the target variables to new, unseen data
         and stores the result into the corresponding table.
+
+
 
     """
 
