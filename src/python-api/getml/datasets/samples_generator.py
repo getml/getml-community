@@ -120,6 +120,7 @@ def make_categorical(
     GROUP BY t1.join_key,
          t1.time_stamp;
     ```
+
     Args:
         n_rows_population (int, optional):
             Number of rows in the population table.
@@ -159,11 +160,8 @@ def make_categorical(
 
     Returns:
         tuple:
-        tuple containing:
-
-        * population ([`DataFrame`][getml.DataFrame]): Population table
-
-        * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
+            * population ([`DataFrame`][getml.DataFrame]): Population table
+            * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
     """
 
     if random_state is None:
@@ -290,6 +288,7 @@ def make_discrete(
         GROUP BY t1.join_key,
                  t1.time_stamp;
     ```
+
     Args:
         n_rows_population (int, optional):
             Number of rows in the population table.
@@ -329,11 +328,8 @@ def make_discrete(
 
     Returns:
         tuple:
-        tuple containing:
-
-        * population ([`DataFrame`][getml.DataFrame]): Population table
-
-        * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
+            * population ([`DataFrame`][getml.DataFrame]): Population table
+            * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
     """
 
     if random_state is None:
@@ -459,6 +455,7 @@ def make_numerical(
         GROUP BY t1.join_key,
              t1.time_stamp;
     ```
+
     Args:
         n_rows_population (int, optional):
             Number of rows in the population table.
@@ -498,11 +495,8 @@ def make_numerical(
 
     Returns:
         tuple:
-        tuple containing:
-
-        * population ([`DataFrame`][getml.DataFrame]): Population table
-
-        * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
+            * population ([`DataFrame`][getml.DataFrame]): Population table
+            * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
     """
 
     if random_state is None:
@@ -629,6 +623,7 @@ def make_same_units_categorical(
     GROUP BY t1.join_key,
          t1.time_stamp;
     ```
+
     Args:
         n_rows_population (int, optional):
             Number of rows in the population table.
@@ -668,11 +663,8 @@ def make_same_units_categorical(
 
     Returns:
         tuple:
-        tuple containing:
-
-        * population ([`DataFrame`][getml.DataFrame]): Population table
-
-        * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
+            * population ([`DataFrame`][getml.DataFrame]): Population table
+            * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
     """
 
     if random_state is None:
@@ -828,6 +820,7 @@ def make_same_units_numerical(
         GROUP BY t1.join_key,
              t1.time_stamp;
     ```
+
     Args:
         n_rows_population (int, optional):
             Number of rows in the population table.
@@ -867,11 +860,8 @@ def make_same_units_numerical(
 
     Returns:
         tuple:
-        tuple containing:
-
-        * population ([`DataFrame`][getml.DataFrame]): Population table
-
-        * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
+            * population ([`DataFrame`][getml.DataFrame]): Population table
+            * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
     """
 
     if random_state is None:
@@ -1038,6 +1028,7 @@ def make_snowflake(
         GROUP BY t1.join_key,
              t1.time_stamp;
     ```
+
     Args:
         n_rows_population (int, optional):
             Number of rows in the population table.
@@ -1094,13 +1085,9 @@ def make_snowflake(
 
     Returns:
         tuple:
-        tuple containing:
-
-        * population ([`DataFrame`][getml.DataFrame]): Population table
-
-        * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
-
-        * peripheral_2 ([`DataFrame`][getml.DataFrame]): Peripheral table
+            * population ([`DataFrame`][getml.DataFrame]): Population table
+            * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
+            * peripheral_2 ([`DataFrame`][getml.DataFrame]): Peripheral table
     """
 
     if random_state is None:

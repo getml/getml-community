@@ -6,16 +6,14 @@
 #
 
 
-"""Checks whether a particular parameter does lie within the provided
-    `bounds`.
-
+"""
 Handlers for 1-d arrays storing the data of an individual variable.
 
 Like the [`DataFrame`][getml.DataFrame], the
-`~getml.data.columns` do not contain any actual data themselves
+[`columns`][getml.data.columns] do not contain any actual data themselves
 but are only handlers to objects within the getML engine. These
 containers store data of a single variable in a one-dimensional array
-of an uniform type.
+of a uniform type.
 
 Columns are *immutable* and *lazily evaluated*.
 
