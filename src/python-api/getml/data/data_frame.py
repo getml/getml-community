@@ -95,7 +95,7 @@ class DataFrame:
     handler without altering the underlying data. For more information
     about the lifecycle of the data in the getML engine and its
     synchronization with the Python API please see the
-    corresponding user guide: [the_getml_python_api_lifecycles][ref the_getml_python_api_lifecycles].
+    corresponding [User Guide][python-api].
 
     Args:
         name (str):
@@ -146,7 +146,7 @@ class DataFrame:
         [`load_data_frame`][getml.data.load_data_frame] to create a
         [`DataFrame`][getml.DataFrame] handler for a data set already
         present in the getML engine (see
-        [the_getml_python_api_lifecycles][:ref:`the_getml_python_api_lifecycles`] for details).
+        [User Guide][python-api] for details).
 
         ```python
         df_table.save()
@@ -1346,10 +1346,10 @@ class DataFrame:
 
     @classmethod
     def from_pandas(cls, pandas_df, name, roles=None, ignore=False, dry=False):
-        """Create a DataFrame from a [`DataFrame`][pandas.DataFrame].
+        """Create a DataFrame from a `pandas.DataFrame`.
 
         It will construct a data frame object in the engine, fill it
-        with the data read from the [`DataFrame`][pandas.DataFrame], and
+        with the data read from the `pandas.DataFrame`, and
         return a corresponding [`DataFrame`][getml.DataFrame] handle.
 
         Args:
@@ -2950,9 +2950,8 @@ class DataFrame:
 
         When switching from a role based on type float to a role based on type
         string or vice verse, an implicit type conversion will be conducted.
-        The `time_formats` argument is used to interpret [annotating_roles_time_stamp][:ref:`time
-        format string <annotating_roles_time_stamp>`]. For more information on
-        roles, please refer to the :ref:`[user guide] <annotating>`.
+        The `time_formats` argument is used to interpret [Time Stamps][annotating-data-time-stamp]. For more information on
+        roles, please refer to the [User Guide][annotating-data].
 
         Args:
             cols (str, FloatColumn, StringColumn, or List[str, FloatColumn, StringColumn]):
@@ -3350,8 +3349,8 @@ class DataFrame:
         """
         Writes the underlying data into a newly created CSV file
         located in an S3 bucket.
-
-        NOTE THAT S3 IS NOT SUPPORTED ON WINDOWS.
+        Note:
+            Note that S3 is not supported on Windows.
 
         Args:
             bucket (str):
@@ -3620,7 +3619,7 @@ class DataFrame:
         string or vice verse, an implicit type conversion will be conducted.
         The `time_formats` argument is used to interpret time
         format string: `annotating_roles_time_stamp`. For more information on
-        roles, please refer to the user guide: [`annotating`][ref].
+        roles, please refer to the [User Guide][annotating-data].
 
         Args:
             cols (str, FloatColumn, StingColumn, or List[str, FloatColumn, StringColumn]):
