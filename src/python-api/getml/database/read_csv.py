@@ -31,25 +31,6 @@ def read_csv(
     """
     Reads a CSV file into the database.
 
-    Example:
-        Let's assume you have two CSV files - *file1.csv* and
-        *file2.csv* . You can import their data into the database
-        using the following commands:
-
-        stmt = data.database.sniff_csv(
-                fnames=["file1.csv", "file2.csv"],
-                name="MY_TABLE",
-                sep=';'
-        )
-
-        getml.database.execute(stmt)
-
-        stmt = data.database.read_csv(
-                fnames=["file1.csv", "file2.csv"],
-                name="MY_TABLE",
-                sep=';'
-        )
-
     Args:
         name (str):
             Name of the table in which the data is to be inserted.
@@ -80,6 +61,27 @@ def read_csv(
             The database connection to be used.
             If you don't explicitly pass a connection,
             the engine will use the default connection.
+
+    Example:
+        Let's assume you have two CSV files - *file1.csv* and
+        *file2.csv* . You can import their data into the database
+        using the following commands:
+
+        ```python
+        stmt = data.database.sniff_csv(
+                fnames=["file1.csv", "file2.csv"],
+                name="MY_TABLE",
+                sep=';'
+        )
+
+        getml.database.execute(stmt)
+
+        stmt = data.database.read_csv(
+                fnames=["file1.csv", "file2.csv"],
+                name="MY_TABLE",
+                sep=';'
+        )
+        ```
 
     """
     # -------------------------------------------

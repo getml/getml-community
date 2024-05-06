@@ -85,7 +85,7 @@ class View:
         dropped (List[str]):
             A list of columns that have been dropped.
 
-    Examples:
+    Example:
         You hardly ever directly create views. Instead, it is more likely
         that you will encounter them as a result of some operation on a
         [`DataFrame`][getml.DataFrame]:

@@ -32,19 +32,19 @@ class Imputation(_Preprocessor):
             that signify whether the original value was imputed..
 
     Example:
-    ```python
-    imputation = getml.preprocessors.Imputation()
+        ```python
+        imputation = getml.preprocessors.Imputation()
 
-    pipe = getml.Pipeline(
-        population=population_placeholder,
-        peripheral=[order_placeholder, trans_placeholder],
-        preprocessors=[imputation],
-        feature_learners=[feature_learner_1, feature_learner_2],
-        feature_selectors=feature_selector,
-        predictors=predictor,
-        share_selected_features=0.5
-    )
-    ```
+        pipe = getml.Pipeline(
+            population=population_placeholder,
+            peripheral=[order_placeholder, trans_placeholder],
+            preprocessors=[imputation],
+            feature_learners=[feature_learner_1, feature_learner_2],
+            feature_selectors=feature_selector,
+            predictors=predictor,
+            share_selected_features=0.5
+        )
+        ```
     """
 
     add_dummies: bool = False

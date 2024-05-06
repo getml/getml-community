@@ -30,6 +30,11 @@ class RelMT(_FeatureLearner):
     the name. A linear model tree is a decision tree
     with linear models on its leaves.
 
+
+    For more information on the underlying feature learning
+    algorithm, check out the User Guide: [RelMT][feature-engineering-algorithms-relmt].
+
+
     Attributes:
         allow_avg:
             Whether to allow an AVG aggregation. Particularly for time
@@ -41,8 +46,7 @@ class RelMT(_FeatureLearner):
             time series setting. When set to 0.0, there will be no lag
             variables.
 
-            For more information, please refer to
-            :ref:`data_model_time_series`. Range: [0, $\infty$]
+            For more information, please refer to [Data Model Time Series][data-model-time-series]. Range: [0, $\infty$]
 
         gamma:
             During the training of RelMT, which is based on

@@ -81,7 +81,7 @@ def read_csv(
         skip (int):
             The number of lines to skip (before a possible header)
 
-        colnames(List[str] or None, optional):
+        colnames (List[str] or None, optional):
             The first line of a CSV file
             usually contains the column names. When this is not the case, you can
             explicitly pass them. If you pass colnames, it is assumed that the

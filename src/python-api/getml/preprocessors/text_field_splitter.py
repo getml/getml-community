@@ -33,22 +33,22 @@ class TextFieldSplitter(_Preprocessor):
     ```python
     ; , . ! ? - | " \t \v \f \r \n % ' ( ) [ ] { }
     ```
-    Refer to the [text_fields][text_fields] for more information.
+    Refer to the [User Guide][preprocessing-free-form-text] for more information.
 
     Example:
-    ```python
-    text_field_splitter = getml.preprocessors.TextFieldSplitter()
+        ```python
+        text_field_splitter = getml.preprocessors.TextFieldSplitter()
 
-    pipe = getml.Pipeline(
-        population=population_placeholder,
-        peripheral=[order_placeholder, trans_placeholder],
-        preprocessors=[text_field_splitter],
-        feature_learners=[feature_learner_1, feature_learner_2],
-        feature_selectors=feature_selector,
-        predictors=predictor,
-        share_selected_features=0.5
-    )
-    ```
+        pipe = getml.Pipeline(
+            population=population_placeholder,
+            peripheral=[order_placeholder, trans_placeholder],
+            preprocessors=[text_field_splitter],
+            feature_learners=[feature_learner_1, feature_learner_2],
+            feature_selectors=feature_selector,
+            predictors=predictor,
+            share_selected_features=0.5
+        )
+        ```
     """
 
     def validate(self, params=None):

@@ -13,7 +13,7 @@ internet browser and enter [http://localhost:1709](http://localhost:1709) in the
 connect to a local TCP socket at port 1709 opened by the getML
 monitor. This will only be possible from within the same device!
 
-Examples:
+Example:
     First of all, you need to start the getML engine.
     Next, you need to create a new project or
     load an existing one.
@@ -29,6 +29,7 @@ Examples:
     print(getml.engine.is_alive())
     getml.engine.shutdown()
     ```
+
 Note:
     The Python process and the getML engine must be located on
     the same machine. If you

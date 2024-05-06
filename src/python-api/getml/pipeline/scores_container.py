@@ -140,13 +140,11 @@ class Scores:
                 A container of filtered scores.
 
         Example:
-        ```python
-        from datetime import datetime, timedelta
-
-        one_week_ago = datetime.today() - timedelta(days=7)
-
-        scores_last_week = pipe.scores.filter(lambda score: score.date_time >= one_week_ago)
-        ```
+            ```python
+            from datetime import datetime, timedelta
+            one_week_ago = datetime.today() - timedelta(days=7)
+            scores_last_week = pipe.scores.filter(lambda score: score.date_time >= one_week_ago)
+            ```
         """
         scores_filtered = [score for score in self.data if conditional(score)]
 
@@ -199,11 +197,10 @@ class Scores:
                 A container of sorted scores.
 
         Example:
-        ```python
-        by_auc = pipe.scores.sort(key=lambda score: score.auc)
-
-        most_recent_first = pipe.scores.sort(key=lambda score: score.date_time, descending=True)
-        ```
+            ```python
+            by_auc = pipe.scores.sort(key=lambda score: score.auc)
+            most_recent_first = pipe.scores.sort(key=lambda score: score.date_time, descending=True)
+            ```
         """
 
         scores_sorted = sorted(self.data, key=key, reverse=descending)

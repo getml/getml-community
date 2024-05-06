@@ -171,7 +171,7 @@ class Pipeline:
             The share of features you want the feature
             selection to keep. When set to 0.0, then all features will be kept.
 
-    Examples:
+    Example:
         We assume that you have already set up your
         preprocessors (refer to [`preprocessors`][getml.preprocessors]),
         your feature learners (refer to [`feature_learning`][getml.feature_learning])
@@ -232,6 +232,7 @@ class Pipeline:
         predictions = pipe.predict(container.full)
         ```
 
+    Example:
         If your data can be organized in a simple star schema,
         you can use [`StarSchema`][getml.data.StarSchema].
         [`StarSchema`][getml.data.StarSchema] unifies
@@ -300,6 +301,7 @@ class Pipeline:
         pipe.score(star_schema.test)
         ```
 
+    Example:
         [`StarSchema`][getml.data.StarSchema] is simpler,
         but cannot be used for more complex data models.
         The general approach is to use
@@ -1440,11 +1442,10 @@ class Pipeline:
                 be written into a table in a [`database`][getml.database].
                 Refer to [unified_import_interface][unified_import_interface] for further information.
 
-        Return:
-            [`ndarray`][numpy.ndarray]:
-                Resulting predictions provided in an array of the
-                (number of rows in `population_table`, number of
-                targets in `population_table`).
+        Returns:
+            Resulting predictions provided in an array of the
+            (number of rows in `population_table`, number of
+            targets in `population_table`).
 
         Note:
             Only fitted pipelines
@@ -1698,21 +1699,21 @@ class Pipeline:
         `peripheral_tables` into features, which can be inserted into
         machine learning models.
 
-        Examples:
-             By default, transform returns a [`ndarray`](https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html):
-        ```python
-        my_features_array = pipe.transform()
-        ```
-             You can also export your features as a [`DataFrame`][getml.DataFrame]
-             by providing the `df_name` argument:
-        ```python
-        my_features_df = pipe.transform(df_name="my_features")
-        ```
-             Or you can write the results directly into a database:
-        ```python
-        getml.database.connect_odbc(...)
-        pipe.transform(table_name="MY_FEATURES")
-        ```
+        Example:
+            By default, `transform` returns a [`ndarray`](https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html):
+            ```python
+            my_features_array = pipe.transform()
+            ```
+            You can also export your features as a [`DataFrame`][getml.DataFrame]
+            by providing the `df_name` argument:
+            ```python
+            my_features_df = pipe.transform(df_name="my_features")
+            ```
+            Or you can write the results directly into a database:
+            ```python
+            getml.database.connect_odbc(...)
+            pipe.transform(table_name="MY_FEATURES")
+            ```
 
         Args:
             population_table ([`DataFrame`][getml.DataFrame], [`View`][getml.View] or [`Subset`][getml.data.Subset]):

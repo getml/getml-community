@@ -61,7 +61,7 @@ The Square loss (aka mean squared error (MSE)) measures the loss by calculating 
 deviations of the predictions $\hat{y}$ from the observed
 (given) outcomes $y$. Depending on the context this measure
 is also known as mean squared error (MSE) or mean squared
-deviation (MSD).  deviation (MSD).
+deviation (MSD).
 
 $$
 L(y,\hat{y}) = \\frac{1}{n} \sum_{i=1}^{n} (y_i -\hat{y}_i)^2 

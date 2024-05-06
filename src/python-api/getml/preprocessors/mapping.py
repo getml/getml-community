@@ -30,7 +30,7 @@ class Mapping(_Preprocessor):
     You are particularly encouraged to use the mapping preprocessor in combination with
     [`FastProp`][getml.feature_learning.FastProp].
 
-    Refer to the User guide: `mappings` for more information.
+    Refer to the [User guide][preprocessing-mappings] for more information.
 
     Args:
         aggregation (List[[`aggregations`][getml.feature_learning.aggregations]], optional):
@@ -46,19 +46,19 @@ class Mapping(_Preprocessor):
             Whether you want to apply multithreading.
 
     Example:
-    ```python
-    mapping = getml.preprocessors.Mapping()
+        ```python
+        mapping = getml.preprocessors.Mapping()
 
-    pipe = getml.Pipeline(
-        population=population_placeholder,
-        peripheral=[order_placeholder, trans_placeholder],
-        preprocessors=[mapping],
-        feature_learners=[feature_learner_1, feature_learner_2],
-        feature_selectors=feature_selector,
-        predictors=predictor,
-        share_selected_features=0.5
-    )
-    ```
+        pipe = getml.Pipeline(
+            population=population_placeholder,
+            peripheral=[order_placeholder, trans_placeholder],
+            preprocessors=[mapping],
+            feature_learners=[feature_learner_1, feature_learner_2],
+            feature_selectors=feature_selector,
+            predictors=predictor,
+            share_selected_features=0.5
+        )
+        ```
 
     Note:
         Not supported in the getML community edition.

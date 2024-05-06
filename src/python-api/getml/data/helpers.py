@@ -57,22 +57,24 @@ OnType = Optional[Union[str, Tuple[str, str], List[Union[str, Tuple[str, str]]]]
 def list_data_frames() -> Dict[str, List[str]]:
     """Lists all available data frames of the project.
 
-    Examples:
+    Returns:
+        dict:
+            Dict containing lists of strings representing the names of
+            the data frames objects
+
+            - 'in_memory'
+                held in memory (RAM).
+            - 'on_disk'
+                stored on disk.
+
+    Example:
         ```python
         d, _ = getml.datasets.make_numerical()
         getml.data.list_data_frames()
         d.save()
         getml.data.list_data_frames()
         ```
-    Returns:
-        dict:
-            Dict containing lists of strings representing the names of
-            the data frames objects
 
-        - 'in_memory'
-            held in memory (RAM).
-        - 'on_disk'
-            stored on disk.
     """
 
     cmd: Dict[str, Any] = {}

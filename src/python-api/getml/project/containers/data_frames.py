@@ -110,9 +110,7 @@ class DataFrames:
         Args:
             mem_only (bool):
                 If called with the `mem_only` option set to True, the data
-                frames will be kept on disk (in the project folder) and can
-                be reloaded to memory through
-                [`load_all`][getml.project.data_frames.load_all].
+                frames will be kept on disk (in the project folder).
         """
 
         for name in self.on_disk:
@@ -138,13 +136,12 @@ class DataFrames:
                 A callable that evaluates to a boolean for a given item.
 
         Returns:
-            [`DataFrames`][getml.pipeline.DataFrames]:
                 A container of filtered data frames.
 
         Example:
-        ```python
-        big_frames = getml.project.data_frames.filter(lambda frame: frame.memory_usage > 1000)
-        ```
+            ```python
+            big_frames = getml.project.data_frames.filter(lambda frame: frame.memory_usage > 1000)
+            ```
         """
 
         dfs_filtered = [df for df in self.data if conditional(df)]
@@ -202,13 +199,12 @@ class DataFrames:
                 Whether to sort in descending order.
 
         Return:
-            [`DataFrames`][getml.pipeline.DataFrames]:
                 A container of sorted data frames.
 
         Example:
-        ```python
-        by_num_rows = getml.project.data_frames.sort(lambda frame: frame.nrows())
-        ```
+            ```python
+            by_num_rows = getml.project.data_frames.sort(lambda frame: frame.nrows())
+            ```
         """
 
         dfs_sorted = sorted(self.data, key=key, reverse=descending)

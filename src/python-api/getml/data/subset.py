@@ -30,26 +30,25 @@ class Subset:
 
     Example:
         ```python
+        container = getml.data.Container(
+            train=population_train,
+            test=population_test
+        )
 
-            container = getml.data.Container(
-                train=population_train,
-                test=population_test
-            )
+        container.add(
+            meta=meta,
+            order=order,
+            trans=trans
+        )
 
-            container.add(
-                meta=meta,
-                order=order,
-                trans=trans
-            )
+        # train and test are Subsets.
+        # They contain population_train
+        # and population_test respectively,
+        # as well as their peripheral tables
+        # meta, order and trans.
+        my_pipeline.fit(container.train)
 
-            # train and test are Subsets.
-            # They contain population_train
-            # and population_test respectively,
-            # as well as their peripheral tables
-            # meta, order and trans.
-            my_pipeline.fit(container.train)
-
-            my_pipeline.score(container.test)
+        my_pipeline.score(container.test)
         ```
     """
 

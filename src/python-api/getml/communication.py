@@ -59,9 +59,7 @@ def is_monitor_alive() -> bool:
     """Checks if the getML monitor is running.
 
     Returns:
-        bool:
-            `True` if the getML monitor is running and ready to accept
-            commands and `False` otherwise.
+        `True` if the getML monitor is running and ready to accept commands and `False` otherwise.
     """
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -100,8 +98,7 @@ class _GetmlEncoder(json.JSONEncoder):
             Create a :class:`~getml.predictors.LinearRegression`,
             serialize it, and deserialize it again.
 
-            .. code-block:: python
-
+            ```python
                 p = getml.predictors.LinearRegression()
                 p_serialized = json.dumps(
                     p, cls = getml.communication._GetmlEncoder)
@@ -110,7 +107,7 @@ class _GetmlEncoder(json.JSONEncoder):
                     object_hook=getml.helpers.predictors._decode_predictor
                 )
                 p == p2
-
+            ```
         """
 
         if hasattr(obj, "_getml_deserialize"):
@@ -146,10 +143,8 @@ def engine_exception_handler(msg: str, fallback=""):
     In either way, this function will always throw some sort of Exception.
 
     Args:
-
         msg (str): Error message returned by the getML engine.
         fallback (str):
-
             If not empty, the default Exception will carry this
             string.
     """
@@ -244,7 +239,7 @@ def recv_float_matrix(sock: socket.socket):
 
 def recv_bytestring(sock: socket.socket):
     """
-    Receives a bytestring from the getml engine
+    Receives a bytestring from the getml engine.
     """
 
     if not isinstance(sock, socket.socket):
@@ -369,23 +364,22 @@ def send(cmd: Dict[str, Any]):
     connection.
 
     Creates a socket and sends a command to the getML engine using the
-    module-wide variable :py:const:`~getml.port`.
+    module-wide variable [`port`][getml.communication.port].
 
-    A message (string) from the :py:class:`socket.socket` will be
-    received using :py:func:`~getml.recv_string` and the socket will
-    be closed. If the message is "Success!", everything work
+    A message (string) from the `socket.socket` will be
+    received using [`recv_string`][getml.communication.recv_string] and the socket will
+    be closed. If the message is "Success!", everything works
     properly. Else, an Exception will be thrown containing the
     message.
 
-    In case another message is supposed to be send by the engine,
-    :py:func:`~getml.communication.send_and_get_socket` has to be used
+    In case another message is supposed to be sent by the engine,
+    [`send_and_get_socket`][getml.communication.send_and_get_socket] has to be used
     and the calling function must handle the message itself!
 
     Please be very careful when altering the routing/calling behavior
-    of the socket communication! The engine might react in a quite
-    sensible and freezing way.
+    of the socket communication! The engine is quite sensitive and might freeze.
 
-    Arg:
+    Args:
         cmd (dict): A dictionary specifying the command the engine is
             supposed to execute. It _must_ contain at least two string
             values with the corresponding keys being named "name_" and
@@ -426,31 +420,30 @@ def send_and_get_socket(cmd: Dict[str, Any]) -> socket.socket:
     connection.
 
     Creates a socket and sends a command to the getML engine using the
-    module-wide variable :py:const:`~getml.port`.
+    module-wide variable [`port`][getml.communication.port].
 
     The function will return the socket it opened and the calling
     function is free to receive whatever data is desires over it. But
-    the latter has also to take care of closing the socket afterwards
+    the latter also has to take care of closing the socket afterwards
     itself!
 
     Please be very careful when altering the routing/calling behavior
-    of the socket communication! The engine might react in a quite
-    sensible and freezing way. Especially implemented handling of
+    of the socket communication! The engine is quite sensitive and might freeze.
+    Especially implemented handling of
     socket sessions (their passing from function to function) must not
     be altered or separated in distinct calls to the
-    :py:func:`~getml.communication.send` function! Some commands have
-    to be send via the same socket or the engine will not be able to
+    [`send`][getml.communication.send] function! Some commands have
+    to be sent via the same socket or the engine will not be able to
     handle them and might block.
 
-    Arg:
+    Args:
         cmd (dict): A dictionary specifying the command the engine is
             supposed to execute. It _must_ contain at least two string
             values with the corresponding keys being named "name_" and
             "type_"."
 
     Returns:
-        :py:class:`socket.socket`: A socket using which the Python API
-            can communicate with the getML engine.
+        A socket which, using the Python API, can communicate with the getML engine.
     """
 
     if not isinstance(cmd, dict):

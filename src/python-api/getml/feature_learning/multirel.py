@@ -33,11 +33,10 @@ for relational data and time series. It is based on an efficient
 variation of the Multi-Relational Decision Tree Learning (MRDTL).
 
 For more information on the underlying feature learning algorithm, check
-out the User guide: `feature_learning_algorithms_multirel`.
+out the User guide: [Multirel][feature-engineering-algorithms-multirel].
 
 
 Attributes:
-
     aggregation:
         Mathematical operations used by the automated feature
         learning algorithm to create new features.
@@ -112,7 +111,7 @@ Attributes:
     num_subfeatures:
         The number of subfeatures you would like to extract in a
         subensemble (for snowflake data model only). See
-        :ref:`data_model_snowflake_schema` for more
+        [Snowflake Schema][data-model-snowflake-schema] for more
         information. Range: [1, $\infty$]
 
     num_threads:
@@ -205,7 +204,6 @@ Note:
     allow_sets: bool = True
     delta_t: float = 0.0
     grid_factor: float = 1.0
-    #Union[CrossEntropyloss, SquareLoss],
     loss_function: Optional[Union[CrossEntropyLoss, SquareLoss]] = None
     max_length: int = 4
     min_df: int = 30

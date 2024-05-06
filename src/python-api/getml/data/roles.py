@@ -46,9 +46,8 @@ join_key = "join_key"
 Role required to establish a relation between two
 [`Placeholder`][getml.data.Placeholder], the abstract representation of the
 [`DataFrame`][getml.DataFrame], by using the
-[`join`][getml.data.Placeholder.join] method (see
-:ref:`data_model`). Please refer to the
-chapter :ref:`data_model` for details.
+[`join`][getml.data.Placeholder.join] method. Please refer to the
+chapter [Data Model][data-model] for details.
 
 The content of this column is allowed to contain NULL values. But
 beware, columns with NULL in their join keys won't be matched to
@@ -82,7 +81,7 @@ algorithm unless we explicitly tell it to do so
 (refer to ``lagged_target`` in [`join`][getml.data.Placeholder.join]).
 But they
 are such an important part of the analysis that the population table is required
-to contain at least one of them (refer to :ref:`data_model_tables`).
+to contain at least one of them (refer to [Data Model Tables][data_model_tables]).
 
 The content of the target columns needs to be numerical.
 For classification problems, target variables can only assume the values
@@ -116,15 +115,11 @@ change their units. This means
 that conditions like this are not possible by default:
 
 ```python
-...
 WHERE time_stamp > some_fixed_date
-...
 ```
 Instead, time stamps will always be compared to other time stamps:
 ```python
-...
 WHERE time_stamp1 - time_stamp2 > some_value
-...
 ```
 
 This is because it is unlikely that comparing time stamps to a fixed date performs
@@ -166,24 +161,26 @@ that is used to try to interpret the input strings. Possible format options are
 If none of the formats works, the getML engine will try to interpret
 the time stamps as numerical values. If this fails, the time stamp will be set
 to NULL.
-```python
-data_df = dict(
-        date1=[getml.data.time.days(365), getml.data.time.days(366), getml.data.time.days(367)],
-        date2=['1971-01-01', '1971-01-02', '1971-01-03'],
-        date3=['1|1|71', '1|2|71', '1|3|71'],
-    )
-df = getml.DataFrame.from_dict(data_df, name='dates')
-df.set_role(['date1', 'date2', 'date3'], getml.data.roles.time_stamp, time_formats=['%Y-%m-%d', '%n|%e|%y'])
-df
-```
-```
-| date1                       | date2                       | date3                       |
-| time stamp                  | time stamp                  | time stamp                  |
--------------------------------------------------------------------------------------------
-| 1971-01-01T00:00:00.000000Z | 1971-01-01T00:00:00.000000Z | 1971-01-01T00:00:00.000000Z |
-| 1971-01-02T00:00:00.000000Z | 1971-01-02T00:00:00.000000Z | 1971-01-02T00:00:00.000000Z |
-| 1971-01-03T00:00:00.000000Z | 1971-01-03T00:00:00.000000Z | 1971-01-03T00:00:00.000000Z |
-```
+
+Example:
+    ```python
+    data_df = dict(
+            date1=[getml.data.time.days(365), getml.data.time.days(366), getml.data.time.days(367)],
+            date2=['1971-01-01', '1971-01-02', '1971-01-03'],
+            date3=['1|1|71', '1|2|71', '1|3|71'],
+        )
+    df = getml.DataFrame.from_dict(data_df, name='dates')
+    df.set_role(['date1', 'date2', 'date3'], getml.data.roles.time_stamp, time_formats=['%Y-%m-%d', '%n|%e|%y'])
+    df
+    ```
+    ```
+    | date1                       | date2                       | date3                       |
+    | time stamp                  | time stamp                  | time stamp                  |
+    -------------------------------------------------------------------------------------------
+    | 1971-01-01T00:00:00.000000Z | 1971-01-01T00:00:00.000000Z | 1971-01-01T00:00:00.000000Z |
+    | 1971-01-02T00:00:00.000000Z | 1971-01-02T00:00:00.000000Z | 1971-01-02T00:00:00.000000Z |
+    | 1971-01-03T00:00:00.000000Z | 1971-01-03T00:00:00.000000Z | 1971-01-03T00:00:00.000000Z |
+    ```
 
 Note:
     getML time stamps are actually floats expressing the number of seconds since

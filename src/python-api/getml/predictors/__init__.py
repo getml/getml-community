@@ -20,17 +20,19 @@ the [`predict`][getml.Pipeline.predict] method of one of the
 models, the raw relational data is interpreted in the
 data model, which was provided during the construction of the model,
 transformed into features using the trained feature learning
-algorithm, and, finally, its [target][annotating_data_target]
+algorithm, and, finally, its [target][annotating-data-target]
 will be predicted using the trained predictor.
 
 The algorithms can be grouped according to their finesse and
 whether you want to use them for a classification or
 regression problem.
 
+
+
 |   | simple  | sophisticated  |
-|--:|--:|--:|
-|  regression | [`LinearRegression`][getml.predictors.LinearRegression]  |  [`XGBoostRegressor`][getml.predictors.XGBoostRegressor] |
-| classification |  [`LogisticRegression`][getml.predictors.LogisticRegression] | [`XGBoostClassifier`][getml.predictors.XGBoostClassifier]  |
+----|---------|---------------|
+|  __regression__ | [`LinearRegression`][getml.predictors.LinearRegression]  |  [`XGBoostRegressor`][getml.predictors.XGBoostRegressor] |
+| __classification__ |  [`LogisticRegression`][getml.predictors.LogisticRegression] | [`XGBoostClassifier`][getml.predictors.XGBoostClassifier]  |
 
 
 Note:

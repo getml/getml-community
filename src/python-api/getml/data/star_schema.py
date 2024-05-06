@@ -104,7 +104,8 @@ class StarSchema:
                 # validation or test
                 my_pipeline.fit(star_schema.my_subset)
                 ```
-    Examples:
+
+    Example:
         Note that this example is taken from the
         [loans notebook](https://nbviewer.getml.com/github/getml/getml-demo/blob/master/loans.ipynb).
 
@@ -346,7 +347,7 @@ class StarSchema:
         all joins take place on the population table. If you want to create more
         complex data models, use [`DataModel`][getml.data.DataModel] instead.
 
-        Examples:
+        Example:
             This example will construct a data model in which the
             'population_table' depends on the 'peripheral_table' via
             the 'join_key' column. In addition, only those rows in
@@ -390,10 +391,10 @@ class StarSchema:
             You can join over more than one join key:
 
             ```python
-                star_schema.join(
-                    peripheral_table,
-                    on=["join_key1", "join_key2", ("join_key3", "other_join_key3")],
-                    time_stamps="time_stamp",
+            star_schema.join(
+                peripheral_table,
+                on=["join_key1", "join_key2", ("join_key3", "other_join_key3")],
+                time_stamps="time_stamp",
                 )
             ```
 
@@ -403,12 +404,12 @@ class StarSchema:
             do something like this:
 
             ```python
-                star_schema.join(
-                    peripheral_table,
-                    on="join_key",
-                    time_stamps="time_stamp",
-                    memory=getml.data.time.days(7),
-                )
+            star_schema.join(
+                peripheral_table,
+                on="join_key",
+                time_stamps="time_stamp",
+                memory=getml.data.time.days(7),
+            )
             ```
 
             In some use cases, particularly those involving time series, it
@@ -419,14 +420,14 @@ class StarSchema:
             you could do this:
 
             ```python
-                star_schema.join(
-                    peripheral_table,
-                    on="join_key",
-                    time_stamps="time_stamp",
-                    lagged_targets=True,
-                    horizon=getml.data.time.hours(1),
-                    memory=getml.data.time.days(7),
-                )
+            star_schema.join(
+                peripheral_table,
+                on="join_key",
+                time_stamps="time_stamp",
+                lagged_targets=True,
+                horizon=getml.data.time.hours(1),
+                memory=getml.data.time.days(7),
+            )
             ```
 
             Please also refer to [`time`][getml.data.time].
@@ -437,12 +438,12 @@ class StarSchema:
             algorithm for this join, which can significantly speed things up.
 
             ```python
-                star_schema.join(
-                    peripheral_table,
-                    on="join_key",
-                    time_stamps="time_stamp",
-                    relationship=getml.data.relationship.propositionalization,
-                )
+            star_schema.join(
+                peripheral_table,
+                on="join_key",
+                time_stamps="time_stamp",
+                relationship=getml.data.relationship.propositionalization,
+            )
             ```
 
             Please also refer to [`relationship`][getml.data.relationship].

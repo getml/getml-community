@@ -31,26 +31,6 @@ def sniff_s3(
     """
     Sniffs a list of CSV files located in an S3 bucket.
 
-    Example:
-        Let's assume you have two CSV files - *file1.csv* and
-        *file2.csv* - in the bucket. You can
-        import their data into the getML engine using the following
-        commands:
-        ```python
-        getml.engine.set_s3_access_key_id("YOUR-ACCESS-KEY-ID")
-
-        getml.engine.set_s3_secret_access_key("YOUR-SECRET-ACCESS-KEY")
-
-        stmt = data.database.sniff_s3(
-                bucket="your-bucket-name",
-                keys=["file1.csv", "file2.csv"],
-                region="us-east-2",
-                name="MY_TABLE",
-                sep=';'
-        )
-        ```
-        You can also set the access credential as environment variables
-        before you launch the getML engine.
 
     Args:
         name (str):
@@ -86,6 +66,27 @@ def sniff_s3(
 
     Returns:
         str: Appropriate `CREATE TABLE` statement.
+
+    Example:
+        Let's assume you have two CSV files - *file1.csv* and
+        *file2.csv* - in the bucket. You can
+        import their data into the getML engine using the following
+        commands:
+        ```python
+        getml.engine.set_s3_access_key_id("YOUR-ACCESS-KEY-ID")
+
+        getml.engine.set_s3_secret_access_key("YOUR-SECRET-ACCESS-KEY")
+
+        stmt = data.database.sniff_s3(
+                bucket="your-bucket-name",
+                keys=["file1.csv", "file2.csv"],
+                region="us-east-2",
+                name="MY_TABLE",
+                sep=';'
+        )
+        ```
+        You can also set the access credential as environment variables
+        before you launch the getML engine.
 
     """
 

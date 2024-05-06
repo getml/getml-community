@@ -35,6 +35,9 @@ class FastProp(_FeatureLearner):
     the [`Mapping`][getml.preprocessors.Mapping] and [`Seasonal`][getml.preprocessors.Seasonal]
     preprocessors, which can drastically improve predictive accuracy.
 
+    For more information on the underlying feature learning algorithm, check
+    out the User guide: [FastProp][feature-engineering-algorithms-fastprop].
+
     Attributes:
         aggregation:
             Mathematical operations used by the automated feature
@@ -49,7 +52,7 @@ class FastProp(_FeatureLearner):
             max_lag.
 
             For more information please refer to
-            :ref:`data_model_time_series`. Range: [0, $\infty$]
+            [Data Model Time Series][data-model-time-series]. Range: [0, $\infty$]
 
         loss_function:
             Objective function used by the feature learning algorithm

@@ -31,37 +31,6 @@ def read_s3(
     """
     Reads a list of CSV files located in an S3 bucket.
 
-    Example:
-        Let's assume you have two CSV files - *file1.csv* and
-        *file2.csv* - in the bucket. You can
-        import their data into the getML engine using the following
-        commands:
-        ```python
-        getml.engine.set_s3_access_key_id("YOUR-ACCESS-KEY-ID")
-
-        getml.engine.set_s3_secret_access_key("YOUR-SECRET-ACCESS-KEY")
-
-        stmt = data.database.sniff_s3(
-                bucket="your-bucket-name",
-                keys=["file1.csv", "file2.csv"],
-                region="us-east-2",
-                name="MY_TABLE",
-                sep=';'
-        )
-
-        getml.database.execute(stmt)
-
-        stmt = data.database.read_s3(
-                bucket="your-bucket-name",
-                keys=["file1.csv", "file2.csv"],
-                region="us-east-2",
-                name="MY_TABLE",
-                sep=';'
-        )
-        ```
-        You can also set the access credential as environment variables
-        before you launch the getML engine.
-
     Args:
         name (str):
             Name of the table in which the data is to be inserted.
@@ -95,6 +64,38 @@ def read_s3(
             The database connection to be used.
             If you don't explicitly pass a connection,
             the engine will use the default connection.
+
+    Example:
+        Let's assume you have two CSV files - *file1.csv* and
+        *file2.csv* - in the bucket. You can
+        import their data into the getML engine using the following
+        commands:
+        ```python
+        getml.engine.set_s3_access_key_id("YOUR-ACCESS-KEY-ID")
+
+        getml.engine.set_s3_secret_access_key("YOUR-SECRET-ACCESS-KEY")
+
+        stmt = data.database.sniff_s3(
+                bucket="your-bucket-name",
+                keys=["file1.csv", "file2.csv"],
+                region="us-east-2",
+                name="MY_TABLE",
+                sep=';'
+        )
+
+        getml.database.execute(stmt)
+
+        stmt = data.database.read_s3(
+                bucket="your-bucket-name",
+                keys=["file1.csv", "file2.csv"],
+                region="us-east-2",
+                name="MY_TABLE",
+                sep=';'
+        )
+        ```
+        You can also set the access credential as environment variables
+        before you launch the getML engine.
+
     """
     # -------------------------------------------
 

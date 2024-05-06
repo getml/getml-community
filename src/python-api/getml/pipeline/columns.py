@@ -271,14 +271,12 @@ class Columns:
             conditional (callable, optional):
                 A callable that evaluates to a boolean for a given item.
 
-        Return:
-            [`Column`][getml.pipeline.Column]:
-                A container of filtered Columns.
+        Returns:
+            A container of filtered Columns.
 
         Example:
             ```python
             important_columns = my_pipeline.columns.filter(lambda column: column.importance > 0.1)
-
             peripheral_columns = my_pipeline.columns.filter(lambda column: column.marker == "[PERIPHERAL]")
             ```
         """
@@ -316,12 +314,9 @@ class Columns:
             sort (bool):
                 Whether you want the results to be sorted.
 
-        Return:
-            ([`ndarray`][numpy.ndarray], [`ndarray`][numpy.ndarray]):
-            - The first array contains the names of
-              the columns.
-            - The second array contains their importances.
-              By definition, all importances add up to 1.
+        Returns:
+            The first array contains the names of the columns.
+            The second array contains their importances. By definition, all importances add up to 1.
         """
 
         # ------------------------------------------------------------
@@ -367,7 +362,7 @@ class Columns:
             container ([`Container`][getml.data.Container] or [`StarSchema`][getml.data.StarSchema] or [`TimeSeries`][getml.data.TimeSeries]):
                 The container containing the data you want to use.
 
-            share_selected_columns (numerical): The share of columns
+            share_selected_columns: The share of columns
                 to keep. Must be between 0.0 and 1.0.
         """
 
@@ -450,7 +445,7 @@ class Columns:
             descending (bool, optional):
                 Whether to sort in descending order.
 
-        Return:
+        Returns:
             [`columns`][getml.pipeline.columns]:
                 A container of sorted columns.
 

@@ -22,19 +22,19 @@ class Roles:
     predefine the roles assigned to certain columns.
 
     Example:
-    ```python
-    roles = getml.data.Roles(
-        categorical=["col1", "col2"], target=["col3"]
-    )
+        ```python
+        roles = getml.data.Roles(
+            categorical=["col1", "col2"], target=["col3"]
+        )
 
-    df_expd = data.DataFrame.from_csv(
-        fnames=["file1.csv", "file2.csv"],
-        name="MY DATA FRAME",
-        sep=';',
-        quotechar='"',
-        roles=roles
-    )
-    ```
+        df_expd = data.DataFrame.from_csv(
+            fnames=["file1.csv", "file2.csv"],
+            name="MY DATA FRAME",
+            sep=';',
+            quotechar='"',
+            roles=roles
+        )
+        ```
     """
 
     categorical: List[str] = field(default_factory=list)
