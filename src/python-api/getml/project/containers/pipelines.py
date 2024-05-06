@@ -24,23 +24,23 @@ class Pipelines:
     Container which holds all pipelines associated with the currently running
     project. The container supports slicing and is sort- and filterable.
 
-    Examples:
+    Example:
         Show the first 10 pipelines belonging to the current project:
-    ```python
-    getml.project.pipelines[:10]
-    ```
+        ```python
+        getml.project.pipelines[:10]
+        ```
         You can use nested list comprehensions to retrieve a scoring history
         for your project:
-    ```python
-    import matplotlib.pyplot as plt
+        ```python
+        import matplotlib.pyplot as plt
 
-    hyperopt_scores = [(score.date_time, score.mae) for pipe in getml.project.pipelines
-                          for score in pipe.scores["data_test"]
-                          if "hyperopt" in pipe.tags]
+        hyperopt_scores = [(score.date_time, score.mae) for pipe in getml.project.pipelines
+                              for score in pipe.scores["data_test"]
+                              if "hyperopt" in pipe.tags]
 
-    fig, ax = plt.subplots()
-    ax.bar(*zip(*hyperopt_scores))
-    ```
+        fig, ax = plt.subplots()
+        ax.bar(*zip(*hyperopt_scores))
+        ```
     """
 
     # ----------------------------------------------------------------
@@ -194,15 +194,13 @@ class Pipelines:
                 Whether to sort in descending order.
 
         Returns:
-            [`Pipelines`][getml.project.Pipelines]:
                 A container of sorted pipelines.
 
         Example:
-        ```python
-        by_auc = getml.project.pipelines.sort(key=lambda pipe: pipe.auc)
-
-        by_fl = getml.project.pipelines.sort(key=lambda pipe: pipe.feature_learners[0].type)
-        ```
+            ```python
+            by_auc = getml.project.pipelines.sort(key=lambda pipe: pipe.auc)
+            by_fl = getml.project.pipelines.sort(key=lambda pipe: pipe.feature_learners[0].type)
+            ```
         """
         pipelines_sorted = sorted(self.data, key=key, reverse=descending)
         return Pipelines(data=pipelines_sorted)
@@ -218,15 +216,13 @@ class Pipelines:
                 A callable that evaluates to a boolean for a given item.
 
         Returns:
-            [`Pipelines`][getml.project.Pipelines]:
                 A container of filtered pipelines.
 
         Example:
-        ```python
-        pipelines_with_tags = getml.project.pipelines.filter(lambda pipe: len(pipe.tags) > 0)
-
-        accurate_pipes = getml.project.pipelines.filter(lambda pipe: all(acc > 0.9 for acc in pipe.accuracy))
-        ```
+            ```python
+            pipelines_with_tags = getml.project.pipelines.filter(lambda pipe: len(pipe.tags) > 0)
+            accurate_pipes = getml.project.pipelines.filter(lambda pipe: all(acc > 0.9 for acc in pipe.accuracy))
+            ```
         """
         pipelines_filtered = [
             pipeline for pipeline in self.data if conditional(pipeline)

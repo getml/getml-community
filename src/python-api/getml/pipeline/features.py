@@ -270,13 +270,9 @@ class Features:
             sort (bool):
                 Whether you want the results to be sorted.
 
-        Return:
-            ([`ndarray`][numpy.ndarray], [`ndarray`][numpy.ndarray]):
-            - The first array contains the names of
-              the features.
-            - The second array contains the correlations with
-              the target.
-
+        Returns:
+            The first array contains the names of the features.
+            The second array contains the correlations with the target.
         """
 
         cmd: Dict[str, Any] = {}
@@ -329,14 +325,13 @@ class Features:
             conditional (callable, optional):
                 A callable that evaluates to a boolean for a given item.
 
-        Return:
+        Returns:
             [`Features`][getml.pipeline.Features]:
                 A container of filtered Features.
 
         Example:
             ```python
             important_features = my_pipeline.features.filter(lambda feature: feature.importance > 0.1)
-
             correlated_features = my_pipeline.features.filter(lambda feature: feature.correlation > 0.3)
             ```
         """
@@ -376,12 +371,9 @@ class Features:
             sort (bool):
                 Whether you want the results to be sorted.
 
-        Return:
-            ([`ndarray`][numpy.ndarray], [`ndarray`][numpy.ndarray]):
-            - The first array contains the names of
-              the features.
-            - The second array contains their importances.
-              By definition, all importances add up to 1.
+        Returns
+            The first array contains the names of the features.
+            The second array contains their importances. By definition, all importances add up to 1.
 
         """
 

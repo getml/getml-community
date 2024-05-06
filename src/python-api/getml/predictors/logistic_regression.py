@@ -31,11 +31,11 @@ $$
 $\sigma$ denotes the sigmoid function:
 
 $$
-\sigma(z) = \frac{1}{1 + exp(-z)}
+\sigma(z) = \\frac{1}{1 + exp(-z)}
 $$
 
 The weights are optimized by minimizing the cross entropy loss of
-the predictions $\hat{y}$ w.r.t. the [targets][annotating_roles_target] $y$.
+the predictions $\hat{y}$ w.r.t. the [targets][annotating-roles-target] $y$.
 
 $$
 L(\hat{y},y) = - y*\log \hat{y} - (1 - y)*\log(1 - \hat{y})
@@ -77,16 +77,16 @@ Args:
                 the own parameters will be validated.
 
         Examples:
-        ```python
-        l = getml.predictors.LogisticRegression()
-        l.learning_rate = 20
-        l.validate()
-        ```
+            ```python
+            l = getml.predictors.LogisticRegression()
+            l.learning_rate = 20
+            l.validate()
+            ```
 
         Note:
             This method is called at end of the \_\_init\_\_ constructor
             and every time before the predictor - or a class holding
-            it as an instance variable - is send to the getML engine.
+            it as an instance variable - is sent to the getML engine.
         """
 
         if params is None:

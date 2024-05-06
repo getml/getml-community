@@ -28,6 +28,7 @@ def from_value(val: Union[bool, str, int, float, np.datetime64]) -> ReturnType:
     """
     Creates an infinite column that contains the same
     value in all of its elements.
+
     Args:
         val (bool, str or number):
             The value you want to insert into your column.

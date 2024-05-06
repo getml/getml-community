@@ -43,7 +43,7 @@ class Placeholder:
             The name used for this placeholder. This name will appear
             in the generated SQL code.
 
-    Examples:
+    Example:
         This example will construct a data model in which the
         'population_table' depends on the 'peripheral_table' via
         the 'join_key' column. In addition, only those rows in
@@ -86,7 +86,7 @@ class Placeholder:
             relationship=getml.data.relationship.many_to_one,
         )
         ```
-        Please also refer to `~getml.data.relationship`.
+        Please also refer to [`relationship`][getml.data.relationship].
 
         If the join keys or time stamps are named differently in the two
         different tables, use a tuple:
@@ -147,7 +147,7 @@ class Placeholder:
             relationship=getml.data.relationship.propositionalization,
         )
         ```
-        Please also refer to `~getml.data.relationship`.
+        Please also refer to [`relationship`][getml.data.relationship].
 
         In some cases, it is necessary to have more than one placeholder
         on the same table. This is necessary to create more complicated
@@ -318,7 +318,7 @@ class Placeholder:
         Joins another to placeholder to this placeholder.
 
         Args:
-            right (:class:`~getml.data.Placeholder`):
+            right ([`Placeholder`][getml.data.Placeholder]):
                 The placeholder you would like to join.
 
             on (None, string, Tuple[str, str] or List[Union[str, Tuple[str, str]]]):
@@ -330,16 +330,16 @@ class Placeholder:
 
             relationship (str):
                 The relationship between the two tables. Must be from
-                :mod:`~getml.data.relationship`.
+                [`relationship`][getml.data.relationship].
 
             memory (float):
                 The difference between the time stamps until data is 'forgotten'.
                 Limiting your joins using memory can significantly speed up
-                training time. Also refer to :mod:`~getml.data.time`.
+                training time. Also refer to [`time`][getml.data.time].
 
             horizon (float):
                 The prediction horizon to apply to this join.
-                Also refer to :mod:`~getml.data.time`.
+                Also refer to [`time`][getml.data.time].
 
             lagged_targets (bool):
                 Whether you want to allow lagged targets. If this is set to True,

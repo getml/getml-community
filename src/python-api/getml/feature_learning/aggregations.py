@@ -13,7 +13,7 @@ This module contains all possible aggregations to be used with
 [`Mapping`][getml.preprocessors.Mapping].
 
 
-Refer to the [feature learning section][feature_learning] in the user guide for details about how
+Refer to the [feature learning section][feature-learning] in the user guide for details about how
 these aggregations are used in the context of feature learning.
 """
 
@@ -497,8 +497,7 @@ fastprop = _Aggregations(
     Minimal=[Avg, Count, Max, Min, Sum],
 )
 """
-Set of default aggregations for [`FastProp`][getml.feature_learning.FastProp] and
-[`FastPropTimeseries`][getml.feature_learning.FastPropTimeseries]. `All` contains all aggregations
+Set of default aggregations for [`FastProp`][getml.feature_learning.FastProp]. `All` contains all aggregations
 supported by FastProp, `Default` contains the subset of reasonable default aggregations,
 `Minimal` is minimal set.
 """

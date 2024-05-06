@@ -66,7 +66,7 @@ def list_pipelines() -> List[str]:
 
     Note that this function only lists pipelines which are part of the
     current project. See [`set_project`][getml.engine.set_project] for
-    changing projects and [`pipelines`][getml.pipelines] for more details about
+    changing projects and [`pipelines`][getml.pipeline] for more details about
     the lifecycles of the pipelines.
 
     To subsequently load one of them, use

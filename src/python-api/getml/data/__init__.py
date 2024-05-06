@@ -23,14 +23,14 @@ version of the underlying data model, which is represented by the
 In general, working with data within the getML suite is organized in
 three different steps.
 
-* Importing the data: `importing_data` into the getML engine .
-* Annotating the data: `annotating` by assigning
+* [Importing the data][importing-data] into the getML engine .
+* [Annotating the data][annotating-data] by assigning
   [`roles`][getml.data.roles] to the individual [`columns`][getml.data.columns]
-* Constructing the data model: `data_model` by deriving
+* [Constructing the data model][data-model] by deriving
   [`Placeholder`][getml.data.Placeholder] from the data and joining them to
   represent the data schema.
 
-Examples:
+Example:
     Creating a new data frame object in the getML engine and importing
     data is done by one of the class methods
     [`from_csv`][getml.DataFrame.from_csv],
@@ -68,7 +68,6 @@ Examples:
     print(loan)
     ```
     ```
-    ...
     | loan_id      | account_id   | amount       | duration     | date          | payments      | status        |
     | unused float | unused float | unused float | unused float | unused string | unused string | unused string |
     -------------------------------------------------------------------------------------------------------------
@@ -77,7 +76,6 @@ Examples:
     | 4962         | 25           | 30276        | 12           | 1997-12-08    | 2523.00       | A             |
     | 4967         | 37           | 318480       | 60           | 1998-10-14    | 5308.00       | D             |
     | 4968         | 38           | 110736       | 48           | 1998-04-19    | 2307.00       | C             |
-    ...
     ```
     In order to construct the data model and for the feature
     learning algorithm to get the most out of your data, you have
@@ -98,7 +96,6 @@ Examples:
     print(loan)
     ```
     ```
-    ...
     | date                        | loan_id  | account_id | payments  | duration  | amount    | status        |
     | time stamp                  | join key | join key   | target    | numerical | numerical | unused string |
     -----------------------------------------------------------------------------------------------------------
@@ -107,7 +104,6 @@ Examples:
     | 1997-12-08T00:00:00.000000Z | 4962     | 25         | 2523      | 12        | 30276     | A             |
     | 1998-10-14T00:00:00.000000Z | 4967     | 37         | 5308      | 60        | 318480    | D             |
     | 1998-04-19T00:00:00.000000Z | 4968     | 38         | 2307      | 48        | 110736    | C             |
-    ...
     ```
     Finally, we are able to construct the data model by deriving
     [`Placeholder`][getml.data.Placeholder] from each

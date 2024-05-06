@@ -29,16 +29,16 @@ def concat(name, data_frames: List[Union[DataFrame, View]]):
         name (str):
             Name of the new column.
 
-        data_frames(List[[`DataFrame`][getml.DataFrame] or [`View`][getml.data.View]]):
+        data_frames (List[[`DataFrame`][getml.DataFrame] or [`View`][getml.data.View]]):
             The data frames to concatenate.
             Must be non-empty. However, it can contain only one data frame.
             Column names and roles must match.
             Columns will be appended by name, not order.
 
-    Example:
-    ```python
+    Examples:
+        ```python
         new_df = data.concat("NEW_DF_NAME", [df1, df2])
-    ```
+        ```
     """
 
     if not isinstance(name, str):

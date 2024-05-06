@@ -81,7 +81,7 @@ def load(bundle, name=None):
     Loads a project from a bundle and connects to it.
 
     Args:
-        bundle (str): The '.getml' bundle file to load.
+        bundle (str): The `.getml` bundle file to load.
 
         name (str): A name for the project contained in the bundle.
           If None, the name will be extracted from the bundle.
@@ -113,7 +113,7 @@ def save(filename=None, target_dir=None, replace=True):
     Saves the currently connected project to disk.
 
     Args:
-        filename (str): The name of the '.getml' bundle file
+        filename (str): The name of the `.getml` bundle file
 
         target_dir (str): the directory to save the bundle to.
           If None, the current working directory is used.
@@ -136,7 +136,7 @@ def switch(name):
     """Creates a new project or loads an existing one.
 
     If there is no project called `name` present on the engine, a new one will
-    be created. See the :ref:`User guide <project_management>` for more
+    be created. See the [User guide][project-management] for more
     information.
 
     Args:

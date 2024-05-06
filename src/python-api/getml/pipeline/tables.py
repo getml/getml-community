@@ -39,19 +39,14 @@ class Tables:
         [`filter`][getml.pipeline.Tables.filter] you can also use python list
         comprehensions for filtering.
 
-    Example:
-    ```python
-            all_my_tables = my_pipeline.tables
-
-            first_table = my_pipeline.tables[0]
-
-            all_but_last_10_tables = my_pipeline.tables[:-10]
-
-            important_tables = [table for table in my_pipeline.tables if
-            table.importance > 0.1]
-
-            names, importances = my_pipeline.tables.importances()
-    ```
+    Examples:
+        ```python
+        all_my_tables = my_pipeline.tables
+        first_table = my_pipeline.tables[0]
+        all_but_last_10_tables = my_pipeline.tables[:-10]
+        important_tables = [table for table in my_pipeline.tables if table.importance > 0.1]
+        names, importances = my_pipeline.tables.importances()
+        ```
     """
 
     def __init__(
@@ -202,17 +197,14 @@ class Tables:
             conditional (callable, optional):
                 A callable that evaluates to a boolean for a given item.
 
-        Return:
-            [`Tables`][getml.pipeline.Tables]:
+        Returns:
                 A container of filtered tables.
 
         Example:
-                important_tables = my_pipeline.table.filter(
-                    lambda table: table.importance > 0.1)
-
-                peripheral_tables = my_pipeline.tables.filter(
-                    lambda table: table.marker == "[PERIPHERAL]")
-
+            ```python
+            important_tables = my_pipeline.table.filter(lambda table: table.importance > 0.1)
+            peripheral_tables = my_pipeline.tables.filter(lambda table: table.marker == "[PERIPHERAL]")
+            ```
         """
         tables_filtered = [table for table in self.data if conditional(table)]
         return self._make_tables(tables_filtered)
@@ -238,12 +230,9 @@ class Tables:
             sort (bool):
                 Whether you want the results to be sorted.
 
-        Return:
-            ([`ndarray`][numpy.ndarray], [`ndarray`][numpy.ndarray]):
-            - The first array contains the names of the tables.
-
-            - The second array contains their importances. By definition,
-              all importances add up to 1.
+        Returns:
+            The first array contains the names of the tables.
+            The second array contains their importances. By definition, all importances add up to 1.
         """
 
         target_name = self._targets[target_num]
@@ -300,14 +289,13 @@ class Tables:
             descending (bool, optional):
                 Whether to sort in descending order.
 
-        Return:
-            [`Tables`][getml.pipeline.Tables]:
+        Returns:
                 A container of sorted tables.
 
         Example:
-        ```python
-        by_importance = my_pipeline.tables.sort(key=lambda table: table.importance)
-        ```
+            ```python
+            by_importance = my_pipeline.tables.sort(key=lambda table: table.importance)
+            ```
         """
 
         reverse = False if descending is None else descending

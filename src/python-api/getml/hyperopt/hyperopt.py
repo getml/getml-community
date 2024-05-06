@@ -563,152 +563,151 @@ class GaussianHyperparameterSearch(_Hyperopt):
           it starts evaluating hyperparameter combinations that are
           particularly interesting.
 
-        References:
-            - [Carl Edward Rasmussen and Christopher K. I. Williams, MIT
-              Press, 2006 ](http://www.gaussianprocess.org/gpml/)
-            - [Julien Villemonteix, Emmanuel Vazquez, and Eric Walter, 2009
-              ](https://arxiv.org/pdf/cs/0611143.pdf)
+    References:
+        * [Carl Edward Rasmussen and Christopher K. I. Williams, MIT
+          Press, 2006 ](http://www.gaussianprocess.org/gpml/)
+        * [Julien Villemonteix, Emmanuel Vazquez, and Eric Walter, 2009
+          ](https://arxiv.org/pdf/cs/0611143.pdf)
 
     Example:
+        ```python
+        from getml import data
+        from getml import datasets
+        from getml import engine
+        from getml import feature_learning
+        from getml.feature_learning import aggregations
+        from getml.feature_learning import loss_functions
+        from getml import hyperopt
+        from getml import pipeline
+        from getml import predictors
 
-    ```python
-    from getml import data
-    from getml import datasets
-    from getml import engine
-    from getml import feature_learning
-    from getml.feature_learning import aggregations
-    from getml.feature_learning import loss_functions
-    from getml import hyperopt
-    from getml import pipeline
-    from getml import predictors
+        # ----------------
 
-    # ----------------
+        engine.set_project("examples")
 
-    engine.set_project("examples")
+        # ----------------
 
-    # ----------------
+        population_table, peripheral_table = datasets.make_numerical()
 
-    population_table, peripheral_table = datasets.make_numerical()
+        # ----------------
+        # Construct placeholders
 
-    # ----------------
-    # Construct placeholders
+        population_placeholder = data.Placeholder("POPULATION")
+        peripheral_placeholder = data.Placeholder("PERIPHERAL")
+        population_placeholder.join(peripheral_placeholder, "join_key", "time_stamp")
 
-    population_placeholder = data.Placeholder("POPULATION")
-    peripheral_placeholder = data.Placeholder("PERIPHERAL")
-    population_placeholder.join(peripheral_placeholder, "join_key", "time_stamp")
+        # ----------------
+        # Base model - any parameters not included
+        # in param_space will be taken from this.
 
-    # ----------------
-    # Base model - any parameters not included
-    # in param_space will be taken from this.
+        fe1 = feature_learning.Multirel(
+            aggregation=[
+                aggregations.Count,
+                aggregations.Sum
+            ],
+            loss_function=loss_functions.SquareLoss,
+            num_features=10,
+            share_aggregations=1.0,
+            max_length=1,
+            num_threads=0
+        )
 
-    fe1 = feature_learning.Multirel(
-        aggregation=[
-            aggregations.Count,
-            aggregations.Sum
-        ],
-        loss_function=loss_functions.SquareLoss,
-        num_features=10,
-        share_aggregations=1.0,
-        max_length=1,
-        num_threads=0
-    )
+        # ----------------
+        # Base model - any parameters not included
+        # in param_space will be taken from this.
 
-    # ----------------
-    # Base model - any parameters not included
-    # in param_space will be taken from this.
+        fe2 = feature_learning.Relboost(
+            loss_function=loss_functions.SquareLoss,
+            num_features=10
+        )
 
-    fe2 = feature_learning.Relboost(
-        loss_function=loss_functions.SquareLoss,
-        num_features=10
-    )
+        # ----------------
+        # Base model - any parameters not included
+        # in param_space will be taken from this.
 
-    # ----------------
-    # Base model - any parameters not included
-    # in param_space will be taken from this.
+        predictor = predictors.LinearRegression()
 
-    predictor = predictors.LinearRegression()
+        # ----------------
 
-    # ----------------
+        pipe = pipeline.Pipeline(
+            population=population_placeholder,
+            peripheral=[peripheral_placeholder],
+            feature_learners=[fe1, fe2],
+            predictors=[predictor]
+        )
 
-    pipe = pipeline.Pipeline(
-        population=population_placeholder,
-        peripheral=[peripheral_placeholder],
-        feature_learners=[fe1, fe2],
-        predictors=[predictor]
-    )
+        # ----------------
+        # Build a hyperparameter space.
+        # We have two feature learners and one
+        # predictor, so this is how we must
+        # construct our hyperparameter space.
+        # If we only wanted to optimize the predictor,
+        # we could just leave out the feature_learners.
 
-    # ----------------
-    # Build a hyperparameter space.
-    # We have two feature learners and one
-    # predictor, so this is how we must
-    # construct our hyperparameter space.
-    # If we only wanted to optimize the predictor,
-    # we could just leave out the feature_learners.
+        param_space = {
+            "feature_learners": [
+                {
+                    "num_features": [10, 50],
+                },
+                {
+                    "max_depth": [1, 10],
+                    "min_num_samples": [100, 500],
+                    "num_features": [10, 50],
+                    "reg_lambda": [0.0, 0.1],
+                    "shrinkage": [0.01, 0.4]
+                }],
+            "predictors": [
+                {
+                    "reg_lambda": [0.0, 10.0]
+                }
+            ]
+        }
 
-    param_space = {
-        "feature_learners": [
-            {
-                "num_features": [10, 50],
-            },
-            {
-                "max_depth": [1, 10],
-                "min_num_samples": [100, 500],
-                "num_features": [10, 50],
-                "reg_lambda": [0.0, 0.1],
-                "shrinkage": [0.01, 0.4]
-            }],
-        "predictors": [
-            {
-                "reg_lambda": [0.0, 10.0]
-            }
-        ]
-    }
+        # ----------------
+        # Wrap a GaussianHyperparameterSearch around the reference model
 
-    # ----------------
-    # Wrap a GaussianHyperparameterSearch around the reference model
+        gaussian_search = hyperopt.GaussianHyperparameterSearch(
+            pipeline=pipe,
+            param_space=param_space,
+            n_iter=30,
+            score=pipeline.metrics.rsquared
+        )
 
-    gaussian_search = hyperopt.GaussianHyperparameterSearch(
-        pipeline=pipe,
-        param_space=param_space,
-        n_iter=30,
-        score=pipeline.metrics.rsquared
-    )
+        gaussian_search.fit(
+            population_table_training=population_table,
+            population_table_validation=population_table,
+            peripheral_tables=[peripheral_table]
+        )
 
-    gaussian_search.fit(
-        population_table_training=population_table,
-        population_table_validation=population_table,
-        peripheral_tables=[peripheral_table]
-    )
+        # ----------------
 
-    # ----------------
+        # We want 5 additional iterations.
+        gaussian_search.n_iter = 5
 
-    # We want 5 additional iterations.
-    gaussian_search.n_iter = 5
+        # We do not want another burn-in-phase,
+        # so we set ratio_iter to 0.
+        gaussian_search.ratio_iter = 0.0
 
-    # We do not want another burn-in-phase,
-    # so we set ratio_iter to 0.
-    gaussian_search.ratio_iter = 0.0
+        # This widens the hyperparameter space.
+        gaussian_search.param_space["feature_learners"][1]["num_features"] = [10, 100]
 
-    # This widens the hyperparameter space.
-    gaussian_search.param_space["feature_learners"][1]["num_features"] = [10, 100]
+        # This narrows the hyperparameter space.
+        gaussian_search.param_space["predictors"][0]["reg_lambda"] = [0.0, 0.0]
 
-    # This narrows the hyperparameter space.
-    gaussian_search.param_space["predictors"][0]["reg_lambda"] = [0.0, 0.0]
+        # This continues the hyperparameter search using the previous iterations as
+        # prior knowledge.
+        gaussian_search.fit(
+            population_table_training=population_table,
+            population_table_validation=population_table,
+            peripheral_tables=[peripheral_table]
+        )
 
-    # This continues the hyperparameter search using the previous iterations as
-    # prior knowledge.
-    gaussian_search.fit(
-        population_table_training=population_table,
-        population_table_validation=population_table,
-        peripheral_tables=[peripheral_table]
-    )
+        # ----------------
 
-    # ----------------
+        all_hyp = hyperopt.list_hyperopts()
 
-    all_hyp = hyperopt.list_hyperopts()
-
-    best_pipeline = gaussian_search.best_pipeline
-    ```
+        best_pipeline = gaussian_search.best_pipeline
+        ```
 
     Note:
         Not supported in the getML community edition.
@@ -864,116 +863,115 @@ class LatinHypercubeSearch(_Hyperopt):
             5543. Range: [0, $\infty$]
 
     Example:
+        ```python
+        from getml import data
+        from getml import datasets
+        from getml import engine
+        from getml import feature_learning
+        from getml.feature_learning import aggregations
+        from getml.feature_learning import loss_functions
+        from getml import hyperopt
+        from getml import pipeline
+        from getml import predictors
 
-    ```python
-    from getml import data
-    from getml import datasets
-    from getml import engine
-    from getml import feature_learning
-    from getml.feature_learning import aggregations
-    from getml.feature_learning import loss_functions
-    from getml import hyperopt
-    from getml import pipeline
-    from getml import predictors
+        # ----------------
 
-    # ----------------
+        engine.set_project("examples")
 
-    engine.set_project("examples")
+        # ----------------
 
-    # ----------------
+        population_table, peripheral_table = datasets.make_numerical()
 
-    population_table, peripheral_table = datasets.make_numerical()
+        # ----------------
+        # Construct placeholders
 
-    # ----------------
-    # Construct placeholders
+        population_placeholder = data.Placeholder("POPULATION")
+        peripheral_placeholder = data.Placeholder("PERIPHERAL")
+        population_placeholder.join(peripheral_placeholder, "join_key", "time_stamp")
 
-    population_placeholder = data.Placeholder("POPULATION")
-    peripheral_placeholder = data.Placeholder("PERIPHERAL")
-    population_placeholder.join(peripheral_placeholder, "join_key", "time_stamp")
+        # ----------------
+        # Base model - any parameters not included
+        # in param_space will be taken from this.
 
-    # ----------------
-    # Base model - any parameters not included
-    # in param_space will be taken from this.
+        fe1 = feature_learning.Multirel(
+            aggregation=[
+                aggregations.Count,
+                aggregations.Sum
+            ],
+            loss_function=loss_functions.SquareLoss,
+            num_features=10,
+            share_aggregations=1.0,
+            max_length=1,
+            num_threads=0
+        )
 
-    fe1 = feature_learning.Multirel(
-        aggregation=[
-            aggregations.Count,
-            aggregations.Sum
-        ],
-        loss_function=loss_functions.SquareLoss,
-        num_features=10,
-        share_aggregations=1.0,
-        max_length=1,
-        num_threads=0
-    )
+        # ----------------
+        # Base model - any parameters not included
+        # in param_space will be taken from this.
 
-    # ----------------
-    # Base model - any parameters not included
-    # in param_space will be taken from this.
+        fe2 = feature_learning.Relboost(
+            loss_function=loss_functions.SquareLoss,
+            num_features=10
+        )
 
-    fe2 = feature_learning.Relboost(
-        loss_function=loss_functions.SquareLoss,
-        num_features=10
-    )
+        # ----------------
+        # Base model - any parameters not included
+        # in param_space will be taken from this.
 
-    # ----------------
-    # Base model - any parameters not included
-    # in param_space will be taken from this.
+        predictor = predictors.LinearRegression()
 
-    predictor = predictors.LinearRegression()
+        # ----------------
 
-    # ----------------
+        pipe = pipeline.Pipeline(
+            population=population_placeholder,
+            peripheral=[peripheral_placeholder],
+            feature_learners=[fe1, fe2],
+            predictors=[predictor]
+        )
 
-    pipe = pipeline.Pipeline(
-        population=population_placeholder,
-        peripheral=[peripheral_placeholder],
-        feature_learners=[fe1, fe2],
-        predictors=[predictor]
-    )
+        # ----------------
+        # Build a hyperparameter space.
+        # We have two feature learners and one
+        # predictor, so this is how we must
+        # construct our hyperparameter space.
+        # If we only wanted to optimize the predictor,
+        # we could just leave out the feature_learners.
 
-    # ----------------
-    # Build a hyperparameter space.
-    # We have two feature learners and one
-    # predictor, so this is how we must
-    # construct our hyperparameter space.
-    # If we only wanted to optimize the predictor,
-    # we could just leave out the feature_learners.
+        param_space = {
+            "feature_learners": [
+                {
+                    "num_features": [10, 50],
+                },
+                {
+                    "max_depth": [1, 10],
+                    "min_num_samples": [100, 500],
+                    "num_features": [10, 50],
+                    "reg_lambda": [0.0, 0.1],
+                    "shrinkage": [0.01, 0.4]
+                }],
+            "predictors": [
+                {
+                    "reg_lambda": [0.0, 10.0]
+                }
+            ]
+        }
 
-    param_space = {
-        "feature_learners": [
-            {
-                "num_features": [10, 50],
-            },
-            {
-                "max_depth": [1, 10],
-                "min_num_samples": [100, 500],
-                "num_features": [10, 50],
-                "reg_lambda": [0.0, 0.1],
-                "shrinkage": [0.01, 0.4]
-            }],
-        "predictors": [
-            {
-                "reg_lambda": [0.0, 10.0]
-            }
-        ]
-    }
+        # ----------------
+        # Wrap a LatinHypercubeSearch around the reference model
 
-    # ----------------
-    # Wrap a LatinHypercubeSearch around the reference model
+        latin_search = hyperopt.LatinHypercubeSearch(
+            pipeline=pipe,
+            param_space=param_space,
+            n_iter=30,
+            score=pipeline.metrics.rsquared
+        )
 
-    latin_search = hyperopt.LatinHypercubeSearch(
-        pipeline=pipe,
-        param_space=param_space,
-        n_iter=30,
-        score=pipeline.metrics.rsquared
-    )
-
-    latin_search.fit(
-        population_table_training=population_table,
-        population_table_validation=population_table,
-        peripheral_tables=[peripheral_table]
-    )
-    ```
+        latin_search.fit(
+            population_table_training=population_table,
+            population_table_validation=population_table,
+            peripheral_tables=[peripheral_table]
+        )
+        ```
 
     Note:
         Not supported in the getML community edition.
@@ -1108,118 +1106,118 @@ class RandomSearch(_Hyperopt):
             5543. Range: [0, $\infty$]
 
     Example:
-    ```python
+        ```python
 
 
 
-    from getml import data
-    from getml import datasets
-    from getml import engine
-    from getml import feature_learning
-    from getml.feature_learning import aggregations
-    from getml.feature_learning import loss_functions
-    from getml import hyperopt
-    from getml import pipeline
-    from getml import predictors
+        from getml import data
+        from getml import datasets
+        from getml import engine
+        from getml import feature_learning
+        from getml.feature_learning import aggregations
+        from getml.feature_learning import loss_functions
+        from getml import hyperopt
+        from getml import pipeline
+        from getml import predictors
 
-    # ----------------
+        # ----------------
 
-    engine.set_project("examples")
+        engine.set_project("examples")
 
-    # ----------------
+        # ----------------
 
-    population_table, peripheral_table = datasets.make_numerical()
+        population_table, peripheral_table = datasets.make_numerical()
 
-    # ----------------
-    # Construct placeholders
+        # ----------------
+        # Construct placeholders
 
-    population_placeholder = data.Placeholder("POPULATION")
-    peripheral_placeholder = data.Placeholder("PERIPHERAL")
-    population_placeholder.join(peripheral_placeholder, "join_key", "time_stamp")
+        population_placeholder = data.Placeholder("POPULATION")
+        peripheral_placeholder = data.Placeholder("PERIPHERAL")
+        population_placeholder.join(peripheral_placeholder, "join_key", "time_stamp")
 
-    # ----------------
-    # Base model - any parameters not included
-    # in param_space will be taken from this.
+        # ----------------
+        # Base model - any parameters not included
+        # in param_space will be taken from this.
 
-    fe1 = feature_learning.Multirel(
-        aggregation=[
-            aggregations.Count,
-            aggregations.Sum
-        ],
-        loss_function=loss_functions.SquareLoss,
-        num_features=10,
-        share_aggregations=1.0,
-        max_length=1,
-        num_threads=0
-    )
+        fe1 = feature_learning.Multirel(
+            aggregation=[
+                aggregations.Count,
+                aggregations.Sum
+            ],
+            loss_function=loss_functions.SquareLoss,
+            num_features=10,
+            share_aggregations=1.0,
+            max_length=1,
+            num_threads=0
+        )
 
-    # ----------------
-    # Base model - any parameters not included
-    # in param_space will be taken from this.
+        # ----------------
+        # Base model - any parameters not included
+        # in param_space will be taken from this.
 
-    fe2 = feature_learning.Relboost(
-        loss_function=loss_functions.SquareLoss,
-        num_features=10
-    )
+        fe2 = feature_learning.Relboost(
+            loss_function=loss_functions.SquareLoss,
+            num_features=10
+        )
 
-    # ----------------
-    # Base model - any parameters not included
-    # in param_space will be taken from this.
+        # ----------------
+        # Base model - any parameters not included
+        # in param_space will be taken from this.
 
-    predictor = predictors.LinearRegression()
+        predictor = predictors.LinearRegression()
 
-    # ----------------
+        # ----------------
 
-    pipe = pipeline.Pipeline(
-        population=population_placeholder,
-        peripheral=[peripheral_placeholder],
-        feature_learners=[fe1, fe2],
-        predictors=[predictor]
-    )
+        pipe = pipeline.Pipeline(
+            population=population_placeholder,
+            peripheral=[peripheral_placeholder],
+            feature_learners=[fe1, fe2],
+            predictors=[predictor]
+        )
 
-    # ----------------
-    # Build a hyperparameter space.
-    # We have two feature learners and one
-    # predictor, so this is how we must
-    # construct our hyperparameter space.
-    # If we only wanted to optimize the predictor,
-    # we could just leave out the feature_learners.
+        # ----------------
+        # Build a hyperparameter space.
+        # We have two feature learners and one
+        # predictor, so this is how we must
+        # construct our hyperparameter space.
+        # If we only wanted to optimize the predictor,
+        # we could just leave out the feature_learners.
 
-    param_space = {
-        "feature_learners": [
-            {
-                "num_features": [10, 50],
-            },
-            {
-                "max_depth": [1, 10],
-                "min_num_samples": [100, 500],
-                "num_features": [10, 50],
-                "reg_lambda": [0.0, 0.1],
-                "shrinkage": [0.01, 0.4]
-            }],
-        "predictors": [
-            {
-                "reg_lambda": [0.0, 10.0]
-            }
-        ]
-    }
+        param_space = {
+            "feature_learners": [
+                {
+                    "num_features": [10, 50],
+                },
+                {
+                    "max_depth": [1, 10],
+                    "min_num_samples": [100, 500],
+                    "num_features": [10, 50],
+                    "reg_lambda": [0.0, 0.1],
+                    "shrinkage": [0.01, 0.4]
+                }],
+            "predictors": [
+                {
+                    "reg_lambda": [0.0, 10.0]
+                }
+            ]
+        }
 
-    # ----------------
-    # Wrap a RandomSearch around the reference model
+        # ----------------
+        # Wrap a RandomSearch around the reference model
 
-    random_search = hyperopt.RandomSearch(
-        pipeline=pipe,
-        param_space=param_space,
-        n_iter=30,
-        score=pipeline.metrics.rsquared
-    )
+        random_search = hyperopt.RandomSearch(
+            pipeline=pipe,
+            param_space=param_space,
+            n_iter=30,
+            score=pipeline.metrics.rsquared
+        )
 
-    random_search.fit(
-        population_table_training=population_table,
-        population_table_validation=population_table,
-        peripheral_tables=[peripheral_table]
-    )
-    ```
+        random_search.fit(
+            population_table_training=population_table,
+            population_table_validation=population_table,
+            peripheral_tables=[peripheral_table]
+        )
+        ```
 
     Note:
         Not supported in the getML community edition.

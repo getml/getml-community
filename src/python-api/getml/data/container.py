@@ -102,8 +102,7 @@ class Container:
                 my_pipeline.fit(container.my_subset)
                 ```
 
-    Examples:
-
+    Example:
         A [`DataModel`][getml.data.DataModel] only contains abstract data. When we
         fit a pipeline, we need to assign concrete data.
 
@@ -113,7 +112,6 @@ class Container:
         demonstration purposes we are proceeding now with the low level implementation.
 
         ```python
-
         # The abstract data model is constructed
         # using the DataModel class. A data model
         # does not contain any actual data. It just

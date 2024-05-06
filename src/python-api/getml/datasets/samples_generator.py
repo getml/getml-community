@@ -278,15 +278,15 @@ def make_discrete(
       ``time_stamp_peripheral < time_stamp_population``
       and the join key matches
     ```sql
-        SELECT aggregation( column_01 )
-        FROM POPULATION t1
-        LEFT JOIN PERIPHERAL t2
-        ON t1.join_key = t2.join_key
-        WHERE (
-           ( t2.column_01 > 0 )
-        ) AND t2.time_stamp <= t1.time_stamp
-        GROUP BY t1.join_key,
-                 t1.time_stamp;
+    SELECT aggregation( column_01 )
+    FROM POPULATION t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t2.column_01 > 0 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.join_key,
+             t1.time_stamp;
     ```
 
     Args:
@@ -445,15 +445,15 @@ def make_numerical(
       time_stamp_population < time_stamp_peripheral + 0.5``
 
     ```sql
-        SELECT aggregation( column_01 )
-        FROM POPULATION t1
-        LEFT JOIN PERIPHERAL t2
-        ON t1.join_key = t2.join_key
-        WHERE (
-           ( t1.time_stamp - t2.time_stamp <= 0.5 )
-        ) AND t2.time_stamp <= t1.time_stamp
-        GROUP BY t1.join_key,
-             t1.time_stamp;
+    SELECT aggregation( column_01 )
+    FROM POPULATION t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.time_stamp - t2.time_stamp <= 0.5 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.join_key,
+         t1.time_stamp;
     ```
 
     Args:
@@ -809,16 +809,15 @@ def make_same_units_numerical(
       time_stamp_population < time_stamp_peripheral + 0.5``
 
     ```sql
-
-        SELECT aggregation( column_01 )
-        FROM POPULATION t1
-        LEFT JOIN PERIPHERAL t2
-        ON t1.join_key = t2.join_key
-        WHERE (
-           ( t1.column_01 - t2.column_01 <= 0.5 )
-        ) AND t2.time_stamp <= t1.time_stamp
-        GROUP BY t1.join_key,
-             t1.time_stamp;
+    SELECT aggregation( column_01 )
+    FROM POPULATION t1
+    LEFT JOIN PERIPHERAL t2
+    ON t1.join_key = t2.join_key
+    WHERE (
+       ( t1.column_01 - t2.column_01 <= 0.5 )
+    ) AND t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.join_key,
+         t1.time_stamp;
     ```
 
     Args:
@@ -1009,24 +1008,23 @@ def make_snowflake(
     * `targets`: target variable as defined by the SQL block below:
 
     ```sql
-
-        SELECT aggregation1( feature_1_1 )
-        FROM POPULATION t1
-        LEFT JOIN (
-            SELECT aggregation2( t4.column_01 ) AS feature_1_1
-            FROM PERIPHERAL t3
-            LEFT JOIN PERIPHERAL2 t4
-            ON t3.join_key2 = t4.join_key2
-            WHERE (
-               ( t3.time_stamp - t4.time_stamp <= 0.5 )
-            ) AND t4.time_stamp <= t3.time_stamp
-            GROUP BY t3.join_key,
-                 t3.time_stamp
-        ) t2
-        ON t1.join_key = t2.join_key
-        WHERE t2.time_stamp <= t1.time_stamp
-        GROUP BY t1.join_key,
-             t1.time_stamp;
+    SELECT aggregation1( feature_1_1 )
+    FROM POPULATION t1
+    LEFT JOIN (
+        SELECT aggregation2( t4.column_01 ) AS feature_1_1
+        FROM PERIPHERAL t3
+        LEFT JOIN PERIPHERAL2 t4
+        ON t3.join_key2 = t4.join_key2
+        WHERE (
+           ( t3.time_stamp - t4.time_stamp <= 0.5 )
+        ) AND t4.time_stamp <= t3.time_stamp
+        GROUP BY t3.join_key,
+             t3.time_stamp
+    ) t2
+    ON t1.join_key = t2.join_key
+    WHERE t2.time_stamp <= t1.time_stamp
+    GROUP BY t1.join_key,
+         t1.time_stamp;
     ```
 
     Args:

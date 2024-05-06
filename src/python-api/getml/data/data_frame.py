@@ -113,7 +113,7 @@ class DataFrame:
             ```
             Otherwise, you can use the [`Roles`][getml.data.Roles] class.
 
-    Examples:
+    Example:
         Creating a new data frame object in the getML engine and importing
         data is done by one the class functions
         [`from_csv`][getml.DataFrame.from_csv],
@@ -991,7 +991,7 @@ class DataFrame:
             It is assumed that the first line of each CSV file
             contains a header with the column names.
 
-        Examples:
+        Example:
             Let's assume you have two CSV files - *file1.csv* and
             *file2.csv* - in the current working directory. You can
             import their data into the getML engine using.
@@ -1346,10 +1346,10 @@ class DataFrame:
 
     @classmethod
     def from_pandas(cls, pandas_df, name, roles=None, ignore=False, dry=False):
-        """Create a DataFrame from a :py[`DataFrame`][pandas.DataFrame].
+        """Create a DataFrame from a [`DataFrame`][pandas.DataFrame].
 
         It will construct a data frame object in the engine, fill it
-        with the data read from the :py[`DataFrame`][pandas.DataFrame], and
+        with the data read from the [`DataFrame`][pandas.DataFrame], and
         return a corresponding [`DataFrame`][getml.DataFrame] handle.
 
         Args:
@@ -1501,7 +1501,7 @@ class DataFrame:
     # --------------------------------------------------------------------
 
     @classmethod
-    def from_pyspark(cls, spark_df, name, roles=None, ignore=False, dry=False):
+    def from_pyspark(cls, spark_df, name, roles=None, ignore=False, dry=False) -> "DataFrame":
         """Create a DataFrame from a `pyspark.sql.DataFrame`.
 
         It will construct a data frame object in the engine, fill it
@@ -1851,7 +1851,7 @@ class DataFrame:
         disk into the getML engine and updates the current handler
         using [`refresh`][getml.DataFrame.refresh].
 
-        Examples:
+        Example:
             First, we have to create and import data sets.
             ```python
             d, _ = getml.datasets.make_numerical(population_name = 'test')
@@ -3464,7 +3464,6 @@ class DataFrame:
                 Indicates the rows you want to select.
 
         Example:
-
             Generate example data:
             ```python
             data = dict(

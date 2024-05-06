@@ -23,8 +23,11 @@ class Fastboost(_FeatureLearner):
     Feature learning based on Gradient Boosting.
 
     [`Fastboost`][getml.feature_learning.Fastboost] automates feature learning
-    for relational data and time series. The algorithm used is slighly
+    for relational data and time series. The algorithm used is slightly
     simpler than [`Relboost`][getml.feature_learning.Relboost] and much faster.
+
+    For more information on the underlying feature learning algorithm, check
+    out the User guide: [Fastboost][feature-engineering-algorithms-fastboost].
 
     Attributes:
         gamma:

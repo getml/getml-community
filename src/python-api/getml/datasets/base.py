@@ -184,7 +184,7 @@ def load_air_pollution(
 
         * air_pollution
 
-    Examples:
+    Example:
         ```python
         air_pollution = getml.datasets.load_air_pollution()
         type(air_pollution)
@@ -266,7 +266,7 @@ def load_atherosclerosis(
         * `population`
         * `contr`
 
-    Examples:
+    Example:
         ```python
         population, contr = getml.datasets.load_atherosclerosis()
         type(population)
@@ -358,7 +358,7 @@ def load_biodegradability(
         * `gmember`
         * `group`
 
-    Examples:
+    Example:
         ```python
         biodegradability = getml.datasets.load_biodegradability(as_dict=True)
         type(biodegradability["molecule_train"])
@@ -433,7 +433,7 @@ def load_consumer_expenditures(
         * `fmld`
         * `memd`
 
-    Examples:
+    Example:
         ```python
         ce = getml.datasets.load_consumer_expenditures(as_dict=True)
         type(ce["expd"])
@@ -505,7 +505,7 @@ def load_interstate94(
 
         * `traffic`
 
-    Examples:
+    Example:
         ```python
         traffic = getml.datasets.load_interstate94()
         type(traffic)
@@ -598,7 +598,7 @@ def load_loans(
         * `order`
         * `trans`
 
-    Examples:
+    Example:
         ```python
         loans = getml.datasets.load_loans(as_dict=True)
         type(loans["population_train"])
@@ -676,7 +676,7 @@ def load_occupancy(
         * `population_test`
         * `population_validation`
 
-    Examples:
+    Example:
         ```python
         population_train, population_test, _ = getml.datasets.load_occupancy()
         type(occupancy_train)

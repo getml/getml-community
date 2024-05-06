@@ -35,7 +35,7 @@ $$
 $$
 
 The weights are optimized by minimizing the squared loss of the
-predictions $\hat{y}$ w.r.t. the [targets][annotating_roles_target] $y$.
+predictions $\hat{y}$ w.r.t. the [target][annotating-data-target] $y$.
 
 $$
 L(y,\hat{y}) = \\frac{1}{n} \sum_{i=1}^{n} (y_i -\hat{y}_i)^2
@@ -45,7 +45,7 @@ Linear regressions can be trained arithmetically or numerically.
 Training arithmetically is more accurate, but suffers worse
 scalability.
 
-If you decide to pass [categorical features][annotating_data_categorical] to the
+If you decide to pass [categorical features][annotating-data-categorical] to the
 [`LinearRegression`][getml.predictors.LinearRegression], it will be trained
 numerically. Otherwise, it will be trained arithmetically.
 
@@ -78,12 +78,13 @@ Args:
                 the parameters to validate. If nothing is passed,
                 the default parameters will be validated.
 
-        Examples:
-        ```python
-        l = getml.predictors.LinearRegression()
-        l.learning_rate = 8.1
-        l.validate()
-        ```
+        Example:
+            ```python
+            l = getml.predictors.LinearRegression()
+            l.learning_rate = 8.1
+            l.validate()
+            ```
+
         Note:
             This method is called at end of the \_\_init\_\_ constructor
             and every time before the predictor - or a class holding
