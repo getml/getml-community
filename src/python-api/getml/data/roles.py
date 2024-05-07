@@ -81,7 +81,7 @@ algorithm unless we explicitly tell it to do so
 (refer to ``lagged_target`` in [`join`][getml.data.Placeholder.join]).
 But they
 are such an important part of the analysis that the population table is required
-to contain at least one of them (refer to [Data Model Tables][data_model_tables]).
+to contain at least one of them (refer to [Data Model Tables][data-model-tables]).
 
 The content of the target columns needs to be numerical.
 For classification problems, target variables can only assume the values
