@@ -67,7 +67,7 @@ class FastProp(_FeatureLearner):
             a value to delta_t.
 
             For more information please refer to
-            :ref:`data_model_time_series`. Range: [0, $\infty$]
+            [Time Series][data-model-time-series]. Range: [0, $\infty$]
 
         min_df:
             Only relevant for columns with role [`text`][getml.data.roles.text].
