@@ -40,7 +40,7 @@ Example:
 
     In this example we chose to directly load data from a public
     database in the internet. But, firstly, we have to connect the
-    getML engine to the database (see [mysql_interface][mysql_interface] in the user
+    getML engine to the database (see [MySQL interface][mysql] in the user
     guide for further details).
 
 

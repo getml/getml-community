@@ -90,7 +90,7 @@ class FastProp(_FeatureLearner):
             Number of threads used by the feature learning algorithm. If set to
             zero or a negative value, the number of threads will be
             determined automatically by the getML engine. Range:
-            [$0$, $\infty$]
+            [0, $\infty$]
 
         sampling_factor:
             FastProp uses a bootstrapping procedure (sampling with replacement) to train

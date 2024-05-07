@@ -26,8 +26,6 @@ class Fastboost(_FeatureLearner):
     for relational data and time series. The algorithm used is slightly
     simpler than [`Relboost`][getml.feature_learning.Relboost] and much faster.
 
-    For more information on the underlying feature learning algorithm, check
-    out the User guide: [Fastboost][feature-engineering-algorithms-fastboost].
 
     Attributes:
         gamma:

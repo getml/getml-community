@@ -35,7 +35,7 @@ $$
 $$
 
 The weights are optimized by minimizing the cross entropy loss of
-the predictions $\hat{y}$ w.r.t. the [targets][annotating-roles-target] $y$.
+the predictions $\hat{y}$ w.r.t. the [targets][annotating-data-target] $y$.
 
 $$
 L(\hat{y},y) = - y*\log \hat{y} - (1 - y)*\log(1 - \hat{y})

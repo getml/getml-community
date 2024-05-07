@@ -106,12 +106,12 @@ class Pipeline:
     A Pipeline is the main class for feature learning and prediction.
 
     Args:
-        data_model ([`DataModel`][getml.data.DataModel]):
+        data_model:
             Abstract representation of the data_model,
             which defines the abstract relationships between the tables.
             Required for the feature learners.
 
-        peripheral (Union[[`Placeholder`][getml.data.Placeholder], List[[`Placeholder`][getml.data.Placeholder]]], optional):
+        peripheral:
             Abstract representations of the additional tables used to
             augment the information provided in `population`. These
             have to be the same objects that were
@@ -130,25 +130,25 @@ class Pipeline:
             be inferred from the data model and ordered
             alphabetically.
 
-        preprocessors (Union[[`_Preprocessor`][getml.feature_learning._Preprocessor], List[[`_Preprocessor`][getml.feature_learning._Preprocessor]]], optional):
+        preprocessors:
             The preprocessor(s) to be used.
             Must be from [`preprocessors`][getml.preprocessors].
             A single preprocessor does not have to be wrapped in a list.
 
-        feature_learners (Union[[`_FeatureLearner`][getml.feature_learning._FeatureLearner], List[[`_FeatureLearner`][getml.feature_learning._FeatureLearner]]], optional):
+        feature_learners:
             The feature learner(s) to be used.
             Must be from [`feature_learning`][getml.feature_learning].
             A single feature learner does not have to be wrapped
             in a list.
 
-        feature_selectors (Union[[`_Predictor`][getml.predictors._Predictor], List[[`_Predictor`][getml.predictors._Predictor]]], optional):
+        feature_selectors:
             Predictor(s) used to select the best features.
             Must be from [`predictors`][getml.predictors].
             A single feature selector does not have to be wrapped
             in a list.
             Make sure to also set *share_selected_features*.
 
-        predictors (Union[[`_Predictor`][getml.predictors._Predictor], List[[`_Predictor`][getml.predictors._Predictor]]], optional):
+        predictors:
             Predictor(s) used to generate the predictions.
             If more than one predictor is passed, the predictions
             generated will be averaged.
@@ -156,18 +156,18 @@ class Pipeline:
             A single predictor does not have to be wrapped
             in a list.
 
-        loss_function (str or None):
+        loss_function:
             The loss function to use for the feature learners.
 
-        tags (List[str], optional): Tags exist to help you organize your pipelines.
+        tags: Tags exist to help you organize your pipelines.
             You can add any tags that help you remember what you were
             trying to do.
 
-        include_categorical (bool, optional):
+        include_categorical:
             Whether you want to pass categorical columns
             in the population table to the predictor.
 
-        share_selected_features(float, optional):
+        share_selected_features:
             The share of features you want the feature
             selection to keep. When set to 0.0, then all features will be kept.
 
@@ -1440,12 +1440,10 @@ class Pipeline:
             table_name (str, optional):
                 If not an empty string, the resulting predictions will
                 be written into a table in a [`database`][getml.database].
-                Refer to [unified_import_interface][unified_import_interface] for further information.
+                Refer to [Unified import interface][importing-data-unified-interface] for further information.
 
         Returns:
-            Resulting predictions provided in an array of the
-            (number of rows in `population_table`, number of
-            targets in `population_table`).
+            Resulting predictions provided in an array of the (number of rows in `population_table`, number of targets in `population_table`).
 
         Note:
             Only fitted pipelines
@@ -1742,7 +1740,7 @@ class Pipeline:
             table_name (str, optional):
                 If not an empty string, the resulting features will
                 be written into a table in a [`database`][getml.database].
-                Refer to [unified_import_interface][unified_import_interface] for further information.
+                Refer to [Unified import interface][importing-data-unified-interface] for further information.
 
         Note:
             Only fitted pipelines

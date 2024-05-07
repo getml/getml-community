@@ -86,7 +86,7 @@ def list_projects():
 
     Returns:
         List[str]:
-            Lists the name all the projects.
+            Lists the name of all the projects.
     """
     return _list_projects_impl(running_only=False)
 
@@ -99,7 +99,7 @@ def list_running_projects():
     List all projects on the getML engine that are currently running.
 
     Returns:
-        List[str]: Lists the name all the projects currently running.
+        List[str]: Lists the name of all the projects currently running.
     """
     return _list_projects_impl(running_only=True)
 

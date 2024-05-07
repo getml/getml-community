@@ -13,7 +13,7 @@ This module contains all possible aggregations to be used with
 [`Mapping`][getml.preprocessors.Mapping].
 
 
-Refer to the [feature learning section][feature-learning] in the user guide for details about how
+Refer to the [feature learning section][feature-engineering-design-principles] in the user guide for details about how
 these aggregations are used in the context of feature learning.
 """
 

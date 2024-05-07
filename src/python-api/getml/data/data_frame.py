@@ -84,7 +84,7 @@ class DataFrame:
     [`from_db`][getml.DataFrame.from_db],
     [`from_json`][getml.DataFrame.from_json], or
     [`from_pandas`][getml.DataFrame.from_pandas] class methods. The
-    [importing_data][importing_data] section in the user guide explains the
+    [Importing Data][importing-data] section in the user guide explains the
     particularities of each of those flavors of the unified
     import interface.
 
@@ -95,7 +95,7 @@ class DataFrame:
     handler without altering the underlying data. For more information
     about the lifecycle of the data in the getML engine and its
     synchronization with the Python API please see the
-    corresponding [User Guide][python-api].
+    corresponding [User Guide][python-api-lifecycles].
 
     Args:
         name (str):

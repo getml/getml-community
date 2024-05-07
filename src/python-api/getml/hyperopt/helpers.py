@@ -53,7 +53,7 @@ def list_hyperopts():
 def exists(name):
     """Determines whether a hyperopt exists.
 
-    Attributes:
+    Args:
         name (str): The name of the hyperopt.
 
     Returns:
@@ -72,7 +72,7 @@ def delete(name):
     """
     If a hyperopt named 'name' exists, it is deleted.
 
-    Attributes:
+    Args:
         name (str): The name of the hyperopt.
     """
 

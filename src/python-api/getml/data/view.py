@@ -1023,7 +1023,7 @@ class View:
         string or vice verse, an implicit type conversion will be conducted.
         The `time_formats` argument is used to interpret time
         format string: `annotating_roles_time_stamp`. For more information on
-        roles, please refer to the user guide: [ref][`annotating`].
+        roles, please refer to the [User Guide][annotating-data].
 
         Args:
             names (str or List[str]):
