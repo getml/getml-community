@@ -53,29 +53,28 @@ class Features:
     correlations and their respective transpiled sql representation.
 
     Note:
-
         The container is an iterable. So, in addition to
-        :meth:`~getml.pipeline.Features.filter` you can also use python list
+        [`filter`][getml.pipeline.Features.filter] you can also use python list
         comprehensions for filtering.
 
     Example:
-        .. code-block:: python
+        ```python
+        all_my_features = my_pipeline.features
 
-            all_my_features = my_pipeline.features
+        first_feature = my_pipeline.features[0]
 
-            first_feature = my_pipeline.features[0]
+        second_feature = my_pipeline.features["feature_1_2"]
 
-            second_feature = my_pipeline.features["feature_1_2"]
+        all_but_last_10_features = my_pipeline.features[:-10]
 
-            all_but_last_10_features = my_pipeline.features[:-10]
+        important_features = [feature for feature in my_pipeline.features if feature.importance > 0.1]
 
-            important_features = [feature for feature in my_pipeline.features if feature.importance > 0.1]
+        names, importances = my_pipeline.features.importances()
 
-            names, importances = my_pipeline.features.importances()
+        names, correlations = my_pipeline.features.correlations()
 
-            names, correlations = my_pipeline.features.correlations()
-
-            sql_code = my_pipeline.features.to_sql()
+        sql_code = my_pipeline.features.to_sql()
+        ```
     """
 
     # ----------------------------------------------------------------
@@ -243,13 +242,12 @@ class Features:
     @property
     def correlation(self) -> List[float]:
         """
-        Holds the correlations of a :class:`~getml.Pipeline`\ 's features.
+        Holds the correlations of a [`Pipeline`][getml.Pipeline]'s features.
 
         Returns:
-            :class:`list` containing the correlations.
+            `list` containing the correlations.
 
         Note:
-
             The order corresponds to the current sorting of the container.
         """
         return self._pivot("correlation")
@@ -272,12 +270,9 @@ class Features:
             sort (bool):
                 Whether you want the results to be sorted.
 
-        Return:
-            (:class:`numpy.ndarray`, :class:`numpy.ndarray`):
-                - The first array contains the names of
-                  the features.
-                - The second array contains the correlations with
-                  the target.
+        Returns:
+            The first array contains the names of the features.
+            The second array contains the correlations with the target.
         """
 
         cmd: Dict[str, Any] = {}
@@ -324,23 +319,21 @@ class Features:
 
     def filter(self, conditional: Callable[[Feature], bool]) -> Features:
         """
-        Filters the Features container.
+         Filters the Features container.
 
         Args:
             conditional (callable, optional):
                 A callable that evaluates to a boolean for a given item.
 
-        Return:
-            :class:`getml.pipeline.Features`:
+        Returns:
+            [`Features`][getml.pipeline.Features]:
                 A container of filtered Features.
 
         Example:
-            .. code-block:: python
-
-                important_features = my_pipeline.features.filter(lambda feature: feature.importance > 0.1)
-
-                correlated_features = my_pipeline.features.filter(lambda feature: feature.correlation > 0.3)
-
+            ```python
+            important_features = my_pipeline.features.filter(lambda feature: feature.importance > 0.1)
+            correlated_features = my_pipeline.features.filter(lambda feature: feature.correlation > 0.3)
+            ```
         """
         features_filtered = [feature for feature in self.data if conditional(feature)]
         return Features(self.pipeline, self.targets, data=features_filtered)
@@ -350,13 +343,12 @@ class Features:
     @property
     def importance(self) -> List[float]:
         """
-        Holds the correlations of a :class:`~getml.Pipeline`\ 's features.
+         Holds the correlations of a [`Pipeline`][getml.Pipeline]'s features.
 
         Returns:
-            :class:`list` containing the correlations.
+            `list` containing the correlations.
 
         Note:
-
             The order corresponds to the current sorting of the container.
         """
         return self._pivot("importance")
@@ -379,12 +371,10 @@ class Features:
             sort (bool):
                 Whether you want the results to be sorted.
 
-        Return:
-            (:class:`numpy.ndarray`, :class:`numpy.ndarray`):
-                - The first array contains the names of
-                  the features.
-                - The second array contains their importances.
-                  By definition, all importances add up to 1.
+        Returns
+            The first array contains the names of the features.
+            The second array contains their importances. By definition, all importances add up to 1.
+
         """
 
         cmd: Dict[str, Any] = {}
@@ -434,13 +424,12 @@ class Features:
     @property
     def name(self) -> List[str]:
         """
-        Holds the names of a :class:`~getml.Pipeline`\ 's features.
+        Holds the names of a [`Pipeline`][getml.Pipeline]'s features.
 
         Returns:
-            :class:`list` containing the names.
+            `list` containing the names.
 
         Note:
-
             The order corresponds to the current sorting of the container.
         """
         return self._pivot("name")
@@ -450,13 +439,12 @@ class Features:
     @property
     def names(self) -> List[str]:
         """
-        Holds the names of a :class:`~getml.Pipeline`\ 's features.
+        Holds the names of a [`Pipeline`][getml.Pipeline]'s features.
 
         Returns:
-            :class:`list` containing the names.
+            `list` containing the names.
 
         Note:
-
             The order corresponds to the current sorting of the container.
         """
         return self._pivot("name")
@@ -494,16 +482,15 @@ class Features:
                 Whether to sort in descending order.
 
         Return:
-            :class:`getml.pipeline.Features`:
+            [`Features`][getml.pipeline.Features]:
                 A container of sorted Features.
 
         Example:
-            .. code-block:: python
+            ```python
+            by_correlation = my_pipeline.features.sort(by="correlation")
 
-                by_correlation = my_pipeline.features.sort(by="correlation")
-
-                by_importance = my_pipeline.features.sort(key=lambda feature: feature.importance)
-
+            by_importance = my_pipeline.features.sort(key=lambda feature: feature.importance)
+            ```
         """
 
         reverse = False if descending is None else descending
@@ -574,70 +561,69 @@ class Features:
         """
         Returns SQL statements visualizing the features.
 
-            Args:
-                targets (boolean):
-                    Whether you want to include the target columns
-                    in the main table.
+        Args:
+            targets (boolean):
+                Whether you want to include the target columns
+                in the main table.
 
-                subfeatures (boolean):
-                    Whether you want to include the code for the
-                    subfeatures of a snowflake schema.
+            subfeatures (boolean):
+                Whether you want to include the code for the
+                subfeatures of a snowflake schema.
 
-                dialect (string):
-                    The SQL dialect to use. Must be from
-                    :mod:`~getml.pipeline.dialect`. Please
-                    note that not all dialects are supported
-                    in the getML community edition.
+            dialect (string):
+                The SQL dialect to use. Must be from
+                [`dialect`][getml.pipeline.dialect]. Please
+                note that not all dialects are supported
+                in the getML community edition.
 
-                schema (string, optional):
-                    The schema in which to wrap all generated tables and
-                    indices. None for no schema. Not applicable to all dialects.
-                    For the BigQuery and MySQL dialects, the schema is identical
-                    to the database ID.
+            schema (string, optional):
+                The schema in which to wrap all generated tables and
+                indices. None for no schema. Not applicable to all dialects.
+                For the BigQuery and MySQL dialects, the schema is identical
+                to the database ID.
 
-                nchar_categorical (int):
-                    The maximum number of characters used in the
-                    VARCHAR for categorical columns. Not applicable
-                    to all dialects.
+            nchar_categorical (int):
+                The maximum number of characters used in the
+                VARCHAR for categorical columns. Not applicable
+                to all dialects.
 
-                nchar_join_key (int):
-                    The maximum number of characters used in the
-                    VARCHAR for join keys. Not applicable
-                    to all dialects.
+            nchar_join_key (int):
+                The maximum number of characters used in the
+                VARCHAR for join keys. Not applicable
+                to all dialects.
 
-                nchar_text (int):
-                    The maximum number of characters used in the
-                    VARCHAR for text columns. Not applicable
-                    to all dialects.
+            nchar_text (int):
+                The maximum number of characters used in the
+                VARCHAR for text columns. Not applicable
+                to all dialects.
 
-                size_threshold (int, optional):
-                    The maximum number of characters to display
-                    in a single feature. Displaying extremely
-                    complicated features can crash your iPython
-                    notebook or lead to unexpectedly high memory
-                    consumption, which is why a reasonable
-                    upper limit is advantageous. Set to None
-                    for no upper limit.
+            size_threshold (int, optional):
+                The maximum number of characters to display
+                in a single feature. Displaying extremely
+                complicated features can crash your iPython
+                notebook or lead to unexpectedly high memory
+                consumption, which is why a reasonable
+                upper limit is advantageous. Set to None
+                for no upper limit.
 
-            Examples:
+        Examples:
+            ```python
+            my_pipeline.features.to_sql()
+            ```
+        Returns:
+            [`SQLCode`][getml.pipeline.SQLCode]
+                Object representing the features.
 
-                .. code-block:: python
+        Note:
+            Only fitted pipelines
+            ([`fit`][getml.Pipeline.fit]) can hold trained
+            features which can be returned as SQL statements.
 
-                    my_pipeline.features.to_sql()
+        Note:
+            The getML community edition only supports
+            transpilation to human-readable SQL. Passing
+            'sqlite3' will also produce human-readable SQL.
 
-            Returns:
-                :class:`~getml.pipeline.SQLCode`
-                    Object representing the features.
-
-            Note:
-                Only fitted pipelines
-                (:meth:`~getml.Pipeline.fit`) can hold trained
-                features which can be returned as SQL statements.
-
-            Note:
-                The getML community edition only supports
-                transpilation to human-readable SQL. Passing
-                'sqlite3' will also produce human-readable SQL.
         """
 
         if not isinstance(targets, bool):

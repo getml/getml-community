@@ -20,11 +20,10 @@ class Aggregation:
     Lazily evaluated aggregation over a column.
 
     Example:
-
-    .. code-block:: python
-
-        >>> my_data_frame["my_column"].avg()
+        ```python
+        my_data_frame["my_column"].avg()
         3.0
+        ```
     """
 
     def __init__(self, alias, col, agg_type):

@@ -7,23 +7,23 @@
 
 
 """A role determines if and how
-:mod:`~getml.data.columns` are handled during the construction of the
-:class:`~getml.data.DataModel` and used by the feature learning
-algorithm (see :mod:`~getml.data.feature_learning`).
+[`columns`][getml.data.columns] are handled during the construction of the
+[`DataModel`][getml.data.DataModel] and used by the feature learning
+algorithm (see [`feature_learning`][getml.feature_learning]).
 
 Example:
-    .. code-block:: python
+    ```python
+    data_frame = getml.DataFrame.from_db(
+        name=name,
+        table_name=table_name,
+        conn=conn
+    )
 
-        data_frame = getml.DataFrame.from_db(
-            name=name,
-            table_name=table_name,
-            conn=conn
-        )
-
-        data_frame.set_role(
-            ["store_nbr", "item_nbr"], getml.data.roles.join_key)
-        data_frame.set_role("date", getml.data.roles.time_stamp)
-        data_frame.set_role("units", getml.data.roles.target)
+    data_frame.set_role(
+        ["store_nbr", "item_nbr"], getml.data.roles.join_key)
+    data_frame.set_role("date", getml.data.roles.time_stamp)
+    data_frame.set_role("units", getml.data.roles.target)
+    ```
 
 """
 
@@ -32,7 +32,7 @@ categorical = "categorical"
 """Marks categorical columns.
 
 This role tells the getML engine to include the associated
-:class:`~getml.data.columns.StringColumn` during feature
+[`StringColumn`][getml.data.columns.StringColumn] during feature
 learning.
 
 It should be used for all data with no inherent ordering, even if the
@@ -44,17 +44,16 @@ join_key = "join_key"
 """Marks join keys.
 
 Role required to establish a relation between two
-:class:`~getml.data.Placeholder`, the abstract representation of the
-:class:`~getml.DataFrame`, by using the
-:meth:`~getml.data.Placeholder.join` method (see
-:ref:`data_model`). Please refer to the
-chapter :ref:`data_model` for details.
+[`Placeholder`][getml.data.Placeholder], the abstract representation of the
+[`DataFrame`][getml.DataFrame], by using the
+[`join`][getml.data.Placeholder.join] method. Please refer to the
+chapter [Data Model][data-model] for details.
 
 The content of this column is allowed to contain NULL values. But
 beware, columns with NULL in their join keys won't be matched to
 anything, not even to NULL in other join keys.
 
-:mod:`~getml.data.columns` of this role will *not* be handled by
+[`columns`][getml.data.columns] of this role will *not* be handled by
 the feature learning algorithm.
 
 """
@@ -63,7 +62,7 @@ numerical = "numerical"
 """Marks numerical columns.
 
 This role tells the getML engine to include the associated
-:class:`~getml.data.columns.FloatColumn` during feature
+[`FloatColumn`][getml.data.columns.FloatColumn] during feature
 learning.
 
 It should be used for all data with an inherent ordering, regardless
@@ -76,13 +75,13 @@ target = "target"
 """
 Marks the column(s) we would like to predict.
 
-The associated :mod:`~getml.data.columns` contain the variables we
+The associated [`columns`][getml.data.columns] contain the variables we
 want to predict. They are not used by the feature learning
 algorithm unless we explicitly tell it to do so
-(refer to ``lagged_target`` in :meth:`~getml.data.Placeholder.join`).
+(refer to ``lagged_target`` in [`join`][getml.data.Placeholder.join]).
 But they
 are such an important part of the analysis that the population table is required
-to contain at least one of them (refer to :ref:`data_model_tables`).
+to contain at least one of them (refer to [Data Model Tables][data-model-tables]).
 
 The content of the target columns needs to be numerical.
 For classification problems, target variables can only assume the values
@@ -93,11 +92,11 @@ text = "text"
 """Marks text columns.
 
 This role tells the getML engine to include the associated
-:class:`~getml.data.columns.StringColumn` during feature
+[`StringColumn`][getml.data.columns.StringColumn] during feature
 learning.
 
 It should be used for all data with no inherent ordering.
-Unlike cateogorical columns, text columns can not be used
+Unlike categorical columns, text columns can not be used
 as a whole. Instead, the feature learners have to apply
 basic text mining techniques before they are able to use them.
 """
@@ -115,28 +114,22 @@ for conditions. However, they will not be compared to fixed values unless you ex
 change their units. This means
 that conditions like this are not possible by default:
 
-.. code-block:: sql
-
-    ...
-    WHERE time_stamp > some_fixed_date
-    ...
-
+```python
+WHERE time_stamp > some_fixed_date
+```
 Instead, time stamps will always be compared to other time stamps:
-
-.. code-block:: sql
-
-    ...
-    WHERE time_stamp1 - time_stamp2 > some_value
-    ...
+```python
+WHERE time_stamp1 - time_stamp2 > some_value
+```
 
 This is because it is unlikely that comparing time stamps to a fixed date performs
 well out-of-sample.
 
 When assigning the role time stamp to a column that is currently a
-:class:`~getml.data.columns.StringColumn`,
+[`StringColumn`][getml.data.columns.StringColumn],
 you need to specify the format of this string. You can do so by using
-the :code:`time_formats` argument of
-:meth:`~getml.DataFrame.set_role`. You can pass a list of time formats
+the `time_formats` argument of
+[`set_role`][getml.DataFrame.set_role]. You can pass a list of time formats
 that is used to try to interpret the input strings. Possible format options are
 
 * %w - abbreviated weekday (Mon, Tue, ...)
@@ -169,39 +162,42 @@ If none of the formats works, the getML engine will try to interpret
 the time stamps as numerical values. If this fails, the time stamp will be set
 to NULL.
 
->>> data_df = dict(
-        ... date1=[getml.data.time.days(365), getml.data.time.days(366), getml.data.time.days(367)],
-        ... date2=['1971-01-01', '1971-01-02', '1971-01-03'],
-        ... date3=['1|1|71', '1|2|71', '1|3|71'],
+Example:
+    ```python
+    data_df = dict(
+            date1=[getml.data.time.days(365), getml.data.time.days(366), getml.data.time.days(367)],
+            date2=['1971-01-01', '1971-01-02', '1971-01-03'],
+            date3=['1|1|71', '1|2|71', '1|3|71'],
         )
->>> df = getml.DataFrame.from_dict(data_df, name='dates')
->>> df.set_role(['date1', 'date2', 'date3'], getml.data.roles.time_stamp, time_formats=['%Y-%m-%d', '%n|%e|%y'])
->>> df
-| date1                       | date2                       | date3                       |
-| time stamp                  | time stamp                  | time stamp                  |
--------------------------------------------------------------------------------------------
-| 1971-01-01T00:00:00.000000Z | 1971-01-01T00:00:00.000000Z | 1971-01-01T00:00:00.000000Z |
-| 1971-01-02T00:00:00.000000Z | 1971-01-02T00:00:00.000000Z | 1971-01-02T00:00:00.000000Z |
-| 1971-01-03T00:00:00.000000Z | 1971-01-03T00:00:00.000000Z | 1971-01-03T00:00:00.000000Z |
+    df = getml.DataFrame.from_dict(data_df, name='dates')
+    df.set_role(['date1', 'date2', 'date3'], getml.data.roles.time_stamp, time_formats=['%Y-%m-%d', '%n|%e|%y'])
+    df
+    ```
+    ```
+    | date1                       | date2                       | date3                       |
+    | time stamp                  | time stamp                  | time stamp                  |
+    -------------------------------------------------------------------------------------------
+    | 1971-01-01T00:00:00.000000Z | 1971-01-01T00:00:00.000000Z | 1971-01-01T00:00:00.000000Z |
+    | 1971-01-02T00:00:00.000000Z | 1971-01-02T00:00:00.000000Z | 1971-01-02T00:00:00.000000Z |
+    | 1971-01-03T00:00:00.000000Z | 1971-01-03T00:00:00.000000Z | 1971-01-03T00:00:00.000000Z |
+    ```
 
-
-.. note::
-
+Note:
     getML time stamps are actually floats expressing the number of seconds since
     UNIX time (1970-01-01T00:00:00).
 """
 
 unused_float = "unused_float"
-"""Marks a :class:`~getml.data.column.FloatColumn` as unused.
+"""Marks a [`FloatColumn`][getml.data.columns.columns.FloatColumn] as unused.
 
-The associated :mod:`~getml.data.column` will be neither used in the
+The associated [`column`][getml.data.columns.columns] will be neither used in the
 data model nor during feature learning or prediction.
 """
 
 unused_string = "unused_string"
-"""Marks a :class:`~getml.data.column.StringColumn` as unused.
+"""Marks a [`StringColumn`][getml.data.columns.columns.StringColumn] as unused.
 
-The associated :mod:`~getml.data.column` will be neither used in the
+The associated [`column`][getml.data.columns.columns] will be neither used in the
 data model nor during feature learning or prediction.
 """
 

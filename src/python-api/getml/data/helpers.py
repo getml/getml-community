@@ -57,25 +57,24 @@ OnType = Optional[Union[str, Tuple[str, str], List[Union[str, Tuple[str, str]]]]
 def list_data_frames() -> Dict[str, List[str]]:
     """Lists all available data frames of the project.
 
-    Examples:
-
-        .. code-block:: python
-
-            d, _ = getml.datasets.make_numerical()
-            getml.data.list_data_frames()
-            d.save()
-            getml.data.list_data_frames()
-
     Returns:
         dict:
-
             Dict containing lists of strings representing the names of
             the data frames objects
 
-            * 'in_memory'
+            - 'in_memory'
                 held in memory (RAM).
-            * 'on_disk'
+            - 'on_disk'
                 stored on disk.
+
+    Example:
+        ```python
+        d, _ = getml.datasets.make_numerical()
+        getml.data.list_data_frames()
+        d.save()
+        getml.data.list_data_frames()
+        ```
+
     """
 
     cmd: Dict[str, Any] = {}
@@ -450,7 +449,7 @@ def _replace_non_alphanumeric(string: str) -> str:
 
 def _replace_non_alphanumeric_cols(df_or_view):
     """
-    Many databases only accept alphanumetic characters
+    Many databases only accept alphanumeric characters
     and underscores. This is meant to handle these
     problems.
     """
@@ -591,7 +590,7 @@ def _sniff_csv(
         skip (int, optional):
             Number of lines to skip at the beginning of each file.
 
-        colnames(List[str] or None, optional): The first line of a CSV file
+        colnames (List[str] or None, optional): The first line of a CSV file
             usually contains the column names. When this is not the case, you need to
             explicitly pass them.
 
@@ -640,7 +639,7 @@ def _sniff_db(
     Args:
         table_name (str): Name of the table to be sniffed.
 
-        conn (:class:`~getml.database.Connection`, optional): The database
+        conn ([`Connection`][getml.database.Connection], optional): The database
             connection to be used. If you don't explicitly pass a connection,
             the engine will use the default connection.
 
@@ -766,7 +765,7 @@ def _sniff_s3(
         skip (int, optional):
             Number of lines to skip at the beginning of each file.
 
-        colnames(List[str] or None, optional): The first line of a CSV file
+        colnames (List[str] or None, optional): The first line of a CSV file
             usually contains the column names. When this is not the case, you need to
             explicitly pass them.
 

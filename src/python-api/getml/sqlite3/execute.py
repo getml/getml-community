@@ -39,7 +39,7 @@ def execute(conn: sqlite3.Connection, fname: str):
 
     Args:
         conn (sqlite3.Connection):
-            A sqlite3 connection created by :func:`~getml.sqlite3.connect`.
+            A sqlite3 connection created by [`connect`][getml.sqlite3.connect].
 
         fname (str):
             The names of the SQL script or a folder containing SQL scripts.

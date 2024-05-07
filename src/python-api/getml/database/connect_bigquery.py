@@ -38,7 +38,7 @@ def connect_bigquery(
             The ID of the project to connect to.
 
         google_application_credentials (str or pathlib.Path):
-            The path of the google application credentials.
+            The path of the Google application credentials.
             (Must be located on the machine hosting the getML engine).
 
         time_formats (List[str], optional):

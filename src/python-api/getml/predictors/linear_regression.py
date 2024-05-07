@@ -24,40 +24,41 @@ from .predictor import _Predictor
 
 @dataclass(repr=False)
 class LinearRegression(_Predictor):
-    """Simple predictor for regression problems.
+    """
+Simple predictor for regression problems.
 
-    Learns a simple linear relationship using ordinary least squares (OLS)
-    regression:
+Learns a simple linear relationship using ordinary least squares (OLS)
+regression:
 
-    .. math::
+$$
+\hat{y} = w_0 + w_1 * feature_1 + w_2 * feature_2 + ...
+$$
 
-        \\hat{y} = w_0 + w_1 * feature_1 + w_2 * feature_2 + ...
+The weights are optimized by minimizing the squared loss of the
+predictions $\hat{y}$ w.r.t. the [target][annotating-data-target] $y$.
 
-    The weights are optimized by minimizing the squared loss of the
-    predictions :math:`\\hat{y}` w.r.t. the :ref:`targets
-    <annotating_roles_target>` :math:`y`.
+$$
+L(y,\hat{y}) = \\frac{1}{n} \sum_{i=1}^{n} (y_i -\hat{y}_i)^2
+$$
 
-    .. math::
+Linear regressions can be trained arithmetically or numerically.
+Training arithmetically is more accurate, but suffers worse
+scalability.
 
-        L(y,\\hat{y}) = \\frac{1}{n} \\sum_{i=1}^{n} (y_i -\\hat{y}_i)^2
+If you decide to pass [categorical features][annotating-data-categorical] to the
+[`LinearRegression`][getml.predictors.LinearRegression], it will be trained
+numerically. Otherwise, it will be trained arithmetically.
 
-    Linear regressions can be trained arithmetically or numerically.
-    Training arithmetically is more accurate, but suffers worse
-    scalability.
+Args:
+    learning_rate (float, optional):
+        The learning rate used for training numerically (only
+        relevant when categorical features are included). Range:
+        (0, $\infty$]
 
-    If you decide to pass :ref:`categorical
-    features<annotating_roles_categorical>` to the
-    :class:`~getml.predictors.LinearRegression`, it will be trained
-    numerically. Otherwise, it will be trained arithmetically.
+    reg_lambda (float, optional):
+        L2 regularization parameter. Range: [0, $\infty$]
 
-    Args:
-        learning_rate (float, optional):
-            The learning rate used for training numerically (only
-            relevant when categorical features are included). Range:
-            (0, :math:`\\infty`]
 
-        reg_lambda (float, optional):
-            L2 regularization parameter. Range: [0, :math:`\\infty`]
 
     """
 
@@ -74,22 +75,20 @@ class LinearRegression(_Predictor):
 
         Args:
             params (dict, optional): A dictionary containing
-                the parameters to validate. If not is passed,
-                the own parameters will be validated.
+                the parameters to validate. If nothing is passed,
+                the default parameters will be validated.
 
-        Examples:
-
-            .. code-block:: python
-
-                l = getml.predictors.LinearRegression()
-                l.learning_rate = 8.1
-                l.validate()
+        Example:
+            ```python
+            l = getml.predictors.LinearRegression()
+            l.learning_rate = 8.1
+            l.validate()
+            ```
 
         Note:
-
-            This method is called at end of the __init__ constructor
+            This method is called at end of the \_\_init\_\_ constructor
             and every time before the predictor - or a class holding
-            it as an instance variable - is send to the getML engine.
+            it as an instance variable - is sent to the getML engine.
         """
 
         if params is None:
@@ -108,28 +107,26 @@ class LinearRegression(_Predictor):
 
 def _validate_linear_model_parameters(parameters):
     """Checks both the types and values of the `parameters` and raises an
-    exception is something is off.
+    exception if something is off.
 
     Examples:
-
-        .. code-block:: python
-
+    ```python
             getml.helpers.validation._validate_linear_model_parameters(
                 {'learning_rate': 0.1})
+    ```
 
     Args:
         parameters (dict): Dictionary containing some of all
             parameters supported in
-            :class:`~getml.predictors.LinearRegression` and
-            :class:`~getml.predictors.LogisticRegression`.
+            [`LinearRegression`][getml.predictors.LinearRegression] and
+            [`LogisticRegression`][getml.predictors.LogisticRegression].
 
     Note:
-
-        Both :class:`~getml.predictors.LinearRegression` and
-        :class:`~getml.predictors.LogisticRegression` have an instance
+        Both [`LinearRegression`][getml.predictors.LinearRegression] and
+        [`LogisticRegression`][getml.predictors.LogisticRegression] have an instance
         variable called ``type``, which is not checked in this
         function but in the corresponding
-        :meth:`~getml.predictors.LinearRegression.validate` method. If
+        [`validate`][getml.predictors.LinearRegression.validate] method. If
         it is supplied to this function, it won't cause harm but will
         be ignored instead of checked.
     """

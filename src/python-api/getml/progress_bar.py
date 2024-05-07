@@ -16,7 +16,7 @@ class _ProgressBar:
 
     def close(self):
         """
-        Closes the progress bar so we can display
+        Closes the progress bar, so we can display
         the next thing.
         """
         self.show(100)

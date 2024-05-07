@@ -158,7 +158,7 @@ def _truncate_line(line, margin, max_width, template="{}"):
 
 
 class _Formatter:
-    """A formatter for tabular output of data (ususally a container of some kind)."""
+    """A formatter for tabular output of data (usually a container of some kind)."""
 
     # the margin between columns (in chars)
     margin = 3
@@ -568,7 +568,7 @@ class _FormatColumn:
     def width(self):
         """
         The width of a column (in chars). With parsing enabled the final width of column
-        of floats depends of the precision specified.
+        of floats depends on the precision specified.
         """
         return max(
             _get_width(cell, getattr(self, "precision", None))

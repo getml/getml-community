@@ -23,16 +23,16 @@ class TimeSeries(StarSchema):
     A TimeSeries is a simplifying abstraction that can be used
     for machine learning problems on time series data.
 
-    It unifies :class:`~getml.data.Container` and
-    :class:`~getml.data.DataModel` thus abstracting away the need to
+    It unifies [`Container`][getml.data.Container] and
+    [`DataModel`][getml.data.DataModel] thus abstracting away the need to
     differentiate between the concrete data and the abstract data model.
     It also abstracts away the need for
-    `self joins <https://en.wikipedia.org/wiki/Join_(SQL)#Self-join>`_.
+    [self joins ](https://en.wikipedia.org/wiki/Join_(SQL)#Self-join).
 
     Args:
-        population (:class:`~getml.DataFrame` or :class:`~getml.data.View`):
+        population ([`DataFrame`][getml.DataFrame] or [`View`][getml.data.View]):
             The population table defines the
-            `statistical population <https://en.wikipedia.org/wiki/Statistical_population>`_
+            [statistical population ](https://en.wikipedia.org/wiki/Statistical_population)
             of the machine learning problem and contains the target variables.
 
         time_stamps (str):
@@ -41,17 +41,17 @@ class TimeSeries(StarSchema):
         alias (str, optional):
             The alias to be used for the population table. If it isn't set, the 'population'
             will be used as the alias. To explicitly set an alias for the
-            peripheral table, use :meth:`~getml.DataFrame.with_name`.
+            peripheral table, use [`with_name`][getml.DataFrame.with_name].
 
         peripheral (dict, optional):
             The peripheral tables are joined onto *population* or other
             peripheral tables. Note that you can also pass them using
-            :meth:`~getml.data.Container.add`.
+            [`add`][getml.data.Container.add].
 
-        split (:class:`~getml.data.columns.StringColumn` or :class:`~getml.data.columns.StringColumnView`, optional):
+        split ([`StringColumn`][getml.data.columns.columns.StringColumn] or [`StringColumnView`][getml.data.columns.columns.StringColumnView], optional):
             Contains information on how you want to split *population* into
-            different :class:`~getml.data.Subset` s.
-            Also refer to :mod:`~getml.data.split`.
+            different [`Subset`][getml.data.Subset] s.
+            Also refer to [`split`][getml.data.split].
 
         deep_copy (bool, optional):
             Whether you want to create deep copies or your tables.
@@ -63,11 +63,11 @@ class TimeSeries(StarSchema):
         memory (float, optional):
             The difference between the time stamps until data is 'forgotten'.
             Limiting your joins using memory can significantly speed up
-            training time. Also refer to :mod:`~getml.data.time`.
+            training time. Also refer to [`time`][getml.data.time].
 
         horizon (float, optional):
             The prediction horizon to apply to this join.
-            Also refer to :mod:`~getml.data.time`.
+            Also refer to [`time`][getml.data.time].
 
         lagged_targets (bool, optional):
             Whether you want to allow lagged targets. If this is set to True,
@@ -78,45 +78,45 @@ class TimeSeries(StarSchema):
             on the join.
 
     Example:
-        .. code-block:: python
+        ```python
+        # All rows before row 10500 will be used for training.
+        split = getml.data.split.time(data_all, "rowid", test=10500)
 
-            # All rows before row 10500 will be used for training.
-            split = getml.data.split.time(data_all, "rowid", test=10500)
+        time_series = getml.data.TimeSeries(
+            population=data_all,
+            time_stamps="rowid",
+            split=split,
+            lagged_targets=False,
+            memory=30,
+        )
 
-            time_series = getml.data.TimeSeries(
-                population=data_all,
-                time_stamps="rowid",
-                split=split,
-                lagged_targets=False,
-                memory=30,
-            )
+        pipe = getml.Pipeline(
+            data_model=time_series.data_model,
+            feature_learners=[...],
+            predictors=...
+        )
 
-            pipe = getml.Pipeline(
-                data_model=time_series.data_model,
-                feature_learners=[...],
-                predictors=...
-            )
+        pipe.check(time_series.train)
 
-            pipe.check(time_series.train)
+        pipe.fit(time_series.train)
 
-            pipe.fit(time_series.train)
+        pipe.score(time_series.test)
 
-            pipe.score(time_series.test)
+        # To generate predictions on new data,
+        # it is sufficient to use a Container.
+        # You don't have to recreate the entire
+        # TimeSeries, because the abstract data model
+        # is stored in the pipeline.
+        container = getml.data.Container(
+            population=population_new,
+        )
 
-            # To generate predictions on new data,
-            # it is sufficient to use a Container.
-            # You don't have to recreate the entire
-            # TimeSeries, because the abstract data model
-            # is stored in the pipeline.
-            container = getml.data.Container(
-                population=population_new,
-            )
+        # Add the data as a peripheral table, for the
+        # self-join.
+        container.add(population=population_new)
 
-            # Add the data as a peripheral table, for the
-            # self-join.
-            container.add(population=population_new)
-
-            predictions = pipe.predict(container.full)
+        predictions = pipe.predict(container.full)
+        ```
     """
 
     def __init__(

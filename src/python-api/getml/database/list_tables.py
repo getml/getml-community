@@ -23,7 +23,7 @@ def list_tables(conn: Optional[Connection] = None) -> List[str]:
     Lists all tables and views currently held in the database.
 
     Args:
-        conn (:class:`~getml.database.Connection`, optional):
+        conn ([`Connection`][getml.database.Connection], optional):
             The database connection to be used.
             If you don't explicitly pass a connection,
             the engine will use the default connection.

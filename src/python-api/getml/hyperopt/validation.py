@@ -185,25 +185,23 @@ def _validate_param_space(kwargs):
 
 
 def _validate_hyperopt(supported_params, **kwargs):
-    """Checks both the types and values of the `kwargs` and raises an
+    """
+    Checks both the types and values of the `kwargs` and raises an
     exception is something is off.
 
     Examples:
-
-        .. code-block:: python
-
-            getml.helpers.validation.validate_Hyperopt_kwargs(
-                {'n_iter': 10, 'score': 'auc'})
-
+    ```python
+    getml.helpers.validation.validate_Hyperopt_kwargs(
+        {'n_iter': 10, 'score': 'auc'})
+    ```
     Args:
         kwargs (dict): Dictionary containing some of all
             kwargs supported in
-            :class:`~getml.predictors.RandomSearch`,
-            :class:`~getml.predictors.GaussianHyperparameterSearch`, and
-            :class:`~getml.predictors.LatinHypercubeSearch`.
+            [`RandomSearch`][getml.predictors.RandomSearch],
+            [`GaussianHyperparameterSearch`][getml.predictors.GaussianHyperparameterSearch], and
+            [`LatinHypercubeSearch`][getml.predictors.LatinHypercubeSearch].
 
     Note:
-
         In addition to checking the types and values of the
         `kwargs`, the function also accesses whether:
 
@@ -213,7 +211,6 @@ def _validate_hyperopt(supported_params, **kwargs):
             - `n_iter` matches the requirements of the algorithm
             - `score` is compatible with the loss function provided
                 in `model`
-
     """
 
     # ----------------------------------------------------------------

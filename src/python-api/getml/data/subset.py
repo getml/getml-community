@@ -25,31 +25,31 @@ class Subset:
     """
     A Subset consists of a population table and one or several peripheral tables.
 
-    It is passed by a :class:`~getml.data.Container`, :class:`~getml.data.StarSchema`
-    and :class:`~getml.data.TimeSeries` to the :class:`~getml.Pipeline`.
+    It is passed by a [`Container`][getml.data.Container], [`StarSchema`][getml.data.StarSchema]
+    and [`TimeSeries`][getml.data.TimeSeries] to the [`Pipeline`][getml.Pipeline].
 
     Example:
-        .. code-block:: python
+        ```python
+        container = getml.data.Container(
+            train=population_train,
+            test=population_test
+        )
 
-            container = getml.data.Container(
-                train=population_train,
-                test=population_test
-            )
+        container.add(
+            meta=meta,
+            order=order,
+            trans=trans
+        )
 
-            container.add(
-                meta=meta,
-                order=order,
-                trans=trans
-            )
+        # train and test are Subsets.
+        # They contain population_train
+        # and population_test respectively,
+        # as well as their peripheral tables
+        # meta, order and trans.
+        my_pipeline.fit(container.train)
 
-            # train and test are Subsets.
-            # They contain population_train
-            # and population_test respectively,
-            # as well as ther peripheral tables
-            # meta, order and trans.
-            my_pipeline.fit(container.train)
-
-            my_pipeline.score(container.test)
+        my_pipeline.score(container.test)
+        ```
     """
 
     container_id: str

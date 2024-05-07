@@ -9,20 +9,20 @@
 """
 SQL dialects that can be used for the generated code.
 
-One way to productionize a :class:`~getml.Pipeline` is
+One way to productionize a [`Pipeline`][getml.Pipeline] is
 to transpile its features to production-ready SQL code.
 This SQL code can be run on standard cloud infrastructure.
-Please also refer to :class:`~getml.pipeline.SQLCode`.
+Please also refer to [`SQLCode`][getml.pipeline.SQLCode].
 
 Example:
-    .. code-block:: python
+    ```python
+    sql_code = my_pipeline.features.to_sql(
+        getml.pipeline.dialect.spark_sql)
 
-        sql_code = my_pipeline.features.to_sql(
-            getml.pipeline.dialect.spark_sql)
-
-        # Creates a folder called "my_pipeline"
-        # which contains the SQL scripts.
-        sql_code.save("my_pipeline")
+    # Creates a folder called "my_pipeline"
+    # which contains the SQL scripts.
+    sql_code.save("my_pipeline")
+    ```
 """
 
 import re

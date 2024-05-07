@@ -52,30 +52,30 @@ from .roles_obj import Roles
 
 
 class View:
-    """A view is a lazily evaluated, immutable representation of a :class:`~getml.DataFrame`.
+    """A view is a lazily evaluated, immutable representation of a [`DataFrame`][getml.DataFrame].
 
     There are important differences between a
-    :class:`~getml.DataFrame` and a view:
+    [`DataFrame`][getml.DataFrame] and a view:
 
-        - Views are lazily evaluated. That means that views do not
-          contain any data themselves. Instead, they just refer to
-          an underlying data frame. If the underlying data frame changes,
-          so will the view (but such behavior will result in a warning).
+    - Views are lazily evaluated. That means that views do not
+      contain any data themselves. Instead, they just refer to
+      an underlying data frame. If the underlying data frame changes,
+      so will the view (but such behavior will result in a warning).
 
-        - Views are immutable. In-place operations on a view are not
-          possible. Any operation on a view will result in a new view.
+    - Views are immutable. In-place operations on a view are not
+      possible. Any operation on a view will result in a new view.
 
-        - Views have no direct representation on the getML engine and
-          therefore they do not need to have an identifying name.
+    - Views have no direct representation on the getML engine, and
+      therefore they do not need to have an identifying name.
 
     Args:
-        base (:class:`~getml.DataFrame` or :class:`~getml.data.View`):
+        base ([`DataFrame`][getml.DataFrame] or [`View`][getml.data.View]):
             A data frame or view used as the basis for this view.
 
         name (str):
             The name assigned to this view.
 
-        subselection (:class:`~getml.data.columns.BooleanColumnView`, :class:`~getml.data.columns.FloatColumnView` or :class:`~getml.data.columns.FloatColumn`):
+        subselection ([`BooleanColumnView`][getml.data.columns.BooleanColumnView], [`FloatColumnView`][getml.data.columns.FloatColumnView] or [`FloatColumn`][getml.data.columns.FloatColumn]):
             Indicates which rows we would like to keep.
 
         added (dict):
@@ -85,53 +85,53 @@ class View:
         dropped (List[str]):
             A list of columns that have been dropped.
 
-    Examples:
+    Example:
         You hardly ever directly create views. Instead, it is more likely
         that you will encounter them as a result of some operation on a
-        :class:`~getml.DataFrame`:
+        [`DataFrame`][getml.DataFrame]:
 
-        .. code-block:: python
+        ```python
 
-            # Creates a view on the first 100 lines
-            view1 = data_frame[:100]
+        # Creates a view on the first 100 lines
+        view1 = data_frame[:100]
 
-            # Creates a view without some columns.
-            view2 = data_frame.drop(["col1", "col2"])
+        # Creates a view without some columns.
+        view2 = data_frame.drop(["col1", "col2"])
 
-            # Creates a view in which some roles are reassigned.
-            view3 = data_frame.with_role(["col1", "col2"], getml.data.roles.categorical)
-
+        # Creates a view in which some roles are reassigned.
+        view3 = data_frame.with_role(["col1", "col2"], getml.data.roles.categorical)
+        ```
         A recommended pattern is to assign 'baseline roles' to your data frames
         and then using views to tweak them:
 
-        .. code-block:: python
+        ```python
+        # Assign baseline roles
+        data_frame.set_role(["jk"], getml.data.roles.join_key)
+        data_frame.set_role(["col1", "col2"], getml.data.roles.categorical)
+        data_frame.set_role(["col3", "col4"], getml.data.roles.numerical)
+        data_frame.set_role(["col5"], getml.data.roles.target)
 
-            # Assign baseline roles
-            data_frame.set_role(["jk"], getml.data.roles.join_key)
-            data_frame.set_role(["col1", "col2"], getml.data.roles.categorical)
-            data_frame.set_role(["col3", "col4"], getml.data.roles.numerical)
-            data_frame.set_role(["col5"], getml.data.roles.target)
+        # Make the data frame immutable, so in-place operations are
+        # no longer possible.
+        data_frame.freeze()
 
-            # Make the data frame immutable, so in-place operations are
-            # no longer possible.
-            data_frame.freeze()
+        # Save the data frame.
+        data_frame.save()
 
-            # Save the data frame.
-            data_frame.save()
+        # I suspect that col1 leads to overfitting, so I will drop it.
+        view = data_frame.drop(["col1"])
 
-            # I suspect that col1 leads to overfitting, so I will drop it.
-            view = data_frame.drop(["col1"])
-
-            # Insert the view into a container.
-            container = getml.data.Container(...)
-            container.add(some_alias=view)
-            container.save()
+        # Insert the view into a container.
+        container = getml.data.Container(...)
+        container.add(some_alias=view)
+        container.save()
+        ```
 
         The advantage of using such a pattern is that it enables you to
         always completely retrace your entire pipeline without creating
         deep copies of the data frames whenever you have made a small
         change like the one in our example. Note that the pipeline will
-        record which :class:`~getml.data.Container` you have used.
+        record which [`Container`][getml.data.Container] you have used.
 
     """
 
@@ -308,7 +308,7 @@ class View:
     def base(self):
         """
         The basis on which the view is created. Must be a
-        :class:`~getml.DataFrame` or a :class:`~getml.data.View`.
+        [`DataFrame`][getml.DataFrame] or a [`View`][getml.data.View].
         """
         return deepcopy(self._base)
 
@@ -365,7 +365,7 @@ class View:
     @property
     def columns(self):
         """
-        Alias for :meth:`~getml.View.colnames`.
+        Alias for [`colnames`][getml.data.View.colnames].
 
         Returns:
             List[str]:
@@ -376,7 +376,7 @@ class View:
     # ------------------------------------------------------------
 
     def drop(self, cols):
-        """Returns a new :class:`~getml.data.View` that has one or several columns removed.
+        """Returns a new [`View`][getml.data.View] that has one or several columns removed.
 
         Args:
             cols (str or List[str]):
@@ -488,7 +488,7 @@ class View:
         corresponding data frame in the getML engine.
 
         Returns:
-            :class:`~getml.data.View`:
+            [`View`][getml.data.View]:
                 Updated handle the underlying data frame in the getML
                 engine.
 
@@ -565,13 +565,13 @@ class View:
     # ------------------------------------------------------------
 
     def to_arrow(self):
-        """Creates a :py:class:`pyarrow.Table` from the view.
+        """Creates a `pyarrow.Table` from the view.
 
         Loads the underlying data from the getML engine and constructs
-        a :class:`pyarrow.Table`.
+        a `pyarrow.Table`.
 
         Returns:
-            :class:`pyarrow.Table`:
+            `pyarrow.Table`:
                 Pyarrow equivalent of the current instance including
                 its underlying data.
         """
@@ -607,7 +607,7 @@ class View:
             sep (str, optional):
                 The character used for separating fields.
 
-            batch_size(int, optional):
+            batch_size (int, optional):
                 Maximum number of lines per file. Set to 0 to read
                 the entire data frame into a single file.
         """
@@ -654,7 +654,7 @@ class View:
                 If a table of that name already exists, it will be
                 replaced.
 
-            conn (:class:`~getml.database.Connection`, optional):
+            conn ([`Connection`][getml.database.Connection], optional):
                 The database connection to be used.
                 If you don't explicitly pass a connection,
                 the engine will use the default connection.
@@ -684,13 +684,13 @@ class View:
     # ------------------------------------------------------------
 
     def to_pandas(self):
-        """Creates a :py:class:`pandas.DataFrame` from the view.
+        """Creates a `pandas.DataFrame` from the view.
 
         Loads the underlying data from the getML engine and constructs
-        a :class:`pandas.DataFrame`.
+        a `pandas.DataFrame`.
 
         Returns:
-            :class:`pandas.DataFrame`:
+            `pandas.DataFrame`:
                 Pandas equivalent of the current instance including
                 its underlying data.
         """
@@ -699,8 +699,8 @@ class View:
     # ------------------------------------------------------------
 
     def to_placeholder(self, name=None):
-        """Generates a :class:`~getml.data.Placeholder` from the
-        current :class:`~getml.data.View`.
+        """Generates a [`Placeholder`][getml.data.Placeholder] from the
+        current [`View`][getml.data.View].
 
         Args:
             name (str, optional):
@@ -709,7 +709,7 @@ class View:
                 be identical to the name of the current view.
 
         Returns:
-            :class:`~getml.data.Placeholder`:
+            [`Placeholder`][getml.data.Placeholder]:
                 A placeholder with the same name as this data frame.
 
 
@@ -737,27 +737,27 @@ class View:
     # ----------------------------------------------------------------
 
     def to_pyspark(self, spark, name=None):
-        """Creates a :py:class:`pyspark.sql.DataFrame` from the current instance.
+        """Creates a `pyspark.sql.DataFrame` from the current instance.
 
         Loads the underlying data from the getML engine and constructs
-        a :class:`pyspark.sql.DataFrame`.
+        a `pyspark.sql.DataFrame`.
 
         Args:
-            spark (:py:class:`pyspark.sql.SparkSession`):
+            spark (pyspark.sql.SparkSession):
                 The pyspark session in which you want to
                 create the data frame.
 
             name (str or None):
                 The name of the temporary view to be created on top
-                of the :py:class:`pyspark.sql.DataFrame`,
+                of the `pyspark.sql.DataFrame`,
                 with which it can be referred to
                 in Spark SQL (refer to
-                :py:meth:`pyspark.sql.DataFrame.createOrReplaceTempView`).
+                `pyspark.sql.DataFrame.createOrReplaceTempView`).
                 If none is passed, then the name of this
-                :class:`getml.DataFrame` will be used.
+                [`DataFrame`][getml.DataFrame] will be used.
 
         Returns:
-            :py:class:`pyspark.sql.DataFrame`:
+            pyspark.sql.DataFrame:
                 Pyspark equivalent of the current instance including
                 its underlying data.
 
@@ -777,8 +777,8 @@ class View:
         """
         Writes the underlying data into a newly created CSV file
         located in an S3 bucket.
-
-        NOTE THAT S3 IS NOT SUPPORTED ON WINDOWS.
+        Note:
+            S3 is not supported on Windows.
 
         Args:
             bucket (str):
@@ -795,21 +795,22 @@ class View:
             sep (str, optional):
                 The character used for separating fields.
 
-            batch_size(int, optional):
+            batch_size (int, optional):
                 Maximum number of lines per file. Set to 0 to read
                 the entire data frame into a single file.
 
         Example:
-            >>> getml.engine.set_s3_access_key_id("YOUR-ACCESS-KEY-ID")
-            >>>
-            >>> getml.engine.set_s3_secret_access_key("YOUR-SECRET-ACCESS-KEY")
-            >>>
-            >>> your_view.to_s3(
-                    ...     bucket="your-bucket-name",
-                    ...     key="filename-on-s3",
-                    ...     region="us-east-2",
-                    ...     sep=';'
-                    ... )
+            ```python
+            getml.engine.set_s3_access_key_id("YOUR-ACCESS-KEY-ID")
+            getml.engine.set_s3_secret_access_key("YOUR-SECRET-ACCESS-KEY")
+
+            your_view.to_s3(
+                bucket="your-bucket-name",
+                key="filename-on-s3",
+                region="us-east-2",
+                sep=';'
+            )
+            ```
         """
 
         self.refresh()
@@ -866,57 +867,53 @@ class View:
     def where(self, index) -> "View":
         """Extract a subset of rows.
 
-        Creates a new :class:`~getml.data.View` as a
+        Creates a new [`View`][getml.data.View] as a
         subselection of the current instance.
 
         Args:
-            index (:class:`~getml.data.columns.BooleanColumnView` or :class:`~getml.data.columns.FloatColumnView` or :class:`~getml.data.columns.FloatColumn`):
+            index ([`BooleanColumnView`][getml.data.columns.BooleanColumnView] or [`FloatColumnView`][getml.data.columns.FloatColumnView] or [`FloatColumn`][getml.data.columns.FloatColumn]):
                 Boolean column indicating the rows you want to select.
 
         Example:
-
             Generate example data:
+            ```python
+            data = dict(
+                fruit=["banana", "apple", "cherry", "cherry", "melon", "pineapple"],
+                price=[2.4, 3.0, 1.2, 1.4, 3.4, 3.4],
+                join_key=["0", "1", "2", "2", "3", "3"])
 
-            .. code-block:: python
+            fruits = getml.DataFrame.from_dict(data, name="fruits",
+            roles={"categorical": ["fruit"], "join_key": ["join_key"], "numerical": ["price"]})
 
-                data = dict(
-                    fruit=["banana", "apple", "cherry", "cherry", "melon", "pineapple"],
-                    price=[2.4, 3.0, 1.2, 1.4, 3.4, 3.4],
-                    join_key=["0", "1", "2", "2", "3", "3"])
-
-                fruits = getml.DataFrame.from_dict(data, name="fruits",
-                roles={"categorical": ["fruit"], "join_key": ["join_key"], "numerical": ["price"]})
-
-                fruits
-
-            .. code-block:: pycon
-
-                | join_key | fruit       | price     |
-                | join key | categorical | numerical |
-                --------------------------------------
-                | 0        | banana      | 2.4       |
-                | 1        | apple       | 3         |
-                | 2        | cherry      | 1.2       |
-                | 2        | cherry      | 1.4       |
-                | 3        | melon       | 3.4       |
-                | 3        | pineapple   | 3.4       |
-
+            fruits
+            ```
+            ```
+            | join_key | fruit       | price     |
+            | join key | categorical | numerical |
+            --------------------------------------
+            | 0        | banana      | 2.4       |
+            | 1        | apple       | 3         |
+            | 2        | cherry      | 1.2       |
+            | 2        | cherry      | 1.4       |
+            | 3        | melon       | 3.4       |
+            | 3        | pineapple   | 3.4       |
+            ```
             Apply where condition. This creates a new DataFrame called "cherries":
 
-            .. code-block:: python
+            ```python
 
-                cherries = fruits.where(
-                    fruits["fruit"] == "cherry")
+            cherries = fruits.where(
+                fruits["fruit"] == "cherry")
 
-                cherries
-
-            .. code-block:: pycon
-
-                | join_key | fruit       | price     |
-                | join key | categorical | numerical |
-                --------------------------------------
-                | 2        | cherry      | 1.2       |
-                | 2        | cherry      | 1.4       |
+            cherries
+            ```
+            ```
+            | join_key | fruit       | price     |
+            | join key | categorical | numerical |
+            --------------------------------------
+            | 2        | cherry      | 1.2       |
+            | 2        | cherry      | 1.4       |
+            ```
         """
         if isinstance(index, numbers.Integral):
             index = index if int(index) > 0 else len(self) + index
@@ -938,20 +935,20 @@ class View:
     def with_column(
         self, col, name, role=None, unit="", subroles=None, time_formats=None
     ):
-        """Returns a new :class:`~getml.data.View` that contains an additional column.
+        """Returns a new [`View`][getml.data.View] that contains an additional column.
 
         Args:
-            col (:mod:`~getml.column`):
+            col ([`column`][getml.column]):
                 The column to be added.
 
             name (str):
                 Name of the new column.
 
             role (str, optional):
-                Role of the new column. Must be from :mod:`getml.data.roles`.
+                Role of the new column. Must be from [`roles`][getml.data.roles].
 
             subroles (str, List[str] or None, optional):
-                Subroles of the new column. Must be from :mod:`getml.data.subroles`.
+                Subroles of the new column. Must be from [`subroles`][getml.data.subroles].
 
             unit (str, optional):
                 Unit of the column.
@@ -960,7 +957,7 @@ class View:
                 Formats to be used to parse the time stamps.
 
                 This is only necessary, if an implicit conversion from
-                a :class:`~getml.data.columns.StringColumn` to a time
+                a [`StringColumn`][getml.data.columns.StringColumn] to a time
                 stamp is taking place.
 
                 The formats are allowed to contain the following
@@ -1009,7 +1006,7 @@ class View:
     # ------------------------------------------------------------
 
     def with_name(self, name):
-        """Returns a new :class:`~getml.data.View` with a new name.
+        """Returns a new [`View`][getml.data.View] with a new name.
 
         Args:
             name (str):
@@ -1020,13 +1017,13 @@ class View:
     # ------------------------------------------------------------
 
     def with_role(self, names, role, time_formats=None):
-        """Returns a new :class:`~getml.data.View` with modified roles.
+        """Returns a new [`View`][getml.data.View] with modified roles.
 
         When switching from a role based on type float to a role based on type
         string or vice verse, an implicit type conversion will be conducted.
-        The :code:`time_formats` argument is used to interpret :ref:`time
-        format string <annotating_roles_time_stamp>`. For more information on
-        roles, please refer to the :ref:`user guide <annotating>`.
+        The `time_formats` argument is used to interpret time
+        format string: `annotating_roles_time_stamp`. For more information on
+        roles, please refer to the [User Guide][annotating-data].
 
         Args:
             names (str or List[str]):

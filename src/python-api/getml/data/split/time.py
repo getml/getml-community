@@ -32,24 +32,24 @@ def time(
     **kwargs: TimeStampType
 ) -> StringColumnView:
     """
-    Returns a :class:`~getml.data.columns.StringColumnView` that can be used to divide
+    Returns a [`StringColumnView`][getml.data.columns.StringColumnView] that can be used to divide
     data into training, testing, validation or other sets.
 
     The arguments are
-    :code:`key=value` pairs of names (:code:`key`) and starting points (:code:`value`).
+    `key=value` pairs of names (`key`) and starting points (`value`).
     The starting point defines the left endpoint of the subset. Intervals are left
-    closed and right open, such that :math:`[value, next value)`.  The (unnamed) subset
-    left from the first named starting point, i.e.  :math:`[0, first value)`, is always
+    closed and right open, such that $[value, next value)$.  The (unnamed) subset
+    left from the first named starting point, i.e.  $[0, first value)$, is always
     considered to be the training set.
 
     Args:
-        population (:class:`~getml.DataFrame` or :class:`~getml.data.View`):
+        population ([`DataFrame`][getml.DataFrame] or [`View`][getml.data.View]):
             The population table you would like to split.
 
         time_stamp (str):
             The name of the time stamp column in the population table
             you want to use. Ideally, the role of said column would be
-            :const:`~getml.data.roles.time_stamp`. If you want to split on the rowid,
+            [`time_stamp`][getml.data.roles.time_stamp]. If you want to split on the rowid,
             then pass "rowid" to `time_stamp`.
 
         validation (float, optional):
@@ -64,31 +64,31 @@ def time(
             we called it 'other').
 
     Example:
-        .. code-block:: python
+        ```python
+        validation_begin = getml.data.time.datetime(2010, 1, 1)
+        test_begin = getml.data.time.datetime(2011, 1, 1)
+        other_begin = getml.data.time.datetime(2012, 1, 1)
 
-            validation_begin = getml.data.time.datetime(2010, 1, 1)
-            test_begin = getml.data.time.datetime(2011, 1, 1)
-            other_begin = getml.data.time.datetime(2012, 1, 1)
+        split = getml.data.split.time(
+            population=data_frame,
+            time_stamp="ds",
+            test=test_begin,
+            validation=validation_begin,
+            other=other_begin
+        )
 
-            split = getml.data.split.time(
-                population=data_frame,
-                time_stamp="ds",
-                test=test_begin,
-                validation=validation_begin,
-                other=other_begin
-            )
+        # Contains all data before 2010-01-01 (not included)
+        train_set = data_frame[split=='train']
 
-            # Contains all data before 2010-01-01 (not included)
-            train_set = data_frame[split=='train']
+        # Contains all data between 2010-01-01 (included) and 2011-01-01 (not included)
+        validation_set = data_frame[split=='validation']
 
-            # Contains all data between 2010-01-01 (included) and 2011-01-01 (not included)
-            validation_set = data_frame[split=='validation']
+        # Contains all data between 2011-01-01 (included) and 2012-01-01 (not included)
+        test_set = data_frame[split=='test']
 
-            # Contains all data between 2011-01-01 (included) and 2012-01-01 (not included)
-            test_set = data_frame[split=='test']
-
-            # Contains all data after 2012-01-01 (included)
-            other_set = data_frame[split=='other']
+        # Contains all data after 2012-01-01 (included)
+        other_set = data_frame[split=='other']
+        ```
     """
     if not isinstance(population, (DataFrame, View)):
         raise ValueError("'population' must be a DataFrame or a View.")

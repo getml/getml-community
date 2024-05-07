@@ -24,30 +24,30 @@ class EmailDomain(_Preprocessor):
     For instance, if the e-mail address is 'some.guy@domain.com',
     the preprocessor will automatically extract '@domain.com'.
 
-    The preprocessor will be applied to all :const:`~getml.data.roles.text`
-    columns that were assigned one of the :mod:`~getml.data.subroles`
-    :const:`getml.data.subroles.include.email` or
-    :const:`getml.data.subroles.only.email`.
+    The preprocessor will be applied to all [`text`][getml.data.roles.text]
+    columns that were assigned one of the [`subroles`][getml.data.subroles]
+    [`include.email`][getml.data.subroles.include.email] or
+    [`only.email`][getml.data.subroles.only.email].
 
-    It is recommended that you assign :const:`getml.data.subroles.only.email`,
+    It is recommended that you assign [`only.email`][getml.data.subroles.only.email],
     because it is unlikely that the e-mail address itself is interesting.
 
     Example:
-        .. code-block:: python
+        ```python
+        my_data_frame.set_subroles("email", getml.data.subroles.only.email)
 
-            my_data_frame.set_subroles("email", getml.data.subroles.only.email)
+        domain = getml.preprocessors.EmailDomain()
 
-            domain = getml.preprocessors.EmailDomain()
-
-            pipe = getml.Pipeline(
-                population=population_placeholder,
-                peripheral=[order_placeholder, trans_placeholder],
-                preprocessors=[domain],
-                feature_learners=[feature_learner_1, feature_learner_2],
-                feature_selectors=feature_selector,
-                predictors=predictor,
-                share_selected_features=0.5
-            )
+        pipe = getml.Pipeline(
+            population=population_placeholder,
+            peripheral=[order_placeholder, trans_placeholder],
+            preprocessors=[domain],
+            feature_learners=[feature_learner_1, feature_learner_2],
+            feature_selectors=feature_selector,
+            predictors=predictor,
+            share_selected_features=0.5
+        )
+        ```
     """
 
     def validate(self, params=None):

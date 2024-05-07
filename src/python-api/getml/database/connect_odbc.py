@@ -43,7 +43,7 @@ def connect_odbc(
             The server name, as referenced in your .obdc.ini file.
 
         user (str, optional):
-            User name with which to log into the database.
+            Username with which to log into the database.
             You do not need to pass this, if it is already contained in your
             .odbc.ini.
 

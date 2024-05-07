@@ -61,11 +61,11 @@ def _remove_private(dict):
 class _SignatureFormatter:
     """
     A formatter for function and class signatures. Used for generating appropriate
-    __repr__s.
+    __repr__ s.
 
     Outputs a PEP8-compliant string representation of a signature with a maximum of one
-    argument per line. Lists of parameter values that exceed a given width are splitted
-    to span multiple lines, while preserving proper indendation.
+    argument per line. Lists of parameter values that exceed a given width are split
+    to span multiple lines, while preserving proper indentation.
     """
 
     max_width = 88
@@ -164,7 +164,7 @@ class _SignatureFormatter:
 
     def _format_compact(self, suppress_none=False):
 
-        # tokenize params regardless of of parameter values' depth by splitting
+        # tokenize params regardless of parameter values' depth by splitting
         # params formatted as a single line string on ", "
         params_tokenized = self.params_formatted.split(", ", suppress_none)
 

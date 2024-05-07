@@ -36,12 +36,12 @@ class Columns:
     """
     Container which holds a pipeline's columns. These include the columns for
     which importance can be calculated, such as the ones with
-    :mod:`~getml.data.roles` as :const:`~getml.data.roles.categorical`,
-    :const:`~getml.data.roles.numerical` and :const:`~getml.data.roles.text`.
-    The rest of the columns with roles :const:`~getml.data.roles.time_stamp`,
-    :const:`~getml.data.roles.join_key`, :const:`~getml.data.roles.target`,
-    :const:`~getml.data.roles.unused_float` and
-    :const:`~getml.data.roles.unused_string` can not have importance of course.
+    [`roles`][getml.data.roles] as [`categorical`][getml.data.roles.categorical],
+    [`numerical`][getml.data.roles.numerical] and [`text`][getml.data.roles.text].
+    The rest of the columns with roles [`time_stamp`][getml.data.roles.time_stamp],
+    [`join_key`][getml.data.roles.join_key], [`target`][getml.data.roles.target],
+    [`unused_float`][getml.data.roles.unused_float] and
+    [`unused_string`][getml.data.roles.unused_string] can not have importance of course.
 
     Columns can be accessed by name, index or with a NumPy array. The container
     supports slicing and is sort- and filterable. Further, the container holds
@@ -50,27 +50,27 @@ class Columns:
 
     Note:
         The container is an iterable. So, in addition to
-        :meth:`~getml.pipeline.Columns.filter` you can also use python list
+        [`filter`][getml.pipeline.Columns.filter] you can also use python list
         comprehensions for filtering.
 
     Example:
-        .. code-block:: python
+        ```python
+        all_my_columns = my_pipeline.columns
 
-            all_my_columns = my_pipeline.columns
+        first_column = my_pipeline.columns[0]
 
-            first_column = my_pipeline.columns[0]
+        all_but_last_10_columns = my_pipeline.columns[:-10]
 
-            all_but_last_10_columns = my_pipeline.columns[:-10]
+        important_columns = [column for column in my_pipeline.columns if
+        column.importance > 0.1]
 
-            important_columns = [column for column in my_pipeline.columns if
-            column.importance > 0.1]
+        names, importances = my_pipeline.columns.importances()
 
-            names, importances = my_pipeline.columns.importances()
-
-            # Drops all categorical and numerical columns that are not # in the
-            top 20%. new_container = my_pipeline.columns.select(
-                container, share_selected_columns=0.2,
-            )
+        # Drops all categorical and numerical columns that are not # in the
+        top 20%. new_container = my_pipeline.columns.select(
+            container, share_selected_columns=0.2,
+        )
+        ```
     """
 
     # ----------------------------------------------------------------
@@ -271,17 +271,14 @@ class Columns:
             conditional (callable, optional):
                 A callable that evaluates to a boolean for a given item.
 
-        Return:
-            :class:`getml.pipeline.Column`:
-                A container of filtered Columns.
+        Returns:
+            A container of filtered Columns.
 
         Example:
-            .. code-block:: python
-
-                important_columns = my_pipeline.columns.filter(lambda column: column.importance > 0.1)
-
-                peripheral_columns = my_pipeline.columns.filter(lambda column: column.marker == "[PERIPHERAL]")
-
+            ```python
+            important_columns = my_pipeline.columns.filter(lambda column: column.importance > 0.1)
+            peripheral_columns = my_pipeline.columns.filter(lambda column: column.marker == "[PERIPHERAL]")
+            ```
         """
         columns_filtered = [column for column in self.data if conditional(column)]
         return self._make_columns(columns_filtered)
@@ -301,12 +298,12 @@ class Columns:
         columns importances add up to 1.
 
         The importances can be calculated for columns with
-        :mod:`~getml.data.roles` such as :const:`~getml.data.roles.categorical`,
-        :const:`~getml.data.roles.numerical` and :const:`~getml.data.roles.text`.
-        The rest of the columns with roles :const:`~getml.data.roles.time_stamp`,
-        :const:`~getml.data.roles.join_key`, :const:`~getml.data.roles.target`,
-        :const:`~getml.data.roles.unused_float` and
-        :const:`~getml.data.roles.unused_string` can not have importance of course.
+        [`roles`][getml.data.roles] such as [`categorical`][getml.data.roles.categorical],
+        [`numerical`][getml.data.roles.numerical] and [`text`][getml.data.roles.text].
+        The rest of the columns with roles [`time_stamp`][getml.data.roles.time_stamp],
+        [`join_key`][getml.data.roles.join_key], [`target`][getml.data.roles.target],
+        [`unused_float`][getml.data.roles.unused_float] and
+        [`unused_string`][getml.data.roles.unused_string] can not have importance of course.
 
         Args:
             target_num (int):
@@ -317,12 +314,9 @@ class Columns:
             sort (bool):
                 Whether you want the results to be sorted.
 
-        Return:
-            (:class:`numpy.ndarray`, :class:`numpy.ndarray`):
-                - The first array contains the names of
-                  the columns.
-                - The second array contains their importances.
-                  By definition, all importances add up to 1.
+        Returns:
+            The first array contains the names of the columns.
+            The second array contains their importances. By definition, all importances add up to 1.
         """
 
         # ------------------------------------------------------------
@@ -346,13 +340,12 @@ class Columns:
     @property
     def names(self) -> List[str]:
         """
-        Holds the names of a :class:`~getml.Pipeline`\'s columns.
+        Holds the names of a [`Pipeline`][getml.Pipeline]'s columns.
 
         Returns:
-            :class:`list` containing the names.
+            `list` containing the names.
 
         Note:
-
             The order corresponds to the current sorting of the container.
         """
         return [column.name for column in self.data]
@@ -366,10 +359,10 @@ class Columns:
         Returns a new data container with all insufficiently important columns dropped.
 
         Args:
-            container (:class:`getml.data.Container` or :class:`getml.data.StarSchema` or :class:`getml.data.TimeSeries`):
+            container ([`Container`][getml.data.Container] or [`StarSchema`][getml.data.StarSchema] or [`TimeSeries`][getml.data.TimeSeries]):
                 The container containing the data you want to use.
 
-            share_selected_columns(numerical): The share of columns
+            share_selected_columns: The share of columns
                 to keep. Must be between 0.0 and 1.0.
         """
 
@@ -452,15 +445,14 @@ class Columns:
             descending (bool, optional):
                 Whether to sort in descending order.
 
-        Return:
-            :class:`getml.pipeline.columns`:
+        Returns:
+            [`columns`][getml.pipeline.columns]:
                 A container of sorted columns.
 
         Example:
-            .. code-block:: python
-
-                by_importance = my_pipeline.columns.sort(key=lambda column: column.importance)
-
+            ```python
+            by_importance = my_pipeline.columns.sort(key=lambda column: column.importance)
+            ```
         """
 
         reverse = False if descending is None else descending

@@ -36,22 +36,17 @@ class Tables:
 
     Note:
         The container is an iterable. So, in addition to
-        :meth:`~getml.pipeline.Tables.filter` you can also use python list
+        [`filter`][getml.pipeline.Tables.filter] you can also use python list
         comprehensions for filtering.
 
-    Example:
-        .. code-block:: python
-
-            all_my_tables = my_pipeline.tables
-
-            first_table = my_pipeline.tables[0]
-
-            all_but_last_10_tables = my_pipeline.tables[:-10]
-
-            important_tables = [table for table in my_pipeline.tables if
-            table.importance > 0.1]
-
-            names, importances = my_pipeline.tables.importances()
+    Examples:
+        ```python
+        all_my_tables = my_pipeline.tables
+        first_table = my_pipeline.tables[0]
+        all_but_last_10_tables = my_pipeline.tables[:-10]
+        important_tables = [table for table in my_pipeline.tables if table.importance > 0.1]
+        names, importances = my_pipeline.tables.importances()
+        ```
     """
 
     def __init__(
@@ -186,8 +181,8 @@ class Tables:
 
     def _make_tables(self, data: Sequence[Table]) -> Tables:
         """
-        A factory to construct a :class:`getml.pipeline.Tables` container
-        from a list of :class:`getml.pipeline.Table`s.
+        A factory to construct a [`Tables`][getml.pipeline.Tables] container
+        from a list of [`Table`][getml.pipeline.Table]s.
         """
 
         return Tables(self._targets, self._columns, data=data)
@@ -202,19 +197,14 @@ class Tables:
             conditional (callable, optional):
                 A callable that evaluates to a boolean for a given item.
 
-        Return:
-            :class:`getml.pipeline.Tables`:
+        Returns:
                 A container of filtered tables.
 
         Example:
-            .. code-block:: python
-
-                important_tables = my_pipeline.table.filter(
-                    lambda table: table.importance > 0.1)
-
-                peripheral_tables = my_pipeline.tables.filter(
-                    lambda table: table.marker == "[PERIPHERAL]")
-
+            ```python
+            important_tables = my_pipeline.table.filter(lambda table: table.importance > 0.1)
+            peripheral_tables = my_pipeline.tables.filter(lambda table: table.marker == "[PERIPHERAL]")
+            ```
         """
         tables_filtered = [table for table in self.data if conditional(table)]
         return self._make_tables(tables_filtered)
@@ -240,12 +230,9 @@ class Tables:
             sort (bool):
                 Whether you want the results to be sorted.
 
-        Return:
-            (:class:`numpy.ndarray`, :class:`numpy.ndarray`):
-                - The first array contains the names of the tables.
-
-                - The second array contains their importances. By definition,
-                  all importances add up to 1.
+        Returns:
+            The first array contains the names of the tables.
+            The second array contains their importances. By definition, all importances add up to 1.
         """
 
         target_name = self._targets[target_num]
@@ -270,10 +257,10 @@ class Tables:
     @property
     def names(self) -> list[str]:
         """
-        Holds the names of a :class:`~getml.Pipeline`\'s tables.
+        Holds the names of a [`Pipeline`][getml.Pipeline]'s tables.
 
         Returns:
-            :class:`list` containing the names.
+            `list` containing the names.
 
         Note:
             The order corresponds to the current sorting of the container.
@@ -302,15 +289,13 @@ class Tables:
             descending (bool, optional):
                 Whether to sort in descending order.
 
-        Return:
-            :class:`getml.pipeline.Tables`:
+        Returns:
                 A container of sorted tables.
 
         Example:
-            .. code-block:: python
-
-                by_importance = my_pipeline.tables.sort(key=lambda table: table.importance)
-
+            ```python
+            by_importance = my_pipeline.tables.sort(key=lambda table: table.importance)
+            ```
         """
 
         reverse = False if descending is None else descending
@@ -349,10 +334,10 @@ class Tables:
     @property
     def targets(self) -> list[str]:
         """
-        Holds the targets of a :class:`~getml.Pipeline`\'s tables.
+        Holds the targets of a [`Pipeline`][getml.Pipeline]'s tables.
 
         Returns:
-            :class:`list` containing the names.
+            `list` containing the names.
 
         Note:
             The order corresponds to the current sorting of the container.

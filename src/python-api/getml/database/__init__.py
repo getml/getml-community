@@ -8,23 +8,24 @@
 
 """This module contains communication routines to access various databases.
 
-The :func:`~getml.database.connect_bigquery`,
-:func:`~getml.database.connect_hana`,
-:func:`~getml.database.connect_greenplum`,
-:func:`~getml.database.connect_mariadb`,
-:func:`~getml.database.connect_mysql`,
-:func:`~getml.database.connect_postgres`, and
-:func:`~getml.database.connect_sqlite3` functions establish a
+The [`connect_bigquery`][getml.database.connect_bigquery],
+[`connect_hana`][getml.database.connect_hana],
+[`connect_greenplum`][getml.database.connect_greenplum],
+[`connect_mariadb`][getml.database.connect_mariadb],
+[`connect_mysql`][getml.database.connect_mysql],
+[`connect_postgres`][getml.database.connect_postgres], and
+[`connect_sqlite3`][getml.database.connect_sqlite3] functions establish a
 connection between a database and the getML engine. During the data
-import using either the :meth:`~getml.DataFrame.read_db` or
-:meth:`~getml.DataFrame.read_query` methods of a
-:class:`~getml.DataFrame` instance or the corresponding
-:func:`~getml.DataFrame.from_db` class method all data will be
+import using either the [`read_db`][getml.DataFrame.read_db] or
+[`read_query`][getml.DataFrame.read_query] methods of a
+[`DataFrame`][getml.DataFrame] instance or the corresponding
+[`from_db`][getml.DataFrame.from_db] class method all data will be
 directly loaded from the database into the engine without ever passing
 the Python interpreter.
 
 In addition, several auxiliary functions that might be handy during
 the analysis and interaction with the database are provided.
+
 """
 
 from .helpers import _load_to_buffer, _retrieve_temp_dir, _retrieve_url, _retrieve_urls

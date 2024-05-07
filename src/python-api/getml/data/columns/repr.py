@@ -7,7 +7,7 @@
 
 
 """
-ASCII represenation of the column.
+ASCII representation of the column.
 """
 
 

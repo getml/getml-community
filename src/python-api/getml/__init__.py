@@ -10,8 +10,8 @@
 getML (https://getml.com) is a software for automated machine learning
 (AutoML) with a special focus on feature learning for relational data
 and time series. The getML algorithms can produce features that are far
-more advanced than what any data scientist could write by hand or what you
-could accomplish using simple brute force approaches.
+more advanced than what any data scientist could write by hand or what
+could be accomplished by using simple brute force approaches.
 
 This is the official python client for the getML engine.
 

@@ -22,44 +22,42 @@ from .predictor import _Predictor
 class LogisticRegression(_Predictor):
     """Simple predictor for classification problems.
 
-    Learns a simple linear relationship using the sigmoid function:
+Learns a simple linear relationship using the sigmoid function:
 
-    .. math::
+$$
+\hat{y} = \sigma(w_0 + w_1 * feature_1 + w_2 * feature_2 + ...)
+$$
 
-        \\hat{y} = \\sigma(w_0 + w_1 * feature_1 + w_2 * feature_2 + ...)
+$\sigma$ denotes the sigmoid function:
 
-    :math:`\\sigma` denotes the sigmoid function:
+$$
+\sigma(z) = \\frac{1}{1 + exp(-z)}
+$$
 
-    .. math::
+The weights are optimized by minimizing the cross entropy loss of
+the predictions $\hat{y}$ w.r.t. the [targets][annotating-data-target] $y$.
 
-        \\sigma(z) = \\frac{1}{1 + exp(-z)}
+$$
+L(\hat{y},y) = - y*\log \hat{y} - (1 - y)*\log(1 - \hat{y})
+$$
 
-    The weights are optimized by minimizing the cross entropy loss of
-    the predictions :math:`\\hat{y}` w.r.t. the :ref:`targets
-    <annotating_roles_target>` :math:`y`.
+Logistic regressions are always trained numerically.
 
-    .. math::
+If you decide to pass categorical
+features: `annotating_roles_categorical` to the
+[`LogisticRegression`][getml.predictors.LogisticRegression], it will be trained
+using the Broyden-Fletcher-Goldfarb-Shannon (BFGS) algorithm.
+Otherwise, it will be trained using adaptive moments (Adam). BFGS
+is more accurate, but less scalable than Adam.
 
-        L(\\hat{y},y) = - y*\\log \\hat{y} - (1 - y)*\\log(1 - \\hat{y})
+Args:
+    learning_rate (float, optional):
+        The learning rate used for the Adaptive Moments algorithm
+        (only relevant when categorical features are
+        included). Range: (0, $\infty$]
 
-    Logistic regressions are always trained numerically.
-
-    If you decide to pass :ref:`categorical
-    features<annotating_roles_categorical>` to the
-    :class:`~getml.predictors.LogisticRegression`, it will be trained
-    using the Broyden-Fletcher-Goldfarb-Shannon (BFGS) algorithm.
-    Otherwise, it will be trained using adaptive moments (Adam). BFGS
-    is more accurate, but less scalable than Adam.
-
-    Args:
-        learning_rate (float, optional):
-            The learning rate used for the Adaptive Moments algorithm
-            (only relevant when categorical features are
-            included). Range: (0, :math:`\\infty`]
-
-        reg_lambda (float, optional):
-            L2 regularization parameter. Range: [0, :math:`\\infty`]
-
+    reg_lambda (float, optional):
+        L2 regularization parameter. Range: [0, $\infty$]
     """
 
     # ----------------------------------------------------------------
@@ -79,18 +77,16 @@ class LogisticRegression(_Predictor):
                 the own parameters will be validated.
 
         Examples:
-
-            .. code-block:: python
-
-                l = getml.predictors.LogisticRegression()
-                l.learning_rate = 20
-                l.validate()
+            ```python
+            l = getml.predictors.LogisticRegression()
+            l.learning_rate = 20
+            l.validate()
+            ```
 
         Note:
-
-            This method is called at end of the __init__ constructor
+            This method is called at end of the \_\_init\_\_ constructor
             and every time before the predictor - or a class holding
-            it as an instance variable - is send to the getML engine.
+            it as an instance variable - is sent to the getML engine.
         """
 
         if params is None:

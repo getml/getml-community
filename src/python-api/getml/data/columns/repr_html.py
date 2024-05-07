@@ -6,7 +6,7 @@
 #
 
 """
-HTML represenation of the column.
+HTML representation of the column.
 """
 
 

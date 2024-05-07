@@ -11,31 +11,32 @@ generated features.
 
 The predictor classes defined in this module serve two
 purposes. First, a predictor can be used as a ``feature_selector``
-in :class:`~getml.Pipeline` to only select the best features
-generated during the automated feature learning and to get rid off
+in [`Pipeline`][getml.Pipeline] to only select the best features
+generated during the automated feature learning and to get rid of
 any redundancies. Second, by using it as a ``predictor``, it will
 be trained on the features of the supplied data set and used to
 predict to unknown results. Every time a new data set is passed to
-the :meth:`~getml.Pipeline.predict` method of one of the
-:mod:`~getml.models`, the raw relational data is interpreted in the
+the [`predict`][getml.Pipeline.predict] method of one of the
+models, the raw relational data is interpreted in the
 data model, which was provided during the construction of the model,
 transformed into features using the trained feature learning
-algorithm, and, finally, its :ref:`target<annotating_roles_target>`
+algorithm, and, finally, its [target][annotating-data-target]
 will be predicted using the trained predictor.
 
 The algorithms can be grouped according to their finesse and
 whether you want to use them for a classification or
 regression problem.
 
-.. csv-table::
 
-    "", "simple", "sophisticated"
-    "regression", ":class:`~getml.predictors.LinearRegression`", ":class:`~getml.predictors.XGBoostRegressor`"
-    "classification", ":class:`~getml.predictors.LogisticRegression`", ":class:`~getml.predictors.XGBoostClassifier`"
+
+|   | simple  | sophisticated  |
+----|---------|---------------|
+|  __regression__ | [`LinearRegression`][getml.predictors.LinearRegression]  |  [`XGBoostRegressor`][getml.predictors.XGBoostRegressor] |
+| __classification__ |  [`LogisticRegression`][getml.predictors.LogisticRegression] | [`XGBoostClassifier`][getml.predictors.XGBoostClassifier]  |
+
 
 Note:
-
-    All predictors need to be passed to :class:`~getml.Pipeline`.
+    All predictors need to be passed to [`Pipeline`][getml.Pipeline].
 """
 
 

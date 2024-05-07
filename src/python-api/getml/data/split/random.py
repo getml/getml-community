@@ -24,7 +24,7 @@ def random(
     seed=5849, train=0.8, test=0.2, validation=0, **kwargs: float
 ) -> StringColumnView:
     """
-    Returns a :class:`~getml.data.columns.StringColumnView` that
+    Returns a [`StringColumnView`][getml.data.columns.StringColumnView] that
     can be used to randomly divide data into training, testing,
     validation or other sets.
 
@@ -50,16 +50,16 @@ def random(
             we called it 'other').
 
     Example:
-        .. code-block:: python
+        ```python
+        split = getml.data.split.random(
+            train=0.8, test=0.1, validation=0.05, other=0.05
+        )
 
-            split = getml.data.split.random(
-                train=0.8, test=0.1, validation=0.05, other=0.05
-            )
-
-            train_set = data_frame[split=='train']
-            validation_set = data_frame[split=='validation']
-            test_set = data_frame[split=='test']
-            other_set = data_frame[split=='other']
+        train_set = data_frame[split=='train']
+        validation_set = data_frame[split=='validation']
+        test_set = data_frame[split=='test']
+        other_set = data_frame[split=='other']
+        ```
 
     """
 

@@ -33,7 +33,7 @@ def connect_hana(
 
     Args:
         user (str):
-            User name with which to log into the HANA database.
+            Username with which to log into the HANA database.
 
         password (str):
             Password with which to log into the HANA database.

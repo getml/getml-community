@@ -31,7 +31,7 @@ def to_list(conn, query):
 
     Args:
         conn:
-            A sqlite3 connection created by :func:`~getml.sqlite3.connect`.
+            A sqlite3 connection created by [`connect`][getml.sqlite3.connect].
 
         query (str):
             The query used to get the table. You can also

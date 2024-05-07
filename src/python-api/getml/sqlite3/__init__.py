@@ -14,23 +14,22 @@ only sqlite3 and Python, fully based on open-source code.
 This requires SQLite version 3.33.0 or above. To check the sqlite3
 version of your Python distribution, do the following:
 
-.. code-block:: python
-
-    import sqlite3
-    sqlite3.sqlite_version
+```python
+import sqlite3
+sqlite3.sqlite_version
+```
 
 Example:
     For our example we will assume that you want to productionize
-    the CORA project (https://github.com/getml/getml-demo).
+    the [CORA project](https://github.com/getml/getml-demo/blob/master/cora.ipynb).
 
     First, we want to transpile the features into SQL code,
     like this:
 
-    .. code-block:: python
-
-        # Set targets to False, if you want an inference pipeline.
-        pipe1.features.to_sql(targets=True).save("cora")
-
+    ```python
+    # Set targets to False, if you want an inference pipeline.
+    pipe1.features.to_sql(targets=True).save("cora")
+    ```
     This transpiles the features learned by pipe1 into a set of
     SQLite3 scripts ready to be executed. These scripts are contained
     in a folder called "cora".
@@ -41,44 +40,36 @@ Example:
 
     We want to create a new sqlite3 connection and then read in the
     data:
+    ```python
+    conn = getml.sqlite3.connect("cora.db")
 
-    .. code-block:: python
+    getml.sqlite3.read_pandas(
+        conn, table_name="cites", data_frame=cites, if_exists="replace")
 
-        conn = getml.sqlite3.connect("cora.db")
+    getml.sqlite3.read_pandas(
+        conn, table_name="content", data_frame=content, if_exists="replace")
 
-        getml.sqlite3.read_pandas(
-            conn, table_name="cites", data_frame=cites, if_exists="replace")
-
-        getml.sqlite3.read_pandas(
-            conn, table_name="content", data_frame=content, if_exists="replace")
-
-        getml.sqlite3.read_pandas(
-            conn, table_name="paper", data_frame=paper, if_exists="replace")
-
+    getml.sqlite3.read_pandas(
+        conn, table_name="paper", data_frame=paper, if_exists="replace")
+    ```
     Now we can execute the scripts we have just created:
-
-    .. code-block:: python
-
-        conn = getml.sqlite3.execute(conn, "cora")
-
+    ```python
+    conn = getml.sqlite3.execute(conn, "cora")
+    ```
     The transpiled pipeline will always create a table called "FEATURES", which
     contain the features. Here is how we retrieve them:
-
-    .. code-block:: python
-
-        features = getml.sqlite3.to_pandas(conn, "FEATURES")
-
+    ```python
+    features = getml.sqlite3.to_pandas(conn, "FEATURES")
+    ```
     Now you have created your features in a pandas DataFrame ready to be inserted
     into your favorite machine learning library.
 
     To build stable data science pipelines, it is often a good idea to ensure
     type safety by hard-coding your table schema. You can use the sniff...
     methods to do that:
-
-    .. code-block:: python
-
-        getml.sqlite3.sniff_pandas("cites", cites)
-
+    ```python
+    getml.sqlite3.sniff_pandas("cites", cites)
+    ```
     This will generate SQLite3 code that creates the "cites" table. You can
     hard-code that into your pipeline. This will ensure that the data always have
     the correct types, avoiding awkward problems in the future.

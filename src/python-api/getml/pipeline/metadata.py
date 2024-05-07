@@ -23,7 +23,7 @@ class Metadata(NamedTuple):
 class AllMetadata(NamedTuple):
     """
     Contains the metadata related
-    to all of the data frames that
+    to all the data frames that
     were originally passed to .fit(...).
     """
 

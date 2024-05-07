@@ -33,7 +33,7 @@ class Score(ABC):
 @dataclass
 class ClassificationScore(Score):
     """
-    Dataclass that holds data of a scorig run for a classification pipeline.
+    Dataclass that holds data of a scoring run for a classification pipeline.
     """
 
     accuracy: float
@@ -50,7 +50,7 @@ class ClassificationScore(Score):
 @dataclass
 class RegressionScore(Score):
     """
-    Dataclass that holds data of a scorig run for a regression pipeline.
+    Dataclass that holds data of a scoring run for a regression pipeline.
     """
 
     mae: float

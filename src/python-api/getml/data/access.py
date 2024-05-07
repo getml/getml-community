@@ -21,11 +21,12 @@ from getml.engine import is_alive as _is_alive
 def set_s3_access_key_id(value):
     """Sets the Access Key ID to S3.
 
-    NOTE THAT S3 IS NOT SUPPORTED ON WINDOWS.
+    Notes:
+        Note that S3 is not supported on Windows.
 
     In order to retrieve data from S3, you need to set the Access Key ID
     and the Secret Access Key. You can either set them as environment
-    variables before you start the getML engine or you can set them from
+    variables before you start the getML engine, or you can set them from
     this module.
 
     Args:
@@ -63,11 +64,12 @@ def set_s3_access_key_id(value):
 def set_s3_secret_access_key(value):
     """Sets the Secret Access Key to S3.
 
-    NOTE THAT S3 IS NOT SUPPORTED ON WINDOWS.
+    Notes:
+        Note that S3 is not supported on Windows.
 
     In order to retrieve data from S3, you need to set the Access Key ID
     and the Secret Access Key. You can either set them as environment
-    variables before you start the getML engine or you can set them from
+    variables before you start the getML engine, or you can set them from
     this module.
 
     Args:

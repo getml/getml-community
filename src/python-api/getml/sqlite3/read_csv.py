@@ -50,7 +50,7 @@ def read_csv(
 
     Args:
         conn (sqlite3.Connection):
-            A sqlite3 connection created by :func:`~getml.sqlite3.connect`.
+            A sqlite3 connection created by [`connect`][getml.sqlite3.connect].
 
         fnames (str or List[str]):
             The names of the CSV files.
@@ -71,9 +71,9 @@ def read_csv(
         if_exists (str):
             How to behave if the table already exists:
 
-                - 'fail': Raise a ValueError.
-                - 'replace': Drop the table before inserting new values.
-                - 'append': Insert new values to the existing table.
+            - 'fail': Raise a ValueError.
+            - 'replace': Drop the table before inserting new values.
+            - 'append': Insert new values to the existing table.
 
         sep (str):
             The field separator.
@@ -81,7 +81,7 @@ def read_csv(
         skip (int):
             The number of lines to skip (before a possible header)
 
-        colnames(List[str] or None, optional):
+        colnames (List[str] or None, optional):
             The first line of a CSV file
             usually contains the column names. When this is not the case, you can
             explicitly pass them. If you pass colnames, it is assumed that the

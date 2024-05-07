@@ -174,27 +174,25 @@ def _make_subsets_from_split(population, split):
 
 
 def load_data_frame(name):
-    """Retrieves a :class:`~getml.DataFrame` handler of data in the
+    """Retrieves a [`DataFrame`][getml.DataFrame] handler of data in the
     getML engine.
 
     A data frame object can be loaded regardless if it is held in
     memory or not. It only has to be present in the current project
     and thus listed in the output of
-    :func:`~getml.data.list_data_frames`.
+    [`list_data_frames`][getml.data.list_data_frames].
 
     Args:
         name (str):
             Name of the data frame.
 
     Examples:
-
-        .. code-block:: python
-
-            d, _ = getml.datasets.make_numerical(population_name = 'test')
-            d2 = getml.data.load_data_frame('test')
-
+        ```python
+        d, _ = getml.datasets.make_numerical(population_name = 'test')
+        d2 = getml.data.load_data_frame('test')
+        ```
     Returns:
-        :class:`~getml.DataFrame`:
+        [`DataFrame`][getml.DataFrame]:
             Handle the underlying data frame in the getML engine.
     """
 
@@ -321,7 +319,7 @@ def make_target_columns(base, colname):
     target columns.
 
     Args:
-        base (:class:`~getml.DataFrame` or :class:`~getml.data.View`):
+        base ([`DataFrame`][getml.DataFrame] or [`View`][getml.data.View]):
             The original view or data frame. `base` will remain unaffected
             by this function, instead you will get a view with the appropriate
             changes.
@@ -363,12 +361,12 @@ def make_target_columns(base, colname):
 def to_placeholder(*args, **kwargs):
     """
     Factory function for extracting placeholders from a
-    :class:`~getml.DataFrame` or :class:`~getml.data.View`.
+    [`DataFrame`][getml.DataFrame] or [`View`][getml.data.View].
 
     Example:
-        Suppose we wanted to create a :class:`~getml.data.DataModel`:
+        Suppose we wanted to create a [`DataModel`][getml.data.DataModel]:
 
-        .. code-block:: python
+
 
             dm = getml.data.DataModel(
                 population_train.to_placeholder("population")
@@ -381,17 +379,15 @@ def to_placeholder(*args, **kwargs):
 
         But this is a bit repetitive. So instead, we can do
         the following:
+        ```python
+        dm = getml.data.DataModel(
+            population_train.to_placeholder("population")
+        )
 
-        .. code-block:: python
-
-            dm = getml.data.DataModel(
-                population_train.to_placeholder("population")
-            )
-
-            # Add placeholders for the peripheral tables.
-            dm.add(getml.data.to_placeholder(
-                meta=meta, order=order, trans=trans))
-
+        # Add placeholders for the peripheral tables.
+        dm.add(getml.data.to_placeholder(
+            meta=meta, order=order, trans=trans))
+        ```
     """
 
     def to_ph_list(list_or_elem, key=None):

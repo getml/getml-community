@@ -28,37 +28,37 @@ class Mapping(_Preprocessor):
     by aggregating targets in the relational neighbourhood.
 
     You are particularly encouraged to use the mapping preprocessor in combination with
-    :class:`~getml.feature_learning.FastProp`.
+    [`FastProp`][getml.feature_learning.FastProp].
 
-    Refer to the :ref:`User guide <mappings>` for more information.
+    Refer to the [User guide][preprocessing-mappings] for more information.
 
     Args:
-        aggregation (List[:class:`~getml.feature_learning.aggregations`], optional):
+        aggregation (List[[`aggregations`][getml.feature_learning.aggregations]], optional):
             The aggregation function to use over the targets.
 
-            Must be from :mod:`~getml.feature_learning.aggregations`.
+            Must be from [`aggregations`][getml.feature_learning.aggregations].
 
         min_freq (int, optional):
             The minimum number of targets required for a value to be included in
-            the mapping. Range: [0, :math:`\\infty`]
+            the mapping. Range: [0, $\infty$]
 
         multithreading (bool, optional):
             Whether you want to apply multithreading.
 
     Example:
-        .. code-block:: python
+        ```python
+        mapping = getml.preprocessors.Mapping()
 
-            mapping = getml.preprocessors.Mapping()
-
-            pipe = getml.Pipeline(
-                population=population_placeholder,
-                peripheral=[order_placeholder, trans_placeholder],
-                preprocessors=[mapping],
-                feature_learners=[feature_learner_1, feature_learner_2],
-                feature_selectors=feature_selector,
-                predictors=predictor,
-                share_selected_features=0.5
-            )
+        pipe = getml.Pipeline(
+            population=population_placeholder,
+            peripheral=[order_placeholder, trans_placeholder],
+            preprocessors=[mapping],
+            feature_learners=[feature_learner_1, feature_learner_2],
+            feature_selectors=feature_selector,
+            predictors=predictor,
+            share_selected_features=0.5
+        )
+        ```
 
     Note:
         Not supported in the getML community edition.

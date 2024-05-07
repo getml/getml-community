@@ -27,7 +27,7 @@ def read_pandas(conn, table_name, data_frame, if_exists="append"):
 
     Args:
         conn:
-            A sqlite3 connection created by :func:`~getml.sqlite3.connect`.
+            A sqlite3 connection created by [`connect`][getml.sqlite3.connect].
 
         table_name (str):
             The name of the table to write to.
@@ -41,9 +41,9 @@ def read_pandas(conn, table_name, data_frame, if_exists="append"):
         if_exists (str):
             How to behave if the table already exists:
 
-                - 'fail': Raise a ValueError.
-                - 'replace': Drop the table before inserting new values.
-                - 'append': Insert new values into the existing table.
+            - 'fail': Raise a ValueError.
+            - 'replace': Drop the table before inserting new values.
+            - 'append': Insert new values into the existing table.
     """
 
     # ------------------------------------------------------------
