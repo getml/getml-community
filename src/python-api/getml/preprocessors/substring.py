@@ -25,8 +25,8 @@ class Substring(_Preprocessor):
     The preprocessor will be applied to all
     [`categorical`][getml.data.roles.categorical] and [`text`][getml.data.roles.text]
     columns that were assigned one of the [`subroles`][getml.data.subroles]
-    [`substring`][getml.data.subroles.include.substring](_include_) or
-    [`substring`][getml.data.subroles.only.substring](_only_).
+    [`include.substring`][getml.data.subroles.include.substring] or
+    [`only.substring`][getml.data.subroles.only.substring].
 
     To further limit the scope of a substring preprocessor,
     you can also assign a *unit*.
@@ -39,14 +39,14 @@ class Substring(_Preprocessor):
             The length of the substring.
 
         unit (str, optional):
-            The unit of all columns to which the proprocessor
+            The unit of all columns to which the preprocessor
             should be applied. These columns must also have the subrole
             substring.
 
             If it is left empty, then the preprocessor
             will be applied to all columns with the subrole
-            [`substring`][getml.data.subroles.include.substring] or
-            [`substring`][getml.data.subroles.only.substring].
+            [`include.substring`][getml.data.subroles.include.substring] or
+            [`only.substring`][getml.data.subroles.only.substring].
 
     Example:
         ```python
