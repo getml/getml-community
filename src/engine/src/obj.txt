@@ -31,7 +31,7 @@ include(${TRANSPILATION_SOURCE_DIRECTORY}/obj.txt)
 include(${TSINDEX_SOURCE_DIRECTORY}/obj.txt)
 
 add_executable(
- 	${GETML_VERSION}-engine
+ 	engine
  	${COMMANDS_OBJ}
  	${COMMUNICATION_OBJ}
  	${CONTAINERS_OBJ}
