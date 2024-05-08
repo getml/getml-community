@@ -5,12 +5,10 @@
 # for details.
 #
 
-
 [project]
-
 name = "getml"
-version = "1.5.0"
 description = "Python API for getML"
+dynamic = ["version"]
 readme = "README.md"
 requires-python = ">=3.8"
 license = { text = "Elastic License 2.0 (ELv2)" }
@@ -22,6 +20,8 @@ classifiers = [
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Intended Audience :: Education",
     "Intended Audience :: Science/Research",
@@ -40,24 +40,18 @@ dependencies = [
     "scipy",
 ]
 
-
 [project.urls]
-
 "Hompage" = "https://getml.com"
-"Documentation" = "https://docs.getml.com/1.4.0"
+"Documentation" = "https://docs.getml.com/latest"
 "Bug Tracker" = "https://github.com/getml/getml-community/issues"
 "Download" = "https://getml.com/product/download/"
 "Source Code" = "https://github.com/getml/getml-community"
 
-
 [project.optional-dependencies]
-
 test = [ "pytest", "pyspark" ]
 development = [ "black", "mypy", "pylint" ]
 
-
 [tool.setuptools]
-
 packages = [
     "getml",
     "getml.data",
@@ -81,18 +75,17 @@ packages = [
     "getml.utilities.templates"
 ]
 
+[tool.setuptools.dynamic]
+version = { attr = "getml.version.__version__" }
 
 [tool.setuptools.package-data]
-
 getml = [
+    "VERSION",
     "py.typed",
     "utilities/templates/*.jinja2",
-    "./.getML/**/*",
+    ".getML/**/*",
 ]
 
-
 [build-system]
-
-requires = [ "setuptools>=42", "wheel" ]   # PEP 508 specifications.
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
-

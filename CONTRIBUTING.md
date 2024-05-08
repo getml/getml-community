@@ -112,60 +112,104 @@ On macOS and Linux, execute the following in a terminal:
 bash uninstall.sh # or ./uninstall.sh
 ```
 
-
 ## Compiling from source
 
-Because getML is a complicated software, we use Docker
-for our build environment. If you want to compile it from source,
-here is what you have to do:
-
-On a Linux machine, install Docker (if you don't have a Linux
-machine, we recommend https://multipass.run):
-
-https://docs.docker.com/engine/install/ubuntu/
-
-Also make sure that you follow the post-installation steps for Linux, so
-can launch Docker without root rights:
-
-https://docs.docker.com/engine/install/linux-postinstall/
-
-Then, do the following, again replacing `ARCH` with either `x64` or `arm64`:
+Because getML is a complex software, we use Docker for our build environment. If
+you want to compile it from source, we provide a set of [wrappers to ease local
+development](bin):
 
 ```bash
-# Go to the linux folder inside the repository
-cd linux-ARCH
-
-# Set up the Docker container (you only have to do this once)
-./build.sh init_docker
-
-# Download and compile the dependencies - this will
-# take a while (you only have to do this once)
-./build.sh init
-
-# Builds the package
-./build.sh p
-
-# Runs the newly built engine
-./build.sh x
+./bin/getml
 ```
 
-From now on, whenever you want to build a new
-package, you can do that with one simple command:
+``` bash
+Usage:
+    getml <subcommand> [options]
 
-```bash
-./build.sh p
+Subcommands:
+    build   Build utilities
+    help    Show help (this message)
+
+Options:
+    -h      Show help (this message)
 ```
 
-If you want to change the C++ code and then compile only the engine,
-you can do the following:
+The `build` subcommand is the entrypoint for building getml from source. For
+details about the build process, see [Directly interacting with
+bake](#directly-interacting-with-bake) below.
 
-```bash
-./build.sh c
+``` bash
+getml build wrapper
+
+Usage:
+  build <subcommand> [options]
+
+Subcommands:
+  [a]ll       Build all (whole package, ref. [p]ackage)
+  [c]li       Build cli
+  [e]ngine    Build engine
+  [p]ackage   Build package
+
+Options:
+  -b <args>   Specify build args (-b KEY=VALUE); passed to docker build
+  -h          Show help (this message)
+  -o <path>   Set output path (default: build); passed to docker build
 ```
 
-Likewise, if you want to change the Go code and then compile only the entrypoint,
-you can do the following:
+Most of the time you probably want to build the (C++) engine:
 
 ```bash
-./build.sh app
+./bin/getml build engine
+```
+
+If you are calling `getml build package` all build artifacts will be packaged
+inside the specified output folder. Further, a tarball
+(`getml-<version>-<arch>-linux.tar.gz`) will be created inside the folder.
+
+### Build options
+#### `-b <args>`: Build args 
+[Build args](https://docs.docker.com/build/guide/build-args/) passed to `docker
+build`. Build args can be provided as key-value pairs. The following build args
+are supported:
+- `VERSION`: the build version (default: the version specified in the [`VERSION`
+  file](VERSION)) 
+- `NJOBS`: the number of threads to use for each compilation step
+#### `-h`: Show help
+Show the help screen
+#### `-o <path>`: Output folder
+The [output folder](https://docs.docker.com/build/exporters/) used by docker's
+export backend
+
+### Directly interacting with bake
+The build pipeline is based on multi-stage docker builds. There are two `Dockerfile`s:
+- one for cli, wheel and packaging located in the project root:
+  [`./Dockerfile`](./Dockerfile)
+- one related to the engine and its dependencies in the engine subfolder:
+  [`./src/engine/Dockerfile`](./src/egnine/Dockerfile)
+
+As the second `Dockerfile` is a dependency for the first, we use
+[bake](https://docs.docker.com/build/bake/) to orchestrate the builds. The
+[bake file](docker-bake.hcl) holds definitions for all build targets and
+ensures the appropriate build contexts are set.
+
+If you want to interact with docker directly, you can do so by calling `docker
+buildx bake`:
+
+``` bash
+VERSION=1.5.0 docker buildx bake engine
+```
+
+If you want to override build-args, you can do so per build stage via [bake's
+`--set`
+overrides](https://docs.docker.com/reference/cli/docker/buildx/bake/#set):
+
+``` bash
+docker buildx bake engine --set engine.args.VERSION=1.5.0
+```
+
+This way, you can also override some of a target's [default
+attributes](https://docs.docker.com/reference/cli/docker/buildx/bake/#set):
+
+``` bash
+docker buildx bake engine --set engine.output=out
 ```
