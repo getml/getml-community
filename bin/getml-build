@@ -1,0 +1,125 @@
+#!/usr/bin/env bash
+
+bin_dir=$(dirname -- "$(realpath -- "$0")")
+
+[[ $(arch) = "aarch64" || $(arch) = "arm64" ]] && arch=arm64 || arch=x64
+
+parse_opt_multiple_args() {
+  while [[ ${OPTIND} -le $# && ${!OPTIND:0:1} != "-" ]]; do
+    OPTARG[i]=${!OPTIND}
+    ((OPTIND++))
+    ((i++))
+  done
+}
+
+process_build_args() {
+  processed=""
+  for arg in "$@"; do
+    processed+=" --set $target.args.${arg}"
+  done
+  build_args=$processed
+}
+
+show_help() {
+  cat <<-EOF
+		getml build wrapper
+
+		Usage:
+		  build <subcommand> [options]
+
+		Subcommands:
+		  [a]ll       Build all (whole package, ref. [p]ackage)
+		  [c]li       Build cli
+		  [e]ngine    Build engine
+		  [p]ackage   Build package
+		  [w]heel     Build wheel
+
+		Options:
+		  -b <args>   Specify build args (-b KEY=VALUE); passed to docker build
+		  -h          Show help (this message)
+		  -o <path>   Set output path (default: build); passed to docker build
+	EOF
+}
+
+process_opts() {
+  while getopts ":b:ho:" opt; do
+    case ${opt} in
+      b)
+        parse_opt_multiple_args "$@"
+        process_build_args "${OPTARG[@]}"
+        ;;
+      h)
+        show_help
+        exit 0
+        ;;
+      o)
+        output="$OPTARG"
+        ;;
+      \?)
+        echo "Invalid option: -$OPTARG" >&2
+        exit 1
+        ;;
+    esac
+  done
+}
+
+
+
+if [[ -z $1 || $1 = "-h" ]]; then
+  show_help
+  exit 0
+fi
+
+# process subcommands
+while [[ "$#" -gt 0 ]]; do
+  case $1 in
+    a | all)
+      target="package"
+      ;;
+    c | cli)
+      target="cli"
+      ;;
+    e | engine)
+      target="engine"
+      ;;
+    p | package)
+      target="package"
+      ;;
+    w | wheel)
+      target="wheel"
+      ;;
+    --)
+      shift
+      break
+      ;;
+    -*)
+      process_opts "$@"
+      shift $((OPTIND - 1))
+      ;;
+    *)
+      echo "Unrecognized subcommmand: $1" >&2
+      exit 1
+      ;;
+  esac
+  shift
+done
+
+
+(
+  export VERSION=${VERSION:-$(<"$bin_dir/../VERSION")}
+  output=${output:-build}
+  cd "${bin_dir}/.."
+  docker buildx bake $target \
+    --set $target.output=$output \
+    $build_args \
+    "${@}"
+
+  if [[ $target = "package" ]]; then
+    package=$(find $output -type d -name "getml-${VERSION}-*" -maxdepth 1 | sort | tail -1)
+    tarball=$(basename $package).tar
+    docker buildx bake $target \
+      --set $target.output=type=tar,dest=$output/$tarball \
+      $build_args \
+      "${@}"
+  fi
+)

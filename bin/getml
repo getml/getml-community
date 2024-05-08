@@ -1,0 +1,38 @@
+#!/usr/bin/env sh
+
+cmd=$(basename $0)
+bin_dir=$(dirname -- "$(realpath -- "$0")")
+
+show_help() {
+    cat <<-EOF
+		getml utilities
+
+		Usage:
+		    ${cmd} <subcommand> [options]
+
+		Subcommands:
+		    build   Build utilities
+		    help    Show help (this message)
+
+		Options:
+		    -h      Show help (this message)
+	EOF
+}
+
+subcmd=$1
+shift
+
+case $subcmd in
+    "" | -h | help)
+        show_help
+        exit 0
+        ;;
+    build)
+        "${bin_dir}/getml-build" $@
+        exit 0
+        ;;
+    *)
+        echo "Unrecognized subcommmand: $subcmd" >&2
+        exit 1
+        ;;
+esac
