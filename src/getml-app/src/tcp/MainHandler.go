@@ -581,8 +581,6 @@ func (m *MainHandler) SetProject(
 		return
 	}
 
-	fname := m.version + "-engine"
-
 	enginePort, err := m.findFreePort()
 
 	if err != nil {
@@ -594,7 +592,7 @@ func (m *MainHandler) SetProject(
 
 	args := append(m.args, "-project="+name, "-engine-port="+enginePortStr)
 
-	cmd, err := startProcess(fname, m.projects.Config.Monitor.Log, args)
+	cmd, err := startProcess("engine", m.projects.Config.Monitor.Log, args)
 
 	if err != nil {
 		sendString(c, err.Error())
