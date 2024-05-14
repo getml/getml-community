@@ -27,13 +27,16 @@ def concat(name: str, **kwargs: DataFrame) -> Tuple[DataFrame, StringColumnView]
     column that keeps track of their origin.
 
     Args:
-        name (str):
+        name:
             The name of the data frame you would like to create.
 
         kwargs:
             The data frames you would like
             to concat with the name in which they should appear
             in the split column.
+
+    Returns:
+        A tuple containing the concatenated data frame and the split column.
 
     Example:
         A common use case for this functionality are [`TimeSeries`][getml.data.TimeSeries]:

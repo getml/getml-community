@@ -24,11 +24,10 @@ def random(seed: int = 5849) -> FloatColumnView:
     set
 
     Args:
-        seed (int):
+        seed:
             Seed used for the random number generator.
 
     Returns:
-        [`FloatColumnView`][getml.data.columns.FloatColumnView]:
             FloatColumn containing random numbers
 
     Example:

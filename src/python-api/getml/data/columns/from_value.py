@@ -30,7 +30,7 @@ def from_value(val: Union[bool, str, int, float, np.datetime64]) -> ReturnType:
     value in all of its elements.
 
     Args:
-        val (bool, str or number):
+        val:
             The value you want to insert into your column.
     """
     cmd = _value_to_cmd(val)

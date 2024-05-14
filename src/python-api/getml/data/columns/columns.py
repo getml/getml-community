@@ -73,13 +73,13 @@ def arange(
     Returns evenly spaced variables, within a given interval.
 
     Args:
-        start (float, optional):
+        start:
             The beginning of the interval. Defaults to 0.
 
-        stop (float):
+        stop:
             The end of the interval.
 
-        step (float, optional):
+        step:
             The step taken. Defaults to 1.
     """
     if stop is None:
@@ -368,13 +368,13 @@ class StringColumn(_Column):
     """Handle for categorical data that is kept in the getML engine
 
     Args:
-        name (str, optional):
+        name:
             Name of the categorical column.
 
-        role (str, optional):
+        role:
             Role that the column plays.
 
-        df_name (str, optional):
+        df_name:
             ``name`` instance variable of the
             [`DataFrame`][getml.DataFrame] containing this column.
 
@@ -597,13 +597,13 @@ class FloatColumn(_Column):
     including time stamps.
 
     Args:
-        name (str, optional):
+        name:
             Name of the categorical column.
 
-        role (str, optional):
+        role:
             Role that the column plays.
 
-        df_name (str, optional):
+        df_name:
             ``name`` instance variable of the
             [`DataFrame`][getml.DataFrame]  containing this column.
 
@@ -815,7 +815,7 @@ FloatColumnView.__radd__ = _radd  # type: ignore
 # -----------------------------------------------------------------------------
 
 
-def _assert_equal(self, alias="new_column"):
+def _assert_equal(self, alias: str="new_column"):
     """
     ASSERT EQUAL aggregation.
 
@@ -823,7 +823,7 @@ def _assert_equal(self, alias="new_column"):
     into the aggregation are equal.
 
     Args:
-        alias (str): Name for the new column.
+        alias: Name for the new column.
     """
     return Aggregation(alias, self, "assert_equal").get()
 
@@ -857,12 +857,12 @@ FloatColumnView.atan = _atan  # type: ignore
 # -----------------------------------------------------------------------------
 
 
-def _avg(self, alias="new_column"):
+def _avg(self, alias: str="new_column"):
     """
     AVG aggregation.
 
     Args:
-        alias (str): Name for the new column.
+        alias: Name for the new column.
     """
     return Aggregation(alias, self, "avg").get()
 
@@ -970,12 +970,12 @@ FloatColumnView.cos = _cos  # type: ignore
 # -----------------------------------------------------------------------------
 
 
-def _count(self, alias="new_column"):
+def _count(self, alias: str="new_column"):
     """
     COUNT aggregation.
 
     Args:
-        alias (str): Name for the new column.
+        alias: Name for the new column.
     """
     return Aggregation(alias, self, "count").get()
 
@@ -986,12 +986,12 @@ FloatColumnView.count = _count  # type: ignore
 # -----------------------------------------------------------------------------
 
 
-def _count_categorical(self, alias="new_column"):
+def _count_categorical(self, alias: str="new_column"):
     """
     COUNT aggregation.
 
     Args:
-        alias (str): Name for the new column.
+        alias: Name for the new column.
     """
     return Aggregation(alias, self, "count_categorical").get()
 
@@ -1002,12 +1002,12 @@ StringColumnView.count = _count_categorical  # type: ignore
 # -----------------------------------------------------------------------------
 
 
-def _count_distinct(self, alias="new_column"):
+def _count_distinct(self, alias: str="new_column"):
     """
     COUNT DISTINCT aggregation.
 
     Args:
-        alias (str): Name for the new column.
+        alias: Name for the new column.
     """
     return Aggregation(alias, self, "count_distinct").get()
 
@@ -1289,12 +1289,12 @@ FloatColumnView.__lt__ = _lt  # type: ignore
 # -----------------------------------------------------------------------------
 
 
-def _max(self, alias="new_column"):
+def _max(self, alias: str="new_column"):
     """
     MAX aggregation.
 
     Args:
-        alias (str): Name for the new column.
+        alias: Name for the new column.
     """
     return Aggregation(alias, self, "max").get()
 
@@ -1305,11 +1305,12 @@ FloatColumnView.max = _max  # type: ignore
 # -----------------------------------------------------------------------------
 
 
-def _median(self, alias="new_column"):
+def _median(self, alias: str="new_column"):
     """
     MEDIAN aggregation.
 
-    **alias**: Name for the new column.
+    Args:
+        alias: Name for the new column.
     """
     return Aggregation(alias, self, "median").get()
 
@@ -1530,12 +1531,12 @@ FloatColumnView.sqrt = _sqrt  # type: ignore
 # -----------------------------------------------------------------------------
 
 
-def _stddev(self, alias="new_column"):
+def _stddev(self, alias: str="new_column"):
     """
     STDDEV aggregation.
 
     Args:
-        alias (str): Name for the new column.
+        alias: Name for the new column.
     """
     return Aggregation(alias, self, "stddev").get()
 
@@ -1637,13 +1638,13 @@ StringColumn.__getitem__ = _subselection_string  # type: ignore
 # -----------------------------------------------------------------------------
 
 
-def _substr(self, begin, length):
+def _substr(self, begin: int, length: int):
     """
     Return a substring for every element in the column.
 
     Args:
-        begin (int): First position of the original string.
-        length (int): Length of the extracted string.
+        begin: First position of the original string.
+        length: Length of the extracted string.
     """
     col = StringColumnView(
         operator="substr",
@@ -1661,12 +1662,12 @@ StringColumnView.substr = _substr  # type: ignore
 # -----------------------------------------------------------------------------
 
 
-def _sum(self, alias="new_column"):
+def _sum(self, alias: str="new_column"):
     """
     SUM aggregation.
 
     Args:
-        alias (str): Name for the new column.
+        alias: Name for the new column.
     """
     return Aggregation(alias, self, "sum").get()
 
@@ -1728,12 +1729,12 @@ BooleanColumnView.as_str = _as_str  # type: ignore
 # -----------------------------------------------------------------------------
 
 
-def _as_ts(self, time_formats=None):
+def _as_ts(self, time_formats: Optional[Union[str, List[str]]]=None):
     """
     Transforms a categorical column to a time stamp.
 
     Args:
-        time_formats (str): Formats to be used to parse the time stamps.
+        time_formats: Formats to be used to parse the time stamps.
     """
     time_formats = time_formats or TIME_FORMATS
     col = FloatColumnView(operator="as_ts", operand1=self, operand2=None)
@@ -1794,7 +1795,7 @@ def _update_float(self, condition: BooleanColumnView, values: NumericOperandType
     are updated using the corresponding entry in **values**.
 
     Args:
-        condition (Boolean column): Condition according to which the update is done
+        condition: Condition according to which the update is done
         values: Values to update with
     """
     col = FloatColumnView(
@@ -1823,7 +1824,7 @@ def _update_str(self, condition: BooleanColumnView, values: StringOperandType):
     are updated using the corresponding entry in **values**.
 
     Args:
-        condition (Boolean column): Condition according to which the update is done
+        condition: Condition according to which the update is done
         values: Values to update with
     """
     col = StringColumnView(
@@ -1844,12 +1845,12 @@ StringColumnView.update = _update_str  # type: ignore
 # -----------------------------------------------------------------------------
 
 
-def _var(self, alias="new_column"):
+def _var(self, alias: str="new_column"):
     """
     VAR aggregation.
 
     Args:
-        alias (str): Name for the new column.
+        alias: Name for the new column.
     """
     return Aggregation(alias, self, "var").get()
 
@@ -1880,14 +1881,14 @@ FloatColumnView.weekday = _weekday  # type: ignore
 # -----------------------------------------------------------------------------
 
 
-def _with_subroles_float(self, subroles: Union[str, List[str]], append=True):
+def _with_subroles_float(self, subroles: Union[str, List[str]], append: bool=True):
     """
     Returns a new column with new subroles.
 
     Args:
-        subroles (str or List[str]): The subroles to be assigned.
+        subroles: The subroles to be assigned.
 
-        append (bool, optional): Whether you want to append the
+        append: Whether you want to append the
             new subroles to the existing subroles.
     """
     if isinstance(subroles, str):
@@ -1917,14 +1918,14 @@ FloatColumnView.with_subroles = _with_subroles_float  # type: ignore
 # -----------------------------------------------------------------------------
 
 
-def _with_subroles_string(self, subroles: Union[str, List[str]], append=True):
+def _with_subroles_string(self, subroles: Union[str, List[str]], append: bool=True):
     """
     Returns a new column with new subroles.
 
     Args:
-        subroles (str or List[str]): The subroles to be assigned.
+        subroles: The subroles to be assigned.
 
-        append (bool, optional): Whether you want to append the
+        append: Whether you want to append the
             new subroles to the existing subroles.
     """
     if isinstance(subroles, str):
@@ -1958,7 +1959,7 @@ def _with_unit_float(self, unit: str):
     Returns a new column with a new unit.
 
     Args:
-        unit (str): The new unit.
+        unit: The new unit.
     """
     col = FloatColumnView(
         operator="num_with_unit",
@@ -1981,7 +1982,7 @@ def _with_unit_string(self, unit: str):
     Returns a new column with a new unit,
 
     Args:
-        unit (str): The new unit.
+        unit: The new unit.
     """
     col = StringColumnView(
         operator="str_with_unit",
