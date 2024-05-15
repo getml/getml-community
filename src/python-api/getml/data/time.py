@@ -17,30 +17,27 @@ functions that express other time units in terms of seconds."""
 
 import datetime as dt
 
-import numpy as np
-
-
 # --------------------------------------------------------------------------
 
 
-def seconds(num):
+def seconds(num: float) -> float:
     """
-    Transforms *num* into a float64.
+    Returns the number of seconds.
 
     Args:
-        num (float):
+        num:
             The number of seconds.
 
     Returns:
-        float: *num* as a float64.
+        *num*
     """
-    return np.float64(num)
+    return num
 
 
 # --------------------------------------------------------------------------
 
 
-def minutes(num):
+def minutes(num: float) -> float:
     """
     Expresses *num* minutes in terms of seconds.
 
@@ -49,7 +46,7 @@ def minutes(num):
             The number of minutes.
 
     Returns:
-        float: *num* minutes expressed in terms of seconds.
+        *num* minutes expressed in terms of seconds.
     """
     return seconds(num) * 60.0
 
@@ -57,7 +54,7 @@ def minutes(num):
 # --------------------------------------------------------------------------
 
 
-def hours(num):
+def hours(num: float)  -> float:
     """
     Expresses *num* hours in terms of seconds.
 
@@ -66,7 +63,7 @@ def hours(num):
             The number of hours.
 
     Returns:
-        float: *num* hours expressed in terms of seconds.
+        *num* hours expressed in terms of seconds.
     """
     return minutes(num) * 60.0
 
@@ -74,7 +71,7 @@ def hours(num):
 # --------------------------------------------------------------------------
 
 
-def days(num):
+def days(num: float) -> float:
     """
     Expresses *num* days in terms of seconds.
 
@@ -83,7 +80,7 @@ def days(num):
             The number of days.
 
     Returns:
-        float: *num* days expressed in terms of seconds.
+        *num* days expressed in terms of seconds.
     """
     return hours(num) * 24.0
 
@@ -91,7 +88,7 @@ def days(num):
 # --------------------------------------------------------------------------
 
 
-def weeks(num):
+def weeks(num: float) -> float:
     """
     Expresses *num* weeks in terms of seconds.
 
@@ -100,7 +97,7 @@ def weeks(num):
             The number of weeks.
 
     Returns:
-        float: *num* weeks expressed in terms of seconds.
+        *num* weeks expressed in terms of seconds.
     """
     return days(num) * 7.0
 
@@ -108,7 +105,7 @@ def weeks(num):
 # --------------------------------------------------------------------------
 
 
-def milliseconds(num):
+def milliseconds(num: float) -> float:
     """
     Expresses *num* milliseconds in terms of fractions of a second.
 
@@ -117,7 +114,7 @@ def milliseconds(num):
             The number of milliseconds.
 
     Returns:
-        float: *num* milliseconds expressed in terms of seconds.
+        *num* milliseconds expressed in terms of seconds.
     """
     return seconds(num) / 1000.0
 
@@ -125,7 +122,7 @@ def milliseconds(num):
 # --------------------------------------------------------------------------
 
 
-def microseconds(num):
+def microseconds(num: float) -> float:
     """
     Expresses *num* microseconds in terms of fractions of a second.
 
@@ -134,7 +131,7 @@ def microseconds(num):
             The number of microseconds.
 
     Returns:
-        float: *num* microseconds expressed in terms of seconds.
+        *num* microseconds expressed in terms of seconds.
     """
     return milliseconds(num) / 1000.0
 
@@ -142,7 +139,7 @@ def microseconds(num):
 # --------------------------------------------------------------------------
 
 
-def datetime(year, month, day, hour=0, minute=0, second=0, microsecond=0):
+def datetime(year, month, day, hour=0, minute=0, second=0, microsecond=0) -> float:
     """
     Returns the number of seconds since UNIX time (January 1, 1970, 00:00:00).
 
@@ -167,6 +164,9 @@ def datetime(year, month, day, hour=0, minute=0, second=0, microsecond=0):
 
         microsecond (int, optional):
             Microsecond component of the date.
+
+    Returns:
+        The number of seconds since UNIX time (January 1, 1970, 00:00:00).
     """
     return dt.datetime(
         year,
