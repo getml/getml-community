@@ -12,7 +12,7 @@ Dataclass for handling the roles.
 
 from dataclasses import dataclass, field, fields
 from inspect import cleandoc
-from typing import List
+from typing import List, Dict
 
 
 @dataclass
@@ -20,6 +20,33 @@ class Roles:
     """
     Roles can be passed to [`DataFrame`][getml.DataFrame] to
     predefine the roles assigned to certain columns.
+
+    Args:
+        categorical:
+            Names of the categorical columns.
+
+        join_key:
+            Names of the join key columns.
+
+        numerical:
+            Names of the numerical columns.
+
+        target:
+            Names of the target columns.
+
+        text:
+            Names of the text columns.
+
+        time_stamp:
+            Names of the time stamp columns.
+
+        unused_float:
+            Names of the unused float columns.
+
+        unused_string:
+            Names of the unused string columns.
+
+
 
     Example:
         ```python
@@ -76,41 +103,56 @@ class Roles:
         return "\n\n".join(blocks)
 
     @property
-    def columns(self):
+    def columns(self) -> List[str]:
         """
         The name of all columns contained in the roles object.
+
+        Returns:
+            The names of all columns.
         """
         return [r for role in self for r in self[role]]
 
-    def infer(self, colname):
+    def infer(self, colname: str) -> str:
         """
         Infers the role of a column.
 
         Args:
-            colname (str):
+            colname:
                 The name of the column to be inferred.
+
+        Returns:
+            The role of the column as a string.
         """
         for role in self:
             if colname in self[role]:
                 return role
         raise ValueError("Column named '" + colname + "' not found.")
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, List[str]]:
         """
         Expresses the roles object as a dictionary.
+
+        Returns:
+            A dictionary where keys are role names and values are lists of column names.
         """
         return {role: self[role] for role in self}
 
-    def to_list(self):
+    def to_list(self) -> List[str]:
         """
         Returns a list containing the roles, without the corresponding
         columns names.
+
+        Returns:
+            A list where each element is a role name, repeated by the number of columns in that role.
         """
         return [r for role in self for r in [role] * len(self[role])]
 
     @property
-    def unused(self):
+    def unused(self) -> List[str]:
         """
         Names of all unused columns (unused_float + unused_string).
+
+        Returns:
+            A list of column names that are categorized as unused, combining both float and string types.
         """
         return self.unused_float + self.unused_string

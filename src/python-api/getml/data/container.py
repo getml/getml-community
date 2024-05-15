@@ -232,7 +232,7 @@ class Container:
     def __init__(
         self,
         population: Optional[Union[DataFrame, View]] = None,
-        peripheral: Optional[dict[str, Union[DataFrame, View]]] = None,
+        peripheral: Optional[Dict[str, Union[DataFrame, View]]] = None,
         split: Optional[Union[StringColumn, StringColumnView]] = None,
         deep_copy: Optional[bool] = False,
         train: Optional[Union[DataFrame, View]] = None,

@@ -12,6 +12,7 @@ A container for the placeholders.
 
 from copy import deepcopy
 from inspect import cleandoc
+from typing import Union, List
 
 from getml.utilities.formatting import _Formatter
 
@@ -28,7 +29,7 @@ Abstract representation of the relationship between tables.
 You might also want to refer to [`Placeholder`][getml.data.Placeholder].
 
 Args:
-    population ([`Placeholder`][getml.data.Placeholder]):
+    population:
         The placeholder representing the population table,
         which defines the
         [statistical population](https://en.wikipedia.org/wiki/Statistical_population)
@@ -160,7 +161,7 @@ Example:
         [CORA notebook](https://nbviewer.getml.com/github/getml/getml-demo/blob/master/cora.ipynb).
     """
 
-    def __init__(self, population):
+    def __init__(self, population: Union[Placeholder, str]):
         if isinstance(population, str):
             population = Placeholder(population)
 
@@ -254,12 +255,12 @@ Example:
 
         return output
 
-    def add(self, *placeholders):
+    def add(self, *placeholders: Union[Placeholder, List[Placeholder]]):
         """
         Adds peripheral placeholders to the data model.
 
         Args:
-            placeholders ([`Placeholder`][getml.data.Placeholder]:
+            placeholders:
                 The placeholder or placeholders you would like to add.
         """
 
@@ -282,8 +283,11 @@ Example:
             self._add(placeholder)
 
     @property
-    def names(self):
+    def names(self) -> List[str]:
         """
         A list of the names of all tables contained in the DataModel.
+
+        Returns:
+            A list of names.
         """
         return [name for name in self]

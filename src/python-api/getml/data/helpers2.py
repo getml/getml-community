@@ -9,7 +9,7 @@
 """Helper functions that depend on the DataFrame class."""
 
 import numbers
-from typing import Any, Dict
+from typing import Any, Dict, Union, List
 
 from getml.constants import MULTIPLE_JOIN_KEYS_BEGIN, NO_JOIN_KEY
 from getml.data.columns import (
@@ -173,7 +173,7 @@ def _make_subsets_from_split(population, split):
 # -----------------------------------------------------------------
 
 
-def load_data_frame(name):
+def load_data_frame(name: str) -> DataFrame:
     """Retrieves a [`DataFrame`][getml.DataFrame] handler of data in the
     getML engine.
 
@@ -183,17 +183,17 @@ def load_data_frame(name):
     [`list_data_frames`][getml.data.list_data_frames].
 
     Args:
-        name (str):
+        name:
             Name of the data frame.
+
+    Returns:
+            Handle the underlying data frame in the getML engine.
 
     Examples:
         ```python
         d, _ = getml.datasets.make_numerical(population_name = 'test')
         d2 = getml.data.load_data_frame('test')
         ```
-    Returns:
-        [`DataFrame`][getml.DataFrame]:
-            Handle the underlying data frame in the getML engine.
     """
 
     if not isinstance(name, str):
@@ -272,12 +272,12 @@ def _load_view(cmd):
 # --------------------------------------------------------------------
 
 
-def exists(name):
+def exists(name: str):
     """
     Returns true if a data frame named 'name' exists.
 
     Args:
-        name (str):
+        name:
             Name of the data frame.
     """
     if not isinstance(name, str):
@@ -291,12 +291,12 @@ def exists(name):
 # --------------------------------------------------------------------
 
 
-def delete(name):
+def delete(name: str):
     """
     If a data frame named 'name' exists, it is deleted.
 
     Args:
-        name (str):
+        name:
             Name of the data frame.
     """
 
@@ -310,7 +310,7 @@ def delete(name):
 # --------------------------------------------------------------------
 
 
-def make_target_columns(base, colname):
+def make_target_columns(base: Union[DataFrame, View], colname: str) -> View:
     """
     Returns a view containing binary target columns.
 
@@ -319,13 +319,16 @@ def make_target_columns(base, colname):
     target columns.
 
     Args:
-        base ([`DataFrame`][getml.DataFrame] or [`View`][getml.data.View]):
+        base:
             The original view or data frame. `base` will remain unaffected
             by this function, instead you will get a view with the appropriate
             changes.
 
-        colname (str): The column you would like to split. A column named
+        colname: The column you would like to split. A column named
             `colname` should appear on `base`.
+
+    Returns:
+        A view containing binary target columns.
     """
     if not isinstance(
         base[colname], (FloatColumn, FloatColumnView, StringColumn, StringColumnView)
@@ -358,10 +361,21 @@ def make_target_columns(base, colname):
 # --------------------------------------------------------------------
 
 
-def to_placeholder(*args, **kwargs):
+def to_placeholder(*args: Union[DataFrame, View, List[Union[DataFrame, View]]],
+                   **kwargs: Union[DataFrame, View, List[Union[DataFrame, View]]]) -> List[Placeholder]:
     """
     Factory function for extracting placeholders from a
     [`DataFrame`][getml.DataFrame] or [`View`][getml.data.View].
+
+    Args:
+        args:
+            The data frames or views you would like to convert to placeholders.
+
+        kwargs:
+            The data frames or views you would like to convert to placeholders.
+
+    Returns:
+        A list of placeholders.
 
     Example:
         Suppose we wanted to create a [`DataModel`][getml.data.DataModel]:

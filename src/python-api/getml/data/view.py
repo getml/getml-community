@@ -13,12 +13,16 @@ import numbers
 import os
 from collections import namedtuple
 from copy import deepcopy
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, Tuple, Literal
 
 import numpy as np
 import pandas as pd  # type: ignore
+import pyarrow
 
 import getml.communication as comm
+import pyspark.sql
+from getml import DataFrame
+from getml.data.columns import StringColumn, StringColumnView
 from getml.database import Connection
 from getml.log import logger
 from getml.utilities.formatting import _ViewFormatter
@@ -69,20 +73,20 @@ class View:
       therefore they do not need to have an identifying name.
 
     Args:
-        base ([`DataFrame`][getml.DataFrame] or [`View`][getml.data.View]):
+        base:
             A data frame or view used as the basis for this view.
 
-        name (str):
+        name:
             The name assigned to this view.
 
-        subselection ([`BooleanColumnView`][getml.data.columns.BooleanColumnView], [`FloatColumnView`][getml.data.columns.FloatColumnView] or [`FloatColumn`][getml.data.columns.FloatColumn]):
+        subselection:
             Indicates which rows we would like to keep.
 
-        added (dict):
+        added:
             A dictionary that describes a new column
             that has been added to the view.
 
-        dropped (List[str]):
+        dropped:
             A list of columns that have been dropped.
 
     Example:
@@ -139,12 +143,12 @@ class View:
 
     def __init__(
         self,
-        base,
+        base: Union[DataFrame, "View"],
         name: Optional[str] = None,
-        subselection: Union[
-            BooleanColumnView, FloatColumn, FloatColumnView, None
-        ] = None,
-        added=None,
+        subselection: Optional[Union[
+            BooleanColumnView, FloatColumn, FloatColumnView
+        ]] = None,
+        added: Optional[Dict]=None,
         dropped: Optional[List[str]] = None,
     ):
         self._added = added
@@ -296,19 +300,25 @@ class View:
     # ------------------------------------------------------------
 
     @property
-    def added(self):
+    def added(self) -> Dict:
         """
         The column that has been added to the view.
+
+        Returns:
+                The column that has been added to the view.
         """
         return deepcopy(self._added)
 
     # ------------------------------------------------------------
 
     @property
-    def base(self):
+    def base(self) -> Union[DataFrame, "View"]:
         """
         The basis on which the view is created. Must be a
         [`DataFrame`][getml.DataFrame] or a [`View`][getml.data.View].
+
+        Returns:
+                The basis on which the view is created.
         """
         return deepcopy(self._base)
 
@@ -342,12 +352,11 @@ class View:
     # ------------------------------------------------------------
 
     @property
-    def colnames(self):
+    def colnames(self) -> List[str]:
         """
         List of the names of all columns.
 
         Returns:
-            List[str]:
                 List of the names of all columns.
         """
         return (
@@ -363,24 +372,26 @@ class View:
     # ------------------------------------------------------------
 
     @property
-    def columns(self):
+    def columns(self) -> List[str]:
         """
         Alias for [`colnames`][getml.data.View.colnames].
 
         Returns:
-            List[str]:
                 List of the names of all columns.
         """
         return self.colnames
 
     # ------------------------------------------------------------
 
-    def drop(self, cols):
+    def drop(self, cols: Union[str, List[str]]) -> "View":
         """Returns a new [`View`][getml.data.View] that has one or several columns removed.
 
         Args:
-            cols (str or List[str]):
+            cols:
                 The names of the columns to be dropped.
+
+        Returns:
+                A new view with the specified columns removed.
         """
         if isinstance(cols, str):
             cols = [cols]
@@ -393,9 +404,12 @@ class View:
     # ------------------------------------------------------------
 
     @property
-    def dropped(self):
+    def dropped(self) -> List[str]:
         """
         The names of the columns that has been dropped.
+
+        Returns:
+                The names of the columns that has been dropped.
         """
         return deepcopy(self._dropped)
 
@@ -405,6 +419,9 @@ class View:
     def last_change(self) -> str:
         """
         A string describing the last time this data frame has been changed.
+
+        Returns:
+                A string describing the last time this data frame has been changed.
         """
         return self.__dict__["_base"].last_change
 
@@ -417,10 +434,14 @@ class View:
     # ------------------------------------------------------------
 
     @property
-    def name(self):
+    def name(self) -> str:
         """
         The name of the view. If no name is explicitly set,
         the name will be identical to the name of the base.
+
+        Returns:
+                The name of the view.
+
         """
         if self.__dict__["_name"] is None:
             return self.__dict__["_base"].name
@@ -428,28 +449,30 @@ class View:
 
     # ------------------------------------------------------------
 
-    def ncols(self):
+    def ncols(self) -> int:
         """
         Number of columns in the current instance.
 
         Returns:
-            int:
                 Overall number of columns
         """
         return len(self.colnames)
 
     # ------------------------------------------------------------
 
-    def nrows(self, force=False):
+    def nrows(self, force: bool=False) -> Union[int, str]:
         """
         Returns the number of rows in the current instance.
 
         Args:
-            force (bool, optional):
+            force:
                 If the number of rows is unknown,
                 do you want to force the engine to calculate it anyway?
                 This is a relatively expensive operation, therefore
                 you might not necessarily want this.
+
+        Returns:
+                The number of rows in the current instance.
         """
 
         self.refresh()
@@ -483,12 +506,11 @@ class View:
 
     # --------------------------------------------------------------------------
 
-    def refresh(self):
+    def refresh(self) -> "View":
         """Aligns meta-information of the current instance with the
         corresponding data frame in the getML engine.
 
         Returns:
-            [`View`][getml.data.View]:
                 Updated handle the underlying data frame in the getML
                 engine.
 
@@ -499,10 +521,13 @@ class View:
     # ------------------------------------------------------------
 
     @property
-    def roles(self):
+    def roles(self) -> Roles:
         """
         The roles of the columns included
         in this View.
+
+        Returns:
+                The roles of the columns included in this View.
         """
         return Roles(
             categorical=self._categorical_names,
@@ -518,18 +543,24 @@ class View:
     # ------------------------------------------------------------
 
     @property
-    def rowid(self):
+    def rowid(self) -> List[int]:
         """
         The rowids for this view.
+
+        Returns:
+                The rowids for this view.
         """
         return rowid()[: len(self)]
 
     # ------------------------------------------------------------
 
     @property
-    def subselection(self):
+    def subselection(self) -> Union[BooleanColumnView, FloatColumn, FloatColumnView]:
         """
         The subselection that is applied to this view.
+
+        Returns:
+                The subselection that is applied to this view.
         """
         return deepcopy(self._subselection)
 
@@ -554,24 +585,22 @@ class View:
     # ------------------------------------------------------------
 
     @property
-    def shape(self):
+    def shape(self) -> Tuple[Union[int, str], int]:
         """
         A tuple containing the number of rows and columns of
         the View.
         """
         self.refresh()
-        return (self.nrows(), self.ncols())
+        return self.nrows(), self.ncols()
 
     # ------------------------------------------------------------
-
-    def to_arrow(self):
+    def to_arrow(self) -> pyarrow.Table:
         """Creates a `pyarrow.Table` from the view.
 
         Loads the underlying data from the getML engine and constructs
         a `pyarrow.Table`.
 
         Returns:
-            `pyarrow.Table`:
                 Pyarrow equivalent of the current instance including
                 its underlying data.
         """
@@ -579,11 +608,15 @@ class View:
 
     # ------------------------------------------------------------
 
-    def to_json(self):
+    def to_json(self) -> str:
         """Creates a JSON string from the current instance.
 
         Loads the underlying data from the getML engine and constructs
         a JSON string.
+
+        Returns:
+                JSON string of the current instance including its
+                underlying data.
         """
         return self.to_pandas().to_json()
 
@@ -596,18 +629,18 @@ class View:
         Writes the underlying data into a newly created CSV file.
 
         Args:
-            fname (str):
+            fname:
                 The name of the CSV file.
                 The ending ".csv" and an optional batch number will
                 be added automatically.
 
-            quotechar (str, optional):
+            quotechar:
                 The character used to wrap strings.
 
-            sep (str, optional):
+            sep:
                 The character used for separating fields.
 
-            batch_size (int, optional):
+            batch_size:
                 Maximum number of lines per file. Set to 0 to read
                 the entire data frame into a single file.
         """
@@ -648,13 +681,13 @@ class View:
         database.
 
         Args:
-            table_name (str):
+            table_name:
                 Name of the table to be created.
 
                 If a table of that name already exists, it will be
                 replaced.
 
-            conn ([`Connection`][getml.database.Connection], optional):
+            conn:
                 The database connection to be used.
                 If you don't explicitly pass a connection,
                 the engine will use the default connection.
@@ -683,14 +716,13 @@ class View:
 
     # ------------------------------------------------------------
 
-    def to_pandas(self):
+    def to_pandas(self) -> pd.DataFrame:
         """Creates a `pandas.DataFrame` from the view.
 
         Loads the underlying data from the getML engine and constructs
         a `pandas.DataFrame`.
 
         Returns:
-            `pandas.DataFrame`:
                 Pandas equivalent of the current instance including
                 its underlying data.
         """
@@ -698,18 +730,17 @@ class View:
 
     # ------------------------------------------------------------
 
-    def to_placeholder(self, name=None):
+    def to_placeholder(self, name: Optional[str] = None) -> Placeholder:
         """Generates a [`Placeholder`][getml.data.Placeholder] from the
         current [`View`][getml.data.View].
 
         Args:
-            name (str, optional):
+            name:
                 The name of the placeholder. If no
                 name is passed, then the name of the placeholder will
                 be identical to the name of the current view.
 
         Returns:
-            [`Placeholder`][getml.data.Placeholder]:
                 A placeholder with the same name as this data frame.
 
 
@@ -719,16 +750,16 @@ class View:
 
     # ------------------------------------------------------------
 
-    def to_parquet(self, fname, compression="snappy"):
+    def to_parquet(self, fname, compression: Literal["brotli", "gzip", "lz4", "snappy", "zstd"]="snappy"):
         """
         Writes the underlying data into a newly created parquet file.
 
         Args:
-            fname (str):
+            fname:
                 The name of the parquet file.
                 The ending ".parquet" will be added automatically.
 
-            compression (str):
+            compression:
                 The compression format to use.
                 Supported values are "brotli", "gzip", "lz4", "snappy", "zstd"
         """
@@ -736,18 +767,18 @@ class View:
 
     # ----------------------------------------------------------------
 
-    def to_pyspark(self, spark, name=None):
+    def to_pyspark(self, spark: pyspark.sql.SparkSession, name: Optional[str]=None) -> pyspark.sql.DataFrame:
         """Creates a `pyspark.sql.DataFrame` from the current instance.
 
         Loads the underlying data from the getML engine and constructs
         a `pyspark.sql.DataFrame`.
 
         Args:
-            spark (pyspark.sql.SparkSession):
+            spark:
                 The pyspark session in which you want to
                 create the data frame.
 
-            name (str or None):
+            name:
                 The name of the temporary view to be created on top
                 of the `pyspark.sql.DataFrame`,
                 with which it can be referred to
@@ -757,7 +788,6 @@ class View:
                 [`DataFrame`][getml.DataFrame] will be used.
 
         Returns:
-            pyspark.sql.DataFrame:
                 Pyspark equivalent of the current instance including
                 its underlying data.
 
@@ -777,25 +807,26 @@ class View:
         """
         Writes the underlying data into a newly created CSV file
         located in an S3 bucket.
+
         Note:
             S3 is not supported on Windows.
 
         Args:
-            bucket (str):
+            bucket:
                 The bucket from which to read the files.
 
-            key (str):
+            key:
                 The key in the S3 bucket in which you want to
                 write the output. The ending ".csv" and an optional
                 batch number will be added automatically.
 
-            region (str):
+            region:
                 The region in which the bucket is located.
 
-            sep (str, optional):
+            sep:
                 The character used for separating fields.
 
-            batch_size (int, optional):
+            batch_size:
                 Maximum number of lines per file. Set to 0 to read
                 the entire data frame into a single file.
 
@@ -864,15 +895,18 @@ class View:
 
     # ------------------------------------------------------------
 
-    def where(self, index) -> "View":
+    def where(self, index: Optional[Union[BooleanColumnView, FloatColumn, FloatColumnView]]) -> "View":
         """Extract a subset of rows.
 
         Creates a new [`View`][getml.data.View] as a
         subselection of the current instance.
 
         Args:
-            index ([`BooleanColumnView`][getml.data.columns.BooleanColumnView] or [`FloatColumnView`][getml.data.columns.FloatColumnView] or [`FloatColumn`][getml.data.columns.FloatColumn]):
+            index:
                 Boolean column indicating the rows you want to select.
+
+        Returns:
+            A new view containing only the rows that satisfy the condition.
 
         Example:
             Generate example data:
@@ -933,27 +967,39 @@ class View:
     # ------------------------------------------------------------
 
     def with_column(
-        self, col, name, role=None, unit="", subroles=None, time_formats=None
-    ):
+        self,
+        col:Union[
+        bool,
+        str,
+        float,
+        int,
+        np.datetime64,
+        FloatColumn,
+        FloatColumnView,
+        StringColumn,
+        StringColumnView,
+        BooleanColumnView,
+    ], name: str, role: Union[dict[str, List[str]], Roles] =None, unit: Optional[str]="", subroles: Optional[Union[str, List[str]]] =None, time_formats: Optional[List[str]] = None,
+    ) -> "View":
         """Returns a new [`View`][getml.data.View] that contains an additional column.
 
         Args:
-            col ([`column`][getml.column]):
+            col:
                 The column to be added.
 
-            name (str):
+            name:
                 Name of the new column.
 
-            role (str, optional):
+            role:
                 Role of the new column. Must be from [`roles`][getml.data.roles].
 
-            subroles (str, List[str] or None, optional):
+            subroles:
                 Subroles of the new column. Must be from [`subroles`][getml.data.subroles].
 
-            unit (str, optional):
+            unit:
                 Unit of the column.
 
-            time_formats (str, optional):
+            time_formats:
                 Formats to be used to parse the time stamps.
 
                 This is only necessary, if an implicit conversion from
@@ -988,6 +1034,9 @@ class View:
                 * %z - time zone differential in ISO 8601 format (Z or +NN.NN)
                 * %Z - time zone differential in RFC format (GMT or +NNNN)
                 * %% - percent sign
+
+        Returns:
+            A new view containing the additional column.
         """
         col, role, subroles = _with_column(
             col, name, role, subroles, unit, time_formats
@@ -1005,18 +1054,21 @@ class View:
 
     # ------------------------------------------------------------
 
-    def with_name(self, name):
+    def with_name(self, name: str) -> "View":
         """Returns a new [`View`][getml.data.View] with a new name.
 
         Args:
             name (str):
                 The name of the new view.
+
+        Returns:
+            A new view with the new name.
         """
         return View(base=self, name=name)
 
     # ------------------------------------------------------------
 
-    def with_role(self, names, role, time_formats=None):
+    def with_role(self, names: Union[str, List[str]], role: str, time_formats: Optional[List[str]]=None) -> "View":
         """Returns a new [`View`][getml.data.View] with modified roles.
 
         When switching from a role based on type float to a role based on type
@@ -1026,50 +1078,56 @@ class View:
         roles, please refer to the [User Guide][annotating-data].
 
         Args:
-            names (str or List[str]):
+            names:
                 The name or names of the column.
 
-            role (str):
+            role:
                 The role to be assigned.
 
-            time_formats (str or List[str], optional):
+            time_formats:
                 Formats to be used to parse the time stamps.
                 This is only necessary, if an implicit conversion from a StringColumn to
                 a time stamp is taking place.
+
+        Returns:
+            A new view with the modified roles.
         """
         return _with_role(self, names, role, time_formats)
 
     # ------------------------------------------------------------
 
-    def with_subroles(self, names, subroles, append=True):
+    def with_subroles(self, names: Union[str, List[str]], subroles: Union[str, List[str]], append: bool=True):
         """Returns a new view with one or several new subroles on one or more columns.
 
         Args:
-            names (str or List[str]):
+            names:
                 The name or names of the column.
 
-            subroles (str or List[str]):
+            subroles:
                 The subroles to be assigned.
 
-            append (bool, optional):
+            append:
                 Whether you want to append the
                 new subroles to the existing subroles.
+
+        Returns:
+            A new view with the modified subroles.
         """
         return _with_subroles(self, names, subroles, append)
 
     # ------------------------------------------------------------
 
-    def with_unit(self, names, unit, comparison_only=False):
+    def with_unit(self, names: Union[str, List[str]], unit: str, comparison_only: bool=False) -> "View":
         """Returns a view that contains a new unit on one or more columns.
 
         Args:
-            names (str or List[str]):
+            names:
                 The name or names of the column.
 
-            unit (str):
+            unit:
                 The unit to be assigned.
 
-            comparison_only (bool):
+            comparison_only:
                 Whether you want the column to
                 be used for comparison only. This means that the column can
                 only be used in comparison to other columns of the same unit.
@@ -1081,6 +1139,9 @@ class View:
                 If True, this will append ", comparison only" to the unit.
                 The feature learning algorithms and the feature selectors will
                 interpret this accordingly.
+
+        Returns:
+            A new view with the modified unit.
         """
         return _with_unit(self, names, unit, comparison_only)
 
