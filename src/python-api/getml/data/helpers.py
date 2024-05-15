@@ -50,7 +50,9 @@ from .subroles import _all_subroles
 # --------------------------------------------------------------------
 
 OnType = Optional[Union[str, Tuple[str, str], List[Union[str, Tuple[str, str]]]]]
-
+"""
+Types that can be passed to the 'on' argument of the 'join' method.
+"""
 # --------------------------------------------------------------------
 
 

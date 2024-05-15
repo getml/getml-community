@@ -13,18 +13,20 @@
 from dataclasses import dataclass, fields
 from inspect import cleandoc
 from textwrap import indent
-from typing import Dict, List, Optional, Sequence, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 from getml.utilities.formatting import _SignatureFormatter
 
-from .helpers import _check_join_key, _handle_on, _handle_ts
+from .helpers import _check_join_key, _handle_on, _handle_ts, OnType
 from .relationship import many_to_many
 from .roles_obj import Roles
 
 # --------------------------------------------------------------------
 
-OnType = Optional[Union[str, Tuple[str, str], List[Union[str, Tuple[str, str]]]]]
 TimeStampsType = Optional[Union[str, Tuple[str, str]]]
+"""
+Types of time stamps used in joins.
+"""
 
 # ------------------------------------------------------------------------------
 
