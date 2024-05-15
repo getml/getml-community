@@ -42,7 +42,7 @@ def minutes(num: float) -> float:
     Expresses *num* minutes in terms of seconds.
 
     Args:
-        num (float):
+        num:
             The number of minutes.
 
     Returns:
@@ -59,7 +59,7 @@ def hours(num: float)  -> float:
     Expresses *num* hours in terms of seconds.
 
     Args:
-        num (float):
+        num:
             The number of hours.
 
     Returns:
@@ -76,7 +76,7 @@ def days(num: float) -> float:
     Expresses *num* days in terms of seconds.
 
     Args:
-        num(float):
+        num:
             The number of days.
 
     Returns:
@@ -93,7 +93,7 @@ def weeks(num: float) -> float:
     Expresses *num* weeks in terms of seconds.
 
     Args:
-        num (float):
+        num:
             The number of weeks.
 
     Returns:
@@ -110,7 +110,7 @@ def milliseconds(num: float) -> float:
     Expresses *num* milliseconds in terms of fractions of a second.
 
     Args:
-        num (float):
+        num:
             The number of milliseconds.
 
     Returns:
@@ -127,7 +127,7 @@ def microseconds(num: float) -> float:
     Expresses *num* microseconds in terms of fractions of a second.
 
     Args:
-        num (float):
+        num:
             The number of microseconds.
 
     Returns:
@@ -139,30 +139,30 @@ def microseconds(num: float) -> float:
 # --------------------------------------------------------------------------
 
 
-def datetime(year, month, day, hour=0, minute=0, second=0, microsecond=0) -> float:
+def datetime(year: int, month: int, day: int, hour: int=0, minute: int=0, second: int=0, microsecond: int=0) -> float:
     """
     Returns the number of seconds since UNIX time (January 1, 1970, 00:00:00).
 
     Args:
-        year (int):
+        year:
             Year component of the date.
 
-        month (int):
+        month:
             Month component of the date.
 
-        day (int):
+        day:
             Day component of the date.
 
-        hour (int, optional):
+        hour:
             Hour component of the date.
 
-        minute (int, optional):
+        minute:
             Minute component of the date.
 
-        second (int, optional):
+        second:
             Second component of the date.
 
-        microsecond (int, optional):
+        microsecond:
             Microsecond component of the date.
 
     Returns:
