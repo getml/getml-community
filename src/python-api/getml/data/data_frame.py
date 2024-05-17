@@ -1256,7 +1256,7 @@ class DataFrame:
     @classmethod
     def from_dict(
         cls,
-        data: Dict[str, List[Any]],
+        data: Dict[str, Union[List[float], List[str]]],
         name: str,
         roles: Optional[Union[dict[str, List[str]], Roles]] = None,
         ignore: bool = False,
