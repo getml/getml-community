@@ -45,7 +45,7 @@ class StarSchema:
     [`Container`][getml.data.Container] and [`DataModel`][getml.data.DataModel] by directly
     accessing the attributes `container` and `data_model`.
 
-    Args:
+    Attributes:
         population:
             The population table defines the
             [statistical population ](https://en.wikipedia.org/wiki/Statistical_population)

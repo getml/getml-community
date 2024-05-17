@@ -56,7 +56,7 @@ def time(
             The start date of the validation set.
 
         test:
-            The start date of the test set. Should be of type `TimeStampType` from module [`time`][getml.data.split.time.TimeStampType].
+            The start date of the test set.
 
         kwargs:
             Any other sets you would like to assign.

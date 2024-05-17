@@ -21,7 +21,7 @@ class Roles:
     Roles can be passed to [`DataFrame`][getml.DataFrame] to
     predefine the roles assigned to certain columns.
 
-    Args:
+    Attributes:
         categorical:
             Names of the categorical columns.
 

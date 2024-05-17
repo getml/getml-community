@@ -28,7 +28,7 @@ class Subset:
     It is passed by a [`Container`][getml.data.Container], [`StarSchema`][getml.data.StarSchema]
     and [`TimeSeries`][getml.data.TimeSeries] to the [`Pipeline`][getml.Pipeline].
 
-    Args:
+    Attributes:
         container_id:
             The ID of the container the subset belongs to.
 

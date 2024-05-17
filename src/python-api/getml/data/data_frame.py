@@ -13,7 +13,7 @@ import numbers
 import os
 import shutil
 from collections import namedtuple
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, Literal
 
 import numpy as np
 import pandas as pd  # type: ignore
@@ -99,7 +99,7 @@ class DataFrame:
     synchronization with the Python API please see the
     corresponding [User Guide][python-api-lifecycles].
 
-    Args:
+    Attributes:
         name:
             Unique identifier used to link the handler with
             the underlying data frame object in the engine.
@@ -473,7 +473,7 @@ class DataFrame:
         _send_numpy_array(col, numpy_array)
 
         if subroles:
-            self._set_subroles(name, subroles, append=False)
+            self._set_subroles(name, append=False, subroles=subroles)
 
         if unit:
             self._set_unit(name, unit)
@@ -650,7 +650,7 @@ class DataFrame:
         self,
         col: Union[StringColumn, FloatColumn, np.array],
         name: str,
-        role: str = None,
+        role: Optional[str] = None,
         subroles: Optional[Union[str, List[str]]] = None,
         unit: str = "",
         time_formats: Optional[List[str]] = None,
@@ -850,7 +850,7 @@ class DataFrame:
         cls,
         table: pa.Table,
         name: str,
-        roles: Union[dict[str, List[str]], Roles] = None,
+        roles: Optional[Union[dict[str, List[str]], Roles]] = None,
         ignore: bool = False,
         dry: bool = False,
     ) -> "DataFrame":
@@ -943,7 +943,7 @@ class DataFrame:
         sep: str = ",",
         skip: int = 0,
         colnames: Optional[List[str]] = None,
-        roles: Union[dict[str, List[str]], Roles] = None,
+        roles: Optional[Union[dict[str, List[str]], Roles]] = None,
         ignore: bool = False,
         dry: bool = False,
         verbose: bool = True,
@@ -1137,11 +1137,11 @@ class DataFrame:
     def from_db(
         cls,
         table_name: str,
-        name: str = None,
-        roles: Union[dict[str, List[str]], Roles] = None,
+        name: Optional[str] = None,
+        roles: Optional[Union[dict[str, List[str]], Roles]] = None,
         ignore: bool = False,
         dry: bool = False,
-        conn: Connection = None,
+        conn: Optional[Connection] = None,
     ) -> "DataFrame":
         """Create a DataFrame from a table in a database.
 
@@ -1258,7 +1258,7 @@ class DataFrame:
         cls,
         data: Dict[str, List[Any]],
         name: str,
-        roles: Union[dict[str, List[str]], Roles] = None,
+        roles: Optional[Union[dict[str, List[str]], Roles]] = None,
         ignore: bool = False,
         dry: bool = False,
     ) -> "DataFrame":
@@ -1319,7 +1319,7 @@ class DataFrame:
         cls,
         json_str: str,
         name: str,
-        roles: Union[dict[str, List[str]], Roles] = None,
+        roles: Optional[Union[dict[str, List[str]], Roles]] = None,
         ignore: bool = False,
         dry: bool = False,
     ) -> "DataFrame":
@@ -1385,7 +1385,7 @@ class DataFrame:
         cls,
         pandas_df: pd.DataFrame,
         name: str,
-        roles: Union[dict[str, List[str]], Roles] = None,
+        roles: Optional[Union[dict[str, List[str]], Roles]] = None,
         ignore: bool = False,
         dry: bool = False,
     ) -> "DataFrame":
@@ -1477,7 +1477,7 @@ class DataFrame:
         cls,
         fname: str,
         name: str,
-        roles: Union[dict[str, List[str]], Roles] = None,
+        roles: Optional[Union[dict[str, List[str]], Roles]] = None,
         ignore: bool = False,
         dry: bool = False,
     ):
@@ -1561,7 +1561,7 @@ class DataFrame:
         cls,
         spark_df: pyspark.sql.DataFrame,
         name: str,
-        roles: Union[dict[str, List[str]], Roles] = None,
+        roles: Optional[Union[dict[str, List[str]], Roles]] = None,
         ignore: bool = False,
         dry: bool = False,
     ) -> "DataFrame":
@@ -1656,7 +1656,7 @@ class DataFrame:
         sep: str = ",",
         skip: int = 0,
         colnames: Optional[List[str]] = None,
-        roles: Union[dict[str, List[str]], Roles] = None,
+        roles: Optional[Union[dict[str, List[str]], Roles]] = None,
         ignore: bool = False,
         dry: bool = False,
     ) -> "DataFrame":
@@ -2145,7 +2145,7 @@ class DataFrame:
         skip: int = 0,
         colnames: Optional[List[str]] = None,
         time_formats: Optional[List[str]] = None,
-        verbose=True,
+        verbose: bool = True,
     ) -> "DataFrame":
         """Read CSV files.
 
@@ -2681,7 +2681,7 @@ class DataFrame:
     # --------------------------------------------------------------------------
 
     def read_db(
-        self, table_name: str, append: bool = False, conn: Connection = None
+        self, table_name: str, append: bool = False, conn: Optional[Connection] = None
     ) -> "DataFrame":
         """
         Fill from Database.
@@ -2960,7 +2960,7 @@ class DataFrame:
     def remove_subroles(
         self,
         cols: Union[
-            str, FloatColumn, StringColumn, List[str, FloatColumn, StringColumn]
+            str, FloatColumn, StringColumn, List[Union[str, FloatColumn, StringColumn]]
         ],
     ):
         """Removes all [`subroles`][getml.data.subroles] from one or more columns.
@@ -2973,7 +2973,7 @@ class DataFrame:
         names = _handle_cols(cols)
 
         for name in names:
-            self._set_subroles(name, subroles=[], append=False)
+            self._set_subroles(name, append=False, subroles=[])
 
         self.refresh()
 
@@ -2982,7 +2982,7 @@ class DataFrame:
     def remove_unit(
         self,
         cols: Union[
-            str, FloatColumn, StringColumn, List[str, FloatColumn, StringColumn]
+            str, FloatColumn, StringColumn, List[Union[str, FloatColumn, StringColumn]]
         ],
     ):
         """Removes the unit from one or more columns.
@@ -3032,7 +3032,7 @@ class DataFrame:
     def set_role(
         self,
         cols: Union[
-            str, FloatColumn, StringColumn, List[str, FloatColumn, StringColumn]
+            str, FloatColumn, StringColumn, List[Union[str, FloatColumn, StringColumn]]
         ],
         role: str,
         time_formats: Optional[List[str]] = None,
@@ -3120,7 +3120,7 @@ class DataFrame:
     def set_subroles(
         self,
         cols: Union[
-            str, FloatColumn, StringColumn, List[str, FloatColumn, StringColumn]
+            str, FloatColumn, StringColumn, List[Union[str, FloatColumn, StringColumn]]
         ],
         subroles: Optional[Union[str, List[str]]] = None,
         append: Optional[bool] = True,
@@ -3152,7 +3152,7 @@ class DataFrame:
             raise TypeError("'append' must be a bool.")
 
         for name in names:
-            self._set_subroles(name, subroles, append)
+            self._set_subroles(name, append, subroles)
 
         self.refresh()
 
@@ -3161,7 +3161,7 @@ class DataFrame:
     def set_unit(
         self,
         cols: Union[
-            str, FloatColumn, StringColumn, List[str, FloatColumn, StringColumn]
+            str, FloatColumn, StringColumn, List[Union[str, FloatColumn, StringColumn]]
         ],
         unit: str,
         comparison_only: bool = False,
@@ -3649,7 +3649,7 @@ class DataFrame:
             BooleanColumnView,
         ],
         name: str,
-        role=None,
+        role: Optional[str] = None,
         subroles: Optional[Union[str, List[str]]] = None,
         unit: Optional[str] = "",
         time_formats: Optional[List[str]] = None,
@@ -3744,7 +3744,7 @@ class DataFrame:
         cols: Union[
             str, FloatColumn, StringColumn, List[Union[str, FloatColumn, StringColumn]]
         ],
-        role: [str],
+        role: str,
         time_formats: Optional[List[str]] = None,
     ):
         """Returns a new [`View`][getml.data.View] with modified roles.
@@ -3784,7 +3784,7 @@ class DataFrame:
         cols: Union[
             str, FloatColumn, StringColumn, List[Union[str, FloatColumn, StringColumn]]
         ],
-        subroles: Optional[Union[str, List[str]]] = None,
+        subroles: Union[str, List[str]],
         append: bool = True,
     ):
         """Returns a new view with one or several new subroles on one or more columns.

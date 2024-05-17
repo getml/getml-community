@@ -33,7 +33,7 @@ class TimeSeries(StarSchema):
     It also abstracts away the need for
     [self joins](https://en.wikipedia.org/wiki/Join_(SQL)#Self-join).
 
-    Args:
+    Attributes:
         time_stamps:
             The time stamps used to limit the self-join.
 
@@ -128,7 +128,7 @@ class TimeSeries(StarSchema):
     def __init__(
         self,
         time_stamps: str,
-        population: Optional[Union[DataFrame, View]] = None,
+        population: Union[DataFrame, View],
         alias: Optional[str] = None,
         peripheral: Optional[Dict[str, Union[DataFrame, View]]] = None,
         split: Optional[Union[StringColumn, StringColumnView]] = None,

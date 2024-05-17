@@ -72,7 +72,7 @@ class View:
     - Views have no direct representation on the getML engine, and
       therefore they do not need to have an identifying name.
 
-    Args:
+    Attributes:
         base:
             A data frame or view used as the basis for this view.
 
@@ -750,7 +750,7 @@ class View:
 
     # ------------------------------------------------------------
 
-    def to_parquet(self, fname, compression: Literal["brotli", "gzip", "lz4", "snappy", "zstd"]="snappy"):
+    def to_parquet(self, fname: str, compression: Literal["brotli", "gzip", "lz4", "snappy", "zstd"]="snappy"):
         """
         Writes the underlying data into a newly created parquet file.
 
@@ -979,7 +979,7 @@ class View:
         StringColumn,
         StringColumnView,
         BooleanColumnView,
-    ], name: str, role: Union[dict[str, List[str]], Roles] =None, unit: Optional[str]="", subroles: Optional[Union[str, List[str]]] =None, time_formats: Optional[List[str]] = None,
+    ], name: str, role: Optional[Union[dict[str, List[str]], Roles]] =None, unit: Optional[str]="", subroles: Optional[Union[str, List[str]]] =None, time_formats: Optional[List[str]] = None,
     ) -> "View":
         """Returns a new [`View`][getml.data.View] that contains an additional column.
 

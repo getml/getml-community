@@ -43,7 +43,7 @@ class Container:
 
     - Storing data and allowing you to reproduce previous results.
 
-    Args:
+    Attributes:
         population:
             The population table defines the
             [statistical population ](https://en.wikipedia.org/wiki/Statistical_population)

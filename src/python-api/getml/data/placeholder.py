@@ -40,7 +40,7 @@ class Placeholder:
 
     You might also want to refer to [`DataModel`][getml.data.DataModel].
 
-    Args:
+    Attributes:
         name:
             The name used for this placeholder. This name will appear
             in the generated SQL code.

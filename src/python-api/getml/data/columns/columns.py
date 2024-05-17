@@ -367,7 +367,7 @@ class BooleanColumnView(_View):
 class StringColumn(_Column):
     """Handle for categorical data that is kept in the getML engine
 
-    Args:
+    Attributes:
         name:
             Name of the categorical column.
 
@@ -596,7 +596,7 @@ class FloatColumn(_Column):
     This is a handler for all numerical data in the getML engine,
     including time stamps.
 
-    Args:
+    Attributes:
         name:
             Name of the categorical column.
 

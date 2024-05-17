@@ -28,7 +28,7 @@ Abstract representation of the relationship between tables.
 
 You might also want to refer to [`Placeholder`][getml.data.Placeholder].
 
-Args:
+Attributes:
     population:
         The placeholder representing the population table,
         which defines the
